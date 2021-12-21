@@ -335,7 +335,7 @@ public:
 
 #define MAX_IDE_CONTROLLERS 8
 
-static IDEController *idecontroller[MAX_IDE_CONTROLLERS] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static IDEController *idecontroller[MAX_IDE_CONTROLLERS] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
 static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/);
 static IDEController *GetIDEController(uint32_t idx);
@@ -343,12 +343,12 @@ static IDEController *GetIDEController(uint32_t idx);
 static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 {
 	IDEController *ctrl = GetIDEController(idx);
-	if (ctrl == NULL)
+	if (ctrl == nullptr)
 		return;
 
 	for (uint32_t i = 0; i < 2; i++) {
 		IDEDevice *dev = ctrl->device[i];
-		if (dev == NULL)
+		if (dev == nullptr)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
@@ -370,12 +370,12 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/);
 static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 {
 	IDEController *ctrl = GetIDEController(idx);
-	if (ctrl == NULL)
+	if (ctrl == nullptr)
 		return;
 
 	for (uint32_t i = 0; i < 2; i++) {
 		IDEDevice *dev = ctrl->device[i];
-		if (dev == NULL)
+		if (dev == nullptr)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
@@ -398,12 +398,12 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 {
 	IDEController *ctrl = GetIDEController(idx);
-	if (ctrl == NULL)
+	if (ctrl == nullptr)
 		return;
 
 	for (uint32_t i = 0; i < 2; i++) {
 		IDEDevice *dev = ctrl->device[i];
-		if (dev == NULL)
+		if (dev == nullptr)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
@@ -485,7 +485,7 @@ void IDEATAPICDROMDevice::read_subchannel()
 	TMSF rel, abs;
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
 		prepare_read(0, 8);
 		return;
@@ -702,7 +702,7 @@ void IDEATAPICDROMDevice::pause_resume()
 	bool Resume = !!(atapi_cmd[8] & 1);
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
@@ -717,7 +717,7 @@ void IDEATAPICDROMDevice::play_audio_msf()
 	uint32_t end_lba = 0;
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
@@ -770,7 +770,7 @@ void IDEATAPICDROMDevice::play_audio10()
 	uint32_t start_lba;
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
@@ -824,7 +824,7 @@ void IDEATAPICDROMDevice::read_toc()
 	TMSF leadOut;
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		prepare_read(0, 8);
 		return;
@@ -1114,7 +1114,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 		} else {
 			/* OK, try to read */
 			CDROM_Interface *cdrom = getMSCDEXDrive();
-			bool res = (cdrom != NULL ? cdrom->ReadSectorsHost(/*buffer*/ sector, false, LBA, TransferLength)
+			bool res = (cdrom != nullptr ? cdrom->ReadSectorsHost(/*buffer*/ sector, false, LBA, TransferLength)
 			                          : false);
 			if (res) {
 				prepare_read(0, std::min((TransferLength * 2048), host_maximum_byte_count));
@@ -2125,16 +2125,16 @@ IDEATADevice::~IDEATADevice()
 std::shared_ptr<imageDisk> IDEATADevice::getBIOSdisk()
 {
 	if (bios_disk_index >= (2 + MAX_HDD_IMAGES))
-		return NULL;
+		return nullptr;
 	return imageDiskList[bios_disk_index];
 }
 
 CDROM_Interface *IDEATAPICDROMDevice::getMSCDEXDrive()
 {
-	CDROM_Interface *cdrom = NULL;
+	CDROM_Interface *cdrom = nullptr;
 
 	if (!GetMSCDEXDrive(drive_index, &cdrom))
-		return NULL;
+		return nullptr;
 
 	return cdrom;
 }
@@ -2142,7 +2142,7 @@ CDROM_Interface *IDEATAPICDROMDevice::getMSCDEXDrive()
 void IDEATAPICDROMDevice::update_from_cdrom()
 {
 	CDROM_Interface *cdrom = getMSCDEXDrive();
-	if (cdrom == NULL) {
+	if (cdrom == nullptr) {
 		LOG_WARNING("IDE: IDE update from CD-ROM failed, disk not available");
 		return;
 	}
@@ -2151,7 +2151,7 @@ void IDEATAPICDROMDevice::update_from_cdrom()
 void IDEATADevice::update_from_biosdisk()
 {
 	std::shared_ptr<imageDisk> dsk = getBIOSdisk();
-	if (dsk == NULL) {
+	if (dsk == nullptr) {
 		LOG_WARNING("IDE: IDE update from BIOS disk failed, disk not available");
 		return;
 	}
@@ -2210,15 +2210,15 @@ void IDE_Auto(int8_t &index, bool &slave)
 	slave = false;
 	for (i = 0; i < MAX_IDE_CONTROLLERS; i++) {
 		IDEController *c;
-		if ((c = idecontroller[i]) == NULL)
+		if ((c = idecontroller[i]) == nullptr)
 			continue;
 		index = (int8_t)i;
 
-		if (c->device[0] == NULL) {
+		if (c->device[0] == nullptr) {
 			slave = false;
 			break;
 		}
-		if (c->device[1] == NULL) {
+		if (c->device[1] == nullptr) {
 			slave = true;
 			break;
 		}
@@ -2230,11 +2230,11 @@ void IDE_ATAPI_MediaChangeNotify(uint8_t requested_drive_index)
 {
 	for (uint32_t ide = 0; ide < MAX_IDE_CONTROLLERS; ide++) {
 		IDEController *c = idecontroller[ide];
-		if (c == NULL)
+		if (c == nullptr)
 			continue;
 		for (uint32_t ms = 0; ms < 2; ms++) {
 			IDEDevice *dev = c->device[ms];
-			if (dev == NULL)
+			if (dev == nullptr)
 				continue;
 			if (dev->type == IDE_TYPE_CDROM) {
 				IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
@@ -2263,15 +2263,15 @@ void IDE_CDROM_Attach(int8_t index, bool slave, uint8_t requested_drive_index)
 	if (index < 0 || index >= MAX_IDE_CONTROLLERS)
 		return;
 	c = idecontroller[index];
-	if (c == NULL)
+	if (c == nullptr)
 		return;
 
-	if (c->device[slave ? 1 : 0] != NULL) {
+	if (c->device[slave ? 1 : 0] != nullptr) {
 		LOG_WARNING("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
 		return;
 	}
 
-	if (!GetMSCDEXDrive(requested_drive_index, NULL)) {
+	if (!GetMSCDEXDrive(requested_drive_index, nullptr)) {
 		LOG_WARNING("IDE: Asked to attach CD-ROM that does not exist");
 		return;
 	}
@@ -2292,7 +2292,7 @@ void IDE_CDROM_Detach(uint8_t requested_drive_index)
 				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev && dev->drive_index == requested_drive_index) {
 					delete dev;
-					c->device[slave] = NULL;
+					c->device[slave] = nullptr;
 				}
 			}
 	}
@@ -2308,7 +2308,7 @@ void IDE_CDROM_DetachAll()
 				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev) {
 					delete dev;
-					c->device[slave] = NULL;
+					c->device[slave] = nullptr;
 				}
 			}
 	}
@@ -2325,15 +2325,15 @@ void IDE_Hard_Disk_Attach(int8_t index,
 	if (index < 0 || index >= MAX_IDE_CONTROLLERS)
 		return;
 	c = idecontroller[index];
-	if (c == NULL)
+	if (c == nullptr)
 		return;
 
-	if (c->device[slave ? 1 : 0] != NULL) {
+	if (c->device[slave ? 1 : 0] != nullptr) {
 		LOG_WARNING("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
 		return;
 	}
 
-	if (imageDiskList[bios_disk_index] == NULL) {
+	if (imageDiskList[bios_disk_index] == nullptr) {
 		LOG_WARNING("IDE: Asked to attach bios disk that does not exist");
 		return;
 	}
@@ -2354,7 +2354,7 @@ void IDE_Hard_Disk_Detach(uint8_t bios_disk_index)
 				dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
 				if (dev && dev->bios_disk_index == bios_disk_index) {
 					delete dev;
-					c->device[slave] = NULL;
+					c->device[slave] = nullptr;
 				}
 			}
 	}
@@ -2399,14 +2399,14 @@ std::string GetIDEInfo()
 static IDEController *GetIDEController(uint32_t idx)
 {
 	if (idx >= MAX_IDE_CONTROLLERS)
-		return NULL;
+		return nullptr;
 	return idecontroller[idx];
 }
 
 static IDEDevice *GetIDESelectedDevice(IDEController *ide)
 {
-	if (ide == NULL)
-		return NULL;
+	if (ide == nullptr)
+		return nullptr;
 	return ide->device[ide->select];
 }
 
@@ -2441,7 +2441,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 
 	for (idx = 0; idx < MAX_IDE_CONTROLLERS; idx++) {
 		ide = GetIDEController(idx);
-		if (ide == NULL)
+		if (ide == nullptr)
 			continue;
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
@@ -2453,7 +2453,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
 			dev = ide->device[ms];
-			if (dev == NULL)
+			if (dev == nullptr)
 				continue;
 
 			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
@@ -2603,7 +2603,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 
 	for (idx = 0; idx < MAX_IDE_CONTROLLERS; idx++) {
 		ide = GetIDEController(idx);
-		if (ide == NULL)
+		if (ide == nullptr)
 			continue;
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
@@ -2615,7 +2615,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
 			dev = ide->device[ms];
-			if (dev == NULL)
+			if (dev == nullptr)
 				continue;
 
 			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
@@ -2675,7 +2675,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 					if (ata->headshr != 0 || ata->geo_translate) {
 						unsigned long lba;
 
-						if (dsk == NULL)
+						if (dsk == nullptr)
 							return;
 						lba = (head * dsk->sectors) +
 						      (cyl * dsk->sectors * dsk->heads) + sect - 1;
@@ -2809,7 +2809,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 
 	for (idx = 0; idx < MAX_IDE_CONTROLLERS; idx++) {
 		ide = GetIDEController(idx);
-		if (ide == NULL)
+		if (ide == nullptr)
 			continue;
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
@@ -2821,7 +2821,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
 			dev = ide->device[ms];
-			if (dev == NULL)
+			if (dev == nullptr)
 				continue;
 
 			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
@@ -2873,7 +2873,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 {
 	IDEDevice *dev = GetIDESelectedDevice(GetIDEController(idx));
-	if (dev == NULL)
+	if (dev == nullptr)
 		return;
 
 	if (dev->type == IDE_TYPE_HDD) {
@@ -2886,7 +2886,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		switch (dev->command) {
 		case 0x30: /* WRITE SECTOR */
 			disk = ata->getBIOSdisk();
-			if (disk == NULL) {
+			if (disk == nullptr) {
 				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -2965,7 +2965,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 
 		case 0x20: /* READ SECTOR */
 			disk = ata->getBIOSdisk();
-			if (disk == NULL) {
+			if (disk == nullptr) {
 				LOG_MSG("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3023,7 +3023,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		case 0x40: /* READ SECTOR VERIFY WITH RETRY */
 		case 0x41: /* READ SECTOR VERIFY WITHOUT RETRY */
 			disk = ata->getBIOSdisk();
-			if (disk == NULL) {
+			if (disk == nullptr) {
 				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3094,7 +3094,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 
 		case 0xC4: /* READ MULTIPLE */
 			disk = ata->getBIOSdisk();
-			if (disk == NULL) {
+			if (disk == nullptr) {
 				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3160,7 +3160,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 
 		case 0xC5: /* WRITE MULTIPLE */
 			disk = ata->getBIOSdisk();
-			if (disk == NULL) {
+			if (disk == nullptr) {
 				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3322,7 +3322,7 @@ IDEController *match_ide_controller(io_port_t port)
 {
 	for (uint32_t i = 0; i < MAX_IDE_CONTROLLERS; i++) {
 		IDEController *ide = idecontroller[i];
-		if (ide == NULL)
+		if (ide == nullptr)
 			continue;
 		if (ide->base_io != 0U && ide->base_io == (port & 0xFFF8U))
 			return ide;
@@ -3330,7 +3330,7 @@ IDEController *match_ide_controller(io_port_t port)
 			return ide;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 uint32_t IDEDevice::data_read(io_width_t)
@@ -3363,7 +3363,7 @@ IDEDevice::~IDEDevice()
 
 void IDEDevice::abort_silent()
 {
-	assert(controller != NULL);
+	assert(controller != nullptr);
 
 	/* a command was written while another is in progress */
 	state = IDE_DEV_READY;
@@ -3374,7 +3374,7 @@ void IDEDevice::abort_silent()
 
 void IDEDevice::abort_error()
 {
-	assert(controller != NULL);
+	assert(controller != nullptr);
 	LOG_WARNING("IDE: abort dh=0x%02x with error on 0x%03x", drivehead, controller->base_io);
 
 	/* a command was written while another is in progress */
@@ -3775,9 +3775,9 @@ IDEController::~IDEController()
 	uint32_t i;
 
 	for (i = 0; i < 2; i++) {
-		if (device[i] != NULL) {
+		if (device[i] != nullptr) {
 			delete device[i];
-			device[i] = NULL;
+			device[i] = nullptr;
 		}
 	}
 }
@@ -3785,7 +3785,7 @@ IDEController::~IDEController()
 static void ide_altio_w(io_port_t port, io_val_t val, io_width_t width)
 {
 	IDEController *ide = match_ide_controller(port);
-	if (ide == NULL) {
+	if (ide == nullptr) {
 		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return;
 	}
@@ -3830,7 +3830,7 @@ static uint32_t ide_altio_r(io_port_t port, io_width_t width)
 	IDEController *ide = match_ide_controller(port);
 	IDEDevice *dev;
 
-	if (ide == NULL) {
+	if (ide == nullptr) {
 		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return UINT32_MAX;
 	}
@@ -3845,10 +3845,10 @@ static uint32_t ide_altio_r(io_port_t port, io_width_t width)
 	port &= 1;
 
 	if (port == 0) /*3F6(R) status, does NOT clear interrupt*/
-		return (dev != NULL) ? dev->status : ide->status;
+		return (dev != nullptr) ? dev->status : ide->status;
 	else /*3F7(R) Drive Address Register*/
 		return 0x80u | (ide->select == 0 ? 0u : 1u) | (ide->select == 1 ? 0u : 2u) |
-		       ((dev != NULL) ? (((dev->drivehead & 0xFu) ^ 0xFu) << 2u) : 0x3Cu);
+		       ((dev != nullptr) ? (((dev->drivehead & 0xFu) ^ 0xFu) << 2u) : 0x3Cu);
 
 	return UINT32_MAX;
 }
@@ -3859,7 +3859,7 @@ static uint32_t ide_baseio_r(io_port_t port, io_width_t width)
 	IDEDevice *dev;
 	uint32_t ret = UINT32_MAX;
 
-	if (ide == NULL) {
+	if (ide == nullptr) {
 		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return UINT32_MAX;
 	}
@@ -3874,22 +3874,22 @@ static uint32_t ide_baseio_r(io_port_t port, io_width_t width)
 	port &= 7;
 
 	switch (port) {
-	case 0: /* 1F0 */ ret = (dev != NULL) ? dev->data_read(width) : 0xFFFFFFFFUL; break;
-	case 1: /* 1F1 */ ret = (dev != NULL) ? dev->feature : 0x00; break;
-	case 2: /* 1F2 */ ret = (dev != NULL) ? dev->count : 0x00; break;
-	case 3: /* 1F3 */ ret = (dev != NULL) ? dev->lba[0] : 0x00; break;
-	case 4: /* 1F4 */ ret = (dev != NULL) ? dev->lba[1] : 0x00; break;
-	case 5: /* 1F5 */ ret = (dev != NULL) ? dev->lba[2] : 0x00; break;
+	case 0: /* 1F0 */ ret = (dev != nullptr) ? dev->data_read(width) : 0xFFFFFFFFUL; break;
+	case 1: /* 1F1 */ ret = (dev != nullptr) ? dev->feature : 0x00; break;
+	case 2: /* 1F2 */ ret = (dev != nullptr) ? dev->count : 0x00; break;
+	case 3: /* 1F3 */ ret = (dev != nullptr) ? dev->lba[0] : 0x00; break;
+	case 4: /* 1F4 */ ret = (dev != nullptr) ? dev->lba[1] : 0x00; break;
+	case 5: /* 1F5 */ ret = (dev != nullptr) ? dev->lba[2] : 0x00; break;
 	case 6: /* 1F6 */ ret = ide->drivehead; break;
 	case 7: /* 1F7 */
 		/* if an IDE device exists at selection return it's status, else return our status */
 		if (dev && dev->status & IDE_STATUS_BUSY) {
-		} else if (dev == NULL && ide->status & IDE_STATUS_BUSY) {
+		} else if (dev == nullptr && ide->status & IDE_STATUS_BUSY) {
 		} else {
 			ide->lower_irq();
 		}
 
-		ret = (dev != NULL) ? dev->status : ide->status;
+		ret = (dev != nullptr) ? dev->status : ide->status;
 		break;
 	}
 
@@ -3901,7 +3901,7 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 	IDEController *ide = match_ide_controller(port);
 	IDEDevice *dev;
 
-	if (ide == NULL) {
+	if (ide == nullptr) {
 		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return;
 	}
@@ -4008,9 +4008,9 @@ static void IDE_Destroy(Section *sec)
 {
 	(void)sec; // UNUSED
 	for (uint32_t i = 0; i < MAX_IDE_CONTROLLERS; i++) {
-		if (idecontroller[i] != NULL) {
+		if (idecontroller[i] != nullptr) {
 			delete idecontroller[i];
-			idecontroller[i] = NULL;
+			idecontroller[i] = nullptr;
 		}
 	}
 
@@ -4033,9 +4033,9 @@ static void IDE_Init(Section *sec, uint8_t ide_interface)
 		init_ide = 1;
 	}
 
-	if (idecontroller[ide_interface] != NULL) {
+	if (idecontroller[ide_interface] != nullptr) {
 		delete idecontroller[ide_interface];
-		idecontroller[ide_interface] = NULL;
+		idecontroller[ide_interface] = nullptr;
 	}
 
 	ide = idecontroller[ide_interface] = new IDEController(sec, ide_interface);
