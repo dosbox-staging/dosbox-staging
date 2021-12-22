@@ -54,13 +54,9 @@ constexpr uint16_t SB_SH_MASK = ((1 << SB_SH) - 1);
 
 constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 
-// time allowed to bring up a cold speaker
-constexpr uint32_t SPEAKER_WARMUP_MS = 100;
-constexpr uint32_t DSP_RESET_WARMUP_MS = 2;
-
 // It was common for games perform some initial checks
 // and resets on startup, resulting a rapid susccession of resets.
-constexpr uint8_t DSP_INITIAL_RESET_LIMIT = 4; 
+constexpr uint8_t DSP_INITIAL_RESET_LIMIT = 4;
 
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 
@@ -117,7 +113,6 @@ struct SB_INFO {
 		uint32_t remain_size = 0;
 	} dma = {};
 	bool speaker = false;
-	uint16_t warmup_remaining_ms = SPEAKER_WARMUP_MS;
 	bool midi = false;
 	uint8_t time_constant = 0;
 	DSP_MODES mode = MODE_NONE;
@@ -141,6 +136,9 @@ struct SB_INFO {
 		uint8_t test_register = 0;
 		uint32_t write_busy = 0;
 		uint32_t reset_tally = 0;
+		uint8_t cold_warmup_ms = 0;
+		uint8_t hot_warmup_ms = 0;
+		uint16_t warmup_remaining_ms = 0;
 	} dsp = {};
 	struct {
 		int16_t data[DSP_DACSIZE + 1] = {};
@@ -270,7 +268,7 @@ static void DSP_SetSpeaker(bool requested_state) {
 		PIC_RemoveEvents(SuppressDMATransfer);
 		FlushRemainingDMATransfer();
 		// Speaker powered-on after cold-state, give it warmup time
-		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
+		sb.dsp.warmup_remaining_ms = sb.dsp.cold_warmup_ms;
 	}
 	sb.chan->Enable(requested_state);
 	sb.speaker = requested_state;
@@ -288,8 +286,8 @@ static void InitializeSpeakerState()
 	// Also, because the channel is active, we treat this as startup event.
 	if (sb.type == SBT_16) {
 		const bool is_cold_start = sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT;
-		sb.warmup_remaining_ms = is_cold_start ? SPEAKER_WARMUP_MS
-		                                       : DSP_RESET_WARMUP_MS;
+		sb.dsp.warmup_remaining_ms = is_cold_start ? sb.dsp.cold_warmup_ms
+		                                           : sb.dsp.hot_warmup_ms;
 		sb.chan->Enable(true);
 	} else {
 		sb.chan->Enable(false);
@@ -451,7 +449,7 @@ static uint8_t decode_ADPCM_3_sample(const int val)
 template <typename T>
 static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 {
-	if (!sb.warmup_remaining_ms)
+	if (!sb.dsp.warmup_remaining_ms)
 		return buffer;
 
 	static std::vector<T> quiet_buffer;
@@ -459,7 +457,7 @@ static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 	if (quiet_buffer.size() < num_samples)
 		quiet_buffer.resize(num_samples, silent);
 
-	sb.warmup_remaining_ms--;
+	sb.dsp.warmup_remaining_ms--;
 	return quiet_buffer.data();
 }
 
@@ -1124,8 +1122,16 @@ static void DSP_DoCommand() {
 	case 0xd8:  /* Speaker status */
 		DSP_SB2_ABOVE;
 		DSP_FlushData();
-		if (sb.speaker) DSP_AddData(0xff);
-		else DSP_AddData(0x00);
+		if (sb.speaker) {
+			DSP_AddData(0xff);
+			// If the game is courteous enough to ask if the speaker
+			// is ready, then we can be confident it won't play
+			// garbage content, so we zero the warmup count down.
+			// remaining warmup time.
+			sb.dsp.warmup_remaining_ms = 0;
+		} else {
+			DSP_AddData(0x00);
+		}
 		break;
 	case 0xd6:	/* Continue DMA 16-bit */
 		DSP_SB16_ONLY;
@@ -1776,6 +1782,8 @@ public:
 		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
 		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
 		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+		sb.dsp.cold_warmup_ms = check_cast<uint8_t>(section->Get_int("sbwarmup"));
+		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms >> 5;
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;

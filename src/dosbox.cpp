@@ -775,6 +775,13 @@ void DOSBOX_Init() {
 	Pbool = secprop->Add_bool("sbmixer", when_idle, true);
 	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer.");
 
+	pint = secprop->Add_int("sbwarmup", when_idle, 100);
+	pint->Set_help(
+	        "Silence initial DMA content after card power-on, in milliseconds.\n"
+	        "This mitigates pops heard when starting many SB-based games.\n."
+	        "Reduce this if you notice cut-samples or prefer hardware accuracy.");
+	pint->SetMinMax(0, 100);
+
 	pint = secprop->Add_int("oplrate", deprecated, false);
 	pint->Set_help("oplrate is deprecated. The OPL waveform is now sampled\n"
 	               "        at the mixer's playback rate to avoid resampling.");
