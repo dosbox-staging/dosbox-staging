@@ -1,6 +1,3 @@
-/* String appended to the .conf file. */
-#define CONF_SUFFIX "-staging-git"
-
 /* Version number of package */
 #define VERSION "0.78.0"
 
