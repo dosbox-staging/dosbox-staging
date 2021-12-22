@@ -329,6 +329,7 @@ public:
 	~IDEController();
 
 	void install_io_port();
+	void uninstall_io_ports();
 	void raise_irq();
 	void lower_irq();
 };
@@ -3770,16 +3771,33 @@ void IDEController::install_io_port()
 	}
 }
 
+void IDEController::uninstall_io_ports()
+{
+	// Uninstall the eight sets of base I/O ports
+	assert(base_io != 0);
+	for (auto & h : WriteHandler)
+		h.Uninstall();
+	for (auto & h : ReadHandler)
+		h.Uninstall();
+
+	// Uninstall the two sets of alternate I/O ports
+	assert(alt_io != 0);
+	for (auto & h : WriteHandlerAlt)
+		h.Uninstall();
+	for (auto & h : ReadHandlerAlt)
+		h.Uninstall();
+}
+
 IDEController::~IDEController()
 {
-	uint32_t i;
+	lower_irq();
+	uninstall_io_ports();
 
-	for (i = 0; i < 2; i++) {
-		if (device[i] != nullptr) {
-			delete device[i];
-			device[i] = nullptr;
-		}
+	for (auto & d : device) {
+		delete d;
+		d = nullptr;
 	}
+	idecontroller[interface_index] = nullptr;
 }
 
 static void ide_altio_w(io_port_t port, io_val_t val, io_width_t width)
