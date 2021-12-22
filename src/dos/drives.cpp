@@ -18,6 +18,7 @@
 
 #include "drives.h"
 
+#include "ide.h"
 #include "string_utils.h"
 
 
@@ -188,13 +189,24 @@ void DriveManager::CycleDisk(bool pressed) {
 }
 */
 
-void DriveManager::CycleDisks(int drive, bool notify) {
+void DriveManager::CycleDisks(int requested_drive, bool notify)
+{
+	const auto drive = check_cast<int8_t>(requested_drive);
+
 	int numDisks = (int)driveInfos[drive].disks.size();
 	if (numDisks > 1) {
 		// cycle disk
 		int currentDisk = driveInfos[drive].currentDisk;
-		DOS_Drive* oldDisk = driveInfos[drive].disks[currentDisk];
-		currentDisk = (currentDisk + 1) % numDisks;		
+
+		// dettach CDROM from controller, if attached
+		isoDrive *cdrom = dynamic_cast<isoDrive *>(Drives[drive]);
+		int8_t index = -1;
+		bool slave = false;
+		if (cdrom)
+			IDE_CDROM_Detach_Ret(index, slave, drive);
+
+		DOS_Drive *oldDisk = driveInfos[drive].disks[currentDisk];
+		currentDisk = (currentDisk + 1) % numDisks;
 		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
 		driveInfos[drive].currentDisk = currentDisk;
 		
@@ -202,7 +214,14 @@ void DriveManager::CycleDisks(int drive, bool notify) {
 		strcpy(newDisk->curdir, oldDisk->curdir);
 		newDisk->Activate();
 		Drives[drive] = newDisk;
-		if (notify) LOG_MSG("Drive %c: disk %d of %d now active", 'A'+drive, currentDisk+1, numDisks);
+
+		// Re-attach the new drive to the controller
+		if (cdrom && index > -1)
+			IDE_CDROM_Attach(index, slave, drive);
+
+		if (notify)
+			LOG_MSG("Drive %c: disk %d of %d now active",
+			        'A' + drive, currentDisk + 1, numDisks);
 	}
 }
 
@@ -212,6 +231,12 @@ void DriveManager::CycleAllDisks(void) {
 
 int DriveManager::UnmountDrive(int drive) {
 	int result = 0;
+
+	// dettach CDROM from controller, if attached
+	isoDrive *cdrom = dynamic_cast<isoDrive *>(Drives[drive]);
+	if (cdrom)
+		IDE_CDROM_Detach(drive);
+
 	// unmanaged drive
 	if (driveInfos[drive].disks.size() == 0) {
 		result = Drives[drive]->UnMount();
@@ -228,7 +253,6 @@ int DriveManager::UnmountDrive(int drive) {
 			driveInfos[drive].disks.clear();
 		}
 	}
-	
 	return result;
 }
 

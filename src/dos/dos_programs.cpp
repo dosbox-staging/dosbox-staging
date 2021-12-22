@@ -48,7 +48,7 @@ extern Bit32u floppytype;
 void DOS_SetupPrograms(void)
 {
 	/*Add Messages */
-
+	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE", "No available IDE controllers. Drive will not have IDE emulation.\n");
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
 	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
