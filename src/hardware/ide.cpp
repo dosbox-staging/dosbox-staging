@@ -353,6 +353,7 @@ static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
+			// Empty
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -380,6 +381,7 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
+			// Empty
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -408,6 +410,7 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
+			// Empty
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -750,7 +753,7 @@ void IDEATAPICDROMDevice::play_audio_msf()
 		/* The play length field specifies the number of contiguous logical blocks that shall
 		 * be played. A play length of zero indicates that no audio operation shall occur.
 		 * This condition is not an error. */
-		/* TODO: How do we interpret that? Does that mean audio playback stops? Or does it
+		/* TBD: How do we interpret that? Does that mean audio playback stops? Or does it
 		 * mean we do nothing to the state of audio playback? */
 		sector_total = 0;
 		return;
@@ -786,7 +789,7 @@ void IDEATAPICDROMDevice::play_audio10()
 		/* The play length field specifies the number of contiguous logical blocks that shall
 		 * be played. A play length of zero indicates that no audio operation shall occur.
 		 * This condition is not an error. */
-		/* TODO: How do we interpret that? Does that mean audio playback stops? Or does it
+		/* TBD: How do we interpret that? Does that mean audio playback stops? Or does it
 		 * mean we do nothing to the state of audio playback? */
 		sector_total = 0;
 		return;
@@ -1130,7 +1133,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 				status = IDE_STATUS_DRIVE_READY | IDE_STATUS_ERROR;
 				LOG_WARNING("IDE: ATAPI: Failed to read %lu sectors at %lu",
 				        (unsigned long)TransferLength, (unsigned long)LBA);
-				/* TODO: write sense data */
+				/* TBD: write sense data */
 			}
 		}
 
@@ -1284,7 +1287,7 @@ IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c, uint8_t requested_dri
 {
 	IDEATAPICDROMDevice::set_sense(/*SK=*/0);
 
-	/* FIXME: Spinup/down times should be dosbox.conf configurable, if the DOSBox gamers
+	/* TBD: Spinup/down times should be dosbox.conf configurable, if the DOSBox gamers
 	 *        care more about loading times than emulation accuracy. */
 	if (c->cd_insertion_time > 0)
 		cd_insertion_time = c->cd_insertion_time;
@@ -1545,7 +1548,7 @@ uint32_t IDEATAPICDROMDevice::data_read(io_width_t width)
 	return w;
 }
 
-/* TODO: Your code should also be paying attention to the "transfer length" field
+/* TBD: Your code should also be paying attention to the "transfer length" field
          in many of the commands here. Right now it doesn't matter. */
 void IDEATAPICDROMDevice::atapi_cmd_completion()
 {
@@ -1617,7 +1620,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 		if (common_spinup_response(/*spin up*/ true, /*wait*/ true)) {
 			set_sense(0); /* <- nothing wrong */
 
-			/* FIXME: MSCDEX.EXE appears to test the drive by issuing READ(10) with transfer
+			/* TBD: MSCDEX.EXE appears to test the drive by issuing READ(10) with transfer
 			   length == 0. This is all well and good but our response seems to cause a temporary
 			   2-3 second pause for each attempt. Why? */
 			LBA = ((uint32_t)atapi_cmd[2] << 24UL) | ((uint32_t)atapi_cmd[3] << 16UL) |
@@ -1625,7 +1628,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 			TransferLength = ((uint32_t)atapi_cmd[6] << 24UL) | ((uint32_t)atapi_cmd[7] << 16UL) |
 			                 ((uint32_t)atapi_cmd[8] << 8UL) | ((uint32_t)atapi_cmd[9]);
 
-			/* FIXME: We actually should NOT be capping the transfer length, but instead should
+			/* TBD: We actually should NOT be capping the transfer length, but instead should
 			   be breaking the larger transfer into smaller DRQ block transfers like
 			   most IDE ATAPI drives do. Writing the test IDE code taught me that if you
 			   go to most drives and request a transfer length of 0xFFFE the drive will
@@ -1638,7 +1641,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 			count = 0x02;
 			state = IDE_DEV_ATAPI_BUSY;
 			status = IDE_STATUS_BUSY;
-			/* TODO: Emulate CD-ROM spin-up delay, and seek delay */
+			/* TBD: Emulate CD-ROM spin-up delay, and seek delay */
 			PIC_AddEvent(IDE_DelayedCommand, (faked_command ? 0.000001 : 3) /*ms*/,
 			             controller->interface_index);
 		} else {
@@ -1656,14 +1659,14 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 		if (common_spinup_response(/*spin up*/ true, /*wait*/ true)) {
 			set_sense(0); /* <- nothing wrong */
 
-			/* FIXME: MSCDEX.EXE appears to test the drive by issuing READ(10) with transfer
+			/* TBD: MSCDEX.EXE appears to test the drive by issuing READ(10) with transfer
 			   length == 0. This is all well and good but our response seems to cause a temporary
 			   2-3 second pause for each attempt. Why? */
 			LBA = ((uint32_t)atapi_cmd[2] << 24UL) | ((uint32_t)atapi_cmd[3] << 16UL) |
 			      ((uint32_t)atapi_cmd[4] << 8UL) | ((uint32_t)atapi_cmd[5] << 0UL);
 			TransferLength = ((uint32_t)atapi_cmd[7] << 8) | ((uint32_t)atapi_cmd[8]);
 
-			/* FIXME: We actually should NOT be capping the transfer length, but instead should
+			/* TBD: We actually should NOT be capping the transfer length, but instead should
 			   be breaking the larger transfer into smaller DRQ block transfers like
 			   most IDE ATAPI drives do. Writing the test IDE code taught me that if you
 			   go to most drives and request a transfer length of 0xFFFE the drive will
@@ -1676,7 +1679,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 			count = 0x02;
 			state = IDE_DEV_ATAPI_BUSY;
 			status = IDE_STATUS_BUSY;
-			/* TODO: Emulate CD-ROM spin-up delay, and seek delay */
+			/* TBD: Emulate CD-ROM spin-up delay, and seek delay */
 			PIC_AddEvent(IDE_DelayedCommand, (faked_command ? 0.000001 : 3) /*ms*/,
 			             controller->interface_index);
 		} else {
@@ -2023,8 +2026,6 @@ void IDEATADevice::generate_identify_device()
 {
 	//  imageDisk *disk = getBIOSdisk();
 	uint8_t csum;
-	uint64_t ptotal;
-	uint64_t total;
 	uint32_t i;
 
 	/* IN RESPONSE TO IDENTIFY DEVICE (0xEC)
@@ -2032,8 +2033,13 @@ void IDEATADevice::generate_identify_device()
 	std::fill_n(sector, 512, 0);
 
 	/* total disk capacity in sectors */
-	total = sects * cyls * heads;
-	ptotal = phys_sects * phys_cyls * phys_heads;
+	uint64_t total = sects;
+	total *= cyls;
+	total *= heads;
+
+	uint64_t ptotal = phys_sects;
+	ptotal *= phys_cyls;
+	ptotal *= phys_heads;
 
 	host_writew(sector + (0 * 2), 0x0040); /* bit 6: 1=fixed disk */
 	host_writew(sector + (1 * 2), check_cast<uint16_t>(phys_cyls));
@@ -2070,7 +2076,7 @@ void IDEATADevice::generate_identify_device()
 	                                        /* :10 0=IORDY not disabled */
 	                                        /* :9  1=LBA supported */
 	                                        /* :8  0=DMA not supported */
-	host_writew(sector + (50 * 2), 0x4000); /* FIXME: ??? */
+	host_writew(sector + (50 * 2), 0x4000); /* TBD: ??? */
 	host_writew(sector + (51 * 2), 0x00F0); /* PIO data transfer cycle timing mode */
 	host_writew(sector + (52 * 2), 0x00F0); /* DMA data transfer cycle timing mode */
 	host_writew(sector + (53 * 2), 0x0007); /* :2  1=the fields in word 88 are valid */
@@ -2088,24 +2094,24 @@ void IDEATADevice::generate_identify_device()
 	/* 7:0 current setting for number of log. sectors per DRQ of READ/WRITE MULTIPLE */
 
 	host_writed(sector + (60 * 2), check_cast<uint16_t>(ptotal)); /* total user addressable sectors (LBA) */
-	host_writew(sector + (62 * 2), 0x0000);                       /* FIXME: ??? */
+	host_writew(sector + (62 * 2), 0x0000);                       /* TBD: ??? */
 	host_writew(sector + (63 * 2), 0x0000); /* :10 0=Multiword DMA mode 2 not selected */
-	                                        /* TODO: Basically, we don't do DMA. Fill out this comment */
-	host_writew(sector + (64 * 2), 0x0003); /* 7:0 PIO modes supported (FIXME ???) */
-	host_writew(sector + (65 * 2), 0x0000); /* FIXME: ??? */
-	host_writew(sector + (66 * 2), 0x0000); /* FIXME: ??? */
-	host_writew(sector + (67 * 2), 0x0078); /* FIXME: ??? */
-	host_writew(sector + (68 * 2), 0x0078); /* FIXME: ??? */
+	                                        /* TBD: Basically, we don't do DMA. Fill out this comment */
+	host_writew(sector + (64 * 2), 0x0003); /* 7:0 PIO modes supported (TBD: ???) */
+	host_writew(sector + (65 * 2), 0x0000); /* TBD: ??? */
+	host_writew(sector + (66 * 2), 0x0000); /* TBD: ??? */
+	host_writew(sector + (67 * 2), 0x0078); /* TBD: ??? */
+	host_writew(sector + (68 * 2), 0x0078); /* TBD: ??? */
 	host_writew(sector + (80 * 2), 0x007E); /* major version number. Here we say we support ATA-1 through ATA-8 */
 	host_writew(sector + (81 * 2), 0x0022); /* minor version */
 	host_writew(sector + (82 * 2), 0x4208); /* command set: NOP, DEVICE RESET[XXXXX], POWER MANAGEMENT */
 	host_writew(sector + (83 * 2), 0x4000); /* command set: LBA48[XXXX] */
-	host_writew(sector + (84 * 2), 0x4000); /* FIXME: ??? */
+	host_writew(sector + (84 * 2), 0x4000); /* TBD: ??? */
 	host_writew(sector + (85 * 2), 0x4208); /* commands in 82 enabled */
 	host_writew(sector + (86 * 2), 0x4000); /* commands in 83 enabled */
-	host_writew(sector + (87 * 2), 0x4000); /* FIXME: ??? */
-	host_writew(sector + (88 * 2), 0x0000); /* FIXME: ??? */
-	host_writew(sector + (93 * 3), 0x0000); /* FIXME: ??? */
+	host_writew(sector + (87 * 2), 0x4000); /* TBD: ??? */
+	host_writew(sector + (88 * 2), 0x0000); /* TBD: ??? */
+	host_writew(sector + (93 * 3), 0x0000); /* TBD: ??? */
 
 	/* ATA-8 integrity checksum */
 	sector[510] = 0xA5;
@@ -2178,11 +2184,12 @@ void IDEATADevice::update_from_biosdisk()
 	 * will ignore this device and fall back to using INT 13h. For user convenience we will
 	 * print a warning to reminder the user of exactly that. */
 	if (heads > 16) {
-		unsigned long tmp;
-
 		geo_translate = true;
 
-		tmp = heads * cyls * sects;
+		uint64_t tmp = heads;
+		tmp *= cyls;
+		tmp *= sects;
+
 		sects = 63;
 		heads = 16;
 		cyls = static_cast<uint32_t>((tmp + ((63 * 16) - 1)) / (63 * 16));
@@ -2503,9 +2510,9 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
 
-		/* TODO: Print a warning message if the IDE controller is busy (debug/warning message) */
+		/* TBD: Print a warning message if the IDE controller is busy (debug/warning message) */
 
-		/* TODO: Force IDE state to readiness, abort command, etc. */
+		/* TBD: Force IDE state to readiness, abort command, etc. */
 
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
@@ -2513,9 +2520,9 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 			if (dev == nullptr)
 				continue;
 
-			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
+			/* TBD: Print a warning message if the IDE device is busy or in the middle of a command */
 
-			/* TODO: Forcibly device-reset the IDE device */
+			/* TBD: Forcibly device-reset the IDE device */
 
 			/* Issue I/O to ourself to select drive */
 			dev->faked_command = true;
@@ -2577,7 +2584,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 						               io_width_t::byte); /* issue READ */
 
 						do {
-							/* TODO: Timeout needed */
+							/* TBD: Timeout needed */
 							uint32_t i = IDE_SelfIO_In(ide, ide->alt_io,
 							                           io_width_t::byte);
 							if ((i & 0x80) == 0)
@@ -2665,9 +2672,9 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
 
-		/* TODO: Print a warning message if the IDE controller is busy (debug/warning message) */
+		/* TBD: Print a warning message if the IDE controller is busy (debug/warning message) */
 
-		/* TODO: Force IDE state to readiness, abort command, etc. */
+		/* TBD: Force IDE state to readiness, abort command, etc. */
 
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
@@ -2675,9 +2682,9 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 			if (dev == nullptr)
 				continue;
 
-			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
+			/* TBD: Print a warning message if the IDE device is busy or in the middle of a command */
 
-			/* TODO: Forcibly device-reset the IDE device */
+			/* TBD: Forcibly device-reset the IDE device */
 
 			/* Issue I/O to ourself to select drive */
 			dev->faked_command = true;
@@ -2785,7 +2792,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 						               io_width_t::byte); /* issue READ */
 
 						do {
-							/* TODO: Timeout needed */
+							/* TBD: Timeout needed */
 							uint32_t i = IDE_SelfIO_In(ide, ide->alt_io,
 							                           io_width_t::byte);
 							if ((i & 0x80) == 0)
@@ -2871,9 +2878,9 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 		if (!ide->int13fakeio && !ide->int13fakev86io)
 			continue;
 
-		/* TODO: Print a warning message if the IDE controller is busy (debug/warning message) */
+		/* TBD: Print a warning message if the IDE controller is busy (debug/warning message) */
 
-		/* TODO: Force IDE state to readiness, abort command, etc. */
+		/* TBD: Force IDE state to readiness, abort command, etc. */
 
 		/* for master/slave device... */
 		for (ms = 0; ms < 2; ms++) {
@@ -2881,15 +2888,15 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 			if (dev == nullptr)
 				continue;
 
-			/* TODO: Print a warning message if the IDE device is busy or in the middle of a command */
+			/* TBD: Print a warning message if the IDE device is busy or in the middle of a command */
 
-			/* TODO: Forcibly device-reset the IDE device */
+			/* TBD: Forcibly device-reset the IDE device */
 
 			/* Issue I/O to ourself to select drive */
 			IDE_SelfIO_In(ide, ide->base_io + 7u, io_width_t::byte);
 			IDE_SelfIO_Out(ide, ide->base_io + 6u, static_cast<uint16_t>(ms << 4u), io_width_t::byte);
 
-			/* TODO: Forcibly device-reset the IDE device */
+			/* TBD: Forcibly device-reset the IDE device */
 
 			if (dev->type == IDE_TYPE_HDD) {
 				IDEATADevice *ata = (IDEATADevice *)dev;
@@ -2935,7 +2942,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 
 	if (dev->type == IDE_TYPE_HDD) {
 		IDEATADevice *ata = (IDEATADevice *)dev;
-		uint32_t sectorn = 0; /* FIXME: expand to uint64_t when adding LBA48 emulation */
+		uint32_t sectorn = 0; /* TBD: expand to uint64_t when adding LBA48 emulation */
 		uint32_t sectcount;
 		std::shared_ptr<imageDisk> disk;
 		//      int i;
@@ -3597,7 +3604,7 @@ void IDEATADevice::writecommand(uint8_t cmd)
 	/* if the drive is asleep, then writing a command wakes it up */
 	interface_wakeup();
 
-	/* FIXME: OAKCDROM.SYS is sending the hard disk command 0xA0 (ATAPI packet) for some reason. Why? */
+	/* TBD: OAKCDROM.SYS is sending the hard disk command 0xA0 (ATAPI packet) for some reason. Why? */
 
 	/* drive is ready to accept command */
 	allow_writing = false;
@@ -4038,26 +4045,26 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 	switch (port) {
 	case 0: /* 1F0 */
 		if (dev)
-			dev->data_write(val, width); /* <- TODO: what about 32-bit PIO modes? */
+			dev->data_write(val, width); /* <- TBD: what about 32-bit PIO modes? */
 		break;
 	case 1:                                /* 1F1 */
-		if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
+		if (dev && dev->allow_writing) /* TBD: LBA48 16-bit wide register */
 			dev->feature = check_cast<uint16_t>(val);
 		break;
 	case 2:                                /* 1F2 */
-		if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
+		if (dev && dev->allow_writing) /* TBD: LBA48 16-bit wide register */
 			dev->count = check_cast<uint16_t>(val);
 		break;
 	case 3:                                /* 1F3 */
-		if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
+		if (dev && dev->allow_writing) /* TBD: LBA48 16-bit wide register */
 			dev->lba[0] = check_cast<uint16_t>(val);
 		break;
 	case 4:                                /* 1F4 */
-		if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
+		if (dev && dev->allow_writing) /* TBD: LBA48 16-bit wide register */
 			dev->lba[1] = check_cast<uint16_t>(val);
 		break;
 	case 5:                                /* 1F5 */
-		if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
+		if (dev && dev->allow_writing) /* TBD: LBA48 16-bit wide register */
 			dev->lba[2] = check_cast<uint16_t>(val);
 		break;
 	case 6: /* 1F6 */
