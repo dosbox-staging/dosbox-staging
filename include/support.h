@@ -306,4 +306,10 @@ FILE_unique_ptr make_fopen(const char *fname, const char *mode);
 
 const std_fs::path &GetExecutablePath();
 
+template <typename container_t>
+bool contains(const container_t &container, const typename container_t::value_type &value)
+{
+	return std::find(container.begin(), container.end(), value) != container.end();
+}
+
 #endif
