@@ -2299,6 +2299,24 @@ void IDE_CDROM_Detach(uint8_t requested_drive_index)
 	}
 }
 
+void IDE_CDROM_Detach_Ret(int8_t &indexret,bool &slaveret,int8_t drive_index) {
+    indexret = -1;
+    for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+        IDEController *c = idecontroller[index];
+        if (c)
+        for (int slave = 0; slave < 2; slave++) {
+            IDEATAPICDROMDevice *dev;
+            dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
+            if (dev && dev->drive_index == drive_index) {
+                delete dev;
+                c->device[slave] = nullptr;
+                slaveret = slave;
+                indexret = check_cast<int8_t>(index);
+            }
+        }
+    }
+}
+
 void IDE_CDROM_DetachAll()
 {
 	for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
