@@ -156,8 +156,6 @@ jobs:
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          # overwrite .conf file branding for release build
-          sed -i "s|CONF_SUFFIX \"-staging-git\"|CONF_SUFFIX \"-staging\"|" src/platform/visualc/config.h
 
       - name:  Build release
         shell: pwsh
