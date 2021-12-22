@@ -85,28 +85,15 @@ void IMGMOUNT::Run(void) {
     Bit16u sizes[4] = {0};
     bool imgsizedetect = false;
 
-    signed char ide_index = -1;
-    bool ide_slave = false;
-    std::string ideattach = "auto";
-
     std::string str_size = "";
     Bit8u mediaid = 0xF8;
 
-    /* DOSBox-X: we allow "-ide" to allow controlling which IDE controller and
-     * slot to attach the hard disk/CD-ROM to */
-    cmd->FindString("-ide", ideattach, true);
+    // Possibly used to hold the IDE channel and drive slot for CDROM types
+    std::string ide_value = {};
+    int8_t ide_index = -1;
+    bool is_second_cable_slot = false;
+    const bool wants_ide = cmd->FindString("-ide", ide_value, true) || cmd->FindExist("-ide", true);
 
-    if (ideattach == "auto") {
-	    if (type != "floppy")
-		    IDE_Auto(ide_index, ide_slave);
-    } else if (ideattach != "none" && isdigit(ideattach[0]) &&
-	       ideattach[0] > '0') { /* takes the form [controller]<m/s> such
-		                        as: 1m for primary master */
-	    ide_index = ideattach[0] - '1';
-	    if (ideattach.length() >= 1)
-		    ide_slave = (ideattach[1] == 's');
-	    LOG_MSG("IDE: index %d slave=%d", ide_index, ide_slave ? 1 : 0);
-    }
 
     if (type == "floppy") {
 	    mediaid = 0xF0;
@@ -115,6 +102,10 @@ void IMGMOUNT::Run(void) {
 	    // (AllocationInfo)
 	    mediaid = 0xF8;
 	    fstype = "iso";
+
+        if (wants_ide) {
+            IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
+        }
     }
 
     cmd->FindString("-size",str_size,true);
@@ -376,12 +367,17 @@ void IMGMOUNT::Run(void) {
                             drive_index(drive) * 9,
                     mediaid);
 
-	// If instructed, attach to IDE controller as ATAPI CD-ROM device
-	if (ide_index >= 0)
-		IDE_CDROM_Attach(ide_index, ide_slave, drive - 'A');
+        // If instructed, attach to IDE controller as ATAPI CD-ROM device
+        if (wants_ide) {
+            if (ide_index >= 0) {
+                IDE_CDROM_Attach(ide_index, is_second_cable_slot, drive_index(drive));
+            } else {
+                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"));
+            }
+        }
 
-	// Print status message (success)
-	WriteOut(MSG_Get("MSCDEX_SUCCESS"));
+        // Print status message (success)
+        WriteOut(MSG_Get("MSCDEX_SUCCESS"));
         std::string tmp(paths[0]);
         for (i = 1; i < paths.size(); i++) {
             tmp += "; " + paths[i];

@@ -30,28 +30,6 @@
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;
-static uint8_t init_ide = 0;
-
-static const uint8_t IDE_default_IRQs[4] = {
-        14, /* primary */
-        15, /* secondary */
-        11, /* tertiary */
-        10  /* quaternary */
-};
-
-static const uint16_t IDE_default_bases[4] = {
-        0x1F0, /* primary */
-        0x170, /* secondary */
-        0x1E8, /* tertiary */
-        0x168  /* quaternary */
-};
-
-static const uint16_t IDE_default_alts[4] = {
-        0x3F6, /* primary */
-        0x376, /* secondary */
-        0x3EE, /* tertiary */
-        0x36E  /* quaternary */
-};
 
 static void ide_altio_w(io_port_t port, io_val_t val, io_width_t width);
 static uint32_t ide_altio_r(io_port_t port, io_width_t width);
@@ -98,6 +76,22 @@ static inline bool drivehead_is_chs(uint8_t val) {
     return (val&0xE0) == 0xA0;
 }
 #endif
+
+static const char *get_controller_name(int index)
+{
+	switch (index) {
+	case 0: return "primary";
+	case 1: return "secondary";
+	case 2: return "tertiary";
+	case 3: return "quaternary";
+	default: return "unknown-controller_name";
+	}
+}
+
+static const char *get_cable_slot_name(const bool is_second_slot)
+{
+	return is_second_slot ? "second" : "first";
+}
 
 class IDEDevice {
 public:
@@ -290,7 +284,7 @@ public:
 	uint32_t sector_total = 0;
 };
 
-class IDEController : public Module_base {
+class IDEController {
 public:
 	int IRQ = -1;
 	bool int13fakeio = false; /* on certain INT 13h calls, force IDE state as if BIOS had carried them out */
@@ -309,7 +303,7 @@ public:
 	IO_WriteHandleObject WriteHandlerAlt[2] = {};
 
 public:
-	IDEDevice *device[2] = {}; /* IDE devices (master, slave) */
+	IDEDevice *device[2] = {nullptr, nullptr}; /* IDE devices (master, slave) */
 	uint32_t select = 0;       /* selected device (0 or 1) */
 	uint32_t status = 0;       /* status register */
 	uint32_t drivehead = 0; /* which is selected, status register (0x1F7) but ONLY if no device exists at
@@ -323,20 +317,26 @@ public:
 	double cd_insertion_time = 0.0;
 
 public:
-	IDEController(Section *configuration, uint8_t index);
-	IDEController(const IDEController &other) = delete;            // prevent copying
+	IDEController(const uint8_t index,
+	              const uint8_t irq,
+	              const uint16_t port,
+	              const uint16_t alt_port);
+	IDEController(const IDEController &other) = delete; // prevent copying
 	IDEController &operator=(const IDEController &other) = delete; // prevent assignment
 	~IDEController();
 
-	void install_io_port();
+	void install_io_ports();
 	void uninstall_io_ports();
 	void raise_irq();
 	void lower_irq();
 };
 
-#define MAX_IDE_CONTROLLERS 8
-
-static IDEController *idecontroller[MAX_IDE_CONTROLLERS] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+static std::array<IDEController *, MAX_IDE_CONTROLLERS> idecontroller{{
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+}};
 
 static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/);
 static IDEController *GetIDEController(uint32_t idx);
@@ -2203,24 +2203,54 @@ void IDEATADevice::update_from_biosdisk()
 	phys_cyls = cyls;
 }
 
-void IDE_Auto(int8_t &index, bool &slave)
+// Get an existing IDE controller, or create a new one if it doesn't exist
+IDEController *get_or_create_controller(const int8_t i)
 {
-	uint32_t i;
+	// Hold the controllers for the lifetime of the program
+	static std::vector<std::unique_ptr<IDEController>> ide_controllers = {};
 
+	// Note that all checks are asserts because calls to this should be
+	// programmatically managed (and not come from user data).
+
+	// Is the requested controller out of bounds?
+	assert(i >= 0 && i < MAX_IDE_CONTROLLERS);
+	const auto index = static_cast<uint8_t>(i);
+
+	// Does the requested controller already exist?
+	if (idecontroller.at(index)) {
+		return idecontroller[index];
+	}
+
+	// Create a new controller
+	assert(idecontroller.at(index) == nullptr); // consistency check
+	assert(index == ide_controllers.size());    // index should be the next
+	                                            // available slot
+
+	ide_controllers.emplace_back(std::make_unique<IDEController>(index, 0, 0, 0));
+	assert(idecontroller.at(index) != nullptr); // consistency check
+	return idecontroller[index];
+}
+
+void IDE_Get_Next_Cable_Slot(int8_t &index, bool &slave)
+{
 	index = -1;
 	slave = false;
-	for (i = 0; i < MAX_IDE_CONTROLLERS; i++) {
-		IDEController *c;
-		if ((c = idecontroller[i]) == nullptr)
-			continue;
-		index = (int8_t)i;
+	for (int8_t i = 0; i < MAX_IDE_CONTROLLERS; ++i) {
+		const auto c = get_or_create_controller(i);
+		assert(c);
 
-		if (c->device[0] == nullptr) {
+		// If both devices are populated, then the controller is already used (so we can't use it)
+		if (c->device[0] && c->device[1]) {
+			continue;
+		}
+		if (!c->device[0]) {
 			slave = false;
+			index = i;
 			break;
 		}
-		if (c->device[1] == nullptr) {
+		if (!c->device[1]) {
 			slave = true;
+			index = i;
 			break;
 		}
 	}
@@ -2256,42 +2286,50 @@ void IDE_ATAPI_MediaChangeNotify(uint8_t requested_drive_index)
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Attach(int8_t index, bool slave, uint8_t requested_drive_index)
+void IDE_CDROM_Attach(int8_t index, bool slave, const int8_t requested_drive_index)
 {
-	IDEController *c;
-	IDEATAPICDROMDevice *dev;
-
 	if (index < 0 || index >= MAX_IDE_CONTROLLERS)
 		return;
-	c = idecontroller[index];
+
+	// Check if the requested drive index is valid
+	assert(requested_drive_index >= 0 && requested_drive_index < DOS_DRIVES);
+	const auto drive_index = static_cast<uint8_t>(requested_drive_index);
+
+	auto c = get_or_create_controller(index);
 	if (c == nullptr)
 		return;
 
 	if (c->device[slave ? 1 : 0] != nullptr) {
-		LOG_WARNING("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
+		LOG_WARNING("IDE: %s controller slot %s is already taken", get_controller_name(index), get_cable_slot_name(slave));
 		return;
 	}
 
-	if (!GetMSCDEXDrive(requested_drive_index, nullptr)) {
+	if (!GetMSCDEXDrive(drive_index, nullptr)) {
 		LOG_WARNING("IDE: Asked to attach CD-ROM that does not exist");
 		return;
 	}
 
-	dev = new IDEATAPICDROMDevice(c, requested_drive_index);
+	auto dev = new IDEATAPICDROMDevice(c, drive_index);
 	dev->update_from_cdrom();
 	c->device[slave ? 1 : 0] = (IDEDevice *)dev;
+
+    LOG_MSG("Attached ATAPI CD-ROM on %s IDE controller's %s cable slot",  get_controller_name(index), get_cable_slot_name(slave));
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Detach(uint8_t requested_drive_index)
+void IDE_CDROM_Detach(const int8_t requested_drive_index)
 {
-	for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+	// Check if the requested drive index is valid
+	assert(requested_drive_index >= 0 && requested_drive_index < DOS_DRIVES);
+	const auto drive_index = static_cast<uint8_t>(requested_drive_index);
+
+	for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
 				IDEATAPICDROMDevice *dev;
 				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
-				if (dev && dev->drive_index == requested_drive_index) {
+				if (dev && dev->drive_index == drive_index) {
 					delete dev;
 					c->device[slave] = nullptr;
 				}
@@ -2343,7 +2381,7 @@ void IDE_Hard_Disk_Attach(int8_t index,
 
 	if (index < 0 || index >= MAX_IDE_CONTROLLERS)
 		return;
-	c = idecontroller[index];
+	c = idecontroller[static_cast<uint8_t>(index)];
 	if (c == nullptr)
 		return;
 
@@ -3739,39 +3777,50 @@ void IDEDevice::select(uint8_t ndh, bool switched_to)
 	//  state = IDE_DEV_READY;
 }
 
-IDEController::IDEController(Section *configuration, uint8_t index)
-        : Module_base(configuration),
-          interface_index(index)
+IDEController::IDEController(const uint8_t index,
+                             const uint8_t irq,
+                             const uint16_t port,
+                             const uint16_t alt_port)
 {
-	Section_prop *section = static_cast<Section_prop *>(configuration);
+	constexpr int CONFIGS = 4;
+	constexpr std::array<uint8_t, CONFIGS> irqs{{
+	        14, /* primary */
+	        15, /* secondary */
+	        11, /* tertiary */
+	        10, /* quaternary */
+	}};
+	constexpr std::array<uint16_t, CONFIGS> base_ios{{
+	        0x1F0, /* primary */
+	        0x170, /* secondary */
+	        0x1E8, /* tertiary */
+	        0x168, /* quaternary */
+	}};
+	constexpr std::array<uint16_t, CONFIGS> alt_ios{{
+	        0x3F6, /* primary */
+	        0x376, /* secondary */
+	        0x3EE, /* tertiary */
+	        0x36E, /* quaternary */
+	}};
 
-	int i = section->Get_int("irq");
-	if (i > 0 && i <= 15)
-		IRQ = i;
+	assert(index < CONFIGS);
+	interface_index = index;
 
-	i = section->Get_hex("io");
-	if (i >= 0x100 && i <= 0x3FF)
-		base_io = check_cast<uint16_t>(i & ~7);
+	IRQ = contains(irqs, irq) ? irq : irqs[index];
 
-	i = section->Get_hex("altio");
-	if (i >= 0x100 && i <= 0x3FF)
-		alt_io = check_cast<uint16_t>(i & ~1);
+	base_io = contains(base_ios, port) ? port : base_ios[index];
 
-	if (index < sizeof(IDE_default_IRQs)) {
-		if (IRQ < 0)
-			IRQ = IDE_default_IRQs[index];
-		if (alt_io == 0)
-			alt_io = IDE_default_alts[index];
-		if (base_io == 0)
-			base_io = IDE_default_bases[index];
-	} else {
-		if (IRQ < 0 || alt_io == 0 || base_io == 0)
-			LOG_WARNING("IDE: IDE interface %u: Insufficient resources assigned by dosbox.conf, and no appropriate default resources for this interface.",
-			        index);
-	}
+	alt_io = contains(alt_ios, alt_port) ? alt_port : alt_ios[index];
+
+	LOG_MSG("IDE: Created %s controller IRQ %d, base I/O port %03xh, alternate I/O port %03xh",
+	        get_controller_name(index), IRQ, base_io, alt_io);
+
+	install_io_ports();
+	PIC_SetIRQMask((uint32_t)IRQ, false);
+
+	idecontroller[index] = this;
 }
 
-void IDEController::install_io_port()
+void IDEController::install_io_ports()
 {
 	if (base_io != 0) {
 		for (io_port_t i = 0; i < 8; i++) {
@@ -3811,7 +3860,7 @@ IDEController::~IDEController()
 	lower_irq();
 	uninstall_io_ports();
 
-	for (auto & d : device) {
+	for (auto &d : device) {
 		delete d;
 		d = nullptr;
 	}
