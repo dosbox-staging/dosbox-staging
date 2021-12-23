@@ -1071,6 +1071,30 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 }
 #endif
 
+
+[[maybe_unused]] static std::string get_glshader_value()
+{
+#if C_OPENGL
+	assert(control);
+	const Section *rs = control->GetSection("render");
+	assert(rs);
+	return rs->GetPropValue("glshader");
+#else
+	return "";
+#endif // C_OPENGL
+}
+
+// "flexible" shaders properly handle window-resizing and NPOT textures
+[[maybe_unused]] static bool is_shader_flexible()
+{
+	const std::array<std::string, 3> flexible_shader_names{{
+	        "sharp",
+	        "none",
+	        "default",
+	}};
+	return contains(flexible_shader_names, get_glshader_value());
+}
+
 static SDL_Point calc_pp_scale(int avw, int avh)
 {
 	assert(sdl.draw.width > 0);
@@ -1455,8 +1479,11 @@ dosurface:
 		glGenTextures(1, &sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
 		// No borders
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		const auto wrap_parameter = is_shader_flexible()
+		                                    ? GL_CLAMP_TO_EDGE
+		                                    : GL_CLAMP_TO_BORDER;
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
 		const bool use_nearest_neighbour =
 		        (sdl.scaling_mode == SCALING_MODE::NEAREST ||
@@ -2122,18 +2149,6 @@ static void DisplaySplash(int time_ms)
 	Delay(time_ms);
 }
 
-[[maybe_unused]] static std::string get_glshader_value()
-{
-#if C_OPENGL
-	assert(control);
-	const Section *rs = control->GetSection("render");
-	assert(rs);
-	return rs->GetPropValue("glshader");
-#else
-	return "";
-#endif // C_OPENGL
-}
-
 static bool detect_resizable_window()
 {
 #if C_OPENGL
@@ -2141,10 +2156,7 @@ static bool detect_resizable_window()
 		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
 		return false;
 	}
-
-	const std::string sname = get_glshader_value();
-
-	if (sname != "sharp" && sname != "none" && sname != "default") {
+	if (!is_shader_flexible()) {
 		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
 		return false;
 	}
@@ -2762,6 +2774,14 @@ static void GUI_StartUp(Section *sec)
 			sdl.opengl.npot_textures_supported = gl_version_major >= 2 ||
 			        SDL_GL_ExtensionSupported("GL_ARB_texture_non_power_of_two");
 
+			std::string npot_support_msg = sdl.opengl.npot_textures_supported
+			                                       ? "supported"
+			                                       : "not supported";
+			if (sdl.opengl.npot_textures_supported && !is_shader_flexible()) {
+				sdl.opengl.npot_textures_supported = false;
+				npot_support_msg = "disabled to maximize compatibility with custom shader";
+			}
+
 			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
 			LOG_INFO("OPENGL: Version: %s", gl_version_string);
 			LOG_INFO("OPENGL: GLSL version: %s",
@@ -2769,10 +2789,7 @@ static void GUI_StartUp(Section *sec)
 			LOG_INFO("OPENGL: Pixel buffer object: %s",
 			         sdl.opengl.pixel_buffer_object ? "available"
 			                                        : "missing");
-			LOG_INFO("OPENGL: NPOT textures: %s",
-			         sdl.opengl.npot_textures_supported
-			                 ? "supported"
-			                 : "not supported");
+			LOG_INFO("OPENGL: NPOT textures: %s", npot_support_msg.c_str());
 		}
 	} /* OPENGL is requested end */
 #endif	//OPENGL
