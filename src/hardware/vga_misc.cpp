@@ -58,38 +58,52 @@ uint8_t vga_read_p3da(io_port_t, io_width_t)
 static void write_p3c2(io_port_t, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
+	/*
+	   Bit  Description
+	    0   If set: Color Emulation with base Address=3Dxh.
+	        If not set: Mono Emulation with Base Address=3Bxh.
+
+	        The even and odd port ranges: 3[d/b][0-7]h map to 3[d/b][4|5]h.
+	        (mapping ref: https://bochs.sourceforge.io/techspec/PORTS.LST)
+
+	   2-3  Clock Select. 0: 25MHz, 1: 28MHz
+
+	    5   When in Odd/Even modes Select High 64k bank if set
+
+	    6   Horizontal Sync Polarity. Negative if set
+
+	    7   Vertical Sync Polarity. Negative if set
+	        Bit 6-7 indicates the number of lines on the display:
+	        1:  400, 2: 350, 3: 480
+	        Note: Set to all zero on a hardware reset.
+	        Note: This register can be read from port 3CCh.
+	*/
 	vga.misc_output = val;
 
-	const io_port_t base = (val & 0x1) ? 0x3d0 : 0x3b0;
-	const io_port_t free = (val & 0x1) ? 0x3b0 : 0x3d0;
-	const uint8_t first = machine == MCH_EGA ? 0 : 2;
-	const uint8_t last = machine == MCH_EGA ? 3 : 2;
+	const bool is_color = val & 0x1;
 
-	for (uint8_t i = first; i <= last; ++i) {
-		IO_RegisterWriteHandler(base + i * 2, vga_write_p3d4, io_width_t::byte);
-		IO_RegisterReadHandler(base + i * 2, vga_read_p3d4, io_width_t::byte);
-		IO_RegisterWriteHandler(base + i * 2 + 1, vga_write_p3d5, io_width_t::byte);
-		IO_RegisterReadHandler(base + i * 2 + 1, vga_read_p3d5, io_width_t::byte);
-		IO_FreeWriteHandler(free + i * 2, io_width_t::byte);
-		IO_FreeReadHandler(free + i * 2, io_width_t::byte);
-		IO_FreeWriteHandler(free + i * 2 + 1, io_width_t::byte);
-		IO_FreeReadHandler(free + i * 2 + 1, io_width_t::byte);
+	const io_port_t active_base = is_color ? 0x3d0 : 0x3b0;
+
+	for (auto port = active_base; port <= active_base + 6; port += 2) {
+		IO_RegisterWriteHandler(port, vga_write_p3d4, io_width_t::byte);
+		IO_RegisterReadHandler(port, vga_read_p3d4, io_width_t::byte);
+
+		IO_RegisterWriteHandler(port + 1, vga_write_p3d5, io_width_t::byte);
+		IO_RegisterReadHandler(port + 1, vga_read_p3d5, io_width_t::byte);
 	}
 
-	IO_RegisterReadHandler(base + 0xa, vga_read_p3da, io_width_t::byte);
-	IO_FreeReadHandler(free + 0xa, io_width_t::byte);
+	const io_port_t inactive_base = is_color ? 0x3b0 : 0x3d0;
 
-	/*
-		0	If set Color Emulation. Base Address=3Dxh else Mono Emulation. Base Address=3Bxh.
-		2-3	Clock Select. 0: 25MHz, 1: 28MHz
-		5	When in Odd/Even modes Select High 64k bank if set
-		6	Horizontal Sync Polarity. Negative if set
-		7	Vertical Sync Polarity. Negative if set
-			Bit 6-7 indicates the number of lines on the display:
-			1:  400, 2: 350, 3: 480
-			Note: Set to all zero on a hardware reset.
-			Note: This register can be read from port 3CCh.
-	*/
+	for (auto port = inactive_base; port <= inactive_base + 6; port += 2) {
+		IO_FreeWriteHandler(port, io_width_t::byte);
+		IO_FreeReadHandler(port, io_width_t::byte);
+
+		IO_FreeWriteHandler(port + 1, io_width_t::byte);
+		IO_FreeReadHandler(port + 1, io_width_t::byte);
+	}
+
+	IO_RegisterReadHandler(active_base + 0xa, vga_read_p3da, io_width_t::byte);
+	IO_FreeReadHandler(inactive_base + 0xa, io_width_t::byte);
 }
 
 static uint8_t read_p3cc(io_port_t, io_width_t)
