@@ -38,6 +38,7 @@
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
+unsigned int result_errorcode = 0;
 
 #define DOS_COPYBUFSIZE 0x10000
 Bit8u dos_copybuf[DOS_COPYBUFSIZE];
@@ -857,7 +858,8 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x4b:					/* EXEC Load and/or execute program */
-		{ 
+		{
+			result_errorcode = 0;
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			LOG(LOG_EXEC,LOG_ERROR)("Execute %s %d",name1,reg_al);
 			if (!DOS_Execute(name1,SegPhys(es)+reg_bx,reg_al)) {
@@ -869,6 +871,8 @@ static Bitu DOS_21Handler(void) {
 //TODO Check for use of execution state AL=5
 	case 0x4c:					/* EXIT Terminate with return code */
 		DOS_Terminate(dos.psp(),false,reg_al);
+		if (result_errorcode)
+			dos.return_code = result_errorcode;
 		break;
 	case 0x4d:					/* Get Return code */
 		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
