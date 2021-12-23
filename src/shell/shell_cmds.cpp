@@ -196,11 +196,11 @@ void DOS_Shell::DoCommand(char * line) {
 void DOS_Shell::CMD_CLS(char *args)
 {
 	HELP("CLS");
-	const auto rows = INT10_GetTextRows() - 1;
-	const auto cols = INT10_GetTextColumns();
 
-	INT10_ScrollWindow(0, 0, rows, static_cast<uint8_t>(cols), -rows, 0x7, 0xff);
-	INT10_SetCursorPos(0, 0, 0);
+	// Re-apply current video mode. This clears the console, resets the palette, etc.
+	reg_ah = 0x00;
+	reg_al = check_cast<uint8_t>(CurMode->mode);
+	CALLBACK_RunRealInt(0x10);
 }
 
 void DOS_Shell::CMD_DELETE(char * args) {
