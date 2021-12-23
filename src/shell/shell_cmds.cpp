@@ -198,9 +198,16 @@ void DOS_Shell::CMD_CLS(char *args)
 	HELP("CLS");
 
 	// Re-apply current video mode. This clears the console, resets the palette, etc.
-	reg_ah = 0x00;
-	reg_al = check_cast<uint8_t>(CurMode->mode);
-	CALLBACK_RunRealInt(0x10);
+	if (CurMode->mode < 0x100) {
+		reg_ah = 0x00;
+		reg_al = static_cast<uint8_t>(CurMode->mode);
+		CALLBACK_RunRealInt(0x10);
+	} else {
+		reg_ah = 0x4f;
+		reg_al = 0x02;
+		reg_bx = CurMode->mode;
+		CALLBACK_RunRealInt(0x10);
+	}
 }
 
 void DOS_Shell::CMD_DELETE(char * args) {
