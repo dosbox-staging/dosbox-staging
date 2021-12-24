@@ -1,14 +1,14 @@
 Name:    dosbox-staging
-Version: 0.77.0
+Version: 0.78.0
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
 URL:     https://dosbox-staging.github.io/
 
 Source0: https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
-Source1: https://github.com/munt/munt/archive/libmt32emu_2_5_0.tar.gz
-# Downloaded from: https://wrapdb.mesonbuild.com/v1/projects/mt32emu/2.5.0/1/get_zip
-Source2: mt32emu-2.5.0-1-wrap.zip
+Source1: https://github.com/munt/munt/archive/libmt32emu_2_5_3.tar.gz
+# Downloaded from: https://wrapdb.mesonbuild.com/v2/mt32emu_2.5.3-1/get_patch
+Source2: mt32emu_2.5.3-1_patch.zip
 
 # https://github.com/dosbox-staging/dosbox-staging/commit/5d25187760e595f7e6efa6b639c3945fb4804db1
 Patch1: 0001-Add-0.77.0-release-to-metainfo.xml.patch
@@ -17,11 +17,11 @@ Patch1: 0001-Add-0.77.0-release-to-metainfo.xml.patch
 Provides:  dosbox = %{version}-%{release}
 Obsoletes: dosbox < 0.74.4
 
-Provides: bundled(mt32emu) = 2.5.0
+Provides: bundled(mt32emu) = 2.5.3
 
 BuildRequires: alsa-lib-devel
 BuildRequires: desktop-file-utils
-BuildRequires: fluidsynth-devel >= 2.0
+BuildRequires: fluidsynth-devel >= 2.2.3
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: git
@@ -29,8 +29,9 @@ BuildRequires: gtest-devel
 BuildRequires: libappstream-glib
 BuildRequires: libatomic
 BuildRequires: libpng-devel
+BuildRequires: libslirp >= 4.6.1
 BuildRequires: make
-BuildRequires: meson 
+BuildRequires: meson >= 0.54.2
 BuildRequires: opusfile-devel
 BuildRequires: SDL2-devel >= 2.0.5
 BuildRequires: SDL2_net-devel
@@ -91,6 +92,14 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Fri 24 Dec 2021 kcgen <kcgen@users.noreply.github.com>
+- 0.78.0-1
+- Update to 0.78.0
+- Raise minimum Meson version to 0.54.2
+- Raise minimum FluidSynth version to 2.2.3
+- Raise mt32emu version to 2.5.3 and update download links
+- Add libslirp build dependency (new feature)
+
 * Sun Jul 04 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.77.0-2
 - Indicate bundled mt32emu library via "Provides" tag
