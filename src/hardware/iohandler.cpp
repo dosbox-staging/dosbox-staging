@@ -397,7 +397,7 @@ public:
 	}
 	~IO()
 	{
-		size_t total_bytes = 0u;
+		[[maybe_unused]] size_t total_bytes = 0u;
 		for (uint8_t i = 0; i < io_widths; ++i) {
 			const auto readers = io_read_handlers[i].size();
 			const auto writers = io_write_handlers[i].size();
