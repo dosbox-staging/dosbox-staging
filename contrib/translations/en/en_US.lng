@@ -320,9 +320,9 @@ The High DMA number of the Sound Blaster.
 Allow the Sound Blaster mixer to modify the DOSBox mixer.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA content after card power-on, in milliseconds.
+Silence initial DMA audio after card power-on, in milliseconds.
 This mitigates pops heard when starting many SB-based games.
-.Reduce this if you notice cut-samples or prefer hardware accuracy.
+Reduce this if you notice intial playback is missing audio.
 .
 :CONFIG_OPLRATE
 oplrate is deprecated. The OPL waveform is now sampled

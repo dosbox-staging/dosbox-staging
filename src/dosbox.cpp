@@ -777,9 +777,9 @@ void DOSBOX_Init() {
 
 	pint = secprop->Add_int("sbwarmup", when_idle, 100);
 	pint->Set_help(
-	        "Silence initial DMA content after card power-on, in milliseconds.\n"
-	        "This mitigates pops heard when starting many SB-based games.\n."
-	        "Reduce this if you notice cut-samples or prefer hardware accuracy.");
+	        "Silence initial DMA audio after card power-on, in milliseconds.\n"
+	        "This mitigates pops heard when starting many SB-based games.\n"
+	        "Reduce this if you notice intial playback is missing audio.");
 	pint->SetMinMax(0, 100);
 
 	pint = secprop->Add_int("oplrate", deprecated, false);

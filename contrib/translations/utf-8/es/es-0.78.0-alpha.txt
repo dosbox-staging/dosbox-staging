@@ -323,9 +323,9 @@ El número de canal DMA más alto del Sound Blaster.
 Permite que el mezclador de Sound Blaster modifique el mezclador de DOSBox.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA content after card power-on, in milliseconds.
+Silence initial DMA audio after card power-on, in milliseconds.
 This mitigates pops heard when starting many SB-based games.
-.Reduce this if you notice cut-samples or prefer hardware accuracy.
+Reduce this if you notice intial playback is missing audio.
 .
 :CONFIG_OPLRATE
 oplrate está obsoleto. La forma de onda OPL es ahora muestreada
