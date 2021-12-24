@@ -84,7 +84,10 @@ environment variable (which usually blocks the OS screensaver
 while the emulator is running).
 .
 :CONFIG_LANGUAGE
-Select another language file.
+Select a language to use: de, en, es, fr, it, pl, and ru
+Notes: This setting will override the 'LANG' environment, if set.
+       The 'translations' directory bundled with the executable holds these data
+       files. Please keep it along-side the executable to support this feature.
 .
 :CONFIG_MACHINE
 The type of machine DOSBox tries to emulate.
@@ -316,6 +319,11 @@ The High DMA number of the Sound Blaster.
 :CONFIG_SBMIXER
 Allow the Sound Blaster mixer to modify the DOSBox mixer.
 .
+:CONFIG_SBWARMUP
+Silence initial DMA content after card power-on, in milliseconds.
+This mitigates pops heard when starting many SB-based games.
+.Reduce this if you notice cut-samples or prefer hardware accuracy.
+.
 :CONFIG_OPLRATE
 oplrate is deprecated. The OPL waveform is now sampled
         at the mixer's playback rate to avoid resampling.
@@ -433,10 +441,12 @@ Additional parameters must be in the same line in the form of
 parameter:value. Parameter for all types is irq (optional).
 for directserial: realport (required), rxdelay (optional).
                  (realport:COM1 realport:ttyS0).
-for modem: listenport (optional).
+for modem: listenport sock (all optional).
 for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket (all optional).
-Example: serial1=modem listenport:5000
+               transparent, port, inhsocket, sock (all optional).
+SOCK parameter specifies the protocol to be used by both sides
+     of the conection. 0 for TCP and 1 for ENet reliable UDP.
+Example: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
 see serial1
@@ -472,6 +482,54 @@ Language code of the keyboard layout (or none).
 .
 :CONFIG_IPX
 Enable ipx over UDP/IP emulation.
+.
+:CONFIG_NE2000
+Enable emulation of a Novell NE2000 network card on a software-based
+network (using libslirp) with properties as follows:
+ - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
+ - 10.0.2.2      : IP of the gateway and DHCP service.
+ - 10.0.2.3      : IP of the virtual DNS server.
+ - 10.0.2.15     : First IP provided by DHCP, your IP!
+Note: Inside DOS, setting this up requires an NE2000 packet driver,
+      DHCP client, and TCP/IP stack. You might need port-forwarding
+      from the host into the DOS guest, and from your router to your
+      host when acting as the server for multiplayer games.
+.
+:CONFIG_NICBASE
+The base address of the NE2000 card.
+Note: Addresses 220 and 240 might not be available as they're assigned
+      to the Sound Blaster and Gravis UltraSound by default.
+.
+:CONFIG_NICIRQ
+The interrupt used by the NE2000 card.
+Note: IRQs 3 and 5 might not be available as they're assigned
+      to 'serial2' and the Gravis UltraSound by default.
+.
+:CONFIG_MACADDR
+The MAC address of the NE2000 card.
+.
+:CONFIG_TCP_PORT_FORWARDS
+Forwards one or more TCP ports from the host into the DOS guest.
+The format is:
+  port1  port2  port3 ... (e.g., 21 80 443)
+  This will forward FTP, HTTP, and HTTPS into the DOS guest.
+If the ports are privilidged on the host, a mapping can be used
+  host:guest  ..., (e.g., 8021:21 8080:80)
+  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
+A range of adjacent ports can be abbreviated with a dash:
+  start-end ... (e.g., 27910-27960)
+  This will forward ports 27910 to 27960 into the DOS guest.
+Mappings and ranges can be combined, too:
+  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
+  This forwards ports 8040 to 8080 into 20 to 60 in the guest
+Notes:
+  - If mapped ranges differ, the shorter range is extended to fit.
+  - If conflicting host ports are given, only the first one is setup.
+  - If conflicting guest ports are given, the latter rule takes predecent.
+.
+:CONFIG_UDP_PORT_FORWARDS
+Forwards one or more UDP ports from the host into the DOS guest.
+The format is the same as for TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -621,6 +679,10 @@ The path "%s" exceeds the DOS maximum length of %d characters
 .
 :PROGRAM_EXECUTABLE_MISSING
 Executable file not found: %s
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+No available IDE controllers. Drive will not have IDE emulation.
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -1118,7 +1180,7 @@ mounts compact disc image(s) or floppy disk image(s) to a given drive letter.
 Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
+  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [-fs iso] [-ide] -t cdrom|iso
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
   [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
@@ -1131,12 +1193,12 @@ Where:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Notes:
   - %s+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.
-
+  - The '-ide' flag emulates an IDE controller with attached ATAPI CD-ROM drive,
+    This is useful for CDROM-based games that need a real DOS environment via bootable HDD image.
 Examples:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
   [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd
   [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -1289,6 +1351,48 @@ No layout in %s for codepage %i
 :PROGRAM_KEYB_INVCPFILE
 None or invalid codepage file for layout %s
 
+
+.
+:PROGRAM_SERIAL_HELP
+Manage the serial ports.
+
+Usage modes:
+  SERIAL /L | /LIST             List the current serial ports.
+  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.
+
+Where:
+  PORT# : 1, 2, 3, or 4
+  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED
+
+Optional settings for each TYPE:
+  For MODEM        : IRQ, LISTENPORT, SOCK
+  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
+  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
+  For DUMMY        : IRQ
+
+Examples using port 1, or COM1 in DOS:
+  SERIAL /list                                 : List the current serial ports
+  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server
+  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
+  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
+  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux
+
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+Must specify a numeric port value between 1 and %d, inclusive.
+
+.
+:PROGRAM_SERIAL_BAD_MODE
+Mode must be one of the following:
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
 
 .
 :PROGRAM_PLACEHOLDER_SHORT_HELP
