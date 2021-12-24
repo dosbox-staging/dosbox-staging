@@ -100,6 +100,7 @@ Feature differences between release binaries (or unpatched sources):
 | **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup> | N/A
 | **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file           | N/A
 | **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`         | N/A
+| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>                  | Yes: bootable HDD image
 
 
 <sup>＊- Requires original ROM files</sup>
@@ -121,6 +122,7 @@ Feature differences between release binaries (or unpatched sources):
 [15]:    https://github.com/dosbox-staging/dosbox-staging/blob/972ad1f7016648b4557113264022176770878726/README#L422
 [16]:    https://github.com/dosbox-staging/dosbox-staging/pull/1272
 [17]:    https://github.com/dosbox-staging/dosbox-staging/pull/1398
+[18]:    https://github.com/dosbox-staging/dosbox-staging/pull/1447
 
 ## Stable release builds
 
