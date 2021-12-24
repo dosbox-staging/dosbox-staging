@@ -320,6 +320,11 @@ DOSBox, с последующей проверкой других мест в с
 :CONFIG_SBMIXER
 Разрешить микшеру Sound Blaster изменять DOSBox микшер.
 .
+:CONFIG_SBWARMUP
+Silence initial DMA content after card power-on, in milliseconds.
+This mitigates pops heard when starting many SB-based games.
+.Reduce this if you notice cut-samples or prefer hardware accuracy.
+.
 :CONFIG_OPLRATE
 Опция 'oplrate' устарела. Форма волны ОПЛ теперь привязана к скорости
         воспроизведения микшера, чтобы избежать передискретизации.
@@ -473,6 +478,54 @@ Enable IBM PS/1 Audio emulation.
 .
 :CONFIG_IPX
 Включить эмуляцию ipx через UDP/IP.
+.
+:CONFIG_NE2000
+Enable emulation of a Novell NE2000 network card on a software-based
+network (using libslirp) with properties as follows:
+ - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
+ - 10.0.2.2      : IP of the gateway and DHCP service.
+ - 10.0.2.3      : IP of the virtual DNS server.
+ - 10.0.2.15     : First IP provided by DHCP, your IP!
+Note: Inside DOS, setting this up requires an NE2000 packet driver,
+      DHCP client, and TCP/IP stack. You might need port-forwarding
+      from the host into the DOS guest, and from your router to your
+      host when acting as the server for multiplayer games.
+.
+:CONFIG_NICBASE
+The base address of the NE2000 card.
+Note: Addresses 220 and 240 might not be available as they're assigned
+      to the Sound Blaster and Gravis UltraSound by default.
+.
+:CONFIG_NICIRQ
+The interrupt used by the NE2000 card.
+Note: IRQs 3 and 5 might not be available as they're assigned
+      to 'serial2' and the Gravis UltraSound by default.
+.
+:CONFIG_MACADDR
+The MAC address of the NE2000 card.
+.
+:CONFIG_TCP_PORT_FORWARDS
+Forwards one or more TCP ports from the host into the DOS guest.
+The format is:
+  port1  port2  port3 ... (e.g., 21 80 443)
+  This will forward FTP, HTTP, and HTTPS into the DOS guest.
+If the ports are privilidged on the host, a mapping can be used
+  host:guest  ..., (e.g., 8021:21 8080:80)
+  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
+A range of adjacent ports can be abbreviated with a dash:
+  start-end ... (e.g., 27910-27960)
+  This will forward ports 27910 to 27960 into the DOS guest.
+Mappings and ranges can be combined, too:
+  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
+  This forwards ports 8040 to 8080 into 20 to 60 in the guest
+Notes:
+  - If mapped ranges differ, the shorter range is extended to fit.
+  - If conflicting host ports are given, only the first one is setup.
+  - If conflicting guest ports are given, the latter rule takes predecent.
+.
+:CONFIG_UDP_PORT_FORWARDS
+Forwards one or more UDP ports from the host into the DOS guest.
+The format is the same as for TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Строки в этом разделе будут выполняться при запуске.
@@ -1538,6 +1591,10 @@ The path "%s" exceeds the DOS maximum length of %d characters
 Executable file not found: %s
 
 .
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+No available IDE controllers. Drive will not have IDE emulation.
+
+.
 :SHELL_CMD_MEM_HELP_LONG
 Displays the DOS memory information.
 
@@ -1748,6 +1805,48 @@ Examples:
   [32;1mKEYB[0m [36;1muk[0m
   [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
+
+.
+:PROGRAM_SERIAL_HELP
+Manage the serial ports.
+
+Usage modes:
+  SERIAL /L | /LIST             List the current serial ports.
+  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.
+
+Where:
+  PORT# : 1, 2, 3, or 4
+  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED
+
+Optional settings for each TYPE:
+  For MODEM        : IRQ, LISTENPORT, SOCK
+  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
+  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
+  For DUMMY        : IRQ
+
+Examples using port 1, or COM1 in DOS:
+  SERIAL /list                                 : List the current serial ports
+  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server
+  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
+  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
+  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux
+
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+Must specify a numeric port value between 1 and %d, inclusive.
+
+.
+:PROGRAM_SERIAL_BAD_MODE
+Mode must be one of the following:
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
 
 .
 :PROGRAM_PLACEHOLDER_SHORT_HELP
