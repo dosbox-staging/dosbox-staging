@@ -1017,7 +1017,7 @@ void DOSBOX_Init() {
 	                  "The format is:\n"
 	                  "  port1  port2  port3 ... (e.g., 21 80 443)\n"
 	                  "  This will forward FTP, HTTP, and HTTPS into the DOS guest.\n"
-	                  "If the ports are privilidged on the host, a mapping can be used\n"
+	                  "If the ports are privileged on the host, a mapping can be used\n"
 	                  "  host:guest  ..., (e.g., 8021:21 8080:80)\n"
 	                  "  This will forward ports 8021 and 8080 to FTP and HTTP in the guest\n"
 	                  "A range of adjacent ports can be abbreviated with a dash:\n"
@@ -1030,7 +1030,7 @@ void DOSBOX_Init() {
 	                  "Notes:\n"
 	                  "  - If mapped ranges differ, the shorter range is extended to fit.\n"
 	                  "  - If conflicting host ports are given, only the first one is setup.\n"
-	                  "  - If conflicting guest ports are given, the latter rule takes predecent.");
+	                  "  - If conflicting guest ports are given, the latter rule takes precedent.");
 
 	Pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
 	Pstring->Set_help("Forwards one or more UDP ports from the host into the DOS guest.\n"
