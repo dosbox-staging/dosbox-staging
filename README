@@ -1776,21 +1776,23 @@ Alternatively, you can setup the filename in the configuration file
 in the [dosbox] section. There's a language= entry that can be changed with
 the filelocation.
 
-The DOSBox Staging release package includes a "translations" directory
-containing translated language files. Place the "translations" directory
-inside your config path to allow short-hand notation, as follows:
+The DOSBox Staging release is bundled with a "translations" directory
+containing translated language files. Translations are provided for
+German (de), Spanish (es), Fench (fr), Italian (it), Polish (pl), and
+Russian (ru).  Select your prefered language using short-hand notation,
+as shown in these examples:
 
-On launch:
-  dosbox -lang es
-  dosbox -lang fr
-  dosbox -lang it
-  dosbox -lang pl
-  dosbox -lang ru
+Via LANG environment variable:
+  set LANG de     (on Windows)
+  export LANG=it  (on macOS and Linux)
 
 Via conf setting:
   [dosbox]
   language = es
-  # fr, it, pl, ru
+
+Via command-line flag:
+  dosbox -lang pl
+  dosbox -lang ru
 
 Note: macOS users can find the "translations" directory inside the
       "./Resources/" directory, after expanding the .dmg package.
