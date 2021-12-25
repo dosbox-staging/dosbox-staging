@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.78.0
+Version: 0.79.0
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+

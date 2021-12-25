@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-VERSION="0.78.0-alpha"
+VERSION="0.79.0-alpha"
 
 PACKAGED_BUILD="build/lang"
 
@@ -89,7 +89,7 @@ update() {
 }
 
 # Staging needs to be packaged up (using the create-pacakge.sh) script
-# to use the simpler -lang loader format supported by 0.78.
+# to use the simpler -lang loader format supported by 0.78+.
 check_package
 
 # Because English is the source language from which others are
