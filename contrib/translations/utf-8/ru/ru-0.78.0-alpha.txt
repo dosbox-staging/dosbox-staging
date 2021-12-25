@@ -22,25 +22,26 @@
              Масштабирование не выполняется для output=surface.
 .
 :CONFIG_WINDOW_POSITION
-Set initial window position when running in windowed mode:
-  auto:      Let the window manager decide the position.
-  <custom>:  Set window position in X,Y format. For example: 250,100
-             0,0 is the top-left corner of the screen.
+Задать изначальное положение окна при запуске в оконном режиме:
+  auto:      Позволить оконному менеджеру определить положение.
+  <своё>:    Задать положение окна в формате X,Y. Пример: 250,100
+             0,0 является верхним левым углом экрана.
 .
 :CONFIG_WINDOW_DECORATIONS
-Controls whether to display window decorations in windowed mode.
+Управляет отображением оформления окон в оконном режиме.
 .
 :CONFIG_VSYNC
-Настройка вертикальной синхронизации не реализована (настройка игнорируется).
+Синхронизировать с частотой обновления дисплея, если поддерживается.
+Может снизить мерцание и разрывы, но также может повлиять на производительность.
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
+Количество микросекунд, в течение которых рендеринг должен блокироваться перед пропуском следующего кадра. 0 отключает настройку.
 .
 :CONFIG_MAX_RESOLUTION
-Optionally restricts the viewport resolution within the window/screen:
-  auto:      The viewport fills the window/screen (default).
-  <custom>:  Set max viewport resolution in WxH format.
-             For example: 960x720
+Опционально ограничивает разрешение области отрисовки в окне / на экране:
+  auto:      Область отрисовки заполняет окно/экран (по умолчанию).
+  <своё>:    Задать максимальное разрешение области отрисовки в формате ШxВ.
+             Пример: 960x720
 .
 :CONFIG_OUTPUT
 Какую видеосистему использовать для вывода изображения.
@@ -107,20 +108,20 @@ Optionally restricts the viewport resolution within the window/screen:
 Как правило, нет никакого преимущества в скорости при повышении этой величины.
 .
 :CONFIG_VMEMSIZE
-Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+Объём видеопамяти в МиБ (1-8) или КиБ (с 256 по 8192). 'auto' использует умолчание видеоадаптера.
 .
 :CONFIG_VESA_MODES
-Controls the selection of VESA 1.2 and 2.0 modes offered:
-  compatible   A tailored selection that maximizes game compatibility.
-               This is recommended along with 4 or 8 MB of video memory.
-  all          Offers all modes for a given video memory size, however
-               some games may not use them properly (flickering) or may need
-               more system memory (mem = ) to use them.
+Управляет выбором предложенных режимов VESA 1.2 и 2.0:
+  compatible   Выборка с максимальной игровой совместимостью.
+               Рекомендуется при использовании 4 или 8 МиБ видеопамяти.
+  all          Предлагает все режимы для выбранного объёма видеопамяти, однако
+               некоторые игры могут задействовать их неправильно (мерцание)
+               или могут потребовать больше системной памяти (mem = ).
 .
 :CONFIG_AUTOEXEC_SECTION
-How autoexec sections are handled from multiple config files.
-join      : combines them into one big section (legacy behavior).
-overwrite : use the last one encountered, like other conf settings.
+Как обрабатывать секции autoexec из нескольких конфигурационных файлов.
+join      : совмещает их в одну большую секцию (старое поведение).
+overwrite : использовать последнюю встреченную, аналогично другим настройкам.
 .
 :CONFIG_STARTUP_VERBOSITY
 Управляет количеством информации перед отображением программы:
@@ -167,27 +168,27 @@ auto        | 'low', если передан исполняемый файл и�
 'scan2x', 'scan3x', 'tv2x', 'tv3x', 'sharp' ('default').
 .
 :CONFIG_COMPOSITE
-Enable composite mode on start. 'auto' lets the program decide.
-Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
-      Then read the new settings from your console and enter them here.
+Включить композитный режим при запуске. 'auto' позволяет решить программе.
+Примечание: Подстройте следующие параметры с помощью клавиатурных сокращений.
+            Затем прочтите новые значения в консоли и введите их здесь.
 .
 :CONFIG_ERA
-Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.
+Эра композитных технологий. При 'auto', PCjr использует новые и CGA/Tandy используют старые.
 .
 :CONFIG_HUE
-Appearance of RGB palette. For example, adjust until sky is blue.
+Вид RGB-палитры. К примеру, изменяйте, пока небо не станет голубым.
 .
 :CONFIG_SATURATION
-Intensity of colors, from washed out to vivid.
+Насыщенность цветов, от серых к ярким.
 .
 :CONFIG_CONTRAST
-Ratio between the dark and light area.
+Соотношение между тёмными и светлыми оттенками.
 .
 :CONFIG_BRIGHTNESS
-Luminosity of the image, from dark to light.
+Яркость изображения, от тёмного к светлому.
 .
 :CONFIG_CONVERGENCE
-Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
+Слияние субпиксельных элементов, от размытого к чёткому (только CGA и Tandy).
 .
 :CONFIG_CORE
 Ядро процессора, используемое в эмуляции.
@@ -225,8 +226,8 @@ Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
 Сколько миллисекунд нужно удерживать данные на вершине блока.
 .
 :CONFIG_NEGOTIATE
-Allow system audio driver to negotiate optimal rate and blocksize
-as close to the specified values as possible.
+Позволить системному звуковому драйверу согласовать оптимальные частоту
+и размер блока, приближенные к заданным значениям насколько возможно.
 .
 :CONFIG_MIDIDEVICE
 Устройство, которое будет принимать MIDI-данные (от эмулированного MIDI
@@ -265,27 +266,27 @@ as close to the specified values as possible.
 Изменение в процентах может быть в пределах от 1 до 500.
 .
 :CONFIG_CHORUS
-Chorus effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All five must be provided in-order and space-separated.
-  They are: voice-count level speed depth modulation-wave, where:
-  - voice-count is an integer from 0 to 99.
-  - level is a decimal from 0.0 to 10.0
-  - speed is a decimal, measured in Hz, from 0.1 to 5.0
-  - depth is a decimal from 0.0 to 21.0
-  - modulation-wave is either 'sine' or 'triangle'
-  For example: chorus = 3 1.2 0.3 8.0 sine
+Эффект хора: 'auto', 'on', 'off' или собственные значения.
+При использовании своих значений:
+  Все пять должны быть указаны по порядку и разделены пробелом.
+  Параметры: число_голосов громкость скорость глубина волна_модуляции, где:
+  - число_голосов - целое число от 0 до 99
+  - громкость - десятичное число от 0.0 до 10.0
+  - скорость - десятичное число, измеряемое в Гц, от 0.1 до 5.0
+  - глубина - десятичное число от 0.0 до 21.0
+  - волна_модуляции - 'sine' (синусоида) или 'triangle' (треугольная)
+  Пример: chorus = 3 1.2 0.3 8.0 sine
 .
 :CONFIG_REVERB
-Reverb effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All four must be provided in-order and space-separated.
-  They are: room-size damping width level, where:
-  - room-size is a decimal from 0.0 to 1.0
-  - damping is a decimal from 0.0 to 1.0
-  - width is a decimal from 0.0 to 100.0
-  - level is a decimal from 0.0 to 1.0
-  For example: reverb = 0.61 0.23 0.76 0.56
+Эффект реверберации: 'auto', 'on', 'off' или собственные значения.
+При использовании своих значений:
+  Все четыре должны быть указаны по порядку и разделены пробелом.
+  Параметры: размер_помещения затухание ширина громкость, где:
+  - размер_помещения - десятичное число от 0.0 до 1.0
+  - затухание - десятичное число от 0.0 до 1.0
+  - ширина - десятичное число от 0.0 до 100.0
+  - громкость - десятичное число от 0.0 до 1.0
+  Пример: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Модель синтезатора для использования. По умолчанию 'auto' предпочитает CM-32L,
@@ -321,9 +322,9 @@ DOSBox, с последующей проверкой других мест в с
 Разрешить микшеру Sound Blaster изменять DOSBox микшер.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA audio after card power-on, in milliseconds.
-This mitigates pops heard when starting many SB-based games.
-Reduce this if you notice intial playback is missing audio.
+Заглушить изначальное DMA-аудио после включения карты, в миллисекундах.
+Устраняет щелчки, слышимые при запуске многих игр, использующих Sound Blaster.
+Уменьшите значение, если заметите недостающий звук при начале воспроизведения.
 .
 :CONFIG_OPLRATE
 Опция 'oplrate' устарела. Форма волны ОПЛ теперь привязана к скорости
@@ -356,30 +357,30 @@ Reduce this if you notice intial playback is missing audio.
 используемые с Timidity должны работать хорошо.
 .
 :CONFIG_SIDMODEL
-Model of chip to emulate in the Innovation SSI-2001 card:
- - auto:  Selects the 6581 chip.
- - 6581:  The original chip, known for its bassy and rich character.
- - 8580:  A later revision that more closely matched the SID specification.
-          It fixed the 6581's DC bias and is less prone to distortion.
-          The 8580 is an option on reproduction cards, like the DuoSID.
- - none:  Disables the card.
+Модель чипа для эмуляции в карте Innovation SSI-2001:
+ - auto:  Выбирает чип 6581.
+ - 6581:  Оригинальный чип, известный своим басовитым и богатым звучанием.
+ - 8580:  Более поздняя модификация, более точно соответствующая спецификации SID.
+          В нём исправлено смещение постоянного тока 6581 и он менее подвержен искажениям.
+          8580 является опцией для репродуктивных карт, таких как DuoSID.
+ - none:  Отключает карту.
 .
 :CONFIG_SIDCLOCK
-The SID chip's clock frequency, which is jumperable on reproduction cards.
- - default: uses 0.895 MHz, per the original SSI-2001 card.
- - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
- - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
- - hardsid: uses 1.000 MHz, available on the DuoSID.
+Тактовая частота чипа SID, которая на репродуктивных картах устанавливается перемычкой.
+ - default: использует 0.895 МГц, для оригинальной карты SSI-2001.
+ - c64ntsc: использует 1.023 МГц, для NTSC Commodore PC и DuoSID.
+ - c64pal:  использует 0.985 МГц, для PAL Commodore PC и DuoSID.
+ - hardsid: использует 1.000 МГц, доступно на DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Адрес порта ввода-вывода Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Аналоговая фильтрация SID означала, что каждый чип был физически уникален.
+Регулирует силу фильтрации 6581 в процентах от 0 до 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Регулирует силу фильтрации 8580 в процентах от 0 до 100.
 .
 :CONFIG_PCSPEAKER
 Включить эмуляцию PC-Speaker.
@@ -402,7 +403,7 @@ Adjusts the 8580's filtering strength as a percent from 0 to 100.
 Включение эмуляции Disney Sound Source. (Covox Voice Master и Speech Thing совместимых).
 .
 :CONFIG_PS1AUDIO
-Enable IBM PS/1 Audio emulation.
+Включить эмуляцию IBM PS/1 Audio.
 .
 :CONFIG_JOYSTICKTYPE
 Тип джойстика для эмуляции: 'auto' (по умолчанию),
@@ -410,7 +411,7 @@ Enable IBM PS/1 Audio emulation.
 '2axis' (поддерживает два джойстика),
 '4axis' (поддерживает один джойстик, используется первый джойстик),
 '4axis_2' (поддерживает один джойстик, используется второй джойстик),
-'fcs' (Thrustmaster), 'ch' (CH Flighttick).
+'fcs' (Thrustmaster), 'ch' (CH Flightstick).
 'auto' выбирает эмуляцию в зависимости от реальных джойстиков.
 (Не забудьте сбросить файл маппера DOSBox, если Вы сохранили его ранее).
 .
@@ -480,52 +481,52 @@ Enable IBM PS/1 Audio emulation.
 Включить эмуляцию ipx через UDP/IP.
 .
 :CONFIG_NE2000
-Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows:
- - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
- - 10.0.2.2      : IP of the gateway and DHCP service.
- - 10.0.2.3      : IP of the virtual DNS server.
- - 10.0.2.15     : First IP provided by DHCP, your IP!
-Note: Inside DOS, setting this up requires an NE2000 packet driver,
-      DHCP client, and TCP/IP stack. You might need port-forwarding
-      from the host into the DOS guest, and from your router to your
-      host when acting as the server for multiplayer games.
+Включить эмуляцию сетевой карты Novell NE2000 на основе программной сети
+(используя libslirp) со следующими параметрами:
+ - 255.255.255.0 : Маска подсети виртуальной сети 10.0.2.0.
+ - 10.0.2.2      : IP шлюза и сервиса DHCP.
+ - 10.0.2.3      : IP виртуального DNS-сервера.
+ - 10.0.2.15     : Первый IP, предоставляемый DHCP, ваш IP!
+Примечание: В среде DOS, настройка требует пакетный драйвер NE2000,
+            клиент DHCP и стек TCP/IP. Может потребоваться проброс портов
+            от хоста к эмулируемой системе и от маршрутизатора к хосту,
+            когда выступаете в качестве сервера в многопользовательских играх.
 .
 :CONFIG_NICBASE
-The base address of the NE2000 card.
-Note: Addresses 220 and 240 might not be available as they're assigned
-      to the Sound Blaster and Gravis UltraSound by default.
+Базовый адрес карты NE2000.
+Примечание: Адреса 220 и 240 могут быть недоступны, поскольку по умолчанию
+            они присвоены Sound Blaster и Gravis UltraSound.
 .
 :CONFIG_NICIRQ
-The interrupt used by the NE2000 card.
-Note: IRQs 3 and 5 might not be available as they're assigned
-      to 'serial2' and the Gravis UltraSound by default.
+Прерывание, используемое картой NE2000.
+Примечание: IRQ 3 и 5 могут быть недоступны, поскольку по умолчанию
+            они присвоены последовательному порту 'serial2' и Gravis UltraSound.
 .
 :CONFIG_MACADDR
-The MAC address of the NE2000 card.
+MAC-адрес карты NE2000.
 .
 :CONFIG_TCP_PORT_FORWARDS
-Forwards one or more TCP ports from the host into the DOS guest.
-The format is:
-  port1  port2  port3 ... (e.g., 21 80 443)
-  This will forward FTP, HTTP, and HTTPS into the DOS guest.
-If the ports are privileged on the host, a mapping can be used
-  host:guest  ..., (e.g., 8021:21 8080:80)
-  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
-A range of adjacent ports can be abbreviated with a dash:
-  start-end ... (e.g., 27910-27960)
-  This will forward ports 27910 to 27960 into the DOS guest.
-Mappings and ranges can be combined, too:
-  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
-  This forwards ports 8040 to 8080 into 20 to 60 in the guest
-Notes:
-  - If mapped ranges differ, the shorter range is extended to fit.
-  - If conflicting host ports are given, only the first one is setup.
-  - If conflicting guest ports are given, the latter rule takes precedent.
+Пробрасывает один или несколько TCP-портов от хоста к эмулируемой системе.
+Формат:
+  порт1  порт2  порт3 ... (например, 21 80 443)
+  Это пробросит FTP, HTTP и HTTPS к эмулируемой системе.
+Если порты требуют повышенных привилегий на хосте, можно использовать назначение:
+  хост:гость ..., (например, 8021:21 8080:80)
+  Это пробросит порты 8021 и 8080 к протоколам FTP и HTTP в эмулируемой системе.
+Можно указывать диапазон портов через дефис:
+  начало-конец ... (например, 27910-27960)
+  Это пробросит порты от 27910 до 27960 к эмулируемой системе.
+Назначения и диапазоны могут быть совмещены:
+  хначало-хконец:гначало-гконец ..., (например, 8040-8080:20-60)
+  Это пробросит порты от 8040 до 8080 к портам от 20 до 60 в эмулируемой системе.
+Примечания:
+  - Если назначенные диапазоны разнятся, более короткий диапазон будет расширен.
+  - Если указаны конфликтующие порты для хоста, только первый будет настроен.
+  - Если указаны дублирующиеся порты для эмулируемой системы, приоритет получают последние указанные.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Forwards one or more UDP ports from the host into the DOS guest.
-The format is the same as for TCP port forwards.
+Пробрасывает один или несколько UDP-портов от хоста к эмулируемой системе.
+Формат аналогичен пробросу TCP-портов.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Строки в этом разделе будут выполняться при запуске.
@@ -1274,7 +1275,6 @@ IF ERRORLEVEL: Неверный номер.
 
 .
 :SHELL_CMD_GOTO_MISSING_LABEL
-No label supplied to GOTO command.
 Отсутствует метка для команды GOTO.
 
 .
@@ -1584,15 +1584,15 @@ choice [/c:клавиши] [/n] [/s] текст
 
 .
 :PROGRAM_PATH_TOO_LONG
-The path "%s" exceeds the DOS maximum length of %d characters
+Путь "%s" превышает максимальную длину для DOS в %d символов
 
 .
 :PROGRAM_EXECUTABLE_MISSING
-Executable file not found: %s
+Исполняемый файл не найден: %s
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
+Нет доступных IDE контроллеров. Диск не будет иметь эмуляции IDE.
 
 .
 :SHELL_CMD_MEM_HELP_LONG
