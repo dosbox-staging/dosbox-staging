@@ -429,19 +429,8 @@ void CSerialModem::DoCommand()
 	upcase(cmdbuf);
 	LOG_MSG("SERIAL: Port %" PRIu8 " command sent to modem: ->%s<-",
 	        GetPortNumber(), cmdbuf);
-	/* Check for empty line, stops dialing and autoanswer */
-	if (!cmdbuf[0]) {
-		reg[MREG_AUTOANSWER_COUNT] = 0;	// autoanswer off
-		return;
-	}
-	//else {
-		//MIXER_Enable(mhd.chan,false);
-	//	dialing = false;
-	//	SendRes(ResNOCARRIER);
-	//	goto ret_none;
-	//}
-	/* AT command set interpretation */
 
+	/* AT command set interpretation */
 	if ((cmdbuf[0] != 'A') || (cmdbuf[1] != 'T')) {
 		SendRes(ResERROR);
 		return;
@@ -860,7 +849,8 @@ void CSerialModem::Echo(uint8_t ch)
 	}
 }
 
-void CSerialModem::Timer2() {
+void CSerialModem::Timer2()
+{
 	uint32_t txbuffersize = 0;
 
 	// Check for eventual break command
@@ -886,23 +876,44 @@ void CSerialModem::Timer2() {
 	while (tqueue->inuse()) {
 		const uint8_t txval = tqueue->getb();
 		if (commandmode) {
-			Echo(txval);
+			if (cmdpos < 2) {
+				// Ignore everything until we see "AT" sequence.
+				if (cmdpos == 0 && toupper(txval) != 'A') {
+					continue;
+				}
 
-			if (txval == '\n')
-			if (txval == reg[MREG_LF_CHAR])
-				continue; // Real modem doesn't seem to skip this?
+				if (cmdpos == 1 && toupper(txval) != 'T') {
+					Echo(reg[MREG_BACKSPACE_CHAR]);
+					cmdpos = 0;
+					continue;
+				}
+			} else {
+				// Now entering command.
+				if (txval == reg[MREG_BACKSPACE_CHAR]) {
+					if (cmdpos > 2) {
+						Echo(txval);
+						cmdpos--;
+					}
+					continue;
+				}
 
-			if (txval == reg[MREG_BACKSPACE_CHAR]) {
-				if (cmdpos > 0)
-					cmdpos--;
-			} else if (txval == reg[MREG_CR_CHAR]) {
-				DoCommand();
-			} else if (cmdpos < 99) {
+				if (txval == reg[MREG_LF_CHAR]) {
+					continue; // Real modem doesn't seem to skip this?
+				}
+
+				if (txval == reg[MREG_CR_CHAR]) {
+					Echo(txval);
+					DoCommand();
+					continue;
+				}
+			}
+
+			if (cmdpos < 99) {
+				Echo(txval);
 				cmdbuf[cmdpos] = txval;
 				cmdpos++;
 			}
-		}
-		else {// + character
+		} else {
 			if (plusinc >= 1 && plusinc <= 3 && txval == reg[MREG_ESCAPE_CHAR]) // +
 				plusinc++;
 			else {
