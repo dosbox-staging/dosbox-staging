@@ -209,18 +209,18 @@ void CSerialModem::handleUpperEvent(uint16_t type)
 }
 
 void CSerialModem::SendLine(const char *line) {
-	rqueue->addb(0xd);
-	rqueue->addb(0xa);
+	rqueue->addb(reg[MREG_CR_CHAR]);
+	rqueue->addb(reg[MREG_LF_CHAR]);
 	rqueue->adds((uint8_t *)line, strlen(line));
-	rqueue->addb(0xd);
-	rqueue->addb(0xa);
+	rqueue->addb(reg[MREG_CR_CHAR]);
+	rqueue->addb(reg[MREG_LF_CHAR]);
 }
 
 // only for numbers < 1000...
 void CSerialModem::SendNumber(uint32_t val)
 {
-	rqueue->addb(0xd);
-	rqueue->addb(0xa);
+	rqueue->addb(reg[MREG_CR_CHAR]);
+	rqueue->addb(reg[MREG_LF_CHAR]);
 
 	rqueue->addb(val / 100 + '0');
 	val = val%100;
@@ -228,8 +228,8 @@ void CSerialModem::SendNumber(uint32_t val)
 	val = val%10;
 	rqueue->addb(val + '0');
 
-	rqueue->addb(0xd);
-	rqueue->addb(0xa);
+	rqueue->addb(reg[MREG_CR_CHAR]);
+	rqueue->addb(reg[MREG_LF_CHAR]);
 }
 
 void CSerialModem::SendRes(const ResTypes response) {
@@ -889,12 +889,13 @@ void CSerialModem::Timer2() {
 			Echo(txval);
 
 			if (txval == '\n')
+			if (txval == reg[MREG_LF_CHAR])
 				continue; // Real modem doesn't seem to skip this?
 
-			if (txval == '\b') {
+			if (txval == reg[MREG_BACKSPACE_CHAR]) {
 				if (cmdpos > 0)
 					cmdpos--;
-			} else if (txval == '\r') {
+			} else if (txval == reg[MREG_CR_CHAR]) {
 				DoCommand();
 			} else if (cmdpos < 99) {
 				cmdbuf[cmdpos] = txval;
