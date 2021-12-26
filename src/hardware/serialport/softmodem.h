@@ -193,7 +193,7 @@ public:
 
 	void TelnetEmulation(uint8_t *data, uint32_t size);
 
-	//TODO
+	void Echo(uint8_t ch);
 	void Timer2();
 	void handleUpperEvent(uint16_t type);
 
