@@ -479,14 +479,16 @@ void CSerialModem::DoCommand()
 					SendRes(ResERROR);
 					return;
 				}
-				socketType = (SocketTypesE)requested_mode;
-				// This will break when there's more than two
-				// socket types.
-				LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
-				        GetPortNumber(),
-				        socketType ? "ENet" : "TCP");
-				// Reset port state.
-				EnterIdleState();
+				if (socketType != (SocketTypesE)requested_mode) {
+					socketType = (SocketTypesE)requested_mode;
+					// This will break when there's more than two
+					// socket types.
+					LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
+							GetPortNumber(),
+							socketType ? "ENet" : "TCP");
+					// Reset port state.
+					EnterIdleState();
+				}
 				break;
 			}
 			// If the command wasn't recognized then stop parsing
