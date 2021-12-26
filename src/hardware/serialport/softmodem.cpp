@@ -851,6 +851,15 @@ void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
 	}
 }
 
+void CSerialModem::Echo(uint8_t ch)
+{
+	if (echo) {
+		rqueue->addb(ch);
+		// LOG_MSG("SERIAL: Port %" PRIu8 " echo back to queue: %x.",
+		//         GetPortNumber(), txval);
+	}
+}
+
 void CSerialModem::Timer2() {
 	uint32_t txbuffersize = 0;
 
@@ -877,11 +886,7 @@ void CSerialModem::Timer2() {
 	while (tqueue->inuse()) {
 		const uint8_t txval = tqueue->getb();
 		if (commandmode) {
-			if (echo) {
-				rqueue->addb(txval);
-				// LOG_MSG("SERIAL: Port %" PRIu8 " echo back to queue: %x.",
-				//         GetPortNumber(), txval);
-			}
+			Echo(txval);
 
 			if (txval == '\n')
 				continue; // Real modem doesn't seem to skip this?
