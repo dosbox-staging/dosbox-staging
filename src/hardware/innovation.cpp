@@ -306,7 +306,7 @@ static void init_innovation_dosbox_settings(Section_prop &sec_prop)
 	        "Adjusts the 8580's filtering strength as a percent from 0 to 100.");
 }
 
-void INNOVATION_AddConfigSection(Config *conf)
+void INNOVATION_AddConfigSection(const config_ptr_t &conf)
 {
 	assert(conf);
 	Section_prop *sec = conf->AddSection_prop("innovation",

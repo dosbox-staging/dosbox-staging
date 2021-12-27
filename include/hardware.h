@@ -64,11 +64,10 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
 void CAPTURE_VideoStart();
 void CAPTURE_VideoStop();
 
-class Config;
 // Gravis UltraSound configuration and initialization
-void GUS_AddConfigSection(Config *conf);
+void GUS_AddConfigSection(const config_ptr_t &conf);
 
 // Innovation SSI-2001 configuration and initialization
-void INNOVATION_AddConfigSection(Config *conf);
+void INNOVATION_AddConfigSection(const config_ptr_t &conf);
 
 #endif

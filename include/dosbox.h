@@ -23,6 +23,8 @@
 #include "compiler.h"
 #include "types.h"
 
+#include <memory>
+
 int sdl_main(int argc, char *argv[]);
 
 // The shutdown_requested bool is a conditional break in the parse-loop and
@@ -50,7 +52,8 @@ void DOSBOX_SetNormalLoop();
 void DOSBOX_Init(void);
 
 class Config;
-extern Config * control;
+using config_ptr_t = std::unique_ptr<Config>;
+extern config_ptr_t control;
 
 enum MachineType {
 	MCH_HERC,
