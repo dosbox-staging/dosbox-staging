@@ -99,6 +99,11 @@ jobs:
         run: |
           brew install $(cat .github/packages/macos-latest-brew.txt)
 
+      # Workaround frequent HTTPS-based connectivity issues
+      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
+      - name:  Fetch the libffi subproject for Glib
+        run: ./scripts/fetch-libffi-subproject.sh
+
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
         shell: python scripts\msys-bash.py {0}
