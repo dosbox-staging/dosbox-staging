@@ -1075,13 +1075,13 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 [[maybe_unused]] static std::string get_glshader_value()
 {
 #if C_OPENGL
-	assert(control);
-	const Section *rs = control->GetSection("render");
-	assert(rs);
-	return rs->GetPropValue("glshader");
-#else
-	return "";
+	if (control) {
+		const Section *rs = control->GetSection("render");
+		assert(rs);
+		return rs->GetPropValue("glshader");
+	}
 #endif // C_OPENGL
+	return "";
 }
 
 // "flexible" shaders properly handle window-resizing and NPOT textures
