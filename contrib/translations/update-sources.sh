@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-VERSION="0.78.0-alpha"
+VERSION="0.78.1"
 
 PACKAGED_BUILD="build/lang"
 

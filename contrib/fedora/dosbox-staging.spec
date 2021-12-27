@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.78.0
+Version: 0.78.1
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -92,6 +92,10 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Sun 26 Dec 2021 kcgen <kcgen@users.noreply.github.com>
+- 0.78.1-1
+- Update to 0.78.1
+
 * Fri 24 Dec 2021 kcgen <kcgen@users.noreply.github.com>
 - 0.78.0-1
 - Update to 0.78.0

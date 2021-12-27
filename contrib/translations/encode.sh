@@ -7,7 +7,7 @@
 # Encode translation files in old .lng format from utf-8 to the codepage
 # appropriate in DOS for a particular language.
 
-VERSION=0.78.0-alpha
+VERSION=0.78.1
 
 # Literal conversion - for languages that can be fully encoded
 tconv_l () {
