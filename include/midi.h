@@ -38,11 +38,11 @@ void MIDI_ListAll(Program *output_handler);
 void MIDI_RawOutByte(uint8_t data);
 
 #if C_FLUIDSYNTH
-void FLUID_AddConfigSection(Config *conf);
+void FLUID_AddConfigSection(const config_ptr_t &conf);
 #endif
 
 #if C_MT32EMU
-void MT32_AddConfigSection(Config *conf);
+void MT32_AddConfigSection(const config_ptr_t &conf);
 #endif
 
 #endif

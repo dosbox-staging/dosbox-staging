@@ -55,7 +55,6 @@
 #include "hardware.h"
 #include "ne2000.h"
 
-Config * control;
 bool shutdown_requested = false;
 MachineType machine;
 SVGACards svgaCard;

@@ -722,7 +722,7 @@ void MidiHandler_mt32::Render()
 static void mt32_init([[maybe_unused]] Section *sec)
 {}
 
-void MT32_AddConfigSection(Config *conf)
+void MT32_AddConfigSection(const config_ptr_t &conf)
 {
 	assert(conf);
 	Section_prop *sec_prop = conf->AddSection_prop("mt32", &mt32_init);
