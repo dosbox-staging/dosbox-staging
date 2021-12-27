@@ -43,6 +43,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Workaround frequent HTTPS-based connectivity issues
+      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
+      - name:  Fetch the libffi subproject for Glib
+        run: ./scripts/fetch-libffi-subproject.sh
+
       - name: Build
         uses: uraimo/run-on-arch-action@master
         with:

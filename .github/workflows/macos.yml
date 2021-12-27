@@ -190,6 +190,11 @@ jobs:
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
           ccache libpng meson opusfile sdl2 sdl2_net
 
+      # Workaround frequent HTTPS-based connectivity issues
+      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
+      - name:  Fetch the libffi subproject for Glib
+        run: ./scripts/fetch-libffi-subproject.sh
+
       - uses:  actions/cache@v2
         if:    matrix.runner.needs_deps
         with:
