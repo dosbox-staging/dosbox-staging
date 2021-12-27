@@ -481,11 +481,10 @@ void CSerialModem::DoCommand()
 				}
 				if (socketType != (SocketTypesE)requested_mode) {
 					socketType = (SocketTypesE)requested_mode;
-					// This will break when there's more than two
-					// socket types.
+					// This will break when there's more than two socket types.
 					LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
-							GetPortNumber(),
-							socketType ? "ENet" : "TCP");
+					        GetPortNumber(),
+					        socketType ? "ENet" : "TCP");
 					// Reset port state.
 					EnterIdleState();
 				}
