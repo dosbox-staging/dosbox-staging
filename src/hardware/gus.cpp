@@ -1519,7 +1519,7 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	                   "with Timidity should work fine.");
 }
 
-void GUS_AddConfigSection(Config *conf)
+void GUS_AddConfigSection(const config_ptr_t &conf)
 {
 	assert(conf);
 	Section_prop *sec = conf->AddSection_prop("gus", &gus_init, true);

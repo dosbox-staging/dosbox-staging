@@ -39,7 +39,12 @@ extern char **environ;
 #endif
 
 using namespace std;
-static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath
+
+// Commonly accessed global that holds configuration records
+std::unique_ptr<Config> control = {};
+
+// Set by parseconfigfile so Prop_path can use it to construct the realpath
+static std::string current_config_dir;
 void Value::destroy() throw(){
 	if (type == V_STRING) delete _string;
 }

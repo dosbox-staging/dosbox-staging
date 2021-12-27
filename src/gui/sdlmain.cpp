@@ -3770,8 +3770,9 @@ int sdl_main(int argc, char *argv[])
 		CROSS_DetermineConfigPaths();
 
 		CommandLine com_line(argc,argv);
-		Config myconf(&com_line);
-		control=&myconf;
+
+		control = std::make_unique<Config>(&com_line);
+
 		/* Init the configuration system and add default values */
 		Config_Add_SDL();
 		DOSBOX_Init();
@@ -3899,9 +3900,9 @@ int sdl_main(int argc, char *argv[])
 		if (control->cmdline->FindExist("-startmapper"))
 			MAPPER_DisplayUI();
 
-		/* Start up main machine */
-		control->StartUp();
-		/* Shutdown everything */
+		control->StartUp(); // Run the machine until shutdown
+		control.reset();  // Shutdown and release
+
 	} catch (char * error) {
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
