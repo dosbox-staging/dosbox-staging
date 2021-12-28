@@ -3926,6 +3926,10 @@ int sdl_main(int argc, char *argv[])
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
 
+	LOG_MSG("SDL: version %d.%d.%d initialized (%s video and %s audio)",
+		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
+		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
+
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
 
@@ -3979,7 +3983,7 @@ int sdl_main(int argc, char *argv[])
 		control->StartUp(); // Run the machine until shutdown
 		control.reset();  // Shutdown and release
 
-	} catch (char * error) {
+	} catch (char *error) {
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(NULL);
@@ -3993,8 +3997,7 @@ int sdl_main(int argc, char *argv[])
 			Sleep(5000);
 #endif
 		}
-	}
-	catch (...) {
+	} catch (...) {
 		// just exit
 		rcode = 1;
 	}
