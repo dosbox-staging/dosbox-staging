@@ -2290,22 +2290,53 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
 
-static SDL_Point window_bounds_from_resolution(const std::string &pref,
-                                               const SDL_Rect &desktop)
+static SDL_Rect get_desktop_resolution()
+{
+	SDL_Rect desktop;
+	assert(sdl.display_number >= 0);
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
+	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	return desktop;
+}
+
+static void maybe_limit_requested_resolution(int &w, int &h, const char *size_description)
+{
+	const auto desktop = get_desktop_resolution();
+	if (w <= desktop.w && h <= desktop.h)
+		return;
+
+	bool was_limited = false;
+
+	// Add any driver / platform / operating system limits in succession:
+
+	// SDL KMSDRM limitstaions:
+	if (is_using_kmsdrm_driver()) {
+		w = desktop.w;
+		h = desktop.h;
+		was_limited = true;
+		LOG_WARNING("DISPLAY: Limitting %s resolution to '%dx%d' to avoid kmsdrm issues",
+		            size_description, w, h);
+	}
+
+	if (!was_limited)
+		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding the %dx%d display",
+		         size_description, w, h, desktop.w, desktop.h);
+}
+
+static SDL_Point window_bounds_from_resolution(const std::string &pref)
 {
 	int w = 0;
 	int h = 0;
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
-	const bool is_out_of_bounds = (w > desktop.w || h > desktop.h);
-	if (was_parsed && is_out_of_bounds)
-		LOG_WARNING("DISPLAY: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
-		            w, h, desktop.w, desktop.h);
-
 	const bool is_valid = (w >= FALLBACK_WINDOW_DIMENSIONS.x &&
 	                       h >= FALLBACK_WINDOW_DIMENSIONS.y);
-	if (was_parsed && is_valid)
+
+	if (was_parsed && is_valid) {
+		maybe_limit_requested_resolution(w, h, "window");
 		return {w, h};
+	}
 
 	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
 	            pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
@@ -2340,16 +2371,6 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 	const auto w = std::max(size.x, FALLBACK_WINDOW_DIMENSIONS.x);
 	const auto h = std::max(size.y, FALLBACK_WINDOW_DIMENSIONS.y);
 	return {w, h};
-}
-
-static SDL_Rect get_desktop_resolution()
-{
-	SDL_Rect desktop;
-	assert(sdl.display_number >= 0);
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
-	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
-	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
-	return desktop;
 }
 
 // Takes in:
@@ -2490,7 +2511,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	sdl.window_resolution_specified = pref.find('x') != std::string::npos;
 	if (sdl.window_resolution_specified) {
-		coarse_size = window_bounds_from_resolution(pref, desktop);
+		coarse_size = window_bounds_from_resolution(pref);
 		refined_scaling_mode = drop_nearest();
 	} else {
 		coarse_size = window_bounds_from_label(pref, desktop);
@@ -2659,6 +2680,10 @@ static void GUI_StartUp(Section *sec)
 					*height = 0;
 					sdl.desktop.full.height = atoi(height + 1);
 					sdl.desktop.full.width  = atoi(res);
+					maybe_limit_requested_resolution(
+					        sdl.desktop.full.width,
+					        sdl.desktop.full.height,
+					        "fullscreen");
 				}
 			}
 		}
