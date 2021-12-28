@@ -3834,6 +3834,9 @@ int sdl_main(int argc, char *argv[])
 
 	loguru::init(argc, argv);
 
+	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
+	LOG_MSG("---");
+
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
@@ -3911,9 +3914,6 @@ int sdl_main(int argc, char *argv[])
 #if defined(WIN32)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
-
-	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
-	LOG_MSG("---");
 
 	check_kmsdrm_setting();
 
