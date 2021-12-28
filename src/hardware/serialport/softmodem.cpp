@@ -141,7 +141,7 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 
 	CSerial::Init_Registers();
 	Reset(); // reset calls EnterIdleState
-	setEvent(SERIAL_POLLING_EVENT,1);
+	setEvent(SERIAL_POLLING_EVENT, MODEM_TICKTIME);
 
 	// Enable telnet-mode if configured
 	if (getUintFromString("telnet:", val, cmd)) {
@@ -198,7 +198,7 @@ void CSerialModem::handleUpperEvent(uint16_t type)
 			setEvent(SERIAL_RX_EVENT, (float)0.01);
 		}
 		Timer2();
-		setEvent(SERIAL_POLLING_EVENT,1);
+		setEvent(SERIAL_POLLING_EVENT, MODEM_TICKTIME);
 		break;
 	}
 
@@ -857,7 +857,8 @@ void CSerialModem::Timer2()
 	// Check for eventual break command
 	if (!commandmode) {
 		cmdpause++;
-		const auto guard_threashold = static_cast<uint32_t>(20 * reg[MREG_GUARD_TIME]);
+		const auto guard_threashold = static_cast<uint32_t>(
+		        reg[MREG_GUARD_TIME] * 20 / MODEM_TICKTIME);
 		if (cmdpause > guard_threashold) {
 			if (plusinc == 0) {
 				plusinc = 1;
@@ -962,7 +963,7 @@ void CSerialModem::Timer2()
 				SendRes(ResRING);
 				CSerial::setRI(!CSerial::getRI());
 				//MIXER_Enable(mhd.chan,true);
-				ringtimer = 3000;
+				ringtimer = MODEM_RINGINTERVAL;
 				reg[MREG_RING_COUNT] = 0; //Reset ring counter reg
 			}
 		}
@@ -979,7 +980,7 @@ void CSerialModem::Timer2()
 			CSerial::setRI(!CSerial::getRI());
 
 			//MIXER_Enable(mhd.chan,true);
-			ringtimer = 3000;
+			ringtimer = MODEM_RINGINTERVAL;
 		}
 		--ringtimer;
 	}
@@ -1071,8 +1072,8 @@ void CSerialModem::setRTS(bool val) {
 void CSerialModem::setDTR(bool val) {
 	if (val != oldDTRstate) {
 		if (connected && !val) {
-			// Start the timer upon losing DTR.
-			dtrofftimer = reg[MREG_DTR_DELAY];
+			// Start the timer upon losing DTR (S25 stores time in 1/100s of a second).
+			dtrofftimer = reg[MREG_DTR_DELAY] * 10 / MODEM_TICKTIME;
 		} else {
 			dtrofftimer = -1;
 		}

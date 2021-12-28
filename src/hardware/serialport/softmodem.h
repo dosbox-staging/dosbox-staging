@@ -42,6 +42,10 @@
 #define MODEM_RING_EVENT SERIAL_BASE_EVENT_COUNT + 3
 #define SERIAL_MODEM_EVENT_COUNT SERIAL_BASE_EVENT_COUNT+3
 
+#define MODEM_TICKRATE 1000 // Ticks per second
+#define MODEM_TICKTIME (1000 / MODEM_TICKRATE) // Tick interval in milliseconds
+#define MODEM_RINGINTERVAL (3000 / MODEM_TICKTIME)
+
 
 enum ResTypes {
 	ResNONE,
