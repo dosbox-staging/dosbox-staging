@@ -1095,6 +1095,37 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	return contains(flexible_shader_names, get_glshader_value());
 }
 
+static bool is_using_kmsdrm_driver()
+{
+	const bool is_initialized = SDL_WasInit(SDL_INIT_VIDEO);
+	const auto driver = is_initialized ? SDL_GetCurrentVideoDriver()
+	                                   : getenv("SDL_VIDEODRIVER");
+	if (!driver)
+		return false;
+
+	std::string driver_str = driver;
+	lowcase(driver_str);
+	return driver_str == "kmsdrm";
+}
+
+static void check_kmsdrm_setting()
+{
+	// Simple pre-check to see if we're using kmsdrm
+	if (!is_using_kmsdrm_driver())
+		return;
+
+	// Do we have read access to the event subsystem
+	if (auto f = fopen("/dev/input/event0", "r"); f) {
+		fclose(f);
+		return;
+	}
+
+	// We're using KMSDRM, but we don't have read access to the event subsystem
+	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
+	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
+	exit(1);
+}
+
 static SDL_Point calc_pp_scale(int avw, int avh)
 {
 	assert(sdl.draw.width > 0);
@@ -3843,6 +3874,8 @@ int sdl_main(int argc, char *argv[])
 
 	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
+
+	check_kmsdrm_setting();
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
