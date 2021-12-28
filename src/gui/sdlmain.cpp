@@ -3837,6 +3837,9 @@ int sdl_main(int argc, char *argv[])
 	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
+	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,
+	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
+
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
