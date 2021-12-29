@@ -72,7 +72,7 @@ These are common options:
   -exit               Dosbox will close itself when the DOS program
                       specified by FILE ends.
 
-  -v, --version       Output version information and exit.
+  --version       Output version information and exit.
 
 You can find full list of options in the man page: dosbox(1)
 And in file: /usr/share/doc/dosbox-staging/README
