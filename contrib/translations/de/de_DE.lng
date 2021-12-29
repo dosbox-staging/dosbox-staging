@@ -314,10 +314,15 @@ Die IRQ-Nummer des Sound Blasters.
 Die DMA-Nummer des Sound Blasters.
 .
 :CONFIG_HDMA
-Die High DMA Nummer des Sound Blasters.
+Die High-DMA-Nummer des Sound Blasters.
 .
 :CONFIG_SBMIXER
 Erlaube dem Sound Blaster Mixer, den DOSBox Mixer zu modifizieren.
+.
+:CONFIG_SBWARMUP
+Stummschalten des DMA-Audio nach dem Einschalten der Karte in Millisekunden.
+Dadurch werden die Knackger„usche beim Starten vieler SB-basierter Spiele reduziert.
+Reduziere diesen Wert, wenn du feststellst, dass bei der ersten Wiedergabe Audio fehlt.
 .
 :CONFIG_OPLRATE
 oplrate ist veraltet. Die OPL Signale werden nun mit der Sampelrate
@@ -444,7 +449,7 @@ Beispiel: serial1=modem listenport:5000
 siehe serial1
 .
 :CONFIG_SERIAL3
-siehe seriell1
+siehe serial1
 .
 :CONFIG_SERIAL4
 siehe serial1
@@ -473,6 +478,55 @@ Sprachcode des Tastaturlayouts (oder keines).
 .
 :CONFIG_IPX
 Aktiviere IPX ber UDP/IP Emulation.
+.
+:CONFIG_NE2000
+Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem softwarebasierten
+Netzwerk (mit libslirp) mit den folgenden Eigenschaften:
+ - 255.255.255.0 : Subnetzmaske des virtuellen LAN 10.0.2.0.
+ - 10.0.2.2      : IP des Gateways und des DHCP-Dienstes.
+ - 10.0.2.3      : IP des virtuellen DNS-Servers.
+ - 10.0.2.15     : Die erste von DHCP bereitgestellte IP, deine IP!
+Hinweis: Unter DOS wird fr die Einrichtung ein NE2000-Paket-Treiber,
+         DHCP-Client und ein TCP/IP-Stack ben”tigt. M”glicherweise
+         ben”tigst du eine Port-Weiterleitung vom Host zum DOS-Gast
+         und von deinem Router zu deinem Host, wenn du als Server
+         fr Multiplayer-Spiele fungierst.
+.
+:CONFIG_NICBASE
+Die Basisadresse der NE2000-Karte.
+Hinweis: Die Adressen 220 und 240 sind m”glicherweise nicht verfgbar, da sie
+         Sound Blaster und Gravis UltraSound standardm„áig zugewiesen sind.
+.
+:CONFIG_NICIRQ
+Der Interrupt, der von der NE2000-Karte verwendet wird.
+Hinweis: Die IRQs 3 und 5 sind m”glicherweise nicht verfgbar, da sie
+         "serial2" und dem Gravis UltraSound standardm„áig zugewiesen sind.
+.
+:CONFIG_MACADDR
+Die MAC-Adresse der NE2000-Karte.
+.
+:CONFIG_TCP_PORT_FORWARDS
+Leitet einen oder mehrere TCP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist:
+  port1  port2  port3 ... (z.B., 21 80 443)
+  Dadurch werden FTP, HTTP und HTTPS an den DOS-Gast weitergeleitet.
+Wenn die Ports auf dem Host privilegiert sind, kann ein Mapping verwendet werden
+  Host:Gast  ..., (z.B., 8021:21 8080:80)
+  Dadurch werden die Ports 8021 und 8080 an FTP und HTTP im Gast weitergeleitet
+Ein Bereich von benachbarten Ports kann mit einem Bindestrich abgekrzt werden:
+  Start-Ende ... (z.B., 27910-27960)
+  Dadurch werden die Ports 27910 bis 27960 an den DOS-Gast weitergeleitet.
+Zuordnungen und Bereiche k”nnen auch kombiniert werden:
+  HStart-HEnde:GStart-GEnde ..., (z.B, 8040-8080:20-60)
+  Dies leitet die Ports 8040 bis 8080 an die Ports 20 bis 60 des Gastes weiter.
+Anmerkungen:
+  - Wenn die zugewiesenen Bereiche unterschiedlich sind, wird der krzere Bereich erweitert, damit er passt.
+  - Wenn widersprchliche Host-Ports angegeben werden, wird nur der erste eingerichtet.
+  - Bei widersprchlichen Gast-Ports hat die letztere Regel Vorrang.
+.
+:CONFIG_UDP_PORT_FORWARDS
+Leitet einen oder mehrere UDP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist dasselbe wie bei der Weiterleitung von TCP-Ports.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Die Zeilen in diesem Abschnitt werden beim Start ausgefhrt.
@@ -1322,7 +1376,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-º [33mhttps://dosbox-staging.github.io[37m       Deutsche šbersetzung 0.78 v1 º
+º [33mhttps://dosbox-staging.github.io[37m     Deutsche šbersetzung 0.78.1 v1 º
 ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
@@ -2119,5 +2173,50 @@ Anmerkungen:
 Beispiele:
   [32;1mpath[0m
   [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+Keine IDE-Controller verfgbar. Das Laufwerk wird keine IDE-Emulation haben.
+
+.
+:PROGRAM_SERIAL_HELP
+Verwalte die seriellen Schnittstellen.
+Verwendungsarten:
+  SERIAL /L | /LIST             Liste der aktuellen seriellen Schnittstellen.
+  SERIAL PORT# TYPE [settings]  Setzt den Port auf den angegebenen TYP.
+
+Wobei:
+  PORT# : 1, 2, 3, or 4
+  TYP   : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, oder DISABLED
+
+Optionale Einstellungen fr jeden TYP:
+  Fr MODEM        : IRQ, LISTENPORT, SOCK
+  Fr NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
+  Fr DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
+  Fr DUMMY        : IRQ
+
+Beispiele mit Port 1 oder COM1 unter DOS:
+  SERIAL /list                                : Liste der COM-Schnittstellen
+  SERIAL 1 NULLMODEM PORT:1250                : Warte auf TCP:1250 als Server
+  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250: Verbinden mit Port als Client
+  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1       : Warte auf UDP:5000 als Server
+  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0      : Phys. Port unter Linux verwenden
+
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+Ein numerischer Port-Wert zwischen 1 und %d (einschlieálich) muss angegeben werden.
+
+.
+:PROGRAM_SERIAL_BAD_MODE
+Der Modus muss einer der folgenden sein:
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
 
 .

@@ -314,15 +314,15 @@ Die IRQ-Nummer des Sound Blasters.
 Die DMA-Nummer des Sound Blasters.
 .
 :CONFIG_HDMA
-Die High DMA Nummer des Sound Blasters.
+Die High-DMA-Nummer des Sound Blasters.
 .
 :CONFIG_SBMIXER
 Erlaube dem Sound Blaster Mixer, den DOSBox Mixer zu modifizieren.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA audio after card power-on, in milliseconds.
-This mitigates pops heard when starting many SB-based games.
-Reduce this if you notice intial playback is missing audio.
+Stummschalten des DMA-Audio nach dem Einschalten der Karte in Millisekunden.
+Dadurch werden die Knackgeräusche beim Starten vieler SB-basierter Spiele reduziert.
+Reduziere diesen Wert, wenn du feststellst, dass bei der ersten Wiedergabe Audio fehlt.
 .
 :CONFIG_OPLRATE
 oplrate ist veraltet. Die OPL Signale werden nun mit der Sampelrate
@@ -449,7 +449,7 @@ Beispiel: serial1=modem listenport:5000
 siehe serial1
 .
 :CONFIG_SERIAL3
-siehe seriell1
+siehe serial1
 .
 :CONFIG_SERIAL4
 siehe serial1
@@ -480,52 +480,53 @@ Sprachcode des Tastaturlayouts (oder keines).
 Aktiviere IPX über UDP/IP Emulation.
 .
 :CONFIG_NE2000
-Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows:
- - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
- - 10.0.2.2      : IP of the gateway and DHCP service.
- - 10.0.2.3      : IP of the virtual DNS server.
- - 10.0.2.15     : First IP provided by DHCP, your IP!
-Note: Inside DOS, setting this up requires an NE2000 packet driver,
-      DHCP client, and TCP/IP stack. You might need port-forwarding
-      from the host into the DOS guest, and from your router to your
-      host when acting as the server for multiplayer games.
+Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem softwarebasierten
+Netzwerk (mit libslirp) mit den folgenden Eigenschaften:
+ - 255.255.255.0 : Subnetzmaske des virtuellen LAN 10.0.2.0.
+ - 10.0.2.2      : IP des Gateways und des DHCP-Dienstes.
+ - 10.0.2.3      : IP des virtuellen DNS-Servers.
+ - 10.0.2.15     : Die erste von DHCP bereitgestellte IP, deine IP!
+Hinweis: Unter DOS wird für die Einrichtung ein NE2000-Paket-Treiber,
+         DHCP-Client und ein TCP/IP-Stack benötigt. Möglicherweise
+         benötigst du eine Port-Weiterleitung vom Host zum DOS-Gast
+         und von deinem Router zu deinem Host, wenn du als Server
+         für Multiplayer-Spiele fungierst.
 .
 :CONFIG_NICBASE
-The base address of the NE2000 card.
-Note: Addresses 220 and 240 might not be available as they're assigned
-      to the Sound Blaster and Gravis UltraSound by default.
+Die Basisadresse der NE2000-Karte.
+Hinweis: Die Adressen 220 und 240 sind möglicherweise nicht verfügbar, da sie
+         Sound Blaster und Gravis UltraSound standardmäßig zugewiesen sind.
 .
 :CONFIG_NICIRQ
-The interrupt used by the NE2000 card.
-Note: IRQs 3 and 5 might not be available as they're assigned
-      to 'serial2' and the Gravis UltraSound by default.
+Der Interrupt, der von der NE2000-Karte verwendet wird.
+Hinweis: Die IRQs 3 und 5 sind möglicherweise nicht verfügbar, da sie
+         "serial2" und dem Gravis UltraSound standardmäßig zugewiesen sind.
 .
 :CONFIG_MACADDR
-The MAC address of the NE2000 card.
+Die MAC-Adresse der NE2000-Karte.
 .
 :CONFIG_TCP_PORT_FORWARDS
-Forwards one or more TCP ports from the host into the DOS guest.
-The format is:
-  port1  port2  port3 ... (e.g., 21 80 443)
-  This will forward FTP, HTTP, and HTTPS into the DOS guest.
-If the ports are privileged on the host, a mapping can be used
-  host:guest  ..., (e.g., 8021:21 8080:80)
-  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
-A range of adjacent ports can be abbreviated with a dash:
-  start-end ... (e.g., 27910-27960)
-  This will forward ports 27910 to 27960 into the DOS guest.
-Mappings and ranges can be combined, too:
-  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
-  This forwards ports 8040 to 8080 into 20 to 60 in the guest
-Notes:
-  - If mapped ranges differ, the shorter range is extended to fit.
-  - If conflicting host ports are given, only the first one is setup.
-  - If conflicting guest ports are given, the latter rule takes precedent.
+Leitet einen oder mehrere TCP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist:
+  port1  port2  port3 ... (z.B., 21 80 443)
+  Dadurch werden FTP, HTTP und HTTPS an den DOS-Gast weitergeleitet.
+Wenn die Ports auf dem Host privilegiert sind, kann ein Mapping verwendet werden
+  Host:Gast  ..., (z.B., 8021:21 8080:80)
+  Dadurch werden die Ports 8021 und 8080 an FTP und HTTP im Gast weitergeleitet
+Ein Bereich von benachbarten Ports kann mit einem Bindestrich abgekürzt werden:
+  Start-Ende ... (z.B., 27910-27960)
+  Dadurch werden die Ports 27910 bis 27960 an den DOS-Gast weitergeleitet.
+Zuordnungen und Bereiche können auch kombiniert werden:
+  HStart-HEnde:GStart-GEnde ..., (z.B, 8040-8080:20-60)
+  Dies leitet die Ports 8040 bis 8080 an die Ports 20 bis 60 des Gastes weiter.
+Anmerkungen:
+  - Wenn die zugewiesenen Bereiche unterschiedlich sind, wird der kürzere Bereich erweitert, damit er passt.
+  - Wenn widersprüchliche Host-Ports angegeben werden, wird nur der erste eingerichtet.
+  - Bei widersprüchlichen Gast-Ports hat die letztere Regel Vorrang.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Forwards one or more UDP ports from the host into the DOS guest.
-The format is the same as for TCP port forwards.
+Leitet einen oder mehrere UDP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist dasselbe wie bei der Weiterleitung von TCP-Ports.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Die Zeilen in diesem Abschnitt werden beim Start ausgeführt.
@@ -1375,7 +1376,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m       Deutsche Übersetzung 0.78 v1 ║
+║ [33mhttps://dosbox-staging.github.io[37m     Deutsche Übersetzung 0.78.1 v1 ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 .
@@ -2175,33 +2176,32 @@ Beispiele:
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
+Keine IDE-Controller verfügbar. Das Laufwerk wird keine IDE-Emulation haben.
 
 .
 :PROGRAM_SERIAL_HELP
-Manage the serial ports.
+Verwalte die seriellen Schnittstellen.
+Verwendungsarten:
+  SERIAL /L | /LIST             Liste der aktuellen seriellen Schnittstellen.
+  SERIAL PORT# TYPE [settings]  Setzt den Port auf den angegebenen TYP.
 
-Usage modes:
-  SERIAL /L | /LIST             List the current serial ports.
-  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.
-
-Where:
+Wobei:
   PORT# : 1, 2, 3, or 4
-  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED
+  TYP   : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, oder DISABLED
 
-Optional settings for each TYPE:
-  For MODEM        : IRQ, LISTENPORT, SOCK
-  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+Optionale Einstellungen für jeden TYP:
+  Für MODEM        : IRQ, LISTENPORT, SOCK
+  Für NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
                      USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
-  For DUMMY        : IRQ
+  Für DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
+  Für DUMMY        : IRQ
 
-Examples using port 1, or COM1 in DOS:
-  SERIAL /list                                 : List the current serial ports
-  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server
-  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux
+Beispiele mit Port 1 oder COM1 unter DOS:
+  SERIAL /list                                : Liste der COM-Schnittstellen
+  SERIAL 1 NULLMODEM PORT:1250                : Warte auf TCP:1250 als Server
+  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250: Verbinden mit Port als Client
+  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1       : Warte auf UDP:5000 als Server
+  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0      : Phys. Port unter Linux verwenden
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2209,11 +2209,11 @@ COM%d: %s %s
 
 .
 :PROGRAM_SERIAL_BAD_PORT
-Must specify a numeric port value between 1 and %d, inclusive.
+Ein numerischer Port-Wert zwischen 1 und %d (einschließlich) muss angegeben werden.
 
 .
 :PROGRAM_SERIAL_BAD_MODE
-Mode must be one of the following:
+Der Modus muss einer der folgenden sein:
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST
