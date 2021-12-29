@@ -101,7 +101,11 @@ d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca gli screensaver
 del sistema operativo mentre l'emulatore è in esecuzione).
 .
 :CONFIG_LANGUAGE
-Seleziona un altro file di lingua.
+Seleziona una lingua da usare: de, en, es, fr, it, pl e ru.
+Note: Questa impostazione, se utilizzata, sovrascriverà la variabile 
+      d'ambiente 'LANG'. La cartella 'translations', inclusa nel pacchetto
+      insieme all'eseguibile, contiene questi file di dati.
+      Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
 :CONFIG_MACHINE
 Tipo di macchina che DOSBox sta cercando di emulare.
@@ -348,9 +352,10 @@ Canale High DMA della scheda audio Sound Blaster.
 Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA audio after card power-on, in milliseconds.
-This mitigates pops heard when starting many SB-based games.
-Reduce this if you notice intial playback is missing audio.
+Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
+in millisecondi. Questo attenua gli artefatti audio che si sentono quando si
+avviano molti giochi compatibili con Sound Blaster. Riducilo se noti campioni
+tagliati o preferisci un'emulazione più accurata dell'hardware.
 .
 :CONFIG_OPLRATE
 oplrate è deprecato. La forma d'onda OPL viene ora campionata alla velocità di
@@ -478,10 +483,12 @@ Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
 per directserial: realport (richiesto), rxdelay (facoltativo).
                  (realport:COM1 realport:ttyS0).
-per modem: listenport (facoltativo).
+per modem: listenport sock (tutti facoltativi).
 per nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket (tutti facoltativi).
-Esempio: serial1=modem listenport:5000
+               transparent, port, inhsocket, sock (tutti facoltativi).
+Il parametro SOCK specifica il protocollo da utilizzare da entrambi i lati
+della connessione. 0 per TCP e 1 per UDP affidabile ENet.
+Esempio: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
 Fare riferimento alla sezione serial1.
@@ -517,55 +524,58 @@ I parametri riconosciuti sono 3.3, 5.0, 6.22, e 7.1.
 Codice linguaggio del layout della tastiera (o 'none').
 .
 :CONFIG_IPX
-Abilita l'emulazione ipx attraverso UDP/IP.
+Abilita ipx attraverso l'emulazione UDP/IP.
 .
 :CONFIG_NE2000
-Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows:
- - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
- - 10.0.2.2      : IP of the gateway and DHCP service.
- - 10.0.2.3      : IP of the virtual DNS server.
- - 10.0.2.15     : First IP provided by DHCP, your IP!
-Note: Inside DOS, setting this up requires an NE2000 packet driver,
-      DHCP client, and TCP/IP stack. You might need port-forwarding
-      from the host into the DOS guest, and from your router to your
-      host when acting as the server for multiplayer games.
+Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata
+su software (usando libslirp) con le seguenti proprietà:
+ - 255.255.255.0 : Subnet mask della LAN virtuale 10.0.2.0.
+ - 10.0.2.2      : IP del gateway e del servizio DHCP.
+ - 10.0.2.3      : IP del server DNS virtuale.
+ - 10.0.2.15     : Primo IP fornito dal DHCP, il tuo IP!
+Note: All'interno del DOS, la configurazione richiede un pacchetto driver
+      NE2000, un client DHCP e uno stack TCP/IP. Potrebbe essere necessario
+      inoltrare le porte dall'host al guest DOS, e dal router al tuo host
+      quando funge da server per i giochi multigiocatore.
 .
 :CONFIG_NICBASE
-The base address of the NE2000 card.
-Note: Addresses 220 and 240 might not be available as they're assigned
-      to the Sound Blaster and Gravis UltraSound by default.
+L'indirizzo di base della scheda NE2000.
+Note: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
+      assegnati alle schede Sound Blaster e Gravis UltraSound per impostazione
+      predefinita.
 .
 :CONFIG_NICIRQ
-The interrupt used by the NE2000 card.
-Note: IRQs 3 and 5 might not be available as they're assigned
-      to 'serial2' and the Gravis UltraSound by default.
+L'interrupt utilizzato dalla scheda NE2000.
+Note: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
+      'serial2' e Gravis UltraSound per impostazione predefinita.
 .
 :CONFIG_MACADDR
-The MAC address of the NE2000 card.
+L'indirizzo MAC della scheda NE2000.
 .
 :CONFIG_TCP_PORT_FORWARDS
-Forwards one or more TCP ports from the host into the DOS guest.
-The format is:
-  port1  port2  port3 ... (e.g., 21 80 443)
-  This will forward FTP, HTTP, and HTTPS into the DOS guest.
-If the ports are privileged on the host, a mapping can be used
-  host:guest  ..., (e.g., 8021:21 8080:80)
-  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
-A range of adjacent ports can be abbreviated with a dash:
-  start-end ... (e.g., 27910-27960)
-  This will forward ports 27910 to 27960 into the DOS guest.
-Mappings and ranges can be combined, too:
-  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
-  This forwards ports 8040 to 8080 into 20 to 60 in the guest
-Notes:
-  - If mapped ranges differ, the shorter range is extended to fit.
-  - If conflicting host ports are given, only the first one is setup.
-  - If conflicting guest ports are given, the latter rule takes precedent.
+Inoltra una o più porte TCP dall'host al guest DOS.
+Il formato è:
+  porta1  porta2  porta3 ... (ad es. 21 80 443)
+  Questo inoltrerà FTP, HTTP e HTTPS al guest DOS.
+Se le porte sono privilegiate sull'host, è possibile utilizzare una mappatura:
+  host:guest  ..., (ad es. 8021:21 8080:80)
+  Questo inoltrerà le porte 8021 e 8080 a FTP e HTTP nel guest DOS.
+Un intervallo di porte adiacenti può essere abbreviato con un trattino:
+  inizio-fine ... (ad es. 27910-27960)
+  Questo inoltrerà le porte da 27910 a 27960 al guest DOS.
+Le mappature e gli intervalli possono essere combinati:
+  hinizio-hfine:ginizio-gfine ..., (ad es. 8040-8080:20-60)
+  Questo inoltra le porte da 8040 a 8080 in 20 a 60 nel guest DOS.
+Note:
+  - Se gli intervalli mappati differiscono, l'intervallo più corto viene esteso
+    per adattarsi.
+  - Se vengono fornite porte host in conflitto, viene impostata solo la prima.
+  - Se vengono fornite porte guest in conflitto, quest'ultima regola ha la
+    precedenza.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Forwards one or more UDP ports from the host into the DOS guest.
-The format is the same as for TCP port forwards.
+Inoltra una o più porte UDP dall'host al guest DOS.
+Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Le righe in questa sezione verranno eseguite ad ogni avvio.
@@ -716,6 +726,10 @@ Il percorso "%s" supera la lunghezza massima DOS di %d carattere/i.
 .
 :PROGRAM_EXECUTABLE_MISSING
 File eseguibile non trovato: %s
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+Nessun controller IDE disponibile. L'unità non avrà l'emulazione IDE.
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -1101,7 +1115,7 @@ Possono essere modificate nel [33mkeymapper[0m.
 [33;1m%s+Pause[0m  Mette in pausa/riavvia l'emulatore.
 [33;1m%s+F1[0m   %s Avvia il [33mkeymapper[0m.
 [33;1m%s+F4[0m   %s Passa tra le immagini disco montate, scansiona tutte le unità per
-                     rilevare modifiche.               
+           rilevare modifiche.               
 [33;1m%s+F5[0m   %s Scatta un'istantanea dello schermo (screenshot).
 [33;1m%s+F6[0m   %s Avvia/Ferma la registrazione dell'output audio in un file wave.
 [33;1m%s+F7[0m   %s Avvia/Ferma la registrazione dell'output video in un file zmbv.
@@ -1235,7 +1249,7 @@ Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 
 Utilizzo:
-  [32;1mimgmount[0m [37;1mUNITÀ[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
+  [32;1mimgmount[0m [37;1mUNITÀ[0m [36;1mCDROM-SET[0m [-fs iso] [-ide] -t cdrom|iso
   [32;1mimgmount[0m [37;1mUNITÀ[0m [36;1mIMMAGINE[0m [IMMAGINE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mUNITÀ[0m [36;1mAVVIABILE[0m [-fs fat|none] -t hdd -size GEOMETRIA
   [32;1mimgmount[0m -u [37;1mUNITÀ[0m  (smonta le immagini)
@@ -1248,12 +1262,13 @@ Dove:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Note:
   - %s+F4 scambia e monta il CDROM-SET o l'IMMAGINE successiva, se fornita.
-
+  - Il flag '-ide' emula un controller IDE con un'unità ATAPI CD-ROM collegata.
+    Questo è utile per i giochi basati su CDROM che necessitano di un vero
+    ambiente DOS tramite l'immagine HDD avviabile.
 Esempi:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/NOMEUTENTE/giochi/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
   [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/disco_c.img[0m -t hdd
   [32;1mimgmount[0m [37;1mC[0m [36;1mdisco_avviabile.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -1410,6 +1425,49 @@ Impossibile trovare il layout %s per la tabella codici %i.
 :PROGRAM_KEYB_INVCPFILE
 File tabella codici mancante o non valido per il layout %s.
 
+
+.
+:PROGRAM_SERIAL_HELP
+Gestisce le porte seriali.
+
+Utilizzo:
+  SERIAL /L | /LIST               Elenca le porte seriali correnti.
+  SERIAL PORTA# TIPO [impostaz.]  Imposta la porta in base al TIPO specificato.
+
+Dove:
+  PORTA# : 1, 2, 3, o 4
+  TIPO   : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, o DISABLED
+
+Impostazioni facoltative per ogni TIPO:
+  Per MODEM        : IRQ, LISTENPORT, SOCK
+  Per NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
+  Per DIRECTSERIAL : IRQ, REALPORT (necessario), RXDELAY
+  Per DUMMY        : IRQ
+
+Esempi utilizzando la porta 1 o COM1 in DOS:
+ SERIAL /list                                : Elenca le porte seriali correnti
+ SERIAL 1 NULLMODEM PORT:1250                : Ascolto su TCP:1250 come server
+ SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
+ SERIAL 1 MODEM LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
+ SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0      : Usa una porta fisica su Linux
+
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+È necessario specificare un numero di porta compreso tra 1 e %d, estremi
+compresi.
+
+.
+:PROGRAM_SERIAL_BAD_MODE
+La modalità deve essere una delle seguenti:
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
 
 .
 :PROGRAM_PLACEHOLDER_SHORT_HELP
@@ -2334,51 +2392,5 @@ DOS versione %d.%02d
 .
 :SHELL_CMD_VER_INVALID
 La versione DOS specificata non è corretta.
-
-.
-:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
-
-.
-:PROGRAM_SERIAL_HELP
-Manage the serial ports.
-
-Usage modes:
-  SERIAL /L | /LIST             List the current serial ports.
-  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.
-
-Where:
-  PORT# : 1, 2, 3, or 4
-  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED
-
-Optional settings for each TYPE:
-  For MODEM        : IRQ, LISTENPORT, SOCK
-  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
-                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
-  For DUMMY        : IRQ
-
-Examples using port 1, or COM1 in DOS:
-  SERIAL /list                                 : List the current serial ports
-  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server
-  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux
-
-.
-:PROGRAM_SERIAL_SHOW_PORT
-COM%d: %s %s
-
-.
-:PROGRAM_SERIAL_BAD_PORT
-Must specify a numeric port value between 1 and %d, inclusive.
-
-.
-:PROGRAM_SERIAL_BAD_MODE
-Mode must be one of the following:
-
-.
-:PROGRAM_SERIAL_INDENTED_LIST
-  %s
 
 .
