@@ -6,8 +6,6 @@
 
 set -euo pipefail
 
-VERSION="0.78.1"
-
 PACKAGED_BUILD="build/lang"
 
 LNG_DIR="contrib/translations"
@@ -49,7 +47,7 @@ update() {
 	local -r codepage="$3"
 	local -r postfix="${4:-}"
 	local -r lng_path="$LNG_DIR/$lang/${lang}_${dialect}${postfix}.lng"
-	local -r txt_path="$OUTPUT_DIR/$lang/$lang-$VERSION.txt"
+	local -r txt_path="$OUTPUT_DIR/$lang.txt"
 
 	# If the languge is english, then we zero-out the en.lng file
 	# to ensure we get only those strings defined int the source-code
