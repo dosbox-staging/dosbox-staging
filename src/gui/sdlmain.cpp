@@ -757,6 +757,22 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 	return {x, y};
 }
 
+// A safer way to call SDL_SetWindowSize because it ensures the event-callback
+// is disabled during the resize event. This prevents the event callback from
+// firing before the window is resized in which case an endless loop can occur
+static void safe_set_window_size(const int w, const int h)
+{
+	decltype(sdl.draw.callback) saved_callback = nullptr;
+	// Swap and save the callback with a a no-op
+	std::swap(sdl.draw.callback, saved_callback);
+
+	assert(sdl.window);
+	SDL_SetWindowSize(sdl.window, w, h);
+
+	// Swap the saved callback back in
+	std::swap(sdl.draw.callback, saved_callback);
+}
+
 static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -851,7 +867,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// we're in PP mode
 		if (window_is_too_small || (sdl.scaling_mode == SCALING_MODE::PERFECT &&
 		                            window_dimensions_not_exact)) {
-			SDL_SetWindowSize(sdl.window, width, height);
+			safe_set_window_size(width, height);
 		}
 		// If we're switching down from fullscreen, then it will use the set window size
 		if (sdl.desktop.switching_fullscreen) {
@@ -1479,9 +1495,9 @@ dosurface:
 		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
 		    window_doesnt_match_desired && desired_size_is_valid &&
 		    !sdl.desktop.window.adjusted_initial_size) {
-			SDL_SetWindowSize(sdl.window, desired_w, desired_h);
-			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 			sdl.desktop.window.adjusted_initial_size = true;
+			safe_set_window_size(desired_w, desired_h);
+			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 		}
 
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
@@ -3067,8 +3083,7 @@ static void FinalizeWindowState()
 	// on future expose events.
 	sdl.desktop.lazy_init_window_size = false;
 
-	SDL_SetWindowSize(sdl.window, sdl.desktop.window.width,
-	                  sdl.desktop.window.height);
+	safe_set_window_size(sdl.desktop.window.width, sdl.desktop.window.height);
 
 	// Force window position when dosbox is configured to start in
 	// fullscreen.  Otherwise SDL will reset window position to 0,0 when
