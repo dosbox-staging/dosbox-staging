@@ -532,6 +532,9 @@
     <ClCompile Include="..\src\dos\program_serial.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp">
+      <Filter>src\libs\ghc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libs\loguru\loguru.cpp">
       <Filter>src\libs\loguru</Filter>
     </ClCompile>

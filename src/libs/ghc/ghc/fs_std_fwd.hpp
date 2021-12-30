@@ -40,7 +40,7 @@
 #if __has_include(<filesystem>) && (!defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500)
 #define GHC_USE_STD_FS
 #include <filesystem>
-namespace fs {
+namespace std_fs {
 using namespace std::filesystem;
 using ifstream = std::ifstream;
 using ofstream = std::ofstream;
@@ -52,7 +52,7 @@ using fstream = std::fstream;
 //#define GHC_WIN_DISABLE_WSTRING_STORAGE_TYPE
 #define GHC_FILESYSTEM_FWD
 #include <ghc/filesystem.hpp>
-namespace fs {
+namespace std_fs {
 using namespace ghc::filesystem;
 using ifstream = ghc::filesystem::ifstream;
 using ofstream = ghc::filesystem::ofstream;

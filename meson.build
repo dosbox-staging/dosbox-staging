@@ -41,9 +41,19 @@ prefers_static_libs = (get_option('default_library') == 'static')
 summary('Build type',     get_option('buildtype'), section : 'Build Summary')
 summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 
-# compiler flags
-#
-extra_flags = ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
+# extra compiler flags
+extra_flags = []
+
+# If the compiler provides std::filesystem, then we consider it modern enough
+# that we can trust it's extra helpful warnings to let us improve the code quality.
+if cxx.has_header('filesystem')
+  extra_flags += ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
+else
+  # Otherwise, it's an old compiler and we're just trying to build, and don't
+  # care about fixing their warnings (some generate warnings from their own STL).
+  warning('Compiler lacks the C++17 std::filesystem - try to upgrade your compiler!')
+endif
+
 if host_machine.system() == 'windows'
   extra_flags += '-Wno-pedantic-ms-format'
 endif
@@ -381,6 +391,7 @@ incdir = include_directories('include', '.')
 
 # bundled dependencies, in dependency-order
 #
+subdir('src/libs/ghc')
 subdir('src/libs/loguru')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
@@ -426,6 +437,7 @@ executable('dosbox', dosbox_sources,
                            stdcppfs_dep,
                            sdl2_dep,
                            threads_dep,
+                           libghc_dep,
                            libloguru_dep,
                            libwhereami_dep]
                           + internal_deps,
@@ -434,7 +446,13 @@ executable('dosbox', dosbox_sources,
 # create a library so we can test things inside DOSBOX dep path
 libdosbox = static_library('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
                         include_directories : incdir,
-                        dependencies : [atomic_dep, threads_dep, sdl2_dep, libloguru_dep] + internal_deps)
+                        dependencies : [atomic_dep,
+                                        threads_dep,
+                                        sdl2_dep,
+                                        libghc_dep,
+                                        libloguru_dep]
+                                      + internal_deps)
+
 dosbox_dep = declare_dependency(link_with : libdosbox)
 
 
