@@ -11,6 +11,7 @@ libgui = static_library('gui', libgui_sources,
                         dependencies : [
                           sdl2_dep,
                           opengl_dep,
+                          libghc_dep,
                           libloguru_dep,
                           libppscale_dep,
                         ])

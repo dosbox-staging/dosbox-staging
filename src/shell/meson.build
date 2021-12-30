@@ -9,6 +9,7 @@ libshell = static_library('shell', libshell_sources,
                           include_directories : incdir,
                           dependencies : [
                             sdl2_dep,
+                            libghc_dep,
                             libloguru_dep,
                           ])
 

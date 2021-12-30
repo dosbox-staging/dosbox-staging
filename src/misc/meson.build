@@ -17,6 +17,7 @@ libmisc = static_library('misc', libmisc_sources,
                          include_directories : incdir,
                          dependencies : [
                            corefoundation_dep,
+                           libghc_dep,
                            libloguru_dep,
                            libslirp_dep,
                            libwhereami_dep,
