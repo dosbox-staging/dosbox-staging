@@ -757,6 +757,22 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 	return {x, y};
 }
 
+// A safer way to call SDL_SetWindowSize because it ensures the event-callback
+// is disabled during the resize event. This prevents the event callback from
+// firing before the window is resized in which case an endless loop can occur
+static void safe_set_window_size(const int w, const int h)
+{
+	decltype(sdl.draw.callback) saved_callback = nullptr;
+	// Swap and save the callback with a a no-op
+	std::swap(sdl.draw.callback, saved_callback);
+
+	assert(sdl.window);
+	SDL_SetWindowSize(sdl.window, w, h);
+
+	// Swap the saved callback back in
+	std::swap(sdl.draw.callback, saved_callback);
+}
+
 static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -851,7 +867,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// we're in PP mode
 		if (window_is_too_small || (sdl.scaling_mode == SCALING_MODE::PERFECT &&
 		                            window_dimensions_not_exact)) {
-			SDL_SetWindowSize(sdl.window, width, height);
+			safe_set_window_size(width, height);
 		}
 		// If we're switching down from fullscreen, then it will use the set window size
 		if (sdl.desktop.switching_fullscreen) {
@@ -1093,6 +1109,37 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	        "default",
 	}};
 	return contains(flexible_shader_names, get_glshader_value());
+}
+
+static bool is_using_kmsdrm_driver()
+{
+	const bool is_initialized = SDL_WasInit(SDL_INIT_VIDEO);
+	const auto driver = is_initialized ? SDL_GetCurrentVideoDriver()
+	                                   : getenv("SDL_VIDEODRIVER");
+	if (!driver)
+		return false;
+
+	std::string driver_str = driver;
+	lowcase(driver_str);
+	return driver_str == "kmsdrm";
+}
+
+static void check_kmsdrm_setting()
+{
+	// Simple pre-check to see if we're using kmsdrm
+	if (!is_using_kmsdrm_driver())
+		return;
+
+	// Do we have read access to the event subsystem
+	if (auto f = fopen("/dev/input/event0", "r"); f) {
+		fclose(f);
+		return;
+	}
+
+	// We're using KMSDRM, but we don't have read access to the event subsystem
+	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
+	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
+	exit(1);
 }
 
 static SDL_Point calc_pp_scale(int avw, int avh)
@@ -1448,9 +1495,9 @@ dosurface:
 		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
 		    window_doesnt_match_desired && desired_size_is_valid &&
 		    !sdl.desktop.window.adjusted_initial_size) {
-			SDL_SetWindowSize(sdl.window, desired_w, desired_h);
-			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 			sdl.desktop.window.adjusted_initial_size = true;
+			safe_set_window_size(desired_w, desired_h);
+			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 		}
 
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
@@ -2259,22 +2306,53 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
 
-static SDL_Point window_bounds_from_resolution(const std::string &pref,
-                                               const SDL_Rect &desktop)
+static SDL_Rect get_desktop_resolution()
+{
+	SDL_Rect desktop;
+	assert(sdl.display_number >= 0);
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
+	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	return desktop;
+}
+
+static void maybe_limit_requested_resolution(int &w, int &h, const char *size_description)
+{
+	const auto desktop = get_desktop_resolution();
+	if (w <= desktop.w && h <= desktop.h)
+		return;
+
+	bool was_limited = false;
+
+	// Add any driver / platform / operating system limits in succession:
+
+	// SDL KMSDRM limitstaions:
+	if (is_using_kmsdrm_driver()) {
+		w = desktop.w;
+		h = desktop.h;
+		was_limited = true;
+		LOG_WARNING("DISPLAY: Limitting %s resolution to '%dx%d' to avoid kmsdrm issues",
+		            size_description, w, h);
+	}
+
+	if (!was_limited)
+		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding the %dx%d display",
+		         size_description, w, h, desktop.w, desktop.h);
+}
+
+static SDL_Point window_bounds_from_resolution(const std::string &pref)
 {
 	int w = 0;
 	int h = 0;
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
-	const bool is_out_of_bounds = (w > desktop.w || h > desktop.h);
-	if (was_parsed && is_out_of_bounds)
-		LOG_WARNING("DISPLAY: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
-		            w, h, desktop.w, desktop.h);
-
 	const bool is_valid = (w >= FALLBACK_WINDOW_DIMENSIONS.x &&
 	                       h >= FALLBACK_WINDOW_DIMENSIONS.y);
-	if (was_parsed && is_valid)
+
+	if (was_parsed && is_valid) {
+		maybe_limit_requested_resolution(w, h, "window");
 		return {w, h};
+	}
 
 	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
 	            pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
@@ -2309,16 +2387,6 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 	const auto w = std::max(size.x, FALLBACK_WINDOW_DIMENSIONS.x);
 	const auto h = std::max(size.y, FALLBACK_WINDOW_DIMENSIONS.y);
 	return {w, h};
-}
-
-static SDL_Rect get_desktop_resolution()
-{
-	SDL_Rect desktop;
-	assert(sdl.display_number >= 0);
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
-	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
-	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
-	return desktop;
 }
 
 // Takes in:
@@ -2459,7 +2527,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	sdl.window_resolution_specified = pref.find('x') != std::string::npos;
 	if (sdl.window_resolution_specified) {
-		coarse_size = window_bounds_from_resolution(pref, desktop);
+		coarse_size = window_bounds_from_resolution(pref);
 		refined_scaling_mode = drop_nearest();
 	} else {
 		coarse_size = window_bounds_from_label(pref, desktop);
@@ -2628,6 +2696,10 @@ static void GUI_StartUp(Section *sec)
 					*height = 0;
 					sdl.desktop.full.height = atoi(height + 1);
 					sdl.desktop.full.width  = atoi(res);
+					maybe_limit_requested_resolution(
+					        sdl.desktop.full.width,
+					        sdl.desktop.full.height,
+					        "fullscreen");
 				}
 			}
 		}
@@ -3011,8 +3083,7 @@ static void FinalizeWindowState()
 	// on future expose events.
 	sdl.desktop.lazy_init_window_size = false;
 
-	SDL_SetWindowSize(sdl.window, sdl.desktop.window.width,
-	                  sdl.desktop.window.height);
+	safe_set_window_size(sdl.desktop.window.width, sdl.desktop.window.height);
 
 	// Force window position when dosbox is configured to start in
 	// fullscreen.  Otherwise SDL will reset window position to 0,0 when
@@ -3763,6 +3834,12 @@ int sdl_main(int argc, char *argv[])
 
 	loguru::init(argc, argv);
 
+	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
+	LOG_MSG("---");
+
+	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,
+	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
+
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
@@ -3841,14 +3918,17 @@ int sdl_main(int argc, char *argv[])
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
-	LOG_MSG("---");
+	check_kmsdrm_setting();
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
 	sdl.initialized = true;
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
+
+	LOG_MSG("SDL: version %d.%d.%d initialized (%s video and %s audio)",
+		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
+		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
@@ -3903,7 +3983,7 @@ int sdl_main(int argc, char *argv[])
 		control->StartUp(); // Run the machine until shutdown
 		control.reset();  // Shutdown and release
 
-	} catch (char * error) {
+	} catch (char *error) {
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(NULL);
@@ -3917,8 +3997,7 @@ int sdl_main(int argc, char *argv[])
 			Sleep(5000);
 #endif
 		}
-	}
-	catch (...) {
+	} catch (...) {
 		// just exit
 		rcode = 1;
 	}

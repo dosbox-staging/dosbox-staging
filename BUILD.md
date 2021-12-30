@@ -131,7 +131,7 @@ Prerequisites:
 
 ``` shell
 # Fedora
-sudo dnf install gtest-devel
+sudo dnf install gmock-devel gtest-devel
 ```
 ``` shell
 # Debian, Ubuntu
