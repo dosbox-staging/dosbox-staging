@@ -44,6 +44,7 @@ libdos = static_library('dos', libdos_sources,
                         dependencies : [
                           sdl2_dep,
                           libdecoders_dep,
+                          libghc_dep,
                           libloguru_dep,
                         ])
 

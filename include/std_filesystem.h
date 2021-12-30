@@ -21,12 +21,6 @@
 #ifndef DOSBOX_FILESYSTEM_H
 #define DOSBOX_FILESYSTEM_H
 
-#if (defined(__clang__) && __clang_major__ >= 12) || defined(_MSC_VER) || (defined(__GNUC__) && __GNUC__ >= 9)
-#    include <filesystem>
-     namespace std_fs = std::filesystem;
-#else
-#    include <experimental/filesystem>
-     namespace std_fs = std::experimental::filesystem;
-#endif
+#include <ghc/fs_std_fwd.hpp>
 
 #endif
