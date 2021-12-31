@@ -1236,16 +1236,19 @@ bool INT10_SetVideoMode(Bit16u mode)
 				misc_output|=0xc0;	//480-line sync
 			misc_output|=0x0c;		//Select clock 3
 
-			// Use 70 Hz as the lower-bound
-			constexpr int vesa_min_refresh = 70;
+			// Use a fixed 70 Hz DOS VESA refresh rate
+			constexpr int vesa_refresh_hz = 70;
+			// Note:
+			// This is different than the host refresh rate,
+			// acquired with GFX_GetDisplayRefreshRate(), which can
+			// be different than this rate. Setting the VESA rate to
+			// the host refresh rate can cause problems with many
+			// games that assumed this was 70 Hz, so please test
+			// extensively with VESA games (Build Engine games,
+			// Quake, GTA, etc) before changing this.
 
-			// But allow a higher rate from the host and inform the user if so.
-			const auto refresh = std::max(vesa_min_refresh, GFX_GetDisplayRefreshRate());
-			if (refresh > vesa_min_refresh)
-				LOG_INFO("VESA: Refresh rate upgraded to %d Hz per current display rate",
-				         refresh);
-
-			const auto s3_clock = CurMode->vtotal * CurMode->cwidth * CurMode->htotal * refresh;
+			const auto s3_clock = CurMode->vtotal * CurMode->cwidth *
+			                      CurMode->htotal * vesa_refresh_hz;
 
 			const auto s3_clock_khz = s3_clock / 1000.0;
 			assert(s3_clock_khz > 0);
