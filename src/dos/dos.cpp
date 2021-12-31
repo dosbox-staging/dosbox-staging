@@ -38,6 +38,7 @@
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
+uint16_t countryNo = 0;
 unsigned int result_errorcode = 0;
 
 #define DOS_COPYBUFSIZE 0x10000
@@ -45,6 +46,121 @@ Bit8u dos_copybuf[DOS_COPYBUFSIZE];
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
+}
+
+void DOS_SetCountry(uint16_t countryNo)
+{
+	if (dos.tables.country == NULL)
+		return;
+
+	// For US, Latin America and International English use 12h clock
+	*(dos.tables.country +
+	  17) = countryNo == 1 || countryNo == 3 || countryNo == 61 ? 0 : 1;
+
+	// Date format
+	switch (countryNo) {
+	case 1:                          // United States
+		*dos.tables.country = 0; // MM-DD-YYYY
+		break;
+	case 2:                          // Canadian-French
+	case 36:                         // Hungary
+	case 38:                         // Croatia
+	case 40:                         // Romania
+	case 42:                         // Czech Republic / Slovakia
+	case 46:                         // Sweden
+	case 48:                         // Poland
+	case 81:                         // Japan
+	case 82:                         // South Korea
+	case 86:                         // China
+	case 354:                        // Iceland
+	case 886:                        // Taiwan
+		*dos.tables.country = 2; // YYYY-MM-DD
+		break;
+	default:
+		*dos.tables.country = 1; // DD-MM-YYYY
+		break;
+	}
+
+	// Date separation character
+	switch (countryNo) {
+	case 3:                                    // Latin America
+	case 30:                                   // Greece
+	case 32:                                   // Belgium
+	case 34:                                   // Spain
+	case 39:                                   // Italy
+	case 44:                                   // United Kingdom
+	case 55:                                   // Brazil
+	case 90:                                   // Turkey
+	case 785:                                  // Arabic countries
+	case 886:                                  // Taiwan
+	case 972:                                  // Israel
+		*(dos.tables.country + 11) = 0x2f; // Forward-slash (/)
+		break;
+	case 7:                                    // Russia
+	case 33:                                   // France
+	case 41:                                   // Switzerland
+	case 43:                                   // Austria
+	case 47:                                   // Norway
+	case 49:                                   // Germany
+	case 86:                                   // China
+	case 358:                                  // Finland
+		*(dos.tables.country + 11) = 0x2e; // Period (.)
+		break;
+	default:
+		*(dos.tables.country + 11) = 0x2d; // Dash (-)
+		break;
+	}
+
+	// Time separation character
+	switch (countryNo) {
+	case 41:                                   // Switzerland
+		*(dos.tables.country + 13) = 0x2c; // Comma (,)
+		break;
+	case 39:                                   // Italy
+	case 45:                                   // Denmark
+	case 46:                                   // Sweden
+	case 358:                                  // Finland
+		*(dos.tables.country + 13) = 0x2e; // Period (.)
+		break;
+	default:
+		*(dos.tables.country + 13) = 0x3a; // Column (:)
+		break;
+	}
+
+	// Thousand and decimal separators
+	switch (countryNo) {
+	case 1:                                   // United States
+	case 44:                                  // United Kingdom
+	case 61:                                  // International English
+	case 81:                                  // Japan
+	case 82:                                  // South Korea
+	case 86:                                  // China
+	case 886:                                 // Taiwan
+		*(dos.tables.country + 7) = 0x2c; // Comma (,)
+		*(dos.tables.country + 9) = 0x2e; // Period (.)
+		break;
+	case 3:                                   // Latin America
+	case 31:                                  // Netherlands
+	case 34:                                  // Spain
+	case 38:                                  // Yugoslavia
+	case 39:                                  // Italy
+	case 40:                                  // Romania
+	case 45:                                  // Denmark
+	case 46:                                  // Sweden
+	case 49:                                  // Germany
+	case 55:                                  // Brazil
+	case 351:                                 // Portugal
+	case 354:                                 // Iceland
+	case 785:                                 // Arabic countries
+	case 972:                                 // Israel
+		*(dos.tables.country + 7) = 0x2e; // Period (.)
+		*(dos.tables.country + 9) = 0x2c; // Comma (,)
+		break;
+	default:
+		*(dos.tables.country + 7) = 0x20; // Space ( )
+		*(dos.tables.country + 9) = 0x2c; // Comma (,)
+		break;
+	}
 }
 
 const Bit8u DOS_DATE_months[] = {
@@ -633,15 +749,19 @@ static Bitu DOS_21Handler(void) {
 		};
 		LOG(LOG_MISC,LOG_ERROR)("DOS:0x37:Call for not supported switchchar");
 		break;
-	case 0x38:					/* Set Country Code */	
-		if (reg_al==0) {		/* Get country specidic information */
-			PhysPt dest = SegPhys(ds)+reg_dx;
-			MEM_BlockWrite(dest,dos.tables.country,0x18);
+	case 0x38:                 /* Set Country Code */
+		if (reg_al == 0) { /* Get country specific information */
+			PhysPt dest = SegPhys(ds) + reg_dx;
+			MEM_BlockWrite(dest, dos.tables.country, 0x18);
 			reg_ax = reg_bx = 0x01;
 			CALLBACK_SCF(false);
 			break;
-		} else {				/* Set country code */
-			LOG(LOG_MISC,LOG_ERROR)("DOS:Setting country code not supported");
+		} else { /* Set country code */
+			countryNo = reg_al == 0xff ? reg_bx : reg_al;
+			DOS_SetCountry(countryNo);
+			reg_ax = 0;
+			CALLBACK_SCF(false);
+			break;
 		}
 		CALLBACK_SCF(true);
 		break;
@@ -1390,6 +1510,18 @@ public:
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
 		}
+		int countryNo = section->Get_int("country");
+		if (!countryNo) {
+#if defined(WIN32)
+			char buffer[128];
+			if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_ICOUNTRY,
+			                  buffer, 128)) {
+				countryNo = uint16_t(atoi(buffer));
+			} else
+#endif
+				countryNo = 1;
+		}
+		DOS_SetCountry(countryNo);
 	}
 	~DOS(){
 		for (Bit16u i = 0; i < DOS_DRIVES; i++)	delete Drives[i];

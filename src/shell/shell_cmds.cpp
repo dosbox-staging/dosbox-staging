@@ -472,19 +472,24 @@ static std::string format_number(size_t num)
 	const auto tb = static_cast<unsigned>(num);
 	char buf[22];
 	if (tb) {
-		safe_sprintf(buf, "%u,%03u,%03u,%03u,%03u", tb, gb, mb, kb, b);
+		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u%c%03u", tb,
+		             dos.tables.country[7], gb, dos.tables.country[7], mb,
+		             dos.tables.country[7], kb, dos.tables.country[7], b);
 		return buf;
 	}
 	if (gb) {
-		safe_sprintf(buf, "%u,%03u,%03u,%03u", gb, mb, kb, b);
+		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u", gb,
+		             dos.tables.country[7], mb, dos.tables.country[7],
+		             kb, dos.tables.country[7], b);
 		return buf;
 	}
 	if (mb) {
-		safe_sprintf(buf, "%u,%03u,%03u", mb, kb, b);
+		safe_sprintf(buf, "%u%c%03u%c%03u", mb, dos.tables.country[7],
+		             kb, dos.tables.country[7], b);
 		return buf;
 	}
 	if (kb) {
-		safe_sprintf(buf, "%u,%03u", kb, b);
+		safe_sprintf(buf, "%u%c%03u", kb, dos.tables.country[7], b);
 		return buf;
 	}
 	sprintf(buf, "%u", b);
@@ -606,6 +611,56 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 		col_widths.pop_back();
 	}
 	return col_widths;
+}
+
+char buffer[15] = {0};
+char *FormatDate(uint16_t year, uint8_t month, uint8_t day)
+{
+	char formatstring[6], c = dos.tables.country[11];
+	sprintf(formatstring,
+	        dos.tables.country[0] == 1
+	                ? "D%cM%cY"
+	                : (dos.tables.country[0] == 2 ? "Y%cM%cD" : "M%cD%cY"),
+	        c, c);
+	Bitu bufferptr = 0;
+	for (Bitu i = 0; i < 5; i++) {
+		if (i == 1 || i == 3) {
+			buffer[bufferptr] = formatstring[i];
+			bufferptr++;
+		} else {
+			if (formatstring[i] == 'M')
+				bufferptr += (Bitu)sprintf(buffer + bufferptr,
+				                           "%02u", month);
+			if (formatstring[i] == 'D')
+				bufferptr += (Bitu)sprintf(buffer + bufferptr,
+				                           "%02u", day);
+			if (formatstring[i] == 'Y')
+				bufferptr += (Bitu)sprintf(buffer + bufferptr,
+				                           "%04u", year);
+		}
+	}
+	return buffer;
+}
+
+char *FormatTime(Bitu hour, Bitu min, Bitu sec, Bitu msec)
+{
+	Bitu fhour = hour;
+	static char retBuf[14];
+	char ampm[3] = "";
+	if (!(dos.tables.country[17] & 1)) { // 12 hour notation?
+		if (hour != 12)
+			hour %= 12;
+		strcpy(ampm, hour != 12 && hour == fhour ? "am" : "pm");
+	}
+	char sep = dos.tables.country[13];
+	if (sec >= 100 && msec >= 100)
+		sprintf(retBuf, "%2u%c%02u%c", (unsigned int)hour, sep,
+		        (unsigned int)min, *ampm);
+	else
+		sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
+		        sep, (unsigned int)min, sep, (unsigned int)sec,
+		        dos.tables.country[9], (unsigned int)msec, ampm);
+	return retBuf;
 }
 
 void DOS_Shell::CMD_DIR(char * args) {
@@ -829,13 +884,13 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 
 		if (is_dir) {
-			WriteOut("%-8s %-3s   %-21s %02d-%02d-%04d %2d:%02d\n",
-			         name, ext, "<DIR>", day, month, year, hour, minute);
+			WriteOut("%-8s %-3s   %-21s %s %2d%c%02d\n",
+			         name, ext, "<DIR>", FormatDate(year, month, day), hour, dos.tables.country[13], minute);
 		} else {
 			const auto file_size = format_number(size);
-			WriteOut("%-8s %-3s   %21s %02d-%02d-%04d %2d:%02d\n",
-			         name, ext, file_size.c_str(), day, month, year,
-			         hour, minute);
+			WriteOut("%-8s %-3s   %21s %s %2d%c%02d\n",
+			         name, ext, file_size.c_str(), FormatDate(year, month, day),
+			         hour, dos.tables.country[13], minute);
 		}
 		show_press_any_key();
 	}
@@ -1383,7 +1438,8 @@ void DOS_Shell::CMD_CALL(char * args){
 	this->call=false;
 }
 
-void DOS_Shell::CMD_DATE(char * args) {
+void DOS_Shell::CMD_DATE(char *args)
+{
 	HELP("DATE");
 	if (ScanCMDBool(args, "H")) {
 		// synchronize date with host
@@ -1398,8 +1454,17 @@ void DOS_Shell::CMD_DATE(char * args) {
 		return;
 	}
 	// check if a date was passed in command line
+	char c = dos.tables.country[11], c1, c2;
 	uint32_t newday, newmonth, newyear;
-	if (sscanf(args, "%u-%u-%u", &newmonth, &newday, &newyear) == 3) {
+	int n = dos.tables.country[0] == 1
+	                ? sscanf(args, "%u%c%u%c%u", &newday, &c1, &newmonth,
+	                         &c2, &newyear)
+	                : (dos.tables.country[0] == 2
+	                           ? sscanf(args, "%u%c%u%c%u", &newyear, &c1,
+	                                    &newmonth, &c2, &newday)
+	                           : sscanf(args, "%u%c%u%c%u", &newmonth, &c1,
+	                                    &newday, &c2, &newyear));
+	if (n == 5 && c1 == c && c2 == c) {
 		reg_cx = static_cast<uint16_t>(newyear);
 		reg_dh = static_cast<uint8_t>(newmonth);
 		reg_dl = static_cast<uint8_t>(newday);
@@ -1418,11 +1483,13 @@ void DOS_Shell::CMD_DATE(char * args) {
 	const char* datestring = MSG_Get("SHELL_CMD_DATE_DAYS");
 	Bit32u length;
 	char day[6] = {0};
-	if (sscanf(datestring,"%u",&length) && (length<5) && (strlen(datestring) == (length*7+1))) {
+	if (sscanf(datestring, "%u", &length) && (length < 5) &&
+	    (strlen(datestring) == (length * 7 + 1))) {
 		// date string appears valid
-		for (Bit32u i = 0; i < length; i++) day[i] = datestring[reg_al*length+1+i];
+		for (Bit32u i = 0; i < length; i++)
+			day[i] = datestring[reg_al * length + 1 + i];
 	}
-	bool dateonly = ScanCMDBool(args,"T");
+	bool dateonly = ScanCMDBool(args, "T");
 	if (!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
 
 	const char* formatstring = MSG_Get("SHELL_CMD_DATE_FORMAT");
@@ -1439,8 +1506,18 @@ void DOS_Shell::CMD_DATE(char * args) {
 			if (formatstring[i] == 'Y') bufferptr += sprintf(buffer+bufferptr,"%04u",(Bit16u) reg_cx);
 		}
 	}
-	WriteOut("%s %s\n",day, buffer);
-	if (!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_SETHLP"));
+	WriteOut("%s\n",
+	         FormatDate((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
+	if (!dateonly) {
+		char format[11];
+		sprintf(format,
+		        dos.tables.country[0] == 1
+		                ? "DD%cMM%cYYYY"
+		                : (dos.tables.country[0] == 2 ? "YYYY%cMM%cDD"
+		                                              : "MM%cDD%cYYYY"),
+		        c, c);
+		WriteOut(MSG_Get("SHELL_CMD_DATE_SETHLP"), format);
+	}
 }
 
 void DOS_Shell::CMD_TIME(char * args) {
@@ -1458,7 +1535,9 @@ void DOS_Shell::CMD_TIME(char * args) {
 		return;
 	}
 	uint32_t newhour, newminute, newsecond;
-	if (sscanf(args, "%u:%u:%u", &newhour, &newminute, &newsecond) == 3) {
+	char c = dos.tables.country[13], c1, c2;
+	if (sscanf(args, "%u%c%u%c%u", &newhour, &c1, &newminute, &c2, &newsecond) == 5 &&
+	    c1 == c && c2 == c) {
 		if (newhour > 23 || newminute > 59 || newsecond > 59)
 			WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
 		else {
@@ -1485,11 +1564,15 @@ void DOS_Shell::CMD_TIME(char * args) {
 		reg_ch= // hours
 */
 	if (timeonly) {
-		WriteOut("%2u:%02u\n",reg_ch,reg_cl);
+		WriteOut("%u%c%02u%c%02u\n", reg_ch, dos.tables.country[13],
+		         reg_cl, dos.tables.country[13], reg_dh);
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
-		WriteOut("%2u:%02u:%02u,%02u\n",reg_ch,reg_cl,reg_dh,reg_dl);
-		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"));
+		WriteOut("%s\n", FormatTime(reg_ch, reg_cl, reg_dh, reg_dl));
+		char format[9];
+		sprintf(format, "hh%cmm%css", dos.tables.country[13],
+		        dos.tables.country[13]);
+		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"), format);
 	}
 }
 
