@@ -986,6 +986,10 @@ void DOSBOX_Init() {
 	                  "A single number is treated as the major version.\n"
 	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
+	pint = secprop->Add_int("country", when_idle, 0);
+	pint->Set_help("Set DOS country code which will affect country-specific\n"
+	               "information such as date, time, and decimal formats.");
+
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");

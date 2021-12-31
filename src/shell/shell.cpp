@@ -719,7 +719,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
 	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
 	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
-	MSG_Add("SHELL_CMD_DATE_SETHLP", "Type 'date MM-DD-YYYY' to change.\n");
+	MSG_Add("SHELL_CMD_DATE_SETHLP", "Type 'date %s' to change.\n");
 	MSG_Add("SHELL_CMD_DATE_FORMAT", "M/D/Y");
 	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
 	        "Usage:\n"
@@ -742,7 +742,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
-	MSG_Add("SHELL_CMD_TIME_SETHLP", "Type 'time hh:mm:ss' to change.\n");
+	MSG_Add("SHELL_CMD_TIME_SETHLP", "Type 'time %s' to change.\n");
 	MSG_Add("SHELL_CMD_TIME_HELP_LONG",
 	        "Usage:\n"
 	        "  \033[32;1mtime\033[0m [/t]\n"
