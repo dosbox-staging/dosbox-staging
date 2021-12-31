@@ -728,7 +728,7 @@ void SHELL_Init() {
 	        "  \033[32;1mdate\033[0m \033[36;1mDATE\033[0m\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDATE\033[0m is the new date to set to, in the format of \033[36;1mMM-DD-YYYY\033[0m.\n"
+	        "  \033[36;1mDATE\033[0m is the new date to set to, in the format of \033[36;1m%s\033[0m.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running \033[32;1mdate\033[0m without an argument shows the current date, or only a date\n"
@@ -738,7 +738,7 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mdate\033[0m\n"
 	        "  \033[32;1mdate\033[0m /h\n"
-	        "  \033[32;1mdate\033[0m \033[36;1m10-11-2012\033[0m\n");
+	        "  \033[32;1mdate\033[0m \033[36;1m%s\033[0m\n");
 	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
@@ -750,7 +750,7 @@ void SHELL_Init() {
 	        "  \033[32;1mtime\033[0m \033[36;1mTIME\033[0m\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mTIME\033[0m is the new time to set to, in the format of \033[36;1mhh:mm:ss\033[0m.\n"
+	        "  \033[36;1mTIME\033[0m is the new time to set to, in the format of \033[36;1m%s\033[0m.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running \033[32;1mtime\033[0m without an argument shows the current time, or a simple time\n"
@@ -760,7 +760,7 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mtime\033[0m\n"
 	        "  \033[32;1mtime\033[0m /h\n"
-	        "  \033[32;1mtime\033[0m \033[36;1m13:14:15\033[0m\n");
+	        "  \033[32;1mtime\033[0m \033[36;1m%s\033[0m\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");

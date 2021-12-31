@@ -653,13 +653,9 @@ char *FormatTime(Bitu hour, Bitu min, Bitu sec, Bitu msec)
 		strcpy(ampm, hour != 12 && hour == fhour ? "am" : "pm");
 	}
 	char sep = dos.tables.country[13];
-	if (sec >= 100 && msec >= 100)
-		sprintf(retBuf, "%2u%c%02u%c", (unsigned int)hour, sep,
-		        (unsigned int)min, *ampm);
-	else
-		sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
-		        sep, (unsigned int)min, sep, (unsigned int)sec,
-		        dos.tables.country[9], (unsigned int)msec, ampm);
+	sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
+	        sep, (unsigned int)min, sep, (unsigned int)sec,
+	        dos.tables.country[9], (unsigned int)msec, ampm);
 	return retBuf;
 }
 
@@ -1440,7 +1436,20 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char *args)
 {
-	HELP("DATE");
+	char c = dos.tables.country[11], c1, c2;
+	char format[11];
+	sprintf(format,
+	        dos.tables.country[0] == 1
+	                ? "DD%cMM%cYYYY"
+	                : (dos.tables.country[0] == 2 ? "YYYY%cMM%cDD"
+	                                              : "MM%cDD%cYYYY"),
+	        c, c);
+	if (ScanCMDBool(args, "?")) {
+		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP"));
+		WriteOut("\n");
+		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format, FormatDate(2012, 10, 11));
+		return;
+	}
 	if (ScanCMDBool(args, "H")) {
 		// synchronize date with host
 		const time_t curtime = time(nullptr);
@@ -1454,7 +1463,6 @@ void DOS_Shell::CMD_DATE(char *args)
 		return;
 	}
 	// check if a date was passed in command line
-	char c = dos.tables.country[11], c1, c2;
 	uint32_t newday, newmonth, newyear;
 	int n = dos.tables.country[0] == 1
 	                ? sscanf(args, "%u%c%u%c%u", &newday, &c1, &newmonth,
@@ -1509,19 +1517,22 @@ void DOS_Shell::CMD_DATE(char *args)
 	WriteOut("%s\n",
 	         FormatDate((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
 	if (!dateonly) {
-		char format[11];
-		sprintf(format,
-		        dos.tables.country[0] == 1
-		                ? "DD%cMM%cYYYY"
-		                : (dos.tables.country[0] == 2 ? "YYYY%cMM%cDD"
-		                                              : "MM%cDD%cYYYY"),
-		        c, c);
 		WriteOut(MSG_Get("SHELL_CMD_DATE_SETHLP"), format);
 	}
 }
 
 void DOS_Shell::CMD_TIME(char * args) {
-	HELP("TIME");
+	char format[9], example[9];
+	sprintf(format, "hh%cmm%css", dos.tables.country[13],
+	        dos.tables.country[13]);
+	sprintf(example, "%u%c%02u%c%02u\n", 13, dos.tables.country[13],
+	        14, dos.tables.country[13], 15);
+	if (ScanCMDBool(args, "?")) {
+		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP"));
+		WriteOut("\n");
+		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP_LONG"), format, example);
+		return;
+	}
 	if (ScanCMDBool(args, "H")) {
 		// synchronize time with host
 		const time_t curtime = time(NULL);
@@ -1569,9 +1580,6 @@ void DOS_Shell::CMD_TIME(char * args) {
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
 		WriteOut("%s\n", FormatTime(reg_ch, reg_cl, reg_dh, reg_dl));
-		char format[9];
-		sprintf(format, "hh%cmm%css", dos.tables.country[13],
-		        dos.tables.country[13]);
 		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"), format);
 	}
 }
