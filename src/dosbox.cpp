@@ -988,7 +988,9 @@ void DOSBOX_Init() {
 
 	pint = secprop->Add_int("country", when_idle, 0);
 	pint->Set_help("Set DOS country code which will affect country-specific\n"
-	               "information such as date, time, and decimal formats.");
+	               "information such as date, time, and decimal formats.\n"
+	               "If set to 0, the country code corresponding to the\n"
+	               "selected keyboard layout will be used.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");

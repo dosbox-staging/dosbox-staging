@@ -40,6 +40,7 @@ using sv = std::string_view;
 #if defined (WIN32)
 #include <windows.h>
 #endif
+#include <map>
 
 static FILE_unique_ptr OpenDosboxFile(const char *name)
 {
@@ -1340,9 +1341,59 @@ void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
+std::map<std::string, int> country_code_map {
+    {"cz243", 42},
+    {"dk", 45},
+    {"gr", 49},
+    {"gk", 30},
+    {"sp", 34},
+    {"su", 358},
+    {"fr", 33},
+    {"hu", 36},
+    {"hu208", 36},
+    {"is161", 354},
+    {"it", 39},
+    {"nl", 31},
+    {"no", 47},
+    {"pl", 48},
+    {"br", 55},
+    {"ru", 7},
+    {"hr", 38},
+    {"sk", 42},
+    {"sv", 46},
+    {"tr", 90},
+    {"ur", 380},
+    {"bl", 375},
+    {"si", 386},
+    {"et", 372},
+    {"sg", 41},
+    {"po", 351},
+    {"sf", 41},
+    {"be", 32},
+    {"cf", 2},
+    {"cz", 42},
+    {"sl", 42},
+    {"la", 3},
+    {"uk", 44},
+    {"us", 1},
+    {"yu", 38},
+};
+
+void DOS_SetCountry(uint16_t countryNo);
 void DOS_KeyboardLayout_Init(Section* sec) {
 	test = new DOS_KeyboardLayout(sec);
 	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown,true);
 	// MAPPER_AddHandler(switch_keyboard_layout, SDL_SCANCODE_F2,
 	//                   MMOD1 | MMOD2, "sw_layout", "Switch Layout");
+
+	int countryNo = static_cast<Section_prop*>(sec)->Get_int("country");
+	const char *DOS_GetLoadedLayout(void);
+	if (!countryNo) {
+		const char *layout = DOS_GetLoadedLayout();
+		if (layout == NULL)
+			countryNo = 1;
+		else if (country_code_map.find(layout) != country_code_map.end())
+			countryNo = country_code_map.find(layout)->second;
+	}
+	DOS_SetCountry(countryNo);
 }
