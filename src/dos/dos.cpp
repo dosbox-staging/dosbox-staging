@@ -1527,18 +1527,6 @@ public:
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
 		}
-		int countryNo = section->Get_int("country");
-		if (!countryNo) {
-#if defined(WIN32)
-			char buffer[128];
-			if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_ICOUNTRY,
-			                  buffer, 128)) {
-				countryNo = uint16_t(atoi(buffer));
-			} else
-#endif
-				countryNo = 1;
-		}
-		DOS_SetCountry(countryNo);
 	}
 	~DOS(){
 		for (Bit16u i = 0; i < DOS_DRIVES; i++)	delete Drives[i];
