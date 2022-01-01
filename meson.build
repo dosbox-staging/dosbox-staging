@@ -444,7 +444,7 @@ executable('dosbox', dosbox_sources,
            include_directories : incdir,
            install : true)
 # create a library so we can test things inside DOSBOX dep path
-libdosbox = static_library('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
+libdosbox = static_library('dosbox', ['src/dosbox.cpp', version_file],
                         include_directories : incdir,
                         dependencies : [atomic_dep,
                                         threads_dep,
