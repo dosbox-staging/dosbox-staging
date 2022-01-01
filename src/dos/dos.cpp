@@ -48,6 +48,80 @@ void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
 
+int countries_date_format_yyyymmdd[] = {
+        2,   // Canadian-French
+        36,  // Hungary
+        38,  // Croatia
+        40,  // Romania
+        42,  // Czech Republic / Slovakia
+        46,  // Sweden
+        48,  // Poland
+        81,  // Japan
+        82,  // South Korea
+        86,  // China
+        354, // Iceland
+        886, // Taiwan
+};
+
+int countries_date_separator_slash[] = {
+        3,   // Latin America
+        30,  // Greece
+        32,  // Belgium
+        34,  // Spain
+        39,  // Italy
+        44,  // United Kingdom
+        55,  // Brazil
+        90,  // Turkey
+        785, // Arabic countries
+        886, // Taiwan
+        972, // Israel
+};
+
+int countries_date_separator_period[] = {
+        7,   // Russia
+        33,  // France
+        41,  // Switzerland
+        43,  // Austria
+        47,  // Norway
+        49,  // Germany
+        86,  // China
+        358, // Finland
+};
+
+int countries_time_separator_period[] = {
+        39,  // Italy
+        45,  // Denmark
+        46,  // Sweden
+        358, // Finland
+};
+
+int countries_decimal_separator_comma[] = {
+        1,   // United States
+        44,  // United Kingdom
+        61,  // International English
+        81,  // Japan
+        82,  // South Korea
+        86,  // China
+        886, // Taiwan
+};
+
+int countries_decimal_separator_period[] = {
+        3,   // Latin America
+        31,  // Netherlands
+        34,  // Spain
+        38,  // Yugoslavia
+        39,  // Italy
+        40,  // Romania
+        45,  // Denmark
+        46,  // Sweden
+        49,  // Germany
+        55,  // Brazil
+        351, // Portugal
+        354, // Iceland
+        785, // Arabic countries
+        972, // Israel
+};
+
 void DOS_SetCountry(uint16_t countryNo)
 {
 	if (dos.tables.country == NULL)
@@ -58,108 +132,51 @@ void DOS_SetCountry(uint16_t countryNo)
 	  17) = countryNo == 1 || countryNo == 3 || countryNo == 61 ? 0 : 1;
 
 	// Date format
-	switch (countryNo) {
-	case 1:                          // United States
+	if (countryNo == 1)          // United States
 		*dos.tables.country = 0; // MM-DD-YYYY
-		break;
-	case 2:                          // Canadian-French
-	case 36:                         // Hungary
-	case 38:                         // Croatia
-	case 40:                         // Romania
-	case 42:                         // Czech Republic / Slovakia
-	case 46:                         // Sweden
-	case 48:                         // Poland
-	case 81:                         // Japan
-	case 82:                         // South Korea
-	case 86:                         // China
-	case 354:                        // Iceland
-	case 886:                        // Taiwan
+	else if (std::find(std::begin(countries_date_format_yyyymmdd),
+	                   std::end(countries_date_format_yyyymmdd),
+	                   countryNo) != std::end(countries_date_format_yyyymmdd))
 		*dos.tables.country = 2; // YYYY-MM-DD
-		break;
-	default:
+	else
 		*dos.tables.country = 1; // DD-MM-YYYY
-		break;
-	}
 
 	// Date separation character
-	switch (countryNo) {
-	case 3:                                    // Latin America
-	case 30:                                   // Greece
-	case 32:                                   // Belgium
-	case 34:                                   // Spain
-	case 39:                                   // Italy
-	case 44:                                   // United Kingdom
-	case 55:                                   // Brazil
-	case 90:                                   // Turkey
-	case 785:                                  // Arabic countries
-	case 886:                                  // Taiwan
-	case 972:                                  // Israel
+	if (std::find(std::begin(countries_date_separator_slash),
+	              std::end(countries_date_separator_slash),
+	              countryNo) != std::end(countries_date_separator_slash))
 		*(dos.tables.country + 11) = 0x2f; // Forward-slash (/)
-		break;
-	case 7:                                    // Russia
-	case 33:                                   // France
-	case 41:                                   // Switzerland
-	case 43:                                   // Austria
-	case 47:                                   // Norway
-	case 49:                                   // Germany
-	case 86:                                   // China
-	case 358:                                  // Finland
+	else if (std::find(std::begin(countries_date_separator_period),
+	                   std::end(countries_date_separator_period), countryNo) !=
+	         std::end(countries_date_separator_period))
 		*(dos.tables.country + 11) = 0x2e; // Period (.)
-		break;
-	default:
+	else
 		*(dos.tables.country + 11) = 0x2d; // Dash (-)
-		break;
-	}
 
 	// Time separation character
-	switch (countryNo) {
-	case 41:                                   // Switzerland
+	if (countryNo == 41)                   // Switzerland
 		*(dos.tables.country + 13) = 0x2c; // Comma (,)
-		break;
-	case 39:                                   // Italy
-	case 45:                                   // Denmark
-	case 46:                                   // Sweden
-	case 358:                                  // Finland
+	else if (std::find(std::begin(countries_time_separator_period),
+	                   std::end(countries_time_separator_period), countryNo) !=
+	         std::end(countries_time_separator_period))
 		*(dos.tables.country + 13) = 0x2e; // Period (.)
-		break;
-	default:
+	else
 		*(dos.tables.country + 13) = 0x3a; // Column (:)
-		break;
-	}
 
 	// Thousand and decimal separators
-	switch (countryNo) {
-	case 1:                                   // United States
-	case 44:                                  // United Kingdom
-	case 61:                                  // International English
-	case 81:                                  // Japan
-	case 82:                                  // South Korea
-	case 86:                                  // China
-	case 886:                                 // Taiwan
+	if (std::find(std::begin(countries_decimal_separator_comma),
+	              std::end(countries_decimal_separator_comma), countryNo) !=
+	    std::end(countries_decimal_separator_comma)) {
 		*(dos.tables.country + 7) = 0x2c; // Comma (,)
 		*(dos.tables.country + 9) = 0x2e; // Period (.)
-		break;
-	case 3:                                   // Latin America
-	case 31:                                  // Netherlands
-	case 34:                                  // Spain
-	case 38:                                  // Yugoslavia
-	case 39:                                  // Italy
-	case 40:                                  // Romania
-	case 45:                                  // Denmark
-	case 46:                                  // Sweden
-	case 49:                                  // Germany
-	case 55:                                  // Brazil
-	case 351:                                 // Portugal
-	case 354:                                 // Iceland
-	case 785:                                 // Arabic countries
-	case 972:                                 // Israel
+	} else if (std::find(std::begin(countries_decimal_separator_period),
+	                     std::end(countries_decimal_separator_period), countryNo) !=
+	           std::end(countries_decimal_separator_period)) {
 		*(dos.tables.country + 7) = 0x2e; // Period (.)
 		*(dos.tables.country + 9) = 0x2c; // Comma (,)
-		break;
-	default:
+	} else {
 		*(dos.tables.country + 7) = 0x20; // Space ( )
 		*(dos.tables.country + 9) = 0x2c; // Comma (,)
-		break;
 	}
 }
 
