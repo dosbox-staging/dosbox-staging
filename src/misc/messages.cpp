@@ -37,7 +37,7 @@
 
 #if C_COREFOUNDATION
 #include <CoreFoundation/CoreFoundation.h>
-static std::string get_language_from_os()
+[[maybe_unused]] static std::string get_language_from_os()
 {
 	auto cflocale = CFLocaleCopyCurrent();
 	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
@@ -48,7 +48,7 @@ static std::string get_language_from_os()
 	return locale_string;
 }
 #else
-static std::string get_language_from_os()
+[[maybe_unused]] static std::string get_language_from_os()
 {
 	return "";
 }
@@ -193,7 +193,12 @@ static std::string get_language(const Section_prop *section)
 			clear_if_default(lang);
 		}
 	}
-
+	// Avoid changing locales already established by the ncurses debugger
+	// frame. Test it by running "debug.com ls.com" in a debugger build,
+	// then Alt+TAB to the debugger window, and finally press F10. You
+	// should be able to use the up and down arrows keys to select an
+	// instruction from the middle pane.
+#if !(C_DEBUG)
 	// Check if the locale is set
 	if (lang.empty()) {
 		const auto envlang = setlocale(LC_ALL, "");
@@ -208,7 +213,7 @@ static std::string get_language(const Section_prop *section)
 		lang = get_language_from_os();
 		clear_if_default(lang);
 	}
-
+#endif
 	// Drop the dialect part of the language
 	// (e.g. "en_GB.UTF8" -> "en")
 	if (lang.size() > 2) {
