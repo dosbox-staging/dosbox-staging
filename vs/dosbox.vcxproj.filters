@@ -532,14 +532,14 @@
     <ClCompile Include="..\src\dos\program_serial.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp">
-      <Filter>src\libs\ghc</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libs\loguru\loguru.cpp">
       <Filter>src\libs\loguru</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\whereami\whereami.c">
       <Filter>src\libs\whereami</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp">
+      <Filter>src\libs\ghc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1082,6 +1082,9 @@
     </Filter>
     <Filter Include="src\libs\whereami">
       <UniqueIdentifier>{d1c1e098-73ca-4f3a-a2f7-e8186a52c4dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\ghc">
+      <UniqueIdentifier>{9df2bcc2-35e3-4be4-a577-dff8be565c65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
