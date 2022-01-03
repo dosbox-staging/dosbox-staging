@@ -744,6 +744,7 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 
 static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
 static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
+constexpr bool is_64bit_platform = sizeof(void *) == 8;
 
 static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 {
@@ -838,14 +839,18 @@ static void cache_init(bool enable) {
 		if (cache_code_start_ptr == nullptr) {
 			// allocate the code cache memory
 #if defined (WIN32)
-			cache_code_start_ptr = static_cast<uint8_t *>(
-			        VirtualAlloc(nullptr, cache_code_size,
-			                     MEM_RESERVE | MEM_COMMIT,
-			                     PAGE_READWRITE));
-			if (!cache_code_start_ptr) {
-				LOG_MSG("VirtualAlloc error, using malloc");
-				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
+			LPVOID lp_vmem = nullptr;
+			if (CPU_AllowSpeedMods) {
+				lp_vmem = VirtualAlloc(nullptr, cache_code_size,
+				                       MEM_COMMIT,
+				                       PAGE_EXECUTE_READWRITE); // all operations allowed
+			} else {
+				lp_vmem = VirtualAlloc(nullptr, cache_code_size,
+				                       MEM_COMMIT | MEM_RESERVE,
+				                       PAGE_READWRITE); // needs on-going management
 			}
+			assert(lp_vmem);
+			cache_code_start_ptr = static_cast<uint8_t *>(lp_vmem);
 #elif defined(HAVE_MMAP)
 			int map_flags = MAP_PRIVATE | MAP_ANON;
 			int prot_flags = PROT_READ | PROT_WRITE | PROT_EXEC;
