@@ -122,21 +122,21 @@ int countries_decimal_separator_period[] = {
         972, // Israel
 };
 
-void DOS_SetCountry(uint16_t countryNo)
+void DOS_SetCountry(uint16_t countryNumber)
 {
 	if (dos.tables.country == NULL)
 		return;
 
 	// For US, Latin America and International English use 12h clock
 	*(dos.tables.country +
-	  17) = countryNo == 1 || countryNo == 3 || countryNo == 61 ? 0 : 1;
+	  17) = countryNumber == 1 || countryNumber == 3 || countryNumber == 61 ? 0 : 1;
 
 	// Date format
-	if (countryNo == 1)          // United States
+	if (countryNumber == 1)      // United States
 		*dos.tables.country = 0; // MM-DD-YYYY
 	else if (std::find(std::begin(countries_date_format_yyyymmdd),
 	                   std::end(countries_date_format_yyyymmdd),
-	                   countryNo) != std::end(countries_date_format_yyyymmdd))
+	                   countryNumber) != std::end(countries_date_format_yyyymmdd))
 		*dos.tables.country = 2; // YYYY-MM-DD
 	else
 		*dos.tables.country = 1; // DD-MM-YYYY
@@ -144,20 +144,20 @@ void DOS_SetCountry(uint16_t countryNo)
 	// Date separation character
 	if (std::find(std::begin(countries_date_separator_slash),
 	              std::end(countries_date_separator_slash),
-	              countryNo) != std::end(countries_date_separator_slash))
+	              countryNumber) != std::end(countries_date_separator_slash))
 		*(dos.tables.country + 11) = 0x2f; // Forward-slash (/)
 	else if (std::find(std::begin(countries_date_separator_period),
-	                   std::end(countries_date_separator_period), countryNo) !=
+	                   std::end(countries_date_separator_period), countryNumber) !=
 	         std::end(countries_date_separator_period))
 		*(dos.tables.country + 11) = 0x2e; // Period (.)
 	else
 		*(dos.tables.country + 11) = 0x2d; // Dash (-)
 
 	// Time separation character
-	if (countryNo == 41)                   // Switzerland
+	if (countryNumber == 41)               // Switzerland
 		*(dos.tables.country + 13) = 0x2c; // Comma (,)
 	else if (std::find(std::begin(countries_time_separator_period),
-	                   std::end(countries_time_separator_period), countryNo) !=
+	                   std::end(countries_time_separator_period), countryNumber) !=
 	         std::end(countries_time_separator_period))
 		*(dos.tables.country + 13) = 0x2e; // Period (.)
 	else
@@ -165,12 +165,12 @@ void DOS_SetCountry(uint16_t countryNo)
 
 	// Thousand and decimal separators
 	if (std::find(std::begin(countries_decimal_separator_comma),
-	              std::end(countries_decimal_separator_comma), countryNo) !=
+	              std::end(countries_decimal_separator_comma), countryNumber) !=
 	    std::end(countries_decimal_separator_comma)) {
 		*(dos.tables.country + 7) = 0x2c; // Comma (,)
 		*(dos.tables.country + 9) = 0x2e; // Period (.)
 	} else if (std::find(std::begin(countries_decimal_separator_period),
-	                     std::end(countries_decimal_separator_period), countryNo) !=
+	                     std::end(countries_decimal_separator_period), countryNumber) !=
 	           std::end(countries_decimal_separator_period)) {
 		*(dos.tables.country + 7) = 0x2e; // Period (.)
 		*(dos.tables.country + 9) = 0x2c; // Comma (,)

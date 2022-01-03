@@ -2378,10 +2378,7 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 		            pref.c_str());
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
-
-	// 320x200 when physically scaled by 3x4 produces 960x800 or a 6:5 aspect ratio
-	const int h_with_aspect = ceil_sdivide(desktop.w * percent * 5, 100 * 6);
-	const int h = std::min(desktop.h, h_with_aspect); // limit to desktop size
+	const int h = ceil_sdivide(desktop.h * percent, 100);
 	return {w, h};
 }
 
@@ -3902,7 +3899,6 @@ int sdl_main(int argc, char *argv[])
 
 		//If command line includes --help or -h, print help message and exit.
 		if (control->cmdline->FindExist("--help") ||
-		    control->cmdline->FindExist("-help") ||
 		    control->cmdline->FindExist("-h")) {
 			printf(help_msg); // -V618
 			return 0;
@@ -3936,40 +3932,6 @@ int sdl_main(int argc, char *argv[])
 
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
-
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-		"There is no property \"%s\" in section \"%s\".\n");
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		"Correct syntax: config -set \"[section] property=value\".\n");
-	std::string line;
-	while (control->cmdline->FindString("-set", line, true)) {
-		trim(line);
-		if (line.empty()
-		    || line[0] == '%' || line[0] == '\0'
-		    || line[0] == '#' || line[0] == '\n')
-			continue;
-		std::vector<std::string> pvars(1, std::move(line));
-		const char *result = SetProp(pvars);
-		if (strlen(result))
-			LOG_WARNING("%s", result);
-		else {
-			Section *tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
-			// Due to parsing there can be a = at the start of value.
-			while (value.size() &&
-			       (value.at(0) == ' ' || value.at(0) == '='))
-				value.erase(0, 1);
-			for (Bitu i = 3; i < pvars.size(); i++)
-				value += (std::string(" ") + pvars[i]);
-			std::string inputline = pvars[1] + "=" + value;
-			bool change_success = tsec->HandleInputline(
-				inputline.c_str());
-			if (!change_success && !value.empty())
-				LOG_WARNING("Cannot set \"%s\"\n",
-					    inputline.c_str());
-		}
-	}
 
 #if C_OPENGL
 	const std::string glshaders_dir = config_path + "glshaders";
