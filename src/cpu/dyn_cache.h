@@ -802,12 +802,14 @@ static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
 #elif defined(HAVE_SYS_ICACHE_INVALIDATE)
 #if defined(HAVE_BUILTIN_AVAILABLE)
 	if (__builtin_available(macOS 11.0, *))
-#endif	
+#endif
 		sys_icache_invalidate(ptr, size);
 #elif defined(WIN32)
+	if (CPU_AllowSpeedMods)
+		return;
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #else
-	#error "Don't know how to clear the cache on this platform"
+#error "Don't know how to clear the cache on this platform: please report this"
 #endif
 }
 
