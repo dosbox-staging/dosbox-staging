@@ -3870,8 +3870,8 @@ int sdl_main(int argc, char *argv[])
 		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
 		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
 
-		/* Can't disable the console with debugger enabled */
-#if defined(WIN32) && !(C_DEBUG)
+		/* Can't disable the console with debugger-enabled or when built with mingw */
+#if defined(WIN32) && !((C_DEBUG) || defined(__MINGW32__))
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
@@ -3891,7 +3891,7 @@ int sdl_main(int argc, char *argv[])
 			}
 			SetConsoleTitle("DOSBox Status Window");
 		}
-#endif  //defined(WIN32) && !(C_DEBUG)
+#endif  //defined(WIN32) && !((C_DEBUG) || defined(__MINGW32__))
 
 		if (control->cmdline->FindExist("--version") ||
 		    control->cmdline->FindExist("-version") ||

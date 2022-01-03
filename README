@@ -494,7 +494,7 @@ dosbox -opencaptures program
 
         The machinetype affects the video card and the available sound cards.
 
-  -noconsole (Windows Only)
+  -noconsole (Windows Visual Studio-builds only)
         Start DOSBox without showing the DOSBox status window (console).
         Output will be redirected to stdout.txt and stderr.txt
 
