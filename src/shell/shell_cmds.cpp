@@ -1498,7 +1498,10 @@ void DOS_Shell::CMD_DATE(char *args)
 			day[i] = datestring[reg_al * length + 1 + i];
 	}
 	bool dateonly = ScanCMDBool(args, "T");
-	if (!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
+	if (!dateonly) {
+		WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
+		WriteOut("%s ", day);
+	}
 	WriteOut("%s\n",
 	         FormatDate((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
 	if (!dateonly) {
@@ -1510,7 +1513,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	char format[9], example[9];
 	sprintf(format, "hh%cmm%css", dos.tables.country[13],
 	        dos.tables.country[13]);
-	sprintf(example, "%u%c%02u%c%02u\n", 13, dos.tables.country[13],
+	sprintf(example, "%u%c%02u%c%02u", 13, dos.tables.country[13],
 	        14, dos.tables.country[13], 15);
 	if (ScanCMDBool(args, "?")) {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP"));
