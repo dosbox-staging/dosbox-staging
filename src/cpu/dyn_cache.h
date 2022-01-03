@@ -783,8 +783,7 @@ static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
 	                                                    &old_protect);
 	assert(vp_res != 0);
 #else
-	LOG_MSG("No method to set memory access %p, %zu, %d on this platform",
-	        ptr, size, execute);
+#error "no dynamic memory protection on this platform: please report this"
 #endif
 }
 
