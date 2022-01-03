@@ -757,23 +757,30 @@ static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 	ptr = reinterpret_cast<void *>(p_aligned);
 }
 
-static inline void dyn_mem_set_access(void *ptr, size_t size, const bool execute)
+static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
+                                      [[maybe_unused]] size_t size,
+                                      [[maybe_unused]] const bool execute)
 {
-	dyn_mem_adjust(ptr, size);
 #if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
 #if defined(HAVE_BUILTIN_AVAILABLE)
 	if (__builtin_available(macOS 11.0, *))
 #endif
 		pthread_jit_write_protect_np(execute);
+
 #elif defined(HAVE_MPROTECT)
+	dyn_mem_adjust(ptr, size);
 	const int flags = (execute ? PROT_EXEC : PROT_WRITE) | PROT_READ;
 	[[maybe_unused]] const int mp_res = mprotect(ptr, size, flags);
 	assert(mp_res == 0);
+
 #elif defined(WIN32)
+	if (CPU_AllowSpeedMods)
+		return; // the cache block is already marked RWX
+	dyn_mem_adjust(ptr, size);
 	DWORD old_protect = 0;
 	const DWORD flags = (execute ? PAGE_EXECUTE_READ : PAGE_READWRITE);
-	[[maybe_unused]] const BOOL vp_res = VirtualProtect(ptr, size, flags,
-	                                                &old_protect);
+	[[maybe_unused]] const auto vp_res = VirtualProtect(ptr, size, flags,
+	                                                    &old_protect);
 	assert(vp_res != 0);
 #else
 	LOG_MSG("No method to set memory access %p, %zu, %d on this platform",
