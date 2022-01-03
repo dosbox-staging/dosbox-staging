@@ -70,14 +70,16 @@ public:
 			Save();
 		}
 		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE);
-		dynreg->genreg=0;dynreg=0;
+		dynreg->genreg = nullptr;
+		dynreg = nullptr;
 	}
 	void Clear(void) {
 		if (!dynreg) return;
 		if (dynreg->flags&DYNFLG_CHANGED) {
 			Save();
 		}
-		dynreg->genreg=0;dynreg=0;
+		dynreg->genreg = nullptr;
+		dynreg = nullptr;
 	}
 };
 
@@ -211,7 +213,8 @@ static void gen_setupreg(DynReg * dnew,DynReg * dsetup) {
 	/* Not the same genreg must be wrong */
 	if (dnew->genreg) {
 		/* Check if the genreg i'm changing is actually linked to me */
-		if (dnew->genreg->dynreg==dnew) dnew->genreg->dynreg=0;
+		if (dnew->genreg->dynreg == dnew)
+			dnew->genreg->dynreg = nullptr;
 	}
 	dnew->genreg=dsetup->genreg;
 	if (dnew->genreg) dnew->genreg->dynreg=dnew;
@@ -292,7 +295,7 @@ static void gen_reinit(void) {
 	x86gen.last_used=0;
 	x86gen.flagsactive=false;
 	for (Bitu i=0;i<X86_REGS;i++) {
-		x86gen.regs[i]->dynreg=0;
+		x86gen.regs[i]->dynreg = nullptr;
 	}
 }
 

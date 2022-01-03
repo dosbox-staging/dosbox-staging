@@ -268,14 +268,16 @@ public:
 			Save();
 		}
 		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE);
-		dynreg->genreg=0;dynreg=0;
+		dynreg->genreg = nullptr;
+		dynreg = nullptr;
 	}
 	void Clear(void) {
 		if (!dynreg) return;
 		if (dynreg->flags&DYNFLG_CHANGED) {
 			Save();
 		}
-		dynreg->genreg=0;dynreg=0;
+		dynreg->genreg = nullptr;
+		dynreg = nullptr;
 	}
 };
 
@@ -422,7 +424,7 @@ static void ForceDynReg(GenReg * genreg,DynReg * dynreg) {
 		if (genreg->dynreg) genreg->Clear();
 		// mov dst32, src32
 		opcode(genreg->index).setrm(dynreg->genreg->index).Emit8(0x8B);
-		dynreg->genreg->dynreg=0;
+		dynreg->genreg->dynreg = nullptr;
 		dynreg->genreg=genreg;
 		genreg->dynreg=dynreg;
 	} else genreg->Load(dynreg);
@@ -444,7 +446,8 @@ static void gen_setupreg(DynReg * dnew,DynReg * dsetup) {
 	/* Not the same genreg must be wrong */
 	if (dnew->genreg) {
 		/* Check if the genreg i'm changing is actually linked to me */
-		if (dnew->genreg->dynreg==dnew) dnew->genreg->dynreg=0;
+		if (dnew->genreg->dynreg == dnew)
+			dnew->genreg->dynreg = nullptr;
 	}
 	dnew->genreg=dsetup->genreg;
 	if (dnew->genreg) dnew->genreg->dynreg=dnew;
@@ -523,7 +526,7 @@ static void gen_reinit(void) {
 	x64gen.last_used=0;
 	x64gen.flagsactive=false;
 	for (Bitu i=0;i<X64_REGS;i++) {
-		x64gen.regs[i]->dynreg=0;
+		x64gen.regs[i]->dynreg = nullptr;
 	}
 }
 
@@ -900,12 +903,14 @@ static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) 
 	if ((Bit32s)addr==addr || (Bit32s)rbpdiff==rbpdiff || ripdiff < 0x7FFFFFE0ll)
 		i = opcode(FindDynReg(dr1,dword && op==DOP_MOV)->index,dword).setabsaddr(data);
 	else if (dword && op==DOP_MOV) {
-		if (dr1->genreg) dr1->genreg->dynreg=0;
-		x64gen.regs[X64_REG_RAX]->Load(dr1,true);
+		if (dr1->genreg)
+			dr1->genreg->dynreg = nullptr;
+		x64gen.regs[X64_REG_RAX]->Load(dr1, true);
 		if ((Bit32u)addr == (Bitu)addr) {
 			cache_addb(0x67);
 			opcode(0).setimm(addr,4).Emit8Reg(0xA1);
-		} else opcode(0).setimm(addr,8).Emit8Reg(0xA1);
+		} else
+			opcode(0).setimm(addr, 8).Emit8Reg(0xA1);
 		dr1->flags|=DYNFLG_CHANGED;
 		return;
 	} else {
@@ -1111,8 +1116,9 @@ static void gen_call_function(void * func,const char* ops,...) {
 		GenReg * genret;
 		if (rettype == 'd') {
 			genret=x64gen.regs[X64_REG_RAX];
-			if (dynret->genreg) dynret->genreg->dynreg=0;
-			genret->Load(dynret,true);
+			if (dynret->genreg)
+				dynret->genreg->dynreg = nullptr;
+			genret->Load(dynret, true);
 		} else {
 			opcode op(0); // src=eax/ax/al/ah
 			x64gen.regs[X64_REG_RAX]->notusable = true;
