@@ -2378,7 +2378,10 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 		            pref.c_str());
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
-	const int h = ceil_sdivide(desktop.h * percent, 100);
+
+	// 320x200 when physically scaled by 3x4 produces 960x800 or a 6:5 aspect ratio
+	const int h_with_aspect = ceil_sdivide(desktop.w * percent * 5, 100 * 6);
+	const int h = std::min(desktop.h, h_with_aspect); // limit to desktop size
 	return {w, h};
 }
 
