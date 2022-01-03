@@ -327,12 +327,12 @@ enum save_info_type {db_exception, cycle_check, normal, fpu_restore};
 
 
 static struct {
-	save_info_type type;
-	DynState state;
-	const Bit8u * branch_pos;
-	Bit32u eip_change;
-	Bitu cycles;
-	const Bit8u * return_pos;
+	save_info_type type = {};
+	DynState state = {};
+	const Bit8u * branch_pos = nullptr;
+	Bit32u eip_change = 0;
+	Bitu cycles = 0;
+	const Bit8u * return_pos = nullptr;
 } save_info[512];
 
 Bitu used_save_info=0;
