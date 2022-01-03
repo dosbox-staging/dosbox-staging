@@ -1499,21 +1499,6 @@ void DOS_Shell::CMD_DATE(char *args)
 	}
 	bool dateonly = ScanCMDBool(args, "T");
 	if (!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
-
-	const char* formatstring = MSG_Get("SHELL_CMD_DATE_FORMAT");
-	if (strlen(formatstring)!=5) return;
-	char buffer[15] = {0};
-	Bitu bufferptr=0;
-	for (Bitu i = 0; i < 5; i++) {
-		if (i == 1 || i == 3) {
-			buffer[bufferptr] = formatstring[i];
-			bufferptr++;
-		} else {
-			if (formatstring[i] == 'M') bufferptr += sprintf(buffer+bufferptr,"%02u",(Bit8u) reg_dh);
-			if (formatstring[i] == 'D') bufferptr += sprintf(buffer+bufferptr,"%02u",(Bit8u) reg_dl);
-			if (formatstring[i] == 'Y') bufferptr += sprintf(buffer+bufferptr,"%04u",(Bit16u) reg_cx);
-		}
-	}
 	WriteOut("%s\n",
 	         FormatDate((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
 	if (!dateonly) {

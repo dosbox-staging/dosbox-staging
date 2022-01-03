@@ -720,7 +720,6 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
 	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
 	MSG_Add("SHELL_CMD_DATE_SETHLP", "Type 'date %s' to change.\n");
-	MSG_Add("SHELL_CMD_DATE_FORMAT", "M/D/Y");
 	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
 	        "Usage:\n"
 	        "  \033[32;1mdate\033[0m [/t]\n"
