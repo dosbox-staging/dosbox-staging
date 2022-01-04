@@ -381,7 +381,6 @@ static SDL_Rect calc_viewport(int width, int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
-const char *SetProp(std::vector<std::string> &pvars);
 
 #if C_OPENGL
 static char const shader_src_default[] = R"GLSL(
@@ -3938,24 +3937,19 @@ int sdl_main(int argc, char *argv[])
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
 
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property.\n");
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
 		"There is no property \"%s\" in section \"%s\".\n");
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		"Correct syntax: config -set \"section property\".\n");
+		"Correct syntax: config -set \"[section] property=value\".\n");
 	std::string line;
 	while (control->cmdline->FindString("-set", line, true)) {
-		// add rest of command
-		std::string rest;
-		std::vector<std::string> pvars;
 		trim(line);
-		pvars.clear();
-		pvars.push_back(line.c_str());
-		if (!strlen(pvars[0].c_str()))
+		if (line.empty()
+		    || line[0] == '%' || line[0] == '\0'
+		    || line[0] == '#' || line[0] == '\n')
 			continue;
-		if (pvars[0][0] == '%' || pvars[0][0] == '\0' ||
-		    pvars[0][0] == '#' || pvars[0][0] == '\n')
-			continue;
+		std::vector<std::string> pvars(1, std::move(line));
 		const char *result = SetProp(pvars);
 		if (strlen(result))
 			LOG_WARNING("%s", result);
