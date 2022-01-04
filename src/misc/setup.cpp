@@ -1459,3 +1459,86 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 		}
 	}
 }
+
+static char return_msg[200];
+const char *SetProp(std::vector<std::string> &pvars) {
+	*return_msg = 0;
+	// attempt to split off the first word
+	std::string::size_type spcpos = pvars[0].find_first_of(' ');
+	std::string::size_type equpos = pvars[0].find_first_of('=');
+
+	if ((equpos != std::string::npos) &&
+		((spcpos == std::string::npos) || (equpos < spcpos))) {
+		// If we have a '=' possibly before a ' ' split on the =
+		pvars.insert(pvars.begin()+1,pvars[0].substr(equpos+1));
+		pvars[0].erase(equpos);
+		// As we had a = the first thing must be a property now
+		Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
+		if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
+		else {
+			safe_sprintf(return_msg, MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+			return return_msg;
+		}
+		// order in the vector should be ok now
+	} else {
+		if ((spcpos != std::string::npos) &&
+			((equpos == std::string::npos) || (spcpos < equpos))) {
+			// ' ' before a possible '=', split on the ' '
+			pvars.insert(pvars.begin()+1,pvars[0].substr(spcpos+1));
+			pvars[0].erase(spcpos);
+		}
+		// check if the first parameter is a section or property
+		Section* sec = control->GetSection(pvars[0].c_str());
+		if (!sec) {
+			// not a section: little duplicate from above
+			Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
+			if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
+			else {
+				safe_sprintf(return_msg, MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+				return return_msg;
+			}
+		} else {
+			// first of pvars is most likely a section, but could still be gus
+			// have a look at the second parameter
+			if (pvars.size() < 2) {
+				safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				return return_msg;
+			}
+			std::string::size_type spcpos2 = pvars[1].find_first_of(' ');
+			std::string::size_type equpos2 = pvars[1].find_first_of('=');
+			if ((equpos2 != std::string::npos) &&
+				((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
+				// split on the =
+				pvars.insert(pvars.begin()+2,pvars[1].substr(equpos2+1));
+				pvars[1].erase(equpos2);
+			} else if ((spcpos2 != std::string::npos) &&
+				((equpos2 == std::string::npos) || (spcpos2 < equpos2))) {
+				// split on the ' '
+				pvars.insert(pvars.begin()+2,pvars[1].substr(spcpos2+1));
+				pvars[1].erase(spcpos2);
+			}
+			// is this a property?
+			Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+			if (!sec2) {
+				// not a property,
+				Section* sec3 = control->GetSectionFromProperty(pvars[0].c_str());
+				if (sec3) {
+					// section and property name are identical
+					pvars.insert(pvars.begin(),pvars[0]);
+				} // else has been checked above already
+			}
+		}
+	}
+	if (pvars.size() < 3) {
+		safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+		return return_msg;
+	}
+	// check if the property actually exists in the section
+	Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+	if (!sec2) {
+		safe_sprintf(return_msg, MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+			pvars[1].c_str(),pvars[0].c_str());
+		return return_msg;
+	}
+	return return_msg;
+}

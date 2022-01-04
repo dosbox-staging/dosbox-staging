@@ -428,4 +428,6 @@ public:
 
 void SETUP_ParseConfigFiles(const std::string &config_path);
 
+const char *SetProp(std::vector<std::string> &pvars);
+
 #endif
