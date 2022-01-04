@@ -376,6 +376,89 @@ private:
 	}
 };
 
+static char msg[200];
+const char *SetProp(std::vector<std::string> &pvars) {
+	*msg = 0;
+	// attempt to split off the first word
+	std::string::size_type spcpos = pvars[0].find_first_of(' ');
+	std::string::size_type equpos = pvars[0].find_first_of('=');
+
+	if ((equpos != std::string::npos) &&
+		((spcpos == std::string::npos) || (equpos < spcpos))) {
+		// If we have a '=' possibly before a ' ' split on the =
+		pvars.insert(pvars.begin()+1,pvars[0].substr(equpos+1));
+		pvars[0].erase(equpos);
+		// As we had a = the first thing must be a property now
+		Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
+		if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
+		else {
+			strcpy(msg, MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
+			return msg;
+		}
+		// order in the vector should be ok now
+	} else {
+		if ((spcpos != std::string::npos) &&
+			((equpos == std::string::npos) || (spcpos < equpos))) {
+			// ' ' before a possible '=', split on the ' '
+			pvars.insert(pvars.begin()+1,pvars[0].substr(spcpos+1));
+			pvars[0].erase(spcpos);
+		}
+		// check if the first parameter is a section or property
+		Section* sec = control->GetSection(pvars[0].c_str());
+		if (!sec) {
+			// not a section: little duplicate from above
+			Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
+			if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
+			else {
+				strcpy(msg, MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
+				return msg;
+			}
+		} else {
+			// first of pvars is most likely a section, but could still be gus
+			// have a look at the second parameter
+			if (pvars.size() < 2) {
+				strcpy(msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				return msg;
+			}
+			std::string::size_type spcpos2 = pvars[1].find_first_of(' ');
+			std::string::size_type equpos2 = pvars[1].find_first_of('=');
+			if ((equpos2 != std::string::npos) &&
+				((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
+				// split on the =
+				pvars.insert(pvars.begin()+2,pvars[1].substr(equpos2+1));
+				pvars[1].erase(equpos2);
+			} else if ((spcpos2 != std::string::npos) &&
+				((equpos2 == std::string::npos) || (spcpos2 < equpos2))) {
+				// split on the ' '
+				pvars.insert(pvars.begin()+2,pvars[1].substr(spcpos2+1));
+				pvars[1].erase(spcpos2);
+			}
+			// is this a property?
+			Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+			if (!sec2) {
+				// not a property,
+				Section* sec3 = control->GetSectionFromProperty(pvars[0].c_str());
+				if (sec3) {
+					// section and property name are identical
+					pvars.insert(pvars.begin(),pvars[0]);
+				} // else has been checked above already
+			}
+		}
+	}
+	if (pvars.size() < 3) {
+		strcpy(msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+		return msg;
+	}
+	// check if the property actually exists in the section
+	Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+	if (!sec2) {
+		sprintf(msg, MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+			pvars[1].c_str(),pvars[0].c_str());
+		return msg;
+	}
+	return msg;
+}
+
 void CONFIG::Run(void) {
 	static const char* const params[] = {
 		"-r", "-wcp", "-wcd", "-wc", "-writeconf", "-l", "-rmconf",
@@ -752,102 +835,27 @@ void CONFIG::Run(void) {
 			// add rest of command
 			std::string rest;
 			if (cmd->GetStringRemain(rest)) pvars.push_back(rest);
-
-			// attempt to split off the first word
-			std::string::size_type spcpos = pvars[0].find_first_of(' ');
-			std::string::size_type equpos = pvars[0].find_first_of('=');
-
-			if ((equpos != std::string::npos) && 
-				((spcpos == std::string::npos) || (equpos < spcpos))) {
-				// If we have a '=' possibly before a ' ' split on the =
-				pvars.insert(pvars.begin()+1,pvars[0].substr(equpos+1));
-				pvars[0].erase(equpos);
-				// As we had a = the first thing must be a property now
-				Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
-				if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
-				else {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
+			const char *result = SetProp(pvars);
+			if (strlen(result)) WriteOut(result);
+			else {
+				Section* tsec = control->GetSection(pvars[0]);
+				// Input has been parsed (pvar[0]=section, [1]=property, [2]=value)
+				// now execute
+				std::string value(pvars[2]);
+				//Due to parsing there can be a = at the start of value.
+				while (value.size() && (value.at(0) ==' ' ||value.at(0) =='=') ) value.erase(0,1);
+				for (Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
+				if (value.empty() ) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 					return;
 				}
-				// order in the vector should be ok now
-			} else {
-				if ((spcpos != std::string::npos) &&
-					((equpos == std::string::npos) || (spcpos < equpos))) {
-					// ' ' before a possible '=', split on the ' '
-					pvars.insert(pvars.begin()+1,pvars[0].substr(spcpos+1));
-					pvars[0].erase(spcpos);
-				}
-				// check if the first parameter is a section or property
-				Section* sec = control->GetSection(pvars[0].c_str());
-				if (!sec) {
-					// not a section: little duplicate from above
-					Section* sec=control->GetSectionFromProperty(pvars[0].c_str());
-					if (sec) pvars.insert(pvars.begin(),std::string(sec->GetName()));
-					else {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
-						return;
-					}
-				} else {
-					// first of pvars is most likely a section, but could still be gus
-					// have a look at the second parameter
-					if (pvars.size() < 2) {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
-						return;
-					}
-					std::string::size_type spcpos2 = pvars[1].find_first_of(' ');
-					std::string::size_type equpos2 = pvars[1].find_first_of('=');
-					if ((equpos2 != std::string::npos) && 
-						((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
-						// split on the =
-						pvars.insert(pvars.begin()+2,pvars[1].substr(equpos2+1));
-						pvars[1].erase(equpos2);
-					} else if ((spcpos2 != std::string::npos) &&
-						((equpos2 == std::string::npos) || (spcpos2 < equpos2))) {
-						// split on the ' '
-						pvars.insert(pvars.begin()+2,pvars[1].substr(spcpos2+1));
-						pvars[1].erase(spcpos2);
-					}
-					// is this a property?
-					Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
-					if (!sec2) {
-						// not a property, 
-						Section* sec3 = control->GetSectionFromProperty(pvars[0].c_str());
-						if (sec3) {
-							// section and property name are identical
-							pvars.insert(pvars.begin(),pvars[0]);
-						} // else has been checked above already
-					}
-				}
+				std::string inputline = pvars[1] + "=" + value;
+				tsec->ExecuteDestroy(false);
+				bool change_success = tsec->HandleInputline(inputline.c_str());
+				if (!change_success) sprintf(msg, MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
+                    value.c_str(),pvars[1].c_str());
+				tsec->ExecuteInit(false);
 			}
-			if (pvars.size() < 3) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
-				return;
-			}
-			// check if the property actually exists in the section
-			Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
-			if (!sec2) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
-					pvars[1].c_str(),pvars[0].c_str());
-				return;
-			}
-			// Input has been parsed (pvar[0]=section, [1]=property, [2]=value)
-			// now execute
-			Section* tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
-			//Due to parsing there can be a = at the start of value.
-			while (value.size() && (value.at(0) ==' ' ||value.at(0) =='=') ) value.erase(0,1);
-			for (Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
-			if (value.empty() ) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
-				return;
-			}
-			std::string inputline = pvars[1] + "=" + value;
-			
-			tsec->ExecuteDestroy(false);
-			bool change_success = tsec->HandleInputline(inputline.c_str());
-			if (!change_success) WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-				value.c_str(),pvars[1].c_str());
-			tsec->ExecuteInit(false);
 			return;
 		}
 		case P_WRITELANG: case P_WRITELANG2:

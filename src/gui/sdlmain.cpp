@@ -381,6 +381,7 @@ static SDL_Rect calc_viewport(int width, int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
+const char *SetProp(std::vector<std::string> &pvars);
 
 #if C_OPENGL
 static char const shader_src_default[] = R"GLSL(
@@ -3935,6 +3936,40 @@ int sdl_main(int argc, char *argv[])
 
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
+
+	std::string line;
+	while (control->cmdline->FindString("-set", line, true)) {
+		// add rest of command
+		std::string rest;
+		std::vector<std::string> pvars;
+		trim(line);
+		pvars.clear();
+		pvars.push_back(line.c_str());
+		if (!strlen(pvars[0].c_str()))
+			continue;
+		if (pvars[0][0] == '%' || pvars[0][0] == '\0' ||
+		    pvars[0][0] == '#' || pvars[0][0] == '\n')
+			continue;
+		const char *result = SetProp(pvars);
+		if (strlen(result))
+			LOG_WARNING("%s", result);
+		else {
+			Section *tsec = control->GetSection(pvars[0]);
+			std::string value(pvars[2]);
+			// Due to parsing there can be a = at the start of value.
+			while (value.size() &&
+			       (value.at(0) == ' ' || value.at(0) == '='))
+				value.erase(0, 1);
+			for (Bitu i = 3; i < pvars.size(); i++)
+				value += (std::string(" ") + pvars[i]);
+			std::string inputline = pvars[1] + "=" + value;
+			bool change_success = tsec->HandleInputline(
+				inputline.c_str());
+			if (!change_success && !value.empty())
+				LOG_WARNING("Cannot set \"%s\"\n",
+					    inputline.c_str());
+		}
+	}
 
 #if C_OPENGL
 	const std::string glshaders_dir = config_path + "glshaders";
