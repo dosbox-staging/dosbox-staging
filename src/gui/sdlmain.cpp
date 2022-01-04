@@ -3903,6 +3903,7 @@ int sdl_main(int argc, char *argv[])
 
 		//If command line includes --help or -h, print help message and exit.
 		if (control->cmdline->FindExist("--help") ||
+		    control->cmdline->FindExist("-help") ||
 		    control->cmdline->FindExist("-h")) {
 			printf(help_msg); // -V618
 			return 0;
@@ -3937,6 +3938,11 @@ int sdl_main(int argc, char *argv[])
 	const auto config_path = CROSS_GetPlatformConfigDir();
 	SETUP_ParseConfigFiles(config_path);
 
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property.\n");
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+		"There is no property \"%s\" in section \"%s\".\n");
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+		"Correct syntax: config -set \"section property\".\n");
 	std::string line;
 	while (control->cmdline->FindString("-set", line, true)) {
 		// add rest of command

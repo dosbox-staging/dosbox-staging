@@ -46,6 +46,9 @@ These are common options:
   -c <command>        Runs the specified DOS command before running FILE.
                       Multiple commands can be specified.
 
+  -set <option=value> Set the config option (overriding the config file).
+                      Multiple config options can be specified.
+
   -noautoexec         Don't perform any [autoexec] actions.
 
   -noprimaryconf      Don't read settings from the primary configuration file
