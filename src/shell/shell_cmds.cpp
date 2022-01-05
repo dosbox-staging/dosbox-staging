@@ -620,7 +620,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 
 	bool optW=ScanCMDBool(args,"W");
-	ScanCMDBool(args,"S");
+
+	(void)ScanCMDBool(args, "S");
+
 	bool optP=ScanCMDBool(args,"P");
 	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
 		optW=optP=true;
@@ -970,9 +972,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 	while (ScanCMDBool(args,"B")) ;
 	while (ScanCMDBool(args,"T")) ; //Shouldn't this be A ?
 	while (ScanCMDBool(args,"A")) ;
-	ScanCMDBool(args,"Y");
-	ScanCMDBool(args,"-Y");
-	ScanCMDBool(args,"V");
+
+	(void)ScanCMDBool(args, "Y");
+	(void)ScanCMDBool(args, "-Y");
+	(void)ScanCMDBool(args, "V");
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -1578,7 +1581,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	if (args) {
 		optN = ScanCMDBool(args,"N");
 		optS = ScanCMDBool(args,"S"); //Case-sensitive matching
-		ScanCMDBool(args,"T"); //Default Choice after timeout
+
+		(void)ScanCMDBool(args, "T"); // Default Choice after timeout
+
 		char *last = strchr(args,0);
 		StripSpaces(args);
 		rem = ScanCMDRemain(args);
