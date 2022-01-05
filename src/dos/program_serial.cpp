@@ -56,14 +56,14 @@ void SERIAL::showPort(int port)
 void SERIAL::Run()
 {
 	// Show current serial configurations.
-	if (cmd->FindExist("/l", false) || cmd->FindExist("/list", false)) {
+	if (!cmd->GetCount()) {
 		for (int x = 0; x < SERIAL_MAX_PORTS; x++)
 			showPort(x);
 		return;
 	}
 
 	// Select COM port type.
-	if (cmd->GetCount() >= 2) {
+	if (cmd->GetCount() >= 1 && !cmd->FindExist("/?", false)) {
 		// Which COM did they want to change?
 		int port = -1;
 		cmd->FindCommand(1, temp_line);
@@ -78,7 +78,10 @@ void SERIAL::Run()
 		}
 		const auto port_index = port - 1;
 		assert(port_index >= 0 && port_index < SERIAL_MAX_PORTS);
-
+		if (cmd->GetCount() == 1) {
+			showPort(port_index);
+			return;
+		}
 		// Which type of device do they want?
 		SERIAL_PORT_TYPE desired_type = SERIAL_PORT_TYPE::INVALID;
 		cmd->FindCommand(2, temp_line);
@@ -90,7 +93,7 @@ void SERIAL::Run()
 		}
 		if (desired_type == SERIAL_PORT_TYPE::INVALID) {
 			// No idea what they asked for.
-			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_MODE"));
+			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_TYPE"));
 			for (const auto &type_name : serial_type_names) {
 				if (type_name.first == SERIAL_PORT_TYPE::DISABLED)
 					continue; // Don't show the invalid placeholder.
@@ -110,7 +113,7 @@ void SERIAL::Run()
 		                                           commandLineString.c_str());
 		// Remove existing port.
 		delete serialports[port_index];
-		// Recreate the port with the new mode.
+		// Recreate the port with the new type.
 		switch (desired_type) {
 		case SERIAL_PORT_TYPE::INVALID:
 		case SERIAL_PORT_TYPE::DISABLED:

@@ -496,33 +496,34 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
 	MSG_Add("PROGRAM_SERIAL_HELP",
-	        "Manage the serial ports.\n"
+	        "Manages the serial ports.\n"
 	        "\n"
-	        "Usage modes:\n"
-	        "  SERIAL /L | /LIST             List the current serial ports.\n"
-	        "  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.\n"
+	        "Usage:\n"
+	        "  \033[32;1mserial\033[0m \033[37;1m[PORT#]\033[0m                List all or specified serial ports.\n"
+	        "  \033[32;1mserial\033[0m \033[37;1mPORT#\033[0m \033[36;1mTYPE\033[0m [settings]  Set the specified port to the given type.\n"
 	        "\n"
 	        "Where:\n"
-	        "  PORT# : 1, 2, 3, or 4\n"
-	        "  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED\n"
+	        "  \033[37;1mPORT#\033[0m The port number: \033[37;1m1\033[0m, \033[37;1m2\033[0m, \033[37;1m3\033[0m, or \033[37;1m4\033[0m\n"
+	        "  \033[36;1mTYPE\033[0m  The port type: \033[36;1mMODEM\033[0m, \033[36;1mNULLMODEM\033[0m, \033[36;1mDIRECTSERIAL\033[0m, \033[36;1mDUMMY\033[0m, or \033[36;1mDISABLED\033[0m\n"
 	        "\n"
-	        "Optional settings for each TYPE:\n"
-	        "  For MODEM        : IRQ, LISTENPORT, SOCK\n"
-	        "  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,\n"
-			"                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK\n"
-	        "  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY\n"
-	        "  For DUMMY        : IRQ\n"
+	        "Notes:\n"
+	        "  Optional settings for each \033[36;1mTYPE\033[0m:\n"
+	        "  For \033[36;1mMODEM\033[0m        : IRQ, LISTENPORT, SOCK\n"
+	        "  For \033[36;1mNULLMODEM\033[0m    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,\n"
+	        "                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK\n"
+	        "  For \033[36;1mDIRECTSERIAL\033[0m : IRQ, REALPORT (required), RXDELAY\n"
+	        "  For \033[36;1mDUMMY\033[0m        : IRQ\n"
 	        "\n"
-	        "Examples using port 1, or COM1 in DOS:\n"
-	        "  SERIAL /list                                 : List the current serial ports\n"
-	        "  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server\n"
-	        "  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
-	        "  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
-	        "  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux\n");
+	        "Examples:\n"
+	        "  \033[32;1mSERIAL\033[0m                                       : List the current serial ports\n"
+	        "  \033[32;1mSERIAL\033[0m \033[37;1m1\033[0m \033[36;1mNULLMODEM\033[0m PORT:1250                 : Listen on TCP:1250 as server\n"
+	        "  \033[32;1mSERIAL\033[0m \033[37;1m2\033[0m \033[36;1mNULLMODEM\033[0m SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
+	        "  \033[32;1mSERIAL\033[0m \033[37;1m3\033[0m \033[36;1mMODEM\033[0m LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
+	        "  \033[32;1mSERIAL\033[0m \033[37;1m4\033[0m \033[36;1mDIRECTSERIAL\033[0m REALPORT:ttyUSB0       : Use a physical port on Linux\n");
 	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
 	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
 	        "Must specify a numeric port value between 1 and %d, inclusive.\n");
-	MSG_Add("PROGRAM_SERIAL_BAD_MODE", "Mode must be one of the following:\n");
+	MSG_Add("PROGRAM_SERIAL_BAD_TYPE", "Type must be one of the following:\n");
 	MSG_Add("PROGRAM_SERIAL_INDENTED_LIST", "  %s\n");
 
 	MSG_Add("PROGRAM_PLACEHOLDER_SHORT_HELP", "This program is a placeholder");
