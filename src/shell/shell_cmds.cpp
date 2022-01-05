@@ -1080,7 +1080,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 					target_is_file = false;
 				}
 			}
-		} else target_is_file = false;
+		} else
+			target_is_file = false;
 
 		//Find first sourcefile
 		bool ret = DOS_FindFirst(const_cast<char*>(source.filename.c_str()),0xffff & ~DOS_ATTR_VOLUME);

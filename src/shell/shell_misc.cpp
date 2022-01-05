@@ -138,36 +138,40 @@ void DOS_Shell::InputCommand(char * line) {
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
-					it_history ++;
+					++it_history;
 					break;
 
 				case 0x50: /* Down */
 					if (l_history.empty() || it_history == l_history.begin()) break;
 
 					// not very nice but works ..
-					it_history --;
+					--it_history;
 					if (it_history == l_history.begin()) {
 						// no previous commands in history
-						it_history ++;
+						++it_history;
 
 						// remove current command from history
 						if (current_hist) {
-							current_hist=false;
+							current_hist = false;
 							l_history.pop_front();
 						}
 						break;
-					} else it_history --;
+					} else {
+						--it_history;
+					}
 
-					for (;str_index>0; str_index--) {
+					for (; str_index > 0; str_index--) {
 						// removes all characters
-						outc(8); outc(' '); outc(8);
+						outc(8);
+						outc(' ');
+						outc(8);
 					}
 					strcpy(line, it_history->c_str());
 					len = (Bit16u)it_history->length();
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
-					it_history ++;
+					++it_history;
 
 					break;
 				case 0x53: /* Delete */
@@ -187,8 +191,10 @@ void DOS_Shell::InputCommand(char * line) {
 					break;
 				case 15: /* Shift+Tab */
 					if (l_completion.size()) {
-						if (it_completion == l_completion.begin()) it_completion = l_completion.end (); 
-						it_completion--;
+						if (it_completion == l_completion.begin()) {
+							it_completion = l_completion.end ();
+						}
+						--it_completion;
 		
 						if (it_completion->length()) {
 							for (;str_index > completion_index; str_index--) {
@@ -203,8 +209,7 @@ void DOS_Shell::InputCommand(char * line) {
 							DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
 						}
 					}
-				default:
-					break;
+				default: break;
 				}
 			};
 			break;
@@ -241,11 +246,13 @@ void DOS_Shell::InputCommand(char * line) {
 		case'\t':
 			{
 				if (l_completion.size()) {
-					it_completion ++;
-					if (it_completion == l_completion.end()) it_completion = l_completion.begin();
+					++it_completion;
+					if (it_completion == l_completion.end())
+						it_completion = l_completion.begin();
 				} else {
 					// build new completion list
-					// Lines starting with CD will only get directories in the list
+					// Lines starting with CD will only get
+					// directories in the list
 					bool dir_only = (strncasecmp(line,"CD ",3)==0);
 
 					// get completion mask
