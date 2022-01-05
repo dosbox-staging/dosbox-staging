@@ -1011,7 +1011,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 						strcat(source_x,"\\*.*");
 				}
 			}
-			sources.push_back(copysource(source_x,(plus)?true:false));
+			sources.emplace_back(copysource(source_x,(plus)?true:false));
 			source_p = plus;
 		} while (source_p && *source_p);
 	}
