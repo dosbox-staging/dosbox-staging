@@ -532,8 +532,6 @@ public:
 						autoexec[14].Install("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */
 					autoexec[15].Install(std::string("CALL ") + name);
-					if (addexit)
-						autoexec[16].Install("exit");
 				} else if ((strstr(name, ".IMG") != 0) || (strstr(name, ".IMA") != 0)) {
 					// No secure mode here as boot is destructive and enabling securemode disables boot
 					/* Boot image files */
@@ -550,8 +548,6 @@ public:
 					if (secure)
 						autoexec[14].Install("z:\\config.com -securemode");
 					autoexec[15].Install(name);
-					if (addexit)
-						autoexec[16].Install("exit");
 				}
 			}
 			found_dir_or_command = true;
@@ -572,6 +568,11 @@ public:
 			// If we're in secure mode without command line executabls, then seal off the configuration
 			autoexec[12].Install("z:\\config.com -securemode");
 		}
+
+		// The last slot is always reserved for the exit call,
+		// regardless if we're in secure-mode or not.
+		if (addexit)
+			autoexec[16].Install("exit");
 
 		// Print the entire autoexec content, if needed:
 		// for (const auto &autoexec_line : autoexec)
