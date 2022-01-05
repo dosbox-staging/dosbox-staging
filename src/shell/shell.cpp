@@ -599,35 +599,34 @@ void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
 		return;
 
 	auto extra = &section.data[0];
-	if (extra) {
-		/* detect if "echo off" is the first line */
-		size_t firstline_length = strcspn(extra, "\r\n");
-		bool echo_off = !strncasecmp(extra, "echo off", 8);
-		if (echo_off && firstline_length == 8)
-			extra += 8;
-		else {
-			echo_off = !strncasecmp(extra, "@echo off", 9);
-			if (echo_off && firstline_length == 9)
-				extra += 9;
-			else
-				echo_off = false;
-		}
 
-		/* if "echo off" move it to the front of autoexec.bat */
-		if (echo_off) {
-			autoexec_echo.InstallBefore("@echo off");
-			if (*extra == '\r')
-				extra++; // It can point to \0
-			if (*extra == '\n')
-				extra++; // same
-		}
+	/* detect if "echo off" is the first line */
+	size_t firstline_length = strcspn(extra, "\r\n");
+	bool echo_off = !strncasecmp(extra, "echo off", 8);
+	if (echo_off && firstline_length == 8)
+		extra += 8;
+	else {
+		echo_off = !strncasecmp(extra, "@echo off", 9);
+		if (echo_off && firstline_length == 9)
+			extra += 9;
+		else
+			echo_off = false;
+	}
 
-		/* Install the stuff from the configfile if anything
-		 * left after moving echo off */
-		if (*extra) {
-			autoexec[0].Install(std::string(extra));
-			LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
-		}
+	/* if "echo off" move it to the front of autoexec.bat */
+	if (echo_off) {
+		autoexec_echo.InstallBefore("@echo off");
+		if (*extra == '\r')
+			extra++; // It can point to \0
+		if (*extra == '\n')
+			extra++; // same
+	}
+
+	/* Install the stuff from the configfile if anything
+		* left after moving echo off */
+	if (*extra) {
+		autoexec[0].Install(std::string(extra));
+		LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
 	}
 }
 
