@@ -104,4 +104,37 @@ bool ends_with(const std::string &str, const std::string &suffix) noexcept;
 
 bool find_in_case_insensitive(const std::string &needle, const std::string &haystack);
 
+// Safely terminate a C string at the given offset
+//
+// Convert code like: stuff[n] = 0;
+//  - "is stuff an integer array?"
+//  - "are we setting a counter back to 0?"
+//  - "is stuff a valid array?"
+//
+// To: terminate_str_at(stuff, n);
+// which is self-documenting about the type (stuff is a string),
+// intent (terminating), and where it's being applied (n);
+//
+template <typename T, typename INDEX_T>
+void terminate_str_at(T *str, INDEX_T i) noexcept
+{
+	// Check that we're only operating on bona-fide C strings
+	static_assert(std::is_same_v<T, char> || std::is_same_v<T, wchar_t>,
+	              "Can only reset a *char or *wchar_t with the string-terminator");
+
+	// Check that we don't underflow with a negative index
+	assert(std::is_unsigned_v<INDEX_T> || i >= 0);
+
+	// Check that we don't dereferrence a null pointer
+	assert(str != nullptr);
+	str[i] = '\0';
+}
+
+// reset a C string with the string-terminator character
+template <typename T>
+void reset_str(T *str) noexcept
+{
+	terminate_str_at(str, 0);
+}
+
 #endif
