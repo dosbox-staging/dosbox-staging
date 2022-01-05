@@ -832,14 +832,22 @@ void SHELL_Init() {
 	        "\n");
 
 	MSG_Add("SHELL_STARTUP_SUB","\033[32;1mdosbox-staging %s\033[0m\n");
-	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
-	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"
-	        "CHDIR [..]\n"
-	        "CD [drive:][path]\n"
-	        "CD [..]\n\n"
-	        "  ..   Specifies that you want to change to the parent directory.\n\n"
-	        "Type CD drive: to display the current directory in the specified drive.\n"
-	        "Type CD without parameters to display the current drive and directory.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays or changes the current directory.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mcd\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  \033[32;1mchdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to change to.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mcd\033[0m without an argument displays the current directory.\n"
+	        "  With \033[36;1mDIRECTORY\033[0m the command only changes the directory, not the current drive.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mcd\033[0m\n"
+	        "  \033[32;1mcd\033[0m \033[36;1mmydir\033[0m\n");
 	MSG_Add("SHELL_CMD_CLS_HELP", "Clears the DOS screen.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP_LONG",
 	        "Usage:\n"
