@@ -147,13 +147,9 @@ struct SHELL_Cmd {
 class AutoexecObject{
 private:
 	bool installed = false;
-	std::string buf{};
+	std::string buf = {};
 
 public:
-	AutoexecObject()
-		: installed(false),
-		  buf("")
-	{}
 	void Install(std::string const &in);
 	void InstallBefore(std::string const &in);
 	const std::string &GetLine() const { return buf; }
