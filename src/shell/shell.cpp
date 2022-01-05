@@ -446,22 +446,12 @@ public:
 		assert(ds);
 		const bool should_join_autoexecs = ds->GetPropValue("autoexec_section") == "join";
 
-		// Check for the -exit switch, which indicates they want to quit
-		// after the command has finished
-		const bool requested_exit_after_command = control->cmdline->FindExist("-exit");
-
-		// Check if instant-launch is active
-		const bool using_instant_launch = control->GetStartupVerbosity() ==
-		                                  Verbosity::InstantLaunch;
-
-		// Should we add an 'exit' call to the end of autoexec.bat?
-		const bool addexit = requested_exit_after_command || using_instant_launch;
-
 		/* Check to see for extra command line options to be added
 		 * (before the command specified on commandline) */
 		/* Maximum of extra commands: 10 */
 		uint8_t i = 1;
 		std::string line;
+		bool exit_call_exists = false;
 		while (control->cmdline->FindString("-c", line, true) && (i <= 11)) {
 #if defined(WIN32)
 			// replace single with double quotes so that mount
@@ -470,8 +460,28 @@ public:
 				if (line[temp] == '\'')
 					line[temp] = '\"';
 #endif // Linux users can simply use \" in their shell
+
+			// If the user's added an exit call, simply store that
+			// fact but don't insert it because otherwise it can
+			// precede follow on [autoexec] calls.
+			if (line == "exit" || line == "\"exit\"") {
+				exit_call_exists = true;
+				continue;
+			}
 			autoexec[i++].Install(line);
 		}
+
+		// Check for the -exit switch, which indicates they want to quit
+		const bool exit_arg_exists = control->cmdline->FindExist("-exit");
+
+		// Check if instant-launch is active
+		const bool using_instant_launch = control->GetStartupVerbosity() ==
+		                                  Verbosity::InstantLaunch;
+
+		// Should we add an 'exit' call to the end of autoexec.bat?
+		const bool addexit = exit_call_exists
+		                     || exit_arg_exists
+		                     || using_instant_launch;
 
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN + 1];
