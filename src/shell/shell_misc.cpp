@@ -37,8 +37,9 @@ DOS_Shell::~DOS_Shell() {
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
-	dir[0] = 0; //DOS_GetCurrentDir doesn't always return something. (if drive is messed up)
-	DOS_GetCurrentDir(0,dir);
+	reset_str(dir); // DOS_GetCurrentDir doesn't always return
+	                // something. (if drive is messed up)
+	DOS_GetCurrentDir(0, dir);
 	InjectMissingNewline();
 	WriteOut("%c:\\%s>", drive, dir);
 	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
@@ -57,7 +58,7 @@ void DOS_Shell::InputCommand(char * line) {
 	Bit16u len=0;
 	bool current_hist=false; // current command stored in history?
 
-	line[0] = '\0';
+	reset_str(line);
 
 	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
 
@@ -90,7 +91,7 @@ void DOS_Shell::InputCommand(char * line) {
 						}
 						str_len = str_index = it_history->length();
 						size = CMD_MAXLINE - str_index - 2;
-						line[str_len] = 0;
+						terminate_str_at(line, str_len);
 					}
 					break;
 
@@ -185,7 +186,7 @@ void DOS_Shell::InputCommand(char * line) {
 							line[i]=line[i+1];
 							outc(8);
 						}
-						line[--str_len]=0;
+						terminate_str_at(line, --str_len);
 						size++;
 					}
 					break;
@@ -220,13 +221,13 @@ void DOS_Shell::InputCommand(char * line) {
 				size++;
 				if (str_remain) {
 					memmove(&line[str_index-1],&line[str_index],str_remain);
-					line[--str_len]=0;
+					terminate_str_at(line, --str_len);
 					str_index --;
 					/* Go back to redraw */
 					for (size_t i = str_index; i < str_len; i++)
 						outc(line[i]);
 				} else {
-					line[--str_index] = '\0';
+					terminate_str_at(line, --str_index);
 					str_len--;
 				}
 				outc(' ');	outc(8);
@@ -346,7 +347,7 @@ void DOS_Shell::InputCommand(char * line) {
 			outc('\\');
 			outc('\r');
 			outc('\n');
-			*line = 0;      // reset the line.
+			reset_str(line);
 			if (l_completion.size()) l_completion.clear(); //reset the completion list.
 			this->InputCommand(line);	//Get the NEW line.
 			size = 0;       // stop the next loop
@@ -364,14 +365,16 @@ void DOS_Shell::InputCommand(char * line) {
 					line[i]=line[i-1]; //move internal buffer
 					outc(8); //move cursor back (from write buffer to screen)
 				}
-				line[++str_len]=0;//new end (as the internal buffer moved one place to the right
+				// new end (as the internal buffer moved one
+				// place to the right
+				terminate_str_at(line, ++str_len);
 				size--;
 			};
 
 			line[str_index]=c;
 			str_index ++;
 			if (str_index > str_len){ 
-				line[str_index] = '\0';
+				terminate_str_at(line, str_index);
 				str_len++;
 				size--;
 			}
@@ -445,14 +448,14 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	if (have_args) {
 		if (*args != ' ') { // put a space in front
 			line[0] = ' ';
-			line[1] = 0;
+			terminate_str_at(line, 1);
 			strncat(line, args, CMD_MAXLINE - 2);
-			line[CMD_MAXLINE-1]=0;
+			terminate_str_at(line, CMD_MAXLINE - 1);
 		} else {
 			safe_strcpy(line, args);
 		}
 	} else {
-		line[0]=0;
+		reset_str(line);
 	}
 
 	/* check for a drive change */
@@ -536,7 +539,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		safe_strcpy(cmdtail.buffer, line);
 
 		cmdtail.count = check_cast<uint8_t>(safe_strlen(cmdtail.buffer));
-		line[cmdtail.count] = 0;
+		terminate_str_at(line, cmdtail.count);
 
 		assert(cmdtail.count < sizeof(cmdtail.buffer));
 		cmdtail.buffer[cmdtail.count] = 0xd;
@@ -551,22 +554,29 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		//Prepare string first
 		char parseline[258] = { 0 };
 		for(char *pl = line,*q = parseline; *pl ;pl++,q++) {
-			if (*pl == '=' || *pl == ';' || *pl ==',' || *pl == '\t' || *pl == ' ') *q = 0; else *q = *pl; //Replace command seperators with 0.
+			if (*pl == '=' || *pl == ';' || *pl ==',' || *pl == '\t' || *pl == ' ') 
+				reset_str(q);
+			else
+				*q = *pl; //Replace command seperators with 0.
 		} //No end of string \0 needed as parseline is larger than line
 
 		for(char* p = parseline; (p-parseline) < 250 ;p++) { //Stay relaxed within boundaries as we have plenty of room
 			if (*p == '/') { //Transform /Hello into H\0ello
-				*p = 0;
+				reset_str(p);
 				p++;
 				while ( *p == 0 && (p-parseline) < 250) p++; //Skip empty fields
 				if ((p-parseline) < 250) { //Found something. Lets get the first letter and break it up
 					p++;
 					memmove(static_cast<void*>(p + 1),static_cast<void*>(p),(250-(p-parseline)));
-					if ((p-parseline) < 250) *p = 0;
+					if ((p - parseline) < 250)
+						reset_str(p);
 				}
 			}
 		}
-		parseline[255] = parseline[256] = parseline[257] = 0; //Just to be safe.
+		// Just to be safe
+		terminate_str_at(parseline, 255);
+		terminate_str_at(parseline, 256);
+		terminate_str_at(parseline, 257);
 
 		/* Parse FCB (first two parameters) and put them into the current DOS_PSP */
 		Bit8u add;
@@ -659,9 +669,10 @@ const char *DOS_Shell::Which(const char *name) const
 			/* If max size. move till next ; and terminate path */
 			while(*pathenv && (*pathenv != ';')) 
 				pathenv++;
-			path[DOS_PATHLENGTH - 1] = 0;
-		} else path[i_path] = 0;
-
+			terminate_str_at(path, DOS_PATHLENGTH - 1);
+		} else {
+			terminate_str_at(path, i_path);
+		}
 
 		/* check entry */
 		if (size_t len = safe_strlen(path)) {
