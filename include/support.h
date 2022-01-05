@@ -215,8 +215,9 @@ inline bool is_empty(const char *str) noexcept
 {
 	return str[0] == '\0';
 }
-
-bool ScanCMDBool(char * cmd,char const * const check);
+// Scans the provided command-line string for the '/'flag and removes it from
+// the string, returning if the flag was found and removed.
+bool ScanCMDBool(char *cmd, const char * flag);
 char * ScanCMDRemain(char * cmd);
 char * StripWord(char *&cmd);
 
