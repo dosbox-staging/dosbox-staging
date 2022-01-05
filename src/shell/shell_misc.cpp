@@ -441,17 +441,19 @@ bool DOS_Shell::Execute(char * name,char * args) {
  * return false =>       check for hardware changes in do_command */
 	char fullname[DOS_PATHLENGTH+4]; //stores results from Which
 	char line[CMD_MAXLINE];
-	if(strlen(args)!= 0){
-		if(*args != ' '){ //put a space in front
-			line[0]=' ';line[1]=0;
-			strncat(line,args,CMD_MAXLINE-2);
+	const bool have_args = args && args[0] != '\0';
+	if (have_args) {
+		if (*args != ' ') { // put a space in front
+			line[0] = ' ';
+			line[1] = 0;
+			strncat(line, args, CMD_MAXLINE - 2);
 			line[CMD_MAXLINE-1]=0;
 		} else {
 			safe_strcpy(line, args);
 		}
-	}else{
+	} else {
 		line[0]=0;
-	};
+	}
 
 	/* check for a drive change */
 	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
