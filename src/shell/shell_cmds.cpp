@@ -1070,9 +1070,11 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 		// add '\\' if target is a directory
 		bool target_is_file = true;
-		if (pathTarget[strlen(pathTarget) - 1]!='\\') {
-			if (DOS_FindFirst(pathTarget,0xffff & ~DOS_ATTR_VOLUME)) {
-				dta.GetResult(name,size,date,time,attr);
+		const auto target_path_length = strlen(pathTarget);
+		assert(target_path_length > 0);
+		if (pathTarget[target_path_length - 1] != '\\') {
+			if (DOS_FindFirst(pathTarget, 0xffff & ~DOS_ATTR_VOLUME)) {
+				dta.GetResult(name, size, date, time, attr);
 				if (attr & DOS_ATTR_DIRECTORY) {
 					strcat(pathTarget,"\\");
 					target_is_file = false;
@@ -1103,7 +1105,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
 					// Create Target or open it if in concat mode
 					safe_strcpy(nameTarget, pathTarget);
-					if (nameTarget[strlen(nameTarget) - 1] == '\\') strcat(nameTarget,name);
+					const auto name_length = strlen(nameTarget);
+					assert(name_length > 0);
+					if (nameTarget[name_length - 1] == '\\')
+						strcat(nameTarget, name);
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
 					bool special = second_file_of_current_source && target_is_file;
