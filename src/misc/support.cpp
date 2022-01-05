@@ -240,18 +240,24 @@ char * lowcase(char * str) {
 	return str;
 }
 
-bool ScanCMDBool(char * cmd, char const * const check)
+// Scans the provided command-line string for a '/'flag, removes it (if found),
+// and then returns a bool if it was indeed found and removed.
+bool ScanCMDBool(char *cmd, const char * flag)
 {
 	if (cmd == nullptr)
 		return false;
 	char *scan = cmd;
-	const size_t c_len = strlen(check);
+	const size_t flag_len = strlen(flag);
 	while ((scan = strchr(scan,'/'))) {
-		/* found a / now see behind it */
+		// Found a slash indicating the possible start of a flag.
+		// Now see if it's the flag we're looking for:
 		scan++;
-		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='\t' || scan[c_len]=='/' || scan[c_len]==0)) {
-		/* Found a math now remove it from the string */
-			memmove(scan-1,scan+c_len,strlen(scan+c_len)+1);
+		if (strncasecmp(scan, flag, flag_len) == 0 &&
+		    (scan[flag_len] == ' ' || scan[flag_len] == '\t' ||
+		     scan[flag_len] == '/' || scan[flag_len] == 0)) {
+
+			// Found a match for the flag, now remove it
+			memmove(scan - 1, scan + flag_len, strlen(scan + flag_len) + 1);
 			trim(scan-1);
 			return true;
 		}
