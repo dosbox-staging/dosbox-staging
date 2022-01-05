@@ -430,16 +430,19 @@ public:
 		: Module_base(configuration),
 		  autoexec_echo()
 	{
+		const auto cmdline = control->cmdline; // short-lived copy
+
 		// Initialize configurable states that control autoexec-related
 		// behavior
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
-		const bool secure = control->cmdline->FindExist("-securemode", true);
+		const bool secure = cmdline->FindExist("-securemode", true);
 
 		// Are autoexec sections permitted?
 		const bool autoexec_is_allowed = !secure &&
-		                              !control->cmdline->FindExist("-noautoexec", true);
+		                                 !cmdline->FindExist("-noautoexec",
+		                                                     true);
 
 		// Should autoexec sections be joined or overwritten?
 		const auto ds = control->GetSection("dosbox");
@@ -452,7 +455,7 @@ public:
 		uint8_t i = 1;
 		std::string line;
 		bool exit_call_exists = false;
-		while (control->cmdline->FindString("-c", line, true) && (i <= 11)) {
+		while (cmdline->FindString("-c", line, true) && (i <= 11)) {
 #if defined(WIN32)
 			// replace single with double quotes so that mount
 			// commands can contain spaces
@@ -472,7 +475,7 @@ public:
 		}
 
 		// Check for the -exit switch, which indicates they want to quit
-		const bool exit_arg_exists = control->cmdline->FindExist("-exit");
+		const bool exit_arg_exists = cmdline->FindExist("-exit");
 
 		// Check if instant-launch is active
 		const bool using_instant_launch = control->GetStartupVerbosity() ==
@@ -490,7 +493,7 @@ public:
 
 		unsigned int command_index = 1;
 		bool found_dir_or_command = false;
-		while (control->cmdline->FindCommand(command_index++, line) &&
+		while (cmdline->FindCommand(command_index++, line) &&
 		       !found_dir_or_command) {
 			struct stat test;
 			if (line.length() > CROSS_LEN)
@@ -623,7 +626,7 @@ void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
 	}
 
 	/* Install the stuff from the configfile if anything
-		* left after moving echo off */
+	 * left after moving echo off */
 	if (*extra) {
 		autoexec[0].Install(std::string(extra));
 		LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
