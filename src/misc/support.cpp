@@ -254,7 +254,7 @@ bool ScanCMDBool(char *cmd, const char * flag)
 		scan++;
 		if (strncasecmp(scan, flag, flag_len) == 0 &&
 		    (scan[flag_len] == ' ' || scan[flag_len] == '\t' ||
-		     scan[flag_len] == '/' || scan[flag_len] == 0)) {
+		     scan[flag_len] == '/' || scan[flag_len] == '\0')) {
 
 			// Found a match for the flag, now remove it
 			memmove(scan - 1, scan + flag_len, strlen(scan + flag_len) + 1);
