@@ -780,7 +780,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	static Bit8u cpi_buf[65536];
 	Bit32u cpi_buf_size=0,size_of_cpxdata=0;;
 	bool upxfound=false;
-	size_t found_at_pos = 5;
+	Bit16u found_at_pos=5;
 	if (tempfile==NULL) {
 		// check if build-in codepage is available
 		switch (codepage_id) {
@@ -820,19 +820,19 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 				return KEYB_INVALIDCPFILE;
 			}
 			// check if compressed cpi file
-			uint8_t next_byte = 0;
-			int positions_to_try = 100;
-			while (positions_to_try--) {
-				found_at_pos += fread(&next_byte, 1, 1, tempfile.get());
-				while (next_byte == 0x55) {
-					found_at_pos += fread(&next_byte, 1, 1, tempfile.get());
+			Bit8u next_byte=0;
+			for (Bitu i=0; i<100; i++) {
+				fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
+				while (next_byte==0x55) {
+					fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
 					if (next_byte==0x50) {
-						found_at_pos += fread(&next_byte, 1, 1, tempfile.get());
+						fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
 						if (next_byte==0x58) {
-							found_at_pos += fread(&next_byte, 1, 1, tempfile.get());
+							fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
 							if (next_byte==0x21) {
 								// read version ID
-								found_at_pos = fread(&next_byte, 1, 1, tempfile.get());
+								fread(&next_byte, sizeof(Bit8u), 1, tempfile);
+								found_at_pos++;
 								upxfound=true;
 								break;
 							}
