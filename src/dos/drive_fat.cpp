@@ -712,11 +712,13 @@ fatDrive::fatDrive(const char *sysFilename,
                    Bit32u cylsector,
                    Bit32u headscyl,
                    Bit32u cylinders,
-                   Bit32u startSector)
+                   Bit32u startSector,
+                   bool roflag)
 	: loadedDisk(nullptr),
 	  created_successfully(true),
 	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
 	  absolute(false),
+	  readonly(false),
 	  fattype(0),
 	  CountOfClusters(0),
 	  partSectOff(0),
@@ -736,11 +738,14 @@ fatDrive::fatDrive(const char *sysFilename,
 		imgDTAPtr = RealMake(imgDTASeg, 0);
 		imgDTA    = new DOS_DTA(imgDTAPtr);
 	}
-
-	diskfile = fopen_wrap(sysFilename, "rb+");
+	diskfile = roflag ? NULL : fopen_wrap(sysFilename, "rb+");
 	if (!diskfile) {
-		created_successfully = false;
-		return;
+		diskfile = fopen_wrap(sysFilename, "rb");
+		if (!diskfile) {
+			created_successfully = false;
+			return;
+		} else
+			readonly = true;
 	}
 	fseek(diskfile, 0L, SEEK_END);
 	filesize = (Bit32u)ftell(diskfile) / 1024L;
@@ -971,6 +976,10 @@ Bit8u fatDrive::GetMediaByte(void) {
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length
 bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	direntry fileEntry;
 	Bit32u dirClust, subEntry;
 	char dirName[DOS_NAMELENGTH_ASCII];
@@ -1044,6 +1053,10 @@ bool fatDrive::FileStat(const char * /*name*/, FileStat_Block *const /*stat_bloc
 }
 
 bool fatDrive::FileUnlink(char * name) {
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	direntry fileEntry;
 	Bit32u dirClust, subEntry;
 
@@ -1381,6 +1394,10 @@ void fatDrive::zeroOutCluster(Bit32u clustNumber) {
 }
 
 bool fatDrive::MakeDir(char *dir) {
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	Bit32u dummyClust, dirClust;
 	direntry tmpentry;
 	char dirName[DOS_NAMELENGTH_ASCII];
@@ -1433,6 +1450,10 @@ bool fatDrive::MakeDir(char *dir) {
 }
 
 bool fatDrive::RemoveDir(char *dir) {
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	Bit32u dummyClust, dirClust;
 	direntry tmpentry;
 	char dirName[DOS_NAMELENGTH_ASCII];
@@ -1486,6 +1507,10 @@ bool fatDrive::RemoveDir(char *dir) {
 }
 
 bool fatDrive::Rename(char * oldname, char * newname) {
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	direntry fileEntry1;
 	Bit32u dirClust1, subEntry1;
 	if(!getFileDirEntry(oldname, &fileEntry1, &dirClust1, &subEntry1)) return false;

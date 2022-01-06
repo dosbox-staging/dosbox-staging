@@ -155,7 +155,7 @@ struct partTable {
 class imageDisk;
 class fatDrive final : public DOS_Drive {
 public:
-	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
+	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector, bool roflag);
 	fatDrive(const fatDrive&) = delete; // prevent copying
 	fatDrive& operator= (const fatDrive&) = delete; // prevent assignment
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
@@ -204,6 +204,7 @@ private:
 	
 	bootstrap bootbuffer;
 	bool absolute;
+	bool readonly;
 	Bit8u fattype;
 	Bit32u CountOfClusters;
 	Bit32u partSectOff;
