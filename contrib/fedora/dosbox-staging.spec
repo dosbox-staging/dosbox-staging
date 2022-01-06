@@ -92,7 +92,7 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
-* Sun 26 Dec 2021 kcgen <kcgen@users.noreply.github.com>
+* Wed 5 Jan 2022 kcgen <kcgen@users.noreply.github.com>
 - 0.78.1-1
 - Update to 0.78.1
 
