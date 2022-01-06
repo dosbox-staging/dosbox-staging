@@ -63,11 +63,14 @@ void IMGMOUNT::Run(void) {
         return;
     }
 
-
     std::string type   = "hdd";
     std::string fstype = "fat";
     cmd->FindString("-t",type,true);
     cmd->FindString("-fs",fstype,true);
+
+    bool roflag = false;
+    if (cmd->FindExist("-ro", true))
+	    roflag = true;
 
     // Types 'cdrom' and 'iso' are synonyms. Name 'cdrom' is easier
     // to remember and makes more sense, while name 'iso' is
@@ -230,10 +233,13 @@ void IMGMOUNT::Run(void) {
 
     if (fstype=="fat") {
         if (imgsizedetect) {
-            FILE * diskfile = fopen_wrap(temp_line.c_str(), "rb+");
+            FILE * diskfile = roflag ? NULL : fopen_wrap(temp_line.c_str(), "rb+");
             if (!diskfile) {
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-                return;
+                diskfile = fopen_wrap(temp_line.c_str(), "rb");
+                if (!diskfile) {
+                    WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+                    return;
+                }
             }
             fseek(diskfile, 0L, SEEK_END);
             Bit32u fcsize = (Bit32u)(ftell(diskfile) / 512L);
@@ -269,11 +275,13 @@ void IMGMOUNT::Run(void) {
         std::vector<DOS_Drive*>::size_type ct;
 
         for (i = 0; i < paths.size(); i++) {
-            std::unique_ptr<fatDrive> newDrive(
-                new fatDrive(paths[i].c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0));
+		std::unique_ptr<fatDrive> newDrive(
+			new fatDrive(paths[i].c_str(), sizes[0], sizes[1],
+			             sizes[2], sizes[3], 0, roflag));
 
-            if (newDrive->created_successfully) {
-                imgDisks.push_back(static_cast<DOS_Drive*>(newDrive.release()));
+		if (newDrive->created_successfully) {
+			imgDisks.push_back(
+				static_cast<DOS_Drive *>(newDrive.release()));
             } else {
                 // Tear-down all prior drives when we hit a problem
                 WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
@@ -385,10 +393,13 @@ void IMGMOUNT::Run(void) {
         WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
 
     } else if (fstype == "none") {
-        FILE *newDisk = fopen_wrap(temp_line.c_str(), "rb+");
+        FILE *newDisk = roflag ? NULL : fopen_wrap(temp_line.c_str(), "rb+");
         if (!newDisk) {
-            WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-            return;
+            newDisk = fopen_wrap(temp_line.c_str(), "rb");
+            if (!newDisk) {
+                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+                return;
+            }
         }
         fseek(newDisk,0L, SEEK_END);
         Bit32u imagesize = (ftell(newDisk) / 1024);
