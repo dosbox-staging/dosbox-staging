@@ -900,6 +900,17 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 
 
 	start_pos=host_readd(&cpi_buf[0x13]);
+
+	// Internally unpacking some UPX code-page files can result in unparseable data
+	if (start_pos >= cpi_buf_size) {
+		LOG_WARNING("KEYBOARD: Could not parse %scode-data from: %s",
+		            (upxfound) ? "UPX-unpacked " : "", cp_filename);
+
+		LOG(LOG_BIOS, LOG_ERROR)
+		("Code-page file %s invalid start_pos=%u", cp_filename, start_pos);
+		return KEYB_INVALIDCPFILE;
+	}
+
 	number_of_codepages=host_readw(&cpi_buf[start_pos]);
 	start_pos+=4;
 
