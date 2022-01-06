@@ -27,32 +27,38 @@ jobs:
             toolchain: ""
             arch: i686
             sys: MINGW32
+            cc: gcc
             max_warnings: 1
           - name: GCC (MinGW) x86_64
             toolchain: ""
             arch: x86_64
             sys: MINGW64
+            cc: gcc
             max_warnings: 1
-          - name: Clang x86
-            toolchain: clang-
-            arch: i686
-            sys: CLANG32
-            max_warnings: 3
+          - name: GCC (UCRT) x86_64
+            toolchain: ucrt-
+            arch: x86_64
+            sys: UCRT64
+            cc: gcc
+            max_warnings: 1
           - name: Clang x86_64
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
+            cc: clang
             max_warnings: 5
           - name: GCC +tests
             toolchain: ""
             arch: x86_64
             sys: MINGW64
             run_tests: true
+            cc: gcc
             max_warnings: -1
           - name: GCC +debugger
             toolchain: ""
             arch: x86_64
             sys: MINGW64
+            cc: gcc
             max_warnings: 3
             build_flags: -Denable_debugger=normal
     
@@ -70,38 +76,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       
-      - name: Setup MSYS2
+      - name: Setup MSYS2 and install packages
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.conf.sys}}
-          update: true            
-      
-      - name: Enable clang32 repo
-        if:   ${{matrix.conf.sys == 'CLANG32'}}
-        run: |
-          printf "%s\n" "[clang32]" >> /etc/pacman.conf
-          printf "%s\n" "Include = /etc/pacman.d/mirrorlist.mingw" >> /etc/pacman.conf
-          pacman -Sy
-      
-      - name: Install packages
-        run: |
-          toolchain_pkg=$(pacman -Sg mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain \
-            | sed -e 's/mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain //g' | tr '\n' ' ')
-          pacman --noconfirm -S --needed --overwrite \
-            $toolchain_pkg \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2 \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2 \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib \
-
+          update: true
+          install: >-
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-${{matrix.conf.cc}}
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
       
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -157,9 +150,6 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: Clang x86
-            arch: i686
-            sys: CLANG32
           - name: Clang x86_64
             arch: x86_64
             sys: CLANG64
@@ -187,33 +177,20 @@ jobs:
           update: true
           install: |
             git
-      
-      - name: Enable clang32 repo
-        if:   ${{matrix.conf.sys == 'CLANG32'}}
-        run: |
-          printf "%s\n" "[clang32]" >> /etc/pacman.conf
-          printf "%s\n" "Include = /etc/pacman.d/mirrorlist.mingw" >> /etc/pacman.conf
-          pacman -Sy
-      
-      - name: Install packages
-        run: |
-          toolchain_pkg=$(pacman -Sg mingw-w64-clang-${{matrix.conf.arch}}-toolchain \
-            | sed -e 's/mingw-w64-clang-${{matrix.conf.arch}}-toolchain //g' | tr '\n' ' ')
-          pacman --noconfirm -S --needed --overwrite \
-            $toolchain_pkg \
-            mingw-w64-clang-${{matrix.conf.arch}}-meson \
-            mingw-w64-clang-${{matrix.conf.arch}}-ccache \
-            mingw-w64-clang-${{matrix.conf.arch}}-pkgconf \
-            mingw-w64-clang-${{matrix.conf.arch}}-ntldd \
-            mingw-w64-clang-${{matrix.conf.arch}}-ncurses \
-            mingw-w64-clang-${{matrix.conf.arch}}-glib2 \
-            mingw-w64-clang-${{matrix.conf.arch}}-libpng \
-            mingw-w64-clang-${{matrix.conf.arch}}-opusfile \
-            mingw-w64-clang-${{matrix.conf.arch}}-libslirp \
-            mingw-w64-clang-${{matrix.conf.arch}}-SDL2 \
-            mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net \
+            mingw-w64-clang-${{matrix.conf.arch}}-clang
+            mingw-w64-clang-${{matrix.conf.arch}}-meson
+            mingw-w64-clang-${{matrix.conf.arch}}-ccache
+            mingw-w64-clang-${{matrix.conf.arch}}-pkgconf
+            mingw-w64-clang-${{matrix.conf.arch}}-ntldd
+            mingw-w64-clang-${{matrix.conf.arch}}-ncurses
+            mingw-w64-clang-${{matrix.conf.arch}}-glib2
+            mingw-w64-clang-${{matrix.conf.arch}}-libpng
+            mingw-w64-clang-${{matrix.conf.arch}}-opusfile
+            mingw-w64-clang-${{matrix.conf.arch}}-libslirp
+            mingw-w64-clang-${{matrix.conf.arch}}-SDL2
+            mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
-
+            
       - name:  Prepare compiler cache
         id:    prep-ccache
         run: |
