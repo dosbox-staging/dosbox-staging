@@ -18,6 +18,9 @@
 
 #include "dosbox.h"
 
+#include <string_view>
+using sv = std::string_view;
+
 #include "bios.h"
 #include "bios_disk.h"
 #include "setup.h"
@@ -780,7 +783,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	static Bit8u cpi_buf[65536];
 	Bit32u cpi_buf_size=0,size_of_cpxdata=0;;
 	bool upxfound=false;
-	Bit16u found_at_pos=5;
+	size_t found_at_pos = 5;
 	if (tempfile==NULL) {
 		// check if build-in codepage is available
 		switch (codepage_id) {
@@ -819,45 +822,47 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 				LOG(LOG_BIOS,LOG_ERROR)("Codepage file %s has unsupported DR-DOS format",cp_filename);
 				return KEYB_INVALIDCPFILE;
 			}
-			// check if compressed cpi file
-			Bit8u next_byte=0;
-			for (Bitu i=0; i<100; i++) {
-				fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
-				while (next_byte==0x55) {
-					fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
-					if (next_byte==0x50) {
-						fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
-						if (next_byte==0x58) {
-							fread(&next_byte, sizeof(Bit8u), 1, tempfile);	found_at_pos++;
-							if (next_byte==0x21) {
-								// read version ID
-								fread(&next_byte, sizeof(Bit8u), 1, tempfile);
-								found_at_pos++;
-								upxfound=true;
-								break;
-							}
-						}
-					}
-				}
-				if (upxfound) break;
-			}
-			if (!upxfound) {
-				LOG(LOG_BIOS,LOG_ERROR)("Codepage file %s invalid: %x",cp_filename,cpi_buf[0]);
-				return KEYB_INVALIDCPFILE;
-			} else {
-				if (next_byte<10) E_Exit("UPX-compressed cpi file, but upx-version too old");
 
-				// read in compressed CPX-file
-				fseek(tempfile.get(), 0, SEEK_SET);
-				size_of_cpxdata = (Bitu)fread(cpi_buf,
-				                              sizeof(Bit8u), 65536,
-				                              tempfile.get());
+			// Read enough data to scan for UPX's identifier and version
+			const auto scan_size = 100;
+			if (fread(cpi_buf, sizeof(uint8_t), scan_size, tempfile.get()) != scan_size) {
+				LOG_WARNING("CODEPAGE: File %s is too small, could not read initial %d bytes",
+				            cp_filename, scan_size + ds);
+				return KEYB_INVALIDCPFILE;
 			}
+			// Scan for the UPX identifier
+			const auto upx_id = sv{"UPX!"};
+			const auto scan_buf = sv{reinterpret_cast<char *>(cpi_buf), scan_size};
+			const auto upx_id_pos = scan_buf.find(upx_id);
+
+			// did we find the UPX identifier?
+			upxfound = upx_id_pos != scan_buf.npos;
+			if (!upxfound) {
+				LOG_WARNING("CODEPAGE: File %s is invalid, could not find the UPX identifier",
+				            cp_filename);
+				return KEYB_INVALIDCPFILE;
+			}
+			// The IPX version byte comes after the identifier pattern
+			const auto upx_ver_pos = upx_id_pos + upx_id.length();
+			const auto upx_ver = cpi_buf[upx_ver_pos];
+
+			// Can we handle this version?
+			constexpr uint8_t upx_min_ver = 10;
+			if (upx_ver < upx_min_ver) {
+				LOG_WARNING("CODEPAGE: File %s is packed with UPX version %u, but %u+ is needed",
+				            cp_filename, upx_ver, upx_min_ver);
+				return KEYB_INVALIDCPFILE;
+			}
+			// The next data comes after the version (used for decompression below)
+			found_at_pos += upx_ver_pos + sizeof(upx_ver);
+
+			// Read the entire compressed CPX-file
+			fseek(tempfile.get(), 0, SEEK_SET);
+			size_of_cpxdata = fread(cpi_buf, sizeof(Bit8u), sizeof(cpi_buf), tempfile.get());
 		} else {
 			// standard uncompressed cpi-file
 			fseek(tempfile.get(), 0, SEEK_SET);
-			cpi_buf_size = (Bit32u)fread(cpi_buf, sizeof(Bit8u),
-			                             65536, tempfile.get());
+			cpi_buf_size = (Bit32u)fread(cpi_buf, sizeof(Bit8u), sizeof(cpi_buf), tempfile.get());
 		}
 	}
 
