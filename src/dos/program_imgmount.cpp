@@ -233,13 +233,10 @@ void IMGMOUNT::Run(void) {
 
     if (fstype=="fat") {
         if (imgsizedetect) {
-            FILE * diskfile = roflag ? NULL : fopen_wrap(temp_line.c_str(), "rb+");
+            FILE * diskfile = fopen_wrap_ro_fallback(temp_line, roflag);
             if (!diskfile) {
-                diskfile = fopen_wrap(temp_line.c_str(), "rb");
-                if (!diskfile) {
-                    WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-                    return;
-                }
+                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+                return;
             }
             fseek(diskfile, 0L, SEEK_END);
             Bit32u fcsize = (Bit32u)(ftell(diskfile) / 512L);
@@ -275,13 +272,13 @@ void IMGMOUNT::Run(void) {
         std::vector<DOS_Drive*>::size_type ct;
 
         for (i = 0; i < paths.size(); i++) {
-		std::unique_ptr<fatDrive> newDrive(
-			new fatDrive(paths[i].c_str(), sizes[0], sizes[1],
-			             sizes[2], sizes[3], 0, roflag));
+            std::unique_ptr<fatDrive> newDrive(
+                new fatDrive(paths[i].c_str(), sizes[0], sizes[1],
+                             sizes[2], sizes[3], 0, roflag));
 
-		if (newDrive->created_successfully) {
-			imgDisks.push_back(
-				static_cast<DOS_Drive *>(newDrive.release()));
+            if (newDrive->created_successfully) {
+                imgDisks.push_back(
+                    static_cast<DOS_Drive *>(newDrive.release()));
             } else {
                 // Tear-down all prior drives when we hit a problem
                 WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
@@ -393,13 +390,10 @@ void IMGMOUNT::Run(void) {
         WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
 
     } else if (fstype == "none") {
-        FILE *newDisk = roflag ? NULL : fopen_wrap(temp_line.c_str(), "rb+");
+        FILE *newDisk = fopen_wrap_ro_fallback(temp_line, roflag);
         if (!newDisk) {
-            newDisk = fopen_wrap(temp_line.c_str(), "rb");
-            if (!newDisk) {
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-                return;
-            }
+            WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+            return;
         }
         fseek(newDisk,0L, SEEK_END);
         Bit32u imagesize = (ftell(newDisk) / 1024);
