@@ -1396,7 +1396,7 @@ public:
 		// de-init devices, this allows DOSBox to cleanly re-initialize
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
-		for (auto& device : Devices) device = nullptr;
+		DOS_ShutDownDevices();
 	}
 };
 

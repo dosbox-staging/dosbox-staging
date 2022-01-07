@@ -429,3 +429,11 @@ void DOS_SetupDevices() {
 	newdev3=new device_LPT1();
 	DOS_AddDevice(newdev3);
 }
+
+void DOS_ShutDownDevices()
+{
+	for (auto &d : Devices) {
+		delete d;
+		d = nullptr;
+	}
+}
