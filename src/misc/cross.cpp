@@ -416,6 +416,29 @@ FILE *fopen_wrap(const char *path, const char *mode) {
 	return fopen(path,mode);
 }
 
+// A helper for fopen_wrap that will fallback to read-only if read-write isn't possible.
+// In the fallback case, is_readonly argument is toggled to true.
+// In all cases, a pointer to the file is returned (or nullptr on failure).
+FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly)
+{
+	// Try with the requested permissions
+	const auto requested_perms = is_readonly ? "rb" : "rb+";
+	FILE *fp = fopen_wrap(filename.c_str(), requested_perms);
+	if (fp || is_readonly) {
+		return fp;
+	}
+	// Fallback to read-only
+	assert(!fp && !is_readonly);
+	fp = fopen_wrap(filename.c_str(), "rb");
+	if (fp) {
+		is_readonly = true;
+		LOG_INFO("FILESYSTEM: Opened %s read-only per host filesystem permissions",
+		         filename.c_str());
+	}
+	// Note: if failed, the caller should provide a context-specific message
+	return fp;
+}
+
 namespace cross {
 
 #if defined(WIN32)
