@@ -158,7 +158,8 @@ bool DOS_SetFileAttr(char const * const name,Bit16u attr);
 bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
 Bit8u DOS_FindDevice(char const * name);
-void DOS_SetupDevices(void);
+void DOS_SetupDevices();
+void DOS_ShutDownDevices();
 
 /* Execute and new process creation */
 bool DOS_NewPSP(Bit16u pspseg,Bit16u size);
