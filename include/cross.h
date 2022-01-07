@@ -125,5 +125,6 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 void close_directory(dir_information* dirp);
 
 FILE *fopen_wrap(const char *path, const char *mode);
+FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
 #endif

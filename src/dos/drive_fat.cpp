@@ -718,7 +718,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	  created_successfully(true),
 	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
 	  absolute(false),
-	  readonly(false),
+	  readonly(roflag),
 	  fattype(0),
 	  CountOfClusters(0),
 	  partSectOff(0),
@@ -738,15 +738,10 @@ fatDrive::fatDrive(const char *sysFilename,
 		imgDTAPtr = RealMake(imgDTASeg, 0);
 		imgDTA    = new DOS_DTA(imgDTAPtr);
 	}
-	diskfile = roflag ? NULL : fopen_wrap(sysFilename, "rb+");
-	if (!diskfile) {
-		diskfile = fopen_wrap(sysFilename, "rb");
-		if (!diskfile) {
-			created_successfully = false;
-			return;
-		} else
-			readonly = true;
-	}
+	diskfile = fopen_wrap_ro_fallback(sysFilename, readonly);
+	created_successfully = (diskfile != nullptr);
+	if (!created_successfully)
+		return;
 	fseek(diskfile, 0L, SEEK_END);
 	filesize = (Bit32u)ftell(diskfile) / 1024L;
 	is_hdd = (filesize > 2880);
