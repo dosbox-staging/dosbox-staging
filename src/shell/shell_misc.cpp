@@ -29,6 +29,7 @@
 #include "regs.h"
 #include "callback.h"
 #include "string_utils.h"
+#include "../ints/int10.h"
 
 DOS_Shell::~DOS_Shell() {
 	bf.reset();
@@ -48,6 +49,15 @@ void DOS_Shell::ShowPrompt(void) {
 static void outc(Bit8u c) {
 	Bit16u n=1;
 	DOS_WriteFile(STDOUT,&c,&n);
+}
+
+static void backone() {
+	BIOS_NCOLS;
+	uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+	if (CURSOR_POS_COL(page) > 0)
+		outc(8);
+	else if (CURSOR_POS_ROW(page) > 0)
+		INT10_SetCursorPos(CURSOR_POS_ROW(page) - 1, ncols - 1, page);
 }
 
 void DOS_Shell::InputCommand(char * line) {
@@ -97,7 +107,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x4B: /* Left */
 					if (str_index) {
-						outc(8);
+						backone();
 						str_index --;
 					}
 					break;
@@ -110,7 +120,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x47: /* Home */
 					while (str_index) {
-						outc(8);
+						backone();
 						str_index--;
 					}
 					break;
@@ -132,7 +142,9 @@ void DOS_Shell::InputCommand(char * line) {
 
 					for (;str_index>0; str_index--) {
 						// removes all characters
-						outc(8); outc(' '); outc(8);
+						backone();
+						outc(' ');
+						backone();
 					}
 					strcpy(line, it_history->c_str());
 					len = (Bit16u)it_history->length();
@@ -163,9 +175,9 @@ void DOS_Shell::InputCommand(char * line) {
 
 					for (; str_index > 0; str_index--) {
 						// removes all characters
-						outc(8);
+						backone();
 						outc(' ');
-						outc(8);
+						backone();
 					}
 					strcpy(line, it_history->c_str());
 					len = (Bit16u)it_history->length();
@@ -181,10 +193,11 @@ void DOS_Shell::InputCommand(char * line) {
 						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
 						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
 						DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
-						outc(' ');outc(8);
+						outc(' ');
+						backone();
 						for (auto i = str_index; i < str_len-1; i++) {
 							line[i]=line[i+1];
-							outc(8);
+							backone();
 						}
 						terminate_str_at(line, --str_len);
 						size++;
@@ -200,7 +213,9 @@ void DOS_Shell::InputCommand(char * line) {
 						if (it_completion->length()) {
 							for (;str_index > completion_index; str_index--) {
 								// removes all characters
-								outc(8); outc(' '); outc(8);
+								backone();
+								outc(' ');
+								backone();
 							}
 
 							strcpy(&line[completion_index], it_completion->c_str());
@@ -216,7 +231,7 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		case 0x08: /* Backspace */
 			if (str_index) {
-				outc(8);
+				backone();
 				size_t str_remain = str_len - str_index;
 				size++;
 				if (str_remain) {
@@ -230,9 +245,11 @@ void DOS_Shell::InputCommand(char * line) {
 					terminate_str_at(line, --str_index);
 					str_len--;
 				}
-				outc(' ');	outc(8);
+				outc(' ');
+				backone();
 				// moves the cursor left
-				while (str_remain--) outc(8);
+				while (str_remain--)
+					backone();
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
@@ -331,7 +348,9 @@ void DOS_Shell::InputCommand(char * line) {
 				if (l_completion.size() && it_completion->length()) {
 					for (;str_index > completion_index; str_index--) {
 						// removes all characters
-						outc(8); outc(' '); outc(8);
+						backone();
+						outc(' ');
+						backone();
 					}
 
 					strcpy(&line[completion_index], it_completion->c_str());
@@ -360,10 +379,10 @@ void DOS_Shell::InputCommand(char * line) {
 				auto text_len = static_cast<uint16_t>(str_len - str_index);
 				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
 				DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
-				outc(8);//undo the cursor the right.
+				backone(); //undo the cursor the right.
 				for (auto i = str_len; i > str_index; i--) {
 					line[i]=line[i-1]; //move internal buffer
-					outc(8); //move cursor back (from write buffer to screen)
+					backone(); //move cursor back (from write buffer to screen)
 				}
 				// new end (as the internal buffer moved one
 				// place to the right
