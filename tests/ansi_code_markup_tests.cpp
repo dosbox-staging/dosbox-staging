@@ -197,6 +197,12 @@ TEST(ConvertAnsiMarkup, Witespace)
     EXPECT_EQ(convert_ansi_markup(str), "\033[31;1mthis colour is red");
 }
 
+TEST(ConvertAnsiMarkup, EscapeTag)
+{
+    const char str[] = "\\[color=red]this colour is red";
+    EXPECT_EQ(convert_ansi_markup(str), "[color=red]this colour is red");
+}
+
 TEST(ConvertAnsiMarkup, NoMarkupPlain)
 {
     const char str[] = "This is plain text with no markup.";

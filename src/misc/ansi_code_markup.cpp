@@ -121,9 +121,10 @@ private:
 
 static TagParser tag_parser;
 
-static std::regex markup("\\["      // Opening bracket
+static std::regex markup(R"((\\)?)" // Escape tag?
+						 "(\\["      // Opening bracket, open main group
                          "[ \\t]*?" // Optional spacing after opening bracket
-                         "(\\/?)"   // Check for losing tag
+                         "(\\/)?"   // Check for losing tag
                          "("        // Start group of tags
                          "((?:bg)?color)" // Select color or bgcolor. bg not
                                           // captured in separate group
@@ -136,8 +137,8 @@ static std::regex markup("\\["      // Opening bracket
                                                                    // tags to match
                          ")"        // End group of tags
                          "[ \\t]*?" // Optional spacing before closing bracket
-                         "\\]" // Closing bracket. Note: Clang and MSVC requires
-                               // this to be escaped
+                         "\\])" // Closing bracket. Note: Clang and MSVC requires
+                               // this to be escaped. Closing main group
                          ,
                          std::regex::icase);
 
@@ -171,19 +172,20 @@ std::string convert_ansi_markup(const char *str)
 	const char *last_match = str;
 	std::cmatch m;
 	while (std::regex_search(begin, m, markup)) {
-		bool close = (m[1].matched && m[1].str() == "/") ? true : false;
-		std::string tag = m[3].matched ? m[3].str() : m[2].str();
-		std::string color = m[3].matched ? m[4].str() : "";
-		lowcase(tag);
-		lowcase(color);
-
-		// Copy test before current match to output string
-		result += m.prefix().str();
-		if (const char *r = tag_parser.get_ansi_code(tag, close, color)) {
-			result += r;
-		} else {
-			result += m[0].str();
+		const char* r = nullptr;
+		bool escape = m[1].matched;
+		if (!escape) {
+			bool close = m[3].matched;
+			std::string tag = m[5].matched ? m[5].str() : m[4].str();
+			std::string color = m[5].matched ? m[6].str() : "";
+			lowcase(tag);
+			lowcase(color);
+			r = tag_parser.get_ansi_code(tag, close, color);
 		}
+		// Copy text before current match to output string
+		result += m.prefix().str();
+		result += r ? r : m[2].str();
+
 		// Continue the next iteration from the end of the current match
 		begin += m.position() + m.length();
 		last_match = m[0].second;
