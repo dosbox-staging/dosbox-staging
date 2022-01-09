@@ -51,13 +51,14 @@ static void outc(Bit8u c) {
 	DOS_WriteFile(STDOUT,&c,&n);
 }
 
-static void backone() {
-	BIOS_NCOLS;
-	uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
-	if (CURSOR_POS_COL(page) > 0)
+static void move_cursor_back_one() {
+	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+	if (CURSOR_POS_COL(page) > 0) {
 		outc(8);
-	else if (CURSOR_POS_ROW(page) > 0)
-		INT10_SetCursorPos(CURSOR_POS_ROW(page) - 1, ncols - 1, page);
+	} else if (const auto row = CURSOR_POS_ROW(page); row > 0) {
+		BIOS_NCOLS;
+		INT10_SetCursorPos(row - 1, ncols - 1, page);
+	}
 }
 
 void DOS_Shell::InputCommand(char * line) {
@@ -107,7 +108,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x4B: /* Left */
 					if (str_index) {
-						backone();
+						move_cursor_back_one();
 						str_index --;
 					}
 					break;
@@ -120,7 +121,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x47: /* Home */
 					while (str_index) {
-						backone();
+						move_cursor_back_one();
 						str_index--;
 					}
 					break;
@@ -142,9 +143,9 @@ void DOS_Shell::InputCommand(char * line) {
 
 					for (;str_index>0; str_index--) {
 						// removes all characters
-						backone();
+						move_cursor_back_one();
 						outc(' ');
-						backone();
+						move_cursor_back_one();
 					}
 					strcpy(line, it_history->c_str());
 					len = (Bit16u)it_history->length();
@@ -175,9 +176,9 @@ void DOS_Shell::InputCommand(char * line) {
 
 					for (; str_index > 0; str_index--) {
 						// removes all characters
-						backone();
+						move_cursor_back_one();
 						outc(' ');
-						backone();
+						move_cursor_back_one();
 					}
 					strcpy(line, it_history->c_str());
 					len = (Bit16u)it_history->length();
@@ -194,10 +195,10 @@ void DOS_Shell::InputCommand(char * line) {
 						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
 						DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
 						outc(' ');
-						backone();
+						move_cursor_back_one();
 						for (auto i = str_index; i < str_len-1; i++) {
 							line[i]=line[i+1];
-							backone();
+							move_cursor_back_one();
 						}
 						terminate_str_at(line, --str_len);
 						size++;
@@ -213,9 +214,9 @@ void DOS_Shell::InputCommand(char * line) {
 						if (it_completion->length()) {
 							for (;str_index > completion_index; str_index--) {
 								// removes all characters
-								backone();
+								move_cursor_back_one();
 								outc(' ');
-								backone();
+								move_cursor_back_one();
 							}
 
 							strcpy(&line[completion_index], it_completion->c_str());
@@ -231,7 +232,7 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		case 0x08: /* Backspace */
 			if (str_index) {
-				backone();
+				move_cursor_back_one();
 				size_t str_remain = str_len - str_index;
 				size++;
 				if (str_remain) {
@@ -246,10 +247,10 @@ void DOS_Shell::InputCommand(char * line) {
 					str_len--;
 				}
 				outc(' ');
-				backone();
+				move_cursor_back_one();
 				// moves the cursor left
 				while (str_remain--)
-					backone();
+					move_cursor_back_one();
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
@@ -348,9 +349,9 @@ void DOS_Shell::InputCommand(char * line) {
 				if (l_completion.size() && it_completion->length()) {
 					for (;str_index > completion_index; str_index--) {
 						// removes all characters
-						backone();
+						move_cursor_back_one();
 						outc(' ');
-						backone();
+						move_cursor_back_one();
 					}
 
 					strcpy(&line[completion_index], it_completion->c_str());
@@ -362,6 +363,9 @@ void DOS_Shell::InputCommand(char * line) {
 			}
 			break;
 		case 0x1b: /* Esc */
+			while (str_index < str_len) {
+				outc(line[str_index++]);
+			}
 			//write a backslash and return to the next line
 			outc('\\');
 			outc('\r');
@@ -379,10 +383,10 @@ void DOS_Shell::InputCommand(char * line) {
 				auto text_len = static_cast<uint16_t>(str_len - str_index);
 				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
 				DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
-				backone(); //undo the cursor the right.
+				move_cursor_back_one(); //undo the cursor the right.
 				for (auto i = str_len; i > str_index; i--) {
 					line[i]=line[i-1]; //move internal buffer
-					backone(); //move cursor back (from write buffer to screen)
+					move_cursor_back_one(); //move cursor back (from write buffer to screen)
 				}
 				// new end (as the internal buffer moved one
 				// place to the right
