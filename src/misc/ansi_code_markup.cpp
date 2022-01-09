@@ -25,10 +25,6 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
-static std::string empty;
-
-static char light_prefix[] = "light-";
-
 template <typename K, typename V>
 static bool map_contains(std::unordered_map<K, V> &map, K key)
 {
@@ -68,6 +64,7 @@ public:
 
 private:
 	char ansi_code[10] = {0};
+	char light_prefix[7] = "light-";
 	std::unordered_map<std::string, int> base_colors = {
 	        {"black", 30},  {"red", 31},   {"green", 32},
 	        {"yellow", 33}, {"blue", 34},  {"magenta", 35},
