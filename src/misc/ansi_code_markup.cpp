@@ -66,9 +66,29 @@ private:
 	};
 };
 
+class EraseParser {
+public:
+	const char *get_ansi_code(const std::string &extent, const bool line)
+	{
+		reset_str(ansi_code);
+		if (!contains(extents, extent)) {
+			return nullptr;
+		}
+		int ansi_num = extents.at(extent);
+		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num, line ? "K" : "J");
+		return ansi_code;
+	}
+
+private:
+	char ansi_code[10] = {0};
+	const std::unordered_map<std::string, int> extents = {{"end", 0},
+	                                                      {"begin", 1},
+	                                                      {"entire", 2}};
+};
+
 class TagParser {
 public:
-	TagParser() : color() {}
+	TagParser() : color(), erase() {}
 	/*!
 	 * \brief Returns a pointer to an ANSI code
 	 *
@@ -82,20 +102,25 @@ public:
 	 */
 	const char *get_ansi_code(const std::string &tag,
 	                          const bool close,
-	                          const std::string &color_val)
+	                          const std::string &val)
 	{
-		if (tag == "color" || tag == "bgcolor") {
-			// We don't support closing color tags
+		if (tag == "color" || tag == "bgcolor" || tag == "erasel" ||
+		    tag == "erases") {
+			// We don't support closing color or erase tags
 			if (close) {
 				return nullptr;
 			}
-			return color.get_ansi_code(color_val, tag == "bgcolor");
+			if (tag == "color" || tag == "bgcolor") {
+				return color.get_ansi_code(val, tag == "bgcolor");
+			} else if (tag == "erasel" || tag == "erases") {
+				return erase.get_ansi_code(val, tag == "erasel");
+			}
 		}
 		reset_str(ansi_code);
-		if (!contains(tags, tag)) {
+		if (!contains(style_tags, tag)) {
 			return nullptr;
 		}
-		int ansi_num = tags.at(tag);
+		int ansi_num = style_tags.at(tag);
 		if (close) {
 			// "closing" tags have ascii codes +20
 			ansi_num += 20 + (tag == "b" ? 1 : 0); // [/b] is the
@@ -107,8 +132,9 @@ public:
 
 private:
 	ColorParser color;
+	EraseParser erase;
 	char ansi_code[10] = {0};
-	const std::unordered_map<std::string, int> tags = {
+	const std::unordered_map<std::string, int> style_tags = {
 	        {"reset", 0}, {"b", 1},       {"dim", 2},
 	        {"i", 3},     {"u", 4},       {"s", 9},
 	        {"blink", 5}, {"inverse", 7}, {"hidden", 8},
@@ -126,7 +152,7 @@ static TagParser tag_parser;
  * This color is [color=red] red
  *                |_4_| |6|
  *                |_5_|
- * 
+ *
  * The folowing is a closing tag example:
  * _____2____
  * |		|
@@ -139,11 +165,10 @@ static std::regex markup(R"((\\)?)" // Escape tag? (1)
                          "[ \\t]*?" // Optional spacing after opening bracket
                          "(\\/)?"   // Check for closing tag (3)
                          "("        // Start group of tags (4)
-                         "((?:bg)?color)" // Select color or bgcolor. bg not
-                                          // captured in separate group (5)
-
-                         // Color value. '=' not captured in separate group.
-                         // Spacing around '=' is allowed (6)
+                         // Select color, bgcolor, erasel, erases. (5)
+                         "(color|bgcolor|erasel|erases)"
+                         // Color or erase value. '=' not captured in separate
+                         // group. Spacing around '=' is allowed (6)
                          "(?:[ \\t]*?=[ \\t]*?([a-z\\-]+))?"
                          // All other tags to match
                          "|i|b|u|s|blink|dim|hidden|inverse|reset"
@@ -163,11 +188,14 @@ std::string convert_ansi_markup(std::string &str)
  * \brief Convert ANSI markup tags in string to ANSI terminal codes
  *
  * Tags are in the form of [tagname]some text[/tagname]. Not all tags
- * have closing counterparts, such as [reset], [color], and [bgcolor].
+ * have closing counterparts, such as [reset], [color], [bgcolor], [erasel] and
+ * [erases].
  *
- * Color tags take a required parameter in the form [color=value] or
- * [bgcolor=value]. Tag matching is case insensitive, and spacing is
- * allowed between '[', ']' and '='.
+ * Color and erase tags take a required parameter in the form [color=value],
+ * [bgcolor=value], [erasel=value], [erases=value].
+ *
+ * Tag matching is case insensitive, and spacing is allowed between
+ * '[', ']' and '='.
  *
  * If a tag cannot be parsed for any reason, the resulting string will
  * contain the original unparsed tag.
@@ -189,10 +217,10 @@ std::string convert_ansi_markup(const char *str)
 		if (!escape) {
 			bool close = m[3].matched;
 			std::string tag = m[5].matched ? m[5].str() : m[4].str();
-			std::string color = m[5].matched ? m[6].str() : "";
+			std::string val = m[5].matched ? m[6].str() : "";
 			lowcase(tag);
-			lowcase(color);
-			r = tag_parser.get_ansi_code(tag, close, color);
+			lowcase(val);
+			r = tag_parser.get_ansi_code(tag, close, val);
 		}
 		// Copy text before current match to output string
 		result += m.prefix().str();
