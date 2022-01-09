@@ -1,4 +1,5 @@
 libmisc_sources = [
+  'ansi_code_markup.cpp',
   'cross.cpp',
   'ethernet.cpp',
   'ethernet_slirp.cpp',
