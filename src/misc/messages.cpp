@@ -34,6 +34,7 @@
 #include "string_utils.h"
 #include "setup.h"
 #include "support.h"
+#include "ansi_code_markup.h"
 
 #if C_COREFOUNDATION
 #include <CoreFoundation/CoreFoundation.h>
@@ -64,7 +65,7 @@ void MSG_Add(const char *name, const char *msg)
 {
 	// Only add the message if it doesn't exist yet
 	if (messages.find(name) == messages.end()) {
-		messages[name] = msg;
+		messages[name] = convert_ansi_markup(msg);
 		messages_order.emplace_back(name);
 	}
 }
@@ -76,7 +77,7 @@ void MSG_Replace(const char *name, const char *msg)
 	if (it == messages.end())
 		MSG_Add(name, msg);
 	else // replace the prior message
-		it->second = msg;
+		it->second = convert_ansi_markup(msg);
 }
 
 static bool LoadMessageFile(const std_fs::path &filename)
