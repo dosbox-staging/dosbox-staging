@@ -25,12 +25,6 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
-template <typename K, typename V>
-static bool map_contains(std::unordered_map<K, V> &map, K key)
-{
-	return map.find(key) != map.end();
-}
-
 class ColorParser {
 public:
 	/*!
@@ -44,15 +38,15 @@ public:
 	 *                   (false) color
 	 * \return const char*
 	 */
-	const char *get_ansi_code(std::string &color, bool background)
+	const char *get_ansi_code(const std::string &color, const bool background)
 	{
 		reset_str(ansi_code);
 		std::string c = color;
-		bool light = starts_with(light_prefix, color);
+		bool light = (color.rfind(light_prefix, 0) != std::string::npos);
 		if (light) {
-			c = color.substr(sizeof light_prefix - 1);
+			c = color.substr(light_prefix.length());
 		}
-		if (!map_contains<std::string, int>(base_colors, c)) {
+		if (!contains(base_colors, c)) {
 			return nullptr;
 		}
 		// Background colors have codes that are +10
@@ -64,8 +58,8 @@ public:
 
 private:
 	char ansi_code[10] = {0};
-	char light_prefix[7] = "light-";
-	std::unordered_map<std::string, int> base_colors = {
+	const std::string light_prefix = "light-";
+	const std::unordered_map<std::string, int> base_colors = {
 	        {"black", 30},  {"red", 31},   {"green", 32},
 	        {"yellow", 33}, {"blue", 34},  {"magenta", 35},
 	        {"cyan", 36},   {"white", 37}, {"default", 39},
@@ -86,7 +80,9 @@ public:
 	 * \param color_val the color value if a color tag
 	 * \return const char*
 	 */
-	const char *get_ansi_code(std::string &tag, bool close, std::string &color_val)
+	const char *get_ansi_code(const std::string &tag,
+	                          const bool close,
+	                          const std::string &color_val)
 	{
 		if (tag == "color" || tag == "bgcolor") {
 			// We don't support closing color tags
@@ -96,7 +92,7 @@ public:
 			return color.get_ansi_code(color_val, tag == "bgcolor");
 		}
 		reset_str(ansi_code);
-		if (!map_contains<std::string, int>(tags, tag)) {
+		if (!contains(tags, tag)) {
 			return nullptr;
 		}
 		int ansi_num = tags.at(tag);
@@ -112,7 +108,7 @@ public:
 private:
 	ColorParser color;
 	char ansi_code[10] = {0};
-	std::unordered_map<std::string, int> tags = {
+	const std::unordered_map<std::string, int> tags = {
 	        {"reset", 0}, {"b", 1},       {"dim", 2},
 	        {"i", 3},     {"u", 4},       {"s", 9},
 	        {"blink", 5}, {"inverse", 7}, {"hidden", 8},
@@ -121,24 +117,40 @@ private:
 
 static TagParser tag_parser;
 
-static std::regex markup(R"((\\)?)" // Escape tag?
-						 "(\\["      // Opening bracket, open main group
+/*
+ * Regular expression to match tags
+ *
+ * The following is an example with group numbers:
+ *               _____2_____
+ *               |		   |
+ * This color is [color=red] red
+ *                |_4_| |6|
+ *                |_5_|
+ * 
+ * The folowing is a closing tag example:
+ * _____2____
+ * |		|
+ * [/inverse]
+ *  ||     |
+ *  3|__4__|
+ */
+static std::regex markup(R"((\\)?)" // Escape tag? (1)
+                         "(\\["     // Opening bracket, open main group (2)
                          "[ \\t]*?" // Optional spacing after opening bracket
-                         "(\\/)?"   // Check for losing tag
-                         "("        // Start group of tags
+                         "(\\/)?"   // Check for closing tag (3)
+                         "("        // Start group of tags (4)
                          "((?:bg)?color)" // Select color or bgcolor. bg not
-                                          // captured in separate group
-                         "(?:[ \\t]*?=[ \\t]*?([a-z\\-]+))?" // Color value. '='
-                                                             // not captured in
-                                                             // separate group.
-                                                             // Spacing around
-                                                             // '=' is allowed
-                         "|i|b|u|s|blink|dim|hidden|inverse|reset" // All other
-                                                                   // tags to match
-                         ")"        // End group of tags
+                                          // captured in separate group (5)
+
+                         // Color value. '=' not captured in separate group.
+                         // Spacing around '=' is allowed (6)
+                         "(?:[ \\t]*?=[ \\t]*?([a-z\\-]+))?"
+                         // All other tags to match
+                         "|i|b|u|s|blink|dim|hidden|inverse|reset"
+                         ")"        // End group of tags (4)
                          "[ \\t]*?" // Optional spacing before closing bracket
                          "\\])" // Closing bracket. Note: Clang and MSVC requires
-                               // this to be escaped. Closing main group
+                                // this to be escaped. Closing main group (2)
                          ,
                          std::regex::icase);
 
@@ -172,7 +184,7 @@ std::string convert_ansi_markup(const char *str)
 	const char *last_match = str;
 	std::cmatch m;
 	while (std::regex_search(begin, m, markup)) {
-		const char* r = nullptr;
+		const char *r = nullptr;
 		bool escape = m[1].matched;
 		if (!escape) {
 			bool close = m[3].matched;
