@@ -72,6 +72,12 @@
     <ClCompile Include="..\support_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\ansi_code_markup_tests.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\ansi_code_markup.cpp">
+      <Filter>dosbox_sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\meson.build" />
