@@ -648,21 +648,33 @@ void DOSBOX_Init() {
 #endif
 
 
+	// Mixer defaults
+	constexpr int default_mixer_rate = 48000;
+#if defined(WIN32)
+	// Long stading known-good defaults for Windows
+	constexpr int default_mixer_blocksize = 1024;
+	constexpr int default_mixer_prebuffer = 25;
+#else
+	// Non-Windows platforms tollerate slightly lower latency
+	constexpr int default_mixer_blocksize = 512;
+	constexpr int default_mixer_prebuffer = 20;
+#endif
+
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	Pbool = secprop->Add_bool("nosound", only_at_start, false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
-	Pint = secprop->Add_int("rate", only_at_start, 48000);
+	Pint = secprop->Add_int("rate", only_at_start, default_mixer_rate);
 	Pint->Set_values(rates);
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
 	const char *blocksizes[] = {
 		 "1024", "2048", "4096", "8192", "512", "256", "128", 0};
-	Pint = secprop->Add_int("blocksize", only_at_start, 512);
+	Pint = secprop->Add_int("blocksize", only_at_start, default_mixer_blocksize);
 	Pint->Set_values(blocksizes);
 	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
 
-	Pint = secprop->Add_int("prebuffer",only_at_start,20);
+	Pint = secprop->Add_int("prebuffer",only_at_start, default_mixer_prebuffer);
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
