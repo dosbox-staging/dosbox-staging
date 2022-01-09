@@ -313,4 +313,10 @@ bool contains(const container_t &container, const typename container_t::value_ty
 	return std::find(container.begin(), container.end(), value) != container.end();
 }
 
+template <typename container_t>
+bool contains(const container_t &container, const typename container_t::key_type &key)
+{
+	return container.find(key) != container.end();
+}
+
 #endif

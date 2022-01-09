@@ -203,6 +203,30 @@ TEST(ConvertAnsiMarkup, EscapeTag)
     EXPECT_EQ(convert_ansi_markup(str), "[color=red]this colour is red");
 }
 
+TEST(ConvertAnsiMarkup, InvalidNesting)
+{
+    const char str[] = "This will be[bgcolor=light-blue [bgcolor=light-blue] ] light blue.";
+    EXPECT_EQ(convert_ansi_markup(str), "This will be[bgcolor=light-blue \033[44m ] light blue.");
+}
+
+TEST(ConvertAnsiMarkup, EscapedBothBrackets)
+{
+    const char str[] = "This will be \\[bgcolor=light-blue\\] light blue.";
+    EXPECT_EQ(convert_ansi_markup(str), "This will be \\[bgcolor=light-blue\\] light blue.");
+}
+
+TEST(ConvertAnsiMarkup, EscapedDoubleQuotes)
+{
+    const char str[] = "This will be [bgcolor=\"light-blue] light blue.";
+    EXPECT_EQ(convert_ansi_markup(str), "This will be [bgcolor=\"light-blue] light blue.");
+}
+
+TEST(ConvertAnsiMarkup, EscapedMixedQuotes)
+{
+    const char str[] = "This will be [\"bgcolor=\'light-blue] light blue.";
+    EXPECT_EQ(convert_ansi_markup(str), "This will be [\"bgcolor=\'light-blue] light blue.");
+}
+
 TEST(ConvertAnsiMarkup, NoMarkupPlain)
 {
     const char str[] = "This is plain text with no markup.";
