@@ -654,10 +654,13 @@ void DOSBOX_Init() {
 	// Long stading known-good defaults for Windows
 	constexpr int default_mixer_blocksize = 1024;
 	constexpr int default_mixer_prebuffer = 25;
+	constexpr bool default_mixer_allow_negotiate = false;
+
 #else
 	// Non-Windows platforms tollerate slightly lower latency
 	constexpr int default_mixer_blocksize = 512;
 	constexpr int default_mixer_prebuffer = 20;
+	constexpr bool default_mixer_allow_negotiate = true;
 #endif
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
@@ -678,9 +681,9 @@ void DOSBOX_Init() {
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
-	Pbool = secprop->Add_bool("negotiate", only_at_start, true);
-	Pbool->Set_help("Allow system audio driver to negotiate optimal rate and blocksize\n"
-	                "as close to the specified values as possible.");
+	Pbool = secprop->Add_bool("negotiate", only_at_start,
+	                          default_mixer_allow_negotiate);
+	Pbool->Set_help("Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
