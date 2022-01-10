@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <array>
 
 #include "bios.h"
 #include "callback.h"
@@ -48,78 +49,90 @@ void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
 
-int countries_date_format_yyyymmdd[] = {
-        2,   // Canadian-French
-        36,  // Hungary
-        38,  // Croatia
-        40,  // Romania
-        42,  // Czech Republic / Slovakia
-        46,  // Sweden
-        48,  // Poland
-        81,  // Japan
-        82,  // South Korea
-        86,  // China
-        354, // Iceland
-        886, // Taiwan
+enum COUNTRY {
+	United_States = 1,
+	Candian_French = 2,
+	Latin_America = 3,
+	Russia = 7,
+	Greece = 30,
+	Netherlands = 31,
+	Belgium = 32,
+	France = 33,
+	Spain = 34,
+	Hungary = 36,
+	Yugoslavia = 38,
+	Italy = 39,
+	Romania = 40,
+	Switzerland = 41,
+	Czech_Slovak = 42,
+	Austria = 43,
+	United_Kingdom = 44,
+	Denmark = 45,
+	Sweden = 46,
+	Norway = 47,
+	Poland = 48,
+	Germany = 49,
+	Brazil = 55,
+	Australia = 61,
+	Japan = 81,
+	South_Korea = 82,
+	China = 86,
+	Turkey = 90,
+	Portugal = 351,
+	Iceland = 354,
+	Finland = 358,
+	Taiwan = 886,
+	Arabic = 785,
+	Israel = 972,
 };
 
-int countries_date_separator_slash[] = {
-        3,   // Latin America
-        30,  // Greece
-        32,  // Belgium
-        34,  // Spain
-        39,  // Italy
-        44,  // United Kingdom
-        55,  // Brazil
-        90,  // Turkey
-        785, // Arabic countries
-        886, // Taiwan
-        972, // Israel
+std::array<uint16_t, 1> countries_date_format_mmddyyyy = {
+        COUNTRY::United_States,
 };
 
-int countries_date_separator_period[] = {
-        7,   // Russia
-        33,  // France
-        41,  // Switzerland
-        43,  // Austria
-        47,  // Norway
-        49,  // Germany
-        86,  // China
-        358, // Finland
+std::array<uint16_t, 12> countries_date_format_yyyymmdd = {
+        COUNTRY::Candian_French, COUNTRY::Hungary,      COUNTRY::Yugoslavia,
+        COUNTRY::Romania,        COUNTRY::Czech_Slovak, COUNTRY::Sweden,
+        COUNTRY::Poland,         COUNTRY::Japan,        COUNTRY::South_Korea,
+        COUNTRY::China,          COUNTRY::Iceland,      COUNTRY::Taiwan,
 };
 
-int countries_time_separator_period[] = {
-        39,  // Italy
-        45,  // Denmark
-        46,  // Sweden
-        358, // Finland
+std::array<uint16_t, 11> countries_date_separator_slash = {
+        COUNTRY::Latin_America, COUNTRY::Greece, COUNTRY::Belgium,
+        COUNTRY::Spain,         COUNTRY::Italy,  COUNTRY::United_Kingdom,
+        COUNTRY::Brazil,        COUNTRY::Turkey, COUNTRY::Arabic,
+        COUNTRY::Taiwan,        COUNTRY::Israel,
 };
 
-int countries_decimal_separator_comma[] = {
-        1,   // United States
-        44,  // United Kingdom
-        61,  // International English
-        81,  // Japan
-        82,  // South Korea
-        86,  // China
-        886, // Taiwan
+std::array<uint16_t, 8> countries_date_separator_period = {
+        COUNTRY::Russia,  COUNTRY::France,  COUNTRY::Switzerland,
+        COUNTRY::Austria, COUNTRY::Norway,  COUNTRY::Germany,
+        COUNTRY::China,   COUNTRY::Finland,
 };
 
-int countries_decimal_separator_period[] = {
-        3,   // Latin America
-        31,  // Netherlands
-        34,  // Spain
-        38,  // Yugoslavia
-        39,  // Italy
-        40,  // Romania
-        45,  // Denmark
-        46,  // Sweden
-        49,  // Germany
-        55,  // Brazil
-        351, // Portugal
-        354, // Iceland
-        785, // Arabic countries
-        972, // Israel
+std::array<uint16_t, 1> countries_time_separator_comma = {
+        COUNTRY::Switzerland,
+};
+
+std::array<uint16_t, 4> countries_time_separator_period = {
+        COUNTRY::Italy,
+        COUNTRY::Denmark,
+        COUNTRY::Sweden,
+        COUNTRY::Finland,
+};
+
+std::array<uint16_t, 7> countries_decimal_separator_comma = {
+        COUNTRY::United_States, COUNTRY::United_Kingdom, COUNTRY::Australia,
+        COUNTRY::Japan,         COUNTRY::South_Korea,    COUNTRY::China,
+        COUNTRY::Taiwan,
+};
+
+std::array<uint16_t, 14> countries_decimal_separator_period = {
+        COUNTRY::Latin_America, COUNTRY::Netherlands, COUNTRY::Spain,
+        COUNTRY::Yugoslavia,    COUNTRY::Italy,       COUNTRY::Romania,
+        COUNTRY::Denmark,       COUNTRY::Sweden,      COUNTRY::Germany,
+        COUNTRY::Brazil,        COUNTRY::Portugal,    COUNTRY::Iceland,
+        COUNTRY::Arabic,        COUNTRY::Israel,
 };
 
 void DOS_SetCountry(uint16_t countryNumber)
@@ -132,46 +145,34 @@ void DOS_SetCountry(uint16_t countryNumber)
 	  17) = countryNumber == 1 || countryNumber == 3 || countryNumber == 61 ? 0 : 1;
 
 	// Date format
-	if (countryNumber == 1)      // United States
+	if (contains(countries_date_format_mmddyyyy, countryNumber))
 		*dos.tables.country = 0; // MM-DD-YYYY
-	else if (std::find(std::begin(countries_date_format_yyyymmdd),
-	                   std::end(countries_date_format_yyyymmdd),
-	                   countryNumber) != std::end(countries_date_format_yyyymmdd))
+	else if (contains(countries_date_format_yyyymmdd, countryNumber))
 		*dos.tables.country = 2; // YYYY-MM-DD
 	else
 		*dos.tables.country = 1; // DD-MM-YYYY
 
 	// Date separation character
-	if (std::find(std::begin(countries_date_separator_slash),
-	              std::end(countries_date_separator_slash),
-	              countryNumber) != std::end(countries_date_separator_slash))
+	if (contains(countries_date_separator_slash, countryNumber))
 		*(dos.tables.country + 11) = 0x2f; // Forward-slash (/)
-	else if (std::find(std::begin(countries_date_separator_period),
-	                   std::end(countries_date_separator_period), countryNumber) !=
-	         std::end(countries_date_separator_period))
+	else if (contains(countries_date_separator_period, countryNumber))
 		*(dos.tables.country + 11) = 0x2e; // Period (.)
 	else
 		*(dos.tables.country + 11) = 0x2d; // Dash (-)
 
 	// Time separation character
-	if (countryNumber == 41)               // Switzerland
+	if (contains(countries_time_separator_comma, countryNumber))
 		*(dos.tables.country + 13) = 0x2c; // Comma (,)
-	else if (std::find(std::begin(countries_time_separator_period),
-	                   std::end(countries_time_separator_period), countryNumber) !=
-	         std::end(countries_time_separator_period))
+	else if (contains(countries_time_separator_period, countryNumber))
 		*(dos.tables.country + 13) = 0x2e; // Period (.)
 	else
 		*(dos.tables.country + 13) = 0x3a; // Column (:)
 
 	// Thousand and decimal separators
-	if (std::find(std::begin(countries_decimal_separator_comma),
-	              std::end(countries_decimal_separator_comma), countryNumber) !=
-	    std::end(countries_decimal_separator_comma)) {
+	if (contains(countries_decimal_separator_comma, countryNumber)) {
 		*(dos.tables.country + 7) = 0x2c; // Comma (,)
 		*(dos.tables.country + 9) = 0x2e; // Period (.)
-	} else if (std::find(std::begin(countries_decimal_separator_period),
-	                     std::end(countries_decimal_separator_period), countryNumber) !=
-	           std::end(countries_decimal_separator_period)) {
+	} else if (contains(countries_decimal_separator_period, countryNumber)) {
 		*(dos.tables.country + 7) = 0x2e; // Period (.)
 		*(dos.tables.country + 9) = 0x2c; // Comma (,)
 	} else {
