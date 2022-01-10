@@ -181,10 +181,6 @@ void DOS_SetCountry(uint16_t countryNumber)
 	}
 }
 
-const Bit8u DOS_DATE_months[] = {
-	0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-};
-
 uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec) noexcept
 {
 	const auto h_bits = 0b1111100000000000 & (hour << 11);
@@ -607,12 +603,9 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x2b:		/* Set System Date */
-		if (reg_cx<1980) { reg_al=0xff;break;}
-		if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
-		if (reg_dl==0) { reg_al=0xff;break;}
- 		if (reg_dl>DOS_DATE_months[reg_dh]) {
-			if(!((reg_dh==2)&&(reg_cx%4 == 0)&&(reg_dl==29))) // february pass
-			{ reg_al=0xff;break; }
+		if (!is_date_valid(reg_cx, reg_dh, reg_dl)) {
+			reg_al = 0xff;
+			break;
 		}
 		dos.date.year=reg_cx;
 		dos.date.month=reg_dh;
@@ -643,8 +636,8 @@ static Bitu DOS_21Handler(void) {
 		break;
 	}
 	case 0x2d:		/* Set System Time */
-		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
-			reg_al = 0xff; 
+		if (!is_time_valid(reg_ch, reg_cl, reg_dh) || reg_dl > 99)
+			reg_al = 0xff;
 		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
 			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
 			else time_start = 0;
