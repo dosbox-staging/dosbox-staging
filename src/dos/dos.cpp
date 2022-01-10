@@ -110,6 +110,12 @@ std::array<uint16_t, 8> countries_date_separator_period = {
         COUNTRY::China,   COUNTRY::Finland,
 };
 
+std::array<uint16_t, 3> countries_time_12hour_clock = {
+        COUNTRY::United_States,
+        COUNTRY::Latin_America,
+        COUNTRY::Australia,
+};
+
 std::array<uint16_t, 1> countries_time_separator_comma = {
         COUNTRY::Switzerland,
 };
@@ -135,49 +141,58 @@ std::array<uint16_t, 14> countries_decimal_separator_period = {
         COUNTRY::Arabic,        COUNTRY::Israel,
 };
 
-void DOS_SetCountry(uint16_t countryNumber)
+void DOS_SetCountry(uint16_t country_number)
 {
 	if (dos.tables.country == NULL)
 		return;
 
-	// For US, Latin America and International English use 12h clock
-	*(dos.tables.country +
-	  17) = countryNumber == 1 || countryNumber == 3 || countryNumber == 61 ? 0 : 1;
+	Bit8u *p;
 
 	// Date format
-	if (contains(countries_date_format_mmddyyyy, countryNumber))
-		*dos.tables.country = 0; // MM-DD-YYYY
-	else if (contains(countries_date_format_yyyymmdd, countryNumber))
-		*dos.tables.country = 2; // YYYY-MM-DD
+	p = dos.tables.country;
+	if (contains(countries_date_format_mmddyyyy, country_number))
+		*p = 0; // MM-DD-YYYY
+	else if (contains(countries_date_format_yyyymmdd, country_number))
+		*p = 2; // YYYY-MM-DD
 	else
-		*dos.tables.country = 1; // DD-MM-YYYY
+		*p = 1; // DD-MM-YYYY
 
 	// Date separation character
-	if (contains(countries_date_separator_slash, countryNumber))
-		*(dos.tables.country + 11) = 0x2f; // Forward-slash (/)
-	else if (contains(countries_date_separator_period, countryNumber))
-		*(dos.tables.country + 11) = 0x2e; // Period (.)
+	p = dos.tables.country + 11;
+	if (contains(countries_date_separator_slash, country_number))
+		*p = 0x2f; // Forward-slash (/)
+	else if (contains(countries_date_separator_period, country_number))
+		*p = 0x2e; // Period (.)
 	else
-		*(dos.tables.country + 11) = 0x2d; // Dash (-)
+		*p = 0x2d; // Dash (-)
+
+	// 12-hour or 24-hour clock
+	p = dos.tables.country + 17;
+	if (contains(countries_time_12hour_clock, country_number))
+		*p = 0; // 12-hour clock
+	else
+		*p = 1; // 24-hour clock
 
 	// Time separation character
-	if (contains(countries_time_separator_comma, countryNumber))
-		*(dos.tables.country + 13) = 0x2c; // Comma (,)
-	else if (contains(countries_time_separator_period, countryNumber))
-		*(dos.tables.country + 13) = 0x2e; // Period (.)
+	p = dos.tables.country + 13;
+	if (contains(countries_time_separator_comma, country_number))
+		*p = 0x2c; // Comma (,)
+	else if (contains(countries_time_separator_period, country_number))
+		*p = 0x2e; // Period (.)
 	else
-		*(dos.tables.country + 13) = 0x3a; // Column (:)
+		*p = 0x3a; // Column (:)
 
 	// Thousand and decimal separators
-	if (contains(countries_decimal_separator_comma, countryNumber)) {
-		*(dos.tables.country + 7) = 0x2c; // Comma (,)
-		*(dos.tables.country + 9) = 0x2e; // Period (.)
-	} else if (contains(countries_decimal_separator_period, countryNumber)) {
-		*(dos.tables.country + 7) = 0x2e; // Period (.)
-		*(dos.tables.country + 9) = 0x2c; // Comma (,)
+	p = dos.tables.country + 7;
+	if (contains(countries_decimal_separator_comma, country_number)) {
+		*p = 0x2c; // Comma (,)
+		*(p + 2) = 0x2e; // Period (.)
+	} else if (contains(countries_decimal_separator_period, country_number)) {
+		*p = 0x2e; // Period (.)
+		*(p + 2) = 0x2c; // Comma (,)
 	} else {
-		*(dos.tables.country + 7) = 0x20; // Space ( )
-		*(dos.tables.country + 9) = 0x2c; // Comma (,)
+		*p = 0x20; // Space ( )
+		*(p + 2) = 0x2c; // Comma (,)
 	}
 }
 
