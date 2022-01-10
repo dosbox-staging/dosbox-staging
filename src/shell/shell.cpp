@@ -305,13 +305,13 @@ void DOS_Shell::ParseLine(char * line) {
 	char pipetmp[270];
 	uint16_t fattr;
 	if (pipe) {
-		srand(GetTicks());
-		std::string line;
-		if (!GetEnvStr("TEMP", line) && !GetEnvStr("TMP", line))
+		srand((unsigned int)GetTicks());
+		std::string temp_line;
+		if (!GetEnvStr("TEMP", temp_line) && !GetEnvStr("TMP", temp_line))
 			sprintf(pipetmp, "pipe%d.tmp", rand() % 10000);
 		else {
-			std::string::size_type idx = line.find('=');
-			std::string temp = line.substr(idx + 1, std::string::npos);
+			std::string::size_type idx = temp_line.find('=');
+			std::string temp = temp_line.substr(idx + 1, std::string::npos);
 			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
 				sprintf(pipetmp, "%s\\pipe%d.tmp", temp.c_str(),
@@ -350,9 +350,33 @@ void DOS_Shell::ParseLine(char * line) {
 			if (pipe && DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME) &&
 			    !DOS_UnlinkFile(pipetmp))
 				failed_pipe = true;
-			status = DOS_OpenFileExtended(pipe ? pipetmp : out,
+			status = DOS_OpenFileExtended(pipe && !failed_pipe ? pipetmp
+			                                                   : out,
 			                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
 			                              0x12, &dummy, &dummy2);
+			if (pipe && (failed_pipe || !status) &&
+			    (Drives[0] || Drives[2]) && !strchr(pipetmp, '\\')) {
+				int len = (int)strlen(pipetmp);
+				const int pipetmp_limit = 266;
+				if (len > pipetmp_limit) {
+					len = pipetmp_limit;
+					pipetmp[len] = 0;
+				}
+				for (int i = len; i >= 0; i--)
+					pipetmp[i + 3] = pipetmp[i];
+				pipetmp[0] = Drives[2] ? 'c' : 'a';
+				pipetmp[1] = ':';
+				pipetmp[2] = '\\';
+				failed_pipe = false;
+				if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME) &&
+				    !DOS_UnlinkFile(pipetmp))
+					failed_pipe = true;
+				else
+					status = DOS_OpenFileExtended(
+					        pipetmp, OPEN_READWRITE,
+					        DOS_ATTR_ARCHIVE, 0x12, &dummy,
+					        &dummy2);
+			}
 		}
 
 		if (!status && normalstdout) {
