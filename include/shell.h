@@ -83,7 +83,7 @@ public:
 	void RunInternal(); // for command /C
 	/* A load of subfunctions */
 	void ParseLine(char * line);
-	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
+	Bitu GetRedirection(char *s, char **ifn, char **ofn, char **pipe, bool * append);
 	void InputCommand(char * line);
 	void ProcessCmdLineEnvVarStitution(char *line);
 	void ShowPrompt();

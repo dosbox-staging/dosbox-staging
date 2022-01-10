@@ -181,7 +181,7 @@ DOS_Shell::DOS_Shell()
 // TODO: this function should be refactored to make to it easier to understand.
 // It's currently riddled with pointer and array adjustments each loop plus
 // branches and sub-loops.
-Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, bool *append)
+Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **pipe, bool *append)
 {
 	char * lr=s;
 	char * lw=s;
@@ -240,9 +240,21 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, bool *append)
 			*ifn = temp;
 			continue;
 
-		case '|': ch = 0; num++;
+		case '|':
+			num++;
+			if (*pipe)
+				free(*pipe);
+			lr = ltrim(lr);
+			*pipe = lr;
+			while (*lr)
+				lr++;
+			temp_len = static_cast<size_t>(lr - *pipe + 1u);
+			temp = new char[temp_len];
+			safe_strncpy(temp, *pipe, lr - *pipe + 1);
+			*pipe = temp;
+			continue;
 		}
-		*lw++=ch;
+		*lw++ = ch;
 	}
 	*lw=0;
 	return num;
@@ -258,6 +270,7 @@ void DOS_Shell::ParseLine(char * line) {
 
 	char *in = nullptr;
 	char *out = nullptr;
+	char *pipe = nullptr;
 
 	Bit16u dummy,dummy2;
 	Bit32u bigdummy = 0;
@@ -266,9 +279,9 @@ void DOS_Shell::ParseLine(char * line) {
 	bool normalstdin  = false;	/* wether stdin/out are open on start. */
 	bool normalstdout = false;	/* Bug: Assumed is they are "con"      */
 
-	num = GetRedirection(line,&in, &out,&append);
+	num = GetRedirection(line, &in, &out, &pipe, &append);
 	if (num>1) LOG_MSG("SHELL: Multiple command on 1 line not supported");
-	if (in || out) {
+	if (in || out || pipe) {
 		normalstdin  = (psp->GetFileHandle(0) != 0xff);
 		normalstdout = (psp->GetFileHandle(1) != 0xff);
 	}
@@ -278,41 +291,123 @@ void DOS_Shell::ParseLine(char * line) {
 			LOG_MSG("SHELL: Redirect input from %s",in);
 			if(normalstdin) DOS_CloseFile(0);	//Close stdin
 			DOS_OpenFile(in,OPEN_READ,&dummy);	//Open new stdin
+		} else {
+			if (*in)
+				WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
+				                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
+				                         : "SHELL_CMD_FILE_OPEN_ERROR"),
+				         in);
+			in = 0;
+			return;
 		}
 	}
-	if (out){
-		LOG_MSG("SHELL: Redirect output to %s",out);
-		if(normalstdout) DOS_CloseFile(1);
-		if(!normalstdin && !in) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
+	bool failed_pipe = false;
+	char pipetmp[270];
+	uint16_t fattr;
+	if (pipe) {
+		srand(GetTicks());
+		std::string line;
+		if (!GetEnvStr("TEMP", line) && !GetEnvStr("TMP", line))
+			sprintf(pipetmp, "pipe%d.tmp", rand() % 10000);
+		else {
+			std::string::size_type idx = line.find('=');
+			std::string temp = line.substr(idx + 1, std::string::npos);
+			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
+			    fattr & DOS_ATTR_DIRECTORY)
+				sprintf(pipetmp, "%s\\pipe%d.tmp", temp.c_str(),
+				        rand() % 10000);
+			else
+				sprintf(pipetmp, "pipe%d.tmp", rand() % 10000);
+		}
+	}
+	if (out || pipe) {
+		if (out && *out && pipe)
+			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"), out);
+		LOG_MSG("SHELL: Redirect output to %s", pipe ? pipetmp : out);
+		if (normalstdout)
+			DOS_CloseFile(1);
+		if (!normalstdin && !in)
+			DOS_OpenFile("con", OPEN_READWRITE, &dummy);
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
-		if(append) {
-			if( (status = DOS_OpenFile(out,OPEN_READWRITE,&dummy)) ) {
-				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
+		if (!pipe && append) {
+			if (DOS_GetFileAttr(out, &fattr) &&
+			    fattr & DOS_ATTR_READ_ONLY) {
+				DOS_SetError(DOSERR_ACCESS_DENIED);
+				status = false;
+			} else if ((status = DOS_OpenFile(out, OPEN_READWRITE,
+			                                  &dummy))) {
+				DOS_SeekFile(1, &bigdummy, DOS_SEEK_END);
 			} else {
-				status = DOS_CreateFile(out,DOS_ATTR_ARCHIVE,&dummy);	//Create if not exists.
+				// Create if not exists.
+				status = DOS_CreateFile(out, DOS_ATTR_ARCHIVE, &dummy);
 			}
+		} else if (!pipe && DOS_GetFileAttr(out, &fattr) &&
+		           (fattr & DOS_ATTR_READ_ONLY)) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			status = false;
 		} else {
-			status = DOS_OpenFileExtended(out,OPEN_READWRITE,DOS_ATTR_ARCHIVE,0x12,&dummy,&dummy2);
+			if (pipe && DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME) &&
+			    !DOS_UnlinkFile(pipetmp))
+				failed_pipe = true;
+			status = DOS_OpenFileExtended(pipe ? pipetmp : out,
+			                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
+			                              0x12, &dummy, &dummy2);
 		}
 
-		if(!status && normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy); //Read only file, open con again
-		if(!normalstdin && !in) DOS_CloseFile(0);
+		if (!status && normalstdout) {
+			// Read only file, open con again
+			DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+			if (!pipe) {
+				if (*out)
+					WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
+					                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
+					                         : "SHELL_CMD_FILE_CREATE_ERROR"),
+					         out);
+				DOS_CloseFile(1);
+				DOS_OpenFile("nul", OPEN_READWRITE, &dummy);
+			}
+		}
+		if (!normalstdin && !in)
+			DOS_CloseFile(0);
 	}
 	/* Run the actual command */
 	DoCommand(line);
 	/* Restore handles */
-	if(in) {
+	if (in) {
 		DOS_CloseFile(0);
-		if(normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
+		if (normalstdin)
+			DOS_OpenFile("con", OPEN_READWRITE, &dummy);
 		delete[] in;
 	}
-	if(out) {
+	if (out || pipe) {
 		DOS_CloseFile(1);
-		if(!normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
-		if(normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
-		if(!normalstdin) DOS_CloseFile(0);
-		delete[] out;
+		if (!normalstdin)
+			DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+		if (normalstdout)
+			DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+		if (!normalstdin)
+			DOS_CloseFile(0);
+		if (out)
+			delete[] out;
+	}
+	if (pipe) {
+		// Test if file can be opened for reading
+		if (!failed_pipe && DOS_OpenFile(pipetmp, OPEN_READ, &dummy)) {
+			DOS_CloseFile(dummy);
+			if (normalstdin)
+				DOS_CloseFile(0);                 // Close stdin
+			DOS_OpenFile(pipetmp, OPEN_READ, &dummy); // Open new stdin
+			ParseLine(pipe);
+			DOS_CloseFile(0);
+			if (normalstdin)
+				DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+		} else {
+			WriteOut("\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
+		}
+		delete[] pipe;
+		if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME))
+			DOS_UnlinkFile(pipetmp);
 	}
 }
 
@@ -772,6 +867,10 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER","IF ERRORLEVEL: Invalid number.\n");
 	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL","No label supplied to GOTO command.\n");
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
+	MSG_Add("SHELL_CMD_FILE_ACCESS_DENIED", "Access denied - %s\n");
+	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection - %s\n");
+	MSG_Add("SHELL_CMD_FILE_CREATE_ERROR", "File creation error - %s\n");
+	MSG_Add("SHELL_CMD_FILE_OPEN_ERROR", "File open error - %s\n");
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND", "File not found: %s\n");
 	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
 	MSG_Add("SHELL_CMD_DIR_VOLUME"," Volume in drive %c is %s\n");
