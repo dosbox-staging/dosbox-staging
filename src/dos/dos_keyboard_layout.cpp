@@ -1379,6 +1379,7 @@ std::map<std::string, int> country_code_map {
     {"yu", 38},
 };
 
+const char *DOS_GetLoadedLayout(void);
 void DOS_SetCountry(uint16_t countryNo);
 void DOS_KeyboardLayout_Init(Section* sec) {
 	test = new DOS_KeyboardLayout(sec);
@@ -1387,7 +1388,6 @@ void DOS_KeyboardLayout_Init(Section* sec) {
 	//                   MMOD1 | MMOD2, "sw_layout", "Switch Layout");
 
 	int countryNo = static_cast<Section_prop*>(sec)->Get_int("country");
-	const char *DOS_GetLoadedLayout(void);
 	if (!countryNo) {
 		const char *layout = DOS_GetLoadedLayout();
 		if (layout == NULL)

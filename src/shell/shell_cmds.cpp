@@ -480,7 +480,7 @@ static std::string format_number(size_t num)
 	}
 	if (gb) {
 		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u", gb,
-		             thousands_separator, mb, thousands_separator,
+		             thousands_separator, mb, thousands_separator, kb,
 		             thousands_separator, b);
 		return buf;
 	}
@@ -615,7 +615,7 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 }
 
 char buffer[15] = {0};
-char *FormatDate(uint16_t year, uint8_t month, uint8_t day)
+char *format_date(uint16_t year, uint8_t month, uint8_t day)
 {
 	char formatstring[6];
 	char date_format = dos.tables.country[0];
@@ -644,7 +644,7 @@ char *FormatDate(uint16_t year, uint8_t month, uint8_t day)
 	return buffer;
 }
 
-char *FormatTime(Bitu hour, Bitu min, Bitu sec, Bitu msec)
+char *format_time(Bitu hour, Bitu min, Bitu sec, Bitu msec, bool full = false)
 {
 	Bitu fhour = hour;
 	static char retBuf[14];
@@ -654,12 +654,18 @@ char *FormatTime(Bitu hour, Bitu min, Bitu sec, Bitu msec)
 		if (hour != 12)
 			hour %= 12;
 		strcpy(ampm, hour != 12 && hour == fhour ? "am" : "pm");
+		if (!full)
+			*(ampm + 1) = 0;
 	}
 	char time_separator = dos.tables.country[13];
 	char decimal_separator = dos.tables.country[9];
-	sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
-	        time_separator, (unsigned int)min, time_separator, (unsigned int)sec,
-	        decimal_separator, (unsigned int)msec, ampm);
+	if (full)
+		sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
+		    time_separator, (unsigned int)min, time_separator, (unsigned int)sec,
+		    decimal_separator, (unsigned int)msec, ampm);
+	else
+		sprintf(retBuf, "%2u%c%02u%s", (unsigned int)hour,
+		        time_separator, (unsigned int)min, ampm);
 	return retBuf;
 }
 
@@ -816,7 +822,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 	uint32_t file_count = 0;
 	uint32_t dir_count = 0;
 	unsigned w_count = 0;
-	char time_separator = dos.tables.country[13];
 
 	for (auto &entry : results) {
 
@@ -885,13 +890,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 
 		if (is_dir) {
-			WriteOut("%-8s %-3s   %-21s %s %2d%c%02d\n",
-			         name, ext, "<DIR>", FormatDate(year, month, day), hour, time_separator, minute);
+			WriteOut("%-8s %-3s   %-21s %s %s\n", name, ext,
+			         "<DIR>", format_date(year, month, day),
+			         format_time(hour, minute, 0, 0));
 		} else {
 			const auto file_size = format_number(size);
-			WriteOut("%-8s %-3s   %21s %s %2d%c%02d\n",
-			         name, ext, file_size.c_str(), FormatDate(year, month, day),
-			         hour, time_separator, minute);
+			WriteOut("%-8s %-3s   %21s %s %s\n", name, ext,
+			         file_size.c_str(), format_date(year, month, day),
+			         format_time(hour, minute, 0, 0));
 		}
 		show_press_any_key();
 	}
@@ -1454,7 +1460,7 @@ void DOS_Shell::CMD_DATE(char *args)
 	if (ScanCMDBool(args, "?")) {
 		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP"));
 		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format, FormatDate(2012, 10, 11));
+		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format, format_date(2012, 10, 11));
 		return;
 	}
 	if (ScanCMDBool(args, "H")) {
@@ -1513,7 +1519,7 @@ void DOS_Shell::CMD_DATE(char *args)
 		WriteOut("%s ", day);
 	}
 	WriteOut("%s\n",
-	         FormatDate((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
+	         format_date((uint16_t)reg_cx, (uint8_t)reg_dh, (uint8_t)reg_dl));
 	if (!dateonly) {
 		WriteOut(MSG_Get("SHELL_CMD_DATE_SETHLP"), format);
 	}
@@ -1578,7 +1584,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		         reg_cl, time_separator, reg_dh);
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
-		WriteOut("%s\n", FormatTime(reg_ch, reg_cl, reg_dh, reg_dl));
+		WriteOut("%s\n", format_time(reg_ch, reg_cl, reg_dh, reg_dl, true));
 		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"), format);
 	}
 }
