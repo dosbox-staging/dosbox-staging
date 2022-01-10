@@ -621,9 +621,8 @@ char *FormatDate(uint16_t year, uint8_t month, uint8_t day)
 	char date_format = dos.tables.country[0];
 	char date_separator = dos.tables.country[11];
 	sprintf(formatstring,
-	        date_format == 1
-	                ? "D%cM%cY"
-	                : (date_format == 2 ? "Y%cM%cD" : "M%cD%cY"),
+	        date_format == 1 ? "D%cM%cY"
+	                         : (date_format == 2 ? "Y%cM%cD" : "M%cD%cY"),
 	        date_separator, date_separator);
 	Bitu bufferptr = 0;
 	for (Bitu i = 0; i < 5; i++) {
@@ -1480,14 +1479,18 @@ void DOS_Shell::CMD_DATE(char *args)
 	else
 		n = sscanf(args, "%u%c%u%c%u", &newmonth, &c1, &newday, &c2, &newyear);
 	if (n == 5 && c1 == date_separator && c2 == date_separator) {
-		reg_cx = static_cast<uint16_t>(newyear);
-		reg_dh = static_cast<uint8_t>(newmonth);
-		reg_dl = static_cast<uint8_t>(newday);
-
-		reg_ah = 0x2b; // set system date
-		CALLBACK_RunRealInt(0x21);
-		if (reg_al == 0xff) {
+		if (!is_date_valid(newyear, newmonth, newday))
 			WriteOut(MSG_Get("SHELL_CMD_DATE_ERROR"));
+		else {
+			reg_cx = static_cast<uint16_t>(newyear);
+			reg_dh = static_cast<uint8_t>(newmonth);
+			reg_dl = static_cast<uint8_t>(newday);
+
+			reg_ah = 0x2b; // set system date
+			CALLBACK_RunRealInt(0x21);
+			if (reg_al == 0xff) {
+				WriteOut(MSG_Get("SHELL_CMD_DATE_ERROR"));
+			}
 		}
 		return;
 	}
@@ -1545,7 +1548,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	char c1, c2;
 	if (sscanf(args, "%u%c%u%c%u", &newhour, &c1, &newminute, &c2, &newsecond) == 5 &&
 	    c1 == time_separator && c2 == time_separator) {
-		if (newhour > 23 || newminute > 59 || newsecond > 59)
+		if (!is_time_valid(newhour, newminute, newsecond))
 			WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
 		else {
 			reg_ch = static_cast<uint8_t>(newhour);

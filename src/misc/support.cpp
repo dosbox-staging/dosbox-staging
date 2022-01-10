@@ -398,3 +398,25 @@ const std_fs::path &GetExecutablePath()
 	}
 	return exe_path;
 }
+
+const Bit8u DOS_DATE_months[] = {0,  31, 28, 31, 30, 31, 30,
+                                 31, 31, 30, 31, 30, 31};
+
+bool is_date_valid(uint32_t year, uint32_t month, uint32_t day)
+{
+	if (year < 1980 || month > 12 || month == 0 || day == 0)
+		return false;
+	else if (month == 2 && day == 29 &&
+	         (year % 4 != 0 || (year % 100 == 0 && year % 400 != 0)))
+		return false;
+	else if (month != 2 && day > DOS_DATE_months[month])
+		return false;
+	return true;
+}
+
+bool is_time_valid(uint32_t hour, uint32_t minute, uint32_t second)
+{
+	if (hour > 23 || minute > 59 || second > 59)
+		return false;
+	return true;
+}
