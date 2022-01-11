@@ -1,3 +1,5 @@
+cmake
+g++
 build-essential
 ccache
 libasound2-dev
