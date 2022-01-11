@@ -19,52 +19,103 @@ jobs:
     outputs:
       has-commits: ${{ steps.commit-check.outputs.has-commits }}
 
-  build_linux_platforms:
-    name: ${{ matrix.conf.name }}
-    runs-on: ubuntu-latest
+  build_on_platform:
+    name: ${{ matrix.name }}
+    # The host should always be linux
+    runs-on: ubuntu-18.04
     needs: repo-check
     if: needs.repo-check.outputs.has-commits == 'true'
     strategy:
+      fail-fast: false
       matrix:
-        conf:
-          #- name: ARMv7 (Ubuntu 20.04)
-          #  arch: armv7
-          #  distro: ubuntu20.04
+        include:
+          - name: ARMv6 (Raspbian)
+            arch: armv6
+            distro: bullseye
+          - name: ARMv7 (Debian “bullseye”)
+            arch: armv7
+            distro: bullseye
           - name: ARM64 (Ubuntu 20.04)
             arch: aarch64
             distro: ubuntu20.04
-          - name: s390x (Ubuntu 20.04)
+          - name: s390x (Fedora)
             arch: s390x
-            distro: ubuntu20.04
-          - name: ppc64le (Ubuntu 20.04)
+            distro: fedora_latest
+          - name: ppc64le (Fedora)
             arch: ppc64le
-            distro: ubuntu20.04
+            distro: fedora_latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      # Workaround frequent HTTPS-based connectivity issues
-      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
-      - name:  Fetch the libffi subproject for Glib
-        run: ./scripts/fetch-libffi-subproject.sh
-
-      - name: Build
-        uses: uraimo/run-on-arch-action@master
+      - uses: actions/checkout@v2.1.0
+      - uses: uraimo/run-on-arch-action@master
+        name: Build artifact
+        id: build
         with:
-          arch:   ${{ matrix.conf.arch }}
-          distro: ${{ matrix.conf.distro }}
-          run: |
-            set -xo pipefail
-            apt-get update
-            apt-get install -y curl python3-dev cmake make g++ $(cat ./.github/packages/ubuntu-20.04-apt.txt)
-            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-            python3 get-pip.py
-            export PATH="$HOME/.local/bin:$PATH"
-            pip3 install --user --upgrade meson ninja
-            ./scripts/log-env.sh
-            meson setup build
-            meson compile -C build |& tee build.log
-            meson test -C build
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
 
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py --max-warnings -1 build.log
+          # Not required, but speeds up builds
+          githubToken: ${{ github.token }}
+
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          # The shell to run commands with in the container
+          shell: /bin/sh
+
+          # Install some dependencies in the container. This speeds up builds if
+          # you are also using githubToken. Any dependencies installed here will
+          # be part of the container image that gets cached, so subsequent
+          # builds don't have to re-install them. The image layer is cached
+          # publicly in your project's package repository, so it is vital that
+          # no secrets are present in the container state or logs.
+          install: |
+            case "${{ matrix.distro }}" in
+              ubuntu*|jessie|stretch|buster|bullseye)
+                # we only care about issues
+                apt-get -qq update  < /dev/null > /dev/null
+                apt-get -qq install git curl findutils procps tar zstd screenfetch \
+                                    < /dev/null > /dev/null
+                apt-get -qq install cmake g++ build-essential ccache libasound2-dev libgtest-dev \
+                                    libopusfile-dev libsdl2-dev python3-setuptools python3-pip \
+                                    < /dev/null > /dev/null
+                pip3 install meson ninja
+                ;;
+              fedora*)
+                dnf -q -y update
+                dnf -q -y install git which curl findutils procps-ng tar zstd screenfetch
+                dnf -q -y install cmake desktop-file-utils gcc gcc-c++ gmock-devel gtest-devel \
+                                  libappstream-glib libatomic meson opusfile-devel SDL2-devel
+                ;;
+              alpine*)
+                apk update
+                apk add git
+                ;;
+            esac
+
+          run: |
+            # Log the environment
+            sh ./scripts/log-env.sh
+            screenfetch
+
+            # Setup
+            #  - use a minimal build because python fetching wraps segfaults under Docker
+            meson setup \
+                  --wrap-mode=nofallback \
+                  -Duse_fluidsynth=false \
+                  -Duse_sdl2_net=false \
+                  -Duse_opengl=false \
+                  -Duse_mt32emu=false \
+                  -Duse_slirp=false \
+                  -Duse_png=false \
+                  -Duse_alsa=false \
+                  build
+            # Build
+            meson compile -C build
+            # Test
+            meson test -C build
