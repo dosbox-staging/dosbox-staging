@@ -250,7 +250,7 @@ static std::regex markup(R"((\\)?)" // Escape tag? (1)
                          "[ \\t]*?" // Optional spacing after opening bracket
                          "(\\/)?"   // Check for closing tag (3)
                          "("        // Start group of tags (4)
-                         // Select color, bgcolor, erasel, erases. (5)
+                         // Select tags which require a value (5)
                          "(color|bgcolor|erasel|erases)"
                          // Color or erase value. '=' not captured in separate
                          // group. Spacing around '=' is allowed (6)
