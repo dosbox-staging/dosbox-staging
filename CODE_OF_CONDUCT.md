@@ -48,9 +48,7 @@ necessary and appropriate to the circumstances. The project team is obligated
 to maintain confidentiality with regard to the reporter of an incident. Further
 details of specific enforcement policies may be posted separately.
 
-The project leadership team can be contacted by email:
-- [@dreamer](mailto:patryk.obara+coc@gmail.com)
-- [@krcroft](mailto:k.r.croft+coc@gmail.com)
+The project team can be contacted [via Discord](https://discord.gg/WwAg3Xf).
 
 ## License and Acknowledgement
 
