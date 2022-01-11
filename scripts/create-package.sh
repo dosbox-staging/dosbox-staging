@@ -108,7 +108,8 @@ install_translation()
 pkg_linux()
 {
     # Print shared object dependencies
-    ldd "${build_dir}/dosbox"
+    # ldd crashes with a malloc error on the s390x platform, so always pass
+    ldd "${build_dir}/dosbox" || true
     install -DT "${build_dir}/dosbox" "${pkg_dir}/dosbox"
 
     install -DT contrib/linux/dosbox-staging.desktop "${pkg_dir}/desktop/dosbox-staging.desktop"
