@@ -25,6 +25,209 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
+enum class TagGroup {
+	InvalidGroup,
+	Colors,
+	Erasers,
+	Styles,
+	Misc,
+};
+
+enum class TagName {
+	InvalidName,
+	Color,
+	BGColor,
+	EraseL,
+	EraseS,
+	It,
+	Bold,
+	Ul,
+	Strike,
+	Blink,
+	Dim,
+	Hidden,
+	Inverse,
+	Reset,
+};
+
+enum class ColorName {
+	InvalidColor,
+	Black,
+	Red,
+	Green,
+	Yellow,
+	Blue,
+	Magenta,
+	Cyan,
+	White,
+	Default,
+};
+
+enum class EraseExtents {
+	InvalidExtents,
+	Begin,
+	End,
+	Entire,
+};
+
+struct TagInfo {
+	TagGroup group = TagGroup::InvalidGroup;
+	TagName name = TagName::InvalidName;
+	int ansi_num = -1;
+};
+
+struct ColorInfo {
+	ColorName name = ColorName::InvalidColor;
+	int base_ansi_num = -1;
+	bool is_light = false;
+};
+
+struct EraseInfo {
+	EraseExtents extents = EraseExtents::InvalidExtents;
+	int ansi_num = -1;
+};
+
+/*!
+ * \brief Represents a markup tag.
+ *
+ * The constructor takes the string of a tag name and its optional value, and
+ * attempts to construct a valid tag that can be easily queried for its
+ * properties.
+ *
+ * The tag will be valid if, and only if, valid() returns true. Otherwise the
+ * tag could not be recognized.
+ */
+class Tag {
+public:
+	Tag() = delete;
+	Tag(std::string &tag, std::string &val, const bool close)
+	        : t_info(),
+	          c_info(),
+	          e_info()
+	{
+		lowcase(tag);
+		lowcase(val);
+		if (!contains(tags, tag)) {
+			return;
+		}
+		is_closed = close;
+		t_info = tags.at(tag);
+		if ((t_info.group == TagGroup::Colors ||
+		     t_info.group == TagGroup::Erasers) &&
+		    is_closed) {
+			return;
+		}
+		if (t_info.group == TagGroup::Colors && !parse_color_val(val)) {
+			return;
+		}
+		if (t_info.group == TagGroup::Erasers && !parse_erase_val(val)) {
+			return;
+		}
+		is_valid = true;
+		return;
+	}
+
+	/*!
+	 * \brief Determine if tag object is valid.
+	 *
+	 * This should be called after creation of the tag object. If false, all
+	 * other methods do not provide valid values.
+	 *
+	 * \return true
+	 * \return false
+	 */
+	bool valid() const { return is_valid; }
+	bool closed() const { return is_closed; }
+	const TagInfo &info() const { return t_info; }
+	/*!
+	 * \brief Return extra info about color tags
+	 *
+	 * The returned information will only be valid if valid() returns true
+	 * and info().group == TagGroup::Colors
+	 *
+	 * \return const ColorInfo&
+	 */
+	const ColorInfo &color_info() const { return c_info; }
+	/*!
+	 * \brief Return extra info about erase tags
+	 *
+	 * The returned information will only be valid if valid() returns true
+	 * and info().group == TagGroup::Erasers
+	 *
+	 * \return const EraseInfo&
+	 */
+	const EraseInfo &erase_info() const { return e_info; }
+
+private:
+	bool parse_color_val(const std::string &val)
+	{
+		if (!contains(color_values, val)) {
+			return false;
+		}
+		c_info = color_values.at(val);
+		return true;
+	}
+	bool parse_erase_val(const std::string &val)
+	{
+		if (!contains(eraser_extents, val)) {
+			return false;
+		}
+		e_info = eraser_extents.at(val);
+		return true;
+	}
+
+	bool is_closed = false;
+	bool is_valid = false;
+	TagInfo t_info;
+	ColorInfo c_info;
+	EraseInfo e_info;
+
+	static inline const std::string light_prefix = "light-";
+
+	static inline const std::unordered_map<std::string, TagInfo> tags = {
+	        {"color", {TagGroup::Colors, TagName::Color}},
+	        {"bgcolor", {TagGroup::Colors, TagName::BGColor}},
+	        {"erasel", {TagGroup::Erasers, TagName::EraseL}},
+	        {"erases", {TagGroup::Erasers, TagName::EraseS}},
+	        {"i", {TagGroup::Styles, TagName::It, 3}},
+	        {"b", {TagGroup::Styles, TagName::Bold, 1}},
+	        {"u", {TagGroup::Styles, TagName::Ul, 4}},
+	        {"s", {TagGroup::Styles, TagName::Strike, 9}},
+	        {"blink", {TagGroup::Styles, TagName::Blink, 5}},
+	        {"dim", {TagGroup::Styles, TagName::Dim, 2}},
+	        {"hidden", {TagGroup::Styles, TagName::Hidden, 8}},
+	        {"inverse", {TagGroup::Styles, TagName::Inverse, 7}},
+	        {"reset", {TagGroup::Misc, TagName::Reset, 0}},
+	};
+
+	static inline const std::unordered_map<std::string, ColorInfo> color_values = {
+	        {"black", {ColorName::Black, 30}},
+	        {"red", {ColorName::Red, 31}},
+	        {"green", {ColorName::Green, 32}},
+	        {"yellow", {ColorName::Yellow, 33}},
+	        {"blue", {ColorName::Blue, 34}},
+	        {"magenta", {ColorName::Magenta, 35}},
+	        {"cyan", {ColorName::Cyan, 36}},
+	        {"white", {ColorName::White, 37}},
+	        {"default", {ColorName::Default, 39}},
+	        {"light-black", {ColorName::Black, 30, true}},
+	        {"light-red", {ColorName::Red, 31, true}},
+	        {"light-green", {ColorName::Green, 32, true}},
+	        {"light-yellow", {ColorName::Yellow, 33, true}},
+	        {"light-blue", {ColorName::Blue, 34, true}},
+	        {"light-magenta", {ColorName::Magenta, 35, true}},
+	        {"light-cyan", {ColorName::Cyan, 36, true}},
+	        {"light-white", {ColorName::White, 37, true}},
+	        {"light-default", {ColorName::Default, 39, true}},
+	};
+
+	static inline const std::unordered_map<std::string, EraseInfo> eraser_extents = {
+	        {"end", {EraseExtents::End, 0}},
+	        {"begin", {EraseExtents::Begin, 1}},
+	        {"entire", {EraseExtents::End, 2}},
+	};
+};
+
 class ColorParser {
 public:
 	/*!
