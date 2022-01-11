@@ -382,6 +382,64 @@ static std::regex markup(R"((\\)?)" // Escape tag? (1)
                          ,
                          std::regex::icase);
 
+static char ansi_code[10] = {};
+
+/*!
+ * \brief Returns a pointer to an ANSI code
+ *
+ * The returned string remains valid until the next
+ * call to this function.
+ *
+ * nullptr will be returned if the provided tag
+ * is not valid.
+ *
+ * \param tag a valid tag
+ * \return const char*
+ */
+static const char *get_ansi_code(const Tag &tag)
+{
+	if (!tag.valid()) {
+		return nullptr;
+	}
+	int ansi_num = -1;
+	reset_str(ansi_code);
+	const TagInfo &tag_info = tag.info();
+	switch (tag_info.group) {
+	case TagGroup::Colors:
+		// Background colors have codes that are +10
+		// the equivalent foreground color.
+		ansi_num = tag.color_info().base_ansi_num +
+		           (tag_info.name == TagName::BGColor ? 10 : 0);
+		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
+		             (tag.color_info().is_light ? "" : ";1"));
+		break;
+
+	case TagGroup::Erasers:
+		ansi_num = tag.erase_info().ansi_num;
+		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
+		             tag_info.name == TagName::EraseL ? "K" : "J");
+		break;
+
+	case TagGroup::Styles:
+		ansi_num = tag_info.ansi_num;
+		// "closing" tags have ascii codes +20
+		if (tag.closed()) {
+			ansi_num += 20 + (tag_info.name == TagName::Bold
+			                          ? 1
+			                          : 0); // [/b] is the same as
+			                                // [/dim]
+		}
+		safe_sprintf(ansi_code, "\033[%dm", ansi_num);
+		break;
+
+	default:
+		ansi_num = tag_info.ansi_num;
+		safe_sprintf(ansi_code, "\033[%dm", ansi_num);
+		break;
+	}
+	return ansi_code;
+}
+
 std::string convert_ansi_markup(std::string &str)
 {
 	return convert_ansi_markup(str.c_str());
