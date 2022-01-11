@@ -479,9 +479,8 @@ std::string convert_ansi_markup(const char *str)
 			bool close = m[3].matched;
 			std::string tag = m[5].matched ? m[5].str() : m[4].str();
 			std::string val = m[5].matched ? m[6].str() : "";
-			lowcase(tag);
-			lowcase(val);
-			r = tag_parser.get_ansi_code(tag, close, val);
+			Tag t(tag, val, close);
+			r = get_ansi_code(t);
 		}
 		// Copy text before current match to output string
 		result += m.prefix().str();
