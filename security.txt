@@ -1,6 +1,36 @@
-# Security address
-Contact: mailto:dreamer.tan+dosbox-security@gmail.com
-Preferred-Languages: en, pl
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-# Acknowledgements
+# What is this file?
+
+# security.txt is a proposed standard which allows websites to
+# define security policies. The security.txt file sets clear
+# guidelines for security researchers on how to report
+# security issues. security.txt is the equivalent of
+# robots.txt, but for security issues.
+
+# This file conforms to draft RFC:
+# https://datatracker.ietf.org/doc/html/draft-foudil-securitytxt-12
+
+Canonical: https://github.com/dosbox-staging/dosbox-staging/blob/main/security.txt
+
+# The DOSBox Staging team is comprised of volunteers focussing
+# on various aspects of the project. Please inform the team as
+# a whole by reporting security issues via Discord:
+
+Contact: https://discord.gg/WwAg3Xf
+
+Preferred-Languages: en
+
+# Acknowledgements:
 # nobody reported security issues to dosbox-staging yet
+
+
+-----BEGIN PGP SIGNATURE-----
+
+iJUEARYIAD0WIQTjQIXn7uSE2jva/i9K02ePSiwpHAUCYd7b5h8ca2NnZW5AdXNl
+cnMubm9yZXBseS5naXRodWIuY29tAAoJEErTZ49KLCkcy7ABAN14t4FBNIQZHf7T
+Jd9HOn2F3kFkDOyPQjMqUhjF86DFAQDAbnd/0msNW9CDD0J8oh6SgIgBC4eDgnLA
+kt2Nosy9AQ==
+=QUWN
+-----END PGP SIGNATURE-----
