@@ -758,9 +758,6 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		}
 	}
 
-	Bit32u start_pos;
-	Bit16u number_of_codepages;
-
 	char nbuf[512];
 	sprintf(nbuf, "%s", cp_filename);
 	auto tempfile = OpenDosboxFile(nbuf);
@@ -911,8 +908,9 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		DOS_FreeMemory(seg);
 	}
 
-
-	start_pos=host_readd(&cpi_buf[0x13]);
+	constexpr auto data_start_index = 0x13;
+	static_assert(data_start_index < cpi_buf.size());
+	auto start_pos = host_readd(&cpi_buf[data_start_index]);
 
 	// Internally unpacking some UPX code-page files can result in unparseable data
 	if (start_pos >= cpi_buf_size) {
@@ -924,62 +922,58 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		return KEYB_INVALIDCPFILE;
 	}
 
-	number_of_codepages=host_readw(&cpi_buf[start_pos]);
+	const auto number_of_codepages = host_readw(&cpi_buf.at(start_pos));
 	start_pos+=4;
 
 	// search if codepage is provided by file
-	for (Bit16u test_codepage=0; test_codepage<number_of_codepages; test_codepage++) {
-		Bit16u device_type, font_codepage, font_type;
-
+	for (uint16_t test_codepage = 0; test_codepage < number_of_codepages; test_codepage++) {
 		// device type can be display/printer (only the first is supported)
-		device_type=host_readw(&cpi_buf[start_pos+0x04]);
-		font_codepage=host_readw(&cpi_buf[start_pos+0x0e]);
-
-		Bit32u font_data_header_pt;
-		font_data_header_pt=host_readd(&cpi_buf[start_pos+0x16]);
-
-		font_type=host_readw(&cpi_buf[font_data_header_pt]);
+		const auto device_type = host_readw(&cpi_buf.at(start_pos + 0x04));
+		const auto font_codepage = host_readw(&cpi_buf.at(start_pos + 0x0e));
+		const auto font_data_header_pt = host_readd(&cpi_buf.at(start_pos + 0x16));
+		const auto font_type = host_readw(&cpi_buf.at(font_data_header_pt));
 
 		if ((device_type==0x0001) && (font_type==0x0001) && (font_codepage==codepage_id)) {
 			// valid/matching codepage found
 
-			const uint16_t number_of_fonts = host_readw(&cpi_buf[font_data_header_pt + 0x02]);
+			const auto number_of_fonts = host_readw(&cpi_buf.at(font_data_header_pt + 0x02));
 			// const uint16_t font_data_length = host_readw(&cpi_buf[font_data_header_pt + 0x04]);
 
-			bool font_changed=false;
-			Bit32u font_data_start=font_data_header_pt+0x06;
+			auto font_data_start = font_data_header_pt + 0x06;
 
 			// load all fonts if possible
-			for (Bit16u current_font=0; current_font<number_of_fonts; current_font++) {
-				Bit8u font_height=cpi_buf[font_data_start];
-				font_data_start+=6;
-				if (font_height==0x10) {
+			bool font_changed = false;
+			for (uint16_t current_font = 0; current_font < number_of_fonts; ++current_font) {
+				const auto font_height = cpi_buf.at(font_data_start);
+				font_data_start += 6;
+				if (font_height == 0x10) {
 					// 16x8 font
-					PhysPt font16pt=Real2Phys(int10.rom.font_16);
-					for (Bitu i=0;i<256*16;i++) {
-						phys_writeb(font16pt+i,cpi_buf[font_data_start+i]);
+					const auto font16pt = Real2Phys(int10.rom.font_16);
+					for (uint16_t i = 0; i < 256 * 16; ++i) {
+						phys_writeb(font16pt + i, cpi_buf.at(font_data_start + i));
 					}
 					// terminate alternate list to prevent loading
 					phys_writeb(Real2Phys(int10.rom.font_16_alternate),0);
 					font_changed=true;
-				} else if (font_height==0x0e) {
+				} else if (font_height == 0x0e) {
 					// 14x8 font
-					PhysPt font14pt=Real2Phys(int10.rom.font_14);
-					for (Bitu i=0;i<256*14;i++) {
-						phys_writeb(font14pt+i,cpi_buf[font_data_start+i]);
+					const auto font14pt = Real2Phys(int10.rom.font_14);
+					for (uint16_t i = 0; i < 256 * 14; ++i) {
+						phys_writeb(font14pt + i, cpi_buf.at(font_data_start + i));
 					}
 					// terminate alternate list to prevent loading
 					phys_writeb(Real2Phys(int10.rom.font_14_alternate),0);
 					font_changed=true;
-				} else if (font_height==0x08) {
+				} else if (font_height == 0x08) {
 					// 8x8 fonts
-					PhysPt font8pt=Real2Phys(int10.rom.font_8_first);
-					for (Bitu i=0;i<128*8;i++) {
-						phys_writeb(font8pt+i,cpi_buf[font_data_start+i]);
+					auto font8pt = Real2Phys(int10.rom.font_8_first);
+					for (uint16_t i = 0; i < 128 * 8; ++i) {
+						phys_writeb(font8pt + i, cpi_buf.at(font_data_start + i));
 					}
 					font8pt=Real2Phys(int10.rom.font_8_second);
-					for (Bitu i=0;i<128*8;i++) {
-						phys_writeb(font8pt+i,cpi_buf[font_data_start+i+128*8]);
+					for (uint16_t i = 0; i < 128 * 8; ++i) {
+						phys_writeb(font8pt + i,
+						            cpi_buf.at(font_data_start + i + 128 * 8));
 					}
 					font_changed=true;
 				}
@@ -1000,7 +994,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 			return KEYB_NOERROR;
 		}
 
-		start_pos=host_readd(&cpi_buf[start_pos]);
+		start_pos = host_readd(&cpi_buf.at(start_pos));
 		start_pos+=2;
 	}
 
