@@ -37,7 +37,7 @@
  */
 class Tag {
 public:
-	enum class TagGroup {
+	enum class Group {
 		InvalidGroup,
 		Colors,
 		Erasers,
@@ -45,7 +45,7 @@ public:
 		Misc,
 	};
 
-	enum class TagName {
+	enum class Name {
 		InvalidName,
 		Color,
 		BGColor,
@@ -62,7 +62,7 @@ public:
 		Reset,
 	};
 
-	enum class ColorName {
+	enum class Color {
 		InvalidColor,
 		Black,
 		Red,
@@ -83,13 +83,13 @@ public:
 	};
 
 	struct TagInfo {
-		TagGroup group = TagGroup::InvalidGroup;
-		TagName name = TagName::InvalidName;
+		Group group = Group::InvalidGroup;
+		Name name = Name::InvalidName;
 		int ansi_num = -1;
 	};
 
 	struct ColorInfo {
-		ColorName name = ColorName::InvalidColor;
+		Color name = Color::InvalidColor;
 		int base_ansi_num = -1;
 		bool is_light = false;
 	};
@@ -118,7 +118,7 @@ public:
 	 * \brief Return extra info about color tags
 	 *
 	 * The returned information will only be valid if valid() returns true
-	 * and info().group == TagGroup::Colors
+	 * and info().group == Group::Colors
 	 *
 	 * \return const ColorInfo&
 	 */
@@ -127,7 +127,7 @@ public:
 	 * \brief Return extra info about erase tags
 	 *
 	 * The returned information will only be valid if valid() returns true
-	 * and info().group == TagGroup::Erasers
+	 * and info().group == Group::Erasers
 	 *
 	 * \return const EraseInfo&
 	 */
@@ -147,40 +147,40 @@ private:
 	static inline const std::string light_prefix = "light-";
 
 	static inline const std::unordered_map<std::string, TagInfo> tags = {
-	        {"color", {TagGroup::Colors, TagName::Color, -1}},
-	        {"bgcolor", {TagGroup::Colors, TagName::BGColor, -1}},
-	        {"erasel", {TagGroup::Erasers, TagName::EraseL, -1}},
-	        {"erases", {TagGroup::Erasers, TagName::EraseS, -1}},
-	        {"i", {TagGroup::Styles, TagName::It, 3}},
-	        {"b", {TagGroup::Styles, TagName::Bold, 1}},
-	        {"u", {TagGroup::Styles, TagName::Ul, 4}},
-	        {"s", {TagGroup::Styles, TagName::Strike, 9}},
-	        {"blink", {TagGroup::Styles, TagName::Blink, 5}},
-	        {"dim", {TagGroup::Styles, TagName::Dim, 2}},
-	        {"hidden", {TagGroup::Styles, TagName::Hidden, 8}},
-	        {"inverse", {TagGroup::Styles, TagName::Inverse, 7}},
-	        {"reset", {TagGroup::Misc, TagName::Reset, 0}},
+	        {"color", {Group::Colors, Name::Color, -1}},
+	        {"bgcolor", {Group::Colors, Name::BGColor, -1}},
+	        {"erasel", {Group::Erasers, Name::EraseL, -1}},
+	        {"erases", {Group::Erasers, Name::EraseS, -1}},
+	        {"i", {Group::Styles, Name::It, 3}},
+	        {"b", {Group::Styles, Name::Bold, 1}},
+	        {"u", {Group::Styles, Name::Ul, 4}},
+	        {"s", {Group::Styles, Name::Strike, 9}},
+	        {"blink", {Group::Styles, Name::Blink, 5}},
+	        {"dim", {Group::Styles, Name::Dim, 2}},
+	        {"hidden", {Group::Styles, Name::Hidden, 8}},
+	        {"inverse", {Group::Styles, Name::Inverse, 7}},
+	        {"reset", {Group::Misc, Name::Reset, 0}},
 	};
 
 	static inline const std::unordered_map<std::string, ColorInfo> color_values = {
-	        {"black", {ColorName::Black, 30, false}},
-	        {"red", {ColorName::Red, 31, false}},
-	        {"green", {ColorName::Green, 32, false}},
-	        {"yellow", {ColorName::Yellow, 33, false}},
-	        {"blue", {ColorName::Blue, 34, false}},
-	        {"magenta", {ColorName::Magenta, 35, false}},
-	        {"cyan", {ColorName::Cyan, 36, false}},
-	        {"white", {ColorName::White, 37, false}},
-	        {"default", {ColorName::Default, 39, false}},
-	        {"light-black", {ColorName::Black, 30, true}},
-	        {"light-red", {ColorName::Red, 31, true}},
-	        {"light-green", {ColorName::Green, 32, true}},
-	        {"light-yellow", {ColorName::Yellow, 33, true}},
-	        {"light-blue", {ColorName::Blue, 34, true}},
-	        {"light-magenta", {ColorName::Magenta, 35, true}},
-	        {"light-cyan", {ColorName::Cyan, 36, true}},
-	        {"light-white", {ColorName::White, 37, true}},
-	        {"light-default", {ColorName::Default, 39, true}},
+	        {"black", {Color::Black, 30, false}},
+	        {"red", {Color::Red, 31, false}},
+	        {"green", {Color::Green, 32, false}},
+	        {"yellow", {Color::Yellow, 33, false}},
+	        {"blue", {Color::Blue, 34, false}},
+	        {"magenta", {Color::Magenta, 35, false}},
+	        {"cyan", {Color::Cyan, 36, false}},
+	        {"white", {Color::White, 37, false}},
+	        {"default", {Color::Default, 39, false}},
+	        {"light-black", {Color::Black, 30, true}},
+	        {"light-red", {Color::Red, 31, true}},
+	        {"light-green", {Color::Green, 32, true}},
+	        {"light-yellow", {Color::Yellow, 33, true}},
+	        {"light-blue", {Color::Blue, 34, true}},
+	        {"light-magenta", {Color::Magenta, 35, true}},
+	        {"light-cyan", {Color::Cyan, 36, true}},
+	        {"light-white", {Color::White, 37, true}},
+	        {"light-default", {Color::Default, 39, true}},
 	};
 
 	static inline const std::unordered_map<std::string, EraseInfo> eraser_extents = {
@@ -202,14 +202,14 @@ Tag::Tag(std::string &tag, std::string &val, const bool close)
 	}
 	is_closed = close;
 	t_info = tags.at(tag);
-	if ((t_info.group == TagGroup::Colors || t_info.group == TagGroup::Erasers) &&
+	if ((t_info.group == Group::Colors || t_info.group == Group::Erasers) &&
 	    is_closed) {
 		return;
 	}
-	if (t_info.group == TagGroup::Colors && !parse_color_val(val)) {
+	if (t_info.group == Group::Colors && !parse_color_val(val)) {
 		return;
 	}
-	if (t_info.group == TagGroup::Erasers && !parse_erase_val(val)) {
+	if (t_info.group == Group::Erasers && !parse_erase_val(val)) {
 		return;
 	}
 	is_valid = true;
@@ -292,26 +292,26 @@ static const char *get_ansi_code(const Tag &tag)
 	reset_str(ansi_code);
 	auto &tag_info = tag.info();
 	switch (tag_info.group) {
-	case Tag::TagGroup::Colors:
+	case Tag::Group::Colors:
 		// Background colors have codes that are +10
 		// the equivalent foreground color.
 		ansi_num = tag.color_info().base_ansi_num +
-		           (tag_info.name == Tag::TagName::BGColor ? 10 : 0);
+		           (tag_info.name == Tag::Name::BGColor ? 10 : 0);
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
 		             (tag.color_info().is_light ? "" : ";1"));
 		break;
 
-	case Tag::TagGroup::Erasers:
+	case Tag::Group::Erasers:
 		ansi_num = tag.erase_info().ansi_num;
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
-		             tag_info.name == Tag::TagName::EraseL ? "K" : "J");
+		             tag_info.name == Tag::Name::EraseL ? "K" : "J");
 		break;
 
-	case Tag::TagGroup::Styles:
+	case Tag::Group::Styles:
 		ansi_num = tag_info.ansi_num;
 		// "closing" tags have ascii codes +20
 		if (tag.closed()) {
-			ansi_num += 20 + (tag_info.name == Tag::TagName::Bold
+			ansi_num += 20 + (tag_info.name == Tag::Name::Bold
 			                          ? 1
 			                          : 0); // [/b] is the same as
 			                                // [/dim]
