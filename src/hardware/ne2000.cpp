@@ -376,8 +376,8 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
     // have been initialised.
     //
     if (!s.remote_bytes) {
-	    LOG_WARNING("Empty ASIC read from port=0x%02x of length %d and %u remote_bytes",
-			offset, static_cast<int>(io_len), s.remote_bytes);
+	    LOG_WARNING("Empty ASIC read from port=0x%02x of length %u and %u remote_bytes",
+			offset, enum_val(io_len), s.remote_bytes);
 	    break;
     }
 
@@ -440,13 +440,13 @@ bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 
 		chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
 		// is this right ??? asic_read uses DCR.wordsize
-		BX_NE2K_THIS s.remote_dma += static_cast<uint8_t>(io_len);
+		BX_NE2K_THIS s.remote_dma += enum_val(io_len);
 		if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
 			BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(
 			        BX_NE2K_THIS s.page_start << 8);
 		}
 
-		BX_NE2K_THIS s.remote_bytes -= static_cast<uint8_t>(io_len);
+		BX_NE2K_THIS s.remote_bytes -= enum_val(io_len);
 		if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
 			BX_NE2K_THIS s.remote_bytes = 0;
 
@@ -479,7 +479,7 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 {
 	BX_DEBUG("NE2000: page 0 read from port %04x, len=%u", (unsigned)offset,
 	         (unsigned)io_len);
-	if (static_cast<uint8_t>(io_len) > 1) {
+	if (enum_val(io_len) > 1) {
 		BX_ERROR("NE2000: bad length! page 0 read from port %04x, len=%u",
 		         (unsigned)offset, (unsigned)io_len); /* encountered
 		                                                 with win98
@@ -782,7 +782,7 @@ bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 {
   BX_DEBUG("page 1 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len);
-  if (static_cast<uint8_t>(io_len) > 1)
+  if (enum_val(io_len) > 1)
     BX_PANIC("bad length! page 1 read from port %04x, len=%u", (unsigned) offset,
              (unsigned) io_len);
 
@@ -864,7 +864,7 @@ bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
 {
   BX_DEBUG("page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len);
 
-  if (static_cast<uint8_t>(io_len) > 1)
+  if (enum_val(io_len) > 1)
     BX_PANIC("bad length!  page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len);
 
   switch (offset) {
