@@ -82,23 +82,6 @@ public:
 		Entire,
 	};
 
-	struct TagInfo {
-		Group group = Group::Invalid;
-		Type name = Type::Invalid;
-		int ansi_num = -1;
-	};
-
-	struct ColorInfo {
-		Color name = Color::Invalid;
-		int base_ansi_num = -1;
-		bool is_light = false;
-	};
-
-	struct EraseInfo {
-		EraseExtents extents = EraseExtents::Invalid;
-		int ansi_num = -1;
-	};
-
 	Tag() = delete;
 	Tag(std::string &tag, std::string &val, const bool close);
 
@@ -113,25 +96,10 @@ public:
 	 */
 	bool valid() const { return is_valid; }
 	bool closed() const { return is_closed; }
-	const TagInfo &info() const { return t_info; }
-	/*!
-	 * \brief Return extra info about color tags
-	 *
-	 * The returned information will only be valid if valid() returns true
-	 * and info().group == Group::Colors
-	 *
-	 * \return const ColorInfo&
-	 */
-	const ColorInfo &color_info() const { return c_info; }
-	/*!
-	 * \brief Return extra info about erase tags
-	 *
-	 * The returned information will only be valid if valid() returns true
-	 * and info().group == Group::Erasers
-	 *
-	 * \return const EraseInfo&
-	 */
-	const EraseInfo &erase_info() const { return e_info; }
+	Group group() const { return t_detail.group; }
+	Type type() const { return t_detail.type; }
+	bool color_is_light() const { return c_detail.is_light; }
+	int ansi_num() const;
 
 private:
 	bool parse_color_val(const std::string &val);
@@ -140,13 +108,26 @@ private:
 	bool is_closed = false;
 	bool is_valid = false;
 
-	TagInfo t_info;
-	ColorInfo c_info;
-	EraseInfo e_info;
+	struct TagDetail {
+		Group group = Group::Invalid;
+		Type type = Type::Invalid;
+		int ansi_num = -1;
+	} t_detail = {};
+
+	struct ColorDetail {
+		Color color = Color::Invalid;
+		int base_ansi_num = -1;
+		bool is_light = false;
+	} c_detail = {};
+
+	struct EraseDetail {
+		EraseExtents extents = EraseExtents::Invalid;
+		int ansi_num = -1;
+	} e_detail = {};
 
 	static inline const std::string light_prefix = "light-";
 
-	static inline const std::unordered_map<std::string, TagInfo> tags = {
+	static inline const std::unordered_map<std::string, TagDetail> tags = {
 	        {"color", {Group::Colors, Type::Color, -1}},
 	        {"bgcolor", {Group::Colors, Type::BGColor, -1}},
 	        {"erasel", {Group::Erasers, Type::EraseL, -1}},
@@ -162,7 +143,7 @@ private:
 	        {"reset", {Group::Misc, Type::Reset, 0}},
 	};
 
-	static inline const std::unordered_map<std::string, ColorInfo> color_values = {
+	static inline const std::unordered_map<std::string, ColorDetail> color_values = {
 	        {"black", {Color::Black, 30, false}},
 	        {"red", {Color::Red, 31, false}},
 	        {"green", {Color::Green, 32, false}},
@@ -183,7 +164,7 @@ private:
 	        {"light-default", {Color::Default, 39, true}},
 	};
 
-	static inline const std::unordered_map<std::string, EraseInfo> eraser_extents = {
+	static inline const std::unordered_map<std::string, EraseDetail> eraser_extents = {
 	        {"end", {EraseExtents::End, 0}},
 	        {"begin", {EraseExtents::Begin, 1}},
 	        {"entire", {EraseExtents::End, 2}},
@@ -191,9 +172,6 @@ private:
 };
 
 Tag::Tag(std::string &tag, std::string &val, const bool close)
-        : t_info(),
-          c_info(),
-          e_info()
 {
 	lowcase(tag);
 	lowcase(val);
@@ -201,15 +179,15 @@ Tag::Tag(std::string &tag, std::string &val, const bool close)
 		return;
 	}
 	is_closed = close;
-	t_info = tags.at(tag);
-	if ((t_info.group == Group::Colors || t_info.group == Group::Erasers) &&
+	t_detail = tags.at(tag);
+	if ((t_detail.group == Group::Colors || t_detail.group == Group::Erasers) &&
 	    is_closed) {
 		return;
 	}
-	if (t_info.group == Group::Colors && !parse_color_val(val)) {
+	if (t_detail.group == Group::Colors && !parse_color_val(val)) {
 		return;
 	}
-	if (t_info.group == Group::Erasers && !parse_erase_val(val)) {
+	if (t_detail.group == Group::Erasers && !parse_erase_val(val)) {
 		return;
 	}
 	is_valid = true;
@@ -221,7 +199,7 @@ bool Tag::parse_color_val(const std::string &val)
 	if (!contains(color_values, val)) {
 		return false;
 	}
-	c_info = color_values.at(val);
+	c_detail = color_values.at(val);
 	return true;
 }
 bool Tag::parse_erase_val(const std::string &val)
@@ -229,8 +207,17 @@ bool Tag::parse_erase_val(const std::string &val)
 	if (!contains(eraser_extents, val)) {
 		return false;
 	}
-	e_info = eraser_extents.at(val);
+	e_detail = eraser_extents.at(val);
 	return true;
+}
+
+int Tag::ansi_num() const
+{
+	switch (t_detail.group) {
+	case Group::Colors: return c_detail.base_ansi_num; break;
+	case Group::Erasers: return e_detail.ansi_num; break;
+	default: return t_detail.ansi_num; break;
+	}
 }
 
 /*
@@ -288,41 +275,34 @@ static const char *get_ansi_code(const Tag &tag)
 	if (!tag.valid()) {
 		return nullptr;
 	}
-	int ansi_num = -1;
 	reset_str(ansi_code);
-	auto &tag_info = tag.info();
-	switch (tag_info.group) {
+	Tag::Group group = tag.group();
+	Tag::Type type = tag.type();
+	int ansi_num = tag.ansi_num();
+	switch (group) {
 	case Tag::Group::Colors:
 		// Background colors have codes that are +10
 		// the equivalent foreground color.
-		ansi_num = tag.color_info().base_ansi_num +
-		           (tag_info.name == Tag::Type::BGColor ? 10 : 0);
+		ansi_num = ansi_num + (type == Tag::Type::BGColor ? 10 : 0);
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
-		             (tag.color_info().is_light ? "" : ";1"));
+		             (tag.color_is_light() ? "" : ";1"));
 		break;
 
 	case Tag::Group::Erasers:
-		ansi_num = tag.erase_info().ansi_num;
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
-		             tag_info.name == Tag::Type::EraseL ? "K" : "J");
+		             type == Tag::Type::EraseL ? "K" : "J");
 		break;
 
 	case Tag::Group::Styles:
-		ansi_num = tag_info.ansi_num;
 		// "closing" tags have ascii codes +20
 		if (tag.closed()) {
-			ansi_num += 20 + (tag_info.name == Tag::Type::Bold
-			                          ? 1
-			                          : 0); // [/b] is the same as
-			                                // [/dim]
+			ansi_num += 20 + (type == Tag::Type::Bold ? 1 : 0); // [/b] is the same as
+			                                                    // [/dim]
 		}
 		safe_sprintf(ansi_code, "\033[%dm", ansi_num);
 		break;
 
-	default:
-		ansi_num = tag_info.ansi_num;
-		safe_sprintf(ansi_code, "\033[%dm", ansi_num);
-		break;
+	default: safe_sprintf(ansi_code, "\033[%dm", ansi_num); break;
 	}
 	return ansi_code;
 }
