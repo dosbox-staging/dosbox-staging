@@ -319,4 +319,12 @@ bool contains(const container_t &container, const typename container_t::key_type
 	return container.find(key) != container.end();
 }
 
+// Convenience function to cast to the underlying type of an enum class
+template <typename enum_t>
+constexpr auto enum_val(enum_t e)
+{
+	static_assert(std::is_enum_v<enum_t>);
+	return static_cast<std::underlying_type_t<enum_t>>(e);
+}
+
 #endif
