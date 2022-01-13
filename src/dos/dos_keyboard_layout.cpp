@@ -780,7 +780,9 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		}
 	}
 
-	static Bit8u cpi_buf[65536];
+	std::array<uint8_t, UINT16_MAX + 1> cpi_buf;
+	constexpr size_t cpi_unit_size = sizeof(cpi_buf[0]);
+
 	size_t cpi_buf_size = 0;
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
@@ -808,7 +810,8 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		found_at_pos=0x29;
 		size_of_cpxdata=cpi_buf_size;
 	} else {
-		Bit32u dr = (Bit32u)fread(cpi_buf, sizeof(Bit8u), 5, tempfile.get());
+		constexpr auto bytes_to_detect_upx = 5;
+		const auto dr = fread(cpi_buf.data(), cpi_unit_size, bytes_to_detect_upx, tempfile.get());
 		// check if file is valid
 		if (dr<5) {
 			LOG(LOG_BIOS,LOG_ERROR)("Codepage file %s invalid",cp_filename);
@@ -826,14 +829,15 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 
 			// Read enough data to scan for UPX's identifier and version
 			const auto scan_size = 100;
-			if (fread(cpi_buf, sizeof(uint8_t), scan_size, tempfile.get()) != scan_size) {
+			assert(scan_size <= cpi_buf.size());
+			if (fread(cpi_buf.data(), cpi_unit_size, scan_size, tempfile.get()) != scan_size) {
 				LOG_WARNING("CODEPAGE: File %s is too small, could not read initial %d bytes",
 				            cp_filename, scan_size + ds);
 				return KEYB_INVALIDCPFILE;
 			}
 			// Scan for the UPX identifier
 			const auto upx_id = sv{"UPX!"};
-			const auto scan_buf = sv{reinterpret_cast<char *>(cpi_buf), scan_size};
+			const auto scan_buf = sv{reinterpret_cast<char *>(cpi_buf.data()), scan_size};
 			const auto upx_id_pos = scan_buf.find(upx_id);
 
 			// did we find the UPX identifier?
@@ -859,11 +863,11 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 
 			// Read the entire compressed CPX-file
 			fseek(tempfile.get(), 0, SEEK_SET);
-			size_of_cpxdata = fread(cpi_buf, sizeof(Bit8u), sizeof(cpi_buf), tempfile.get());
+			size_of_cpxdata = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
 		} else {
 			// standard uncompressed cpi-file
 			fseek(tempfile.get(), 0, SEEK_SET);
-			cpi_buf_size = (Bit32u)fread(cpi_buf, sizeof(Bit8u), sizeof(cpi_buf), tempfile.get());
+			cpi_buf_size = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
 		}
 	}
 
@@ -877,7 +881,10 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		Bit16u seg=0;
 		Bit16u size=0x1500;
 		if (!DOS_AllocateMemory(&seg,&size)) E_Exit("Not enough free low memory to unpack data");
-		MEM_BlockWrite((seg<<4)+0x100,cpi_buf,size_of_cpxdata);
+
+		const auto dos_segment = static_cast<uint32_t>((seg << 4) + 0x100);
+		assert(size_of_cpxdata <= cpi_buf.size());
+		MEM_BlockWrite(dos_segment, cpi_buf.data(), size_of_cpxdata);
 
 		// setup segments
 		Bit16u save_ds=SegValue(ds);
@@ -898,7 +905,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		reg_esp=save_esp;
 
 		// get unpacked content
-		MEM_BlockRead((seg<<4)+0x100,cpi_buf,65536);
+		MEM_BlockRead(dos_segment, cpi_buf.data(), cpi_buf.size());
 		cpi_buf_size=65536;
 
 		DOS_FreeMemory(seg);
