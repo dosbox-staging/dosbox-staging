@@ -45,41 +45,41 @@ public:
 		Misc,
 	};
 
-	enum class Type {
-		Invalid,
-		Color,
-		BGColor,
-		EraseL,
-		EraseS,
-		It,
-		Bold,
-		Ul,
-		Strike,
-		Blink,
-		Dim,
-		Hidden,
-		Inverse,
-		Reset,
+	enum class Type : int {
+		Invalid = -1,
+		Color = -2,
+		BGColor = -3,
+		EraseL = -4,
+		EraseS = -5,
+		It = 3,
+		Bold = 1,
+		Ul = 4,
+		Strike = 9,
+		Blink = 5,
+		Dim = 2,
+		Hidden = 8,
+		Inverse = 7,
+		Reset = 0,
 	};
 
-	enum class Color {
-		Invalid,
-		Black,
-		Red,
-		Green,
-		Yellow,
-		Blue,
-		Magenta,
-		Cyan,
-		White,
-		Default,
+	enum class Color : int {
+		Invalid = -1,
+		Black = 30,
+		Red = 31,
+		Green = 32,
+		Yellow = 33,
+		Blue = 34,
+		Magenta = 35,
+		Cyan = 36,
+		White = 37,
+		Default = 39,
 	};
 
-	enum class EraseExtents {
-		Invalid,
-		Begin,
-		End,
-		Entire,
+	enum class EraseExtents : int {
+		Invalid = -1,
+		End = 0,
+		Begin = 1,
+		Entire = 2,
 	};
 
 	Tag() = delete;
@@ -102,6 +102,12 @@ public:
 	int ansi_num() const;
 
 private:
+	template <typename E>
+	constexpr auto enum_val(E e) const
+	{
+		return static_cast<std::underlying_type_t<E>>(e);
+	}
+	
 	bool parse_color_val(const std::string &val);
 	bool parse_erase_val(const std::string &val);
 
@@ -111,63 +117,58 @@ private:
 	struct TagDetail {
 		Group group = Group::Invalid;
 		Type type = Type::Invalid;
-		int ansi_num = -1;
 	} t_detail = {};
 
 	struct ColorDetail {
 		Color color = Color::Invalid;
-		int base_ansi_num = -1;
 		bool is_light = false;
 	} c_detail = {};
 
-	struct EraseDetail {
-		EraseExtents extents = EraseExtents::Invalid;
-		int ansi_num = -1;
-	} e_detail = {};
+	EraseExtents e_extent = EraseExtents::Invalid;
 
 	static inline const std::string light_prefix = "light-";
 
 	static inline const std::unordered_map<std::string, TagDetail> tags = {
-	        {"color", {Group::Colors, Type::Color, -1}},
-	        {"bgcolor", {Group::Colors, Type::BGColor, -1}},
-	        {"erasel", {Group::Erasers, Type::EraseL, -1}},
-	        {"erases", {Group::Erasers, Type::EraseS, -1}},
-	        {"i", {Group::Styles, Type::It, 3}},
-	        {"b", {Group::Styles, Type::Bold, 1}},
-	        {"u", {Group::Styles, Type::Ul, 4}},
-	        {"s", {Group::Styles, Type::Strike, 9}},
-	        {"blink", {Group::Styles, Type::Blink, 5}},
-	        {"dim", {Group::Styles, Type::Dim, 2}},
-	        {"hidden", {Group::Styles, Type::Hidden, 8}},
-	        {"inverse", {Group::Styles, Type::Inverse, 7}},
-	        {"reset", {Group::Misc, Type::Reset, 0}},
+	        {"color", {Group::Colors, Type::Color}},
+	        {"bgcolor", {Group::Colors, Type::BGColor}},
+	        {"erasel", {Group::Erasers, Type::EraseL}},
+	        {"erases", {Group::Erasers, Type::EraseS}},
+	        {"i", {Group::Styles, Type::It}},
+	        {"b", {Group::Styles, Type::Bold}},
+	        {"u", {Group::Styles, Type::Ul}},
+	        {"s", {Group::Styles, Type::Strike}},
+	        {"blink", {Group::Styles, Type::Blink}},
+	        {"dim", {Group::Styles, Type::Dim}},
+	        {"hidden", {Group::Styles, Type::Hidden}},
+	        {"inverse", {Group::Styles, Type::Inverse}},
+	        {"reset", {Group::Misc, Type::Reset}},
 	};
 
 	static inline const std::unordered_map<std::string, ColorDetail> color_values = {
-	        {"black", {Color::Black, 30, false}},
-	        {"red", {Color::Red, 31, false}},
-	        {"green", {Color::Green, 32, false}},
-	        {"yellow", {Color::Yellow, 33, false}},
-	        {"blue", {Color::Blue, 34, false}},
-	        {"magenta", {Color::Magenta, 35, false}},
-	        {"cyan", {Color::Cyan, 36, false}},
-	        {"white", {Color::White, 37, false}},
-	        {"default", {Color::Default, 39, false}},
-	        {"light-black", {Color::Black, 30, true}},
-	        {"light-red", {Color::Red, 31, true}},
-	        {"light-green", {Color::Green, 32, true}},
-	        {"light-yellow", {Color::Yellow, 33, true}},
-	        {"light-blue", {Color::Blue, 34, true}},
-	        {"light-magenta", {Color::Magenta, 35, true}},
-	        {"light-cyan", {Color::Cyan, 36, true}},
-	        {"light-white", {Color::White, 37, true}},
-	        {"light-default", {Color::Default, 39, true}},
+	        {"black", {Color::Black, false}},
+	        {"red", {Color::Red, false}},
+	        {"green", {Color::Green, false}},
+	        {"yellow", {Color::Yellow, false}},
+	        {"blue", {Color::Blue, false}},
+	        {"magenta", {Color::Magenta, false}},
+	        {"cyan", {Color::Cyan, false}},
+	        {"white", {Color::White, false}},
+	        {"default", {Color::Default, false}},
+	        {"light-black", {Color::Black, true}},
+	        {"light-red", {Color::Red, true}},
+	        {"light-green", {Color::Green, true}},
+	        {"light-yellow", {Color::Yellow, true}},
+	        {"light-blue", {Color::Blue, true}},
+	        {"light-magenta", {Color::Magenta, true}},
+	        {"light-cyan", {Color::Cyan, true}},
+	        {"light-white", {Color::White, true}},
+	        {"light-default", {Color::Default, true}},
 	};
 
-	static inline const std::unordered_map<std::string, EraseDetail> eraser_extents = {
-	        {"end", {EraseExtents::End, 0}},
-	        {"begin", {EraseExtents::Begin, 1}},
-	        {"entire", {EraseExtents::End, 2}},
+	static inline const std::unordered_map<std::string, EraseExtents> eraser_extents = {
+	        {"end", EraseExtents::End},
+	        {"begin", EraseExtents::Begin},
+	        {"entire", EraseExtents::Entire},
 	};
 };
 
@@ -207,17 +208,18 @@ bool Tag::parse_erase_val(const std::string &val)
 	if (!contains(eraser_extents, val)) {
 		return false;
 	}
-	e_detail = eraser_extents.at(val);
+	e_extent = eraser_extents.at(val);
 	return true;
 }
 
 int Tag::ansi_num() const
 {
 	switch (t_detail.group) {
-	case Group::Colors: return c_detail.base_ansi_num; break;
-	case Group::Erasers: return e_detail.ansi_num; break;
-	default: return t_detail.ansi_num; break;
+	case Group::Colors: return enum_val(c_detail.color); break;
+	case Group::Erasers: return enum_val(e_extent); break;
+	default: return enum_val(t_detail.type); break;
 	}
+	return 0;
 }
 
 /*
