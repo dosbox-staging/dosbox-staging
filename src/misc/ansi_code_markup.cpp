@@ -38,7 +38,7 @@
 class Tag {
 public:
 	enum class Group {
-		InvalidGroup,
+		Invalid,
 		Colors,
 		Erasers,
 		Styles,
@@ -46,7 +46,7 @@ public:
 	};
 
 	enum class Name {
-		InvalidName,
+		Invalid,
 		Color,
 		BGColor,
 		EraseL,
@@ -63,7 +63,7 @@ public:
 	};
 
 	enum class Color {
-		InvalidColor,
+		Invalid,
 		Black,
 		Red,
 		Green,
@@ -76,26 +76,26 @@ public:
 	};
 
 	enum class EraseExtents {
-		InvalidExtents,
+		Invalid,
 		Begin,
 		End,
 		Entire,
 	};
 
 	struct TagInfo {
-		Group group = Group::InvalidGroup;
-		Name name = Name::InvalidName;
+		Group group = Group::Invalid;
+		Name name = Name::Invalid;
 		int ansi_num = -1;
 	};
 
 	struct ColorInfo {
-		Color name = Color::InvalidColor;
+		Color name = Color::Invalid;
 		int base_ansi_num = -1;
 		bool is_light = false;
 	};
 
 	struct EraseInfo {
-		EraseExtents extents = EraseExtents::InvalidExtents;
+		EraseExtents extents = EraseExtents::Invalid;
 		int ansi_num = -1;
 	};
 
