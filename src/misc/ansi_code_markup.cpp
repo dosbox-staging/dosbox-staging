@@ -45,7 +45,7 @@ public:
 		Misc,
 	};
 
-	enum class Name {
+	enum class Type {
 		Invalid,
 		Color,
 		BGColor,
@@ -84,7 +84,7 @@ public:
 
 	struct TagInfo {
 		Group group = Group::Invalid;
-		Name name = Name::Invalid;
+		Type name = Type::Invalid;
 		int ansi_num = -1;
 	};
 
@@ -147,19 +147,19 @@ private:
 	static inline const std::string light_prefix = "light-";
 
 	static inline const std::unordered_map<std::string, TagInfo> tags = {
-	        {"color", {Group::Colors, Name::Color, -1}},
-	        {"bgcolor", {Group::Colors, Name::BGColor, -1}},
-	        {"erasel", {Group::Erasers, Name::EraseL, -1}},
-	        {"erases", {Group::Erasers, Name::EraseS, -1}},
-	        {"i", {Group::Styles, Name::It, 3}},
-	        {"b", {Group::Styles, Name::Bold, 1}},
-	        {"u", {Group::Styles, Name::Ul, 4}},
-	        {"s", {Group::Styles, Name::Strike, 9}},
-	        {"blink", {Group::Styles, Name::Blink, 5}},
-	        {"dim", {Group::Styles, Name::Dim, 2}},
-	        {"hidden", {Group::Styles, Name::Hidden, 8}},
-	        {"inverse", {Group::Styles, Name::Inverse, 7}},
-	        {"reset", {Group::Misc, Name::Reset, 0}},
+	        {"color", {Group::Colors, Type::Color, -1}},
+	        {"bgcolor", {Group::Colors, Type::BGColor, -1}},
+	        {"erasel", {Group::Erasers, Type::EraseL, -1}},
+	        {"erases", {Group::Erasers, Type::EraseS, -1}},
+	        {"i", {Group::Styles, Type::It, 3}},
+	        {"b", {Group::Styles, Type::Bold, 1}},
+	        {"u", {Group::Styles, Type::Ul, 4}},
+	        {"s", {Group::Styles, Type::Strike, 9}},
+	        {"blink", {Group::Styles, Type::Blink, 5}},
+	        {"dim", {Group::Styles, Type::Dim, 2}},
+	        {"hidden", {Group::Styles, Type::Hidden, 8}},
+	        {"inverse", {Group::Styles, Type::Inverse, 7}},
+	        {"reset", {Group::Misc, Type::Reset, 0}},
 	};
 
 	static inline const std::unordered_map<std::string, ColorInfo> color_values = {
@@ -296,7 +296,7 @@ static const char *get_ansi_code(const Tag &tag)
 		// Background colors have codes that are +10
 		// the equivalent foreground color.
 		ansi_num = tag.color_info().base_ansi_num +
-		           (tag_info.name == Tag::Name::BGColor ? 10 : 0);
+		           (tag_info.name == Tag::Type::BGColor ? 10 : 0);
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
 		             (tag.color_info().is_light ? "" : ";1"));
 		break;
@@ -304,14 +304,14 @@ static const char *get_ansi_code(const Tag &tag)
 	case Tag::Group::Erasers:
 		ansi_num = tag.erase_info().ansi_num;
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
-		             tag_info.name == Tag::Name::EraseL ? "K" : "J");
+		             tag_info.name == Tag::Type::EraseL ? "K" : "J");
 		break;
 
 	case Tag::Group::Styles:
 		ansi_num = tag_info.ansi_num;
 		// "closing" tags have ascii codes +20
 		if (tag.closed()) {
-			ansi_num += 20 + (tag_info.name == Tag::Name::Bold
+			ansi_num += 20 + (tag_info.name == Tag::Type::Bold
 			                          ? 1
 			                          : 0); // [/b] is the same as
 			                                // [/dim]
