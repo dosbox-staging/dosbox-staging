@@ -101,13 +101,7 @@ public:
 	bool color_is_light() const { return c_detail.is_light; }
 	int ansi_num() const;
 
-private:
-	template <typename E>
-	constexpr auto enum_val(E e) const
-	{
-		return static_cast<std::underlying_type_t<E>>(e);
-	}
-	
+private:	
 	bool parse_color_val(const std::string &val);
 	bool parse_erase_val(const std::string &val);
 
