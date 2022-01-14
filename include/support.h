@@ -280,11 +280,12 @@ std::string safe_strerror(int err) noexcept;
 
 void set_thread_name(std::thread &thread, const char *name);
 
-extern const Bit8u DOS_DATE_months[];
+constexpr uint8_t DOS_DATE_months[] = {0,  31, 28, 31, 30, 31, 30,
+                                       31, 31, 30, 31, 30, 31};
 
-bool is_date_valid(uint32_t year, uint32_t month, uint32_t day);
+bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day);
 
-bool is_time_valid(uint32_t hour, uint32_t minute, uint32_t second);
+bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t second);
 
 /*
   Returns a number wrapped between the lower and upper bounds.
