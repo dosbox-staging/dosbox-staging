@@ -399,22 +399,20 @@ const std_fs::path &GetExecutablePath()
 	return exe_path;
 }
 
-const Bit8u DOS_DATE_months[] = {0,  31, 28, 31, 30, 31, 30,
-                                 31, 31, 30, 31, 30, 31};
-
-bool is_date_valid(uint32_t year, uint32_t month, uint32_t day)
+bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
 {
 	if (year < 1980 || month > 12 || month == 0 || day == 0)
 		return false;
-	else if (month == 2 && day == 29 &&
-	         (year % 4 != 0 || (year % 100 == 0 && year % 400 != 0)))
+	// February has 29 days on leap-years and 28 days otherwise.
+	const bool is_leap_year = !(year % 4) && (!(year % 400) || (year % 100));
+	if (month == 2 && day > (uint32_t)(is_leap_year ? 29 : DOS_DATE_months[month]))
 		return false;
-	else if (month != 2 && day > DOS_DATE_months[month])
+	if (month != 2 && day > DOS_DATE_months[month])
 		return false;
 	return true;
 }
 
-bool is_time_valid(uint32_t hour, uint32_t minute, uint32_t second)
+bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t second)
 {
 	if (hour > 23 || minute > 59 || second > 59)
 		return false;

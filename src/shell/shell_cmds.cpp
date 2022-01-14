@@ -614,59 +614,85 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 	return col_widths;
 }
 
-char buffer[15] = {0};
-char *format_date(uint16_t year, uint8_t month, uint8_t day)
+char *format_date(const uint16_t year, const uint8_t month, const uint8_t day)
 {
-	char formatstring[6];
-	char date_format = dos.tables.country[0];
-	char date_separator = dos.tables.country[11];
-	sprintf(formatstring,
-	        date_format == 1 ? "D%cM%cY"
-	                         : (date_format == 2 ? "Y%cM%cD" : "M%cD%cY"),
-	        date_separator, date_separator);
-	Bitu bufferptr = 0;
-	for (Bitu i = 0; i < 5; i++) {
+	char format_string[6];
+	static char return_date_buffer[15] = {0};
+	const char date_format = dos.tables.country[0];
+	const char date_separator = dos.tables.country[11];
+	int result;
+	switch (date_format) {
+	case 1:
+		result = sprintf(format_string, "D%cM%cY", date_separator,
+		                 date_separator);
+		break;
+	case 2:
+		result = sprintf(format_string, "Y%cM%cD", date_separator,
+		                 date_separator);
+		break;
+	default:
+		result = sprintf(format_string, "M%cD%cY", date_separator,
+		                 date_separator);
+	}
+	if (result < 0)
+		return return_date_buffer;
+	size_t index = 0;
+	for (int i = 0; i < 5; i++) {
 		if (i == 1 || i == 3) {
-			buffer[bufferptr] = formatstring[i];
-			bufferptr++;
+			return_date_buffer[index] = format_string[i];
+			index++;
 		} else {
-			if (formatstring[i] == 'M')
-				bufferptr += (Bitu)sprintf(buffer + bufferptr,
-				                           "%02u", month);
-			if (formatstring[i] == 'D')
-				bufferptr += (Bitu)sprintf(buffer + bufferptr,
-				                           "%02u", day);
-			if (formatstring[i] == 'Y')
-				bufferptr += (Bitu)sprintf(buffer + bufferptr,
-				                           "%04u", year);
+			if (format_string[i] == 'M') {
+				result = sprintf(return_date_buffer + index,
+				                 "%02u", month);
+				if (result >= 0)
+					index += result;
+			}
+			if (format_string[i] == 'D') {
+				result = sprintf(return_date_buffer + index,
+				                 "%02u", day);
+				if (result >= 0)
+					index += result;
+			}
+			if (format_string[i] == 'Y') {
+				result = sprintf(return_date_buffer + index,
+				                 "%04u", year);
+				if (result >= 0)
+					index += result;
+			}
 		}
 	}
-	return buffer;
+	return return_date_buffer;
 }
 
-char *format_time(Bitu hour, Bitu min, Bitu sec, Bitu msec, bool full = false)
+char *format_time(const uint8_t hour,
+                  const uint8_t min,
+                  const uint8_t sec,
+                  const uint8_t msec,
+                  bool full = false)
 {
-	Bitu fhour = hour;
-	static char retBuf[14];
+	uint8_t fhour = hour;
+	static char return_time_buffer[14] = {0};
 	char ampm[3] = "";
 	char time_format = dos.tables.country[17];
-	if (!(time_format & 1)) { // 12 hour notation?
-		if (hour != 12)
-			hour %= 12;
+	if (!time_format) { // 12 hour notation?
+		if (fhour != 12)
+			fhour %= 12;
 		strcpy(ampm, hour != 12 && hour == fhour ? "am" : "pm");
 		if (!full)
-			*(ampm + 1) = 0;
+			*(ampm + 1) = 0; // "a" or "p" in short time format
 	}
-	char time_separator = dos.tables.country[13];
-	char decimal_separator = dos.tables.country[9];
-	if (full)
-		sprintf(retBuf, "%u%c%02u%c%02u%c%02u%s", (unsigned int)hour,
-		    time_separator, (unsigned int)min, time_separator, (unsigned int)sec,
-		    decimal_separator, (unsigned int)msec, ampm);
-	else
-		sprintf(retBuf, "%2u%c%02u%s", (unsigned int)hour,
+	const char time_separator = dos.tables.country[13];
+	const char decimal_separator = dos.tables.country[9];
+	if (full) // Example full time format: 1:02:03.04am
+		sprintf(return_time_buffer, "%u%c%02u%c%02u%c%02u%s",
+		        (unsigned int)hour, time_separator, (unsigned int)min,
+		        time_separator, (unsigned int)sec, decimal_separator,
+		        (unsigned int)msec, ampm);
+	else // Example short time format: 1:02p
+		sprintf(return_time_buffer, "%2u%c%02u%s", (unsigned int)hour,
 		        time_separator, (unsigned int)min, ampm);
-	return retBuf;
+	return return_time_buffer;
 }
 
 void DOS_Shell::CMD_DIR(char * args) {
@@ -1447,20 +1473,32 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char *args)
 {
-	char c1, c2;
-	char date_format = dos.tables.country[0];
-	char date_separator = dos.tables.country[11];
+	const char date_format = dos.tables.country[0];
+	const char date_separator = dos.tables.country[11];
 	char format[11];
-	sprintf(format,
-	        date_format == 1
-	                ? "DD%cMM%cYYYY"
-	                : (date_format == 2 ? "YYYY%cMM%cDD"
-	                                              : "MM%cDD%cYYYY"),
-	        date_separator, date_separator);
+	int result;
+	switch (date_format) {
+	case 1:
+		result = safe_sprintf(format, "DD%cMM%cYYYY", date_separator,
+		                      date_separator);
+		break;
+	case 2:
+		result = safe_sprintf(format, "YYYY%cMM%cDD", date_separator,
+		                      date_separator);
+		break;
+	default:
+		result = safe_sprintf(format, "MM%cDD%cYYYY", date_separator,
+		                      date_separator);
+	}
+	if (result < 0) {
+		LOG_WARNING("SHELL: Incorrect date format");
+		return;
+	}
 	if (ScanCMDBool(args, "?")) {
 		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP"));
 		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format, format_date(2012, 10, 11));
+		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format,
+		         format_date(2012, 10, 11));
 		return;
 	}
 	if (ScanCMDBool(args, "H")) {
@@ -1477,14 +1515,24 @@ void DOS_Shell::CMD_DATE(char *args)
 	}
 	// check if a date was passed in command line
 	uint32_t newday, newmonth, newyear;
+	char date_separator_placeholder_1, date_separator_placeholder_2;
 	int n;
-	if (date_format == 1)
-		n = sscanf(args, "%u%c%u%c%u", &newday, &c1, &newmonth, &c2, &newyear);
-	else if (date_format == 2)
-		n = sscanf(args, "%u%c%u%c%u", &newyear, &c1, &newmonth, &c2, &newday);
-	else
-		n = sscanf(args, "%u%c%u%c%u", &newmonth, &c1, &newday, &c2, &newyear);
-	if (n == 5 && c1 == date_separator && c2 == date_separator) {
+	switch (date_format) {
+	case 1:
+		n = sscanf(args, "%u%c%u%c%u", &newday, &date_separator_placeholder_1,
+		           &newmonth, &date_separator_placeholder_2, &newyear);
+		break;
+	case 2:
+		n = sscanf(args, "%u%c%u%c%u", &newyear, &date_separator_placeholder_1,
+		           &newmonth, &date_separator_placeholder_2, &newday);
+		break;
+	default:
+		n = sscanf(args, "%u%c%u%c%u", &newmonth,
+		           &date_separator_placeholder_1, &newday,
+		           &date_separator_placeholder_2, &newyear);
+	}
+	if (n == 5 && date_separator_placeholder_1 == date_separator &&
+	    date_separator_placeholder_2 == date_separator) {
 		if (!is_date_valid(newyear, newmonth, newday))
 			WriteOut(MSG_Get("SHELL_CMD_DATE_ERROR"));
 		else {
@@ -1501,10 +1549,10 @@ void DOS_Shell::CMD_DATE(char *args)
 		return;
 	}
 	// display the current date
-	reg_ah=0x2a; // get system date
+	reg_ah = 0x2a; // get system date
 	CALLBACK_RunRealInt(0x21);
 
-	const char* datestring = MSG_Get("SHELL_CMD_DATE_DAYS");
+	const char *datestring = MSG_Get("SHELL_CMD_DATE_DAYS");
 	Bit32u length;
 	char day[6] = {0};
 	if (sscanf(datestring, "%u", &length) && (length < 5) &&
@@ -1527,11 +1575,9 @@ void DOS_Shell::CMD_DATE(char *args)
 
 void DOS_Shell::CMD_TIME(char * args) {
 	char format[9], example[9];
-	char time_separator = dos.tables.country[13];
-	sprintf(format, "hh%cmm%css", time_separator,
-	        time_separator);
-	sprintf(example, "%u%c%02u%c%02u", 13, time_separator,
-	        14, time_separator, 15);
+	const char time_separator = dos.tables.country[13];
+	sprintf(format, "hh%cmm%css", time_separator, time_separator);
+	sprintf(example, "13%c14%c15", time_separator, time_separator);
 	if (ScanCMDBool(args, "?")) {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP"));
 		WriteOut("\n");
@@ -1551,9 +1597,11 @@ void DOS_Shell::CMD_TIME(char * args) {
 		return;
 	}
 	uint32_t newhour, newminute, newsecond;
-	char c1, c2;
-	if (sscanf(args, "%u%c%u%c%u", &newhour, &c1, &newminute, &c2, &newsecond) == 5 &&
-	    c1 == time_separator && c2 == time_separator) {
+	char time_separator_placeholder_1, time_separator_placeholder_2;
+	if (sscanf(args, "%u%c%u%c%u", &newhour, &time_separator_placeholder_1,
+	           &newminute, &time_separator_placeholder_2, &newsecond) == 5 &&
+	    time_separator_placeholder_1 == time_separator &&
+	    time_separator_placeholder_2 == time_separator) {
 		if (!is_time_valid(newhour, newminute, newsecond))
 			WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
 		else {
@@ -1569,19 +1617,19 @@ void DOS_Shell::CMD_TIME(char * args) {
 		}
 		return;
 	}
-	bool timeonly = ScanCMDBool(args,"T");
+	bool timeonly = ScanCMDBool(args, "T");
 
-	reg_ah=0x2c; // get system time
+	reg_ah = 0x2c; // get system time
 	CALLBACK_RunRealInt(0x21);
-/*
-		reg_dl= // 1/100 seconds
-		reg_dh= // seconds
-		reg_cl= // minutes
-		reg_ch= // hours
-*/
+	/*
+	                reg_dl= // 1/100 seconds
+	                reg_dh= // seconds
+	                reg_cl= // minutes
+	                reg_ch= // hours
+	*/
 	if (timeonly) {
-		WriteOut("%u%c%02u%c%02u\n", reg_ch, time_separator,
-		         reg_cl, time_separator, reg_dh);
+		WriteOut("%u%c%02u%c%02u\n", reg_ch, time_separator, reg_cl,
+		         time_separator, reg_dh);
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
 		WriteOut("%s\n", format_time(reg_ch, reg_cl, reg_dh, reg_dl, true));
