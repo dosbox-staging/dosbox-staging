@@ -2872,6 +2872,10 @@ static void GUI_StartUp(Section *sec)
 	if (!SetDefaultWindowMode())
 		E_Exit("Could not initialize video: %s", SDL_GetError());
 
+	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
+	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
+	SDL_SetWindowOpacity(sdl.window, alpha);
+
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
@@ -3464,6 +3468,10 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
 	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
+
+	Pint = sdl_sec->Add_int("transparency", always, 0);
+	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
+	               "From 0 (no transparency) to 90 (high transparency).");
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
