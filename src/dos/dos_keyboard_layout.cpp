@@ -1341,42 +1341,42 @@ void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
-std::map<std::string, int> country_code_map {
-    {"cz243", 42},
-    {"dk", 45},
-    {"gr", 49},
-    {"gk", 30},
-    {"sp", 34},
-    {"su", 358},
-    {"fr", 33},
-    {"hu", 36},
-    {"hu208", 36},
-    {"is161", 354},
-    {"it", 39},
-    {"nl", 31},
-    {"no", 47},
-    {"pl", 48},
-    {"br", 55},
-    {"ru", 7},
-    {"hr", 38},
-    {"sk", 42},
-    {"sv", 46},
-    {"tr", 90},
-    {"ur", 380},
-    {"bl", 375},
-    {"si", 386},
-    {"et", 372},
-    {"sg", 41},
-    {"po", 351},
-    {"sf", 41},
-    {"be", 32},
-    {"cf", 2},
-    {"cz", 42},
-    {"sl", 42},
-    {"la", 3},
-    {"uk", 44},
-    {"us", 1},
-    {"yu", 38},
+const std::map<std::string, int> country_code_map {
+    {"cz243", COUNTRY::Czech_Slovak},
+    {"dk", COUNTRY::Denmark},
+    {"gr", COUNTRY::Germany},
+    {"gk", COUNTRY::Greece},
+    {"sp", COUNTRY::Spain},
+    {"su", COUNTRY::Finland},
+    {"fr", COUNTRY::France},
+    {"hu", COUNTRY::Hungary},
+    {"hu208", COUNTRY::Hungary},
+    {"is161", COUNTRY::Iceland},
+    {"it", COUNTRY::Italy},
+    {"nl", COUNTRY::Netherlands},
+    {"no", COUNTRY::Norway},
+    {"pl", COUNTRY::Poland},
+    {"br", COUNTRY::Brazil},
+    {"ru", COUNTRY::Russia},
+    {"hr", COUNTRY::Yugoslavia},
+    {"sk", COUNTRY::Czech_Slovak},
+    {"sv", COUNTRY::Sweden},
+    {"tr", COUNTRY::Turkey},
+    {"ur", COUNTRY::Ukraine},
+    {"bl", COUNTRY::Belarus},
+    {"si", COUNTRY::Slovenia},
+    {"et", COUNTRY::Estonia},
+    {"sg", COUNTRY::Switzerland},
+    {"po", COUNTRY::Portugal},
+    {"sf", COUNTRY::Switzerland},
+    {"be", COUNTRY::Belgium},
+    {"cf", COUNTRY::Candian_French},
+    {"cz", COUNTRY::Czech_Slovak},
+    {"sl", COUNTRY::Czech_Slovak},
+    {"la", COUNTRY::Latin_America},
+    {"uk", COUNTRY::United_Kingdom},
+    {"us", COUNTRY::United_States},
+    {"yu", COUNTRY::Yugoslavia},
 };
 
 const char *DOS_GetLoadedLayout(void);
@@ -1391,7 +1391,7 @@ void DOS_KeyboardLayout_Init(Section* sec) {
 	if (!countryNo) {
 		const char *layout = DOS_GetLoadedLayout();
 		if (layout == NULL)
-			countryNo = 1;
+			countryNo = COUNTRY::United_States;
 		else if (country_code_map.find(layout) != country_code_map.end())
 			countryNo = country_code_map.find(layout)->second;
 	}

@@ -49,43 +49,6 @@ void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
 
-enum COUNTRY {
-	United_States = 1,
-	Candian_French = 2,
-	Latin_America = 3,
-	Russia = 7,
-	Greece = 30,
-	Netherlands = 31,
-	Belgium = 32,
-	France = 33,
-	Spain = 34,
-	Hungary = 36,
-	Yugoslavia = 38,
-	Italy = 39,
-	Romania = 40,
-	Switzerland = 41,
-	Czech_Slovak = 42,
-	Austria = 43,
-	United_Kingdom = 44,
-	Denmark = 45,
-	Sweden = 46,
-	Norway = 47,
-	Poland = 48,
-	Germany = 49,
-	Brazil = 55,
-	Australia = 61,
-	Japan = 81,
-	South_Korea = 82,
-	China = 86,
-	Turkey = 90,
-	Portugal = 351,
-	Iceland = 354,
-	Finland = 358,
-	Taiwan = 886,
-	Arabic = 785,
-	Israel = 972,
-};
-
 std::array<uint16_t, 1> countries_date_format_mmddyyyy = {
         COUNTRY::United_States,
 };
@@ -781,15 +744,12 @@ static Bitu DOS_21Handler(void) {
 			MEM_BlockWrite(dest, dos.tables.country, 0x18);
 			reg_ax = reg_bx = 0x01;
 			CALLBACK_SCF(false);
-			break;
 		} else { /* Set country code */
 			countryNo = reg_al == 0xff ? reg_bx : reg_al;
 			DOS_SetCountry(countryNo);
 			reg_ax = 0;
 			CALLBACK_SCF(false);
-			break;
 		}
-		CALLBACK_SCF(true);
 		break;
 	case 0x39:		/* MKDIR Create directory */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
