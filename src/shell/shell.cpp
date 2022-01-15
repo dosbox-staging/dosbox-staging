@@ -178,9 +178,6 @@ DOS_Shell::DOS_Shell()
           call(false)
 {}
 
-// TODO: this function should be refactored to make to it easier to understand.
-// It's currently riddled with pointer and array adjustments each loop plus
-// branches and sub-loops.
 Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **pipe, bool *append)
 {
 	char * lr=s;
@@ -189,74 +186,47 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **pipe, boo
 	Bitu num=0;
 	bool quote = false;
 	char *temp = nullptr;
-	size_t temp_len = 0;
+	char **redir = nullptr;
+	size_t found, temp_len;
+	std::string str, chrs;
 
 	while ( (ch=*lr++) ) {
 		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
 			*lw++ = ch;
 			continue;
 		}
-
-		switch (ch) {
-		case '"':
+		if (ch == '"') {
 			quote = !quote;
-			break;
-		case '>':
-			*append=((*lr)=='>');
-			if (*append) lr++;
-			lr=ltrim(lr);
-			if (*ofn) {
-				delete[] * ofn;
-				*ofn = nullptr;
-			}
-			*ofn = lr;
-			while (*lr && *lr!=' ' && *lr!='<' && *lr!='|') lr++;
-			//if it ends on a : => remove it.
-			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-			temp_len = static_cast<size_t>(lr - *ofn + 1u);
-			temp = new char[temp_len];
-			safe_strncpy(temp, *ofn, temp_len);
-			*ofn = temp;
-			continue;
-
-		case '<':
-			if (*ifn) {
-				delete[] * ifn;
-				*ifn = nullptr;
+		} else if (ch == '>' || ch == '<' || ch == '|') {
+			// Overwrite with >, and append with >>
+			if (ch == '>' && (*append = (*lr == '>')))
+				lr++;
+			else if (ch == '|')
+				num++;
+			redir = ch == '>' ? ofn : (ch == '<' ? ifn : pipe);
+			if (*redir) {
+				delete[] * redir;
+				*redir = nullptr;
 			}
 			lr = ltrim(lr);
-			*ifn = lr;
-
-			while (*lr && *lr != ' ' && *lr != '>' && *lr != '|')
-				lr++;
-
-			if ((*ifn != lr) && (lr[-1] == ':'))
-				lr[-1] = 0;
-
-			assert(lr >= *ifn);
-			temp_len = static_cast<size_t>(lr - *ifn + 1u);
-			temp = new char[temp_len];
-			safe_strncpy(temp, *ifn, temp_len);
-			*ifn = temp;
-			continue;
-
-		case '|':
-			num++;
-			if (*pipe)
-				free(*pipe);
-			lr = ltrim(lr);
-			*pipe = lr;
-			while (*lr)
-				lr++;
-			temp_len = static_cast<size_t>(lr - *pipe + 1u);
-			temp = new char[temp_len];
-			safe_strncpy(temp, *pipe, lr - *pipe + 1);
-			*pipe = temp;
+			*redir = ltrim(lr);
+			str = *redir;
+			chrs = ch == '|' ? "" : (ch != '<' ? " |<" : " |>");
+			found = str.find_first_of(chrs);
+			if (found == std::string::npos)
+				temp_len = str.size();
+			else
+				temp_len = found - (str[found - 1] == ':' ? 1 : 0);
+			lr += temp_len;
+			str[temp_len] = 0;
+			temp = new char[temp_len + 1];
+			safe_strncpy(temp, str.c_str(), temp_len + 1);
+			*redir = temp;
 			continue;
 		}
 		*lw++ = ch;
 	}
-	*lw=0;
+	*lw = 0;
 	return num;
 }
 
