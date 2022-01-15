@@ -410,7 +410,7 @@ struct SDL_Block {
 		bool middle_will_release = true;
 		bool has_focus = false;
 	} mouse = {};
-	SDL_Point pp_scale = {1, 1};
+	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024];
 	bool window_resolution_specified = false;
 	bool use_max_resolution = false;
@@ -427,7 +427,7 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 static SDL_Point restrict_to_max_resolution(int width, int height);
-static SDL_Point calc_pp_scale(int width, int heigth);
+static PPScale calc_pp_scale(int width, int heigth);
 static SDL_Rect calc_viewport(int width, int height);
 
 static void CleanupSDLResources();
@@ -753,11 +753,11 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(const int in_x,
-                                   const int in_y,
+static void log_display_properties(int in_x,
+                                   int in_y,
                                    const double in_par,
                                    const SCALING_MODE scaling_mode,
-                                   const SDL_Point pp_scale,
+                                   const PPScale &pp_scale,
                                    const bool is_fullscreen,
                                    int out_x,
                                    int out_y)
@@ -767,12 +767,12 @@ static void log_display_properties(const int in_x,
 	assert(out_x > 0 && out_y > 0);
 
 	if (scaling_mode == SCALING_MODE::PERFECT) {
-		// If we're using pixel perfect, then the incoming'out_x' and
-		// 'height' arguments only represent the total drawing area as
-		// opposed to the internal clipped area, so use this approach to
-		// get the actual scaled dimentions.
-		out_x = pp_scale.x * in_x;
-		out_y = pp_scale.y * in_y;
+		// The pixel perfect object holds the effective source
+		// resolution and scaled output resolution, so use those:
+		in_x = pp_scale.effective_source_w;
+		in_y = pp_scale.effective_source_h;
+		out_x = pp_scale.output_w;
+		out_y = pp_scale.output_h;
 	} else if (is_fullscreen) {
 		// If we're fullscreen and using a non-pixel-perfect scaling
 		// mode, then the incoming'out_x' and 'out_y' arguments only
@@ -989,8 +989,8 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
-	const int img_width = sdl.pp_scale.x * sdl.draw.width;
-	const int img_height = sdl.pp_scale.y * sdl.draw.height;
+	const int img_width = sdl.pp_scale.output_w;
+	const int img_height = sdl.pp_scale.output_h;
 
 	int win_width, win_height;
 	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
@@ -1211,22 +1211,10 @@ static bool is_draw_size_doubled()
 	return is_doubled && is_divisible && is_large;
 }
 
-static SDL_Point calc_pp_scale(int avw, int avh)
+static PPScale calc_pp_scale(const int avw, const int avh)
 {
-	assert(sdl.draw.width > 0);
-	assert(sdl.draw.height > 0);
-	assert(sdl.draw.pixel_aspect > 0.0);
-
-	int x = 0;
-	int y = 0;
-	constexpr double aspect_weight = 1.14;
-	const int err = pp_getscale(sdl.draw.width, sdl.draw.height,
-	                            sdl.draw.pixel_aspect, avw, avh,
-	                            aspect_weight, &x, &y);
-	if (err == 0)
-		return {x, y};
-	else
-		return {1, 1};
+	return PPScale(sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
+	               is_draw_size_doubled(), avw, avh);
 }
 
 Bitu GFX_SetSize(int width,
@@ -2680,11 +2668,10 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 {
 	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
-	
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
-	const int w = sdl.pp_scale.x * sdl.draw.width;
-	const int h = sdl.pp_scale.y * sdl.draw.height;
+	const int w = sdl.pp_scale.output_w;
+	const int h = sdl.pp_scale.output_h;
 	const int x = (win_width - w) / 2;
 	const int y = (win_height - h) / 2;
 
