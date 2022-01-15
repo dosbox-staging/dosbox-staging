@@ -1144,6 +1144,24 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
+// Some video modes are effectively doubled in resolution but only have half the
+// unique pixel resolution.
+static bool is_draw_size_doubled()
+{
+	// Has either dimension been doubled?
+	const bool is_doubled = (sdl.draw.width_was_doubled ||
+	                         sdl.draw.height_was_doubled);
+
+	// Are the dimensions divisible by 2?
+	const bool is_divisible = (sdl.draw.width % 2 == 0 &&
+	                           sdl.draw.height % 2 == 0);
+
+	// Are the dimensions beyond low-res?
+	const bool is_large = (sdl.draw.width > 500 && sdl.draw.height > 350);
+
+	return is_doubled && is_divisible && is_large;
+}
+
 static SDL_Point calc_pp_scale(int avw, int avh)
 {
 	assert(sdl.draw.width > 0);
