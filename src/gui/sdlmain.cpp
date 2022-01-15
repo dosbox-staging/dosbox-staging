@@ -271,6 +271,8 @@ struct SDL_Block {
 		uint16_t previous_mode = 0;
 		bool has_changed = false;
 		GFX_CallBack_t callback = nullptr;
+		bool width_was_doubled = false;
+		bool height_was_doubled = false;
 	} draw = {};
 	struct {
 		struct {
@@ -1162,7 +1164,7 @@ static SDL_Point calc_pp_scale(int avw, int avh)
 
 Bitu GFX_SetSize(int width,
                  int height,
-                 [[maybe_unused]] Bitu flags,
+                 const Bitu flags,
                  double scalex,
                  double scaley,
                  GFX_CallBack_t callback,
@@ -1172,7 +1174,12 @@ Bitu GFX_SetSize(int width,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
+	const bool double_width = flags & GFX_DBL_W;
+	const bool double_height = flags & GFX_DBL_H;
+
 	sdl.draw.has_changed = (sdl.draw.width != width || sdl.draw.height != height ||
+	                        sdl.draw.width_was_doubled != double_width ||
+	                        sdl.draw.height_was_doubled != double_height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
 	                        sdl.draw.pixel_aspect != pixel_aspect ||
@@ -1180,6 +1187,8 @@ Bitu GFX_SetSize(int width,
 
 	sdl.draw.width = width;
 	sdl.draw.height = height;
+	sdl.draw.width_was_doubled = double_width;
+	sdl.draw.height_was_doubled = double_height;
 	sdl.draw.scalex = scalex;
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
