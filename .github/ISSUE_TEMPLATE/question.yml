@@ -1,6 +1,5 @@
 name: Question
 description: Ask for support or start a discussion.
-title: '[Question] '
 labels: question
 #assignees: 'anonymous@temp'
 
