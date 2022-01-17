@@ -1218,6 +1218,29 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_LS_PATH_ERR",
 	        "ls: cannot access '%s': No such file or directory\n");
 
+	MSG_Add("SHELL_CMD_ATTRIB_HELP",
+			"Displays or changes file attributes.\n");
+	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mattrib\033[0m \033[37;1m[ATTRIBUTES]\033[0m \033[36;1mPATTERN\033[0m [/S]\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mATTRIBUTES\033[0m are attributes to apply, including one or more of the following:\n"
+	        "             \033[37;1m+R\033[0m, \033[37;1m-R\033[0m, \033[37;1m+A\033[0m, \033[37;1m-A\033[0m, \033[37;1m+S\033[0m, \033[37;1m-S\033[0m, \033[37;1m+H\033[0m, \033[37;1m-H\033[0m\n"
+	        "             Where: R = Read-only, A = Archive, S = System, H = Hidden\n"
+	        "  \033[36;1mPATTERN\033[0m    can be either an exact filename or an inexact filename with\n"
+	        "             wildcards, which are the asterisk (*) and the question mark (?),\n"
+	        "             or an exact name of a directory."
+	        "\n"
+	        "Notes:\n"
+	        "  Multiple attributes can be specified in the command, separated by spaces.\n"
+	        "  If not specified, the command shows the current file/directory attributes.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mattrib\033[0m \033[36;1mfile.txt\033[0m\n"
+	        "  \033[32;1mattrib\033[0m \033[37;1m+R\033[0m \033[37;1m-A\033[0m \033[36;1m*.txt\033[0m\n");
+	MSG_Add("SHELL_CMD_ATTRIB_GET_ERROR", "Unable to get attributes: %s\n");
+	MSG_Add("SHELL_CMD_ATTRIB_SET_ERROR", "Unable to set attributes: %s\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP",
 	        "Waits for a keypress and sets an ERRORLEVEL value.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
