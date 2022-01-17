@@ -236,15 +236,35 @@ bool Virtual_Drive::FindNext(DOS_DTA & dta) {
 	return false;
 }
 
-bool Virtual_Drive::GetFileAttr(char * name,Bit16u * attr) {
-	VFILE_Block * cur_file = first_file;
+bool Virtual_Drive::GetFileAttr(char *name, Bit16u *attr)
+{
+	VFILE_Block *cur_file = first_file;
 	while (cur_file) {
 		if (strcasecmp(name, cur_file->name) == 0) {
-			*attr = DOS_ATTR_ARCHIVE;	//Maybe readonly ?
+			*attr = DOS_ATTR_ARCHIVE; // Maybe readonly ?
 			return true;
 		}
 		cur_file = cur_file->next;
 	}
+	return false;
+}
+
+bool Virtual_Drive::SetFileAttr(const char *name, uint16_t attr)
+{
+	(void)attr; // UNUSED
+	if (*name == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return true;
+	}
+	const VFILE_Block *cur_file = first_file;
+	while (cur_file) {
+		if (strcasecmp(name, cur_file->name) == 0) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+		cur_file = cur_file->next;
+	}
+	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
 }
 
