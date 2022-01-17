@@ -20,6 +20,7 @@
 
 #include "programs.h"
 
+#include "program_attrib.h"
 #include "program_autotype.h"
 #include "program_boot.h"
 #include "program_choice.h"
@@ -546,7 +547,7 @@ void DOS_SetupPrograms(void)
 	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
 	MSG_Add("WIKI_URL", WIKI_URL);
 
-	PROGRAMS_MakeFile("ATTRIB.COM", PLACEHOLDER_ProgramStart);
+	PROGRAMS_MakeFile("ATTRIB.COM", ATTRIB_ProgramStart);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
 #if C_DEBUG
 	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
