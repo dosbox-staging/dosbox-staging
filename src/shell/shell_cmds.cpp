@@ -1251,6 +1251,201 @@ void DOS_Shell::CMD_COPY(char * args) {
 	dos.dta(save_dta);
 }
 
+std::vector<std::string> all_dirs;
+static bool attrib_recursive(DOS_Shell *shell,
+                             char *args,
+                             DOS_DTA dta,
+                             bool optS,
+                             bool adda,
+                             bool adds,
+                             bool addh,
+                             bool addr,
+                             bool suba,
+                             bool subs,
+                             bool subh,
+                             bool subr)
+{
+	char path[DOS_PATHLENGTH + 4], full[DOS_PATHLENGTH];
+	if (!DOS_Canonicalize(args, full) || strrchr(full, '\\') == NULL) {
+		shell->WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+		return false;
+	}
+	bool found = false, res = DOS_FindFirst(args, 0xffff & ~DOS_ATTR_VOLUME);
+	if (!res && !optS)
+		return false;
+	strcpy(path, full);
+	*(strrchr(path, '\\') + 1) = 0;
+	char *end = strrchr(full, '\\');
+	if (end) {
+		end++;
+		*end = 0;
+	}
+	char name[DOS_NAMELENGTH_ASCII];
+	uint32_t size;
+	uint16_t time, date;
+	uint8_t attr;
+	uint16_t fattr;
+	while (res) {
+		dta.GetResult(name, size, date, time, attr);
+		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
+		       strchr(args, '*') != NULL || strchr(args, '?') != NULL) &&
+		      attr & DOS_ATTR_DIRECTORY)) {
+			found = true;
+			strcpy(end, name);
+			if (strlen(full) && DOS_GetFileAttr(full, &fattr)) {
+				bool attra = fattr & DOS_ATTR_ARCHIVE,
+				     attrs = fattr & DOS_ATTR_SYSTEM,
+				     attrh = fattr & DOS_ATTR_HIDDEN,
+				     attrr = fattr & DOS_ATTR_READ_ONLY;
+				if (adda || adds || addh || addr || suba ||
+				    subs || subh || subr) {
+					if (adda)
+						fattr |= DOS_ATTR_ARCHIVE;
+					if (adds)
+						fattr |= DOS_ATTR_SYSTEM;
+					if (addh)
+						fattr |= DOS_ATTR_HIDDEN;
+					if (addr)
+						fattr |= DOS_ATTR_READ_ONLY;
+					if (suba)
+						fattr &= ~DOS_ATTR_ARCHIVE;
+					if (subs)
+						fattr &= ~DOS_ATTR_SYSTEM;
+					if (subh)
+						fattr &= ~DOS_ATTR_HIDDEN;
+					if (subr)
+						fattr &= ~DOS_ATTR_READ_ONLY;
+					if (DOS_SetFileAttr(full, fattr)) {
+						if (DOS_GetFileAttr(full, &fattr))
+							shell->WriteOut(
+							        "  %c  %c%c%c	%s\n",
+							        fattr & DOS_ATTR_ARCHIVE
+							                ? 'A'
+							                : ' ',
+							        fattr & DOS_ATTR_SYSTEM
+							                ? 'S'
+							                : ' ',
+							        fattr & DOS_ATTR_HIDDEN
+							                ? 'H'
+							                : ' ',
+							        fattr & DOS_ATTR_READ_ONLY
+							                ? 'R'
+							                : ' ',
+							        full);
+					} else
+						shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_SET_ERROR"),
+						                full);
+				} else
+					shell->WriteOut("  %c  %c%c%c	%s\n",
+					                attra ? 'A' : ' ',
+					                attrs ? 'S' : ' ',
+					                attrh ? 'H' : ' ',
+					                attrr ? 'R' : ' ', full);
+			} else
+				shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_GET_ERROR"),
+				                full);
+		}
+		res = DOS_FindNext();
+	}
+	if (optS) {
+		size_t len = strlen(path);
+		strcat(path, "*.*");
+		bool ret = DOS_FindFirst(path, 0xffff & ~DOS_ATTR_VOLUME);
+		*(path + len) = 0;
+		if (ret) {
+			std::vector<std::string> found_dirs;
+			found_dirs.clear();
+			do { /* File name and extension */
+				DtaResult result;
+				dta.GetResult(result.name, result.size, result.date,
+				              result.time, result.attr);
+
+				if ((result.attr & DOS_ATTR_DIRECTORY) &&
+				    strcmp(result.name, ".") &&
+				    strcmp(result.name, "..")) {
+					strcat(path, result.name);
+					strcat(path, "\\");
+					char *fname = strrchr(args, '\\');
+					if (fname != NULL)
+						fname++;
+					else {
+						fname = strrchr(args, ':');
+						if (fname != NULL)
+							fname++;
+						else
+							fname = args;
+					}
+					strcat(path, fname);
+					found_dirs.push_back(path);
+					*(path + len) = 0;
+				}
+			} while ((ret = DOS_FindNext()));
+			all_dirs.insert(all_dirs.begin() + 1,
+			                found_dirs.begin(), found_dirs.end());
+		}
+	}
+	return found;
+}
+
+void DOS_Shell::CMD_ATTRIB(char *args)
+{
+	HELP("ATTRIB");
+	StripSpaces(args);
+
+	bool optS = ScanCMDBool(args, "S");
+	char *rem = ScanCMDRemain(args);
+	if (rem) {
+		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
+		return;
+	}
+	bool adda = false, adds = false, addh = false, addr = false,
+	     suba = false, subs = false, subh = false, subr = false;
+	char sfull[DOS_PATHLENGTH + 2];
+	char *arg1;
+	strcpy(sfull, "*.*");
+	do {
+		arg1 = StripWord(args);
+		if (!strcasecmp(arg1, "+A"))
+			adda = true;
+		else if (!strcasecmp(arg1, "+S"))
+			adds = true;
+		else if (!strcasecmp(arg1, "+H"))
+			addh = true;
+		else if (!strcasecmp(arg1, "+R"))
+			addr = true;
+		else if (!strcasecmp(arg1, "-A"))
+			suba = true;
+		else if (!strcasecmp(arg1, "-S"))
+			subs = true;
+		else if (!strcasecmp(arg1, "-H"))
+			subh = true;
+		else if (!strcasecmp(arg1, "-R"))
+			subr = true;
+		else if (*arg1)
+			strcpy(sfull, arg1);
+	} while (*args);
+
+	char buffer[CROSS_LEN];
+	args = ExpandDot(sfull, buffer, CROSS_LEN);
+	StripSpaces(args);
+	RealPt save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+	DOS_DTA dta(dos.dta());
+	all_dirs.clear();
+	all_dirs.emplace_back(std::string(args));
+	bool found = false;
+	while (!all_dirs.empty()) {
+		if (attrib_recursive(this, (char *)all_dirs.begin()->c_str(),
+		                     dta, optS, adda, adds, addh, addr, suba,
+		                     subs, subh, subr))
+			found = true;
+		all_dirs.erase(all_dirs.begin());
+	}
+	if (!found)
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
+	dos.dta(save_dta);
+}
+
 void DOS_Shell::CMD_SET(char * args) {
 	HELP("SET");
 	StripSpaces(args);

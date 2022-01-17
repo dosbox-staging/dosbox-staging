@@ -412,6 +412,9 @@
     <ClCompile Include="..\src\midi\midi.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_attrib.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_autotype.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

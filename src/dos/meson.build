@@ -20,6 +20,7 @@ libdos_sources = files([
   'drive_overlay.cpp',
   'drives.cpp',
   'drive_virtual.cpp',
+  'program_attrib.cpp',
   'program_autotype.cpp',
   'program_biostest.cpp',
   'program_boot.cpp',
