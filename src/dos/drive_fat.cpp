@@ -433,7 +433,7 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry) {
+bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry, bool dirOk) {
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	Bit32u currentClust = 0;
@@ -460,6 +460,11 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 				char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
 				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
+				char *findNext;
+				findNext = strtok(NULL, "\\");
+				if (findNext == NULL && dirOk)
+					break;
+				findDir = findNext;
 			}
 
 			currentClust = foundEntry.loFirstClust;
@@ -470,7 +475,7 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 	}
 
 	/* Search found directory for our file */
-	imgDTA->SetupSearch(0,0x7,findFile);
+	imgDTA->SetupSearch(0,0x7 | (dirOk ? DOS_ATTR_DIRECTORY : 0),findFile);
 	imgDTA->SetDirID(0);
 	if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
 
@@ -1229,34 +1234,45 @@ bool fatDrive::FindNext(DOS_DTA &dta) {
 	return FindNextInternal(dta.GetDirIDCluster(), dta, &dummyClust);
 }
 
-bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
-	direntry fileEntry;
-	Bit32u dirClust, subEntry;
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
-		char dirName[DOS_NAMELENGTH_ASCII];
-		char pathName[11];
+bool fatDrive::GetFileAttr(char *name, Bit16u *attr)
+{
+	direntry fileEntry = {};
+	uint32_t dirClust, subEntry;
 
-		/* Can we even get the name of the directory itself? */
-		if(!getEntryName(name, &dirName[0])) return false;
-		convToDirFile(&dirName[0], &pathName[0]);
+	/* you CAN get file attr root directory */
+	if (*name == 0) {
+		*attr = DOS_ATTR_DIRECTORY;
+		return true;
+	}
 
-		/* Get parent directory starting cluster */
-		if(!getDirClustNum(name, &dirClust, true)) return false;
-
-		/* Find directory entry in parent directory */
-		Bit32s fileidx = 2;
-		if (dirClust==0) fileidx = 0;	// root directory
-		Bit32s last_idx=0;
-		while(directoryBrowse(dirClust, &fileEntry, fileidx, last_idx)) {
-			if(memcmp(&fileEntry.entryname, &pathName[0], 11) == 0) {
-				*attr=fileEntry.attrib;
-				return true;
-			}
-			last_idx=fileidx;
-			fileidx++;
-		}
+	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true)) {
 		return false;
-	} else *attr=fileEntry.attrib;
+	} else
+		*attr = fileEntry.attrib;
+	return true;
+}
+
+bool fatDrive::SetFileAttr(const char *name, uint16_t attr)
+{
+	if (readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+	direntry fileEntry = {};
+	uint32_t dirClust, subEntry;
+
+	/* you cannot set file attr root directory (right?) */
+	if (*name == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true)) {
+		return false;
+	} else {
+		fileEntry.attrib = (uint8_t)attr;
+		directoryChange(dirClust, &fileEntry, (int32_t)subEntry);
+	}
 	return true;
 }
 

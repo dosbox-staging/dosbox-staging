@@ -943,28 +943,43 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	}
 }
 
-
-bool Overlay_Drive::GetFileAttr(char * name,Bit16u * attr) {
+bool Overlay_Drive::GetFileAttr(char *name, uint16_t *attr)
+{
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name);
 	CROSS_FILENAME(overlayname);
 
 	struct stat status;
-	if (stat(overlayname,&status)==0) {
-		*attr=DOS_ATTR_ARCHIVE;
-		if(status.st_mode & S_IFDIR) *attr|=DOS_ATTR_DIRECTORY;
+	if (stat(overlayname, &status) == 0) {
+		*attr = DOS_ATTR_ARCHIVE;
+		if (status.st_mode & S_IFDIR)
+			*attr |= DOS_ATTR_DIRECTORY;
 		return true;
 	}
-	//Maybe check for deleted path as well
+	// Maybe check for deleted path as well
 	if (is_deleted_file(name)) {
 		*attr = 0;
 		return false;
 	}
-	return localDrive::GetFileAttr(name,attr);
-
+	return localDrive::GetFileAttr(name, attr);
 }
 
+bool Overlay_Drive::SetFileAttr(const char *name, uint16_t /*attr*/)
+{
+	char overlayname[CROSS_LEN];
+	safe_strcpy(overlayname, overlaydir);
+	safe_strcat(overlayname, name);
+	CROSS_FILENAME(overlayname);
+
+	struct stat status;
+	if (stat(overlayname, &status) == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return true;
+	}
+	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	return false;
+}
 
 void Overlay_Drive::add_deleted_file(const char* name,bool create_on_disk) {
 	if (logoverlay) LOG_MSG("add del file %s",name);

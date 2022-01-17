@@ -348,7 +348,15 @@ again:
 	}	
 
 	if (stat_block.st_mode & S_IFDIR) find_attr=DOS_ATTR_DIRECTORY;
-	else find_attr=DOS_ATTR_ARCHIVE;
+	else find_attr = 0;
+#if defined (WIN32)
+	Bitu attribs = GetFileAttributesW(host_name);
+	if (attribs != INVALID_FILE_ATTRIBUTES)
+		find_attr|=attribs&0x3f;
+#else
+	if (!(find_attr&DOS_ATTR_DIRECTORY)) find_attr|=DOS_ATTR_ARCHIVE;
+	if (!(stat_block.st_mode & S_IWUSR)) find_attr|=DOS_ATTR_READ_ONLY;
+#endif
  	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 	
 	/*file is okay, setup everything to be copied in DTA Block */
@@ -375,21 +383,75 @@ again:
 	return true;
 }
 
-bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
+bool localDrive::GetFileAttr(char *name, uint16_t *attr)
+{
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
+#if defined(WIN32)
+	Bitu attribs = GetFileAttributes(newname);
+	if (attribs == INVALID_FILE_ATTRIBUTES) {
+		DOS_SetError((uint16_t)GetLastError());
+		return false;
+	}
+	*attr = attribs & 0x3f;
+	return true;
+#else
 	struct stat status;
-	if (stat(newname,&status)==0) {
-		*attr=DOS_ATTR_ARCHIVE;
-		if (status.st_mode & S_IFDIR) *attr|=DOS_ATTR_DIRECTORY;
+	if (stat(newname, &status) == 0) {
+		*attr = status.st_mode & S_IFDIR ? 0 : DOS_ATTR_ARCHIVE;
+		if (status.st_mode & S_IFDIR)
+			*attr |= DOS_ATTR_DIRECTORY;
+		if (!(status.st_mode & S_IWUSR))
+			*attr |= DOS_ATTR_READ_ONLY;
 		return true;
 	}
-	*attr=0;
-	return false; 
+	*attr = 0;
+	return false;
+#endif
+}
+
+bool localDrive::SetFileAttr(const char *name, uint16_t attr)
+{
+	char newname[CROSS_LEN];
+	strcpy(newname, basedir);
+	strcat(newname, name);
+	CROSS_FILENAME(newname);
+	dirCache.ExpandName(newname);
+
+#if defined(WIN32)
+	if (!SetFileAttributes(newname, attr)) {
+		DOS_SetError((uint16_t)GetLastError());
+		return false;
+	}
+	dirCache.EmptyCache();
+	return true;
+#else
+	struct stat status;
+	if (stat(newname, &status) == 0) {
+		if (attr & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN))
+			LOG_WARNING("%s: Application attempted to set system or hidden attributes for '%s' which is ignored for local drives",
+			            __FUNCTION__, newname);
+
+		if (attr & DOS_ATTR_READ_ONLY)
+			status.st_mode &= ~(S_IWUSR | S_IWGRP | S_IWOTH);
+		else
+			status.st_mode |= S_IWUSR;
+
+		if (chmod(newname, status.st_mode) < 0) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+
+		return true;
+	}
+
+	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	return false;
+#endif
 }
 
 bool localDrive::MakeDir(char * dir) {
@@ -841,7 +903,7 @@ bool cdromDrive::Rename(char * /*oldname*/,char * /*newname*/) {
 	return false;
 }
 
-bool cdromDrive::GetFileAttr(char * name,Bit16u * attr) {
+bool cdromDrive::GetFileAttr(char * name, uint16_t * attr) {
 	bool result = localDrive::GetFileAttr(name,attr);
 	if (result) *attr |= DOS_ATTR_READ_ONLY;
 	return result;

@@ -330,7 +330,7 @@ bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char *name, Bit16u *attr) {
+bool isoDrive::GetFileAttr(char *name, uint16_t *attr) {
 	*attr = 0;
 	isoDirEntry de;
 	bool success = lookup(&de, name);
@@ -340,6 +340,15 @@ bool isoDrive::GetFileAttr(char *name, Bit16u *attr) {
 		if (IS_DIR(FLAGS1)) *attr |= DOS_ATTR_DIRECTORY;
 	}
 	return success;
+}
+
+bool isoDrive::SetFileAttr(const char * name, uint16_t attr) {
+	isoDirEntry de;
+	if (lookup(&de, name))
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+	else
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	return false;
 }
 
 bool isoDrive::AllocationInfo(Bit16u *bytes_sector, Bit8u *sectors_cluster, Bit16u *total_clusters, Bit16u *free_clusters) {
