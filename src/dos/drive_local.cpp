@@ -343,22 +343,29 @@ again:
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
 	safe_strcpy(dir_entcopy, dir_ent);
-	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) { 
+	char *temp_name = dirCache.GetExpandName(full_name);
+	if (stat(temp_name, &stat_block) != 0) {
 		goto again;//No symlinks and such
-	}	
+	}
 
-	if (stat_block.st_mode & S_IFDIR) find_attr=DOS_ATTR_DIRECTORY;
-	else find_attr = 0;
-#if defined (WIN32)
-	Bitu attribs = GetFileAttributesW(host_name);
+	if (stat_block.st_mode & S_IFDIR)
+		find_attr = DOS_ATTR_DIRECTORY;
+	else
+		find_attr = 0;
+#if defined(WIN32)
+	Bitu attribs = GetFileAttributes(temp_name);
 	if (attribs != INVALID_FILE_ATTRIBUTES)
-		find_attr|=attribs&0x3f;
+		find_attr |= attribs & 0x3f;
 #else
-	if (!(find_attr&DOS_ATTR_DIRECTORY)) find_attr|=DOS_ATTR_ARCHIVE;
-	if (!(stat_block.st_mode & S_IWUSR)) find_attr|=DOS_ATTR_READ_ONLY;
+	if (!(find_attr & DOS_ATTR_DIRECTORY))
+		find_attr |= DOS_ATTR_ARCHIVE;
+	if (!(stat_block.st_mode & S_IWUSR))
+		find_attr |= DOS_ATTR_READ_ONLY;
 #endif
- 	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
-	
+	if (~srch_attr & find_attr &
+	    (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))
+		goto again;
+
 	/*file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII] = "";
 	uint16_t find_date;

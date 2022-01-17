@@ -342,7 +342,7 @@ bool isoDrive::GetFileAttr(char *name, uint16_t *attr) {
 	return success;
 }
 
-bool isoDrive::SetFileAttr(const char * name, uint16_t attr) {
+bool isoDrive::SetFileAttr(const char * name, uint16_t /*attr*/) {
 	isoDirEntry de;
 	if (lookup(&de, name))
 		DOS_SetError(DOSERR_ACCESS_DENIED);
