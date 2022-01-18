@@ -781,6 +781,9 @@ bool Gus::PerformDmaTransfer()
 	// scale the transfer by the DMA channel's bit-depth
 	const auto bytes_transfered = transfered * (dma_channel->DMA16 + 1u);
 
+	// Update the GUS's DMA address with the current position
+	UpdateDmaAddr(check_cast<uint32_t>(offset + bytes_transfered));
+
 	// If requested, invert the loaded samples' most-significant bits
 	if (is_reading && dma_ctrl & 0x80) {
 		auto ram_pos = ram.begin() + offset;
