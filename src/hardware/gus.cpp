@@ -763,29 +763,29 @@ bool Gus::PerformDmaTransfer()
 	// Get the current DMA offset relative to the block of GUS memory
 	const auto offset = GetDmaOffset();
 
+	// Get the pending DMA count from channel
 	const uint16_t desired = dma_channel->currcnt + 1;
 
-	// All of the operations below involve reading, writing, or skipping
-	// starting at the offset for N-desired samples
+	// Will the maximum transfer stay within the GUS RAM's size?
 	assert(static_cast<size_t>(offset) + desired <= ram.size());
 
-	// Copy samples via DMA from GUS memory
-	if (dma_ctrl & 0x2) {
-		dma_channel->Write(desired, &ram.at(offset));
-	}
-	// Skip DMA content
-	else if (!(dma_ctrl & 0x80)) {
-		dma_channel->Read(desired, &ram.at(offset));
-	}
-	// Copy samples via DMA into GUS memory
-	else {
-		//
-		const auto samples = dma_channel->Read(desired, &ram.at(offset));
+	// Perform the DMA transfer
+	const bool is_reading = !(dma_ctrl & 0x2);
+	const auto transfered =
+	        (is_reading ? dma_channel->Read(desired, &ram.at(offset))
+	                    : dma_channel->Write(desired, &ram.at(offset)));
+
+	// Did we get everything we asked for?
+	assert(transfered == desired);
+
+	// scale the transfer by the DMA channel's bit-depth
+	const auto bytes_transfered = transfered * (dma_channel->DMA16 + 1u);
+
+	// If requested, invert the loaded samples' most-significant bits
+	if (is_reading && dma_ctrl & 0x80) {
 		auto ram_pos = ram.begin() + offset;
-		const auto positions = samples *
-		                       (static_cast<size_t>(dma_channel->DMA16) + 1u);
-		const auto ram_pos_end = ram_pos + positions;
-		// adjust our start and skip size if handling 16-bit
+		const auto ram_pos_end = ram_pos + bytes_transfered;
+		// adjust our start and skip size if handling 16-bit PCM samples
 		ram_pos += IsDmaPcm16Bit() ? 1u : 0u;
 		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
 		assert(ram_pos >= ram.begin() && ram_pos <= ram_pos_end && ram_pos_end <= ram.end());
