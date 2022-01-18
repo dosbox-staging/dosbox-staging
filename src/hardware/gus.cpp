@@ -156,7 +156,7 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 	bool CheckWaveRolloverCondition() noexcept;
-	bool Is8Bit() const noexcept;
+	bool Is16Bit() const noexcept;
 	float GetVolScalar(const vol_scalars_array_t &vol_scalars);
 	float GetSample(const ram_array_t &ram) noexcept;
 	int32_t PopWavePos() noexcept;
@@ -400,9 +400,9 @@ void Voice::IncrementCtrlPos(VoiceCtrl &ctrl, bool dont_loop_or_restart) noexcep
 	return;
 }
 
-bool Voice::Is8Bit() const noexcept
+bool Voice::Is16Bit() const noexcept
 {
-	return !(wave_ctrl.state & CTRL::BIT16);
+	return (wave_ctrl.state & CTRL::BIT16);
 }
 
 float Voice::GetSample(const ram_array_t &ram) noexcept
@@ -411,12 +411,13 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	const auto addr = pos / WAVE_WIDTH;
 	const auto fraction = pos & (WAVE_WIDTH - 1);
 	const bool should_interpolate = wave_ctrl.inc < WAVE_WIDTH && fraction;
-	float sample = Is8Bit() ? Read8BitSample(ram, addr)
-	                        : Read16BitSample(ram, addr);
+	const auto is_16bit = Is16Bit();
+	float sample = is_16bit ? Read16BitSample(ram, addr)
+	                        : Read8BitSample(ram, addr);
 	if (should_interpolate) {
 		const auto next_addr = addr + 1;
-		const float next_sample = Is8Bit() ? Read8BitSample(ram, next_addr)
-		                                   : Read16BitSample(ram, next_addr);
+		const float next_sample = is_16bit ? Read16BitSample(ram, next_addr)
+		                                   : Read8BitSample(ram, next_addr);
 		constexpr float WAVE_WIDTH_INV = 1.0 / WAVE_WIDTH;
 		sample += (next_sample - sample) *
 		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
@@ -449,7 +450,7 @@ void Voice::GenerateSamples(std::vector<float> &render_buffer,
 		*val++ += sample * pan_scalar.right;
 	}
 	// Keep track of how many ms this voice has generated
-	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
+	Is16Bit() ? generated_16bit_ms++ : generated_8bit_ms++;
 }
 
 // Returns the current wave position and increments the position
