@@ -1251,19 +1251,35 @@ void DOS_Shell::CMD_COPY(char * args) {
 	dos.dta(save_dta);
 }
 
-std::vector<std::string> all_dirs;
+static std::vector<std::string> all_dirs;
+struct attributes {
+	bool add_a;
+	bool add_s;
+	bool add_h;
+	bool add_r;
+	bool min_a;
+	bool min_s;
+	bool min_h;
+	bool min_r;
+};
+
+static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *name) {
+	const bool attr_a = fattr & DOS_ATTR_ARCHIVE;
+	const bool attr_s = fattr & DOS_ATTR_SYSTEM;
+	const bool attr_h = fattr & DOS_ATTR_HIDDEN;
+	const bool attr_r = fattr & DOS_ATTR_READ_ONLY;
+	shell->WriteOut("  %c  %c%c%c	%s\n",
+			attr_a ? 'A' : ' ',
+			attr_h ? 'H' : ' ',
+			attr_s ? 'S' : ' ',
+			attr_r ? 'R' : ' ', name);
+}
+
 static bool attrib_recursive(DOS_Shell *shell,
                              char *args,
                              DOS_DTA dta,
                              bool optS,
-                             bool adda,
-                             bool adds,
-                             bool addh,
-                             bool addr,
-                             bool suba,
-                             bool subs,
-                             bool subh,
-                             bool subr)
+                             attributes attribs)
 {
 	char path[DOS_PATHLENGTH + 4], full[DOS_PATHLENGTH];
 	if (!DOS_Canonicalize(args, full) || strrchr(full, '\\') == NULL) {
@@ -1273,18 +1289,16 @@ static bool attrib_recursive(DOS_Shell *shell,
 	bool found = false, res = DOS_FindFirst(args, 0xffff & ~DOS_ATTR_VOLUME);
 	if (!res && !optS)
 		return false;
-	strcpy(path, full);
-	*(strrchr(path, '\\') + 1) = 0;
 	char *end = strrchr(full, '\\');
 	if (end) {
 		end++;
 		*end = 0;
 	}
+	strcpy(path, full);
 	char name[DOS_NAMELENGTH_ASCII];
 	uint32_t size;
-	uint16_t time, date;
+	uint16_t time, date, fattr;
 	uint8_t attr;
-	uint16_t fattr;
 	while (res) {
 		dta.GetResult(name, size, date, time, attr);
 		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
@@ -1293,54 +1307,24 @@ static bool attrib_recursive(DOS_Shell *shell,
 			found = true;
 			strcpy(end, name);
 			if (strlen(full) && DOS_GetFileAttr(full, &fattr)) {
-				bool attra = fattr & DOS_ATTR_ARCHIVE,
-				     attrs = fattr & DOS_ATTR_SYSTEM,
-				     attrh = fattr & DOS_ATTR_HIDDEN,
-				     attrr = fattr & DOS_ATTR_READ_ONLY;
-				if (adda || adds || addh || addr || suba ||
-				    subs || subh || subr) {
-					if (adda)
-						fattr |= DOS_ATTR_ARCHIVE;
-					if (adds)
-						fattr |= DOS_ATTR_SYSTEM;
-					if (addh)
-						fattr |= DOS_ATTR_HIDDEN;
-					if (addr)
-						fattr |= DOS_ATTR_READ_ONLY;
-					if (suba)
-						fattr &= ~DOS_ATTR_ARCHIVE;
-					if (subs)
-						fattr &= ~DOS_ATTR_SYSTEM;
-					if (subh)
-						fattr &= ~DOS_ATTR_HIDDEN;
-					if (subr)
-						fattr &= ~DOS_ATTR_READ_ONLY;
-					if (DOS_SetFileAttr(full, fattr)) {
-						if (DOS_GetFileAttr(full, &fattr))
-							shell->WriteOut(
-							        "  %c  %c%c%c	%s\n",
-							        fattr & DOS_ATTR_ARCHIVE
-							                ? 'A'
-							                : ' ',
-							        fattr & DOS_ATTR_SYSTEM
-							                ? 'S'
-							                : ' ',
-							        fattr & DOS_ATTR_HIDDEN
-							                ? 'H'
-							                : ' ',
-							        fattr & DOS_ATTR_READ_ONLY
-							                ? 'R'
-							                : ' ',
-							        full);
-					} else
+				if (attribs.add_a || attribs.add_s || attribs.add_h || attribs.add_r ||
+				    attribs.min_a || attribs.min_s || attribs.min_h || attribs.min_r) {
+					fattr |= (attribs.add_a ? DOS_ATTR_ARCHIVE : 0);
+					fattr |= (attribs.add_s ? DOS_ATTR_SYSTEM : 0);
+					fattr |= (attribs.add_h ? DOS_ATTR_HIDDEN : 0);
+					fattr |= (attribs.add_r ? DOS_ATTR_READ_ONLY : 0);
+					fattr &= (attribs.min_a ? ~DOS_ATTR_ARCHIVE : 0xffff);
+					fattr &= (attribs.min_s ? ~DOS_ATTR_SYSTEM : 0xffff);
+					fattr &= (attribs.min_h ? ~DOS_ATTR_HIDDEN : 0xffff);
+					fattr &= (attribs.min_r ? ~DOS_ATTR_READ_ONLY : 0xffff);
+					if (DOS_SetFileAttr(full, fattr) && DOS_GetFileAttr(full, &fattr))
+						show_attributes(shell, fattr, full);
+					else
 						shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_SET_ERROR"),
 						                full);
-				} else
-					shell->WriteOut("  %c  %c%c%c	%s\n",
-					                attra ? 'A' : ' ',
-					                attrs ? 'S' : ' ',
-					                attrh ? 'H' : ' ',
-					                attrr ? 'R' : ' ', full);
+				} else {
+					show_attributes(shell, fattr, full);
+				}
 			} else
 				shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_GET_ERROR"),
 				                full);
@@ -1379,7 +1363,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 					found_dirs.push_back(path);
 					*(path + len) = 0;
 				}
-			} while ((ret = DOS_FindNext()));
+			} while (DOS_FindNext());
 			all_dirs.insert(all_dirs.begin() + 1,
 			                found_dirs.begin(), found_dirs.end());
 		}
@@ -1398,29 +1382,30 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
 		return;
 	}
-	bool adda = false, adds = false, addh = false, addr = false,
-	     suba = false, subs = false, subh = false, subr = false;
+	bool add_attr_a = false, add_attr_s = false, add_attr_h = false,
+	     add_attr_r = false, min_attr_a = false, min_attr_s = false,
+	     min_attr_h = false, min_attr_r = false;
 	char sfull[DOS_PATHLENGTH + 2];
 	char *arg1;
 	strcpy(sfull, "*.*");
 	do {
 		arg1 = StripWord(args);
 		if (!strcasecmp(arg1, "+A"))
-			adda = true;
+			add_attr_a = true;
 		else if (!strcasecmp(arg1, "+S"))
-			adds = true;
+			add_attr_s = true;
 		else if (!strcasecmp(arg1, "+H"))
-			addh = true;
+			add_attr_h = true;
 		else if (!strcasecmp(arg1, "+R"))
-			addr = true;
+			add_attr_r = true;
 		else if (!strcasecmp(arg1, "-A"))
-			suba = true;
+			min_attr_a = true;
 		else if (!strcasecmp(arg1, "-S"))
-			subs = true;
+			min_attr_s = true;
 		else if (!strcasecmp(arg1, "-H"))
-			subh = true;
+			min_attr_h = true;
 		else if (!strcasecmp(arg1, "-R"))
-			subr = true;
+			min_attr_r = true;
 		else if (*arg1)
 			strcpy(sfull, arg1);
 	} while (*args);
@@ -1435,9 +1420,11 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 	all_dirs.emplace_back(std::string(args));
 	bool found = false;
 	while (!all_dirs.empty()) {
+		attributes attribs = {add_attr_a, add_attr_s, add_attr_h,
+		                      add_attr_r, min_attr_a, min_attr_s,
+		                      min_attr_h, min_attr_r};
 		if (attrib_recursive(this, (char *)all_dirs.begin()->c_str(),
-		                     dta, optS, adda, adds, addh, addr, suba,
-		                     subs, subh, subr))
+		                     dta, optS, attribs))
 			found = true;
 		all_dirs.erase(all_dirs.begin());
 	}
