@@ -45,11 +45,6 @@ static void UpdateEMSMapping(void) {
 	}
 }
 
-enum class DMA_DIRECTION {
-	READ,
-	WRITE
-};
-
 // Generic function to read or write a block of data to or from memory.
 // Don't use this directly; call two helpers: DMA_BlockRead or DMA_BlockWrite
 static void perform_dma_io(const DMA_DIRECTION direction,
@@ -320,66 +315,33 @@ DmaChannel::DmaChannel(uint8_t num, bool dma16)
 	increment = true;
 }
 
-Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
-	Bitu done=0;
+size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t want, uint8_t *buffer)
+{
+	size_t done = 0;
 	curraddr &= dma_wrapping;
 again:
-	Bitu left=(currcnt+1);
-	if (want<left) {
-		perform_dma_io(DMA_DIRECTION::READ, pagebase, curraddr, buffer,
-		               want, DMA16);
-		done+=want;
-		curraddr+=want;
-		currcnt-=want;
+	Bitu left = (currcnt + 1);
+	if (want < left) {
+		perform_dma_io(direction, pagebase, curraddr, buffer, want, DMA16);
+		done += want;
+		curraddr += want;
+		currcnt -= want;
 	} else {
-		perform_dma_io(DMA_DIRECTION::READ, pagebase, curraddr, buffer,
-		               want, DMA16);
-		buffer+=left << DMA16;
-		want-=left;
-		done+=left;
+		perform_dma_io(direction, pagebase, curraddr, buffer, left, DMA16);
+		buffer += left << DMA16;
+		want -= left;
+		done += left;
 		ReachedTC();
 		if (autoinit) {
-			currcnt=basecnt;
-			curraddr=baseaddr;
-			if (want) goto again;
+			currcnt = basecnt;
+			curraddr = baseaddr;
+			if (want)
+				goto again;
 			UpdateEMSMapping();
 		} else {
-			curraddr+=left;
-			currcnt=0xffff;
-			masked=true;
-			UpdateEMSMapping();
-			DoCallBack(DMA_MASKED);
-		}
-	}
-	return done;
-}
-
-Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
-	Bitu done=0;
-	curraddr &= dma_wrapping;
-again:
-	Bitu left=(currcnt+1);
-	if (want<left) {
-		perform_dma_io(DMA_DIRECTION::WRITE, pagebase, curraddr, buffer,
-		               want, DMA16);
-		done+=want;
-		curraddr+=want;
-		currcnt-=want;
-	} else {
-		perform_dma_io(DMA_DIRECTION::WRITE, pagebase, curraddr, buffer, left, DMA16);
-		buffer+=left << DMA16;
-		want-=left;
-		done+=left;
-		ReachedTC();
-		if (autoinit) {
-			currcnt=basecnt;
-			curraddr=baseaddr;
-			if (want) goto again;
-			UpdateEMSMapping();
-		} else {
-			curraddr+=left;
-			currcnt=0xffff;
-			masked=true;
+			curraddr += left;
+			currcnt = 0xffff;
+			masked = true;
 			UpdateEMSMapping();
 			DoCallBack(DMA_MASKED);
 		}
