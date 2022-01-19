@@ -165,18 +165,11 @@ static uint16_t DMA_Read_Port(io_port_t port, io_width_t width)
 	} else if (port >= 0xc0 && port <= 0xdf) {
 		/* read from the second DMA controller (channels 4-7) */
 		return DmaControllers[1]->ReadControllerReg((port - 0xc0) >> 1, width);
-	} else
-		switch (port) {
-		/* read DMA page register */
-		case 0x81:return GetDMAChannel(2)->pagenum;
-		case 0x82:return GetDMAChannel(3)->pagenum;
-		case 0x83:return GetDMAChannel(1)->pagenum;
-		case 0x87:return GetDMAChannel(0)->pagenum;
-		case 0x89:return GetDMAChannel(6)->pagenum;
-		case 0x8a:return GetDMAChannel(7)->pagenum;
-		case 0x8b:return GetDMAChannel(5)->pagenum;
-		case 0x8f:return GetDMAChannel(4)->pagenum;
-		}
+	} else {
+		const auto channel = GetChannelFromPort(port);
+		if (channel)
+			return channel->pagenum;
+	}
 	return 0;
 }
 
