@@ -690,23 +690,23 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
 	        "Starts the DOSBox Staging command shell.\n"
 	        "Usage:\n"
-	        "  \033[32;1mcommand\033[0m\n"
-	        "  \033[32;1mcommand\033[0m /c (or /init) \033[36;1mCOMMAND\033[0m\n"
+	        "  [color=green]command[reset]\n"
+	        "  [color=green]command[reset] /c (or /init) [color=cyan]COMMAND[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mCOMMAND\033[0m is a DOS command, game, or program to run.\n"
+	        "  [color=cyan]COMMAND[reset] is a DOS command, game, or program to run.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  DOSBox Staging automatically starts a DOS command shell by invoking this\n"
 	        "  command with /init option when it starts, which shows the welcome banner.\n"
-	        "  You can load a new instance of the command shell by running \033[32;1mcommand\033[0m.\n"
-	        "  Adding a /c option along with \033[36;1mCOMMAND\033[0m allows this command to run the\n"
+	        "  You can load a new instance of the command shell by running [color=green]command[reset].\n"
+	        "  Adding a /c option along with [color=cyan]COMMAND[reset] allows this command to run the\n"
 	        "  specified command (optionally with parameters) and then exit automatically.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mcommand\033[0m\n"
-	        "  \033[32;1mcommand\033[0m /c \033[36;1mecho\033[0m \033[37mHello world!\033[0m\n"
-	        "  \033[32;1mcommand\033[0m /init \033[36;1mdir\033[0m\n");
+	        "  [color=green]command[reset]\n"
+	        "  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]\n"
+	        "  [color=green]command[reset] /init [color=cyan]dir[reset]\n");
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF", "ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
@@ -722,44 +722,44 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DATE_SETHLP", "Type 'date %s' to change.\n");
 	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mdate\033[0m [/t]\n"
-	        "  \033[32;1mdate\033[0m /h\n"
-	        "  \033[32;1mdate\033[0m \033[36;1mDATE\033[0m\n"
+	        "  [color=green]date[reset] [/t]\n"
+	        "  [color=green]date[reset] /h\n"
+	        "  [color=green]date[reset] [color=cyan]DATE[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDATE\033[0m is the new date to set to, in the format of \033[36;1m%s\033[0m.\n"
+	        "  [color=cyan]DATE[reset] is the new date to set to, in the format of [color=cyan]%s[reset].\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mdate\033[0m without an argument shows the current date, or only a date\n"
+	        "  Running [color=green]date[reset] without an argument shows the current date, or only a date\n"
 	        "  with the /t option. You can force a date synchronization of with the host\n"
 	        "  system with the /h option, or manually specify a new date to set to.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mdate\033[0m\n"
-	        "  \033[32;1mdate\033[0m /h\n"
-	        "  \033[32;1mdate\033[0m \033[36;1m%s\033[0m\n");
+	        "  [color=green]date[reset]\n"
+	        "  [color=green]date[reset] /h\n"
+	        "  [color=green]date[reset] [color=cyan]%s[reset]\n");
 	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
 	MSG_Add("SHELL_CMD_TIME_SETHLP", "Type 'time %s' to change.\n");
 	MSG_Add("SHELL_CMD_TIME_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mtime\033[0m [/t]\n"
-	        "  \033[32;1mtime\033[0m /h\n"
-	        "  \033[32;1mtime\033[0m \033[36;1mTIME\033[0m\n"
+	        "  [color=green]time[reset] [/t]\n"
+	        "  [color=green]time[reset] /h\n"
+	        "  [color=green]time[reset] [color=cyan]TIME[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mTIME\033[0m is the new time to set to, in the format of \033[36;1m%s\033[0m.\n"
+	        "  [color=cyan]TIME[reset] is the new time to set to, in the format of [color=cyan]%s[reset].\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mtime\033[0m without an argument shows the current time, or a simple time\n"
+	        "  Running [color=green]time[reset] without an argument shows the current time, or a simple time\n"
 	        "  with the /t option. You can force a time synchronization of with the host\n"
 	        "  system with the /h option, or manually specify a new time to set to.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mtime\033[0m\n"
-	        "  \033[32;1mtime\033[0m /h\n"
-	        "  \033[32;1mtime\033[0m \033[36;1m%s\033[0m\n");
+	        "  [color=green]time[reset]\n"
+	        "  [color=green]time[reset] /h\n"
+	        "  [color=green]time[reset] [color=cyan]%s[reset]\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
@@ -783,7 +783,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_PAUSE_HELP", "Waits for a keystroke to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mpause\033[0m\n"
+	        "  [color=green]pause[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  This command has no parameters.\n"
@@ -794,7 +794,7 @@ void SHELL_Init() {
 	        "  any key on the keyboard (except for certain control keys) to continue.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mpause\033[0m\n");
+	        "  [color=green]pause[reset]\n");
 	MSG_Add("SHELL_CMD_COPY_FAILURE","Copy failure : %s.\n");
 	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Unable to remove, drive not in use.\n");
@@ -834,359 +834,359 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        "\n");
 
-	MSG_Add("SHELL_STARTUP_SUB","\033[32;1mdosbox-staging %s\033[0m\n");
+	MSG_Add("SHELL_STARTUP_SUB","[color=green]dosbox-staging %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays or changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mcd\033[0m \033[36;1mDIRECTORY\033[0m\n"
-	        "  \033[32;1mchdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  [color=green]cd[reset] [color=cyan]DIRECTORY[reset]\n"
+	        "  [color=green]chdir[reset] [color=cyan]DIRECTORY[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to change to.\n"
+	        "  [color=cyan]DIRECTORY[reset] is the name of the directory to change to.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mcd\033[0m without an argument displays the current directory.\n"
-	        "  With \033[36;1mDIRECTORY\033[0m the command only changes the directory, not the current drive.\n"
+	        "  Running [color=green]cd[reset] without an argument displays the current directory.\n"
+	        "  With [color=cyan]DIRECTORY[reset] the command only changes the directory, not the current drive.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mcd\033[0m\n"
-	        "  \033[32;1mcd\033[0m \033[36;1mmydir\033[0m\n");
+	        "  [color=green]cd[reset]\n"
+	        "  [color=green]cd[reset] [color=cyan]mydir[reset]\n");
 	MSG_Add("SHELL_CMD_CLS_HELP", "Clears the DOS screen.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mcls\033[0m\n"
+	        "  [color=green]cls[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mcls\033[0m clears all texts on the DOS screen, except for the command\n"
-	        "  prompt (e.g. \033[37;1mZ:\\>\033[0m or \033[37;1mC:\\GAMES>\033[0m) on the top-left corner of the screen.\n"
+	        "  Running [color=green]cls[reset] clears all texts on the DOS screen, except for the command\n"
+	        "  prompt (e.g. [color=white]Z:\\>[reset] or [color=white]C:\\GAMES>[reset]) on the top-left corner of the screen.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mcls\033[0m\n");
+	        "  [color=green]cls[reset]\n");
 	MSG_Add("SHELL_CMD_DIR_HELP",
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mdir\033[0m \033[36;1m[PATTERN]\033[0m [/w] [/b] [/p] [ad] [a-d] [/o\033[37;1mORDER\033[0m]\n"
+	        "  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mPATTERN\033[0m is either an exact filename or an inexact filename with wildcards,\n"
+	        "  [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,\n"
 	        "          which are the asterisk (*) and the question mark (?). A path can be\n"
 	        "          specified in the pattern to list contents in the specified directory.\n"
-	        "  \033[37;1mORDER\033[0m   is a listing order, including \033[37;1mn\033[0m (by name, alphabetic), \033[37;1ms\033[0m (by size,\n"
-	        "          smallest first), \033[37;1me\033[0m (by extension, alphabetic), \033[37;1md\033[0m (by date/time,\n"
-	        "          oldest first), with an optional \033[37;1m-\033[0m prefix to reverse order.\n"
+	        "  [color=white]ORDER[reset]   is a listing order, including [color=white]n[reset] (by name, alphabetic), [color=white]s[reset] (by size,\n"
+	        "          smallest first), [color=white]e[reset] (by extension, alphabetic), [color=white]d[reset] (by date/time,\n"
+	        "          oldest first), with an optional [color=white]-[reset] prefix to reverse order.\n"
 	        "  /w      lists 5 files/directories in a row; /b      lists the names only.\n"
-	        "  /o\033[37;1mORDER\033[0m orders the list (see above)         /p      pauses after each screen.\n"
+	        "  /o[color=white]ORDER[reset] orders the list (see above)         /p      pauses after each screen.\n"
 	        "  /ad     lists all directories;              /a-d    lists all files.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mdir\033[0m without an argument lists all files and subdirectories in the\n"
-	        "  current directory, which is the same as \033[32;1mdir\033[0m \033[36;1m*.*\033[0m.\n"
+	        "  Running [color=green]dir[reset] without an argument lists all files and subdirectories in the\n"
+	        "  current directory, which is the same as [color=green]dir[reset] [color=cyan]*.*[reset].\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mdir\033[0m \033[36;1m\033[0m\n"
-	        "  \033[32;1mdir\033[0m \033[36;1mgames.*\033[0m /p\n"
-	        "  \033[32;1mdir\033[0m \033[36;1mc:\\games\\*.exe\033[0m /b /o\033[37;1m-d\033[0m\n");
+	        "  [color=green]dir[reset] [color=cyan][reset]\n"
+	        "  [color=green]dir[reset] [color=cyan]games.*[reset] /p\n"
+	        "  [color=green]dir[reset] [color=cyan]c:\\games\\*.exe[reset] /b /o[color=white]-d[reset]\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP",
 	        "Displays messages and enables/disables command echoing.\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mecho\033[0m \033[36;1m[on|off]\033[0m\n"
-	        "  \033[32;1mecho\033[0m \033[36;1m[MESSAGE]\033[0m\n"
+	        "  [color=green]echo[reset] [color=cyan][on|off][reset]\n"
+	        "  [color=green]echo[reset] [color=cyan][MESSAGE][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mon|off\033[0m  Turns on/off command echoing.\n"
-	        "  \033[36;1mMESSAGE\033[0m The message to display.\n"
+	        "  [color=cyan]on|off[reset]  Turns on/off command echoing.\n"
+	        "  [color=cyan]MESSAGE[reset] The message to display.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Running \033[32;1mecho\033[0m without an argument shows the current on or off status.\n"
+	        "  - Running [color=green]echo[reset] without an argument shows the current on or off status.\n"
 	        "  - Echo is especially useful when writing or debugging batch files.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mecho\033[0m \033[36;1moff\033[0m\n"
-	        "  \033[32;1mecho\033[0m \033[36;1mHello world!\033[0m\n");
+	        "  [color=green]echo[reset] [color=cyan]off[reset]\n"
+	        "  [color=green]echo[reset] [color=cyan]Hello world![reset]\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP", "Exits from the DOS shell.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mexit\033[0m\n"
+	        "  [color=green]exit[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  If you start a DOS shell from a program, running \033[32;1mexit\033[0m returns to the program.\n"
+	        "  If you start a DOS shell from a program, running [color=green]exit[reset] returns to the program.\n"
 	        "  If there is no DOS program running, the command quits from DOSBox Staging.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mexit\033[0m\n");
+	        "  [color=green]exit[reset]\n");
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP",
 	        "Displays help information for DOS commands.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mhelp\033[0m\n"
-	        "  \033[32;1mhelp\033[0m /a[ll]\n"
-	        "  \033[32;1mhelp\033[0m \033[36;1mCOMMAND\033[0m\n"
+	        "  [color=green]help[reset]\n"
+	        "  [color=green]help[reset] /a[ll]\n"
+	        "  [color=green]help[reset] [color=cyan]COMMAND[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mCOMMAND\033[0m is the name of an internal DOS command, such as \033[36;1mdir\033[0m.\n"
+	        "  [color=cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=cyan]dir[reset].\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Running \033[32;1mecho\033[0m without an argument displays a DOS command list.\n"
+	        "  - Running [color=green]echo[reset] without an argument displays a DOS command list.\n"
 	        "  - You can view a full list of internal commands with the /a or /all option.\n"
-	        "  - Instead of \033[32;1mhelp\033[0m \033[36;1mCOMMAND\033[0m, you can also get command help with \033[36;1mCOMMAND\033[0m /?.\n"
+	        "  - Instead of [color=green]help[reset] [color=cyan]COMMAND[reset], you can also get command help with [color=cyan]COMMAND[reset] /?.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mhelp\033[0m \033[36;1mdir\033[0m\n"
-	        "  \033[32;1mhelp\033[0m /all\n");
+	        "  [color=green]help[reset] [color=cyan]dir[reset]\n"
+	        "  [color=green]help[reset] /all\n");
 	MSG_Add("SHELL_CMD_INTRO_HELP",
 	        "Displays a full-screen introduction to DOSBox Staging.\n");
 	MSG_Add("SHELL_CMD_INTRO_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mintro\033[0m\n"
-	        "  \033[32;1mintro\033[0m \033[37;1mPAGE\033[0m\n"
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]PAGE[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mPAGE\033[0m is the page name to display, including \033[37;1mcdrom\033[0m, \033[37;1mmount\033[0m, and \033[37;1mspecial\033[0m.\n"
+	        "  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running \033[32;1mintro\033[0m without an argument displays one information page at a time;\n"
+	        "  Running [color=green]intro[reset] without an argument displays one information page at a time;\n"
 	        "  press any key to move to the next page. If a page name is provided, then the\n"
 	        "  specified page will be displayed directly.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mintro\033[0m\n"
-	        "  \033[32;1mintro\033[0m \033[37;1mcdrom\033[0m\n");
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]cdrom[reset]\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mmd\033[0m \033[36;1mDIRECTORY\033[0m\n"
-	        "  \033[32;1mmkdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  [color=green]md[reset] [color=cyan]DIRECTORY[reset]\n"
+	        "  [color=green]mkdir[reset] [color=cyan]DIRECTORY[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to create.\n"
+	        "  [color=cyan]DIRECTORY[reset] is the name of the directory to create.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The directory must be an exact name and does not yet exist.\n"
 	        "  - You can specify a path where the directory will be created.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mmd\033[0m \033[36;1mnewdir\033[0m\n"
-	        "  \033[32;1mmd\033[0m \033[36;1mc:\\games\\dir\033[0m\n");
+	        "  [color=green]md[reset] [color=cyan]newdir[reset]\n"
+	        "  [color=green]md[reset] [color=cyan]c:\\games\\dir[reset]\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP", "Removes a directory.\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mrd\033[0m \033[36;1mDIRECTORY\033[0m\n"
-	        "  \033[32;1mrmdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  [color=green]rd[reset] [color=cyan]DIRECTORY[reset]\n"
+	        "  [color=green]rmdir[reset] [color=cyan]DIRECTORY[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to remove.\n"
+	        "  [color=cyan]DIRECTORY[reset] is the name of the directory to remove.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The directory must be empty with no files or subdirectories.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mrd\033[0m \033[36;1memptydir\033[0m\n");
+	        "  [color=green]rd[reset] [color=cyan]emptydir[reset]\n");
 	MSG_Add("SHELL_CMD_SET_HELP", "Displays or changes environment variables.\n");
 	MSG_Add("SHELL_CMD_SET_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mset\033[0m\n"
-	        "  \033[32;1mset\033[0m \033[37;1mVARIABLE\033[0m=\033[36;1m[STRING]\033[0m\n"
+	        "  [color=green]set[reset]\n"
+	        "  [color=green]set[reset] [color=white]VARIABLE[reset]=[color=cyan][STRING][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mVARIABLE\033[0m The name of the environment variable.\n"
-	        "  \033[36;1mSTRING\033[0m   A series of characters to assign to the variable.\n"
+	        "  [color=white]VARIABLE[reset] The name of the environment variable.\n"
+	        "  [color=cyan]STRING[reset]   A series of characters to assign to the variable.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Assigning an empty string to the variable removes the variable.\n"
 	        "  - The command without a parameter displays current environment variables.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mset\033[0m\n"
-	        "  \033[32;1mset\033[0m \033[37;1mname\033[0m=\033[36;1mvalue\033[0m\n");
+	        "  [color=green]set[reset]\n"
+	        "  [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]\n");
 	MSG_Add("SHELL_CMD_IF_HELP",
 	        "Performs conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_IF_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[36;1merrorlevel\033[0m \033[37;1mNUMBER\033[0m COMMAND\n"
-	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[37;1mSTR1==STR2\033[0m COMMAND\n"
-	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[36;1mexist\033[0m \033[37;1mFILE\033[0m COMMAND\n"
+	        "  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND\n"
+	        "  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND\n"
+	        "  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] COMMAND\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mNUMBER\033[0m     is a positive integer less or equal to the desired value.\n"
-	        "  \033[37;1mSTR1==STR2\033[0m compares two text strings (case-sensitive).\n"
-	        "  \033[37;1mFILE\033[0m       is an exact file name to check for existence.\n"
+	        "  [color=white]NUMBER[reset]     is a positive integer less or equal to the desired value.\n"
+	        "  [color=white]STR1==STR2[reset] compares two text strings (case-sensitive).\n"
+	        "  [color=white]FILE[reset]       is an exact file name to check for existence.\n"
 	        "  COMMAND    is a DOS command or program to run, optionally with parameters.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The COMMAND is run if any of the three conditions in the usage are met.\n"
-	        "  If \033[38;1mnot\033[0m is specified, then the command runs only with the false condition.\n"
-	        "  The \033[36;1merrorlevel\033[0m condition is useful for checking if a programs ran correctly.\n"
-	        "  If either \033[37;1mSTR1\033[0m or \033[37;1mSTR2\033[0m may be empty, you can enclose them in quotes (\").\n"
+	        "  If [color=magenta]not[reset] is specified, then the command runs only with the false condition.\n"
+	        "  The [color=cyan]errorlevel[reset] condition is useful for checking if a programs ran correctly.\n"
+	        "  If either [color=white]STR1[reset] or [color=white]STR2[reset] may be empty, you can enclose them in quotes (\").\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mif\033[0m \033[36;1merrorlevel\033[0m \033[37;1m2\033[0m dir\n"
-	        "  \033[32;1mif\033[0m \033[37;1m\"%%myvar%%\"==\"mystring\"\033[0m echo Hello world!\n"
-	        "  \033[32;1mif\033[0m \033[35;1mnot\033[0m \033[36;1mexist\033[0m \033[37;1mfile.txt\033[0m exit\n");
+	        "  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir\n"
+	        "  [color=green]if[reset] [color=white]\"%%myvar%%\"==\"mystring\"[reset] echo Hello world!\n"
+	        "  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP",
 	        "Jumps to a labeled line in a batch program.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mgoto\033[0m \033[36;1mLABEL\033[0m\n"
+	        "  [color=green]goto[reset] [color=cyan]LABEL[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mLABEL\033[0m is text string used in the batch program as a label.\n"
+	        "  [color=cyan]LABEL[reset] is text string used in the batch program as a label.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  A label is on a line by itself, beginning with a colon (:).\n"
 	        "  The label must be unique, and can be anywhere within the batch program.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mgoto\033[0m \033[36;1mmylabel\033[0m\n");
+	        "  [color=green]goto[reset] [color=cyan]mylabel[reset]\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Left-shifts command-line parameters in a batch program.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mshift\033[0m\n"
+	        "  [color=green]shift[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command allows a DOS batch program to accept more than 9 parameters.\n"
-	        "  Running \033[32;1mshift\033[0m left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.\n"
+	        "  Running [color=green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mshift\033[0m\n");
+	        "  [color=green]shift[reset]\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mtype\033[0m \033[36;1mFILE\033[0m\n"
+	        "  [color=green]type[reset] [color=cyan]FILE[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mFILE\033[0m is the name of the file to display.\n"
+	        "  [color=cyan]FILE[reset] is the name of the file to display.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The file must be an exact file name, optionally with a path.\n"
 	        "  This command is only for viewing text files, not binary files.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mtype\033[0m \033[36;1mtext.txt\033[0m\n"
-	        "  \033[32;1mtype\033[0m \033[36;1mc:\\dos\\readme.txt\033[0m\n");
+	        "  [color=green]type[reset] [color=cyan]text.txt[reset]\n"
+	        "  [color=green]type[reset] [color=cyan]c:\\dos\\readme.txt[reset]\n");
 	MSG_Add("SHELL_CMD_REM_HELP", "Adds comments in a batch program.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mrem\033[0m \033[36;1mCOMMENT\033[0m\n"
+	        "  [color=green]rem[reset] [color=cyan]COMMENT[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mCOMMENT\033[0m is any comment you want to add.\n"
+	        "  [color=cyan]COMMENT[reset] is any comment you want to add.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Adding comments to a batch program can make it easier to understand.\n"
 	        "  You can also temporarily comment out some commands with this command.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mrem\033[0m \033[36;1mThis is my test batch program.\033[0m\n");
+	        "  [color=green]rem[reset] [color=cyan]This is my test batch program.[reset]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP", "Renames one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mren\033[0m \033[37;1mSOURCE\033[0m \033[36;1mDESTINATION\033[0m\n"
-	        "  \033[32;1mrename\033[0m \033[37;1mSOURCE\033[0m \033[36;1mDESTINATION\033[0m\n"
+	        "  [color=green]ren[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]\n"
+	        "  [color=green]rename[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mSOURCE\033[0m      is the name of the file to rename.\n"
-	        "  \033[36;1mDESTINATION\033[0m is the new name for the renamed file.\n"
+	        "  [color=white]SOURCE[reset]      is the name of the file to rename.\n"
+	        "  [color=cyan]DESTINATION[reset] is the new name for the renamed file.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The source file must be an exact file name, optionally with a path.\n"
 	        "  - The destination file must be an exact file name without a path.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mren\033[0m \033[37;1moldname\033[0m \033[36;1mnewname\033[0m\n"
-	        "  \033[32;1mren\033[0m \033[37;1mc:\\dos\\file.txt\033[0m \033[36;1mf.txt\033[0m\n");
+	        "  [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]\n"
+	        "  [color=green]ren[reset] [color=white]c:\\dos\\file.txt[reset] [color=cyan]f.txt[reset]\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP_LONG", "Usage:\n"
-	        "  \033[32;1mdel\033[0m \033[36;1mPATTERN\033[0m\n"
-	        "  \033[32;1merase\033[0m \033[36;1mPATTERN\033[0m\n"
+	        "  [color=green]del[reset] [color=cyan]PATTERN[reset]\n"
+	        "  [color=green]erase[reset] [color=cyan]PATTERN[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mPATTERN\033[0m can be either an exact filename (such as \033[36;1mfile.txt\033[0m) or an inexact\n"
+	        "  [color=cyan]PATTERN[reset] can be either an exact filename (such as [color=cyan]file.txt[reset]) or an inexact\n"
 	        "          filename using one or more wildcards, which are the asterisk (*)\n"
 	        "          representing any sequence of one or more characters, and the question\n"
-	        "          mark (?) representing any single character, such as \033[36;1m*.bat\033[0m and \033[36;1mc?.txt\033[0m.\n"
+	        "          mark (?) representing any single character, such as [color=cyan]*.bat[reset] and [color=cyan]c?.txt[reset].\n"
 	        "\n"
 	        "Warning:\n"
-	        "  Be careful when using a pattern with wildcards, especially \033[36;1m*.*\033[0m, as all files\n"
+	        "  Be careful when using a pattern with wildcards, especially [color=cyan]*.*[reset], as all files\n"
 	        "  matching the pattern will be deleted.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mdel\033[0m \033[36;1mtest.bat\033[0m\n"
-	        "  \033[32;1mdel\033[0m \033[36;1mc*.*\033[0m\n"
-	        "  \033[32;1mdel\033[0m \033[36;1ma?b.c*\033[0m\n");
+	        "  [color=green]del[reset] [color=cyan]test.bat[reset]\n"
+	        "  [color=green]del[reset] [color=cyan]c*.*[reset]\n"
+	        "  [color=green]del[reset] [color=cyan]a?b.c*[reset]\n");
 	MSG_Add("SHELL_CMD_COPY_HELP", "Copies one or more files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mcopy\033[0m \033[37;1mSOURCE\033[0m \033[36;1m[DESTINATION]\033[0m\n"
-	        "  \033[32;1mcopy\033[0m \033[37;1mSOURCE1+SOURCE2[+...]\033[0m \033[36;1m[DESTINATION]\033[0m\n"
+	        "  [color=green]copy[reset] [color=white]SOURCE[reset] [color=cyan][DESTINATION][reset]\n"
+	        "  [color=green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=cyan][DESTINATION][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mSOURCE\033[0m      Can be either an exact filename or an inexact filename with\n"
+	        "  [color=white]SOURCE[reset]      Can be either an exact filename or an inexact filename with\n"
 	        "              wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "  \033[36;1mDESTINATION\033[0m An exact filename or directory, not containing any wildcards.\n"
+	        "  [color=cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The \033[37;1m+\033[0m operator combines multiple source files provided to a single file.\n"
+	        "  The [color=white]+[reset] operator combines multiple source files provided to a single file.\n"
 	        "  Destination is optional: if omitted, files are copied to the current path.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mcopy\033[0m \033[37;1msource.bat\033[0m \033[36;1mnew.bat\033[0m\n"
-	        "  \033[32;1mcopy\033[0m \033[37;1mfile1.txt+file2.txt\033[0m \033[36;1mfile3.txt\033[0m\n"
-	        "  \033[32;1mcopy\033[0m \033[37;1m..\\c*.*\033[0m\n");
+	        "  [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]\n"
+	        "  [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]\n"
+	        "  [color=green]copy[reset] [color=white]..\\c*.*[reset]\n");
 	MSG_Add("SHELL_CMD_CALL_HELP",
 	        "Starts a batch program from within another batch program.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mcall\033[0m \033[37;1mBATCH\033[0m \033[36;1m[PARAMETERS]\033[0m\n"
+	        "  [color=green]call[reset] [color=white]BATCH[reset] [color=cyan][PARAMETERS][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mBATCH\033[0m      is a batch program to launch.\n"
-	        "  \033[36;1mPARAMETERS\033[0m are optional parameters for the batch program.\n"
+	        "  [color=white]BATCH[reset]      is a batch program to launch.\n"
+	        "  [color=cyan]PARAMETERS[reset] are optional parameters for the batch program.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  After calling another batch program, the original batch program will\n"
 	        "  resume running after the other batch program ends.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mcall\033[0m \033[37;1mmybatch.bat\033[0m\n"
-	        "  \033[32;1mcall\033[0m \033[37;1mfile.bat\033[0m \033[36;1mHello world!\033[0m\n");
+	        "  [color=green]call[reset] [color=white]mybatch.bat[reset]\n"
+	        "  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Hello world![reset]\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP", "Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1msubst\033[0m \033[37;1mDRIVE\033[0m \033[36;1mPATH\033[0m\n"
-	        "  \033[32;1msubst\033[0m \033[37;1mDRIVE\033[0m /d\n"
+	        "  [color=green]subst[reset] [color=white]DRIVE[reset] [color=cyan]PATH[reset]\n"
+	        "  [color=green]subst[reset] [color=white]DRIVE[reset] /d\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mDRIVE\033[0m is a drive to which you want to assign a path.\n"
-	        "  \033[36;1mPATH\033[0m  is a mounted DOS path you want to assign to.\n"
+	        "  [color=white]DRIVE[reset] is a drive to which you want to assign a path.\n"
+	        "  [color=cyan]PATH[reset]  is a mounted DOS path you want to assign to.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The path must be on a drive mounted by the \033[32;1mmount\033[0m command.\n"
+	        "  The path must be on a drive mounted by the [color=green]mount[reset] command.\n"
 	        "  You can remove an assigned drive with the /d option.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1msubst\033[0m \033[37;1md:\033[0m \033[36;1mc:\\games\033[0m\n"
-	        "  \033[32;1msubst\033[0m \033[37;1me:\033[0m \033[36;1m/d\033[0m\n");
+	        "  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\\games[reset]\n"
+	        "  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP", "Loads a DOS program into upper memory.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mlh\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
-	        "  \033[32;1mloadhigh\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
+	        "  [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]\n"
+	        "  [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mPROGRAM\033[0m is a DOS TSR program to be loaded, optionally with parameters.\n"
+	        "  [color=cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command intends to save the conventional memory by loading specified DOS\n"
@@ -1195,26 +1195,26 @@ void SHELL_Init() {
 	        "  Not all DOS TSR programs can be loaded into upper memory with this command.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mlh\033[0m \033[36;1mtsrapp\033[0m \033[37;1margs\033[0m\n");
+	        "  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]\n");
 	MSG_Add("SHELL_CMD_LS_HELP",
 	        "Displays directory contents in the wide list format.\n");
 	MSG_Add("SHELL_CMD_LS_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mls\033[0m \033[36;1mPATTERN\033[0m\n"
-	        "  \033[32;1mls\033[0m \033[36;1mPATH\033[0m\n"
+	        "  [color=green]ls[reset] [color=cyan]PATTERN[reset]\n"
+	        "  [color=green]ls[reset] [color=cyan]PATH[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mPATTERN\033[0m can be either an exact filename or an inexact filename with\n"
+	        "  [color=cyan]PATTERN[reset] can be either an exact filename or an inexact filename with\n"
 	        "          wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "  \033[36;1mPATH\033[0m    is an exact path in a mounted DOS drive to list contents.\n"
+	        "  [color=cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The command will list directories in \033[34;1mblue\033[0m, executable DOS programs\n"
-	        "   (*.com, *.exe, *.bat) in \033[32;1mgreen\033[0m, and other files in the normal color.\n"
+	        "  The command will list directories in [color=blue]blue[reset], executable DOS programs\n"
+	        "   (*.com, *.exe, *.bat) in [color=green]green[reset], and other files in the normal color.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mls\033[0m \033[36;1mfile.txt\033[0m\n"
-	        "  \033[32;1mls\033[0m \033[36;1mc*.ba?\033[0m\n");
+	        "  [color=green]ls[reset] [color=cyan]file.txt[reset]\n"
+	        "  [color=green]ls[reset] [color=cyan]c*.ba?[reset]\n");
 	MSG_Add("SHELL_CMD_LS_PATH_ERR",
 	        "ls: cannot access '%s': No such file or directory\n");
 
@@ -1222,59 +1222,59 @@ void SHELL_Init() {
 	        "Waits for a keypress and sets an ERRORLEVEL value.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mchoice\033[0m \033[36;1m[TEXT]\033[0m\n"
-	        "  \033[32;1mchoice\033[0m /c[:]\033[37;1mCHOICES\033[0m [/n] [/s] \033[36;1m[TEXT]\033[0m\n"
+	        "  [color=green]choice[reset] [color=cyan][TEXT][reset]\n"
+	        "  [color=green]choice[reset] /c[:][color=white]CHOICES[reset] [/n] [/s] [color=cyan][TEXT][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mTEXT\033[0m         is the text to display as a prompt, or empty.\n"
-	          "  /c[:]\033[37;1mCHOICES\033[0m Specifies allowable keys, which default to \033[37;1myn\033[0m.\n"
+	        "  [color=cyan]TEXT[reset]         is the text to display as a prompt, or empty.\n"
+	          "  /c[:][color=white]CHOICES[reset] Specifies allowable keys, which default to [color=white]yn[reset].\n"
 	          "  /n           Do not display the choices at end of prompt.\n"
 	          "  /s           Enables case-sensitive choices to be selected.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command sets an ERRORLEVEL value starting from 1 according to the\n"
 	        "  allowable keys specified in /c option, and the user input can then be checked\n"
-	        "  with \033[32;1mif\033[0m command. With /n option only the specified text will be displayed,\n"
-	        "  but not the actual choices (such as the default \033[37;1m[Y,N]?\033[0m) in the end.\n"
+	        "  with [color=green]if[reset] command. With /n option only the specified text will be displayed,\n"
+	        "  but not the actual choices (such as the default [color=white][Y,N]?[reset]) in the end.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mchoice\033[0m \033[36;1mContinue?\033[0m\n"
-	        "  \033[32;1mchoice\033[0m /c:\033[37;1mabc\033[0m /s \033[36;1mType the letter a, b, or c\033[0m\n");
+	        "  [color=green]choice[reset] [color=cyan]Continue?[reset]\n"
+	        "  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Type the letter a, b, or c[reset]\n");
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Displays or sets a search path for executable files.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mpath\033[0m\n"
-	        "  \033[32;1mpath\033[0m \033[36;1m[[drive:]path[;...]\033[0m\n"
+	        "  [color=green]path[reset]\n"
+	        "  [color=green]path[reset] [color=cyan][[drive:]path[;...][reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1m[[drive:]path[;...]\033[0m is a path containing a drive and directory.\n"
+	        "  [color=cyan][[drive:]path[;...][reset] is a path containing a drive and directory.\n"
 	        "  More than one path can be specified, separated by a semi-colon (;).\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Parameter with a semi-colon (;) only clears all search path settings.\n"
-	        "  The path can also be set using \033[32;1mset\033[0m command, e.g. \033[32;1mset\033[0m \033[37;1mpath\033[0m=\033[36;1mZ:\\\033[0m\n"
+	        "  The path can also be set using [color=green]set[reset] command, e.g. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\\[reset]\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mpath\033[0m\n"
-	        "  \033[32;1mpath\033[0m \033[36;1mZ:\\;C:\\DOS\033[0m\n");
+	        "  [color=green]path[reset]\n"
+	        "  [color=green]path[reset] [color=cyan]Z:\\;C:\\DOS[reset]\n");
 	MSG_Add("SHELL_CMD_VER_HELP", "View or set the reported DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG", "Usage:\n"
-	        "  \033[32;1mver\033[0m\n"
-	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1mVERSION\033[0m\n"
+	        "  [color=green]ver[reset]\n"
+	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mVERSION\033[0m can be a whole number, such as \033[36;1m5\033[0m, or include a two-digit decimal\n"
-	        "          value, such as: \033[36;1m6.22\033[0m, \033[36;1m7.01\033[0m, or \033[36;1m7.10\033[0m. The decimal can alternatively be\n"
-	        "          space-separated, such as: \033[36;1m6 22\033[0m, \033[36;1m7 01\033[0m, or \033[36;1m7 10\033[0m.\n"
+	        "  [color=cyan]VERSION[reset] can be a whole number, such as [color=cyan]5[reset], or include a two-digit decimal\n"
+	        "          value, such as: [color=cyan]6.22[reset], [color=cyan]7.01[reset], or [color=cyan]7.10[reset]. The decimal can alternatively be\n"
+	        "          space-separated, such as: [color=cyan]6 22[reset], [color=cyan]7 01[reset], or [color=cyan]7 10[reset].\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The DOS version can also be set in the configuration file under the [dos]\n"
-	        "  section using the \"ver = \033[36;1mVERSION\033[0m\" setting.\n"
+	        "  section using the \"ver = [color=cyan]VERSION[reset]\" setting.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m6.22\033[0m\n"
-	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m7 10\033[0m\n");
+	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]\n"
+	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]\n");
 	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
 	                             "DOS version %d.%02d\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
