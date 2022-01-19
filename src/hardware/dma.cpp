@@ -118,6 +118,26 @@ bool SecondDMAControllerAvailable(void) {
 	else return false;
 }
 
+static DmaChannel *GetChannelFromPort(const io_port_t port)
+{
+	uint8_t num = UINT8_MAX;
+	switch (port) {
+	/* read DMA page register */
+	case 0x81: num = 2; break;
+	case 0x82: num = 3; break;
+	case 0x83: num = 1; break;
+	case 0x87: num = 0; break;
+	case 0x89: num = 6; break;
+	case 0x8a: num = 7; break;
+	case 0x8b: num = 5; break;
+	case 0x8f: num = 4; break;
+	default:
+		LOG_WARNING("DMA: Attempted to lookup DMA channel from invalid port %04x",
+		            port);
+	}
+	return GetDMAChannel(num);
+}
+
 static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint16_t>(value);
@@ -130,17 +150,9 @@ static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
 		DmaControllers[1]->WriteControllerReg((port - 0xc0) >> 1, val, io_width_t::byte);
 	} else {
 		UpdateEMSMapping();
-		switch (port) {
-			/* write DMA page register */
-			case 0x81:GetDMAChannel(2)->SetPage((Bit8u)val);break;
-			case 0x82:GetDMAChannel(3)->SetPage((Bit8u)val);break;
-			case 0x83:GetDMAChannel(1)->SetPage((Bit8u)val);break;
-			case 0x87:GetDMAChannel(0)->SetPage((Bit8u)val);break;
-			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
-			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
-			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
-			case 0x8f:GetDMAChannel(4)->SetPage((Bit8u)val);break;
-		}
+		auto channel = GetChannelFromPort(port);
+		if (channel)
+			channel->SetPage(check_cast<uint8_t>(val));
 	}
 }
 
