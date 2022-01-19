@@ -47,20 +47,52 @@ static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u
 	Bitu highpart_addr_page = spage>>12;
 	size <<= dma16;
 	offset <<= dma16;
-	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
-	for ( ; size ; size--, offset++) {
-		if (offset>(dma_wrapping<<dma16)) {
-			LOG_MSG("DMA segbound wrapping (read): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
-		}
-		offset &= dma_wrap;
-		Bitu page = highpart_addr_page+(offset >> 12);
-		/* care for EMS pageframe etc. */
-		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
-		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
-		else if (page < LINK_START) page = paging.firstmb[page];
-		*write++=phys_readb(page*4096 + (offset & 4095));
+	bool didwrap = ((offset + size) > (dma_wrapping << dma16));
+	void *tmpdata;
+
+	if (didwrap)
+	{
+		if ((tmpdata = malloc(size)) == NULL)
+		{
+			E_Exit("can't allocate temporary DMA buffer\n");
+ 		}
+
+		write = (Bit8u *) tmpdata;
 	}
-}
+
+	Bitu tmpsize = size;
+	Bitu pagesize;
+
+	do
+	{
+ 		Bitu page = highpart_addr_page+(offset >> 12);
+
+ 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+ 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
+ 		else if (page < LINK_START) page = paging.firstmb[page];
+
+		if ((pagesize = tmpsize) > 4096)
+		{
+			pagesize = 4096;
+		}
+
+		if (pagesize > (4096 - (offset & 4095)))
+		{
+			pagesize = 4096 - (offset & 4095);
+		}
+
+		MEM_BlockRead(page*4096 + (offset & 4095), write, pagesize);
+		offset += pagesize;
+		write += pagesize;
+	}
+	while ((tmpsize -= pagesize) != 0);
+
+	if (didwrap)
+	{
+		memcpy(data, tmpdata, size);
+		free(tmpdata);
+ 	}
+ }
 
 /* write a block into physical memory */
 static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
@@ -68,20 +100,53 @@ static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8
 	Bitu highpart_addr_page = spage>>12;
 	size <<= dma16;
 	offset <<= dma16;
-	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
-	for ( ; size ; size--, offset++) {
-		if (offset>(dma_wrapping<<dma16)) {
-			LOG_MSG("DMA segbound wrapping (write): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
-		}
-		offset &= dma_wrap;
-		Bitu page = highpart_addr_page+(offset >> 12);
-		/* care for EMS pageframe etc. */
-		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
-		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
-		else if (page < LINK_START) page = paging.firstmb[page];
-		phys_writeb(page*4096 + (offset & 4095), *read++);
+	bool didwrap = ((offset + size) > (dma_wrapping << dma16));
+	void *tmpdata;
+
+	if (didwrap)
+	{
+		if ((tmpdata = malloc(size)) == NULL)
+		{
+			E_Exit("can't allocate temporary DMA buffer\n");
+ 		}
+
+		read = (Bit8u *) tmpdata;
 	}
-}
+
+	Bitu tmpsize = size;
+	Bitu pagesize;
+
+	do
+	{
+ 		Bitu page = highpart_addr_page+(offset >> 12);
+
+ 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+ 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
+ 		else if (page < LINK_START) page = paging.firstmb[page];
+
+		if ((pagesize = tmpsize) > 4096)
+		{
+			pagesize = 4096;
+		}
+
+		if (pagesize > (4096 - (offset & 4095)))
+		{
+			pagesize = 4096 - (offset & 4095);
+		}
+
+		MEM_BlockRead(page*4096 + (offset & 4095), read, pagesize);
+		offset += pagesize;
+		read += pagesize;
+	}
+	while ((tmpsize -= pagesize) != 0);
+
+	if (didwrap)
+	{
+		memcpy(data, tmpdata, size);
+		free(tmpdata);
+ 	}
+ }
+ 
 
 DmaChannel * GetDMAChannel(Bit8u chan) {
 	if (chan<4) {
