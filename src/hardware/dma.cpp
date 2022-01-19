@@ -404,7 +404,7 @@ public:
 	}
 };
 
-void DMA_SetWrapping(Bitu wrap) {
+void DMA_SetWrapping(const uint32_t wrap) {
 	dma_wrapping = wrap;
 }
 
