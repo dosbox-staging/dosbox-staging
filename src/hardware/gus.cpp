@@ -823,10 +823,10 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 	// maximum-limit.
 	assert(port < 0xfff);
 	assert(dma1 < 10 && dma2 < 10);
-	assert(irq1 < 10 && irq2 < 10);
+	assert(irq1 <= 12 && irq2 <= 12);
 
 	// ULTRASND variable
-	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,I,I";
+	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,II,II";
 	safe_sprintf(set_ultrasnd, 
 	         "@SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
 	LOG_MSG("GUS: %s", set_ultrasnd);
