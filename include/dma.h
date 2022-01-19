@@ -27,6 +27,8 @@
 #include "inout.h"
 #include "support.h"
 
+enum class DMA_DIRECTION { READ, WRITE };
+
 enum DMAEvent {
 	DMA_REACHED_TC,
 	DMA_MASKED,
@@ -84,8 +86,17 @@ public:
 	void Clear_Request(void) {
 		request=false;
 	}
-	Bitu Read(Bitu size, Bit8u * buffer);
-	Bitu Write(Bitu size, Bit8u * buffer);
+	size_t Read(size_t words, uint8_t *dest_buffer)
+	{
+		return ReadOrWrite(DMA_DIRECTION::READ, words, dest_buffer);
+	}
+	size_t Write(size_t words, uint8_t *src_buffer)
+	{
+		return ReadOrWrite(DMA_DIRECTION::WRITE, words, src_buffer);
+	}
+
+private:
+	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t *buffer);
 };
 
 class DmaController {
