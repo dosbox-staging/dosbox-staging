@@ -16,22 +16,26 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
 #include "dosbox.h"
+
+#include <algorithm>
+#include <string.h>
+#include <memory>
+
+#include "dma.h"
 #include "mem.h"
 #include "inout.h"
-#include "dma.h"
 #include "pic.h"
 #include "paging.h"
 #include "setup.h"
 
 DmaController *DmaControllers[2];
 
-#define EMM_PAGEFRAME4K	((0xE000*16)/4096)
+#define EMM_PAGEFRAME4K ((0xE000 * 16) / MEM_PAGESIZE)
 Bit32u ems_board_mapping[LINK_START];
 
-static Bit32u dma_wrapping = 0xffff;
+constexpr uint16_t NULL_PAGE = 0xffff;
+static uint32_t dma_wrapping = NULL_PAGE; // initial value
 
 static void UpdateEMSMapping(void) {
 	/* if EMS is not present, this will result in a 1:1 mapping */
@@ -41,112 +45,58 @@ static void UpdateEMSMapping(void) {
 	}
 }
 
-/* read a block from physical memory */
-static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
-	Bit8u * write=(Bit8u *) data;
-	Bitu highpart_addr_page = spage>>12;
-	size <<= dma16;
-	offset <<= dma16;
-	bool didwrap = ((offset + size) > (dma_wrapping << dma16));
-	void *tmpdata;
+enum class DMA_DIRECTION {
+	READ,
+	WRITE
+};
 
-	if (didwrap)
-	{
-		if ((tmpdata = malloc(size)) == NULL)
-		{
-			E_Exit("can't allocate temporary DMA buffer\n");
- 		}
+// Generic function to read or write a block of data to or from memory.
+// Don't use this directly; call two helpers: DMA_BlockRead or DMA_BlockWrite
+static void perform_dma_io(const DMA_DIRECTION direction,
+                           const PhysPt spage,
+                           PhysPt mem_address,
+                           void *data_start,
+                           const size_t num_words,
+                           const uint8_t is_dma16)
+{
+	assert(is_dma16 == 0 || is_dma16 == 1);
 
-		write = (Bit8u *) tmpdata;
-	}
+	const auto highpart_addr_page = spage >> 12;
 
-	Bitu tmpsize = size;
-	Bitu pagesize;
+	// Maybe move the mem_address into the 16-bit range
+	mem_address <<= is_dma16;
 
-	do
-	{
- 		Bitu page = highpart_addr_page+(offset >> 12);
+	// The data pointer will be incremented per transfer
+	auto data_pt = reinterpret_cast<uint8_t *>(data_start);
 
- 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
- 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
- 		else if (page < LINK_START) page = paging.firstmb[page];
+	// Convert from DMA 'words' to actual bytes, no greater than 64 KiB
+	auto remaining_bytes = check_cast<uint16_t>(num_words << is_dma16);
+	do {
+		// Find the right EMS page that contains the current address
+		auto page = highpart_addr_page + (mem_address >> 12);
+		if (page < EMM_PAGEFRAME4K)
+			page = paging.firstmb[page];
+		else if (page < EMM_PAGEFRAME4K + 0x10)
+			page = ems_board_mapping[page];
+		else if (page < LINK_START)
+			page = paging.firstmb[page];
 
-		if ((pagesize = tmpsize) > 4096)
-		{
-			pagesize = 4096;
+		const auto pos_in_page = mem_address & (MEM_PAGESIZE - 1);
+		const auto bytes_to_page_end = check_cast<uint16_t>(MEM_PAGESIZE - pos_in_page);
+		const auto chunk_bytes = std::min(remaining_bytes, bytes_to_page_end);
+		const auto chunk_address = check_cast<PhysPt>(page * MEM_PAGESIZE + pos_in_page);
+
+		if (direction == DMA_DIRECTION::READ) // data_pt is destination
+			MEM_BlockRead(chunk_address, /* --> */ data_pt, chunk_bytes);
+		else {
+			assert(direction == DMA_DIRECTION::WRITE); // data_pt is source
+			MEM_BlockWrite(chunk_address, /* <-- */ data_pt, chunk_bytes);
 		}
-
-		if (pagesize > (4096 - (offset & 4095)))
-		{
-			pagesize = 4096 - (offset & 4095);
-		}
-
-		MEM_BlockRead(page*4096 + (offset & 4095), write, pagesize);
-		offset += pagesize;
-		write += pagesize;
-	}
-	while ((tmpsize -= pagesize) != 0);
-
-	if (didwrap)
-	{
-		memcpy(data, tmpdata, size);
-		free(tmpdata);
- 	}
- }
-
-/* write a block into physical memory */
-static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
-	Bit8u * read=(Bit8u *) data;
-	Bitu highpart_addr_page = spage>>12;
-	size <<= dma16;
-	offset <<= dma16;
-	bool didwrap = ((offset + size) > (dma_wrapping << dma16));
-	void *tmpdata;
-
-	if (didwrap)
-	{
-		if ((tmpdata = malloc(size)) == NULL)
-		{
-			E_Exit("can't allocate temporary DMA buffer\n");
- 		}
-
-		read = (Bit8u *) tmpdata;
-	}
-
-	Bitu tmpsize = size;
-	Bitu pagesize;
-
-	do
-	{
- 		Bitu page = highpart_addr_page+(offset >> 12);
-
- 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
- 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
- 		else if (page < LINK_START) page = paging.firstmb[page];
-
-		if ((pagesize = tmpsize) > 4096)
-		{
-			pagesize = 4096;
-		}
-
-		if (pagesize > (4096 - (offset & 4095)))
-		{
-			pagesize = 4096 - (offset & 4095);
-		}
-
-		MEM_BlockRead(page*4096 + (offset & 4095), read, pagesize);
-		offset += pagesize;
-		read += pagesize;
-	}
-	while ((tmpsize -= pagesize) != 0);
-
-	if (didwrap)
-	{
-		memcpy(data, tmpdata, size);
-		free(tmpdata);
- 	}
- }
- 
+		mem_address += chunk_bytes;
+		data_pt += chunk_bytes;
+		remaining_bytes -= chunk_bytes;
+	} while (remaining_bytes);
+}
 
 DmaChannel * GetDMAChannel(Bit8u chan) {
 	if (chan<4) {
@@ -376,12 +326,14 @@ Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
+		perform_dma_io(DMA_DIRECTION::READ, pagebase, curraddr, buffer,
+		               want, DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
+		perform_dma_io(DMA_DIRECTION::READ, pagebase, curraddr, buffer,
+		               want, DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
@@ -408,12 +360,13 @@ Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		DMA_BlockWrite(pagebase,curraddr,buffer,want,DMA16);
+		perform_dma_io(DMA_DIRECTION::WRITE, pagebase, curraddr, buffer,
+		               want, DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		DMA_BlockWrite(pagebase,curraddr,buffer,left,DMA16);
+		perform_dma_io(DMA_DIRECTION::WRITE, pagebase, curraddr, buffer, left, DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
