@@ -320,9 +320,10 @@ DmaChannel::DmaChannel(uint8_t num, bool dma16)
 	increment = true;
 }
 
-size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t want, uint8_t *buffer)
+size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t *buffer)
 {
-	size_t done = 0;
+	auto want = check_cast<uint16_t>(words);
+	uint16_t done = 0;
 	curraddr &= dma_wrapping;
 again:
 	Bitu left = (currcnt + 1);
