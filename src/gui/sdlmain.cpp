@@ -234,7 +234,7 @@ enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 // Size and ratio constants
 // ------------------------
 constexpr int SMALL_WINDOW_PERCENT = 50;
-constexpr int MEDIUM_WINDOW_PERCENT = 70;
+constexpr int MEDIUM_WINDOW_PERCENT = 74;
 constexpr int LARGE_WINDOW_PERCENT = 90;
 constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
 static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
