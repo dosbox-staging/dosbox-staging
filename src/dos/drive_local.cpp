@@ -353,9 +353,10 @@ again:
 	else
 		find_attr = 0;
 #if defined(WIN32)
+	constexpr int8_t maximum_attribs = 0x3f;
 	Bitu attribs = GetFileAttributes(temp_name);
 	if (attribs != INVALID_FILE_ATTRIBUTES)
-		find_attr |= attribs & 0x3f;
+		find_attr |= attribs & maximum_attribs;
 #else
 	if (!(find_attr & DOS_ATTR_DIRECTORY))
 		find_attr |= DOS_ATTR_ARCHIVE;
@@ -421,7 +422,7 @@ bool localDrive::GetFileAttr(char *name, uint16_t *attr)
 #endif
 }
 
-bool localDrive::SetFileAttr(const char *name, uint16_t attr)
+bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
 {
 	char newname[CROSS_LEN];
 	strcpy(newname, basedir);

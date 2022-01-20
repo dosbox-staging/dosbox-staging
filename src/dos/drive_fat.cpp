@@ -433,7 +433,7 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry, bool dirOk) {
+bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, bool dir_ok) {
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	Bit32u currentClust = 0;
@@ -462,7 +462,7 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
 				char *findNext;
 				findNext = strtok(NULL, "\\");
-				if (findNext == NULL && dirOk)
+				if (findNext == NULL && dir_ok)
 					break;
 				findDir = findNext;
 			}
@@ -475,7 +475,7 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 	}
 
 	/* Search found directory for our file */
-	imgDTA->SetupSearch(0,0x7 | (dirOk ? DOS_ATTR_DIRECTORY : 0),findFile);
+	imgDTA->SetupSearch(0,0x7 | (dir_ok ? DOS_ATTR_DIRECTORY : 0),findFile);
 	imgDTA->SetDirID(0);
 	if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
 
@@ -1236,15 +1236,15 @@ bool fatDrive::FindNext(DOS_DTA &dta) {
 
 bool fatDrive::GetFileAttr(char *name, Bit16u *attr)
 {
-	direntry fileEntry = {};
-	uint32_t dirClust, subEntry;
-
 	/* you CAN get file attr root directory */
 	if (*name == 0) {
 		*attr = DOS_ATTR_DIRECTORY;
 		return true;
 	}
 
+	direntry fileEntry = {};
+	uint32_t dirClust;
+	uint32_t subEntry;
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true)) {
 		return false;
 	} else
@@ -1252,14 +1252,12 @@ bool fatDrive::GetFileAttr(char *name, Bit16u *attr)
 	return true;
 }
 
-bool fatDrive::SetFileAttr(const char *name, uint16_t attr)
+bool fatDrive::SetFileAttr(const char *name, const uint16_t attr)
 {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	direntry fileEntry = {};
-	uint32_t dirClust, subEntry;
 
 	/* you cannot set file attr root directory (right?) */
 	if (*name == 0) {
@@ -1267,6 +1265,9 @@ bool fatDrive::SetFileAttr(const char *name, uint16_t attr)
 		return false;
 	}
 
+	direntry fileEntry = {};
+	uint32_t dirClust;
+	uint32_t subEntry;
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true)) {
 		return false;
 	} else {
