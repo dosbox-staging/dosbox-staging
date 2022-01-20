@@ -288,8 +288,8 @@ public:
 	virtual bool TestDir(char * _dir)=0;
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
-	virtual bool GetFileAttr(char * name, uint16_t * attr)=0;
-	virtual bool SetFileAttr(const char * name, uint16_t attr)=0;
+	virtual bool GetFileAttr(char * name, uint16_t * attr) = 0;
+	virtual bool SetFileAttr(const char * name, const uint16_t attr) = 0;
 	virtual bool Rename(char * oldname,char * newname)=0;
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters)=0;
 	virtual bool FileExists(const char* name)=0;
