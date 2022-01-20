@@ -2375,6 +2375,18 @@ static SDL_Rect get_desktop_resolution()
 	SDL_Rect desktop;
 	assert(sdl.display_number >= 0);
 	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+
+	// Deduct the border decorations from the desktop size
+	int top = 0;
+	int left = 0;
+	int bottom = 0;
+	int right = 0;
+	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
+	                               &top, &left, &bottom, &right);
+	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
+	desktop.w -= (left + right);
+	desktop.h -= (top + bottom);
+
 	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
 	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
 	return desktop;
