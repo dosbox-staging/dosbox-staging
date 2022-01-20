@@ -2,12 +2,11 @@
 #define DOSBOX_RGB24_H
 
 typedef struct rgb24 {
-protected:
+public:
 	uint8_t red = 0;
 	uint8_t green = 0;
 	uint8_t blue = 0;
 
-public:
 	constexpr rgb24() {}
 	constexpr rgb24(const rgb24 &val) { *this = val; }
 	constexpr rgb24(const uint8_t r, const uint8_t g, const uint8_t b)

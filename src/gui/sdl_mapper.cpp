@@ -42,11 +42,22 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "pic.h"
+#include "rgb24.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
 #include "timer.h"
 #include "video.h"
+
+//  Status Colors
+//  ~~~~~~~~~~~~~
+//  NFPA 79 standard for illuminated status indicators:
+//  (https://www.nfpa.org/assets/files/AboutTheCodes/79/79-A2002-rop.pdf
+//  pp.1588-1593)
+//
+constexpr rgb24 marginal_color(255, 103, 0); // Amber for marginal conditions
+constexpr rgb24 on_color(0, 1, 0);           // Green for on/ready/in-use
+constexpr rgb24 off_color(0, 0, 0);          // Black for off/stopped/not-in-use
 
 /* Mouse related */
 void GFX_ToggleMouseCapture();
@@ -112,7 +123,6 @@ typedef std::vector<CEvent *>::iterator CEventVector_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
 
 static CBindList holdlist;
-
 
 class CEvent {
 public:
@@ -550,6 +560,21 @@ protected:
 
 bool autofire = false;
 
+static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
+                             [[maybe_unused]] const rgb24 &color)
+{
+	// Basic joystick LED support was added in SDL 2.0.14
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+	if (!joystick)
+		return;
+	if (!SDL_JoystickHasLED(joystick))
+		return;
+
+	// apply the color
+	SDL_JoystickSetLED(joystick, color.red, color.green, color.blue);
+#endif
+}
+
 class CStickBindGroup : public CBindGroup {
 public:
 	CStickBindGroup(int _stick, uint8_t _emustick, bool _dummy = false)
@@ -576,6 +601,7 @@ public:
 		JOYSTICK_Enable(emustick,true);
 
 		sdl_joystick=SDL_JoystickOpen(_stick);
+		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==NULL) {
 			button_wrap=emulated_buttons;
 			return;
@@ -607,6 +633,7 @@ public:
 
 	~CStickBindGroup()
 	{
+		set_joystick_led(sdl_joystick, off_color);
 		SDL_JoystickClose(sdl_joystick);
 		sdl_joystick = nullptr;
 
@@ -2693,8 +2720,8 @@ static void QueryJoysticks()
 	if (!wants_auto_config)
 		return;
 
-	// Everythiong below here involves auto-configuring
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Everything below here involves auto-configuring
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	const int req_min_axis = std::min(num_joysticks, 2);
 
@@ -2702,8 +2729,12 @@ static void QueryJoysticks()
 	bool useable[2] = {false, false};
 	for (int i = 0; i < req_min_axis; ++i) {
 		SDL_Joystick *stick = SDL_JoystickOpen(i);
+		set_joystick_led(stick, marginal_color);
+
 		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
 		             (SDL_JoystickNumButtons(stick) > 0);
+
+		set_joystick_led(stick, off_color);
 		SDL_JoystickClose(stick);
 	}
 
