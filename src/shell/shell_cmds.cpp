@@ -1253,14 +1253,14 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 static std::vector<std::string> all_dirs;
 struct attributes {
-	bool add_a;
-	bool add_s;
-	bool add_h;
-	bool add_r;
-	bool min_a;
-	bool min_s;
-	bool min_h;
-	bool min_r;
+	bool add_a = false;
+	bool add_s = false;
+	bool add_h = false;
+	bool add_r = false;
+	bool min_a = false;
+	bool min_s = false;
+	bool min_h = false;
+	bool min_r = false;
 };
 
 static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *name) {
@@ -1277,8 +1277,8 @@ static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *
 
 static bool attrib_recursive(DOS_Shell *shell,
                              char *args,
-                             DOS_DTA dta,
-                             bool optS,
+                             const DOS_DTA dta,
+                             const bool optS,
                              attributes attribs)
 {
 	char path[DOS_PATHLENGTH + 4], full[DOS_PATHLENGTH];
@@ -1290,15 +1290,17 @@ static bool attrib_recursive(DOS_Shell *shell,
 	if (!res && !optS)
 		return false;
 	char *end = strrchr(full, '\\');
-	if (end) {
-		end++;
-		*end = 0;
-	}
+	if (!end)
+		return false;
+	end++;
+	*end = 0;
 	strcpy(path, full);
 	char name[DOS_NAMELENGTH_ASCII];
 	uint32_t size;
-	uint16_t time, date, fattr;
+	uint16_t date;
+	uint16_t time;
 	uint8_t attr;
+	uint16_t fattr;
 	while (res) {
 		dta.GetResult(name, size, date, time, attr);
 		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
@@ -1306,28 +1308,29 @@ static bool attrib_recursive(DOS_Shell *shell,
 		      attr & DOS_ATTR_DIRECTORY)) {
 			found = true;
 			strcpy(end, name);
-			if (strlen(full) && DOS_GetFileAttr(full, &fattr)) {
-				if (attribs.add_a || attribs.add_s || attribs.add_h || attribs.add_r ||
-				    attribs.min_a || attribs.min_s || attribs.min_h || attribs.min_r) {
-					fattr |= (attribs.add_a ? DOS_ATTR_ARCHIVE : 0);
-					fattr |= (attribs.add_s ? DOS_ATTR_SYSTEM : 0);
-					fattr |= (attribs.add_h ? DOS_ATTR_HIDDEN : 0);
-					fattr |= (attribs.add_r ? DOS_ATTR_READ_ONLY : 0);
-					fattr &= (attribs.min_a ? ~DOS_ATTR_ARCHIVE : 0xffff);
-					fattr &= (attribs.min_s ? ~DOS_ATTR_SYSTEM : 0xffff);
-					fattr &= (attribs.min_h ? ~DOS_ATTR_HIDDEN : 0xffff);
-					fattr &= (attribs.min_r ? ~DOS_ATTR_READ_ONLY : 0xffff);
-					if (DOS_SetFileAttr(full, fattr) && DOS_GetFileAttr(full, &fattr))
-						show_attributes(shell, fattr, full);
-					else
-						shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_SET_ERROR"),
-						                full);
-				} else {
-					show_attributes(shell, fattr, full);
-				}
-			} else
+			if (!*full || !DOS_GetFileAttr(full, &fattr)) {
 				shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_GET_ERROR"),
 				                full);
+			} else if (attribs.add_a || attribs.add_s || attribs.add_h ||
+			           attribs.add_r || attribs.min_a || attribs.min_s ||
+			           attribs.min_h || attribs.min_r) {
+				fattr |= (attribs.add_a ? DOS_ATTR_ARCHIVE : 0);
+				fattr |= (attribs.add_s ? DOS_ATTR_SYSTEM : 0);
+				fattr |= (attribs.add_h ? DOS_ATTR_HIDDEN : 0);
+				fattr |= (attribs.add_r ? DOS_ATTR_READ_ONLY : 0);
+				fattr &= (attribs.min_a ? ~DOS_ATTR_ARCHIVE : 0xffff);
+				fattr &= (attribs.min_s ? ~DOS_ATTR_SYSTEM : 0xffff);
+				fattr &= (attribs.min_h ? ~DOS_ATTR_HIDDEN : 0xffff);
+				fattr &= (attribs.min_r ? ~DOS_ATTR_READ_ONLY : 0xffff);
+				if (DOS_SetFileAttr(full, fattr) &&
+				    DOS_GetFileAttr(full, &fattr))
+					show_attributes(shell, fattr, full);
+				else
+					shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_SET_ERROR"),
+					                full);
+			} else {
+				show_attributes(shell, fattr, full);
+			}
 		}
 		res = DOS_FindNext();
 	}
