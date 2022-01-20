@@ -1275,9 +1275,24 @@ static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *
 			attr_r ? 'R' : ' ', name);
 }
 
+char *get_filename(char *args)
+{
+	static char *fname = strrchr(args, '\\');
+	if (fname != NULL)
+		fname++;
+	else {
+		fname = strrchr(args, ':');
+		if (fname != NULL)
+			fname++;
+		else
+			fname = args;
+	}
+	return fname;
+}
+
 static bool attrib_recursive(DOS_Shell *shell,
                              char *args,
-                             const DOS_DTA dta,
+                             const DOS_DTA &dta,
                              const bool optS,
                              attributes attribs)
 {
@@ -1346,24 +1361,14 @@ static bool attrib_recursive(DOS_Shell *shell,
 				DtaResult result;
 				dta.GetResult(result.name, result.size, result.date,
 				              result.time, result.attr);
-
 				if ((result.attr & DOS_ATTR_DIRECTORY) &&
 				    strcmp(result.name, ".") &&
 				    strcmp(result.name, "..")) {
-					strcat(path, result.name);
-					strcat(path, "\\");
-					char *fname = strrchr(args, '\\');
-					if (fname != NULL)
-						fname++;
-					else {
-						fname = strrchr(args, ':');
-						if (fname != NULL)
-							fname++;
-						else
-							fname = args;
-					}
-					strcat(path, fname);
-					found_dirs.push_back(path);
+					std::string fullname = result.name +
+					                       std::string(1, '\\') +
+					                       get_filename(args);
+					found_dirs.push_back(fullname);
+					strcpy(path, fullname.c_str());
 					*(path + len) = 0;
 				}
 			} while (DOS_FindNext());

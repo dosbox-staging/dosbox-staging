@@ -433,7 +433,7 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, bool dir_ok) {
+bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, const bool dir_ok) {
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	Bit32u currentClust = 0;
@@ -468,7 +468,6 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 			}
 
 			currentClust = foundEntry.loFirstClust;
-			findDir = strtok(NULL,"\\");
 		}
 	} else {
 		/* Set to root directory */
