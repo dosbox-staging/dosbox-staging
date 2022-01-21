@@ -21,6 +21,8 @@
 */
 #include "SDL_config.h"
 
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+
 #ifdef SDL_CDROM_LINUX
 
 /* Functions for system-level CD-ROM audio control */

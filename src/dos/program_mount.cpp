@@ -158,10 +158,9 @@ void MOUNT::Run(void) {
 
 	if (cmd->FindExist("-cd", false)) {
 		int num = SDL_CDNumDrives();
-		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"),num);
-		for (int i=0; i<num; i++) {
-			WriteOut("%2d. %s\n",i,SDL_CDName(i));
-		};
+		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"), num);
+		for (int i = 0; i < num; i++)
+			WriteOut("%2d. %s\n", i, SDL_CDName(i));
 		return;
 	}
 
@@ -308,7 +307,7 @@ void MOUNT::Run(void) {
 					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
 			}
 			int num = -1;
-			cmd->FindInt("-usecd",num,true);
+			cmd->FindInt("-usecd", num, true);
 			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;

@@ -342,7 +342,7 @@ if host_machine.system() == 'darwin'
 
   # Locale discovery
   corefoundation_dep = dependency('appleframeworks',
-                                  modules : ['CoreFoundation'],
+                                  modules : ['CoreFoundation', 'CoreServices'],
                                   required : false)
   if corefoundation_dep.found()
     if cxx.check_header('CoreFoundation/CoreFoundation.h')

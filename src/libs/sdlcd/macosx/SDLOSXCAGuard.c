@@ -21,6 +21,10 @@
 */
 #include "SDL_config.h"
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#endif
+
 /*  
     Note: This file hasn't been modified so technically we have to keep the disclaimer :-(
     

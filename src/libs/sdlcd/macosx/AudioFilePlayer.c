@@ -30,6 +30,14 @@
 */
 #include "AudioFilePlayer.h"
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wfour-char-constants"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+#pragma GCC diagnostic ignored "-Wmultichar"
+#pragma GCC diagnostic ignored "-Wformat"
+
 /*
 void ThrowResult (OSStatus result, const char* str)
 {
