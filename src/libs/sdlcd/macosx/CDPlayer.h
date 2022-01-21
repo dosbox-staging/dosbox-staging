@@ -63,7 +63,7 @@ int      DetectAudioCDVolumes (FSVolumeRefNum *volumes, int numVolumes);
 int      GetCurrentFrame ();
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __CD_Player__H__ */

@@ -55,8 +55,8 @@
 #define	REQUEST_STATUS_ERROR	0x8000
 
 // Use cdrom Interface
-int useCdromInterface	= CDROM_USE_SDL;
-int forceCD				= -1;
+int useCdromInterface = CDROM_USE_SDL;
+int forceCD = -1;
 
 enum class MountType {
 	PHYSICAL,
@@ -66,7 +66,7 @@ enum class MountType {
 
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
-static MountType MSCDEX_GetMountType(const char *path, int forceCD);
+static MountType MSCDEX_GetMountType(const char *path);
 
 class DOS_DeviceHeader final : public MemStruct {
 public:
@@ -309,11 +309,10 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// Set return type to ok
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
-	switch (MSCDEX_GetMountType(physicalPath, forceCD)) {
+	switch (MSCDEX_GetMountType(physicalPath)) {
 	case MountType::PHYSICAL:
-		// Default case windows and other oses
+		LOG(LOG_MISC, LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
 		cdrom[numDrives] = new CDROM_Interface_SDL();
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
 		break;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
@@ -1102,31 +1101,32 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 	return 0x00;	// success
 }
 
-static MountType MSCDEX_GetMountType(const char *path, int forceCD)
+static MountType MSCDEX_GetMountType(const char *path)
 {
-	const char* cdName;
+	const char *cdName;
 	char buffer[512];
-	strcpy(buffer,path);
-#if defined (WIN32)
+	strcpy(buffer, path);
+#if defined(WIN32)
 	upcase(buffer);
 #endif
 
 	int num = SDL_CDNumDrives();
 	// If cd drive is forced then check if its in range and return 0
-	if ((forceCD>=0) && (forceCD<num)) {
-		LOG(LOG_ALL,LOG_ERROR)("CDROM: Using drive %d",forceCD);
+	if ((forceCD >= 0) && (forceCD < num)) {
+		LOG(LOG_ALL, LOG_ERROR)("CDROM: Using drive %d", forceCD);
 		return MountType::PHYSICAL;
 	}
 
 	// compare names
-	for (int i=0; i<num; i++) {
+	for (int i = 0; i < num; i++) {
 		cdName = SDL_CDName(i);
-		if (strcmp(buffer,cdName)==0) return MountType::PHYSICAL;
+		if (strcmp(buffer, cdName) == 0)
+			return MountType::PHYSICAL;
 	};
 
 	struct stat file_stat;
 	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
-		return MountType::ISO_IMAGE; 
+		return MountType::ISO_IMAGE;
 	else
 		return MountType::DIRECTORY;
 }
@@ -1417,9 +1417,9 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 	return has_changed;
 }
 
-void MSCDEX_SetCDInterface(int intNr, int numCD) {
-	useCdromInterface = intNr;
-	forceCD	= numCD;
+void MSCDEX_SetCDInterface(int int_nr, int num_cd) {
+	useCdromInterface = int_nr;
+	forceCD	= num_cd;
 }
 
 void MSCDEX_ShutDown(Section* /*sec*/) {

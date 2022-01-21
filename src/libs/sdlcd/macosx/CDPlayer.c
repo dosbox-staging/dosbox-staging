@@ -25,6 +25,15 @@
 #include "AudioFilePlayer.h"
 #include "SDLOSXCAGuard.h"
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#else
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+#pragma GCC diagnostic ignored "-Wformat"
+
 /* we're exporting these functions into C land for SDL_syscdrom.c */
 /*extern "C" {*/
 
@@ -554,11 +563,7 @@ static OSStatus CheckInit ()
     callbackSem = SDL_CreateSemaphore(0);
 
     /* Start callback thread */
-#if defined(C_SDL2)
     SDL_CreateThread(RunCallBackThread, "CDPlayer", NULL);
-#else
-    SDL_CreateThread(RunCallBackThread, NULL);
-#endif
 
     { /*try {*/
         ComponentDescription desc;
