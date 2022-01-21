@@ -144,10 +144,15 @@ CD-ROM: My CD-ROM doesn't work.
     in Linux:
       - mount d /path/to/cdrom -t cdrom
 
+    In some cases you might want to use a different CD-ROM interface,
+    for example if CD audio does not work:
+      - mount d f:\ -t cdrom -usecd 0 -noioctl
+
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
                  - f:\ location of CD-ROM on your PC. In most cases it will
                           be d:\ or e:\
+                 - 0   The number of the CD-ROM drive, reported by "mount -cd"
 
     See also the next question: The game/application can't find its CD-ROM.
 
@@ -583,8 +588,10 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-size drivesize] [-label drivelabel] [-freesize size_in_mb]
+      [-t type] [-noioctl] [-usecd #] [-size drivesize] [-size drivesize]
+      [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
+MOUNT -cd
 MOUNT -u "Emulated Drive letter"
 
   Program to mount local directories as drives inside DOSBox.
@@ -618,12 +625,27 @@ MOUNT -u "Emulated Drive letter"
         Sets the name of the drive to "drivelabel". Needed on some systems
         if the CD-ROM label isn't read correctly (useful when a program
         can't find its CD-ROM). If you don't specify a label
-        and no lowlevel support is selected:
+        and no lowlevel support is selected (that is omitting the -usecd #
+        parameter, or specifying -noioctl):
           For Windows: label is extracted from "Real Drive".
           For Linux: label is set to NO_LABEL.
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
+
+  -noioctl
+        Forces use of the SDL CD-ROM layer. Valid on all systems.
+
+  -usecd number
+        Valid on all systems, under Windows the -noioctl switch has to be
+        present to make use of the -usecd switch.
+        Enables to select the drive that should be used by SDL. Use this if
+        the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
+        interface. "number" can be found by "MOUNT -cd".
+
+  -cd
+        Displays all CD-ROM drives detected by SDL, and their numbers.
+        See the information at the -usecd entry above.
 
   -u
         Removes the mount. Doesn't work for Z:\.
@@ -637,7 +659,8 @@ MOUNT -u "Emulated Drive letter"
   directory as drive C: in DOSBox.
 
   Mounting your entire C drive with MOUNT C C:\ is NOT recommended! The same
-  is true for mounting the root of any other drive.
+  is true for mounting the root of any other drive, except for CD-ROMs (due to
+  their read-only nature).
   Otherwise if you or DOSBox make a mistake you may lose all your files.
   Also never mount a "Windows" or "Program Files" folders or their subfolders
   in Windows Vista/7 as DOSBox may not work correctly, or will stop working
