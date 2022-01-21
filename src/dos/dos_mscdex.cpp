@@ -34,6 +34,7 @@
 #include "support.h"
 #include "bios_disk.h"
 #include "cpu.h"
+#include "cdrom.h"
 #include "string_utils.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
@@ -53,14 +54,19 @@
 #define	REQUEST_STATUS_DONE		0x0100
 #define	REQUEST_STATUS_ERROR	0x8000
 
+// Use cdrom Interface
+int useCdromInterface	= CDROM_USE_SDL;
+int forceCD				= -1;
+
 enum class MountType {
+	PHYSICAL,
 	ISO_IMAGE,
 	DIRECTORY,
 };
 
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
-static MountType MSCDEX_GetMountType(const char *path);
+static MountType MSCDEX_GetMountType(const char *path, int forceCD);
 
 class DOS_DeviceHeader final : public MemStruct {
 public:
@@ -303,7 +309,48 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// Set return type to ok
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
-	switch (MSCDEX_GetMountType(physicalPath)) {
+	switch (MSCDEX_GetMountType(physicalPath, forceCD)) {
+	case MountType::PHYSICAL:
+#if defined (WIN32)
+		// Check OS
+		OSVERSIONINFO osi;
+		osi.dwOSVersionInfoSize = sizeof(osi);
+		GetVersionEx(&osi);
+		if ((osi.dwPlatformId == VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
+			// only WIN NT/200/XP
+			if (useCdromInterface == CDROM_USE_IOCTL_DIO) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DIO);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
+				break;
+			}
+			if (useCdromInterface == CDROM_USE_IOCTL_DX) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DX);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (digital audio extraction).");
+				break;
+			}
+			if (useCdromInterface == CDROM_USE_IOCTL_MCI) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_MCI);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (media control interface).");
+				break;
+			}
+		}
+		if (useCdromInterface == CDROM_USE_ASPI) {
+			// all Wins - ASPI
+			cdrom[numDrives] = new CDROM_Interface_Aspi();
+			LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
+			break;
+		}
+#endif
+#if defined (LINUX)
+		// Always use IOCTL in Linux or OS/2
+		cdrom[numDrives] = new CDROM_Interface_Ioctl();
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
+#else
+		// Default case windows and other oses
+		cdrom[numDrives] = new CDROM_Interface_SDL();
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
+#endif
+		break;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
 		cdrom[numDrives] = new CDROM_Interface_Image((Bit8u)numDrives);
@@ -316,7 +363,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		break;
 	};
 
-	if (!cdrom[numDrives]->SetDevice(physicalPath)) {
+	if (!cdrom[numDrives]->SetDevice(physicalPath, forceCD)) {
 //		delete cdrom[numDrives] ; mount seems to delete it
 		return 3;
 	}
@@ -1091,8 +1138,28 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 	return 0x00;	// success
 }
 
-static MountType MSCDEX_GetMountType(const char *path)
+static MountType MSCDEX_GetMountType(const char *path, int forceCD)
 {
+	const char* cdName;
+	char buffer[512];
+	strcpy(buffer,path);
+#if defined (WIN32)
+	upcase(buffer);
+#endif
+
+	int num = SDL_CDNumDrives();
+	// If cd drive is forced then check if its in range and return 0
+	if ((forceCD>=0) && (forceCD<num)) {
+		LOG(LOG_ALL,LOG_ERROR)("CDROM: Using drive %d",forceCD);
+		return MountType::PHYSICAL;
+	}
+
+	// compare names
+	for (int i=0; i<num; i++) {
+		cdName = SDL_CDName(i);
+		if (strcmp(buffer,cdName)==0) return MountType::PHYSICAL;
+	};
+
 	struct stat file_stat;
 	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
 		return MountType::ISO_IMAGE; 
@@ -1384,6 +1451,11 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 		leadOut[subUnit].fr	 = 0;
 	}
 	return has_changed;
+}
+
+void MSCDEX_SetCDInterface(int intNr, int numCD) {
+	useCdromInterface = intNr;
+	forceCD	= numCD;
 }
 
 void MSCDEX_ShutDown(Section* /*sec*/) {

@@ -62,6 +62,7 @@
 #include "timer.h"
 #include "vga.h"
 #include "video.h"
+#include "../dos/cdrom.h"
 
 #include "../libs/ppscale/ppscale.h"
 
@@ -470,8 +471,10 @@ void OPENGL_ERROR(const char*) {
 
 static void QuitSDL()
 {
-	if (sdl.initialized)
+	if (sdl.initialized) {
+		SDL_CDROMQuit();
 		SDL_Quit();
+	}
 }
 
 extern const char* RunningProgram;
@@ -4006,6 +4009,9 @@ int sdl_main(int argc, char *argv[])
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
+	if (SDL_CDROMInit() < 0)
+		LOG_WARNING("Failed to init CD-ROM support");
+
 	sdl.initialized = true;
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
