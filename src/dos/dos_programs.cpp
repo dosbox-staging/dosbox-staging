@@ -248,7 +248,7 @@ void DOS_SetupPrograms(void)
 		);
 	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
 	        "\033[2J\033[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:\033[0m\n"
-	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "DOSBox provides CD-ROM emulation on two levels.\n"
 	        "\n"
 	        "The \033[33mbasic\033[0m level works on all normal directories, which installs MSCDEX\n"
 	        "and marks the files read-only. Usually this is enough for most games:\n"
@@ -259,9 +259,6 @@ void DOS_SetupPrograms(void)
 	        "The \033[33mnext\033[0m level adds some low-level support.\n"
 	        "Therefore only works on CD-ROM drives:\n"
 	        "\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0\033[0m\n"
-	        "\n"
-	        "The \033[33mlast\033[0m level of support:\n"
-	        "\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
 	        "Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 	        "Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
 	        "\033[34;1mmount -cd\033[0m\n"
@@ -271,7 +268,7 @@ void DOS_SetupPrograms(void)
 	        "\033[34;1mimgmount D C:\\cd.cue -t cdrom\033[0m\n");
 	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
 	        "\033[2J\033[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:\033[0m\n"
-	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "DOSBox provides CD-ROM emulation on two levels.\n"
 	        "\n"
 	        "The \033[33mbasic\033[0m level works on all normal directories, which installs MSCDEX\n"
 	        "and marks the files read-only. Usually this is enough for most games:\n"
@@ -283,8 +280,6 @@ void DOS_SetupPrograms(void)
 	        "Therefore only works on CD-ROM drives:\n"
 	        "\033[34;1mmount d \033[0;31m~/example\033[34;1m -t cdrom -usecd \033[33m0\033[0m\n"
 	        "\n"
-	        "The \033[33mlast\033[0m level of support for Linux:\n"
-	        "\033[34;1mmount d \033[0;31m~/example\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
 	        "Replace \033[0;31m~/example\033[0m with the location of your CD-ROM.\n"
 	        "Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
 	        "\033[34;1mmount -cd\033[0m\n"

@@ -146,7 +146,7 @@ CD-ROM: My CD-ROM doesn't work.
 
     In some cases you might want to use a different CD-ROM interface,
     for example if CD audio does not work:
-      - mount d f:\ -t cdrom -usecd 0 -noioctl
+      - mount d f:\ -t cdrom -usecd 0
 
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
@@ -588,7 +588,7 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-noioctl] [-usecd #] [-size drivesize] [-size drivesize]
+      [-t type] [-usecd #] [-size drivesize] [-size drivesize]
       [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
 MOUNT -cd
@@ -624,21 +624,16 @@ MOUNT -u "Emulated Drive letter"
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some systems
         if the CD-ROM label isn't read correctly (useful when a program
-        can't find its CD-ROM). If you don't specify a label
-        and no lowlevel support is selected (that is omitting the -usecd #
-        parameter, or specifying -noioctl):
+        can't find its CD-ROM). If you don't specify a label and no lowlevel
+        support is selected (that is omitting the -usecd # parameter):
           For Windows: label is extracted from "Real Drive".
           For Linux: label is set to NO_LABEL.
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
 
-  -noioctl
-        Forces use of the SDL CD-ROM layer. Valid on all systems.
-
   -usecd number
-        Valid on all systems, under Windows the -noioctl switch has to be
-        present to make use of the -usecd switch.
+        Valid on all systems.
         Enables to select the drive that should be used by SDL. Use this if
         the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
         interface. "number" can be found by "MOUNT -cd".
