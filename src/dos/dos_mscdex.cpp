@@ -311,39 +311,9 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// Get Mounttype and init needed cdrom interface
 	switch (MSCDEX_GetMountType(physicalPath, forceCD)) {
 	case MountType::PHYSICAL:
-#if defined (WIN32)
-		// Check OS
-		OSVERSIONINFO osi;
-		osi.dwOSVersionInfoSize = sizeof(osi);
-		GetVersionEx(&osi);
-		if ((osi.dwPlatformId == VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
-			// only WIN NT/200/XP
-			if (useCdromInterface == CDROM_USE_IOCTL_DIO) {
-				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DIO);
-				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
-				break;
-			}
-			if (useCdromInterface == CDROM_USE_IOCTL_DX) {
-				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DX);
-				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (digital audio extraction).");
-				break;
-			}
-			if (useCdromInterface == CDROM_USE_IOCTL_MCI) {
-				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_MCI);
-				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (media control interface).");
-				break;
-			}
-		}
-#endif
-#if defined (LINUX)
-		// Always use IOCTL in Linux or OS/2
-		cdrom[numDrives] = new CDROM_Interface_Ioctl();
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
-#else
 		// Default case windows and other oses
 		cdrom[numDrives] = new CDROM_Interface_SDL();
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
-#endif
 		break;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);

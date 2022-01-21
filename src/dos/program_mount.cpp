@@ -32,8 +32,6 @@
 #include "string_utils.h"
 #include "../ints/int10.h"
 
-void MSCDEX_SetCDInterface(int intNr, int forceCD);
-
 void MOUNT::Move_Z(char new_z)
 {
 	const char new_drive_z = toupper(new_z);
@@ -304,34 +302,14 @@ void MOUNT::Run(void) {
 		Bit8u bit8size = (Bit8u)sizes[1];
 
 		if (type == "cdrom") {
+			// Following options were relevant only for physical CD-ROM support:
+			for (auto opt : {"-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
+				if (cmd->FindExist(opt, false))
+					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
+			}
 			int num = -1;
 			cmd->FindInt("-usecd",num,true);
-			if (cmd->FindExist("-ioctl_dio",false)) {
-				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-			} else if (cmd->FindExist("-ioctl_dx",false)) {
-				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
-#if defined (WIN32)
-			} else if (cmd->FindExist("-ioctl_mci",false)) {
-				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_MCI, num);
-#endif
-			} else if (cmd->FindExist("-noioctl",false)) {
-				MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
-			} else {
-#if defined (WIN32)
-				// Check OS
-				OSVERSIONINFO osi;
-				osi.dwOSVersionInfoSize = sizeof(osi);
-				GetVersionEx(&osi);
-				if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>5)) {
-					// Vista/above
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
-				} else {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-				}
-#else
-				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-#endif
-			}
+			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;
 			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
