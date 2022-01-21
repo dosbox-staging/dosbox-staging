@@ -52,6 +52,12 @@
     <ClCompile Include="..\src\dos\cdrom_image.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\cdrom_aspi_win32.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\cdrom_ioctl_win32.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\dos.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

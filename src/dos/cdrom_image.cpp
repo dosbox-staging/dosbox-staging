@@ -518,7 +518,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	player.channel.reset();
 }
 
-bool CDROM_Interface_Image::SetDevice(char* path)
+bool CDROM_Interface_Image::SetDevice(char* path, [[maybe_unused]] int forceCD)
 {
 	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {

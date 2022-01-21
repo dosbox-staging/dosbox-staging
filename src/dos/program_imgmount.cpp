@@ -33,6 +33,7 @@
 #include "mapper.h"
 #include "program_mount_common.h"
 #include "shell.h"
+#include "cdrom.h"
 #include "string_utils.h"
 #include "../ints/int10.h"
 
@@ -385,6 +386,7 @@ void IMGMOUNT::Run(void) {
             return;
         }
 
+        MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
         // create new drives for all images
         std::vector<DOS_Drive*> isoDisks;
         std::vector<std::string>::size_type i;

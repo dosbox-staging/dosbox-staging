@@ -28,8 +28,11 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "shell.h"
+#include "cdrom.h"
 #include "string_utils.h"
 #include "../ints/int10.h"
+
+void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
 void MOUNT::Move_Z(char new_z)
 {
@@ -156,7 +159,11 @@ void MOUNT::Run(void) {
 	}
 
 	if (cmd->FindExist("-cd", false)) {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_NO_OPTION"), "-cd");
+		int num = SDL_CDNumDrives();
+		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"),num);
+		for (int i=0; i<num; i++) {
+			WriteOut("%2d. %s\n",i,SDL_CDName(i));
+		};
 		return;
 	}
 
@@ -297,10 +304,35 @@ void MOUNT::Run(void) {
 		Bit8u bit8size = (Bit8u)sizes[1];
 
 		if (type == "cdrom") {
-			// Following options were relevant only for physical CD-ROM support:
-			for (auto opt : {"-usecd", "-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
-				if (cmd->FindExist(opt, false))
-					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
+			int num = -1;
+			cmd->FindInt("-usecd",num,true);
+			if (cmd->FindExist("-aspi",false)) {
+				MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
+			} else if (cmd->FindExist("-ioctl_dio",false)) {
+				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+			} else if (cmd->FindExist("-ioctl_dx",false)) {
+				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+#if defined (WIN32)
+			} else if (cmd->FindExist("-ioctl_mci",false)) {
+				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_MCI, num);
+#endif
+			} else if (cmd->FindExist("-noioctl",false)) {
+				MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
+			} else {
+#if defined (WIN32)
+				// Check OS
+				OSVERSIONINFO osi;
+				osi.dwOSVersionInfoSize = sizeof(osi);
+				GetVersionEx(&osi);
+				if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>5)) {
+					// Vista/above
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+				} else {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+				}
+#else
+				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+#endif
 			}
 
 			int error = 0;
