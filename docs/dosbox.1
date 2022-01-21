@@ -166,7 +166,9 @@ following extra commands are available:
 .HP
 .BI "MOUNT [\-t " type "] [\-size " size ]
 .I driveletter sourcedirectory 
-.BI "[\-label " drivelabel "] [\-freesize " freesize ] 
+.BI "[\-usecd " number "] [\-label " drivelabel "] [\-freesize " freesize ]
+.LP
+.B MOUNT \-cd
 .LP
 .B MOUNT \-u driveletter
 .LP
@@ -192,7 +194,8 @@ Sets the amount of free space available on a drive in MB's. This is a more
 .BI \-label " drivelabel"
 .RI "Sets the name of the drive to " drivelabel ". Needed on some" 
 systems if the cd label isn't read correctly. Useful when a 
-program can't find its cdrom. If you don't specify a label:
+program can't find its cdrom. If you don't specify a label and no
+.RB "lowlevel support is selected (" "\-usecd #" "):"
 .RS
 .LP
 For win32: label is extracted from "Real Drive".
@@ -202,6 +205,14 @@ For Linux: label is set to NO_LABEL.
 If you do specify a label this label will be kept as long as the drive
 is mounted. It will not be updated !!
 .RE
+.TP
+.BI \-usecd " number"
+Forces to use SDL cdrom support for drive number.
+.IR Number " can be found by "
+.BR \-cd ".
+.TP
+.B \-cd
+.RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
 .TP
 .B \-u
 Unmounts a mounted drive. Doesn't work on virtual Drives (like Z:\\)
