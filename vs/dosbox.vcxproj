@@ -290,7 +290,6 @@
     <ClCompile Include="..\src\debug\debug_win32.cpp" />
     <ClCompile Include="..\src\dos\cdrom.cpp" />
     <ClCompile Include="..\src\dos\cdrom_image.cpp" />
-    <ClCompile Include="..\src\dos\cdrom_aspi_win32.cpp" />
     <ClCompile Include="..\src\dos\cdrom_ioctl_win32.cpp" />
     <ClCompile Include="..\src\dos\dos.cpp" />
     <ClCompile Include="..\src\dos\dos_classes.cpp" />

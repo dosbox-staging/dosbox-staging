@@ -63,7 +63,7 @@
 #define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
 #define AUDIO_DECODE_BUFFER_SIZE 16512
 
-enum { CDROM_USE_SDL, CDROM_USE_ASPI, CDROM_USE_IOCTL_DIO, CDROM_USE_IOCTL_DX, CDROM_USE_IOCTL_MCI };
+enum { CDROM_USE_SDL, CDROM_USE_IOCTL_DIO, CDROM_USE_IOCTL_DX, CDROM_USE_IOCTL_MCI };
 
 struct TMSF
 {
@@ -326,56 +326,6 @@ private:
 #if defined (WIN32)	/* Win 32 */
 
 #include <windows.h>
-#include "wnaspi32.h"			// Aspi stuff
-
-class CDROM_Interface_Aspi : public CDROM_Interface
-{
-public:
-	CDROM_Interface_Aspi		(void);
-	virtual ~CDROM_Interface_Aspi(void);
-
-	bool	SetDevice			(char* path, int forceCD);
-
-	bool	GetUPC				(unsigned char& attr, char* upc);
-
-	bool	GetAudioTracks		(uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
-	bool	GetAudioTrackInfo	(uint8_t track, TMSF& start, unsigned char& attr);
-	bool	GetAudioSub			(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool	GetAudioStatus		(bool& playing, bool& pause);
-	bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-
-	bool	PlayAudioSector		(const uint32_t, uint32_t len);
-	bool	PauseAudio			(bool resume);
-	bool	StopAudio			(void);
-	void	ChannelControl		(TCtrl ctrl) { return; };
-
-	bool	ReadSectors			(PhysPt buffer, bool raw, const uint32_t sector, const uint16_t num);
-	bool	ReadSectorsHost		(void* buffer, bool raw, unsigned long sector, unsigned long num) { return true; };
-
-	bool	LoadUnloadMedia		(bool unload);
-
-private:
-	DWORD	GetTOC				(LPTOC toc);
-	HANDLE	OpenIOCTLFile		(char cLetter, BOOL bAsync);
-	void	GetIOCTLAdapter		(HANDLE hF,int * iDA,int * iDT,int * iDL);
-	bool	ScanRegistryFindKey	(HKEY& hKeyBase);
-	bool	ScanRegistry		(HKEY& hKeyBase);
-	BYTE	GetHostAdapter		(char* hardwareID);
-	bool	GetVendor			(BYTE HA_num, BYTE SCSI_Id, BYTE SCSI_Lun, char* szBuffer);
-
-	// ASPI stuff
-	BYTE	haId;
-	BYTE	target;
-	BYTE	lun;
-	char	letter;
-
-	// Windows stuff
-	HINSTANCE	hASPI;
-	HANDLE		hEvent;											// global event
-	DWORD		(*pGetASPI32SupportInfo)	(void);             // ptrs to aspi funcs
-	DWORD		(*pSendASPI32Command)		(LPSRB);
-	TMSF		oldLeadOut;
-};
 
 class CDROM_Interface_Ioctl : public CDROM_Interface
 {
@@ -463,7 +413,7 @@ private:
 
 #endif /* WIN 32 */
 
-#if defined (LINUX) || defined(OS2)
+#if defined (LINUX)
 
 class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
 {

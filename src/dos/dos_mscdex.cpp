@@ -334,12 +334,6 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 				break;
 			}
 		}
-		if (useCdromInterface == CDROM_USE_ASPI) {
-			// all Wins - ASPI
-			cdrom[numDrives] = new CDROM_Interface_Aspi();
-			LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
-			break;
-		}
 #endif
 #if defined (LINUX)
 		// Always use IOCTL in Linux or OS/2

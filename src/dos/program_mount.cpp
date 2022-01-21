@@ -306,9 +306,7 @@ void MOUNT::Run(void) {
 		if (type == "cdrom") {
 			int num = -1;
 			cmd->FindInt("-usecd",num,true);
-			if (cmd->FindExist("-aspi",false)) {
-				MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
-			} else if (cmd->FindExist("-ioctl_dio",false)) {
+			if (cmd->FindExist("-ioctl_dio",false)) {
 				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
 			} else if (cmd->FindExist("-ioctl_dx",false)) {
 				MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
