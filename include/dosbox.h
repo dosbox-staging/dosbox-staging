@@ -55,15 +55,6 @@ class Config;
 using config_ptr_t = std::unique_ptr<Config>;
 extern config_ptr_t control;
 
-enum MachineType {
-	MCH_HERC,
-	MCH_CGA,
-	MCH_TANDY,
-	MCH_PCJR,
-	MCH_EGA,
-	MCH_VGA
-};
-
 enum SVGACards {
 	SVGA_None,
 	SVGA_S3Trio,
@@ -73,9 +64,23 @@ enum SVGACards {
 }; 
 
 extern SVGACards svgaCard;
-extern MachineType machine;
 extern bool mono_cga;
 
+enum MachineType {
+	// In age-order: Hercules is the oldest and VGA is the newest
+	MCH_HERC  = 1 << 0,
+	MCH_CGA   = 1 << 1,
+	MCH_TANDY = 1 << 2,
+	MCH_PCJR  = 1 << 3,
+	MCH_EGA   = 1 << 4,
+	MCH_VGA   = 1 << 5,
+};
+
+extern MachineType machine;
+
+inline bool is_machine(const int type) {
+	return machine & type;
+}
 #define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
 #define IS_EGAVGA_ARCH ((machine==MCH_EGA) || (machine==MCH_VGA))
 #define IS_VGA_ARCH (machine==MCH_VGA)
