@@ -173,18 +173,29 @@ static void write_p60(io_port_t, io_val_t value, io_width_t)
 	}
 }
 
-extern bool TIMER_GetOutput2(void);
-static Bit8u port_61_data = 0;
-static uint8_t read_p61(io_port_t, io_width_t)
-{
-	if (TIMER_GetOutput2())
-		port_61_data |= 0x20;
-	else
-		port_61_data &= ~0x20;
-	port_61_data ^= 0x10;
-	return port_61_data;
-}
+/* Bochs: 8255 Programmable Peripheral Interface
 
+0061	w	KB controller port B (ISA, EISA)   (PS/2 port A is at 0092)
+system control port for compatibility with 8255
+bit 7      (1= IRQ 0 reset )
+bit 6-4    reserved
+bit 3 = 1  channel check enable
+bit 2 = 1  parity check enable
+bit 1 = 1  speaker data enable
+bit 0 = 1  timer 2 gate to speaker enable
+
+0061	w	PPI  Programmable Peripheral Interface 8255 (XT only)
+system control port
+bit 7 = 1  clear keyboard
+bit 6 = 0  hold keyboard clock low
+bit 5 = 0  I/O check enable
+bit 4 = 0  RAM parity check enable
+bit 3 = 0  read low switches
+bit 2      reserved, often used as turbo switch
+bit 1 = 1  speaker data enable
+bit 0 = 1  timer 2 gate to speaker enable
+*/
+static Bit8u port_61_data = 0;
 extern void TIMER_SetGate2(bool);
 static void write_p61(io_port_t, io_val_t value, io_width_t)
 {
@@ -196,6 +207,41 @@ static void write_p61(io_port_t, io_val_t value, io_width_t)
 	port_61_data = val;
 }
 
+/* Bochs: 8255 Programmable Peripheral Interface
+
+0061	r	KB controller port B control register (ISA, EISA)
+system control port for compatibility with 8255
+bit 7    parity check occurred
+bit 6    channel check occurred
+bit 5    mirrors timer 2 output condition
+bit 4    toggles with each refresh request
+bit 3    channel check status
+bit 2    parity check status
+bit 1    speaker data status
+bit 0    timer 2 gate to speaker status
+*/
+extern bool TIMER_GetOutput2(void);
+static uint8_t read_p61(io_port_t, io_width_t)
+{
+	if (TIMER_GetOutput2())
+		port_61_data |= 0x20;
+	else
+		port_61_data &= ~0x20;
+	port_61_data ^= 0x10;
+	return port_61_data;
+}
+
+/* Bochs: 8255 Programmable Peripheral Interface
+0062	r/w	PPI (XT only)
+bit 7 = 1  RAM parity check
+bit 6 = 1  I/O channel check
+bit 5 = 1  timer 2 channel out
+bit 4      reserved
+bit 3 = 1  system board RAM size type 1
+bit 2 = 1  system board RAM size type 2
+bit 1 = 1  coprocessor installed
+bit 0 = 1  loop in POST
+*/
 static uint8_t read_p62(io_port_t, io_width_t)
 {
 	Bit8u ret = ~0x20;
