@@ -32,91 +32,108 @@
 //
 // Examples
 // ~~~~~~~~
-// uint8_t reg = 0;
+// auto reg = make<uint8_t>(b0, b1); // reg = 0b0000'0011
+// auto reg_all_on = all<uint8_t>(); // reg = 0b1111'1111
 //
 // Setting:
-//   set_bits(reg, bit_0 | bit_1); // 0b0000'0011
-//   set_bits(reg, bit_8); // ASSERT FAIL (out of range)
-//   set_all_bits(reg); // 0b1111'1111
+//   set(reg, b0, b1); // 0b0000'0011
+//   set(reg, b8); // ASSERT FAIL (out of range)
+//   set_all(reg); // 0b1111'1111
+//   set_to(reg, b1, b2, false); // 0b0000'0000
+//   set_to(reg, b1, true); // 0b0000'0000
 //
-// Toggling:
-//   toggle_bits(reg, bit_4 | bit_5 | bit_6 | bit_7); // 0b0000'1111
-//   toggle_bits(reg, bit_8); // ASSERT FAIL (out of range)
-//   toggle_all_bits(reg); //  0b1111'0000
+// Flipping:
+//   flip(reg, b4 | b5 | b6 | b7); // 0b0000'1111
+//   flip(reg, b8); // ASSERT FAIL (out of range)
+//   flip_all(reg); //  0b1111'0000
 //
 // Clearing:
-//   clear_bits(reg, bit_4 | bit_5); // 0b1100'0000
-//   clear_bits(reg, bit_8); // ASSERT FAIL (out of range)
+//   clear(reg, b4 | b5); // 0b1100'0000
+//   clear(reg, b8); // ASSERT FAIL (out of range)
 //
+// Masking: returns results, does not modify register
+//   mask_on(reg, b1, b2); // returns 0b0000'0110
+//   mask_off(reg, b1, b2); // returns 0b0000'0000
+//   mask_flip(reg, b1, b2); // returns 0b0000'0110
+//   mask_flip_all(reg); // returns 0b1111'01110
+//   mask_to(reg, b1, b2, false); // returns 0b0000'0000
+//   mask_to(reg, b1, b2, true); // returns 0b0000'0110
+
 // Checking:
-//   are_bits_set(reg, bit_6); // true
-//   are_bits_set(reg, bit_7); // true
-//   are_bits_set(reg, bit_8); // ASSERT FAIL (out of range)
-//   are_bits_set(reg, bit_6 | bit_7); // true (both need to be set)
-//   are_bits_set(reg, bit_5 | bit_6); // false (both aren't set)
-//   are_any_bits_set(reg, bit_5 | bit_6); // true (bit 6 is)
-//   are_bits_cleared(reg, bit_0 | bit_1 | bit_2 | bit_3); // true
+//   is(reg, b6); // true
+//   is(reg, b7); // true
+//   is(reg, b8); // ASSERT FAIL (out of range)
+//   is(reg, b6 | b7); // true (both need to be set)
+//   is(reg, b5 | b6); // false (both isn't set)
+//   any(reg, b5 | b6); // true (bit 6 is)
+//   cleared(reg, b0 | b1 | b2 | b3); // true
 //
 
-enum BITS {
-	bit_0 = 1 << 0,
-	bit_1 = 1 << 1,
-	bit_2 = 1 << 2,
-	bit_3 = 1 << 3,
-	bit_4 = 1 << 4,
-	bit_5 = 1 << 5,
-	bit_6 = 1 << 6,
-	bit_7 = 1 << 7,
-	bit_8 = 1 << 8,
-	bit_9 = 1 << 9,
-	bit_10 = 1 << 10,
-	bit_11 = 1 << 11,
-	bit_12 = 1 << 12,
-	bit_13 = 1 << 13,
-	bit_14 = 1 << 14,
-	bit_15 = 1 << 15,
-	bit_16 = 1 << 16,
-	bit_17 = 1 << 17,
-	bit_18 = 1 << 18,
-	bit_19 = 1 << 19,
-	bit_20 = 1 << 20,
-	bit_21 = 1 << 21,
-	bit_22 = 1 << 22,
-	bit_23 = 1 << 23,
-	bit_24 = 1 << 24,
-	bit_25 = 1 << 25,
-	bit_26 = 1 << 26,
-	bit_27 = 1 << 27,
-	bit_28 = 1 << 28,
-	bit_29 = 1 << 29,
-	bit_30 = 1 << 30,
-	bit_31 = 1 << 31
-};
+namespace bit {
+
+namespace literals {
+constexpr auto b0 = 1 << 0;
+constexpr auto b1 = 1 << 1;
+constexpr auto b2 = 1 << 2;
+constexpr auto b3 = 1 << 3;
+constexpr auto b4 = 1 << 4;
+constexpr auto b5 = 1 << 5;
+constexpr auto b6 = 1 << 6;
+constexpr auto b7 = 1 << 7;
+constexpr auto b8 = 1 << 8;
+constexpr auto b9 = 1 << 9;
+constexpr auto b10 = 1 << 10;
+constexpr auto b11 = 1 << 11;
+constexpr auto b12 = 1 << 12;
+constexpr auto b13 = 1 << 13;
+constexpr auto b14 = 1 << 14;
+constexpr auto b15 = 1 << 15;
+constexpr auto b16 = 1 << 16;
+constexpr auto b17 = 1 << 17;
+constexpr auto b18 = 1 << 18;
+constexpr auto b19 = 1 << 19;
+constexpr auto b20 = 1 << 20;
+constexpr auto b21 = 1 << 21;
+constexpr auto b22 = 1 << 22;
+constexpr auto b23 = 1 << 23;
+constexpr auto b24 = 1 << 24;
+constexpr auto b25 = 1 << 25;
+constexpr auto b26 = 1 << 26;
+constexpr auto b27 = 1 << 27;
+constexpr auto b28 = 1 << 28;
+constexpr auto b29 = 1 << 29;
+constexpr auto b30 = 1 << 30;
+constexpr auto b31 = 1 << 31;
+} // namespace literals
 
 // Is the bitmask within the maximum value of the register?
-template <typename T>
-static constexpr void validate_bit_width([[maybe_unused]] const T reg, const int bits)
+template <typename T, typename B>
+static constexpr void check_width([[maybe_unused]] const T reg, const B bits)
 {
 	// ensure the register is unsigned
 	static_assert(std::is_unsigned<T>::value, "register must be unsigned");
 
 	// Ensure the bits fall within the type size
 	assert(static_cast<uint64_t>(bits) > 0);
+
+	// Note: if you'd like to extend this to 64-bits, double check that the
+	//       assertions still work.  Their purpose is to catch when the bit
+	//       value exceeds the maximum width of the template type.
 	assert(static_cast<int64_t>(bits) <=
 	       static_cast<int64_t>(std::numeric_limits<T>::max()));
 }
 
 // Set the indicated bits
 template <typename T>
-constexpr T set_bits_const(const T reg, const int bits)
+constexpr T mask_on(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return reg | static_cast<T>(bits);
 }
 template <typename T>
-constexpr void set_bits(T &reg, const int bits)
+constexpr void set(T &reg, const int bits)
 {
-	reg = set_bits_const(reg, bits);
+	reg = mask_on(reg, bits);
 }
 
 // Set all of the register's bits high
@@ -134,91 +151,101 @@ constexpr void set_bits(T &reg, const int bits)
 // counter.
 //
 template <typename T>
-constexpr T all_bits_set()
+constexpr T all()
 {
 	return std::is_signed<T>::value ? static_cast<T>(-1)
 	                                : std::numeric_limits<T>::max();
 }
 template <typename T>
-constexpr void set_all_bits(T &reg)
+constexpr void set_all(T &reg)
 {
-	reg = all_bits_set<T>();
+	reg = all<T>();
+}
+
+// Make a bitmask of the indicated bits
+template <typename T>
+constexpr T make(const int bits)
+{
+	check_width(static_cast<T>(0), bits);
+	return static_cast<T>(bits);
 }
 
 // Clear the indicated bits
 template <typename T>
-constexpr T clear_bits_const(const T reg, const int bits)
+constexpr T mask_off(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return reg & ~static_cast<T>(bits);
 }
 template <typename T>
-constexpr void clear_bits(T &reg, const int bits)
+constexpr void clear(T &reg, const int bits)
 {
-	reg = clear_bits_const(reg, bits);
+	reg = mask_off(reg, bits);
 }
 
 // Set the indicated bits to the given bool value
 template <typename T>
-constexpr T set_bits_const_to(const T reg, const int bits, const bool value)
+constexpr T mask_to(const T reg, const bool value, const int bits)
 {
-	validate_bit_width(reg, bits);
-	return value ? set_bits_const(reg, bits) : clear_bits_const(reg, bits);
+	check_width(reg, bits);
+	return value ? mask_on(reg, bits) : mask_off(reg, bits);
 }
 template <typename T>
-constexpr void set_bits_to(T &reg, const int bits, const bool value)
+constexpr void set_to(T &reg, const bool value, const int bits)
 {
-	reg = set_bits_const_to(reg, bits, value);
+	reg = mask_to(reg, value, bits);
 }
 
-// Toggle the indicated bits
+// flip the indicated bits
 template <typename T>
-constexpr T toggle_bits_const(const T reg, const int bits)
+constexpr T mask_flip(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return reg ^ static_cast<T>(bits);
 }
 template <typename T>
-constexpr void toggle_bits(T &reg, const int bits)
+constexpr void flip(T &reg, const int bits)
 {
-	reg = toggle_bits_const(reg, bits);
+	reg = mask_flip(reg, bits);
 }
 
-// Toggle all the bits in the register
+// flip all the bits in the register
 template <typename T>
-constexpr T toggle_all_bits_const(const T reg)
+constexpr T mask_flip_all(const T reg)
 {
-	return reg ^ all_bits_set<T>();
+	return reg ^ all<T>();
 }
 template <typename T>
-constexpr void toggle_all_bits(T &reg)
+constexpr void flip_all(T &reg)
 {
-	reg = toggle_all_bits_const(reg);
+	reg = mask_flip_all(reg);
 }
 
-// Check if the indicated bits are set
+// Check if the indicated bits is set
 template <typename T>
-constexpr bool are_bits_set(const T reg, const int bits)
+constexpr bool is(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return (reg & static_cast<T>(bits)) == static_cast<T>(bits);
 }
 
-// Check if any one of the indicated bits are set
+// Check if any one of the indicated bits is set
 template <typename T>
-constexpr bool are_any_bits_set(const T reg, const int bits)
+constexpr bool any(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return reg & static_cast<T>(bits);
 }
 
-// Check if the indicated bits are cleared (not set)
+// Check if the indicated bits is cleisd (not set)
 template <typename T>
-constexpr bool are_bits_cleared(const T reg, const int bits)
+constexpr bool cleared(const T reg, const int bits)
 {
-	validate_bit_width(reg, bits);
+	check_width(reg, bits);
 	return (reg & static_cast<T>(bits)) == 0;
 }
+
+} // namespace bit
 
 // close the header
 #endif
