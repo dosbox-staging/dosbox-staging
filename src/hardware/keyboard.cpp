@@ -229,11 +229,16 @@ bit 0    timer 2 gate to speaker status
 extern bool TIMER_GetOutput2(void);
 static uint8_t read_p61(io_port_t, io_width_t)
 {
-	if (TIMER_GetOutput2())
-		port_61_data |= 0x20;
+	// Bit 4 must be toggled each request
+	toggle_bits(port_61_data, bit_4);
+
+	// On PC/AT systems, bit 5 sets the timer 2 output status
+	if (is_machine(MCH_EGA | MCH_VGA))
+		set_bits_to(port_61_data, bit_5, TIMER_GetOutput2());
 	else
-		port_61_data &= ~0x20;
-	port_61_data ^= 0x10;
+		// On XT systems always toggle bit 5 (Spellicopter CGA)
+		toggle_bits(port_61_data, bit_5);
+
 	return port_61_data;
 }
 
