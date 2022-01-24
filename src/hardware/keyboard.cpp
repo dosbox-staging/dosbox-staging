@@ -255,8 +255,11 @@ bit 0 = 1  loop in POST
 */
 static uint8_t read_p62(io_port_t, io_width_t)
 {
-	Bit8u ret = ~0x20;
-	if (TIMER_GetOutput2()) ret |= 0x20;
+	auto ret = all_bits_set<uint8_t>();
+
+	if(!TIMER_GetOutput2())
+		clear_bits(ret, bit_5);
+
 	return ret;
 }
 
