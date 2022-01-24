@@ -16,9 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 #include "keyboard.h"
+
+#include "bitops.h"
 #include "inout.h"
 #include "pic.h"
 #include "mem.h"
@@ -200,6 +201,11 @@ extern void TIMER_SetGate2(bool);
 static void write_p61(io_port_t, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
+
+	// Clear the keyboard buffer on XT
+	if (machine < MCH_EGA && are_bits_set(val, bit_7))
+		KEYBOARD_ClrBuffer();
+
 	if ((port_61_data ^ val) & 3) {
 		if ((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
 		PCSPEAKER_SetType(val & 3);
