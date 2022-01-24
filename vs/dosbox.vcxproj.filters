@@ -554,6 +554,9 @@
     <ClInclude Include="..\include\bios_disk.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\bitops.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\byteorder.h">
       <Filter>include</Filter>
     </ClInclude>

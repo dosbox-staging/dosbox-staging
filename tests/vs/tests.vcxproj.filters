@@ -18,6 +18,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\bitops_tests.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\fs_utils_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>
