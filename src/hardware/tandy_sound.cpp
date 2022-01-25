@@ -376,8 +376,15 @@ public:
 			}
 		}
 
-		const auto sample_rate = static_cast<uint32_t>(section->Get_int("tandyrate"));
-		tandy.chan = MIXER_AddChannel(&SN76496Update, sample_rate, "TANDY");
+		tandy.chan = MIXER_AddChannel(&SN76496Update, 0, "TANDY");
+
+		// Use multiples of 8 to divide the SN76496 clock down to a
+		// sampling rate to avoid harmonics.  This can be checked in
+		// Jumpman's intro (machine = tandy).  Note: A high mixer rate
+		// is needed to support the clock/48 rate.
+		const auto mix_rate = tandy.chan->GetSampleRate();
+		const auto gen_rate = SOUND_CLOCK / (mix_rate >= 96000 ? 48 : 96);
+		tandy.chan->SetFreq(gen_rate);
 
 		WriteHandler[0].Install(0xc0, SN76496Write, io_width_t::byte, 2);
 
@@ -409,7 +416,7 @@ public:
 		real_writeb(0x40,0xd4,0xff);	/* BIOS Tandy DAC initialization value */
 
 		((device_t&)device).device_start();
-		device.convert_samplerate(static_cast<int>(sample_rate));
+		device.convert_samplerate(gen_rate);
 	}
 	~TANDYSOUND(){ }
 };
