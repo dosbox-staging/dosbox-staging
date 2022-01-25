@@ -149,15 +149,18 @@ static void SN76496Update(uint16_t length)
 		tandy.chan->Enable(false);
 		return;
 	}
-	const Bitu MAX_SAMPLES = 2048;
-	if (length > MAX_SAMPLES)
-		return;
+	constexpr uint16_t MAX_SAMPLES = 2048;
 	Bit16s buffer[MAX_SAMPLES];
 	Bit16s* outputs = buffer;
 
 	device_sound_interface::sound_stream stream;
-	static_cast<device_sound_interface&>(device).sound_stream_update(stream, 0, &outputs, length);
-	tandy.chan->AddSamples_m16(length, buffer);
+
+	while (length) {
+		const auto n = std::min(MAX_SAMPLES, length);
+		static_cast<device_sound_interface &>(device).sound_stream_update(stream, 0, &outputs, n);
+		tandy.chan->AddSamples_m16(n, buffer);
+		length -= n;
+	}
 }
 
 bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma) {
