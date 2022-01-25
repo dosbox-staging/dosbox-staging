@@ -300,6 +300,9 @@ void MixerChannel::Mix(const int _needed)
 		auto left = needed - done;
 		left *= freq_add;
 		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
+		if (left <= 0) // avoid underflow
+			break;
+		left = std::min(left, MIXER_BUFSIZE); // avoid overflow
 		handler(check_cast<uint16_t>(left));
 	}
 }
