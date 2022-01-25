@@ -288,7 +288,7 @@ private:
 
 	// Register and playback rate
 	uint32_t dram_addr = 0u;
-	uint32_t playback_rate = 0u;
+	int playback_rate = 0;
 	uint16_t register_data = 0u;
 	uint8_t selected_register = 0u;
 
@@ -623,7 +623,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		active_voices = requested_voices;
 		assert(active_voices <= voices.size());
 		active_voice_mask = 0xffffffffu >> (MAX_VOICES - active_voices);
-		playback_rate = static_cast<uint32_t>(
+		playback_rate = static_cast<int>(
 		        round(1000000.0 / (1.619695497 * active_voices)));
 		audio_channel->SetFreq(playback_rate);
 	}
@@ -670,7 +670,7 @@ void Gus::BeginPlayback()
 	irq_enabled = ((register_data & 0x400) != 0);
 	audio_channel->Enable(true);
 	if (prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %u Hz", active_voices,
+		LOG_MSG("GUS: Activated %u voices at %d Hz", active_voices,
 		        playback_rate);
 		prev_logged_voices = active_voices;
 	}
