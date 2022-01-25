@@ -387,7 +387,7 @@ public:
 			ReadHandler[1].Install(0xc4, TandyDACRead, io_width_t::byte, 4);
 
 			tandy.dac.enabled=true;
-			tandy.dac.chan = MIXER_AddChannel(&TandyDACUpdate, sample_rate, "TANDYDAC");
+			tandy.dac.chan = MIXER_AddChannel(&TandyDACUpdate, 0, "TANDYDAC");
 
 			tandy.dac.hw.base=0xc4;
 			tandy.dac.hw.irq =7;
