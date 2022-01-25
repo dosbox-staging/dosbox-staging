@@ -424,8 +424,8 @@ void DOSBOX_Init() {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	// Some frequently used option sets
-	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
-	                       "11025", "8000",  "49716", 0};
+	const char *rates[] = {"96000", "44100", "48000", "32000", "22050",
+	                       "16000", "11025", "8000",  "49716", 0};
 
 	/* Setup all the different modules making up DOSBox */
 	const char *machines[] = {"hercules",      "cga",
