@@ -230,8 +230,8 @@ private:
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
-	uint32_t Dma8Addr() noexcept;
-	uint32_t Dma16Addr() noexcept;
+	uint32_t GetDmaOffset() noexcept;
+	void UpdateDmaAddr(uint32_t offset) noexcept;
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
 	void StartDmaTransfers();
 	bool IsDmaPcm16Bit() noexcept;
@@ -299,6 +299,7 @@ private:
 
 	// DMA states
 	uint16_t dma_addr = 0u;
+	uint8_t dma_addr_nibble = 0u;
 	// dma_ctrl would normally be a uint8_t as real hardware uses 8 bits,
 	// but we store the DMA terminal count status in the 9th bit
 	uint16_t dma_ctrl = 0u;
@@ -716,17 +717,37 @@ void Gus::CheckVoiceIrq()
 	}
 }
 
-uint32_t Gus::Dma8Addr() noexcept
+// Returns a 24-bit offset into the GUS's memory space holding the next
+// DMA sample that will be read or written to via DMA. This offset
+// is derived from the 16-bit DMA address register.
+uint32_t Gus::GetDmaOffset() noexcept
 {
-	return static_cast<uint32_t>(dma_addr << 4);
+	uint32_t adjusted;
+	if(IsDmaXfer16Bit()) {
+		const auto upper = dma_addr & 0b1100'0000'0000'0000;
+		const auto lower = dma_addr & 0b0001'1111'1111'1111;
+		adjusted = static_cast<uint32_t>(upper | (lower << 1));
+	}
+	else {
+		adjusted = dma_addr;
+	}
+	return check_cast<uint32_t>(adjusted << 4) + dma_addr_nibble;
 }
 
-uint32_t Gus::Dma16Addr() noexcept
+// Update the current 16-bit DMA position from the the given 24-bit RAM offset 
+void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 {
-	const auto lower = dma_addr & 0b0001'1111'1111'1111;
-	const auto upper = dma_addr & 0b1100'0000'0000'0000;
-	const auto combined = (lower << 1) | upper;
-	return static_cast<uint32_t>(combined << 4);
+	uint32_t adjusted;
+	if (IsDmaXfer16Bit()) {
+		const auto upper = offset & 0b1100'0000'0000'0000'0000;
+		const auto lower = offset & 0b0011'1111'1111'1111'1110;
+		adjusted = upper | (lower >> 1);
+	}
+	else {
+		adjusted = offset;
+	}
+	dma_addr = check_cast<uint16_t>(adjusted >> 4); // pack it into the 16-bit register
+	dma_addr_nibble = check_cast<uint8_t>(adjusted & 0xf); // hang onto the last nibble
 }
 
 bool Gus::PerformDmaTransfer()
@@ -740,7 +761,9 @@ bool Gus::PerformDmaTransfer()
 	        dma_channel->currcnt + 1);
 #endif
 
-	const auto offset = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
+	// Get the current DMA offset relative to the block of GUS memory
+	const auto offset = GetDmaOffset();
+
 	const uint16_t desired = dma_channel->currcnt + 1;
 
 	// All of the operations below involve reading, writing, or skipping
@@ -1154,7 +1177,7 @@ void Gus::StopPlayback()
 	voice_index = 0u;
 	active_voices = 0u;
 
-	dma_addr = 0u;
+	UpdateDmaAddr(0);
 	dram_addr = 0u;
 	register_data = 0u;
 	selected_register = 0u;
@@ -1320,6 +1343,7 @@ void Gus::WriteToRegister()
 		return;
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
+		dma_addr_nibble = 0u; // invalidate the nibble
 		return;
 	case 0x43: // LSW Peek/poke DRAM position
 		dram_addr = (0xf0000 & dram_addr) |
