@@ -485,10 +485,9 @@ float Voice::Read8BitSample(const ram_array_t &ram, const int32_t addr) const no
 // Read a 16-bit sample returned as a float
 float Voice::Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept
 {
-	// Calculate offset of the 16-bit sample
-	const auto lower = addr & 0b1100'0000'0000'0000'0000;
-	const auto upper = addr & 0b0001'1111'1111'1111'1111;
-	const auto i = static_cast<size_t>(lower | (upper << 1));
+	const auto upper = addr & 0b1100'0000'0000'0000'0000;
+	const auto lower = addr & 0b0001'1111'1111'1111'1111;
+	const auto i = static_cast<uint32_t>(upper | (lower << 1));
 	return static_cast<int16_t>(host_readw(&ram.at(i)));
 }
 
