@@ -47,7 +47,7 @@
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 
 // Buffer and memory constants
-constexpr int BUFFER_FRAMES = 48;
+constexpr int BUFFER_FRAMES = 96;
 constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
 
 // DMA transfer size and rate constants

@@ -90,6 +90,8 @@ centerline.
 #include "mame/sn76496.h"
 
 constexpr int SOUND_CLOCK = 14318180 / 4;
+constexpr int NON_HARMONIC_SOUND_CLOCK = 14318208 / 4;
+
 constexpr uint16_t TDAC_DMA_BUFSIZE = 1024;
 
 static struct {
@@ -149,16 +151,21 @@ static void SN76496Update(uint16_t length)
 		tandy.chan->Enable(false);
 		return;
 	}
-	constexpr uint16_t MAX_SAMPLES = 2048;
-	Bit16s buffer[MAX_SAMPLES];
-	Bit16s* outputs = buffer;
 
-	device_sound_interface::sound_stream stream;
+	// sound_stream_update's API requires an array of two pointers that
+	// point to either the mono array head or left and right heads. In this
+	// case, we're using a mono array but we still want to comply with the
+	// API, so we give it a valid two-element pointer array.
+	constexpr uint16_t max_samples_expected = 128;
+	int16_t buffer[1][max_samples_expected];
+	int16_t *buffer_head[] = {buffer[0], buffer[0]};
+	device_sound_interface::sound_stream ss;
 
 	while (length) {
-		const auto n = std::min(MAX_SAMPLES, length);
-		static_cast<device_sound_interface &>(device).sound_stream_update(stream, 0, &outputs, n);
-		tandy.chan->AddSamples_m16(n, buffer);
+		const auto n = std::min(max_samples_expected, length);
+		static_cast<device_sound_interface &>(device).sound_stream_update(
+		        ss, nullptr, buffer_head, n);
+		tandy.chan->AddSamples_m16(n, buffer[0]);
 		length -= n;
 	}
 }
@@ -383,7 +390,22 @@ public:
 		// Jumpman's intro (machine = tandy).  Note: A high mixer rate
 		// is needed to support the clock/48 rate.
 		const auto mix_rate = tandy.chan->GetSampleRate();
-		const auto gen_rate = SOUND_CLOCK / (mix_rate >= 96000 ? 48 : 96);
+
+		const auto clock_rate = mix_rate > 48000 ? SOUND_CLOCK : NON_HARMONIC_SOUND_CLOCK;
+		if (mix_rate == 48000) {
+
+			static sn76496_device nh_sn76496(machine_config(), 0, 0, clock_rate);
+			static ncr8496_device nh_ncr8496(machine_config(), 0, 0, clock_rate);
+			activeDevice = &nh_ncr8496;
+		}
+		const auto divisor = 48;
+		auto gen_rate = clock_rate / divisor;
+		for (int d = divisor; gen_rate > mix_rate; d += divisor)
+			gen_rate = clock_rate / d;
+
+		LOG_MSG("Tandy: clock-rate %d Hz, gen-rate %d Hz",
+		        clock_rate, gen_rate);
+
 		tandy.chan->SetFreq(gen_rate);
 
 		WriteHandler[0].Install(0xc0, SN76496Write, io_width_t::byte, 2);

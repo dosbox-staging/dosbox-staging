@@ -353,7 +353,7 @@ private:
 	IO_WriteHandleObject write_handler = {};
 	static constexpr auto clock_rate_hz = 4000000;
 	sn76496_device device;
-	static constexpr auto max_samples_expected = 64;
+	static constexpr auto max_samples_expected = 128;
 	int16_t buffer[1][max_samples_expected];
 	size_t last_write = 0;
 };
