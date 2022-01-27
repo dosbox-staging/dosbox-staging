@@ -339,7 +339,6 @@ void DOS_Shell::ParseLine(char *line)
 	line = trim(line);
 
 	/* Do redirection and pipe checks */
-
 	char *in = nullptr;
 	char *out = nullptr;
 	char *pipe = nullptr;
@@ -401,11 +400,10 @@ void DOS_Shell::ParseLine(char *line)
 			// Read only file, open con again
 			open_console_device();
 			if (!pipe) {
-				if (*out)
-					WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
-					                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
-					                         : "SHELL_CMD_FILE_CREATE_ERROR"),
-					         out);
+				WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
+				                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
+				                         : "SHELL_CMD_FILE_CREATE_ERROR"),
+				         *out ? out : "(unnamed)");
 				close_stdout();
 				open_stdout_as("nul");
 			}
@@ -438,7 +436,7 @@ void DOS_Shell::ParseLine(char *line)
 			close_stdin();
 			open_console_device(normalstdin);
 		} else {
-			WriteOut("\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
+			WriteOut(MSG_Get("SHELL_CMD_FAILED_PIPE"));
 		}
 		delete[] pipe;
 		if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME))
@@ -903,6 +901,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_ACCESS_DENIED", "Access denied - %s\n");
 	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection - %s\n");
+	MSG_Add("SHELL_CMD_FAILED_PIPE", "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
 	MSG_Add("SHELL_CMD_FILE_CREATE_ERROR", "File creation error - %s\n");
 	MSG_Add("SHELL_CMD_FILE_OPEN_ERROR", "File open error - %s\n");
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND", "File not found: %s\n");
