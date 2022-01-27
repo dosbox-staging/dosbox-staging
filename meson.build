@@ -235,6 +235,8 @@ atomic_dep         = cxx.find_library('atomic', required : false)
 stdcppfs_dep       = cxx.find_library('stdc++fs', required : false)
 opus_dep           = dependency('opusfile',
                                 static : ('opusfile' in static_libs_list))
+speexdsp_dep       = dependency('speexdsp',
+                                static : ('speexdsp' in static_libs_list))
 threads_dep        = dependency('threads')
 sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
                                 static : ('sdl2' in static_libs_list))

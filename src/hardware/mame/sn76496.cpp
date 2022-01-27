@@ -142,7 +142,7 @@
 
 #define MAX_OUTPUT 0x7fff
 //When you go over this create sample
-#define RATE_MAX ( 1 << 30)
+#define RATE_MAX ( 1 << 10)
 
 sn76496_base_device::sn76496_base_device(const machine_config &mconfig,
                                          device_type type,

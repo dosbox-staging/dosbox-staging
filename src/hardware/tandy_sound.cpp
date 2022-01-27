@@ -89,14 +89,19 @@ centerline.
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
+#include <speex/speex_resampler.h>
+
 constexpr int SOUND_CLOCK = 14318180 / 4;
-constexpr int NON_HARMONIC_SOUND_CLOCK = 14318208 / 4;
+constexpr int gen_rate = SOUND_CLOCK / 8;
 
 constexpr uint16_t TDAC_DMA_BUFSIZE = 1024;
 
 static struct {
 	mixer_channel_t chan = nullptr;
 	bool enabled = false;
+	SpeexResamplerState *resampler = nullptr;
+	double gen_to_mix_ratio = 1.0;
+
 	Bitu last_write = 0u;
 	struct {
 		mixer_channel_t chan = nullptr;
@@ -140,7 +145,7 @@ static void SN76496Write(io_port_t, io_val_t value, io_width_t)
 	//%7.3f",data,PIC_FullIndex());
 }
 
-static void SN76496Update(uint16_t length)
+static void SN76496Update(uint16_t mix_length)
 {
 	if (!tandy.chan)
 		return;
@@ -156,17 +161,48 @@ static void SN76496Update(uint16_t length)
 	// point to either the mono array head or left and right heads. In this
 	// case, we're using a mono array but we still want to comply with the
 	// API, so we give it a valid two-element pointer array.
-	constexpr uint16_t max_samples_expected = 128;
-	int16_t buffer[1][max_samples_expected];
-	int16_t *buffer_head[] = {buffer[0], buffer[0]};
+	constexpr uint16_t mix_samples_expected = 128;
+	int16_t mix_buffer[mix_samples_expected];
+
+	constexpr uint16_t gen_samples_expected = 1000;
+	int16_t gen_buffer[1][gen_samples_expected];
+	int16_t *gen_buffer_head[] = {gen_buffer[0], gen_buffer[0]};
+
 	device_sound_interface::sound_stream ss;
 
-	while (length) {
-		const auto n = std::min(max_samples_expected, length);
+	//
+
+	// where channelID is the ID of the channel to be processed. For a mono
+	// stream, use 0. The in pointer points to the first sample of the input
+	// buffer for the selected channel and out points to the first sample of
+	// the output. The size of the input and output buffers are specified by
+	// in_length and out_length respectively. Upon completion, these values
+	// are replaced by the number of samples read and written by the
+	// resampler. Unless an error occurs, either all input samples will be
+	// read or all output samples will be written to (or both). For
+	// floating-point samples, the function speex_resampler_process_float()
+	// behaves similarly.
+
+	while (mix_length) {
+		const uint32_t n = std::min(mix_samples_expected, mix_length);
+		auto gen_length = static_cast<uint32_t>(
+		        std::ceil(tandy.gen_to_mix_ratio * n));
+
 		static_cast<device_sound_interface &>(device).sound_stream_update(
-		        ss, nullptr, buffer_head, n);
-		tandy.chan->AddSamples_m16(n, buffer[0]);
-		length -= n;
+		        ss, nullptr, gen_buffer_head, static_cast<int>(gen_length));
+
+		uint32_t resampled_length = n;
+		auto err = speex_resampler_process_int(tandy.resampler, 0,
+		                                       gen_buffer[0],
+		                                       &gen_length, mix_buffer,
+		                                       &resampled_length);
+		if (err) {
+			LOG_WARNING("TANDY: after speex_resampler_process_int failed: %d", err);
+			break;
+		}
+		const auto n_to_give = check_cast<uint16_t>(std::min(resampled_length, n));
+		tandy.chan->AddSamples_m16(n_to_give, mix_buffer);
+		mix_length -= n_to_give;
 	}
 }
 
@@ -213,7 +249,7 @@ static void TandyDACModeChanged()
 		tandy.dac.chan->FillUp();
 		if (tandy.dac.frequency!=0) {
 			float freq=3579545.0f/((float)tandy.dac.frequency);
-			tandy.dac.chan->SetFreq((Bitu)freq);
+			tandy.dac.chan->SetFreq(static_cast<int>(freq));
 			float vol=((float)tandy.dac.amplitude)/7.0f;
 			tandy.dac.chan->SetVolume(vol,vol);
 			if ((tandy.dac.mode&0x0c)==0x0c) {
@@ -389,24 +425,18 @@ public:
 		// sampling rate to avoid harmonics.  This can be checked in
 		// Jumpman's intro (machine = tandy).  Note: A high mixer rate
 		// is needed to support the clock/48 rate.
-		const auto mix_rate = tandy.chan->GetSampleRate();
+		const auto mix_rate = static_cast<uint32_t>(tandy.chan->GetSampleRate());
 
-		const auto clock_rate = mix_rate > 48000 ? SOUND_CLOCK : NON_HARMONIC_SOUND_CLOCK;
-		if (mix_rate == 48000) {
-
-			static sn76496_device nh_sn76496(machine_config(), 0, 0, clock_rate);
-			static ncr8496_device nh_ncr8496(machine_config(), 0, 0, clock_rate);
-			activeDevice = &nh_ncr8496;
+		constexpr auto speex_quality = 5;
+		int speex_error = 0;
+		tandy.resampler = speex_resampler_init(1, gen_rate, mix_rate,
+		                                       speex_quality, &speex_error);
+		if (speex_error) {
+			LOG_MSG("Tandy: Speex resampler init failed with error %d",
+			        speex_error);
 		}
-		const auto divisor = 48;
-		auto gen_rate = clock_rate / divisor;
-		for (int d = divisor; gen_rate > mix_rate; d += divisor)
-			gen_rate = clock_rate / d;
 
-		LOG_MSG("Tandy: clock-rate %d Hz, gen-rate %d Hz",
-		        clock_rate, gen_rate);
-
-		tandy.chan->SetFreq(gen_rate);
+		tandy.gen_to_mix_ratio = static_cast<double>(gen_rate) / mix_rate;
 
 		WriteHandler[0].Install(0xc0, SN76496Write, io_width_t::byte, 2);
 
