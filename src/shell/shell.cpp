@@ -325,6 +325,11 @@ void open_console_device(const bool condition = true)
 	}
 }
 
+uint16_t get_tick_random_number() {
+	constexpr uint16_t random_uplimit = 10000;
+	return (uint16_t)(GetTicks() % random_uplimit);
+}
+
 void DOS_Shell::ParseLine(char *line)
 {
 	LOG(LOG_EXEC, LOG_ERROR)("Parsing command line: %s", line);
@@ -346,8 +351,8 @@ void DOS_Shell::ParseLine(char *line)
 
 	GetRedirection(line, &in, &out, &pipe, &append);
 	if (in || out || pipe) {
-		normalstdin = (psp->GetFileHandle(0) != 0xff);
-		normalstdout = (psp->GetFileHandle(1) != 0xff);
+		normalstdin = (psp->GetFileHandle(0) != failed_open);
+		normalstdout = (psp->GetFileHandle(1) != failed_open);
 	}
 	if (in) {
 		if ((dummy = open_stdin_as(in)) != failed_open) { // Test if
@@ -369,10 +374,9 @@ void DOS_Shell::ParseLine(char *line)
 	char pipetmp[270];
 	uint16_t fattr;
 	if (pipe) {
-		srand((unsigned int)GetTicks());
 		std::string temp_line;
 		if (!GetEnvStr("TEMP", temp_line) && !GetEnvStr("TMP", temp_line)) {
-			safe_sprintf(pipetmp, "pipe%d.tmp", rand() % 10000);
+			safe_sprintf(pipetmp, "pipe%d.tmp", get_tick_random_number());
 		} else {
 			std::string::size_type idx = temp_line.find('=');
 			std::string temp = temp_line.substr(idx + 1,
@@ -380,9 +384,9 @@ void DOS_Shell::ParseLine(char *line)
 			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
 				safe_sprintf(pipetmp, "%s\\pipe%d.tmp", temp.c_str(),
-				        rand() % 10000);
+				        get_tick_random_number());
 			else
-				safe_sprintf(pipetmp, "pipe%d.tmp", rand() % 10000);
+				safe_sprintf(pipetmp, "pipe%d.tmp", get_tick_random_number());
 		}
 	}
 	if (out || pipe) {
