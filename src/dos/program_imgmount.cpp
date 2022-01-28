@@ -44,24 +44,31 @@ void IMGMOUNT::ListImgMounts(void)
 	const std::string header_slot = MSG_Get("PROGRAM_MOUNT_STATUS_SLOT");
 
 	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	const auto width_1 = static_cast<int>(header_drive.size());
-	const auto width_3 = std::max(11, static_cast<int>(header_label.size()));
-	const auto width_4 = std::max(11, static_cast<int>(header_slot.size()));
-	const auto width_2 = term_width - 4 - width_1 - width_3 - width_4;
+	const auto width_drive = static_cast<int>(header_drive.length());
+	const auto width_label = std::max(minimum_column_length,
+	                                  static_cast<int>(header_label.length()));
+	const auto width_slot = std::max(minimum_column_length,
+	                                 static_cast<int>(header_slot.length()));
+	const auto width_name = term_width - 4 - width_drive - width_label - width_slot;
+	if (width_name < 0) {
+		LOG_WARNING("Message is too long.");
+		return;
+	}
 
-	auto print_row = [&](const std::string &txt_1, const std::string &txt_2,
-	                     const std::string &txt_3, const std::string &txt_4) {
-		WriteOut("%-*s %-*s %-*s %-*s\n", width_1, txt_1.c_str(),
-		         width_2, txt_2.c_str(), width_3, txt_3.c_str(),
-		         width_4, txt_4.c_str());
+	auto print_row = [&](const std::string &txt_drive,
+	                     const std::string &txt_name, const std::string &txt_label,
+	                     const std::string &txt_slot) {
+		WriteOut("%-*s %-*s %-*s %-*s\n", width_drive, txt_drive.c_str(),
+		         width_name, txt_name.c_str(), width_label,
+		         txt_label.c_str(), width_slot, txt_slot.c_str());
 	};
 
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 	print_row(header_drive, header_name, header_label, header_slot);
-	for (int i = 0; i < term_width; i++)
-		WriteOut_NoParsing("-");
+	const std::string horizontal_divider(term_width, '-');
+	WriteOut_NoParsing(horizontal_divider.c_str());
 
-	bool print_drive = false;
+	bool found_drives = false;
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		std::string disk_info = Drives[d] ? Drives[d]->GetInfo() : "";
 		if (disk_info.substr(0, 9) == "fatDrive " ||
@@ -69,10 +76,10 @@ void IMGMOUNT::ListImgMounts(void)
 			print_row(std::string{drive_letter(d)}, disk_info.substr(9),
 			          To_Label(Drives[d]->GetLabel()),
 			          DriveManager::GetDrivePosition(d));
-			print_drive = true;
+			found_drives = true;
 		}
 	}
-	if (!print_drive)
+	if (!found_drives)
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
 }
 
