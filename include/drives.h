@@ -42,6 +42,7 @@ public:
 //	static void CycleDisk(bool pressed);
 	static void CycleDisks(int drive, bool notify);
 	static void CycleAllDisks(void);
+	static char *GetDrivePosition(int drive);
 	static void Init(Section* sec);
 	
 private:
