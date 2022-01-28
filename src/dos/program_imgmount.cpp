@@ -36,12 +36,56 @@
 #include "string_utils.h"
 #include "../ints/int10.h"
 
+void IMGMOUNT::ListImgMounts(void)
+{
+	const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
+	const std::string header_name = MSG_Get("PROGRAM_MOUNT_STATUS_NAME");
+	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
+	const std::string header_slot = MSG_Get("PROGRAM_MOUNT_STATUS_SLOT");
+
+	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const auto width_1 = static_cast<int>(header_drive.size());
+	const auto width_3 = std::max(11, static_cast<int>(header_label.size()));
+	const auto width_4 = std::max(11, static_cast<int>(header_slot.size()));
+	const auto width_2 = term_width - 4 - width_1 - width_3 - width_4;
+
+	auto print_row = [&](const std::string &txt_1, const std::string &txt_2,
+	                     const std::string &txt_3, const std::string &txt_4) {
+		WriteOut("%-*s %-*s %-*s %-*s\n", width_1, txt_1.c_str(),
+		         width_2, txt_2.c_str(), width_3, txt_3.c_str(),
+		         width_4, txt_4.c_str());
+	};
+
+	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
+	print_row(header_drive, header_name, header_label, header_slot);
+	for (int i = 0; i < term_width; i++)
+		WriteOut_NoParsing("-");
+
+	bool print_drive = false;
+	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
+		std::string disk_info = Drives[d] ? Drives[d]->GetInfo() : "";
+		if (disk_info.substr(0, 9) == "fatDrive " ||
+		    disk_info.substr(0, 9) == "isoDrive ") {
+			print_row(std::string{drive_letter(d)}, disk_info.substr(9),
+			          To_Label(Drives[d]->GetLabel()),
+			          DriveManager::GetDrivePosition(d));
+			print_drive = true;
+		}
+	}
+	if (!print_drive)
+		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
+}
+
 void IMGMOUNT::Run(void) {
     //Hack To allow long commandlines
     ChangeToLongCmd();
 
+    if (!cmd->GetCount()) {
+        ListImgMounts();
+        return;
+    }
     // Usage
-    if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
+    if (cmd->FindExist("/?", false) ||
         cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
         WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
         return;

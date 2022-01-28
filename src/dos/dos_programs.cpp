@@ -49,11 +49,12 @@ extern Bit32u floppytype;
 void DOS_SetupPrograms(void)
 {
 	/*Add Messages */
-	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE", "No available IDE controllers. Drive will not have IDE emulation.\n");
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
 	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
 	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
+	MSG_Add("PROGRAM_MOUNT_STATUS_NAME", "Image name");
+	MSG_Add("PROGRAM_MOUNT_STATUS_SLOT", "Swap slot");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
@@ -438,6 +439,8 @@ void DOS_SetupPrograms(void)
 #endif
 	);
 
+	MSG_Add("PROGRAM_IMGMOUNT_STATUS_1",
+	        "The currently mounted disk and CD image drives are:\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
@@ -448,6 +451,10 @@ void DOS_SetupPrograms(void)
 		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
 		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
 		"\033[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl\033[0m\n");
+	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE",
+		"No drive available\n");
+	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",
+		"No available IDE controllers. Drive will not have IDE emulation.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_IMAGE","Could not load image file.\n"
 		"Check that the path is correct and the image is accessible.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY","Could not extract drive geometry from image.\n"

@@ -25,6 +25,7 @@
 
 class IMGMOUNT final : public Program {
     public:
+        void ListImgMounts(void);
         void Run(void);
 };
 
