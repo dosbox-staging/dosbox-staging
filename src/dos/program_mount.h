@@ -27,7 +27,7 @@ class MOUNT final : public Program {
     public:
         void Move_Z(char new_z);
         void ListMounts();
-        void Run(void);
+        void Run();
 };
 
 void MOUNT_ProgramStart(Program **make);

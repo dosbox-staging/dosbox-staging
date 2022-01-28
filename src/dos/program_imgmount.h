@@ -25,8 +25,8 @@
 
 class IMGMOUNT final : public Program {
     public:
-        void ListImgMounts(void);
-        void Run(void);
+        void ListImgMounts();
+        void Run();
 };
 
 void IMGMOUNT_ProgramStart(Program **make);

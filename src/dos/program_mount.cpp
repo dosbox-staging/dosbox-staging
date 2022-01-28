@@ -88,23 +88,26 @@ void MOUNT::ListMounts()
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	const auto width_1 = static_cast<int>(header_drive.size());
-	const auto width_3 = std::max(11, static_cast<int>(header_label.size()));
-	const auto width_2 = term_width - 3 - width_1 - width_3;
+	const auto width_drive = static_cast<int>(header_drive.length());
+	const auto width_label = std::max(minimum_column_length,
+	                                  static_cast<int>(header_label.size()));
+	const auto width_type = term_width - 3 - width_drive - width_label;
+	if (width_type < 0) {
+		LOG_WARNING("Message is too long.");
+		return;
+	}
 
-	auto print_row = [&](const std::string &txt_1,
-							const std::string &txt_2,
-							const std::string &txt_3) {
-		WriteOut("%-*s %-*s %-*s\n",
-					width_1, txt_1.c_str(),
-					width_2, txt_2.c_str(),
-					width_3, txt_3.c_str());
+	auto print_row = [&](const std::string &txt_drive, const std::string &txt_type,
+	                     const std::string &txt_label) {
+		WriteOut("%-*s %-*s %-*s\n", width_drive, txt_drive.c_str(),
+		         width_type, txt_type.c_str(), width_label,
+		         txt_label.c_str());
 	};
 
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 	print_row(header_drive, header_type, header_label);
-	for (int i = 0; i < term_width; i++)
-		WriteOut_NoParsing("-");
+	const std::string horizontal_divider(term_width, '-');
+	WriteOut_NoParsing(horizontal_divider.c_str());
 
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {

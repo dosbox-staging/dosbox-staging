@@ -259,8 +259,8 @@ int DriveManager::UnmountDrive(int drive) {
 char *DriveManager::GetDrivePosition(int drive)
 {
 	static char swap_position[10];
-	sprintf(swap_position, "%d / %d", driveInfos[drive].currentDisk + 1,
-	        (int)driveInfos[drive].disks.size());
+	safe_sprintf(swap_position, "%d / %d", driveInfos[drive].currentDisk + 1,
+	             (int)driveInfos[drive].disks.size());
 	return swap_position;
 }
 
