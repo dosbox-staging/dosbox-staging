@@ -71,9 +71,8 @@
 #define TICK_NEXT ( 1 << TICK_SHIFT)
 #define TICK_MASK (TICK_NEXT -1)
 
-// Over how many milliseconds will we permit a signal to grow from
-// zero up to peak amplitude? (recommended 10 to 20ms)
-#define ENVELOPE_MAX_EXPANSION_OVER_MS 15u
+// The percentage of the peak amplitude that the enveloper will bound-per sample
+#define ENVELOPE_MAX_EXPANSION_PERCENT 25
 
 // Regardless if the signal needed to be eveloped or not, how long
 // should the envelope monitor the initial signal? (recommended > 5s)
@@ -119,7 +118,11 @@ static struct mixer_t mixer = {};
 Bit8u MixTemp[MIXER_BUFSIZE] = {};
 
 MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name) : envelope(_name), handler(_handler)
-{}
+{
+	envelope.SetPeakAmplitude(MAX_AUDIO);
+	envelope.SetExpansionPercentage(ENVELOPE_MAX_EXPANSION_PERCENT);
+	envelope.SetExpiration(ENVELOPE_EXPIRES_AFTER_S);
+}
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name)
 {
@@ -271,8 +274,7 @@ void MixerChannel::SetFreq(int freq)
 	freq_add = (freq << FREQ_SHIFT) / mixer.freq;
 	interpolate = (freq != mixer.freq);
 	sample_rate = freq;
-	envelope.Update(sample_rate, peak_amplitude,
-	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
+	envelope.SetFrameRate(sample_rate);
 }
 
 bool MixerChannel::IsInterpolated() const
@@ -288,8 +290,7 @@ int MixerChannel::GetSampleRate() const
 void MixerChannel::SetPeakAmplitude(const int peak)
 {
 	peak_amplitude = peak;
-	envelope.Update(sample_rate, peak_amplitude,
-	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
+	envelope.SetPeakAmplitude(peak_amplitude);
 }
 
 void MixerChannel::Mix(const int _needed)
@@ -504,7 +505,7 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
-		envelope.Process(stereo, interpolate, prev_sample, next_sample);
+		envelope.Process(prev_sample, next_sample);
 
 		// Apply the left and right channel mappers only on write[..]
 		// assignments.  This ensures the channels are mapped only once
