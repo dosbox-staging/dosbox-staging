@@ -604,6 +604,9 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	                                      std::placeholders::_1);
 	audio_channel = MIXER_AddChannel(mixer_callback, 1, "GUS");
 
+	audio_channel->envelope.SetExpansionPercentage(12);
+	audio_channel->envelope.SetExpiration(0); // never expires
+
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
 	audio_channel->RegisterLevelCallBack(set_level_callback);
