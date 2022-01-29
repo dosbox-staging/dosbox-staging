@@ -188,6 +188,8 @@ void DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **pipe, boo
 	char **redir = nullptr;
 	size_t found, temp_len;
 	std::string str, chrs;
+	*ifn = *ofn = *pipe = 0;
+	*append = false;
 
 	while ((ch = *lr++)) {
 		if (quote && ch != '"') { /* don't parse redirection within
