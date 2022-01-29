@@ -32,12 +32,11 @@
  *
  *  Use
  *  ---
- *  1. Call Update(..) to provide the Envelope with information about the audio
- *     stream: the frame rate (in Hz), peak possible sample amplitude (from zero
- *     to 2^16 -1), the expansion phase duration in milliseconds that represents
- *     the shortest possible time the envelope will be expanded from zero to
- *     peak volume if the samples "earn" it (reasonable values are <30ms), and
- *     the desired expiration period in seconds (reasonable values are <60s).
+ *  1. Call the four Set*(..) functions to provide the Envelope with information
+ *     about the audio stream: the frame rate (in Hz), peak possible sample
+ *     amplitude (from zero to 2^16 -1), the expansion percentage relative to
+ *     the peak sample, and how long, in seconds, the enveloper should run
+ *     before expiring (zero seconds means run forever).
  *
  *  2. Call Process(..), passing it samples in their natural 16-bit signed
  *     form. Note: when the envelope is fully expanded or has expired, this
@@ -50,7 +49,7 @@
  *     characteristics about the envelope provided in the Update() call are
  *     retained and do not need to be provided after a reactivating.
  *
- *  By default, the evenlope does nothing; it needs to be Update()'d for it to
+ *  By default, the evenlope does nothing; it needs to be Set()'d for it to
  *  do work.
  */
 
@@ -63,12 +62,12 @@ class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(bool is_stereo, bool is_interpolated, int prev[], int next[]);
+	void Process(int prev[], int next[]);
 
-	void Update(int frame_rate,
-	            int peak_amplitude,
-	            uint8_t expansion_phase_ms,
-	            uint8_t expire_after_seconds);
+	void SetFrameRate(int frame_rate);
+	void SetPeakAmplitude(int peak);
+	void SetExpansionPercentage(int percent);
+	void SetExpiration(int seconds);
 
 	void Reactivate();
 
@@ -76,29 +75,30 @@ private:
 	Envelope(const Envelope &) = delete;            // prevent copying
 	Envelope &operator=(const Envelope &) = delete; // prevent assignment
 
-	bool ClampSample(int &sample, int next_edge);
+	void Apply(int prev[], int next[]);
 
-	void Apply(bool is_stereo, bool is_interpolated, int prev[], int next[]);
+	void Skip([[maybe_unused]] int prev[], [[maybe_unused]] int next[]) {}
 
-	void Skip([[maybe_unused]] bool is_stereo,
-	          [[maybe_unused]] bool is_interpolated,
-	          [[maybe_unused]] int prev[],
-	          [[maybe_unused]] int next[])
-	{}
+	void Update();
 
-	using process_f = std::function<void(Envelope &, bool, bool, int[], int[])>;
+	using process_f = std::function<void(Envelope &, int[], int[])>;
 	process_f process = &Envelope::Apply;
 
-	const char *channel_name = nullptr;
-	int expire_after_frames = 0; // Stop enveloping when this many
-	                             // frames have been processed.
-	int frames_done = 0;         // A tally of processed frames.
-	int edge = 0;                // The current edge of the envelope, which
-	              // increments outward when samples press against it.
-	int edge_increment = 0; // The amount the edge grows by once a
-	                        // sample is found to be beyond it.
-	int edge_limit = 0;     // Stop enveloping when the current edge is
-	                        // hits or exceeds this limit.
+
+	static constexpr auto num_channels = 4; // prev & next, L & R channels.
+
+	// Configurable parameters
+	int frame_rate = 0;           // audio frames per second
+	int peak_amplitude = 0;       // The peak amplitude of the envelope.
+	int expansion_percentage = 0; // The edge's maximum incremental amplitide.
+	int expansion_increment = 0;  // The edge's incremental amplitude.
+	int expire_after_seconds = 0; // The number of seconds the envelope will
+	                              // last.
+	int expire_after_frames = 0;  // Stop after processing this many frames.
+
+	// State tracking variables
+	int edge[num_channels] = {}; // The edge of each channel's envelope.
+	int frames_processed = 0;    // The total number of frames processed.
 };
 
 #endif

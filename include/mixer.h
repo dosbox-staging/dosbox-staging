@@ -128,6 +128,7 @@ public:
 	void Enable(bool should_enable);
 	void FlushSamples();
 
+	Envelope envelope;
 	float volmain[2] = {1.0f, 1.0f};
 	std::atomic<int> done = 0; // Timing on how many samples have been done by the mixer
 	bool is_enabled = false;
@@ -138,7 +139,6 @@ private:
 	MixerChannel(const MixerChannel &) = delete;
 	MixerChannel &operator=(const MixerChannel &) = delete;
 
-	Envelope envelope;
 	MIXER_Handler handler = nullptr;
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step
 	int freq_counter = 0u;       // When this flows over a new sample needs to be read from the device
