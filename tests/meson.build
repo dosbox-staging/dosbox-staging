@@ -68,6 +68,7 @@ unit_tests = [
   {'name' : 'drives',               'deps' : [dosbox_dep], 'extra_cpp': []},
   {'name' : 'dos_files',            'deps' : [dosbox_dep], 'extra_cpp': []},
   {'name' : 'shell_cmds',           'deps' : [dosbox_dep], 'extra_cpp': []},
+  {'name' : 'shell_redirection',    'deps' : [dosbox_dep], 'extra_cpp': []},
   {'name' : 'ansi_code_markup',     'deps' : [libmisc_dep]},
 ]
 

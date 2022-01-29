@@ -43,7 +43,6 @@
 #include <gtest/gtest.h>
 
 #include "dosbox_test_fixture.h"
-#include "../src/shell/shell.cpp"
 
 namespace {
 
@@ -68,42 +67,106 @@ TEST_F(DOS_Shell_REDIRTest, CMD_Redirection)
 {
 	MockDOS_Shell shell;
 	bool append;
-	char *in = 0, *out = 0, *pipe = 0, *line = 0;
+	char line[CROSS_LEN];
+	std::string in = "", out = "", pipe = "";
 
-	line = "echo hello!";
-	shell.GetRedirection(line, &in, &out, &pipe, &append);
-	EXPECT_EQ(line, "echo hello!");
-	EXPECT_EQ(in, "");
-	EXPECT_EQ(out, "");
-	EXPECT_EQ(pipe, "");
+	strcpy(line, "echo hello!");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "echo hello!");
+	EXPECT_TRUE(in == "");
+	EXPECT_TRUE(out == "");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
 
-	line = "echo test>test.txt";
-	shell.GetRedirection(line, &in, &out, &pipe, &append);
-	EXPECT_EQ(line, "echo test");
-	EXPECT_EQ(in, "");
-	EXPECT_EQ(out, "test.txt");
-	EXPECT_EQ(pipe, "");
+	in = out = pipe = "";
+	strcpy(line, "echo test>test.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "echo test");
+	EXPECT_TRUE(in == "");
+	EXPECT_TRUE(out == "test.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
 
-	line = "sort<test.txt";
-	shell.GetRedirection(line, &in, &out, &pipe, &append);
-	EXPECT_EQ(line, "sort");
-	EXPECT_EQ(in, "test.txt");
-	EXPECT_EQ(out, "");
-	EXPECT_EQ(pipe, "");
+	in = out = pipe = "";
+	strcpy(line, "sort<test.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "sort");
+	EXPECT_TRUE(in == "test.txt");
+	EXPECT_TRUE(out == "");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
 
-	line = "less<in.txt>out.txt";
-	shell.GetRedirection(line, &in, &out, &pipe, &append);
-	EXPECT_EQ(line, "less");
-	EXPECT_EQ(in, "in.txt");
-	EXPECT_EQ(out, "out.txt");
-	EXPECT_EQ(pipe, "");
+	in = out = pipe = "";
+	strcpy(line, "less<in.txt>out.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "less");
+	EXPECT_TRUE(in == "in.txt");
+	EXPECT_TRUE(out == "out.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
 
-	line = "more<file.txt|sort";
-	shell.GetRedirection(line, &in, &out, &pipe, &append);
-	EXPECT_EQ(line, "more");
-	EXPECT_EQ(in, "file.txt");
-	EXPECT_EQ(out, "");
-	EXPECT_EQ(pipe, "sort");
+	in = out = pipe = "";
+	strcpy(line, "more<file.txt|sort");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "more");
+	EXPECT_TRUE(in == "file.txt");
+	EXPECT_TRUE(out == "");
+	EXPECT_TRUE(pipe == "sort");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
+	strcpy(line, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<in.txt>>out.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	EXPECT_TRUE(in == "in.txt");
+	EXPECT_TRUE(out == "out.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, true);
+
+	in = out = pipe = "";
+	strcpy(line, "");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "");
+	EXPECT_TRUE(in == "");
+	EXPECT_TRUE(out == "");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
+	strcpy(line, " echo  test < in.txt > out.txt ");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, " echo  test   ");
+	EXPECT_TRUE(in == "in.txt");
+	EXPECT_TRUE(out == "out.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
+	strcpy(line, "dir || more");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "dir ");
+	EXPECT_TRUE(in == "");
+	EXPECT_TRUE(out == "");
+	EXPECT_TRUE(pipe == "| more");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
+	strcpy(line, "dir *.bat << in.txt >> out.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "dir *.bat  in.txt ");
+	EXPECT_TRUE(in == "<");
+	EXPECT_TRUE(out == "out.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, true);
+
+	in = out = pipe = "";
+	strcpy(line, "echo test>out1.txt>>out2.txt");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "echo test");
+	EXPECT_TRUE(in == "");
+	EXPECT_TRUE(out == "out1.txt>>out2.txt");
+	EXPECT_TRUE(pipe == "");
+	EXPECT_EQ(append, false);
 }
 
 } // namespace
