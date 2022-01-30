@@ -202,3 +202,30 @@ Build and generate report:
 meson setup build
 ninja -C build scan-build
 ```
+
+### Make a sanitizer build
+
+Recent compilers can add runtime checks for various classes of issues.
+Compared to a debug build, sanitizer builds take longer to compile
+and run slower, so are often reserved to exercise new features or
+perform a periodic whole-program checkup.
+
+If you're running Debian or Ubuntu, we recommend using Clang's latest
+stable version using the setup script here: https://apt.llvm.org/
+
+The following command uses Clang to create a sanitizer build checking
+for address and behavior issues, two of the most common classes of
+issues. See Meson's list of built-in options for other sanitizer types.
+
+``` shell
+meson setup --native-file=.github/meson/native-clang.ini \
+  -Doptimization=0 -Db_sanitize=address,undefined build/sanitizer
+ninja -C build/sanitizer
+```
+
+The directory `build/sanitizer` will contain the compiled files, which
+will leave your normal `build/` files untouched.
+
+Run the sanitizer binary as you normally would, then exit and look for
+sanitizer mesasge in the log output.  If none exist, then your program
+is running clean.
