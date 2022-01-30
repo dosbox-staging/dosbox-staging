@@ -574,7 +574,10 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb) {
 		Files[handle]=new DOS_Device(*Devices[devnum]);
 	} else {
 		exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
-		if (exists) Files[handle]->SetDrive(drive);
+		if (exists)
+			Files[handle]->SetDrive(drive);
+		else if (dos.errorcode == DOSERR_ACCESS_CODE_INVALID)
+			return false;
 	}
 	if (exists || device ) { 
 		Files[handle]->AddRef();
