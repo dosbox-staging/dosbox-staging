@@ -83,7 +83,7 @@ public:
 	void RunInternal(); // for command /C
 	/* A load of subfunctions */
 	void ParseLine(char * line);
-	void GetRedirection(char *s, char **ifn, char **ofn, char **pipe, bool * append);
+	void GetRedirection(char *s, std::string &ifn, std::string &ofn, std::string &pipe, bool * append);
 	void InputCommand(char * line);
 	void ProcessCmdLineEnvVarStitution(char *line);
 	void ShowPrompt();
