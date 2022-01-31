@@ -1,7 +1,6 @@
+mingw-w64-i686-toolchain
 mingw-w64-i686-meson
-mingw-w64-i686-gcc
 mingw-w64-i686-ccache
-mingw-w64-i686-pkgconf
 mingw-w64-i686-python
 mingw-w64-i686-ntldd
 mingw-w64-i686-ncurses
