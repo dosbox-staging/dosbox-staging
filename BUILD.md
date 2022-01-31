@@ -210,12 +210,19 @@ Compared to a debug build, sanitizer builds take longer to compile
 and run slower, so are often reserved to exercise new features or
 perform a periodic whole-program checkup.
 
-If you're running Debian or Ubuntu, we recommend using Clang's latest
-stable version using the setup script here: https://apt.llvm.org/
+ - **Linux users:**:  We recommend using Clang's latest
+stable version. If you're using a Debian or Ubuntu-based distro,
+LLVM has a helpful one-time setup script here: https://apt.llvm.org/
 
-The following command uses Clang to create a sanitizer build checking
-for address and behavior issues, two of the most common classes of
-issues. See Meson's list of built-in options for other sanitizer types.
+ - **Windows users:** Start by setting up MSYS2 as described in the
+_docs/build-windows.md_document. Ensure you've opened an MSYS2 MinGW
+Clang x64 terminal before proceeding and that `clang --version`
+reports version 13.x (or greater).
+
+The following uses Clang's toolchain to create a sanitizer build
+that checks for address and behavior issues, two of the most common
+classes of issues. See Meson's list of built-in options for other
+sanitizer types.
 
 ``` shell
 meson setup --native-file=.github/meson/native-clang.ini \

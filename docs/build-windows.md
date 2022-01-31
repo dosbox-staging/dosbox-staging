@@ -32,28 +32,9 @@ you build a binary optimized for gaming.
 
 ## Build using MSYS2
 
-1. Install MSYS2: <https://www.msys2.org/>
-2. Update packages: <https://www.msys2.org/wiki/MSYS2-installation/>
-3. Install dependencies:
+1. Install MSYS2: <https://www.msys2.org/wiki/MSYS2-installation/>
 
-    ``` shell
-    pacman -S git \
-      mingw-w64-x86_64-meson \
-      mingw-w64-x86_64-toolchain \
-      mingw-w64-x86_64-ccache \
-      mingw-w64-x86_64-pkgconf \
-      mingw-w64-x86_64-ntldd \
-      mingw-w64-x86_64-ncurses \
-      mingw-w64-x86_64-glib2 \
-      mingw-w64-x86_64-libpng \
-      mingw-w64-x86_64-opusfile \
-      mingw-w64-x86_64-SDL2 \
-      mingw-w64-x86_64-SDL2_net \
-      mingw-w64-x86_64-zlib
-    ```
-    The above dependencies install the MinGW-w64 64 bit dependencies. 
-    Replace `x86_64` with `i686` for MinGW-w64 32 bit dependencies. 
-    Prefix `clang-` to `x86_64` for clang 64 bit dependencies.
+2. Install Git: `pacman -S git`
 
 3. Clone and enter the repository's directory:
 
@@ -61,30 +42,66 @@ you build a binary optimized for gaming.
     git clone https://github.com/dosbox-staging/dosbox-staging.git
     cd dosbox-staging
     ```
-4. If you haven't already done so, switch to `MSYS2 MinGW 64-bit`, 
-   `MSYS2 MinGW 64-bit` shells (available in Start menu), or for 
-   Clang, you can launch from the command line with 
-   `C:\msys64\msys2_shell.cmd -clang64`. Your shell should show 
-   `MINGW64 ~`, `MINGW32 ~` or `CLANG64 ~` before proceeding to the 
-   next step.
 
-5. Setup the build:
-   
+4. Update the pacman database and packages:
+    - Open an MSYS2 console from your start menu.
+    - Run `pacman -Syu`, answer `Y`, and let it run to completion.
+    - Close your terminal when it's done.
+    - Re-open the terminal and repeat the process.
+
+5. Install the GCC and Clang runtime groups:
+
+   Note: this will uninstall non-MinGW compilers followed by installing
+   the GCC and Clang runtime groups along with Staging's dependencies.
+
+    ``` shell
+    pacman -R clang
+    pacman -R gcc
+    pacman -S $(cat packages/windows-msys2-clang-x86_64.txt packages/windows-msys2-gcc-x86_64.txt)
+    ```
+
+   Close your terminal when this finishes.
+
+6. Open a toolchain-specific MinGW terminal:
+
+    - **GCC**: _Start Menu > Programs > MSYS2 > MSYS2 MinGW x64_
+    - **Clang**: _Start Menu > Programs > MSYS2 > MSYS2 MinGW Clang x64_
+
+   You can then use those specific toolchains within the
+   respecitive terminal.
+
+7. Setup a GCC build from an *MSYS2 MinGW x64* terminal:
+
    ``` shell
-   meson setup build/release -Dbuildtype=release -Db_asneeded=true \
+   meson setup build/release-gcc -Dbuildtype=release -Db_asneeded=true \
      --force-fallback-for=fluidsynth,mt32emu,slirp \
      -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp \
      -Dfluidsynth:try-static-deps=true
    ```
 
-6. Compile dosbox-staging:
+8. Setup a Clang build from an *MSYS2 MinGW Clang x64* terminal:
 
    ``` shell
-   meson compile -C build/release
+   meson setup build/release-clang --native-file=.github/meson/native-clang.ini \
+     -Dbuildtype=release -Db_asneeded=true \
+     --force-fallback-for=fluidsynth,mt32emu,slirp \
+     -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp \
+     -Dfluidsynth:try-static-deps=true
    ```
-   
-7. Copy binary and required DLL files to destination directory:
+
+9. Compile:
 
    ``` shell
-   ./scripts/create-package.sh -p msys2 build/release ../dosbox-staging-pkg
+   meson compile -C build/release-gcc
+   # or
+   meson compile -C build/release-clang
+   ```
+
+
+10. Create a package of the binary and DLLs to a destination directory:
+
+   ``` shell
+   ./scripts/create-package.sh -p msys2 build/release-gcc ../dosbox-staging-gcc-pkg
+   # or
+   ./scripts/create-package.sh -p msys2 build/release-clang ../dosbox-staging-clang-pkg
    ```
