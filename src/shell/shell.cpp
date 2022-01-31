@@ -178,60 +178,66 @@ DOS_Shell::DOS_Shell()
           call(false)
 {}
 
-void DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **pipe, bool *append)
+void DOS_Shell::GetRedirection(char *line,
+                               std::string &in_file,
+                               std::string &out_file,
+                               std::string &pipe_file,
+                               bool *append)
 {
-	char *lr = s;
-	char *lw = s;
-	char ch;
+	char *line_read = line;
+	char *line_write = line;
+	char character = 0;
 	bool quote = false;
-	char *temp = nullptr;
-	char **redir = nullptr;
-	size_t found, temp_len;
-	std::string str, chrs;
-	*ifn = *ofn = *pipe = 0;
+	size_t found = 0;
+	size_t temp_len = 0;
+	std::string redir = "";
+	std::string find_chars = "";
+	std::string *output;
 	*append = false;
-
-	while ((ch = *lr++)) {
-		if (quote && ch != '"') { /* don't parse redirection within
-			                     quotes. Not perfect yet. Escaped
-			                     quotes will mess the count up */
-			*lw++ = ch;
+	while ((character = *line_read++)) {
+		if (quote && character != '"') { /* don't parse redirection
+			                            within quotes. Not perfect
+			                            yet. Escaped quotes will
+			                            mess the count up */
+			*line_write++ = character;
 			continue;
 		}
-		if (ch == '"') {
+		if (character == '"') {
 			quote = !quote;
-		} else if (ch == '>' || ch == '<' || ch == '|') {
+		} else if (character == '>' || character == '<' || character == '|') {
 			// Overwrite with >, and append with >>
-			if (ch == '>' && (*append = (*lr == '>')))
-				lr++;
-			redir = ch == '>' ? ofn : (ch == '<' ? ifn : pipe);
-			if (*redir) {
-				delete[] * redir;
-				*redir = nullptr;
-			}
-			lr = ltrim(lr);
-			str = *redir = lr;
-			chrs = ch == '|' ? "" : (ch != '<' ? " |<" : " |>");
-			found = str.find_first_of(chrs);
+			if (character == '>' && (*append = (*line_read == '>')))
+				line_read++;
+			// Get the current content of the redirection
+			redir = line_read = ltrim(line_read);
+			// Try to find the characters for string split
+			find_chars = character == '|'
+			                     ? ""
+			                     : (character != '<' ? " |<" : " |>");
+			found = redir.find_first_of(find_chars);
+			// Get the length of the substring before the
+			// characters, or the entire string if not found
 			if (found == std::string::npos)
-				temp_len = str.size();
+				temp_len = redir.size();
 			else
-				temp_len = found - (str[found - 1] == ':' ? 1 : 0);
-			lr += temp_len;
-			str[temp_len] = 0;
-			temp = new char[temp_len + 1];
-			safe_strncpy(temp, str.c_str(), temp_len + 1);
-			*redir = temp;
+				temp_len = found - // Ignore ':' character
+				           (redir[found - 1] == ':' ? 1 : 0);
+			// Assign substring content of length to output parameters
+			output = (character == '>'
+			                  ? &out_file
+			                  : (character == '<' ? &in_file : &pipe_file));
+			*output = redir.substr(0, temp_len);
+			line_read += temp_len;
 			continue;
 		}
-		*lw++ = ch;
+		*line_write++ = character;
 	}
-	*lw = 0;
+	*line_write = 0;
 }
 
-bool get_pipe_status(const char *out,
-                     const char *pipe,
-                     char *pipetmp,
+bool get_pipe_status(const char *out_file,
+                     const char *pipe_file,
+                     char *pipe_tempfile,
                      const bool append,
                      bool &failed_pipe)
 {
@@ -241,46 +247,48 @@ bool get_pipe_status(const char *out,
 	uint32_t bigdummy = 0;
 	bool status = true;
 	/* Create if not exist. Open if exist. Both in read/write mode */
-	if (!pipe && append) {
-		if (DOS_GetFileAttr(out, &fattr) && fattr & DOS_ATTR_READ_ONLY) {
+	if (!pipe_file && append) {
+		if (DOS_GetFileAttr(out_file, &fattr) && fattr & DOS_ATTR_READ_ONLY) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			status = false;
-		} else if ((status = DOS_OpenFile(out, OPEN_READWRITE, &dummy))) {
+		} else if ((status = DOS_OpenFile(out_file, OPEN_READWRITE, &dummy))) {
 			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END);
 		} else {
 			// Create if not exists.
-			status = DOS_CreateFile(out, DOS_ATTR_ARCHIVE, &dummy);
+			status = DOS_CreateFile(out_file, DOS_ATTR_ARCHIVE, &dummy);
 		}
-	} else if (!pipe && DOS_GetFileAttr(out, &fattr) &&
+	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) &&
 	           (fattr & DOS_ATTR_READ_ONLY)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		status = false;
 	} else {
-		if (pipe && DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME) &&
-		    !DOS_UnlinkFile(pipetmp))
+		if (pipe_file && DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME) &&
+		    !DOS_UnlinkFile(pipe_tempfile))
 			failed_pipe = true;
-		status = DOS_OpenFileExtended(pipe && !failed_pipe ? pipetmp : out,
+		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile
+		                                                        : out_file,
 		                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
 		                              0x12, &dummy, &dummy2);
-		if (pipe && (failed_pipe || !status) &&
-		    (Drives[0] || Drives[2]) && !strchr(pipetmp, '\\')) {
-			int len = (int)strlen(pipetmp);
-			const int pipetmp_limit = 266;
-			if (len > pipetmp_limit) {
-				len = pipetmp_limit;
-				pipetmp[len] = 0;
+		if (pipe_file && (failed_pipe || !status) &&
+		    (Drives[0] || Drives[2]) && !strchr(pipe_tempfile, '\\')) {
+			int len = (int)strlen(pipe_tempfile);
+			const int pipe_tempfile_maxlen = 266;
+			if (len > pipe_tempfile_maxlen) {
+				len = pipe_tempfile_maxlen;
+				pipe_tempfile[len] = 0;
 			}
 			for (int i = len; i >= 0; i--)
-				pipetmp[i + 3] = pipetmp[i];
-			pipetmp[0] = Drives[2] ? 'c' : 'a';
-			pipetmp[1] = ':';
-			pipetmp[2] = '\\';
+				pipe_tempfile[i + 3] = pipe_tempfile[i];
+			pipe_tempfile[0] = Drives[2] ? 'c' : 'a';
+			pipe_tempfile[1] = ':';
+			pipe_tempfile[2] = '\\';
 			failed_pipe = false;
-			if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME) &&
-			    !DOS_UnlinkFile(pipetmp))
+			if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME) &&
+			    !DOS_UnlinkFile(pipe_tempfile))
 				failed_pipe = true;
 			else
-				status = DOS_OpenFileExtended(pipetmp, OPEN_READWRITE,
+				status = DOS_OpenFileExtended(pipe_tempfile,
+				                              OPEN_READWRITE,
 				                              DOS_ATTR_ARCHIVE, 0x12,
 				                              &dummy, &dummy2);
 		}
@@ -291,18 +299,18 @@ bool get_pipe_status(const char *out,
 constexpr uint16_t failed_open = 0xff;
 uint16_t open_stdin_as(const char *name)
 {
-	uint16_t dummy;
-	if (DOS_OpenFile(name, OPEN_READ, &dummy))
-		return dummy;
+	uint16_t success_open;
+	if (DOS_OpenFile(name, OPEN_READ, &success_open))
+		return success_open;
 	else
 		return failed_open;
 }
 
 uint16_t open_stdout_as(const char *name)
 {
-	uint16_t dummy;
-	if (DOS_OpenFile(name, OPEN_READWRITE, &dummy))
-		return dummy;
+	uint16_t success_open;
+	if (DOS_OpenFile(name, OPEN_READWRITE, &success_open))
+		return success_open;
 	else
 		return failed_open;
 }
@@ -341,108 +349,112 @@ void DOS_Shell::ParseLine(char *line)
 	line = trim(line);
 
 	/* Do redirection and pipe checks */
-	char *in = nullptr;
-	char *out = nullptr;
-	char *pipe = nullptr;
+	std::string in_file = "";
+	std::string out_file = "";
+	std::string pipe_file = "";
 
 	uint16_t dummy = 0;
 	bool append = false;
 	bool normalstdin = false;  /* whether stdin/out are open on start. */
 	bool normalstdout = false; /* Bug: Assumed is they are "con"      */
 
-	GetRedirection(line, &in, &out, &pipe, &append);
-	if (in || out || pipe) {
+	GetRedirection(line, in_file, out_file, pipe_file, &append);
+	if (in_file.length() || out_file.length() || pipe_file.length()) {
 		normalstdin = (psp->GetFileHandle(0) != failed_open);
 		normalstdout = (psp->GetFileHandle(1) != failed_open);
 	}
-	if (in) {
-		if ((dummy = open_stdin_as(in)) != failed_open) { // Test if
-			                                          // file exists
+	if (in_file.length()) {
+		if ((dummy = open_stdin_as(in_file.c_str())) != failed_open) { // Test if
+			// file exists
 			DOS_CloseFile(dummy);
-			LOG_MSG("SHELL: Redirect input from %s", in);
+			LOG_MSG("SHELL: Redirect input from %s", in_file.c_str());
 			close_stdin(normalstdin);
-			open_stdin_as(in); // Open new stdin
+			open_stdin_as(in_file.c_str()); // Open new stdin
 		} else {
 			WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
 			                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
 			                         : "SHELL_CMD_FILE_OPEN_ERROR"),
-			         *in ? in : "(unnamed)");
-			in = 0;
+			         in_file.length() ? in_file.c_str() : "(unnamed)");
 			return;
 		}
 	}
 	bool failed_pipe = false;
-	char pipetmp[270];
+	char pipe_tempfile[270]; // Piping requires the use of a temporary file
 	uint16_t fattr;
-	if (pipe) {
+	if (pipe_file.length()) {
 		std::string temp_line;
 		if (!GetEnvStr("TEMP", temp_line) && !GetEnvStr("TMP", temp_line)) {
-			safe_sprintf(pipetmp, "pipe%d.tmp", get_tick_random_number());
+			safe_sprintf(pipe_tempfile, "pipe%d.tmp",
+			             get_tick_random_number());
 		} else {
 			std::string::size_type idx = temp_line.find('=');
 			std::string temp = temp_line.substr(idx + 1,
 			                                    std::string::npos);
 			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
-				safe_sprintf(pipetmp, "%s\\pipe%d.tmp", temp.c_str(),
-				        get_tick_random_number());
+				safe_sprintf(pipe_tempfile, "%s\\pipe%d.tmp",
+				             temp.c_str(),
+				             get_tick_random_number());
 			else
-				safe_sprintf(pipetmp, "pipe%d.tmp", get_tick_random_number());
+				safe_sprintf(pipe_tempfile, "pipe%d.tmp",
+				             get_tick_random_number());
 		}
 	}
-	if (out || pipe) {
-		if (out && *out && pipe)
-			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"), out);
-		LOG_MSG("SHELL: Redirect output to %s", pipe ? pipetmp : out);
+	if (out_file.length() || pipe_file.length()) {
+		if (out_file.length() && pipe_file.length())
+			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"),
+			         out_file.c_str());
+		LOG_MSG("SHELL: Redirect output to %s",
+		        pipe_file.c_str() ? pipe_tempfile : out_file.c_str());
 		close_stdout(normalstdout);
-		open_console_device(!normalstdin && !in);
+		open_console_device(!normalstdin && !in_file.length());
 
-		if (!get_pipe_status(out, pipe, pipetmp, append, failed_pipe) &&
+		if (!get_pipe_status(out_file.c_str(), pipe_file.c_str(),
+		                     pipe_tempfile, append, failed_pipe) &&
 		    normalstdout) {
 			// Read only file, open con again
 			open_console_device();
-			if (!pipe) {
+			if (!pipe_file.length()) {
 				WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
 				                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
 				                         : "SHELL_CMD_FILE_CREATE_ERROR"),
-				         *out ? out : "(unnamed)");
+				         out_file.length() ? out_file.c_str()
+				                           : "(unnamed)");
 				close_stdout();
 				open_stdout_as("nul");
 			}
 		}
-		close_stdin(!normalstdin && !in);
+		close_stdin(!normalstdin && !in_file.length());
 	}
 	/* Run the actual command */
 	DoCommand(line);
 	/* Restore handles */
-	if (in) {
+	if (in_file.length()) {
 		close_stdin();
 		open_console_device(normalstdin);
-		delete[] in;
 	}
-	if (out || pipe) {
+	if (out_file.length() || pipe_file.length()) {
 		close_stdout();
 		open_console_device(!normalstdin);
 		open_console_device(normalstdout);
 		close_stdin(!normalstdin);
-		if (out)
-			delete[] out;
 	}
-	if (pipe) {
+	if (pipe_file.length()) {
 		// Test if file can be opened for reading
-		if (!failed_pipe && (dummy = open_stdin_as(pipetmp)) != failed_open) {
+		if (!failed_pipe &&
+		    (dummy = open_stdin_as(pipe_tempfile)) != failed_open) {
 			DOS_CloseFile(dummy);
 			close_stdin(normalstdin);
-			open_stdin_as(pipetmp); // Open new stdin
-			ParseLine(pipe);
+			open_stdin_as(pipe_tempfile); // Open new stdin
+			ParseLine((char *)pipe_file.c_str());
 			close_stdin();
 			open_console_device(normalstdin);
 		} else {
 			WriteOut(MSG_Get("SHELL_CMD_FAILED_PIPE"));
+			LOG_MSG("SHELL: Failed to write pipe content to temporary file");
 		}
-		delete[] pipe;
-		if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME))
-			DOS_UnlinkFile(pipetmp);
+		if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME))
+			DOS_UnlinkFile(pipe_tempfile);
 	}
 }
 
