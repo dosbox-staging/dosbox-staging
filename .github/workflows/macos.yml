@@ -99,7 +99,7 @@ jobs:
         run: |
           arch -arch=${{ matrix.conf.arch }} brew install \
             ${{ matrix.conf.packages }} \
-            $(cat ./.github/packages/macos-latest-brew.txt)
+            $(cat packages/macos-latest-brew.txt)
 
       - uses:  actions/cache@v2
         if:    matrix.conf.needs_deps

@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -xeu
-          sudo apt-get install -y strace $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install -y strace $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"

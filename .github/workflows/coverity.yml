@@ -37,7 +37,7 @@ jobs:
 
       - name: Install C++ compiler and dependencies
         run: |
-          sudo apt-get install curl zstd clang $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install curl zstd clang $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Prepare the Coverity package cache
