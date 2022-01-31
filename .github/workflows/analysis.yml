@@ -51,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install clang-tools python3-bs4 $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install clang-tools python3-bs4 $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
@@ -154,7 +154,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       # Workaround frequent HTTPS-based connectivity issues

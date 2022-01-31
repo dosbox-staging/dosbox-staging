@@ -98,7 +98,7 @@ jobs:
         run: |
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
-            $(cat ./.github/packages/${{ matrix.conf.os }}-apt.txt)
+            $(cat packages/${{ matrix.conf.os }}-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
@@ -159,7 +159,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
-            $(cat ./.github/packages/ubuntu-18.04-apt.txt)
+            $(cat packages/ubuntu-18.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       # Workaround frequent HTTPS-based connectivity issues
