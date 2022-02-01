@@ -30,6 +30,8 @@
 #define KEYBUFSIZE 32
 #define KEYDELAY   0.300 // Considering 20-30 khz serial clock and 11 bits/char
 
+using namespace bit::literals;
+
 enum KeyCommands {
 	CMD_NONE,
 	CMD_SETLEDS,
@@ -203,7 +205,7 @@ static void write_p61(io_port_t, io_val_t value, io_width_t)
 	const auto val = check_cast<uint8_t>(value);
 
 	// Clear the keyboard buffer on XT
-	if (machine < MCH_EGA && are_bits_set(val, bit_7))
+	if (machine < MCH_EGA && bit::is(val, b7))
 		KEYBOARD_ClrBuffer();
 
 	if ((port_61_data ^ val) & 3) {
@@ -230,14 +232,14 @@ extern bool TIMER_GetOutput2(void);
 static uint8_t read_p61(io_port_t, io_width_t)
 {
 	// Bit 4 must be toggled each request
-	toggle_bits(port_61_data, bit_4);
+	bit::flip(port_61_data, b4);
 
 	// On PC/AT systems, bit 5 sets the timer 2 output status
 	if (is_machine(MCH_EGA | MCH_VGA))
-		set_bits_to(port_61_data, bit_5, TIMER_GetOutput2());
+		bit::set_to(port_61_data, b5, TIMER_GetOutput2());
 	else
 		// On XT systems always toggle bit 5 (Spellicopter CGA)
-		toggle_bits(port_61_data, bit_5);
+		bit::flip(port_61_data, b5);
 
 	return port_61_data;
 }
@@ -255,10 +257,10 @@ bit 0 = 1  loop in POST
 */
 static uint8_t read_p62(io_port_t, io_width_t)
 {
-	auto ret = all_bits_set<uint8_t>();
+	auto ret = bit::all<uint8_t>();
 
 	if(!TIMER_GetOutput2())
-		clear_bits(ret, bit_5);
+		bit::clear(ret, b5);
 
 	return ret;
 }
