@@ -297,7 +297,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	// get the users chorus settings
 	const auto chorus = split(section->Get_string("chorus"));
-	bool chorus_enabled = !chorus.empty() && chorus[0] != "no";
+	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
 
 	// does the soundfont have known-issues with chorus?
 	const auto is_problematic_font = find_in_case_insensitive("FluidR3", soundfont) ||
@@ -339,7 +339,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	// get the users reverb settings
 	const auto reverb = split(section->Get_string("reverb"));
-	const bool reverb_enabled = !reverb.empty() && reverb[0] != "no";
+	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
 
 	// default reverb settings
 	auto reverb_room_size = 0.61;
