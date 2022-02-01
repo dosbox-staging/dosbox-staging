@@ -237,7 +237,7 @@ void DOS_Shell::GetRedirection(char *line,
 
 bool get_pipe_status(const char *out_file,
                      const char *pipe_file,
-                     char *pipe_tempfile,
+                     char (&pipe_tempfile)[270],
                      const bool append,
                      bool &failed_pipe)
 {
@@ -271,17 +271,13 @@ bool get_pipe_status(const char *out_file,
 		                              0x12, &dummy, &dummy2);
 		if (pipe_file && (failed_pipe || !status) &&
 		    (Drives[0] || Drives[2]) && !strchr(pipe_tempfile, '\\')) {
-			int len = (int)strlen(pipe_tempfile);
-			const int pipe_tempfile_maxlen = 266;
-			if (len > pipe_tempfile_maxlen) {
-				len = pipe_tempfile_maxlen;
-				pipe_tempfile[len] = 0;
-			}
-			for (int i = len; i >= 0; i--)
-				pipe_tempfile[i + 3] = pipe_tempfile[i];
-			pipe_tempfile[0] = Drives[2] ? 'c' : 'a';
-			pipe_tempfile[1] = ':';
-			pipe_tempfile[2] = '\\';
+			// Insert a drive prefix into the pipe filename path.
+			// Note that the safe_strcpy truncates excess to prevent
+			// writing beyond pipe_tempfile's fixed size.
+			const std::string drive_prefix = Drives[2] ? "c:\\" : "a:\\";
+			const std::string pipe_full_path = drive_prefix + pipe_tempfile;
+			safe_strcpy(pipe_tempfile, pipe_full_path.c_str());
+
 			failed_pipe = false;
 			if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME) &&
 			    !DOS_UnlinkFile(pipe_tempfile))
