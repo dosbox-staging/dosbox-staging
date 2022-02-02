@@ -370,7 +370,7 @@ void DOS_Shell::ParseLine(char *line)
 			WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
 			                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
 			                         : "SHELL_CMD_FILE_OPEN_ERROR"),
-			         in_file.length() ? in_file.c_str() : "(unnamed)");
+			         in_file.c_str());
 			return;
 		}
 	}
@@ -401,11 +401,11 @@ void DOS_Shell::ParseLine(char *line)
 			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"),
 			         out_file.c_str());
 		LOG_MSG("SHELL: Redirect output to %s",
-		        pipe_file.c_str() ? pipe_tempfile : out_file.c_str());
+		        pipe_file.length() ? pipe_tempfile : out_file.c_str());
 		close_stdout(normalstdout);
 		open_console_device(!normalstdin && !in_file.length());
-
-		if (!get_pipe_status(out_file.c_str(), pipe_file.c_str(),
+		if (!get_pipe_status(out_file.length() ? out_file.c_str() : nullptr,
+		                     pipe_file.length() ? pipe_file.c_str() : nullptr,
 		                     pipe_tempfile, append, failed_pipe) &&
 		    normalstdout) {
 			// Read only file, open con again
