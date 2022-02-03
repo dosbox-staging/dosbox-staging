@@ -32,6 +32,7 @@
 #include "program_loadrom.h"
 #include "program_ls.h"
 #include "program_mem.h"
+#include "program_more.h"
 #include "program_mount.h"
 #include "program_placeholder.h"
 #include "program_rescan.h"
@@ -471,6 +472,8 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
 
+	MSG_Add("PROGRAM_MORE_HELP_LONG", "Displays output one screen at a time.\n");
+
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
 	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
 	MSG_Add("PROGRAM_KEYB_HELP_LONG",
@@ -569,6 +572,7 @@ void DOS_SetupPrograms(void)
 	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
 	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
+	PROGRAMS_MakeFile("MORE.COM", MORE_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
 	PROGRAMS_MakeFile("SERIAL.COM", SERIAL_ProgramStart);
