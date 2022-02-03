@@ -35,6 +35,7 @@ Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
 DOS_Shell *first_shell = nullptr;
+bool output_con = true;
 
 static Bitu shellstop_handler()
 {
@@ -422,6 +423,10 @@ void DOS_Shell::ParseLine(char *line)
 		}
 		close_stdin(!normalstdin && !in_file.length());
 	}
+	if (pipe_file.length() ||
+	    (!pipe_file.length() && out_file.length() &&
+	     DOS_FindDevice(out_file.c_str()) != DOS_FindDevice("con")))
+		output_con = false;
 	/* Run the actual command */
 	DoCommand(line);
 	/* Restore handles */
@@ -452,6 +457,7 @@ void DOS_Shell::ParseLine(char *line)
 		if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME))
 			DOS_UnlinkFile(pipe_tempfile);
 	}
+	output_con = true;
 }
 
 void DOS_Shell::RunInternal()

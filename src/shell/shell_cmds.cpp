@@ -81,6 +81,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 // clang-format on
 
 /* support functions */
+extern bool output_con;
 static char empty_char = 0;
 static char* empty_string = &empty_char;
 static void StripSpaces(char*&args) {
@@ -969,6 +970,7 @@ void DOS_Shell::CMD_LS(char *args)
 	using namespace std::string_literals;
 
 	HELP("LS");
+	bool opt1 = ScanCMDBool(args, "1") || !output_con;
 
 	const RealPt original_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
@@ -997,7 +999,8 @@ void DOS_Shell::CMD_LS(char *args)
 
 	const int column_sep = 2; // chars separating columns
 	const auto word_widths = to_name_lengths(dir_contents, column_sep);
-	const auto column_widths = calc_column_widths(word_widths, column_sep + 1);
+	const auto column_widths = calc_column_widths(
+	        word_widths, opt1 ? (INT10_GetTextColumns() - 1) : column_sep + 1);
 	const size_t cols = column_widths.size();
 
 	size_t w_count = 0;
