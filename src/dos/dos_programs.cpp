@@ -472,7 +472,26 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
 
-	MSG_Add("PROGRAM_MORE_HELP_LONG", "Displays output one screen at a time.\n");
+	MSG_Add("PROGRAM_MORE_HELP_LONG", "Displays output one screen at a time.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]more[reset] [color=cyan]FILE[reset]\n"
+	        "  [color=green]more[reset] < [color=cyan]FILE[reset]\n"
+	        "  [color=white]COMMAND[reset] | [color=green]more[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=cyan]FILE[reset]     is a file to display contents.\n"
+	        "  [color=white]COMMAND[reset]  is any DOS command (optionally with arguments).\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The [color=green]more[reset] command allows to display long file contents one screen at a time.\n"
+	        "  You can also pipe the output of another DOS commands (with any necessary\n"
+	        "  arguments) to display one screen at a time.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]more[reset] [color=cyan]myfile.txt[reset]\n"
+	        "  [color=green]more[reset] < [color=cyan]c:\\dos\\readme.txt[reset]\n"
+	        "  [color=white]type test.bat[reset] | [color=cyan]more[reset]\n");
 
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
 	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
