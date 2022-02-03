@@ -485,7 +485,7 @@ void DOS_SetupPrograms(void)
 	        "\n"
 	        "Notes:\n"
 	        "  The [color=green]more[reset] command allows to display long file contents one screen at a time.\n"
-	        "  You can also pipe the output of another DOS commands (with any necessary\n"
+	        "  You can also pipe the output of another DOS command (with any necessary\n"
 	        "  arguments) to display one screen at a time.\n"
 	        "\n"
 	        "Examples:\n"

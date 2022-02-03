@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,11 +28,12 @@
 
 extern bool output_con;
 
-static char PAUSED(void)
+constexpr char CHAR_BR = 3, CHAR_LF = 10, CHAR_CR = 13, CHAR_EOL = 26, TAB_SIZE = 8;
+static char paused_char(bool out_con)
 {
 	uint8_t c;
 	uint16_t n = 1, handle;
-	if (!output_con && DOS_OpenFile("con", OPEN_READWRITE, &handle)) {
+	if (out_con && DOS_OpenFile("con", OPEN_READWRITE, &handle)) {
 		DOS_ReadFile(handle, &c, &n);
 		DOS_CloseFile(handle);
 	} else
@@ -42,20 +43,19 @@ static char PAUSED(void)
 
 void MORE::show_tabs(int &nchars)
 {
-	int COLS = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	int TABSIZE = 8;
+	const auto COLS = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
 	do {
 		WriteOut(" ");
 		nchars++;
-	} while (nchars < COLS && nchars % TABSIZE);
+	} while (nchars < COLS && nchars % TAB_SIZE);
 }
 
 bool MORE::show_lines(
-        const uint8_t c, int &nchars, int &nlines, int linecount, const char *word)
+        const uint8_t c, int &nchars, int &nlines, int line_count, const char *word)
 {
-	int COLS = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	int LINES = (IS_EGAVGA_ARCH ? real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) : 24) +
-	            1;
+	const auto COLS = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const auto LINES = IS_EGAVGA_ARCH ? real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS)
+	                                  : 24;
 	if ((c == '\n') || (nchars >= COLS)) {
 		nlines++;
 		nchars = 0;
@@ -63,8 +63,8 @@ bool MORE::show_lines(
 			if (c != '\n')
 				WriteOut("\n");
 		} else if (nlines == LINES) {
-			WriteOut("-- More -- %s (%u) --", word, linecount);
-			if (PAUSED() == 3) {
+			WriteOut("-- More -- %s (%u) --", word, line_count);
+			if (paused_char(true) == CHAR_BR) {
 				WriteOut("^C\n");
 				return false;
 			}
@@ -86,41 +86,39 @@ void MORE::Run()
 	char arg[CMD_MAXLINE];
 	safe_strcpy(arg, tmp.c_str());
 	char *args = arg;
-	int nchars = 0, nlines = 0, linecount = 0, LINES = 25, COLS = 80;
-	char *word;
-	uint8_t c, last = 0;
+	char *word = NULL;
+	int nchars = 0;
+	int nlines = 0;
+	int line_count = 0;
+	uint8_t c = 0;
+	uint8_t last = 0;
 	uint16_t n = 1;
 	ltrim(args);
-	LINES = (IS_EGAVGA_ARCH ? real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) : 24) + 1;
-	COLS = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	LINES--;
 	if (!*args || !strcasecmp(args, "con")) {
 		while (true) {
 			DOS_ReadFile(STDIN, &c, &n);
-			if (c == 3) {
+			if (c == CHAR_BR) {
 				dos.echo = first_shell->echo;
 				WriteOut("^C\n");
 				return;
 			}
-			if (n == 0) {
-				if (last != 10)
+			if (!n) {
+				if (last != CHAR_LF)
 					WriteOut("\r\n");
 				return;
-			} else if (c == 13 && last == 26)
+			} else if (c == CHAR_CR && last == CHAR_EOL)
 				return;
 			else {
-				if (c == 10)
-					;
-				else if (c == 13) {
-					linecount++;
+				if (c == CHAR_CR) {
+					line_count++;
 					WriteOut("\r\n");
 				} else if (c == '\t') {
 					show_tabs(nchars);
-				} else {
+				} else if (c != CHAR_LF) {
 					nchars++;
 					WriteOut("%c", c);
 				}
-				if (!show_lines(c, nchars, nlines, linecount, ""))
+				if (!show_lines(c, nchars, nlines, line_count, ""))
 					return;
 				last = c;
 			}
@@ -153,14 +151,14 @@ nextfile:
 		else
 			show_tabs(nchars);
 		if (c == '\n')
-			linecount++;
-		if (!show_lines(c, nchars, nlines, linecount, word))
+			line_count++;
+		if (!show_lines(c, nchars, nlines, line_count, word))
 			return;
 	} while (n);
 	DOS_CloseFile(handle);
 	if (*args) {
 		WriteOut("\n");
-		if (PAUSED() == 3)
+		if (paused_char(!output_con) == CHAR_BR)
 			return;
 		goto nextfile;
 	}
