@@ -71,6 +71,11 @@ libhardware_sources = files(
     'vga_seq.cpp',
     'vga_tseng.cpp',
     'vga_xga.cpp',
+    'voodoo.cpp',
+    'voodoo_emu.cpp',
+    'voodoo_interface.cpp',
+    'voodoo_opengl.cpp',
+    'voodoo_vogl.cpp',
 )
 
 libhardware = static_library(

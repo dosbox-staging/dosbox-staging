@@ -27,6 +27,7 @@
 #include "paging.h"
 #include "regs.h"
 #include "support.h"
+#include "voodoo.h"
 
 // Allow up to 3072 MB, at this address emulated S3 card framebuffer starts
 constexpr auto MinMegabytes = 1;
@@ -164,6 +165,8 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	if (phys_page >= last_page_in_first_16mb &&
 	    phys_page < sixteen_pages_beyond_first_16mb) {
 		return memory.lfb.mmiohandler;
+	} else if (VOODOO_PCI_CheckLFBPage(phys_page)) {
+		return VOODOO_GetPageHandler();
 	}
 	return &illegal_page_handler;
 }

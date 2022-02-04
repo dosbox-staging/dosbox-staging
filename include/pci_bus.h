@@ -19,7 +19,7 @@
 #ifndef DOSBOX_PCI_H
 #define DOSBOX_PCI_H
 
-//#define PCI_FUNCTIONALITY_ENABLED 0
+#define PCI_FUNCTIONALITY_ENABLED 1
 
 #if defined PCI_FUNCTIONALITY_ENABLED
 
@@ -82,5 +82,8 @@ bool PCI_IsInitialized();
 RealPt PCI_GetPModeInterface(void);
 
 #endif
+
+void PCI_AddSST_Device(Bitu type);
+void PCI_RemoveSST_Device(void);
 
 #endif

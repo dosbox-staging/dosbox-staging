@@ -56,6 +56,7 @@
 #include "timer.h"
 #include "tracy.h"
 #include "video.h"
+#include "pci_bus.h"
 
 bool shutdown_requested = false;
 MachineType machine;
@@ -87,6 +88,7 @@ void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 void PCI_Init(Section*);
+void VOODOO_Init(Section*);
 #endif
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
@@ -726,9 +728,34 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 
-
 #if defined(PCI_FUNCTIONALITY_ENABLED)
-	secprop=control->AddSection_prop("pci", &PCI_Init); // PCI bus
+
+	secprop=control->AddSection_prop("3dfx", &PCI_Init); //PCI bus
+
+	secprop->AddInitFunction(&VOODOO_Init, changeable_at_runtime);
+	const char* voodoo_settings[] = {
+		"false",
+		"software",
+#if C_OPENGL
+		"opengl",
+#endif
+		"auto",
+		0
+	};
+	Pstring = secprop->Add_string("voodoo_card", when_idle, "auto");
+	Pstring->Set_values(voodoo_settings);
+	Pstring->Set_help("Enable VOODOO card support.");
+
+	const char* voodoo_memory[] = {
+		"standard",
+		"max",
+		0
+	};
+	Pstring = secprop->Add_string("voodoo_mem", only_at_start, "standard");
+	Pstring->Set_values(voodoo_memory);
+	Pstring->Set_help("Specify VOODOO card memory size.\n"
+		              "  'standard'      4MB card (2MB front buffer + 1x2MB texture unit)\n"
+					  "  'max'           12MB card (4MB front buffer + 2x4MB texture units)");
 #endif
 
 	// Configure mouse

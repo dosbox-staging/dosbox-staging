@@ -21,11 +21,11 @@
 #include "inout.h"
 #include "mem.h"
 #include "pci_bus.h"
+#include "support.h"
 #include "setup.h"
 #include "debug.h"
 #include "callback.h"
 #include "regs.h"
-
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 
@@ -117,7 +117,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 	}
 }
 
-static uint32_t read_pci_addr(io_port_t port, io_width_t))
+static uint32_t read_pci_addr(io_port_t port, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
@@ -436,6 +436,33 @@ public:
 
 static PCI* pci_interface=NULL;
 
+void PCI_AddSST_Device(Bitu type) {
+	Bitu ctype = 1;
+	switch (type) {
+		case 1:
+		case 2:
+			ctype = type;
+			break;
+		default:
+			LOG_MSG("PCI:SST: Invalid board type %x specified",type);
+			break;
+	}
+	PCI_Device* voodoo_dev=new PCI_SSTDevice(ctype);
+	if (pci_interface!=NULL) {
+		pci_interface->RegisterPCIDevice(voodoo_dev);
+	} else {
+		if (num_rqueued_devices<max_rqueued_devices)
+			rqueued_devices[num_rqueued_devices++]=voodoo_dev;
+	}
+}
+
+void PCI_RemoveSST_Device(void) {
+	if (pci_interface!=NULL) {
+		Bit16u vendor=PCI_SSTDevice::VendorID();
+		pci_interface->RemoveDevice(vendor,1);
+		pci_interface->RemoveDevice(vendor,2);
+	}
+}
 
 PhysPt PCI_GetPModeInterface(void) {
 	if (pci_interface) {
@@ -461,6 +488,14 @@ void PCI_Init(Section* sec)
 
 	pci_interface = new PCI(sec);
 	sec->AddDestroyFunction(&PCI_ShutDown);
+}
+
+#else
+
+void PCI_AddSST_Device(Bitu type) {
+}
+
+void PCI_RemoveSST_Device(void) {
 }
 
 #endif
