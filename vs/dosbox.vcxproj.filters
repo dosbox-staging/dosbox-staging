@@ -331,6 +331,21 @@
     <ClCompile Include="..\src\hardware\vga_xga.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\voodoo.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\voodoo_emu.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\voodoo_interface.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\voodoo_opengl.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\voodoo_vogl.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ints\bios.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>

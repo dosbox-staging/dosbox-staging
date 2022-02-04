@@ -111,6 +111,7 @@ struct SDL_Block {
 	struct {
 		int width = 0;
 		int height = 0;
+		int flags = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
 		double pixel_aspect = 1.0;
@@ -147,6 +148,8 @@ struct SDL_Block {
 		uint8_t bpp = 0;
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
+		bool lazy_fullscreen = false;
+		bool lazy_fullscreen_req = false;
 
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing

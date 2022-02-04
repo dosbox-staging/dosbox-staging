@@ -190,6 +190,7 @@ struct VGA_Draw {
 	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	VGA_RATE_MODE dos_rate_mode = VGA_RATE_MODE::DEFAULT;
 	double aspect_ratio = 0;
+	bool vga_override = false;
 	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
@@ -527,6 +528,7 @@ void VGA_SetCGA2Table(uint8_t val0,uint8_t val1);
 void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
+void VGA_SetOverride(bool vga_override);
 
 void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,

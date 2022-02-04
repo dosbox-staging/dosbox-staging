@@ -215,6 +215,15 @@ constexpr uint32_t BMASK = 0x00ff0000;
 constexpr uint32_t AMASK = 0xff000000;
 #endif
 
+enum MouseControlType {
+	CaptureOnClick = 1 << 0,
+	CaptureOnStart = 1 << 1,
+	Seamless       = 1 << 2,
+	NoMouse        = 1 << 3
+};
+
+enum class SCALING_MODE { NONE, NEAREST, PERFECT };
+
 // Size and ratio constants
 // ------------------------
 constexpr int SMALL_WINDOW_PERCENT = 50;
@@ -1167,7 +1176,7 @@ static void NewMouseScreenParams()
 	        sdl.desktop.fullscreen);
 }
 
-static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
+SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
                                  bool fullscreen,
@@ -1210,6 +1219,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
 		}
+		SetTransparency();
 
 		if (screen_type == SCREEN_TEXTURE) {
 			if (sdl.renderer) {
@@ -1325,6 +1335,148 @@ finish:
 	return sdl.window;
 }
 
+SDL_Window* GFX_GetSDLWindow(void) {
+    return sdl.window;
+}
+
+SDL_Window* SetWindow(int width, int height) {
+    sdl.window = SetWindowMode(SCREEN_OPENGL, width, height, false, false);
+    return sdl.window;
+}
+
+bool OpenGL_using(void) {
+#if C_OPENGL
+    return (sdl.desktop.want_type==SCREEN_OPENGL?true:false);
+#else
+    return false;
+#endif
+}
+
+SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES screen_type)
+{
+    static SCREEN_TYPES lastType = SCREEN_SURFACE;
+    if (sdl.renderer) {
+        SDL_DestroyRenderer(sdl.renderer);
+        sdl.renderer=0;
+    }
+    if (sdl.texture.pixelFormat) {
+        SDL_FreeFormat(sdl.texture.pixelFormat);
+        sdl.texture.pixelFormat = 0;
+    }
+    if (sdl.texture.texture) {
+        SDL_DestroyTexture(sdl.texture.texture);
+        sdl.texture.texture=0;
+    }
+    int currWidth, currHeight;
+    if (sdl.window) {
+        //SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
+        if (sdl.resizing_window) {
+            SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
+            sdl.update_display_contents = ((width == currWidth) && (height == currHeight));
+
+            return sdl.window;
+        }
+    }
+
+#if C_OPENGL
+    if (sdl.opengl.context) {
+        SDL_GL_DeleteContext(sdl.opengl.context);
+        sdl.opengl.context=0;
+    }
+#endif
+
+    /* If we change screen type, recreate the window. Furthermore, if
+     * it is our very first time then we simply create a new window.
+     */
+    if (!sdl.window
+            || (lastType != screen_type)
+//          || (currWidth != width) || (currHeight != height)
+//          || (glwindow != (0 != (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_OPENGL)))
+//          || (fullscreen && (0 == (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN)))
+//          || (fullscreen != (SDL_WINDOW_FULLSCREEN == (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN)))
+//          || (fullscreen && ((width != currWidth) || (height != currHeight)))
+       ) {
+        lastType = screen_type;
+        int x = -1, y = -1;
+        if (sdl.window) {
+            SDL_GetWindowPosition(sdl.window, &x, &y);
+            SDL_DestroyWindow(sdl.window);
+        }
+
+		uint32_t flags = opengl_driver_crash_workaround(screen_type);
+#if C_OPENGL
+		if (screen_type == SCREEN_OPENGL)
+			flags |= SDL_WINDOW_OPENGL;
+#endif
+		if (!sdl.desktop.window.show_decorations) {
+			flags |= SDL_WINDOW_BORDERLESS;
+		}
+
+		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+		const auto pos = get_initial_window_position_or_default(default_val);
+        sdl.window = SDL_CreateWindow("",
+                                      x>-1?x:pos.x,
+                                      y>-1?y:pos.y,
+                                      width, height,
+                                      flags);
+		if (!sdl.window) {
+			LOG_ERR("SDL: %s", SDL_GetError());
+			return nullptr;
+		}
+		SetTransparency();
+        GFX_SetTitle(-1, -1, false); //refresh title.
+        sdl.surface = SDL_GetWindowSurface(sdl.window);
+        SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
+        sdl.update_display_contents = ((width == currWidth) && (height == currHeight));
+
+#if C_OPENGL
+        if (screen_type == SCREEN_OPENGL) {
+            sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+            if (sdl.opengl.context == NULL) LOG_MSG("WARNING: SDL2 unable to create GL context");
+            if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) != 0) LOG_MSG("WARNING: SDL2 unable to make current GL context");
+        }
+#endif
+
+        return sdl.window;
+    }
+    /* Fullscreen mode switching has its limits, and is also problematic on
+     * some window managers. For now, the following may work up to some
+     * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
+     * although it has its own issues.
+     * Suggestion: Use the desktop res if possible, with output=surface
+     * if one is not interested in scaling.
+     * On Android, desktop res is the only way.
+     */
+    SDL_SetWindowResizable(sdl.window, SDL_FALSE);
+    if (GFX_IsFullscreen()) {
+        SDL_DisplayMode displayMode;
+        SDL_GetWindowDisplayMode(sdl.window, &displayMode);
+        displayMode.w = width;
+        displayMode.h = height;
+        SDL_SetWindowDisplayMode(sdl.window, &displayMode);
+
+        SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    } else {
+        SDL_SetWindowFullscreen(sdl.window, 0);
+
+        SDL_SetWindowSize(sdl.window, width, height);
+    }
+    /* Maybe some requested fullscreen resolution is unsupported? */
+    SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
+    sdl.update_display_contents = ((width == currWidth) && (height == currHeight));
+    sdl.surface = SDL_GetWindowSurface(sdl.window);
+
+#if C_OPENGL
+    if (screen_type == SCREEN_OPENGL) {
+        sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+        if (sdl.opengl.context == NULL) LOG_MSG("WARNING: SDL2 unable to create GL context");
+        if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) != 0) LOG_MSG("WARNING: SDL2 unable to make current GL context");
+    }
+#endif
+
+    return sdl.window;
+}
+
 // Used for the mapper UI and more: Creates a fullscreen window with desktop res
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
 SDL_Window * GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height)
@@ -1427,7 +1579,7 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height);
 
-static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
+SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		return setup_window_pp(screen_type, resizable);
@@ -2347,6 +2499,29 @@ static void SwitchFullScreen(bool pressed)
 {
 	if (pressed)
 		GFX_SwitchFullScreen();
+}
+
+void GFX_SwitchFullscreenNoReset(void) {
+	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
+}
+
+void GFX_SwitchLazyFullscreen(bool lazy) {
+	sdl.desktop.lazy_fullscreen = lazy;
+	sdl.desktop.lazy_fullscreen_req = false;
+}
+
+bool GFX_LazyFullscreenRequested(void) {
+	if (sdl.desktop.lazy_fullscreen) return sdl.desktop.lazy_fullscreen_req;
+	return false;
+}
+
+void GFX_TearDown(void) {
+	if (sdl.updating)
+		GFX_EndUpdate( 0 );
+}
+
+void GFX_RestoreMode(void) {
+	GFX_SetSize(sdl.draw.width,sdl.draw.height,sdl.draw.flags,sdl.draw.scalex,sdl.draw.scaley,sdl.draw.callback,1.0);
 }
 
 // This function returns write'able buffer for user to draw upon. Successful
@@ -3547,6 +3722,13 @@ static void SetPriorityLevels(const std::string_view active_pref,
 
 	sdl.priority.active   = to_level(active_pref);
 	sdl.priority.inactive = to_level(inactive_pref);
+}
+
+void SetTransparency() {
+	Section_prop *section = static_cast<Section_prop *>(control->GetSection("sdl"));
+	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
+	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
+	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
 static void GUI_StartUp(Section *sec)
