@@ -156,7 +156,7 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	if (cmd->FindExist("-cd", false)) {
+	if (cmd->FindExist("-cd", false) || cmd->FindExist("-listcd", false)) {
 		int num = SDL_CDNumDrives();
 		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"), num);
 		for (int i = 0; i < num; i++)

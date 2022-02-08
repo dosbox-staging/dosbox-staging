@@ -50,25 +50,24 @@
 #include "support.h"
 #include "cdrom.h"
 
-CDROM_Interface_SDL::CDROM_Interface_SDL(void)
+CDROM_Interface_SDL::CDROM_Interface_SDL()
 {
 	driveID = 0;
 	oldLeadOut = 0;
-	cd = 0;
+	cd = nullptr;
 }
 
-CDROM_Interface_SDL::~CDROM_Interface_SDL(void)
+CDROM_Interface_SDL::~CDROM_Interface_SDL()
 {
 	StopAudio();
 	SDL_CDClose(cd);
-	cd = 0;
+	cd = nullptr;
 }
 
 bool CDROM_Interface_SDL::SetDevice(char *path, int forceCD)
 {
-	char buffer[512];
-	strcpy(buffer, path);
-	upcase(buffer);
+	std::string path_string = path;
+	upcase(path_string);
 
 	int num = SDL_CDNumDrives();
 	if ((forceCD >= 0) && (forceCD < num)) {
@@ -78,10 +77,10 @@ bool CDROM_Interface_SDL::SetDevice(char *path, int forceCD)
 		return true;
 	};
 
-	const char *cdname = 0;
+	const char *cdname = nullptr;
 	for (int i = 0; i < num; i++) {
 		cdname = SDL_CDName(i);
-		if (strcmp(buffer, cdname) == 0) {
+		if (path_string == cdname) {
 			cd = SDL_CDOpen(i);
 			SDL_CDStatus(cd);
 			driveID = i;
@@ -158,33 +157,29 @@ bool CDROM_Interface_SDL::PlayAudioSector(const uint32_t start, uint32_t len)
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
-	bool success = (SDL_CDPlay(cd, start + 150, len) == 0);
-	return success;
+	return (SDL_CDPlay(cd, start + 150, len) == 0);
 }
 
 bool CDROM_Interface_SDL::PauseAudio(bool resume)
 {
 	bool success;
 	if (resume)
-		success = (SDL_CDResume(cd) == 0);
+		return (SDL_CDResume(cd) == 0);
 	else
-		success = (SDL_CDPause(cd) == 0);
-	return success;
+		return (SDL_CDPause(cd) == 0);
 }
 
-bool CDROM_Interface_SDL::StopAudio(void)
+bool CDROM_Interface_SDL::StopAudio()
 {
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
-	bool success = (SDL_CDStop(cd) == 0);
-	return success;
+	return (SDL_CDStop(cd) == 0);
 }
 
 bool CDROM_Interface_SDL::LoadUnloadMedia([[maybe_unused]] bool unload)
 {
-	bool success = (SDL_CDEject(cd) == 0);
-	return success;
+	return (SDL_CDEject(cd) == 0);
 }
 
 int CDROM_GetMountType(char *path, int forceCD)
@@ -197,12 +192,8 @@ int CDROM_GetMountType(char *path, int forceCD)
 	// (strchr(path,'\\')==strrchr(path,'\\')) &&
 	// (GetDriveType(path)==DRIVE_CDROM)) return 0;
 
-	const char *cdName;
-	char buffer[512];
-	strcpy(buffer, path);
-#if defined(WIN32)
-	upcase(buffer);
-#endif
+	std::string path_string = path;
+	upcase(path_string);
 
 	int num = SDL_CDNumDrives();
 	// If cd drive is forced then check if its in range and return 0
@@ -211,10 +202,11 @@ int CDROM_GetMountType(char *path, int forceCD)
 		return 0;
 	}
 
+	const char *cdName;
 	// compare names
 	for (int i = 0; i < num; i++) {
 		cdName = SDL_CDName(i);
-		if (strcmp(buffer, cdName) == 0)
+		if (path_string == cdName)
 			return 0;
 	};
 
