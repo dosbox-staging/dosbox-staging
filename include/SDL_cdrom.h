@@ -4,13 +4,9 @@
 #include "SDL_config.h"
 
 /** The maximum number of CD-ROM tracks on a disk */
-#define SDL_MAX_TRACKS 99
-
-#define SDL_AUDIO_TRACK 0x00
-#define SDL_DATA_TRACK  0x04
-
-/** Given a status, returns true if there's a disk in the drive */
-#define CD_INDRIVE(status) ((int)(status) > 0)
+constexpr int SDL_MAX_TRACKS = 99;
+constexpr int SDL_AUDIO_TRACK = 0x00;
+constexpr int SDL_DATA_TRACK = 0x04;
 
 /** The possible states which a CD-ROM drive can be in. */
 typedef enum {
@@ -20,6 +16,11 @@ typedef enum {
 	CD_PAUSED,
 	CD_ERROR = -1
 } CDstatus;
+
+/** Given a status, returns true if there's a disk in the drive */
+constexpr bool CD_INDRIVE(CDstatus status) {
+	return (int)(status) > 0;
+}
 
 typedef struct SDL_CDtrack {
 	Uint8 id;   /**< Track number */

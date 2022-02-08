@@ -588,7 +588,7 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-usecd #] [-size drivesize] [-size drivesize]
+      [-t type] [-usecd number] [-size drivesize]
       [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
 MOUNT -cd
@@ -632,15 +632,14 @@ MOUNT -u "Emulated Drive letter"
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
 
-  -usecd number
-        Valid on all systems.
-        Enables to select the drive that should be used by SDL. Use this if
-        the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
-        interface. "number" can be found by "MOUNT -cd".
+  -listcd (or -cd)
+        Lists the host PC's physical CD-ROM drives and their corresponding
+        numerical IDs for use with the -usecd argument below.
 
-  -cd
-        Displays all CD-ROM drives detected by SDL, and their numbers.
-        See the information at the -usecd entry above.
+  -usecd number
+        Specifies the numerical ID for a physical CD-ROM drive as
+        provided by the -listcd argument. Note that the -usecd argument is
+        optional and only needed if the wrong CD-ROM drive is mounted.
 
   -u
         Removes the mount. Doesn't work for Z:\.
