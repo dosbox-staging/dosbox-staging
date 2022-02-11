@@ -114,7 +114,7 @@ static constexpr void check_width([[maybe_unused]] const T reg, const B bits)
 	static_assert(std::is_unsigned<T>::value, "register must be unsigned");
 
 	// Ensure the bits fall within the type size
-	assert(static_cast<uint64_t>(bits) > 0);
+	assert(static_cast<uint64_t>(bits) >= 0); // can't set negative bits
 
 	// Note: if you'd like to extend this to 64-bits, double check that the
 	//       assertions still work.  Their purpose is to catch when the bit
