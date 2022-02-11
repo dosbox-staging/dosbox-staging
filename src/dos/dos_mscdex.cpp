@@ -312,7 +312,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	switch (MSCDEX_GetMountType(physicalPath)) {
 	case MountType::PHYSICAL:
 		LOG(LOG_MISC, LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
+#if defined (LINUX)
+		cdrom[numDrives] = new CDROM_Interface_Ioctl();
+#else
 		cdrom[numDrives] = new CDROM_Interface_SDL();
+#endif
 		break;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);

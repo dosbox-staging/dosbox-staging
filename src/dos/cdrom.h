@@ -118,7 +118,7 @@ public:
 	virtual void InitNewMedia       () {}
 };
 
-class CDROM_Interface_SDL final : public CDROM_Interface
+class CDROM_Interface_SDL : public CDROM_Interface
 {
 public:
 	CDROM_Interface_SDL();
@@ -302,7 +302,7 @@ public:
 	bool	StopAudio               ();
 	void	ChannelControl          (TCtrl ctrl);
 	bool	ReadSectors             (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
-	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	bool	ReadSectorsHost         (void* buffer, bool raw, unsigned long sector, unsigned long num);
 	bool	LoadUnloadMedia         (bool unload);
 	bool	ReadSector              (uint8_t *buffer, const bool raw, const uint32_t sector);
 	bool	HasDataTrack            ();
@@ -349,6 +349,23 @@ private:
 	std::string          mcn;
 	static int           refCount;
 };
+
+#if defined (LINUX)
+class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
+{
+public:
+	CDROM_Interface_Ioctl		(void);
+
+	bool	SetDevice		(char* path, int forceCD);
+	bool	GetUPC			(unsigned char& attr, char* upc);
+	bool	ReadSectors		(PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
+	bool	ReadSectorsHost	(void* buffer, bool raw, unsigned long sector, unsigned long num);
+
+private:
+	char	device_name[512];
+};
+
+#endif /* LINUX */
 
 void MSCDEX_SetCDInterface(int int_nr, int num_cd);
 
