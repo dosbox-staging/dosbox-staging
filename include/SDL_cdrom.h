@@ -2,11 +2,42 @@
 #define _SDL_cdrom_h
 
 #include "SDL_config.h"
+#include <stdio.h>
+#include <stdint.h>
 
 /** The maximum number of CD-ROM tracks on a disk */
-constexpr int SDL_MAX_TRACKS = 99;
-constexpr int SDL_AUDIO_TRACK = 0x00;
-constexpr int SDL_DATA_TRACK = 0x04;
+#define SDL_MAX_TRACKS 99
+#define SDL_AUDIO_TRACK 0x00
+#define SDL_DATA_TRACK 0x04
+
+#ifndef Uint8
+#define Uint8 uint8_t
+#endif
+#ifndef Uint16
+#define Uint16 uint16_t
+#endif
+#ifndef Uint32
+#define Uint32 uint32_t
+#endif
+
+/** Given a status, returns true if there's a disk in the drive */
+#define CD_INDRIVE(status) ((int)(status) > 0)
+
+/** @name Frames / MSF Conversion Functions
+ *  Conversion functions from frames to Minute/Second/Frames and vice versa
+ */
+/*@{*/
+#define CD_FPS 75
+#define FRAMES_TO_MSF(f, M,S,F)	{	\
+	unsigned int value = f;			\
+	*(F) = value%CD_FPS;			\
+	value /= CD_FPS;				\
+	*(S) = value%60u;				\
+	value /= 60u;					\
+	*(M) = value;					\
+}
+#define MSF_TO_FRAMES(M, S, F) ((M)*60 * CD_FPS + (S)*CD_FPS + (F))
+/*@}*/
 
 /** The possible states which a CD-ROM drive can be in. */
 typedef enum {
@@ -16,11 +47,6 @@ typedef enum {
 	CD_PAUSED,
 	CD_ERROR = -1
 } CDstatus;
-
-/** Given a status, returns true if there's a disk in the drive */
-constexpr bool CD_INDRIVE(CDstatus status) {
-	return (int)(status) > 0;
-}
 
 typedef struct SDL_CDtrack {
 	Uint8 id;   /**< Track number */
@@ -44,9 +70,11 @@ typedef struct SDL_CD {
 	/*@}*/
 } SDL_CD;
 
+#if defined(_MSC_VER)
 const char *SDL_CDName(int drive);
-extern int SDL_CDNumDrives(void);
-extern int SDL_CDROMInit(void);
-extern void SDL_CDROMQuit(void);
+int SDL_CDNumDrives(void);
+int SDL_CDROMInit(void);
+void SDL_CDROMQuit(void);
+#endif
 
 #endif

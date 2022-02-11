@@ -21,7 +21,7 @@
 */
 #include "SDL_config.h"
 
-#ifdef SDL_CDROM_WIN32
+#if defined(WIN32)
 
 /* Functions for system-level CD-ROM audio control */
 

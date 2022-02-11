@@ -21,6 +21,8 @@
 */
 #include "SDL_config.h"
 
+#if defined(MACOSX) && defined(__clang__)
+
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
@@ -201,3 +203,4 @@ void delete_SDLOSXCAGuard(SDLOSXCAGuard *cag)
     }
 }
 
+#endif /* SDL_CDROM_MACOSX */
