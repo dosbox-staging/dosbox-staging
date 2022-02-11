@@ -76,17 +76,24 @@ static void perform_dma_io(const DMA_DIRECTION direction,
 		else if (page < LINK_START)
 			page = paging.firstmb[page];
 
+		// Calculate the offset within the page
 		const auto pos_in_page = mem_address & (MEM_PAGESIZE - 1);
 		const auto bytes_to_page_end = check_cast<uint16_t>(MEM_PAGESIZE - pos_in_page);
-		const auto chunk_bytes = std::min(remaining_bytes, bytes_to_page_end);
-		const auto chunk_address = check_cast<PhysPt>(page * MEM_PAGESIZE + pos_in_page);
+		const auto chunk_start = check_cast<PhysPt>(page * MEM_PAGESIZE + pos_in_page);
 
-		if (direction == DMA_DIRECTION::READ) // data_pt is destination
-			MEM_BlockRead(chunk_address, /* --> */ data_pt, chunk_bytes);
-		else {
-			assert(direction == DMA_DIRECTION::WRITE); // data_pt is source
-			MEM_BlockWrite(chunk_address, /* <-- */ data_pt, chunk_bytes);
-		}
+		// Determine how many bytes to transfer within this page
+		const auto chunk_bytes = std::min(remaining_bytes, bytes_to_page_end);
+
+		// Copy the data from the page address into the data pointer
+		if (direction == DMA_DIRECTION::READ)
+			for (auto i = 0; i < chunk_bytes; ++i)
+				data_pt[i] = phys_readb(chunk_start + i);
+
+		// Copy the data from the data pointer into the page address
+		else if (direction == DMA_DIRECTION::WRITE)
+			for (auto i = 0; i < chunk_bytes; ++i)
+				phys_writeb(chunk_start + i, data_pt[i]);
+
 		mem_address += chunk_bytes;
 		data_pt += chunk_bytes;
 		remaining_bytes -= chunk_bytes;
