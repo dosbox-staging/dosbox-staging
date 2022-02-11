@@ -162,7 +162,6 @@ bool CDROM_Interface_SDL::PlayAudioSector(const uint32_t start, uint32_t len)
 
 bool CDROM_Interface_SDL::PauseAudio(bool resume)
 {
-	bool success;
 	if (resume)
 		return (SDL_CDResume(cd) == 0);
 	else
