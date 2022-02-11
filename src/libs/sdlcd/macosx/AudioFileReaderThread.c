@@ -24,6 +24,8 @@
 */
 #include "SDL_config.h"
 
+#if defined(MACOSX) && defined(__clang__)
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    AudioFileManager.cpp
 */
@@ -31,6 +33,12 @@
 #include <mach/mach.h> /* used for setting policy of thread */
 #include "SDLOSXCAGuard.h"
 #include <pthread.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+#pragma GCC diagnostic ignored "-Wformat"
 
 /*#include <list>*/
 
@@ -608,3 +616,4 @@ AudioFileManager *new_AudioFileManager(AudioFilePlayer *inParent,
     return afm;
 }
 
+#endif /* SDL_CDROM_MACOSX */

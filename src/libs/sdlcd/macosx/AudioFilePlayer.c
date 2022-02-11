@@ -22,7 +22,11 @@
     This file based on Apple sample code. We haven't changed the file name, 
     so if you want to see the original search for it on apple.com/developer
 */
+
 #include "SDL_config.h"
+
+#if defined(MACOSX) && defined(__clang__)
+
 #include "SDL_endian.h"
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -366,3 +370,4 @@ AudioFilePlayer *new_AudioFilePlayer (const FSRef *inFileRef)
     return afp;
 }
 
+#endif /* SDL_CDROM_MACOSX */

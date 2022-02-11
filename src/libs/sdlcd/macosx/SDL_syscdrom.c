@@ -21,7 +21,7 @@
 */
 #include "SDL_config.h"
 
-#ifdef SDL_CDROM_MACOSX
+#if defined(MACOSX) && defined(__clang__)
 
 #include "SDL_syscdrom_c.h"
 

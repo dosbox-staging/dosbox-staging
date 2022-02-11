@@ -18,25 +18,6 @@
 
 #include "cdrom.h"
 
-#include "../libs/sdlcd/SDL_cdrom.c"
-#if defined(WIN32)
-#define SDL_CDROM_WIN32
-#include "../libs/sdlcd/win32/SDL_syscdrom.c"
-#elif defined(LINUX)
-#define SDL_CDROM_LINUX
-#include "../libs/sdlcd/linux/SDL_syscdrom.c"
-#elif defined(MACOSX) && defined(__clang__)
-#define SDL_CDROM_MACOSX
-#include "../libs/sdlcd/macosx/SDL_syscdrom.c"
-#include "../libs/sdlcd/macosx/AudioFilePlayer.c"
-#include "../libs/sdlcd/macosx/AudioFileReaderThread.c"
-#include "../libs/sdlcd/macosx/CDPlayer.c"
-#include "../libs/sdlcd/macosx/SDLOSXCAGuard.c"
-#else
-#define SDL_CDROM_DUMMY
-#include "../libs/sdlcd/dummy/SDL_syscdrom.c"
-#endif
-
 // ******************************************************
 // SDL CDROM
 // ******************************************************
@@ -49,6 +30,11 @@
 #include "SDL.h"
 #include "support.h"
 #include "cdrom.h"
+
+#if defined(_MSC_VER)
+#include "../libs/sdlcd/SDL_cdrom.c"
+#include "../libs/sdlcd/win32/SDL_syscdrom.c"
+#endif
 
 CDROM_Interface_SDL::CDROM_Interface_SDL()
 {

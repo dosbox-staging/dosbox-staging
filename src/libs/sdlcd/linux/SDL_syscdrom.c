@@ -23,7 +23,7 @@
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-#ifdef SDL_CDROM_LINUX
+#if defined(LINUX)
 
 /* Functions for system-level CD-ROM audio control */
 

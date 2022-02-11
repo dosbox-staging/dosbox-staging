@@ -21,6 +21,8 @@
 */
 #include "SDL_config.h"
 
+#if defined(MACOSX) && defined(__clang__)
+
 #include "CDPlayer.h"
 #include "AudioFilePlayer.h"
 #include "SDLOSXCAGuard.h"
@@ -641,5 +643,7 @@ static int RunCallBackThread (void *param)
     
     return 0;
 }
+
+#endif /* SDL_CDROM_MACOSX */
 
 /*}; // extern "C" */

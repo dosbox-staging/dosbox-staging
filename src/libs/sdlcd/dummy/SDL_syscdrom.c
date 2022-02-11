@@ -21,7 +21,7 @@
 */
 #include "SDL_config.h"
 
-#if defined(SDL_CDROM_DUMMY) || defined(SDL_CDROM_DISABLED)
+#if !(defined(WIN32) || defined(LINUX) || (defined(MACOSX) && defined(__clang__)))
 
 /* Stub functions for system-level CD-ROM audio control */
 

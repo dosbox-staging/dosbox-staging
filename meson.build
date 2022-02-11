@@ -397,6 +397,7 @@ subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
+subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 
 # internal libs
@@ -439,6 +440,7 @@ executable('dosbox', dosbox_sources,
                            threads_dep,
                            libghc_dep,
                            libloguru_dep,
+                           libsdlcd_dep,
                            libwhereami_dep]
                           + internal_deps,
            include_directories : incdir,
@@ -450,7 +452,8 @@ libdosbox = static_library('dosbox', ['src/dosbox.cpp', version_file],
                                         threads_dep,
                                         sdl2_dep,
                                         libghc_dep,
-                                        libloguru_dep]
+                                        libloguru_dep,
+                                        libsdlcd_dep]
                                       + internal_deps)
 
 dosbox_dep = declare_dependency(link_with : libdosbox)
