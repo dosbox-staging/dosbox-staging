@@ -31,11 +31,6 @@
 #include "support.h"
 #include "cdrom.h"
 
-#if defined(_MSC_VER)
-#include "../libs/sdlcd/SDL_cdrom.c"
-#include "../libs/sdlcd/win32/SDL_syscdrom.c"
-#endif
-
 CDROM_Interface_SDL::CDROM_Interface_SDL()
 {
 	driveID = 0;
