@@ -367,7 +367,6 @@ private:
 
 #endif /* LINUX */
 
-#ifndef _MSC_VER
 extern "C" SDL_CD *SDL_CDOpen(int drive);
 extern "C" void SDL_CDClose(SDL_CD *cdrom);
 extern "C" CDstatus SDL_CDStatus(SDL_CD *cdrom);
@@ -380,7 +379,6 @@ extern "C" const char *SDL_CDName(int drive);
 extern "C" int SDL_CDNumDrives(void);
 extern "C" int SDL_CDROMInit(void);
 extern "C" void SDL_CDROMQuit(void);
-#endif
 void MSCDEX_SetCDInterface(int int_nr, int num_cd);
 
 #endif

@@ -70,11 +70,4 @@ typedef struct SDL_CD {
 	/*@}*/
 } SDL_CD;
 
-#if defined(_MSC_VER)
-const char *SDL_CDName(int drive);
-int SDL_CDNumDrives(void);
-int SDL_CDROMInit(void);
-void SDL_CDROMQuit(void);
-#endif
-
 #endif
