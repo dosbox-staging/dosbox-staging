@@ -22,8 +22,6 @@
 
 #include "FilterModelConfig8580.h"
 
-#include <cassert>
-
 #include "Integrator8580.h"
 #include "OpAmp.h"
 
@@ -60,22 +58,22 @@ namespace reSIDfp
  */
 const double resGain[16] =
 {
-    1.4/1.0,                     // Rf/Ri        1.4
+                        1.4/1.0, //      Rf/Ri   1.4
     ((1.4*15.3)/(1.4+15.3))/1.0, // (Rf|R1)/Ri   1.28263
-    ((1.4*7.3)/(1.4+7.3))/1.0,   // (Rf|R2)/Ri   1.17471
-    ((1.4*4.7)/(1.4+4.7))/1.0,   // (Rf|R3)/Ri   1.07869
-    1.4/1.4,                     // Rf/R4        1
+      ((1.4*7.3)/(1.4+7.3))/1.0, // (Rf|R2)/Ri   1.17471
+      ((1.4*4.7)/(1.4+4.7))/1.0, // (Rf|R3)/Ri   1.07869
+                        1.4/1.4, //      Rf/R4   1
     ((1.4*15.3)/(1.4+15.3))/1.4, // (Rf|R1)/R4   0.916168
-    ((1.4*7.3)/(1.4+7.3))/1.4,   // (Rf|R2)/R4   0.83908
-    ((1.4*4.7)/(1.4+4.7))/1.4,   // (Rf|R3)/R4   0.770492
-    1.4/2.0,                     // Rf/R8        0.7
+      ((1.4*7.3)/(1.4+7.3))/1.4, // (Rf|R2)/R4   0.83908
+      ((1.4*4.7)/(1.4+4.7))/1.4, // (Rf|R3)/R4   0.770492
+                        1.4/2.0, //      Rf/R8   0.7
     ((1.4*15.3)/(1.4+15.3))/2.0, // (Rf|R1)/R8   0.641317
-    ((1.4*7.3)/(1.4+7.3))/2.0,   // (Rf|R2)/R8   0.587356
-    ((1.4*4.7)/(1.4+4.7))/2.0,   // (Rf|R3)/R8   0.539344
-    1.4/2.8,                     // Rf/RC        0.5
+      ((1.4*7.3)/(1.4+7.3))/2.0, // (Rf|R2)/R8   0.587356
+      ((1.4*4.7)/(1.4+4.7))/2.0, // (Rf|R3)/R8   0.539344
+                        1.4/2.8, //      Rf/RC   0.5
     ((1.4*15.3)/(1.4+15.3))/2.8, // (Rf|R1)/RC   0.458084
-    ((1.4*7.3)/(1.4+7.3))/2.8,   // (Rf|R2)/RC   0.41954
-    ((1.4*4.7)/(1.4+4.7))/2.8,   // (Rf|R3)/RC   0.385246
+      ((1.4*7.3)/(1.4+7.3))/2.8, // (Rf|R2)/RC   0.41954
+      ((1.4*4.7)/(1.4+4.7))/2.8, // (Rf|R3)/RC   0.385246
 };
 
 const unsigned int OPAMP_SIZE = 21;
@@ -122,45 +120,20 @@ FilterModelConfig8580* FilterModelConfig8580::getInstance()
 }
 
 FilterModelConfig8580::FilterModelConfig8580() :
-    voice_voltage_range(0.25), // FIXME measure
-    voice_DC_voltage(4.80), // FIXME was 4.76
-    C(22e-9),
-    Vdd(9.09),
-    Vth(0.80),
-    Ut(26.0e-3),
-    uCox(100e-6),
-    Vddt(Vdd - Vth),
-    vmin(opamp_voltage[0].x),
-    vmax(Vddt < opamp_voltage[0].y ? opamp_voltage[0].y : Vddt),
-    denorm(vmax - vmin),
-    norm(1.0 / denorm),
-    N16(norm * ((1 << 16) - 1))
+    FilterModelConfig(
+        0.25,   // voice voltage range FIXME measure
+        4.80,   // voice DC voltage FIXME was 4.76
+        22e-9,  // capacitor value
+        9.09,   // Vdd
+        0.80,   // Vth
+        100e-6, // uCox
+        opamp_voltage,
+        OPAMP_SIZE
+    )
 {
-    // Convert op-amp voltage transfer to 16 bit values.
-
-    Spline::Point scaled_voltage[OPAMP_SIZE];
-
-    for (unsigned int i = 0; i < OPAMP_SIZE; i++)
-    {
-        scaled_voltage[i].x = N16 * (opamp_voltage[i].x - opamp_voltage[i].y + denorm) / 2.;
-        scaled_voltage[i].y = N16 * (opamp_voltage[i].x - vmin);
-    }
-
-    // Create lookup table mapping capacitor voltage to op-amp input voltage:
-
-    Spline s(scaled_voltage, OPAMP_SIZE);
-
-    for (int x = 0; x < (1 << 16); x++)
-    {
-        const Spline::Point out = s.evaluate(x);
-        double tmp = out.x;
-        assert(tmp > -0.5 && tmp < 65535.5);
-        opamp_rev[x] = static_cast<unsigned short>(tmp + 0.5);
-    }
-
     // Create lookup tables for gains / summers.
 
-    OpAmp opampModel(opamp_voltage, OPAMP_SIZE, Vddt);
+    OpAmp opampModel(std::vector<Spline::Point>(std::begin(opamp_voltage), std::end(opamp_voltage)), Vddt);
 
     // The filter summer operates at n ~ 1, and has 5 fundamentally different
     // input configurations (2 - 6 input "resistors").
@@ -180,9 +153,7 @@ FilterModelConfig8580::FilterModelConfig8580() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16 / idiv; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            summer[i][vi] = static_cast<unsigned short>(tmp + 0.5);
+            summer[i][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
@@ -202,9 +173,7 @@ FilterModelConfig8580::FilterModelConfig8580() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16 / idiv; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            mixer[i][vi] = static_cast<unsigned short>(tmp + 0.5);
+            mixer[i][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
@@ -222,9 +191,7 @@ FilterModelConfig8580::FilterModelConfig8580() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            gain_vol[n8][vi] = static_cast<unsigned short>(tmp + 0.5);
+            gain_vol[n8][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
@@ -242,36 +209,14 @@ FilterModelConfig8580::FilterModelConfig8580() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(resGain[n8], vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            gain_res[n8][vi] = static_cast<unsigned short>(tmp + 0.5);
+            gain_res[n8][vi] = getNormalizedValue(opampModel.solve(resGain[n8], vin));
         }
-    }
-}
-
-FilterModelConfig8580::~FilterModelConfig8580()
-{
-    for (int i = 0; i < 5; i++)
-    {
-        delete [] summer[i];
-    }
-
-    for (int i = 0; i < 8; i++)
-    {
-        delete [] mixer[i];
-    }
-
-    for (int i = 0; i < 16; i++)
-    {
-        delete [] gain_vol[i];
-        delete [] gain_res[i];
     }
 }
 
 std::unique_ptr<Integrator8580> FilterModelConfig8580::buildIntegrator()
 {
-    const double nKp = denorm* (uCox / 2. * 1.0e-6 / C);
-    return std::make_unique<Integrator8580>(opamp_rev, Vth, nKp, vmin, N16);
+    return std::make_unique<Integrator8580>(this);
 }
 
 } // namespace reSIDfp

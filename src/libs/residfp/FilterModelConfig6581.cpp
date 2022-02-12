@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2010 Dag Lem
  *
@@ -31,6 +31,7 @@
 namespace reSIDfp
 {
 
+#ifndef HAVE_CXX11
 /**
  * Compute log(1+x) without losing precision for small values of x
  *
@@ -41,6 +42,7 @@ inline double log1p(double x)
 {
     return log(1. + x) - (((1. + x) - 1.) - x) / (1. + x);
 }
+#endif
 
 const unsigned int OPAMP_SIZE = 33;
 
@@ -100,53 +102,27 @@ FilterModelConfig6581* FilterModelConfig6581::getInstance()
 }
 
 FilterModelConfig6581::FilterModelConfig6581() :
-    voice_voltage_range(1.5),
-    voice_DC_voltage(5.0),
-    C(470e-12),
-    Vdd(12.18),
-    Vth(1.31),
-    Ut(26.0e-3),
-    uCox(20e-6),
+    FilterModelConfig(
+        1.5,     // voice voltage range
+        5.075,   // voice DC voltage
+        470e-12, // capacitor value
+        12.18,   // Vdd
+        1.31,    // Vth
+        20e-6,   // uCox
+        opamp_voltage,
+        OPAMP_SIZE
+    ),
     WL_vcr(9.0 / 1.0),
     WL_snake(1.0 / 115.0),
-    Vddt(Vdd - Vth),
     dac_zero(6.65),
     dac_scale(2.63),
-    vmin(opamp_voltage[0].x),
-    vmax(Vddt < opamp_voltage[0].y ? opamp_voltage[0].y : Vddt),
-    denorm(vmax - vmin),
-    norm(1.0 / denorm),
-    N16(norm * ((1 << 16) - 1)),
     dac(DAC_BITS)
 {
     dac.kinkedDac(MOS6581);
 
-    // Convert op-amp voltage transfer to 16 bit values.
-
-    Spline::Point scaled_voltage[OPAMP_SIZE];
-
-    for (unsigned int i = 0; i < OPAMP_SIZE; i++)
-    {
-        scaled_voltage[i].x = N16 * (opamp_voltage[i].x - opamp_voltage[i].y + denorm) / 2.;
-        scaled_voltage[i].y = N16 * (opamp_voltage[i].x - vmin);
-    }
-
-    // Create lookup table mapping capacitor voltage to op-amp input voltage:
-
-    Spline s(scaled_voltage, OPAMP_SIZE);
-
-    for (int x = 0; x < (1 << 16); x++)
-    {
-        const Spline::Point out = s.evaluate(x);
-        double tmp = out.x;
-        if (tmp < 0.) tmp = 0.;
-        assert(tmp < 65535.5);
-        opamp_rev[x] = static_cast<unsigned short>(tmp + 0.5);
-    }
-
     // Create lookup tables for gains / summers.
 
-    OpAmp opampModel(opamp_voltage, OPAMP_SIZE, Vddt);
+    OpAmp opampModel(std::vector<Spline::Point>(std::begin(opamp_voltage), std::end(opamp_voltage)), Vddt);
 
     // The filter summer operates at n ~ 1, and has 5 fundamentally different
     // input configurations (2 - 6 input "resistors").
@@ -166,9 +142,7 @@ FilterModelConfig6581::FilterModelConfig6581() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16 / idiv; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            summer[i][vi] = static_cast<unsigned short>(tmp + 0.5);
+            summer[i][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
@@ -188,44 +162,57 @@ FilterModelConfig6581::FilterModelConfig6581() :
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16 / idiv; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            mixer[i][vi] = static_cast<unsigned short>(tmp + 0.5);
+            mixer[i][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
-    // 4 bit "resistor" ladders in the bandpass resonance gain and the audio
+    // 4 bit "resistor" ladders in the audio
     // output gain necessitate 16 gain tables.
     // From die photographs of the bandpass and volume "resistor" ladders
-    // it follows that gain ~ vol/8 and 1/Q ~ ~res/8 (assuming ideal
+    // it follows that gain ~ vol/12 (assuming ideal
     // op-amps and ideal "resistors").
     for (int n8 = 0; n8 < 16; n8++)
     {
         const int size = 1 << 16;
-        const double n = n8 / 8.0;
+        const double n = n8 / 12.0;
         opampModel.reset();
-        gain[n8] = new unsigned short[size];
+        gain_vol[n8] = new unsigned short[size];
 
         for (int vi = 0; vi < size; vi++)
         {
             const double vin = vmin + vi / N16; /* vmin .. vmax */
-            const double tmp = (opampModel.solve(n, vin) - vmin) * N16;
-            assert(tmp > -0.5 && tmp < 65535.5);
-            gain[n8][vi] = static_cast<unsigned short>(tmp + 0.5);
+            gain_vol[n8][vi] = getNormalizedValue(opampModel.solve(n, vin));
         }
     }
 
-    const double nVddt = N16 * Vddt;
-    const double nVmin = N16 * vmin;
+    // 4 bit "resistor" ladders in the bandpass resonance gain
+    // necessitate 16 gain tables.
+    // From die photographs of the bandpass and volume "resistor" ladders
+    // it follows that 1/Q ~ ~res/8 (assuming ideal
+    // op-amps and ideal "resistors").
+    for (int n8 = 0; n8 < 16; n8++)
+    {
+        const int size = 1 << 16;
+        const double n = (~n8 & 0xf) / 8.0;
+        opampModel.reset();
+        gain_res[n8] = new unsigned short[size];
+
+        for (int vi = 0; vi < size; vi++)
+        {
+            const double vin = vmin + vi / N16; /* vmin .. vmax */
+            gain_res[n8][vi] = getNormalizedValue(opampModel.solve(n, vin));
+        }
+    }
+
+    const double nVddt = N16 * (Vddt - vmin);
 
     for (unsigned int i = 0; i < (1 << 16); i++)
     {
         // The table index is right-shifted 16 times in order to fit in
         // 16 bits; the argument to sqrt is thus multiplied by (1 << 16).
-        const double Vg = nVddt - sqrt((double)(i << 16));
-        const double tmp = Vg - nVmin;
+        const double tmp = nVddt - sqrt(static_cast<double>(i << 16));
         assert(tmp > -0.5 && tmp < 65535.5);
-        vcr_Vg[i] = static_cast<unsigned short>(tmp + 0.5);
+        vcr_nVg[i] = static_cast<unsigned short>(tmp + 0.5);
     }
 
     //  EKV model:
@@ -254,24 +241,6 @@ FilterModelConfig6581::FilterModelConfig6581() :
     }
 }
 
-FilterModelConfig6581::~FilterModelConfig6581()
-{
-    for (int i = 0; i < 5; i++)
-    {
-        delete [] summer[i];
-    }
-
-    for (int i = 0; i < 8; i++)
-    {
-        delete [] mixer[i];
-    }
-
-    for (int i = 0; i < 16; i++)
-    {
-        delete [] gain[i];
-    }
-}
-
 unsigned short* FilterModelConfig6581::getDAC(double adjustment) const
 {
     const double dac_zero = getDacZero(adjustment);
@@ -281,9 +250,7 @@ unsigned short* FilterModelConfig6581::getDAC(double adjustment) const
     for (unsigned int i = 0; i < (1 << DAC_BITS); i++)
     {
         const double fcd = dac.getOutput(i);
-        const double tmp = N16 * (dac_zero + fcd * dac_scale / (1 << DAC_BITS) - vmin);
-        assert(tmp > -0.5 && tmp < 65535.5);
-        f0_dac[i] = static_cast<unsigned short>(tmp + 0.5);
+        f0_dac[i] = getNormalizedValue(dac_zero + fcd * dac_scale / (1 << DAC_BITS));
     }
 
     return f0_dac;
@@ -291,27 +258,7 @@ unsigned short* FilterModelConfig6581::getDAC(double adjustment) const
 
 std::unique_ptr<Integrator6581> FilterModelConfig6581::buildIntegrator()
 {
-    // Vdd - Vth, normalized so that translated values can be subtracted:
-    // Vddt - x = (Vddt - t) - (x - t)
-    double tmp = N16 * (Vddt - vmin);
-    assert(tmp > -0.5 && tmp < 65535.5);
-    const unsigned short nVddt = static_cast<unsigned short>(tmp + 0.5);
-
-    tmp = N16 * (Vth - vmin);
-    assert(tmp > -0.5 && tmp < 65535.5);
-    const unsigned short nVt = static_cast<unsigned short>(tmp + 0.5);
-
-    tmp = N16 * vmin;
-    assert(tmp > -0.5 && tmp < 65535.5);
-    const unsigned short nVmin = static_cast<unsigned short>(tmp + 0.5);
-
-    // Normalized snake current factor, 1 cycle at 1MHz.
-    // Fit in 5 bits.
-    tmp = denorm * (1 << 13) * (uCox / 2. * WL_snake * 1.0e-6 / C);
-    assert(tmp > -0.5 && tmp < 65535.5);
-    const unsigned short n_snake = static_cast<unsigned short>(tmp + 0.5);
-
-    return std::unique_ptr<Integrator6581>(new Integrator6581(vcr_Vg, vcr_n_Ids_term, opamp_rev, nVddt, nVt, nVmin, n_snake, N16));
+    return std::make_unique<Integrator6581>(this, WL_snake);
 }
 
 } // namespace reSIDfp

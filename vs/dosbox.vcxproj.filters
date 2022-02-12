@@ -466,6 +466,9 @@
     <ClCompile Include="..\src\libs\residfp\Filter8580.cpp">
       <Filter>src\libs\residfp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\FilterModelConfig.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libs\residfp\FilterModelConfig6581.cpp">
       <Filter>src\libs\residfp</Filter>
     </ClCompile>
@@ -949,6 +952,9 @@
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\residfp\Filter8580.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\FilterModelConfig.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\residfp\FilterModelConfig6581.h">

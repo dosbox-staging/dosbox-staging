@@ -122,8 +122,8 @@ short calculateCombinedWaveform(const CombinedWaveformConfig& config, int wavefo
         distancetable[12] = 1.f;
         for (int i = 12; i > 0; i--)
         {
-            distancetable[12-i] = 1.0f / powf(config.distance1, static_cast<float>(i));
-            distancetable[12+i] = 1.0f / powf(config.distance2, static_cast<float>(i));
+            distancetable[12-i] = 1.0f / powf(config.distance1, static_cast<float>(i)); // all floats
+            distancetable[12+i] = 1.0f / powf(config.distance2, static_cast<float>(i)); // all floats
         }
 
         float tmp[12];

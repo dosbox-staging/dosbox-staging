@@ -54,64 +54,64 @@ private:
 
 private:
     /// XOR shift register for ADSR prescaling.
-    unsigned int lfsr;
+    unsigned int lfsr = 0;
 
     /// Comparison value (period) of the rate counter before next event.
-    unsigned int rate;
+    unsigned int rate = 0;
 
     /**
      * During release mode, the SID approximates envelope decay via piecewise
      * linear decay rate.
      */
-    unsigned int exponential_counter;
+    unsigned int exponential_counter = 0;
 
     /**
      * Comparison value (period) of the exponential decay counter before next
      * decrement.
      */
-    unsigned int exponential_counter_period;
-    unsigned int new_exponential_counter_period;
+    unsigned int exponential_counter_period = 0;
+    unsigned int new_exponential_counter_period = 0;
 
-    unsigned int state_pipeline;
+    unsigned int state_pipeline = 0;
 
     ///
-    unsigned int envelope_pipeline;
+    unsigned int envelope_pipeline = 0;
 
-    unsigned int exponential_pipeline;
+    unsigned int exponential_pipeline = 0;
 
     /// Current envelope state
-    State state;
-    State next_state;
+    State state = {};
+    State next_state = {};
 
     /// Whether counter is enabled. Only switching to ATTACK can release envelope.
-    bool counter_enabled;
+    bool counter_enabled = false;
 
     /// Gate bit
-    bool gate;
+    bool gate = false;
 
     ///
-    bool resetLfsr;
+    bool resetLfsr = false;
 
     /// The current digital value of envelope output.
-    unsigned char envelope_counter;
+    unsigned char envelope_counter = 0;
 
     /// Attack register
-    unsigned char attack;
+    unsigned char attack = 0;
 
     /// Decay register
-    unsigned char decay;
+    unsigned char decay = 0;
 
     /// Sustain register
-    unsigned char sustain;
+    unsigned char sustain = 0;
 
     /// Release register
-    unsigned char release;
+    unsigned char release = 0;
 
     /// The ENV3 value, sampled at the first phase of the clock
-    unsigned char env3;
+    unsigned char env3 = 0;
 
     /// The DAC LUT for analog output
-    float* dac = nullptr;
+    float* dac = nullptr; //-V730_NOINIT this is initialized in the SID constructor
 
 private:
     static const unsigned int adsrtable[16];

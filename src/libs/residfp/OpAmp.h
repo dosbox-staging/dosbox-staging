@@ -24,6 +24,7 @@
 #define OPAMP_H
 
 #include <memory>
+#include <vector>
 
 #include "Spline.h"
 
@@ -83,12 +84,12 @@ public:
      * @param opamplength length of the opamp array
      * @param kVddt transistor dt parameter (in volts)
      */
-    OpAmp(const Spline::Point opamp[], int opamplength, double Vddt) :
+    OpAmp(const std::vector<Spline::Point> &opamp, double Vddt) :
         x(0.),
         Vddt(Vddt),
-        vmin(opamp[0].x),
-        vmax(opamp[opamplength - 1].x),
-        opamp(new Spline(opamp, opamplength)) {}
+        vmin(opamp.front().x),
+        vmax(opamp.back().x),
+        opamp(new Spline(opamp)) {}
 
     void reset() const
     {

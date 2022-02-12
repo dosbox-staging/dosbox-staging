@@ -5,6 +5,7 @@ libresidfp_sources = files([
   'Filter6581.cpp',
   'Filter8580.cpp',
   'Filter.cpp',
+  'FilterModelConfig.cpp',
   'FilterModelConfig6581.cpp',
   'FilterModelConfig8580.cpp',
   'Integrator6581.cpp',
