@@ -43,7 +43,7 @@ void Filter6581::updatedCenterFrequency()
 
 void Filter6581::updatedMixing()
 {
-    currentGain = gain[vol];
+    currentGain = gain_vol[vol];
 
     unsigned int ni = 0;
     unsigned int no = 0;

@@ -135,7 +135,7 @@ void WaveformGenerator::write_shift_register()
         // A bit once set to zero cannot be changed, hence the and'ing.
         //
         // [1] ftp://ftp.untergrund.net/users/nata/sid_test/$D1+$81_wave_test.7z
-        //chipModel
+        //
         // FIXME: Write test program to check the effect of 1 bits and whether
         // neighboring bits are affected.
 
@@ -300,9 +300,6 @@ void WaveformGenerator::writeCONTROL_REG(unsigned char control)
 
             // bit0 = (bit22 | test) ^ bit17 = 1 ^ bit17 = ~bit17
             clock_shift_register((~shift_register << 17) & (1 << 22));
-
-            // New noise waveform output.
-            set_noise_output();
         }
     }
 }

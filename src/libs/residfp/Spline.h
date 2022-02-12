@@ -65,10 +65,9 @@ private:
     mutable ParamVector::const_pointer c;
 
 public:
-    Spline(const Point input[], size_t inputLength);
+    Spline(const std::vector<Point> &input);
 
     Spline(const Spline&) = delete; // prevent copy
-
     Spline &operator=(const Spline&) = delete; // prevent assignment
 
     /**

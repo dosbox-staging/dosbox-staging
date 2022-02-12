@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004, 2010 Dag Lem <resid@nimrod.no>
  *
@@ -22,6 +22,8 @@
 
 #ifndef INTEGRATOR8580_H
 #define INTEGRATOR8580_H
+
+#include "FilterModelConfig8580.h"
 
 #include <stdint.h>
 #include <cassert>
@@ -52,43 +54,31 @@ namespace reSIDfp
 class Integrator8580
 {
 private:
-    const unsigned short* opamp_rev = nullptr;
-
     mutable int vx = 0;
     mutable int vc = 0;
 
     unsigned short nVgt = 0;
     unsigned short n_dac = 0;
 
-    const double Vth = 0.0;
-    const double nKp = 0.0;
-    const double vmin = 0.0;
-    const double N16 = 0.0;
+    const FilterModelConfig8580* fmc;
 
 public:
-    Integrator8580(const unsigned short* opamp_rev, double Vth, double nKp, double vmin, double N16) :
-        opamp_rev(opamp_rev),
+    Integrator8580(const FilterModelConfig8580* fmc) :
         vx(0),
         vc(0),
-        Vth(Vth),
-        nKp(nKp),
-        vmin(vmin),
-        N16(N16)
+        fmc(fmc)
     {
         setV(1.5);
     }
 
-    Integrator8580(const Integrator8580&) = delete; // prevent copy
-
-    Integrator8580 &operator=(const Integrator8580&) = delete; // prevent assignment
-
+    /**
+     * Set Filter Cutoff resistor ratio.
+     */
     void setFc(double wl)
     {
         // Normalized current factor, 1 cycle at 1MHz.
         // Fit in 5 bits.
-        const double tmp = (1 << 13) * nKp * wl;
-        assert(tmp > -0.5 && tmp < 65535.5);
-        n_dac = static_cast<unsigned short>(tmp + 0.5);
+        n_dac = fmc->getNormalizedCurrentFactor(wl);
     }
 
     /**
@@ -98,14 +88,13 @@ public:
     {
         // Gate voltage is controlled by the switched capacitor voltage divider
         // Ua = Ue * v = 4.76v  1<v<2
-        const double Vg = 4.76 * v;
-        const double Vgt = Vg - Vth;
+        assert(v > 1.0 && v < 2.0);
+        const double Vg = fmc->getVoiceDCVoltage() * v;
+        const double Vgt = Vg - fmc->getVth();
 
         // Vg - Vth, normalized so that translated values can be subtracted:
         // Vgt - x = (Vgt - t) - (x - t)
-        const double tmp = N16 * (Vgt - vmin);
-        assert(tmp > -0.5 && tmp < 65535.5);
-        nVgt = static_cast<unsigned short>(tmp + 0.5);
+        nVgt = fmc->getNormalizedValue(Vgt);
     }
 
     int solve(int vi) const;
@@ -140,7 +129,7 @@ int Integrator8580::solve(int vi) const
     // vx = g(vc)
     const int tmp = (vc >> 15) + (1 << 15);
     assert(tmp < (1 << 16));
-    vx = opamp_rev[tmp];
+    vx = fmc->getOpampRev(tmp);
 
     // Return vo.
     return vx - (vc >> 14);
