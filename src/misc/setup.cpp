@@ -989,11 +989,17 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 	if (ec)
 		return false;
 	
+	if (contains(configFilesCanonical, canonical_path)) {
+		LOG_INFO("CONFIG: Skipping duplicate config file '%s'", 
+			configfilename.c_str());
+		return true;
+	}
 	// static bool first_configfile = true;
 	ifstream in(canonical_path);
 	if (!in)
 		return false;
 	configfiles.push_back(configfilename);
+	configFilesCanonical.push_back(canonical_path);
 
 	// Get directory from configfilename, used with relative paths.
 	current_config_dir = canonical_path.parent_path().string();
