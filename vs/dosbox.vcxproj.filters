@@ -541,8 +541,9 @@
     <ClCompile Include="..\src\libs\whereami\whereami.c">
       <Filter>src\libs\whereami</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp" />
+    <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp">
       <Filter>src\libs\ghc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\ansi_code_markup.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
