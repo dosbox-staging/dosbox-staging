@@ -34,7 +34,7 @@ def parse_issues(filename):
     with open(filename, encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            sourcefile = os.path.realpath(row['FilePath'])
+            sourcefile = row['FilePath']
             # Skip non-file lines
             if not sourcefile.startswith('/'):
                 continue
