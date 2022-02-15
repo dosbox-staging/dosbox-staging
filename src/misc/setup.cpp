@@ -983,18 +983,20 @@ const Section_line &Config::GetOverwrittenAutoexecSection() const
 
 bool Config::ParseConfigFile(const std::string &type, const std::string &configfilename)
 {
+	std::error_code ec;
+	const std_fs::path cfg_path = configfilename;
+	const auto canonical_path = std_fs::canonical(cfg_path, ec);
+	if (ec)
+		return false;
+	
 	// static bool first_configfile = true;
-	ifstream in(configfilename);
+	ifstream in(canonical_path);
 	if (!in)
 		return false;
 	configfiles.push_back(configfilename);
 
 	// Get directory from configfilename, used with relative paths.
-	current_config_dir = configfilename;
-	auto split_pos = current_config_dir.rfind(CROSS_FILESPLIT);
-	if (split_pos == std::string::npos)
-		split_pos = 0; // No directory then erase string
-	current_config_dir.erase(split_pos);
+	current_config_dir = canonical_path.parent_path().string();
 
 	string gegevens;
 	Section *currentsection = nullptr;
