@@ -29,6 +29,7 @@
 
 #include "programs.h"
 #include "setup.h"
+#include "std_filesystem.h"
 
 enum class Verbosity : int8_t {
 	//                     Splash | Welcome | Early Stdout |
