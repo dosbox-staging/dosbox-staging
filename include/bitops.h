@@ -208,16 +208,17 @@ constexpr void clear(T &reg, const int bits)
 }
 
 // Set the indicated bits to the given bool value
-template <typename T>
-constexpr T mask_to(const T reg, const bool value, const int bits)
+template <typename T, typename S>
+constexpr T mask_to(const T reg, const int bits, const S state)
 {
+	check_state_type<S>();
 	check_width(reg, bits);
-	return value ? mask_on(reg, bits) : mask_off(reg, bits);
+	return state ? mask_on(reg, bits) : mask_off(reg, bits);
 }
-template <typename T>
-constexpr void set_to(T &reg, const bool value, const int bits)
+template <typename T, typename S>
+constexpr void set_to(T &reg, const int bits, const S state)
 {
-	reg = mask_to(reg, value, bits);
+	reg = mask_to(reg, bits, state);
 }
 
 // flip the indicated bits

@@ -289,8 +289,8 @@ TEST(bitops, masking)
 
 	EXPECT_TRUE(is(mask_on(reg, b4), b4));
 	EXPECT_TRUE(cleared(mask_off(reg, b4), b4));
-	EXPECT_TRUE(any(mask_to(reg, true, b4), b4));
-	EXPECT_TRUE(cleared(mask_to(reg, false, b4), b4));
+	EXPECT_TRUE(any(mask_to(reg, b4, true), b4));
+	EXPECT_TRUE(cleared(mask_to(reg, b4, false), b4));
 	EXPECT_TRUE(any(mask_flip(reg, b4), b4));
 	EXPECT_TRUE(is(mask_flip_all(reg), b4));
 }
