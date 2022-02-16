@@ -19,7 +19,7 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 /* This is the Mac OS X / CoreAudio specific header for the SDL CD-ROM API
    Contributed by Darrell Walisser and Max Horn

@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-CDROM_Interface_Ioctl::CDROM_Interface_Ioctl(void) : CDROM_Interface_SDL()
+CDROM_Interface_Ioctl::CDROM_Interface_Ioctl() : CDROM_Interface_SDL()
 {
 	*device_name = '\0';
 }
@@ -92,12 +92,12 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer,
 	return (ret > 0);
 }
 
-bool CDROM_Interface_Ioctl::SetDevice(char *path, int forceCD)
+bool CDROM_Interface_Ioctl::SetDevice(const char *path, const int cd_number)
 {
-	bool success = CDROM_Interface_SDL::SetDevice(path, forceCD);
+	bool success = CDROM_Interface_SDL::SetDevice(path, cd_number);
 
 	if (success) {
-		const char *tmp = SDL_CDName(forceCD);
+		const char *tmp = SDL_CDName(cd_number);
 		if (tmp)
 			safe_strncpy(device_name, tmp, 512);
 		else

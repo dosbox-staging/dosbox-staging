@@ -19,7 +19,7 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 #if defined(WIN32)
 
@@ -29,7 +29,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include "SDL_cdrom.h"
+#include "../SDL_cdrom.h"
 #include "../SDL_syscdrom.h"
 
 /* This really broken?? */

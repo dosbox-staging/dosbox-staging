@@ -168,7 +168,7 @@ following extra commands are available:
 .I driveletter sourcedirectory 
 .BI "[\-usecd " number "] [\-label " drivelabel "] [\-freesize " freesize ]
 .LP
-.B MOUNT \-cd
+.B MOUNT \-listcd (or \-cd)
 .LP
 .B MOUNT \-u driveletter
 .LP
@@ -209,9 +209,9 @@ is mounted. It will not be updated !!
 .BI \-usecd " number"
 Forces to use SDL cdrom support for drive number.
 .IR Number " can be found by "
-.BR \-cd ".
+.BR \-listcd/\-cd ".
 .TP
-.B \-cd
+.B \-listcd (or \-cd)
 .RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
 .TP
 .B \-u

@@ -1107,13 +1107,11 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 
 static MountType MSCDEX_GetMountType(const char *path)
 {
-	const char *cdName;
-	char buffer[512];
-	strcpy(buffer, path);
-#if defined(WIN32)
-	upcase(buffer);
-#endif
+	assert(path != NULL);
+	std::string path_string = path;
+	upcase(path_string);
 
+	const char *cdName;
 	int num = SDL_CDNumDrives();
 	// If cd drive is forced then check if its in range and return 0
 	if ((forceCD >= 0) && (forceCD < num)) {
@@ -1124,7 +1122,7 @@ static MountType MSCDEX_GetMountType(const char *path)
 	// compare names
 	for (int i = 0; i < num; i++) {
 		cdName = SDL_CDName(i);
-		if (strcmp(buffer, cdName) == 0)
+		if (path_string == cdName)
 			return MountType::PHYSICAL;
 	};
 

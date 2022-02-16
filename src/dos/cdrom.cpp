@@ -45,14 +45,15 @@ CDROM_Interface_SDL::~CDROM_Interface_SDL()
 	cd = nullptr;
 }
 
-bool CDROM_Interface_SDL::SetDevice(char *path, int forceCD)
+bool CDROM_Interface_SDL::SetDevice(const char *path, const int cd_number)
 {
+	assert(path != NULL);
 	std::string path_string = path;
 	upcase(path_string);
 
 	int num = SDL_CDNumDrives();
-	if ((forceCD >= 0) && (forceCD < num)) {
-		driveID = forceCD;
+	if ((cd_number >= 0) && (cd_number < num)) {
+		driveID = cd_number;
 		cd = SDL_CDOpen(driveID);
 		SDL_CDStatus(cd);
 		return true;
@@ -162,7 +163,7 @@ bool CDROM_Interface_SDL::LoadUnloadMedia([[maybe_unused]] bool unload)
 	return (SDL_CDEject(cd) == 0);
 }
 
-int CDROM_GetMountType(char *path, int forceCD)
+int CDROM_GetMountType(const char *path, const int forceCD)
 {
 	// 0 - physical CDROM
 	// 1 - Iso file
