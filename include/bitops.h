@@ -106,19 +106,42 @@ constexpr auto b30 = 1 << 30;
 constexpr auto b31 = 1 << 31;
 } // namespace literals
 
-// Is the bitmask within the maximum value of the register?
+// ensure the register is an unsigned integer, but not a bool
+template <typename R>
+static constexpr void check_reg_type()
+{
+	static_assert(std::is_unsigned<R>::value, "register must be unsigned");
+	static_assert(std::is_same<R, bool>::value == false,
+	              "register must not be a bool");
+}
+
+// ensure the bits aren't a bool
+template <typename B>
+static constexpr void check_bits_type()
+{
+	static_assert(std::is_same<B, bool>::value == false,
+	              "bits must not be a bool");
+}
+
+// ensure the bit state is a bool
+template <typename S>
+static constexpr void check_state_type()
+{
+	static_assert(std::is_same<S, bool>::value, "bit state must be a bool");
+}
+
+// Ensure the bits fall within the register's type size
 template <typename T, typename B>
 static constexpr void check_width([[maybe_unused]] const T reg, const B bits)
 {
-	// ensure the register is unsigned
-	static_assert(std::is_unsigned<T>::value, "register must be unsigned");
-
-	// Ensure the bits fall within the type size
-	assert(static_cast<uint64_t>(bits) >= 0); // can't set negative bits
+	check_reg_type<T>();
+	check_bits_type<B>();
 
 	// Note: if you'd like to extend this to 64-bits, double check that the
 	//       assertions still work.  Their purpose is to catch when the bit
 	//       value exceeds the maximum width of the template type.
+	assert(static_cast<uint64_t>(bits) >= 0); // can't set negative bits
+
 	assert(static_cast<int64_t>(bits) <=
 	       static_cast<int64_t>(std::numeric_limits<T>::max()));
 }
@@ -153,6 +176,7 @@ constexpr void set(T &reg, const int bits)
 template <typename T>
 constexpr T all()
 {
+	check_reg_type<T>();
 	return std::is_signed<T>::value ? static_cast<T>(-1)
 	                                : std::numeric_limits<T>::max();
 }
