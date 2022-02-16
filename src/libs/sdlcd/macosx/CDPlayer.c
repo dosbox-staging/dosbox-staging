@@ -19,7 +19,7 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 #if defined(MACOSX) && defined(__clang__)
 

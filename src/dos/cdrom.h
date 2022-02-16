@@ -39,7 +39,7 @@
 #include "support.h"
 #include "mem.h"
 #include "mixer.h"
-#include "SDL_cdrom.h"
+#include "../../libs/sdlcd/SDL_cdrom.h"
 #include "../libs/decoders/SDL_sound.h"
 
 // CDROM data and audio format constants
@@ -101,7 +101,7 @@ class CDROM_Interface
 {
 public:
 	virtual ~CDROM_Interface        () {}
-	virtual bool SetDevice          (char *path, int forceCD) = 0;
+	virtual bool SetDevice          (const char *path, const int cd_number) = 0;
 	virtual bool GetUPC             (unsigned char& attr, char* upc) = 0;
 	virtual bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut) = 0;
 	virtual bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr) = 0;
@@ -125,7 +125,7 @@ public:
 	CDROM_Interface_SDL(const CDROM_Interface_SDL&);
 	CDROM_Interface_SDL& operator = (const CDROM_Interface_SDL&);
 	virtual ~CDROM_Interface_SDL();
-	virtual bool SetDevice(char *path, int forceCD);
+	virtual bool SetDevice(const char *path, int cd_number);
 	virtual bool GetUPC(unsigned char &attr, char *upc)
 	{
 		attr = '\0';
@@ -178,7 +178,7 @@ private:
 class CDROM_Interface_Fake final : public CDROM_Interface
 {
 public:
-	bool SetDevice          (char *, [[maybe_unused]] int forceCD) { return true; }
+	bool SetDevice          ([[maybe_unused]] const char *path, [[maybe_unused]] const int cd_number) { return true; }
 	bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; }
 	bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
 	bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr);
@@ -290,7 +290,7 @@ public:
 
 	virtual ~CDROM_Interface_Image  ();
 	void	InitNewMedia            () {}
-	bool	SetDevice               (char *path, int forceCD);
+	bool	SetDevice               (const char *path, const int cd_number);
 	bool	GetUPC                  (unsigned char& attr, char* upc);
 	bool	GetAudioTracks          (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
 	bool	GetAudioTrackInfo       (uint8_t track, TMSF& start, unsigned char& attr);
@@ -354,9 +354,9 @@ private:
 class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
 {
 public:
-	CDROM_Interface_Ioctl		(void);
+	CDROM_Interface_Ioctl		();
 
-	bool	SetDevice		(char* path, int forceCD);
+	bool	SetDevice		(const char* path, const int cd_number);
 	bool	GetUPC			(unsigned char& attr, char* upc);
 	bool	ReadSectors		(PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
 	bool	ReadSectorsHost	(void* buffer, bool raw, unsigned long sector, unsigned long num);
@@ -376,9 +376,9 @@ extern "C" int SDL_CDResume(SDL_CD *cdrom);
 extern "C" int SDL_CDStop(SDL_CD *cdrom);
 extern "C" int SDL_CDEject(SDL_CD *cdrom);
 extern "C" const char *SDL_CDName(int drive);
-extern "C" int SDL_CDNumDrives(void);
-extern "C" int SDL_CDROMInit(void);
-extern "C" void SDL_CDROMQuit(void);
+extern "C" int SDL_CDNumDrives();
+extern "C" int SDL_CDROMInit();
+extern "C" void SDL_CDROMQuit();
 void MSCDEX_SetCDInterface(int int_nr, int num_cd);
 
 #endif

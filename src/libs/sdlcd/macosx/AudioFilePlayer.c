@@ -23,7 +23,7 @@
     so if you want to see the original search for it on apple.com/developer
 */
 
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 #if defined(MACOSX) && defined(__clang__)
 

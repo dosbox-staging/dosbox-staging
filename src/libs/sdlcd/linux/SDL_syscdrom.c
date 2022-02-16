@@ -19,7 +19,7 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
@@ -124,14 +124,18 @@ static int CheckDrive(char *drive, char *mnttype, struct stat *stbuf)
 	struct cdrom_subchnl info;
 
 	/* If it doesn't exist, return -1 */
-	if ( stat(drive, stbuf) < 0 ) {
+	if ( drive == NULL )
 		return(-1);
-	}
+	cdfd = open(drive, (O_RDONLY|O_NONBLOCK), 0);
+	if ( stat(drive, stbuf) < 0 ) {
+		if ( cdfd >= 0 )
+			close(cdfd);
+		return(-1);
+    }
 
 	/* If it does exist, verify that it's an available CD-ROM */
 	is_cd = 0;
 	if ( S_ISCHR(stbuf->st_mode) || S_ISBLK(stbuf->st_mode) ) {
-		cdfd = open(drive, (O_RDONLY|O_NONBLOCK), 0);
 		if ( cdfd >= 0 ) {
 			info.cdsc_format = CDROM_MSF;
 			/* Under Linux, EIO occurs when a disk is not present.
@@ -140,7 +144,6 @@ static int CheckDrive(char *drive, char *mnttype, struct stat *stbuf)
 						ERRNO_TRAYEMPTY(errno) ) {
 				is_cd = 1;
 			}
-			close(cdfd);
 		}
 #ifdef USE_MNTENT
 		/* Even if we can't read it, it might be mounted */
@@ -149,6 +152,8 @@ static int CheckDrive(char *drive, char *mnttype, struct stat *stbuf)
 		}
 #endif
 	}
+	if ( cdfd >= 0 )
+		close(cdfd);
 	return(is_cd);
 }
 
@@ -186,6 +191,7 @@ static void AddDrive(char *drive, struct stat *stbuf)
 }
 
 #ifdef USE_MNTENT
+#define STRMAXLEN 300
 static void CheckMounts(const char *mtab)
 {
 	FILE *mntfp;
@@ -195,24 +201,18 @@ static void CheckMounts(const char *mtab)
 	mntfp = setmntent(mtab, "r");
 	if ( mntfp != NULL ) {
 		char *tmp;
-		char *mnt_type;
 		size_t mnt_type_len;
-		char *mnt_dev;
 		size_t mnt_dev_len;
+		char mnt_type_str[STRMAXLEN+1];
+		char mnt_dev_str[STRMAXLEN+1];
+		char *mnt_type = mnt_type_str;
+		char *mnt_dev = mnt_dev_str;
 
 		while ( (mntent=getmntent(mntfp)) != NULL ) {
-			mnt_type_len = SDL_strlen(mntent->mnt_type) + 1;
-			mnt_type = SDL_stack_alloc(char, mnt_type_len);
-			if (mnt_type == NULL)
-				continue;  /* maybe you'll get lucky next time. */
-
-			mnt_dev_len = SDL_strlen(mntent->mnt_fsname) + 1;
-			mnt_dev = SDL_stack_alloc(char, mnt_dev_len);
-			if (mnt_dev == NULL) {
-				SDL_stack_free(mnt_type);
-				continue;
-			}
-
+			snprintf(mnt_type_str, STRMAXLEN, "%s", mntent->mnt_type);
+			snprintf(mnt_dev_str, STRMAXLEN, "%s", mntent->mnt_fsname);
+			mnt_type_len = SDL_strlen(mnt_type_str) + 1;
+			mnt_dev_len = SDL_strlen(mnt_dev_str) + 1;
 			SDL_strlcpy(mnt_type, mntent->mnt_type, mnt_type_len);
 			SDL_strlcpy(mnt_dev, mntent->mnt_fsname, mnt_dev_len);
 
@@ -220,9 +220,8 @@ static void CheckMounts(const char *mtab)
 			if ( SDL_strcmp(mnt_type, MNTTYPE_SUPER) == 0 ) {
 				tmp = SDL_strstr(mntent->mnt_opts, "fs=");
 				if ( tmp ) {
-					SDL_stack_free(mnt_type);
-					mnt_type = SDL_strdup(tmp + SDL_strlen("fs="));
-					if ( mnt_type ) {
+					strcpy(mnt_type, strlen(tmp + SDL_strlen("fs=")) <= STRMAXLEN ? tmp + SDL_strlen("fs=") : "");
+					if ( *mnt_type ) {
 						tmp = SDL_strchr(mnt_type, ',');
 						if ( tmp ) {
 							*tmp = '\0';
@@ -231,9 +230,8 @@ static void CheckMounts(const char *mtab)
 				}
 				tmp = SDL_strstr(mntent->mnt_opts, "dev=");
 				if ( tmp ) {
-					SDL_stack_free(mnt_dev);
-					mnt_dev = SDL_strdup(tmp + SDL_strlen("dev="));
-					if ( mnt_dev ) {
+					strcpy(mnt_dev, strlen(tmp + SDL_strlen("dev=")) <= STRMAXLEN ? tmp + SDL_strlen("dev=") : "");
+					if ( *mnt_dev ) {
 						tmp = SDL_strchr(mnt_dev, ',');
 						if ( tmp ) {
 							*tmp = '\0';
@@ -241,7 +239,7 @@ static void CheckMounts(const char *mtab)
 					}
 				}
 			}
-			if ( SDL_strcmp(mnt_type, MNTTYPE_CDROM) == 0 ) {
+			if ( *mnt_type && SDL_strcmp(mnt_type, MNTTYPE_CDROM) == 0 ) {
 #ifdef DEBUG_CDROM
   fprintf(stderr, "Checking mount path from %s: %s mounted on %s of %s\n",
 	mtab, mnt_dev, mntent->mnt_dir, mnt_type);
@@ -250,8 +248,6 @@ static void CheckMounts(const char *mtab)
 					AddDrive(mnt_dev, &stbuf);
 				}
 			}
-			SDL_stack_free(mnt_dev);
-			SDL_stack_free(mnt_type);
 		}
 		endmntent(mntfp);
 	}

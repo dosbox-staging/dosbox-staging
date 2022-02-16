@@ -518,9 +518,9 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	player.channel.reset();
 }
 
-bool CDROM_Interface_Image::SetDevice(char* path, [[maybe_unused]] int forceCD)
+bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const int cd_number)
 {
-	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
+	const bool result = LoadCueSheet((char *)path) || LoadIsoFile((char *)path);
 	if (!result) {
 		// print error message on dosbox console
 		char buf[MAX_LINE_LENGTH];

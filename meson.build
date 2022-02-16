@@ -342,7 +342,7 @@ if host_machine.system() == 'darwin'
 
   # Locale discovery
   corefoundation_dep = dependency('appleframeworks',
-                                  modules : ['CoreFoundation', 'CoreServices'],
+                                  modules : ['CoreFoundation'],
                                   required : false)
   if corefoundation_dep.found()
     if cxx.check_header('CoreFoundation/CoreFoundation.h')
@@ -352,6 +352,20 @@ if host_machine.system() == 'darwin'
     endif
   else
     warning('''Core Foundation support disabled: compiler can't detect/use Apple Frameworks''')
+  endif
+
+  # SDL CD dependency
+  coreservices_dep = dependency('appleframeworks',
+                                modules : ['CoreServices'],
+                                required : false)
+  if coreservices_dep.found()
+    if cxx.check_header('CoreServices/CoreServices.h')
+      conf_data.set('C_CORESERVICES', 1)
+    else
+      warning('''Core Services support disabled: header is unsable''')
+    endif
+  else
+    warning('''Core Services support disabled: compiler can't detect/use Apple Frameworks''')
   endif
 
   # Apple Silicon has 16k pages

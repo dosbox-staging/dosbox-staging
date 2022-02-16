@@ -19,13 +19,13 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#include "SDL_config.h"
+#include "../SDL_config.h"
 
 #if !(defined(WIN32) || defined(LINUX) || (defined(MACOSX) && defined(__clang__)))
 
 /* Stub functions for system-level CD-ROM audio control */
 
-#include "SDL_cdrom.h"
+#include "../SDL_cdrom.h"
 #include "../SDL_syscdrom.h"
 
 int  SDL_SYS_CDInit(void)

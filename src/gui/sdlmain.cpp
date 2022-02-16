@@ -62,7 +62,6 @@
 #include "timer.h"
 #include "vga.h"
 #include "video.h"
-#include "../dos/cdrom.h"
 
 #include "../libs/ppscale/ppscale.h"
 
@@ -469,6 +468,7 @@ void OPENGL_ERROR(const char*) {
 #endif
 #endif
 
+extern "C" void SDL_CDROMQuit(void);
 static void QuitSDL()
 {
 	if (sdl.initialized) {
@@ -3905,6 +3905,7 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen)
 	fullscreen = sdl.desktop.fullscreen;
 }
 
+extern "C" int SDL_CDROMInit(void);
 int sdl_main(int argc, char *argv[])
 {
 	int rcode = 0; // assume good until proven otherwise
