@@ -16,34 +16,18 @@ gtest_dep = optional_dep
 gmock_dep = optional_dep
 
 if not (get_option('buildtype') == 'release' and get_option('unit_tests').auto())
-  gtest_system_dep = dependency('gtest', main : true,
-                                required : get_option('unit_tests'))
-  gmock_system_dep = dependency('gmock', main : true,
-                                required : get_option('unit_tests'))
+  gtest_dep = dependency('gtest', main : true,
+                         required : get_option('unit_tests'),
+                         fallback : ['gtest', 'gtest_main_dep'])
 
-  # GTest and GMock are closely coupled together, we must use them in exactly
-  # the same version.  We can't allow situation when one of packages is
-  # system-installed and another one is used from meson subproject.
-  #
-  if (gmock_system_dep.found() and gtest_system_dep.found())
-    gtest_dep = gtest_system_dep
-    gmock_dep = gmock_system_dep
-  else
-    message('GTest or GMock is not installed, using fallback for both dependencies')
-    gtest_dep = dependency('', main : true,
-                           required : get_option('unit_tests'),
-                           fallback : ['gtest', 'gtest_main_dep'])
-    gmock_dep = dependency('', main : true,
-                           required : get_option('unit_tests'),
-                           fallback : ['gtest', 'gmock_dep'])
-  endif
+  gmock_dep = dependency('gmock', main : true,
+                         required : get_option('unit_tests'),
+                         fallback : ['gtest', 'gmock_dep'])
 endif
-if not (gtest_dep.found() and gmock_dep.found())
+if not (gtest_dep.found() or gmock_dep.found())
   gtest_dep = disabler()
   gmock_dep = disabler()
 endif
-
-summary('Unit tests', gtest_dep.found() and gmock_dep.found())
 
 # Disable compiler flags that generate warnings
 # from deliberately flawed unit test code.
