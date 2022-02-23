@@ -171,7 +171,7 @@ jobs:
           readonly VC_REDIST_VERSION="14.30.30704"
           readonly VC_REDIST_CRT_VERSION="Microsoft.VC143.CRT"
           export VC_REDIST_DIR="$VC_REDIST_BASE/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/$VC_REDIST_CRT_VERSION"
-          find "$VC_REDIST_DIR" -maxdepth 3 -type d
+          find "$VC_REDIST_BASE" -maxdepth 3 -type d
 
           # Package
           ./scripts/create-package.sh \
