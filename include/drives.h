@@ -29,7 +29,6 @@
 #include "dos_inc.h"
 #include "dos_system.h"
 
-bool WildFileCmp(const char * file, const char * wild);
 void Set_Label(char const * const input, char * const output, bool cdrom);
 std::string To_Label(const char* name);
 

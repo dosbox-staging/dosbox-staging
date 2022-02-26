@@ -22,60 +22,6 @@
 #include "string_utils.h"
 
 
-bool WildFileCmp(const char *file, const char *wild)
-{
-	char file_name[9];
-	char file_ext[4];
-	char wild_name[9];
-	char wild_ext[4];
-	const char * find_ext;
-	Bitu r;
-
-	strcpy(file_name,"        ");
-	strcpy(file_ext,"   ");
-	strcpy(wild_name,"        ");
-	strcpy(wild_ext,"   ");
-
-	find_ext=strrchr(file,'.');
-	if (find_ext) {
-		Bitu size=(Bitu)(find_ext-file);
-		if (size>8) size=8;
-		memcpy(file_name,file,size);
-		find_ext++;
-		memcpy(file_ext, find_ext, strnlen(find_ext, 3));
-	} else {
-		memcpy(file_name, file, strnlen(file, 8));
-	}
-	upcase(file_name);upcase(file_ext);
-
-	find_ext=strrchr(wild,'.');
-	if (find_ext) {
-		Bitu size=(Bitu)(find_ext-wild);
-		if (size>8) size=8;
-		memcpy(wild_name,wild,size);
-		find_ext++;
-		memcpy(wild_ext, find_ext, strnlen(find_ext, 3));
-	} else {
-		memcpy(wild_name, wild, strnlen(wild, 8));
-	}
-	upcase(wild_name);upcase(wild_ext);
-	/* Names are right do some checking */
-	r=0;
-	while (r<8) {
-		if (wild_name[r]=='*') goto checkext;
-		if (wild_name[r]!='?' && wild_name[r]!=file_name[r]) return false;
-		r++;
-	}
-checkext:
-    r=0;
-	while (r<3) {
-		if (wild_ext[r]=='*') return true;
-		if (wild_ext[r]!='?' && wild_ext[r]!=file_ext[r]) return false;
-		r++;
-	}
-	return true;
-}
-
 // TODO Right now label formatting seems to be a bit of mess, with various
 // places in code setting/expecting different format, so simple GetLabel() on
 // a drive object might not yield an expected result. Not sure how to sort it
