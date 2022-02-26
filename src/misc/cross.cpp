@@ -43,6 +43,7 @@
 #include "fs_utils.h"
 #include "string_utils.h"
 #include "support.h"
+#include "drives.h"
 
 static std::string GetConfigName()
 {
@@ -437,6 +438,224 @@ FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly)
 	}
 	// Note: if failed, the caller should provide a context-specific message
 	return fp;
+}
+
+bool wild_match(const char *haystack, char *needle)
+{
+	size_t max, i;
+	for (; *needle != '\0'; ++needle) {
+		switch (*needle) {
+		case '?':
+			if (*haystack == '\0')
+				return false;
+			++haystack;
+			break;
+		case '*':
+			if (needle[1] == '\0')
+				return true;
+			max = strlen(haystack);
+			for (i = 0; i < max; i++)
+				if (wild_match(haystack + i, needle + 1))
+					return true;
+			return false;
+		default:
+			if (toupper(*haystack) != *needle)
+				return false;
+			++haystack;
+		}
+	}
+	return *haystack == '\0';
+}
+
+bool WildFileCmp(const char *file, const char *wild)
+{
+	char file_name[DOS_MFNLENGTH + 1];
+	char file_ext[DOS_EXTLENGTH + 1];
+	char wild_name[DOS_MFNLENGTH + 1];
+	char wild_ext[DOS_EXTLENGTH + 1];
+	const char *find_ext;
+
+	strcpy(file_name, "        ");
+	strcpy(file_ext, "   ");
+	strcpy(wild_name, "        ");
+	strcpy(wild_ext, "   ");
+
+	find_ext = strrchr(file, '.');
+	if (find_ext) {
+		Bitu size = (Bitu)(find_ext - file);
+		if (size > DOS_MFNLENGTH)
+			size = DOS_MFNLENGTH;
+		memcpy(file_name, file, size);
+		find_ext++;
+		memcpy(file_ext, find_ext, strnlen(find_ext, DOS_EXTLENGTH));
+	} else {
+		memcpy(file_name, file, strnlen(file, DOS_MFNLENGTH));
+	}
+	upcase(file_name);
+	upcase(file_ext);
+
+	find_ext = strrchr(wild, '.');
+	if (find_ext) {
+		Bitu size = (Bitu)(find_ext - wild);
+		if (size > DOS_MFNLENGTH)
+			size = DOS_MFNLENGTH;
+		memcpy(wild_name, wild, size);
+		find_ext++;
+		memcpy(wild_ext, find_ext, strnlen(find_ext, DOS_EXTLENGTH));
+	} else {
+		memcpy(wild_name, wild, strnlen(wild, DOS_MFNLENGTH));
+	}
+	upcase(wild_name);
+	upcase(wild_ext);
+	/* Names are right do some checking */
+	Bitu r = 0;
+	while (r < DOS_MFNLENGTH) {
+		if (wild_name[r] == '*')
+			break;
+		if (wild_name[r] != '?' && wild_name[r] != file_name[r])
+			return false;
+		r++;
+	}
+	r = 0;
+	while (r < DOS_EXTLENGTH) {
+		if (wild_ext[r] == '*')
+			return true;
+		if (wild_ext[r] != '?' && wild_ext[r] != file_ext[r])
+			return false;
+		r++;
+	}
+	return true;
+}
+
+bool LWildFileCmp(const char *file, const char *wild)
+{
+	if (*file == 0)
+		return false;
+	char file_name[LFN_NAMELENGTH + 1];
+	char file_ext[LFN_NAMELENGTH + 1];
+	char wild_name[LFN_NAMELENGTH + 1];
+	char wild_ext[LFN_NAMELENGTH + 1];
+	Bitu r;
+
+	for (r = 0; r <= LFN_NAMELENGTH; r++) {
+		file_name[r] = 0;
+		wild_name[r] = 0;
+		file_ext[r] = 0;
+		wild_ext[r] = 0;
+	}
+
+	Bitu size;
+	size_t elength;
+	const char *find_ext;
+	find_ext = strrchr(file, '.');
+	if (find_ext) {
+		size = (Bitu)(find_ext - file);
+		if (size > LFN_NAMELENGTH)
+			size = LFN_NAMELENGTH;
+		memcpy(file_name, file, size);
+		find_ext++;
+		elength = strlen(find_ext);
+		memcpy(file_ext, find_ext,
+		       (strlen(find_ext) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
+		                                           : strlen(find_ext));
+	} else {
+		size = strlen(file);
+		elength = 0;
+		memcpy(file_name, file,
+		       (strlen(file) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
+		                                       : strlen(file));
+	}
+	upcase(file_name);
+	upcase(file_ext);
+	char nwild[LFN_NAMELENGTH + 2];
+	strcpy(nwild, wild);
+	if (strrchr(nwild, '*') && strrchr(nwild, '.') == NULL)
+		strcat(nwild, ".*");
+	find_ext = strrchr(nwild, '.');
+	if (find_ext) {
+		if (wild_match(file, nwild))
+			return true;
+		Bitu size = (Bitu)(find_ext - nwild);
+		if (size > LFN_NAMELENGTH)
+			size = LFN_NAMELENGTH;
+		memcpy(wild_name, nwild, size);
+		find_ext++;
+		memcpy(wild_ext, find_ext,
+		       (strlen(find_ext) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
+		                                           : strlen(find_ext));
+	} else {
+		memcpy(wild_name, nwild,
+		       (strlen(nwild) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
+		                                        : strlen(nwild));
+	}
+	upcase(wild_name);
+	upcase(wild_ext);
+	/* Names are right do some checking */
+	if (strchr(wild_name, '*')) {
+		if (!strchr(wild, '.'))
+			return wild_match(file, wild_name);
+		else if (!wild_match(file_name, wild_name))
+			return false;
+	} else {
+		r = 0;
+		while (r < size) {
+			if (wild_name[r] == '*')
+				break;
+			if (wild_name[r] != '?' && wild_name[r] != file_name[r])
+				return false;
+			r++;
+		}
+		if (wild_name[r] && wild_name[r] != '*')
+			return false;
+	}
+	if (strchr(wild_ext, '*'))
+		return wild_match(file_ext, wild_ext);
+	else {
+		r = 0;
+		while (r < elength) {
+			if (wild_ext[r] == '*')
+				return true;
+			if (wild_ext[r] != '?' && wild_ext[r] != file_ext[r])
+				return false;
+			r++;
+		}
+		if (wild_ext[r] && wild_ext[r] != '*')
+			return false;
+		return true;
+	}
+}
+
+bool get_expanded_files(const std::string &path,
+                        std::vector<std::string> &files,
+                        bool files_only) noexcept
+{
+	files.clear();
+	const std::string real_path = to_native_path(path);
+	if (!real_path.empty()) {
+		files.push_back(real_path);
+		return true;
+	}
+
+	std_fs::path p = path, dir = p.parent_path();
+	const std::string dir_str = dir.string(), real_dir = to_native_path(dir_str);
+	if (dir_str.size() && real_dir.empty())
+		return false;
+
+	dir = real_dir.empty() ? "." : real_dir;
+	for (const auto &entry : std_fs::directory_iterator(dir)) {
+		std_fs::path result = entry.path().filename();
+		if ((!files_only || !entry.is_directory()) &&
+		    LWildFileCmp(result.string().c_str(),
+		                 p.filename().string().c_str()))
+			files.push_back(real_dir + CROSS_FILESPLIT + result.string());
+	}
+
+	if (files.size() > 0) {
+		sort(files.begin(), files.end());
+		return true;
+	} else {
+		return false;
+	}
 }
 
 namespace cross {

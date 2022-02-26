@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
 #include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -126,5 +127,10 @@ void close_directory(dir_information* dirp);
 
 FILE *fopen_wrap(const char *path, const char *mode);
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
+
+bool WildFileCmp(const char * file, const char * wild);
+bool LWildFileCmp(const char * file, const char * wild);
+
+bool get_expanded_files(const std::string &path, std::vector<std::string> &files, bool files_only) noexcept;
 
 #endif
