@@ -124,6 +124,29 @@ Options can be passed to the `meson setup` command using `-Doption=value`
 notation or using comma-separated notation (ie: `-Doption=value1,value2,value3`)
 when the option supports multiple values.
 
+### If your build fails
+
+1. Check if the `main` branch is also experiencing build failures
+   [on GitHub](https://github.com/dosbox-staging/dosbox-staging/actions?query=event%3Apush+is%3Acompleted+branch%3Amain).
+   If so, the maintenance team is aware of it and is working on it.
+
+2. Double-check that all your dependencies are installed. Read the
+   platform-specific documents above if needed.
+
+3. If the build fails with errors from the compiler (gcc/clang/msvc)
+   or linker, then please open a new issue.
+
+4. If Meson reports a problem with a subpackage, try resetting it
+   with `meson subprojects update --reset name-of-subpackage`. For example,
+   to reset FluidSynth: `meson subprojects update --reset fluidsynth`.
+
+5. If that doesn't help, try resetting your build area with:
+
+    ``` shell
+    git checkout -f main
+    git pull
+    git clean -fdx
+    ```
 
 ### Run unit tests
 
