@@ -50,11 +50,9 @@ support today's systems.
 
 ### Feature differences
 
-DOSBox Staging does not support audio playback using physical CDs.
-Using CD Digital Audio emulation (loading CD music via
-[cue sheets](https://en.wikipedia.org/wiki/Cue_sheet_(computing)) or
-mounting [ISO images](https://en.wikipedia.org/wiki/ISO_image)) is
-preferred instead.
+DOSBox Staging supports features not included in DOSBox SVN.
+Below is a detailed comparison of feature differences between
+DOSBox Staging and DOSBox SVN.
 
 Codecs supported for CD-DA emulation:
 
