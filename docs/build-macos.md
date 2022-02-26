@@ -28,7 +28,7 @@ to be installed and the license agreed to:
 2. Install dependencies and related tools:
 
     ``` shell
-    brew install ccache cmake fluid-synth libpng meson libslirp \
+    brew install ccache cmake libpng meson libslirp \
                  opusfile pkg-config python3 sdl2 sdl2_net
     ```
 
