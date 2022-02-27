@@ -47,6 +47,7 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "programs.h"
+#include "reelmagic.h"
 #include "render.h"
 #include "setup.h"
 #include "shell.h"
@@ -825,6 +826,29 @@ void DOSBOX_Init()
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
+
+	secprop=control->AddSection_prop("reelmagic",&ReelMagic_Init,false);//ReelMagic Emulator -- where is the right place to put this? probably after mixer...
+	Pbool = secprop->Add_bool("enabled",Property::Changeable::OnlyAtStart,true);
+	Pbool->Set_help("Enable the ReelMagic emulator.");
+	Pbool = secprop->Add_bool("alwaysresident",Property::Changeable::OnlyAtStart,false);
+	Pbool->Set_help("Force the FMPDRV.EXE to always be resident and not unloadable.");
+	Pbool = secprop->Add_bool("vgadup5hack",Property::Changeable::OnlyAtStart,false);
+	Pbool->Set_help("Enable the VGA DUP5 Hack. Duplicate's every VGA 5th line.");
+	Pint = secprop->Add_int("audiolevel", Property::Changeable::OnlyAtStart,150);
+	Pint->Set_help("Sets the MPEG audio sample level in percents. Defaults to 150%");
+	Pint = secprop->Add_int("audiofifosize", Property::Changeable::OnlyAtStart,30);
+	Pint->Set_help("Sets the MPEG audio frame FIFO size. Defaults to 30 MPEG audio frames.");
+	Pint = secprop->Add_int("audiofifodispose", Property::Changeable::OnlyAtStart,2);
+	Pint->Set_help("Sets the count of MPEG audio frames to dispose of when the MPEG is going faster than audio-side of things and the FIFO hits max. Defaults to 2.");
+	Pstring = secprop->Add_string("initialmagickey",Property::Changeable::OnlyAtStart,"40044041");
+	Pstring->Set_help("Provides and alternate value for the initial global \"magic key\" value in hex. Defaults to 40044041.");
+	Pint = secprop->Add_int("magicfhack",Property::Changeable::OnlyAtStart,0);
+	Pint->Set_help("MPEG debugging only! Consult the reelmagic_player.cpp source code and NOTES_MPEG.md");
+	Pbool = secprop->Add_bool("a204debug",Property::Changeable::OnlyAtStart,true);
+	Pbool->Set_help("Turns on/off FMPDRV.EXE function Ah subfunction 204h debug logging. Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code and RMDOS_API.md");
+	Pbool = secprop->Add_bool("a206debug",Property::Changeable::OnlyAtStart,true);
+	Pbool->Set_help("Turns on/off FMPDRV.EXE function Ah subfunction 206h debug logging. Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code and RMDOS_API.md");
+
 
 	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
 

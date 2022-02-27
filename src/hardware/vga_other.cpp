@@ -33,6 +33,7 @@
 #include "pic.h"
 #include "render.h"
 #include "vga.h"
+#include "vga_reelmagic_override.h"
 
 // CHECK_NARROWING();
 
