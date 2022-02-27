@@ -29,6 +29,7 @@
 #include "../gui/render_scalers.h"
 #include "vga.h"
 #include "video.h"
+#include "vga_reelmagic_override.h"
 
 //#undef C_DEBUG
 //#define C_DEBUG 1

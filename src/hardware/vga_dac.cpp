@@ -25,6 +25,8 @@
 #include "vga.h"
 #include "mem.h"
 
+#include "vga_reelmagic_override.h"
+
 /*
 3C6h (R/W):  PEL Mask
 bit 0-7  This register is anded with the palette index sent for each dot.
