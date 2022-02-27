@@ -327,7 +327,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 				pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 				Bit16u dataread=0x1800;
 				DOS_ReadFile(fhandle,loadbuf,&dataread);
-				if (dataread<0x1800) maxsize=dataread;
+				if (dataread<0x1800) maxsize=((dataread+0x10)>>4)+0x20;
 				if (minsize>maxsize) minsize=maxsize;
 			}
 		} else {	/* Exe size calculated from header */
@@ -358,6 +358,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			maxsize=0xffff;
 			/* resize to full extent of memory block */
 			DOS_ResizeMemory(pspseg,&maxsize);
+			memsize=maxsize;
 		}
 		loadseg=pspseg+16;
 		if (!iscom) {
