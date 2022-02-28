@@ -672,7 +672,7 @@ char *format_time(const uint8_t hour,
                   bool full = false)
 {
 	uint8_t fhour = hour;
-	static char return_time_buffer[14] = {0};
+	static char return_time_buffer[19] = {0};
 	char ampm[3] = "";
 	char time_format = dos.tables.country[17];
 	if (!time_format) { // 12 hour notation?
@@ -685,13 +685,13 @@ char *format_time(const uint8_t hour,
 	const char time_separator = dos.tables.country[13];
 	const char decimal_separator = dos.tables.country[9];
 	if (full) // Example full time format: 1:02:03.04am
-		sprintf(return_time_buffer, "%u%c%02u%c%02u%c%02u%s",
-		        (unsigned int)hour, time_separator, (unsigned int)min,
-		        time_separator, (unsigned int)sec, decimal_separator,
-		        (unsigned int)msec, ampm);
+		safe_sprintf(return_time_buffer, "%u%c%02u%c%02u%c%02u%s",
+		             (unsigned int)hour, time_separator,
+		             (unsigned int)min, time_separator, (unsigned int)sec,
+		             decimal_separator, (unsigned int)msec, ampm);
 	else // Example short time format: 1:02p
-		sprintf(return_time_buffer, "%2u%c%02u%s", (unsigned int)hour,
-		        time_separator, (unsigned int)min, ampm);
+		safe_sprintf(return_time_buffer, "%2u%c%02u%s", (unsigned int)hour,
+		             time_separator, (unsigned int)min, ampm);
 	return return_time_buffer;
 }
 
