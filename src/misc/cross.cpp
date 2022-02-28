@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <SDL.h>
 
 #ifdef WIN32
 #ifndef _WIN32_IE
@@ -467,69 +468,9 @@ bool wild_match(const char *haystack, char *needle)
 	return *haystack == '\0';
 }
 
-bool WildFileCmp(const char *file, const char *wild)
+bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 {
-	char file_name[DOS_MFNLENGTH + 1];
-	char file_ext[DOS_EXTLENGTH + 1];
-	char wild_name[DOS_MFNLENGTH + 1];
-	char wild_ext[DOS_EXTLENGTH + 1];
-	const char *find_ext;
-
-	strcpy(file_name, "        ");
-	strcpy(file_ext, "   ");
-	strcpy(wild_name, "        ");
-	strcpy(wild_ext, "   ");
-
-	find_ext = strrchr(file, '.');
-	if (find_ext) {
-		Bitu size = (Bitu)(find_ext - file);
-		if (size > DOS_MFNLENGTH)
-			size = DOS_MFNLENGTH;
-		memcpy(file_name, file, size);
-		find_ext++;
-		memcpy(file_ext, find_ext, strnlen(find_ext, DOS_EXTLENGTH));
-	} else {
-		memcpy(file_name, file, strnlen(file, DOS_MFNLENGTH));
-	}
-	upcase(file_name);
-	upcase(file_ext);
-
-	find_ext = strrchr(wild, '.');
-	if (find_ext) {
-		Bitu size = (Bitu)(find_ext - wild);
-		if (size > DOS_MFNLENGTH)
-			size = DOS_MFNLENGTH;
-		memcpy(wild_name, wild, size);
-		find_ext++;
-		memcpy(wild_ext, find_ext, strnlen(find_ext, DOS_EXTLENGTH));
-	} else {
-		memcpy(wild_name, wild, strnlen(wild, DOS_MFNLENGTH));
-	}
-	upcase(wild_name);
-	upcase(wild_ext);
-	/* Names are right do some checking */
-	Bitu r = 0;
-	while (r < DOS_MFNLENGTH) {
-		if (wild_name[r] == '*')
-			break;
-		if (wild_name[r] != '?' && wild_name[r] != file_name[r])
-			return false;
-		r++;
-	}
-	r = 0;
-	while (r < DOS_EXTLENGTH) {
-		if (wild_ext[r] == '*')
-			return true;
-		if (wild_ext[r] != '?' && wild_ext[r] != file_ext[r])
-			return false;
-		r++;
-	}
-	return true;
-}
-
-bool LWildFileCmp(const char *file, const char *wild)
-{
-	if (*file == 0)
+	if (*file && !*wild)
 		return false;
 	char file_name[LFN_NAMELENGTH + 1];
 	char file_ext[LFN_NAMELENGTH + 1];
@@ -537,68 +478,75 @@ bool LWildFileCmp(const char *file, const char *wild)
 	char wild_ext[LFN_NAMELENGTH + 1];
 	Bitu r;
 
-	for (r = 0; r <= LFN_NAMELENGTH; r++) {
-		file_name[r] = 0;
-		wild_name[r] = 0;
-		file_ext[r] = 0;
-		wild_ext[r] = 0;
+	if (long_compare) {
+		for (r = 0; r <= LFN_NAMELENGTH; r++) {
+			file_name[r] = 0;
+			wild_name[r] = 0;
+			file_ext[r] = 0;
+			wild_ext[r] = 0;
+		}
+	} else {
+		strcpy(file_name, "        ");
+		strcpy(file_ext, "   ");
+		strcpy(wild_name, "        ");
+		strcpy(wild_ext, "   ");
 	}
 
-	Bitu size;
-	size_t elength;
+	Bitu size = 0;
+	size_t elength = 0;
 	const char *find_ext;
 	find_ext = strrchr(file, '.');
 	if (find_ext) {
-		size = (Bitu)(find_ext - file);
-		if (size > LFN_NAMELENGTH)
-			size = LFN_NAMELENGTH;
+		size = (std::min)((unsigned int)(long_compare ? LFN_NAMELENGTH
+		                                              : DOS_MFNLENGTH),
+		                  (unsigned int)(find_ext - file));
 		memcpy(file_name, file, size);
 		find_ext++;
 		elength = strlen(find_ext);
 		memcpy(file_ext, find_ext,
-		       (strlen(find_ext) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
-		                                           : strlen(find_ext));
+		       strnlen(find_ext,
+		               long_compare ? LFN_NAMELENGTH : DOS_EXTLENGTH));
 	} else {
 		size = strlen(file);
 		elength = 0;
 		memcpy(file_name, file,
-		       (strlen(file) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
-		                                       : strlen(file));
+		       strnlen(file, long_compare ? LFN_NAMELENGTH : DOS_MFNLENGTH));
 	}
 	upcase(file_name);
 	upcase(file_ext);
 	char nwild[LFN_NAMELENGTH + 2];
 	strcpy(nwild, wild);
-	if (strrchr(nwild, '*') && strrchr(nwild, '.') == NULL)
+	if (long_compare && strrchr(nwild, '*') && strrchr(nwild, '.') == NULL)
 		strcat(nwild, ".*");
 	find_ext = strrchr(nwild, '.');
 	if (find_ext) {
-		if (wild_match(file, nwild))
+		if (long_compare && wild_match(file, nwild))
 			return true;
-		Bitu size = (Bitu)(find_ext - nwild);
-		if (size > LFN_NAMELENGTH)
-			size = LFN_NAMELENGTH;
+		Bitu size = (std::min)((unsigned int)(long_compare
+		                                              ? LFN_NAMELENGTH
+		                                              : (DOS_MFNLENGTH + 1)),
+		                       (unsigned int)(find_ext - nwild));
 		memcpy(wild_name, nwild, size);
 		find_ext++;
 		memcpy(wild_ext, find_ext,
-		       (strlen(find_ext) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
-		                                           : strlen(find_ext));
+		       strnlen(find_ext,
+		               (long_compare ? LFN_NAMELENGTH : DOS_EXTLENGTH) + 1));
 	} else {
-		memcpy(wild_name, nwild,
-		       (strlen(nwild) > LFN_NAMELENGTH) ? LFN_NAMELENGTH
-		                                        : strlen(nwild));
+		memcpy(wild_name, wild,
+		       strnlen(wild,
+		               (long_compare ? LFN_NAMELENGTH : DOS_MFNLENGTH) + 1));
 	}
 	upcase(wild_name);
 	upcase(wild_ext);
 	/* Names are right do some checking */
-	if (strchr(wild_name, '*')) {
+	if (long_compare && strchr(wild_name, '*')) {
 		if (!strchr(wild, '.'))
 			return wild_match(file, wild_name);
 		else if (!wild_match(file_name, wild_name))
 			return false;
 	} else {
 		r = 0;
-		while (r < size) {
+		while (r < (long_compare ? size : DOS_MFNLENGTH)) {
 			if (wild_name[r] == '*')
 				break;
 			if (wild_name[r] != '?' && wild_name[r] != file_name[r])
@@ -608,11 +556,11 @@ bool LWildFileCmp(const char *file, const char *wild)
 		if (wild_name[r] && wild_name[r] != '*')
 			return false;
 	}
-	if (strchr(wild_ext, '*'))
+	if (long_compare && strchr(wild_ext, '*'))
 		return wild_match(file_ext, wild_ext);
 	else {
 		r = 0;
-		while (r < elength) {
+		while (r < (long_compare ? elength : DOS_EXTLENGTH)) {
 			if (wild_ext[r] == '*')
 				return true;
 			if (wild_ext[r] != '?' && wild_ext[r] != file_ext[r])
@@ -645,8 +593,8 @@ bool get_expanded_files(const std::string &path,
 	for (const auto &entry : std_fs::directory_iterator(dir)) {
 		std_fs::path result = entry.path().filename();
 		if ((!files_only || !entry.is_directory()) &&
-		    LWildFileCmp(result.string().c_str(),
-		                 p.filename().string().c_str()))
+		    WildFileCmp(result.string().c_str(),
+		                 p.filename().string().c_str(), true))
 			files.push_back(real_dir + CROSS_FILESPLIT + result.string());
 	}
 
