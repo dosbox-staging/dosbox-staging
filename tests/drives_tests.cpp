@@ -53,8 +53,23 @@ std::string run_Set_Label(char const * const input, bool cdrom) {
 
 namespace {
 
+TEST(WildFileCmp, wild_match)
+{
+    EXPECT_EQ(true, wild_match("TEST", "*"));
+    EXPECT_EQ(true, wild_match("TEST", "T*"));
+    EXPECT_EQ(true, wild_match("TEST", "T*T"));
+    EXPECT_EQ(true, wild_match("TEST", "TES?"));
+    EXPECT_EQ(false, wild_match("TEST LONG NAME", "TEST*long*"));
+    EXPECT_EQ(false, wild_match("TEST LONG NAME", "*NONE*"));
+    EXPECT_EQ(true, wild_match("TEST LONG LONG NAME", "*LONG?NAME"));
+    EXPECT_EQ(true, wild_match("TEST LONG LONG NAME", "*LONG*LONG*"));
+    EXPECT_EQ(false, wild_match("TEST LONG LONG NAME", "*LONGLONG*"));
+    EXPECT_EQ(false, wild_match("TEST", "Z*"));
+}
+
 TEST(WildFileCmp, ExactMatch)
 {
+    EXPECT_EQ(true, WildFileCmp("", ""));
     EXPECT_EQ(true, WildFileCmp("TEST.EXE", "TEST.EXE"));
     EXPECT_EQ(true, WildFileCmp("TEST", "TEST"));
     EXPECT_EQ(false, WildFileCmp("TEST.EXE", ".EXE"));
@@ -74,6 +89,7 @@ TEST(WildFileCmp, WildcardNoExt)
     EXPECT_EQ(false, WildFileCmp(".EXE", "*"));
     EXPECT_EQ(true, WildFileCmp("TEST", "*"));
     EXPECT_EQ(true, WildFileCmp("TEST", "T*"));
+    EXPECT_EQ(true, WildFileCmp("TEST", "*Y*"));
     EXPECT_EQ(false, WildFileCmp("TEST", "Z*"));
 }
 
@@ -86,6 +102,29 @@ TEST(WildFileCmp, QuestionMark)
     EXPECT_EQ(true, WildFileCmp("TEST.EXE", "TEST.?XE"));
     EXPECT_EQ(true, WildFileCmp("TEST.EXE", "???T.EXE"));
     EXPECT_EQ(true, WildFileCmp("TEST", "???T.???"));
+}
+
+TEST(WildFileCmp, LongCompare)
+{
+    EXPECT_EQ(false, WildFileCmp("TEST", "", true));
+    EXPECT_EQ(true, WildFileCmp("TEST.EXE", "*", true));
+    EXPECT_EQ(true, WildFileCmp("TEST", "?EST", true));
+    EXPECT_EQ(false, WildFileCmp("TEST", "???Z", true));
+    EXPECT_EQ(true, WildFileCmp("TEST.EXE", "T*T.*", true));
+    EXPECT_EQ(true, WildFileCmp("TEST.EXE", "T*T.?X?", true));
+    EXPECT_EQ(true, WildFileCmp("TEST.EXE", "T??T.E*E", true));
+    EXPECT_EQ(true, WildFileCmp("Test.exe", "*ST.E*", true));
+    EXPECT_EQ(true, WildFileCmp("Test long name", "*NAME", true));
+    EXPECT_EQ(true, WildFileCmp("Test long name", "*T*L*M*", true));
+    EXPECT_EQ(true, WildFileCmp("Test long name.txt", "T*long*.T??", true));
+    EXPECT_EQ(true, WildFileCmp("Test long name.txt", "??st*name.*t", true));
+    EXPECT_EQ(true, WildFileCmp("Test long name.txt", "Test?long?????.*t", true));
+    EXPECT_EQ(true, WildFileCmp("Test long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long.txt", "Test*long.???", true));
+    EXPECT_EQ(true, WildFileCmp("Test long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long.txt", "Test long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long.txt", true));
+    EXPECT_EQ(false, WildFileCmp("Test long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long.txt", "Test long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long.txt", true));
+    EXPECT_EQ(false, WildFileCmp("TEST", "Z*", true));
+    EXPECT_EQ(false, WildFileCmp("TEST FILE NAME", "*Y*", true));
+    EXPECT_EQ(false, WildFileCmp("TEST FILE NAME", "*F*X*", true));
 }
 
 /**
