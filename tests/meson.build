@@ -3,31 +3,28 @@
 # If feature 'unit_tests' is set to 'auto', then unit tests are disabled
 # for release builds and enabled everywhere else.
 #
-# Meson will first try to find pre-installed gtest via pkg-config;
+# Meson will first try to find pre-installed gmock and gtest via pkg-config;
 # if this fails, it will download wrap dependency (subproject).
 #
 # Users can further configure the download behaviour using:
 #
 #   meson setup --wrap-mode={nofallback,nodownload,forcefallback}
 #
-# If gtest is not available at all, unit tests will be disabled.
+# If gmock and gtest are not available at all, unit tests will be disabled.
 #
-gtest_dep = optional_dep
-gmock_dep = optional_dep
+gmock_dep = disabler()
 
 if not (get_option('buildtype') == 'release' and get_option('unit_tests').auto())
-  gtest_dep = dependency('gtest', main : true,
-                         required : get_option('unit_tests'),
-                         fallback : ['gtest', 'gtest_main_dep'])
-
+  # Depend on gmock > 1.8.0 pulling in gtest as a dependency, otherwise it's hard
+  # to set up gtest and gmock in mixed wrap/system-installed edge-cases.
   gmock_dep = dependency('gmock', main : true,
+                         version : '> 1.8.0',
+                         disabler : true,
                          required : get_option('unit_tests'),
-                         fallback : ['gtest', 'gmock_dep'])
+                         fallback : ['gtest', 'gmock_main_dep'])
 endif
-if not (gtest_dep.found() or gmock_dep.found())
-  gtest_dep = disabler()
-  gmock_dep = disabler()
-endif
+
+summary('Unit tests', gmock_dep.found())
 
 # Disable compiler flags that generate warnings
 # from deliberately flawed unit test code.
@@ -45,13 +42,13 @@ endforeach
 # - fs_utils - depends on files in: tests/files/
 #
 example = executable('example', ['example_tests.cpp', 'stubs.cpp'],
-                     dependencies : [gmock_dep, gtest_dep, libmisc_dep, libghc_dep, libloguru_dep],
+                     dependencies : [gmock_dep, libmisc_dep, libghc_dep, libloguru_dep],
                      include_directories : incdir, cpp_args : cpp_args)
 test('gtest example', example, 
      should_fail : true)
 
 fs_utils = executable('fs_utils', ['fs_utils_tests.cpp', 'stubs.cpp'],
-                      dependencies : [gmock_dep, gtest_dep, libmisc_dep, libghc_dep, libloguru_dep],
+                      dependencies : [gmock_dep, libmisc_dep, libghc_dep, libloguru_dep],
                       include_directories : incdir, cpp_args : cpp_args)
 test('gtest fs_utils', fs_utils,
      workdir : project_source_root, is_parallel : false)
@@ -77,7 +74,7 @@ foreach ut : unit_tests
   name = ut.get('name')
   extra_cpp = ut.get('extra_cpp', ['stubs.cpp'])
   exe = executable(name, [name + '_tests.cpp'] + extra_cpp,
-                   dependencies : [gmock_dep, gtest_dep, libghc_dep, libloguru_dep] + ut.get('deps'),
+                   dependencies : [gmock_dep, libghc_dep, libloguru_dep] + ut.get('deps'),
                    include_directories : incdir, cpp_args : cpp_args)
   test('gtest ' + name, exe)
 endforeach
