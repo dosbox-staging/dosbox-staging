@@ -128,8 +128,12 @@ void close_directory(dir_information* dirp);
 FILE *fopen_wrap(const char *path, const char *mode);
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
-bool WildFileCmp(const char * file, const char * wild, bool long_compare = false);
+bool wild_match(const char *haystack, const char *needle);
+bool WildFileCmp(const char *file, const char *wild, bool long_compare = false);
 
-bool get_expanded_files(const std::string &path, std::vector<std::string> &files, bool files_only) noexcept;
+bool get_expanded_files(const std::string &path,
+                        std::vector<std::string> &files,
+                        bool files_only,
+                        bool skip_native_path = false) noexcept;
 
 #endif
