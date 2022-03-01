@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <SDL.h>
 
 #ifdef WIN32
 #ifndef _WIN32_IE
@@ -441,36 +440,41 @@ FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly)
 	return fp;
 }
 
-bool wild_match(const char *haystack, char *needle)
+bool wild_match(const char *haystack, const char *needle)
 {
-	size_t max, i;
-	for (; *needle != '\0'; ++needle) {
-		switch (*needle) {
+	assert(haystack);
+	assert(needle);
+	char *p = (char *)needle;
+	while(*p != '\0') {
+		switch (*p) {
 		case '?':
 			if (*haystack == '\0')
 				return false;
 			++haystack;
 			break;
 		case '*':
-			if (needle[1] == '\0')
+		{
+			if (p[1] == '\0')
 				return true;
-			max = strlen(haystack);
-			for (i = 0; i < max; i++)
-				if (wild_match(haystack + i, needle + 1))
+			const auto max = strlen(haystack);
+			for (size_t i = 0; i < max; i++)
+				if (wild_match(haystack + i, p + 1))
 					return true;
 			return false;
+		}
 		default:
-			if (toupper(*haystack) != *needle)
+			if (toupper(*haystack) != *p)
 				return false;
 			++haystack;
 		}
+		++p;
 	}
 	return *haystack == '\0';
 }
 
 bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 {
-	if (*file && !*wild)
+	if (!file || !wild || (*file && !*wild) || strlen(wild) > LFN_NAMELENGTH)
 		return false;
 	char file_name[LFN_NAMELENGTH + 1];
 	char file_ext[LFN_NAMELENGTH + 1];
@@ -479,12 +483,8 @@ bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 	Bitu r;
 
 	if (long_compare) {
-		for (r = 0; r <= LFN_NAMELENGTH; r++) {
-			file_name[r] = 0;
-			wild_name[r] = 0;
-			file_ext[r] = 0;
-			wild_ext[r] = 0;
-		}
+		for (r = 0; r <= LFN_NAMELENGTH; r++)
+			file_name[r] = wild_name[r] = file_ext[r] = wild_ext[r] = 0;
 	} else {
 		strcpy(file_name, "        ");
 		strcpy(file_ext, "   ");
@@ -574,32 +574,39 @@ bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 }
 
 bool get_expanded_files(const std::string &path,
-                        std::vector<std::string> &files,
-                        bool files_only) noexcept
+                        std::vector<std::string> &paths,
+                        bool files_only,
+                        bool skip_native_path) noexcept
 {
-	files.clear();
-	const std::string real_path = to_native_path(path);
-	if (!real_path.empty()) {
-		files.push_back(real_path);
-		return true;
+	if (!skip_native_path) {
+		const auto real_path = to_native_path(path);
+		if (real_path.length()) {
+			paths.push_back(real_path);
+			return true;
+		}
 	}
 
-	std_fs::path p = path, dir = p.parent_path();
-	const std::string dir_str = dir.string(), real_dir = to_native_path(dir_str);
-	if (dir_str.size() && real_dir.empty())
+	std::vector<std::string> files;
+	const std_fs::path p = path;
+	auto dir = p.parent_path();
+	const auto dir_str = dir.string();
+	const auto native_dir = to_native_path(dir_str);
+	if (dir_str.size() && native_dir.empty())
 		return false;
 
-	dir = real_dir.empty() ? "." : real_dir;
+	dir = native_dir.empty() ? "." : native_dir;
 	for (const auto &entry : std_fs::directory_iterator(dir)) {
-		std_fs::path result = entry.path().filename();
+		const auto result = entry.path().filename();
+		const auto long_compare = true;
 		if ((!files_only || !entry.is_directory()) &&
 		    WildFileCmp(result.string().c_str(),
-		                 p.filename().string().c_str(), true))
-			files.push_back(real_dir + CROSS_FILESPLIT + result.string());
+		                p.filename().string().c_str(), long_compare))
+			files.push_back((dir / result).string());
 	}
 
-	if (files.size() > 0) {
+	if (files.size()) {
 		sort(files.begin(), files.end());
+		paths.insert(paths.end(), files.begin(), files.end());
 		return true;
 	} else {
 		return false;
