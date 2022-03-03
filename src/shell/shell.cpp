@@ -41,7 +41,7 @@ static Bitu shellstop_handler()
 	return CBRET_STOP;
 }
 
-static void SHELL_ProgramStart(Program * * make) {
+void SHELL_ProgramStart(Program * * make) {
 	*make = new DOS_Shell;
 }
 //Repeat it with the correct type, could do it in the function below, but this way it should be 
@@ -50,12 +50,11 @@ static void SHELL_ProgramStart_First_shell(DOS_Shell * * make) {
 	*make = new DOS_Shell;
 }
 
-#define AUTOEXEC_SIZE 4096
-static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
+char autoexec_data[AUTOEXEC_SIZE] = { 0 };
 static std::list<std::string> autoexec_strings;
 typedef std::list<std::string>::iterator auto_it;
 
-void VFILE_Remove(const char *name);
+void VFILE_Remove(const char *name,const char *dir = "");
 
 void AutoexecObject::Install(const std::string &in) {
 	if (GCC_UNLIKELY(installed))
@@ -731,7 +730,7 @@ public:
 		// for (const auto &autoexec_line : autoexec)
 		// 	LOG_INFO("AUTOEXEC-LINE: %s", autoexec_line.GetLine().c_str());
 
-		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
+		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data),"");
 	}
 };
 
