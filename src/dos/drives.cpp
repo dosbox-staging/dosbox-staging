@@ -21,6 +21,7 @@
 #include "ide.h"
 #include "string_utils.h"
 
+extern char sfn[DOS_NAMELENGTH_ASCII];
 
 // TODO Right now label formatting seems to be a bit of mess, with various
 // places in code setting/expecting different format, so simple GetLabel() on
@@ -69,6 +70,138 @@ void Set_Label(char const * const input, char * const output, bool cdrom) {
 	//Remove trailing dot. except when on cdrom and filename is exactly 8 (9 including the dot) letters. MSCDEX feature/bug (fifa96 cdrom detection)
 	if((labelPos > 0) && (output[labelPos-1] == '.') && !(cdrom && labelPos ==9))
 		output[labelPos-1] = 0;
+}
+
+bool is_special_character(char c)
+{
+	return c == '"' || c == '+' || c == '=' || c == ',' || c == ';' ||
+	       c == ':' || c == '<' || c == '>' || c == '[' || c == ']' ||
+	       c == '|' || c == '?' || c == '*';
+}
+
+/* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */
+void generate_8x3(char *lfn, unsigned int k, unsigned int &i, unsigned int &t)
+{
+	char *n = lfn;
+	if (t > strlen(n) || k == 1 || k == 10 || k == 100 || k == 1000) {
+		i = 0;
+		*sfn = 0;
+		while (*n == '.' || *n == ' ')
+			n++;
+		auto len = strlen(n);
+		while (len && (*(n + len - 1) == '.' || *(n + len - 1) == ' ')) {
+			*(n + len - 1) = 0;
+			len = strlen(n);
+		}
+		unsigned int m = k < 10 ? 6u : (k < 100 ? 5u : (k < 1000 ? 4 : 3u));
+		while (*n != 0 && *n != '.' && i < m) {
+			if (*n == ' ') {
+				n++;
+				continue;
+			}
+			if (is_special_character(*n)) {
+				sfn[i++] = '_';
+				n++;
+			} else {
+				sfn[i++] = toupper(*n);
+				n++;
+			}
+		}
+		sfn[i++] = '~';
+		t = i;
+	} else
+		i = t;
+	if (k < 10)
+		sfn[i++] = '0' + k;
+	else if (k < 100) {
+		sfn[i++] = '0' + (k / 10);
+		sfn[i++] = '0' + (k % 10);
+	} else if (k < 1000) {
+		sfn[i++] = '0' + (k / 100);
+		sfn[i++] = '0' + ((k % 100) / 10);
+		sfn[i++] = '0' + (k % 10);
+	} else {
+		sfn[i++] = '0' + (k / 1000);
+		sfn[i++] = '0' + ((k % 1000) / 100);
+		sfn[i++] = '0' + ((k % 100) / 10);
+		sfn[i++] = '0' + (k % 10);
+	}
+	if (t > strlen(n) || k == 1 || k == 10 || k == 100 || k == 1000) {
+		char *p = strrchr(n, '.');
+		if (p != NULL) {
+			sfn[i++] = '.';
+			n = p + 1;
+			while (*n == '.')
+				n++;
+			int j = 0;
+			while (*n != 0 && j++ < 3) {
+				if (*n == ' ') {
+					n++;
+					continue;
+				}
+				if (is_special_character(*n)) {
+					sfn[i++] = '_';
+					n++;
+				} else {
+					sfn[i++] = toupper(*n);
+					n++;
+				}
+			}
+		}
+		sfn[i++] = 0;
+	}
+}
+
+bool filename_not_8x3(const char *n)
+{
+	unsigned int i;
+
+	i = 0;
+	while (*n != 0) {
+		if (*n == '.')
+			break;
+		if ((*n & 0xFF) <= 32 || *n == 127 || is_special_character(*n))
+			return true;
+		i++;
+		n++;
+	}
+	if (i > 8)
+		return true;
+	if (*n == 0)
+		return false; /* made it past 8 or less normal chars and end of
+		                 string: normal */
+
+	/* skip dot */
+	assert(*n == '.');
+	n++;
+
+	i = 0;
+	while (*n != 0) {
+		if (*n == '.')
+			return true; /* another '.' means LFN */
+		if ((*n & 0xFF) <= 32 || *n == 127 || is_special_character(*n))
+			return true;
+		i++;
+		n++;
+	}
+	if (i > 3)
+		return true;
+
+	return false; /* it is 8.3 case */
+}
+
+/* Assuming an LFN call, if the name is not strict 8.3 uppercase, return true.
+ * If the name is strict 8.3 uppercase like "FILENAME.TXT" there is no point
+ * making an LFN because it is a waste of space */
+bool filename_not_strict_8x3(const char *n)
+{
+	if (filename_not_8x3(n))
+		return true;
+	const auto len = strlen(n);
+	for (unsigned int i = 0; i < len; i++)
+		if (n[i] >= 'a' && n[i] <= 'z')
+			return true;
+	return false; /* it is strict 8.3 upper case */
 }
 
 DOS_Drive::DOS_Drive()

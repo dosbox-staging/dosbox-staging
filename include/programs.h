@@ -94,6 +94,7 @@ public:
 };
 
 typedef void (PROGRAMS_Main)(Program * * make);
+void PROGRAMS_Destroy(Section *);
 void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main);
 
 #endif
