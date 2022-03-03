@@ -27,6 +27,8 @@
 
 #include "dos_inc.h"
 
+#define AUTOEXEC_SIZE 4096
+
 class CommandLine {
 public:
 	CommandLine(int argc, char const *const argv[]);
