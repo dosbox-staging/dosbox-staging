@@ -31,6 +31,9 @@
 
 void Set_Label(char const * const input, char * const output, bool cdrom);
 std::string To_Label(const char* name);
+void generate_8x3(char *lfn, unsigned int k, unsigned int &i, unsigned int &t);
+bool filename_not_8x3(const char *n);
+bool filename_not_strict_8x3(const char *n);
 
 class DriveManager {
 public:
@@ -400,7 +403,7 @@ public:
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block* const stat_block);
 	Bit8u GetMediaByte(void);
-	void EmptyCache(void){}
+	void EmptyCache(void);
 	bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);

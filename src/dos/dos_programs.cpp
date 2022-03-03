@@ -46,6 +46,48 @@ extern Bit32u floppytype;
 #define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
 #define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
 
+extern char autoexec_data[AUTOEXEC_SIZE];
+void CONFIG_ProgramStart(Program **make);
+void MIXER_ProgramStart(Program **make);
+void SHELL_ProgramStart(Program **make);
+void get_drivez_path(std::string &path, const std::string &dirname);
+void drivez_register(const std::string &path, const std::string &dir);
+
+void Add_VFiles(const bool add_autoexec)
+{
+	const std::string dirname = "drivez";
+	std::string path = ".";
+	path += CROSS_FILESPLIT;
+	path += dirname;
+	get_drivez_path(path, dirname);
+	drivez_register(path, "/");
+
+	PROGRAMS_MakeFile("ATTRIB.COM", ATTRIB_ProgramStart);
+	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
+#if C_DEBUG
+	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
+#endif
+	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
+	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
+	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
+	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
+	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
+	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
+	PROGRAMS_MakeFile("LOADFIX.COM", LOADFIX_ProgramStart);
+	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
+	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
+	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
+	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
+	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
+	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramStart);
+	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramStart);
+	PROGRAMS_MakeFile("SERIAL.COM", SERIAL_ProgramStart);
+	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramStart);
+	if (add_autoexec)
+		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data,
+		               (uint32_t)strlen(autoexec_data));
+}
+
 void DOS_SetupPrograms(void)
 {
 	/*Add Messages */
@@ -560,22 +602,6 @@ void DOS_SetupPrograms(void)
 	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
 	MSG_Add("WIKI_URL", WIKI_URL);
 
-	PROGRAMS_MakeFile("ATTRIB.COM", ATTRIB_ProgramStart);
-	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
-#if C_DEBUG
-	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
-#endif
-	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
-	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
-	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
-	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
-	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
-	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
-	PROGRAMS_MakeFile("LOADFIX.COM", LOADFIX_ProgramStart);
-	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
-	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
-	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
-	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
-	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
-	PROGRAMS_MakeFile("SERIAL.COM", SERIAL_ProgramStart);
+	const auto add_autoexec = false;
+	Add_VFiles(add_autoexec);
 }

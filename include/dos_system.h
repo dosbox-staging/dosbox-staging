@@ -336,6 +336,6 @@ void DOS_AddDevice(DOS_Device * adddev);
 /* DelDevice destroys the device that is pointed to. */
 void DOS_DelDevice(DOS_Device * dev);
 
-void VFILE_Register(const char * name,Bit8u * data,Bit32u size);
+void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir = "");
 
 #endif
