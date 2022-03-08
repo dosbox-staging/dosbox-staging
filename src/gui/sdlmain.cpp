@@ -849,10 +849,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		last_type = screen_type;
 
-		if (sdl.window) {
-			SDL_DestroyWindow(sdl.window);
-			sdl.window = nullptr;
-		}
+		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(screen_type);
 #if C_OPENGL
@@ -2102,8 +2099,7 @@ static void GUI_ShutDown(Section *)
 		GFX_ToggleMouseCapture();
 	CleanupSDLResources();
 
-	SDL_DestroyWindow(sdl.window);
-	sdl.window = nullptr;
+	remove_window();
 }
 
 static void SetPriority(PRIORITY_LEVELS level)
@@ -2281,7 +2277,7 @@ static bool detect_resizable_window()
 #endif // C_OPENGL
 }
 
-static bool wants_stretched_pixels()
+bool wants_stretched_pixels()
 {
 	const auto render_section = static_cast<Section_prop *>(
 	        control->GetSection("render"));
@@ -2698,6 +2694,207 @@ static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 		return calc_viewport_fit(width, height);
 }
 
+void remove_window()
+{
+	if (sdl.window) {
+		SDL_DestroyWindow(sdl.window);
+		sdl.window = nullptr;
+	}
+}
+
+void set_output(Section *sec, bool should_stretch_pixels)
+{
+	// Apply the user's mouse settings
+	const auto section = static_cast<const Section_prop *>(sec);
+	std::string output = section->Get_string("output");
+
+	if (output == "surface") {
+		sdl.desktop.want_type = SCREEN_SURFACE;
+	} else if (output == "texture") {
+		sdl.desktop.want_type = SCREEN_TEXTURE;
+		sdl.scaling_mode = SCALING_MODE::NONE;
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	} else if (output == "texturenb") {
+		sdl.desktop.want_type = SCREEN_TEXTURE;
+		sdl.scaling_mode = SCALING_MODE::NEAREST;
+		// Currently the default, but... oh well
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+	} else if (output == "texturepp") {
+		sdl.desktop.want_type = SCREEN_TEXTURE;
+		sdl.scaling_mode = SCALING_MODE::PERFECT;
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+#if C_OPENGL
+	} else if (output == "opengl") {
+		sdl.desktop.want_type = SCREEN_OPENGL;
+		sdl.scaling_mode = SCALING_MODE::NONE;
+		sdl.opengl.bilinear = true;
+	} else if (output == "openglnb") {
+		sdl.desktop.want_type = SCREEN_OPENGL;
+		sdl.scaling_mode = SCALING_MODE::NEAREST;
+		sdl.opengl.bilinear = false;
+	} else if (output == "openglpp") {
+		sdl.desktop.want_type = SCREEN_OPENGL;
+		sdl.scaling_mode = SCALING_MODE::PERFECT;
+		sdl.opengl.bilinear = false;
+#endif
+	} else {
+		LOG_WARNING("SDL: Unsupported output device %s, switching back to surface",
+		            output.c_str());
+		sdl.desktop.want_type = SCREEN_SURFACE; // SHOULDN'T BE POSSIBLE
+		                                        // anymore
+	}
+
+	const std::string screensaver = section->Get_string("screensaver");
+	if (screensaver == "allow")
+		SDL_EnableScreenSaver();
+	if (screensaver == "block")
+		SDL_DisableScreenSaver();
+
+	sdl.render_driver = section->Get_string("texture_renderer");
+	lowcase(sdl.render_driver);
+
+	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
+
+	setup_initial_window_position_from_conf(
+	        section->Get_string("window_position"));
+
+	setup_max_resolution_from_conf(section->Get_string("max_resolution"));
+
+	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
+	                             sdl.scaling_mode, should_stretch_pixels);
+
+#if C_OPENGL
+	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
+		if (!SetDefaultWindowMode()) {
+			LOG_WARNING("Could not create OpenGL window, switching back to surface");
+			sdl.desktop.want_type = SCREEN_SURFACE;
+		} else {
+			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+			if (sdl.opengl.context == 0) {
+				LOG_WARNING("Could not create OpenGL context, switching back to surface");
+				sdl.desktop.want_type = SCREEN_SURFACE;
+			}
+		}
+		if (sdl.desktop.want_type == SCREEN_OPENGL) {
+			sdl.opengl.program_object = 0;
+			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
+			        "glAttachShader");
+			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
+			        "glCompileShader");
+			glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
+			        "glCreateProgram");
+			glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress(
+			        "glCreateShader");
+			glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
+			        "glDeleteProgram");
+			glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress(
+			        "glDeleteShader");
+			glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
+			        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+			glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)
+			        SDL_GL_GetProcAddress("glGetAttribLocation");
+			glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress(
+			        "glGetProgramiv");
+			glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)
+			        SDL_GL_GetProcAddress("glGetProgramInfoLog");
+			glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress(
+			        "glGetShaderiv");
+			glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)
+			        SDL_GL_GetProcAddress("glGetShaderInfoLog");
+			glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)
+			        SDL_GL_GetProcAddress("glGetUniformLocation");
+			glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress(
+			        "glLinkProgram");
+			glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
+			        "glShaderSource");
+			glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress(
+			        "glUniform2f");
+			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress(
+			        "glUniform1i");
+			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress(
+			        "glUseProgram");
+			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)
+			        SDL_GL_GetProcAddress("glVertexAttribPointer");
+			sdl.opengl.use_shader =
+			        (glAttachShader && glCompileShader &&
+			         glCreateProgram && glDeleteProgram &&
+			         glDeleteShader && glEnableVertexAttribArray &&
+			         glGetAttribLocation && glGetProgramiv &&
+			         glGetProgramInfoLog && glGetShaderiv &&
+			         glGetShaderInfoLog && glGetUniformLocation &&
+			         glLinkProgram && glShaderSource &&
+			         glUniform2f && glUniform1i && glUseProgram &&
+			         glVertexAttribPointer);
+
+			sdl.opengl.buffer = 0;
+			sdl.opengl.framebuf = 0;
+			sdl.opengl.texture = 0;
+			sdl.opengl.displaylist = 0;
+			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+
+			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress(
+			        "glGenBuffersARB");
+			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress(
+			        "glBindBufferARB");
+			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
+			        SDL_GL_GetProcAddress("glDeleteBuffersARB");
+			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress(
+			        "glBufferDataARB");
+			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
+			        "glMapBufferARB");
+			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
+			        "glUnmapBufferARB");
+			const bool have_arb_buffers = glGenBuffersARB &&
+			                              glBindBufferARB &&
+			                              glDeleteBuffersARB &&
+			                              glBufferDataARB &&
+			                              glMapBufferARB &&
+			                              glUnmapBufferARB;
+
+			const auto gl_version_string = reinterpret_cast<const char *>(
+			        glGetString(GL_VERSION));
+			assert(gl_version_string);
+			const int gl_version_major = gl_version_string[0] - '0';
+
+			sdl.opengl.pixel_buffer_object =
+			        have_arb_buffers &&
+			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
+
+			sdl.opengl.npot_textures_supported =
+			        gl_version_major >= 2 ||
+			        SDL_GL_ExtensionSupported(
+			                "GL_ARB_texture_non_power_of_two");
+
+			std::string npot_support_msg = sdl.opengl.npot_textures_supported
+			                                       ? "supported"
+			                                       : "not supported";
+			if (sdl.opengl.npot_textures_supported &&
+			    !is_shader_flexible()) {
+				sdl.opengl.npot_textures_supported = false;
+				npot_support_msg = "disabled to maximize compatibility with custom shader";
+			}
+
+			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
+			LOG_INFO("OPENGL: Version: %s", gl_version_string);
+			LOG_INFO("OPENGL: GLSL version: %s",
+			         glGetString(GL_SHADING_LANGUAGE_VERSION));
+			LOG_INFO("OPENGL: Pixel buffer object: %s",
+			         sdl.opengl.pixel_buffer_object ? "available"
+			                                        : "missing");
+			LOG_INFO("OPENGL: NPOT textures: %s",
+			         npot_support_msg.c_str());
+		}
+	} /* OPENGL is requested end */
+#endif    // OPENGL
+
+	if (!SetDefaultWindowMode())
+		E_Exit("Could not initialize video: %s", SDL_GetError());
+
+	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
+	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
+	SDL_SetWindowOpacity(sdl.window, alpha);
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
@@ -2801,155 +2998,7 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	std::string output=section->Get_string("output");
-
-	if (output == "surface") {
-		sdl.desktop.want_type=SCREEN_SURFACE;
-	} else if (output == "texture") {
-		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::NONE;
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-	} else if (output == "texturenb") {
-		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::NEAREST;
-		// Currently the default, but... oh well
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-	} else if (output == "texturepp") {
-		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::PERFECT;
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-#if C_OPENGL
-	} else if (output == "opengl") {
-		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::NONE;
-		sdl.opengl.bilinear = true;
-	} else if (output == "openglnb") {
-		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::NEAREST;
-		sdl.opengl.bilinear = false;
-	} else if (output == "openglpp") {
-		sdl.desktop.want_type = SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::PERFECT;
-		sdl.opengl.bilinear = false;
-#endif
-	} else {
-		LOG_WARNING("SDL: Unsupported output device %s, switching back to surface",
-		            output.c_str());
-		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
-	}
-
-	const std::string screensaver = section->Get_string("screensaver");
-	if (screensaver == "allow")
-		SDL_EnableScreenSaver();
-	if (screensaver == "block")
-		SDL_DisableScreenSaver();
-
-	sdl.render_driver = section->Get_string("texture_renderer");
-	lowcase(sdl.render_driver);
-
-	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
-
-	setup_initial_window_position_from_conf(section->Get_string("window_position"));
-
-	setup_max_resolution_from_conf(section->Get_string("max_resolution"));
-
-	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
-	                             sdl.scaling_mode, should_stretch_pixels);
-
-#if C_OPENGL
-	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
-		if (!SetDefaultWindowMode()) {
-			LOG_WARNING("Could not create OpenGL window, switching back to surface");
-			sdl.desktop.want_type = SCREEN_SURFACE;
-		} else {
-			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-			if (sdl.opengl.context == 0) {
-				LOG_WARNING("Could not create OpenGL context, switching back to surface");
-				sdl.desktop.want_type = SCREEN_SURFACE;
-			}
-		}
-		if (sdl.desktop.want_type == SCREEN_OPENGL) {
-			sdl.opengl.program_object = 0;
-			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
-			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress("glCompileShader");
-			glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress("glCreateProgram");
-			glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
-			glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress("glDeleteProgram");
-			glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
-			glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)SDL_GL_GetProcAddress("glEnableVertexAttribArray");
-			glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress("glGetAttribLocation");
-			glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
-			glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress("glGetProgramInfoLog");
-			glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
-			glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress("glGetShaderInfoLog");
-			glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress("glGetUniformLocation");
-			glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
-			glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress("glShaderSource");
-			glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
-			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
-			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
-			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
-			sdl.opengl.use_shader = (glAttachShader && glCompileShader && glCreateProgram && glDeleteProgram && glDeleteShader && \
-				glEnableVertexAttribArray && glGetAttribLocation && glGetProgramiv && glGetProgramInfoLog && \
-				glGetShaderiv && glGetShaderInfoLog && glGetUniformLocation && glLinkProgram && glShaderSource && \
-				glUniform2f && glUniform1i && glUseProgram && glVertexAttribPointer);
-
-			sdl.opengl.buffer=0;
-			sdl.opengl.framebuf=0;
-			sdl.opengl.texture=0;
-			sdl.opengl.displaylist=0;
-			glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-
-			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
-			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
-			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
-			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
-			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
-			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
-			const bool have_arb_buffers = glGenBuffersARB &&
-			                              glBindBufferARB &&
-			                              glDeleteBuffersARB &&
-			                              glBufferDataARB &&
-			                              glMapBufferARB &&
-			                              glUnmapBufferARB;
-
-			const auto gl_version_string = reinterpret_cast<const char *>(
-			        glGetString(GL_VERSION));
-			assert(gl_version_string);
-			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.pixel_buffer_object = have_arb_buffers &&
-			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
-
-			sdl.opengl.npot_textures_supported = gl_version_major >= 2 ||
-			        SDL_GL_ExtensionSupported("GL_ARB_texture_non_power_of_two");
-
-			std::string npot_support_msg = sdl.opengl.npot_textures_supported
-			                                       ? "supported"
-			                                       : "not supported";
-			if (sdl.opengl.npot_textures_supported && !is_shader_flexible()) {
-				sdl.opengl.npot_textures_supported = false;
-				npot_support_msg = "disabled to maximize compatibility with custom shader";
-			}
-
-			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
-			LOG_INFO("OPENGL: Version: %s", gl_version_string);
-			LOG_INFO("OPENGL: GLSL version: %s",
-			         glGetString(GL_SHADING_LANGUAGE_VERSION));
-			LOG_INFO("OPENGL: Pixel buffer object: %s",
-			         sdl.opengl.pixel_buffer_object ? "available"
-			                                        : "missing");
-			LOG_INFO("OPENGL: NPOT textures: %s", npot_support_msg.c_str());
-		}
-	} /* OPENGL is requested end */
-#endif	//OPENGL
-
-	if (!SetDefaultWindowMode())
-		E_Exit("Could not initialize video: %s", SDL_GetError());
-
-	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
-	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
-	SDL_SetWindowOpacity(sdl.window, alpha);
+	set_output(section, should_stretch_pixels);
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();

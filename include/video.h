@@ -74,6 +74,10 @@ void GFX_EndUpdate( const Bit16u *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_LosingFocus(void);
 
+bool wants_stretched_pixels();
+void remove_window();
+void set_output(Section *sec, bool should_stretch_pixels);
+
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);
 #endif
