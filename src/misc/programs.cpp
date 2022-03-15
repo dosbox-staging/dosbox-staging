@@ -811,7 +811,7 @@ void CONFIG_ProgramStart(Program * * make) {
 	*make=new CONFIG;
 }
 
-void PROGRAMS_Destroy(Section*) {
+void PROGRAMS_Destroy([[maybe_unused]] Section* sec) {
 	internal_progs_comdata.clear();
 	internal_progs.clear();
 }

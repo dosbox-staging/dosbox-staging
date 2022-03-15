@@ -20,6 +20,7 @@
 
 #include "ide.h"
 #include "string_utils.h"
+#include <string_view>
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
 
@@ -72,11 +73,10 @@ void Set_Label(char const * const input, char * const output, bool cdrom) {
 		output[labelPos-1] = 0;
 }
 
-bool is_special_character(char c)
+constexpr bool is_special_character(const char c)
 {
-	return c == '"' || c == '+' || c == '=' || c == ',' || c == ';' ||
-	       c == ':' || c == '<' || c == '>' || c == '[' || c == ']' ||
-	       c == '|' || c == '?' || c == '*';
+    constexpr auto special_characters = std::string_view("\"+=,;:<>[]|?*");
+    return special_characters.find(c) != std::string_view::npos;
 }
 
 /* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */

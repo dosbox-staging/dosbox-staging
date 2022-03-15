@@ -28,32 +28,39 @@
 #include "shell.h"
 #include "cross.h"
 
+#define default_date DOS_PackDate(2002, 10, 1)
+#define default_time DOS_PackTime(12, 34, 56)
+
+struct Filename {
+	std::string fullname = {};
+	std::string shortname = {};
+};
+std::vector<Filename> vfilenames = {Filename{"", ""}};
 constexpr int max_vfiles = 500;
 unsigned int vfile_pos = 1;
 uint16_t fztime = 0;
 uint16_t fzdate = 0;
 char sfn[DOS_NAMELENGTH_ASCII];
-char vfnames[max_vfiles][CROSS_LEN];
-char vfsnames[max_vfiles][DOS_NAMELENGTH_ASCII];
 void Add_VFiles(const bool add_autoexec);
 extern DOS_Shell *first_shell;
 
 struct VFILE_Block {
-	const char * name;
-	uint8_t * data;
-	uint32_t size;
-	uint16_t date;
-	uint16_t time;
-	unsigned int onpos;
-	bool isdir;
-	VFILE_Block * next;
+	const char * name = nullptr;
+	uint8_t * data = nullptr;
+	uint32_t size = 0;
+	uint16_t date = 0;
+	uint16_t time = 0;
+	unsigned int onpos = 0;
+	bool isdir = false;
+	VFILE_Block * next = nullptr;
 };
 
-static VFILE_Block *first_file, *parent_dir = NULL;
+static VFILE_Block *first_file = nullptr;
+static VFILE_Block *parent_dir = nullptr;
 
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 {
-	if (name == NULL || !*name) {
+	if (!name || !*name) {
 		strcpy(sfn, "");
 		return sfn;
 	}
@@ -62,26 +69,20 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 		upcase(sfn);
 		return sfn;
 	}
-	char lfn[LFN_NAMELENGTH + 1];
-	if (strlen(name) > LFN_NAMELENGTH) {
-		strncpy(lfn, name, LFN_NAMELENGTH);
-		lfn[LFN_NAMELENGTH] = 0;
-	} else {
-		strcpy(lfn, name);
-	}
-	if (!strlen(lfn)) {
-		strcpy(sfn, "");
-		return sfn;
-	}
+	std::string lfn = name;
+	if (lfn.length() >= LFN_NAMELENGTH)
+		lfn.erase(LFN_NAMELENGTH);
 	unsigned int num = 1;
 	const VFILE_Block *cur_file;
+	// Get 8.3 names for LFNs by iterating the numbers
 	while (1) {
-		strcpy(sfn, generate_8x3(lfn, num).c_str());
+		strcpy(sfn, generate_8x3(lfn.c_str(), num).c_str());
 		if (!*sfn)
 			return sfn;
 		cur_file = first_file;
 		bool found = false;
 		while (cur_file) {
+			// If 8.3 name already exists, try next number
 			if (onpos == cur_file->onpos &&
 			    (strcasecmp(sfn, cur_file->name) == 0)) {
 				found = true;
@@ -89,6 +90,7 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 			}
 			cur_file = cur_file->next;
 		}
+		// Return if 8.3 name does not already exist
 		if (!found)
 			return sfn;
 		num++;
@@ -99,6 +101,7 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 
 void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir)
 {
+	assert(name);
 	if (vfile_pos >= max_vfiles)
 		return;
 	const auto isdir = !strcmp(dir, "/") || !strcmp(name, ".") || !strcmp(name, "..");
@@ -106,9 +109,9 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 	unsigned int onpos = 0;
 	if (len > 2 && dir[0] == '/' && dir[len - 1] == '/') {
 		for (unsigned int i = 1; i < vfile_pos; i++)
-			if (!strcasecmp((std::string(vfsnames[i]) + "/").c_str(),
+			if (!strcasecmp((vfilenames[i].shortname + "/").c_str(),
 			                dir + 1) ||
-			    !strcasecmp((std::string(vfnames[i]) + "/").c_str(),
+			    !strcasecmp((vfilenames[i].fullname + "/").c_str(),
 			                dir + 1)) {
 				onpos = i;
 				break;
@@ -122,20 +125,23 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 			return;
 		cur_file = cur_file->next;
 	}
-	std::string sname = filename_not_strict_8x3(name)
-	                            ? VFILE_Generate_8x3(name, onpos)
-	                            : name;
-	strcpy(vfnames[vfile_pos], name);
-	strcpy(vfsnames[vfile_pos], sname.c_str());
-	if (!strlen(trim(vfnames[vfile_pos])) || !strlen(trim(vfsnames[vfile_pos])))
+	Filename filename;
+	filename.fullname = name;
+	filename.shortname = filename_not_strict_8x3(name)
+	                             ? VFILE_Generate_8x3(name, onpos)
+	                             : name;
+	trim(filename.fullname);
+	trim(filename.shortname);
+	vfilenames.push_back(filename);
+	if (!vfilenames[vfile_pos].shortname.length() || !vfilenames[vfile_pos].fullname.length())
 		return;
 	VFILE_Block *new_file = new VFILE_Block;
-	new_file->name = vfsnames[vfile_pos];
+	new_file->name = strdup(vfilenames[vfile_pos].shortname.c_str());
 	vfile_pos++;
 	new_file->data = data;
 	new_file->size = size;
-	new_file->date = fztime || fzdate ? fzdate : DOS_PackDate(2002, 10, 1);
-	new_file->time = fztime || fzdate ? fztime : DOS_PackTime(12, 34, 56);
+	new_file->date = fztime || fzdate ? fzdate : default_date;
+	new_file->time = fztime || fzdate ? fztime : default_time;
 	new_file->onpos = onpos;
 	new_file->isdir = isdir;
 	new_file->next = first_file;
@@ -143,11 +149,13 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 }
 
 void VFILE_Remove(const char *name, const char *dir = "") {
+	assert(name);
+	assert(dir);
 	unsigned int onpos = 0;
 	if (*dir) {
 		for (unsigned int i = 1; i < vfile_pos; i++)
-			if (!strcasecmp(vfsnames[i], dir) ||
-			    !strcasecmp(vfnames[i], dir)) {
+			if (!strcasecmp(vfilenames[i].shortname.c_str(), dir) ||
+			    !strcasecmp(vfilenames[i].fullname.c_str(), dir)) {
 				onpos = i;
 				break;
 			}
@@ -169,17 +177,17 @@ void VFILE_Remove(const char *name, const char *dir = "") {
 	}
 }
 
-void get_drivez_path(std::string &path, const std::string &dirname)
+void z_drive_getpath(std::string &path, const std::string &dirname)
 {
 	struct stat cstat;
 	int result = stat(path.c_str(), &cstat);
 	if (result == -1 || !(cstat.st_mode & S_IFDIR)) {
 		path = GetExecutablePath().string();
-		if (path.size()) {
+		if (path.length()) {
 			path += dirname;
 			result = stat(path.c_str(), &cstat);
 		}
-		if (!path.size() || result == -1 || (cstat.st_mode & S_IFDIR) == 0) {
+		if (!path.length() || result == -1 || (cstat.st_mode & S_IFDIR) == 0) {
 			path.clear();
 			Cross::CreatePlatformConfigDir(path);
 			path += dirname;
@@ -194,21 +202,17 @@ void get_datetime(const int result, time_t mtime, uint16_t &time, uint16_t &date
 {
 	const struct tm *ltime;
 	if (result == 0 && (ltime = localtime(&mtime)) != 0) {
-		time = DOS_PackTime((uint16_t)ltime->tm_hour,
-		                    (uint16_t)ltime->tm_min,
-		                    (uint16_t)ltime->tm_sec);
-		date = DOS_PackDate((uint16_t)(ltime->tm_year + 1900),
-		                    (uint16_t)(ltime->tm_mon + 1),
-		                    (uint16_t)ltime->tm_mday);
+		time = DOS_PackTime(*ltime);
+		date = DOS_PackDate(*ltime);
 	}
 }
 
-void drivez_register(const std::string &path, const std::string &dir)
+void z_drive_register(const std::string &path, const std::string &dir)
 {
 	char exePath[CROSS_LEN];
 	std::vector<std::string> names;
-	if (path.size()) {
-		const std_fs::path pathdir = path;
+	const std_fs::path pathdir = path;
+	if (path.length()) {
 		for (const auto &entry : std_fs::directory_iterator(pathdir)) {
 			const auto result = entry.path().filename();
 			if (!entry.is_directory())
@@ -222,34 +226,33 @@ void drivez_register(const std::string &path, const std::string &dir)
 	uint8_t *f_data;
 	struct stat temp_stat;
 	for (std::string name : names) {
-		if (!name.size())
+		if (!name.length())
 			continue;
 		if (name.back() == '/' && dir == "/") {
-			result = stat((path + CROSS_FILESPLIT + name).c_str(),
-			           &temp_stat);
+			result = stat((pathdir / name).string().c_str(), &temp_stat);
 			if (result)
 				result = stat((GetExecutablePath().string() +
-				               path + CROSS_FILESPLIT + name)
+				               (pathdir / name).string())
 				                      .c_str(),
 				              &temp_stat);
 			get_datetime(result, temp_stat.st_mtime, fztime, fzdate);
-			VFILE_Register(name.substr(0, name.size() - 1).c_str(),
+			VFILE_Register(name.substr(0, name.length() - 1).c_str(),
 			               0, 0, dir.c_str());
 			fztime = fzdate = 0;
-			drivez_register(path + CROSS_FILESPLIT +
-			                        name.substr(0, name.size() - 1),
-			                dir + name);
+			z_drive_register(
+			        (pathdir / name.substr(0, name.length() - 1)).string(),
+			        dir + name);
 			continue;
 		}
-		FILE *f = fopen((path + CROSS_FILESPLIT + name).c_str(), "rb");
-		if (f == NULL) {
+		FILE *f = fopen((pathdir / name).string().c_str(), "rb");
+		if (!f) {
 			strcpy(exePath, GetExecutablePath().string().c_str());
-			strcat(exePath, (path + CROSS_FILESPLIT + name).c_str());
+			strcat(exePath, (pathdir / name).string().c_str());
 			f = fopen(exePath, "rb");
 		}
 		f_size = 0;
-		f_data = NULL;
-		if (f != NULL) {
+		f_data = nullptr;
+		if (f) {
 			result = fstat(fileno(f), &temp_stat);
 			get_datetime(result, temp_stat.st_mtime, fztime, fzdate);
 			fseek(f, 0, SEEK_END);
@@ -279,7 +282,7 @@ public:
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
 	bool Close();
-	Bit16u GetInformation(void);
+	Bit16u GetInformation();
 
 private:
 	uint32_t file_size;
@@ -292,8 +295,8 @@ Virtual_File::Virtual_File(uint8_t *in_data, uint32_t in_size)
           file_pos(0),
           file_data(in_data)
 {
-	date = DOS_PackDate(2002,10,1);
-	time = DOS_PackTime(12,34,56);
+	date = default_date;
+	time = default_time;
 	open = true;
 }
 
@@ -338,17 +341,19 @@ bool Virtual_File::Close(){
 }
 
 
-Bit16u Virtual_File::GetInformation(void) {
+Bit16u Virtual_File::GetInformation() {
 	return 0x40;	// read-only drive
 }
 
 Virtual_Drive::Virtual_Drive() : search_file(nullptr)
 {
-	strcpy(info,"Internal Virtual Drive");
-	if (parent_dir == NULL) parent_dir = new VFILE_Block;
+	strcpy(info, "Internal Virtual Drive");
+	if (!parent_dir)
+		parent_dir = new VFILE_Block;
 }
 
 bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -357,7 +362,7 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	VFILE_Block * cur_file = first_file;
 	while (cur_file) {
 		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfsnames[onpos] +
+		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
 		                                                  std::string(1, '\\')
 		                                        : "") +
 		                      cur_file->name)
@@ -393,20 +398,23 @@ bool Virtual_Drive::MakeDir(char * /*dir*/) {
 }
 
 bool Virtual_Drive::TestDir(char * dir) {
+	assert(dir);
 	if (!dir[0]) return true;		//only valid dir is the empty dir
 	const VFILE_Block* cur_file = first_file;
 	while (cur_file) {
-		if (cur_file->isdir&&(!strcasecmp(cur_file->name, dir))) return true;
-		cur_file=cur_file->next;
+		if (cur_file->isdir && !strcasecmp(cur_file->name, dir))
+			return true;
+		cur_file = cur_file->next;
 	}
 	return false;
 }
 
 bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block){
+	assert(name);
 	VFILE_Block * cur_file = first_file;
 	while (cur_file) {
 		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfsnames[onpos] +
+		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
 		                                                  std::string(1, '\\')
 		                                        : "") +
 		                      cur_file->name)
@@ -415,8 +423,8 @@ bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 			                                 ? DOS_ATTR_DIRECTORY
 			                                 : DOS_ATTR_ARCHIVE);
 			stat_block->size = cur_file->size;
-			stat_block->date = DOS_PackDate(2002,10,1);
-			stat_block->time = DOS_PackTime(12,34,56);
+			stat_block->date = default_date;
+			stat_block->time = default_time;
 			return true;
 		}
 		cur_file = cur_file->next;
@@ -425,10 +433,11 @@ bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 }
 
 bool Virtual_Drive::FileExists(const char* name){
+	assert(name);
 	VFILE_Block * cur_file = first_file;
 	while (cur_file) {
 		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfsnames[onpos] +
+		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
 		                                                  std::string(1, '\\')
 		                                        : "") +
 		                      cur_file->name)
@@ -441,6 +450,7 @@ bool Virtual_Drive::FileExists(const char* name){
 
 bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 {
+	assert(_dir);
 	unsigned int onpos = 0;
 	if (*_dir) {
 		if (FileExists(_dir)) {
@@ -448,8 +458,8 @@ bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 			return false;
 		}
 		for (unsigned int i = 1; i < vfile_pos; i++) {
-			if (!strcasecmp(vfsnames[i], _dir) ||
-			    !strcasecmp(vfnames[i], _dir)) {
+			if (!strcasecmp(vfilenames[i].shortname.c_str(), _dir) ||
+			    !strcasecmp(vfilenames[i].fullname.c_str(), _dir)) {
 				onpos = i;
 				break;
 			}
@@ -475,8 +485,8 @@ bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 		}
 	} else if ((attr & DOS_ATTR_DIRECTORY) && onpos > 0) {
 		if (WildFileCmp(".", pattern)) {
-			dta.SetResult(".", 0, DOS_PackDate(2002, 10, 1),
-			              DOS_PackTime(12, 34, 56), DOS_ATTR_DIRECTORY);
+			dta.SetResult(".", 0, default_date,
+			              default_time, DOS_ATTR_DIRECTORY);
 			return true;
 		}
 	}
@@ -492,8 +502,8 @@ bool Virtual_Drive::FindNext(DOS_DTA &dta)
 	if (search_file == parent_dir) {
 		bool cmp = WildFileCmp("..", pattern);
 		if (cmp)
-			dta.SetResult("..", 0, DOS_PackDate(2002, 10, 1),
-			              DOS_PackTime(12, 34, 56), DOS_ATTR_DIRECTORY);
+			dta.SetResult("..", 0, default_date,
+			              default_time, DOS_ATTR_DIRECTORY);
 		search_file = first_file;
 		if (cmp)
 			return true;
@@ -517,14 +527,15 @@ bool Virtual_Drive::FindNext(DOS_DTA &dta)
 
 bool Virtual_Drive::GetFileAttr(char *name, Bit16u *attr)
 {
+	assert(name);
 	if (*name == 0) {
-		*attr=DOS_ATTR_DIRECTORY;
+		*attr = DOS_ATTR_DIRECTORY;
 		return true;
 	}
 	VFILE_Block *cur_file = first_file;
 	while (cur_file) {
 		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfsnames[onpos] +
+		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
 		                                                  std::string(1, '\\')
 		                                        : "") +
 		                      cur_file->name)
@@ -533,13 +544,14 @@ bool Virtual_Drive::GetFileAttr(char *name, Bit16u *attr)
 			                              : DOS_ATTR_ARCHIVE); // Read-only?
 			return true;
 		}
-		cur_file=cur_file->next;
+		cur_file = cur_file->next;
 	}
 	return false;
 }
 
 bool Virtual_Drive::SetFileAttr(const char *name, [[maybe_unused]] uint16_t attr)
 {
+	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return true;
@@ -547,7 +559,7 @@ bool Virtual_Drive::SetFileAttr(const char *name, [[maybe_unused]] uint16_t attr
 	const VFILE_Block *cur_file = first_file;
 	while (cur_file) {
 		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfsnames[onpos] +
+		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
 		                                                  std::string(1, '\\')
 		                                        : "") +
 		                      cur_file->name)
@@ -561,7 +573,7 @@ bool Virtual_Drive::SetFileAttr(const char *name, [[maybe_unused]] uint16_t attr
 	return false;
 }
 
-bool Virtual_Drive::Rename(char * /*oldname*/,char * /*newname*/) {
+bool Virtual_Drive::Rename([[maybe_unused]] char * oldname, [[maybe_unused]] char * newname) {
 	return false;
 }
 
@@ -573,34 +585,35 @@ bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_clust
 	return true;
 }
 
-Bit8u Virtual_Drive::GetMediaByte(void) {
+Bit8u Virtual_Drive::GetMediaByte() {
 	return 0xF8;
 }
 
-bool Virtual_Drive::isRemote(void) {
+bool Virtual_Drive::isRemote() {
 	return false;
 }
 
-bool Virtual_Drive::isRemovable(void) {
+bool Virtual_Drive::isRemovable() {
 	return false;
 }
 
-Bits Virtual_Drive::UnMount(void) {
+Bits Virtual_Drive::UnMount() {
 	return 1;
 }
 
-char const* Virtual_Drive::GetLabel(void) {
+char const* Virtual_Drive::GetLabel() {
 	return "DOSBOX";
 }
 
-void Virtual_Drive::EmptyCache(void)
+void Virtual_Drive::EmptyCache()
 {
-	while (first_file != NULL) {
+	while (first_file != nullptr) {
 		VFILE_Block *n = first_file->next;
 		delete first_file;
 		first_file = n;
 	}
 	vfile_pos = 1;
-	PROGRAMS_Destroy(NULL);
-	Add_VFiles(first_shell != NULL);
+	PROGRAMS_Destroy(nullptr);
+	vfilenames = {Filename{"", ""}};
+	Add_VFiles(first_shell != nullptr);
 }
