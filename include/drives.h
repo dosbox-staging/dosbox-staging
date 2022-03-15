@@ -34,6 +34,8 @@ std::string To_Label(const char* name);
 std::string generate_8x3(const char *lfn, const unsigned int num, const bool start = false);
 bool filename_not_8x3(const char *n);
 bool filename_not_strict_8x3(const char *n);
+char *VFILE_Generate_8x3(const char *name, const unsigned int onpos);
+void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir);
 
 class DriveManager {
 public:
@@ -402,12 +404,12 @@ public:
 	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block* const stat_block);
-	Bit8u GetMediaByte(void);
-	void EmptyCache(void);
-	bool isRemote(void);
-	virtual bool isRemovable(void);
-	virtual Bits UnMount(void);
-	virtual char const* GetLabel(void);
+	Bit8u GetMediaByte();
+	void EmptyCache();
+	bool isRemote();
+	virtual bool isRemovable();
+	virtual Bits UnMount();
+	virtual char const* GetLabel();
 private:
 	Virtual_Drive(const Virtual_Drive&); // prevent copying
 	Virtual_Drive& operator= (const Virtual_Drive&); // prevent assignment
