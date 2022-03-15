@@ -53,8 +53,10 @@ static VFILE_Block *first_file, *parent_dir = NULL;
 
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 {
-	if (name == NULL || !*name)
-		return NULL;
+	if (name == NULL || !*name) {
+		strcpy(sfn, "");
+		return sfn;
+	}
 	if (!filename_not_8x3(name)) {
 		strcpy(sfn, name);
 		upcase(sfn);
@@ -67,15 +69,16 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	} else {
 		strcpy(lfn, name);
 	}
-	if (!strlen(lfn))
-		return NULL;
-	constexpr int tilde_limit = 10000;
-	unsigned int k = 1;
-	unsigned int i = 0;
-	unsigned int t = tilde_limit;
+	if (!strlen(lfn)) {
+		strcpy(sfn, "");
+		return sfn;
+	}
+	unsigned int num = 1;
 	const VFILE_Block *cur_file;
-	while (k < tilde_limit) {
-		generate_8x3(lfn, k, i, t);
+	while (1) {
+		strcpy(sfn, generate_8x3(lfn, num).c_str());
+		if (!*sfn)
+			return sfn;
 		cur_file = first_file;
 		bool found = false;
 		while (cur_file) {
@@ -88,9 +91,10 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 		}
 		if (!found)
 			return sfn;
-		k++;
+		num++;
 	}
-	return 0;
+	strcpy(sfn, "");
+	return sfn;
 }
 
 void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir)
