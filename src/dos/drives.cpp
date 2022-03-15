@@ -80,76 +80,52 @@ bool is_special_character(char c)
 }
 
 /* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */
-void generate_8x3(char *lfn, unsigned int k, unsigned int &i, unsigned int &t)
+std::string generate_8x3(const char *lfn, const unsigned int num, const bool start)
 {
-	char *n = lfn;
-	if (t > strlen(n) || k == 1 || k == 10 || k == 100 || k == 1000) {
-		i = 0;
-		*sfn = 0;
-		while (*n == '.' || *n == ' ')
-			n++;
-		auto len = strlen(n);
-		while (len && (*(n + len - 1) == '.' || *(n + len - 1) == ' ')) {
-			*(n + len - 1) = 0;
-			len = strlen(n);
-		}
-		unsigned int m = k < 10 ? 6u : (k < 100 ? 5u : (k < 1000 ? 4 : 3u));
-		while (*n != 0 && *n != '.' && i < m) {
-			if (*n == ' ') {
-				n++;
-				continue;
+	unsigned int tilde_limit = 1000000;
+	if (num >= tilde_limit)
+		return "";
+	static std::string result = "";
+	std::string input = lfn;
+	while (input.size() && (input[0] == '.' || input[0] == ' '))
+		input.erase(input.begin());
+	while (input.size() && (input.back() == '.' || input.back() == ' '))
+		input.pop_back();
+	size_t len = 0;
+	auto found = input.rfind('.');
+	unsigned int tilde_pos = 6 - (unsigned int)floor(log10(num));
+	if (num == 1 || start) {
+		result.clear();
+		len = found != std::string::npos ? found : input.size();
+		for (size_t i = 0; i < len; i++) {
+			if (input[i] != ' ') {
+				result += is_special_character(input[i])
+				                  ? "_"
+				                  : std::string(1, toupper(input[i]));
+				if (result.size() >= tilde_pos)
+					break;
 			}
-			if (is_special_character(*n)) {
-				sfn[i++] = '_';
-				n++;
-			} else {
-				sfn[i++] = toupper(*n);
-				n++;
-			}
 		}
-		sfn[i++] = '~';
-		t = i;
-	} else
-		i = t;
-	if (k < 10)
-		sfn[i++] = '0' + k;
-	else if (k < 100) {
-		sfn[i++] = '0' + (k / 10);
-		sfn[i++] = '0' + (k % 10);
-	} else if (k < 1000) {
-		sfn[i++] = '0' + (k / 100);
-		sfn[i++] = '0' + ((k % 100) / 10);
-		sfn[i++] = '0' + (k % 10);
-	} else {
-		sfn[i++] = '0' + (k / 1000);
-		sfn[i++] = '0' + ((k % 1000) / 100);
-		sfn[i++] = '0' + ((k % 100) / 10);
-		sfn[i++] = '0' + (k % 10);
 	}
-	if (t > strlen(n) || k == 1 || k == 10 || k == 100 || k == 1000) {
-		char *p = strrchr(n, '.');
-		if (p != NULL) {
-			sfn[i++] = '.';
-			n = p + 1;
-			while (*n == '.')
-				n++;
-			int j = 0;
-			while (*n != 0 && j++ < 3) {
-				if (*n == ' ') {
-					n++;
-					continue;
-				}
-				if (is_special_character(*n)) {
-					sfn[i++] = '_';
-					n++;
-				} else {
-					sfn[i++] = toupper(*n);
-					n++;
-				}
+	result.erase(tilde_pos);
+	result += '~' + std::to_string(num);
+	if (found != std::string::npos) {
+		input.erase(0, found + 1);
+		size_t len_ext = 0;
+		len = input.size();
+		for (size_t i = 0; i < len; i++) {
+			if (input[i] != ' ') {
+				if (!len_ext)
+					result += ".";
+				result += is_special_character(input[i])
+				                  ? "_"
+				                  : std::string(1, toupper(input[i]));
+				if (++len_ext >= 3)
+					break;
 			}
 		}
-		sfn[i++] = 0;
 	}
+	return result;
 }
 
 bool filename_not_8x3(const char *n)

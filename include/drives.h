@@ -31,7 +31,7 @@
 
 void Set_Label(char const * const input, char * const output, bool cdrom);
 std::string To_Label(const char* name);
-void generate_8x3(char *lfn, unsigned int k, unsigned int &i, unsigned int &t);
+std::string generate_8x3(const char *lfn, const unsigned int num, const bool start = false);
 bool filename_not_8x3(const char *n);
 bool filename_not_strict_8x3(const char *n);
 
