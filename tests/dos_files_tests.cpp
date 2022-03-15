@@ -44,6 +44,7 @@
 
 #include "control.h"
 #include "dos_system.h"
+#include "drives.h"
 #include "shell.h"
 #include "string_utils.h"
 
@@ -371,6 +372,20 @@ TEST_F(DOS_FilesTest, DOS_DTAExtendName_Space_Pads)
 TEST_F(DOS_FilesTest, DOS_DTAExtendName_Enforces_8_3)
 {
 	assert_DTAExtendName("12345678ABCDEF.123ABCDE", "12345678", "123");
+}
+
+TEST_F(DOS_FilesTest, VFILE_Register)
+{
+	VFILE_Register("TEST", 0, 0, "/");
+	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+	VFILE_Register("filename_1.txt", 0, 0, "/TEST/");
+	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~2.TXT", 0, false));
+	VFILE_Register("filename_2.txt", 0, 0, "/TEST/");
+	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~2.TXT", 0, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~3.TXT", 0, false));
+	VFILE_Register("filename_3.txt", 0, 0, "/TEST/");
+	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~3.TXT", 0, false));
 }
 
 } // namespace

@@ -127,6 +127,31 @@ TEST(WildFileCmp, LongCompare)
     EXPECT_EQ(false, WildFileCmp("TEST FILE NAME", "*F*X*", true));
 }
 
+TEST(generate_8x3, SFNTest)
+{
+	EXPECT_EQ("TESTLO~1", generate_8x3("test long name...", 1, true));
+	EXPECT_EQ("TESTLO~2.TXT", generate_8x3("test long name.txt", 2, true));
+	EXPECT_EQ("TESTL~20.TEX", generate_8x3("test long name.txt.text", 20, true));
+	EXPECT_EQ("TEST__~2.TEX", generate_8x3("test[ ]long name.text", 2, true));
+	EXPECT_EQ("TEST_~20", generate_8x3("... test[ ]long name ...", 20, true));
+	EXPECT_EQ("TEST~200.TT", generate_8x3("test long name.txt.tt", 200, true));
+	EXPECT_EQ("TES~2000.TXT", generate_8x3("test[]long name.txt", 2000, true));
+	EXPECT_EQ("TE~20000.EXT", generate_8x3("test long long name.txt..ext..", 20000, true));
+	EXPECT_EQ("T~200000.TXT", generate_8x3("test long long name.txt", 200000, true));
+	EXPECT_EQ("", generate_8x3("test long long name.txt", 2000000, true));
+}
+
+TEST(filename_not_8x3, NameTest)
+{
+	EXPECT_FALSE(filename_not_8x3("testfile.txt"));
+	EXPECT_TRUE(filename_not_8x3("test_file.txt"));
+	EXPECT_FALSE(filename_not_8x3("myfile.t"));
+	EXPECT_TRUE(filename_not_8x3("my file.txt"));
+	EXPECT_TRUE(filename_not_8x3("my+file.txt"));
+	EXPECT_TRUE(filename_not_8x3("myfile.text"));
+	EXPECT_TRUE(filename_not_8x3("myfile..txt"));
+}
+
 /**
  * Set_Labels tests. These test the conversion of a FAT/CD-ROM volume
  * label to an MS-DOS 8.3 label with a variety of edge cases & oddities.
