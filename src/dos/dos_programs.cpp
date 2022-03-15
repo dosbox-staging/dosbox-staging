@@ -46,12 +46,12 @@ extern Bit32u floppytype;
 #define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
 #define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
 
-extern char autoexec_data[AUTOEXEC_SIZE];
+extern char autoexec_data[autoexec_maxsize];
 void CONFIG_ProgramStart(Program **make);
 void MIXER_ProgramStart(Program **make);
 void SHELL_ProgramStart(Program **make);
-void get_drivez_path(std::string &path, const std::string &dirname);
-void drivez_register(const std::string &path, const std::string &dir);
+void z_drive_getpath(std::string &path, const std::string &dirname);
+void z_drive_register(const std::string &path, const std::string &dir);
 
 void Add_VFiles(const bool add_autoexec)
 {
@@ -59,8 +59,8 @@ void Add_VFiles(const bool add_autoexec)
 	std::string path = ".";
 	path += CROSS_FILESPLIT;
 	path += dirname;
-	get_drivez_path(path, dirname);
-	drivez_register(path, "/");
+	z_drive_getpath(path, dirname);
+	z_drive_register(path, "/");
 
 	PROGRAMS_MakeFile("ATTRIB.COM", ATTRIB_ProgramStart);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
