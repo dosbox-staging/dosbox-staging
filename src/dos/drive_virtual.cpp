@@ -105,7 +105,8 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 	assert(name);
 	if (vfile_pos >= max_vfiles)
 		return;
-	const auto isdir = !strcmp(dir, "/") || !strcmp(name, ".") || !strcmp(name, "..");
+	const auto isdir = !strcmp(dir, "/") || !strcmp(name, ".") ||
+	                   !strcmp(name, "..");
 	const auto len = strlen(dir);
 	unsigned int onpos = 0;
 	if (len > 2 && dir[0] == '/' && dir[len - 1] == '/') {
@@ -134,12 +135,15 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 	trim(filename.fullname);
 	trim(filename.shortname);
 	vfilenames.push_back(filename);
-	if (!vfilenames[vfile_pos].shortname.length() || !vfilenames[vfile_pos].fullname.length())
+	if (!vfilenames[vfile_pos].shortname.length() ||
+	    !vfilenames[vfile_pos].fullname.length())
 		return;
 	VFILE_Block *new_file = new VFILE_Block;
 	new_file->name = strdup(vfilenames[vfile_pos].shortname.c_str());
 	vfile_pos++;
-	new_file->data = data;
+	new_file->data = data ? new (std::nothrow) uint8_t[size] : nullptr;
+	if (new_file->data)
+		memcpy(new_file->data, data, size);
 	new_file->size = size;
 	new_file->date = fztime || fzdate ? fzdate : default_date;
 	new_file->time = fztime || fzdate ? fztime : default_time;
@@ -239,22 +243,19 @@ void z_drive_register(const std::string &path, const std::string &dir)
 		}
 		if (name.back() == '/' && dir == "/") {
 			name.pop_back();
-			VFILE_Register(name.c_str(), 0, 0, dir.c_str());
+			VFILE_Register(name.c_str(), nullptr, 0, dir.c_str());
 			fztime = fzdate = 0;
 			z_drive_register((pathdir / name).string(), dir + name + "/");
 			continue;
 		}
 		std::ifstream file(fullname, std::ios::in | std::ios::binary);
-		if (!file.is_open())
-			continue;
-		const auto size = (uint32_t)std_fs::file_size(fullname);
-		std::string content(size, '\0');
-		file.read(content.data(), size);
-		file.close();
-		uint8_t *data = (uint8_t *)malloc(size);
-		if (data) {
-			memcpy(data, content.c_str(), size);
-			VFILE_Register(name.c_str(), data, size,
+		if (file.is_open()) {
+			const auto size = (uint32_t)std_fs::file_size(fullname);
+			std::string content(size, '\0');
+			file.read(content.data(), size);
+			file.close();
+			VFILE_Register(name.c_str(),
+			               (uint8_t *)content.c_str(), size,
 			               dir == "/" ? "" : dir.c_str());
 		}
 		fztime = fzdate = 0;
