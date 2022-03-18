@@ -28,9 +28,10 @@
 #include "support.h"
 #include "shell.h"
 #include "cross.h"
+#include "string_utils.h"
 
-#define default_date DOS_PackDate(2002, 10, 1)
-#define default_time DOS_PackTime(12, 34, 56)
+constexpr auto default_date = DOS_PackDate(2002, 10, 1);
+constexpr auto default_time = DOS_PackTime(12, 34, 56);
 
 struct Filename {
 	std::string fullname = {};
@@ -62,10 +63,11 @@ static VFILE_Block *parent_dir = nullptr;
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 {
 	if (!name || !*name) {
-		strcpy(sfn, "");
+		reset_str(sfn);
 		return sfn;
 	}
 	if (!filename_not_8x3(name)) {
+		assert(strlen(name) < DOS_NAMELENGTH_ASCII);
 		strcpy(sfn, name);
 		upcase(sfn);
 		return sfn;
@@ -77,7 +79,8 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	const VFILE_Block *cur_file;
 	// Get 8.3 names for LFNs by iterating the numbers
 	while (1) {
-		strcpy(sfn, generate_8x3(lfn.c_str(), num).c_str());
+		const auto str = generate_8x3(lfn.c_str(), num);
+		strcpy(sfn, str.length() < DOS_NAMELENGTH_ASCII ? str.c_str() : "");
 		if (!*sfn)
 			return sfn;
 		cur_file = first_file;
@@ -96,7 +99,7 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 			return sfn;
 		num++;
 	}
-	strcpy(sfn, "");
+	reset_str(sfn);
 	return sfn;
 }
 
