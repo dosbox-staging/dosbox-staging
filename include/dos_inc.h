@@ -123,10 +123,41 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 
 // Date and Time Conversion
-uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec) noexcept;
-uint16_t DOS_PackTime(const struct tm &datetime) noexcept;
-uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day) noexcept;
-uint16_t DOS_PackDate(const struct tm &datetime) noexcept;
+constexpr uint16_t DOS_PackTime(const uint16_t hour,
+                                const uint16_t min,
+                                const uint16_t sec) noexcept
+{
+	const auto h_bits = 0b1111100000000000 & (hour << 11);
+	const auto m_bits = 0b0000011111100000 & (min << 5);
+	const auto s_bits = 0b0000000000011111 & (sec / 2);
+	const auto packed = h_bits | m_bits | s_bits;
+	return static_cast<uint16_t>(packed);
+}
+
+constexpr uint16_t DOS_PackTime(const struct tm &datetime) noexcept
+{
+	return DOS_PackTime(static_cast<uint16_t>(datetime.tm_hour),
+	                    static_cast<uint16_t>(datetime.tm_min),
+	                    static_cast<uint16_t>(datetime.tm_sec));
+}
+
+constexpr uint16_t DOS_PackDate(const uint16_t year,
+                                const uint16_t mon,
+                                const uint16_t day) noexcept
+{
+	const auto y_bits = 0b1111111000000000 & ((year - 1980) << 9);
+	const auto m_bits = 0b0000000111100000 & (mon << 5);
+	const auto d_bits = 0b0000000000011111 & day;
+	const auto packed = y_bits | m_bits | d_bits;
+	return static_cast<uint16_t>(packed);
+}
+
+constexpr uint16_t DOS_PackDate(const struct tm &datetime) noexcept
+{
+	return DOS_PackDate(static_cast<uint16_t>(datetime.tm_year + 1900),
+	                    static_cast<uint16_t>(datetime.tm_mon + 1),
+	                    static_cast<uint16_t>(datetime.tm_mday));
+}
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb = false);
