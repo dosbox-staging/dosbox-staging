@@ -61,7 +61,6 @@ constexpr rgb24 off_color(0, 0, 0);          // Black for off/stopped/not-in-use
 
 /* Mouse related */
 void GFX_ToggleMouseCapture();
-static bool first_window = true;
 extern bool mouse_is_captured; //true if mouse is confined to window
 
 enum {
@@ -3004,12 +3003,7 @@ void MAPPER_BindKeys(Section *sec)
 	if (SDL_GetModState()&KMOD_NUM)
 		MAPPER_TriggerEvent(num_lock_event, false);
 
-	if (!first_window) {
-		remove_window();
-		set_output(sec, wants_stretched_pixels());
-		GFX_ResetScreen();
-	}
-	first_window = false;
+	GFX_RegenerateWindow(sec);
 }
 
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {

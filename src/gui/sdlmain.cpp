@@ -424,6 +424,7 @@ struct SDL_Block {
 	SDL_EventType raltstate = SDL_KEYUP;
 };
 
+static bool first_window = true;
 static SDL_Block sdl;
 
 static SDL_Point restrict_to_max_resolution(int width, int height);
@@ -828,6 +829,14 @@ static void safe_set_window_size(const int w, const int h)
 }
 
 static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
+
+static void remove_window()
+{
+	if (sdl.window) {
+		SDL_DestroyWindow(sdl.window);
+		sdl.window = nullptr;
+	}
+}
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
@@ -2277,7 +2286,7 @@ static bool detect_resizable_window()
 #endif // C_OPENGL
 }
 
-bool wants_stretched_pixels()
+static bool wants_stretched_pixels()
 {
 	const auto render_section = static_cast<Section_prop *>(
 	        control->GetSection("render"));
@@ -2694,15 +2703,7 @@ static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 		return calc_viewport_fit(width, height);
 }
 
-void remove_window()
-{
-	if (sdl.window) {
-		SDL_DestroyWindow(sdl.window);
-		sdl.window = nullptr;
-	}
-}
-
-void set_output(Section *sec, bool should_stretch_pixels)
+static void set_output(Section *sec, bool should_stretch_pixels)
 {
 	// Apply the user's mouse settings
 	const auto section = static_cast<const Section_prop *>(sec);
@@ -3143,8 +3144,20 @@ void GFX_LosingFocus()
 	MAPPER_LosingFocus();
 }
 
-bool GFX_IsFullscreen(void) {
+bool GFX_IsFullscreen() {
 	return sdl.desktop.fullscreen;
+}
+
+void GFX_RegenerateWindow(Section *sec) {
+	if (first_window) {
+		first_window = false;
+		return;
+	}
+	const auto section = static_cast<const Section_prop *>(sec);
+	if (strcmp(section->Get_string("output"), "surface"))
+		remove_window();
+	set_output(sec, wants_stretched_pixels());
+	GFX_ResetScreen();
 }
 
 #if defined(MACOSX)
