@@ -57,7 +57,6 @@ typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 bool GFX_Events();
 
 Bitu GFX_GetBestMode(Bitu flags);
-int GFX_GetDisplayRefreshRate();
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 void GFX_SetShader(const char* src);
 Bitu GFX_SetSize(int width, int height, Bitu flags,

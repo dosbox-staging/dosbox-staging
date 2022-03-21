@@ -59,9 +59,21 @@ enum VGAModes {
 	M_ERROR = 1 << 31,
 };
 
+constexpr auto M_TEXT_MODES = M_TEXT | M_HERC_TEXT | M_TANDY_TEXT | M_CGA_TEXT_COMPOSITE;
+
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
 constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
+
+// Refresh rate constants
+constexpr auto REFRESH_RATE_MIN = 23;
+constexpr auto REFRESH_RATE_DOS_DOUBLED_MAX = 35;
+constexpr auto REFRESH_RATE_HOST_VRR_LFC = 48;
+constexpr auto REFRESH_RATE_HOST_TV_MAX = 50;
+constexpr auto REFRESH_RATE_HOST_DEFAULT = 60;
+constexpr auto REFRESH_RATE_DOS_DEFAULT = 70;
+constexpr auto REFRESH_RATE_HOST_VRR_MIN = 75;
+constexpr auto REFRESH_RATE_MAX = 1000;
 
 #define CLK_25 25175
 #define CLK_28 28322
@@ -135,6 +147,8 @@ struct VGA_Config {
 
 enum Drawmode { PART, DRAWLINE, EGALINE };
 
+enum class VGA_RATE_MODE { DEFAULT, HOST, CUSTOM };
+
 struct VGA_Draw {
 	bool resizing = false;
 	Bitu width = 0;
@@ -169,6 +183,10 @@ struct VGA_Draw {
 		double parts = 0;
 	} delay;
 	Bitu bpp = 0;
+	double host_refresh_hz = REFRESH_RATE_HOST_DEFAULT;
+	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
+	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
+	VGA_RATE_MODE dos_rate_mode = VGA_RATE_MODE::DEFAULT;
 	double aspect_ratio = 0;
 	bool double_scan = false;
 	bool doublewidth = false;
@@ -489,6 +507,12 @@ void VGA_AddCompositeSettings(Config &conf);
 /* Some Support Functions */
 std::pair<const char *, const char *> VGA_DescribeType(VGAModes type);
 void VGA_SetClock(Bitu which, uint32_t target);
+
+// Save, get, and limit refresh and clock functions
+void VGA_SetHostRate(const double refresh_hz);
+void VGA_SetRatePreference(const std::string &pref);
+double VGA_GetPreferredRate();
+
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);

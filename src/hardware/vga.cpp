@@ -143,6 +143,61 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 	}
 }
 
+void VGA_SetHostRate(const double refresh_hz)
+{
+	// may come from user content, so always clamp it
+	constexpr auto min_rate = static_cast<double>(REFRESH_RATE_MIN);
+	constexpr auto max_rate = static_cast<double>(REFRESH_RATE_MAX);
+	vga.draw.host_refresh_hz = clamp(refresh_hz,min_rate, max_rate);
+}
+
+void VGA_SetRatePreference(const std::string &pref)
+{
+	if (pref == "default") {
+		vga.draw.dos_rate_mode = VGA_RATE_MODE::DEFAULT;
+		LOG_MSG("VIDEO: Using the DOS video mode's frame rate");
+
+	} else if (pref == "host") {
+		vga.draw.dos_rate_mode = VGA_RATE_MODE::HOST;
+		LOG_MSG("VIDEO: Matching the DOS graphical frame rate to the host");
+
+	} else if (const auto rate = to_finite<double>(pref); std::isfinite(rate)) {
+		vga.draw.dos_rate_mode = VGA_RATE_MODE::CUSTOM;
+		constexpr auto min_rate = static_cast<double>(REFRESH_RATE_MIN);
+		constexpr auto max_rate = static_cast<double>(REFRESH_RATE_MAX);
+		vga.draw.custom_refresh_hz = clamp(rate, min_rate, max_rate);
+		LOG_MSG("VIDEO: Using a custom DOS graphical frame rate of %.3g Hz",
+		        vga.draw.custom_refresh_hz);
+
+	} else {
+		vga.draw.dos_rate_mode = VGA_RATE_MODE::DEFAULT;
+		LOG_WARNING("VIDEO: Unknown frame rate setting: %s, using default",
+		            pref.c_str());
+	}
+}
+
+double VGA_GetPreferredRate()
+{
+	// If we're in a text-mode, always use the as-indicated DOS rate because
+	// the vblank rate is often used for timing.
+	if (CurMode->type & M_TEXT_MODES)
+		return vga.draw.dos_refresh_hz;
+
+	// In we're in a graphical mode, then we can use preferred rates
+	switch (vga.draw.dos_rate_mode) {
+	case VGA_RATE_MODE::DEFAULT:
+		return vga.draw.dos_refresh_hz;
+	case VGA_RATE_MODE::HOST:
+		assert(vga.draw.host_refresh_hz > REFRESH_RATE_MIN);
+		return vga.draw.host_refresh_hz;
+	case VGA_RATE_MODE::CUSTOM:
+		assert(vga.draw.custom_refresh_hz >= REFRESH_RATE_MIN);
+		assert(vga.draw.custom_refresh_hz <= REFRESH_RATE_MAX);
+		return vga.draw.custom_refresh_hz;
+	}
+	return vga.draw.dos_refresh_hz;
+}
+
 void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 {
 	if (svga.set_clock) {

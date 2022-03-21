@@ -1371,8 +1371,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 #endif
 
 	// The screen refresh frequency and clock settings, per the DOS-mode
-	const auto f_clock = static_cast<double>(clock);
-	const auto fps = f_clock / static_cast<double>(vtotal * htotal);
+	vga.draw.dos_refresh_hz = static_cast<double>(clock) / (vtotal * htotal);
+	const auto fps = VGA_GetPreferredRate();
+	const auto f_clock = fps * vtotal * htotal;
 
 	// Horizontal total (that's how long a line takes with whistles and bells)
 	vga.draw.delay.htotal = static_cast<double>(htotal) * 1000.0 / f_clock; //  milliseconds
