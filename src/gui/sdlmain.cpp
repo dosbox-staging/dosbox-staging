@@ -238,6 +238,24 @@ enum class HOST_RATE_MODE {
 
 enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 
+enum class VSYNC_STATE {
+	UNSET = -2,
+	ADAPTIVE = -1,
+	OFF = 0,
+	ON = 1,
+};
+
+// A vsync preference consists of three parts:
+//  - What the user asked for
+//  - What the host reports vsync as after setting it
+//  - What the actual resulting state is after setting it
+struct VsyncPreference {
+	VSYNC_STATE requested = VSYNC_STATE::UNSET;
+	VSYNC_STATE reported = VSYNC_STATE::UNSET;
+	VSYNC_STATE resultant = VSYNC_STATE::UNSET;
+	int16_t benchmarked_rate = 0;
+};
+
 // Size and ratio constants
 // ------------------------
 constexpr int SMALL_WINDOW_PERCENT = 50;
@@ -362,8 +380,6 @@ struct SDL_Block {
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
-		bool vsync = false;
-		int vsync_skip = 0;
 		HOST_RATE_MODE host_rate_mode = HOST_RATE_MODE::AUTO;
 		double preferred_host_rate = 0.0;
 		bool want_resizable_window = false;
@@ -371,6 +387,12 @@ struct SDL_Block {
 		SCREEN_TYPES type = SCREEN_SURFACE;
 		SCREEN_TYPES want_type = SCREEN_SURFACE;
 	} desktop = {};
+	struct {
+		VsyncPreference when_windowed = {};
+		VsyncPreference when_fullscreen = {};
+		VSYNC_STATE current = VSYNC_STATE::ON;
+		int skip_us = 0;
+	} vsync = {};
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
@@ -442,6 +464,17 @@ static SDL_Rect calc_viewport(int width, int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
+
+static const char *vsync_state_as_string(const VSYNC_STATE state)
+{
+	switch (state) {
+	case VSYNC_STATE::UNSET: return "unset";
+	case VSYNC_STATE::ADAPTIVE: return "adaptive";
+	case VSYNC_STATE::OFF: return "off";
+	case VSYNC_STATE::ON: return "on";
+	default: return "unknown";
+	}
+}
 
 #if C_OPENGL
 static char const shader_src_default[] = R"GLSL(
@@ -898,6 +931,179 @@ static void safe_set_window_size(const int w, const int h)
 
 static Pacer render_pacer("Render", 7000, Pacer::LogLevel::TIMEOUTS);
 
+static const VsyncPreference &get_vsync_preference()
+{
+	return sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
+	                              : sdl.vsync.when_windowed;
+}
+
+static int benchmark_presentation_rate()
+{
+	// Number of frames to benchmark
+	const auto warmup_frames = 10;
+	const auto bench_frames = 4;
+	// Disable the pacer because we need every frame presented and measured
+	// so we can hit the vsync wall (if it exists)
+	render_pacer.SetTimeout(0);
+	// Warmup round
+	for (auto i = 0; i < warmup_frames; ++i) {
+		GFX_EndUpdate(nullptr);
+	}
+	// Measured round
+	const auto start_us = GetTicksUs();
+	for (auto frame = 0; frame < bench_frames; ++frame) {
+		GFX_EndUpdate(nullptr);
+	}
+	return (bench_frames * 1'000'000) / GetTicksUsSince(start_us);
+}
+
+static VSYNC_STATE get_reported_vsync()
+{
+	auto state = VSYNC_STATE::UNSET;
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		assert(sdl.opengl.context);
+		const auto retval = SDL_GL_GetSwapInterval();
+		switch (retval) {
+		case 1: state = VSYNC_STATE::ON; break;
+		case 0: state = VSYNC_STATE::OFF; break;
+		case -1: state = VSYNC_STATE::ADAPTIVE; break;
+		default:
+			LOG_WARNING("SDL:OPENGL: Reported an unknown vsync state: %d",
+			            retval);
+			break;
+		}
+	}
+#endif
+	if (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE) {
+		const std::string_view retstr = SDL_GetHint(SDL_HINT_RENDER_VSYNC);
+		if (retstr == "1")
+			state = VSYNC_STATE::ON;
+		else if (retstr == "0")
+			state = VSYNC_STATE::OFF;
+		else if (retstr == "-1")
+			state = VSYNC_STATE::ADAPTIVE;
+		else
+			LOG_WARNING("SDL: Reported an unknown vsync state: %s",
+			            retstr.data());
+	}
+	assert(state != VSYNC_STATE::UNSET);
+	return state;
+}
+
+static VSYNC_STATE get_resultant_vsync(int16_t &bench_rate)
+{
+	bench_rate = benchmark_presentation_rate();
+	const auto host_rate = get_host_refresh_rate();
+
+	// Notify the user if the machine is prensetation-starved.
+	if (bench_rate < host_rate * 0.5) {
+		LOG_WARNING("SDL: The benchmarked rendering rate of %d FPS, which"
+		            " is well below the host's refresh rate of %2.5g Hz.",
+		            bench_rate, host_rate);
+		LOG_WARNING(
+		        "SDL: You will experience rendering lag and stuttering."
+		        " Consider updating your video drivers and try disabling"
+		        " vsync in your host and drivers, set [sdl] vsync = false");
+	}
+
+	if (bench_rate < host_rate * 1.5)
+		return VSYNC_STATE::ON;
+	else if (bench_rate < host_rate * 2.5)
+		return VSYNC_STATE::ADAPTIVE;
+	else
+		return VSYNC_STATE::OFF;
+}
+
+static void set_vsync(const VSYNC_STATE state)
+{
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		assert(sdl.opengl.context);
+		const auto interval = static_cast<int>(state);
+		// -1=adaptive, 0=off, 1=on
+		assert(interval >= -1 || interval <= 1);
+		if (SDL_GL_SetSwapInterval(interval) == 0)
+			return;
+
+		// the requested interval is not supported
+		LOG_WARNING("SDL: Failed setting the OpenGL vsync state to %s (%d): %s",
+		            vsync_state_as_string(state), interval, SDL_GetError());
+
+		// Per SDL's recommendation: If an application requests adaptive
+		// vsync and the system does not support it, this function will
+		// fail and return -1. In such a case, you should probably retry
+		// the call with 1 for the interval.
+		if (interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
+			LOG_WARNING("SDL: Tried enabling non-adaptive OpenGL vsync, but it still failed: %s",
+			            SDL_GetError());
+		}
+		return;
+	}
+#endif
+	if (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE) {
+		// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
+		// set to "1", "0", adapative is currently not supported, so we
+		// also treat it as "1"
+		const auto hint_str = (state == VSYNC_STATE::ON ||
+		                       state == VSYNC_STATE::ADAPTIVE)
+		                              ? "1"
+		                              : "0";
+		if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE)
+			return;
+		LOG_WARNING("SDL: Failed setting SDL's vsync state to to %s (%s): %s",
+		            vsync_state_as_string(state), hint_str, SDL_GetError());
+		return;
+	}
+	// Unhandled screen type
+	LOG_WARNING("SDL: Failed setting the vsync state to %s: unsupported screen type",
+	            vsync_state_as_string(state));
+}
+
+static void update_vsync_state()
+{
+	// Hosts can have different vsync constraints between window modes
+	auto &vsync_pref = sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
+	                                          : sdl.vsync.when_windowed;
+	// Short-hand aliases
+	auto &requested = vsync_pref.requested;
+	auto &reported = vsync_pref.reported;
+	auto &resultant = vsync_pref.resultant;
+
+	assert(requested != VSYNC_STATE::UNSET);
+
+	// We haven't assessed the reported and resultant states yet
+	if (resultant == VSYNC_STATE::UNSET) {
+		set_vsync(requested);
+		resultant = get_resultant_vsync(vsync_pref.benchmarked_rate);
+		reported = get_reported_vsync();
+		if (requested != resultant) {
+			DEBUG_LOG_MSG("SDL: Set the %s-mode vsync to %s, after which the driver told us vsync"
+			              " was %s, but measurements proved it to be %s (benchmarked %d FPS)",
+			              sdl.desktop.fullscreen ? "fullscreen" : "window",
+			              vsync_state_as_string(requested),
+			              vsync_state_as_string(reported),
+			              vsync_state_as_string(resultant),
+			              vsync_pref.benchmarked_rate);
+		}
+	}
+	// Do we need to set the state?
+	if (sdl.vsync.current != resultant) {
+		set_vsync(requested);
+		const auto new_reported = get_reported_vsync();
+		if (new_reported != reported) {
+			DEBUG_LOG_MSG("SDL: Set the %s-mode vsync to %s like before, but now the driver tells"
+			              " us vsync was %s when previously it said vsync was %s",
+			              sdl.desktop.fullscreen ? "fullscreen" : "window",
+			              vsync_state_as_string(requested),
+			              vsync_state_as_string(new_reported),
+			              vsync_state_as_string(reported));
+			resultant = get_resultant_vsync(vsync_pref.benchmarked_rate);
+		}
+		sdl.vsync.current = resultant;
+	}
+}
+
 static void remove_window()
 {
 	if (sdl.window) {
@@ -1327,6 +1533,8 @@ Bitu GFX_SetSize(int width,
 	sdl.draw.callback = callback;
 	sdl.draw.previous_mode = CurMode->type;
 
+	const auto wants_vsync = get_vsync_preference().requested != VSYNC_STATE::OFF;
+
 	switch (sdl.desktop.want_type) {
 dosurface:
 	case SCREEN_SURFACE:
@@ -1414,9 +1622,12 @@ dosurface:
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
 
 		assert(sdl.renderer == nullptr); // ensure we don't leak
+
+		const auto vsync_bit = wants_vsync ? SDL_RENDERER_PRESENTVSYNC : 0;
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
-		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
+		                                          vsync_bit);
+
 		if (!sdl.renderer) {
 			LOG_ERR("%s\n", SDL_GetError());
 			LOG_WARNING("SDL: Can't create renderer, falling back to surface");
@@ -1513,8 +1724,12 @@ dosurface:
 			LOG_WARNING("SDL:OPENGL: Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
-		/* Sync to VBlank if desired */
-		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
+		if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
+			LOG_WARNING("SDL:OPENGL: Can't make OpenGL context current, falling back to surface");
+			goto dosurface;
+		}
+
+		SDL_GL_SetSwapInterval(wants_vsync);
 
 		if (sdl.opengl.use_shader) {
 			GLuint prog=0;
@@ -1741,6 +1956,8 @@ dosurface:
 	}
 #endif // C_OPENGL
 	}
+
+	update_vsync_state();
 
 	if (retFlags)
 		GFX_Start();
@@ -3063,10 +3280,12 @@ static void GUI_StartUp(Section *sec)
 		}
 	}
 
-	// TODO vsync option is disabled for the time being, as it does not work
-	//      correctly and is causing serious bugs.
-	sdl.desktop.vsync = section->Get_bool("vsync");
-	sdl.desktop.vsync_skip = section->Get_int("vsync_skip");
+	sdl.vsync.when_windowed.requested = VSYNC_STATE::OFF;
+	sdl.vsync.when_fullscreen.requested = section->Get_bool("vsync")
+	                                              ? VSYNC_STATE::ON
+	                                              : VSYNC_STATE::OFF;
+	sdl.vsync.skip_us = section->Get_int("vsync_skip");
+
 
 	const int display = section->Get_int("display");
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
