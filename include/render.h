@@ -93,7 +93,6 @@ struct Render_t {
 	bool active = false;
 	bool aspect = true;
 	bool fullFrame = true;
-	bool forceUpdate = false;
 };
 
 extern Render_t render;
@@ -108,7 +107,5 @@ void RENDER_SetSize(uint32_t width,
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
-bool RENDER_GetForceUpdate(void);
-void RENDER_SetForceUpdate(bool);
 
 #endif
