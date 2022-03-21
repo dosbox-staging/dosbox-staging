@@ -181,7 +181,7 @@ struct VGA_Draw {
 		double vdend = 0, vtotal = 0;
 		double hdend = 0, htotal = 0;
 		double parts = 0;
-	} delay;
+	} delay = {};
 	Bitu bpp = 0;
 	double host_refresh_hz = REFRESH_RATE_HOST_DEFAULT;
 	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
@@ -203,8 +203,8 @@ struct VGA_Draw {
 		Bit8u count = 0;
 		uint8_t delay = 0;
 		Bit8u enabled = 0;
-	} cursor;
-	Drawmode mode;
+	} cursor = {};
+	Drawmode mode = {};
 	bool vret_triggered = false;
 };
 
