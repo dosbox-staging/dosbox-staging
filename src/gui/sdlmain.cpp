@@ -229,6 +229,13 @@ enum SCREEN_TYPES	{
 #endif
 };
 
+enum class HOST_RATE_MODE {
+	AUTO,
+	SDI, // serial digital interface
+	VRR, // variable refresh rate
+	CUSTOM,
+};
+
 enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 
 // Size and ratio constants
@@ -357,6 +364,8 @@ struct SDL_Block {
 		bool lazy_init_window_size = false;
 		bool vsync = false;
 		int vsync_skip = 0;
+		HOST_RATE_MODE host_rate_mode = HOST_RATE_MODE::AUTO;
+		double preferred_host_rate = 0.0;
 		bool want_resizable_window = false;
 		SDL_WindowEventID last_size_event = {};
 		SCREEN_TYPES type = SCREEN_SURFACE;
@@ -506,27 +515,86 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
-int GFX_GetDisplayRefreshRate()
+static double get_host_refresh_rate()
 {
-	constexpr auto invalid_refresh = -1;
-	assert(sdl.window);
-	const int display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
-	if (display_in_use < 0) {
-		LOG_ERR("SDL: Could not get the current window index: %s", SDL_GetError());
-		return invalid_refresh;
-	}
+	auto get_sdl_rate = []() {
+		SDL_DisplayMode mode = {};
+		auto &sdl_rate = mode.refresh_rate;
+		assert(sdl.window);
+		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+		if (display_in_use < 0) {
+			LOG_ERR("SDL: Could not get the current window index: %s",
+			        SDL_GetError());
+			return REFRESH_RATE_HOST_DEFAULT;
+		}
+		if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
+			LOG_ERR("SDL: Could not get the current display mode: %s",
+			        SDL_GetError());
+			return REFRESH_RATE_HOST_DEFAULT;
+		}
+		if (sdl_rate < REFRESH_RATE_MIN) {
+			LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
+			            sdl_rate);
+			return REFRESH_RATE_HOST_DEFAULT;
+		}
+		assert(sdl_rate >= REFRESH_RATE_MIN);
+		return sdl_rate;
+	};
 
-	SDL_DisplayMode mode;
-	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
-		LOG_ERR("SDL: Could not get the current display mode: %s", SDL_GetError());
-		return invalid_refresh;
-	}
-	if (mode.refresh_rate < 23 || mode.refresh_rate > 500) {
-		LOG_ERR("SDL: Got an unexpected refresh rate of %d Hz; not using it", mode.refresh_rate);
-		return invalid_refresh;
-	}
+	auto get_vrr_rate = [](const int sdl_rate) {
+		constexpr auto vrr_backoff_hz = 3;
+		return sdl_rate - vrr_backoff_hz;
+	};
 
-	return mode.refresh_rate;
+	auto get_sdi_rate = [](const int sdl_rate) {
+		const auto is_odd = sdl_rate % 2 != 0;
+		const auto not_div_by_5 = sdl_rate % 5 != 0;
+		const auto next_is_div_by_3 = (sdl_rate + 1) % 3 == 0;
+		const bool should_adjust = is_odd && not_div_by_5 && next_is_div_by_3;
+		constexpr auto sdi_factor = 1.0 - 1.0 / 1000.0;
+		return should_adjust ? (sdl_rate + 1) * sdi_factor : sdl_rate;
+	};
+
+	// To be populated in the switch
+	auto rate = 0.0;              // refresh rate as a floating point number
+	const char *rate_description; // description of the refresh rate
+
+	switch (sdl.desktop.host_rate_mode) {
+	case HOST_RATE_MODE::AUTO:
+		if (const auto sdl_rate = get_sdl_rate();
+		    sdl.desktop.fullscreen && sdl_rate >= REFRESH_RATE_HOST_VRR_MIN) {
+			rate = get_vrr_rate(sdl_rate);
+			rate_description = "VRR-adjusted (auto)";
+		} else {
+			rate = get_sdi_rate(sdl_rate);
+			rate_description = "standard SDI (auto)";
+		}
+		break;
+	case HOST_RATE_MODE::SDI:
+		rate = get_sdi_rate(get_sdl_rate());
+		rate_description = "standard SDI";
+		break;
+	case HOST_RATE_MODE::VRR:
+		rate = get_vrr_rate(get_sdl_rate());
+		rate_description = "VRR-adjusted";
+		break;
+	case HOST_RATE_MODE::CUSTOM:
+		assert(sdl.desktop.preferred_host_rate >= REFRESH_RATE_MIN);
+		rate = sdl.desktop.preferred_host_rate;
+		rate_description = "custom";
+		break;
+	}
+	assert(rate >= REFRESH_RATE_MIN);
+
+	// Log if changed
+	static auto last_int_rate = 0;
+	const auto int_rate = static_cast<int>(rate);
+	if (last_int_rate != int_rate) {
+		last_int_rate = int_rate;
+		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
+		        rate_description, rate);
+	}
+	return rate;
 }
 
 /* This function is SDL_EventFilter which is being called when event is
@@ -2976,6 +3044,25 @@ static void GUI_StartUp(Section *sec)
 		}
 	}
 
+	const std::string host_rate_pref = section->Get_string("host_rate");
+	if (host_rate_pref == "auto")
+		sdl.desktop.host_rate_mode = HOST_RATE_MODE::AUTO;
+	else if (host_rate_pref == "sdi")
+		sdl.desktop.host_rate_mode = HOST_RATE_MODE::SDI;
+	else if (host_rate_pref == "vrr")
+		sdl.desktop.host_rate_mode = HOST_RATE_MODE::VRR;
+	else {
+		const auto rate = to_finite<double>(host_rate_pref);
+		if (std::isfinite(rate) && rate >= REFRESH_RATE_MIN) {
+			sdl.desktop.host_rate_mode = HOST_RATE_MODE::CUSTOM;
+			sdl.desktop.preferred_host_rate = rate;
+		} else {
+			LOG_WARNING("SDL: Invalid host_rate value '%s', using auto",
+			            host_rate_pref.c_str());
+			sdl.desktop.host_rate_mode = HOST_RATE_MODE::AUTO;
+		}
+	}
+
 	// TODO vsync option is disabled for the time being, as it does not work
 	//      correctly and is causing serious bugs.
 	sdl.desktop.vsync = section->Get_bool("vsync");
@@ -3605,6 +3692,21 @@ void Config_Add_SDL() {
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
+	pstring = sdl_sec->Add_path("max_resolution", always, "auto");
+	pstring->Set_help(
+	        "Optionally restricts the viewport resolution within the window/screen:\n"
+	        "  auto:      The viewport fills the window/screen (default).\n"
+	        "  <custom>:  Set max viewport resolution in WxH format.\n"
+	        "             For example: 960x720");
+
+	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
+	pstring->Set_help(
+	        "Set the host's refresh rate:\n"
+	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.\n"
+	        "  sdi:       Use serial device interface (SDI) rates, without further adjustment.\n"
+	        "  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).\n"
+	        "  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.");
+
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
 	        "Synchronize with display refresh rate if supported. This can\n"
@@ -3614,13 +3716,6 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
 	               "the next frame. 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
-
-	pstring = sdl_sec->Add_path("max_resolution", always, "auto");
-	pstring->Set_help(
-	        "Optionally restricts the viewport resolution within the window/screen:\n"
-	        "  auto:      The viewport fills the window/screen (default).\n"
-	        "  <custom>:  Set max viewport resolution in WxH format.\n"
-	        "             For example: 960x720");
 
 	const char *outputs[] =
 	{ "surface",
