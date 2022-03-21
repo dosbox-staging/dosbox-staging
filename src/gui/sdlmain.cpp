@@ -896,7 +896,7 @@ static void safe_set_window_size(const int w, const int h)
 	std::swap(sdl.draw.callback, saved_callback);
 }
 
-static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
+static Pacer render_pacer("Render", 7000, Pacer::LogLevel::TIMEOUTS);
 
 static void remove_window()
 {
@@ -4236,13 +4236,6 @@ int sdl_main(int argc, char *argv[])
 		control->Init();
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
-
-		render_pacer.SetTimeout(sdl.desktop.vsync_skip);
-
-		const auto pacer_log_level = sdl.desktop.vsync
-		                                     ? Pacer::LogLevel::NOTHING
-		                                     : Pacer::LogLevel::TIMEOUTS;
-		render_pacer.SetLogLevel(pacer_log_level);
 
 		if (control->cmdline->FindExist("-fullscreen") ||
 		    sdl_sec->Get_bool("fullscreen")) {
