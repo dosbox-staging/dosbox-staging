@@ -401,6 +401,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	else
 		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 
+	VGA_SetRatePreference(section->Get_string("dos_rate"));
+
 	CPU_AllowSpeedMods = section->Get_bool("speed_mods");
 	LOG_MSG("SYSTEM: Speed modifications are %s",
 	        CPU_AllowSpeedMods ? "enabled" : "disabled");
@@ -477,6 +479,14 @@ void DOSBOX_Init() {
 	pstring->Set_values(vmemsize_choices);
 	pstring->Set_help(
 	        "Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.");
+
+	pstring = secprop->Add_string("dos_rate", when_idle, "default");
+	pstring->Set_help(
+	        "Customize the emulated video mode's frame rate, in Hz:\n"
+	        "default:  The DOS video mode determines the rate (recommended).\n"
+	        "host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
+	        "<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
+	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
 
 	const char *vesa_modes_choices[] = {"compatible", "all", 0};
 	Pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
