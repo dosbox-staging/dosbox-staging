@@ -927,9 +927,27 @@ static void log_display_properties(int in_x,
 
 	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
 
-	LOG_MSG("DISPLAY: %s %dx%d%s (mode %Xh) scaling by %.1fx%.1f to %dx%d with %#.3g pixel-aspect",
-	        type_name, in_x, in_y, type_colours, CurMode->mode, scale_x,
-	        scale_y, out_x, out_y, out_par);
+	const char *frame_mode = nullptr;
+	switch (sdl.frame.mode) {
+	case FRAME_MODE::CFR: frame_mode = "CFR"; break;
+	case FRAME_MODE::VFR: frame_mode = "VFR"; break;
+	case FRAME_MODE::SYNCED_CFR: frame_mode = "synced CFR"; break;
+	case FRAME_MODE::THROTTLED_VFR: frame_mode = "throttled VFR"; break;
+	case FRAME_MODE::UNSET: break;
+	}
+	assert(frame_mode);
+
+	// Some DOS FPS rates are double-scanned in hardware, so multiply them
+	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
+	auto refresh_rate = VGA_GetPreferredRate();
+	const auto double_scanned_str = (refresh_rate <= REFRESH_RATE_DOS_DOUBLED_MAX)
+	                                        ? "double-scanned "
+	                                        : "";
+	LOG_MSG("DISPLAY: %s %dx%d%s (%Xh) at %s%2.5g Hz %s, scaled"
+	        " by %.1fx%.1f to %dx%d with %#.2g pixel-aspect",
+	        type_name, in_x, in_y, type_colours, CurMode->mode,
+	        double_scanned_str, refresh_rate, frame_mode, scale_x, scale_y,
+	        out_x, out_y, out_par);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -1429,10 +1447,12 @@ finish:
 		SDL_SetWindowMinimumSize(sdl.window, w, h);
 	}
 
-	if (sdl.draw.has_changed)
+	if (sdl.draw.has_changed) {
+		setup_presentation_mode(sdl.frame.mode);
 		log_display_properties(sdl.draw.width, sdl.draw.height,
 		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
 		                       sdl.pp_scale, fullscreen, width, height);
+	}
 
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
@@ -2345,6 +2365,14 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
 	GFX_ResetScreen();
 	FocusInput();
+	setup_presentation_mode(sdl.frame.mode);
+	log_display_properties(sdl.draw.width, sdl.draw.height,
+	                       sdl.draw.pixel_aspect, sdl.scaling_mode,
+	                       sdl.pp_scale, sdl.desktop.fullscreen,
+	                       sdl.desktop.fullscreen ? sdl.desktop.full.width
+	                                              : sdl.desktop.window.width,
+	                       sdl.desktop.fullscreen ? sdl.desktop.full.height
+	                                              : sdl.desktop.window.height);
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -2410,120 +2438,29 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
-void GFX_EndUpdate(const Bit16u *changedLines)
+void GFX_EndUpdate(const uint16_t *changedLines)
 {
-	if (!sdl.update_display_contents)
-		return;
-#if C_OPENGL
-	const bool using_opengl = (sdl.desktop.type == SCREEN_OPENGL);
-#else
-	const bool using_opengl = false;
-#endif
-	if (!using_opengl && !sdl.updating)
-		return;
-	[[maybe_unused]] bool actually_updating = sdl.updating;
-	sdl.updating = false;
-	switch (sdl.desktop.type) {
-	case SCREEN_TEXTURE: {
-		assert(sdl.texture.texture);
-		assert(sdl.texture.input_surface);
-		if (render_pacer.CanRun()) {
-			SDL_UpdateTexture(sdl.texture.texture,
-			                  nullptr, // update entire texture
-			                  sdl.texture.input_surface->pixels,
-			                  sdl.texture.input_surface->pitch);
-			SDL_RenderClear(sdl.renderer);
-			SDL_RenderCopy(sdl.renderer, sdl.texture.texture,
-			               nullptr, &sdl.clip);
-			SDL_RenderPresent(sdl.renderer);
-		}
-		render_pacer.Checkpoint();
-	} break;
-#if C_OPENGL
-	case SCREEN_OPENGL:
-		// Clear drawing area. Some drivers (on Linux) have more than 2 buffers and the screen might
-		// be dirty because of other programs.
-		if (!actually_updating) {
-			/* Don't really update; Just increase the frame counter.
-			 * If we tried to update it may have not worked so well
-			 * with VSync...
-			 * (Think of 60Hz on the host with 70Hz on the client.)
-			 */
-			sdl.opengl.actual_frame_count++;
-			return;
-		}
-		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (sdl.opengl.pixel_buffer_object) {
-			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
-			                sdl.draw.height, GL_BGRA_EXT,
-			                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		} else if (changedLines) {
-			int y = 0;
-			size_t index = 0;
-			while (y < sdl.draw.height) {
-				if (!(index & 1)) {
-					y += changedLines[index];
-				} else {
-					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
-					int height = changedLines[index];
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-					                sdl.draw.width, height,
-					                GL_BGRA_EXT,
-					                GL_UNSIGNED_INT_8_8_8_8_REV,
-					                pixels);
-					y += height;
-				}
-				index++;
-			}
-		} else {
-			return;
-		}
+	sdl.frame.update(changedLines);
 
-		if (render_pacer.CanRun()) {
-			if (sdl.opengl.program_object) {
-				glUniform1i(sdl.opengl.ruby.frame_count,
-				            sdl.opengl.actual_frame_count++);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-			} else {
-				glCallList(sdl.opengl.displaylist);
-			}
-			SDL_GL_SwapWindow(sdl.window);
-		}
-		render_pacer.Checkpoint();
+	const auto frame_is_new = sdl.update_display_contents && sdl.updating;
+
+	switch (sdl.frame.mode) {
+	case FRAME_MODE::CFR:
+		maybe_present_synced(frame_is_new);
 		break;
-#endif
-	case SCREEN_SURFACE:
-		if (changedLines) {
-			int y = 0;
-			size_t index = 0;
-			size_t rect_count = 0;
-			while (y < sdl.draw.height) {
-				if (!(index & 1)) {
-					y += changedLines[index];
-				} else {
-					SDL_Rect *rect = &sdl.updateRects[rect_count++];
-					rect->x = sdl.clip.x;
-					rect->y = sdl.clip.y + y;
-					rect->w = sdl.draw.width;
-					rect->h = changedLines[index];
-					y += changedLines[index];
-				}
-				index++;
-			}
-			if (rect_count) {
-				if (render_pacer.CanRun()) {
-					SDL_UpdateWindowSurfaceRects(sdl.window,
-					                             sdl.updateRects,
-					                             rect_count);
-				}
-				render_pacer.Checkpoint();
-			}
-		}
+	case FRAME_MODE::VFR:
+		if (frame_is_new)
+			sdl.frame.present();
+		break;
+	case FRAME_MODE::THROTTLED_VFR:
+		maybe_present_throttled(frame_is_new);
+		break;
+	// Synced CFR is started when the presetation mode is setup
+	case FRAME_MODE::SYNCED_CFR:
+	case FRAME_MODE::UNSET:
 		break;
 	}
+	sdl.updating = false;
 }
 
 // Texture update and presentation
