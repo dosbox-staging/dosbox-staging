@@ -229,6 +229,14 @@ enum SCREEN_TYPES	{
 #endif
 };
 
+enum class FRAME_MODE {
+	UNSET,
+	CFR,        // constant frame rate, as defined by the emulated system
+	VFR,        // variable frame rate, as defined by the emulated system
+	SYNCED_CFR, // constant frame rate, synced with the display's refresh rate
+	THROTTLED_VFR, // variable frame rate, throttled to the display's rate
+};
+
 enum class HOST_RATE_MODE {
 	AUTO,
 	SDI, // serial digital interface
@@ -327,6 +335,20 @@ private:
 
 /* Alias for indicating, that new window should not be user-resizable: */
 constexpr bool FIXED_SIZE = false;
+
+// Texture buffer and presentation functions and type-defines
+using update_frame_buffer_f = void(const uint16_t *);
+using present_frame_f = bool();
+static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines);
+static bool present_frame_texture();
+#if C_OPENGL
+static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines);
+static void update_frame_gl_fb(const uint16_t *changedLines);
+static bool present_frame_gl();
+#endif
+static void update_frame_surface(const uint16_t *changedLines);
+constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
+static inline bool present_frame_noop() { return true; }
 
 struct SDL_Block {
 	bool initialized = false;
@@ -433,6 +455,16 @@ struct SDL_Block {
 		SDL_Texture *texture = nullptr;
 		SDL_PixelFormat *pixelFormat = nullptr;
 	} texture = {};
+	struct {
+		present_frame_f *present = present_frame_noop;
+		update_frame_buffer_f *update = update_frame_noop;
+		FRAME_MODE desired_mode = FRAME_MODE::UNSET;
+		FRAME_MODE mode = FRAME_MODE::UNSET;
+		double period_ms = 0.0; // in ms, for use with PIC timers
+		int period_us = 0;      // same but in us, for use with chrono
+		int period_us_early = 0;
+		int period_us_late = 0;
+	} frame = {};
 	struct {
 		int xsensitivity = 0;
 		int ysensitivity = 0;
@@ -937,8 +969,24 @@ static const VsyncPreference &get_vsync_preference()
 	                              : sdl.vsync.when_windowed;
 }
 
+static void save_rate_to_frame_period(const double rate_hz)
+{
+	assert(rate_hz > 0);
+	// backoff by one-onethousandth to avoid hitting the vsync edge
+	sdl.frame.period_ms = 1'001.0 / rate_hz;
+	const auto period_us = sdl.frame.period_ms * 1'000;
+	sdl.frame.period_us = static_cast<int>(period_us);
+	// Permit the frame period to be off by up to 90% before "out of sync"
+	sdl.frame.period_us_early = static_cast<int>(55 * period_us / 100);
+	sdl.frame.period_us_late = static_cast<int>(145 * period_us / 100);
+}
+
 static int benchmark_presentation_rate()
 {
+	// If the presentation function is empty, then we can't benchmark
+	assert(sdl.frame.present != present_frame_noop ||
+	       sdl.frame.update != update_frame_noop);
+
 	// Number of frames to benchmark
 	const auto warmup_frames = 10;
 	const auto bench_frames = 4;
@@ -947,12 +995,14 @@ static int benchmark_presentation_rate()
 	render_pacer.SetTimeout(0);
 	// Warmup round
 	for (auto i = 0; i < warmup_frames; ++i) {
-		GFX_EndUpdate(nullptr);
+		sdl.frame.update(nullptr);
+		sdl.frame.present();
 	}
 	// Measured round
 	const auto start_us = GetTicksUs();
 	for (auto frame = 0; frame < bench_frames; ++frame) {
-		GFX_EndUpdate(nullptr);
+		sdl.frame.update(nullptr);
+		sdl.frame.present();
 	}
 	return (bench_frames * 1'000'000) / GetTicksUsSince(start_us);
 }
@@ -1110,6 +1160,167 @@ static void remove_window()
 		SDL_DestroyWindow(sdl.window);
 		sdl.window = nullptr;
 	}
+}
+
+// The throttled presenter skip frames that have an inter-frame spaces more
+// narrow than the allowed frame period.
+static void maybe_present_throttled(const bool frame_is_new)
+{
+	static bool last_frame_shown = false;
+	if (!frame_is_new && last_frame_shown)
+		return;
+
+	const auto now = GetTicksUs();
+	static int64_t last_present_time = 0;
+	const auto elapsed = now - last_present_time;
+	if (elapsed >= sdl.frame.period_us) {
+		// If we waited beyond this frame's refresh period, then credit
+		// this extra wait back by deducting it from the recorded time.
+		const auto wait_overage = elapsed % sdl.frame.period_us;
+		last_present_time = now - (9 * wait_overage / 10);
+		last_frame_shown = sdl.frame.present();
+	} else {
+		last_frame_shown = false;
+	}
+}
+
+static void maybe_present_synced(const bool present_if_last_skipped)
+{
+	// state tracking across runs
+	static bool last_frame_shown = false;
+	static int64_t last_sync_time = 0;
+
+	const auto now = GetTicksUs();
+
+	const auto scheduler_arrival = GetTicksDiff(now, last_sync_time);
+
+	const auto on_time = scheduler_arrival > sdl.frame.period_us_early &&
+	                     scheduler_arrival < sdl.frame.period_us_late;
+
+	const auto should_present = on_time ||
+	                            (present_if_last_skipped && !last_frame_shown);
+
+	last_frame_shown = should_present ? sdl.frame.present() : false;
+
+	last_sync_time = should_present ? GetTicksUs() : now;
+}
+
+static void schedule_synced([[maybe_unused]] const uint32_t event_id = 0)
+{
+	if (sdl.frame.mode != FRAME_MODE::SYNCED_CFR)
+		return;
+
+	constexpr bool present_if_last_skipped = false;
+	maybe_present_synced(present_if_last_skipped);
+	PIC_RemoveEvents(schedule_synced);
+	PIC_AddEvent(schedule_synced, sdl.frame.period_ms);
+}
+
+static void setup_presentation_mode(FRAME_MODE &previous_mode)
+{
+	// Always get the reported refresh rate and hint the VGA side with it
+	// This ensures the VGA side always has the host's rate to prior to
+	// its next mode change.
+	const auto host_rate = get_host_refresh_rate();
+	if (host_rate >= REFRESH_RATE_MIN)
+		VGA_SetHostRate(host_rate);
+	const auto dos_rate = VGA_GetPreferredRate();
+
+	// Frame rates are defined up to the 3rd decimal place, so compare on
+	// the fourth.
+	auto atleast_as_fast = [](const double a, const double b) {
+		constexpr auto threshold = 0.0001;
+		return a > b - threshold;
+	};
+
+	auto configure_cfr_mode = [&]() -> FRAME_MODE {
+		if (atleast_as_fast(dos_rate, REFRESH_RATE_HOST_VRR_LFC) ||
+		    !atleast_as_fast(host_rate, REFRESH_RATE_HOST_VRR_MIN)) {
+			const auto lesser_rate = std::min(host_rate, dos_rate);
+			save_rate_to_frame_period(lesser_rate);
+			return atleast_as_fast(host_rate, dos_rate)
+			               ? FRAME_MODE::CFR
+			               : FRAME_MODE::SYNCED_CFR;
+		}
+		assert(!atleast_as_fast(dos_rate, REFRESH_RATE_HOST_VRR_LFC));
+		const auto doubled_dos_rate = dos_rate * 2;
+		const auto lesser_rate = std::min(doubled_dos_rate, host_rate);
+		save_rate_to_frame_period(lesser_rate);
+		return atleast_as_fast(host_rate, doubled_dos_rate)
+		               ? FRAME_MODE::CFR
+		               : FRAME_MODE::SYNCED_CFR;
+	};
+
+	auto configure_vfr_mode = [&]() {
+		const auto bench_rate = get_vsync_preference().benchmarked_rate;
+		const auto lesser_rate = std::min(host_rate, dos_rate);
+		save_rate_to_frame_period(lesser_rate);
+		const auto is_fast_enough = sdl.vsync.current != VSYNC_STATE::ON &&
+		                            atleast_as_fast(bench_rate, dos_rate);
+		const auto wont_hit_vsync_wall = sdl.vsync.current != VSYNC_STATE::OFF &&
+		                                 atleast_as_fast(host_rate, dos_rate);
+		return (is_fast_enough || wont_hit_vsync_wall)
+		               ? FRAME_MODE::VFR
+		               : FRAME_MODE::THROTTLED_VFR;
+	};
+
+	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
+
+	const bool wants_vsync = sdl.vsync.current == VSYNC_STATE::ON ||
+	                         get_vsync_preference().requested == VSYNC_STATE::ON;
+
+	// to be set below
+	auto mode = FRAME_MODE::UNSET;
+
+	// Manual full CFR
+	if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
+		if (configure_cfr_mode() != FRAME_MODE::CFR && !in_text_mode && wants_vsync) {
+			LOG_WARNING("SDL: CFR performance warning: the DOS rate of %2.5g"
+			            " Hz exceeds the host's %2.5g Hz vsynced rate",
+			            dos_rate, host_rate);
+		}
+		mode = sdl.frame.desired_mode;
+
+	}
+	// Manual full VFR
+	else if (sdl.frame.desired_mode == FRAME_MODE::VFR) {
+		if (configure_vfr_mode() != FRAME_MODE::VFR && !in_text_mode) {
+			LOG_WARNING("SDL: VFR performance warning: the DOS rate of %2.5g"
+			            " Hz exceeds the host's %2.5g Hz handling rate",
+			            dos_rate, host_rate);
+		}
+		mode = sdl.frame.desired_mode;
+	}
+	// Auto CFR
+	else if (wants_vsync) {
+		mode = configure_cfr_mode();
+	}
+	// Auto VFR
+	else {
+		mode = configure_vfr_mode();
+	}
+
+	// Text-mode mode on a standard system: just use VFR
+	if (in_text_mode && !atleast_as_fast(host_rate, REFRESH_RATE_HOST_VRR_MIN)) {
+		mode = FRAME_MODE::VFR;
+		save_rate_to_frame_period(dos_rate);
+	}
+
+	// If the mode is unchanged, do nothing
+	assert(mode != FRAME_MODE::UNSET);
+	if (previous_mode == mode)
+		return;
+	previous_mode = mode;
+
+	// Configure the pacer. We only use it for VFR modes because CFR modes
+	// determine if the frame is presented based on the scheduler's accuracy.
+	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
+	                         mode == FRAME_MODE::THROTTLED_VFR;
+	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
+
+	// Start synced presentation, if applicable
+	if (mode == FRAME_MODE::SYNCED_CFR)
+		schedule_synced();
 }
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -1609,6 +1820,10 @@ dosurface:
 		changing between modes with different dimensions */
 		SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 		SDL_UpdateWindowSurface(sdl.window);
+
+		sdl.frame.update = update_frame_surface;
+		sdl.frame.present = present_frame_noop; // surface presents during the update
+
 		sdl.desktop.type = SCREEN_SURFACE;
 		break; // SCREEN_SURFACE
 
@@ -1679,6 +1894,9 @@ dosurface:
 		
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
+
+		sdl.frame.update = update_frame_texture;
+		sdl.frame.present = present_frame_texture;
 
 		sdl.desktop.type = SCREEN_TEXTURE;
 		break; // SCREEN_TEXTURE
@@ -1948,8 +2166,14 @@ dosurface:
 		OPENGL_ERROR("End of setsize");
 
 		retFlags = GFX_CAN_32 | GFX_SCALING;
-		if (sdl.opengl.pixel_buffer_object)
+		if (sdl.opengl.pixel_buffer_object) {
 			retFlags |= GFX_HARDWARE;
+			sdl.frame.update = update_frame_gl_pbo;
+		} else {
+			sdl.frame.update = update_frame_gl_fb;
+		}
+		// Both update mechanisms use the same presentation call
+		sdl.frame.present = present_frame_gl;
 
 		sdl.desktop.type = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
@@ -2299,6 +2523,124 @@ void GFX_EndUpdate(const Bit16u *changedLines)
 			}
 		}
 		break;
+	}
+}
+
+// Texture update and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
+{
+	if (sdl.update_display_contents) {
+		SDL_UpdateTexture(sdl.texture.texture,
+		                  nullptr, // update entire texture
+		                  sdl.texture.input_surface->pixels,
+		                  sdl.texture.input_surface->pitch);
+	}
+}
+
+static bool present_frame_texture()
+{
+	const auto is_presenting = render_pacer.CanRun();
+	if (is_presenting) {
+		SDL_RenderClear(sdl.renderer);
+		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, &sdl.clip);
+		SDL_RenderPresent(sdl.renderer);
+	}
+	render_pacer.Checkpoint();
+	return is_presenting;
+}
+
+// OpenGL PBO-based update, frame-based update, and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#if C_OPENGL
+static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines)
+{
+	if (sdl.updating) {
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
+		                sdl.draw.height, GL_BGRA_EXT,
+		                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+	} else {
+		sdl.opengl.actual_frame_count++;
+	}
+}
+
+static void update_frame_gl_fb(const uint16_t *changedLines)
+{
+	if (changedLines) {
+		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
+		const auto pitch = sdl.opengl.pitch;
+		int y = 0;
+		size_t index = 0;
+		while (y < sdl.draw.height) {
+			if (!(index & 1)) {
+				y += changedLines[index];
+			} else {
+				const uint8_t *pixels = framebuf + y * pitch;
+				const int height = changedLines[index];
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
+				                sdl.draw.width, height, GL_BGRA_EXT,
+				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+				y += height;
+			}
+			index++;
+		}
+	} else {
+		sdl.opengl.actual_frame_count++;
+	}
+}
+
+static bool present_frame_gl()
+{
+	const auto is_presenting = render_pacer.CanRun();
+	if (is_presenting) {
+		glClear(GL_COLOR_BUFFER_BIT);
+		if (sdl.opengl.program_object) {
+			glUniform1i(sdl.opengl.ruby.frame_count,
+			            sdl.opengl.actual_frame_count++);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		} else {
+			glCallList(sdl.opengl.displaylist);
+		}
+		SDL_GL_SwapWindow(sdl.window);
+	}
+	render_pacer.Checkpoint();
+	return is_presenting;
+}
+#endif
+
+// Surface update & presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+static void update_frame_surface([[maybe_unused]] const uint16_t *changedLines)
+{
+	// Changed lines are "streamed in" over multiple ticks - so important
+	// we don't ignore or skip this content (otherwise parts of the image
+	// won't be updated). So no matter, we always processed these changes,
+	// even if we don't have to render a frame this pass.  The content is
+	// updated in a persistent buffer.
+	if (changedLines) {
+		int y = 0;
+		size_t index = 0;
+		int16_t rect_count = 0;
+		auto *rect = sdl.updateRects;
+		assert(rect);
+		while (y < sdl.draw.height) {
+			if (index & 1) {
+				rect->x = sdl.clip.x;
+				rect->y = sdl.clip.y + y;
+				rect->w = sdl.draw.width;
+				rect->h = changedLines[index];
+				rect++;
+				rect_count++;
+			}
+			y += changedLines[index];
+			index++;
+		}
+		if (rect_count) {
+			SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects,
+			                             rect_count);
+		}
 	}
 }
 
@@ -3294,6 +3636,20 @@ static void GUI_StartUp(Section *sec)
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = 0;
 	}
+	
+	const std::string presentation_mode_pref = section->Get_string(
+	        "presentation_mode");
+	if (presentation_mode_pref == "auto")
+		sdl.frame.desired_mode = FRAME_MODE::UNSET;
+	else if (presentation_mode_pref == "cfr")
+		sdl.frame.desired_mode = FRAME_MODE::CFR;
+	else if (presentation_mode_pref == "vfr")
+		sdl.frame.desired_mode = FRAME_MODE::VFR;
+	else {
+		sdl.frame.desired_mode = FRAME_MODE::UNSET;
+		LOG_WARNING("SDL: Invalid presentation_mode value '%s'",
+		            presentation_mode_pref.c_str());
+	}
 
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
@@ -3935,6 +4291,16 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
 	               "the next frame. 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
+
+	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
+	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
+	pstring->Set_help(
+	        "Optionally select the frame presentation mode:\n"
+	        "  auto:  Intelligently time and drop frames to prevent\n"
+	        "         emulation stalls, based on host and DOS frame rates.\n"
+	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
+	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
+	pstring->Set_values(presentation_modes);
 
 	const char *outputs[] =
 	{ "surface",
