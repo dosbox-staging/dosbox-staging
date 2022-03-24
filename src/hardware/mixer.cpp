@@ -318,7 +318,11 @@ void MixerChannel::AddSilence()
 			freq_counter = FREQ_NEXT;
 		} else {
 			bool stereo = last_samples_were_stereo;
-			//Position where to write the data
+
+			const auto mapped_output_left = output_map.left;
+			const auto mapped_output_right = output_map.right;
+
+			// Position where to write the data
 			auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 			while (done < needed) {
 				// Maybe depend on sample rate. (the 4)
@@ -331,8 +335,12 @@ void MixerChannel::AddSilence()
 
 				mixpos &= MIXER_BUFMASK;
 
-				mixer.work[mixpos][0] += prev_sample[0] * volmul[0];
-				mixer.work[mixpos][1] += (stereo ? prev_sample[1] : prev_sample[0]) * volmul[1];
+				mixer.work[mixpos][mapped_output_left] +=
+				        prev_sample[0] * volmul[0];
+
+				mixer.work[mixpos][mapped_output_right] +=
+				        (stereo ? prev_sample[1] : prev_sample[0]) *
+				        volmul[1];
 
 				prev_sample[0] = next_sample[0];
 				prev_sample[1] = next_sample[1];
@@ -382,13 +390,16 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 
 	last_samples_were_stereo = stereo;
 
-	//Position where to write the data
+	// Position where to write the data
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 	//Position in the incoming data
 	work_index_t pos = 0;
 
 	// read-only aliases to avoid repeated dereferencing and to inform the compiler their values
 	// don't change
+	const auto mapped_output_left = output_map.left;
+	const auto mapped_output_right = output_map.right;
+
 	const auto mapped_channel_left = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
@@ -516,24 +527,29 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 		//Where to write
 		mixpos &= MIXER_BUFMASK;
 		if (!interpolate) {
-			mixer.work[mixpos][0] += prev_sample[mapped_channel_left] * volmul[0];
-			mixer.work[mixpos][1] += (stereo ? prev_sample[mapped_channel_right]
-			                                 : prev_sample[mapped_channel_left]) *
-			                         volmul[1];
+
+			mixer.work[mixpos][mapped_output_left] +=
+			        prev_sample[mapped_channel_left] * volmul[0];
+
+			mixer.work[mixpos][mapped_output_right] +=
+			        (stereo ? prev_sample[mapped_channel_right]
+			                : prev_sample[mapped_channel_left]) *
+			        volmul[1];
+
 		} else {
 			const auto diff_mul = freq_counter & FREQ_MASK;
 			auto sample = prev_sample[mapped_channel_left] +
 			              (((next_sample[mapped_channel_left] - prev_sample[mapped_channel_left]) *
 			                diff_mul) >>
 			               FREQ_SHIFT);
-			mixer.work[mixpos][0] += sample * volmul[0];
+			mixer.work[mixpos][mapped_output_left] += sample * volmul[0];
 			if (stereo) {
 				sample = prev_sample[mapped_channel_right] +
 				         (((next_sample[mapped_channel_right] - prev_sample[mapped_channel_right]) *
 				           diff_mul) >>
 				          FREQ_SHIFT);
 			}
-			mixer.work[mixpos][1] += sample * volmul[1];
+			mixer.work[mixpos][mapped_output_right] += sample * volmul[1];
 		}
 		//Prepare for next sample
 		freq_counter += freq_add;
@@ -560,6 +576,11 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 	auto pos = 0;
 
+	// read-only aliases to avoid dereferencing and inform compiler their
+	// values don't change
+	const auto mapped_output_left = output_map.left;
+	const auto mapped_output_right = output_map.right;
+
 	while (outlen--) {
 		const auto new_pos = index >> FREQ_SHIFT;
 		if (pos != new_pos) {
@@ -573,8 +594,8 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
 		const auto sample = prev_sample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][0] += sample * volmul[0];
-		mixer.work[mixpos][1] += sample * volmul[1];
+		mixer.work[mixpos][mapped_output_left] += sample * volmul[0];
+		mixer.work[mixpos][mapped_output_right] += sample * volmul[1];
 		mixpos++;
 	}
 
@@ -656,6 +677,41 @@ void MixerChannel::FillUp()
 	MIXER_LockAudioDevice();
 	Mix(check_cast<uint16_t>(static_cast<int64_t>(index * mixer.needed)));
 	MIXER_UnlockAudioDevice();
+}
+
+std::string_view MixerChannel::DescribeLineout() const
+{
+	std::string_view description;
+
+	if (output_map == STEREO)
+		description = "Stereo";
+	else if (output_map == REVERSE)
+		description = "Reverse";
+	else if (output_map == LEFT_MONO)
+		description = "LeftMono";
+	else if (output_map == RIGHT_MONO)
+		description = "RightMono";
+
+	assert(description.length());
+	return description;
+}
+
+bool MixerChannel::ChangeLineoutMap(std::string choice)
+{
+	lowcase(choice);
+
+	if (choice == "stereo")
+		output_map = STEREO;
+	else if (choice == "reverse")
+		output_map = REVERSE;
+	else if (choice == "leftmono")
+		output_map = LEFT_MONO;
+	else if (choice == "rightmono")
+		output_map = RIGHT_MONO;
+	else
+		return false;
+
+	return true;
 }
 
 extern bool ticksLocked;
@@ -909,6 +965,9 @@ public:
 		std::unique_lock lock(mixer.channel_mutex);
 		for (auto &[name, channel] : mixer.channels) {
 			if (cmd->FindString(name.c_str(), temp_line, false)) {
+				if (channel->ChangeLineoutMap(temp_line)) {
+					continue;
+				}
 				float left_vol = 0;
 				float right_vol = 0;
 				MakeVolume(&temp_line[0], left_vol, right_vol);
@@ -920,22 +979,31 @@ public:
 
 		if (cmd->FindExist("/NOSHOW"))
 			return;
-		WriteOut("Channel  Main    Main(dB)\n");
-		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
+		WriteOut("Channel  Main      Main(dB)    Rate(Hz)  Lineout mode\n");
+		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],
+		             mixer.freq, "Stereo (always)");
 
 		lock.lock();
 		for (auto &[name, channel] : mixer.channels)
-			ShowVolume(name.c_str(), channel->volmain[0], channel->volmain[1]);
+			ShowSettings(name.c_str(), channel->volmain[0],
+			             channel->volmain[1], channel->GetSampleRate(),
+			             channel->DescribeLineout().data());
 		lock.unlock();
 	}
 
 private:
-	void ShowVolume(const char * name,float vol0,float vol1) {
-		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n", name,
+	void ShowSettings(const char *name,
+	                  const float vol0,
+	                  const float vol1,
+	                  const int rate,
+	                  const char *lineout_mode)
+	{
+		WriteOut("%-8s %3.0f:%-3.0f  %+6.2f:%-+6.2f %6d   %s\n", name,
 		         static_cast<double>(vol0 * 100),
 		         static_cast<double>(vol1 * 100),
 		         static_cast<double>(20 * log(vol0) / log(10.0f)),
-		         static_cast<double>(20 * log(vol1) / log(10.0f)));
+		         static_cast<double>(20 * log(vol1) / log(10.0f)), rate,
+		         lineout_mode);
 	}
 
 	void ListMidi() { MIDI_ListAll(this); }

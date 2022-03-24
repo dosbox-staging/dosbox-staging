@@ -27,6 +27,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <string_view>
 
 #include "envelope.h"
 
@@ -89,9 +90,8 @@ constexpr T Mixer_GetSilentDOSSample()
 enum LINE_INDEX : uint8_t {
 	LEFT = 0,
 	RIGHT = 1,
-	// DOS games didn't support surround sound, but if we up need to
-	// populate extra output channels (if surround sound becomes standard at
-	// the host-level), then then these additional line indexes would go here.
+	// DOS games didn't support surround sound, but if surround sound becomes
+	// standard at the host-level, then additional line indexes would go here.
 };
 
 class MixerChannel {
@@ -105,6 +105,8 @@ public:
 	void SetScale(float f);
 	void SetScale(float _left, float _right);
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
+	bool ChangeLineoutMap(std::string choice);
+	std::string_view DescribeLineout() const;
 	void UpdateVolume();
 	void SetFreq(int _freq);
 	void SetPeakAmplitude(int peak);
@@ -171,7 +173,15 @@ private:
 		LINE_INDEX right = RIGHT;
 		bool operator==(const StereoLine &other) const;
 	};
+
 	static constexpr StereoLine STEREO = {LEFT, RIGHT};
+	static constexpr StereoLine REVERSE = {RIGHT, LEFT};
+	static constexpr StereoLine LEFT_MONO = {LEFT, LEFT};
+	static constexpr StereoLine RIGHT_MONO = {RIGHT, RIGHT};
+
+	// User-configurable that defines how the channel's stereo line maps
+	// into the mixer.
+	StereoLine output_map = STEREO;
 
 	// DOS application-configurable that maps the channels own "left" or
 	// "right" as themselves or vice-versa.
