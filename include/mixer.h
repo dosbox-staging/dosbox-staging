@@ -85,6 +85,15 @@ constexpr T Mixer_GetSilentDOSSample()
 	static_assert(sizeof(T) <= 2, "DOS only produced 8 and 16-bit samples");
 }
 
+// A simple enum to describe the array index associated with a given audio line
+enum LINE_INDEX : uint8_t {
+	LEFT = 0,
+	RIGHT = 1,
+	// DOS games didn't support surround sound, but if we up need to
+	// populate extra output channels (if surround sound becomes standard at
+	// the host-level), then then these additional line indexes would go here.
+};
+
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, const char *name);
@@ -156,6 +165,13 @@ private:
 	// Default to signed 16bit max, however channel's that know their own
 	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
 	int peak_amplitude = MAX_AUDIO;
+
+	struct StereoLine {
+		LINE_INDEX left = LEFT;
+		LINE_INDEX right = RIGHT;
+		bool operator==(const StereoLine &other) const;
+	};
+	static constexpr StereoLine STEREO = {LEFT, RIGHT};
 
 	uint8_t channel_map[2] = {0, 1}; // Output channel mapping
 

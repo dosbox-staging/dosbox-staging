@@ -121,6 +121,11 @@ Bit8u MixTemp[MIXER_BUFSIZE] = {};
 MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name) : envelope(_name), handler(_handler)
 {}
 
+bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
+{
+	return left == other.left && right == other.right;
+}
+
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name);
