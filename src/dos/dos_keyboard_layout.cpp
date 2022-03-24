@@ -304,6 +304,8 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 			tempfile = OpenDosboxFile("keybrd2.sys");
 		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
+		} else if ((start_pos=read_kcl_file("keybrd4.sys",keyboard_file_name,false))) {
+			tempfile = OpenDosboxFile("keybrd4.sys");
 		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,true))) {
 			assert(read_buf_size == 0);
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
@@ -316,6 +318,10 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 			assert(read_buf_size == 0);
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
 				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD4_SYS,keyboard_file_name,true))) {
+			assert(read_buf_size == 0);
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD4_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD4_SYS[ct];
 		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,false))) {
 			assert(read_buf_size == 0);
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
@@ -328,6 +334,10 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 			assert(read_buf_size == 0);
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
 				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD4_SYS,keyboard_file_name,false))) {
+			assert(read_buf_size == 0);
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD4_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD4_SYS[ct];
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return KEYB_FILENOTFOUND;
@@ -667,6 +677,8 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
 		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
+		} else if ((start_pos=read_kcl_file("keybrd4.sys",keyboard_file_name,false))) {
+			tempfile = OpenDosboxFile("keybrd4.sys");
 		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
@@ -691,6 +703,10 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
 				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD4_SYS,keyboard_file_name,false))) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD4_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD4_SYS[ct];
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return 437;
@@ -797,21 +813,68 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
 	size_t found_at_pos = 5;
+	auto get_builtin_codepage = [&](const std::vector<Bit8u> &blob) {
+		cpi_buf_size=blob.size();
+		for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=blob[bct];
+	};
 	if (tempfile==NULL) {
 		// check if build-in codepage is available
+		// reference: https://gitlab.com/FreeDOS/base/cpidos/-/blob/master/DOC/CPIDOS/CODEPAGE.TXT
 		switch (codepage_id) {
 			case 437:	case 850:	case 852:	case 853:	case 857:	case 858:
-						cpi_buf_size=BLOB_EGA_CPX.size();
-						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA_CPX[bct];
-						break;
+				get_builtin_codepage(BLOB_EGA_CPX);
+				break;
+			case 775:	case 859:	case 1116:	case 1117:	case 1118:	case 1119:
+				get_builtin_codepage(BLOB_EGA2_CPX);
+				break;
 			case 771:	case 772:	case 808:	case 855:	case 866:	case 872:
-						cpi_buf_size=BLOB_EGA3_CPX.size();
-						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA3_CPX[bct];
-						break;
-			case 737:	case 851:	case 869:
-						cpi_buf_size=BLOB_EGA5_CPX.size();
-						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA5_CPX[bct];
-						break;
+				get_builtin_codepage(BLOB_EGA3_CPX);
+				break;
+			case 848:	case 849:	case 1125:	case 1131:	case 3012:	case 30010:
+				get_builtin_codepage(BLOB_EGA4_CPX);
+				break;
+			case 113:	case 737:	case 851:	case 869:
+				get_builtin_codepage(BLOB_EGA5_CPX);
+				break;
+			case 899:	case 30008:	case 58210:	case 59829:	case 60258:	case 60853:
+				get_builtin_codepage(BLOB_EGA6_CPX);
+				break;
+			case 30011:	case 30013:	case 30014:	case 30017:	case 30018:	case 30019:
+				get_builtin_codepage(BLOB_EGA7_CPX);
+				break;
+			case 770:	case 773:	case 774:	case 777:	case 778:
+				get_builtin_codepage(BLOB_EGA8_CPX);
+				break;
+			case 860:	case 861:	case 863:	case 865:	case 867:
+				get_builtin_codepage(BLOB_EGA9_CPX);
+				break;
+			case 667:	case 668:	case 790:	case 991:	case 3845:
+				get_builtin_codepage(BLOB_EGA10_CPX);
+				break;
+			case 30000:	case 30001:	case 30004:	case 30007:	case 30009:
+				get_builtin_codepage(BLOB_EGA11_CPX);
+				break;
+			case 30003:	case 30029:	case 30030:	case 58335:
+				get_builtin_codepage(BLOB_EGA12_CPX);
+				break;
+			case 895:	case 30002:	case 58152:	case 59234:	case 62306:
+				get_builtin_codepage(BLOB_EGA13_CPX);
+				break;
+			case 30006:	case 30012:	case 30015:	case 30016:	case 30020:	case 30021:
+				get_builtin_codepage(BLOB_EGA14_CPX);
+				break;
+			case 30023:	case 30024:	case 30025:	case 30026:	case 30027:	case 30028:
+				get_builtin_codepage(BLOB_EGA15_CPX);
+				break;
+			case 3021:	case 30005:	case 30022:	case 30031:	case 30032:
+				get_builtin_codepage(BLOB_EGA16_CPX);
+				break;
+			case 862:	case 864:	case 30034:	case 30033:	case 30039:	case 30040:
+				get_builtin_codepage(BLOB_EGA17_CPX);
+				break;
+			case 856:	case 3846:	case 3848:
+				get_builtin_codepage(BLOB_EGA10_CPX);
+				break;
 			default: 
 				return KEYB_INVALIDCPFILE;
 				break;

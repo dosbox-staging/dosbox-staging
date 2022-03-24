@@ -24,13 +24,29 @@
 #include <vector>
 
 
-extern const std::vector<Bit8u> BLOB_EGA_CPX;
-extern const std::vector<Bit8u> BLOB_EGA3_CPX;
-extern const std::vector<Bit8u> BLOB_EGA5_CPX;
+extern std::vector<Bit8u> BLOB_EGA_CPX;
+extern std::vector<Bit8u> BLOB_EGA2_CPX;
+extern std::vector<Bit8u> BLOB_EGA3_CPX;
+extern std::vector<Bit8u> BLOB_EGA4_CPX;
+extern std::vector<Bit8u> BLOB_EGA5_CPX;
+extern std::vector<Bit8u> BLOB_EGA6_CPX;
+extern std::vector<Bit8u> BLOB_EGA7_CPX;
+extern std::vector<Bit8u> BLOB_EGA8_CPX;
+extern std::vector<Bit8u> BLOB_EGA9_CPX;
+extern std::vector<Bit8u> BLOB_EGA10_CPX;
+extern std::vector<Bit8u> BLOB_EGA11_CPX;
+extern std::vector<Bit8u> BLOB_EGA12_CPX;
+extern std::vector<Bit8u> BLOB_EGA13_CPX;
+extern std::vector<Bit8u> BLOB_EGA14_CPX;
+extern std::vector<Bit8u> BLOB_EGA15_CPX;
+extern std::vector<Bit8u> BLOB_EGA16_CPX;
+extern std::vector<Bit8u> BLOB_EGA17_CPX;
+extern std::vector<Bit8u> BLOB_EGA18_CPX;
 
-extern const std::vector<Bit8u> BLOB_KEYBOARD_SYS;
-extern const std::vector<Bit8u> BLOB_KEYBRD2_SYS;
-extern const std::vector<Bit8u> BLOB_KEYBRD3_SYS;
+extern std::vector<Bit8u> BLOB_KEYBOARD_SYS;
+extern std::vector<Bit8u> BLOB_KEYBRD2_SYS;
+extern std::vector<Bit8u> BLOB_KEYBRD3_SYS;
+extern std::vector<Bit8u> BLOB_KEYBRD4_SYS;
 
 
 #endif // DOSBOX_BLOBS_H

@@ -49,19 +49,7 @@
     <ClCompile Include="..\src\dos\blob_ega_cpx.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\dos\blob_ega3_cpx.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\dos\blob_ega5_cpx.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dos\blob_keyboard_sys.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\dos\blob_keybrd2_sys.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\dos\blob_keybrd3_sys.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
     <ClCompile Include="..\src\dos\cdrom.cpp">

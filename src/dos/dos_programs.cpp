@@ -89,12 +89,29 @@ void Add_VFiles(const bool add_autoexec)
 		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data,
 		               (uint32_t)strlen(autoexec_data));
 	VFILE_Register("CPI", 0, 0, "/");
-	VFILE_Register("EGA.CPX",      (uint8_t *) &BLOB_EGA_CPX[0],      BLOB_EGA_CPX.size(),  "/CPI/");
-	VFILE_Register("EGA3.CPX",     (uint8_t *) &BLOB_EGA3_CPX[0],     BLOB_EGA3_CPX.size(), "/CPI/");
-	VFILE_Register("EGA5.CPX",     (uint8_t *) &BLOB_EGA5_CPX[0],     BLOB_EGA5_CPX.size(), "/CPI/");
-	VFILE_Register("KEYBOARD.SYS", (uint8_t *) &BLOB_KEYBOARD_SYS[0], BLOB_KEYBOARD_SYS.size());
-	VFILE_Register("KEYBRD2.SYS",  (uint8_t *) &BLOB_KEYBRD2_SYS[0],  BLOB_KEYBRD2_SYS.size());
-	VFILE_Register("KEYBRD3.SYS",  (uint8_t *) &BLOB_KEYBRD3_SYS[0],  BLOB_KEYBRD3_SYS.size());
+	VFILE_Register("EGA.CPX",      &BLOB_EGA_CPX[0],      BLOB_EGA_CPX.size(),   "/CPI/");
+	VFILE_Register("EGA2.CPX",     &BLOB_EGA2_CPX[0],     BLOB_EGA2_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA3.CPX",     &BLOB_EGA3_CPX[0],     BLOB_EGA3_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA4.CPX",     &BLOB_EGA4_CPX[0],     BLOB_EGA4_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA5.CPX",     &BLOB_EGA5_CPX[0],     BLOB_EGA5_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA6.CPX",     &BLOB_EGA6_CPX[0],     BLOB_EGA6_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA7.CPX",     &BLOB_EGA7_CPX[0],     BLOB_EGA7_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA8.CPX",     &BLOB_EGA8_CPX[0],     BLOB_EGA8_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA9.CPX",     &BLOB_EGA9_CPX[0],     BLOB_EGA9_CPX.size(),  "/CPI/");
+	VFILE_Register("EGA10.CPX",    &BLOB_EGA10_CPX[0],    BLOB_EGA10_CPX.size(), "/CPI/");
+	VFILE_Register("EGA11.CPX",    &BLOB_EGA11_CPX[0],    BLOB_EGA11_CPX.size(), "/CPI/");
+	VFILE_Register("EGA12.CPX",    &BLOB_EGA12_CPX[0],    BLOB_EGA12_CPX.size(), "/CPI/");
+	VFILE_Register("EGA13.CPX",    &BLOB_EGA13_CPX[0],    BLOB_EGA13_CPX.size(), "/CPI/");
+	VFILE_Register("EGA14.CPX",    &BLOB_EGA14_CPX[0],    BLOB_EGA14_CPX.size(), "/CPI/");
+	VFILE_Register("EGA15.CPX",    &BLOB_EGA15_CPX[0],    BLOB_EGA15_CPX.size(), "/CPI/");
+	VFILE_Register("EGA16.CPX",    &BLOB_EGA16_CPX[0],    BLOB_EGA16_CPX.size(), "/CPI/");
+	VFILE_Register("EGA17.CPX",    &BLOB_EGA17_CPX[0],    BLOB_EGA17_CPX.size(), "/CPI/");
+	VFILE_Register("EGA18.CPX",    &BLOB_EGA18_CPX[0],    BLOB_EGA18_CPX.size(), "/CPI/");
+
+	VFILE_Register("KEYBOARD.SYS", &BLOB_KEYBOARD_SYS[0], BLOB_KEYBOARD_SYS.size());
+	VFILE_Register("KEYBRD2.SYS",  &BLOB_KEYBRD2_SYS[0],  BLOB_KEYBRD2_SYS.size());
+	VFILE_Register("KEYBRD3.SYS",  &BLOB_KEYBRD3_SYS[0],  BLOB_KEYBRD3_SYS.size());
+	VFILE_Register("KEYBRD4.SYS",  &BLOB_KEYBRD4_SYS[0],  BLOB_KEYBRD4_SYS.size());
 }
 
 void DOS_SetupPrograms(void)
