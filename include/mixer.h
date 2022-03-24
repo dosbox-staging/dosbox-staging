@@ -104,7 +104,7 @@ public:
 	void SetVolume(float _left, float _right);
 	void SetScale(float f);
 	void SetScale(float _left, float _right);
-	void MapChannels(Bit8u _left, Bit8u _right);
+	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	void UpdateVolume();
 	void SetFreq(int _freq);
 	void SetPeakAmplitude(int peak);
@@ -173,7 +173,9 @@ private:
 	};
 	static constexpr StereoLine STEREO = {LEFT, RIGHT};
 
-	uint8_t channel_map[2] = {0, 1}; // Output channel mapping
+	// DOS application-configurable that maps the channels own "left" or
+	// "right" as themselves or vice-versa.
+	StereoLine channel_map = STEREO;
 
 	// The RegisterLevelCallBack() assigns this callback that can be used by
 	// the channel's source to manage the stream's level prior to mixing,
