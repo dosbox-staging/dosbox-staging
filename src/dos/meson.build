@@ -1,4 +1,10 @@
 libdos_sources = files([
+  'blob_ega_cpx.cpp',
+  'blob_ega3_cpx.cpp',
+  'blob_ega5_cpx.cpp',
+  'blob_keyboard_sys.cpp',
+  'blob_keybrd2_sys.cpp',
+  'blob_keybrd3_sys.cpp',
   'cdrom.cpp',
   'cdrom_image.cpp',
   'cdrom_ioctl_linux.cpp',

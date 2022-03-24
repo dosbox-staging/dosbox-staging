@@ -33,9 +33,8 @@ using sv = std::string_view;
 #include "drives.h"
 #include "dos_inc.h"
 
-#include "dos_codepages.h"
+#include "blobs.h"
 #include "dos_keyboard_layout.h"
-#include "dos_keyboard_layout_data.h"
 
 #if defined (WIN32)
 #include <windows.h>
@@ -226,7 +225,8 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 	return 0;
 }
 
-static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* layout_id, bool first_id_only) {
+static Bit32u read_kcl_data(const std::vector<Bit8u> &kcl_data, const char* layout_id, bool first_id_only) {
+
 	// check ID-bytes
 	if ((kcl_data[0]!=0x4b) || (kcl_data[1]!=0x43) || (kcl_data[2]!=0x46)) {
 		return 0;
@@ -235,7 +235,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 	Bit32u dpos=7+kcl_data[6];
 
 	for (;;) {
-		if (dpos+5>kcl_data_size) break;
+		if (dpos+5>kcl_data.size()) break;
 		Bit32u cur_pos=dpos;
 		Bit16u len=host_readw(&kcl_data[dpos]);
 		Bit8u data_len=kcl_data[dpos+2];
@@ -248,7 +248,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
-				if (dpos+1>kcl_data_size) break;
+				if (dpos+1>kcl_data.size()) break;
 				char lc=(char)kcl_data[dpos];
 				dpos++;
 				i++;
@@ -304,24 +304,30 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 			tempfile = OpenDosboxFile("keybrd2.sys");
 		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true))) {
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,true))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBOARD_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD2_SYS,keyboard_file_name,true))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD2_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD2_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD3_SYS,keyboard_file_name,true))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,false))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBOARD_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD2_SYS,keyboard_file_name,false))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD2_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD2_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD3_SYS,keyboard_file_name,false))) {
 			assert(read_buf_size == 0);
-			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return KEYB_FILENOTFOUND;
@@ -661,24 +667,30 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
 		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true))) {
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,true))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBOARD_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD2_SYS,keyboard_file_name,true))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD2_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD2_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD3_SYS,keyboard_file_name,true))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBOARD_SYS,keyboard_file_name,false))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBOARD_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBOARD_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD2_SYS,keyboard_file_name,false))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false))) {
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD2_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD2_SYS[ct];
+		} else if ((start_pos=read_kcl_data(BLOB_KEYBRD3_SYS,keyboard_file_name,false))) {
 			read_buf_size=0;
-			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
+			for (Bitu ct=start_pos+2; ct<BLOB_KEYBRD3_SYS.size(); ct++)
+				read_buf[read_buf_size++]=BLOB_KEYBRD3_SYS[ct];
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return 437;
@@ -788,17 +800,17 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	if (tempfile==NULL) {
 		// check if build-in codepage is available
 		switch (codepage_id) {
-			case 437:	case 850:	case 852:	case 853:	case 857:	case 858:	
-						for (Bitu bct=0; bct<6322; bct++) cpi_buf[bct]=font_ega_cpx[bct];
-						cpi_buf_size=6322;
+			case 437:	case 850:	case 852:	case 853:	case 857:	case 858:
+						cpi_buf_size=BLOB_EGA_CPX.size();
+						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA_CPX[bct];
 						break;
 			case 771:	case 772:	case 808:	case 855:	case 866:	case 872:
-						for (Bitu bct=0; bct<5455; bct++) cpi_buf[bct]=font_ega3_cpx[bct];
-						cpi_buf_size=5455;
+						cpi_buf_size=BLOB_EGA3_CPX.size();
+						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA3_CPX[bct];
 						break;
 			case 737:	case 851:	case 869:
-						for (Bitu bct=0; bct<5720; bct++) cpi_buf[bct]=font_ega5_cpx[bct];
-						cpi_buf_size=5720;
+						cpi_buf_size=BLOB_EGA5_CPX.size();
+						for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=BLOB_EGA5_CPX[bct];
 						break;
 			default: 
 				return KEYB_INVALIDCPFILE;
