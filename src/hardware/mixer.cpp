@@ -132,7 +132,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const ch
 	chan->SetFreq(freq); // also enables 'interpolate' if needed
 	chan->SetScale(1.0);
 	chan->SetVolume(1, 1);
-	chan->MapChannels(0, 1);
+	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
 	const auto mix_rate = mixer.freq;
@@ -214,22 +214,18 @@ void MixerChannel::SetScale(float _left, float _right) {
 	}
 }
 
-void MixerChannel::MapChannels(Bit8u _left, Bit8u _right) {
-	// Constrain mapping to the 0 (left) and 1 (right) channel indexes
-	const Bit8u min_channel(0);
-	const Bit8u max_channel(1);
-	_left =  clamp(_left,  min_channel, max_channel);
-	_right = clamp(_right, min_channel, max_channel);
-	if (channel_map[0] != _left || channel_map[1] != _right) {
-		channel_map[0] = _left;
-		channel_map[1] = _right;
+void MixerChannel::ChangeChannelMap(const LINE_INDEX mapped_as_left,
+                                    const LINE_INDEX mapped_as_right)
+{
+	assert(mapped_as_left == LEFT || mapped_as_left == RIGHT);
+	assert(mapped_as_right == LEFT || mapped_as_right == RIGHT);
+	channel_map = {mapped_as_left, mapped_as_right};
+
 #ifdef DEBUG
-		LOG_MSG("MIXER %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
-		        name,
-		        channel_map[0] == 0 ? "left" : "right",
-		        channel_map[1] == 0 ? "left" : "right");
+	LOG_MSG("MIXER %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
+	        name, channel_map.left == LEFT ? "left" : "right",
+	        channel_map.right == LEFT ? "left" : "right");
 #endif
-	}
 }
 
 void MixerChannel::Enable(const bool should_enable)
@@ -390,7 +386,13 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 	//Position in the incoming data
 	work_index_t pos = 0;
-	//Mix and data for the full length
+
+	// read-only aliases to avoid repeated dereferencing and to inform the compiler their values
+	// don't change
+	const auto mapped_channel_left = channel_map.left;
+	const auto mapped_channel_right = channel_map.right;
+
+	// Mix data for the full length
 	while (1) {
 		//Does new data need to get read?
 		while (freq_counter >= FREQ_NEXT) {
@@ -511,25 +513,25 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, interpolate, prev_sample, next_sample);
 
-		// Apply the left and right channel mappers only on write[..]
-		// assignments.  This ensures the channels are mapped only once
-		//(avoiding double-swapping) and also minimizes the places where
-		// we use our mapping variables as array indexes.
-		// Note that volumes are independent of the channels mapping.
-		const auto left_map(channel_map[0]);
-		const auto right_map(channel_map[1]);
-
 		//Where to write
 		mixpos &= MIXER_BUFMASK;
 		if (!interpolate) {
-			mixer.work[mixpos][0] += prev_sample[left_map] * volmul[0];
-			mixer.work[mixpos][1] += (stereo ? prev_sample[right_map] : prev_sample[left_map]) * volmul[1];
+			mixer.work[mixpos][0] += prev_sample[mapped_channel_left] * volmul[0];
+			mixer.work[mixpos][1] += (stereo ? prev_sample[mapped_channel_right]
+			                                 : prev_sample[mapped_channel_left]) *
+			                         volmul[1];
 		} else {
 			const auto diff_mul = freq_counter & FREQ_MASK;
-			auto sample = prev_sample[left_map] + (((next_sample[left_map] - prev_sample[left_map]) * diff_mul) >> FREQ_SHIFT);
+			auto sample = prev_sample[mapped_channel_left] +
+			              (((next_sample[mapped_channel_left] - prev_sample[mapped_channel_left]) *
+			                diff_mul) >>
+			               FREQ_SHIFT);
 			mixer.work[mixpos][0] += sample * volmul[0];
 			if (stereo) {
-				sample = prev_sample[right_map] + (((next_sample[right_map] - prev_sample[right_map]) * diff_mul) >> FREQ_SHIFT);
+				sample = prev_sample[mapped_channel_right] +
+				         (((next_sample[mapped_channel_right] - prev_sample[mapped_channel_right]) *
+				           diff_mul) >>
+				          FREQ_SHIFT);
 			}
 			mixer.work[mixpos][1] += sample * volmul[1];
 		}
