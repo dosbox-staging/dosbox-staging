@@ -28,6 +28,10 @@ Set initial window position when running in windowed mode:
 :CONFIG_WINDOW_DECORATIONS
 Controls whether to display window decorations in windowed mode.
 .
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
+.
 :CONFIG_VSYNC
 Synchronize with display refresh rate if supported. This can
 reduce flickering and tearing, but may also impact performance.
@@ -86,8 +90,8 @@ while the emulator is running).
 :CONFIG_LANGUAGE
 Select a language to use: de, en, es, fr, it, pl, and ru
 Notes: This setting will override the 'LANG' environment, if set.
-       The 'translations' directory bundled with the executable holds these data
-       files. Please keep it along-side the executable to support this feature.
+       The 'Resources/translations' directory bundled with the executable holds
+       these files. Please keep it along-side the executable to support this feature.
 .
 :CONFIG_MACHINE
 The type of machine DOSBox tries to emulate.
@@ -111,6 +115,11 @@ Controls the selection of VESA 1.2 and 2.0 modes offered:
   all          Offers all modes for a given video memory size, however
                some games may not use them properly (flickering) or may need
                more system memory (mem = ) to use them.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 How autoexec sections are handled from multiple config files.
@@ -222,8 +231,7 @@ Mixer block size, larger blocks might help sound stuttering but sound will also 
 How many milliseconds of data to keep on top of the blocksize.
 .
 :CONFIG_NEGOTIATE
-Allow system audio driver to negotiate optimal rate and blocksize
-as close to the specified values as possible.
+Let the system audio driver negotiate (possibly) better rate and blocksize settings.
 .
 :CONFIG_MIDIDEVICE
 Device that will receive the MIDI data (from the emulated MIDI
@@ -477,6 +485,12 @@ Set DOS version (5.0 by default). Specify as major.minor format.
 A single number is treated as the major version.
 Common settings are 3.3, 5.0, 6.22, and 7.1.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
 Language code of the keyboard layout (or none).
 .
@@ -543,6 +557,18 @@ You can put your MOUNT lines here.
 .
 :CONFIG_SUGGESTED_VALUES
 Possible values
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+No such section or property: %s
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+There is no property "%s" in section "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Correct syntax: config -set "[section] property=value".
+
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 No config file loaded!
@@ -647,18 +673,6 @@ Section "%s" doesn't exist.
 "%s" is not a valid value for property %s.
 
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
-No such section or property.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-There is no property "%s" in section "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Correct syntax: config -set "section property".
-
-.
 :PROGRAM_CONFIG_GET_SYNTAX
 Correct syntax: config -get "section property".
 
@@ -681,10 +695,6 @@ The path "%s" exceeds the DOS maximum length of %d characters
 Executable file not found: %s
 
 .
-:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
-
-.
 :PROGRAM_MOUNT_CDROMS_FOUND
 CDROMs found: %d
 
@@ -697,6 +707,12 @@ Type
 .
 :PROGRAM_MOUNT_STATUS_LABEL
 Label
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
 .
 :PROGRAM_MOUNT_STATUS_2
 Drive %c is mounted as %s
@@ -981,19 +997,19 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
-โ•‘ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.โ•‘
-โ•‘                                                                         โ•‘
-โ•‘ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m โ•‘
-โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.บ
+บ                                                                         บ
+บ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
-โ•‘ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.โ•‘
-โ•‘                                                                      โ•‘
-โ•‘ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  โ•‘
-โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.บ
+บ                                                                      บ
+บ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -1004,42 +1020,47 @@ You can run programs/files with extensions [31m.exe .bat[0m and [31m.com[0m.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+DOSBox provides CD-ROM emulation on two levels.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
-
+The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+and marks the files read-only. Usually this is enough for most games:
 [34;1mmount D C:\example -t cdrom[0m
-
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-
 [34;1mmount D C:\example -t cdrom -label CDLABEL[0m
 
+The [33mnext[0m level adds some low-level support.
+Therefore only works on CD-ROM drives:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+Replace [0;31mD:\[0m with the location of your CD-ROM.
+Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
+[34;1mmount -listcd[0m
+
 Additionally, you can use imgmount to mount iso or cue/bin images:
-
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
-
 [34;1mimgmount D C:\cd.cue -t cdrom[0m
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+DOSBox provides CD-ROM emulation on two levels.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
-
+The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+and marks the files read-only. Usually this is enough for most games:
 [34;1mmount D ~/example -t cdrom[0m
-
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-
 [34;1mmount D ~/example -t cdrom -label CDLABEL[0m
 
+The [33mnext[0m level adds some low-level support.
+Therefore only works on CD-ROM drives:
+[34;1mmount d [0;31m~/example[34;1m -t cdrom -usecd [33m0[0m
+
+Replace [0;31m~/example[0m with the location of your CD-ROM.
+Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
+[34;1mmount -listcd[0m
+
 Additionally, you can use imgmount to mount iso or cue/bin images:
-
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
-
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
@@ -1181,9 +1202,9 @@ Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [-fs iso] [-ide] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
-  [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
+  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
+  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY -ro
+  [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the [37;1mDRIVE[0m's image)
 
 Where:
   [37;1mDRIVE[0m     is the drive letter where the image will be mounted: a, c, d, ...
@@ -1192,13 +1213,14 @@ Where:
   [36;1mBOOTIMAGE[0m is a bootable disk image with specified -size GEOMETRY:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Notes:
-  - %s+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.
-  - The '-ide' flag emulates an IDE controller with attached ATAPI CD-ROM drive,
-    This is useful for CDROM-based games that need a real DOS environment via bootable HDD image.
+  - %s+F4 swaps & mounts the next [36;1mCDROM-SET[0m or [36;1mBOOTIMAGE[0m, if provided.
+  - The -ro flag mounts the disk image in read-only (write-protected) mode.
+  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
+    for CD-based games that need a real DOS environment via bootable HDD image.
 Examples:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
+  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy -ro
   [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -1210,7 +1232,8 @@ maps physical folders or drives to a virtual drive letter.
 Mount a directory from the host OS to a drive letter.
 
 Usage:
-  [32;1mmount[0m [37;1mDRIVE[0m [36;1mDIRECTORY[0m [-t TYPE] [-freesize SIZE] [-label LABEL]
+  [32;1mmount[0m [37;1mDRIVE[0m [36;1mDIRECTORY[0m [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
+  [32;1mmount[0m -listcd / -cd (lists all detected CD-ROM drives and their numbers)
   [32;1mmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's directory)
 
 Where:
@@ -1230,6 +1253,10 @@ Examples:
   [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay
 
 .
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 Must specify drive letter to mount image at.
 
@@ -1244,6 +1271,14 @@ For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t 
 For [33mhardrive[0m images: Must specify drive geometry for hard drives:
 bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
 [34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+No available IDE controllers. Drive will not have IDE emulation.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
@@ -1354,29 +1389,30 @@ None or invalid codepage file for layout %s
 
 .
 :PROGRAM_SERIAL_HELP
-Manage the serial ports.
+Manages the serial ports.
 
-Usage modes:
-  SERIAL /L | /LIST             List the current serial ports.
-  SERIAL PORT# TYPE [settings]  Set the port to the given TYPE.
+Usage:
+  [32;1mserial[0m [37;1m[PORT#][0m                List all or specified serial ports.
+  [32;1mserial[0m [37;1mPORT#[0m [36;1mTYPE[0m [settings]  Set the specified port to the given type.
 
 Where:
-  PORT# : 1, 2, 3, or 4
-  TYPE  : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, or DISABLED
+  [37;1mPORT#[0m The port number: [37;1m1[0m, [37;1m2[0m, [37;1m3[0m, or [37;1m4[0m
+  [36;1mTYPE[0m  The port type: [36;1mMODEM[0m, [36;1mNULLMODEM[0m, [36;1mDIRECTSERIAL[0m, [36;1mDUMMY[0m, or [36;1mDISABLED[0m
 
-Optional settings for each TYPE:
-  For MODEM        : IRQ, LISTENPORT, SOCK
-  For NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+Notes:
+  Optional settings for each [36;1mTYPE[0m:
+  For [36;1mMODEM[0m        : IRQ, LISTENPORT, SOCK
+  For [36;1mNULLMODEM[0m    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
                      USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  For DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
-  For DUMMY        : IRQ
+  For [36;1mDIRECTSERIAL[0m : IRQ, REALPORT (required), RXDELAY
+  For [36;1mDUMMY[0m        : IRQ
 
-Examples using port 1, or COM1 in DOS:
-  SERIAL /list                                 : List the current serial ports
-  SERIAL 1 NULLMODEM PORT:1250                 : Listen on TCP:1250 as server
-  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0       : Use a physical port on Linux
+Examples:
+  [32;1mSERIAL[0m                                       : List the current serial ports
+  [32;1mSERIAL[0m [37;1m1[0m [36;1mNULLMODEM[0m PORT:1250                 : Listen on TCP:1250 as server
+  [32;1mSERIAL[0m [37;1m2[0m [36;1mNULLMODEM[0m SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
+  [32;1mSERIAL[0m [37;1m3[0m [36;1mMODEM[0m LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
+  [32;1mSERIAL[0m [37;1m4[0m [36;1mDIRECTSERIAL[0m REALPORT:ttyUSB0       : Use a physical port on Linux
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -1387,8 +1423,8 @@ COM%d: %s %s
 Must specify a numeric port value between 1 and %d, inclusive.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-Mode must be one of the following:
+:PROGRAM_SERIAL_BAD_TYPE
+Type must be one of the following:
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST
@@ -1449,7 +1485,7 @@ Notes:
 
 Examples:
   [32;1mcommand[0m
-  [32;1mcommand[0m /c [36;1mecho[0m [37mHello world![0m
+  [32;1mcommand[0m /c [36;1mecho[0m [37;1mHello world![0m
   [32;1mcommand[0m /init [36;1mdir[0m
 
 .
@@ -1501,11 +1537,8 @@ The specified date is not correct.
 Current date: 
 .
 :SHELL_CMD_DATE_SETHLP
-Type 'date MM-DD-YYYY' to change.
+Type 'date %s' to change.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
 Usage:
@@ -1514,7 +1547,7 @@ Usage:
   [32;1mdate[0m [36;1mDATE[0m
 
 Where:
-  [36;1mDATE[0m is the new date to set to, in the format of [36;1mMM-DD-YYYY[0m.
+  [36;1mDATE[0m is the new date to set to, in the format of [36;1m%s[0m.
 
 Notes:
   Running [32;1mdate[0m without an argument shows the current date, or only a date
@@ -1524,7 +1557,7 @@ Notes:
 Examples:
   [32;1mdate[0m
   [32;1mdate[0m /h
-  [32;1mdate[0m [36;1m10-11-2012[0m
+  [32;1mdate[0m [36;1m%s[0m
 
 .
 :SHELL_CMD_TIME_HELP
@@ -1539,7 +1572,7 @@ The specified time is not correct.
 Current time: 
 .
 :SHELL_CMD_TIME_SETHLP
-Type 'time hh:mm:ss' to change.
+Type 'time %s' to change.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
@@ -1549,7 +1582,7 @@ Usage:
   [32;1mtime[0m [36;1mTIME[0m
 
 Where:
-  [36;1mTIME[0m is the new time to set to, in the format of [36;1mhh:mm:ss[0m.
+  [36;1mTIME[0m is the new time to set to, in the format of [36;1m%s[0m.
 
 Notes:
   Running [32;1mtime[0m without an argument shows the current time, or a simple time
@@ -1559,7 +1592,7 @@ Notes:
 Examples:
   [32;1mtime[0m
   [32;1mtime[0m /h
-  [32;1mtime[0m [36;1m13:14:15[0m
+  [32;1mtime[0m [36;1m%s[0m
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -1604,6 +1637,27 @@ No label supplied to GOTO command.
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO: Label %s not found.
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Access denied - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Duplicate redirection - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+File creation error - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+File open error - %s
 
 .
 :SHELL_CMD_FILE_NOT_FOUND
@@ -1679,43 +1733,43 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
-โ•‘ [32mWelcome to DOSBox Staging %-40s[37m โ•‘
-โ•‘                                                                    โ•‘
-โ•‘ For a short introduction for new users type: [33mINTRO[37m                 โ•‘
-โ•‘ For supported shell commands type: [33mHELP[37m                            โ•‘
-โ•‘                                                                    โ•‘
-โ•‘ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       โ•‘
-โ•‘ To activate the keymapper [31m%s+F1[37m.%s                                 โ•‘
-โ•‘ For more information read the [36mREADME[37m file in the DOSBox directory. โ•‘
-โ•‘                                                                    โ•‘
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mWelcome to DOSBox Staging %-40s[37m บ
+บ                                                                    บ
+บ For a short introduction for new users type: [33mINTRO[37m                 บ
+บ For supported shell commands type: [33mHELP[37m                            บ
+บ                                                                    บ
+บ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       บ
+บ To activate the keymapper [31m%s+F1[37m.%s                                 บ
+บ For more information read the [36mREADME[37m file in the DOSBox directory. บ
+บ                                                                    บ
 
 .
 :SHELL_STARTUP_CGA
-โ•‘ DOSBox supports Composite CGA mode.                                โ•‘
-โ•‘ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        โ•‘
-โ•‘ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   โ•‘
-โ•‘                                                                    โ•‘
+บ DOSBox supports Composite CGA mode.                                บ
+บ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        บ
+บ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   บ
+บ                                                                    บ
 
 .
 :SHELL_STARTUP_CGA_MONO
-โ•‘ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, โ•‘
-โ•‘ and [31m%s+F11[37m to change contrast/brightness settings.                โ•‘
+บ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, บ
+บ and [31m%s+F11[37m to change contrast/brightness settings.                บ
 
 .
 :SHELL_STARTUP_HERC
-โ•‘ Use [31mF11[37m to cycle through white, amber, and green monochrome color. โ•‘
-โ•‘                                                                    โ•‘
+บ Use [31mF11[37m to cycle through white, amber, and green monochrome color. บ
+บ                                                                    บ
 
 .
 :SHELL_STARTUP_DEBUG
-โ•‘ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. โ•‘
-โ•‘                                                                    โ•‘
+บ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. บ
+บ                                                                    บ
 
 .
 :SHELL_STARTUP_END
-โ•‘ [33mhttps://dosbox-staging.github.io[37m                                   โ•‘
-โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
+บ [33mhttps://dosbox-staging.github.io[37m                                   บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 
 .
@@ -1724,19 +1778,24 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_CMD_CHDIR_HELP
-Displays/changes the current directory.
+Displays or changes the current directory.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-CHDIR [drive:][path]
-CHDIR [..]
-CD [drive:][path]
-CD [..]
+Usage:
+  [32;1mcd[0m [36;1mDIRECTORY[0m
+  [32;1mchdir[0m [36;1mDIRECTORY[0m
 
-  ..   Specifies that you want to change to the parent directory.
+Where:
+  [36;1mDIRECTORY[0m is the name of the directory to change to.
 
-Type CD drive: to display the current directory in the specified drive.
-Type CD without parameters to display the current drive and directory.
+Notes:
+  Running [32;1mcd[0m without an argument displays the current directory.
+  With [36;1mDIRECTORY[0m the command only changes the directory, not the current drive.
+
+Examples:
+  [32;1mcd[0m
+  [32;1mcd[0m [36;1mmydir[0m
 
 .
 :SHELL_CMD_CLS_HELP
@@ -1764,7 +1823,7 @@ Displays a list of files and subdirectories in a directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Usage:
-  [32;1mdir[0m [36;1m[PATTERN][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDER[0m]
+  [32;1mdir[0m [36;1m[PATTERN][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDER[0m]
 
 Where:
   [36;1mPATTERN[0m is either an exact filename or an inexact filename with wildcards,
@@ -1957,7 +2016,7 @@ Where:
 
 Notes:
   The COMMAND is run if any of the three conditions in the usage are met.
-  If [38;1mnot[0m is specified, then the command runs only with the false condition.
+  If [35;1mnot[0m is specified, then the command runs only with the false condition.
   The [36;1merrorlevel[0m condition is useful for checking if a programs ran correctly.
   If either [37;1mSTR1[0m or [37;1mSTR2[0m may be empty, you can enclose them in quotes (").
 
@@ -2211,6 +2270,38 @@ Examples:
 ls: cannot access '%s': No such file or directory
 
 .
+:SHELL_CMD_ATTRIB_HELP
+Displays or changes file attributes.
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Usage:
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+
+Where:
+  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Where: R = Read-only, A = Archive, S = System, H = Hidden
+  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+             wildcards, which are the asterisk (*) and the question mark (?),
+             or an exact name of a directory.
+Notes:
+  Multiple attributes can be specified in the command, separated by spaces.
+  If not specified, the command shows the current file/directory attributes.
+
+Examples:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Unable to get attributes: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Unable to set attributes: %s
+
+.
 :SHELL_CMD_CHOICE_HELP
 Waits for a keypress and sets an ERRORLEVEL value.
 
@@ -2218,7 +2309,7 @@ Waits for a keypress and sets an ERRORLEVEL value.
 :SHELL_CMD_CHOICE_HELP_LONG
 Usage:
   [32;1mchoice[0m [36;1m[TEXT][0m
-  [32;1mchoice[0m /c[:][37;1mCHOICES[0m [/n] [/s] [36;1m[TEXT][0m
+  [32;1mchoice[0m /c[:][37;1mCHOICES[0m [/n] [29m [36;1m[TEXT][0m
 
 Where:
   [36;1mTEXT[0m         is the text to display as a prompt, or empty.
@@ -2252,7 +2343,7 @@ Where:
 
 Notes:
   Parameter with a semi-colon (;) only clears all search path settings.
-  The path can also be set using [32;1mset[0m command, e.g. [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
+  The path can also be set using [32;1mset[0m command, e.g. [32;1mset[0m [37;1mpath[0m=[36;1mZ:[reset]
 
 Examples:
   [32;1mpath[0m
