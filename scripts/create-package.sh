@@ -175,10 +175,17 @@ pkg_msvc()
 
 # Get GitHub CI environment variables if available. The CLI options
 # '-c', '-b', '-r' will override these if set.
-git_commit=$GITHUB_SHA
-git_branch=${GITHUB_REF#refs/heads/}
-git_repo=$GITHUB_REPOSITORY
+if [ -n "${GITHUB_REPOSITORY:-}" ]; then
+    git_commit=${GITHUB_SHA}
+    git_branch=${GITHUB_REF#refs/heads/}
+    git_repo=${GITHUB_REPOSITORY}
+else
+    git_commit=$(git rev-parse --short HEAD || echo '')
+    git_branch=$(git rev-parse --abbrev-ref HEAD || echo '')
+    git_repo=$(basename "$(git rev-parse --show-toplevel)" || echo '')
+fi
 
+print_usage="false"
 while getopts 'p:c:b:r:v:hf' c
 do
     case $c in
