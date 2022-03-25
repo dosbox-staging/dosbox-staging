@@ -226,30 +226,6 @@ static std::string get_language(const Section_prop *section)
 	return lang;
 }
 
-static std::deque<std_fs::path> get_paths()
-{
-	std::deque<std_fs::path> paths = {};
-
-	// Try finding bundled translations first
-	const auto exe_path = GetExecutablePath();
-#if defined(MACOSX)
-	paths.emplace_back(exe_path / "../Resources/translations");
-#else
-	paths.emplace_back(exe_path / "translations");
-#endif
-
-	// Try the user-installed and then repo-installed paths, which
-	// can exist on macOS, POSIX, and even MinGW/MSYS2/Cygwin.
-	paths.emplace_back("/usr/local/share/dosbox-staging/translations");
-	paths.emplace_back("/usr/share/dosbox-staging/translations");
-
-	// Worst-cast: fallback to the user's config directory
-	const std_fs::path config_path(CROSS_GetPlatformConfigDir());
-	paths.emplace_back(config_path / "translations");
-
-	return paths;
-}
-
 // MSG_Init loads the requested language provided on the command line or
 // from the language = conf setting.
 
@@ -273,13 +249,8 @@ void MSG_Init(Section_prop *section)
 	// If a short-hand name was provided then add the file extension
 	const auto lng_file = lang + (ends_with(lang, ".lng") ? "" : ".lng");
 
-	// Otherwise let's try prefixes the paths
-	for (const auto &p : get_paths()) {
-		const auto lng_path = p / lng_file;
-		if (LoadMessageFile(lng_path)) {
-			return;
-		}
-	}
+	if (LoadMessageFile(GetResource("translations", lng_file)))
+		return;
 
 	// If we got here, then the language was not found
 	LOG_MSG("LANG: No language could be loaded, using English messages");

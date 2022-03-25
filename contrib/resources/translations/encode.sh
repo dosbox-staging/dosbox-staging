@@ -29,37 +29,37 @@ echo "In directory $trans_dir:"
 # (default)
 # keyb us 437
 # keyb us 858
-tconv_l CP437 "utf-8/en.txt" en/en_US
+tconv_l CP437 "utf-8/en.txt" en
 
 # keyb de
 # keyb de 437
 # keyb de 858
-tconv_l CP858 "utf-8/de.txt" de/de_DE
+tconv_l CP858 "utf-8/de.txt" de
 
 # keyb es
 # keyb es 437
 # keyb es 858
-tconv_l CP858 "utf-8/es.txt" es/es_ES
+tconv_l CP858 "utf-8/es.txt" es
 
 # keyb fr
 # keyb fr 437
 # keyb fr 858
-tconv_l CP858 "utf-8/fr.txt" fr/fr_FR
+tconv_l CP858 "utf-8/fr.txt" fr
 
 # keyb it
 # keyb it 858
-tconv_l CP858 "utf-8/it.txt" it/it_IT
+tconv_l CP858 "utf-8/it.txt" it
 
 # keyb pl
 # keyb pl 852
-tconv_l CP852 "utf-8/pl.txt" pl/pl_PL
+tconv_l CP852 "utf-8/pl.txt" pl
 
 # keyb pl 437
-tconv_t CP437 "utf-8/pl.txt" pl/pl_PL
+tconv_t CP437 "utf-8/pl.txt" pl.cp437
 
 # keyb ru
 # keyb ru 866
 # keyb ru 808 - CP808 is CP866 with euro sign; iconv does not know 808 (?)
-tconv_l CP866 "utf-8/ru.txt" ru/ru_RU
+tconv_l CP866 "utf-8/ru.txt" ru
 
 popd > /dev/null || exit
