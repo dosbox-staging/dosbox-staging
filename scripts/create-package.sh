@@ -85,23 +85,22 @@ install_doc()
     fi
 }
 
-install_translation()
+install_resources()
 {
-    lng_dir=${pkg_dir}/translations
-    if [ "$platform" = "macos" ]; then
-        lng_dir=${macos_dst_dir}/Resources/translations
-    fi
-    # Prepare translation files
-    #
-    # Note:
-    #   We conciously drop the dialect postfix because no dialects are available.
-    #   (US was the default DOS dialect and therefore is the default for 'en').
-    #   Dialect translations will be added if/when they're available.
-    #
-    find contrib/translations -name '*.lng' |
+    case "$platform" in
+    "macos")
+        local src_dir=${build_dir}/../Resources
+        local dest_dir=${macos_dst_dir}/Resources
+        ;;
+    *)
+        local src_dir=${build_dir}/resources
+        local dest_dir=${pkg_dir}/resources
+        ;;
+    esac
+
+    find $src_dir -type f |
         while IFS= read -r src; do
-            target=$(basename "$src" | tr '[:upper:]' '[:lower:]')
-            install_file "$src" "$lng_dir/${target#??_}"
+            install_file "$src" "$dest_dir/${src#*$src_dir/}"
         done
 }
 
@@ -260,7 +259,7 @@ fi
 set -x
 
 install_doc
-install_translation
+install_resources
 
 case $platform in
     linux) pkg_linux ;;

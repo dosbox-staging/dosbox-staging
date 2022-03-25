@@ -260,6 +260,12 @@ jobs:
           name: dosbox-${{ matrix.runner.arch }}
           path: build/dosbox
         
+      - name: Upload resources
+        uses: actions/upload-artifact@v2
+        with:
+          name: Resources
+          path: Resources
+
   publish_universal_build:
     name: Publish universal build
     needs: build_macos_release
@@ -283,6 +289,7 @@ jobs:
       
       - name: Package
         run: |
+          mv Resources ../
           ./scripts/create-package.sh \
             -p macos \
             -v "${{ env.VERSION }}" \
