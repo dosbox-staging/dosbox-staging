@@ -399,6 +399,34 @@ const std_fs::path &GetExecutablePath()
 	return exe_path;
 }
 
+std_fs::path GetResource(const std_fs::path &name)
+{
+#if defined(MACOSX)
+	const auto bundled_path = GetExecutablePath() / "../Resources";
+#else
+	const auto bundled_path = GetExecutablePath() / "resources";
+#endif
+	const auto parents = {bundled_path,
+	                      // macOS, POSIX, and even MinGW/MSYS2/Cygwin:
+	                      std_fs::path("/usr/local/share/dosbox-staging"),
+	                      std_fs::path("/usr/share/dosbox-staging"),
+	                      std_fs::path(CROSS_GetPlatformConfigDir())};
+
+	// return the first existing resource
+	for (const auto &parent : parents) {
+		const auto resource = parent / name;
+		if (std_fs::exists(resource)) {
+			return resource;
+		}
+	}
+	return std_fs::path();
+}
+
+std_fs::path GetResource(const std_fs::path &subdir, const std_fs::path &name)
+{
+	return GetResource(subdir / name);
+}
+
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
 {
 	if (year < 1980 || month > 12 || month == 0 || day == 0)
