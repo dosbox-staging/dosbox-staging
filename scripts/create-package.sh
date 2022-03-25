@@ -20,7 +20,7 @@ usage()
         -f          : force creation if PACKAGE_DIR is not empty
         BUILD_DIR   : Meson build directory
         PACKAGE_DIR : Package directory
-    
+
     Note: On macos, '-v' must be set. On msvc, the environment variable VC_REDIST_DIR must be set."
 }
 
@@ -74,10 +74,10 @@ install_doc()
             ;;
     esac
     # Fill template variables in README.template
-    if [ -n "$git_commit" ]; then 
+    if [ -n "$git_commit" ]; then
         sed -i -e "s|%GIT_COMMIT%|$git_commit|" "$readme_tmpl"
     fi
-    if [ -n "$git_branch" ]; then 
+    if [ -n "$git_branch" ]; then
         sed -i -e "s|%GIT_BRANCH%|$git_branch|" "$readme_tmpl"
     fi
     if [ -n "$git_repo" ]; then
@@ -234,7 +234,7 @@ if [ -z "$pkg_dir" ]; then
     exit 1
 fi
 
-if [ "$platform" = "macos" ]; then 
+if [ "$platform" = "macos" ]; then
     if [ -z "$dbox_version" ]; then
         echo "Dosbox version required on MacOS"
         usage
