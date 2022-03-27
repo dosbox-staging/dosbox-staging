@@ -594,7 +594,7 @@ static void SetIcon()
 
 #endif
 
-static void RequestExit(bool pressed)
+void GFX_RequestExit(const bool pressed)
 {
 	shutdown_requested = pressed;
 	if (shutdown_requested) {
@@ -620,7 +620,7 @@ static void RequestExit(bool pressed)
 	while (paused) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
-		case SDL_QUIT: RequestExit(true); break;
+		case SDL_QUIT: GFX_RequestExit(true); break;
 
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
@@ -647,7 +647,7 @@ static void RequestExit(bool pressed)
 			if (event.key.keysym.sym == SDLK_q &&
 			   (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
 				/* On macs, all aps exit when pressing cmd-q */
-				RequestExit(true);
+				GFX_RequestExit(true);
 				break;
 			}
 #endif
@@ -3067,8 +3067,8 @@ static void GUI_StartUp(Section *sec)
 	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
 	/* Get some Event handlers */
-	MAPPER_AddHandler(RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown",
-	                  "Shutdown");
+	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
+	                  "shutdown", "Shutdown");
 	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
 	                  "fullscr", "Fullscreen");
 	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart",
@@ -3393,7 +3393,7 @@ bool GFX_Events()
 				DEBUG_LOG_MSG("SDL: The window manager "
 				              "requests that the window be "
 				              "closed");
-				RequestExit(true);
+				GFX_RequestExit(true);
 				break;
 
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
@@ -3434,7 +3434,7 @@ bool GFX_Events()
 
 						switch (ev.type) {
 						case SDL_QUIT:
-							RequestExit(true);
+							GFX_RequestExit(true);
 							break;
 						case SDL_WINDOWEVENT:     // wait until we get window focus back
 							if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (ev.window.event == SDL_WINDOWEVENT_MINIMIZED) || (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
@@ -3472,7 +3472,7 @@ bool GFX_Events()
 			if (sdl.mouse.control_choice != NoMouse)
 				HandleMouseButton(&event.button);
 			break;
-		case SDL_QUIT: RequestExit(true); break;
+		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -3498,7 +3498,7 @@ bool GFX_Events()
 			/* On macs CMD-Q is the default key to close an application */
 			if (event.key.keysym.sym == SDLK_q &&
 			    (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
-				RequestExit(true);
+				GFX_RequestExit(true);
 				break;
 			}
 			[[fallthrough]];
