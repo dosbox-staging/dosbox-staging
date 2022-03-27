@@ -9,6 +9,7 @@
 #define SDL_MAIN_HANDLED
 
 #include "control.h"
+#include "video.h"
 
 class DOSBoxTestFixture : public ::testing::Test {
 public:
@@ -52,6 +53,7 @@ public:
 		std::vector<std::string>::reverse_iterator r = sections.rbegin();
 		for (; r != sections.rend(); ++r)
 			control->GetSection(*r)->ExecuteDestroy();
+		GFX_RequestExit(true);
 	}
 
 private:

@@ -66,6 +66,7 @@ Bitu GFX_SetSize(int width, int height, Bitu flags,
                  double pixel_aspect);
 
 void GFX_ResetScreen(void);
+void GFX_RequestExit(const bool requested);
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
