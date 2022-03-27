@@ -170,10 +170,10 @@ static Uint32 VORBIS_read(Sound_Sample *sample, void* buffer, Uint32 desired_fra
     const int err = stb_vorbis_get_error(stb);
 
     if (decoded_frames == 0) {
-        sample->flags |= (err ? SOUND_SAMPLEFLAG_ERROR : SOUND_SAMPLEFLAG_EOF);
+        sample->flags |= (err ? (Uint32)SOUND_SAMPLEFLAG_ERROR : (Uint32)SOUND_SAMPLEFLAG_EOF);
     }
     else if (decoded_frames < (int) desired_frames) {
-        sample->flags |= SOUND_SAMPLEFLAG_EAGAIN;
+        sample->flags |= (Uint32)SOUND_SAMPLEFLAG_EAGAIN;
     }
     return decoded_frames;
 } /* VORBIS_read */
