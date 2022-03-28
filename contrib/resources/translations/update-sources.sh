@@ -2,15 +2,16 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
+# Copyright (C) 2022-2022  The DOSBox Staging Team
 # Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
 
 set -euo pipefail
 
 PACKAGED_BUILD="build/lang"
 
-LNG_DIR="contrib/translations"
+LNG_DIR="contrib/resources/translations"
 
-EN_LANG_PATH="$LNG_DIR/en/en_US.lng"
+EN_LANG_PATH="$LNG_DIR/en.lng"
 
 OUTPUT_DIR="$LNG_DIR/utf-8"
 
@@ -35,7 +36,7 @@ check_package() {
 	echo ""
 	echo "  4. ./scripts/create-package.sh -f -p linux build/full-static build/lang"
 	echo ""
-	echo "  5. cd contrib/translations"
+	echo "  5. cd contrib/resources/translations"
 	echo ""
 	echo "  6. ./update-sources.sh"
 	exit 1
@@ -43,10 +44,9 @@ check_package() {
 
 update() {
 	local -r lang="$1"
-	local -r dialect="$2"
-	local -r codepage="$3"
-	local -r postfix="${4:-}"
-	local -r lng_path="$LNG_DIR/$lang/${lang}_${dialect}${postfix}.lng"
+	local -r codepage="$2"
+	local -r postfix="${3:-}"
+	local -r lng_path="$LNG_DIR/${lang}${postfix}.lng"
 	local -r txt_path="$OUTPUT_DIR/$lang.txt"
 
 	# If the languge is english, then we zero-out the en.lng file
@@ -93,19 +93,19 @@ check_package
 # Because English is the source language from which others are
 # translated, we first dump the latest english translations.
 #
-update en US 437
+update en 437
 
 # After this, we update the other language files which will inject
 # any missing messages into them in english, so translators can easily
 # find and update those new messages.
 #
-update de DE 858
-update es ES 858
-update fr FR 858
-update it IT 858
-update pl PL 437 .CP437
-update pl PL 852
-update ru RU 866
+update de 858
+update es 858
+update fr 858
+update it 858
+update pl 437 .cp437
+update pl 852
+update ru 866
 
 set +x
 

@@ -441,8 +441,8 @@ void DOSBOX_Init() {
 	pstring->Set_help(
 	        "Select a language to use: de, en, es, fr, it, pl, and ru\n"
 	        "Notes: This setting will override the 'LANG' environment, if set.\n"
-	        "       The 'translations' directory bundled with the executable holds these data\n"
-	        "       files. Please keep it along-side the executable to support this feature.");
+	        "       The 'resources/translations' directory bundled with the executable holds\n"
+	        "       these files. Please keep it along-side the executable to support this feature.");
 
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);

@@ -20,7 +20,7 @@ usage()
         -f          : force creation if PACKAGE_DIR is not empty
         BUILD_DIR   : Meson build directory
         PACKAGE_DIR : Package directory
-    
+
     Note: On macos, '-v' must be set. On msvc, the environment variable VC_REDIST_DIR must be set."
 }
 
@@ -74,10 +74,10 @@ install_doc()
             ;;
     esac
     # Fill template variables in README.template
-    if [ -n "$git_commit" ]; then 
+    if [ -n "$git_commit" ]; then
         sed -i -e "s|%GIT_COMMIT%|$git_commit|" "$readme_tmpl"
     fi
-    if [ -n "$git_branch" ]; then 
+    if [ -n "$git_branch" ]; then
         sed -i -e "s|%GIT_BRANCH%|$git_branch|" "$readme_tmpl"
     fi
     if [ -n "$git_repo" ]; then
@@ -85,23 +85,22 @@ install_doc()
     fi
 }
 
-install_translation()
+install_resources()
 {
-    lng_dir=${pkg_dir}/translations
-    if [ "$platform" = "macos" ]; then
-        lng_dir=${macos_dst_dir}/Resources/translations
-    fi
-    # Prepare translation files
-    #
-    # Note:
-    #   We conciously drop the dialect postfix because no dialects are available.
-    #   (US was the default DOS dialect and therefore is the default for 'en').
-    #   Dialect translations will be added if/when they're available.
-    #
-    find contrib/translations -name '*.lng' |
+    case "$platform" in
+    "macos")
+        local src_dir=${build_dir}/../Resources
+        local dest_dir=${macos_dst_dir}/Resources
+        ;;
+    *)
+        local src_dir=${build_dir}/resources
+        local dest_dir=${pkg_dir}/resources
+        ;;
+    esac
+
+    find $src_dir -type f |
         while IFS= read -r src; do
-            target=$(basename "$src" | tr '[:upper:]' '[:lower:]')
-            install_file "$src" "$lng_dir/${target#??_}"
+            install_file "$src" "$dest_dir/${src#*$src_dir/}"
         done
 }
 
@@ -176,10 +175,17 @@ pkg_msvc()
 
 # Get GitHub CI environment variables if available. The CLI options
 # '-c', '-b', '-r' will override these if set.
-git_commit=$GITHUB_SHA
-git_branch=${GITHUB_REF#refs/heads/}
-git_repo=$GITHUB_REPOSITORY
+if [ -n "${GITHUB_REPOSITORY:-}" ]; then
+    git_commit=${GITHUB_SHA}
+    git_branch=${GITHUB_REF#refs/heads/}
+    git_repo=${GITHUB_REPOSITORY}
+else
+    git_commit=$(git rev-parse --short HEAD || echo '')
+    git_branch=$(git rev-parse --abbrev-ref HEAD || echo '')
+    git_repo=$(basename "$(git rev-parse --show-toplevel)" || echo '')
+fi
 
+print_usage="false"
 while getopts 'p:c:b:r:v:hf' c
 do
     case $c in
@@ -228,7 +234,7 @@ if [ -z "$pkg_dir" ]; then
     exit 1
 fi
 
-if [ "$platform" = "macos" ]; then 
+if [ "$platform" = "macos" ]; then
     if [ -z "$dbox_version" ]; then
         echo "Dosbox version required on MacOS"
         usage
@@ -260,7 +266,7 @@ fi
 set -x
 
 install_doc
-install_translation
+install_resources
 
 case $platform in
     linux) pkg_linux ;;

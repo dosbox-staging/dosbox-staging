@@ -30,6 +30,10 @@ Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
 :CONFIG_WINDOW_DECORATIONS
 Legt fest, ob der Rahmen im Fenster-Modus angezeigt werden soll.
 .
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
+.
 :CONFIG_VSYNC
 Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert).
 .
@@ -117,6 +121,11 @@ Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
   all          Bietet alle Modi für eine bestimmte Videospeichergröße, allerdings
                können einige Programme sie nicht richtig nutzen (Flackern) oder benötigen
                mehr Systemspeicher (mem = ), um sie zu nutzen.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 Wie Autoexec-Abschnitte aus mehreren Konfigurationsdateien behandelt werden.
@@ -473,6 +482,12 @@ Setzt die DOS Version (5.0 als Standard). Anzugeben als major.minor Format.
 Eine einzelne Zahl wird als die Hauptversion behandelt.
 Übliche Einstellungen sind 3.3, 5.0, 6.22, und 7.1.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts (oder keines).
 .
@@ -540,6 +555,18 @@ Du kannst deine MOUNT-Zeilen hier einfügen.
 .
 :CONFIG_SUGGESTED_VALUES
 Mögliche Werte
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Keine solche Sektion oder Eigenschaft.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Korrekte Syntax: config -set "section property".
+
 .
 :
  :CONFIG_FULLSCREEN
@@ -646,18 +673,6 @@ Abschnitt "%s" existiert nicht.
 .
 :PROGRAM_CONFIG_VALUE_ERROR
 "%s" ist kein gültiger Wert für die Eigenschaft %s.
-
-.
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Keine solche Sektion oder Eigenschaft.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Korrekte Syntax: config -set "section property".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1217,7 +1232,7 @@ Tippe "date MM-TT-JJJJ" um es zu ändern.
 M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [/T] [/H] [/S] | MM-TT-JJJJ]
+DATE [/T] [/H] [29m | MM-TT-JJJJ]
   MM-TT-JJJJ: neues zu setzendes Datum
   /S: Host-Zeit und -Datum permanent als DOS-Zeit verwenden
   /F: Zurückschalten auf DOSBox-interne Zeit (Gegenteil von /S)
@@ -1540,7 +1555,7 @@ Wartet auf einen Tastendruck und setzt ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:choices] [/N] [/S] text
+CHOICE [/C:choices] [/N] [29m text
   /C[:]choices - Legt die erlaubten Tasten fest.  Standard ist: jn.
   /N - Zeigt die Auswahlmöglichkeiten am Ende der Eingabeaufforderung nicht an.
   /S - Ermöglicht die Eingabe in Groß- und Kleinschreibung.
@@ -2218,5 +2233,72 @@ Der Modus muss einer der folgenden sein:
 .
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
+
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Type must be one of the following:
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Access denied - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Duplicate redirection - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+File creation error - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+File open error - %s
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Usage:
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+
+Where:
+  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Where: R = Read-only, A = Archive, S = System, H = Hidden
+  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+             wildcards, which are the asterisk (*) and the question mark (?),
+             or an exact name of a directory.
+Notes:
+  Multiple attributes can be specified in the command, separated by spaces.
+  If not specified, the command shows the current file/directory attributes.
+
+Examples:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Unable to get attributes: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Unable to set attributes: %s
 
 .
