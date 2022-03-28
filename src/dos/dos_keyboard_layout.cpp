@@ -1417,41 +1417,127 @@ void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
 }
 
 const std::map<std::string, int> country_code_map {
-    {"cz243", COUNTRY::Czech_Slovak},
-    {"dk", COUNTRY::Denmark},
-    {"gr", COUNTRY::Germany},
-    {"gk", COUNTRY::Greece},
-    {"sp", COUNTRY::Spain},
-    {"su", COUNTRY::Finland},
-    {"fr", COUNTRY::France},
-    {"hu", COUNTRY::Hungary},
-    {"hu208", COUNTRY::Hungary},
-    {"is161", COUNTRY::Iceland},
-    {"it", COUNTRY::Italy},
-    {"nl", COUNTRY::Netherlands},
-    {"no", COUNTRY::Norway},
-    {"pl", COUNTRY::Poland},
-    {"br", COUNTRY::Brazil},
-    {"ru", COUNTRY::Russia},
-    {"hr", COUNTRY::Yugoslavia},
-    {"sk", COUNTRY::Czech_Slovak},
-    {"sv", COUNTRY::Sweden},
-    {"tr", COUNTRY::Turkey},
-    {"ur", COUNTRY::Ukraine},
-    {"bl", COUNTRY::Belarus},
-    {"si", COUNTRY::Slovenia},
-    {"et", COUNTRY::Estonia},
-    {"sg", COUNTRY::Switzerland},
-    {"po", COUNTRY::Portugal},
-    {"sf", COUNTRY::Switzerland},
-    {"be", COUNTRY::Belgium},
-    {"cf", COUNTRY::Candian_French},
-    {"cz", COUNTRY::Czech_Slovak},
-    {"sl", COUNTRY::Czech_Slovak},
-    {"la", COUNTRY::Latin_America},
-    {"uk", COUNTRY::United_Kingdom},
-    {"us", COUNTRY::United_States},
-    {"yu", COUNTRY::Yugoslavia},
+	// reference: https://gitlab.com/FreeDOS/base/keyb_lay/-/blob/master/DOC/KEYB/LAYOUTS/LAYOUTS.TXT
+	{"ar462",  COUNTRY::Arabic         },
+	{"ar470",  COUNTRY::Arabic         },
+	{"az",     COUNTRY::Azerbaijan     },
+	{"ba",     COUNTRY::Bosnia         },
+	{"be",     COUNTRY::Belgium        },
+	{"bg",     COUNTRY::Bulgaria       }, // 101-key
+	{"bg103",  COUNTRY::Bulgaria       }, // 101-key, Phonetic
+	{"bg241",  COUNTRY::Bulgaria       }, // 102-key
+	{"bl",     COUNTRY::Belarus        },
+	{"bn",     COUNTRY::Benin          },
+	{"br",     COUNTRY::Brazil         }, // ABNT layout
+	{"br274",  COUNTRY::Brazil         }, // US layout
+	{"bx",     COUNTRY::Belgium        }, // International
+	{"by",     COUNTRY::Belarus        },
+	{"ca",     COUNTRY::Candian_French }, // Standard
+	{"ce",     COUNTRY::Russia         }, // Chechnya Standard
+	{"ce443",  COUNTRY::Russia         }, // Chechnya Typewriter
+	{"cg",     COUNTRY::Montenegro     },
+	{"cf",     COUNTRY::Candian_French }, // Standard
+	{"cf445",  COUNTRY::Candian_French }, // Dual-layer
+	{"co",     COUNTRY::United_States  }, // Colemak
+	{"cz",     COUNTRY::Czech_Slovak   }, // Czechia, QWERTY
+	{"cz243",  COUNTRY::Czech_Slovak   }, // Czechia, Standard
+	{"cz489",  COUNTRY::Czech_Slovak   }, // Czechia, Programmers
+	{"de",     COUNTRY::Germany        }, // Standard
+	{"dk",     COUNTRY::Denmark        },
+	{"dv",     COUNTRY::United_States  }, // Dvorak
+	{"ee",     COUNTRY::Estonia        },
+	{"el",     COUNTRY::Greece         }, // 319
+	{"es",     COUNTRY::Spain          },
+	{"et",     COUNTRY::Estonia        },
+	{"fi",     COUNTRY::Finland        },
+	{"fo",     COUNTRY::Faeroe_Islands },
+	{"fr",     COUNTRY::France         }, // Standard
+	{"fx",     COUNTRY::France         }, // International
+	{"gk",     COUNTRY::Greece         }, // 319
+	{"gk220",  COUNTRY::Greece         }, // 220
+	{"gk459",  COUNTRY::Greece         }, // 101-key
+	{"gr",     COUNTRY::Germany        }, // Standard
+	{"gr453",  COUNTRY::Germany        }, // Dual-layer
+	{"hr",     COUNTRY::Croatia        },
+	{"hu",     COUNTRY::Hungary        }, // 101-key
+	{"hu208",  COUNTRY::Hungary        }, // 102-key
+	{"hy",     COUNTRY::Armenia        },
+	{"il",     COUNTRY::Israel         },
+	{"is",     COUNTRY::Iceland        }, // 101-key
+	{"is161",  COUNTRY::Iceland        }, // 102-key
+	{"it",     COUNTRY::Italy          }, // Standard
+	{"it142",  COUNTRY::Italy          }, // Comma on Numeric Pad
+	{"ix",     COUNTRY::Italy          }, // International
+	{"jp",     COUNTRY::Japan          },
+	{"ka",     COUNTRY::Georgia        },
+	{"kk",     COUNTRY::Kazakhstan     },
+	{"kk476",  COUNTRY::Kazakhstan     },
+	{"kx",     COUNTRY::United_Kingdom }, // International
+	{"ky",     COUNTRY::Kyrgyzstan     },
+	{"la",     COUNTRY::Latin_America  },
+	{"lh",     COUNTRY::United_States  }, // Left-Hand Dvorak
+	{"lt",     COUNTRY::Lithuania      }, // Baltic
+	{"lt210",  COUNTRY::Lithuania      }, // 101-key, Programmers
+	{"lt211",  COUNTRY::Lithuania      }, // AZERTY
+	{"lt221",  COUNTRY::Lithuania      }, // Standard
+	{"lt456",  COUNTRY::Lithuania      }, // Dual-layout
+	{"lv",     COUNTRY::Latvia         }, // Standard
+	{"lv455",  COUNTRY::Latvia         }, // Dual-layout
+	{"ml",     COUNTRY::Malta          }, // UK-based
+	{"mk",     COUNTRY::Macedonia      },
+	{"mn",     COUNTRY::Mongolia       },
+	{"mo",     COUNTRY::Mongolia       },
+	{"mt",     COUNTRY::Malta          }, // UK-based
+	{"mt103",  COUNTRY::Malta          }, // US-based
+	{"ne",     COUNTRY::Niger          },
+	{"ng",     COUNTRY::Nigeria        },
+	{"nl",     COUNTRY::Netherlands    }, // 102-key
+	{"no",     COUNTRY::Norway         },
+	{"ph",     COUNTRY::Philippines    },
+	{"pl",     COUNTRY::Poland         }, // 101-key, Programmers
+	{"pl214",  COUNTRY::Poland         }, // 102-key
+	{"po",     COUNTRY::Portugal       },
+	{"px",     COUNTRY::Portugal       }, // International
+	{"ro",     COUNTRY::Romania        }, // Standard
+	{"ro446",  COUNTRY::Romania        }, // QWERTY
+	{"rh",     COUNTRY::United_States  }, // Right-Hand Dvorak
+	{"ru",     COUNTRY::Russia         }, // Standard
+	{"ru443",  COUNTRY::Russia         }, // Typewriter
+	{"rx",     COUNTRY::Russia         }, // Extended Standard
+	{"rx443",  COUNTRY::Russia         }, // Extended Typewriter
+	{"sd",     COUNTRY::Switzerland    }, // German
+	{"sf",     COUNTRY::Switzerland    }, // French
+	{"sg",     COUNTRY::Switzerland    }, // German
+	{"si",     COUNTRY::Slovenia       },
+	{"sk",     COUNTRY::Czech_Slovak   }, // Slovakia
+	{"sp",     COUNTRY::Spain          },
+	{"sq",     COUNTRY::Albania        }, // No-deadkeys
+	{"sq448",  COUNTRY::Albania        }, // Deadkeys
+	{"sr",     COUNTRY::Serbia         }, // Deadkey
+	{"su",     COUNTRY::Finland        },
+	{"sv",     COUNTRY::Sweden         },
+	{"sx",     COUNTRY::Spain          }, // International
+	{"tj",     COUNTRY::Tadjikistan    },
+	{"tm",     COUNTRY::Turkmenistan   },
+	{"tr",     COUNTRY::Turkey         }, // QWERTY
+	{"tr440",  COUNTRY::Turkey         }, // Non-standard
+	{"tt",     COUNTRY::Russia         }, // Tatarstan Standard
+	{"tt443",  COUNTRY::Russia         }, // Tatarstan Typewriter
+	{"ua",     COUNTRY::Ukraine        }, // 101-key
+	{"uk",     COUNTRY::United_Kingdom }, // Standard
+	{"uk168",  COUNTRY::United_Kingdom }, // Allternate
+	{"ur",     COUNTRY::Ukraine        }, // 101-key
+	{"ur465",  COUNTRY::Ukraine        }, // 101-key
+	{"ur1996", COUNTRY::Ukraine        }, // 101-key
+	{"ur2001", COUNTRY::Ukraine        }, // 102-key
+	{"ur2007", COUNTRY::Ukraine        }, // 102-key
+	{"us",     COUNTRY::United_States  }, // Standard
+	{"ux",     COUNTRY::United_States  }, // International
+	{"uz",     COUNTRY::Uzbekistan     },
+	{"vi",     COUNTRY::Vietnam        },
+	{"yc",     COUNTRY::Serbia         }, // Deadkey
+	{"yc450",  COUNTRY::Serbia         }, // No-deadkey
+	{"yu",     COUNTRY::Yugoslavia     },
 };
 
 const char *DOS_GetLoadedLayout(void);

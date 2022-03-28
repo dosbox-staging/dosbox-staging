@@ -49,114 +49,143 @@ void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
 
-std::array<uint16_t, 1> countries_date_format_mmddyyyy = {
-        COUNTRY::United_States,
+static constexpr Bit8u DATE_MDY = 0;
+static constexpr Bit8u DATE_DMY = 1;
+static constexpr Bit8u DATE_YMD = 2;
+
+static constexpr Bit8u TIME_12H = 0;
+static constexpr Bit8u TIME_24H = 1;
+
+static constexpr Bit8u SEP_SPACE  = 0x20; // ( )
+static constexpr Bit8u SEP_APOST  = 0x27; // (')
+static constexpr Bit8u SEP_COMMA  = 0x2c; // (,)
+static constexpr Bit8u SEP_DASH   = 0x2d; // (-)
+static constexpr Bit8u SEP_PERIOD = 0x2e; // (.)
+static constexpr Bit8u SEP_SLASH  = 0x2f; // (/)
+static constexpr Bit8u SEP_COLON  = 0x3a; // (:)
+
+typedef struct CountryInfo {
+	COUNTRY country_number;
+	Bit8u   date_format;
+	Bit8u   date_separator;
+	Bit8u   time_format;
+	Bit8u   time_separator;
+	Bit8u   thousands_separator;
+	Bit8u   decimal_separator;
+} CountryInfo;
+
+static const std::vector<CountryInfo> COUNTRY_INFO = {
+	//                         | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
+	{ COUNTRY::United_States   , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_PERIOD }, // C
+//	{ COUNTRY::United_States   , DATE_MDY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_US
+	{ COUNTRY::Candian_French  , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_CA.
+	{ COUNTRY::Latin_America   , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // es_419
+	{ COUNTRY::Russia          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ru_RU
+	{ COUNTRY::Greece          , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // el_GR
+	{ COUNTRY::Netherlands     , DATE_DMY , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // nl_NL
+	{ COUNTRY::Belgium         , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_BE
+	{ COUNTRY::France          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_FR
+	{ COUNTRY::Spain           , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // es_ES
+	{ COUNTRY::Hungary         , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // hu_HU
+	{ COUNTRY::Yugoslavia      , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_RS/sr_ME/hr_HR/sk_SK/bs_BA/mk_MK
+	{ COUNTRY::Italy           , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // it_IT
+	{ COUNTRY::Romania         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // ro_RO
+	{ COUNTRY::Switzerland     , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_APOST  , SEP_PERIOD }, // ??_CH
+	{ COUNTRY::Czech_Slovak    , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // cs_CZ
+	{ COUNTRY::Austria         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // de_AT
+	{ COUNTRY::United_Kingdom  , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_GB
+	{ COUNTRY::Denmark         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // da_DK
+	{ COUNTRY::Sweden          , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sv_SE
+	{ COUNTRY::Norway          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // nn_NO
+	{ COUNTRY::Poland          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // pl_PL
+	{ COUNTRY::Germany         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // de_DE
+	{ COUNTRY::Argentina       , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // es_AR
+	{ COUNTRY::Brazil          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // pt_BR
+	//                         | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
+	{ COUNTRY::Malaysia        , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ms_MY
+	{ COUNTRY::Australia       , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_AU
+	{ COUNTRY::Philippines     , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // fil_PH
+	{ COUNTRY::Singapore       , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ms_SG
+	{ COUNTRY::Kazakhstan      , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // kk_KZ
+	{ COUNTRY::Japan           , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ja_JP
+	{ COUNTRY::South_Korea     , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ko_KR
+	{ COUNTRY::Vietnam         , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // vi_VN
+	{ COUNTRY::China           , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // zh_CN
+	{ COUNTRY::Turkey          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // tr_TR
+	{ COUNTRY::India           , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // hi_IN
+	{ COUNTRY::Niger           , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_NE
+	{ COUNTRY::Benin           , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_BJ
+	{ COUNTRY::Nigeria         , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_NG
+	{ COUNTRY::Faeroe_Islands  , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // fo_FO
+	{ COUNTRY::Portugal        , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // pt_PT
+	{ COUNTRY::Iceland         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // is_IS
+	{ COUNTRY::Albania         , DATE_DMY , SEP_PERIOD , TIME_12H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sq_AL
+	{ COUNTRY::Malta           , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // mt_MT
+	{ COUNTRY::Finland         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fi_FI
+	{ COUNTRY::Bulgaria        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // bg_BG
+	{ COUNTRY::Lithuania       , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // lt_LT
+	{ COUNTRY::Latvia          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // lv_LV
+	{ COUNTRY::Estonia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // et_EE
+	{ COUNTRY::Armenia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // hy_AM
+	//                         | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
+	{ COUNTRY::Belarus         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // be_BY
+	{ COUNTRY::Ukraine         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // uk_UA
+	{ COUNTRY::Serbia          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_RS
+	{ COUNTRY::Montenegro      , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_ME
+	{ COUNTRY::Croatia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // hr_HR
+	{ COUNTRY::Slovenia        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sk_SK
+	{ COUNTRY::Bosnia          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // bs_BA
+	{ COUNTRY::Macedonia       , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // mk_MK
+	{ COUNTRY::Taiwan          , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // zh_TW
+	{ COUNTRY::Arabic          , DATE_DMY , SEP_PERIOD , TIME_12H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // ar_??
+	{ COUNTRY::Israel          , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // he_IL
+	{ COUNTRY::Mongolia        , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // mn_MN
+	{ COUNTRY::Tadjikistan     , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // tg_TJ
+	{ COUNTRY::Turkmenistan    , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // tk_TM
+	{ COUNTRY::Azerbaijan      , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // az_AZ
+	{ COUNTRY::Georgia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ka_GE
+	{ COUNTRY::Kyrgyzstan      , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ky_KG
+	{ COUNTRY::Uzbekistan      , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // uz_UZ
+	//                         | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
 };
 
-std::array<uint16_t, 12> countries_date_format_yyyymmdd = {
-        COUNTRY::Candian_French, COUNTRY::Hungary,      COUNTRY::Yugoslavia,
-        COUNTRY::Romania,        COUNTRY::Czech_Slovak, COUNTRY::Sweden,
-        COUNTRY::Poland,         COUNTRY::Japan,        COUNTRY::South_Korea,
-        COUNTRY::China,          COUNTRY::Iceland,      COUNTRY::Taiwan,
-};
-
-std::array<uint16_t, 11> countries_date_separator_slash = {
-        COUNTRY::Latin_America, COUNTRY::Greece, COUNTRY::Belgium,
-        COUNTRY::Spain,         COUNTRY::Italy,  COUNTRY::United_Kingdom,
-        COUNTRY::Brazil,        COUNTRY::Turkey, COUNTRY::Arabic,
-        COUNTRY::Taiwan,        COUNTRY::Israel,
-};
-
-std::array<uint16_t, 8> countries_date_separator_period = {
-        COUNTRY::Russia,  COUNTRY::France,  COUNTRY::Switzerland,
-        COUNTRY::Austria, COUNTRY::Norway,  COUNTRY::Germany,
-        COUNTRY::China,   COUNTRY::Finland,
-};
-
-std::array<uint16_t, 3> countries_time_12hour_clock = {
-        COUNTRY::United_States,
-        COUNTRY::Latin_America,
-        COUNTRY::Australia,
-};
-
-std::array<uint16_t, 1> countries_time_separator_comma = {
-        COUNTRY::Switzerland,
-};
-
-std::array<uint16_t, 4> countries_time_separator_period = {
-        COUNTRY::Italy,
-        COUNTRY::Denmark,
-        COUNTRY::Sweden,
-        COUNTRY::Finland,
-};
-
-std::array<uint16_t, 7> countries_decimal_separator_comma = {
-        COUNTRY::United_States, COUNTRY::United_Kingdom, COUNTRY::Australia,
-        COUNTRY::Japan,         COUNTRY::South_Korea,    COUNTRY::China,
-        COUNTRY::Taiwan,
-};
-
-std::array<uint16_t, 14> countries_decimal_separator_period = {
-        COUNTRY::Latin_America, COUNTRY::Netherlands, COUNTRY::Spain,
-        COUNTRY::Yugoslavia,    COUNTRY::Italy,       COUNTRY::Romania,
-        COUNTRY::Denmark,       COUNTRY::Sweden,      COUNTRY::Germany,
-        COUNTRY::Brazil,        COUNTRY::Portugal,    COUNTRY::Iceland,
-        COUNTRY::Arabic,        COUNTRY::Israel,
-};
-
-void DOS_SetCountry(uint16_t country_number)
+void DOS_SetCountry(uint16_t country_number) // XXX check where this is called, why always sets to US locale (is US country info OK?)
 {
 	if (dos.tables.country == NULL)
 		return;
 
+	// Select country information structure
+	CountryInfo country_info = COUNTRY_INFO[0];
+	for (auto &current : COUNTRY_INFO) {
+		if (current.country_number != country_number) continue;
+
+		country_info = current;
+		break;
+	}
+
 	Bit8u *p;
 
 	// Date format
-	p = dos.tables.country;
-	if (contains(countries_date_format_mmddyyyy, country_number))
-		*p = 0; // MM-DD-YYYY
-	else if (contains(countries_date_format_yyyymmdd, country_number))
-		*p = 2; // YYYY-MM-DD
-	else
-		*p = 1; // DD-MM-YYYY
+	p  = dos.tables.country;
+	*p = country_info.date_format;
 
 	// Date separation character
-	p = dos.tables.country + 11;
-	if (contains(countries_date_separator_slash, country_number))
-		*p = 0x2f; // Forward-slash (/)
-	else if (contains(countries_date_separator_period, country_number))
-		*p = 0x2e; // Period (.)
-	else
-		*p = 0x2d; // Dash (-)
+	p  = dos.tables.country + 11;
+	*p = country_info.date_separator;
 
 	// 12-hour or 24-hour clock
-	p = dos.tables.country + 17;
-	if (contains(countries_time_12hour_clock, country_number))
-		*p = 0; // 12-hour clock
-	else
-		*p = 1; // 24-hour clock
+	p  = dos.tables.country + 17;
+	*p = country_info.time_format;
 
 	// Time separation character
-	p = dos.tables.country + 13;
-	if (contains(countries_time_separator_comma, country_number))
-		*p = 0x2c; // Comma (,)
-	else if (contains(countries_time_separator_period, country_number))
-		*p = 0x2e; // Period (.)
-	else
-		*p = 0x3a; // Column (:)
+	p  = dos.tables.country + 13;
+	*p = country_info.time_separator;
 
 	// Thousand and decimal separators
-	p = dos.tables.country + 7;
-	if (contains(countries_decimal_separator_comma, country_number)) {
-		*p = 0x2c; // Comma (,)
-		*(p + 2) = 0x2e; // Period (.)
-	} else if (contains(countries_decimal_separator_period, country_number)) {
-		*p = 0x2e; // Period (.)
-		*(p + 2) = 0x2c; // Comma (,)
-	} else {
-		*p = 0x20; // Space ( )
-		*(p + 2) = 0x2c; // Comma (,)
-	}
+	p  = dos.tables.country + 7;
+	*p = country_info.thousands_separator;
+	p  = dos.tables.country + 9;
+	*p = country_info.decimal_separator;
 }
 
 static void DOS_AddDays(Bitu days)
