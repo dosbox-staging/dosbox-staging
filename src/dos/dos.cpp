@@ -76,8 +76,8 @@ typedef struct CountryInfo {
 	uint8_t decimal_separator;
 } CountryInfo;
 
-// Values here reflect the current KDE/Linux system settings - they willl probably not produce 100% same
-// result as old MS-DOS systems, but should at least produce reasonably consistent user experience with
+// Values here reflect the current KDE/Linux system settings - they will probably not produce 100% same
+// result as old MS-DOS systems, but should at least provide reasonably consistent user experience with
 // certain host operating systems.
 static const std::vector<CountryInfo> COUNTRY_INFO = {
 	//                        | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
