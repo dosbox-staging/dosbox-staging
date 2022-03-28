@@ -41,7 +41,7 @@
 #include "program_biostest.h"
 #endif
 
-#include "blobs.h"
+#include "dos_resources.h"
 
 extern Bit32u floppytype;
 

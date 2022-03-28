@@ -1,0 +1,242 @@
+Support for official languages in Russia
+========================================
+
+According to information collected on the web, there are 31 official
+languages in Russia where russian is nationwide and the other 30 are:
+
+Adyghe      Chuvash     Kalmyk             Komi-Zyrian     Ossetian
+Altai       Dolgan      Karachay-Balkar    Koryak          Tatar
+Bashkir     Erzya       Karelian           Mansi           Tuvin
+Buryat      Evenki      Khakas             Mari            Udmurt
+Chechen     Ingush      Khanty             Moksha          Yakut
+Chukchi     Kabardian   Komi-Permyak       Nenets          Yiddish
+
+Russian is already assisted through regular major industry codepages
+(cp866 and cp808) and Yiddish was left unassisted for the time being
+because KEYB can't handle right-to-left scripts yet.
+
+This document focus on the other 29 languages. I have made codepages
+to handle them, as well as keyboard layouts; in  order  to  avoid  a
+a large number of both of them, I have gathered characters according
+to the region where they are required.
+
+For all keyboard layouts:
+
+<Alt> + <Left_Shift> selects the latin layer (default);
+<Alt> + <Right_Shift> selects the cyrillic layer.
+
+All codepages are based on cp808/cp866, so they can be used to write
+and/or read the russian  language;  the  extra  characters  replaced
+linedraw and/or block characters. The Numero and the Euro signs were
+also left on the same place where they're found on cp808.
+
+The Euro sign can be found either on <AltGr> + <E> or  <AltGr> + <4>
+(latin  layer)   or   on  <AltGr> + <cyrillic YE>  or  <AltGr> + <4>
+(cyrillic layer) on all keyboard layouts.
+
+There are particular mixed cyrillic/latin codepages for chechen  and
+tatar; when using them, the cyrillic layer will still be available -
+to type in russian only.
+
+
+Tatar
+-----
+
+Codepage 30018 handles the latin tatar alphabet.
+Keyboard layout: "TT".
+
+   The following keys work as:
+
+   Combining <AltGr> and <Shift> + <AltGr> with:
+   <6> = a/A with circumflex
+   <U> = u/U with diaeresis
+   <I> = undotted i
+   <O> = o/O with diaeresis
+   <A> = a/A with diaeresis
+   <S> = s/S with cedilla
+   <G> = g/G with breve
+   <C> = c/C with cedilla
+   <N> = n/N with tilde
+
+   <'> works as deadkey for <A, E, I, O, U>.
+
+Codepage 30013 handles the cyrillic tatar alphabet.
+
+   The cyrillic layer follows Windows XP standards.
+
+
+Chechen
+-------
+
+Codepage 30019 handles the latin chechen alphabet.
+Keyboard layout: "CE".
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <Q, G, X, C> = q/Q, g/G, x/X, c/C with dot above
+  <Z> = z/Z with stroke
+  <O> = uo/UO ligature
+  <E> = ie/IE ligature
+  <A> = schwa/SCHWA
+  <S> = s/S with cedilla
+  <N> = n/N with hook
+  <[> = c/C with cedilla
+  <]> = c/C with cedilla and dot above
+
+  Diaeresis: <`> works as deadkey for <A, O, U>
+
+Codepage 30011 handles the cyrillic chechen alphabet.
+
+  Standard russian keyboard:
+  <=> = palochka; <AltGr> + <=> = "="
+
+  Russian typewriter (/id: 443) keyboard:
+  <|> = palochka; <AltGr> + <|> = "|"
+
+  All the rest is the same as the cyrillic layer of russian keyboards.
+
+
+Other languages
+---------------
+
+The other 27 languages are assisted through keyboard layout "RX" and 7
+different codepages.
+
+Codepage 30011 - languages of the Southern Federal District.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <TSE>        = u/U with breve
+  <U>          = straight u/U
+  <KA>         = u/U with acute
+  <EN>         = en/EN with descender
+  <HA>         = shha/SHHA
+  <A>          = a-ye/A-YE ligature
+  <O>          = barred o/O
+  <ZHE>        = zhe/ZHE with descender
+  <OBOROTNOYE> = schwa/SCHWA
+
+  <=> = palochka; <AltGr> + <=> = "="
+
+Codepage 30012 - languages of the Siberian and Far Eastern Districts.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <I KRATKOYE> = je/JE
+  <TSE>        = straight u/U
+  <U>          = u/U with diaeresis
+  <KA>         = ka/KA with hook
+  <YE>         = en/EN with descender
+  <EN>         = en/EN with hook
+  <GHE>        = ghe/GHE with middle hook
+  <SHA>        = ghe/GHE with stroke
+  <HA>         = shha/SHHA
+  <ER>         = en-ghe/EN-GHE ligature
+  <O>          = o/O with diaeresis
+  <EL>         = barred o/O
+  <CHE>        = khakassian che/CHE
+  <I>          = latin-like i/I
+
+Codepage 30013 - turkic languages of the Volga District.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <TSE>        = u/U with double acute
+  <U>          = straight u/U
+  <KA>         = bashkir ka/KA
+  <YE>         = ye/YE with breve
+  <EN>         = en/EN with descender
+  <GHE>        = ghe/GHE with stroke
+  <ZE>         = ze/ZE with descender
+  <HA>         = shha/SHHA
+  <A>          = a/A with breve
+  <O>          = barred o/O
+  <ZHE>        = zhe/ZHE with descender
+  <OBOROTNOYE> = schwa/SCHWA
+  <ES>         = es/ES with descender
+
+Codepage 30014 - finno-ugric languages of the Volga District.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <U>    = u/U with diaeresis
+  <EN>   = en-ghe/EN-GHE ligature
+  <ZE>   = ze/ZE with diaeresis
+  <YERY> = yery/YERY with diaeresis
+  <A>    = a/A with diaeresis
+  <O>    = o/O with diaeresis
+  <ZHE>  = zhe/ZHE with diaeresis
+  <CHE>  = che/CHE with diaeresis
+  <I>    = i/I with diaeresis
+
+Codepage 30015 - Khanty.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <I KRATKOYE> = je/JE
+  <U>          = u/U with diaeresis
+  <KA>         = ka/KA with hook
+  <EN>         = en/EN with hook
+  <A>          = a/A with diaeresis
+  <O>          = o/O with diaeresis
+  <ZHE>        = schwa/SCHWA with diaeresis
+  <OBOROTNOYE> = schwa/SCHWA
+  <YA>         = barred o/O
+  <CHE>        = barred o/O with diaeresis
+
+Codepage 30016 - Mansi.
+
+  The following keys work as:
+
+  Combining <AltGr> and <Shift> + <AltGr> with:
+
+  <U>          = u/U with macron
+  <YE>         = ye/YE with macron
+  <EN>         = en/EN with hook
+  <YERY>       = yery/YERY with macron
+  <A>          = a/A with macron
+  <O>          = o/O with macron
+  <OBOROTNOYE> = oborotnoye/OBOROTNOYE with macron
+  <YO>         = yo/YO with macron
+  <YA>         = ya/YA with macron
+  <I>          = i/I with macron
+  <YU>         = yu/YU with macron
+
+Codepage 30017 - languages of the Northwestern District.
+
+  Latin layer
+
+    The following keys work as:
+
+    Combining <AltGr> and <Shift> + <AltGr> with:
+
+    <U> = u/U with diaeresis
+    <O> = o/O with diaeresis
+    <A> = a/A with diaeresis
+    <S> = s/S with caron
+    <Z> = z/Z with caron
+    <C> = c/C with caron
+    <X> = ezh/EZH with caron
+
+  Cyrillic layer
+
+    The following keys work as:
+
+    Combining <AltGr> and <Shift> + <AltGr> with:
+
+    <EN>         = en/EN with hook
+    <O>          = o/O with diaeresis
+    <OBOROTNOYE> = oborotnoye/OBOROTNOYE with dot above
+    <I>          = latin-like i/I

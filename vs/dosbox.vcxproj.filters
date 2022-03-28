@@ -46,12 +46,6 @@
     <ClCompile Include="..\src\debug\debug_win32.cpp">
       <Filter>src\debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\dos\blob_ega_cpx.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\dos\blob_keyboard_sys.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dos\cdrom.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
@@ -788,10 +782,6 @@
     </ClInclude>
     <ClInclude Include="..\src\debug\debug_inc.h">
       <Filter>src\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\dos\blobs.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\dos\cdrom.h">
       <Filter>src\dos</Filter>
     </ClInclude>
@@ -799,6 +789,9 @@
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\dos_mscdex.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_resources.h">
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\fpu\fpu_instructions.h">

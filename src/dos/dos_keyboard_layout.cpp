@@ -33,8 +33,8 @@ using sv = std::string_view;
 #include "drives.h"
 #include "dos_inc.h"
 
-#include "blobs.h"
 #include "dos_keyboard_layout.h"
+#include "dos_resources.h"
 
 #if defined (WIN32)
 #include <windows.h>
@@ -813,13 +813,13 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
 	size_t found_at_pos = 5;
-	auto get_builtin_codepage = [&](const std::vector<Bit8u> &blob) {
-		cpi_buf_size=blob.size();
-		for (Bitu bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=blob[bct];
-	};
 	if (tempfile==NULL) {
 		// check if build-in codepage is available
 		// reference: https://gitlab.com/FreeDOS/base/cpidos/-/blob/master/DOC/CPIDOS/CODEPAGE.TXT
+		auto get_builtin_codepage = [&](const std::vector<uint8_t> &blob) {
+			cpi_buf_size=blob.size();
+			for (size_t bct=0; bct<cpi_buf_size; bct++) cpi_buf[bct]=blob[bct];
+		};
 		switch (codepage_id) {
 			case 437:	case 850:	case 852:	case 853:	case 857:	case 858:
 				get_builtin_codepage(BLOB_EGA_CPX);

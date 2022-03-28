@@ -288,8 +288,6 @@
     <ClCompile Include="..\src\debug\debug_disasm.cpp" />
     <ClCompile Include="..\src\debug\debug_gui.cpp" />
     <ClCompile Include="..\src\debug\debug_win32.cpp" />
-    <ClCompile Include="..\src\dos\blob_ega_cpx.cpp" />
-    <ClCompile Include="..\src\dos\blob_keyboard_sys.cpp" />
     <ClCompile Include="..\src\dos\cdrom.cpp" />
     <ClCompile Include="..\src\dos\cdrom_image.cpp" />
     <ClCompile Include="..\src\dos\dos.cpp" />
@@ -543,10 +541,10 @@
     <ClInclude Include="..\src\cpu\lazyflags.h" />
     <ClInclude Include="..\src\cpu\modrm.h" />
     <ClInclude Include="..\src\debug\debug_inc.h" />
-    <ClInclude Include="..\src\dos\blobs.h" />
     <ClInclude Include="..\src\dos\cdrom.h" />
     <ClInclude Include="..\src\dos\dev_con.h" />
     <ClInclude Include="..\src\dos\dos_mscdex.h" />
+    <ClInclude Include="..\src\dos\dos_resources.h" />
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\dos\program_ls.h" />
     <ClInclude Include="..\src\dos\program_serial.h" />
