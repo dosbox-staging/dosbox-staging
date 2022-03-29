@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "bitops.h"
 #include "callback.h"
 #include "cpu.h"		// for 0x3da delay
 #include "inout.h"
@@ -253,18 +254,14 @@ static Bitu GetMixResult(uint32_t mixmode, Bitu srcval, Bitu dstdata)
 	return destval;
 }
 
-void XGA_DrawLineVector(Bitu val) {
-	Bits xat, yat;
-	Bitu srcval = 0;
-	bool skiplast;
-	Bits i;
+static void XGA_DrawLineVector(const uint32_t val, const bool skip_last_pixel)
+{
+	// No work to do with a zero-length line
+	if (!xga.MAPcount)
+		return;
 
-	Bits dx, sx, sy;
-
-	dx = xga.MAPcount; 
-	xat = xga.curx;
-	yat = xga.cury;
-
+	int sx = 0;
+	int sy = 0;
 	switch((val >> 5) & 0x7) {
 		case 0x00: /* 0 degrees */
 			sx = 1;
@@ -304,17 +301,14 @@ void XGA_DrawLineVector(Bitu val) {
 			break;
 	}
 
-	// Do we skip drawing the last pixel? (bit 2), Trio64 documentation This
-	// is needed to correctly draw polylines in Windows
-	skiplast = (val >> 2) & 1;
-	if (skiplast) {
-		if (dx > 0)
-			dx--;
-		else
-			return;
-	}
 
-	for (i = 0; i <= dx; ++i) {
+	assert(xga.MAPcount);
+	const auto dx = xga.MAPcount - skip_last_pixel;
+	auto xat = xga.curx;
+	auto yat = xga.cury;
+	auto srcval = decltype(xga.backcolor)(0);
+
+	for (auto i = 0; i <= dx; ++i) {
 		uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
 		Bitu dstdata;
 		Bitu destval;
@@ -353,8 +347,8 @@ void XGA_DrawLineVector(Bitu val) {
 	}
 
 #if 0
-	LOG_MSG("XGA: DrawLineVector: (%d,%d) to (%d,%d), skiplast=%d",
-	        xga.curx, xga.cury, xat, yat, skiplast);
+	LOG_MSG("XGA: DrawLineVector: (%d,%d) to (%d,%d), skip_last_pixel=%d",
+	        xga.curx, xga.cury, xat, yat, skip_last_pixel);
 #endif
 
 	xga.curx = xat - 1;
@@ -363,13 +357,12 @@ void XGA_DrawLineVector(Bitu val) {
 
 // NTS: The Windows 3.1 driver does not use this XGA command for horizontal and
 // vertical lines
-void XGA_DrawLineBresenham(Bitu val)
+static void XGA_DrawLineBresenham(const uint32_t val, const bool skip_last_pixel)
 {
 	Bits xat, yat;
 	Bitu srcval = 0;
 	Bits i;
 	Bits tmpswap;
-	bool skiplast;
 	bool steep;
 
 #define SWAP(a,b) tmpswap = a; a = b; b = tmpswap;
@@ -415,10 +408,6 @@ void XGA_DrawLineBresenham(Bitu val)
 		sy = -1;
 	}
 
-	// Do we skip drawing the last pixel? (bit 2), Trio64 documentation.
-	// This is needed to correctly draw polylines in Windows
-	skiplast = (val >> 2) & 1;
-
 	// S3 Trio64 documentation:
 	// if x1 < x2: 2 * min(abs(dx),abs(dy)) - max(abs(dx),abs(dy))
 	// if x1 >= x2: 2 * min(abs(dx),abs(dy)) - max(abs(dx),abs(dy)) - 1
@@ -438,13 +427,13 @@ void XGA_DrawLineBresenham(Bitu val)
 
 #if 0
 	LOG_MSG("XGA: Bresenham: ASC %ld, LPDSC %ld, sx %ld, sy %ld, err %ld,"
-	" steep %ld, length %ld, dmajor %ld, dminor %ld, xstart %ld, ystart %ld, skiplast %u",
+	" steep %ld, length %ld, dmajor %ld, dminor %ld, xstart %ld, ystart %ld, skip_last_pixel %u",
 		(signed long)dx, (signed long)dy, (signed long)sx, (signed long)sy, (signed long)e,
 		(signed long)steep, (signed long)xga.MAPcount, (signed long)dmajor, (signed long)dminor,
-		(signed long)xat, (signed long)yat, skiplast?1:0);
+		(signed long)xat, (signed long)yat, skip_last_pixel);
 #endif
 
-	const Bits run = xga.MAPcount - (skiplast ? 1 : 0);
+	const auto run = xga.MAPcount - (xga.MAPcount && skip_last_pixel);
 
 	for (i = 0; i <= run; ++i) {
 		uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
@@ -506,17 +495,12 @@ void XGA_DrawLineBresenham(Bitu val)
 		xga.curx = yat;
 		xga.cury = xat;
 	}
-	//	}
-	//}
 }
 
-void XGA_DrawRectangle(Bitu val) {
-	Bit32u xat, yat;
+static void XGA_DrawRectangle(const uint32_t val, const bool skip_last_pixel)
+{
 	Bitu srcval = 0;
-	bool skiplast;
 	Bits srcx, srcy, dx, dy;
-
-	skiplast = (val >> 2) & 1;
 
 	dx = -1;
 	dy = -1;
@@ -528,18 +512,12 @@ void XGA_DrawRectangle(Bitu val) {
 
 	// Undocumented, but seen with Windows 3.1 drivers: Horizontal lines are
 	// drawn with this XGA command and "skip last pixel" set, else they are
-	// one pixel too wide
-	auto xrun = xga.MAPcount;
-	if (skiplast) {
-		if (xrun > 0u)
-			xrun--;
-		else
-			return;
-	}
+	// one pixel too wide (but don't underflow below zero).
+	const auto xrun = xga.MAPcount - (xga.MAPcount && skip_last_pixel);
 
-	for (yat = 0; yat <= xga.MIPcount; yat++) {
+	for (auto yat = 0; yat <= xga.MIPcount; ++yat) {
 		srcx = xga.curx;
-		for (xat = 0; xat <= xrun; ++xat) {
+		for (auto xat = 0; xat <= xrun; ++xat) {
 			uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
 			Bitu dstdata;
 			Bitu destval;
@@ -581,8 +559,8 @@ void XGA_DrawRectangle(Bitu val) {
 	xga.cury = srcy;
 
 #if 0
-	LOG_MSG("XGA: DrawRectangle: %d,%d,%d,%d skiplast=%d",
-	        xga.curx, xga.cury, xga.MAPcount, xga.MIPcount, skiplast);
+	LOG_MSG("XGA: DrawRectangle: %d,%d,%d,%d skip_last_pixel=%d",
+	        xga.curx, xga.cury, xga.MAPcount, xga.MIPcount, skip_last_pixel);
 #endif
 }
 
@@ -976,7 +954,7 @@ void XGA_DrawPattern(Bitu val) {
 	}
 }
 
-static void XGA_DrawCmd(Bitu val)
+static void XGA_DrawCmd(const uint32_t val)
 {
 	Bit16u cmd;
 	cmd = val >> 13;
@@ -984,6 +962,11 @@ static void XGA_DrawCmd(Bitu val)
 	//LOG_MSG("XGA: Draw command %x", cmd);
 #endif
 	xga.curcommand = val;
+
+	// Do we skip drawing the last pixel? (bit 2), Trio64 documentation This
+	// is needed to correctly draw polylines in Windows
+	const auto skip_last_pixel = bit::is(val, bit::literals::b2);
+
 	switch(cmd) {
 		case 1: /* Draw line */
 			if((val & 0x100) == 0) {
@@ -991,12 +974,12 @@ static void XGA_DrawCmd(Bitu val)
 #if XGA_SHOW_COMMAND_TRACE == 1
 					LOG_MSG("XGA: Drawing Bresenham line");
 #endif
-                    XGA_DrawLineBresenham(val);
+					XGA_DrawLineBresenham(val, skip_last_pixel);
 				} else {
 #if XGA_SHOW_COMMAND_TRACE == 1
 					LOG_MSG("XGA: Drawing vector line");
 #endif
-					XGA_DrawLineVector(val);
+					XGA_DrawLineVector(val, skip_last_pixel);
 				}
 			} else {
 				LOG_MSG("XGA: Wants line drawn from PIX_TRANS register!");
@@ -1009,7 +992,7 @@ static void XGA_DrawCmd(Bitu val)
 				LOG_MSG("XGA: Draw immediate rect: xy(%3d/%3d), len(%3d/%3d)",
 					xga.curx,xga.cury,xga.MAPcount,xga.MIPcount);
 #endif
-				XGA_DrawRectangle(val);
+				XGA_DrawRectangle(val, skip_last_pixel);
 
 			} else {
 			        uint16_t xga_bit_depth = 0;
