@@ -103,7 +103,10 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	return sfn;
 }
 
-void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir)
+void VFILE_Register(const char *name,
+                    const uint8_t *data,
+                    const uint32_t size,
+                    const char *dir)
 {
 	assert(name);
 	if (vfile_pos >= max_vfiles)
@@ -156,7 +159,13 @@ void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const 
 	first_file = new_file;
 }
 
-void VFILE_Remove(const char *name, const char *dir = "") {
+void VFILE_Register(const char *name, const std::vector<uint8_t> &blob, const char *dir)
+{
+	VFILE_Register(name, blob.data(), check_cast<uint32_t>(blob.size()), dir);
+}
+
+void VFILE_Remove(const char *name, const char *dir = "")
+{
 	assert(name);
 	assert(dir);
 	unsigned int onpos = 0;
