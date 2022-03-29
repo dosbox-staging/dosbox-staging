@@ -686,11 +686,11 @@ char *format_time(const uint8_t hour,
 	const char decimal_separator = dos.tables.country[9];
 	if (full) // Example full time format: 1:02:03.04am
 		safe_sprintf(return_time_buffer, "%u%c%02u%c%02u%c%02u%s",
-		             (unsigned int)hour, time_separator,
+		             (unsigned int)fhour, time_separator,
 		             (unsigned int)min, time_separator, (unsigned int)sec,
 		             decimal_separator, (unsigned int)msec, ampm);
 	else // Example short time format: 1:02p
-		safe_sprintf(return_time_buffer, "%2u%c%02u%s", (unsigned int)hour,
+		safe_sprintf(return_time_buffer, "%2u%c%02u%s", (unsigned int)fhour,
 		             time_separator, (unsigned int)min, ampm);
 	return return_time_buffer;
 }

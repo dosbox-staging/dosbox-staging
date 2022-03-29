@@ -785,7 +785,6 @@
     </ClInclude>
     <ClInclude Include="..\src\debug\debug_inc.h">
       <Filter>src\debug</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\dos\cdrom.h">
       <Filter>src\dos</Filter>
     </ClInclude>
@@ -793,6 +792,9 @@
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\dos_mscdex.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_resources.h">
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\fpu\fpu_instructions.h">
