@@ -336,6 +336,10 @@ void DOS_AddDevice(DOS_Device * adddev);
 /* DelDevice destroys the device that is pointed to. */
 void DOS_DelDevice(DOS_Device * dev);
 
-void VFILE_Register(const char *name, uint8_t *data, const uint32_t size, const char *dir = "");
+void VFILE_Register(const char *name,
+                    const uint8_t *data,
+                    const uint32_t size,
+                    const char *dir = "");
 
+void VFILE_Register(const char *name, const std::vector<uint8_t> &blob, const char *dir);
 #endif
