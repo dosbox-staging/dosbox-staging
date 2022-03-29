@@ -249,7 +249,7 @@ void MSG_Init(Section_prop *section)
 	// If a short-hand name was provided then add the file extension
 	const auto lng_file = lang + (ends_with(lang, ".lng") ? "" : ".lng");
 
-	if (LoadMessageFile(GetResource("translations", lng_file)))
+	if (LoadMessageFile(GetResourcePath("translations", lng_file)))
 		return;
 
 	// If we got here, then the language was not found

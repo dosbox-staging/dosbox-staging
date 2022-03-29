@@ -313,8 +313,15 @@ using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
 FILE_unique_ptr make_fopen(const char *fname, const char *mode);
 
 const std_fs::path &GetExecutablePath();
-std_fs::path GetResource(const std_fs::path &name);
-std_fs::path GetResource(const std_fs::path &subdir, const std_fs::path &name);
+std_fs::path GetResourcePath(const std_fs::path &name);
+std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name);
+
+enum class ResourceImportance { Mandatory, Optional };
+std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
+                                  const std_fs::path &name,
+                                  ResourceImportance importance);
+std::vector<uint8_t> LoadResource(const std_fs::path &name,
+                                  ResourceImportance importance);
 
 template <typename container_t>
 bool contains(const container_t &container, const typename container_t::value_type &value)

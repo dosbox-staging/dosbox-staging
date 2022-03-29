@@ -1,4 +1,6 @@
 resource_dirs = [
+  'freedos-cpi',
+  'freedos-keyboard',
   'translations',
   # insert new resource subdirectory names here
 ]

@@ -31,6 +31,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
+#include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
@@ -399,32 +401,67 @@ const std_fs::path &GetExecutablePath()
 	return exe_path;
 }
 
-std_fs::path GetResource(const std_fs::path &name)
+std_fs::path GetResourcePath(const std_fs::path &name)
 {
 #if defined(MACOSX)
 	const auto bundled_path = GetExecutablePath() / "../Resources";
+	const auto outer_bundled_path = GetExecutablePath() / "../../Resources";
 #else
 	const auto bundled_path = GetExecutablePath() / "resources";
+	const auto outer_bundled_path = GetExecutablePath() / "../resources";
 #endif
-	const auto parents = {bundled_path,
+	const auto parents = {bundled_path, outer_bundled_path,
 	                      // macOS, POSIX, and even MinGW/MSYS2/Cygwin:
 	                      std_fs::path("/usr/local/share/dosbox-staging"),
 	                      std_fs::path("/usr/share/dosbox-staging"),
 	                      std_fs::path(CROSS_GetPlatformConfigDir())};
 
 	// return the first existing resource
+	std::error_code ec;
 	for (const auto &parent : parents) {
 		const auto resource = parent / name;
-		if (std_fs::exists(resource)) {
+		if (std_fs::exists(resource, ec)) {
 			return resource;
 		}
 	}
 	return std_fs::path();
 }
 
-std_fs::path GetResource(const std_fs::path &subdir, const std_fs::path &name)
+std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name)
 {
-	return GetResource(subdir / name);
+	return GetResourcePath(subdir / name);
+}
+
+std::vector<uint8_t> LoadResource(const std_fs::path &name,
+                                  ResourceImportance importance)
+{
+	const auto resource = GetResourcePath(name);
+
+	if (resource.empty()) {
+		if (importance == ResourceImportance::Mandatory) {
+			E_Exit("Resource %s not found", name.string().c_str());
+		}
+		return {};
+	}
+
+	std::ifstream file(resource, std::ios::binary);
+	if (!file.is_open()) {
+		if (importance == ResourceImportance::Mandatory) {
+			E_Exit("Could not open resource %s", resource.string().c_str());
+		}
+		return {};
+	}
+
+	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
+	// LOG_MSG("loaded resource %s [%lu bytes]", resource.string().c_str(), buffer.size());
+	return buffer;
+}
+
+std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
+                                  const std_fs::path &name,
+                                  ResourceImportance importance)
+{
+	return LoadResource(subdir / name, importance);
 }
 
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
