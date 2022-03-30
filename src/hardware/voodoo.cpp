@@ -51,10 +51,10 @@ public:
 		std::string voodoo_type_str(section->Get_string("voodoo_card"));
 		if (voodoo_type_str=="false") {
 			emulation_type=0;
-		} else if ((voodoo_type_str=="software") || !OpenGL_using()) {
+		} else if (voodoo_type_str=="software" || (voodoo_type_str=="auto" && !OpenGL_using())) {
 			emulation_type=1;
 #if C_OPENGL
-		} else if ((voodoo_type_str=="opengl") || (voodoo_type_str=="auto")) {
+		} else if (voodoo_type_str=="opengl" || voodoo_type_str=="auto") {
 			emulation_type=2;
 #else
 		} else if (voodoo_type_str=="auto") {

@@ -532,13 +532,15 @@ void ogl_printInfoLog(GLhandleARB obj)
 
     glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infologLength);
 
-    if (infologLength > 0)
-    {
+	if (infologLength > 0)
+	{
 		infoLog = (char *)malloc(infologLength);
-		glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
-		LOG_MSG("%s\n",infoLog);
-		free(infoLog);
-    }
+		if (infoLog) {
+			glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
+			LOG_MSG("%s\n",infoLog);
+			free(infoLog);
+		}
+	}
 }
 
 void ogl_sh_tex_combine(std::string *strFShader, const int TMU, const poly_extra_data *extra) {
@@ -592,12 +594,11 @@ void ogl_sh_tex_combine(std::string *strFShader, const int TMU, const poly_extra
 	case 0:
 		*strFShader += "  blend.a = 0.0;\n";
 		break;
-	case 1:
-		*strFShader += "  blend.a = clocal.a;\n";
-		break;
 	case 2:
 		*strFShader += "  blend.a = cother.a;\n";
 		break;
+	case 1:
+		// fall through
 	case 3:
 		*strFShader += "  blend.a = clocal.a;\n";
 		break;
@@ -745,12 +746,11 @@ void ogl_sh_color_path(std::string *strFShader, const poly_extra_data *extra) {
 	switch (FBZCP_CCA_LOCALSELECT(FBZCOLORPATH))
 	{
 	default:
-	case 0:
-		*strFShader += "  clocal.a = gl_Color.a;\n";
-		break;
 	case 1:
 		*strFShader += "  clocal.a = color0.a;\n";
 		break;
+	case 0:
+		// fall through
 	case 2:
 		*strFShader += "  clocal.a = gl_Color.a;\n"; // TODO CLAMPED_Z
 		break;
@@ -805,12 +805,11 @@ void ogl_sh_color_path(std::string *strFShader, const poly_extra_data *extra) {
 	case 0:
 		*strFShader += "  blend.a = 0.0;\n";
 		break;
-	case 1:
-		*strFShader += "  blend.a = clocal.a;\n";
-		break;
 	case 2:
 		*strFShader += "  blend.a = cother.a;\n";
 		break;
+	case 1:
+		// fall through
 	case 3:
 		*strFShader += "  blend.a = clocal.a;\n";
 		break;
@@ -881,16 +880,14 @@ void ogl_sh_fog(std::string *strFShader, const poly_extra_data *extra) {
 		/* fog blending mode */
 		switch (FOGMODE_FOG_ZALPHA(FOGMODE))
 		{
-			case 0:		/* fog table */
-				// blend factor calculated in ogl_get_fog_blend //
-				*strFShader += "  fogblend = f_fogblend;\n";
-				break;
 			case 1:		/* iterated A */
 				*strFShader += "  fogblend = gl_Color.a;\n";
 				break;
+			case 0:		/* fog table */
+				// blend factor calculated in ogl_get_fog_blend //
+				// fall through
 			case 2:		/* iterated Z */
-				*strFShader += "  fogblend = f_fogblend;\n";
-				break;
+				// fall through
 			case 3:		/* iterated W - Voodoo 2 only */
 				*strFShader += "  fogblend = f_fogblend;\n";
 				break;
@@ -1686,10 +1683,12 @@ void voodoo_ogl_update_dimensions(void) {
 }
 
 bool voodoo_ogl_init(voodoo_state *v) {
+	OpenGL_On();
 	voodoo_ogl_reset_videomode();
 
 	if (!VOGL_Initialize()) {
 		VOGL_Reset();
+		OpenGL_Off();
 		// reset video mode etc.
 		return false;
 	}
@@ -1776,6 +1775,7 @@ void voodoo_ogl_leave(bool leavemode) {
 			ogl_surface = NULL;
 		}
 		GFX_RestoreMode();
+		OpenGL_Off();
 	}
 }
 
