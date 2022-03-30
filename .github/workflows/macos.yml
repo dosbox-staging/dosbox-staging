@@ -16,7 +16,7 @@ jobs:
   build_macos:
     name: ${{ matrix.conf.name }} (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,FeralChild64', github.actor) == false
     strategy:
       fail-fast: false
       matrix:
@@ -139,7 +139,7 @@ jobs:
   build_macos_release:
     name: Release build (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.host }}
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,FeralChild64', github.actor) == false
     env:
       MIN_SUPPORTED_MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runner.minimum_deployment }}
 
