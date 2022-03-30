@@ -62,14 +62,14 @@ protected:
 
     /// Lookup tables for gain and summer op-amps in output stage / filter.
     //@{
-    unsigned short* mixer[8];       //-V730_NOINIT this is initialized in the derived class constructor
-    unsigned short* summer[5];      //-V730_NOINIT this is initialized in the derived class constructor
-    unsigned short* gain_vol[16];   //-V730_NOINIT this is initialized in the derived class constructor
-    unsigned short* gain_res[16];   //-V730_NOINIT this is initialized in the derived class constructor
+    unsigned short* mixer[8] = {};
+    unsigned short* summer[5] = {};
+    unsigned short* gain_vol[16] = {};
+    unsigned short* gain_res[16] = {};
     //@}
 
     /// Reverse op-amp transfer function.
-    unsigned short opamp_rev[1 << 16]; //-V730_NOINIT this is initialized in the derived class constructor
+    unsigned short opamp_rev[1 << 16] = {};
 
 private:
     FilterModelConfig (const FilterModelConfig&) = delete;
