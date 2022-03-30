@@ -101,6 +101,8 @@ void GFX_SetMouseVisibility(const bool requested_visible);
 void GFX_SetMouseRawInput(const bool requested_raw_input);
 
 void SetTransparency();
+void OpenGL_On();
+void OpenGL_Off();
 bool OpenGL_using();
 SDL_Window* GFX_GetSDLWindow();
 SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
