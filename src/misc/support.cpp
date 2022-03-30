@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
 #include <functional>
 #include <fstream>
 #include <iterator>
@@ -401,8 +402,12 @@ const std_fs::path &GetExecutablePath()
 	return exe_path;
 }
 
-std_fs::path GetResourcePath(const std_fs::path &name)
+static const std::deque<std_fs::path> &GetResourceParentPaths()
 {
+	static std::deque<std_fs::path> paths = {};
+	if (paths.size())
+		return paths;
+
 #if defined(MACOSX)
 	const auto bundled_path = GetExecutablePath() / "../Resources";
 	const auto outer_bundled_path = GetExecutablePath() / "../../Resources";
@@ -410,15 +415,19 @@ std_fs::path GetResourcePath(const std_fs::path &name)
 	const auto bundled_path = GetExecutablePath() / "resources";
 	const auto outer_bundled_path = GetExecutablePath() / "../resources";
 #endif
-	const auto parents = {bundled_path, outer_bundled_path,
-	                      // macOS, POSIX, and even MinGW/MSYS2/Cygwin:
-	                      std_fs::path("/usr/local/share/dosbox-staging"),
-	                      std_fs::path("/usr/share/dosbox-staging"),
-	                      std_fs::path(CROSS_GetPlatformConfigDir())};
+	paths = {bundled_path, outer_bundled_path,
+	         // macOS, POSIX, and even MinGW/MSYS2/Cygwin:
+	         std_fs::path("/usr/local/share/dosbox-staging"),
+	         std_fs::path("/usr/share/dosbox-staging"),
+	         std_fs::path(CROSS_GetPlatformConfigDir())};
+	return paths;
+}
 
+std_fs::path GetResourcePath(const std_fs::path &name)
+{
 	// return the first existing resource
 	std::error_code ec;
-	for (const auto &parent : parents) {
+	for (const auto &parent : GetResourceParentPaths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
 			return resource;
@@ -435,25 +444,24 @@ std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &nam
 std::vector<uint8_t> LoadResource(const std_fs::path &name,
                                   const ResourceImportance importance)
 {
-	const auto resource = GetResourcePath(name);
+	const auto resource_path = GetResourcePath(name);
+	std::ifstream file(resource_path, std::ios::binary);
 
-	if (resource.empty()) {
-		if (importance == ResourceImportance::Mandatory) {
-			E_Exit("Resource %s not found", name.string().c_str());
-		}
-		return {};
-	}
-
-	std::ifstream file(resource, std::ios::binary);
 	if (!file.is_open()) {
-		if (importance == ResourceImportance::Mandatory) {
-			E_Exit("Could not open resource %s", resource.string().c_str());
+		if (importance == ResourceImportance::Optional) {
+			return {};
 		}
-		return {};
+		assert(importance == ResourceImportance::Mandatory);
+		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:", name.string().c_str());
+		for (const auto &path : GetResourceParentPaths()) {
+			LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
+		}
+		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 	}
 
 	const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
-	// LOG_MSG("loaded resource %s [%lu bytes]", resource.string().c_str(), buffer.size());
+	DEBUG_LOG_MSG("RESOURCES: Loaded resource '%s' [%d bytes]",
+	              resource_path.string().c_str(), check_cast<int>(buffer.size()));
 	return buffer;
 }
 
