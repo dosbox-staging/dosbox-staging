@@ -470,7 +470,7 @@ static std::string format_number(size_t num)
 	const auto gb = static_cast<unsigned>(num % 1000);
 	num /= 1000;
 	const auto tb = static_cast<unsigned>(num);
-	const char thousands_separator = dos.tables.country[7];
+	const char thousands_separator = dos.tables.country[DOS_THOUSANDS_SEPARATOR_OFS];
 	char buf[22];
 	if (tb) {
 		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u%c%03u", tb,
@@ -618,8 +618,8 @@ char *format_date(const uint16_t year, const uint8_t month, const uint8_t day)
 {
 	char format_string[6];
 	static char return_date_buffer[15] = {0};
-	const char date_format = dos.tables.country[0];
-	const char date_separator = dos.tables.country[11];
+	const char date_format = dos.tables.country[DOS_DATE_FORMAT_OFS];
+	const char date_separator = dos.tables.country[DOS_DATE_SEPARATOR_OFS];
 	int result;
 	switch (date_format) {
 	case 1:
@@ -674,7 +674,7 @@ char *format_time(const uint8_t hour,
 	uint8_t fhour = hour;
 	static char return_time_buffer[19] = {0};
 	char ampm[3] = "";
-	char time_format = dos.tables.country[17];
+	char time_format = dos.tables.country[DOS_TIME_FORMAT_OFS];
 	if (!time_format) { // 12 hour notation?
 		if (fhour != 12)
 			fhour %= 12;
@@ -682,8 +682,8 @@ char *format_time(const uint8_t hour,
 		if (!full)
 			*(ampm + 1) = 0; // "a" or "p" in short time format
 	}
-	const char time_separator = dos.tables.country[13];
-	const char decimal_separator = dos.tables.country[9];
+	const char time_separator = dos.tables.country[DOS_TIME_SEPARATOR_OFS];
+	const char decimal_separator = dos.tables.country[DOS_DECIMAL_SEPARATOR_OFS];
 	if (full) // Example full time format: 1:02:03.04am
 		safe_sprintf(return_time_buffer, "%u%c%02u%c%02u%c%02u%s",
 		             (unsigned int)fhour, time_separator,
@@ -1663,8 +1663,8 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char *args)
 {
-	const char date_format = dos.tables.country[0];
-	const char date_separator = dos.tables.country[11];
+	const char date_format = dos.tables.country[DOS_DATE_FORMAT_OFS];
+	const char date_separator = dos.tables.country[DOS_DATE_SEPARATOR_OFS];
 	char format[11];
 	int result;
 	switch (date_format) {
@@ -1765,7 +1765,7 @@ void DOS_Shell::CMD_DATE(char *args)
 
 void DOS_Shell::CMD_TIME(char * args) {
 	char format[9], example[9];
-	const char time_separator = dos.tables.country[13];
+	const char time_separator = dos.tables.country[DOS_TIME_SEPARATOR_OFS];
 	sprintf(format, "hh%cmm%css", time_separator, time_separator);
 	sprintf(example, "13%c14%c15", time_separator, time_separator);
 	if (ScanCMDBool(args, "?")) {

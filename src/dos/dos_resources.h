@@ -21,30 +21,13 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <vector>
 
-extern std::vector<uint8_t> BLOB_EGA_CPX;
-extern std::vector<uint8_t> BLOB_EGA2_CPX;
-extern std::vector<uint8_t> BLOB_EGA3_CPX;
-extern std::vector<uint8_t> BLOB_EGA4_CPX;
-extern std::vector<uint8_t> BLOB_EGA5_CPX;
-extern std::vector<uint8_t> BLOB_EGA6_CPX;
-extern std::vector<uint8_t> BLOB_EGA7_CPX;
-extern std::vector<uint8_t> BLOB_EGA8_CPX;
-extern std::vector<uint8_t> BLOB_EGA9_CPX;
-extern std::vector<uint8_t> BLOB_EGA10_CPX;
-extern std::vector<uint8_t> BLOB_EGA11_CPX;
-extern std::vector<uint8_t> BLOB_EGA12_CPX;
-extern std::vector<uint8_t> BLOB_EGA13_CPX;
-extern std::vector<uint8_t> BLOB_EGA14_CPX;
-extern std::vector<uint8_t> BLOB_EGA15_CPX;
-extern std::vector<uint8_t> BLOB_EGA16_CPX;
-extern std::vector<uint8_t> BLOB_EGA17_CPX;
-extern std::vector<uint8_t> BLOB_EGA18_CPX;
+extern const std::array<const char *, 18> FILE_EGA_CPX;
+extern const std::array<const char *, 4>  FILE_KEYBOARD_SYS;
 
-extern std::vector<uint8_t> BLOB_KEYBOARD_SYS;
-extern std::vector<uint8_t> BLOB_KEYBRD2_SYS;
-extern std::vector<uint8_t> BLOB_KEYBRD3_SYS;
-extern std::vector<uint8_t> BLOB_KEYBRD4_SYS;
+extern std::vector<std::vector<uint8_t>> BLOB_EGA_CPX;
+extern std::vector<std::vector<uint8_t>> BLOB_KEYBOARD_SYS;
 
 #endif // DOSBOX_RESOURCES_H

@@ -319,9 +319,9 @@ std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &nam
 enum class ResourceImportance { Mandatory, Optional };
 std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
                                   const std_fs::path &name,
-                                  ResourceImportance importance);
+                                  const ResourceImportance importance);
 std::vector<uint8_t> LoadResource(const std_fs::path &name,
-                                  ResourceImportance importance);
+                                  const ResourceImportance importance);
 
 template <typename container_t>
 bool contains(const container_t &container, const typename container_t::value_type &value)

@@ -433,7 +433,7 @@ std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &nam
 }
 
 std::vector<uint8_t> LoadResource(const std_fs::path &name,
-                                  ResourceImportance importance)
+                                  const ResourceImportance importance)
 {
 	const auto resource = GetResourcePath(name);
 
@@ -452,14 +452,14 @@ std::vector<uint8_t> LoadResource(const std_fs::path &name,
 		return {};
 	}
 
-	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
+	const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
 	// LOG_MSG("loaded resource %s [%lu bytes]", resource.string().c_str(), buffer.size());
 	return buffer;
 }
 
 std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
                                   const std_fs::path &name,
-                                  ResourceImportance importance)
+                                  const ResourceImportance importance)
 {
 	return LoadResource(subdir / name, importance);
 }

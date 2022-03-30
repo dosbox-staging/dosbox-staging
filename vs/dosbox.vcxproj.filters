@@ -782,6 +782,7 @@
     </ClInclude>
     <ClInclude Include="..\src\debug\debug_inc.h">
       <Filter>src\debug</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\dos\cdrom.h">
       <Filter>src\dos</Filter>
     </ClInclude>
