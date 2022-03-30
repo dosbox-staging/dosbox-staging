@@ -786,6 +786,13 @@ static inline Bit8u RealHandle(Bit16u handle) {
 	return psp.GetFileHandle(handle);
 }
 
+#define DOS_DATE_FORMAT_OFS         0
+#define DOS_DATE_SEPARATOR_OFS      11
+#define DOS_TIME_FORMAT_OFS         17
+#define DOS_TIME_SEPARATOR_OFS      13
+#define DOS_THOUSANDS_SEPARATOR_OFS 7
+#define DOS_DECIMAL_SEPARATOR_OFS   9
+
 enum COUNTRY {
 	United_States = 1,
 	Candian_French = 2,
