@@ -53,7 +53,8 @@ static UINT32 last_clear_color=0;
 static UINT32 last_width=0;
 static UINT32 last_height=0;
 static INT32 last_orientation=-1;
-
+UINT32 new_width = 0;
+UINT32 new_height = 0;
 
 static UINT32 ogl_texture_index = 1;
 
@@ -65,6 +66,7 @@ UINT32 texrgb[256*256];
 /* texture address map */
 std::map <const UINT32, ogl_texmap> textures[2];
 
+SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES screenType);
 
 static void ogl_get_depth(voodoo_state* VV, INT32 ITERZ, INT64 ITERW, INT32 *depthval, INT32 *out_wfloat)
 {
@@ -1112,6 +1114,11 @@ void voodoo_ogl_draw_triangle(poly_extra_data *extra) {
 	ogl_get_vertex_data(v->fbi.bx, v->fbi.by, (void*)extra, &vd[1]);
 	ogl_get_vertex_data(v->fbi.cx, v->fbi.cy, (void*)extra, &vd[2]);
 
+	for (int i = 0; i < 3; i++)
+	{
+		vd[i].x = (vd[i].x * new_width) / v->fbi.width;
+		vd[i].y = (vd[i].y * new_height) / v->fbi.height;
+	}
 
 	if (FBZMODE_DEPTH_SOURCE_COMPARE(FBZMODE) && VOGL_CheckFeature(VOGL_HAS_STENCIL_BUFFER)) {
 		if (m_hProgramObject != 0) {
@@ -1319,7 +1326,20 @@ void voodoo_ogl_draw_pixel(int x, int y, bool has_rgb, bool has_alpha, int r, in
 
 	VOGL_BeginMode(GL_POINTS);
 	glColor4ub((GLubyte)(r&0xff), (GLubyte)(g&0xff), (GLubyte)(b&0xff), (GLubyte)(a&0xff));
-	glVertex2i(x, y);
+	float dx = (float)new_width / (float)v->fbi.width;
+	float dy = (float)new_height / (float)v->fbi.height;
+	int startx = (int)(x*dx);
+	int endx = (int)((x + 1)*dx);
+	int starty = (int)(y*dy);
+	int endy = (int)((y + 1)*dy);
+
+	for (int nx = startx; nx < endx; nx++)
+	{
+		for (int ny = starty; ny < endy; ny++)
+		{
+			glVertex2i(nx, ny);
+		}
+	}
 }
 
 void voodoo_ogl_draw_z(int x, int y, int z) {
@@ -1346,7 +1366,20 @@ void voodoo_ogl_draw_z(int x, int y, int z) {
 
 	VOGL_BeginMode(GL_POINTS);
 //	glBegin(GL_POINTS);
-	glVertex3i(x, y, z);	// z adjustment??
+	float dx = (float)new_width / (float)v->fbi.width;
+	float dy = (float)new_height / (float)v->fbi.height;
+	int startx = (int)(x*dx);
+	int endx = (int)((x + 1)*dx);
+	int starty = (int)(y*dy);
+	int endy = (int)((y + 1)*dy);
+
+	for (int nx = startx; nx < endx; nx++)
+	{
+		for (int ny = starty; ny < endy; ny++)
+		{
+			glVertex3i(nx, ny, z);	// z adjustment??
+		}
+	}
 //	glEnd();
 }
 
@@ -1387,7 +1420,20 @@ void voodoo_ogl_draw_pixel_pipeline(int x, int y, int r, int g, int b) {
 //	glBegin(GL_POINTS);
 //	glColor3f((float)r/255.0f, (float)g/255.0f, (float)b/255.0f);
 	glColor3ub((GLubyte)(r&0xff), (GLubyte)(g&0xff), (GLubyte)(b&0xff));
-	glVertex2f((float)x, (float)y);
+	float dx = (float)new_width / (float)v->fbi.width;
+	float dy = (float)new_height / (float)v->fbi.height;
+	int startx = (int)(x*dx);
+	int endx = (int)((x + 1)*dx);
+	int starty = (int)(y*dy);
+	int endy = (int)((y + 1)*dy);
+
+	for (int nx = startx; nx < endx; nx++)
+	{
+		for (int ny = starty; ny < endy; ny++)
+		{
+			glVertex2i(nx, ny);
+		}
+	}
 //	glEnd();
 }
 
@@ -1438,6 +1484,11 @@ void voodoo_ogl_fastfill(void) {
 		if ((ex == v->fbi.width) && (ey == v->fbi.height)) scissors_needed = false;
 	}
 
+	sx = (sx* new_width) / v->fbi.width;
+	ex = (ex* new_width) / v->fbi.width;
+	sy = (sy* new_height) / v->fbi.height;
+	ey = (ey* new_height) / v->fbi.height;
+
 	if (scissors_needed) {
 		glEnable(GL_SCISSOR_TEST);
 		glScissor(sx,sy,ex-sx,ey-sy);
@@ -1476,7 +1527,7 @@ void voodoo_ogl_fastfill(void) {
 	if (clear_mask) glClear(clear_mask);
 
 	if (scissors_needed) {
-		glScissor(0,0,v->fbi.width,v->fbi.height);
+		glScissor(0,0,new_width,new_height);
 		glDisable(GL_SCISSOR_TEST);
 	}
 }
@@ -1500,21 +1551,23 @@ void voodoo_ogl_clear(void) {
 UINT32 voodoo_ogl_read_pixel(int x, int y) {
 	UINT32 data[2];
 	if ((x < 0) || (y < 0) || (x >= (INT32)v->fbi.width) || (y >= (INT32)v->fbi.height)) return 0xffffffff;
+	x = (x * new_width)  / v->fbi.width;
+	y = (y * new_height) / v->fbi.height;
 
 	UINT32 mode=GL_RGBA;
 	switch (LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u)) {
 		case 0:			/* front buffer */
 			VOGL_SetReadMode(true);
 			if ((cached_line_front_y != y) || (x+1 >= cached_line_front_width)) {
-				if (cached_line_front_length<(INT32)v->fbi.width) {
+				if (cached_line_front_length<(INT32)new_width) {
 					if (cached_line_front_data!=NULL) free(cached_line_front_data);
-					size_t span_length=((v->fbi.width+64)&(~15));
+					size_t span_length=((new_width+64)&(~15));
 					cached_line_front_data=(UINT32*)malloc(sizeof(UINT32)*span_length);
 					cached_line_front_length=(INT32)span_length;
 				}
-				glReadPixels(0,v->fbi.height-y,v->fbi.width,1,mode,GL_UNSIGNED_BYTE,cached_line_front_data);
+				glReadPixels(0,new_height-y,new_width,1,mode,GL_UNSIGNED_BYTE,cached_line_front_data);
 				cached_line_front_y=y;
-				cached_line_front_width = (INT32)v->fbi.width;
+				cached_line_front_width = (INT32)new_width;
 			}
 			data[0]=cached_line_front_data[x];
 			data[1]=cached_line_front_data[x+1];
@@ -1522,15 +1575,15 @@ UINT32 voodoo_ogl_read_pixel(int x, int y) {
 		case 1:			/* back buffer */
 			VOGL_SetReadMode(false);
 			if ((cached_line_back_y != y) || (x+1 >= cached_line_back_width)) {
-				if (cached_line_back_length<(INT32)v->fbi.width) {
+				if (cached_line_back_length<(INT32)new_width) {
 					if (cached_line_back_data!=NULL) free(cached_line_back_data);
-					size_t span_length=((v->fbi.width+64)&(~15));
+					size_t span_length=((new_width+64)&(~15));
 					cached_line_back_data=(UINT32*)malloc(sizeof(UINT32)*span_length);
 					cached_line_back_length=(INT32)span_length;
 				}
-				glReadPixels(0,v->fbi.height-y,v->fbi.width,1,mode,GL_UNSIGNED_BYTE,cached_line_back_data);
+				glReadPixels(0,new_height-y,new_width,1,mode,GL_UNSIGNED_BYTE,cached_line_back_data);
 				cached_line_back_y=y;
-				cached_line_back_width = (INT32)v->fbi.width;
+				cached_line_back_width = (INT32)new_width;
 			}
 			data[0]=cached_line_back_data[x];
 			data[1]=cached_line_back_data[x+1];
@@ -1538,7 +1591,7 @@ UINT32 voodoo_ogl_read_pixel(int x, int y) {
 		case 2:			/* aux buffer */
 			mode=GL_DEPTH_COMPONENT;
 			VOGL_SetReadMode(false);
-			glReadPixels(x,v->fbi.height-y,2,1,mode,GL_UNSIGNED_INT,&data);
+			glReadPixels(x,new_height-y,2,1,mode,GL_UNSIGNED_INT,&data);
 			return ((data[0]>>16)&0xffff) | (data[1] & 0xffff0000);
 		default:
 			E_Exit("read from invalid buf %x",LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u));
@@ -1561,20 +1614,20 @@ void voodoo_ogl_set_window(voodoo_state *v) {
 
 	// 	matrix mode GL_PROJECTION assumed
 	bool size_changed=false;
-	if ((v->fbi.width!=last_width) || (v->fbi.height!=last_height)) size_changed=true;
+	if ((new_width!=last_width) || (new_height!=last_height)) size_changed=true;
 	if (size_changed || (last_orientation != (INT32)FBZMODE_Y_ORIGIN(v->reg[fbzMode].u))) {
 		glLoadIdentity( );
 		if (FBZMODE_Y_ORIGIN(v->reg[fbzMode].u))
-			glOrtho( 0, v->fbi.width, 0, v->fbi.height, 0.0f, -1.0f );
+			glOrtho( 0, new_width, 0, new_height, 0.0f, -1.0f );
 		else
-			glOrtho( 0, v->fbi.width, v->fbi.height, 0, 0.0f, -1.0f );
+			glOrtho( 0, new_width, new_height, 0, 0.0f, -1.0f );
 		if (last_orientation != (INT32)FBZMODE_Y_ORIGIN(v->reg[fbzMode].u))
 			last_orientation = FBZMODE_Y_ORIGIN(v->reg[fbzMode].u);
 	}
 	if (size_changed) {
-		glViewport( 0, 0, v->fbi.width, v->fbi.height );
-		last_width = v->fbi.width;
-		last_height = v->fbi.height;
+		glViewport( 0, 0, new_width, new_height );
+		last_width = new_width;
+		last_height = new_height;
 	}
 }
 
@@ -1615,10 +1668,12 @@ void voodoo_ogl_reset_videomode(void) {
 		ogl_surface = NULL;
 	}
 
-    SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES screenType);
-    SDL_Window *window = GFX_SetSDLWindowMode((int)v->fbi.width, (int)v->fbi.height, SCREEN_OPENGL);
-	//SDL_Window *window = SetWindowMode(SCREEN_OPENGL, (int)v->fbi.width, (int)v->fbi.height, false, false);
-    //SDL_Window *window = GFX_GetSDLWindow();
+	if (new_height<v->fbi.height) new_height = v->fbi.height;
+	if (new_width < v->fbi.width) new_width = v->fbi.width;
+
+	if (GFX_LazyFullscreenRequested()) GFX_SwitchFullscreenNoReset();
+
+	SDL_Window *window = GFX_SetSDLWindowMode(new_width, new_height, SCREEN_OPENGL);
 	if (window != NULL)
         ogl_surface = SDL_GetWindowSurface(window);
 	if (ogl_surface == NULL)
@@ -1781,14 +1836,13 @@ void voodoo_ogl_leave(bool leavemode) {
 
 void voodoo_ogl_shutdown(voodoo_state *v) {
 	// TODO revert to previous video mode //
-
+	new_width = new_height = 0;
 	voodoo_ogl_leave(false);
 
 	v->active = false;
 }
 
 #else
-
 
 bool voodoo_ogl_init(voodoo_state *v) {
 	return false;
