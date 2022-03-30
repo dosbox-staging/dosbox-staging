@@ -118,11 +118,11 @@
       <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir)
-cd ..
-$(TargetPath)
-</Command>
-      <Message>Run tests</Message>
+        <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
+cd $(SolutionDir)  &amp;&amp; ^
+cd ..  &amp;&amp; ^
+$(TargetPath)</Command>
+        <Message>Copy resources to output directory and run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,11 +152,11 @@ $(TargetPath)
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir)
-cd ..
-$(TargetPath)
-</Command>
-      <Message>Run tests</Message>
+        <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
+cd $(SolutionDir)  &amp;&amp; ^
+cd ..  &amp;&amp; ^
+$(TargetPath)</Command>
+        <Message>Copy resources to output directory and run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -179,11 +179,11 @@ $(TargetPath)
       <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir)
-cd ..
-$(TargetPath)
-</Command>
-      <Message>Run tests</Message>
+        <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
+cd $(SolutionDir)  &amp;&amp; ^
+cd ..  &amp;&amp; ^
+$(TargetPath)</Command>
+        <Message>Copy resources to output directory and run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -213,11 +213,11 @@ $(TargetPath)
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir)
-cd ..
-$(TargetPath)
-</Command>
-      <Message>Run tests</Message>
+        <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
+cd $(SolutionDir)  &amp;&amp; ^
+cd ..  &amp;&amp; ^
+$(TargetPath)</Command>
+        <Message>Copy resources to output directory and run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
