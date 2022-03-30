@@ -5157,7 +5157,9 @@ unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
       set_file_offset(f, last_page_loc);
 
       // parse the header
-      getn(f, (unsigned char *)header, 6);
+      if (!getn(f, (unsigned char *)header, 6))
+          return error(f, VORBIS_unexpected_eof);
+
       // extract the absolute granule position
       lo = get32(f);
       hi = get32(f);
