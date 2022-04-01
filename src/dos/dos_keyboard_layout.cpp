@@ -390,28 +390,25 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	if (additional_planes>(layout_pages-4)) additional_planes=(layout_pages-4);
 
 	// seek to plane descriptor
-	read_buf_pos=start_pos+0x14+submappings*8;
-	for (Bit16u cplane=0; cplane<additional_planes; cplane++) {
-		Bit16u plane_flags;
+	read_buf_pos = start_pos + 0x14 + submappings * 8;
 
-		// get required-flags (Shift/Alt/Ctrl states, etc.)
-		plane_flags=host_readw(&read_buf[read_buf_pos]);
-		read_buf_pos+=2;
-		current_layout_planes[cplane].required_flags=plane_flags;
-		used_lock_modifiers |= (plane_flags&0x70);
-		// get forbidden-flags
-		plane_flags=host_readw(&read_buf[read_buf_pos]);
-		read_buf_pos+=2;
-		current_layout_planes[cplane].forbidden_flags=plane_flags;
+	assert(read_buf_pos < sizeof(read_buf));
 
-		// get required-userflags
-		plane_flags=host_readw(&read_buf[read_buf_pos]);
-		read_buf_pos+=2;
-		current_layout_planes[cplane].required_userflags=plane_flags;
-		// get forbidden-userflags
-		plane_flags=host_readw(&read_buf[read_buf_pos]);
-		read_buf_pos+=2;
-		current_layout_planes[cplane].forbidden_userflags=plane_flags;
+	for (auto i = 0; i < additional_planes; ++i) {
+		auto &layout = current_layout_planes[i];
+		for (auto p_flags : {
+		             &layout.required_flags,
+		             &layout.forbidden_flags,
+		             &layout.required_userflags,
+		             &layout.forbidden_userflags,
+		     }) {
+			assert(read_buf_pos < sizeof(read_buf));
+			*p_flags = host_readw(&read_buf[read_buf_pos]);
+			read_buf_pos += 2;
+			if (p_flags == &layout.required_flags) {
+				used_lock_modifiers |= ((*p_flags) & 0x70);
+			}
+		}
 	}
 
 	bool found_matching_layout=false;
