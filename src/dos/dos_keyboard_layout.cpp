@@ -191,6 +191,8 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 		Bit16u len=host_readw(&rbuf[0]);
 
 		Bit8u data_len=rbuf[2];
+		assert (data_len < UINT8_MAX);
+		static_assert(UINT8_MAX < sizeof(rbuf), "rbuf too small");
 
 		char lng_codes[258];
 		fseek(tempfile.get(), -2, SEEK_CUR);
