@@ -34,6 +34,7 @@
 #include <functional>
 #include <fstream>
 #include <iterator>
+#include <random>
 #include <stdexcept>
 #include <string>
 
@@ -421,6 +422,25 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	paths.emplace_back(std_fs::path(CROSS_GetPlatformConfigDir()));
 	return paths;
 }
+
+template <typename T>
+std::function<T()> CreateRandomizer(const T min_value, const T max_value)
+{
+	static std::random_device rd;        // one-time call to the host OS
+	static std::mt19937 generator(rd()); // seed the mersenne_twister once
+
+	// Hand back as many generators as needed without further costs
+	// incurred setting up the random number generator.
+	return [=]() {
+		std::uniform_int_distribution<T> distrib(min_value, max_value);
+		return distrib(generator);
+	};
+}
+// Explicit template instantiations
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+template std::function<char()> CreateRandomizer<char>(const char, const char);
+template std::function<uint8_t()> CreateRandomizer<uint8_t>(const uint8_t,
+                                                            const uint8_t);
 
 std_fs::path GetResourcePath(const std_fs::path &name)
 {
