@@ -158,16 +158,6 @@ Bitu CPU_Pop32(void) {
 	return val;
 }
 
-PhysPt SelBase(Bitu sel) {
-	if (cpu.cr0 & CR0_PROTECTION) {
-		Descriptor desc;
-		cpu.gdt.GetDescriptor(sel,desc);
-		return desc.GetBase();
-	} else {
-		return sel<<4;
-	}
-}
-
 void CPU_SetFlags(const uint32_t word, uint32_t mask)
 {
 	mask |= CPU_extflags_toggle; // ID-flag and AC-flag can be toggled on
