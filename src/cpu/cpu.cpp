@@ -2326,11 +2326,14 @@ public:
 					}
 				}
 			} else if(type =="fixed") {
-				cmd.FindCommand(1,str);
-				int rmdval=0;
-				std::istringstream stream(str);
-				stream >> rmdval;
-				CPU_CycleMax = rmdval;
+				if (cmd.FindCommand(1, str)) {
+					int rmdval = 0;
+					std::istringstream stream(str);
+					stream >> rmdval;
+					if (rmdval > 0) {
+						CPU_CycleMax = rmdval;
+					}
+				}
 			} else {
 				std::istringstream stream(type);
 				int rmdval=0;
