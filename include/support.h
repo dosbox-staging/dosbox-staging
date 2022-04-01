@@ -106,7 +106,11 @@ inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
 	// https://stackoverflow.com/a/33790603
 }
 
-inline int iround(double x) {
+template <typename T>
+std::function<T()> CreateRandomizer(const T min_value, const T max_value);
+
+inline int iround(double x)
+{
 	assert(std::isfinite(x));
 	assert(x >= (std::numeric_limits<int>::min)());
 	assert(x <= (std::numeric_limits<int>::max)());
