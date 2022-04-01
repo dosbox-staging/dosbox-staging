@@ -2261,87 +2261,75 @@ public:
 		CPU_Cycles=0;
 		CPU_SkipCycleAutoAdjust=false;
 
-		Prop_multival* p = section->Get_multival("cycles");
+		// Sets the value if the string in within the min and max values
+		auto set_if_in_range = [](const std::string &str, int &value,
+		                          const int min_value = 1,
+		                          const int max_value = 0) {
+			std::istringstream stream(str);
+			int v = 0;
+			stream >> v;
+			const bool within_min = (v >= min_value);
+			const bool within_max = (!max_value || v <= max_value);
+			if (within_min && within_max)
+				value = v;
+		};
+
+		Prop_multival *p = section->Get_multival("cycles");
 		std::string type = p->GetSection()->Get_string("type");
-		std::string str ;
-		CommandLine cmd(0,p->GetSection()->Get_string("parameters"));
-		if (type=="max") {
-			CPU_CycleMax=0;
-			CPU_CyclePercUsed=100;
-			CPU_CycleAutoAdjust=true;
-			CPU_CycleLimit=-1;
-			for (Bitu cmdnum=1; cmdnum<=cmd.GetCount(); cmdnum++) {
-				if (cmd.FindCommand(cmdnum,str)) {
-					if (str.find('%')==str.length()-1) {
-						str.erase(str.find('%'));
-						int percval=0;
-						std::istringstream stream(str);
-						stream >> percval;
-						if ((percval > 0) && (percval <= 105))
-							CPU_CyclePercUsed = percval;
-					} else if (str=="limit") {
-						cmdnum++;
-						if (cmd.FindCommand(cmdnum,str)) {
-							int cyclimit=0;
-							std::istringstream stream(str);
-							stream >> cyclimit;
-							if (cyclimit>0) CPU_CycleLimit=cyclimit;
+		std::string str;
+		CommandLine cmd(0, p->GetSection()->Get_string("parameters"));
+
+		constexpr auto min_percent = 0;
+		constexpr auto max_percent = 105;
+
+		if (type == "max") {
+			CPU_CycleMax = 0;
+			CPU_CyclePercUsed = 100;
+			CPU_CycleAutoAdjust = true;
+			CPU_CycleLimit = -1;
+			for (auto cmdnum = 1; cmdnum <= cmd.GetCount(); ++cmdnum) {
+				if (cmd.FindCommand(cmdnum, str)) {
+					if (str.back() == '%') {
+						str.pop_back();
+						set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
+					} else if (str == "limit") {
+						++cmdnum;
+						if (cmd.FindCommand(cmdnum, str)) {
+							set_if_in_range(str, CPU_CycleLimit);
 						}
 					}
 				}
 			}
 		} else {
-			if (type=="auto") {
-				CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CYCLES;
-				CPU_CycleMax=3000;
-				CPU_OldCycleMax=3000;
-				CPU_CyclePercUsed=100;
-				for (Bitu cmdnum=0; cmdnum<=cmd.GetCount(); cmdnum++) {
-					if (cmd.FindCommand(cmdnum,str)) {
-						if (str.find('%')==str.length()-1) {
-							str.erase(str.find('%'));
-							int percval=0;
-							std::istringstream stream(str);
-							stream >> percval;
-							if ((percval > 0) &&
-							    (percval <= 105))
-								CPU_CyclePercUsed = percval;
-						} else if (str=="limit") {
-							cmdnum++;
-							if (cmd.FindCommand(cmdnum,str)) {
-								int cyclimit=0;
-								std::istringstream stream(str);
-								stream >> cyclimit;
-								if (cyclimit>0) CPU_CycleLimit=cyclimit;
+			if (type == "auto") {
+				CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CYCLES;
+				CPU_CycleMax = 3000;
+				CPU_OldCycleMax = 3000;
+				CPU_CyclePercUsed = 100;
+				for (auto cmdnum = 0; cmdnum <= cmd.GetCount(); ++cmdnum) {
+					if (cmd.FindCommand(cmdnum, str)) {
+						if (str.back() == '%') {
+							str.pop_back();
+							set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
+						} else if (str == "limit") {
+							++cmdnum;
+							if (cmd.FindCommand(cmdnum, str)) {
+								set_if_in_range(str, CPU_CycleLimit);
 							}
 						} else {
-							int rmdval=0;
-							std::istringstream stream(str);
-							stream >> rmdval;
-							if (rmdval>0) {
-								CPU_CycleMax = rmdval;
-								CPU_OldCycleMax = rmdval;
-							}
+							set_if_in_range(str, CPU_CycleMax);
+							set_if_in_range(str, CPU_OldCycleMax);
 						}
 					}
 				}
-			} else if(type =="fixed") {
+			} else if (type == "fixed") {
 				if (cmd.FindCommand(1, str)) {
-					int rmdval = 0;
-					std::istringstream stream(str);
-					stream >> rmdval;
-					if (rmdval > 0) {
-						CPU_CycleMax = rmdval;
-					}
+					set_if_in_range(str, CPU_CycleMax);
 				}
 			} else {
-				std::istringstream stream(type);
-				int rmdval=0;
-				stream >> rmdval;
-				if (rmdval)
-					CPU_CycleMax = rmdval;
+				set_if_in_range(type, CPU_CycleMax);
 			}
-			CPU_CycleAutoAdjust=false;
+			CPU_CycleAutoAdjust = false;
 		}
 
 		CPU_CycleUp=section->Get_int("cycleup");
