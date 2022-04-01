@@ -409,17 +409,16 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 		return paths;
 
 #if defined(MACOSX)
-	const auto bundled_path = GetExecutablePath() / "../Resources";
-	const auto outer_bundled_path = GetExecutablePath() / "../../Resources";
+	paths.emplace_back(GetExecutablePath() / "../Resources");
+	paths.emplace_back(GetExecutablePath() / "../../Resources");
 #else
-	const auto bundled_path = GetExecutablePath() / "resources";
-	const auto outer_bundled_path = GetExecutablePath() / "../resources";
+	paths.emplace_back(GetExecutablePath() / "resources");
+	paths.emplace_back(GetExecutablePath() / "../resources");
 #endif
-	paths = {bundled_path, outer_bundled_path,
-	         // macOS, POSIX, and even MinGW/MSYS2/Cygwin:
-	         std_fs::path("/usr/local/share/dosbox-staging"),
-	         std_fs::path("/usr/share/dosbox-staging"),
-	         std_fs::path(CROSS_GetPlatformConfigDir())};
+	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
+	paths.emplace_back(std_fs::path("/usr/local/share/dosbox-staging"));
+	paths.emplace_back(std_fs::path("/usr/share/dosbox-staging"));
+	paths.emplace_back(std_fs::path(CROSS_GetPlatformConfigDir()));
 	return paths;
 }
 
