@@ -361,8 +361,9 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		                              tempfile.get());
 	}
 
-	Bit8u data_len,submappings;
-	data_len=read_buf[start_pos++];
+	const auto data_len = read_buf[start_pos++];
+	assert(data_len < UINT8_MAX);
+	static_assert(UINT8_MAX < sizeof(read_buf), "read_buf too small");
 
 	language_codes=new char*[data_len];
 	language_code_count=0;
@@ -372,6 +373,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		i+=2;
 		Bitu lcpos=0;
 		for (;i<data_len;) {
+			assert(start_pos + i < sizeof(read_buf));
 			char lcode=char(read_buf[start_pos+i]);
 			i++;
 			if (lcode==',') break;
@@ -383,8 +385,11 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 
 	start_pos+=data_len;		// start_pos==absolute position of KeybCB block
 
-	submappings=read_buf[start_pos];
-	additional_planes=read_buf[start_pos+1];
+	assert(start_pos < sizeof(read_buf));
+	const auto submappings = read_buf[start_pos];
+
+	assert(start_pos + 1 < sizeof(read_buf));
+	additional_planes = read_buf[start_pos + 1];
 
 	// four pages always occupied by normal,shift,flags,commandbits
 	if (additional_planes>(layout_pages-4)) additional_planes=(layout_pages-4);
