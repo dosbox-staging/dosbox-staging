@@ -724,9 +724,14 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 
 	start_pos+=data_len;		// start_pos==absolute position of KeybCB block
 
+	assert(start_pos < sizeof(read_buf));
 	submappings=read_buf[start_pos];
 
-	// check all submappings and use them if general submapping or same codepage submapping
+	// Make sure we don't read beyond the end of the buffer
+	assert(start_pos + 0x14 + submappings * 8 < sizeof(read_buf));
+
+	// check all submappings and use them if general submapping or same
+	// codepage submapping
 	for (Bit16u sub_map=0; (sub_map<submappings); sub_map++) {
 		Bit16u submap_cp;
 
