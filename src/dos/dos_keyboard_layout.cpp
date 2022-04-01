@@ -176,7 +176,12 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 		return 0;
 	}
 
-	fseek(tempfile.get(), 7 + rbuf[6], SEEK_SET);
+	const auto seek_pos = 7 + rbuf[6];
+	if (fseek(tempfile.get(), seek_pos, SEEK_SET) != 0) {
+		LOG_WARNING("LAYOUT: could not seek to byte %d in keyboard layout file '%s': %s",
+		            seek_pos, kcl_file_name, strerror(errno));
+		return 0;
+	}
 
 	for (;;) {
 		Bit32u cur_pos = (Bit32u)(ftell(tempfile.get()));
