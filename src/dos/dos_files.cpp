@@ -799,13 +799,12 @@ bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
 		}
 	}
 	dos.errorcode=0;
-	/* add random crap to the end of the name and try to open */
-	const auto seed = static_cast<unsigned int>(time(nullptr));
-	srand(seed);
+
+	static const auto randomize_letter = CreateRandomizer<char>('A', 'Z');
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {
-			tempname[i]=(rand()%26)+'A';
+			tempname[i] = randomize_letter();
 		}
 		tempname[8]=0;
 	} while (DOS_FileExists(name));
