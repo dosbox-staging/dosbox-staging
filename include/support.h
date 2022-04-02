@@ -328,8 +328,18 @@ std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
 std::vector<uint8_t> LoadResource(const std_fs::path &name,
                                   const ResourceImportance importance);
 
+bool path_exists(const std_fs::path &path);
+
+bool is_writable(const std_fs::path &path);
+bool is_readable(const std_fs::path &path);
+bool is_readonly(const std_fs::path &path);
+
+bool make_writable(const std_fs::path &path);
+bool make_readonly(const std_fs::path &path);
+
 template <typename container_t>
-bool contains(const container_t &container, const typename container_t::value_type &value)
+bool contains(const container_t &container,
+              const typename container_t::value_type &value)
 {
 	return std::find(container.begin(), container.end(), value) != container.end();
 }

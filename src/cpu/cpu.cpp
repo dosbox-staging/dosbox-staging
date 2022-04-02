@@ -2287,7 +2287,7 @@ public:
 			CPU_CyclePercUsed = 100;
 			CPU_CycleAutoAdjust = true;
 			CPU_CycleLimit = -1;
-			for (auto cmdnum = 1; cmdnum <= cmd.GetCount(); ++cmdnum) {
+			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount(); ++cmdnum) {
 				if (cmd.FindCommand(cmdnum, str)) {
 					if (str.back() == '%') {
 						str.pop_back();
@@ -2306,7 +2306,7 @@ public:
 				CPU_CycleMax = 3000;
 				CPU_OldCycleMax = 3000;
 				CPU_CyclePercUsed = 100;
-				for (auto cmdnum = 0; cmdnum <= cmd.GetCount(); ++cmdnum) {
+				for (unsigned int cmdnum = 0; cmdnum <= cmd.GetCount(); ++cmdnum) {
 					if (cmd.FindCommand(cmdnum, str)) {
 						if (str.back() == '%') {
 							str.pop_back();
