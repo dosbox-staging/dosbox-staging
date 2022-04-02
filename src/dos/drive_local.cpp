@@ -435,31 +435,30 @@ bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
 		DOS_SetError((uint16_t)GetLastError());
 		return false;
 	}
-	dirCache.EmptyCache();
-	return true;
 #else
-	struct stat status;
-	if (stat(newname, &status) == 0) {
-		if (attr & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN))
-			LOG_WARNING("%s: Application attempted to set system or hidden attributes for '%s' which is ignored for local drives",
-			            __FUNCTION__, newname);
+	const auto f = std_fs::path(newname);
 
-		if (attr & DOS_ATTR_READ_ONLY)
-			status.st_mode &= ~(S_IWUSR | S_IWGRP | S_IWOTH);
-		else
-			status.st_mode |= S_IWUSR;
-
-		if (chmod(newname, status.st_mode) < 0) {
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
-
-		return true;
+	if (!path_exists(f)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
 	}
 
-	DOS_SetError(DOSERR_FILE_NOT_FOUND);
-	return false;
+	if (attr & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN))
+		LOG_WARNING("FILESYSTEM: Application attempted to set system or hidden"
+		            " attributes for '%s', which is ignored for local drives",
+		            newname);
+
+	const auto result = attr & DOS_ATTR_READ_ONLY ? make_readonly(f)
+	                                              : make_writable(f);
+	if (!result) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 #endif
+
+	// If we made it here, the attributes were applied successfully
+	dirCache.EmptyCache();
+	return true;
 }
 
 bool localDrive::MakeDir(char * dir) {
