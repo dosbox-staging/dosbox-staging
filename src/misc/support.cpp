@@ -491,6 +491,82 @@ std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
 	return LoadResource(subdir / name, importance);
 }
 
+bool path_exists(const std_fs::path &path)
+{
+	std::error_code ec; // avoid exceptions
+	return std_fs::exists(path, ec);
+}
+
+bool is_writable(const std_fs::path &p)
+{
+	using namespace std_fs;
+	std::error_code ec; // avoid exceptions
+	const auto perms = status(p, ec).permissions();
+	return ((perms & perms::owner_write) != perms::none ||
+	        (perms & perms::group_write) != perms::none ||
+	        (perms & perms::others_write) != perms::none);
+}
+
+bool is_readable(const std_fs::path &p)
+{
+	using namespace std_fs;
+	std::error_code ec; // avoid exceptions
+	const auto perms = status(p, ec).permissions();
+	return ((perms & perms::owner_read) != perms::none ||
+	        (perms & perms::group_read) != perms::none ||
+	        (perms & perms::others_read) != perms::none);
+}
+
+bool is_readonly(const std_fs::path &p)
+{
+	return is_readable(p) && !is_writable(p);
+}
+
+bool make_writable(const std_fs::path &p)
+{
+	// Check
+	if (is_writable(p))
+		return true;
+
+	// Apply
+	std::error_code ec;
+	using namespace std_fs;
+	permissions(p, perms::owner_write, perm_options::add, ec);
+
+	// Result and verification
+	if (ec)
+		LOG_WARNING("FILESYSTEM: Failed to add write permissions for '%s': %s",
+		            p.string().c_str(), ec.message().c_str());
+	else
+		assert(is_writable(p));
+
+	return (!ec);
+}
+
+bool make_readonly(const std_fs::path &p)
+{
+	// Check
+	if (is_readonly(p))
+		return true;
+
+	// Apply
+	using namespace std_fs;
+	constexpr auto write_perms = (perms::owner_write |
+	                              perms::group_write |
+	                              perms::others_write);
+	std::error_code ec;
+	permissions(p, write_perms, perm_options::remove, ec);
+
+	// Result and verification
+	if (ec)
+		LOG_WARNING("FILESYSTEM: Failed to remove write permissions for '%s': %s",
+		            p.string().c_str(), ec.message().c_str());
+	else
+		assert(is_readonly(p));
+
+	return (!ec);
+}
+
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
 {
 	if (year < 1980 || month > 12 || month == 0 || day == 0)
