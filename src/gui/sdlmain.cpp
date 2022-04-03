@@ -4158,7 +4158,7 @@ void Config_Add_SDL() {
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
-	// constexpr auto deprecated = Property::Changeable::Deprecated;
+	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
@@ -4184,6 +4184,13 @@ void Config_Add_SDL() {
 	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
+	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
+	pstring->Set_help(
+	        "Set the viewport size (drawable area) within the window/screen:\n"
+	        "  fit:       Fit the viewport to the available window/screen (default).\n"
+	        "  <custom>:  Limit the viewport within to a custom resolution or percentage of\n"
+	        "             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%");
+
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
 	        "Set initial window position when running in windowed mode:\n"
@@ -4198,12 +4205,8 @@ void Config_Add_SDL() {
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = sdl_sec->Add_path("viewport_resolution", always, "auto");
-	pstring->Set_help(
-	        "Optionally restricts the viewport resolution within the window/screen:\n"
-	        "  auto:      The viewport fills the window/screen (default).\n"
-	        "  <custom>:  Set max viewport resolution in WxH format.\n"
-	        "             For example: 960x720");
+	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
+	pstring->Set_help("This setting has been renamed to viewport_resolution.");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
