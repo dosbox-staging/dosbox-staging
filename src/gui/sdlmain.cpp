@@ -475,7 +475,7 @@ struct SDL_Block {
 	} mouse = {};
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024];
-	bool window_resolution_specified = false;
+	bool use_exact_window_resolution = false;
 	bool use_max_resolution = false;
 	SDL_Point max_resolution = {-1, -1};
 #if defined (WIN32)
@@ -1507,7 +1507,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	const int img_height = sdl.pp_scale.output_h;
 
 	int win_width, win_height;
-	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
+	if (sdl.use_exact_window_resolution && sdl.use_max_resolution) {
 		win_width = w;
 		win_height = h;
 	} else {
@@ -3168,8 +3168,8 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	const std::string pref = windowresolution_val;
 	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
 
-	sdl.window_resolution_specified = pref.find('x') != std::string::npos;
-	if (sdl.window_resolution_specified) {
+	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
+	if (sdl.use_exact_window_resolution) {
 		coarse_size = window_bounds_from_resolution(pref);
 		refined_scaling_mode = drop_nearest();
 	} else {
@@ -3183,7 +3183,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
-	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
+	if (sdl.use_exact_window_resolution && sdl.use_max_resolution) {
 		// If max_resolution is enabled, the refinement is applied to
 		// max_resolution instead of the the window dimensions.
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
