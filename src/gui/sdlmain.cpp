@@ -476,7 +476,7 @@ struct SDL_Block {
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024];
 	bool use_exact_window_resolution = false;
-	bool use_max_resolution = false;
+	bool use_viewport_limits = false;
 	SDL_Point max_resolution = {-1, -1};
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
@@ -1507,7 +1507,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	const int img_height = sdl.pp_scale.output_h;
 
 	int win_width, win_height;
-	if (sdl.use_exact_window_resolution && sdl.use_max_resolution) {
+	if (sdl.use_exact_window_resolution && sdl.use_viewport_limits) {
 		win_width = w;
 		win_height = h;
 	} else {
@@ -1529,7 +1529,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 static SDL_Point restrict_to_max_resolution(int width, int height)
 {
 	int w, h;
-	if (sdl.use_max_resolution) {
+	if (sdl.use_viewport_limits) {
 		w = std::min(width, sdl.max_resolution.x);
 		h = std::min(height, sdl.max_resolution.y);
 	} else {
@@ -3036,12 +3036,12 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 //  - The 'max_resolution' config value: 'auto', 'WxH', or an invalid setting.
 //
 // Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_max_resolution', true if the max_resolution feature is enabled.
+//  - 'sdl.desktop.use_viewport_limits', true if the max_resolution feature is enabled.
 //  - 'sdl.desktop.max_resolution', with the refined size.
 
 static void setup_max_resolution_from_conf(const std::string &max_resolution_val)
 {
-	sdl.use_max_resolution = false;
+	sdl.use_viewport_limits = false;
 	sdl.max_resolution = {-1, -1};
 
 	// TODO: Deprecate SURFACE output and remove this.
@@ -3081,7 +3081,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 		                                  wants_stretched_pixels());
 	}
 
-	sdl.use_max_resolution = true;
+	sdl.use_viewport_limits = true;
 	sdl.max_resolution = refined_size;
 
 	LOG_MSG("DISPLAY: max_resolution set to %dx%d (refined from %dx%d)",
@@ -3183,7 +3183,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
-	if (sdl.use_exact_window_resolution && sdl.use_max_resolution) {
+	if (sdl.use_exact_window_resolution && sdl.use_viewport_limits) {
 		// If max_resolution is enabled, the refinement is applied to
 		// max_resolution instead of the the window dimensions.
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
