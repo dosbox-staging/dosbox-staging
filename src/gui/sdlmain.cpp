@@ -477,7 +477,7 @@ struct SDL_Block {
 	SDL_Rect updateRects[1024];
 	bool use_exact_window_resolution = false;
 	bool use_viewport_limits = false;
-	SDL_Point max_resolution = {-1, -1};
+	SDL_Point viewport_resolution = {-1, -1};
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
@@ -490,7 +490,7 @@ struct SDL_Block {
 static bool first_window = true;
 static SDL_Block sdl;
 
-static SDL_Point restrict_to_max_resolution(int width, int height);
+static SDL_Point restrict_to_viewport_resolution(int width, int height);
 static PPScale calc_pp_scale(int width, int heigth);
 static SDL_Rect calc_viewport(int width, int height);
 
@@ -1499,7 +1499,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	}
 	assert(w > 0 && h > 0);
 
-	const auto render_resolution = restrict_to_max_resolution(w, h);
+	const auto render_resolution = restrict_to_viewport_resolution(w, h);
 
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
@@ -1526,12 +1526,12 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 }
 
 
-static SDL_Point restrict_to_max_resolution(int width, int height)
+static SDL_Point restrict_to_viewport_resolution(int width, int height)
 {
 	int w, h;
 	if (sdl.use_viewport_limits) {
-		w = std::min(width, sdl.max_resolution.x);
-		h = std::min(height, sdl.max_resolution.y);
+		w = std::min(width, sdl.viewport_resolution.x);
+		h = std::min(height, sdl.viewport_resolution.y);
 	} else {
 		w = width;
 		h = height;
@@ -3033,37 +3033,37 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 }
 
 // Takes in:
-//  - The 'max_resolution' config value: 'auto', 'WxH', or an invalid setting.
+//  - The 'viewport_resolution' config value: 'fit', 'WxH', 'N[.M]%', or an invalid setting.
 //
 // Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_viewport_limits', true if the max_resolution feature is enabled.
-//  - 'sdl.desktop.max_resolution', with the refined size.
+//  - 'sdl.desktop.use_viewport_limits', true if the viewport_resolution feature is enabled.
+//  - 'sdl.desktop.viewport_resolution', with the refined size.
 
-static void setup_max_resolution_from_conf(const std::string &max_resolution_val)
+static void setup_viewport_resolution_from_conf(const std::string &viewport_resolution_val)
 {
 	sdl.use_viewport_limits = false;
-	sdl.max_resolution = {-1, -1};
+	sdl.viewport_resolution = {-1, -1};
 
 	// TODO: Deprecate SURFACE output and remove this.
 	if (sdl.desktop.want_type == SCREEN_SURFACE)
 		return;
 
-	if (max_resolution_val == "auto")
+	if (viewport_resolution_val == "auto")
 		return;
 
 	const auto desktop = get_desktop_resolution();
 	int w, h;
-	auto was_parsed = sscanf(max_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
+	auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested max_resolution '%s' was not in WxH format, resolution restriction is disabled",
-		            max_resolution_val.c_str());
+		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH format, resolution restriction is disabled",
+		            viewport_resolution_val.c_str());
 		return;
 	}
 
 	const bool is_out_of_bounds = w <= 0 || w > desktop.w || h <= 0 ||
 	                              h > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested max_resolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested viewport_resolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
 		            "resolution restriction is disabled",
 		            w, h, desktop.w, desktop.h);
 		return;
@@ -3073,7 +3073,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 
 	SDL_Point refined_size;
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT) {
-		// Keep requested max_resolution in pixel-perfect modes; refining it
+		// Keep requested viewport_resolution in pixel-perfect modes; refining it
 		// would be too counterintuitive
 		refined_size = coarse_size;
 	} else {
@@ -3082,9 +3082,9 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 	}
 
 	sdl.use_viewport_limits = true;
-	sdl.max_resolution = refined_size;
+	sdl.viewport_resolution = refined_size;
 
-	LOG_MSG("DISPLAY: max_resolution set to %dx%d (refined from %dx%d)",
+	LOG_MSG("DISPLAY: viewport_resolution set to %dx%d (refined from %dx%d)",
 			refined_size.x, refined_size.y, w, h);
 }
 
@@ -3184,8 +3184,8 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
 	if (sdl.use_exact_window_resolution && sdl.use_viewport_limits) {
-		// If max_resolution is enabled, the refinement is applied to
-		// max_resolution instead of the the window dimensions.
+		// If viewport_resolution is enabled, the refinement is applied to
+		// viewport_resolution instead of the the window dimensions.
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
@@ -3222,7 +3222,7 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) / (sdl.draw.height * sdl.draw.scaley);
 	const double win_aspect_ratio = double(win_width) / double(win_height);
 
-	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	const auto render_resolution = restrict_to_viewport_resolution(win_width, win_height);
 
 	int w, h;
 	if (prog_aspect_ratio > win_aspect_ratio) {
@@ -3243,7 +3243,7 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 {
-	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	const auto render_resolution = restrict_to_viewport_resolution(win_width, win_height);
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
 	const int w = sdl.pp_scale.output_w;
@@ -3318,7 +3318,7 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
 
-	setup_max_resolution_from_conf(section->Get_string("max_resolution"));
+	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.scaling_mode, should_stretch_pixels);
@@ -4204,7 +4204,7 @@ void Config_Add_SDL() {
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = sdl_sec->Add_path("max_resolution", always, "auto");
+	pstring = sdl_sec->Add_path("viewport_resolution", always, "auto");
 	pstring->Set_help(
 	        "Optionally restricts the viewport resolution within the window/screen:\n"
 	        "  auto:      The viewport fills the window/screen (default).\n"
