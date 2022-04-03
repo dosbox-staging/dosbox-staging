@@ -3181,9 +3181,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
-	if (sdl.use_exact_window_resolution && sdl.use_viewport_limits) {
-		// If viewport_resolution is enabled, the refinement is applied to
-		// viewport_resolution instead of the the window dimensions.
+	if (sdl.use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
