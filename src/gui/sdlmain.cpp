@@ -1525,18 +1525,12 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	return sdl.window;
 }
 
-
-static SDL_Point restrict_to_viewport_resolution(int width, int height)
+static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
-	int w, h;
-	if (sdl.use_viewport_limits) {
-		w = std::min(width, sdl.viewport_resolution.x);
-		h = std::min(height, sdl.viewport_resolution.y);
-	} else {
-		w = width;
-		h = height;
-	}
-	return {w, h};
+	return sdl.use_viewport_limits
+	               ? SDL_Point{std::min(sdl.viewport_resolution.x, w),
+	                           std::min(sdl.viewport_resolution.y, h)}
+	               : SDL_Point{w, h};
 }
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height);
