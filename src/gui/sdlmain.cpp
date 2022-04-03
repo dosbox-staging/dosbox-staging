@@ -2983,7 +2983,7 @@ static void maybe_limit_requested_resolution(int &w, int &h, const char *size_de
 		         size_description, w, h, desktop.w, desktop.h);
 }
 
-static SDL_Point window_bounds_from_resolution(const std::string &pref)
+static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 {
 	int w = 0;
 	int h = 0;
@@ -3170,7 +3170,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
-		coarse_size = window_bounds_from_resolution(pref);
+		coarse_size = parse_window_resolution_from_conf(pref);
 		refined_scaling_mode = drop_nearest();
 	} else {
 		coarse_size = window_bounds_from_label(pref, desktop);
