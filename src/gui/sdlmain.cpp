@@ -493,6 +493,7 @@ static SDL_Block sdl;
 static SDL_Point restrict_to_viewport_resolution(int width, int height);
 static PPScale calc_pp_scale(int width, int heigth);
 static SDL_Rect calc_viewport(int width, int height);
+static SDL_Rect calc_viewport_fit(const int width, const int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
@@ -895,7 +896,6 @@ static void log_display_properties(int in_x,
                                    const double in_par,
                                    const SCALING_MODE scaling_mode,
                                    const PPScale &pp_scale,
-                                   const bool is_fullscreen,
                                    int out_x,
                                    int out_y)
 {
@@ -910,16 +910,10 @@ static void log_display_properties(int in_x,
 		in_y = pp_scale.effective_source_h;
 		out_x = pp_scale.output_w;
 		out_y = pp_scale.output_h;
-	} else if (is_fullscreen) {
-		// If we're fullscreen and using a non-pixel-perfect scaling
-		// mode, then the incoming'out_x' and 'out_y' arguments only
-		// represent the total display resolution as opposed to the 4:3
-		// or 8:5 area, so use this approach to get the actual scaled
-		// dimentions.
-		const auto fs = refine_window_size({out_x, out_y},
-		                                   SCALING_MODE::NONE, in_par > 1);
-		out_x = fs.x;
-		out_y = fs.y;
+	} else {
+		const auto viewport = calc_viewport_fit(out_x, out_y);
+		out_x = viewport.w;
+		out_y = viewport.h;
 	}
 	const auto scale_x = static_cast<double>(out_x) / in_x;
 	const auto scale_y = static_cast<double>(out_y) / in_y;
@@ -1451,7 +1445,7 @@ finish:
 		setup_presentation_mode(sdl.frame.mode);
 		log_display_properties(sdl.draw.width, sdl.draw.height,
 		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
-		                       sdl.pp_scale, fullscreen, width, height);
+		                       sdl.pp_scale, width, height);
 	}
 
 	// Force redraw after changing the window
@@ -2361,8 +2355,7 @@ void GFX_SwitchFullScreen()
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
 	log_display_properties(sdl.draw.width, sdl.draw.height,
-	                       sdl.draw.pixel_aspect, sdl.scaling_mode,
-	                       sdl.pp_scale, sdl.desktop.fullscreen,
+	                       sdl.draw.pixel_aspect, sdl.scaling_mode, sdl.pp_scale,
 	                       sdl.desktop.fullscreen ? sdl.desktop.full.width
 	                                              : sdl.desktop.window.width,
 	                       sdl.desktop.fullscreen ? sdl.desktop.full.height
