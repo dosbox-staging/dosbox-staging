@@ -3777,6 +3777,11 @@ static void HandleVideoResize(int width, int height)
 	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
 		sdl.clip = calc_viewport(width, height);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+
+		if (!sdl.desktop.fullscreen) {
+			sdl.desktop.window.width = width;
+			sdl.desktop.window.height = height;
+		}
 		return;
 	}
 #endif
