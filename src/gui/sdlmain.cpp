@@ -3208,7 +3208,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	        sdl.display_number);
 }
 
-static SDL_Rect calc_viewport_fit(int win_width, int win_height)
+static SDL_Rect calc_viewport_fit(const int win_w, const int win_h)
 {
 	assert(sdl.draw.width > 0);
 	assert(sdl.draw.height > 0);
@@ -3217,26 +3217,30 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 	assert(std::isfinite(sdl.draw.scalex));
 	assert(std::isfinite(sdl.draw.scaley));
 
-	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) / (sdl.draw.height * sdl.draw.scaley);
-	const double win_aspect_ratio = double(win_width) / double(win_height);
+	// limit the window to the user's desired viewport, if configured
+	const auto [lwin_w, lwin_h] = restrict_to_viewport_resolution(win_w, win_h);
 
-	const auto render_resolution = restrict_to_viewport_resolution(win_width, win_height);
+	// calculate the aspect ratios of the draw buffer and the limited window
+	const auto draw_aspect = (sdl.draw.width * sdl.draw.scalex) /
+	                         (sdl.draw.height * sdl.draw.scaley);
+	const auto lwin_aspect = static_cast<double>(lwin_w) / lwin_h;
 
-	int w, h;
-	if (prog_aspect_ratio > win_aspect_ratio) {
-		w = render_resolution.x;
-		h = iround(w / prog_aspect_ratio);
-	} else {
-		h = render_resolution.y;
-		w = iround(h * prog_aspect_ratio);
-	}
-	assert(win_width >= w);
-	assert(win_height >= h);
+	// calculate the viewport contingent on the aspect ratio of the limited
+	// window versus draw buffer
+	const auto lwin_is_wider = lwin_aspect > draw_aspect;
+	const auto view_w = lwin_is_wider ? iround(lwin_h * draw_aspect) : lwin_w;
+	const auto view_h = lwin_is_wider ? lwin_h : iround(lwin_w / draw_aspect);
 
-	const int x = (win_width - w) / 2;
-	const int y = (win_height - h) / 2;
+	const int view_x = (win_w - view_w) / 2;
+	const int view_y = (win_h - view_h) / 2;
 
-	return {x, y, w, h};
+	/*
+	LOG_MSG("DISPLAY: %s win %4dx%4d, lwin %4dx%4d %1.2f"
+	        " vs draw %1.2f => viewport=%3d,%3d %4dx%4d",
+	        __FUNCTION__, win_w, win_h, lwin_w, lwin_h, lwin_aspect,
+	        draw_aspect, view_x, view_y, view_w, view_h);
+	*/
+	return {view_x, view_y, view_w, view_h};
 }
 
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
