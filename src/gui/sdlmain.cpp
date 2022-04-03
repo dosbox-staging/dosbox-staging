@@ -3042,44 +3042,48 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 	if (sdl.desktop.want_type == SCREEN_SURFACE)
 		return;
 
-	if (viewport_resolution_val == "auto")
+	constexpr auto default_val = "fit";
+	if (viewport_resolution_val == default_val)
 		return;
+
+	int w = 0;
+	int h = 0;
+	float p = 0.0f;
+	const auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
+	                        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
+
+	if (!was_parsed) {
+		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH"
+		            " or N%% format, using the default setting ('%s') instead",
+		            viewport_resolution_val.c_str(), default_val);
+		return;
+	}
 
 	const auto desktop = get_desktop_resolution();
-	int w, h;
-	auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
-	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH format, resolution restriction is disabled",
-		            viewport_resolution_val.c_str());
-		return;
-	}
-
-	const bool is_out_of_bounds = w <= 0 || w > desktop.w || h <= 0 ||
-	                              h > desktop.h;
+	const bool is_out_of_bounds = (w <= 0 || w > desktop.w || h <= 0 ||
+	                               h > desktop.h) &&
+	                              (p <= 0.0f || p > 100.0f);
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
-		            "resolution restriction is disabled",
-		            w, h, desktop.w, desktop.h);
+		LOG_WARNING("DISPLAY: Requested viewport_resolution of '%s' is outside"
+		            " the desktop '%dx%d' bounds or the 1-100%% range, "
+		            " using the default setting ('%s') instead",
+		            viewport_resolution_val.c_str(), desktop.w,
+		            desktop.h, default_val);
 		return;
-	}
-
-	auto coarse_size = clamp_to_minimum_window_dimensions({w, h});
-
-	SDL_Point refined_size;
-	if (sdl.scaling_mode == SCALING_MODE::PERFECT) {
-		// Keep requested viewport_resolution in pixel-perfect modes; refining it
-		// would be too counterintuitive
-		refined_size = coarse_size;
-	} else {
-		refined_size = refine_window_size(coarse_size, sdl.scaling_mode,
-		                                  wants_stretched_pixels());
 	}
 
 	sdl.use_viewport_limits = true;
-	sdl.viewport_resolution = refined_size;
+	if (p > 0.0f) {
+		sdl.viewport_resolution.x = iround(desktop.w * static_cast<double>(p) / 100.0);
+		sdl.viewport_resolution.y = iround(desktop.h * static_cast<double>(p) / 100.0);
+		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
+		        static_cast<double>(p), sdl.viewport_resolution.x, sdl.viewport_resolution.y);
 
-	LOG_MSG("DISPLAY: viewport_resolution set to %dx%d (refined from %dx%d)",
-			refined_size.x, refined_size.y, w, h);
+	} else {
+		sdl.viewport_resolution = {w, h};
+		LOG_MSG("DISPLAY: Limiting viewport resolution to %dx%d",
+		        sdl.viewport_resolution.x, sdl.viewport_resolution.y);
+	}
 }
 
 static void setup_initial_window_position_from_conf(const std::string &window_position_val)
