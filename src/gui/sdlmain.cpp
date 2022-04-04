@@ -1435,12 +1435,6 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
 
-	if (sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen) {
-		const int w = iround(sdl.draw.width * sdl.draw.scalex);
-		const int h = iround(sdl.draw.height * sdl.draw.scaley);
-		SDL_SetWindowMinimumSize(sdl.window, w, h);
-	}
-
 	if (sdl.draw.has_changed) {
 		setup_presentation_mode(sdl.frame.mode);
 		log_display_properties(sdl.draw.width, sdl.draw.height,
