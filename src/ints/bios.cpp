@@ -1305,34 +1305,36 @@ public:
 		
 		/* detect parallel ports */
 		Bitu ppindex=0; // number of lpt ports
-		if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
+		if ((IO_Read(0x378) != 0xff) || (IO_Read(0x379) != 0xff)) {
 			// this is our LPT1
 			mem_writew(BIOS_ADDRESS_LPT1,0x378);
 			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+			if ((IO_Read(0x278) != 0xff) || (IO_Read(0x279) != 0xff)) {
 				// this is our LPT2
 				mem_writew(BIOS_ADDRESS_LPT2,0x278);
 				ppindex++;
-				if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+				if ((IO_Read(0x3bc) != 0xff) ||
+				    (IO_Read(0x3be) != 0xff)) {
 					// this is our LPT3
 					mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
 					ppindex++;
 				}
-			} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+			} else if ((IO_Read(0x3bc) != 0xff) ||
+			           (IO_Read(0x3be) != 0xff)) {
 				// this is our LPT2
 				mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
 				ppindex++;
 			}
-		} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+		} else if ((IO_Read(0x3bc) != 0xff) || (IO_Read(0x3be) != 0xff)) {
 			// this is our LPT1
 			mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
 			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+			if ((IO_Read(0x278) != 0xff) || (IO_Read(0x279) != 0xff)) {
 				// this is our LPT2
 				mem_writew(BIOS_ADDRESS_LPT2,0x278);
 				ppindex++;
 			}
-		} else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+		} else if ((IO_Read(0x278) != 0xff) || (IO_Read(0x279) != 0xff)) {
 			// this is our LPT1
 			mem_writew(BIOS_ADDRESS_LPT1,0x278);
 			ppindex++;
