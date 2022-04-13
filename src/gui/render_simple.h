@@ -51,7 +51,7 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 	PTYPE * line0=(PTYPE *)(render.scale.outWrite);
 #if (SBPP == 9)
 	for (Bits x=render.src.width;x>0;) {
-		if (*(Bit32u const*)src == *(Bit32u*)cache && !(
+		if (*(uint32_t const*)src == *(uint32_t*)cache && !(
 			render.pal.modified[src[0]] | 
 			render.pal.modified[src[1]] | 
 			render.pal.modified[src[2]] | 
@@ -92,16 +92,16 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
 #else
 #if (SCALERHEIGHT > 1) 
-		PTYPE *line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
+		PTYPE *line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
-		PTYPE *line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+		PTYPE *line2 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 2);
 #endif
 #if (SCALERHEIGHT > 3) 
-		PTYPE *line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+		PTYPE *line3 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 3);
 #endif
 #if (SCALERHEIGHT > 4) 
-		PTYPE *line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+		PTYPE *line4 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 4);
 #endif
 #endif //defined(SCALERLINEAR)
 			hadChange = 1;
@@ -127,17 +127,17 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 			}
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1)
-			Bitu copyLen = (Bitu)((Bit8u*)line1 - (Bit8u*)WC[0]);
-			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch  ,WC[0], copyLen );
+			Bitu copyLen = (Bitu)((uint8_t*)line1 - (uint8_t*)WC[0]);
+			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch  ,WC[0], copyLen );
 #endif
 #if (SCALERHEIGHT > 2) 
-			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*2,WC[1], copyLen );
+			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch*2,WC[1], copyLen );
 #endif
 #if (SCALERHEIGHT > 3) 
-			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*3,WC[2], copyLen );
+			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch*3,WC[2], copyLen );
 #endif
 #if (SCALERHEIGHT > 4) 
-			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*4,WC[3], copyLen );
+			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch*4,WC[3], copyLen );
 #endif
 
 #endif //defined(SCALERLINEAR)

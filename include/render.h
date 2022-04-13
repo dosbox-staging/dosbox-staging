@@ -106,6 +106,6 @@ void RENDER_SetSize(uint32_t width,
                     bool dblh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
-void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
+void RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue);
 
 #endif

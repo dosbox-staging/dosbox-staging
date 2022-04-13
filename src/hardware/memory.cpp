@@ -36,7 +36,7 @@
 
 struct LinkBlock {
 	Bitu used;
-	Bit32u pages[MAX_LINKS];
+	uint32_t pages[MAX_LINKS];
 };
 
 static struct MemoryBlock {
@@ -53,7 +53,7 @@ static struct MemoryBlock {
 	} lfb;
 	struct {
 		bool enabled;
-		Bit8u controlport;
+		uint8_t controlport;
 	} a20;
 } memory;
 
@@ -171,7 +171,7 @@ Bitu mem_strlen(PhysPt pt) {
 }
 
 void mem_strcpy(PhysPt dest,PhysPt src) {
-	Bit8u r;
+	uint8_t r;
 	while ( (r = mem_readb(src++)) ) mem_writeb_inline(dest++,r);
 	mem_writeb_inline(dest,0);
 }
@@ -181,7 +181,7 @@ void mem_memcpy(PhysPt dest,PhysPt src,Bitu size) {
 }
 
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
-	Bit8u * write=reinterpret_cast<Bit8u *>(data);
+	uint8_t * write=reinterpret_cast<uint8_t *>(data);
 	while (size--) {
 		*write++=mem_readb_inline(pt++);
 	}
@@ -201,7 +201,7 @@ void MEM_BlockCopy(PhysPt dest,PhysPt src,Bitu size) {
 
 void MEM_StrCopy(PhysPt pt,char * data,Bitu size) {
 	while (size--) {
-		Bit8u r=mem_readb_inline(pt++);
+		uint8_t r=mem_readb_inline(pt++);
 		if (!r) break;
 		*data++=r;
 	}
@@ -430,14 +430,14 @@ void MEM_A20_Enable(bool enabled) {
 
 
 /* Memory access functions */
-Bit16u mem_unalignedreadw(PhysPt address) {
-	Bit16u ret = mem_readb_inline(address);
+uint16_t mem_unalignedreadw(PhysPt address) {
+	uint16_t ret = mem_readb_inline(address);
 	ret       |= mem_readb_inline(address+1) << 8;
 	return ret;
 }
 
-Bit32u mem_unalignedreadd(PhysPt address) {
-	Bit32u ret = mem_readb_inline(address);
+uint32_t mem_unalignedreadd(PhysPt address) {
+	uint32_t ret = mem_readb_inline(address);
 	ret       |= mem_readb_inline(address+1) << 8;
 	ret       |= mem_readb_inline(address+2) << 16;
 	ret       |= mem_readb_inline(address+3) << 24;
@@ -445,20 +445,20 @@ Bit32u mem_unalignedreadd(PhysPt address) {
 }
 
 
-void mem_unalignedwritew(PhysPt address,Bit16u val) {
-	mem_writeb_inline(address,(Bit8u)val);val>>=8;
-	mem_writeb_inline(address+1,(Bit8u)val);
+void mem_unalignedwritew(PhysPt address,uint16_t val) {
+	mem_writeb_inline(address,(uint8_t)val);val>>=8;
+	mem_writeb_inline(address+1,(uint8_t)val);
 }
 
-void mem_unalignedwrited(PhysPt address,Bit32u val) {
-	mem_writeb_inline(address,(Bit8u)val);val>>=8;
-	mem_writeb_inline(address+1,(Bit8u)val);val>>=8;
-	mem_writeb_inline(address+2,(Bit8u)val);val>>=8;
-	mem_writeb_inline(address+3,(Bit8u)val);
+void mem_unalignedwrited(PhysPt address,uint32_t val) {
+	mem_writeb_inline(address,(uint8_t)val);val>>=8;
+	mem_writeb_inline(address+1,(uint8_t)val);val>>=8;
+	mem_writeb_inline(address+2,(uint8_t)val);val>>=8;
+	mem_writeb_inline(address+3,(uint8_t)val);
 }
 
 
-bool mem_unalignedreadw_checked(PhysPt address, Bit16u * val) {
+bool mem_unalignedreadw_checked(PhysPt address, uint16_t * val) {
 	uint8_t rval1;
 	if (mem_readb_checked(address + 0, &rval1))
 		return true;
@@ -471,7 +471,7 @@ bool mem_unalignedreadw_checked(PhysPt address, Bit16u * val) {
 	return false;
 }
 
-bool mem_unalignedreadd_checked(PhysPt address, Bit32u * val) {
+bool mem_unalignedreadd_checked(PhysPt address, uint32_t * val) {
 	uint8_t rval1;
 	if (mem_readb_checked(address+0, &rval1)) return true;
 
@@ -491,45 +491,45 @@ bool mem_unalignedreadd_checked(PhysPt address, Bit32u * val) {
 	return false;
 }
 
-bool mem_unalignedwritew_checked(PhysPt address, Bit16u val) {
-	if (mem_writeb_checked(address+0, (Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwritew_checked(PhysPt address, uint16_t val) {
+	if (mem_writeb_checked(address+0, (uint8_t)(val & 0xff))) return true;
 	val >>= 8;
-	if (mem_writeb_checked(address+1, (Bit8u)(val & 0xff))) return true;
+	if (mem_writeb_checked(address+1, (uint8_t)(val & 0xff))) return true;
 	return false;
 }
 
-bool mem_unalignedwrited_checked(PhysPt address, Bit32u val) {
-	if (mem_writeb_checked(address+0, (Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwrited_checked(PhysPt address, uint32_t val) {
+	if (mem_writeb_checked(address+0, (uint8_t)(val & 0xff))) return true;
 	val >>= 8;
-	if (mem_writeb_checked(address+1, (Bit8u)(val & 0xff))) return true;
+	if (mem_writeb_checked(address+1, (uint8_t)(val & 0xff))) return true;
 	val >>= 8;
-	if (mem_writeb_checked(address+2, (Bit8u)(val & 0xff))) return true;
+	if (mem_writeb_checked(address+2, (uint8_t)(val & 0xff))) return true;
 	val >>= 8;
-	if (mem_writeb_checked(address+3, (Bit8u)(val & 0xff))) return true;
+	if (mem_writeb_checked(address+3, (uint8_t)(val & 0xff))) return true;
 	return false;
 }
 
-Bit8u mem_readb(PhysPt address) {
+uint8_t mem_readb(PhysPt address) {
 	return mem_readb_inline(address);
 }
 
-Bit16u mem_readw(PhysPt address) {
+uint16_t mem_readw(PhysPt address) {
 	return mem_readw_inline(address);
 }
 
-Bit32u mem_readd(PhysPt address) {
+uint32_t mem_readd(PhysPt address) {
 	return mem_readd_inline(address);
 }
 
-void mem_writeb(PhysPt address,Bit8u val) {
+void mem_writeb(PhysPt address,uint8_t val) {
 	mem_writeb_inline(address,val);
 }
 
-void mem_writew(PhysPt address,Bit16u val) {
+void mem_writew(PhysPt address,uint16_t val) {
 	mem_writew_inline(address,val);
 }
 
-void mem_writed(PhysPt address,Bit32u val) {
+void mem_writed(PhysPt address,uint32_t val) {
 	mem_writed_inline(address,val);
 }
 
@@ -589,7 +589,7 @@ public:
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new (std::nothrow) Bit8u[memsize * 1024 * 1024];
+		MemBase = new (std::nothrow) uint8_t[memsize * 1024 * 1024];
 		if (!MemBase) {
 			E_Exit("Can't allocate main memory of %u MB", memsize);
 		}

@@ -58,7 +58,7 @@
 
 void VGA_MapMMIO(void);
 //Nice one from DosEmu
-inline static Bit32u RasterOp(Bit32u input,Bit32u mask) {
+inline static uint32_t RasterOp(uint32_t input,uint32_t mask) {
 	switch (vga.config.raster_op) {
 	case 0x00:	/* None */
 		return (input & mask) | (vga.latch.d & ~mask);
@@ -72,8 +72,8 @@ inline static Bit32u RasterOp(Bit32u input,Bit32u mask) {
 	return 0;
 }
 
-inline static Bit32u ModeOperation(Bit8u val) {
-	Bit32u full;
+inline static uint32_t ModeOperation(uint8_t val) {
+	uint32_t full;
 	switch (vga.config.write_mode) {
 	case 0x00:
 		// Write Mode 0: In this mode, the host data is first rotated as per the Rotate Count field, then the Enable Set/Reset mechanism selects data from this or the Set/Reset field. Then the selected Logical Operation is performed on the resulting data and the data in the latch register. Then the Bit Mask field is used to select which bits come from the resulting data and which come from the latch register. Finally, only the bit planes enabled by the Memory Plane Write Enable field are written to memory. 
@@ -118,14 +118,14 @@ class VGA_UnchainedRead_Handler : public PageHandler {
 public:
 	uint8_t readHandler(PhysPt start)
 	{
-		vga.latch.d=((Bit32u*)vga.mem.linear)[start];
+		vga.latch.d=((uint32_t*)vga.mem.linear)[start];
 		switch (vga.config.read_mode) {
 		case 0:
 			return (vga.latch.b[vga.config.read_map_select]);
 		case 1:
 			VGA_Latch templatch;
 			templatch.d=(vga.latch.d &	FillTable[vga.config.color_dont_care]) ^ FillTable[vga.config.color_compare & vga.config.color_dont_care];
-			return (Bit8u)~(templatch.b[0] | templatch.b[1] | templatch.b[2] | templatch.b[3]);
+			return (uint8_t)~(templatch.b[0] | templatch.b[1] | templatch.b[2] | templatch.b[3]);
 		}
 		return 0;
 	}
@@ -163,31 +163,31 @@ public:
 class VGA_ChainedEGA_Handler final : public PageHandler {
 public:
 	uint8_t readHandler(PhysPt addr) { return vga.mem.linear[addr]; }
-	void writeHandler(PhysPt start, Bit8u val) {
+	void writeHandler(PhysPt start, uint8_t val) {
 		ModeOperation(val);
 		/* Update video memory and the pixel buffer */
 		VGA_Latch pixels;
 		vga.mem.linear[start] = val;
 		start >>= 2;
-		pixels.d=((Bit32u*)vga.mem.linear)[start];
+		pixels.d=((uint32_t*)vga.mem.linear)[start];
 
-		Bit8u * write_pixels=&vga.fastmem[start<<3];
+		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
-		Bit32u colors0_3, colors4_7;
+		uint32_t colors0_3, colors4_7;
 		VGA_Latch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 		colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
-		*(Bit32u *)write_pixels=colors0_3;
+		*(uint32_t *)write_pixels=colors0_3;
 		temp.d=pixels.d & 0x0f0f0f0f;
 		colors4_7 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
-		*(Bit32u *)(write_pixels+4)=colors4_7;
+		*(uint32_t *)(write_pixels+4)=colors4_7;
 	}
 public:	
 	VGA_ChainedEGA_Handler()  {
@@ -200,7 +200,7 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
 	}
 
 	void writew(PhysPt addr, uint16_t val)
@@ -209,8 +209,8 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
 	}
 
 	void writed(PhysPt addr, uint32_t val)
@@ -219,10 +219,10 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
-		writeHandler(addr+2,(Bit8u)(val >> 16));
-		writeHandler(addr+3,(Bit8u)(val >> 24));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
+		writeHandler(addr+2,(uint8_t)(val >> 16));
+		writeHandler(addr+3,(uint8_t)(val >> 24));
 	}
 
 	uint8_t readb(PhysPt addr)
@@ -256,31 +256,31 @@ public:
 
 class VGA_UnchainedEGA_Handler : public VGA_UnchainedRead_Handler {
 public:
-	void writeHandler(PhysPt start, Bit8u val) {
-		Bit32u data=ModeOperation(val);
+	void writeHandler(PhysPt start, uint8_t val) {
+		uint32_t data=ModeOperation(val);
 		/* Update video memory and the pixel buffer */
 		VGA_Latch pixels;
-		pixels.d=((Bit32u*)vga.mem.linear)[start];
+		pixels.d=((uint32_t*)vga.mem.linear)[start];
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
-		((Bit32u*)vga.mem.linear)[start]=pixels.d;
-		Bit8u * write_pixels=&vga.fastmem[start<<3];
+		((uint32_t*)vga.mem.linear)[start]=pixels.d;
+		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
-		Bit32u colors0_3, colors4_7;
+		uint32_t colors0_3, colors4_7;
 		VGA_Latch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 			colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
-		*(Bit32u *)write_pixels=colors0_3;
+		*(uint32_t *)write_pixels=colors0_3;
 		temp.d=pixels.d & 0x0f0f0f0f;
 		colors4_7 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
-		*(Bit32u *)(write_pixels+4)=colors4_7;
+		*(uint32_t *)(write_pixels+4)=colors4_7;
 	}
 public:	
 	VGA_UnchainedEGA_Handler()  {
@@ -293,7 +293,7 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
 	}
 
 	void writew(PhysPt addr, uint16_t val)
@@ -302,8 +302,8 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
 	}
 
 	void writed(PhysPt addr, uint32_t val)
@@ -312,10 +312,10 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 3);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
-		writeHandler(addr+2,(Bit8u)(val >> 16));
-		writeHandler(addr+3,(Bit8u)(val >> 24));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
+		writeHandler(addr+2,(uint8_t)(val >> 16));
+		writeHandler(addr+3,(uint8_t)(val >> 24));
 	}
 };
 
@@ -471,15 +471,15 @@ public:
 
 class VGA_UnchainedVGA_Handler final : public VGA_UnchainedRead_Handler {
 public:
-	void writeHandler( PhysPt addr, Bit8u val ) {
-		Bit32u data=ModeOperation(val);
+	void writeHandler( PhysPt addr, uint8_t val ) {
+		uint32_t data=ModeOperation(val);
 		VGA_Latch pixels;
-		pixels.d=((Bit32u*)vga.mem.linear)[addr];
+		pixels.d=((uint32_t*)vga.mem.linear)[addr];
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
-		((Bit32u*)vga.mem.linear)[addr]=pixels.d;
+		((uint32_t*)vga.mem.linear)[addr]=pixels.d;
 //		if(vga.config.compatible_chain4)
-//			((Bit32u*)vga.mem.linear)[CHECKED2(addr+64*1024)]=pixels.d; 
+//			((uint32_t*)vga.mem.linear)[CHECKED2(addr+64*1024)]=pixels.d; 
 	}
 public:
 	VGA_UnchainedVGA_Handler()  {
@@ -492,7 +492,7 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 2 );
-		writeHandler(addr+0,(Bit8u)(val >> 0));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
 	}
 
 	void writew(PhysPt addr, uint16_t val)
@@ -501,8 +501,8 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 2);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
 	}
 
 	void writed(PhysPt addr, uint32_t val)
@@ -511,10 +511,10 @@ public:
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED2(addr);
 		MEM_CHANGED( addr << 2);
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
-		writeHandler(addr+2,(Bit8u)(val >> 16));
-		writeHandler(addr+3,(Bit8u)(val >> 24));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
+		writeHandler(addr+2,(uint8_t)(val >> 16));
+		writeHandler(addr+3,(uint8_t)(val >> 24));
 	}
 };
 
@@ -639,7 +639,7 @@ public:
 		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr = CHECKED4(addr);
 		MEM_CHANGED( addr << 3 );
-		writeHandler(addr+0,(Bit8u)(val >> 0));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
 	}
 
 	void writew(PhysPt addr, uint16_t val)
@@ -647,8 +647,8 @@ public:
 		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr = CHECKED4(addr);
 		MEM_CHANGED( addr << 3 );
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
 	}
 
 	void writed(PhysPt addr, uint32_t val)
@@ -656,10 +656,10 @@ public:
 		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr = CHECKED4(addr);
 		MEM_CHANGED( addr << 3 );
-		writeHandler(addr+0,(Bit8u)(val >> 0));
-		writeHandler(addr+1,(Bit8u)(val >> 8));
-		writeHandler(addr+2,(Bit8u)(val >> 16));
-		writeHandler(addr+3,(Bit8u)(val >> 24));
+		writeHandler(addr+0,(uint8_t)(val >> 0));
+		writeHandler(addr+1,(uint8_t)(val >> 8));
+		writeHandler(addr+2,(uint8_t)(val >> 16));
+		writeHandler(addr+3,(uint8_t)(val >> 24));
 	}
 
 	uint8_t readb(PhysPt addr)
@@ -1066,17 +1066,17 @@ void VGA_SetupMemory(Section* sec) {
 	vga.svga.bank_read = vga.svga.bank_write = 0;
 	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
 
-	Bit32u vga_allocsize=vga.vmemsize;
+	uint32_t vga_allocsize=vga.vmemsize;
 	// Keep lower limit at 512k
 	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
 	// We reserve extra 2K for one scan line
 	vga_allocsize+=2048;
-	vga.mem.linear_orgptr = new Bit8u[vga_allocsize+16];
-	vga.mem.linear=(Bit8u*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
+	vga.mem.linear_orgptr = new uint8_t[vga_allocsize+16];
+	vga.mem.linear=(uint8_t*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
 	memset(vga.mem.linear,0,vga_allocsize);
 
-	vga.fastmem_orgptr = new Bit8u[(vga.vmemsize<<1)+4096+16];
-	vga.fastmem=(Bit8u*)(((Bitu)vga.fastmem_orgptr + 16-1) & ~(16-1));
+	vga.fastmem_orgptr = new uint8_t[(vga.vmemsize<<1)+4096+16];
+	vga.fastmem=(uint8_t*)(((Bitu)vga.fastmem_orgptr + 16-1) & ~(16-1));
 
 	// In most cases these values stay the same. Assumptions: vmemwrap is power of 2,
 	// vmemwrap <= vmemsize, fastmem implicitly has mem wrap twice as big
@@ -1085,7 +1085,7 @@ void VGA_SetupMemory(Section* sec) {
 #ifdef VGA_KEEP_CHANGES
 	memset( &vga.changes, 0, sizeof( vga.changes ));
 	int changesMapSize = (vga.vmemsize >> VGA_CHANGE_SHIFT) + 32;
-	vga.changes.map = new Bit8u[changesMapSize];
+	vga.changes.map = new uint8_t[changesMapSize];
 	memset(vga.changes.map, 0, changesMapSize);
 #endif
 	vga.svga.bank_read = vga.svga.bank_write = 0;

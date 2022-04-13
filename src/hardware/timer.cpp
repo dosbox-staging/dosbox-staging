@@ -29,7 +29,7 @@
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 
-static inline void BIN2BCD(Bit16u& val) {
+static inline void BIN2BCD(uint16_t& val) {
 	const auto b = ((val / 10) % 10) << 4;
 	const auto c = ((val / 100) % 10) << 8;
 	const auto d = ((val / 1000) % 10) << 12;
@@ -39,8 +39,8 @@ static inline void BIN2BCD(Bit16u& val) {
 	val = temp;
 }
 
-static inline void BCD2BIN(Bit16u& val) {
-	Bit16u temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
+static inline void BCD2BIN(uint16_t& val) {
+	uint16_t temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
 	val=temp;
 }
 
@@ -49,13 +49,13 @@ struct PIT_Block {
 	double delay;
 	double start;
 
-	Bit16u read_latch;
-	Bit16u write_latch;
+	uint16_t read_latch;
+	uint16_t write_latch;
 
-	Bit8u mode;
-	Bit8u latch_mode;
-	Bit8u read_state;
-	Bit8u write_state;
+	uint8_t mode;
+	uint8_t latch_mode;
+	uint8_t read_state;
+	uint8_t write_state;
 
 	bool bcd;
 	bool go_read_latch;
@@ -68,7 +68,7 @@ struct PIT_Block {
 static PIT_Block pit[3];
 static bool gate2;
 
-static Bit8u latched_timerstatus;
+static uint8_t latched_timerstatus;
 // the timer status can not be overwritten until it is read or the timer was 
 // reprogrammed.
 static bool latched_timerstatus_locked;
@@ -310,7 +310,7 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 {
 	// LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
 	const uint16_t counter = port - 0x40;
-	Bit8u ret = 0;
+	uint8_t ret = 0;
 	if (GCC_UNLIKELY(pit[counter].counterstatus_set)) {
 		pit[counter].counterstatus_set = false;
 		latched_timerstatus_locked = false;
@@ -384,7 +384,7 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 			pit[latch].counting = false;
 			pit[latch].read_state = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
-			Bit8u mode = (val >> 1) & 0x07;
+			uint8_t mode = (val >> 1) & 0x07;
 			if (mode > 5)
 				mode -= 4; // 6,7 become 2 and 3
 
@@ -438,7 +438,7 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 void TIMER_SetGate2(bool in) {
 	//No changes if gate doesn't change
 	if(gate2 == in) return;
-	Bit8u & mode=pit[2].mode;
+	uint8_t & mode=pit[2].mode;
 	switch (mode) {
 	case 0:
 		if(in) pit[2].start = PIC_FullIndex();

@@ -158,7 +158,7 @@ int CDROM_Interface_Image::BinaryFile::getLength()
 	return length_redbook_bytes;
 }
 
-Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
+uint16_t CDROM_Interface_Image::BinaryFile::getEndian()
 {
 	// Image files are always little endian
 	return AUDIO_S16LSB;
@@ -442,17 +442,17 @@ uint32_t CDROM_Interface_Image::AudioFile::decode(int16_t *buffer,
 	return frames_decoded;
 }
 
-Bit16u CDROM_Interface_Image::AudioFile::getEndian()
+uint16_t CDROM_Interface_Image::AudioFile::getEndian()
 {
 	return sample ? sample->actual.format : AUDIO_S16SYS;
 }
 
-Bit32u CDROM_Interface_Image::AudioFile::getRate()
+uint32_t CDROM_Interface_Image::AudioFile::getRate()
 {
 	return sample ? sample->actual.rate : 0;
 }
 
-Bit8u CDROM_Interface_Image::AudioFile::getChannels()
+uint8_t CDROM_Interface_Image::AudioFile::getChannels()
 {
 	return sample ? sample->actual.channels : 0;
 }
@@ -525,8 +525,8 @@ bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const i
 		// print error message on dosbox console
 		char buf[MAX_LINE_LENGTH];
 		snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\r\n", path);
-		Bit16u size = (Bit16u)strlen(buf);
-		DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
+		uint16_t size = (uint16_t)strlen(buf);
+		DOS_WriteFile(STDOUT, (uint8_t*)buf, &size);
 	}
 	return result;
 }
@@ -1034,12 +1034,12 @@ void CDROM_Interface_Image::CDAudioCallBack(uint16_t desired_track_frames)
 		const double percent_played = static_cast<double>(
 		                              player.playedTrackFrames)
 		                              / player.totalTrackFrames;
-		const Bit32u played_redbook_frames = static_cast<Bit32u>(ceil(
+		const uint32_t played_redbook_frames = static_cast<uint32_t>(ceil(
 		                                     percent_played
 		                                     * player.totalRedbookFrames));
-		const Bit32u new_redbook_start_frame = player.startSector
+		const uint32_t new_redbook_start_frame = player.startSector
 		                                       + played_redbook_frames;
-		const Bit32u remaining_redbook_frames = player.totalRedbookFrames -
+		const uint32_t remaining_redbook_frames = player.totalRedbookFrames -
 		                                        played_redbook_frames;
 		player.cd->PlayAudioSector(new_redbook_start_frame, remaining_redbook_frames);
 		return;
@@ -1108,7 +1108,7 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file,
 	if (file == nullptr) return false;
 
 	// Initialize our array in the event file->read() doesn't fully write it
-	Bit8u pvd[BYTES_PER_COOKED_REDBOOK_FRAME] = {0};
+	uint8_t pvd[BYTES_PER_COOKED_REDBOOK_FRAME] = {0};
 
 	uint32_t seek = 16 * sectorSize;  // first vd is located at sector 16
 	if (sectorSize == BYTES_PER_RAW_REDBOOK_FRAME && !mode2) seek += 16;
@@ -1385,7 +1385,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	char fullname[CROSS_LEN];
 	char tmp[CROSS_LEN];
 	safe_strcpy(tmp, filename.c_str());
-	Bit8u drive;
+	uint8_t drive;
 	if (!DOS_MakeName(tmp, fullname, &drive)) {
 		return false;
 	}

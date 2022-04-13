@@ -59,7 +59,7 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
 		case MONO:
 			//LOG_MSG("Monitor MONO");
 			for (Bitu i=0;i<64;i++) {
-				Bit8u value = ((i & 0x8)? 0x2a:0) + ((i & 0x10)? 0x15:0);
+				uint8_t value = ((i & 0x8)? 0x2a:0) + ((i & 0x10)? 0x15:0);
 				vga.dac.rgb[i].red = vga.dac.rgb[i].green =
 					vga.dac.rgb[i].blue = value;
 			}
@@ -67,7 +67,7 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
 	}
 
 	// update the mappings
-	for (Bit8u i=0;i<0x10;i++)
+	for (uint8_t i=0;i<0x10;i++)
 		VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 }
 
@@ -134,7 +134,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			attr(mode_control) = val;
 
 			if (difference & 0x80) {
-				for (Bit8u i=0;i<0x10;i++)
+				for (uint8_t i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 			}
 			if (difference & 0x08)
@@ -183,7 +183,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			if ((attr(color_plane_enable)^val) & 0xf) {
 				// in case the plane enable bits change...
 				attr(color_plane_enable) = val;
-				for (Bit8u i=0;i<0x10;i++)
+				for (uint8_t i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 			} else
 				attr(color_plane_enable) = val;
@@ -240,7 +240,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			}
 			if (attr(color_select) ^ val) {
 				attr(color_select) = val;
-				for (Bit8u i=0;i<0x10;i++)
+				for (uint8_t i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 			}
 			/*

@@ -222,9 +222,9 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
-		Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
-		Bit32s new_cmax = CPU_CycleMax;
-		Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
+		int32_t ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+		int32_t new_cmax = CPU_CycleMax;
+		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticksScheduled;
 		double ratioremoved = 0.0; //increase scope for logging
 		if (cproc > 0) {
 			/* ignore the cycles added due to the IO delay code in order
@@ -232,7 +232,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
 			if (ratioremoved < 1.0) {
 				double ratio_not_removed = 1 - ratioremoved;
-				ratio = (Bit32s)((double)ratio * ratio_not_removed);
+				ratio = (int32_t)((double)ratio * ratio_not_removed);
 
 				/* Don't allow very high ratio which can cause us to lock as we don't scale down
 				 * for very low ratios. High ratio might result because of timing resolution */
@@ -250,11 +250,11 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				if (ratio <= 1024) {
 					// ratio_not_removed = 1.0; //enabling this restores the old formula
 					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + 1024.0/(static_cast<double>(ratio)));
-					new_cmax = 1 + static_cast<Bit32s>(CPU_CycleMax * r);
+					new_cmax = 1 + static_cast<int32_t>(CPU_CycleMax * r);
 				} else {
-					Bit64s ratio_with_removed = (Bit64s) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
-					Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * ratio_with_removed;
-					new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
+					int64_t ratio_with_removed = (int64_t) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
+					int64_t cmax_scaled = (int64_t)CPU_CycleMax * ratio_with_removed;
+					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (int64_t)2048);
 				}
 			}
 		}

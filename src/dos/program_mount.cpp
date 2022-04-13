@@ -168,8 +168,8 @@ void MOUNT::Run(void) {
 	cmd->FindString("-t",type,true);
 	bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
 	if (type=="floppy" || type=="dir" || type=="cdrom" || type =="overlay") {
-		Bit16u sizes[4] ={0};
-		Bit8u mediaid;
+		uint16_t sizes[4] ={0};
+		uint8_t mediaid;
 		std::string str_size = "";
 		if (type=="floppy") {
 			str_size="512,1,2880,2880";/* All space free */
@@ -190,13 +190,13 @@ void MOUNT::Run(void) {
 		std::string mb_size;
 		if (cmd->FindString("-freesize",mb_size,true)) {
 			char teststr[1024];
-			Bit16u freesize = static_cast<Bit16u>(atoi(mb_size.c_str()));
+			uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 			if (type=="floppy") {
 				// freesize in kb
 				sprintf(teststr,"512,1,2880,%d",freesize*1024/(512*1));
 			} else {
-				Bit32u total_size_cyl=32765;
-				Bit32u free_size_cyl=(Bit32u)freesize*1024*1024/(512*32);
+				uint32_t total_size_cyl=32765;
+				uint32_t free_size_cyl=(uint32_t)freesize*1024*1024/(512*32);
 				if (free_size_cyl>65534) free_size_cyl=65534;
 				if (total_size_cyl<free_size_cyl) total_size_cyl=free_size_cyl+10;
 				if (total_size_cyl>65534) total_size_cyl=65534;
@@ -298,7 +298,7 @@ void MOUNT::Run(void) {
 		}
 
 		if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) temp_line += CROSS_FILESPLIT;
-		Bit8u bit8size = (Bit8u)sizes[1];
+		uint8_t int8_tize = (uint8_t)sizes[1];
 
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
@@ -311,7 +311,7 @@ void MOUNT::Run(void) {
 			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;
-			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],int8_tize,sizes[2],0,mediaid,error);
 			// Check Mscdex, if it worked out...
 			switch (error) {
 				case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -345,8 +345,8 @@ void MOUNT::Run(void) {
 					return;
 				}
 				std::string base = ldp->GetBasedir();
-				Bit8u o_error = 0;
-				newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,o_error);
+				uint8_t o_error = 0;
+				newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],int8_tize,sizes[2],sizes[3],mediaid,o_error);
 				//Erase old drive on success
 				if (o_error) {
 					if (o_error == 1) WriteOut("No mixing of relative and absolute paths. Overlay failed.");
@@ -364,7 +364,7 @@ void MOUNT::Run(void) {
 				delete Drives[drive_index(drive)];
 				Drives[drive_index(drive)] = nullptr;
 			} else {
-				newdrive = new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+				newdrive = new localDrive(temp_line.c_str(),sizes[0],int8_tize,sizes[2],sizes[3],mediaid);
 			}
 		}
 	} else {

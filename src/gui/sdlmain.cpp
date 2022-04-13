@@ -391,7 +391,7 @@ struct SDL_Block {
 			int height = 0;
 		} requested_window_bounds = {};
 
-		Bit8u bpp = 0;
+		uint8_t bpp = 0;
 		bool fullscreen = false;
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
@@ -559,7 +559,7 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
+void GFX_SetTitle(int32_t cycles, int /*frameskip*/, bool paused)
 {
 	char title[200] = {0};
 
@@ -569,7 +569,7 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	const char* build_type = "";
 #endif
 
-	static Bit32s internal_cycles = 0;
+	static int32_t internal_cycles = 0;
 	if (cycles != -1)
 		internal_cycles = cycles;
 
@@ -1457,7 +1457,7 @@ finish:
 
 // Used for the mapper UI and more: Creates a fullscreen window with desktop res
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
-SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height)
+SDL_Window * GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height)
 {
 	constexpr bool fullscreen = false;
 	return SetWindowMode(SCREEN_SURFACE, width, height, fullscreen, FIXED_SIZE);
@@ -1465,7 +1465,7 @@ SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height)
 
 // Returns the rectangle in the current window to be used for scaling a
 // sub-window with the given dimensions, like the mapper UI.
-SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height)
+SDL_Rect GFX_GetSDLSurfaceSubwindowDims(uint16_t width, uint16_t height)
 {
 	SDL_Rect rect;
 	rect.x = rect.y = 0;
@@ -2562,7 +2562,7 @@ static void update_frame_surface([[maybe_unused]] const uint16_t *changedLines)
 	}
 }
 
-Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
+Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue) {
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 		return SDL_MapRGB(sdl.surface->format,red,green,blue);
@@ -2710,15 +2710,15 @@ static void SetPriority(PRIORITY_LEVELS level)
 }
 
 #ifdef WIN32
-extern Bit8u int10_font_14[256 * 14];
-static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u color2,SDL_Surface * output_surface) {
-	Bit32u * draw=(Bit32u*)(((Bit8u *)output_surface->pixels)+((y)*output_surface->pitch))+x;
+extern uint8_t int10_font_14[256 * 14];
+static void OutputString(Bitu x,Bitu y,const char * text,uint32_t color,uint32_t color2,SDL_Surface * output_surface) {
+	uint32_t * draw=(uint32_t*)(((uint8_t *)output_surface->pixels)+((y)*output_surface->pitch))+x;
 	while (*text) {
-		Bit8u * font=&int10_font_14[(*text)*14];
+		uint8_t * font=&int10_font_14[(*text)*14];
 		Bitu i,j;
-		Bit32u * draw_line=draw;
+		uint32_t * draw_line=draw;
 		for (i=0;i<14;i++) {
-			Bit8u map=*font++;
+			uint8_t map=*font++;
 			for (j=0;j<8;j++) {
 				*(draw_line + j) = map & 0x80 ? color : color2;
 				map<<=1;

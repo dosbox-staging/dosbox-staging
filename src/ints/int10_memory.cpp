@@ -21,7 +21,7 @@
 #include "mem.h"
 #include "inout.h"
 
-static Bit8u static_functionality[0x10]=
+static uint8_t static_functionality[0x10]=
 {
  /* 0 */ 0xff,  // All modes supported #1
  /* 1 */ 0xff,  // All modes supported #2
@@ -38,14 +38,14 @@ static Bit8u static_functionality[0x10]=
  /* f */ 0x00   // reserved
 };
 
-static Bit16u map_offset[8]={
+static uint16_t map_offset[8]={
 	0x0000,0x4000,0x8000,0xc000,
 	0x2000,0x6000,0xa000,0xe000
 };
 
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
-	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+(Bit16u)(offset*32));
-	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+(uint16_t)(offset*32));
+	uint16_t base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 	bool mono=(base==VGAREG_MDA_CRTC_ADDRESS);
 
 	//Put video adapter in planar mode
@@ -84,7 +84,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		Bitu rows=CurMode->sheight/height;
 		Bitu vdend=rows*height*((CurMode->sheight==200)?2:1)-1;
 		IO_Write(base,0x12);
-		IO_Write(base+1,(Bit8u)vdend);
+		IO_Write(base+1,(uint8_t)vdend);
 		//Underline location
 		if (CurMode->mode==7) {
 			IO_Write(base,0x14);
@@ -92,7 +92,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		}
 		//Rows setting in bios segment
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,rows-1);
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit8u)height);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(uint8_t)height);
 		//Page size
 		Bitu pagesize=rows*real_readb(BIOSMEM_SEG,BIOSMEM_NB_COLS)*2;
 		pagesize+=0x100; // bios adds extra on reload
@@ -314,18 +314,18 @@ void INT10_ReloadRomFonts(void) {
 void INT10_SetupRomMemoryChecksum(void) {
 	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
 		/* Sum of all bytes in rom module 256 should be 0 */
-		Bit8u sum = 0;
+		uint8_t sum = 0;
 		PhysPt rom_base = PhysMake(0xc000,0);
 		Bitu last_rombyte = 32*1024 - 1;		//32 KB romsize
 		for (Bitu i = 0;i < last_rombyte;i++)
 			sum += phys_readb(rom_base + i);	//OVERFLOW IS OKAY
-		sum = (Bit8u)((256 - (Bitu)sum)&0xff);
+		sum = (uint8_t)((256 - (Bitu)sum)&0xff);
 		phys_writeb(rom_base + last_rombyte,sum);
 	}
 }
 
 
-Bit8u int10_font_08[256 * 8] = {
+uint8_t int10_font_08[256 * 8] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x7e, 0x81, 0xa5, 0x81, 0xbd, 0x99, 0x81, 0x7e,
   0x7e, 0xff, 0xdb, 0xff, 0xc3, 0xe7, 0xff, 0x7e,
@@ -584,7 +584,7 @@ Bit8u int10_font_08[256 * 8] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-Bit8u int10_font_14[256 * 14] = {
+uint8_t int10_font_14[256 * 14] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x7e, 0x81, 0xa5, 0x81, 0x81, 0xbd, 0x99, 0x81,
@@ -1035,7 +1035,7 @@ Bit8u int10_font_14[256 * 14] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-Bit8u int10_font_16[256 * 16] = {
+uint8_t int10_font_16[256 * 16] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x7e, 0x81, 0xa5, 0x81, 0x81, 0xbd,
@@ -1550,7 +1550,7 @@ Bit8u int10_font_16[256 * 16] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-Bit8u int10_font_14_alternate[20 * 15 + 1] = {
+uint8_t int10_font_14_alternate[20 * 15 + 1] = {
   0x1d,
   0x00, 0x00, 0x00, 0x00, 0x24, 0x66, 0xff,
   0x66, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1614,7 +1614,7 @@ Bit8u int10_font_14_alternate[20 * 15 + 1] = {
   0x00
 };
 
-Bit8u int10_font_16_alternate[19 * 17 + 1] = {
+uint8_t int10_font_16_alternate[19 * 17 + 1] = {
   0x1d,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x66, 0xff,
   0x66, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

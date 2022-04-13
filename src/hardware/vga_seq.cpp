@@ -83,7 +83,7 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 		        if (IS_VGA_ARCH)
 			        font1 |= (val & 0x10) >> 4;
 		        vga.draw.font_tables[0] = &vga.draw.font[font1 * 8 * 1024];
-		        Bit8u font2 = ((val & 0xc) >> 1);
+		        uint8_t font2 = ((val & 0xc) >> 1);
 		        if (IS_VGA_ARCH)
 			        font2 |= (val & 0x20) >> 5;
 		        vga.draw.font_tables[1] = &vga.draw.font[font2 * 8 * 1024];

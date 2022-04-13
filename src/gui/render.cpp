@@ -63,10 +63,10 @@ static void Check_Palette(void) {
 	case scalerMode15:
 	case scalerMode16:
 		for (i=render.pal.first;i<=render.pal.last;i++) {
-			Bit8u r=render.pal.rgb[i].red;
-			Bit8u g=render.pal.rgb[i].green;
-			Bit8u b=render.pal.rgb[i].blue;
-			Bit16u newPal = GFX_GetRGB(r,g,b);
+			uint8_t r=render.pal.rgb[i].red;
+			uint8_t g=render.pal.rgb[i].green;
+			uint8_t b=render.pal.rgb[i].blue;
+			uint16_t newPal = GFX_GetRGB(r,g,b);
 			if (newPal != render.pal.lut.b16[i]) {
 				render.pal.changed = true;
 				render.pal.modified[i] = 1;
@@ -77,10 +77,10 @@ static void Check_Palette(void) {
 	case scalerMode32:
 	default:
 		for (i=render.pal.first;i<=render.pal.last;i++) {
-			Bit8u r=render.pal.rgb[i].red;
-			Bit8u g=render.pal.rgb[i].green;
-			Bit8u b=render.pal.rgb[i].blue;
-			Bit32u newPal = GFX_GetRGB(r,g,b);
+			uint8_t r=render.pal.rgb[i].red;
+			uint8_t g=render.pal.rgb[i].green;
+			uint8_t b=render.pal.rgb[i].blue;
+			uint32_t newPal = GFX_GetRGB(r,g,b);
 			if (newPal != render.pal.lut.b32[i]) {
 				render.pal.changed = true;
 				render.pal.modified[i] = 1;
@@ -94,7 +94,7 @@ static void Check_Palette(void) {
 	render.pal.last=0;
 }
 
-void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
+void RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue) {
 	render.pal.rgb[entry].red=red;
 	render.pal.rgb[entry].green=green;
 	render.pal.rgb[entry].blue=blue;
@@ -146,9 +146,9 @@ static void RENDER_FinishLineHandler(const void * s) {
 
 static void RENDER_ClearCacheHandler(const void * src) {
 	Bitu x, width;
-	Bit32u *srcLine, *cacheLine;
-	srcLine = (Bit32u *)src;
-	cacheLine = (Bit32u *)render.scale.cacheRead;
+	uint32_t *srcLine, *cacheLine;
+	srcLine = (uint32_t *)src;
+	cacheLine = (uint32_t *)render.scale.cacheRead;
 	width = render.scale.cachePitch / 4;
 	for (x=0;x<width;x++)
 		cacheLine[x] = ~srcLine[x];
@@ -170,7 +170,7 @@ bool RENDER_StartUpdate(void) {
 	}
 	render.scale.inLine = 0;
 	render.scale.outLine = 0;
-	render.scale.cacheRead = (Bit8u*)&scalerSourceCache;
+	render.scale.cacheRead = (uint8_t*)&scalerSourceCache;
 	render.scale.outWrite = 0;
 	render.scale.outPitch = 0;
 	Scaler_ChangedLines[0] = 0;
@@ -229,8 +229,8 @@ void RENDER_EndUpdate( bool abort ) {
 			fps /= fps_skip;
 		}
 		CAPTURE_AddImage(render.src.width, render.src.height, render.src.bpp,
-		                 pitch, flags, static_cast<float>(fps), (Bit8u *)&scalerSourceCache,
-		                 (Bit8u *)&render.pal.rgb);
+		                 pitch, flags, static_cast<float>(fps), (uint8_t *)&scalerSourceCache,
+		                 (uint8_t *)&render.pal.rgb);
 	}
 	if ( render.scale.outWrite ) {
 		GFX_EndUpdate( abort? NULL : Scaler_ChangedLines );
@@ -594,7 +594,7 @@ void RENDER_SetSize(uint32_t width,
 	RENDER_Reset( );
 }
 
-extern void GFX_SetTitle(Bit32s cycles, int frameskip,bool paused);
+extern void GFX_SetTitle(int32_t cycles, int frameskip,bool paused);
 static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;

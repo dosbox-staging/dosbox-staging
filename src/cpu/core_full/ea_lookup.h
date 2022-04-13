@@ -18,7 +18,7 @@
 
 {
 	EAPoint seg_base = 0;
-	Bit16u off = 0;
+	uint16_t off = 0;
 	switch ((inst.rm_mod << 3) | inst.rm_eai) {
 	case 0x00:
 		off=reg_bx+reg_si;
@@ -143,10 +143,10 @@
 	}																\
 	off+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);					\
 };																	
-	static Bit32u SIBZero=0;
-	static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
+	static uint32_t SIBZero=0;
+	static uint32_t * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 	EAPoint seg_base = 0;
-	Bit32u off = 0;
+	uint32_t off = 0;
 	switch ((inst.rm_mod<<3)|inst.rm_eai) {
 	case 0x00:
 		off=reg_eax;

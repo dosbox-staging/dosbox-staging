@@ -32,10 +32,10 @@ static Bitu call_int16,call_irq1,call_irq6;
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
 static struct {
-  Bit16u normal;
-  Bit16u shift;
-  Bit16u control;
-  Bit16u alt;
+  uint16_t normal;
+  uint16_t shift;
+  uint16_t control;
+  uint16_t alt;
   } scan_to_scanascii[MAX_SCAN_CODE + 1] = {
       {   none,   none,   none,   none },
       { 0x011b, 0x011b, 0x011b, 0x01f0 }, /* escape */
@@ -128,9 +128,9 @@ static struct {
       { 0x8600, 0x8800, 0x8a00, 0x8c00 }  /* F12 */
       };
 
-bool BIOS_AddKeyToBuffer(Bit16u code) {
+bool BIOS_AddKeyToBuffer(uint16_t code) {
 	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return true;
-	Bit16u start,end,head,tail,ttail;
+	uint16_t start,end,head,tail,ttail;
 	if (machine==MCH_PCJR) {
 		/* should be done for cga and others as well, to be tested */
 		start=0x1e;
@@ -153,12 +153,12 @@ bool BIOS_AddKeyToBuffer(Bit16u code) {
 	return true;
 }
 
-static void add_key(Bit16u code) {
+static void add_key(uint16_t code) {
 	if (code!=0) BIOS_AddKeyToBuffer(code);
 }
 
-static bool get_key(Bit16u &code) {
-	Bit16u start,end,head,tail,thead;
+static bool get_key(uint16_t &code) {
+	uint16_t start,end,head,tail,thead;
 	if (machine==MCH_PCJR) {
 		/* should be done for cga and others as well, to be tested */
 		start=0x1e;
@@ -178,8 +178,8 @@ static bool get_key(Bit16u &code) {
 	return true;
 }
 
-static bool check_key(Bit16u &code) {
-	Bit16u head,tail;
+static bool check_key(uint16_t &code) {
+	uint16_t head,tail;
 	head =mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	tail =mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 	code = real_readw(0x40,head);
@@ -229,7 +229,7 @@ static Bitu IRQ1_Handler(void) {
  */
 	Bitu scancode=reg_al;	/* Read the code */
 
-	Bit8u flags1,flags2,flags3,leds;
+	uint8_t flags1,flags2,flags3,leds;
 	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
 	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
@@ -290,7 +290,7 @@ static Bitu IRQ1_Handler(void) {
 		else flags2 &= ~0x02;
 		if( !( (flags3 &0x08) || (flags2 &0x02) ) ) { /* Both alt released */
 			flags1 &= ~0x08;
-			Bit16u token =mem_readb(BIOS_KEYBOARD_TOKEN);
+			uint16_t token =mem_readb(BIOS_KEYBOARD_TOKEN);
 			if(token != 0){
 				add_key(token);
 				mem_writeb(BIOS_KEYBOARD_TOKEN,0);
@@ -366,8 +366,8 @@ static Bitu IRQ1_Handler(void) {
 			break;
 		}
 		if(flags1 &0x08) {
-			Bit8u token = mem_readb(BIOS_KEYBOARD_TOKEN);
-			token = token*10 + (Bit8u)(scan_to_scanascii[scancode].alt&0xff);
+			uint8_t token = mem_readb(BIOS_KEYBOARD_TOKEN);
+			token = token*10 + (uint8_t)(scan_to_scanascii[scancode].alt&0xff);
 			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
@@ -378,7 +378,7 @@ static Bitu IRQ1_Handler(void) {
 
 	default: /* Normal Key */
 normal_key:
-		Bit16u asciiscan;
+		uint16_t asciiscan;
 		/* Now Handle the releasing of keys and see if they match up for a code */
 		/* Handle the actual scancode */
 		if (scancode & 0x80) goto irq1_end;
@@ -433,7 +433,7 @@ irq1_end:
 #if 0
 /* Signal the keyboard for next code */
 /* In dosbox port 60 reads do this as well */
-	Bit8u old61=IO_Read(0x61);
+	uint8_t old61=IO_Read(0x61);
 	IO_Write(0x61,old61 | 128);
 	IO_Write(0x64,0xae);
 #endif
@@ -443,7 +443,7 @@ irq1_end:
 
 /* check whether key combination is enhanced or not,
    translate key if necessary */
-static bool IsEnhancedKey(Bit16u &key) {
+static bool IsEnhancedKey(uint16_t &key) {
 	/* test for special keys (return and slash on numblock) */
 	if ((key>>8)==0xe0) {
 		if (((key&0xff)==0x0a) || ((key&0xff)==0x0d)) {
@@ -468,7 +468,7 @@ static bool IsEnhancedKey(Bit16u &key) {
 }
 
 static Bitu INT16_Handler(void) {
-	Bit16u temp=0;
+	uint16_t temp=0;
 	switch (reg_ah) {
 	case 0x00: /* GET KEYSTROKE */
 		if ((get_key(temp)) && (!IsEnhancedKey(temp))) {
@@ -569,8 +569,8 @@ static void InitBiosSegment(void) {
 	mem_writew(BIOS_KEYBOARD_BUFFER_END,0x3e);
 	mem_writew(BIOS_KEYBOARD_BUFFER_HEAD,0x1e);
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,0x1e);
-	Bit8u flag1 = 0;
-	Bit8u leds = 16; /* Ack received */
+	uint8_t flag1 = 0;
+	uint8_t leds = 16; /* Ack received */
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	

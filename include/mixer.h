@@ -31,7 +31,7 @@
 
 #include "envelope.h"
 
-typedef void (*MIXER_MixHandler)(Bit8u *sampdate, Bit32u len);
+typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 
 // The mixer callback can accept a static function or a member function
 // using a std::bind. The callback typically requests enough frames to
@@ -57,7 +57,7 @@ struct AudioFrame {
 
 #define MIXER_BUFSIZE (16 * 1024)
 #define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
-extern Bit8u MixTemp[MIXER_BUFSIZE];
+extern uint8_t MixTemp[MIXER_BUFSIZE];
 
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
@@ -116,24 +116,24 @@ public:
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(uint16_t len, const Type *data);
 
-	void AddSamples_m8(uint16_t len, const Bit8u *data);
-	void AddSamples_s8(uint16_t len, const Bit8u *data);
-	void AddSamples_m8s(uint16_t len, const Bit8s *data);
-	void AddSamples_s8s(uint16_t len, const Bit8s *data);
-	void AddSamples_m16(uint16_t len, const Bit16s *data);
-	void AddSamples_s16(uint16_t len, const Bit16s *data);
-	void AddSamples_m16u(uint16_t len, const Bit16u *data);
-	void AddSamples_s16u(uint16_t len, const Bit16u *data);
-	void AddSamples_m32(uint16_t len, const Bit32s *data);
-	void AddSamples_s32(uint16_t len, const Bit32s *data);
-	void AddSamples_m16_nonnative(uint16_t len, const Bit16s *data);
-	void AddSamples_s16_nonnative(uint16_t len, const Bit16s *data);
-	void AddSamples_m16u_nonnative(uint16_t len, const Bit16u *data);
-	void AddSamples_s16u_nonnative(uint16_t len, const Bit16u *data);
-	void AddSamples_m32_nonnative(uint16_t len, const Bit32s *data);
-	void AddSamples_s32_nonnative(uint16_t len, const Bit32s *data);
+	void AddSamples_m8(uint16_t len, const uint8_t *data);
+	void AddSamples_s8(uint16_t len, const uint8_t *data);
+	void AddSamples_m8s(uint16_t len, const int8_t *data);
+	void AddSamples_s8s(uint16_t len, const int8_t *data);
+	void AddSamples_m16(uint16_t len, const int16_t *data);
+	void AddSamples_s16(uint16_t len, const int16_t *data);
+	void AddSamples_m16u(uint16_t len, const uint16_t *data);
+	void AddSamples_s16u(uint16_t len, const uint16_t *data);
+	void AddSamples_m32(uint16_t len, const int32_t *data);
+	void AddSamples_s32(uint16_t len, const int32_t *data);
+	void AddSamples_m16_nonnative(uint16_t len, const int16_t *data);
+	void AddSamples_s16_nonnative(uint16_t len, const int16_t *data);
+	void AddSamples_m16u_nonnative(uint16_t len, const uint16_t *data);
+	void AddSamples_s16u_nonnative(uint16_t len, const uint16_t *data);
+	void AddSamples_m32_nonnative(uint16_t len, const int32_t *data);
+	void AddSamples_s32_nonnative(uint16_t len, const int32_t *data);
 
-	void AddStretched(uint16_t len, Bit16s *data); // Stretch block up into needed data
+	void AddStretched(uint16_t len, int16_t *data); // Stretch block up into needed data
 
 	void FillUp();
 	void Enable(bool should_enable);

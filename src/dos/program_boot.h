@@ -28,8 +28,8 @@ class BOOT final : public Program {
     public:
         void Run(void);
     private:
-        FILE* getFSFile_mounted(char const* filename, Bit32u *ksize, Bit32u *bsize, Bit8u *error);
-        FILE* getFSFile(char const * filename, Bit32u *ksize, Bit32u *bsize,bool tryload=false);
+        FILE* getFSFile_mounted(char const* filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error);
+        FILE* getFSFile(char const * filename, uint32_t *ksize, uint32_t *bsize,bool tryload=false);
         void printError(void);
         void disable_umb_ems_xms(void);
 };

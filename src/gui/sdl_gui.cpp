@@ -37,9 +37,9 @@
 #include <cctype>
 #include <assert.h>
 
-extern Bit8u int10_font_14[256 * 14];
+extern uint8_t int10_font_14[256 * 14];
 extern bool MSG_Write(const char *);
-extern void GFX_SetTitle(Bit32s cycles, int frameskip, bool paused);
+extern void GFX_SetTitle(int32_t cycles, int frameskip, bool paused);
 
 static int cursor, saved_bpp;
 static int old_unicode;
@@ -59,29 +59,29 @@ static void getPixel(Bits x, Bits y, int &r, int &g, int &b, int shift)
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
 
-	Bit8u* src = (Bit8u *)&scalerSourceCache;
-	Bit32u pixel;
+	uint8_t* src = (uint8_t *)&scalerSourceCache;
+	uint32_t pixel;
 	switch (render.scale.inMode) {
 	case scalerMode8:
-		pixel = *(x+(Bit8u*)(src+y*render.scale.cachePitch));
+		pixel = *(x+(uint8_t*)(src+y*render.scale.cachePitch));
 		r += render.pal.rgb[pixel].red >> shift;
 		g += render.pal.rgb[pixel].green >> shift;
 		b += render.pal.rgb[pixel].blue >> shift;
 		break;
 	case scalerMode15:
-		pixel = *(x+(Bit16u*)(src+y*render.scale.cachePitch));
+		pixel = *(x+(uint16_t*)(src+y*render.scale.cachePitch));
 		r += (pixel >> (7+shift)) & (0xf8 >> shift);
 		g += (pixel >> (2+shift)) & (0xf8 >> shift);
 		b += (pixel << (3-shift)) & (0xf8 >> shift);
 		break;
 	case scalerMode16:
-		pixel = *(x+(Bit16u*)(src+y*render.scale.cachePitch));
+		pixel = *(x+(uint16_t*)(src+y*render.scale.cachePitch));
 		r += (pixel >> (8+shift)) & (0xf8 >> shift);
 		g += (pixel >> (3+shift)) & (0xfc >> shift);
 		b += (pixel << (3-shift)) & (0xf8 >> shift);
 		break;
 	case scalerMode32:
-		pixel = *(x+(Bit32u*)(src+y*render.scale.cachePitch));
+		pixel = *(x+(uint32_t*)(src+y*render.scale.cachePitch));
 		r += (pixel >> (16+shift)) & (0xff >> shift);
 		g += (pixel >> (8+shift))  & (0xff >> shift);
 		b += (pixel >> shift)      & (0xff >> shift);
@@ -114,7 +114,7 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	// create screenshot for fade effect
 	int rs = screenshot->format->Rshift, gs = screenshot->format->Gshift, bs = screenshot->format->Bshift, am = GUI::Color::AlphaMask;
 	for (int y = 0; y < h; y++) {
-		Bit32u *bg = (Bit32u*)(y*screenshot->pitch + (char*)screenshot->pixels);
+		uint32_t *bg = (uint32_t*)(y*screenshot->pitch + (char*)screenshot->pixels);
 		for (int x = 0; x < w; x++) {
 			int r = 0, g = 0, b = 0;
 			getPixel(x    *(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 0);
@@ -125,7 +125,7 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	background = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, GUI::Color::RedMask, GUI::Color::GreenMask, GUI::Color::BlueMask, GUI::Color::AlphaMask);
 	// use a blurred and sepia-toned screenshot as menu background
 	for (int y = 0; y < h; y++) {
-		Bit32u *bg = (Bit32u*)(y*background->pitch + (char*)background->pixels);
+		uint32_t *bg = (uint32_t*)(y*background->pitch + (char*)background->pixels);
 		for (int x = 0; x < w; x++) {
 			int r = 0, g = 0, b = 0;
 			getPixel(x    *(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3);

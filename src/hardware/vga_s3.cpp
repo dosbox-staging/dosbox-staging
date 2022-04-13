@@ -441,9 +441,9 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 	case 0x67:	/* Extended Miscellaneous Control 2 */
 		return vga.s3.misc_control_2;
 	case 0x69:	/* Extended System Control 3 */
-		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16);
+		return (uint8_t)((vga.config.display_start & 0x1f0000)>>16);
 	case 0x6a:	/* Extended System Control 4 */
-		return (Bit8u)(vga.svga.bank_read & 0x7f);
+		return (uint8_t)(vga.svga.bank_read & 0x7f);
 	case 0x6b:	// BIOS scatchpad: LFB address
 		return vga.s3.reg_6b;
 	default:

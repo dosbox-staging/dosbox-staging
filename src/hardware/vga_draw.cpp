@@ -36,13 +36,13 @@
 
 #define VGA_PARTS 4
 
-typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
+typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 static uint8_t TempLine[SCALER_MAXWIDTH * 4];
 
-static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
+static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
 
 	uint16_t i = 0;
 	for (Bitu x = vga.draw.blocks; x > 0; --x, ++vidstart) {
@@ -53,8 +53,8 @@ static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart, Bitu line) {
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
+static uint8_t * VGA_Draw_2BPP_Line(Bitu vidstart, Bitu line) {
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
 
 	uint16_t i = 0;
 	for (Bitu x = 0; x < vga.draw.blocks; ++x) {
@@ -65,8 +65,8 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
+static uint8_t * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
 
 	uint16_t i = 0;
 	for (Bitu x = 0; x < vga.draw.blocks; ++x) {
@@ -131,7 +131,7 @@ static uint8_t byte_clamp(int v)
 	return v < 0 ? 0u : (v > 255 ? 255u : static_cast<uint8_t>(v));
 }
 
-static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
+static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool doublewidth)
 {
 	static int temp[SCALER_MAXWIDTH + 10] = {0};
 	static int atemp[SCALER_MAXWIDTH + 2] = {0};
@@ -140,8 +140,8 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 	int w = blocks * 4;
 
 	if (doublewidth) {
-		Bit8u *source = TempLine + w - 1;
-		Bit8u *dest = TempLine + w * 2 - 2;
+		uint8_t *source = TempLine + w - 1;
+		uint8_t *dest = TempLine + w * 2 - 2;
 		for (int x = 0; x < w; ++x) {
 			*dest = *source;
 			*(dest + 1) = *source;
@@ -159,7 +159,7 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 		++o;
 	};
 
-	Bit8u *rgbi = TempLine;
+	uint8_t *rgbi = TempLine;
 	int *b = &CGA_Composite_Table[border * 68];
 	for (int x = 0; x < 4; ++x)
 		push_pixel(b[(x + 3) & 3]);
@@ -176,7 +176,7 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 		// Decode
 		int *i = temp + 5;
 		uint16_t idx = 0;
-		for (Bit32u x = 0; x < blocks * 4; ++x) {
+		for (uint32_t x = 0; x < blocks * 4; ++x) {
 			int c = (i[0] + i[0]) << 3;
 			int d = (i[-1] + i[1]) << 3;
 			int y = ((c + d) << 8) + vga.sharpness * (c - d);
@@ -217,7 +217,7 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 			write_unaligned_uint32_at(TempLine, idx++, srgb);
 		};
 
-		for (Bit32u x = 0; x < blocks; ++x) {
+		for (uint32_t x = 0; x < blocks; ++x) {
 			COMPOSITE_CONVERT(ap[0], bp[0]);
 			COMPOSITE_CONVERT(-bp[0], ap[0]);
 			COMPOSITE_CONVERT(-ap[0], -bp[0]);
@@ -227,33 +227,33 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 	return TempLine;
 }
 
-static Bit8u *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line);
+static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line);
 
-static Bit8u *VGA_CGA_TEXT_Composite_Draw_Line(Bitu vidstart, Bitu line)
+static uint8_t *VGA_CGA_TEXT_Composite_Draw_Line(Bitu vidstart, Bitu line)
 {
 	VGA_TEXT_Draw_Line(vidstart, line);
 	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks * 2,
 	                         (vga.tandy.mode_control & 0x1) == 0);
 }
 
-static Bit8u *VGA_Draw_CGA2_Composite_Line(Bitu vidstart, Bitu line)
+static uint8_t *VGA_Draw_CGA2_Composite_Line(Bitu vidstart, Bitu line)
 {
 	VGA_Draw_1BPP_Line(vidstart, line);
 	return Composite_Process(0, vga.draw.blocks * 2, false);
 }
 
-static Bit8u *VGA_Draw_CGA4_Composite_Line(Bitu vidstart, Bitu line)
+static uint8_t *VGA_Draw_CGA4_Composite_Line(Bitu vidstart, Bitu line)
 {
 	VGA_Draw_2BPP_Line(vidstart, line);
 	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks, true);
 }
 
-static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart, Bitu line) {
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit8u* draw=TempLine;
+static uint8_t * VGA_Draw_4BPP_Line(Bitu vidstart, Bitu line) {
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
+	uint8_t* draw=TempLine;
 	Bitu end = vga.draw.blocks*2;
 	while(end) {
-		Bit8u byte = base[vidstart & vga.tandy.addr_mask];
+		uint8_t byte = base[vidstart & vga.tandy.addr_mask];
 		*draw++=vga.attr.palette[byte >> 4];
 		*draw++=vga.attr.palette[byte & 0x0f];
 		++vidstart;
@@ -262,13 +262,13 @@ static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart, Bitu line) {
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit8u* draw=TempLine;
+static uint8_t * VGA_Draw_4BPP_Line_Double(Bitu vidstart, Bitu line) {
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
+	uint8_t* draw=TempLine;
 	Bitu end = vga.draw.blocks;
 	while(end) {
-		Bit8u byte = base[vidstart & vga.tandy.addr_mask];
-		Bit8u data = vga.attr.palette[byte >> 4];
+		uint8_t byte = base[vidstart & vga.tandy.addr_mask];
+		uint8_t data = vga.attr.palette[byte >> 4];
 		*draw++ = data; *draw++ = data;
 		data = vga.attr.palette[byte & 0x0f];
 		*draw++ = data; *draw++ = data;
@@ -279,9 +279,9 @@ static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart, Bitu line) {
 }
 
 #ifdef VGA_KEEP_CHANGES
-static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
+static uint8_t * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 	Bitu checkMask = vga.changes.checkMask;
-	Bit8u *map = vga.changes.map;
+	uint8_t *map = vga.changes.map;
 	Bitu start = (vidstart >> VGA_CHANGE_SHIFT);
 	Bitu end = ((vidstart + vga.draw.line_length ) >> VGA_CHANGE_SHIFT);
 	for (; start <= end; ++start) {
@@ -289,7 +289,7 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 			Bitu offset = vidstart & vga.draw.linear_mask;
 			if (vga.draw.linear_mask-offset < vga.draw.line_length)
 				memcpy(vga.draw.linear_base+vga.draw.linear_mask+1, vga.draw.linear_base, vga.draw.line_length);
-			Bit8u *ret = &vga.draw.linear_base[ offset ];
+			uint8_t *ret = &vga.draw.linear_base[ offset ];
 #if !defined(C_UNALIGNED_MEMORY)
 			if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
 				memcpy( TempLine, ret, vga.draw.line_length );
@@ -306,9 +306,9 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 
 #endif
 
-static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
+static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	Bitu offset = vidstart & vga.draw.linear_mask;
-	Bit8u* ret = &vga.draw.linear_base[offset];
+	uint8_t* ret = &vga.draw.linear_base[offset];
 	
 	// in case (vga.draw.line_length + offset) has bits set that
 	// are not set in the mask: ((x|y)!=y) equals (x&~y)
@@ -371,7 +371,7 @@ static uint8_t *VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/)
 }
 
 //Test version, might as well keep it
-/* static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
+/* static uint8_t * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 	Bitu i = 0;
 	for ( i = 0; i < vga.draw.width;i++ ) {
 		Bitu addr = vidstart + i;
@@ -380,7 +380,7 @@ static uint8_t *VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/)
 	return TempLine;
 } */
 
-static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
+static uint8_t * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		// HW Mouse not enabled, use the tried and true call
 		return &vga.mem.linear[vidstart];
@@ -403,19 +403,19 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
 		// convert to video memory addr and bit index
 		// start adjusted to the pattern structure (thus shift address by 2 instead of 3)
 		// Need to get rid of the third bit, so "/8 *2" becomes ">> 2 & ~1"
-		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		// stay at the right position in the pattern
 		if (cursorMemStart & 0x2)
 			--cursorMemStart;
 		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
-		Bit8u* xat = &TempLine[vga.s3.hgc.originx]; // mouse data start pos. in scanline
+		uint8_t* xat = &TempLine[vga.s3.hgc.originx]; // mouse data start pos. in scanline
 		for (Bitu m = cursorMemStart; m < cursorMemEnd;
 		     (m & 1) ? (m += 3) : ++m) {
 			// for each byte of cursor data
-			Bit8u bitsA = vga.mem.linear[m];
-			Bit8u bitsB = vga.mem.linear[m+2];
-			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
+			uint8_t bitsA = vga.mem.linear[m];
+			uint8_t bitsB = vga.mem.linear[m+2];
+			for (uint8_t bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
 				// for each bit
 				cursorStartBit=0; // only the first byte has some bits cut off
 				if (bitsA&bit) {
@@ -433,7 +433,7 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
 	}
 }
 
-static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
+static uint8_t * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		return &vga.mem.linear[vidstart];
 
@@ -445,7 +445,7 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	} else {
 		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*2);
 		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
- 		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+ 		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2) cursorMemStart--;
 		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
@@ -454,9 +454,9 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 		for (Bitu m = cursorMemStart; m < cursorMemEnd;
 		     (m & 1) ? (m += 3) : ++m) {
 			// for each byte of cursor data
-			Bit8u bitsA = vga.mem.linear[m];
-			Bit8u bitsB = vga.mem.linear[m+2];
-			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
+			uint8_t bitsA = vga.mem.linear[m];
+			uint8_t bitsB = vga.mem.linear[m+2];
+			for (uint8_t bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
 				// for each bit
 				cursorStartBit=0;
 				if (bitsA&bit) {
@@ -467,7 +467,7 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 					}
 					// else Transparent
 				} else if (bitsB & bit) {
-					// Source as well as destination are Bit8u arrays, 
+					// Source as well as destination are uint8_t arrays, 
 					// so this should work out endian-wise?
 					const auto fore = read_unaligned_uint16(vga.s3.hgc.forestack);
 					write_unaligned_uint16_at(TempLine, i, fore);
@@ -482,7 +482,7 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	}
 }
 
-static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
+static uint8_t * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		return &vga.mem.linear[vidstart];
 
@@ -494,7 +494,7 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	} else {
 		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*4);
 		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
-		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2)
 			--cursorMemStart;
@@ -503,9 +503,9 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 		for (Bitu m = cursorMemStart; m < cursorMemEnd;
 		     (m & 1) ? (m += 3) : ++m) {
 			// for each byte of cursor data
-			Bit8u bitsA = vga.mem.linear[m];
-			Bit8u bitsB = vga.mem.linear[m+2];
-			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) { // for each bit
+			uint8_t bitsA = vga.mem.linear[m];
+			uint8_t bitsB = vga.mem.linear[m+2];
+			for (uint8_t bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) { // for each bit
 				cursorStartBit=0;
 				if (bitsA&bit) {
 					if (bitsB & bit) {
@@ -527,7 +527,7 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	}
 }
 
-static const Bit8u* VGA_Text_Memwrap(Bitu vidstart) {
+static const uint8_t* VGA_Text_Memwrap(Bitu vidstart) {
 	vidstart &= vga.draw.linear_mask;
 	Bitu line_end = 2 * vga.draw.blocks;
 	if (GCC_UNLIKELY((vidstart + line_end) > vga.draw.linear_mask)) {
@@ -547,19 +547,19 @@ static bool SkipCursor(Bitu vidstart, Bitu line)
 	       (vga.draw.cursor.address < vidstart);
 }
 
-static Bit32u FontMask[2]={0xffffffff,0x0};
+static uint32_t FontMask[2]={0xffffffff,0x0};
 static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 {
 	uint16_t i = 0;
-	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
+	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart);
 	for (Bitu cx = 0; cx < vga.draw.blocks; ++cx) {
 		Bitu chr=vidmem[cx*2];
 		Bitu col=vidmem[cx*2+1];
 		Bitu font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
-		Bit32u mask1=TXT_Font_Table[font>>4] & FontMask[col >> 7];
-		Bit32u mask2=TXT_Font_Table[font&0xf] & FontMask[col >> 7];
-		Bit32u fg=TXT_FG_Table[col&0xf];
-		Bit32u bg=TXT_BG_Table[col>>4];
+		uint32_t mask1=TXT_Font_Table[font>>4] & FontMask[col >> 7];
+		uint32_t mask2=TXT_Font_Table[font&0xf] & FontMask[col >> 7];
+		uint32_t fg=TXT_FG_Table[col&0xf];
+		uint32_t bg=TXT_BG_Table[col>>4];
 		write_unaligned_uint32_at(TempLine, i++, (fg & mask1) | (bg & ~mask1));
 		write_unaligned_uint32_at(TempLine, i++, (fg & mask2) | (bg & ~mask2));
 	}
@@ -567,8 +567,8 @@ static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		Bit32u *draw = (Bit32u *)&TempLine[font_addr * 8];
-		Bit32u att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
+		uint32_t *draw = (uint32_t *)&TempLine[font_addr * 8];
+		uint32_t att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
 		*draw++ = att;
 		*draw++ = att;
 	}
@@ -578,7 +578,7 @@ static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 {
 	uint16_t i = 0;
-	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
+	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart);
 
 	for (Bitu cx = 0; cx < vga.draw.blocks; ++cx) {
 		Bitu chr=vidmem[cx*2];
@@ -588,7 +588,7 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 			write_unaligned_uint32_at(TempLine, i++, 0);
 			write_unaligned_uint32_at(TempLine, i++, 0);
 		} else {
-			Bit32u bg, fg;
+			uint32_t bg, fg;
 			bool underline=false;
 			if ((attrib&0x77)==0x70) {
 				bg = TXT_BG_Table[0x7];
@@ -600,7 +600,7 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 				if (attrib&0x8) fg = TXT_FG_Table[0xf];
 				else fg = TXT_FG_Table[0x7];
 			}
-			Bit32u mask1, mask2;
+			uint32_t mask1, mask2;
 			if (GCC_UNLIKELY(underline)) mask1 = mask2 = FontMask[attrib >> 7];
 			else {
 				Bitu font=vga.draw.font_tables[0][chr*32+line];
@@ -615,9 +615,9 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		Bit32u *draw = (Bit32u *)&TempLine[font_addr * 8];
-		Bit8u attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
-		Bit32u cg;
+		uint32_t *draw = (uint32_t *)&TempLine[font_addr * 8];
+		uint8_t attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
+		uint32_t cg;
 		if (attr&0x8) {
 			cg = TXT_FG_Table[0xf];
 		} else if ((attr&0x77)==0x70) {
@@ -635,7 +635,7 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 {
 	// keep it aligned:
 	uint16_t idx = 16 - vga.draw.panning;
-	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart); // pointer to chars+attribs
+	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart); // pointer to chars+attribs
 	Bitu blocks = vga.draw.blocks;
 	if (vga.draw.panning)
 		++blocks; // if the text is panned part of an
@@ -682,7 +682,7 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 		const Bitu attr_addr = (vga.draw.cursor.address - vidstart) >> 1;
 		if (attr_addr < vga.draw.blocks) {
 			Bitu index = attr_addr * (vga.draw.char9dot? 18:16);
-			Bit16u *draw = (Bit16u *)(&TempLine[index]) + 16 -
+			uint16_t *draw = (uint16_t *)(&TempLine[index]) + 16 -
 			               vga.draw.panning;
 
 			Bitu foreground = vga.tandy.draw_base[vga.draw.cursor.address+1] & 0xf;
@@ -700,9 +700,9 @@ static inline void VGA_ChangesEnd(void ) {
 //		vga.changes.active = false;
 		Bitu end = vga.draw.address >> VGA_CHANGE_SHIFT;
 		Bitu total = 4 + end - vga.changes.start;
-		Bit32u clearMask = vga.changes.clearMask;
+		uint32_t clearMask = vga.changes.clearMask;
 		total >>= 2;
-		Bit32u *clear = (Bit32u *)&vga.changes.map[  vga.changes.start & ~3 ];
+		uint32_t *clear = (uint32_t *)&vga.changes.map[  vga.changes.start & ~3 ];
 		while ( total-- ) {
 			clear[0] &= clearMask;
 			++clear;
@@ -728,7 +728,7 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
-static Bit8u bg_color_index = 0; // screen-off black index
+static uint8_t bg_color_index = 0; // screen-off black index
 static void VGA_DrawSingleLine(uint32_t /*blah*/)
 {
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
@@ -783,14 +783,14 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 		if (vga.draw.bpp==8) {
 			memset(TempLine, bg_color_index, sizeof(TempLine));
 		} else if (vga.draw.bpp == 16) {
-			Bit16u value = vga.dac.xlat16[bg_color_index];
+			uint16_t value = vga.dac.xlat16[bg_color_index];
 			for (size_t i = 0; i < sizeof(TempLine) / 2; ++i) {
 				write_unaligned_uint16_at(TempLine, i, value);
 			}
 		}
 		RENDER_DrawLine(TempLine);
 	} else {
-		Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
+		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
 		RENDER_DrawLine(data);
 	}
 
@@ -814,7 +814,7 @@ static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 	} else {
 		Bitu address = vga.draw.address;
 		if (vga.mode!=M_TEXT) address += vga.draw.panning;
-		Bit8u * data=VGA_DrawLine(address, vga.draw.address_line );	
+		uint8_t * data=VGA_DrawLine(address, vga.draw.address_line );	
 		RENDER_DrawLine(data);
 	}
 
@@ -833,7 +833,7 @@ static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 static void VGA_DrawPart(uint32_t lines)
 {
 	while (lines--) {
-		Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );
+		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );
 		RENDER_DrawLine(data);
 		++vga.draw.address_line;
 		if (vga.draw.address_line>=vga.draw.address_line_total) {

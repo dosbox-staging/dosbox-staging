@@ -179,7 +179,7 @@ struct SB_INFO {
 static SB_INFO sb = {};
 
 // number of bytes in input for commands (sb/sbpro)
-static Bit8u DSP_cmd_len_sb[256] = {
+static uint8_t DSP_cmd_len_sb[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
 //  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
   1,0,0,0, 2,2,2,2, 0,0,0,0, 0,0,0,0,  // 0x10 Wari hack
@@ -203,7 +203,7 @@ static Bit8u DSP_cmd_len_sb[256] = {
 };
 
 // number of bytes in input for commands (sb16)
-static Bit8u DSP_cmd_len_sb16[256] = {
+static uint8_t DSP_cmd_len_sb16[256] = {
   0,0,0,0, 1,2,0,0, 1,0,0,0, 0,0,2,1,  // 0x00
 //  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
   1,0,0,0, 2,2,2,2, 0,0,0,0, 0,0,0,0,  // 0x10 Wari hack
@@ -226,7 +226,7 @@ static Bit8u DSP_cmd_len_sb16[256] = {
   0,0,0,0, 0,0,0,0, 0,1,0,0, 0,0,0,0   // 0xf0
 };
 
-static Bit8u ASP_regs[256];
+static uint8_t ASP_regs[256];
 static bool ASP_init_in_progress = false;
 
 static int E2_incr_table[4][9] = {
@@ -859,7 +859,7 @@ static void DSP_PrepareDMA_New(DMA_MODES mode, uint32_t length, bool autoinit, b
 	DSP_DoDMATransfer(mode,freq,autoinit,stereo);
 }
 
-static void DSP_AddData(Bit8u val) {
+static void DSP_AddData(uint8_t val) {
 	if (sb.dsp.out.used<DSP_BUFSIZE) {
 		auto start = sb.dsp.out.used + sb.dsp.out.pos;
 		if (start>=DSP_BUFSIZE) start-=DSP_BUFSIZE;
@@ -913,7 +913,7 @@ static void DSP_Reset() {
 	PIC_RemoveEvents(ProcessDMATransfer);
 }
 
-static void DSP_DoReset(Bit8u val) {
+static void DSP_DoReset(uint8_t val) {
 	if (((val&1)!=0) && (sb.dsp.state!=DSP_S_RESET)) {
 		// TODO Get out of highspeed mode
 		// Halt the channel so we're silent across reset events.
@@ -932,7 +932,7 @@ static void DSP_DoReset(Bit8u val) {
 
 static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event==DMA_UNMASKED) {
-		Bit8u val=(Bit8u)(sb.e2.value&0xff);
+		uint8_t val=(uint8_t)(sb.e2.value&0xff);
 		DmaChannel * chan=GetDMAChannel(sb.hw.dma8);
 		chan->Register_Callback(0);
 		chan->Write(1,&val);
@@ -941,7 +941,7 @@ static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 
 static void DSP_ADC_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
-	Bit8u val=128;
+	uint8_t val=128;
 	DmaChannel * ch=GetDMAChannel(sb.hw.dma8);
 	while (sb.dma.left--) {
 		ch->Write(1,&val);
@@ -1021,8 +1021,8 @@ static void DSP_DoCommand() {
 	case 0x10:	/* Direct DAC */
 		DSP_ChangeMode(MODE_DAC);
 		if (sb.dac.used<DSP_DACSIZE) {
-			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
-			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
+			sb.dac.data[sb.dac.used++]=(int8_t(sb.dsp.in.data[0] ^ 0x80)) << 8;
+			sb.dac.data[sb.dac.used++]=(int8_t(sb.dsp.in.data[0] ^ 0x80)) << 8;
 		}
 		break;
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
@@ -1277,7 +1277,7 @@ static void DSP_DoCommand() {
 	sb.dsp.in.pos=0;
 }
 
-static void DSP_DoWrite(Bit8u val) {
+static void DSP_DoWrite(uint8_t val) {
 	switch (sb.dsp.cmd) {
 	case DSP_NO_COMMAND:
 		sb.dsp.cmd=val;
@@ -1293,7 +1293,7 @@ static void DSP_DoWrite(Bit8u val) {
 	}
 }
 
-static Bit8u DSP_ReadData() {
+static uint8_t DSP_ReadData() {
 /* Static so it repeats the last value on succesive reads (JANGLE DEMO) */
 	if (sb.dsp.out.used) {
 		sb.dsp.out.lastval=sb.dsp.out.data[sb.dsp.out.pos];
@@ -1304,8 +1304,8 @@ static Bit8u DSP_ReadData() {
 	return sb.dsp.out.lastval;
 }
 
-static float calc_vol(Bit8u amount) {
-	Bit8u count = 31 - amount;
+static float calc_vol(uint8_t amount) {
+	uint8_t count = 31 - amount;
 	float db = static_cast<float>(count);
 	if (sb.type == SBT_PRO1 || sb.type == SBT_PRO2) {
 		if (count) {
@@ -1368,7 +1368,7 @@ static void DSP_ChangeStereo(bool stereo) {
 	sb.dma.stereo=stereo;
 }
 
-static void CTMIXER_Write(Bit8u val) {
+static void CTMIXER_Write(uint8_t val) {
 	switch (sb.mixer.index) {
 	case 0x00:		/* Reset */
 		CTMIXER_Reset();
@@ -1508,8 +1508,8 @@ static void CTMIXER_Write(Bit8u val) {
 	}
 }
 
-static Bit8u CTMIXER_Read() {
-	Bit8u ret;
+static uint8_t CTMIXER_Read() {
+	uint8_t ret;
 //	if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 	switch (sb.mixer.index) {
 	case 0x00:		/* RESET */
@@ -1668,7 +1668,7 @@ static void write_sb(io_port_t port, io_val_t value, io_width_t)
 static void adlib_gusforward(io_port_t, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
-	adlib_commandreg = (Bit8u)(val & 0xff);
+	adlib_commandreg = (uint8_t)(val & 0xff);
 }
 
 bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)

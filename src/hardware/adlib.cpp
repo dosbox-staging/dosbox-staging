@@ -43,12 +43,12 @@ namespace OPL2 {
 	#include "opl.cpp"
 
 struct Handler : public Adlib::Handler {
-	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
-	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
+	virtual void WriteReg(uint32_t reg, uint8_t val) { adlib_write(reg, val); }
+	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
 
 	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
-		Bit16s buf[1024];
+		int16_t buf[1024];
 		int remaining = samples;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
@@ -68,15 +68,15 @@ namespace OPL3 {
 	#include "opl.cpp"
 
 struct Handler : public Adlib::Handler {
-	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
-	virtual Bit32u WriteAddr(io_port_t port, Bit8u val)
+	virtual void WriteReg(uint32_t reg, uint8_t val) { adlib_write(reg, val); }
+	virtual uint32_t WriteAddr(io_port_t port, uint8_t val)
 	{
 		adlib_write_index(port, val);
 		return opl_index;
 	}
 	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
-		Bit16s buf[1024 * 2];
+		int16_t buf[1024 * 2];
 		int remaining = samples;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
@@ -96,14 +96,14 @@ namespace MAMEOPL2 {
 struct Handler : public Adlib::Handler {
 	void *chip = nullptr;
 
-	virtual void WriteReg(Bit32u reg, Bit8u val) {
+	virtual void WriteReg(uint32_t reg, uint8_t val) {
 		ym3812_write(chip, 0, reg);
 		ym3812_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
+	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
 	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
-		Bit16s buf[1024 * 2];
+		int16_t buf[1024 * 2];
 		int remaining = samples;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
@@ -129,18 +129,18 @@ namespace MAMEOPL3 {
 struct Handler : public Adlib::Handler {
 	void *chip = nullptr;
 
-	virtual void WriteReg(Bit32u reg, Bit8u val) {
+	virtual void WriteReg(uint32_t reg, uint8_t val) {
 		ymf262_write(chip, 0, reg);
 		ymf262_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
+	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
 	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
 		// We generate data for 4 channels, but only the first 2 are
 		// connected on a pc
-		Bit16s buf[4][1024];
-		Bit16s result[1024][2];
-		Bit16s* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
+		int16_t buf[4][1024];
+		int16_t result[1024][2];
+		int16_t* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
 
 		int remaining = samples;
 		while (remaining > 0) {
@@ -170,18 +170,18 @@ namespace NukedOPL {
 
 struct Handler : public Adlib::Handler {
 	opl3_chip chip = {};
-	Bit8u newm = 0;
+	uint8_t newm = 0;
 
-	void WriteReg(Bit32u reg, Bit8u val) override
+	void WriteReg(uint32_t reg, uint8_t val) override
 	{
-		OPL3_WriteRegBuffered(&chip, (Bit16u)reg, val);
+		OPL3_WriteRegBuffered(&chip, (uint16_t)reg, val);
 		if (reg == 0x105)
 			newm = reg & 0x01;
 	}
 
-	Bit32u WriteAddr(io_port_t port, Bit8u val) override
+	uint32_t WriteAddr(io_port_t port, uint8_t val) override
 	{
-		Bit16u addr;
+		uint16_t addr;
 		addr = val;
 		if ((port & 2) && (addr == 0x05 || newm)) {
 			addr |= 0x100;
@@ -228,17 +228,17 @@ namespace Adlib {
 #define HW_OPL3 2
 
 struct RawHeader {
-	Bit8u id[8];				/* 0x00, "DBRAWOPL" */
-	Bit16u versionHigh;			/* 0x08, size of the data following the m */
-	Bit16u versionLow;			/* 0x0a, size of the data following the m */
-	Bit32u commands;			/* 0x0c, Bit32u amount of command/data pairs */
-	Bit32u milliseconds;		/* 0x10, Bit32u Total milliseconds of data in this chunk */
-	Bit8u hardware;				/* 0x14, Bit8u Hardware Type 0=opl2,1=dual-opl2,2=opl3 */
-	Bit8u format;				/* 0x15, Bit8u Format 0=cmd/data interleaved, 1 maybe all cdms, followed by all data */
-	Bit8u compression;			/* 0x16, Bit8u Compression Type, 0 = No Compression */
-	Bit8u delay256;				/* 0x17, Bit8u Delay 1-256 msec command */
-	Bit8u delayShift8;			/* 0x18, Bit8u (delay + 1)*256 */			
-	Bit8u conversionTableSize;	/* 0x191, Bit8u Raw Conversion Table size */
+	uint8_t id[8];				/* 0x00, "DBRAWOPL" */
+	uint16_t versionHigh;			/* 0x08, size of the data following the m */
+	uint16_t versionLow;			/* 0x0a, size of the data following the m */
+	uint32_t commands;			/* 0x0c, uint32_t amount of command/data pairs */
+	uint32_t milliseconds;		/* 0x10, uint32_t Total milliseconds of data in this chunk */
+	uint8_t hardware;				/* 0x14, uint8_t Hardware Type 0=opl2,1=dual-opl2,2=opl3 */
+	uint8_t format;				/* 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe all cdms, followed by all data */
+	uint8_t compression;			/* 0x16, uint8_t Compression Type, 0 = No Compression */
+	uint8_t delay256;				/* 0x17, uint8_t Delay 1-256 msec command */
+	uint8_t delayShift8;			/* 0x18, uint8_t (delay + 1)*256 */			
+	uint8_t conversionTableSize;	/* 0x191, uint8_t Raw Conversion Table size */
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #pragma pack()
@@ -251,28 +251,28 @@ struct RawHeader {
 
 //Table to map the opl register to one <127 for dro saving
 class Capture {
-	Bit8u ToReg[127];       // 127 entries to go from raw data to registers
-	Bit8u RawUsed = 0;      // How many entries in the ToPort are used
-	Bit8u ToRaw[256];       // 256 entries to go from port index to raw data
-	Bit8u delay256 = 0;
-	Bit8u delayShift8 = 0;
+	uint8_t ToReg[127];       // 127 entries to go from raw data to registers
+	uint8_t RawUsed = 0;      // How many entries in the ToPort are used
+	uint8_t ToRaw[256];       // 256 entries to go from port index to raw data
+	uint8_t delay256 = 0;
+	uint8_t delayShift8 = 0;
 	RawHeader header;
 
 	FILE*  handle = nullptr;  // File used for writing
-	Bit32u startTicks = 0;    // Start used to check total raw length on end
-	Bit32u lastTicks = 0;     // Last ticks when last last cmd was added
-	Bit8u  buf[1024];         // 16 added for delay commands and what not
-	Bit32u bufUsed = 0;
+	uint32_t startTicks = 0;    // Start used to check total raw length on end
+	uint32_t lastTicks = 0;     // Last ticks when last last cmd was added
+	uint8_t  buf[1024];         // 16 added for delay commands and what not
+	uint32_t bufUsed = 0;
 
 	RegisterCache* cache;
 
-	void MakeEntry( Bit8u reg, Bit8u& raw ) {
+	void MakeEntry( uint8_t reg, uint8_t& raw ) {
 		ToReg[ raw ] = reg;
 		ToRaw[ reg ] = raw;
 		raw++;
 	}
 	void MakeTables( void ) {
-		Bit8u index = 0;
+		uint8_t index = 0;
 		memset( ToReg, 0xff, sizeof ( ToReg ) );
 		memset( ToRaw, 0xff, sizeof ( ToRaw ) );
 		//Select the entries that are valid and the index is the mapping to the index entry
@@ -309,15 +309,15 @@ class Capture {
 		header.commands += bufUsed / 2;
 		bufUsed = 0;
 	}
-	void AddBuf( Bit8u raw, Bit8u val ) {
+	void AddBuf( uint8_t raw, uint8_t val ) {
 		buf[bufUsed++] = raw;
 		buf[bufUsed++] = val;
 		if ( bufUsed >= sizeof( buf ) ) {
 			ClearBuf();
 		}
 	}
-	void AddWrite( Bit32u regFull, Bit8u val ) {
-		Bit8u regMask = regFull & 0xff;
+	void AddWrite( uint32_t regFull, uint8_t val ) {
+		uint8_t regMask = regFull & 0xff;
 		/*
 			Do some special checks if we're doing opl3 or dualopl2 commands
 			Although you could pretty much just stick to always doing opl3 on the player side
@@ -331,7 +331,7 @@ class Capture {
 		if ( header.hardware == HW_OPL2 && regFull >= 0x1b0 && regFull <=0x1b8 && val ) {
 			header.hardware = HW_DUALOPL2;
 		}
-		Bit8u raw = ToRaw[ regMask ];
+		uint8_t raw = ToRaw[ regMask ];
 		if ( raw == 0xff )
 			return;
 		if ( regFull & 0x100 )
@@ -388,14 +388,14 @@ class Capture {
 		}
 	}
 public:
-	bool DoWrite( Bit32u regFull, Bit8u val ) {
-		Bit8u regMask = regFull & 0xff;
+	bool DoWrite( uint32_t regFull, uint8_t val ) {
+		uint8_t regMask = regFull & 0xff;
 		//Check the raw index for this register if we actually have to save it
 		if ( handle ) {
 			/*
 				Check if we actually care for this to be logged, else just ignore it
 			*/
-			Bit8u raw = ToRaw[ regMask ];
+			uint8_t raw = ToRaw[ regMask ];
 			if ( raw == 0xff ) {
 				return true;
 			}
@@ -481,7 +481,7 @@ Chip
 Chip::Chip() : timer0(80), timer1(320) {
 }
 
-bool Chip::Write( Bit32u reg, Bit8u val ) {
+bool Chip::Write( uint32_t reg, uint8_t val ) {
 	//if(reg == 0x02 || reg == 0x03 || reg == 0x04) LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
 	switch ( reg ) {
 	case 0x02:
@@ -520,9 +520,9 @@ bool Chip::Write( Bit32u reg, Bit8u val ) {
 }
 
 
-Bit8u Chip::Read( ) {
+uint8_t Chip::Read( ) {
 	const auto time(PIC_FullIndex());
-	Bit8u ret = 0;
+	uint8_t ret = 0;
 	//Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
 		ret |= 0x40;
@@ -535,7 +535,7 @@ Bit8u Chip::Read( ) {
 	return ret;
 }
 
-void Module::CacheWrite(Bit32u port, Bit8u val)
+void Module::CacheWrite(uint32_t port, uint8_t val)
 {
 	// capturing?
 	if (capture) {
@@ -545,7 +545,7 @@ void Module::CacheWrite(Bit32u port, Bit8u val)
 	cache[port] = val;
 }
 
-void Module::DualWrite(Bit8u index, Bit8u port, Bit8u val)
+void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 {
 	// Make sure you don't use opl3 features
 	// Don't allow write to disable opl3
@@ -569,7 +569,7 @@ void Module::DualWrite(Bit8u index, Bit8u port, Bit8u val)
 	CacheWrite(full_port, val);
 }
 
-void Module::CtrlWrite( Bit8u val ) {
+void Module::CtrlWrite( uint8_t val ) {
 	switch ( ctrl.index ) {
 	case 0x09: /* Left FM Volume */
 		ctrl.lvol = val;
@@ -627,7 +627,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 		case MODE_DUALOPL2:
 			//Not a 0x??8 port, then write to a specific port
 			if ( !(port & 0x8) ) {
-				Bit8u index = ( port & 2 ) >> 1;
+				uint8_t index = ( port & 2 ) >> 1;
 				DualWrite( index, reg.dual[index], val );
 			} else {
 				//Write to both ports
@@ -663,7 +663,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 		case MODE_DUALOPL2:
 			//Not a 0x?88 port, when write to a specific side
 			if ( !(port & 0x8) ) {
-				Bit8u index = ( port & 2 ) >> 1;
+				uint8_t index = ( port & 2 ) >> 1;
 				reg.dual[index] = val & 0xff;
 			} else {
 				reg.dual[0] = val & 0xff;
@@ -770,9 +770,9 @@ static void SaveRad() {
 	b[w++] = 0x06;		//default speed and no description
 	//Write 18 instuments for all operators in the cache
 	for ( int i = 0; i < 18; i++ ) {
-		Bit8u* set = module->cache + ( i / 9 ) * 256;
+		uint8_t* set = module->cache + ( i / 9 ) * 256;
 		const auto offset = ((i % 9) / 3) * 8 + (i % 3);
-		Bit8u* base = set + offset;
+		uint8_t* base = set + offset;
 		b[w++] = 1 + i;		//instrument number
 		b[w++] = base[0x23];
 		b[w++] = base[0x20];

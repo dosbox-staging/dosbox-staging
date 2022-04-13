@@ -32,13 +32,13 @@
 #include "regs.h"
 #include "string_utils.h"
 
-FILE *BOOT::getFSFile_mounted(char const *filename, Bit32u *ksize, Bit32u *bsize, Bit8u *error)
+FILE *BOOT::getFSFile_mounted(char const *filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error)
 {
 	// if return NULL then put in error the errormessage code if an error
 	// was requested
 	bool tryload = (*error) ? true : false;
 	*error = 0;
-	Bit8u drive;
+	uint8_t drive;
 	FILE *tmpfile;
 	char fullname[DOS_PATHLENGTH];
 
@@ -83,9 +83,9 @@ FILE *BOOT::getFSFile_mounted(char const *filename, Bit32u *ksize, Bit32u *bsize
 	}
 }
 
-FILE *BOOT::getFSFile(char const *filename, Bit32u *ksize, Bit32u *bsize, bool tryload)
+FILE *BOOT::getFSFile(char const *filename, uint32_t *ksize, uint32_t *bsize, bool tryload)
 {
-	Bit8u error = tryload ? 1 : 0;
+	uint8_t error = tryload ? 1 : 0;
 	FILE *tmpfile = getFSFile_mounted(filename, ksize, bsize, &error);
 	if (tmpfile)
 		return tmpfile;
@@ -152,9 +152,9 @@ void BOOT::Run(void)
 	FILE *usefile_1 = NULL;
 	FILE *usefile_2 = NULL;
 	Bitu i = 0;
-	Bit32u floppysize = 0;
-	Bit32u rombytesize_1 = 0;
-	Bit32u rombytesize_2 = 0;
+	uint32_t floppysize = 0;
+	uint32_t rombytesize_1 = 0;
+	uint32_t rombytesize_2 = 0;
 	char drive = 'A';
 	std::string cart_cmd = "";
 
@@ -226,7 +226,7 @@ void BOOT::Run(void)
 			}
 			WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"),
 			         temp_line.c_str());
-			Bit32u rombytesize;
+			uint32_t rombytesize;
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != NULL) {
@@ -264,7 +264,7 @@ void BOOT::Run(void)
 		if (machine != MCH_PCJR) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
 		} else {
-			Bit8u rombuf[65536];
+			uint8_t rombuf[65536];
 			Bits cfound_at = -1;
 			if (!cart_cmd.empty()) {
 				/* read cartridge data into buffer */
@@ -348,11 +348,11 @@ void BOOT::Run(void)
 			if (usefile_1 == NULL)
 				return;
 
-			Bit32u sz1, sz2;
+			uint32_t sz1, sz2;
 			FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
 			if (tfile != NULL) {
 				fseek(tfile, 0x3000L, SEEK_SET);
-				Bit32u drd = (Bit32u)fread(rombuf, 1, 0xb000, tfile);
+				uint32_t drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
 				if (drd == 0xb000) {
 					for (i = 0; i < 0xb000; i++)
 						phys_writeb(0xf3000 + i, rombuf[i]);
@@ -395,7 +395,7 @@ void BOOT::Run(void)
 				return;
 			}
 
-			Bit16u romseg = host_readw(&rombuf[0x1ce]);
+			uint16_t romseg = host_readw(&rombuf[0x1ce]);
 
 			/* read cartridge data into buffer */
 			fseek(usefile_1, 0x200L, SEEK_SET);
@@ -417,7 +417,7 @@ void BOOT::Run(void)
 				disk.reset();
 
 			if (cart_cmd.empty()) {
-				Bit32u old_int18 = mem_readd(0x60);
+				uint32_t old_int18 = mem_readd(0x60);
 				/* run cartridge setup */
 				SegSet16(ds, romseg);
 				SegSet16(es, romseg);
@@ -425,7 +425,7 @@ void BOOT::Run(void)
 				reg_esp = 0xfffe;
 				CALLBACK_RunRealFar(romseg, 0x0003);
 
-				Bit32u new_int18 = mem_readd(0x60);
+				uint32_t new_int18 = mem_readd(0x60);
 				if (old_int18 != new_int18) {
 					/* boot cartridge (int18) */
 					SegSet16(cs, RealSeg(new_int18));

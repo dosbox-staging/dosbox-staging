@@ -65,13 +65,13 @@ enum {
 	CBRET_NONE=0,CBRET_STOP=1
 };
 
-extern Bit8u lastint;
+extern uint8_t lastint;
 
 static inline RealPt CALLBACK_RealPointer(Bitu callback) {
-	return RealMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
+	return RealMake(CB_SEG,(uint16_t)(CB_SOFFSET+callback*CB_SIZE));
 }
 static inline PhysPt CALLBACK_PhysPointer(Bitu callback) {
-	return PhysMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
+	return PhysMake(CB_SEG,(uint16_t)(CB_SOFFSET+callback*CB_SIZE));
 }
 
 static inline PhysPt CALLBACK_GetBase(void) {
@@ -83,8 +83,8 @@ Bitu CALLBACK_Allocate();
 void CALLBACK_Idle(void);
 
 
-void CALLBACK_RunRealInt(Bit8u intnum);
-void CALLBACK_RunRealFar(Bit16u seg,Bit16u off);
+void CALLBACK_RunRealInt(uint8_t intnum);
+void CALLBACK_RunRealFar(uint16_t seg,uint16_t off);
 
 bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr);
 Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr);
@@ -127,12 +127,12 @@ public:
 
 	//Only allocate a callback number
 	void Allocate(CallBack_Handler handler,const char* description=0);
-	Bit16u Get_callback() {
-		return (Bit16u)m_callback;
+	uint16_t Get_callback() {
+		return (uint16_t)m_callback;
 	}
 	RealPt Get_RealPointer() {
 		return CALLBACK_RealPointer(m_callback);
 	}
-	void Set_RealVec(Bit8u vec);
+	void Set_RealVec(uint8_t vec);
 };
 #endif

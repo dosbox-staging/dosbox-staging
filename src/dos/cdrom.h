@@ -73,8 +73,8 @@ struct TMSF
 };
 
 typedef struct SCtrl {
-	Bit8u	out[4];			// output channel mapping
-	Bit8u	vol[4];			// channel volume (0 to 255)
+	uint8_t	out[4];			// output channel mapping
+	uint8_t	vol[4];			// channel volume (0 to 255)
 } TCtrl;
 
 // Conversion function from frames to Minutes/Second/Frames
@@ -202,7 +202,7 @@ private:
 	// Nested Class Definitions
 	class TrackFile {
 	protected:
-		TrackFile(Bit16u _chunkSize) : chunkSize(_chunkSize) {}
+		TrackFile(uint16_t _chunkSize) : chunkSize(_chunkSize) {}
 		bool offsetInsideTrack(const uint32_t offset);
 		uint32_t adjustOverRead(const uint32_t offset,
 		                        const uint32_t requested_bytes);
@@ -216,12 +216,12 @@ private:
 		                      const uint32_t requested_bytes) = 0;
 		virtual bool     seek(const uint32_t offset) = 0;
 		virtual uint32_t decode(int16_t *buffer, const uint32_t desired_track_frames) = 0;
-		virtual Bit16u   getEndian() = 0;
-		virtual Bit32u   getRate() = 0;
-		virtual Bit8u    getChannels() = 0;
+		virtual uint16_t   getEndian() = 0;
+		virtual uint32_t   getRate() = 0;
+		virtual uint8_t    getChannels() = 0;
 		virtual int      getLength() = 0;
 		virtual void setAudioPosition(uint32_t pos) = 0;
-		const Bit16u chunkSize = 0;
+		const uint16_t chunkSize = 0;
 	};
 
 	class BinaryFile final : public TrackFile {
@@ -238,9 +238,9 @@ private:
 		                     const uint32_t requested_bytes);
 		bool            seek(const uint32_t offset);
 		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
-		Bit16u          getEndian();
-		Bit32u          getRate() { return 44100; }
-		Bit8u           getChannels() { return 2; }
+		uint16_t          getEndian();
+		uint32_t          getRate() { return 44100; }
+		uint8_t           getChannels() { return 2; }
 		int             getLength();
 		void setAudioPosition(uint32_t pos) { audio_pos = pos; }
 
@@ -262,9 +262,9 @@ private:
 		                     const uint32_t requested_bytes);
 		bool            seek(const uint32_t offset);
 		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
-		Bit16u          getEndian();
-		Bit32u          getRate();
-		Bit8u           getChannels();
+		uint16_t          getEndian();
+		uint32_t          getRate();
+		uint8_t           getChannels();
 		int             getLength();
 		// This is a no-op because we track the audio position in all
 		// areas of this class.

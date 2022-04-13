@@ -397,7 +397,7 @@ static void PCSPEAKER_CallBack(uint16_t len)
 	if (!SpeakerExists())
 		return;
 
-	Bit16s * stream=(Bit16s*)MixTemp;
+	int16_t * stream=(int16_t*)MixTemp;
 	ForwardPIT(1);
 	spkr.last_index=0;
 	auto count = len;
@@ -456,7 +456,7 @@ static void PCSPEAKER_CallBack(uint16_t len)
 			}
 		}
 		spkr.prev_pos = pos;
-		*stream++=(Bit16s)(value/sample_add);
+		*stream++=(int16_t)(value/sample_add);
 	}
 
 	int16_t *buffer = reinterpret_cast<int16_t *>(MixTemp);

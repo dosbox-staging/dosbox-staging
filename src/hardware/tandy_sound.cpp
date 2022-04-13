@@ -57,7 +57,7 @@ if (tandy.dac.dma.last_sample != 128) {
                 tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
                 if (tandy.dac.dma.last_sample != 128)
                         tandy.dac.dma.last_sample =
-(Bit8u)(((((int)tandy.dac.dma.last_sample - 128) * 63) / 64) + 128);
+(uint8_t)(((((int)tandy.dac.dma.last_sample - 128) * 63) / 64) + 128);
         }
 }
 
@@ -101,19 +101,19 @@ static struct {
 		bool enabled = false;
 		struct {
 			Bitu base = 0u;
-			Bit8u irq = 0u;
-			Bit8u dma = 0u;
+			uint8_t irq = 0u;
+			uint8_t dma = 0u;
 		} hw;
 		struct {
 			Bitu rate = 0u;
-			Bit8u buf[TDAC_DMA_BUFSIZE] = {};
+			uint8_t buf[TDAC_DMA_BUFSIZE] = {};
 			DmaChannel *chan = nullptr;
 			bool transfer_done = false;
 		} dma;
-		Bit8u mode = 0u;
-		Bit8u control = 0u;
-		Bit16u frequency = 0u;
-		Bit8u amplitude = 0u;
+		uint8_t mode = 0u;
+		uint8_t control = 0u;
+		uint16_t frequency = 0u;
+		uint8_t amplitude = 0u;
 		bool irq_activated = false;
 	} dac = {};
 } tandy = {};
@@ -152,8 +152,8 @@ static void SN76496Update(uint16_t length)
 	const Bitu MAX_SAMPLES = 2048;
 	if (length > MAX_SAMPLES)
 		return;
-	Bit16s buffer[MAX_SAMPLES];
-	Bit16s* outputs = buffer;
+	int16_t buffer[MAX_SAMPLES];
+	int16_t* outputs = buffer;
 
 	device_sound_interface::sound_stream stream;
 	static_cast<device_sound_interface&>(device).sound_stream_update(stream, 0, &outputs, length);

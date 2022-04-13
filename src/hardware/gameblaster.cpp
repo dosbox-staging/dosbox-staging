@@ -37,7 +37,7 @@ constexpr uint32_t GAMEBLASTER_CLOCK_HZ = 7159090;
 //My mixer channel
 static mixer_channel_t cms_chan;
 //Timer to disable the channel after a while
-static Bit32u lastWriteTicks;
+static uint32_t lastWriteTicks;
 static io_port_t cmsBase;
 static saa1099_device* device[2];
 
@@ -79,9 +79,9 @@ static void CMS_CallBack(Bitu len) {
 			cms_chan->Enable( false );
 			return;
 		}
-		Bit32s result[BUFFER_SIZE][2];
-		Bit16s work[2][BUFFER_SIZE];
-		Bit16s* buffers[2] = { work[0], work[1] };
+		int32_t result[BUFFER_SIZE][2];
+		int16_t work[2][BUFFER_SIZE];
+		int16_t* buffers[2] = { work[0], work[1] };
 		device_sound_interface::sound_stream stream;
 		device[0]->sound_stream_update(stream, 0, buffers, len);
 		for (Bitu i = 0; i < len; i++) {
@@ -98,7 +98,7 @@ static void CMS_CallBack(Bitu len) {
 }
 
 // The Gameblaster detection
-static Bit8u cms_detect_register = 0xff;
+static uint8_t cms_detect_register = 0xff;
 
 static void write_cms_detect(io_port_t port, io_val_t value, io_width_t)
 {
@@ -113,7 +113,7 @@ static void write_cms_detect(io_port_t port, io_val_t value, io_width_t)
 
 static uint8_t read_cms_detect(io_port_t port, io_width_t)
 {
-	Bit8u retval = 0xff;
+	uint8_t retval = 0xff;
 	switch ( port - cmsBase ) {
 	case 0x4:
 		retval = 0x7f;

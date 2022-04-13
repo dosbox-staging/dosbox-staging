@@ -50,7 +50,7 @@ public:
 	bool HasExecutableName() const;
 	unsigned int GetCount(void);
 	void Shift(unsigned int amount=1);
-	Bit16u Get_arglength();
+	uint16_t Get_arglength();
 
 private:
 	using cmd_it = std::list<std::string>::iterator;

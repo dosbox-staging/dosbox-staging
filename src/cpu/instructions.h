@@ -293,7 +293,7 @@
 
 #define RCLB(op1,op2,load,save)							\
 	if (!(op2%9)) break;								\
-{	Bit8u cf=(Bit8u)FillFlags()&0x1;					\
+{	uint8_t cf=(uint8_t)FillFlags()&0x1;					\
 	lf_var1b=load(op1);									\
 	lf_var2b=op2%9;										\
 	lf_resb=(lf_var1b << lf_var2b) |					\
@@ -306,7 +306,7 @@
 
 #define RCLW(op1,op2,load,save)							\
 	if (!(op2%17)) break;								\
-{	Bit16u cf=(Bit16u)FillFlags()&0x1;					\
+{	uint16_t cf=(uint16_t)FillFlags()&0x1;					\
 	lf_var1w=load(op1);									\
 	lf_var2b=op2%17;									\
 	lf_resw=(lf_var1w << lf_var2b) |					\
@@ -338,7 +338,7 @@
 
 #define RCRB(op1, op2, load, save) \
 	if (op2 % 9) { \
-		Bit8u cf = (Bit8u)FillFlags() & 0x1; \
+		uint8_t cf = (uint8_t)FillFlags() & 0x1; \
 		lf_var1b = load(op1); \
 		lf_var2b = op2 % 9; \
 		lf_resb = (lf_var1b >> lf_var2b) | (cf << (8 - lf_var2b)) | \
@@ -350,7 +350,7 @@
 
 #define RCRW(op1, op2, load, save) \
 	if (op2 % 17) { \
-		Bit16u cf = (Bit16u)FillFlags() & 0x1; \
+		uint16_t cf = (uint16_t)FillFlags() & 0x1; \
 		lf_var1w = load(op1); \
 		lf_var2b = op2 % 17; \
 		lf_resw = (lf_var1w >> lf_var2b) | (cf << (16 - lf_var2b)) | \
@@ -479,7 +479,7 @@
 
 #define DAS()												\
 {															\
-	Bit8u osigned=reg_al & 0x80;							\
+	uint8_t osigned=reg_al & 0x80;							\
 	if (((reg_al & 0x0f) > 9) || get_AF()) {				\
 		if ((reg_al>0x99) || get_CF()) {					\
 			reg_al-=0x60;									\
@@ -556,7 +556,7 @@
 
 #define AAM(op1)											\
 {															\
-	Bit8u dv=op1;											\
+	uint8_t dv=op1;											\
 	if (dv!=0) {											\
 		reg_ah=reg_al / dv;									\
 		reg_al=reg_al % dv;									\
@@ -574,9 +574,9 @@
 //Took this from bochs, i seriously hate these weird bcd opcodes
 #define AAD(op1)											\
 	{														\
-		Bit16u ax1 = reg_ah * op1;							\
-		Bit16u ax2 = ax1 + reg_al;							\
-		reg_al = (Bit8u) ax2;								\
+		uint16_t ax1 = reg_ah * op1;							\
+		uint16_t ax2 = ax1 + reg_al;							\
+		reg_al = (uint8_t) ax2;								\
 		reg_ah = 0;											\
 		SETFLAGBIT(CF,false);								\
 		SETFLAGBIT(OF,false);								\
@@ -636,8 +636,8 @@
 	Bitu val=load(op1);										\
 	if (val==0)	EXCEPTION(0);								\
 	Bitu quo=reg_ax / val;									\
-	Bit8u rem=(Bit8u)(reg_ax % val);						\
-	Bit8u quo8=(Bit8u)(quo&0xff);							\
+	uint8_t rem=(uint8_t)(reg_ax % val);						\
+	uint8_t quo8=(uint8_t)(quo&0xff);							\
 	if (quo>0xff) EXCEPTION(0);								\
 	reg_ah=rem;												\
 	reg_al=quo8;											\
@@ -649,11 +649,11 @@
 {															\
 	Bitu val=load(op1);										\
 	if (val==0)	EXCEPTION(0);								\
-	Bitu num=((Bit32u)reg_dx<<16)|reg_ax;							\
+	Bitu num=((uint32_t)reg_dx<<16)|reg_ax;							\
 	Bitu quo=num/val;										\
-	Bit16u rem=(Bit16u)(num % val);							\
-	Bit16u quo16=(Bit16u)(quo&0xffff);						\
-	if (quo!=(Bit32u)quo16) EXCEPTION(0);					\
+	uint16_t rem=(uint16_t)(num % val);							\
+	uint16_t quo16=(uint16_t)(quo&0xffff);						\
+	if (quo!=(uint32_t)quo16) EXCEPTION(0);					\
 	reg_dx=rem;												\
 	reg_ax=quo16;											\
 	SETFLAGBIT(OF,false);									\
@@ -663,11 +663,11 @@
 {															\
 	Bitu val=load(op1);										\
 	if (val==0) EXCEPTION(0);									\
-	Bit64u num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
-	Bit64u quo=num/val;										\
-	Bit32u rem=(Bit32u)(num % val);							\
-	Bit32u quo32=(Bit32u)(quo&0xffffffff);					\
-	if (quo!=(Bit64u)quo32) EXCEPTION(0);					\
+	uint64_t num=(((uint64_t)reg_edx)<<32)|reg_eax;				\
+	uint64_t quo=num/val;										\
+	uint32_t rem=(uint32_t)(num % val);							\
+	uint32_t quo32=(uint32_t)(quo&0xffffffff);					\
+	if (quo!=(uint64_t)quo32) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32;											\
 	SETFLAGBIT(OF,false);									\
@@ -676,12 +676,12 @@
 
 #define IDIVB(op1,load,save)								\
 {															\
-	Bits val=(Bit8s)(load(op1));							\
+	Bits val=(int8_t)(load(op1));							\
 	if (val==0)	EXCEPTION(0);								\
-	Bits quo=((Bit16s)reg_ax) / val;						\
-	Bit8s rem=(Bit8s)((Bit16s)reg_ax % val);				\
-	Bit8s quo8s=(Bit8s)(quo&0xff);							\
-	if (quo!=(Bit16s)quo8s) EXCEPTION(0);					\
+	Bits quo=((int16_t)reg_ax) / val;						\
+	int8_t rem=(int8_t)((int16_t)reg_ax % val);				\
+	int8_t quo8s=(int8_t)(quo&0xff);							\
+	if (quo!=(int16_t)quo8s) EXCEPTION(0);					\
 	reg_ah=rem;												\
 	reg_al=quo8s;											\
 	SETFLAGBIT(OF,false);									\
@@ -705,13 +705,13 @@
 
 #define IDIVD(op1,load,save)								\
 {															\
-	Bits val=(Bit32s)(load(op1));							\
+	Bits val=(int32_t)(load(op1));							\
 	if (val==0) EXCEPTION(0);									\
-	Bit64s num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
-	Bit64s quo=num/val;										\
-	Bit32s rem=(Bit32s)(num % val);							\
-	Bit32s quo32s=(Bit32s)(quo&0xffffffff);					\
-	if (quo!=(Bit64s)quo32s) EXCEPTION(0);					\
+	int64_t num=(((uint64_t)reg_edx)<<32)|reg_eax;				\
+	int64_t quo=num/val;										\
+	int32_t rem=(int32_t)(num % val);							\
+	int32_t quo32s=(int32_t)(quo&0xffffffff);					\
+	if (quo!=(int64_t)quo32s) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32s;											\
 	SETFLAGBIT(OF,false);									\
@@ -719,7 +719,7 @@
 
 #define IMULB(op1,load,save)								\
 {															\
-	reg_ax=((Bit8s)reg_al) * ((Bit8s)(load(op1)));			\
+	reg_ax=((int8_t)reg_al) * ((int8_t)(load(op1)));			\
 	FillFlagsNoCFOF();										\
 	SETFLAGBIT(ZF,reg_al == 0);								\
 	SETFLAGBIT(SF,reg_al & 0x80);							\
@@ -752,10 +752,10 @@
 
 #define IMULD(op1, load, save) \
 	{ \
-		Bit64s temps = ((Bit64s)((Bit32s)reg_eax)) * \
-		               ((Bit64s)((Bit32s)(load(op1)))); \
-		reg_eax = (Bit32s)(temps); \
-		reg_edx = (Bit32s)(temps >> 32); \
+		int64_t temps = ((int64_t)((int32_t)reg_eax)) * \
+		               ((int64_t)((int32_t)(load(op1)))); \
+		reg_eax = (int32_t)(temps); \
+		reg_edx = (int32_t)(temps >> 32); \
 		FillFlagsNoCFOF(); \
 		SETFLAGBIT(ZF, reg_eax == 0); \
 		SETFLAGBIT(SF, reg_eax & 0x80000000); \
@@ -789,10 +789,10 @@
 	{ \
 		const auto res = static_cast<int64_t>(op2) * \
 		                 static_cast<int64_t>(op3); \
-		save(op1, (Bit32s)res); \
+		save(op1, (int32_t)res); \
 		FillFlagsNoCFOF(); \
-		if ((res >= -((Bit64s)(2147483647) + 1)) && \
-		    (res <= (Bit64s)2147483647)) { \
+		if ((res >= -((int64_t)(2147483647) + 1)) && \
+		    (res <= (int64_t)2147483647)) { \
 			SETFLAGBIT(CF, false); \
 			SETFLAGBIT(OF, false); \
 		} else { \
@@ -806,7 +806,7 @@
 	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArb;											\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which)	{									\
 		case 0x00:ROLB(*earb,val,LoadRb,SaveRb);break;		\
@@ -820,7 +820,7 @@
 		}													\
 	} else {												\
 		GetEAa;												\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which) {									\
 		case 0x00:ROLB(eaa,val,LoadMb,SaveMb);break;		\
@@ -842,7 +842,7 @@
 	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArw;											\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which)	{									\
 		case 0x00:ROLW(*earw,val,LoadRw,SaveRw);break;		\
@@ -856,7 +856,7 @@
 		}													\
 	} else {												\
 		GetEAa;												\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which) {									\
 		case 0x00:ROLW(eaa,val,LoadMw,SaveMw);break;		\
@@ -877,7 +877,7 @@
 	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArd;											\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which)	{									\
 		case 0x00:ROLD(*eard,val,LoadRd,SaveRd);break;		\
@@ -891,7 +891,7 @@
 		}													\
 	} else {												\
 		GetEAa;												\
-		Bit8u val=blah & 0x1f;								\
+		uint8_t val=blah & 0x1f;								\
 		if (!val) break;									\
 		switch (which) {									\
 		case 0x00:ROLD(eaa,val,LoadMd,SaveMd);break;		\
@@ -909,17 +909,17 @@
 /* let's hope bochs has it correct with the higher than 16 shifts */
 /* double-precision shift left has low bits in second argument */
 #define DSHLW(op1,op2,op3,load,save)									\
-	Bit8u val=op3 & 0x1F;												\
+	uint8_t val=op3 & 0x1F;												\
 	if (!val) break;													\
 	lf_var2b=val;lf_var1d=(load(op1)<<16)|op2;					\
-	Bit32u tempd=lf_var1d << lf_var2b;							\
+	uint32_t tempd=lf_var1d << lf_var2b;							\
   	if (lf_var2b>16) tempd |= (op2 << (lf_var2b - 16));			\
-	lf_resw=(Bit16u)(tempd >> 16);								\
+	lf_resw=(uint16_t)(tempd >> 16);								\
 	save(op1,lf_resw);											\
 	lflags.type=t_DSHLw;
 
 #define DSHLD(op1,op2,op3,load,save)									\
-	Bit8u val=op3 & 0x1F;												\
+	uint8_t val=op3 & 0x1F;												\
 	if (!val) break;													\
 	lf_var2b=val;lf_var1d=load(op1);							\
 	lf_resd=(lf_var1d << lf_var2b) | (op2 >> (32-lf_var2b));	\
@@ -928,17 +928,17 @@
 
 /* double-precision shift right has high bits in second argument */
 #define DSHRW(op1,op2,op3,load,save)									\
-	Bit8u val=op3 & 0x1F;												\
+	uint8_t val=op3 & 0x1F;												\
 	if (!val) break;													\
 	lf_var2b=val;lf_var1d=(op2<<16)|load(op1);					\
-	Bit32u tempd=lf_var1d >> lf_var2b;							\
+	uint32_t tempd=lf_var1d >> lf_var2b;							\
   	if (lf_var2b>16) tempd |= (op2 << (32-lf_var2b ));			\
-	lf_resw=(Bit16u)(tempd);										\
+	lf_resw=(uint16_t)(tempd);										\
 	save(op1,lf_resw);											\
 	lflags.type=t_DSHRw;
 
 #define DSHRD(op1,op2,op3,load,save)									\
-	Bit8u val=op3 & 0x1F;												\
+	uint8_t val=op3 & 0x1F;												\
 	if (!val) break;													\
 	lf_var2b=val;lf_var1d=load(op1);							\
 	lf_resd=(lf_var1d >> lf_var2b) | (op2 << (32-lf_var2b));	\

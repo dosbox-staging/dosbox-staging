@@ -151,7 +151,7 @@ void FinishSetMode_PVGA1A(io_port_t /*crtc_base*/, VGA_ModeExtraData *modeData)
 	IO_Write(0x3ce, 0x0a);
 	IO_Write(0x3cf, 0x00);
 	IO_Write(0x3ce, 0x0b);
-	Bit8u val = IO_Read(0x3cf);
+	uint8_t val = IO_Read(0x3cf);
 	IO_Write(0x3cf, val & ~0x08);
 	IO_Write(0x3ce, 0x0c);
 	IO_Write(0x3cf, 0x00);

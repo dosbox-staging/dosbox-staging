@@ -193,7 +193,7 @@ static void write_lightpen(io_port_t port, io_val_t, io_width_t)
 			const auto timeInLine = fmod(timeInFrame, vga.draw.delay.htotal);
 			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
 
-			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
+			vga.other.lightpen = (uint16_t)((vga.draw.address_add/2) * (current_scanline/2));
 			vga.other.lightpen += static_cast<uint16_t>(
 			        (timeInLine / vga.draw.delay.hdend) *
 			        (static_cast<double>(vga.draw.address_add / 2)));

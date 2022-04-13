@@ -26,8 +26,8 @@
 #pragma pack(1)
 #endif
 struct DOS_TableCase {	
-	Bit16u size;
-	Bit8u chars[256];
+	uint16_t size;
+	uint8_t chars[256];
 }
 GCC_ATTRIBUTE (packed);
 #ifdef _MSC_VER
@@ -39,13 +39,13 @@ RealPt DOS_TableLowCase;
 
 static Bitu call_casemap;
 
-static Bit16u dos_memseg=DOS_PRIVATE_SEGMENT;
+static uint16_t dos_memseg=DOS_PRIVATE_SEGMENT;
 
-Bit16u DOS_GetMemory(Bit16u pages) {
+uint16_t DOS_GetMemory(uint16_t pages) {
 	if ((Bitu)pages+(Bitu)dos_memseg>=DOS_PRIVATE_SEGMENT_END) {
 		E_Exit("DOS:Not enough memory for internal tables");
 	}
-	Bit16u page=dos_memseg;
+	uint16_t page=dos_memseg;
 	dos_memseg+=pages;
 	return page;
 }
@@ -55,7 +55,7 @@ static Bitu DOS_CaseMapFunc(void) {
 	return CBRET_NONE;
 }
 
-static Bit8u country_info[0x22] = {
+static uint8_t country_info[0x22] = {
 /* Date format      */  0x00, 0x00,
 /* Currencystring   */  0x24, 0x00, 0x00, 0x00, 0x00,
 /* Thousands sep    */  0x2c, 0x00,
@@ -72,7 +72,7 @@ static Bit8u country_info[0x22] = {
 };
 
 void DOS_SetupTables(void) {
-	Bit16u seg;Bitu i;
+	uint16_t seg;Bitu i;
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta_fcbdelete=RealMake(DOS_GetMemory(4),0);
 	/* Create the DOS Info Block */

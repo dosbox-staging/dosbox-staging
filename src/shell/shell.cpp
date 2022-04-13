@@ -124,7 +124,7 @@ void AutoexecObject::CreateAutoexec()
 		}
 		sprintf((autoexec_data + auto_len),"%s\r\n",linecopy.c_str());
 	}
-	if (first_shell) VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
+	if (first_shell) VFILE_Register("AUTOEXEC.BAT",(uint8_t *)autoexec_data,(uint32_t)strlen(autoexec_data));
 }
 
 AutoexecObject::~AutoexecObject(){
@@ -730,7 +730,7 @@ public:
 		// for (const auto &autoexec_line : autoexec)
 		// 	LOG_INFO("AUTOEXEC-LINE: %s", autoexec_line.GetLine().c_str());
 
-		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
+		VFILE_Register("AUTOEXEC.BAT",(uint8_t *)autoexec_data,(uint32_t)strlen(autoexec_data));
 	}
 };
 
@@ -783,7 +783,7 @@ static Bitu INT2E_Handler()
 {
 	/* Save return address and current process */
 	RealPt save_ret=real_readd(SegValue(ss),reg_sp);
-	Bit16u save_psp=dos.psp();
+	uint16_t save_psp=dos.psp();
 
 	/* Set first shell as process and copy command */
 	dos.psp(DOS_FIRST_SHELL);
@@ -1455,19 +1455,19 @@ void SHELL_Init() {
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
 
 	/* Now call up the shell for the first time */
-	Bit16u psp_seg=DOS_FIRST_SHELL;
-	Bit16u env_seg=DOS_FIRST_SHELL+19; //DOS_GetMemory(1+(4096/16))+1;
-	Bit16u stack_seg=DOS_GetMemory(2048/16);
+	uint16_t psp_seg=DOS_FIRST_SHELL;
+	uint16_t env_seg=DOS_FIRST_SHELL+19; //DOS_GetMemory(1+(4096/16))+1;
+	uint16_t stack_seg=DOS_GetMemory(2048/16);
 	SegSet16(ss,stack_seg);
 	reg_sp=2046;
 
 	/* Set up int 24 and psp (Telarium games) */
 	real_writeb(psp_seg+16+1,0,0xea);		/* far jmp */
 	real_writed(psp_seg+16+1,1,real_readd(0,0x24*4));
-	real_writed(0,0x24*4,((Bit32u)psp_seg<<16) | ((16+1)<<4));
+	real_writed(0,0x24*4,((uint32_t)psp_seg<<16) | ((16+1)<<4));
 
 	/* Set up int 23 to "int 20" in the psp. Fixes what.exe */
-	real_writed(0,0x23*4,((Bit32u)psp_seg<<16));
+	real_writed(0,0x23*4,((uint32_t)psp_seg<<16));
 
 	/* Set up int 2e handler */
 	Bitu call_int2e=CALLBACK_Allocate();
@@ -1476,11 +1476,11 @@ void SHELL_Init() {
 	RealSetVec(0x2e,addr_int2e);
 
 	/* Setup MCBs */
-	DOS_MCB pspmcb((Bit16u)(psp_seg-1));
+	DOS_MCB pspmcb((uint16_t)(psp_seg-1));
 	pspmcb.SetPSPSeg(psp_seg);	// MCB of the command shell psp
 	pspmcb.SetSize(0x10+2);
 	pspmcb.SetType(0x4d);
-	DOS_MCB envmcb((Bit16u)(env_seg-1));
+	DOS_MCB envmcb((uint16_t)(env_seg-1));
 	envmcb.SetPSPSeg(psp_seg);	// MCB of the command shell environment
 	envmcb.SetSize(DOS_MEM_START-env_seg);
 	envmcb.SetType(0x4d);
@@ -1504,7 +1504,7 @@ void SHELL_Init() {
 	 * 01 01 01 00 02
 	 * In order to achieve this: First open 2 files. Close the first and
 	 * duplicate the second (so the entries get 01) */
-	Bit16u dummy=0;
+	uint16_t dummy=0;
 	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDIN  */
 	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDOUT */
 	DOS_CloseFile(0);							/* Close STDIN */
@@ -1514,8 +1514,8 @@ void SHELL_Init() {
 	DOS_OpenFile("PRN",OPEN_READWRITE,&dummy);	/* STDPRN */
 
 	/* Create appearance of handle inheritance by first shell */
-	for (Bit16u i=0;i<5;i++) {
-		Bit8u handle=psp.GetFileHandle(i);
+	for (uint16_t i=0;i<5;i++) {
+		uint8_t handle=psp.GetFileHandle(i);
 		if (Files[handle]) Files[handle]->AddRef();
 	}
 
@@ -1524,7 +1524,7 @@ void SHELL_Init() {
 	psp.SetEnvironment(env_seg);
 	/* Set the command line for the shell start up */
 	CommandTail tail;
-	tail.count=(Bit8u)strlen(init_line);
+	tail.count=(uint8_t)strlen(init_line);
 	memset(&tail.buffer,0,127);
 	safe_strcpy(tail.buffer, init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);

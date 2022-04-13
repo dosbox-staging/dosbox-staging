@@ -33,7 +33,7 @@
 #define DRC_FLAGS_INVALIDATION_DCODE
 
 // type with the same size as a pointer
-#define DRC_PTR_SIZE_IM Bit32u
+#define DRC_PTR_SIZE_IM uint32_t
 
 // calling convention modifier
 #define DRC_FC /* nothing */
@@ -96,7 +96,7 @@ extern struct FPU_rec fpu;
 #endif
 
 #if defined(USE_SDA_BASE)
-extern Bit32u _SDA_BASE_[];
+extern uint32_t _SDA_BASE_[];
 #endif
 
 // register that holds function return values
@@ -130,7 +130,7 @@ extern Bit32u _SDA_BASE_[];
 // temporary register for LEA
 #define TEMP_REG_DRC HOST_R10
 
-#define IMM(op, regsd, rega, imm)           (((op)<<26)|((regsd)<<21)|((rega)<<16)|             (((Bit32u)(imm))&0xFFFF))
+#define IMM(op, regsd, rega, imm)           (((op)<<26)|((regsd)<<21)|((rega)<<16)|             (((uint32_t)(imm))&0xFFFF))
 #define EXT(regsd, rega, regb, op, rc)      (  (31<<26)|((regsd)<<21)|((rega)<<16)|((regb)<<11)|          ((op)<<1)|(rc))
 #define RLW(op, regs, rega, sh, mb, me, rc) (((op)<<26)|((regs) <<21)|((rega)<<16)|  ((sh)<<11)|((mb)<<6)|((me)<<1)|(rc))
 
@@ -147,7 +147,7 @@ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src)
 
 // move a 16bit constant value into dest_reg
 // the upper 16bit of the destination register may be destroyed
-static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm)
+static void gen_mov_word_to_reg_imm(HostReg dest_reg,uint16_t imm)
 {
 	IMM_OP(14, dest_reg, 0, imm); // li dest,imm
 }
@@ -155,37 +155,37 @@ static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm)
 DRC_PTR_SIZE_IM block_ptr;
 
 // Helper for loading addresses
-static HostReg inline gen_addr(Bit32s &addr, HostReg dest)
+static HostReg inline gen_addr(int32_t &addr, HostReg dest)
 {
-	Bit32s off;
+	int32_t off;
 
-	if ((Bit16s)addr == addr)
+	if ((int16_t)addr == addr)
 		return HOST_R0;
 
-	off = addr - (Bit32s)&Segs;
-	if ((Bit16s)off == off)
+	off = addr - (int32_t)&Segs;
+	if ((int16_t)off == off)
 	{
 		addr = off;
 		return FC_SEGS_ADDR;
 	}
 
-	off = addr - (Bit32s)&cpu_regs;
-	if ((Bit16s)off == off)
+	off = addr - (int32_t)&cpu_regs;
+	if ((int16_t)off == off)
 	{
 		addr = off;
 		return FC_REGS_ADDR;
 	}
 
-	off = addr - (Bit32s)block_ptr;
-	if ((Bit16s)off == off)
+	off = addr - (int32_t)block_ptr;
+	if ((int16_t)off == off)
 	{
 		addr = off;
 		return HOST_R27;
 	}
 
 #if C_FPU
-	off = addr - (Bit32s)&fpu;
-	if ((Bit16s)off == off)
+	off = addr - (int32_t)&fpu;
+	if ((int16_t)off == off)
 	{
 		addr = off;
 		return HOST_R28;
@@ -193,8 +193,8 @@ static HostReg inline gen_addr(Bit32s &addr, HostReg dest)
 #endif
 
 #if defined(USE_SDA_BASE)
-	off = addr - (Bit32s)_SDA_BASE_;
-	if ((Bit16s)off == off)
+	off = addr - (int32_t)_SDA_BASE_;
+	if ((int16_t)off == off)
 	{
 		addr = off;
 		return HOST_R13;
@@ -202,14 +202,14 @@ static HostReg inline gen_addr(Bit32s &addr, HostReg dest)
 #endif
 
 	IMM_OP(15, dest, 0, (addr+0x8000)>>16); // lis dest, addr@ha
-	addr = (Bit16s)addr;
+	addr = (int16_t)addr;
 	return dest;
 }
 
 // move a 32bit constant value into dest_reg
-static void gen_mov_dword_to_reg_imm(HostReg dest_reg,Bit32u imm)
+static void gen_mov_dword_to_reg_imm(HostReg dest_reg,uint32_t imm)
 {
-	HostReg ld = gen_addr((Bit32s&)imm, dest_reg);
+	HostReg ld = gen_addr((int32_t&)imm, dest_reg);
 	if (imm || ld != dest_reg)
 		IMM_OP(14, dest_reg, ld, imm);   // addi dest_reg, ldr, imm@l
 }
@@ -218,14 +218,14 @@ static void gen_mov_dword_to_reg_imm(HostReg dest_reg,Bit32u imm)
 // 16bit moves may destroy the upper 16bit of the destination register
 static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword)
 {
-	Bit32s addr = (Bit32s)data;
+	int32_t addr = (int32_t)data;
 	HostReg ld = gen_addr(addr, dest_reg);
 	IMM_OP(dword ? 32:40, dest_reg, ld, addr);  // lwz/lhz dest, addr@l(ld)
 }
 
 // move a 32bit (dword==true) or 16bit (dword==false) value from host memory into dest_reg
 static void gen_mov_LE_word_to_reg(HostReg dest_reg,void* data, bool dword) {
-	Bit32u addr = (Bit32u)data;
+	uint32_t addr = (uint32_t)data;
 	gen_mov_dword_to_reg_imm(dest_reg, addr);
 	EXT_OP(dest_reg, 0, dest_reg, dword ? 534 : 790, 0); // lwbrx/lhbrx dest, 0, dest
 }
@@ -234,7 +234,7 @@ static void gen_mov_LE_word_to_reg(HostReg dest_reg,void* data, bool dword) {
 // the upper 24bit of the destination register can be destroyed
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
+static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,uint8_t imm) {
 	gen_mov_word_to_reg_imm(dest_reg, imm);
 }
 
@@ -242,14 +242,14 @@ static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
+static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,uint8_t imm) {
 	gen_mov_word_to_reg_imm(dest_reg, imm);
 }
 
 // move 32bit (dword==true) or 16bit (dword==false) of a register into memory
 static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword)
 {
-	Bit32s addr = (Bit32s)dest;
+	int32_t addr = (int32_t)dest;
 	HostReg ld = gen_addr(addr, HOST_R8);
 	IMM_OP(dword ? 36 : 44, src_reg, ld, addr);  // stw/sth src,addr@l(ld)
 }
@@ -260,7 +260,7 @@ static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword)
 // registers might not be directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data)
 {
-	Bit32s addr = (Bit32s)data;
+	int32_t addr = (int32_t)data;
 	HostReg ld = gen_addr(addr, dest_reg);
 	IMM_OP(34, dest_reg, ld, addr);  // lbz dest,addr@l(ld)
 }
@@ -276,7 +276,7 @@ static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 // move the lowest 8bit of a register into memory
 static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest)
 {
-	Bit32s addr = (Bit32s)dest;
+	int32_t addr = (int32_t)dest;
 	HostReg ld = gen_addr(addr, HOST_R8);
 	IMM_OP(38, src_reg, ld, addr);  // stb src_reg,addr@l(ld)
 }
@@ -304,7 +304,7 @@ static void gen_extend_word(bool sign,HostReg reg)
 // add a 32bit value from memory to a full register
 static void gen_add(HostReg reg,void* op)
 {
-	gen_mov_word_to_reg(HOST_R8, op, true); // r8 = *(Bit32u*)op
+	gen_mov_word_to_reg(HOST_R8, op, true); // r8 = *(uint32_t*)op
 	EXT_OP(reg,reg,HOST_R8,266,0);          // add reg,reg,r8
 }
 
@@ -316,16 +316,16 @@ static void gen_add_LE(HostReg reg,void* op)
 }
 
 // add a 32bit constant value to a full register
-static void gen_add_imm(HostReg reg,Bit32u imm)
+static void gen_add_imm(HostReg reg,uint32_t imm)
 {
-	if ((Bit16s)imm != (Bit32s)imm)
+	if ((int16_t)imm != (int32_t)imm)
 		IMM_OP(15, reg, reg, (imm+0x8000)>>16); // addis reg,reg,imm@ha
-	if ((Bit16s)imm)
+	if ((int16_t)imm)
 		IMM_OP(14, reg, reg, imm);              // addi reg, reg, imm@l
 }
 
 // and a 32bit constant value with a full register
-static void gen_and_imm(HostReg reg,Bit32u imm) {
+static void gen_and_imm(HostReg reg,uint32_t imm) {
 	Bits sbit,ebit,tbit,bbit,abit,i;
 
 	// sbit = number of leading 0 bits
@@ -389,7 +389,7 @@ static void gen_and_imm(HostReg reg,Bit32u imm) {
 }
 
 // move a 32bit constant value into memory
-static void gen_mov_direct_dword(void* dest,Bit32u imm) {
+static void gen_mov_direct_dword(void* dest,uint32_t imm) {
 	gen_mov_dword_to_reg_imm(HOST_R9, imm);
 	gen_mov_word_from_reg(HOST_R9, dest, 1);
 }
@@ -405,10 +405,10 @@ static void inline gen_mov_direct_ptr(void* dest,DRC_PTR_SIZE_IM imm)
 }
 
 // add a 32bit (dword==true) or 16bit (dword==false) constant value to a 32bit memory value
-static void gen_add_direct_word(void* dest,Bit32u imm,bool dword)
+static void gen_add_direct_word(void* dest,uint32_t imm,bool dword)
 {
 	HostReg ld;
-	Bit32s addr = (Bit32s)dest;
+	int32_t addr = (int32_t)dest;
 
 	if (!dword)
 	{
@@ -421,16 +421,16 @@ static void gen_add_direct_word(void* dest,Bit32u imm,bool dword)
 
 	ld = gen_addr(addr, HOST_R8);
 	IMM_OP(dword ? 32 : 40, HOST_R9, ld, addr); // lwz/lhz r9, addr@l(ld)
-	if (dword && (Bit16s)imm != (Bit32s)imm)
+	if (dword && (int16_t)imm != (int32_t)imm)
 		IMM_OP(15, HOST_R9, HOST_R9, (imm+0x8000)>>16); // addis r9,r9,imm@ha
-	if (!dword || (Bit16s)imm)
+	if (!dword || (int16_t)imm)
 		IMM_OP(14, HOST_R9, HOST_R9, imm);      // addi r9,r9,imm@l
 	IMM_OP(dword ? 36 : 44, HOST_R9, ld, addr); // stw/sth r9, addr@l(ld)
 }
 
 // subtract a 32bit (dword==true) or 16bit (dword==false) constant value from a 32-bit memory value
-static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
-	gen_add_direct_word(dest, -(Bit32s)imm, dword);
+static void gen_sub_direct_word(void* dest,uint32_t imm,bool dword) {
+	gen_add_direct_word(dest, -(int32_t)imm, dword);
 }
 
 // effective address calculation, destination is dest_reg
@@ -462,10 +462,10 @@ static inline void gen_lea(HostReg dest_reg,Bitu scale,Bits imm)
 }
 
 // helper function to choose direct or indirect call
-static int inline do_gen_call(void *func, Bit32u *pos, bool pad)
+static int inline do_gen_call(void *func, uint32_t *pos, bool pad)
 {
-	Bit32s f = (Bit32s)func;
-	Bit32s off = f - (Bit32s)pos;
+	int32_t f = (int32_t)func;
+	int32_t off = f - (int32_t)pos;
 
 	// relative branches are limited to +/- ~32MB
 	if (off < 0x02000000 && off >= -0x02000000)
@@ -490,15 +490,15 @@ static int inline do_gen_call(void *func, Bit32u *pos, bool pad)
 // generate a call to a parameterless function
 static void inline gen_call_function_raw(void * func,bool fastcall=true)
 {
-	cache.pos += do_gen_call(func, (Bit32u*)cache.pos, fastcall);
+	cache.pos += do_gen_call(func, (uint32_t*)cache.pos, fastcall);
 }
 
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static Bit32u inline gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
+static uint32_t inline gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
 {
-	Bit32u proc_addr=(Bit32u)cache.pos;
+	uint32_t proc_addr=(uint32_t)cache.pos;
 	gen_call_function_raw(func,fastcall);
 	return proc_addr;
 }
@@ -525,8 +525,8 @@ static void inline gen_load_param_mem(Bitu mem,Bitu param) {
 
 // jump to an address pointed at by ptr, offset is in imm
 static void gen_jmp_ptr(void * ptr,Bits imm=0) {
-	gen_mov_word_to_reg(HOST_R8,ptr,true);                // r8 = *(Bit32u*)ptr
-	if ((Bit16s)imm != (Bit32s)imm)
+	gen_mov_word_to_reg(HOST_R8,ptr,true);                // r8 = *(uint32_t*)ptr
+	if ((int16_t)imm != (int32_t)imm)
 		IMM_OP(15, HOST_R8, HOST_R8, (imm + 0x8000)>>16); // addis r8, r8, imm@ha
 	IMM_OP(32, HOST_R8, HOST_R8, imm);                    // lwz r8, imm@l(r8)
 	EXT_OP(HOST_R8, 9, 0, 467, 0);                        // mtctr r8
@@ -535,7 +535,7 @@ static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 
 // short conditional jump (+-127 bytes) if register is zero
 // the destination is set by gen_fill_branch() later
-static Bit32u gen_create_branch_on_zero(HostReg reg,bool dword)
+static uint32_t gen_create_branch_on_zero(HostReg reg,bool dword)
 {
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
@@ -543,12 +543,12 @@ static Bit32u gen_create_branch_on_zero(HostReg reg,bool dword)
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x0C, 2, 0); // bc 12,CR0[Z] (beq)
-	return ((Bit32u)cache.pos-4);
+	return ((uint32_t)cache.pos-4);
 }
 
 // short conditional jump (+-127 bytes) if register is nonzero
 // the destination is set by gen_fill_branch() later
-static Bit32u gen_create_branch_on_nonzero(HostReg reg,bool dword)
+static uint32_t gen_create_branch_on_nonzero(HostReg reg,bool dword)
 {
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
@@ -556,26 +556,26 @@ static Bit32u gen_create_branch_on_nonzero(HostReg reg,bool dword)
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bc 4,CR0[Z] (bne)
-	return ((Bit32u)cache.pos-4);
+	return ((uint32_t)cache.pos-4);
 }
 
 // calculate relative offset and fill it into the location pointed to by data
 static void gen_fill_branch(DRC_PTR_SIZE_IM data)
 {
 #if C_DEBUG
-	Bits len=(Bit32u)cache.pos-data;
+	Bits len=(uint32_t)cache.pos-data;
 	if (len<0) len=-len;
 	if (len >= 0x8000) LOG_MSG("Big jump %d",len);
 #endif
 
-	((Bit16u*)data)[1] =((Bit32u)cache.pos-data) & 0xFFFC;
+	((uint16_t*)data)[1] =((uint32_t)cache.pos-data) & 0xFFFC;
 }
 
 
 // conditional jump if register is nonzero
 // for isdword==true the 32bit of the register are tested
 // for isdword==false the lowest 8bit of the register are tested
-static Bit32u gen_create_branch_long_nonzero(HostReg reg,bool dword)
+static uint32_t gen_create_branch_long_nonzero(HostReg reg,bool dword)
 {
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFF); // andi. r0,reg,0xFF
@@ -583,27 +583,27 @@ static Bit32u gen_create_branch_long_nonzero(HostReg reg,bool dword)
 		IMM_OP(11, 0, reg, 0);       // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bne
-	return ((Bit32u)cache.pos-4);
+	return ((uint32_t)cache.pos-4);
 }
 
 // compare 32bit-register against zero and jump if value less/equal than zero
-static Bit32u gen_create_branch_long_leqzero(HostReg reg)
+static uint32_t gen_create_branch_long_leqzero(HostReg reg)
 {
 	IMM_OP(11, 0, reg, 0); // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 1, 0); // ble
-	return ((Bit32u)cache.pos-4);
+	return ((uint32_t)cache.pos-4);
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void gen_fill_branch_long(Bit32u data) {
+static void gen_fill_branch_long(uint32_t data) {
 	return gen_fill_branch((DRC_PTR_SIZE_IM)data);
 }
 
 static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
 {
 #if defined(__GNUC__)
-	Bit8u* start = (Bit8u*)((Bit32u)block_start & -32);
+	uint8_t* start = (uint8_t*)((uint32_t)block_start & -32);
 
 	while (start < block_start + block_size)
 	{
@@ -620,7 +620,7 @@ static void cache_block_before_close(void) {}
 
 static void gen_function(void* func)
 {
-	Bit32s off = (Bit32s)func - (Bit32s)cache.pos;
+	int32_t off = (int32_t)func - (int32_t)cache.pos;
 
 	// relative branches are limited to +/- 32MB
 	if (off < 0x02000000 && off >= -0x02000000) {
@@ -628,14 +628,14 @@ static void gen_function(void* func)
 		return;
 	}
 
-	gen_mov_dword_to_reg_imm(HOST_R8, (Bit32u)func); // r8 = func
+	gen_mov_dword_to_reg_imm(HOST_R8, (uint32_t)func); // r8 = func
 	EXT_OP(HOST_R8, 9, 0, 467, 0);  // mtctr r8
 	IMM_OP(19, 0x14, 0, 528<<1); // bctr
 }
 
 // gen_run_code is assumed to be called exactly once, gen_return_function() jumps back to it
 static void* epilog_addr;
-static Bit8u *getCF_glue;
+static uint8_t *getCF_glue;
 static void gen_run_code(void)
 {
 	// prolog
@@ -645,14 +645,14 @@ static void gen_run_code(void)
 
 	IMM_OP(47, HOST_R26, HOST_R1, 128); // stmw r26, 128(sp)
 
-	IMM_OP(15, FC_SEGS_ADDR, 0, ((Bit32u)&Segs)>>16);  // lis FC_SEGS_ADDR, Segs@h
+	IMM_OP(15, FC_SEGS_ADDR, 0, ((uint32_t)&Segs)>>16);  // lis FC_SEGS_ADDR, Segs@h
 	IMM_OP(24, FC_SEGS_ADDR, FC_SEGS_ADDR, &Segs);     // ori FC_SEGS_ADDR, FC_SEGS_ADDR, Segs@l
 
-	IMM_OP(15, FC_REGS_ADDR, 0, ((Bit32u)&cpu_regs)>>16);  // lis FC_REGS_ADDR, cpu_regs@h
+	IMM_OP(15, FC_REGS_ADDR, 0, ((uint32_t)&cpu_regs)>>16);  // lis FC_REGS_ADDR, cpu_regs@h
 	IMM_OP(24, FC_REGS_ADDR, FC_REGS_ADDR, &cpu_regs);     // ori FC_REGS_ADDR, FC_REGS_ADDR, cpu_regs@l
 
 #if C_FPU
-	IMM_OP(15, HOST_R28, 0, ((Bit32u)&fpu)>>16);  // lis r28, fpu@h
+	IMM_OP(15, HOST_R28, 0, ((uint32_t)&fpu)>>16);  // lis r28, fpu@h
 	IMM_OP(24, HOST_R28, HOST_R28, &fpu);         // ori r28, r28, fpu@l
 #endif
 
@@ -680,10 +680,10 @@ static void gen_return_function(void)
 
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type)
+static void gen_fill_function_ptr(uint8_t * pos,void* fct_ptr,Bitu flags_type)
 {
-	Bit32u *op = (Bit32u*)pos;
-	Bit32u *end = op+4;
+	uint32_t *op = (uint32_t*)pos;
+	uint32_t *end = op+4;
 
 	switch (flags_type) {
 #if defined(DRC_FLAGS_INVALIDATION_DCODE)
@@ -821,30 +821,30 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type)
 // mov 16bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 2 must be zero)
 // 16bit moves may destroy the upper 16bit of the destination register
 static void gen_mov_seg16_to_reg(HostReg dest_reg,Bitu index) {
-	gen_mov_word_to_reg(dest_reg, (Bit8u*)&Segs + index, false);
+	gen_mov_word_to_reg(dest_reg, (uint8_t*)&Segs + index, false);
 }
 
 // mov 32bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 4 must be zero)
 static void gen_mov_seg32_to_reg(HostReg dest_reg,Bitu index) {
-	gen_mov_word_to_reg(dest_reg, (Bit8u*)&Segs + index, true);
+	gen_mov_word_to_reg(dest_reg, (uint8_t*)&Segs + index, true);
 }
 
 // add a 32bit value from Segs[index] to a full register using FC_SEGS_ADDR (index modulo 4 must be zero)
 static void gen_add_seg32_to_reg(HostReg reg,Bitu index) {
-	gen_add(reg, (Bit8u*)&Segs + index);
+	gen_add(reg, (uint8_t*)&Segs + index);
 }
 
 // mov 16bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 2 must be zero)
 // 16bit moves may destroy the upper 16bit of the destination register
 static void gen_mov_regval16_to_reg(HostReg dest_reg,Bitu index)
 {
-	gen_mov_word_to_reg(dest_reg, (Bit8u*)&cpu_regs + index, false);
+	gen_mov_word_to_reg(dest_reg, (uint8_t*)&cpu_regs + index, false);
 }
 
 // mov 32bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 4 must be zero)
 static void gen_mov_regval32_to_reg(HostReg dest_reg,Bitu index)
 {
-	gen_mov_word_to_reg(dest_reg, (Bit8u*)&cpu_regs + index, true);
+	gen_mov_word_to_reg(dest_reg, (uint8_t*)&cpu_regs + index, true);
 }
 
 // move an 8bit value from cpu_regs[index]  into dest_reg using FC_REGS_ADDR
@@ -853,7 +853,7 @@ static void gen_mov_regval32_to_reg(HostReg dest_reg,Bitu index)
 // registers might not be directly byte-accessible on some architectures
 static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index)
 {
-	gen_mov_byte_to_reg_low(dest_reg, (Bit8u*)&cpu_regs + index);
+	gen_mov_byte_to_reg_low(dest_reg, (uint8_t*)&cpu_regs + index);
 }
 
 // move an 8bit value from cpu_regs[index]  into dest_reg using FC_REGS_ADDR
@@ -861,31 +861,31 @@ static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index)
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
 static void inline gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
-	gen_mov_byte_to_reg_low_canuseword(dest_reg, (Bit8u*)&cpu_regs + index);
+	gen_mov_byte_to_reg_low_canuseword(dest_reg, (uint8_t*)&cpu_regs + index);
 }
 
 // move 16bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 2 must be zero)
 static void gen_mov_regval16_from_reg(HostReg src_reg,Bitu index)
 {
-	gen_mov_word_from_reg(src_reg, (Bit8u*)&cpu_regs + index, false);
+	gen_mov_word_from_reg(src_reg, (uint8_t*)&cpu_regs + index, false);
 }
 
 // move 32bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 4 must be zero)
 static void gen_mov_regval32_from_reg(HostReg src_reg,Bitu index)
 {
-	gen_mov_word_from_reg(src_reg, (Bit8u*)&cpu_regs + index, true);
+	gen_mov_word_from_reg(src_reg, (uint8_t*)&cpu_regs + index, true);
 }
 
 // move the lowest 8bit of a register into cpu_regs[index] using FC_REGS_ADDR
 static void gen_mov_regbyte_from_reg_low(HostReg src_reg,Bitu index)
 {
-	gen_mov_byte_from_reg_low(src_reg, (Bit8u*)&cpu_regs + index);
+	gen_mov_byte_from_reg_low(src_reg, (uint8_t*)&cpu_regs + index);
 }
 
 // add a 32bit value from cpu_regs[index] to a full register using FC_REGS_ADDR (index modulo 4 must be zero)
 static void gen_add_regval32_to_reg(HostReg reg,Bitu index)
 {
-	gen_add(reg, (Bit8u*)&cpu_regs + index);
+	gen_add(reg, (uint8_t*)&cpu_regs + index);
 }
 
 // move 32bit (dword==true) or 16bit (dword==false) of a register into cpu_regs[index] using FC_REGS_ADDR (if dword==true index modulo 4 must be zero) (if dword==false index modulo 2 must be zero)

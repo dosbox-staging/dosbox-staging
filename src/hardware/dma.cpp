@@ -32,7 +32,7 @@
 DmaController *DmaControllers[2];
 
 #define EMM_PAGEFRAME4K ((0xE000 * 16) / MEM_PAGESIZE)
-Bit32u ems_board_mapping[LINK_START];
+uint32_t ems_board_mapping[LINK_START];
 
 constexpr uint16_t NULL_PAGE = 0xffff;
 static uint32_t dma_wrapping = NULL_PAGE; // initial value
@@ -100,7 +100,7 @@ static void perform_dma_io(const DMA_DIRECTION direction,
 	} while (remaining_bytes);
 }
 
-DmaChannel * GetDMAChannel(Bit8u chan) {
+DmaChannel * GetDMAChannel(uint8_t chan) {
 	if (chan<4) {
 		/* channel on first DMA controller */
 		if (DmaControllers[0]) return DmaControllers[0]->GetChannel(chan);
@@ -188,7 +188,7 @@ void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t
 	/* set base address of DMA transfer (1st byte low part, 2nd byte high part) */
 	case 0x0:case 0x2:case 0x4:case 0x6:
 		UpdateEMSMapping();
-		chan=GetChannel((Bit8u)(reg >> 1));
+		chan=GetChannel((uint8_t)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->baseaddr=(chan->baseaddr&0xff00)|val;
@@ -201,7 +201,7 @@ void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t
 	/* set DMA transfer count (1st byte low part, 2nd byte high part) */
 	case 0x1:case 0x3:case 0x5:case 0x7:
 		UpdateEMSMapping();
-		chan=GetChannel((Bit8u)(reg >> 1));
+		chan=GetChannel((uint8_t)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->basecnt=(chan->basecnt&0xff00)|val;
@@ -232,7 +232,7 @@ void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t
 		flipflop=false;
 		break;
 	case 0xd: /* Clear/Reset all channels */
-		for (Bit8u ct=0;ct<4;ct++) {
+		for (uint8_t ct=0;ct<4;ct++) {
 			chan=GetChannel(ct);
 			chan->SetMask(true);
 			chan->tcount=false;
@@ -241,14 +241,14 @@ void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t
 		break;
 	case 0xe:		/* Clear Mask register */		
 		UpdateEMSMapping();
-		for (Bit8u ct=0;ct<4;ct++) {
+		for (uint8_t ct=0;ct<4;ct++) {
 			chan=GetChannel(ct);
 			chan->SetMask(false);
 		}
 		break;
 	case 0xf:		/* Multiple Mask register */
 		UpdateEMSMapping();
-		for (Bit8u ct=0;ct<4;ct++) {
+		for (uint8_t ct=0;ct<4;ct++) {
 			chan=GetChannel(ct);
 			chan->SetMask(val & 1);
 			val>>=1;
@@ -267,7 +267,7 @@ uint16_t DmaController::ReadControllerReg(io_port_t reg, io_width_t)
 	case 0x2:
 	case 0x4:
 	case 0x6:
-		chan = GetChannel((Bit8u)(reg >> 1));
+		chan = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
 			return chan->curraddr & 0xff;
@@ -279,7 +279,7 @@ uint16_t DmaController::ReadControllerReg(io_port_t reg, io_width_t)
 	case 0x3:
 	case 0x5:
 	case 0x7:
-		chan = GetChannel((Bit8u)(reg >> 1));
+		chan = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
 			return chan->currcnt & 0xff;

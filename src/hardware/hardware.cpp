@@ -148,8 +148,8 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 }
 
 #if (C_SSHOT)
-static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit32u flags) {
-	Bit8u chunk[8];Bit8u *index;Bit32u pos, writesize;
+static void CAPTURE_AddAviChunk(const char * tag, uint32_t size, void * data, uint32_t flags) {
+	uint8_t chunk[8];uint8_t *index;uint32_t pos, writesize;
 
 	chunk[0] = tag[0];chunk[1] = tag[1];chunk[2] = tag[2];chunk[3] = tag[3];
 	host_writed(&chunk[4], size);   
@@ -185,7 +185,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		CaptureState &= ~CAPTURE_VIDEO;
 		LOG_MSG("Stopped capturing video.");	
 
-		Bit8u avi_header[AVI_HEADER_SIZE];
+		uint8_t avi_header[AVI_HEADER_SIZE];
 		Bitu main_list;
 		Bitu header_pos=0;
 #define AVIOUT4(_S_) memcpy(&avi_header[header_pos],_S_,4);header_pos+=4;
@@ -202,7 +202,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 
 		AVIOUT4("avih");
 		AVIOUTd(56);                         /* # of bytes to follow */
-		AVIOUTd((Bit32u)(1000000 / capture.video.fps));       /* Microseconds per frame */
+		AVIOUTd((uint32_t)(1000000 / capture.video.fps));       /* Microseconds per frame */
 		AVIOUTd(0);
 		AVIOUTd(0);                         /* PaddingGranularity (whatever that might be) */
 		AVIOUTd(0x110);                     /* Flags,0x10 has index, 0x100 interleaved */
@@ -230,7 +230,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTd(0);                         /* Reserved, MS says: wPriority, wLanguage */
 		AVIOUTd(0);                         /* InitialFrames */
 		AVIOUTd(1000000);                   /* Scale */
-		AVIOUTd((Bit32u)(1000000 * capture.video.fps));              /* Rate: Rate/Scale == samples/second */
+		AVIOUTd((uint32_t)(1000000 * capture.video.fps));              /* Rate: Rate/Scale == samples/second */
 		AVIOUTd(0);                         /* Start */
 		AVIOUTd(capture.video.frames);      /* Length */
 		AVIOUTd(0);                  /* SuggestedBufferSize */
@@ -592,8 +592,8 @@ skip_shot:
 				case 15:
 				case 16:
 					for (auto x = 0; x < countWidth; ++x)
-						((Bit16u *)doubleRow)[x*2+0] =
-						((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
+						((uint16_t *)doubleRow)[x*2+0] =
+						((uint16_t *)doubleRow)[x*2+1] = ((uint16_t *)srcLine)[x];
 					break;
 				case 24:
 					for (auto x = 0; x < countWidth; ++x) {
@@ -604,8 +604,8 @@ skip_shot:
 					break;
 				case 32:
 					for (auto x = 0; x < countWidth; ++x)
-						((Bit32u *)doubleRow)[x*2+0] =
-						((Bit32u *)doubleRow)[x*2+1] = ((Bit32u *)srcLine)[x];
+						((uint32_t *)doubleRow)[x*2+0] =
+						((uint32_t *)doubleRow)[x*2+1] = ((uint32_t *)srcLine)[x];
 					break;
 				}
                 rowPointer=doubleRow;
@@ -653,16 +653,16 @@ static void CAPTURE_ScreenShotEvent(bool pressed) {
 
 
 /* WAV capturing */
-static Bit8u wavheader[]={
-	'R','I','F','F',	0x0,0x0,0x0,0x0,		/* Bit32u Riff Chunk ID /  Bit32u riff size */
-	'W','A','V','E',	'f','m','t',' ',		/* Bit32u Riff Format  / Bit32u fmt chunk id */
-	0x10,0x0,0x0,0x0,	0x1,0x0,0x2,0x0,		/* Bit32u fmt size / Bit16u encoding/ Bit16u channels */
-	0x0,0x0,0x0,0x0,	0x0,0x0,0x0,0x0,		/* Bit32u freq / Bit32u byterate */
-	0x4,0x0,0x10,0x0,	'd','a','t','a',		/* Bit16u byte-block / Bit16u bits / Bit16u data chunk id */
-	0x0,0x0,0x0,0x0,							/* Bit32u data size */
+static uint8_t wavheader[]={
+	'R','I','F','F',	0x0,0x0,0x0,0x0,		/* uint32_t Riff Chunk ID /  uint32_t riff size */
+	'W','A','V','E',	'f','m','t',' ',		/* uint32_t Riff Format  / uint32_t fmt chunk id */
+	0x10,0x0,0x0,0x0,	0x1,0x0,0x2,0x0,		/* uint32_t fmt size / uint16_t encoding/ uint16_t channels */
+	0x0,0x0,0x0,0x0,	0x0,0x0,0x0,0x0,		/* uint32_t freq / uint32_t byterate */
+	0x4,0x0,0x10,0x0,	'd','a','t','a',		/* uint16_t byte-block / uint16_t bits / uint16_t data chunk id */
+	0x0,0x0,0x0,0x0,							/* uint32_t data size */
 };
 
-void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
+void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data) {
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		Bitu left = WAVE_BUF - capture.video.audioused;
@@ -685,7 +685,7 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
 			capture.wave.freq = freq;
 			fwrite(wavheader,1,sizeof(wavheader),capture.wave.handle);
 		}
-		Bit16s * read = data;
+		int16_t * read = data;
 		while (len > 0 ) {
 			Bitu left = WAVE_BUF - capture.wave.used;
 			if (!left) {
@@ -729,19 +729,19 @@ static void CAPTURE_WaveEvent(bool pressed) {
 
 /* MIDI capturing */
 
-static Bit8u midi_header[]={
-	'M','T','h','d',			/* Bit32u, Header Chunk */
-	0x0,0x0,0x0,0x6,			/* Bit32u, Chunk Length */
-	0x0,0x0,					/* Bit16u, Format, 0=single track */
-	0x0,0x1,					/* Bit16u, Track Count, 1 track */
-	0x01,0xf4,					/* Bit16u, Timing, 2 beats/second with 500 frames */
-	'M','T','r','k',			/* Bit32u, Track Chunk */
-	0x0,0x0,0x0,0x0,			/* Bit32u, Chunk Length */
+static uint8_t midi_header[]={
+	'M','T','h','d',			/* uint32_t, Header Chunk */
+	0x0,0x0,0x0,0x6,			/* uint32_t, Chunk Length */
+	0x0,0x0,					/* uint16_t, Format, 0=single track */
+	0x0,0x1,					/* uint16_t, Track Count, 1 track */
+	0x01,0xf4,					/* uint16_t, Timing, 2 beats/second with 500 frames */
+	'M','T','r','k',			/* uint32_t, Track Chunk */
+	0x0,0x0,0x0,0x0,			/* uint32_t, Chunk Length */
 	//Track data
 };
 
 
-static void RawMidiAdd(Bit8u data) {
+static void RawMidiAdd(uint8_t data) {
 	capture.midi.buffer[capture.midi.used++]=data;
 	if (capture.midi.used >= MIDI_BUF ) {
 		capture.midi.done += capture.midi.used;
@@ -750,14 +750,14 @@ static void RawMidiAdd(Bit8u data) {
 	}
 }
 
-static void RawMidiAddNumber(Bit32u val) {
-	if (val & 0xfe00000) RawMidiAdd((Bit8u)(0x80|((val >> 21) & 0x7f)));
-	if (val & 0xfffc000) RawMidiAdd((Bit8u)(0x80|((val >> 14) & 0x7f)));
-	if (val & 0xfffff80) RawMidiAdd((Bit8u)(0x80|((val >> 7) & 0x7f)));
-	RawMidiAdd((Bit8u)(val & 0x7f));
+static void RawMidiAddNumber(uint32_t val) {
+	if (val & 0xfe00000) RawMidiAdd((uint8_t)(0x80|((val >> 21) & 0x7f)));
+	if (val & 0xfffc000) RawMidiAdd((uint8_t)(0x80|((val >> 14) & 0x7f)));
+	if (val & 0xfffff80) RawMidiAdd((uint8_t)(0x80|((val >> 7) & 0x7f)));
+	RawMidiAdd((uint8_t)(val & 0x7f));
 }
 
-void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
+void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t * data) {
 	if (!capture.midi.handle) {
 		capture.midi.handle=OpenCaptureFile("Raw Midi",".mid");
 		if (!capture.midi.handle) {
@@ -766,7 +766,7 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
 		fwrite(midi_header,1,sizeof(midi_header),capture.midi.handle);
 		capture.midi.last=PIC_Ticks;
 	}
-	Bit32u delta=PIC_Ticks-capture.midi.last;
+	uint32_t delta=PIC_Ticks-capture.midi.last;
 	capture.midi.last=PIC_Ticks;
 	RawMidiAddNumber(delta);
 	if (sysex) {
@@ -793,11 +793,11 @@ static void CAPTURE_MidiEvent(bool pressed) {
 		fwrite(capture.midi.buffer,1,capture.midi.used,capture.midi.handle);
 		capture.midi.done+=capture.midi.used;
 		fseek(capture.midi.handle,18, SEEK_SET);
-		Bit8u size[4];
-		size[0]=(Bit8u)(capture.midi.done >> 24);
-		size[1]=(Bit8u)(capture.midi.done >> 16);
-		size[2]=(Bit8u)(capture.midi.done >> 8);
-		size[3]=(Bit8u)(capture.midi.done >> 0);
+		uint8_t size[4];
+		size[0]=(uint8_t)(capture.midi.done >> 24);
+		size[1]=(uint8_t)(capture.midi.done >> 16);
+		size[2]=(uint8_t)(capture.midi.done >> 8);
+		size[3]=(uint8_t)(capture.midi.done >> 0);
 		fwrite(&size,1,4,capture.midi.handle);
 		fclose(capture.midi.handle);
 		capture.midi.handle=0;

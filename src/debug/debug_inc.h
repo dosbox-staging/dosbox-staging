@@ -38,18 +38,18 @@ struct DBGBlock {
 	WINDOW * win_code;					/* Disassembly/Debug point Window */
 	WINDOW * win_var;					/* Variable Window */
 	WINDOW * win_out;					/* Text Output Window */
-	Bit32u active_win;					/* Current active window */
-	Bit32u input_y;
-	Bit32u global_mask;					/* Current msgmask */
+	uint32_t active_win;					/* Current active window */
+	uint32_t input_y;
+	uint32_t global_mask;					/* Current msgmask */
 };
 
 
 struct DASMLine {
-	Bit32u pc;
+	uint32_t pc;
 	char dasm[80];
 	PhysPt ea;
-	Bit16u easeg;
-	Bit32u eaoff;
+	uint16_t easeg;
+	uint32_t eaoff;
 };
 
 extern DBGBlock dbg;

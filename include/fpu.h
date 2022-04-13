@@ -50,25 +50,25 @@ typedef union {
     double d;
 #ifndef WORDS_BIGENDIAN
     struct {
-        Bit32u lower;
-        Bit32s upper;
+        uint32_t lower;
+        int32_t upper;
     } l;
 #else
     struct {
-        Bit32s upper;
-        Bit32u lower;
+        int32_t upper;
+        uint32_t lower;
     } l;
 #endif
-    Bit64s ll;
+    int64_t ll;
 } FPU_Reg;
 
 typedef struct {
-    Bit32u m1;
-    Bit32u m2;
-    Bit16u m3;
+    uint32_t m1;
+    uint32_t m2;
+    uint16_t m3;
 
-    Bit16u d1;
-    Bit32u d2;
+    uint16_t d1;
+    uint32_t d2;
 } FPU_P_Reg;
 
 enum FPU_Tag {
@@ -89,9 +89,9 @@ typedef struct FPU_rec {
 	FPU_Reg		regs[9];
 	FPU_P_Reg	p_regs[9];
 	FPU_Tag		tags[9];
-	Bit16u		cw,cw_mask_all;
-	Bit16u		sw;
-	Bit32u		top;
+	uint16_t		cw,cw_mask_all;
+	uint16_t		sw;
+	uint32_t		top;
 	FPU_Round	round;
 } FPU_rec;
 
@@ -107,17 +107,17 @@ extern FPU_rec fpu;
 #define STV(i)  ( (fpu.top+ (i) ) & 7 )
 
 
-Bit16u FPU_GetTag(void);
+uint16_t FPU_GetTag(void);
 void FPU_FLDCW(PhysPt addr);
 
-static inline void FPU_SetTag(Bit16u tag){
+static inline void FPU_SetTag(uint16_t tag){
 	for(Bitu i=0;i<8;i++)
 		fpu.tags[i] = static_cast<FPU_Tag>((tag >>(2*i))&3);
 }
 
 static inline void FPU_SetCW(Bitu word){
-	fpu.cw = (Bit16u)word;
-	fpu.cw_mask_all = (Bit16u)(word | 0x3f);
+	fpu.cw = (uint16_t)word;
+	fpu.cw_mask_all = (uint16_t)(word | 0x3f);
 	fpu.round = (FPU_Round)((word >> 10) & 3);
 }
 

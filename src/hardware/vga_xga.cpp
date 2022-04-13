@@ -42,39 +42,39 @@ constexpr uint16_t XGA_32_BIT = 0x0008;
 
 struct XGAStatus {
 	struct scissorreg {
-		Bit16u x1, y1, x2, y2;
+		uint16_t x1, y1, x2, y2;
 	} scissors;
 
-	Bit32u readmask;
-	Bit32u writemask;
+	uint32_t readmask;
+	uint32_t writemask;
 
-	Bit32u forecolor;
-	Bit32u backcolor;
+	uint32_t forecolor;
+	uint32_t backcolor;
 
 	Bitu curcommand;
 
-	Bit16u foremix;
-	Bit16u backmix;
+	uint16_t foremix;
+	uint16_t backmix;
 
-	Bit16u curx, cury;
-	Bit16u destx, desty;
+	uint16_t curx, cury;
+	uint16_t destx, desty;
 
-	Bit16u ErrTerm;
-	Bit16u MIPcount;
-	Bit16u MAPcount;
+	uint16_t ErrTerm;
+	uint16_t MIPcount;
+	uint16_t MAPcount;
 
-	Bit16u pix_cntl;
-	Bit16u control1;
-	Bit16u control2;
-	Bit16u read_sel;
+	uint16_t pix_cntl;
+	uint16_t control1;
+	uint16_t control2;
+	uint16_t read_sel;
 
 	struct XGA_WaitCmd {
 		bool newline;
 		bool wait;
-		Bit16u cmd;
-		Bit16u curx, cury;
-		Bit16u x1, y1, x2, y2, sizex, sizey;
-		Bit32u data; /* transient data passed by multiple calls */
+		uint16_t cmd;
+		uint16_t curx, cury;
+		uint16_t x1, y1, x2, y2, sizex, sizey;
+		uint32_t data; /* transient data passed by multiple calls */
 		Bitu datasize;
 		Bitu buswidth;
 	} waitcmd;
@@ -159,15 +159,15 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 			break;
 		case M_LIN15:
 			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0x7fff);
+			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0x7fff);
 			break;
 		case M_LIN16:
 			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0xffff);
+			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0xffff);
 			break;
 		case M_LIN32:
 			if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
-			((Bit32u*)(vga.mem.linear))[memaddr] = c;
+			((uint32_t*)(vga.mem.linear))[memaddr] = c;
 			break;
 		default:
 			break;
@@ -185,10 +185,10 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	case M_LIN15:
 	case M_LIN16:
 		if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-		return ((Bit16u*)(vga.mem.linear))[memaddr];
+		return ((uint16_t*)(vga.mem.linear))[memaddr];
 	case M_LIN32:
 		if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
-		return ((Bit32u*)(vga.mem.linear))[memaddr];
+		return ((uint32_t*)(vga.mem.linear))[memaddr];
 	default:
 		break;
 	}
@@ -377,7 +377,7 @@ static void XGA_DrawLineBresenham(const uint32_t val, const bool skip_last_pixel
 	//
 	// lpast = 2 * min(abs(dx),abs(dy))
 
-	dminor = (Bits)((Bit16s)xga.desty);
+	dminor = (Bits)((int16_t)xga.desty);
 	if(xga.desty&0x2000) dminor |= ~0x1fff;
 	dminor >>= 1;
 
@@ -389,7 +389,7 @@ static void XGA_DrawLineBresenham(const uint32_t val, const bool skip_last_pixel
 	//
 	// lpdst = 2 * min(abs(dx),abs(dy)) - max(abs(dx),abs(dy))
 
-	destxtmp = (Bits)((Bit16s)xga.destx);
+	destxtmp = (Bits)((int16_t)xga.destx);
 	if (xga.destx & 0x2000)
 		destxtmp |= ~0x1fff;
 
@@ -412,7 +412,7 @@ static void XGA_DrawLineBresenham(const uint32_t val, const bool skip_last_pixel
 	// if x1 < x2: 2 * min(abs(dx),abs(dy)) - max(abs(dx),abs(dy))
 	// if x1 >= x2: 2 * min(abs(dx),abs(dy)) - max(abs(dx),abs(dy)) - 1
 
-	e = (Bits)((Bit16s)xga.ErrTerm);
+	e = (Bits)((int16_t)xga.ErrTerm);
 	if(xga.ErrTerm&0x2000) e |= ~0x1fff;
 	xat = xga.curx;
 	yat = xga.cury;
@@ -577,9 +577,9 @@ bool XGA_CheckX(void) {
 		if((xga.waitcmd.cury<2048)&&(xga.waitcmd.cury > xga.waitcmd.y2))
 			xga.waitcmd.wait = false;
 	} else if(xga.waitcmd.curx>=2048) {
-		Bit16u realx = 4096-xga.waitcmd.curx;
+		uint16_t realx = 4096-xga.waitcmd.curx;
 		if(xga.waitcmd.x2>2047) { // x end is negative too
-			Bit16u realxend=4096-xga.waitcmd.x2;
+			uint16_t realxend=4096-xga.waitcmd.x2;
 			if(realx==realxend) {
 				xga.waitcmd.curx = xga.waitcmd.x1;
 				xga.waitcmd.cury++;
@@ -792,7 +792,7 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 }
 
 void XGA_BlitRect(Bitu val) {
-	Bit32u xat, yat;
+	uint32_t xat, yat;
 	Bitu srcdata;
 	Bitu dstdata;
 	Bits srcx, srcy, tarx, tary, dx, dy;
@@ -956,7 +956,7 @@ void XGA_DrawPattern(Bitu val) {
 
 static void XGA_DrawCmd(const uint32_t val)
 {
-	Bit16u cmd;
+	uint16_t cmd;
 	cmd = val >> 13;
 #if XGA_SHOW_COMMAND_TRACE == 1
 	//LOG_MSG("XGA: Draw command %x", cmd);
@@ -1013,8 +1013,8 @@ static void XGA_DrawCmd(const uint32_t val)
 			        xga.waitcmd.cury = xga.cury;
 			        xga.waitcmd.x1 = xga.curx;
 			        xga.waitcmd.y1 = xga.cury;
-			        xga.waitcmd.x2 = (Bit16u)((xga.curx + xga.MAPcount)&0x0fff);
-				xga.waitcmd.y2 = (Bit16u)((xga.cury + xga.MIPcount + 1)&0x0fff);
+			        xga.waitcmd.x2 = (uint16_t)((xga.curx + xga.MAPcount)&0x0fff);
+				xga.waitcmd.y2 = (uint16_t)((xga.cury + xga.MIPcount + 1)&0x0fff);
 				xga.waitcmd.sizex = xga.MAPcount;
 				xga.waitcmd.sizey = xga.MIPcount + 1;
 				xga.waitcmd.cmd = 2;
@@ -1050,13 +1050,13 @@ static void XGA_DrawCmd(const uint32_t val)
 	}
 }
 
-void XGA_SetDualReg(Bit32u &reg, uint32_t val)
+void XGA_SetDualReg(uint32_t &reg, uint32_t val)
 {
 	switch (XGA_COLOR_MODE) {
-	case M_LIN8: reg = (Bit8u)(val & 0xff); break;
+	case M_LIN8: reg = (uint8_t)(val & 0xff); break;
 	case M_LIN15:
 	case M_LIN16:
-		reg = (Bit16u)(val&0xffff); break;
+		reg = (uint16_t)(val&0xffff); break;
 	case M_LIN32:
 		if (xga.control1 & 0x200)
 			reg = val;
@@ -1071,12 +1071,12 @@ void XGA_SetDualReg(Bit32u &reg, uint32_t val)
 	}
 }
 
-uint32_t XGA_GetDualReg(Bit32u reg) {
+uint32_t XGA_GetDualReg(uint32_t reg) {
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
-		return (Bit8u)(reg&0xff);
+		return (uint8_t)(reg&0xff);
 	case M_LIN15: case M_LIN16:
-		return (Bit16u)(reg&0xffff);
+		return (uint16_t)(reg&0xffff);
 	case M_LIN32:
 		if (xga.control1 & 0x200) return reg;
 		xga.control1 ^= 0x10;

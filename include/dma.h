@@ -40,17 +40,17 @@ using DMA_CallBack = std::function<void(DmaChannel *chan, DMAEvent event)>;
 
 class DmaChannel {
 public:
-	Bit32u pagebase;
-	Bit16u baseaddr;
-	Bit32u curraddr;
-	Bit16u basecnt;
-	Bit16u currcnt;
-	Bit8u channum;
-	Bit8u pagenum;
-	Bit8u DMA16;
+	uint32_t pagebase;
+	uint16_t baseaddr;
+	uint32_t curraddr;
+	uint16_t basecnt;
+	uint16_t currcnt;
+	uint8_t channum;
+	uint8_t pagenum;
+	uint8_t DMA16;
 	bool increment;
 	bool autoinit;
-//	Bit8u trantype; //Not used at the moment
+//	uint8_t trantype; //Not used at the moment
 	bool masked;
 	bool tcount;
 	bool request;
@@ -76,7 +76,7 @@ public:
 		tcount=true;
 		DoCallBack(DMA_REACHED_TC);
 	}
-	void SetPage(Bit8u val) {
+	void SetPage(uint8_t val) {
 		pagenum=val;
 		pagebase=(pagenum >> DMA16) << (16+DMA16);
 	}
@@ -138,7 +138,7 @@ public:
 	uint16_t ReadControllerReg(io_port_t reg, io_width_t width);
 };
 
-DmaChannel * GetDMAChannel(Bit8u chan);
+DmaChannel * GetDMAChannel(uint8_t chan);
 
 void CloseSecondDMAController(void);
 bool SecondDMAControllerAvailable(void);

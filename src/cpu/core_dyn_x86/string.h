@@ -72,7 +72,7 @@ static void dyn_string(STRING_OP op) {
 	}
 	DynState rep_state;
 	dyn_savestate(&rep_state);
-	const Bit8u * rep_start=cache.pos;
+	const uint8_t * rep_start=cache.pos;
 
 	/* Check if ECX!=zero */
 	if (decode.rep) {

@@ -319,14 +319,14 @@ switch (inst.code.op) {
 		break;
 	case O_XCHG_AX:
 		{
-			Bit16u temp=reg_ax;
+			uint16_t temp=reg_ax;
 			reg_ax=inst_op1_w;
 			inst_op1_w=temp;
 			break;
 		}
 	case O_XCHG_EAX:
 		{
-			Bit32u temp=reg_eax;
+			uint32_t temp=reg_eax;
 			reg_eax=inst_op1_d;
 			inst_op1_d=temp;
 			break;
@@ -397,10 +397,10 @@ switch (inst.code.op) {
 		if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 		switch (inst.rm_index) {
 		case 0x00:	/* SLDT */
-			inst_op1_d=(Bit32u)CPU_SLDT();
+			inst_op1_d=(uint32_t)CPU_SLDT();
 			break;
 		case 0x01:	/* STR */
-			inst_op1_d=(Bit32u)CPU_STR();
+			inst_op1_d=(uint32_t)CPU_STR();
 			break;
 		case 0x02:	/* LLDT */
 			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -479,21 +479,21 @@ switch (inst.code.op) {
 		{
 			Bitu ar=inst_op2_d;
 			CPU_LAR(inst_op1_w,ar);
-			inst_op1_d=(Bit32u)ar;
+			inst_op1_d=(uint32_t)ar;
 		}
 		break;
 	case O_LSL:
 		{
 			Bitu limit=inst_op2_d;
 			CPU_LSL(inst_op1_w,limit);
-			inst_op1_d=(Bit32u)limit;
+			inst_op1_d=(uint32_t)limit;
 		}
 		break;
 	case O_ARPL:
 		{
 			Bitu new_sel=inst_op1_d;
 			CPU_ARPL(new_sel,inst_op2_d);
-			inst_op1_d=(Bit32u)new_sel;
+			inst_op1_d=(uint32_t)new_sel;
 		}
 		break;
 	case O_BSFw:
@@ -651,10 +651,10 @@ switch (inst.code.op) {
 #endif
 	case O_BOUNDw:
 		{
-			Bit16s bound_min, bound_max;
+			int16_t bound_min, bound_max;
 			bound_min=LoadMw(inst.rm_eaa);
 			bound_max=LoadMw(inst.rm_eaa+2);
-			if ( (((Bit16s)inst_op1_w) < bound_min) || (((Bit16s)inst_op1_w) > bound_max) ) {
+			if ( (((int16_t)inst_op1_w) < bound_min) || (((int16_t)inst_op1_w) > bound_max) ) {
 				EXCEPTION(5);
 			}
 		}

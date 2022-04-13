@@ -77,7 +77,7 @@
 struct XMS_Block {
 	Bitu	size;
 	MemHandle mem;
-	Bit8u	locked;
+	uint8_t	locked;
 	bool	free;
 };
 
@@ -85,16 +85,16 @@ struct XMS_Block {
 #pragma pack (1)
 #endif
 struct XMS_MemMove{
-	Bit32u length;
-	Bit16u src_handle;
+	uint32_t length;
+	uint16_t src_handle;
 	union {
 		RealPt realpt;
-		Bit32u offset;
+		uint32_t offset;
 	} src;
-	Bit16u dest_handle;
+	uint16_t dest_handle;
 	union {
 		RealPt realpt;
-		Bit32u offset;
+		uint32_t offset;
 	} dest;
 
 } GCC_ATTRIBUTE(packed);
@@ -104,7 +104,7 @@ struct XMS_MemMove{
 
 
 Bitu XMS_EnableA20(bool enable) {
-	Bit8u val = IO_Read	(0x92);
+	uint8_t val = IO_Read	(0x92);
 	if (enable) IO_Write(0x92,val | 2);
 	else		IO_Write(0x92,val & ~2);
 	return 0;
@@ -123,17 +123,17 @@ static inline bool InvalidHandle(Bitu handle) {
 	return (!handle || (handle>=XMS_HANDLES) || xms_handles[handle].free);
 }
 
-Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
+Bitu XMS_QueryFreeMemory(uint16_t& largestFree, uint16_t& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
-	totalFree=(Bit16u)(MEM_FreeTotal()*4);
-	largestFree=(Bit16u)(MEM_FreeLargest()*4);
+	totalFree=(uint16_t)(MEM_FreeTotal()*4);
+	largestFree=(uint16_t)(MEM_FreeLargest()*4);
 	if (!totalFree) return XMS_OUT_OF_SPACE;
 	return 0;
 }
 
-Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle) {	// size = kb
+Bitu XMS_AllocateMemory(Bitu size, uint16_t& handle) {	// size = kb
 	/* Find free handle */
-	Bit16u index=1;
+	uint16_t index=1;
 	while (!xms_handles[index].free) {
 		if (++index>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
 	}
@@ -169,7 +169,7 @@ Bitu XMS_MoveMemory(PhysPt bpt) {
 	Bitu src_handle=mem_readw(bpt+offsetof(XMS_MemMove,src_handle));
 	union {
 		RealPt realpt;
-		Bit32u offset;
+		uint32_t offset;
 	} src,dest;
 	src.offset=mem_readd(bpt+offsetof(XMS_MemMove,src.offset));
 	Bitu dest_handle=mem_readw(bpt+offsetof(XMS_MemMove,dest_handle));
@@ -208,7 +208,7 @@ Bitu XMS_MoveMemory(PhysPt bpt) {
 	return 0;
 }
 
-Bitu XMS_LockMemory(Bitu handle, Bit32u& address) {
+Bitu XMS_LockMemory(Bitu handle, uint32_t& address) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	if (xms_handles[handle].locked<255) xms_handles[handle].locked++;
 	address = xms_handles[handle].mem*4096;
@@ -224,7 +224,7 @@ Bitu XMS_UnlockMemory(Bitu handle) {
 	return XMS_BLOCK_NOT_LOCKED;
 }
 
-Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size) {
+Bitu XMS_GetHandleInformation(Bitu handle, uint8_t& lockCount, uint8_t& numFree, uint16_t& size) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	lockCount = xms_handles[handle].locked;
 	/* Find available blocks */
@@ -232,7 +232,7 @@ Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit
 	for (Bitu i=1;i<XMS_HANDLES;i++) {
 		if (xms_handles[i].free) numFree++;
 	}
-	size=(Bit16u)(xms_handles[handle].size);
+	size=(uint16_t)(xms_handles[handle].size);
 	return 0;
 }
 
@@ -262,7 +262,7 @@ static bool multiplex_xms(void) {
 }
 
 inline void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
-	if(touch_bl_on_succes || res) reg_bl = (Bit8u)res;
+	if(touch_bl_on_succes || res) reg_bl = (uint8_t)res;
 	reg_ax = (res==0);
 }
 
@@ -303,7 +303,7 @@ Bitu XMS_Handler(void) {
 		[[fallthrough]];
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
-		Bit16u handle = 0;
+		uint16_t handle = 0;
 		SET_RESULT(XMS_AllocateMemory(reg_dx,handle));
 		reg_dx = handle;
 		}; break;
@@ -314,13 +314,13 @@ Bitu XMS_Handler(void) {
 		SET_RESULT(XMS_MoveMemory(SegPhys(ds)+reg_si),false);
 		break;
 	case XMS_LOCK_EXTENDED_MEMORY_BLOCK: {						/* 0c */
-		Bit32u address;
+		uint32_t address;
 		Bitu res = XMS_LockMemory(reg_dx, address);
-		if(res) reg_bl = (Bit8u)res;
+		if(res) reg_bl = (uint8_t)res;
 		reg_ax = (res==0);
 		if (res==0) { // success
-			reg_bx=(Bit16u)(address & 0xFFFF);
-			reg_dx=(Bit16u)(address >> 16);
+			reg_bx=(uint16_t)(address & 0xFFFF);
+			reg_dx=(uint16_t)(address >> 16);
 		};
 		}; break;
 	case XMS_UNLOCK_EXTENDED_MEMORY_BLOCK:						/* 0d */
@@ -341,7 +341,7 @@ Bitu XMS_Handler(void) {
 			reg_bl=XMS_FUNCTION_NOT_IMPLEMENTED;
 			break;
 		}
-		Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+		uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
 		if (umb_start==0xffff) {
 			reg_ax=0;
 			reg_bl=UMB_NO_BLOCKS_AVAILABLE;
@@ -350,12 +350,12 @@ Bitu XMS_Handler(void) {
 		}
 		/* Save status and linkage of upper UMB chain and link upper
 		   memory to the regular MCB chain */
-		Bit8u umb_flag=dos_infoblock.GetUMBChainState();
+		uint8_t umb_flag=dos_infoblock.GetUMBChainState();
 		if ((umb_flag&1)==0) DOS_LinkUMBsToMemChain(1);
-		Bit8u old_memstrat=DOS_GetMemAllocStrategy()&0xff;
+		uint8_t old_memstrat=DOS_GetMemAllocStrategy()&0xff;
 		DOS_SetMemAllocStrategy(0x40);	// search in UMBs only
 
-		Bit16u size=reg_dx;Bit16u seg;
+		uint16_t size=reg_dx;uint16_t seg;
 		if (DOS_AllocateMemory(&seg,&size)) {
 			reg_ax=1;
 			reg_bx=seg;
@@ -367,7 +367,7 @@ Bitu XMS_Handler(void) {
 		}
 
 		/* Restore status and linkage of upper UMB chain */
-		Bit8u current_umb_flag=dos_infoblock.GetUMBChainState();
+		uint8_t current_umb_flag=dos_infoblock.GetUMBChainState();
 		if ((current_umb_flag&1)!=(umb_flag&1)) DOS_LinkUMBsToMemChain(umb_flag);
 		DOS_SetMemAllocStrategy(old_memstrat);
 		}
@@ -394,7 +394,7 @@ Bitu XMS_Handler(void) {
 		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
-		Bit8u free_handles;
+		uint8_t free_handles;
 		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_dx);
 		if (result != 0) reg_bl = result;
 		else {
