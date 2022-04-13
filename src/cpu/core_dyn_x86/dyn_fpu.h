@@ -634,7 +634,7 @@ static void dyn_fpu_esc7()
 	} else {
 		dyn_fill_ea();
 		switch (group) {
-		case 0x00:  /* FILD Bit16s */
+		case 0x00:  /* FILD int16_t */
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
 			gen_load_host(&TOP,DREG(TMPB),4); 
 			gen_call_function((void*)&FPU_FLD_I16,"%Drd%Drd",DREG(EA),DREG(TMPB));
@@ -642,10 +642,10 @@ static void dyn_fpu_esc7()
 		case 0x01:
 			FPU_LOG_WARN(7,true,group,sub);
 			break;
-		case 0x02:   /* FIST Bit16s */
+		case 0x02:   /* FIST int16_t */
 			gen_call_function((void*)&FPU_FST_I16,"%Drd",DREG(EA));
 			break;
-		case 0x03:	/* FISTP Bit16s */
+		case 0x03:	/* FISTP int16_t */
 			gen_call_function((void*)&FPU_FST_I16,"%Drd",DREG(EA));
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
@@ -654,7 +654,7 @@ static void dyn_fpu_esc7()
 			gen_load_host(&TOP,DREG(TMPB),4);
 			gen_call_function((void*)&FPU_FBLD,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
-		case 0x05:  /* FILD Bit64s */
+		case 0x05:  /* FILD int64_t */
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
 			gen_load_host(&TOP,DREG(TMPB),4);
 			gen_call_function((void*)&FPU_FLD_I64,"%Drd%Drd",DREG(EA),DREG(TMPB));
@@ -663,7 +663,7 @@ static void dyn_fpu_esc7()
 			gen_call_function((void*)&FPU_FBST,"%Drd",DREG(EA));
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
-		case 0x07:  /* FISTP Bit64s */
+		case 0x07:  /* FISTP int64_t */
 			gen_call_function((void*)&FPU_FST_I64,"%Drd",DREG(EA));
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;

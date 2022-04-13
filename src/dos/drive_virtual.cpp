@@ -281,11 +281,11 @@ public:
 	Virtual_File(const Virtual_File &) = delete; // prevent copying
 	Virtual_File &operator=(const Virtual_File &) = delete; // prevent assignment
 
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
+	bool Read(uint8_t * data,uint16_t * size);
+	bool Write(uint8_t * data,uint16_t * size);
+	bool Seek(uint32_t * pos,uint32_t type);
 	bool Close();
-	Bit16u GetInformation();
+	uint16_t GetInformation();
 
 private:
 	uint32_t file_size;
@@ -303,11 +303,11 @@ Virtual_File::Virtual_File(uint8_t *in_data, uint32_t in_size)
 	open = true;
 }
 
-bool Virtual_File::Read(Bit8u * data,Bit16u * size) {
-	Bit32u left=file_size-file_pos;
+bool Virtual_File::Read(uint8_t * data,uint16_t * size) {
+	uint32_t left=file_size-file_pos;
 	if (left <= *size) {
 		memcpy(data, &file_data[file_pos], left);
-		*size = (Bit16u)left;
+		*size = (uint16_t)left;
 	} else {
 		memcpy(data, &file_data[file_pos], *size);
 	}
@@ -315,12 +315,12 @@ bool Virtual_File::Read(Bit8u * data,Bit16u * size) {
 	return true;
 }
 
-bool Virtual_File::Write(Bit8u * /*data*/,Bit16u * /*size*/){
+bool Virtual_File::Write(uint8_t * /*data*/,uint16_t * /*size*/){
 	/* Not really writable */
 	return false;
 }
 
-bool Virtual_File::Seek(Bit32u * new_pos,Bit32u type){
+bool Virtual_File::Seek(uint32_t * new_pos,uint32_t type){
 	switch (type) {
 	case DOS_SEEK_SET:
 		if (*new_pos <= file_size) file_pos = *new_pos;
@@ -344,7 +344,7 @@ bool Virtual_File::Close(){
 }
 
 
-Bit16u Virtual_File::GetInformation() {
+uint16_t Virtual_File::GetInformation() {
 	return 0x40;	// read-only drive
 }
 
@@ -355,7 +355,7 @@ Virtual_Drive::Virtual_Drive() : search_file(nullptr)
 		parent_dir = new VFILE_Block;
 }
 
-bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -380,7 +380,7 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	return false;
 }
 
-bool Virtual_Drive::FileCreate(DOS_File * * /*file*/,char * /*name*/,Bit16u /*attributes*/) {
+bool Virtual_Drive::FileCreate(DOS_File * * /*file*/,char * /*name*/,uint16_t /*attributes*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -473,7 +473,7 @@ bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 		}
 	}
 	dta.SetDirID(onpos);
-	Bit8u attr;
+	uint8_t attr;
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 	search_file = (attr & DOS_ATTR_DIRECTORY) && onpos > 0 ? parent_dir
@@ -498,7 +498,7 @@ bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 
 bool Virtual_Drive::FindNext(DOS_DTA &dta)
 {
-	Bit8u attr;
+	uint8_t attr;
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 	unsigned int pos = dta.GetDirID();
@@ -528,7 +528,7 @@ bool Virtual_Drive::FindNext(DOS_DTA &dta)
 	return false;
 }
 
-bool Virtual_Drive::GetFileAttr(char *name, Bit16u *attr)
+bool Virtual_Drive::GetFileAttr(char *name, uint16_t *attr)
 {
 	assert(name);
 	if (*name == 0) {
@@ -580,7 +580,7 @@ bool Virtual_Drive::Rename([[maybe_unused]] char * oldname, [[maybe_unused]] cha
 	return false;
 }
 
-bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
+bool Virtual_Drive::AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters) {
 	*_bytes_sector = 512;
 	*_sectors_cluster = 32;
 	*_total_clusters = 32765; // total size is always 500 mb
@@ -588,7 +588,7 @@ bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_clust
 	return true;
 }
 
-Bit8u Virtual_Drive::GetMediaByte() {
+uint8_t Virtual_Drive::GetMediaByte() {
 	return 0xF8;
 }
 

@@ -46,7 +46,7 @@
 #include "cross.h"
 #include "inout.h"
 
-bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
+bool localDrive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/) {
 //TODO Maybe care for attributes but not likely
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
@@ -109,7 +109,7 @@ DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
 	return nullptr;
 }
 
-bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
+bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 {
 	const char *type = nullptr;
 	switch (flags&0xf) {
@@ -276,7 +276,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	if (tempDir[strlen(tempDir) - 1] != CROSS_FILESPLIT)
 		safe_strcat(tempDir, end);
 
-	Bit16u id;
+	uint16_t id;
 	if (!dirCache.FindFirst(tempDir,id)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
@@ -284,7 +284,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	safe_strcpy(srchInfo[id].srch_dir, tempDir);
 	dta.SetDirID(id);
 	
-	Bit8u sAttr;
+	uint8_t sAttr;
 	dta.GetSearchParams(sAttr,tempDir);
 
 	if (this->isRemote() && this->isRemovable()) {
@@ -323,11 +323,11 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
-	Bit8u find_attr;
+	uint8_t srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
+	uint8_t find_attr;
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
-	Bit16u id = dta.GetDirID();
+	uint16_t id = dta.GetDirID();
 
 again:
 	if (!dirCache.FindNext(id,dir_ent)) {
@@ -378,7 +378,7 @@ again:
 		upcase(find_name);
 	} 
 
-	find_size=(Bit32u) stat_block.st_size;
+	find_size=(uint32_t) stat_block.st_size;
 	struct tm datetime;
 	if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
 		find_date = DOS_PackDate(datetime);
@@ -516,7 +516,7 @@ bool localDrive::Rename(char * oldname,char * newname) {
 
 }
 
-bool localDrive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
+bool localDrive::AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters) {
 	*_bytes_sector=allocation.bytes_sector;
 	*_sectors_cluster=allocation.sectors_cluster;
 	*_total_clusters=allocation.total_clusters;
@@ -552,12 +552,12 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	} else {
 		LOG_MSG("FS: error while converting date in: %s", name);
 	}
-	stat_block->size=(Bit32u)temp_stat.st_size;
+	stat_block->size=(uint32_t)temp_stat.st_size;
 	return true;
 }
 
 
-Bit8u localDrive::GetMediaByte(void) {
+uint8_t localDrive::GetMediaByte(void) {
 	return allocation.mediaid;
 }
 
@@ -575,11 +575,11 @@ Bits localDrive::UnMount(void) {
 }
 
 localDrive::localDrive(const char * startdir,
-                       Bit16u _bytes_sector,
-                       Bit8u _sectors_cluster,
-                       Bit16u _total_clusters,
-                       Bit16u _free_clusters,
-                       Bit8u _mediaid)
+                       uint16_t _bytes_sector,
+                       uint8_t _sectors_cluster,
+                       uint16_t _total_clusters,
+                       uint16_t _free_clusters,
+                       uint8_t _mediaid)
 	: write_protected_files{},
 	  allocation{_bytes_sector,
 	             _sectors_cluster,
@@ -653,7 +653,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	/* Same for Igor */
 	/* hardrive motion => unmask irq 2. Only do it when it's masked as
 	 * unmasking is realitively heavy to emulate */
-	Bit8u mask = IO_Read(0x21);
+	uint8_t mask = IO_Read(0x21);
 	if (mask & 0x4)
 		IO_Write(0x21, mask & 0xfb);
 	return true;
@@ -661,7 +661,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 bool localFile::Write(uint8_t *data, uint16_t *size)
 {
-	Bit32u lastflags = this->flags & 0xf;
+	uint32_t lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -728,7 +728,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 #if 0
 	fpos_t temppos;
 	fgetpos(fhandle,&temppos);
-	Bit32u * fake_pos=(Bit32u*)&temppos;
+	uint32_t * fake_pos=(uint32_t*)&temppos;
 	*pos_addr = *fake_pos;
 #endif
 	static_cast<void>(ftell_and_check());
@@ -786,7 +786,7 @@ bool localFile::Close() {
 	return true;
 }
 
-Bit16u localFile::GetInformation(void) {
+uint16_t localFile::GetInformation(void) {
 	return read_only_medium?0x40:0;
 }
 
@@ -848,11 +848,11 @@ void localFile::Flush()
 
 cdromDrive::cdromDrive(const char _driveLetter,
                        const char * startdir,
-                       Bit16u _bytes_sector,
-                       Bit8u _sectors_cluster,
-                       Bit16u _total_clusters,
-                       Bit16u _free_clusters,
-                       Bit8u _mediaid,
+                       uint16_t _bytes_sector,
+                       uint8_t _sectors_cluster,
+                       uint16_t _total_clusters,
+                       uint16_t _free_clusters,
+                       uint8_t _mediaid,
                        int& error)
 	: localDrive(startdir,
 	             _bytes_sector,
@@ -872,7 +872,7 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 }
 
-bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+bool cdromDrive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	if ((flags&0xf)==OPEN_READWRITE) {
 		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
 	} else if ((flags&0xf)==OPEN_WRITE) {
@@ -885,7 +885,7 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	return success;
 }
 
-bool cdromDrive::FileCreate(DOS_File * * /*file*/,char * /*name*/,Bit16u /*attributes*/) {
+bool cdromDrive::FileCreate(DOS_File * * /*file*/,char * /*name*/,uint16_t /*attributes*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }

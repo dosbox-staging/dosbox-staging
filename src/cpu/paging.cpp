@@ -64,15 +64,15 @@ void PageHandler::writeb(PhysPt addr, uint8_t /*val*/)
 
 void PageHandler::writew(PhysPt addr, uint16_t val)
 {
-	writeb(addr+0,(Bit8u) (val >> 0));
-	writeb(addr+1,(Bit8u) (val >> 8));
+	writeb(addr+0,(uint8_t) (val >> 0));
+	writeb(addr+1,(uint8_t) (val >> 8));
 }
 void PageHandler::writed(PhysPt addr, uint32_t val)
 {
-	writeb(addr+0,(Bit8u) (val >> 0));
-	writeb(addr+1,(Bit8u) (val >> 8));
-	writeb(addr+2,(Bit8u) (val >> 16));
-	writeb(addr+3,(Bit8u) (val >> 24));
+	writeb(addr+0,(uint8_t) (val >> 0));
+	writeb(addr+1,(uint8_t) (val >> 8));
+	writeb(addr+2,(uint8_t) (val >> 16));
+	writeb(addr+3,(uint8_t) (val >> 24));
 }
 
 HostPt PageHandler::GetHostReadPt(Bitu /*phys_page*/) {
@@ -679,7 +679,7 @@ void PAGING_InitTLB(void) {
 }
 
 void PAGING_ClearTLB(void) {
-	Bit32u * entries=&paging.links.entries[0];
+	uint32_t * entries=&paging.links.entries[0];
 	for (;paging.links.used>0;paging.links.used--) {
 		Bitu page=*entries++;
 		paging.tlb.read[page]=0;
@@ -780,7 +780,7 @@ void PAGING_InitTLB(void) {
 }
 
 void PAGING_ClearTLB(void) {
-	Bit32u * entries=&paging.links.entries[0];
+	uint32_t * entries=&paging.links.entries[0];
 	for (;paging.links.used>0;paging.links.used--) {
 		Bitu page=*entries++;
 		tlb_entry *entry = get_tlb_entry(page<<12);

@@ -30,7 +30,7 @@ uint8_t vga_read_p3d5(io_port_t port, io_width_t);
 
 uint8_t vga_read_p3da(io_port_t, io_width_t)
 {
-	Bit8u retval = 4; // bit 2 set, needed by Blues Brothers
+	uint8_t retval = 4; // bit 2 set, needed by Blues Brothers
 	const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
 
 	vga.internal.attrindex=false;
@@ -124,7 +124,7 @@ static uint8_t read_p3c8(io_port_t, io_width_t)
 
 static uint8_t read_p3c2(io_port_t, io_width_t)
 {
-	Bit8u retval = 0;
+	uint8_t retval = 0;
 
 	if (machine==MCH_EGA) retval = 0x0F;
 	else if (IS_VGA_ARCH) retval = 0x60;

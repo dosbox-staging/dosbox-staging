@@ -63,11 +63,11 @@ private:
 
 class localDrive : public DOS_Drive {
 public:
-	localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
+	localDrive(const char * startdir,uint16_t _bytes_sector,uint8_t _sectors_cluster,uint16_t _total_clusters,uint16_t _free_clusters,uint8_t _mediaid);
+	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
 	virtual FILE *GetSystemFilePtr(char const * const name, char const * const type);
 	virtual bool GetSystemFilename(char* sysName, char const * const dosName);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
+	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t attributes);
 	virtual bool FileUnlink(char * name);
 	virtual bool RemoveDir(char * dir);
 	virtual bool MakeDir(char * dir);
@@ -77,10 +77,10 @@ public:
 	virtual bool GetFileAttr(char * name, uint16_t * attr);
 	virtual bool SetFileAttr(const char * name, const uint16_t attr);
 	virtual bool Rename(char * oldname,char * newname);
-	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	virtual bool AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters);
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
-	virtual Bit8u GetMediaByte(void);
+	virtual uint8_t GetMediaByte(void);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
@@ -96,11 +96,11 @@ private:
 	bool IsFirstEncounter(const std::string& filename);
 	std::unordered_set<std::string> write_protected_files;
 	struct {
-		Bit16u bytes_sector;
-		Bit8u sectors_cluster;
-		Bit16u total_clusters;
-		Bit16u free_clusters;
-		Bit8u mediaid;
+		uint16_t bytes_sector;
+		uint8_t sectors_cluster;
+		uint16_t total_clusters;
+		uint16_t free_clusters;
+		uint8_t mediaid;
 	} allocation;
 };
 
@@ -108,53 +108,53 @@ private:
 #pragma pack (1)
 #endif
 struct bootstrap {
-	Bit8u  nearjmp[3];
-	Bit8u  oemname[8];
-	Bit16u bytespersector;
-	Bit8u  sectorspercluster;
-	Bit16u reservedsectors;
-	Bit8u  fatcopies;
-	Bit16u rootdirentries;
-	Bit16u totalsectorcount;
-	Bit8u  mediadescriptor;
-	Bit16u sectorsperfat;
-	Bit16u sectorspertrack;
-	Bit16u headcount;
+	uint8_t  nearjmp[3];
+	uint8_t  oemname[8];
+	uint16_t bytespersector;
+	uint8_t  sectorspercluster;
+	uint16_t reservedsectors;
+	uint8_t  fatcopies;
+	uint16_t rootdirentries;
+	uint16_t totalsectorcount;
+	uint8_t  mediadescriptor;
+	uint16_t sectorsperfat;
+	uint16_t sectorspertrack;
+	uint16_t headcount;
 	/* 32-bit FAT extensions */
-	Bit32u hiddensectorcount;
-	Bit32u totalsecdword;
-	Bit8u  bootcode[474];
-	Bit8u  magic1; /* 0x55 */
-	Bit8u  magic2; /* 0xaa */
+	uint32_t hiddensectorcount;
+	uint32_t totalsecdword;
+	uint8_t  bootcode[474];
+	uint8_t  magic1; /* 0x55 */
+	uint8_t  magic2; /* 0xaa */
 } GCC_ATTRIBUTE(packed);
 
 struct direntry {
-	Bit8u entryname[11];
-	Bit8u attrib;
-	Bit8u NTRes;
-	Bit8u milliSecondStamp;
-	Bit16u crtTime;
-	Bit16u crtDate;
-	Bit16u accessDate;
-	Bit16u hiFirstClust;
-	Bit16u modTime;
-	Bit16u modDate;
-	Bit16u loFirstClust;
-	Bit32u entrysize;
+	uint8_t entryname[11];
+	uint8_t attrib;
+	uint8_t NTRes;
+	uint8_t milliSecondStamp;
+	uint16_t crtTime;
+	uint16_t crtDate;
+	uint16_t accessDate;
+	uint16_t hiFirstClust;
+	uint16_t modTime;
+	uint16_t modDate;
+	uint16_t loFirstClust;
+	uint32_t entrysize;
 } GCC_ATTRIBUTE(packed);
 
 struct partTable {
-	Bit8u booter[446];
+	uint8_t booter[446];
 	struct {
-		Bit8u bootflag;
-		Bit8u beginchs[3];
-		Bit8u parttype;
-		Bit8u endchs[3];
-		Bit32u absSectStart;
-		Bit32u partSize;
+		uint8_t bootflag;
+		uint8_t beginchs[3];
+		uint8_t parttype;
+		uint8_t endchs[3];
+		uint32_t absSectStart;
+		uint32_t partSize;
 	} pentry[4];
-	Bit8u  magic1; /* 0x55 */
-	Bit8u  magic2; /* 0xaa */
+	uint8_t  magic1; /* 0x55 */
+	uint8_t  magic2; /* 0xaa */
 } GCC_ATTRIBUTE(packed);
 
 #ifdef _MSC_VER
@@ -164,11 +164,11 @@ struct partTable {
 class imageDisk;
 class fatDrive final : public DOS_Drive {
 public:
-	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector, bool roflag);
+	fatDrive(const char * sysFilename, uint32_t bytesector, uint32_t cylsector, uint32_t headscyl, uint32_t cylinders, uint32_t startSector, bool roflag);
 	fatDrive(const fatDrive&) = delete; // prevent copying
 	fatDrive& operator= (const fatDrive&) = delete; // prevent assignment
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
+	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
+	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t attributes);
 	virtual bool FileUnlink(char * name);
 	virtual bool RemoveDir(char * dir);
 	virtual bool MakeDir(char * dir);
@@ -178,61 +178,61 @@ public:
 	virtual bool GetFileAttr(char * name, uint16_t * attr);
 	virtual bool SetFileAttr(const char * name, const uint16_t attr);
 	virtual bool Rename(char * oldname,char * newname);
-	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	virtual bool AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters);
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
-	virtual Bit8u GetMediaByte(void);
+	virtual uint8_t GetMediaByte(void);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
 	virtual void EmptyCache(void){}
 public:
-	Bit8u readSector(Bit32u sectnum, void * data);
-	Bit8u writeSector(Bit32u sectnum, void * data);
-	Bit32u getAbsoluteSectFromBytePos(Bit32u startClustNum, Bit32u bytePos);
-	Bit32u getSectorSize(void);
-	Bit32u getClusterSize(void);
-	Bit32u getAbsoluteSectFromChain(Bit32u startClustNum, Bit32u logicalSector);
-	bool allocateCluster(Bit32u useCluster, Bit32u prevCluster);
-	Bit32u appendCluster(Bit32u startCluster);
-	void deleteClustChain(Bit32u startCluster, Bit32u bytePos);
-	Bit32u getFirstFreeClust(void);
-	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start=0);
-	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
+	uint8_t readSector(uint32_t sectnum, void * data);
+	uint8_t writeSector(uint32_t sectnum, void * data);
+	uint32_t getAbsoluteSectFromBytePos(uint32_t startClustNum, uint32_t bytePos);
+	uint32_t getSectorSize(void);
+	uint32_t getClusterSize(void);
+	uint32_t getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t logicalSector);
+	bool allocateCluster(uint32_t useCluster, uint32_t prevCluster);
+	uint32_t appendCluster(uint32_t startCluster);
+	void deleteClustChain(uint32_t startCluster, uint32_t bytePos);
+	uint32_t getFirstFreeClust(void);
+	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
+	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 private:
-	Bit32u getClusterValue(Bit32u clustNum);
-	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
-	Bit32u getClustFirstSect(Bit32u clustNum);
-	bool FindNextInternal(Bit32u dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
-	bool getDirClustNum(char * dir, Bit32u * clustNum, bool parDir);
+	uint32_t getClusterValue(uint32_t clustNum);
+	void setClusterValue(uint32_t clustNum, uint32_t clustValue);
+	uint32_t getClustFirstSect(uint32_t clustNum);
+	bool FindNextInternal(uint32_t dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
+	bool getDirClustNum(char * dir, uint32_t * clustNum, bool parDir);
 	bool getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, const bool dir_ok = false);
-	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry);
-	void zeroOutCluster(Bit32u clustNumber);
+	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
+	void zeroOutCluster(uint32_t clustNumber);
 	bool getEntryName(char *fullname, char *entname);
 	
 	bootstrap bootbuffer;
 	bool absolute;
 	bool readonly;
-	Bit8u fattype;
-	Bit32u CountOfClusters;
-	Bit32u partSectOff;
-	Bit32u firstDataSector;
-	Bit32u firstRootDirSect;
+	uint8_t fattype;
+	uint32_t CountOfClusters;
+	uint32_t partSectOff;
+	uint32_t firstDataSector;
+	uint32_t firstRootDirSect;
 
-	Bit32u cwdDirCluster;
+	uint32_t cwdDirCluster;
 
-	Bit8u fatSectBuffer[1024];
-	Bit32u curFatSect;
+	uint8_t fatSectBuffer[1024];
+	uint32_t curFatSect;
 };
 
 class cdromDrive final : public localDrive
 {
 public:
-	cdromDrive(const char _driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
+	cdromDrive(const char _driveLetter, const char * startdir,uint16_t _bytes_sector,uint8_t _sectors_cluster,uint16_t _total_clusters,uint16_t _free_clusters,uint8_t _mediaid, int& error);
+	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
+	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t attributes);
 	virtual bool FileUnlink(char * name);
 	virtual bool RemoveDir(char * dir);
 	virtual bool MakeDir(char * dir);
@@ -244,7 +244,7 @@ public:
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
 private:
-	Bit8u subUnit;
+	uint8_t subUnit;
 	char driveLetter;
 };
 
@@ -252,53 +252,53 @@ private:
 #pragma pack (1)
 #endif
 struct isoPVD {
-	Bit8u type;
-	Bit8u standardIdent[5];
-	Bit8u version;
-	Bit8u unused1;
-	Bit8u systemIdent[32];
-	Bit8u volumeIdent[32];
-	Bit8u unused2[8];
-	Bit32u volumeSpaceSizeL;
-	Bit32u volumeSpaceSizeM;
-	Bit8u unused3[32];
-	Bit16u volumeSetSizeL;
-	Bit16u volumeSetSizeM;
-	Bit16u volumeSeqNumberL;
-	Bit16u volumeSeqNumberM;
-	Bit16u logicBlockSizeL;
-	Bit16u logicBlockSizeM;
-	Bit32u pathTableSizeL;
-	Bit32u pathTableSizeM;
-	Bit32u locationPathTableL;
-	Bit32u locationOptPathTableL;
-	Bit32u locationPathTableM;
-	Bit32u locationOptPathTableM;
-	Bit8u rootEntry[34];
-	Bit32u unused4[1858];
+	uint8_t type;
+	uint8_t standardIdent[5];
+	uint8_t version;
+	uint8_t unused1;
+	uint8_t systemIdent[32];
+	uint8_t volumeIdent[32];
+	uint8_t unused2[8];
+	uint32_t volumeSpaceSizeL;
+	uint32_t volumeSpaceSizeM;
+	uint8_t unused3[32];
+	uint16_t volumeSetSizeL;
+	uint16_t volumeSetSizeM;
+	uint16_t volumeSeqNumberL;
+	uint16_t volumeSeqNumberM;
+	uint16_t logicBlockSizeL;
+	uint16_t logicBlockSizeM;
+	uint32_t pathTableSizeL;
+	uint32_t pathTableSizeM;
+	uint32_t locationPathTableL;
+	uint32_t locationOptPathTableL;
+	uint32_t locationPathTableM;
+	uint32_t locationOptPathTableM;
+	uint8_t rootEntry[34];
+	uint32_t unused4[1858];
 } GCC_ATTRIBUTE(packed);
 
 struct isoDirEntry {
-	Bit8u length;
-	Bit8u extAttrLength;
-	Bit32u extentLocationL;
-	Bit32u extentLocationM;
-	Bit32u dataLengthL;
-	Bit32u dataLengthM;
-	Bit8u dateYear;
-	Bit8u dateMonth;
-	Bit8u dateDay;
-	Bit8u timeHour;
-	Bit8u timeMin;
-	Bit8u timeSec;
-	Bit8u timeZone;
-	Bit8u fileFlags;
-	Bit8u fileUnitSize;
-	Bit8u interleaveGapSize;
-	Bit16u VolumeSeqNumberL;
-	Bit16u VolumeSeqNumberM;
-	Bit8u fileIdentLength;
-	Bit8u ident[222];
+	uint8_t length;
+	uint8_t extAttrLength;
+	uint32_t extentLocationL;
+	uint32_t extentLocationM;
+	uint32_t dataLengthL;
+	uint32_t dataLengthM;
+	uint8_t dateYear;
+	uint8_t dateMonth;
+	uint8_t dateDay;
+	uint8_t timeHour;
+	uint8_t timeMin;
+	uint8_t timeSec;
+	uint8_t timeZone;
+	uint8_t fileFlags;
+	uint8_t fileUnitSize;
+	uint8_t interleaveGapSize;
+	uint16_t VolumeSeqNumberL;
+	uint16_t VolumeSeqNumberM;
+	uint8_t fileIdentLength;
+	uint8_t ident[222];
 } GCC_ATTRIBUTE(packed);
 
 #ifdef _MSC_VER
@@ -327,10 +327,10 @@ struct isoDirEntry {
 
 class isoDrive final : public DOS_Drive {
 public:
-	isoDrive(char driveLetter, const char* device_name, Bit8u mediaid, int &error);
+	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid, int &error);
 	~isoDrive();
-	virtual bool FileOpen(DOS_File **file, char *name, Bit32u flags);
-	virtual bool FileCreate(DOS_File **file, char *name, Bit16u attributes);
+	virtual bool FileOpen(DOS_File **file, char *name, uint32_t flags);
+	virtual bool FileCreate(DOS_File **file, char *name, uint16_t attributes);
 	virtual bool FileUnlink(char *name);
 	virtual bool RemoveDir(char *dir);
 	virtual bool MakeDir(char *dir);
@@ -340,50 +340,50 @@ public:
 	virtual bool GetFileAttr(char *name, uint16_t *attr);
 	virtual bool SetFileAttr(const char * name, const uint16_t attr);
 	virtual bool Rename(char * oldname,char * newname);
-	virtual bool AllocationInfo(Bit16u *bytes_sector, Bit8u *sectors_cluster, Bit16u *total_clusters, Bit16u *free_clusters);
+	virtual bool AllocationInfo(uint16_t *bytes_sector, uint8_t *sectors_cluster, uint16_t *total_clusters, uint16_t *free_clusters);
 	virtual bool FileExists(const char *name);
    	virtual bool FileStat(const char *name, FileStat_Block *const stat_block);
-	virtual Bit8u GetMediaByte(void);
+	virtual uint8_t GetMediaByte(void);
 	virtual void EmptyCache(void){}
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
-	bool readSector(Bit8u *buffer, Bit32u sector);
+	bool readSector(uint8_t *buffer, uint32_t sector);
 	virtual const char *GetLabel() { return discLabel; }
 	virtual void Activate(void);
 private:
-	int  readDirEntry(isoDirEntry *de, Bit8u *data);
+	int  readDirEntry(isoDirEntry *de, uint8_t *data);
 	bool loadImage();
-	bool lookupSingle(isoDirEntry *de, const char *name, Bit32u sectorStart, Bit32u length);
+	bool lookupSingle(isoDirEntry *de, const char *name, uint32_t sectorStart, uint32_t length);
 	bool lookup(isoDirEntry *de, const char *path);
-	int  UpdateMscdex(char driveLetter, const char* physicalPath, Bit8u& subUnit);
+	int  UpdateMscdex(char driveLetter, const char* physicalPath, uint8_t& subUnit);
 	int  GetDirIterator(const isoDirEntry* de);
 	bool GetNextDirEntry(const int dirIterator, isoDirEntry* de);
 	void FreeDirIterator(const int dirIterator);
-	bool ReadCachedSector(Bit8u** buffer, const Bit32u sector);
+	bool ReadCachedSector(uint8_t** buffer, const uint32_t sector);
 	
 	struct DirIterator {
 		bool valid;
 		bool root;
-		Bit32u currentSector;
-		Bit32u endSector;
-		Bit32u pos;
+		uint32_t currentSector;
+		uint32_t endSector;
+		uint32_t pos;
 	} dirIterators[MAX_OPENDIRS];
 	
 	int nextFreeDirIterator;
 	
 	struct SectorHashEntry {
 		bool valid;
-		Bit32u sector;
-		Bit8u data[ISO_FRAMESIZE];
+		uint32_t sector;
+		uint8_t data[ISO_FRAMESIZE];
 	} sectorHashEntries[ISO_MAX_HASH_TABLE_SIZE];
 
 	bool iso;
 	bool dataCD;
 	isoDirEntry rootEntry;
-	Bit8u mediaid;
+	uint8_t mediaid;
 	char fileName[CROSS_LEN];
-	Bit8u subUnit;
+	uint8_t subUnit;
 	char driveLetter;
 	char discLabel[32];
 };
@@ -393,8 +393,8 @@ struct VFILE_Block;
 class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
-	bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
+	bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
+	bool FileCreate(DOS_File * * file,char * name,uint16_t attributes);
 	bool FileUnlink(char * name);
 	bool RemoveDir(char * dir);
 	bool MakeDir(char * dir);
@@ -404,10 +404,10 @@ public:
 	bool GetFileAttr(char * name, uint16_t * attr);
 	bool SetFileAttr(const char * name, const uint16_t attr);
 	bool Rename(char * oldname,char * newname);
-	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	bool AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters);
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block* const stat_block);
-	Bit8u GetMediaByte();
+	uint8_t GetMediaByte();
 	void EmptyCache();
 	bool isRemote();
 	virtual bool isRemovable();
@@ -431,7 +431,7 @@ public:
 	              uint8_t &error);
 
 	virtual bool FileOpen(DOS_File **file, char *name, uint32_t flags);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/);
+	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/);
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
 	virtual bool FindNext(DOS_DTA & dta);
 	virtual bool FileUnlink(char * name);

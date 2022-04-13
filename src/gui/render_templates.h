@@ -18,7 +18,7 @@
 
 #if DBPP == 8
 #define PSIZE 1
-#define PTYPE Bit8u
+#define PTYPE uint8_t
 #define WC scalerWriteCache.b8
 //#define FC scalerFrameCache.b8
 #define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b8
@@ -33,7 +33,7 @@
 #define blueShift	0
 #elif DBPP == 15 || DBPP == 16
 #define PSIZE 2
-#define PTYPE Bit16u
+#define PTYPE uint16_t
 #define WC scalerWriteCache.b16
 //#define FC scalerFrameCache.b16
 #define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b16
@@ -60,7 +60,7 @@
 #endif
 #elif DBPP == 32
 #define PSIZE 4
-#define PTYPE Bit32u
+#define PTYPE uint32_t
 #define WC scalerWriteCache.b32
 //#define FC scalerFrameCache.b32
 #define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b32
@@ -89,7 +89,7 @@
 #elif DBPP == 32
 #define PMAKE(_VAL) render.pal.lut.b32[_VAL]
 #endif
-#define SRCTYPE Bit8u
+#define SRCTYPE uint8_t
 #endif
 
 #if SBPP == 15
@@ -111,7 +111,7 @@
 #define PMAKE(_VAL)  (((_VAL&(31<<10))<<9)|((_VAL&(31<<5))<<6)|((_VAL&31)<<3)|((_VAL&(7<<12))<<4)|((_VAL&(7<<7))<<1)|((_VAL&(7<<2))>>2))
 #endif
 #endif
-#define SRCTYPE Bit16u
+#define SRCTYPE uint16_t
 #endif
 
 #if SBPP == 16
@@ -133,7 +133,7 @@
 #define PMAKE(_VAL)  (((_VAL&(31<<11))<<8)|((_VAL&(63<<5))<<5)|((_VAL&0xE01F)<<3)|((_VAL&(3<<9))>>1)|((_VAL&(7<<2))>>2))
 #endif
 #endif
-#define SRCTYPE Bit16u
+#define SRCTYPE uint16_t
 #endif
 
 #if SBPP == 24
@@ -168,7 +168,7 @@
 #define PMAKE(_VAL) (_VAL)
 #endif
 #endif
-#define SRCTYPE Bit32u
+#define SRCTYPE uint32_t
 #endif
 
 //  C0 C1 C2 D3

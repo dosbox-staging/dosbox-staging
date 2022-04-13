@@ -30,13 +30,13 @@
 #include "timer.h"
 
 static struct {
-	Bit8u regs[0x40];
+	uint8_t regs[0x40];
 	bool nmi;
 	bool bcd;
-	Bit8u reg;
+	uint8_t reg;
 	struct {
 		bool enabled;
-		Bit8u div;
+		uint8_t div;
 		double delay;
 		bool acknowledged;
 	} timer;
@@ -135,7 +135,7 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		return 0xff;
 	}
 	Bitu drive_a, drive_b;
-	Bit8u hdparm;
+	uint8_t hdparm;
 
 	const time_t curtime = time(nullptr);
 	struct tm datetime;
@@ -172,12 +172,12 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		cmos.timer.acknowledged=true;
 		if (cmos.timer.enabled) {
 			/* In periodic interrupt mode only care for those flags */
-			Bit8u val=cmos.regs[0xc];
+			uint8_t val=cmos.regs[0xc];
 			cmos.regs[0xc]=0;
 			return val;
 		} else {
 			/* Give correct values at certain times */
-			Bit8u val=0;
+			uint8_t val=0;
 			const auto index = PIC_FullIndex();
 			if (index>=(cmos.last.timer+cmos.timer.delay)) {
 				cmos.last.timer=index;
@@ -285,7 +285,7 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 	}
 }
 
-void CMOS_SetRegister(Bitu regNr, Bit8u val) {
+void CMOS_SetRegister(Bitu regNr, uint8_t val) {
 	cmos.regs[regNr] = val;
 }
 
@@ -316,14 +316,14 @@ public:
 		                                                     on */
 		// Equipment is updated from bios.cpp and bios_disk.cpp
 		/* Fill in base memory size, it is 640K always */
-		cmos.regs[0x15]=(Bit8u)0x80;
-		cmos.regs[0x16]=(Bit8u)0x02;
+		cmos.regs[0x15]=(uint8_t)0x80;
+		cmos.regs[0x16]=(uint8_t)0x02;
 		/* Fill in extended memory size */
 		Bitu exsize=(MEM_TotalPages()*4)-1024;
-		cmos.regs[0x17]=(Bit8u)exsize;
-		cmos.regs[0x18]=(Bit8u)(exsize >> 8);
-		cmos.regs[0x30]=(Bit8u)exsize;
-		cmos.regs[0x31]=(Bit8u)(exsize >> 8);
+		cmos.regs[0x17]=(uint8_t)exsize;
+		cmos.regs[0x18]=(uint8_t)(exsize >> 8);
+		cmos.regs[0x30]=(uint8_t)exsize;
+		cmos.regs[0x31]=(uint8_t)(exsize >> 8);
 	}
 };
 

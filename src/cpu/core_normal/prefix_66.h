@@ -158,11 +158,11 @@
 		break;
 	CASE_D(0x62)												/* BOUND Ed */
 		{
-			Bit32s bound_min, bound_max;
+			int32_t bound_min, bound_max;
 			GetRMrd;GetEAa;
 			bound_min=LoadMd(eaa);
 			bound_max=LoadMd(eaa+4);
-			if ( (((Bit32s)*rmrd) < bound_min) || (((Bit32s)*rmrd) > bound_max) ) {
+			if ( (((int32_t)*rmrd) < bound_min) || (((int32_t)*rmrd) > bound_max) ) {
 				EXCEPTION(5);
 			}
 		}
@@ -172,13 +172,13 @@
 			if (((cpu.pmode) && (reg_flags & FLAG_VM)) || (!cpu.pmode)) goto illegal_opcode;
 			GetRMrw;
 			if (rm >= 0xc0 ) {
-				GetEArd;Bitu new_sel=(Bit16u)*eard;
+				GetEArd;Bitu new_sel=(uint16_t)*eard;
 				CPU_ARPL(new_sel,*rmrw);
-				*eard=(Bit32u)new_sel;
+				*eard=(uint32_t)new_sel;
 			} else {
 				GetEAa;Bitu new_sel=LoadMw(eaa);
 				CPU_ARPL(new_sel,*rmrw);
-				SaveMd(eaa,(Bit32u)new_sel);
+				SaveMd(eaa,(uint32_t)new_sel);
 			}
 		}
 		break;
@@ -234,7 +234,7 @@
 		{
 			GetRM;Bitu which=(rm>>3)&7;
 			if (rm >= 0xc0) {
-				GetEArd;Bit32u id=Fetchd();
+				GetEArd;uint32_t id=Fetchd();
 				switch (which) {
 				case 0x00:ADDD(*eard,id,LoadRd,SaveRd);break;
 				case 0x01: ORD(*eard,id,LoadRd,SaveRd);break;
@@ -246,7 +246,7 @@
 				case 0x07:CMPD(*eard,id,LoadRd,SaveRd);break;
 				}
 			} else {
-				GetEAa;Bit32u id=Fetchd();
+				GetEAa;uint32_t id=Fetchd();
 				switch (which) {
 				case 0x00:ADDD(eaa,id,LoadMd,SaveMd);break;
 				case 0x01: ORD(eaa,id,LoadMd,SaveMd);break;
@@ -264,7 +264,7 @@
 		{
 			GetRM;Bitu which=(rm>>3)&7;
 			if (rm >= 0xc0) {
-				GetEArd;Bit32u id=(Bit32s)Fetchbs();
+				GetEArd;uint32_t id=(int32_t)Fetchbs();
 				switch (which) {
 				case 0x00:ADDD(*eard,id,LoadRd,SaveRd);break;
 				case 0x01: ORD(*eard,id,LoadRd,SaveRd);break;
@@ -276,7 +276,7 @@
 				case 0x07:CMPD(*eard,id,LoadRd,SaveRd);break;
 				}
 			} else {
-				GetEAa;Bit32u id=(Bit32s)Fetchbs();
+				GetEAa;uint32_t id=(int32_t)Fetchbs();
 				switch (which) {
 				case 0x00:ADDD(eaa,id,LoadMd,SaveMd);break;
 				case 0x01: ORD(eaa,id,LoadMd,SaveMd);break;
@@ -294,7 +294,7 @@
 		RMEdGd(TESTD);break;
 	CASE_D(0x87)												/* XCHG Ed,Gd */
 		{	
-			GetRMrd;Bit32u oldrmrd=*rmrd;
+			GetRMrd;uint32_t oldrmrd=*rmrd;
 			if (rm >= 0xc0 ) {GetEArd;*rmrd=*eard;*eard=oldrmrd;}
 			else {GetEAa;*rmrd=LoadMd(eaa);SaveMd(eaa,oldrmrd);}
 			break;
@@ -315,7 +315,7 @@
 		}
 	CASE_D(0x8c)												/* Mov Ew,Sw */
 			{
-				GetRM;Bit16u val;Bitu which=(rm>>3)&7;
+				GetRM;uint16_t val;Bitu which=(rm>>3)&7;
 				switch (which) {
 				case 0x00:					/* MOV Ew,ES */
 					val=SegValue(es);break;
@@ -352,41 +352,41 @@
                 }
 	CASE_D(0x8f)												/* POP Ed */
 		{
-			Bit32u val=Pop_32();
+			uint32_t val=Pop_32();
 			GetRM;
 			if (rm >= 0xc0 ) {GetEArd;*eard=val;}
 			else {GetEAa;SaveMd(eaa,val);}
 			break;
 		}
 	CASE_D(0x91)												/* XCHG ECX,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_ecx;reg_ecx=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_ecx;reg_ecx=temp;break;}
 	CASE_D(0x92)												/* XCHG EDX,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_edx;reg_edx=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_edx;reg_edx=temp;break;}
 		break;
 	CASE_D(0x93)												/* XCHG EBX,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_ebx;reg_ebx=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_ebx;reg_ebx=temp;break;}
 		break;
 	CASE_D(0x94)												/* XCHG ESP,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_esp;reg_esp=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_esp;reg_esp=temp;break;}
 		break;
 	CASE_D(0x95)												/* XCHG EBP,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_ebp;reg_ebp=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_ebp;reg_ebp=temp;break;}
 		break;
 	CASE_D(0x96)												/* XCHG ESI,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_esi;reg_esi=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_esi;reg_esi=temp;break;}
 		break;
 	CASE_D(0x97)												/* XCHG EDI,EAX */
-		{ Bit32u temp=reg_eax;reg_eax=reg_edi;reg_edi=temp;break;}
+		{ uint32_t temp=reg_eax;reg_eax=reg_edi;reg_edi=temp;break;}
 		break;
 	CASE_D(0x98)												/* CWDE */
-		reg_eax=(Bit16s)reg_ax;break;
+		reg_eax=(int16_t)reg_ax;break;
 	CASE_D(0x99)												/* CDQ */
 		if (reg_eax & 0x80000000) reg_edx=0xffffffff;
 		else reg_edx=0;
 		break;
 	CASE_D(0x9a)												/* CALL FAR Ad */
 		{ 
-			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
+			uint32_t newip=Fetchd();uint16_t newcs=Fetchw();
 			FillFlags();
 			CPU_CALL(true,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
@@ -569,7 +569,7 @@
 		}
 	CASE_D(0xe8)												/* CALL Jd */
 		{ 
-			Bit32s addip=Fetchds();
+			int32_t addip=Fetchds();
 			SAVEIP;
 			Push_32(reg_eip);
 			reg_eip+=addip;
@@ -577,15 +577,15 @@
 		}
 	CASE_D(0xe9)												/* JMP Jd */
 		{ 
-			Bit32s addip=Fetchds();
+			int32_t addip=Fetchds();
 			SAVEIP;
 			reg_eip+=addip;
 			continue;
 		}
 	CASE_D(0xea)												/* JMP Ad */
 		{ 
-			Bit32u newip=Fetchd();
-			Bit16u newcs=Fetchw();
+			uint32_t newip=Fetchd();
+			uint16_t newcs=Fetchw();
 			FillFlags();
 			CPU_JMP(true,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
@@ -598,7 +598,7 @@
 		}
 	CASE_D(0xeb)												/* JMP Jb */
 		{ 
-			Bit32s addip=Fetchbs();
+			int32_t addip=Fetchbs();
 			SAVEIP;
 			reg_eip+=addip;
 			continue;
@@ -674,8 +674,8 @@
 				{
 					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
-					Bit32u newip=LoadMd(eaa);
-					Bit16u newcs=LoadMw(eaa+4);
+					uint32_t newip=LoadMd(eaa);
+					uint16_t newcs=LoadMw(eaa+4);
 					FillFlags();
 					CPU_CALL(true,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
@@ -694,8 +694,8 @@
 				{
 					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
-					Bit32u newip=LoadMd(eaa);
-					Bit16u newcs=LoadMw(eaa+4);
+					uint32_t newip=LoadMd(eaa);
+					uint16_t newcs=LoadMw(eaa+4);
 					FillFlags();
 					CPU_JMP(true,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK

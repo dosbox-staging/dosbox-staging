@@ -44,10 +44,10 @@ bool PS1AUDIO_IsEnabled();
 bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
-extern Bit8u adlib_commandreg;
+extern uint8_t adlib_commandreg;
 FILE * OpenCaptureFile(const char * type,const char * ext);
 
-void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data);
+void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data);
 
 #define CAPTURE_FLAG_DBLW	0x1
 #define CAPTURE_FLAG_DBLH	0x2
@@ -60,7 +60,7 @@ void CAPTURE_AddImage(int width,
                       uint8_t *data,
                       uint8_t *pal);
 
-void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
+void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t * data);
 void CAPTURE_VideoStart();
 void CAPTURE_VideoStop();
 

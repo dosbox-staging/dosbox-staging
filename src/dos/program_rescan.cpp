@@ -24,7 +24,7 @@ void RESCAN::Run(void)
 {
 	bool all = false;
 
-	Bit8u drive = DOS_GetDefaultDrive();
+	uint8_t drive = DOS_GetDefaultDrive();
 
 	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
 	    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {

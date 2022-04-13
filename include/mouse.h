@@ -26,13 +26,13 @@ void Mouse_HideCursor(void);
 
 bool Mouse_SetPS2State(bool use);
 
-void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs);
+void Mouse_ChangePS2Callback(uint16_t pseg, uint16_t pofs);
 
 
 void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate);
 void Mouse_CursorSet(float x,float y);
-void Mouse_ButtonPressed(Bit8u button);
-void Mouse_ButtonReleased(Bit8u button);
+void Mouse_ButtonPressed(uint8_t button);
+void Mouse_ButtonReleased(uint8_t button);
 
 void Mouse_AutoLock(bool enable);
 void Mouse_BeforeNewVideoMode();

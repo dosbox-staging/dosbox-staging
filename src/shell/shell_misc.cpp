@@ -36,7 +36,7 @@ DOS_Shell::~DOS_Shell() {
 }
 
 void DOS_Shell::ShowPrompt(void) {
-	Bit8u drive=DOS_GetDefaultDrive()+'A';
+	uint8_t drive=DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
 	reset_str(dir); // DOS_GetCurrentDir doesn't always return
 	                // something. (if drive is messed up)
@@ -46,8 +46,8 @@ void DOS_Shell::ShowPrompt(void) {
 	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
 }
 
-static void outc(Bit8u c) {
-	Bit16u n=1;
+static void outc(uint8_t c) {
+	uint16_t n=1;
 	DOS_WriteFile(STDOUT,&c,&n);
 }
 
@@ -63,10 +63,10 @@ static void move_cursor_back_one() {
 
 void DOS_Shell::InputCommand(char * line) {
 	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
-	Bit8u c;Bit16u n=1;
+	uint8_t c;uint16_t n=1;
 	size_t str_len = 0;
 	size_t str_index = 0;
-	Bit16u len=0;
+	uint16_t len=0;
 	bool current_hist=false; // current command stored in history?
 
 	reset_str(line);
@@ -76,7 +76,7 @@ void DOS_Shell::InputCommand(char * line) {
 	while (size && !shutdown_requested) {
 		dos.echo=false;
 		while(!DOS_ReadFile(input_handle,&c,&n)) {
-			Bit16u dummy;
+			uint16_t dummy;
 			DOS_CloseFile(input_handle);
 			DOS_OpenFile("con",2,&dummy);
 			LOG(LOG_MISC,LOG_ERROR)("Reopening the input handle. This is a bug!");
@@ -148,10 +148,10 @@ void DOS_Shell::InputCommand(char * line) {
 						move_cursor_back_one();
 					}
 					strcpy(line, it_history->c_str());
-					len = (Bit16u)it_history->length();
+					len = (uint16_t)it_history->length();
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
+					DOS_WriteFile(STDOUT, (uint8_t *)line, &len);
 					++it_history;
 					break;
 
@@ -181,10 +181,10 @@ void DOS_Shell::InputCommand(char * line) {
 						move_cursor_back_one();
 					}
 					strcpy(line, it_history->c_str());
-					len = (Bit16u)it_history->length();
+					len = (uint16_t)it_history->length();
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
+					DOS_WriteFile(STDOUT, (uint8_t *)line, &len);
 					++it_history;
 
 					break;
@@ -192,7 +192,7 @@ void DOS_Shell::InputCommand(char * line) {
 					{
 						if(str_index>=str_len) break;
 						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
-						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
+						uint8_t* text=reinterpret_cast<uint8_t*>(&line[str_index+1]);
 						DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
 						outc(' ');
 						move_cursor_back_one();
@@ -220,10 +220,10 @@ void DOS_Shell::InputCommand(char * line) {
 							}
 
 							strcpy(&line[completion_index], it_completion->c_str());
-							len = (Bit16u)it_completion->length();
+							len = (uint16_t)it_completion->length();
 							str_len = str_index = completion_index + len;
 							size = CMD_MAXLINE - str_index - 2;
-							DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
+							DOS_WriteFile(STDOUT, (uint8_t *)it_completion->c_str(), &len);
 						}
 					}
 				default: break;
@@ -279,15 +279,15 @@ void DOS_Shell::InputCommand(char * line) {
 
 					if (p_completion_start) {
 						p_completion_start ++;
-						completion_index = (Bit16u)(str_len - strlen(p_completion_start));
+						completion_index = (uint16_t)(str_len - strlen(p_completion_start));
 					} else {
 						p_completion_start = line;
 						completion_index = 0;
 					}
 
 					char *path;
-					if ((path = strrchr(line+completion_index,'\\'))) completion_index = (Bit16u)(path-line+1);
-					if ((path = strrchr(line+completion_index,'/'))) completion_index = (Bit16u)(path-line+1);
+					if ((path = strrchr(line+completion_index,'\\'))) completion_index = (uint16_t)(path-line+1);
+					if ((path = strrchr(line+completion_index,'/'))) completion_index = (uint16_t)(path-line+1);
 
 					// build the completion list
 					char mask[DOS_PATHLENGTH] = {0};
@@ -319,7 +319,7 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 
 					DOS_DTA dta(dos.dta());
-					char name[DOS_NAMELENGTH_ASCII];Bit32u sz;Bit16u date;Bit16u time;Bit8u att;
+					char name[DOS_NAMELENGTH_ASCII];uint32_t sz;uint16_t date;uint16_t time;uint8_t att;
 
 					std::list<std::string> executable;
 					while (res) {
@@ -355,10 +355,10 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 
 					strcpy(&line[completion_index], it_completion->c_str());
-					len = (Bit16u)it_completion->length();
+					len = (uint16_t)it_completion->length();
 					str_len = str_index = completion_index + len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
+					DOS_WriteFile(STDOUT, (uint8_t *)it_completion->c_str(), &len);
 				}
 			}
 			break;
@@ -381,7 +381,7 @@ void DOS_Shell::InputCommand(char * line) {
 			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
 				outc(' ');//move cursor one to the right.
 				auto text_len = static_cast<uint16_t>(str_len - str_index);
-				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
+				uint8_t* text=reinterpret_cast<uint8_t*>(&line[str_index]);
 				DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
 				move_cursor_back_one(); //undo the cursor the right.
 				for (auto i = str_len; i > str_index; i--) {
@@ -602,8 +602,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		terminate_str_at(parseline, 257);
 
 		/* Parse FCB (first two parameters) and put them into the current DOS_PSP */
-		Bit8u add;
-		Bit16u skip = 0;
+		uint8_t add;
+		uint16_t skip = 0;
 		//find first argument, we end up at parseline[256] if there is only one argument (similar for the second), which exists and is 0.
 		while(skip < 256 && parseline[skip] == 0) skip++;
 		FCB_Parsename(dos.psp(),0x5C,0x01,parseline + skip,&add);
@@ -621,8 +621,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		block.SaveData();
 #if 0
 		/* Save CS:IP to some point where i can return them from */
-		Bit32u oldeip=reg_eip;
-		Bit16u oldcs=SegValue(cs);
+		uint32_t oldeip=reg_eip;
+		uint16_t oldcs=SegValue(cs);
 		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
 		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);

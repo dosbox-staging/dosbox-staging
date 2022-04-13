@@ -90,7 +90,7 @@ extern Bitu cycle_count;
 
 typedef PhysPt (*GetEAHandler)(void);
 
-static const Bit32u AddrMaskTable[2]={0x0000ffff,0xffffffff};
+static const uint32_t AddrMaskTable[2]={0x0000ffff,0xffffffff};
 
 static struct {
 	Bitu opcode_index;
@@ -112,12 +112,12 @@ static struct {
 
 
 #define MAX_PQ_SIZE 32
-static Bit8u prefetch_buffer[MAX_PQ_SIZE];
+static uint8_t prefetch_buffer[MAX_PQ_SIZE];
 static bool pq_valid=false;
 static Bitu pq_start;
 
-static Bit8u Fetchb() {
-	Bit8u temp;
+static uint8_t Fetchb() {
+	uint8_t temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start];
 		if ((core.cseip+1>=pq_start+CPU_PrefetchQueueSize-4) &&
@@ -141,8 +141,8 @@ static Bit8u Fetchb() {
 	return temp;
 }
 
-static Bit16u Fetchw() {
-	Bit16u temp;
+static uint16_t Fetchw() {
+	uint16_t temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip+2<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start]|
 			(prefetch_buffer[core.cseip-pq_start+1]<<8);
@@ -167,8 +167,8 @@ static Bit16u Fetchw() {
 	return temp;
 }
 
-static Bit32u Fetchd() {
-	Bit32u temp;
+static uint32_t Fetchd() {
+	uint32_t temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip+4<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start]|
 			(prefetch_buffer[core.cseip-pq_start+1]<<8)|
@@ -232,7 +232,7 @@ Bits CPU_Core_Prefetch_Run(void) {
 		cycle_count++;
 #endif
 restart_opcode:
-		Bit8u next_opcode=Fetchb();
+		uint8_t next_opcode=Fetchb();
 		invalidate_pq=false;
 		if (core.opcode_index&OPCODE_0F) invalidate_pq=true;
 		else switch (next_opcode) {

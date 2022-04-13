@@ -34,25 +34,25 @@
 
 #define MAX_SWAPPABLE_DISKS 20
 struct diskGeo {
-	Bit32u ksize;  /* Size in kilobytes */
-	Bit16u secttrack; /* Sectors per track */
-	Bit16u headscyl;  /* Heads per cylinder */
-	Bit16u cylcount;  /* Cylinders per side */
-	Bit16u biosval;   /* Type to return from BIOS */
+	uint32_t ksize;  /* Size in kilobytes */
+	uint16_t secttrack; /* Sectors per track */
+	uint16_t headscyl;  /* Heads per cylinder */
+	uint16_t cylcount;  /* Cylinders per side */
+	uint16_t biosval;   /* Type to return from BIOS */
 };
 extern diskGeo DiskGeometryList[];
 
 class imageDisk  {
 public:
-	Bit8u Read_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Read_AbsoluteSector(Bit32u sectnum, void * data);
-	Bit8u Write_AbsoluteSector(Bit32u sectnum, void * data);
+	uint8_t Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
+	uint8_t Write_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
+	uint8_t Read_AbsoluteSector(uint32_t sectnum, void * data);
+	uint8_t Write_AbsoluteSector(uint32_t sectnum, void * data);
 
-	void Set_Geometry(Bit32u setHeads, Bit32u setCyl, Bit32u setSect, Bit32u setSectSize);
-	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
-	Bit8u GetBiosType(void);
-	Bit32u getSectSize(void);
+	void Set_Geometry(uint32_t setHeads, uint32_t setCyl, uint32_t setSect, uint32_t setSectSize);
+	void Get_Geometry(uint32_t * getHeads, uint32_t *getCyl, uint32_t *getSect, uint32_t *getSectSize);
+	uint8_t GetBiosType(void);
+	uint32_t getSectSize(void);
 
 	imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, bool is_hdd);
 	imageDisk(const imageDisk&) = delete; // prevent copy
@@ -68,12 +68,12 @@ public:
 	bool active;
 	FILE *diskimg;
 	char diskname[512];
-	Bit8u floppytype;
+	uint8_t floppytype;
 
-	Bit32u sector_size;
-	Bit32u heads,cylinders,sectors;
+	uint32_t sector_size;
+	uint32_t heads,cylinders,sectors;
 private:
-	Bit32u current_fpos;
+	uint32_t current_fpos;
 	enum { NONE,READ,WRITE } last_action;
 };
 
@@ -87,7 +87,7 @@ void incrementFDD(void);
 extern std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
 extern std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 
-extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
+extern uint16_t imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern DOS_DTA *imgDTA;
 

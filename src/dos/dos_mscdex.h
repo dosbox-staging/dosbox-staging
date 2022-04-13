@@ -22,13 +22,13 @@
 #include "dosbox.h"
 #include "cdrom.h"
 
-int   MSCDEX_AddDrive(char driveLetter, const char *physicalPath, Bit8u &subUnit);
+int   MSCDEX_AddDrive(char driveLetter, const char *physicalPath, uint8_t &subUnit);
 int   MSCDEX_RemoveDrive(char driveLetter);
 bool  MSCDEX_HasDrive(char driveLetter);
-void  MSCDEX_ReplaceDrive(CDROM_Interface *cdrom, Bit8u subUnit);
-Bit8u MSCDEX_GetSubUnit(char driveLetter);
-bool  MSCDEX_GetVolumeName(Bit8u subUnit, char *name);
-bool  MSCDEX_HasMediaChanged(Bit8u subUnit);
+void  MSCDEX_ReplaceDrive(CDROM_Interface *cdrom, uint8_t subUnit);
+uint8_t MSCDEX_GetSubUnit(char driveLetter);
+bool  MSCDEX_GetVolumeName(uint8_t subUnit, char *name);
+bool  MSCDEX_HasMediaChanged(uint8_t subUnit);
 
 #endif // DOSBOX_DOS_MSCDEX_H
 

@@ -17,9 +17,9 @@
  */
 
 
-#define LoadMbs(off) (Bit8s)(LoadMb(off))
-#define LoadMws(off) (Bit16s)(LoadMw(off))
-#define LoadMds(off) (Bit32s)(LoadMd(off))
+#define LoadMbs(off) (int8_t)(LoadMb(off))
+#define LoadMws(off) (int16_t)(LoadMw(off))
+#define LoadMds(off) (int32_t)(LoadMd(off))
 
 #define LoadRb(reg) reg
 #define LoadRw(reg) reg

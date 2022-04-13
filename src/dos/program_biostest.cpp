@@ -36,7 +36,7 @@ void BIOSTEST::Run(void) {
 		return;
 	}
 
-	Bit8u drive;
+	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
 	localDrive *ldp = 0;
 	if (!DOS_MakeName((char *)temp_line.c_str(), fullname, &drive))
@@ -60,7 +60,7 @@ void BIOSTEST::Run(void) {
 			return;
 		}
 		fseek(tmpfile, 0L, SEEK_SET);
-		Bit8u buffer[64 * 1024];
+		uint8_t buffer[64 * 1024];
 		const auto bytes_read = fread(buffer, 1, sizeof(buffer), tmpfile);
 		assert(bytes_read <= sizeof(buffer));
 

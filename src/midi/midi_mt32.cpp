@@ -58,7 +58,7 @@ constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 
-// Analog rendering types: BIT16S, FLOAT
+// Analog rendering types: int16_t, FLOAT
 constexpr auto RENDERING_TYPE = MT32Emu::RendererType_FLOAT;
 
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST

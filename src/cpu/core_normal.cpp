@@ -89,7 +89,7 @@ extern Bitu cycle_count;
 
 typedef PhysPt (*GetEAHandler)(void);
 
-static const Bit32u AddrMaskTable[2]={0x0000ffff,0xffffffff};
+static const uint32_t AddrMaskTable[2]={0x0000ffff,0xffffffff};
 
 static struct {
 	Bitu opcode_index;
@@ -109,19 +109,19 @@ static struct {
 #define BaseDS		core.base_ds
 #define BaseSS		core.base_ss
 
-static inline Bit8u Fetchb() {
-	Bit8u temp=LoadMb(core.cseip);
+static inline uint8_t Fetchb() {
+	uint8_t temp=LoadMb(core.cseip);
 	core.cseip+=1;
 	return temp;
 }
 
-static inline Bit16u Fetchw() {
-	Bit16u temp=LoadMw(core.cseip);
+static inline uint16_t Fetchw() {
+	uint16_t temp=LoadMw(core.cseip);
 	core.cseip+=2;
 	return temp;
 }
-static inline Bit32u Fetchd() {
-	Bit32u temp=LoadMd(core.cseip);
+static inline uint32_t Fetchd() {
+	uint32_t temp=LoadMd(core.cseip);
 	core.cseip+=4;
 	return temp;
 }

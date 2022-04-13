@@ -181,7 +181,7 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 
 static uint8_t read_p3c9(io_port_t, io_width_t)
 {
-	Bit8u ret;
+	uint8_t ret;
 	switch (vga.dac.pel_index) {
 	case 0:
 		ret=vga.dac.rgb[vga.dac.read_index].red;
@@ -205,7 +205,7 @@ static uint8_t read_p3c9(io_port_t, io_width_t)
 	return ret;
 }
 
-void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
+void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal) {
 	/* Check if this is a new color */
 	vga.dac.combine[attr]=pal;
 	switch (vga.mode) {
@@ -221,7 +221,7 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	}
 }
 
-void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue) {
+void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue) {
 	//Should only be called in machine != vga
 	vga.dac.rgb[entry].red=red;
 	vga.dac.rgb[entry].green=green;

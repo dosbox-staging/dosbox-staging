@@ -31,7 +31,7 @@
 #include "lazyflags.h"
 #include "support.h"
 
-extern void GFX_SetTitle(Bit32s cycles ,int frameskip,bool paused);
+extern void GFX_SetTitle(int32_t cycles ,int frameskip,bool paused);
 
 #if 1
 #undef LOG
@@ -47,15 +47,15 @@ CPU_Regs cpu_regs = {};
 CPUBlock cpu = {};
 Segments Segs = {};
 
-Bit32s CPU_Cycles = 0;
-Bit32s CPU_CycleLeft = 3000;
-Bit32s CPU_CycleMax = 3000;
-Bit32s CPU_OldCycleMax = 3000;
-Bit32s CPU_CyclePercUsed = 100;
-Bit32s CPU_CycleLimit = -1;
-Bit32s CPU_CycleUp = 0;
-Bit32s CPU_CycleDown = 0;
-Bit64s CPU_IODelayRemoved = 0;
+int32_t CPU_Cycles = 0;
+int32_t CPU_CycleLeft = 3000;
+int32_t CPU_CycleMax = 3000;
+int32_t CPU_OldCycleMax = 3000;
+int32_t CPU_CyclePercUsed = 100;
+int32_t CPU_CycleLimit = -1;
+int32_t CPU_CycleUp = 0;
+int32_t CPU_CycleDown = 0;
+int64_t CPU_IODelayRemoved = 0;
 CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust = false;
 bool CPU_SkipCycleAutoAdjust = false;
@@ -120,14 +120,14 @@ void CPU_Core_Dynrec_Cache_Close(void);
 
 void Descriptor::Load(PhysPt address) {
 	cpu.mpl=0;
-	Bit32u* data = (Bit32u*)&saved;
+	uint32_t* data = (uint32_t*)&saved;
 	*data	  = mem_readd(address);
 	*(data+1) = mem_readd(address+4);
 	cpu.mpl=3;
 }
 void Descriptor:: Save(PhysPt address) {
 	cpu.mpl=0;
-	Bit32u* data = (Bit32u*)&saved;
+	uint32_t* data = (uint32_t*)&saved;
 	mem_writed(address,*data);
 	mem_writed(address+4,*(data+1));
 	cpu.mpl=03;
@@ -135,13 +135,13 @@ void Descriptor:: Save(PhysPt address) {
 
 
 void CPU_Push16(Bitu value) {
-	Bit32u new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-2)&cpu.stack.mask);
+	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-2)&cpu.stack.mask);
 	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
 	reg_esp=new_esp;
 }
 
 void CPU_Push32(Bitu value) {
-	Bit32u new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-4)&cpu.stack.mask);
+	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-4)&cpu.stack.mask);
 	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
 	reg_esp=new_esp;
 }
@@ -286,7 +286,7 @@ public:
 
 	Bitu Get_back(void) {
 		cpu.mpl=0;
-		Bit16u backlink=mem_readw(base);
+		uint16_t backlink=mem_readw(base);
 		cpu.mpl=3;
 		return backlink;
 	}
@@ -405,7 +405,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		cpu_tss.desc.SetBusy(false);
 		cpu_tss.SaveSelector();
 	}
-	Bit32u old_flags = reg_flags;
+	uint32_t old_flags = reg_flags;
 	if (tstype==TSwitch_IRET) old_flags &= (~FLAG_NT);
 
 	/* Save current context in current TSS */
@@ -538,7 +538,7 @@ doexception:
 	return CPU_PrepareException(EXCEPTION_GP,0);
 }
 
-void CPU_DebugException(Bit32u triggers,Bitu oldeip) {
+void CPU_DebugException(uint32_t triggers,Bitu oldeip) {
 	cpu.drx[6] = (cpu.drx[6] & 0xFFFF1FF0) | triggers;
 	CPU_Interrupt(EXCEPTION_DB,CPU_INT_EXCEPTION,oldeip);
 }
@@ -549,7 +549,7 @@ void CPU_Exception(Bitu which,Bitu error ) {
 	CPU_Interrupt(which,CPU_INT_EXCEPTION | ((which>=8) ? CPU_INT_HAS_ERROR : 0),reg_eip);
 }
 
-Bit8u lastint;
+uint8_t lastint;
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	if (num == EXCEPTION_DB && (type&CPU_INT_EXCEPTION) == 0) {
 		CPU_DebugException(0,oldeip); // DR6 bits need updating
@@ -795,26 +795,26 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				return;
 			} else {
 				if (use32) {
-					Bit32u new_eip=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-					Bit32u tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
-					Bit32u new_cs=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					uint32_t new_eip=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+					uint32_t tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
+					uint32_t new_cs=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
 					tempesp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
-					Bit32u new_flags=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					uint32_t new_flags=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
 					reg_esp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
 
 					reg_eip=new_eip;
-					SegSet16(cs,(Bit16u)(new_cs&0xffff));
+					SegSet16(cs,(uint16_t)(new_cs&0xffff));
 					/* IOPL can not be modified in v86 mode by IRET */
 					CPU_SetFlags(new_flags,FMASK_NORMAL|FLAG_NT);
 				} else {
-					Bit16u new_eip=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-					Bit32u tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
-					Bit16u new_cs=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					uint16_t new_eip=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+					uint32_t tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
+					uint16_t new_cs=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
 					tempesp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
-					Bit16u new_flags=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					uint16_t new_flags=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
 					reg_esp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
 
-					reg_eip=(Bit32u)new_eip;
+					reg_eip=(uint32_t)new_eip;
 					SegSet16(cs,new_cs);
 					/* IOPL can not be modified in v86 mode by IRET */
 					CPU_SetFlags(new_flags,FMASK_NORMAL|FLAG_NT);
@@ -838,7 +838,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			return;
 		}
 		Bitu n_cs_sel,n_eip,n_flags;
-		Bit32u tempesp;
+		uint32_t tempesp;
 		if (use32) {
 			n_eip=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 			tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
@@ -1233,7 +1233,7 @@ call_code:
 						}
 
 						cpu.cpl = n_cs_desc.DPL();
-						Bit16u oldcs    = SegValue(cs);
+						uint16_t oldcs    = SegValue(cs);
 						/* Switch to new CS:EIP */
 						Segs.phys[cs]	= n_cs_desc.GetBase();
 						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
@@ -1648,7 +1648,7 @@ Bitu CPU_GET_CRX(Bitu cr) {
 	return 0;
 }
 
-bool CPU_READ_CRX(Bitu cr,Bit32u & retvalue) {
+bool CPU_READ_CRX(Bitu cr,uint32_t & retvalue) {
 	/* Check if privileged to access control registers */
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	if ((cr==1) || (cr>4)) return CPU_PrepareException(EXCEPTION_UD,0);
@@ -1686,7 +1686,7 @@ bool CPU_WRITE_DRX(Bitu dr,Bitu value) {
 	return false;
 }
 
-bool CPU_READ_DRX(Bitu dr,Bit32u & retvalue) {
+bool CPU_READ_DRX(Bitu dr,uint32_t & retvalue) {
 	/* Check if privileged to access control registers */
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	switch (dr) {
@@ -1728,7 +1728,7 @@ bool CPU_WRITE_TRX(Bitu tr,Bitu value) {
 	return CPU_PrepareException(EXCEPTION_UD,0);
 }
 
-bool CPU_READ_TRX(Bitu tr,Bit32u & retvalue) {
+bool CPU_READ_TRX(Bitu tr,uint32_t & retvalue) {
 	/* Check if privileged to access control registers */
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	switch (tr) {
@@ -2001,7 +2001,7 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 	Bitu addsp = use32 ? 0x04 : 0x02;
 	//Calcullate this beforehande since the stack mask might change
-	Bit32u new_esp  = (reg_esp&cpu.stack.notmask) | ((reg_esp + addsp)&cpu.stack.mask);
+	uint32_t new_esp  = (reg_esp&cpu.stack.notmask) | ((reg_esp + addsp)&cpu.stack.mask);
 	if (CPU_SetSegGeneral(seg,val)) return true;
 	reg_esp = new_esp;
 	return false;
@@ -2084,7 +2084,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 	if (!use32) {
 		sp_index-=2;
 		mem_writew(SegPhys(ss)+sp_index,reg_bp);
-		reg_bp=(Bit16u)(reg_esp-2);
+		reg_bp=(uint16_t)(reg_esp-2);
 		if (level) {
 			for (Bitu i=1;i<level;i++) {	
 				sp_index-=2;bp_index-=2;
@@ -2118,9 +2118,9 @@ static void CPU_CycleIncrease(bool pressed) {
 		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
-		Bit32s old_cycles=CPU_CycleMax;
+		int32_t old_cycles=CPU_CycleMax;
 		if (CPU_CycleUp < 100) {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax *
+			CPU_CycleMax = (int32_t)(CPU_CycleMax *
 			                        (1 + static_cast<float>(CPU_CycleUp) /
 			                                     100.0f));
 		} else {
@@ -2149,7 +2149,7 @@ static void CPU_CycleDecrease(bool pressed) {
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		if (CPU_CycleDown < 100) {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax /
+			CPU_CycleMax = (int32_t)(CPU_CycleMax /
 			                        (1 + static_cast<float>(CPU_CycleDown) /
 			                                     100.0f));
 		} else {

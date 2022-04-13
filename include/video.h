@@ -57,7 +57,7 @@ typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 bool GFX_Events();
 
 Bitu GFX_GetBestMode(Bitu flags);
-Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
+Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
 void GFX_SetShader(const char* src);
 Bitu GFX_SetSize(int width, int height, Bitu flags,
                  double scalex, double scaley,
@@ -70,7 +70,7 @@ void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
-void GFX_EndUpdate( const Bit16u *changedLines );
+void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);

@@ -117,7 +117,7 @@ void LOG::operator() (char const* format, ...){
 
 	if (d_type>=LOG_MAX) return;
 	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
-	DEBUG_ShowMsg("%10u: %s:%s\n",static_cast<Bit32u>(cycle_count),loggrp[d_type].front,buf);
+	DEBUG_ShowMsg("%10u: %s:%s\n",static_cast<uint32_t>(cycle_count),loggrp[d_type].front,buf);
 }
 
 

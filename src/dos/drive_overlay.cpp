@@ -102,7 +102,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		return (temp == 0);
 	} else {
-		Bit16u olderror = dos.errorcode; //FindFirst/Next always set an errorcode, while RemoveDir itself shouldn't touch it if successful
+		uint16_t olderror = dos.errorcode; //FindFirst/Next always set an errorcode, while RemoveDir itself shouldn't touch it if successful
 		DOS_DTA dta(dos.tables.tempdta);
 		char stardotstar[4] = {'*', '.', '*', 0};
 		dta.SetupSearch(0,(0xff & ~DOS_ATTR_VOLUME),stardotstar); //Fake drive as we don't use it.
@@ -114,7 +114,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		bool empty = true;
 		do {
-			char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+			char name[DOS_NAMELENGTH_ASCII];uint32_t size;uint16_t date;uint16_t time;uint8_t attr;
 			dta.GetResult(name,size,date,time,attr);
 			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
 			if (empty && strcmp(".",name ) && strcmp("..",name)) 
@@ -203,8 +203,8 @@ public:
 			LOG_MSG("constructing OverlayFile: %s", name);
 	}
 
-	bool Write(Bit8u * data,Bit16u * size) {
-		Bit32u f = flags&0xf;
+	bool Write(uint8_t * data,uint16_t * size) {
+		uint32_t f = flags&0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
 			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
 			if (*data == 0) {
@@ -269,7 +269,7 @@ bool OverlayFile::create_copy() {
 	fseek(lhandle,0L,SEEK_SET);
 	
 	FILE* newhandle = NULL;
-	Bit8u drive_set = GetDrive();
+	uint8_t drive_set = GetDrive();
 	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
 		Overlay_Drive* od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
 		if (od) {
@@ -411,7 +411,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	const char* type;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;
@@ -476,7 +476,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 }
 
 
-bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
+bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/) {
 	//TODO Check if it exists in the dirCache ? // fix addentry ?  or just double check (ld and overlay)
 	//AddEntry looks sound to me.. 
 	
@@ -757,11 +757,11 @@ bool Overlay_Drive::FindNext(DOS_DTA & dta) {
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
-	Bit8u find_attr;
+	uint8_t srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
+	uint8_t find_attr;
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
-	Bit16u id = dta.GetDirID();
+	uint16_t id = dta.GetDirID();
 
 again:
 	if (!dirCache.FindNext(id,dir_ent)) {
@@ -823,14 +823,14 @@ again:
 
 	
 	/* file is okay, setup everything to be copied in DTA Block */
-	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
+	char find_name[DOS_NAMELENGTH_ASCII];uint16_t find_date,find_time;uint32_t find_size;
 
 	if(safe_strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	} 
 
-	find_size=(Bit32u) stat_block.st_size;
+	find_size=(uint32_t) stat_block.st_size;
 	struct tm datetime;
 	if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
 		find_date = DOS_PackDate(datetime);
@@ -1142,7 +1142,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 	//if oldname is on base => copy file to overlay with new name and mark old file as deleted. 
 	//More advanced version. keep track of the file being renamed in order to detect that the file is being renamed back. 
 	
-	Bit16u attr = 0;
+	uint16_t attr = 0;
 	if (!GetFileAttr(oldname,&attr)) E_Exit("rename, but source doesn't exist, should not happen %s",oldname);
 	if (attr&DOS_ATTR_DIRECTORY) {
 		//See if the directory exists only in the overlay, then it should be possible.
@@ -1246,7 +1246,7 @@ bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 	} else {
 		LOG_MSG("OVERLAY: Error while converting date in: %s", name);
 	}
-	stat_block->size=(Bit32u)temp_stat.st_size;
+	stat_block->size=(uint32_t)temp_stat.st_size;
 	return true;
 }
 

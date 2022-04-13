@@ -43,7 +43,7 @@ using sv = std::string_view;
 
 static FILE_unique_ptr OpenDosboxFile(const char *name)
 {
-	Bit8u drive;
+	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
 
 	localDrive* ldp=0;
@@ -86,34 +86,34 @@ public:
 	~keyboard_layout();
 
 	// read in a codepage from a .cpi-file
-	Bitu read_codepage_file(const char* codepage_file_name, Bit32s codepage_id);
-	Bit16u extract_codepage(const char* keyboard_file_name);
+	Bitu read_codepage_file(const char* codepage_file_name, int32_t codepage_id);
+	uint16_t extract_codepage(const char* keyboard_file_name);
 	// read in a keyboard layout from a .kl-file
-	Bitu read_keyboard_file(const char* keyboard_file_name, Bit32s req_cp);
+	Bitu read_keyboard_file(const char* keyboard_file_name, int32_t req_cp);
 
 	// call layout_key to apply the current language layout
-	bool layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3);
+	bool layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3);
 
-	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout, Bit32s& tried_cp);
+	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout, int32_t& tried_cp);
 	void switch_foreign_layout();
 	const char* get_layout_name();
 	const char* main_language_code();
 
 
 private:
-	static const Bit8u layout_pages=12;
-	Bit16u current_layout[(MAX_SCAN_CODE+1)*layout_pages];
+	static const uint8_t layout_pages=12;
+	uint16_t current_layout[(MAX_SCAN_CODE+1)*layout_pages];
 	struct {
-		Bit16u required_flags,forbidden_flags;
-		Bit16u required_userflags,forbidden_userflags;
+		uint16_t required_flags,forbidden_flags;
+		uint16_t required_userflags,forbidden_userflags;
 	} current_layout_planes[layout_pages-4];
-	Bit8u additional_planes,used_lock_modifiers;
+	uint8_t additional_planes,used_lock_modifiers;
 
 	// diacritics table
-	Bit8u diacritics[2048];
-	Bit16u diacritics_entries;
-	Bit16u diacritics_character;
-	Bit16u user_keys;
+	uint8_t diacritics[2048];
+	uint16_t diacritics_entries;
+	uint16_t diacritics_character;
+	uint16_t user_keys;
 
 	char current_keyboard_file_name[256];
 	bool use_foreign_layout;
@@ -123,9 +123,9 @@ private:
 	Bitu language_code_count;
 
 	void reset();
-	void read_keyboard_file(Bit32s specific_layout);
-	Bitu read_keyboard_file(const char* keyboard_file_name, Bit32s specific_layout, Bit32s requested_codepage);
-	bool map_key(Bitu key, Bit16u layouted_key, bool is_command, bool is_keypair);
+	void read_keyboard_file(int32_t specific_layout);
+	Bitu read_keyboard_file(const char* keyboard_file_name, int32_t specific_layout, int32_t requested_codepage);
+	bool map_key(Bitu key, uint16_t layouted_key, bool is_command, bool is_keypair);
 	int8_t get_CPX_file_id(uint32_t codepage_id);
 };
 
@@ -139,8 +139,8 @@ keyboard_layout::~keyboard_layout() {
 }
 
 void keyboard_layout::reset() {
-	for (Bit32u i=0; i<(MAX_SCAN_CODE+1)*layout_pages; i++) current_layout[i]=0;
-	for (Bit32u i=0; i<layout_pages-4; i++) {
+	for (uint32_t i=0; i<(MAX_SCAN_CODE+1)*layout_pages; i++) current_layout[i]=0;
+	for (uint32_t i=0; i<layout_pages-4; i++) {
 		current_layout_planes[i].required_flags=0;
 		current_layout_planes[i].forbidden_flags=0xffff;
 		current_layout_planes[i].required_userflags=0;
@@ -153,25 +153,25 @@ void keyboard_layout::reset() {
 	language_code_count=0;
 }
 
-Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s req_cp) {
+Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t req_cp) {
 	return this->read_keyboard_file(keyboard_file_name, -1, req_cp);
 }
 
 // switch to a different layout
-void keyboard_layout::read_keyboard_file(Bit32s specific_layout) {
+void keyboard_layout::read_keyboard_file(int32_t specific_layout) {
 	if (strcmp(current_keyboard_file_name,"none"))
 		this->read_keyboard_file(current_keyboard_file_name, specific_layout, dos.loaded_codepage);
 }
 
-static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bool first_id_only) {
+static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, bool first_id_only) {
 	auto tempfile = OpenDosboxFile(kcl_file_name);
 	if (!tempfile)
 		return 0;
 
-	static Bit8u rbuf[8192];
+	static uint8_t rbuf[8192];
 
 	// check ID-bytes of file
-	Bit32u dr = (Bit32u)fread(rbuf, sizeof(Bit8u), 7, tempfile.get());
+	uint32_t dr = (uint32_t)fread(rbuf, sizeof(uint8_t), 7, tempfile.get());
 	if ((dr < 7) || (rbuf[0] != 0x4b) || (rbuf[1] != 0x43) || (rbuf[2] != 0x46)) {
 		return 0;
 	}
@@ -184,13 +184,13 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 	}
 
 	for (;;) {
-		Bit32u cur_pos = (Bit32u)(ftell(tempfile.get()));
-		dr = (Bit32u)fread(rbuf, sizeof(Bit8u), 5, tempfile.get());
+		uint32_t cur_pos = (uint32_t)(ftell(tempfile.get()));
+		dr = (uint32_t)fread(rbuf, sizeof(uint8_t), 5, tempfile.get());
 		if (dr < 5)
 			break;
-		Bit16u len=host_readw(&rbuf[0]);
+		uint16_t len=host_readw(&rbuf[0]);
 
-		Bit8u data_len=rbuf[2];
+		uint8_t data_len=rbuf[2];
 		assert (data_len < UINT8_MAX);
 		static_assert(UINT8_MAX < sizeof(rbuf), "rbuf too small");
 
@@ -198,14 +198,14 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 		fseek(tempfile.get(), -2, SEEK_CUR);
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
-			if (fread(rbuf, sizeof(Bit8u), 2, tempfile.get()) != 2) {
+			if (fread(rbuf, sizeof(uint8_t), 2, tempfile.get()) != 2) {
 				break;
 			}
-			Bit16u lcnum = host_readw(&rbuf[0]);
+			uint16_t lcnum = host_readw(&rbuf[0]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
-				if (fread(rbuf, sizeof(Bit8u), 1,
+				if (fread(rbuf, sizeof(uint8_t), 1,
 				          tempfile.get()) != 1) {
 					break;
 				}
@@ -242,20 +242,20 @@ static uint32_t read_kcl_data(const std::vector<uint8_t> &kcl_data,
 		return 0;
 	}
 
-	Bit32u dpos=7+kcl_data[6];
+	uint32_t dpos=7+kcl_data[6];
 
 	for (;;) {
 		if (dpos + 5 > kcl_data.size())
 			break;
-		Bit32u cur_pos=dpos;
-		Bit16u len=host_readw(&kcl_data[dpos]);
-		Bit8u data_len=kcl_data[dpos+2];
+		uint32_t cur_pos=dpos;
+		uint16_t len=host_readw(&kcl_data[dpos]);
+		uint8_t data_len=kcl_data[dpos+2];
 		dpos+=5;
 
 		char lng_codes[258];
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
-			Bit16u lcnum=host_readw(&kcl_data[dpos-2]);
+			uint16_t lcnum=host_readw(&kcl_data[dpos-2]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
@@ -287,16 +287,16 @@ static uint32_t read_kcl_data(const std::vector<uint8_t> &kcl_data,
 	return 0;
 }
 
-Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s specific_layout, Bit32s requested_codepage) {
+Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t specific_layout, int32_t requested_codepage) {
 	this->reset();
 
 	if (specific_layout == -1)
 		safe_strcpy(current_keyboard_file_name, keyboard_file_name);
 	if (!strcmp(keyboard_file_name,"none")) return KEYB_NOERROR;
 
-	static Bit8u read_buf[65535];
-	Bit32u read_buf_size, read_buf_pos, bytes_read;
-	Bit32u start_pos=5;
+	static uint8_t read_buf[65535];
+	uint32_t read_buf_size, read_buf_pos, bytes_read;
+	uint32_t start_pos=5;
 
 	char nbuf[512];
 	read_buf_size = 0;
@@ -344,13 +344,13 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 				            seek_pos, keyboard_file_name, strerror(errno));
 				return KEYB_INVALIDFILE;
 			}
-			read_buf_size = (Bit32u)fread(read_buf, sizeof(Bit8u),
+			read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t),
 			                              65535, tempfile.get());
 		}
 		start_pos=0;
 	} else {
 		// check ID-bytes of file
-		Bit32u dr = (Bit32u)fread(read_buf, sizeof(Bit8u), 4,
+		uint32_t dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
 		                          tempfile.get());
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG(LOG_BIOS, LOG_ERROR)
@@ -359,7 +359,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		}
 
 		fseek(tempfile.get(), 0, SEEK_SET);
-		read_buf_size = (Bit32u)fread(read_buf, sizeof(Bit8u), 65535,
+		read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t), 65535,
 		                              tempfile.get());
 	}
 
@@ -421,10 +421,10 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	bool found_matching_layout=false;
 	
 	// check all submappings and use them if general submapping or same codepage submapping
-	for (Bit16u sub_map=0; (sub_map<submappings) && (!found_matching_layout); sub_map++) {
-		Bit16u submap_cp, table_offset;
+	for (uint16_t sub_map=0; (sub_map<submappings) && (!found_matching_layout); sub_map++) {
+		uint16_t submap_cp, table_offset;
 
-		if ((sub_map!=0) && (specific_layout!=-1)) sub_map=(Bit16u)(specific_layout&0xffff);
+		if ((sub_map!=0) && (specific_layout!=-1)) sub_map=(uint16_t)(specific_layout&0xffff);
 
 		// read codepage of submapping
 		submap_cp=host_readw(&read_buf[start_pos+0x14+sub_map*8]);
@@ -438,7 +438,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		diacritics_entries=0;
 		if (table_offset!=0) {
 			// process table
-			Bit16u i,j;
+			uint16_t i,j;
 			for (i=0; i<2048;) {
 				if (read_buf[start_pos+table_offset+i]==0) break;	// end of table
 				diacritics_entries++;
@@ -458,20 +458,20 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		bytes_read=read_buf_size-read_buf_pos;
 
 		// process submapping table
-		for (Bit32u i=0; i<bytes_read;) {
-			Bit8u scan=read_buf[read_buf_pos++];
+		for (uint32_t i=0; i<bytes_read;) {
+			uint8_t scan=read_buf[read_buf_pos++];
 			if (scan==0) break;
-			Bit8u scan_length=(read_buf[read_buf_pos]&7)+1;		// length of data struct
+			uint8_t scan_length=(read_buf[read_buf_pos]&7)+1;		// length of data struct
 			read_buf_pos+=2;
 			i+=3;
 
 			assert(scan_length > 0);
 			if ((scan & 0x7f) <= MAX_SCAN_CODE) {
 				// add all available mappings
-				for (Bit16u addmap=0; addmap<scan_length; addmap++) {
+				for (uint16_t addmap=0; addmap<scan_length; addmap++) {
 					if (addmap>additional_planes+2) break;
 					Bitu charptr=read_buf_pos+addmap*((read_buf[read_buf_pos-2]&0x80)?2:1);
-					Bit16u kchar=read_buf[charptr];
+					uint16_t kchar=read_buf[charptr];
 
 					if (kchar!=0) {		// key remapped
 						if (read_buf[read_buf_pos-2]&0x80) kchar|=read_buf[charptr+1]<<8;	// scancode/char pair
@@ -485,7 +485,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 				}
 
 				// calculate max length of entries, taking into account old number of entries
-				Bit8u new_flags=current_layout[scan*layout_pages+layout_pages-1]&0x7;
+				uint8_t new_flags=current_layout[scan*layout_pages+layout_pages-1]&0x7;
 				if ((read_buf[read_buf_pos-2]&0x7) > new_flags) new_flags = read_buf[read_buf_pos-2]&0x7;
 
 				// merge flag bits in as well
@@ -515,7 +515,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	return KEYB_LAYOUTNOTFOUND;
 }
 
-bool keyboard_layout::layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3) {
+bool keyboard_layout::layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3) {
 	if (key>MAX_SCAN_CODE) return false;
 	if (!this->use_foreign_layout) return false;
 
@@ -544,14 +544,14 @@ bool keyboard_layout::layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u fla
 	}
 
 	// calculate current flags
-	Bit16u current_flags=(flags1&0x7f) | (((flags2&3) | (flags3&0xc))<<8);
+	uint16_t current_flags=(flags1&0x7f) | (((flags2&3) | (flags3&0xc))<<8);
 	if (flags1&3) current_flags|=0x4000;	// either shift key active
 	if (flags3&2) current_flags|=0x1000;	// e0 prefixed
 
 	// check all planes if flags fit
-	for (Bit16u cplane=0; cplane<additional_planes; cplane++) {
-		Bit16u req_flags=current_layout_planes[cplane].required_flags;
-		Bit16u req_userflags=current_layout_planes[cplane].required_userflags;
+	for (uint16_t cplane=0; cplane<additional_planes; cplane++) {
+		uint16_t req_flags=current_layout_planes[cplane].required_flags;
+		uint16_t req_userflags=current_layout_planes[cplane].required_userflags;
 		// test flags
 		if (((current_flags & req_flags)==req_flags) &&
 			((user_keys & req_userflags)==req_userflags) &&
@@ -583,12 +583,12 @@ bool keyboard_layout::layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u fla
 				        diacritics_character=0;
 					return true;
 			        }
-			        Bit16u diacritics_start=0;
+			        uint16_t diacritics_start=0;
 				// search start of subtable
-				for (Bit16u i=0; i<diacritics_character-200; i++)
+				for (uint16_t i=0; i<diacritics_character-200; i++)
 					diacritics_start+=diacritics[diacritics_start+1]*2+2;
 
-				BIOS_AddKeyToBuffer((Bit16u)(key<<8) | diacritics[diacritics_start]);
+				BIOS_AddKeyToBuffer((uint16_t)(key<<8) | diacritics[diacritics_start]);
 				diacritics_character=0;
 		}
 	}
@@ -596,9 +596,9 @@ bool keyboard_layout::layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u fla
 	return false;
 }
 
-bool keyboard_layout::map_key(Bitu key, Bit16u layouted_key, bool is_command, bool is_keypair) {
+bool keyboard_layout::map_key(Bitu key, uint16_t layouted_key, bool is_command, bool is_keypair) {
 	if (is_command) {
-		Bit8u key_command=(Bit8u)(layouted_key&0xff);
+		uint8_t key_command=(uint8_t)(layouted_key&0xff);
 		// check if diacritics-command
 		if ((key_command>=200) && (key_command<235)) {
 			// diacritics command
@@ -624,43 +624,43 @@ bool keyboard_layout::map_key(Bitu key, Bit16u layouted_key, bool is_command, bo
 		if (diacritics_character>0) {
 			if (diacritics_character-200>=diacritics_entries) diacritics_character = 0;
 			else {
-				Bit16u diacritics_start=0;
+				uint16_t diacritics_start=0;
 				// search start of subtable
-				for (Bit16u i=0; i<diacritics_character-200; i++)
+				for (uint16_t i=0; i<diacritics_character-200; i++)
 					diacritics_start+=diacritics[diacritics_start+1]*2+2;
 
-				Bit8u diacritics_length=diacritics[diacritics_start+1];
+				uint8_t diacritics_length=diacritics[diacritics_start+1];
 				diacritics_start+=2;
 				diacritics_character=0;	// reset
 
 				// search scancode
-				for (Bit16u i=0; i<diacritics_length; i++) {
+				for (uint16_t i=0; i<diacritics_length; i++) {
 					if (diacritics[diacritics_start+i*2]==(layouted_key&0xff)) {
 						// add diacritics to keybuf
-						BIOS_AddKeyToBuffer((Bit16u)(key<<8) | diacritics[diacritics_start+i*2+1]);
+						BIOS_AddKeyToBuffer((uint16_t)(key<<8) | diacritics[diacritics_start+i*2+1]);
 						return true;
 					}
 				}
 				// add standard-diacritics to keybuf
-				BIOS_AddKeyToBuffer((Bit16u)(key<<8) | diacritics[diacritics_start-2]);
+				BIOS_AddKeyToBuffer((uint16_t)(key<<8) | diacritics[diacritics_start-2]);
 			}
 		}
 
 		// add remapped key to keybuf
 		if (is_keypair) BIOS_AddKeyToBuffer(layouted_key);
-		else BIOS_AddKeyToBuffer((Bit16u)(key<<8) | (layouted_key&0xff));
+		else BIOS_AddKeyToBuffer((uint16_t)(key<<8) | (layouted_key&0xff));
 
 		return true;
 	}
 	return false;
 }
 
-Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
+uint16_t keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	if (!strcmp(keyboard_file_name,"none")) return 437;
 
-	Bit32u read_buf_size;
-	static Bit8u read_buf[65535];
-	Bit32u start_pos=5;
+	uint32_t read_buf_size;
+	static uint8_t read_buf[65535];
+	uint32_t start_pos=5;
 
 	char nbuf[512];
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
@@ -702,13 +702,13 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 		}
 		if (tempfile) {
 			fseek(tempfile.get(), start_pos + 2, SEEK_SET);
-			read_buf_size = (Bit32u)fread(read_buf, sizeof(Bit8u),
+			read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t),
 			                              65535, tempfile.get());
 		}
 		start_pos=0;
 	} else {
 		// check ID-bytes of file
-		Bit32u dr = (Bit32u)fread(read_buf, sizeof(Bit8u), 4,
+		uint32_t dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
 		                          tempfile.get());
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG(LOG_BIOS, LOG_ERROR)
@@ -717,11 +717,11 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 		}
 
 		fseek(tempfile.get(), 0, SEEK_SET);
-		read_buf_size = (Bit32u)fread(read_buf, sizeof(Bit8u), 65535,
+		read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t), 65535,
 		                              tempfile.get());
 	}
 
-	Bit8u data_len,submappings;
+	uint8_t data_len,submappings;
 	data_len=read_buf[start_pos++];
 
 	start_pos+=data_len;		// start_pos==absolute position of KeybCB block
@@ -734,8 +734,8 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 
 	// check all submappings and use them if general submapping or same
 	// codepage submapping
-	for (Bit16u sub_map=0; (sub_map<submappings); sub_map++) {
-		Bit16u submap_cp;
+	for (uint16_t sub_map=0; (sub_map<submappings); sub_map++) {
+		uint16_t submap_cp;
 
 		// read codepage of submapping
 		submap_cp=host_readw(&read_buf[start_pos+0x14+sub_map*8]);
@@ -850,7 +850,7 @@ int8_t keyboard_layout::get_CPX_file_id(uint32_t codepage_id)
 }
 
 Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
-                                         Bit32s codepage_id)
+                                         int32_t codepage_id)
 {
 	char cp_filename[512];
 	safe_strcpy(cp_filename, codepage_file_name);
@@ -974,8 +974,8 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 		// prepare for direct decompression
 		cpi_buf[found_at_pos]=0xcb;
 
-		Bit16u seg=0;
-		Bit16u size=0x1500;
+		uint16_t seg=0;
+		uint16_t size=0x1500;
 		if (!DOS_AllocateMemory(&seg,&size)) E_Exit("Not enough free low memory to unpack data");
 
 		const auto dos_segment = static_cast<uint32_t>((seg << 4) + 0x100);
@@ -983,10 +983,10 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 		MEM_BlockWrite(dos_segment, cpi_buf.data(), size_of_cpxdata);
 
 		// setup segments
-		Bit16u save_ds=SegValue(ds);
-		Bit16u save_es=SegValue(es);
-		Bit16u save_ss=SegValue(ss);
-		Bit32u save_esp=reg_esp;
+		uint16_t save_ds=SegValue(ds);
+		uint16_t save_es=SegValue(es);
+		uint16_t save_ss=SegValue(ss);
+		uint32_t save_esp=reg_esp;
 		SegSet16(ds,seg);
 		SegSet16(es,seg);
 		SegSet16(ss,seg+0x1000);
@@ -1082,7 +1082,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 			LOG(LOG_BIOS,LOG_NORMAL)("Codepage %i successfully loaded",codepage_id);
 
 			// set codepage entries
-			dos.loaded_codepage=(Bit16u)(codepage_id&0xffff);
+			dos.loaded_codepage=(uint16_t)(codepage_id&0xffff);
 
 			// update font if necessary
 			if (font_changed && (CurMode->type==M_TEXT) && (IS_EGAVGA_ARCH)) {
@@ -1102,7 +1102,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	return KEYB_INVALIDCPFILE;
 }
 
-Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_layout*& created_layout, Bit32s& tried_cp) {
+Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_layout*& created_layout, int32_t& tried_cp) {
 	if (strncasecmp(new_layout,"US",2)) {
 		// switch to a foreign layout
 		char tbuf[256];
@@ -1189,12 +1189,12 @@ static void switch_keyboard_layout(bool pressed) {
 #endif
 
 // called by int9-handler
-bool DOS_LayoutKey(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3) {
+bool DOS_LayoutKey(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3) {
 	if (loaded_layout) return loaded_layout->layout_key(key, flags1, flags2, flags3);
 	else return false;
 }
 
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile) {
+Bitu DOS_LoadKeyboardLayout(const char * layoutname, int32_t codepage, const char * codepagefile) {
 	keyboard_layout * temp_layout=new keyboard_layout();
 	// try to read the layout for the specified codepage
 	Bitu kerrcode=temp_layout->read_keyboard_file(layoutname, codepage);
@@ -1213,7 +1213,7 @@ Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char
 	return KEYB_NOERROR;
 }
 
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp) {
+Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp) {
 	if (loaded_layout) {
 		keyboard_layout* changed_layout=NULL;
 		Bitu ret_code=loaded_layout->switch_keyboard_layout(new_layout, changed_layout, tried_cp);

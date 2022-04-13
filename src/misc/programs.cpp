@@ -85,8 +85,8 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Main *main)
 
 static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
-	Bitu size=sizeof(Bit8u);
-	Bit8u index;
+	Bitu size=sizeof(uint8_t);
+	uint8_t index;
 
 	// Sanity check the exec_block size before down-casting
 	constexpr auto exec_block_size = exe_block.size();
@@ -179,10 +179,10 @@ void Program::WriteOut(const char *format, ...)
 	vsnprintf(buf,2047,format,msg);
 	va_end(msg);
 
-	Bit16u size = (Bit16u)strlen(buf);
+	uint16_t size = (uint16_t)strlen(buf);
 	dos.internal_output=true;
-	for (Bit16u i = 0; i < size; i++) {
-		Bit8u out;Bit16u s=1;
+	for (uint16_t i = 0; i < size; i++) {
+		uint8_t out;uint16_t s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
 		}
@@ -191,7 +191,7 @@ void Program::WriteOut(const char *format, ...)
 	}
 	dos.internal_output=false;
 
-//	DOS_WriteFile(STDOUT,(Bit8u *)buf,&size);
+//	DOS_WriteFile(STDOUT,(uint8_t *)buf,&size);
 }
 
 void Program::WriteOut(const char *format, const char *arguments)
@@ -202,10 +202,10 @@ void Program::WriteOut(const char *format, const char *arguments)
 	char buf[2048];
 	sprintf(buf,format,arguments);
 
-	Bit16u size = (Bit16u)strlen(buf);
+	uint16_t size = (uint16_t)strlen(buf);
 	dos.internal_output=true;
-	for (Bit16u i = 0; i < size; i++) {
-		Bit8u out;Bit16u s=1;
+	for (uint16_t i = 0; i < size; i++) {
+		uint8_t out;uint16_t s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
 		}
@@ -219,11 +219,11 @@ void Program::WriteOut_NoParsing(const char * format) {
 	if (SuppressWriteOut(format))
 		return;
 
-	Bit16u size = (Bit16u)strlen(format);
+	uint16_t size = (uint16_t)strlen(format);
 	char const* buf = format;
 	dos.internal_output=true;
-	for (Bit16u i = 0; i < size; i++) {
-		Bit8u out;Bit16u s=1;
+	for (uint16_t i = 0; i < size; i++) {
+		uint8_t out;uint16_t s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
 		}
@@ -232,7 +232,7 @@ void Program::WriteOut_NoParsing(const char * format) {
 	}
 	dos.internal_output=false;
 
-//	DOS_WriteFile(STDOUT,(Bit8u *)format,&size);
+//	DOS_WriteFile(STDOUT,(uint8_t *)format,&size);
 }
 
 void Program::ResetLastWrittenChar(char c)
@@ -310,7 +310,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	
 	//Get size of environment.
 	DOS_MCB mcb(psp->GetEnvironment() - 1);
-	Bit16u envsize = mcb.GetSize()*16;
+	uint16_t envsize = mcb.GetSize()*16;
 
 
 	PhysPt env_write = env_read;

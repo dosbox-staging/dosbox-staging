@@ -107,7 +107,7 @@ class CBindGroup;
 
 static void SetActiveEvent(CEvent * event);
 static void SetActiveBind(CBind * _bind);
-extern Bit8u int10_font_14[256 * 14];
+extern uint8_t int10_font_14[256 * 14];
 
 static std::vector<CEvent *> events;
 static std::vector<CButton *> buttons;
@@ -1165,7 +1165,7 @@ public:
 		}
 
 		unsigned i;
-		Bit16u j;
+		uint16_t j;
 		j=button_state;
 		for(i=0;i<16;i++) if (j & 1) break; else j>>=1;
 		JOYSTICK_Button(0,0,i&1);
@@ -1364,13 +1364,13 @@ void CBindGroup::DeactivateBindList(CBindList * list,bool ev_trigger) {
 	}
 }
 
-static void DrawText(Bitu x,Bitu y,const char * text,Bit8u color) {
-	Bit8u * draw = ((Bit8u *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
+static void DrawText(Bitu x,Bitu y,const char * text,uint8_t color) {
+	uint8_t * draw = ((uint8_t *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
 	while (*text) {
-		Bit8u * font=&int10_font_14[(*text)*14];
-		Bitu i,j;Bit8u * draw_line=draw;
+		uint8_t * font=&int10_font_14[(*text)*14];
+		Bitu i,j;uint8_t * draw_line=draw;
 		for (i=0;i<14;i++) {
-			Bit8u map=*font++;
+			uint8_t map=*font++;
 			for (j=0;j<8;j++) {
 				if (map & 0x80) *(draw_line+j)=color;
 				else *(draw_line+j)=CLR_BLACK;
@@ -1400,7 +1400,7 @@ public:
 	virtual void Draw() {
 		if (!enabled)
 			return;
-		Bit8u * point = ((Bit8u *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
+		uint8_t * point = ((uint8_t *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
 		for (Bitu lines=0;lines<dy;lines++)  {
 			if (lines==0 || lines==(dy-1)) {
 				for (Bitu cols=0;cols<dx;cols++) *(point+cols)=color;
@@ -1422,10 +1422,10 @@ public:
 		mapper.redraw = true;
 	}
 
-	void SetColor(Bit8u _col) { color=_col; }
+	void SetColor(uint8_t _col) { color=_col; }
 protected:
 	Bitu x,y,dx,dy;
-	Bit8u color;
+	uint8_t color;
 	bool enabled;
 };
 
@@ -1516,7 +1516,7 @@ void CCaptionButton::Change(const char * format,...) {
 	mapper.redraw=true;
 }
 
-static void change_action_text(const char* text,Bit8u col);
+static void change_action_text(const char* text,uint8_t col);
 
 static void MAPPER_SaveBinds();
 
@@ -1590,7 +1590,7 @@ public:
 			break;
 		}
 		if (checked) {
-			Bit8u * point=((Bit8u *)mapper.draw_surface->pixels)+((y+2)*mapper.draw_surface->w)+x+dx-dy+2;
+			uint8_t * point=((uint8_t *)mapper.draw_surface->pixels)+((y+2)*mapper.draw_surface->w)+x+dx-dy+2;
 			for (Bitu lines=0;lines<(dy-4);lines++)  {
 				memset(point,color,dy-4);
 				point+=mapper.draw_surface->w;
@@ -1650,7 +1650,7 @@ public:
 	CJAxisEvent& operator=(const CJAxisEvent&) = delete; // prevent assignment
 
 	void Active(bool /*moved*/) {
-		virtual_joysticks[stick].axis_pos[axis]=(Bit16s)(GetValue()*(positive?1:-1));
+		virtual_joysticks[stick].axis_pos[axis]=(int16_t)(GetValue()*(positive?1:-1));
 	}
 	virtual Bitu GetActivityCount() {
 		return activity|opposite_axis->activity;
@@ -1777,7 +1777,7 @@ static struct {
 } bind_but;
 
 
-static void change_action_text(const char* text,Bit8u col) {
+static void change_action_text(const char* text,uint8_t col) {
 	bind_but.action->Change(text,"");
 	bind_but.action->SetColor(col);
 }
@@ -1917,8 +1917,8 @@ static void SetActiveEvent(CEvent * event) {
 	}
 }
 
-extern SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height);
-extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height);
+extern SDL_Window * GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height);
+extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(uint16_t width, uint16_t height);
 extern void GFX_UpdateDisplayDimensions(int width, int height);
 
 static void DrawButtons() {
@@ -2784,7 +2784,7 @@ static void CreateBindGroups() {
 			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
 		}
 
-		Bit8u joyno = 0;
+		uint8_t joyno = 0;
 		switch (joytype) {
 		case JOY_DISABLED:
 		case JOY_NONE_FOUND: break;
@@ -2864,7 +2864,7 @@ void MAPPER_Run(bool pressed) {
 	PIC_AddEvent(MAPPER_RunEvent,0);	//In case mapper deletes the key object that ran it
 }
 
-SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags);
+SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,uint32_t flags);
 
 void MAPPER_DisplayUI() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);

@@ -137,11 +137,11 @@ void IMGMOUNT::Run(void) {
         return;
     }
 
-    Bit16u sizes[4] = {0};
+    uint16_t sizes[4] = {0};
     bool imgsizedetect = false;
 
     std::string str_size = "";
-    Bit8u mediaid = 0xF8;
+    uint8_t mediaid = 0xF8;
 
     // Possibly used to hold the IDE channel and drive slot for CDROM types
     std::string ide_value = {};
@@ -254,7 +254,7 @@ void IMGMOUNT::Run(void) {
                 char tmp[CROSS_LEN];
                 safe_strcpy(tmp, temp_line.c_str());
 
-                Bit8u dummy;
+                uint8_t dummy;
                 if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
                     WriteOut(MSG_Get("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
                     return;
@@ -303,10 +303,10 @@ void IMGMOUNT::Run(void) {
                 return;
             }
             fseek(diskfile, 0L, SEEK_END);
-            Bit32u fcsize = (Bit32u)(ftell(diskfile) / 512L);
-            Bit8u buf[512];
+            uint32_t fcsize = (uint32_t)(ftell(diskfile) / 512L);
+            uint8_t buf[512];
             fseek(diskfile, 0L, SEEK_SET);
-            if (fread(buf,sizeof(Bit8u),512,diskfile)<512) {
+            if (fread(buf,sizeof(uint8_t),512,diskfile)<512) {
                 fclose(diskfile);
                 WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
                 return;
@@ -461,7 +461,7 @@ void IMGMOUNT::Run(void) {
             return;
         }
         fseek(newDisk,0L, SEEK_END);
-        Bit32u imagesize = (ftell(newDisk) / 1024);
+        uint32_t imagesize = (ftell(newDisk) / 1024);
         const bool hdd = (imagesize > 2880);
         //Seems to make sense to require a valid geometry..
         if (hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 && sizes[3] == 0) {

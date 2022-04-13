@@ -169,7 +169,7 @@ public:
 		                               // modified, it has to be exited
 		                               // as soon as possible
 
-		Bit32u ip_point=SegPhys(cs)+reg_eip;
+		uint32_t ip_point=SegPhys(cs)+reg_eip;
 		ip_point = (PAGING_GetPhysicalPage(ip_point) -
 		            check_cast<uint32_t>(phys_page << 12)) +
 		           (ip_point & 0xfff);
@@ -904,7 +904,7 @@ static void cache_init(bool enable) {
 
 #if (C_DYNREC)
 		cache.pos=&cache_code_link_blocks[64];
-		core_dynrec.runcode=(BlockReturn (*)(const Bit8u*))cache.pos;
+		core_dynrec.runcode=(BlockReturn (*)(const uint8_t*))cache.pos;
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
 #endif

@@ -237,7 +237,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	}
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
 	char * end=strrchr(full,'\\')+1;*end=0;
-	char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u time,date;Bit8u attr;
+	char name[DOS_NAMELENGTH_ASCII];uint32_t size;uint16_t time,date;uint8_t attr;
 	DOS_DTA dta(dos.dta());
 	while (res) {
 		dta.GetResult(name,size,date,time,attr);
@@ -379,13 +379,13 @@ void DOS_Shell::CMD_EXIT(char *args)
 void DOS_Shell::CMD_CHDIR(char * args) {
 	HELP("CHDIR");
 	StripSpaces(args);
-	Bit8u drive = DOS_GetDefaultDrive()+'A';
+	uint8_t drive = DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
 	if (!*args) {
 		DOS_GetCurrentDir(0,dir);
 		WriteOut("%c:\\%s\n",drive,dir);
 	} else if (strlen(args) == 2 && args[1] == ':') {
-		Bit8u targetdrive = (args[0] | 0x20) - 'a' + 1;
+		uint8_t targetdrive = (args[0] | 0x20) - 'a' + 1;
 		unsigned char targetdisplay = *reinterpret_cast<unsigned char*>(&args[0]);
 		if (!DOS_GetCurrentDir(targetdrive,dir)) {
 			if (drive == 'Z') {
@@ -499,10 +499,10 @@ static std::string format_number(size_t num)
 
 struct DtaResult {
 	char name[DOS_NAMELENGTH_ASCII];
-	Bit32u size;
-	Bit16u date;
-	Bit16u time;
-	Bit8u attr;
+	uint32_t size;
+	uint16_t date;
+	uint16_t time;
+	uint8_t attr;
 
 	static bool compareName(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.name, rhs.name) < 0; }
 	static bool compareExt(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.getExtension(), rhs.getExtension()) < 0; }
@@ -1053,7 +1053,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
-	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+	uint32_t size;uint16_t date;uint16_t time;uint8_t attr;
 	char name[DOS_NAMELENGTH_ASCII];
 	std::vector<copysource> sources;
 	// ignore /b and /t switches: always copy binary
@@ -1125,7 +1125,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 	copysource oldsource;
 	copysource source;
-	Bit32u count = 0;
+	uint32_t count = 0;
 	while (sources.size()) {
 		/* Get next source item and keep track of old source for concat start end */
 		oldsource = source;
@@ -1182,7 +1182,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			return;
 		}
 
-		Bit16u sourceHandle,targetHandle;
+		uint16_t sourceHandle,targetHandle;
 		char nameTarget[DOS_PATHLENGTH];
 		char nameSource[DOS_PATHLENGTH];
 
@@ -1208,12 +1208,12 @@ void DOS_Shell::CMD_COPY(char * args) {
 					if (special) oldsource.concat = true;
 					//Don't create a new file when in concat mode
 					if (oldsource.concat || DOS_CreateFile(nameTarget,0,&targetHandle)) {
-						Bit32u dummy=0;
+						uint32_t dummy=0;
 						//In concat mode. Open the target and seek to the eof
 						if (!oldsource.concat || (DOS_OpenFile(nameTarget,OPEN_READWRITE,&targetHandle) &&
 					        	                  DOS_SeekFile(targetHandle,&dummy,DOS_SEEK_END))) {
 							// Copy
-							static Bit8u buffer[0x8000]; // static, otherwise stack overflow possible.
+							static uint8_t buffer[0x8000]; // static, otherwise stack overflow possible.
 							uint16_t toread = 0x8000;
 							do {
 								DOS_ReadFile(sourceHandle, buffer, &toread);
@@ -1522,7 +1522,7 @@ void DOS_Shell::CMD_IF(char * args) {
 			return;
 		}
 
-		Bit8u n = 0;
+		uint8_t n = 0;
 		do n = n * 10 + (*word - '0');
 		while (isdigit(*++word));
 		if (*word && !isspace(*word)) {
@@ -1620,7 +1620,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 		WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 		return;
 	}
-	Bit16u handle;
+	uint16_t handle;
 	char * word;
 nextfile:
 	word=StripWord(args);
@@ -1628,7 +1628,7 @@ nextfile:
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),word);
 		return;
 	}
-	Bit16u n;Bit8u c;
+	uint16_t n;uint8_t c;
 	do {
 		n=1;
 		DOS_ReadFile(handle,&c,&n);
@@ -1743,12 +1743,12 @@ void DOS_Shell::CMD_DATE(char *args)
 	CALLBACK_RunRealInt(0x21);
 
 	const char *datestring = MSG_Get("SHELL_CMD_DATE_DAYS");
-	Bit32u length;
+	uint32_t length;
 	char day[6] = {0};
 	if (sscanf(datestring, "%u", &length) && (length < 5) &&
 	    (strlen(datestring) == (length * 7 + 1))) {
 		// date string appears valid
-		for (Bit32u i = 0; i < length; i++)
+		for (uint32_t i = 0; i < length; i++)
 			day[i] = datestring[reg_al * length + 1 + i];
 	}
 	bool dateonly = ScanCMDBool(args, "T");
@@ -1861,7 +1861,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		strcat(mountstring, temp_str);
 		strcat(mountstring, " ");
 
-   		Bit8u drive;char fulldir[DOS_PATHLENGTH];
+   		uint8_t drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
 
 		if ( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
@@ -1893,14 +1893,14 @@ void DOS_Shell::CMD_SUBST (char * args) {
 
 void DOS_Shell::CMD_LOADHIGH(char *args){
 	HELP("LOADHIGH");
-	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
-	Bit8u umb_flag=dos_infoblock.GetUMBChainState();
-	Bit8u old_memstrat=(Bit8u)(DOS_GetMemAllocStrategy()&0xff);
+	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
+	uint8_t umb_flag=dos_infoblock.GetUMBChainState();
+	uint8_t old_memstrat=(uint8_t)(DOS_GetMemAllocStrategy()&0xff);
 	if (umb_start == 0x9fff) {
 		if ((umb_flag&1) == 0) DOS_LinkUMBsToMemChain(1);
 		DOS_SetMemAllocStrategy(0x80);	// search in UMBs first
 		this->ParseLine(args);
-		Bit8u current_umb_flag=dos_infoblock.GetUMBChainState();
+		uint8_t current_umb_flag=dos_infoblock.GetUMBChainState();
 		if ((current_umb_flag&1)!=(umb_flag&1)) DOS_LinkUMBsToMemChain(umb_flag);
 		DOS_SetMemAllocStrategy(old_memstrat);	// restore strategy
 	} else this->ParseLine(args);
@@ -1938,7 +1938,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	}
 	if (!rem || !*rem) rem = defchoice; /* No choices specified use YN */
 	ptr = rem;
-	Bit8u c;
+	uint8_t c;
 	if (!optS) while ((c = *ptr)) *ptr++ = (char)toupper(c); /* When in no case-sensitive mode. make everything upcase */
 	if (args && *args ) {
 		StripSpaces(args);
@@ -1960,16 +1960,16 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		WriteOut("%c]?",rem[len-1]);
 	}
 
-	Bit16u n=1;
+	uint16_t n=1;
 	do {
 		DOS_ReadFile(STDIN, &c, &n);
 		if (shutdown_requested)
 			break;
 	} while (!c || !(ptr = strchr(rem, (optS ? c : toupper(c)))));
-	c = optS ? c : (Bit8u)toupper(c);
+	c = optS ? c : (uint8_t)toupper(c);
 	DOS_WriteFile(STDOUT, &c, &n);
 	WriteOut_NoParsing("\n");
-	dos.return_code = (Bit8u)(ptr-rem+1);
+	dos.return_code = (uint8_t)(ptr-rem+1);
 }
 
 void DOS_Shell::CMD_PATH(char *args){

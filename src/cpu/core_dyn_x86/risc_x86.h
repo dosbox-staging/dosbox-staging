@@ -39,12 +39,12 @@ static struct {
 
 class GenReg {
 public:
-	Bit8u index = 0;
+	uint8_t index = 0;
 	DynReg  * dynreg = nullptr;
 	Bitu last_used = 0;			//Keeps track of last assigned regs 
 	bool notusable = false;
 
-	GenReg(Bit8u _index) : index(_index) {}
+	GenReg(uint8_t _index) : index(_index) {}
 	void Load(DynReg * _dynreg,bool stale=false) {
 		if (!_dynreg) return;
 		if (GCC_UNLIKELY((Bitu)dynreg)) Clear();
@@ -54,7 +54,7 @@ public:
 		dynreg->genreg=this;
 		if ((!stale) && (dynreg->flags & (DYNFLG_LOAD|DYNFLG_ACTIVE))) {
 			cache_addw(0x058b+(index << (8+3)));		//Mov reg,[data]
-			cache_addd((Bit32u)dynreg->data);
+			cache_addd((uint32_t)dynreg->data);
 		}
 		dynreg->flags|=DYNFLG_ACTIVE;
 	}
@@ -62,7 +62,7 @@ public:
 		if (GCC_UNLIKELY(!((Bitu)dynreg))) IllegalOption("GenReg->Save");
 		dynreg->flags&=~DYNFLG_CHANGED;
 		cache_addw(0x0589+(index << (8+3)));		//Mov [data],reg
-		cache_addd((Bit32u)dynreg->data);
+		cache_addd((uint32_t)dynreg->data);
 	}
 	void Release(void) {
 		if (GCC_UNLIKELY(!((Bitu)dynreg))) return;
@@ -83,7 +83,7 @@ public:
 	}
 };
 
-static BlockReturn gen_runcode(const Bit8u * code) {
+static BlockReturn gen_runcode(const uint8_t * code) {
 	BlockReturn retval;
 #if defined (_MSC_VER)
 	__asm {
@@ -111,7 +111,7 @@ return_address:
 		mov		[retval],eax
 	}
 #elif defined (MACOSX)
-	Bit32u tempflags = reg_flags & FMASK_TEST;
+	uint32_t tempflags = reg_flags & FMASK_TEST;
 	__asm__ volatile (
 		"pushl %%ebx						\n"
 		"pushl %%ebp						\n"
@@ -127,7 +127,7 @@ return_address:
 	);
 	reg_flags=(reg_flags & ~FMASK_TEST) | (tempflags & FMASK_TEST);
 #else
-	Bit32u tempflags = reg_flags & FMASK_TEST;
+	uint32_t tempflags = reg_flags & FMASK_TEST;
 	__asm__ volatile (
 		"pushl %%ebp						\n"
 		"pushl $(run_return_adress)			\n"
@@ -310,7 +310,7 @@ static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
 		IllegalOption("gen_load_host");
 	}
 	cache_addb(0x5+(gr1->index<<3));
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
@@ -325,14 +325,14 @@ static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bitu di1=0) {
 		IllegalOption("gen_mov_host");
 	}
 	cache_addb(0x5+((gr1->index+di1)<<3));
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
 
-static void gen_dop_byte(DualOps op,DynReg * dr1,Bit8u di1,DynReg * dr2,Bit8u di2) {
+static void gen_dop_byte(DualOps op,DynReg * dr1,uint8_t di1,DynReg * dr2,uint8_t di2) {
 	GenReg * gr1=FindDynReg(dr1);GenReg * gr2=FindDynReg(dr2);
-	Bit8u tmp = 0x00;
+	uint8_t tmp = 0x00;
 	switch (op) {
 	case DOP_ADD:	tmp=0x02; break;
 	case DOP_ADC:	tmp=0x12; break;
@@ -354,9 +354,9 @@ nochange:
 	cache_addw(tmp|(0xc0+((gr1->index+di1)<<3)+gr2->index+di2)<<8);
 }
 
-static void gen_dop_byte_imm(DualOps op,DynReg * dr1,Bit8u di1,Bitu imm) {
+static void gen_dop_byte_imm(DualOps op,DynReg * dr1,uint8_t di1,Bitu imm) {
 	GenReg * gr1=FindDynReg(dr1);
-	Bit16u tmp;
+	uint16_t tmp;
 	switch (op) {
 	case DOP_ADD:	tmp=0xc080; break;
 	case DOP_ADC:	tmp=0xd080; break;
@@ -380,9 +380,9 @@ finish:
 	cache_addb(imm);
 }
 
-static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
+static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,uint8_t di1,void* data) {
 	GenReg * gr1=FindDynReg(dr1);
-	Bit16u tmp;
+	uint16_t tmp;
 	switch (op) {
 	case DOP_ADD:	tmp=0x0502; break;
 	case DOP_ADC:	tmp=0x0512; break;
@@ -400,12 +400,12 @@ static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
 	dr1->flags|=DYNFLG_CHANGED;
 nochange:
 	cache_addw(tmp+((gr1->index+di1)<<11));
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 }
 
-static void gen_sop_byte(SingleOps op,DynReg * dr1,Bit8u di1) {
+static void gen_sop_byte(SingleOps op,DynReg * dr1,uint8_t di1) {
 	GenReg * gr1=FindDynReg(dr1);
-	Bit16u tmp;
+	uint16_t tmp;
 	switch (op) {
 	case SOP_INC: tmp=0xc0FE; break;
 	case SOP_DEC: tmp=0xc8FE; break;
@@ -428,7 +428,7 @@ static void gen_extend_word(bool sign,DynReg * ddr,DynReg * dsr) {
 	ddr->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bit8u dsi) {
+static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,uint8_t dsi) {
 	GenReg * gsr=FindDynReg(dsr);
 	GenReg * gdr=FindDynReg(ddr,dword);
 	if (!dword) cache_addb(0x66);
@@ -441,7 +441,7 @@ static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bit8u
 static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm) {
 	GenReg * gdr=FindDynReg(ddr);
 	Bitu imm_size;
-	Bit8u rm_base=(gdr->index << 3);
+	uint8_t rm_base=(gdr->index << 3);
 	if (dsr1) {
 		GenReg * gsr1=FindDynReg(dsr1);
 		if (!imm && (gsr1->index!=0x5)) {
@@ -455,7 +455,7 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm
 			GenReg * gsr2=FindDynReg(dsr2);
 			cache_addb(0x8d);		//LEA
 			cache_addb(rm_base+0x4);			//The sib indicator
-			Bit8u sib=(gsr1->index)+(gsr2->index<<3)+(scale<<6);
+			uint8_t sib=(gsr1->index)+(gsr2->index<<3)+(scale<<6);
 			cache_addb(sib);
 		} else {
 			if ((ddr==dsr1) && !imm_size) return;
@@ -467,7 +467,7 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm
 			GenReg * gsr2=FindDynReg(dsr2);
 			cache_addb(0x8d);			//LEA
 			cache_addb(rm_base+0x4);	//The sib indicator
-			Bit8u sib=(5+(gsr2->index<<3)+(scale<<6));
+			uint8_t sib=(5+(gsr2->index<<3)+(scale<<6));
 			cache_addb(sib);
 			imm_size=4;
 		} else {
@@ -486,9 +486,9 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm
 
 static void gen_lea_imm_mem(DynReg * ddr,DynReg * dsr,void* data) {
 	GenReg * gdr=FindDynReg(ddr);
-	Bit8u rm_base=(gdr->index << 3);
+	uint8_t rm_base=(gdr->index << 3);
 	cache_addw(0x058b+(rm_base<<8));
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 	GenReg * gsr=FindDynReg(dsr);
 	cache_addb(0x8d);		//LEA
 	cache_addb(rm_base+0x44);
@@ -500,7 +500,7 @@ static void gen_lea_imm_mem(DynReg * ddr,DynReg * dsr,void* data) {
 static void gen_dop_word(DualOps op,bool dword,DynReg * dr1,DynReg * dr2) {
 	GenReg * gr2=FindDynReg(dr2);
 	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
-	Bit8u tmp;
+	uint8_t tmp;
 	switch (op) {
 	case DOP_ADD:	tmp=0x03; break;
 	case DOP_ADC:	tmp=0x13; break;
@@ -533,7 +533,7 @@ nochange:
 
 static void gen_dop_word_imm(DualOps op,bool dword,DynReg * dr1,Bits imm) {
 	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
-	Bit16u tmp;
+	uint16_t tmp;
 	if (!dword) cache_addb(0x66);
 	switch (op) {
 	case DOP_ADD:	tmp=0xc081; break; 
@@ -559,7 +559,7 @@ finish:
 
 static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) {
 	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
-	Bit16u tmp;
+	uint16_t tmp;
 	switch (op) {
 	case DOP_ADD:	tmp=0x0503; break; 
 	case DOP_ADC:	tmp=0x0513; break;
@@ -581,12 +581,12 @@ static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) 
 nochange:
 	if (!dword) cache_addb(0x66);
 	cache_addw(tmp+(gr1->index<<11));
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 }
 
 static void gen_dop_word_var(DualOps op,bool dword,DynReg * dr1,void* drd) {
 	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
-	Bit8u tmp;
+	uint8_t tmp;
 	switch (op) {
 	case DOP_ADD:	tmp=0x03; break;
 	case DOP_ADC:	tmp=0x13; break;
@@ -604,7 +604,7 @@ static void gen_dop_word_var(DualOps op,bool dword,DynReg * dr1,void* drd) {
 	}
 	if (!dword) cache_addb(0x66);
 	cache_addw(tmp|(0x05+((gr1->index)<<3))<<8);
-	cache_addd((Bit32u)drd);
+	cache_addd((uint32_t)drd);
 }
 
 static void gen_imul_word(bool dword,DynReg * dr1,DynReg * dr2) {
@@ -649,16 +649,16 @@ static void gen_sop_word(SingleOps op,bool dword,DynReg * dr1) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_byte_cl(Bitu op,DynReg * dr1,Bit8u di1,DynReg * drecx) {
+static void gen_shift_byte_cl(Bitu op,DynReg * dr1,uint8_t di1,DynReg * drecx) {
 	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	GenReg * gr1=FindDynReg(dr1);
-	cache_addw(0xc0d2+(((Bit16u)op) << 11)+ ((gr1->index+di1)<<8));
+	cache_addw(0xc0d2+(((uint16_t)op) << 11)+ ((gr1->index+di1)<<8));
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_byte_imm(Bitu op,DynReg * dr1,Bit8u di1,Bit8u imm) {
+static void gen_shift_byte_imm(Bitu op,DynReg * dr1,uint8_t di1,uint8_t imm) {
 	GenReg * gr1=FindDynReg(dr1);
-	cache_addw(0xc0c0+(((Bit16u)op) << 11) + ((gr1->index+di1)<<8));
+	cache_addw(0xc0c0+(((uint16_t)op) << 11) + ((gr1->index+di1)<<8));
 	cache_addb(imm);
 	dr1->flags|=DYNFLG_CHANGED;
 }
@@ -667,17 +667,17 @@ static void gen_shift_word_cl(Bitu op,bool dword,DynReg * dr1,DynReg * drecx) {
 	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	GenReg * gr1=FindDynReg(dr1);
 	if (!dword) cache_addb(0x66);
-	cache_addw(0xc0d3+(((Bit16u)op) << 11) + ((gr1->index)<<8));
+	cache_addw(0xc0d3+(((uint16_t)op) << 11) + ((gr1->index)<<8));
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_word_imm(Bitu op,bool dword,DynReg * dr1,Bit8u imm) {
+static void gen_shift_word_imm(Bitu op,bool dword,DynReg * dr1,uint8_t imm) {
 	GenReg * gr1=FindDynReg(dr1);
 	dr1->flags|=DYNFLG_CHANGED;
 	if (!dword) {
-		cache_addd(0x66|((0xc0c1+((Bit16u)op << 11) + (gr1->index<<8))|imm<<16)<<8);
+		cache_addd(0x66|((0xc0c1+((uint16_t)op << 11) + (gr1->index<<8))|imm<<16)<<8);
 	} else { 
-		cache_addw(0xc0c1+((Bit16u)op << 11) + (gr1->index<<8));
+		cache_addw(0xc0c1+((uint16_t)op << 11) + (gr1->index<<8));
 		cache_addb(imm);
 	}
 }
@@ -698,7 +698,7 @@ static void gen_cwd(bool dword,DynReg * dyn_ax,DynReg * dyn_dx) {
 	else cache_addb(0x99);
 }
 
-static void gen_mul_byte(bool imul,DynReg * dyn_ax,DynReg * dr1,Bit8u di1) {
+static void gen_mul_byte(bool imul,DynReg * dyn_ax,DynReg * dr1,uint8_t di1) {
 	ForceDynReg(x86gen.regs[X86_REG_EAX],dyn_ax);
 	GenReg * gr1=FindDynReg(dr1);
 	if (imul) cache_addw(0xe8f6+((gr1->index+di1)<<8));
@@ -855,7 +855,7 @@ static void gen_call_function(void * func,char const* ops,...) {
 		if (free_flags) release_flags=false;
 	} else {
 		/* align stack */
-		Bit32u stack_used=8;	// saving esp and return address on the stack
+		uint32_t stack_used=8;	// saving esp and return address on the stack
 
 		cache_addw(0xc48b);		// mov eax,esp
 		cache_addb(0x2d);		// sub eax,stack_used
@@ -877,7 +877,7 @@ static void gen_call_function(void * func,char const* ops,...) {
 		DynRegs[G_ESP].genreg->Save();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
-	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
+	cache_addd((uint32_t)func - (uint32_t)cache.pos-4);
 	/* Restore the params of the stack */
 	if (paramcount) {
 		cache_addw(0xc483);				//add ESP,imm byte
@@ -917,7 +917,7 @@ static void gen_call_function(void * func,char const* ops,...) {
 #endif
 }
 
-static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
+static void gen_call_write(DynReg * dr,uint32_t val,Bitu write_size) {
 	/* Clear the EAX Genreg for usage */
 	x86gen.regs[X86_REG_EAX]->Clear();
 	x86gen.regs[X86_REG_EAX]->notusable=true;
@@ -952,9 +952,9 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
 	switch (write_size) {
-		case 1: cache_addd((Bit32u)mem_writeb_checked - (Bit32u)cache.pos-4); break;
-		case 2: cache_addd((Bit32u)mem_writew_checked - (Bit32u)cache.pos-4); break;
-		case 4: cache_addd((Bit32u)mem_writed_checked - (Bit32u)cache.pos-4); break;
+		case 1: cache_addd((uint32_t)mem_writeb_checked - (uint32_t)cache.pos-4); break;
+		case 2: cache_addd((uint32_t)mem_writew_checked - (uint32_t)cache.pos-4); break;
+		case 4: cache_addd((uint32_t)mem_writed_checked - (uint32_t)cache.pos-4); break;
 		default: IllegalOption("gen_call_write");
 	}
 
@@ -969,46 +969,46 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 #endif
 }
 
-static const Bit8u * gen_create_branch(BranchTypes type) {
+static const uint8_t * gen_create_branch(BranchTypes type) {
 	/* First free all registers */
 	cache_addw(0x70+type);
 	return (cache.pos-1);
 }
 
-static void gen_fill_branch(const Bit8u * data,const Bit8u * from=cache.pos) {
+static void gen_fill_branch(const uint8_t * data,const uint8_t * from=cache.pos) {
 #if C_DEBUG
 	Bits len=from-data;
 	if (len<0) len=-len;
 	if (len>126) LOG_MSG("Big jump %d",len);
 #endif
-	cache_addb((Bit8u)(from-data-1),data);
+	cache_addb((uint8_t)(from-data-1),data);
 }
 
-static const Bit8u * gen_create_branch_long(BranchTypes type) {
+static const uint8_t * gen_create_branch_long(BranchTypes type) {
 	cache_addw(0x800f+(type<<8));
 	cache_addd(0);
 	return (cache.pos-4);
 }
 
-static void gen_fill_branch_long(const Bit8u * data,const Bit8u * from=cache.pos) {
-	cache_addd((Bit32u)(from-data-4),data);
+static void gen_fill_branch_long(const uint8_t * data,const uint8_t * from=cache.pos) {
+	cache_addd((uint32_t)(from-data-4),data);
 }
 
-static const Bit8u * gen_create_jump(const Bit8u * to=0) {
+static const uint8_t * gen_create_jump(const uint8_t * to=0) {
 	/* First free all registers */
 	cache_addb(0xe9);
 	cache_addd(to-(cache.pos+4));
 	return (cache.pos-4);
 }
 
-static void gen_fill_jump(const Bit8u * data,const Bit8u * to=cache.pos) {
+static void gen_fill_jump(const uint8_t * data,const uint8_t * to=cache.pos) {
 	gen_fill_branch_long(data,to);
 }
 
 
 static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 	cache_addb(0xa1);
-	cache_addd((Bit32u)ptr);
+	cache_addd((uint32_t)ptr);
 	cache_addb(0xff);		//JMP EA
 	if (!imm) {			//NO EBP
 		cache_addb(0x20);
@@ -1039,7 +1039,7 @@ static void gen_load_flags(DynReg * dynreg) {
 
 static void gen_save_host_direct(void * data,Bits imm) {
 	cache_addw(0x05c7);		//MOV [],dword
-	cache_addd((Bit32u)data);
+	cache_addd((uint32_t)data);
 	cache_addd(imm);
 }
 
@@ -1057,7 +1057,7 @@ static void gen_return(BlockReturn retcode) {
 static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
 	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption("gen_return_fast");
 	cache_addw(0x0d8b);			//MOV ECX, the flags
-	cache_addd((Bit32u)&cpu_regs.flags);
+	cache_addd((uint32_t)&cpu_regs.flags);
 	if (!ret_exception) {
 		cache_addw(0xc483);			//ADD ESP,4
 		cache_addb(0x4);

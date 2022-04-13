@@ -104,7 +104,7 @@ static double FROUND(double in){
 	case ROUND_Nearest:	
 		if (in-floor(in)>0.5) return (floor(in)+1);
 		else if (in-floor(in)<0.5) return (floor(in));
-		else return (((static_cast<Bit64s>(floor(in)))&1)!=0)?(floor(in)+1):(floor(in));
+		else return (((static_cast<int64_t>(floor(in)))&1)!=0)?(floor(in)+1):(floor(in));
 		break;
 	case ROUND_Down:
 		return (floor(in));
@@ -126,19 +126,19 @@ static double FROUND(double in){
 
 static Real64 FPU_FLD80(PhysPt addr) {
 	struct {
-		Bit16s begin;
+		int16_t begin;
 		FPU_Reg eind;
 	} test;
 	test.eind.l.lower = mem_readd(addr);
 	test.eind.l.upper = mem_readd(addr+4);
 	test.begin = mem_readw(addr+8);
    
-	Bit64s exp64 = (((test.begin&0x7fff) - BIAS80));
-	Bit64s blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	Bit64s exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
+	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
+	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
+	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
 
-	Bit64s mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
-	Bit64s sign = (test.begin&0x8000)?1:0;
+	int64_t mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
+	int64_t sign = (test.begin&0x8000)?1:0;
 	FPU_Reg result;
 	result.ll = (sign <<63)|(exp64final << 52)| mant64;
 
@@ -154,21 +154,21 @@ static Real64 FPU_FLD80(PhysPt addr) {
 
 static void FPU_ST80(PhysPt addr,Bitu reg) {
 	struct {
-		Bit16s begin;
+		int16_t begin;
 		FPU_Reg eind;
 	} test;
-	Bit64s sign80 = (fpu.regs[reg].ll&LONGTYPE(0x8000000000000000))?1:0;
-	Bit64s exp80 =  fpu.regs[reg].ll&LONGTYPE(0x7ff0000000000000);
-	Bit64s exp80final = (exp80>>52);
-	Bit64s mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
-	Bit64s mant80final = (mant80 << 11);
+	int64_t sign80 = (fpu.regs[reg].ll&LONGTYPE(0x8000000000000000))?1:0;
+	int64_t exp80 =  fpu.regs[reg].ll&LONGTYPE(0x7ff0000000000000);
+	int64_t exp80final = (exp80>>52);
+	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
+	int64_t mant80final = (mant80 << 11);
 	if(fpu.regs[reg].d != 0){ //Zero is a special case
 		// Elvira wants the 8 and tcalc doesn't
 		mant80final |= LONGTYPE(0x8000000000000000);
 		//Ca-cyber doesn't like this when result is zero.
 		exp80final += (BIAS80 - BIAS64);
 	}
-	test.begin = (static_cast<Bit16s>(sign80)<<15)| static_cast<Bit16s>(exp80final);
+	test.begin = (static_cast<int16_t>(sign80)<<15)| static_cast<int16_t>(exp80final);
 	test.eind.ll = mant80final;
 	mem_writed(addr,test.eind.l.lower);
 	mem_writed(addr+4,test.eind.l.upper);
@@ -179,7 +179,7 @@ static void FPU_ST80(PhysPt addr,Bitu reg) {
 static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
 	union {
 		float f;
-		Bit32u l;
+		uint32_t l;
 	}	blah;
 	blah.l = mem_readd(addr);
 	fpu.regs[store_to].d = static_cast<Real64>(blah.f);
@@ -195,12 +195,12 @@ static void FPU_FLD_F80(PhysPt addr) {
 }
 
 static void FPU_FLD_I16(PhysPt addr,Bitu store_to) {
-	Bit16s blah = mem_readw(addr);
+	int16_t blah = mem_readw(addr);
 	fpu.regs[store_to].d = static_cast<Real64>(blah);
 }
 
 static void FPU_FLD_I32(PhysPt addr,Bitu store_to) {
-	Bit32s blah = mem_readd(addr);
+	int32_t blah = mem_readd(addr);
 	fpu.regs[store_to].d = static_cast<Real64>(blah);
 }
 
@@ -212,9 +212,9 @@ static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
 }
 
 static void FPU_FBLD(PhysPt addr,Bitu store_to) {
-	Bit64u val = 0;
+	uint64_t val = 0;
 	Bitu in = 0;
-	Bit64u base = 1;
+	uint64_t base = 1;
 	for(Bitu i = 0;i < 9;i++){
 		in = mem_readb(addr + i);
 		val += ( (in&0xf) * base); //in&0xf shouldn't be higher then 9
@@ -250,7 +250,7 @@ static inline void FPU_FLD_I16_EA(PhysPt addr) {
 static void FPU_FST_F32(PhysPt addr) {
 	union {
 		float f;
-		Bit32u l;
+		uint32_t l;
 	}	blah;
 	//should depend on rounding method
 	blah.f = static_cast<float>(fpu.regs[TOP].d);
@@ -268,18 +268,18 @@ static void FPU_FST_F80(PhysPt addr) {
 
 static void FPU_FST_I16(PhysPt addr) {
 	double val = FROUND(fpu.regs[TOP].d);
-	mem_writew(addr,(val < 32768.0 && val >= -32768.0)?static_cast<Bit16s>(val):0x8000);
+	mem_writew(addr,(val < 32768.0 && val >= -32768.0)?static_cast<int16_t>(val):0x8000);
 }
 
 static void FPU_FST_I32(PhysPt addr) {
 	double val = FROUND(fpu.regs[TOP].d);
-	mem_writed(addr,(val < 2147483648.0 && val >= -2147483648.0)?static_cast<Bit32s>(val):0x80000000);
+	mem_writed(addr,(val < 2147483648.0 && val >= -2147483648.0)?static_cast<int32_t>(val):0x80000000);
 }
 
 static void FPU_FST_I64(PhysPt addr) {
 	double val = FROUND(fpu.regs[TOP].d);
 	FPU_Reg blah;
-	blah.ll = (val < 9223372036854775808.0 && val >= -9223372036854775808.0)?static_cast<Bit64s>(val):LONGTYPE(0x8000000000000000);
+	blah.ll = (val < 9223372036854775808.0 && val >= -9223372036854775808.0)?static_cast<int64_t>(val):LONGTYPE(0x8000000000000000);
 
 	mem_writed(addr,blah.l.lower);
 	mem_writed(addr+4,blah.l.upper);
@@ -292,7 +292,7 @@ static void FPU_FBST(PhysPt addr) {
 		val.d = -val.d;
 	} else mem_writeb(addr+9,0);
 
-	Bit64u rndint = static_cast<Bit64u>(FROUND(val.d));
+	uint64_t rndint = static_cast<uint64_t>(FROUND(val.d));
 	// BCD (18 decimal digits) overflow? (0x0DE0B6B3A763FFFF max)
 	if (rndint > LONGTYPE(999999999999999999)) {
 		// write BCD integer indefinite value
@@ -429,7 +429,7 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 }
 
 static void FPU_FRNDINT(void){
-	Bit64s temp  = static_cast<Bit64s>(FROUND(fpu.regs[TOP].d));
+	int64_t temp  = static_cast<int64_t>(FROUND(fpu.regs[TOP].d));
 	double tempd = static_cast<double>(temp);
 	if (fpu.cw&0x20) { //As we don't generate exceptions; only do it when masked
 		if (tempd != fpu.regs[TOP].d)
@@ -441,7 +441,7 @@ static void FPU_FRNDINT(void){
 static void FPU_FPREM(void){
 	Real64 valtop = fpu.regs[TOP].d;
 	Real64 valdiv = fpu.regs[STV(1)].d;
-	Bit64s ressaved = static_cast<Bit64s>( (valtop/valdiv) );
+	int64_t ressaved = static_cast<int64_t>( (valtop/valdiv) );
 // Some backups
 //	Real64 res=valtop - ressaved*valdiv; 
 //      res= fmod(valtop,valdiv);
@@ -457,10 +457,10 @@ static void FPU_FPREM1(void){
 	Real64 valdiv = fpu.regs[STV(1)].d;
 	double quot = valtop/valdiv;
 	double quotf = floor(quot);
-	Bit64s ressaved;
-	if (quot-quotf>0.5) ressaved = static_cast<Bit64s>(quotf+1);
-	else if (quot-quotf<0.5) ressaved = static_cast<Bit64s>(quotf);
-	else ressaved = static_cast<Bit64s>((((static_cast<Bit64s>(quotf))&1)!=0)?(quotf+1):(quotf));
+	int64_t ressaved;
+	if (quot-quotf>0.5) ressaved = static_cast<int64_t>(quotf+1);
+	else if (quot-quotf<0.5) ressaved = static_cast<int64_t>(quotf);
+	else ressaved = static_cast<int64_t>((((static_cast<int64_t>(quotf))&1)!=0)?(quotf+1):(quotf));
 	fpu.regs[TOP].d = valtop - ressaved*valdiv;
 	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
 	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
@@ -511,7 +511,7 @@ static void FPU_FYL2XP1(void){
 }
 
 static void FPU_FSCALE(void){
-	fpu.regs[TOP].d *= pow(2.0,static_cast<Real64>(static_cast<Bit64s>(fpu.regs[STV(1)].d)));
+	fpu.regs[TOP].d *= pow(2.0,static_cast<Real64>(static_cast<int64_t>(fpu.regs[STV(1)].d)));
 	//FPU_SET_C1(0);
 	return; //2^x where x is chopped.
 }
@@ -519,19 +519,19 @@ static void FPU_FSCALE(void){
 static void FPU_FSTENV(PhysPt addr){
 	FPU_SET_TOP(TOP);
 	if(!cpu.code.big) {
-		mem_writew(addr+0,static_cast<Bit16u>(fpu.cw));
-		mem_writew(addr+2,static_cast<Bit16u>(fpu.sw));
-		mem_writew(addr+4,static_cast<Bit16u>(FPU_GetTag()));
+		mem_writew(addr+0,static_cast<uint16_t>(fpu.cw));
+		mem_writew(addr+2,static_cast<uint16_t>(fpu.sw));
+		mem_writew(addr+4,static_cast<uint16_t>(FPU_GetTag()));
 	} else { 
-		mem_writed(addr+0,static_cast<Bit32u>(fpu.cw));
-		mem_writed(addr+4,static_cast<Bit32u>(fpu.sw));
-		mem_writed(addr+8,static_cast<Bit32u>(FPU_GetTag()));
+		mem_writed(addr+0,static_cast<uint32_t>(fpu.cw));
+		mem_writed(addr+4,static_cast<uint32_t>(fpu.sw));
+		mem_writed(addr+8,static_cast<uint32_t>(FPU_GetTag()));
 	}
 }
 
 static void FPU_FLDENV(PhysPt addr){
-	Bit16u tag;
-	Bit32u tagbig;
+	uint16_t tag;
+	uint32_t tagbig;
 	Bitu cw;
 	if(!cpu.code.big) {
 		cw     = mem_readw(addr+0);
@@ -539,9 +539,9 @@ static void FPU_FLDENV(PhysPt addr){
 		tag    = mem_readw(addr+4);
 	} else { 
 		cw     = mem_readd(addr+0);
-		fpu.sw = (Bit16u)mem_readd(addr+4);
+		fpu.sw = (uint16_t)mem_readd(addr+4);
 		tagbig = mem_readd(addr+8);
-		tag    = static_cast<Bit16u>(tagbig);
+		tag    = static_cast<uint16_t>(tagbig);
 	}
 	FPU_SetTag(tag);
 	FPU_SetCW(cw);
@@ -573,8 +573,8 @@ static void FPU_FXTRACT(void) {
 	// if double ever uses a different base please correct this function
 
 	FPU_Reg test = fpu.regs[TOP];
-	Bit64s exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
-	Bit64s exp80final = (exp80>>52) - BIAS64;
+	int64_t exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
+	int64_t exp80final = (exp80>>52) - BIAS64;
 	Real64 mant = test.d / (pow(2.0,static_cast<Real64>(exp80final)));
 	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
 	FPU_PUSH(mant);

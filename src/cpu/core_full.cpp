@@ -36,9 +36,9 @@ typedef PhysPt EAPoint;
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
 
-#define LoadMbs(off) (Bit8s)(LoadMb(off))
-#define LoadMws(off) (Bit16s)(LoadMw(off))
-#define LoadMds(off) (Bit32s)(LoadMd(off))
+#define LoadMbs(off) (int8_t)(LoadMb(off))
+#define LoadMws(off) (int16_t)(LoadMw(off))
+#define LoadMds(off) (int32_t)(LoadMd(off))
 
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
@@ -56,7 +56,7 @@ typedef PhysPt EAPoint;
 
 #define EXCEPTION(blah)										\
 	{														\
-		Bit8u new_num=blah;									\
+		uint8_t new_num=blah;									\
 		CPU_Exception(new_num,0);							\
 		continue;											\
 	}

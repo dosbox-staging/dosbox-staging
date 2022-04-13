@@ -27,31 +27,31 @@
 #ifndef RENDER_TEMPLATES_HQNX_TABLE_H
 #define RENDER_TEMPLATES_HQNX_TABLE_H
 
-static Bit32u *_RGBtoYUV = 0;
-static inline bool diffYUV(Bit32u yuv1, Bit32u yuv2)
+static uint32_t *_RGBtoYUV = 0;
+static inline bool diffYUV(uint32_t yuv1, uint32_t yuv2)
 {
-	static const Bit32u Ymask = 0x00FF0000;
-	static const Bit32u Umask = 0x0000FF00;
-	static const Bit32u Vmask = 0x000000FF;
-	static const Bit32u trY   = 0x00300000;
-	static const Bit32u trU   = 0x00000700;
-	static const Bit32u trV   = 0x00000006;
+	static const uint32_t Ymask = 0x00FF0000;
+	static const uint32_t Umask = 0x0000FF00;
+	static const uint32_t Vmask = 0x000000FF;
+	static const uint32_t trY   = 0x00300000;
+	static const uint32_t trU   = 0x00000700;
+	static const uint32_t trV   = 0x00000006;
 
-	Bit32u diff;
-	Bit32u mask;
+	uint32_t diff;
+	uint32_t mask;
 
 	diff = ((yuv1 & Ymask) - (yuv2 & Ymask));
-	mask = ((Bit32s)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
+	mask = ((int32_t)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
 	if (diff > trY) return true;
 
 	diff = ((yuv1 & Umask) - (yuv2 & Umask));
-	mask = ((Bit32s)diff)>> 31; // ~1/-1 if value < 0, 0 otherwise
+	mask = ((int32_t)diff)>> 31; // ~1/-1 if value < 0, 0 otherwise
 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
 	if (diff > trU) return true;
 
 	diff = ((yuv1 & Vmask) - (yuv2 & Vmask));
-	mask = ((Bit32s)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
+	mask = ((int32_t)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
 	if (diff > trV) return true;
 
@@ -65,7 +65,7 @@ static inline void conc2d(InitLUTs,SBPP)(void)
 	int r, g, b;
 	int Y, u, v;
 
-	_RGBtoYUV = (Bit32u *)malloc(65536 * sizeof(Bit32u));
+	_RGBtoYUV = (uint32_t *)malloc(65536 * sizeof(uint32_t));
 	if (_RGBtoYUV == nullptr) {
 		return;
 	}

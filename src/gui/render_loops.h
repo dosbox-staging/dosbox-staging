@@ -42,7 +42,7 @@ lastagain:
 	CC[render.scale.outLine][0] = 0;
 	const PTYPE * fc = &FC[render.scale.outLine][1];
 	PTYPE * line0=(PTYPE *)(render.scale.outWrite);
-	Bit8u * changed = &CC[render.scale.outLine][1];
+	uint8_t * changed = &CC[render.scale.outLine][1];
 	Bitu b;
 	for (b=0;b<render.scale.blocks;b++) {
 #if (SCALERHEIGHT > 1) 
@@ -67,16 +67,16 @@ lastagain:
 			continue;
 		case SCALE_LEFT:
 #if (SCALERHEIGHT > 1) 
-			line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
+			line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
-			line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+			line2 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 2);
 #endif
 #if (SCALERHEIGHT > 3) 
-			line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+			line3 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 3);
 #endif
 #if (SCALERHEIGHT > 4) 
-			line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+			line4 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 4);
 #endif
 			SCALERFUNC;
 			line0 += SCALERWIDTH * SCALER_BLOCKSIZE;
@@ -84,31 +84,31 @@ lastagain:
 			break;
 		case SCALE_LEFT | SCALE_RIGHT:
 #if (SCALERHEIGHT > 1) 
-			line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
+			line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
-			line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+			line2 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 2);
 #endif
 #if (SCALERHEIGHT > 3) 
-			line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+			line3 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 3);
 #endif
 #if (SCALERHEIGHT > 4) 
-			line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+			line4 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 4);
 #endif
 			SCALERFUNC;
 			[[fallthrough]];
 		case SCALE_RIGHT:
 #if (SCALERHEIGHT > 1) 			
-			line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
+			line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
-			line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+			line2 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 2);
 #endif
 #if (SCALERHEIGHT > 3) 
-			line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+			line3 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 3);
 #endif
 #if (SCALERHEIGHT > 4) 
-			line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+			line4 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 4);
 #endif
 			line0 += SCALERWIDTH * (SCALER_BLOCKSIZE -1);
 #if (SCALERHEIGHT > 1) 
@@ -144,16 +144,16 @@ lastagain:
 #endif
 #else
 #if (SCALERHEIGHT > 1) 
-			line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
+			line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
-			line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+			line2 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 2);
 #endif
 #if (SCALERHEIGHT > 3) 
-			line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+			line3 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 3);
 #endif
 #if (SCALERHEIGHT > 4) 
-			line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+			line4 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch * 4);
 #endif
 #endif //defined(SCALERLINEAR)
 			for (Bitu i = 0; i<SCALER_BLOCKSIZE;i++) {
@@ -175,16 +175,16 @@ lastagain:
 			}
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1) 
-			BituMove((Bit8u*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch  ,WC[0], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
+			BituMove((uint8_t*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch  ,WC[0], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
 #endif
 #if (SCALERHEIGHT > 2) 
-			BituMove((Bit8u*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*2,WC[1], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
+			BituMove((uint8_t*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*2,WC[1], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
 #endif
 #if (SCALERHEIGHT > 3) 
-			BituMove((Bit8u*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*3,WC[2], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
+			BituMove((uint8_t*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*3,WC[2], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
 #endif
 #if (SCALERHEIGHT > 4) 
-			BituMove((Bit8u*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*4,WC[3], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
+			BituMove((uint8_t*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*4,WC[3], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
 #endif
 #endif //defined(SCALERLINEAR)
 			break;

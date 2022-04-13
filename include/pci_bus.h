@@ -30,7 +30,7 @@
 class PCI_Device {
 private:
 	Bits pci_id, pci_subfunction;
-	Bit16u vendor_id, device_id;
+	uint16_t vendor_id, device_id;
 
 	// subdevices declarations, they will respond to pci functions 1 to 7
 	// (main device is attached to function 0)
@@ -38,7 +38,7 @@ private:
 	PCI_Device* subdevices[PCI_MAX_PCIFUNCTIONS-1];
 
 public:
-	PCI_Device(Bit16u vendor, Bit16u device);
+	PCI_Device(uint16_t vendor, uint16_t device);
 
 	Bits PCIId(void) {
 		return pci_id;
@@ -46,10 +46,10 @@ public:
 	Bits PCISubfunction(void) {
 		return pci_subfunction;
 	}
-	Bit16u VendorID(void) {
+	uint16_t VendorID(void) {
 		return vendor_id;
 	}
-	Bit16u DeviceID(void) {
+	uint16_t DeviceID(void) {
 		return device_id;
 	}
 
@@ -60,9 +60,9 @@ public:
 
 	PCI_Device* GetSubdevice(Bits subfct);
 
-	Bit16u NumSubdevices(void) {
-		if (num_subdevices>PCI_MAX_PCIFUNCTIONS-1) return (Bit16u)(PCI_MAX_PCIFUNCTIONS-1);
-		return (Bit16u)num_subdevices;
+	uint16_t NumSubdevices(void) {
+		if (num_subdevices>PCI_MAX_PCIFUNCTIONS-1) return (uint16_t)(PCI_MAX_PCIFUNCTIONS-1);
+		return (uint16_t)num_subdevices;
 	}
 
 	Bits GetNextSubdeviceNumber(void) {
@@ -70,10 +70,10 @@ public:
 		return (Bits)num_subdevices+1;
 	}
 
-	virtual Bits ParseReadRegister(Bit8u regnum)=0;
-	virtual bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask)=0;
-	virtual Bits ParseWriteRegister(Bit8u regnum,Bit8u value)=0;
-	virtual bool InitializeRegisters(Bit8u registers[256])=0;
+	virtual Bits ParseReadRegister(uint8_t regnum)=0;
+	virtual bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)=0;
+	virtual Bits ParseWriteRegister(uint8_t regnum,uint8_t value)=0;
+	virtual bool InitializeRegisters(uint8_t registers[256])=0;
 
 };
 

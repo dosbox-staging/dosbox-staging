@@ -160,7 +160,7 @@
 		break;
 	case R_SCASB:
 		{
-			Bit8u val2;
+			uint8_t val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMb(di_base+di_index);
@@ -173,7 +173,7 @@
 	case R_SCASW:
 		{
 			add_index *= 2;
-			Bit16u val2;
+			uint16_t val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMw(di_base+di_index);
@@ -186,7 +186,7 @@
 	case R_SCASD:
 		{
 			add_index *= 4;
-			Bit32u val2;
+			uint32_t val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMd(di_base+di_index);
@@ -198,7 +198,7 @@
 		break;
 	case R_CMPSB:
 		{
-			Bit8u val1,val2;
+			uint8_t val1,val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMb(si_base+si_index);
@@ -213,7 +213,7 @@
 	case R_CMPSW:
 		{
 			add_index *= 2;
-			Bit16u val1,val2;
+			uint16_t val1,val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMw(si_base+si_index);
@@ -228,7 +228,7 @@
 	case R_CMPSD:
 		{
 			add_index *= 4;
-			Bit32u val1,val2;
+			uint32_t val1,val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMd(si_base+si_index);

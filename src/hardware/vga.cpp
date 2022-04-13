@@ -31,18 +31,18 @@
 VGA_Type vga;
 SVGA_Driver svga;
 
-Bit32u CGA_2_Table[16];
-Bit32u CGA_4_Table[256];
-Bit32u CGA_4_HiRes_Table[256];
+uint32_t CGA_2_Table[16];
+uint32_t CGA_4_Table[256];
+uint32_t CGA_4_HiRes_Table[256];
 uint32_t CGA_16_Table[256];
 int CGA_Composite_Table[1024];
-Bit32u TXT_Font_Table[16];
-Bit32u TXT_FG_Table[16];
-Bit32u TXT_BG_Table[16];
-Bit32u ExpandTable[256];
-Bit32u Expand16Table[4][16];
-Bit32u FillTable[16];
-Bit32u ColorTable[16];
+uint32_t TXT_Font_Table[16];
+uint32_t TXT_FG_Table[16];
+uint32_t TXT_BG_Table[16];
+uint32_t ExpandTable[256];
+uint32_t Expand16Table[4][16];
+uint32_t FillTable[16];
+uint32_t ColorTable[16];
 
 std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
 {
@@ -251,8 +251,8 @@ void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 	VGA_StartResize();
 }
 
-void VGA_SetCGA2Table(Bit8u val0,Bit8u val1) {
-	Bit8u total[2]={ val0,val1};
+void VGA_SetCGA2Table(uint8_t val0,uint8_t val1) {
+	uint8_t total[2]={ val0,val1};
 	for (Bitu i=0;i<16;i++) {
 		CGA_2_Table[i]=
 #ifdef WORDS_BIGENDIAN
@@ -265,8 +265,8 @@ void VGA_SetCGA2Table(Bit8u val0,Bit8u val1) {
 	}
 }
 
-void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3) {
-	Bit8u total[4]={ val0,val1,val2,val3};
+void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
+	uint8_t total[4]={ val0,val1,val2,val3};
 	for (Bitu i=0;i<256;i++) {
 		CGA_4_Table[i]=
 #ifdef WORDS_BIGENDIAN

@@ -1367,7 +1367,7 @@ CommandLine::CommandLine(int argc, char const *const argv[])
 	}
 }
 
-Bit16u CommandLine::Get_arglength()
+uint16_t CommandLine::Get_arglength()
 {
 	if (cmds.empty())
 		return 0;

@@ -120,29 +120,29 @@ struct VGA_Config {
 	bool compatible_chain4 = false;
 
 	/* Pixel Scrolling */
-	Bit8u pel_panning = 0; /* Amount of pixels to skip when starting
+	uint8_t pel_panning = 0; /* Amount of pixels to skip when starting
 	                          horizontal line */
-	Bit8u hlines_skip = 0;
-	Bit8u bytes_skip = 0;
-	Bit8u addr_shift = 0;
+	uint8_t hlines_skip = 0;
+	uint8_t bytes_skip = 0;
+	uint8_t addr_shift = 0;
 
 	/* Specific stuff memory write/read handling */
 
-	Bit8u read_mode = 0;
-	Bit8u write_mode = 0;
-	Bit8u read_map_select = 0;
-	Bit8u color_dont_care = 0;
-	Bit8u color_compare = 0;
-	Bit8u data_rotate = 0;
-	Bit8u raster_op = 0;
+	uint8_t read_mode = 0;
+	uint8_t write_mode = 0;
+	uint8_t read_map_select = 0;
+	uint8_t color_dont_care = 0;
+	uint8_t color_compare = 0;
+	uint8_t data_rotate = 0;
+	uint8_t raster_op = 0;
 
-	Bit32u full_bit_mask = 0;
-	Bit32u full_map_mask = 0;
-	Bit32u full_not_map_mask = 0;
-	Bit32u full_set_reset = 0;
-	Bit32u full_not_enable_set_reset = 0;
-	Bit32u full_enable_set_reset = 0;
-	Bit32u full_enable_and_set_reset = 0;
+	uint32_t full_bit_mask = 0;
+	uint32_t full_map_mask = 0;
+	uint32_t full_not_map_mask = 0;
+	uint32_t full_set_reset = 0;
+	uint32_t full_not_enable_set_reset = 0;
+	uint32_t full_enable_set_reset = 0;
+	uint32_t full_enable_and_set_reset = 0;
 };
 
 enum Drawmode { PART, DRAWLINE, EGALINE };
@@ -157,7 +157,7 @@ struct VGA_Draw {
 	Bitu address = 0;
 	uint16_t panning = 0;
 	Bitu bytes_skip = 0;
-	Bit8u *linear_base = nullptr;
+	uint8_t *linear_base = nullptr;
 	Bitu linear_mask = 0;
 	Bitu address_add = 0;
 	uint32_t line_length = 0;
@@ -191,35 +191,35 @@ struct VGA_Draw {
 	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
-	Bit8u font[64 * 1024] = {};
-	Bit8u *font_tables[2] = {nullptr, nullptr};
+	uint8_t font[64 * 1024] = {};
+	uint8_t *font_tables[2] = {nullptr, nullptr};
 	Bitu blinking = 0;
 	bool blink = false;
 	bool char9dot = false;
 	struct {
 		Bitu address = 0;
-		Bit8u sline = 0;
+		uint8_t sline = 0;
 		uint8_t eline = 0;
-		Bit8u count = 0;
+		uint8_t count = 0;
 		uint8_t delay = 0;
-		Bit8u enabled = 0;
+		uint8_t enabled = 0;
 	} cursor = {};
 	Drawmode mode = {};
 	bool vret_triggered = false;
 };
 
 struct VGA_HWCURSOR {
-	Bit8u curmode = 0;
-	Bit16u originx = 0;
+	uint8_t curmode = 0;
+	uint16_t originx = 0;
 	uint16_t originy = 0;
-	Bit8u fstackpos = 0;
+	uint8_t fstackpos = 0;
 	uint8_t bstackpos = 0;
-	Bit8u forestack[4] = {};
-	Bit8u backstack[4] = {};
-	Bit16u startaddr = 0;
-	Bit8u posx = 0;
+	uint8_t forestack[4] = {};
+	uint8_t backstack[4] = {};
+	uint16_t startaddr = 0;
+	uint8_t posx = 0;
 	uint8_t posy = 0;
-	Bit8u mc[64][64] = {};
+	uint8_t mc[64][64] = {};
 };
 
 struct VGA_S3 {
@@ -264,65 +264,65 @@ struct VGA_S3 {
 };
 
 struct VGA_HERC {
-	Bit8u mode_control = 0;
-	Bit8u enable_bits = 0;
+	uint8_t mode_control = 0;
+	uint8_t enable_bits = 0;
 };
 
 struct VGA_OTHER {
-	Bit8u index = 0;
-	Bit8u htotal = 0;
-	Bit8u hdend = 0;
-	Bit8u hsyncp = 0;
-	Bit8u hsyncw = 0;
-	Bit8u vtotal = 0;
-	Bit8u vdend = 0;
-	Bit8u vadjust = 0;
-	Bit8u vsyncp = 0;
-	Bit8u vsyncw = 0;
-	Bit8u max_scanline = 0;
-	Bit16u lightpen = 0;
+	uint8_t index = 0;
+	uint8_t htotal = 0;
+	uint8_t hdend = 0;
+	uint8_t hsyncp = 0;
+	uint8_t hsyncw = 0;
+	uint8_t vtotal = 0;
+	uint8_t vdend = 0;
+	uint8_t vadjust = 0;
+	uint8_t vsyncp = 0;
+	uint8_t vsyncw = 0;
+	uint8_t max_scanline = 0;
+	uint16_t lightpen = 0;
 	bool lightpen_triggered = false;
-	Bit8u cursor_start = 0;
-	Bit8u cursor_end = 0;
+	uint8_t cursor_start = 0;
+	uint8_t cursor_end = 0;
 };
 
 struct VGA_TANDY {
-	Bit8u pcjr_flipflop = 0;
-	Bit8u mode_control = 0;
-	Bit8u color_select = 0;
-	Bit8u disp_bank = 0;
-	Bit8u reg_index = 0;
-	Bit8u gfx_control = 0;
-	Bit8u palette_mask = 0;
-	Bit8u extended_ram = 0;
-	Bit8u border_color = 0;
-	Bit8u line_mask = 0;
+	uint8_t pcjr_flipflop = 0;
+	uint8_t mode_control = 0;
+	uint8_t color_select = 0;
+	uint8_t disp_bank = 0;
+	uint8_t reg_index = 0;
+	uint8_t gfx_control = 0;
+	uint8_t palette_mask = 0;
+	uint8_t extended_ram = 0;
+	uint8_t border_color = 0;
+	uint8_t line_mask = 0;
 	uint8_t line_shift = 0;
-	Bit8u draw_bank = 0;
+	uint8_t draw_bank = 0;
 	uint8_t mem_bank = 0;
-	Bit8u *draw_base = nullptr;
+	uint8_t *draw_base = nullptr;
 	uint8_t *mem_base = nullptr;
 	Bitu addr_mask = 0;
 };
 
 struct VGA_Seq {
-	Bit8u index = 0;
-	Bit8u reset = 0;
-	Bit8u clocking_mode = 0;
-	Bit8u map_mask = 0;
-	Bit8u character_map_select = 0;
-	Bit8u memory_mode = 0;
+	uint8_t index = 0;
+	uint8_t reset = 0;
+	uint8_t clocking_mode = 0;
+	uint8_t map_mask = 0;
+	uint8_t character_map_select = 0;
+	uint8_t memory_mode = 0;
 };
 
 struct VGA_Attr {
-	Bit8u palette[16] = {};
-	Bit8u mode_control = 0;
-	Bit8u horizontal_pel_panning = 0;
-	Bit8u overscan_color = 0;
-	Bit8u color_plane_enable = 0;
-	Bit8u color_select = 0;
-	Bit8u index = 0;
-	Bit8u disabled = 0; // Used for disabling the screen.
+	uint8_t palette[16] = {};
+	uint8_t mode_control = 0;
+	uint8_t horizontal_pel_panning = 0;
+	uint8_t overscan_color = 0;
+	uint8_t color_plane_enable = 0;
+	uint8_t color_select = 0;
+	uint8_t index = 0;
+	uint8_t disabled = 0; // Used for disabling the screen.
 	                    // Bit0: screen disabled by attribute controller
 	                    // index Bit1: screen disabled by sequencer index 1
 	                    // bit 5 These are put together in one variable for
@@ -332,66 +332,66 @@ struct VGA_Attr {
 };
 
 struct VGA_Crtc {
-	Bit8u horizontal_total = 0;
-	Bit8u horizontal_display_end = 0;
-	Bit8u start_horizontal_blanking = 0;
-	Bit8u end_horizontal_blanking = 0;
-	Bit8u start_horizontal_retrace = 0;
-	Bit8u end_horizontal_retrace = 0;
-	Bit8u vertical_total = 0;
-	Bit8u overflow = 0;
-	Bit8u preset_row_scan = 0;
-	Bit8u maximum_scan_line = 0;
-	Bit8u cursor_start = 0;
-	Bit8u cursor_end = 0;
-	Bit8u start_address_high = 0;
-	Bit8u start_address_low = 0;
-	Bit8u cursor_location_high = 0;
-	Bit8u cursor_location_low = 0;
-	Bit8u vertical_retrace_start = 0;
-	Bit8u vertical_retrace_end = 0;
-	Bit8u vertical_display_end = 0;
-	Bit8u offset = 0;
-	Bit8u underline_location = 0;
-	Bit8u start_vertical_blanking = 0;
-	Bit8u end_vertical_blanking = 0;
-	Bit8u mode_control = 0;
-	Bit8u line_compare = 0;
+	uint8_t horizontal_total = 0;
+	uint8_t horizontal_display_end = 0;
+	uint8_t start_horizontal_blanking = 0;
+	uint8_t end_horizontal_blanking = 0;
+	uint8_t start_horizontal_retrace = 0;
+	uint8_t end_horizontal_retrace = 0;
+	uint8_t vertical_total = 0;
+	uint8_t overflow = 0;
+	uint8_t preset_row_scan = 0;
+	uint8_t maximum_scan_line = 0;
+	uint8_t cursor_start = 0;
+	uint8_t cursor_end = 0;
+	uint8_t start_address_high = 0;
+	uint8_t start_address_low = 0;
+	uint8_t cursor_location_high = 0;
+	uint8_t cursor_location_low = 0;
+	uint8_t vertical_retrace_start = 0;
+	uint8_t vertical_retrace_end = 0;
+	uint8_t vertical_display_end = 0;
+	uint8_t offset = 0;
+	uint8_t underline_location = 0;
+	uint8_t start_vertical_blanking = 0;
+	uint8_t end_vertical_blanking = 0;
+	uint8_t mode_control = 0;
+	uint8_t line_compare = 0;
 
-	Bit8u index = 0;
+	uint8_t index = 0;
 	bool read_only = false;
 };
 
 struct VGA_Gfx {
-	Bit8u index = 0;
-	Bit8u set_reset = 0;
-	Bit8u enable_set_reset = 0;
-	Bit8u color_compare = 0;
-	Bit8u data_rotate = 0;
-	Bit8u read_map_select = 0;
-	Bit8u mode = 0;
-	Bit8u miscellaneous = 0;
-	Bit8u color_dont_care = 0;
-	Bit8u bit_mask = 0;
+	uint8_t index = 0;
+	uint8_t set_reset = 0;
+	uint8_t enable_set_reset = 0;
+	uint8_t color_compare = 0;
+	uint8_t data_rotate = 0;
+	uint8_t read_map_select = 0;
+	uint8_t mode = 0;
+	uint8_t miscellaneous = 0;
+	uint8_t color_dont_care = 0;
+	uint8_t bit_mask = 0;
 };
 
 struct RGBEntry {
-	Bit8u red = 0;
-	Bit8u green = 0;
-	Bit8u blue = 0;
+	uint8_t red = 0;
+	uint8_t green = 0;
+	uint8_t blue = 0;
 };
 
 struct VGA_Dac {
-	Bit8u bits = 0; /* DAC bits, usually 6 or 8 */
-	Bit8u pel_mask = 0;
-	Bit8u pel_index = 0;
-	Bit8u state = 0;
-	Bit8u write_index = 0;
-	Bit8u read_index = 0;
+	uint8_t bits = 0; /* DAC bits, usually 6 or 8 */
+	uint8_t pel_mask = 0;
+	uint8_t pel_index = 0;
+	uint8_t state = 0;
+	uint8_t write_index = 0;
+	uint8_t read_index = 0;
 	Bitu first_changed = 0;
-	Bit8u combine[16] = {};
+	uint8_t combine[16] = {};
 	RGBEntry rgb[0x100] = {};
-	Bit16u xlat16[256] = {};
+	uint16_t xlat16[256] = {};
 };
 
 struct VGA_SVGA {
@@ -399,43 +399,43 @@ struct VGA_SVGA {
 	Bitu bankMask = 0;
 	Bitu bank_read_full = 0;
 	Bitu bank_write_full = 0;
-	Bit8u bank_read = 0;
-	Bit8u bank_write = 0;
+	uint8_t bank_read = 0;
+	uint8_t bank_write = 0;
 	Bitu bank_size = 0;
 };
 
 union VGA_Latch {
-	Bit32u d = 0;
-	Bit8u b[4];
+	uint32_t d = 0;
+	uint8_t b[4];
 };
 
 struct VGA_Memory {
-	Bit8u *linear = nullptr;
-	Bit8u *linear_orgptr = nullptr;
+	uint8_t *linear = nullptr;
+	uint8_t *linear_orgptr = nullptr;
 };
 
 struct VGA_Changes {
 	//Add a few more just to be safe
-	Bit8u *map = nullptr; /* allocated dynamically: [(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32] */
-	Bit8u checkMask = 0;
+	uint8_t *map = nullptr; /* allocated dynamically: [(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32] */
+	uint8_t checkMask = 0;
 	uint8_t frame = 0;
 	uint8_t writeMask = 0;
 	bool active = 0;
-	Bit32u clearMask = 0;
-	Bit32u start = 0, last = 0;
-	Bit32u lastAddress = 0;
+	uint32_t clearMask = 0;
+	uint32_t start = 0, last = 0;
+	uint32_t lastAddress = 0;
 };
 
 struct VGA_LFB {
-	Bit32u page = 0;
-	Bit32u addr = 0;
-	Bit32u mask = 0;
+	uint32_t page = 0;
+	uint32_t addr = 0;
+	uint32_t mask = 0;
 	PageHandler *handler = nullptr;
 };
 
 struct VGA_Type {
 	VGAModes mode = {}; /* The mode the vga system is in */
-	Bit8u misc_output = 0;
+	uint8_t misc_output = 0;
 	VGA_Draw draw = {};
 	VGA_Config config = {};
 	VGA_Internal internal = {};
@@ -452,11 +452,11 @@ struct VGA_Type {
 	VGA_TANDY tandy = {};
 	VGA_OTHER other = {};
 	VGA_Memory mem = {};
-	Bit32u vmemwrap = 0;      /* this is assumed to be power of 2 */
-	Bit8u *fastmem = nullptr; /* memory for fast (usually 16-color)
+	uint32_t vmemwrap = 0;      /* this is assumed to be power of 2 */
+	uint8_t *fastmem = nullptr; /* memory for fast (usually 16-color)
 	                             rendering, always twice as big as vmemsize */
-	Bit8u *fastmem_orgptr = nullptr;
-	Bit32u vmemsize = 0;
+	uint8_t *fastmem_orgptr = nullptr;
+	uint32_t vmemsize = 0;
 #ifdef VGA_KEEP_CHANGES
 	VGA_Changes changes = {};
 #endif
@@ -484,9 +484,9 @@ void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
 /* Some DAC/Attribute functions */
-void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
-void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue);
-void VGA_ATTR_SetPalette(Bit8u index,Bit8u val);
+void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal);
+void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue);
+void VGA_ATTR_SetPalette(uint8_t index,uint8_t val);
 
 enum EGAMonitorMode { CGA, EGA, MONO };
 
@@ -517,8 +517,8 @@ void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(uint8_t enabled);
-void VGA_SetCGA2Table(Bit8u val0,Bit8u val1);
-void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
+void VGA_SetCGA2Table(uint8_t val0,uint8_t val1);
+void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
 
@@ -540,8 +540,8 @@ extern VGA_Type vga;
    It also contains basic int10 mode data - number, vtotal, htotal
    */
 struct VGA_ModeExtraData {
-	Bit8u ver_overflow = 0;
-	Bit8u hor_overflow = 0;
+	uint8_t ver_overflow = 0;
+	uint8_t hor_overflow = 0;
 	Bitu offset = 0;
 	Bitu modeNo = 0;
 	uint32_t htotal = 0;
@@ -587,17 +587,17 @@ void SVGA_Setup_Driver(void);
 // Amount of video memory required for a mode, implemented in int10_modes.cpp
 uint32_t VideoModeMemSize(uint16_t mode);
 
-extern Bit32u ExpandTable[256];
-extern Bit32u FillTable[16];
-extern Bit32u CGA_2_Table[16];
-extern Bit32u CGA_4_Table[256];
-extern Bit32u CGA_4_HiRes_Table[256];
-extern Bit32u CGA_16_Table[256];
+extern uint32_t ExpandTable[256];
+extern uint32_t FillTable[16];
+extern uint32_t CGA_2_Table[16];
+extern uint32_t CGA_4_Table[256];
+extern uint32_t CGA_4_HiRes_Table[256];
+extern uint32_t CGA_16_Table[256];
 extern int CGA_Composite_Table[1024];
-extern Bit32u TXT_Font_Table[16];
-extern Bit32u TXT_FG_Table[16];
-extern Bit32u TXT_BG_Table[16];
-extern Bit32u Expand16Table[4][16];
-extern Bit32u Expand16BigTable[0x10000];
+extern uint32_t TXT_Font_Table[16];
+extern uint32_t TXT_FG_Table[16];
+extern uint32_t TXT_BG_Table[16];
+extern uint32_t Expand16Table[4][16];
+extern uint32_t Expand16BigTable[0x10000];
 
 #endif

@@ -219,7 +219,7 @@ static uint8_t read_p3cf(io_port_t port, io_width_t)
 	default:
 		if (svga.read_p3cf)
 			return svga.read_p3cf(gfx(index), io_width_t::byte);
-		LOG(LOG_VGAMISC,LOG_NORMAL)("Reading from illegal index %2X in port %4X",static_cast<Bit32u>(gfx(index)),port);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("Reading from illegal index %2X in port %4X",static_cast<uint32_t>(gfx(index)),port);
 		break;
 	}
 	return 0;	/* Compiler happy */

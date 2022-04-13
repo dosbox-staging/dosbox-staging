@@ -28,16 +28,16 @@ class device_CON final : public DOS_Device {
 public:
 	device_CON() { SetName("CON"); }
 
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
+	bool Read(uint8_t * data,uint16_t * size);
+	bool Write(uint8_t * data,uint16_t * size);
+	bool Seek(uint32_t * pos,uint32_t type);
 	bool Close();
-	Bit16u GetInformation(void);
-	bool ReadFromControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return false;}
-	bool WriteToControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return false;}
+	uint16_t GetInformation(void);
+	bool ReadFromControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
+	bool WriteToControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
 private:
 	void ClearAnsi();
-	void Output(Bit8u chr);
+	void Output(uint8_t chr);
 
 	uint8_t readcache = 0;
 	struct ansi {
@@ -61,9 +61,9 @@ void device_CON::ClearAnsi()
 	ansi.numberofarg = 0;
 }
 
-bool device_CON::Read(Bit8u * data,Bit16u * size) {
-	Bit16u oldax=reg_ax;
-	Bit16u count=0;
+bool device_CON::Read(uint8_t * data,uint16_t * size) {
+	uint16_t oldax=reg_ax;
+	uint16_t count=0;
 	INT10_SetCurMode();
 	if ((readcache) && (*size)) {
 		data[count++]=readcache;
@@ -123,12 +123,12 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 }
 
 
-bool device_CON::Write(Bit8u * data,Bit16u * size) {
-	Bit16u count=0;
+bool device_CON::Write(uint8_t * data,uint16_t * size) {
+	uint16_t count=0;
 	Bitu i;
-	Bit8u col,row,page;
-	Bit16u ncols,nrows;
-	Bit8u tempdata;
+	uint8_t col,row,page;
+	uint16_t ncols,nrows;
+	uint8_t tempdata;
 	INT10_SetCurMode();
 	while (*size>count) {
 		if (!ansi.esc){
@@ -291,8 +291,8 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			/* Turn them into positions that are on the screen */
 			if(ansi.data[0] == 0) ansi.data[0] = 1;
 			if(ansi.data[1] == 0) ansi.data[1] = 1;
-			if(ansi.data[0] > nrows) ansi.data[0] = (Bit8u)nrows;
-			if(ansi.data[1] > ncols) ansi.data[1] = (Bit8u)ncols;
+			if(ansi.data[0] > nrows) ansi.data[0] = (uint8_t)nrows;
+			if(ansi.data[1] > ncols) ansi.data[1] = (uint8_t)ncols;
 			INT10_SetCursorPos(--(ansi.data[0]),--(ansi.data[1]),page); /*ansi=1 based, int10 is 0 based */
 			ClearAnsi();
 			break;
@@ -390,7 +390,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	return true;
 }
 
-bool device_CON::Seek(Bit32u * pos,Bit32u /*type*/) {
+bool device_CON::Seek(uint32_t * pos,uint32_t /*type*/) {
 	// seek is valid
 	*pos = 0;
 	return true;
@@ -400,31 +400,31 @@ bool device_CON::Close() {
 	return true;
 }
 
-Bit16u device_CON::GetInformation(void) {
-	Bit16u head=mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
-	Bit16u tail=mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
+uint16_t device_CON::GetInformation(void) {
+	uint16_t head=mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
+	uint16_t tail=mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 
 	if ((head==tail) && !readcache) return 0x80D3;	/* No Key Available */
 	if (readcache || real_readw(0x40,head)) return 0x8093;		/* Key Available */
 
 	/* remove the zero from keyboard buffer */
-	Bit16u start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
-	Bit16u end	=mem_readw(BIOS_KEYBOARD_BUFFER_END);
+	uint16_t start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
+	uint16_t end	=mem_readw(BIOS_KEYBOARD_BUFFER_END);
 	head+=2;
 	if (head>=end) head=start;
 	mem_writew(BIOS_KEYBOARD_BUFFER_HEAD,head);
 	return 0x80D3; /* No Key Available */
 }
 
-void device_CON::Output(Bit8u chr) {
+void device_CON::Output(uint8_t chr) {
 	if (dos.internal_output || ansi.enabled) {
 		if (CurMode->type==M_TEXT) {
-			Bit8u page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-			Bit8u col=CURSOR_POS_COL(page);
-			Bit8u row=CURSOR_POS_ROW(page);
+			uint8_t page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+			uint8_t col=CURSOR_POS_COL(page);
+			uint8_t row=CURSOR_POS_ROW(page);
 			BIOS_NCOLS;BIOS_NROWS;
 			if (nrows==row+1 && (chr=='\n' || (ncols==col+1 && chr!='\r' && chr!=8 && chr!=7))) {
-				INT10_ScrollWindow(0,0,(Bit8u)(nrows-1),(Bit8u)(ncols-1),-1,ansi.attr,page);
+				INT10_ScrollWindow(0,0,(uint8_t)(nrows-1),(uint8_t)(ncols-1),-1,ansi.attr,page);
 				INT10_SetCursorPos(row-1,col,page);
 			}
 		}

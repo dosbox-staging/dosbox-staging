@@ -30,7 +30,7 @@
 
 // Tseng ET4K data
 typedef struct {
-	Bit8u extensionsEnabled;
+	uint8_t extensionsEnabled;
 
 // Stored exact values of some registers. Documentation only specifies some bits but hardware checks may
 // expect other bits to be preserved.
@@ -126,7 +126,7 @@ void write_p3d5_et4k(io_port_t reg, io_val_t value, io_width_t)
 		vga.config.line_compare = (vga.config.line_compare & 0x3ff) | ((val&0x10)<<6);
 	// Abusing s3 ex_ver_overflow field. This is to be cleaned up later.
 		{
-			Bit8u s3val =
+			uint8_t s3val =
 				((val & 0x01) << 2) | // vbstart
 				((val & 0x02) >> 1) | // vtotal
 				((val & 0x04) >> 1) | // vdispend
@@ -336,14 +336,14 @@ void FinishSetMode_ET4K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 	// Reinterpret hor_overflow. Curiously, three bits out of four are
 	// in the same places. Input has hdispend (not supported), output
 	// has CRTC offset (also not supported)
-	Bit8u et4k_hor_overflow =
+	uint8_t et4k_hor_overflow =
 		(modeData->hor_overflow & 0x01) |
 		(modeData->hor_overflow & 0x04) |
 		(modeData->hor_overflow & 0x10);
 	IO_Write(crtc_base,0x3f);IO_Write(crtc_base+1,et4k_hor_overflow);
 
 	// Reinterpret ver_overflow
-	Bit8u et4k_ver_overflow =
+	uint8_t et4k_ver_overflow =
 		((modeData->ver_overflow & 0x01) << 1) | // vtotal10
 		((modeData->ver_overflow & 0x02) << 1) | // vdispend10
 		((modeData->ver_overflow & 0x04) >> 2) | // vbstart10
@@ -568,7 +568,7 @@ void write_p3d5_et3k(io_port_t reg, io_val_t value, io_width_t)
 		vga.config.line_compare = (vga.config.line_compare & 0x3ff) | ((val&0x10)<<6);
 	// Abusing s3 ex_ver_overflow field. This is to be cleaned up later.
 		{
-			Bit8u s3val =
+			uint8_t s3val =
 				((val & 0x01) << 2) | // vbstart
 				((val & 0x02) >> 1) | // vtotal
 				((val & 0x04) >> 1) | // vdispend
@@ -711,7 +711,7 @@ void FinishSetMode_ET3K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 
 	// Tseng ET3K does not have horizontal overflow bits
 	// Reinterpret ver_overflow
-	Bit8u et4k_ver_overflow =
+	uint8_t et4k_ver_overflow =
 		((modeData->ver_overflow & 0x01) << 1) | // vtotal10
 		((modeData->ver_overflow & 0x02) << 1) | // vdispend10
 		((modeData->ver_overflow & 0x04) >> 2) | // vbstart10
@@ -739,7 +739,7 @@ void FinishSetMode_ET3K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 		Bitu best = 1;
 		int dist = 100000000;
 		for (Bitu i = 0; i < 8; i++) {
-			int cdiff = abs( static_cast<Bit32s>(target - static_cast<Bits>(et3k.clockFreq[i])) );
+			int cdiff = abs( static_cast<int32_t>(target - static_cast<Bits>(et3k.clockFreq[i])) );
 			if (cdiff < dist) {
 				best = i;
 				dist = cdiff;

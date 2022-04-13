@@ -40,7 +40,7 @@ enum KeyCommands {
 };
 
 static struct {
-	Bit8u buffer[KEYBUFSIZE];
+	uint8_t buffer[KEYBUFSIZE];
 	Bitu used;
 	Bitu pos;
 	struct {
@@ -49,14 +49,14 @@ static struct {
 		Bitu pause,rate;
 	} repeat;
 	KeyCommands command;
-	Bit8u p60data;
+	uint8_t p60data;
 	bool p60changed;
 	bool active;
 	bool scanning;
 	bool scheduled;
 } keyb;
 
-static void KEYBOARD_SetPort60(Bit8u val) {
+static void KEYBOARD_SetPort60(uint8_t val) {
 	keyb.p60changed=true;
 	keyb.p60data=val;
 	if (machine==MCH_PCJR) PIC_ActivateIRQ(6);
@@ -82,7 +82,7 @@ void KEYBOARD_ClrBuffer(void) {
 	keyb.scheduled=false;
 }
 
-static void KEYBOARD_AddBuffer(Bit8u data) {
+static void KEYBOARD_AddBuffer(uint8_t data) {
 	if (keyb.used>=KEYBUFSIZE) {
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("Buffer full, dropping code");
 		return;
@@ -198,7 +198,7 @@ bit 2      reserved, often used as turbo switch
 bit 1 = 1  speaker data enable
 bit 0 = 1  timer 2 gate to speaker enable
 */
-static Bit8u port_61_data = 0;
+static uint8_t port_61_data = 0;
 extern void TIMER_SetGate2(bool);
 static void write_p61(io_port_t, io_val_t value, io_width_t)
 {
@@ -295,12 +295,12 @@ static void write_p64(io_port_t, io_val_t value, io_width_t)
 
 static uint8_t read_p64(io_port_t, io_width_t)
 {
-	Bit8u status = 0x1c | (keyb.p60changed ? 0x1 : 0x0);
+	uint8_t status = 0x1c | (keyb.p60changed ? 0x1 : 0x0);
 	return status;
 }
 
 void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
-	Bit8u ret=0;bool extend=false;
+	uint8_t ret=0;bool extend=false;
 	switch (keytype) {
 	case KBD_esc:ret=1;break;
 	case KBD_1:ret=2;break;

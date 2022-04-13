@@ -31,8 +31,8 @@ void LOADFIX::Run(void)
 		WriteOut(MSG_Get("SHELL_CMD_LOADFIX_HELP_LONG"));
 		return;
 	}
-	Bit16u commandNr = 1;
-	Bit16u kb = 64;
+	uint16_t commandNr = 1;
+	uint16_t kb = 64;
 	if (cmd->FindCommand(commandNr, temp_line)) {
 		if (temp_line[0] == '-' || temp_line[0] == '/') {
 			const auto ch = std::toupper(temp_line[1]);
@@ -50,10 +50,10 @@ void LOADFIX::Run(void)
 		}
 	}
 	// Allocate Memory
-	Bit16u segment;
-	Bit16u blocks = kb*1024/16;
+	uint16_t segment;
+	uint16_t blocks = kb*1024/16;
 	if (DOS_AllocateMemory(&segment,&blocks)) {
-		DOS_MCB mcb((Bit16u)(segment-1));
+		DOS_MCB mcb((uint16_t)(segment-1));
 		mcb.SetPSPSeg(0x40);			// use fake segment
 		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"),kb);
 		// Prepare commandline...

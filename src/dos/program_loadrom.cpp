@@ -37,7 +37,7 @@ void LOADROM::Run(void) {
 	    WriteOut(MSG_Get("SHELL_CMD_LOADROM_HELP_LONG"));
 	    return;
     }
-    Bit8u drive;
+    uint8_t drive;
     char fullname[DOS_PATHLENGTH];
     localDrive* ldp=0;
     if (!DOS_MakeName((char *)temp_line.c_str(),fullname,&drive)) return;
@@ -59,7 +59,7 @@ void LOADROM::Run(void) {
             return;
         }
         fseek(tmpfile, 0L, SEEK_SET);
-        Bit8u rom_buffer[0x8000];
+        uint8_t rom_buffer[0x8000];
         Bitu data_read = fread(rom_buffer, 1, 0x8000, tmpfile);
         fclose(tmpfile);
 

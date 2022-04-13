@@ -43,7 +43,7 @@
 
 #include "dos_resources.h"
 
-extern Bit32u floppytype;
+extern uint32_t floppytype;
 
 #define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
 #define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"

@@ -79,7 +79,7 @@ void assert_DOS_MakeName(char const *const input,
                          std::string exp_fullname = "",
                          int exp_drive = 0)
 {
-	Bit8u drive_result;
+	uint8_t drive_result;
 	char fullname_result[DOS_PATHLENGTH];
 	bool result = DOS_MakeName(input, fullname_result, &drive_result);
 	EXPECT_EQ(result, exp_result);
@@ -111,7 +111,7 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Z_AUTOEXEC_BAT_exists)
 // ramifications across the codebase if not replicated
 TEST_F(DOS_FilesTest, DOS_MakeName_Drive_Index_Set_On_Failure)
 {
-	Bit8u drive_result;
+	uint8_t drive_result;
 	char fullname_result[DOS_PATHLENGTH];
 	bool result;
 	result = DOS_MakeName("A:\r\n", fullname_result, &drive_result);

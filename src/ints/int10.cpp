@@ -74,7 +74,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x05:								/* Set Active Page */
 		if ((reg_al & 0x80) && IS_TANDY_ARCH) {
-			Bit8u crtcpu=real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE);		
+			uint8_t crtcpu=real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE);		
 			switch (reg_al) {
 			case 0x80:
 				reg_bh=crtcpu & 7;
@@ -141,7 +141,7 @@ static Bitu INT10_Handler(void) {
 		reg_bh=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 		reg_al=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
 		if (IS_EGAVGA_ARCH) reg_al|=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL)&0x80;
-		reg_ah=(Bit8u)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
+		reg_ah=(uint8_t)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 		break;					
 	case 0x10:								/* Palette functions */
 		if (!IS_EGAVGA_ARCH && (reg_al>0x02)) break;
@@ -341,8 +341,8 @@ graphics_chars:
 						break;
 					}
 				}
-				Bit8u modeset_ctl = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
-				Bit8u video_switches = real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES)&0xf0;
+				uint8_t modeset_ctl = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
+				uint8_t video_switches = real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES)&0xf0;
 				switch(reg_al) {
 				case 0: // 200
 					modeset_ctl &= 0xef;
@@ -376,7 +376,7 @@ graphics_chars:
 					reg_al=0;		//invalid subfunction
 					break;
 				}
-				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xf7;
+				uint8_t temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xf7;
 				if (reg_al&1) temp|=8;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
 				reg_al=0x12;
@@ -397,7 +397,7 @@ graphics_chars:
 					reg_al=0;
 					break;
 				}
-				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
+				uint8_t temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
 				if (!(reg_al&1)) temp|=2;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
 				reg_al=0x12;
@@ -412,7 +412,7 @@ graphics_chars:
 					reg_al=0;
 					break;
 				}
-				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0xfe;
+				uint8_t temp = real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0xfe;
 				real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,temp|reg_al);
 				reg_al=0x12;
 				break;	
@@ -429,7 +429,7 @@ graphics_chars:
 				break;
 			}
 			IO_Write(0x3c4,0x1);
-			Bit8u clocking = IO_Read(0x3c5);
+			uint8_t clocking = IO_Read(0x3c5);
 			
 			if (reg_al==0) clocking &= ~0x20;
 			else clocking |= 0x20;
@@ -476,7 +476,7 @@ graphics_chars:
 				Bitu ret=INT10_VideoState_GetSize(reg_cx);
 				if (ret) {
 					reg_al=0x1c;
-					reg_bx=(Bit16u)ret;
+					reg_bx=(uint16_t)ret;
 				} else reg_al=0;
 				}
 				break;
@@ -522,7 +522,7 @@ graphics_chars:
 					Bitu ret=INT10_VideoState_GetSize(reg_cx);
 					if (ret) {
 						reg_ah=0;
-						reg_bx=(Bit16u)ret;
+						reg_bx=(uint16_t)ret;
 					} else reg_ah=1;
 					}
 					break;
@@ -702,7 +702,7 @@ static void INT10_InitVGA(void) {
 }
 
 static void SetupTandyBios(void) {
-	static Bit8u TandyConfig[130]= {
+	static uint8_t TandyConfig[130]= {
 		0x21, 0x42, 0x49, 0x4f, 0x53, 0x20, 0x52, 0x4f, 0x4d, 0x20, 0x76, 0x65, 0x72,
 		0x73, 0x69, 0x6f, 0x6e, 0x20, 0x30, 0x32, 0x2e, 0x30, 0x30, 0x2e, 0x30, 0x30,
 		0x0d, 0x0a, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69, 0x62, 0x69, 0x6c, 0x69,

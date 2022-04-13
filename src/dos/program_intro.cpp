@@ -73,7 +73,7 @@ void INTRO::Run(void) {
     }
     /* Default action is to show all pages */
     WriteOut(MSG_Get("PROGRAM_INTRO"));
-    Bit8u c;Bit16u n=1;
+    uint8_t c;uint16_t n=1;
     DOS_ReadFile (STDIN,&c,&n);
     DisplayMount();
     DOS_ReadFile (STDIN,&c,&n);
