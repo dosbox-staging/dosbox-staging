@@ -37,16 +37,7 @@
 #define PRIuPTR "I64u"
 #endif
 
-using Bit8u  = uint8_t;
-using Bit16u = uint16_t;
-using Bit32u = uint32_t;
-using Bit64u = uint64_t;
 using Bitu   = uintptr_t;
-
-using Bit8s  = int8_t;
-using Bit16s = int16_t;
-using Bit32s = int32_t;
-using Bit64s = int64_t;
 using Bits   = intptr_t;
 
 using Real64 = double;
