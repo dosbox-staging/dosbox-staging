@@ -78,7 +78,7 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 	SSET_WORD(sDIB, protFCBs, uint16_t(0));
 	SSET_WORD(sDIB, specialCodeSeg, uint16_t(0));
 	SSET_BYTE(sDIB, joindedDrives, uint8_t(0));
-	SSET_BYTE(sDIB, lastdrive, uint8_t(0x01)); // increase this if you add drives to cds-chain
+	SSET_BYTE(sDIB, lastdrive, uint8_t(0x03)); // increase this if you add drives to cds-chain
 	const RealPt dib_addr = RealMake(segment, offsetof(sDIB, diskBufferHeadPt));
 	SSET_DWORD(sDIB, diskInfoBuffer, dib_addr);
 	SSET_DWORD(sDIB, setverPtr, uint32_t(0));
