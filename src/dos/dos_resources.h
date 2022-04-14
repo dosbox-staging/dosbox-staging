@@ -26,8 +26,10 @@
 
 extern const std::array<const char *, 18> FILE_EGA_CPX;
 extern const std::array<const char *, 4>  FILE_KEYBOARD_SYS;
+extern const std::array<const char *, 1>  FILE_TOOL_BIN;
 
 extern std::vector<std::vector<uint8_t>> BLOB_EGA_CPX;
 extern std::vector<std::vector<uint8_t>> BLOB_KEYBOARD_SYS;
+extern std::vector<std::vector<uint8_t>> BLOB_TOOL_BIN;
 
 #endif // DOSBOX_RESOURCES_H

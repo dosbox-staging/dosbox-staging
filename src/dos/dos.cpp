@@ -214,8 +214,13 @@ const std::array<const char *, 4> FILE_KEYBOARD_SYS = {
 	"KEYBOARD.SYS", "KEYBRD2.SYS", "KEYBRD3.SYS", "KEYBRD4.SYS",
 };
 
+const std::array<const char *, 1> FILE_TOOL_BIN = {
+	"DEVLOAD.COM",
+};
+
 std::vector<std::vector<uint8_t>> BLOB_EGA_CPX;
 std::vector<std::vector<uint8_t>> BLOB_KEYBOARD_SYS;
+std::vector<std::vector<uint8_t>> BLOB_TOOL_BIN;
 
 static void DOS_LoadResources() {
 	const auto mandatory = ResourceImportance::Mandatory;
@@ -229,6 +234,11 @@ static void DOS_LoadResources() {
 	for (size_t i = 0; i < FILE_KEYBOARD_SYS.size(); i++)
 		BLOB_KEYBOARD_SYS[i] = LoadResource("freedos-keyboard", FILE_KEYBOARD_SYS[i],
 			                                mandatory);
+
+	BLOB_TOOL_BIN.resize(FILE_TOOL_BIN.size());
+	for (size_t i = 0; i < FILE_TOOL_BIN.size(); i++)
+		BLOB_TOOL_BIN[i] = LoadResource("freedos-tool", FILE_TOOL_BIN[i],
+			                            mandatory);
 }
 
 static uint16_t DOS_GetAmount(void) {

@@ -94,6 +94,8 @@ void Add_VFiles(const bool add_autoexec)
 		VFILE_Register(FILE_EGA_CPX[i], BLOB_EGA_CPX[i], "/CPI/");
 	for (size_t i = 0; i < FILE_KEYBOARD_SYS.size(); i++)
 		VFILE_Register(FILE_KEYBOARD_SYS[i], BLOB_KEYBOARD_SYS[i], "");
+	for (size_t i = 0; i < FILE_TOOL_BIN.size(); i++)
+		VFILE_Register(FILE_TOOL_BIN[i], BLOB_TOOL_BIN[i], "");
 }
 
 void DOS_SetupPrograms(void)
