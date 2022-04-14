@@ -96,3 +96,12 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+/* Loguru-related defines
+ */
+
+// Prevent loguru from parsing command-line arguments with
+// with the hosts's locale-applied, because this can foul up
+// ncurses. (DOSBox also doesn't have foreign-language arguments).
+//
+#define LOGURU_USE_LOCALE 0
