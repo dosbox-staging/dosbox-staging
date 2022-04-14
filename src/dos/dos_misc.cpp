@@ -89,7 +89,9 @@ static bool DOS_MultiplexFunctions(void) {
 				mem_writew(sftptr+sftofs+0x02,(uint16_t)(Files[reg_bx]->flags&3));	// file open mode
 				mem_writeb(sftptr+sftofs+0x04,(uint8_t)(Files[reg_bx]->attr));		// file attribute
 				mem_writew(sftptr+sftofs+0x05,0x40|drive);							// device info word
-				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive*9));	// dpb of the drive
+				mem_writed(sftptr + sftofs + 0x07,
+				           RealMake(dos.tables.dpb,
+				                    drive * dos.tables.dpb_size));					// dpb of the drive
 				mem_writew(sftptr+sftofs+0x0d,Files[reg_bx]->time);					// packed file time
 				mem_writew(sftptr+sftofs+0x0f,Files[reg_bx]->date);					// packed file date
 				uint32_t curpos=0;

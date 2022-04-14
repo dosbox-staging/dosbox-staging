@@ -462,6 +462,11 @@ public:
 	void SetLocation(uint16_t segment);
 	void SetBuffers(uint16_t x, uint16_t y);
 
+	void SetFirstDPB(uint32_t _first_dpb)
+	{
+		SSET_DWORD(sDIB, firstDPB, _first_dpb);
+	}
+
 	RealPt GetPointer() const
 	{
 		return RealMake(seg, offsetof(sDIB, firstDPB));
@@ -774,6 +779,8 @@ struct DOS_Block {
 		RealPt upcase;
 		uint8_t* country;//Will be copied to dos memory. resides in real mem
 		uint16_t dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
+		uint16_t dpb_size; // bytes per DPB entry
+		uint16_t mediaid_offset; // media ID offset in DPB
 	} tables;
 	uint16_t loaded_codepage;
 	uint16_t dcp;

@@ -148,14 +148,36 @@ void DOS_SetupTables(void) {
 	dos_infoblock.SetFCBTable(RealMake(seg,0));
 
 	/* Create a fake DPB */
-	dos.tables.dpb=DOS_GetMemory(16);
-	dos.tables.mediaid=RealMake(dos.tables.dpb,0x17);	//Media ID offset in DPB
-	for (i=0;i<DOS_DRIVES;i++) {
-		real_writeb(dos.tables.dpb,i*9,i);				// drive number
-		real_writeb(dos.tables.dpb,i*9+1,i);			// unit number
-		real_writew(dos.tables.dpb,i*9+2,0x0200);		// bytes per sector
-		mem_writew(Real2Phys(dos.tables.mediaid)+i*9,0);
+	dos.tables.dpb_size = 0x21;			// Bytes per DPB entry
+	dos.tables.mediaid_offset = 0x17;	// Media ID offset in DPB
+	dos.tables.dpb = DOS_GetMemory(
+	        ((DOS_DRIVES * dos.tables.dpb_size) + 15u) / 16u);
+	dos.tables.mediaid = RealMake(dos.tables.dpb, dos.tables.mediaid_offset);
+	for (i = 0; i < DOS_DRIVES; i++) {
+		real_writeb(dos.tables.dpb, i * dos.tables.dpb_size, (Bit8u)i); // drive number
+		real_writeb(dos.tables.dpb, i * dos.tables.dpb_size + 1,
+		            (Bit8u)i); // unit number
+		real_writew(dos.tables.dpb, i * dos.tables.dpb_size + 2,
+		            0x0200); // bytes per sector
+		real_writew(dos.tables.dpb, i * dos.tables.dpb_size + 6,
+		            0x0001); // reserved sectors at the beginning of the
+		                     // drive
+		mem_writew(Real2Phys(dos.tables.mediaid) + i * dos.tables.dpb_size,
+		           0u);
+		real_writew(dos.tables.dpb, i * dos.tables.dpb_size + 0x1F,
+		            0xFFFF); // number of free clusters or 0xFFFF if
+		                     // unknown
+
+		// next DPB pointer
+		if ((i + 1) < DOS_DRIVES)
+			real_writed(dos.tables.dpb, i * dos.tables.dpb_size + 0x19,
+			            RealMake(dos.tables.dpb,
+			                     (i + 1) * dos.tables.dpb_size));
+		else
+			real_writed(dos.tables.dpb,
+			            i * dos.tables.dpb_size + 0x19, 0xFFFFFFFF);
 	}
+	dos_infoblock.SetFirstDPB(RealMake(dos.tables.dpb, 0));
 
 	/* Create Device command packet area */
 	dos.dcp = DOS_GetMemory(3);
