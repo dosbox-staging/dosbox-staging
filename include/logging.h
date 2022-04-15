@@ -62,7 +62,11 @@ public:
 void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 #define LOG_MSG DEBUG_ShowMsg
 
-#else  //C_DEBUG
+#define LOG_INFO(...)    LOG(LOG_ALL, LOG_NORMAL)(__VA_ARGS__)
+#define LOG_WARNING(...) LOG(LOG_ALL, LOG_WARN)(__VA_ARGS__)
+#define LOG_ERR(...)     LOG(LOG_ALL, LOG_ERROR)(__VA_ARGS__)
+
+#else // C_DEBUG
 
 struct LOG
 {
@@ -94,11 +98,11 @@ void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1,
 // Keep for compatibility
 #define LOG_MSG(...)	LOG_F(INFO, __VA_ARGS__)
 
-#endif //C_DEBUG
-
 #define LOG_INFO(...)		LOG_F(INFO, __VA_ARGS__)
 #define LOG_WARNING(...)	LOG_F(WARNING, __VA_ARGS__)
 #define LOG_ERR(...)		LOG_F(ERROR, __VA_ARGS__)
+
+#endif // C_DEBUG
 
 #ifdef NDEBUG
 // DEBUG_LOG_MSG exists only for messages useful during development, and not to
