@@ -35,19 +35,19 @@
 #include "debug_inc.h"
 
 struct _LogGroup {
-	char const* front;
-	bool enabled;
+	char const *front = nullptr;
+	bool enabled = false;
 };
 #include <list>
 #include <string>
 using namespace std;
 
 #define MAX_LOG_BUFFER 500
-static list<string> logBuff;
+static list<string> logBuff = {};
 static list<string>::iterator logBuffPos = logBuff.end();
 
 static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
-static FILE* debuglog;
+static FILE *debuglog = nullptr;
 
 extern int old_cursor_state;
 
