@@ -274,7 +274,7 @@ void sn76496_base_device::device_start()
 	m_current_clock = m_clock_divider-1;
 
 	// set gain
-	gain = 0;
+	gain = 16;
 
 	gain &= 0xff;
 
