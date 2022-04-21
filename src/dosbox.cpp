@@ -872,10 +872,6 @@ void DOSBOX_Init() {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
-	Pint = secprop->Add_int("tandyrate", when_idle, 44100);
-	Pint->Set_values(rates);
-	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
-
 	secprop->AddInitFunction(&DISNEY_Init,true);//done
 
 	Pbool = secprop->Add_bool("disney", when_idle, true);
