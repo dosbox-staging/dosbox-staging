@@ -146,6 +146,9 @@ public:
 
 	virtual ~device_t() {
 	}
+	// prevent copying and assignment
+	device_t(const device_t &) = delete;
+	device_t &operator=(const device_t &) = delete;
 };
 
 #define auto_alloc_array_clear(m, t, c) calloc(c, sizeof(t) )
