@@ -2,7 +2,7 @@ name: PVS-Studio analysis
 
 on: push
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -11,7 +11,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.17.56957.190-amd64.deb
+      debfile: pvs-studio-7.18.59210.195-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
