@@ -102,7 +102,7 @@ struct machine_config {
 typedef int device_type;
 
 class device_t {
-	u32 clockRate;
+	u32 clockRate = 0;
 public:
 	struct machine_t {
 		int describe_context() const {
