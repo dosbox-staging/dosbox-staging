@@ -141,6 +141,7 @@
 #include "sn76496.h"
 
 #include <algorithm>
+#include <cassert>
 
 #define MAX_OUTPUT 0x7fff
 //When you go over this create sample
@@ -401,8 +402,10 @@ void sn76496_base_device::countdown_cycles()
 void sn76496_base_device::sound_stream_update([[maybe_unused]] sound_stream &stream, [[maybe_unused]] stream_sample_t **inputs, stream_sample_t **outputs, int samples)
 {
 	int i;
+
+	assert(outputs);
 	stream_sample_t *lbuffer = outputs[0];
-	stream_sample_t *rbuffer = (m_stereo)? outputs[1] : 0;//nullptr;
+	stream_sample_t *rbuffer = (m_stereo) ? outputs[1] : nullptr;
 
 	int16_t out;
 	int16_t out2 = 0;
@@ -477,8 +480,14 @@ void sn76496_base_device::sound_stream_update([[maybe_unused]] sound_stream &str
 		}
 
 		if (m_negate) { out = -out; out2 = -out2; }
+
+		assert(lbuffer);
 		*(lbuffer++) = out;
-		if (m_stereo) *(rbuffer++) = out2;
+
+		if (m_stereo) {
+			assert(rbuffer);
+			*(rbuffer++) = out2;
+		}
 		samples--;
 	}
 }
