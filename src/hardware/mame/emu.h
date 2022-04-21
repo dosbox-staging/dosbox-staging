@@ -104,6 +104,7 @@ typedef int device_type;
 class device_t {
 	u32 clockRate = 0;
 public:
+	const char *shortName = nullptr;
 	struct machine_t {
 		int describe_context() const {
 			return 0;
@@ -141,8 +142,14 @@ public:
 	void save_item(int, [[maybe_unused]] int blah= 0) {
 	}
 
-	device_t(const machine_config & /* mconfig */, [[maybe_unused]] device_type type, [[maybe_unused]] const char *tag, [[maybe_unused]] device_t *owner, u32 _clock) : clockRate( _clock ) {
-	}
+	device_t(const machine_config & /* mconfig */,
+	         [[maybe_unused]] device_type type,
+	         const char *short_name,
+	         [[maybe_unused]] device_t *owner,
+	         u32 _clock)
+	        : clockRate(_clock),
+	          shortName(short_name)
+	{}
 
 	virtual ~device_t() {
 	}
