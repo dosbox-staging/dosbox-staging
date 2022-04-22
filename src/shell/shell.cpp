@@ -1388,13 +1388,14 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=green]choice[reset] [color=cyan][TEXT][reset]\n"
-	        "  [color=green]choice[reset] /c[:][color=white]CHOICES[reset] [/n] [/s] [color=cyan][TEXT][reset]\n"
+	        "  [color=green]choice[reset] /c[:][color=white]CHOICES[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEXT][reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=cyan]TEXT[reset]         is the text to display as a prompt, or empty.\n"
 	          "  /c[:][color=white]CHOICES[reset] Specifies allowable keys, which default to [color=white]yn[reset].\n"
 	          "  /n           Do not display the choices at end of prompt.\n"
 	          "  /s           Enables case-sensitive choices to be selected.\n"
+	          "  /t[:][color=white]c[reset],[color=magenta]nn[reset]    Default choice to [color=white]c[reset] after [color=magenta]nn[reset] seconds.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command sets an ERRORLEVEL value starting from 1 according to the\n"
@@ -1403,7 +1404,7 @@ void SHELL_Init() {
 	        "  but not the actual choices (such as the default [color=white][Y,N]?[reset]) in the end.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]choice[reset] [color=cyan]Continue?[reset]\n"
+	        "  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Continue?[reset]\n"
 	        "  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Type the letter a, b, or c[reset]\n");
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Displays or sets a search path for executable files.\n");
