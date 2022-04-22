@@ -1906,37 +1906,65 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 	} else this->ParseLine(args);
 }
 
+bool get_param(char *&args, char *&rem, char *&temp, char &wait_char, int &wait_sec)
+{
+	const char *last = strchr(args, 0);
+	StripSpaces(args);
+	temp = ScanCMDRemain(args);
+	const bool optC = temp && tolower(temp[1]) == 'c';
+	const bool optT = temp && tolower(temp[1]) == 't';
+	if (temp && *temp && !optC && !optT)
+		return false;
+	if (temp) {
+		if (args == temp)
+			args = strchr(temp, 0) + 1;
+		temp += 2;
+		if (temp[0] == ':')
+			temp++;
+	}
+	if (optC) {
+		rem = temp;
+	} else if (optT) {
+		if (temp && *temp && *(temp + 1) == ',') {
+			wait_char = *temp;
+			wait_sec = atoi(temp + 2);
+		} else
+			wait_sec = 0;
+	}
+	if (args > last)
+		args = NULL;
+	return true;
+}
+
+void MAPPER_AutoType(std::vector<std::string> &sequence,
+                     const uint32_t wait_ms,
+                     const uint32_t pacing_ms);
+void MAPPER_AutoType_End();
+
 void DOS_Shell::CMD_CHOICE(char * args){
 	HELP("CHOICE");
 	static char defchoice[3] = {'y','n',0};
-	char *rem = NULL, *ptr;
+	char *rem = nullptr;
+	char *ptr = nullptr;
+	char *temp = nullptr;
+	char wait_char = '\0';
+	int wait_sec = 0;
 	bool optN = false;
 	bool optS = false;
 	if (args) {
-		optN = ScanCMDBool(args,"N");
-		optS = ScanCMDBool(args,"S"); //Case-sensitive matching
-
-		(void)ScanCMDBool(args, "T"); // Default Choice after timeout
-
-		char *last = strchr(args,0);
-		StripSpaces(args);
-		rem = ScanCMDRemain(args);
-
-		if (rem && *rem && (tolower(rem[1]) != 'c')) {
-			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
+		optN = ScanCMDBool(args, "N");
+		optS = ScanCMDBool(args, "S"); // Case-sensitive matching
+		if (!get_param(args, rem, temp, wait_char, wait_sec)) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), temp);
 			return;
 		}
-		if (args == rem) {
-			assert(args);
-			if (rem != nullptr) {
-				args = strchr(rem, '\0') + 1;
-			}
+		if (args && !get_param(args, rem, temp, wait_char, wait_sec)) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), temp);
+			return;
 		}
-		if (rem) rem += 2;
-		if (rem && rem[0] == ':') rem++; /* optional : after /c */
-		if (args > last) args = NULL;
 	}
-	if (!rem || !*rem) rem = defchoice; /* No choices specified use YN */
+	if (!rem || !*rem)
+		rem = defchoice; /* No choices specified use YN */
 	ptr = rem;
 	uint8_t c;
 	if (!optS) while ((c = *ptr)) *ptr++ = (char)toupper(c); /* When in no case-sensitive mode. make everything upcase */
@@ -1960,9 +1988,20 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		WriteOut("%c]?",rem[len-1]);
 	}
 
-	uint16_t n=1;
+	std::vector<std::string> sequence;
+	bool in_char = optS ? (strchr(rem, wait_char) != nullptr)
+	                    : (strchr(rem, toupper(wait_char)) ||
+	                       strchr(rem, tolower(wait_char)));
+	bool auto_type = wait_char && *rem && in_char && wait_sec > 0;
+	if (auto_type) {
+		sequence.emplace_back(std::string(1, tolower(wait_char)));
+		MAPPER_AutoType(sequence, wait_sec * 1000, 500);
+	}
+	uint16_t n = 1;
 	do {
 		DOS_ReadFile(STDIN, &c, &n);
+		if (auto_type)
+			MAPPER_AutoType_End();
 		if (shutdown_requested)
 			break;
 	} while (!c || !(ptr = strchr(rem, (optS ? c : toupper(c)))));

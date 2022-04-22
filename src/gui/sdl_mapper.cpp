@@ -1269,6 +1269,9 @@ class Typer {
 			m_stop_requested = true;
 			Wait();
 		}
+		void End() {
+			m_stop_requested = true;
+		}
 
 	private:
 		void Callback() {
@@ -1277,6 +1280,8 @@ class Typer {
 			        return;
 		        std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
 			for (const auto &button : m_sequence) {
+				if (m_stop_requested)
+					return;
 				bool found = false;
 				// comma adds an extra pause, similar to the pause used in a phone number
 				if (button == ",") {
@@ -3024,6 +3029,10 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pace_ms) {
 	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
+}
+
+void MAPPER_AutoType_End() {
+	mapper.typist.End();
 }
 
 void MAPPER_StartUp(Section * sec) {
