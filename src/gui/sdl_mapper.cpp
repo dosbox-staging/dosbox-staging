@@ -1238,43 +1238,44 @@ void MAPPER_TriggerEvent(const CEvent *event, const bool deactivation_state) {
 }
 
 class Typer {
-	public:
-		Typer() = default;
-		Typer(const Typer&) = delete; // prevent copy
-		Typer& operator=(const Typer&) = delete; // prevent assignment
-		~Typer() {
-			Stop();
-		}
-		void Start(std::vector<CEvent*>     *ext_events,
-		           std::vector<std::string> &ext_sequence,
-                   const uint32_t           wait_ms,
-                   const uint32_t           pace_ms) {
-			// Guard against empty inputs
-			if (!ext_events || ext_sequence.empty())
-				return;
-			Wait();
-			m_events = ext_events;
-			m_sequence = std::move(ext_sequence);
-			m_wait_ms = wait_ms;
-			m_pace_ms = pace_ms;
-			m_stop_requested = false;
-			m_instance = std::thread(&Typer::Callback, this);
-			set_thread_name(m_instance, "dosbox:autotype");
-		}
-		void Wait() {
-			if (m_instance.joinable())
-				m_instance.join();
-		}
-		void Stop() {
-			m_stop_requested = true;
-			Wait();
-		}
-	        void StopImmediately()
-	        {
-		        m_stop_requested = true;
-		        if (m_instance.joinable())
-			        m_instance.detach();
-	        }
+public:
+	Typer() = default;
+	Typer(const Typer &) = delete;            // prevent copy
+	Typer &operator=(const Typer &) = delete; // prevent assignment
+	~Typer() { Stop(); }
+	void Start(std::vector<CEvent *> *ext_events,
+	           std::vector<std::string> &ext_sequence,
+	           const uint32_t wait_ms,
+	           const uint32_t pace_ms)
+	{
+		// Guard against empty inputs
+		if (!ext_events || ext_sequence.empty())
+			return;
+		Wait();
+		m_events = ext_events;
+		m_sequence = std::move(ext_sequence);
+		m_wait_ms = wait_ms;
+		m_pace_ms = pace_ms;
+		m_stop_requested = false;
+		m_instance = std::thread(&Typer::Callback, this);
+		set_thread_name(m_instance, "dosbox:autotype");
+	}
+	void Wait()
+	{
+		if (m_instance.joinable())
+			m_instance.join();
+	}
+	void Stop()
+	{
+		m_stop_requested = true;
+		Wait();
+	}
+	void StopImmediately()
+	{
+		m_stop_requested = true;
+		if (m_instance.joinable())
+			m_instance.detach();
+	}
 
 private:
 	// find the event for the lshift key and return it
