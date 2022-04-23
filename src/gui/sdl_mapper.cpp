@@ -1269,9 +1269,12 @@ class Typer {
 			m_stop_requested = true;
 			Wait();
 		}
-		void End() {
-			m_stop_requested = true;
-		}
+	        void StopImmediately()
+	        {
+		        m_stop_requested = true;
+		        if (m_instance.joinable())
+			        m_instance.detach();
+	        }
 
 	private:
 		void Callback() {
@@ -3031,8 +3034,9 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
 }
 
-void MAPPER_AutoType_End() {
-	mapper.typist.End();
+void MAPPER_AutoTypeStopImmediately()
+{
+	mapper.typist.StopImmediately();
 }
 
 void MAPPER_StartUp(Section * sec) {
