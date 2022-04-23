@@ -1276,56 +1276,84 @@ class Typer {
 			        m_instance.detach();
 	        }
 
-	private:
-		void Callback() {
-		        // quit before our initial wait time
-		        if (m_stop_requested)
-			        return;
-		        std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
-			for (const auto &button : m_sequence) {
-				if (m_stop_requested)
-					return;
-				bool found = false;
-				// comma adds an extra pause, similar to the pause used in a phone number
-				if (button == ",") {
-					found = true;
-					 // quit before the pause
-					if (m_stop_requested)
-						return;
-					std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
-				// Otherwise trigger the matching button if we have one
-				} else {
-					const std::string bind_name = "key_" + button;
-					for (auto &event : *m_events) {
-						if (bind_name == event->GetName()) {
-							found = true;
-							event->Active(true);
-							std::this_thread::sleep_for(std::chrono::milliseconds(50));
-							event->Active(false);
-							break;
-						}
-					}
-				}
-				/*
-				*  Terminate the sequence for safety reasons if we can't find a button.
-				*  For example, we don't wan't DEAL becoming DEL, or 'rem' becoming 'rm'
-				*/
-				if (!found) {
-					LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
-							button.c_str());
-					return;
-				}
-				if (m_stop_requested) // quit before the pacing delay
-					return;
-				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+private:
+	// find the event for the lshift key and return it
+	CEvent *GetLShiftEvent()
+	{
+		static CEvent *lshift_event = nullptr;
+		for (auto &event : *m_events) {
+			if (std::string("key_lshift") == event->GetName()) {
+				lshift_event = event;
+				break;
 			}
 		}
-		std::thread m_instance = {};
-		std::vector<std::string> m_sequence = {};
-		std::vector<CEvent*>     *m_events = nullptr;
-		uint32_t                 m_wait_ms = 0;
-		uint32_t                 m_pace_ms = 0;
-		std::atomic_bool         m_stop_requested{false};
+		assert(lshift_event);
+		return lshift_event;
+	}
+
+	void Callback()
+	{
+		// quit before our initial wait time
+		if (m_stop_requested)
+			return;
+		std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
+		for (const auto &button : m_sequence) {
+			if (m_stop_requested)
+				return;
+			bool found = false;
+			// comma adds an extra pause, similar to on phones
+			if (button == ",") {
+				found = true;
+				// quit before the pause
+				if (m_stop_requested)
+					return;
+				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+				// Otherwise trigger the matching button if we have one
+			} else {
+				// is the button an upper case letter?
+				const auto is_cap = button.length() == 1 && isupper(button[0]);
+				const auto maybe_lshift = is_cap ? GetLShiftEvent() : nullptr;
+				const std::string lbutton = is_cap ? std::string{int_to_char(
+				                                             tolower(button[0]))}
+				                                   : button;
+				const std::string bind_name = "key_" + lbutton;
+				for (auto &event : *m_events) {
+					if (bind_name == event->GetName()) {
+						found = true;
+						if (maybe_lshift)
+							maybe_lshift->Active(true);
+						event->Active(true);
+						std::this_thread::sleep_for(
+						        std::chrono::milliseconds(50));
+						event->Active(false);
+						if (maybe_lshift)
+							maybe_lshift->Active(false);
+						break;
+					}
+				}
+			}
+			/*
+			 *  Terminate the sequence for safety reasons if we can't find
+			 * a button. For example, we don't wan't DEAL becoming DEL, or
+			 * 'rem' becoming 'rm'
+			 */
+			if (!found) {
+				LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
+				        button.c_str());
+				return;
+			}
+			if (m_stop_requested) // quit before the pacing delay
+				return;
+			std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+		}
+	}
+
+	std::thread m_instance = {};
+	std::vector<std::string> m_sequence = {};
+	std::vector<CEvent *> *m_events = nullptr;
+	uint32_t m_wait_ms = 0;
+	uint32_t m_pace_ms = 0;
+	std::atomic_bool m_stop_requested{false};
 };
 
 static struct CMapper {
