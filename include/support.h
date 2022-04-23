@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <thread>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include "std_filesystem.h"
@@ -348,6 +349,24 @@ template <typename container_t>
 bool contains(const container_t &container, const typename container_t::key_type &key)
 {
 	return container.find(key) != container.end();
+}
+
+// remove duplicates from an unordered container using std::remove_if (C++17)
+
+// The std::remove_if algorithm moves 'failed' elements to the end of the
+// container, and then returns an iterator to the new end of the container.
+// We can then chop-off all the unwanted elements using a single std::erase
+// call (minimizing memory thrashing).
+
+template <typename container_t, typename value_t = typename container_t::value_type>
+void remove_duplicates(container_t &c)
+{
+	std::unordered_set<value_t> s;
+	auto val_is_duplicate = [&s](const value_t &value) {
+		return s.insert(value).second == false;
+	};
+	const auto end = std::remove_if(c.begin(), c.end(), val_is_duplicate);
+	c.erase(end, c.end());
 }
 
 // Convenience function to cast to the underlying type of an enum class
