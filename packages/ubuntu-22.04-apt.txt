@@ -4,6 +4,7 @@ build-essential
 ccache
 libasound-dev
 libatomic1
+libfreetype6-dev
 libfluidsynth-dev
 libgtest-dev
 libopusfile-dev

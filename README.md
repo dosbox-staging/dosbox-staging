@@ -113,7 +113,7 @@ Install build dependencies appropriate for your OS:
 ``` shell
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
-                 SDL2-devel SDL2_net-devel opusfile-devel \
+                 SDL2-devel SDL2_net-devel opusfile-devel freetype-devel \
                  fluidsynth-devel iir1-devel mt32emu-devel libslirp-devel \
                  speexdsp-devel libXi-devel zlib-ng-devel
 ```
@@ -121,7 +121,7 @@ sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
-                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
+                 libsdl2-dev libsdl2-net-dev libopusfile-dev libfreetype-dev \
                  libfluidsynth-dev libslirp-dev libspeexdsp-dev libxi-dev
 
 # Install Meson on Debian-11 "Bullseye" or Ubuntu-21.04 and newer
@@ -130,7 +130,7 @@ sudo apt install meson
 
 ``` shell
 # Arch, Manjaro
-sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net \
+sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net freetype \
                opusfile fluidsynth libslirp speexdsp libxi pkgconf
 ```
 
@@ -139,7 +139,7 @@ sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net \
 sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel \
                     libSDL2-devel libSDL2_net-devel \
                     opusfile-devel fluidsynth-devel libmt32emu-devel libslirp-devel \
-                    speexdsp libXi-devel
+                    speexdsp libXi-devel freetype-devel
 ```
 
 ``` shell
@@ -147,13 +147,13 @@ sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel 
 sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
                      fluidsynth-devel libiir1-devel libmt32emu-devel \
                      libpng-devel libslirp-devel opusfile-devel \
-                     speexdsp-devel libatomic-devel libXi-devel
+                     speexdsp-devel libatomic-devel libXi-devel freetype-devel
 ```
 
 ``` shell
 # NixOS
 # With Home Manager on home.nix (Recommended Permanent Installation)
-home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \
+home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net freetype \
                   fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \
                   libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
                   libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
@@ -166,7 +166,7 @@ home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \
 # macOS
 xcode-select --install
 brew install cmake ccache meson libpng sdl2 sdl2_net opusfile \
-     fluid-synth libslirp pkg-config python3 speexdsp
+     fluid-synth libslirp pkg-config python3 speexdsp freetype
 ```
 
 ### Build and stay up-to-date with the latest sources

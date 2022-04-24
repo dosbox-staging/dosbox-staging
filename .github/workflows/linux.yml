@@ -107,6 +107,7 @@ jobs:
               -Dunit_tests=disabled
               -Duse_alsa=false
               -Duse_fluidsynth=false
+              -Duse_freetype=false
               -Duse_mt32emu=false
               -Duse_opengl=false
               -Duse_sdl2_net=false
@@ -156,7 +157,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y build-essential libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
+          sudo apt-get install -y build-essential libsdl2-dev libopusfile-dev libfreetype-dev libspeexdsp-dev python3-setuptools
           sudo pip3 install --upgrade meson ninja
       
       # Note: not run for cross builds

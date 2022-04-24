@@ -138,7 +138,7 @@ jobs:
       - name: Install C++ compiler and libraries
         if:   matrix.runner.needs_deps
         run: |
-          brew install librsvg tree libpng ninja opusfile speexdsp meson python-setuptools
+          brew install librsvg tree libpng ninja opusfile freetype speexdsp meson python-setuptools
 
       - name: Cache subprojects
         id: cache-subprojects

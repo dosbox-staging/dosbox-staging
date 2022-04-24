@@ -2,6 +2,7 @@ cmake
 curl
 fluid-synth
 gnu-tar
+freetype
 libpng
 libslirp
 meson

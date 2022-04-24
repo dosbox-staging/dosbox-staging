@@ -2,6 +2,7 @@ build-essential
 ccache
 libasound2-dev
 libatomic1
+libfreetype6-dev
 libopusfile-dev
 libpng-dev
 libsdl2-dev

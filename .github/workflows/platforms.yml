@@ -92,7 +92,7 @@ jobs:
                 apt-get -qq update  < /dev/null > /dev/null
                 apt-get -qq install git curl findutils procps tar zstd screenfetch \
                                     < /dev/null > /dev/null
-                apt-get -qq install cmake g++ build-essential ccache libasound2-dev libgtest-dev \
+                apt-get -qq install cmake g++ build-essential ccache libasound2-dev libgtest-dev libfreetype-dev  \
                                     libopusfile-dev libsdl2-dev zlib1g-dev libspeexdsp-dev libpng-dev \
                                     < /dev/null > /dev/null
                 # Meson from Debian repository is too old for DOSBox Staging
@@ -112,7 +112,7 @@ jobs:
               fedora*)
                 dnf -q -y update
                 dnf -q -y install git which curl findutils procps-ng tar zstd screenfetch
-                dnf -q -y install cmake desktop-file-utils gcc gcc-c++ gmock-devel gtest-devel \
+                dnf -q -y install cmake desktop-file-utils freetype-devel gcc gcc-c++ gmock-devel gtest-devel \
                                   libappstream-glib libatomic meson opusfile-devel SDL2-devel zlib-devel
                 ;;
               alpine*)
@@ -132,6 +132,7 @@ jobs:
             #    it until a proper fix can be found
             meson setup \
                   -Duse_fluidsynth=false \
+                  -Duse_freetype=false \
                   -Duse_sdl2_net=false \
                   -Duse_opengl=false \
                   -Duse_mt32emu=false \

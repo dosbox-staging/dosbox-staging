@@ -16,6 +16,7 @@ libgui = static_library(
         ghc_dep,
         libiir_dep,
         libloguru_dep,
+        freetype_dep,
         opengl_dep,
         sdl2_dep,
         tracy_dep,

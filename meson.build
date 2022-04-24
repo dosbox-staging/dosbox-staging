@@ -438,6 +438,7 @@ conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_SLIRP', get_option('use_slirp'))
 conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
+conf_data.set10('C_FREETYPE', get_option('use_freetype'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
@@ -1026,6 +1027,13 @@ if get_option('use_fluidsynth')
     )
 endif
 summary('FluidSynth support', fluid_dep.found())
+
+# FreeType
+freetype_dep = optional_dep
+if get_option('use_freetype')
+    freetype_dep = dependency('freetype2', not_found_message: msg.format('use_freetype'))
+endif
+summary('FreeType support', freetype_dep.found())
 
 # mt32emu
 mt32emu_dep = optional_dep

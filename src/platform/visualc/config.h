@@ -63,6 +63,9 @@
 /* Define to 1 to enable FluidSynth MIDI synthesizer */
 #define C_FLUIDSYNTH 1
 
+/* Define to 1 to enable FreeType font rasterizing support */
+#define C_FREETYPE 1
+
 // Define to 1 to enable MT-32 emulator
 #define C_MT32EMU 1
 

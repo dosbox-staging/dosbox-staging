@@ -40,7 +40,7 @@ Tools need to be installed and the license agreed to.
 
     ``` shell
     brew install cmake ccache meson sdl2 sdl2_net opusfile \
-         pkg-config python3
+         pkg-config python3 freetype
     ```
 
 3. Add `brew` to your shell path:
@@ -58,7 +58,7 @@ Tools need to be installed and the license agreed to.
 
     ```shell
     sudo port -q install cmake ccache meson libsdl2 libsdl2_net opusfile \
-              pkgconfig python311
+              pkgconfig python311 freetype
     ```
 
 ## Building

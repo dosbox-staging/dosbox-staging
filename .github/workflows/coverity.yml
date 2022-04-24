@@ -94,6 +94,7 @@ jobs:
           -Duse_slirp=false \
           -Duse_xinput2=false \
           -Duse_zlib_ng=false \
+          -Duse_freetype=false \
           build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int meson compile -C build

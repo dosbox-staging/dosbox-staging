@@ -7,6 +7,7 @@ mingw-w64-i686-ncurses
 mingw-w64-i686-glib2
 mingw-w64-i686-iir
 mingw-w64-i686-fluidsynth
+mingw-w64-i686-freetype
 mingw-w64-i686-munt-mt32emu
 mingw-w64-i686-libpng
 mingw-w64-i686-libslirp

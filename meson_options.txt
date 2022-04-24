@@ -27,6 +27,13 @@ option(
 )
 
 option(
+    'use_freetype',
+    type : 'boolean',
+    value : true,
+    description : 'Rasterize fonts using the FreeType font engine',
+)
+
+option(
     'use_slirp',
     type: 'boolean',
     value: true,
@@ -203,6 +210,7 @@ option(
     type: 'array',
     choices: [
         'fluidsynth',
+        'freetype',
         'glib',
         'iir',
         'mt32emu',

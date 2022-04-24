@@ -1,6 +1,7 @@
 meson
 mingw-w64-x86_64-ccache
 mingw-w64-x86_64-fluidsynth
+mingw-w64-x86_64-freetype
 mingw-w64-x86_64-gcc
 mingw-w64-x86_64-libpng
 mingw-w64-x86_64-libslirp
