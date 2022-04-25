@@ -185,6 +185,7 @@ struct SDL_Block {
 		bool pixel_buffer_object = false;
 		bool npot_textures_supported = false;
 		bool use_shader;
+		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 		const char *shader_src;
 		struct {
