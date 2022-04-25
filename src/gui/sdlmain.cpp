@@ -1388,10 +1388,18 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	return "";
 }
 
-// "flexible" shaders properly handle window-resizing and NPOT textures
+[[maybe_unused]] static bool is_sharp_shader()
+{
+	constexpr std::array<std::string_view, 2> sharp_shader_names{{
+	        "sharp",
+	        "default",
+	}};
+	return contains(sharp_shader_names, get_glshader_value());
+}
+
 [[maybe_unused]] static bool is_shader_flexible()
 {
-	const std::array<std::string, 3> flexible_shader_names{{
+	constexpr std::array<std::string_view, 3> flexible_shader_names{{
 	        "sharp",
 	        "none",
 	        "default",
@@ -1672,6 +1680,7 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 		SetupWindowScaled(SCREEN_OPENGL, sdl.desktop.want_resizable_window);
 
 		/* We may simply use SDL_BYTESPERPIXEL
@@ -1857,9 +1866,25 @@ dosurface:
 		assert(emptytex);
 
 		memset(emptytex, 0, texture_area_bytes);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize_w, texsize_h,
+
+		int is_framebuffer_srgb_capable;
+		SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+		                    &is_framebuffer_srgb_capable);
+
+		sdl.opengl.framebuffer_is_srgb_encoded = is_sharp_shader() && is_framebuffer_srgb_capable > 0;
+
+		if (is_sharp_shader() && !sdl.opengl.framebuffer_is_srgb_encoded)
+			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
+
+		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs
+		const auto texformat = sdl.opengl.framebuffer_is_srgb_encoded ? GL_SRGB8_ALPHA8 : GL_RGB8;
+		glTexImage2D(GL_TEXTURE_2D, 0, texformat, texsize_w, texsize_h,
 		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
 		delete[] emptytex;
+
+		if (sdl.opengl.framebuffer_is_srgb_encoded) {
+			glEnable(GL_FRAMEBUFFER_SRGB);
+		}
 
 		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
 
