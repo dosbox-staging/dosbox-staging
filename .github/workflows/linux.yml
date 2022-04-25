@@ -24,23 +24,23 @@ jobs:
             os: ubuntu-20.04
             packages: clang
             build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             build_flags: -Dunit_tests=disabled
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             build_flags: -Dunit_tests=disabled
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC 7, Ubuntu 18.04
             os: ubuntu-18.04
             packages: g++-7
             build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-7.ini
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, +tests
             os: ubuntu-20.04
@@ -50,22 +50,22 @@ jobs:
           - name: GCC, +debugger
             os: ubuntu-20.04
             build_flags: -Dunit_tests=disabled -Denable_debugger=normal
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
             build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
             build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec -Denable_debugger=normal
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, -network
             os: ubuntu-20.04
             build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC, minimum build
             os: ubuntu-20.04
@@ -80,7 +80,7 @@ jobs:
               -Duse_sdl2_net=false
               -Duse_slirp=false
             min_dependencies: true
-            max_warnings: 0
+            max_warnings: 29
 
     steps:
       - name: Checkout repository

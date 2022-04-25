@@ -27,7 +27,7 @@ jobs:
             needs_deps: true
             packages: meson
             build_flags: -Dunit_tests=disabled
-            max_warnings: 0
+            max_warnings: 29
 
           - name: Clang
             host: macos-latest
@@ -35,7 +35,7 @@ jobs:
             needs_deps: true
             packages: meson
             build_flags: -Dunit_tests=disabled
-            max_warnings: 0
+            max_warnings: 29
 
           - name: GCC 11
             host: macos-latest
@@ -43,7 +43,7 @@ jobs:
             needs_deps: true
             packages: gcc@11
             build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
-            max_warnings: 0
+            max_warnings: 29
 
           - name: Clang, +tests
             host: macos-latest
@@ -57,7 +57,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Dunit_tests=disabled -Denable_debugger=normal
-            max_warnings: 0
+            max_warnings: 29
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
@@ -65,7 +65,7 @@ jobs:
             needs_deps: false
             packages: meson
             build_flags: -Dunit_tests=disabled
-            max_warnings: 0
+            max_warnings: 29
 
     steps:
       - name: Checkout repository

@@ -16,10 +16,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 5
+            max_warnings: 34
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 1085
+            max_warnings: 1119
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
@@ -56,7 +56,7 @@ jobs:
           git clone --depth 1 https://github.com/Microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth pdcurses gtest
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
           rm -R c:\vcpkg\buildtrees
           rm -R c:\vcpkg\packages
@@ -202,7 +202,6 @@ jobs:
           readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
           ls "vs/$RELEASE_DIR"
           cp vs/$RELEASE_DIR/dosbox.exe   dest/dosbox_with_debugger.exe
-          cp vs/$RELEASE_DIR/pdcurses.dll dest/
           # Create dir for zipping
           mv dest dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
 

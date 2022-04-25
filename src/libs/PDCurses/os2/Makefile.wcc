@@ -1,0 +1,24 @@
+# Watcom Makefile for PDCurses - OS/2
+#
+# Usage: wmake -f [path\]Makefile.wcc [DEBUG=Y] [target]
+#
+# where target can be any of:
+# [all|demos|pdcurses.lib|testcurs.exe...]
+
+!ifdef %PDCURSES_SRCDIR
+PDCURSES_SRCDIR	= $(%PDCURSES_SRCDIR)
+!else
+PDCURSES_SRCDIR	= ..
+!endif
+
+osdir		= $(PDCURSES_SRCDIR)/os2
+
+CC		= wcc386
+TARGET		= os2v2
+
+CFLAGS		= -bt=$(TARGET) -i=c:\watcom\h\os2
+
+!include $(PDCURSES_SRCDIR)/common/watcom.mif
+
+$(LIBCURSES) : $(LIBOBJS) $(PDCOBJS)
+	$(LIBEXE) $@ $(LIBOBJS) $(PDCOBJS)

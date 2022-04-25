@@ -51,13 +51,8 @@ using namespace std;
 #include "keyboard.h"
 #include "setup.h"
 
-#ifdef WIN32
-void WIN32_Console();
-#else
-#include <termios.h>
-#include <unistd.h>
-static struct termios consolesettings;
-#endif
+SDL_Window *GFX_GetSDLWindow(void);
+
 int old_cursor_state;
 
 // Forwards
@@ -733,7 +728,7 @@ static void DrawData(void) {
 				if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
 				mvwaddch (dbg.win_data,y,63+x,ch);
 			} else {
-#ifdef __PDCURSES__
+#if PDCURSES
 				mvwaddrawch (dbg.win_data,y,63+x,ch);
 #else
 				if (ch<32) ch='.';
@@ -1584,7 +1579,6 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 	return result;
 }
 
-
 int32_t DEBUG_Run(int32_t amount,bool quickexit) {
 	skipFirstInstruction = true;
 	CPU_Cycles = amount;
@@ -1593,8 +1587,10 @@ int32_t DEBUG_Run(int32_t amount,bool quickexit) {
 	else {
 		// ensure all breakpoints are activated
 		CBreakpoint::ActivateBreakpoints();
+		SDL_RaiseWindow(GFX_GetSDLWindow());				
 		DOSBOX_SetNormalLoop();
 	}
+
 	return ret;
 }
 
@@ -1622,7 +1618,7 @@ uint32_t DEBUG_CheckKeys(void) {
 	}
 
 	if (key>0 || numberrun) {
-#if defined(WIN32) && defined(__PDCURSES__)
+#if defined(WIN32) && PDCURSES
 		switch (key) {
 		case PADENTER:	key=0x0A;	break;
 		case PADSLASH:	key='/';	break;
@@ -1766,6 +1762,7 @@ uint32_t DEBUG_CheckKeys(void) {
 
 				ret = DEBUG_Run(1,false);
 				skipDraw = true; // don't update screen after this instruction
+
 				break;
 		case KEY_F(8):	// Toggle printable characters
 				showPrintable = !showPrintable;
@@ -1879,11 +1876,19 @@ Bitu DEBUG_Loop(void) {
 	return DEBUG_CheckKeys();
 }
 
+#include <queue>
+extern SDL_Window *pdc_window;
+extern std::queue<SDL_Event> pdc_event_queue;
+
 void DEBUG_Enable(bool pressed) {
 	if (!pressed)
 		return;
 	static bool showhelp=false;
 	debugging=true;
+
+	pdc_event_queue = {};
+
+	SDL_RaiseWindow(pdc_window);
 	SetCodeWinStart();
 	DEBUG_DrawScreen();
 	DOSBOX_SetLoop(&DEBUG_Loop);
@@ -2227,14 +2232,10 @@ static void DEBUG_ProgramStart(Program * * make) {
 // INIT
 
 void DEBUG_SetupConsole(void) {
-#ifdef WIN32
-	WIN32_Console();
-#else
-	tcgetattr(0,&consolesettings);
+	//tcgetattr(0,&consolesettings);
 	//curses must be inited first in order to catch the resize (is an event)
 //	printf("\e[8;50;80t"); //resize terminal
 //	fflush(NULL);
-#endif
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;
 //	dbg.active_win=3;
@@ -2247,12 +2248,12 @@ void DEBUG_ShutDown(Section * /*sec*/) {
 	CDebugVar::DeleteAll();
 	curs_set(old_cursor_state);
 	endwin();
-#ifndef WIN32
-	tcsetattr(0, TCSANOW,&consolesettings);
+//#ifndef WIN32
+	//tcsetattr(0, TCSANOW,&consolesettings);
 //	printf("\e[0m\e[2J"); //Seems to destroy scrolling
 //	printf("\ec"); //Doesn't seem to be needed anymore
 //	fflush(NULL);
-#endif
+//#endif
 }
 
 Bitu debugCallback;
