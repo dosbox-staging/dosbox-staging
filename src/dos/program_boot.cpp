@@ -273,10 +273,15 @@ void BOOT::Run(void)
 					return;
 				}
 				/* read cartridge data into buffer */
-				fseek(usefile_1, 0x200L, SEEK_SET);
+				constexpr auto seek_pos = 0x200;
+				if (fseek(usefile_1, seek_pos, SEEK_SET) != 0) {
+					LOG_ERR("BOOT: Failed seeking to %d in cartridge data file '%s': %s",
+					        seek_pos, temp_line.c_str(), strerror(errno));
+					return;
+				}
 				if (fread(rombuf, 1, rombytesize_1 - 0x200,
 				          usefile_1) < rombytesize_1 - 0x200) {
-					LOG_MSG("Failed to read sufficient cartridge data");
+					LOG_ERR("BOOT: Failed to read sufficient cartridge data");
 					fclose(usefile_1);
 					return;
 				}
