@@ -733,8 +733,13 @@ uint16_t keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	assert(start_pos < sizeof(read_buf));
 	submappings=read_buf[start_pos];
 
-	// Make sure we don't read beyond the end of the buffer
-	assert(start_pos + 0x14 + submappings * 8 < sizeof(read_buf));
+	// Make sure the submappings value won't let us read beyond the end of
+	// the buffer
+	if (submappings >= ceil_udivide(sizeof(read_buf) - start_pos - 0x14, 8u)) {
+		LOG(LOG_BIOS, LOG_ERROR)
+		("Keyboard layout file %s is corrupt", keyboard_file_name);
+		return 437;
+	}
 
 	// check all submappings and use them if general submapping or same
 	// codepage submapping
