@@ -18,6 +18,7 @@
 
 #include "drives.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -648,10 +649,8 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 		}
 		close_directory(dirp);
 		dirp = nullptr;
-		//parse directories to add them.
 
-
-		
+		// parse directories to add them.
 		for (i = dirnames.begin(); i != dirnames.end(); ++i) {
 			if ((*i) == ".") continue;
 			if ((*i) == "..") continue;
@@ -700,11 +699,12 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			close_directory(dirp);
 			dirp = nullptr;
 
-			for (i = dirnames.begin(); i != dirnames.end(); ++i) {
-				if ((*i) == backupi)
-					break; // find current directory again,
-					       // for the next round.
-			}
+			// find current directory again, for the next round. But
+			// if it's not there, then bail out before the next
+			// round to avoid incrementing beyond the end.
+			i = std::find(dirnames.begin(), dirnames.end(), backupi);
+			if (i == dirnames.end())
+				break;
 		}
 	}
 
