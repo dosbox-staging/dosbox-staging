@@ -1494,16 +1494,8 @@ static inline void set_mul(OPL3 *chip,int slot,int v)
 		{
 		case 0: case 1: case 2:
 		case 9: case 10: case 11:
-			if (CH->extended)
-			{
-				/* normal */
-				CALC_FCSLOT(CH,SLOT);
-			}
-			else
-			{
-				/* normal */
-				CALC_FCSLOT(CH,SLOT);
-			}
+			/* normal */
+			CALC_FCSLOT(CH,SLOT);
 		break;
 		case 3: case 4: case 5:
 		case 12: case 13: case 14:
@@ -1557,16 +1549,8 @@ static inline void set_ksl_tl(OPL3 *chip,int slot,int v)
 		{
 		case 0: case 1: case 2:
 		case 9: case 10: case 11:
-			if (CH->extended)
-			{
-				/* normal */
-				SLOT->TLL = SLOT->TL + (CH->ksl_base>>SLOT->ksl);
-			}
-			else
-			{
-				/* normal */
-				SLOT->TLL = SLOT->TL + (CH->ksl_base>>SLOT->ksl);
-			}
+			/* normal */
+			SLOT->TLL = SLOT->TL + (CH->ksl_base>>SLOT->ksl);
 		break;
 		case 3: case 4: case 5:
 		case 12: case 13: case 14:
