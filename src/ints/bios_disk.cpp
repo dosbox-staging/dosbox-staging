@@ -162,13 +162,18 @@ uint8_t imageDisk::Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,v
 	return Read_AbsoluteSector(sectnum, data);
 }
 
-uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void * data) {
-	uint32_t bytenum;
+uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void *data)
+{
+	const uint32_t bytenum = sectnum * sector_size;
 
-	bytenum = sectnum * sector_size;
-
-	if (last_action==WRITE || bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
-	size_t ret=fread(data, 1, sector_size, diskimg);
+	if (last_action == WRITE || bytenum != current_fpos) {
+		if (fseek(diskimg, bytenum, SEEK_SET) != 0) {
+			LOG_ERR("BIOSDISK: Could not seek to sector %u in file '%s': %s",
+			        sectnum, diskname, strerror(errno));
+			return 0xff;
+		}
+	}
+	size_t ret = fread(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
 	last_action=READ;
 
@@ -191,8 +196,14 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
 
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 
-	if (last_action==READ || bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
-	size_t ret=fwrite(data, 1, sector_size, diskimg);
+	if (last_action == READ || bytenum != current_fpos) {
+		if (fseek(diskimg, bytenum, SEEK_SET) != 0) {
+			LOG_ERR("BIOSDISK: Could not seek to byte %u in file '%s': %s",
+			        bytenum, diskname, strerror(errno));
+			return 0xff;
+		}
+	}
+	size_t ret = fwrite(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
 	last_action=WRITE;
 
