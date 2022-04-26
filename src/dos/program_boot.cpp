@@ -268,6 +268,10 @@ void BOOT::Run(void)
 			uint8_t rombuf[65536];
 			Bits cfound_at = -1;
 			if (!cart_cmd.empty()) {
+				if (!usefile_1) {
+					WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_NOT_OPEN"), temp_line.c_str());
+					return;
+				}
 				/* read cartridge data into buffer */
 				fseek(usefile_1, 0x200L, SEEK_SET);
 				if (fread(rombuf, 1, rombytesize_1 - 0x200,
