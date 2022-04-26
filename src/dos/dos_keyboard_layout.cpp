@@ -227,7 +227,11 @@ static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, 
 				}
 			}
 		}
-		fseek(tempfile.get(), cur_pos + 3 + len, SEEK_SET);
+		if (fseek(tempfile.get(), cur_pos + 3 + len, SEEK_SET) != 0) {
+			LOG_ERR("LAYOUT: could not seek to byte %d in keyboard layout file '%s': %s",
+			        cur_pos + 3 + len, kcl_file_name, strerror(errno));
+			return 0;
+		}
 	}
 
 	return 0;
