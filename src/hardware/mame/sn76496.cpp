@@ -140,6 +140,8 @@
 #include "emu.h"
 #include "sn76496.h"
 
+#include <algorithm>
+
 #define MAX_OUTPUT 0x7fff
 //When you go over this create sample
 #define RATE_MAX ( 1 << 30)
@@ -275,8 +277,11 @@ void sn76496_base_device::device_start()
 
 	gain &= 0xff;
 
+	// four channels, each gets 1/4 of the total range
+	constexpr int32_t max_output_per_channel = MAX_OUTPUT / 4;
+
 	// increase max output basing on gain (0.2 dB per step)
-	out = MAX_OUTPUT / 4; // four channels, each gets 1/4 of the total range
+	out = max_output_per_channel;
 	while (gain-- > 0)
 		out *= 1.023292992; // = (10 ^ (0.2/20))
 
@@ -284,8 +289,8 @@ void sn76496_base_device::device_start()
 	for (i = 0; i < 15; i++)
 	{
 		// limit volume to avoid clipping
-		if (out > MAX_OUTPUT / 4) m_vol_table[i] = MAX_OUTPUT / 4;
-		else m_vol_table[i] = static_cast<int32_t>(out);
+		m_vol_table[i] = std::min(static_cast<int32_t>(out),
+		                          max_output_per_channel);
 
 		out /= 1.258925412; /* = 10 ^ (2/20) = 2dB */
 	}
