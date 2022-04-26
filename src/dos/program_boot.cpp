@@ -20,6 +20,7 @@
 
 #include "program_boot.h"
 
+#include <limits>
 #include <stdio.h>
 
 #include "bios_disk.h"
@@ -278,16 +279,21 @@ void BOOT::Run(void)
 				char cmdlist[1024];
 				cmdlist[0] = 0;
 				Bitu ct = 6;
-				Bits clen = rombuf[ct];
-				char buf[257];
+
+				auto clen = rombuf[ct];
+				static constexpr auto max_clen =
+				        std::numeric_limits<decltype(clen)>::max();
+				std::array<char, max_clen + 1> buf = {0};
+
 				if (cart_cmd == "?") {
 					while (clen != 0) {
-						strncpy(buf, (char *)&rombuf[ct + 1],
+						strncpy(buf.data(),
+						        (char *)&rombuf[ct + 1],
 						        clen);
 						buf[clen] = 0;
-						upcase(buf);
+						upcase(buf.data());
 						safe_strcat(cmdlist, " ");
-						safe_strcat(cmdlist, buf);
+						safe_strcat(cmdlist, buf.data());
 						ct += 1 + clen + 3;
 						if (ct > sizeof(cmdlist))
 							break;
@@ -307,15 +313,16 @@ void BOOT::Run(void)
 					return;
 				} else {
 					while (clen != 0) {
-						strncpy(buf, (char *)&rombuf[ct + 1],
+						strncpy(buf.data(),
+						        (char *)&rombuf[ct + 1],
 						        clen);
 						buf[clen] = 0;
-						upcase(buf);
+						upcase(buf.data());
 						safe_strcat(cmdlist, " ");
-						safe_strcat(cmdlist, buf);
+						safe_strcat(cmdlist, buf.data());
 						ct += 1 + clen;
 
-						if (cart_cmd == buf) {
+						if (cart_cmd == buf.data()) {
 							cfound_at = ct;
 							break;
 						}
