@@ -1,4 +1,8 @@
 /* PDCurses */
+
+#ifndef PDC_SDL2_DOSBOX_PDCSDL_H
+#define PDC_SDL2_DOSBOX_PDCSDL_H
+
 #include <queue>
 
 #include <SDL.h>
@@ -38,3 +42,5 @@ PDCEX  void PDC_retile(void);
 
 extern void PDC_pump_and_peep(void);
 extern void PDC_blink_text(void);
+
+#endif
