@@ -322,7 +322,10 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
 	return true;
 
 cleanup_error:
-	if (cp->porthandle != 0) close(cp->porthandle);
+	// Only close the handle if it's valid
+	if (cp->porthandle > 0)
+		close(cp->porthandle);
+
 	free(cp);
 	return false;
 }
