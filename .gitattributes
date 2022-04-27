@@ -1,2 +1,4 @@
+# auto-normalize any added text files to LF
+*	text=auto
 # github linguist 
-*.h linguist-language=C++
+*.h	linguist-language=C++
