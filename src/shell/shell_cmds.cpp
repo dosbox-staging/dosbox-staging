@@ -1841,12 +1841,22 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		std::string arg;
 		CommandLine command(0,args);
 
-		if (command.GetCount() != 2) throw 0 ;
+		// Expecting two arguments
+		if (command.GetCount() != 2)
+			throw 0;
 
-		command.FindCommand(1,arg);
-		if ( (arg.size() > 1) && arg[1] !=':')  throw(0);
+		// Found first
+		if (!command.FindCommand(1, arg))
+			throw 0;
+		if ((arg.size() > 1) && arg[1] != ':')
+			throw(0);
+
 		temp_str[0]=(char)toupper(args[0]);
-		command.FindCommand(2,arg);
+
+		// Found second
+		if (!command.FindCommand(2, arg))
+			throw 0;
+
 		const auto drive_idx = drive_index(temp_str[0]);
 		if ((arg == "/D") || (arg == "/d")) {
 			if (!Drives[drive_idx])
