@@ -1415,7 +1415,7 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 		else if (!strcasecmp(arg1, "-R"))
 			min_attr_r = true;
 		else if (*arg1)
-			strcpy(sfull, arg1);
+			safe_strcpy(sfull, arg1);
 	} while (*args);
 
 	char buffer[CROSS_LEN];
