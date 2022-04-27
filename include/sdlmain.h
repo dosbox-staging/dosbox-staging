@@ -94,7 +94,7 @@ struct VsyncPreference {
 	VSYNC_STATE requested = VSYNC_STATE::UNSET;
 	VSYNC_STATE reported = VSYNC_STATE::UNSET;
 	VSYNC_STATE resultant = VSYNC_STATE::UNSET;
-	int16_t benchmarked_rate = 0;
+	int benchmarked_rate = 0;
 };
 
 enum PRIORITY_LEVELS {
