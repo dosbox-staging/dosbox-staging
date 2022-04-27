@@ -756,7 +756,8 @@ static int benchmark_presentation_rate()
 		sdl.frame.update(nullptr);
 		sdl.frame.present();
 	}
-	return (bench_frames * 1'000'000) / GetTicksUsSince(start_us);
+	const auto elapsed_us = std::max(1, GetTicksUsSince(start_us));
+	return (bench_frames * 1'000'000) / elapsed_us;
 }
 
 static VSYNC_STATE get_reported_vsync()
@@ -793,7 +794,7 @@ static VSYNC_STATE get_reported_vsync()
 	return state;
 }
 
-static VSYNC_STATE get_resultant_vsync(int16_t &bench_rate)
+static VSYNC_STATE get_resultant_vsync(int &bench_rate)
 {
 	bench_rate = benchmark_presentation_rate();
 	const auto host_rate = get_host_refresh_rate();
