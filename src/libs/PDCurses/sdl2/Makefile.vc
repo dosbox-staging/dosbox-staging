@@ -1,0 +1,129 @@
+# Visual C++ Makefile for PDCurses - SDL2
+#
+# Usage: nmake -f [path\]Makefile.vc [DEBUG=Y] [DLL=Y] [WIDE=Y] [UTF8=Y]
+#        [INFOEX=N] [target]
+#
+# where target can be any of:
+# [all|demos|pdcurses.lib|testcurs.exe...]
+
+O = obj
+E = .exe
+RM = del
+
+!ifndef PDCURSES_SRCDIR
+PDCURSES_SRCDIR = ..
+!endif
+
+osdir		= $(PDCURSES_SRCDIR)\sdl2
+common		= $(PDCURSES_SRCDIR)\common
+
+!include $(common)\libobjs.mif
+!include $(osdir)\versions.mif
+
+SDL2_INCLUDE = -I$(SDLBASE)\include
+SDL2_LIB = $(SDLBASE)\lib\$(PLATFORM)\SDL2.lib
+SDL2_LIBMAIN = $(SDLBASE)\lib\$(PLATFORM)\SDL2main.lib
+
+PDCURSES_WIN_H	= $(osdir)\pdcsdl.h
+
+CC		= cl.exe -nologo
+
+!ifdef DEBUG
+CFLAGS		= -Z7 -DPDCDEBUG
+LDFLAGS		= -debug -pdb:none
+!else
+CFLAGS		= -O1
+LDFLAGS		=
+!endif
+
+!ifdef WIDE
+WIDEOPT		= -DPDC_WIDE
+TTF_INCLUDE	= -I$(TTFBASE)\include
+TTF_LIB		= $(TTFBASE)\lib\$(PLATFORM)\SDL2_ttf.lib
+!endif
+
+!ifdef UTF8
+UTF8OPT		= -DPDC_FORCE_UTF8
+!endif
+
+!ifdef INFOEX
+INFOPT		= -DHAVE_NO_INFOEX
+!endif
+
+SHL_LD = link $(LDFLAGS) -nologo -dll -machine:$(PLATFORM) -out:pdcurses.dll
+
+LINK		= link.exe -nologo -subsystem:windows
+
+LIBEXE		= lib -nologo
+
+LIBCURSES	= pdcurses.lib
+CURSESDLL	= pdcurses.dll
+
+!ifdef DLL
+DLLOPT		= -DPDC_DLL_BUILD
+PDCLIBS		= $(CURSESDLL)
+LIBLIBS		= $(SDL2_LIB) $(TTF_LIB)
+CCLIBS		= $(SDL2_LIBMAIN) $(SDL2_LIB)
+!else
+PDCLIBS		= $(LIBCURSES)
+CCLIBS		= $(SDL2_LIBMAIN) $(SDL2_LIB) $(TTF_LIB)
+!endif
+
+BUILD		= $(CC) -I$(PDCURSES_SRCDIR) \
+-c $(CFLAGS) $(DLLOPT) $(WIDEOPT) $(UTF8OPT) $(INFOPT)
+
+all:	$(PDCLIBS)
+
+clean:
+	-$(RM) *.obj
+	-$(RM) *.lib
+	-$(RM) *.exe
+	-$(RM) *.dll
+	-$(RM) *.exp
+	-$(RM) *.res
+
+demos:	$(PDCLIBS) $(DEMOS) sdltest.exe
+
+DEMOOBJS = $(DEMOS:.exe=.obj) tui.obj sdltest.obj
+
+$(LIBOBJS) $(PDCOBJS) : $(PDCURSES_HEADERS)
+$(PDCOBJS) : $(PDCURSES_WIN_H)
+$(DEMOOBJS) : $(PDCURSES_CURSES_H)
+$(DEMOS) : $(LIBCURSES)
+panel.obj : $(PANEL_HEADER)
+
+!ifndef DLL
+$(LIBCURSES) : $(LIBOBJS) $(PDCOBJS)
+	$(LIBEXE) -out:$@ $(LIBOBJS) $(PDCOBJS)
+!endif
+
+$(CURSESDLL) : $(LIBOBJS) $(PDCOBJS) pdcurses.obj
+	$(SHL_LD) $(LIBOBJS) $(PDCOBJS) pdcurses.obj $(LIBLIBS)
+
+pdcurses.res pdcurses.obj: $(common)\pdcurses.rc
+	rc -r -fopdcurses.res $(common)\pdcurses.rc
+	cvtres -machine:$(PLATFORM) -nologo -out:pdcurses.obj pdcurses.res
+
+{$(srcdir)\}.c{}.obj::
+	$(BUILD) $<
+
+{$(osdir)\}.c{}.obj::
+	$(BUILD) -Dmain=SDL_main $(SDL2_INCLUDE) $(TTF_INCLUDE) $<
+
+{$(demodir)\}.c{}.obj::
+	$(BUILD) -Dmain=SDL_main $<
+
+.obj.exe:
+	$(LINK) $(LDFLAGS) $< $(LIBCURSES) $(CCLIBS)
+
+tuidemo.exe: tuidemo.obj tui.obj
+	$(LINK) $(LDFLAGS) $*.obj tui.obj $(LIBCURSES) $(CCLIBS)
+
+tui.obj: $(demodir)\tui.c $(demodir)\tui.h
+	$(BUILD) -I$(demodir) $(demodir)\tui.c
+
+tuidemo.obj: $(demodir)\tuidemo.c
+	$(BUILD) -Dmain=SDL_main -I$(demodir) $(demodir)\tuidemo.c
+
+sdltest.exe: sdltest.obj
+	$(LINK) $(LDFLAGS) $*.obj $(LIBCURSES) $(LIBLIBS) $(CCLIBS)
