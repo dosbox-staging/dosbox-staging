@@ -60,7 +60,7 @@ int PDC_getclipboard(char **contents, long *length)
     return PDC_CLIP_SUCCESS;
 }
 
-int PDC_setclipboard(const char *contents, long length)
+int PDC_setclipboard(const char *contents, [[maybe_unused]] long length)
 {
     PDC_LOG(("PDC_setclipboard() - called\n"));
 

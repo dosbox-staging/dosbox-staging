@@ -182,6 +182,8 @@ int scr_dump(const char *filename)
 
 int scr_init(const char *filename)
 {
+    UNUSED_PARAMETER(filename);
+
     PDC_LOG(("scr_init() - called: filename %s\n", filename));
 
     return OK;

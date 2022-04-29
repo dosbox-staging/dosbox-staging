@@ -187,6 +187,9 @@ int halfdelay(int tenths)
 
 int intrflush(WINDOW *win, bool bf)
 {
+    UNUSED_PARAMETER(win);
+    UNUSED_PARAMETER(bf);
+
     PDC_LOG(("intrflush() - called\n"));
 
     return OK;
@@ -206,6 +209,8 @@ int keypad(WINDOW *win, bool bf)
 
 int meta(WINDOW *win, bool bf)
 {
+    UNUSED_PARAMETER(win);
+
     PDC_LOG(("meta() - called\n"));
 
     if (!SP)
@@ -254,6 +259,9 @@ int nodelay(WINDOW *win, bool flag)
 
 int notimeout(WINDOW *win, bool flag)
 {
+    UNUSED_PARAMETER(win);
+    UNUSED_PARAMETER(flag);
+    
     PDC_LOG(("notimeout() - called\n"));
 
     return OK;
@@ -297,6 +305,8 @@ void qiflush(void)
 
 int typeahead(int fildes)
 {
+    UNUSED_PARAMETER(fildes);
+    
     PDC_LOG(("typeahead() - called\n"));
 
     return OK;

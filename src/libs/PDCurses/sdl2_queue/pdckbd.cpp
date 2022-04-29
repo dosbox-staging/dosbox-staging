@@ -72,7 +72,7 @@ static struct
  {0,            0,      0,           0,            0,           0}
 };
 
-void PDC_set_keyboard_binary(bool on)
+void PDC_set_keyboard_binary([[maybe_unused]] bool on)
 {
     PDC_LOG(("PDC_set_keyboard_binary() - called\n"));
 }
@@ -81,17 +81,23 @@ void PDC_set_keyboard_binary(bool on)
 
 bool PDC_check_key(void)
 {
-    int haveevent;
+    int haveevent = 0;
 
     PDC_pump_and_peep();
 
     /* SDL_TEXTINPUT can return multiple chars from the IME which we
        should handle before polling for additional events. */
 
-    if (event.type == SDL_TEXTINPUT && event.text.text[0])
+    if (event.type == SDL_TEXTINPUT && event.text.text[0]) {
         haveevent = 1;
-    else
-        haveevent = SDL_PollEvent(&event);
+    } else {
+        haveevent = !pdc_event_queue.empty();
+        if (haveevent) {
+            const auto ev = pdc_event_queue.front();
+            event = ev;
+            pdc_event_queue.pop();
+        }
+    }
 
     return haveevent;
 }
@@ -373,16 +379,16 @@ static int _process_mouse_event(void)
 
         if (action == BUTTON_PRESSED && SP->mouse_wait)
         {
-            SDL_Event rel;
-
             napms(SP->mouse_wait);
 
-            if (SDL_PollEvent(&rel))
+            if (!pdc_event_queue.empty())
             {
-                if (rel.type == SDL_MOUSEBUTTONUP && rel.button.button == btn)
+                const auto rel = pdc_event_queue.front();
+
+                if (rel.type == SDL_MOUSEBUTTONUP && rel.button.button == btn) {
                     action = BUTTON_CLICKED;
-                else
-                    SDL_PushEvent(&rel);
+                    pdc_event_queue.pop();
+                }
             }
         }
 
@@ -428,6 +434,7 @@ int PDC_get_key(void)
         break;
     case SDL_MOUSEMOTION:
         SDL_ShowCursor(SDL_ENABLE);
+        [[fallthrough]];
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEWHEEL:
