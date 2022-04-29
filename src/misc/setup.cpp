@@ -1233,12 +1233,15 @@ bool CommandLine::FindStringOption(const std::string &name, std::string &value, 
 	return true;
 }
 
-bool CommandLine::FindCommand(unsigned int which,std::string & value) {
-	if (which<1) return false;
-	if (which>cmds.size()) return false;
-	cmd_it it=cmds.begin();
-	for (;which>1;which--) it++;
-	value=(*it);
+bool CommandLine::FindCommand(unsigned int which, std::string &value)
+{
+	if (which < 1 || which > cmds.size())
+		return false;
+	cmd_it it = cmds.begin();
+	for (; which > 1; which--)
+		it++;
+	assert(it != cmds.end());
+	value = (*it);
 	return true;
 }
 
@@ -1264,8 +1267,10 @@ bool CommandLine::FindEntry(const std::string &name, cmd_it &it, bool need_next)
 {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(), name.c_str())) {
-			cmd_it itnext=it;++itnext;
-			if (need_next && (itnext == cmds.end()))
+			cmd_it it_next = it;
+			assert(it_next != cmds.end());
+			++it_next;
+			if (need_next && (it_next == cmds.end()))
 				return false;
 			return true;
 		}
@@ -1273,26 +1278,30 @@ bool CommandLine::FindEntry(const std::string &name, cmd_it &it, bool need_next)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(char const* const begin,std::string & value, bool remove) {
+bool CommandLine::FindStringBegin(char const *const begin, std::string &value, bool remove)
+{
 	size_t len = strlen(begin);
-	for (cmd_it it = cmds.begin(); it != cmds.end();++it) {
-		if (strncmp(begin,(*it).c_str(),len)==0) {
-			value=((*it).c_str() + len);
-			if (remove) cmds.erase(it);
+	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
+		if (strncmp(begin, (*it).c_str(), len) == 0) {
+			value = ((*it).c_str() + len);
+			if (remove)
+				cmds.erase(it);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
+bool CommandLine::FindStringRemain(char const *const name, std::string &value)
+{
 	cmd_it it = cmds.end();
 	value.clear();
 	std::string string = name;
 	if (!FindEntry(string, it))
 		return false;
+	assert(it != cmds.end());
 	++it;
-	for (;it != cmds.end();++it) {
+	for (; it != cmds.end(); ++it) {
 		value += " ";
 		value += (*it);
 	}
@@ -1303,7 +1312,8 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
  * Allowing /C dir and /Cdir
  * Restoring quotes back into the commands so command /C mount d "/tmp/a b" works as intended
  */
-bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
+bool CommandLine::FindStringRemainBegin(char const *const name, std::string &value)
+{
 	cmd_it it = cmds.end();
 	value.clear();
 	std::string string = name;
@@ -1334,23 +1344,25 @@ bool CommandLine::FindStringRemainBegin(char const * const name,std::string & va
 	return true;
 }
 
-bool CommandLine::GetStringRemain(std::string & value) {
+bool CommandLine::GetStringRemain(std::string &value)
+{
 	if (!cmds.size()) return false;
 
-	cmd_it it = cmds.begin();value = (*it++);
-	for(;it != cmds.end();++it) {
+	cmd_it it = cmds.begin();
+	value = (*it++);
+	for (; it != cmds.end(); ++it) {
 		value += " ";
 		value += (*it);
 	}
 	return true;
 }
 
-
 unsigned int CommandLine::GetCount(void) {
 	return (unsigned int)cmds.size();
 }
 
-void CommandLine::FillVector(std::vector<std::string> & vector) {
+void CommandLine::FillVector(std::vector<std::string> &vector)
+{
 	for(cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
 		vector.push_back((*it));
 	}
