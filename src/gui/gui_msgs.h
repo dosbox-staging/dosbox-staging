@@ -24,7 +24,7 @@
 constexpr char version_msg[] =
         R"(dosbox (dosbox-staging), version %s
 
-Copyright (C) 2020-2021  The DOSBox Staging Team
+Copyright (C) 2020-2022  The DOSBox Staging Team
 License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
 
 This is free software, and you are welcome to change and redistribute it under
@@ -35,13 +35,13 @@ There is NO WARRANTY, to the extent permitted by law.
 constexpr char help_msg[] =
         R"(Usage: dosbox [OPTION]... [FILE]
 
-These are common options:
+These are common options (which can be started with either /, -, or --):
 
-  -h, --help          Displays this message.
+  -h, -help           Displays this message.
 
-  --printconf         Prints the location of the default configuration file.
+  -printconf          Prints the location of the default configuration file.
 
-  --editconf          Open the default configuration file in a text editor.
+  -editconf           Opens the default configuration file in a text editor.
 
   -c <command>        Runs the specified DOS command before running FILE.
                       Multiple commands can be specified.
@@ -54,15 +54,15 @@ These are common options:
   -nolocalconf        Don't read settings from "dosbox.conf" if present in
                       the local current working directory.
 
-  -conf <configfile>  Start dosbox with the options specified in <configfile>.
+  -conf <configfile>  Starts dosbox with the options specified in <configfile>.
                       Multiple configfiles can be present at the commandline.
 
-  -fullscreen         Start dosbox in fullscreen mode.
+  -fullscreen         Starts dosbox in fullscreen mode.
 
-  -lang <langfile>    Start dosbox with the language specified in
+  -lang <langfile>    Starts dosbox with the language specified in
                       <langfile>.
 
-  -machine <type>     Setup dosbox to emulate a specific type of machine.
+  -machine <type>     Setups dosbox to emulate a specific type of machine.
                       The machine type has influence on both the videocard
                       and the emulated soundcards.  Valid choices are:
                       hercules, cga, cga_mono, tandy, pcjr, ega, vgaonly,
@@ -72,7 +72,7 @@ These are common options:
   -exit               Dosbox will close itself when the DOS program
                       specified by FILE ends.
 
-  --version       Output version information and exit.
+  -version            Outputs version information and exit.
 
 You can find full list of options in the man page: dosbox(1)
 And in file: /usr/share/doc/dosbox-staging/README
