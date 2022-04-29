@@ -1135,69 +1135,101 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-bool CommandLine::IsOption(const std::string &name, cmd_it &it) {
-	if (!(FindEntry(("/" + name).c_str(), it, false)) &&
-	    !(FindEntry(("-" + name).c_str(), it, false)) &&
-	    !(FindEntry(("--" + name).c_str(), it, false)))
-		return false;
-	return true;
+bool CommandLine::IsOption(const std::string &name, cmd_it &it)
+{
+	return FindEntry("/" + name, it, false) ||
+	       FindEntry("-" + name, it, false) ||
+	       FindEntry("--" + name, it, false);
 }
 
-bool CommandLine::FindExist(char const * const name,bool remove) {
-	cmd_it it;
+bool CommandLine::FindExist(char const *const name, bool remove)
+{
+	cmd_it it = cmds.end();
 	std::string string = name;
 	if (!(FindEntry(string, it, false)))
 		return false;
-	if (remove) cmds.erase(it);
+	if (remove) {
+		assert(it != cmds.end());
+		cmds.erase(it);
+	}
 	return true;
 }
 
-bool CommandLine::FindExistOption(const std::string &name, bool remove) {
-	cmd_it it;
+bool CommandLine::FindOption(const std::string &name, bool remove)
+{
+	cmd_it it = cmds.end();
 	if (!IsOption(name, it))
 		return false;
-	if (remove) cmds.erase(it);
+	if (remove) {
+		assert(it != cmds.end());
+		cmds.erase(it);
+	}
 	return true;
 }
 
-bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
-	cmd_it it,it_next;
+bool CommandLine::FindInt(char const *const name, int &value, bool remove)
+{
+	cmd_it it = cmds.end();
+	cmd_it it_next = cmds.end();
 	std::string string = name;
 	if (!(FindEntry(string, it, true)))
 		return false;
-	it_next=it;++it_next;
-	value=atoi((*it_next).c_str());
-	if (remove) cmds.erase(it,++it_next);
+	it_next = it;
+	assert(it_next != cmds.end());
+	++it_next;
+	assert(it_next != cmds.end());
+	value = atoi((*it_next).c_str());
+	if (remove)
+		cmds.erase(it, ++it_next);
 	return true;
 }
 
-bool CommandLine::FindIntOption(const std::string &name, int &value, bool remove) {
-	cmd_it it,it_next;
+bool CommandLine::FindIntOption(const std::string &name, int &value, bool remove)
+{
+	cmd_it it = cmds.end();
+	cmd_it it_next = cmds.end();
 	if (!IsOption(name, it))
 		return false;
-	it_next=it;++it_next;
-	value=atoi((*it_next).c_str());
-	if (remove) cmds.erase(it,++it_next);
+	it_next = it;
+	assert(it_next != cmds.end());
+	++it_next;
+	assert(it_next != cmds.end());
+	value = atoi((*it_next).c_str());
+	if (remove)
+		cmds.erase(it, ++it_next);
 	return true;
 }
 
-bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
-	cmd_it it,it_next;
+bool CommandLine::FindString(char const *const name, std::string &value, bool remove)
+{
+	cmd_it it = cmds.end();
+	cmd_it it_next = cmds.end();
 	std::string string = name;
-	if (!(FindEntry(string,it,true))) return false;
-	it_next=it;++it_next;
-	value=*it_next;
-	if (remove) cmds.erase(it,++it_next);
+	if (!(FindEntry(string, it, true)))
+		return false;
+	it_next = it;
+	assert(it_next != cmds.end());
+	++it_next;
+	assert(it_next != cmds.end());
+	value = *it_next;
+	if (remove)
+		cmds.erase(it, ++it_next);
 	return true;
 }
 
-bool CommandLine::FindStringOption(const std::string &name, std::string &value, bool remove) {
-	cmd_it it, it_next;
+bool CommandLine::FindStringOption(const std::string &name, std::string &value, bool remove)
+{
+	cmd_it it = cmds.end();
+	cmd_it it_next = cmds.end();
 	if (!IsOption(name, it))
 		return false;
-	it_next=it;++it_next;
-	value=*it_next;
-	if (remove) cmds.erase(it,++it_next);
+	it_next = it;
+	assert(it_next != cmds.end());
+	++it_next;
+	assert(it_next != cmds.end());
+	value = *it_next;
+	if (remove)
+		cmds.erase(it, ++it_next);
 	return true;
 }
 
@@ -1228,11 +1260,13 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(const std::string &name, cmd_it &it, bool need_next) {
+bool CommandLine::FindEntry(const std::string &name, cmd_it &it, bool need_next)
+{
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(), name.c_str())) {
 			cmd_it itnext=it;++itnext;
-			if (need_next && (itnext==cmds.end())) return false;
+			if (need_next && (itnext == cmds.end()))
+				return false;
 			return true;
 		}
 	}
@@ -1252,7 +1286,8 @@ bool CommandLine::FindStringBegin(char const* const begin,std::string & value, b
 }
 
 bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
-	cmd_it it;value.clear();
+	cmd_it it = cmds.end();
+	value.clear();
 	std::string string = name;
 	if (!FindEntry(string, it))
 		return false;
@@ -1269,7 +1304,8 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
  * Restoring quotes back into the commands so command /C mount d "/tmp/a b" works as intended
  */
 bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
-	cmd_it it;value.clear();
+	cmd_it it = cmds.end();
+	value.clear();
 	std::string string = name;
 	if (!FindEntry(string, it)) {
 		size_t len = strlen(name);
@@ -1472,8 +1508,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	std::string config_file;
 
 	// First: parse the user's primary config file
-	const bool wants_primary_conf =
-	        !control->cmdline->FindExistOption("noprimaryconf", true);
+	const bool wants_primary_conf = !control->cmdline->FindOption("noprimaryconf",
+	                                                              true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
 		const std::string config_combined = config_path + config_file;

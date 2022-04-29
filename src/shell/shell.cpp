@@ -576,11 +576,12 @@ public:
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
-		const bool secure = cmdline->FindExistOption("securemode", true);
+		const bool secure = cmdline->FindOption("securemode", true);
 
 		// Are autoexec sections permitted?
-		const bool autoexec_is_allowed =
-		        !secure && !cmdline->FindExistOption("noautoexec", true);
+		const bool autoexec_is_allowed = !secure &&
+		                                 !cmdline->FindOption("noautoexec",
+		                                                      true);
 
 		// Should autoexec sections be joined or overwritten?
 		const auto ds = control->GetSection("dosbox");
@@ -613,7 +614,7 @@ public:
 		}
 
 		// Check for the -exit switch, which indicates they want to quit
-		const bool exit_arg_exists = cmdline->FindExistOption("exit");
+		const bool exit_arg_exists = cmdline->FindOption("exit");
 
 		// Check if instant-launch is active
 		const bool using_instant_launch = control->GetStartupVerbosity() ==
