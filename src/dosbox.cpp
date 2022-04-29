@@ -348,7 +348,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	                  "speedlock", "Speedlock");
 
 	std::string cmd_machine;
-	if (control->cmdline->FindString("-machine",cmd_machine,true)){
+	if (control->cmdline->FindStringOption("machine", cmd_machine, true)) {
 		//update value in config (else no matching against suggested values
 		section->HandleInputline(std::string("machine=") + cmd_machine);
 	}

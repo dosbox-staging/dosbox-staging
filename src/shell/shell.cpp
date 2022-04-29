@@ -576,12 +576,11 @@ public:
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
-		const bool secure = cmdline->FindExist("-securemode", true);
+		const bool secure = cmdline->FindExistOption("securemode", true);
 
 		// Are autoexec sections permitted?
-		const bool autoexec_is_allowed = !secure &&
-		                                 !cmdline->FindExist("-noautoexec",
-		                                                     true);
+		const bool autoexec_is_allowed =
+		        !secure && !cmdline->FindExistOption("noautoexec", true);
 
 		// Should autoexec sections be joined or overwritten?
 		const auto ds = control->GetSection("dosbox");
@@ -594,7 +593,7 @@ public:
 		uint8_t i = 1;
 		std::string line;
 		bool exit_call_exists = false;
-		while (cmdline->FindString("-c", line, true) && (i <= 11)) {
+		while (cmdline->FindStringOption("c", line, true) && (i <= 11)) {
 #if defined(WIN32)
 			// replace single with double quotes so that mount
 			// commands can contain spaces
@@ -614,7 +613,7 @@ public:
 		}
 
 		// Check for the -exit switch, which indicates they want to quit
-		const bool exit_arg_exists = cmdline->FindExist("-exit");
+		const bool exit_arg_exists = cmdline->FindExistOption("exit");
 
 		// Check if instant-launch is active
 		const bool using_instant_launch = control->GetStartupVerbosity() ==

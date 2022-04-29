@@ -90,7 +90,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 #ifdef NATIVESOCKETS
 		if (bool_temp == 1) {
 			int sock;
-			if (control->cmdline->FindInt("-socket", sock, true)) {
+			if (control->cmdline->FindIntOption("socket", sock, true)) {
 				dtrrespect = false;
 				transparent = true;
 				LOG_MSG("SERIAL: Port %" PRIu8 " inheritance "

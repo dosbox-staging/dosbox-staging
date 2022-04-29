@@ -170,7 +170,7 @@ static std::string get_language(const Section_prop *section)
 	std::string lang = {};
 
 	// Did the user provide a language on the command line?
-	(void)control->cmdline->FindString("-lang", lang, true);
+	(void)control->cmdline->FindStringOption("lang", lang, true);
 
 	// Is a language provided in the conf file?
 	if (lang.empty()) {

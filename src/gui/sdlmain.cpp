@@ -4153,10 +4153,7 @@ static int LaunchEditor()
 	std::string editor;
 	constexpr bool remove_arg = true;
 	// Loop until one succeeds
-	while (control->cmdline->FindString("--editconf", editor, remove_arg))
-		replace_with_process(editor);
-
-	while (control->cmdline->FindString("-editconf", editor, remove_arg))
+	while (control->cmdline->FindStringOption("editconf", editor, remove_arg))
 		replace_with_process(editor);
 
 	const char *env_editor = getenv("EDITOR");
@@ -4351,22 +4348,24 @@ int sdl_main(int argc, char *argv[])
 		Config_Add_SDL();
 		DOSBOX_Init();
 
-		if (control->cmdline->FindExist("--editconf") ||
-		    control->cmdline->FindExist("-editconf")) {
+		if (control->cmdline->FindExistOption("editconf")) {
 			const int err = LaunchEditor();
 			return err;
 		}
 
 		std::string editor;
-		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
-		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
-		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
+		if (control->cmdline->FindStringOption("opencaptures", editor, true))
+			launchcaptures(editor);
+		if (control->cmdline->FindExistOption("eraseconf") ||
+		    control->cmdline->FindExistOption("resetconf"))
+			eraseconfigfile();
+		if (control->cmdline->FindExistOption("erasemapper") ||
+		    control->cmdline->FindExistOption("resetmapper"))
+			erasemapperfile();
 
-		/* Can't disable the console with debugger enabled */
+			/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
-		if (control->cmdline->FindExist("-noconsole")) {
+		if (control->cmdline->FindExistOption("noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
@@ -4387,23 +4386,20 @@ int sdl_main(int argc, char *argv[])
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
 
-		if (control->cmdline->FindExist("--version") ||
-		    control->cmdline->FindExist("-version") ||
-		    control->cmdline->FindExist("-v")) {
+		if (control->cmdline->FindExistOption("version") ||
+		    control->cmdline->FindExistOption("v")) {
 			printf(version_msg, DOSBOX_GetDetailedVersion());
 			return 0;
 		}
 
 		//If command line includes --help or -h, print help message and exit.
-		if (control->cmdline->FindExist("--help") ||
-		    control->cmdline->FindExist("-help") ||
-		    control->cmdline->FindExist("-h")) {
+		if (control->cmdline->FindExistOption("help") ||
+		    control->cmdline->FindExistOption("h")) {
 			printf(help_msg); // -V618
 			return 0;
 		}
 
-		if (control->cmdline->FindExist("--printconf") ||
-		    control->cmdline->FindExist("-printconf")) {
+		if (control->cmdline->FindExistOption("printconf")) {
 			const int err = PrintConfigLocation();
 			return err;
 		}
@@ -4440,7 +4436,7 @@ int sdl_main(int argc, char *argv[])
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
 		"Correct syntax: config -set \"[section] property=value\".\n");
 	std::string line;
-	while (control->cmdline->FindString("-set", line, true)) {
+	while (control->cmdline->FindStringOption("set", line, true)) {
 		trim(line);
 		if (line.empty()
 		    || line[0] == '%' || line[0] == '\0'
@@ -4489,13 +4485,13 @@ int sdl_main(int argc, char *argv[])
 
 		control->ParseEnv();
 //		UI_Init();
-//		if (control->cmdline->FindExist("-startui")) UI_Run(false);
+//		if (control->cmdline->FindExistOption("startui")) UI_Run(false);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
-		if (control->cmdline->FindExist("-fullscreen") ||
+		if (control->cmdline->FindExistOption("fullscreen") ||
 		    sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
 				GFX_SwitchFullScreen();
@@ -4505,7 +4501,7 @@ int sdl_main(int argc, char *argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
-		if (control->cmdline->FindExist("-startmapper"))
+		if (control->cmdline->FindExistOption("startmapper"))
 			MAPPER_DisplayUI();
 
 		control->StartUp(); // Run the machine until shutdown

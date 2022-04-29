@@ -711,12 +711,12 @@ void RENDER_Init(Section * sec) {
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values
-	if (control->cmdline->FindString("-scaler",cline,true)) {
+	if (control->cmdline->FindStringOption("scaler", cline, true)) {
 		section->HandleInputline(std::string("scaler=") + cline);
-	} else if (control->cmdline->FindString("-forcescaler",cline,true)) {
+	} else if (control->cmdline->FindStringOption("forcescaler", cline, true)) {
 		section->HandleInputline(std::string("scaler=") + cline + " forced");
 	}
-	   
+
 	Prop_multival* prop = section->Get_multival("scaler");
 	scaler = prop->GetSection()->Get_string("type");
 	std::string f = prop->GetSection()->Get_string("force");
