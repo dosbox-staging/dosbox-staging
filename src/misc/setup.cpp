@@ -1135,9 +1135,25 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
+bool CommandLine::IsOption(const std::string &name, cmd_it &it) {
+	if (!(FindEntry(("/" + name).c_str(), it, false)) &&
+	    !(FindEntry(("-" + name).c_str(), it, false)) &&
+	    !(FindEntry(("--" + name).c_str(), it, false)))
+		return false;
+	return true;
+}
+
 bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
+	if (remove) cmds.erase(it);
+	return true;
+}
+
+bool CommandLine::FindExistOption(const std::string &name, bool remove) {
+	cmd_it it;
+	if (!IsOption(name, it))
+		return false;
 	if (remove) cmds.erase(it);
 	return true;
 }
@@ -1151,9 +1167,29 @@ bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 	return true;
 }
 
+bool CommandLine::FindIntOption(const std::string &name, int &value, bool remove) {
+	cmd_it it,it_next;
+	if (!IsOption(name, it))
+		return false;
+	it_next=it;++it_next;
+	value=atoi((*it_next).c_str());
+	if (remove) cmds.erase(it,++it_next);
+	return true;
+}
+
 bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
+	it_next=it;++it_next;
+	value=*it_next;
+	if (remove) cmds.erase(it,++it_next);
+	return true;
+}
+
+bool CommandLine::FindStringOption(const std::string &name, std::string &value, bool remove) {
+	cmd_it it, it_next;
+	if (!IsOption(name, it))
+		return false;
 	it_next=it;++it_next;
 	value=*it_next;
 	if (remove) cmds.erase(it,++it_next);
@@ -1428,7 +1464,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	std::string config_file;
 
 	// First: parse the user's primary config file
-	const bool wants_primary_conf = !control->cmdline->FindExist("-noprimaryconf", true);
+	const bool wants_primary_conf =
+	        !control->cmdline->FindExistOption("noprimaryconf", true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
 		const std::string config_combined = config_path + config_file;
@@ -1436,13 +1473,14 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
-	const bool wants_local_conf = !control->cmdline->FindExist("-nolocalconf", true);
+	const bool wants_local_conf =
+	        !control->cmdline->FindExist("nolocalconf", true);
 	if (wants_local_conf) {
 		control->ParseConfigFile("local", "dosbox.conf");
 	}
 
 	// Finally: layer on custom -conf <files>
-	while (control->cmdline->FindString("-conf", config_file, true)) {
+	while (control->cmdline->FindString("conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// try to load it from the user directory
 			if (!control->ParseConfigFile("custom", config_path + config_file)) {

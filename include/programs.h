@@ -36,14 +36,21 @@ public:
 
 	const char *GetFileName() { return file_name.c_str(); }
 
-	bool FindExist(char const * const name,bool remove=false);
-	bool FindInt(char const * const name,int & value,bool remove=false);
-	bool FindString(char const * const name,std::string & value,bool remove=false);
-	bool FindCommand(unsigned int which,std::string & value);
-	bool FindStringBegin(char const * const begin,std::string & value, bool remove=false);
-	bool FindStringRemain(char const * const name,std::string & value);
+	bool FindExist(char const *const name, bool remove = false);
+	bool FindExistOption(const std::string &name, bool remove = false);
+	bool FindInt(char const *const name, int &value, bool remove = false);
+	bool FindIntOption(const std::string &name, int &value, bool remove = false);
+	bool FindString(char const *const name, std::string &value, bool remove = false);
+	bool FindStringOption(const std::string &name,
+	                      std::string &value,
+	                      bool remove = false);
+	bool FindCommand(unsigned int which, std::string &value);
+	bool FindStringBegin(char const *const begin,
+	                     std::string &value,
+	                     bool remove = false);
+	bool FindStringRemain(char const *const name, std::string &value);
 	bool FindStringRemainBegin(char const *const name, std::string &value);
-	bool GetStringRemain(std::string & value);
+	bool GetStringRemain(std::string &value);
 	int GetParameterFromList(const char* const params[], std::vector<std::string> & output);
 	void FillVector(std::vector<std::string> & vector);
 	bool HasDirectory() const;
@@ -58,7 +65,8 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name = "";
 
-	bool FindEntry(char const * const name,cmd_it & it,bool neednext=false);
+	bool FindEntry(char const * const name,cmd_it &it, bool neednext = false);
+	bool IsOption(const std::string &name, cmd_it &it);
 };
 
 class Program {
