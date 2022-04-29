@@ -507,7 +507,7 @@ void PDC_transform_line(int lineno, int x, int len, const chtype *srcp)
     _new_packet(old_attr, lineno, x, i, srcp);
 }
 
-static Uint32 _blink_timer(Uint32 interval, void *param)
+static Uint32 _blink_timer(Uint32 interval, [[maybe_unused]] void *param)
 {
     SDL_Event event;
 
@@ -563,18 +563,17 @@ void PDC_doupdate(void)
 
 void PDC_pump_and_peep(void)
 {
-    SDL_Event event;
-
-    if (SDL_PollEvent(&event))
+    if (!pdc_event_queue.empty())
     {
+        const auto event = pdc_event_queue.front();
+
         if (SDL_WINDOWEVENT == event.type &&
             (SDL_WINDOWEVENT_RESTORED == event.window.event ||
              SDL_WINDOWEVENT_EXPOSED == event.window.event))
         {
             SDL_UpdateWindowSurface(pdc_window);
             rectcount = 0;
+            pdc_event_queue.pop();
         }
-        else
-            SDL_PushEvent(&event);
     }
 }

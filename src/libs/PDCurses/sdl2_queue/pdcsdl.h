@@ -1,4 +1,8 @@
 /* PDCurses */
+#ifndef PDC_SDL2_QUEUE_H
+#define PDC_SDL2_QUEUE_H
+
+#include <queue>
 
 #include <SDL.h>
 #ifdef PDC_WIDE
@@ -11,6 +15,7 @@
 PDCEX  TTF_Font *pdc_ttffont;
 PDCEX  int pdc_font_size;
 #endif
+
 PDCEX  SDL_Window *pdc_window;
 PDCEX  SDL_Surface *pdc_screen, *pdc_font, *pdc_icon, *pdc_back;
 PDCEX  int pdc_sheight, pdc_swidth, pdc_yoffset, pdc_xoffset;
@@ -29,8 +34,12 @@ extern bool pdc_own_window;          /* if pdc_window was not set
                                         before initscr(), PDCurses is
                                         responsible for (owns) it */
 
+extern std::queue<SDL_Event> pdc_event_queue;
+
 PDCEX  void PDC_update_rects(void);
 PDCEX  void PDC_retile(void);
 
 extern void PDC_pump_and_peep(void);
 extern void PDC_blink_text(void);
+
+#endif

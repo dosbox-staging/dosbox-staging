@@ -37,6 +37,8 @@ Uint32 pdc_mapped[PDC_MAXCOL];
 int pdc_fheight, pdc_fwidth, pdc_fthick, pdc_flastc;
 bool pdc_own_window;
 
+std::queue<SDL_Event> pdc_event_queue;
+
 static void _clean(void)
 {
 #ifdef PDC_WIDE
@@ -296,10 +298,13 @@ int PDC_scr_open(void)
 
     /* Wait until window is exposed before getting surface */
 
+    const auto wId = SDL_GetWindowID(pdc_window);
+
     while (SDL_PollEvent(&event))
         if (SDL_WINDOWEVENT == event.type &&
+            event.window.windowID == wId &&
             SDL_WINDOWEVENT_EXPOSED == event.window.event)
-            break;
+                break;
 
     if (!pdc_screen)
     {
@@ -391,11 +396,11 @@ void PDC_reset_shell_mode(void)
     PDC_flushinp();
 }
 
-void PDC_restore_screen_mode(int i)
+void PDC_restore_screen_mode([[maybe_unused]] int i)
 {
 }
 
-void PDC_save_screen_mode(int i)
+void PDC_save_screen_mode([[maybe_unused]] int i)
 {
 }
 

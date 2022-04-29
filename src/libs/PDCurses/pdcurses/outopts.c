@@ -85,6 +85,9 @@ int clearok(WINDOW *win, bool bf)
 
 int idlok(WINDOW *win, bool bf)
 {
+    UNUSED_PARAMETER(win);
+    UNUSED_PARAMETER(bf);
+
     PDC_LOG(("idlok() - called\n"));
 
     return OK;
@@ -92,6 +95,9 @@ int idlok(WINDOW *win, bool bf)
 
 void idcok(WINDOW *win, bool bf)
 {
+    UNUSED_PARAMETER(win);
+    UNUSED_PARAMETER(bf);
+
     PDC_LOG(("idcok() - called\n"));
 }
 

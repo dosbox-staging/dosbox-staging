@@ -7,6 +7,14 @@
 #define CURSES_LIBRARY
 #include <curses.h>
 
+#define UNUSED_VARIABLE(X)  ((void)(X))
+#define UNUSED_PARAMETER(X) UNUSED_VARIABLE(X)
+#define UNUSED_RETURN_VALUE(X) UNUSED_VARIABLE(X)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(__TURBOC__) || defined(__EMX__) || defined(__DJGPP__) || \
     defined(PDC_99) || defined(__WATCOMC__)
 # ifndef HAVE_VSSCANF
@@ -118,5 +126,9 @@ size_t  PDC_wcstombs(char *, const wchar_t *, size_t);
 
 #define _INBUFSIZ        512  /* size of terminal input buffer */
 #define NUNGETCH         256  /* max # chars to ungetch() */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CURSES_INTERNALS__ */

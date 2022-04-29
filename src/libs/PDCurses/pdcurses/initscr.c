@@ -291,6 +291,10 @@ bool isendwin(void)
 
 SCREEN *newterm(const char *type, FILE *outfd, FILE *infd)
 {
+    UNUSED_PARAMETER(type);
+    UNUSED_PARAMETER(outfd);
+    UNUSED_PARAMETER(infd);
+    
     PDC_LOG(("newterm() - called\n"));
 
     return initscr() ? SP : NULL;

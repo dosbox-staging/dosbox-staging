@@ -233,6 +233,8 @@ chtype getattrs(WINDOW *win)
 
 int wcolor_set(WINDOW *win, short color_pair, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wcolor_set() - called\n"));
 
     if (!win)
@@ -252,6 +254,8 @@ int color_set(short color_pair, void *opts)
 
 int wattr_get(WINDOW *win, attr_t *attrs, short *color_pair, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wattr_get() - called\n"));
 
     if (!win)
@@ -275,6 +279,8 @@ int attr_get(attr_t *attrs, short *color_pair, void *opts)
 
 int wattr_off(WINDOW *win, attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wattr_off() - called\n"));
 
     return wattroff(win, attrs);
@@ -282,6 +288,8 @@ int wattr_off(WINDOW *win, attr_t attrs, void *opts)
 
 int attr_off(attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("attr_off() - called\n"));
 
     return wattroff(stdscr, attrs);
@@ -289,6 +297,8 @@ int attr_off(attr_t attrs, void *opts)
 
 int wattr_on(WINDOW *win, attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wattr_off() - called\n"));
 
     return wattron(win, attrs);
@@ -296,6 +306,8 @@ int wattr_on(WINDOW *win, attr_t attrs, void *opts)
 
 int attr_on(attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("attr_on() - called\n"));
 
     return wattron(stdscr, attrs);
@@ -303,6 +315,8 @@ int attr_on(attr_t attrs, void *opts)
 
 int wattr_set(WINDOW *win, attr_t attrs, short color_pair, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wattr_set() - called\n"));
 
     if (!win)
@@ -325,6 +339,8 @@ int wchgat(WINDOW *win, int n, attr_t attr, short color, const void *opts)
     chtype *dest, newattr;
     int startpos, endpos;
 
+    UNUSED_PARAMETER(opts);
+    
     PDC_LOG(("wchgat() - called\n"));
 
     if (!win)

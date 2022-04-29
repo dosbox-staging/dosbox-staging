@@ -50,6 +50,9 @@ int move(int y, int x)
 
 int mvcur(int oldrow, int oldcol, int newrow, int newcol)
 {
+    UNUSED_PARAMETER(oldrow);
+    UNUSED_PARAMETER(oldcol);
+
     PDC_LOG(("mvcur() - called: oldrow %d oldcol %d newrow %d newcol %d\n",
              oldrow, oldcol, newrow, newcol));
 

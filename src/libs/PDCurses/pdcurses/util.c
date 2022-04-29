@@ -112,6 +112,8 @@ void filter(void)
 
 void use_env(bool x)
 {
+    UNUSED_PARAMETER(x);
+    
     PDC_LOG(("use_env() - called: x %d\n", x));
 }
 

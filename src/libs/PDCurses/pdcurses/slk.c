@@ -358,6 +358,8 @@ int slk_attron(const chtype attrs)
 
 int slk_attr_on(const attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+
     PDC_LOG(("slk_attr_on() - called\n"));
 
     return slk_attron(attrs);
@@ -380,6 +382,8 @@ int slk_attroff(const chtype attrs)
 
 int slk_attr_off(const attr_t attrs, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+
     PDC_LOG(("slk_attr_off() - called\n"));
 
     return slk_attroff(attrs);
@@ -417,6 +421,8 @@ int slk_color(short color_pair)
 
 int slk_attr_set(const attr_t attrs, short color_pair, void *opts)
 {
+    UNUSED_PARAMETER(opts);
+
     PDC_LOG(("slk_attr_set() - called\n"));
 
     return slk_attrset(attrs | COLOR_PAIR(color_pair));
