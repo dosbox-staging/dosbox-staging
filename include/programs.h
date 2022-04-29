@@ -65,7 +65,7 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name = "";
 
-	bool FindEntry(char const * const name,cmd_it &it, bool neednext = false);
+	bool FindEntry(const std::string &name, cmd_it &it, bool need_next = false);
 	bool IsOption(const std::string &name, cmd_it &it);
 };
 

@@ -1145,7 +1145,9 @@ bool CommandLine::IsOption(const std::string &name, cmd_it &it) {
 
 bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
-	if (!(FindEntry(name,it,false))) return false;
+	std::string string = name;
+	if (!(FindEntry(string, it, false)))
+		return false;
 	if (remove) cmds.erase(it);
 	return true;
 }
@@ -1160,7 +1162,9 @@ bool CommandLine::FindExistOption(const std::string &name, bool remove) {
 
 bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 	cmd_it it,it_next;
-	if (!(FindEntry(name,it,true))) return false;
+	std::string string = name;
+	if (!(FindEntry(string, it, true)))
+		return false;
 	it_next=it;++it_next;
 	value=atoi((*it_next).c_str());
 	if (remove) cmds.erase(it,++it_next);
@@ -1179,7 +1183,8 @@ bool CommandLine::FindIntOption(const std::string &name, int &value, bool remove
 
 bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
 	cmd_it it,it_next;
-	if (!(FindEntry(name,it,true))) return false;
+	std::string string = name;
+	if (!(FindEntry(string,it,true))) return false;
 	it_next=it;++it_next;
 	value=*it_next;
 	if (remove) cmds.erase(it,++it_next);
@@ -1223,11 +1228,11 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
+bool CommandLine::FindEntry(const std::string &name, cmd_it &it, bool need_next) {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
-		if (!strcasecmp((*it).c_str(),name)) {
+		if (!strcasecmp((*it).c_str(), name.c_str())) {
 			cmd_it itnext=it;++itnext;
-			if (neednext && (itnext==cmds.end())) return false;
+			if (need_next && (itnext==cmds.end())) return false;
 			return true;
 		}
 	}
@@ -1248,7 +1253,9 @@ bool CommandLine::FindStringBegin(char const* const begin,std::string & value, b
 
 bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
 	cmd_it it;value.clear();
-	if (!FindEntry(name,it)) return false;
+	std::string string = name;
+	if (!FindEntry(string, it))
+		return false;
 	++it;
 	for (;it != cmds.end();++it) {
 		value += " ";
@@ -1263,7 +1270,8 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
  */
 bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
 	cmd_it it;value.clear();
-	if (!FindEntry(name,it)) {
+	std::string string = name;
+	if (!FindEntry(string, it)) {
 		size_t len = strlen(name);
 			for (it = cmds.begin();it != cmds.end();++it) {
 				if (strncasecmp(name,(*it).c_str(),len)==0) {
