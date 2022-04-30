@@ -624,25 +624,33 @@ static void ChangeScaler(bool pressed) {
 } */
 
 #if C_OPENGL
+const std::unordered_map<std::string, const char *> builtin_shaders = {
+		{"advinterp2x", advinterp2x_glsl},
+		{"advinterp3x", advinterp3x_glsl},
+		{"advmame2x", advmame2x_glsl},
+		{"advmame3x", advmame3x_glsl},
+		{"crt-easymode-flat", crt_easymode_tweaked_glsl},
+		{"crt-fakelottes-flat", crt_fakelottes_tweaked_glsl},
+		{"default", sharp_glsl},
+		{"rgb2x", rgb2x_glsl},
+		{"rgb3x", rgb3x_glsl},
+		{"scan2x", scan2x_glsl},
+		{"scan3x", scan3x_glsl},
+		{"sharp", sharp_glsl},
+		{"tv2x", tv2x_glsl},
+		{"tv3x", tv3x_glsl},
+};
+
+const std::vector<std::string> builtin_shader_names = []{
+		std::vector<std::string> v;
+		for (auto &it : builtin_shaders) {
+			v.push_back(it.first);
+		}
+		return v;
+}();
+
 static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 {
-	const std::unordered_map<std::string, const char *> builtin_shaders = {
-	        {"advinterp2x", advinterp2x_glsl},
-	        {"advinterp3x", advinterp3x_glsl},
-	        {"advmame2x", advmame2x_glsl},
-	        {"advmame3x", advmame3x_glsl},
-	        {"crt-easymode-flat", crt_easymode_tweaked_glsl},
-	        {"crt-fakelottes-flat", crt_fakelottes_tweaked_glsl},
-	        {"default", sharp_glsl},
-	        {"rgb2x", rgb2x_glsl},
-	        {"rgb3x", rgb3x_glsl},
-	        {"scan2x", scan2x_glsl},
-	        {"scan3x", scan3x_glsl},
-	        {"sharp", sharp_glsl},
-	        {"tv2x", tv2x_glsl},
-	        {"tv3x", tv3x_glsl},
-	};
-
 	char* src;
 	std::stringstream buf;
 	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);

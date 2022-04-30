@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cerrno>
@@ -31,6 +32,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <tuple>
+#include <vector>
 #include <math.h>
 #ifdef WIN32
 #include <signal.h>
@@ -58,6 +60,7 @@
 #include "render.h"
 #include "setup.h"
 #include "string_utils.h"
+#include "render.h"
 #include "support.h"
 #include "sdlmain.h"
 #include "timer.h"
@@ -1388,14 +1391,14 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	return "";
 }
 
-[[maybe_unused]] static bool is_sharp_shader()
+#if C_OPENGL
+static bool is_builtin_non_crt_shader()
 {
-	constexpr std::array<std::string_view, 2> sharp_shader_names{{
-	        "sharp",
-	        "default",
-	}};
-	return contains(sharp_shader_names, get_glshader_value());
+	auto it = std::find(builtin_shader_names.begin(),
+	                    builtin_shader_names.end(), get_glshader_value());
+	return it != builtin_shader_names.end() && !starts_with("crt-", *it);
 }
+#endif // C_OPENGL
 
 [[maybe_unused]] static bool is_shader_flexible()
 {
@@ -1871,9 +1874,14 @@ dosurface:
 		SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
 		                    &is_framebuffer_srgb_capable);
 
-		sdl.opengl.framebuffer_is_srgb_encoded = is_sharp_shader() && is_framebuffer_srgb_capable > 0;
+		auto shader_name = get_glshader_value();
+		auto use_srgb_framebuffer = is_builtin_non_crt_shader() ||
+		                            shader_name.empty() ||
+		                            shader_name == "none";
 
-		if (is_sharp_shader() && !sdl.opengl.framebuffer_is_srgb_encoded)
+		sdl.opengl.framebuffer_is_srgb_encoded = use_srgb_framebuffer && is_framebuffer_srgb_capable > 0;
+
+		if (use_srgb_framebuffer && !sdl.opengl.framebuffer_is_srgb_encoded)
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs

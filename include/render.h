@@ -27,6 +27,9 @@
 
 #include "../src/gui/render_scalers.h"
 
+#include <string>
+#include <vector>
+
 #define RENDER_SKIP_CACHE	16
 //Enable this for scalers to support 0 input for empty lines
 //#define RENDER_NULL_INPUT
@@ -107,5 +110,9 @@ void RENDER_SetSize(uint32_t width,
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 void RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue);
+
+#if C_OPENGL
+extern const std::vector<std::string> builtin_shader_names;
+#endif
 
 #endif
