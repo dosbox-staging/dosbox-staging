@@ -203,6 +203,31 @@ void MIDI_RawOutByte(uint8_t data)
 	}
 }
 
+void MidiHandler::HaltSequence()
+{
+	uint8_t message[3] = {}; // see MIDI_evt_len for length lookup-table
+	constexpr uint8_t all_notes_off = 0x7b;
+	constexpr uint8_t all_controllers_off = 0x79;
+	constexpr uint8_t controller = 0xb0;
+
+	// from the first to last channel
+	for (uint8_t channel = 0x0; channel <= 0xf; ++channel) {
+		message[0] = controller | channel; // 0xb0 through 0xbf
+
+		message[1] = all_notes_off;
+		PlayMsg(message);
+
+		message[1] = all_controllers_off;
+		PlayMsg(message);
+	}
+}
+
+void MIDI_HaltSequence()
+{
+	if (midi.handler)
+		midi.handler->HaltSequence();
+}
+
 bool MIDI_Available()
 {
 	return midi.available;
