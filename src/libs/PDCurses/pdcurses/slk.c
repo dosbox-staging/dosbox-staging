@@ -444,7 +444,7 @@ static void _slk_calc(void)
 
         slk[0].start_col = col;
         slk[1].start_col = (col += label_length);
-        slk[2].start_col = (col += label_length);
+        slk[2].start_col = (col + label_length);
 
         center = COLS / 2;
 
@@ -455,7 +455,7 @@ static void _slk_calc(void)
 
         slk[5].start_col = col;
         slk[6].start_col = (col += label_length);
-        slk[7].start_col = (col += label_length);
+        slk[7].start_col = (col + label_length);
         break;
 
     case 1:     /* 4 - 4 F-Key layout */
