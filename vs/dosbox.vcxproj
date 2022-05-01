@@ -100,7 +100,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -112,12 +112,13 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointExceptions>true</FloatingPointExceptions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -134,14 +135,14 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-        <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
-        <Message>Copy resources to output directory</Message>
+      <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
+      <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -155,11 +156,12 @@
       <OmitFramePointers>false</OmitFramePointers>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MinimalRebuild>false</MinimalRebuild>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -175,8 +177,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-        <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
-        <Message>Copy resources to output directory</Message>
+      <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
+      <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -186,7 +188,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -201,10 +203,11 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -228,8 +231,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-        <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
-        <Message>Copy resources to output directory</Message>
+      <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
+      <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -239,7 +242,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -254,10 +257,11 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -282,12 +286,59 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-        <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
-        <Message>Copy resources to output directory</Message>
+      <Command>%systemroot%\System32\xcopy ..\contrib\resources "$(OutDir)\resources" /s /i /y</Command>
+      <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\dosbox.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\addch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\addchstr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\addstr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\attr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\beep.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\bkgd.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\border.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\clear.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\color.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\debug.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\delch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\deleteln.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\getch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\getstr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\getyx.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\inch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\inchstr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\initscr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\inopts.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\insch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\insstr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\instr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\kernel.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\keyname.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\mouse.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\move.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\outopts.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\overlay.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\pad.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\panel.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\printw.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\refresh.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\scanw.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\scroll.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\scr_dump.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\slk.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\termattr.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\touch.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\util.c" />
+    <ClCompile Include="..\src\libs\PDCurses\pdcurses\window.c" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcclip.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcdisp.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcgetsc.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdckbd.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcscrn.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcsetsc.cpp" />
+    <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcutil.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\cpu\callback.cpp" />
     <ClCompile Include="..\src\cpu\core_dynrec.cpp" />
@@ -303,7 +354,6 @@
     <ClCompile Include="..\src\debug\debug.cpp" />
     <ClCompile Include="..\src\debug\debug_disasm.cpp" />
     <ClCompile Include="..\src\debug\debug_gui.cpp" />
-    <ClCompile Include="..\src\debug\debug_win32.cpp" />
     <ClCompile Include="..\src\dos\cdrom.cpp" />
     <ClCompile Include="..\src\dos\cdrom_image.cpp" />
     <ClCompile Include="..\src\dos\dos.cpp" />
@@ -598,6 +648,7 @@
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />
+    <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h" />
     <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
     <ClInclude Include="..\src\libs\residfp\array.h" />
     <ClInclude Include="..\src\libs\residfp\Dac.h" />
