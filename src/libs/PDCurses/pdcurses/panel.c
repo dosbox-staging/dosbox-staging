@@ -123,7 +123,7 @@ panel
 
 PANEL *_bottom_panel = (PANEL *)0;
 PANEL *_top_panel = (PANEL *)0;
-PANEL _stdscr_pseudo_panel = { (WINDOW *)0 };
+PANEL _stdscr_pseudo_panel = {NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
 
 #ifdef PANEL_DEBUG
 
