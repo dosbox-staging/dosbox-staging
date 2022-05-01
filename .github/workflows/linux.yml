@@ -16,7 +16,7 @@ jobs:
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,FeralChild64', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,jnovak,FeralChild64', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -150,7 +150,7 @@ jobs:
   build_linux_release:
     name: Release build
     runs-on: ubuntu-18.04
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,FeralChild64', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,jnovak,FeralChild64', github.actor) == false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
