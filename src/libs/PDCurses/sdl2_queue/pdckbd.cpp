@@ -93,8 +93,7 @@ bool PDC_check_key(void)
     } else {
         haveevent = !pdc_event_queue.empty();
         if (haveevent) {
-            const auto ev = pdc_event_queue.front();
-            event = ev;
+            event = pdc_event_queue.front();
             pdc_event_queue.pop();
         }
     }
@@ -383,9 +382,9 @@ static int _process_mouse_event(void)
 
             if (!pdc_event_queue.empty())
             {
-                const auto rel = pdc_event_queue.front();
+                const auto & ev = pdc_event_queue.front();
 
-                if (rel.type == SDL_MOUSEBUTTONUP && rel.button.button == btn) {
+                if (ev.type == SDL_MOUSEBUTTONUP && ev.button.button == btn) {
                     action = BUTTON_CLICKED;
                     pdc_event_queue.pop();
                 }
