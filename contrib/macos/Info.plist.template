@@ -38,6 +38,9 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 
+	<key>NSHighResolutionCapable</key>
+	<string>YES</string>
+
 	<key>CGDisableCoalescedUpdates</key>
 	<true/>
 
