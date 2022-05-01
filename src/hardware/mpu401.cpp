@@ -347,7 +347,19 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
 	if (mpu.mode == M_UART) {
+		// Always write the byte to device
 		MIDI_RawOutByte(val);
+
+		// In UART mode, the software communicates directly with the
+		// MIDI device (sending it 16-bit MIDI words via the UART), which
+		// can include the reset message. This is slightly different than
+		// resetting the MPU (which reverts it back to intelligent mode,
+		// amung other things). We can detect this in UART mode and apply
+		// it generally, in addition to how the device handles it.
+		// https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
+		if (val == MSG_MPU_RESET) {
+			MIDI_HaltSequence();
+		}
 		return;
 	}
 	// 0xe# command data
