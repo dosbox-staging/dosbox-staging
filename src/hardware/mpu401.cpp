@@ -693,6 +693,7 @@ static void MPU401_ResetDone(uint32_t)
 }
 static void MPU401_Reset()
 {
+	MIDI_HaltSequence();
 	PIC_DeActivateIRQ(mpu.irq);
 	mpu.mode = (mpu.intelligent ? M_INTELLIGENT : M_UART);
 	PIC_RemoveEvents(MPU401_Event);
