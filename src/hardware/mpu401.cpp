@@ -56,6 +56,7 @@ constexpr uint8_t MSG_MPU_COMMAND_REQ = 0xf9;
 constexpr uint8_t MSG_MPU_END = 0xfc;
 constexpr uint8_t MSG_MPU_CLOCK = 0xfd;
 constexpr uint8_t MSG_MPU_ACK = 0xfe;
+constexpr uint8_t MSG_MPU_RESET = 0xff;
 
 static struct {
 	bool intelligent;
@@ -135,10 +136,10 @@ static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
-	if (mpu.mode == M_UART && val != 0xff)
+	if (mpu.mode == M_UART && val != MSG_MPU_RESET)
 		return;
 	if (mpu.state.reset) {
-		if (mpu.state.cmd_pending || val != 0xff) {
+		if (mpu.state.cmd_pending || val != MSG_MPU_RESET) {
 			mpu.state.cmd_pending = val + 1;
 			return;
 		}
@@ -282,7 +283,7 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 			mpu.state.req_mask = 0;
 			mpu.state.irq_pending = true;
 			break;
-		case 0xff: // Reset MPU-401
+		case MSG_MPU_RESET:
 			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Reset %u", val);
 			PIC_AddEvent(MPU401_ResetDone, MPU401_RESETBUSY);
 			mpu.state.reset = true;
