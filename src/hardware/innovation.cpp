@@ -21,10 +21,11 @@
 
 #include "control.h"
 #include "pic.h"
+#include "support.h"
 
-// Innovation Settings
-// -------------------
-constexpr uint16_t SAMPLES_PER_BUFFER = 2048;
+// Constants
+// ---------
+constexpr auto idle_after_ms = 200;
 
 void Innovation::Open(const std::string &model_choice,
                       const std::string &clock_choice,
@@ -76,14 +77,18 @@ void Innovation::Open(const std::string &model_choice,
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::MixerCallBack, this, _1);
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback, 0, "INNOVATION");
-	sid_sample_rate = mixer_channel->GetSampleRate();
+	const auto frame_rate_hz = mixer_channel->GetSampleRate();
+	frame_rate_per_ms = frame_rate_hz / 1000.0;
+
+	// Compute how many silent samples before idling the service
+	idle_after_silent_frames = iround(frame_rate_per_ms * idle_after_ms);
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.
-	const double passband = 0.9 * sid_sample_rate / 2;
+	const double passband = 0.9 * frame_rate_hz / 2;
 
 	// Assign the sampling parameters
 	sid_service->setSamplingParameters(chip_clock, reSIDfp::RESAMPLE,
-	                                   sid_sample_rate, passband);
+	                                   frame_rate_hz, passband);
 
 	// Setup and assign the port address
 	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
@@ -97,21 +102,18 @@ void Innovation::Open(const std::string &model_choice,
 	channel = std::move(mixer_channel);
 
 	// Ready state-values for rendering
-	last_used = 0;
-	play_buffer_pos = 0;
-	keep_rendering = true;
+	last_render_time = 0;
+	unwritten_for_ms = 0;
+	silent_frames = 0;
+	is_enabled = false;
 
-	// Start rendering
-	renderer = std::thread(std::bind(&Innovation::Render, this));
-	set_thread_name(renderer, "dosbox:innovatn"); // < 16-character cap
-	play_buffer = playable.Dequeue(); // populate the first play buffer
-
+	constexpr auto us_per_s = 1'000'000.0;
 	if (filter_strength == 0)
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
-		        base_port, model_name.c_str(), chip_clock / 1000000.0);
+		        base_port, model_name.c_str(), chip_clock / us_per_s);
 	else
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
-		        base_port, model_name.c_str(), chip_clock / 1000000.0,
+		        base_port, model_name.c_str(), chip_clock / us_per_s,
 		        filter_strength);
 
 	is_open = true;
@@ -128,17 +130,6 @@ void Innovation::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the queues
-	keep_rendering = false;
-	if (!backstock.Size())
-		backstock.Enqueue(std::move(play_buffer));
-	while (playable.Size())
-		play_buffer = playable.Dequeue();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable())
-		renderer.join();
-
 	// Remove the IO handlers before removing the SID device
 	read_handler.Uninstall();
 	write_handler.Uninstall();
@@ -152,88 +143,74 @@ void Innovation::Close()
 uint8_t Innovation::ReadFromPort(io_port_t port, io_width_t)
 {
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
-	const std::lock_guard<std::mutex> lock(service_mutex);
 	return service->read(sid_port);
 }
 
 void Innovation::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto now = PIC_FullIndex();
+
+	// Turn on the channel after the data's written
+	if (!is_enabled) {
+		assert(channel);
+		channel->Enable(true);
+		is_enabled = true;
+	} else {
+		RenderForMs(now - last_render_time);
+	}
+	last_render_time = now;
+
 	const auto data = check_cast<uint8_t>(value);
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
-	{ // service-lock
-		const std::lock_guard<std::mutex> lock(service_mutex);
-		service->write(sid_port, data);
-	}
-	// Turn on the channel after the data's written
-	if (!last_used) {
-		channel->Enable(true);
-	}
-	last_used = PIC_Ticks;
+	service->write(sid_port, data);
+	unwritten_for_ms = 0;
 }
 
-void Innovation::Render()
+int16_t Innovation::RenderOnce()
 {
-	const auto cycles_per_sample = static_cast<uint16_t>(chip_clock /
-	                                                     sid_sample_rate);
+	int16_t sample = 0;
+	while (!service->clock(1, &sample))
+		; // cycle until we have a sample
+	if (!sample) {
+		++silent_frames;
+		return 0;
+	}
+	silent_frames = 0;
+	return check_cast<int16_t>(sample * 2);
+}
 
-	// Allocate one buffer and reuse it for the duration.
-	std::vector<int16_t> buffer(SAMPLES_PER_BUFFER);
+void Innovation::RenderForMs(const double duration_ms)
+{
+	auto render_count = iround(duration_ms * frame_rate_per_ms);
+	while (render_count-- > 0)
+		fifo.push(RenderOnce());
+}
 
-	// Populate the backstock queue using copies of the current buffer.
-	while (backstock.Size() < backstock.MaxCapacity() - 1)
-		backstock.Enqueue(buffer);    // copied
-	backstock.Enqueue(std::move(buffer)); // moved; buffer is hollow
-	assert(backstock.Size() == backstock.MaxCapacity());
+double Innovation::ConvertFramesToMs(const int frames)
+{
+	return frames / frame_rate_per_ms;
+}
 
-	while (keep_rendering.load()) {
-		// Variables populated during rendering.
-		uint16_t n = 0;
-		buffer = backstock.Dequeue();
-		std::unique_lock<std::mutex> lock(service_mutex);
-
-		while (n < SAMPLES_PER_BUFFER) {
-			const auto buffer_pos = buffer.data() + n;
-			const auto n_remaining = SAMPLES_PER_BUFFER - n;
-			const auto cycles = static_cast<unsigned int>(cycles_per_sample * n_remaining);
-			n += service->clock(cycles, buffer_pos);
+void Innovation::MixerCallBack(uint16_t requested_frames)
+{
+	while (requested_frames && fifo.size()) {
+		channel->AddSamples_m16(1, &fifo.front());
+		fifo.pop();
+		--requested_frames;
+	}
+	if (requested_frames) {
+		last_render_time += ConvertFramesToMs(requested_frames);
+		while (requested_frames--) {
+			const auto frame = RenderOnce();
+			channel->AddSamples_m16(1, &frame);
 		}
-		assert(n == SAMPLES_PER_BUFFER);
-		lock.unlock();
-
-		// The buffer is now populated so move it into the playable queue.
-		playable.Enqueue(std::move(buffer));
 	}
-}
 
-void Innovation::MixerCallBack(uint16_t requested_samples)
-{
-	while (requested_samples) {
-		const auto n = std::min(GetRemainingSamples(), requested_samples);
-		const auto buffer_pos = play_buffer.data() + play_buffer_pos;
-		channel->AddSamples_m16(n, buffer_pos);
-		requested_samples -= n;
-		play_buffer_pos += n;
-	}
-	// Stop the channel after 5 seconds of idle-time.
-	if (last_used + 5000 < PIC_Ticks) {
-		last_used = 0;
+	if (unwritten_for_ms++ > idle_after_ms &&
+	    silent_frames > idle_after_silent_frames) {
 		channel->Enable(false);
+		is_enabled = false;
 	}
-}
-
-// Return the number of samples left to play in the current buffer.
-uint16_t Innovation::GetRemainingSamples()
-{
-	// If the current buffer has some samples left, then return those ...
-	if (play_buffer_pos < SAMPLES_PER_BUFFER)
-		return SAMPLES_PER_BUFFER - play_buffer_pos;
-
-	// Otherwise put the spent buffer in backstock and get the next buffer.
-	backstock.Enqueue(std::move(play_buffer));
-	play_buffer = playable.Dequeue();
-	play_buffer_pos = 0; // reset the sample counter to the beginning.
-
-	return SAMPLES_PER_BUFFER;
 }
 
 Innovation innovation;

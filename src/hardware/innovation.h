@@ -23,21 +23,16 @@
 
 #include "dosbox.h"
 
-#include <atomic>
 #include <memory>
-#include <mutex>
+#include <queue>
 #include <string>
-#include <thread>
-#include <vector>
 
 #include "mixer.h"
 #include "inout.h"
-#include "rwqueue.h"
 #include "../libs/residfp/SID.h"
 
 class Innovation {
 public:
-	Innovation() : keep_rendering(false) {}
 	void Open(const std::string &model_choice,
 	          const std::string &clock_choice,
 	          int filter_strength_6581,
@@ -49,8 +44,12 @@ public:
 
 private:
 	void Render();
-	uint16_t GetRemainingSamples();
-	void MixerCallBack(uint16_t requested_samples);
+	double ConvertFramesToMs(const int samples);
+
+	int16_t RenderOnce();
+	void RenderForMs(const double duration_ms);
+
+	void MixerCallBack(uint16_t requested_frames);
 	uint8_t ReadFromPort(io_port_t port, io_width_t width);
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
 
@@ -60,21 +59,20 @@ private:
 	IO_ReadHandleObject read_handler = {};
 	IO_WriteHandleObject write_handler = {};
 
-	std::vector<int16_t> play_buffer = {};
-	static constexpr auto num_buffers = 4;
-	RWQueue<std::vector<int16_t>> playable{num_buffers};
-	RWQueue<std::vector<int16_t>> backstock{num_buffers};
-	std::thread renderer = {};
-	std::mutex service_mutex = {};
 	std::unique_ptr<reSIDfp::SID> service = {};
-	std::atomic_bool keep_rendering = {};
+	std::queue<int16_t> fifo = {};
 
-	// Scalar members
+	// Initial configuration
 	io_port_t base_port = 0;
 	double chip_clock = 0;
-	double sid_sample_rate = 0;
-	size_t last_used = 0;
-	uint16_t play_buffer_pos = 0;
+	double frame_rate_per_ms = 0;
+	int idle_after_silent_frames = 0;
+
+	// Runtime states
+	double last_render_time = 0;
+	int unwritten_for_ms = 0;
+	int silent_frames = 0;
+	bool is_enabled = false;
 	bool is_open = false;
 };
 
