@@ -191,7 +191,17 @@ BreakStringLiterals: false
 # 	// …
 # }
 #
-BinPackParameters: false
+# Place paramaters on their own lines, like:
+# constexpr std::array<uint32_t, 9> debuggers_events = {
+#   SDL_WINDOWEVENT,
+#   SDL_KEYDOWN,
+#   SDL_KEYUP,
+#   SDL_MOUSEMOTION,
+# };
+# BinPackParameters: false
+BinPackArguments: false
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
 
 # Emulates dosbox-staging constructor formatting rules; initializer list
 # is treated as continuation, therefore initializers are indented with spaces.
