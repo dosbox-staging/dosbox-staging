@@ -120,14 +120,14 @@ void AUTOTYPE::Run()
 	ChangeToLongCmd();
 
 	// Usage
-	if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
-	    cmd->FindExist("-?", false) || cmd->FindExist("-help", false)) {
+	if (!cmd->GetCount() || cmd->FindOption("?", false) ||
+	    cmd->FindDashOption("h", false) || cmd->FindDashOption("help", false)) {
 		WriteOut(MSG_Get("SHELL_CMD_AUTOTYPE_HELP_LONG"));
 		return;
 	}
 
 	// Print available keys
-	if (cmd->FindExist("-list", false)) {
+	if (cmd->FindDashOption("list", false)) {
 		PrintKeys();
 		return;
 	}

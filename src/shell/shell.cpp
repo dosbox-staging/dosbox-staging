@@ -483,7 +483,7 @@ void DOS_Shell::Run()
 
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
-	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+	if (cmd->FindOption("?", false)) {
 		WriteOut(MSG_Get("SHELL_CMD_COMMAND_HELP_LONG"));
 		return;
 	}

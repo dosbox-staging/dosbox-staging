@@ -26,8 +26,8 @@
 
 void LOADFIX::Run(void)
 {
-	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
-	    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+	if (cmd->FindOption("?", false) || cmd->FindDashOption("h", false) ||
+	    cmd->FindDashOption("help", false)) {
 		WriteOut(MSG_Get("SHELL_CMD_LOADFIX_HELP_LONG"));
 		return;
 	}

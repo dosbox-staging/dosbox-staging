@@ -141,22 +141,23 @@ void MOUNT::Run(void) {
 		return;
 	}
 	bool path_relative_to_last_config = false;
-	if (cmd->FindExist("-pr",true)) path_relative_to_last_config = true;
+	if (cmd->FindDashOption("pr", true))
+		path_relative_to_last_config = true;
 
 	/* Check for unmounting */
-	if (cmd->FindString("-u",umount,false)) {
+	if (cmd->FindStringOption("u", umount, false)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 		return;
 	}
 
 	/* Check for moving Z: */
 	/* Only allowing moving it once. It is merely a convenience added for the wine team */
-	if (ZDRIVE_NUM == 25 && cmd->FindString("-z", newz,false)) {
+	if (ZDRIVE_NUM == 25 && cmd->FindStringOption("z", newz, false)) {
 		Move_Z(newz[0]);
 		return;
 	}
 
-	if (cmd->FindExist("-cd", false) || cmd->FindExist("-listcd", false)) {
+	if (cmd->FindDashOption("cd", false) || cmd->FindDashOption("listcd", false)) {
 		int num = SDL_CDNumDrives();
 		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"), num);
 		for (int i = 0; i < num; i++)

@@ -25,7 +25,7 @@
 
 void KEYB::Run(void) {
 	if (cmd->FindCommand(1,temp_line)) {
-		if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
+		if (cmd->FindOption("?", false) ||
 		    cmd->FindString("?", temp_line, false)) {
 			WriteOut(MSG_Get("PROGRAM_KEYB_HELP_LONG"));
 		} else {

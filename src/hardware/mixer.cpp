@@ -952,12 +952,12 @@ public:
 
 	void Run()
 	{
-		if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
-		    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+		if (cmd->FindOption("?", false) || cmd->FindDashOption("h", false) ||
+		    cmd->FindDashOption("help", false)) {
 			WriteOut(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));
 			return;
 		}
-		if(cmd->FindExist("/LISTMIDI")) {
+		if (cmd->FindSlashOption("LISTMIDI")) {
 			ListMidi();
 			return;
 		}
@@ -980,7 +980,7 @@ public:
 		}
 		lock.unlock();
 
-		if (cmd->FindExist("/NOSHOW"))
+		if (cmd->FindSlashOption("NOSHOW"))
 			return;
 		WriteOut("Channel  Main      Main(dB)    Rate(Hz)  Lineout mode\n");
 		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],

@@ -1550,8 +1550,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
-	const bool wants_local_conf =
-	        !control->cmdline->FindDashOption("nolocalconf", true);
+	const bool wants_local_conf = !control->cmdline->FindDashOption("nolocalconf",
+	                                                                true);
 	if (wants_local_conf) {
 		control->ParseConfigFile("local", "dosbox.conf");
 	}

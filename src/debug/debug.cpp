@@ -2159,8 +2159,8 @@ public:
 
 	void Run()
 	{
-		if(cmd->FindExist("/NOMOUSE",false)) {
-	        	real_writed(0,0x33<<2,0);
+		if (cmd->FindSlashOption("NOMOUSE", false)) {
+			real_writed(0, 0x33 << 2, 0);
 			return;
 		}
 

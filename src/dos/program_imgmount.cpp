@@ -93,10 +93,10 @@ void IMGMOUNT::Run(void) {
         return;
     }
     // Usage
-    if (cmd->FindExist("/?", false) ||
-        cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
-        WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
-        return;
+    if (cmd->FindOption("?", false) || cmd->FindDashOption("h", false) ||
+	cmd->FindDashOption("help", false)) {
+	    WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
+	    return;
     }
 
     /* In secure mode don't allow people to change imgmount points.
@@ -121,7 +121,7 @@ void IMGMOUNT::Run(void) {
     cmd->FindString("-fs",fstype,true);
 
     bool roflag = false;
-    if (cmd->FindExist("-ro", true))
+    if (cmd->FindDashOption("ro", true))
 	    roflag = true;
 
     // Types 'cdrom' and 'iso' are synonyms. Name 'cdrom' is easier
@@ -147,8 +147,8 @@ void IMGMOUNT::Run(void) {
     std::string ide_value = {};
     int8_t ide_index = -1;
     bool is_second_cable_slot = false;
-    const bool wants_ide = cmd->FindString("-ide", ide_value, true) || cmd->FindExist("-ide", true);
-
+    const bool wants_ide = cmd->FindStringOption("ide", ide_value, true) ||
+	                   cmd->FindDashOption("ide", true);
 
     if (type == "floppy") {
 	    mediaid = 0xF0;
