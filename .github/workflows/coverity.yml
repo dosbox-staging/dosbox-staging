@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -16,10 +16,10 @@ env:
   PACKAGE: "/dev/shm/coverity-package/coverity.tar.zst"
   PACKAGE_DIR: "/dev/shm/coverity-package"
   # Latest package: https://scan.coverity.com/download
-  PACKAGE_VERSION: "2020.09"
+  PACKAGE_VERSION: "2021.12.1"
   # One-time download, then lives in GitHub cache
   TARBALL_URL: "https://kcgen.duckdns.org/coverity.tar.zst"
-  TARBALL_SHA256: "f7f529088c140a45176e99e1bbcb7581fa751619318e30f20c3697269dc32411"
+  TARBALL_SHA256: "db872225984b588e178e42faecf597382d20e185c949512c93c485debd42d8d9"
 
 jobs:
   coverity_scan:
