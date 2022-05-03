@@ -37,6 +37,8 @@ public:
 	const char *GetFileName() { return file_name.c_str(); }
 
 	bool FindExist(char const *const name, bool remove = false);
+	bool FindSlashOption(const std::string &name, bool remove = false);
+	bool FindDashOption(const std::string &name, bool remove = false);
 	bool FindOption(const std::string &name, bool remove = false);
 	bool FindInt(char const *const name, int &value, bool remove = false);
 	bool FindIntOption(const std::string &name, int &value, bool remove = false);
@@ -67,7 +69,8 @@ private:
 	std::string file_name = "";
 
 	bool FindEntry(const std::string &name, cmd_it &it, bool need_next = false);
-	bool IsOption(const std::string &name, cmd_it &it);
+	bool IsSlashOption(const std::string &name, cmd_it &it);
+	bool IsDashOption(const std::string &name, cmd_it &it);
 };
 
 class Program {

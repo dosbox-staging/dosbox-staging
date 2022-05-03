@@ -4348,7 +4348,7 @@ int sdl_main(int argc, char *argv[])
 		Config_Add_SDL();
 		DOSBOX_Init();
 
-		if (control->cmdline->FindOption("editconf")) {
+		if (control->cmdline->FindDashOption("editconf")) {
 			const int err = LaunchEditor();
 			return err;
 		}
@@ -4356,16 +4356,16 @@ int sdl_main(int argc, char *argv[])
 		std::string editor;
 		if (control->cmdline->FindStringOption("opencaptures", editor, true))
 			launchcaptures(editor);
-		if (control->cmdline->FindOption("eraseconf") ||
-		    control->cmdline->FindOption("resetconf"))
+		if (control->cmdline->FindDashOption("eraseconf") ||
+		    control->cmdline->FindDashOption("resetconf"))
 			eraseconfigfile();
-		if (control->cmdline->FindOption("erasemapper") ||
-		    control->cmdline->FindOption("resetmapper"))
+		if (control->cmdline->FindDashOption("erasemapper") ||
+		    control->cmdline->FindDashOption("resetmapper"))
 			erasemapperfile();
 
 			/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
-		if (control->cmdline->FindOption("noconsole")) {
+		if (control->cmdline->FindDashOption("noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
@@ -4386,20 +4386,20 @@ int sdl_main(int argc, char *argv[])
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
 
-		if (control->cmdline->FindOption("version") ||
-		    control->cmdline->FindOption("v")) {
+		if (control->cmdline->FindDashOption("version") ||
+		    control->cmdline->FindDashOption("v")) {
 			printf(version_msg, DOSBOX_GetDetailedVersion());
 			return 0;
 		}
 
 		//If command line includes --help or -h, print help message and exit.
-		if (control->cmdline->FindOption("help") ||
-		    control->cmdline->FindOption("h")) {
+		if (control->cmdline->FindDashOption("help") ||
+		    control->cmdline->FindDashOption("h")) {
 			printf(help_msg); // -V618
 			return 0;
 		}
 
-		if (control->cmdline->FindOption("printconf")) {
+		if (control->cmdline->FindDashOption("printconf")) {
 			const int err = PrintConfigLocation();
 			return err;
 		}
@@ -4484,15 +4484,15 @@ int sdl_main(int argc, char *argv[])
 #endif // C_MT32EMU
 
 		control->ParseEnv();
-		//UI_Init();
-		//if (control->cmdline->FindExist("-startui"))
-		//UI_Run(false); UI_Run(false);
+		// UI_Init();
+		// if (control->cmdline->FindDashOption("startui"))
+		// UI_Run(false); UI_Run(false);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
-		if (control->cmdline->FindOption("fullscreen") ||
+		if (control->cmdline->FindDashOption("fullscreen") ||
 		    sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
 				GFX_SwitchFullScreen();
@@ -4502,7 +4502,7 @@ int sdl_main(int argc, char *argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
-		if (control->cmdline->FindOption("startmapper"))
+		if (control->cmdline->FindDashOption("startmapper"))
 			MAPPER_DisplayUI();
 
 		control->StartUp(); // Run the machine until shutdown

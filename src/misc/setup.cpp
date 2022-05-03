@@ -1135,11 +1135,15 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-bool CommandLine::IsOption(const std::string &name, cmd_it &it)
+bool CommandLine::IsSlashOption(const std::string &name, cmd_it &it)
 {
-	return FindEntry("/" + name, it, false) ||
-	       FindEntry("-" + name, it, false) ||
-	       FindEntry("--" + name, it, false);
+	return FindEntry("/" + name, it, false);
+}
+
+bool CommandLine::IsDashOption(const std::string &name, cmd_it &it)
+{
+	return FindEntry("-" + name, it, false) ||
+	       (name.length() > 1 && FindEntry("--" + name, it, false));
 }
 
 bool CommandLine::FindExist(char const *const name, bool remove)
@@ -1155,16 +1159,33 @@ bool CommandLine::FindExist(char const *const name, bool remove)
 	return true;
 }
 
-bool CommandLine::FindOption(const std::string &name, bool remove)
+bool CommandLine::FindSlashOption(const std::string &name, bool remove)
 {
 	cmd_it it = cmds.end();
-	if (!IsOption(name, it))
+	if (!IsSlashOption(name, it))
 		return false;
 	if (remove) {
 		assert(it != cmds.end());
 		cmds.erase(it);
 	}
 	return true;
+}
+
+bool CommandLine::FindDashOption(const std::string &name, bool remove)
+{
+	cmd_it it = cmds.end();
+	if (!IsDashOption(name, it))
+		return false;
+	if (remove) {
+		assert(it != cmds.end());
+		cmds.erase(it);
+	}
+	return true;
+}
+
+bool CommandLine::FindOption(const std::string &name, bool remove)
+{
+	return FindSlashOption(name, remove) || FindDashOption(name, remove);
 }
 
 bool CommandLine::FindInt(char const *const name, int &value, bool remove)
@@ -1188,7 +1209,7 @@ bool CommandLine::FindIntOption(const std::string &name, int &value, bool remove
 {
 	cmd_it it = cmds.end();
 	cmd_it it_next = cmds.end();
-	if (!IsOption(name, it))
+	if (!IsDashOption(name, it))
 		return false;
 	it_next = it;
 	assert(it_next != cmds.end());
@@ -1221,7 +1242,7 @@ bool CommandLine::FindStringOption(const std::string &name, std::string &value, 
 {
 	cmd_it it = cmds.end();
 	cmd_it it_next = cmds.end();
-	if (!IsOption(name, it))
+	if (!IsDashOption(name, it))
 		return false;
 	it_next = it;
 	assert(it_next != cmds.end());
@@ -1520,8 +1541,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	std::string config_file;
 
 	// First: parse the user's primary config file
-	const bool wants_primary_conf = !control->cmdline->FindOption("noprimaryconf",
-	                                                              true);
+	const bool wants_primary_conf = !control->cmdline->FindDashOption("noprimaryconf",
+	                                                                  true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
 		const std::string config_combined = config_path + config_file;
@@ -1530,13 +1551,13 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 
 	// Second: parse the local 'dosbox.conf', if present
 	const bool wants_local_conf =
-	        !control->cmdline->FindExist("nolocalconf", true);
+	        !control->cmdline->FindDashOption("nolocalconf", true);
 	if (wants_local_conf) {
 		control->ParseConfigFile("local", "dosbox.conf");
 	}
 
 	// Finally: layer on custom -conf <files>
-	while (control->cmdline->FindString("conf", config_file, true)) {
+	while (control->cmdline->FindStringOption("conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// try to load it from the user directory
 			if (!control->ParseConfigFile("custom", config_path + config_file)) {

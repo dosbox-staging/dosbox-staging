@@ -35,7 +35,7 @@ There is NO WARRANTY, to the extent permitted by law.
 constexpr char help_msg[] =
         R"(Usage: dosbox [OPTION]... [FILE]
 
-These are common options (which can be started with either /, -, or --):
+These are common options (most of which can be started with either - or --):
 
   -h, -help           Displays this message.
 

@@ -362,7 +362,7 @@ void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
 
-	const bool wants_force_exit = control->cmdline->FindOption("exit");
+	const bool wants_force_exit = control->cmdline->FindDashOption("exit");
 	const bool is_normal_launch = control->GetStartupVerbosity() != Verbosity::InstantLaunch;
 	const auto seconds_since_launch = GetTicksSince(ticks_at_program_launch) / 1000.0;
 
