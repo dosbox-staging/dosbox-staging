@@ -277,10 +277,12 @@ int PDC_scr_open(void)
         env = getenv("PDC_COLS");
         pdc_swidth = (env ? atoi(env) : 80) * pdc_fwidth;
 
+        constexpr uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+
         pdc_window = SDL_CreateWindow("PDCurses",
             SDL_WINDOWPOS_CENTERED_DISPLAY(displaynum),
             SDL_WINDOWPOS_CENTERED_DISPLAY(displaynum),
-            pdc_swidth, pdc_sheight, SDL_WINDOW_RESIZABLE);
+            pdc_swidth, pdc_sheight, flags);
 
         if (pdc_window == NULL)
         {
