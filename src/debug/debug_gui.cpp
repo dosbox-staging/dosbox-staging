@@ -293,16 +293,16 @@ void LOG_StartUp(void) {
 
 void DBGUI_StartUp(void) {
 	/* Start the main window */
-	dbg.win_main=initscr();
+	dbg.win_main = initscr();
 	cbreak();       /* take input chars one at a time, no wait for \n */
 	noecho();       /* don't echo input */
-	nodelay(dbg.win_main,true);
-	keypad(dbg.win_main,true);
-	resize_term(50,80);
+	nodelay(dbg.win_main, true);
+	keypad(dbg.win_main, true);
+	resize_term(50, 80);
 	touchwin(dbg.win_main);
 	old_cursor_state = curs_set(0);
 	start_color();
-	cycle_count=0;
+	cycle_count = 0;
 	MakePairs();
 	MakeSubWindows();
 

@@ -1588,7 +1588,7 @@ int32_t DEBUG_Run(int32_t amount,bool quickexit) {
 	else {
 		// ensure all breakpoints are activated
 		CBreakpoint::ActivateBreakpoints();
-		SDL_RaiseWindow(GFX_GetSDLWindow());				
+		SDL_RaiseWindow(GFX_GetSDLWindow());
 		DOSBOX_SetNormalLoop();
 	}
 	return ret;
@@ -1762,7 +1762,6 @@ uint32_t DEBUG_CheckKeys(void) {
 
 				ret = DEBUG_Run(1,false);
 				skipDraw = true; // don't update screen after this instruction
-
 				break;
 		case KEY_F(8):	// Toggle printable characters
 				showPrintable = !showPrintable;
@@ -2232,13 +2231,13 @@ static void DEBUG_ProgramStart(Program * * make) {
 // INIT
 
 void DEBUG_SetupConsole(void) {
-	//tcgetattr(0,&consolesettings);
-	//curses must be inited first in order to catch the resize (is an event)
-//	printf("\e[8;50;80t"); //resize terminal
-//	fflush(NULL);
+	// tcgetattr(0,&consolesettings);
+	// curses must be inited first in order to catch the resize (is an event)
+	// printf("\e[8;50;80t"); //resize terminal
+	// fflush(NULL);
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;
-//	dbg.active_win=3;
+	// dbg.active_win=3;
 	/* Start the Debug Gui */
 	DBGUI_StartUp();
 }
@@ -2248,12 +2247,12 @@ void DEBUG_ShutDown(Section * /*sec*/) {
 	CDebugVar::DeleteAll();
 	curs_set(old_cursor_state);
 	endwin();
-//#ifndef WIN32
-	//tcsetattr(0, TCSANOW,&consolesettings);
-//	printf("\e[0m\e[2J"); //Seems to destroy scrolling
-//	printf("\ec"); //Doesn't seem to be needed anymore
-//	fflush(NULL);
-//#endif
+	//#ifndef WIN32
+	// tcsetattr(0, TCSANOW,&consolesettings);
+	// printf("\e[0m\e[2J"); //Seems to destroy scrolling
+	// printf("\ec"); //Doesn't seem to be needed anymore
+	// fflush(NULL);
+	//#endif
 }
 
 Bitu debugCallback;
