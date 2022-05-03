@@ -260,14 +260,24 @@ extern std::queue<SDL_Event> pdc_event_queue;
 
 static bool isDebuggerEvent(const SDL_Event &event)
 {
-	const auto dbgWndId = SDL_GetWindowID(pdc_window);
+	// No need to check events if we're not using the debugger
+	if (event.window.windowID != SDL_GetWindowID(pdc_window))
+		return false;
 
-	return ((event.type == SDL_WINDOWEVENT || event.type == SDL_KEYUP ||
-	         event.type == SDL_KEYDOWN || event.type == SDL_TEXTINPUT ||
-	         event.type == SDL_TEXTEDITING || event.type == SDL_MOUSEMOTION ||
-	         event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
-	         event.type == SDL_MOUSEWHEEL || event.type == SDL_USEREVENT) &&
-	        dbgWndId == event.window.windowID);
+	constexpr std::array<uint32_t, 10> debuggers_events = {
+	        SDL_KEYDOWN,
+	        SDL_KEYUP,
+	        SDL_MOUSEBUTTONDOWN,
+	        SDL_MOUSEBUTTONUP,
+	        SDL_MOUSEMOTION,
+	        SDL_MOUSEWHEEL,
+	        SDL_TEXTINPUT,
+	        SDL_TEXTEDITING,
+	        SDL_USEREVENT,
+	        SDL_WINDOWEVENT,
+	};
+	// Is the event relevant to the debugger?
+	return contains(debuggers_events, event.type);
 }
 
 SDL_Window *GFX_GetSDLWindow(void)
