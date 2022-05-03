@@ -262,16 +262,12 @@ static bool isDebuggerEvent(const SDL_Event &event)
 {
 	const auto dbgWndId = SDL_GetWindowID(pdc_window);
 
-	return (
-		(event.type == SDL_WINDOWEVENT || 
-		event.type == SDL_KEYUP || event.type == SDL_KEYDOWN ||
-		event.type == SDL_TEXTINPUT || event.type == SDL_TEXTEDITING ||
-		event.type == SDL_MOUSEMOTION || 
-		event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
-		event.type == SDL_MOUSEWHEEL ||
-		event.type == SDL_USEREVENT) &&
-		dbgWndId == event.window.windowID
-	);
+	return ((event.type == SDL_WINDOWEVENT || event.type == SDL_KEYUP ||
+	         event.type == SDL_KEYDOWN || event.type == SDL_TEXTINPUT ||
+	         event.type == SDL_TEXTEDITING || event.type == SDL_MOUSEMOTION ||
+	         event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
+	         event.type == SDL_MOUSEWHEEL || event.type == SDL_USEREVENT) &&
+	        dbgWndId == event.window.windowID);
 }
 
 SDL_Window *GFX_GetSDLWindow(void)
@@ -320,9 +316,9 @@ static void QuitSDL()
 {
 	if (sdl.initialized) {
 		SDL_CDROMQuit();
-#if !C_DEBUG		
+#if !C_DEBUG
 		SDL_Quit();
-#endif		
+#endif
 	}
 }
 
@@ -3656,12 +3652,12 @@ bool GFX_Events()
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
-#if C_DEBUG		
+#if C_DEBUG
 		if (isDebuggerEvent(event)) {
 			pdc_event_queue.push(event);
 			continue;
 		}
-#endif		
+#endif
 		switch (event.type) {
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
