@@ -19,6 +19,12 @@ Set window size when running in windowed mode:
              WxH format. For example: 1024x768.
              Scaling is not performed for output=surface.
 .
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
 :CONFIG_WINDOW_POSITION
 Set initial window position when running in windowed mode:
   auto:      Let the window manager decide the position.
@@ -32,6 +38,16 @@ Controls whether to display window decorations in windowed mode.
 Set the transparency of the DOSBox Staging screen.
 From 0 (no transparency) to 90 (high transparency).
 .
+:CONFIG_MAX_RESOLUTION
+This setting has been renamed to viewport_resolution.
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
 :CONFIG_VSYNC
 Synchronize with display refresh rate if supported. This can
 reduce flickering and tearing, but may also impact performance.
@@ -39,11 +55,12 @@ reduce flickering and tearing, but may also impact performance.
 :CONFIG_VSYNC_SKIP
 Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
 .
-:CONFIG_MAX_RESOLUTION
-Optionally restricts the viewport resolution within the window/screen:
-  auto:      The viewport fills the window/screen (default).
-  <custom>:  Set max viewport resolution in WxH format.
-             For example: 960x720
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 What video system to use for output.
@@ -90,7 +107,7 @@ while the emulator is running).
 :CONFIG_LANGUAGE
 Select a language to use: de, en, es, fr, it, pl, and ru
 Notes: This setting will override the 'LANG' environment, if set.
-       The 'Resources/translations' directory bundled with the executable holds
+       The 'resources/translations' directory bundled with the executable holds
        these files. Please keep it along-side the executable to support this feature.
 .
 :CONFIG_MACHINE
@@ -107,6 +124,13 @@ There is generally no speed advantage when raising this value.
 .
 :CONFIG_VMEMSIZE
 Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+.
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
 .
 :CONFIG_VESA_MODES
 Controls the selection of VESA 1.2 and 2.0 modes offered:
@@ -401,9 +425,6 @@ If your OS performs its own DC-offset correction, then set this to 'false'.
 .
 :CONFIG_TANDY
 Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.
-.
-:CONFIG_TANDYRATE
-Sample rate of the Tandy 3-Voice generation.
 .
 :CONFIG_DISNEY
 Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
@@ -2309,13 +2330,14 @@ Waits for a keypress and sets an ERRORLEVEL value.
 :SHELL_CMD_CHOICE_HELP_LONG
 Usage:
   [32;1mchoice[0m [36;1m[TEXT][0m
-  [32;1mchoice[0m /c[:][37;1mCHOICES[0m [/n] [29m [36;1m[TEXT][0m
+  [32;1mchoice[0m /c[:][37;1mCHOICES[0m /n /s /t[:][37;1mc[0m,[35;1mnn[0m [36;1m[TEXT][0m
 
 Where:
   [36;1mTEXT[0m         is the text to display as a prompt, or empty.
   /c[:][37;1mCHOICES[0m Specifies allowable keys, which default to [37;1myn[0m.
   /n           Do not display the choices at end of prompt.
   /s           Enables case-sensitive choices to be selected.
+  /t[:][37;1mc[0m,[35;1mnn[0m    Default choice to [37;1mc[0m after [35;1mnn[0m seconds.
 
 Notes:
   This command sets an ERRORLEVEL value starting from 1 according to the
@@ -2324,8 +2346,13 @@ Notes:
   but not the actual choices (such as the default [37;1m[Y,N]?[0m) in the end.
 
 Examples:
-  [32;1mchoice[0m [36;1mContinue?[0m
+  [32;1mchoice[0m /t:[37;1my[0m,[35;1m2[0m [36;1mContinue?[0m
   [32;1mchoice[0m /c:[37;1mabc[0m /s [36;1mType the letter a, b, or c[0m
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Choice aborted.
 
 .
 :SHELL_CMD_PATH_HELP
