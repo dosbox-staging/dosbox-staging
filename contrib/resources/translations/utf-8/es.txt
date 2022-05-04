@@ -19,6 +19,12 @@ Establezca tamaño de ventana cuando se ejecute en modo ventana:
              formato LxA. Por ejemplo: 1024x768.
              El escalado no se realiza para output=surface.
 .
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
 :CONFIG_WINDOW_POSITION
 Establezca posición inicial de ventana cuando se ejecute en modo ventana:
   auto:      Deja que el administrador de ventana decida la posición.
@@ -28,6 +34,23 @@ Establezca posición inicial de ventana cuando se ejecute en modo ventana:
 :CONFIG_WINDOW_DECORATIONS
 Controla si se muestran decoraciones de ventana en modo ventana.
 .
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
+.
+:CONFIG_MAX_RESOLUTION
+Opcionalmente restringe la resolución de la ventana gráfica dentro de la ventana/pantalla:
+  auto:      La ventana gráfica rellena la ventana/pantalla (predeterminado).
+  <custom>:  Establece resolución máxima de ventana gráfica en formato LxA.
+             Por ejemplo: 960x720
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
 :CONFIG_VSYNC
 Sincroniza con la frecuencia de refresco de la pantalla si es compatible. Esto puede
 reducir el parpadeo y el tearing, pero también puede afectar al rendimiento.
@@ -35,11 +58,12 @@ reducir el parpadeo y el tearing, pero también puede afectar al rendimiento.
 :CONFIG_VSYNC_SKIP
 Número de microsegundos para permitir el bloqueo del renderizado antes de omitir el siguiente fotograma. 0 deshabilita esto y siempre se renderizará.
 .
-:CONFIG_MAX_RESOLUTION
-Opcionalmente restringe la resolución de la ventana gráfica dentro de la ventana/pantalla:
-  auto:      La ventana gráfica rellena la ventana/pantalla (predeterminado).
-  <custom>:  Establece resolución máxima de ventana gráfica en formato LxA.
-             Por ejemplo: 960x720
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 Qué sistema de vídeo utilizar para la salida.
@@ -104,6 +128,13 @@ Por lo general, no hay ninguna ventaja de velocidad al aumentar este valor.
 :CONFIG_VMEMSIZE
 Memoria de vídeo en MiB (1-8) o KiB (256 a 8192). 'auto' usa el valor preterminado por adaptador de vídeo.
 .
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
+.
 :CONFIG_VESA_MODES
 Controla la selección de los modos VESA 1.2 y 2.0 ofrecidos:
   compatible   Una selección a medida que maximiza la compatibilidad del juego.
@@ -111,6 +142,11 @@ Controla la selección de los modos VESA 1.2 y 2.0 ofrecidos:
   all          Ofrece todos los modos para un tamaño de memoria de vídeo dado, sin embargo
                algunos juegos pueden no usarlo correctamente (parpadeo) o pueden necesitar
                más memoria de sistema (mem = ) para usarlos.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 Cómo se manejan secciones autoexec desde múltiples archivos de configuración.
@@ -394,9 +430,6 @@ Si tu SO realiza su propia corrección de DC-offset, entonces establezca esto en
 :CONFIG_TANDY
 Habilita emulación del sistema de sonido Tandy. Para 'auto', la emulación está presente sólo si la máquina está establecida en 'tandy'.
 .
-:CONFIG_TANDYRATE
-Frecuencia de muestreo de la generación Tandy 3-Voice.
-.
 :CONFIG_DISNEY
 Habilita emulación Disney Sound Source. (compatible con Covox Voice Master y Speech Thing).
 .
@@ -477,6 +510,12 @@ Establezca versión DOS (5.0 por defecto). Especificar formato como principal.me
 Un solo número es tratado como la versión principal.
 Los ajustes más comunes son 3.3, 5.0, 6.22, y 7.1.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
 Código de idioma de la distribución del teclado (o "none").
 .
@@ -543,6 +582,21 @@ Puedes colocar tus líneas MOUNT aquí.
 .
 :CONFIG_SUGGESTED_VALUES
 Valores posibles
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+No hay tal sección o propiedad.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+No existe la propiedad "%s" en la sección "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Sintaxis correcta: config -set "propiedad de la sección".
+
+.
+:CONFIG_TANDYRATE
+Frecuencia de muestreo de la generación Tandy 3-Voice.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 No se ha cargado ningún archivo de configuración!
@@ -645,18 +699,6 @@ La sección "%s" no existe.
 .
 :PROGRAM_CONFIG_VALUE_ERROR
 "%s" no es un valor válido para la propiedad %s.
-
-.
-:PROGRAM_CONFIG_PROPERTY_ERROR
-No hay tal sección o propiedad.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-No existe la propiedad "%s" en la sección "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Sintaxis correcta: config -set "propiedad de la sección".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1764,7 +1806,7 @@ Muestra una lista de archivos y subdirectorios de un directorio.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Uso:
-  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
+  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
 
 Dónde:
   [36;1mPATRÓN[0m es un nombre de archivo exacto o un nombre de archivo inexacto con comodines,
@@ -2218,7 +2260,7 @@ Espera a que se presione una tecla y establece un valor ERRORLEVEL.
 :SHELL_CMD_CHOICE_HELP_LONG
 Uso:
   [32;1mchoice[0m [36;1m[TEXTO][0m
-  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [/s] [36;1m[TEXTO][0m
+  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [29m [36;1m[TEXTO][0m
 
 Dónde:
   [36;1mTEXTO[0m         es el texto a mostrar como un aviso, o vacío.
@@ -2289,5 +2331,81 @@ DOS versión %d.%02d
 .
 :SHELL_CMD_VER_INVALID
 La versión DOS especificada no es correcta.
+
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Type must be one of the following:
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Access denied - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Duplicate redirection - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+File creation error - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+File open error - %s
+
+.
+:SHELL_CMD_ATTRIB_HELP
+Displays or changes file attributes.
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Usage:
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+
+Where:
+  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Where: R = Read-only, A = Archive, S = System, H = Hidden
+  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+             wildcards, which are the asterisk (*) and the question mark (?),
+             or an exact name of a directory.
+Notes:
+  Multiple attributes can be specified in the command, separated by spaces.
+  If not specified, the command shows the current file/directory attributes.
+
+Examples:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Unable to get attributes: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Unable to set attributes: %s
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Choice aborted.
 
 .
