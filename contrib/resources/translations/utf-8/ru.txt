@@ -21,6 +21,12 @@
              в формате ШxВ. Например: '1024x768'.
              Масштабирование не выполняется для output=surface.
 .
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
 :CONFIG_WINDOW_POSITION
 Задать изначальное положение окна при запуске в оконном режиме:
   auto:      Позволить оконному менеджеру определить положение.
@@ -30,6 +36,23 @@
 :CONFIG_WINDOW_DECORATIONS
 Управляет отображением оформления окон в оконном режиме.
 .
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
+.
+:CONFIG_MAX_RESOLUTION
+Опционально ограничивает разрешение области отрисовки в окне / на экране:
+  auto:      Область отрисовки заполняет окно/экран (по умолчанию).
+  <своё>:    Задать максимальное разрешение области отрисовки в формате ШxВ.
+             Пример: 960x720
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
 :CONFIG_VSYNC
 Синхронизировать с частотой обновления дисплея, если поддерживается.
 Может снизить мерцание и разрывы, но также может повлиять на производительность.
@@ -37,11 +60,12 @@
 :CONFIG_VSYNC_SKIP
 Количество микросекунд, в течение которых рендеринг должен блокироваться перед пропуском следующего кадра. 0 отключает настройку.
 .
-:CONFIG_MAX_RESOLUTION
-Опционально ограничивает разрешение области отрисовки в окне / на экране:
-  auto:      Область отрисовки заполняет окно/экран (по умолчанию).
-  <своё>:    Задать максимальное разрешение области отрисовки в формате ШxВ.
-             Пример: 960x720
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 Какую видеосистему использовать для вывода изображения.
@@ -110,6 +134,13 @@
 :CONFIG_VMEMSIZE
 Объём видеопамяти в МиБ (1-8) или КиБ (с 256 по 8192). 'auto' использует умолчание видеоадаптера.
 .
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
+.
 :CONFIG_VESA_MODES
 Управляет выбором предложенных режимов VESA 1.2 и 2.0:
   compatible   Выборка с максимальной игровой совместимостью.
@@ -117,6 +148,11 @@
   all          Предлагает все режимы для выбранного объёма видеопамяти, однако
                некоторые игры могут задействовать их неправильно (мерцание)
                или могут потребовать больше системной памяти (mem = ).
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 Как обрабатывать секции autoexec из нескольких конфигурационных файлов.
@@ -396,9 +432,6 @@ DOSBox, с последующей проверкой других мест в с
 :CONFIG_TANDY
 Включить эмуляцию Tandy Sound System. Для 'auto', эмуляция включается только тогда, когда 'machine = tandy'.
 .
-:CONFIG_TANDYRATE
-Частота дискретизации для Tandy 3-Voice поколения.
-.
 :CONFIG_DISNEY
 Включение эмуляции Disney Sound Source. (Covox Voice Master и Speech Thing совместимых).
 .
@@ -474,6 +507,12 @@ DOSBox, с последующей проверкой других мест в с
 Одиночный номер рассматривается как основная версия.
 Обычно используются: '3.3', '5.0', '6.22' и '7.1'.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
 Языковой код раскладки клавиатуры (или 'none').
 .
@@ -539,6 +578,21 @@ MAC-адрес карты NE2000.
 .
 :CONFIG_SUGGESTED_VALUES
 Возможные значения
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Нет такого раздела или свойства.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+В разделе "%2$s" нет свойства "%1$s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Правильный синтаксис: config -set "название_свойства".
+
+.
+:CONFIG_TANDYRATE
+Частота дискретизации для Tandy 3-Voice поколения.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Конфигурационный файл не загружен!
@@ -638,18 +692,6 @@ MAC-адрес карты NE2000.
 .
 :PROGRAM_CONFIG_VALUE_ERROR
 "%s" недопустимое значение свойства "%s".
-
-.
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Нет такого раздела или свойства.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-В разделе "%2$s" нет свойства "%1$s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Правильный синтаксис: config -set "название_свойства".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1217,7 +1259,7 @@ PCjr картридж найден, но машина не PCjr.
 D.M.Y
 .
 :SHELL_CMD_DATE_HELP_LONG
-date [[/t] [/h] [/s] | MM-DD-YYYY]
+date [[/t] [/h] [29m | MM-DD-YYYY]
   MM-DD-YYYY: Установить новую дату.
   /s:         Использовать время и дату операционной системы для времени DOS.
   /f:         Вернуться к внутреннему времени DOSBox (противоположность /s).
@@ -1536,7 +1578,7 @@ ls: невозможно получить доступ к "%s": Нет тако�
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-choice [/c:клавиши] [/n] [/s] текст
+choice [/c:клавиши] [/n] [29m текст
   /c[:]клавиши - Определяет допустимые клавиши. По умолчанию: yn.
   /n           - Не отображать варианты в конце запроса.
   /s           - Определить регистрозависимый выбор.
@@ -2197,5 +2239,77 @@ Notes:
 Examples:
   [32;1mpath[0m
   [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
+
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Type must be one of the following:
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Access denied - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Duplicate redirection - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+File creation error - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+File open error - %s
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Usage:
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+
+Where:
+  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Where: R = Read-only, A = Archive, S = System, H = Hidden
+  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+             wildcards, which are the asterisk (*) and the question mark (?),
+             or an exact name of a directory.
+Notes:
+  Multiple attributes can be specified in the command, separated by spaces.
+  If not specified, the command shows the current file/directory attributes.
+
+Examples:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Unable to get attributes: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Unable to set attributes: %s
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Choice aborted.
 
 .
