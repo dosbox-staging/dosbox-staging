@@ -21,6 +21,12 @@ Bestimmt die Fenstergröße, die verwendet werden soll:
              Abmessungen, im Format BxH. Zum Beispiel: 1024x768.
              Die Skalierung wird bei output=surface nicht durchgeführt.
 .
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
 :CONFIG_WINDOW_POSITION
 Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
   auto:      Lass den Fenstermanager die Position bestimmen.
@@ -34,17 +40,31 @@ Legt fest, ob der Rahmen im Fenster-Modus angezeigt werden soll.
 Set the transparency of the DOSBox Staging screen.
 From 0 (no transparency) to 90 (high transparency).
 .
+:CONFIG_MAX_RESOLUTION
+Schränkt optional die Auflösung des Darstellungsbereichs innerhalb des Fensters/Bildschirms ein:
+  auto:      Der Darstellungsbereich füllt das Fenster/den Bildschirm aus (Standard).
+  <custom>:  Lege die maximale Auflösung des Darstellungsbereichs im Format WxH fest.
+             Zum Beispiel: 960x720
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
 :CONFIG_VSYNC
 Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert).
 .
 :CONFIG_VSYNC_SKIP
 Anzahl der Mikrosekunden, die das Rendering verzögert sein darf, bevor der nächste Frame übersprungen wird.
 .
-:CONFIG_MAX_RESOLUTION
-Schränkt optional die Auflösung des Darstellungsbereichs innerhalb des Fensters/Bildschirms ein:
-  auto:      Der Darstellungsbereich füllt das Fenster/den Bildschirm aus (Standard).
-  <custom>:  Lege die maximale Auflösung des Darstellungsbereichs im Format WxH fest.
-             Zum Beispiel: 960x720
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 Welches Videosystem soll für die Ausgabe verwendet werden.
@@ -113,6 +133,13 @@ Es gibt generell keinen Geschwindigkeitsvorteil, wenn du diesen Wert erhöhst.
 .
 :CONFIG_VMEMSIZE
 Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den Standardwert pro Videoadapter.
+.
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
 .
 :CONFIG_VESA_MODES
 Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
@@ -404,9 +431,6 @@ Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchführt, dann setz
 :CONFIG_TANDY
 Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur vorhanden, wenn "machine" auf "tandy" eingestellt ist.
 .
-:CONFIG_TANDYRATE
-Sample-Rate des Tandy 3-Voice Generators.
-.
 :CONFIG_DISNEY
 Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und Speech Thing kompatibel).
 .
@@ -567,6 +591,9 @@ Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
 :PROGRAM_CONFIG_SET_SYNTAX
 Korrekte Syntax: config -set "section property".
 
+.
+:CONFIG_TANDYRATE
+Sample-Rate des Tandy 3-Voice Generators.
 .
 :
  :CONFIG_FULLSCREEN
@@ -2300,5 +2327,10 @@ Unable to get attributes: %s
 .
 :SHELL_CMD_ATTRIB_SET_ERROR
 Unable to set attributes: %s
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Choice aborted.
 
 .
