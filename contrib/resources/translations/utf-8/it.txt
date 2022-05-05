@@ -23,10 +23,13 @@ in modalità finestra:
              Il ridimensionamento non viene eseguito con output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Set the viewport size (drawable area) within the window/screen:
-  fit:       Fit the viewport to the available window/screen (default).
-  <custom>:  Limit the viewport within to a custom resolution or percentage of
-             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+Imposta le dimensioni dell'area di visualizzazione all'interno della
+finestra/schermo:
+  fit:       Adatta l'area di visualizzazione alla finestra/schermo disponibile
+             (predefinito).
+  <custom>:  Limita l'area di visualizzazione in base alla risoluzione o
+             percentuale personalizzata. Specificato in WxH, N%, N.M%.
+             Esempi: 960x720 o 50%
 .
 :CONFIG_WINDOW_POSITION
 Imposta la posizione iniziale della finestra durante l'esecuzione in modalità
@@ -40,22 +43,21 @@ finestra:
 Controlla se visualizzare le decorazioni delle finestre in modalità finestra.
 .
 :CONFIG_TRANSPARENCY
-Set the transparency of the DOSBox Staging screen.
-From 0 (no transparency) to 90 (high transparency).
+Imposta la trasparenza della schermata di DOSBox Staging.
+Da 0 (nessuna trasparenza) a 90 (alta trasparenza).
 .
 :CONFIG_MAX_RESOLUTION
-Limita facoltativamente la risoluzione dell'area di visualizzazione all'interno
-della finestra/schermo:
-  auto:     L'area di visualizzazione riempie la finestra/schermo (predefinito)
-  <custom>: Imposta la risoluzione massima dell'area di visualizzazione nel
-            formato WxH. Per esempio: 960x720
+Questa impostazione è stata rinominata in viewport_resolution.
 .
 :CONFIG_HOST_RATE
-Set the host's refresh rate:
-  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
-  sdi:       Use serial device interface (SDI) rates, without further adjustment.
-  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
-  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+Imposta la frequenza di aggiornamento dell'host:
+  auto:      Utilizza le frequenze SDI, o VRR quando in modalità schermo intero
+             su uno schermo ad alta frequenza di aggiornamento.
+  sdi:       Utilizza le frequenze dell'interfaccia del dispositivo seriale
+             (SDI), senza ulteriori regolazioni.
+  vrr:       Sottrae 3 Hz dalla frequenza riportata (necessario su schermi VRR)
+  <custom>:  Specifica una frequenza personalizzata come valore intero o
+             decimale maggiore di 23.000.
 .
 :CONFIG_VSYNC
 Sincronizza con la frequenza di aggiornamento dello schermo, se supportata.
@@ -68,11 +70,12 @@ al fotogramma successivo. Impostando un valore di 0, disabiliterà questa
 funzione.
 .
 :CONFIG_PRESENTATION_MODE
-Optionally select the frame presentation mode:
-  auto:  Intelligently time and drop frames to prevent
-         emulation stalls, based on host and DOS frame rates.
-  cfr:   Always present DOS frames at a constant frame rate.
-  vfr:   Always present changed DOS frames at a variable frame rate.
+Facoltativamente, seleziona la modalità di presentazione dei fotogrammi:
+  auto:  Determina la durata e taglia i fotogrammi in modo intelligente per
+         prevenire lo stallo dell'emulazione, in base alla frequenza dei
+         fotogrammi host e DOS.
+  cfr:   Presenta sempre i fotogrammi DOS ad una frequenza costante.
+  vfr:   Presenta sempre i fotogrammi DOS modificati ad una frequenza variabile
 .
 :CONFIG_OUTPUT
 Sistema video da utilizzare per l'output.
@@ -127,7 +130,7 @@ del sistema operativo mentre l'emulatore è in esecuzione).
 :CONFIG_LANGUAGE
 Seleziona una lingua da usare: de, en, es, fr, it, pl e ru.
 Note: Questa impostazione, se utilizzata, sovrascriverà la variabile 
-      d'ambiente 'LANG'. La cartella 'translations', inclusa nel pacchetto
+      d'ambiente 'LANG'. La cartella 'resources/translations', inclusa nel pacchetto
       insieme all'eseguibile, contiene questi file di dati.
       Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
@@ -148,11 +151,14 @@ Memoria video in MiB (1-8) o KiB (da 256 a 8192).
 'auto' usa il valore predefinito in base all'adattatore video scelto.
 .
 :CONFIG_DOS_RATE
-Customize the emulated video mode's frame rate, in Hz:
-default:  The DOS video mode determines the rate (recommended).
-host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
-We recommend the 'default' rate; otherwise test and set on a per-game basis.
+Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
+  default:  La frequenza è determinata dalla modalità video DOS (consigliato).
+  host:     Abbina la frequenza DOS alla frequenza host (vedi impostazione
+            'host_rate').
+  <value>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
+            1000.000 (Hz).
+Si consiglia la frequenza dei fotogrammi 'predefinita' (default), altrimenti
+provare ed impostare in base al gioco.
 .
 :CONFIG_VESA_MODES
 Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
@@ -164,9 +170,10 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
                memoria di sistema (mem = ).
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
+Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
+è noto per essere influenzato da questo. Segnala un bug nel repository del
+progetto se trovi un gioco che fallisce quando questo è impostato su 'true',
+in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
@@ -554,10 +561,9 @@ Un singolo numero viene considerato come la versione principale.
 I parametri riconosciuti sono 3.3, 5.0, 6.22, e 7.1.
 .
 :CONFIG_COUNTRY
-Set DOS country code which will affect country-specific
-information such as date, time, and decimal formats.
-If set to 0, the country code corresponding to the
-selected keyboard layout will be used.
+Imposta il codice paese DOS che influenzerà informazioni come data, ora e
+formati decimali. Se impostato a 0, verrà utilizzato il codice paese
+corrispondente al layout di tastiera selezionato.
 .
 :CONFIG_KEYBOARDLAYOUT
 Codice linguaggio del layout della tastiera (o 'none').
@@ -640,9 +646,6 @@ La proprietà "%s" non è presente nella sezione "%s".
 :PROGRAM_CONFIG_SET_SYNTAX
 Sintassi corretta: config -set "sezione proprietà = valore".
 
-.
-:CONFIG_TANDYRATE
-Frequenza di campionamento della generazione del suono a 3-voci Tandy.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nessun file di configurazione caricato!
@@ -770,10 +773,6 @@ Il percorso "%s" supera la lunghezza massima DOS di %d carattere/i.
 File eseguibile non trovato: %s
 
 .
-:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-Nessun controller IDE disponibile. L'unità non avrà l'emulazione IDE.
-
-.
 :PROGRAM_MOUNT_CDROMS_FOUND
 CDROM trovati: %d
 
@@ -786,6 +785,12 @@ Tipo
 .
 :PROGRAM_MOUNT_STATUS_LABEL
 Etichetta
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Nome immagine
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Scambia slot
 .
 :PROGRAM_MOUNT_STATUS_2
 Unità %c montata come %s
@@ -1077,7 +1082,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 :PROGRAM_INTRO_MOUNT_START
 [2J[32;1mEcco alcuni comandi utili per iniziare:[0m
 Prima di poter utilizzare i file che si trovano sul tuo filesystem,
-Devi montare la directory contenente i file.
+devi montare la cartella contenente i file.
 
 
 .
@@ -1345,6 +1350,10 @@ Esempi:
   [32;1mmount[0m [37;1mC[0m [36;1mfile_di_salvataggio[0m -t overlay
 
 .
+:PROGRAM_IMGMOUNT_STATUS_1
+Le unità disco e immagini CD attualmente montate sono:
+
+.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 È necessario specificare la lettera dell'unità su cui montare l'immagine.
 
@@ -1360,6 +1369,14 @@ Per le immagini [33mCD-ROM[0m:   [34;1mIMGMOUNT lettera-unità posizione-imma
 Per le immagini [33mdisco rigido[0m: È necessario specificare la geometria dell'unità:
 bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
 [34;1mIMGMOUNT lettera-unità posizione-immagine -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+Nessuna unità disponibile
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+Nessun controller IDE disponibile. L'unità non avrà l'emulazione IDE.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
@@ -1473,26 +1490,27 @@ File tabella codici mancante o non valido per il layout %s.
 Gestisce le porte seriali.
 
 Utilizzo:
-  SERIAL /L | /LIST               Elenca le porte seriali correnti.
-  SERIAL PORTA# TIPO [impostaz.]  Imposta la porta in base al TIPO specificato.
+  [32;1mserial[0m [37;1m[PORTA#][0m           Elenca tutte le porte seriali o quelle specificate.
+  [32;1mserial[0m [37;1mPORTA#[0m [36;1mTIPO[0m [impostaz.]  Imposta la porta in base al tipo specificato.
 
 Dove:
-  PORTA# : 1, 2, 3, o 4
-  TIPO   : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, o DISABLED
+  [37;1mPORTA#[0m è il numero della porta: [37;1m1[0m, [37;1m2[0m, [37;1m3[0m, o [37;1m4[0m
+  [36;1mTIPO[0m   è il tipo di porta: [36;1mMODEM[0m, [36;1mNULLMODEM[0m, [36;1mDIRECTSERIAL[0m, [36;1mDUMMY[0m, o [36;1mDISABLED[0m
 
-Impostazioni facoltative per ogni TIPO:
-  Per MODEM        : IRQ, LISTENPORT, SOCK
-  Per NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+Note:
+  Impostazioni facoltative per ogni [36;1mTIPO[0m:
+  Per [36;1mMODEM[0m        : IRQ, LISTENPORT, SOCK
+  Per [36;1mNULLMODEM[0m    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
                      USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  Per DIRECTSERIAL : IRQ, REALPORT (necessario), RXDELAY
-  Per DUMMY        : IRQ
+  Per [36;1mDIRECTSERIAL[0m : IRQ, REALPORT (richiesto), RXDELAY
+  Per [36;1mDUMMY[0m        : IRQ
 
-Esempi utilizzando la porta 1 o COM1 in DOS:
- SERIAL /list                                : Elenca le porte seriali correnti
- SERIAL 1 NULLMODEM PORT:1250                : Ascolto su TCP:1250 come server
- SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
- SERIAL 1 MODEM LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
- SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0      : Usa una porta fisica su Linux
+Esempi:
+ [32;1mSERIAL[0m                                : Elenca le porte seriali correnti
+ [32;1mSERIAL[0m [37;1m1[0m [36;1mNULLMODEM[0m PORT:1250                : Ascolto su TCP:1250 come server
+ [32;1mSERIAL[0m [37;1m2[0m [36;1mNULLMODEM[0m SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
+ [32;1mSERIAL[0m [37;1m3[0m [36;1mMODEM[0m LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
+ [32;1mSERIAL[0m [37;1m4[0m [36;1mDIRECTSERIAL[0m REALPORT:ttyUSB0      : Usa una porta fisica su Linux
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -1500,12 +1518,11 @@ COM%d: %s %s
 
 .
 :PROGRAM_SERIAL_BAD_PORT
-È necessario specificare un numero di porta compreso tra 1 e %d, estremi
-compresi.
+È necessario specificare un numero di porta tra 1 e %d, estremi compresi.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-La modalità deve essere una delle seguenti:
+:PROGRAM_SERIAL_BAD_TYPE
+Il tipo deve essere uno dei seguenti:
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST
@@ -1526,7 +1543,7 @@ Per esempio:
 :UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
 
    [autoexec]
-   mount u ~/dos/utils
+   mount u C:\Users\username\dos\utils
    set PATH=u:\;%PATH%
 
 
@@ -1607,7 +1624,7 @@ Sei ancora nell'unità Z:, passa ad un'unità montata con [31mC:[0m.
 
 .
 :SHELL_CMD_DATE_HELP
-Visualizza o imposta la data.
+Visualizza o modifica la data.
 
 .
 :SHELL_CMD_DATE_ERROR
@@ -1621,11 +1638,8 @@ La data specificata non è corretta.
 Data corrente: 
 .
 :SHELL_CMD_DATE_SETHLP
-Digita 'date MM-GG-AAAA' per cambiare.
+Digita 'date %s' per cambiare la data.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/G/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 Utilizzo:
@@ -1634,7 +1648,7 @@ Utilizzo:
   [32;1mdate[0m [36;1mDATA[0m
 
 Dove:
-  [36;1mDATA[0m è la nuova data da impostare, nel formato [36;1mMM-GG-AAAA[0m.
+  [36;1mDATA[0m è la nuova data da impostare, nel formato [36;1m%s[0m.
 
 Note:
   L'esecuzione di [32;1mdate[0m senza un argomento, mostra la data corrente e permette
@@ -1645,7 +1659,7 @@ Note:
 Esempi:
   [32;1mdate[0m
   [32;1mdate[0m /h
-  [32;1mdate[0m [36;1m10-11-2012[0m
+  [32;1mdate[0m [36;1m%s[0m
 
 .
 :SHELL_CMD_TIME_HELP
@@ -1660,7 +1674,7 @@ L'ora specificata non è corretta.
 Ora attuale: 
 .
 :SHELL_CMD_TIME_SETHLP
-Digita 'time hh:mm:ss' per cambiare l'orario.
+Digita 'time %s' per cambiare l'orario.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
@@ -1670,7 +1684,7 @@ Utilizzo:
   [32;1mtime[0m [36;1mORA[0m
 
 Dove:
-  [36;1mORA[0m è il nuovo orario da impostare, nel formato [36;1mhh:mm:ss[0m.
+  [36;1mORA[0m è il nuovo orario da impostare, nel formato [36;1m%s[0m.
 
 Note:
   L'esecuzione di [32;1mtime[0m senza un argomento, mostra l'orario corrente e permette
@@ -1681,7 +1695,7 @@ Note:
 Esempi:
   [32;1mtime[0m
   [32;1mtime[0m /h
-  [32;1mtime[0m [36;1m13:14:15[0m
+  [32;1mtime[0m [36;1m%s[0m
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -1726,6 +1740,28 @@ Nessuna etichetta fornita al comando GOTO.
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO: Etichetta %s non trovata.
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Accesso negato - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Reindirizzamento duplicato - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+
+Impossibile creare/aprire un file temporaneo per il piping. Controllare la variabile %%TEMP%%.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+Errore nella creazione del file - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+Errore di apertura del file - %s
 
 .
 :SHELL_CMD_FILE_NOT_FOUND
@@ -1849,19 +1885,24 @@ destinazione è già in uso. È possibile utilizzare SUBST solo su unità locali
 
 .
 :SHELL_CMD_CHDIR_HELP
-Visualizza/cambia la directory corrente.
+Visualizza o cambia la directory corrente.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-CHDIR [unità:][percorso]
-CHDIR [..]
-CD [unità:][percorso]
-CD [..]
+Utilizzo:
+  [32;1mcd[0m [36;1mCARTELLA[0m
+  [32;1mchdir[0m [36;1mCARTELLA[0m
 
-  ..   Indica che si desidera passare alla directory padre.
+Dove:
+  [36;1mCARTELLA[0m è il nome della cartella in cui spostarsi.
 
-Scrivi CD [unità:] per mostrare la directory corrente nell'unità specificata.
-Scrivi CD senza parametri per visualizzare l'unità e la directory correnti.
+Note:
+  L'esecuzione di [32;1mcd[0m senza un argomento visualizza la directory corrente.
+  Con [36;1mCARTELLA[0m il comando cambia solo la directory, non l'unità corrente.
+
+Esempi:
+  [32;1mcd[0m
+  [32;1mcd[0m [36;1mlaMiaCartella[0m
 
 .
 :SHELL_CMD_CLS_HELP
@@ -2023,12 +2064,12 @@ Dove:
   [36;1mCARTELLA[0m è il nome della cartella da creare.
 
 Note:
-  - Alla cartella deve essere assegnato un nome specifico e non già utilizzato.
+  - Alla cartella deve essere assegnato un nome specifico e non utilizzato.
   - È possibile specificare il percorso in cui verrà creata la cartella.
 
 Esempi:
-  [32;1mmd[0m [36;1mnuovacartella[0m
-  [32;1mmd[0m [36;1mc:\giochi\nuovacartella[0m
+  [32;1mmd[0m [36;1mnuovaCartella[0m
+  [32;1mmd[0m [36;1mc:\giochi\nuovaCartella[0m
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -2047,7 +2088,7 @@ Note:
   La cartella deve essere vuota, senza file o sottocartelle.
 
 Esempi:
-  [32;1mrd[0m [36;1mcartellavuota[0m
+  [32;1mrd[0m [36;1mcartellaVuota[0m
 
 .
 :SHELL_CMD_SET_HELP
@@ -2205,7 +2246,7 @@ Note:
   - Il file di destinazione deve essere un nome file specifico senza percorso.
 
 Esempi:
-  [32;1mren[0m [37;1mvecchio_nome[0m [36;1mnuovo_nome[0m
+  [32;1mren[0m [37;1mvecchioNome[0m [36;1mnuovoNome[0m
   [32;1mren[0m [37;1mc:\dos\file.txt[0m [36;1mf.txt[0m
 
 .
@@ -2305,7 +2346,7 @@ Esempi:
 
 .
 :SHELL_CMD_LOADHIGH_HELP
-Carica un programma in memoria superiore (xms=true, umb=true).
+Carica un programma DOS nella memoria superiore.
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
@@ -2354,6 +2395,40 @@ Esempi:
 ls: impossibile accedere a '%s': Percorso o file non trovato.
 
 .
+:SHELL_CMD_ATTRIB_HELP
+Visualizza o modifica gli attributi dei file.
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Utilizzo:
+  [32;1mattrib[0m [37;1m[ATTRIBUTI][0m [36;1mMODELLO[0m [29m
+
+Dove:
+  [37;1mATTRIBUTI[0m  sono gli attributi da applicare, tra cui uno o più dei seguenti:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
+  [36;1mMODELLO[0m    può essere un nome file esatto o un nome file con caratteri jolly,
+             cioè asterisco (*) e punto interrogativo (?), oppure il nome di
+             una cartella.
+
+Note:
+  In questo comando è possibile specificare più attributi, separati da spazi.
+  Se non specificato, il comando mostra gli attributi di file/cartelle correnti
+
+Esempi:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Impossibile ottenere gli attributi: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Impossibile impostare gli attributi: %s
+
+.
+
 :SHELL_CMD_CHOICE_HELP
 Attende la pressione di un tasto e imposta un valore ERRORLEVEL.
 
@@ -2361,7 +2436,7 @@ Attende la pressione di un tasto e imposta un valore ERRORLEVEL.
 :SHELL_CMD_CHOICE_HELP_LONG
 Utilizzo:
   [32;1mchoice[0m [36;1m[TESTO][0m
-  [32;1mchoice[0m /c[:][37;1mSCELTE[0m [/n] [29m [36;1m[TESTO][0m
+  [32;1mchoice[0m /c[:][37;1mSCELTE[0m /n /s /t[:][37;1mc[0m,[35;1mnn[0m [36;1m[TESTO][0m
 
 Dove:
   [36;1mTESTO[0m       è il testo da visualizzare come prompt (può rimanere vuoto).
@@ -2369,6 +2444,7 @@ Dove:
   /n          consente di non visualizzare le scelte alla fine del prompt.
   /s          consente di selezionare le scelte con distinzione tra maiuscole
               e minuscole.
+  /t[:][37;1mc[0m,[35;1mnn[0m   imposta come scelta [37;1mc[0m dopo [35;1mnn[0m secondi.
 
 Note:
   Questo comando imposta un valore ERRORLEVEL a partire da 1 in base alle
@@ -2377,8 +2453,13 @@ Note:
   testo specificato, ma non le scelte effettive alla fine (predefinito [37;1m[Y,N]?[0m).
 
 Esempi:
-  [32;1mchoice[0m [36;1mContinuare?[0m
+  [32;1mchoice[0m /t:[37;1my[0m,[35;1m2[0m [36;1mContinuare?[0m
   [32;1mchoice[0m /c:[37;1mabc[0m /s [36;1mDigita la lettera a, b, o c[0m
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Scelta annullata.
 
 .
 :SHELL_CMD_PATH_HELP
@@ -2434,81 +2515,5 @@ DOS versione %d.%02d
 .
 :SHELL_CMD_VER_INVALID
 La versione DOS specificata non è corretta.
-
-.
-:PROGRAM_MOUNT_STATUS_NAME
-Image name
-.
-:PROGRAM_MOUNT_STATUS_SLOT
-Swap slot
-.
-:PROGRAM_IMGMOUNT_STATUS_1
-The currently mounted disk and CD image drives are:
-
-.
-:PROGRAM_IMGMOUNT_STATUS_NONE
-No drive available
-
-.
-:PROGRAM_SERIAL_BAD_TYPE
-Type must be one of the following:
-
-.
-:SHELL_CMD_FILE_ACCESS_DENIED
-Access denied - %s
-
-.
-:SHELL_CMD_DUPLICATE_REDIRECTION
-Duplicate redirection - %s
-
-.
-:SHELL_CMD_FAILED_PIPE
-
-Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-File creation error - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-File open error - %s
-
-.
-:SHELL_CMD_ATTRIB_HELP
-Displays or changes file attributes.
-
-.
-:SHELL_CMD_ATTRIB_HELP_LONG
-Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
-
-Where:
-  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
-             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
-             Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
-             wildcards, which are the asterisk (*) and the question mark (?),
-             or an exact name of a directory.
-Notes:
-  Multiple attributes can be specified in the command, separated by spaces.
-  If not specified, the command shows the current file/directory attributes.
-
-Examples:
-  [32;1mattrib[0m [36;1mfile.txt[0m
-  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
-
-.
-:SHELL_CMD_ATTRIB_GET_ERROR
-Unable to get attributes: %s
-
-.
-:SHELL_CMD_ATTRIB_SET_ERROR
-Unable to set attributes: %s
-
-.
-:SHELL_CMD_CHOICE_ABORTED
-
-Choice aborted.
 
 .
