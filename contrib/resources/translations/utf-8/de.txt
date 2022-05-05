@@ -592,11 +592,7 @@ Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
 Korrekte Syntax: config -set "section property".
 
 .
-:CONFIG_TANDYRATE
-Sample-Rate des Tandy 3-Voice Generators.
-.
-:
- :CONFIG_FULLSCREEN
+:CONFIG_FULLSCREEN
 Startet DOSBox direkt im Vollbildmodus.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -1254,9 +1250,6 @@ Aktuelles Datum:
 :SHELL_CMD_DATE_SETHLP
 Tippe "date MM-TT-JJJJ" um es zu ändern.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [/T] [/H] [29m | MM-TT-JJJJ]
@@ -2252,10 +2245,6 @@ COM%d: %s %s
 .
 :PROGRAM_SERIAL_BAD_PORT
 Ein numerischer Port-Wert zwischen 1 und %d (einschließlich) muss angegeben werden.
-
-.
-:PROGRAM_SERIAL_BAD_MODE
-Der Modus muss einer der folgenden sein:
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST

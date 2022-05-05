@@ -595,9 +595,6 @@ No existe la propiedad "%s" en la sección "%s".
 Sintaxis correcta: config -set "propiedad de la sección".
 
 .
-:CONFIG_TANDYRATE
-Frecuencia de muestreo de la generación Tandy 3-Voice.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 No se ha cargado ningún archivo de configuración!
 
@@ -1429,10 +1426,6 @@ COM%d: %s %s
 Debes especificar un valor de puerto numérico entre 1 y %d, incluido.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-El modo debe ser uno de los siguientes:
-
-.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
@@ -1545,9 +1538,6 @@ Fecha actual:
 :SHELL_CMD_DATE_SETHLP
 Escriba 'date MM-DD-AAAA' para cambiar la fecha.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 Uso:
