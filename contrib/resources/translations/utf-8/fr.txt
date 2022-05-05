@@ -592,9 +592,6 @@ Il n'y a aucune propriété "%s" dans la section "%s".
 Syntaxe correcte : config -set "section propriété".
 
 .
-:CONFIG_TANDYRATE
-Taux d'échantillonnage de la génération 3-Voix Tandy.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Aucun fichier de configuration chargé !
 
@@ -923,24 +920,6 @@ d'entrer dans un répertoire (reconnaissable par les [33;1m[][0m dans le listi
 Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
 
 .
-:PROGRAM_INTRO_CDROM
-[2J[32;1mComment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[0m
-DOSBox supporte l'émulation CD-ROM à plusieurs niveaux.
-
-Ceci fonctionne sur tous les répertoires ordinaires, installe MSCDEX et marque les fichiers
-en lecteur seule. Généralement c'est suffisant pour la plupart des jeux :
-
-[34;1mmount D C:\exemple -t cdrom[0m
-
-Si cela ne marche pas, vous pouvez préciser à DOSBox le nom de volume du CD-ROM :
-
-[34;1mmount D C:\exemple -t cdrom -label CDLABEL[0m
-
-Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fichiers CUE :
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-
-.
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1mTouches spéciales :[0m
 Voici les combinaisons des touches par défaut.
@@ -1258,9 +1237,6 @@ Date actuelle :
 :SHELL_CMD_DATE_SETHLP
 Tapez 'date MM-JJ-AAAA' pour changer
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/J/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [29m | MM-JJ-AAAA]

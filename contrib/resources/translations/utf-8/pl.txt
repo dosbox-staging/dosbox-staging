@@ -587,9 +587,6 @@ Brak parametru %s w sekcji %s.
 Poprawna składnia: config -set "sekcja parametr".
 
 .
-:CONFIG_TANDYRATE
-Częstotliwość próbkowania Tandy 3-Voice.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 No config file loaded!
 
@@ -918,24 +915,6 @@ enter a directory (recognised by the [33;1m[][0m in a directory listing).
 You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.
 
 .
-:PROGRAM_INTRO_CDROM
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
-
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
-
-[34;1mmount D C:\example -t cdrom[0m
-
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
-
-Additionally, you can use IMGMOUNT to mount ISO images or CUE files:
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-
-.
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1mKlawisze specjalne:[0m
 Domyślne skróty klawiaturowe.
@@ -1249,9 +1228,6 @@ Current date:
 :SHELL_CMD_DATE_SETHLP
 Type 'date MM-DD-YYYY' to change.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [29m | MM-DD-YYYY]
