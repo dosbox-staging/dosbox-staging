@@ -643,6 +643,42 @@ static bool read_shader(const std_fs::path &shader_path, std::string &shader_str
 	return true;
 }
 
+std::deque<std::string> RENDER_InventoryShaders()
+{
+	std::deque<std::string> inventory;
+	inventory.emplace_back("");
+	inventory.emplace_back("List of available GLSL shaders");
+	inventory.emplace_back("------------------------------");
+
+	const std::string dir_prefix = "Path '";
+	const std::string file_prefix = "        ";
+	for (auto &[dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
+		const auto dir_exists = std_fs::is_directory(dir);
+		auto shader = shaders.begin();
+		const auto dir_has_shaders = shader != shaders.end();
+		const auto dir_postfix = dir_exists ? (dir_has_shaders
+		                                               ? "' has:"
+		                                               : "' has no shaders")
+		                                    : "' does not exist";
+
+		inventory.emplace_back(dir_prefix + dir.string() + dir_postfix);
+
+		while (shader != shaders.end()) {
+			shader->replace_extension("");
+			const auto is_last = (shader + 1 == shaders.end());
+			inventory.emplace_back(file_prefix +
+			                       (is_last ? "`- " : "|- ") +
+			                       shader->string());
+			shader++;
+		}
+		inventory.emplace_back("");
+	}
+	inventory.emplace_back("The above shaders can be used exactly as listed in the \"glshader\"");
+	inventory.emplace_back("conf setting, without the need for the resource path or .glsl extension.");
+	inventory.emplace_back("");
+	return inventory;
+}
+
 static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 {
 	// Start with the path as-is and then try from resources
@@ -809,7 +845,9 @@ void RENDER_Init(Section * sec) {
 	else if (!RENDER_GetShader(sh->realpath, shader_src) &&
 	         (sh->realpath == f || !RENDER_GetShader(f, shader_src))) {
 		sh->SetValue("none");
-		LOG_WARNING("RENDER: Shader file '%s' not found", f.c_str());
+		LOG_ERR("RENDER: Shader file '%s' not found", f.c_str());
+		for (const auto &line : RENDER_InventoryShaders())
+			LOG_WARNING("RENDER: %s", line.c_str());
 	} else if (using_opengl) {
 		LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
 		parse_shader_options(std::string(render.shader_src));
