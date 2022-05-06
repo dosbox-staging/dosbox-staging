@@ -62,6 +62,9 @@ These are common options:
   -lang <langfile>    Start dosbox with the language specified in
                       <langfile>.
 
+  --list-glshaders    List available GLSL shaders and their directories.
+                      Results are useable in the "glshader = " conf setting.
+
   -machine <type>     Setup dosbox to emulate a specific type of machine.
                       The machine type has influence on both the videocard
                       and the emulated soundcards.  Valid choices are:

@@ -29,6 +29,8 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .LP
 .B dosbox \-resetconf
 .LP
+.B dosbox \-\-list\-glshaders
+.LP
 .B dosbox \-erasemapper
 .LP
 .B dosbox \-resetmapper
@@ -156,6 +158,10 @@ Prints the location of the default configuration file.
 .TP
 .B \-eraseconf, \-resetconf
 removes the default configuration file.
+.TP
+.B \-\-list-glshaders
+List available GLSL shaders and their directories.
+Results are useable in the "glshader = " conf setting.
 .TP
 .B \-erasemapper, \-resetmapper
 removes the mapperfile configured in the clean default configuration file.

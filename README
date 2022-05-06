@@ -383,7 +383,7 @@ description:
 dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode]
        [-noprimaryconf] [-nolocalconf] [-conf congfigfile]
        [-scaler scaler | -forcescaler scaler] [-lang langfile]
-       [-machine machine-type] [-socket socketnumber]
+       [--list-glshaders] [-machine machine-type] [-socket socketnumber]
        [-c command] [-noconsole] [-exit] [NAME]
 
 dosbox --version
@@ -474,6 +474,10 @@ dosbox -opencaptures program
   -lang languagefilelocation
         Start DOSBox using the language specified in "languagefilelocation".
         See Section 14: "The Language File" for more details.
+
+  --list-glshaders
+        List available GLSL shaders and their directories.
+        Results are useable in the "glshader = " conf setting.
 
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
