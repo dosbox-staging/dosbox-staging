@@ -1068,12 +1068,6 @@
     <ClInclude Include="..\src\gui\gui_msgs.h">
       <Filter>src\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\render_crt_glsl.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gui\render_glsl.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\residfp\array.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
