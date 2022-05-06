@@ -409,6 +409,10 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	if (paths.size())
 		return paths;
 
+	// Prioritize portable configuration: allow the entire resource tree or
+	// just a single resource to be included in the current working directory.
+	paths.emplace_back(std_fs::path("."));
+	paths.emplace_back(std_fs::path("resources"));
 #if defined(MACOSX)
 	paths.emplace_back(GetExecutablePath() / "../Resources");
 	paths.emplace_back(GetExecutablePath() / "../../Resources");
