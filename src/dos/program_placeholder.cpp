@@ -36,6 +36,25 @@ void PLACEHOLDER::Run()
 	result_errorcode = dos.return_code;
 }
 
+void PLACEHOLDER::AddMessages() {
+	MSG_Add("PROGRAM_PLACEHOLDER_SHORT_HELP", "This program is a placeholder");
+	MSG_Add("PROGRAM_PLACEHOLDER_LONG_HELP",
+	        "%s is only a placeholder.\n"
+	        "\nInstall a 3rd-party and give its PATH precedence.\n"
+	        "\nFor example:");
+			
+	MSG_Add("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE",
+	        "\n   [autoexec]\n"
+#if defined(WIN32)
+	        "   mount u C:\\Users\\username\\dos\\utils\n"
+#else
+	        "   mount u ~/dos/utils\n"
+#endif
+	        "   set PATH=u:\\;%PATH%\n\n");
+	
+	MSG_Add("VISIT_FOR_MORE_HELP", "Visit the following for more help:");
+}
+
 void PLACEHOLDER_ProgramStart(Program **make)
 {
 	*make = new PLACEHOLDER;

@@ -25,9 +25,12 @@
 
 class INTRO final : public Program {
     public:
+        INTRO() { AddMessages(); }
 	    void DisplayMount(void);
         void Run(void);
+
     private:
+        void AddMessages();
         void WriteOutProgramIntroSpecial();
 };
 

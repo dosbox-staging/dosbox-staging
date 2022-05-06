@@ -87,6 +87,29 @@ void MEM::Run(void) {
     }
 }
 
+void MEM::AddMessages() {
+    MSG_Add("SHELL_CMD_MEM_HELP_LONG",
+	        "Displays the DOS memory information.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]mem[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command shows the DOS memory status, including the free conventional\n"
+	        "  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]mem[reset]\n");
+	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
+	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
+	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
+	MSG_Add("PROGRAM_MEM_UPPER",
+	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
+}
+
 void MEM_ProgramStart(Program * * make) {
 	*make=new MEM;
 }

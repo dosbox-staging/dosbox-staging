@@ -27,9 +27,10 @@
 
 class AUTOTYPE final : public Program {
 public:
+	AUTOTYPE() { AddMessages(); }
 	void Run();
-
 private:
+	void AddMessages();
 	void PrintUsage();
 	void PrintKeys();
 	bool ReadDoubleArg(const std::string &name,

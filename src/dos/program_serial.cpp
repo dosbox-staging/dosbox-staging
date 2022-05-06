@@ -156,6 +156,39 @@ void SERIAL::Run()
 	WriteOut(MSG_Get("PROGRAM_SERIAL_HELP"), SERIAL_MAX_PORTS);
 }
 
+void SERIAL::AddMessages() {
+	MSG_Add("PROGRAM_SERIAL_HELP",
+	        "Manages the serial ports.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]serial[reset] [color=white][PORT#][reset]                List all or specified serial ports.\n"
+	        "  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]TYPE[reset] [settings]  Set the specified port to the given type.\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]PORT#[reset] The port number: [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]\n"
+	        "  [color=cyan]TYPE[reset]  The port type: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]DIRECTSERIAL[reset], [color=cyan]DUMMY[reset], or [color=cyan]DISABLED[reset]\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Optional settings for each [color=cyan]TYPE[reset]:\n"
+	        "  For [color=cyan]MODEM[reset]        : IRQ, LISTENPORT, SOCK\n"
+	        "  For [color=cyan]NULLMODEM[reset]    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,\n"
+	        "                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK\n"
+	        "  For [color=cyan]DIRECTSERIAL[reset] : IRQ, REALPORT (required), RXDELAY\n"
+	        "  For [color=cyan]DUMMY[reset]        : IRQ\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]SERIAL[reset]                                       : List the current serial ports\n"
+	        "  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server\n"
+	        "  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
+	        "  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
+	        "  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECTSERIAL[reset] REALPORT:ttyUSB0       : Use a physical port on Linux\n");
+	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
+	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
+	        "Must specify a numeric port value between 1 and %d, inclusive.\n");
+	MSG_Add("PROGRAM_SERIAL_BAD_TYPE", "Type must be one of the following:\n");
+	MSG_Add("PROGRAM_SERIAL_INDENTED_LIST", "  %s\n");
+}
+
 void SERIAL_ProgramStart(Program **make)
 {
 	*make = new SERIAL;

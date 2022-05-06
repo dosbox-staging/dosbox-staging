@@ -25,9 +25,12 @@
 
 class MOUNT final : public Program {
     public:
+        MOUNT() { AddMessages(); }
         void Move_Z(char new_z);
         void ListMounts();
         void Run();
+    private:
+        void AddMessages();
 };
 
 void MOUNT_ProgramStart(Program **make);

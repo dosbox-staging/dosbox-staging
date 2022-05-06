@@ -400,6 +400,66 @@ showusage:
 	return;
 }
 
+void MOUNT::AddMessages() {
+	AddCommonMountMessages();
+	MSG_Add("SHELL_CMD_MOUNT_HELP",
+	        "maps physical folders or drives to a virtual drive letter.\n");
+
+	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
+	        "Mount a directory from the host OS to a drive letter.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]mount[reset] [color=white]DRIVE[reset] [color=cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]\n"
+	        "  [color=green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)\n"
+	        "  [color=green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...\n"
+	        "  [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted\n"
+	        "  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
+	        "  SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)\n"
+	        "  LABEL     drive label name to be used\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
+	        "  - Additional options are described in the manual (README file, chapter 4).\n"
+	        "\n"
+	        "Examples:\n"
+#if defined(WIN32)
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]C:\\dosgames[reset]\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\\[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+#elif defined(MACOSX)
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+#else
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+#endif
+	);
+
+	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
+	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
+	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR", "'%c' is not a valid drive identifier.\n");
+	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
+	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
+	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE","A normal directory needs to be MOUNTed first before an overlay can be added on top.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE","The overlay is NOT compatible with the drive that is specified.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE","The overlay needs to be specified using the same addressing as the underlying drive. No mixing of relative and absolute paths.");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
+}
 void MOUNT_ProgramStart(Program **make) {
 	*make=new MOUNT;
 }

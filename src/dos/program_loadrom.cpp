@@ -100,6 +100,30 @@ void LOADROM::Run(void) {
     }
 }
 
+void LOADROM::AddMessages() {
+    MSG_Add("SHELL_CMD_LOADROM_HELP_LONG",
+	        "Loads a ROM image of the video BIOS or IBM BASIC.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]loadrom [color=cyan]IMAGEFILE[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.\n"
+	        "\n"
+	        "Notes:\n"
+	        "   After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
+	        "   you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]\n");
+	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE","Must specify ROM file to load.\n");
+	MSG_Add("PROGRAM_LOADROM_CANT_OPEN","ROM file not accessible.\n");
+	MSG_Add("PROGRAM_LOADROM_TOO_LARGE","ROM file too large.\n");
+	MSG_Add("PROGRAM_LOADROM_INCOMPATIBLE","Video BIOS not supported by machine type.\n");
+	MSG_Add("PROGRAM_LOADROM_UNRECOGNIZED","ROM file not recognized.\n");
+	MSG_Add("PROGRAM_LOADROM_BASIC_LOADED","BASIC ROM loaded.\n");
+}
+
 void LOADROM_ProgramStart(Program **make) {
 	*make=new LOADROM;
 }
