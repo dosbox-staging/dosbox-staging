@@ -666,23 +666,23 @@ static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 
 	if (first_shell) {
 		std::string pre_defs;
-		Bitu count = first_shell->GetEnvCount();
-		for (Bitu i = 0; i < count; i++) {
+		const size_t count = first_shell->GetEnvCount();
+		for (size_t i = 0; i < count; ++i) {
 			std::string env;
 			if (!first_shell->GetEnvNum(i, env))
 				continue;
 			if (env.compare(0, 9, "GLSHADER_") == 0) {
-				size_t brk = env.find('=');
+				const auto brk = env.find('=');
 				if (brk == std::string::npos)
 					continue;
 				env[brk] = ' ';
 				pre_defs += "#define " + env.substr(9) + '\n';
 			}
 		}
-		if (!pre_defs.empty()) {
+		if (pre_defs.length()) {
 			// if "#version" occurs it must be before anything
 			// except comments and whitespace
-			size_t pos = s.find("#version ");
+			auto pos = s.find("#version ");
 
 			if (pos != std::string::npos)
 				pos = s.find('\n', pos + 9);
