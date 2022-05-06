@@ -25,6 +25,9 @@
 // 3: complex scalers on
 #define RENDER_USE_ADVANCED_SCALERS 3
 
+#include <deque>
+#include <string>
+
 #include "../src/gui/render_scalers.h"
 
 #define RENDER_SKIP_CACHE	16
@@ -101,6 +104,9 @@ struct Render_t {
 
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
+
+std::deque<std::string> RENDER_InventoryShaders();
+
 void RENDER_SetSize(uint32_t width,
                     uint32_t height,
                     unsigned bpp,
