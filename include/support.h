@@ -32,9 +32,11 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <sys/types.h>
 #include <thread>
 #include <type_traits>
@@ -321,6 +323,9 @@ FILE_unique_ptr make_fopen(const char *fname, const char *mode);
 const std_fs::path &GetExecutablePath();
 std_fs::path GetResourcePath(const std_fs::path &name);
 std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name);
+
+std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
+        const std_fs::path &res_name, const std::string_view files_ext);
 
 enum class ResourceImportance { Mandatory, Optional };
 std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
