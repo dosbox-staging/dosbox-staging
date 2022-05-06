@@ -924,6 +924,8 @@ static void MIXER_Stop([[maybe_unused]] Section *sec)
 
 class MIXER final : public Program {
 public:
+	MIXER() { AddMessages(); }
+
 	void MakeVolume(char * scan,float & vol0,float & vol1) {
 		Bitu w=0;
 		bool db=(toupper(*scan)=='D');
@@ -1010,6 +1012,31 @@ private:
 	}
 
 	void ListMidi() { MIDI_ListAll(this); }
+
+	void AddMessages() 
+	{
+		MSG_Add("SHELL_CMD_MIXER_HELP_LONG",
+	        "Displays or changes the current sound mixer volumes.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]mixer[reset] [color=cyan]CHANNEL[reset] [color=white]VOLUME[reset] [/noshow]\n"
+	        "  [color=green]mixer[reset] [/listmidi][reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=cyan]CHANNEL[reset] is the sound channel you want to change the volume.\n"
+	        "  [color=white]VOLUME[reset]  is an integer between 0 and 100 representing the volume.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running [color=green]mixer[reset] without an argument shows the volumes of all sound channels.\n"
+	        "  You can view available MIDI devices and user options with /listmidi option.\n"
+	        "  You may change the volumes of more than one sound channels in one command.\n"
+	        "  The /noshow option causes mixer not to show the volumes when making a change.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]mixer[reset]\n"
+	        "  [color=green]mixer[reset] [color=cyan]master[reset] [color=white]50[reset] [color=cyan]record[reset] [color=white]60[reset] /noshow\n"
+	        "  [color=green]mixer[reset] /listmidi");
+	}
 };
 
 void MIXER_ProgramStart(Program * * make) {

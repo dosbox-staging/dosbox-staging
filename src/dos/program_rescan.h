@@ -25,7 +25,10 @@
 
 class RESCAN final : public Program {
 public:
+	RESCAN() { AddMessages(); }
 	void Run(void);
+private:
+	void AddMessages();
 };
 
 void RESCAN_ProgramStart(Program **make);

@@ -25,7 +25,10 @@
 
 class PLACEHOLDER final : public Program {
 public:
+	PLACEHOLDER() { AddMessages(); }
 	void Run();
+private:
+	void AddMessages();
 };
 
 void PLACEHOLDER_ProgramStart(Program **make);

@@ -27,9 +27,11 @@
 
 class SERIAL final : public Program {
 public:
+	SERIAL() { AddMessages(); }
 	void Run();
 
 private:
+	void AddMessages();
 	void showPort(int port);
 };
 

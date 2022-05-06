@@ -25,8 +25,12 @@
 
 class IMGMOUNT final : public Program {
     public:
+        IMGMOUNT() { AddMessages(); }
         void ListImgMounts();
         void Run();
+
+    private:
+        void AddMessages();
 };
 
 void IMGMOUNT_ProgramStart(Program **make);

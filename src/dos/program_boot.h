@@ -26,8 +26,11 @@
 
 class BOOT final : public Program {
     public:
+        BOOT() { AddMessages(); }
         void Run(void);
+
     private:
+        void AddMessages();
         FILE* getFSFile_mounted(char const* filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error);
         FILE* getFSFile(char const * filename, uint32_t *ksize, uint32_t *bsize,bool tryload=false);
         void printError(void);

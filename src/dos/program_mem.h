@@ -25,7 +25,10 @@
 
 class MEM final : public Program {
     public:
+        MEM() { AddMessages(); }
         void Run(void);
+    private:
+        void AddMessages();
 };
 
 void MEM_ProgramStart(Program **make);

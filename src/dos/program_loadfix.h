@@ -25,7 +25,10 @@
 
 class LOADFIX final : public Program {
 public:
+    LOADFIX() { AddMessages(); }
 	void Run(void);
+private:
+    void AddMessages();
 };
 
 void LOADFIX_ProgramStart(Program **make);

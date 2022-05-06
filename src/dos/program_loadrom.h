@@ -25,7 +25,10 @@
 
 class LOADROM final : public Program {
     public:
+        LOADROM() { AddMessages(); }
         void Run(void);
+    private:
+        void AddMessages();
 };
 
 void LOADROM_ProgramStart(Program **make);

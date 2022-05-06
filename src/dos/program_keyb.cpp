@@ -84,6 +84,41 @@ void KEYB::Run(void) {
 	}
 }
 
+void KEYB::AddMessages() {
+	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
+	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
+	MSG_Add("PROGRAM_KEYB_HELP_LONG",
+	        "Configures a keyboard for a specific language.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]keyb[reset] [color=cyan][LANGCODE][reset]\n"
+	        "  [color=green]keyb[reset] [color=cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=cyan]LANGCODE[reset]     is a language code or keyboard layout ID.\n"
+	        "  [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].\n"
+	        "  CODEPAGEFILE is a file containing information for a code page.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running [color=green]keyb[reset] without an argument shows the currently loaded keyboard layout\n"
+	        "  and code page. It will change to [color=cyan]LANGCODE[reset] if provided, optionally with a\n"
+	        "  [color=white]CODEPAGE[reset] and an additional CODEPAGEFILE to load the specified code page\n"
+	        "  number and code page file if provided. This command is especially useful if\n"
+	        "  you use a non-US keyboard, and [color=cyan]LANGCODE[reset] can also be set in the configuration\n"
+	        "  file under the [dos] section using the \"keyboardlayout = [color=cyan]LANGCODE[reset]\" setting.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]KEYB[reset]\n"
+	        "  [color=green]KEYB[reset] [color=cyan]uk[reset]\n"
+	        "  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]\n"
+	        "  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
+	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i\n");
+	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n\n");
+	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid\n");
+	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
+	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
+}
+
 void KEYB_ProgramStart(Program * * make) {
 	*make=new KEYB;
 }

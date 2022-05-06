@@ -483,6 +483,83 @@ void IMGMOUNT::Run(void) {
     return;
 }
 
+void IMGMOUNT::AddMessages() {
+    AddCommonMountMessages();
+    MSG_Add("SHELL_CMD_IMGMOUNT_HELP",
+	        "mounts compact disc image(s) or floppy disk image(s) to a given drive letter.\n");
+
+	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
+	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
+	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro\n"
+	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro\n"
+	        "  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...\n"
+	        "  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+	        "  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format\n"
+	        "  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:\n"
+	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
+	        "Notes:\n"
+	        "  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.\n"
+	        "  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"
+	        "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
+	        "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
+	        "Examples:\n"
+#if defined(WIN32)
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\\games\\doom.iso[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+#elif defined(MACOSX)
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+#else
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+#endif
+	);
+    
+    MSG_Add("PROGRAM_IMGMOUNT_STATUS_1",
+	        "The currently mounted disk and CD image drives are:\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
+	        "Must specify drive letter to mount image at.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
+	        "Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
+		"For \033[33mCD-ROM\033[0m images:   \033[34;1mIMGMOUNT drive-letter location-of-image -t iso\033[0m\n"
+		"\n"
+		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
+		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
+		"\033[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl\033[0m\n");
+	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE",
+		"No drive available\n");
+	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",
+		"No available IDE controllers. Drive will not have IDE emulation.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_INVALID_IMAGE","Could not load image file.\n"
+		"Check that the path is correct and the image is accessible.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY","Could not extract drive geometry from image.\n"
+		"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED",
+	        "Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND","Image file not found.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MOUNT","To mount directories, use the \033[34;1mMOUNT\033[0m command, not the \033[34;1mIMGMOUNT\033[0m command.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED","Drive already mounted at that letter.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
+	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
+}
+
 void IMGMOUNT_ProgramStart(Program **make) {
 	*make=new IMGMOUNT;
 }

@@ -35,5 +35,6 @@ extern Bitu ZDRIVE_NUM;
 constexpr int minimum_column_length = 11;
 
 const char *UnmountHelper(char umount);
+void AddCommonMountMessages();
 
 #endif // DOSBOX_PROGRAM_MOUNT_COMMON_H

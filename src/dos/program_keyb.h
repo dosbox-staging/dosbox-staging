@@ -25,7 +25,11 @@
 
 class KEYB final : public Program {
 public:
+	KEYB() { AddMessages(); }
 	void Run(void);
+private:
+	void AddMessages();
+
 };
 
 void KEYB_ProgramStart(Program **make);
