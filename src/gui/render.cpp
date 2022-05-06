@@ -801,18 +801,20 @@ void RENDER_Init(Section * sec) {
 	char* shader_src = render.shader_src;
 	Prop_path *sh = section->Get_path("glshader");
 	f = (std::string)sh->GetValue();
-	if (f.empty() || f=="none") render.shader_src = NULL;
-	else if (!RENDER_GetShader(sh->realpath,shader_src)) {
-		std::string path;
-		Cross::GetPlatformConfigDir(path);
-		path = path + "glshaders" + CROSS_FILESPLIT + f;
-		if (!RENDER_GetShader(path,shader_src) && (sh->realpath==f || !RENDER_GetShader(f,shader_src))) {
-			sh->SetValue("none");
-			LOG_MSG("RENDER: Shader file '%s' not found", f.c_str());
-		} else if (using_opengl) {
-			LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
-			parse_shader_options(std::string(render.shader_src));
-		}
+
+	// if 'default' is given, use the sharp shader
+	if (f == "default")
+		f = "sharp";
+
+	if (f.empty() || f == "none")
+		render.shader_src = NULL;
+	else if (!RENDER_GetShader(sh->realpath, shader_src) &&
+	         (sh->realpath == f || !RENDER_GetShader(f, shader_src))) {
+		sh->SetValue("none");
+		LOG_WARNING("RENDER: Shader file '%s' not found", f.c_str());
+	} else if (using_opengl) {
+		LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
+		parse_shader_options(std::string(render.shader_src));
 	}
 	if (shader_src!=render.shader_src) free(shader_src);
 #endif
