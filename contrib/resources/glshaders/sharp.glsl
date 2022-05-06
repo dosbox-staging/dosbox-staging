@@ -30,16 +30,18 @@ varying vec2 prescale; // const set by vertex shader
 
 #if defined(VERTEX)
 attribute vec4 a_position;
-void main() {
+void main()
+{
 	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
 	prescale = ceil(rubyOutputSize / rubyInputSize);
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
-void main() {
+void main()
+{
 	const vec2 halfp = vec2(0.5);
 	vec2 texel_floored = floor(v_texCoord);
 	vec2 s = fract(v_texCoord);
@@ -48,7 +50,7 @@ void main() {
 	vec2 center_dist = s - halfp;
 	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + halfp;
 
-	vec2 mod_texel = min(texel_floored + f, rubyInputSize-halfp);
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize - halfp);
 	gl_FragColor = texture2D(rubyTexture, mod_texel / rubyTextureSize);
 }
 #endif

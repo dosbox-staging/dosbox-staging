@@ -34,16 +34,18 @@ uniform vec2 rubyTextureSize;
 #if defined(VERTEX)
 attribute vec4 a_position;
 
-void main() {
+void main()
+{
 	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize * 2.0;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize * 2.0;
 }
 
 #elif defined(FRAGMENT)
 
-vec4 getRGB2xtexel(vec2 coord) {
+vec4 getRGB2xtexel(vec2 coord)
+{
 	vec2 mid = vec2(0.5);
-	vec4 s = texture2D(rubyTexture, (floor(coord/vec2(2.0))+mid)/rubyTextureSize);
+	vec4 s = texture2D(rubyTexture, (floor(coord / vec2(2.0)) + mid) / rubyTextureSize);
 
 	coord = max(floor(mod(coord, 2.0)), 0.0);
 	/* 2x2 output:
@@ -66,12 +68,12 @@ void main()
 #else
 	coord -= 0.5;
 	vec4 c0 = getRGB2xtexel(coord);
-	vec4 c1 = getRGB2xtexel(coord+vec2(1.0,0.0));
-	vec4 c2 = getRGB2xtexel(coord+vec2(0.0,1.0));
-	vec4 c3 = getRGB2xtexel(coord+vec2(1.0));
+	vec4 c1 = getRGB2xtexel(coord + vec2(1.0, 0.0));
+	vec4 c2 = getRGB2xtexel(coord + vec2(0.0, 1.0));
+	vec4 c3 = getRGB2xtexel(coord + vec2(1.0));
 
-	coord = fract(max(coord,0.0));
-	gl_FragColor = mix(mix(c0,c1,coord.x), mix(c2,c3,coord.x), coord.y);
+	coord = fract(max(coord, 0.0));
+	gl_FragColor = mix(mix(c0, c1, coord.x), mix(c2, c3, coord.x), coord.y);
 #endif
 }
 #endif
