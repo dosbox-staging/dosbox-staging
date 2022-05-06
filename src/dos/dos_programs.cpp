@@ -45,9 +45,6 @@
 
 extern uint32_t floppytype;
 
-#define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
-#define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
-
 extern char autoexec_data[autoexec_maxsize];
 void CONFIG_ProgramStart(Program **make);
 void MIXER_ProgramStart(Program **make);

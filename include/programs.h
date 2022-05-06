@@ -27,6 +27,9 @@
 
 #include "dos_inc.h"
 
+#define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
+#define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
+
 constexpr int autoexec_maxsize = 4096;
 
 class CommandLine {
