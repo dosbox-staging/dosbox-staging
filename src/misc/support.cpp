@@ -34,6 +34,7 @@
 #include <functional>
 #include <fstream>
 #include <iterator>
+#include <map>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -462,6 +463,38 @@ std_fs::path GetResourcePath(const std_fs::path &name)
 std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name)
 {
 	return GetResourcePath(subdir / name);
+}
+
+static std::vector<std_fs::path> GetFilesInPath(const std_fs::path &dir,
+                                                const std::string_view files_ext)
+{
+	std::vector<std_fs::path> files;
+
+	// Check if the directory exists
+	if (!std_fs::is_directory(dir))
+		return files;
+
+	// Ensure the extension is valid
+	assert(files_ext.length() && files_ext[0] == '.');
+
+	for (const auto &entry : std_fs::recursive_directory_iterator(dir))
+		if (entry.is_regular_file() && entry.path().extension() == files_ext)
+			files.emplace_back(entry.path().lexically_relative(dir));
+
+	std::sort(files.begin(), files.end());
+	return files;
+}
+
+std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
+        const std_fs::path &res_name, const std::string_view files_ext)
+{
+	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
+	for (const auto &parent : GetResourceParentPaths()) {
+		auto res_path = parent / res_name;
+		auto res_files = GetFilesInPath(res_path, files_ext);
+		paths_and_files.emplace(std::move(res_path), std::move(res_files));
+	}
+	return paths_and_files;
 }
 
 std::vector<uint8_t> LoadResource(const std_fs::path &name,
