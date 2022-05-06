@@ -283,24 +283,6 @@ SDL_Window *GFX_GetSDLWindow(void)
 #endif
 
 #if C_OPENGL
-static char const shader_src_default[] = R"GLSL(
-varying vec2 v_texCoord;
-#if defined(VERTEX)
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
-attribute vec4 a_position;
-void main() {
-	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize/rubyTextureSize;
-}
-#elif defined(FRAGMENT)
-uniform sampler2D rubyTexture;
-void main() {
-	gl_FragColor = texture2D(rubyTexture, v_texCoord);
-}
-#endif
-)GLSL";
-
 #ifdef DB_OPENGL_ERROR
 void OPENGL_ERROR(const char* message) {
 	GLenum r = glGetError();
