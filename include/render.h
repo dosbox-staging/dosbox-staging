@@ -87,6 +87,10 @@ struct Render_t {
 	} scale = {};
 #if C_OPENGL
 	char *shader_src = nullptr;
+  struct {
+    bool use_srgb_texture = false;
+    bool use_srgb_framebuffer = false;
+  } shader_opts = {};
 #endif
 	RenderPal_t pal = {};
 	bool updating = false;
@@ -107,5 +111,10 @@ void RENDER_SetSize(uint32_t width,
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 void RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue);
+
+#if C_OPENGL
+bool RENDER_UseSRGBTexture();
+bool RENDER_UseSRGBFramebuffer();
+#endif
 
 #endif

@@ -21,7 +21,9 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <unordered_map>
 
@@ -690,6 +692,37 @@ static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 	render.shader_src = src;
 	return src != NULL;
 }
+
+static void parse_shader_options(const std::string &shader_src) {
+	try {
+		const std::regex re("^\\s*#pragma\\s+(\\w+)");
+		std::sregex_iterator next(shader_src.begin(), shader_src.end(), re);
+		const std::sregex_iterator end;
+
+		while (next != end) {
+			std::smatch match = *next;
+			auto pragma = match[1].str();
+			if (pragma == "use_srgb_texture")
+				render.shader_opts.use_srgb_texture = true;
+			else if (pragma == "use_srgb_framebuffer")
+				render.shader_opts.use_srgb_framebuffer = true;
+			++next;
+		}
+	} catch (std::regex_error &e) {
+		LOG_ERR("Regex error while parsing OpenGL shader for pragmas: %d", e.code());
+	}
+}
+
+bool RENDER_UseSRGBTexture()
+{
+	return render.shader_opts.use_srgb_texture;
+}
+
+bool RENDER_UseSRGBFramebuffer()
+{
+	return render.shader_opts.use_srgb_framebuffer;
+}
+
 #endif
 
 void RENDER_Init(Section * sec) {
@@ -767,6 +800,7 @@ void RENDER_Init(Section * sec) {
 			LOG_MSG("RENDER: Shader file '%s' not found", f.c_str());
 		} else if (using_opengl) {
 			LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
+			parse_shader_options(std::string(render.shader_src));
 		}
 	}
 	if (shader_src!=render.shader_src) free(shader_src);
