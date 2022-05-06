@@ -4277,6 +4277,17 @@ static void launchcaptures(std::string const& edit) {
 	exit(1);
 }
 
+static void ListGlShaders()
+{
+#if C_OPENGL
+	for (const auto &line : RENDER_InventoryShaders())
+		printf("%s\n", line.c_str());
+#else
+	LOG_ERR("OpenGL is not supported by this executable "
+	        "and is missing the functionality to list shaders");
+#endif
+}
+
 static int PrintConfigLocation()
 {
 	std::string path, file;
@@ -4445,6 +4456,12 @@ int sdl_main(int argc, char *argv[])
 		    control->cmdline->FindExist("-printconf")) {
 			const int err = PrintConfigLocation();
 			return err;
+		}
+
+		if (control->cmdline->FindExist("--list-glshaders") ||
+		    control->cmdline->FindExist("-list-glshaders")) {
+			ListGlShaders();
+			return 0;
 		}
 
 #if C_DEBUG

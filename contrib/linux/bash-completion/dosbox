@@ -31,7 +31,7 @@ _dosbox()
                   )\
   _exclusive_opts=(
                     --version --printconf --editconf -resetconf -eraseconf
-                    -erasemapper -resetmapper
+                    -erasemapper -resetmapper --list-glshaders
                   )
   ####
 
