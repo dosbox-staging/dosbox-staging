@@ -1423,15 +1423,6 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	return "";
 }
 
-[[maybe_unused]] static bool is_sharp_shader()
-{
-	constexpr std::array<std::string_view, 2> sharp_shader_names{{
-	        "sharp",
-	        "default",
-	}};
-	return contains(sharp_shader_names, get_glshader_value());
-}
-
 [[maybe_unused]] static bool is_shader_flexible()
 {
 	constexpr std::array<std::string_view, 3> flexible_shader_names{{
@@ -1906,13 +1897,13 @@ dosurface:
 		SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
 		                    &is_framebuffer_srgb_capable);
 
-		sdl.opengl.framebuffer_is_srgb_encoded = is_sharp_shader() && is_framebuffer_srgb_capable > 0;
+		sdl.opengl.framebuffer_is_srgb_encoded = RENDER_UseSRGBFramebuffer() && is_framebuffer_srgb_capable > 0;
 
-		if (is_sharp_shader() && !sdl.opengl.framebuffer_is_srgb_encoded)
+		if (RENDER_UseSRGBFramebuffer() && !sdl.opengl.framebuffer_is_srgb_encoded)
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = sdl.opengl.framebuffer_is_srgb_encoded ? GL_SRGB8_ALPHA8 : GL_RGB8;
+		const auto texformat = RENDER_UseSRGBTexture() ? GL_SRGB8_ALPHA8 : GL_RGB8;
 		glTexImage2D(GL_TEXTURE_2D, 0, texformat, texsize_w, texsize_h,
 		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
 		delete[] emptytex;
