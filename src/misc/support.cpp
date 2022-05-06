@@ -479,8 +479,9 @@ std::vector<uint8_t> LoadResource(const std_fs::path &name,
 	}
 
 	const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
-	DEBUG_LOG_MSG("RESOURCES: Loaded resource '%s' [%d bytes]",
-	              resource_path.string().c_str(), check_cast<int>(buffer.size()));
+	// DEBUG_LOG_MSG("RESOURCE: Loaded resource '%s' [%d bytes]",
+	//               resource_path.string().c_str(),
+	//               check_cast<int>(buffer.size()));
 	return buffer;
 }
 
