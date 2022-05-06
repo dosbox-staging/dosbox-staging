@@ -626,71 +626,82 @@ static void ChangeScaler(bool pressed) {
 } */
 
 #if C_OPENGL
+
+// Reads the given shader path into the string
+static bool read_shader(const std_fs::path &shader_path, std::string &shader_str)
+{
+	std::ifstream fshader(shader_path, std::ios_base::binary);
+	if (!fshader.is_open())
+		return false;
+
+	std::stringstream buf;
+	buf << fshader.rdbuf();
+	fshader.close();
+	if (buf.str().empty())
+		return false;
+
+	shader_str = buf.str();
+	shader_str += '\n';
+	return true;
+}
+
 static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 {
-	const std::unordered_map<std::string, const char *> builtin_shaders = {
-	        {"advinterp2x", advinterp2x_glsl},
-	        {"advinterp3x", advinterp3x_glsl},
-	        {"advmame2x", advmame2x_glsl},
-	        {"advmame3x", advmame3x_glsl},
-	        {"crt-easymode-flat", crt_easymode_tweaked_glsl},
-	        {"crt-fakelottes-flat", crt_fakelottes_tweaked_glsl},
-	        {"default", sharp_glsl},
-	        {"rgb2x", rgb2x_glsl},
-	        {"rgb3x", rgb3x_glsl},
-	        {"scan2x", scan2x_glsl},
-	        {"scan3x", scan3x_glsl},
-	        {"sharp", sharp_glsl},
-	        {"tv2x", tv2x_glsl},
-	        {"tv3x", tv3x_glsl},
-	};
+	// Start with the path as-is and then try from resources
+	const auto candidate_paths = {std_fs::path(shader_path),
+	                              std_fs::path(shader_path + ".glsl"),
+	                              GetResourcePath("glshaders", shader_path),
+	                              GetResourcePath("glshaders",
+	                                              shader_path + ".glsl")};
 
-	char* src;
-	std::stringstream buf;
-	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);
-	if (!fshader.is_open())
-		fshader.open(shader_path + ".glsl", std::ios_base::binary);
-	if (fshader.is_open()) {
-		buf << fshader.rdbuf();
-		fshader.close();
-	} else if (builtin_shaders.count(shader_path) > 0) {
-		buf << builtin_shaders.at(shader_path);
+	std::string s; // populated with the shader source
+	for (const auto &p : candidate_paths)
+		if (read_shader(p, s))
+			break;
+
+	if (s.empty()) {
+		render.shader_src = nullptr;
+		return false;
 	}
 
-	if (!buf.str().empty()) {
-		std::string s = buf.str() + '\n';
-		if (first_shell) {
-			std::string pre_defs;
-			Bitu count = first_shell->GetEnvCount();
-			for (Bitu i=0; i < count; i++) {
-				std::string env;
-				if (!first_shell->GetEnvNum(i, env))
+	if (first_shell) {
+		std::string pre_defs;
+		Bitu count = first_shell->GetEnvCount();
+		for (Bitu i = 0; i < count; i++) {
+			std::string env;
+			if (!first_shell->GetEnvNum(i, env))
+				continue;
+			if (env.compare(0, 9, "GLSHADER_") == 0) {
+				size_t brk = env.find('=');
+				if (brk == std::string::npos)
 					continue;
-				if (env.compare(0, 9, "GLSHADER_")==0) {
-					size_t brk = env.find('=');
-					if (brk == std::string::npos) continue;
-					env[brk] = ' ';
-					pre_defs += "#define " + env.substr(9) + '\n';
-				}
-			}
-			if (!pre_defs.empty()) {
-				// if "#version" occurs it must be before anything except comments and whitespace
-				size_t pos = s.find("#version ");
-
-				if (pos != std::string::npos)
-					pos = s.find('\n', pos + 9);
-
-				s.insert(pos, pre_defs);
+				env[brk] = ' ';
+				pre_defs += "#define " + env.substr(9) + '\n';
 			}
 		}
-		// keep the same buffer if contents aren't different
-		if (old_src==NULL || s != old_src) {
-			src = strdup(s.c_str());
-			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
-		} else src = old_src;
-	} else src = NULL;
+		if (!pre_defs.empty()) {
+			// if "#version" occurs it must be before anything
+			// except comments and whitespace
+			size_t pos = s.find("#version ");
+
+			if (pos != std::string::npos)
+				pos = s.find('\n', pos + 9);
+
+			s.insert(pos, pre_defs);
+		}
+	}
+	// keep the same buffer if contents aren't different
+	char *src = nullptr;
+	if (!old_src || s != old_src) {
+		src = strdup(s.c_str());
+		if (!src) {
+			LOG_ERR("RENDER: Couldn't copy shader source");
+		}
+	} else {
+		src = old_src;
+	}
 	render.shader_src = src;
-	return src != NULL;
+	return (render.shader_src != nullptr);
 }
 
 static void parse_shader_options(const std::string &shader_src) {
