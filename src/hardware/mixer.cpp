@@ -984,7 +984,7 @@ public:
 
 		if (cmd->FindExist("/NOSHOW"))
 			return;
-		WriteOut("Channel  Main      Main(dB)    Rate(Hz)  Lineout mode\n");
+		WriteOut("Channel      Main       Main(dB)     Rate(Hz)   Lineout mode\n");
 		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],
 		             mixer.freq, "Stereo (always)");
 
@@ -1003,7 +1003,7 @@ private:
 	                  const int rate,
 	                  const char *lineout_mode)
 	{
-		WriteOut("%-8s %3.0f:%-3.0f  %+6.2f:%-+6.2f %6d   %s\n", name,
+		WriteOut("%-11s %4.0f:%-4.0f  %+6.2f:%-+6.2f %8d   %s\n", name,
 		         static_cast<double>(vol0 * 100),
 		         static_cast<double>(vol1 * 100),
 		         static_cast<double>(20 * log(vol0) / log(10.0f)),
