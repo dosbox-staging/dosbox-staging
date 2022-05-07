@@ -1,5 +1,8 @@
 name: PVS-Studio analysis
 
+# If the CI job fails with 404-not-found, then PVS studio has updated the release.
+# Get the new DEB version from: https://pvs-studio.com/en/pvs-studio/download-all/
+
 on: push
 
 concurrency:
@@ -11,7 +14,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.18.59210.195-amd64.deb
+      debfile: pvs-studio-7.18.59866.202-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
