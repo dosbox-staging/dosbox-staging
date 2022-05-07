@@ -89,11 +89,11 @@ struct Render_t {
 		uint32_t outLine = 0;
 	} scale = {};
 #if C_OPENGL
-	char *shader_src = nullptr;
-  struct {
-    bool use_srgb_texture = false;
-    bool use_srgb_framebuffer = false;
-  } shader_opts = {};
+	struct {
+		std::string source = {};
+		bool use_srgb_texture = false;
+		bool use_srgb_framebuffer = false;
+	} shader = {};
 #endif
 	RenderPal_t pal = {};
 	bool updating = false;
