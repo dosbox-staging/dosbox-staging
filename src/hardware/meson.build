@@ -68,6 +68,7 @@ libhardware = static_library('hardware', libhardware_sources,
                                sdl2_dep,
                                sdl2_net_dep,
                                winsock2_dep,
+                               zlib_dep,
                              ])
 
 libhardware_dep = declare_dependency(link_with : libhardware)
