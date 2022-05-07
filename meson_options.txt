@@ -42,9 +42,20 @@ option('dynamic_core', type : 'combo',
 # This is NOT guaranteed to work - the end results will vary depending on your
 # OS, installed libraries, and dependencies of those libraries.
 #
-option('try_static_libs', type : 'array',
-       choices : ['fluidsynth', 'mt32emu', 'opusfile', 'png', 'sdl2', 'sdl2_net', 'slirp'], value : [],
-       description : 'Attempt to statically link selected libraries.')
+option('try_static_libs',
+       type : 'array',
+       choices : [
+           'fluidsynth',
+           'mt32emu',
+           'opusfile',
+           'png',
+           'sdl2',
+           'sdl2_net',
+           'slirp',
+           'zlib'],
+       value : [],
+       description : 'Attempt to statically link selected libraries.'
+)
 
 option('unit_tests', type : 'feature', value : 'auto',
        description : 'Build unit tests. Auto skips for release builds.')
