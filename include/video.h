@@ -19,6 +19,8 @@
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
 
+#include <string>
+
 #include "types.h"
 
 #define REDUCE_JOYSTICK_POLLING
@@ -58,7 +60,7 @@ bool GFX_Events();
 
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
-void GFX_SetShader(const char* src);
+void GFX_SetShader(const std::string &source);
 Bitu GFX_SetSize(int width, int height, Bitu flags,
                  double scalex, double scaley,
                  GFX_CallBack_t callback,

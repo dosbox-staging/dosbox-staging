@@ -1322,10 +1322,14 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 
 #if C_OPENGL
 /* Create a GLSL shader object, load the shader source, and compile the shader. */
-static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
-	GLuint shader;
-	GLint compiled;
-	const char* src_strings[2];
+static GLuint BuildShader(GLenum type, const std::string_view source_sv)
+{
+	GLuint shader = 0;
+	GLint compiled = 0;
+
+	assert(source_sv.length());
+	const char *shaderSrc = source_sv.data();
+	const char *src_strings[2] = {nullptr, nullptr};
 	std::string top;
 
 	// look for "#version" because it has to occur first
@@ -1375,11 +1379,19 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 	return shader;
 }
 
-static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
-	GLuint s = BuildShader(GL_VERTEX_SHADER, src);
+static bool LoadGLShaders(const std::string_view source_sv, GLuint *vertex,
+                          GLuint *fragment)
+{
+	if (source_sv.empty())
+		return false;
+
+	assert(vertex);
+	assert(fragment);
+
+	GLuint s = BuildShader(GL_VERTEX_SHADER, source_sv);
 	if (s) {
 		*vertex = s;
-		s = BuildShader(GL_FRAGMENT_SHADER, src);
+		s = BuildShader(GL_FRAGMENT_SHADER, source_sv);
 		if (s) {
 			*fragment = s;
 			return true;
@@ -1727,13 +1739,11 @@ dosurface:
 				// does program need to be rebuilt?
 				if (sdl.opengl.program_object == 0) {
 					GLuint vertexShader, fragmentShader;
-					const char *src = sdl.opengl.shader_src;
-					if (src && !LoadGLShaders(src, &vertexShader, &fragmentShader)) {
-						LOG_WARNING("SDL:OPENGL: Failed to compile shader, falling back to default");
-						src = NULL;
-					}
-					if (src == NULL && !LoadGLShaders(shader_src_default, &vertexShader, &fragmentShader)) {
-						LOG_WARNING("SDL:OPENGL: Failed to compile default shader!");
+
+					if (!LoadGLShaders(sdl.opengl.shader_source_sv,
+					                   &vertexShader,
+					                   &fragmentShader)) {
+						LOG_ERR("SDL:OPENGL: Failed to compile shader!");
 						goto dosurface;
 					}
 
@@ -1962,13 +1972,13 @@ dosurface:
 	return retFlags;
 }
 
-void GFX_SetShader([[maybe_unused]] const char *src)
+void GFX_SetShader([[maybe_unused]] const std::string &source)
 {
 #if C_OPENGL
-	if (!sdl.opengl.use_shader || src == sdl.opengl.shader_src)
+	if (!sdl.opengl.use_shader || sdl.opengl.shader_source_sv == source)
 		return;
 
-	sdl.opengl.shader_src = src;
+	sdl.opengl.shader_source_sv = source;
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;

@@ -22,6 +22,7 @@
 #define DOSBOX_SDLMAIN_H
  
 #include <string>
+#include <string_view>
 #include <string.h>
 #include "SDL.h"
 #if C_OPENGL
@@ -187,7 +188,7 @@ struct SDL_Block {
 		bool use_shader;
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
-		const char *shader_src;
+		std::string_view shader_source_sv = {};
 		struct {
 			GLint texture_size;
 			GLint input_size;
