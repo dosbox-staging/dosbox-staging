@@ -46,7 +46,7 @@ to be installed and the license agreed to:
 
     ``` shell
     sudo port -q install ccache cmake fluidsynth libpng libsdl2 \
-              libsdl2_net meson opusfile pkg-config python3 \
+              libsdl2_net meson opusfile pkgconfig python310 \
               libslirp
     ```
 
