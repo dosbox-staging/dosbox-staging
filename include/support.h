@@ -53,6 +53,15 @@
 // is in-range of a char and returns it as such.
 char int_to_char(int val);
 
+constexpr bool char_is_negative([[maybe_unused]] char c)
+{
+#if (CHAR_MIN < 0) // char is signed
+	return c < 0;
+#else // char is unsigned
+	return false;
+#endif
+}
+
 // Given a case-insensitive drive letter (a/A .. z/Z),
 // returns a zero-based index starting at 0 for drive A
 // through to 26 for drive Z.
