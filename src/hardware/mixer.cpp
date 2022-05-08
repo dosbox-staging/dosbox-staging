@@ -1039,8 +1039,8 @@ private:
 	}
 };
 
-std::unique_ptr<Program> MIXER_ProgramStart() {
-	return ProgramStart<MIXER>();
+std::unique_ptr<Program> MIXER_ProgramCreate() {
+	return ProgramCreate<MIXER>();
 }
 
 void MIXER_Init(Section* sec) {

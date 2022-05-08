@@ -2263,8 +2263,8 @@ void DEBUG_Init(Section* sec) {
 	/* Reset code overview and input line */
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */
-	PROGRAMS_MakeFile("DEBUG.COM",ProgramStart<DEBUG>);
-	PROGRAMS_MakeFile("DBXDEBUG.COM",ProgramStart<DEBUG>);
+	PROGRAMS_MakeFile("DEBUG.COM",ProgramCreate<DEBUG>);
+	PROGRAMS_MakeFile("DBXDEBUG.COM",ProgramCreate<DEBUG>);
 	/* Setup callback */
 	debugCallback=CALLBACK_Allocate();
 	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");

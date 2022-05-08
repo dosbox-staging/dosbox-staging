@@ -1163,7 +1163,7 @@ public:
 		RealSetVec(0x73,ESRRoutineBase,old_73_vector);	// IRQ11
 		IO_WriteB(0xa1,IO_ReadB(0xa1)&(~8));			// enable IRQ11
 
-		PROGRAMS_MakeFile("IPXNET.COM",ProgramStart<IPXNET>);
+		PROGRAMS_MakeFile("IPXNET.COM",ProgramCreate<IPXNET>);
 	}
 
 	~IPX() {

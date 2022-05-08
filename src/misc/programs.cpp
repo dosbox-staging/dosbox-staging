@@ -59,9 +59,9 @@ constexpr int callback_pos = 12;
 // Persistent program containers
 using comdata_t = std::vector<uint8_t>;
 static std::vector<comdata_t> internal_progs_comdata;
-static std::vector<PROGRAMS_Main> internal_progs;
+static std::vector<PROGRAMS_Creator> internal_progs;
 
-void PROGRAMS_MakeFile(const char *name, PROGRAMS_Main p_main)
+void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 {
 	comdata_t comdata(exe_block.begin(), exe_block.end());
 	comdata.at(callback_pos) = static_cast<uint8_t>(call_program & 0xff);
@@ -80,7 +80,7 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Main p_main)
 
 	// Register the program's main pointer
 	// NOTE: This step must come after the index is saved in the COM data
-	internal_progs.push_back(p_main);
+	internal_progs.push_back(creator);
 }
 
 static Bitu PROGRAMS_Handler(void) {
@@ -98,8 +98,8 @@ static Bitu PROGRAMS_Handler(void) {
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	if (index >= internal_progs.size()) E_Exit("something is messing with the memory");
-	PROGRAMS_Main handler = internal_progs[index];
-	auto new_program = handler();
+	PROGRAMS_Creator creator = internal_progs[index];
+	auto new_program = creator();
 	new_program->Run();
 	return CBRET_NONE;
 }
@@ -805,8 +805,8 @@ void CONFIG::Run(void) {
 }
 
 
-std::unique_ptr<Program> CONFIG_ProgramStart() {
-	return ProgramStart<CONFIG>();
+std::unique_ptr<Program> CONFIG_ProgramCreate() {
+	return ProgramCreate<CONFIG>();
 }
 
 void PROGRAMS_Destroy([[maybe_unused]] Section* sec) {

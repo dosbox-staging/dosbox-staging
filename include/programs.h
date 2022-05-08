@@ -98,12 +98,12 @@ public:
 	static void ResetLastWrittenChar(char c);
 };
 
-using PROGRAMS_Main = std::function<std::unique_ptr<Program>()>;
+using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
 void PROGRAMS_Destroy([[maybe_unused]] Section* sec);
-void PROGRAMS_MakeFile(char const * const name, PROGRAMS_Main p_main);
+void PROGRAMS_MakeFile(char const * const name, PROGRAMS_Creator creator);
 
 template<class P>
-std::unique_ptr<Program> ProgramStart() {
+std::unique_ptr<Program> ProgramCreate() {
 	// ensure that P is derived from Program
 	static_assert(std::is_base_of_v<Program, P>);
 	return std::make_unique<P>();
