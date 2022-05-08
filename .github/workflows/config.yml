@@ -3,7 +3,7 @@ name: Config heavy
 on:
   schedule: [cron: '0 16 * * *']
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 

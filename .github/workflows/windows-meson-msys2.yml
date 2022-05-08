@@ -2,7 +2,7 @@ name: MSYS2 builds
 
 on: [push, pull_request]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -75,7 +75,7 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v2
-      
+
       - name: Setup MSYS2 and install packages
         uses: msys2/setup-msys2@v2
         with:
@@ -95,7 +95,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
-      
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         run: |
@@ -125,13 +125,13 @@ jobs:
       - name: Setup build
         run: |
           meson setup ${{ matrix.conf.build_flags }} build
-      
+
       - name: Build
         run: |
           set -xo pipefail
           ninja -C build |& tee build.log
           ccache -s
-      
+
       - name: Run tests
         if:   matrix.conf.run_tests
         run:  meson test -C build --print-errorlogs
@@ -146,18 +146,18 @@ jobs:
     name: ${{ matrix.conf.name }} Release
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,jnovak,FeralChild64', github.actor) == false
-    
+
     strategy:
       matrix:
         conf:
           - name: Clang x86_64
             arch: x86_64
             sys: CLANG64
-    
+
     defaults:
       run:
         shell: msys2 {0}
-   
+
     steps:
       - name: Disable git line ending conversion
         shell: powershell
@@ -190,7 +190,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
-            
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         run: |
@@ -212,7 +212,7 @@ jobs:
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
-      
+
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -222,24 +222,24 @@ jobs:
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      
+
       - name: Inject package name
         run: |
           set -x
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
-           
+
       - name: Setup release build
         run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
         run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
-      
+
       - name: Build release
         run: ninja -C $BUILD_RELEASE_DIR
-      
+
       - name: Build debugger
         run: ninja -C $BUILD_DEBUGGER_DIR
-            
+
       - name: Package
         run: |
           # Package the debug build to bring in required dependencies such as ncurses
@@ -249,7 +249,7 @@ jobs:
             "$PKG_RELEASE"
           mv "${PKG_RELEASE}/dosbox.exe" "${PKG_RELEASE}/dosbox_with_debugger.exe"
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
-      
+
       - name: Windows Defender AV Scan
         shell: powershell
         run: |

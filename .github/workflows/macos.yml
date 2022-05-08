@@ -2,7 +2,7 @@ name: macOS builds
 
 on: [push, pull_request]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -259,7 +259,7 @@ jobs:
         with:
           name: dosbox-${{ matrix.runner.arch }}
           path: build/dosbox
-        
+
       - name: Upload resources
         uses: actions/upload-artifact@v2
         with:
@@ -282,11 +282,11 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install brew depedencies
-        run: brew install librsvg          
+        run: brew install librsvg
 
       - name: Download binaries
         uses: actions/download-artifact@v2
-      
+
       - name: Package
         run: |
           mv Resources ../
@@ -296,13 +296,13 @@ jobs:
             -f \
             "$(pwd)" \
             "$(pwd)"
-          
+
       - name: Create dmg
         run: |
           ln -s /Applications dist/
 
           codesign -s "-" dist/dosbox-staging.app --force --deep -v
-          
+
           hdiutil create \
               -volname "dosbox-staging" \
               -srcfolder dist \
@@ -322,7 +322,7 @@ jobs:
         with:
           name: dosbox-staging-macOS-universal
           path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
-    
+
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
   # https://dosbox-staging.github.io/downloads/devel/
