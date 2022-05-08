@@ -2,7 +2,7 @@ name: Code analysis
 
 on: [push, pull_request]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -144,7 +144,7 @@ jobs:
               -Db_lundef=false
               -Ddefault_library=static
               --wrap-mode=forcefallback
-              -Dfluidsynth:try-static-deps=true 
+              -Dfluidsynth:try-static-deps=true
             logs: clang-uasan-logs
             max_issues: 4
     steps:

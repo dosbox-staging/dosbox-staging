@@ -3,7 +3,7 @@ name: Platform builds
 on:
   schedule: [cron: '0 14 * * *']
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
