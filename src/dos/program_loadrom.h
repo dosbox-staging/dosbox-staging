@@ -31,6 +31,4 @@ class LOADROM final : public Program {
         void AddMessages();
 };
 
-void LOADROM_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_LOADROM_H

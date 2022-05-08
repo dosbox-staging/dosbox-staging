@@ -186,8 +186,3 @@ void AUTOTYPE::AddMessages() {
 	        "  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]\n"
 	        "  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter\n[reset]");
 }
-
-void AUTOTYPE_ProgramStart(Program **make)
-{
-	*make = new AUTOTYPE;
-}

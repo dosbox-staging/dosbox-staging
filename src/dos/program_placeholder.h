@@ -31,6 +31,4 @@ private:
 	void AddMessages();
 };
 
-void PLACEHOLDER_ProgramStart(Program **make);
-
 #endif

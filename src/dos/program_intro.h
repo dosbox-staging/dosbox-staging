@@ -34,6 +34,4 @@ class INTRO final : public Program {
         void WriteOutProgramIntroSpecial();
 };
 
-void INTRO_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_INTRO_H

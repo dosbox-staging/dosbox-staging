@@ -31,6 +31,4 @@ private:
 	void AddMessages();
 };
 
-void RESCAN_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_RESCAN_H

@@ -33,8 +33,3 @@ void LS::Run()
 	safe_strcpy(args, tmp.c_str());
 	first_shell->CMD_LS(args);
 }
-
-void LS_ProgramStart(Program **make)
-{
-	*make = new LS;
-}

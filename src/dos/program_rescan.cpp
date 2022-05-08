@@ -78,7 +78,3 @@ void RESCAN::AddMessages() {
 	        "  [color=green]rescan[reset] /a\n");
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive re-scanned.\n");
 }
-
-void RESCAN_ProgramStart(Program **make) {
-	*make=new RESCAN;
-}

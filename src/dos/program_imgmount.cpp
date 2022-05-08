@@ -559,7 +559,3 @@ void IMGMOUNT::AddMessages() {
 	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
 }
-
-void IMGMOUNT_ProgramStart(Program **make) {
-	*make=new IMGMOUNT;
-}

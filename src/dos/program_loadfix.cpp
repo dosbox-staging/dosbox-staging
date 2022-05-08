@@ -109,7 +109,3 @@ void LOADFIX::AddMessages() {
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 }
-
-void LOADFIX_ProgramStart(Program **make) {
-	*make=new LOADFIX;
-}

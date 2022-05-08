@@ -29,6 +29,4 @@ class BIOSTEST final : public Program {
         void Run(void);
 };
 
-void BIOSTEST_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_BIOSTEST_H

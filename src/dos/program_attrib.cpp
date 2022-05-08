@@ -33,8 +33,3 @@ void ATTRIB::Run()
 	safe_strcpy(args, tmp.c_str());
 	first_shell->CMD_ATTRIB(args);
 }
-
-void ATTRIB_ProgramStart(Program **make)
-{
-	*make = new ATTRIB;
-}

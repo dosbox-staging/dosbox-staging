@@ -460,6 +460,3 @@ void MOUNT::AddMessages() {
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 }
-void MOUNT_ProgramStart(Program **make) {
-	*make=new MOUNT;
-}

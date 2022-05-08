@@ -41,6 +41,4 @@ private:
 	                   double &value);
 };
 
-void AUTOTYPE_ProgramStart(Program **make);
-
 #endif

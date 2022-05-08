@@ -30,6 +30,4 @@ public:
 	void Run();
 };
 
-void CHOICE_ProgramStart(Program **make);
-
 #endif

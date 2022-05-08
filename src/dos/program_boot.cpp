@@ -527,8 +527,3 @@ void BOOT::AddMessages() {
 	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
 	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
 }
-
-void BOOT_ProgramStart(Program **make)
-{
-	*make = new BOOT;
-}

@@ -35,6 +35,4 @@ private:
 	void showPort(int port);
 };
 
-void SERIAL_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_SERIAL_H

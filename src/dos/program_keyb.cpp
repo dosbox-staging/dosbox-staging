@@ -118,7 +118,3 @@ void KEYB::AddMessages() {
 	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 }
-
-void KEYB_ProgramStart(Program * * make) {
-	*make=new KEYB;
-}

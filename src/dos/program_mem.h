@@ -31,6 +31,4 @@ class MEM final : public Program {
         void AddMessages();
 };
 
-void MEM_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_MEM_H
