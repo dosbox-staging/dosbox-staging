@@ -4902,7 +4902,7 @@ extern "C" {
             return (t);
         }
 
-        int clock_gettime(int X, struct timespec *tv) {
+        int clock_gettime(int /* X */, struct timespec *tv) {
             LARGE_INTEGER t;
             FILETIME f;
             double microseconds;
