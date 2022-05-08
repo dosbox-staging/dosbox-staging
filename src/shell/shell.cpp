@@ -41,13 +41,8 @@ static Bitu shellstop_handler()
 	return CBRET_STOP;
 }
 
-void SHELL_ProgramStart(Program * * make) {
-	*make = new DOS_Shell;
-}
-//Repeat it with the correct type, could do it in the function below, but this way it should be 
-//clear that if the above function is changed, this function might need a change as well.
-static void SHELL_ProgramStart_First_shell(DOS_Shell * * make) {
-	*make = new DOS_Shell;
+std::unique_ptr<Program> SHELL_ProgramStart() {
+	return ProgramStart<DOS_Shell>();
 }
 
 char autoexec_data[autoexec_maxsize] = { 0 };
@@ -1536,7 +1531,9 @@ void SHELL_Init() {
 	dos.psp(psp_seg);
 
 
-	SHELL_ProgramStart_First_shell(&first_shell);
+	// first_shell is only setup here, so may as well invoke
+	// it's constructor directly
+	first_shell = new DOS_Shell;
 	first_shell->Run();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore

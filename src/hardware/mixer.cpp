@@ -1039,8 +1039,8 @@ private:
 	}
 };
 
-void MIXER_ProgramStart(Program * * make) {
-	*make=new MIXER;
+std::unique_ptr<Program> MIXER_ProgramStart() {
+	return ProgramStart<MIXER>();
 }
 
 void MIXER_Init(Section* sec) {
