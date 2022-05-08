@@ -82,7 +82,7 @@ jobs:
                 apt-get -qq install git curl findutils procps tar zstd screenfetch \
                                     < /dev/null > /dev/null
                 apt-get -qq install cmake g++ build-essential ccache libasound2-dev libgtest-dev \
-                                    libopusfile-dev libsdl2-dev python3-setuptools python3-pip \
+                                    libopusfile-dev libsdl2-dev python3-setuptools python3-pip zlib1g-dev \
                                     < /dev/null > /dev/null
                 pip3 install meson ninja
                 ;;
@@ -90,7 +90,7 @@ jobs:
                 dnf -q -y update
                 dnf -q -y install git which curl findutils procps-ng tar zstd screenfetch
                 dnf -q -y install cmake desktop-file-utils gcc gcc-c++ gmock-devel gtest-devel \
-                                  libappstream-glib libatomic meson opusfile-devel SDL2-devel
+                                  libappstream-glib libatomic meson opusfile-devel SDL2-devel zlib-devel
                 ;;
               alpine*)
                 apk update
