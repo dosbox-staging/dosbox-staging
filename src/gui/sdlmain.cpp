@@ -666,16 +666,11 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(int in_x,
-                                   int in_y,
-                                   const double in_par,
-                                   const SCALING_MODE scaling_mode,
-                                   const PPScale &pp_scale,
-                                   int out_x,
-                                   int out_y)
+static void log_display_properties(int in_x, int in_y, const SCALING_MODE scaling_mode,
+                                   const PPScale &pp_scale, int out_x, int out_y)
 {
 	// Sanity check expectations
-	assert(in_x > 0 && in_y > 0 && in_par > 0);
+	assert(in_x > 0 && in_y > 0);
 	assert(out_x > 0 && out_y > 0);
 
 	if (scaling_mode == SCALING_MODE::PERFECT) {
@@ -1213,9 +1208,12 @@ finish:
 
 	if (sdl.draw.has_changed) {
 		setup_presentation_mode(sdl.frame.mode);
-		log_display_properties(sdl.draw.width, sdl.draw.height,
-		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
-		                       sdl.pp_scale, width, height);
+		log_display_properties(sdl.draw.width,
+		                       sdl.draw.height,
+		                       sdl.scaling_mode,
+		                       sdl.pp_scale,
+		                       width,
+		                       height);
 	}
 
 	// Force redraw after changing the window
@@ -2140,8 +2138,10 @@ void GFX_SwitchFullScreen()
 	GFX_ResetScreen();
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
-	log_display_properties(sdl.draw.width, sdl.draw.height,
-	                       sdl.draw.pixel_aspect, sdl.scaling_mode, sdl.pp_scale,
+	log_display_properties(sdl.draw.width,
+	                       sdl.draw.height,
+	                       sdl.scaling_mode,
+	                       sdl.pp_scale,
 	                       sdl.desktop.fullscreen ? sdl.desktop.full.width
 	                                              : sdl.desktop.window.width,
 	                       sdl.desktop.fullscreen ? sdl.desktop.full.height
