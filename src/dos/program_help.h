@@ -30,6 +30,4 @@ public:
 	void Run();
 };
 
-void HELP_ProgramStart(Program **make);
-
 #endif

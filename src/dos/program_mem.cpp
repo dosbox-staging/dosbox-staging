@@ -109,7 +109,3 @@ void MEM::AddMessages() {
 	MSG_Add("PROGRAM_MEM_UPPER",
 	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
 }
-
-void MEM_ProgramStart(Program * * make) {
-	*make=new MEM;
-}

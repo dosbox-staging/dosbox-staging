@@ -33,8 +33,3 @@ void HELP::Run()
 	safe_strcpy(args, tmp.c_str());
 	first_shell->CMD_HELP(args);
 }
-
-void HELP_ProgramStart(Program **make)
-{
-	*make = new HELP;
-}

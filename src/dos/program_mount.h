@@ -33,6 +33,4 @@ class MOUNT final : public Program {
         void AddMessages();
 };
 
-void MOUNT_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_MOUNT_H

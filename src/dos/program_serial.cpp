@@ -188,8 +188,3 @@ void SERIAL::AddMessages() {
 	MSG_Add("PROGRAM_SERIAL_BAD_TYPE", "Type must be one of the following:\n");
 	MSG_Add("PROGRAM_SERIAL_INDENTED_LIST", "  %s\n");
 }
-
-void SERIAL_ProgramStart(Program **make)
-{
-	*make = new SERIAL;
-}

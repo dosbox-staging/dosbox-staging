@@ -54,8 +54,3 @@ void PLACEHOLDER::AddMessages() {
 	
 	MSG_Add("VISIT_FOR_MORE_HELP", "Visit the following for more help:");
 }
-
-void PLACEHOLDER_ProgramStart(Program **make)
-{
-	*make = new PLACEHOLDER;
-}

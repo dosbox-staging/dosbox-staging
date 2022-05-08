@@ -33,6 +33,4 @@ class IMGMOUNT final : public Program {
         void AddMessages();
 };
 
-void IMGMOUNT_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_IMGMOUNT_H

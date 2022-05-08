@@ -192,7 +192,3 @@ void INTRO::AddMessages() {
 	        "\033[33;1m%s+F12\033[0m  %s Speed up emulation.\n"
 	        "\033[33;1m%s+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
 }
-
-void INTRO_ProgramStart(Program **make) {
-	*make=new INTRO;
-}

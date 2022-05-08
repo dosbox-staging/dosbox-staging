@@ -31,6 +31,4 @@ private:
     void AddMessages();
 };
 
-void LOADFIX_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_LOADFIX_H

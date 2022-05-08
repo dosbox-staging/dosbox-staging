@@ -32,6 +32,4 @@ private:
 
 };
 
-void KEYB_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_KEYB_H

@@ -36,8 +36,3 @@ void CHOICE::Run()
 	first_shell->CMD_CHOICE(args);
 	result_errorcode = dos.return_code;
 }
-
-void CHOICE_ProgramStart(Program **make)
-{
-	*make = new CHOICE;
-}

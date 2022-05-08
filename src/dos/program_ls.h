@@ -30,6 +30,4 @@ public:
 	void Run();
 };
 
-void LS_ProgramStart(Program **make);
-
 #endif

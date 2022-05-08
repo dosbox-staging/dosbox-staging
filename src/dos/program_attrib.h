@@ -30,6 +30,4 @@ public:
 	void Run();
 };
 
-void ATTRIB_ProgramStart(Program **make);
-
 #endif

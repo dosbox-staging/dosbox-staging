@@ -85,8 +85,4 @@ void BIOSTEST::Run(void) {
 	}
 }
 
-void BIOSTEST_ProgramStart(Program **make) {
-	*make = new BIOSTEST;
-}
-
 #endif // C_DEBUG

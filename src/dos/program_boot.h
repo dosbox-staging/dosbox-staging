@@ -37,6 +37,4 @@ class BOOT final : public Program {
         void disable_umb_ems_xms(void);
 };
 
-void BOOT_ProgramStart(Program **make);
-
 #endif // DOSBOX_PROGRAM_BOOT_H

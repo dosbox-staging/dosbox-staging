@@ -123,7 +123,3 @@ void LOADROM::AddMessages() {
 	MSG_Add("PROGRAM_LOADROM_UNRECOGNIZED","ROM file not recognized.\n");
 	MSG_Add("PROGRAM_LOADROM_BASIC_LOADED","BASIC ROM loaded.\n");
 }
-
-void LOADROM_ProgramStart(Program **make) {
-	*make=new LOADROM;
-}
