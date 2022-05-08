@@ -105,7 +105,7 @@ void PROGRAMS_MakeFile(char const * const name, PROGRAMS_Creator creator);
 template<class P>
 std::unique_ptr<Program> ProgramCreate() {
 	// ensure that P is derived from Program
-	static_assert(std::is_base_of_v<Program, P>);
+	static_assert(std::is_base_of_v<Program, P>, "class not derived from Program");
 	return std::make_unique<P>();
 }
 

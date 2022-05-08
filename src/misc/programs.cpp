@@ -80,7 +80,7 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 
 	// Register the program's main pointer
 	// NOTE: This step must come after the index is saved in the COM data
-	internal_progs.push_back(creator);
+	internal_progs.emplace_back(creator);
 }
 
 static Bitu PROGRAMS_Handler(void) {
@@ -97,9 +97,8 @@ static Bitu PROGRAMS_Handler(void) {
 	                         256 + static_cast<uint16_t>(exec_block_size));
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
-	if (index >= internal_progs.size()) E_Exit("something is messing with the memory");
-	PROGRAMS_Creator creator = internal_progs[index];
-	auto new_program = creator();
+	const PROGRAMS_Creator& creator = internal_progs.at(index);
+	const auto new_program = creator();
 	new_program->Run();
 	return CBRET_NONE;
 }
