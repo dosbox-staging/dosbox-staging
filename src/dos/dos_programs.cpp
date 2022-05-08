@@ -46,9 +46,9 @@
 extern uint32_t floppytype;
 
 extern char autoexec_data[autoexec_maxsize];
-std::unique_ptr<Program> CONFIG_ProgramStart();
-std::unique_ptr<Program> MIXER_ProgramStart();
-std::unique_ptr<Program> SHELL_ProgramStart();
+std::unique_ptr<Program> CONFIG_ProgramCreate();
+std::unique_ptr<Program> MIXER_ProgramCreate();
+std::unique_ptr<Program> SHELL_ProgramCreate();
 void z_drive_getpath(std::string &path, const std::string &dirname);
 void z_drive_register(const std::string &path, const std::string &dir);
 
@@ -61,27 +61,27 @@ void Add_VFiles(const bool add_autoexec)
 	z_drive_getpath(path, dirname);
 	z_drive_register(path, "/");
 
-	PROGRAMS_MakeFile("ATTRIB.COM", ProgramStart<ATTRIB>);
-	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramStart<AUTOTYPE>);
+	PROGRAMS_MakeFile("ATTRIB.COM", ProgramCreate<ATTRIB>);
+	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramCreate<AUTOTYPE>);
 #if C_DEBUG
-	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramStart<AUTOTYPE>);
+	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramCreate<AUTOTYPE>);
 #endif
-	PROGRAMS_MakeFile("BOOT.COM", ProgramStart<AUTOTYPE>);
-	PROGRAMS_MakeFile("CHOICE.COM", ProgramStart<CHOICE>);
-	PROGRAMS_MakeFile("HELP.COM", ProgramStart<HELP>);
-	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramStart<IMGMOUNT>);
-	PROGRAMS_MakeFile("INTRO.COM", ProgramStart<INTRO>);
-	PROGRAMS_MakeFile("KEYB.COM", ProgramStart<KEYB>);
-	PROGRAMS_MakeFile("LOADFIX.COM", ProgramStart<LOADFIX>);
-	PROGRAMS_MakeFile("LOADROM.COM", ProgramStart<LOADROM>);
-	PROGRAMS_MakeFile("LS.COM", ProgramStart<LS>);
-	PROGRAMS_MakeFile("MEM.COM", ProgramStart<MEM>);
-	PROGRAMS_MakeFile("MOUNT.COM", ProgramStart<MOUNT>);
-	PROGRAMS_MakeFile("RESCAN.COM", ProgramStart<RESCAN>);
-	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramStart);
-	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramStart);
-	PROGRAMS_MakeFile("SERIAL.COM", ProgramStart<SERIAL>);
-	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramStart);
+	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<AUTOTYPE>);
+	PROGRAMS_MakeFile("CHOICE.COM", ProgramCreate<CHOICE>);
+	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
+	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
+	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
+	PROGRAMS_MakeFile("KEYB.COM", ProgramCreate<KEYB>);
+	PROGRAMS_MakeFile("LOADFIX.COM", ProgramCreate<LOADFIX>);
+	PROGRAMS_MakeFile("LOADROM.COM", ProgramCreate<LOADROM>);
+	PROGRAMS_MakeFile("LS.COM", ProgramCreate<LS>);
+	PROGRAMS_MakeFile("MEM.COM", ProgramCreate<MEM>);
+	PROGRAMS_MakeFile("MOUNT.COM", ProgramCreate<MOUNT>);
+	PROGRAMS_MakeFile("RESCAN.COM", ProgramCreate<RESCAN>);
+	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
+	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
+	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
+	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	if (add_autoexec)
 		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data,
 		               (uint32_t)strlen(autoexec_data));

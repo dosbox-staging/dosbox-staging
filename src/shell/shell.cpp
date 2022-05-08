@@ -41,8 +41,8 @@ static Bitu shellstop_handler()
 	return CBRET_STOP;
 }
 
-std::unique_ptr<Program> SHELL_ProgramStart() {
-	return ProgramStart<DOS_Shell>();
+std::unique_ptr<Program> SHELL_ProgramCreate() {
+	return ProgramCreate<DOS_Shell>();
 }
 
 char autoexec_data[autoexec_maxsize] = { 0 };
@@ -1449,7 +1449,7 @@ void SHELL_Init() {
 	reg_ip=RealOff(newcsip);
 
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET,"shell stop");
-	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
+	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramCreate);
 
 	/* Now call up the shell for the first time */
 	uint16_t psp_seg=DOS_FIRST_SHELL;
