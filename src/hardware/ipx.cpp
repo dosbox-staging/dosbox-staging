@@ -1064,10 +1064,6 @@ public:
 	}
 };
 
-static void IPXNET_ProgramStart(Program * * make) {
-	*make=new IPXNET;
-}
-
 Bitu IPX_ESRHandler(void) {
 	LOG_IPX("ESR: >>>>>>>>>>>>>>>" );
 	while(ESRList!=NULL) {
@@ -1167,7 +1163,7 @@ public:
 		RealSetVec(0x73,ESRRoutineBase,old_73_vector);	// IRQ11
 		IO_WriteB(0xa1,IO_ReadB(0xa1)&(~8));			// enable IRQ11
 
-		PROGRAMS_MakeFile("IPXNET.COM",IPXNET_ProgramStart);
+		PROGRAMS_MakeFile("IPXNET.COM",ProgramStart<IPXNET>);
 	}
 
 	~IPX() {

@@ -21,7 +21,9 @@
 
 #include "dosbox.h"
 
+#include <functional>
 #include <list>
+#include <memory>
 #include <string>
 #include "std_filesystem.h"
 
@@ -96,8 +98,15 @@ public:
 	static void ResetLastWrittenChar(char c);
 };
 
-typedef void (PROGRAMS_Main)(Program * * make);
+using PROGRAMS_Main = std::function<std::unique_ptr<Program>()>;
 void PROGRAMS_Destroy([[maybe_unused]] Section* sec);
-void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main);
+void PROGRAMS_MakeFile(char const * const name, PROGRAMS_Main p_main);
+
+template<class P>
+std::unique_ptr<Program> ProgramStart() {
+	// ensure that P is derived from Program
+	static_assert(std::is_base_of_v<Program, P>);
+	return std::make_unique<P>();
+}
 
 #endif

@@ -46,9 +46,9 @@
 extern uint32_t floppytype;
 
 extern char autoexec_data[autoexec_maxsize];
-void CONFIG_ProgramStart(Program **make);
-void MIXER_ProgramStart(Program **make);
-void SHELL_ProgramStart(Program **make);
+std::unique_ptr<Program> CONFIG_ProgramStart();
+std::unique_ptr<Program> MIXER_ProgramStart();
+std::unique_ptr<Program> SHELL_ProgramStart();
 void z_drive_getpath(std::string &path, const std::string &dirname);
 void z_drive_register(const std::string &path, const std::string &dir);
 
@@ -61,26 +61,26 @@ void Add_VFiles(const bool add_autoexec)
 	z_drive_getpath(path, dirname);
 	z_drive_register(path, "/");
 
-	PROGRAMS_MakeFile("ATTRIB.COM", ATTRIB_ProgramStart);
-	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
+	PROGRAMS_MakeFile("ATTRIB.COM", ProgramStart<ATTRIB>);
+	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramStart<AUTOTYPE>);
 #if C_DEBUG
-	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
+	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramStart<AUTOTYPE>);
 #endif
-	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
-	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
-	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
-	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
-	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
-	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
-	PROGRAMS_MakeFile("LOADFIX.COM", LOADFIX_ProgramStart);
-	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
-	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
-	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
-	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
-	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
+	PROGRAMS_MakeFile("BOOT.COM", ProgramStart<AUTOTYPE>);
+	PROGRAMS_MakeFile("CHOICE.COM", ProgramStart<CHOICE>);
+	PROGRAMS_MakeFile("HELP.COM", ProgramStart<HELP>);
+	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramStart<IMGMOUNT>);
+	PROGRAMS_MakeFile("INTRO.COM", ProgramStart<INTRO>);
+	PROGRAMS_MakeFile("KEYB.COM", ProgramStart<KEYB>);
+	PROGRAMS_MakeFile("LOADFIX.COM", ProgramStart<LOADFIX>);
+	PROGRAMS_MakeFile("LOADROM.COM", ProgramStart<LOADROM>);
+	PROGRAMS_MakeFile("LS.COM", ProgramStart<LS>);
+	PROGRAMS_MakeFile("MEM.COM", ProgramStart<MEM>);
+	PROGRAMS_MakeFile("MOUNT.COM", ProgramStart<MOUNT>);
+	PROGRAMS_MakeFile("RESCAN.COM", ProgramStart<RESCAN>);
 	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramStart);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramStart);
-	PROGRAMS_MakeFile("SERIAL.COM", SERIAL_ProgramStart);
+	PROGRAMS_MakeFile("SERIAL.COM", ProgramStart<SERIAL>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramStart);
 	if (add_autoexec)
 		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data,
