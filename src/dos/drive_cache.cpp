@@ -468,20 +468,43 @@ bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname) {
 // From the Wine project
 static Bits wine_hash_short_file_name( char* name, char* buffer )
 {
-	static const char hash_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
-	static const char invalid_chars[] = { '*','?','<','>','|','"','+','=',',',';','[',']',' ','\345','~','.',0 };
-	char* p;
-	char* ext;
-	char* end = name + strlen(name);
-	char* dst;
-	unsigned short hash;
-	int i;
+	constexpr char hash_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
+
+	// returns '_' if invalid or upper case if valid.
+	auto replace_invalid = [](char c) -> char {
+		constexpr char invalid_chars[] = {'*',
+		                                  '?',
+		                                  '<',
+		                                  '>',
+		                                  '|',
+		                                  '"',
+		                                  '+',
+		                                  '=',
+		                                  ',',
+		                                  ';',
+		                                  '[',
+		                                  ']',
+		                                  ' ',
+		                                  '\345',
+		                                  '~',
+		                                  '.',
+		                                  '\0'};
+		const auto is_invalid = char_is_negative(c) ||
+		                        strchr(invalid_chars, c);
+		return is_invalid ? '_' : toupper(c);
+	};
+
+	char *p = nullptr;
+	char *ext = nullptr;
+	char *end = name + strlen(name);
+	char *dst = nullptr;
+	uint16_t hash = 0;
+	int i = 0;
 
 	// Compute the hash code of the file name
 	for (p = name, hash = 0xbeef; p < end - 1; p++)
 		hash = (hash<<3) ^ (hash>>5) ^ tolower(*p) ^ (tolower(p[1]) << 8);
 	hash = (hash<<3) ^ (hash>>5) ^ tolower(*p); // Last character
-
 
 	// Find last dot for start of the extension
 	for (p = name + 1, ext = NULL; p < end - 1; p++) if (*p == '.') ext = p;
@@ -489,11 +512,14 @@ static Bits wine_hash_short_file_name( char* name, char* buffer )
 	// Copy first 4 chars, replacing invalid chars with '_'
 	for (i = 4, p = name, dst = buffer; i > 0; i--, p++)
 	{
-		if (p == end || p == ext) break;
-		*dst++ = (*p < 0 || strchr( invalid_chars, *p ) != NULL) ? '_' : toupper(*p);
+		if (p == end || p == ext) {
+			break;
+		}
+		*dst++ = replace_invalid(*p);
 	}
 	// Pad to 5 chars with '~'
-	while (i-- >= 0) *dst++ = '~';
+	while (i-- >= 0)
+		*dst++ = '~';
 
 	// Insert hash code converted to 3 ASCII chars
 	*dst++ = hash_chars[(hash >> 10) & 0x1f];
@@ -501,11 +527,11 @@ static Bits wine_hash_short_file_name( char* name, char* buffer )
 	*dst++ = hash_chars[hash & 0x1f];
 
 	// Copy the first 3 chars of the extension (if any)
-	if (ext)
-	{
+	if (ext) {
 		*dst++ = '.';
-		for (i = 3, ext++; (i > 0) && ext < end; i--, ext++)
-			*dst++ = (*ext < 0 || strchr( invalid_chars, *ext ) != NULL) ? '_' : toupper(*ext);
+		for (i = 3, ext++; (i > 0) && ext < end; i--, ext++) {
+			*dst++ = replace_invalid(*ext);
+		}
 	}
 
 	return dst - buffer;
