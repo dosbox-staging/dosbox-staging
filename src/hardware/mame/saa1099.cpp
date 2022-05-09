@@ -176,6 +176,8 @@ saa1099_device::saa1099_device(const machine_config &mconfig,
         : device_t(mconfig, SAA1099, tag, owner, clock),
           device_sound_interface(mconfig, *this),
           m_stream(0),
+          m_noise_freqs{2 * clock / 256.0, 2 * clock / 512.0, 2 * clock / 1024.0},
+
 #if 0
           m_noise_params{ 0, 0 },
           m_env_enable{ 0, 0 },
@@ -271,9 +273,9 @@ void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
 	{
 		switch (m_noise_params[ch])
 		{
-		case 0: m_noise[ch].freq = m_chip_clock / 256.0 * 2; break;
-		case 1: m_noise[ch].freq = m_chip_clock / 512.0 * 2; break;
-		case 2: m_noise[ch].freq = m_chip_clock / 1024.0 * 2; break;
+		case 0: m_noise[ch].freq = m_noise_freqs[0]; break;
+		case 1: m_noise[ch].freq = m_noise_freqs[1]; break;
+		case 2: m_noise[ch].freq = m_noise_freqs[2]; break;
 		case 3:
 			m_noise[ch].freq = m_channels[ch * 3].freq;
 			break; // todo: this case will be
@@ -290,45 +292,35 @@ void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
 		int output_l = 0, output_r = 0;
 
 		/* for each channel */
-		for (ch = 0; ch < 6; ch++)
-		{
-			auto channel = m_channels[ch];
-
-			auto calc_channel_freq = [this, channel]() {
-				return static_cast<double>((2 * m_chip_clock / 512)
-				                           << channel.octave) /
-				       (511.0 - channel.frequency);
-			};
-
-			if (abs(channel.freq) <= DBL_EPSILON) {
-				channel.freq = calc_channel_freq();
+		uint8_t ch_num = 0;
+		for (auto &channel : m_channels) {
+			if (channel.freq == 0.0) {
+				channel.update_freq(m_chip_clock);
 			}
-
 			/* check the actual position in the square wave */
 			channel.counter -= channel.freq;
 			while (channel.counter < 0) {
-				/* calculate new frequency now after the half
-				 * wave is updated */
-				channel.freq = calc_channel_freq();
-
 				channel.counter += m_sample_rate;
 				channel.level ^= 1;
 
 				/* eventually clock the envelope counters */
-				if (ch == 1 && m_env_clock[0] == 0)
+				if (ch_num == 1 && m_env_clock[0] == 0)
 					envelope_w(0);
-				if (ch == 4 && m_env_clock[1] == 0)
+				if (ch_num == 4 && m_env_clock[1] == 0)
 					envelope_w(1);
 			}
 
 			// if the noise is enabled
 			if (channel.noise_enable) {
-				// if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
-				if (m_noise[ch/3].level & 1)
-				{
-					// subtract to avoid overflows, also use only half amplitude
-					output_l -= channel.amplitude[LEFT] * channel.envelope[LEFT] / 16 / 2;
-					output_r -= channel.amplitude[RIGHT] * channel.envelope[RIGHT] / 16 / 2;
+				// if the noise level is high (noise 0: chan
+				// 0-2, noise 1: chan 3-5)
+				if (m_noise[ch_num / 3].level & 1) {
+					// subtract to avoid overflows, also use
+					// only half amplitude
+					output_l -= channel.amplitude[LEFT] *
+					            channel.envelope[LEFT] / 16 / 2;
+					output_r -= channel.amplitude[RIGHT] *
+					            channel.envelope[RIGHT] / 16 / 2;
 				}
 			}
 			// if the square wave is enabled
@@ -336,9 +328,11 @@ void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
 				// if the channel level is high
 				if (channel.level & 1) {
 					output_l += channel.amplitude[LEFT] * channel.envelope[LEFT] / 16;
-					output_r += channel.amplitude[RIGHT] * channel.envelope[RIGHT] / 16;
+					output_r += channel.amplitude[RIGHT] *
+					            channel.envelope[RIGHT] / 16;
 				}
 			}
+			++ch_num;
 		}
 
 		for (ch = 0; ch < 2; ch++)
@@ -424,6 +418,10 @@ WRITE8_MEMBER( saa1099_device::control_w )
 	}
 }
 
+void saa1099_device::saa1099_channel::update_freq(const int chip_clock)
+{
+	freq = (chip_clock >> (8 - octave)) / (511.0 - frequency);
+}
 
 WRITE8_MEMBER( saa1099_device::data_w )
 {
@@ -445,12 +443,15 @@ WRITE8_MEMBER( saa1099_device::data_w )
 	case 0x08:  case 0x09:  case 0x0a:  case 0x0b:  case 0x0c:  case 0x0d:
 		ch = reg & 7;
 		m_channels[ch].frequency = data & 0xff;
+		m_channels[ch].update_freq(m_chip_clock);
 		break;
 	/* channel i octave */
 	case 0x10:  case 0x11:  case 0x12:
 		ch = (reg - 0x10) << 1;
 		m_channels[ch + 0].octave = data & 0x07;
+		m_channels[ch + 0].update_freq(m_chip_clock);
 		m_channels[ch + 1].octave = (data >> 4) & 0x07;
+		m_channels[ch + 1].update_freq(m_chip_clock);
 		break;
 	/* channel i frequency enable */
 	case 0x14:
