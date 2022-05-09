@@ -951,6 +951,9 @@
     <ClInclude Include="..\src\hardware\font-switch.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\hardware\gameblaster.h">
+      <Filter>src\hardware\mame</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\hardware\mame\emu.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
