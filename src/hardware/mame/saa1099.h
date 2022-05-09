@@ -52,7 +52,6 @@ public:
 private:
 	struct saa1099_channel {
 		saa1099_channel() = default;
-
 		int frequency = 0;         // frequency (0x00..0xff)
 		int freq_enable = 0;       // frequency enable
 		int noise_enable = 0;      // noise enable
@@ -61,6 +60,8 @@ private:
 		int envelope[2] = {0, 0};  // envelope (0x00..0x0f or 0x10 == off)
 
 		/* vars to simulate the square wave */
+		void update_freq(int chip_clock); // based on the octave and
+		                                  // frequency registers
 		double counter = 0;
 		double freq = 0;
 		int level = 0;
@@ -78,6 +79,7 @@ private:
 	void envelope_w(int ch);
 
 	sound_stream *m_stream;           /* our stream */
+	const double m_noise_freqs[3];    /* noise frequencies based on chip-clock */
 	int m_noise_params[2];            /* noise generators parameters */
 	int m_env_enable[2];              /* envelope generators enable */
 	int m_env_reverse_right[2];       /* envelope reversed for right channel */
