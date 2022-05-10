@@ -64,9 +64,9 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("ATTRIB.COM", ProgramCreate<ATTRIB>);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramCreate<AUTOTYPE>);
 #if C_DEBUG
-	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramCreate<AUTOTYPE>);
+	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramCreate<BIOSTEST>);
 #endif
-	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<AUTOTYPE>);
+	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);
 	PROGRAMS_MakeFile("CHOICE.COM", ProgramCreate<CHOICE>);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
