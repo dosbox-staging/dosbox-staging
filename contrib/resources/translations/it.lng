@@ -60,7 +60,7 @@ Imposta la frequenza di aggiornamento dell'host:
              decimale maggiore di 23.000.
 .
 :CONFIG_VSYNC
-Sincronizza con la frequenza di aggiornamento dello schermo, se supportata.
+Sincronizza con la frequenza di aggiornamento dello schermo, se supportato.
 Questo pu• ridurre il tremolio e lo strappo, ma pu• anche influire sulle
 prestazioni.
 .
@@ -89,9 +89,11 @@ Metodo di controllo del mouse:
    onclick:       Cattura il mouse alla pressione di qualsiasi tasto
                   all'interno della finestra.
    onstart:       Cattura il mouse immediatamente all'avvio.
-   seamless:      Il mouse pu• muoversi liberamente; Ô possibile catturarlo con
-                  un clic centrale o con l'apposito tasto di scelta rapida.
-   nomouse:       Nasconde il mouse e non viene inviato alcun segnale al gioco.
+   seamless:      Permette al mouse di muoversi liberamente; Ô possibile
+                  catturarlo con un clic centrale o con l'apposito tasto di
+                  scelta rapida.
+   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
+                  input al gioco.
 Gestione del clic centrale (secondo parametro):
    middlegame:    I clic centrali vengono inviati al gioco.
    middlerelease: Il clic centrale rilascia il mouse precedentemente catturato.
@@ -100,8 +102,8 @@ Gestione del clic centrale (secondo parametro):
 Predefiniti (se non presenti o incorretti): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Sensibilit… del mouse. Il secondo parametro opzionale specifica la sensibilit…
-verticale (es. 100,-50).
+Sensibilit… del mouse. Il secondo parametro, facoltativo, specifica la
+sensibilit… verticale (es. 100,-50).
 .
 :CONFIG_RAW_MOUSE_INPUT
 Abilita questa impostazione per bypassare le impostazioni di sensibilit…
@@ -130,8 +132,8 @@ del sistema operativo mentre l'emulatore Š in esecuzione).
 :CONFIG_LANGUAGE
 Seleziona una lingua da usare: de, en, es, fr, it, pl e ru.
 Note: Questa impostazione, se utilizzata, sovrascriver… la variabile 
-      d'ambiente 'LANG'. La cartella 'resources/translations', inclusa nel pacchetto
-      insieme all'eseguibile, contiene questi file di dati.
+      d'ambiente 'LANG'. La cartella 'resources/translations', inclusa nel
+      pacchetto insieme all'eseguibile, contiene questi file di dati.
       Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
 :CONFIG_MACHINE
@@ -171,8 +173,8 @@ Controlla la selezione delle modalit… VESA 1.2 e 2.0 offerte:
 .
 :CONFIG_SPEED_MODS
 Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
-Š noto per essere influenzato da questo. Segnala un bug nel repository del
-progetto se trovi un gioco che fallisce quando questo Š impostato su 'true',
+Š noto per esserne influenzato. Se trovi un gioco che fallisce quando questa
+impostazione Š impostata su 'true', segnala il bug nel repository del progetto,
 in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
@@ -258,13 +260,13 @@ appropriato.
 Tipo di CPU usata nell'emulazione. 'auto' Š la scelta pi— veloce.
 .
 :CONFIG_CYCLES
-Numero di istruzioni che DOSBox prova ad emulare ogni millisecondo.
+Numero di istruzioni DOSBox tenta di emulare ogni millisecondo.
 Un valore troppo alto produrr… perdite nell'audio e ritardi.
 I cicli possono essere impostati in 3 modi:
   'auto'          prova a indovinare le necessit… del gioco.
                   Di solito funziona, ma pu• fallire con alcuni giochi.
-  'fixed #number' imposta un numero fisso di cicli. Questo Š ci• di cui hai
-                  bisogno di solito se 'auto' fallisce. (Esempio: fixed 4000)
+  'fixed #numero  imposta un numero fisso di cicli. Questo Š ci• di cui hai
+                  bisogno di solito se 'auto' fallisce (Esempio: fixed 4000).
   'max'           allocher… tanti cicli quanti il tuo computer Š in grado di
                   gestire.
 .
@@ -297,8 +299,8 @@ Quantit… di dati, in millisecondi, da tenere in cima alla dimensione dei
 blocchi.
 .
 :CONFIG_NEGOTIATE
-Consenti al driver audio di sistema di negoziare la frequenza e la dimensione
-dei blocchi ottimali il pi— vicino possibile ai valori specificati.
+Consenti al driver audio di sistema di negoziare (possibilmente) le migliori
+impostazioni di frequenza e dimensione dei blocchi.
 .
 :CONFIG_MIDIDEVICE
 Dispositivo che ricever… i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
@@ -315,14 +317,14 @@ Opzioni di configurazione per l'interfaccia MIDI selezionata.
 Di solito Š l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
 (trova l'id/nome con il comando DOS 'mixer /listmidi').
 - Questa opzione non ha effetto quando si utilizzano sintetizzatori intergrati.
-  (mididevice = fluidsynth o mt32)
+  (mididevice = fluidsynth o mt32).
 - Quando usi ALSA, utilizza il comando Linux 'aconnect -l' per elencare le
-  porte MIDI aperte, e selezionane una.
-  (ad esempio 'midiconfig=14:0' per il client sequencer 14, porta 0)
+  porte MIDI aperte, e selezionane una
+  (ad esempio 'midiconfig=14:0' per il client sequencer 14, porta 0).
 - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
   potrebbe richiedere un ritardo per evitare che il suo buffer
-  si sovraccarichi. 
-  In tal caso, aggiungi 'delaysysex', ad esempio: 'midiconfig=2 delaysysex'.
+  si sovraccarichi. In tal caso, aggiungi 'delaysysex', 
+  ad esempio: 'midiconfig=2 delaysysex'.
 Fare riferimento al README/Manuale per ulteriori dettagli.
 .
 :CONFIG_MPU401
@@ -340,11 +342,11 @@ La percentuale del volume pu• variare da 1 a 500.
 Effetto coro (Chorus): 'auto', 'on', 'off', o valori personalizzati.
 Quando si utilizzano valori personalizzati:
   Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: conteggio-voci livello velocit… intensit… modulazione-onda, dove:
+  Essi sono: conteggio-voci livello velocit… profondit… modulazione-onda, dove:
   - conteggio-voci Š un numero intero compreso tra 0 e 99
   - livello Š un numero decimale compreso tra 0.0 e 10.0
   - velocit… Š un numero decimale, misurato in Hz, compreso tra 0.1 e 5.0
-  - intensit… Š un numero decimale compreso tra 0.0 e 21.0
+  - profondit… Š un numero decimale compreso tra 0.0 e 21.0
   - modulazione-onda Š 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
 .
@@ -397,8 +399,8 @@ Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox.
 :CONFIG_SBWARMUP
 Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
 in millisecondi. Questo attenua gli artefatti audio che si sentono quando si
-avviano molti giochi compatibili con Sound Blaster. Riducilo se noti campioni
-tagliati o preferisci un'emulazione pi— accurata dell'hardware.
+avviano molti giochi compatibili con Sound Blaster. Riduci questo valore se
+noti che nella riproduzione iniziale manca l'audio.
 .
 :CONFIG_OPLRATE
 oplrate Š deprecato. La forma d'onda OPL viene ora campionata alla velocit… di
@@ -409,7 +411,7 @@ Tipo di emulazione OPL. Se 'auto', la modalit… Š determinata da 'sbtype'.
 Tutte le modalit… OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
 :CONFIG_OPLEMU
-Provider per l'emulazione OPL. 'compat' fornisce una migliore qualit…, 'nuked'
+Provider per l'emulazione OPL. 'compat' fornisce la migliore qualit…, 'nuked'
 Š l'impostazione predefinita e pi— accurata (ma la pi— impegnativa per la CPU).
 .
 :CONFIG_GUS
@@ -425,8 +427,8 @@ Numero IRQ della scheda audio Gravis UltraSound.
 Canale DMA della scheda audio Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-Percorso per la cartella UltraSound. Questa directory dovrebbe contenere una
-cartella MIDI con al suo interno i patch file per la riproduzione GUS.
+Percorso per la cartella UltraSound. In essa dovrebbe essere presente una
+cartella MIDI con al suo interno i file di patch per la riproduzione GUS.
 I set di patch utilizzati con Timidity dovrebbero funzionare.
 .
 :CONFIG_SIDMODEL
@@ -442,9 +444,9 @@ Modello di chip da emulare nella scheda Innovation SSI-2001:
 :CONFIG_SIDCLOCK
 Frequenza di clock del chip SID, modificabile tramite ponticello (o jumper)
 sulle schede di riproduzione.
- - default: utilizza 0.895 MHz, per la scheda SSI-2001 originale.
- - c64ntsc: utilizza 1.023 MHz, per i PC Commodore NTSC e DuoSID.
- - c64pal:  utilizza 0.985 MHz, per i PC Commodore PAL e DuoSID.
+ - default: utilizza 0.895 MHz, secondo la scheda SSI-2001 originale.
+ - c64ntsc: utilizza 1.023 MHz, secondo i PC Commodore e DuoSID NTSC.
+ - c64pal:  utilizza 0.985 MHz, secondo i PC Commodore e DuoSID PAL.
  - hardsid: utilizza 1.000 MHz, disponibile sul DuoSID.
 .
 :CONFIG_SIDPORT
@@ -458,7 +460,7 @@ Regola la forza di filtraggio del chip 6581 come percentuale da 0 a 100.
 Regola la forza di filtraggio del chip 8580 come percentuale da 0 a 100.
 .
 :CONFIG_PCSPEAKER
-Attiva l'emulazione del PC-Speaker (altoparlante interno del PC).
+Abilita l'emulazione dell'altoparlante interno del PC (PC-Speaker).
 .
 :CONFIG_PCRATE
 Frequenza di campionamento della generazione del suono del PC-Speaker.
@@ -470,11 +472,11 @@ su Windows. Se il tuo sistema operativo esegue la propria correzione del
 DC-offset, impostalo su 'false'.
 .
 :CONFIG_TANDY
-Attiva l'emulazione del sistema audio Tandy.
+Abilita l'emulazione del sistema audio Tandy.
 Se 'auto', l'emulazione Š presente solo se la macchina Š impostata su 'tandy'.
 .
 :CONFIG_DISNEY
-Attiva l'emulazione Disney Sound Source.
+Abilita l'emulazione Disney Sound Source.
 (Compatibile con Covox Voice Master e Speech Thing)
 .
 :CONFIG_PS1AUDIO
@@ -495,7 +497,7 @@ disabled : Disabilita completamente i joystick: non saranno interrogati,
 (Ricorda di resettare il mapperfile di DOSBox se l'hai salvato in precedenza)
 .
 :CONFIG_TIMED
-Attiva gli intervalli temporizzati per gli assi.
+Abilita gli intervalli temporizzati per gli assi.
 Sperimenta con questa opzione, se il tuo joystick soffre di drifting.
 .
 :CONFIG_AUTOFIRE
@@ -514,7 +516,7 @@ cerchio.
 .
 :CONFIG_DEADZONE
 Percentuale di movimento da ignorare.
-100 trasforma la levetta analogica in digitale.
+Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
 :CONFIG_SERIAL1
 Imposta il tipo di dispositivo connesso alla porta com.
@@ -531,13 +533,13 @@ della connessione. 0 per TCP e 1 per UDP affidabile ENet.
 Esempio: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Fare riferimento alla sezione serial1.
+Fare riferimento a serial1.
 .
 :CONFIG_SERIAL3
-Fare riferimento alla sezione serial1.
+Fare riferimento a serial1.
 .
 :CONFIG_SERIAL4
-Fare riferimento alla sezione serial1.
+Fare riferimento a serial1.
 .
 :CONFIG_PHONEBOOKFILE
 File utilizzato per mappare numeri di telefono falsi su indirizzi. 
@@ -547,18 +549,17 @@ Abilita supporto XMS.
 .
 :CONFIG_EMS
 Abilita supporto EMS. L'impostazione predefinita (=true) fornisce la migliore
-compatibilit…, ma alcune applicazioni possono funzionare meglio con
-altre scelte, o richiedono che il supporto EMS sia disabilitato (=false)
-per funzionare.
+compatibilit…, ma alcune applicazioni potrebbero funzionare meglio con altre
+scelte o richiedere la disabilitazione del supporto EMS (=false).
 .
 :CONFIG_UMB
 Abilita supporto UMB.
 .
 :CONFIG_VER
 Imposta la versione DOS (5.0 per impostazione predefinita).
-Specificare come formato major.minor.
+Specificare come formato maggiore.minore.
 Un singolo numero viene considerato come la versione principale.
-I parametri riconosciuti sono 3.3, 5.0, 6.22, e 7.1.
+Le impostazioni comuni sono 3.3, 5.0, 6.22, e 7.1.
 .
 :CONFIG_COUNTRY
 Imposta il codice paese DOS che influenzer… informazioni come data, ora e
@@ -636,7 +637,7 @@ Puoi inserire i tuoi comandi MOUNT qui.
 Valori Possibili
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
-Sezione o propriet… non trovata.
+Sezione o propriet… non trovata: %s
 
 .
 :PROGRAM_CONFIG_NO_PROPERTY
@@ -644,7 +645,7 @@ La propriet… "%s" non Š presente nella sezione "%s".
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Sintassi corretta: config -set "sezione propriet… = valore".
+Sintassi corretta: config -set "[sezione] propriet…=valore".
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -688,18 +689,18 @@ Usa -writelang o -wl [nomefile] per scrivere le stringhe della lingua corrente.
 -wcd
  Scrive nel file di config. predefinito nella cartella di configurazione.
 -l elenca i parametri di configurazione.
--h, -help, -? sections / nome sezione / nome propriet…
- Senza parametri, visualizza questa guida. Aggiungi "sections" per un elenco di
+-h, -help, -? sections / nomeSezione / nomePropriet…
+ Senza parametri, visualizza questa guida. Aggiungi "sections" per elencare le
  sezioni. Per info su sezione o propriet…, aggiungere il suo nome dopo -help.
 -axclear pulisce la sezione autoexec.
--axadd [line] aggiunge una riga alla sezione autoexec.
+-axadd [riga] aggiunge una riga alla sezione autoexec.
 -axtype stampa il contenuto della sezione autoexec.
 -securemode passa alla modalit… sicura.
 -avistart avvia la registrazione AVI.
 -avistop interrompe la registrazione AVI.
 -startmapper avvia il keymapper.
--get "sezione propriet…" restituisce il valore della propriet….
--set "sezione propriet… = valore" imposta il valore.
+-get "[sezione] propriet…" restituisce il valore della propriet….
+-set "[sezione] propriet…=valore" imposta il valore.
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
@@ -751,7 +752,7 @@ La sezione "%s" non esiste.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Sintassi corretta: config -get "sezione propriet…".
+Sintassi corretta: config -get "[sezione] propriet…".
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
@@ -766,7 +767,6 @@ Parametro mancante.
 .
 :PROGRAM_PATH_TOO_LONG
 Il percorso "%s" supera la lunghezza massima DOS di %d carattere/i.
-
 
 .
 :PROGRAM_EXECUTABLE_MISSING
@@ -841,7 +841,7 @@ Le unit… virtuali non possono essere smontate.
 
 .
 :PROGRAM_MOUNT_NO_OPTION
-Attenzione: l'opzione '%s' non Š supportata e sar… ignorata.
+Avviso: l'opzione '%s' non Š supportata e sar… ignorata.
 
 .
 :PROGRAM_MOUNT_OVERLAY_NO_BASE
@@ -1063,7 +1063,7 @@ Esempi:
 
 .
 :PROGRAM_RESCAN_SUCCESS
-l'unit… Š stata nuovamente scansionata.
+Unit… nuovamente scansionata.
 
 .
 :PROGRAM_INTRO
@@ -1073,7 +1073,7 @@ DOSBox crea una shell simile al vecchio DOS.
 Per informazioni sul montaggio delle unit…, digita [34;1mintro mount[0m
 Per informazioni sul supporto CD-ROM, digita [34;1mintro cdrom[0m
 Per informazioni sui tasti speciali, digita [34;1mintro special[0m
-Per ulteriori informazioni su DOSBox Staging, visita:[34;1m
+Per ulteriori informazioni, visita il wiki di DOSBox Staging:[34;1m
 https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 
 [31;1mIn caso di errori, DOSBox si interromper… e terminer… senza preavvisi![0m
@@ -1111,44 +1111,48 @@ Puoi eseguire programmi/file con estensione [31m.exe[0m, [31m.bat[0m e [31m
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mCome montare un'unit… CD-ROM virtuale in DOSBox:[0m
-DOSBox fornisce un'emulazione CD-ROM a vari livelli.
+[2J[32;1mCome montare un'unit… CD-ROM reale/virtuale in DOSBox:[0m
+DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
-Funziona su tutte le cartelle normali, viene installato MSCDEX e impostati
-tutti i file in sola lettura. Di solito questo va bene per la maggior parte
-dei giochi:
-
+Il livello [33mbase[0m funziona su tutte le cartelle normali, installa MSCDEX e
+contrassegna i file in sola lettura. Di solito questo Š sufficiente per la
+maggior parte dei giochi:
 [34;1mmount D C:\esempio -t cdrom[0m
+Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
+[34;1mmount D C:\esempio -t cdrom -label ETICHETTACD[0m
 
-Se non funziona, potresti dover specificare l'etichetta del CD-ROM:
-
-[34;1mmount D C:\esempio -t cdrom -label ETICHETTA[0m
+Il livello [33msuccessivo[0m aggiunge un supporto di basso livello.
+Pertanto funziona solo su unit… CD-ROM:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+Sostituisci [0;31mD:\[0m con la posizione del tuo CD-ROM.
+Sostituisci lo [33;1m0[0m in [34;1m-usecd [33m0[0m con il numero riportato per il tuo CD-ROM
+se digiti: [34;1mmount -listcd[0m
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
-
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
-
 [34;1mimgmount D C:\cd.cue -t cdrom[0m
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mCome montare un'unit… CD-ROM virtuale in DOSBox:[0m
-DOSBox fornisce un'emulazione CD-ROM a vari livelli.
+[2J[32;1mCome montare un'unit… CD-ROM reale/virtuale in DOSBox:[0m
+DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
-Funziona su tutte le cartelle normali, viene installato MSCDEX e impostati
-tutti i file in sola lettura. Di solito questo va bene per la maggior parte
-dei giochi:
+Il livello [33mbase[0m funziona su tutte le cartelle normali, installa MSCDEX e
+contrassegna i file in sola lettura. Di solito questo Š sufficiente per la
+maggior parte dei giochi:
+[34;1mmount D ~/example -t cdrom[0m
+Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
+[34;1mmount D ~/example -t cdrom -label ETICHETTACD[0m
 
-[34;1mmount D ~/esempio -t cdrom[0m
-
-Se non funziona, potresti dover specificare l'etichetta del CD-ROM:
-
-[34;1mmount D ~/esempio -t cdrom -label ETICHETTA[0m
+Il livello [33msuccessivo[0m aggiunge un supporto di basso livello.
+Pertanto funziona solo su unit… CD-ROM:
+[34;1mmount d [0;31m~/example[34;1m -t cdrom -usecd [33m0[0m
+Sostituisci [0;31m~/example[0m con la posizione del tuo CD-ROM.
+Sostituisci lo [33;1m0[0m in [34;1m-usecd [33m0[0m con il numero riportato per il tuo CD-ROM
+se digiti: [34;1mmount -listcd[0m
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
-
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
-
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
@@ -1164,8 +1168,8 @@ Possono essere modificate nel [33mkeymapper[0m.
 [33;1m%s+F4[0m   %s Passa tra le immagini disco montate, scansiona tutte le unit… per
            rilevare modifiche.               
 [33;1m%s+F5[0m   %s Scatta un'istantanea dello schermo (screenshot).
-[33;1m%s+F6[0m   %s Avvia/Ferma la registrazione dell'output audio in un file wave.
-[33;1m%s+F7[0m   %s Avvia/Ferma la registrazione dell'output video in un file zmbv.
+[33;1m%s+F6[0m   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
+[33;1m%s+F7[0m   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.
 [33;1m%s+F9[0m   %s Chiude l'emulatore.
 [33;1m%s+F10[0m  %s Cattura/Rilascia il mouse.
 [33;1m%s+F11[0m  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
@@ -1253,12 +1257,12 @@ Utilizzo:
   [32;1mloadrom [36;1mIMMAGINE[0m
 
 Dove:
-  [36;1mIMMAGINE[0m Š un BIOS video o un'immagine ROM IBM BASIC.
+  [36;1mIMMAGINE[0m Š un'immagine ROM BIOS video o IBM BASIC.
 
 Note:
-   Dopo aver caricato un'immagine ROM IBM BASIC nella ROM emulata con il
-   comando 'loadrom', Š possibile eseguire il programma interprete IBM BASIC
-   originale in DOSBox Staging.
+   Dopo aver caricato un'immagine ROM IBM BASIC nella ROM emulata con questo
+   comando, Š possibile eseguire il programma interprete IBM BASIC originale in
+   DOSBox Staging.
 
 Esempi:
   [32;1mloadrom[0m [36;1mbios.rom[0m
@@ -1297,9 +1301,9 @@ Monta un'immagine CD-ROM, floppy o disco su una lettera di unit….
 
 Utilizzo:
   [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mCDROM-SET[0m [-fs iso] [-ide] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mIMMAGINE[0m [IMMAGINE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mAVVIABILE[0m [-fs fat|none] -t hdd -size GEOMETRIA
-  [32;1mimgmount[0m -u [37;1mUNIT·[0m  (smonta le immagini)
+  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mIMMAGINE[0m [IMMAGINE2 [..]] [-fs fat] -t hdd|floppy -ro
+  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mAVVIABILE[0m [-fs fat|none] -t hdd -size GEOMETRIA -ro
+  [32;1mimgmount[0m -u [37;1mUNIT·[0m  (smonta l'immagine dell'[37;1mUNIT·[0m)
 
 Dove:
   [37;1mUNIT·[0m     Š la lettera dell'unit… in cui verr… montata l'immagine: a, c, d ..
@@ -1308,15 +1312,15 @@ Dove:
   [36;1mAVVIABILE[0m Š un'immagine disco avviabile con -size GEOMETRIA specificata:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Note:
-  - %s+F4 scambia e monta il CDROM-SET o l'IMMAGINE successiva, se fornita.
-  - Il flag '-ide' emula un controller IDE con un'unit… ATAPI CD-ROM collegata.
-    Questo Š utile per i giochi basati su CDROM che necessitano di un vero
-    ambiente DOS tramite l'immagine HDD avviabile.
+  - %s+F4 scambia e monta il [36;1mCDROM-SET[0m o l'immagine [36;1mAVVIABILE[0m successiva.
+  - Il flag -ro monta l'immagine disco in sola lettura (Protetto da scrittura).
+  - Il flag -ide emula un controller IDE con un'unit… CD collegata, utile per i
+    giochi CD che richiedono un ambiente DOS tramite l'immagine HDD avviabile.
 Esempi:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/NOMEUTENTE/giochi/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1mdisco_avviabile.img[0m -t hdd -fs none -size 512,63,32,1023
+  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy -ro
+  [32;1mimgmount[0m [37;1mC[0m [36;1mdiscoAvviabile.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
 :SHELL_CMD_MOUNT_HELP
@@ -1327,17 +1331,17 @@ Monta una cartella del sistema operativo host su una lettera di unit….
 Monta una cartella del sistema operativo host su una lettera di unit….
 
 Utilizzo:
-  [32;1mmount[0m [37;1mUNIT·[0m [36;1mCARTELLA[0m [-t TIPO] [-freesize DIMENSIONE] [-label ETICHETTA]
-  [32;1mmount[0m -u [37;1mUNIT·[0m  (smonta l'unit…)
+  [32;1mmount[0m [37;1mUNIT·[0m [36;1mCARTELLA[0m [-t TIPO] [-usecd #] [-freesize DIM] [-label ETICHETTA]
+  [32;1mmount[0m -listcd / -cd (elenca le unit… CD-ROM rilevate e i relativi numeri)
+  [32;1mmount[0m -u [37;1mUNIT·[0m  (smonta la cartella dell'UNIT·)
 
 Dove:
-  [37;1mUNIT·[0m      Š la lettera dell'unit… in cui verr… montata la cartella: es. C
-  [36;1mCARTELLA[0m   Š la cartella sul sistema operativo host da montare.
-  TIPO       Š il tipo di directory da montare: 'dir', 'floppy', 'cdrom' o
-             'overlay'.
-  DIMENSIONE Š lo spazio libero per l'unit… virtuale (KiB per floppy, 
-             altrimenti MiB).
-  ETICHETTA  Š il nome dell'etichetta dell'unit… da utilizzare.
+  [37;1mUNIT·[0m     Š la lettera dell'unit… in cui verr… montata la cartella: es. C
+  [36;1mCARTELLA[0m  Š la cartella sul sistema operativo host da montare.
+  TIPO      Š il tipo di cartella da montare: dir, floppy, cdrom o overlay.
+  DIM       Š lo spazio libero per l'unit… virtuale (KiB per floppy,
+            altrimenti MiB).
+  ETICHETTA Š il nome dell'etichetta dell'unit… da utilizzare.
 
 Note:
   - '-t overlay' reindirizza le scritture per l'unit… montata in un'altra
@@ -1360,7 +1364,7 @@ Le unit… disco e immagini CD attualmente montate sono:
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
 Ô necessario specificare il numero di unit… (0 o 3) su cui montare l'immagine
-(0,1 = fda,fdb; 2,3 = hda,hdb).
+(0,1=fda,fdb; 2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
@@ -1458,10 +1462,10 @@ Note:
   sezione [dos] utilizzando l'impostazione "keyboardlayout = [36;1mCODICELINGUA[0m".
 
 Esempi:
-  [32;1mKEYB[0m
-  [32;1mKEYB[0m [36;1muk[0m
-  [32;1mKEYB[0m [36;1mit[0m [37;1m850[0m
-  [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
+  [32;1mkeyb[0m
+  [32;1mkeyb[0m [36;1muk[0m
+  [32;1mkeyb[0m [36;1mit[0m [37;1m850[0m
+  [32;1mkeyb[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
 :PROGRAM_KEYB_NOERROR
@@ -1506,11 +1510,11 @@ Note:
   Per [36;1mDUMMY[0m        : IRQ
 
 Esempi:
- [32;1mSERIAL[0m                                : Elenca le porte seriali correnti
- [32;1mSERIAL[0m [37;1m1[0m [36;1mNULLMODEM[0m PORT:1250                : Ascolto su TCP:1250 come server
- [32;1mSERIAL[0m [37;1m2[0m [36;1mNULLMODEM[0m SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
- [32;1mSERIAL[0m [37;1m3[0m [36;1mMODEM[0m LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
- [32;1mSERIAL[0m [37;1m4[0m [36;1mDIRECTSERIAL[0m REALPORT:ttyUSB0      : Usa una porta fisica su Linux
+ [32;1mserial[0m                                : Elenca le porte seriali correnti
+ [32;1mserial[0m [37;1m1[0m [36;1mNULLMODEM[0m PORT:1250                : Ascolto su TCP:1250 come server
+ [32;1mserial[0m [37;1m2[0m [36;1mNULLMODEM[0m SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
+ [32;1mserial[0m [37;1m3[0m [36;1mMODEM[0m LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
+ [32;1mserial[0m [37;1m4[0m [36;1mDIRECTSERIAL[0m REALPORT:ttyUSB0      : Usa una porta fisica su Linux
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -1577,8 +1581,9 @@ Dove:
   [36;1mCOMANDO[0m Š un comando, gioco o programma DOS da eseguire.
 
 Note:
-  DOSBox Staging avvia automaticamente una shell di comandi DOS invocando questo
-  comando con l'opzione /init all'avvio, mostrando la schermata di benvenuto.
+  DOSBox Staging avvia automaticamente una shell di comandi DOS richiamando
+  questo comando con l'opzione /init all'avvio, che mostra la schermata di
+  benvenuto. 
   Puoi caricare una nuova istanza della shell dei comandi eseguendo [32;1mcommand[0m.
   L'aggiunta dell'opzione /c insieme a un [36;1mCOMANDO[0m (facoltativamente con
   parametri), consente di chiudere il programma automaticamente al concludersi
@@ -1624,7 +1629,7 @@ Sei ancora nell'unit… Z:, passa ad un'unit… montata con [31mC:[0m.
 
 .
 :SHELL_CMD_DATE_HELP
-Visualizza o modifica la data.
+Visualizza o modifica la data interna.
 
 .
 :SHELL_CMD_DATE_ERROR
@@ -1752,8 +1757,8 @@ Reindirizzamento duplicato - %s
 .
 :SHELL_CMD_FAILED_PIPE
 
-
-Impossibile creare/aprire un file temporaneo per il piping. Controllare la variabile %%TEMP%%.
+Impossibile creare/aprire un file temporaneo per il piping.
+Controllare la variabile %%TEMP%%.
 
 .
 :SHELL_CMD_FILE_CREATE_ERROR
@@ -1769,7 +1774,7 @@ File non trovato: %s
 
 .
 :SHELL_CMD_FILE_EXISTS
-File %s gi… esistente.
+Il file %s esiste gi….
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -1931,29 +1936,27 @@ Visualizza un elenco di file e sottocartelle in una directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Utilizzo:
-  [32;1mdir[0m [36;1m[MODELLO][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDINAMENTO[0m]
+  [32;1mdir[0m [36;1m[MODELLO][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDINAM[0m]
 
 Dove:
-  [36;1mMODELLO[0m     Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
-              o punto di domanda (?). Ô possibile specificare il percorso di
-              una cartella per elencarne il contenuto.
-  [37;1mORDINAMENTO[0m Š il tipo di ordinamento scelto per visualizzare l'elenco, cioŠ:
-              [37;1mn[0m (per nome, alfabetico), [37;1ms[0m (per dimensione, dal minore),
-              [37;1me[0m (per estensione, alfabetico), [37;1md[0m (per data/ora dal pi— vecchio),
-              con un prefisso opzionale [37;1m-[0m per invertire l'ordinamento.
-  /w  elenca 5 file/directory in una riga;    /b   elenca solo i nomi.
-  /o  elenca i file ordinandoli. (vedi sopra) /p   mostra schermata per volta.
-  /ad visualizza tutte le cartelle;           /a-d visualizza tutti i file.
+  [36;1mMODELLO[0m Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
+          o punto di domanda (?). Ô possibile specificare il percorso di
+          una cartella per elencarne il contenuto.
+  [37;1mORDINAM[0m Š il tipo di ordinamento scelto, cioŠ: [37;1mn[0m (per nome, alfabetico),
+          [37;1ms[0m (per dimensione, dal minore), [37;1me[0m (per estensione, alfabetico),
+          [37;1md[0m (per data/ora dal pi— vecchio), con prefisso [37;1m-[0m per invertire ordine
+  /w  elenca 5 file/cartelle in una riga;  /b   elenca solo i nomi.
+  /o  ordina la lista (vedi sopra);        /p   mostra una schermata per volta.
+  /ad elenca tutte le cartelle;            /a-d elenca tutti i file.
 
 Note:
   L'esecuzione di [32;1mdir[0m senza un argomento elenca tutti i file e le
-  sottocartelle nella directory corrente. [32;1mdir[0m [36;1m*.*[0m effettua la stessa operazione.
+  sottocartelle nella directory corrente. [32;1mdir[0m [36;1m*.*[0m effettua la stessa operazione
 
 Esempi:
   [32;1mdir[0m [36;1m[0m
   [32;1mdir[0m [36;1mgiochi.*[0m /p
   [32;1mdir[0m [36;1mc:\giochi\*.exe[0m /b /o[37;1m-d[0m
-
 .
 :SHELL_CMD_ECHO_HELP
 Visualizza messaggi e attiva/disattiva la ripetizione dei comandi.
@@ -2038,7 +2041,7 @@ Utilizzo:
   [32;1mintro[0m [37;1mPAGINA[0m
 
 Dove:
-  [37;1mPAGINA[0m Š il nome della pagina da visualizzare, incluso [37;1mcdrom[0m, [37;1mmount[0m, e [37;1mspecial[0m
+  [37;1mPAGINA[0m Š il nome della pagina da visualizzare, incluso [37;1mcdrom[0m, [37;1mmount[0m e [37;1mspecial[0m
 
 Note:
   L'esecuzione di [32;1mintro[0m senza un argomento, permette di visualizzare una pagina
@@ -2069,7 +2072,7 @@ Note:
 
 Esempi:
   [32;1mmd[0m [36;1mnuovaCartella[0m
-  [32;1mmd[0m [36;1mc:\giochi\nuovaCartella[0m
+  [32;1mmd[0m [36;1mc:\giochi\cartella[0m
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -2164,7 +2167,7 @@ Esempi:
 
 .
 :SHELL_CMD_SHIFT_HELP
-Cambia la posizione dei parametri sostituibili in un programma batch.
+Cambia la posizione dei parametri sostituibili in un programma batch
 
 .
 :SHELL_CMD_SHIFT_HELP_LONG
@@ -2202,7 +2205,6 @@ Esempi:
   [32;1mtype[0m [36;1mtesto.txt[0m
   [32;1mtype[0m [36;1mc:\dos\leggimi.txt[0m
 
-
 .
 :SHELL_CMD_REM_HELP
 Aggiunge commenti in un programma batch.
@@ -2216,7 +2218,7 @@ Dove:
   [36;1mCOMMENTO[0m Š una nota che si vuole aggiungere.
 
 Note:
-  L'aggiunta di commenti a un programma batch pu• semplificarne la comprensione.
+  L'aggiunta di commenti a un programma batch pu• semplificarne la comprensione
   Puoi anche commentare temporaneamente alcuni comandi con questo comando.
 
 Esempi:
@@ -2286,15 +2288,15 @@ Utilizzo:
   [32;1mcopy[0m [37;1mSORGENTE1+SORGENTE2[+...][0m [36;1m[DESTINAZIONE][0m
 
 Dove:
-  [37;1mSORGENTE[0m     Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
-               o punto di domanda (?).
+  [37;1mSORGENTE[0m     Š un nome file specifico o con caratteri jolly, cioŠ
+               asterisco(*) o punto di domanda (?).
   [36;1mDESTINAZIONE[0m Š un nome file specifico che non contiene caratteri
                jolly o una cartella.
 
 Note:
   L'operatore [37;1m+[0m combina pi— file sorgente forniti in un unico file.
-  La destinazione Š facoltativa: se omessa, i file vengono copiati nel percorso
-  corrente.
+  La destinazione Š facoltativa: se omessa, i file verranno copiati nel
+  percorso corrente.
 
 Esempi:
   [32;1mcopy[0m [37;1msorgente.bat[0m [36;1mnuovo.bat[0m
@@ -2384,7 +2386,7 @@ Dove:
 
 Note:
   Il comando elencher… le cartelle in [34;1mblu[0m, programmi eseguibili DOS
-   (*.com, *.exe, *.bat) in [32;1mverde[0m, e altri file nel colore normale.
+  (*.com, *.exe, *.bat) in [32;1mverde[0m, e altri file nel colore normale.
 
 Esempi:
   [32;1mls[0m [36;1mfile.txt[0m
@@ -2428,7 +2430,6 @@ Impossibile ottenere gli attributi: %s
 Impossibile impostare gli attributi: %s
 
 .
-
 :SHELL_CMD_CHOICE_HELP
 Attende la pressione di un tasto e imposta un valore ERRORLEVEL.
 
@@ -2472,13 +2473,14 @@ Utilizzo:
   [32;1mpath[0m [36;1m[unit…:]percorso[;...][0m
 
 Dove:
-  [36;1m[unit…:]percorso[;...][0m Š un percorso contenente un'unit… e una directory.
+  [36;1m[unit…:]percorso[;...][0m Š un percorso contenente un'unit… e una cartella.
   Ô possibile specificare pi— di un percorso, separati da un punto e virgola(;)
 
 Note:
-  Il parametro con solo un punto e virgola (;), cancella tutte le impostazioni
-  del percorso di ricerca. La variabile d'ambiente path pu• essere impostata
-  utilizzando anche il comando [32;1mset[0m, per esempio [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
+  Il parametro con solo un punto e virgola (;) cancella tutte le impostazioni
+  del percorso di ricerca. 
+  La variabile d'ambiente path pu• anche essere impostata utilizzando il
+  comando [32;1mset[0m, per esempio [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
 
 Esempi:
   [32;1mpath[0m
@@ -2486,7 +2488,7 @@ Esempi:
 
 .
 :SHELL_CMD_VER_HELP
-Visualizza o imposta la versione DOS.
+Visualizza o imposta la versione DOS riportata.
 
 .
 :SHELL_CMD_VER_HELP_LONG
