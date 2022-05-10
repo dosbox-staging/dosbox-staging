@@ -41,7 +41,7 @@ void GameBlaster::Open(const int port_choice, const std::string_view card_choice
 
 	// Create the SAA1099 devices
 	for (auto &d : devices) {
-		d = std::make_unique<saa1099_device>(machine_config(), "", nullptr, chip_clock);
+		d = std::make_unique<saa1099_device>(machine_config(), "", nullptr, chip_clock, render_divisor);
 		d->device_start();
 	}
 
@@ -73,8 +73,19 @@ void GameBlaster::Open(const int port_choice, const std::string_view card_choice
 		                                    12);
 	}
 
+	// Setup the mixer
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
-	channel = MIXER_AddChannel(audio_callback, frame_rate_hz, CardName());
+	channel = MIXER_AddChannel(audio_callback, 0, CardName());
+
+	// Calculate rates and ratio based on the mixer's rate
+	const auto frame_rate_hz = channel->GetSampleRate();
+	frame_rate_per_ms = frame_rate_hz / 1000.0;
+	render_to_play_ratio = static_cast<double>(render_rate_hz) / frame_rate_hz;
+
+	// Setup the resampler to convert from the render rate to the mixer's frame rate
+	const auto max_freq = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
+	for (auto &r : resamplers)
+		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz, frame_rate_hz, max_freq));
 
 	LOG_MSG("%s: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
 	        CardName(),
@@ -84,30 +95,43 @@ void GameBlaster::Open(const int port_choice, const std::string_view card_choice
 	assert(channel);
 	assert(devices[0]);
 	assert(devices[1]);
+	assert(resamplers[0]);
+	assert(resamplers[1]);
 
 	is_open = true;
 }
 
-GameBlaster::frame_t GameBlaster::RenderOnce()
+bool GameBlaster::RenderOnce()
 {
 	static frame_t input = {};
 	static int16_t *buffer[] = {&input[0], &input[1]};
 	static device_sound_interface::sound_stream stream;
 
-	frame_t output = {};
+	frame_t rendered = {};
 	for (const auto &d : devices) {
 		d->sound_stream_update(stream, 0, buffer, 1);
-		output[0] += input[0];
-		output[1] += input[1];
+		rendered[0] += input[0];
+		rendered[1] += input[1];
 	}
-	return output;
+	const auto l_sample_ready = resamplers[0]->input(rendered[0]);
+	const auto r_sample_ready = resamplers[1]->input(rendered[1]);
+	assert(l_sample_ready == r_sample_ready);
+	return l_sample_ready && r_sample_ready;
+}
+
+GameBlaster::frame_t GameBlaster::GetFrame()
+{
+	const auto l_sample = check_cast<int16_t>(resamplers[0]->output());
+	const auto r_sample = check_cast<int16_t>(resamplers[1]->output());
+	return {l_sample, r_sample};
 }
 
 void GameBlaster::RenderForMs(const double duration_ms)
 {
-	auto render_count = iround(duration_ms * frame_rate_per_ms);
+	auto render_count = iround(duration_ms * render_rate_per_ms);
 	while (render_count-- > 0)
-		fifo.emplace(RenderOnce());
+		if (RenderOnce())
+			fifo.emplace(GetFrame());
 }
 
 void GameBlaster::RenderUpToNow()
@@ -162,7 +186,9 @@ void GameBlaster::AudioCallback(uint16_t requested_frames)
 	if (requested_frames) {
 		last_render_time += ConvertFramesToMs(requested_frames);
 		while (requested_frames--) {
-			const auto frame = RenderOnce();
+			while (!RenderOnce())
+				; // render until a frame is ready
+			const auto frame = GetFrame();
 			channel->AddSamples_s16(1, frame.data());
 		}
 	}
@@ -220,6 +246,10 @@ void GameBlaster::Close()
 	channel.reset();
 	devices[0].reset();
 	devices[1].reset();
+
+	// Destroy the resamplers
+	resamplers[0].reset();
+	resamplers[1].reset();
 
 	is_open = false;
 }

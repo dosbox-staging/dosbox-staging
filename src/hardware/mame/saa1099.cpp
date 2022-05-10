@@ -169,10 +169,8 @@ constexpr uint8_t envelope[8][64] = {
 
 #define FILL_ARRAY( _FILL_ ) memset( _FILL_, 0, sizeof( _FILL_ ) )
 
-saa1099_device::saa1099_device(const machine_config &mconfig,
-                               const char *tag,
-                               device_t *owner,
-                               uint32_t clock)
+saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner,
+                               const uint32_t clock, const int rate_divisor)
         : device_t(mconfig, SAA1099, tag, owner, clock),
           device_sound_interface(mconfig, *this),
           m_stream(0),
@@ -190,7 +188,7 @@ saa1099_device::saa1099_device(const machine_config &mconfig,
           m_all_ch_enable(0),
           m_sync_state(0),
           m_selected_reg(0),
-          m_sample_rate(0.0),
+          m_sample_rate(clock / rate_divisor),
           m_chip_clock(0)
 {
 	FILL_ARRAY( m_noise_params );
@@ -211,7 +209,6 @@ void saa1099_device::device_start()
 {
 	/* copy global parameters */
 	m_chip_clock = clock();
-	m_sample_rate = clock() / 256;
 
 	/* for each chip allocate one stream */
 	assert(m_sample_rate >= 0 && m_sample_rate <= INT_MAX);
