@@ -29,10 +29,8 @@
 
 class saa1099_device final : public device_t, public device_sound_interface {
 public:
-	saa1099_device(const machine_config &mconfig,
-	               const char *tag,
-	               device_t *owner,
-	               uint32_t clock);
+	saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner,
+	               const uint32_t clock, const int rate_divisor);
 
 	saa1099_device(const saa1099_device &) = delete; // prevent copying
 	saa1099_device &operator=(const saa1099_device &) = delete; // prevent assignment

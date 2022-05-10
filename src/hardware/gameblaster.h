@@ -30,10 +30,11 @@
 
 #include "inout.h"
 #include "mixer.h"
+#include "support.h"
 
 #include "mame/emu.h"
 #include "mame/saa1099.h"
-
+#include "../libs/residfp/resample/TwoPassSincResampler.h"
 
 class GameBlaster {
 public:
@@ -44,7 +45,8 @@ public:
 	using frame_t = std::array<int16_t, 2>;
 private:
 	// Autio rendering
-	frame_t RenderOnce();
+	bool RenderOnce();
+	frame_t GetFrame();
 	double ConvertFramesToMs(const int frames) const;
 	void RenderForMs(const double duration_ms);
 	void AudioCallback(uint16_t requested_frames);
@@ -70,12 +72,17 @@ private:
 	IO_WriteHandleObject write_handler_for_detection = {};
 	IO_ReadHandleObject read_handler_for_detection = {};
 	std::unique_ptr<saa1099_device> devices[2] = {};
+	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
 	std::queue<frame_t> fifo = {};
 
 	// Initial configuration
 	static constexpr auto chip_clock = 14318180 / 2;
-	static constexpr auto frame_rate_hz = chip_clock / 256;
-	static constexpr auto frame_rate_per_ms = frame_rate_hz / 1000.0;
+	static constexpr auto render_divisor = 32;
+	static constexpr auto render_rate_hz = ceil_sdivide(chip_clock,
+	                                                    render_divisor);
+	static constexpr auto render_rate_per_ms = render_rate_hz / 1000.0;
+	double render_to_play_ratio = 0.0; // derived from mixer-rate
+	double frame_rate_per_ms = 0.0; // derived from mixer-rate
 	io_port_t base_port = 0;
 
 	// Runtime states
