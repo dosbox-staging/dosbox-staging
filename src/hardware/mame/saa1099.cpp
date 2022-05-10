@@ -351,8 +351,13 @@ void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
 			}
 		}
 		/* write sound data to the buffer */
-		outputs[LEFT][j] = output_l / 6;
-		outputs[RIGHT][j] = output_r / 6;
+		const auto left_sample = output_l / 6;
+		assert(left_sample >= INT16_MIN && left_sample <= INT16_MAX);
+		outputs[LEFT][j] = static_cast<int16_t>(left_sample);
+
+		const auto right_sample = output_r / 6;
+		assert(right_sample >= INT16_MIN && right_sample <= INT16_MAX);
+		outputs[RIGHT][j] = static_cast<int16_t>(right_sample);
 	}
 }
 
