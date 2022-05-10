@@ -52,12 +52,12 @@ public:
 private:
 	struct saa1099_channel {
 		saa1099_channel() = default;
-		int frequency = 0;         // frequency (0x00..0xff)
-		int freq_enable = 0;       // frequency enable
-		int noise_enable = 0;      // noise enable
-		int octave = 0;            // octave (0x00..0x07)
-		int amplitude[2] = {0, 0}; // amplitude (0x00..0x0f)
-		int envelope[2] = {0, 0};  // envelope (0x00..0x0f or 0x10 == off)
+		uint16_t amplitude[2] = {0, 0}; // amplitude (0x00..0x0f)
+		uint8_t envelope[2] = {0, 0}; // envelope (0x00..0x0f or 0x10==off)
+		uint8_t octave = 0;           // octave (0x00..0x07)
+		uint8_t frequency = 0;        // frequency (0x00..0xff)
+		bool freq_enable = 0;         // frequency enable
+		bool noise_enable = 0;        // noise enable
 
 		/* vars to simulate the square wave */
 		void update_freq(int chip_clock); // based on the octave and
