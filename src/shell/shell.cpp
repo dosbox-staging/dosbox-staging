@@ -612,13 +612,14 @@ public:
 		const bool exit_arg_exists = cmdline->FindExist("-exit");
 
 		// Check if instant-launch is active
-		const bool using_instant_launch = control->GetStartupVerbosity() ==
-		                                  Verbosity::InstantLaunch;
+		const bool using_instant_launch_with_executable =
+		        control->GetStartupVerbosity() == Verbosity::InstantLaunch &&
+		        cmdline->HasExecutableName();
 
 		// Should we add an 'exit' call to the end of autoexec.bat?
-		const bool addexit = exit_call_exists
-		                     || exit_arg_exists
-		                     || using_instant_launch;
+		const bool addexit = exit_call_exists ||
+		                     exit_arg_exists ||
+		                     using_instant_launch_with_executable;
 
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN + 1];
