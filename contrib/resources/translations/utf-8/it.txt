@@ -260,7 +260,7 @@ appropriato.
 Tipo di CPU usata nell'emulazione. 'auto' è la scelta più veloce.
 .
 :CONFIG_CYCLES
-Numero di istruzioni DOSBox tenta di emulare ogni millisecondo.
+Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo.
 Un valore troppo alto produrrà perdite nell'audio e ritardi.
 I cicli possono essere impostati in 3 modi:
   'auto'          prova a indovinare le necessità del gioco.
