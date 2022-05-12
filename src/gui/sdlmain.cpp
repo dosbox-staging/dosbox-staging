@@ -1029,8 +1029,6 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		               : FRAME_MODE::THROTTLED_VFR;
 	};
 
-	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
-
 	const bool wants_vsync = sdl.vsync.current == VSYNC_STATE::ON ||
 	                         get_vsync_preference().requested == VSYNC_STATE::ON;
 
@@ -1039,7 +1037,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 
 	// Manual full CFR
 	if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
-		if (configure_cfr_mode() != FRAME_MODE::CFR && !in_text_mode && wants_vsync) {
+		if (configure_cfr_mode() != FRAME_MODE::CFR && wants_vsync) {
 			LOG_WARNING("SDL: CFR performance warning: the DOS rate of %2.5g"
 			            " Hz exceeds the host's %2.5g Hz vsynced rate",
 			            dos_rate, host_rate);
@@ -1049,12 +1047,18 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	}
 	// Manual full VFR
 	else if (sdl.frame.desired_mode == FRAME_MODE::VFR) {
-		if (configure_vfr_mode() != FRAME_MODE::VFR && !in_text_mode) {
+		if (configure_vfr_mode() != FRAME_MODE::VFR) {
 			LOG_WARNING("SDL: VFR performance warning: the DOS rate of %2.5g"
 			            " Hz exceeds the host's %2.5g Hz handling rate",
 			            dos_rate, host_rate);
 		}
 		mode = sdl.frame.desired_mode;
+	}
+	// Auto VFR, if in a text mode with a non-VRR display
+	else if (CurMode->type & M_TEXT_MODES &&
+	         !atleast_as_fast(host_rate, REFRESH_RATE_HOST_VRR_MIN)) {
+		mode = FRAME_MODE::VFR;
+		save_rate_to_frame_period(dos_rate);
 	}
 	// Auto CFR
 	else if (wants_vsync) {
@@ -1063,12 +1067,6 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	// Auto VFR
 	else {
 		mode = configure_vfr_mode();
-	}
-
-	// Text-mode mode on a standard system: just use VFR
-	if (in_text_mode && !atleast_as_fast(host_rate, REFRESH_RATE_HOST_VRR_MIN)) {
-		mode = FRAME_MODE::VFR;
-		save_rate_to_frame_period(dos_rate);
 	}
 
 	// If the mode is unchanged, do nothing
