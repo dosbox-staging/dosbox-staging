@@ -107,6 +107,7 @@ public:
 	const AudioFrame &GetPeaks() const noexcept { return global_peaks; }
 	void PrintStats() const;
 	void Reset() noexcept;
+	void SetBounds(const int val) noexcept;
 	void UpdateLevels(const AudioFrame &desired_levels, float desired_multiplier);
 
 private:
@@ -151,6 +152,8 @@ private:
 	std::atomic<AudioFrame> prescale = {};
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
+	float bounds = 0.0f;
+	float release_amplitude = 0.0f;
 	float range_multiplier = 1.0f;
 	int limited_tally = 0;
 	int non_limited_tally = 0;

@@ -29,11 +29,10 @@
 
 constexpr static auto relaxed = std::memory_order_relaxed;
 
-constexpr static float bounds = static_cast<float>(INT16_MAX - 1);
-
 SoftLimiter::SoftLimiter(const std::string &name)
         : channel_name(name)
 {
+	SetBounds(INT16_MAX - 1);
 	UpdateLevels({1, 1}, 1); // default to unity (ie: no) scaling
 	limited_tally = 0;
 	non_limited_tally = 0;
@@ -45,6 +44,16 @@ void SoftLimiter::UpdateLevels(const AudioFrame &desired_levels,
 	range_multiplier = desired_multiplier;
 	prescale = {desired_levels.left * desired_multiplier,
 	            desired_levels.right * desired_multiplier};
+}
+
+void SoftLimiter::SetBounds(const int val) noexcept
+{
+	assert(val >= 0 && val <= INT16_MAX);
+	bounds = static_cast<float>(val);
+
+	// Calculate the new release amount based on the bounds
+	static constexpr float delta_db = 0.002709201f; // 0.0235 dB increments
+	release_amplitude = bounds * delta_db;
 }
 
 //  Limit the input array and returned as integer array
@@ -89,14 +98,13 @@ void SoftLimiter::Process(const std::vector<float> &in,
 // Saves new local and global peaks, and the input-array iterator of any new
 // peaks before the first zero-crossing, along with the first zero-crossing
 // position.
-void FindPeakAndCross(const SoftLimiter::in_iterator_t in_end,
-                      const SoftLimiter::in_iterator_t pos,
-                      SoftLimiter::in_iterator_t &prev_pos,
-                      const float prescalar,
-                      float &local_peak,
-                      SoftLimiter::in_iterator_t &precross_peak_pos,
-                      SoftLimiter::in_iterator_t &zero_cross_pos,
-                      float &global_peak) noexcept
+static void FindPeakAndCross(const SoftLimiter::in_iterator_t in_end,
+                             const SoftLimiter::in_iterator_t pos,
+                             SoftLimiter::in_iterator_t &prev_pos,
+                             const float prescalar, float &local_peak,
+                             SoftLimiter::in_iterator_t &precross_peak_pos,
+                             SoftLimiter::in_iterator_t &zero_cross_pos,
+                             float &global_peak, const float bounds) noexcept
 {
 	const auto val = fabsf(*pos) * prescalar;
 	if (val > bounds && val > local_peak) {
@@ -133,15 +141,25 @@ void SoftLimiter::FindPeaksAndZeroCrosses(const std::vector<float> &in,
 	AudioFrame local_peaks = global_peaks;
 
 	while (pos != pos_end) {
-		FindPeakAndCross(in.end(), pos++, prev_pos_left,
-		                 prescale.load(relaxed).left, local_peaks.left,
-		                 precross_peak_pos_left, zero_cross_left,
-		                 global_peaks.left);
+		FindPeakAndCross(in.end(),
+		                 pos++,
+		                 prev_pos_left,
+		                 prescale.load(relaxed).left,
+		                 local_peaks.left,
+		                 precross_peak_pos_left,
+		                 zero_cross_left,
+		                 global_peaks.left,
+		                 bounds);
 
-		FindPeakAndCross(in.end(), pos++, prev_pos_right,
+		FindPeakAndCross(in.end(),
+		                 pos++,
+		                 prev_pos_right,
 		                 prescale.load(relaxed).right,
-		                 local_peaks.right, precross_peak_pos_right,
-		                 zero_cross_right, global_peaks.right);
+		                 local_peaks.right,
+		                 precross_peak_pos_right,
+		                 zero_cross_right,
+		                 global_peaks.right,
+		                 bounds);
 	}
 }
 
@@ -251,8 +269,6 @@ void SoftLimiter::SaveTailFrame(const uint16_t frames,
 void SoftLimiter::Release() noexcept
 {
 	// Decrement the peak(s) one step
-	constexpr float delta_db = 0.002709201f; // 0.0235 dB increments
-	constexpr float release_amplitude = bounds * delta_db;
 	if (global_peaks.left > bounds)
 		global_peaks.left -= release_amplitude;
 	if (global_peaks.right > bounds)
@@ -304,8 +320,7 @@ void SoftLimiter::Reset() noexcept
 	// the upper bound because we want retain information about the peak
 	// amplitude when printing statistics.
 
-	constexpr auto upper = bounds; // (workaround to prevent link-errors)
-	global_peaks.left = std::min(global_peaks.left, upper);
-	global_peaks.right = std::min(global_peaks.right, upper);
+	global_peaks.left = std::min(global_peaks.left, bounds);
+	global_peaks.right = std::min(global_peaks.right, bounds);
 	tail_frame = {0, 0};
 }
