@@ -188,7 +188,7 @@ saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, d
           m_all_ch_enable(0),
           m_sync_state(0),
           m_selected_reg(0),
-          m_sample_rate(clock / rate_divisor),
+          m_sample_rate(static_cast<double>(clock) / rate_divisor),
           m_chip_clock(0)
 {
 	FILL_ARRAY( m_noise_params );
