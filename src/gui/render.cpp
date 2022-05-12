@@ -768,7 +768,60 @@ bool RENDER_UseSRGBFramebuffer()
 
 #endif
 
-void RENDER_Init(Section * sec) {
+void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
+{
+#if C_OPENGL
+	assert(control);
+	const Section *sdl_sec = control->GetSection("sdl");
+	assert(sdl_sec);
+	const bool using_opengl = starts_with("opengl",
+	                                      sdl_sec->GetPropValue("output"));
+
+	const auto section = static_cast<Section_prop *>(sec);
+	Prop_path *sh = section->Get_path("glshader");
+	auto filename = (std::string)sh->GetValue();
+
+	constexpr auto fallback_shader = "none";
+	if (filename.empty())
+		filename = fallback_shader;
+	else if (filename == "default")
+		filename = "sharp";
+
+	std::string source = {};
+	if (!RENDER_GetShader(sh->realpath, source) &&
+	    (sh->realpath == filename || !RENDER_GetShader(filename, source))) {
+		sh->SetValue("none");
+		source.clear();
+
+		// List all the existing shaders for the user
+		LOG_ERR("RENDER: Shader file '%s' not found", filename.c_str());
+		for (const auto &line : RENDER_InventoryShaders()) {
+			LOG_WARNING("RENDER: %s", line.c_str());
+		}
+		// Fallback to the 'none' shader and otherwise fail
+		if (RENDER_GetShader(fallback_shader, source)) {
+			filename = fallback_shader;
+		} else {
+			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
+			       fallback_shader);
+		}
+	}
+	if (using_opengl && source.length() && render.shader.filename != filename) {
+		LOG_MSG("RENDER: Using GLSL shader '%s'", filename.c_str());
+		parse_shader_options(source);
+
+		// Move the temporary filename and source into the memebers
+		render.shader.filename = std::move(filename);
+		render.shader.source = std::move(source);
+
+		// Pass the shader source up to the GFX engine
+		GFX_SetShader(render.shader.source);
+	}
+#endif
+}
+
+void RENDER_Init(Section *sec)
+{
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	//For restarting the renderer.
@@ -825,43 +878,8 @@ void RENDER_Init(Section * sec) {
 #endif
 
 #if C_OPENGL
-	assert(control);
-	const Section *sdl_sec = control->GetSection("sdl");
-	assert(sdl_sec);
-	const bool using_opengl = starts_with("opengl",
-	                                      sdl_sec->GetPropValue("output"));
-	Prop_path *sh = section->Get_path("glshader");
-	f = (std::string)sh->GetValue();
-
-	auto &source = render.shader.source;
-	std::hash<std::string> hash_fn;
-	const auto previous_source_hash = hash_fn(source);
-
-	constexpr auto fallback_shader = "none";
-	if (f.empty())
-		f = fallback_shader;
-	else if (f == "default")
-		f = "sharp";
-
-	if (!RENDER_GetShader(sh->realpath, source) &&
-	    (sh->realpath == f || !RENDER_GetShader(f, source))) {
-		sh->SetValue("none");
-		source.clear();
-
-		// List all the existing shaders for the user
-		LOG_ERR("RENDER: Shader file '%s' not found", f.c_str());
-		for (const auto &line : RENDER_InventoryShaders()) {
-			LOG_WARNING("RENDER: %s", line.c_str());
-		}
-		// Fallback to the 'none' shader and otherwise fail
-		if (!RENDER_GetShader(fallback_shader, source)) {
-			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
-			       fallback_shader);
-		}
-	} else if (using_opengl) {
-		LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
-		parse_shader_options(render.shader.source);
-	}
+	const auto previous_shader_filename = render.shader.filename;
+	RENDER_InitShaderSource(section);
 #endif
 
 	//If something changed that needs a ReInit
@@ -871,7 +889,7 @@ void RENDER_Init(Section * sec) {
 	     (render.scale.size != scalersize) ||
 	     (render.scale.forced != scalerforced) ||
 #if C_OPENGL
-	     (previous_source_hash != hash_fn(source)) ||
+	     (previous_shader_filename != render.shader.filename) ||
 #endif
 	     render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );

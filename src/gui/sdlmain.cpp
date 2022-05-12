@@ -1973,10 +1973,12 @@ dosurface:
 void GFX_SetShader([[maybe_unused]] const std::string &source)
 {
 #if C_OPENGL
-	if (!sdl.opengl.use_shader || sdl.opengl.shader_source_sv == source)
+	if (sdl.opengl.shader_source_sv != source)
+		sdl.opengl.shader_source_sv = source;
+
+	if (!sdl.opengl.use_shader)
 		return;
 
-	sdl.opengl.shader_source_sv = source;
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;

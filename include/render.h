@@ -90,6 +90,7 @@ struct Render_t {
 	} scale = {};
 #if C_OPENGL
 	struct {
+		std::string filename = {};
 		std::string source = {};
 		bool use_srgb_texture = false;
 		bool use_srgb_framebuffer = false;
@@ -116,6 +117,7 @@ void RENDER_SetSize(uint32_t width,
                     bool dblh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
+void RENDER_InitShaderSource([[maybe_unused]] Section *sec);
 void RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue);
 
 #if C_OPENGL

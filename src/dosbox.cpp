@@ -539,6 +539,7 @@ void DOSBOX_Init() {
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
+	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, true);
 	pint = secprop->Add_int("frameskip", always, 0);
 	pint->SetMinMax(0, 10);
 	pint->Set_help("How many frames DOSBox skips before drawing one.");
