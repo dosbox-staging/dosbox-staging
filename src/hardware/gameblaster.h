@@ -27,9 +27,11 @@
 #include <memory>
 #include <queue>
 #include <string_view>
+#include <vector>
 
 #include "inout.h"
 #include "mixer.h"
+#include "soft_limiter.h"
 #include "support.h"
 
 #include "mame/emu.h"
@@ -42,14 +44,14 @@ public:
 	void Close();
 	~GameBlaster() { Close(); }
 
-	using frame_t = std::array<int16_t, 2>;
 private:
 	// Autio rendering
 	bool RenderOnce();
-	frame_t GetFrame();
+	std::vector<int16_t> GetFrame();
 	double ConvertFramesToMs(const int frames) const;
 	void RenderForMs(const double duration_ms);
 	void AudioCallback(uint16_t requested_frames);
+	void LevelCallback(const AudioFrame &levels);
 	void RenderUpToNow();
 
 	// IO callbacks to the left SAA1099 device
@@ -73,7 +75,8 @@ private:
 	IO_ReadHandleObject read_handler_for_detection = {};
 	std::unique_ptr<saa1099_device> devices[2] = {};
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
-	std::queue<frame_t> fifo = {};
+	std::unique_ptr<SoftLimiter> soft_limiter = {};
+	std::queue<std::vector<int16_t>> fifo = {};
 
 	// Initial configuration
 	static constexpr auto chip_clock = 14318180 / 2;
