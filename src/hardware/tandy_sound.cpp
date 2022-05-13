@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2019-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2018  The DOSBox Team
  *
