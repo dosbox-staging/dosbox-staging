@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,12 +18,13 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
-// NOTE: a lot of this code assumes that the callback is called every emulated millisecond
+
+// NOTE: a lot of this code assumes that the callback is called every emulated
+// millisecond
 
 #include "dosbox.h"
 
-//#define SPKR_DEBUGGING
+// #define SPKR_DEBUGGING
 #define LOOKUP
 #include <algorithm>
 #include <cmath>
@@ -32,21 +34,29 @@
 #include "setup.h"
 #include "pic.h"
 
-#define NASSERT(X, Y) do{if (X) E_Exit(__FILE__ ": assertion violation: " Y);}while(0)
-#define ASSERT(X, Y)  do{if (!(X)) E_Exit(__FILE__ ": assertion violation: " Y);}while(0)
+#define NASSERT(X, Y) \
+	do { \
+		if (X) \
+			E_Exit(__FILE__ ": assertion violation: " Y); \
+	} while (0)
+#define ASSERT(X, Y) \
+	do { \
+		if (!(X)) \
+			E_Exit(__FILE__ ": assertion violation: " Y); \
+	} while (0)
 
 #ifndef PI
 #define PI 3.14159265358979323846
 #endif
 
 #define SPKR_ENTRIES 1024
-#define SPKR_VOLUME 40000
+#define SPKR_VOLUME  40000
 
 #define SPKR_FILTER_QUALITY 100
-#define SPKR_OVERSAMPLING 32
-#define SPKR_CUTOFF_MARGIN 0.2 // must be greater than 0.0
-#define SPKR_FILTER_WIDTH (SPKR_FILTER_QUALITY*SPKR_OVERSAMPLING)
-#define SPKR_HIGHPASS 0.999 // FIXME: should be selected based on sampling rate
+#define SPKR_OVERSAMPLING   32
+#define SPKR_CUTOFF_MARGIN  0.2 // must be greater than 0.0
+#define SPKR_FILTER_WIDTH   (SPKR_FILTER_QUALITY * SPKR_OVERSAMPLING)
+#define SPKR_HIGHPASS       0.999 // FIXME: should be selected based on sampling rate
 
 struct DelayEntry {
 	float index;
@@ -58,18 +68,18 @@ static struct {
 	uint8_t pit_mode;
 	int rate;
 
-	bool  pit_output_enabled;
-	bool  pit_clock_gate_enabled;
-	bool  pit_output_level;
-	float pit_new_max,pit_new_half;
-	float pit_max,pit_half;
+	bool pit_output_enabled;
+	bool pit_clock_gate_enabled;
+	bool pit_output_level;
+	float pit_new_max, pit_new_half;
+	float pit_max, pit_half;
 	float pit_index;
-	bool  pit_mode1_waiting_for_counter;
-	bool  pit_mode1_waiting_for_trigger;
+	bool pit_mode1_waiting_for_counter;
+	bool pit_mode1_waiting_for_trigger;
 	float pit_mode1_pending_max;
 
-	bool  pit_mode3_counting;
-	float volwant,volcur;
+	bool pit_mode3_counting;
+	float volwant, volcur;
 	// Bitu last_ticks;
 	float last_index;
 	int minimum_counter;
@@ -77,10 +87,13 @@ static struct {
 	int used;
 } spkr;
 
-inline static void AddDelayEntry(float index, bool new_output_level) {
+inline static void AddDelayEntry(float index, bool new_output_level)
+{
 #ifdef SPKR_DEBUGGING
 	if (index < 0 || index > 1) {
-		LOG_MSG("AddDelayEntry: index out of range %f at %f", index, PIC_FullIndex());
+		LOG_MSG("AddDelayEntry: index out of range %f at %f",
+		        index,
+		        PIC_FullIndex());
 	}
 #endif
 	static bool previous_output_level = 0;
@@ -91,32 +104,37 @@ inline static void AddDelayEntry(float index, bool new_output_level) {
 	if (spkr.used == SPKR_ENTRIES) {
 		return;
 	}
-	spkr.entries[spkr.used].index=index;
-	spkr.entries[spkr.used].output_level=new_output_level;
+	spkr.entries[spkr.used].index = index;
+	spkr.entries[spkr.used].output_level = new_output_level;
 	spkr.used++;
 }
 
-inline static void AddPITOutput(float index) {
+inline static void AddPITOutput(float index)
+{
 	if (spkr.pit_output_enabled) {
 		AddDelayEntry(index, spkr.pit_output_level);
 	}
 }
 
-static void ForwardPIT(float newindex) {
+static void ForwardPIT(float newindex)
+{
 #ifdef SPKR_DEBUGGING
 	if (newindex < 0 || newindex > 1) {
-		LOG_MSG("ForwardPIT: index out of range %f at %f", newindex, PIC_FullIndex());
+		LOG_MSG("ForwardPIT: index out of range %f at %f",
+		        newindex,
+		        PIC_FullIndex());
 	}
 #endif
-	float passed=(newindex-spkr.last_index);
-	float delay_base=spkr.last_index;
-	spkr.last_index=newindex;
+	float passed = (newindex - spkr.last_index);
+	float delay_base = spkr.last_index;
+	spkr.last_index = newindex;
 	switch (spkr.pit_mode) {
 	case 6: // dummy
 		return;
 	case 0:
 		if (spkr.pit_index >= spkr.pit_max) {
-			return; // counter reached zero before previous call so do nothing
+			return; // counter reached zero before previous call so
+			        // do nothing
 		}
 		spkr.pit_index += passed;
 		if (spkr.pit_index >= spkr.pit_max) {
@@ -137,7 +155,8 @@ static void ForwardPIT(float newindex) {
 			return; // no pulse yet
 		}
 		if (spkr.pit_index >= spkr.pit_max) {
-			return; // counter reached zero before previous call so do nothing
+			return; // counter reached zero before previous call so
+			        // do nothing
 		}
 		spkr.pit_index += passed;
 		if (spkr.pit_index >= spkr.pit_max) {
@@ -151,129 +170,138 @@ static void ForwardPIT(float newindex) {
 		}
 		return;
 	case 2:
-		while (passed>0) {
+		while (passed > 0) {
 			/* passed the initial low cycle? */
-			if (spkr.pit_index>=spkr.pit_half) {
+			if (spkr.pit_index >= spkr.pit_half) {
 				/* Start a new low cycle */
-				if ((spkr.pit_index+passed)>=spkr.pit_max) {
-					float delay=spkr.pit_max-spkr.pit_index;
-					delay_base+=delay;passed-=delay;
+				if ((spkr.pit_index + passed) >= spkr.pit_max) {
+					float delay = spkr.pit_max - spkr.pit_index;
+					delay_base += delay;
+					passed -= delay;
 					spkr.pit_output_level = 0;
 					AddPITOutput(delay_base);
-					spkr.pit_index=0;
+					spkr.pit_index = 0;
 				} else {
-					spkr.pit_index+=passed;
+					spkr.pit_index += passed;
 					return;
 				}
 			} else {
-				if ((spkr.pit_index+passed)>=spkr.pit_half) {
-					float delay=spkr.pit_half-spkr.pit_index;
-					delay_base+=delay;passed-=delay;
+				if ((spkr.pit_index + passed) >= spkr.pit_half) {
+					float delay = spkr.pit_half - spkr.pit_index;
+					delay_base += delay;
+					passed -= delay;
 					spkr.pit_output_level = 1;
-					AddPITOutput(delay_base); 
-					spkr.pit_index=spkr.pit_half;
+					AddPITOutput(delay_base);
+					spkr.pit_index = spkr.pit_half;
 				} else {
-					spkr.pit_index+=passed;
+					spkr.pit_index += passed;
 					return;
 				}
 			}
 		}
 		break;
-		//END CASE 2
+		// END CASE 2
 	case 3:
-		if (!spkr.pit_mode3_counting) break;
-		while (passed>0) {
+		if (!spkr.pit_mode3_counting)
+			break;
+		while (passed > 0) {
 			/* Determine where in the wave we're located */
-			if (spkr.pit_index>=spkr.pit_half) {
-				if ((spkr.pit_index+passed)>=spkr.pit_max) {
-					float delay=spkr.pit_max-spkr.pit_index;
-					delay_base+=delay;passed-=delay;
+			if (spkr.pit_index >= spkr.pit_half) {
+				if ((spkr.pit_index + passed) >= spkr.pit_max) {
+					float delay = spkr.pit_max - spkr.pit_index;
+					delay_base += delay;
+					passed -= delay;
 					spkr.pit_output_level = 1;
 					AddPITOutput(delay_base);
-					spkr.pit_index=0;
+					spkr.pit_index = 0;
 					/* Load the new count */
-					spkr.pit_half=spkr.pit_new_half;
-					spkr.pit_max=spkr.pit_new_max;
+					spkr.pit_half = spkr.pit_new_half;
+					spkr.pit_max = spkr.pit_new_max;
 				} else {
-					spkr.pit_index+=passed;
+					spkr.pit_index += passed;
 					return;
 				}
 			} else {
-				if ((spkr.pit_index+passed)>=spkr.pit_half) {
-					float delay=spkr.pit_half-spkr.pit_index;
-					delay_base+=delay;passed-=delay;
+				if ((spkr.pit_index + passed) >= spkr.pit_half) {
+					float delay = spkr.pit_half - spkr.pit_index;
+					delay_base += delay;
+					passed -= delay;
 					spkr.pit_output_level = 0;
-					AddPITOutput(delay_base); 
-					spkr.pit_index=spkr.pit_half;
+					AddPITOutput(delay_base);
+					spkr.pit_index = spkr.pit_half;
 					/* Load the new count */
-					spkr.pit_half=spkr.pit_new_half;
-					spkr.pit_max=spkr.pit_new_max;
+					spkr.pit_half = spkr.pit_new_half;
+					spkr.pit_max = spkr.pit_new_max;
 				} else {
-					spkr.pit_index+=passed;
+					spkr.pit_index += passed;
 					return;
 				}
 			}
 		}
 		break;
-		//END CASE 3
+		// END CASE 3
 	case 4:
-		if (spkr.pit_index<spkr.pit_max) {
+		if (spkr.pit_index < spkr.pit_max) {
 			/* Check if we're gonna pass the end this block */
-			if (spkr.pit_index+passed>=spkr.pit_max) {
-				float delay=spkr.pit_max-spkr.pit_index;
-				delay_base+=delay;passed-=delay;
-				spkr.pit_output_level = 0;                                   
-				AddPITOutput(delay_base); //No new events unless reprogrammed
-				spkr.pit_index=spkr.pit_max;
-			} else spkr.pit_index+=passed;
+			if (spkr.pit_index + passed >= spkr.pit_max) {
+				float delay = spkr.pit_max - spkr.pit_index;
+				delay_base += delay;
+				passed -= delay;
+				spkr.pit_output_level = 0;
+				AddPITOutput(delay_base); // No new events
+				                          // unless reprogrammed
+				spkr.pit_index = spkr.pit_max;
+			} else
+				spkr.pit_index += passed;
 		}
 		break;
-		//END CASE 4
+		// END CASE 4
 	}
 }
 
-void PCSPEAKER_SetPITControl(int mode) {                             
-	float newindex = PIC_TickIndex();                                    
-	ForwardPIT(newindex);                                                
-#ifdef SPKR_DEBUGGING                                                 
+void PCSPEAKER_SetPITControl(int mode)
+{
+	float newindex = PIC_TickIndex();
+	ForwardPIT(newindex);
+#ifdef SPKR_DEBUGGING
 	fprintf(PCSpeakerLog, "%f pit command: %u\n", PIC_FullIndex(), mode);
-#endif                                                                
-	// TODO: implement all modes                                         
-	switch(mode) {                                                       
-	case 1:                                                              
-		spkr.pit_mode = 1;                                                 
-		spkr.pit_mode1_waiting_for_counter = 1;                            
-		spkr.pit_mode1_waiting_for_trigger = 0;                            
-		spkr.pit_output_level = 1;                                         
-		break;                                                             
-	case 3:                                                              
-		spkr.pit_mode = 3;                                                 
-		spkr.pit_mode3_counting = 0;                                       
-		spkr.pit_output_level = 1;                                         
-		break;                                                             
-	default:                                                             
-		return;                                                            
+#endif
+	// TODO: implement all modes
+	switch (mode) {
+	case 1:
+		spkr.pit_mode = 1;
+		spkr.pit_mode1_waiting_for_counter = 1;
+		spkr.pit_mode1_waiting_for_trigger = 0;
+		spkr.pit_output_level = 1;
+		break;
+	case 3:
+		spkr.pit_mode = 3;
+		spkr.pit_mode3_counting = 0;
+		spkr.pit_output_level = 1;
+		break;
+	default: return;
 	}
-	AddPITOutput(newindex);                                                          
-}                                                                                 
-                                                                                  
-void PCSPEAKER_SetCounter(int cntr, int mode) {                                 
-#ifdef SPKR_DEBUGGING                                                             
+	AddPITOutput(newindex);
+}
+
+void PCSPEAKER_SetCounter(int cntr, int mode)
+{
+#ifdef SPKR_DEBUGGING
 	fprintf(PCSpeakerLog, "%f counter: %u, mode: %u\n", PIC_FullIndex(), cntr, mode);
-#endif                                                                            
-	//if (!spkr.last_ticks) {                                                        
-	//	if(spkr.chan) spkr.chan->Enable(true);                                       
-	//	spkr.last_index=0;                                                           
-	//}                                                                              
-	//spkr.last_ticks=PIC_Ticks;                                                     
-	float newindex=PIC_TickIndex();
+#endif
+	// if (!spkr.last_ticks) {
+	//	if(spkr.chan) spkr.chan->Enable(true);
+	//	spkr.last_index=0;
+	// }
+	// spkr.last_ticks=PIC_Ticks;
+	float newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
 	switch (mode) {
-	case 0:		/* Mode 0 one shot, used with "realsound" (PWM) */
-		//if (cntr>80) { 
+	case 0: /* Mode 0 one shot, used with "realsound" (PWM) */
+		// if (cntr>80) {
 		//	cntr=80;
-		//}
-		//spkr.pit_output_level=((float)cntr-40)*(SPKR_VOLUME/40.0f);
+		// }
+		// spkr.pit_output_level=((float)cntr-40)*(SPKR_VOLUME/40.0f);
 		spkr.pit_output_level = 0;
 		spkr.pit_index = 0;
 		spkr.pit_max = (1000.0f / PIT_TICK_RATE) * cntr;
@@ -287,46 +315,47 @@ void PCSPEAKER_SetCounter(int cntr, int mode) {
 			spkr.pit_mode1_waiting_for_trigger = 1;
 		}
 		break;
-	case 2:			/* Single cycle low, rest low high generator */
-		spkr.pit_index=0;
+	case 2: /* Single cycle low, rest low high generator */
+		spkr.pit_index = 0;
 		spkr.pit_output_level = 0;
 		AddPITOutput(newindex);
-		spkr.pit_half=(1000.0f/PIT_TICK_RATE)*1;
-		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
+		spkr.pit_half = (1000.0f / PIT_TICK_RATE) * 1;
+		spkr.pit_max = (1000.0f / PIT_TICK_RATE) * cntr;
 		break;
-	case 3:		/* Square wave generator */
+	case 3: /* Square wave generator */
 		if (cntr < spkr.minimum_counter) {
-//#ifdef SPKR_DEBUGGING
-//			LOG_MSG(
-//				"SetCounter: too high frequency %u (cntr %u) at %f",
-//				PIT_TICK_RATE/cntr,
-//				cntr,
-//				PIC_FullIndex());
-//#endif
-			// hack to save CPU cycles
-			//cntr = spkr.minimum_counter;
+			// #ifdef SPKR_DEBUGGING
+			//			LOG_MSG(
+			//				"SetCounter: too high
+			// frequency %u (cntr %u) at %f",
+			// PIT_TICK_RATE/cntr, 				cntr,
+			// PIC_FullIndex()); #endif
+			//  hack to save CPU cycles
+			// cntr = spkr.minimum_counter;
 			spkr.pit_output_level = 1; // avoid breaking digger music
 			spkr.pit_mode = 6; // dummy mode with constant high output
-			AddPITOutput(newindex);			return;
+			AddPITOutput(newindex);
+			return;
 		}
-		spkr.pit_new_max = (1000.0f/PIT_TICK_RATE)*cntr;
-		spkr.pit_new_half=spkr.pit_new_max/2;
+		spkr.pit_new_max = (1000.0f / PIT_TICK_RATE) * cntr;
+		spkr.pit_new_half = spkr.pit_new_max / 2;
 		if (!spkr.pit_mode3_counting) {
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_new_max;
 			spkr.pit_half = spkr.pit_new_half;
 			if (spkr.pit_clock_gate_enabled) {
 				spkr.pit_mode3_counting = 1;
-				spkr.pit_output_level = 1; // probably not necessary
+				spkr.pit_output_level = 1; // probably not
+				                           // necessary
 				AddPITOutput(newindex);
 			}
 		}
 		break;
-	case 4:		/* Software triggered strobe */
+	case 4: /* Software triggered strobe */
 		spkr.pit_output_level = 1;
 		AddPITOutput(newindex);
-		spkr.pit_index=0;
-		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
+		spkr.pit_index = 0;
+		spkr.pit_max = (1000.0f / PIT_TICK_RATE) * cntr;
 		break;
 	default:
 #ifdef SPKR_DEBUGGING
@@ -337,43 +366,42 @@ void PCSPEAKER_SetCounter(int cntr, int mode) {
 	spkr.pit_mode = mode;
 }
 
-void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled) {
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled)
+{
 #ifdef SPKR_DEBUGGING
-	fprintf(
-			PCSpeakerLog,
-			"%f output: %s, clock gate %s\n",
-			PIC_FullIndex(),
-			pit_output_enabled ? "pit" : "forced low",
-			pit_clock_gate_enabled ? "on" : "off"
-			);
+	fprintf(PCSpeakerLog,
+	        "%f output: %s, clock gate %s\n",
+	        PIC_FullIndex(),
+	        pit_output_enabled ? "pit" : "forced low",
+	        pit_clock_gate_enabled ? "on" : "off");
 #endif
-	//if (!spkr.last_ticks) {
+	// if (!spkr.last_ticks) {
 	//	if(spkr.chan) spkr.chan->Enable(true);
 	//	spkr.last_index=0;
-	//}
-	//spkr.last_ticks=PIC_Ticks;
-	float newindex=PIC_TickIndex();
+	// }
+	// spkr.last_ticks=PIC_Ticks;
+	float newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
 	// pit clock gate enable rising edge is a trigger
 	bool pit_trigger = pit_clock_gate_enabled && !spkr.pit_clock_gate_enabled;
 	spkr.pit_clock_gate_enabled = pit_clock_gate_enabled;
-	spkr.pit_output_enabled     = pit_output_enabled;
+	spkr.pit_output_enabled = pit_output_enabled;
 	if (pit_trigger) {
 		switch (spkr.pit_mode) {
-	case 1:
+		case 1:
 			if (spkr.pit_mode1_waiting_for_counter) {
 				// assert output level is high
-		break;
+				break;
 			}
 			spkr.pit_output_level = 0;
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_mode1_pending_max;
 			spkr.pit_mode1_waiting_for_trigger = 0;
-		break;
-	case 3:
+			break;
+		case 3:
 			spkr.pit_mode3_counting = 1;
 			spkr.pit_new_max = spkr.pit_new_max;
-			spkr.pit_new_half=spkr.pit_new_max/2;
+			spkr.pit_new_half = spkr.pit_new_max / 2;
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_new_max;
 			spkr.pit_half = spkr.pit_new_half;
@@ -387,10 +415,10 @@ void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled) {
 		switch (spkr.pit_mode) {
 		case 1:
 			// gate level does not affect mode1
-		break;
+			break;
 		case 3:
 			// low gate forces pit output high
-			spkr.pit_output_level   = 1;
+			spkr.pit_output_level = 1;
 			spkr.pit_mode3_counting = 0;
 			break;
 		default:
@@ -406,60 +434,68 @@ void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled) {
 }
 
 static unsigned output_buffer_length = 0;
-static double*  output_buffer = NULL;
-static double*  sampled_impulse = NULL;
+static double *output_buffer = NULL;
+static double *sampled_impulse = NULL;
 
 // TODO: check if this is accurate
-static inline double sinc(double t) {
+static inline double sinc(double t)
+{
 #define SINC_ACCURACY 20
 	double result = 1;
 	int k;
 	for (k = 1; k < SINC_ACCURACY; k++) {
-		result *= cos(t/pow(2.0, k));
+		result *= cos(t / pow(2.0, k));
 	}
 	return result;
 }
 
-static inline double impulse(double t) {
+static inline double impulse(double t)
+{
 	// raised-cosine-windowed sinc function
 	double fs = spkr.rate;
 	double fc = fs / (2 + SPKR_CUTOFF_MARGIN);
-	double  q = SPKR_FILTER_QUALITY;
-	if ((0 < t) && (t*fs < q)) {
-		double window = 1.0 + cos(2*fs*PI*(q/(2*fs)-t)/q);
-		return window*(sinc(2*fc*PI*(t-q/(2*fs))))/2.0;
-	} else return 0.0;
+	double q = SPKR_FILTER_QUALITY;
+	if ((0 < t) && (t * fs < q)) {
+		double window = 1.0 + cos(2 * fs * PI * (q / (2 * fs) - t) / q);
+		return window * (sinc(2 * fc * PI * (t - q / (2 * fs)))) / 2.0;
+	} else
+		return 0.0;
 }
 
-static inline void add_impulse(double index, double amplitude) {
+static inline void add_impulse(double index, double amplitude)
+{
 #ifndef REFERENCE
-	unsigned offset = (unsigned)(index*spkr.rate/1000.0);
-	unsigned phase  =
-			(unsigned)(index*spkr.rate*SPKR_OVERSAMPLING/1000.0) %
-			SPKR_OVERSAMPLING;
+	unsigned offset = (unsigned)(index * spkr.rate / 1000.0);
+	unsigned phase = (unsigned)(index * spkr.rate * SPKR_OVERSAMPLING / 1000.0) %
+	                 SPKR_OVERSAMPLING;
 	if (phase != 0) {
 		offset++;
 		phase = SPKR_OVERSAMPLING - phase;
 	}
 	for (unsigned i = 0; i < SPKR_FILTER_QUALITY; i++) {
-		ASSERT(offset + i < output_buffer_length, "index into output_buffer too high");
-		ASSERT(phase + SPKR_OVERSAMPLING*i < SPKR_FILTER_WIDTH, "index into sampled_impulse too high");
-		output_buffer[offset + i] += amplitude*sampled_impulse[phase + i*SPKR_OVERSAMPLING];
+		ASSERT(offset + i < output_buffer_length,
+		       "index into output_buffer too high");
+		ASSERT(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
+		       "index into sampled_impulse too high");
+		output_buffer[offset + i] += amplitude *
+		                             sampled_impulse[phase + i * SPKR_OVERSAMPLING];
 	}
 }
 #else
 	for (unsigned i = 0; i < output_buffer_length; i++) {
-		output_buffer[i] += amplitude*impulse((double)i/spkr.rate - index/1000.0);
+		output_buffer[i] += amplitude * impulse((double)i / spkr.rate -
+		                                        index / 1000.0);
 	}
-}
+                        }
 #endif
 
-static void PCSPEAKER_CallBack(Bitu len) {
-	int16_t * stream=(int16_t*)MixTemp;
+static void PCSPEAKER_CallBack(Bitu len)
+{
+	int16_t *stream = (int16_t *)MixTemp;
 	ForwardPIT(1);
-	spkr.last_index=0;
+	spkr.last_index = 0;
 	for (unsigned i = 0; i < spkr.used; i++) {
-		float index        = spkr.entries[i].index;
+		float index = spkr.entries[i].index;
 		float output_level = spkr.entries[i].output_level;
 		if (index < 0.0) { // this happens in digger sometimes
 			index = 0.0;
@@ -467,16 +503,17 @@ static void PCSPEAKER_CallBack(Bitu len) {
 		if (index > 1.0) { // probably not necessary
 			index = 1.0f;
 		}
-		add_impulse(
-			index,
-			output_level*(double)SPKR_VOLUME-SPKR_VOLUME/2.0);
+		add_impulse(index,
+		            output_level * (double)SPKR_VOLUME - SPKR_VOLUME / 2.0);
 	}
 	spkr.used = 0;
 	if (len > output_buffer_length) {
-		// massive HACK, insert zeros if callback wants too many samples
-		LOG_MSG("mixer callback wants too many samples from pc speaker emulator: %u", len);
+		// massive HACK, insert zeros if callback wants too many
+		// samples
+		LOG_MSG("mixer callback wants too many samples from pc speaker emulator: %u",
+		        len);
 		for (unsigned i = len - output_buffer_length; i; i--) {
-			*stream++= 0; // output
+			*stream++ = 0; // output
 		}
 		len = output_buffer_length;
 	}
@@ -484,14 +521,15 @@ static void PCSPEAKER_CallBack(Bitu len) {
 	static double current_output_level = 0.0;
 	for (unsigned i = 0; i < len; i++) {
 		current_output_level += output_buffer[i];
-		*stream++=(int16_t)current_output_level; // output sample
+		*stream++ = (int16_t)current_output_level; // output sample
 		current_output_level *= SPKR_HIGHPASS;
 	}
 	// shift out consumed samples
 	// TODO: use ring buffer or something to avoid shifting
 	for (unsigned i = len; i < output_buffer_length; i++) {
 		NASSERT(i - len < 0, "index into output_buffer too low");
-		ASSERT(i - len < output_buffer_length, "index into output_buffer too high");
+		ASSERT(i - len < output_buffer_length,
+		       "index into output_buffer too high");
 		ASSERT(i < output_buffer_length, "index into output_buffer too high");
 		output_buffer[i - len] = output_buffer[i];
 	}
@@ -499,43 +537,53 @@ static void PCSPEAKER_CallBack(Bitu len) {
 	for (unsigned i = output_buffer_length - len; i < output_buffer_length; i++) {
 		output_buffer[i] = 0.0;
 	}
-	if(spkr.chan) spkr.chan->AddSamples_m16(len,(int16_t*)MixTemp);
+	if (spkr.chan)
+		spkr.chan->AddSamples_m16(len, (int16_t *)MixTemp);
 
-	//Turn off speaker after 10 seconds of idle or one second idle when in off mode
-	//bool turnoff = false;
-	//Bitu test_ticks = PIC_Ticks;
-	//if ((spkr.last_ticks + 10000) < test_ticks) turnoff = true;
-	//if((!spkr.pit_output_enabled) && ((spkr.last_ticks + 1000) < test_ticks)) turnoff = true;
+		// Turn off speaker after 10 seconds of idle or one
+		// second idle when in off mode bool turnoff = false;
+		// Bitu test_ticks = PIC_Ticks; if ((spkr.last_ticks +
+		// 10000) < test_ticks) turnoff = true;
+		// if((!spkr.pit_output_enabled) &&
+		// ((spkr.last_ticks + 1000) < test_ticks)) turnoff =
+		// true;
 
-	//if(turnoff){
-	//	if(spkr.volwant == 0) { 
-	//		spkr.last_ticks = 0;
-	//		if(spkr.chan) spkr.chan->Enable(false);
-	//	} else {
-	//		if(spkr.volwant > 0) spkr.volwant--; else spkr.volwant++;
-	//	
-	//	}
-	//}
+		// if(turnoff){
+		//	if(spkr.volwant == 0) {
+		//		spkr.last_ticks = 0;
+		//		if(spkr.chan) spkr.chan->Enable(false);
+		//	} else {
+		//		if(spkr.volwant > 0) spkr.volwant--; else
+		// spkr.volwant++;
+		//
+		//	}
+		// }
 #ifdef SPKR_DEBUGGING
 	if (spkr.used) {
-		LOG_MSG("PCSPEAKER_CallBack: DelayEntries not emptied (%u) at %f", spkr.used, PIC_FullIndex());
-	} 
+		LOG_MSG("PCSPEAKER_CallBack: DelayEntries not emptied (%u) at %f",
+		        spkr.used,
+		        PIC_FullIndex());
+	}
 #endif
 }
 
-static void init_interpolation() {
+static void init_interpolation()
+{
 	sampled_impulse = new double[SPKR_FILTER_WIDTH];
-	if (sampled_impulse == NULL) E_Exit("memory allocation failed");
+	if (sampled_impulse == NULL)
+		E_Exit("memory allocation failed");
 	for (unsigned i = 0; i < SPKR_FILTER_WIDTH; i++) {
-		sampled_impulse[i] = impulse((double)i/(spkr.rate*SPKR_OVERSAMPLING));
+		sampled_impulse[i] = impulse((double)i /
+		                             (spkr.rate * SPKR_OVERSAMPLING));
 	}
-	//FILE* asdf = fopen("dummkopf.raw", "wb");
-	//fwrite(sampled_impulse, sizeof(double), SPKR_FILTER_WIDTH, asdf);
-	//fclose(asdf);
-	// +1 to compensate for rounding down of the division
-	output_buffer_length  = SPKR_FILTER_QUALITY + spkr.rate/1000 + 1;
+	// FILE* asdf = fopen("dummkopf.raw", "wb");
+	// fwrite(sampled_impulse, sizeof(double), SPKR_FILTER_WIDTH,
+	// asdf); fclose(asdf);
+	//  +1 to compensate for rounding down of the division
+	output_buffer_length = SPKR_FILTER_QUALITY + spkr.rate / 1000 + 1;
 	output_buffer = new double[output_buffer_length];
-	if (output_buffer == NULL) E_Exit("memory allocation failed");
+	if (output_buffer == NULL)
+		E_Exit("memory allocation failed");
 	for (unsigned i = 0; i < output_buffer_length; i++) {
 		output_buffer[i] = 0.0;
 	}
@@ -543,33 +591,36 @@ static void init_interpolation() {
 	LOG_MSG("PC speaker output buffer length: %u", output_buffer_length);
 }
 
-class PCSPEAKER:public Module_base {
+class PCSPEAKER : public Module_base {
 public:
-	PCSPEAKER(Section* configuration):Module_base(configuration){
-		spkr.chan=0;
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("pcspeaker")) return;
+	PCSPEAKER(Section *configuration) : Module_base(configuration)
+	{
+		spkr.chan = 0;
+		Section_prop *section = static_cast<Section_prop *>(configuration);
+		if (!section->Get_bool("pcspeaker"))
+			return;
 		spkr.pit_output_enabled = 0;
 		spkr.pit_clock_gate_enabled = 0;
 		spkr.pit_mode1_waiting_for_trigger = 1;
-		//spkr.last_ticks=0;
-		spkr.last_index=0;
-		spkr.rate=std::max(section->Get_int("pcrate"), 8000);
+		// spkr.last_ticks=0;
+		spkr.last_index = 0;
+		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
 		init_interpolation();
 
 		// PIT initially in mode 3 at ~903 Hz
 		spkr.pit_mode = 3;
 		spkr.pit_mode3_counting = 0;
 		spkr.pit_output_level = 1;
-		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*1320;
-		spkr.pit_half=spkr.pit_max/2;
-		spkr.pit_new_max=spkr.pit_max;
-		spkr.pit_new_half=spkr.pit_half;
-		spkr.pit_index=0;
+		spkr.pit_max = (1000.0f / PIT_TICK_RATE) * 1320;
+		spkr.pit_half = spkr.pit_max / 2;
+		spkr.pit_new_max = spkr.pit_max;
+		spkr.pit_new_half = spkr.pit_half;
+		spkr.pit_index = 0;
 
-		//spkr.minimum_counter = (PIT_TICK_RATE + spkr.rate/2-1)/(spkr.rate/2);
-		spkr.minimum_counter = 2*PIT_TICK_RATE/spkr.rate;
-		spkr.used=0;
+		// spkr.minimum_counter = (PIT_TICK_RATE +
+		// spkr.rate/2-1)/(spkr.rate/2);
+		spkr.minimum_counter = 2 * PIT_TICK_RATE / spkr.rate;
+		spkr.used = 0;
 		/* Register the sound channel */
 
 		spkr.chan = MIXER_AddChannel(&PCSPEAKER_CallBack,
@@ -608,18 +659,22 @@ public:
 		}
 		spkr.chan->Enable(true);
 	}
-	~PCSPEAKER(){
-		Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		if(!section->Get_bool("pcspeaker")) return;
+	~PCSPEAKER()
+	{
+		Section_prop *section = static_cast<Section_prop *>(m_configuration);
+		if (!section->Get_bool("pcspeaker"))
+			return;
 	}
 };
-static PCSPEAKER* test;
+static PCSPEAKER *test;
 
-void PCSPEAKER_ShutDown(Section* sec){
+void PCSPEAKER_ShutDown(Section *sec)
+{
 	delete test;
 }
 
-void PCSPEAKER_Init(Section* sec) {
+void PCSPEAKER_Init(Section *sec)
+{
 	test = new PCSPEAKER(sec);
-	sec->AddDestroyFunction(&PCSPEAKER_ShutDown,true);
+	sec->AddDestroyFunction(&PCSPEAKER_ShutDown, true);
 }
