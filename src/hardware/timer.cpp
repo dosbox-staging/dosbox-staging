@@ -411,7 +411,8 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 			}
 			pit[latch].new_mode = true;
 			if (latch == 2) {
-				// notify pc speaker code that the control word was written
+				// notify pc speaker code that the control word
+				// was written
 				PCSPEAKER_SetPITControl(mode);
 			}
 		}
