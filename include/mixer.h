@@ -306,7 +306,8 @@ mixer_channel_t MIXER_FindChannel(const char *name);
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(int cntr, int mode);
-void PCSPEAKER_SetType(int mode);
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetPITControl(int mode);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);

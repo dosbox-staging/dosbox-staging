@@ -210,7 +210,9 @@ static void write_p61(io_port_t, io_val_t value, io_width_t)
 
 	if ((port_61_data ^ val) & 3) {
 		if ((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
-		PCSPEAKER_SetType(val & 3);
+		bool pit_clock_gate_enabled = val & 1;
+		bool pit_output_enabled = val & 2;
+		PCSPEAKER_SetType(pit_clock_gate_enabled, pit_output_enabled);
 	}
 	port_61_data = val;
 }
