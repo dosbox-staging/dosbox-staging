@@ -27,27 +27,14 @@
 // #define SPKR_DEBUGGING
 #define LOOKUP
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
+#include "support.h"
 #include "pic.h"
-
-#define NASSERT(X, Y) \
-	do { \
-		if (X) \
-			E_Exit(__FILE__ ": assertion violation: " Y); \
-	} while (0)
-#define ASSERT(X, Y) \
-	do { \
-		if (!(X)) \
-			E_Exit(__FILE__ ": assertion violation: " Y); \
-	} while (0)
-
-#ifndef PI
-#define PI 3.14159265358979323846
-#endif
 
 #define SPKR_ENTRIES 1024
 #define SPKR_VOLUME  40000
@@ -456,8 +443,8 @@ static inline double impulse(double t)
 	double fc = fs / (2 + SPKR_CUTOFF_MARGIN);
 	double q = SPKR_FILTER_QUALITY;
 	if ((0 < t) && (t * fs < q)) {
-		double window = 1.0 + cos(2 * fs * PI * (q / (2 * fs) - t) / q);
-		return window * (sinc(2 * fc * PI * (t - q / (2 * fs)))) / 2.0;
+		double window = 1.0 + cos(2 * fs * M_PI * (q / (2 * fs) - t) / q);
+		return window * (sinc(2 * fc * M_PI * (t - q / (2 * fs)))) / 2.0;
 	} else
 		return 0.0;
 }
@@ -473,10 +460,10 @@ static inline void add_impulse(double index, double amplitude)
 		phase = SPKR_OVERSAMPLING - phase;
 	}
 	for (unsigned i = 0; i < SPKR_FILTER_QUALITY; i++) {
-		ASSERT(offset + i < output_buffer_length,
-		       "index into output_buffer too high");
-		ASSERT(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
-		       "index into sampled_impulse too high");
+		assertm(offset + i < output_buffer_length,
+		        "index into output_buffer too high");
+		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
+		        "index into sampled_impulse too high");
 		output_buffer[offset + i] += amplitude *
 		                             sampled_impulse[phase + i * SPKR_OVERSAMPLING];
 	}
@@ -486,7 +473,7 @@ static inline void add_impulse(double index, double amplitude)
 		output_buffer[i] += amplitude * impulse((double)i / spkr.rate -
 		                                        index / 1000.0);
 	}
-                        }
+}
 #endif
 
 static void PCSPEAKER_CallBack(Bitu len)
@@ -527,10 +514,10 @@ static void PCSPEAKER_CallBack(Bitu len)
 	// shift out consumed samples
 	// TODO: use ring buffer or something to avoid shifting
 	for (unsigned i = len; i < output_buffer_length; i++) {
-		NASSERT(i - len < 0, "index into output_buffer too low");
-		ASSERT(i - len < output_buffer_length,
-		       "index into output_buffer too high");
-		ASSERT(i < output_buffer_length, "index into output_buffer too high");
+		assertm(i - len > 0, "index into output_buffer too low");
+		assertm(i - len < output_buffer_length,
+		        "index into output_buffer too high");
+		assertm(i < output_buffer_length, "index into output_buffer too high");
 		output_buffer[i - len] = output_buffer[i];
 	}
 	// zero the rest of the samples
