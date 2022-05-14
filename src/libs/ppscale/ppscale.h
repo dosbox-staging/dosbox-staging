@@ -75,8 +75,8 @@ public:
 		assert(output_w > 0);
 		assert(output_h > 0);
 	}
-	// default constructor
-	PPScale() {}
+
+	PPScale() = default;
 
 	int effective_source_w = 0;
 	int effective_source_h = 0;
