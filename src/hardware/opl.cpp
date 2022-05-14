@@ -49,10 +49,6 @@ static int32_t vibval_var2[BLOCKBUF_SIZE];
 //static int32_t vibval_var3[BLOCKBUF_SIZE];
 //static int32_t vibval_var4[BLOCKBUF_SIZE];
 
-// vibrato/trmolo value table pointers
-static int32_t *vibval1, *vibval2, *vibval3, *vibval4;
-static int32_t *tremval1, *tremval2, *tremval3, *tremval4;
-
 // return a pointer to the requested operator, but only after ensuring it's valid
 op_type *get_op(const int64_t i)
 {
@@ -961,9 +957,13 @@ static inline void clipit16(int32_t ival, int16_t *outval)
 	outbufl[i] += chanval;
 #endif
 
-void adlib_getsample(int16_t* sndptr, Bits numsamples) {
+void adlib_getsample(int16_t *sndptr, Bits numsamples)
+{
 	Bits i, endsamples;
 	op_type* cptr;
+	// vibrato/trmolo value table pointers
+	int32_t *vibval1, *vibval2, *vibval3, *vibval4;
+	int32_t *tremval1, *tremval2, *tremval3, *tremval4;
 
 	int32_t outbufl[BLOCKBUF_SIZE];
 #if defined(OPLTYPE_IS_OPL3)
