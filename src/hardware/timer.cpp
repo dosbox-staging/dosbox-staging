@@ -410,6 +410,10 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 				PCSPEAKER_SetCounter(0, 3);
 			}
 			pit[latch].new_mode = true;
+			if (latch == 2) {
+				// notify pc speaker code that the control word was written
+				PCSPEAKER_SetPITControl(mode);
+			}
 		}
 		break;
 	case 3:
