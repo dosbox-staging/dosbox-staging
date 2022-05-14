@@ -4378,9 +4378,24 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen)
 extern "C" int SDL_CDROMInit(void);
 int sdl_main(int argc, char *argv[])
 {
-	int rcode = 0; // assume good until proven otherwise
-	
-	// Setup logging right away
+	CommandLine com_line(argc, argv);
+	control = std::make_unique<Config>(&com_line);
+
+	if (control->cmdline->FindExist("--version") ||
+	    control->cmdline->FindExist("-version") ||
+	    control->cmdline->FindExist("-v")) {
+		printf(version_msg, DOSBOX_GetDetailedVersion());
+		return 0;
+	}
+
+	if (control->cmdline->FindExist("--help") ||
+	    control->cmdline->FindExist("-help") ||
+	    control->cmdline->FindExist("-h")) {
+		printf(help_msg); // -V618
+		return 0;
+	}
+
+	// Setup logging after commandline is parsed and trivial arguments handled
 	loguru::g_preamble_date    = true; // The date field
 	loguru::g_preamble_time    = true; // The time of the current day
 	loguru::g_preamble_uptime  = false; // The time since init call
@@ -4397,15 +4412,12 @@ int sdl_main(int argc, char *argv[])
 	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,
 	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
 
+	int rcode = 0; // assume good until proven otherwise
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CROSS_DetermineConfigPaths();
-
-		CommandLine com_line(argc,argv);
-
-		control = std::make_unique<Config>(&com_line);
 
 		/* Init the configuration system and add default values */
 		Config_Add_SDL();
@@ -4446,21 +4458,6 @@ int sdl_main(int argc, char *argv[])
 			SetConsoleTitle("DOSBox Status Window");
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
-
-		if (control->cmdline->FindExist("--version") ||
-		    control->cmdline->FindExist("-version") ||
-		    control->cmdline->FindExist("-v")) {
-			printf(version_msg, DOSBOX_GetDetailedVersion());
-			return 0;
-		}
-
-		//If command line includes --help or -h, print help message and exit.
-		if (control->cmdline->FindExist("--help") ||
-		    control->cmdline->FindExist("-help") ||
-		    control->cmdline->FindExist("-h")) {
-			printf(help_msg); // -V618
-			return 0;
-		}
 
 		if (control->cmdline->FindExist("--printconf") ||
 		    control->cmdline->FindExist("-printconf")) {
