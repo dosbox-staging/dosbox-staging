@@ -45,7 +45,7 @@ constexpr auto SPKR_FILTER_QUALITY = 100;
 constexpr auto SPKR_OVERSAMPLING = 32;
 constexpr auto SPKR_CUTOFF_MARGIN = 0.2f; // must be greater than 0.0f
 constexpr auto SPKR_FILTER_WIDTH = (SPKR_FILTER_QUALITY * SPKR_OVERSAMPLING);
-constexpr auto SPKR_HIGHPASS = 0.999f; // FIXME: should be selected based on
+constexpr auto SPKR_HIGHPASS = 0.999f; // Should be selected based on
                                        // sampling rate
 constexpr auto ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
 constexpr auto pi_f = static_cast<float>(M_PI);
@@ -62,6 +62,8 @@ static struct {
 
 	uint8_t pit_mode = 0;
 	int rate = 0;
+	float rate_as_float = 0.0f;
+	float rate_per_ms = 0.0f;
 
 	bool pit_output_enabled = false;
 	bool pit_clock_gate_enabled = false;
@@ -84,7 +86,7 @@ static struct {
 	int used = 0;
 } spkr = {};
 
-inline static void AddDelayEntry(float index, bool new_output_level)
+inline static void AddDelayEntry(const float index, const bool new_output_level)
 {
 #ifdef SPKR_DEBUGGING
 	if (index < 0 || index > 1) {
@@ -106,14 +108,14 @@ inline static void AddDelayEntry(float index, bool new_output_level)
 	spkr.used++;
 }
 
-inline static void AddPITOutput(float index)
+inline static void AddPITOutput(const float index)
 {
 	if (spkr.pit_output_enabled) {
 		AddDelayEntry(index, spkr.pit_output_level);
 	}
 }
 
-static void ForwardPIT(float newindex)
+static void ForwardPIT(const float newindex)
 {
 #ifdef SPKR_DEBUGGING
 	if (newindex < 0 || newindex > 1) {
@@ -136,8 +138,8 @@ static void ForwardPIT(float newindex)
 		spkr.pit_index += passed;
 		if (spkr.pit_index >= spkr.pit_max) {
 			// counter reached zero between previous and this call
-			float delay = delay_base;
-			delay += spkr.pit_max - spkr.pit_index + passed;
+			const float delay = delay_base + spkr.pit_max -
+			                    spkr.pit_index + passed;
 			spkr.pit_output_level = 1;
 			AddPITOutput(delay);
 		}
@@ -158,8 +160,8 @@ static void ForwardPIT(float newindex)
 		spkr.pit_index += passed;
 		if (spkr.pit_index >= spkr.pit_max) {
 			// counter reached zero between previous and this call
-			float delay = delay_base;
-			delay += spkr.pit_max - spkr.pit_index + passed;
+			const float delay = delay_base + spkr.pit_max -
+			                    spkr.pit_index + passed;
 			spkr.pit_output_level = 1;
 			AddPITOutput(delay);
 			// finished with this pulse
@@ -172,7 +174,8 @@ static void ForwardPIT(float newindex)
 			if (spkr.pit_index >= spkr.pit_half) {
 				/* Start a new low cycle */
 				if ((spkr.pit_index + passed) >= spkr.pit_max) {
-					float delay = spkr.pit_max - spkr.pit_index;
+					const float delay = spkr.pit_max -
+					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
 					spkr.pit_output_level = 0;
@@ -184,7 +187,8 @@ static void ForwardPIT(float newindex)
 				}
 			} else {
 				if ((spkr.pit_index + passed) >= spkr.pit_half) {
-					float delay = spkr.pit_half - spkr.pit_index;
+					const float delay = spkr.pit_half -
+					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
 					spkr.pit_output_level = 1;
@@ -205,7 +209,8 @@ static void ForwardPIT(float newindex)
 			/* Determine where in the wave we're located */
 			if (spkr.pit_index >= spkr.pit_half) {
 				if ((spkr.pit_index + passed) >= spkr.pit_max) {
-					float delay = spkr.pit_max - spkr.pit_index;
+					const float delay = spkr.pit_max -
+					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
 					spkr.pit_output_level = 1;
@@ -220,7 +225,8 @@ static void ForwardPIT(float newindex)
 				}
 			} else {
 				if ((spkr.pit_index + passed) >= spkr.pit_half) {
-					float delay = spkr.pit_half - spkr.pit_index;
+					const float delay = spkr.pit_half -
+					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
 					spkr.pit_output_level = 0;
@@ -241,7 +247,7 @@ static void ForwardPIT(float newindex)
 		if (spkr.pit_index < spkr.pit_max) {
 			/* Check if we're gonna pass the end this block */
 			if (spkr.pit_index + passed >= spkr.pit_max) {
-				float delay = spkr.pit_max - spkr.pit_index;
+				const float delay = spkr.pit_max - spkr.pit_index;
 				delay_base += delay;
 				passed -= delay;
 				spkr.pit_output_level = 0;
@@ -258,7 +264,7 @@ static void ForwardPIT(float newindex)
 
 void PCSPEAKER_SetPITControl(const uint8_t mode)
 {
-	const auto newindex = PIC_TickIndex();
+	const auto newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f pit command: %u", PIC_FullIndex(), mode);
@@ -281,7 +287,7 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 	AddPITOutput(newindex);
 }
 
-void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
+void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 {
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %u", PIC_FullIndex(), cntr, mode);
@@ -291,7 +297,8 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 	//	spkr.last_index=0;
 	// }
 	// spkr.last_ticks=PIC_Ticks;
-	const auto newindex = PIC_TickIndex();
+	const auto newindex = static_cast<float>(PIC_TickIndex());
+	const auto duration_of_count_ms = ms_per_pit_tick * static_cast<float>(cntr);
 	ForwardPIT(newindex);
 	switch (mode) {
 	case 0: /* Mode 0 one shot, used with "realsound" (PWM) */
@@ -301,11 +308,11 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 		// spkr.pit_output_level=((float)cntr-40)*(SPKR_VOLUME/40.0f);
 		spkr.pit_output_level = 0;
 		spkr.pit_index = 0;
-		spkr.pit_max = ms_per_pit_tick * cntr;
+		spkr.pit_max = duration_of_count_ms;
 		AddPITOutput(newindex);
 		break;
 	case 1: // retriggerable one-shot, used by Star Control 1
-		spkr.pit_mode1_pending_max = ms_per_pit_tick * cntr;
+		spkr.pit_mode1_pending_max = duration_of_count_ms;
 		if (spkr.pit_mode1_waiting_for_counter) {
 			// assert output level is high
 			spkr.pit_mode1_waiting_for_counter = 0;
@@ -317,7 +324,7 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 		spkr.pit_output_level = 0;
 		AddPITOutput(newindex);
 		spkr.pit_half = ms_per_pit_tick;
-		spkr.pit_max = ms_per_pit_tick * cntr;
+		spkr.pit_max = duration_of_count_ms;
 		break;
 	case 3: /* Square wave generator */
 		if (cntr < spkr.minimum_counter) {
@@ -334,7 +341,7 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 			AddPITOutput(newindex);
 			return;
 		}
-		spkr.pit_new_max = ms_per_pit_tick * cntr;
+		spkr.pit_new_max = duration_of_count_ms;
 		spkr.pit_new_half = spkr.pit_new_max / 2;
 		if (!spkr.pit_mode3_counting) {
 			spkr.pit_index = 0;
@@ -352,7 +359,7 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 		spkr.pit_output_level = 1;
 		AddPITOutput(newindex);
 		spkr.pit_index = 0;
-		spkr.pit_max = ms_per_pit_tick * cntr;
+		spkr.pit_max = duration_of_count_ms;
 		break;
 	default:
 #ifdef SPKR_DEBUGGING
@@ -363,7 +370,7 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 	spkr.pit_mode = mode;
 }
 
-void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled)
+void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_enabled)
 {
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
@@ -376,10 +383,11 @@ void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled)
 	//	spkr.last_index=0;
 	// }
 	// spkr.last_ticks=PIC_Ticks;
-	float newindex = PIC_TickIndex();
+	const float newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 	// pit clock gate enable rising edge is a trigger
-	bool pit_trigger = pit_clock_gate_enabled && !spkr.pit_clock_gate_enabled;
+	const bool pit_trigger = pit_clock_gate_enabled &&
+	                         !spkr.pit_clock_gate_enabled;
 	spkr.pit_clock_gate_enabled = pit_clock_gate_enabled;
 	spkr.pit_output_enabled = pit_output_enabled;
 	if (pit_trigger) {
@@ -430,23 +438,22 @@ void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled)
 }
 
 // TODO: check if this is accurate
-static inline float sinc(float t)
+static inline float sinc(const float t)
 {
 #define SINC_ACCURACY 20
 	float result = 1;
-	int k;
-	for (k = 1; k < SINC_ACCURACY; k++) {
-		result *= cosf(t / powf(2.0f, k));
+	for (auto k = 1; k < SINC_ACCURACY; ++k) {
+		result *= cosf(t / powf(2.0f, static_cast<float>(k)));
 	}
 	return result;
 }
 
-static inline float impulse(float t)
+static inline float impulse(const float t)
 {
 	// raised-cosine-windowed sinc function
-	float fs = spkr.rate;
-	float fc = fs / (2 + SPKR_CUTOFF_MARGIN);
-	float q = SPKR_FILTER_QUALITY;
+	const float fs = spkr.rate_as_float;
+	const float fc = fs / (2 + SPKR_CUTOFF_MARGIN);
+	const float q = SPKR_FILTER_QUALITY;
 	if ((0 < t) && (t * fs < q)) {
 		float window = 1.0f + cosf(2 * fs * pi_f * (q / (2 * fs) - t) / q);
 		return window * (sinc(2 * fc * pi_f * (t - q / (2 * fs)))) / 2.0f;
@@ -454,17 +461,18 @@ static inline float impulse(float t)
 		return 0.0f;
 }
 
-static inline void add_impulse(float index, float amplitude)
+static inline void add_impulse(const float index, const float amplitude)
 {
 #ifndef REFERENCE
-	unsigned offset = (unsigned)(index * spkr.rate / 1000.0f);
-	unsigned phase = (unsigned)(index * spkr.rate * SPKR_OVERSAMPLING / 1000.0f) %
-	                 SPKR_OVERSAMPLING;
+	const auto samples_in_impulse = index * spkr.rate_per_ms;
+	auto offset = static_cast<uint32_t>(samples_in_impulse);
+	auto phase = static_cast<uint32_t>(samples_in_impulse * SPKR_OVERSAMPLING) %
+	             SPKR_OVERSAMPLING;
 	if (phase != 0) {
 		offset++;
 		phase = SPKR_OVERSAMPLING - phase;
 	}
-	for (unsigned i = 0; i < SPKR_FILTER_QUALITY; ++i) {
+	for (uint16_t i = 0; i < SPKR_FILTER_QUALITY; ++i) {
 		assertm(offset + i < spkr.output_buffer.size(),
 		        "index into spkr.output_buffer too high");
 		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
@@ -475,9 +483,10 @@ static inline void add_impulse(float index, float amplitude)
 	}
 }
 #else
+	const auto portion_of_ms = index / 1000.0f;
 	for (size_t i = 0; i < spkr.output_buffer.size(); ++i) {
-		spkr.output_buffer[i] += amplitude * impulse((float)i / spkr.rate -
-		                                             index / 1000.0f);
+		const auto impulse_time = i / spkr.rate_as_float - portion_of_ms;
+		spkr.output_buffer[i] += amplitude * impulse(impulse_time);
 	}
 }
 #endif
@@ -485,7 +494,7 @@ static inline void add_impulse(float index, float amplitude)
 static void PCSPEAKER_CallBack(uint16_t len)
 {
 	int16_t *stream = (int16_t *)MixTemp;
-	ForwardPIT(1);
+	ForwardPIT(1.0f);
 	spkr.last_index = 0;
 	for (auto i = 0; i < spkr.used; ++i) {
 		float index = spkr.entries[i].index;
@@ -565,9 +574,9 @@ static void PCSPEAKER_CallBack(uint16_t len)
 static void init_interpolation()
 {
 	spkr.sampled_impulse.resize(SPKR_FILTER_WIDTH);
-	for (unsigned i = 0; i < SPKR_FILTER_WIDTH; ++i) {
+	for (uint16_t i = 0; i < SPKR_FILTER_WIDTH; ++i) {
 		spkr.sampled_impulse[i] = impulse(
-		        (float)i / (spkr.rate * SPKR_OVERSAMPLING));
+		        i / (spkr.rate_as_float * SPKR_OVERSAMPLING));
 	}
 	// FILE* asdf = fopen("dummkopf.raw", "wb");
 	// fwrite(spkr.sampled_impulse, sizeof(float), SPKR_FILTER_WIDTH,
@@ -594,6 +603,8 @@ public:
 		// spkr.last_ticks=0;
 		spkr.last_index = 0;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
+		spkr.rate_as_float = static_cast<float>(spkr.rate);
+		spkr.rate_per_ms = spkr.rate_as_float / 1000.0f;
 		init_interpolation();
 
 		// PIT initially in mode 3 at ~903 Hz
