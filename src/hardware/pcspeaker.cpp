@@ -25,7 +25,7 @@
 #include "dosbox.h"
 
 // #define SPKR_DEBUGGING
-#define LOOKUP
+// #define REFERENCE
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -261,7 +261,7 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 	const auto newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
 #ifdef SPKR_DEBUGGING
-	fprintf(PCSpeakerLog, "%f pit command: %u\n", PIC_FullIndex(), mode);
+	LOG_INFO("PCSPEAKER: %f pit command: %u", PIC_FullIndex(), mode);
 #endif
 	// TODO: implement all modes
 	switch (mode) {
@@ -284,7 +284,7 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 {
 #ifdef SPKR_DEBUGGING
-	fprintf(PCSpeakerLog, "%f counter: %u, mode: %u\n", PIC_FullIndex(), cntr, mode);
+	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %u", PIC_FullIndex(), cntr, mode);
 #endif
 	// if (!spkr.last_ticks) {
 	//	if(spkr.chan) spkr.chan->Enable(true);
@@ -366,8 +366,7 @@ void PCSPEAKER_SetCounter(int cntr, const uint8_t mode)
 void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled)
 {
 #ifdef SPKR_DEBUGGING
-	fprintf(PCSpeakerLog,
-	        "%f output: %s, clock gate %s\n",
+	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
 	        PIC_FullIndex(),
 	        pit_output_enabled ? "pit" : "forced low",
 	        pit_clock_gate_enabled ? "on" : "off");
