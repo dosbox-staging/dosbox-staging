@@ -682,21 +682,21 @@ void MixerChannel::FillUp()
 	MIXER_UnlockAudioDevice();
 }
 
-std::string_view MixerChannel::DescribeLineout() const
+std::string MixerChannel::DescribeLineout() const
 {
-	std::string_view description;
-
 	if (output_map == STEREO)
-		description = "Stereo";
-	else if (output_map == REVERSE)
-		description = "Reverse";
-	else if (output_map == LEFT_MONO)
-		description = "LeftMono";
-	else if (output_map == RIGHT_MONO)
-		description = "RightMono";
+		return "Stereo";
+	if (output_map == REVERSE)
+		return "Reverse";
+	if (output_map == LEFT_MONO)
+		return "LeftMono";
+	if (output_map == RIGHT_MONO)
+		return "RightMono";
 
-	assert(description.length());
-	return description;
+	// Output_map is programmtically set (not directly assigned from user
+	// data), so we can assert.
+	assertm(false, "Unknown lineout mode");
+	return "unknown";
 }
 
 bool MixerChannel::ChangeLineoutMap(std::string choice)
@@ -992,7 +992,7 @@ public:
 		for (auto &[name, channel] : mixer.channels)
 			ShowSettings(name.c_str(), channel->volmain[0],
 			             channel->volmain[1], channel->GetSampleRate(),
-			             channel->DescribeLineout().data());
+			             channel->DescribeLineout().c_str());
 		lock.unlock();
 	}
 

@@ -27,7 +27,6 @@
 #include <atomic>
 #include <functional>
 #include <memory>
-#include <string_view>
 
 #include "envelope.h"
 
@@ -106,7 +105,7 @@ public:
 	void SetScale(float _left, float _right);
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
-	std::string_view DescribeLineout() const;
+	std::string DescribeLineout() const;
 	void UpdateVolume();
 	void SetFreq(int _freq);
 	void SetPeakAmplitude(int peak);
