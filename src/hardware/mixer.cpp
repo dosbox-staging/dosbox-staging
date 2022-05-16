@@ -380,10 +380,6 @@ constexpr void fill_8to16_lut()
 		lut_u8to16[i] = u8to16(i);
 }
 
-// 4 seems to work . Disabled for now
-#define MIXER_UPRAMP_STEPS 0
-#define MIXER_UPRAMP_SAVE 512
-
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(uint16_t len, const Type *data)
 {
@@ -411,15 +407,6 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 			//Would this overflow the source data, then it's time to leave
 			if (pos >= len) {
 				last_samples_were_silence = false;
-#if MIXER_UPRAMP_STEPS > 0
-				if (offset[0] || offset[1]) {
-					//Should be safe to do, as the value inside offset is 16 bit while offset itself is at least 32 bit
-					offset[0] = (offset[0]*(MIXER_UPRAMP_STEPS-1))/MIXER_UPRAMP_STEPS;
-					offset[1] = (offset[1]*(MIXER_UPRAMP_STEPS-1))/MIXER_UPRAMP_STEPS;
-					if (offset[0] < MIXER_UPRAMP_SAVE && offset[0] > -MIXER_UPRAMP_SAVE) offset[0] = 0;
-					if (offset[1] < MIXER_UPRAMP_SAVE && offset[1] > -MIXER_UPRAMP_SAVE) offset[1] = 0;
-				}
-#endif
 				MIXER_UnlockAudioDevice();
 				return;
 			}
@@ -505,21 +492,6 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 			}
 			//This sample has been handled now, increase position
 			pos++;
-#if MIXER_UPRAMP_STEPS > 0
-			// TODO needs to be rewritten to operate on floats when re-enabled
-			if (last_samples_were_silence && pos == 1) {
-				offset[0] = next_sample[0] - prev_sample[0];
-				if (stereo) offset[1] = next_sample[1] - prev_sample[1];
-				//Don't bother with small steps.
-				if (offset[0] < (MIXER_UPRAMP_SAVE*4) && offset[0] > (-MIXER_UPRAMP_SAVE*4)) offset[0] = 0;
-				if (offset[1] < (MIXER_UPRAMP_SAVE*4) && offset[1] > (-MIXER_UPRAMP_SAVE*4)) offset[1] = 0;
-			}
-
-			if (offset[0] || offset[1]) {
-				next_sample[0] = next_sample[0] - (offset[0]*(MIXER_UPRAMP_STEPS*static_cast<Bits>(len)-static_cast<Bits>(pos))) /( MIXER_UPRAMP_STEPS*static_cast<Bits>(len) );
-				next_sample[1] = next_sample[1] - (offset[1]*(MIXER_UPRAMP_STEPS*static_cast<Bits>(len)-static_cast<Bits>(pos))) /( MIXER_UPRAMP_STEPS*static_cast<Bits>(len) );
-			}
-#endif
 		}
 
 		// Process initial samples through an expanding envelope to
