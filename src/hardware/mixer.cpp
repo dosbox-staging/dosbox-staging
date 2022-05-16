@@ -61,8 +61,6 @@
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 
-#define MIXER_VOLSHIFT 13
-
 #define FREQ_SHIFT 14
 #define FREQ_NEXT ( 1 << FREQ_SHIFT)
 #define FREQ_MASK ( FREQ_NEXT -1 )
@@ -93,7 +91,7 @@ static constexpr int16_t MIXER_CLIP(const int SAMP)
 
 struct mixer_t {
 	// complex types
-	matrix<int, MIXER_BUFSIZE, 2> work = {};
+	matrix<float, MIXER_BUFSIZE, 2> work = {};
 	std::array<float, 2> mastervol = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
 	std::mutex channel_mutex = {}; // use whenever accessing channels
@@ -177,8 +175,8 @@ void MixerChannel::UpdateVolume()
 	// Don't scale by volmain[] if the level is being managed by the source
 	const float level_l = apply_level ? 1 : volmain[0];
 	const float level_r = apply_level ? 1 : volmain[1];
-	volmul[0] = static_cast<int>((1 << MIXER_VOLSHIFT) * scale[0] * level_l * mixer.mastervol[0]);
-	volmul[1] = static_cast<int>((1 << MIXER_VOLSHIFT) * scale[1] * level_r * mixer.mastervol[1]);
+	volmul[0] = scale[0] * level_l * mixer.mastervol[0];
+	volmul[1] = scale[1] * level_r * mixer.mastervol[1];
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
@@ -508,6 +506,7 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 			//This sample has been handled now, increase position
 			pos++;
 #if MIXER_UPRAMP_STEPS > 0
+			// TODO needs to be rewritten to operate on floats when re-enabled
 			if (last_samples_were_silence && pos == 1) {
 				offset[0] = next_sample[0] - prev_sample[0];
 				if (stereo) offset[1] = next_sample[1] - prev_sample[1];
@@ -529,31 +528,15 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 
 		//Where to write
 		mixpos &= MIXER_BUFMASK;
-		if (!interpolate) {
 
-			mixer.work[mixpos][mapped_output_left] +=
-			        prev_sample[mapped_channel_left] * volmul[0];
+		mixer.work[mixpos][mapped_output_left] +=
+				prev_sample[mapped_channel_left] * volmul[0];
 
-			mixer.work[mixpos][mapped_output_right] +=
-			        (stereo ? prev_sample[mapped_channel_right]
-			                : prev_sample[mapped_channel_left]) *
-			        volmul[1];
+		mixer.work[mixpos][mapped_output_right] +=
+				(stereo ? prev_sample[mapped_channel_right]
+						: prev_sample[mapped_channel_left]) *
+				volmul[1];
 
-		} else {
-			const auto diff_mul = freq_counter & FREQ_MASK;
-			auto sample = prev_sample[mapped_channel_left] +
-			              (((next_sample[mapped_channel_left] - prev_sample[mapped_channel_left]) *
-			                diff_mul) >>
-			               FREQ_SHIFT);
-			mixer.work[mixpos][mapped_output_left] += sample * volmul[0];
-			if (stereo) {
-				sample = prev_sample[mapped_channel_right] +
-				         (((next_sample[mapped_channel_right] - prev_sample[mapped_channel_right]) *
-				           diff_mul) >>
-				          FREQ_SHIFT);
-			}
-			mixer.work[mixpos][mapped_output_right] += sample * volmul[1];
-		}
 		//Prepare for next sample
 		freq_counter += freq_add;
 		mixpos++;
@@ -748,8 +731,8 @@ static void MIXER_MixData(int needed)
 		const auto added = check_cast<work_index_t>(std::min(needed - mixer.done, 1024));
 		auto readpos = check_cast<work_index_t>((mixer.pos + mixer.done) & MIXER_BUFMASK);
 		for (work_index_t i = 0; i < added; i++) {
-			const auto sample_1 = mixer.work[readpos][0] >> MIXER_VOLSHIFT;
-			const auto sample_2 = mixer.work[readpos][1] >> MIXER_VOLSHIFT;
+			const auto sample_1 = mixer.work[readpos][0];
+			const auto sample_2 = mixer.work[readpos][1];
 			const auto s1 = static_cast<uint16_t>(MIXER_CLIP(sample_1));
 			const auto s2 = static_cast<uint16_t>(MIXER_CLIP(sample_2));
 			convert[i][0] = static_cast<int16_t>(host_to_le16(s1));
@@ -891,9 +874,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 		while (need--) {
 			const auto i = check_cast<work_index_t>((pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
 			index += index_add;
-			sample = mixer.work[i][0] >> MIXER_VOLSHIFT;
+			sample = mixer.work[i][0];
 			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[i][1] >> MIXER_VOLSHIFT;
+			sample = mixer.work[i][1];
 			*output++ = MIXER_CLIP(sample);
 		}
 		/* Clean the used buffer */
@@ -906,9 +889,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 	} else {
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
-			sample = mixer.work[pos][0] >> MIXER_VOLSHIFT;
+			sample = mixer.work[pos][0];
 			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[pos][1] >> MIXER_VOLSHIFT;
+			sample = mixer.work[pos][1];
 			*output++ = MIXER_CLIP(sample);
 			mixer.work[pos][0] = 0;
 			mixer.work[pos][1] = 0;

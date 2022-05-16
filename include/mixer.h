@@ -159,7 +159,7 @@ private:
 	// >0. Still work in progress and thus disabled for now.
 	int offset[2] = {0, 0};
 	int sample_rate = 0u;
-	int volmul[2] = {1, 1};
+	float volmul[2] = {1.0f, 1.0f};
 	float scale[2] = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
