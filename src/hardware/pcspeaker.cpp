@@ -497,14 +497,8 @@ static void PCSPEAKER_CallBack(uint16_t len)
 	ForwardPIT(1.0f);
 	spkr.last_index = 0;
 	for (auto i = 0; i < spkr.used; ++i) {
-		float index = spkr.entries[i].index;
+		float index = clamp(spkr.entries[i].index, 0.0f, 1.0f);
 		float output_level = spkr.entries[i].output_level;
-		if (index < 0.0f) { // this happens in digger sometimes
-			index = 0.0f;
-		}
-		if (index > 1.0f) { // probably not necessary
-			index = 1.0f;
-		}
 		add_impulse(index,
 		            output_level * (float)SPKR_VOLUME - SPKR_VOLUME / 2.0f);
 	}
