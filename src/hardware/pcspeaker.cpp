@@ -493,7 +493,11 @@ static inline void add_impulse(const float index, const float amplitude)
 
 static void PCSPEAKER_CallBack(uint16_t len)
 {
-	int16_t *stream = (int16_t *)MixTemp;
+	static std::vector<int16_t> mix_buffer;
+	if (mix_buffer.size() < len)
+		mix_buffer.resize(len);
+	auto stream = mix_buffer.begin();
+
 	ForwardPIT(1.0f);
 	spkr.last_index = 0;
 	for (auto i = 0; i < spkr.used; ++i) {
@@ -536,7 +540,7 @@ static void PCSPEAKER_CallBack(uint16_t len)
 		spkr.output_buffer[i] = 0.0f;
 	}
 	if (spkr.chan)
-		spkr.chan->AddSamples_m16(len, (int16_t *)MixTemp);
+		spkr.chan->AddSamples_m16(len, mix_buffer.data());
 
 		// Turn off speaker after 10 seconds of idle or one
 		// second idle when in off mode bool turnoff = false;
