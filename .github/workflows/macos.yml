@@ -188,7 +188,7 @@ jobs:
         if:   matrix.runner.needs_deps
         run: >-
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
-          ccache libpng meson opusfile sdl2 sdl2_net
+          ccache libpng meson opusfile sdl2 sdl2_net speexdsp
 
       # Workaround frequent HTTPS-based connectivity issues
       # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
@@ -243,7 +243,7 @@ jobs:
           -Db_lto=true
           -Db_asneeded=true
           -Ddefault_library=static
-          -Dtry_static_libs=opusfile,sdl2,sdl2_net,zlib
+          -Dtry_static_libs=opusfile,sdl2,sdl2_net,zlib,speexdsp
           -Dfluidsynth:try-static-deps=true
           build
 

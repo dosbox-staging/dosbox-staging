@@ -1,1 +1,1 @@
-alsa-lib-devel cmake desktop-file-utils fluidsynth-devel gcc gcc-c++ git gmock-devel gtest-devel libappstream-glib libatomic libpng-devel libslirp make meson opusfile-devel SDL2-devel SDL2_net-devel
+alsa-lib-devel cmake desktop-file-utils fluidsynth-devel gcc gcc-c++ git gmock-devel gtest-devel libappstream-glib libatomic libpng-devel libslirp make meson opusfile-devel SDL2-devel SDL2_net-devel speexsdp-devel

@@ -46,7 +46,7 @@ jobs:
         run: |
           rm -R c:\vcpkg
           mv c:\vcpkg-bak c:\vcpkg
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth pdcurses gtest
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth pdcurses gtest speexdsp
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
           rm -R c:\vcpkg\buildtrees
           rm -R c:\vcpkg\packages

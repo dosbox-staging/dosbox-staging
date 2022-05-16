@@ -10,5 +10,6 @@ libpng-dev
 libsdl2-dev
 libsdl2-net-dev
 libslirp-dev
+libspeexdsp-dev
 python3-setuptools
 meson

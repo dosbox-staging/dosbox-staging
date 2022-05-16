@@ -28,6 +28,8 @@
 #include <functional>
 #include <memory>
 
+#include <speex/speex_resampler.h>
+
 #include "envelope.h"
 
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
@@ -96,8 +98,9 @@ enum LINE_INDEX : uint8_t {
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, const char *name);
+	~MixerChannel();
+
 	int GetSampleRate() const;
-	bool IsInterpolated() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
 	void SetVolume(float _left, float _right);
@@ -148,6 +151,10 @@ private:
 	MixerChannel(const MixerChannel &) = delete;
 	MixerChannel &operator=(const MixerChannel &) = delete;
 
+	template <class Type, bool stereo, bool signeddata, bool nativeorder>
+	void ConvertSamples(const Type *data, const uint16_t frames,
+	                    std::vector<float> &out);
+
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step
@@ -191,9 +198,11 @@ private:
 	// in-place of scaling by volmain[]
 	apply_level_callback_f apply_level = nullptr;
 
-	bool interpolate = false;
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
+
+	bool resample = false;
+	SpeexResamplerState *resampler = nullptr;
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 

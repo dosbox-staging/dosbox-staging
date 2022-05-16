@@ -29,7 +29,7 @@ to be installed and the license agreed to:
 
     ``` shell
     brew install ccache cmake libpng meson libslirp \
-                 opusfile pkg-config python3 sdl2 sdl2_net
+                 opusfile pkg-config python3 sdl2 sdl2_net speexdsp
     ```
 
 3. Add brew to your shell path:
@@ -47,7 +47,7 @@ to be installed and the license agreed to:
     ``` shell
     sudo port -q install ccache cmake fluidsynth libpng libsdl2 \
               libsdl2_net meson opusfile pkgconfig python310 \
-              libslirp
+              libslirp speexdsp
     ```
 
 ## Build
@@ -71,13 +71,13 @@ See more build options in [BUILD.md](/BUILD.md).
 
 1. Allow the terminal to get keyboard events, which will let you
    launch dosbox from the command line.
-   
+
     In System Settings > Privacy > Input Monitoring > Terminal (enable)
-    
+
 2. Launch DOSBox Staging:
 
     ``` shell
     cd src/dosbox-staging/
     ./build/dosbox
     ```
- 
+
