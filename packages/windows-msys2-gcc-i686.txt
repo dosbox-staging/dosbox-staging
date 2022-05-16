@@ -13,3 +13,4 @@ mingw-w64-i686-opusfile
 mingw-w64-i686-SDL2
 mingw-w64-i686-SDL2_net
 mingw-w64-i686-zlib
+mingw-w64-i686-speexdsp

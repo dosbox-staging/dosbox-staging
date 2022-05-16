@@ -63,7 +63,7 @@ class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(bool is_stereo, bool is_interpolated, int prev[], int next[]);
+	void Process(bool is_stereo, int frame[]);
 
 	void Update(int frame_rate,
 	            int peak_amplitude,
@@ -78,15 +78,13 @@ private:
 
 	bool ClampSample(int &sample, int next_edge);
 
-	void Apply(bool is_stereo, bool is_interpolated, int prev[], int next[]);
+	void Apply(bool is_stereo, int frame[]);
 
 	void Skip([[maybe_unused]] bool is_stereo,
-	          [[maybe_unused]] bool is_interpolated,
-	          [[maybe_unused]] int prev[],
-	          [[maybe_unused]] int next[])
+	          [[maybe_unused]] int frame[])
 	{}
 
-	using process_f = std::function<void(Envelope &, bool, bool, int[], int[])>;
+	using process_f = std::function<void(Envelope &, bool, int[])>;
 	process_f process = &Envelope::Apply;
 
 	const char *channel_name = nullptr;

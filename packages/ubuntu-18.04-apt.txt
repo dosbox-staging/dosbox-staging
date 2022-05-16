@@ -5,4 +5,5 @@ libopusfile-dev
 libpng-dev
 libsdl2-dev
 libsdl2-net-dev
+libspeexdsp-dev
 python3-setuptools

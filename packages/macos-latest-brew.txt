@@ -6,3 +6,4 @@ opusfile
 sdl2
 sdl2_net
 libslirp
+speexdsp

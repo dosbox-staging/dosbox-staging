@@ -56,7 +56,7 @@ jobs:
           git clone --depth 1 https://github.com/Microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest speexdsp
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
           rm -R c:\vcpkg\buildtrees
           rm -R c:\vcpkg\packages

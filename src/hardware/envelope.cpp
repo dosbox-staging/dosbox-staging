@@ -72,29 +72,21 @@ bool Envelope::ClampSample(int &sample, const int lip)
 	return false;
 }
 
-void Envelope::Process(const bool is_stereo,
-                       const bool is_interpolated,
-                       int prev[],
-                       int next[])
+void Envelope::Process(const bool is_stereo, int frame[])
 {
-	process(*this, is_stereo, is_interpolated, prev, next);
+	process(*this, is_stereo, frame);
 }
 
-void Envelope::Apply(const bool is_stereo,
-                     const bool is_interpolated,
-                     int prev[],
-                     int next[])
+void Envelope::Apply(const bool is_stereo, int frame[])
 {
 	// Only start the envelope once our samples have actual values
-	if (prev[0] == 0 && frames_done == 0u)
+	if (frame[0] == 0 && frames_done == 0u)
 		return;
 
 	// beyond the edge is the lip. Do any samples walk out onto the lip?
 	const int lip = edge + edge_increment;
-	const bool on_lip = (ClampSample(prev[0], lip)) || (is_stereo &&
-	                     ClampSample(prev[1], lip)) || (is_interpolated &&
-	                     (ClampSample(next[0], lip) || (is_stereo &&
-	                      ClampSample(next[1], lip))));
+	const bool on_lip = ClampSample(frame[0], lip) ||
+	                    (is_stereo && ClampSample(frame[1], lip));
 
 	// If any of the samples are out on the lip, then march the edge forward
 	if (on_lip)

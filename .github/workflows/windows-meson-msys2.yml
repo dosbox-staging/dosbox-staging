@@ -10,7 +10,7 @@ env:
   CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
-  BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp,zlib -Dfluidsynth:try-static-deps=true"
+  BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp,zlib,speexsdp -Dfluidsynth:try-static-deps=true"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 
@@ -95,6 +95,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -190,6 +191,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
+            mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
 
       - name:  Prepare compiler cache
         id:    prep-ccache

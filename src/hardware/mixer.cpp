@@ -58,9 +58,6 @@
 
 #define MIXER_SSIZE 4
 
-//#define MIXER_SHIFT 14
-//#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
-
 #define FREQ_SHIFT 14
 #define FREQ_NEXT ( 1 << FREQ_SHIFT)
 #define FREQ_MASK ( FREQ_NEXT -1 )
@@ -92,6 +89,9 @@ static constexpr int16_t MIXER_CLIP(const int SAMP)
 struct mixer_t {
 	// complex types
 	matrix<float, MIXER_BUFSIZE, 2> work = {};
+	std::vector<float> resample_temp;
+	std::vector<float> resample_out;
+
 	std::array<float, 2> mastervol = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
 	std::mutex channel_mutex = {}; // use whenever accessing channels
@@ -110,6 +110,8 @@ struct mixer_t {
 
 	SDL_AudioDeviceID sdldevice = 0;
 	bool nosound = false;
+
+	mixer_t() : resample_temp(MIXER_BUFSIZE), resample_out(MIXER_BUFSIZE) {}
 };
 
 static struct mixer_t mixer = {};
@@ -127,7 +129,7 @@ bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name);
-	chan->SetFreq(freq); // also enables 'interpolate' if needed
+	chan->SetFreq(freq);
 	chan->SetScale(1.0);
 	chan->SetVolume(1, 1);
 	chan->ChangeChannelMap(LEFT, RIGHT);
@@ -259,24 +261,34 @@ void MixerChannel::Enable(const bool should_enable)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::SetFreq(int freq)
+void MixerChannel::SetFreq(const int freq)
 {
-	if (!freq) {
+	if (freq) {
+		sample_rate = freq;
+	} else {
 		// If the channel rate is zero, then avoid resampling by running
 		// the channel at the same rate as the mixer
 		assert(mixer.freq > 0);
-		freq = mixer.freq;
+		sample_rate = mixer.freq;
 	}
-	freq_add = (freq << FREQ_SHIFT) / mixer.freq;
-	interpolate = (freq != mixer.freq);
-	sample_rate = freq;
+	freq_add = (sample_rate << FREQ_SHIFT) / mixer.freq;
 	envelope.Update(sample_rate, peak_amplitude,
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
-}
 
-bool MixerChannel::IsInterpolated() const
-{
-	return interpolate;
+	if (sample_rate == mixer.freq) {
+		resample = false;
+	} else {
+		const auto in_rate = sample_rate;
+		const auto out_rate = mixer.freq;
+		if (!resampler) {
+			const auto num_channels = 2;	// always stereo
+			const auto quality = 7;	// TODO set from config?
+			resampler = speex_resampler_init(
+			        num_channels, in_rate, out_rate, quality, nullptr);
+		}
+		speex_resampler_set_rate(resampler, in_rate, out_rate);
+		resample = true;
+	}
 }
 
 int MixerChannel::GetSampleRate() const
@@ -380,18 +392,10 @@ constexpr void fill_8to16_lut()
 		lut_u8to16[i] = u8to16(i);
 }
 
+// Convert sample data to floats and  remove clicks.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::AddSamples(uint16_t len, const Type *data)
+void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::vector<float> &out)
 {
-	MIXER_LockAudioDevice();
-
-	last_samples_were_stereo = stereo;
-
-	// Position where to write the data
-	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
-	//Position in the incoming data
-	work_index_t pos = 0;
-
 	// read-only aliases to avoid repeated dereferencing and to inform the compiler their values
 	// don't change
 	const auto mapped_output_left = output_map.left;
@@ -400,121 +404,150 @@ void MixerChannel::AddSamples(uint16_t len, const Type *data)
 	const auto mapped_channel_left = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
-	// Mix data for the full length
-	while (1) {
-		//Does new data need to get read?
-		while (freq_counter >= FREQ_NEXT) {
-			//Would this overflow the source data, then it's time to leave
-			if (pos >= len) {
-				last_samples_were_silence = false;
-				MIXER_UnlockAudioDevice();
-				return;
-			}
-			freq_counter -= FREQ_NEXT;
+	work_index_t pos = 0;
+	std::array<float, 2> out_frame;
 
-			prev_sample[0] = next_sample[0];
-			if (stereo) {
-				prev_sample[1] = next_sample[1];
-			}
+	out.resize(0);
 
-			if ( sizeof( Type) == 1) {
-				// unsigned 8-bit
-				if (!signeddata) {
-					if (stereo) {
-						next_sample[0] = lut_u8to16[data[pos * 2 + 0]];
-						next_sample[1] = lut_u8to16[data[pos * 2 + 1]];
-					} else {
-						next_sample[0] = lut_u8to16[data[pos]];
-					}
-				}
-				// signed 8-bit
-				else {
-					if (stereo) {
-						next_sample[0] = lut_s8to16[data[pos * 2 + 0]];
-						next_sample[1] = lut_s8to16[data[pos * 2 + 1]];
-					} else {
-						next_sample[0] = lut_s8to16[data[pos]];
-					}
-				}
-			//16bit and 32bit both contain 16bit data internally
-			} else  {
-				if (signeddata) {
-					if (stereo) {
-						if (nativeorder) {
-							next_sample[0]=data[pos*2+0];
-							next_sample[1]=data[pos*2+1];
-						} else {
-							if ( sizeof( Type) == 2) {
-								next_sample[0] = (int16_t)host_readw((HostPt)&data[pos * 2 + 0]);
-								next_sample[1] = (int16_t)host_readw((HostPt)&data[pos * 2 + 1]);
-							} else {
-								next_sample[0]=(int32_t)host_readd((HostPt)&data[pos*2+0]);
-								next_sample[1]=(int32_t)host_readd((HostPt)&data[pos*2+1]);
-							}
-						}
-					} else {
-						if (nativeorder) {
-							next_sample[0] = data[pos];
-						} else {
-							if ( sizeof( Type) == 2) {
-								next_sample[0] = (int16_t)host_readw((HostPt)&data[pos]);
-							} else {
-								next_sample[0]=(int32_t)host_readd((HostPt)&data[pos]);
-							}
-						}
-					}
+	while (pos < frames) {
+		prev_sample[0] = next_sample[0];
+		if (stereo) {
+			prev_sample[1] = next_sample[1];
+		}
+
+		if (sizeof(Type) == 1) {
+			// unsigned 8-bit
+			if (!signeddata) {
+				if (stereo) {
+					next_sample[0] = lut_u8to16[data[pos * 2 + 0]];
+					next_sample[1] = lut_u8to16[data[pos * 2 + 1]];
 				} else {
-					if (stereo) {
-						if (nativeorder) {
-							next_sample[0] = static_cast<int>(data[pos * 2 + 0]) - 32768;
-							next_sample[1] = static_cast<int>(data[pos * 2 + 1]) - 32768;
-						} else {
-							if ( sizeof( Type) == 2) {
-								next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 0])) - 32768;
-								next_sample[1] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 1])) - 32768;
-							} else {
-								next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 0])) - 32768;
-								next_sample[1] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 1])) - 32768;
-							}
-						}
+					next_sample[0] = lut_u8to16[data[pos]];
+				}
+			}
+			// signed 8-bit
+			else {
+				if (stereo) {
+					next_sample[0] = lut_s8to16[data[pos * 2 + 0]];
+					next_sample[1] = lut_s8to16[data[pos * 2 + 1]];
+				} else {
+					next_sample[0] = lut_s8to16[data[pos]];
+				}
+			}
+		// 16-bit and 32-bit both contain 16-bit data internally
+		} else {
+			if (signeddata) {
+				if (stereo) {
+					if (nativeorder) {
+						next_sample[0] = data[pos * 2 + 0];
+						next_sample[1] = data[pos * 2 + 1];
 					} else {
-						if (nativeorder) {
-							next_sample[0] = static_cast<int>(data[pos]) - 32768;
+						if (sizeof(Type) == 2) {
+							next_sample[0] = (int16_t)host_readw((HostPt)&data[pos * 2 + 0]);
+							next_sample[1] = (int16_t)host_readw((HostPt)&data[pos * 2 + 1]);
 						} else {
-							if ( sizeof( Type) == 2) {
-								next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos])) - 32768;
-							} else {
-								next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos])) - 32768;
-							}
+							next_sample[0] = (int32_t)host_readd((HostPt)&data[pos * 2 + 0]);
+							next_sample[1] = (int32_t)host_readd((HostPt)&data[pos * 2 + 1]);
+						}
+					}
+				} else { // mono
+					if (nativeorder) {
+						next_sample[0] = data[pos];
+					} else {
+						if (sizeof(Type) == 2) {
+							next_sample[0] = (int16_t)host_readw((HostPt)&data[pos]);
+						} else {
+							next_sample[0] = (int32_t)host_readd((HostPt)&data[pos]);
+						}
+					}
+				}
+			} else { // unsigned
+				const auto offset = 32768;
+				if (stereo) {
+					if (nativeorder) {
+						next_sample[0] = static_cast<int>(data[pos * 2 + 0]) - offset;
+						next_sample[1] = static_cast<int>(data[pos * 2 + 1]) - offset;
+					} else {
+						if (sizeof(Type) == 2) {
+							next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 0])) - offset;
+							next_sample[1] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 1])) - offset;
+						} else {
+							next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 0])) - offset;
+							next_sample[1] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 1])) - offset;
+						}
+					}
+				} else { // mono
+					if (nativeorder) {
+						next_sample[0] = static_cast<int>(data[pos]) - offset;
+					} else {
+						if (sizeof(Type) == 2) {
+							next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos])) - offset;
+						} else {
+							next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos])) - offset;
 						}
 					}
 				}
 			}
-			//This sample has been handled now, increase position
-			pos++;
 		}
 
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
-		envelope.Process(stereo, interpolate, prev_sample, next_sample);
+		envelope.Process(stereo, prev_sample);
 
-		//Where to write
-		mixpos &= MIXER_BUFMASK;
+		auto left = prev_sample[mapped_channel_left] * volmul[0];
+		auto right = (stereo ? prev_sample[mapped_channel_right]
+		                     : prev_sample[mapped_channel_left]) *
+		             volmul[1];
 
-		mixer.work[mixpos][mapped_output_left] +=
-				prev_sample[mapped_channel_left] * volmul[0];
+		out_frame = {0.0, 0.0};
+		out_frame[mapped_output_left] += left;
+		out_frame[mapped_output_right] += right;
 
-		mixer.work[mixpos][mapped_output_right] +=
-				(stereo ? prev_sample[mapped_channel_right]
-						: prev_sample[mapped_channel_left]) *
-				volmul[1];
+		out.push_back(out_frame[0]);
+		out.push_back(out_frame[1]);
 
-		//Prepare for next sample
-		freq_counter += freq_add;
-		mixpos++;
-		done++;
+		++pos;
 	}
-	
+}
+
+template <class Type, bool stereo, bool signeddata, bool nativeorder>
+void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
+{
+	assert(frames <= MIXER_BUFSIZE);
+	MIXER_LockAudioDevice();
+	last_samples_were_stereo = stereo;
+
+	auto &convert_out = resample ? mixer.resample_temp : mixer.resample_out;
+	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
+
+	spx_uint32_t out_frames;
+	if (resample) {
+		spx_uint32_t in_frames = mixer.resample_temp.size() / 2;
+		out_frames = mixer.resample_out.capacity() / 2;
+		speex_resampler_process_interleaved_float(resampler,
+		                                          mixer.resample_temp.data(),
+		                                          &in_frames,
+		                                          mixer.resample_out.data(),
+		                                          &out_frames);
+	} else {
+		out_frames = mixer.resample_out.size() / 2;
+	}
+
+	// Mix channel to the master output
+	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
+
+	work_index_t pos = 0;
+	auto frames_left = out_frames;
+	do {
+		mixpos &= MIXER_BUFMASK;
+		mixer.work[mixpos][0] += mixer.resample_out[pos++];
+		mixer.work[mixpos][1] += mixer.resample_out[pos++];
+		++mixpos;
+	} while (--frames_left);
+
+	done += out_frames;
+
+	last_samples_were_silence = false;
 	MIXER_UnlockAudioDevice();
 }
 
@@ -672,6 +705,14 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 	return true;
 }
 
+MixerChannel::~MixerChannel()
+{
+	if (resampler) {
+		speex_resampler_destroy(resampler);
+		resampler = nullptr;
+	}
+}
+
 extern bool ticksLocked;
 static inline bool Mixer_irq_important()
 {
@@ -705,8 +746,8 @@ static void MIXER_MixData(int needed)
 		for (work_index_t i = 0; i < added; i++) {
 			const auto sample_1 = mixer.work[readpos][0];
 			const auto sample_2 = mixer.work[readpos][1];
-			const auto s1 = static_cast<uint16_t>(MIXER_CLIP(sample_1));
-			const auto s2 = static_cast<uint16_t>(MIXER_CLIP(sample_2));
+			const auto s1 = static_cast<uint16_t>(MIXER_CLIP(static_cast<int>(sample_1)));
+			const auto s2 = static_cast<uint16_t>(MIXER_CLIP(static_cast<int>(sample_2)));
 			convert[i][0] = static_cast<int16_t>(host_to_le16(s1));
 			convert[i][1] = static_cast<int16_t>(host_to_le16(s2));
 			readpos = (readpos + 1) & MIXER_BUFMASK;
@@ -846,9 +887,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 		while (need--) {
 			const auto i = check_cast<work_index_t>((pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
 			index += index_add;
-			sample = mixer.work[i][0];
+			sample = static_cast<int>(mixer.work[i][0]);
 			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[i][1];
+			sample = static_cast<int>(mixer.work[i][1]);
 			*output++ = MIXER_CLIP(sample);
 		}
 		/* Clean the used buffer */
@@ -861,9 +902,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 	} else {
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
-			sample = mixer.work[pos][0];
+			sample = static_cast<int>(mixer.work[pos][0]);
 			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[pos][1];
+			sample = static_cast<int>(mixer.work[pos][1]);
 			*output++ = MIXER_CLIP(sample);
 			mixer.work[pos][0] = 0;
 			mixer.work[pos][1] = 0;
