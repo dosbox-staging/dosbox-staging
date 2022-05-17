@@ -39,7 +39,9 @@
 
 // constants
 constexpr auto SPKR_ENTRIES = 1024;
-constexpr auto SPKR_VOLUME = 40000;
+
+constexpr int16_t SPKR_POSITIVE_LEVEL = 20000;
+constexpr int16_t SPKR_NEGATIVE_LEVEL = -SPKR_POSITIVE_LEVEL;
 
 constexpr auto SPKR_FILTER_QUALITY = 100;
 constexpr auto SPKR_OVERSAMPLING = 32;
@@ -52,7 +54,7 @@ constexpr auto pi_f = static_cast<float>(M_PI);
 
 struct DelayEntry {
 	float index = 0.0f;
-	bool output_level = false;
+	int16_t output_level = SPKR_NEGATIVE_LEVEL;
 };
 
 static struct {
@@ -67,7 +69,7 @@ static struct {
 
 	bool pit_output_enabled = false;
 	bool pit_clock_gate_enabled = false;
-	bool pit_output_level = false;
+	int16_t pit_output_level = SPKR_NEGATIVE_LEVEL;
 	float pit_new_max = 0.0f;
 	float pit_new_half = 0.0f;
 	float pit_max = 0.0f;
@@ -86,7 +88,7 @@ static struct {
 	int used = 0;
 } spkr = {};
 
-inline static void AddDelayEntry(const float index, const bool new_output_level)
+inline static void AddDelayEntry(const float index, const int16_t new_output_level)
 {
 #ifdef SPKR_DEBUGGING
 	if (index < 0 || index > 1) {
@@ -95,7 +97,7 @@ inline static void AddDelayEntry(const float index, const bool new_output_level)
 		        PIC_FullIndex());
 	}
 #endif
-	static bool previous_output_level = 0;
+	static auto previous_output_level = SPKR_NEGATIVE_LEVEL;
 	if (new_output_level == previous_output_level) {
 		return;
 	}
@@ -140,7 +142,7 @@ static void ForwardPIT(const float newindex)
 			// counter reached zero between previous and this call
 			const float delay = delay_base + spkr.pit_max -
 			                    spkr.pit_index + passed;
-			spkr.pit_output_level = 1;
+			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 			AddPITOutput(delay);
 		}
 		return;
@@ -162,7 +164,7 @@ static void ForwardPIT(const float newindex)
 			// counter reached zero between previous and this call
 			const float delay = delay_base + spkr.pit_max -
 			                    spkr.pit_index + passed;
-			spkr.pit_output_level = 1;
+			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 			AddPITOutput(delay);
 			// finished with this pulse
 			spkr.pit_mode1_waiting_for_trigger = 1;
@@ -178,7 +180,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = 0;
+					spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 					AddPITOutput(delay_base);
 					spkr.pit_index = 0;
 				} else {
@@ -191,7 +193,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = 1;
+					spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 					AddPITOutput(delay_base);
 					spkr.pit_index = spkr.pit_half;
 				} else {
@@ -213,7 +215,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = 1;
+					spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 					AddPITOutput(delay_base);
 					spkr.pit_index = 0;
 					/* Load the new count */
@@ -229,7 +231,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = 0;
+					spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 					AddPITOutput(delay_base);
 					spkr.pit_index = spkr.pit_half;
 					/* Load the new count */
@@ -250,7 +252,7 @@ static void ForwardPIT(const float newindex)
 				const float delay = spkr.pit_max - spkr.pit_index;
 				delay_base += delay;
 				passed -= delay;
-				spkr.pit_output_level = 0;
+				spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 				AddPITOutput(delay_base); // No new events
 				                          // unless reprogrammed
 				spkr.pit_index = spkr.pit_max;
@@ -275,12 +277,12 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 		spkr.pit_mode = 1;
 		spkr.pit_mode1_waiting_for_counter = 1;
 		spkr.pit_mode1_waiting_for_trigger = 0;
-		spkr.pit_output_level = 1;
+		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 		break;
 	case 3:
 		spkr.pit_mode = 3;
 		spkr.pit_mode3_counting = 0;
-		spkr.pit_output_level = 1;
+		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 		break;
 	default: return;
 	}
@@ -306,7 +308,7 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		//	cntr=80;
 		// }
 		// spkr.pit_output_level=((float)cntr-40)*(SPKR_VOLUME/40.0f);
-		spkr.pit_output_level = 0;
+		spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 		spkr.pit_index = 0;
 		spkr.pit_max = duration_of_count_ms;
 		AddPITOutput(newindex);
@@ -321,7 +323,7 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		break;
 	case 2: /* Single cycle low, rest low high generator */
 		spkr.pit_index = 0;
-		spkr.pit_output_level = 0;
+		spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 		AddPITOutput(newindex);
 		spkr.pit_half = ms_per_pit_tick;
 		spkr.pit_max = duration_of_count_ms;
@@ -336,7 +338,9 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			// PIC_FullIndex()); #endif
 			//  hack to save CPU cycles
 			// cntr = spkr.minimum_counter;
-			spkr.pit_output_level = 1; // avoid breaking digger music
+
+			// avoid breaking digger music
+			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 			spkr.pit_mode = 6; // dummy mode with constant high output
 			AddPITOutput(newindex);
 			return;
@@ -349,14 +353,14 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			spkr.pit_half = spkr.pit_new_half;
 			if (spkr.pit_clock_gate_enabled) {
 				spkr.pit_mode3_counting = 1;
-				spkr.pit_output_level = 1; // probably not
-				                           // necessary
+				// probably not necessary
+				spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 				AddPITOutput(newindex);
 			}
 		}
 		break;
 	case 4: /* Software triggered strobe */
-		spkr.pit_output_level = 1;
+		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 		AddPITOutput(newindex);
 		spkr.pit_index = 0;
 		spkr.pit_max = duration_of_count_ms;
@@ -397,19 +401,19 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 				// assert output level is high
 				break;
 			}
-			spkr.pit_output_level = 0;
+			spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_mode1_pending_max;
 			spkr.pit_mode1_waiting_for_trigger = 0;
 			break;
 		case 3:
 			spkr.pit_mode3_counting = 1;
-			spkr.pit_new_max = spkr.pit_new_max;
+			// spkr.pit_new_max = spkr.pit_new_max; // typo or bug?
 			spkr.pit_new_half = spkr.pit_new_max / 2;
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_new_max;
 			spkr.pit_half = spkr.pit_new_half;
-			spkr.pit_output_level = 1;
+			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 			break;
 		default:
 			// TODO: implement other modes
@@ -422,7 +426,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 			break;
 		case 3:
 			// low gate forces pit output high
-			spkr.pit_output_level = 1;
+			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 			spkr.pit_mode3_counting = 0;
 			break;
 		default:
@@ -433,7 +437,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 	if (pit_output_enabled) {
 		AddDelayEntry(newindex, spkr.pit_output_level);
 	} else {
-		AddDelayEntry(newindex, 0);
+		AddDelayEntry(newindex, SPKR_NEGATIVE_LEVEL);
 	}
 }
 
@@ -501,10 +505,8 @@ static void PCSPEAKER_CallBack(uint16_t len)
 	ForwardPIT(1.0f);
 	spkr.last_index = 0;
 	for (auto i = 0; i < spkr.used; ++i) {
-		float index = clamp(spkr.entries[i].index, 0.0f, 1.0f);
-		float output_level = spkr.entries[i].output_level;
-		add_impulse(index,
-		            output_level * (float)SPKR_VOLUME - SPKR_VOLUME / 2.0f);
+		const float index = clamp(spkr.entries[i].index, 0.0f, 1.0f);
+		add_impulse(index, spkr.entries[i].output_level);
 	}
 	spkr.used = 0;
 	if (len > spkr.output_buffer.size()) {
@@ -521,7 +523,8 @@ static void PCSPEAKER_CallBack(uint16_t len)
 	static float current_output_level = 0.0f;
 	for (unsigned i = 0; i < len; ++i) {
 		current_output_level += spkr.output_buffer[i];
-		*stream++ = (int16_t)current_output_level; // output sample
+		assert(current_output_level >= MIN_AUDIO && current_output_level <= MAX_AUDIO);
+		*stream++ = static_cast<int16_t>(current_output_level); // output sample
 		current_output_level *= SPKR_HIGHPASS;
 	}
 	// shift out consumed samples
@@ -587,7 +590,7 @@ static void init_interpolation()
 	LOG_MSG("PC speaker output buffer length: %u", output_buffer_length);
 }
 
-class PCSPEAKER : public Module_base {
+class PCSPEAKER final : public Module_base {
 public:
 	PCSPEAKER(Section *configuration) : Module_base(configuration)
 	{
@@ -600,7 +603,8 @@ public:
 		spkr.pit_mode1_waiting_for_trigger = 1;
 		// spkr.last_ticks=0;
 		spkr.last_index = 0;
-		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
+
+		spkr.rate = std::max(section->Get_int("pcrate"), 8000);;
 		spkr.rate_as_float = static_cast<float>(spkr.rate);
 		spkr.rate_per_ms = spkr.rate_as_float / 1000.0f;
 		init_interpolation();
@@ -608,7 +612,7 @@ public:
 		// PIT initially in mode 3 at ~903 Hz
 		spkr.pit_mode = 3;
 		spkr.pit_mode3_counting = 0;
-		spkr.pit_output_level = 1;
+		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
 		spkr.pit_max = ms_per_pit_tick * 1320;
 		spkr.pit_half = spkr.pit_max / 2;
 		spkr.pit_new_max = spkr.pit_max;
