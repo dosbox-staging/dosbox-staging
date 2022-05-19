@@ -55,7 +55,7 @@ public:
 	bool echo = false;
 	DOS_Shell *shell = nullptr;
 	std::shared_ptr<BatchFile> prev = {}; // shared with Shell.bf
-	CommandLine *cmd = nullptr;
+	std::unique_ptr<CommandLine> cmd = {};
 	std::string filename{};
 };
 

@@ -61,7 +61,7 @@ BatchFile::BatchFile(DOS_Shell *host,
 }
 
 BatchFile::~BatchFile() {
-	delete cmd;
+	cmd.reset();
 	assert(shell);
 	shell->bf = prev;
 	shell->echo = echo;
