@@ -152,7 +152,7 @@ Install build dependencies appropriate for your OS:
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
                  SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel \
-                 mt32emu-devel libslirp-devel
+                 mt32emu-devel libslirp-devel speexdsp-devel
 ```
 
 ``` shell

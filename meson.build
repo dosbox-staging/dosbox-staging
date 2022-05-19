@@ -240,7 +240,7 @@ sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
                                 static : ('sdl2' in static_libs_list))
 zlib_dep           = dependency('zlib', version : '>= 1.2.11',
                                 static : ('zlib' in static_libs_list))
-speexdsp_dep       = dependency('speexdsp', version : '>= 1.2.0',
+speexdsp_dep       = dependency('speexdsp', version : '> 1.1.9',
                                 static : ('speexdsp' in static_libs_list))
 sdl2_net_dep       = optional_dep
 opengl_dep         = optional_dep

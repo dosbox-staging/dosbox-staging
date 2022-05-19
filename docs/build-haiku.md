@@ -7,7 +7,7 @@ Install dependencies:
 ``` shell
 pkgman install -y meson ccache libpng libsdl2_devel sdl2_net_devel \
                   libogg_devel opus_devel opusfile_devel gcc_syslibs_devel \
-                  opus_tools fluidsynth2_devel llvm_clang
+                  opus_tools fluidsynth2_devel llvm_clang speexdsp_devel
 ```
 
 Clone and enter the repository's directory:
