@@ -38,7 +38,7 @@ jobs:
         id:   cache-vcpkg
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-3
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -126,7 +126,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-3
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1

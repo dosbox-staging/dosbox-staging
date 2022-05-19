@@ -43,6 +43,7 @@
 #endif
 
 #include <SDL.h>
+#include <speex/speex_resampler.h>
 
 #include "mem.h"
 #include "pic.h"

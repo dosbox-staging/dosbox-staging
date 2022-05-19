@@ -67,6 +67,7 @@ libhardware = static_library('hardware', libhardware_sources,
                                png_dep,
                                sdl2_dep,
                                sdl2_net_dep,
+                               speexdsp_dep,
                                winsock2_dep,
                                zlib_dep,
                              ])

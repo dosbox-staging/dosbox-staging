@@ -11,6 +11,7 @@ extraction:
       - libpng-dev
       - libsdl2-dev
       - libsdl2-net-dev
+      - libspeexdsp-dev
       - python3-pip
     after_prepare:
     - python3 -m pip install --user --upgrade meson

@@ -28,8 +28,6 @@
 #include <functional>
 #include <memory>
 
-#include <speex/speex_resampler.h>
-
 #include "envelope.h"
 
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
@@ -94,6 +92,10 @@ enum LINE_INDEX : uint8_t {
 	// DOS games didn't support surround sound, but if surround sound becomes
 	// standard at the host-level, then additional line indexes would go here.
 };
+
+// forward declarations
+struct SpeexResamplerState_;
+typedef SpeexResamplerState_ SpeexResamplerState;
 
 class MixerChannel {
 public:

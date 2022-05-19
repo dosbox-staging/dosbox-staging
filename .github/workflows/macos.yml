@@ -243,7 +243,7 @@ jobs:
           -Db_lto=true
           -Db_asneeded=true
           -Ddefault_library=static
-          -Dtry_static_libs=opusfile,sdl2,sdl2_net,zlib,speexdsp
+          -Dtry_static_libs=opusfile,sdl2,sdl2_net,speexdsp,zlib
           -Dfluidsynth:try-static-deps=true
           build
 

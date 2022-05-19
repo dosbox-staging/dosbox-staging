@@ -90,7 +90,7 @@ jobs:
       - name: Install dependencies (minimum set)
         if:   matrix.conf.min_dependencies
         run: |
-          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev python3-setuptools
+          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
           sudo pip3 install --upgrade meson ninja
 
       - name: Install dependencies

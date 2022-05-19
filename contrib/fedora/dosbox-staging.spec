@@ -35,7 +35,7 @@ BuildRequires: meson >= 0.54.2
 BuildRequires: opusfile-devel
 BuildRequires: SDL2-devel >= 2.0.5
 BuildRequires: SDL2_net-devel
-
+BuildRequires: speexdsp-devel > 1.1.9
 # mt32emu dependencies:
 BuildRequires: cmake
 
