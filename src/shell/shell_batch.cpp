@@ -220,8 +220,7 @@ bool BatchFile::Goto(char * where) {
 	//Open bat file and search for the where string
 	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
 		LOG(LOG_MISC,LOG_ERROR)("SHELL:Goto Can't open BatchFile %s",filename.c_str());
-		delete this;
-		return false;
+		return false; // Parent deletes this BatchFile on negative return
 	}
 
 	char cmd_buffer[CMD_MAXLINE] = "";
@@ -282,8 +281,7 @@ again:
 	}
 	if (!bytes_read) {
 		DOS_CloseFile(file_handle);
-		delete this;
-		return false;
+		return false; // Parent deletes this BatchFile on negative return
 	}
 	goto again;
 	return false;

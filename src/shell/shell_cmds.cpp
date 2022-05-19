@@ -1604,8 +1604,10 @@ void DOS_Shell::CMD_GOTO(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_GOTO_MISSING_LABEL"));
 		return;
 	}
+	assert(bf);
 	if (!bf->Goto(args)) {
 		WriteOut(MSG_Get("SHELL_CMD_GOTO_LABEL_NOT_FOUND"),args);
+		bf.reset();
 		return;
 	}
 }
