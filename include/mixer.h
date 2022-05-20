@@ -30,6 +30,8 @@
 
 #include "envelope.h"
 
+#include "../src/libs/iir1/Iir.h"
+
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 
 // The mixer callback can accept a static function or a member function
