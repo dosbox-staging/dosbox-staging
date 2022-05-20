@@ -260,6 +260,25 @@ void MixerChannel::Enable(const bool should_enable)
 	MIXER_UnlockAudioDevice();
 }
 
+void MixerChannel::ConfigureResampler()
+{
+	const auto in_rate = zoh_upsampler.enabled ? zoh_upsampler.target_freq
+	                                           : sample_rate;
+	const auto out_rate = mixer.freq;
+	if (in_rate == out_rate) {
+		resample = false;
+	} else {
+		if (!resampler) {
+			const auto num_channels = 2; // always stereo
+			const auto quality = 5;
+			resampler = speex_resampler_init(
+			        num_channels, in_rate, out_rate, quality, nullptr);
+		}
+		speex_resampler_set_rate(resampler, in_rate, out_rate);
+		resample = true;
+	}
+}
+
 void MixerChannel::SetFreq(const int freq)
 {
 	if (freq) {
@@ -274,20 +293,8 @@ void MixerChannel::SetFreq(const int freq)
 	envelope.Update(sample_rate, peak_amplitude,
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 
-	if (sample_rate == mixer.freq) {
-		resample = false;
-	} else {
-		const auto in_rate = sample_rate;
-		const auto out_rate = mixer.freq;
-		if (!resampler) {
-			constexpr auto num_channels = 2;	// always stereo
-			constexpr auto quality = 5;
-			resampler = speex_resampler_init(
-			        num_channels, in_rate, out_rate, quality, nullptr);
-		}
-		speex_resampler_set_rate(resampler, in_rate, out_rate);
-		resample = true;
-	}
+	ConfigureResampler();
+	UpdateZOHUpsamplerState();
 }
 
 int MixerChannel::GetSampleRate() const
@@ -368,6 +375,45 @@ void MixerChannel::AddSilence()
 	MIXER_UnlockAudioDevice();
 }
 
+void MixerChannel::EnableLowPassFilter(const bool enabled)
+{
+	filter.enabled = enabled;
+}
+
+void MixerChannel::ForceLowPassFilter(const bool force)
+{
+	filter.force = force;
+}
+
+void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
+                                          const uint16_t cutoff_freq)
+{
+	assert(order > 0 && order <= max_filter_order);
+	const auto sample_rate = mixer.freq;
+	for (auto i = 0; i < 2; ++i)
+		filter.lpf[i].setup(order, sample_rate, cutoff_freq);
+}
+
+void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
+{
+	zoh_upsampler.enabled = enabled;
+}
+
+void MixerChannel::UpdateZOHUpsamplerState()
+{
+	// we only allow upsampling
+	zoh_upsampler.step = std::min(static_cast<float>(sample_rate) /
+	                                      zoh_upsampler.target_freq,
+	                              1.0f);
+}
+
+void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
+{
+	zoh_upsampler.target_freq = target_freq;
+	ConfigureResampler();
+	UpdateZOHUpsamplerState();
+}
+
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
 // This is only used to populate a lookup table that's 20-fold faster.
 constexpr int16_t u8to16(const int u_val)
@@ -393,17 +439,21 @@ constexpr void fill_8to16_lut()
 
 // Convert sample data to floats and remove clicks.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::vector<float> &out)
+void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
+                                  std::vector<float> &out)
 {
-	// read-only aliases to avoid repeated dereferencing and to inform the compiler their values
-	// don't change
+	// read-only aliases to avoid repeated dereferencing and to inform the
+	// compiler their values don't change
 	const auto mapped_output_left = output_map.left;
 	const auto mapped_output_right = output_map.right;
 
 	const auto mapped_channel_left = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
+	const auto zoh = zoh_upsampler;
+
 	work_index_t pos = 0;
+	float zoh_pos = 0;
 	std::array<float, 2> out_frame;
 
 	out.resize(0);
@@ -505,7 +555,14 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		++pos;
+		if (zoh.enabled) {
+			zoh_pos += zoh.step;
+			if (zoh_pos > 1.0f) {
+				zoh_pos -= 1.0f;
+				++pos;
+			}
+		} else
+			++pos;
 	}
 }
 
@@ -553,14 +610,20 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		mixer.resample_out.resize(out_frames * 2);  // only shrinks
 	}
 
-	// Mix channel to the master output
+	// Optionally low-pass filter, then mix the results to the master output
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
+	auto sample = 0.0f;
+	const auto do_filter = filter.enabled || filter.force;
 
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
-		mixer.work[mixpos][0] += *pos++;
-		mixer.work[mixpos][1] += *pos++;
+		for (auto i = 0; i < 2; ++i) {
+			sample = *pos++;
+			if (do_filter)
+				sample = filter.lpf[i].filter(sample);
+			mixer.work[mixpos][i] += sample;
+		}
 		++mixpos;
 	}
 
