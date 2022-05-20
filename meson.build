@@ -413,6 +413,7 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/PDCurses')
+subdir('src/libs/iir1')
 
 # internal libs
 #
@@ -452,6 +453,7 @@ executable('dosbox', dosbox_sources,
                            stdcppfs_dep,
                            sdl2_dep,
                            threads_dep,
+                           libiir1_dep,
                            libghc_dep,
                            libloguru_dep,
                            libpdcurses_dep,
@@ -466,6 +468,7 @@ libdosbox = static_library('dosbox', ['src/dosbox.cpp', version_file],
                         dependencies : [atomic_dep,
                                         threads_dep,
                                         sdl2_dep,
+                                        libiir1_dep,
                                         libghc_dep,
                                         libloguru_dep,
                                         libsdlcd_dep]

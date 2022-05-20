@@ -59,7 +59,7 @@ unit_tests = [
   {'name' : 'bitops',               'deps' : []},
   {'name' : 'iohandler_containers', 'deps' : [libmisc_dep]},
   {'name' : 'rwqueue',              'deps' : [libmisc_dep]},
-  {'name' : 'soft_limiter',         'deps' : [atomic_dep, libmisc_dep]},
+  {'name' : 'soft_limiter',         'deps' : [atomic_dep, libiir1_dep, libmisc_dep]},
   {'name' : 'string_utils',         'deps' : []},
   {'name' : 'setup',                'deps' : [libmisc_dep]},
   {'name' : 'support',              'deps' : [libmisc_dep]},
