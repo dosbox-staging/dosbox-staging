@@ -112,7 +112,7 @@ struct mixer_t {
 	SDL_AudioDeviceID sdldevice = 0;
 	bool nosound = false;
 
-	mixer_t() : resample_temp(MIXER_BUFSIZE), resample_out(MIXER_BUFSIZE) {}
+	mixer_t() : resample_temp(MIXER_BUFSIZE * 2), resample_out(MIXER_BUFSIZE * 2) {}
 };
 
 static struct mixer_t mixer = {};
@@ -495,10 +495,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, prev_sample);
 
-		auto left = prev_sample[mapped_channel_left] * volmul[0];
-		auto right = (stereo ? prev_sample[mapped_channel_right]
-		                     : prev_sample[mapped_channel_left]) *
-		             volmul[1];
+		const auto left = prev_sample[mapped_channel_left] * volmul[0];
+		const auto right = (stereo ? prev_sample[mapped_channel_right]
+		                           : prev_sample[mapped_channel_left]) *
+		                   volmul[1];
 
 		out_frame = {0.0, 0.0};
 		out_frame[mapped_output_left] += left;
