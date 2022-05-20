@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <string.h>
 #include <math.h>
+#include <map>
 
 #include "dma.h"
 #include "inout.h"
@@ -68,6 +69,15 @@ enum SB_TYPES {
 	SBT_PRO2 = 4,
 	SBT_16   = 6,
 	SBT_GB   = 7
+};
+
+enum FILTER_TYPES {
+	FT_NONE,
+	FT_SB1,
+	FT_SB2,
+	FT_SBPRO1,
+	FT_SBPRO2,
+	FT_SB16,
 };
 
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
@@ -117,6 +127,10 @@ struct SB_INFO {
 	uint8_t time_constant = 0;
 	DSP_MODES mode = MODE_NONE;
 	SB_TYPES type = SBT_NONE;
+	FILTER_TYPES sb_filter_type = FT_NONE;
+	FILTER_TYPES opl_filter_type = FT_NONE;
+	bool sb_filter_force = false;
+	bool opl_filter_force = false;
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
@@ -291,6 +305,136 @@ static void InitializeSpeakerState()
 		sb.chan->Enable(true);
 	} else {
 		sb.chan->Enable(false);
+	}
+}
+
+
+static const std::map<SB_TYPES, FILTER_TYPES> sb_type_to_filter_type_map = {
+        {SBT_NONE, FT_NONE},
+        {SBT_1, FT_SB1},
+        {SBT_2, FT_SB2},
+        {SBT_PRO1, FT_SBPRO1},
+        {SBT_PRO2, FT_SBPRO2},
+        {SBT_16, FT_SB16},
+        {SBT_GB, FT_NONE},
+};
+
+static const std::map<std::string, FILTER_TYPES> filter_map = {
+        {"none", FT_NONE},
+        {"sb1", FT_SB1},
+        {"sb2", FT_SB2},
+        {"sbpro1", FT_SBPRO1},
+        {"sbpro2", FT_SBPRO2},
+        {"sb16", FT_SB16},
+};
+
+static void configure_filters(Section_prop* config)
+{
+	auto set_filter_params = [](const std::string conf,
+	                            FILTER_TYPES &filter_type_out,
+	                            bool &filter_force_out) {
+
+		const auto filter = split(conf);
+		const auto filter_type = filter.empty() ? "auto" : filter[0];
+		const auto force = filter.size() > 1 ? filter[1] == "always_on"
+		                                     : false;
+		if (filter_type == "auto") {
+			auto it = sb_type_to_filter_type_map.find(sb.type);
+			if (it != sb_type_to_filter_type_map.end())
+				filter_type_out = it->second;
+		} else {
+			auto it = filter_map.find(filter_type);
+			if (it != filter_map.end())
+				filter_type_out = it->second;
+		}
+		filter_force_out = force && filter_type_out != FT_NONE;
+	};
+
+	set_filter_params(config->Get_string("sb_filter"),
+	                  sb.sb_filter_type,
+	                  sb.sb_filter_force);
+
+	set_filter_params(config->Get_string("opl_filter"),
+	                  sb.opl_filter_type,
+	                  sb.opl_filter_force);
+}
+
+static void set_sb_filter()
+{
+	auto set_filter = [](const uint8_t order,
+	                     const uint16_t cutoff_freq) {
+		sb.chan->ConfigureLowPassFilter(order, cutoff_freq);
+		sb.chan->EnableLowPassFilter();
+		sb.chan->ForceLowPassFilter(sb.sb_filter_force);
+	};
+	auto disable_filter = [] {
+		sb.chan->EnableLowPassFilter(false);
+		sb.chan->ForceLowPassFilter(false);
+	};
+	auto enable_zoh_upsampler = []() {
+		constexpr auto dac_rate = 45454;
+		sb.chan->ConfigureZeroOrderHoldUpsampler(dac_rate);
+		sb.chan->EnableZeroOrderHoldUpsampler();
+	};
+
+	switch (sb.sb_filter_type) {
+	case FT_NONE:
+		disable_filter();
+		enable_zoh_upsampler();
+		break;
+
+	case FT_SB1:
+		set_filter(2, 3800);
+		enable_zoh_upsampler();
+		break;
+
+	case FT_SB2:
+		set_filter(2, 4800);
+		enable_zoh_upsampler();
+		break;
+
+	case FT_SBPRO1:
+	case FT_SBPRO2:
+		set_filter(2, 3200);
+		enable_zoh_upsampler();
+		break;
+
+	case FT_SB16:
+		// Resampling from the SB channel rate to the mixer rate applies
+		// brickwall filtering at half the SB channel rate, which
+		// perfectly emulates the dynamic brickwall filter of the SB16.
+		disable_filter();
+		sb.chan->EnableZeroOrderHoldUpsampler(false);
+		break;
+	}
+}
+
+static void set_opl_filter()
+{
+	auto set_filter = [](mixer_channel_t chan,
+	                     const uint8_t order,
+	                     const uint16_t cutoff_freq) {
+		chan->ConfigureLowPassFilter(order, cutoff_freq);
+		chan->EnableLowPassFilter();
+		chan->ForceLowPassFilter(sb.opl_filter_force);
+	};
+
+	auto chan = MIXER_FindChannel("FM");
+	if (!chan)
+		return;
+
+	switch (sb.opl_filter_type) {
+	case FT_SB1:
+	case FT_SB2: set_filter(chan, 1, 12000); break;
+
+	case FT_SBPRO1:
+	case FT_SBPRO2: set_filter(chan, 1, 8000); break;
+
+	case FT_SB16:
+	case FT_NONE:
+		chan->EnableLowPassFilter(false);
+		chan->ForceLowPassFilter(false);
+		break;
 	}
 }
 
@@ -1404,6 +1548,7 @@ static void CTMIXER_Write(uint8_t val) {
 	case 0x0e:		/* Output/Stereo Select */
 		sb.mixer.stereo=(val & 0x2) > 0;
 		sb.mixer.filtered=(val & 0x20) > 0;
+		sb.chan->EnableLowPassFilter(sb.mixer.filtered);
 		DSP_ChangeStereo(sb.mixer.stereo);
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;
@@ -1789,6 +1934,7 @@ public:
 		sb.mixer.stereo=false;
 
 		Find_Type_And_Opl(section,sb.type,oplmode);
+		configure_filters(section);
 
 		switch (oplmode) {
 		case OPL_none: WriteHandler[0].Install(0x388, adlib_gusforward, io_width_t::byte); break;
@@ -1803,11 +1949,14 @@ public:
 		case OPL_opl3:
 		case OPL_opl3gold:
 			OPL_Init(section,oplmode);
+			set_opl_filter();
 			break;
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
 		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB");
+		set_sb_filter();
+
 		sb.dsp.state=DSP_S_NORMAL;
 		sb.dsp.out.lastval=0xaa;
 		sb.dma.chan=NULL;

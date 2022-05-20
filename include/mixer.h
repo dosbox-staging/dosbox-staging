@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -62,6 +63,8 @@ extern uint8_t MixTemp[MIXER_BUFSIZE];
 
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
+
+static constexpr auto max_filter_order = 16;
 
 // Get a DOS-formatted silent-sample when there's a chance it will
 // be processed using AddSamples_nonnative()
@@ -119,6 +122,13 @@ public:
 	void Mix(int _needed);
 	void AddSilence(); // Fill up until needed
 
+	void EnableLowPassFilter(const bool enabled = true);
+	void ForceLowPassFilter(const bool force = true);
+	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
+
+	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
+	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(uint16_t len, const Type *data);
 
@@ -158,6 +168,9 @@ private:
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void ConvertSamples(const Type *data, const uint16_t frames,
 	                    std::vector<float> &out);
+
+	void ConfigureResampler();
+	void UpdateZOHUpsamplerState();
 
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
@@ -207,6 +220,18 @@ private:
 
 	bool resample = false;
 	SpeexResamplerState *resampler = nullptr;
+
+	struct {
+		bool enabled = false;
+		uint16_t target_freq = 0;
+		float step = 0.0f;
+	} zoh_upsampler = {};
+
+	struct {
+		bool enabled = false;
+		bool force = true;
+		std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
+	} filter = {};
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 

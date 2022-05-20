@@ -834,6 +834,23 @@ void DOSBOX_Init() {
 	        "Provider for the OPL emulation. 'compat' provides better quality,\n"
 	        "'nuked' is the default and most accurate (but the most CPU-intensive).");
 
+	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
+	Pstring->Set_help(
+	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
+	        "  auto:    Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
+	        "           Use the filter of this Sound Blaster model.\n"
+	        "  none:    Don't filter the output.\n"
+	        "A second 'always_on' parameter can be provided to disallow programs from turning the filter off.\n"
+	        "(Example: sbpro1 always_on)");
+
+	Pstring = secprop->Add_string("opl_filter", when_idle, "auto");
+	Pstring->Set_help("Type of filter to emulate for the Sound Blaster OPL output:\n"
+	                  "  auto:    Use the appropriate filter determined by 'sbtype' (default).\n"
+	                  "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
+	                  "           Use the filter of this Sound Blaster model.\n"
+	                  "  none:    Don't filter the output.");
+
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
 
