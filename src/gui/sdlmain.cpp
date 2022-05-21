@@ -3691,19 +3691,6 @@ bool GFX_Events()
 					sdl.draw.callback(GFX_CallBackRedraw);
 				GFX_UpdateMouseState();
 
-				// When we're fullscreen, the DOS program might
-				// change underlying draw resolutions, which can
-				// pose a problem when switching back to
-				// window-mode (beacuse the prior window-size
-				// may not longer accomodate the new draw-size).
-				// So in this case, we want to reset the screen
-				// size - but only if we're not in the middle of
-				// resizing the window (which also fires EXPOSED
-				// events).
-				if (!sdl.desktop.fullscreen &&
-					sdl.desktop.last_size_event != SDL_WINDOWEVENT_RESIZED)
-					GFX_ResetScreen();
-
 				FocusInput();
 				continue;
 
