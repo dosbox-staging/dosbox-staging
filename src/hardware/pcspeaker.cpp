@@ -52,36 +52,44 @@ constexpr auto SPKR_HIGHPASS = 0.999f; // Should be selected based on
                                        // sampling rate
 constexpr auto ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
 
+// PIT starts in mode 3 at ~903 Hz (pit_max) with positive amplitude
 static struct {
-	mixer_channel_t chan = nullptr;
+	// Complex types and containers
 	std::deque<float> waveform_deque = {};
-	uint16_t waveform_deque_size = 0;
 	std::array<float, SPKR_FILTER_WIDTH> impulse_lut = {};
 	std::unique_ptr<SoftLimiter> soft_limiter = {};
+	mixer_channel_t chan = nullptr;
 
-	uint8_t pit_mode = 0;
-	int rate = 0;
-	float rate_as_float = 0.0f;
-	float rate_per_ms = 0.0f;
-
-	bool pit_output_enabled = false;
-	bool pit_clock_gate_enabled = false;
-	int16_t pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
-	int16_t pit_prev_amplitude = SPKR_NEGATIVE_AMPLITUDE;
-	float pit_new_max = 0.0f;
-	float pit_new_half = 0.0f;
-	float pit_max = 0.0f;
-	float pit_half = 0.0f;
+	// time values
+	float pit_max = ms_per_pit_tick * 1320;
+	float pit_new_max = pit_max;
+	float pit_half = pit_max / 2;
+	float pit_new_half = pit_half;
 	float pit_index = 0.0f;
-	bool pit_mode1_waiting_for_counter = false;
-	bool pit_mode1_waiting_for_trigger = false;
+	float last_index = 0.0f;
 	float pit_mode1_pending_max = 0.0f;
 
+	// Playback rate (and derived)
+	float rate_as_float = 0.0f;
+	float rate_per_ms = 0.0f;
+	int rate = 0;
+
+	int minimum_counter = 0; // based on channel rate rate
+
+	// Toggles
+	bool pit_clock_gate_enabled = false;
+	bool pit_mode1_waiting_for_counter = false;
+	bool pit_mode1_waiting_for_trigger = true;
 	bool pit_mode3_counting = false;
-	float volwant, volcur = 0.0f;
-	float last_index = 0.0f;
-	int minimum_counter = 0;
-	uint16_t tally_of_silence = 0;
+	bool pit_output_enabled = false;
+
+	// PIT mode and apl
+	int16_t pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
+	int16_t pit_prev_amplitude = SPKR_NEGATIVE_AMPLITUDE;
+	int16_t tally_of_silence = 0;
+
+	uint8_t pit_mode = 3;
+
 } spkr = {};
 
 static void AddImpulse(float index, const int16_t amplitude);
@@ -461,8 +469,7 @@ static void AddImpulse(float index, const int16_t amplitude)
 		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
 		        "index into spkr.impulse_lut too high");
 		spkr.waveform_deque[offset + i] +=
-		        amplitude *
-		        spkr.impulse_lut[phase + i * SPKR_OVERSAMPLING];
+		        amplitude * spkr.impulse_lut[phase + i * SPKR_OVERSAMPLING];
 	}
 }
 #else
@@ -534,36 +541,17 @@ class PCSPEAKER final : public Module_base {
 public:
 	PCSPEAKER(Section *configuration) : Module_base(configuration)
 	{
-		spkr.chan = 0;
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("pcspeaker"))
 			return;
-		spkr.pit_output_enabled = 0;
-		spkr.pit_clock_gate_enabled = 0;
-		spkr.pit_mode1_waiting_for_trigger = 1;
-		// spkr.last_ticks=0;
-		spkr.last_index = 0;
 
+		// Get the playback rate and calculate related constants
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
 		spkr.rate_as_float = static_cast<float>(spkr.rate);
 		spkr.rate_per_ms = spkr.rate_as_float / 1000.0f;
-		InitializeImpulseLUT();
-
-		// PIT initially in mode 3 at ~903 Hz
-		spkr.pit_mode = 3;
-		spkr.pit_mode3_counting = false;
-		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
-		spkr.pit_max = ms_per_pit_tick * 1320;
-		spkr.pit_half = spkr.pit_max / 2;
-		spkr.pit_new_max = spkr.pit_max;
-		spkr.pit_new_half = spkr.pit_half;
-		spkr.pit_index = 0;
-
-		// spkr.minimum_counter = (PIT_TICK_RATE +
-		// spkr.rate/2-1)/(spkr.rate/2);
 		spkr.minimum_counter = 2 * PIT_TICK_RATE / spkr.rate;
 
-		spkr.used = 0;
+		InitializeImpulseLUT();
 
 		// Size the waveform queue
 		// +1 to compensate for rounding down of the division
