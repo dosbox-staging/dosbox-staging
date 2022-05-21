@@ -839,7 +839,7 @@ void DOSBOX_Init() {
 	// have worked with when tuning their game audio, we therefore use this
 	// same value given it's the most likely to produce audio as intended by
 	// the authors.
-	pint = secprop->Add_int("pcrate", when_idle, 18939);
+	pint = secprop->Add_int("pcrate", when_idle, 12000);
 	pint->SetMinMax(8000, 48000);
 	pint->Set_help("Sample rate of the PC speaker sound generation.");
 
