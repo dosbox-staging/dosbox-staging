@@ -283,7 +283,7 @@ void MixerChannel::SetFreq(const int freq)
 		const auto out_rate = mixer.freq;
 		if (!resampler) {
 			const auto num_channels = 2;	// always stereo
-			const auto quality = 7;	// TODO set from config?
+			const auto quality = 5;
 			resampler = speex_resampler_init(
 			        num_channels, in_rate, out_rate, quality, nullptr);
 		}
