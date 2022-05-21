@@ -2,6 +2,7 @@
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2011-2011  ripa, from vogons.org
  *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
