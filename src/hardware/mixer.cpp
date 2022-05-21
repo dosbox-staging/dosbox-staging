@@ -393,7 +393,7 @@ constexpr void fill_8to16_lut()
 		lut_u8to16[i] = u8to16(i);
 }
 
-// Convert sample data to floats and  remove clicks.
+// Convert sample data to floats and remove clicks.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::vector<float> &out)
 {
@@ -500,7 +500,7 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::
 		                           : prev_sample[mapped_channel_left]) *
 		                   volmul[1];
 
-		out_frame = {0.0, 0.0};
+		out_frame = {0.0f, 0.0f};
 		out_frame[mapped_output_left] += left;
 		out_frame[mapped_output_right] += right;
 
@@ -521,31 +521,37 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto &convert_out = resample ? mixer.resample_temp : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
-	spx_uint32_t out_frames;
 	if (resample) {
 		spx_uint32_t in_frames = mixer.resample_temp.size() / 2;
-		out_frames = mixer.resample_out.capacity() / 2;
+		spx_uint32_t out_frames = mixer.resample_out.capacity() / 2;
+
+		// Make sure useful data won't get zeroed out when we resize the vector
+		// to the actual output length after resampling
+		mixer.resample_out.resize(mixer.resample_out.capacity());
+
 		speex_resampler_process_interleaved_float(resampler,
 		                                          mixer.resample_temp.data(),
 		                                          &in_frames,
 		                                          mixer.resample_out.data(),
 		                                          &out_frames);
-	} else {
-		out_frames = mixer.resample_out.size() / 2;
+
+		// out_frames now contains the actual number of frames output by the resampler
+		auto newsize = out_frames * 2;
+		mixer.resample_out.resize(newsize);
 	}
 
 	// Mix channel to the master output
+	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 
-	work_index_t pos = 0;
-	auto frames_left = out_frames;
-	do {
+	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
-		mixer.work[mixpos][0] += mixer.resample_out[pos++];
-		mixer.work[mixpos][1] += mixer.resample_out[pos++];
+		mixer.work[mixpos][0] += *pos++;
+		mixer.work[mixpos][1] += *pos++;
 		++mixpos;
-	} while (--frames_left);
+	}
 
+	auto out_frames = mixer.resample_out.size() / 2;
 	done += out_frames;
 
 	last_samples_were_silence = false;
