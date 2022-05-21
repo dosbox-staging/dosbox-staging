@@ -90,8 +90,8 @@ static constexpr int16_t MIXER_CLIP(const int SAMP)
 struct mixer_t {
 	// complex types
 	matrix<float, MIXER_BUFSIZE, 2> work = {};
-	std::vector<float> resample_temp;
-	std::vector<float> resample_out;
+	std::vector<float> resample_temp = {};
+	std::vector<float> resample_out = {};
 
 	std::array<float, 2> mastervol = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
@@ -111,8 +111,6 @@ struct mixer_t {
 
 	SDL_AudioDeviceID sdldevice = 0;
 	bool nosound = false;
-
-	mixer_t() : resample_temp(MIXER_BUFSIZE * 2), resample_out(MIXER_BUFSIZE * 2) {}
 };
 
 static struct mixer_t mixer = {};
@@ -282,8 +280,8 @@ void MixerChannel::SetFreq(const int freq)
 		const auto in_rate = sample_rate;
 		const auto out_rate = mixer.freq;
 		if (!resampler) {
-			const auto num_channels = 2;	// always stereo
-			const auto quality = 5;
+			constexpr auto num_channels = 2;	// always stereo
+			constexpr auto quality = 5;
 			resampler = speex_resampler_init(
 			        num_channels, in_rate, out_rate, quality, nullptr);
 		}
@@ -504,11 +502,25 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames, std::
 		out_frame[mapped_output_left] += left;
 		out_frame[mapped_output_right] += right;
 
-		out.push_back(out_frame[0]);
-		out.push_back(out_frame[1]);
+		out.emplace_back(out_frame[0]);
+		out.emplace_back(out_frame[1]);
 
 		++pos;
 	}
+}
+
+spx_uint32_t estimate_max_out_frames(SpeexResamplerState *resampler,
+                                     const spx_uint32_t in_frames)
+{
+	assert(resampler);
+	assert(in_frames);
+
+	spx_uint32_t ratio_num = 0;
+	spx_uint32_t ratio_den = 0;
+	speex_resampler_get_ratio(resampler, &ratio_num, &ratio_den);
+	assert(ratio_num && ratio_den);
+
+	return ceil_udivide(in_frames * ratio_den, ratio_num);
 }
 
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
@@ -523,11 +535,9 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	if (resample) {
 		spx_uint32_t in_frames = mixer.resample_temp.size() / 2;
-		spx_uint32_t out_frames = mixer.resample_out.capacity() / 2;
-
-		// Make sure useful data won't get zeroed out when we resize the vector
-		// to the actual output length after resampling
-		mixer.resample_out.resize(mixer.resample_out.capacity());
+		spx_uint32_t out_frames = estimate_max_out_frames(resampler,
+		                                                  in_frames);
+		mixer.resample_out.resize(out_frames * 2);
 
 		speex_resampler_process_interleaved_float(resampler,
 		                                          mixer.resample_temp.data(),
@@ -535,9 +545,10 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		                                          mixer.resample_out.data(),
 		                                          &out_frames);
 
-		// out_frames now contains the actual number of frames output by the resampler
-		auto newsize = out_frames * 2;
-		mixer.resample_out.resize(newsize);
+		// out_frames now contains the actual number of resampled frames,
+		// ensure the number of output frames is within the logical size.
+		assert(out_frames <= mixer.resample_out.size() / 2);
+		mixer.resample_out.resize(out_frames * 2);  // only shrinks
 	}
 
 	// Mix channel to the master output
