@@ -27,10 +27,10 @@
 // #define SPKR_DEBUGGING
 // #define REFERENCE
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <deque>
-#include <vector>
 
 #include "mixer.h"
 #include "timer.h"
@@ -56,7 +56,7 @@ static struct {
 	mixer_channel_t chan = nullptr;
 	std::deque<float> waveform_deque = {};
 	uint16_t waveform_deque_size = 0;
-	std::vector<float> sampled_impulse = {};
+	std::array<float, SPKR_FILTER_WIDTH> impulse_lut = {};
 	std::unique_ptr<SoftLimiter> soft_limiter = {};
 
 	uint8_t pit_mode = 0;
@@ -459,10 +459,10 @@ static void AddImpulse(float index, const int16_t amplitude)
 		assertm(offset + i < spkr.waveform_deque.size(),
 		        "index into spkr.waveform_deque too high");
 		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
-		        "index into spkr.sampled_impulse too high");
+		        "index into spkr.impulse_lut too high");
 		spkr.waveform_deque[offset + i] +=
 		        amplitude *
-		        spkr.sampled_impulse[phase + i * SPKR_OVERSAMPLING];
+		        spkr.impulse_lut[phase + i * SPKR_OVERSAMPLING];
 	}
 }
 #else
@@ -522,13 +522,12 @@ static void PCSPEAKER_CallBack(uint16_t requested_frames)
 	}
 }
 
-static void init_interpolation()
+static void InitializeImpulseLUT()
 {
-	spkr.sampled_impulse.resize(SPKR_FILTER_WIDTH);
-	for (uint16_t i = 0; i < SPKR_FILTER_WIDTH; ++i) {
-		spkr.sampled_impulse[i] = impulse(
+	assert(spkr.impulse_lut.size() == SPKR_FILTER_WIDTH);
+	for (uint16_t i = 0; i < SPKR_FILTER_WIDTH; ++i)
+		spkr.impulse_lut[i] = impulse(
 		        i / (static_cast<double>(spkr.rate) * SPKR_OVERSAMPLING));
-	}
 }
 
 class PCSPEAKER final : public Module_base {
@@ -548,7 +547,7 @@ public:
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
 		spkr.rate_as_float = static_cast<float>(spkr.rate);
 		spkr.rate_per_ms = spkr.rate_as_float / 1000.0f;
-		init_interpolation();
+		InitializeImpulseLUT();
 
 		// PIT initially in mode 3 at ~903 Hz
 		spkr.pit_mode = 3;
