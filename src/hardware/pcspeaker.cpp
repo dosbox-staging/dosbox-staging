@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <deque>
 
@@ -102,13 +103,7 @@ static void AddPITOutput(const float index)
 
 static void ForwardPIT(const float newindex)
 {
-#ifdef SPKR_DEBUGGING
-	if (newindex < 0 || newindex > 1) {
-		LOG_MSG("ForwardPIT: index out of range %f at %f",
-		        newindex,
-		        PIC_FullIndex());
-	}
-#endif
+	assert(newindex >= -FLT_EPSILON && newindex <= 1.0f + FLT_EPSILON);
 	float passed = (newindex - spkr.last_index);
 	float delay_base = spkr.last_index;
 	spkr.last_index = newindex;
