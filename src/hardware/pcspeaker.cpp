@@ -450,14 +450,9 @@ static void AddImpulse(float index, const int16_t amplitude)
 		offset++;
 		phase = SPKR_OVERSAMPLING - phase;
 	}
-	for (uint16_t i = 0; i < SPKR_FILTER_QUALITY; ++i) {
-		assertm(offset + i < spkr.waveform_deque.size(),
-		        "index into spkr.waveform_deque too high");
-		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
-		        "index into spkr.impulse_lut too high");
-		spkr.waveform_deque[offset + i] +=
-		        amplitude * spkr.impulse_lut[phase + i * SPKR_OVERSAMPLING];
-	}
+	for (uint16_t i = 0; i < SPKR_FILTER_QUALITY; ++i)
+		spkr.waveform_deque.at(offset + i) +=
+		        amplitude * spkr.impulse_lut.at(phase + i * SPKR_OVERSAMPLING);
 }
 #else
 	const auto portion_of_ms = static_cast < double(index) / 1000.0;
