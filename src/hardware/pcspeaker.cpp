@@ -308,15 +308,6 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		break;
 	case 3: /* Square wave generator */
 		if (cntr < spkr.minimum_counter) {
-			// #ifdef SPKR_DEBUGGING
-			//			LOG_MSG(
-			//				"SetCounter: too high
-			// frequency %u (cntr %u) at %f",
-			// PIT_TICK_RATE/cntr, 				cntr,
-			// PIC_FullIndex()); #endif
-			//  hack to save CPU cycles
-			// cntr = spkr.minimum_counter;
-
 			// avoid breaking digger music
 			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			spkr.pit_mode = 6; // dummy mode with constant high output
