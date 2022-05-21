@@ -40,8 +40,9 @@
 #include "pic.h"
 
 // constants
-constexpr int16_t SPKR_POSITIVE_LEVEL = 20000;
-constexpr int16_t SPKR_NEGATIVE_LEVEL = -SPKR_POSITIVE_LEVEL;
+constexpr int16_t SPKR_POSITIVE_AMPLITUDE = 20000;
+constexpr int16_t SPKR_NEGATIVE_AMPLITUDE = -SPKR_POSITIVE_AMPLITUDE;
+constexpr int16_t SPKR_NEUTRAL_AMPLITUDE = 0;
 
 constexpr auto SPKR_FILTER_QUALITY = 100;
 constexpr auto SPKR_OVERSAMPLING = 32;
@@ -50,11 +51,6 @@ constexpr auto SPKR_FILTER_WIDTH = (SPKR_FILTER_QUALITY * SPKR_OVERSAMPLING);
 constexpr auto SPKR_HIGHPASS = 0.999f; // Should be selected based on
                                        // sampling rate
 constexpr auto ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
-
-struct DelayEntry {
-	float index = 0.0f;
-	int16_t output_level = SPKR_NEGATIVE_LEVEL;
-};
 
 static struct {
 	mixer_channel_t chan = nullptr;
@@ -70,7 +66,8 @@ static struct {
 
 	bool pit_output_enabled = false;
 	bool pit_clock_gate_enabled = false;
-	int16_t pit_output_level = SPKR_NEGATIVE_LEVEL;
+	int16_t pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
+	int16_t pit_prev_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 	float pit_new_max = 0.0f;
 	float pit_new_half = 0.0f;
 	float pit_max = 0.0f;
@@ -87,21 +84,11 @@ static struct {
 	uint16_t tally_of_silence = 0;
 } spkr = {};
 
-static void add_impulse(const DelayEntry &entry);
-
-static void AddDelayEntry(const float index, const int16_t new_output_level)
-{
-	static auto previous_output_level = SPKR_NEGATIVE_LEVEL;
-	if (new_output_level == previous_output_level)
-		return;
-	previous_output_level = new_output_level;
-	add_impulse(DelayEntry{index, new_output_level});
-}
-
+static void AddImpulse(float index, const int16_t amplitude);
 static void AddPITOutput(const float index)
 {
 	if (spkr.pit_output_enabled) {
-		AddDelayEntry(index, spkr.pit_output_level);
+		AddImpulse(index, spkr.pit_amplitude);
 	}
 }
 
@@ -130,17 +117,17 @@ static void ForwardPIT(const float newindex)
 			// counter reached zero between previous and this call
 			const float delay = delay_base + spkr.pit_max -
 			                    spkr.pit_index + passed;
-			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			AddPITOutput(delay);
 		}
 		return;
 	case 1:
 		if (spkr.pit_mode1_waiting_for_counter) {
-			// assert output level is high
+			// assert output amplitude is high
 			return; // counter not written yet
 		}
 		if (spkr.pit_mode1_waiting_for_trigger) {
-			// assert output level is high
+			// assert output amplitude is high
 			return; // no pulse yet
 		}
 		if (spkr.pit_index >= spkr.pit_max) {
@@ -152,7 +139,7 @@ static void ForwardPIT(const float newindex)
 			// counter reached zero between previous and this call
 			const float delay = delay_base + spkr.pit_max -
 			                    spkr.pit_index + passed;
-			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			AddPITOutput(delay);
 			// finished with this pulse
 			spkr.pit_mode1_waiting_for_trigger = 1;
@@ -168,7 +155,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+					spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 					AddPITOutput(delay_base);
 					spkr.pit_index = 0;
 				} else {
@@ -181,7 +168,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+					spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 					AddPITOutput(delay_base);
 					spkr.pit_index = spkr.pit_half;
 				} else {
@@ -203,7 +190,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+					spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 					AddPITOutput(delay_base);
 					spkr.pit_index = 0;
 					/* Load the new count */
@@ -219,7 +206,7 @@ static void ForwardPIT(const float newindex)
 					                    spkr.pit_index;
 					delay_base += delay;
 					passed -= delay;
-					spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+					spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 					AddPITOutput(delay_base);
 					spkr.pit_index = spkr.pit_half;
 					/* Load the new count */
@@ -240,7 +227,7 @@ static void ForwardPIT(const float newindex)
 				const float delay = spkr.pit_max - spkr.pit_index;
 				delay_base += delay;
 				passed -= delay;
-				spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+				spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 				AddPITOutput(delay_base); // No new events
 				                          // unless reprogrammed
 				spkr.pit_index = spkr.pit_max;
@@ -265,12 +252,12 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 		spkr.pit_mode = 1;
 		spkr.pit_mode1_waiting_for_counter = 1;
 		spkr.pit_mode1_waiting_for_trigger = 0;
-		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		break;
 	case 3:
 		spkr.pit_mode = 3;
 		spkr.pit_mode3_counting = false;
-		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		break;
 	default: return;
 	}
@@ -290,8 +277,8 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		// if (cntr>80) {
 		//	cntr=80;
 		// }
-		// spkr.pit_output_level=((float)cntr-40)*(SPKR_VOLUME/40.0f);
-		spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+		// spkr.pit_amplitude=((float)cntr-40)*(SPKR_VOLUME/40.0f);
+		spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 		spkr.pit_index = 0;
 		spkr.pit_max = duration_of_count_ms;
 		AddPITOutput(newindex);
@@ -299,14 +286,14 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 	case 1: // retriggerable one-shot, used by Star Control 1
 		spkr.pit_mode1_pending_max = duration_of_count_ms;
 		if (spkr.pit_mode1_waiting_for_counter) {
-			// assert output level is high
+			// assert output amplitude is high
 			spkr.pit_mode1_waiting_for_counter = 0;
 			spkr.pit_mode1_waiting_for_trigger = 1;
 		}
 		break;
 	case 2: /* Single cycle low, rest low high generator */
 		spkr.pit_index = 0;
-		spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+		spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 		AddPITOutput(newindex);
 		spkr.pit_half = ms_per_pit_tick;
 		spkr.pit_max = duration_of_count_ms;
@@ -323,7 +310,7 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			// cntr = spkr.minimum_counter;
 
 			// avoid breaking digger music
-			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			spkr.pit_mode = 6; // dummy mode with constant high output
 			AddPITOutput(newindex);
 			return;
@@ -337,13 +324,13 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			if (spkr.pit_clock_gate_enabled) {
 				spkr.pit_mode3_counting = true;
 				// probably not necessary
-				spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+				spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 				AddPITOutput(newindex);
 			}
 		}
 		break;
 	case 4: /* Software triggered strobe */
-		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		AddPITOutput(newindex);
 		spkr.pit_index = 0;
 		spkr.pit_max = duration_of_count_ms;
@@ -376,10 +363,10 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 		switch (spkr.pit_mode) {
 		case 1:
 			if (spkr.pit_mode1_waiting_for_counter) {
-				// assert output level is high
+				// assert output amplitude is high
 				break;
 			}
-			spkr.pit_output_level = SPKR_NEGATIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_mode1_pending_max;
 			spkr.pit_mode1_waiting_for_trigger = 0;
@@ -391,7 +378,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_new_max;
 			spkr.pit_half = spkr.pit_new_half;
-			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			break;
 		default:
 			// TODO: implement other modes
@@ -400,11 +387,11 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 	} else if (!pit_clock_gate_enabled) {
 		switch (spkr.pit_mode) {
 		case 1:
-			// gate level does not affect mode1
+			// gate amplitude does not affect mode1
 			break;
 		case 3:
 			// low gate forces pit output high
-			spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			spkr.pit_mode3_counting = false;
 			break;
 		default:
@@ -413,9 +400,9 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 		}
 	}
 	if (pit_output_enabled) {
-		AddDelayEntry(newindex, spkr.pit_output_level);
+		AddImpulse(newindex, spkr.pit_amplitude);
 	} else {
-		AddDelayEntry(newindex, SPKR_NEGATIVE_LEVEL);
+		AddImpulse(newindex, SPKR_NEGATIVE_AMPLITUDE);
 	}
 }
 
@@ -437,21 +424,28 @@ static float impulse(const double t)
 	const auto fc = fs / (2 + static_cast<double>(SPKR_CUTOFF_MARGIN));
 	const auto q = static_cast<double>(SPKR_FILTER_QUALITY);
 	if ((0 < t) && (t * fs < q)) {
-		const auto window = 1.0 +
-		                    cos(2 * fs * M_PI * (q / (2 * fs) - t) / q);
-		const auto level = window *
-		                   (sinc(2 * fc * M_PI * (t - q / (2 * fs)))) / 2.0;
-		return static_cast<float>(level);
+		const auto window = 1.0 + cos(2 * fs * M_PI * (q / (2 * fs) - t) / q);
+		const auto amplitude = window * (sinc(2 * fc * M_PI * (t - q / (2 * fs)))) / 2.0;
+		return static_cast<float>(amplitude);
 	} else
 		return 0.0f;
 }
 
-static void add_impulse(const DelayEntry &entry)
+static void AddImpulse(float index, const int16_t amplitude)
 {
-	if (!spkr.chan->is_enabled)
-		spkr.chan->Enable(true);
+	// Did the amplitude change?
+	if (amplitude == spkr.pit_prev_amplitude)
+		return;
+	spkr.pit_prev_amplitude = amplitude;
 
-	const auto index = clamp(entry.index, 0.0f, 1.0f);
+	// Wake the channel if it was sleeping
+	if (!spkr.chan->is_enabled) {
+		spkr.chan->ReactivateEnvelope();
+		spkr.chan->Enable(true);
+	}
+
+	// Make sure the time index is valid
+	index = clamp(index, 0.0f, 1.0f);
 #ifndef REFERENCE
 	const auto samples_in_impulse = index * spkr.rate_per_ms;
 	auto offset = static_cast<uint32_t>(samples_in_impulse);
@@ -467,7 +461,7 @@ static void add_impulse(const DelayEntry &entry)
 		assertm(phase + SPKR_OVERSAMPLING * i < SPKR_FILTER_WIDTH,
 		        "index into spkr.sampled_impulse too high");
 		spkr.waveform_deque[offset + i] +=
-		        entry.output_level *
+		        amplitude *
 		        spkr.sampled_impulse[phase + i * SPKR_OVERSAMPLING];
 	}
 }
@@ -476,7 +470,7 @@ static void add_impulse(const DelayEntry &entry)
 	for (size_t i = 0; i < spkr.waveform_deque.size(); ++i) {
 		const auto impulse_time = static_cast<double>(i) / spkr.rate -
 		                          portion_of_ms;
-		spkr.waveform_deque[i] += entry.output_level * impulse(impulse_time);
+		spkr.waveform_deque[i] += amplitude * impulse(impulse_time);
 	}
 }
 #endif
@@ -509,22 +503,23 @@ static void PCSPEAKER_CallBack(uint16_t requested_frames)
 		// Keep a tally of sequential silence so we can sleep the channel
 		spkr.tally_of_silence = out_sample ? 0 : spkr.tally_of_silence + 1;
 
-		// Scale down the running volume level. Eventually it will hit 0
-		// if no other waveforms are generated.
+		// Scale down the running volume amplitude. Eventually it will
+		// hit 0 if no other waveforms are generated.
 		in_sample *= SPKR_HIGHPASS;
 	}
 
 	// Write silence if the waveform deque ran out
-	constexpr int16_t zero_sample = 0;
 	while (requested_frames) {
-		spkr.chan->AddSamples_m16(1, &zero_sample);
+		spkr.chan->AddSamples_m16(1, &SPKR_NEUTRAL_AMPLITUDE);
 		++spkr.tally_of_silence;
 		--requested_frames;
 	}
 
 	// Maybe put the channel to sleep
-	if (spkr.tally_of_silence > 1000)
+	if (spkr.tally_of_silence > 1000) {
+		spkr.pit_prev_amplitude = SPKR_NEUTRAL_AMPLITUDE;
 		spkr.chan->Enable(false);
+	}
 }
 
 static void init_interpolation()
@@ -558,7 +553,7 @@ public:
 		// PIT initially in mode 3 at ~903 Hz
 		spkr.pit_mode = 3;
 		spkr.pit_mode3_counting = false;
-		spkr.pit_output_level = SPKR_POSITIVE_LEVEL;
+		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		spkr.pit_max = ms_per_pit_tick * 1320;
 		spkr.pit_half = spkr.pit_max / 2;
 		spkr.pit_new_max = spkr.pit_max;
@@ -573,11 +568,13 @@ public:
 
 		// Size the waveform queue
 		// +1 to compensate for rounding down of the division
-		static auto waveform_size = SPKR_FILTER_QUALITY + spkr.rate / 1000 + 1;
+		static auto waveform_size = SPKR_FILTER_QUALITY +
+		                            spkr.rate / 1000 + 1;
 		spkr.waveform_deque.resize(check_cast<uint16_t>(waveform_size), 0.0f);
 
 		// Setup the soft limiter
-		spkr.soft_limiter = std::make_unique<SoftLimiter>("SPKR");
+		constexpr auto channel_name = "SPKR";
+		spkr.soft_limiter = std::make_unique<SoftLimiter>(channel_name);
 		assert(spkr.soft_limiter);
 
 		// Register the sound channel
