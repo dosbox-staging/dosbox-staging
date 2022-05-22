@@ -998,7 +998,7 @@ public:
 
 		if (cmd->FindExist("/NOSHOW"))
 			return;
-		WriteOut("Channel      Main       Main(dB)     Rate(Hz)   Lineout mode\n");
+		WriteOut("Channel      Volume     Volume(dB)   Rate(Hz)   Lineout mode\n");
 		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],
 		             mixer.freq, "Stereo (always)");
 
