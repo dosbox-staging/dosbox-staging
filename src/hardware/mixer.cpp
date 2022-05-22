@@ -957,6 +957,11 @@ public:
 			else
 				val = powf(10.0f, val / 20.0f);
 			if (val<0) val=1.0f;
+
+			const auto min_vol = powf(10.0f, -99.99f / 20.0f);
+			constexpr auto max_vol = 99.99f;
+			val = clamp(val, min_vol, max_vol);
+
 			if (!w) {
 				vol0=val;
 			} else {
