@@ -49,23 +49,23 @@ constexpr uint16_t MAX_COUNTER = UINT16_MAX;
 struct PIT_Block {
 	// The PIT has only 16 bits that are used as frequency
 	// divider, which can represent dividers from 0 to 65535.
-	int count;
-	double delay;
-	double start;
+	int count = 0;
+	double delay = 0.0;
+	double start = 0.0;
 
-	uint16_t read_latch;
-	uint16_t write_latch;
+	uint16_t read_latch = 0;
+	uint16_t write_latch = 0;
 
-	PitMode mode;
-	uint8_t read_state;
-	uint8_t write_state;
+	PitMode mode = PitMode::Inactive;
+	uint8_t read_state = 0;
+	uint8_t write_state = 0;
 
-	bool bcd;
-	bool go_read_latch;
-	bool mode_changed;
-	bool counterstatus_set;
-	bool counting;
-	bool update_count;
+	bool bcd = false;
+	bool go_read_latch = false;
+	bool mode_changed = false;
+	bool counterstatus_set = false;
+	bool counting = false;
+	bool update_count = false;
 };
 
 static PIT_Block pit[3];
