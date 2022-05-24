@@ -54,7 +54,7 @@ constexpr auto SPKR_HIGHPASS = 0.999f; // Should be selected based on
                                        // sampling rate
 constexpr auto ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
 
-// PIT starts in mode 3 at ~903 Hz (pit_max) with positive amplitude
+// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with positive amplitude
 static struct {
 	// Complex types and containers
 	std::deque<float> waveform_deque = {};
@@ -89,7 +89,7 @@ static struct {
 	int16_t pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 	int16_t pit_prev_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 	int16_t tally_of_silence = 0;
-	uint8_t pit_mode = 3;
+	PitMode pit_mode = PitMode::SquareWave;
 	bool is_active = false;
 } spkr = {};
 
@@ -108,9 +108,9 @@ static void ForwardPIT(const float newindex)
 	float delay_base = spkr.last_index;
 	spkr.last_index = newindex;
 	switch (spkr.pit_mode) {
-	case 6: // dummy
+	case PitMode::Inactive:
 		return;
-	case 0:
+	case PitMode::InterruptOnTC:
 		if (spkr.pit_index >= spkr.pit_max) {
 			return; // counter reached zero before previous call so
 			        // do nothing
@@ -124,7 +124,7 @@ static void ForwardPIT(const float newindex)
 			AddPITOutput(delay);
 		}
 		return;
-	case 1:
+	case PitMode::OneShot:
 		if (spkr.pit_mode1_waiting_for_counter) {
 			// assert output amplitude is high
 			return; // counter not written yet
@@ -148,7 +148,8 @@ static void ForwardPIT(const float newindex)
 			spkr.pit_mode1_waiting_for_trigger = 1;
 		}
 		return;
-	case 2:
+	case PitMode::RateGenerator:
+	case PitMode::RateGeneratorAlias:
 		while (passed > 0) {
 			/* passed the initial low cycle? */
 			if (spkr.pit_index >= spkr.pit_half) {
@@ -182,7 +183,8 @@ static void ForwardPIT(const float newindex)
 		}
 		break;
 		// END CASE 2
-	case 3:
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
 		if (!spkr.pit_mode3_counting)
 			break;
 		while (passed > 0) {
@@ -223,7 +225,7 @@ static void ForwardPIT(const float newindex)
 		}
 		break;
 		// END CASE 3
-	case 4:
+	case PitMode::SoftwareStrobe:
 		if (spkr.pit_index < spkr.pit_max) {
 			/* Check if we're gonna pass the end this block */
 			if (spkr.pit_index + passed >= spkr.pit_max) {
@@ -239,10 +241,13 @@ static void ForwardPIT(const float newindex)
 		}
 		break;
 		// END CASE 4
+	default:
+		// other modes not implemented
+		break;
 	}
 }
 
-void PCSPEAKER_SetPITControl(const uint8_t mode)
+void PCSPEAKER_SetPITControl(const PitMode pit_mode)
 {
 	if (!spkr.is_active)
 		return;
@@ -250,18 +255,21 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 	const auto newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f pit command: %u", PIC_FullIndex(), mode);
+	LOG_INFO("PCSPEAKER: %f pit command: %s",
+	         PIC_FullIndex(),
+	         PitModeToString(pit_mode));
 #endif
 	// TODO: implement all modes
-	switch (mode) {
-	case 1:
-		spkr.pit_mode = 1;
+	switch (pit_mode) {
+	case PitMode::OneShot:
+		spkr.pit_mode = pit_mode;
 		spkr.pit_mode1_waiting_for_counter = 1;
 		spkr.pit_mode1_waiting_for_trigger = 0;
 		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		break;
-	case 3:
-		spkr.pit_mode = 3;
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
+		spkr.pit_mode = pit_mode;
 		spkr.pit_mode3_counting = false;
 		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		break;
@@ -270,19 +278,22 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 	AddPITOutput(newindex);
 }
 
-void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
+void PCSPEAKER_SetCounter(const uint16_t cntr, const PitMode pit_mode)
 {
 	if (!spkr.is_active)
 		return;
 
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %u", PIC_FullIndex(), cntr, mode);
+	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s",
+	         PIC_FullIndex(),
+	         cntr,
+	         PitModeToString(pit_mode));
 #endif
 	const auto newindex = static_cast<float>(PIC_TickIndex());
 	const auto duration_of_count_ms = ms_per_pit_tick * static_cast<float>(cntr);
 	ForwardPIT(newindex);
-	switch (mode) {
-	case 0: /* Mode 0 one shot, used with "realsound" (PWM) */
+	switch (pit_mode) {
+	case PitMode::InterruptOnTC: /*used with "realsound" (PWM) */
 		// if (cntr>80) {
 		//	cntr=80;
 		// }
@@ -292,7 +303,7 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		spkr.pit_max = duration_of_count_ms;
 		AddPITOutput(newindex);
 		break;
-	case 1: // retriggerable one-shot, used by Star Control 1
+	case PitMode::OneShot: // used by Star Control 1
 		spkr.pit_mode1_pending_max = duration_of_count_ms;
 		if (spkr.pit_mode1_waiting_for_counter) {
 			// assert output amplitude is high
@@ -300,18 +311,20 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			spkr.pit_mode1_waiting_for_trigger = 1;
 		}
 		break;
-	case 2: /* Single cycle low, rest low high generator */
+	case PitMode::RateGenerator: /* Single cycle low, rest low high generator */
+	case PitMode::RateGeneratorAlias:
 		spkr.pit_index = 0;
 		spkr.pit_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 		AddPITOutput(newindex);
 		spkr.pit_half = ms_per_pit_tick;
 		spkr.pit_max = duration_of_count_ms;
 		break;
-	case 3: /* Square wave generator */
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
 		if (cntr < spkr.minimum_counter) {
 			// avoid breaking digger music
 			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
-			spkr.pit_mode = 6; // dummy mode with constant high output
+			spkr.pit_mode = PitMode::Inactive;
 			AddPITOutput(newindex);
 			return;
 		}
@@ -329,7 +342,7 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 			}
 		}
 		break;
-	case 4: /* Software triggered strobe */
+	case PitMode::SoftwareStrobe:
 		spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 		AddPITOutput(newindex);
 		spkr.pit_index = 0;
@@ -337,11 +350,13 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 		break;
 	default:
 #ifdef SPKR_DEBUGGING
-		LOG_MSG("Unhandled speaker mode %d at %f", mode, PIC_FullIndex());
+		LOG_MSG("Unhandled speaker mode %s at %f",
+		        PitModeToString(pit_mode),
+		        PIC_FullIndex());
 #endif
 		return;
 	}
-	spkr.pit_mode = mode;
+	spkr.pit_mode = pit_mode;
 }
 
 void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_enabled)
@@ -364,7 +379,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 	spkr.pit_output_enabled = pit_output_enabled;
 	if (pit_trigger) {
 		switch (spkr.pit_mode) {
-		case 1:
+		case PitMode::OneShot:
 			if (spkr.pit_mode1_waiting_for_counter) {
 				// assert output amplitude is high
 				break;
@@ -374,7 +389,8 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 			spkr.pit_max = spkr.pit_mode1_pending_max;
 			spkr.pit_mode1_waiting_for_trigger = 0;
 			break;
-		case 3:
+		case PitMode::SquareWave:
+		case PitMode::SquareWaveAlias:
 			spkr.pit_mode3_counting = true;
 			// spkr.pit_new_max = spkr.pit_new_max; // typo or bug?
 			spkr.pit_new_half = spkr.pit_new_max / 2;
@@ -389,10 +405,11 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 		}
 	} else if (!pit_clock_gate_enabled) {
 		switch (spkr.pit_mode) {
-		case 1:
+		case PitMode::OneShot:
 			// gate amplitude does not affect mode1
 			break;
-		case 3:
+		case PitMode::SquareWave:
+		case PitMode::SquareWaveAlias:
 			// low gate forces pit output high
 			spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 			spkr.pit_mode3_counting = false;

@@ -52,14 +52,13 @@ struct PIT_Block {
 	uint16_t read_latch;
 	uint16_t write_latch;
 
-	uint8_t mode;
-	uint8_t latch_mode;
+	PitMode mode;
 	uint8_t read_state;
 	uint8_t write_state;
 
 	bool bcd;
 	bool go_read_latch;
-	bool new_mode;
+	bool mode_changed;
 	bool counterstatus_set;
 	bool counting;
 	bool update_count;
@@ -73,10 +72,26 @@ static uint8_t latched_timerstatus;
 // reprogrammed.
 static bool latched_timerstatus_locked;
 
+const char *PitModeToString(const PitMode mode)
+{
+	switch (mode) {
+	case PitMode::InterruptOnTC: return "Interrupt on terminal count";
+	case PitMode::OneShot: return "One-shot";
+	case PitMode::RateGenerator: return "Rate generator";
+	case PitMode::SquareWave: return "Square wave generator";
+	case PitMode::SoftwareStrobe: return "Software-triggered strobe";
+	case PitMode::HardwareStrobe: return "Hardware-triggered strobe";
+	case PitMode::RateGeneratorAlias: return "Rate generator (alias)";
+	case PitMode::SquareWaveAlias: return "Square wave generator (alias)";
+	case PitMode::Inactive: return "Inactive";
+	}
+	return "Unknown";
+}
+
 static void PIT0_Event(uint32_t /*val*/)
 {
 	PIC_ActivateIRQ(0);
-	if (pit[0].mode != 0) {
+	if (pit[0].mode != PitMode::InterruptOnTC) {
 		pit[0].start += pit[0].delay;
 
 		if (GCC_UNLIKELY(pit[0].update_count)) {
@@ -93,26 +108,33 @@ static bool counter_output(const uint32_t counter)
 	PIT_Block *p = &pit[counter];
 	auto index = PIC_FullIndex() - p->start;
 	switch (p->mode) {
-	case 0:
-		if (p->new_mode) return false;
-		if (index>p->delay) return true;
+	case PitMode::InterruptOnTC:
+		if (p->mode_changed)
+			return false;
+		if (index > p->delay)
+			return true;
 		else return false;
 		break;
-	case 2:
-		if (p->new_mode) return true;
+	case PitMode::RateGenerator:
+	case PitMode::RateGeneratorAlias:
+		if (p->mode_changed)
+			return true;
 		index = fmod(index, p->delay);
 		return index>0;
-	case 3:
-		if (p->new_mode) return true;
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
+		if (p->mode_changed)
+			return true;
 		index = fmod(index, p->delay);
 		return index*2<p->delay;
-	case 4:
+	case PitMode::SoftwareStrobe:
 		//Only low on terminal count
 		// if(fmod(index,(double)p->delay) == 0) return false; //Maybe take one rate tick in consideration
 		//Easiest solution is to report always high (Space marines uses this mode)
 		return true;
 	default:
-		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading output",p->mode);
+		LOG(LOG_PIT, LOG_ERROR)
+		("Illegal Mode %s for reading output", PitModeToString(p->mode));
 		return true;
 	}
 }
@@ -132,7 +154,7 @@ static void status_latch(const uint32_t counter)
 		// - the logic level on the Timer output pin
 		if (p->bcd)
 			latched_timerstatus |= 0x1;
-		latched_timerstatus |= ((p->mode & 7) << 1);
+		latched_timerstatus |= ((static_cast<uint8_t>(p->mode) & 7) << 1);
 		if ((p->read_state == 0) || (p->read_state == 3))
 			latched_timerstatus |= 0x30;
 		else if (p->read_state == 1)
@@ -141,7 +163,7 @@ static void status_latch(const uint32_t counter)
 			latched_timerstatus |= 0x20;
 		if (counter_output(counter))
 			latched_timerstatus |= 0x80;
-		if (p->new_mode)
+		if (p->mode_changed)
 			latched_timerstatus |= 0x40;
 		// The first thing that is being read from this counter now is
 		// the counter status.
@@ -156,7 +178,8 @@ static void counter_latch(uint32_t counter)
 	p->go_read_latch=false;
 
 	//If gate2 is disabled don't update the read_latch
-	if (counter == 2 && !gate2 && p->mode !=1) return;
+	if (counter == 2 && !gate2 && p->mode != PitMode::OneShot)
+		return;
 
 	auto elapsed_ms = PIC_FullIndex() - p->start;
 	auto save_read_latch = [p](double latch_time) {
@@ -166,18 +189,18 @@ static void counter_latch(uint32_t counter)
 		p->read_latch = static_cast<uint16_t>(bound_latch);
 	};
 
-	if (GCC_UNLIKELY(p->new_mode)) {
+	if (GCC_UNLIKELY(p->mode_changed)) {
 		const auto total_ticks = static_cast<uint32_t>(elapsed_ms /
 		                                               PERIOD_OF_1K_PIT_TICKS);
-		// if (p->mode==3) ticks_since_then /= 2; // TODO figure this
-		// out on real hardware
+		// if (p->mode== PitMode::SquareWave) ticks_since_then /= 2; //
+		// TODO figure this out on real hardware
 		save_read_latch(p->read_latch - total_ticks);
 		return;
 	}
 	const auto cntr = static_cast<double>(p->cntr);
 	switch (p->mode) {
-	case 4:         /* Software Triggered Strobe */
-	case 0:		/* Interrupt on Terminal Count */
+	case PitMode::SoftwareStrobe:
+	case PitMode::InterruptOnTC:
 		/* Counter keeps on counting after passing terminal count */
 		if (elapsed_ms > p->delay) {
 			elapsed_ms -= p->delay;
@@ -192,8 +215,8 @@ static void counter_latch(uint32_t counter)
 			save_read_latch(cntr - elapsed_ms * PIT_TICK_RATE_KHZ);
 		}
 		break;
-	case 1: // countdown
-		if(p->counting) {
+	case PitMode::OneShot:
+		if (p->counting) {
 			if (elapsed_ms > p->delay) {     // has timed out
 				save_read_latch(0xffff); // unconfirmed
 			} else {
@@ -201,11 +224,13 @@ static void counter_latch(uint32_t counter)
 			}
 		}
 		break;
-	case 2:		/* Rate Generator */
+	case PitMode::RateGenerator:
+	case PitMode::RateGeneratorAlias:
 		elapsed_ms = fmod(elapsed_ms, p->delay);
 		save_read_latch(cntr - (elapsed_ms / p->delay) * cntr);
 		break;
-	case 3:		/* Square Wave Rate Generator */
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
 		elapsed_ms = fmod(elapsed_ms, p->delay);
 		elapsed_ms *= 2;
 		if (elapsed_ms > p->delay)
@@ -217,7 +242,9 @@ static void counter_latch(uint32_t counter)
 		save_read_latch(p->read_latch & 0xfffe);
 		break;
 	default:
-		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading counter %d",p->mode,counter);
+		LOG(LOG_PIT, LOG_ERROR)("Illegal Mode %s for reading counter %f",
+		                        PitModeToString(p->mode),
+		                        cntr);
 		save_read_latch(0xffff);
 		break;
 	}
@@ -261,14 +288,17 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 				p->cntr = 9999;
 		}
 		// square wave, count by 2
-		else if (p->write_latch == 1 && p->mode == 3)
-			// counter==1 and mode==3 makes a low frequency
+		else if (p->write_latch == 1 && (p->mode == PitMode::SquareWave ||
+		                                 p->mode == PitMode::SquareWaveAlias))
 			// buzz (Paratrooper)
 			p->cntr = p->bcd ? 10000 : 0x10001;
 		else
 			p->cntr = p->write_latch;
 
-		if ((!p->new_mode) && (p->mode == 2) && (counter == 0)) {
+		if ((!p->mode_changed) &&
+		    (p->mode == PitMode::RateGenerator ||
+		     p->mode == PitMode::RateGeneratorAlias) &&
+		    (counter == 0)) {
 			// In mode 2 writing another value has no direct
 			// effect on the count until the old one has run
 			// out. This might apply to other modes too.
@@ -281,17 +311,17 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 
 		switch (counter) {
 		case 0x00: /* Timer hooked to IRQ 0 */
-			if (p->new_mode || p->mode == 0) {
-				if (p->mode == 0) { // DoWhackaDo demo
+			if (p->mode_changed || p->mode == PitMode::InterruptOnTC) {
+				if (p->mode == PitMode::InterruptOnTC) { // DoWhackaDo demo
 					PIC_RemoveEvents(PIT0_Event);
 				}
 				PIC_AddEvent(PIT0_Event, p->delay);
 			} else
 				LOG(LOG_PIT, LOG_NORMAL)
 			("PIT 0 Timer set without new control word");
-			LOG(LOG_PIT, LOG_NORMAL)
-			("PIT 0 Timer at %.4f Hz mode %d", 1000.0 / p->delay,
-			 p->mode);
+			LOG(LOG_PIT, LOG_NORMAL)("PIT 0 Timer at %.4f Hz %s",
+			                         1000.0 / p->delay,
+			                         PitModeToString(p->mode));
 			break;
 		case 0x02: // Timer hooked to PC-Speaker
 			// LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",
@@ -302,7 +332,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 			LOG(LOG_PIT, LOG_ERROR)
 			("PIT:Illegal timer selected for writing");
 		}
-		p->new_mode = false;
+		p->mode_changed = false;
 	}
 }
 
@@ -384,11 +414,7 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 			pit[latch].counting = false;
 			pit[latch].read_state = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
-			uint8_t mode = (val >> 1) & 0x07;
-			if (mode > 5)
-				mode -= 4; // 6,7 become 2 and 3
-
-			pit[latch].mode = mode;
+			pit[latch].mode = static_cast<PitMode>((val >> 1) & 0x07);
 
 			/* If the line goes from low to up => generate irq.
 			 * ( BUT needs to stay up until acknowlegded by the
@@ -401,19 +427,19 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 
 			if (latch == 0) {
 				PIC_RemoveEvents(PIT0_Event);
-				if ((mode != 0) && !old_output) {
+				if ((pit[latch].mode != PitMode::InterruptOnTC) && !old_output) {
 					PIC_ActivateIRQ(0);
 				} else {
 					PIC_DeActivateIRQ(0);
 				}
 			} else if (latch == 2) {
-				PCSPEAKER_SetCounter(0, 3);
+				PCSPEAKER_SetCounter(0, PitMode::SquareWave);
 			}
-			pit[latch].new_mode = true;
+			pit[latch].mode_changed = true;
 			if (latch == 2) {
 				// notify pc speaker code that the control word
 				// was written
-				PCSPEAKER_SetPITControl(mode);
+				PCSPEAKER_SetPITControl(pit[latch].mode);
 			}
 		}
 		break;
@@ -443,9 +469,9 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 void TIMER_SetGate2(bool in) {
 	//No changes if gate doesn't change
 	if(gate2 == in) return;
-	uint8_t & mode=pit[2].mode;
+	const auto &mode = pit[2].mode;
 	switch (mode) {
-	case 0:
+	case PitMode::InterruptOnTC:
 		if(in) pit[2].start = PIC_FullIndex();
 		else {
 			//Fill readlatch and store it.
@@ -453,22 +479,27 @@ void TIMER_SetGate2(bool in) {
 			pit[2].cntr = pit[2].read_latch;
 		}
 		break;
-	case 1:
+	case PitMode::OneShot:
 		// gate 1 on: reload counter; off: nothing
 		if(in) {
 			pit[2].counting = true;
 			pit[2].start = PIC_FullIndex();
 		}
 		break;
-	case 2:
-	case 3:
-		//If gate is enabled restart counting. If disable store the current read_latch
+	case PitMode::RateGenerator:
+	case PitMode::RateGeneratorAlias:
+	case PitMode::SquareWave:
+	case PitMode::SquareWaveAlias:
+		// If gate is enabled restart counting. If disable store the
+		// current read_latch
 		if(in) pit[2].start = PIC_FullIndex();
 		else counter_latch(2);
 		break;
-	case 4:
-	case 5:
-		LOG(LOG_MISC,LOG_WARN)("unsupported gate 2 mode %x",mode);
+	case PitMode::SoftwareStrobe:
+	case PitMode::HardwareStrobe:
+	case PitMode::Inactive:
+		LOG(LOG_MISC, LOG_WARN)("unsupported gate 2 mode %s",
+		                        PitModeToString(mode));
 		break;
 	}
 	gate2 = in; //Set it here so the counter_latch above works
@@ -497,7 +528,7 @@ public:
 		pit[0].read_state = 3;
 		pit[0].read_latch=0;
 		pit[0].write_latch=0;
-		pit[0].mode=3;
+		pit[0].mode = PitMode::SquareWave;
 		pit[0].bcd = false;
 		pit[0].go_read_latch = true;
 		pit[0].counterstatus_set = false;
@@ -507,14 +538,14 @@ public:
 		pit[1].read_state = 1;
 		pit[1].go_read_latch = true;
 		pit[1].cntr = 18;
-		pit[1].mode = 2;
+		pit[1].mode = PitMode::RateGenerator;
 		pit[1].write_state = 3;
 		pit[1].counterstatus_set = false;
 	
 		pit[2].read_latch=1320;	/* MadTv1 */
 		pit[2].write_state = 3; /* Chuck Yeager */
 		pit[2].read_state = 3;
-		pit[2].mode=3;
+		pit[2].mode = PitMode::SquareWave;
 		pit[2].bcd=false;   
 		pit[2].cntr=1320;
 		pit[2].go_read_latch=true;
