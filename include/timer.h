@@ -37,6 +37,38 @@ constexpr auto PIT_TICK_RATE_KHZ = static_cast<double>(PIT_TICK_RATE) / 1000.0;
 // In this case, we want the period of every 1000 PIT tick events.
 constexpr auto PERIOD_OF_1K_PIT_TICKS = 1000.0 / static_cast<double>(PIT_TICK_RATE);
 
+/* PIT operating modes represented in 3 bits:
+1 to 3       Operating mode :
+                0 0 0 = Mode 0 (interrupt on terminal count)
+                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+                0 1 0 = Mode 2 (rate generator)
+                0 1 1 = Mode 3 (square wave generator)
+                1 0 0 = Mode 4 (software triggered strobe)
+                1 0 1 = Mode 5 (hardware triggered strobe)
+                1 1 0 = Mode 2 (rate generator, same as 010b)
+                1 1 1 = Mode 3 (square wave generator, same as 011b)
+Refs: http://www.osdever.net/bkerndev/Docs/pit.htm
+      https://wiki.osdev.org/Programmable_Interval_Timer#Operating_Modes
+*/
+enum class PitMode : uint8_t {
+	InterruptOnTC      = 0b0'0'0,
+	OneShot            = 0b0'0'1,
+	RateGenerator      = 0b0'1'0,
+	SquareWave         = 0b0'1'1,
+	SoftwareStrobe     = 0b1'0'0,
+	HardwareStrobe     = 0b1'0'1,
+	RateGeneratorAlias = 0b1'1'0,
+	SquareWaveAlias    = 0b1'1'1,
+	Inactive,
+};
+
+const char *PitModeToString(const PitMode mode);
+
+/* PC Speakers functions, tightly related to the timer functions */
+void PCSPEAKER_SetCounter(uint16_t cntr, PitMode pit_mode);
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetPITControl(PitMode pit_mode);
+
 typedef void (*TIMER_TickHandler)(void);
 
 /* Register a function that gets called every time if 1 or more ticks pass */
