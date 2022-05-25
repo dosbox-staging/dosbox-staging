@@ -89,9 +89,8 @@ static struct {
 	int16_t pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
 	int16_t pit_prev_amplitude = SPKR_NEGATIVE_AMPLITUDE;
 	int16_t tally_of_silence = 0;
-
 	uint8_t pit_mode = 3;
-
+	bool is_active = false;
 } spkr = {};
 
 static void AddImpulse(float index, const int16_t amplitude);
@@ -245,6 +244,9 @@ static void ForwardPIT(const float newindex)
 
 void PCSPEAKER_SetPITControl(const uint8_t mode)
 {
+	if (!spkr.is_active)
+		return;
+
 	const auto newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 #ifdef SPKR_DEBUGGING
@@ -270,6 +272,9 @@ void PCSPEAKER_SetPITControl(const uint8_t mode)
 
 void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 {
+	if (!spkr.is_active)
+		return;
+
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %u", PIC_FullIndex(), cntr, mode);
 #endif
@@ -341,6 +346,9 @@ void PCSPEAKER_SetCounter(const int cntr, const uint8_t mode)
 
 void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_enabled)
 {
+	if (!spkr.is_active)
+		return;
+
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
 	        PIC_FullIndex(),
@@ -553,6 +561,7 @@ public:
 		                             {ChannelFeature::ReverbSend,
 		                              ChannelFeature::ChorusSend});
 		assert(spkr.chan);
+
 		spkr.chan->SetPeakAmplitude(
 		        static_cast<uint32_t>(AMPLITUDE_POSITIVE));
 
@@ -583,12 +592,14 @@ public:
 			spkr.chan->SetLowPassFilter(FilterState::Off);
 		}
 		spkr.chan->Enable(true);
+		spkr.is_active = true;
 	}
 	~PCSPEAKER()
 	{
 		Section_prop *section = static_cast<Section_prop *>(m_configuration);
 		if (!section->Get_bool("pcspeaker"))
 			return;
+		spkr.is_active = false;
 	}
 };
 static PCSPEAKER *test;
