@@ -31,19 +31,25 @@
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 
-static inline void BIN2BCD(uint16_t& val) {
-	const auto b = ((val / 10) % 10) << 4;
-	const auto c = ((val / 100) % 10) << 8;
-	const auto d = ((val / 1000) % 10) << 12;
-	assert(b + c + d <= UINT16_MAX);
-
-	const uint16_t temp = (val % 10) + static_cast<uint16_t>(b + c + d);
-	val = temp;
+constexpr void decimal_to_bcd(uint16_t &val)
+{
+	const auto first = val % 10;
+	const auto second = (val / 10) % 10;
+	const auto third = (val / 100) % 10;
+	const auto fourth = (val / 1000) % 10;
+	const auto total = first + (second * 16) + (third * 16 * 16) +
+	                   (fourth * 16 * 16 * 16);
+	val = check_cast<uint16_t>(total);
 }
 
-static inline void BCD2BIN(uint16_t& val) {
-	uint16_t temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
-	val=temp;
+constexpr void bcd_to_decimal(uint16_t &val)
+{
+	const auto ones = (val & 0x000f);
+	const auto tens = (val & 0x00f0) / 16;
+	const auto hundreds = (val & 0x0f00) / (16 * 16);
+	const auto thousands = (val & 0xf000) / (16 * 16 * 16);
+	const auto total = (thousands * 1000) + (hundreds * 100) + (tens * 10) + ones;
+	val = check_cast<uint16_t>(total);
 }
 
 constexpr uint16_t MAX_COUNTER = UINT16_MAX;
@@ -309,7 +315,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	auto &channel = pit.at(channel_num);
 
 	if (channel.bcd == true)
-		BIN2BCD(channel.write_latch);
+		decimal_to_bcd(channel.write_latch);
 
 	switch (channel.write_state) {
 	case 0:
@@ -329,7 +335,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	}
 
 	if (channel.bcd == true)
-		BCD2BIN(channel.write_latch);
+		bcd_to_decimal(channel.write_latch);
 
 	if (channel.write_state != 0) {
 		if (channel.write_latch == 0) {
@@ -403,7 +409,7 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 			counter_latch(channel);
 
 		if (channel.bcd == true)
-			BIN2BCD(channel.read_latch);
+			decimal_to_bcd(channel.read_latch);
 
 		switch (channel.read_state) {
 		case 0: /* read MSB & return to state 3 */
@@ -428,7 +434,7 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 			break;
 		}
 		if (channel.bcd == true)
-			BCD2BIN(channel.read_latch);
+			bcd_to_decimal(channel.read_latch);
 	}
 	return ret;
 }
