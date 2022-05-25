@@ -25,8 +25,7 @@
 
 void KEYB::Run(void) {
 	if (cmd->FindCommand(1,temp_line)) {
-		if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
-		    cmd->FindString("?", temp_line, false)) {
+		if (HelpRequested()) {
 			WriteOut(MSG_Get("SHELL_CMD_KEYB_HELP_LONG"));
 		} else {
 			/* first parameter is layout ID */

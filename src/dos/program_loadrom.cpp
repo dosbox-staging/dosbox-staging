@@ -33,7 +33,7 @@ void LOADROM::Run(void) {
         WriteOut(MSG_Get("PROGRAM_LOADROM_SPECIFY_FILE"));
         return;
     }
-    if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+    if (HelpRequested()) {
 	    WriteOut(MSG_Get("SHELL_CMD_LOADROM_HELP_LONG"));
 	    return;
     }
