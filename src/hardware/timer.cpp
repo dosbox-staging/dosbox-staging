@@ -52,8 +52,6 @@ constexpr void bcd_to_decimal(uint16_t &val)
 	val = check_cast<uint16_t>(total);
 }
 
-constexpr uint16_t MAX_COUNTER = UINT16_MAX;
-
 struct PIT_Block {
 	// The PIT has only 16 bits that are used as frequency
 	// divider, which can represent dividers from 0 to 65535.
@@ -142,10 +140,27 @@ const char *PitModeToString(const PitMode mode)
 	return "Unknown";
 }
 
-static void update_channel_delay(PIT_Block &channel)
+// The PIT has only 16 bits that are used as frequency divider,
+// which can represent the values from 0 to 65535.
+constexpr uint16_t get_max_count(const PIT_Block &channel)
 {
-	channel.delay = 1000.0 / (static_cast<double>(PIT_TICK_RATE) /
-	                          static_cast<double>(channel.count));
+	constexpr uint16_t max_dec_count = UINT16_MAX;
+	constexpr uint16_t max_bcd_count = 9999;
+	return channel.bcd ? max_bcd_count : max_dec_count;
+}
+
+constexpr int update_channel_delay(PIT_Block &channel)
+{
+	// Since the frequency can't be divided by 0 in a sane way, many
+	// implementations use 0 to represent the value 65536 (or 10000
+	// when programmed in BCD mode).
+	// Ref: https://wiki.osdev.org/Programmable_Interval_Timer
+	//
+	const auto freq_divider = channel.count ? channel.count
+	                                        : (get_max_count(channel) + 1);
+
+	channel.delay = 1000.0 * freq_divider / PIT_TICK_RATE;
+	return freq_divider;
 }
 
 static void PIT0_Event(uint32_t /*val*/)
@@ -383,8 +398,6 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 			                         PitModeToString(channel.mode));
 			break;
 		case 2: // Timer hooked to PC-Speaker
-			// LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",
-			//     PIT_TICK_RATE/(double)channel.count,channel.mode);
 			PCSPEAKER_SetCounter(channel.count, channel.mode);
 			break;
 		default:
