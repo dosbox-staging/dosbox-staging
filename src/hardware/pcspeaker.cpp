@@ -278,7 +278,7 @@ void PCSPEAKER_SetPITControl(const PitMode pit_mode)
 	AddPITOutput(newindex);
 }
 
-void PCSPEAKER_SetCounter(const uint16_t cntr, const PitMode pit_mode)
+void PCSPEAKER_SetCounter(const uint32_t cntr, const PitMode pit_mode)
 {
 	if (!spkr.is_active)
 		return;

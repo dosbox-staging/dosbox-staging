@@ -44,8 +44,12 @@ static inline void BCD2BIN(uint16_t& val) {
 	val=temp;
 }
 
+constexpr uint16_t MAX_COUNTER = UINT16_MAX;
+
 struct PIT_Block {
-	uint32_t cntr;
+	// The PIT has only 16 bits that are used as frequency
+	// divider, which can represent dividers from 0 to 65535.
+	int count;
 	double delay;
 	double start;
 
@@ -95,8 +99,8 @@ static void PIT0_Event(uint32_t /*val*/)
 		pit[0].start += pit[0].delay;
 
 		if (GCC_UNLIKELY(pit[0].update_count)) {
-			pit[0].delay = (1000.0 / (static_cast<double>(PIT_TICK_RATE) /
-			                          (double)pit[0].cntr));
+			pit[0].delay = 1000.0 / (static_cast<double>(PIT_TICK_RATE) /
+			                          static_cast<double>(pit[0].count));
 			pit[0].update_count = false;
 		}
 		PIC_AddEvent(PIT0_Event,pit[0].delay);
@@ -197,7 +201,7 @@ static void counter_latch(uint32_t counter)
 		save_read_latch(p->read_latch - total_ticks);
 		return;
 	}
-	const auto cntr = static_cast<double>(p->cntr);
+	const auto count = static_cast<double>(p->count);
 	switch (p->mode) {
 	case PitMode::SoftwareStrobe:
 	case PitMode::InterruptOnTC:
@@ -212,7 +216,7 @@ static void counter_latch(uint32_t counter)
 				save_read_latch(0xffff - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		} else {
-			save_read_latch(cntr - elapsed_ms * PIT_TICK_RATE_KHZ);
+			save_read_latch(count - elapsed_ms * PIT_TICK_RATE_KHZ);
 		}
 		break;
 	case PitMode::OneShot:
@@ -220,14 +224,14 @@ static void counter_latch(uint32_t counter)
 			if (elapsed_ms > p->delay) {     // has timed out
 				save_read_latch(0xffff); // unconfirmed
 			} else {
-				save_read_latch(cntr - elapsed_ms * PIT_TICK_RATE_KHZ);
+				save_read_latch(count - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		}
 		break;
 	case PitMode::RateGenerator:
 	case PitMode::RateGeneratorAlias:
 		elapsed_ms = fmod(elapsed_ms, p->delay);
-		save_read_latch(cntr - (elapsed_ms / p->delay) * cntr);
+		save_read_latch(count - (elapsed_ms / p->delay) * count);
 		break;
 	case PitMode::SquareWave:
 	case PitMode::SquareWaveAlias:
@@ -235,7 +239,7 @@ static void counter_latch(uint32_t counter)
 		elapsed_ms *= 2;
 		if (elapsed_ms > p->delay)
 			elapsed_ms -= p->delay;
-		save_read_latch(cntr - (elapsed_ms / p->delay) * cntr);
+		save_read_latch(count - (elapsed_ms / p->delay) * count);
 		// In mode 3 it never returns odd numbers LSB (if odd number is
 		// written 1 will be subtracted on first clock and then always
 		// 2) fixes "Corncob 3D"
@@ -244,7 +248,7 @@ static void counter_latch(uint32_t counter)
 	default:
 		LOG(LOG_PIT, LOG_ERROR)("Illegal Mode %s for reading counter %f",
 		                        PitModeToString(p->mode),
-		                        cntr);
+		                        count);
 		save_read_latch(0xffff);
 		break;
 	}
@@ -283,17 +287,17 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	if (p->write_state != 0) {
 		if (p->write_latch == 0) {
 			if (p->bcd == false)
-				p->cntr = 0x10000;
+				p->count = 0x10000;
 			else
-				p->cntr = 9999;
+				p->count = 9999;
 		}
 		// square wave, count by 2
 		else if (p->write_latch == 1 && (p->mode == PitMode::SquareWave ||
 		                                 p->mode == PitMode::SquareWaveAlias))
 			// buzz (Paratrooper)
-			p->cntr = p->bcd ? 10000 : 0x10001;
+			p->count = p->bcd ? 10000 : 0x10001;
 		else
-			p->cntr = p->write_latch;
+			p->count = p->write_latch;
 
 		if ((!p->mode_changed) &&
 		    (p->mode == PitMode::RateGenerator ||
@@ -307,7 +311,8 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 			return;
 		}
 		p->start = PIC_FullIndex();
-		p->delay = (1000.0 / ((double)PIT_TICK_RATE / (double)p->cntr));
+		p->delay = 1000.0 / ((double)PIT_TICK_RATE /
+		                     static_cast<double>(p->count));
 
 		switch (counter) {
 		case 0x00: /* Timer hooked to IRQ 0 */
@@ -325,8 +330,8 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 			break;
 		case 0x02: // Timer hooked to PC-Speaker
 			// LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",
-			//     PIT_TICK_RATE/(double)p->cntr,p->mode);
-			PCSPEAKER_SetCounter(p->cntr, p->mode);
+			//     PIT_TICK_RATE/(double)p->count,p->mode);
+			PCSPEAKER_SetCounter(p->count, p->mode);
 			break;
 		default:
 			LOG(LOG_PIT, LOG_ERROR)
@@ -398,8 +403,8 @@ static void write_p43(io_port_t, io_val_t value, io_width_t)
 			counter_latch(latch);
 			pit[latch].bcd = (val & 1) > 0;
 			if (val & 1) {
-				if (pit[latch].cntr >= 9999)
-					pit[latch].cntr = 9999;
+				if (pit[latch].count >= 9999)
+					pit[latch].count = 9999;
 			}
 
 			// Timer is being reprogrammed, unlock the status
@@ -476,7 +481,7 @@ void TIMER_SetGate2(bool in) {
 		else {
 			//Fill readlatch and store it.
 			counter_latch(2);
-			pit[2].cntr = pit[2].read_latch;
+			pit[2].count = pit[2].read_latch;
 		}
 		break;
 	case PitMode::OneShot:
@@ -492,7 +497,8 @@ void TIMER_SetGate2(bool in) {
 	case PitMode::SquareWaveAlias:
 		// If gate is enabled restart counting. If disable store the
 		// current read_latch
-		if(in) pit[2].start = PIC_FullIndex();
+		if (in)
+			pit[2].start = PIC_FullIndex();
 		else counter_latch(2);
 		break;
 	case PitMode::SoftwareStrobe:
@@ -523,7 +529,7 @@ public:
 		ReadHandler[1].Install(0x41, read_latch, io_width_t::byte);
 		ReadHandler[2].Install(0x42, read_latch, io_width_t::byte);
 		/* Setup Timer 0 */
-		pit[0].cntr=0x10000;
+		pit[0].count = 0x10000;
 		pit[0].write_state = 3;
 		pit[0].read_state = 3;
 		pit[0].read_latch=0;
@@ -537,7 +543,7 @@ public:
 		pit[1].bcd = false;
 		pit[1].read_state = 1;
 		pit[1].go_read_latch = true;
-		pit[1].cntr = 18;
+		pit[1].count = 18;
 		pit[1].mode = PitMode::RateGenerator;
 		pit[1].write_state = 3;
 		pit[1].counterstatus_set = false;
@@ -547,14 +553,14 @@ public:
 		pit[2].read_state = 3;
 		pit[2].mode = PitMode::SquareWave;
 		pit[2].bcd=false;   
-		pit[2].cntr=1320;
+		pit[2].count=1320;
 		pit[2].go_read_latch=true;
 		pit[2].counterstatus_set = false;
 		pit[2].counting = false;
 
-		pit[0].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[0].cntr));
-		pit[1].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[1].cntr));
-		pit[2].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[2].cntr));
+		pit[0].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[0].count));
+		pit[1].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[1].count));
+		pit[2].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[2].count));
 
 		latched_timerstatus_locked=false;
 		gate2 = false;
