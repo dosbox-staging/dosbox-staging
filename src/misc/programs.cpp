@@ -341,6 +341,11 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	return true;
 }
 
+bool Program::HelpRequested() {
+	return cmd->FindExist("/?", false) || cmd->FindExist("-h", false) ||
+	       cmd->FindExist("--help", false);
+}
+
 bool MSG_Write(const char *);
 void restart_program(std::vector<std::string> & parameters);
 
