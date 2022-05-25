@@ -94,6 +94,7 @@ public:
 	bool SuppressWriteOut(const char *format); // prevent writing to DOS stdout
 	void InjectMissingNewline();
 	void ChangeToLongCmd();
+	bool HelpRequested();
 
 	static void ResetLastWrittenChar(char c);
 };
