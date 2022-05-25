@@ -133,6 +133,13 @@ void MOUNT::Run(void) {
 		ListMounts();
 		return;
 	}
+	// Print help if requested. Previously, help was shown as 
+	// a side effect of not being able to parse the correct 
+	// command line options.
+	if (HelpRequested()) {
+		WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+		return;
+	}
 
 	/* In secure mode don't allow people to change mount points.
 		* Neither mount nor unmount */

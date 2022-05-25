@@ -63,7 +63,7 @@ void SERIAL::Run()
 	}
 
 	// Select COM port type.
-	if (cmd->GetCount() >= 1 && !cmd->FindExist("/?", false)) {
+	if (cmd->GetCount() >= 1 && !HelpRequested()) {
 		// Which COM did they want to change?
 		int port = -1;
 		cmd->FindCommand(1, temp_line);

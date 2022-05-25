@@ -120,8 +120,7 @@ void AUTOTYPE::Run()
 	ChangeToLongCmd();
 
 	// Usage
-	if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
-	    cmd->FindExist("-?", false) || cmd->FindExist("-help", false)) {
+	if (!cmd->GetCount() || HelpRequested()) {
 		WriteOut(MSG_Get("SHELL_CMD_AUTOTYPE_HELP_LONG"));
 		return;
 	}

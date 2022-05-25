@@ -48,7 +48,7 @@ void INTRO::DisplayMount(void) {
 
 void INTRO::Run(void) {
 	// Usage
-	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+	if (HelpRequested()) {
 		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP_LONG"));
 		return;
 	}

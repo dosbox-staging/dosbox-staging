@@ -93,8 +93,7 @@ void IMGMOUNT::Run(void) {
         return;
     }
     // Usage
-    if (cmd->FindExist("/?", false) ||
-        cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+    if (HelpRequested()) {
         WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
         return;
     }

@@ -24,8 +24,7 @@
 #include "regs.h"
 
 void MEM::Run(void) {
-	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
-	    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+	if (HelpRequested()) {
 		WriteOut(MSG_Get("SHELL_CMD_MEM_HELP_LONG"));
 		return;
 	}
