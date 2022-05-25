@@ -65,7 +65,7 @@ enum class PitMode : uint8_t {
 const char *PitModeToString(const PitMode mode);
 
 /* PC Speakers functions, tightly related to the timer functions */
-void PCSPEAKER_SetCounter(uint32_t cntr, PitMode pit_mode);
+void PCSPEAKER_SetCounter(int cntr, PitMode pit_mode);
 void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
 void PCSPEAKER_SetPITControl(PitMode pit_mode);
 
