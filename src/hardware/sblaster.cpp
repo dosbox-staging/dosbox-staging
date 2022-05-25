@@ -23,6 +23,7 @@
 #include <string.h>
 #include <math.h>
 #include <map>
+#include <tuple>
 
 #include "dma.h"
 #include "inout.h"
@@ -130,7 +131,6 @@ struct SB_INFO {
 	FILTER_TYPES sb_filter_type = FT_NONE;
 	FILTER_TYPES opl_filter_type = FT_NONE;
 	bool sb_filter_force = false;
-	bool opl_filter_force = false;
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
@@ -330,33 +330,35 @@ static const std::map<std::string, FILTER_TYPES> filter_map = {
 
 static void configure_filters(Section_prop* config)
 {
-	auto set_filter_params = [](const std::string conf,
-	                            FILTER_TYPES &filter_type_out,
-	                            bool &filter_force_out) {
-
-		const auto filter = split(conf);
-		const auto filter_type = filter.empty() ? "auto" : filter[0];
-		const auto force = filter.size() > 1 ? filter[1] == "always_on"
+	auto set_filter_params = [](const std::string conf) {
+		const auto tokens = split(conf);
+		const auto filter = tokens.empty() ? "auto" : tokens[0];
+		const auto force = tokens.size() > 1 ? tokens[1] == "always_on"
 		                                     : false;
-		if (filter_type == "auto") {
+		FILTER_TYPES filter_type = FT_NONE;
+		if (filter == "auto") {
 			auto it = sb_type_to_filter_type_map.find(sb.type);
 			if (it != sb_type_to_filter_type_map.end())
-				filter_type_out = it->second;
+				filter_type = it->second;
 		} else {
-			auto it = filter_map.find(filter_type);
+			auto it = filter_map.find(filter);
 			if (it != filter_map.end())
-				filter_type_out = it->second;
+				filter_type = it->second;
 		}
-		filter_force_out = force && filter_type_out != FT_NONE;
+		auto force_filter = force && filter_type != FT_NONE;
+		return std::make_tuple(filter_type, force_filter);
 	};
 
-	set_filter_params(config->Get_string("sb_filter"),
-	                  sb.sb_filter_type,
-	                  sb.sb_filter_force);
+	auto [sb_filter, sb_filter_force] = set_filter_params(
+	        config->Get_string("sb_filter"));
 
-	set_filter_params(config->Get_string("opl_filter"),
-	                  sb.opl_filter_type,
-	                  sb.opl_filter_force);
+	sb.sb_filter_type = sb_filter;
+	sb.sb_filter_force = sb_filter_force;
+
+	[[maybe_unused]] auto [opl_filter_type, dummy] = set_filter_params(
+	        config->Get_string("opl_filter"));
+
+	sb.opl_filter_type = opl_filter_type;
 }
 
 static void set_sb_filter()
@@ -416,7 +418,6 @@ static void set_opl_filter()
 	                     const uint16_t cutoff_freq) {
 		chan->ConfigureLowPassFilter(order, cutoff_freq);
 		chan->EnableLowPassFilter();
-		chan->ForceLowPassFilter(sb.opl_filter_force);
 	};
 
 	auto chan = MIXER_FindChannel("FM");
