@@ -31,6 +31,21 @@
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 
+/*
+ Bit 4 and 5    Access mode :
+                0 0 = Latch count value command
+                0 1 = Access mode: lobyte only
+                1 0 = Access mode: hibyte only
+                1 1 = Access mode: lobyte/hibyte
+Ref: https://wiki.osdev.org/Programmable_Interval_Timer
+*/
+enum class AccessMode : uint8_t {
+	Latch = 0b0'0,
+	Low   = 0b0'1,
+	High  = 0b1'0,
+	Both  = 0b1'1
+};
+
 constexpr void decimal_to_bcd(uint16_t &val)
 {
 	const auto first = val % 10;
@@ -63,8 +78,8 @@ struct PIT_Block {
 	uint16_t write_latch = 0;
 
 	PitMode mode = PitMode::Inactive;
-	uint8_t read_state = 0;
-	uint8_t write_state = 0;
+	AccessMode read_mode = AccessMode::Latch;
+	AccessMode write_mode = AccessMode::Latch;
 
 	bool bcd = false;
 	bool go_read_latch = false;
@@ -227,11 +242,12 @@ static void status_latch(PIT_Block &channel)
 		if (channel.bcd)
 			latched_timerstatus |= 0x1;
 		latched_timerstatus |= (static_cast<uint8_t>(channel.mode) & 7) << 1;
-		if ((channel.read_state == 0) || (channel.read_state == 3))
+		if (channel.read_mode == AccessMode::Latch ||
+		    channel.read_mode == AccessMode::Both)
 			latched_timerstatus |= 0x30;
-		else if (channel.read_state == 1)
+		else if (channel.read_mode == AccessMode::Low)
 			latched_timerstatus |= 0x10;
-		else if (channel.read_state == 2)
+		else if (channel.read_mode == AccessMode::High)
 			latched_timerstatus |= 0x20;
 		if (counter_output(channel))
 			latched_timerstatus |= 0x80;
@@ -332,19 +348,19 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	if (channel.bcd == true)
 		decimal_to_bcd(channel.write_latch);
 
-	switch (channel.write_state) {
-	case 0:
+	switch (channel.write_mode) {
+	case AccessMode::Latch:
 		// write_latch is 16-bits
 		channel.write_latch = static_cast<uint16_t>(channel.write_latch |
 		                                            ((val & 0xff) << 8));
-		channel.write_state = 3;
+		channel.write_mode = AccessMode::Both;
 		break;
-	case 3:
+	case AccessMode::Both:
 		channel.write_latch = val & 0xff;
-		channel.write_state = 0;
+		channel.write_mode = AccessMode::Latch;
 		break;
-	case 1: channel.write_latch = val & 0xff; break;
-	case 2:
+	case AccessMode::Low: channel.write_latch = val & 0xff; break;
+	case AccessMode::High:
 		channel.write_latch = static_cast<uint16_t>((val & 0xff) << 8);
 		break;
 	}
@@ -352,7 +368,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	if (channel.bcd == true)
 		bcd_to_decimal(channel.write_latch);
 
-	if (channel.write_state != 0) {
+	if (channel.write_mode != AccessMode::Latch) {
 		if (channel.write_latch == 0) {
 			if (channel.bcd == false)
 				channel.count = 0x10000;
@@ -424,27 +440,25 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 		if (channel.bcd == true)
 			decimal_to_bcd(channel.read_latch);
 
-		switch (channel.read_state) {
-		case 0: /* read MSB & return to state 3 */
+		switch (channel.read_mode) {
+		case AccessMode::Latch: /* read MSB & return to state 3 */
 			ret = (channel.read_latch >> 8) & 0xff;
-			channel.read_state = 3;
+			channel.read_mode = AccessMode::Both;
 			channel.go_read_latch = true;
 			break;
-		case 3: /* read LSB followed by MSB */
-			ret = channel.read_latch & 0xff;
-			channel.read_state = 0;
-			break;
-		case 1: /* read LSB */
+		case AccessMode::Low: /* read LSB */
 			ret = channel.read_latch & 0xff;
 			channel.go_read_latch = true;
 			break;
-		case 2: /* read MSB */
+		case AccessMode::High: /* read MSB */
 			ret = (channel.read_latch >> 8) & 0xff;
 			channel.go_read_latch = true;
 			break;
-		default:
-			E_Exit("Timer.cpp: error in readlatch");
+		case AccessMode::Both: /* read LSB followed by MSB */
+			ret = channel.read_latch & 0xff;
+			channel.read_mode = AccessMode::Latch;
 			break;
+		default: E_Exit("Timer.cpp: error in readlatch"); break;
 		}
 		if (channel.bcd == true)
 			bcd_to_decimal(channel.read_latch);
@@ -481,8 +495,8 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	channel.go_read_latch = true;
 	channel.update_count = false;
 	channel.counting = false;
-	channel.read_state = (val >> 4) & 0x03;
-	channel.write_state = (val >> 4) & 0x03;
+	channel.read_mode = static_cast<AccessMode>((val >> 4) & 0x03);
+	channel.write_mode = static_cast<AccessMode>((val >> 4) & 0x03);
 	channel.mode = static_cast<PitMode>((val >> 1) & 0x07);
 
 	/* If the line goes from low to up => generate irq.
@@ -612,8 +626,8 @@ public:
 
 		// Initialize channel 0
 		channel_0.count = 0x10000;
-		channel_0.write_state = 3;
-		channel_0.read_state = 3;
+		channel_0.write_mode = AccessMode::Both;
+		channel_0.read_mode = AccessMode::Both;
 		channel_0.read_latch = 0;
 		channel_0.write_latch = 0;
 		channel_0.mode = PitMode::SquareWave;
@@ -624,17 +638,19 @@ public:
 
 		// Initialize channel 1
 		channel_1.bcd = false;
-		channel_1.read_state = 1;
+		channel_1.read_mode = AccessMode::Low;
+		channel_1.write_mode = AccessMode::Both;
 		channel_1.go_read_latch = true;
 		channel_1.count = 18;
 		channel_1.mode = PitMode::RateGenerator;
-		channel_1.write_state = 3;
 		channel_1.counterstatus_set = false;
 
 		// Initialize channel 2
 		channel_2.read_latch = 1320; /* MadTv1 */
-		channel_2.write_state = 3;   /* Chuck Yeager */
-		channel_2.read_state = 3;
+		channel_2.write_mode = AccessMode::Both;
+		; /* Chuck Yeager */
+		channel_2.read_mode = AccessMode::Both;
+		;
 		channel_2.mode = PitMode::SquareWave;
 		channel_2.bcd = false;
 		channel_2.count = 1320;
