@@ -526,7 +526,9 @@ spx_uint32_t estimate_max_out_frames(SpeexResamplerState *resampler,
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 {
+	assert(frames > 0);
 	assert(frames <= MIXER_BUFSIZE);
+
 	MIXER_LockAudioDevice();
 	last_samples_were_stereo = stereo;
 
