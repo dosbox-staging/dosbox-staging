@@ -387,6 +387,13 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 		f.setup(order, mixer.sample_rate, cutoff_freq);
 }
 
+void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
+{
+	zoh_upsampler.target_freq = target_freq;
+	ConfigureResampler();
+	UpdateZOHUpsamplerState();
+}
+
 void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 {
 	zoh_upsampler.enabled = enabled;
@@ -398,13 +405,6 @@ void MixerChannel::UpdateZOHUpsamplerState()
 	zoh_upsampler.step = std::min(static_cast<float>(sample_rate) /
 	                                      zoh_upsampler.target_freq,
 	                              1.0f);
-}
-
-void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
-{
-	zoh_upsampler.target_freq = target_freq;
-	ConfigureResampler();
-	UpdateZOHUpsamplerState();
 }
 
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
