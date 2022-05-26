@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 
+#include "ansi_code_markup.h"
 #include "bios.h"
 #include "callback.h"
 #include "control.h"
@@ -48,37 +49,37 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "CALL",     {1, &DOS_Shell::CMD_CALL,     "SHELL_CMD_CALL_HELP",     nullptr } },
-	{ "CD",       {0, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
-	{ "CHDIR",    {1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
-	{ "CLS",      {0, &DOS_Shell::CMD_CLS,      "SHELL_CMD_CLS_HELP",      nullptr } },
-	{ "COPY",     {0, &DOS_Shell::CMD_COPY,     "SHELL_CMD_COPY_HELP",     nullptr } },
-	{ "DATE",     {0, &DOS_Shell::CMD_DATE,     "SHELL_CMD_DATE_HELP",     "SHELL_CMD_DATE_HELP_LONG" } },
-	{ "DEL",      {0, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
-	{ "DELETE",   {1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
-	{ "DIR",      {0, &DOS_Shell::CMD_DIR,      "SHELL_CMD_DIR_HELP",      "SHELL_CMD_DIR_HELP_LONG" } },
-	{ "ECHO",     {1, &DOS_Shell::CMD_ECHO,     "SHELL_CMD_ECHO_HELP",     nullptr } },
-	{ "ERASE",    {1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
-	{ "EXIT",     {0, &DOS_Shell::CMD_EXIT,     "SHELL_CMD_EXIT_HELP",     nullptr } },
-	{ "GOTO",     {1, &DOS_Shell::CMD_GOTO,     "SHELL_CMD_GOTO_HELP",     nullptr } },
-	{ "IF",       {1, &DOS_Shell::CMD_IF,       "SHELL_CMD_IF_HELP",       nullptr } },
-	{ "LH",       {1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP", nullptr } },
-	{ "LOADHIGH", {1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP", nullptr } },
-	{ "MD",       {0, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP",    "SHELL_CMD_MKDIR_HELP_LONG" } },
-	{ "MKDIR",    {1, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP",    "SHELL_CMD_MKDIR_HELP_LONG" } },
-	{ "PATH",     {1, &DOS_Shell::CMD_PATH,     "SHELL_CMD_PATH_HELP",     nullptr } },
-	{ "PAUSE",    {1, &DOS_Shell::CMD_PAUSE,    "SHELL_CMD_PAUSE_HELP",    nullptr } },
-	{ "RD",       {0, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP",    "SHELL_CMD_RMDIR_HELP_LONG" } },
-	{ "REM",      {1, &DOS_Shell::CMD_REM,      "SHELL_CMD_REM_HELP",      "SHELL_CMD_REM_HELP_LONG" } },
-	{ "REN",      {0, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP",   "SHELL_CMD_RENAME_HELP_LONG" } },
-	{ "RENAME",   {1, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP",   "SHELL_CMD_RENAME_HELP_LONG" } },
-	{ "RMDIR",    {1, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP",    "SHELL_CMD_RMDIR_HELP_LONG" } },
-	{ "SET",      {1, &DOS_Shell::CMD_SET,      "SHELL_CMD_SET_HELP",      nullptr } },
-	{ "SHIFT",    {1, &DOS_Shell::CMD_SHIFT,    "SHELL_CMD_SHIFT_HELP",    nullptr } },
-	{ "SUBST",    {1, &DOS_Shell::CMD_SUBST,    "SHELL_CMD_SUBST_HELP",    nullptr } },
-	{ "TIME",     {0, &DOS_Shell::CMD_TIME,     "SHELL_CMD_TIME_HELP",     "SHELL_CMD_TIME_HELP_LONG" } },
-	{ "TYPE",     {0, &DOS_Shell::CMD_TYPE,     "SHELL_CMD_TYPE_HELP",     "SHELL_CMD_TYPE_HELP_LONG" } },
-	{ "VER",      {0, &DOS_Shell::CMD_VER,      "SHELL_CMD_VER_HELP",      "SHELL_CMD_VER_HELP_LONG" } },
+	{ "CALL",     {1, &DOS_Shell::CMD_CALL,     "CALL",     HELP_Category::Batch } },
+	{ "CD",       {1, &DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Category::File } },
+	{ "CHDIR",    {0, &DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Category::File } },
+	{ "CLS",      {1, &DOS_Shell::CMD_CLS,      "CLS",      HELP_Category::Misc} },
+	{ "COPY",     {1, &DOS_Shell::CMD_COPY,     "COPY",     HELP_Category::File} },
+	{ "DATE",     {0, &DOS_Shell::CMD_DATE,     "DATE",     HELP_Category::Misc } },
+	{ "DEL",      {1, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
+	{ "DELETE",   {0, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
+	{ "DIR",      {1, &DOS_Shell::CMD_DIR,      "DIR",      HELP_Category::File } },
+	{ "ECHO",     {0, &DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Category::Batch } },
+	{ "ERASE",    {0, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
+	{ "EXIT",     {1, &DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Category::Misc } },
+	{ "GOTO",     {0, &DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Category::Batch } },
+	{ "IF",       {0, &DOS_Shell::CMD_IF,       "IF",       HELP_Category::Batch } },
+	{ "LH",       {0, &DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Category::Misc } },
+	{ "LOADHIGH", {0, &DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Category::Misc } },
+	{ "MD",       {1, &DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Category::File } },
+	{ "MKDIR",    {0, &DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Category::File } },
+	{ "PATH",     {0, &DOS_Shell::CMD_PATH,     "PATH",     HELP_Category::Misc} },
+	{ "PAUSE",    {0, &DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Category::Batch } },
+	{ "RD",       {1, &DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Category::File } },
+	{ "REM",      {0, &DOS_Shell::CMD_REM,      "REM",      HELP_Category::Batch } },
+	{ "REN",      {1, &DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Category::File } },
+	{ "RENAME",   {0, &DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Category::File } },
+	{ "RMDIR",    {0, &DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Category::File } },
+	{ "SET",      {0, &DOS_Shell::CMD_SET,      "SET",      HELP_Category::Misc} },
+	{ "SHIFT",    {0, &DOS_Shell::CMD_SHIFT,    "SHIFT",    HELP_Category::Batch } },
+	{ "SUBST",    {0, &DOS_Shell::CMD_SUBST,    "SUBST",    HELP_Category::File} },
+	{ "TIME",     {0, &DOS_Shell::CMD_TIME,     "TIME",     HELP_Category::Misc } },
+	{ "TYPE",     {1, &DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Category::Misc } },
+	{ "VER",      {0, &DOS_Shell::CMD_VER,      "VER",      HELP_Category::Misc } },
 	};
 // clang-format on
 
@@ -252,23 +253,58 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	dos.dta(save_dta);
 }
 
-void DOS_Shell::PrintHelpForCommands(const HELP_LIST requested_list)
+void DOS_Shell::PrintHelpForCommands(HELP_Filter req_filter)
 {
 	BIOS_NROWS; // macro creates 'nrows' queried from BIOS
+	nrows--;
 	int rows_printed = 0;
-	for (const auto &s : shell_cmds) {
-		if (requested_list == HELP_LIST::COMMON && !s.second.flags)
-			continue;
-
-		WriteOut("<\033[34;1m%-8s\033[0m> %s", s.first.c_str(),
-		         MSG_Get(s.second.help));
-
-		// Do we need a page-break?
+	auto page_break_if_required = [&]() {
 		if (++rows_printed == nrows) {
 			CMD_PAUSE(empty_string);
 			rows_printed = 0;
 		}
+	};
+	for (const auto &cat : {HELP_Category::Dosbox, HELP_Category::File, HELP_Category::Batch, HELP_Category::Misc}) {
+		bool category_started = false;
+		for (const auto &s : HELP_GetHelpList()) {
+			if (req_filter == HELP_Filter::Common &&
+				s.second.filter != HELP_Filter::Common)
+				continue;
+			if (s.second.category != cat)
+				continue;
+			if (!category_started) {
+				auto header_pattern = convert_ansi_markup("[color=blue]%s[reset]\n");
+				WriteOut(header_pattern.c_str(), HELP_CategoryHeading(cat));
+				category_started = true;
+				page_break_if_required();
+			}
+			std::string name(s.first);
+			lowcase(name);
+			auto pattern = convert_ansi_markup("  [color=green]%-8s[reset] %s");
+			WriteOut(pattern.c_str(),
+					name.c_str(),
+					HELP_GetShortHelp(s.second.name).c_str());
+
+			page_break_if_required();
+		}
 	}
+}
+
+void DOS_Shell::AddShellCmdsToHelpList() {
+	// Setup Help
+	if (DOS_Shell::help_list_populated) {
+		return;
+	}
+	for (const auto &c : shell_cmds) {
+		auto filter = c.second.flags == 1 ? HELP_Filter::Common : HELP_Filter::All;
+		HELP_AddToHelpList(c.first,
+		                 HELP_Detail{filter,
+		                        c.second.category,
+		                        HELP_CmdType::Shell,
+		                        c.second.help},
+		                 true);
+	}
+	DOS_Shell::help_list_populated = true;
 }
 
 void DOS_Shell::CMD_HELP(char * args){
@@ -276,18 +312,21 @@ void DOS_Shell::CMD_HELP(char * args){
 
 	upcase(args);
 	SHELL_Cmd shell_cmd = {};
-	if (lookup_shell_cmd(args, shell_cmd)) {
-		// Print the help for the provided command
-		WriteOut("%s\n", MSG_Get(shell_cmd.help));
-		WriteOut("%s\n", shell_cmd.long_help ? MSG_Get(shell_cmd.long_help)
-		                                     : args);
+	char help_arg[] = "/?";
+	const auto& hl = HELP_GetHelpList();
+	if (contains(hl, args) && hl.at(args).type == HELP_CmdType::Program) {
+		Execute(args, help_arg);
+	} else if (lookup_shell_cmd(args, shell_cmd)) {
+		// Print help for the provided command by
+		// calling it with the '/?' arg
+		(this->*(shell_cmd.handler))(help_arg);
 	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
 		// Print help for all the commands
-		PrintHelpForCommands(HELP_LIST::ALL);
+		PrintHelpForCommands(HELP_Filter::All);
 	} else {
 		// Print help for just the common commands
 		WriteOut(MSG_Get("SHELL_CMD_HELP"));
-		PrintHelpForCommands(HELP_LIST::COMMON);
+		PrintHelpForCommands(HELP_Filter::Common);
 	}
 }
 
