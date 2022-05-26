@@ -308,29 +308,28 @@ static void InitializeSpeakerState()
 	}
 }
 
-
-static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
-        {SBT_NONE, FilterType::None},
-        {SBT_1, FilterType::SB1},
-        {SBT_2, FilterType::SB2},
-        {SBT_PRO1, FilterType::SBPro1},
-        {SBT_PRO2, FilterType::SBPro2},
-        {SBT_16, FilterType::SB16},
-        {SBT_GB, FilterType::None},
-};
-
-static const std::map<std::string, FilterType> filter_map = {
-        {"none", FilterType::None},
-        {"sb1", FilterType::SB1},
-        {"sb2", FilterType::SB2},
-        {"sbpro1", FilterType::SBPro1},
-        {"sbpro2", FilterType::SBPro2},
-        {"sb16", FilterType::SB16},
-};
-
 static void configure_filters(Section_prop* config)
 {
 	auto set_filter_params = [](const std::string conf) {
+		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
+				{SBT_NONE, FilterType::None},
+				{SBT_1, FilterType::SB1},
+				{SBT_2, FilterType::SB2},
+				{SBT_PRO1, FilterType::SBPro1},
+				{SBT_PRO2, FilterType::SBPro2},
+				{SBT_16, FilterType::SB16},
+				{SBT_GB, FilterType::None},
+		};
+
+		static const std::map<std::string, FilterType> filter_map = {
+				{"none", FilterType::None},
+				{"sb1", FilterType::SB1},
+				{"sb2", FilterType::SB2},
+				{"sbpro1", FilterType::SBPro1},
+				{"sbpro2", FilterType::SBPro2},
+				{"sb16", FilterType::SB16},
+		};
+
 		const auto tokens = split(conf);
 		const auto filter = tokens.empty() ? "auto" : tokens[0];
 
