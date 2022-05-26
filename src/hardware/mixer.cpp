@@ -385,8 +385,8 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 {
 	assert(order > 0 && order <= max_filter_order);
 	const auto sample_rate = mixer.freq;
-	for (auto i = 0; i < 2; ++i)
-		filter.lpf[i].setup(order, sample_rate, cutoff_freq);
+	for (auto &f : filter.lpf)
+		f.setup(order, sample_rate, cutoff_freq);
 }
 
 void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
