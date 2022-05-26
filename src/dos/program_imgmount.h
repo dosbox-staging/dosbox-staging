@@ -24,10 +24,17 @@
 #include "programs.h"
 
 class IMGMOUNT final : public Program {
-    public:
-        IMGMOUNT() { AddMessages(); }
-        void ListImgMounts();
-        void Run();
+public:
+	IMGMOUNT()
+	{
+		AddMessages();
+		help_detail = {HELP_Filter::Common,
+		               HELP_Category::Dosbox,
+		               HELP_CmdType::Program,
+		               "IMGMOUNT"};
+	}
+	void ListImgMounts();
+	void Run();
 
     private:
         void AddMessages();

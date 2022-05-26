@@ -25,7 +25,14 @@
 
 class PLACEHOLDER final : public Program {
 public:
-	PLACEHOLDER() { AddMessages(); }
+	PLACEHOLDER()
+	{
+		AddMessages();
+		help_detail = {HELP_Filter::All,
+		               HELP_Category::Misc,
+		               HELP_CmdType::Program,
+		               "PLACEHOLDER"};
+	}
 	void Run();
 private:
 	void AddMessages();

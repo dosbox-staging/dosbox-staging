@@ -27,7 +27,14 @@
 
 class SERIAL final : public Program {
 public:
-	SERIAL() { AddMessages(); }
+	SERIAL()
+	{
+		AddMessages();
+		help_detail = {HELP_Filter::All,
+		               HELP_Category::Dosbox,
+		               HELP_CmdType::Program,
+		               "SERIAL"};
+	}
 	void Run();
 
 private:

@@ -138,6 +138,7 @@ public:
 	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);
 	void CMD_LS(char *args);
+
 	/* The shell's variables */
 	uint16_t input_handle = 0;
 	std::shared_ptr<BatchFile> bf = {}; // shared with BatchFile.prev

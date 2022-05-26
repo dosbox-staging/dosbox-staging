@@ -27,6 +27,13 @@
 
 class LS final : public Program {
 public:
+	LS()
+	{
+		help_detail = {HELP_Filter::All,
+		               HELP_Category::File,
+		               HELP_CmdType::Program,
+		               "LS"};
+	}
 	void Run();
 };
 
