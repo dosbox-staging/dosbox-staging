@@ -330,8 +330,8 @@ static void configure_filters(Section_prop* config)
 				{"sb16", FilterType::SB16},
 		};
 
-		const auto tokens = split(conf);
-		const auto filter = tokens.empty() ? "auto" : tokens[0];
+		const auto filter_prefs = split(conf);
+		const auto filter = filter_prefs.empty() ? "auto" : filter_prefs[0];
 
 		FilterType filter_type = FilterType::None;
 		if (filter == "auto") {
@@ -346,7 +346,7 @@ static void configure_filters(Section_prop* config)
 
 		FilterState filter_state = FilterState::Off;
 		if (filter_type != FilterType::None) {
-			if (tokens.size() > 1 && tokens[1] == "always_on") {
+			if (filter_prefs.size() > 1 && filter_prefs[1] == "always_on") {
 				filter_state = FilterState::ForcedOn;
 			} else {
 				filter_state = FilterState::On;
