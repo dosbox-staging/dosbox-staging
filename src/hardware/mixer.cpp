@@ -106,7 +106,7 @@ struct mixer_t {
 	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
 
 	int tick_counter = 0;
-	int freq = 0;           // sample rate negotiated with SDL
+	int sample_rate = 0;    // sample rate negotiated with SDL
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
 	SDL_AudioDeviceID sdldevice = 0;
@@ -134,7 +134,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const ch
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
-	const auto mix_rate = mixer.freq;
+	const auto mix_rate = mixer.sample_rate;
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mix_rate)
 		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
@@ -264,7 +264,7 @@ void MixerChannel::ConfigureResampler()
 {
 	const auto in_rate = zoh_upsampler.enabled ? zoh_upsampler.target_freq
 	                                           : sample_rate;
-	const auto out_rate = mixer.freq;
+	const auto out_rate = mixer.sample_rate;
 	if (in_rate == out_rate) {
 		resample = false;
 	} else {
@@ -286,10 +286,10 @@ void MixerChannel::SetFreq(const int freq)
 	} else {
 		// If the channel rate is zero, then avoid resampling by running
 		// the channel at the same rate as the mixer
-		assert(mixer.freq > 0);
-		sample_rate = mixer.freq;
+		assert(mixer.sample_rate > 0);
+		sample_rate = mixer.sample_rate;
 	}
-	freq_add = (sample_rate << FREQ_SHIFT) / mixer.freq;
+	freq_add = (sample_rate << FREQ_SHIFT) / mixer.sample_rate;
 	envelope.Update(sample_rate, peak_amplitude,
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 
@@ -384,7 +384,7 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
                                           const uint16_t cutoff_freq)
 {
 	assert(order > 0 && order <= max_filter_order);
-	const auto sample_rate = mixer.freq;
+	const auto sample_rate = mixer.sample_rate;
 	for (auto &f : filter.lpf)
 		f.setup(order, sample_rate, cutoff_freq);
 }
@@ -831,11 +831,11 @@ static void MIXER_MixData(int needed)
 			convert[i][1] = static_cast<int16_t>(host_to_le16(s2));
 			readpos = (readpos + 1) & MIXER_BUFMASK;
 		}
-		CAPTURE_AddWave(mixer.freq, added, reinterpret_cast<int16_t*>(convert));
+		CAPTURE_AddWave(mixer.sample_rate, added, reinterpret_cast<int16_t*>(convert));
 	}
 	//Reset the the tick_add for constant speed
 	if( Mixer_irq_important() )
-		mixer.tick_add = calc_tickadd(mixer.freq);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 	mixer.done = needed;
 }
 
@@ -896,7 +896,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 			return;
 		reduce = mixer.done;
 		index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
-		mixer.tick_add = calc_tickadd(mixer.freq + mixer.min_needed);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate + mixer.min_needed);
 	} else if (mixer.done < mixer.max_needed) {
 		auto left = mixer.done - need;
 		if (left < mixer.min_needed) {
@@ -904,7 +904,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 				auto needed = mixer.needed - need;
 				auto diff = (mixer.min_needed > needed ? mixer.min_needed.load()
 				                                       : needed) - left;
-				mixer.tick_add = calc_tickadd(mixer.freq +
+				mixer.tick_add = calc_tickadd(mixer.sample_rate +
 				                              (diff * 3));
 				left = 0; // No stretching as we compensate with
 				          // the tick_add value
@@ -933,13 +933,13 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 			if (diff > (mixer.min_needed << 1))
 				diff = mixer.min_needed << 1;
 			if (diff > (mixer.min_needed >> 1))
-				mixer.tick_add = calc_tickadd(mixer.freq -
+				mixer.tick_add = calc_tickadd(mixer.sample_rate -
 				                              (diff / 5));
 			else if (diff > (mixer.min_needed >> 2))
-				mixer.tick_add = calc_tickadd(mixer.freq -
+				mixer.tick_add = calc_tickadd(mixer.sample_rate -
 				                              (diff >> 3));
 			else
-				mixer.tick_add = calc_tickadd(mixer.freq);
+				mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		}
 	} else {
 		/* There is way too much data in the buffer */
@@ -950,13 +950,13 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 			index_add = mixer.done - 2 * mixer.min_needed;
 		index_add = (index_add << INDEX_SHIFT_LOCAL) / need;
 		reduce = mixer.done - 2 * mixer.min_needed;
-		mixer.tick_add = calc_tickadd(mixer.freq - (mixer.min_needed / 5));
+		mixer.tick_add = calc_tickadd(mixer.sample_rate - (mixer.min_needed / 5));
 	}
 	MIXER_ReduceChannelsDoneCounts(reduce);
 
 	// Reset mixer.tick_add when irqs are important
 	if( Mixer_irq_important() )
-		mixer.tick_add = calc_tickadd(mixer.freq);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 
 	mixer.done -= reduce;
 	mixer.needed -= reduce;
@@ -1066,7 +1066,7 @@ public:
 			return;
 		WriteOut("Channel      Volume     Volume(dB)   Rate(Hz)   Lineout mode\n");
 		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],
-		             mixer.freq, "Stereo (always)");
+		             mixer.sample_rate, "Stereo (always)");
 
 		lock.lock();
 		for (auto &[name, channel] : mixer.channels)
@@ -1134,7 +1134,7 @@ void MIXER_Init(Section* sec) {
 	/* Read out config section */
 
 	mixer.nosound=section->Get_bool("nosound");
-	mixer.freq = section->Get_int("rate");
+	mixer.sample_rate = section->Get_int("rate");
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 	const auto negotiate = section->Get_bool("negotiate");
 
@@ -1142,7 +1142,7 @@ void MIXER_Init(Section* sec) {
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
 
-	spec.freq = static_cast<int>(mixer.freq);
+	spec.freq = static_cast<int>(mixer.sample_rate);
 	spec.format = AUDIO_S16SYS;
 	spec.channels = 2;
 	spec.callback = MIXER_CallBack;
@@ -1161,12 +1161,12 @@ void MIXER_Init(Section* sec) {
 	mixer.tick_counter=0;
 	if (mixer.nosound) {
 		LOG_MSG("MIXER: No Sound Mode Selected.");
-		mixer.tick_add=calc_tickadd(mixer.freq);
+		mixer.tick_add=calc_tickadd(mixer.sample_rate);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained, sdl_allow_flags)) ==0 ) {
 		mixer.nosound = true;
 		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
-		mixer.tick_add=calc_tickadd(mixer.freq);
+		mixer.tick_add=calc_tickadd(mixer.sample_rate);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		// Does SDL want something other than stereo output?
@@ -1175,9 +1175,9 @@ void MIXER_Init(Section* sec) {
 			       obtained.channels, spec.channels);
 
 		// Does SDL want a different playback rate?
-		if (obtained.freq != mixer.freq) {
-			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz", mixer.freq, obtained.freq);
-			mixer.freq = obtained.freq;
+		if (obtained.freq != mixer.sample_rate) {
+			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz", mixer.sample_rate, obtained.freq);
+			mixer.sample_rate = obtained.freq;
 		}
 
 		// Does SDL want a different blocksize?
@@ -1187,19 +1187,19 @@ void MIXER_Init(Section* sec) {
 			        mixer.blocksize, obtained_blocksize);
 			mixer.blocksize = obtained_blocksize;
 		}
-		mixer.tick_add = calc_tickadd(mixer.freq);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
-		        obtained.channels, mixer.freq, mixer.blocksize);
+		        obtained.channels, mixer.sample_rate, mixer.blocksize);
 	}
 
 	//1000 = 8 *125
-	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
+	mixer.tick_counter = (mixer.sample_rate % 125) ? TICK_NEXT : 0;
 	const auto requested_prebuffer = section->Get_int("prebuffer");
 	mixer.min_needed = static_cast<uint16_t>(clamp(requested_prebuffer, 0, 100));
-	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
+	mixer.min_needed = (mixer.sample_rate * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
 
