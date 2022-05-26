@@ -269,8 +269,8 @@ void MixerChannel::ConfigureResampler()
 		resample = false;
 	} else {
 		if (!resampler) {
-			const auto num_channels = 2; // always stereo
-			const auto quality = 5;
+			constexpr auto num_channels = 2; // always stereo
+			constexpr auto quality = 5;
 			resampler = speex_resampler_init(
 			        num_channels, in_rate, out_rate, quality, nullptr);
 		}
