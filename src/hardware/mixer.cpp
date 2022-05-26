@@ -278,10 +278,10 @@ void MixerChannel::ConfigureResampler()
 	}
 }
 
-void MixerChannel::SetSampleRate(const int freq)
+void MixerChannel::SetSampleRate(const int rate)
 {
-	if (freq) {
-		sample_rate = freq;
+	if (rate) {
+		sample_rate = rate;
 	} else {
 		// If the channel rate is zero, then avoid resampling by running
 		// the channel at the same rate as the mixer
