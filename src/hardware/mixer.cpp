@@ -443,10 +443,7 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 	const auto mapped_channel_left = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
-	const auto zoh = zoh_upsampler;
-
 	work_index_t pos = 0;
-	float zoh_pos = 0;
 	std::array<float, 2> out_frame;
 
 	out.resize(0);
@@ -548,10 +545,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (zoh.enabled) {
-			zoh_pos += zoh.step;
-			if (zoh_pos > 1.0f) {
-				zoh_pos -= 1.0f;
+		if (zoh_upsampler.enabled) {
+			zoh_upsampler.pos += zoh_upsampler.step;
+			if (zoh_upsampler.pos > 1.0f) {
+				zoh_upsampler.pos -= 1.0f;
 				++pos;
 			}
 		} else
