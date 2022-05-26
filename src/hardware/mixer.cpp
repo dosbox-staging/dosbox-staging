@@ -134,14 +134,13 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const ch
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
-	const auto mix_rate = mixer.sample_rate;
 	const auto chan_rate = chan->GetSampleRate();
-	if (chan_rate == mix_rate)
+	if (chan_rate == mixer.sample_rate)
 		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
 		        name, chan_rate);
 	else
 		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate", name,
-		        chan_rate, chan_rate > mix_rate ? "downsampling" : "upsampling");
+		        chan_rate, chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
 	std::lock_guard lock(mixer.channel_mutex);
 	mixer.channels[name] = chan; // replace the old, if it exists
 	return chan;
@@ -384,9 +383,8 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
                                           const uint16_t cutoff_freq)
 {
 	assert(order > 0 && order <= max_filter_order);
-	const auto sample_rate = mixer.sample_rate;
 	for (auto &f : filter.lpf)
-		f.setup(order, sample_rate, cutoff_freq);
+		f.setup(order, mixer.sample_rate, cutoff_freq);
 }
 
 void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
@@ -1161,12 +1159,12 @@ void MIXER_Init(Section* sec) {
 	mixer.tick_counter=0;
 	if (mixer.nosound) {
 		LOG_MSG("MIXER: No Sound Mode Selected.");
-		mixer.tick_add=calc_tickadd(mixer.sample_rate);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained, sdl_allow_flags)) ==0 ) {
 		mixer.nosound = true;
 		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
-		mixer.tick_add=calc_tickadd(mixer.sample_rate);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		// Does SDL want something other than stereo output?
