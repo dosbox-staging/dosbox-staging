@@ -97,7 +97,7 @@ static void DISNEY_enable(uint32_t freq)
 	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", freq,
 	                         disney.stereo ? "stereo" : "mono");
 #endif
-	disney.chan->SetFreq(freq);
+	disney.chan->SetSampleRate(freq);
 	disney.chan->Enable(true);
 	disney.state = DISNEY_STATE::RUNNING;
 }

@@ -949,7 +949,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit
 		sb.dma.mul*=2;
 	sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 	sb.dma.min=(sb.dma.rate*3)/1000;
-	sb.chan->SetFreq(freq);
+	sb.chan->SetSampleRate(freq);
 
 	PIC_RemoveEvents(ProcessDMATransfer);
 	//Set to be masked, the dma call can change this again.
@@ -1053,7 +1053,7 @@ static void DSP_Reset() {
 	sb.e2.count=0;
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
-	sb.chan->SetFreq(22050);
+	sb.chan->SetSampleRate(22050);
 	InitializeSpeakerState();
 	PIC_RemoveEvents(ProcessDMATransfer);
 }
@@ -1099,7 +1099,7 @@ static void DSP_ChangeRate(uint32_t freq)
 {
 	if (sb.freq != freq && sb.dma.mode != DSP_DMA_NONE) {
 		sb.chan->FillUp();
-		sb.chan->SetFreq(freq / (sb.mixer.stereo ? 2 : 1));
+		sb.chan->SetSampleRate(freq / (sb.mixer.stereo ? 2 : 1));
 		sb.dma.rate=(freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
 	}
@@ -1500,12 +1500,12 @@ static void CTMIXER_Reset() {
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
-		sb.chan->SetFreq(sb.freq/2);
+		sb.chan->SetSampleRate(sb.freq/2);
 		sb.dma.mul*=2;
 		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
 	} else if (sb.dma.stereo && !stereo) {
-		sb.chan->SetFreq(sb.freq);
+		sb.chan->SetSampleRate(sb.freq);
 		sb.dma.mul/=2;
 		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;

@@ -244,7 +244,7 @@ void TandyDAC::ChangeMode()
 		    freq > dac_min_freq_hz && freq < dac_max_freq_hz) {
 			assert(channel);
 			channel->FillUp(); // using the prior frequency
-			channel->SetFreq(freq);
+			channel->SetSampleRate(freq);
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
 			channel->SetVolume(vol, vol);
 			if ((regs.mode & 0x0c) == 0x0c) {
