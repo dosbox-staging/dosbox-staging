@@ -98,6 +98,11 @@ public:
 	bool HelpRequested();
 
 	static void ResetLastWrittenChar(char c);
+
+	void AddToHelpList();
+
+protected:
+	HELP_Detail help_detail {};
 };
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;

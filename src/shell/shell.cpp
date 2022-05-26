@@ -172,6 +172,10 @@ DOS_Shell::DOS_Shell()
           call(false)
 {
 	AddShellCmdsToHelpList();
+	help_detail = {HELP_Filter::All,
+	               HELP_Category::Misc,
+	               HELP_CmdType::Program,
+	               "COMMAND"};
 }
 
 void DOS_Shell::GetRedirection(char *line,

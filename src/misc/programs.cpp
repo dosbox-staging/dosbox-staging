@@ -81,6 +81,9 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 	// Register the program's main pointer
 	// NOTE: This step must come after the index is saved in the COM data
 	internal_progs.emplace_back(creator);
+
+	// Register help for command
+	creator()->AddToHelpList();
 }
 
 static Bitu PROGRAMS_Handler(void) {
@@ -346,11 +349,23 @@ bool Program::HelpRequested() {
 	       cmd->FindExist("--help", false);
 }
 
+void Program::AddToHelpList() {
+	if (help_detail.name.size())
+		HELP_AddToHelpList(help_detail.name, help_detail);
+}
+
 bool MSG_Write(const char *);
 void restart_program(std::vector<std::string> & parameters);
 
 class CONFIG final : public Program {
 public:
+	CONFIG()
+	{
+		help_detail = {HELP_Filter::Common,
+		               HELP_Category::Dosbox,
+		               HELP_CmdType::Program,
+		               "CONFIG"};
+	}
 	void Run(void);
 private:
 	void restart(const char* useconfig);

@@ -484,9 +484,6 @@ void IMGMOUNT::Run(void) {
 
 void IMGMOUNT::AddMessages() {
     AddCommonMountMessages();
-    MSG_Add("SHELL_CMD_IMGMOUNT_HELP",
-	        "mounts compact disc image(s) or floppy disk image(s) to a given drive letter.\n");
-
 	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"

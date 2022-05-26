@@ -27,6 +27,13 @@
 
 class CHOICE final : public Program {
 public:
+	CHOICE()
+	{
+		help_detail = {HELP_Filter::All,
+		               HELP_Category::Batch,
+		               HELP_CmdType::Program,
+		               "CHOICE"};
+	}
 	void Run();
 };
 
