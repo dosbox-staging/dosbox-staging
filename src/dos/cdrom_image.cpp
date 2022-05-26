@@ -788,7 +788,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 #endif
 
 	// start the channel!
-	player.channel->SetFreq(track_rate);
+	player.channel->SetSampleRate(track_rate);
 	player.channel->Enable(true);
 	return true;
 }

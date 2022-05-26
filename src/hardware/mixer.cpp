@@ -128,7 +128,7 @@ bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name);
-	chan->SetFreq(freq);
+	chan->SetSampleRate(freq);
 	chan->SetScale(1.0);
 	chan->SetVolume(1, 1);
 	chan->ChangeChannelMap(LEFT, RIGHT);
@@ -278,7 +278,7 @@ void MixerChannel::ConfigureResampler()
 	}
 }
 
-void MixerChannel::SetFreq(const int freq)
+void MixerChannel::SetSampleRate(const int freq)
 {
 	if (freq) {
 		sample_rate = freq;

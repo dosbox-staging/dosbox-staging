@@ -119,7 +119,7 @@ public:
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
 	void UpdateVolume();
-	void SetFreq(int _freq);
+	void SetSampleRate(int _freq);
 	void SetPeakAmplitude(int peak);
 	void Mix(int _needed);
 	void AddSilence(); // Fill up until needed

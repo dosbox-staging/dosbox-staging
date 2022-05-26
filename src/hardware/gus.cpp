@@ -625,7 +625,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		active_voice_mask = 0xffffffffu >> (MAX_VOICES - active_voices);
 		playback_rate = static_cast<int>(
 		        round(1000000.0 / (1.619695497 * active_voices)));
-		audio_channel->SetFreq(playback_rate);
+		audio_channel->SetSampleRate(playback_rate);
 	}
 }
 
