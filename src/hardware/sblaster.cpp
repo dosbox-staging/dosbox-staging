@@ -130,7 +130,7 @@ struct SB_INFO {
 	SB_TYPES type = SBT_NONE;
 	FilterType sb_filter_type = FilterType::None;
 	FilterType opl_filter_type = FilterType::None;
-	bool sb_filter_force = false;
+	FilterState sb_filter_state = FilterState::Off;
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
@@ -333,8 +333,7 @@ static void configure_filters(Section_prop* config)
 	auto set_filter_params = [](const std::string conf) {
 		const auto tokens = split(conf);
 		const auto filter = tokens.empty() ? "auto" : tokens[0];
-		const auto force = tokens.size() > 1 ? tokens[1] == "always_on"
-		                                     : false;
+
 		FilterType filter_type = FilterType::None;
 		if (filter == "auto") {
 			auto it = sb_type_to_filter_type_map.find(sb.type);
@@ -345,15 +344,23 @@ static void configure_filters(Section_prop* config)
 			if (it != filter_map.end())
 				filter_type = it->second;
 		}
-		auto force_filter = force && filter_type != FilterType::None;
-		return std::make_tuple(filter_type, force_filter);
+
+		FilterState filter_state = FilterState::Off;
+		if (filter_type != FilterType::None) {
+			if (tokens.size() > 1 && tokens[1] == "always_on") {
+				filter_state = FilterState::ForcedOn;
+			} else {
+				filter_state = FilterState::On;
+			}
+		}
+		return std::make_tuple(filter_type, filter_state);
 	};
 
-	auto [sb_filter, sb_filter_force] = set_filter_params(
+	auto [sb_filter_type, sb_filter_state] = set_filter_params(
 	        config->Get_string("sb_filter"));
 
-	sb.sb_filter_type = sb_filter;
-	sb.sb_filter_force = sb_filter_force;
+	sb.sb_filter_type = sb_filter_type;
+	sb.sb_filter_state = sb_filter_state;
 
 	[[maybe_unused]] auto [opl_filter_type, dummy] = set_filter_params(
 	        config->Get_string("opl_filter"));
@@ -363,17 +370,14 @@ static void configure_filters(Section_prop* config)
 
 static void set_sb_filter()
 {
-	auto set_filter = [](const uint8_t order,
-	                     const uint16_t cutoff_freq) {
+	auto set_filter = [](const uint8_t order, const uint16_t cutoff_freq) {
 		sb.chan->ConfigureLowPassFilter(order, cutoff_freq);
-		sb.chan->EnableLowPassFilter();
-		sb.chan->ForceLowPassFilter(sb.sb_filter_force);
+		sb.chan->SetLowPassFilter(sb.sb_filter_state);
 	};
-	auto disable_filter = [] {
-		sb.chan->EnableLowPassFilter(false);
-		sb.chan->ForceLowPassFilter(false);
-	};
-	auto enable_zoh_upsampler = []() {
+
+	auto disable_filter = [] { sb.chan->SetLowPassFilter(FilterState::Off); };
+
+	auto enable_zoh_upsampler = [] {
 		constexpr auto dac_rate = 45454;
 		sb.chan->ConfigureZeroOrderHoldUpsampler(dac_rate);
 		sb.chan->EnableZeroOrderHoldUpsampler();
@@ -417,7 +421,7 @@ static void set_opl_filter()
 	                     const uint8_t order,
 	                     const uint16_t cutoff_freq) {
 		chan->ConfigureLowPassFilter(order, cutoff_freq);
-		chan->EnableLowPassFilter();
+		chan->SetLowPassFilter(FilterState::On);
 	};
 
 	auto chan = MIXER_FindChannel("FM");
@@ -432,10 +436,7 @@ static void set_opl_filter()
 	case FilterType::SBPro2: set_filter(chan, 1, 8000); break;
 
 	case FilterType::SB16:
-	case FilterType::None:
-		chan->EnableLowPassFilter(false);
-		chan->ForceLowPassFilter(false);
-		break;
+	case FilterType::None: chan->SetLowPassFilter(FilterState::Off); break;
 	}
 }
 
@@ -1549,7 +1550,11 @@ static void CTMIXER_Write(uint8_t val) {
 	case 0x0e:		/* Output/Stereo Select */
 		sb.mixer.stereo=(val & 0x2) > 0;
 		sb.mixer.filtered=(val & 0x20) > 0;
-		sb.chan->EnableLowPassFilter(sb.mixer.filtered);
+		if (sb.sb_filter_state != FilterState::ForcedOn) {
+			sb.sb_filter_state = sb.mixer.filtered ? FilterState::On
+			                                       : FilterState::Off;
+			sb.chan->SetLowPassFilter(sb.sb_filter_state);
+		}
 		DSP_ChangeStereo(sb.mixer.stereo);
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;

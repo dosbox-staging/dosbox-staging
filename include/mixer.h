@@ -98,6 +98,8 @@ enum LINE_INDEX : uint8_t {
 	// standard at the host-level, then additional line indexes would go here.
 };
 
+enum class FilterState { Off, On, ForcedOn };
+
 // forward declarations
 struct SpeexResamplerState_;
 typedef SpeexResamplerState_ SpeexResamplerState;
@@ -122,8 +124,7 @@ public:
 	void Mix(int _needed);
 	void AddSilence(); // Fill up until needed
 
-	void EnableLowPassFilter(const bool enabled = true);
-	void ForceLowPassFilter(const bool force = true);
+	void SetLowPassFilter(const FilterState state);
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 
 	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
@@ -228,8 +229,7 @@ private:
 	} zoh_upsampler = {};
 
 	struct {
-		bool enabled = false;
-		bool force = true;
+		FilterState state = FilterState::Off;
 		std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
 	} filter = {};
 };

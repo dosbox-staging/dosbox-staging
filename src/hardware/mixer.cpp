@@ -375,14 +375,9 @@ void MixerChannel::AddSilence()
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::EnableLowPassFilter(const bool enabled)
+void MixerChannel::SetLowPassFilter(const FilterState state)
 {
-	filter.enabled = enabled;
-}
-
-void MixerChannel::ForceLowPassFilter(const bool force)
-{
-	filter.force = force;
+	filter.state = state;
 }
 
 void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
@@ -614,7 +609,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 	auto sample = 0.0f;
-	const auto do_filter = filter.enabled || filter.force;
+	const auto do_filter = filter.state == FilterState::On ||
+	                       filter.state == FilterState::ForcedOn;
 
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
