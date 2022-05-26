@@ -72,13 +72,13 @@ enum SB_TYPES {
 	SBT_GB   = 7
 };
 
-enum FILTER_TYPES {
-	FT_NONE,
-	FT_SB1,
-	FT_SB2,
-	FT_SBPRO1,
-	FT_SBPRO2,
-	FT_SB16,
+enum class FilterType {
+	None,
+	SB1,
+	SB2,
+	SBPro1,
+	SBPro2,
+	SB16,
 };
 
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
@@ -128,8 +128,8 @@ struct SB_INFO {
 	uint8_t time_constant = 0;
 	DSP_MODES mode = MODE_NONE;
 	SB_TYPES type = SBT_NONE;
-	FILTER_TYPES sb_filter_type = FT_NONE;
-	FILTER_TYPES opl_filter_type = FT_NONE;
+	FilterType sb_filter_type = FilterType::None;
+	FilterType opl_filter_type = FilterType::None;
 	bool sb_filter_force = false;
 	struct {
 		bool pending_8bit;
@@ -309,23 +309,23 @@ static void InitializeSpeakerState()
 }
 
 
-static const std::map<SB_TYPES, FILTER_TYPES> sb_type_to_filter_type_map = {
-        {SBT_NONE, FT_NONE},
-        {SBT_1, FT_SB1},
-        {SBT_2, FT_SB2},
-        {SBT_PRO1, FT_SBPRO1},
-        {SBT_PRO2, FT_SBPRO2},
-        {SBT_16, FT_SB16},
-        {SBT_GB, FT_NONE},
+static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
+        {SBT_NONE, FilterType::None},
+        {SBT_1, FilterType::SB1},
+        {SBT_2, FilterType::SB2},
+        {SBT_PRO1, FilterType::SBPro1},
+        {SBT_PRO2, FilterType::SBPro2},
+        {SBT_16, FilterType::SB16},
+        {SBT_GB, FilterType::None},
 };
 
-static const std::map<std::string, FILTER_TYPES> filter_map = {
-        {"none", FT_NONE},
-        {"sb1", FT_SB1},
-        {"sb2", FT_SB2},
-        {"sbpro1", FT_SBPRO1},
-        {"sbpro2", FT_SBPRO2},
-        {"sb16", FT_SB16},
+static const std::map<std::string, FilterType> filter_map = {
+        {"none", FilterType::None},
+        {"sb1", FilterType::SB1},
+        {"sb2", FilterType::SB2},
+        {"sbpro1", FilterType::SBPro1},
+        {"sbpro2", FilterType::SBPro2},
+        {"sb16", FilterType::SB16},
 };
 
 static void configure_filters(Section_prop* config)
@@ -335,7 +335,7 @@ static void configure_filters(Section_prop* config)
 		const auto filter = tokens.empty() ? "auto" : tokens[0];
 		const auto force = tokens.size() > 1 ? tokens[1] == "always_on"
 		                                     : false;
-		FILTER_TYPES filter_type = FT_NONE;
+		FilterType filter_type = FilterType::None;
 		if (filter == "auto") {
 			auto it = sb_type_to_filter_type_map.find(sb.type);
 			if (it != sb_type_to_filter_type_map.end())
@@ -345,7 +345,7 @@ static void configure_filters(Section_prop* config)
 			if (it != filter_map.end())
 				filter_type = it->second;
 		}
-		auto force_filter = force && filter_type != FT_NONE;
+		auto force_filter = force && filter_type != FilterType::None;
 		return std::make_tuple(filter_type, force_filter);
 	};
 
@@ -380,28 +380,28 @@ static void set_sb_filter()
 	};
 
 	switch (sb.sb_filter_type) {
-	case FT_NONE:
+	case FilterType::None:
 		disable_filter();
 		enable_zoh_upsampler();
 		break;
 
-	case FT_SB1:
+	case FilterType::SB1:
 		set_filter(2, 3800);
 		enable_zoh_upsampler();
 		break;
 
-	case FT_SB2:
+	case FilterType::SB2:
 		set_filter(2, 4800);
 		enable_zoh_upsampler();
 		break;
 
-	case FT_SBPRO1:
-	case FT_SBPRO2:
+	case FilterType::SBPro1:
+	case FilterType::SBPro2:
 		set_filter(2, 3200);
 		enable_zoh_upsampler();
 		break;
 
-	case FT_SB16:
+	case FilterType::SB16:
 		// Resampling from the SB channel rate to the mixer rate applies
 		// brickwall filtering at half the SB channel rate, which
 		// perfectly emulates the dynamic brickwall filter of the SB16.
@@ -425,14 +425,14 @@ static void set_opl_filter()
 		return;
 
 	switch (sb.opl_filter_type) {
-	case FT_SB1:
-	case FT_SB2: set_filter(chan, 1, 12000); break;
+	case FilterType::SB1:
+	case FilterType::SB2: set_filter(chan, 1, 12000); break;
 
-	case FT_SBPRO1:
-	case FT_SBPRO2: set_filter(chan, 1, 8000); break;
+	case FilterType::SBPro1:
+	case FilterType::SBPro2: set_filter(chan, 1, 8000); break;
 
-	case FT_SB16:
-	case FT_NONE:
+	case FilterType::SB16:
+	case FilterType::None:
 		chan->EnableLowPassFilter(false);
 		chan->ForceLowPassFilter(false);
 		break;
