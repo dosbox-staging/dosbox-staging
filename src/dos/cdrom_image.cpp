@@ -1011,16 +1011,37 @@ void CDROM_Interface_Image::CDAudioCallBack(uint16_t desired_track_frames)
 		return;
 	}
 
-	const uint32_t decoded_track_frames = track_file->decode(player.buffer,
-	                                                         static_cast<uint32_t>(desired_track_frames));
-	player.playedTrackFrames += decoded_track_frames;
+	const auto decoded_track_frames = check_cast<uint16_t>(
+	        track_file->decode(player.buffer, desired_track_frames));
 
-	/**
-	 *  Uses either the stereo or mono and native or nonnative
-	 *  AddSamples call assigned during construction
-	 */
+	if (!decoded_track_frames) {
+		// This particular CDDA track has come to an end, but the
+		// program has requested we continue playing for a longer
+		// period. So keep going!
+		const auto fraction_played = static_cast<double>(
+		                                     player.playedTrackFrames) /
+		                             player.totalTrackFrames;
+
+		const auto played_redbook_frames = static_cast<uint32_t>(
+		        ceil(fraction_played * player.totalRedbookFrames));
+
+		const auto new_redbook_start_frame = player.startSector +
+		                                     played_redbook_frames;
+
+		const auto remaining_redbook_frames = player.totalRedbookFrames -
+		                                      played_redbook_frames;
+
+		player.cd->PlayAudioSector(new_redbook_start_frame,
+		                           remaining_redbook_frames);
+
+		return;
+	}
+
+	// Use the stereo or mono and native or nonnative AddSamples call
+	// assigned during construction
 	(player.channel.get()->*player.addFrames)(decoded_track_frames, player.buffer);
 
+	player.playedTrackFrames += decoded_track_frames;
 	if (player.playedTrackFrames >= player.totalTrackFrames) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: CDAudioCallBack stopping because "
@@ -1028,21 +1049,6 @@ void CDROM_Interface_Image::CDAudioCallBack(uint16_t desired_track_frames)
 		player.playedTrackFrames, player.totalTrackFrames);
 #endif
 		player.cd->StopAudio();
-
-	} else if (decoded_track_frames == 0) {
-		// Our track has run dry but we still have more music left to play!
-		const double percent_played = static_cast<double>(
-		                              player.playedTrackFrames)
-		                              / player.totalTrackFrames;
-		const uint32_t played_redbook_frames = static_cast<uint32_t>(ceil(
-		                                     percent_played
-		                                     * player.totalRedbookFrames));
-		const uint32_t new_redbook_start_frame = player.startSector
-		                                       + played_redbook_frames;
-		const uint32_t remaining_redbook_frames = player.totalRedbookFrames -
-		                                        played_redbook_frames;
-		player.cd->PlayAudioSector(new_redbook_start_frame, remaining_redbook_frames);
-		return;
 	}
 }
 
