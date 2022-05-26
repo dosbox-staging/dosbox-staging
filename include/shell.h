@@ -30,6 +30,8 @@
 #include "programs.h"
 #endif
 
+#include "help_util.h"
+
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20
 #define CMD_OLDSIZE 4096
@@ -60,10 +62,18 @@ public:
 };
 
 class AutoexecEditor;
+
+struct SHELL_Cmd {
+	uint32_t flags = 0;                               // Flags about the command
+	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
+	const char *help = "";                       // String with command help
+	HELP_Category category = HELP_Category::Misc;
+};
+
 class DOS_Shell : public Program {
 private:
-	enum class HELP_LIST { ALL, COMMON };
-	void PrintHelpForCommands(HELP_LIST requested_list);
+	void PrintHelpForCommands(HELP_Filter req_filter);
+	void AddShellCmdsToHelpList();
 
 	friend class AutoexecEditor;
 	std::list<std::string> l_history{};
@@ -72,6 +82,7 @@ private:
 	char *completion_start = nullptr;
 	uint16_t completion_index = 0;
 	bool exit_cmd_called = false;
+	static inline bool help_list_populated = false;
 
 public:
 
@@ -132,13 +143,6 @@ public:
 	std::shared_ptr<BatchFile> bf = {}; // shared with BatchFile.prev
 	bool echo = false;
 	bool call = false;
-};
-
-struct SHELL_Cmd {
-	uint32_t flags = 0;                               // Flags about the command
-	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
-	const char *help = nullptr;                       // String with command help
-	const char *long_help = nullptr;                  // String with long help (optional)
 };
 
 /* Object to manage lines in the autoexec.bat The lines get removed from

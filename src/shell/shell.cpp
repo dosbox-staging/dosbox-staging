@@ -170,7 +170,9 @@ DOS_Shell::DOS_Shell()
           bf(nullptr),
           echo(true),
           call(false)
-{}
+{
+	AddShellCmdsToHelpList();
+}
 
 void DOS_Shell::GetRedirection(char *line,
                                std::string &in_file,
