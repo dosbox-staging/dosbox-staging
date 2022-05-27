@@ -1091,11 +1091,10 @@ public:
 			WriteOut(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));
 			return;
 		}
-		if(cmd->FindExist("/LISTMIDI")) {
+		if (cmd->FindExist("/LISTMIDI")) {
 			ListMidi();
 			return;
 		}
-
 		auto noShow = cmd->FindExist("/NOSHOW", true);
 
 		std::vector<std::string> args = {};
