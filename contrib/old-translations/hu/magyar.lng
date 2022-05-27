@@ -120,7 +120,7 @@ Az ebben a szekci¢ban l‚v” sorokat ind¡t skor mag t¢l v‚grehajtja a DOSBox.
 :PROGRAM_CONFIG_FILE_ERROR
 Nem tudom megnyitni a %s f jlt.
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 DOSBox konfigur ci¢s eszk”z:
 CONFIG -writeconf [f jl] ki¡rja a jelenlegi konfigur ci¢t a megadott f jlba.
 CONFIG -writelang [f jl] ki¡rja a jelenlegi nyelv sz”vegeit a f jlba.

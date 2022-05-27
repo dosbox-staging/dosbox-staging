@@ -619,7 +619,7 @@ MAC-адрес карты NE2000.
 Запись конфигурационного файла %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Инструмент конфигурации:
 -writeconf [имя_файла] или -wc [имя_файла]: Сохранить текущую конфигурацию
 в основной файл конфигурации или в указанный файл в директории конфигурации.
@@ -1798,7 +1798,7 @@ Examples:
   [32;1mloadrom[0m [36;1mbios.rom[0m
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -1825,7 +1825,7 @@ Examples:
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Manage the serial ports.
 
 Usage modes:
@@ -1863,7 +1863,7 @@ Must specify a numeric port value between 1 and %d, inclusive.
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 This program is a placeholder
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

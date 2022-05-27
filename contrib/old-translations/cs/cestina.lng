@@ -123,7 +123,7 @@ ipx -- Povolit ipx pøes UDP/IP emulaci.
 :PROGRAM_CONFIG_FILE_ERROR
 Nelze otevøít soubor %s
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Nastroj Config
 
 CONFIG -writeconf [jednotka:][cesta]jmeno_souboru

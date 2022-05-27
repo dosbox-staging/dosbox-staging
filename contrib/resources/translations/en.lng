@@ -619,7 +619,7 @@ Can't open file %s
 Writing config file %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Config tool:
 -writeconf or -wc without parameter: write to primary loaded config file.
 -writeconf or -wc with filename: write file to config directory.
@@ -1360,7 +1360,7 @@ Codepage %i has been loaded
 Codepage %i has been loaded for layout %s
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -1409,7 +1409,7 @@ None or invalid codepage file for layout %s
 
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Manages the serial ports.
 
 Usage:
@@ -1452,7 +1452,7 @@ Type must be one of the following:
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 This program is a placeholder
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

@@ -244,7 +244,7 @@ Mogelijke waarden
 Kan het bestand %s niet openen.
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Configuratieprogramma:
 Typ -writeconf bestandsnaam om de huidige configuratie weg te schrijven.
 Typ -writelang bestandsnaam om de huidige taaltekenreeksen weg te schrijven.

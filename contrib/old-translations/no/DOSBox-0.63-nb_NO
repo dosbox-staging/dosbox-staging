@@ -101,7 +101,7 @@ Linjer i dette området vil bli kjørt ved oppstart.
 :PROGRAM_CONFIG_FILE_ERROR
 Kan ikke åpne filen %s.
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Konfigureringsverktoey:
 Bruk "-writeconf FILNAVN" for † skrive gjeldende konfigurasjon.
 Bruk "-writelang FILNAVN" for † skrive gjeldende spr†kstrenger.

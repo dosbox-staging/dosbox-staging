@@ -623,7 +623,7 @@ No se puede abrir el archivo %s
 Escribiendo archivo de configuración %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Herramienta de configuración:
 -writeconf o -wc escribe al archivo de configuración primario cargado.
 -writeconf o -wc [nombre de archivo] escribe archivo al directorio de configuración.
@@ -1343,7 +1343,7 @@ Página de código %i ha sido cargada
 Página de código %i ha sido cargada para distribución %s
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configura un teclado para un idioma específico.
 
 Uso:
@@ -1392,7 +1392,7 @@ Archivo de página de código no válido o no existe para la distribución %s
 
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Administra los puertos serie.
 
 Modos de uso:
@@ -1430,7 +1430,7 @@ Debes especificar un valor de puerto numérico entre 1 y %d, incluido.
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 Este programa es un marcador de posición
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

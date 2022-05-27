@@ -572,7 +572,7 @@ No se puede abrir el archivo %s
 Escribiendo archivo de configuraci¢n %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Herramienta de configuraci¢n:
 -writeconf o -wc escribe al archivo de configuraci¢n primario cargado.
 -writeconf o -wc [nombre de archivo] escribe archivo al directorio de configuraci¢n.
@@ -1304,7 +1304,7 @@ P gina de c¢digo %i ha sido cargada
 P gina de c¢digo %i ha sido cargada para distribuci¢n %s
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configura un teclado para un idioma espec¡fico.
 
 Uso:
@@ -1353,7 +1353,7 @@ Archivo de p gina de c¢digo no v lido o no existe para la distribuci¢n %s
 
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Administra los puertos serie.
 
 Modos de uso:
@@ -1395,7 +1395,7 @@ El modo debe ser uno de los siguientes:
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 Este programa es un marcador de posici¢n
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

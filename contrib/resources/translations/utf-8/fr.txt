@@ -620,7 +620,7 @@ Impossible d'ouvrir le fichier %s
 Écriture du fichier de configuration %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Outil de configuration :
 -writeconf ou -wc sans paramètre : écrit dans le fichier de configuration primaire chargé.
 -writeconf ou -wc avec un nom de fichier : écrit le fichier dans le répertoire de configuration.
@@ -1823,7 +1823,7 @@ No drive available
 No available IDE controllers. Drive will not have IDE emulation.
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -1850,7 +1850,7 @@ Examples:
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Manages the serial ports.
 
 Usage:
@@ -1893,7 +1893,7 @@ Type must be one of the following:
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 This program is a placeholder
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

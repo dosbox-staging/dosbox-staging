@@ -480,13 +480,13 @@ void CONFIG::Run(void) {
 			[[fallthrough]];
 
 		case P_NOMATCH:
-			WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+			WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
 			return;
 
 		case P_HELP: case P_HELP2: case P_HELP3: {
 			switch(pvars.size()) {
 			case 0:
-				WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+				WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
 				return;
 			case 1: {
 				if (!strcasecmp("sections",pvars[0].c_str())) {
@@ -522,7 +522,7 @@ void CONFIG::Run(void) {
 				break;
 			}
 			default:
-				WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+				WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
 				return;
 			}	
 			// if we have one value in pvars, it's a section
@@ -833,7 +833,7 @@ void PROGRAMS_Init(Section* sec) {
 	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
 	
 	// help
-	MSG_Add("PROGRAM_CONFIG_USAGE",
+	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
 	        "Config tool:\n"
 	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
 	        "-writeconf or -wc with filename: write file to config directory.\n"

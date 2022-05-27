@@ -256,7 +256,7 @@ An dieser Stelle k”nnen z.B. MOUNT-Befehle stehen.
 Die Konfigurationsdatei %s kann nicht ge”ffnet werden
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Konfigurations-Werkzeug "CONFIG":
  -writeconf  Speichert die aktuelle Konfigurationsdatei.
  -writelang  Speichert die aktuelle Sprachdatei.
