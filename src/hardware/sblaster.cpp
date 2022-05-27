@@ -310,7 +310,7 @@ static void InitializeSpeakerState()
 
 static void configure_filters(Section_prop* config)
 {
-	auto set_filter_params = [](const std::string conf) {
+	auto get_filter_params = [&](const char * conf) {
 		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
 				{SBT_NONE, FilterType::None},
 				{SBT_1, FilterType::SB1},
@@ -329,8 +329,8 @@ static void configure_filters(Section_prop* config)
 				{"sbpro2", FilterType::SBPro2},
 				{"sb16", FilterType::SB16},
 		};
-
-		const auto filter_prefs = split(conf);
+		assert(conf);
+		const auto filter_prefs = split(config->Get_string(conf));
 		const auto filter = filter_prefs.empty() ? "auto" : filter_prefs[0];
 
 		FilterType filter_type = FilterType::None;
@@ -354,17 +354,9 @@ static void configure_filters(Section_prop* config)
 		}
 		return std::make_tuple(filter_type, filter_state);
 	};
-
-	auto [sb_filter_type, sb_filter_state] = set_filter_params(
-	        config->Get_string("sb_filter"));
-
-	sb.sb_filter_type = sb_filter_type;
-	sb.sb_filter_state = sb_filter_state;
-
-	[[maybe_unused]] auto [opl_filter_type, dummy] = set_filter_params(
-	        config->Get_string("opl_filter"));
-
-	sb.opl_filter_type = opl_filter_type;
+	using std::tie;
+	tie(sb.sb_filter_type, sb.sb_filter_state) = get_filter_params("sb_filter");
+	tie(sb.opl_filter_type, std::ignore) = get_filter_params("opl_filter");
 }
 
 static void set_sb_filter()
