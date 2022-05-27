@@ -1095,37 +1095,71 @@ public:
 			ListMidi();
 			return;
 		}
-		if (cmd->FindString("MASTER",temp_line,false)) {
-			MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
-		}
 
-		std::unique_lock lock(mixer.channel_mutex);
-		for (auto &[name, channel] : mixer.channels) {
-			if (cmd->FindString(name.c_str(), temp_line, false)) {
-				if (channel->ChangeLineoutMap(temp_line)) {
+		auto noShow = cmd->FindExist("/NOSHOW", true);
+
+		std::vector<std::string> args = {};
+		cmd->FillVector(args);
+
+		mixer_channel_t curr_chan = {};
+		auto is_master = false;
+
+		for (auto &arg : args) {
+			upcase(arg);
+			if (arg == "MASTER") {
+				curr_chan = nullptr;
+				is_master = true;
+				continue;
+			}
+			auto chan = MIXER_FindChannel(arg.c_str());
+			if (chan) {
+				curr_chan = chan;
+				is_master = false;
+				continue;
+			}
+			if (is_master) {
+				std::lock_guard lock(mixer.channel_mutex);
+
+				MakeVolume(const_cast<char *>(arg.c_str()),
+				           mixer.mastervol[0],
+				           mixer.mastervol[1]);
+
+			} else if (curr_chan) {
+				std::lock_guard lock(mixer.channel_mutex);
+
+				if (curr_chan->ChangeLineoutMap(arg))
 					continue;
-				}
+
 				float left_vol = 0;
 				float right_vol = 0;
-				MakeVolume(&temp_line[0], left_vol, right_vol);
-				channel->SetVolume(left_vol, right_vol);
+				MakeVolume(const_cast<char *>(arg.c_str()),
+				           left_vol,
+				           right_vol);
+
+				curr_chan->SetVolume(left_vol, right_vol);
+				curr_chan->UpdateVolume();
 			}
-			channel->UpdateVolume();
 		}
-		lock.unlock();
 
-		if (cmd->FindExist("/NOSHOW"))
+		if (noShow)
 			return;
-		WriteOut("Channel      Volume     Volume(dB)   Rate(Hz)   Lineout mode\n");
-		ShowSettings("MASTER", mixer.mastervol[0], mixer.mastervol[1],
-		             mixer.sample_rate, "Stereo (always)");
 
-		lock.lock();
-		for (auto &[name, channel] : mixer.channels)
-			ShowSettings(name.c_str(), channel->volmain[0],
-			             channel->volmain[1], channel->GetSampleRate(),
-			             channel->DescribeLineout().c_str());
-		lock.unlock();
+		WriteOut("Channel      Volume     Volume(dB)   Rate(Hz)   Lineout mode\n");
+		ShowSettings("MASTER",
+		             mixer.mastervol[0],
+		             mixer.mastervol[1],
+		             mixer.sample_rate,
+		             "Stereo (always)");
+		{
+			std::lock_guard lock(mixer.channel_mutex);
+
+			for (auto &[name, channel] : mixer.channels)
+				ShowSettings(name.c_str(),
+				             channel->volmain[0],
+				             channel->volmain[1],
+				             channel->GetSampleRate(),
+				             channel->DescribeLineout().c_str());
+		}
 	}
 
 private:
