@@ -424,6 +424,20 @@ void MixerChannel::UpdateZOHUpsamplerState()
 	zoh_upsampler.pos = 0.0f;
 }
 
+void MixerChannel::SetCrossfeedStrength(const float strength)
+{
+	assert(strength >= 0.0f);
+	assert(strength <= 1.0f);
+
+	crossfeed.strength = strength;
+
+	// map [0, 1] range to [0.5, 0]
+	auto p = (1.0f - strength) / 2.0f;
+	constexpr auto center = 0.5f;
+	crossfeed.pan_left = center - p;
+	crossfeed.pan_right = center + p;
+}
+
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
 // This is only used to populate a lookup table that's 20-fold faster.
 constexpr int16_t u8to16(const int u_val)
@@ -587,6 +601,18 @@ spx_uint32_t estimate_max_out_frames(SpeexResamplerState *resampler_state,
 	return ceil_udivide(in_frames * ratio_den, ratio_num);
 }
 
+AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame &frame) const
+{
+	// Pan mono sample using -6dB linear pan law in the stereo field
+	// pan: 0.0 = left, 0.5 = center, 1.0 = right
+	auto pan = [](const float sample, const float pan) -> AudioFrame {
+		return {(1 - pan) * sample, pan * sample};
+	};
+	auto a = pan(frame.left, crossfeed.pan_left);
+	auto b = pan(frame.right, crossfeed.pan_right);
+	return {a.left + b.left, a.right + b.right};
+}
+
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 {
@@ -617,21 +643,29 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		mixer.resample_out.resize(out_frames * 2);  // only shrinks
 	}
 
-	// Optionally low-pass filter, then mix the results to the master output
+	// Optionally low-pass filter, apply crossfeed, then mix the results
+	// to the master output
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
-	auto sample = 0.0f;
+
 	const auto do_filter = filter.state == FilterState::On ||
 	                       filter.state == FilterState::ForcedOn;
 
+	const auto do_crossfeed = crossfeed.strength > 0.0f;
+
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
-		for (auto i = 0; i < 2; ++i) {
-			sample = *pos++;
-			if (do_filter)
-				sample = filter.lpf[i].filter(sample);
-			mixer.work[mixpos][i] += sample;
+
+		AudioFrame frame = {*pos++, *pos++};
+		if (do_filter) {
+			frame.left = filter.lpf[0].filter(frame.left);
+			frame.right = filter.lpf[1].filter(frame.right);
 		}
+		if (do_crossfeed)
+			frame = ApplyCrossfeed(frame);
+
+		mixer.work[mixpos][0] += frame.left;
+		mixer.work[mixpos][1] += frame.right;
 		++mixpos;
 	}
 

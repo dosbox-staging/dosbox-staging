@@ -130,6 +130,8 @@ public:
 	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
 	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
 
+	void SetCrossfeedStrength(const float strength);
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(uint16_t len, const Type *data);
 
@@ -172,6 +174,8 @@ private:
 
 	void ConfigureResampler();
 	void UpdateZOHUpsamplerState();
+
+	AudioFrame ApplyCrossfeed(const AudioFrame &frame) const;
 
 	std::string name = {};
 	Envelope envelope;
@@ -236,6 +240,12 @@ private:
 		FilterState state = FilterState::Off;
 		std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
 	} filter = {};
+
+	struct {
+		float strength = 0.0f;
+		float pan_left = 0.0f;
+		float pan_right = 0.0f;
+	} crossfeed = {};
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
