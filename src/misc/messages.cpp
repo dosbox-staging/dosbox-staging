@@ -185,6 +185,11 @@ const char *MSG_Get(char const *requested_name)
 	return "Message not Found!\n";
 }
 
+bool MSG_Exists(const char *requested_name) 
+{
+	return contains(messages, requested_name);
+}
+
 // Write the names and messages (in the order they were added) to the given location
 bool MSG_Write(const char * location) {
 	FILE *out = fopen(location, "w+t");
