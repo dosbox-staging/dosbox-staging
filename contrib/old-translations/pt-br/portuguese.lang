@@ -243,7 +243,7 @@ Valores possíveis
 NÆo foi poss¡vel abrir o arquivo %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Ferramenta config:
 Use -writeconf nomedoarquivo para salvar as configura‡äes atuais.
 Use -writelang nomedoarquivo para salvar os textos do idioma utilizado.

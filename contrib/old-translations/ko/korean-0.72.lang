@@ -122,7 +122,7 @@ ipx -- UDP/IP 가상 구현을 거쳐 IPX를 사용합니다.
 :PROGRAM_CONFIG_FILE_ERROR
 %s 파일을 열 수 없습니다
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Config 도구:
 현재의 구성을 저장하려면 "-writeconf 파일 이름"을 사용하십시오.
 현재의 언어 문자열을 저장하려면 "-writelang 파일 이름"을 사용하십시오.

@@ -244,7 +244,7 @@ Olasç deßerler
 %s dosyasç aáçlamadç.
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Yapçlandçrma aracç:
 Geáerli yapçlandçrmayç yazdçrmak iáin -writeconf dosyaismi kullançn.
 Geáerli dil katarlarç iáin -writelang dosyaismi kullançn.

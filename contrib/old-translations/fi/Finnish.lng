@@ -115,7 +115,7 @@ T„m„n lohkon rivit ajetaan k„ynnistyksen yhteydess„.
 :PROGRAM_CONFIG_FILE_ERROR
 Tiedostoa %s ei voitu avata
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Asetusty”kalu:
 K„yt„ komentoa -writeconf tiednimi kirjoittaaksesi nykyiset asetukset.
 K„yt„ komentoa -writelang tiednimi kirjoittaaksesi nykyiset kielimerkkijonot.

@@ -166,7 +166,7 @@ Mo¾liwe warto˜ci.
 :PROGRAM_CONFIG_FILE_ERROR
 Nie mo¾na otworzy† pliku %s
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Narz©dzie Config:
 U¾yj -writeconf nazwapliku do zapisania aktualnej konfiguracji.
 U¾yj -writelang nazwapliku do zapisania aktualnych napis¢w j©zykowych.

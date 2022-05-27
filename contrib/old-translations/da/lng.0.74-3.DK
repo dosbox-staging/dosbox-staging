@@ -251,7 +251,7 @@ Mulige værdier
 Kan ikke †bne filen: %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Konfigurations-muligheder:
 CONFIG -writeconf  Skriver den aktuelle konfiguration til disk.
 CONFIG -writelang  Skriver de aktuelle sprogstrenge til disk.

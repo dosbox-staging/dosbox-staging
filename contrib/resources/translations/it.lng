@@ -676,7 +676,7 @@ Impossibile aprire il file %s
 Scrittura del file di configurazione in %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Strumento di configurazione:
 -writeconf o -wc senza parametro: scrive nel file di config. primario caricato.
 -writeconf o -wc [nomefile]: scrive il file nella cartella di configurazione.
@@ -1441,7 +1441,7 @@ Tabella codici %i caricata.
 Tabella codici %i caricata per il layout %s
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Configura una tastiera per una lingua specifica.
 
 Utilizzo:
@@ -1490,7 +1490,7 @@ File tabella codici mancante o non valido per il layout %s.
 
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
@@ -1533,7 +1533,7 @@ Il tipo deve essere uno dei seguenti:
   %s
 
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 Questo programma Š un segnaposto.
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP

@@ -573,7 +573,7 @@ Kann die Datei %s nicht îffnen
 Schreibe Konfigurationsdatei %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Config Tool:
 -writeconf / -wc ohne Parameter: in die primÑr geladene Config-Datei schreiben.
 -writeconf / -wc mit Dateiname: schreibt die Datei in das Konfig-Verzeichnis.
@@ -1824,7 +1824,7 @@ Beispiel:
   [32;1mloadrom[0m [36;1mbios.rom[0m
 
 .
-:PROGRAM_KEYB_HELP_LONG
+:SHELL_CMD_KEYB_HELP_LONG
 Konfiguriert eine Tastatur fÅr eine bestimmte Sprache.
 
 Verwendung:
@@ -1849,7 +1849,7 @@ Beispiele:
   [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 .
-:PROGRAM_PLACEHOLDER_SHORT_HELP
+:SHELL_CMD_PLACEHOLDER_HELP
 Dieses Programm ist ein Platzhalter.
 .
 :PROGRAM_PLACEHOLDER_LONG_HELP
@@ -2179,7 +2179,7 @@ Beispiele:
 Keine IDE-Controller verfÅgbar. Das Laufwerk wird keine IDE-Emulation haben.
 
 .
-:PROGRAM_SERIAL_HELP
+:SHELL_CMD_SERIAL_HELP_LONG
 Verwalte die seriellen Schnittstellen.
 Verwendungsarten:
   SERIAL /L | /LIST             Liste der aktuellen seriellen Schnittstellen.

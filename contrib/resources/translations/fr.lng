@@ -407,7 +407,7 @@ Impossible d'ouvrir le fichier %s
 êcriture du fichier de configuration %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Outil de configuration :
 -writeconf ou -wc sans paramätre : Çcrit dans le fichier de configuration primaire chargÇ.
 -writeconf ou -wc avec un nom de fichier : Çcrit le fichier dans le rÇpertoire de configuration.

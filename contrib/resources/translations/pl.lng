@@ -402,7 +402,7 @@ Nie mo¾na otworzy† pliku %s
 Writing config file %s
 
 .
-:PROGRAM_CONFIG_USAGE
+:SHELL_CMD_CONFIG_HELP_LONG
 Config tool:
 -writeconf or -wc without parameter: write to primary loaded config file.
 -writeconf or -wc with filename: write file to config directory.
