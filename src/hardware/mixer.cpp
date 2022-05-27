@@ -265,16 +265,16 @@ void MixerChannel::ConfigureResampler()
 	                                           : sample_rate;
 	const auto out_rate = mixer.sample_rate;
 	if (in_rate == out_rate) {
-		resample = false;
+		resampler.enabled = false;
 	} else {
-		if (!resampler) {
+		if (!resampler.state) {
 			constexpr auto num_channels = 2; // always stereo
 			constexpr auto quality = 5;
-			resampler = speex_resampler_init(
+			resampler.state = speex_resampler_init(
 			        num_channels, in_rate, out_rate, quality, nullptr);
 		}
-		speex_resampler_set_rate(resampler, in_rate, out_rate);
-		resample = true;
+		speex_resampler_set_rate(resampler.state, in_rate, out_rate);
+		resampler.enabled = true;
 	}
 }
 
@@ -559,15 +559,15 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 	}
 }
 
-spx_uint32_t estimate_max_out_frames(SpeexResamplerState *resampler,
+spx_uint32_t estimate_max_out_frames(SpeexResamplerState *resampler_state,
                                      const spx_uint32_t in_frames)
 {
-	assert(resampler);
+	assert(resampler_state);
 	assert(in_frames);
 
 	spx_uint32_t ratio_num = 0;
 	spx_uint32_t ratio_den = 0;
-	speex_resampler_get_ratio(resampler, &ratio_num, &ratio_den);
+	speex_resampler_get_ratio(resampler_state, &ratio_num, &ratio_den);
 	assert(ratio_num && ratio_den);
 
 	return ceil_udivide(in_frames * ratio_den, ratio_num);
@@ -582,16 +582,17 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	MIXER_LockAudioDevice();
 	last_samples_were_stereo = stereo;
 
-	auto &convert_out = resample ? mixer.resample_temp : mixer.resample_out;
+	auto &convert_out = resampler.enabled ? mixer.resample_temp
+	                                      : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
-	if (resample) {
+	if (resampler.enabled) {
 		spx_uint32_t in_frames = mixer.resample_temp.size() / 2;
-		spx_uint32_t out_frames = estimate_max_out_frames(resampler,
+		spx_uint32_t out_frames = estimate_max_out_frames(resampler.state,
 		                                                  in_frames);
 		mixer.resample_out.resize(out_frames * 2);
 
-		speex_resampler_process_interleaved_float(resampler,
+		speex_resampler_process_interleaved_float(resampler.state,
 		                                          mixer.resample_temp.data(),
 		                                          &in_frames,
 		                                          mixer.resample_out.data(),
@@ -784,9 +785,9 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 
 MixerChannel::~MixerChannel()
 {
-	if (resampler) {
-		speex_resampler_destroy(resampler);
-		resampler = nullptr;
+	if (resampler.state) {
+		speex_resampler_destroy(resampler.state);
+		resampler.state = nullptr;
 	}
 }
 

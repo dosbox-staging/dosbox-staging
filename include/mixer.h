@@ -219,8 +219,10 @@ private:
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
 
-	bool resample = false;
-	SpeexResamplerState *resampler = nullptr;
+	struct {
+		bool enabled = false;
+		SpeexResamplerState *state = nullptr;
+	} resampler = {};
 
 	struct {
 		bool enabled = false;
