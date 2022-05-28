@@ -64,9 +64,9 @@ public:
 class AutoexecEditor;
 
 struct SHELL_Cmd {
-	uint32_t flags = 0;                               // Flags about the command
 	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
 	const char *help = "";                       // String with command help
+	HELP_Filter filter = HELP_Filter::Common;
 	HELP_Category category = HELP_Category::Misc;
 };
 

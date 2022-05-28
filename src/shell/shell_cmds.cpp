@@ -49,37 +49,37 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "CALL",     {1, &DOS_Shell::CMD_CALL,     "CALL",     HELP_Category::Batch } },
-	{ "CD",       {1, &DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Category::File } },
-	{ "CHDIR",    {0, &DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Category::File } },
-	{ "CLS",      {1, &DOS_Shell::CMD_CLS,      "CLS",      HELP_Category::Misc} },
-	{ "COPY",     {1, &DOS_Shell::CMD_COPY,     "COPY",     HELP_Category::File} },
-	{ "DATE",     {0, &DOS_Shell::CMD_DATE,     "DATE",     HELP_Category::Misc } },
-	{ "DEL",      {1, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
-	{ "DELETE",   {0, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
-	{ "DIR",      {1, &DOS_Shell::CMD_DIR,      "DIR",      HELP_Category::File } },
-	{ "ECHO",     {0, &DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Category::Batch } },
-	{ "ERASE",    {0, &DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Category::File } },
-	{ "EXIT",     {1, &DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Category::Misc } },
-	{ "GOTO",     {0, &DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Category::Batch } },
-	{ "IF",       {0, &DOS_Shell::CMD_IF,       "IF",       HELP_Category::Batch } },
-	{ "LH",       {0, &DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Category::Misc } },
-	{ "LOADHIGH", {0, &DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Category::Misc } },
-	{ "MD",       {1, &DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Category::File } },
-	{ "MKDIR",    {0, &DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Category::File } },
-	{ "PATH",     {0, &DOS_Shell::CMD_PATH,     "PATH",     HELP_Category::Misc} },
-	{ "PAUSE",    {0, &DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Category::Batch } },
-	{ "RD",       {1, &DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Category::File } },
-	{ "REM",      {0, &DOS_Shell::CMD_REM,      "REM",      HELP_Category::Batch } },
-	{ "REN",      {1, &DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Category::File } },
-	{ "RENAME",   {0, &DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Category::File } },
-	{ "RMDIR",    {0, &DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Category::File } },
-	{ "SET",      {0, &DOS_Shell::CMD_SET,      "SET",      HELP_Category::Misc} },
-	{ "SHIFT",    {0, &DOS_Shell::CMD_SHIFT,    "SHIFT",    HELP_Category::Batch } },
-	{ "SUBST",    {0, &DOS_Shell::CMD_SUBST,    "SUBST",    HELP_Category::File} },
-	{ "TIME",     {0, &DOS_Shell::CMD_TIME,     "TIME",     HELP_Category::Misc } },
-	{ "TYPE",     {1, &DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Category::Misc } },
-	{ "VER",      {0, &DOS_Shell::CMD_VER,      "VER",      HELP_Category::Misc } },
+	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::Common, HELP_Category::Batch } },
+	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
+	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
+	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
+	{ "COPY",     {&DOS_Shell::CMD_COPY,     "COPY",     HELP_Filter::Common, HELP_Category::File} },
+	{ "DATE",     {&DOS_Shell::CMD_DATE,     "DATE",     HELP_Filter::All,    HELP_Category::Misc } },
+	{ "DEL",      {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::Common, HELP_Category::File } },
+	{ "DELETE",   {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
+	{ "DIR",      {&DOS_Shell::CMD_DIR,      "DIR",      HELP_Filter::Common, HELP_Category::File } },
+	{ "ECHO",     {&DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Filter::All,    HELP_Category::Batch } },
+	{ "ERASE",    {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
+	{ "EXIT",     {&DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Filter::Common, HELP_Category::Misc } },
+	{ "GOTO",     {&DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Filter::All,    HELP_Category::Batch } },
+	{ "IF",       {&DOS_Shell::CMD_IF,       "IF",       HELP_Filter::All,    HELP_Category::Batch } },
+	{ "LH",       {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
+	{ "LOADHIGH", {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
+	{ "MD",       {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::Common, HELP_Category::File } },
+	{ "MKDIR",    {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::All,    HELP_Category::File } },
+	{ "PATH",     {&DOS_Shell::CMD_PATH,     "PATH",     HELP_Filter::All,    HELP_Category::Misc} },
+	{ "PAUSE",    {&DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Filter::All,    HELP_Category::Batch } },
+	{ "RD",       {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::Common, HELP_Category::File } },
+	{ "REM",      {&DOS_Shell::CMD_REM,      "REM",      HELP_Filter::All,    HELP_Category::Batch } },
+	{ "REN",      {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::Common, HELP_Category::File } },
+	{ "RENAME",   {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::All,    HELP_Category::File } },
+	{ "RMDIR",    {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::All,    HELP_Category::File } },
+	{ "SET",      {&DOS_Shell::CMD_SET,      "SET",      HELP_Filter::All,    HELP_Category::Misc} },
+	{ "SHIFT",    {&DOS_Shell::CMD_SHIFT,    "SHIFT",    HELP_Filter::All,    HELP_Category::Batch } },
+	{ "SUBST",    {&DOS_Shell::CMD_SUBST,    "SUBST",    HELP_Filter::All,    HELP_Category::File} },
+	{ "TIME",     {&DOS_Shell::CMD_TIME,     "TIME",     HELP_Filter::All,    HELP_Category::Misc } },
+	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
+	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
 	};
 // clang-format on
 
@@ -303,13 +303,12 @@ void DOS_Shell::AddShellCmdsToHelpList() {
 		return;
 	}
 	for (const auto &c : shell_cmds) {
-		auto filter = c.second.flags == 1 ? HELP_Filter::Common : HELP_Filter::All;
 		HELP_AddToHelpList(c.first,
-		                 HELP_Detail{filter,
-		                        c.second.category,
-		                        HELP_CmdType::Shell,
-		                        c.second.help},
-		                 true);
+		                   HELP_Detail{c.second.filter,
+		                               c.second.category,
+		                               HELP_CmdType::Shell,
+		                               c.second.help},
+		                   true);
 	}
 	DOS_Shell::help_list_populated = true;
 }
