@@ -173,6 +173,7 @@ private:
 	void ConfigureResampler();
 	void UpdateZOHUpsamplerState();
 
+	std::string name = {};
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step

@@ -359,7 +359,31 @@ static void configure_filters(Section_prop* config)
 	tie(sb.opl_filter_type, std::ignore) = get_filter_params("opl_filter");
 }
 
-static void set_sb_filter()
+static void log_filter_config(const char *output_type, FilterType filter)
+{
+	static const std::map<FilterType, std::string> filter_name_map = {
+	        {FilterType::SB1, "Sound Blaster 1.0"},
+	        {FilterType::SB2, "Sound Blaster 2.0"},
+	        {FilterType::SBPro1, "Sound Blaster Pro 1"},
+	        {FilterType::SBPro2, "Sound Blaster Pro 2"},
+	        {FilterType::SB16, "Sound Blaster 16"},
+	};
+
+	if (filter == FilterType::None) {
+		LOG_MSG("%s: %s filter emulation disabled", CardType(), output_type);
+	} else {
+		auto it = filter_name_map.find(filter);
+		if (it != filter_name_map.end()) {
+			auto filter_type = it->second;
+			LOG_MSG("%s: Emulating %s %s output filter",
+			        CardType(),
+			        filter_type.c_str(),
+			        output_type);
+		}
+	}
+}
+
+static void configure_sb_filter()
 {
 	auto set_filter = [](const uint8_t order, const uint16_t cutoff_freq) {
 		sb.chan->ConfigureLowPassFilter(order, cutoff_freq);
@@ -404,9 +428,11 @@ static void set_sb_filter()
 		sb.chan->EnableZeroOrderHoldUpsampler(false);
 		break;
 	}
+
+	log_filter_config("PCM", sb.sb_filter_type);
 }
 
-static void set_opl_filter()
+static void configure_opl_filter()
 {
 	auto set_filter = [](mixer_channel_t chan,
 	                     const uint8_t order,
@@ -429,6 +455,8 @@ static void set_opl_filter()
 	case FilterType::SB16:
 	case FilterType::None: chan->SetLowPassFilter(FilterState::Off); break;
 	}
+
+	log_filter_config("OPL", sb.opl_filter_type);
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
@@ -1946,13 +1974,13 @@ public:
 		case OPL_opl3:
 		case OPL_opl3gold:
 			OPL_Init(section,oplmode);
-			set_opl_filter();
+			configure_opl_filter();
 			break;
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
 		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB");
-		set_sb_filter();
+		configure_sb_filter();
 
 		sb.dsp.state=DSP_S_NORMAL;
 		sb.dsp.out.lastval=0xaa;
@@ -1996,6 +2024,13 @@ public:
 			             sb.hw.base, sb.hw.irq, sb.hw.dma8,
 			             static_cast<int>(sb.type));
 		}
+
+		LOG_MSG("%s: Running on port %xh, irq=%d, dma8=%d, dma16=%d",
+		        CardType(),
+		        sb.hw.base,
+		        sb.hw.irq,
+		        sb.hw.dma8,
+		        sb.hw.dma16);
 
 		LOG_MSG("%s: %s", CardType(), set_blaster);
 		autoexecline.Install(set_blaster);

@@ -117,7 +117,10 @@ static struct mixer_t mixer = {};
 
 uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
-MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name) : envelope(_name), handler(_handler)
+MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name)
+        : name(_name),
+          envelope(_name),
+          handler(_handler)
 {}
 
 bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
@@ -377,6 +380,17 @@ void MixerChannel::AddSilence()
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
 	filter.state = state;
+
+	static const std::map<FilterState, std::string> filter_state_map = {
+	        {FilterState::Off, "disabed"},
+	        {FilterState::On, "enabled"},
+	        {FilterState::ForcedOn, "enabled (forced)"},
+	};
+	auto it = filter_state_map.find(state);
+	if (it != filter_state_map.end()) {
+		auto filter_state = it->second;
+		LOG_MSG("MIXER: %s channel filter %s", name.c_str(), filter_state.c_str());
+	}
 }
 
 void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
