@@ -131,6 +131,7 @@ public:
 	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
 
 	void SetCrossfeedStrength(const float strength);
+	float GetCrossfeedStrength();
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(uint16_t len, const Type *data);

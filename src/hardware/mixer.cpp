@@ -438,6 +438,11 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.pan_right = center + p;
 }
 
+float MixerChannel::GetCrossfeedStrength()
+{
+	return crossfeed.strength;
+}
+
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
 // This is only used to populate a lookup table that's 20-fold faster.
 constexpr int16_t u8to16(const int u_val)
@@ -1120,8 +1125,33 @@ public:
 				}
 			}
 
+			auto parse_prefixed_percentage = [](const char prefix,
+			                                    const std::string s,
+			                                    float &value_out) {
+				if (s.size() > 1 && s[0] == prefix) {
+					float p = 0.0f;
+					if (sscanf(s.c_str() + 1, "%f", &p)) {
+						value_out = clamp(p / 100, 0.0f, 1.0f);
+						return true;
+					}
+				}
+				return false;
+			};
+
+			// Global commands that apply to all channels
+			if (!is_master && !curr_chan) {
+				std::lock_guard lock(mixer.channel_mutex);
+
+				float value = 0.0f;
+				if (parse_prefixed_percentage('X', arg, value)) {
+					for (auto &[name, chan] : mixer.channels) {
+						chan->SetCrossfeedStrength(value);
+					}
+					continue;
+				}
+
 			// Only setting the volume is allowed for the MASTER channel
-			if (is_master) {
+			} else if (is_master) {
 				std::lock_guard lock(mixer.channel_mutex);
 
 				MakeVolume(const_cast<char *>(arg.c_str()),
@@ -1131,21 +1161,6 @@ public:
 			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
 				std::lock_guard lock(mixer.channel_mutex);
-
-				auto parse_prefixed_percentage = [](const char prefix,
-				                                    const std::string s,
-				                                    float &value_out) {
-					if (s.size() > 1 && s[0] == prefix) {
-						float p = 0.0f;
-						if (sscanf(s.c_str() + 1, "%f", &p)) {
-							value_out = clamp(p / 100,
-							                  0.0f,
-							                  1.0f);
-							return true;
-						}
-					}
-					return false;
-				};
 
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
@@ -1170,37 +1185,46 @@ public:
 		if (noShow)
 			return;
 
-		WriteOut("Channel      Volume     Volume(dB)   Rate(Hz)   Lineout mode\n");
+		WriteOut("Channel     Volume    Volume(dB)   Rate(Hz)  Lineout  Xfeed\n");
 		ShowSettings("MASTER",
 		             mixer.mastervol[0],
 		             mixer.mastervol[1],
 		             mixer.sample_rate,
-		             "Stereo (always)");
+		             "Stereo",
+		             "-");
 		{
 			std::lock_guard lock(mixer.channel_mutex);
 
-			for (auto &[name, channel] : mixer.channels)
+			for (auto &[name, channel] : mixer.channels) {
+				auto xfeed = channel->GetCrossfeedStrength() > 0.0f
+				                     ? std::to_string(static_cast<uint8_t>(
+				                               round(channel->GetCrossfeedStrength() *
+				                                     100)))
+				                     : "off";
+
 				ShowSettings(name.c_str(),
 				             channel->volmain[0],
 				             channel->volmain[1],
 				             channel->GetSampleRate(),
-				             channel->DescribeLineout().c_str());
+				             channel->DescribeLineout().c_str(),
+				             xfeed.c_str());
+			}
 		}
 	}
 
 private:
-	void ShowSettings(const char *name,
-	                  const float vol0,
-	                  const float vol1,
-	                  const int rate,
-	                  const char *lineout_mode)
+	void ShowSettings(const char *name, const float vol0, const float vol1,
+	                  const int rate, const char *lineout_mode, const char *xfeed)
 	{
-		WriteOut("%-11s %4.0f:%-4.0f  %+6.2f:%-+6.2f %8d   %s\n", name,
+		WriteOut("%-10s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %s     %3s\n",
+		         name,
 		         static_cast<double>(vol0 * 100),
 		         static_cast<double>(vol1 * 100),
 		         static_cast<double>(20 * log(vol0) / log(10.0f)),
-		         static_cast<double>(20 * log(vol1) / log(10.0f)), rate,
-		         lineout_mode);
+		         static_cast<double>(20 * log(vol1) / log(10.0f)),
+		         rate,
+		         lineout_mode,
+		         xfeed);
 	}
 
 	void ListMidi() { MIDI_ListAll(this); }
