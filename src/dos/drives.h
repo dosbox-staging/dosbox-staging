@@ -174,6 +174,7 @@ public:
 	Bit8u readSector(Bit32u sectnum, void * data);
 	Bit8u writeSector(Bit32u sectnum, void * data);
 	Bit32u getAbsoluteSectFromBytePos(Bit32u startClustNum, Bit32u bytePos);
+	Bit32u getSectorCount(void);
 	Bit32u getSectorSize(void);
 	Bit32u getClusterSize(void);
 	Bit32u getAbsoluteSectFromChain(Bit32u startClustNum, Bit32u logicalSector);
@@ -185,6 +186,7 @@ public:
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	imageDisk *loadedDisk;
 	bool created_successfully;
+	Bit32u partSectOff;
 private:
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
@@ -212,7 +214,6 @@ private:
 	bool absolute;
 	Bit8u fattype;
 	Bit32u CountOfClusters;
-	Bit32u partSectOff;
 	Bit32u firstDataSector;
 	Bit32u firstRootDirSect;
 
