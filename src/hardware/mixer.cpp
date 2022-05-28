@@ -1132,6 +1132,27 @@ public:
 			} else if (curr_chan) {
 				std::lock_guard lock(mixer.channel_mutex);
 
+				auto parse_prefixed_percentage = [](const char prefix,
+				                                    const std::string s,
+				                                    float &value_out) {
+					if (s.size() > 1 && s[0] == prefix) {
+						float p = 0.0f;
+						if (sscanf(s.c_str() + 1, "%f", &p)) {
+							value_out = clamp(p / 100,
+							                  0.0f,
+							                  1.0f);
+							return true;
+						}
+					}
+					return false;
+				};
+
+				float value = 0.0f;
+				if (parse_prefixed_percentage('X', arg, value)) {
+					curr_chan->SetCrossfeedStrength(value);
+					continue;
+				}
+
 				if (curr_chan->ChangeLineoutMap(arg))
 					continue;
 
