@@ -1104,18 +1104,23 @@ public:
 		auto is_master = false;
 
 		for (auto &arg : args) {
+			// Does this argument set the target channel of subsequent
+			// commands?
 			upcase(arg);
 			if (arg == "MASTER") {
 				curr_chan = nullptr;
 				is_master = true;
 				continue;
+			} else {
+				auto chan = MIXER_FindChannel(arg.c_str());
+				if (chan) {
+					curr_chan = chan;
+					is_master = false;
+					continue;
+				}
 			}
-			auto chan = MIXER_FindChannel(arg.c_str());
-			if (chan) {
-				curr_chan = chan;
-				is_master = false;
-				continue;
-			}
+
+			// Only setting the volume is allowed for the MASTER channel
 			if (is_master) {
 				std::lock_guard lock(mixer.channel_mutex);
 
@@ -1123,6 +1128,7 @@ public:
 				           mixer.mastervol[0],
 				           mixer.mastervol[1]);
 
+			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
 				std::lock_guard lock(mixer.channel_mutex);
 
