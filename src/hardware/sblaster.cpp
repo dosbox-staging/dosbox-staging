@@ -308,7 +308,7 @@ static void InitializeSpeakerState()
 	}
 }
 
-static void configure_filters(Section_prop* config)
+static void configure_filters(const Section_prop* config)
 {
 	auto get_filter_params = [&](const char * conf) {
 		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
@@ -359,7 +359,7 @@ static void configure_filters(Section_prop* config)
 	tie(sb.opl_filter_type, std::ignore) = get_filter_params("opl_filter");
 }
 
-static void log_filter_config(const char *output_type, FilterType filter)
+static void log_filter_config(const char *output_type, const FilterType filter)
 {
 	static const std::map<FilterType, std::string> filter_name_map = {
 	        {FilterType::SB1, "Sound Blaster 1.0"},
