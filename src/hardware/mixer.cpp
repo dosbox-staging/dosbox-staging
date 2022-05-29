@@ -1229,33 +1229,33 @@ private:
 
 	void ListMidi() { MIDI_ListAll(this); }
 
-	void AddMessages() 
+	void AddMessages()
 	{
 		MSG_Add("SHELL_CMD_MIXER_HELP_LONG",
 		        "Displays or changes the sound mixer settings.\n"
 		        "\n"
 		        "Usage:\n"
-		        "  [color=green]mixer[reset] [color=cyan]CHANNEL[reset] [color=white]VOLUME[reset] [/noshow]\n"
-		        "  [color=green]mixer[reset] [color=cyan]CHANNEL[reset] [color=white]LINEOUT[reset] [/noshow]\n"
+		        "  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]\n"
 		        "  [color=green]mixer[reset] [/listmidi]\n"
 		        "\n"
 		        "Where:\n"
-		        "  [color=cyan]CHANNEL[reset] is the sound channel to change the settings of.\n"
-		        "  [color=white]VOLUME[reset]  is either a percentage value between 0.0 and 100.0,\n"
-		        "          or a decibel value prefixed with [color=white]d[reset] (e.g. d-7.5).\n"
-		        "  [color=white]LINEOUT[reset] sets the channel's line out mode to one of the following:\n"
-		        "          [color=white]stereo, reverse, leftmono, rightmono[reset]"
+		        "  [color=cyan]CHANNEL[reset]  is the sound channel to change the settings of.\n"
+		        "  [color=white]COMMANDS[reset] is one or more of the following commands:\n"
+		        "    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])\n"
+		        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
+		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
+		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]\n"
 		        "\n"
 		        "Notes:\n"
 		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
-		        "  You can view the list of available MIDI devices with /listmidi.\n"
 		        "  You may change the settings of more than one channel in a single command.\n"
+		        "  If channel is unspecified, you can set crossfeed, reverb or chorus globally.\n"
+		        "  You can view the list of available MIDI devices with /listmidi.\n"
 		        "  The /noshow option applies the changes without showing the mixer settings.\n"
 		        "\n"
 		        "Examples:\n"
-		        "  [color=green]mixer[reset]\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-		        "  [color=green]mixer[reset] /listmidi");
+		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 };
 
