@@ -190,6 +190,7 @@ public:
 	uint8_t readSector(uint32_t sectnum, void * data);
 	uint8_t writeSector(uint32_t sectnum, void * data);
 	uint32_t getAbsoluteSectFromBytePos(uint32_t startClustNum, uint32_t bytePos);
+	uint32_t getSectorCount();
 	uint32_t getSectorSize(void);
 	uint32_t getClusterSize(void);
 	uint32_t getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t logicalSector);
@@ -201,6 +202,8 @@ public:
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
+	uint32_t partSectOff;
+
 private:
 	uint32_t getClusterValue(uint32_t clustNum);
 	void setClusterValue(uint32_t clustNum, uint32_t clustValue);
@@ -217,7 +220,6 @@ private:
 	bool readonly;
 	uint8_t fattype;
 	uint32_t CountOfClusters;
-	uint32_t partSectOff;
 	uint32_t firstDataSector;
 	uint32_t firstRootDirSect;
 

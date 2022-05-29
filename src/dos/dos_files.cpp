@@ -573,11 +573,14 @@ bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
 	if (device) {
 		Files[handle]=new DOS_Device(*Devices[devnum]);
 	} else {
-		exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
+		const auto old_errorcode = dos.errorcode;
+		dos.errorcode = 0;
+		exists = Drives[drive]->FileOpen(&Files[handle], fullname, flags);
 		if (exists)
 			Files[handle]->SetDrive(drive);
-		else if (dos.errorcode == DOSERR_ACCESS_CODE_INVALID)
+		if (dos.errorcode)
 			return false;
+		dos.errorcode = old_errorcode;
 	}
 	if (exists || device ) { 
 		Files[handle]->AddRef();
@@ -798,7 +801,8 @@ bool DOS_CreateTempFile(char * const name,uint16_t * entry) {
 			tempname++;
 		}
 	}
-	dos.errorcode=0;
+	const auto old_errorcode = dos.errorcode;
+	dos.errorcode = 0;
 
 	static const auto randomize_letter = CreateRandomizer<char>('A', 'Z');
 	do {
@@ -808,8 +812,12 @@ bool DOS_CreateTempFile(char * const name,uint16_t * entry) {
 		}
 		tempname[8]=0;
 	} while (DOS_FileExists(name));
+
 	DOS_CreateFile(name,0,entry);
-	if (dos.errorcode) return false;
+	if (dos.errorcode)
+		return false;
+
+	dos.errorcode = old_errorcode;
 	return true;
 }
 

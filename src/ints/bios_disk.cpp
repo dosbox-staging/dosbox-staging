@@ -297,7 +297,7 @@ static uint8_t GetDosDriveNumber(uint8_t biosNum) {
 }
 
 static bool driveInactive(uint8_t driveNum) {
-	if(driveNum>=(2 + MAX_HDD_IMAGES)) {
+	if (driveNum >= MAX_DISK_IMAGES) {
 		LOG(LOG_BIOS,LOG_ERROR)("Disk %d non-existent", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
@@ -380,19 +380,22 @@ static Bitu INT13_DiskHandler(void) {
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
 		}
-		if (!any_images) {
-			if (drivenum >= DOS_DRIVES || !Drives[drivenum] || Drives[drivenum]->isRemovable()) {
+		if (drivenum < MAX_DISK_IMAGES && imageDiskList[drivenum] == nullptr) {
+			if (!Drives[drivenum] || Drives[drivenum]->isRemovable()) {
 				reg_ah = 0x01;
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
 			// Inherit the Earth cdrom and Amberstar use it as a disk test
 			if (((reg_dl&0x80)==0x80) && (reg_dh==0) && ((reg_cl&0x3f)==1)) {
-				if (reg_ch==0) {
-					PhysPt ptr = PhysMake(SegValue(es),reg_bx);
+				if (reg_ch == 0) {
 					// write some MBR data into buffer for Amberstar installer
-					mem_writeb(ptr+0x1be,0x80); // first partition is active
-					mem_writeb(ptr+0x1c2,0x06); // first partition is FAT16B
+					real_writeb(SegValue(es),
+					            reg_bx + 0x1be,
+					            0x80); // first partition is active
+					real_writeb(SegValue(es),
+					            reg_bx + 0x1c2,
+					            0x06); // first partition is FAT16B
 				}
 				reg_ah = 0;
 				CALLBACK_SCF(false);

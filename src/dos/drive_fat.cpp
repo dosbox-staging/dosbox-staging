@@ -171,7 +171,10 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 
 	if(seekpos < filelength && *size == 0) {
 		/* Truncate file to current position */
-		myDrive->deleteClustChain(firstCluster, seekpos);
+		if (firstCluster != 0)
+			myDrive->deleteClustChain(firstCluster, seekpos);
+		if (seekpos == 0)
+			firstCluster = 0;
 		filelength = seekpos;
 		goto finalizeWrite;
 	}
@@ -554,7 +557,16 @@ uint8_t fatDrive::writeSector(uint32_t sectnum, void * data) {
 	return loadedDisk->Write_Sector(head, cylinder, sector, data);
 }
 
-uint32_t fatDrive::getSectorSize(void) {
+uint32_t fatDrive::getSectorCount()
+{
+	if (bootbuffer.totalsectorcount != 0)
+		return check_cast<uint32_t>(bootbuffer.totalsectorcount);
+	else
+		return bootbuffer.totalsecdword;
+}
+
+uint32_t fatDrive::getSectorSize(void)
+{
 	return bootbuffer.bytespersector;
 }
 
@@ -720,12 +732,12 @@ fatDrive::fatDrive(const char *sysFilename,
                    bool roflag)
 	: loadedDisk(nullptr),
 	  created_successfully(true),
+	  partSectOff(0),
 	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
 	  absolute(false),
 	  readonly(roflag),
 	  fattype(0),
 	  CountOfClusters(0),
-	  partSectOff(0),
 	  firstDataSector(0),
 	  firstRootDirSect(0),
 	  cwdDirCluster(0),
@@ -989,9 +1001,12 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 	/* Check if file already exists */
 	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
 		/* Truncate file */
-		fileEntry.entrysize=0;
+		if (fileEntry.loFirstClust != 0) {
+			deleteClustChain(fileEntry.loFirstClust, 0);
+			fileEntry.loFirstClust = 0;
+		}
+		fileEntry.entrysize = 0;
 		directoryChange(dirClust, &fileEntry, subEntry);
-		if(fileEntry.loFirstClust != 0) deleteClustChain(fileEntry.loFirstClust, 0);
 	} else {
 		/* Can we even get the name of the file itself? */
 		if(!getEntryName(name, &dirName[0])) return false;

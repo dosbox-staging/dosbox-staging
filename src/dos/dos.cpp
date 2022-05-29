@@ -26,6 +26,7 @@
 
 #include "bios.h"
 #include "callback.h"
+#include "drives.h"
 #include "mem.h"
 #include "regs.h"
 #include "serialport.h"
@@ -1377,16 +1378,55 @@ static Bitu DOS_27Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bitu DOS_25Handler(void) {
+static uint16_t DOS_SectorAccess(const bool read)
+{
+	auto drive = static_cast<fatDrive *>(Drives[reg_al]);
+	auto bufferSeg = SegValue(ds);
+	auto bufferOff = reg_bx;
+	auto sectorCnt = reg_cx;
+	auto sectorNum = static_cast<uint32_t>(reg_dx) + drive->partSectOff;
+	auto sectorEnd = drive->getSectorCount() + drive->partSectOff;
+
+	if (sectorCnt == 0xffff) { // large partition form
+		bufferSeg = real_readw(SegValue(ds), reg_bx + 8);
+		bufferOff = real_readw(SegValue(ds), reg_bx + 6);
+		sectorCnt = real_readw(SegValue(ds), reg_bx + 4);
+		sectorNum = real_readd(SegValue(ds), reg_bx + 0) + drive->partSectOff;
+	} else if (sectorEnd > 0xffff)
+		return 0x0207; // must use large partition form
+
+	uint8_t sectorBuf[512];
+	while (sectorCnt--) {
+		if (sectorNum >= sectorEnd)
+			return 0x0408; // sector not found
+		if (read) {
+			if (drive->readSector(sectorNum++, &sectorBuf))
+				return 0x0408;
+			for (const auto& sectorVal : sectorBuf)
+				real_writeb(bufferSeg, bufferOff++, sectorVal);
+		} else {
+			for (auto &sectorVal : sectorBuf)
+				sectorVal = real_readb(bufferSeg, bufferOff++);
+			if (drive->writeSector(sectorNum++, &sectorBuf))
+				return 0x0408;
+		}
+	}
+	return 0;
+}
+
+static Bitu DOS_25Handler(void)
+{
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
+	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+		reg_ax = DOS_SectorAccess(true);
+		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
 		if (reg_cx == 1 && reg_dx == 0) {
 			if (reg_al >= 2) {
-				PhysPt ptr = PhysMake(SegValue(ds),reg_bx);
 				// write some BPB data into buffer for MicroProse installers
-				mem_writew(ptr+0x1c,0x3f); // hidden sectors
+				real_writew(SegValue(ds), reg_bx + 0x1c, 0x3f); // hidden sectors
 			}
 		} else {
 			LOG(LOG_DOSMISC,LOG_NORMAL)("int 25 called but not as disk detection drive %u",reg_al);
@@ -1401,6 +1441,9 @@ static Bitu DOS_26Handler(void) {
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
+	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+		reg_ax = DOS_SectorAccess(false);
+		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
 		SETFLAGBIT(CF,false);
 		reg_ax = 0;

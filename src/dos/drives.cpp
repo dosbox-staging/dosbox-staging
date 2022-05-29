@@ -15,12 +15,13 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
 #include "drives.h"
 
+#include <string_view>
+
+#include "bios_disk.h"
 #include "ide.h"
 #include "string_utils.h"
-#include <string_view>
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
 
@@ -264,7 +265,17 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		currentDisk = (currentDisk + 1) % numDisks;
 		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
 		driveInfos[drive].currentDisk = currentDisk;
-		
+		if (drive < MAX_DISK_IMAGES && imageDiskList[drive] != nullptr) {
+			if (strncmp(newDisk->GetInfo(), "fatDrive", 8) == 0) {
+				imageDiskList[drive] = reinterpret_cast<fatDrive *>(newDisk)->loadedDisk;
+			} else {
+				imageDiskList[drive].reset(reinterpret_cast<imageDisk *>(newDisk));
+			}
+			if ((drive == 2 || drive == 3) && imageDiskList[drive]->hardDrive) {
+				updateDPT();
+			}
+		}
+
 		// copy working directory, acquire system resources and finally switch to next drive		
 		strcpy(newDisk->curdir, oldDisk->curdir);
 		newDisk->Activate();

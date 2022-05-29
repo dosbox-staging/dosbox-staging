@@ -346,10 +346,12 @@ uint8_t DOS_FindDevice(char const * name) {
 	char* name_part = strrchr(fullname,'\\');
 	if(name_part) {
 		*name_part++ = 0;
-		//Check validity of leading directory.
-		if(!Drives[drive]->TestDir(fullname)) return DOS_DEVICES;
-	} else name_part = fullname;
-   
+		// Check validity of leading directory.
+		//  if(!Drives[drive]->TestDir(fullname))
+		//      return DOS_DEVICES; //can be invalid
+	} else
+		name_part = fullname;
+
 	char* dot = strrchr(name_part,'.');
 	if(dot) *dot = 0; //no ext checking
 
