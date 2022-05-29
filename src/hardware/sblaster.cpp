@@ -442,6 +442,7 @@ static void configure_opl_filter()
 	};
 
 	auto chan = MIXER_FindChannel("FM");
+	assert(chan);
 	if (!chan)
 		return;
 
