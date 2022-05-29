@@ -382,7 +382,7 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	filter.state = state;
 
 	static const std::map<FilterState, std::string> filter_state_map = {
-	        {FilterState::Off, "disabed"},
+	        {FilterState::Off, "disabled"},
 	        {FilterState::On, "enabled"},
 	        {FilterState::ForcedOn, "enabled (forced)"},
 	};
