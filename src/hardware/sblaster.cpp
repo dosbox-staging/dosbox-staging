@@ -370,12 +370,12 @@ static void log_filter_config(const char *output_type, const FilterType filter)
 	};
 
 	if (filter == FilterType::None) {
-		LOG_MSG("%s: %s filter emulation disabled", CardType(), output_type);
+		LOG_MSG("%s: %s filter disabled", CardType(), output_type);
 	} else {
 		auto it = filter_name_map.find(filter);
 		if (it != filter_name_map.end()) {
 			auto filter_type = it->second;
-			LOG_MSG("%s: Emulating %s %s output filter",
+			LOG_MSG("%s: %s %s output filter enabled",
 			        CardType(),
 			        filter_type.c_str(),
 			        output_type);
