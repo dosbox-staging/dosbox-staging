@@ -1160,8 +1160,8 @@ public:
 
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
-					for (auto &[name, chan] : mixer.channels) {
-						chan->SetCrossfeedStrength(value);
+					for (auto &it : mixer.channels) {
+						it.second->SetCrossfeedStrength(value);
 					}
 					continue;
 				}
@@ -1211,18 +1211,23 @@ public:
 		{
 			std::lock_guard lock(mixer.channel_mutex);
 
-			for (auto &[name, channel] : mixer.channels) {
-				auto xfeed = channel->GetCrossfeedStrength() > 0.0f
-				                     ? std::to_string(static_cast<uint8_t>(
-				                               round(channel->GetCrossfeedStrength() *
-				                                     100)))
-				                     : "off";
+			for (auto &[name, chan] : mixer.channels) {
+				std::string xfeed = "-";
+				if (chan->HasFeature(ChannelFeature::Stereo)) {
+					if (chan->GetCrossfeedStrength() > 0.0f) {
+						xfeed = std::to_string(static_cast<uint8_t>(
+						        round(chan->GetCrossfeedStrength() *
+						              100)));
+					} else {
+						xfeed = "off";
+					}
+				}
 
 				ShowSettings(name.c_str(),
-				             channel->volmain[0],
-				             channel->volmain[1],
-				             channel->GetSampleRate(),
-				             channel->DescribeLineout().c_str(),
+				             chan->volmain[0],
+				             chan->volmain[1],
+				             chan->GetSampleRate(),
+				             chan->DescribeLineout().c_str(),
 				             xfeed.c_str());
 			}
 		}
