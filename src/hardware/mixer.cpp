@@ -820,10 +820,6 @@ std::string MixerChannel::DescribeLineout() const
 		return "Stereo";
 	if (output_map == REVERSE)
 		return "Reverse";
-	if (output_map == LEFT_MONO)
-		return "LeftMono";
-	if (output_map == RIGHT_MONO)
-		return "RightMono";
 
 	// Output_map is programmtically set (not directly assigned from user
 	// data), so we can assert.
@@ -842,10 +838,6 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 		output_map = STEREO;
 	else if (choice == "reverse")
 		output_map = REVERSE;
-	else if (choice == "leftmono")
-		output_map = LEFT_MONO;
-	else if (choice == "rightmono")
-		output_map = RIGHT_MONO;
 	else
 		return false;
 

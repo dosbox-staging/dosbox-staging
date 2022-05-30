@@ -214,8 +214,6 @@ private:
 
 	static constexpr StereoLine STEREO = {LEFT, RIGHT};
 	static constexpr StereoLine REVERSE = {RIGHT, LEFT};
-	static constexpr StereoLine LEFT_MONO = {LEFT, LEFT};
-	static constexpr StereoLine RIGHT_MONO = {RIGHT, RIGHT};
 
 	// User-configurable that defines how the channel's stereo line maps
 	// into the mixer.
