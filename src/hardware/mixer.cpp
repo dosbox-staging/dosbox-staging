@@ -1194,35 +1194,42 @@ private:
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
-	void MakeVolume(char * scan,float & vol0,float & vol1) {
-		Bitu w=0;
-		bool db=(toupper(*scan)=='D');
-		if (db) scan++;
+	void MakeVolume(char *scan, float &vol0, float &vol1)
+	{
+		Bitu w = 0;
+		bool db = (toupper(*scan) == 'D');
+		if (db)
+			scan++;
+
 		while (*scan) {
-			if (*scan==':') {
-				++scan;w=1;
+			if (*scan == ':') {
+				++scan;
+				w = 1;
 			}
-			char * before=scan;
-			float val=(float)strtod(scan,&scan);
-			if (before==scan) {
-				++scan;continue;
+			char *before = scan;
+			float val = (float)strtod(scan, &scan);
+			if (before == scan) {
+				++scan;
+				continue;
 			}
-			if (!db) val/=100;
+			if (!db)
+				val /= 100;
 			else
 				val = powf(10.0f, val / 20.0f);
-			if (val<0) val=1.0f;
+			if (val < 0)
+				val = 1.0f;
 
 			const auto min_vol = powf(10.0f, -99.99f / 20.0f);
 			constexpr auto max_vol = 99.99f;
 			val = clamp(val, min_vol, max_vol);
 
-			if (!w) {
-				vol0=val;
-			} else {
-				vol1=val;
-			}
+			if (!w)
+				vol0 = val;
+			else
+				vol1 = val;
 		}
-		if (!w) vol1=vol0;
+		if (!w)
+			vol1 = vol0;
 	}
 
 	void ShowMixerStatus()
