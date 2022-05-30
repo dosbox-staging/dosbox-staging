@@ -1235,17 +1235,17 @@ private:
 	void ShowMixerStatus()
 	{
 		auto show_channel = [this](const std::string name,
-		                           const float vol0,
-		                           const float vol1,
+		                           const float vol_left,
+		                           const float vol_right,
 		                           const int rate,
 		                           const std::string mode,
 		                           const std::string xfeed) {
 			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
 			         name.c_str(),
-			         static_cast<double>(vol0 * 100),
-			         static_cast<double>(vol1 * 100),
-			         static_cast<double>(20 * log(vol0) / log(10.0f)),
-			         static_cast<double>(20 * log(vol1) / log(10.0f)),
+			         vol_left * 100.0f,
+			         vol_right * 100.0f,
+			         20.0f * log(vol_left) / log(10.0f),
+			         20.0f * log(vol_right) / log(10.0f),
 			         rate,
 			         mode.c_str(),
 			         xfeed.c_str());
@@ -1268,21 +1268,21 @@ private:
 			if (chan->HasFeature(ChannelFeature::Stereo)) {
 				if (chan->GetCrossfeedStrength() > 0.0f) {
 					xfeed = std::to_string(static_cast<uint8_t>(
-							round(chan->GetCrossfeedStrength() *
-								  100)));
+					        round(chan->GetCrossfeedStrength() *
+					              100)));
 				} else {
 					xfeed = "off";
 				}
 			}
 
-			auto s = std::string("[color=cyan]") + name +
-					 std::string("[reset]");
+			auto channel_name = std::string("[color=cyan]") + name +
+			                    std::string("[reset]");
 
 			auto mode = chan->HasFeature(ChannelFeature::Stereo)
-								? chan->DescribeLineout()
-								: "Mono";
+			                    ? chan->DescribeLineout()
+			                    : "Mono";
 
-			show_channel(convert_ansi_markup(s.c_str()),
+			show_channel(convert_ansi_markup(channel_name),
 			             chan->volmain[0],
 			             chan->volmain[1],
 			             chan->GetSampleRate(),
