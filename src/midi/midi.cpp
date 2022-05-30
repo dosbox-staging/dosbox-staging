@@ -29,6 +29,7 @@
 
 #include <SDL.h>
 
+#include "ansi_code_markup.h"
 #include "cross.h"
 #include "hardware.h"
 #include "mapper.h"
@@ -318,7 +319,9 @@ void MIDI_ListAll(Program *caller)
 		if (name == "none")
 			continue;
 
-		caller->WriteOut("%s:\n", name.c_str());
+		caller->WriteOut(
+		        convert_ansi_markup("[color=white]%s:[reset]\n").c_str(),
+		        name.c_str());
 
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED)
