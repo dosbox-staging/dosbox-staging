@@ -1251,6 +1251,8 @@ private:
 			         xfeed.c_str());
 		};
 
+		std::lock_guard lock(mixer.channel_mutex);
+
 		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
 		                 .c_str());
 
@@ -1260,8 +1262,6 @@ private:
 		             mixer.sample_rate,
 		             "Stereo",
 		             "-");
-
-		std::lock_guard lock(mixer.channel_mutex);
 
 		for (auto &[name, chan] : mixer.channels) {
 			std::string xfeed = "-";
