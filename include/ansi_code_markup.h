@@ -31,4 +31,12 @@
  */
 std::string convert_ansi_markup(const char* str);
 
+/*!
+ * \brief Convert marked up strings to strings with ANSI codes
+ * 
+ * \param str 
+ * \return std::string 
+ */
+std::string convert_ansi_markup(std::string &str);
+
 #endif // DOSBOX_ANSI_CODE_MARKUP_H
