@@ -1132,9 +1132,9 @@ public:
 			} else if (is_master) {
 				std::lock_guard lock(mixer.channel_mutex);
 
-				MakeVolume(const_cast<char *>(arg.c_str()),
-				           mixer.mastervol[0],
-				           mixer.mastervol[1]);
+				ParseVolume(const_cast<char *>(arg.c_str()),
+				            mixer.mastervol[0],
+				            mixer.mastervol[1]);
 
 			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
@@ -1151,9 +1151,9 @@ public:
 
 				float left_vol = 0;
 				float right_vol = 0;
-				MakeVolume(const_cast<char *>(arg.c_str()),
-				           left_vol,
-				           right_vol);
+				ParseVolume(const_cast<char *>(arg.c_str()),
+				            left_vol,
+				            right_vol);
 
 				curr_chan->SetVolume(left_vol, right_vol);
 				curr_chan->UpdateVolume();
@@ -1194,7 +1194,7 @@ private:
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
-	void MakeVolume(char *scan, float &vol0, float &vol1)
+	void ParseVolume(char *scan, float &vol0, float &vol1)
 	{
 		Bitu w = 0;
 		bool db = (toupper(*scan) == 'D');
