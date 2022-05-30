@@ -49,7 +49,7 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::Common, HELP_Category::Batch } },
+	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All, HELP_Category::Batch } },
 	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
 	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
@@ -271,6 +271,11 @@ void DOS_Shell::PrintHelpForCommands(HELP_Filter req_filter)
 			rows_printed = 0;
 		}
 	};
+	auto add_blank_line = [&]() {
+		WriteOut("\n");
+		page_break_if_required();
+	};
+
 	for (const auto &cat : {HELP_Category::Dosbox, HELP_Category::File, HELP_Category::Batch, HELP_Category::Misc}) {
 		bool category_started = false;
 		for (const auto &s : HELP_GetHelpList()) {
@@ -280,6 +285,15 @@ void DOS_Shell::PrintHelpForCommands(HELP_Filter req_filter)
 			if (s.second.category != cat)
 				continue;
 			if (!category_started) {
+				// Only add a newline to the first category heading when
+				// displaying "common" help
+				if (cat == HELP_Category::Dosbox) {
+					if (req_filter == HELP_Filter::Common) {
+						add_blank_line();
+					}
+				} else {
+					add_blank_line();
+				}
 				auto header_pattern = convert_ansi_markup("[color=blue]%s[reset]\n");
 				WriteOut(header_pattern.c_str(), HELP_CategoryHeading(cat));
 				category_started = true;
