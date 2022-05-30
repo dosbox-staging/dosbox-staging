@@ -1219,11 +1219,16 @@ public:
 				
 				auto s = std::string("[color=cyan]") + name +
 				         std::string("[reset]");
+
+				auto mode = chan->HasFeature(ChannelFeature::Stereo)
+				                    ? chan->DescribeLineout()
+				                    : "Mono";
+
 				ShowSettings(convert_ansi_markup(s.c_str()).c_str(),
 				             chan->volmain[0],
 				             chan->volmain[1],
 				             chan->GetSampleRate(),
-				             chan->DescribeLineout().c_str(),
+				             mode.c_str(),
 				             xfeed.c_str());
 			}
 		}
@@ -1231,16 +1236,16 @@ public:
 
 private:
 	void ShowSettings(const char *name, const float vol0, const float vol1,
-	                  const int rate, const char *lineout_mode, const char *xfeed)
+	                  const int rate, const char *mode, const char *xfeed)
 	{
-		WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %s     %3s\n",
+		WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
 		         name,
 		         static_cast<double>(vol0 * 100),
 		         static_cast<double>(vol1 * 100),
 		         static_cast<double>(20 * log(vol0) / log(10.0f)),
 		         static_cast<double>(20 * log(vol1) / log(10.0f)),
 		         rate,
-		         lineout_mode,
+		         mode,
 		         xfeed);
 	}
 
