@@ -1194,7 +1194,7 @@ public:
 		if (noShow)
 			return;
 
-		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Lineout  Xfeed[reset]\n")
+		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
 		                 .c_str());
 		ShowSettings(convert_ansi_markup("[color=cyan]MASTER[reset]").c_str(),
 		             mixer.mastervol[0],
