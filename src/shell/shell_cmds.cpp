@@ -186,15 +186,22 @@ void DOS_Shell::DoCommand(char * line) {
 	WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),cmd_buffer);
 }
 
-#define HELP(command) \
-	if (ScanCMDBool(args,"?")) { \
-		WriteOut(MSG_Get("SHELL_CMD_" command "_HELP")); \
-		const char* long_m = MSG_Get("SHELL_CMD_" command "_HELP_LONG"); \
-		WriteOut("\n"); \
-		if (strcmp("Message not Found!\n",long_m)) WriteOut(long_m); \
-		else WriteOut(command "\n"); \
-		return; \
+bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
+	if (!args || !ScanCMDBool(args, "?")) {
+		return false;
 	}
+	std::string short_key("SHELL_CMD_" + command + "_HELP");
+	WriteOut("%s\n", MSG_Get(short_key.c_str()));
+	std::string long_key("SHELL_CMD_" + command + "_HELP_LONG");
+	if (MSG_Exists(long_key.c_str())) {
+		WriteOut("%s", MSG_Get(long_key.c_str()));
+	} else {
+		WriteOut("%s\n", command.c_str());
+	}
+	return true;
+}
+
+#define HELP(command) if (WriteHelp((command), args)) return
 
 void DOS_Shell::CMD_CLS(char *args)
 {

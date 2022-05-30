@@ -74,6 +74,7 @@ class DOS_Shell : public Program {
 private:
 	void PrintHelpForCommands(HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
+	bool WriteHelp(const std::string &command, char* args);
 
 	friend class AutoexecEditor;
 	std::list<std::string> l_history{};
