@@ -1099,6 +1099,47 @@ public:
 		if (!w) vol1=vol0;
 	}
 
+	void ShowMixerStatus()
+	{
+		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
+		                 .c_str());
+		ShowSettings(convert_ansi_markup("[color=cyan]MASTER[reset]").c_str(),
+		             mixer.mastervol[0],
+		             mixer.mastervol[1],
+		             mixer.sample_rate,
+		             "Stereo",
+		             "-");
+
+		std::lock_guard lock(mixer.channel_mutex);
+
+		for (auto &[name, chan] : mixer.channels) {
+			std::string xfeed = "-";
+			if (chan->HasFeature(ChannelFeature::Stereo)) {
+				if (chan->GetCrossfeedStrength() > 0.0f) {
+					xfeed = std::to_string(static_cast<uint8_t>(
+							round(chan->GetCrossfeedStrength() *
+								  100)));
+				} else {
+					xfeed = "off";
+				}
+			}
+
+			auto s = std::string("[color=cyan]") + name +
+					 std::string("[reset]");
+
+			auto mode = chan->HasFeature(ChannelFeature::Stereo)
+								? chan->DescribeLineout()
+								: "Mono";
+
+			ShowSettings(convert_ansi_markup(s.c_str()).c_str(),
+						 chan->volmain[0],
+						 chan->volmain[1],
+						 chan->GetSampleRate(),
+						 mode.c_str(),
+						 xfeed.c_str());
+		}
+	}
+
 	void Run()
 	{
 		if (HelpRequested()) {
@@ -1109,7 +1150,7 @@ public:
 			ListMidi();
 			return;
 		}
-		auto noShow = cmd->FindExist("/NOSHOW", true);
+		auto showStatus = !cmd->FindExist("/NOSHOW", true);
 
 		std::vector<std::string> args = {};
 		cmd->FillVector(args);
@@ -1191,47 +1232,8 @@ public:
 			}
 		}
 
-		if (noShow)
-			return;
-
-		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
-		                 .c_str());
-		ShowSettings(convert_ansi_markup("[color=cyan]MASTER[reset]").c_str(),
-		             mixer.mastervol[0],
-		             mixer.mastervol[1],
-		             mixer.sample_rate,
-		             "Stereo",
-		             "-");
-		{
-			std::lock_guard lock(mixer.channel_mutex);
-
-			for (auto &[name, chan] : mixer.channels) {
-				std::string xfeed = "-";
-				if (chan->HasFeature(ChannelFeature::Stereo)) {
-					if (chan->GetCrossfeedStrength() > 0.0f) {
-						xfeed = std::to_string(static_cast<uint8_t>(
-						        round(chan->GetCrossfeedStrength() *
-						              100)));
-					} else {
-						xfeed = "off";
-					}
-				}
-				
-				auto s = std::string("[color=cyan]") + name +
-				         std::string("[reset]");
-
-				auto mode = chan->HasFeature(ChannelFeature::Stereo)
-				                    ? chan->DescribeLineout()
-				                    : "Mono";
-
-				ShowSettings(convert_ansi_markup(s.c_str()).c_str(),
-				             chan->volmain[0],
-				             chan->volmain[1],
-				             chan->GetSampleRate(),
-				             mode.c_str(),
-				             xfeed.c_str());
-			}
-		}
+		if (showStatus)
+			ShowMixerStatus();
 	}
 
 private:
