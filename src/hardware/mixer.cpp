@@ -46,6 +46,7 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "ansi_code_markup.h"
 #include "mem.h"
 #include "pic.h"
 #include "mixer.h"
@@ -1201,8 +1202,9 @@ public:
 		if (noShow)
 			return;
 
-		WriteOut("Channel     Volume    Volume(dB)   Rate(Hz)  Lineout  Xfeed\n");
-		ShowSettings("MASTER",
+		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Lineout  Xfeed[reset]\n")
+		                 .c_str());
+		ShowSettings(convert_ansi_markup("[color=cyan]MASTER[reset]").c_str(),
 		             mixer.mastervol[0],
 		             mixer.mastervol[1],
 		             mixer.sample_rate,
@@ -1222,8 +1224,10 @@ public:
 						xfeed = "off";
 					}
 				}
-
-				ShowSettings(name.c_str(),
+				
+				auto s = std::string("[color=cyan]") + name +
+				         std::string("[reset]");
+				ShowSettings(convert_ansi_markup(s.c_str()).c_str(),
 				             chan->volmain[0],
 				             chan->volmain[1],
 				             chan->GetSampleRate(),
@@ -1237,7 +1241,7 @@ private:
 	void ShowSettings(const char *name, const float vol0, const float vol1,
 	                  const int rate, const char *lineout_mode, const char *xfeed)
 	{
-		WriteOut("%-10s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %s     %3s\n",
+		WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %s     %3s\n",
 		         name,
 		         static_cast<double>(vol0 * 100),
 		         static_cast<double>(vol1 * 100),
