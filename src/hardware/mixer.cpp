@@ -1147,7 +1147,7 @@ public:
 			return;
 		}
 		if (cmd->FindExist("/LISTMIDI")) {
-			ListMidi();
+			MIDI_ListAll(this);
 			return;
 		}
 		auto showStatus = !cmd->FindExist("/NOSHOW", true);
@@ -1250,8 +1250,6 @@ private:
 		         mode,
 		         xfeed);
 	}
-
-	void ListMidi() { MIDI_ListAll(this); }
 
 	void AddMessages()
 	{
