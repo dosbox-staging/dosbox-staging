@@ -1234,27 +1234,27 @@ private:
 
 	void ShowMixerStatus()
 	{
-		auto show_channel = [this](const char *name,
+		auto show_channel = [this](const std::string name,
 		                           const float vol0,
 		                           const float vol1,
 		                           const int rate,
-		                           const char *mode,
-		                           const char *xfeed) {
+		                           const std::string mode,
+		                           const std::string xfeed) {
 			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
-			         name,
+			         name.c_str(),
 			         static_cast<double>(vol0 * 100),
 			         static_cast<double>(vol1 * 100),
 			         static_cast<double>(20 * log(vol0) / log(10.0f)),
 			         static_cast<double>(20 * log(vol1) / log(10.0f)),
 			         rate,
-			         mode,
-			         xfeed);
+			         mode.c_str(),
+			         xfeed.c_str());
 		};
 
 		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
 		                 .c_str());
 
-		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]").c_str(),
+		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
 		             mixer.mastervol[0],
 		             mixer.mastervol[1],
 		             mixer.sample_rate,
@@ -1282,12 +1282,12 @@ private:
 								? chan->DescribeLineout()
 								: "Mono";
 
-			show_channel(convert_ansi_markup(s.c_str()).c_str(),
+			show_channel(convert_ansi_markup(s.c_str()),
 			             chan->volmain[0],
 			             chan->volmain[1],
 			             chan->GetSampleRate(),
-			             mode.c_str(),
-			             xfeed.c_str());
+			             mode,
+			             xfeed);
 		}
 	}
 };
