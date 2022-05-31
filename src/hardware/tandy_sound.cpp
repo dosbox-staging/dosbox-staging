@@ -197,7 +197,12 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile)
 
 	// Run the audio channel at the mixer's native rate
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
-	channel = MIXER_AddChannel(callback, 0, "TANDYDAC");
+	channel = MIXER_AddChannel(callback,
+	                           0,
+	                           "TANDYDAC",
+	                           {ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend});
+
 	sample_rate = channel->GetSampleRate();
 
 	// Register DAC per-port read handlers
@@ -392,7 +397,11 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 
 	// Run the audio channel at the mixer's native rate
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
-	channel = MIXER_AddChannel(callback, 0, "TANDY");
+	channel = MIXER_AddChannel(callback,
+	                           0,
+	                           "TANDY",
+	                           {ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend});
 
 	// Setup the resampler
 	const auto sample_rate = channel->GetSampleRate();

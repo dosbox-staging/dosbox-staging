@@ -31,6 +31,7 @@
 #include <cstring>
 #include <map>
 #include <mutex>
+#include <set>
 #include <sys/types.h>
 
 #if defined (WIN32)
@@ -117,20 +118,29 @@ static struct mixer_t mixer = {};
 
 uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
-MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name)
+MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
+                           const std::set<ChannelFeature> &_features)
         : name(_name),
           envelope(_name),
-          handler(_handler)
+          handler(_handler),
+          features(_features)
 {}
+
+bool MixerChannel::HasFeature(ChannelFeature feature)
+{
+	return features.find(feature) != features.end();
+}
 
 bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
 {
 	return left == other.left && right == other.right;
 }
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name)
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
+                                 const char *name,
+                                 const std::set<ChannelFeature> &features)
 {
-	auto chan = std::make_shared<MixerChannel>(handler, name);
+	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
 	chan->SetScale(1.0);
 	chan->SetVolume(1, 1);

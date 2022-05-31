@@ -602,7 +602,12 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	// Register the Audio and DMA channels
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
-	audio_channel = MIXER_AddChannel(mixer_callback, 0, "GUS");
+	audio_channel = MIXER_AddChannel(mixer_callback,
+	                                 0,
+	                                 "GUS",
+	                                 {ChannelFeature::Stereo,
+	                                  ChannelFeature::ReverbSend,
+	                                  ChannelFeature::ChorusSend});
 
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);

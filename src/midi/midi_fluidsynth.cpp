@@ -223,7 +223,11 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// Setup the mixer channel and level callback
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback, 0, "FSYNTH");
+
+	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                            0,
+	                                            "FSYNTH",
+	                                            {ChannelFeature::Stereo});
 
 	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
 	                                       this, std::placeholders::_1);

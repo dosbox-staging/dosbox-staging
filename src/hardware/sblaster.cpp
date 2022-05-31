@@ -1980,7 +1980,13 @@ public:
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
-		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB");
+		std::set channel_features = {ChannelFeature::ReverbSend,
+		                             ChannelFeature::ChorusSend};
+
+		if (sb.type == SBT_PRO1 || sb.type == SBT_PRO2 || sb.type == SBT_16)
+			channel_features.insert(ChannelFeature::Stereo);
+
+		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB", channel_features);
 		configure_sb_filter();
 
 		sb.dsp.state=DSP_S_NORMAL;

@@ -489,7 +489,11 @@ public:
 
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
-		spkr.chan = MIXER_AddChannel(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
+		spkr.chan = MIXER_AddChannel(&PCSPEAKER_CallBack,
+		                             spkr.rate,
+		                             "SPKR",
+		                             {ChannelFeature::ReverbSend,
+		                              ChannelFeature::ChorusSend});
 		spkr.chan->SetPeakAmplitude(
 		        static_cast<uint32_t>(AMPLITUDE_POSITIVE));
 	}
