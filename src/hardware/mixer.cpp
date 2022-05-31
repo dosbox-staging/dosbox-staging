@@ -1410,6 +1410,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 #endif
 
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto bool_prop = sec_prop.Add_bool("nosound", only_at_start, false);
 	assert(bool_prop);
@@ -1440,8 +1441,16 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	                              default_mixer_allow_negotiate);
 	bool_prop->Set_help(
 	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
-}
 
+	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
+	string_prop->Set_help(
+	        "Set crossfeed globally on all stereo channels for headphone listening:\n"
+	        "  off:         No crossfeed (default).\n"
+	        "  on:          Enable crossfeed (at strength 30).\n"
+	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
+	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
+	        "Note: You can set per-channel crossfeed via mixer commands.");
+}
 
 void MIXER_AddConfigSection(const config_ptr_t &conf)
 {
