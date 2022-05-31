@@ -1428,12 +1428,12 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_mixer_blocksize);
 	int_prop->Set_values(blocksizes);
 	int_prop->Set_help(
-	        "Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
+	        "Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.");
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_mixer_prebuffer);
 	int_prop->SetMinMax(0, 100);
 	int_prop->Set_help(
-	        "How many milliseconds of data to keep on top of the blocksize.");
+	        "How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.");
 
 	bool_prop = sec_prop.Add_bool("negotiate",
 	                              only_at_start,
