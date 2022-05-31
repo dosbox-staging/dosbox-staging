@@ -439,6 +439,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	assert(strength >= 0.0f);
 	assert(strength <= 1.0f);
 
+	if (!HasFeature(ChannelFeature::Stereo))
+		return;
+
 	crossfeed.strength = strength;
 
 	// map [0, 1] range to [0.5, 0]
@@ -829,6 +832,9 @@ std::string MixerChannel::DescribeLineout() const
 
 bool MixerChannel::ChangeLineoutMap(std::string choice)
 {
+	if (!HasFeature(ChannelFeature::Stereo))
+		return false;
+
 	lowcase(choice);
 
 	if (choice == "stereo")
