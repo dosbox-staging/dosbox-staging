@@ -266,4 +266,7 @@ mixer_channel_t MIXER_FindChannel(const char *name);
 void PCSPEAKER_SetCounter(int cntr, int mode);
 void PCSPEAKER_SetType(int mode);
 
+// Mixer configuration and initialization
+void MIXER_AddConfigSection(const config_ptr_t &conf);
+
 #endif

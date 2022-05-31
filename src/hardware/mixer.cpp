@@ -47,6 +47,7 @@
 #include <speex/speex_resampler.h>
 
 #include "ansi_code_markup.h"
+#include "control.h"
 #include "mem.h"
 #include "pic.h"
 #include "mixer.h"
@@ -54,6 +55,7 @@
 #include "setup.h"
 #include "cross.h"
 #include "string_utils.h"
+#include "setup.h"
 #include "mapper.h"
 #include "hardware.h"
 #include "programs.h"
@@ -1388,4 +1390,62 @@ void MIXER_CloseAudioDevice()
 			mixer.sdldevice = 0;
 		}
 	}
+}
+
+void init_mixer_dosbox_settings(Section_prop &sec_prop)
+{
+	// Mixer defaults
+	constexpr int default_mixer_rate = 48000;
+#if defined(WIN32)
+	// Long stading known-good defaults for Windows
+	constexpr int default_mixer_blocksize = 1024;
+	constexpr int default_mixer_prebuffer = 25;
+	constexpr bool default_mixer_allow_negotiate = false;
+
+#else
+	// Non-Windows platforms tollerate slightly lower latency
+	constexpr int default_mixer_blocksize = 512;
+	constexpr int default_mixer_prebuffer = 20;
+	constexpr bool default_mixer_allow_negotiate = true;
+#endif
+
+	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+
+	auto bool_prop = sec_prop.Add_bool("nosound", only_at_start, false);
+	assert(bool_prop);
+	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
+
+	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_mixer_rate);
+	assert(int_prop);
+	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
+	                       "11025", "8000",  "49716", 0};
+	int_prop->Set_values(rates);
+	int_prop->Set_help(
+	        "Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
+
+	const char *blocksizes[] = {"1024", "2048", "4096", "8192", "512", "256", "128", 0};
+
+	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_mixer_blocksize);
+	int_prop->Set_values(blocksizes);
+	int_prop->Set_help(
+	        "Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
+
+	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_mixer_prebuffer);
+	int_prop->SetMinMax(0, 100);
+	int_prop->Set_help(
+	        "How many milliseconds of data to keep on top of the blocksize.");
+
+	bool_prop = sec_prop.Add_bool("negotiate",
+	                               only_at_start,
+	                               default_mixer_allow_negotiate);
+	bool_prop->Set_help(
+	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
+}
+
+void MIXER_AddConfigSection(const config_ptr_t &conf)
+{
+	assert(conf);
+	Section_prop *sec = conf->AddSection_prop("mixer", &MIXER_Init);
+	assert(sec);
+	init_mixer_dosbox_settings(*sec);
 }
