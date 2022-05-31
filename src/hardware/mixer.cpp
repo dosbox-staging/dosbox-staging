@@ -139,6 +139,30 @@ bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
 	return left == other.left && right == other.right;
 }
 
+static void set_global_channel_settings(mixer_channel_t channel)
+{
+	const auto sect = static_cast<Section_prop *>(control->GetSection("mixer"));
+	assert(sect);
+
+	// Global crossfeed
+	auto crossfeed = 0.0f;
+
+	const std::string crossfeed_pref = sect->Get_string("crossfeed");
+	if (crossfeed_pref == "on") {
+		constexpr auto default_crossfeed_strength = 0.3f;
+		crossfeed = default_crossfeed_strength;
+	} else {
+		const auto cf = to_finite<double>(crossfeed_pref);
+		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
+			crossfeed = cf / 100.0f;
+		} else {
+			LOG_WARNING("MIXER: Invalid crossfeed value '%s', using off",
+			            crossfeed_pref.c_str());
+		}
+	}
+	channel->SetCrossfeedStrength(crossfeed);
+}
+
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
                                  const char *name,
                                  const std::set<ChannelFeature> &features)
@@ -150,6 +174,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
+	set_global_channel_settings(chan);
+
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate)
 		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
@@ -157,6 +183,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 	else
 		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate", name,
 		        chan_rate, chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
+
 	std::lock_guard lock(mixer.channel_mutex);
 	mixer.channels[name] = chan; // replace the old, if it exists
 	return chan;
