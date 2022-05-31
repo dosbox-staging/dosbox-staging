@@ -121,7 +121,11 @@ static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &ch
 Ps1Dac::Ps1Dac()
 {
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
-	channel = MIXER_AddChannel(callback, 0, "PS1DAC");
+	channel = MIXER_AddChannel(callback,
+	                           0,
+	                           "PS1DAC",
+	                           {ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend});
 
 	// Register DAC per-port read handlers
 	read_handlers[0].Install(0x02F, std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2), io_width_t::byte);
@@ -363,7 +367,11 @@ private:
 Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
-	channel = MIXER_AddChannel(callback, 0, "PS1");
+	channel = MIXER_AddChannel(callback,
+	                           0,
+	                           "PS1",
+	                           {ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend});
 
 	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);

@@ -396,7 +396,11 @@ void DISNEY_Init(Section* sec) {
 		return;
 
 	// Setup the mixer callback
-	disney.chan = MIXER_AddChannel(DISNEY_CallBack, 10000, "DISNEY");
+	disney.chan = MIXER_AddChannel(DISNEY_CallBack,
+	                               10000,
+	                               "DISNEY",
+	                               {ChannelFeature::ReverbSend,
+	                                ChannelFeature::ChorusSend});
 
 	// Register port handlers for 8-bit IO
 	disney.write_handler.Install(DISNEY_BASE, disney_write, io_width_t::byte, 3);

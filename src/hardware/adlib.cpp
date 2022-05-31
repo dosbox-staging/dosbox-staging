@@ -853,7 +853,12 @@ Module::Module(Section *configuration)
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
-	mixerChan = MIXER_AddChannel(OPL_CallBack, 0, "FM");
+	std::set channel_features = {ChannelFeature::ReverbSend, ChannelFeature::ChorusSend};
+	if (oplmode != OPL_opl2)
+		channel_features.emplace(ChannelFeature::Stereo);
+
+	mixerChan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
+
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 

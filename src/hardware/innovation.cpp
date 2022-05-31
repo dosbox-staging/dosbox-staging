@@ -78,7 +78,12 @@ void Innovation::Open(const std::string &model_choice,
 	// Setup the mixer and get it's sampling rate
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::MixerCallBack, this, _1);
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback, 0, "INNOVATION");
+	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                            0,
+	                                            "INNOVATION",
+	                                            {ChannelFeature::ReverbSend,
+	                                             ChannelFeature::ChorusSend});
+
 	const auto frame_rate_hz = mixer_channel->GetSampleRate();
 	frame_rate_per_ms = frame_rate_hz / 1000.0;
 

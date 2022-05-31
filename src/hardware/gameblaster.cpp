@@ -81,7 +81,13 @@ void GameBlaster::Open(const int port_choice, const std::string_view card_choice
 	// Setup the mixer and level controls
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 	const auto level_callback = std::bind(&GameBlaster::LevelCallback, this, _1);
-	channel = MIXER_AddChannel(audio_callback, 0, CardName());
+	channel = MIXER_AddChannel(audio_callback,
+	                           0,
+	                           CardName(),
+	                           {ChannelFeature::Stereo,
+	                            ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend});
+
 	channel->RegisterLevelCallBack(level_callback);
 
 	// Calculate rates and ratio based on the mixer's rate

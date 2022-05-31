@@ -28,6 +28,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <set>
 
 #include "envelope.h"
 
@@ -98,6 +99,8 @@ enum LINE_INDEX : uint8_t {
 	// standard at the host-level, then additional line indexes would go here.
 };
 
+enum class ChannelFeature { Stereo, ReverbSend, ChorusSend };
+
 enum class FilterState { Off, On, ForcedOn };
 
 // forward declarations
@@ -106,9 +109,11 @@ typedef SpeexResamplerState_ SpeexResamplerState;
 
 class MixerChannel {
 public:
-	MixerChannel(MIXER_Handler _handler, const char *name);
+	MixerChannel(MIXER_Handler _handler, const char *name,
+	             const std::set<ChannelFeature> &features);
 	~MixerChannel();
 
+	bool HasFeature(ChannelFeature feature);
 	int GetSampleRate() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
@@ -153,14 +158,16 @@ public:
 	void AddSamples_m32_nonnative(uint16_t len, const int32_t *data);
 	void AddSamples_s32_nonnative(uint16_t len, const int32_t *data);
 
-	void AddStretched(uint16_t len, int16_t *data); // Stretch block up into needed data
+	void AddStretched(uint16_t len, int16_t *data); // Stretch block up into
+	                                                // needed data
 
 	void FillUp();
 	void Enable(bool should_enable);
 	void FlushSamples();
 
 	float volmain[2] = {1.0f, 1.0f};
-	std::atomic<int> done = 0; // Timing on how many samples have been done by the mixer
+	std::atomic<int> done = 0; // Timing on how many samples have been done
+	                           // by the mixer
 	bool is_enabled = false;
 
 private:
@@ -181,6 +188,7 @@ private:
 	std::string name = {};
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
+	std::set<ChannelFeature> features = {};
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step
 	int freq_counter = 0u;       // When this flows over a new sample needs to be read from the device
 	int needed = 0u;             // Timing on how many samples were needed by the mixer
@@ -250,7 +258,10 @@ private:
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq, const char *name);
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
+                                 const char *name,
+                                 const std::set<ChannelFeature> &features);
+
 mixer_channel_t MIXER_FindChannel(const char *name);
 
 /* PC Speakers functions, tightly related to the timer functions */
