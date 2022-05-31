@@ -194,37 +194,37 @@ TEST(ConvertAnsiMarkup, ColorUppercaseValue)
 TEST(ConvertAnsiMarkup, EraseScreenBeginning)
 {
     const char str[] = "erase [erases=begin] to beginning of screen.";
-    EXPECT_EQ(convert_ansi_markup(str), "erase \033[1Jm to beginning of screen.");
+    EXPECT_EQ(convert_ansi_markup(str), "erase \033[1J to beginning of screen.");
 }
 
 TEST(ConvertAnsiMarkup, EraseScreenEnd)
 {
     const char str[] = "erase [erases=end] to end of screen.";
-    EXPECT_EQ(convert_ansi_markup(str), "erase \033[0Jm to end of screen.");
+    EXPECT_EQ(convert_ansi_markup(str), "erase \033[0J to end of screen.");
 }
 
 TEST(ConvertAnsiMarkup, EraseScreenEntire)
 {
     const char str[] = "[erases=entire] Erase entire screen.";
-    EXPECT_EQ(convert_ansi_markup(str), "\033[2Jm Erase entire screen.");
+    EXPECT_EQ(convert_ansi_markup(str), "\033[2J Erase entire screen.");
 }
 
 TEST(ConvertAnsiMarkup, EraseLineBeginning)
 {
     const char str[] = "erase [erasel=begin] to beginning of line.";
-    EXPECT_EQ(convert_ansi_markup(str), "erase \033[1Km to beginning of line.");
+    EXPECT_EQ(convert_ansi_markup(str), "erase \033[1K to beginning of line.");
 }
 
 TEST(ConvertAnsiMarkup, EraseLineEnd)
 {
     const char str[] = "erase [erasel=end] to end of line.";
-    EXPECT_EQ(convert_ansi_markup(str), "erase \033[0Km to end of line.");
+    EXPECT_EQ(convert_ansi_markup(str), "erase \033[0K to end of line.");
 }
 
 TEST(ConvertAnsiMarkup, EraseLineEntire)
 {
     const char str[] = "[erasel=entire] Erase entire line.";
-    EXPECT_EQ(convert_ansi_markup(str), "\033[2Km Erase entire line.");
+    EXPECT_EQ(convert_ansi_markup(str), "\033[2K Erase entire line.");
 }
 
 TEST(ConvertAnsiMarkup, Whitespace)

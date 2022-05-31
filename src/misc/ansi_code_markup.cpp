@@ -285,7 +285,7 @@ static const char *get_ansi_code(const Tag &tag)
 		break;
 
 	case Tag::Group::Erasers:
-		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
+		safe_sprintf(ansi_code, "\033[%d%s", ansi_num,
 		             type == Tag::Type::EraseL ? "K" : "J");
 		break;
 
