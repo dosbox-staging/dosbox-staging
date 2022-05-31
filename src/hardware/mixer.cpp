@@ -1421,19 +1421,18 @@ void MIXER_CloseAudioDevice()
 
 void init_mixer_dosbox_settings(Section_prop &sec_prop)
 {
-	// Mixer defaults
-	constexpr int default_mixer_rate = 48000;
+	constexpr int default_rate = 48000;
 #if defined(WIN32)
 	// Long stading known-good defaults for Windows
-	constexpr int default_mixer_blocksize = 1024;
-	constexpr int default_mixer_prebuffer = 25;
-	constexpr bool default_mixer_allow_negotiate = false;
+	constexpr int default_blocksize = 1024;
+	constexpr int default_prebuffer = 25;
+	constexpr bool default_allow_negotiate = false;
 
 #else
 	// Non-Windows platforms tollerate slightly lower latency
-	constexpr int default_mixer_blocksize = 512;
-	constexpr int default_mixer_prebuffer = 20;
-	constexpr bool default_mixer_allow_negotiate = true;
+	constexpr int default_blocksize = 512;
+	constexpr int default_prebuffer = 20;
+	constexpr bool default_allow_negotiate = true;
 #endif
 
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
@@ -1443,7 +1442,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	assert(bool_prop);
 	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
 
-	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_mixer_rate);
+	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
 	const char *rates[] = {
 	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", "49716", 0};
@@ -1453,19 +1452,19 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", 0};
 
-	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_mixer_blocksize);
+	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(blocksizes);
 	int_prop->Set_help(
 	        "Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.");
 
-	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_mixer_prebuffer);
+	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer);
 	int_prop->SetMinMax(0, 100);
 	int_prop->Set_help(
 	        "How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.");
 
 	bool_prop = sec_prop.Add_bool("negotiate",
 	                              only_at_start,
-	                              default_mixer_allow_negotiate);
+	                              default_allow_negotiate);
 	bool_prop->Set_help(
 	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
 
