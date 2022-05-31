@@ -1423,13 +1423,13 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr int default_rate = 48000;
 #if defined(WIN32)
-	// Long stading known-good defaults for Windows
+	// Longstanding known-good defaults for Windows
 	constexpr int default_blocksize = 1024;
 	constexpr int default_prebuffer = 25;
 	constexpr bool default_allow_negotiate = false;
 
 #else
-	// Non-Windows platforms tollerate slightly lower latency
+	// Non-Windows platforms tolerate slightly lower latency
 	constexpr int default_blocksize = 512;
 	constexpr int default_prebuffer = 20;
 	constexpr bool default_allow_negotiate = true;
