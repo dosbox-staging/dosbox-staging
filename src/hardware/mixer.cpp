@@ -1116,8 +1116,8 @@ public:
 		auto is_master = false;
 
 		for (auto &arg : args) {
-			// Does this argument set the target channel of subsequent
-			// commands?
+			// Does this argument set the target channel of
+			// subsequent commands?
 			upcase(arg);
 			if (arg == "MASTER") {
 				curr_chan = nullptr;
@@ -1157,15 +1157,15 @@ public:
 					continue;
 				}
 
-			// Only setting the volume is allowed for the MASTER channel
+				// Only setting the volume is allowed for the
+				// MASTER channel
 			} else if (is_master) {
 				std::lock_guard lock(mixer.channel_mutex);
-
-				ParseVolume(const_cast<char *>(arg.c_str()),
+				ParseVolume(arg,
 				            mixer.mastervol[0],
 				            mixer.mastervol[1]);
 
-			// Adjust settings of a regular non-master channel
+				// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
 				std::lock_guard lock(mixer.channel_mutex);
 
@@ -1180,9 +1180,7 @@ public:
 
 				float left_vol = 0;
 				float right_vol = 0;
-				ParseVolume(const_cast<char *>(arg.c_str()),
-				            left_vol,
-				            right_vol);
+				ParseVolume(arg, left_vol, right_vol);
 
 				curr_chan->SetVolume(left_vol, right_vol);
 				curr_chan->UpdateVolume();
@@ -1223,42 +1221,41 @@ private:
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
-	void ParseVolume(char *scan, float &vol0, float &vol1)
+	void ParseVolume(const std::string s, float &vol_left, float &vol_right)
 	{
-		Bitu w = 0;
-		bool db = (toupper(*scan) == 'D');
-		if (db)
-			scan++;
+		auto vol_parts = split(s, ':');
+		if (vol_parts.empty())
+			return;
 
-		while (*scan) {
-			if (*scan == ':') {
-				++scan;
-				w = 1;
+		const auto is_decibel = toupper(vol_parts[0][0]) == 'D';
+		if (is_decibel)
+			vol_parts[0].erase(0, 1);
+
+		auto parse_vol_pref = [is_decibel](const std::string &vol_pref,
+		                                   float &vol_out) {
+			const auto vol = to_finite<float>(vol_pref);
+			if (std::isfinite(vol)) {
+				if (is_decibel)
+					vol_out = powf(10.0f, vol / 20.0f);
+				else
+					vol_out = vol / 100.0f;
+
+				const auto min_vol = powf(10.0f, -99.99f / 20.0f);
+				constexpr auto max_vol = 99.99f;
+				if (vol_out < min_vol)
+					vol_out = 0;
+				else
+					vol_out = std::min(vol_out, max_vol);
+			} else {
+				vol_out = 0;
 			}
-			char *before = scan;
-			float val = (float)strtod(scan, &scan);
-			if (before == scan) {
-				++scan;
-				continue;
-			}
-			if (!db)
-				val /= 100;
-			else
-				val = powf(10.0f, val / 20.0f);
-			if (val < 0)
-				val = 1.0f;
+		};
 
-			const auto min_vol = powf(10.0f, -99.99f / 20.0f);
-			constexpr auto max_vol = 99.99f;
-			val = clamp(val, min_vol, max_vol);
-
-			if (!w)
-				vol0 = val;
-			else
-				vol1 = val;
-		}
-		if (!w)
-			vol1 = vol0;
+		parse_vol_pref(vol_parts[0], vol_left);
+		if (vol_parts.size() > 1)
+			parse_vol_pref(vol_parts[1], vol_right);
+		else
+			vol_right = vol_left;
 	}
 
 	void ShowMixerStatus()
