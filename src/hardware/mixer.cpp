@@ -1159,15 +1159,15 @@ public:
 					continue;
 				}
 
-				// Only setting the volume is allowed for the
-				// MASTER channel
+			// Only setting the volume is allowed for the
+			// MASTER channel
 			} else if (is_master) {
 				std::lock_guard lock(mixer.channel_mutex);
 				ParseVolume(arg,
 				            mixer.mastervol[0],
 				            mixer.mastervol[1]);
 
-				// Adjust settings of a regular non-master channel
+			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
 				std::lock_guard lock(mixer.channel_mutex);
 
