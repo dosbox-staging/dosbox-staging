@@ -28,38 +28,38 @@ jobs:
             arch: i686
             sys: MINGW32
             cc: gcc
-            max_warnings: 0
+            max_warnings: -1
           - name: GCC (MinGW) x86_64
             toolchain: ""
             arch: x86_64
             sys: MINGW64
             cc: gcc
-            max_warnings: 0
+            max_warnings: -1
           - name: GCC (UCRT) x86_64
             toolchain: ucrt-
             arch: x86_64
             sys: UCRT64
             cc: gcc
-            max_warnings: 0
+            max_warnings: -1
           - name: Clang x86_64
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
             cc: clang
-            max_warnings: 0
+            max_warnings: -1
           - name: GCC +tests
             toolchain: ""
             arch: x86_64
             sys: MINGW64
             run_tests: true
             cc: gcc
-            max_warnings: 0
+            max_warnings: -1
           - name: GCC +debugger
             toolchain: ""
             arch: x86_64
             sys: MINGW64
             cc: gcc
-            max_warnings: 0
+            max_warnings: -1
             build_flags: -Denable_debugger=normal
 
     defaults:
