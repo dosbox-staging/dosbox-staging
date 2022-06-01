@@ -40,10 +40,19 @@ std::string HELP_GetShortHelp(const std::string &cmd_name)
 const char *HELP_CategoryHeading(const HELP_Category category)
 {
 	switch (category) {
-	case HELP_Category::Dosbox: return "DOSBox Commands";
-	case HELP_Category::File: return "File/Directory Commands";
-	case HELP_Category::Batch: return "Batch File Commands";
-	case HELP_Category::Misc: return "Miscellaneous Commands";
-	default: return "Unknown Commands";
+	case HELP_Category::Dosbox: return MSG_Get("HELP_UTIL_CATEGORY_DOSBOX");
+	case HELP_Category::File: return MSG_Get("HELP_UTIL_CATEGORY_FILE");
+	case HELP_Category::Batch: return MSG_Get("HELP_UTIL_CATEGORY_BATCH");
+	case HELP_Category::Misc: return MSG_Get("HELP_UTIL_CATEGORY_MISC");
+	default: return MSG_Get("HELP_UTIL_CATEGORY_UNKNOWN");
 	}
+}
+
+void HELP_AddMessages()
+{
+	MSG_Add("HELP_UTIL_CATEGORY_DOSBOX", "DOSBox Commands");
+	MSG_Add("HELP_UTIL_CATEGORY_FILE", "File/Directory Commands");
+	MSG_Add("HELP_UTIL_CATEGORY_BATCH", "Batch File Commands");
+	MSG_Add("HELP_UTIL_CATEGORY_MISC", "Miscellaneous Commands");
+	MSG_Add("HELP_UTIL_CATEGORY_UNKNOWN", "Unknown Command");
 }

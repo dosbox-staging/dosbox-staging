@@ -22,5 +22,6 @@ void HELP_AddToHelpList(const std::string &cmd_name, const HELP_Detail &detail,
 const std::map<const std::string, HELP_Detail> &HELP_GetHelpList();
 std::string HELP_GetShortHelp(const std::string &cmd_name);
 const char *HELP_CategoryHeading(const HELP_Category category);
+void HELP_AddMessages();
 
 #endif // HELP_UTIL_H

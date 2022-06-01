@@ -1448,6 +1448,9 @@ void SHELL_Init() {
 	                             "DOS version %d.%02d\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
 
+	/* Ensure help categories are loaded into the message vector */
+	HELP_AddMessages();
+
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
