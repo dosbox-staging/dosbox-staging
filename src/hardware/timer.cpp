@@ -155,12 +155,12 @@ const char *PitModeToString(const PitMode mode)
 	return "Unknown";
 }
 
-// The PIT has only 16 bits that are used as frequency divider,
-// which can represent the values from 0 to 65535.
-constexpr uint16_t get_max_count(const PIT_Block &channel)
+// The maximum decimal count can go beyond 16-bit, beacuse a
+// count of zero was used to represent 65536 ticks.
+constexpr int32_t get_max_count(const PIT_Block &channel)
 {
-	constexpr uint16_t max_dec_count = UINT16_MAX;
-	constexpr uint16_t max_bcd_count = 9999;
+	constexpr int32_t max_dec_count = 0x10000;
+	constexpr int32_t max_bcd_count = 9999;
 	return channel.bcd ? max_bcd_count : max_dec_count;
 }
 
@@ -370,17 +370,14 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 
 	if (channel.write_mode != AccessMode::Latch) {
 		if (channel.write_latch == 0) {
-			if (channel.bcd == false)
-				channel.count = 0x10000;
-			else
-				channel.count = 9999;
+			channel.count = get_max_count(channel);
 		}
 		// square wave, count by 2
 		else if (channel.write_latch == 1 &&
 		         (channel.mode == PitMode::SquareWave ||
 		          channel.mode == PitMode::SquareWaveAlias))
 			// buzz (Paratrooper)
-			channel.count = channel.bcd ? 10000 : 0x10001;
+			channel.count = get_max_count(channel) + 1;
 		else
 			channel.count = channel.write_latch;
 
@@ -625,13 +622,13 @@ public:
 		ReadHandler[2].Install(0x42, read_latch, io_width_t::byte);
 
 		// Initialize channel 0
-		channel_0.count = 0x10000;
+		channel_0.bcd = false;
+		channel_0.count = get_max_count(channel_0);
 		channel_0.write_mode = AccessMode::Both;
 		channel_0.read_mode = AccessMode::Both;
 		channel_0.read_latch = 0;
 		channel_0.write_latch = 0;
 		channel_0.mode = PitMode::SquareWave;
-		channel_0.bcd = false;
 		channel_0.go_read_latch = true;
 		channel_0.counterstatus_set = false;
 		channel_0.update_count = false;
