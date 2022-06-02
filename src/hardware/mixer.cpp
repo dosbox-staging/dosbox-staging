@@ -129,7 +129,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
           features(_features)
 {}
 
-bool MixerChannel::HasFeature(ChannelFeature feature)
+bool MixerChannel::HasFeature(const ChannelFeature feature)
 {
 	return features.find(feature) != features.end();
 }
@@ -656,10 +656,10 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame &frame) const
 	// Pan mono sample using -6dB linear pan law in the stereo field
 	// pan: 0.0 = left, 0.5 = center, 1.0 = right
 	auto pan = [](const float sample, const float pan) -> AudioFrame {
-		return {(1 - pan) * sample, pan * sample};
+		return {(1.0f - pan) * sample, pan * sample};
 	};
-	auto a = pan(frame.left, crossfeed.pan_left);
-	auto b = pan(frame.right, crossfeed.pan_right);
+	const auto a = pan(frame.left, crossfeed.pan_left);
+	const auto b = pan(frame.right, crossfeed.pan_right);
 	return {a.left + b.left, a.right + b.right};
 }
 
