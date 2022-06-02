@@ -154,7 +154,7 @@ static void set_global_channel_settings(mixer_channel_t channel)
 	} else if (crossfeed_pref == "off") {
 		crossfeed = 0.0f;
 	} else {
-		const auto cf = to_finite<double>(crossfeed_pref);
+		const auto cf = to_finite<float>(crossfeed_pref);
 		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
 			crossfeed = cf / 100.0f;
 		} else {
