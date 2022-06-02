@@ -26,7 +26,7 @@
 #include <array>
 #include <memory>
 #include <queue>
-#include <string_view>
+#include <string>
 #include <vector>
 
 #include "inout.h"
@@ -40,7 +40,9 @@
 
 class GameBlaster {
 public:
-	void Open(const int port_choice, const std::string_view card_choice);
+	void Open(const int port_choice, const std::string &card_choice,
+	          const std::string &filter_choice);
+
 	void Close();
 	~GameBlaster() { Close(); }
 
