@@ -812,6 +812,11 @@ void DOSBOX_Init() {
 	                  "           Use the filter of this Sound Blaster model.\n"
 	                  "  none:    Don't filter the output.");
 
+	Pstring = secprop->Add_string("cms_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the Sound Blaster CMS output:\n"
+	                  "  on:    Filter the output (default).\n"
+	                  "  none:  Don't filter the output.");
+
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
 

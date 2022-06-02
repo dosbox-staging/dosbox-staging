@@ -25,7 +25,8 @@
 #include "support.h"
 #include "pic.h"
 
-void GameBlaster::Open(const int port_choice, const std::string_view card_choice)
+void GameBlaster::Open(const int port_choice, const std::string &card_choice,
+                       const std::string &filter_choice)
 {
 	Close();
 	assert(!is_open);
@@ -87,6 +88,18 @@ void GameBlaster::Open(const int port_choice, const std::string_view card_choice
 	                           {ChannelFeature::Stereo,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend});
+
+	if (filter_choice == "on") {
+		channel->ConfigureLowPassFilter(1, 6000);
+		channel->SetLowPassFilter(FilterState::On);
+	} else {
+		if (filter_choice != "off")
+			LOG_WARNING("%s: Invalid filter setting '%s', using off",
+			            CardName(),
+			            filter_choice.c_str());
+
+		channel->SetLowPassFilter(FilterState::Off);
+	}
 
 	channel->RegisterLevelCallBack(level_callback);
 
@@ -290,7 +303,9 @@ GameBlaster gameblaster;
 void CMS_Init(Section *configuration)
 {
 	Section_prop *section = static_cast<Section_prop *>(configuration);
-	gameblaster.Open(section->Get_hex("sbbase"), section->Get_string("sbtype"));
+	gameblaster.Open(section->Get_hex("sbbase"),
+	                 section->Get_string("sbtype"),
+	                 section->Get_string("cms_filter"));
 }
 void CMS_ShutDown([[maybe_unused]] Section* sec) {
 	gameblaster.Close();
