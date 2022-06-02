@@ -1135,7 +1135,7 @@ public:
 			}
 
 			auto parse_prefixed_percentage = [](const char prefix,
-			                                    const std::string s,
+			                                    const std::string &s,
 			                                    float &value_out) {
 				if (s.size() > 1 && s[0] == prefix) {
 					float p = 0.0f;
@@ -1223,7 +1223,7 @@ private:
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
-	void ParseVolume(const std::string s, float &vol_left, float &vol_right)
+	void ParseVolume(const std::string &s, float &vol_left, float &vol_right)
 	{
 		auto vol_parts = split(s, ':');
 		if (vol_parts.empty())
@@ -1262,12 +1262,12 @@ private:
 
 	void ShowMixerStatus()
 	{
-		auto show_channel = [this](const std::string name,
+		auto show_channel = [this](const std::string &name,
 		                           const float vol_left,
 		                           const float vol_right,
 		                           const int rate,
-		                           const std::string mode,
-		                           const std::string xfeed) {
+		                           const std::string &mode,
+		                           const std::string &xfeed) {
 			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
 			         name.c_str(),
 			         vol_left * 100.0f,
