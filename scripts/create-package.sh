@@ -168,6 +168,12 @@ pkg_msvc()
     cp "${build_dir}"/*.dll                  "${pkg_dir}/"
     cp "src/libs/zmbv/${release_dir}"/*.dll  "${pkg_dir}/"
 
+    # For some reason, vcpkg isn't creating the correct speexdsp dll filename
+    # Fix it here for now as a temporary workaround.
+    if [ -f "${pkg_dir}/speexdsp.dll" ]; then
+        mv "${pkg_dir}/speexdsp.dll" "${pkg_dir}/libspeexdsp.dll"
+    fi
+
     # Copy MSVC C++ redistributable files
     cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
     cp "$VC_REDIST_DIR"/*.dll                "${pkg_dir}/"
