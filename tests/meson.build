@@ -57,6 +57,7 @@ test('gtest fs_utils', fs_utils,
 
 unit_tests = [
   {'name' : 'bitops',               'deps' : []},
+  {'name' : 'bit_view',             'deps' : []},
   {'name' : 'iohandler_containers', 'deps' : [libmisc_dep]},
   {'name' : 'rwqueue',              'deps' : [libmisc_dep]},
   {'name' : 'soft_limiter',         'deps' : [atomic_dep, libiir1_dep, libmisc_dep]},
