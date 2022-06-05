@@ -2,7 +2,7 @@
 #
 # More detailed description of all options:
 # https://releases.llvm.org/9.0.0/tools/clang/docs/ClangFormatStyleOptions.html
-# 
+#
 # Note that version of clang-format provided by your distribution might be
 # newer and provide additional options, that won't work in 8.x.
 #
@@ -58,13 +58,64 @@ AlignConsecutiveMacros: true
 #
 AlignEscapedNewlines: DontAlign
 
-# Allow short functions defined inside a class to be put on a single line
-#
-# class Foo {
-# 	void f() { foo(); }
+##
+# This will align the assignment operators of consecutive lines.
+# enum Enum {
+#    ONE   = 1,
+#    TWO   = 2,
+#    THREE = 3,
+#    FOUR  = 4,
+#    FIVE  = 5,
+#    SIX   = 6,
+#    SEVEN = 7
 # };
+AlignConsecutiveAssignments: true
+
+##
+#  If set to Left, backslashes are aligned and pushed to the left:
+#   #define A   \
+#     int aaaa; \
+#     int b;    \
+#     int dddddddddd;
 #
-AllowShortFunctionsOnASingleLine: InlineOnly
+AlignEscapedNewlinesLeft: false
+
+##
+#  the operator is un-indented so that the wrapped operand is aligned with the operand on the first line.
+#
+#  int aaa = bbbbbbbbbbbbbbb
+#          + ccccccccccccccc;
+#
+AlignOperands:  AlignAfterOperator
+
+##
+#   // Indents directives after the hash.
+#
+#   #if FOO
+#   #  if BAR
+#   #    include <foo>
+#   #  else
+#   #    include <other>
+#   #  endif
+#   #endif
+#
+#   // This much easier to see what's happening versus:
+#
+#   #if FOO
+#   #if BAR
+#   #include <foo>
+#   #else
+#   #include <other>
+#   #endif
+#   #endif
+#
+IndentPPDirectives: AfterHash
+
+# Always place function bodies on their own lines because
+# it makes a mess when some are on the same line and others are
+# on separate lines.
+#
+AllowShortFunctionsOnASingleLine: Empty
 
 # Short case labels in switch can be contracted to a single line
 #
@@ -73,6 +124,11 @@ AllowShortFunctionsOnASingleLine: InlineOnly
 # };
 #
 AllowShortCaseLabelsOnASingleLine: true
+
+# Always place if/else and loops bodies on the subsequent line
+#
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 
 # Always place parameter declarations in a separate line:
 #
@@ -302,7 +358,7 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 #
 # This decides what order things should be done if a line is too long
 #
-# clang-format iterates through various versions the long line can be formatted 
+# clang-format iterates through various versions the long line can be formatted
 # and selects the one with smallest penalty score.
 #
 # Small ExcessCharacter penalty prevents breaking line is longer than
