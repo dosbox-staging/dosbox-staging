@@ -129,6 +129,15 @@ inline int iround(double x)
 	return static_cast<int>(round(x));
 }
 
+// Select the nearest unsigned integer capable of holding the given bits
+template <int n_bits>
+using nearest_uint_t = \
+        std::conditional_t<n_bits <= std::numeric_limits<uint8_t>::digits, uint8_t,
+        std::conditional_t<n_bits <= std::numeric_limits<uint16_t>::digits, uint16_t,
+        std::conditional_t<n_bits <= std::numeric_limits<uint32_t>::digits, uint32_t,
+        std::conditional_t<n_bits <= std::numeric_limits<uint64_t>::digits, uint64_t,
+        uintmax_t>>>>;
+
 // Select the next larger signed integer type
 template <typename T>
 using next_int_t = typename std::conditional<
