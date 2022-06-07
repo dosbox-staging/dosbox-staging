@@ -60,3 +60,9 @@ option('try_static_libs',
 
 option('unit_tests', type : 'feature', value : 'auto',
        description : 'Build unit tests. Auto skips for release builds.')
+
+option('narrowing_warnings', type : 'boolean', value : false,
+       description : 'Warn about implicit type narrowing')
+
+option('autovec_info', type : 'boolean', value : false,
+       description : 'Inform about auto-vectorizion results')

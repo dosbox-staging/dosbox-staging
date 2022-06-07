@@ -80,6 +80,21 @@ if prefers_static_libs
 else
   extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
 endif
+
+if get_option('narrowing_warnings')
+  extra_flags += ['-Wconversion', '-Wnarrowing']
+endif
+
+if get_option('autovec_info')
+  # At least O2 is needed enable auto-vectorizion
+  extra_flags += ['-march=native',
+                  '-O2',
+                  '-Wno-system-headers',
+                  '-Rpass-analysis=loop-vectorize',
+                  '-fopt-info-vec-missed',
+                  '-fopt-info-vec']
+endif
+
 foreach flag : extra_flags
   if cc.has_argument(flag)
     add_project_arguments(flag, language : 'c')
