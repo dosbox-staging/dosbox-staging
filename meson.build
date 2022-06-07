@@ -54,6 +54,24 @@ else
   warning('Compiler lacks the C++17 std::filesystem - try to upgrade your compiler!')
 endif
 
+if get_option('buildtype') == 'release'
+  # For release builds, we're not anticipating needing
+  # to divide by zero and NaNs, and get FPU signals.
+  # These safety measures are still enabled in debug builds,
+  # so if an issue is reported where these happen help, then
+  # testing with debug builds will make use of them.
+  #
+  extra_flags += ['-fno-math-errno',
+                  '-fno-signed-zeros',
+                  '-fno-trapping-math',
+                  '-fassociative-math',
+                  '-freciprocal-math',
+                  '-ffinite-math-only',
+                  '-frename-registers',
+                  '-ffunction-sections',
+                  '-fdata-sections']
+endif
+
 if host_machine.system() == 'windows'
   extra_flags += '-Wno-pedantic-ms-format'
 endif
