@@ -110,7 +110,7 @@ struct mixer_t {
 	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
 
 	int tick_counter = 0;
-	int sample_rate = 0;    // sample rate negotiated with SDL
+	std::atomic<int> sample_rate = 0; // sample rate negotiated with SDL
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
 	SDL_AudioDeviceID sdldevice = 0;
@@ -308,7 +308,7 @@ void MixerChannel::ConfigureResampler()
 {
 	const auto in_rate = zoh_upsampler.enabled ? zoh_upsampler.target_freq
 	                                           : sample_rate;
-	const auto out_rate = mixer.sample_rate;
+	const auto out_rate = mixer.sample_rate.load();
 	if (in_rate == out_rate) {
 		resampler.enabled = false;
 	} else {
@@ -1373,7 +1373,7 @@ void MIXER_Init(Section* sec) {
 
 		// Does SDL want a different playback rate?
 		if (obtained.freq != mixer.sample_rate) {
-			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz", mixer.sample_rate, obtained.freq);
+			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz", mixer.sample_rate.load(), obtained.freq);
 			mixer.sample_rate = obtained.freq;
 		}
 
@@ -1389,7 +1389,7 @@ void MIXER_Init(Section* sec) {
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
-		        obtained.channels, mixer.sample_rate, mixer.blocksize);
+		        obtained.channels, mixer.sample_rate.load(), mixer.blocksize);
 	}
 
 	//1000 = 8 *125
