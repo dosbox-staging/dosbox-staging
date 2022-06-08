@@ -21,6 +21,6 @@
 #ifndef DOSBOX_FILESYSTEM_H
 #define DOSBOX_FILESYSTEM_H
 
-#include <ghc/fs_std_fwd.hpp>
+#include "../src/libs/ghc/ghc/fs_std_fwd.hpp"
 
 #endif
