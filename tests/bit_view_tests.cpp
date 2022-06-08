@@ -136,8 +136,10 @@ TEST(bit_view, increment)
 	EXPECT_EQ(r.middle_3, 0b000);
 	EXPECT_EQ(r.last_3, 0b111);
 
-	// overflow is caught
+	// overflow is caught with every increment method
 	EXPECT_DEBUG_DEATH({ r.first_2++; }, "");
+	EXPECT_DEBUG_DEATH({ ++r.first_2; }, "");
+	EXPECT_DEBUG_DEATH({ r.first_2 += 1; }, "");
 
 	// make sure adjacent bits are not affected
 	EXPECT_EQ(r.middle_3, 0b000);
@@ -172,8 +174,10 @@ TEST(bit_view, decrement)
 	EXPECT_EQ(r.middle_3, 0b000);
 	EXPECT_EQ(r.last_3, 0b111);
 
-	// underflow is caught
+	// underflow is caught with every decrement method
 	EXPECT_DEBUG_DEATH({ r.first_2--; }, "");
+	EXPECT_DEBUG_DEATH({ --r.first_2; }, "");
+	EXPECT_DEBUG_DEATH({ r.first_2 -= 1; }, "");
 
 	// make sure adjacent bits are not affected
 	EXPECT_EQ(r.middle_3, 0b000);
