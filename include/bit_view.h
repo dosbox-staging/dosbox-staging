@@ -138,7 +138,7 @@ public:
 	}
 
 	// copy constructor
-	bit_view(const bit_view &other)
+	constexpr bit_view(const bit_view &other)
 	{
 		// get the other view's value using the data_type() operator
 		const data_type d = other;
@@ -150,7 +150,7 @@ public:
 
 	// assign from right-hand-side value
 	template <class rhs_type>
-	bit_view &operator=(const rhs_type rhs_value) noexcept
+	constexpr bit_view &operator=(const rhs_type rhs_value) noexcept
 	{
 		check_rhs(rhs_value);
 		const auto outer = data & ~mask::shifted;
