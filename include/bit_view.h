@@ -168,11 +168,11 @@ public:
 	}
 
 	// post-increment the view's value
-	constexpr data_type operator++(int) noexcept
+	constexpr bit_view operator++(int) noexcept
 	{
-		const data_type d = *this;
+		const auto b = *this;
 		++*this;
-		return d;
+		return b;
 	}
 
 	// increment the view's value by the right-hand side
@@ -190,11 +190,11 @@ public:
 	}
 
 	// post-decrement the view's value
-	constexpr data_type operator--(int) noexcept
+	constexpr bit_view operator--(int) noexcept
 	{
-		const data_type d = *this;
+		const auto b = *this;
 		--*this;
-		return d;
+		return b;
 	}
 
 	// decrement the view's value by the right-hand side
