@@ -622,38 +622,36 @@ public:
 		ReadHandler[2].Install(0x42, read_latch, io_width_t::byte);
 
 		// Initialize channel 0
-		channel_0.bcd = false;
-		channel_0.count = get_max_count(channel_0);
-		channel_0.write_mode = AccessMode::Both;
-		channel_0.read_mode = AccessMode::Both;
-		channel_0.read_latch = 0;
-		channel_0.write_latch = 0;
-		channel_0.mode = PitMode::SquareWave;
-		channel_0.go_read_latch = true;
+		channel_0.bcd               = false;
+		channel_0.count             = get_max_count(channel_0);
+		channel_0.read_latch        = 0;
+		channel_0.write_latch       = 0;
+		channel_0.read_mode         = AccessMode::Both;
+		channel_0.write_mode        = AccessMode::Both;
+		channel_0.mode              = PitMode::SquareWave;
+		channel_0.go_read_latch     = true;
 		channel_0.counterstatus_set = false;
-		channel_0.update_count = false;
+		channel_0.update_count      = false;
 
 		// Initialize channel 1
-		channel_1.bcd = false;
-		channel_1.read_mode = AccessMode::Low;
-		channel_1.write_mode = AccessMode::Both;
-		channel_1.go_read_latch = true;
-		channel_1.count = 18;
-		channel_1.mode = PitMode::RateGenerator;
+		channel_1.bcd               = false;
+		channel_1.count             = 18;
+		channel_1.read_mode         = AccessMode::Low;
+		channel_1.write_mode        = AccessMode::Both;
+		channel_1.mode              = PitMode::RateGenerator;
+		channel_1.go_read_latch     = true;
 		channel_1.counterstatus_set = false;
 
 		// Initialize channel 2
-		channel_2.read_latch = 1320; /* MadTv1 */
-		channel_2.write_mode = AccessMode::Both;
-		; /* Chuck Yeager */
-		channel_2.read_mode = AccessMode::Both;
-		;
-		channel_2.mode = PitMode::SquareWave;
-		channel_2.bcd = false;
-		channel_2.count = 1320;
-		channel_2.go_read_latch = true;
+		channel_2.bcd               = false;
+		channel_2.count             = 1320;
+		channel_2.read_latch        = 1320;             // MadTv1
+		channel_2.read_mode         = AccessMode::Both; // Chuck Yeager
+		channel_2.write_mode        = AccessMode::Both;
+		channel_2.mode              = PitMode::SquareWave;
+		channel_2.go_read_latch     = true;
 		channel_2.counterstatus_set = false;
-		channel_2.counting = false;
+		channel_2.counting          = false;
 
 		update_channel_delay(channel_0);
 		update_channel_delay(channel_1);
