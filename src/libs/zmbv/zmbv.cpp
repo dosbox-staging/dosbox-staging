@@ -28,20 +28,20 @@
 #include "support.h"
 
 constexpr uint8_t DBZV_VERSION_HIGH = 0;
-constexpr uint8_t DBZV_VERSION_LOW = 1;
+constexpr uint8_t DBZV_VERSION_LOW  = 1;
 
 constexpr uint8_t MAX_VECTOR = 16;
 
-constexpr uint8_t Mask_KeyFrame = 0x01;
+constexpr uint8_t Mask_KeyFrame     = 0x01;
 constexpr uint8_t Mask_DeltaPalette = 0x02;
 
 // Compression flags
-constexpr uint8_t COMPRESSION_ZLIB = 1;
-constexpr int ZLIB_COMPRESSION_LEVEL = 6; // 0 to 9 (0 = no compression)
+constexpr uint8_t COMPRESSION_ZLIB     = 1;
+constexpr int ZLIB_COMPRESSION_LEVEL   = 6;          // 0 to 9 (0 = no compression)
 constexpr auto ZLIB_COMPRESSION_METHOD = Z_DEFLATED; // currently the only option
-constexpr int ZLIB_MEM_LEVEL = 9;                    // 1 to 9 (default 8)
-constexpr auto ZLIB_STRATEGY = Z_FILTERED; // Z_DEFAULT_STRATEGY, Z_FILTERED,
-                                           // Z_HUFFMAN_ONLY, Z_RLE, Z_FIXED
+constexpr int ZLIB_MEM_LEVEL           = 9;          // 1 to 9 (default 8)
+constexpr auto ZLIB_STRATEGY           = Z_FILTERED; // Z_DEFAULT_STRATEGY, Z_FILTERED,
+                                                     // Z_HUFFMAN_ONLY, Z_RLE, Z_FIXED
 
 ZMBV_FORMAT BPPFormat(const int bpp)
 {
@@ -75,7 +75,7 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 	switch (_format) {
 	case ZMBV_FORMAT::BPP_8:
 		pixelsize = 1;
-		palsize = 256;
+		palsize   = 256;
 		break;
 	case ZMBV_FORMAT::BPP_15: pixelsize = 2; break;
 	case ZMBV_FORMAT::BPP_16: pixelsize = 2; break;
@@ -87,16 +87,21 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 
 	assert(bufsize > 0);
 	const auto buf_sizes = static_cast<size_t>(bufsize);
+
 	buf1 = std::vector<uint8_t>(buf_sizes, 0);
 	buf2 = std::vector<uint8_t>(buf_sizes, 0);
 	work = std::vector<uint8_t>(buf_sizes, 0);
 
 	auto xblocks = (width / blockwidth);
+
 	const auto xleft = width % blockwidth;
 	if (xleft)
 		xblocks++;
+
 	auto yblocks = (height / blockheight);
+
 	const auto yleft = height % blockheight;
+
 	if (yleft)
 		yblocks++;
 	blockcount = static_cast<FrameBlock_offset>(yblocks) * xblocks;
@@ -122,7 +127,7 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 
 	oldframe = buf1.data();
 	newframe = buf2.data();
-	format = _format;
+	format   = _format;
 	return true;
 }
 
@@ -166,7 +171,7 @@ template <class P>
 int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock_it block)
 {
 	int ret = 0;
-	P *pold =  reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
 	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	;
 	for (auto y = 0; y < block->dy; y++) {
@@ -205,10 +210,12 @@ void VideoCodec::AddXorFrame()
 	assert(static_cast<size_t>(blockcount) == blocks.size());
 	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
 		const auto block = blocks.begin() + b;
-		int8_t bestvx = 0;
-		int8_t bestvy = 0;
+
+		int8_t bestvx   = 0;
+		int8_t bestvy   = 0;
 		auto bestchange = CompareBlock<P>(0, 0, block);
-		auto possibles = 64;
+		auto possibles  = 64;
+
 		for (auto v = 0; v < VectorCount && possibles; v++) {
 			if (bestchange < 4)
 				break;
@@ -216,12 +223,13 @@ void VideoCodec::AddXorFrame()
 			auto vy = VectorTable[v].y;
 			if (PossibleBlock<P>(vx, vy, block) < 4) {
 				possibles--;
-				// if (!possibles) Msg("Ran out of possibles, at %d of %d best%d\n",v,VectorCount,bestchange);
+				// if (!possibles) Msg("Ran out of possibles, at
+				// %d of %d best%d\n",v,VectorCount,bestchange);
 				auto testchange = CompareBlock<P>(vx, vy, block);
 				if (testchange < bestchange) {
 					bestchange = testchange;
-					bestvx = check_cast<int8_t>(vx);
-					bestvy = check_cast<int8_t>(vy);
+					bestvx     = check_cast<int8_t>(vx);
+					bestvy     = check_cast<int8_t>(vy);
 				}
 			}
 		}
@@ -236,28 +244,29 @@ void VideoCodec::AddXorFrame()
 
 bool VideoCodec::SetupCompress(const int _width, const int _height)
 {
-	width = _width;
+	width  = _width;
 	height = _height;
-	pitch = _width + 2 * MAX_VECTOR;
+	pitch  = _width + 2 * MAX_VECTOR;
 	format = ZMBV_FORMAT::NONE;
-	if (deflateInit2(&zstream, ZLIB_COMPRESSION_LEVEL, ZLIB_COMPRESSION_METHOD,
-	                 ZLIB_MEM_LEVEL, ZLIB_MEM_LEVEL, ZLIB_STRATEGY) != Z_OK)
+	if (deflateInit2(&zstream, ZLIB_COMPRESSION_LEVEL, ZLIB_COMPRESSION_METHOD, ZLIB_MEM_LEVEL, ZLIB_MEM_LEVEL, ZLIB_STRATEGY) !=
+	    Z_OK)
 		return false;
 	return true;
 }
 
 bool VideoCodec::SetupDecompress(const int _width, const int _height)
 {
-	width = _width;
+	width  = _width;
 	height = _height;
-	pitch = _width + 2 * MAX_VECTOR;
+	pitch  = _width + 2 * MAX_VECTOR;
 	format = ZMBV_FORMAT::NONE;
 	if (inflateInit(&zstream) != Z_OK)
 		return false;
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint8_t *pal, uint8_t *writeBuf, const uint32_t writeSize)
+bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint8_t *pal, uint8_t *writeBuf,
+                                      const uint32_t writeSize)
 {
 	if (_format != format) {
 		if (!SetupBuffers(_format, 16, 16))
@@ -266,31 +275,32 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint
 	}
 	/* replace oldframe with new frame */
 	auto copyFrame = newframe;
-	newframe = oldframe;
-	oldframe = copyFrame;
+	newframe       = oldframe;
+	oldframe       = copyFrame;
 
 	compress.linesDone = 0;
 	compress.writeSize = writeSize;
 	compress.writeDone = 1;
-	compress.writeBuf = writeBuf;
-	/* Set a pointer to the first byte which will contain info about this frame */
+	compress.writeBuf  = writeBuf;
+	/* Set a pointer to the first byte which will contain info about this
+	 * frame */
 	auto &firstByte = compress.writeBuf[0];
-	firstByte = 0;
+	firstByte       = 0;
 	// Reset the work buffer
 	workUsed = 0;
-	workPos = 0;
+	workPos  = 0;
 	if (flags & 1) {
 		/* Make a keyframe */
 		firstByte |= Mask_KeyFrame;
 		KeyframeHeader *header = (KeyframeHeader *)(compress.writeBuf + compress.writeDone);
-		header->high_version = DBZV_VERSION_HIGH;
-		header->low_version = DBZV_VERSION_LOW;
-		header->compression = COMPRESSION_ZLIB;
+		header->high_version   = DBZV_VERSION_HIGH;
+		header->low_version    = DBZV_VERSION_LOW;
+		header->compression    = COMPRESSION_ZLIB;
 
 		// The public codec can't handle 24 bit content, so we convert
 		// it to 32bit and indicate it in this format field.
 		header->format = static_cast<uint8_t>(format == ZMBV_FORMAT::BPP_24 ? ZMBV_FORMAT::BPP_32 : format);
-		header->blockwidth = 16;
+		header->blockwidth  = 16;
 		header->blockheight = 16;
 		compress.writeDone += sizeof(KeyframeHeader);
 		/* Copy the new frame directly over */
@@ -327,7 +337,9 @@ void VideoCodec::CompressLines(const int lineCount, uint8_t *lineData[])
 {
 	const auto linePitch = pitch * pixelsize;
 	const auto lineWidth = width * pixelsize;
+
 	auto destStart = newframe + pixelsize * (MAX_VECTOR + (compress.linesDone + MAX_VECTOR) * pitch);
+
 	auto i = 0;
 	while (i < lineCount && (compress.linesDone < height)) {
 		memcpy(destStart, lineData[i], static_cast<size_t>(lineWidth));
@@ -344,6 +356,7 @@ int VideoCodec::FinishCompressFrame()
 	if (firstByte & Mask_KeyFrame) {
 		/* Add the full frame data */
 		auto readFrame = newframe + pixelsize * (MAX_VECTOR + MAX_VECTOR * pitch);
+
 		const int line_width = width * pixelsize;
 		assert(line_width > 0);
 		for (auto i = 0; i < height; ++i) {
@@ -363,11 +376,11 @@ int VideoCodec::FinishCompressFrame()
 		}
 	}
 	/* Create the actual frame with compression */
-	zstream.next_in = work.data();
+	zstream.next_in  = work.data();
 	zstream.avail_in = workUsed;
 	zstream.total_in = 0;
 
-	zstream.next_out = compress.writeBuf + compress.writeDone;
+	zstream.next_out  = compress.writeBuf + compress.writeDone;
 	zstream.avail_out = compress.writeSize - compress.writeDone;
 	zstream.total_out = 0;
 	deflate(&zstream, Z_SYNC_FLUSH);
@@ -414,14 +427,15 @@ template <class P>
 void VideoCodec::UnXorFrame()
 {
 	int8_t *vectors = (int8_t *)&work[workPos];
+
 	workPos = (workPos + blockcount * 2 + 3) & ~3;
 
 	assert(static_cast<size_t>(blockcount) == blocks.size());
 	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
 		const auto block = blocks.begin() + b;
 		const auto delta = vectors[b * 2 + 0] & 1;
-		const auto vx = vectors[b * 2 + 0] >> 1;
-		const auto vy = vectors[b * 2 + 1] >> 1;
+		const auto vx    = vectors[b * 2 + 0] >> 1;
+		const auto vy    = vectors[b * 2 + 1] >> 1;
 		if (delta)
 			UnXorBlock<P>(vx, vy, block);
 		else
@@ -432,6 +446,7 @@ void VideoCodec::UnXorFrame()
 bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 {
 	auto data = framedata;
+
 	const auto tag = *data++;
 
 	if (--size <= 0)
@@ -450,11 +465,11 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		if (inflateReset(&zstream) != Z_OK)
 			return false;
 	}
-	zstream.next_in = data;
+	zstream.next_in  = data;
 	zstream.avail_in = size;
 	zstream.total_in = 0;
 
-	zstream.next_out = work.data();
+	zstream.next_out  = work.data();
 	zstream.avail_out = bufsize;
 	zstream.total_out = 0;
 
@@ -465,7 +480,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		return false;
 
 	workUsed = check_cast<uint32_t>(zstream.total_out);
-	workPos = 0;
+	workPos  = 0;
 	if (tag & Mask_KeyFrame) {
 		if (palsize) {
 			for (size_t i = 0; i < palsize; ++i) {
@@ -477,7 +492,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		newframe = buf1.data();
 		oldframe = buf2.data();
 
-		auto writeframe = newframe + pixelsize * (MAX_VECTOR + MAX_VECTOR * pitch);
+		auto writeframe       = newframe + pixelsize * (MAX_VECTOR + MAX_VECTOR * pitch);
 		const auto line_width = width * pixelsize;
 		assert(line_width > 0);
 		for (auto i = 0; i < height; ++i) {
@@ -486,7 +501,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 			workPos += line_width;
 		}
 	} else {
-		data = oldframe;
+		data     = oldframe;
 		oldframe = newframe;
 		newframe = data;
 		if (tag & Mask_DeltaPalette) {
@@ -510,7 +525,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 
 void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 {
-	auto w = output;
+	auto w  = output;
 	int pad = width & 3;
 
 	for (auto i = height - 1; i >= 0; --i) {
@@ -519,6 +534,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 		case ZMBV_FORMAT::BPP_8:
 			for (auto j = 0; j < width; j++) {
 				const auto c = r[j];
+
 				*w++ = palette[c * 4 + 2];
 				*w++ = palette[c * 4 + 1];
 				*w++ = palette[c * 4 + 0];
@@ -527,6 +543,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 		case ZMBV_FORMAT::BPP_15:
 			for (auto j = 0; j < width; ++j) {
 				const auto c = read_unaligned_uint16_at(r, j);
+
 				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
 				*w++ = check_cast<uint8_t>(((c & 0x03e0) * 0x21) >> 7);
 				*w++ = check_cast<uint8_t>(((c & 0x7c00) * 0x21) >> 12);
@@ -535,6 +552,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 		case ZMBV_FORMAT::BPP_16:
 			for (auto j = 0; j < width; ++j) {
 				const auto c = read_unaligned_uint16_at(r, j);
+
 				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
 				*w++ = check_cast<uint8_t>(((c & 0x07e0) * 0x41) >> 9);
 				*w++ = check_cast<uint8_t>(((c & 0xf800) * 0x21) >> 13);
