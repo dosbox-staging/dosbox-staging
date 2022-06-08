@@ -19,6 +19,7 @@
 #ifndef DOSBOX_ZMBV_H
 #define DOSBOX_ZMBV_H
 
+#include <cstdint>
 #include <vector>
 
 #include <zlib.h>
