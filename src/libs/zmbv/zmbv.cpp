@@ -26,6 +26,9 @@
 
 #include "mem_unaligned.h"
 #include "support.h"
+#include "checks.h"
+
+CHECK_NARROWING();
 
 constexpr uint8_t DBZV_VERSION_HIGH = 0;
 constexpr uint8_t DBZV_VERSION_LOW  = 1;
@@ -104,8 +107,9 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 
 	if (yleft)
 		yblocks++;
-	blockcount = static_cast<FrameBlock_offset>(yblocks) * xblocks;
-	blocks.resize(blockcount);
+
+	const auto blocks_needed = check_cast<uint32_t>(xblocks * yblocks);
+	blocks.resize(blocks_needed);
 
 	size_t i = 0;
 	for (auto y = 0; y < yblocks; ++y) {
@@ -150,16 +154,16 @@ void VideoCodec::CreateVectorTable()
 }
 
 template <class P>
-int VideoCodec::PossibleBlock(const int vx, const int vy, const FrameBlock_it block)
+int VideoCodec::PossibleBlock(const int vx, const int vy, const FrameBlock & block)
 {
 	int ret = 0;
-	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
 	;
-	for (auto y = 0; y < block->dy; y += 4) {
-		for (auto x = 0; x < block->dx; x += 4) {
-			int test = 0 - ((pold[x] - pnew[x]) & 0x00ffffff);
-			ret -= (test >> 31);
+	for (auto y = 0; y < block.dy; y += 4) {
+		for (auto x = 0; x < block.dx; x += 4) {
+			const auto test = 0 - ((pold[x] - pnew[x]) & 0x00ffffff);
+			ret -= check_cast<int>(test >> 31);
 		}
 		pold += pitch * 4;
 		pnew += pitch * 4;
@@ -168,16 +172,16 @@ int VideoCodec::PossibleBlock(const int vx, const int vy, const FrameBlock_it bl
 }
 
 template <class P>
-int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock_it block)
+int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock & block)
 {
 	int ret = 0;
-	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
 	;
-	for (auto y = 0; y < block->dy; y++) {
-		for (auto x = 0; x < block->dx; x++) {
-			const int test = 0 - ((pold[x] - pnew[x]) & 0x00ffffff);
-			ret -= (test >> 31);
+	for (auto y = 0; y < block.dy; y++) {
+		for (auto x = 0; x < block.dx; x++) {
+			const auto test = 0 - ((pold[x] - pnew[x]) & 0x00ffffff);
+			ret -= check_cast<int>(test >> 31);
 		}
 		pold += pitch;
 		pnew += pitch;
@@ -186,12 +190,12 @@ int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock_it blo
 }
 
 template <class P>
-void VideoCodec::AddXorBlock(const int vx, const int vy, const FrameBlock_it block)
+void VideoCodec::AddXorBlock(const int vx, const int vy, const FrameBlock & block)
 {
-	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
-	for (auto y = 0; y < block->dy; ++y) {
-		for (auto x = 0; x < block->dx; ++x) {
+	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
+	for (auto y = 0; y < block.dy; ++y) {
+		for (auto x = 0; x < block.dx; ++x) {
 			*reinterpret_cast<P *>(&work[workUsed]) = pnew[x] ^ pold[x];
 			workUsed += sizeof(P);
 		}
@@ -200,16 +204,20 @@ void VideoCodec::AddXorBlock(const int vx, const int vy, const FrameBlock_it blo
 	}
 }
 
+// align offset to the next 4-byte boundary
+void VideoCodec::AlignWork(size_t & offset) {
+	offset = (offset + blocks.size() * 2u + 3u) & ~3u;
+}
+
 template <class P>
 void VideoCodec::AddXorFrame()
 {
 	auto vectors = &work[workUsed];
-	/* Align the following xor data on 4 byte boundary*/
-	workUsed = (workUsed + blockcount * 2 + 3) & ~3;
 
-	assert(static_cast<size_t>(blockcount) == blocks.size());
-	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
-		const auto block = blocks.begin() + b;
+	AlignWork(workUsed);
+
+	size_t b = 0;
+	for (const auto & block : blocks) {
 
 		int8_t bestvx   = 0;
 		int8_t bestvy   = 0;
@@ -239,6 +247,7 @@ void VideoCodec::AddXorFrame()
 			vectors[b * 2 + 0] |= 1;
 			AddXorBlock<P>(bestvx, bestvy, block);
 		}
+		++b;
 	}
 }
 
@@ -286,9 +295,11 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint
 	 * frame */
 	auto &firstByte = compress.writeBuf[0];
 	firstByte       = 0;
+
 	// Reset the work buffer
 	workUsed = 0;
 	workPos  = 0;
+
 	if (flags & 1) {
 		/* Make a keyframe */
 		firstByte |= Mask_KeyFrame;
@@ -302,7 +313,7 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint
 		header->format = static_cast<uint8_t>(format == ZMBV_FORMAT::BPP_24 ? ZMBV_FORMAT::BPP_32 : format);
 		header->blockwidth  = 16;
 		header->blockheight = 16;
-		compress.writeDone += sizeof(KeyframeHeader);
+		compress.writeDone += keyframeHeaderBytes;
 		/* Copy the new frame directly over */
 		if (palsize) {
 			if (pal)
@@ -362,7 +373,7 @@ int VideoCodec::FinishCompressFrame()
 		for (auto i = 0; i < height; ++i) {
 			memcpy(&work[workUsed], readFrame, static_cast<size_t>(line_width));
 			readFrame += pitch * pixelsize;
-			workUsed += static_cast<size_t>(line_width);
+			workUsed += static_cast<uint32_t>(line_width);
 		}
 	} else {
 		/* Add the delta frame data */
@@ -377,7 +388,7 @@ int VideoCodec::FinishCompressFrame()
 	}
 	/* Create the actual frame with compression */
 	zstream.next_in  = work.data();
-	zstream.avail_in = workUsed;
+	zstream.avail_in = check_cast<uint32_t>(workUsed);
 	zstream.total_in = 0;
 
 	zstream.next_out  = compress.writeBuf + compress.writeDone;
@@ -395,12 +406,12 @@ void VideoCodec::FinishVideo()
 }
 
 template <class P>
-void VideoCodec::UnXorBlock(const int vx, const int vy, const FrameBlock_it block)
+void VideoCodec::UnXorBlock(const int vx, const int vy, const FrameBlock & block)
 {
-	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
-	for (auto y = 0; y < block->dy; ++y) {
-		for (auto x = 0; x < block->dx; ++x) {
+	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
+	for (auto y = 0; y < block.dy; ++y) {
+		for (auto x = 0; x < block.dx; ++x) {
 			pnew[x] = pold[x] ^ *reinterpret_cast<P *>(&work[workPos]);
 			workPos += sizeof(P);
 		}
@@ -410,12 +421,12 @@ void VideoCodec::UnXorBlock(const int vx, const int vy, const FrameBlock_it bloc
 }
 
 template <class P>
-void VideoCodec::CopyBlock(const int vx, const int vy, const FrameBlock_it block)
+void VideoCodec::CopyBlock(const int vx, const int vy, const FrameBlock & block)
 {
-	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
-	for (auto y = 0; y < block->dy; ++y) {
-		for (auto x = 0; x < block->dx; ++x) {
+	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
+	for (auto y = 0; y < block.dy; ++y) {
+		for (auto x = 0; x < block.dx; ++x) {
 			pnew[x] = pold[x];
 		}
 		pold += pitch;
@@ -426,13 +437,12 @@ void VideoCodec::CopyBlock(const int vx, const int vy, const FrameBlock_it block
 template <class P>
 void VideoCodec::UnXorFrame()
 {
-	int8_t *vectors = (int8_t *)&work[workPos];
+	auto vectors = &work[workPos];
 
-	workPos = (workPos + blockcount * 2 + 3) & ~3;
+	AlignWork(workPos);
 
-	assert(static_cast<size_t>(blockcount) == blocks.size());
-	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
-		const auto block = blocks.begin() + b;
+	uint32_t b = 0;
+	for (const auto & block : blocks) {
 		const auto delta = vectors[b * 2 + 0] & 1;
 		const auto vx    = vectors[b * 2 + 0] >> 1;
 		const auto vy    = vectors[b * 2 + 1] >> 1;
@@ -440,6 +450,7 @@ void VideoCodec::UnXorFrame()
 			UnXorBlock<P>(vx, vy, block);
 		else
 			CopyBlock<P>(vx, vy, block);
+		++b;
 	}
 }
 
@@ -453,8 +464,10 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		return false;
 	if (tag & Mask_KeyFrame) {
 		KeyframeHeader *header = (KeyframeHeader *)data;
-		size -= sizeof(KeyframeHeader);
-		data += sizeof(KeyframeHeader);
+
+		size -= keyframeHeaderBytes;
+		data += keyframeHeaderBytes;
+
 		if (size <= 0)
 			return false;
 		if (header->low_version != DBZV_VERSION_LOW || header->high_version != DBZV_VERSION_HIGH)
@@ -466,7 +479,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 			return false;
 	}
 	zstream.next_in  = data;
-	zstream.avail_in = size;
+	zstream.avail_in = check_cast<uint32_t>(size);
 	zstream.total_in = 0;
 
 	zstream.next_out  = work.data();
@@ -493,7 +506,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		oldframe = buf2.data();
 
 		auto writeframe       = newframe + pixelsize * (MAX_VECTOR + MAX_VECTOR * pitch);
-		const auto line_width = width * pixelsize;
+		const auto line_width = check_cast<uint32_t>(width * pixelsize);
 		assert(line_width > 0);
 		for (auto i = 0; i < height; ++i) {
 			memcpy(writeframe, &work[workPos], line_width);
@@ -506,9 +519,9 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		newframe = data;
 		if (tag & Mask_DeltaPalette) {
 			for (size_t i = 0; i < palsize; ++i) {
-				palette[i * 4 + 0] ^= work[workPos++];
-				palette[i * 4 + 1] ^= work[workPos++];
-				palette[i * 4 + 2] ^= work[workPos++];
+				palette[i * 4 + 0] = check_cast<uint8_t>(palette[i * 4 + 0] ^ work[workPos++]);
+				palette[i * 4 + 1] = check_cast<uint8_t>(palette[i * 4 + 1] ^ work[workPos++]);
+				palette[i * 4 + 2] = check_cast<uint8_t>(palette[i * 4 + 2] ^ work[workPos++]);
 			}
 		}
 		switch (format) {
@@ -526,13 +539,17 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 {
 	auto w  = output;
-	int pad = width & 3;
+
+	assert(width >= 0);
+	const auto line_width = static_cast<uint32_t>(width);
+
+	int pad = line_width & 3;
 
 	for (auto i = height - 1; i >= 0; --i) {
 		auto r = newframe + pixelsize * (MAX_VECTOR + (i + MAX_VECTOR) * pitch);
 		switch (format) {
 		case ZMBV_FORMAT::BPP_8:
-			for (auto j = 0; j < width; j++) {
+			for (uint32_t j = 0; j < line_width; j++) {
 				const auto c = r[j];
 
 				*w++ = palette[c * 4 + 2];
@@ -541,7 +558,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 			}
 			break;
 		case ZMBV_FORMAT::BPP_15:
-			for (auto j = 0; j < width; ++j) {
+			for (uint32_t j = 0; j < line_width; ++j) {
 				const auto c = read_unaligned_uint16_at(r, j);
 
 				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
@@ -550,7 +567,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 			}
 			break;
 		case ZMBV_FORMAT::BPP_16:
-			for (auto j = 0; j < width; ++j) {
+			for (uint32_t j = 0; j < line_width; ++j) {
 				const auto c = read_unaligned_uint16_at(r, j);
 
 				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
@@ -560,7 +577,7 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 			break;
 		case ZMBV_FORMAT::BPP_24:
 		case ZMBV_FORMAT::BPP_32:
-			for (auto j = 0; j < width; ++j) {
+			for (uint32_t j = 0; j < line_width; ++j) {
 				*w++ = r[j * 4 + 0];
 				*w++ = r[j * 4 + 1];
 				*w++ = r[j * 4 + 2];

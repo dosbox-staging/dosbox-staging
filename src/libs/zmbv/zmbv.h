@@ -68,6 +68,9 @@ private:
 		uint8_t *writeBuf = nullptr;
 	};
 
+
+	static constexpr uint8_t keyframeHeaderBytes = {sizeof(KeyframeHeader)};
+
 	CodecVector VectorTable[512] = {};
 	int VectorCount = 0;
 
@@ -79,11 +82,8 @@ private:
 	uint32_t bufsize = 0;
 
 	std::vector<FrameBlock> blocks = {};
-	using FrameBlock_it = std::vector<FrameBlock>::const_iterator;
-	using FrameBlock_offset = std::vector<FrameBlock>::difference_type;
-	FrameBlock_offset blockcount = 0;
-	uint32_t workUsed = 0;
-	uint32_t workPos = 0;
+	size_t workUsed = 0;
+	size_t workPos = 0;
 
 	uint32_t palsize = 0;
 	uint8_t palette[256 * 4] = {0};
@@ -105,15 +105,17 @@ private:
 	template <class P>
 	void UnXorFrame();
 	template <class P>
-	int PossibleBlock(int vx, int vy, FrameBlock_it block);
+	int PossibleBlock(int vx, int vy, const FrameBlock & block);
 	template <class P>
-	int CompareBlock(int vx, int vy, FrameBlock_it block);
+	int CompareBlock(int vx, int vy, const FrameBlock & block);
 	template <class P>
-	void AddXorBlock(int vx, int vy, FrameBlock_it block);
+	void AddXorBlock(int vx, int vy, const FrameBlock & block);
 	template <class P>
-	void UnXorBlock(int vx, int vy, FrameBlock_it block);
+	void UnXorBlock(int vx, int vy, const FrameBlock & block);
 	template <class P>
-	void CopyBlock(int vx, int vy, FrameBlock_it block);
+	void CopyBlock(int vx, int vy, const FrameBlock & block);
+
+	void AlignWork(size_t & offset);
 
 public:
 	VideoCodec();
