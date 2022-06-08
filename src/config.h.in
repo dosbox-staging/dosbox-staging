@@ -40,7 +40,9 @@
 #mesondefine MACOSX
 
 // Defined if compiling for Windows (any option)
+#ifndef WIN32
 #mesondefine WIN32
+#endif
 
 /* CPU and FPU emulation
  *
