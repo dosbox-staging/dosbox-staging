@@ -530,6 +530,9 @@
     <ClCompile Include="..\src\libs\sdlcd\SDL_cdrom.c" />
     <ClCompile Include="..\src\libs\sdlcd\win32\SDL_syscdrom.c" />
     <ClCompile Include="..\src\libs\whereami\whereami.c" />
+    <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
+    <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
+    <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
     <ClCompile Include="..\src\platform\visualc\version.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -702,6 +705,8 @@
     <ClInclude Include="..\src\platform\visualc\unistd.h" />
     <ClInclude Include="..\src\libs\loguru\loguru.hpp" />
     <ClInclude Include="..\src\libs\whereami\whereami.h" />
+    <ClInclude Include="..\src\libs\zmbv\Resource.h" />
+    <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\src\dosbox.ico" />

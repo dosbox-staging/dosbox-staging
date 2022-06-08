@@ -448,9 +448,17 @@ subdir('src/libs/whereami')
 subdir('src/libs/PDCurses')
 subdir('src/libs/iir1')
 
-# internal libs
-#
+# A list of DOSBox's internal libraries populated
+# by each of the src/ subdir imports below.
 internal_deps = []
+
+# ZMBV is unique in that it's not really a stand-alone 3rd
+# party library, because it uses some code from (from misc/),
+# so we need to import libmisc_dep before ZBMV:
+subdir('src/misc')
+subdir('src/libs/zmbv')
+
+# internal libs
 subdir('src/cpu')
 subdir('src/debug')
 subdir('src/dos')
@@ -459,7 +467,6 @@ subdir('src/gui')
 subdir('src/hardware')
 subdir('src/ints')
 subdir('src/midi')
-subdir('src/misc')
 subdir('src/shell')
 
 

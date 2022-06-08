@@ -37,7 +37,7 @@
 
 #if (C_SSHOT)
 #include <png.h>
-#include "../libs/zmbv/zmbv.cpp"
+#include "../libs/zmbv/zmbv.h"
 #endif
 
 static std::string capturedir;
