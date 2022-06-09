@@ -198,23 +198,31 @@ bit 2      reserved, often used as turbo switch
 bit 1 = 1  speaker data enable
 bit 0 = 1  timer 2 gate to speaker enable
 */
-static uint8_t port_61_data = 0;
+static PpiPortB port_b_state = {0};
 extern void TIMER_SetGate2(bool);
 static void write_p61(io_port_t, io_val_t value, io_width_t)
 {
-	const auto val = check_cast<uint8_t>(value);
+	const PpiPortB new_state = {check_cast<uint8_t>(value)};
 
-	// Clear the keyboard buffer on XT
-	if (machine < MCH_EGA && bit::is(val, b7))
+	// Determine how the state changed
+	const auto output_changed = new_state.timerGateAndSpeakerOutput !=
+	                            port_b_state.timerGateAndSpeakerOutput;
+	const auto timer_changed = new_state.timerGateOutput !=
+	                           port_b_state.timerGateOutput;
+
+	// Update the state
+	port_b_state.data = new_state.data;
+
+	if (machine < MCH_EGA && port_b_state.clearKeyboardXt)
 		KEYBOARD_ClrBuffer();
 
-	if ((port_61_data ^ val) & 3) {
-		if ((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
-		bool pit_clock_gate_enabled = val & 1;
-		bool pit_output_enabled = val & 2;
-		PCSPEAKER_SetType(pit_clock_gate_enabled, pit_output_enabled);
-	}
-	port_61_data = val;
+	if (!output_changed)
+		return;
+
+	if (timer_changed)
+		TIMER_SetGate2(port_b_state.timerGateOutput);
+
+	PCSPEAKER_SetType(port_b_state);
 }
 
 /* Bochs: 8255 Programmable Peripheral Interface
@@ -234,16 +242,16 @@ extern bool TIMER_GetOutput2(void);
 static uint8_t read_p61(io_port_t, io_width_t)
 {
 	// Bit 4 must be toggled each request
-	bit::flip(port_61_data, b4);
+	port_b_state.toggleOnRead.flip();
 
 	// On PC/AT systems, bit 5 sets the timer 2 output status
 	if (is_machine(MCH_EGA | MCH_VGA))
-		bit::set_to(port_61_data, b5, TIMER_GetOutput2());
+		port_b_state.timerGateOutputAlias = TIMER_GetOutput2();
 	else
 		// On XT systems always toggle bit 5 (Spellicopter CGA)
-		bit::flip(port_61_data, b5);
+		port_b_state.toggleOnReadXt.flip();
 
-	return port_61_data;
+	return port_b_state.data;
 }
 
 /* Bochs: 8255 Programmable Peripheral Interface

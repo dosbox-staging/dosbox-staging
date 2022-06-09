@@ -19,8 +19,9 @@
 #ifndef DOSBOX_TIMER_H
 #define DOSBOX_TIMER_H
 
-#include <cassert>
+#include "bit_view.h"
 
+#include <cassert>
 #include <chrono>
 #include <limits>
 #include <thread>
@@ -62,11 +63,34 @@ enum class PitMode : uint8_t {
 	Inactive,
 };
 
+/*  PPI Port B Control Register
+    Bit System   Description
+    ~~~ ~~~~~~   ~~~~~~~~~~~
+    0   XT & PC  Timer 2 gate to speaker output (read+write)
+    1   XT & PC  Speaker data state (read+write)
+    4   XT & PC  Toggles with each read
+    5   XT-only  Toggles with each read
+        PC-only  Mirrors timer 2 gate to speaker output
+    7   XT-only  Clear keyboard buffer
+*/
+
+union PpiPortB {
+	uint8_t data = {0};
+	bit_view<0, 1> timerGateOutput;
+	bit_view<1, 1> speakerOutput;
+	bit_view<4, 1> toggleOnRead;
+	bit_view<5, 1> toggleOnReadXt;
+	bit_view<5, 1> timerGateOutputAlias;
+	bit_view<7, 1> clearKeyboardXt;
+	// virtual view of the timer and speaker fields
+	bit_view<0, 2> timerGateAndSpeakerOutput;
+};
+
 const char *PitModeToString(const PitMode mode);
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(int cntr, PitMode pit_mode);
-void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetType(const PpiPortB &port_b_state);
 void PCSPEAKER_SetPITControl(PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
