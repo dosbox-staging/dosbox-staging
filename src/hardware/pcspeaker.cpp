@@ -79,11 +79,10 @@ static struct {
 	int minimum_counter = 0; // based on channel rate rate
 
 	// Toggles
-	bool pit_clock_gate_enabled = false;
+	PpiPortB prev_port_b_state         = {};
 	bool pit_mode1_waiting_for_counter = false;
 	bool pit_mode1_waiting_for_trigger = true;
-	bool pit_mode3_counting = false;
-	bool pit_output_enabled = false;
+	bool pit_mode3_counting            = false;
 
 	// PIT mode and apl
 	int16_t pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
@@ -96,7 +95,7 @@ static struct {
 static void AddImpulse(float index, const int16_t amplitude);
 static void AddPITOutput(const float index)
 {
-	if (spkr.pit_output_enabled) {
+	if (spkr.prev_port_b_state.speakerOutput) {
 		AddImpulse(index, spkr.pit_amplitude);
 	}
 }
@@ -334,7 +333,7 @@ void PCSPEAKER_SetCounter(const int cntr, const PitMode pit_mode)
 			spkr.pit_index = 0;
 			spkr.pit_max = spkr.pit_new_max;
 			spkr.pit_half = spkr.pit_new_half;
-			if (spkr.pit_clock_gate_enabled) {
+			if (spkr.prev_port_b_state.timerGateOutput) {
 				spkr.pit_mode3_counting = true;
 				// probably not necessary
 				spkr.pit_amplitude = SPKR_POSITIVE_AMPLITUDE;
@@ -359,24 +358,23 @@ void PCSPEAKER_SetCounter(const int cntr, const PitMode pit_mode)
 	spkr.pit_mode = pit_mode;
 }
 
-void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_enabled)
+void PCSPEAKER_SetType(const PpiPortB &port_b_state)
 {
 	if (!spkr.is_active)
 		return;
 
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
-	        PIC_FullIndex(),
-	        pit_output_enabled ? "pit" : "forced low",
-	        pit_clock_gate_enabled ? "on" : "off");
+	         PIC_FullIndex(),
+	         port_b_state.speakerOutput ? "pit" : "forced low",
+	         port_b_state.timerGateOutput ? "on" : "off");
 #endif
 	const float newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 	// pit clock gate enable rising edge is a trigger
-	const bool pit_trigger = pit_clock_gate_enabled &&
-	                         !spkr.pit_clock_gate_enabled;
-	spkr.pit_clock_gate_enabled = pit_clock_gate_enabled;
-	spkr.pit_output_enabled = pit_output_enabled;
+	const bool pit_trigger = !spkr.prev_port_b_state.timerGateOutput &&
+	                         port_b_state.timerGateOutput;
+	spkr.prev_port_b_state.data = port_b_state.data;
 	if (pit_trigger) {
 		switch (spkr.pit_mode) {
 		case PitMode::OneShot:
@@ -403,7 +401,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 			// TODO: implement other modes
 			break;
 		}
-	} else if (!pit_clock_gate_enabled) {
+	} else if (!port_b_state.timerGateOutput) {
 		switch (spkr.pit_mode) {
 		case PitMode::OneShot:
 			// gate amplitude does not affect mode1
@@ -419,7 +417,7 @@ void PCSPEAKER_SetType(const bool pit_clock_gate_enabled, const bool pit_output_
 			break;
 		}
 	}
-	if (pit_output_enabled) {
+	if (port_b_state.speakerOutput) {
 		AddImpulse(newindex, spkr.pit_amplitude);
 	} else {
 		AddImpulse(newindex, SPKR_NEGATIVE_AMPLITUDE);
