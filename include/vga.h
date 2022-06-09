@@ -409,9 +409,11 @@ union VGA_Latch {
 	uint8_t b[4];
 };
 
+constexpr uint32_t vga_maxmemsize = 8*1024*1024+2048;
+constexpr uint32_t vga_memalign = 16;
+
 struct VGA_Memory {
-	uint8_t *linear = nullptr;
-	uint8_t *linear_orgptr = nullptr;
+	alignas(vga_memalign) uint8_t linear[vga_maxmemsize];
 };
 
 struct VGA_Changes {
@@ -452,10 +454,11 @@ struct VGA_Type {
 	VGA_TANDY tandy = {};
 	VGA_OTHER other = {};
 	VGA_Memory mem = {};
-	uint32_t vmemwrap = 0;      /* this is assumed to be power of 2 */
-	uint8_t *fastmem = nullptr; /* memory for fast (usually 16-color)
-	                             rendering, always twice as big as vmemsize */
-	uint8_t *fastmem_orgptr = nullptr;
+	// this is assumed to be power of 2
+	uint32_t vmemwrap = 0;
+	 // memory for fast (usually 16-color) rendering, 
+	 // always twice as big as vmemsize
+	alignas(vga_memalign) uint8_t fastmem[vga_maxmemsize*2];
 	uint32_t vmemsize = 0;
 #ifdef VGA_KEEP_CHANGES
 	VGA_Changes changes = {};

@@ -1055,8 +1055,6 @@ void VGA_StartUpdateLFB(void) {
 }
 
 static void VGA_Memory_ShutDown(Section * /*sec*/) {
-	delete[] vga.mem.linear_orgptr;
-	delete[] vga.fastmem_orgptr;
 #ifdef VGA_KEEP_CHANGES
 	delete[] vga.changes.map;
 #endif
@@ -1066,17 +1064,17 @@ void VGA_SetupMemory(Section* sec) {
 	vga.svga.bank_read = vga.svga.bank_write = 0;
 	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
 
+	// ensure memory is aligned to vga_memalign bytes
+	assert(reinterpret_cast<uintptr_t>(vga.mem.linear) % vga_memalign == 0);
+	assert(reinterpret_cast<uintptr_t>(vga.fastmem) % vga_memalign == 0);
+
 	uint32_t vga_allocsize=vga.vmemsize;
 	// Keep lower limit at 512k
 	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
 	// We reserve extra 2K for one scan line
 	vga_allocsize+=2048;
-	vga.mem.linear_orgptr = new uint8_t[vga_allocsize+16];
-	vga.mem.linear=(uint8_t*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
-	memset(vga.mem.linear,0,vga_allocsize);
 
-	vga.fastmem_orgptr = new uint8_t[(vga.vmemsize<<1)+4096+16];
-	vga.fastmem=(uint8_t*)(((Bitu)vga.fastmem_orgptr + 16-1) & ~(16-1));
+	memset(vga.mem.linear,0,vga_allocsize);
 
 	// In most cases these values stay the same. Assumptions: vmemwrap is power of 2,
 	// vmemwrap <= vmemsize, fastmem implicitly has mem wrap twice as big

@@ -41,8 +41,8 @@ struct LinkBlock {
 
 static struct MemoryBlock {
 	Bitu pages;
-	PageHandler * * phandlers;
-	MemHandle * mhandles;
+	PageHandler * phandlers[MAX_PAGE_ENTRIES];
+	MemHandle mhandles[MAX_PAGE_ENTRIES];
 	LinkBlock links;
 	struct	{
 		Bitu		start_page;
@@ -57,7 +57,11 @@ static struct MemoryBlock {
 	} a20;
 } memory;
 
-HostPt MemBase;
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
+
+alignas(PAGESIZE) uint8_t MemBase[MAX_MEMORY*1024*1024];
 
 class IllegalPageHandler final : public PageHandler {
 public:
@@ -589,28 +593,11 @@ public:
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new (std::nothrow) uint8_t[memsize * 1024 * 1024];
-		if (!MemBase) {
-			E_Exit("Can't allocate main memory of %u MB", memsize);
-		}
 		memset((void*)MemBase, 0, memsize * 1024 * 1024);
 		memory.pages = (memsize * 1024 * 1024) / 4096;
 		LOG_MSG("MEMORY: Base address: %p", static_cast<void *>(MemBase));
 		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
 		        static_cast<int>(memory.pages), memsize);
-
-		/* Allocate the data for the different page information blocks */
-		memory.phandlers = new (std::nothrow) PageHandler * [memory.pages];
-		if (!memory.phandlers) {
-			E_Exit("Can't allocate %" PRIuPTR " bytes for the PageHandler array",
-			       sizeof(PageHandler*) * memory.pages);
-		}
-
-		memory.mhandles = new (std::nothrow) MemHandle [memory.pages];
-		if (!memory.mhandles) {
-			E_Exit("Can't allocate %" PRIuPTR " bytes worth of memory handles",
-			       sizeof(MemHandle) * memory.pages);
-		}
 
 		for (i = 0; i < memory.pages; i++) {
 			memory.phandlers[i] = &ram_page_handler;
@@ -636,13 +623,6 @@ public:
 		WriteHandler.Install(0x92, write_p92, io_width_t::byte);
 		ReadHandler.Install(0x92, read_p92, io_width_t::byte);
 		MEM_A20_Enable(false);
-	}
-
-	~MEMORY()
-	{
-		delete [] MemBase;
-		delete [] memory.phandlers;
-		delete [] memory.mhandles;
 	}
 };
 
