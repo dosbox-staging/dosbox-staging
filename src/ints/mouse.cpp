@@ -153,6 +153,7 @@ static struct {
 	uint16_t	oldhidden;
 	uint8_t  page;
 	bool enabled;
+	bool cute_mouse;
 	bool inhibit_draw;
 	bool in_UIR;
 	uint8_t mode;
@@ -561,12 +562,14 @@ inline void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate
 }
 
 static inline uint8_t GetResetWheel8bit() {
+    if (!mouse.cute_mouse) return 0;
     int8_t tmp = std::clamp(mouse.wheel, static_cast<int16_t>(-0x80), static_cast<int16_t>(0x7f));
     mouse.wheel = 0;
     return (tmp >= 0) ? tmp : 0x100 + tmp;
 }
 
 static inline uint16_t GetResetWheel16bit() {
+    if (!mouse.cute_mouse) return 0;
     int16_t tmp = (mouse.wheel >= 0) ? mouse.wheel : 0x10000 + mouse.wheel;
     mouse.wheel = 0;
     return tmp;
@@ -692,8 +695,10 @@ static void Mouse_Reset()
 	Mouse_AfterNewVideoMode(false);
 	Mouse_SetMickeyPixelRate(8,16);
 
-	mouse.mickey_x = 0;
-	mouse.mickey_y = 0;
+	mouse.mickey_x   = 0;
+	mouse.mickey_y   = 0;
+    mouse.wheel      = 0;
+    mouse.cute_mouse = false;
 
 	buttons_12  = 0;
 	buttons_345 = 0;
@@ -762,7 +767,7 @@ static Bitu INT33_Handler(void) {
 	case 0x05: // MS MOUSE v1.0+ / CuteMouse - return button press data / mouse wheel data
 		{
             uint16_t but = reg_bx;
-            if (but == 0xffff) {
+            if (but == 0xffff && mouse.cute_mouse) {
                 reg_bx = GetResetWheel16bit();
                 reg_cx = mouse.last_wheel_moved_x;
                 reg_dx = mouse.last_wheel_moved_y;
@@ -779,7 +784,7 @@ static Bitu INT33_Handler(void) {
 	case 0x06: // MS MOUSE v1.0+ / CuteMouse - return button release data / mouse wheel data
 		{
             uint16_t but = reg_bx;
-            if (but == 0xffff) {
+            if (but == 0xffff && mouse.cute_mouse) {
                 reg_bx = GetResetWheel16bit();
                 reg_cx = mouse.last_wheel_moved_x;
                 reg_dx = mouse.last_wheel_moved_y;
@@ -880,9 +885,11 @@ static Bitu INT33_Handler(void) {
 		DrawCursor();
 		break;
     case 0x11: // CuteMouse - get mouse capabilities
-        reg_ax = 0x574D; // Identifier for detection purposes
+        reg_ax = 0x574d; // Identifier for detection purposes
         reg_bx = 0;      // Reserved capabilities flags
         reg_cx = 1;      // Wheel is supported
+        mouse.cute_mouse = true; // This call enables CuteMouse extensions
+        mouse.wheel = 0;
         // Previous implementation provided Genius Mouse 9.06 function to get
         // number of buttons (https://sourceforge.net/p/dosbox/patches/32/), it was
         // returning 0xffff in reg_ax and number of buttons in reg_bx; I suppose
@@ -1297,11 +1304,13 @@ void Mouse_EventReleased(uint8_t idx) {
 void Mouse_EventWheel(int32_t w_rel) {
     MouseSER_NotifyWheel(w_rel);
 
-    mouse.wheel = std::clamp(w_rel + mouse.wheel, -0x8000, 0x7fff);
-    mouse.last_wheel_moved_x = POS_X;
-    mouse.last_wheel_moved_y = POS_Y;
+    if (mouse.cute_mouse) {
+	    mouse.wheel = std::clamp(w_rel + mouse.wheel, -0x8000, 0x7fff);
+	    mouse.last_wheel_moved_x = POS_X;
+	    mouse.last_wheel_moved_y = POS_Y;
 
-    AddEvent(DOS_EV::WHEEL_MOVED);
+	    AddEvent(DOS_EV::WHEEL_MOVED);
+    }
 }
 
 // ***************************************************************************
