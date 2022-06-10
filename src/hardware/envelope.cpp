@@ -22,14 +22,16 @@
 #include "envelope.h"
 
 #include "support.h"
+#include "mixer.h"
 
 Envelope::Envelope(const char *name) : channel_name(name)
 {}
 
 void Envelope::Reactivate()
 {
-	edge = 0;
+	edge        = 0.0f;
 	frames_done = 0;
+
 	process = &Envelope::Apply;
 }
 
@@ -58,12 +60,15 @@ void Envelope::Update(const int frame_rate,
 	assert(expansion_phase_frames);
 	edge_increment = ceil_sdivide(peak_amplitude, expansion_phase_frames);
 
-	// DEBUG_LOG_MSG("ENVELOPE: %s grows by %-3u to %-5u across %-3u frames (%u ms)",
-	//               channel_name, edge_increment, edge_limit, expansion_phase_frames,
-	//               expansion_phase_ms);
+//	DEBUG_LOG_MSG("ENVELOPE: %s grows by %-3f to %-5f across %-3u frames (%u ms)",
+//	              channel_name,
+//	              edge_increment,
+//	              edge_limit,
+//	              expansion_phase_frames,
+//	              expansion_phase_ms);
 }
 
-bool Envelope::ClampSample(int &sample, const int lip)
+bool Envelope::ClampSample(float &sample, const float lip)
 {
 	if (std::abs(sample) > edge) {
 		sample = clamp(sample, -lip, lip);
@@ -72,21 +77,21 @@ bool Envelope::ClampSample(int &sample, const int lip)
 	return false;
 }
 
-void Envelope::Process(const bool is_stereo, int frame[])
+void Envelope::Process(const bool is_stereo, AudioFrame &frame)
 {
 	process(*this, is_stereo, frame);
 }
 
-void Envelope::Apply(const bool is_stereo, int frame[])
+void Envelope::Apply(const bool is_stereo, AudioFrame &frame)
 {
 	// Only start the envelope once our samples have actual values
-	if (frame[0] == 0 && frames_done == 0u)
+	if (frame.left == 0.0f && frames_done == 0u)
 		return;
 
 	// beyond the edge is the lip. Do any samples walk out onto the lip?
-	const int lip = edge + edge_increment;
-	const bool on_lip = ClampSample(frame[0], lip) ||
-	                    (is_stereo && ClampSample(frame[1], lip));
+	const float lip   = edge + edge_increment;
+	const bool on_lip = ClampSample(frame.left, lip) ||
+	                    (is_stereo && ClampSample(frame.right, lip));
 
 	// If any of the samples are out on the lip, then march the edge forward
 	if (on_lip)
@@ -96,7 +101,10 @@ void Envelope::Apply(const bool is_stereo, int frame[])
 	if (++frames_done > expire_after_frames || edge >= edge_limit) {
 		process = &Envelope::Skip;
 		(void)channel_name; // [[maybe_unused]] in release builds
-		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %u",
-		              channel_name, frames_done, edge);
+		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %f",
+		              channel_name,
+		              frames_done,
+		              edge);
 	}
 }
+
