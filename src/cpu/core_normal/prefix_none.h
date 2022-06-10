@@ -227,10 +227,11 @@
 		break;
 	CASE_W(0x62)												/* BOUND */
 		{
-			Bit16s bound_min, bound_max;
-			GetRMrw;GetEAa;
-			bound_min=LoadMw(eaa);
-			bound_max=LoadMw(eaa+2);
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
+			Bit16s bound_min=LoadMws(eaa);
+			Bit16s bound_max=LoadMws(eaa+2);
 			if ( (((Bit16s)*rmrw) < bound_min) || (((Bit16s)*rmrw) > bound_max) ) {
 				EXCEPTION(5);
 			}

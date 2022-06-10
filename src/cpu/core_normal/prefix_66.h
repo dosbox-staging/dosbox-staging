@@ -158,10 +158,11 @@
 		break;
 	CASE_D(0x62)												/* BOUND Ed */
 		{
-			Bit32s bound_min, bound_max;
-			GetRMrd;GetEAa;
-			bound_min=LoadMd(eaa);
-			bound_max=LoadMd(eaa+4);
+			GetRMrd;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
+			Bit32s bound_min=LoadMds(eaa);
+			Bit32s bound_max=LoadMds(eaa+4);
 			if ( (((Bit32s)*rmrd) < bound_min) || (((Bit32s)*rmrd) > bound_max) ) {
 				EXCEPTION(5);
 			}
