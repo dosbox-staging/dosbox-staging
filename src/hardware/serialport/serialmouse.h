@@ -25,7 +25,7 @@
 
 class CSerialMouse : public CSerial {
 public:
-    CSerialMouse(uintptr_t id, CommandLine* cmd);
+    CSerialMouse(uint8_t id, CommandLine* cmd);
     virtual ~CSerialMouse();
 
     void onMouseEventMoved(int16_t delta_x, int16_t delta_y);
@@ -61,7 +61,7 @@ private:
     void startPacketPart2();
     void unimplemented();
 
-    const int port_num;
+    const uint16_t port_num;
 
     MouseType config_type;         // mouse type as in the configuration file
     bool      config_auto;         // true = autoswitch between config_type and Mouse Systems Mouse

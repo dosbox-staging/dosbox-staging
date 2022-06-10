@@ -16,9 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "checks.h"
 #include "mouse.h"
 
 #include "../hardware/serialport/serialmouse.h"
+
+CHECK_NARROWING();
 
 // Implementation here is very primitive, it mainly just passes notifications
 // to registered listeners, which emulate a particular mouse on a particular
@@ -45,8 +48,8 @@ void MouseSER_UnRegisterListener(CSerialMouse *listener) {
 void MouseSER_NotifyMoved(int32_t x_rel, int32_t y_rel) {
     static constexpr float MAX = 16384.0f;
 
-    delta_x += std::clamp(x_rel * mouse_config.sensitivity_x, -MAX, MAX);
-    delta_y += std::clamp(y_rel * mouse_config.sensitivity_y, -MAX, MAX);
+    delta_x += std::clamp(static_cast<float>(x_rel) * mouse_config.sensitivity_x, -MAX, MAX);
+    delta_y += std::clamp(static_cast<float>(y_rel) * mouse_config.sensitivity_y, -MAX, MAX);
 
     int16_t dx = static_cast<int16_t>(std::round(delta_x));
     int16_t dy = static_cast<int16_t>(std::round(delta_y));
@@ -71,5 +74,5 @@ void MouseSER_NotifyReleased(uint8_t buttons_12S, uint8_t idx) {
 
 void MouseSER_NotifyWheel(int32_t w_rel) {
     for (auto &listener : listeners)
-        listener->onMouseEventWheel(std::clamp(w_rel, -0x80, 0x7f));
+        listener->onMouseEventWheel(static_cast<int8_t>(std::clamp(w_rel, -0x80, 0x7f)));
 }
