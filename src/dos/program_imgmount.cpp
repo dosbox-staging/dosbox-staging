@@ -382,14 +382,13 @@ void IMGMOUNT::Run(void) {
         }
         WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
 
-        if (paths.size() == 1) {
-            auto *newdrive = static_cast<fatDrive*>(imgDisks[0]);
-            if (('A' <= drive && drive <= 'B' && !(newdrive->loadedDisk->hardDrive)) ||
-                ('C' <= drive && drive <= 'D' && newdrive->loadedDisk->hardDrive)) {
-                const size_t idx = drive_index(drive);
-                imageDiskList[idx] = newdrive->loadedDisk;
-                updateDPT();
-            }
+        auto newdrive = static_cast<fatDrive*>(imgDisks[0]);
+        assert(newdrive);
+        if (('A' <= drive && drive <= 'B' && !(newdrive->loadedDisk->hardDrive)) ||
+            ('C' <= drive && drive <= 'D' && newdrive->loadedDisk->hardDrive)) {
+            const size_t idx = drive_index(drive);
+            imageDiskList[idx] = newdrive->loadedDisk;
+            updateDPT();
         }
     } else if (fstype=="iso") {
         if (Drives[drive_index(drive)]) {
