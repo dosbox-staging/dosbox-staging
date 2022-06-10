@@ -26,6 +26,7 @@
 #include "../hardware/serialport/serialdummy.h"
 #include "../hardware/serialport/softmodem.h"
 #include "../hardware/serialport/nullmodem.h"
+#include "../hardware/serialport/serialmouse.h"
 
 // Map the serial port type enums to printable names
 static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
@@ -38,6 +39,7 @@ static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
         {SERIAL_PORT_TYPE::MODEM, "modem"},
         {SERIAL_PORT_TYPE::NULL_MODEM, "nullmodem"},
 #endif
+        {SERIAL_PORT_TYPE::MOUSE,   "serialmouse"},
         {SERIAL_PORT_TYPE::INVALID, "invalid"},
 };
 
@@ -138,6 +140,10 @@ void SERIAL::Run()
 			serialports[port_index] = new CNullModem(port_index, commandLine);
 			break;
 #endif
+		case SERIAL_PORT_TYPE::MOUSE:
+			serialports[port_index] = new CSerialMouse(port_index,
+			                                         commandLine);
+			break;
 		default:
 			serialports[port_index] = nullptr;
 			LOG_WARNING("SERIAL: Unknown serial port type %d", desired_type);
