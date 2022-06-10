@@ -1205,6 +1205,9 @@ finish:
 		                       height);
 	}
 
+	// Ensure mouse emulation knows the current parameters
+	Mouse_NewScreenParams(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
 		sdl.draw.callback(GFX_CallBackRedraw);
@@ -3445,8 +3448,8 @@ static void GUI_StartUp(Section *sec)
 
 		// Apply the user's mouse sensitivity settings
 		Prop_multival *p3 = section->Get_multival("sensitivity");
-		sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
-		sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
+		Mouse_SetSensitivity(p3->GetSection()->Get_int("xsens"),
+		                     p3->GetSection()->Get_int("ysens"));
 
 		// Apply raw mouse input setting
 		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
@@ -3478,13 +3481,22 @@ static void GUI_StartUp(Section *sec)
 	startup_state_capslock = keystate & KMOD_CAPS;
 }
 
-static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (mouse_is_captured || sdl.mouse.control_choice == Seamless)
-		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.xsensitivity/100.0f,
-						  (float)motion->yrel*sdl.mouse.ysensitivity/100.0f,
-						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.xsensitivity/100.0f,
-						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.ysensitivity/100.0f,
-						  mouse_is_captured);
+inline void HandleMouseMotion(SDL_MouseMotionEvent *motion)
+{
+	if (motion->xrel != 0 || motion->yrel != 0) {
+		if (mouse_is_captured || sdl.mouse.control_choice == Seamless)
+			Mouse_EventMoved(motion->xrel,
+			                 motion->yrel,
+			                 motion->x,
+			                 motion->y,
+			                 mouse_is_captured);
+	}
+}
+
+inline void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
+{
+	if (wheel->y != 0)
+		Mouse_EventWheel((wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y);
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -3499,28 +3511,20 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 			break; // Don't pass click to mouse handler
 		}
 		switch (button->button) {
-		case SDL_BUTTON_LEFT:
-			Mouse_ButtonPressed(0);
-			break;
-		case SDL_BUTTON_RIGHT:
-			Mouse_ButtonPressed(1);
-			break;
-		case SDL_BUTTON_MIDDLE:
-			Mouse_ButtonPressed(2);
-			break;
+		case SDL_BUTTON_LEFT:   Mouse_EventPressed(0); break;
+		case SDL_BUTTON_RIGHT:  Mouse_EventPressed(1); break;
+		case SDL_BUTTON_MIDDLE: Mouse_EventPressed(2); break;
+		case SDL_BUTTON_X1:     Mouse_EventPressed(3); break;
+		case SDL_BUTTON_X2:     Mouse_EventPressed(4); break;
 		}
 		break;
 	case SDL_RELEASED:
 		switch (button->button) {
-		case SDL_BUTTON_LEFT:
-			Mouse_ButtonReleased(0);
-			break;
-		case SDL_BUTTON_RIGHT:
-			Mouse_ButtonReleased(1);
-			break;
-		case SDL_BUTTON_MIDDLE:
-			Mouse_ButtonReleased(2);
-			break;
+		case SDL_BUTTON_LEFT:   Mouse_EventReleased(0); break;
+		case SDL_BUTTON_RIGHT:  Mouse_EventReleased(1); break;
+		case SDL_BUTTON_MIDDLE: Mouse_EventReleased(2); break;
+		case SDL_BUTTON_X1:     Mouse_EventReleased(3); break;
+		case SDL_BUTTON_X2:     Mouse_EventReleased(4); break;
 		}
 		break;
 	}
@@ -3856,9 +3860,8 @@ bool GFX_Events()
 			}
 			break; // end of SDL_WINDOWEVENT
 
-		case SDL_MOUSEMOTION:
-			HandleMouseMotion(&event.motion);
-			break;
+		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
+		case SDL_MOUSEWHEEL:  HandleMouseWheel(&event.wheel);   break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			if (sdl.mouse.control_choice != NoMouse)

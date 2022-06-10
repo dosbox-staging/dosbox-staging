@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
  
@@ -228,13 +228,10 @@ struct SDL_Block {
 		int period_us_late = 0;
 	} frame = {};
 	struct {
-		int xsensitivity = 0;
-		int ysensitivity = 0;
-		int sensitivity = 0;
 		MouseControlType control_choice = Seamless;
 		bool middle_will_release = true;
 		bool has_focus = false;
-	} mouse = {};
+	} mouse          = {};
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024];
 	bool use_exact_window_resolution = false;
