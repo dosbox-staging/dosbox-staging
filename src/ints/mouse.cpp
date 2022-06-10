@@ -106,7 +106,7 @@ static struct {
 
     // TODO - DANGER, WILL ROBINSON!
     // This whole structure can be read or written from the guest side via virtual DOS driver,
-    // functions 0x15 / 0x16; we need to make sure nothing can be broken by malicious code!
+    // functions 0x15 / 0x16 / 0x17; we need to make sure nothing can be broken by malicious code!
 
 	uint16_t times_pressed[MOUSE_BUTTONS];
 	uint16_t times_released[MOUSE_BUTTONS];
@@ -114,11 +114,16 @@ static struct {
 	uint16_t last_released_y[MOUSE_BUTTONS];
 	uint16_t last_pressed_x[MOUSE_BUTTONS];
 	uint16_t last_pressed_y[MOUSE_BUTTONS];
+    uint16_t last_wheel_moved_x;
+    uint16_t last_wheel_moved_y;
+
+	float    x,y;
+    int16_t  wheel;
+
 	uint16_t hidden;
 	float add_x,add_y;
 	int16_t min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
-	float x,y;
 	uint16_t sub_seg,sub_ofs;
 	uint16_t sub_mask;
 
@@ -229,7 +234,7 @@ inline void AddEvent(uint8_t type) {
 	if (queue_used < QUEUE_SIZE) {
 		if (queue_used > 0) {
 			/* Skip duplicate events */
-			if (type==DOS_EV::MOUSE_MOVED) return;
+			if (type==DOS_EV::MOUSE_MOVED || type==DOS_EV::WHEEL_MOVED) return;
 			/* Always put the newest element in the front as that the events are 
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
@@ -555,6 +560,18 @@ inline void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate
 	DrawCursor();
 }
 
+static inline uint8_t GetResetWheel8bit() {
+    int8_t tmp = std::clamp(mouse.wheel, static_cast<int16_t>(-0x80), static_cast<int16_t>(0x7f));
+    mouse.wheel = 0;
+    return (tmp >= 0) ? tmp : 0x100 + tmp;
+}
+
+static inline uint16_t GetResetWheel16bit() {
+    int16_t tmp = (mouse.wheel >= 0) ? mouse.wheel : 0x10000 + mouse.wheel;
+    mouse.wheel = 0;
+    return tmp;
+}
+
 static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
@@ -681,6 +698,9 @@ static void Mouse_Reset()
 	buttons_12  = 0;
 	buttons_345 = 0;
 
+    mouse.last_wheel_moved_x = 0;
+    mouse.last_wheel_moved_y = 0;
+
 	for (uint8_t but=0; but<MOUSE_BUTTONS; but++) {
 		mouse.times_pressed[but] = 0;
 		mouse.times_released[but] = 0;
@@ -700,35 +720,36 @@ static void Mouse_Reset()
 static Bitu INT33_Handler(void) {
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
 	switch (reg_ax) {
-	case 0x00:	/* Reset Driver and Read Status */
+	case 0x00: // MS MOUSE - reset driver and read status
 		Mouse_ResetHardware();
 		[[fallthrough]];
-	case 0x21:	/* Software Reset */
+	case 0x21: // MS MOUSE v6.0+ - software reset
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;
 		Mouse_Reset();
 		break;
-	case 0x01:	/* Show Mouse */
+	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
 		if(mouse.hidden) mouse.hidden--;
 		mouse.updateRegion_y[1] = -1; //offscreen
 		DrawCursor();
 		break;
-	case 0x02:	/* Hide Mouse */
+	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
 		{
 			if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 			else RestoreCursorBackgroundText();
 			mouse.hidden++;
 		}
 		break;
-	case 0x03:	/* Return position and Button Status */
-		reg_bx = buttons_12 + (buttons_345 ? 4 : 0);
+	case 0x03: // MS MOUSE v1.0+ / CuteMouse - return position and button status
+		reg_bl = buttons_12 + (buttons_345 ? 4 : 0);
+		reg_bh = GetResetWheel8bit(); // original CuteMouse clears mouse wheel status here
 		reg_cx = POS_X;
 		reg_dx = POS_Y;
 		break;
-	case 0x04:	/* Position Mouse */
-		/* If position isn't different from current position
-		 * don't change it then. (as position is rounded so numbers get
-		 * lost when the rounded number is set) (arena/simulation Wolf) */
+	case 0x04: // MS MOUSE v1.0+ - position mouse cursor
+        // If position isn't different from current position, don't change it.
+        // (position is rounded so numbers get lost when the rounded number is set)
+        // (arena/simulation Wolf)
 		if ((int16_t)reg_cx >= mouse.max_x) mouse.x = static_cast<float>(mouse.max_x);
 		else if (mouse.min_x >= (int16_t)reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
 		else if ((int16_t)reg_cx != POS_X) mouse.x = static_cast<float>(reg_cx);
@@ -738,63 +759,75 @@ static Bitu INT33_Handler(void) {
 		else if ((int16_t)reg_dx != POS_Y) mouse.y = static_cast<float>(reg_dx);
 		DrawCursor();
 		break;
-	case 0x05:	/* Return Button Press Data */
+	case 0x05: // MS MOUSE v1.0+ / CuteMouse - return button press data / mouse wheel data
 		{
-			uint16_t but = reg_bx;
-			reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
-			if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
-			reg_cx = mouse.last_pressed_x[but];
-			reg_dx = mouse.last_pressed_y[but];
-			reg_bx = mouse.times_pressed[but];
-			mouse.times_pressed[but] = 0;
+            uint16_t but = reg_bx;
+            if (but == 0xffff) {
+                reg_bx = GetResetWheel16bit();
+                reg_cx = mouse.last_wheel_moved_x;
+                reg_dx = mouse.last_wheel_moved_y;
+            } else {
+                reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+                if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
+                reg_cx = mouse.last_pressed_x[but];
+                reg_dx = mouse.last_pressed_y[but];
+                reg_bx = mouse.times_pressed[but];
+                mouse.times_pressed[but] = 0;
+            }
 		}
 		break;
-	case 0x06:	/* Return Button Release Data */
+	case 0x06: // MS MOUSE v1.0+ / CuteMouse - return button release data / mouse wheel data
 		{
-			uint16_t but = reg_bx;
-			reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
-			if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
-			reg_cx = mouse.last_released_x[but];
-			reg_dx = mouse.last_released_y[but];
-			reg_bx = mouse.times_released[but];
-			mouse.times_released[but] = 0;
+            uint16_t but = reg_bx;
+            if (but == 0xffff) {
+                reg_bx = GetResetWheel16bit();
+                reg_cx = mouse.last_wheel_moved_x;
+                reg_dx = mouse.last_wheel_moved_y;
+            } else {
+			    reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+			    if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
+			    reg_cx = mouse.last_released_x[but];
+			    reg_dx = mouse.last_released_y[but];
+			    reg_bx = mouse.times_released[but];
+			    mouse.times_released[but] = 0;
+            }
 		}
 		break;
-	case 0x07:	/* Define horizontal cursor range */
-		{	//lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
-			//Iron seed works if newvideo mode with mode 13 sets 0-639
-			//Larry 6 actually wants newvideo mode with mode 13 to set it to 0-319
+	case 0x07: // MS MOUSE v1.0+ - define horizontal cursor range
+        {   // Lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
+            // Iron seed works if newvideo mode with mode 13 sets 0-639
+            // Larry 6 actually wants newvideo mode with mode 13 to set it to 0-319
 			int16_t max,min;
 			if ((int16_t)reg_cx<(int16_t)reg_dx) { min=(int16_t)reg_cx;max=(int16_t)reg_dx;}
 			else { min=(int16_t)reg_dx;max=(int16_t)reg_cx;}
 			mouse.min_x=min;
 			mouse.max_x=max;
-			/* Battlechess wants this */
+            // Battlechess wants this
 			if(mouse.x > mouse.max_x) mouse.x = mouse.max_x;
 			if(mouse.x < mouse.min_x) mouse.x = mouse.min_x;
-			/* Or alternatively this: 
-			mouse.x = (mouse.max_x - mouse.min_x + 1)/2;*/
+			// Or alternatively this: 
+			// mouse.x = (mouse.max_x - mouse.min_x + 1)/2;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
 		}
 		break;
-	case 0x08:	/* Define vertical cursor range */
-		{	// not sure what to take instead of the CurMode (see case 0x07 as well)
-			// especially the cases where sheight= 400 and we set it with the mouse_reset to 200
-			//disabled it at the moment. Seems to break syndicate who want 400 in mode 13
+	case 0x08: // MS MOUSE v1.0+ - define vertical cursor range
+        {   // not sure what to take instead of the CurMode (see case 0x07 as well)
+            // especially the cases where sheight= 400 and we set it with the mouse_reset to 200
+            // disabled it at the moment. Seems to break syndicate who want 400 in mode 13
 			int16_t max,min;
 			if ((int16_t)reg_cx<(int16_t)reg_dx) { min=(int16_t)reg_cx;max=(int16_t)reg_dx;}
 			else { min=(int16_t)reg_dx;max=(int16_t)reg_cx;}
 			mouse.min_y=min;
 			mouse.max_y=max;
-			/* Battlechess wants this */
+            // Battlechess wants this
 			if(mouse.y > mouse.max_y) mouse.y = mouse.max_y;
 			if(mouse.y < mouse.min_y) mouse.y = mouse.min_y;
-			/* Or alternatively this: 
-			mouse.y = (mouse.max_y - mouse.min_y + 1)/2;*/
+			// Or alternatively this: 
+			// mouse.y = (mouse.max_y - mouse.min_y + 1)/2;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
 		}
 		break;
-	case 0x09:	/* Define GFX Cursor */
+	case 0x09: // MS MOUSE v3.0+ - define GFX cursor
 		{
 			PhysPt src = SegPhys(es)+reg_dx;
 			MEM_BlockRead(src          ,userdefScreenMask,CURSORY*2);
@@ -807,7 +840,7 @@ static Bitu INT33_Handler(void) {
 			DrawCursor();
 		}
 		break;
-	case 0x0a:	/* Define Text Cursor */
+	case 0x0a: // MS MOUSE v3.0+ - define text cursor
 		mouse.cursorType = (reg_bx?1:0);
 		mouse.textAndMask = reg_cx;
 		mouse.textXorMask = reg_dx;
@@ -817,40 +850,52 @@ static Bitu INT33_Handler(void) {
 		}
 		DrawCursor();
 		break;
-	case 0x27:	/* Get Screen/Cursor Masks and Mickey Counts */
+	case 0x27: // MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
 		reg_ax=mouse.textAndMask;
 		reg_bx=mouse.textXorMask;
 		[[fallthrough]];
-	case 0x0b:	/* Read Motion Data */
+	case 0x0b: // MS MOUSE v1.0+ - read motion data
 		reg_cx=static_cast<int16_t>(mouse.mickey_x);
 		reg_dx=static_cast<int16_t>(mouse.mickey_y);
 		mouse.mickey_x=0;
 		mouse.mickey_y=0;
 		break;
-	case 0x0c:	/* Define interrupt subroutine parameters */
+	case 0x0c: // MS MOUSE v1.0+ - define interrupt subroutine parameters
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
 		break;
-	case 0x0f:	/* Define mickey/pixel rate */
+    case 0x0d: // MS MOUSE v1.0+ - light pen emulation on
+    case 0x0e: // MS MOUSE v1.0+ - light pen emulation off
+        LOG(LOG_MOUSE,LOG_ERROR)("Mouse light pen emulation not implemented");
+        break;
+	case 0x0f: // MS MOUSE v1.0+ - define mickey/pixel rate
 		Mouse_SetMickeyPixelRate(reg_cx,reg_dx);
 		break;
-	case 0x10:	/* Define screen region for updating */
+	case 0x10: // MS MOUSE v1.0+ - define screen region for updating
 		mouse.updateRegion_x[0]=(int16_t)reg_cx;
 		mouse.updateRegion_y[0]=(int16_t)reg_dx;
 		mouse.updateRegion_x[1]=(int16_t)reg_si;
 		mouse.updateRegion_y[1]=(int16_t)reg_di;
 		DrawCursor();
 		break;
-	case 0x11:      /* Get number of buttons */
-		reg_ax=0xffff;
-		reg_bx=MOUSE_BUTTONS;
-		break;
-	case 0x13:      /* Set double-speed threshold */
+    case 0x11: // CuteMouse - get mouse capabilities
+        reg_ax = 0x574D; // Identifier for detection purposes
+        reg_bx = 0;      // Reserved capabilities flags
+        reg_cx = 1;      // Wheel is supported
+        // Previous implementation provided Genius Mouse 9.06 function to get
+        // number of buttons (https://sourceforge.net/p/dosbox/patches/32/), it was
+        // returning 0xffff in reg_ax and number of buttons in reg_bx; I suppose
+        // the CuteMouse extensions are more useful
+        break;
+    case 0x12: // MS MOUSE - set large graphics cursor block
+        LOG(LOG_MOUSE,LOG_ERROR)("Large graphics cursor block not implemented");
+        break;
+	case 0x13: // MS MOUSE v5.0+ - set double-speed threshold
 		mouse.doubleSpeedThreshold=(reg_bx ? reg_bx : 64);
  		break;
-	case 0x14: /* Exchange event-handler */ 
-		{	
+	case 0x14: // MS MOUSE v3.0+ - exchange event-handler
+		{
 			uint16_t oldSeg = mouse.sub_seg;
 			uint16_t oldOfs = mouse.sub_ofs;
 			uint16_t oldMask= mouse.sub_mask;
@@ -863,100 +908,163 @@ static Bitu INT33_Handler(void) {
 			reg_dx = oldOfs;
 			SegSet16(es,oldSeg);
 		}
-		break;		
-	case 0x15: /* Get Driver storage space requirements */
+		break;
+	case 0x15: // MS MOUSE v6.0+ - get driver storage space requirements
 		reg_bx = sizeof(mouse);
 		break;
-	case 0x16: /* Save driver state */
+	case 0x16: // MS MOUSE v6.0+ - save driver state
 		{
 			LOG(LOG_MOUSE,LOG_WARN)("Saving driver state...");
 			PhysPt dest = SegPhys(es)+reg_dx;
 			MEM_BlockWrite(dest, &mouse, sizeof(mouse));
 		}
 		break;
-	case 0x17: /* load driver state */
+	case 0x17: // MS MOUSE v6.0+ - load driver state
 		{
 			LOG(LOG_MOUSE,LOG_WARN)("Loading driver state...");
 			PhysPt src = SegPhys(es)+reg_dx;
 			MEM_BlockRead(src, &mouse, sizeof(mouse));
 		}
 		break;
-	case 0x1a:	/* Set mouse sensitivity */
+    case 0x18: // MS MOUSE v6.0+ - set alternate mouse user handler
+    case 0x19: // MS MOUSE v6.0+ - set alternate mouse user handler
+        LOG(LOG_MOUSE,LOG_WARN)("Alternate mouse user handler not implemented");
+        break;
+	case 0x1a: // MS MOUSE v6.0+ - set mouse sensitivity
 		// ToDo : double mouse speed value
 		Mouse_SetSensitivity(reg_bx,reg_cx,reg_dx);
 
 		LOG(LOG_MOUSE,LOG_WARN)("Set sensitivity used with %d %d (%d)",reg_bx,reg_cx,reg_dx);
 		break;
-	case 0x1b:	/* Get mouse sensitivity */
+	case 0x1b: //  MS MOUSE v6.0+ - get mouse sensitivity
 		reg_bx = mouse.senv_x_val;
 		reg_cx = mouse.senv_y_val;
 		reg_dx = mouse.dspeed_val;
 
 		LOG(LOG_MOUSE,LOG_WARN)("Get sensitivity %d %d",reg_bx,reg_cx);
 		break;
-	case 0x1c:	/* Set interrupt rate */
-		/* Can't really set a rate this is host determined */
-		break;
-	case 0x1d:      /* Set display page number */
+    case 0x1c: // MS MOUSE v6.0+ - set interrupt rate
+        // Can't really set a rate this is host determined
+        break;
+    case 0x1d: // MS MOUSE v6.0+ - set display page number
 		mouse.page=reg_bl;
 		break;
-	case 0x1e:      /* Get display page number */
+	case 0x1e: // MS MOUSE v6.0+ - get display page number
 		reg_bx=mouse.page;
 		break;
-	case 0x1f:	/* Disable Mousedriver */
-		/* ES:BX old mouse driver Zero at the moment TODO */ 
+	case 0x1f: // MS MOUSE v6.0+ - disable mouse driver
+        // ES:BX old mouse driver Zero at the moment TODO
 		reg_bx=0;
 		SegSet16(es,0);	   
-		mouse.enabled=false; /* Just for reporting not doing a thing with it */
+		mouse.enabled=false; // Just for reporting not doing a thing with it
 		mouse.oldhidden=mouse.hidden;
 		mouse.hidden=1;
 		break;
-	case 0x20:	/* Enable Mousedriver */
+	case 0x20: // MS MOUSE v6.0+ - enable mouse driver
 		mouse.enabled=true;
 		mouse.hidden=mouse.oldhidden;
 		break;
-	case 0x22:      /* Set language for messages */
- 			/*
-			 *                        Values for mouse driver language:
-			 * 
-			 *                        00h     English
-			 *                        01h     French
-			 *                        02h     Dutch
-			 *                        03h     German
-			 *                        04h     Swedish
-			 *                        05h     Finnish
-			 *                        06h     Spanish
-			 *                        07h     Portugese
-			 *                        08h     Italian
-			 *                
-			 */
+	case 0x22: // MS MOUSE v6.0+ - set language for messages
+        // 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h = Swedish
+        // 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h = Italian
 		mouse.language=reg_bx;
 		break;
-	case 0x23:      /* Get language for messages */
+	case 0x23: // MS MOUSE v6.0+ - get language for messages
 		reg_bx=mouse.language;
 		break;
-	case 0x24:	/* Get Software version and mouse type */
-		reg_bx=0x805;	//Version 8.05 woohoo 
-		reg_ch=0x04;	/* PS/2 type */
-		reg_cl=0;		/* PS/2 (unused) */
+	case 0x24: // MS MOUSE v6.26+ - get Software version, mouse type, and IRQ number
+		reg_bx=0x805; // version 8.05 woohoo 
+		reg_ch=0x04;  // PS/2 type
+		reg_cl=0;     // PS/2 mouse; for any other type it would be IRQ number
 		break;
-	case 0x26: /* Get Maximum virtual coordinates */
+    case 0x25: // MS MOUSE v6.26+ - get general driver information
+        // TODO: According to PC sourcebook reference
+        //       Returns:
+        //       AH = status
+        //         bit 7 driver type: 1=sys 0=com
+        //         bit 6: 0=non-integrated 1=integrated mouse driver
+        //         bits 4-5: cursor type  00=software text cursor 01=hardware text cursor 1X=graphics cursor
+        //         bits 0-3: Function 28 mouse interrupt rate
+        //       AL = Number of MDDS (?)
+        //       BX = fCursor lock
+        //       CX = FinMouse code
+        //       DX = fMouse busy
+        LOG(LOG_MOUSE,LOG_ERROR)("General driver information not implemented");
+        break;
+	case 0x26: // MS MOUSE v6.26+ - get maximum virtual coordinates
 		reg_bx=(mouse.enabled ? 0x0000 : 0xffff);
 		reg_cx=(uint16_t)mouse.max_x;
 		reg_dx=(uint16_t)mouse.max_y;
 		break;
-	case 0x2a:	/* Get cursor hot spot */
+    case 0x28: // MS MOUSE v7.0+ - set video mode
+        // TODO: According to PC sourcebook
+        //       Entry:
+        //       CX = Requested video mode
+        //       DX = Font size, 0 for default
+        //       Returns:
+        //       DX = 0 on success, nonzero (requested video mode) if not
+        LOG(LOG_MOUSE,LOG_ERROR)("Set video mode not implemented");
+        break;
+    case 0x29: // MS MOUSE v7.0+ - enumerate video modes
+        // TODO: According to PC sourcebook
+        //       Entry:
+        //       CX = 0 for first, != 0 for next
+        //       Exit:
+        //       BX:DX = named string far ptr
+        //       CX = video mode number
+        LOG(LOG_MOUSE,LOG_ERROR)("Enumerate video modes not implemented");
+        break;
+	case 0x2a: // MS MOUSE v7.01+ - get cursor hot spot
 		reg_al=(uint8_t)-mouse.hidden;	// Microsoft uses a negative byte counter for cursor visibility
 		reg_bx=(uint16_t)mouse.hotx;
 		reg_cx=(uint16_t)mouse.hoty;
-		reg_dx=0x04;	// PS/2 mouse type
+		reg_dx=0x04; // PS/2 mouse type
 		break;
-	case 0x31: /* Get Current Minimum/Maximum virtual coordinates */
+    case 0x2b: // MS MOUSE v7.0+ - load acceleration profiles
+        LOG(LOG_MOUSE,LOG_ERROR)("Load acceleration profiles not implemented");
+        break;
+    case 0x2c: // MS MOUSE v7.0+ - get acceleration profiles
+        LOG(LOG_MOUSE,LOG_ERROR)("Get acceleration profiles not implemented");
+        break;
+    case 0x2d: // MS MOUSE v7.0+ - select acceleration profile
+        LOG(LOG_MOUSE,LOG_ERROR)("Select acceleration profile not implemented");
+        break;
+    case 0x2e: // MS MOUSE v8.10+ - set acceleration profile names
+        LOG(LOG_MOUSE,LOG_ERROR)("Set acceleration profile names not implemented");
+        break;
+    case 0x2f: // MS MOUSE v7.02+ - mouse hardware reset
+        LOG(LOG_MOUSE,LOG_ERROR)("INT 33 AX=2F mouse hardware reset not implemented");
+        break;
+    case 0x30: // MS MOUSE v7.04+ - get/set BallPoint information
+        LOG(LOG_MOUSE,LOG_ERROR)("Get/set BallPoint information not implemented");
+        break;
+	case 0x31: // MS MOUSE v7.05+ - get current minimum/maximum virtual coordinates
 		reg_ax=(uint16_t)mouse.min_x;
 		reg_bx=(uint16_t)mouse.min_y;
 		reg_cx=(uint16_t)mouse.max_x;
 		reg_dx=(uint16_t)mouse.max_y;
 		break;
+    case 0x32: // MS MOUSE v7.05+ - get active advanced functions
+        LOG(LOG_MOUSE,LOG_ERROR)("Get active advanced functions not implemented");
+        break;
+    case 0x33: // MS MOUSE v7.05+ - get switch settings and accelleration profile data
+        LOG(LOG_MOUSE,LOG_ERROR)("Get switch settings and acceleration profile data not implemented");
+        break;
+    case 0x34: // MS MOUSE v8.0+ - get initialization file
+        LOG(LOG_MOUSE,LOG_ERROR)("Get initialization file not implemented");
+        break;
+    case 0x35: // MS MOUSE v8.10+ - LCD screen large pointer support
+        LOG(LOG_MOUSE,LOG_ERROR)("LCD screen large pointer support not implemented");
+        break;
+    case 0x4d: // MS MOUSE - return pointer to copyright string
+        LOG(LOG_MOUSE,LOG_ERROR)("Return pointer to copyright string not implemented");
+        break;
+    case 0x6d: // MS MOUSE - get version string
+        LOG(LOG_MOUSE,LOG_ERROR)("Get version string not implemented");
+        break;
+    case 0x53C1: // Logitech CyberMan
+        LOG(LOG_MOUSE,LOG_NORMAL)("Mouse function 53C1 for Logitech CyberMan called. Ignored by regular mouse driver.");
+        break;
 	default:
 		LOG(LOG_MOUSE,LOG_ERROR)("Mouse Function %04X not implemented!",reg_ax);
 		break;
@@ -1029,7 +1137,8 @@ static Bitu INT74_Handler(void) {
 		/* Check for an active Interrupt Handler that will get called */
 		if (mouse.sub_mask & queue[queue_used].dos_type) {
 			reg_ax=queue[queue_used].dos_type;
-			reg_bx=queue[queue_used].dos_buttons;
+            reg_bl=queue[queue_used].dos_buttons;
+            reg_bh=GetResetWheel8bit();
 			reg_cx=POS_X;
 			reg_dx=POS_Y;
 			reg_si=static_cast<int16_t>(mouse.mickey_x);
@@ -1188,7 +1297,11 @@ void Mouse_EventReleased(uint8_t idx) {
 void Mouse_EventWheel(int32_t w_rel) {
     MouseSER_NotifyWheel(w_rel);
 
-    // TODO: implement wheel support for DOS
+    mouse.wheel = std::clamp(w_rel + mouse.wheel, -0x8000, 0x7fff);
+    mouse.last_wheel_moved_x = POS_X;
+    mouse.last_wheel_moved_y = POS_Y;
+
+    AddEvent(DOS_EV::WHEEL_MOVED);
 }
 
 // ***************************************************************************
