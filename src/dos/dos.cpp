@@ -1186,7 +1186,7 @@ static Bitu DOS_27Handler(void) {
 	return CBRET_NONE;
 }
 
-Bit16u DOS_SectorAccess(bool read) {
+static Bit16u DOS_SectorAccess(bool read) {
 	fatDrive * drive = (fatDrive *)Drives[reg_al];
 	Bit16u bufferSeg = SegValue(ds);
 	Bit16u bufferOff = reg_bx;
