@@ -223,8 +223,11 @@ void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
 		StereoFrame frame = {buf[0], buf[1]};
 
 		const auto wet = adlib_gold.surround_processor->Process(frame);
-		frame.left += wet.left;
-		frame.right += wet.right;
+		// Additional wet signal level boost to make the emulated sound
+		// more closely resemble real hardware recordings.
+		constexpr auto wet_boost = 1.6;
+		frame.left += wet.left * wet_boost;
+		frame.right += wet.right * wet_boost;
 
 		frame = adlib_gold.stereo_processor->Process(frame);
 
@@ -812,7 +815,10 @@ void Module::CtrlWrite(uint8_t val)
 		if (adlib_gold.surround_enabled) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, treble: %d",
 			              val & 0xf);
-			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_TR, val);
+			// Additional treble boost to make the emulated sound
+			// more closely resemble real hardware recordings.
+			adlib_gold.stereo_processor->ControlWrite(
+			        TDA8425_Reg_TR, val < 0xf ? val + 1 : 0xf);
 		}
 		break;
 
