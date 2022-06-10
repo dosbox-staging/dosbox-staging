@@ -15,6 +15,7 @@ libints_sources = files([
   'int10_vptable.cpp',
   'mouse.cpp',
   'mouse_serial.cpp',
+  'mouse_vmware.cpp',
   'xms.cpp',
 ])
 

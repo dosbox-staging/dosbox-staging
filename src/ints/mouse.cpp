@@ -1095,15 +1095,21 @@ void Mouse_SetSensitivity(int32_t sensitivity_x, int32_t sensitivity_y) {
         mouse_config.sensitivity_y = std::min(mouse_config.sensitivity_y, -MIN);
 }
 
-void Mouse_NewScreenParams(uint16_t clip_x, uint16_t clip_y, uint16_t res_x, uint16_t res_y) {
+void Mouse_NewScreenParams(uint16_t clip_x, uint16_t clip_y, uint16_t res_x, uint16_t res_y,
+                           bool fullscreen, int32_t x_abs, int32_t y_abs) {
 
     mouse_video.clip_x     = clip_x;
     mouse_video.clip_y     = clip_y;
     mouse_video.res_x      = res_x;
     mouse_video.res_y      = res_y;
+    mouse_video.fullscreen = fullscreen;
+
+    MouseVMW_NewScreenParams(x_abs, y_abs);
 }
 
 void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs, bool is_captured) {
+
+	MouseVMW_NotifyMoved(x_abs, y_abs);
 
 	Mouse_CursorMoved(x_rel * mouse_config.sensitivity_x,
 					  y_rel * mouse_config.sensitivity_y,
@@ -1112,6 +1118,11 @@ void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs
 					  is_captured);
 
 	MouseSER_NotifyMoved(x_rel, y_rel);
+}
+
+void Mouse_NotifyMovedVMW() {
+
+	AddEvent(DOS_EV::MOUSE_MOVED);
 }
 
 void Mouse_EventPressed(uint8_t idx) {
@@ -1130,19 +1141,17 @@ void Mouse_EventPressed(uint8_t idx) {
 
     uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
     bool    changed_12S = (buttons_12S_old != buttons_12S);
-    uint8_t idx_12S     = idx < 2 ? idx : 2;
+    
+    if (changed_12S) {
+    	uint8_t idx_12S = idx < 2 ? idx : 2;
 
-    auto event = SelectEventPressed(idx, changed_12S);
+    	MouseVMW_NotifyPressedReleased(buttons_12S);
+        MouseSER_NotifyPressed(buttons_12S, idx_12S);
 
-    if (event != DOS_EV::NOT_DOS_EVENT) {
 	 	mouse.times_pressed[idx_12S]++;
 		mouse.last_pressed_x[idx_12S] = POS_X;
 		mouse.last_pressed_y[idx_12S] = POS_Y;
-        AddEvent(event);
-    }
-
-    if (changed_12S) {
-        MouseSER_NotifyPressed(buttons_12S, idx_12S);
+        AddEvent(SelectEventPressed(idx, changed_12S));
     }
 }
 
@@ -1162,19 +1171,17 @@ void Mouse_EventReleased(uint8_t idx) {
 
     uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
     bool    changed_12S = (buttons_12S_old != buttons_12S);
-    uint8_t idx_12S     = idx < 2 ? idx : 2;
 
-    auto event = SelectEventReleased(idx, changed_12S);
+    if (changed_12S) {
+    	uint8_t idx_12S = idx < 2 ? idx : 2;
 
-    if (event != DOS_EV::NOT_DOS_EVENT) {
+    	MouseVMW_NotifyPressedReleased(buttons_12S);
+        MouseSER_NotifyReleased(buttons_12S, idx_12S);
+
 		mouse.times_released[idx_12S]++;	
 		mouse.last_released_x[idx_12S] = POS_X;
 		mouse.last_released_y[idx_12S] = POS_Y;
-        AddEvent(event);
-    }
-
-    if (changed_12S) {
-        MouseSER_NotifyReleased(buttons_12S, idx_12S);
+        AddEvent(SelectEventReleased(idx, changed_12S));
     }
 }
 
@@ -1266,4 +1273,6 @@ void MOUSE_Init(Section* /*sec*/) {
 	Mouse_ResetHardware();
 	Mouse_Reset();
 	Mouse_SetSensitivity(50,50,50);
+
+	MouseVMW_Init();
 }

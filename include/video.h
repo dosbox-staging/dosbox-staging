@@ -78,6 +78,7 @@ void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
+void GFX_UpdateMouseState();
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
 

@@ -26,13 +26,15 @@
 // Notifications from external subsystems - all should go via these methods
 // ***************************************************************************
 
-void  Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs, bool is_captured);
-void  Mouse_EventPressed(uint8_t idx);
-void  Mouse_EventReleased(uint8_t idx);
-void  Mouse_EventWheel(int32_t w_rel);
+void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs, bool is_captured);
+void Mouse_EventPressed(uint8_t idx);
+void Mouse_EventReleased(uint8_t idx);
+void Mouse_EventWheel(int32_t w_rel);
 
-void  Mouse_SetSensitivity(int32_t sensitivity_x, int32_t sensitivity_y);
-void  Mouse_NewScreenParams(uint16_t clip_x, uint16_t clip_y, uint16_t res_x, uint16_t res_y);
+void Mouse_SetSensitivity(int32_t sensitivity_x, int32_t sensitivity_y);
+void Mouse_NewScreenParams(uint16_t clip_x, uint16_t clip_y, uint16_t res_x, uint16_t res_y,
+                           bool fullscreen, int32_t x_abs, int32_t y_abs);
+void Mouse_NotifyMovedVMW();
 
 // ***************************************************************************
 // Common structures, please only update via functions above
@@ -57,6 +59,7 @@ typedef struct {
 
 extern MouseInfoConfig mouse_config;
 extern MouseInfoVideo  mouse_video;
+extern bool            mouse_vmware; // true = VMware driver took over the mouse
 
 // ***************************************************************************
 // Serial mouse
@@ -82,6 +85,20 @@ void MouseSER_NotifyWheel(int32_t w_rel);
 
 bool Mouse_SetPS2State(bool use);
 void Mouse_ChangePS2Callback(uint16_t pseg, uint16_t pofs);
+
+// ***************************************************************************
+// VMware protocol extension for PS/2 mouse
+// ***************************************************************************
+
+void MouseVMW_Init();
+void MouseVMW_NewScreenParams(int32_t x_abs, int32_t y_abs);
+
+// - needs absolute mouse position
+// - understands up to 3 buttons
+
+bool MouseVMW_NotifyMoved(int32_t x_abs, int32_t y_abs);
+void MouseVMW_NotifyPressedReleased(uint8_t buttons_12S);
+void MouseVMW_NotifyWheel(int32_t w_rel);
 
 // ***************************************************************************
 // DOS virtual mouse driver
