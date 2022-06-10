@@ -54,7 +54,7 @@ public:
 	~AdlibGoldSurroundProcessor();
 
 	void ControlWrite(const uint8_t val) noexcept;
-	StereoFrame Process(const StereoFrame &frame) noexcept;
+	AudioFrame Process(const AudioFrame &frame) noexcept;
 
 private:
 	YM7128B_ChipIdeal *chip = nullptr;
@@ -98,9 +98,9 @@ void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
 
 	// Change register data at the falling edge of 'a0' word clock
 	if (control_state.a0 && !a0) {
-		//		LOG_MSG("ADLIBGOLD.SURROUND: Write control
-		//register %d, data: %d", 		        control_state.addr,
-		//		        control_state.data);
+//		DEBUG_LOG_MSG("ADLIBGOLD.SURROUND: Write control register %d, data: %d",
+//		              control_state.addr,
+//		              control_state.data);
 		YM7128B_ChipIdeal_Write(chip, control_state.addr, control_state.data);
 	} else {
 		// Data is sent in serially through 'din' in MSB->LSB order,
@@ -121,15 +121,14 @@ void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
 	control_state.a0  = a0;
 }
 
-StereoFrame AdlibGoldSurroundProcessor::Process(const StereoFrame &frame) noexcept
+AudioFrame AdlibGoldSurroundProcessor::Process(const AudioFrame &frame) noexcept
 {
 	YM7128B_ChipIdeal_Process_Data data = {};
 	data.inputs[0]                      = frame.left + frame.right;
 
 	YM7128B_ChipIdeal_Process(chip, &data);
 
-	return {static_cast<int16_t>(data.outputs[0]),
-	        static_cast<int16_t>(data.outputs[1])};
+	return {data.outputs[0], data.outputs[1]};
 }
 
 class AdlibGoldStereoProcessor {
@@ -139,7 +138,7 @@ public:
 
 	void Reset() noexcept;
 	void ControlWrite(const TDA8425_Reg reg, const TDA8425_Register data) noexcept;
-	StereoFrame Process(const StereoFrame &frame) noexcept;
+	AudioFrame Process(const AudioFrame &frame) noexcept;
 
 private:
 	TDA8425_Chip *chip = nullptr;
@@ -193,7 +192,7 @@ void AdlibGoldStereoProcessor::ControlWrite(const TDA8425_Reg addr,
 	TDA8425_Chip_Write(chip, addr, data);
 }
 
-StereoFrame AdlibGoldStereoProcessor::Process(const StereoFrame &frame) noexcept
+AudioFrame AdlibGoldStereoProcessor::Process(const AudioFrame &frame) noexcept
 {
 	TDA8425_Chip_Process_Data data = {};
 	data.inputs[0][0]              = frame.left;
@@ -203,8 +202,7 @@ StereoFrame AdlibGoldStereoProcessor::Process(const StereoFrame &frame) noexcept
 
 	TDA8425_Chip_Process(chip, &data);
 
-	return {static_cast<int16_t>(data.outputs[0]),
-	        static_cast<int16_t>(data.outputs[1])};
+	return {data.outputs[0], data.outputs[1]};
 }
 
 struct {
@@ -214,13 +212,17 @@ struct {
 } adlib_gold = {};
 
 void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
-                                            int16_t *data, const uint32_t frames)
+                                            const int16_t *data, const uint32_t frames)
 {
-	auto frames_left = frames;
-	auto buf         = data;
+	float out_buf[1024 * 2];
 
+	auto in  = data;
+	auto out = out_buf;
+
+	auto frames_left = frames;
 	while (frames_left--) {
-		StereoFrame frame = {buf[0], buf[1]};
+		AudioFrame frame = {static_cast<float>(in[0]),
+		                    static_cast<float>(in[1])};
 
 		const auto wet = adlib_gold.surround_processor->Process(frame);
 		// Additional wet signal level boost to make the emulated sound
@@ -231,12 +233,13 @@ void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
 
 		frame = adlib_gold.stereo_processor->Process(frame);
 
-		buf[0] = frame.left;
-		buf[1] = frame.right;
-		buf += 2;
+		out[0] = frame.left;
+		out[1] = frame.right;
+		in += 2;
+		out += 2;
 	}
 
-	chan->AddSamples_s16(frames, data);
+	chan->AddSamples_sfloat(frames, out_buf);
 }
 
 namespace OPL2 {

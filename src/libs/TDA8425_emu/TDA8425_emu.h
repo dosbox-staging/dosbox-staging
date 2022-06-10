@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 #ifndef TDA8425_FLOAT
-#define TDA8425_FLOAT double            //!< Floating point data type
+#define TDA8425_FLOAT float            //!< Floating point data type
 #endif
 
 #ifndef TDA8425_USE_DC_REMOVAL
