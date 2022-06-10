@@ -23,114 +23,20 @@
 // NOTE: a lot of this code assumes that the callback is called every emulated
 // millisecond
 
-#include "dosbox.h"
+#include "pcspeaker_impulse.h"
 
-// #define SPKR_DEBUGGING
-// #define REFERENCE
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <cfloat>
-#include <cmath>
-#include <deque>
-
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
-#include "setup.h"
-#include "soft_limiter.h"
-#include "support.h"
-#include "pic.h"
 #include "checks.h"
 
 CHECK_NARROWING();
 
-class PcSpeaker {
-public:
-	PcSpeaker();
-	~PcSpeaker();
-
-	void SetFilterState(const FilterState &filter_state);
-	void SetCounter(const int cntr, const PitMode pit_mode);
-	void SetPITControl(const PitMode pit_mode);
-	void SetType(const PpiPortB &port_b_state);
-
-private:
-	void AddImpulse(float index, const int16_t amplitude);
-	void AddPITOutput(const float index);
-	void ChannelCallback(uint16_t requested_frames);
-	void ForwardPIT(const float new_index);
-	float CalcImpulse(const double t);
-	void InitializeImpulseLUT();
-
-	// Constants
-	static constexpr char device_name[] = "PCSPEAKER";
-
-	static constexpr int16_t positive_amplitude = 20000;
-	static constexpr int16_t negative_amplitude = -positive_amplitude;
-	static constexpr int16_t neutral_amplitude  = 0;
-
-	static constexpr float ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
-
-	// Mixer channel constants
-	static constexpr auto sample_rate         = 32000;
-	static constexpr auto lowpass_cutoff_freq = 4300;
-	static constexpr auto sample_rate_per_ms  = sample_rate / 1000;
-	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate;
-
-	// must be greater than 0.0f
-	static constexpr float cutoff_margin = 0.2f;
-
-	// Should be selected based on sampling rate
-	static constexpr float high_pass_amount   = 0.999f;
-	static constexpr auto filter_quality      = 100;
-	static constexpr auto oversampling_factor = 32;
-	static constexpr auto filter_width        = filter_quality * oversampling_factor;
-
-	// Compound types and containers
-	struct PitState {
-		// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with
-		// positive amplitude
-		float max_ms            = ms_per_pit_tick * 1320;
-		float new_max_ms        = max_ms;
-		float half_max_ms       = max_ms / 2;
-		float new_half_max_ms   = half_max_ms;
-		float index             = 0.0f;
-		float last_index        = index;
-		float mode1_pending_max = 0.0f;
-
-		// PIT boolean state
-		bool mode1_waiting_for_counter = false;
-		bool mode1_waiting_for_trigger = true;
-		bool mode3_counting            = false;
-
-		PitMode mode = PitMode::SquareWave;
-
-		int16_t amplitude      = positive_amplitude;
-		int16_t prev_amplitude = negative_amplitude;
-	} pit = {};
-
-	std::deque<float> waveform_deque = {};
-
-	std::array<float, filter_width> impulse_lut = {};
-
-	std::unique_ptr<SoftLimiter> soft_limiter = {};
-
-	mixer_channel_t channel = {};
-
-	PpiPortB prev_port_b_state = {};
-
-	int tally_of_silence = 0;
-};
-
-void PcSpeaker::AddPITOutput(const float index)
+void PcSpeakerImpulse::AddPITOutput(const float index)
 {
 	if (prev_port_b_state.speakerOutput) {
 		AddImpulse(index, pit.amplitude);
 	}
 }
 
-void PcSpeaker::ForwardPIT(const float new_index)
+void PcSpeakerImpulse::ForwardPIT(const float new_index)
 {
 	auto passed = new_index - pit.last_index;
 
@@ -183,7 +89,7 @@ void PcSpeaker::ForwardPIT(const float new_index)
 	case PitMode::RateGeneratorAlias:
 		while (passed > 0) {
 			// passed the initial low cycle?
-			if (pit.index >= pit.half_max_ms) {
+			if (pit.index >= pit.half_ms) {
 				// Start a new low cycle
 				if ((pit.index + passed) >= pit.max_ms) {
 					const auto delay = pit.max_ms - pit.index;
@@ -197,13 +103,13 @@ void PcSpeaker::ForwardPIT(const float new_index)
 					return;
 				}
 			} else {
-				if ((pit.index + passed) >= pit.half_max_ms) {
-					const auto delay = pit.half_max_ms - pit.index;
+				if ((pit.index + passed) >= pit.half_ms) {
+					const auto delay = pit.half_ms - pit.index;
 					delay_base += delay;
 					passed -= delay;
 					pit.amplitude = positive_amplitude;
 					AddPITOutput(delay_base);
-					pit.index = pit.half_max_ms;
+					pit.index = pit.half_ms;
 				} else {
 					pit.index += passed;
 					return;
@@ -218,7 +124,7 @@ void PcSpeaker::ForwardPIT(const float new_index)
 			break;
 		while (passed > 0) {
 			// Determine where in the wave we're located
-			if (pit.index >= pit.half_max_ms) {
+			if (pit.index >= pit.half_ms) {
 				if ((pit.index + passed) >= pit.max_ms) {
 					const auto delay = pit.max_ms - pit.index;
 					delay_base += delay;
@@ -227,23 +133,23 @@ void PcSpeaker::ForwardPIT(const float new_index)
 					AddPITOutput(delay_base);
 					pit.index = 0;
 					// Load the new count
-					pit.max_ms      = pit.new_max_ms;
-					pit.half_max_ms = pit.new_half_max_ms;
+					pit.max_ms  = pit.new_max_ms;
+					pit.half_ms = pit.new_half_ms;
 				} else {
 					pit.index += passed;
 					return;
 				}
 			} else {
-				if ((pit.index + passed) >= pit.half_max_ms) {
-					const auto delay = pit.half_max_ms - pit.index;
+				if ((pit.index + passed) >= pit.half_ms) {
+					const auto delay = pit.half_ms - pit.index;
 					delay_base += delay;
 					passed -= delay;
 					pit.amplitude = negative_amplitude;
 					AddPITOutput(delay_base);
-					pit.index = pit.half_max_ms;
+					pit.index = pit.half_ms;
 					// Load the new count
-					pit.max_ms      = pit.new_max_ms;
-					pit.half_max_ms = pit.new_half_max_ms;
+					pit.max_ms  = pit.new_max_ms;
+					pit.half_ms = pit.new_half_ms;
 				} else {
 					pit.index += passed;
 					return;
@@ -258,7 +164,7 @@ void PcSpeaker::ForwardPIT(const float new_index)
 			if (pit.index + passed >= pit.max_ms) {
 				const auto delay = pit.max_ms - pit.index;
 				delay_base += delay;
-				passed -= delay;
+				// passed -= delay; // not currently used
 				pit.amplitude = negative_amplitude;
 				// No new events unless reprogrammed
 				AddPITOutput(delay_base);
@@ -273,14 +179,12 @@ void PcSpeaker::ForwardPIT(const float new_index)
 	}
 }
 
-void PcSpeaker::SetPITControl(const PitMode pit_mode)
+void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
 {
 	const auto new_index = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(new_index);
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f pit command: %s",
-	         PIC_FullIndex(),
-	         PitModeToString(pit_mode));
+	LOG_INFO("PCSPEAKER: %f pit command: %s", PIC_FullIndex(), PitModeToString(pit_mode));
 #endif
 	// TODO: implement all modes
 	switch (pit_mode) {
@@ -305,13 +209,10 @@ void PcSpeaker::SetPITControl(const PitMode pit_mode)
 	AddPITOutput(new_index);
 }
 
-void PcSpeaker::SetCounter(const int cntr, const PitMode pit_mode)
+void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 {
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s",
-	         PIC_FullIndex(),
-	         cntr,
-	         PitModeToString(pit_mode));
+	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s", PIC_FullIndex(), cntr, PitModeToString(pit_mode));
 #endif
 	const auto new_index = static_cast<float>(PIC_TickIndex());
 
@@ -321,9 +222,11 @@ void PcSpeaker::SetCounter(const int cntr, const PitMode pit_mode)
 	switch (pit_mode) {
 	case PitMode::InterruptOnTC:
 		// used with "realsound" (PWM)
-		pit.index     = 0;
+		pit.index = 0;
+
 		pit.amplitude = negative_amplitude;
 		pit.max_ms    = duration_of_count_ms;
+
 		AddPITOutput(new_index);
 		break;
 
@@ -341,9 +244,11 @@ void PcSpeaker::SetCounter(const int cntr, const PitMode pit_mode)
 	case PitMode::RateGeneratorAlias:
 		pit.index     = 0;
 		pit.amplitude = negative_amplitude;
+
 		AddPITOutput(new_index);
-		pit.max_ms      = duration_of_count_ms;
-		pit.half_max_ms = ms_per_pit_tick;
+
+		pit.max_ms  = duration_of_count_ms;
+		pit.half_ms = ms_per_pit_tick;
 		break;
 
 	case PitMode::SquareWave:
@@ -352,15 +257,17 @@ void PcSpeaker::SetCounter(const int cntr, const PitMode pit_mode)
 			// avoid breaking digger music
 			pit.amplitude = positive_amplitude;
 			pit.mode      = PitMode::Inactive;
+
 			AddPITOutput(new_index);
 			return;
 		}
-		pit.new_max_ms      = duration_of_count_ms;
-		pit.new_half_max_ms = pit.new_max_ms / 2;
+		pit.new_max_ms  = duration_of_count_ms;
+		pit.new_half_ms = pit.new_max_ms / 2;
 		if (!pit.mode3_counting) {
-			pit.index       = 0;
-			pit.max_ms      = pit.new_max_ms;
-			pit.half_max_ms = pit.new_half_max_ms;
+			pit.index = 0;
+
+			pit.max_ms  = pit.new_max_ms;
+			pit.half_ms = pit.new_half_ms;
 			if (prev_port_b_state.timerGateOutput) {
 				pit.mode3_counting = true;
 				// probably not necessary
@@ -379,16 +286,14 @@ void PcSpeaker::SetCounter(const int cntr, const PitMode pit_mode)
 
 	default:
 #ifdef SPKR_DEBUGGING
-		LOG_MSG("Unhandled speaker mode %s at %f",
-		        PitModeToString(pit_mode),
-		        PIC_FullIndex());
+		LOG_WARNING("Unhandled speaker PIT mode: %s at %f", PitModeToString(pit_mode), PIC_FullIndex());
 #endif
 		return;
 	}
 	pit.mode = pit_mode;
 }
 
-void PcSpeaker::SetType(const PpiPortB &port_b_state)
+void PcSpeakerImpulse::SetType(const PpiPortB &port_b_state)
 {
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
@@ -400,6 +305,7 @@ void PcSpeaker::SetType(const PpiPortB &port_b_state)
 	ForwardPIT(new_index);
 	// pit clock gate enable rising edge is a trigger
 	const bool pit_trigger = !prev_port_b_state.timerGateOutput && port_b_state.timerGateOutput;
+
 	prev_port_b_state.data = port_b_state.data;
 	if (pit_trigger) {
 		switch (pit.mode) {
@@ -419,11 +325,11 @@ void PcSpeaker::SetType(const PpiPortB &port_b_state)
 		case PitMode::SquareWaveAlias:
 			pit.mode3_counting = true;
 			// pit.new_max_ms = pit.new_max_ms; // typo or bug?
-			pit.index           = 0;
-			pit.max_ms          = pit.new_max_ms;
-			pit.new_half_max_ms = pit.new_max_ms / 2;
-			pit.half_max_ms     = pit.new_half_max_ms;
-			pit.amplitude       = positive_amplitude;
+			pit.index       = 0;
+			pit.max_ms      = pit.new_max_ms;
+			pit.new_half_ms = pit.new_max_ms / 2;
+			pit.half_ms     = pit.new_half_ms;
+			pit.amplitude   = positive_amplitude;
 			break;
 
 		default:
@@ -467,7 +373,7 @@ static double sinc(const double t)
 	return result;
 }
 
-float PcSpeaker::CalcImpulse(const double t)
+float PcSpeakerImpulse::CalcImpulse(const double t)
 {
 	// raised-cosine-windowed sinc function
 	const double fs = sample_rate;
@@ -481,7 +387,7 @@ float PcSpeaker::CalcImpulse(const double t)
 		return 0.0f;
 }
 
-void PcSpeaker::AddImpulse(float index, int16_t amplitude)
+void PcSpeakerImpulse::AddImpulse(float index, int16_t amplitude)
 {
 	// Did the amplitude change?
 	if (amplitude == pit.prev_amplitude)
@@ -497,17 +403,16 @@ void PcSpeaker::AddImpulse(float index, int16_t amplitude)
 	index = clamp(index, 0.0f, 1.0f);
 #ifndef REFERENCE
 	const auto samples_in_impulse = index * sample_rate_per_ms;
-	auto phase = static_cast<int>(samples_in_impulse * oversampling_factor) %
-	             oversampling_factor;
+	auto phase = static_cast<int>(samples_in_impulse * oversampling_factor) % oversampling_factor;
 
-	auto offset = static_cast<int>(samples_in_impulse);
+	auto offset = static_cast<size_t>(samples_in_impulse);
 	if (phase != 0) {
 		offset++;
 		phase = oversampling_factor - phase;
 	}
 
 	for (int i = 0; i < filter_quality; ++i) {
-		const auto wave_i    = static_cast<size_t>(offset + i);
+		const auto wave_i = offset + static_cast<size_t>(i);
 		const auto impulse_i = static_cast<size_t>(phase + i * oversampling_factor);
 		waveform_deque.at(wave_i) += amplitude * impulse_lut.at(impulse_i);
 	}
@@ -522,7 +427,7 @@ void PcSpeaker::AddImpulse(float index, int16_t amplitude)
 }
 #endif
 
-void PcSpeaker::ChannelCallback(uint16_t requested_frames)
+void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 {
 	ForwardPIT(1.0f);
 	pit.last_index = 0;
@@ -570,18 +475,18 @@ void PcSpeaker::ChannelCallback(uint16_t requested_frames)
 	}
 }
 
-void PcSpeaker::InitializeImpulseLUT()
+void PcSpeakerImpulse::InitializeImpulseLUT()
 {
 	assert(impulse_lut.size() == filter_width);
 	for (auto i = 0u; i < filter_width; ++i)
 		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate) * oversampling_factor));
 }
 
-void PcSpeaker::SetFilterState(const FilterState &filter_state)
+void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 {
 	assert(channel);
-	
-	// Setup the low-pass filter
+
+	// Setup filters
 	if (filter_state == FilterState::On) {
 		// The filters are meant to emulate the bandwidth limited
 		// sound of the small PC speaker. This more accurately
@@ -593,8 +498,8 @@ void PcSpeaker::SetFilterState(const FilterState &filter_state)
 		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
 		channel->SetHighPassFilter(FilterState::On);
 
-		constexpr auto lp_order       = 2;
-		constexpr auto lp_cutoff_freq = 4800;
+		constexpr auto lp_order       = 3;
+		constexpr auto lp_cutoff_freq = 4300;
 		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
@@ -603,7 +508,7 @@ void PcSpeaker::SetFilterState(const FilterState &filter_state)
 	}
 }
 
-PcSpeaker::PcSpeaker()
+PcSpeakerImpulse::PcSpeakerImpulse()
 {
 	static_assert(sample_rate >= 8000, "Sample rate must be at least 8 kHz");
 	static_assert(sample_rate % 1000 == 0, "PC Speaker sample must be a multiple of 1000");
@@ -619,7 +524,7 @@ PcSpeaker::PcSpeaker()
 	assert(soft_limiter);
 
 	// Register the sound channel
-	const auto callback = std::bind(&PcSpeaker::ChannelCallback, this, std::placeholders::_1);
+	const auto callback = std::bind(&PcSpeakerImpulse::ChannelCallback, this, std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
 	                           sample_rate,
@@ -627,63 +532,13 @@ PcSpeaker::PcSpeaker()
 	                           {ChannelFeature::ReverbSend, ChannelFeature::ChorusSend});
 	assert(channel);
 
-	LOG_MSG("%s: Initialized", device_name);
+	LOG_MSG("%s: Initialized %s model", device_name, model_name);
 
 	channel->SetPeakAmplitude(static_cast<uint32_t>(positive_amplitude));
 }
 
-PcSpeaker::~PcSpeaker()
+PcSpeakerImpulse::~PcSpeakerImpulse()
 {
 	channel->Enable(false);
-	LOG_MSG("%s: Shutting down", device_name);
-}
-
-// The PC Speaker managed pointer
-std::unique_ptr<PcSpeaker> pc_speaker = {};
-
-// PC Speaker external API, used by the PIT timer and keyboard
-void PCSPEAKER_SetCounter(const int counter, const PitMode pit_mode)
-{
-	if (pc_speaker)
-		pc_speaker->SetCounter(counter, pit_mode);
-}
-
-void PCSPEAKER_SetPITControl(const PitMode pit_mode)
-{
-	if (pc_speaker)
-		pc_speaker->SetPITControl(pit_mode);
-}
-
-void PCSPEAKER_SetType(const PpiPortB &port_b_state)
-{
-	if (pc_speaker)
-		pc_speaker->SetType(port_b_state);
-}
-
-void PCSPEAKER_ShutDown([[maybe_unused]] Section *sec)
-{
-	pc_speaker.reset();
-}
-
-void PCSPEAKER_Init(Section *section)
-{
-	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
-
-	if (!prop->Get_bool("pcspeaker"))
-		return;
-
-	// Create the PC Speaker
-	if (!pc_speaker)
-		pc_speaker = std::make_unique<PcSpeaker>();
-
-	// Get the user's filering preference
-	const auto filter_pref  = std::string_view(prop->Get_string("pcspeaker_filter"));
-	const auto filter_state = filter_pref == "on" ? FilterState::On : FilterState::Off;
-
-	// Apply the user's filtering preference
-	assert(pc_speaker);
-	pc_speaker->SetFilterState(filter_state);
-
-	section->AddDestroyFunction(&PCSPEAKER_ShutDown, true);
+	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
 }
