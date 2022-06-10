@@ -221,6 +221,12 @@ void BOOT::Run(void)
 				continue;
 			}
 
+
+			if (imageDiskList[0] != nullptr || imageDiskList[1] != nullptr) {
+				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_MOUNTED"));
+				return;
+			}
+
 			if (i >= MAX_SWAPPABLE_DISKS) {
 				return; // TODO give a warning.
 			}
@@ -520,6 +526,7 @@ void BOOT::AddMessages() {
 	        "Type \033[34;1mBOOT /?\033[0m for the syntax of this command.\033[0m\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
+	MSG_Add("PROGRAM_BOOT_IMAGE_MOUNTED","Floppy image(s) already mounted.\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
 	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
