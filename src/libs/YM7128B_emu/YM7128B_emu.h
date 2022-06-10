@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 #ifndef YM7128B_FLOAT
-#define YM7128B_FLOAT double        //!< Floating point data type
+#define YM7128B_FLOAT float         //!< Floating point data type
 #define YM7128B_Float_Min   (-1)    //!< Maximum floating point value
 #define YM7128B_Float_Max   (+1)    //!< Minimum floating point value
 #endif
