@@ -59,11 +59,14 @@
 #include <cstdint>
 #include <functional>
 
+
+typedef struct AudioFrame AudioFrame_;
+
 class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(bool is_stereo, int frame[]);
+	void Process(bool is_stereo, AudioFrame &frame);
 
 	void Update(int frame_rate,
 	            int peak_amplitude,
@@ -76,27 +79,30 @@ private:
 	Envelope(const Envelope &) = delete;            // prevent copying
 	Envelope &operator=(const Envelope &) = delete; // prevent assignment
 
-	bool ClampSample(int &sample, int next_edge);
+	bool ClampSample(float &sample, float next_edge);
 
-	void Apply(bool is_stereo, int frame[]);
+	void Apply(bool is_stereo, AudioFrame &frame);
 
-	void Skip([[maybe_unused]] bool is_stereo,
-	          [[maybe_unused]] int frame[])
+	void Skip([[maybe_unused]] bool is_stereo, [[maybe_unused]] AudioFrame &frame)
 	{}
 
-	using process_f = std::function<void(Envelope &, bool, int[])>;
+	using process_f = std::function<void(Envelope &, bool, AudioFrame &)>;
 	process_f process = &Envelope::Apply;
 
 	const char *channel_name = nullptr;
+
 	int expire_after_frames = 0; // Stop enveloping when this many
 	                             // frames have been processed.
-	int frames_done = 0;         // A tally of processed frames.
-	int edge = 0;                // The current edge of the envelope, which
-	              // increments outward when samples press against it.
-	int edge_increment = 0; // The amount the edge grows by once a
-	                        // sample is found to be beyond it.
-	int edge_limit = 0;     // Stop enveloping when the current edge is
-	                        // hits or exceeds this limit.
+
+	int frames_done = 0; // A tally of processed frames.
+
+	float edge = 0.0f;           // The current edge of the envelope, which
+	                             // increments outward when samples press
+	                             // against it.
+	float edge_increment = 0.0f; // The amount the edge grows by once a
+	                             // sample is found to be beyond it.
+	float edge_limit = 0.0f;     // Stop enveloping when the current edge is
+	                             // hits or exceeds this limit.
 };
 
 #endif

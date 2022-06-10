@@ -31,6 +31,7 @@
 #include <set>
 
 #include "envelope.h"
+#include "mixer.h"
 
 #include "../src/libs/iir1/Iir.h"
 
@@ -54,8 +55,14 @@ enum MixerModes {
 
 // A simple stereo audio frame
 struct AudioFrame {
-	float left = 0;
+	float left  = 0;
 	float right = 0;
+
+	float &operator[](std::size_t i)
+	{
+		assert(i < 2);
+		return i == 0 ? left : right;
+	}
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
@@ -189,11 +196,14 @@ private:
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
 	std::set<ChannelFeature> features = {};
+
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step
 	int freq_counter = 0u;       // When this flows over a new sample needs to be read from the device
 	int needed = 0u;             // Timing on how many samples were needed by the mixer
-	int prev_sample[2] = {0, 0}; // Previous and next samples
-	int next_sample[2] = {0, 0};
+
+	AudioFrame prev_frame = {}; // Previous and next samples
+	AudioFrame next_frame = {};
+
 	// Simple way to lower the impact of DC offset. if MIXER_UPRAMP_STEPS is
 	// >0. Still work in progress and thus disabled for now.
 	int offset[2] = {0, 0};

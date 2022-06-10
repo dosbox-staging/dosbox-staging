@@ -295,10 +295,11 @@ void MixerChannel::Enable(const bool should_enable)
 		// we don't perform this zero'ing in the enable phase.
 		done = 0u;
 		needed = 0u;
-		prev_sample[0] = 0;
-		prev_sample[1] = 0;
-		next_sample[0] = 0;
-		next_sample[1] = 0;
+
+		prev_frame[0] = 0.0f;
+		prev_frame[1] = 0.0f;
+		next_frame[0] = 0.0f;
+		next_frame[1] = 0.0f;
 	}
 	is_enabled = should_enable;
 	MIXER_UnlockAudioDevice();
@@ -372,45 +373,57 @@ void MixerChannel::AddSilence()
 	MIXER_LockAudioDevice();
 
 	if (done < needed) {
-		if(prev_sample[0] == 0 && prev_sample[1] == 0) {
+		if (prev_frame[0] == 0.0f && prev_frame[1] == 0.0f) {
 			done = needed;
-			//Make sure the next samples are zero when they get switched to prev
-			next_sample[0] = 0;
-			next_sample[1] = 0;
-			//This should trigger an instant request for new samples
+			// Make sure the next samples are zero when they get
+			// switched to prev
+			next_frame[0] = 0.0f;
+			next_frame[1] = 0.0f;
+			// This should trigger an instant request for new samples
 			freq_counter = FREQ_NEXT;
 		} else {
 			bool stereo = last_samples_were_stereo;
 
-			const auto mapped_output_left = output_map.left;
+			const auto mapped_output_left  = output_map.left;
 			const auto mapped_output_right = output_map.right;
 
 			// Position where to write the data
 			auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 			while (done < needed) {
-				// Maybe depend on sample rate. (the 4)
-				if (prev_sample[0] > 4)       next_sample[0] = prev_sample[0] - 4;
-				else if (prev_sample[0] < -4) next_sample[0] = prev_sample[0] + 4;
-				else next_sample[0] = 0;
-				if (prev_sample[1] > 4)       next_sample[1] = prev_sample[1] - 4;
-				else if (prev_sample[1] < -4) next_sample[1] = prev_sample[1] + 4;
-				else next_sample[1] = 0;
+				// Fade gradually to silence to avoid clicks.
+				// Maybe the fade factor f depends on the sample
+				// rate.
+				constexpr auto f = 4.0f;
+
+				if (prev_frame[0] > f)
+					next_frame[0] = prev_frame[0] - f;
+				else if (prev_frame[0] < -f)
+					next_frame[0] = prev_frame[0] + f;
+				else
+					next_frame[0] = 0.0f;
+
+				if (prev_frame[1] > f)
+					next_frame[1] = prev_frame[1] - f;
+				else if (prev_frame[1] < -f)
+					next_frame[1] = prev_frame[1] + f;
+				else
+					next_frame[1] = 0.0f;
 
 				mixpos &= MIXER_BUFMASK;
 
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_sample[0] * volmul[0];
+				        prev_frame[0] * volmul[0];
 
 				mixer.work[mixpos][mapped_output_right] +=
-				        (stereo ? prev_sample[1] : prev_sample[0]) *
+				        (stereo ? prev_frame[1] : prev_frame[0]) *
 				        volmul[1];
 
-				prev_sample[0] = next_sample[0];
-				prev_sample[1] = next_sample[1];
+				prev_frame[0] = next_frame[0];
+				prev_frame[1] = next_frame[1];
 				mixpos++;
 				done++;
 				freq_counter = FREQ_NEXT;
-			} 
+			}
 		}
 	}
 	last_samples_were_silence = true;
@@ -530,54 +543,58 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 	out.resize(0);
 
 	while (pos < frames) {
-		prev_sample[0] = next_sample[0];
+		prev_frame[0] = next_frame[0];
 		if (stereo) {
-			prev_sample[1] = next_sample[1];
+			prev_frame[1] = next_frame[1];
 		}
 
-		if (sizeof(Type) == 1) {
+		if (std::is_same<Type, float>::value) {
+			// Float TODO
+
+		} else if (sizeof(Type) == 1) {
+			// Integer types
 			// unsigned 8-bit
 			if (!signeddata) {
 				if (stereo) {
-					next_sample[0] = lut_u8to16[data[pos * 2 + 0]];
-					next_sample[1] = lut_u8to16[data[pos * 2 + 1]];
+					next_frame[0] = lut_u8to16[data[pos * 2 + 0]];
+					next_frame[1] = lut_u8to16[data[pos * 2 + 1]];
 				} else {
-					next_sample[0] = lut_u8to16[data[pos]];
+					next_frame[0] = lut_u8to16[data[pos]];
 				}
 			}
 			// signed 8-bit
 			else {
 				if (stereo) {
-					next_sample[0] = lut_s8to16[data[pos * 2 + 0]];
-					next_sample[1] = lut_s8to16[data[pos * 2 + 1]];
+					next_frame[0] = lut_s8to16[data[pos * 2 + 0]];
+					next_frame[1] = lut_s8to16[data[pos * 2 + 1]];
 				} else {
-					next_sample[0] = lut_s8to16[data[pos]];
+					next_frame[0] = lut_s8to16[data[pos]];
 				}
 			}
-		// 16-bit and 32-bit both contain 16-bit data internally
 		} else {
+			// 16-bit and 32-bit both contain 16-bit data internally
 			if (signeddata) {
 				if (stereo) {
 					if (nativeorder) {
-						next_sample[0] = data[pos * 2 + 0];
-						next_sample[1] = data[pos * 2 + 1];
+						next_frame[0] = data[pos * 2 + 0];
+						next_frame[1] = data[pos * 2 + 1];
 					} else {
 						if (sizeof(Type) == 2) {
-							next_sample[0] = (int16_t)host_readw((HostPt)&data[pos * 2 + 0]);
-							next_sample[1] = (int16_t)host_readw((HostPt)&data[pos * 2 + 1]);
+							next_frame[0] = (int16_t)host_readw((HostPt)&data[pos * 2 + 0]);
+							next_frame[1] = (int16_t)host_readw((HostPt)&data[pos * 2 + 1]);
 						} else {
-							next_sample[0] = (int32_t)host_readd((HostPt)&data[pos * 2 + 0]);
-							next_sample[1] = (int32_t)host_readd((HostPt)&data[pos * 2 + 1]);
+							next_frame[0] = (int32_t)host_readd((HostPt)&data[pos * 2 + 0]);
+							next_frame[1] = (int32_t)host_readd((HostPt)&data[pos * 2 + 1]);
 						}
 					}
 				} else { // mono
 					if (nativeorder) {
-						next_sample[0] = data[pos];
+						next_frame[0] = data[pos];
 					} else {
 						if (sizeof(Type) == 2) {
-							next_sample[0] = (int16_t)host_readw((HostPt)&data[pos]);
+							next_frame[0] = (int16_t)host_readw((HostPt)&data[pos]);
 						} else {
-							next_sample[0] = (int32_t)host_readd((HostPt)&data[pos]);
+							next_frame[0] = (int32_t)host_readd((HostPt)&data[pos]);
 						}
 					}
 				}
@@ -585,25 +602,25 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 				const auto offset = 32768;
 				if (stereo) {
 					if (nativeorder) {
-						next_sample[0] = static_cast<int>(data[pos * 2 + 0]) - offset;
-						next_sample[1] = static_cast<int>(data[pos * 2 + 1]) - offset;
+						next_frame[0] = static_cast<int>(data[pos * 2 + 0]) - offset;
+						next_frame[1] = static_cast<int>(data[pos * 2 + 1]) - offset;
 					} else {
 						if (sizeof(Type) == 2) {
-							next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 0])) - offset;
-							next_sample[1] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 1])) - offset;
+							next_frame[0] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 0])) - offset;
+							next_frame[1] = static_cast<int>(host_readw((HostPt)&data[pos * 2 + 1])) - offset;
 						} else {
-							next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 0])) - offset;
-							next_sample[1] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 1])) - offset;
+							next_frame[0] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 0])) - offset;
+							next_frame[1] = static_cast<int>(host_readd((HostPt)&data[pos * 2 + 1])) - offset;
 						}
 					}
 				} else { // mono
 					if (nativeorder) {
-						next_sample[0] = static_cast<int>(data[pos]) - offset;
+						next_frame[0] = static_cast<int>(data[pos]) - offset;
 					} else {
 						if (sizeof(Type) == 2) {
-							next_sample[0] = static_cast<int>(host_readw((HostPt)&data[pos])) - offset;
+							next_frame[0] = static_cast<int>(host_readw((HostPt)&data[pos])) - offset;
 						} else {
-							next_sample[0] = static_cast<int>(host_readd((HostPt)&data[pos])) - offset;
+							next_frame[0] = static_cast<int>(host_readd((HostPt)&data[pos])) - offset;
 						}
 					}
 				}
@@ -612,11 +629,11 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
-		envelope.Process(stereo, prev_sample);
+		envelope.Process(stereo, prev_frame);
 
-		const auto left = prev_sample[mapped_channel_left] * volmul[0];
-		const auto right = (stereo ? prev_sample[mapped_channel_right]
-		                           : prev_sample[mapped_channel_left]) *
+		const auto left = prev_frame[mapped_channel_left] * volmul[0];
+		const auto right = (stereo ? prev_frame[mapped_channel_right]
+		                           : prev_frame[mapped_channel_left]) *
 		                   volmul[1];
 
 		out_frame = {0.0f, 0.0f};
@@ -752,14 +769,14 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		if (pos != new_pos) {
 			pos = new_pos;
 			//Forward the previous sample
-			prev_sample[0] = data[0];
+			prev_frame[0] = data[0];
 			data++;
 		}
-		const auto diff = data[0] - prev_sample[0];
+		const auto diff = data[0] - static_cast<int16_t>(prev_frame[0]);
 		const auto diff_mul = index & FREQ_MASK;
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
-		const auto sample = prev_sample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
+		const auto sample = prev_frame[0] + ((diff * diff_mul) >> FREQ_SHIFT);
 		mixer.work[mixpos][mapped_output_left] += sample * volmul[0];
 		mixer.work[mixpos][mapped_output_right] += sample * volmul[1];
 		mixpos++;
