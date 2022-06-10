@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022       The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -279,6 +280,16 @@ static void dyn_reduce_cycles(void) {
 	gen_protectflags();
 	if (!decode.cycles) decode.cycles++;
 	gen_dop_word_imm(DOP_SUB,true,DREG(CYCLES),decode.cycles);
+}
+
+static void dyn_save_vmware_relevant_regs(void) {
+	// VMware interface uses these registers for bidirectional
+	// communication with guest side tools, they have to be
+	// up to date when reading the magic IO port
+	gen_releasereg(DREG(EAX));
+	gen_releasereg(DREG(ECX));
+	gen_releasereg(DREG(EDX));
+	gen_releasereg(DREG(EBX));
 }
 
 static void dyn_save_noncritical_regs(void) {
@@ -2736,11 +2747,13 @@ restart_prefix:
 		case 0xeb:dyn_exit_link((int8_t)decode_fetchb());goto finish_block;
 		/* IN AL/AX,DX*/
 		case 0xec:
+			dyn_save_vmware_relevant_regs();
 			gen_call_function((void*)&dyn_io_readB,"%Dw",DREG(EDX));
 			dyn_check_bool_exception_al();
 			gen_mov_host(&core_dyn.readdata,DREG(EAX),1);
 			break;
 		case 0xed:
+			dyn_save_vmware_relevant_regs();
 			if (!decode.big_op)
 				gen_call_function((void*)&dyn_io_readW,"%Dw",DREG(EDX));
 			else
