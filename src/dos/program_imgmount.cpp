@@ -472,7 +472,10 @@ void IMGMOUNT::Run(void) {
 
         if (hdd) newImage->Set_Geometry(sizes[2],sizes[3],sizes[1],sizes[0]);
         imageDiskList[drive - '0'].reset(newImage);
-        updateDPT();
+
+    	if ((drive == '2' || drive == '3') && hdd)
+		    updateDPT();
+
         WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive - '0',temp_line.c_str());
     }
 
