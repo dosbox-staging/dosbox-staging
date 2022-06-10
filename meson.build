@@ -447,6 +447,7 @@ subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/PDCurses')
 subdir('src/libs/iir1')
+subdir('src/libs/TDA8425_emu')
 subdir('src/libs/YM7128B_emu')
 
 

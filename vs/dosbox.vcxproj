@@ -504,6 +504,7 @@
     <ClCompile Include="..\src\libs\residfp\Spline.cpp" />
     <ClCompile Include="..\src\libs\residfp\WaveformCalculator.cpp" />
     <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp" />
+    <ClCompile Include="..\src\libs\TDA8425_emu\TDA8425_emu.c" />
     <ClCompile Include="..\src\libs\YM7128B_emu\YM7128B_emu.c" />
     <ClCompile Include="..\src\midi\midi.cpp" />
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp" />
@@ -697,6 +698,7 @@
     <ClInclude Include="..\src\libs\residfp\Voice.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformCalculator.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h" />
+    <ClInclude Include="..\src\libs\TDA8425_emu\TDA8425_emu.h" />
     <ClInclude Include="..\src\libs\YM7128B_emu\YM7128B_emu.h" />
     <ClInclude Include="..\src\midi\midi_fluidsynth.h" />
     <ClInclude Include="..\src\midi\midi_lasynth_model.h" />
