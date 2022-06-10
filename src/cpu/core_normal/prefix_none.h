@@ -227,10 +227,11 @@
 		break;
 	CASE_W(0x62)												/* BOUND */
 		{
-			int16_t bound_min, bound_max;
-			GetRMrw;GetEAa;
-			bound_min=LoadMw(eaa);
-			bound_max=LoadMw(eaa+2);
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
+			const auto bound_min=LoadMws(eaa);
+			const auto bound_max=LoadMws(eaa+2);
 			if ( (((int16_t)*rmrw) < bound_min) || (((int16_t)*rmrw) > bound_max) ) {
 				EXCEPTION(5);
 			}
