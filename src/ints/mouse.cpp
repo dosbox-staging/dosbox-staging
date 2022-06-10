@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1109,6 +1110,8 @@ void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs
 					  (x_abs - mouse_video.clip_x) / (mouse_video.res_x - 1) * mouse_config.sensitivity_x,
 					  (y_abs - mouse_video.clip_y) / (mouse_video.res_y - 1) * mouse_config.sensitivity_y,
 					  is_captured);
+
+	MouseSER_NotifyMoved(x_rel, y_rel);
 }
 
 void Mouse_EventPressed(uint8_t idx) {
@@ -1136,6 +1139,10 @@ void Mouse_EventPressed(uint8_t idx) {
 		mouse.last_pressed_x[idx_12S] = POS_X;
 		mouse.last_pressed_y[idx_12S] = POS_Y;
         AddEvent(event);
+    }
+
+    if (changed_12S) {
+        MouseSER_NotifyPressed(buttons_12S, idx_12S);
     }
 }
 
@@ -1165,12 +1172,16 @@ void Mouse_EventReleased(uint8_t idx) {
 		mouse.last_released_y[idx_12S] = POS_Y;
         AddEvent(event);
     }
+
+    if (changed_12S) {
+        MouseSER_NotifyReleased(buttons_12S, idx_12S);
+    }
 }
 
 void Mouse_EventWheel(int32_t w_rel) {
-    if (w_rel == 0) return;
+    MouseSER_NotifyWheel(w_rel);
 
-    // TODO: implement wheel support
+    // TODO: implement wheel support for DOS
 }
 
 // ***************************************************************************

@@ -149,6 +149,7 @@ enum SERIAL_PORT_TYPE { // Also change src/dos/program_serial.cpp
 	DIRECT_SERIAL,
 	MODEM,
 	NULL_MODEM,
+	MOUSE,
 	INVALID,
 };
 

@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022       The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,6 +57,24 @@ typedef struct {
 
 extern MouseInfoConfig mouse_config;
 extern MouseInfoVideo  mouse_video;
+
+// ***************************************************************************
+// Serial mouse
+// ***************************************************************************
+
+class CSerialMouse;
+
+void MouseSER_RegisterListener(CSerialMouse *listener);
+void MouseSER_UnRegisterListener(CSerialMouse *listener);
+
+// - needs relative movements
+// - understands up to 3 buttons
+// - needs index of button which changed state
+
+void MouseSER_NotifyMoved(int32_t x_rel, int32_t y_rel);
+void MouseSER_NotifyPressed(uint8_t buttons_12S, uint8_t idx);
+void MouseSER_NotifyReleased(uint8_t buttons_12S, uint8_t idx);
+void MouseSER_NotifyWheel(int32_t w_rel);
 
 // ***************************************************************************
 // BIOS interface for PS/2 mouse
