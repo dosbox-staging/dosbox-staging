@@ -31,21 +31,47 @@
 #include "bios.h"
 #include "dos_inc.h"
 
+enum DOS_EV:uint8_t { // compatible with DOS driver mask in driver function 0x0c
+    NOT_DOS_EVENT   = 0x00,
+    MOUSE_MOVED     = 0x01,
+    PRESSED_LEFT    = 0x02,
+    RELEASED_LEFT   = 0x04,
+    PRESSED_RIGHT   = 0x08,
+    RELEASED_RIGHT  = 0x10,
+    PRESSED_MIDDLE  = 0x20,
+    RELEASED_MIDDLE = 0x40,
+    WHEEL_MOVED     = 0x80,
+};
+
+static const uint8_t QUEUE_SIZE  = 32;   // if over 255, increase 'queue_used' type size
+static const uint8_t KEY_MASKS[] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
+
+static uint8_t buttons_12  = 0; // state of buttons 1 (left), 2 (right), as visible on host side
+static uint8_t buttons_345 = 0; // state of mouse buttons 3 (middle), 4, and 5 as visible on host side
+
+typedef struct MouseEvent {
+    uint8_t dos_type    = 0;
+    uint8_t dos_buttons = 0; 
+
+    MouseEvent() {}
+    MouseEvent(uint8_t dos_type) : dos_type(dos_type) {}
+
+} MouseEvent;
+
+static MouseEvent queue[QUEUE_SIZE];
+static uint8_t    queue_used = 0;
+static bool       timer_in_progress = false;
+
+MouseInfoConfig   mouse_config;
+MouseInfoVideo    mouse_video;
+
 static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static uint16_t ps2cbseg,ps2cbofs;
 static bool useps2callback,ps2callbackinit;
 static Bitu call_ps2,call_uir;
 static RealPt ps2_callback,uir_callback;
 static int16_t oldmouseX, oldmouseY;
-// forward
-void WriteMouseIntVector(void);
 
-struct button_event {
-	uint8_t type;
-	uint8_t buttons;
-};
-
-#define QUEUE_SIZE 32
 #define MOUSE_BUTTONS 3
 #define MOUSE_IRQ 12
 #define POS_X (static_cast<int16_t>(mouse.x) & mouse.gran_x)
@@ -76,7 +102,11 @@ static uint16_t userdefScreenMask[CURSORY];
 static uint16_t userdefCursorMask[CURSORY];
 
 static struct {
-	uint8_t buttons;
+
+    // TODO - DANGER, WILL ROBINSON!
+    // This whole structure can be read or written from the guest side via virtual DOS driver,
+    // functions 0x15 / 0x16; we need to make sure nothing can be broken by malicious code!
+
 	uint16_t times_pressed[MOUSE_BUTTONS];
 	uint16_t times_released[MOUSE_BUTTONS];
 	uint16_t last_released_x[MOUSE_BUTTONS];
@@ -88,8 +118,6 @@ static struct {
 	int16_t min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
 	float x,y;
-	button_event event_queue[QUEUE_SIZE];
-	uint8_t events;//Increase if QUEUE_SIZE >255 (currently 32)
 	uint16_t sub_seg,sub_ofs;
 	uint16_t sub_mask;
 
@@ -120,7 +148,6 @@ static struct {
 	uint8_t  page;
 	bool enabled;
 	bool inhibit_draw;
-	bool timer_in_progress;
 	bool in_UIR;
 	uint8_t mode;
 	int16_t gran_x,gran_y;
@@ -182,49 +209,63 @@ Bitu PS2_Handler(void) {
 	return CBRET_NONE;
 }
 
-
 #define X_MICKEY 8
 #define Y_MICKEY 8
 
-#define MOUSE_HAS_MOVED 1
-#define MOUSE_LEFT_PRESSED 2
-#define MOUSE_LEFT_RELEASED 4
-#define MOUSE_RIGHT_PRESSED 8
-#define MOUSE_RIGHT_RELEASED 16
-#define MOUSE_MIDDLE_PRESSED 32
-#define MOUSE_MIDDLE_RELEASED 64
 #define MOUSE_DELAY 5.0
 
 void MOUSE_Limit_Events(uint32_t /*val*/)
 {
-	mouse.timer_in_progress = false;
-	if (mouse.events) {
-		mouse.timer_in_progress = true;
+	timer_in_progress = false;
+	if (queue_used) {
+		timer_in_progress = true;
 		PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
 		PIC_ActivateIRQ(MOUSE_IRQ);
 	}
 }
 
-inline void Mouse_AddEvent(uint8_t type) {
-	if (mouse.events<QUEUE_SIZE) {
-		if (mouse.events>0) {
+inline void AddEvent(uint8_t type) {
+	if (queue_used < QUEUE_SIZE) {
+		if (queue_used > 0) {
 			/* Skip duplicate events */
-			if (type==MOUSE_HAS_MOVED) return;
+			if (type==DOS_EV::MOUSE_MOVED) return;
 			/* Always put the newest element in the front as that the events are 
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
-			for(Bitu i = mouse.events ; i ; i--)
-				mouse.event_queue[i] = mouse.event_queue[i-1];
+            for (auto i = queue_used ; i ; i--)
+                queue[i] = queue[i - 1];
 		}
-		mouse.event_queue[0].type=type;
-		mouse.event_queue[0].buttons=mouse.buttons;
-		mouse.events++;
+		queue[0].dos_type    = type;
+		queue[0].dos_buttons = buttons_12 + (buttons_345 ? 4 : 0);
+		queue_used++;
 	}
-	if (!mouse.timer_in_progress) {
-		mouse.timer_in_progress = true;
+	if (!timer_in_progress) {
+		timer_in_progress = true;
 		PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
 		PIC_ActivateIRQ(MOUSE_IRQ);
 	}
+}
+
+static inline DOS_EV SelectEventPressed(uint8_t idx, bool changed_12S) {
+    switch (idx) {
+    case 0:  return DOS_EV::PRESSED_LEFT;
+    case 1:  return DOS_EV::PRESSED_RIGHT;
+    case 2:  return DOS_EV::PRESSED_MIDDLE;
+    case 3:
+    case 4:  return changed_12S ? DOS_EV::PRESSED_MIDDLE : DOS_EV::NOT_DOS_EVENT;
+    default: return DOS_EV::NOT_DOS_EVENT;
+    }
+}
+
+static inline DOS_EV SelectEventReleased(uint8_t idx, bool changed_12S) {
+    switch (idx) {
+    case 0:  return DOS_EV::RELEASED_LEFT;
+    case 1:  return DOS_EV::RELEASED_RIGHT;
+    case 2:  return DOS_EV::RELEASED_MIDDLE;
+    case 3:
+    case 4:  return changed_12S ? DOS_EV::RELEASED_MIDDLE : DOS_EV::NOT_DOS_EVENT;
+    default: return DOS_EV::NOT_DOS_EVENT;
+    }
 }
 
 // ***************************************************************************
@@ -461,7 +502,7 @@ void DrawCursor() {
 	RestoreVgaRegisters();
 }
 
-void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
+inline void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	float dx = xrel * mouse.pixelPerMickey_x;
 	float dy = yrel * mouse.pixelPerMickey_y;
 
@@ -509,76 +550,8 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		if (mouse.y >= 32768.0) mouse.y -= 65536.0;
 		else if (mouse.y <= -32769.0) mouse.y += 65536.0;
 	}
-	Mouse_AddEvent(MOUSE_HAS_MOVED);
+	AddEvent(DOS_EV::MOUSE_MOVED);
 	DrawCursor();
-}
-
-void Mouse_CursorSet(float x,float y) {
-	mouse.x=x;
-	mouse.y=y;
-	DrawCursor();
-}
-
-void Mouse_ButtonPressed(uint8_t button) {
-	switch (button) {
-#if (MOUSE_BUTTONS >= 1)
-	case 0:
-		if (mouse.buttons&1) return;
-		mouse.buttons|=1;
-		Mouse_AddEvent(MOUSE_LEFT_PRESSED);
-		break;
-#endif
-#if (MOUSE_BUTTONS >= 2)
-	case 1:
-		if (mouse.buttons&2) return;
-		mouse.buttons|=2;
-		Mouse_AddEvent(MOUSE_RIGHT_PRESSED);
-		break;
-#endif
-#if (MOUSE_BUTTONS >= 3)
-	case 2:
-		if (mouse.buttons&4) return;
-		mouse.buttons|=4;
-		Mouse_AddEvent(MOUSE_MIDDLE_PRESSED);
-		break;
-#endif
-	default:
-		return;
-	}
-	mouse.times_pressed[button]++;
-	mouse.last_pressed_x[button]=POS_X;
-	mouse.last_pressed_y[button]=POS_Y;
-}
-
-void Mouse_ButtonReleased(uint8_t button) {
-	switch (button) {
-#if (MOUSE_BUTTONS >= 1)
-	case 0:
-		if (!(mouse.buttons&1)) return;
-		mouse.buttons&=~1;
-		Mouse_AddEvent(MOUSE_LEFT_RELEASED);
-		break;
-#endif
-#if (MOUSE_BUTTONS >= 2)
-	case 1:
-		if (!(mouse.buttons&2)) return;
-		mouse.buttons&=~2;
-		Mouse_AddEvent(MOUSE_RIGHT_RELEASED);
-		break;
-#endif
-#if (MOUSE_BUTTONS >= 3)
-	case 2:
-		if (!(mouse.buttons&4)) return;
-		mouse.buttons&=~4;
-		Mouse_AddEvent(MOUSE_MIDDLE_RELEASED);
-		break;
-#endif
-	default:
-		return;
-	}
-	mouse.times_released[button]++;	
-	mouse.last_released_x[button]=POS_X;
-	mouse.last_released_y[button]=POS_Y;
 }
 
 static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
@@ -671,8 +644,8 @@ void Mouse_AfterNewVideoMode(bool setmode) {
 	mouse.min_x = 0;
 	mouse.min_y = 0;
 
-	mouse.events = 0;
-	mouse.timer_in_progress = false;
+	queue_used = 0;
+	timer_in_progress = false;
 	PIC_RemoveEvents(MOUSE_Limit_Events);
 
 	mouse.hotx		 = 0;
@@ -704,9 +677,10 @@ static void Mouse_Reset()
 	mouse.mickey_x = 0;
 	mouse.mickey_y = 0;
 
-	mouse.buttons = 0;
+	buttons_12  = 0;
+	buttons_345 = 0;
 
-	for (uint16_t but=0; but<MOUSE_BUTTONS; but++) {
+	for (uint8_t but=0; but<MOUSE_BUTTONS; but++) {
 		mouse.times_pressed[but] = 0;
 		mouse.times_released[but] = 0;
 		mouse.last_pressed_x[but] = 0;
@@ -746,9 +720,9 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x03:	/* Return position and Button Status */
-		reg_bx=mouse.buttons;
-		reg_cx=POS_X;
-		reg_dx=POS_Y;
+		reg_bx = buttons_12 + (buttons_345 ? 4 : 0);
+		reg_cx = POS_X;
+		reg_dx = POS_Y;
 		break;
 	case 0x04:	/* Position Mouse */
 		/* If position isn't different from current position
@@ -765,24 +739,24 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x05:	/* Return Button Press Data */
 		{
-			uint16_t but=reg_bx;
-			reg_ax=mouse.buttons;
-			if (but>=MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
-			reg_cx=mouse.last_pressed_x[but];
-			reg_dx=mouse.last_pressed_y[but];
-			reg_bx=mouse.times_pressed[but];
-			mouse.times_pressed[but]=0;
+			uint16_t but = reg_bx;
+			reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+			if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
+			reg_cx = mouse.last_pressed_x[but];
+			reg_dx = mouse.last_pressed_y[but];
+			reg_bx = mouse.times_pressed[but];
+			mouse.times_pressed[but] = 0;
 		}
 		break;
 	case 0x06:	/* Return Button Release Data */
 		{
-			uint16_t but=reg_bx;
-			reg_ax=mouse.buttons;
-			if (but>=MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
-			reg_cx=mouse.last_released_x[but];
-			reg_dx=mouse.last_released_y[but];
-			reg_bx=mouse.times_released[but];
-			mouse.times_released[but]=0;
+			uint16_t but = reg_bx;
+			reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+			if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
+			reg_cx = mouse.last_released_x[but];
+			reg_dx = mouse.last_released_y[but];
+			reg_bx = mouse.times_released[but];
+			mouse.times_released[but] = 0;
 		}
 		break;
 	case 0x07:	/* Define horizontal cursor range */
@@ -1049,12 +1023,12 @@ static Bitu MOUSE_BD_Handler(void) {
 }
 
 static Bitu INT74_Handler(void) {
-	if (mouse.events>0 && !mouse.in_UIR) {
-		mouse.events--;
+	if (queue_used && !mouse.in_UIR) {
+		queue_used--;
 		/* Check for an active Interrupt Handler that will get called */
-		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
-			reg_ax=mouse.event_queue[mouse.events].type;
-			reg_bx=mouse.event_queue[mouse.events].buttons;
+		if (mouse.sub_mask & queue[queue_used].dos_type) {
+			reg_ax=queue[queue_used].dos_type;
+			reg_bx=queue[queue_used].dos_buttons;
 			reg_cx=POS_X;
 			reg_dx=POS_Y;
 			reg_si=static_cast<int16_t>(mouse.mickey_x);
@@ -1066,11 +1040,11 @@ static Bitu INT74_Handler(void) {
 			CPU_Push16(mouse.sub_seg);
 			CPU_Push16(mouse.sub_ofs);
 			mouse.in_UIR = true;
-			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",mouse.event_queue[mouse.events].type );
+			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",queue[queue_used].dos_type );
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
-			DoPS2Callback(mouse.event_queue[mouse.events].buttons, static_cast<int16_t>(mouse.x), static_cast<int16_t>(mouse.y));
+			DoPS2Callback(queue[queue_used].dos_buttons, static_cast<int16_t>(mouse.x), static_cast<int16_t>(mouse.y));
 		} else {
 			SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
@@ -1085,9 +1059,9 @@ static Bitu INT74_Handler(void) {
 }
 
 Bitu INT74_Ret_Handler(void) {
-	if (mouse.events) {
-		if (!mouse.timer_in_progress) {
-			mouse.timer_in_progress = true;
+	if (queue_used) {
+		if (!timer_in_progress) {
+			timer_in_progress = true;
 			PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
 		}
 	}
@@ -1098,6 +1072,110 @@ Bitu UIR_Handler(void) {
 	mouse.in_UIR = false;
 	return CBRET_NONE;
 }
+
+// ***************************************************************************
+// External notifications
+// ***************************************************************************
+
+void Mouse_SetSensitivity(int32_t sensitivity_x, int32_t sensitivity_y) {
+    static constexpr float MIN = 0.01f;
+    static constexpr float MAX = 100.0f;
+
+    mouse_config.sensitivity_x = std::clamp(sensitivity_x / 100.0f, -MAX, MAX);
+    if (!std::signbit(mouse_config.sensitivity_x))
+        mouse_config.sensitivity_x = std::max(mouse_config.sensitivity_x, MIN);
+    else
+        mouse_config.sensitivity_x = std::min(mouse_config.sensitivity_x, -MIN);
+
+    mouse_config.sensitivity_y = std::clamp(sensitivity_y / 100.0f, -MAX, MAX);
+    if (!std::signbit(mouse_config.sensitivity_y))
+        mouse_config.sensitivity_y = std::max(mouse_config.sensitivity_y, MIN);
+    else
+        mouse_config.sensitivity_y = std::min(mouse_config.sensitivity_y, -MIN);
+}
+
+void Mouse_NewScreenParams(uint16_t clip_x, uint16_t clip_y, uint16_t res_x, uint16_t res_y) {
+
+    mouse_video.clip_x     = clip_x;
+    mouse_video.clip_y     = clip_y;
+    mouse_video.res_x      = res_x;
+    mouse_video.res_y      = res_y;
+}
+
+void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs, bool is_captured) {
+
+	Mouse_CursorMoved(x_rel * mouse_config.sensitivity_x,
+					  y_rel * mouse_config.sensitivity_y,
+					  (x_abs - mouse_video.clip_x) / (mouse_video.res_x - 1) * mouse_config.sensitivity_x,
+					  (y_abs - mouse_video.clip_y) / (mouse_video.res_y - 1) * mouse_config.sensitivity_y,
+					  is_captured);
+}
+
+void Mouse_EventPressed(uint8_t idx) {
+    uint8_t buttons_12S_old = buttons_12 + (buttons_345 ? 4 : 0);
+
+    if (idx < 2) {
+        // left/right button
+        if (buttons_12 & KEY_MASKS[idx]) return;
+        buttons_12 |= KEY_MASKS[idx];
+    } else if (idx < 5) {
+        // middle/extra button
+        if (buttons_345 & KEY_MASKS[idx]) return;
+        buttons_345 |= KEY_MASKS[idx];
+    } else
+        return; // button not supported
+
+    uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
+    bool    changed_12S = (buttons_12S_old != buttons_12S);
+    uint8_t idx_12S     = idx < 2 ? idx : 2;
+
+    auto event = SelectEventPressed(idx, changed_12S);
+
+    if (event != DOS_EV::NOT_DOS_EVENT) {
+	 	mouse.times_pressed[idx_12S]++;
+		mouse.last_pressed_x[idx_12S] = POS_X;
+		mouse.last_pressed_y[idx_12S] = POS_Y;
+        AddEvent(event);
+    }
+}
+
+void Mouse_EventReleased(uint8_t idx) {
+    uint8_t buttons_12S_old = buttons_12 + (buttons_345 ? 4 : 0);
+
+    if (idx < 2) {
+        // left/right button
+        if (!(buttons_12 & KEY_MASKS[idx])) return;
+        buttons_12 &= ~KEY_MASKS[idx];
+    } else if (idx < 5) {
+        // middle/extra button
+        if (!(buttons_345 & KEY_MASKS[idx])) return;
+        buttons_345 &= ~KEY_MASKS[idx];
+    } else
+        return; // button not supported
+
+    uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
+    bool    changed_12S = (buttons_12S_old != buttons_12S);
+    uint8_t idx_12S     = idx < 2 ? idx : 2;
+
+    auto event = SelectEventReleased(idx, changed_12S);
+
+    if (event != DOS_EV::NOT_DOS_EVENT) {
+		mouse.times_released[idx_12S]++;	
+		mouse.last_released_x[idx_12S] = POS_X;
+		mouse.last_released_y[idx_12S] = POS_Y;
+        AddEvent(event);
+    }
+}
+
+void Mouse_EventWheel(int32_t w_rel) {
+    if (w_rel == 0) return;
+
+    // TODO: implement wheel support
+}
+
+// ***************************************************************************
+// Initialization
+// ***************************************************************************
 
 void MOUSE_Init(Section* /*sec*/) {
 	// Callback for mouse interrupt 0x33
@@ -1168,7 +1246,6 @@ void MOUSE_Init(Section* /*sec*/) {
 
 	memset(&mouse,0,sizeof(mouse));
 	mouse.hidden = 1; //Hide mouse on startup
-	mouse.timer_in_progress = false;
 	mouse.mode = 0xFF; //Non existing mode
 
    	mouse.sub_mask=0;
