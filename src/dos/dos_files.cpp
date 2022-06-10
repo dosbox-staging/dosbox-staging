@@ -578,7 +578,7 @@ bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
 		exists = Drives[drive]->FileOpen(&Files[handle], fullname, flags);
 		if (exists)
 			Files[handle]->SetDrive(drive);
-		if (dos.errorcode)
+		if (dos.errorcode == DOSERR_ACCESS_CODE_INVALID)
 			return false;
 		dos.errorcode = old_errorcode;
 	}
