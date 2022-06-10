@@ -184,6 +184,38 @@ TEST(bit_view, decrement)
 	EXPECT_EQ(r.last_3, 0b111);
 }
 
+TEST(bit_view, compare_with_bool)
+{
+	union RegSingles {
+		uint8_t data = 0;
+		bit_view<0, 1> bit0;
+		bit_view<7, 1> bit7;
+	};
+
+	RegSingles reg = {0};
+
+	reg.bit0 = true;
+	EXPECT_EQ(reg.data, 0b00000001);
+	EXPECT_EQ(reg.bit0, 1);
+	EXPECT_TRUE(reg.bit0);
+	EXPECT_TRUE(reg.bit0 == true);
+
+	reg.bit7 = true;
+	EXPECT_EQ(reg.data, 0b10000001);
+	EXPECT_EQ(reg.bit7, 1);
+	EXPECT_TRUE(reg.bit7 == true);
+
+	reg.bit0 = false;
+	EXPECT_EQ(reg.data, 0b10000000);
+	EXPECT_EQ(reg.bit0, 0);
+
+	EXPECT_FALSE(reg.bit0);
+	EXPECT_TRUE(reg.bit0 != true);
+	EXPECT_TRUE(reg.bit0 == false);
+	EXPECT_FALSE(reg.bit0 == reg.bit7);
+	EXPECT_TRUE(reg.bit0 != reg.bit7);
+}
+
 TEST(bit_view, clear)
 {
 	Register r = {0b111'111'11};
