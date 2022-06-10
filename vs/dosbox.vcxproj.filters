@@ -499,6 +499,9 @@
     <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp">
       <Filter>src\libs\residfp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\YM7128B_emu\YM7128B_emu.c">
+      <Filter>src\libs\YM7128B_emu</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\pacer.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
@@ -1161,6 +1164,9 @@
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\YM7128B_emu\YM7128B_emu.h">
+      <Filter>src\libs\YM7128B_emu</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\cpu\core_dyn_x86\risc_x64.h">
       <Filter>src\cpu\core_dyn_x86</Filter>
     </ClInclude>
@@ -1316,6 +1322,9 @@
     </Filter>
     <Filter Include="src\libs\residfp">
       <UniqueIdentifier>{e8ef008d-ceb9-4224-9b9e-b5b62933ca0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\YM7128B_emu">
+      <UniqueIdentifier>{033fc9cc-5916-480d-a3f8-839ae0d7a1b0}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\loguru">
       <UniqueIdentifier>{61f19037-c60b-46ea-8d28-53fbf18dc6db}</UniqueIdentifier>
