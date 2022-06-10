@@ -66,12 +66,11 @@ class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(bool is_stereo, AudioFrame &frame);
+	void Process(const bool is_stereo, AudioFrame &frame);
 
-	void Update(int frame_rate,
-	            int peak_amplitude,
-	            uint8_t expansion_phase_ms,
-	            uint8_t expire_after_seconds);
+	void Update(const int frame_rate, const int peak_amplitude,
+	            const uint8_t expansion_phase_ms,
+	            const uint8_t expire_after_seconds);
 
 	void Reactivate();
 
@@ -81,12 +80,12 @@ private:
 
 	bool ClampSample(float &sample, float next_edge);
 
-	void Apply(bool is_stereo, AudioFrame &frame);
+	void Apply(const bool is_stereo, AudioFrame &frame);
 
 	void Skip([[maybe_unused]] bool is_stereo, [[maybe_unused]] AudioFrame &frame)
 	{}
 
-	using process_f = std::function<void(Envelope &, bool, AudioFrame &)>;
+	using process_f = std::function<void(Envelope &, const bool, AudioFrame &)>;
 	process_f process = &Envelope::Apply;
 
 	const char *channel_name = nullptr;
