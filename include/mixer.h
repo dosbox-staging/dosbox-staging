@@ -160,6 +160,8 @@ public:
 	void AddSamples_s16u(uint16_t len, const uint16_t *data);
 	void AddSamples_m32(uint16_t len, const int32_t *data);
 	void AddSamples_s32(uint16_t len, const int32_t *data);
+	void AddSamples_mfloat(uint16_t len, const float *data);
+	void AddSamples_sfloat(uint16_t len, const float *data);
 	void AddSamples_m16_nonnative(uint16_t len, const int16_t *data);
 	void AddSamples_s16_nonnative(uint16_t len, const int16_t *data);
 	void AddSamples_m16u_nonnative(uint16_t len, const uint16_t *data);

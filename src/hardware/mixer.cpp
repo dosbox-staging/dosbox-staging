@@ -533,19 +533,19 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 		// unsigned 8-bit
 		if (!signeddata) {
 			if (stereo) {
-				frame[0] = lut_u8to16[data[pos * 2 + 0]];
-				frame[1] = lut_u8to16[data[pos * 2 + 1]];
+				frame[0] = lut_u8to16[static_cast<uint8_t>(data[pos * 2 + 0])];
+				frame[1] = lut_u8to16[static_cast<uint8_t>(data[pos * 2 + 1])];
 			} else {
-				frame[0] = lut_u8to16[data[pos]];
+				frame[0] = lut_u8to16[static_cast<uint8_t>(data[pos])];
 			}
 		}
 		// signed 8-bit
 		else {
 			if (stereo) {
-				frame[0] = lut_s8to16[data[pos * 2 + 0]];
-				frame[1] = lut_s8to16[data[pos * 2 + 1]];
+				frame[0] = lut_s8to16[static_cast<int8_t>(data[pos * 2 + 0])];
+				frame[1] = lut_s8to16[static_cast<int8_t>(data[pos * 2 + 1])];
 			} else {
-				frame[0] = lut_s8to16[data[pos]];
+				frame[0] = lut_s8to16[static_cast<int8_t>(data[pos])];
 			}
 		}
 	} else {
@@ -653,7 +653,12 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		}
 
 		if (std::is_same<Type, float>::value) {
-			// TODO
+			if (stereo) {
+				next_frame[0] = data[pos * 2 + 0];
+				next_frame[1] = data[pos * 2 + 1];
+			} else {
+				next_frame[0] = data[pos];
+			}
 		} else {
 			next_frame = ConvertNextFrame<Type, stereo, signeddata, nativeorder>(
 			        data, pos);
@@ -858,6 +863,14 @@ void MixerChannel::AddSamples_m32(uint16_t len, const int32_t *data)
 void MixerChannel::AddSamples_s32(uint16_t len, const int32_t *data)
 {
 	AddSamples<int32_t, true, true, true>(len, data);
+}
+void MixerChannel::AddSamples_mfloat(uint16_t len, const float *data)
+{
+	AddSamples<float, false, true, true>(len, data);
+}
+void MixerChannel::AddSamples_sfloat(uint16_t len, const float *data)
+{
+	AddSamples<float, true, true, true>(len, data);
 }
 void MixerChannel::AddSamples_m16_nonnative(uint16_t len, const int16_t *data)
 {
