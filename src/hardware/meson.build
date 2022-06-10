@@ -37,6 +37,7 @@ libhardware_sources = files([
   'serialport/misc_util.cpp',
   'serialport/nullmodem.cpp',
   'serialport/serialdummy.cpp',
+  'serialport/serialmouse.cpp',
   'serialport/serialport.cpp',
   'serialport/softmodem.cpp',
   'tandy_sound.cpp',

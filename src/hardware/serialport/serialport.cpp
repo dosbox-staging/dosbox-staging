@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022       The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,6 +37,7 @@
 #include "serialdummy.h"
 #include "softmodem.h"
 #include "nullmodem.h"
+#include "serialmouse.h"
 
 #include "cpu.h"
 
@@ -1343,6 +1345,15 @@ public:
 				}
 			}
 #endif
+			else if(type=="serialmouse") {
+				serialports[i] = new CSerialMouse (i, &cmd);
+				serialports[i]->serialType = SERIAL_PORT_TYPE::MOUSE;
+				cmd.GetStringRemain(serialports[i]->commandLineString);
+				if (!serialports[i]->InstallationSuccessful)  {
+					delete serialports[i];
+					serialports[i] = NULL;
+				}
+			}
 			else if(type=="disabled") {
 				serialports[i] = NULL;
 			} else {
