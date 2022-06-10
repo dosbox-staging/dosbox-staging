@@ -284,7 +284,7 @@ TEST(bit_view, size_safety)
 
 TEST(bit_view, illegal_view)
 {
-	union Register {
+	union BadRegister {
 		uint32_t data = 0;
 		// the following fails to compile because the view is out of
 		// range:
