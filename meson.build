@@ -447,6 +447,8 @@ subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/PDCurses')
 subdir('src/libs/iir1')
+subdir('src/libs/YM7128B_emu')
+
 
 # A list of DOSBox's internal libraries populated
 # by each of the src/ subdir imports below.
