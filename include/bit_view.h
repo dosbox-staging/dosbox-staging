@@ -136,19 +136,17 @@ public:
 	template <class rhs_type>
 	constexpr bit_view(const rhs_type rhs_value) noexcept
 	{
-		// leverage the assignment operator to check the type, shift and
-		// mask the value, and assign into our view's bits
+		// use the = operator to save the value into the view
 		*this = rhs_value;
 	}
 
 	// copy constructor
-	constexpr bit_view(const bit_view &other)
+	constexpr bit_view(const bit_view &other) noexcept
 	{
 		// get the other view's value using the data_type() operator
 		const data_type d = other;
 
-		// use the assignment operator to check the type, shift and mask
-		// the value, and assign into our view's bits
+		// use the = operator to save the value into the view
 		*this = d;
 	}
 
@@ -179,8 +177,7 @@ public:
 		// get the other view's value using the data_type() operator
 		const data_type d = other;
 
-		// use the assignment operator to check the type, shift and mask
-		// the value, and assign into our view's bits
+		// use the = operator to save the value into the view
 		return *this = d;
 	}
 
@@ -193,6 +190,7 @@ public:
 	// pre-increment the view's value
 	constexpr bit_view &operator++() noexcept
 	{
+		// use the = operator to save the value into the view
 		return *this = *this + 1;
 	}
 
@@ -209,12 +207,14 @@ public:
 	constexpr bit_view &operator+=(const rhs_type rhs_value) noexcept
 	{
 		check_rhs(rhs_value);
+		// use the = operator to save the value into the view
 		return *this = *this + rhs_value;
 	}
 
 	// pre-decrement the view's value
 	constexpr bit_view &operator--() noexcept
 	{
+		// use the = operator to save the value into the view
 		return *this = *this - 1;
 	}
 
