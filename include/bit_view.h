@@ -107,6 +107,10 @@ private:
 		static_assert(std::is_integral<rhs_type>::value,
 		              "the bit_view's value can only accept integral types");
 
+		// detect use of bool, in which case the data is 1 bit and safe
+		if (std::is_same<rhs_type, bool>::value)
+			return;
+
 		// detect assignments of negative values
 		if (std::is_signed<rhs_type>::value)
 			assert(rhs_value >= 0);
@@ -146,6 +150,15 @@ public:
 		// use the assignment operator to check the type, shift and mask
 		// the value, and assign into our view's bits
 		*this = d;
+	}
+
+	// assign from right-hand-side boolean
+	constexpr bit_view &operator=(const bool b) noexcept
+	{
+		constexpr uint8_t bool_to_val[2] = {0, 1};
+
+		// use the = operator to save the value into the view
+		return *this = bool_to_val[static_cast<size_t>(b)];
 	}
 
 	// assign from right-hand-side value
