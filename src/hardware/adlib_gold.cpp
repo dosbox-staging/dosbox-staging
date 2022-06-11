@@ -19,6 +19,7 @@
  */
 
 #include "adlib_gold.h"
+#include "bit_view.h"
 
 AdlibGoldSurroundProcessor::AdlibGoldSurroundProcessor(const uint16_t sample_rate)
         : chip(nullptr)
@@ -37,17 +38,18 @@ AdlibGoldSurroundProcessor::~AdlibGoldSurroundProcessor()
 	YM7128B_ChipIdeal_Dtor(chip);
 }
 
+union AdlibGoldSurroundControlReg {
+	uint8_t data = 0;
+	bit_view<0, 1> din; // serial data
+	bit_view<1, 1> sci; // bit clock
+	bit_view<2, 1> a0;  // word clock
+};
+
 void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
 {
-	// Serial data
-	const auto din = val & 1;
-	// Bit clock
-	const auto sci = val & 2;
-	// Word clock
-	const auto a0 = val & 4;
-
+	AdlibGoldSurroundControlReg reg = {val};
 	// Change register data at the falling edge of 'a0' word clock
-	if (control_state.a0 && !a0) {
+	if (control_state.a0 && !reg.a0) {
 //		DEBUG_LOG_MSG("ADLIBGOLD.SURROUND: Write control register %d, data: %d",
 //		              control_state.addr,
 //		              control_state.data);
@@ -56,19 +58,21 @@ void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
 		// Data is sent in serially through 'din' in MSB->LSB order,
 		// synchronised by the 'sci' bit clock. Data should be read on
 		// the rising edge of 'sci'.
-		if (!control_state.sci && sci) {
+		if (!control_state.sci && reg.sci) {
 			// The 'a0' word clock determines the type of the data.
-			if (a0)
+			if (reg.a0)
 				// Data cycle
-				control_state.data = (control_state.data << 1) | din;
+				control_state.data = (control_state.data << 1) |
+				                     reg.din;
 			else
 				// Address cycle
-				control_state.addr = (control_state.addr << 1) | din;
+				control_state.addr = (control_state.addr << 1) |
+				                     reg.din;
 		}
 	}
 
-	control_state.sci = sci;
-	control_state.a0  = a0;
+	control_state.sci = reg.sci;
+	control_state.a0  = reg.a0;
 }
 
 AudioFrame AdlibGoldSurroundProcessor::Process(const AudioFrame &frame) noexcept
