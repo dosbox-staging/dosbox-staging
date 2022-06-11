@@ -21,8 +21,35 @@
 #include "adlib_gold.h"
 #include "bit_view.h"
 
-AdlibGoldSurroundProcessor::AdlibGoldSurroundProcessor(const uint16_t sample_rate)
-        : chip(nullptr)
+#include "../libs/YM7128B_emu/YM7128B_emu.h"
+
+// Yamaha YM7128B Surround Processor emulation
+// -------------------------------------------
+
+class SurroundProcessor {
+public:
+	SurroundProcessor(const uint16_t sample_rate);
+	~SurroundProcessor();
+
+	void ControlWrite(const uint8_t val) noexcept;
+	AudioFrame Process(const AudioFrame &frame) noexcept;
+
+	// prevent copying and assignment
+	SurroundProcessor(const SurroundProcessor &) = delete;
+	SurroundProcessor &operator=(const SurroundProcessor &) = delete;
+
+private:
+	YM7128B_ChipIdeal *chip = nullptr;
+
+	struct {
+		uint8_t sci  = 0;
+		uint8_t a0   = 0;
+		uint8_t addr = 0;
+		uint8_t data = 0;
+	} control_state = {};
+};
+
+SurroundProcessor::SurroundProcessor(const uint16_t sample_rate) : chip(nullptr)
 {
 	chip = (YM7128B_ChipIdeal *)malloc(sizeof(YM7128B_ChipIdeal));
 
@@ -32,22 +59,23 @@ AdlibGoldSurroundProcessor::AdlibGoldSurroundProcessor(const uint16_t sample_rat
 	YM7128B_ChipIdeal_Start(chip);
 }
 
-AdlibGoldSurroundProcessor::~AdlibGoldSurroundProcessor()
+SurroundProcessor::~SurroundProcessor()
 {
 	YM7128B_ChipIdeal_Stop(chip);
 	YM7128B_ChipIdeal_Dtor(chip);
 }
 
-union AdlibGoldSurroundControlReg {
+union SurroundControlReg {
 	uint8_t data = 0;
 	bit_view<0, 1> din; // serial data
 	bit_view<1, 1> sci; // bit clock
 	bit_view<2, 1> a0;  // word clock
 };
 
-void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
+void SurroundProcessor::ControlWrite(const uint8_t val) noexcept
 {
-	AdlibGoldSurroundControlReg reg = {val};
+	SurroundControlReg reg = {val};
+
 	// Change register data at the falling edge of 'a0' word clock
 	if (control_state.a0 && !reg.a0) {
 //		DEBUG_LOG_MSG("ADLIBGOLD.SURROUND: Write control register %d, data: %d",
@@ -75,18 +103,39 @@ void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
 	control_state.a0  = reg.a0;
 }
 
-AudioFrame AdlibGoldSurroundProcessor::Process(const AudioFrame &frame) noexcept
+AudioFrame SurroundProcessor::Process(const AudioFrame &frame) noexcept
 {
 	YM7128B_ChipIdeal_Process_Data data = {};
-	data.inputs[0]                      = frame.left + frame.right;
+
+	data.inputs[0] = frame.left + frame.right;
 
 	YM7128B_ChipIdeal_Process(chip, &data);
 
 	return {data.outputs[0], data.outputs[1]};
 }
 
-AdlibGoldStereoProcessor::AdlibGoldStereoProcessor(const uint16_t sample_rate)
-        : chip(nullptr)
+
+// Philips Semiconductors TDA8425 hi-fi stereo audio processor emulation
+// ----------------------------------------------------------------------
+
+class StereoProcessor {
+public:
+	StereoProcessor(const uint16_t sample_rate);
+	~StereoProcessor();
+
+	void Reset() noexcept;
+	void ControlWrite(const TDA8425_Reg reg, const TDA8425_Register data) noexcept;
+	AudioFrame Process(const AudioFrame &frame) noexcept;
+
+	// prevent copying and assignment
+	StereoProcessor(const StereoProcessor &) = delete;
+	StereoProcessor &operator=(const StereoProcessor &) = delete;
+
+private:
+	TDA8425_Chip *chip = nullptr;
+};
+
+StereoProcessor::StereoProcessor(const uint16_t sample_rate) : chip(nullptr)
 {
 	chip = (TDA8425_Chip *)malloc(sizeof(TDA8425_Chip));
 
@@ -102,54 +151,63 @@ AdlibGoldStereoProcessor::AdlibGoldStereoProcessor(const uint16_t sample_rate)
 	Reset();
 }
 
-AdlibGoldStereoProcessor::~AdlibGoldStereoProcessor()
+StereoProcessor::~StereoProcessor()
 {
 	TDA8425_Chip_Stop(chip);
 	TDA8425_Chip_Dtor(chip);
 }
 
-void AdlibGoldStereoProcessor::Reset() noexcept
+void StereoProcessor::Reset() noexcept
 {
-	constexpr auto volume_0db    = 60;
-	constexpr auto bass_0db      = 6;
-	constexpr auto treble_0db    = 6;
-	constexpr auto stereo_output = TDA8425_Selector_Stereo_1;
-	constexpr auto linear_stereo = TDA8425_Mode_LinearStereo
-	                            << TDA8425_Reg_SF_STL;
+	constexpr auto volume_0db = 60;
+	constexpr auto bass_0db   = 6;
+	constexpr auto treble_0db = 6;
 
 	ControlWrite(TDA8425_Reg_VL, volume_0db);
 	ControlWrite(TDA8425_Reg_VR, volume_0db);
 	ControlWrite(TDA8425_Reg_BA, bass_0db);
 	ControlWrite(TDA8425_Reg_TR, treble_0db);
+
+	constexpr auto stereo_output = TDA8425_Selector_Stereo_1;
+	constexpr auto linear_stereo = TDA8425_Mode_LinearStereo
+	                            << TDA8425_Reg_SF_STL;
+
 	ControlWrite(TDA8425_Reg_SF, stereo_output & linear_stereo);
 }
 
-void AdlibGoldStereoProcessor::ControlWrite(const TDA8425_Reg addr,
-                                            const TDA8425_Register data) noexcept
+void StereoProcessor::ControlWrite(const TDA8425_Reg addr,
+                                   const TDA8425_Register data) noexcept
 {
 	TDA8425_Chip_Write(chip, addr, data);
 }
 
-AudioFrame AdlibGoldStereoProcessor::Process(const AudioFrame &frame) noexcept
+AudioFrame StereoProcessor::Process(const AudioFrame &frame) noexcept
 {
 	TDA8425_Chip_Process_Data data = {};
-	data.inputs[0][0]              = frame.left;
-	data.inputs[1][0]              = frame.left;
-	data.inputs[0][1]              = frame.right;
-	data.inputs[1][1]              = frame.right;
+
+	data.inputs[0][0] = frame.left;
+	data.inputs[1][0] = frame.left;
+	data.inputs[0][1] = frame.right;
+	data.inputs[1][1] = frame.right;
 
 	TDA8425_Chip_Process(chip, &data);
 
 	return {data.outputs[0], data.outputs[1]};
 }
 
+// AdLib Gold module
+// -----------------
+
 AdlibGold::AdlibGold(const uint16_t sample_rate)
         : surround_processor(nullptr),
           stereo_processor(nullptr)
 {
-	surround_processor = std::make_unique<AdlibGoldSurroundProcessor>(sample_rate);
-	stereo_processor = std::make_unique<AdlibGoldStereoProcessor>(sample_rate);
+	surround_processor = std::make_unique<SurroundProcessor>(sample_rate);
+	stereo_processor   = std::make_unique<StereoProcessor>(sample_rate);
 }
+
+AdlibGold::~AdlibGold()
+{}
 
 void AdlibGold::StereoControlWrite(const TDA8425_Reg reg,
                                    const TDA8425_Register data) noexcept
@@ -164,8 +222,8 @@ void AdlibGold::SurroundControlWrite(const uint8_t val) noexcept
 
 void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) noexcept
 {
-	auto frames_left = frames;
-	while (frames_left--) {
+	auto frames_remaining = frames;
+	while (frames_remaining--) {
 		AudioFrame frame = {static_cast<float>(in[0]),
 		                    static_cast<float>(in[1])};
 
