@@ -17,18 +17,10 @@ Note that the debugger imposes a significant runtime performance penalty.
 If you're not planning to use the debugger then the steps above will help
 you build a binary optimized for gaming.
 
-1. Follow the steps above to setup a working build environment.
-2. Install and integrate `pdcurses` using vcpkg:
-
-    ``` shell
-    cd \vcpkg
-    .\vcpkg install --triplet pdcurses
-    .\vcpkg integrate install
-    ```
-
-3. Edit `src\platform\visualc\config.h` and enable `C_DEBUG` and optionally
+1. Edit `src\platform\visualc\config.h` and enable `C_DEBUG` and optionally
   `C_HEAVY_DEBUG` by setting them to `1` instead of `0`.
-4. Select a **Release** build type in Visual Studio, and run the build.
+  
+2. Select a **Release** build type in Visual Studio, and run the build.
 
 ## Build using MSYS2
 
