@@ -43,11 +43,11 @@ extern "C" {
 #endif
 
 #ifndef TDA8425_USE_DC_REMOVAL
-#define TDA8425_USE_DC_REMOVAL 1
+#define TDA8425_USE_DC_REMOVAL 0
 #endif
 
 #ifndef TDA8425_USE_TFILTER
-#define TDA8425_USE_TFILTER 1
+#define TDA8425_USE_TFILTER 0
 #endif
 
 #ifndef TDA8425_USE_MODEL_CACHE
