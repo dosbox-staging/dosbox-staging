@@ -43,11 +43,6 @@
 
 static Adlib::Module *module = nullptr;
 
-struct StereoFrame {
-	int16_t left  = 0;
-	int16_t right = 0;
-};
-
 class AdlibGoldSurroundProcessor {
 public:
 	AdlibGoldSurroundProcessor(const uint16_t sample_rate);
