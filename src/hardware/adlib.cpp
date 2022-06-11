@@ -205,14 +205,41 @@ AudioFrame AdlibGoldStereoProcessor::Process(const AudioFrame &frame) noexcept
 	return {data.outputs[0], data.outputs[1]};
 }
 
-struct {
-	AdlibGoldSurroundProcessor *surround_processor = nullptr;
-	AdlibGoldStereoProcessor *stereo_processor     = nullptr;
-	bool surround_enabled                          = false;
-} adlib_gold = {};
+class AdlibGold {
+public:
+	AdlibGold(const uint16_t sample_rate);
 
-void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
-                                            const int16_t *data, const uint32_t frames)
+	void SurroundControlWrite(const uint8_t val) noexcept;
+	void StereoControlWrite(const TDA8425_Reg reg,
+	                        const TDA8425_Register data) noexcept;
+
+	void PostprocessAndAddSamples(mixer_channel_t &chan, const int16_t *data,
+	                              const uint32_t frames) noexcept;
+
+private:
+	std::unique_ptr<AdlibGoldSurroundProcessor> surround_processor;
+	std::unique_ptr<AdlibGoldStereoProcessor> stereo_processor;
+};
+
+AdlibGold::AdlibGold(const uint16_t sample_rate)
+{
+	surround_processor = std::make_unique<AdlibGoldSurroundProcessor>(sample_rate);
+	stereo_processor = std::make_unique<AdlibGoldStereoProcessor>(sample_rate);
+}
+
+void AdlibGold::StereoControlWrite(const TDA8425_Reg reg,
+                                   const TDA8425_Register data) noexcept
+{
+	stereo_processor->ControlWrite(reg, data);
+}
+
+void AdlibGold::SurroundControlWrite(const uint8_t val) noexcept
+{
+	surround_processor->ControlWrite(val);
+}
+
+void AdlibGold::PostprocessAndAddSamples(mixer_channel_t &chan, const int16_t *data,
+                                         const uint32_t frames) noexcept
 {
 	float out_buf[1024 * 2];
 
@@ -224,14 +251,14 @@ void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
 		AudioFrame frame = {static_cast<float>(in[0]),
 		                    static_cast<float>(in[1])};
 
-		const auto wet = adlib_gold.surround_processor->Process(frame);
+		const auto wet = surround_processor->Process(frame);
 		// Additional wet signal level boost to make the emulated sound
 		// more closely resemble real hardware recordings.
 		constexpr auto wet_boost = 1.6;
 		frame.left += wet.left * wet_boost;
 		frame.right += wet.right * wet_boost;
 
-		frame = adlib_gold.stereo_processor->Process(frame);
+		frame = stereo_processor->Process(frame);
 
 		out[0] = frame.left;
 		out[1] = frame.right;
@@ -241,6 +268,9 @@ void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
 
 	chan->AddSamples_sfloat(frames, out_buf);
 }
+
+static AdlibGold *adlib_gold = nullptr;
+
 
 namespace OPL2 {
 	#include "opl.cpp"
@@ -281,12 +311,13 @@ struct Handler : public Adlib::Handler {
 	{
 		int16_t buf[1024 * 2];
 		int remaining = samples;
+
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
 			adlib_getsample(buf, todo);
 
-			if (adlib_gold.surround_enabled) {
-				adlib_gold_postprocess_and_add_samples(chan, buf, todo);
+			if (adlib_gold) {
+				adlib_gold->PostprocessAndAddSamples(chan, buf, todo);
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
@@ -359,10 +390,10 @@ struct Handler : public Adlib::Handler {
 				result[i][0] = buf[0][i];
 				result[i][1] = buf[1][i];
 			}
-			if (adlib_gold.surround_enabled) {
-				adlib_gold_postprocess_and_add_samples(chan,
-				                                       result[0],
-				                                       todo);
+			if (adlib_gold) {
+				adlib_gold->PostprocessAndAddSamples(chan,
+				                                     result[0],
+				                                     todo);
 			} else {
 				chan->AddSamples_s16(todo, result[0]);
 			}
@@ -411,8 +442,8 @@ struct Handler : public Adlib::Handler {
 			uint32_t todo = samples > 1024 ? 1024 : samples;
 			OPL3_GenerateStream(&chip, buf, todo);
 
-			if (adlib_gold.surround_enabled) {
-				adlib_gold_postprocess_and_add_samples(chan, buf, todo);
+			if (adlib_gold) {
+				adlib_gold->PostprocessAndAddSamples(chan, buf, todo);
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
@@ -794,49 +825,47 @@ void Module::CtrlWrite(uint8_t val)
 {
 	switch (ctrl.index) {
 	case 0x04:
-		if (adlib_gold.surround_enabled) {
+		if (adlib_gold) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume left: %d",
 			              val & 0x3f);
-			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_VL, val);
+			adlib_gold->StereoControlWrite(TDA8425_Reg_VL, val);
 		}
 		break;
 	case 0x05:
-		if (adlib_gold.surround_enabled) {
+		if (adlib_gold) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume right: %d",
 			              val & 0x3f);
-			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_VR, val);
+			adlib_gold->StereoControlWrite(TDA8425_Reg_VR, val);
 		}
 		break;
 	case 0x06:
-		if (adlib_gold.surround_enabled) {
+		if (adlib_gold) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, bass: %d",
 			              val & 0xf);
-			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_BA, val);
+			adlib_gold->StereoControlWrite(TDA8425_Reg_BA, val);
 		}
 		break;
 	case 0x07:
-		if (adlib_gold.surround_enabled) {
+		if (adlib_gold) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, treble: %d",
 			              val & 0xf);
 			// Additional treble boost to make the emulated sound
 			// more closely resemble real hardware recordings.
-			adlib_gold.stereo_processor->ControlWrite(
-			        TDA8425_Reg_TR, val < 0xf ? val + 1 : 0xf);
+			adlib_gold->StereoControlWrite(TDA8425_Reg_TR,
+			                               val < 0xf ? val + 1 : 0xf);
 		}
 		break;
 
 	case 0x08:
-		if (adlib_gold.surround_enabled) {
+		if (adlib_gold) {
 			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, input selector: 0x%02x, stereo mode: 0x%02x",
 			              val & 6,
 			              val & 18);
-			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_SF, val);
+			adlib_gold->StereoControlWrite(TDA8425_Reg_SF, val);
 		}
 		break;
 
-	case 0x09: /* Left FM Volume */
-		ctrl.lvol = val;
-		goto setvol;
+	case 0x09: /* Left FM Volume */ ctrl.lvol = val; goto setvol;
 	case 0x0a: /* Right FM Volume */
 		ctrl.rvol = val;
 	setvol:
@@ -849,8 +878,8 @@ void Module::CtrlWrite(uint8_t val)
 		break;
 
 	case 0x18: /* Surround */
-		if (adlib_gold.surround_enabled)
-			adlib_gold.surround_processor->ControlWrite(val);
+		if (adlib_gold)
+			adlib_gold->SurroundControlWrite(val);
 	}
 }
 
@@ -858,7 +887,7 @@ uint8_t Module::CtrlRead(void)
 {
 	switch (ctrl.index) {
 	case 0x00: /* Board Options */
-		if (adlib_gold.surround_enabled)
+		if (adlib_gold)
 			return 0x50; // 16-bit ISA, surround module, no
 			             // telephone/CDROM
 		else
@@ -1001,14 +1030,9 @@ void Module::Init(Mode m)
 
 	switch (mode) {
 	case MODE_OPL3:
+		break;
 	case MODE_OPL3GOLD:
-		adlib_gold.surround_processor = new AdlibGoldSurroundProcessor(
-		        mixerChan->GetSampleRate());
-
-		adlib_gold.stereo_processor = new AdlibGoldStereoProcessor(
-		        mixerChan->GetSampleRate());
-
-		adlib_gold.surround_enabled = true;
+		adlib_gold = new AdlibGold(mixerChan->GetSampleRate());
 		break;
 	case MODE_OPL2: break;
 	case MODE_DUALOPL2:
@@ -1197,15 +1221,10 @@ Module::~Module()
 	delete handler;
 	handler = nullptr;
 
-	if (adlib_gold.surround_processor) {
-		delete adlib_gold.surround_processor;
-		adlib_gold.surround_processor = nullptr;
+	if (adlib_gold) {
+		delete adlib_gold;
+		adlib_gold = nullptr;
 	}
-	if (adlib_gold.stereo_processor) {
-		delete adlib_gold.stereo_processor;
-		adlib_gold.stereo_processor = nullptr;
-	}
-	adlib_gold.surround_enabled = false;
 }
 
 //Initialize static members
