@@ -6,6 +6,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  VCPKG_ROOT: C:\vcpkg
+  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+  GH_NUGET_REGISTRY: https://nuget.pkg.github.com/dosbox-staging/index.json
+
 jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
@@ -21,24 +26,26 @@ jobs:
             arch: x64
             max_warnings: 1102
     steps:
-      - name:  Backup existing vcpkg installation
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name:  Prepare VCPKG
+        id: prep-vcpkg
         shell: pwsh
         run: |
-          mv c:\vcpkg c:\vcpkg-bak
-          md c:\vcpkg -ea 0
+          ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
+          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
 
-      - name: Generate vcpkg cache key
-        id:    prep-vcpkg
-        shell: bash
-        run: |
-          echo "::set-output name=year_and_week::$(date '+%Y%W')"
-
-      - name: Cache vcpkg
-        uses: actions/cache@v2
-        id:   cache-vcpkg
-        with:
-          path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
+      - name: 'Setup NuGet Credentials'
+        shell: pwsh
+        run: >-
+          ${{ steps.prep-vcpkg.outputs.nuget_bin }}
+          sources add
+          -source "${{ env.GH_NUGET_REGISTRY }}"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "dosbox-staging"
+          -password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -46,29 +53,11 @@ jobs:
             vs-prerelease: true
             msbuild-architecture: ${{ matrix.conf.arch }}
 
-      - name:  Install new packages using vcpkg
-        if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          rm -R c:\vcpkg
-          c:
-          cd \
-          git clone --depth 1 https://github.com/Microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest speexdsp
-          if (-not $?) { throw "vcpkg failed to install library dependencies" }
-          rm -R c:\vcpkg\buildtrees
-          rm -R c:\vcpkg\packages
-
       - name:  Integrate packages
         shell: pwsh
         run: |
-          vcpkg integrate install
+          ${{ env.VCPKG_ROOT }}\vcpkg.exe integrate install
           if (-not $?) { throw "vcpkg failed to integrate packages" }
-
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
       - name:  Log environment
         shell: pwsh
@@ -109,24 +98,26 @@ jobs:
             vs-release-dirname: x64
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name:  Prepare vcpkg for cache restore
+      - name:  Prepare VCPKG
+        id: prep-vcpkg
         shell: pwsh
         run: |
-          mv c:\vcpkg c:\vcpkg-bak
-          md c:\vcpkg -ea 0
+          ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
+          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
 
-      - name: Generate vcpkg cache key
-        id:    prep-vcpkg
-        shell: bash
-        run: |
-          echo "::set-output name=year_and_week::$(date '+%Y%W')"
-
-      - name: Restore the most recent cache of vcpkg
-        uses: actions/cache@v2
-        with:
-          path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
+      - name: 'Setup NuGet Credentials'
+        shell: pwsh
+        run: >-
+          ${{ steps.prep-vcpkg.outputs.nuget_bin }}
+          sources add
+          -source "${{ env.GH_NUGET_REGISTRY }}"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "dosbox-staging"
+          -password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -137,11 +128,8 @@ jobs:
       - name:  Integrate packages
         shell: pwsh
         run: |
-          vcpkg integrate install
+          ${{ env.VCPKG_ROOT }}\vcpkg.exe integrate install
           if (-not $?) { throw "vcpkg failed to integrate packages" }
-
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
       - name:  Log environment
         shell: pwsh
