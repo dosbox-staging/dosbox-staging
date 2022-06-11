@@ -110,6 +110,8 @@ enum class ChannelFeature { Stereo, ReverbSend, ChorusSend };
 
 enum class FilterState { Off, On, ForcedOn };
 
+using work_index_t = uint16_t;
+
 // forward declarations
 struct SpeexResamplerState_;
 typedef SpeexResamplerState_ SpeexResamplerState;
@@ -182,6 +184,9 @@ private:
 	MixerChannel() = delete;
 	MixerChannel(const MixerChannel &) = delete;
 	MixerChannel &operator=(const MixerChannel &) = delete;
+
+	template <class Type, bool stereo, bool signeddata, bool nativeorder>
+	AudioFrame ConvertNextFrame(const Type *data, const work_index_t pos);
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void ConvertSamples(const Type *data, const uint16_t frames,
