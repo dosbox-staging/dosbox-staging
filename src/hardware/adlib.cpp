@@ -39,6 +39,8 @@
 #define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
 #define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
 
+constexpr auto render_frames = 1024;
+
 namespace OPL2 {
 	#include "opl.cpp"
 
@@ -48,10 +50,10 @@ struct Handler : public Adlib::Handler {
 
 	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
-		int16_t buf[1024];
+		int16_t buf[render_frames];
 		int remaining = frames;
 		while (remaining > 0) {
-			const auto todo = std::min(remaining, 1024);
+			const auto todo = std::min(remaining, render_frames);
 			adlib_getsample(buf, todo);
 			chan->AddSamples_m16(todo, buf);
 			remaining -= todo;
@@ -76,11 +78,11 @@ struct Handler : public Adlib::Handler {
 	}
 	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
-		int16_t buf[1024 * 2];
+		int16_t buf[render_frames * 2];
 		int remaining = frames;
 
 		while (remaining > 0) {
-			const auto todo = std::min(remaining, 1024);
+			const auto todo = std::min(remaining, render_frames);
 			adlib_getsample(buf, todo);
 			chan->AddSamples_s16(todo, buf);
 			remaining -= todo;
@@ -104,10 +106,10 @@ struct Handler : public Adlib::Handler {
 	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
 	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
-		int16_t buf[1024 * 2];
+		int16_t buf[render_frames * 2];
 		int remaining = frames;
 		while (remaining > 0) {
-			const auto todo = std::min(remaining, 1024);
+			const auto todo = std::min(remaining, render_frames);
 			ym3812_update_one(chip, buf, todo);
 			chan->AddSamples_m16(todo, buf);
 			remaining -= todo;
@@ -139,13 +141,13 @@ struct Handler : public Adlib::Handler {
 	{
 		// We generate data for 4 channels, but only the first 2 are
 		// connected on a pc
-		int16_t buf[4][1024];
-		int16_t result[1024][2];
+		int16_t buf[4][render_frames];
+		int16_t result[render_frames][2];
 		int16_t* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
 
 		int remaining = frames;
 		while (remaining > 0) {
-			const auto todo = std::min(remaining, 1024);
+			const auto todo = std::min(remaining, render_frames);
 			ymf262_update_one(chip, buffers, todo);
 			//Interleave the samples before mixing
 			for (int i = 0; i < todo; i++) {
@@ -192,9 +194,9 @@ struct Handler : public Adlib::Handler {
 
 	void Generate(mixer_channel_t &chan, uint16_t frames) override
 	{
-		int16_t buf[1024 * 2];
+		int16_t buf[render_frames * 2];
 		while (frames > 0) {
-			uint32_t todo = frames > 1024 ? 1024 : frames;
+			uint32_t todo = frames > render_frames ? render_frames : frames;
 			OPL3_GenerateStream(&chip, buf, todo);
 			chan->AddSamples_s16(todo, buf);
 			frames -= todo;
