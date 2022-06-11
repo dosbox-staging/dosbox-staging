@@ -583,51 +583,51 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				}
 			}
 		} else { // unsigned
-			const auto offset = 32768;
+			const auto offs = 32768;
 			if (stereo) {
 				if (nativeorder) {
 					frame[0] = static_cast<float>(
 					        static_cast<int>(data[pos * 2 + 0]) -
-					        offset);
+					        offs);
 					frame[1] = static_cast<float>(
 					        static_cast<int>(data[pos * 2 + 1]) -
-					        offset);
+					        offs);
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                (HostPt)&data[pos * 2 + 0])) -
-						        offset);
+						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                (HostPt)&data[pos * 2 + 1])) -
-						        offset);
+						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                (HostPt)&data[pos * 2 + 0])) -
-						        offset);
+						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                (HostPt)&data[pos * 2 + 1])) -
-						        offset);
+						        offs);
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
 					frame[0] = static_cast<float>(
-					        static_cast<int>(data[pos]) - offset);
+					        static_cast<int>(data[pos]) - offs);
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                (HostPt)&data[pos])) -
-						        offset);
+						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                (HostPt)&data[pos])) -
-						        offset);
+						        offs);
 					}
 				}
 			}

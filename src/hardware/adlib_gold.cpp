@@ -178,7 +178,7 @@ void StereoProcessor::Reset() noexcept
 void StereoProcessor::ControlWrite(const TDA8425_Reg addr,
                                    const TDA8425_Register data) noexcept
 {
-	TDA8425_Chip_Write(chip, addr, data);
+	TDA8425_Chip_Write(chip, static_cast<TDA8425_Address>(addr), data);
 }
 
 AudioFrame StereoProcessor::Process(const AudioFrame &frame) noexcept
@@ -206,8 +206,7 @@ AdlibGold::AdlibGold(const uint16_t sample_rate)
 	stereo_processor   = std::make_unique<StereoProcessor>(sample_rate);
 }
 
-AdlibGold::~AdlibGold()
-{}
+AdlibGold::~AdlibGold() = default;
 
 void AdlibGold::StereoControlWrite(const TDA8425_Reg reg,
                                    const TDA8425_Register data) noexcept
