@@ -428,8 +428,9 @@ struct Handler : public Adlib::Handler {
 		int16_t buf[render_frames * 2];
 		float float_buf[render_frames * 2];
 
-		while (frames > 0) {
-			uint32_t todo = frames > render_frames ? render_frames : frames;
+		int remaining = frames;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, render_frames);
 			OPL3_GenerateStream(&chip, buf, todo);
 
 			if (adlib_gold) {
@@ -438,7 +439,7 @@ struct Handler : public Adlib::Handler {
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
-			frames -= todo;
+			remaining -= todo;
 		}
 	}
 
