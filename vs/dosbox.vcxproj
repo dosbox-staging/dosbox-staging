@@ -400,6 +400,7 @@
     <ClCompile Include="..\src\gui\sdl_gui.cpp" />
     <ClCompile Include="..\src\gui\sdl_mapper.cpp" />
     <ClCompile Include="..\src\hardware\adlib.cpp" />
+	<ClCompile Include="..\src\hardware\adlib_gold.cpp" />
     <ClCompile Include="..\src\hardware\cmos.cpp" />
     <ClCompile Include="..\src\hardware\dc_silencer.cpp" />
     <ClCompile Include="..\src\hardware\dbopl.cpp" />

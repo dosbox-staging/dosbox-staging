@@ -130,6 +130,9 @@
     <ClCompile Include="..\src\hardware\adlib.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\adlib_gold.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\cmos.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
