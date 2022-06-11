@@ -142,8 +142,8 @@ StereoProcessor::StereoProcessor(const uint16_t sample_rate) : chip(nullptr)
 	TDA8425_Chip_Ctor(chip);
 	TDA8425_Chip_Setup(chip,
 	                   sample_rate,
-	                   TDA8425_Pseudo_C1_Table[TDA8425_Pseudo_Preset_1],
-	                   TDA8425_Pseudo_C2_Table[TDA8425_Pseudo_Preset_1],
+	                   TDA8425_Pseudo_C1_Table[TDA8425_Pseudo_Preset_2],
+	                   TDA8425_Pseudo_C2_Table[TDA8425_Pseudo_Preset_2],
 	                   TDA8425_Tfilter_Mode_Disabled);
 	TDA8425_Chip_Reset(chip);
 	TDA8425_Chip_Start(chip);
