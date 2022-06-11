@@ -117,6 +117,7 @@ static struct {
     uint16_t last_wheel_moved_x;
     uint16_t last_wheel_moved_y;
 
+    uint8_t  buttons;
 	float    x,y;
     int16_t  wheel;
 
@@ -243,7 +244,7 @@ inline void AddEvent(uint8_t type) {
                 queue[i] = queue[i - 1];
 		}
 		queue[0].dos_type    = type;
-		queue[0].dos_buttons = buttons_12 + (buttons_345 ? 4 : 0);
+		queue[0].dos_buttons = mouse.buttons;
 		queue_used++;
 	}
 	if (!timer_in_progress) {
@@ -697,11 +698,9 @@ static void Mouse_Reset()
 
 	mouse.mickey_x   = 0;
 	mouse.mickey_y   = 0;
+	mouse.buttons    = 0;
     mouse.wheel      = 0;
     mouse.cute_mouse = false;
-
-	buttons_12  = 0;
-	buttons_345 = 0;
 
     mouse.last_wheel_moved_x = 0;
     mouse.last_wheel_moved_y = 0;
@@ -746,7 +745,7 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x03: // MS MOUSE v1.0+ / CuteMouse - return position and button status
-		reg_bl = buttons_12 + (buttons_345 ? 4 : 0);
+		reg_bl = mouse.buttons;
 		reg_bh = GetResetWheel8bit(); // original CuteMouse clears mouse wheel status here
 		reg_cx = POS_X;
 		reg_dx = POS_Y;
@@ -772,7 +771,7 @@ static Bitu INT33_Handler(void) {
                 reg_cx = mouse.last_wheel_moved_x;
                 reg_dx = mouse.last_wheel_moved_y;
             } else {
-                reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+                reg_ax = mouse.buttons;
                 if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
                 reg_cx = mouse.last_pressed_x[but];
                 reg_dx = mouse.last_pressed_y[but];
@@ -789,7 +788,7 @@ static Bitu INT33_Handler(void) {
                 reg_cx = mouse.last_wheel_moved_x;
                 reg_dx = mouse.last_wheel_moved_y;
             } else {
-			    reg_ax = buttons_12 + (buttons_345 ? 4 : 0);
+			    reg_ax = mouse.buttons;
 			    if (but >= MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
 			    reg_cx = mouse.last_released_x[but];
 			    reg_dx = mouse.last_released_y[but];
@@ -1227,6 +1226,7 @@ void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs
 
 	MouseVMW_NotifyMoved(x_abs, y_abs);
 
+    // TODO: change the code so that in seamless mode sensitivity is not applied
 	Mouse_CursorMoved(x_rel * mouse_config.sensitivity_x,
 					  y_rel * mouse_config.sensitivity_y,
 					  (x_abs - mouse_video.clip_x) / (mouse_video.res_x - 1) * mouse_config.sensitivity_x,
@@ -1255,14 +1255,15 @@ void Mouse_EventPressed(uint8_t idx) {
     } else
         return; // button not supported
 
-    uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
-    bool    changed_12S = (buttons_12S_old != buttons_12S);
+    mouse.buttons    = buttons_12 + (buttons_345 ? 4 : 0);
+    bool changed_12S = (buttons_12S_old != mouse.buttons);
     
     if (changed_12S) {
     	uint8_t idx_12S = idx < 2 ? idx : 2;
+    	mouse.buttons   = buttons_12 + (buttons_345 ? 4 : 0);
 
-    	MouseVMW_NotifyPressedReleased(buttons_12S);
-        MouseSER_NotifyPressed(buttons_12S, idx_12S);
+    	MouseVMW_NotifyPressedReleased(mouse.buttons);
+        MouseSER_NotifyPressed(mouse.buttons, idx_12S);
 
 	 	mouse.times_pressed[idx_12S]++;
 		mouse.last_pressed_x[idx_12S] = POS_X;
@@ -1285,14 +1286,14 @@ void Mouse_EventReleased(uint8_t idx) {
     } else
         return; // button not supported
 
-    uint8_t buttons_12S = buttons_12 + (buttons_345 ? 4 : 0);
-    bool    changed_12S = (buttons_12S_old != buttons_12S);
+    mouse.buttons    = buttons_12 + (buttons_345 ? 4 : 0);
+    bool changed_12S = (buttons_12S_old != mouse.buttons);
 
     if (changed_12S) {
     	uint8_t idx_12S = idx < 2 ? idx : 2;
-
-    	MouseVMW_NotifyPressedReleased(buttons_12S);
-        MouseSER_NotifyReleased(buttons_12S, idx_12S);
+    	
+    	MouseVMW_NotifyPressedReleased(mouse.buttons);
+        MouseSER_NotifyReleased(mouse.buttons, idx_12S);
 
 		mouse.times_released[idx_12S]++;	
 		mouse.last_released_x[idx_12S] = POS_X;
