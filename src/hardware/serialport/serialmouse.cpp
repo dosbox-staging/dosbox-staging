@@ -33,7 +33,7 @@ CHECK_NARROWING();
 
 
 CSerialMouse::CSerialMouse(uint8_t id, CommandLine* cmd): CSerial(id, cmd),
-    port_num(id + 1), 
+    port_num(static_cast<uint16_t>(id + 1)), 
     config_type(MouseType::NO_MOUSE),
     config_auto(false),
     mouse_type(MouseType::NO_MOUSE),
@@ -274,12 +274,12 @@ void CSerialMouse::startPacketData(bool extended) {
         uint8_t dy = static_cast<uint8_t>(std::clamp(mouse_delta_y, -0x80, 0x7f));
         uint8_t bt = mouse_has_3rd_button ? (mouse_buttons & 7) : (mouse_buttons & 3);
 
-        packet[0]  = 0x40 | ((bt & 1) << 5) | ((bt & 2) << 3) | (((dy >> 6) & 3) << 2) | ((dx >> 6) & 3);
-        packet[1]  = 0x00 | (dx & 0x3f);
-        packet[2]  = 0x00 | (dy & 0x3f);
+        packet[0]  = static_cast<uint8_t>(0x40 | ((bt & 1) << 5) | ((bt & 2) << 3) | (((dy >> 6) & 3) << 2) | ((dx >> 6) & 3));
+        packet[1]  = static_cast<uint8_t>(0x00 | (dx & 0x3f));
+        packet[2]  = static_cast<uint8_t>(0x00 | (dy & 0x3f));
         if (extended) {
             uint8_t dw = std::clamp(mouse_delta_w, -0x10, 0x0f) & 0x0f;
-            packet[3]  = ((bt & 4) ? 0x20 : 0) | dw;
+            packet[3]  = static_cast<uint8_t>(((bt & 4) ? 0x20 : 0) | dw);
             packet_len = 4;
         } else {
             packet_len = 3;           
@@ -296,7 +296,7 @@ void CSerialMouse::startPacketData(bool extended) {
         uint8_t dy = static_cast<uint8_t>(std::clamp(-mouse_delta_y, -0x80, 0x7f));
         uint8_t bt = mouse_has_3rd_button ? ((~mouse_buttons) & 7) : ((~mouse_buttons) & 3);
 
-        packet[0]  = 0x80 | ((bt & 1) << 2) | ((bt & 2) >> 1) | ((bt & 4) >> 1);
+        packet[0]  = static_cast<uint8_t>(0x80 | ((bt & 1) << 2) | ((bt & 2) >> 1) | ((bt & 4) >> 1));
         packet[1]  = dx;
         packet[2]  = dy;
         packet_len = 3;
@@ -383,9 +383,9 @@ void CSerialMouse::updatePortConfig(uint16_t divider, uint8_t lcr) {
 
     mouse_port_valid = true;
 
-    const uint8_t bytelen   = (lcr & 0x3) + 5;
+    const uint8_t bytelen   = static_cast<uint8_t>((lcr & 0x3) + 5);
     const bool    onestop   = !(lcr & 0x4);
-    const uint8_t parity_id = (lcr & 0x38) >> 3;
+    const uint8_t parity_id = static_cast<uint8_t>((lcr & 0x38) >> 3);
 
     if (divider!= 96 || !onestop || // for mouse we need 1200 bauds and 1 stop bit
         parity_id == 1 || parity_id == 3 || parity_id == 5 || parity_id == 7) // parity has to be 'N'

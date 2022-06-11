@@ -18,6 +18,8 @@
 
 #include "mouse.h"
 
+#include <algorithm>
+
 #include "checks.h"
 
 #include "../hardware/serialport/serialmouse.h"

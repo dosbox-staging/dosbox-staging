@@ -443,6 +443,7 @@
     <ClCompile Include="..\src\hardware\serialport\misc_util.cpp" />
     <ClCompile Include="..\src\hardware\serialport\nullmodem.cpp" />
     <ClCompile Include="..\src\hardware\serialport\serialdummy.cpp" />
+    <ClCompile Include="..\src\hardware\serialport\serialmouse.cpp" />
     <ClCompile Include="..\src\hardware\serialport\serialport.cpp" />
     <ClCompile Include="..\src\hardware\serialport\softmodem.cpp" />
     <ClCompile Include="..\src\hardware\tandy_sound.cpp" />
@@ -476,6 +477,8 @@
     <ClCompile Include="..\src\ints\int10_video_state.cpp" />
     <ClCompile Include="..\src\ints\int10_vptable.cpp" />
     <ClCompile Include="..\src\ints\mouse.cpp" />
+    <ClCompile Include="..\src\ints\mouse_serial.cpp" />
+    <ClCompile Include="..\src\ints\mouse_vmware.cpp" />
     <ClCompile Include="..\src\ints\xms.cpp" />
     <ClCompile Include="..\src\libs\gui_tk\gui_tk.cpp" />
     <ClCompile Include="..\src\libs\decoders\flac.c" />
@@ -656,6 +659,7 @@
     <ClInclude Include="..\src\hardware\serialport\nullmodem.h" />
     <ClInclude Include="..\src\hardware\serialport\serialdummy.h" />
     <ClInclude Include="..\src\hardware\serialport\softmodem.h" />
+    <ClInclude Include="..\src\hardware\serialport\softmouse.h" />
     <ClInclude Include="..\src\ints\int10.h" />
     <ClInclude Include="..\src\ints\xms.h" />
     <ClInclude Include="..\src\libs\decoders\archive.h" />

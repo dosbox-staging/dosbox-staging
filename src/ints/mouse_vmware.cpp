@@ -18,6 +18,8 @@
 
 #include "mouse.h"
 
+#include <algorithm>
+
 #include "checks.h"
 #include "regs.h"
 #include "inout.h"
@@ -56,7 +58,7 @@ enum VMW_BUTTON:uint8_t {
 };
 
 static constexpr io_port_t VMW_PORT   = 0x5658u;     // communication port
-static constexpr io_port_t VMW_PORTHB = 0x5659u;     // communication port, high bandwidth
+// static constexpr io_port_t VMW_PORTHB = 0x5659u;  // communication port, high bandwidth
 static constexpr uint32_t  VMW_MAGIC  = 0x564D5868u; // magic number for all VMware calls
 
 static bool      updated     = false;                // true = mouse state update waits top be piced up
@@ -75,7 +77,7 @@ bool mouse_vmware = false;                           // if true, VMware compatib
 // ***************************************************************************
 
 static inline void CmdGetVersion() {
-    reg_eax = 0; // FIXME: should we respond with something resembling VMware?
+    reg_eax = 0; // TODO: should we respond with something resembling VMware? For now 0 seems OK
     reg_ebx = VMW_MAGIC;
 }
 
@@ -161,8 +163,10 @@ bool MouseVMW_NotifyMoved(int32_t x_abs, int32_t y_abs) {
     auto old_x = scaled_x;
     auto old_y = scaled_y;
 
-    scaled_x = static_cast<uint16_t>(std::min(0xffffu, static_cast<uint32_t>(vmw_x * 0xffff / (mouse_video.res_x - 1) + 0.499)));
-    scaled_y = static_cast<uint16_t>(std::min(0xffffu, static_cast<uint32_t>(vmw_y * 0xffff / (mouse_video.res_y - 1) + 0.499)));
+    scaled_x = static_cast<uint16_t>(std::min(0xffffu,
+        static_cast<uint32_t>(vmw_x * 0xffff / static_cast<float>(mouse_video.res_x - 1) + 0.499)));
+    scaled_y = static_cast<uint16_t>(std::min(0xffffu,
+        static_cast<uint32_t>(vmw_y * 0xffff / static_cast<float>(mouse_video.res_y - 1) + 0.499)));
 
     updated = true;
 
