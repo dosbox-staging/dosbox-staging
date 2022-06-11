@@ -16,6 +16,9 @@ missed.txt
 build
 builddir
 
+# VCPKG
+vcpkg_installed
+
 # Visual Studio / Code
 .vs
 .vscode
