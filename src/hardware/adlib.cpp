@@ -213,8 +213,7 @@ public:
 	void StereoControlWrite(const TDA8425_Reg reg,
 	                        const TDA8425_Register data) noexcept;
 
-	void PostprocessAndAddSamples(mixer_channel_t &chan, const int16_t *data,
-	                              const uint32_t frames) noexcept;
+	void Process(const int16_t *in, const uint32_t frames, float *out) noexcept;
 
 private:
 	std::unique_ptr<AdlibGoldSurroundProcessor> surround_processor;
@@ -238,14 +237,8 @@ void AdlibGold::SurroundControlWrite(const uint8_t val) noexcept
 	surround_processor->ControlWrite(val);
 }
 
-void AdlibGold::PostprocessAndAddSamples(mixer_channel_t &chan, const int16_t *data,
-                                         const uint32_t frames) noexcept
+void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) noexcept
 {
-	float out_buf[1024 * 2];
-
-	auto in  = data;
-	auto out = out_buf;
-
 	auto frames_left = frames;
 	while (frames_left--) {
 		AudioFrame frame = {static_cast<float>(in[0]),
@@ -265,8 +258,6 @@ void AdlibGold::PostprocessAndAddSamples(mixer_channel_t &chan, const int16_t *d
 		in += 2;
 		out += 2;
 	}
-
-	chan->AddSamples_sfloat(frames, out_buf);
 }
 
 static AdlibGold *adlib_gold = nullptr;
@@ -310,6 +301,7 @@ struct Handler : public Adlib::Handler {
 	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
 		int16_t buf[1024 * 2];
+		float float_buf[1024 * 2];
 		int remaining = frames;
 
 		while (remaining > 0) {
@@ -317,7 +309,8 @@ struct Handler : public Adlib::Handler {
 			adlib_getsample(buf, todo);
 
 			if (adlib_gold) {
-				adlib_gold->PostprocessAndAddSamples(chan, buf, todo);
+				adlib_gold->Process(buf, todo, float_buf);
+				chan->AddSamples_sfloat(todo, float_buf);
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
@@ -378,6 +371,7 @@ struct Handler : public Adlib::Handler {
 		// We generate data for 4 channels, but only the first 2 are
 		// connected on a pc
 		int16_t buf[4][1024];
+		float float_buf[1024 * 2];
 		int16_t result[1024][2];
 		int16_t* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
 
@@ -391,9 +385,8 @@ struct Handler : public Adlib::Handler {
 				result[i][1] = buf[1][i];
 			}
 			if (adlib_gold) {
-				adlib_gold->PostprocessAndAddSamples(chan,
-				                                     result[0],
-				                                     todo);
+				adlib_gold->Process(result[0], todo, float_buf);
+				chan->AddSamples_sfloat(todo, float_buf);
 			} else {
 				chan->AddSamples_s16(todo, result[0]);
 			}
@@ -437,13 +430,15 @@ struct Handler : public Adlib::Handler {
 	void Generate(mixer_channel_t &chan, uint16_t frames) override
 	{
 		int16_t buf[1024 * 2];
+		float float_buf[1024 * 2];
 
 		while (frames > 0) {
 			uint32_t todo = frames > 1024 ? 1024 : frames;
 			OPL3_GenerateStream(&chip, buf, todo);
 
 			if (adlib_gold) {
-				adlib_gold->PostprocessAndAddSamples(chan, buf, todo);
+				adlib_gold->Process(buf, todo, float_buf);
+				chan->AddSamples_sfloat(todo, float_buf);
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
