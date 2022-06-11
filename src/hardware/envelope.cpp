@@ -35,8 +35,7 @@ void Envelope::Reactivate()
 	process = &Envelope::Apply;
 }
 
-void Envelope::Update(const int frame_rate,
-                      const int peak_amplitude,
+void Envelope::Update(const int frame_rate, const int peak_amplitude,
                       const uint8_t expansion_phase_ms,
                       const uint8_t expire_after_seconds)
 {
@@ -48,7 +47,7 @@ void Envelope::Update(const int frame_rate,
 	assert(expire_after_frames > 0);
 
 	// The furtherest allowed edge is the peak sample amplitude.
-	edge_limit = peak_amplitude;
+	edge_limit = static_cast<float>(peak_amplitude);
 
 	// Permit the envelop to achieve peak volume within the expansion_phase
 	// (in ms) if the samples happen to constantly press on the edges.
@@ -58,7 +57,7 @@ void Envelope::Update(const int frame_rate,
 	// Calculate how much the envelope's edge will grow after a frame
 	// presses against it.
 	assert(expansion_phase_frames);
-	edge_increment = ceil_sdivide(peak_amplitude, expansion_phase_frames);
+	edge_increment = static_cast<float>(ceil_sdivide(peak_amplitude, expansion_phase_frames));
 
 //	DEBUG_LOG_MSG("ENVELOPE: %s grows by %-3f to %-5f across %-3u frames (%u ms)",
 //	              channel_name,

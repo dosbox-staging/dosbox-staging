@@ -172,7 +172,7 @@ void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) no
 		const auto wet = surround_processor->Process(frame);
 		// Additional wet signal level boost to make the emulated sound
 		// more closely resemble real hardware recordings.
-		constexpr auto wet_boost = 1.6;
+		constexpr auto wet_boost = 1.6f;
 		frame.left += wet.left * wet_boost;
 		frame.right += wet.right * wet_boost;
 

@@ -553,8 +553,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 		if (signeddata) {
 			if (stereo) {
 				if (nativeorder) {
-					frame[0] = data[pos * 2 + 0];
-					frame[1] = data[pos * 2 + 1];
+					frame[0] = static_cast<float>(data[pos * 2 + 0]);
+					frame[1] = static_cast<float>(data[pos * 2 + 1]);
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
@@ -562,22 +562,23 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 						frame[1] = (int16_t)host_readw(
 						        (HostPt)&data[pos * 2 + 1]);
 					} else {
-						frame[0] = (int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 0]);
-						frame[1] = (int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 1]);
+						frame[0] = static_cast<float>((int32_t)host_readd(
+						        (HostPt)&data[pos * 2 + 0]));
+						frame[1] = static_cast<float>((int32_t)host_readd(
+						        (HostPt)&data[pos * 2 + 1]));
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
-					frame[0] = data[pos];
+					frame[0] = static_cast<float>(data[pos]);
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
 						        (HostPt)&data[pos]);
 					} else {
-						frame[0] = (int32_t)host_readd(
-						        (HostPt)&data[pos]);
+						frame[0] = static_cast<float>(
+						        (int32_t)host_readd(
+						                (HostPt)&data[pos]));
 					}
 				}
 			}
@@ -585,41 +586,48 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 			const auto offset = 32768;
 			if (stereo) {
 				if (nativeorder) {
-					frame[0] = static_cast<int>(
-					                   data[pos * 2 + 0]) -
-					           offset;
-					frame[1] = static_cast<int>(
-					                   data[pos * 2 + 1]) -
-					           offset;
+					frame[0] = static_cast<float>(
+					        static_cast<int>(data[pos * 2 + 0]) -
+					        offset);
+					frame[1] = static_cast<float>(
+					        static_cast<int>(data[pos * 2 + 1]) -
+					        offset);
 				} else {
 					if (sizeof(Type) == 2) {
-						frame[0] = static_cast<int>(host_readw(
-						                   (HostPt)&data[pos * 2 + 0])) -
-						           offset;
-						frame[1] = static_cast<int>(host_readw(
-						                   (HostPt)&data[pos * 2 + 1])) -
-						           offset;
+						frame[0] = static_cast<float>(
+						        static_cast<int>(host_readw(
+						                (HostPt)&data[pos * 2 + 0])) -
+						        offset);
+						frame[1] = static_cast<float>(
+						        static_cast<int>(host_readw(
+						                (HostPt)&data[pos * 2 + 1])) -
+						        offset);
 					} else {
-						frame[0] = static_cast<int>(host_readd(
-						                   (HostPt)&data[pos * 2 + 0])) -
-						           offset;
-						frame[1] = static_cast<int>(host_readd(
-						                   (HostPt)&data[pos * 2 + 1])) -
-						           offset;
+						frame[0] = static_cast<float>(
+						        static_cast<int>(host_readd(
+						                (HostPt)&data[pos * 2 + 0])) -
+						        offset);
+						frame[1] = static_cast<float>(
+						        static_cast<int>(host_readd(
+						                (HostPt)&data[pos * 2 + 1])) -
+						        offset);
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
-					frame[0] = static_cast<int>(data[pos]) - offset;
+					frame[0] = static_cast<float>(
+					        static_cast<int>(data[pos]) - offset);
 				} else {
 					if (sizeof(Type) == 2) {
-						frame[0] = static_cast<int>(host_readw(
-						                   (HostPt)&data[pos])) -
-						           offset;
+						frame[0] = static_cast<float>(
+						        static_cast<int>(host_readw(
+						                (HostPt)&data[pos])) -
+						        offset);
 					} else {
-						frame[0] = static_cast<int>(host_readd(
-						                   (HostPt)&data[pos])) -
-						           offset;
+						frame[0] = static_cast<float>(
+						        static_cast<int>(host_readd(
+						                (HostPt)&data[pos])) -
+						        offset);
 					}
 				}
 			}
@@ -654,10 +662,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 
 		if (std::is_same<Type, float>::value) {
 			if (stereo) {
-				next_frame[0] = data[pos * 2 + 0];
-				next_frame[1] = data[pos * 2 + 1];
+				next_frame[0] = static_cast<float>(data[pos * 2 + 0]);
+				next_frame[1] = static_cast<float>(data[pos * 2 + 1]);
 			} else {
-				next_frame[0] = data[pos];
+				next_frame[0] = static_cast<float>(data[pos]);
 			}
 		} else {
 			next_frame = ConvertNextFrame<Type, stereo, signeddata, nativeorder>(
