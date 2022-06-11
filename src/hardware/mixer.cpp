@@ -212,8 +212,18 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 {
 	MIXER_LockAudioDevice();
 	auto it = mixer.channels.find(name);
+
+	// Deprecated alias SPKR to PCSPEAKER
+	if (it == mixer.channels.end() && std::string_view(name) == "SPKR") {
+		LOG_WARNING("MIXER: '%s' is deprecated due to inconsistent "
+		            "naming, please use 'PCSPEAKER' instead",
+		            name);
+		it = mixer.channels.find("PCSPEAKER");
+	}
+
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
 	MIXER_UnlockAudioDevice();
+
 	return chan;
 }
 
