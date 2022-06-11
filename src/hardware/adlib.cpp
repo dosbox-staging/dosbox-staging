@@ -30,6 +30,8 @@
 #include "mem.h"
 #include "dbopl.h"
 #include "../libs/nuked/opl3.h"
+#include "../libs/TDA8425_emu/TDA8425_emu.h"
+#include "../libs/YM7128B_emu/YM7128B_emu.h"
 
 #include "mame/emu.h"
 #include "mame/fmopl.h"
@@ -38,6 +40,201 @@
 
 #define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
 #define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
+
+static Adlib::Module *module = nullptr;
+
+struct StereoFrame {
+	int16_t left  = 0;
+	int16_t right = 0;
+};
+
+class AdlibGoldSurroundProcessor {
+public:
+	AdlibGoldSurroundProcessor(const uint16_t sample_rate);
+	~AdlibGoldSurroundProcessor();
+
+	void ControlWrite(const uint8_t val) noexcept;
+	StereoFrame Process(const StereoFrame &frame) noexcept;
+
+private:
+	YM7128B_ChipIdeal *chip = nullptr;
+
+	struct {
+		uint8_t sci  = 0;
+		uint8_t a0   = 0;
+		uint8_t addr = 0;
+		uint8_t data = 0;
+	} control_state = {};
+};
+
+AdlibGoldSurroundProcessor::AdlibGoldSurroundProcessor(const uint16_t sample_rate)
+{
+	chip = (YM7128B_ChipIdeal *)malloc(sizeof(YM7128B_ChipIdeal));
+
+	YM7128B_ChipIdeal_Ctor(chip);
+	YM7128B_ChipIdeal_Setup(chip, sample_rate);
+	YM7128B_ChipIdeal_Reset(chip);
+	YM7128B_ChipIdeal_Start(chip);
+}
+
+AdlibGoldSurroundProcessor::~AdlibGoldSurroundProcessor()
+{
+	if (chip) {
+		YM7128B_ChipIdeal_Stop(chip);
+		YM7128B_ChipIdeal_Dtor(chip);
+		free(chip);
+		chip = nullptr;
+	}
+}
+
+void AdlibGoldSurroundProcessor::ControlWrite(const uint8_t val) noexcept
+{
+	// Serial data
+	const auto din = val & 1;
+	// Bit clock
+	const auto sci = val & 2;
+	// Word clock
+	const auto a0 = val & 4;
+
+	// Change register data at the falling edge of 'a0' word clock
+	if (control_state.a0 && !a0) {
+		//		LOG_MSG("ADLIBGOLD.SURROUND: Write control
+		//register %d, data: %d", 		        control_state.addr,
+		//		        control_state.data);
+		YM7128B_ChipIdeal_Write(chip, control_state.addr, control_state.data);
+	} else {
+		// Data is sent in serially through 'din' in MSB->LSB order,
+		// synchronised by the 'sci' bit clock. Data should be read on
+		// the rising edge of 'sci'.
+		if (!control_state.sci && sci) {
+			// The 'a0' word clock determines the type of the data.
+			if (a0)
+				// Data cycle
+				control_state.data = (control_state.data << 1) | din;
+			else
+				// Address cycle
+				control_state.addr = (control_state.addr << 1) | din;
+		}
+	}
+
+	control_state.sci = sci;
+	control_state.a0  = a0;
+}
+
+StereoFrame AdlibGoldSurroundProcessor::Process(const StereoFrame &frame) noexcept
+{
+	YM7128B_ChipIdeal_Process_Data data = {};
+	data.inputs[0]                      = frame.left + frame.right;
+
+	YM7128B_ChipIdeal_Process(chip, &data);
+
+	return {static_cast<int16_t>(data.outputs[0]),
+	        static_cast<int16_t>(data.outputs[1])};
+}
+
+class AdlibGoldStereoProcessor {
+public:
+	AdlibGoldStereoProcessor(const uint16_t sample_rate);
+	~AdlibGoldStereoProcessor();
+
+	void Reset() noexcept;
+	void ControlWrite(const TDA8425_Reg reg, const TDA8425_Register data) noexcept;
+	StereoFrame Process(const StereoFrame &frame) noexcept;
+
+private:
+	TDA8425_Chip *chip = nullptr;
+};
+
+AdlibGoldStereoProcessor::AdlibGoldStereoProcessor(const uint16_t sample_rate)
+{
+	chip = (TDA8425_Chip *)malloc(sizeof(TDA8425_Chip));
+
+	TDA8425_Chip_Ctor(chip);
+	TDA8425_Chip_Setup(chip,
+	                   sample_rate,
+	                   TDA8425_Pseudo_C1_Table[TDA8425_Pseudo_Preset_1],
+	                   TDA8425_Pseudo_C2_Table[TDA8425_Pseudo_Preset_1],
+	                   TDA8425_Tfilter_Mode_Disabled);
+	TDA8425_Chip_Reset(chip);
+	TDA8425_Chip_Start(chip);
+
+	Reset();
+}
+
+AdlibGoldStereoProcessor::~AdlibGoldStereoProcessor()
+{
+	if (chip) {
+		TDA8425_Chip_Stop(chip);
+		TDA8425_Chip_Dtor(chip);
+		free(chip);
+		chip = nullptr;
+	}
+}
+
+void AdlibGoldStereoProcessor::Reset() noexcept
+{
+	constexpr auto volume_0db    = 60;
+	constexpr auto bass_0db      = 6;
+	constexpr auto treble_0db    = 6;
+	constexpr auto stereo_output = TDA8425_Selector_Stereo_1;
+	constexpr auto linear_stereo = TDA8425_Mode_LinearStereo
+	                            << TDA8425_Reg_SF_STL;
+
+	ControlWrite(TDA8425_Reg_VL, volume_0db);
+	ControlWrite(TDA8425_Reg_VR, volume_0db);
+	ControlWrite(TDA8425_Reg_BA, bass_0db);
+	ControlWrite(TDA8425_Reg_TR, treble_0db);
+	ControlWrite(TDA8425_Reg_SF, stereo_output & linear_stereo);
+}
+
+void AdlibGoldStereoProcessor::ControlWrite(const TDA8425_Reg addr,
+                                            const TDA8425_Register data) noexcept
+{
+	TDA8425_Chip_Write(chip, addr, data);
+}
+
+StereoFrame AdlibGoldStereoProcessor::Process(const StereoFrame &frame) noexcept
+{
+	TDA8425_Chip_Process_Data data = {};
+	data.inputs[0][0]              = frame.left;
+	data.inputs[1][0]              = frame.left;
+	data.inputs[0][1]              = frame.right;
+	data.inputs[1][1]              = frame.right;
+
+	TDA8425_Chip_Process(chip, &data);
+
+	return {static_cast<int16_t>(data.outputs[0]),
+	        static_cast<int16_t>(data.outputs[1])};
+}
+
+struct {
+	AdlibGoldSurroundProcessor *surround_processor = nullptr;
+	AdlibGoldStereoProcessor *stereo_processor     = nullptr;
+	bool surround_enabled                          = false;
+} adlib_gold = {};
+
+void adlib_gold_postprocess_and_add_samples(mixer_channel_t &chan,
+                                            int16_t *data, const uint32_t frames)
+{
+	auto frames_left = frames;
+	auto buf         = data;
+
+	while (frames_left--) {
+		StereoFrame frame = {buf[0], buf[1]};
+
+		const auto wet = adlib_gold.surround_processor->Process(frame);
+		frame.left += wet.left;
+		frame.right += wet.right;
+
+		frame = adlib_gold.stereo_processor->Process(frame);
+
+		buf[0] = frame.left;
+		buf[1] = frame.right;
+		buf += 2;
+	}
+
+	chan->AddSamples_s16(frames, data);
+}
 
 namespace OPL2 {
 	#include "opl.cpp"
@@ -81,7 +278,12 @@ struct Handler : public Adlib::Handler {
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
 			adlib_getsample(buf, todo);
-			chan->AddSamples_s16(todo, buf);
+
+			if (adlib_gold.surround_enabled) {
+				adlib_gold_postprocess_and_add_samples(chan, buf, todo);
+			} else {
+				chan->AddSamples_s16(todo, buf);
+			}
 			remaining -= todo;
 		}
 	}
@@ -151,7 +353,13 @@ struct Handler : public Adlib::Handler {
 				result[i][0] = buf[0][i];
 				result[i][1] = buf[1][i];
 			}
-			chan->AddSamples_s16(todo, result[0]);
+			if (adlib_gold.surround_enabled) {
+				adlib_gold_postprocess_and_add_samples(chan,
+				                                       result[0],
+				                                       todo);
+			} else {
+				chan->AddSamples_s16(todo, result[0]);
+			}
 			remaining -= todo;
 		}
 	}
@@ -192,10 +400,16 @@ struct Handler : public Adlib::Handler {
 	void Generate(mixer_channel_t &chan, uint16_t samples) override
 	{
 		int16_t buf[1024 * 2];
+
 		while (samples > 0) {
 			uint32_t todo = samples > 1024 ? 1024 : samples;
 			OPL3_GenerateStream(&chip, buf, todo);
-			chan->AddSamples_s16(todo, buf);
+
+			if (adlib_gold.surround_enabled) {
+				adlib_gold_postprocess_and_add_samples(chan, buf, todo);
+			} else {
+				chan->AddSamples_s16(todo, buf);
+			}
 			samples -= todo;
 		}
 	}
@@ -208,6 +422,7 @@ struct Handler : public Adlib::Handler {
 };
 
 } // namespace NukedOPL
+
 
 /*
 	Main Adlib implementation
@@ -569,31 +784,81 @@ void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 	CacheWrite(full_port, val);
 }
 
-void Module::CtrlWrite( uint8_t val ) {
-	switch ( ctrl.index ) {
+void Module::CtrlWrite(uint8_t val)
+{
+	switch (ctrl.index) {
+	case 0x04:
+		if (adlib_gold.surround_enabled) {
+			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume left: %d",
+			              val & 0x3f);
+			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_VL, val);
+		}
+		break;
+	case 0x05:
+		if (adlib_gold.surround_enabled) {
+			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume right: %d",
+			              val & 0x3f);
+			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_VR, val);
+		}
+		break;
+	case 0x06:
+		if (adlib_gold.surround_enabled) {
+			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, bass: %d",
+			              val & 0xf);
+			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_BA, val);
+		}
+		break;
+	case 0x07:
+		if (adlib_gold.surround_enabled) {
+			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, treble: %d",
+			              val & 0xf);
+			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_TR, val);
+		}
+		break;
+
+	case 0x08:
+		if (adlib_gold.surround_enabled) {
+			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, input selector: 0x%02x, stereo mode: 0x%02x",
+			              val & 6,
+			              val & 18);
+			adlib_gold.stereo_processor->ControlWrite(TDA8425_Reg_SF, val);
+		}
+		break;
+
 	case 0x09: /* Left FM Volume */
 		ctrl.lvol = val;
 		goto setvol;
 	case 0x0a: /* Right FM Volume */
 		ctrl.rvol = val;
-setvol:
-		if ( ctrl.mixer ) {
-			//Dune cdrom uses 32 volume steps in an apparent mistake, should be 128
-			mixerChan->SetVolume( (float)(ctrl.lvol&0x1f)/31.0f, (float)(ctrl.rvol&0x1f)/31.0f );
+	setvol:
+		if (ctrl.mixer) {
+			// Dune cdrom uses 32 volume steps in an apparent
+			// mistake, should be 128
+			mixerChan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
+			                     (float)(ctrl.rvol & 0x1f) / 31.0f);
 		}
 		break;
+
+	case 0x18: /* Surround */
+		if (adlib_gold.surround_enabled)
+			adlib_gold.surround_processor->ControlWrite(val);
 	}
 }
 
 uint8_t Module::CtrlRead(void)
 {
 	switch (ctrl.index) {
-	case 0x00: /* Board Options */ return 0x70; // No options installed
+	case 0x00: /* Board Options */
+		if (adlib_gold.surround_enabled)
+			return 0x50; // 16-bit ISA, surround module, no
+			             // telephone/CDROM
+		else
+			return 0x70; // 16-bit ISA, no telephone/surround/CD-ROM
+
 	case 0x09: /* Left FM Volume */ return ctrl.lvol;
-	case 0x0a: /* Right FM Volume */
-		return ctrl.rvol;
-	case 0x15: /* Audio Relocation */
-		return 0x388 >> 3; //Cryo installer detection
+	case 0x0a: /* Right FM Volume */ return ctrl.rvol;
+	case 0x15:                 /* Audio Relocation */
+		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
 }
@@ -720,26 +985,33 @@ uint8_t Module::PortRead(io_port_t port, io_width_t)
 	return 0;
 }
 
-void Module::Init( Mode m ) {
+void Module::Init(Mode m)
+{
 	mode = m;
 	memset(cache, 0, ARRAY_LEN(cache));
-	switch ( mode ) {
+
+	switch (mode) {
 	case MODE_OPL3:
 	case MODE_OPL3GOLD:
-	case MODE_OPL2:
+		adlib_gold.surround_processor = new AdlibGoldSurroundProcessor(
+		        mixerChan->GetSampleRate());
+
+		adlib_gold.stereo_processor = new AdlibGoldStereoProcessor(
+		        mixerChan->GetSampleRate());
+
+		adlib_gold.surround_enabled = true;
 		break;
+	case MODE_OPL2: break;
 	case MODE_DUALOPL2:
-		//Setup opl3 mode in the hander
-		handler->WriteReg( 0x105, 1 );
-		//Also set it up in the cache so the capturing will start opl3
-		CacheWrite( 0x105, 1 );
+		// Setup opl3 mode in the hander
+		handler->WriteReg(0x105, 1);
+		// Also set it up in the cache so the capturing will start opl3
+		CacheWrite(0x105, 1);
 		break;
 	}
 }
 
 } // namespace Adlib
-
-static Adlib::Module* module = 0;
 
 static void OPL_CallBack(uint16_t len)
 {
@@ -889,28 +1161,42 @@ Module::Module(Section *configuration)
 	const auto read_from = std::bind(&Module::PortRead, this, _1, _2);
 	const auto write_to = std::bind(&Module::PortWrite, this, _1, _2, _3);
 
-	// 0x388 range
+	// 0x388-0x38b ports (read/write)
 	constexpr io_port_t port_0x388 = 0x388;
 	WriteHandler[0].Install(port_0x388, write_to, io_width_t::byte, 4);
 	ReadHandler[0].Install(port_0x388, read_from, io_width_t::byte, 4);
-	// 0x220 range
+
+	// 0x220-0x223 ports (read/write)
 	if (!single) {
 		WriteHandler[1].Install(base, write_to, io_width_t::byte, 4);
 		ReadHandler[1].Install(base, read_from, io_width_t::byte, 4);
 	}
-	//0x228 range
+	// 0x228-0x229 ports (write)
 	WriteHandler[2].Install(base + 8u, write_to, io_width_t::byte, 2);
+
+	// 0x228 port (read)
 	ReadHandler[2].Install(base + 8u, read_from, io_width_t::byte, 1);
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0,
 	                  "caprawopl", "Rec. OPL");
 }
 
-Module::~Module() {
+Module::~Module()
+{
 	delete capture;
 	capture = nullptr;
 	delete handler;
 	handler = nullptr;
+
+	if (adlib_gold.surround_processor) {
+		delete adlib_gold.surround_processor;
+		adlib_gold.surround_processor = nullptr;
+	}
+	if (adlib_gold.stereo_processor) {
+		delete adlib_gold.stereo_processor;
+		adlib_gold.stereo_processor = nullptr;
+	}
+	adlib_gold.surround_enabled = false;
 }
 
 //Initialize static members
