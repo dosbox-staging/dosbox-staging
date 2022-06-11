@@ -32,7 +32,6 @@ LazyFlags lflags;
           otherwise.
 */
 uint32_t get_CF(void) {
-
 	switch (lflags.type) {
 	case t_UNKNOWN:
 	case t_INCb:
@@ -112,7 +111,7 @@ uint32_t get_CF(void) {
 	case t_DIV:
 		return false;	/* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_CF Unknown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_CF Unknown %u",lflags.type);
 	}
 	return 0;
 }
@@ -122,8 +121,7 @@ uint32_t get_CF(void) {
             arithmetic.
 */
 uint32_t get_AF(void) {
-	Bitu type=lflags.type;
-	switch (type) {
+	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(AF);
 	case t_ADDb:	
@@ -194,7 +192,7 @@ uint32_t get_AF(void) {
 	case t_MUL:
 		return false; /* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_AF Unknown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_AF Unknown %u",lflags.type);
 	}
 	return 0;
 }
@@ -203,8 +201,7 @@ uint32_t get_AF(void) {
 */
 
 uint32_t get_ZF(void) {
-	Bitu type=lflags.type;
-	switch (type) {
+	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(ZF);
 	case t_ADDb:	
@@ -263,7 +260,7 @@ uint32_t get_ZF(void) {
 	case t_MUL:
 		return false; /* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_ZF Unknown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_ZF Unknown %u",lflags.type);
 	}
 	return false;
 }
@@ -271,8 +268,7 @@ uint32_t get_ZF(void) {
             positive, 1 if negative).
 */
 uint32_t get_SF(void) {
-	Bitu type=lflags.type;
-	switch (type) {
+	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(SF);
 	case t_ADDb:
@@ -331,14 +327,13 @@ uint32_t get_SF(void) {
 	case t_MUL:
 		return false; /* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_SF Unknown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_SF Unknown %u",lflags.type);
 	}
 	return false;
 
 }
 uint32_t get_OF(void) {
-	Bitu type=lflags.type;
-	switch (type) {
+	switch (lflags.type) {
 	case t_UNKNOWN:
 	case t_MUL:
 		return GETFLAG(OF);
@@ -419,7 +414,7 @@ uint32_t get_OF(void) {
 	case t_DIV:
 		return false; /* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_OF Unknown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_OF Unknown %u",lflags.type);
 	}
 	return false;
 }
@@ -821,7 +816,7 @@ uint32_t FillFlags(void) {
 		break;
 
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %u",lflags.type);
 		return 0;
 	}
 	lflags.type=t_UNKNOWN;
@@ -1046,7 +1041,7 @@ void FillFlagsNoCFOF(void) {
 		break;
 
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %u",lflags.type);
 		break;
 	}
 	lflags.type=t_UNKNOWN;

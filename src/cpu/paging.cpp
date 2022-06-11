@@ -147,10 +147,8 @@ bool first=false;
 
 void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,uint32_t faultcode) {
 	/* Save the state of the cpu cores */
-	LazyFlags old_lflags;
-	memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-	CPU_Decoder * old_cpudecoder;
-	old_cpudecoder=cpudecoder;
+	const auto old_lflags = lflags;
+	const auto old_cpudecoder=cpudecoder;
 	cpudecoder=&PageFaultCore;
 	paging.cr2=lin_addr;
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used++];
@@ -167,7 +165,7 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,uint32_t faultcode) {
 	DOSBOX_RunMachine();
 	pf_queue.used--;
 	LOG(LOG_PAGING, LOG_NORMAL)("Left PageFault for %x queue %u", lin_addr, pf_queue.used);
-	memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+	lflags = old_lflags;
 	cpudecoder=old_cpudecoder;
 //	LOG_MSG("SS:%04x SP:%08X",SegValue(ss),reg_esp);
 }

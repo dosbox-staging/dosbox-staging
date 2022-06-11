@@ -167,10 +167,8 @@ void IO_WriteB(io_port_t port, uint8_t val)
 {
 	log_io(io_width_t::byte, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -191,7 +189,7 @@ void IO_WriteB(io_port_t port, uint8_t val)
 
 		reg_al = old_al;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 	}
 	else {
@@ -204,10 +202,8 @@ void IO_WriteW(io_port_t port, uint16_t val)
 {
 	log_io(io_width_t::word, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -228,7 +224,7 @@ void IO_WriteW(io_port_t port, uint16_t val)
 
 		reg_ax = old_ax;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 	}
 	else {
@@ -241,10 +237,8 @@ void IO_WriteD(io_port_t port, uint32_t val)
 {
 	log_io(io_width_t::dword, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -265,7 +259,7 @@ void IO_WriteD(io_port_t port, uint32_t val)
 
 		reg_eax = old_eax;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 	} else {
 		write_dword_to_port(port, val);
@@ -276,10 +270,8 @@ uint8_t IO_ReadB(io_port_t port)
 {
 	uint8_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -300,7 +292,7 @@ uint8_t IO_ReadB(io_port_t port)
 		retval = reg_al;
 		reg_al = old_al;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 		return retval;
 	}
@@ -316,10 +308,8 @@ uint16_t IO_ReadW(io_port_t port)
 {
 	uint16_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -340,7 +330,7 @@ uint16_t IO_ReadW(io_port_t port)
 		retval = reg_ax;
 		reg_ax = old_ax;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 	}
 	else {
@@ -355,10 +345,8 @@ uint32_t IO_ReadD(io_port_t port)
 {
 	uint32_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
-		LazyFlags old_lflags;
-		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
-		CPU_Decoder * old_cpudecoder;
-		old_cpudecoder=cpudecoder;
+		const auto old_lflags = lflags;
+		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
 		IOF_Entry * entry=&iof_queue.entries[iof_queue.used++];
 		entry->cs=SegValue(cs);
@@ -379,7 +367,7 @@ uint32_t IO_ReadD(io_port_t port)
 		retval = reg_eax;
 		reg_eax = old_eax;
 		reg_dx = old_dx;
-		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+		lflags = old_lflags;
 		cpudecoder=old_cpudecoder;
 	} else {
 		retval = read_dword_from_port(port);
