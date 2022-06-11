@@ -82,10 +82,8 @@ jobs:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run: python scripts\count-warnings.py -f --msvc vs\build.log
 
-
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
-    needs: build_windows_vs
     runs-on: windows-2022
     strategy:
       matrix:
@@ -93,9 +91,19 @@ jobs:
           - name: Release build (32-bit)
             arch: x86
             vs-release-dirname: Win32
+            debugger: false
           - name: Release build (64-bit)
             arch: x64
             vs-release-dirname: x64
+            debugger: false
+          - name: Release build w/ debugger (32-bit)
+            arch: x86
+            vs-release-dirname: Win32
+            debugger: true
+          - name: Release build w/ debugger (64-bit)
+            arch: x64
+            vs-release-dirname: x64
+            debugger: true
 
     steps:
       - name: Checkout repository
@@ -135,7 +143,8 @@ jobs:
         shell: pwsh
         run:   .\scripts\log-env.ps1
 
-      - name:  Adjust config.h
+      - name:  Set version
+        id:    set_dosbox_vers
         shell: bash
         run: |
           set -x
@@ -144,6 +153,15 @@ jobs:
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=dosbox_vers::${VERSION}"
+
+      - name:  Enable the debugger in config.h
+        if: ${{ matrix.conf.debugger }}
+        shell: bash
+        run: |
+          set -x
+          sed -i "s|C_DEBUG.*|C_DEBUG 1|"             src/platform/visualc/config.h
+          sed -i "s|C_HEAVY_DEBUG.*|C_HEAVY_DEBUG 1|" src/platform/visualc/config.h
 
       - name:  Build release
         shell: pwsh
@@ -151,7 +169,14 @@ jobs:
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
 
-      - name: Package
+      - name:  Set packaging names
+        id:    set_pkg_dir
+        shell: bash
+        run: |
+          echo "::set-output name=pkg_dir::dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}"
+
+      - name: Package standard build
+        if: ${{ !matrix.conf.debugger }}
         shell: bash
         run: |
           # Construct VC_REDIST_DIR
@@ -165,39 +190,24 @@ jobs:
           ./scripts/create-package.sh \
             -p msvc \
             vs/${{ matrix.conf.vs-release-dirname }}/Release \
-            "dest"
-
-      - name:  Enable the debugger in config.h
-        shell: bash
-        run: |
-          set -x
-          sed -i "s|C_DEBUG.*|C_DEBUG 1|"             src/platform/visualc/config.h
-          sed -i "s|C_HEAVY_DEBUG.*|C_HEAVY_DEBUG 1|" src/platform/visualc/config.h
-
-      - name:  Build release with the debugger
-        shell: pwsh
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
-        run: |
-          cd vs
-          MSBuild -m dosbox.sln -t:dosbox:"Clean;Rebuild" -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
-
+            "${{ steps.set_pkg_dir.outputs.pkg_dir }}"
+      
       - name:  Package the debugger
+        if:    ${{ matrix.conf.debugger }}
         shell: bash
         run: |
           set -x
+          mkdir -p ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           # Move the debugger build into the release area
           readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
           ls "vs/$RELEASE_DIR"
-          cp vs/$RELEASE_DIR/dosbox.exe   dest/dosbox_with_debugger.exe
-          # Create dir for zipping
-          mv dest dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          cp vs/$RELEASE_DIR/dosbox.exe   ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}"
+          $dosboxDir = "${{ github.workspace }}\${{ steps.set_pkg_dir.outputs.pkg_dir }}"
           & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
           if( $LASTEXITCODE -ne 0 ) {
               Get-Content -Path $env:TEMP\MpCmdRun.log
@@ -205,11 +215,18 @@ jobs:
           }
 
       - name: Upload package
-        uses: actions/upload-artifact@v2
+        if:   ${{ !matrix.conf.debugger }}
+        uses: actions/upload-artifact@v3
         with:
-          name: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
-          path: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
-
+          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+      
+      - name: Upload debugger artifact
+        if:   ${{ matrix.conf.debugger }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
