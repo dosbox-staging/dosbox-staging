@@ -279,10 +279,10 @@ struct Handler : public Adlib::Handler {
 	virtual void WriteReg(uint32_t reg, uint8_t val) { adlib_write(reg, val); }
 	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
 
-	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
 		int16_t buf[1024];
-		int remaining = samples;
+		int remaining = frames;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
 			adlib_getsample(buf, todo);
@@ -307,10 +307,10 @@ struct Handler : public Adlib::Handler {
 		adlib_write_index(port, val);
 		return opl_index;
 	}
-	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
 		int16_t buf[1024 * 2];
-		int remaining = samples;
+		int remaining = frames;
 
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
@@ -340,10 +340,10 @@ struct Handler : public Adlib::Handler {
 		ym3812_write(chip, 1, val);
 	}
 	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
-	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
 		int16_t buf[1024 * 2];
-		int remaining = samples;
+		int remaining = frames;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
 			ym3812_update_one(chip, buf, todo);
@@ -373,7 +373,7 @@ struct Handler : public Adlib::Handler {
 		ymf262_write(chip, 1, val);
 	}
 	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
-	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
 	{
 		// We generate data for 4 channels, but only the first 2 are
 		// connected on a pc
@@ -381,7 +381,7 @@ struct Handler : public Adlib::Handler {
 		int16_t result[1024][2];
 		int16_t* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
 
-		int remaining = samples;
+		int remaining = frames;
 		while (remaining > 0) {
 			const auto todo = std::min(remaining, 1024);
 			ymf262_update_one(chip, buffers, todo);
@@ -434,12 +434,12 @@ struct Handler : public Adlib::Handler {
 		return addr;
 	}
 
-	void Generate(mixer_channel_t &chan, uint16_t samples) override
+	void Generate(mixer_channel_t &chan, uint16_t frames) override
 	{
 		int16_t buf[1024 * 2];
 
-		while (samples > 0) {
-			uint32_t todo = samples > 1024 ? 1024 : samples;
+		while (frames > 0) {
+			uint32_t todo = frames > 1024 ? 1024 : frames;
 			OPL3_GenerateStream(&chip, buf, todo);
 
 			if (adlib_gold) {
@@ -447,7 +447,7 @@ struct Handler : public Adlib::Handler {
 			} else {
 				chan->AddSamples_s16(todo, buf);
 			}
-			samples -= todo;
+			frames -= todo;
 		}
 	}
 
