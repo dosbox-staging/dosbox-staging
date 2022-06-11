@@ -19,6 +19,7 @@
 
 #include "mouse.h"
 
+#include <algorithm>
 #include <string.h>
 #include <math.h>
 
@@ -34,14 +35,14 @@
 
 enum DOS_EV:uint8_t { // compatible with DOS driver mask in driver function 0x0c
     NOT_DOS_EVENT   = 0x00,
-    MOUSE_MOVED     = 0x01,
+    MOUSE_HAS_MOVED = 0x01,
     PRESSED_LEFT    = 0x02,
     RELEASED_LEFT   = 0x04,
     PRESSED_RIGHT   = 0x08,
     RELEASED_RIGHT  = 0x10,
     PRESSED_MIDDLE  = 0x20,
     RELEASED_MIDDLE = 0x40,
-    WHEEL_MOVED     = 0x80,
+    WHEEL_HAS_MOVED = 0x80,
 };
 
 static const uint8_t QUEUE_SIZE  = 32;   // if over 255, increase 'queue_used' type size
@@ -236,7 +237,7 @@ inline void AddEvent(uint8_t type) {
 	if (queue_used < QUEUE_SIZE) {
 		if (queue_used > 0) {
 			/* Skip duplicate events */
-			if (type==DOS_EV::MOUSE_MOVED || type==DOS_EV::WHEEL_MOVED) return;
+			if (type==DOS_EV::MOUSE_HAS_MOVED || type==DOS_EV::WHEEL_HAS_MOVED) return;
 			/* Always put the newest element in the front as that the events are 
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
@@ -558,13 +559,13 @@ inline void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate
 		if (mouse.y >= 32768.0) mouse.y -= 65536.0;
 		else if (mouse.y <= -32769.0) mouse.y += 65536.0;
 	}
-	AddEvent(DOS_EV::MOUSE_MOVED);
+	AddEvent(DOS_EV::MOUSE_HAS_MOVED);
 	DrawCursor();
 }
 
 static inline uint8_t GetResetWheel8bit() {
     if (!mouse.cute_mouse) return 0;
-    int8_t tmp = std::clamp(mouse.wheel, static_cast<int16_t>(-0x80), static_cast<int16_t>(0x7f));
+    int8_t tmp = static_cast<int8_t>(std::clamp(mouse.wheel, static_cast<int16_t>(-0x80), static_cast<int16_t>(0x7f)));
     mouse.wheel = 0;
     return (tmp >= 0) ? tmp : 0x100 + tmp;
 }
@@ -1238,7 +1239,7 @@ void Mouse_EventMoved(int32_t x_rel, int32_t y_rel, int32_t x_abs, int32_t y_abs
 
 void Mouse_NotifyMovedVMW() {
 
-	AddEvent(DOS_EV::MOUSE_MOVED);
+	AddEvent(DOS_EV::MOUSE_HAS_MOVED);
 }
 
 void Mouse_EventPressed(uint8_t idx) {
@@ -1310,7 +1311,7 @@ void Mouse_EventWheel(int32_t w_rel) {
 	    mouse.last_wheel_moved_x = POS_X;
 	    mouse.last_wheel_moved_y = POS_Y;
 
-	    AddEvent(DOS_EV::WHEEL_MOVED);
+	    AddEvent(DOS_EV::WHEEL_HAS_MOVED);
     }
 }
 
@@ -1392,6 +1393,14 @@ void MOUSE_Init(Section* /*sec*/) {
    	mouse.sub_mask=0;
 	mouse.sub_seg=0x6362;	// magic value
 	mouse.sub_ofs=0;
+
+	memset(&mouse_config,0,sizeof(mouse_config));
+	mouse_config.sensitivity_x = 0.3f;
+    mouse_config.sensitivity_y = 0.3f;
+
+	memset(&mouse_video,0,sizeof(mouse_video));
+    mouse_video.res_x = 320;
+    mouse_video.res_y = 200;
 
 	Mouse_ResetHardware();
 	Mouse_Reset();

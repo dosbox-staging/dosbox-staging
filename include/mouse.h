@@ -42,18 +42,18 @@ void Mouse_NotifyMovedVMW();
 
 typedef struct {
 
-    float  sensitivity_x = 0.3f;     // sensitivity, might depend on the GUI/GFX 
-    float  sensitivity_y = 0.3f;     // for scaling all relative mouse movements
+    float  sensitivity_x;    // sensitivity, might depend on the GUI/GFX 
+    float  sensitivity_y;    // for scaling all relative mouse movements
 
 } MouseInfoConfig;
 
 typedef struct {
 
-    bool     fullscreen = false;
-    uint16_t res_x      = 320;       // resolution to which guest image is scaled, excluding black borders
-    uint16_t res_y      = 200;
-    uint16_t clip_x     = 0;         // clipping = size of black border (one side)
-    uint16_t clip_y     = 0;         // clipping value - size of black border (one side)
+    bool     fullscreen;
+    uint16_t res_x;          // resolution to which guest image is scaled, excluding black borders
+    uint16_t res_y;
+    uint16_t clip_x;         // clipping = size of black border (one side)
+    uint16_t clip_y;         // clipping value - size of black border (one side)
 
 } MouseInfoVideo;
 

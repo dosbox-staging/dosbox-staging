@@ -235,6 +235,9 @@
     <ClCompile Include="..\src\hardware\serialport\serialdummy.cpp">
       <Filter>src\hardware\serialport</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\serialport\serialmouse.cpp">
+      <Filter>src\hardware\serialport</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\serialport\serialport.cpp">
       <Filter>src\hardware\serialport</Filter>
     </ClCompile>
@@ -332,6 +335,12 @@
       <Filter>src\ints</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ints\mouse.cpp">
+      <Filter>src\ints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ints\mouse_serial.cpp">
+      <Filter>src\ints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ints\mouse_vmware.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ints\xms.cpp">
@@ -1024,6 +1033,9 @@
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\softmodem.h">
+      <Filter>src\hardware\serialport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\serialport\softmouse.h">
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ints\int10.h">

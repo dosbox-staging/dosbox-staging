@@ -1206,8 +1206,8 @@ finish:
 	}
 
 	// Ensure mouse emulation knows the current parameters
-    int abs_x, abs_y;
-    SDL_GetMouseState(&abs_x, &abs_y);
+	int abs_x, abs_y;
+	SDL_GetMouseState(&abs_x, &abs_y);
 	Mouse_NewScreenParams(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h, sdl.desktop.fullscreen, abs_x, abs_y);
 
 	// Force redraw after changing the window
