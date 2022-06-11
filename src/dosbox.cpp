@@ -811,10 +811,13 @@ void DOSBOX_Init() {
 	                  "           Use the filter of this Sound Blaster model.\n"
 	                  "  off:   Don't filter the output.");
 
-	Pstring = secprop->Add_string("cms_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the Sound Blaster CMS output:\n"
+const char *filter_on_or_off[] = {"on", "off", 0};
+
+	pstring = secprop->Add_string("cms_filter", when_idle, "on");
+	pstring->Set_help("Filter for the Sound Blaster CMS output:\n"
 	                  "  on:   Filter the output (default).\n"
 	                  "  off:  Don't filter the output.");
+	pstring->Set_values(filter_on_or_off);
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
@@ -842,6 +845,12 @@ void DOSBOX_Init() {
 	pint = secprop->Add_int("pcrate", when_idle, 12000);
 	pint->SetMinMax(8000, 48000);
 	pint->Set_help("Sample rate of the PC speaker sound generation.");
+
+	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
+	pstring->Set_help("Filter for the PC Speaker output:\n"
+	                  "  on:   Filter the output (default).\n"
+	                  "  off:  Don't filter the output.");
+	pstring->Set_values(filter_on_or_off);
 
 	const char *zero_offset_opts[] = {"auto", "true", "false", 0};
 	pstring = secprop->Add_string("zero_offset", when_idle, zero_offset_opts[0]);
