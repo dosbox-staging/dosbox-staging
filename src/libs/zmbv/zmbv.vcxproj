@@ -93,6 +93,9 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\..\include;..\..\platform\visualc;..\ghc;..\loguru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
