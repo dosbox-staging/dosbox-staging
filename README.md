@@ -238,13 +238,26 @@ is bootstrapped, open PowerShell and run:
 
 ``` powershell
 PS:\> .\vcpkg integrate install
-PS:\> .\vcpkg install --triplet x64-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest speexdsp
 ```
 
-These two steps will ensure that MSVC finds and links all dependencies.
+This step will ensure that MSVC can use vcpkg to build, find and links all 
+dependencies.
 
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
+
+Note, the first time you build a configuration, dependencies will be built 
+automatically and stored in the `vcpkg_installed` directory. This can take 
+a significant length of time.
+
+Occasionally, dosbox-staging will increase dependency requirements such that 
+a newer version of vcpkg is required. To upgrade, open powershell to the 
+`vcpkg` directory and run:
+
+``` powershell
+PS:\> git pull
+PS:\> .\bootstrap-vcpkg.bat
+```
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
