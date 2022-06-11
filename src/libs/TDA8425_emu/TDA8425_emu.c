@@ -703,12 +703,7 @@ static void TDA8425_Chip_ProcessSelector(
         break;
 
     case TDA8425_Selector_Sound_B_2:
-        stereo[L] = data->inputs[S2][L];
-        stereo[R] = data->inputs[S2][R];
-        break;
-
-    case TDA8425_Selector_Stereo_2:
-        stereo[L] = data->inputs[S2][L];
+        stereo[L] = data->inputs[S2][R];
         stereo[R] = data->inputs[S2][R];
         break;
 
@@ -716,6 +711,11 @@ static void TDA8425_Chip_ProcessSelector(
     default:
         stereo[L] = data->inputs[S1][L];
         stereo[R] = data->inputs[S1][R];
+        break;
+
+    case TDA8425_Selector_Stereo_2:
+        stereo[L] = data->inputs[S2][L];
+        stereo[R] = data->inputs[S2][R];
         break;
     }
 }
