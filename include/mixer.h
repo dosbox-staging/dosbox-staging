@@ -126,9 +126,9 @@ public:
 	int GetSampleRate() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
-	void SetVolume(float _left, float _right);
+	void SetVolume(float left, float right);
 	void SetScale(float f);
-	void SetScale(float _left, float _right);
+	void SetScale(float left, float right);
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
@@ -176,7 +176,7 @@ public:
 	void Enable(bool should_enable);
 	void FlushSamples();
 
-	float volmain[2] = {1.0f, 1.0f};
+	AudioFrame volmain = {1.0f, 1.0f};
 	std::atomic<int> done = 0; // Timing on how many samples have been done
 	                           // by the mixer
 	bool is_enabled = false;
@@ -215,8 +215,8 @@ private:
 	// >0. Still work in progress and thus disabled for now.
 	int offset[2] = {0, 0};
 	int sample_rate = 0u;
-	float volmul[2] = {1.0f, 1.0f};
-	float scale[2] = {1.0f, 1.0f};
+	AudioFrame volmul = {1.0f, 1.0f};
+	AudioFrame scale = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
 	// Default to signed 16bit max, however channel's that know their own
