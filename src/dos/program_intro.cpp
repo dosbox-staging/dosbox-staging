@@ -24,14 +24,30 @@
 
 void INTRO::WriteOutProgramIntroSpecial()
 {
-    WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"), MMOD2_NAME,
-                MMOD2_NAME, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-                PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-                PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-                PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-                PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-                PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-                PRIMARY_MOD_PAD, MMOD2_NAME);
+	WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"),
+	         MMOD2_NAME,       // Alt, for fullscreen toggle
+	         MMOD2_NAME,       // Alt, for pause/unpause
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for keymapper
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for swap disk image
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for screenshot
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for sound recording
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for video recording
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for mute/unmute
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for shutdown
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for mouse capture
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for slow down
+	         PRIMARY_MOD_PAD,
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for speed up
+	         PRIMARY_MOD_PAD,
+	         MMOD2_NAME); // Alt, for turbo
 }
 
 void INTRO::DisplayMount(void) {
@@ -186,6 +202,7 @@ void INTRO::AddMessages() {
 	        "\033[33;1m%s+F5\033[0m   %s Save a screenshot.\n"
 	        "\033[33;1m%s+F6\033[0m   %s Start/Stop recording sound output to a wave file.\n"
 	        "\033[33;1m%s+F7\033[0m   %s Start/Stop recording video output to a zmbv file.\n"
+	        "\033[33;1m%s+F8\033[0m   %s Mute/Unmute the audio.\n"
 	        "\033[33;1m%s+F9\033[0m   %s Shutdown emulator.\n"
 	        "\033[33;1m%s+F10\033[0m  %s Capture/Release the mouse.\n"
 	        "\033[33;1m%s+F11\033[0m  %s Slow down emulation.\n"
