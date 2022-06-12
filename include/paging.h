@@ -86,8 +86,8 @@ void PAGING_SetDirBase(Bitu cr3);
 void PAGING_InitTLB(void);
 void PAGING_ClearTLB(void);
 
-void PAGING_LinkPage(Bitu lin_page,Bitu phys_page);
-void PAGING_LinkPage_ReadOnly(Bitu lin_page,Bitu phys_page);
+void PAGING_LinkPage(uint32_t lin_page,uint32_t phys_page);
+void PAGING_LinkPage_ReadOnly(uint32_t lin_page,uint32_t phys_page);
 void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 /* This maps the page directly, only use when paging is disabled */
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
@@ -150,10 +150,10 @@ typedef struct {
 #endif
 
 struct PagingBlock {
-	Bitu			cr3;
-	Bitu			cr2;
+	uint32_t			cr3;
+	uint32_t			cr2;
 	struct {
-		Bitu page;
+		uint32_t page;
 		PhysPt addr;
 	} base;
 #if defined(USE_FULL_TLB)
@@ -169,7 +169,7 @@ struct PagingBlock {
 	tlb_entry *tlbh_banks[TLB_BANKS];
 #endif
 	struct {
-		Bitu used;
+		uint32_t used;
 		uint32_t entries[PAGING_LINKS];
 	} links;
 	uint32_t		firstmb[LINK_START];
