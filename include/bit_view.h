@@ -132,22 +132,15 @@ private:
 public:
 	constexpr bit_view() = default;
 
+	// trivial copy constructor
+	bit_view(const bit_view &other) noexcept = default;
+
 	// construct the view from a right-hand-side value
 	template <class rhs_type>
 	constexpr bit_view(const rhs_type rhs_value) noexcept
 	{
 		// use the = operator to save the value into the view
 		*this = rhs_value;
-	}
-
-	// copy constructor
-	constexpr bit_view(const bit_view &other) noexcept
-	{
-		// get the other view's value using the data_type() operator
-		const data_type d = other;
-
-		// use the = operator to save the value into the view
-		*this = d;
 	}
 
 	// assign from right-hand-side boolean

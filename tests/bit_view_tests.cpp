@@ -32,6 +32,19 @@ union Register {
 	bit_view<5, 3> last_3;   // is bits 5, 6, and 7
 };
 
+// function to take in and return a Register by value
+Register pass_by_value(const Register in)
+{
+	// empty register
+	Register out = {0};
+
+	// assign just the middle_3
+	out.middle_3 = in.middle_3;
+
+	// return by value
+	return out;
+}
+
 // function to take in a reference of a Register and set its bits
 void set_bits(Register &reg, uint8_t first, uint8_t middle, uint8_t last)
 {
@@ -295,6 +308,22 @@ TEST(bit_view, illegal_view)
 		// std::numeric_limits<unsigned long>::digits' "bit_view cannot
 		// exceed the number of bits in the data_type"
 	};
+}
+
+TEST(bit_view, pass_by_value)
+{
+	const Register in = {0b111'010'11};
+
+	// The function assigns and returns just the middle_3 from 'in'
+	const auto out = pass_by_value(in);
+
+	//  should only have middle_3 set from in
+	EXPECT_EQ(out.middle_3, in.middle_3);
+	EXPECT_EQ(out.middle_3, 0b010);
+
+	// first_2 and last_3 should still be zeros
+	EXPECT_EQ(out.first_2, 0b00);
+	EXPECT_EQ(out.last_3, 0b000);
 }
 
 TEST(bit_view, writable_via_reference)
