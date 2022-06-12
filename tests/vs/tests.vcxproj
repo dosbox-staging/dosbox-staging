@@ -143,7 +143,7 @@ $(TargetPath)</Command>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>Default</ConformanceMode>
       <OmitFramePointers>true</OmitFramePointers>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <AssemblerOutput>NoListing</AssemblerOutput>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -204,7 +204,7 @@ $(TargetPath)</Command>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
       <ConformanceMode>Default</ConformanceMode>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <AssemblerOutput>NoListing</AssemblerOutput>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
     </ClCompile>
