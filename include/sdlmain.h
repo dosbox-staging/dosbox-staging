@@ -233,7 +233,7 @@ struct SDL_Block {
 		bool has_focus = false;
 	} mouse          = {};
 	PPScale pp_scale = {};
-	SDL_Rect updateRects[1024];
+	SDL_Rect updateRects[1024] = {};
 	bool use_exact_window_resolution = false;
 	bool use_viewport_limits = false;
 	SDL_Point viewport_resolution = {-1, -1};

@@ -20,10 +20,14 @@
 
 #include <algorithm>
 
+#include "bitops.h"
+#include "bit_view.h"
 #include "checks.h"
 #include "regs.h"
 #include "inout.h"
 #include "video.h"
+
+using namespace bit::literals;
 
 CHECK_NARROWING();
 
@@ -38,171 +42,217 @@ CHECK_NARROWING();
 // - https://github.com/NattyNarwhal/vmwmouse
 // - https://git.javispedro.com/cgit/vbmouse.git (planned support)
 
-enum VMW_CMD:uint16_t {
-    GETVERSION         = 10,
-    ABSPOINTER_DATA    = 39,
-    ABSPOINTER_STATUS  = 40,
-    ABSPOINTER_COMMAND = 41,
+enum class VMwareCmd : uint16_t {
+	GetVersion        = 10,
+	AbsPointerData    = 39,
+	AbsPointerStatus  = 40,
+	AbsPointerCommand = 41,
 };
 
-enum VMW_ABSPNT:uint32_t {
-    ENABLE             = 0x45414552,
-    RELATIVE           = 0xF5,
-    ABSOLUTE           = 0x53424152,
+enum class VMwareAbsPointer : uint32_t {
+	Enable   = 0x45414552,
+	Relative = 0xF5,
+	Absolute = 0x53424152,
 };
 
-enum VMW_BUTTON:uint8_t {
-    LEFT               = 0x20,
-    RIGHT              = 0x10,
-    MIDDLE             = 0x08,
+union VMwareButtons {
+	uint8_t data = 0;
+	bit_view<5, 1> left;
+	bit_view<4, 1> right;
+	bit_view<3, 1> middle;
 };
 
-static constexpr io_port_t VMW_PORT   = 0x5658u;     // communication port
-// static constexpr io_port_t VMW_PORTHB = 0x5659u;  // communication port, high bandwidth
-static constexpr uint32_t  VMW_MAGIC  = 0x564D5868u; // magic number for all VMware calls
+static constexpr io_port_t VMWARE_PORT = 0x5658u; // communication port
+// static constexpr io_port_t VMWARE_PORTHB = 0x5659u;  // communication port,
+                                                        // high bandwidth
+static constexpr uint32_t VMWARE_MAGIC = 0x564D5868u; // magic number for all
+                                                      // VMware calls
+static constexpr uint32_t ABS_UPDATED = 4;            // tells that new pointer
+                                                      // position is available
+static constexpr uint32_t ABS_NOT_UPDATED = 0;
 
-static bool      updated     = false;                // true = mouse state update waits top be piced up
-static uint8_t   buttons_vmw = 0;                    // state of mouse buttons, in VMware format
-static uint16_t  scaled_x    = 0x7fff;               // absolute mouse position, scaled from 0 to 0xffff
-static uint16_t  scaled_y    = 0x7fff;               // 0x7fff is a center position
-static int8_t    wheel       = 0;                    // wheel movement counter
+static bool updated = false;  // true = mouse state update waits to be picked up
+static VMwareButtons buttons; // state of mouse buttons, in VMware format
+static uint16_t scaled_x = 0x7fff; // absolute mouse position, scaled from 0 to
+                                   // 0xffff
+static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
+static int8_t wheel      = 0;      // wheel movement counter
 
-static int16_t   offset_x    = 0;                    // offses between host and guest mouse coordinates (in host pixels)
-static int16_t   offset_y    = 0;                    // (in host pixels)
+static int16_t offset_x = 0; // offset between host and guest mouse coordinates
+static int16_t offset_y = 0; // (in host pixels)
 
-bool mouse_vmware = false;                           // if true, VMware compatible driver has taken over the mouse
+bool mouse_vmware = false; // if true, VMware compatible driver has taken over
+                           // the mouse
 
 // ***************************************************************************
 // VMware interface implementation
 // ***************************************************************************
 
-static inline void CmdGetVersion() {
-    reg_eax = 0; // TODO: should we respond with something resembling VMware? For now 0 seems OK
-    reg_ebx = VMW_MAGIC;
+static void CmdGetVersion()
+{
+	reg_eax = 0; // TODO: should we respond with something resembling
+	             // VMware? For now 0 seems OK
+	reg_ebx = VMWARE_MAGIC;
 }
 
-static inline void CmdAbsPointerData() {
-    reg_eax = buttons_vmw;
-    reg_ebx = scaled_x;
-    reg_ecx = scaled_y;
-    reg_edx = static_cast<uint32_t>((wheel >= 0) ? wheel : 0x100 + wheel);
+static void CmdAbsPointerData()
+{
+	reg_eax = buttons.data;
+	reg_ebx = scaled_x;
+	reg_ecx = scaled_y;
+	reg_edx = static_cast<uint32_t>((wheel >= 0) ? wheel : 0x100 + wheel);
 
-    wheel = 0;
+	wheel = 0;
 }
 
-static inline void CmdAbsPointerStatus() {
-    reg_eax = updated ? 4 : 0;
-    updated = false;
+static void CmdAbsPointerStatus()
+{
+	reg_eax = updated ? ABS_UPDATED : ABS_NOT_UPDATED;
+	updated = false;
 }
 
-static inline void CmdAbsPointerCommand() {
-    switch (reg_ebx) {
-    case VMW_ABSPNT::ENABLE:
-        break; // can be safely ignored
-    case VMW_ABSPNT::RELATIVE:
-        mouse_vmware = false;
-        LOG_MSG("MOUSE (PS/2): VMware protocol disabled");
-        GFX_UpdateMouseState();
-        break;
-    case VMW_ABSPNT::ABSOLUTE:
-        mouse_vmware = true;
-        wheel = 0;
-        LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
-        GFX_UpdateMouseState();
-        break;
-    default:
-        LOG_WARNING("Mouse: unimplemented VMware subcommand 0x%08x", reg_ebx);
-        break;
-    }
+static void CmdAbsPointerCommand()
+{
+	switch (static_cast<VMwareAbsPointer>(reg_ebx)) {
+	case VMwareAbsPointer::Enable: break; // can be safely ignored
+	case VMwareAbsPointer::Relative:
+		mouse_vmware = false;
+		LOG_MSG("MOUSE (PS/2): VMware protocol disabled");
+		GFX_UpdateMouseState();
+		break;
+	case VMwareAbsPointer::Absolute:
+		mouse_vmware = true;
+		wheel        = 0;
+		LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
+		GFX_UpdateMouseState();
+		break;
+	default:
+		LOG_WARNING("MOUSE (PS/2): unimplemented VMware subcommand 0x%08x",
+		            reg_ebx);
+		break;
+	}
 }
 
-static uint16_t PortRead_VMW(io_port_t, io_width_t) {
-    if (reg_eax != VMW_MAGIC)
-        return 0;
+static uint16_t PortReadVMware(const io_port_t, const io_width_t)
+{
+	if (reg_eax != VMWARE_MAGIC)
+		return 0;
 
-    switch (reg_cx) {
-    case VMW_CMD::GETVERSION:         CmdGetVersion();        break;
-    case VMW_CMD::ABSPOINTER_DATA:    CmdAbsPointerData();    break;
-    case VMW_CMD::ABSPOINTER_STATUS:  CmdAbsPointerStatus();  break;
-    case VMW_CMD::ABSPOINTER_COMMAND: CmdAbsPointerCommand(); break;
-    default:
-        LOG_WARNING("Mouse: unimplemented VMware command 0x%08x", reg_ecx);
-        break;
-    }
+	switch (static_cast<VMwareCmd>(reg_cx)) {
+	case VMwareCmd::GetVersion: CmdGetVersion(); break;
+	case VMwareCmd::AbsPointerData: CmdAbsPointerData(); break;
+	case VMwareCmd::AbsPointerStatus: CmdAbsPointerStatus(); break;
+	case VMwareCmd::AbsPointerCommand: CmdAbsPointerCommand(); break;
+	default:
+		LOG_WARNING("MOUSE (PS/2): unimplemented VMware command 0x%08x",
+		            reg_ecx);
+		break;
+	}
 
-    return reg_ax;
+	return reg_ax;
 }
 
-bool MouseVMW_NotifyMoved(int32_t x_abs, int32_t y_abs) {
-    float vmw_x, vmw_y;
-    if (mouse_video.fullscreen) {
-        // We have to maintain the diffs (offsets) between host and guest
-        // mouse positions; otherwise in case of clipped picture (like
-        // 4:3 screen displayed on 16:9 fullscreen mode) we could have
-        // an effect of 'sticky' borders if the user moves mouse outside
-        // of the guest display area
+bool MOUSEVMWARE_NotifyMoved(const uint16_t x_abs, const uint16_t y_abs)
+{
+	auto calculate = [](const uint16_t absolute,
+	                    int16_t &offset,
+	                    const uint16_t res,
+	                    const uint16_t clip) {
+		float unscaled; // unscaled guest mouse coordinate
+		if (mouse_video.fullscreen) {
+			// We have to maintain the diffs (offsets) between host
+			// and guest mouse positions; otherwise in case of
+			// clipped picture (like 4:3 screen displayed on 16:9
+			// fullscreen mode) we could have an effect of 'sticky'
+			// borders if the user moves mouse outside of the guest
+			// display area
 
-        if (x_abs + offset_x < mouse_video.clip_x)
-                offset_x = static_cast<int16_t>(mouse_video.clip_x - x_abs);
-        else if (x_abs + offset_x >= mouse_video.res_x + mouse_video.clip_x)
-                offset_x = static_cast<int16_t>(mouse_video.res_x + mouse_video.clip_x - x_abs - 1);
+			// Guest mouse position is a host mouse position +
+			// offset, which is 0 at the beginning. Once the guest
+			// mouse cursor is at the edge of the screen, and the
+			// host mouse cursor continues moving outside, the
+			// offset is increased or decreased to accomodate
+			// changes. Once the host mouse cursor starts moving
+			// back, we continue with the same offset, so that guest
+			// mouse cursor starts moving immediately.
 
-        if (y_abs + offset_y < mouse_video.clip_y)
-                offset_y = static_cast<int16_t>(mouse_video.clip_y - y_abs);
-        else if (y_abs + offset_y >= mouse_video.res_y + mouse_video.clip_y)
-                offset_y = static_cast<int16_t>(mouse_video.res_y + mouse_video.clip_y - y_abs - 1);
+			if (absolute + offset < clip)
+				offset = static_cast<int16_t>(clip - absolute);
+			else if (absolute + offset >= res + clip)
+				offset = static_cast<int16_t>(res + clip - absolute - 1);
 
-        vmw_x = static_cast<float>(x_abs + offset_x - mouse_video.clip_x);
-        vmw_y = static_cast<float>(y_abs + offset_y - mouse_video.clip_y);
-    }
-    else {
-        vmw_x = static_cast<float>(std::max(x_abs - mouse_video.clip_x, 0));
-        vmw_y = static_cast<float>(std::max(y_abs - mouse_video.clip_y, 0));
-    }
+			unscaled = static_cast<float>(absolute + offset - clip);
+		} else {
+			// Skip the offset mechanism if not in fullscreen mode
+			unscaled = static_cast<float>(std::max(absolute - clip, 0));
+		}
 
-    auto old_x = scaled_x;
-    auto old_y = scaled_y;
+		assert(res > 1u);
+		const auto scale = static_cast<float>(UINT16_MAX) /
+		                   static_cast<float>(res - 1);
+		const auto tmp = std::min(static_cast<uint32_t>(UINT16_MAX),
+		                          static_cast<uint32_t>(unscaled * scale + 0.499f));
+		return static_cast<uint16_t>(tmp);
+	};
 
-    scaled_x = static_cast<uint16_t>(std::min(0xffffu,
-        static_cast<uint32_t>(vmw_x * 0xffff / static_cast<float>(mouse_video.res_x - 1) + 0.499)));
-    scaled_y = static_cast<uint16_t>(std::min(0xffffu,
-        static_cast<uint32_t>(vmw_y * 0xffff / static_cast<float>(mouse_video.res_y - 1) + 0.499)));
+	const auto old_x = scaled_x;
+	const auto old_y = scaled_y;
 
-    updated = true;
+	scaled_x = calculate(x_abs, offset_x, mouse_video.res_x, mouse_video.clip_x);
+	scaled_y = calculate(y_abs, offset_y, mouse_video.res_y, mouse_video.clip_y);
 
-    return mouse_vmware && (old_x != scaled_x || old_y != scaled_y);
+	updated = true;
+
+	return mouse_vmware && (old_x != scaled_x || old_y != scaled_y);
 }
 
-void MouseVMW_NotifyPressedReleased(uint8_t buttons_12S) {
-    buttons_vmw = 0;
+void MOUSEVMWARE_NotifyPressedReleased(const uint8_t buttons_12S)
+{
+	buttons.data = 0;
 
-    if (buttons_12S & 1) buttons_vmw |=VMW_BUTTON::LEFT;
-    if (buttons_12S & 2) buttons_vmw |=VMW_BUTTON::RIGHT;
-    if (buttons_12S & 4) buttons_vmw |=VMW_BUTTON::MIDDLE;
+	if (bit::is(buttons_12S, b0))
+		buttons.left = 1;
+	if (bit::is(buttons_12S, b1))
+		buttons.right = 1;
+	if (bit::is(buttons_12S, b2))
+		buttons.middle = 1;
 
-    updated = true;
+	updated = true;
 }
 
-void MouseVMW_NotifyWheel(int32_t w_rel) {
-    if (mouse_vmware) {
-        wheel   = static_cast<int8_t>(std::clamp(w_rel + wheel, -0x80, 0x7f));
-        updated = true;
-    }
+void MOUSEVMWARE_NotifyWheel(const int16_t w_rel)
+{
+	if (mouse_vmware) {
+		const auto tmp = std::clamp(static_cast<int32_t>(w_rel + wheel),
+		                            static_cast<int32_t>(INT8_MIN),
+		                            static_cast<int32_t>(INT8_MAX));
+		wheel   = static_cast<int8_t>(tmp);
+		updated = true;
+	}
 }
 
-void MouseVMW_NewScreenParams(int32_t x_abs, int32_t y_abs) {
+void MOUSEVMWARE_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs)
+{
+	// Adjust offset, to prevent cursor jump with the next mouse move on the
+	// host side
 
-    // Adjust clipping, toprevent cursor jump with the next mouse move on the host side
+	auto ClampOffset = [](const int16_t offset, uint16_t clip) {
+		const auto tmp = std::clamp(static_cast<int32_t>(offset),
+		                            static_cast<int32_t>(-clip),
+		                            static_cast<int32_t>(clip));
+		return static_cast<int16_t>(tmp);
+	};
 
-    offset_x = static_cast<int16_t>(std::clamp(static_cast<int32_t>(offset_x), -mouse_video.clip_x, static_cast<int32_t>(mouse_video.clip_x)));
-    offset_y = static_cast<int16_t>(std::clamp(static_cast<int32_t>(offset_y), -mouse_video.clip_y, static_cast<int32_t>(mouse_video.clip_y)));
+	offset_x = ClampOffset(offset_x, mouse_video.clip_x);
+	offset_y = ClampOffset(offset_y, mouse_video.clip_y);
 
-    // Report a fake mouse movement
+	// Report a fake mouse movement
 
-    if (MouseVMW_NotifyMoved(x_abs, y_abs) && mouse_vmware)
-        Mouse_NotifyMovedVMW();
+	if (MOUSEVMWARE_NotifyMoved(x_abs, y_abs) && mouse_vmware)
+		MOUSE_NotifyMovedFake();
 }
 
-void MouseVMW_Init() {
-    IO_RegisterReadHandler(VMW_PORT, PortRead_VMW, io_width_t::word, 1);
+void MOUSEVMWARE_Init()
+{
+	IO_RegisterReadHandler(VMWARE_PORT, PortReadVMware, io_width_t::word, 1);
 }

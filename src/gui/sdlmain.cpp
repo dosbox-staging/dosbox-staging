@@ -1095,6 +1095,20 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		schedule_synced();
 }
 
+static void NewMouseScreenParams()
+{
+	int abs_x, abs_y;
+	SDL_GetMouseState(&abs_x, &abs_y);
+
+	MOUSE_NewScreenParams(sdl.clip.x,
+	                      sdl.clip.y,
+	                      sdl.clip.w,
+	                      sdl.clip.h,
+	                      sdl.desktop.fullscreen,
+	                      check_cast<uint16_t>(abs_x),
+	                      check_cast<uint16_t>(abs_y));
+}
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -1206,9 +1220,7 @@ finish:
 	}
 
 	// Ensure mouse emulation knows the current parameters
-	int abs_x, abs_y;
-	SDL_GetMouseState(&abs_x, &abs_y);
-	Mouse_NewScreenParams(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h, sdl.desktop.fullscreen, abs_x, abs_y);
+	NewMouseScreenParams();
 
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
@@ -2060,7 +2072,8 @@ static void FocusInput()
 /*
  *  Assesses the following:
  *   - current window size (full or not),
- *   - mouse capture state, (yes or no).
+ *   - mouse capture state (yes or no),
+ *   - whether VMware mouse driver is running,
  *   - desired capture type (start, click, seamless), and
  *   - if we're starting up for the first time,
  *  to determine if the mouse-capture state should be toggled.
@@ -2080,9 +2093,8 @@ void GFX_UpdateMouseState()
 	 *  We've switched to or started in fullscreen, so capture the mouse
 	 *  This is valid for all modes except for nomouse.
 	 */
-	if (sdl.desktop.fullscreen
-	    && !mouse_is_captured
-	    && sdl.mouse.control_choice != NoMouse) {
+	if (sdl.desktop.fullscreen && !mouse_is_captured &&
+	    sdl.mouse.control_choice != NoMouse) {
 		GFX_ToggleMouseCapture();
 
 		/*
@@ -2092,7 +2104,8 @@ void GFX_UpdateMouseState()
 		 * in seamless-mode.
 		 */
 	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
-	           (mouse_vmware || (!mouse_capture_requested && sdl.mouse.control_choice == Seamless))) {
+	           (mouse_vmware || (!mouse_capture_requested &&
+	                             sdl.mouse.control_choice == Seamless))) {
 		GFX_ToggleMouseCapture();
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -2107,7 +2120,8 @@ void GFX_UpdateMouseState()
 		if (sdl.mouse.control_choice == CaptureOnStart) {
 			SDL_RaiseWindow(sdl.window);
 			toggle_mouse_capture_from_user(true);
-		} else if (mouse_vmware || (sdl.mouse.control_choice & (Seamless | NoMouse))) {
+		} else if (mouse_vmware ||
+		           (sdl.mouse.control_choice & (Seamless | NoMouse))) {
 			SDL_ShowCursor(SDL_DISABLE);
 		}
 	}
@@ -3452,7 +3466,7 @@ static void GUI_StartUp(Section *sec)
 
 		// Apply the user's mouse sensitivity settings
 		Prop_multival *p3 = section->Get_multival("sensitivity");
-		Mouse_SetSensitivity(p3->GetSection()->Get_int("xsens"),
+		MOUSE_SetSensitivity(p3->GetSection()->Get_int("xsens"),
 		                     p3->GetSection()->Get_int("ysens"));
 
 		// Apply raw mouse input setting
@@ -3485,22 +3499,22 @@ static void GUI_StartUp(Section *sec)
 	startup_state_capslock = keystate & KMOD_CAPS;
 }
 
-inline void HandleMouseMotion(SDL_MouseMotionEvent *motion)
+
+static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 {
-	if (motion->xrel != 0 || motion->yrel != 0) {
-		if (mouse_vmware || mouse_is_captured || sdl.mouse.control_choice == Seamless)
-			Mouse_EventMoved(motion->xrel,
-			                 motion->yrel,
-			                 motion->x,
-			                 motion->y,
-			                 mouse_is_captured);
-	}
+	if (mouse_vmware || mouse_is_captured ||
+	    sdl.mouse.control_choice == Seamless)
+		MOUSE_EventMoved(check_cast<int16_t>(motion->xrel),
+		                 check_cast<int16_t>(motion->yrel),
+		                 check_cast<uint16_t>(motion->x),
+		                 check_cast<uint16_t>(motion->y),
+		                 mouse_is_captured);
 }
 
-inline void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
+static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 {
-	if (wheel->y != 0)
-		Mouse_EventWheel((wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y);
+    const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y;
+	MOUSE_EventWheel(check_cast<int16_t>(tmp));
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -3515,20 +3529,20 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 			break; // Don't pass click to mouse handler
 		}
 		switch (button->button) {
-		case SDL_BUTTON_LEFT:   Mouse_EventPressed(0); break;
-		case SDL_BUTTON_RIGHT:  Mouse_EventPressed(1); break;
-		case SDL_BUTTON_MIDDLE: Mouse_EventPressed(2); break;
-		case SDL_BUTTON_X1:     Mouse_EventPressed(3); break;
-		case SDL_BUTTON_X2:     Mouse_EventPressed(4); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventPressed(0); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventPressed(1); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventPressed(2); break;
+		case SDL_BUTTON_X1:     MOUSE_EventPressed(3); break;
+		case SDL_BUTTON_X2:     MOUSE_EventPressed(4); break;
 		}
 		break;
 	case SDL_RELEASED:
 		switch (button->button) {
-		case SDL_BUTTON_LEFT:   Mouse_EventReleased(0); break;
-		case SDL_BUTTON_RIGHT:  Mouse_EventReleased(1); break;
-		case SDL_BUTTON_MIDDLE: Mouse_EventReleased(2); break;
-		case SDL_BUTTON_X1:     Mouse_EventReleased(3); break;
-		case SDL_BUTTON_X2:     Mouse_EventReleased(4); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventReleased(0); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventReleased(1); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventReleased(2); break;
+		case SDL_BUTTON_X1:     MOUSE_EventReleased(3); break;
+		case SDL_BUTTON_X2:     MOUSE_EventReleased(4); break;
 		}
 		break;
 	}
@@ -3585,6 +3599,10 @@ static void HandleVideoResize(int width, int height)
 			sdl.desktop.window.width = width;
 			sdl.desktop.window.height = height;
 		}
+
+		// Ensure mouse emulation knows the current parameters
+		NewMouseScreenParams();
+
 		return;
 	}
 #endif
@@ -3603,6 +3621,9 @@ static void HandleVideoResize(int width, int height)
 	sdl.resizing_window = true;
 	GFX_ResetScreen();
 	sdl.resizing_window = false;
+
+	// Ensure mouse emulation knows the current parameters
+	NewMouseScreenParams();
 }
 
 /* This function is triggered after window is shown to fixup sdl.window
@@ -3865,12 +3886,13 @@ bool GFX_Events()
 			break; // end of SDL_WINDOWEVENT
 
 		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
-		case SDL_MOUSEWHEEL:  HandleMouseWheel(&event.wheel);   break;
+		case SDL_MOUSEWHEEL: HandleMouseWheel(&event.wheel); break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			if (sdl.mouse.control_choice != NoMouse)
 				HandleMouseButton(&event.button);
 			break;
+
 		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
 		case SDL_KEYDOWN:

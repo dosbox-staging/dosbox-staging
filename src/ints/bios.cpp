@@ -947,11 +947,11 @@ static Bitu INT15_Handler(void) {
 		switch (reg_al) {
 		case 0x00:                      // enable/disable
 			if (reg_bh==0) {	// disable
-				Mouse_SetPS2State(false);
+				MOUSE_SetPS2State(false);
 				reg_ah=0;
 				CALLBACK_SCF(false);
 			} else if (reg_bh==0x01) {	//enable
-				if (!Mouse_SetPS2State(true)) {
+				if (!MOUSE_SetPS2State(true)) {
 					reg_ah=5;
 					CALLBACK_SCF(true);
 					break;
@@ -973,7 +973,7 @@ static Bitu INT15_Handler(void) {
 				reg_ah=2;
 				break;
 			}
-			Mouse_SetPS2State(false);
+			MOUSE_SetPS2State(false);
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
@@ -997,7 +997,7 @@ static Bitu INT15_Handler(void) {
 			}
 			break;
 		case 0x07:		// set callback
-			Mouse_ChangePS2Callback(SegValue(es),reg_bx);
+			MOUSE_ChangePS2Callback(SegValue(es), reg_bx);
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;

@@ -25,63 +25,78 @@
 
 class CSerialMouse : public CSerial {
 public:
-    CSerialMouse(uint8_t id, CommandLine* cmd);
-    virtual ~CSerialMouse();
+	CSerialMouse(const uint8_t id, CommandLine *cmd);
+	virtual ~CSerialMouse();
 
-    void onMouseEventMoved(int16_t delta_x, int16_t delta_y);
-    void onMouseEventButton(uint8_t buttons, uint8_t idx); // idx - index of changed button, staring from 0
-    void onMouseEventWheel(int8_t delta_w);
+	void OnMouseEventMoved(const int16_t new_delta_x, const int16_t new_delta_y);
+	void OnMouseEventButton(const uint8_t new_buttons,
+	                        const uint8_t idx); // idx - index of changed
+	                                            // button, staring from 0
+	void OnMouseEventWheel(const int8_t new_delta_w);
 
-    void setRTSDTR(bool rts, bool dtr);
-    void setRTS(bool val);
-    void setDTR(bool val);
+	void setRTSDTR(const bool rts, const bool dtr) override;
+	void setRTS(const bool val) override;
+	void setDTR(const bool val) override;
 
-    void updatePortConfig(uint16_t divider, uint8_t lcr);
-    void updateMSR();
-    void transmitByte(uint8_t val, bool first);
-    void setBreak(bool value);
-    void handleUpperEvent(uint16_t type);
+	void updatePortConfig(const uint16_t divider, const uint8_t lcr) override;
+	void updateMSR() override;
+	void transmitByte(const uint8_t val, const bool first) override;
+	void setBreak(const bool value) override;
+	void handleUpperEvent(const uint16_t event_type) override;
 
 private:
+	enum class MouseType {
+		NoMouse,
+		Microsoft,
+		Logitech,
+		Wheel,
+		MouseSystems
+	};
 
-    enum MouseType {
-        NO_MOUSE,
-        MICROSOFT,
-        LOGITECH,
-        WHEEL,
-        MOUSE_SYSTEMS
-    };
+	void SetType(const MouseType new_type);
+	void AbortPacket();
+	void ClearCounters();
+	void MouseReset();
+	void StartPacketId();
+	void StartPacketData(const bool extended = false);
+	void StartPacketPart2();
+	void SetEventTX();
+	void SetEventRX();
+	void SetEventTHR();
+	void LogUnimplemented() const;
+	uint8_t ClampDelta(const int32_t delta) const;
 
-    void setType(MouseType type);
-    void abortPacket();
-    void clearCounters();
-    void mouseReset();
-    void startPacketId();
-    void startPacketData(bool extended = false);
-    void startPacketPart2();
-    void unimplemented();
+	const uint16_t port_num = 0;
 
-    const uint16_t port_num;
+	MouseType config_type = MouseType::NoMouse; // mouse type as in the
+	                                            // configuration file
+	bool config_auto = false; // true = autoswitch between config_type and
+	                          // Mouse Systems Mouse
 
-    MouseType config_type;         // mouse type as in the configuration file
-    bool      config_auto;         // true = autoswitch between config_type and Mouse Systems Mouse
-
-    MouseType mouse_type;          // currently emulated mouse type
-    uint8_t   mouse_bytelen;
-    bool      mouse_has_3rd_button;
-    bool      mouse_has_wheel;
-    bool      mouse_port_valid;    // false = port settings incompatible with selected mouse
-    uint8_t   smooth_div;
-
-    bool      send_ack;
-    uint8_t   packet[6] = {};
-    uint8_t   packet_len;
-    uint8_t   xmit_idx;            // index of byte to send, if >= packet_len it means transmission ended
-    bool      xmit_2part;          // true = packet has a second part, which could not be evaluated yet
-    bool      xmit_another_move;   // true = while transmitting a packet we received mouse move event
-    bool      xmit_another_button; // true = while transmitting a packet we received mouse button event
-    uint8_t   mouse_buttons;       // bit 0 = left, bit 1 = right, bit 2 = middle
-    int32_t   mouse_delta_x, mouse_delta_y, mouse_delta_w;
+	MouseType type   = MouseType::NoMouse; // currently emulated mouse type
+	uint8_t byte_len = 0; // how many bits the emulated mouse transmits in a
+	                      // byte (serial port setting)
+	bool has_3rd_button = false;
+	bool has_wheel      = false;
+	bool port_valid     = false; // false = port settings incompatible with
+	                             // selected mouse
+	uint8_t smooth_div = 1; // time divider value, if > 1 mouse is more
+	                        // smooth than with real HW
+	bool send_ack      = true;
+	uint8_t packet[6]  = {};
+	uint8_t packet_len = 0;
+	uint8_t xmit_idx = UINT8_MAX; // index of byte to send, if >= packet_len
+	                              // it means transmission ended
+	bool xmit_2part = false; // true = packet has a second part, which could
+	                         // not be evaluated yet
+	bool another_move = false; // true = while transmitting a packet we
+	                           // received mouse move event
+	bool another_button = false; // true = while transmitting a packet we
+	                             // received mouse button event
+	uint8_t buttons = 0; // bit 0 = left, bit 1 = right, bit 2 = middle
+	int32_t delta_x = 0; // movement since last transmitted package
+	int32_t delta_y = 0;
+	int32_t delta_w = 0;
 };
 
 #endif // DOSBOX_SERIALMOUSE_H
