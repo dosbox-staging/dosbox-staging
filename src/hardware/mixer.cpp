@@ -95,7 +95,7 @@ struct mixer_t {
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out = {};
 
-	std::array<float, 2> mastervol = {1.0f, 1.0f};
+	AudioFrame mastervol = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
 
 	// Counters accessed by multiple threads
@@ -216,28 +216,27 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
 {
 	apply_level = cb;
-	const AudioFrame level{volmain[0], volmain[1]};
-	apply_level(level);
+	apply_level(volmain);
 }
 
 void MixerChannel::UpdateVolume()
 {
 	// Don't scale by volmain[] if the level is being managed by the source
-	const float level_l = apply_level ? 1 : volmain[0];
-	const float level_r = apply_level ? 1 : volmain[1];
-	volmul[0] = scale[0] * level_l * mixer.mastervol[0];
-	volmul[1] = scale[1] * level_r * mixer.mastervol[1];
+	const float level_left  = apply_level ? 1 : volmain.left;
+	const float level_right = apply_level ? 1 : volmain.right;
+
+	volmul.left = scale.left * level_left * mixer.mastervol.left;
+	volmul.right = scale.right * level_right * mixer.mastervol.right;
 }
 
-void MixerChannel::SetVolume(float _left,float _right) {
+void MixerChannel::SetVolume(float left, float right)
+{
 	// Allow unconstrained user-defined values
-	volmain[0] = _left;
-	volmain[1] = _right;
+	volmain = {left, right};
 
-	if (apply_level) {
-		const AudioFrame level{_left, _right};
-		apply_level(level);
-	}
+	if (apply_level)
+		apply_level(volmain);
+
 	UpdateVolume();
 }
 
@@ -245,19 +244,24 @@ void MixerChannel::SetScale(float f) {
 	SetScale(f, f);
 }
 
-void MixerChannel::SetScale(float _left, float _right) {
+void MixerChannel::SetScale(float left, float right)
+{
 	// Constrain application-defined volume between 0% and 100%
-	const float min_volume(0.0);
-	const float max_volume(1.0);
-	_left  = clamp(_left,  min_volume, max_volume);
-	_right = clamp(_right, min_volume, max_volume);
-	if (scale[0] != _left || scale[1] != _right) {
-		scale[0] = _left;
-		scale[1] = _right;
+	constexpr auto min_volume = 0.0f;
+	constexpr auto max_volume = 1.0f;
+
+	left  = clamp(left, min_volume, max_volume);
+	right = clamp(right, min_volume, max_volume);
+
+	if (scale.left != left || scale.right != right) {
+		scale.left  = left;
+		scale.right = right;
 		UpdateVolume();
 #ifdef DEBUG
 		LOG_MSG("MIXER %-7s channel: application changed left and right volumes to %3.0f%% and %3.0f%%, respectively",
-		        name, scale[0] * 100, scale[1] * 100);
+		        name,
+		        scale.left * 100.0f,
+		        scale.right * 100.0f);
 #endif
 	}
 }
@@ -301,10 +305,8 @@ void MixerChannel::Enable(const bool should_enable)
 		done = 0u;
 		needed = 0u;
 
-		prev_frame[0] = 0.0f;
-		prev_frame[1] = 0.0f;
-		next_frame[0] = 0.0f;
-		next_frame[1] = 0.0f;
+		prev_frame = {0.0f, 0.0f};
+		next_frame = {0.0f, 0.0f};
 	}
 	is_enabled = should_enable;
 	MIXER_UnlockAudioDevice();
@@ -382,8 +384,7 @@ void MixerChannel::AddSilence()
 			done = needed;
 			// Make sure the next samples are zero when they get
 			// switched to prev
-			next_frame[0] = 0.0f;
-			next_frame[1] = 0.0f;
+			next_frame = {0.0f, 0.0f};
 			// This should trigger an instant request for new samples
 			freq_counter = FREQ_NEXT;
 		} else {
@@ -400,31 +401,25 @@ void MixerChannel::AddSilence()
 				// rate.
 				constexpr auto f = 4.0f;
 
-				if (prev_frame[0] > f)
-					next_frame[0] = prev_frame[0] - f;
-				else if (prev_frame[0] < -f)
-					next_frame[0] = prev_frame[0] + f;
-				else
-					next_frame[0] = 0.0f;
-
-				if (prev_frame[1] > f)
-					next_frame[1] = prev_frame[1] - f;
-				else if (prev_frame[1] < -f)
-					next_frame[1] = prev_frame[1] + f;
-				else
-					next_frame[1] = 0.0f;
+				for (auto ch = 0; ch < 2; ++ch) {
+					if (prev_frame[ch] > f)
+						next_frame[ch] = prev_frame[ch] - f;
+					else if (prev_frame[ch] < -f)
+						next_frame[ch] = prev_frame[0] + f;
+					else
+						next_frame[ch] = 0.0f;
+				}
 
 				mixpos &= MIXER_BUFMASK;
 
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_frame[0] * volmul[0];
+				        prev_frame.left * volmul.left;
 
 				mixer.work[mixpos][mapped_output_right] +=
-				        (stereo ? prev_frame[1] : prev_frame[0]) *
-				        volmul[1];
+				        (stereo ? prev_frame.right : prev_frame.left) *
+				        volmul.right;
 
-				prev_frame[0] = next_frame[0];
-				prev_frame[1] = next_frame[1];
+				prev_frame = next_frame;
 				mixpos++;
 				done++;
 				freq_counter = FREQ_NEXT;
@@ -685,17 +680,14 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 	out.resize(0);
 
 	while (pos < frames) {
-		prev_frame[0] = next_frame[0];
-		if (stereo) {
-			prev_frame[1] = next_frame[1];
-		}
+		prev_frame = next_frame;
 
 		if (std::is_same<Type, float>::value) {
 			if (stereo) {
-				next_frame[0] = static_cast<float>(data[pos * 2 + 0]);
-				next_frame[1] = static_cast<float>(data[pos * 2 + 1]);
+				next_frame.left = static_cast<float>(data[pos * 2 + 0]);
+				next_frame.right = static_cast<float>(data[pos * 2 + 1]);
 			} else {
-				next_frame[0] = static_cast<float>(data[pos]);
+				next_frame.left = static_cast<float>(data[pos]);
 			}
 		} else {
 			next_frame = ConvertNextFrame<Type, stereo, signeddata, nativeorder>(
@@ -706,10 +698,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, prev_frame);
 
-		const auto left  = prev_frame[mapped_channel_left] * volmul[0];
+		const auto left  = prev_frame[mapped_channel_left] * volmul.left;
 		const auto right = (stereo ? prev_frame[mapped_channel_right]
 		                           : prev_frame[mapped_channel_left]) *
-		                   volmul[1];
+		                   volmul.right;
 
 		out_frame = {0.0f, 0.0f};
 		out_frame[mapped_output_left] += left;
@@ -852,17 +844,17 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		const auto new_pos = index >> FREQ_SHIFT;
 		if (pos != new_pos) {
 			pos = new_pos;
-			//Forward the previous sample
-			prev_frame[0] = data[0];
+			// Forward the previous sample
+			prev_frame.left = data[0];
 			data++;
 		}
-		const auto diff = data[0] - static_cast<int16_t>(prev_frame[0]);
+		const auto diff = data[0] - static_cast<int16_t>(prev_frame.left);
 		const auto diff_mul = index & FREQ_MASK;
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
-		const auto sample = prev_frame[0] + ((diff * diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][mapped_output_left] += sample * volmul[0];
-		mixer.work[mixpos][mapped_output_right] += sample * volmul[1];
+		const auto sample = prev_frame.left + ((diff * diff_mul) >> FREQ_SHIFT);
+		mixer.work[mixpos][mapped_output_left] += sample * volmul.left;
+		mixer.work[mixpos][mapped_output_right] += sample * volmul.right;
 		mixpos++;
 	}
 
@@ -1270,9 +1262,7 @@ public:
 			// Only setting the volume is allowed for the
 			// MASTER channel
 			} else if (is_master) {
-				ParseVolume(arg,
-				            mixer.mastervol[0],
-				            mixer.mastervol[1]);
+				ParseVolume(arg, mixer.mastervol);
 
 			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
@@ -1286,11 +1276,10 @@ public:
 				if (curr_chan->ChangeLineoutMap(arg))
 					continue;
 
-				float left_vol = 0;
-				float right_vol = 0;
-				ParseVolume(arg, left_vol, right_vol);
+				AudioFrame volume = {};
+				ParseVolume(arg, volume);
 
-				curr_chan->SetVolume(left_vol, right_vol);
+				curr_chan->SetVolume(volume.left, volume.right);
 				curr_chan->UpdateVolume();
 			}
 		}
@@ -1330,7 +1319,7 @@ private:
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
-	void ParseVolume(const std::string &s, float &vol_left, float &vol_right)
+	void ParseVolume(const std::string &s, AudioFrame &volume)
 	{
 		auto vol_parts = split(s, ':');
 		if (vol_parts.empty())
@@ -1360,27 +1349,26 @@ private:
 			}
 		};
 
-		parse_vol_pref(vol_parts[0], vol_left);
+		parse_vol_pref(vol_parts[0], volume.left);
 		if (vol_parts.size() > 1)
-			parse_vol_pref(vol_parts[1], vol_right);
+			parse_vol_pref(vol_parts[1], volume.right);
 		else
-			vol_right = vol_left;
+			volume.right = volume.left;
 	}
 
 	void ShowMixerStatus()
 	{
 		auto show_channel = [this](const std::string &name,
-		                           const float vol_left,
-		                           const float vol_right,
+		                           const AudioFrame volume,
 		                           const int rate,
 		                           const std::string &mode,
 		                           const std::string &xfeed) {
 			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
 			         name.c_str(),
-			         vol_left * 100.0f,
-			         vol_right * 100.0f,
-			         20.0f * log(vol_left) / log(10.0f),
-			         20.0f * log(vol_right) / log(10.0f),
+			         volume.left * 100.0f,
+			         volume.right * 100.0f,
+			         20.0f * log(volume.left) / log(10.0f),
+			         20.0f * log(volume.right) / log(10.0f),
 			         rate,
 			         mode.c_str(),
 			         xfeed.c_str());
@@ -1391,8 +1379,7 @@ private:
 
 		MIXER_LockAudioDevice();
 		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
-		             mixer.mastervol[0],
-		             mixer.mastervol[1],
+		             mixer.mastervol,
 		             mixer.sample_rate,
 		             "Stereo",
 		             "-");
@@ -1417,8 +1404,7 @@ private:
 			                    : "Mono";
 
 			show_channel(convert_ansi_markup(channel_name),
-			             chan->volmain[0],
-			             chan->volmain[1],
+			             chan->volmain,
 			             chan->GetSampleRate(),
 			             mode,
 			             xfeed);
