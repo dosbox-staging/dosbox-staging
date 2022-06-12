@@ -2904,6 +2904,11 @@ void MAPPER_Run(bool pressed) {
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,uint32_t flags);
 
 void MAPPER_DisplayUI() {
+	// The mapper is about to take-over SDL's surface and rendering
+	// functions, so disengage the main ones. When the mapper closes, SDL
+	// main will recreate its rendering pipeline.
+	GFX_DisengageRendering();
+
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle = false;
