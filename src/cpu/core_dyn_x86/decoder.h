@@ -282,7 +282,8 @@ static void dyn_reduce_cycles(void) {
 	gen_dop_word_imm(DOP_SUB,true,DREG(CYCLES),decode.cycles);
 }
 
-static void dyn_save_vmware_relevant_regs(void) {
+static void dyn_save_vmware_relevant_regs()
+{
 	// VMware interface uses these registers for bidirectional
 	// communication with guest side tools, they have to be
 	// up to date when reading the magic IO port
