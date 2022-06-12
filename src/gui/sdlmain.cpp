@@ -587,6 +587,14 @@ check_surface:
 	return flags;
 }
 
+// Let the presentation layer safely call no-op functions.
+// Useful during output initialization or transitions.
+void GFX_DisengageRendering()
+{
+	sdl.frame.update  = update_frame_noop;
+	sdl.frame.present = present_frame_noop;
+}
+
 /* Reset the screen with current values in the sdl structure */
 void GFX_ResetScreen(void) {
 	GFX_Stop();
@@ -608,14 +616,6 @@ void GFX_ForceFullscreenExit()
 	while ((val >>= 1) != 0)
 		log++;
 	return log;
-}
-
-// Let the presentation layer safely call no-op functions.
-// Useful during output initialization or transitions.
-static void disengage_frame_rendering()
-{
-	sdl.frame.update = update_frame_noop;
-	sdl.frame.present = present_frame_noop;
 }
 
 // This is a hack to prevent SDL2 from re-creating window internally. Prevents
@@ -1498,7 +1498,7 @@ Bitu GFX_SetSize(int width,
 	if (sdl.updating)
 		GFX_EndUpdate(nullptr);
 
-	disengage_frame_rendering();
+	GFX_DisengageRendering();
 	// The rendering objects are recreated below with new sizes, after which
 	// frame rendering is re-engaged with the output-type specific calls.
 
@@ -3051,7 +3051,7 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	const auto section = static_cast<const Section_prop *>(sec);
 	std::string output = section->Get_string("output");
 
-	disengage_frame_rendering();
+	GFX_DisengageRendering();
 	// it's the job of everything after this to re-engage it.
 
 	if (output == "surface") {
