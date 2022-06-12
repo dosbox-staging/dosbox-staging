@@ -427,8 +427,9 @@ bool MEM_A20_Enabled(void) {
 }
 
 void MEM_A20_Enable(bool enabled) {
-	Bitu phys_base=enabled ? (1024/4) : 0;
-	for (Bitu i=0;i<16;i++) PAGING_MapPage((1024/4)+i,phys_base+i);
+	if (enabled == memory.a20.enabled) return;
+	const uint32_t phys_base=enabled ? (1024/4) : 0;
+	for (int i=0;i<16;i++) PAGING_MapPage((1024/4)+i,phys_base+i);
 	memory.a20.enabled=enabled;
 }
 
