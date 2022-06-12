@@ -114,7 +114,8 @@ struct mixer_t {
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
 	SDL_AudioDeviceID sdldevice = 0;
-	bool nosound = false;
+
+	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
 };
 
 static struct mixer_t mixer = {};
@@ -1324,13 +1325,77 @@ std::unique_ptr<Program> MIXER_ProgramCreate() {
 	return ProgramCreate<MIXER>();
 }
 
-void MIXER_Init(Section* sec) {
+bool MIXER_IsManuallyMuted()
+{
+	return mixer.state == MixerState::Mute;
+}
+
+[[maybe_unused]] static const char * MixerStateToString(const MixerState s)
+{
+	switch (s) {
+	case MixerState::Uninitialized: return "uninitialized";
+	case MixerState::NoSound: return "no sound";
+	case MixerState::Off: return "off";
+	case MixerState::On: return "on";
+	case MixerState::Mute: return "mute";
+	}
+	return "unknown!";
+}
+
+void MIXER_SetState(MixerState requested)
+{
+	// The mixer starts uninitialized but should never be programmatically
+	// asked to become uninitialized
+	assert(requested != MixerState::Uninitialized);
+
+	// When sdldevice is zero then the SDL audio device doesn't exist, which
+	// is a valid configuration. In these cases the only logical end-state
+	// is NoSound. So switch the request and let the rest of the function
+	// handle it.
+	if (mixer.sdldevice == 0)
+		requested = MixerState::NoSound;
+
+	if (mixer.state == requested) {
+		// Nothing to do.
+		// LOG_MSG("MIXER: Is already %s, skipping",
+		// MixerStateToString(mixer.state));
+	} else if (mixer.state == MixerState::On && requested != MixerState::On) {
+		TIMER_DelTickHandler(MIXER_Mix);
+		TIMER_AddTickHandler(MIXER_Mix_NoSound);
+		// LOG_MSG("MIXER: Changed from on to %s",
+		// MixerStateToString(requested));
+	} else if (mixer.state != MixerState::On && requested == MixerState::On) {
+		TIMER_DelTickHandler(MIXER_Mix_NoSound);
+		TIMER_AddTickHandler(MIXER_Mix);
+		// LOG_MSG("MIXER: Changed from %s to on",
+		// MixerStateToString(mixer.state));
+	} else {
+		// Nothing to do.
+		// LOG_MSG("MIXER: Skipping unecessary change from %s to %s",
+		// MixerStateToString(mixer.state), MixerStateToString(requested));
+	}
+	mixer.state = requested;
+
+	// Finally, we start the audio device either paused or unpaused:
+	if (mixer.sdldevice)
+		SDL_PauseAudioDevice(mixer.sdldevice, mixer.state != MixerState::On);
+	//
+	// When unpaused, the device pulls frames queued by the MIXER_Mix
+	// function, which it fetches from each channel's callback (every
+	// millisecond tick), and mixes into a stereo frame buffer.
+
+	// When paused, the audio device stops reading frames from our buffer,
+	// so it's imporant that the we no longer queue them, which is why we
+	// use MIXER_Mix_NoSound (to throw away frames instead of queuing).
+}
+
+void MIXER_Init(Section *sec)
+{
 	sec->AddDestroyFunction(&MIXER_Stop);
 
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Read out config section */
 
-	mixer.nosound=section->Get_bool("nosound");
 	mixer.sample_rate = section->Get_int("rate");
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 	const auto negotiate = section->Get_bool("negotiate");
@@ -1356,15 +1421,19 @@ void MIXER_Init(Section* sec) {
 	}
 
 	mixer.tick_counter=0;
-	if (mixer.nosound) {
+
+	const auto configured_state = section->Get_bool("nosound")
+	                                    ? MixerState::NoSound
+	                                    : MixerState::On;
+
+	if (configured_state == MixerState::NoSound) {
 		LOG_MSG("MIXER: No Sound Mode Selected.");
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		TIMER_AddTickHandler(MIXER_Mix_NoSound);
+		MIXER_SetState(MixerState::NoSound);
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained, sdl_allow_flags)) ==0 ) {
-		mixer.nosound = true;
 		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		TIMER_AddTickHandler(MIXER_Mix_NoSound);
+		MIXER_SetState(MixerState::NoSound);
 	} else {
 		// Does SDL want something other than stereo output?
 		if (obtained.channels != spec.channels)
@@ -1385,8 +1454,7 @@ void MIXER_Init(Section* sec) {
 			mixer.blocksize = obtained_blocksize;
 		}
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		TIMER_AddTickHandler(MIXER_Mix);
-		SDL_PauseAudioDevice(mixer.sdldevice, 0);
+		MIXER_SetState(MixerState::On);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
 		        obtained.channels, mixer.sample_rate.load(), mixer.blocksize);
@@ -1406,16 +1474,42 @@ void MIXER_Init(Section* sec) {
 
 void MIXER_CloseAudioDevice()
 {
+	assert(mixer.state != MixerState::Uninitialized);
+
 	std::lock_guard lock(mixer.channel_mutex);
 	for (auto &it : mixer.channels)
 		it.second->Enable(false);
 
-	if (!mixer.nosound) {
+	if (mixer.state != MixerState::NoSound) {
 		if (mixer.sdldevice != 0) {
 			SDL_CloseAudioDevice(mixer.sdldevice);
 			mixer.sdldevice = 0;
 		}
 	}
+}
+
+// Toggle the mixer on/off when a true-bool is passed.
+static void ToggleMute(const bool was_pressed)
+{
+	// The "pressed" bool argument is used by the Mapper API, which sends a
+	// true-bool for key down events and a false-bool for key up events.
+	if (!was_pressed)
+		return;
+
+	switch (mixer.state) {
+	case MixerState::NoSound:
+		LOG_WARNING("MIXER: Mute requested, but sound is off (nosound mode)");
+		break;
+	case MixerState::Mute:
+		MIXER_SetState(MixerState::On);
+		LOG_MSG("MIXER: Unmuted");
+		break;
+	case MixerState::On:
+		MIXER_SetState(MixerState::Mute);
+		LOG_MSG("MIXER: Muted");
+		break;
+	default: break;
+	};
 }
 
 void init_mixer_dosbox_settings(Section_prop &sec_prop)
