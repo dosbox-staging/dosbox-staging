@@ -1602,6 +1602,8 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
+
+	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
 void MIXER_AddConfigSection(const config_ptr_t &conf)
