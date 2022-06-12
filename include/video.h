@@ -58,6 +58,10 @@ typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 // - false means event loop wants to quit.
 bool GFX_Events();
 
+// Let the presentation layer safely call no-op functions.
+// Useful during output initialization or transitions.
+void GFX_DisengageRendering();
+
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
 void GFX_SetShader(const std::string &source);
