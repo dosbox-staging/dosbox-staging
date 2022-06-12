@@ -52,6 +52,14 @@ enum MixerModes {
 	M_16M,M_16S
 };
 
+enum class MixerState {
+	Uninitialized,
+	NoSound,
+	Off,
+	On,
+	Mute,
+};
+
 // A simple stereo audio frame
 struct AudioFrame {
 	float left = 0;
@@ -277,5 +285,7 @@ void PCSPEAKER_SetType(int mode);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);
+bool MIXER_IsManuallyMuted();
+void MIXER_SetState(const MixerState requested);
 
 #endif
