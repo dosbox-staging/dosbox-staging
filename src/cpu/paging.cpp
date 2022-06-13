@@ -346,7 +346,7 @@ public:
 			// 3: fails a privilege check
 			int priv_check=0;
 			if (InitPage_CheckUseraccess(entry.block.us,table.block.us)) {
-				if ((cpu.cpl&cpu.mpl)==3) priv_check=3;
+				if (USERWRITE_PROHIBITED) priv_check=3;
 				else {
 					switch (CPU_ArchitectureType) {
 					case CPU_ARCHTYPE_MIXED:
@@ -669,8 +669,8 @@ bool PAGING_ForcePageInit(Bitu lin_addr) {
 #if defined(USE_FULL_TLB)
 void PAGING_InitTLB(void) {
 	for (auto i=0;i<TLB_SIZE;i++) {
-		paging.tlb.read[i]=0;
-		paging.tlb.write[i]=0;
+		paging.tlb.read[i]=nullptr;
+		paging.tlb.write[i]=nullptr;
 		paging.tlb.readhandler[i]=&init_page_handler;
 		paging.tlb.writehandler[i]=&init_page_handler;
 	}
@@ -681,8 +681,8 @@ void PAGING_ClearTLB(void) {
 	uint32_t * entries=&paging.links.entries[0];
 	for (;paging.links.used>0;paging.links.used--) {
 		const auto page=*entries++;
-		paging.tlb.read[page]=0;
-		paging.tlb.write[page]=0;
+		paging.tlb.read[page]=nullptr;
+		paging.tlb.write[page]=nullptr;
 		paging.tlb.readhandler[page]=&init_page_handler;
 		paging.tlb.writehandler[page]=&init_page_handler;
 	}
@@ -691,8 +691,8 @@ void PAGING_ClearTLB(void) {
 
 void PAGING_UnlinkPages(Bitu lin_page,Bitu pages) {
 	for (;pages>0;pages--) {
-		paging.tlb.read[lin_page]=0;
-		paging.tlb.write[lin_page]=0;
+		paging.tlb.read[lin_page]=nullptr;
+		paging.tlb.write[lin_page]=nullptr;
 		paging.tlb.readhandler[lin_page]=&init_page_handler;
 		paging.tlb.writehandler[lin_page]=&init_page_handler;
 		lin_page++;
@@ -702,8 +702,8 @@ void PAGING_UnlinkPages(Bitu lin_page,Bitu pages) {
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page) {
 	if (lin_page<LINK_START) {
 		paging.firstmb[lin_page]=phys_page;
-		paging.tlb.read[lin_page]=0;
-		paging.tlb.write[lin_page]=0;
+		paging.tlb.read[lin_page]=nullptr;
+		paging.tlb.write[lin_page]=nullptr;
 		paging.tlb.readhandler[lin_page]=&init_page_handler;
 		paging.tlb.writehandler[lin_page]=&init_page_handler;
 	} else {
@@ -725,9 +725,9 @@ void PAGING_LinkPage(uint32_t lin_page,uint32_t phys_page) {
 
 	paging.tlb.phys_page[lin_page]=phys_page;
 	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=handler->GetHostReadPt(phys_page)-lin_base;
-	else paging.tlb.read[lin_page]=0;
+	else paging.tlb.read[lin_page]=nullptr;
 	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=handler->GetHostWritePt(phys_page)-lin_base;
-	else paging.tlb.write[lin_page]=0;
+	else paging.tlb.write[lin_page]=nullptr;
 
 	paging.links.entries[paging.links.used++]=lin_page;
 	paging.tlb.readhandler[lin_page]=handler;
@@ -748,8 +748,8 @@ void PAGING_LinkPage_ReadOnly(uint32_t lin_page,uint32_t phys_page) {
 
 	paging.tlb.phys_page[lin_page]=phys_page;
 	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=handler->GetHostReadPt(phys_page)-lin_base;
-	else paging.tlb.read[lin_page]=0;
-	paging.tlb.write[lin_page]=0;
+	else paging.tlb.read[lin_page]=nullptr;
+	paging.tlb.write[lin_page]=nullptr;
 
 	paging.links.entries[paging.links.used++]=lin_page;
 	paging.tlb.readhandler[lin_page]=handler;
