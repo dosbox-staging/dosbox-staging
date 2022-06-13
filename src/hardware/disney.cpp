@@ -33,6 +33,9 @@ constexpr uint16_t DISNEY_BASE = 0x0378;
 constexpr uint8_t BUFFER_SAMPLES = 128;
 constexpr uint8_t DISNEY_INIT_STATUS = 0x84;
 
+// The Disney Sound Source is an LPT DAC with a fixed sample rate of 7kHz.
+constexpr auto disney_sample_rate = 7000;
+
 enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
 struct dac_channel {
@@ -58,6 +61,7 @@ struct Disney {
 	Bitu last_used = 0;
 	mixer_channel_t chan = nullptr;
 	bool stereo = false;
+	bool filter_enabled = false;
 
 	// For mono-output, the analysis step points the leader to the channel
 	// with the most rendered-samples. We use the left channel as a valid
@@ -86,33 +90,59 @@ static void DISNEY_disable(uint32_t)
 	disney.stereo = false;
 }
 
-static void DISNEY_enable(uint32_t freq)
+static void update_filter_freq(const uint32_t sample_rate)
 {
-	if (freq < 500 || freq > 100000) {
+	if (!disney.filter_enabled)
+		return;
+
+	// Disney only supports a single fixed 7kHz sample rate; the 6dB/oct LPF @
+	// 1kHz is an accurate emulation of how the actual Disney lowpass filter
+	// sounds.
+	//
+	// With Covox one can theorically achieve any sample rate as long as the
+	// CPU can keep up. Most Covox adapters have no lowpass filter whatsoever,
+	// but as the aim here is to make the sound more pleasant to listen to,
+	// we'll apply a gentle 6dB/oct LPF at a bit below half the sample rate to
+	// tame the harshest aliased frequencies while still retaining a good dose
+	// of the "raw crunchy DAC sound".
+	constexpr auto order              = 1;
+	constexpr auto disney_cutoff_freq = 1000;
+
+	const auto cutoff_freq = (sample_rate == disney_sample_rate)
+	                               ? disney_cutoff_freq
+	                               : sample_rate * 0.45;
+
+	disney.chan->ConfigureLowPassFilter(order, cutoff_freq);
+}
+
+static void DISNEY_enable(uint32_t sample_rate)
+{
+	if (sample_rate < 500 || sample_rate > 100000) {
 		// try again..
 		disney.state = DISNEY_STATE::IDLE;
 		return;
 	}
 #if 0
-	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", freq,
+	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", sample_rate,
 	                         disney.stereo ? "stereo" : "mono");
 #endif
-	disney.chan->SetSampleRate(freq);
+	disney.chan->SetSampleRate(sample_rate);
 	disney.chan->Enable(true);
 	disney.state = DISNEY_STATE::RUNNING;
+	update_filter_freq(sample_rate);
 }
 
-// Calculate the frequency from DAC samples and speed parameters
-// The maximum possible frequency return is 127000 Hz, which
-// occurs when all 128 samples are used and the speedcheck_sum
-// has accumulated only one single tick.
-static uint32_t calc_frequency(const dac_channel &dac)
+// Calculate the sample rate from DAC samples and speed parameters.
+// The maximum possible sample rate is 127,000 Hz which occurs when all 128
+// samples are used and the speedcheck_sum has accumulated only one single
+// tick.
+static uint32_t calc_sample_rate(const dac_channel &dac)
 {
 	if (dac.used <= 1)
 		return 0;
 	const uint32_t k_samples = 1000 * (dac.used - 1);
-	const auto frequency = k_samples / dac.speedcheck_sum;
-	return static_cast<uint32_t>(frequency);
+	const auto sample_rate   = k_samples / dac.speedcheck_sum;
+	return static_cast<uint32_t>(sample_rate);
 }
 
 static void DISNEY_analyze(Bitu channel){
@@ -143,10 +173,10 @@ static void DISNEY_analyze(Bitu channel){
 		const auto st_diff = abs(disney.da[0].used - disney.da[1].used);
 		disney.stereo = (st_diff < 5);
 
-		// Run with the greater DAC frequency
-		const auto max_freq = std::max(calc_frequency(disney.da[0]),
-		                               calc_frequency(disney.da[1]));
-		DISNEY_enable(max_freq);
+		// Run with the greater DAC sample rate
+		const auto max_sample_rate = std::max(calc_sample_rate(disney.da[0]),
+		                                      calc_sample_rate(disney.da[1]));
+		DISNEY_enable(max_sample_rate);
 	} break;
 
 	case DISNEY_STATE::ANALYZING: {
@@ -244,7 +274,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 				disney.interface_det = 0;
 				if(disney.interface_det_ext > 5) {
 					disney.leader = &disney.da[0];
-					DISNEY_enable(7000);
+					DISNEY_enable(disney_sample_rate);
 				}
 			}
 			if (disney.interface_det_ext > 5) {
@@ -397,10 +427,32 @@ void DISNEY_Init(Section* sec) {
 
 	// Setup the mixer callback
 	disney.chan = MIXER_AddChannel(DISNEY_CallBack,
-	                               10000,
+	                               0,
 	                               "DISNEY",
 	                               {ChannelFeature::ReverbSend,
 	                                ChannelFeature::ChorusSend});
+
+	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
+	// DACs
+	const auto sample_rate = disney.chan->GetSampleRate();
+
+	disney.chan->ConfigureZeroOrderHoldUpsampler(sample_rate);
+	disney.chan->EnableZeroOrderHoldUpsampler();
+
+	// Parse filter setting
+	std::string filter_pref = section->Get_string("disney_filter");
+
+	if (filter_pref == "on") {
+		disney.filter_enabled = true;
+		disney.chan->SetLowPassFilter(FilterState::On);
+	} else {
+		if (filter_pref != "off")
+			LOG_WARNING("DISNEY: Invalid filter setting '%s', using off",
+			            filter_pref.c_str());
+
+		disney.filter_enabled = false;
+		disney.chan->SetLowPassFilter(FilterState::Off);
+	}
 
 	// Register port handlers for 8-bit IO
 	disney.write_handler.Install(DISNEY_BASE, disney_write, io_width_t::byte, 3);
