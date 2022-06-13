@@ -140,13 +140,19 @@ static void AddDelayEntry(double index, double vol)
 		vol *= AMPLITUDE_SQUARE_WAVE_REDUCER;
 // #define DEBUG_SQUARE_WAVE 1
 #ifdef DEBUG_SQUARE_WAVE
-		LOG_MSG("SPEAKER: square-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu]",
-		        spkr.prev_pos, spkr.prev_mode, spkr.mode,
-		        spkr.prev_pit_mode, spkr.pit_mode);
+		LOG_MSG("PCSPEAKER: square-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu]",
+		        spkr.prev_pos,
+		        spkr.prev_mode,
+		        spkr.mode,
+		        spkr.prev_pit_mode,
+		        spkr.pit_mode);
 	} else {
-		LOG_MSG("SPEAKER: sine-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu], ",
-		        spkr.prev_pos, spkr.prev_mode, spkr.mode,
-		        spkr.prev_pit_mode, spkr.pit_mode);
+		LOG_MSG("PCSPEAKER: sine-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu], ",
+		        spkr.prev_pos,
+		        spkr.prev_mode,
+		        spkr.mode,
+		        spkr.prev_pit_mode,
+		        spkr.pit_mode);
 #endif
 	}
 
@@ -157,7 +163,7 @@ static void AddDelayEntry(double index, double vol)
 	// This is extremely verbose; pipe the output to a file.
 	// Display the previous and current speaker modes w/ requested volume
 	if (fabs(vol) > AMPLITUDE_NEUTRAL)
-		LOG_MSG("SPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
+		LOG_MSG("PCSPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
 		        ", pwm=%d|%d, volume=%6.0f",
 		        spkr.prev_pos > 0 ? "yes" : "no", spkr.prev_pit_mode,
 		        spkr.pit_mode, spkr.prev_mode, spkr.mode,
@@ -310,7 +316,7 @@ void PCSPEAKER_SetCounter(int cntr, int mode)
 		break;
 	default:
 #if C_DEBUG
-		LOG_MSG("Unhandled speaker mode %u", mode);
+		LOG_MSG("PCSPEAKER: Unhandled speaker mode %u", mode);
 #endif
 		return;
 	}
