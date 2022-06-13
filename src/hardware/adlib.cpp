@@ -604,42 +604,33 @@ void Module::CtrlWrite(uint8_t val)
 	switch (ctrl.index) {
 	case 0x04:
 		if (adlib_gold) {
-			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume left: %d",
-			              val & 0x3f);
-			adlib_gold->StereoControlWrite(TDA8425_Reg_VL, val);
+			adlib_gold->StereoControlWrite(StereoProcessorControlReg::VolumeLeft,
+			                               val);
 		}
 		break;
 	case 0x05:
 		if (adlib_gold) {
-			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, final output volume right: %d",
-			              val & 0x3f);
-			adlib_gold->StereoControlWrite(TDA8425_Reg_VR, val);
+			adlib_gold->StereoControlWrite(StereoProcessorControlReg::VolumeRight,
+			                               val);
 		}
 		break;
 	case 0x06:
 		if (adlib_gold) {
-			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, bass: %d",
-			              val & 0xf);
-			adlib_gold->StereoControlWrite(TDA8425_Reg_BA, val);
+			adlib_gold->StereoControlWrite(StereoProcessorControlReg::Bass,
+			                               val);
 		}
 		break;
 	case 0x07:
 		if (adlib_gold) {
-			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, treble: %d",
-			              val & 0xf);
-			// Additional treble boost to make the emulated sound
-			// more closely resemble real hardware recordings.
-			adlib_gold->StereoControlWrite(TDA8425_Reg_TR,
-			                               val < 0xf ? val + 1 : 0xf);
+			adlib_gold->StereoControlWrite(StereoProcessorControlReg::Treble,
+			                               val);
 		}
 		break;
 
 	case 0x08:
 		if (adlib_gold) {
-			DEBUG_LOG_MSG("ADLIBGOLD.STEREO: Control write, input selector: 0x%02x, stereo mode: 0x%02x",
-			              val & 6,
-			              val & 18);
-			adlib_gold->StereoControlWrite(TDA8425_Reg_SF, val);
+			adlib_gold->StereoControlWrite(
+			        StereoProcessorControlReg::SwitchFunctions, val);
 		}
 		break;
 
@@ -648,7 +639,7 @@ void Module::CtrlWrite(uint8_t val)
 		ctrl.rvol = val;
 	setvol:
 		if (ctrl.mixer) {
-			// Dune cdrom uses 32 volume steps in an apparent
+			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
 			mixerChan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
 			                     (float)(ctrl.rvol & 0x1f) / 31.0f);

@@ -21,13 +21,44 @@
 #ifndef DOSBOX_ADLIB_GOLD_H
 #define DOSBOX_ADLIB_GOLD_H
 
+#include "bit_view.h"
 #include "dosbox.h"
 #include "mixer.h"
 
-#include "../libs/TDA8425_emu/TDA8425_emu.h"
-
 class SurroundProcessor;
 class StereoProcessor;
+
+enum class StereoProcessorControlReg {
+	VolumeLeft,
+	VolumeRight,
+	Bass,
+	Treble,
+	SwitchFunctions,
+};
+
+union StereoProcessorSwitchFunctions {
+	uint8_t data = 0;
+	bit_view<0, 3> source_selector;
+	bit_view<3, 2> stereo_mode;
+};
+
+enum class StereoProcessorSourceSelector : uint8_t {
+    SoundA1 = 2,
+    SoundA2 = 3,
+    SoundB1 = 4,
+    SoundB2 = 5,
+    Stereo1 = 6,
+    Stereo2 = 7,
+};
+
+// Apparently, the values for LinearStereo and PseudoStereo are switched in
+// the specs.
+enum class StereoProcessorStereoMode : uint8_t {
+	ForcedMono    = 0,
+	LinearStereo  = 1,
+	PseudoStereo  = 2,
+	SpatialStereo = 3,
+};
 
 class AdlibGold {
 public:
@@ -35,8 +66,8 @@ public:
 	~AdlibGold();
 
 	void SurroundControlWrite(const uint8_t val) noexcept;
-	void StereoControlWrite(const TDA8425_Reg reg,
-	                        const TDA8425_Register data) noexcept;
+	void StereoControlWrite(const StereoProcessorControlReg reg,
+	                        const uint8_t data) noexcept;
 
 	void Process(const int16_t *in, const uint32_t frames, float *out) noexcept;
 

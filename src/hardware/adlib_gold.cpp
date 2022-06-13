@@ -19,9 +19,12 @@
  */
 
 #include "adlib_gold.h"
-#include "bit_view.h"
+#include "checks.h"
 
+#include "../libs/iir1/Iir.h"
 #include "../libs/YM7128B_emu/YM7128B_emu.h"
+
+CHECK_NARROWING();
 
 // Yamaha YM7128B Surround Processor emulation
 // -------------------------------------------
@@ -34,8 +37,9 @@ public:
 	void ControlWrite(const uint8_t val) noexcept;
 	AudioFrame Process(const AudioFrame &frame) noexcept;
 
-	// prevent copying and assignment
+	// prevent copying
 	SurroundProcessor(const SurroundProcessor &) = delete;
+	// prevent assignment
 	SurroundProcessor &operator=(const SurroundProcessor &) = delete;
 
 private:
@@ -78,9 +82,10 @@ void SurroundProcessor::ControlWrite(const uint8_t val) noexcept
 
 	// Change register data at the falling edge of 'a0' word clock
 	if (control_state.a0 && !reg.a0) {
-//		DEBUG_LOG_MSG("ADLIBGOLD.SURROUND: Write control register %d, data: %d",
-//		              control_state.addr,
-//		              control_state.data);
+		//		DEBUG_LOG_MSG("ADLIBGOLD: Surround: Write
+		// control register %d, data: %d",
+		// control_state.addr, control_state.data);
+
 		YM7128B_ChipIdeal_Write(chip, control_state.addr, control_state.data);
 	} else {
 		// Data is sent in serially through 'din' in MSB->LSB order,
@@ -90,11 +95,13 @@ void SurroundProcessor::ControlWrite(const uint8_t val) noexcept
 			// The 'a0' word clock determines the type of the data.
 			if (reg.a0)
 				// Data cycle
-				control_state.data = (control_state.data << 1) |
+				control_state.data = static_cast<uint8_t>(
+				                             control_state.data << 1) |
 				                     reg.din;
 			else
 				// Address cycle
-				control_state.addr = (control_state.addr << 1) |
+				control_state.addr = static_cast<uint8_t>(
+				                             control_state.addr << 1) |
 				                     reg.din;
 		}
 	}
@@ -114,9 +121,8 @@ AudioFrame SurroundProcessor::Process(const AudioFrame &frame) noexcept
 	return {data.outputs[0], data.outputs[1]};
 }
 
-
 // Philips Semiconductors TDA8425 hi-fi stereo audio processor emulation
-// ----------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 class StereoProcessor {
 public:
@@ -124,75 +130,235 @@ public:
 	~StereoProcessor();
 
 	void Reset() noexcept;
-	void ControlWrite(const TDA8425_Reg reg, const TDA8425_Register data) noexcept;
+	void ControlWrite(const StereoProcessorControlReg, const uint8_t data) noexcept;
 	AudioFrame Process(const AudioFrame &frame) noexcept;
 
-	// prevent copying and assignment
+	void SetLowShelfGain(const double gain_db) noexcept;
+	void SetHighShelfGain(const double gain_db) noexcept;
+
+	// prevent copying
 	StereoProcessor(const StereoProcessor &) = delete;
+	// prevent assignment
 	StereoProcessor &operator=(const StereoProcessor &) = delete;
 
 private:
-	TDA8425_Chip *chip = nullptr;
+	uint16_t sample_rate = 0;
+
+	AudioFrame gain = {};
+
+	StereoProcessorSourceSelector source_selector = {};
+	StereoProcessorStereoMode stereo_mode         = {};
+
+	std::array<Iir::RBJ::LowShelf, 2> lowshelf   = {};
+	std::array<Iir::RBJ::HighShelf, 2> highshelf = {};
+
+	Iir::RBJ::AllPass allpass = {};
+
+	AudioFrame ProcessSourceSelection(const AudioFrame &frame) noexcept;
+	AudioFrame ProcessShelvingFilters(const AudioFrame &frame) noexcept;
+	AudioFrame ProcessStereoProcessing(const AudioFrame &frame) noexcept;
 };
 
-StereoProcessor::StereoProcessor(const uint16_t sample_rate) : chip(nullptr)
+StereoProcessor::StereoProcessor(const uint16_t _sample_rate)
+        : sample_rate(_sample_rate)
 {
-	chip = (TDA8425_Chip *)malloc(sizeof(TDA8425_Chip));
+	constexpr auto allpass_freq = 350.0;
+	allpass.setup(sample_rate, allpass_freq);
 
-	TDA8425_Chip_Ctor(chip);
-	TDA8425_Chip_Setup(chip,
-	                   sample_rate,
-	                   TDA8425_Pseudo_C1_Table[TDA8425_Pseudo_Preset_2],
-	                   TDA8425_Pseudo_C2_Table[TDA8425_Pseudo_Preset_2],
-	                   TDA8425_Tfilter_Mode_Disabled);
-	TDA8425_Chip_Reset(chip);
-	TDA8425_Chip_Start(chip);
-
-	Reset();
+	SetLowShelfGain(0.0);
+	SetHighShelfGain(0.0);
 }
 
-StereoProcessor::~StereoProcessor()
+void StereoProcessor::SetLowShelfGain(const double gain_db) noexcept
 {
-	TDA8425_Chip_Stop(chip);
-	TDA8425_Chip_Dtor(chip);
+	constexpr auto cutoff_freq = 350.0;
+	constexpr auto slope       = 0.4;
+	for (auto &f : lowshelf)
+		f.setup(sample_rate, cutoff_freq, gain_db, slope);
 }
+
+void StereoProcessor::SetHighShelfGain(const double gain_db) noexcept
+{
+	DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Setting treble gain to %.2fdB", gain_db);
+
+	constexpr auto cutoff_freq = 3500.0;
+	constexpr auto slope       = 0.4;
+	for (auto &f : highshelf)
+		f.setup(sample_rate, cutoff_freq, gain_db, slope);
+}
+
+StereoProcessor::~StereoProcessor() {}
+
+constexpr auto volume_0db_value       = 60;
+constexpr auto shelf_filter_0db_value = 6;
 
 void StereoProcessor::Reset() noexcept
 {
-	constexpr auto volume_0db = 60;
-	constexpr auto bass_0db   = 6;
-	constexpr auto treble_0db = 6;
+	ControlWrite(StereoProcessorControlReg::VolumeLeft, volume_0db_value);
+	ControlWrite(StereoProcessorControlReg::VolumeRight, volume_0db_value);
+	ControlWrite(StereoProcessorControlReg::Bass, shelf_filter_0db_value);
+	ControlWrite(StereoProcessorControlReg::Treble, shelf_filter_0db_value);
 
-	ControlWrite(TDA8425_Reg_VL, volume_0db);
-	ControlWrite(TDA8425_Reg_VR, volume_0db);
-	ControlWrite(TDA8425_Reg_BA, bass_0db);
-	ControlWrite(TDA8425_Reg_TR, treble_0db);
+	StereoProcessorSwitchFunctions sf = {};
+	sf.source_selector                = static_cast<uint8_t>(
+                StereoProcessorSourceSelector::Stereo1);
+	sf.stereo_mode = static_cast<uint8_t>(StereoProcessorStereoMode::LinearStereo);
 
-	constexpr auto stereo_output = TDA8425_Selector_Stereo_1;
-	constexpr auto linear_stereo = TDA8425_Mode_LinearStereo
-	                            << TDA8425_Reg_SF_STL;
-
-	ControlWrite(TDA8425_Reg_SF, stereo_output & linear_stereo);
+	ControlWrite(StereoProcessorControlReg::SwitchFunctions, sf.data);
 }
 
-void StereoProcessor::ControlWrite(const TDA8425_Reg addr,
-                                   const TDA8425_Register data) noexcept
+void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
+                                   const uint8_t data) noexcept
 {
-	TDA8425_Chip_Write(chip, static_cast<TDA8425_Address>(addr), data);
+	auto calc_volume_gain = [](const int value) {
+		constexpr auto min_gain_db = -128.0;
+		constexpr auto max_gain_db = 6.0;
+		constexpr auto step_db     = 2.0;
+
+		auto val     = value - volume_0db_value;
+		auto gain_db = clamp(val * step_db, min_gain_db, max_gain_db);
+		return static_cast<float>(decibel_to_gain(gain_db));
+	};
+
+	auto calc_filter_gain_db = [](const int value) {
+		constexpr auto min_gain_db = -12.0;
+		constexpr auto max_gain_db = 15.0;
+		constexpr auto step_db     = 3.0;
+
+		auto val = value - shelf_filter_0db_value;
+		return clamp(val * step_db, min_gain_db, max_gain_db);
+	};
+
+	constexpr auto volume_control_width = 6;
+	constexpr auto volume_control_mask  = (1 << volume_control_width) - 1;
+
+	constexpr auto filter_control_width = 4;
+	constexpr auto filter_control_mask  = (1 << filter_control_width) - 1;
+
+	switch (reg) {
+	case StereoProcessorControlReg::VolumeLeft: {
+		const auto value = data & volume_control_mask;
+		gain.left        = calc_volume_gain(value);
+		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Final left volume set to %.2fdB (value %d)",
+		              gain.left,
+		              value);
+	} break;
+
+	case StereoProcessorControlReg::VolumeRight: {
+		const auto value = data & volume_control_mask;
+		gain.right       = calc_volume_gain(value);
+		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Final right volume set to %.2fdB (value %d)",
+		              gain.right,
+		              value);
+	} break;
+
+	case StereoProcessorControlReg::Bass: {
+		const auto value   = data & filter_control_mask;
+		const auto gain_db = calc_filter_gain_db(value);
+		SetLowShelfGain(gain_db);
+
+		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Bass gain set to %.2fdB (value %d)",
+		              gain_db,
+		              value);
+	} break;
+
+	case StereoProcessorControlReg::Treble: {
+		const auto value   = data & filter_control_mask;
+		const auto gain_db = calc_filter_gain_db(value);
+		SetHighShelfGain(calc_filter_gain_db(data + 1));
+
+		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Treble gain set to %.2fdB (value %d)",
+		              gain_db,
+		              value);
+	} break;
+
+	case StereoProcessorControlReg::SwitchFunctions: {
+		auto sf = StereoProcessorSwitchFunctions{data};
+
+		source_selector = StereoProcessorSourceSelector(
+		        static_cast<uint8_t>(sf.source_selector));
+		stereo_mode = StereoProcessorStereoMode(
+		        static_cast<uint8_t>(sf.stereo_mode));
+
+		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Source selector set to %hhu, stereo mode set to %hhu",
+		              source_selector,
+		              stereo_mode);
+	} break;
+	}
+}
+
+AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame) noexcept
+{
+	switch (source_selector) {
+	case StereoProcessorSourceSelector::SoundA1:
+	case StereoProcessorSourceSelector::SoundA2:
+		return {frame.left, frame.left};
+
+	case StereoProcessorSourceSelector::SoundB1:
+	case StereoProcessorSourceSelector::SoundB2:
+		return {frame.right, frame.right};
+
+	case StereoProcessorSourceSelector::Stereo1:
+	case StereoProcessorSourceSelector::Stereo2:
+	default:
+		// Dune sends an invalid source selector value of 0 during the
+		// intro; we'll just revert to stereo operation
+		return frame;
+	}
+}
+
+AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame) noexcept
+{
+	AudioFrame out_frame = {};
+
+	for (std::size_t i = 0; i < 2; ++i) {
+		out_frame[i] = lowshelf[i].filter(frame[i]);
+		out_frame[i] = highshelf[i].filter(out_frame[i]);
+	}
+	return out_frame;
+}
+
+AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame) noexcept
+{
+	AudioFrame out_frame = {};
+
+	switch (stereo_mode) {
+	case StereoProcessorStereoMode::ForcedMono: {
+		const auto m    = frame.left + frame.right;
+		out_frame.left  = m;
+		out_frame.right = m;
+	} break;
+
+	case StereoProcessorStereoMode::PseudoStereo:
+		out_frame.left  = allpass.filter(frame.left);
+		out_frame.right = frame.right;
+		break;
+
+	case StereoProcessorStereoMode::SpatialStereo: {
+		constexpr auto crosstalk_percentage = 52.0f;
+		constexpr auto k = crosstalk_percentage / 100.0f;
+		const auto l     = frame.left;
+		const auto r     = frame.right;
+		out_frame.left   = l + (l - r) * k;
+		out_frame.right  = r + (r - l) * k;
+	} break;
+
+	case StereoProcessorStereoMode::LinearStereo:
+	default: out_frame = frame; break;
+	}
+	return out_frame;
 }
 
 AudioFrame StereoProcessor::Process(const AudioFrame &frame) noexcept
 {
-	TDA8425_Chip_Process_Data data = {};
+	auto out_frame = ProcessSourceSelection(frame);
+	out_frame      = ProcessShelvingFilters(out_frame);
+	out_frame      = ProcessStereoProcessing(out_frame);
 
-	data.inputs[0][0] = frame.left;
-	data.inputs[1][0] = frame.left;
-	data.inputs[0][1] = frame.right;
-	data.inputs[1][1] = frame.right;
+	out_frame.left *= gain.left;
+	out_frame.right *= gain.right;
 
-	TDA8425_Chip_Process(chip, &data);
-
-	return {data.outputs[0], data.outputs[1]};
+	return out_frame;
 }
 
 // AdLib Gold module
@@ -208,8 +374,8 @@ AdlibGold::AdlibGold(const uint16_t sample_rate)
 
 AdlibGold::~AdlibGold() = default;
 
-void AdlibGold::StereoControlWrite(const TDA8425_Reg reg,
-                                   const TDA8425_Register data) noexcept
+void AdlibGold::StereoControlWrite(const StereoProcessorControlReg reg,
+                                   const uint8_t data) noexcept
 {
 	stereo_processor->ControlWrite(reg, data);
 }
@@ -222,13 +388,14 @@ void AdlibGold::SurroundControlWrite(const uint8_t val) noexcept
 void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) noexcept
 {
 	auto frames_remaining = frames;
+
 	while (frames_remaining--) {
 		AudioFrame frame = {static_cast<float>(in[0]),
 		                    static_cast<float>(in[1])};
 
 		const auto wet = surround_processor->Process(frame);
-		// Additional wet signal level boost to make the emulated sound
-		// more closely resemble real hardware recordings.
+		// Additional wet signal level boost to make the emulated
+		// sound more closely resemble real hardware recordings.
 		constexpr auto wet_boost = 1.6f;
 		frame.left += wet.left * wet_boost;
 		frame.right += wet.right * wet_boost;
