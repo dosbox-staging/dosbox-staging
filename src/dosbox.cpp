@@ -850,12 +850,28 @@ void DOSBOX_Init() {
 	        "'auto' enables this for non-Windows systems and disables it on Windows.\n"
 	        "If your OS performs its own DC-offset correction, then set this to 'false'.");
 
+	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, true);
+
 	const char *tandys[] = {"auto", "on", "off", 0};
+
 	Pstring = secprop->Add_string("tandy", when_idle, "auto");
 	Pstring->Set_values(tandys);
-	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
+	Pstring->Set_help(
+	        "Enable Tandy Sound System emulation. "
+	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
 
+	Pstring = secprop->Add_string("tandy_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the Tandy synth output:\n"
+	                  "  on:    Filter the output (default).\n"
+	                  "  none:  Don't filter the output.");
+
+	Pstring = secprop->Add_string("tandy_dac_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the Tandy DAC output:\n"
+	                  "  on:    Filter the output (default).\n"
+	                  "  none:  Don't filter the output.");
+
+	// Disney Audio emulation
 	secprop->AddInitFunction(&DISNEY_Init,true);//done
 
 	Pbool = secprop->Add_bool("disney", when_idle, true);

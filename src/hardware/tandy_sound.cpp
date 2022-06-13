@@ -19,7 +19,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* 
+/*
 	Based of sn76496.c of the M.A.M.E. project
 */
 
@@ -130,7 +130,7 @@ class TandyDAC {
 	};
 
 public:
-	TandyDAC(const ConfigProfile config_profile);
+	TandyDAC(const ConfigProfile config_profile, const std::string &filter_choice);
 	bool IsEnabled() const { return is_enabled; }
 	const IOConfig &GetIOConfig() const { return io; }
 
@@ -158,7 +158,8 @@ private:
 
 class TandyPSG {
 public:
-	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled);
+	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
+	         const std::string &filter_choice);
 
 private:
 	TandyPSG() = delete;
@@ -191,12 +192,30 @@ private:
 	bool is_enabled = false;
 };
 
-TandyDAC::TandyDAC(const ConfigProfile config_profile)
+static void setup_filters(mixer_channel_t &channel) {
+	// The filters are meant to emulate the bandwidth limited sound of the
+	// small integrated speaker of the Tandy. This more accurately
+	// reflects people's actual experience of the Tandy sound than the raw
+	// unfiltered output, and it's a lot more pleasant to listen to,
+	// especially in headphones.
+	constexpr auto hp_order       = 3;
+	constexpr auto hp_cutoff_freq = 120.0f;
+	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+	channel->SetHighPassFilter(FilterState::On);
+
+	constexpr auto lp_order       = 2;
+	constexpr auto lp_cutoff_freq = 4800.0f;
+	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	channel->SetLowPassFilter(FilterState::On);
+}
+
+TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter_choice)
 {
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	// Run the audio channel at the mixer's native rate
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
+
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "TANDYDAC",
@@ -204,6 +223,23 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile)
 	                            ChannelFeature::ChorusSend});
 
 	sample_rate = channel->GetSampleRate();
+
+	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
+	// DACs
+	channel->ConfigureZeroOrderHoldUpsampler(sample_rate);
+	channel->EnableZeroOrderHoldUpsampler();
+
+	// Setup filters
+	if (filter_choice == "on") {
+		setup_filters(channel);
+	} else {
+		if (filter_choice != "off")
+			LOG_WARNING("TANDYDAC: Invalid filter setting '%s', using off",
+			            filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
 
 	// Register DAC per-port read handlers
 	const auto reader = std::bind(&TandyDAC::ReadFromPort, this, _1, _2);
@@ -371,7 +407,8 @@ void TandyDAC::AudioCallback(uint16_t requested)
 	}
 }
 
-TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled)
+TandyPSG::TandyPSG(const ConfigProfile config_profile,
+                   const bool is_dac_enabled, const std::string &filter_choice)
 {
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
@@ -403,11 +440,24 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	                           {ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend});
 
+	// Setup filters
+	if (filter_choice == "on") {
+		setup_filters(channel);
+	} else {
+		if (filter_choice != "off")
+			LOG_WARNING("TANDY: Invalid filter setting '%s', using off",
+			            filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
+
 	// Setup the resampler
 	const auto sample_rate = channel->GetSampleRate();
-	const auto max_freq = std::max(sample_rate * 0.9 / 2, 8000.0);
+	const auto max_freq    = std::max(sample_rate * 0.9 / 2, 8000.0);
 	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-	                                                      sample_rate, max_freq));
+	                                                      sample_rate,
+	                                                      max_freq));
 	render_to_play_ratio = static_cast<double>(render_rate_hz) / sample_rate;
 
 	// Compute how many silent samples before idling the PSG
@@ -570,8 +620,11 @@ void TANDYSOUND_Init(Section *section)
 
 	const auto can_use_tandy_dac = is_sound_blaster_absent();
 	if (can_use_tandy_dac)
-		tandy_dac = std::make_unique<TandyDAC>(cfg);
-	tandy_psg = std::make_unique<TandyPSG>(cfg, can_use_tandy_dac);
+		tandy_dac = std::make_unique<TandyDAC>(
+		        cfg, prop->Get_string("tandy_dac_filter"));
+
+	tandy_psg = std::make_unique<TandyPSG>(
+	        cfg, can_use_tandy_dac, prop->Get_string("tandy_filter"));
 
 	set_tandy_sound_flag_in_bios(true);
 
