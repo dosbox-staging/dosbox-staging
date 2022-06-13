@@ -129,7 +129,9 @@ public:
 	void Mix(int _needed);
 	void AddSilence(); // Fill up until needed
 
+	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
+	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 
 	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
@@ -246,8 +248,8 @@ private:
 	struct {
 		struct {
 			FilterState state = FilterState::Off;
-			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
-		} lowpass = {};
+			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
+		} highpass = {};
 
 		struct {
 			FilterState state = FilterState::Off;
