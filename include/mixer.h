@@ -244,9 +244,16 @@ private:
 	} zoh_upsampler = {};
 
 	struct {
-		FilterState state = FilterState::Off;
-		std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
-	} filter = {};
+		struct {
+			FilterState state = FilterState::Off;
+			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
+		} lowpass = {};
+
+		struct {
+			FilterState state = FilterState::Off;
+			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
+		} lowpass = {};
+	} filters = {};
 
 	struct {
 		float strength = 0.0f;
