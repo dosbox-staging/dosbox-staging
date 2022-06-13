@@ -879,10 +879,23 @@ void DOSBOX_Init() {
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, true);
+
 	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
 	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
 
+	Pstring = secprop->Add_string("ps1audio_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the PS/1 Audio synth output:\n"
+	                  "  on:   Filter the output (default).\n"
+	                  "  off:  Don't filter the output.");
+
+	Pstring = secprop->Add_string("ps1audio_dac_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the PS/1 Audio DAC output:\n"
+	                  "  on:   Filter the output (default).\n"
+	                  "  off:  Don't filter the output.");
+
+	// Joystick emulation
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
+
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init,true);

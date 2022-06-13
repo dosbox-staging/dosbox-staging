@@ -48,7 +48,7 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	Ps1Dac();
+	Ps1Dac(const std::string &filter_choice);
 	~Ps1Dac();
 
 private:
@@ -118,14 +118,44 @@ static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &ch
 		channel->Enable(false);
 }
 
-Ps1Dac::Ps1Dac()
+static void setup_filter(mixer_channel_t &channel)
+{
+	constexpr auto hp_order       = 3;
+	constexpr auto hp_cutoff_freq = 160;
+	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+	channel->SetHighPassFilter(FilterState::On);
+
+	constexpr auto lp_order       = 1;
+	constexpr auto lp_cutoff_freq = 2100;
+	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	channel->SetLowPassFilter(FilterState::On);
+}
+
+Ps1Dac::Ps1Dac(const std::string &filter_choice)
 {
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
+
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "PS1DAC",
 	                           {ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend});
+
+	// Setup filters
+	if (filter_choice == "on") {
+		// Using the same filter settings for the DAC as for the PSG
+		// synth. It's unclear whether this is accurate, but in any
+		// case, the filters do a good approximation of how a small
+		// integrated speaker would sound.
+		setup_filter(channel);
+	} else {
+		if (filter_choice != "off")
+			LOG_WARNING("PSDAC: Invalid filter setting '%s', using off",
+			            filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
 
 	// Register DAC per-port read handlers
 	read_handlers[0].Install(0x02F, std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2), io_width_t::byte);
@@ -348,7 +378,7 @@ Ps1Dac::~Ps1Dac()
 
 class Ps1Synth {
 public:
-	Ps1Synth();
+	Ps1Synth(const std::string &filter_choice);
 	~Ps1Synth();
 
 private:
@@ -364,16 +394,34 @@ private:
 	size_t last_write = 0;
 };
 
-Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
+Ps1Synth::Ps1Synth(const std::string &filter_choice)
+        : device(machine_config(), 0, 0, clock_rate_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
+
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "PS1",
 	                           {ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend});
 
-	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
+	// Setup filters
+	if (filter_choice == "on") {
+		// The filter parameters have been tweaked by analysing real
+		// hardware recordings. The results are virtually
+		// undistinguishable from the real thing by ear only.
+		setup_filter(channel);
+	} else {
+		if (filter_choice != "off")
+			LOG_WARNING("PS1: Invalid filter setting '%s', using off",
+			            filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
+
+	const auto generate_sound =
+	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t &>(device).device_start();
 
@@ -397,7 +445,7 @@ void Ps1Synth::Update(uint16_t samples)
 	// point to either the mono array head or left and right heads. In this
 	// case, we're using a mono array but we still want to comply with the
 	// API, so we give it a valid two-element pointer array.
-	int16_t *buffer_head[] = {buffer[0], buffer[0]}; 
+	int16_t *buffer_head[] = {buffer[0], buffer[0]};
 
 	device_sound_interface::sound_stream ss;
 	static_cast<device_sound_interface &>(device).sound_stream_update(
@@ -435,14 +483,20 @@ bool PS1AUDIO_IsEnabled()
 	return properties->Get_bool("ps1audio");
 }
 
-void PS1AUDIO_Init([[maybe_unused]] Section *sec)
+void PS1AUDIO_Init(Section *section)
 {
+	assert(section);
+	const auto prop = static_cast<Section_prop *>(section);
+
 	if (!PS1AUDIO_IsEnabled())
 		return;
 
-	ps1_dac = std::make_unique<Ps1Dac>();
-	ps1_synth = std::make_unique<Ps1Synth>();
+	ps1_dac = std::make_unique<Ps1Dac>(prop->Get_string("ps1audio_dac_filter"));
+
+	ps1_synth = std::make_unique<Ps1Synth>(
+	        prop->Get_string("ps1audio_filter"));
 
 	LOG_MSG("PS/1: Initialized IBM PS/1 Audio card");
-	sec->AddDestroyFunction(&PS1AUDIO_ShutDown, true);
+
+	section->AddDestroyFunction(&PS1AUDIO_ShutDown, true);
 }
