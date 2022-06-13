@@ -488,6 +488,7 @@ public:
 		                           DC_SILENCER_WAVES, DC_SILENCER_WAVE_HZ);
 
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
+
 		/* Register the sound channel */
 		spkr.chan = MIXER_AddChannel(&PCSPEAKER_CallBack,
 		                             spkr.rate,
@@ -496,6 +497,29 @@ public:
 		                              ChannelFeature::ChorusSend});
 		spkr.chan->SetPeakAmplitude(
 		        static_cast<uint32_t>(AMPLITUDE_POSITIVE));
+
+
+		// Setup filters
+		std::string filter_pref = section->Get_string("pcspeaker_filter");
+
+		if (filter_pref == "on") {
+			constexpr auto hp_order       = 3;
+			constexpr auto hp_cutoff_freq = 120.0f;
+			spkr.chan->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+			spkr.chan->SetHighPassFilter(FilterState::On);
+
+			constexpr auto lp_order       = 2;
+			constexpr auto lp_cutoff_freq = 4800.0f;
+			spkr.chan->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+			spkr.chan->SetLowPassFilter(FilterState::On);
+		} else {
+			if (filter_pref != "off")
+				LOG_WARNING("PCSPEAKER: Invalid filter setting '%s', using off",
+				            filter_pref.c_str());
+
+			spkr.chan->SetHighPassFilter(FilterState::Off);
+			spkr.chan->SetLowPassFilter(FilterState::Off);
+		}
 	}
 
 	PCSPEAKER(const PCSPEAKER&) = delete; // prevent copying
