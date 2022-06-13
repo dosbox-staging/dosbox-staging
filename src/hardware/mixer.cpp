@@ -421,7 +421,7 @@ void MixerChannel::AddSilence()
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
-	filter.state = state;
+	filters.lowpass.state = state;
 
 	static const std::map<FilterState, std::string> filter_state_map = {
 	        {FilterState::Off, "disabled"},
@@ -439,7 +439,7 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
                                           const uint16_t cutoff_freq)
 {
 	assert(order > 0 && order <= max_filter_order);
-	for (auto &f : filter.lpf)
+	for (auto &f : filters.lowpass.lpf)
 		f.setup(order, mixer.sample_rate, cutoff_freq);
 }
 
@@ -698,8 +698,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
 
-	const auto do_filter = filter.state == FilterState::On ||
-	                       filter.state == FilterState::ForcedOn;
+	const auto do_filter = filters.lowpass.state == FilterState::On ||
+	                       filters.lowpass.state == FilterState::ForcedOn;
 
 	const auto do_crossfeed = crossfeed.strength > 0.0f;
 
@@ -708,8 +708,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 		AudioFrame frame = {*pos++, *pos++};
 		if (do_filter) {
-			frame.left = filter.lpf[0].filter(frame.left);
-			frame.right = filter.lpf[1].filter(frame.right);
+			frame.left = filters.lowpass.lpf[0].filter(frame.left);
+			frame.right = filters.lowpass.lpf[1].filter(frame.right);
 		}
 		if (do_crossfeed)
 			frame = ApplyCrossfeed(frame);
