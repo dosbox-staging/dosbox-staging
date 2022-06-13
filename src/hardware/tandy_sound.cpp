@@ -258,7 +258,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 
 void TandyDAC::DmaCallback([[maybe_unused]] DmaChannel *, DMAEvent event)
 {
-	// LOG_MSG("TandyDAC: DMA event %d", event);
+	// LOG_MSG("TANDYDAC: DMA event %d", event);
 	if (event != DMA_REACHED_TC)
 		return;
 	dma.is_done = true;
@@ -272,7 +272,7 @@ void TandyDAC::ChangeMode()
 	constexpr auto dac_min_freq_hz = 4900;
 	constexpr auto dac_max_freq_hz = 49000;
 
-	// LOG_MSG("TandyDAC: Mode changed to %d", regs.mode);
+	// LOG_MSG("TANDYDAC: Mode changed to %d", regs.mode);
 	switch (regs.mode & 3) {
 	case 0: // joystick mode
 	case 1:
@@ -297,9 +297,7 @@ void TandyDAC::ChangeMode()
 					                  this, _1, _2);
 					dma.channel->Register_Callback(callback);
 					channel->Enable(true);
-					// LOG_MSG("Tandy DAC: playback started
-					// with freqency %f, volume %f", freq,
-					// vol);
+					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", freq, vol);
 				}
 			}
 		}
@@ -309,7 +307,7 @@ void TandyDAC::ChangeMode()
 
 uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 {
-	// LOG_MSG("TandyDAC: Read from port %04x", port);
+	// LOG_MSG("TANDYDAC: Read from port %04x", port);
 	switch (port) {
 	case 0xc4:
 		return (regs.mode & 0x77) | (regs.irq_activated ? 0x08 : 0x00);
@@ -318,7 +316,7 @@ uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 		return static_cast<uint8_t>(((regs.frequency >> 8) & 0xf) |
 		                            (regs.amplitude << 5));
 	}
-	LOG_MSG("Tandy DAC: Read from unknown %x", port);
+	LOG_MSG("TANDYDAC: Read from unknown %x", port);
 	return 0xff;
 }
 
@@ -372,17 +370,15 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		}
 		break;
 	}
-	// LOG_MSG("TandyDAC: Write %02x to port %04x", data, port);
-	// LOG_MSG("TandyDAC: Mode %02x, Control %02x, Frequency %04x, Amplitude
-	// %02x",
+	// LOG_MSG("TANDYDAC: Write %02x to port %04x", data, port);
+	// LOG_MSG("TANDYDAC: Mode %02x, Control %02x, Frequency %04x, Amplitude %02x",
 	//        regs.mode, regs.control, regs.frequency, regs.amplitude);
 }
 
 void TandyDAC::AudioCallback(uint16_t requested)
 {
 	if (!channel || !dma.channel) {
-		DEBUG_LOG_MSG(
-		        "TANDY: Skipping update until the DAC is initialized");
+		DEBUG_LOG_MSG("TANDY: Skipping update until the DAC is initialized");
 		return;
 	}
 	const bool should_read = is_enabled && (regs.mode & 0x0c) == 0x0c &&
