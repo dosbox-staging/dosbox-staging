@@ -250,15 +250,6 @@ Note, the first time you build a configuration, dependencies will be built
 automatically and stored in the `vcpkg_installed` directory. This can take 
 a significant length of time.
 
-Occasionally, dosbox-staging will increase dependency requirements such that 
-a newer version of vcpkg is required. To upgrade, open powershell to the 
-`vcpkg` directory and run:
-
-``` powershell
-PS:\> git pull
-PS:\> .\bootstrap-vcpkg.bat
-```
-
 [vcpkg]: https://github.com/microsoft/vcpkg
 
 ### Windows (MSYS2), macOS (MacPorts), Haiku, others
