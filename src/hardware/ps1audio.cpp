@@ -150,7 +150,7 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 		setup_filter(channel);
 	} else {
 		if (filter_choice != "off")
-			LOG_WARNING("PSDAC: Invalid filter setting '%s', using off",
+			LOG_WARNING("PS1DAC: Invalid filter setting '%s', using off",
 			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -470,7 +470,7 @@ static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
 static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
 {
-	LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
+	LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.reset();
 	ps1_synth.reset();
 }
@@ -496,7 +496,7 @@ void PS1AUDIO_Init(Section *section)
 	ps1_synth = std::make_unique<Ps1Synth>(
 	        prop->Get_string("ps1audio_filter"));
 
-	LOG_MSG("PS/1: Initialized IBM PS/1 Audio card");
+	LOG_MSG("PS1: Initialized IBM PS/1 Audio card");
 
 	section->AddDestroyFunction(&PS1AUDIO_ShutDown, true);
 }
