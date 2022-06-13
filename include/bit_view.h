@@ -26,7 +26,9 @@ The bit_view class is a wrapper around a data value, typically a union member:
 
 union Register {
         uint8_t data = 0;
-        bit_view<1, 1> first_bit;
+        bit_view<0, 1> first_bit;     // value is 0 or 1
+        bit_view<1, 6> middle_6_bits; // value is 0 to 2^6-1
+        bit_view<7, 1> last_bit;      // value is 0 or 1
 };
 
 It provides a view into a subset of its bits allowing them to be
