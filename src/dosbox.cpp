@@ -823,11 +823,13 @@ void DOSBOX_Init() {
 	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);
 
+	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
-	Pbool = secprop->Add_bool("pcspeaker", when_idle, true);
-	Pbool->Set_help("Enable PC-Speaker emulation.");
 
-	// Basis for the default PC-Speaker sample generation rate:
+	Pbool = secprop->Add_bool("pcspeaker", when_idle, true);
+	Pbool->Set_help("Enable PC speaker emulation.");
+
+	// Basis for the default PC speaker sample generation rate:
 	//   "With the PC speaker, typically a 6-bit DAC with a maximum value of
 	//   63
 	//    is used at a sample rate of 18,939.4 Hz."
@@ -840,7 +842,7 @@ void DOSBOX_Init() {
 	// the authors.
 	pint = secprop->Add_int("pcrate", when_idle, 18939);
 	pint->SetMinMax(8000, 48000);
-	pint->Set_help("Sample rate of the PC-Speaker sound generation.");
+	pint->Set_help("Sample rate of the PC speaker sound generation.");
 
 	const char *zero_offset_opts[] = {"auto", "true", "false", 0};
 	pstring = secprop->Add_string("zero_offset", when_idle, zero_offset_opts[0]);
@@ -849,6 +851,11 @@ void DOSBOX_Init() {
 	        "Neutralizes and prevents the PC speaker's DC-offset from harming other sources.\n"
 	        "'auto' enables this for non-Windows systems and disables it on Windows.\n"
 	        "If your OS performs its own DC-offset correction, then set this to 'false'.");
+
+	Pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the PC speaker output:\n"
+	                  "  on:   Filter the output (default).\n"
+	                  "  off:  Don't filter the output.");
 
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, true);
