@@ -21,6 +21,7 @@
 
 #include <cerrno>
 #include <cassert>
+#include <array>
 #include <new>
 
 #include "mem_unaligned.h"
@@ -125,7 +126,7 @@ static uint8_t *cache_code_start_ptr = nullptr;
 static uint8_t *cache_code = nullptr;
 static uint8_t *cache_code_link_blocks = nullptr;
 
-static CacheBlock *cache_blocks = nullptr;
+static std::array<CacheBlock, CACHE_BLOCKS> cache_blocks = {};
 static CacheBlock link_blocks[2]; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
@@ -452,7 +453,7 @@ public:
 		else cache.last_page=prev;
 		next=cache.free_pages;
 		cache.free_pages=this;
-		prev=0;
+		prev=nullptr;
 	}
 
 	void ClearRelease()
@@ -464,7 +465,7 @@ public:
 			while (block==NULL)
 				block=*++map;
 			CacheBlock * nextblock=block->hash.next;
-			block->page.handler=0;			// no need, full clear
+			block->page.handler=nullptr;			// no need, full clear
 			block->Clear();
 			block=nextblock;
 		}
@@ -530,7 +531,7 @@ static CacheBlock *cache_getblock()
 	if (!ret)
 		E_Exit("Ran out of CacheBlocks");
 	cache.block.free=ret->cache.next;
-	ret->cache.next=0;
+	ret->cache.next=nullptr;
 	return ret;
 }
 
@@ -540,12 +541,12 @@ void CacheBlock::Clear()
 	// check if this is not a cross page block
 	if (hash.index) for (ind=0;ind<2;ind++) {
 		CacheBlock * fromlink=link[ind].from;
-		link[ind].from=0;
+		link[ind].from=nullptr;
 		while (fromlink) {
 			CacheBlock * nextlink=fromlink->link[ind].next;
 			// clear the next-link and let the block point to the
 			// standard linkcode
-			fromlink->link[ind].next=0;
+			fromlink->link[ind].next=nullptr;
 			fromlink->link[ind].to=&link_blocks[ind];
 
 			fromlink=nextlink;
@@ -568,14 +569,14 @@ void CacheBlock::Clear()
 	}
 	if (crossblock) {
 		// clear out the crossblock (in the page before) as well
-		crossblock->crossblock=0;
+		crossblock->crossblock=nullptr;
 		crossblock->Clear();
-		crossblock=0;
+		crossblock=nullptr;
 	}
 	if (page.handler) {
 		// clear out the code page handler
 		page.handler->DelCacheBlock(this);
-		page.handler=0;
+		page.handler=nullptr;
 	}
 	if (cache.wmapmask){
 		free(cache.wmapmask);
@@ -618,10 +619,10 @@ static void cache_closeblock()
 	// links point to the default linking code
 	block->link[0].to=&link_blocks[0];
 	block->link[1].to=&link_blocks[1];
-	block->link[0].from=0;
-	block->link[1].from=0;
-	block->link[0].next=0;
-	block->link[1].next=0;
+	block->link[0].from=nullptr;
+	block->link[1].from=nullptr;
+	block->link[0].next=nullptr;
+	block->link[1].next=nullptr;
 	// close the block with correct alignment
 	Bitu written = (Bitu)(cache.pos - block->cache.start);
 	if (written>block->cache.size) {
@@ -743,7 +744,6 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
 static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
-static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
 constexpr bool is_64bit_platform = sizeof(void *) == 8;
 
 static inline void dyn_mem_adjust(void *&ptr, size_t &size)
@@ -823,24 +823,16 @@ static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
 static bool cache_initialized = false;
 
 static void cache_init(bool enable) {
-	Bits i;
 	if (enable) {
 		// see if cache is already initialized
 		if (cache_initialized) return;
 		cache_initialized = true;
-		if (cache_blocks == nullptr) {
-			// allocate the cache blocks memory
-			cache_blocks = static_cast<CacheBlock *>(malloc(cache_blocks_total_bytes));
-			if (!cache_blocks)
-				E_Exit("Allocating cache_blocks has failed");
-			memset(cache_blocks, 0, cache_blocks_total_bytes);
-			cache.block.free=&cache_blocks[0];
-			// initialize the cache blocks
-			for (i=0;i<CACHE_BLOCKS-1;i++) {
-				cache_blocks[i].link[0].to = (CacheBlock *)1;
-				cache_blocks[i].link[1].to = (CacheBlock *)1;
-				cache_blocks[i].cache.next = &cache_blocks[i + 1];
-			}
+		cache.block.free=&cache_blocks[0];
+		// initialize the cache blocks
+		for (int i=0;i<CACHE_BLOCKS-1;i++) {
+			cache_blocks[i].link[0].to = (CacheBlock *)1;
+			cache_blocks[i].link[1].to = (CacheBlock *)1;
+			cache_blocks[i].cache.next = &cache_blocks[i + 1];
 		}
 		if (cache_code_start_ptr == nullptr) {
 			// allocate the code cache memory
@@ -885,7 +877,7 @@ static void cache_init(bool enable) {
 			cache.block.active=block;
 			block->cache.start=&cache_code[0];
 			block->cache.size=CACHE_TOTAL;
-			block->cache.next = 0; // last block in the list
+			block->cache.next = nullptr; // last block in the list
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
@@ -911,11 +903,11 @@ static void cache_init(bool enable) {
 		dyn_mem_execute(cache_addr, cache_bytes);
 		dyn_cache_invalidate(cache_addr, cache_bytes);
 
-		cache.free_pages=0;
-		cache.last_page=0;
-		cache.used_pages=0;
+		cache.free_pages=nullptr;
+		cache.last_page=nullptr;
+		cache.used_pages=nullptr;
 		// setup the code pages
-		for (i=0;i<CACHE_PAGES;i++) {
+		for (int i=0;i<CACHE_PAGES;i++) {
 			CodePageHandler *newpage = new CodePageHandler();
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
