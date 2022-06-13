@@ -14,7 +14,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.18.59866.202-amd64.deb
+      debfile: pvs-studio-7.19.61166.216-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
