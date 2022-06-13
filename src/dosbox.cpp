@@ -865,7 +865,7 @@ void DOSBOX_Init() {
 	Pstring = secprop->Add_string("tandy", when_idle, "auto");
 	Pstring->Set_values(tandys);
 	Pstring->Set_help(
-	        "Enable Tandy Sound System emulation. "
+	        "Enable Tandy Sound System emulation."
 	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
 
 	Pstring = secprop->Add_string("tandy_filter", when_idle, "on");
@@ -883,6 +883,11 @@ void DOSBOX_Init() {
 
 	Pbool = secprop->Add_bool("disney", when_idle, true);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
+
+	Pstring = secprop->Add_string("disney_filter", when_idle, "on");
+	Pstring->Set_help("Filter for the Disney audio output:\n"
+	                  "  on:   Filter the output (default).\n"
+	                  "  off:  Don't filter the output.");
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, true);
