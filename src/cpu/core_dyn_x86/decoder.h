@@ -44,10 +44,10 @@ static struct DynDecode {
 		Bitu first;
 	} page;
 	struct {
-		Bitu val;
-		Bitu mod;
-		Bitu rm;
-		Bitu reg;
+		uint_fast8_t val;
+		uint_fast8_t mod;
+		uint_fast8_t rm;
+		uint_fast8_t reg;
 	} modrm;
 	DynReg * segprefix;
 } decode;
