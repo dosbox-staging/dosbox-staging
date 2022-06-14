@@ -94,7 +94,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// real thing by ear only.
 	if (filter_choice == "on") {
 		constexpr auto order       = 1;
-		constexpr auto cutoff_freq = 6000.0f;
+		constexpr auto cutoff_freq = 6000;
 		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
