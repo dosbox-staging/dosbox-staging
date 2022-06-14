@@ -100,7 +100,6 @@ struct VsyncPreference {
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
-	PRIORITY_LEVEL_PAUSE,
 	PRIORITY_LEVEL_LOWEST,
 	PRIORITY_LEVEL_LOWER,
 	PRIORITY_LEVEL_NORMAL,
@@ -200,9 +199,13 @@ struct SDL_Block {
 	} opengl = {};
 #endif // C_OPENGL
 	struct {
-		PRIORITY_LEVELS focus;
-		PRIORITY_LEVELS nofocus;
+		PRIORITY_LEVELS active   = PRIORITY_LEVEL_AUTO;
+		PRIORITY_LEVELS inactive = PRIORITY_LEVEL_AUTO;
 	} priority = {};
+
+	bool mute_when_inactive  = false;
+	bool pause_when_inactive = false;
+
 	SDL_Rect clip = {0, 0, 0, 0};
 	SDL_Surface *surface = nullptr;
 	SDL_Window *window = nullptr;
