@@ -89,8 +89,13 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend});
 
+	// The filter parameters have been tweaked by analysing real hardware
+	// recordings. The results are virtually undistinguishable from the
+	// real thing by ear only.
 	if (filter_choice == "on") {
-		channel->ConfigureLowPassFilter(1, 6000);
+		constexpr auto order       = 1;
+		constexpr auto cutoff_freq = 6000.0f;
+		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
 		if (filter_choice != "off")
