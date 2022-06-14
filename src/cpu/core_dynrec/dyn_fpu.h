@@ -374,7 +374,7 @@ static void dyn_fpu_esc3()
 			switch (decode.modrm.rm) {
 			case 0x00:				//FNENI
 			case 0x01:				//FNDIS
-				LOG(LOG_FPU, LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %" PRIuPTR,
+				LOG(LOG_FPU, LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %u",
 				                        decode.modrm.rm);
 				break;
 			case 0x02:				//FNCLEX FCLEX
@@ -388,7 +388,7 @@ static void dyn_fpu_esc3()
 //				LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 				break;
 			default:
-				E_Exit("ESC 3:ILLEGAL OPCODE group %" PRIuPTR " subfunction %" PRIuPTR,
+				E_Exit("ESC 3:ILLEGAL OPCODE group %u subfunction %u",
 				       decode.modrm.reg, decode.modrm.rm);
 			}
 			break;

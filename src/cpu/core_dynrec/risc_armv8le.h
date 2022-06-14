@@ -836,7 +836,7 @@ static void inline gen_fill_branch(const uint8_t* data) {
 #if C_DEBUG
 	Bits len=cache.pos-data;
 	if (len<0) len=-len;
-	if (len>=0x00100000) LOG_MSG("Big jump %d",len);
+	if (len>=0x00100000) LOG_MSG("Big jump %ld",len);
 #endif
 	uint32_t offset = (uint32_t)(cache.pos-data) << 3;
 	cache_addw(((uint16_t)offset&~0x1f)|(data[0]&0x1f),data);

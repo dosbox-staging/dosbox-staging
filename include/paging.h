@@ -74,7 +74,7 @@ public:
 	virtual bool writew_checked(PhysPt addr, uint16_t val);
 	virtual bool writed_checked(PhysPt addr, uint32_t val);
 
-	uint8_t flags = 0x0;
+	uint_fast8_t flags = 0x0;
 };
 
 /* Some other functions */

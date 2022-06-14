@@ -43,8 +43,8 @@ struct LazyFlags {
 	GenReg32 var1 = {};
 	GenReg32 var2 = {};
 	GenReg32 res = {};
-	uint8_t type  = 0;
-	uint8_t oldcf = 0;
+	uint_fast8_t type  = 0;
+	uint_fast8_t oldcf = 0;
 };
 
 extern LazyFlags lflags;
