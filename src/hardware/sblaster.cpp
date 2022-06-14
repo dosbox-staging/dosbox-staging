@@ -398,6 +398,9 @@ static void configure_sb_filter()
 		sb.chan->EnableZeroOrderHoldUpsampler();
 	};
 
+	// The filter parameters have been tweaked by analysing real hardware
+	// recordings. The results are virtually undistinguishable from the real
+	// thing by ear only.
 	switch (sb.sb_filter_type) {
 	case FilterType::None:
 		disable_filter();
@@ -446,6 +449,9 @@ static void configure_opl_filter()
 	if (!chan)
 		return;
 
+	// The filter parameters have been tweaked by analysing real hardware
+	// recordings. The results are virtually undistinguishable from the real
+	// thing by ear only.
 	switch (sb.opl_filter_type) {
 	case FilterType::SB1:
 	case FilterType::SB2: set_filter(chan, 1, 12000); break;
