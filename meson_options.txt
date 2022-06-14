@@ -66,3 +66,6 @@ option('narrowing_warnings', type : 'boolean', value : false,
 
 option('autovec_info', type : 'boolean', value : false,
        description : 'Inform about auto-vectorizion results')
+
+option('asm', type : 'boolean', value : false,
+       description : 'Save intermediate assembly output')

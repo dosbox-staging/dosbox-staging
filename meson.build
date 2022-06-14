@@ -72,6 +72,11 @@ if get_option('buildtype') == 'release'
                   '-fdata-sections']
 endif
 
+if get_option('asm')
+  extra_flags += ['--save-temps',
+                  '/FAs']
+endif
+
 if host_machine.system() == 'windows'
   extra_flags += '-Wno-pedantic-ms-format'
 endif
