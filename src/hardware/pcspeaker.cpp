@@ -509,6 +509,11 @@ public:
 		std::string filter_pref = section->Get_string("pcspeaker_filter");
 
 		if (filter_pref == "on") {
+			// The filters are meant to emulate the bandwidth limited
+			// sound of the small PC speaker. This more accurately
+			// reflects people's actual experience of the PC speaker
+			// sound than the raw unfiltered output, and it's a lot
+			// more pleasant to listen to, especially in headphones.
 			constexpr auto hp_order       = 3;
 			constexpr auto hp_cutoff_freq = 120.0f;
 			spkr.chan->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
