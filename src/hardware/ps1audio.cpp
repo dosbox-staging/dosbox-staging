@@ -409,7 +409,7 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	if (filter_choice == "on") {
 		// The filter parameters have been tweaked by analysing real
 		// hardware recordings. The results are virtually
-		// undistinguishable from the real thing by ear only.
+		// indistinguishable from the real thing by ear only.
 		setup_filter(channel);
 	} else {
 		if (filter_choice != "off")
