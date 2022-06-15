@@ -1389,11 +1389,30 @@ void MIXER_SetState(MixerState requested)
 	// use MIXER_Mix_NoSound (to throw away frames instead of queuing).
 }
 
+void MIXER_CloseAudioDevice()
+{
+	// Stop either mixing method
+	TIMER_DelTickHandler(MIXER_Mix);
+	TIMER_DelTickHandler(MIXER_Mix_NoSound);
+
+	std::lock_guard lock(mixer.channel_mutex);
+	for (auto &it : mixer.channels)
+		it.second->Enable(false);
+
+	if (mixer.sdldevice) {
+		SDL_CloseAudioDevice(mixer.sdldevice);
+		mixer.sdldevice = 0;
+	}
+	mixer.state = MixerState::Uninitialized;
+}
+
 void MIXER_Init(Section *sec)
 {
+	MIXER_CloseAudioDevice();
+
 	sec->AddDestroyFunction(&MIXER_Stop);
 
-	Section_prop * section=static_cast<Section_prop *>(sec);
+	Section_prop *section = static_cast<Section_prop *>(sec);
 	/* Read out config section */
 
 	mixer.sample_rate = section->Get_int("rate");
@@ -1472,22 +1491,6 @@ void MIXER_Init(Section *sec)
 	fill_8to16_lut();
 }
 
-void MIXER_CloseAudioDevice()
-{
-	assert(mixer.state != MixerState::Uninitialized);
-
-	std::lock_guard lock(mixer.channel_mutex);
-	for (auto &it : mixer.channels)
-		it.second->Enable(false);
-
-	if (mixer.state != MixerState::NoSound) {
-		if (mixer.sdldevice != 0) {
-			SDL_CloseAudioDevice(mixer.sdldevice);
-			mixer.sdldevice = 0;
-		}
-	}
-}
-
 // Toggle the mixer on/off when a true-bool is passed.
 static void ToggleMute(const bool was_pressed)
 {
@@ -1528,10 +1531,11 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	constexpr bool default_allow_negotiate = true;
 #endif
 
+	constexpr auto always        = Property::Changeable::Always;
+	constexpr auto when_idle     = Property::Changeable::WhenIdle;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto bool_prop = sec_prop.Add_bool("nosound", only_at_start, false);
+	auto bool_prop = sec_prop.Add_bool("nosound", always, false);
 	assert(bool_prop);
 	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
 
@@ -1576,7 +1580,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 void MIXER_AddConfigSection(const config_ptr_t &conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mixer", &MIXER_Init);
+	Section_prop *sec = conf->AddSection_prop("mixer", &MIXER_Init, true);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 }
