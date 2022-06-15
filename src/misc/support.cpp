@@ -624,3 +624,13 @@ bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t se
 		return false;
 	return true;
 }
+
+double decibel_to_gain(const double decibel)
+{
+	return pow(10.0, decibel / 20.0);
+}
+
+double gain_to_decibel(const double gain)
+{
+	return 20.0 * log(gain) / log(10.0);
+}
