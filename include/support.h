@@ -400,4 +400,7 @@ constexpr auto enum_val(enum_t e)
 	return static_cast<std::underlying_type_t<enum_t>>(e);
 }
 
+double decibel_to_gain(const double decibel);
+double gain_to_decibel(const double gain);
+
 #endif
