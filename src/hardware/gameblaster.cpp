@@ -90,7 +90,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	                            ChannelFeature::ChorusSend});
 
 	// The filter parameters have been tweaked by analysing real hardware
-	// recordings. The results are virtually undistinguishable from the
+	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
 	if (filter_choice == "on") {
 		constexpr auto order       = 1;

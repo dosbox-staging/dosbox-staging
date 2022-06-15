@@ -399,7 +399,7 @@ static void configure_sb_filter()
 	};
 
 	// The filter parameters have been tweaked by analysing real hardware
-	// recordings. The results are virtually undistinguishable from the real
+	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
 	switch (sb.sb_filter_type) {
 	case FilterType::None:
@@ -450,7 +450,7 @@ static void configure_opl_filter()
 		return;
 
 	// The filter parameters have been tweaked by analysing real hardware
-	// recordings. The results are virtually undistinguishable from the real
+	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
 	switch (sb.opl_filter_type) {
 	case FilterType::SB1:
