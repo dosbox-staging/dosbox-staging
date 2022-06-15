@@ -429,9 +429,9 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 {
 	filters.highpass.state = state;
 
-	auto it = filter_state_map.find(state);
+	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
-		auto filter_state = it->second;
+		const auto filter_state = it->second;
 		LOG_MSG("MIXER: %s channel highpass filter %s",
 		        name.c_str(),
 		        filter_state.c_str());
@@ -442,9 +442,9 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 {
 	filters.lowpass.state = state;
 
-	auto it = filter_state_map.find(state);
+	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
-		auto filter_state = it->second;
+		const auto filter_state = it->second;
 		LOG_MSG("MIXER: %s channel lowpass filter %s",
 		        name.c_str(),
 		        filter_state.c_str());
