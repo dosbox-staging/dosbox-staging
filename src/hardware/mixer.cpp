@@ -1334,11 +1334,11 @@ private:
 			const auto vol = to_finite<float>(vol_pref);
 			if (std::isfinite(vol)) {
 				if (is_decibel)
-					vol_out = powf(10.0f, vol / 20.0f);
+					vol_out = static_cast<float>(decibel_to_gain(vol));
 				else
 					vol_out = vol / 100.0f;
 
-				const auto min_vol = powf(10.0f, -99.99f / 20.0f);
+				const auto min_vol = static_cast<float>(decibel_to_gain(-99.99));
 				constexpr auto max_vol = 99.99f;
 				if (vol_out < min_vol)
 					vol_out = 0;
@@ -1367,8 +1367,8 @@ private:
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
-			         20.0f * log(volume.left) / log(10.0f),
-			         20.0f * log(volume.right) / log(10.0f),
+			         gain_to_decibel(volume.left),
+			         gain_to_decibel(volume.right),
 			         rate,
 			         mode.c_str(),
 			         xfeed.c_str());
