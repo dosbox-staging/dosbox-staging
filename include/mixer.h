@@ -71,6 +71,11 @@ struct AudioFrame {
 		assert(i < 2);
 		return i == 0 ? left : right;
 	}
+	const float &operator[](std::size_t i) const
+	{
+		assert(i < 2);
+		return i == 0 ? left : right;
+	}
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
