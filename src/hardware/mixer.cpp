@@ -30,7 +30,6 @@
 #include <cstdint>
 #include <cstring>
 #include <map>
-#include <mutex>
 #include <set>
 #include <sys/types.h>
 
@@ -99,7 +98,6 @@ struct mixer_t {
 
 	std::array<float, 2> mastervol = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
-	std::mutex channel_mutex = {}; // use whenever accessing channels
 
 	// Counters accessed by multiple threads
 	std::atomic<work_index_t> pos = 0;
@@ -120,7 +118,21 @@ struct mixer_t {
 
 static struct mixer_t mixer = {};
 
-uint8_t MixTemp[MIXER_BUFSIZE] = {};
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
+
+alignas(PAGESIZE) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+
+static void MIXER_LockAudioDevice()
+{
+	SDL_LockAudioDevice(mixer.sdldevice);
+}
+
+static void MIXER_UnlockAudioDevice()
+{
+	SDL_UnlockAudioDevice(mixer.sdldevice);
+}
 
 MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
                            const std::set<ChannelFeature> &_features)
@@ -187,26 +199,19 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate", name,
 		        chan_rate, chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
 
-	std::lock_guard lock(mixer.channel_mutex);
+	MIXER_LockAudioDevice();
 	mixer.channels[name] = chan; // replace the old, if it exists
+	MIXER_UnlockAudioDevice();
 	return chan;
 }
 
 mixer_channel_t MIXER_FindChannel(const char *name)
 {
-	std::lock_guard lock(mixer.channel_mutex);
+	MIXER_LockAudioDevice();
 	auto it = mixer.channels.find(name);
-	return (it != mixer.channels.end()) ? it->second : nullptr;
-}
-
-static void MIXER_LockAudioDevice()
-{
-	SDL_LockAudioDevice(mixer.sdldevice);
-}
-
-static void MIXER_UnlockAudioDevice()
-{
-	SDL_UnlockAudioDevice(mixer.sdldevice);
+	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
+	MIXER_UnlockAudioDevice();
+	return chan;
 }
 
 void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
@@ -693,7 +698,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 {
 	assert(frames > 0);
 
-	MIXER_LockAudioDevice();
 	last_samples_were_stereo = stereo;
 
 	auto &convert_out = resampler.enabled ? mixer.resample_temp
@@ -718,6 +722,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		mixer.resample_out.resize(out_frames * 2);  // only shrinks
 	}
 
+	MIXER_LockAudioDevice();
 	// Optionally low-pass filter, apply crossfeed, then mix the results
 	// to the master output
 	auto pos = mixer.resample_out.begin();
@@ -938,10 +943,8 @@ static constexpr int calc_tickadd(const int freq)
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(int needed)
 {
-	std::unique_lock lock(mixer.channel_mutex);
 	for (auto &it : mixer.channels)
 		it.second->Mix(needed);
-	lock.unlock();
 
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
 		int16_t convert[1024][2];
@@ -976,13 +979,13 @@ static void MIXER_Mix()
 
 static void MIXER_ReduceChannelsDoneCounts(const int at_most)
 {
-	std::lock_guard lock(mixer.channel_mutex);
 	for (auto &it : mixer.channels)
 		it.second->done -= std::min(it.second->done.load(), at_most);
 }
 
 static void MIXER_Mix_NoSound()
 {
+	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	/* Clear piece we've just generated */
 	for (auto i = 0; i < mixer.needed; ++i) {
@@ -997,6 +1000,7 @@ static void MIXER_Mix_NoSound()
 	mixer.needed = (mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
 	mixer.done=0;
+	MIXER_UnlockAudioDevice();
 }
 
 #define INDEX_SHIFT_LOCAL 14
@@ -1151,6 +1155,7 @@ public:
 		mixer_channel_t curr_chan = {};
 		auto is_master = false;
 
+		MIXER_LockAudioDevice();
 		for (auto &arg : args) {
 			// Does this argument set the target channel of
 			// subsequent commands?
@@ -1183,7 +1188,6 @@ public:
 
 			// Global commands that apply to all channels
 			if (!is_master && !curr_chan) {
-				std::lock_guard lock(mixer.channel_mutex);
 
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
@@ -1196,14 +1200,12 @@ public:
 			// Only setting the volume is allowed for the
 			// MASTER channel
 			} else if (is_master) {
-				std::lock_guard lock(mixer.channel_mutex);
 				ParseVolume(arg,
 				            mixer.mastervol[0],
 				            mixer.mastervol[1]);
 
 			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
-				std::lock_guard lock(mixer.channel_mutex);
 
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
@@ -1222,6 +1224,7 @@ public:
 				curr_chan->UpdateVolume();
 			}
 		}
+		MIXER_UnlockAudioDevice();
 
 		if (showStatus)
 			ShowMixerStatus();
@@ -1313,11 +1316,10 @@ private:
 			         xfeed.c_str());
 		};
 
-		std::lock_guard lock(mixer.channel_mutex);
-
 		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
 		                 .c_str());
 
+		MIXER_LockAudioDevice();
 		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
 		             mixer.mastervol[0],
 		             mixer.mastervol[1],
@@ -1351,6 +1353,7 @@ private:
 			             mode,
 			             xfeed);
 		}
+		MIXER_UnlockAudioDevice();
 	}
 };
 
@@ -1428,9 +1431,10 @@ void MIXER_CloseAudioDevice()
 	TIMER_DelTickHandler(MIXER_Mix);
 	TIMER_DelTickHandler(MIXER_Mix_NoSound);
 
-	std::lock_guard lock(mixer.channel_mutex);
+	MIXER_LockAudioDevice();
 	for (auto &it : mixer.channels)
 		it.second->Enable(false);
+	MIXER_UnlockAudioDevice();
 
 	if (mixer.sdldevice) {
 		SDL_CloseAudioDevice(mixer.sdldevice);
