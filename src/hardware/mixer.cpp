@@ -118,14 +118,18 @@ struct mixer_t {
 
 static struct mixer_t mixer = {};
 
-alignas(sizeof(void *)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
 
-static inline void MIXER_LockAudioDevice()
+alignas(PAGESIZE) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+
+static void MIXER_LockAudioDevice()
 {
 	SDL_LockAudioDevice(mixer.sdldevice);
 }
 
-static inline void MIXER_UnlockAudioDevice()
+static void MIXER_UnlockAudioDevice()
 {
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
@@ -973,7 +977,7 @@ static void MIXER_Mix()
 	MIXER_UnlockAudioDevice();
 }
 
-static inline void MIXER_ReduceChannelsDoneCounts(const int at_most)
+static void MIXER_ReduceChannelsDoneCounts(const int at_most)
 {
 	for (auto &it : mixer.channels)
 		it.second->done -= std::min(it.second->done.load(), at_most);
