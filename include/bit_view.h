@@ -118,7 +118,7 @@ private:
 			assert(rhs_value >= 0);
 
 		// detect assignment of values that are too large
-		constexpr uint64_t max_data_value = (1u << view_width);
+		[[maybe_unused]] constexpr uint64_t max_data_value = (1u << view_width);
 		assert(static_cast<uint64_t>(rhs_value) < max_data_value);
 	}
 
