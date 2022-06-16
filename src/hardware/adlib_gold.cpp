@@ -352,8 +352,25 @@ AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame) noe
 AudioFrame StereoProcessor::Process(const AudioFrame &frame) noexcept
 {
 	auto out_frame = ProcessSourceSelection(frame);
+
+	assert(!isnan(out_frame.left)); assert(!isnan(out_frame.right));
+	assert(!isinf(out_frame.left)); assert(!isinf(out_frame.right));
+	assert(fpclassify(out_frame.left) != FP_SUBNORMAL);
+	assert(fpclassify(out_frame.right) != FP_SUBNORMAL);
+
 	out_frame      = ProcessShelvingFilters(out_frame);
+
+	assert(!isnan(out_frame.left)); assert(!isnan(out_frame.right));
+	assert(!isinf(out_frame.left)); assert(!isinf(out_frame.right));
+	assert(fpclassify(out_frame.left) != FP_SUBNORMAL);
+	assert(fpclassify(out_frame.right) != FP_SUBNORMAL);
+
 	out_frame      = ProcessStereoProcessing(out_frame);
+
+	assert(!isnan(out_frame.left)); assert(!isnan(out_frame.right));
+	assert(!isinf(out_frame.left)); assert(!isinf(out_frame.right));
+	assert(fpclassify(out_frame.left) != FP_SUBNORMAL);
+	assert(fpclassify(out_frame.right) != FP_SUBNORMAL);
 
 	out_frame.left *= gain.left;
 	out_frame.right *= gain.right;
@@ -394,6 +411,12 @@ void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) no
 		                    static_cast<float>(in[1])};
 
 		const auto wet = surround_processor->Process(frame);
+
+		assert(!isnan(wet.left)); assert(!isnan(wet.right));
+		assert(!isinf(wet.left)); assert(!isinf(wet.right));
+		assert(fpclassify(wet.left) != FP_SUBNORMAL);
+		assert(fpclassify(wet.right) != FP_SUBNORMAL);
+
 		// Additional wet signal level boost to make the emulated
 		// sound more closely resemble real hardware recordings.
 		constexpr auto wet_boost = 1.6f;
