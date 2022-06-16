@@ -31,7 +31,6 @@
 #include <set>
 
 #include "envelope.h"
-#include "mixer.h"
 
 #include "../src/libs/iir1/Iir.h"
 

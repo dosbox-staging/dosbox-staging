@@ -265,7 +265,7 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 	case StereoProcessorControlReg::Treble: {
 		const auto value   = data & filter_control_mask;
 		const auto gain_db = calc_filter_gain_db(value);
-		SetHighShelfGain(calc_filter_gain_db(data + 1));
+		SetHighShelfGain(calc_filter_gain_db(data));
 
 		DEBUG_LOG_MSG("ADLIBGOLD: Stereo: Treble gain set to %.2fdB (value %d)",
 		              gain_db,

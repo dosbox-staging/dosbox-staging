@@ -113,6 +113,8 @@ struct mixer_t {
 	SDL_AudioDeviceID sdldevice = 0;
 
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
+
+	std::array<Iir::Butterworth::HighPass<2>, 2> highpass_filter = {};
 };
 
 static struct mixer_t mixer = {};
@@ -853,7 +855,7 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
 		const auto sample = prev_frame.left + ((diff * diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][mapped_output_left] += sample * volmul.left;
+		mixer.work[mixpos][mapped_output_left]  += sample * volmul.left;
 		mixer.work[mixpos][mapped_output_right] += sample * volmul.right;
 		mixpos++;
 	}
@@ -1008,23 +1010,42 @@ static void MIXER_MixData(int needed)
 	for (auto &it : mixer.channels)
 		it.second->Mix(needed);
 
+	// Master high-pass filter
+	const auto added = check_cast<work_index_t>(
+	        std::min(needed - mixer.done, 1024));
+	auto pos = check_cast<work_index_t>((mixer.pos + mixer.done) & MIXER_BUFMASK);
+
+	for (work_index_t i = 0; i < added; i++) {
+		for (auto ch = 0; ch < 2; ++ch) {
+			mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
+			        mixer.work[pos][ch]);
+		}
+		pos = (pos + 1) & MIXER_BUFMASK;
+	}
+
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
 		int16_t convert[1024][2];
-		const auto added = check_cast<work_index_t>(std::min(needed - mixer.done, 1024));
-		auto readpos = check_cast<work_index_t>((mixer.pos + mixer.done) & MIXER_BUFMASK);
+		auto readpos = check_cast<work_index_t>((mixer.pos + mixer.done) &
+		                                        MIXER_BUFMASK);
+
 		for (work_index_t i = 0; i < added; i++) {
-			const auto sample_1 = mixer.work[readpos][0];
-			const auto sample_2 = mixer.work[readpos][1];
-			const auto s1 = static_cast<uint16_t>(MIXER_CLIP(static_cast<int>(sample_1)));
-			const auto s2 = static_cast<uint16_t>(MIXER_CLIP(static_cast<int>(sample_2)));
-			convert[i][0] = static_cast<int16_t>(host_to_le16(s1));
-			convert[i][1] = static_cast<int16_t>(host_to_le16(s2));
+			const auto left = static_cast<uint16_t>(MIXER_CLIP(
+			        static_cast<int>(mixer.work[readpos][0])));
+
+			const auto right = static_cast<uint16_t>(MIXER_CLIP(
+			        static_cast<int>(mixer.work[readpos][1])));
+
+			convert[i][0] = static_cast<int16_t>(host_to_le16(left));
+			convert[i][1] = static_cast<int16_t>(host_to_le16(right));
+
 			readpos = (readpos + 1) & MIXER_BUFMASK;
 		}
-		CAPTURE_AddWave(mixer.sample_rate, added, reinterpret_cast<int16_t*>(convert));
+		CAPTURE_AddWave(mixer.sample_rate,
+		                added,
+		                reinterpret_cast<int16_t *>(convert));
 	}
-	//Reset the the tick_add for constant speed
-	if( Mixer_irq_important() )
+	// Reset the the tick_add for constant speed
+	if (Mixer_irq_important())
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 	mixer.done = needed;
 }
@@ -1082,7 +1103,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 	auto sample = 0;
 	/* Enough room in the buffer ? */
 	if (mixer.done < need) {
-		//LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+//		LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done.load(), mixer.min_needed.load());
 		if ((need - mixer.done) > (need >> 7)) // Max 1 percent stretch.
 			return;
 		reduce = mixer.done;
@@ -1103,15 +1124,13 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 				left = (mixer.min_needed - left);
 				left = 1 + (2 * left) / mixer.min_needed; // left=1,2,3
 			}
-			//LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+//			LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done.load(), mixer.min_needed.load(), left);
 			reduce = need - left;
 			index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
 		} else {
 			reduce = need;
 			index_add = (1 << INDEX_SHIFT_LOCAL);
-			//			LOG_MSG("regular run need %d, have
-			//%d, min %d, left %d", need, mixer.done,
-			//mixer.min_needed, left);
+//			LOG_MSG("regular run need %d, have %d, min %d, left %d", need, mixer.done.load(), mixer.min_needed.load(), left);
 
 			/* Mixer tick value being updated:
 			 * 3 cases:
@@ -1134,7 +1153,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 		}
 	} else {
 		/* There is way too much data in the buffer */
-		LOG_WARNING("overflow run need %u, have %u, min %u", need, mixer.done.load(), mixer.min_needed.load());
+//		LOG_WARNING("overflow run need %u, have %u, min %u", need, mixer.done.load(), mixer.min_needed.load());
 		if (mixer.done > MIXER_BUFSIZE)
 			index_add = MIXER_BUFSIZE - 2 * mixer.min_needed;
 		else
@@ -1155,29 +1174,31 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
 	if (need != reduce) {
 		while (need--) {
-			const auto i = check_cast<work_index_t>((pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
+			const auto i = check_cast<work_index_t>(
+			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
 			index += index_add;
-			sample = static_cast<int>(mixer.work[i][0]);
+
+			sample    = static_cast<int>(mixer.work[i][0]);
 			*output++ = MIXER_CLIP(sample);
-			sample = static_cast<int>(mixer.work[i][1]);
+			sample    = static_cast<int>(mixer.work[i][1]);
 			*output++ = MIXER_CLIP(sample);
 		}
 		/* Clean the used buffer */
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
-			mixer.work[pos][0] = 0;
-			mixer.work[pos][1] = 0;
+			mixer.work[pos][0] = 0.0f;
+			mixer.work[pos][1] = 0.0f;
 			pos++;
 		}
 	} else {
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
-			sample = static_cast<int>(mixer.work[pos][0]);
+			sample    = static_cast<int>(mixer.work[pos][0]);
 			*output++ = MIXER_CLIP(sample);
-			sample = static_cast<int>(mixer.work[pos][1]);
+			sample    = static_cast<int>(mixer.work[pos][1]);
 			*output++ = MIXER_CLIP(sample);
-			mixer.work[pos][0] = 0;
-			mixer.work[pos][1] = 0;
+			mixer.work[pos][0] = 0.0f;
+			mixer.work[pos][1] = 0.0f;
 			pos++;
 		}
 	}
@@ -1582,6 +1603,34 @@ void MIXER_Init(Section *sec)
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
+
+	// Initialise master high-pass filter
+	// ----------------------------------
+	// The purpose of this filter is two-fold:
+	//
+	// - Remove any DC offset from the summed master output (any high-pass
+	//   filter can achieve this, even a 6dB/oct HPF at 1Hz). Virtually all
+	//   synth modules (CMS, OPL, etc.) can introduce DC offset; this usually
+	//   isn't a problem on real hardware as most audio interfaces include
+	//   a DC-blocking of high-pass filter in the analog output stages.
+	//
+	// - Get rid of (or more precisely, attenuate) unnecessary rumble below
+	//   20Hz that serves no musical purpose and only eats up headroom.
+	//   Issues like this could have gone unnoticed in the 80s/90s due to
+	//   much lower quality consumer audio equipment available, plus
+	//   most sound cards had weak bass response (on some models the bass
+	//   rolloff starts from as high as 100-120Hz), so the presence of
+	//   unnecessary ultra low-frequency content never became an issue back
+	//   then.
+	//
+	// Thanks to the float mixbuffer, it is sufficient to peform the high-pass
+	// filtering only once at the very end of the processing chain, instead of
+	// doing it on every single mixer channel.
+	//
+	constexpr auto highpass_cutoff_freq = 20.0;
+	for (auto &f : mixer.highpass_filter) {
+		f.setup(mixer.sample_rate, highpass_cutoff_freq);
+	}
 }
 
 // Toggle the mixer on/off when a true-bool is passed.
