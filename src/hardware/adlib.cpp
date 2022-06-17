@@ -43,7 +43,7 @@
 static Adlib::Module *module = nullptr;
 static AdlibGold *adlib_gold = nullptr;
 
-constexpr auto render_frames = 1024;
+constexpr auto render_frames = 128;
 
 namespace OPL2 {
 	#include "opl.cpp"
