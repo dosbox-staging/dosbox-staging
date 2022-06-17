@@ -23,12 +23,13 @@
 #include <math.h>
 #include <sys/types.h>
 
+#include "adlib_gold.h"
 #include "cpu.h"
-#include "setup.h"
-#include "support.h"
+#include "dbopl.h"
 #include "mapper.h"
 #include "mem.h"
-#include "dbopl.h"
+#include "setup.h"
+#include "support.h"
 #include "../libs/nuked/opl3.h"
 
 #include "mame/emu.h"
@@ -38,6 +39,9 @@
 
 #define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
 #define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
+
+static Adlib::Module *module = nullptr;
+static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
 
@@ -192,14 +196,23 @@ struct Handler : public Adlib::Handler {
 		return addr;
 	}
 
-	void Generate(mixer_channel_t &chan, uint16_t frames) override
+	void Generate(mixer_channel_t &chan, const uint16_t frames) override
 	{
 		int16_t buf[render_frames * 2];
-		while (frames > 0) {
-			uint32_t todo = frames > render_frames ? render_frames : frames;
+		float float_buf[render_frames * 2];
+
+		int remaining = frames;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, render_frames);
 			OPL3_GenerateStream(&chip, buf, todo);
-			chan->AddSamples_s16(todo, buf);
-			frames -= todo;
+
+			if (adlib_gold) {
+				adlib_gold->Process(buf, todo, float_buf);
+				chan->AddSamples_sfloat(todo, float_buf);
+			} else {
+				chan->AddSamples_s16(todo, buf);
+			}
+			remaining -= todo;
 		}
 	}
 
@@ -211,6 +224,7 @@ struct Handler : public Adlib::Handler {
 };
 
 } // namespace NukedOPL
+
 
 /*
 	Main Adlib implementation
@@ -572,31 +586,57 @@ void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 	CacheWrite(full_port, val);
 }
 
-void Module::CtrlWrite( uint8_t val ) {
-	switch ( ctrl.index ) {
-	case 0x09: /* Left FM Volume */
-		ctrl.lvol = val;
-		goto setvol;
+void Module::CtrlWrite(uint8_t val)
+{
+	switch (ctrl.index) {
+	case 0x04:
+		adlib_gold->StereoControlWrite(StereoProcessorControlReg::VolumeLeft,
+		                               val);
+		break;
+	case 0x05:
+		adlib_gold->StereoControlWrite(StereoProcessorControlReg::VolumeRight,
+		                               val);
+		break;
+	case 0x06:
+		adlib_gold->StereoControlWrite(StereoProcessorControlReg::Bass, val);
+		break;
+	case 0x07:
+		adlib_gold->StereoControlWrite(StereoProcessorControlReg::Treble, val);
+		break;
+
+	case 0x08:
+		adlib_gold->StereoControlWrite(StereoProcessorControlReg::SwitchFunctions,
+		                               val);
+		break;
+
+	case 0x09: /* Left FM Volume */ ctrl.lvol = val; goto setvol;
 	case 0x0a: /* Right FM Volume */
 		ctrl.rvol = val;
-setvol:
-		if ( ctrl.mixer ) {
-			//Dune cdrom uses 32 volume steps in an apparent mistake, should be 128
-			mixerChan->SetVolume( (float)(ctrl.lvol&0x1f)/31.0f, (float)(ctrl.rvol&0x1f)/31.0f );
+	setvol:
+		if (ctrl.mixer) {
+			// Dune CD version uses 32 volume steps in an apparent
+			// mistake, should be 128
+			mixerChan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
+			                     (float)(ctrl.rvol & 0x1f) / 31.0f);
 		}
 		break;
+
+	case 0x18: /* Surround */ adlib_gold->SurroundControlWrite(val);
 	}
 }
 
 uint8_t Module::CtrlRead(void)
 {
 	switch (ctrl.index) {
-	case 0x00: /* Board Options */ return 0x70; // No options installed
+	case 0x00: /* Board Options */
+		return 0x50; // 16-bit ISA, surround module, no
+					 // telephone/CDROM
+//		return 0x70; // 16-bit ISA, no telephone/surround/CD-ROM
+
 	case 0x09: /* Left FM Volume */ return ctrl.lvol;
-	case 0x0a: /* Right FM Volume */
-		return ctrl.rvol;
-	case 0x15: /* Audio Relocation */
-		return 0x388 >> 3; //Cryo installer detection
+	case 0x0a: /* Right FM Volume */ return ctrl.rvol;
+	case 0x15:                 /* Audio Relocation */
+		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
 }
@@ -723,26 +763,28 @@ uint8_t Module::PortRead(io_port_t port, io_width_t)
 	return 0;
 }
 
-void Module::Init( Mode m ) {
+void Module::Init(Mode m)
+{
 	mode = m;
 	memset(cache, 0, ARRAY_LEN(cache));
-	switch ( mode ) {
+
+	switch (mode) {
 	case MODE_OPL3:
-	case MODE_OPL3GOLD:
-	case MODE_OPL2:
 		break;
+	case MODE_OPL3GOLD:
+		adlib_gold = new AdlibGold(mixerChan->GetSampleRate());
+		break;
+	case MODE_OPL2: break;
 	case MODE_DUALOPL2:
-		//Setup opl3 mode in the hander
-		handler->WriteReg( 0x105, 1 );
-		//Also set it up in the cache so the capturing will start opl3
-		CacheWrite( 0x105, 1 );
+		// Setup opl3 mode in the hander
+		handler->WriteReg(0x105, 1);
+		// Also set it up in the cache so the capturing will start opl3
+		CacheWrite(0x105, 1);
 		break;
 	}
 }
 
 } // namespace Adlib
-
-static Adlib::Module* module = 0;
 
 static void OPL_CallBack(uint16_t len)
 {
@@ -892,28 +934,35 @@ Module::Module(Section *configuration)
 	const auto read_from = std::bind(&Module::PortRead, this, _1, _2);
 	const auto write_to = std::bind(&Module::PortWrite, this, _1, _2, _3);
 
-	// 0x388 range
+	// 0x388-0x38b ports (read/write)
 	constexpr io_port_t port_0x388 = 0x388;
 	WriteHandler[0].Install(port_0x388, write_to, io_width_t::byte, 4);
 	ReadHandler[0].Install(port_0x388, read_from, io_width_t::byte, 4);
-	// 0x220 range
+
+	// 0x220-0x223 ports (read/write)
 	if (!single) {
 		WriteHandler[1].Install(base, write_to, io_width_t::byte, 4);
 		ReadHandler[1].Install(base, read_from, io_width_t::byte, 4);
 	}
-	//0x228 range
+	// 0x228-0x229 ports (write)
 	WriteHandler[2].Install(base + 8u, write_to, io_width_t::byte, 2);
+
+	// 0x228 port (read)
 	ReadHandler[2].Install(base + 8u, read_from, io_width_t::byte, 1);
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0,
 	                  "caprawopl", "Rec. OPL");
 }
 
-Module::~Module() {
+Module::~Module()
+{
 	delete capture;
 	capture = nullptr;
 	delete handler;
 	handler = nullptr;
+
+	delete adlib_gold;
+	adlib_gold = nullptr;
 }
 
 //Initialize static members
@@ -926,8 +975,8 @@ void OPL_Init(Section* sec,OPL_Mode oplmode) {
 	module = new Adlib::Module( sec );
 }
 
-void OPL_ShutDown(Section* /*sec*/){
+void OPL_ShutDown(Section * /*sec*/)
+{
 	delete module;
-	module = 0;
-
+	module = nullptr;
 }
