@@ -63,10 +63,15 @@ enum class MixerState {
 
 // A simple stereo audio frame
 struct AudioFrame {
-	float left  = 0;
-	float right = 0;
+	float left  = 0.0f;
+	float right = 0.0f;
 
 	float &operator[](std::size_t i)
+	{
+		assert(i < 2);
+		return i == 0 ? left : right;
+	}
+	constexpr const float &operator[](const size_t i) const noexcept
 	{
 		assert(i < 2);
 		return i == 0 ? left : right;
