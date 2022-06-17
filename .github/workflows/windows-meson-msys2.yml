@@ -110,15 +110,15 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-2
+          key:  ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-3
           restore-keys: |
-            ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-2
+            ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -205,15 +205,15 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.today }}-2
+          key:  ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.today }}-3
           restore-keys: |
-            ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-2
+            ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
 
       - name: Log environment
         run:  ./scripts/log-env.sh
