@@ -39,7 +39,7 @@
 #define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
 #define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
 
-constexpr auto render_frames = 1024;
+constexpr auto render_frames = 128;
 
 namespace OPL2 {
 	#include "opl.cpp"
