@@ -209,7 +209,7 @@ struct Handler : public Adlib::Handler {
 		return addr;
 	}
 
-	void Generate(mixer_channel_t &chan, uint16_t frames) override
+	void Generate(mixer_channel_t &chan, const uint16_t frames) override
 	{
 		int16_t buf[render_frames * 2];
 		float float_buf[render_frames * 2];
@@ -1006,9 +1006,9 @@ void OPL_Init(Section* sec,OPL_Mode oplmode) {
 	module = new Adlib::Module( sec );
 }
 
-void OPL_ShutDown(Section* /*sec*/){
+void OPL_ShutDown(Section * /*sec*/)
+{
 	delete module;
-	module = 0;
-
+	module = nullptr;
 }
 
