@@ -72,8 +72,8 @@ public:
 	void Process(const int16_t *in, const uint32_t frames, float *out) noexcept;
 
 private:
-	std::unique_ptr<SurroundProcessor> surround_processor;
-	std::unique_ptr<StereoProcessor> stereo_processor;
+	std::unique_ptr<SurroundProcessor> surround_processor = {};
+	std::unique_ptr<StereoProcessor> stereo_processor = {};
 };
 
 #endif
