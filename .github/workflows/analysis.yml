@@ -189,7 +189,7 @@ jobs:
 
       - run:  meson setup -Dunit_tests=disabled ${{ matrix.conf.build_flags }} build
 
-      - run:  ninja -C build
+      - run:  meson compile -C build
 
       - name: Run sanitizer test cases
         run:  ./.github/scripts/run-sanitizers.sh build sanitizer-logs

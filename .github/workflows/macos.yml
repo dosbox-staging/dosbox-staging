@@ -248,7 +248,7 @@ jobs:
           build
 
       - name: Build
-        run:  arch -arch=${{ matrix.runner.arch }} ninja -C build
+        run:  arch -arch=${{ matrix.runner.arch }} meson compile -C build
 
       - name: Reinstate libintl.8.dylib
         if:   matrix.runner.needs_libintl_workaround
