@@ -1380,7 +1380,7 @@ private:
 	void ShowMixerStatus()
 	{
 		auto show_channel = [this](const std::string &name,
-		                           const AudioFrame volume,
+		                           const AudioFrame &volume,
 		                           const int rate,
 		                           const std::string &mode,
 		                           const std::string &xfeed) {
