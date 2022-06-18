@@ -130,7 +130,9 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          meson compile -C build |& tee build.log
+          until meson compile -C build |& tee build.log; do
+            echo "build failed, try again"
+          done
           ccache -s
 
       - name: Run tests
@@ -237,10 +239,17 @@ jobs:
         run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
 
       - name: Build release
-        run: meson compile -C $BUILD_RELEASE_DIR
+        run: |
+          until meson compile -C $BUILD_RELEASE_DIR; do
+            echo "build failed, try again"
+          done
+
 
       - name: Build debugger
-        run: meson compile -C $BUILD_DEBUGGER_DIR
+        run: |
+          until meson compile -C $BUILD_DEBUGGER_DIR; do
+            echo "build failed, try again"
+          done
 
       - name: Package
         run: |
