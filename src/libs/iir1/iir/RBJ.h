@@ -80,7 +80,7 @@ namespace RBJ {
 			return state;
 		}
 	private:
-		DirectFormI state;
+		DirectFormI state = {};
 	};
 
 	/**
