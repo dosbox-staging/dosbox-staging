@@ -147,7 +147,7 @@ public:
 	void UpdateVolume();
 	void SetSampleRate(int _freq);
 	void SetPeakAmplitude(int peak);
-	void Mix(int _needed);
+	void Mix(int frames_requested);
 	void AddSilence(); // Fill up until needed
 
 	void SetHighPassFilter(const FilterState state);
@@ -191,8 +191,8 @@ public:
 	void FlushSamples();
 
 	AudioFrame volmain = {1.0f, 1.0f};
-	std::atomic<int> done = 0; // Timing on how many samples have been done
-	                           // by the mixer
+	std::atomic<int> frames_done = 0; // Timing on how many sample frames
+	                                  // have been done by the mixer
 	bool is_enabled = false;
 
 private:
@@ -220,7 +220,7 @@ private:
 
 	int freq_add = 0u;           // This gets added the frequency counter each mixer step
 	int freq_counter = 0u;       // When this flows over a new sample needs to be read from the device
-	int needed = 0u;             // Timing on how many samples were needed by the mixer
+	int frames_needed = 0u;      // Timing on how many samples were needed by the mixer
 
 	AudioFrame prev_frame = {}; // Previous and next samples
 	AudioFrame next_frame = {};
