@@ -130,10 +130,11 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          until meson compile -C build |& tee build.log; do
-            echo "build failed, try again"
-          done
+          scripts/retry_command.sh 2 meson compile -C build |& tee build.log
           ccache -s
+          #
+          # Reason for retry is due to intermittent Python symbol extractor failure
+          # under MSYS2 reported in bug: https://github.com/msys2/MINGW-packages/issues/11864
 
       - name: Run tests
         if:   matrix.conf.run_tests
@@ -240,16 +241,19 @@ jobs:
 
       - name: Build release
         run: |
-          until meson compile -C $BUILD_RELEASE_DIR; do
-            echo "build failed, try again"
-          done
-
+          set -euo pipefail
+          scripts/retry_command.sh 2 meson compile -C $BUILD_RELEASE_DIR
+          #
+          # Reason for retry is due to intermittent Python symbol extractor failure
+          # under MSYS2 reported in bug: https://github.com/msys2/MINGW-packages/issues/11864
 
       - name: Build debugger
         run: |
-          until meson compile -C $BUILD_DEBUGGER_DIR; do
-            echo "build failed, try again"
-          done
+          set -euo pipefail
+          scripts/retry_command.sh 2 meson compile -C $BUILD_DEBUGGER_DIR
+          #
+          # Reason for retry is due to intermittent Python symbol extractor failure
+          # under MSYS2 reported in bug: https://github.com/msys2/MINGW-packages/issues/11864
 
       - name: Package
         run: |
