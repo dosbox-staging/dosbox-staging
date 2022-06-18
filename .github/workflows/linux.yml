@@ -133,7 +133,7 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          ninja -C build |& tee build.log
+          meson compile -C build |& tee build.log
           ccache -s
 
       - name: Run tests
@@ -212,7 +212,7 @@ jobs:
             build
 
       - name: Build
-        run:  ninja -C build
+        run:  meson compile -C build
 
       - name: Package
         run: |

@@ -130,7 +130,7 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          ninja -C build |& tee build.log
+          meson compile -C build |& tee build.log
           ccache -s
 
       - name: Run tests
@@ -237,10 +237,10 @@ jobs:
         run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
 
       - name: Build release
-        run: ninja -C $BUILD_RELEASE_DIR
+        run: meson compile -C $BUILD_RELEASE_DIR
 
       - name: Build debugger
-        run: ninja -C $BUILD_DEBUGGER_DIR
+        run: meson compile -C $BUILD_DEBUGGER_DIR
 
       - name: Package
         run: |

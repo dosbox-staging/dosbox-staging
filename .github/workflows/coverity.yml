@@ -61,7 +61,7 @@ jobs:
           set -xeu
           CC="clang" CXX="clang++" meson setup -Duse_slirp=false -Duse_mt32emu=false -Duse_fluidsynth=false -Dunit_tests=disabled build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
-          cov-build --dir cov-int ninja -C build
+          cov-build --dir cov-int meson compile -C build
           tar -cvaf package.tar.gz cov-int
 
       - name: Upload the package to Coverity

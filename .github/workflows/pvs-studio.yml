@@ -53,7 +53,7 @@ jobs:
         run: |
           set -xeu
           meson setup -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
-          pvs-studio-analyzer trace -- ninja -C build
+          pvs-studio-analyzer trace -- meson compile -C build
 
       - name: Analyze
         run: |

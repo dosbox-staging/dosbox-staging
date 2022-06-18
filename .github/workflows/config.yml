@@ -115,7 +115,7 @@ jobs:
             ${{ matrix.conf.configure_flags }} \
             build
           cat build/meson-logs/meson-log.txt
-          ninja -C build
+          meson compile -C build
 
       - name:  Build ${{ matrix.conf.configure_flags }} (${{ matrix.system.name }})
         if:    matrix.system.name == 'macOS' || matrix.system.name == 'Linux'
@@ -124,4 +124,4 @@ jobs:
             -Dunit_tests=disabled \
             ${{ matrix.conf.configure_flags }} \
             build
-          ninja -C build
+          meson compile -C build
