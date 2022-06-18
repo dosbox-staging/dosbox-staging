@@ -60,7 +60,7 @@
 #include "programs.h"
 #include "midi.h"
 
-#define MIXER_SSIZE 4
+constexpr auto mixer_frame_size = 4;
 
 #define FREQ_SHIFT 14
 #define FREQ_NEXT ( 1 << FREQ_SHIFT)
@@ -78,15 +78,17 @@
 // should the envelope monitor the initial signal? (recommended > 5s)
 #define ENVELOPE_EXPIRES_AFTER_S 10u
 
+constexpr auto max_prebuffer_ms = 100;
+
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
 
-static constexpr int16_t MIXER_CLIP(const int SAMP)
+static constexpr int16_t MIXER_CLIP(const int sample)
 {
-	if (SAMP <= MIN_AUDIO) return MIN_AUDIO;
-	if (SAMP >= MAX_AUDIO) return MAX_AUDIO;
+	if (sample <= MIN_AUDIO) return MIN_AUDIO;
+	if (sample >= MAX_AUDIO) return MAX_AUDIO;
 	
-	return static_cast<int16_t>(SAMP);
+	return static_cast<int16_t>(sample);
 }
 
 struct mixer_t {
@@ -100,10 +102,10 @@ struct mixer_t {
 
 	// Counters accessed by multiple threads
 	std::atomic<work_index_t> pos = 0;
-	std::atomic<int> done = 0;
-	std::atomic<int> needed = 0;
-	std::atomic<int> min_needed = 0;
-	std::atomic<int> max_needed = 0;
+	std::atomic<int> frames_done = 0;
+	std::atomic<int> frames_needed = 0;
+	std::atomic<int> min_frames_needed = 0;
+	std::atomic<int> max_frames_needed = 0;
 	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
 
 	int tick_counter = 0;
@@ -295,8 +297,8 @@ void MixerChannel::Enable(const bool should_enable)
 	if (should_enable) {
 		freq_counter = 0u;
 		// Don't start with a deficit
-		if (done < mixer.done)
-			done = mixer.done.load();
+		if (frames_done < mixer.frames_done)
+			frames_done = mixer.frames_done.load();
 
 		// Prepare the channel to go dormant
 	} else {
@@ -304,8 +306,8 @@ void MixerChannel::Enable(const bool should_enable)
 		// start clean if/when this channel is re-enabled.
 		// Samples can be buffered into disable channels, so
 		// we don't perform this zero'ing in the enable phase.
-		done = 0u;
-		needed = 0u;
+		frames_done = 0u;
+		frames_needed = 0u;
 
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
@@ -363,17 +365,18 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 }
 
-void MixerChannel::Mix(const int _needed)
+void MixerChannel::Mix(const int frames_requested)
 {
-	needed = _needed;
-	while (is_enabled && needed > done) {
-		auto left = needed - done;
-		left *= freq_add;
-		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
-		if (left <= 0) // avoid underflow
+	frames_needed = frames_requested;
+	while (is_enabled && frames_needed > frames_done) {
+		auto frames_remaining = frames_needed - frames_done;
+		frames_remaining *= freq_add;
+		frames_remaining = (frames_remaining >> FREQ_SHIFT) +
+		                   ((frames_remaining & FREQ_MASK) != 0);
+		if (frames_remaining <= 0) // avoid underflow
 			break;
-		left = std::min(left, MIXER_BUFSIZE); // avoid overflow
-		handler(check_cast<uint16_t>(left));
+		frames_remaining = std::min(frames_remaining, MIXER_BUFSIZE); // avoid overflow
+		handler(check_cast<uint16_t>(frames_remaining));
 	}
 }
 
@@ -381,9 +384,9 @@ void MixerChannel::AddSilence()
 {
 	MIXER_LockAudioDevice();
 
-	if (done < needed) {
+	if (frames_done < frames_needed) {
 		if (prev_frame[0] == 0.0f && prev_frame[1] == 0.0f) {
-			done = needed;
+			frames_done = frames_needed;
 			// Make sure the next samples are zero when they get
 			// switched to prev
 			next_frame = {0.0f, 0.0f};
@@ -396,8 +399,8 @@ void MixerChannel::AddSilence()
 			const auto mapped_output_right = output_map.right;
 
 			// Position where to write the data
-			auto mixpos = check_cast<work_index_t>(mixer.pos + done);
-			while (done < needed) {
+			auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
+			while (frames_done < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
 				// Maybe the fade factor f depends on the sample
 				// rate.
@@ -423,7 +426,7 @@ void MixerChannel::AddSilence()
 
 				prev_frame = next_frame;
 				mixpos++;
-				done++;
+				frames_done++;
 				freq_counter = FREQ_NEXT;
 			}
 		}
@@ -782,7 +785,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	// Optionally low-pass filter, apply crossfeed, then mix the results
 	// to the master output
 	auto pos = mixer.resample_out.begin();
-	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
+	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 
 	const auto do_lowpass_filter = filters.lowpass.state == FilterState::On ||
 	                               filters.lowpass.state == FilterState::ForcedOn;
@@ -815,7 +818,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	}
 
 	auto out_frames = mixer.resample_out.size() / 2;
-	done += out_frames;
+	frames_done += out_frames;
 
 	last_samples_were_silence = false;
 	MIXER_UnlockAudioDevice();
@@ -825,16 +828,16 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 {
 	MIXER_LockAudioDevice();
 
-	if (done >= needed) {
+	if (frames_done >= frames_needed) {
 		LOG_MSG("Can't add, buffer full");
 		MIXER_UnlockAudioDevice();
 		return;
 	}
 	//Target samples this inputs gets stretched into
-	auto outlen = needed - done;
+	auto outlen = frames_needed - frames_done;
 	auto index = 0;
 	auto index_add = (len << FREQ_SHIFT) / outlen;
-	auto mixpos = check_cast<work_index_t>(mixer.pos + done);
+	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 	auto pos = 0;
 
 	// read-only aliases to avoid dereferencing and inform compiler their
@@ -860,7 +863,7 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		mixpos++;
 	}
 
-	done = needed;
+	frames_done = frames_needed;
 	
 	MIXER_UnlockAudioDevice();
 }
@@ -940,11 +943,11 @@ void MixerChannel::AddSamples_s32_nonnative(uint16_t len, const int32_t *data)
 
 void MixerChannel::FillUp()
 {
-	if (!is_enabled || done < mixer.done)
+	if (!is_enabled || frames_done < mixer.frames_done)
 		return;
 	const auto index = PIC_TickIndex();
 	MIXER_LockAudioDevice();
-	Mix(check_cast<uint16_t>(static_cast<int64_t>(index * mixer.needed)));
+	Mix(check_cast<uint16_t>(static_cast<int64_t>(index * mixer.frames_needed)));
 	MIXER_UnlockAudioDevice();
 }
 
@@ -1004,16 +1007,19 @@ static constexpr int calc_tickadd(const int freq)
 #endif
 }
 
-/* Mix a certain amount of new samples */
-static void MIXER_MixData(int needed)
+/* Mix a certain amount of new sample frames */
+static void MIXER_MixData(int frames_requested)
 {
 	for (auto &it : mixer.channels)
-		it.second->Mix(needed);
+		it.second->Mix(frames_requested);
 
 	// Master high-pass filter
+	constexpr auto capture_buf_len = 1024;
 	const auto added = check_cast<work_index_t>(
-	        std::min(needed - mixer.done, 1024));
-	auto pos = check_cast<work_index_t>((mixer.pos + mixer.done) & MIXER_BUFMASK);
+	        std::min(frames_requested - mixer.frames_done, capture_buf_len));
+
+	auto pos = check_cast<work_index_t>((mixer.pos + mixer.frames_done) &
+	                                    MIXER_BUFMASK);
 
 	for (work_index_t i = 0; i < added; ++i) {
 		for (auto ch = 0; ch < 2; ++ch) {
@@ -1024,38 +1030,40 @@ static void MIXER_MixData(int needed)
 	}
 
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
-		int16_t convert[1024][2];
-		auto readpos = check_cast<work_index_t>((mixer.pos + mixer.done) &
-		                                        MIXER_BUFMASK);
+		int16_t out[capture_buf_len][2];
+
+		auto pos = check_cast<work_index_t>(
+		        (mixer.pos + mixer.frames_done) & MIXER_BUFMASK);
 
 		for (work_index_t i = 0; i < added; i++) {
-			const auto left = static_cast<uint16_t>(MIXER_CLIP(
-			        static_cast<int>(mixer.work[readpos][0])));
+			const auto left = static_cast<uint16_t>(
+			        MIXER_CLIP(static_cast<int>(mixer.work[pos][0])));
 
-			const auto right = static_cast<uint16_t>(MIXER_CLIP(
-			        static_cast<int>(mixer.work[readpos][1])));
+			const auto right = static_cast<uint16_t>(
+			        MIXER_CLIP(static_cast<int>(mixer.work[pos][1])));
 
-			convert[i][0] = static_cast<int16_t>(host_to_le16(left));
-			convert[i][1] = static_cast<int16_t>(host_to_le16(right));
+			out[i][0] = static_cast<int16_t>(host_to_le16(left));
+			out[i][1] = static_cast<int16_t>(host_to_le16(right));
 
-			readpos = (readpos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MIXER_BUFMASK;
 		}
 		CAPTURE_AddWave(mixer.sample_rate,
 		                added,
-		                reinterpret_cast<int16_t *>(convert));
+		                reinterpret_cast<int16_t *>(out));
 	}
 	// Reset the the tick_add for constant speed
 	if (Mixer_irq_important())
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-	mixer.done = needed;
+
+	mixer.frames_done = frames_requested;
 }
 
 static void MIXER_Mix()
 {
 	MIXER_LockAudioDevice();
-	MIXER_MixData(mixer.needed);
+	MIXER_MixData(mixer.frames_needed);
 	mixer.tick_counter += mixer.tick_add;
-	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
+	mixer.frames_needed += mixer.tick_counter >> TICK_SHIFT;
 	mixer.tick_counter &= TICK_MASK;
 	MIXER_UnlockAudioDevice();
 }
@@ -1063,74 +1071,102 @@ static void MIXER_Mix()
 static void MIXER_ReduceChannelsDoneCounts(const int at_most)
 {
 	for (auto &it : mixer.channels)
-		it.second->done -= std::min(it.second->done.load(), at_most);
+		it.second->frames_done -= std::min(it.second->frames_done.load(),
+		                                   at_most);
 }
 
 static void MIXER_Mix_NoSound()
 {
 	MIXER_LockAudioDevice();
-	MIXER_MixData(mixer.needed);
+	MIXER_MixData(mixer.frames_needed);
+
 	/* Clear piece we've just generated */
-	for (auto i = 0; i < mixer.needed; ++i) {
-		mixer.work[mixer.pos][0]=0;
-		mixer.work[mixer.pos][1]=0;
-		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
+	for (auto i = 0; i < mixer.frames_needed; ++i) {
+		mixer.work[mixer.pos][0] = 0;
+		mixer.work[mixer.pos][1] = 0;
+
+		mixer.pos = (mixer.pos + 1) & MIXER_BUFMASK;
 	}
-	MIXER_ReduceChannelsDoneCounts(mixer.needed);
+	MIXER_ReduceChannelsDoneCounts(mixer.frames_needed);
 
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
-	mixer.needed = (mixer.tick_counter >> TICK_SHIFT);
+	mixer.frames_needed = (mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
-	mixer.done=0;
+	mixer.frames_done = 0;
 	MIXER_UnlockAudioDevice();
 }
 
 #define INDEX_SHIFT_LOCAL 14
 
-static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *stream, int len)
+static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
+                                   Uint8 *stream, int len)
 {
 	memset(stream, 0, len);
-	auto need = len / MIXER_SSIZE;
-	auto output = reinterpret_cast<int16_t *>(stream);
-	auto reduce = 0;
-	work_index_t pos = 0;
+
+	auto frames_requested = len / mixer_frame_size;
+	auto output           = reinterpret_cast<int16_t *>(stream);
+	auto reduce_frames    = 0;
+	work_index_t pos      = 0;
+
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
 	auto index_add = (1 << INDEX_SHIFT_LOCAL);
-	auto index = (index_add % need) ? need : 0;
+	auto index     = (index_add % frames_requested) ? frames_requested : 0;
 
 	auto sample = 0;
+
 	/* Enough room in the buffer ? */
-	if (mixer.done < need) {
-//		LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done.load(), mixer.min_needed.load());
-		if ((need - mixer.done) > (need >> 7)) // Max 1 percent stretch.
+	if (mixer.frames_done < frames_requested) {
+		//		LOG_WARNING("Full underrun requested %d, have
+		//%d, min %d", frames_requested, mixer.frames_done.load(),
+		// mixer.min_frames_needed.load());
+		if ((frames_requested - mixer.frames_done) >
+		    (frames_requested >> 7)) // Max 1 percent
+		                             // stretch.
 			return;
-		reduce = mixer.done;
-		index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
-		mixer.tick_add = calc_tickadd(mixer.sample_rate + mixer.min_needed);
-	} else if (mixer.done < mixer.max_needed) {
-		auto left = mixer.done - need;
-		if (left < mixer.min_needed) {
+		reduce_frames = mixer.frames_done;
+		index_add = (reduce_frames << INDEX_SHIFT_LOCAL) / frames_requested;
+		mixer.tick_add = calc_tickadd(mixer.sample_rate +
+		                              mixer.min_frames_needed);
+
+	} else if (mixer.frames_done < mixer.max_frames_needed) {
+		auto frames_remaining = mixer.frames_done - frames_requested;
+
+		if (frames_remaining < mixer.min_frames_needed) {
 			if (!Mixer_irq_important()) {
-				auto needed = mixer.needed - need;
-				auto diff = (mixer.min_needed > needed ? mixer.min_needed.load()
-				                                       : needed) - left;
+				auto frames_needed = mixer.frames_needed -
+				                     frames_requested;
+				auto diff = (mixer.min_frames_needed > frames_needed
+				                     ? mixer.min_frames_needed.load()
+				                     : frames_needed) -
+				            frames_remaining;
+
 				mixer.tick_add = calc_tickadd(mixer.sample_rate +
 				                              (diff * 3));
-				left = 0; // No stretching as we compensate with
-				          // the tick_add value
+				frames_remaining = 0; // No stretching as we
+				                      // compensate with the
+				                      // tick_add value
 			} else {
-				left = (mixer.min_needed - left);
-				left = 1 + (2 * left) / mixer.min_needed; // left=1,2,3
+				frames_remaining = (mixer.min_frames_needed -
+				                    frames_remaining);
+				frames_remaining = 1 + (2 * frames_remaining) /
+				                               mixer.min_frames_needed; // frames_remaining=1,2,3
 			}
-//			LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done.load(), mixer.min_needed.load(), left);
-			reduce = need - left;
-			index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
+			//			LOG_WARNING("needed underrun
+			// requested %d, have %d, min %d, frames_remaining %d",
+			// frames_requested, mixer.frames_done.load(),
+			// mixer.min_frames_needed.load(), frames_remaining);
+			reduce_frames = frames_requested - frames_remaining;
+			index_add     = (reduce_frames << INDEX_SHIFT_LOCAL) /
+			            frames_requested;
 		} else {
-			reduce = need;
-			index_add = (1 << INDEX_SHIFT_LOCAL);
-//			LOG_MSG("regular run need %d, have %d, min %d, left %d", need, mixer.done.load(), mixer.min_needed.load(), left);
+			reduce_frames = frames_requested;
+			index_add     = (1 << INDEX_SHIFT_LOCAL);
+			//			LOG_MSG("regular run requested
+			//%d, have %d, min %d, frames_remaining %d",
+			// frames_requested, mixer.frames_done.load(),
+			// mixer.min_frames_needed.load(), frames_remaining);
 
 			/* Mixer tick value being updated:
 			 * 3 cases:
@@ -1139,13 +1175,16 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 			 * division by 8 3) A little to nothing above the
 			 * min_needed buffer > go to default value
 			 */
-			int diff = left - mixer.min_needed;
-			if (diff > (mixer.min_needed << 1))
-				diff = mixer.min_needed << 1;
-			if (diff > (mixer.min_needed >> 1))
+			int diff = frames_remaining - mixer.min_frames_needed;
+
+			if (diff > (mixer.min_frames_needed << 1))
+				diff = mixer.min_frames_needed << 1;
+
+			if (diff > (mixer.min_frames_needed >> 1))
 				mixer.tick_add = calc_tickadd(mixer.sample_rate -
 				                              (diff / 5));
-			else if (diff > (mixer.min_needed >> 2))
+
+			else if (diff > (mixer.min_frames_needed >> 2))
 				mixer.tick_add = calc_tickadd(mixer.sample_rate -
 				                              (diff >> 3));
 			else
@@ -1153,27 +1192,35 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 		}
 	} else {
 		/* There is way too much data in the buffer */
-//		LOG_WARNING("overflow run need %u, have %u, min %u", need, mixer.done.load(), mixer.min_needed.load());
-		if (mixer.done > MIXER_BUFSIZE)
-			index_add = MIXER_BUFSIZE - 2 * mixer.min_needed;
+		//		LOG_WARNING("overflow run requested %u, have %u,
+		// min %u", frames_requested, mixer.frames_done.load(),
+		// mixer.min_frames_needed.load());
+		if (mixer.frames_done > MIXER_BUFSIZE)
+			index_add = MIXER_BUFSIZE - 2 * mixer.min_frames_needed;
 		else
-			index_add = mixer.done - 2 * mixer.min_needed;
-		index_add = (index_add << INDEX_SHIFT_LOCAL) / need;
-		reduce = mixer.done - 2 * mixer.min_needed;
-		mixer.tick_add = calc_tickadd(mixer.sample_rate - (mixer.min_needed / 5));
+			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
+
+		index_add = (index_add << INDEX_SHIFT_LOCAL) / frames_requested;
+		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
+
+		mixer.tick_add = calc_tickadd(mixer.sample_rate -
+		                              (mixer.min_frames_needed / 5));
 	}
-	MIXER_ReduceChannelsDoneCounts(reduce);
+
+	MIXER_ReduceChannelsDoneCounts(reduce_frames);
 
 	// Reset mixer.tick_add when irqs are important
-	if( Mixer_irq_important() )
+	if (Mixer_irq_important())
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 
-	mixer.done -= reduce;
-	mixer.needed -= reduce;
-	pos = mixer.pos;
-	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
-	if (need != reduce) {
-		while (need--) {
+	mixer.frames_done -= reduce_frames;
+	mixer.frames_needed -= reduce_frames;
+
+	pos       = mixer.pos;
+	mixer.pos = (mixer.pos + reduce_frames) & MIXER_BUFMASK;
+
+	if (frames_requested != reduce_frames) {
+		while (frames_requested--) {
 			const auto i = check_cast<work_index_t>(
 			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
 			index += index_add;
@@ -1184,14 +1231,14 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 			*output++ = MIXER_CLIP(sample);
 		}
 		/* Clean the used buffer */
-		while (reduce--) {
+		while (reduce_frames--) {
 			pos &= MIXER_BUFMASK;
 			mixer.work[pos][0] = 0.0f;
 			mixer.work[pos][1] = 0.0f;
 			pos++;
 		}
 	} else {
-		while (reduce--) {
+		while (reduce_frames--) {
 			pos &= MIXER_BUFMASK;
 			sample    = static_cast<int>(mixer.work[pos][0]);
 			*output++ = MIXER_CLIP(sample);
@@ -1593,13 +1640,18 @@ void MIXER_Init(Section *sec)
 		        obtained.channels, mixer.sample_rate.load(), mixer.blocksize);
 	}
 
-	//1000 = 8 *125
+	// 1000 = 8 *125
 	mixer.tick_counter = (mixer.sample_rate % 125) ? TICK_NEXT : 0;
-	const auto requested_prebuffer = section->Get_int("prebuffer");
-	mixer.min_needed = static_cast<uint16_t>(clamp(requested_prebuffer, 0, 100));
-	mixer.min_needed = (mixer.sample_rate * mixer.min_needed) / 1000;
-	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
-	mixer.needed = mixer.min_needed + 1;
+
+	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
+
+	const auto prebuffer_ms = static_cast<uint16_t>(
+	        clamp(requested_prebuffer_ms, 0, max_prebuffer_ms));
+
+	const auto prebuffer_frames = (mixer.sample_rate * prebuffer_ms) / 1000;
+
+	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
+	mixer.frames_needed     = mixer.min_frames_needed + 1;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
@@ -1663,13 +1715,13 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
 	constexpr int default_blocksize = 1024;
-	constexpr int default_prebuffer = 25;
+	constexpr int default_prebuffer_ms = 25;
 	constexpr bool default_allow_negotiate = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
 	constexpr int default_blocksize = 512;
-	constexpr int default_prebuffer = 20;
+	constexpr int default_prebuffer_ms = 20;
 	constexpr bool default_allow_negotiate = true;
 #endif
 
@@ -1696,8 +1748,8 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	int_prop->Set_help(
 	        "Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.");
 
-	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer);
-	int_prop->SetMinMax(0, 100);
+	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
+	int_prop->SetMinMax(0, max_prebuffer_ms);
 	int_prop->Set_help(
 	        "How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.");
 
