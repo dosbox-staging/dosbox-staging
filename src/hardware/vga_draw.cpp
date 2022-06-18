@@ -39,7 +39,7 @@
 typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
-static uint8_t TempLine[SCALER_MAXWIDTH * 4];
+alignas(vga_memalign) static uint8_t TempLine[SCALER_MAXWIDTH * 4];
 
 static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
