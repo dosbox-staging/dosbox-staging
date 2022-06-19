@@ -721,7 +721,7 @@ void Gus::CheckVoiceIrq()
 	}
 }
 
-// Returns a 24-bit offset into the GUS's memory space holding the next
+// Returns a 20-bit offset into the GUS's memory space holding the next
 // DMA sample that will be read or written to via DMA. This offset
 // is derived from the 16-bit DMA address register.
 uint32_t Gus::GetDmaOffset() noexcept
@@ -738,7 +738,7 @@ uint32_t Gus::GetDmaOffset() noexcept
 	return check_cast<uint32_t>(adjusted << 4) + dma_addr_nibble;
 }
 
-// Update the current 16-bit DMA position from the the given 24-bit RAM offset 
+// Update the current 16-bit DMA position from the the given 20-bit RAM offset
 void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 {
 	uint32_t adjusted;
@@ -748,10 +748,14 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 		adjusted = upper | (lower >> 1);
 	}
 	else {
-		adjusted = offset;
+		// Take the top 16 bits from the 20 bit address
+		adjusted = offset & 0b1111'1111'1111'1111'0000;
 	}
-	dma_addr = check_cast<uint16_t>(adjusted >> 4); // pack it into the 16-bit register
-	dma_addr_nibble = check_cast<uint8_t>(adjusted & 0xf); // hang onto the last nibble
+	// pack it into the 16-bit register
+	dma_addr = static_cast<uint16_t>(adjusted >> 4);
+
+	// hang onto the last nibble
+	dma_addr_nibble = check_cast<uint8_t>(adjusted & 0xf);
 }
 
 bool Gus::PerformDmaTransfer()
