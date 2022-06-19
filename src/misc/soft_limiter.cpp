@@ -176,7 +176,7 @@ void SoftLimiter::ScaleOrCopy(const std::vector<float> &in,
 {
 	assert(samples >= 2); // need at least one frame
 	auto in_start = in.begin() + channel;
-	const auto in_end = in.begin() + channel + samples;
+	const auto in_end = in.begin() + (channel + samples - 1);
 	auto out_start = out.begin() + channel;
 
 	// We have a new peak, so ...
@@ -248,12 +248,15 @@ void SoftLimiter::LinearScale(in_iterator_t in_pos,
                               out_iterator_t out_pos,
                               const float scalar) const noexcept
 {
-	while (in_pos != in_end) {
+	const auto iterations = ((in_end - in_pos) / 2);
+	for (auto i = 0; i <= iterations; ++i) {
 		const auto scaled = (*in_pos) * scalar;
 		assert(fabsf(scaled) < INT16_MAX);
 		*out_pos = static_cast<int16_t>(scaled);
-		out_pos += 2;
-		in_pos += 2;
+		if (i != iterations) {
+			out_pos += 2;
+			in_pos += 2;
+		}
 	}
 }
 
