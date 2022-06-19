@@ -404,16 +404,15 @@ void PcSpeakerImpulse::AddImpulse(float index, int16_t amplitude)
 #ifndef REFERENCE
 	const auto samples_in_impulse = index * sample_rate_per_ms;
 	auto phase = static_cast<int>(samples_in_impulse * oversampling_factor) % oversampling_factor;
-
-	auto offset = static_cast<size_t>(samples_in_impulse);
+	auto offset = static_cast<int>(samples_in_impulse);
 	if (phase != 0) {
 		offset++;
 		phase = oversampling_factor - phase;
 	}
 
-	for (int i = 0; i < filter_quality; ++i) {
-		const auto wave_i = offset + static_cast<size_t>(i);
-		const auto impulse_i = static_cast<size_t>(phase + i * oversampling_factor);
+	for (uint16_t i = 0; i < filter_quality; ++i) {
+		const auto wave_i    = check_cast<uint16_t>(offset + i);
+		const auto impulse_i = check_cast<uint16_t>(phase + i * oversampling_factor);
 		waveform_deque.at(wave_i) += amplitude * impulse_lut.at(impulse_i);
 	}
 }
@@ -517,7 +516,7 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 
 	// Size the waveform queue
 	constexpr auto waveform_size = filter_quality + sample_rate_per_ms;
-	waveform_deque.resize(check_cast<uint16_t>(waveform_size), 0.0f);
+	waveform_deque.resize(waveform_size, 0.0f);
 
 	// Setup the soft limiter
 	soft_limiter = std::make_unique<SoftLimiter>(device_name);
