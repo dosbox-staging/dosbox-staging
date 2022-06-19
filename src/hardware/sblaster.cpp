@@ -308,7 +308,7 @@ static void InitializeSpeakerState()
 	}
 }
 
-static void configure_filters(const Section_prop* config)
+static void configure_filters(const Section_prop* config, const OPL_Mode opl_mode)
 {
 	auto get_filter_params = [&](const char * conf) {
 		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
@@ -354,9 +354,22 @@ static void configure_filters(const Section_prop* config)
 		}
 		return std::make_tuple(filter_type, filter_state);
 	};
+
 	using std::tie;
 	tie(sb.sb_filter_type, sb.sb_filter_state) = get_filter_params("sb_filter");
 	tie(sb.opl_filter_type, std::ignore) = get_filter_params("opl_filter");
+
+	// When "opl_filter" is set to "auto", the low-pass filter to use is
+	// determined by "sbtype". For AdLib Gold ("oplmode = opl3gold") we want
+	// to disable the low-pass filter on auto, but as AdLib Gold is not tied
+	// to any particular Sound Blaster model, we need special handling for
+	// this case.
+	if (opl_mode == OPL_opl3gold) {
+		const std::string opl_filter_prefs = config->Get_string("opl_filter");
+		if (opl_filter_prefs == "auto") {
+			sb.opl_filter_type = FilterType::None;
+		}
+	}
 }
 
 static void log_filter_config(const char *output_type, const FilterType filter)
@@ -1966,7 +1979,7 @@ public:
 		sb.mixer.stereo=false;
 
 		Find_Type_And_Opl(section,sb.type,oplmode);
-		configure_filters(section);
+		configure_filters(section, oplmode);
 
 		switch (oplmode) {
 		case OPL_none: WriteHandler[0].Install(0x388, adlib_gusforward, io_width_t::byte); break;
