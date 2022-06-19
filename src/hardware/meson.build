@@ -25,6 +25,7 @@ libhardware_sources = files([
   'ne2000.cpp',
   'pci_bus.cpp',
   'pcspeaker.cpp',
+  'pcspeaker_impulse.cpp',
   'ps1audio.cpp',
   'pic.cpp',
   'sblaster.cpp',
