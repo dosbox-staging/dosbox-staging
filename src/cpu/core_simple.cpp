@@ -163,15 +163,23 @@ restart_opcode:
 		illegal_opcode:
 #if C_DEBUG	
 			{
-				Bitu len=(GETIP-reg_eip);
+				// Basic illegal opcode info-only report
+				LOG(LOG_CPU, LOG_NORMAL)("Illegal/Unhandled opcode");
+
+				/* Detailed illegal opcode logging is disabled.
+				// (sprintf below is commented out)
+				Bitu len = (GETIP - reg_eip);
 				LOADIP;
-				if (len>16) len=16;
-				char tempcode[16*2+1];char * writecode=tempcode;
-				for (;len>0;len--) {
-//					sprintf(writecode,"%X",mem_readb(core.cseip++));
-					writecode+=2;
+				if (len > 16)
+					len = 16;
+				char tempcode[16 * 2 + 1];
+				[[maybe_unused]] char *writecode = tempcode;
+				for (; len > 0; len--) {
+					// sprintf(writecode,"%X",mem_readb(core.cseip++));
+					writecode += 2;
 				}
-				LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
+				LOG(LOG_CPU, LOG_NORMAL)("Illegal/Unhandled opcode %s", tempcode);
+				*/
 			}
 #endif
 			CPU_Exception(6,0);
