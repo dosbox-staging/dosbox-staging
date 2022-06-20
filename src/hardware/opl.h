@@ -33,16 +33,20 @@
 class Timer {
 	// Rounded down start time
 	double start = 0.0;
+
 	// Time when you overflow
 	double trigger = 0.0;
+
 	// Clock interval
 	double clockInterval = 0.0;
+
 	// cycle interval
 	double counterInterval = 0.0;
-	uint8_t counter        = 0;
-	bool enabled           = false;
-	bool overflow          = false;
-	bool masked            = false;
+
+	uint8_t counter = 0;
+	bool enabled    = false;
+	bool overflow   = false;
+	bool masked     = false;
 
 public:
 	Timer(int16_t micros)
@@ -83,14 +87,14 @@ public:
 		overflow = false;
 	}
 
-	void SetCounter(uint8_t val)
+	void SetCounter(const uint8_t val)
 	{
 		counter = val;
 		// Interval for next cycle
 		counterInterval = (256 - counter) * clockInterval;
 	}
 
-	void SetMask(bool set)
+	void SetMask(const bool set)
 	{
 		masked = set;
 		if (masked)
@@ -123,7 +127,7 @@ struct Chip {
 	Timer timer1;
 
 	// Check for it being a write to the timer
-	bool Write(uint32_t addr, uint8_t val);
+	bool Write(const uint32_t addr, const uint8_t val);
 
 	// Read the current timer state, will use current double
 	uint8_t Read();
@@ -142,13 +146,13 @@ class Capture;
 
 class OPL : public Module_base {
 	// Write an address to a chip, returns the address the chip sets
-	uint32_t WriteAddr(io_port_t port, uint8_t val);
+	uint32_t WriteAddr(const io_port_t port, const uint8_t val);
 
 	// Write to a specific register in the chip
-	void WriteReg(uint32_t addr, uint8_t val);
+	void WriteReg(const uint32_t addr, const uint8_t val);
 
 	// Initialize at a specific sample rate and mode
-	void Init(uint32_t rate);
+	void Init(const uint32_t rate);
 
 	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[3];
@@ -170,9 +174,9 @@ class OPL : public Module_base {
 		bool mixer    = false;
 	} ctrl = {};
 
-	void CacheWrite(uint32_t reg, uint8_t val);
-	void DualWrite(uint8_t index, uint8_t reg, uint8_t val);
-	void CtrlWrite(uint8_t val);
+	void CacheWrite(const uint32_t reg, const uint8_t val);
+	void DualWrite(const uint8_t index, const uint8_t reg, const uint8_t value);
+	void CtrlWrite(const uint8_t val);
 
 	uint8_t CtrlRead(void);
 
@@ -191,9 +195,11 @@ public:
 	uint8_t newm      = 0;
 
 	// Handle port writes
-	void PortWrite(io_port_t port, io_val_t value, io_width_t width);
-	uint8_t PortRead(io_port_t port, io_width_t width);
-	void Init(Mode m);
+	void PortWrite(const io_port_t port, const io_val_t value,
+	               const io_width_t width);
+
+	uint8_t PortRead(const io_port_t port, const io_width_t width);
+	void Init(const Mode m);
 
 	OPL(Section *configuration);
 	~OPL() override;
@@ -206,7 +212,7 @@ public:
 
 public:
 	// Generate a certain amount of frames
-	void Generate(mixer_channel_t &chan, uint16_t frames);
+	void Generate(const mixer_channel_t &chan, const uint16_t frames);
 };
 
 #endif
