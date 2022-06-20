@@ -90,14 +90,14 @@ class Capture {
 
 	RegisterCache *cache;
 
-	void MakeEntry(uint8_t reg, uint8_t &raw)
+	void MakeEntry(const uint8_t reg, uint8_t &raw)
 	{
 		ToReg[raw] = reg;
 		ToRaw[reg] = raw;
 		raw++;
 	}
 
-	void MakeTables(void)
+	void MakeTables()
 	{
 		uint8_t index = 0;
 		memset(ToReg, 0xff, sizeof(ToReg));
@@ -149,14 +149,14 @@ class Capture {
 		delayShift8 = RawUsed + 1;
 	}
 
-	void ClearBuf(void)
+	void ClearBuf()
 	{
 		fwrite(buf, 1, bufUsed, handle);
 		header.commands += bufUsed / 2;
 		bufUsed = 0;
 	}
 
-	void AddBuf(uint8_t raw, uint8_t val)
+	void AddBuf(const uint8_t raw, const uint8_t val)
 	{
 		buf[bufUsed++] = raw;
 		buf[bufUsed++] = val;
@@ -165,7 +165,7 @@ class Capture {
 		}
 	}
 
-	void AddWrite(uint32_t regFull, uint8_t val)
+	void AddWrite(const uint32_t regFull, const uint8_t val)
 	{
 		uint8_t regMask = regFull & 0xff;
 		/*
@@ -192,7 +192,7 @@ class Capture {
 		AddBuf(raw, val);
 	}
 
-	void WriteCache(void)
+	void WriteCache()
 	{
 		/* Check the registers to add */
 		for (uint16_t i = 0; i < 256; i++) {
@@ -214,7 +214,7 @@ class Capture {
 		}
 	}
 
-	void InitHeader(void)
+	void InitHeader()
 	{
 		memset(&header, 0, sizeof(header));
 		memcpy(header.id, "DBRAWOPL", 8);
@@ -225,7 +225,7 @@ class Capture {
 		header.conversionTableSize = RawUsed;
 	}
 
-	void CloseFile(void)
+	void CloseFile()
 	{
 		if (handle) {
 			ClearBuf();
@@ -243,7 +243,7 @@ class Capture {
 	}
 
 public:
-	bool DoWrite(uint32_t regFull, uint8_t val)
+	bool DoWrite(const uint32_t regFull, const uint8_t val)
 	{
 		uint8_t regMask = regFull & 0xff;
 		// Check the raw index for this register if we actually have to
@@ -336,7 +336,7 @@ public:
 
 Chip::Chip() : timer0(80), timer1(320) {}
 
-bool Chip::Write(uint32_t reg, uint8_t val)
+bool Chip::Write(const uint32_t reg, const uint8_t val)
 {
 	// if(reg == 0x02 || reg == 0x03 || reg == 0x04)
 	// LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
@@ -390,20 +390,20 @@ uint8_t Chip::Read()
 	return ret;
 }
 
-void OPL::Init(uint32_t rate)
+void OPL::Init(const uint32_t rate)
 {
 	newm = 0;
 	OPL3_Reset(&oplchip, rate);
 }
 
-void OPL::WriteReg(uint32_t reg, uint8_t val)
+void OPL::WriteReg(const uint32_t reg, const uint8_t val)
 {
 	OPL3_WriteRegBuffered(&oplchip, (uint16_t)reg, val);
 	if (reg == 0x105)
 		newm = reg & 0x01;
 }
 
-uint32_t OPL::WriteAddr(io_port_t port, uint8_t val)
+uint32_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 {
 	uint16_t addr;
 	addr = val;
@@ -413,7 +413,7 @@ uint32_t OPL::WriteAddr(io_port_t port, uint8_t val)
 	return addr;
 }
 
-void OPL::Generate(mixer_channel_t &chan, const uint16_t frames)
+void OPL::Generate(const mixer_channel_t &chan, const uint16_t frames)
 {
 	int16_t buf[render_frames * 2];
 	float float_buf[render_frames * 2];
@@ -433,7 +433,7 @@ void OPL::Generate(mixer_channel_t &chan, const uint16_t frames)
 	}
 }
 
-void OPL::CacheWrite(uint32_t port, uint8_t val)
+void OPL::CacheWrite(const uint32_t port, const uint8_t val)
 {
 	// capturing?
 	if (capture) {
@@ -443,7 +443,7 @@ void OPL::CacheWrite(uint32_t port, uint8_t val)
 	cache[port] = val;
 }
 
-void OPL::DualWrite(uint8_t index, uint8_t port, uint8_t val)
+void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value)
 {
 	// Make sure you don't use opl3 features
 	// Don't allow write to disable opl3
@@ -451,6 +451,7 @@ void OPL::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 		return;
 	}
 	// Only allow 4 waveforms
+	auto val = value;
 	if (port >= 0xE0) {
 		val &= 3;
 	}
@@ -468,7 +469,7 @@ void OPL::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 	CacheWrite(full_port, val);
 }
 
-void OPL::CtrlWrite(uint8_t val)
+void OPL::CtrlWrite(const uint8_t val)
 {
 	switch (ctrl.index) {
 	case 0x04:
@@ -507,7 +508,7 @@ void OPL::CtrlWrite(uint8_t val)
 	}
 }
 
-uint8_t OPL::CtrlRead(void)
+uint8_t OPL::CtrlRead()
 {
 	switch (ctrl.index) {
 	case 0x00:           /* Board Options */
@@ -524,7 +525,7 @@ uint8_t OPL::CtrlRead(void)
 	return 0xff;
 }
 
-void OPL::PortWrite(io_port_t port, io_val_t value, io_width_t)
+void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
 	// Keep track of last write time
@@ -598,7 +599,7 @@ void OPL::PortWrite(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-uint8_t OPL::PortRead(io_port_t port, io_width_t)
+uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 {
 	// roughly half a micro (as we already do 1 micro on each port read and
 	// some tests revealed it taking 1.5 micros to read an adlib port)
@@ -643,7 +644,7 @@ uint8_t OPL::PortRead(io_port_t port, io_width_t)
 	return 0;
 }
 
-void OPL::Init(Mode m)
+void OPL::Init(const Mode m)
 {
 	mode = m;
 	memset(cache, 0, ARRAY_LEN(cache));
@@ -663,7 +664,7 @@ void OPL::Init(Mode m)
 	}
 }
 
-static void OPL_CallBack(uint16_t len)
+static void OPL_CallBack(const uint16_t len)
 {
 	opl->Generate(opl->mixerChan, len);
 
@@ -725,12 +726,12 @@ static void SaveRad() {
 };
 #endif
 
-static void OPL_SaveRawEvent(bool pressed)
+static void OPL_SaveRawEvent(const bool pressed)
 {
 	if (!pressed)
 		return;
 	//	SaveRad();return;
-	
+
 	// Check for previously opened wave file
 	if (opl->capture) {
 		delete opl->capture;
@@ -817,7 +818,7 @@ OPL::~OPL()
 // Initialize static members
 OPL_Mode OPL::oplmode = OPL_none;
 
-void OPL_Init(Section *sec, OPL_Mode oplmode)
+void OPL_Init(Section *sec, const OPL_Mode oplmode)
 {
 	OPL::oplmode = oplmode;
 
