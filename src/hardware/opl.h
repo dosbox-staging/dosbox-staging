@@ -135,8 +135,9 @@ struct Chip {
 	Chip();
 };
 
-// The type of handler this is
-typedef enum { MODE_OPL2, MODE_DUALOPL2, MODE_OPL3, MODE_OPL3GOLD } Mode;
+enum class Mode {
+	OPL2, DualOPL2, OPL3, OPL3Gold
+};
 
 // The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
