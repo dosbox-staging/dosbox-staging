@@ -1762,8 +1762,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	const char *rates[] = {
 	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", 0};
 	int_prop->Set_values(rates);
-	int_prop->Set_help(
-	        "Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
+	int_prop->Set_help("Mixer sample rate.");
 
 	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", 0};
 
