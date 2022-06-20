@@ -33,70 +33,14 @@
 
 class Timer {
 public:
-	Timer(int16_t micros)
-	        : clock_interval(micros * 0.001) // interval in milliseconds
-	{
-		SetCounter(0);
-	}
+	Timer(int16_t micros);
 
-	// Update returns with true if overflow
-	// Properly syncs up the start/end to current time and changing intervals
-	bool Update(const double time)
-	{
-		if (enabled && (time >= trigger)) {
-			// How far into the next cycle
-			const double deltaTime = time - trigger;
-			// Sync start to last cycle
-			const auto counter_mod = fmod(deltaTime, counter_interval);
-
-			start   = time - counter_mod;
-			trigger = start + counter_interval;
-			// Only set the overflow flag when not masked
-			if (!masked)
-				overflow = true;
-		}
-		return overflow;
-	}
-
-	// On a reset make sure the start is in sync with the next cycle
-	void Reset()
-	{
-		overflow = false;
-	}
-
-	void SetCounter(const uint8_t val)
-	{
-		counter = val;
-		// Interval for next cycle
-		counter_interval = (256 - counter) * clock_interval;
-	}
-
-	void SetMask(const bool set)
-	{
-		masked = set;
-		if (masked)
-			overflow = false;
-	}
-
-	void Stop()
-	{
-		enabled = false;
-	}
-
-	void Start(const double time)
-	{
-		// Only properly start when not running before
-		if (!enabled) {
-			enabled  = true;
-			overflow = false;
-			// Sync start to the last clock interval
-			const auto clockMod = fmod(time, clock_interval);
-
-			start = time - clockMod;
-			// Overflow trigger
-			trigger = start + counter_interval;
-		}
-	}
+	bool Update(const double time);
+	void Reset();
+	void SetCounter(const uint8_t val);
+	void SetMask(const bool set);
+	void Stop();
+	void Start(const double time);
 
 private:
 	double start            = 0.0; // Rounded down start time
