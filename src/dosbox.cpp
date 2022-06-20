@@ -828,23 +828,17 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 
-	Pbool = secprop->Add_bool("pcspeaker", when_idle, true);
-	Pbool->Set_help("Enable PC speaker emulation.");
-
-	// Basis for the default PC speaker sample generation rate:
-	//   "With the PC speaker, typically a 6-bit DAC with a maximum value of
-	//   63
-	//    is used at a sample rate of 18,939.4 Hz."
-	// PC Speaker. (2020, June 8). In Wikipedia. Retrieved from
-	// https://en.wikipedia.org/w/index.php?title=PC_speaker&oldid=961464485
-	//
-	// As this is the frequency range that game authors in the 1980s would
-	// have worked with when tuning their game audio, we therefore use this
-	// same value given it's the most likely to produce audio as intended by
-	// the authors.
-	pint = secprop->Add_int("pcrate", when_idle, 12000);
-	pint->SetMinMax(8000, 48000);
-	pint->Set_help("Sample rate of the PC speaker sound generation.");
+	const char *pcspeaker_models[] = {"discrete", "impulse", "none", 0};
+	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
+	pstring->Set_help(
+	        "PC speaker emulation model:\n"
+	        "  discrete: Waveform is created using discrete steps (default).\n"
+	        "            Work well for game that use RealSound-type effects.\n"
+	        "  impulse:  Waveform is created using sinc impulses.\n"
+	        "            Recommended for square-wave games, like Commander Keen.\n"
+	        "            Higher accuracy but also higher host CPU usage.\n"
+	        "  none:     Disable the PC Speaker.");
+	pstring->Set_values(pcspeaker_models);
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	pstring->Set_help("Filter for the PC Speaker output:\n"

@@ -34,16 +34,26 @@ void PCSPEAKER_ShutDown([[maybe_unused]] Section *sec)
 
 void PCSPEAKER_Init(Section *section)
 {
+	// Always reset the speaker on changes
+	PCSPEAKER_ShutDown(nullptr);
+
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
 
-	if (!prop->Get_bool("pcspeaker"))
-		return;
+	const auto model_pref = std::string_view(prop->Get_string("pcspeaker"));
 
-	// Create the PC Speaker
-	if (!pc_speaker)
+	// Maybe create the PC Speaker
+	if (model_pref == "none")
+		return;
+	else if (model_pref == "discrete")
 		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
-	//		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+	else if (model_pref == "impulse")
+		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+	else {
+		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
+		        model_pref.data());
+		return;
+	}
 
 	// Get the user's filering preference
 	const auto filter_pref  = std::string_view(prop->Get_string("pcspeaker_filter"));
