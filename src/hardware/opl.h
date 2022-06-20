@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_OPL_H
 #define DOSBOX_OPL_H
 
@@ -32,13 +31,13 @@
 #include <cmath>
 
 class Timer {
-	//Rounded down start time
+	// Rounded down start time
 	double start;
-	//Time when you overflow
+	// Time when you overflow
 	double trigger;
-	//Clock interval
+	// Clock interval
 	double clockInterval;
-	//cycle interval
+	// cycle interval
 	double counterInterval;
 	uint8_t counter;
 	bool enabled;
@@ -59,8 +58,8 @@ public:
 		SetCounter(0);
 	}
 
-	//Update returns with true if overflow
-	//Properly syncs up the start/end to current time and changing intervals
+	// Update returns with true if overflow
+	// Properly syncs up the start/end to current time and changing intervals
 	bool Update(const double time)
 	{
 		if (enabled && (time >= trigger)) {
@@ -68,9 +67,9 @@ public:
 			const double deltaTime = time - trigger;
 			// Sync start to last cycle
 			const auto counterMod = fmod(deltaTime, counterInterval);
-			start = time - counterMod;
-			trigger = start + counterInterval;
-			//Only set the overflow flag when not masked
+			start                 = time - counterMod;
+			trigger               = start + counterInterval;
+			// Only set the overflow flag when not masked
 			if (!masked) {
 				overflow = true;
 			}
@@ -78,24 +77,28 @@ public:
 		return overflow;
 	}
 
-	//On a reset make sure the start is in sync with the next cycle
-	void Reset() {
+	// On a reset make sure the start is in sync with the next cycle
+	void Reset()
+	{
 		overflow = false;
 	}
 
-	void SetCounter(uint8_t val) {
+	void SetCounter(uint8_t val)
+	{
 		counter = val;
-		//Interval for next cycle
+		// Interval for next cycle
 		counterInterval = (256 - counter) * clockInterval;
 	}
 
-	void SetMask(bool set) {
+	void SetMask(bool set)
+	{
 		masked = set;
 		if (masked)
 			overflow = false;
 	}
 
-	void Stop( ) {
+	void Stop()
+	{
 		enabled = false;
 	}
 
@@ -103,43 +106,38 @@ public:
 	{
 		// Only properly start when not running before
 		if (!enabled) {
-			enabled = true;
+			enabled  = true;
 			overflow = false;
-			//Sync start to the last clock interval
+			// Sync start to the last clock interval
 			const auto clockMod = fmod(time, clockInterval);
-			start = time - clockMod;
-			//Overflow trigger
+			start               = time - clockMod;
+			// Overflow trigger
 			trigger = start + counterInterval;
 		}
 	}
 };
 
 struct Chip {
-	//Last selected register
+	// Last selected register
 	Timer timer0, timer1;
-	//Check for it being a write to the timer
-	bool Write( uint32_t addr, uint8_t val );
-	//Read the current timer state, will use current double
-	uint8_t Read( );
+	// Check for it being a write to the timer
+	bool Write(uint32_t addr, uint8_t val);
+	// Read the current timer state, will use current double
+	uint8_t Read();
 
 	Chip();
 };
 
-//The type of handler this is
-typedef enum {
-	MODE_OPL2,
-	MODE_DUALOPL2,
-	MODE_OPL3,
-	MODE_OPL3GOLD
-} Mode;
+// The type of handler this is
+typedef enum { MODE_OPL2, MODE_DUALOPL2, MODE_OPL3, MODE_OPL3GOLD } Mode;
 
-//The cache for 2 chips or an opl3
+// The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
 
-//Internal class used for dro capturing
+// Internal class used for dro capturing
 class Capture;
 
-class OPL: public Module_base {
+class OPL : public Module_base {
 	// Write an address to a chip, returns the address the chip sets
 	uint32_t WriteAddr(io_port_t port, uint8_t val);
 
@@ -152,13 +150,14 @@ class OPL: public Module_base {
 	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[3];
 
-	//Mode we're running in
+	// Mode we're running in
 	Mode mode;
-	//Last selected address in the chip for the different modes
+	// Last selected address in the chip for the different modes
 	union {
 		uint32_t normal;
 		uint8_t dual[2];
 	} reg;
+
 	struct {
 		bool active;
 		uint8_t index;
@@ -166,24 +165,28 @@ class OPL: public Module_base {
 		uint8_t rvol;
 		bool mixer;
 	} ctrl;
-	void CacheWrite( uint32_t reg, uint8_t val );
-	void DualWrite( uint8_t index, uint8_t reg, uint8_t val );
-	void CtrlWrite( uint8_t val );
+
+	void CacheWrite(uint32_t reg, uint8_t val);
+	void DualWrite(uint8_t index, uint8_t reg, uint8_t val);
+	void CtrlWrite(uint8_t val);
+
 	uint8_t CtrlRead(void);
 
-	public:
+public:
 	static OPL_Mode oplmode;
 	mixer_channel_t mixerChan;
-	uint32_t lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
+
+	uint32_t lastUsed; // Ticks when adlib was last used to turn of mixing
+	                   // after a few second
 
 	RegisterCache cache;
-	Capture* capture;
-	Chip	chip[2];
+	Capture *capture;
+	Chip chip[2];
 
 	opl3_chip oplchip = {};
-	uint8_t newm = 0;
+	uint8_t newm      = 0;
 
-	//Handle port writes
+	// Handle port writes
 	void PortWrite(io_port_t port, io_val_t value, io_width_t width);
 	uint8_t PortRead(io_port_t port, io_width_t width);
 	void Init(Mode m);
@@ -191,8 +194,8 @@ class OPL: public Module_base {
 	OPL(Section *configuration);
 	~OPL() override;
 
-	OPL(const OPL&) = delete; // prevent copy
-	OPL& operator=(const OPL&) = delete; // prevent assignment
+	OPL(const OPL &)            = delete; // prevent copy
+	OPL &operator=(const OPL &) = delete; // prevent assignment
 
 public:
 	// Generate a certain amount of frames
