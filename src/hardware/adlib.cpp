@@ -30,12 +30,10 @@
 #include "setup.h"
 #include "support.h"
 
-static Adlib::Module *module = nullptr;
+static OPL *opl = nullptr;
 static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
-
-namespace Adlib {
 
 /* Raw DRO capture stuff */
 
@@ -355,20 +353,20 @@ uint8_t Chip::Read( ) {
 	return ret;
 }
 
-void Module::Init(uint32_t rate)
+void OPL::Init(uint32_t rate)
 {
 	newm = 0;
 	OPL3_Reset(&oplchip, rate);
 }
 
-void Module::WriteReg(uint32_t reg, uint8_t val)
+void OPL::WriteReg(uint32_t reg, uint8_t val)
 {
 	OPL3_WriteRegBuffered(&oplchip, (uint16_t)reg, val);
 	if (reg == 0x105)
 		newm = reg & 0x01;
 }
 
-uint32_t Module::WriteAddr(io_port_t port, uint8_t val)
+uint32_t OPL::WriteAddr(io_port_t port, uint8_t val)
 {
 	uint16_t addr;
 	addr = val;
@@ -378,7 +376,7 @@ uint32_t Module::WriteAddr(io_port_t port, uint8_t val)
 	return addr;
 }
 
-void Module::Generate(mixer_channel_t &chan, const uint16_t frames)
+void OPL::Generate(mixer_channel_t &chan, const uint16_t frames)
 {
 	int16_t buf[render_frames * 2];
 	float float_buf[render_frames * 2];
@@ -398,7 +396,7 @@ void Module::Generate(mixer_channel_t &chan, const uint16_t frames)
 	}
 }
 
-void Module::CacheWrite(uint32_t port, uint8_t val)
+void OPL::CacheWrite(uint32_t port, uint8_t val)
 {
 	// capturing?
 	if (capture) {
@@ -408,7 +406,7 @@ void Module::CacheWrite(uint32_t port, uint8_t val)
 	cache[port] = val;
 }
 
-void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
+void OPL::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 {
 	// Make sure you don't use opl3 features
 	// Don't allow write to disable opl3
@@ -432,7 +430,7 @@ void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 	CacheWrite(full_port, val);
 }
 
-void Module::CtrlWrite(uint8_t val)
+void OPL::CtrlWrite(uint8_t val)
 {
 	switch (ctrl.index) {
 	case 0x04:
@@ -471,7 +469,7 @@ void Module::CtrlWrite(uint8_t val)
 	}
 }
 
-uint8_t Module::CtrlRead(void)
+uint8_t OPL::CtrlRead(void)
 {
 	switch (ctrl.index) {
 	case 0x00: /* Board Options */
@@ -487,7 +485,7 @@ uint8_t Module::CtrlRead(void)
 	return 0xff;
 }
 
-void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
+void OPL::PortWrite(io_port_t port, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
 	// Keep track of last write time
@@ -563,7 +561,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-uint8_t Module::PortRead(io_port_t port, io_width_t)
+uint8_t OPL::PortRead(io_port_t port, io_width_t)
 {
 	// roughly half a micro (as we already do 1 micro on each port read and
 	// some tests revealed it taking 1.5 micros to read an adlib port)
@@ -609,7 +607,7 @@ uint8_t Module::PortRead(io_port_t port, io_width_t)
 	return 0;
 }
 
-void Module::Init(Mode m)
+void OPL::Init(Mode m)
 {
 	mode = m;
 	memset(cache, 0, ARRAY_LEN(cache));
@@ -630,17 +628,15 @@ void Module::Init(Mode m)
 	}
 }
 
-} // namespace Adlib
-
 static void OPL_CallBack(uint16_t len)
 {
-	module->Generate(module->mixerChan, len);
+	opl->Generate(opl->mixerChan, len);
 	// Disable the sound generation after 30 seconds of silence
-	if ((PIC_Ticks - module->lastUsed) > 30000) {
+	if ((PIC_Ticks - opl->lastUsed) > 30000) {
 		uint8_t i;
-		for (i=0xb0;i<0xb9;i++) if (module->cache[i]&0x20||module->cache[i+0x100]&0x20) break;
-		if (i==0xb9) module->mixerChan->Enable(false);
-		else module->lastUsed = PIC_Ticks;
+		for (i=0xb0;i<0xb9;i++) if (opl->cache[i]&0x20||opl->cache[i+0x100]&0x20) break;
+		if (i==0xb9) opl->mixerChan->Enable(false);
+		else opl->lastUsed = PIC_Ticks;
 	}
 }
 
@@ -661,7 +657,7 @@ static void SaveRad() {
 	b[w++] = 0x06;		//default speed and no description
 	//Write 18 instuments for all operators in the cache
 	for ( int i = 0; i < 18; i++ ) {
-		uint8_t* set = module->cache + ( i / 9 ) * 256;
+		uint8_t* set = opl->cache + ( i / 9 ) * 256;
 		const auto offset = ((i % 9) / 3) * 8 + (i % 3);
 		uint8_t* base = set + offset;
 		b[w++] = 1 + i;		//instrument number
@@ -693,19 +689,17 @@ static void OPL_SaveRawEvent(bool pressed) {
 		return;
 //	SaveRad();return;
 	/* Check for previously opened wave file */
-	if ( module->capture ) {
-		delete module->capture;
-		module->capture = 0;
+	if ( opl->capture ) {
+		delete opl->capture;
+		opl->capture = 0;
 		LOG_MSG("Stopped Raw OPL capturing.");
 	} else {
 		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
-		module->capture = new Adlib::Capture( &module->cache );
+		opl->capture = new Capture( &opl->cache );
 	}
 }
 
-namespace Adlib {
-
-Module::Module(Section *configuration)
+OPL::OPL(Section *configuration)
         : Module_base(configuration),
           mode(MODE_OPL2), // TODO this is set in Init and there's no good default
           reg{0},          // union
@@ -734,16 +728,16 @@ Module::Module(Section *configuration)
 	switch ( oplmode ) {
 	case OPL_opl2:
 		single = true;
-		Init( Adlib::MODE_OPL2 );
+		Init( MODE_OPL2 );
 		break;
 	case OPL_dualopl2:
-		Init( Adlib::MODE_DUALOPL2 );
+		Init( MODE_DUALOPL2 );
 		break;
 	case OPL_opl3:
-		Init( Adlib::MODE_OPL3 );
+		Init( MODE_OPL3 );
 		break;
 	case OPL_opl3gold:
-		Init( Adlib::MODE_OPL3GOLD );
+		Init( MODE_OPL3GOLD );
 		break;
 	case OPL_cms:
 	case OPL_none:
@@ -751,8 +745,8 @@ Module::Module(Section *configuration)
 	}
 	using namespace std::placeholders;
 
-	const auto read_from = std::bind(&Module::PortRead, this, _1, _2);
-	const auto write_to = std::bind(&Module::PortWrite, this, _1, _2, _3);
+	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
+	const auto write_to = std::bind(&OPL::PortWrite, this, _1, _2, _3);
 
 	// 0x388-0x38b ports (read/write)
 	constexpr io_port_t port_0x388 = 0x388;
@@ -774,7 +768,7 @@ Module::Module(Section *configuration)
 	                  "caprawopl", "Rec. OPL");
 }
 
-Module::~Module()
+OPL::~OPL()
 {
 	delete capture;
 	capture = nullptr;
@@ -784,17 +778,15 @@ Module::~Module()
 }
 
 //Initialize static members
-OPL_Mode Module::oplmode=OPL_none;
-
-} // namespace Adlib
+OPL_Mode OPL::oplmode=OPL_none;
 
 void OPL_Init(Section* sec,OPL_Mode oplmode) {
-	Adlib::Module::oplmode = oplmode;
-	module = new Adlib::Module( sec );
+	OPL::oplmode = oplmode;
+	opl = new OPL( sec );
 }
 
 void OPL_ShutDown(Section * /*sec*/)
 {
-	delete module;
-	module = nullptr;
+	delete opl;
+	opl = nullptr;
 }
