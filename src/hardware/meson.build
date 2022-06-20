@@ -1,5 +1,4 @@
 libhardware_sources = files([
-  'adlib.cpp',
   'adlib_gold.cpp',
   'cmos.cpp',
   'dc_silencer.cpp',
@@ -21,6 +20,7 @@ libhardware_sources = files([
   'mame/sn76496.cpp',
   'memory.cpp',
   'mixer.cpp',
+  'opl.cpp',
   'mpu401.cpp',
   'ne2000.cpp',
   'pci_bus.cpp',
