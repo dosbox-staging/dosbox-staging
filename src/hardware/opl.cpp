@@ -74,6 +74,99 @@ struct RawHeader {
 
 // Table to map the opl register to one <127 for dro saving
 class Capture {
+public:
+	bool DoWrite(const uint32_t reg_full, const uint8_t val)
+	{
+		const auto reg_mask = reg_full & 0xff;
+
+		// Check the raw index for this register if we actually have to
+		// save it
+		if (handle) {
+			// Check if we actually care for this to be logged,
+			// else just ignore it
+			uint8_t raw = to_raw[reg_mask];
+			if (raw == 0xff) {
+				return true;
+			}
+			// Check if this command will not just replace the same
+			// value in a reg that doesn't do anything with it
+			if ((*cache)[reg_full] == val)
+				return true;
+
+			// Check how much time has passed
+			uint32_t passed = PIC_Ticks - lastTicks;
+			lastTicks       = PIC_Ticks;
+			header.milliseconds += passed;
+
+			// if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
+
+			// If we passed more than 30 seconds since the last
+			// command, we'll restart the the capture
+			if (passed > 30000) {
+				CloseFile();
+				goto skipWrite;
+			}
+			while (passed > 0) {
+				if (passed < 257) { // 1-256 millisecond delay
+					AddBuf(delay256, passed - 1);
+					passed = 0;
+				} else {
+					const auto shift = (passed >> 8);
+					passed -= shift << 8;
+					AddBuf(delay_shift8, shift - 1);
+				}
+			}
+			AddWrite(reg_full, val);
+			return true;
+		}
+	skipWrite:
+		// Not yet capturing to a file here
+		// Check for commands that would start capturing, if it's not
+		// one of them return
+		if (!( // note on in any channel
+		            (reg_mask >= 0xb0 && reg_mask <= 0xb8 && (val & 0x020)) ||
+		            // Percussion mode enabled and a note on in any
+		            // percussion instrument
+		            (reg_mask == 0xbd && ((val & 0x3f) > 0x20)))) {
+			return true;
+		}
+		handle = OpenCaptureFile("Raw Opl", ".dro");
+		if (!handle)
+			return false;
+
+		InitHeader();
+
+		// Prepare space at start of the file for the header
+		fwrite(&header, 1, sizeof(header), handle);
+		// write the Raw To Reg table
+		fwrite(&to_reg, 1, raw_used, handle);
+		// Write the cache of last commands
+		WriteCache();
+		// Write the command that triggered this
+		AddWrite(reg_full, val);
+		// Init the timing information for the next commands
+		lastTicks  = PIC_Ticks;
+		startTicks = PIC_Ticks;
+		return true;
+	}
+
+	Capture(RegisterCache *_cache) : header(), cache(_cache)
+	{
+		MakeTables();
+	}
+
+	virtual ~Capture()
+	{
+		CloseFile();
+	}
+
+	// prevent copy
+	Capture(const Capture &) = delete;
+
+	// prevent assignment
+	Capture &operator=(const Capture &) = delete;
+
+private:
 	uint8_t to_reg[127];  // 127 entries to go from raw data to registers
 	uint8_t raw_used = 0; // How many entries in the ToPort are used
 	uint8_t to_raw[256];  // 256 entries to go from port index to raw data
@@ -250,97 +343,6 @@ class Capture {
 		}
 	}
 
-public:
-	bool DoWrite(const uint32_t reg_full, const uint8_t val)
-	{
-		const auto reg_mask = reg_full & 0xff;
-
-		// Check the raw index for this register if we actually have to
-		// save it
-		if (handle) {
-			// Check if we actually care for this to be logged,
-			// else just ignore it
-			uint8_t raw = to_raw[reg_mask];
-			if (raw == 0xff) {
-				return true;
-			}
-			// Check if this command will not just replace the same
-			// value in a reg that doesn't do anything with it
-			if ((*cache)[reg_full] == val)
-				return true;
-
-			// Check how much time has passed
-			uint32_t passed = PIC_Ticks - lastTicks;
-			lastTicks       = PIC_Ticks;
-			header.milliseconds += passed;
-
-			// if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
-
-			// If we passed more than 30 seconds since the last
-			// command, we'll restart the the capture
-			if (passed > 30000) {
-				CloseFile();
-				goto skipWrite;
-			}
-			while (passed > 0) {
-				if (passed < 257) { // 1-256 millisecond delay
-					AddBuf(delay256, passed - 1);
-					passed = 0;
-				} else {
-					const auto shift = (passed >> 8);
-					passed -= shift << 8;
-					AddBuf(delay_shift8, shift - 1);
-				}
-			}
-			AddWrite(reg_full, val);
-			return true;
-		}
-	skipWrite:
-		// Not yet capturing to a file here
-		// Check for commands that would start capturing, if it's not
-		// one of them return
-		if (!( // note on in any channel
-		            (reg_mask >= 0xb0 && reg_mask <= 0xb8 && (val & 0x020)) ||
-		            // Percussion mode enabled and a note on in any
-		            // percussion instrument
-		            (reg_mask == 0xbd && ((val & 0x3f) > 0x20)))) {
-			return true;
-		}
-		handle = OpenCaptureFile("Raw Opl", ".dro");
-		if (!handle)
-			return false;
-
-		InitHeader();
-
-		// Prepare space at start of the file for the header
-		fwrite(&header, 1, sizeof(header), handle);
-		// write the Raw To Reg table
-		fwrite(&to_reg, 1, raw_used, handle);
-		// Write the cache of last commands
-		WriteCache();
-		// Write the command that triggered this
-		AddWrite(reg_full, val);
-		// Init the timing information for the next commands
-		lastTicks  = PIC_Ticks;
-		startTicks = PIC_Ticks;
-		return true;
-	}
-
-	Capture(RegisterCache *_cache) : header(), cache(_cache)
-	{
-		MakeTables();
-	}
-
-	virtual ~Capture()
-	{
-		CloseFile();
-	}
-
-	// prevent copy
-	Capture(const Capture &) = delete;
-
-	// prevent assignment
-	Capture &operator=(const Capture &) = delete;
 };
 
 /* Chip */
