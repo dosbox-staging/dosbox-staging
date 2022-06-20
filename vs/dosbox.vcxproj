@@ -410,7 +410,6 @@
 	<ClCompile Include="..\src\hardware\adlib_gold.cpp" />
     <ClCompile Include="..\src\hardware\cmos.cpp" />
     <ClCompile Include="..\src\hardware\dc_silencer.cpp" />
-    <ClCompile Include="..\src\hardware\dbopl.cpp" />
     <ClCompile Include="..\src\hardware\disney.cpp" />
     <ClCompile Include="..\src\hardware\dma.cpp" />
     <ClCompile Include="..\src\hardware\envelope.cpp" />
@@ -425,11 +424,8 @@
     <ClCompile Include="..\src\hardware\ipxserver.cpp" />
     <ClCompile Include="..\src\hardware\joystick.cpp" />
     <ClCompile Include="..\src\hardware\keyboard.cpp" />
-    <ClCompile Include="..\src\hardware\mame\fmopl.cpp" />
     <ClCompile Include="..\src\hardware\mame\saa1099.cpp" />
     <ClCompile Include="..\src\hardware\mame\sn76496.cpp" />
-    <ClCompile Include="..\src\hardware\mame\ymdeltat.cpp" />
-    <ClCompile Include="..\src\hardware\mame\ymf262.cpp" />
     <ClCompile Include="..\src\hardware\memory.cpp" />
     <ClCompile Include="..\src\hardware\mixer.cpp" />
     <ClCompile Include="..\src\hardware\mpu401.cpp" />
@@ -645,11 +641,8 @@
     <ClInclude Include="..\src\hardware\font-switch.h" />
     <ClInclude Include="..\src\hardware\gameblaster.h" />
     <ClInclude Include="..\src\hardware\mame\emu.h" />
-    <ClInclude Include="..\src\hardware\mame\fmopl.h" />
     <ClInclude Include="..\src\hardware\mame\saa1099.h" />
     <ClInclude Include="..\src\hardware\mame\sn76496.h" />
-    <ClInclude Include="..\src\hardware\mame\ymdeltat.h" />
-    <ClInclude Include="..\src\hardware\mame\ymf262.h" />
     <ClInclude Include="..\src\hardware\serialport\directserial.h" />
     <ClInclude Include="..\src\hardware\serialport\libserial.h" />
     <ClInclude Include="..\src\hardware\serialport\misc_util.h" />

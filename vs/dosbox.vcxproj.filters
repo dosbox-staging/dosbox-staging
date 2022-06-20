@@ -139,9 +139,6 @@
     <ClCompile Include="..\src\hardware\dc_silencer.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\dbopl.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\disney.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -181,19 +178,10 @@
     <ClCompile Include="..\src\hardware\keyboard.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\mame\fmopl.cpp">
-      <Filter>src\hardware\mame</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\mame\saa1099.cpp">
       <Filter>src\hardware\mame</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\mame\sn76496.cpp">
-      <Filter>src\hardware\mame</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mame\ymdeltat.cpp">
-      <Filter>src\hardware\mame</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mame\ymf262.cpp">
       <Filter>src\hardware\mame</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\memory.cpp">
@@ -993,19 +981,10 @@
     <ClInclude Include="..\src\hardware\mame\emu.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hardware\mame\fmopl.h">
-      <Filter>src\hardware\mame</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\hardware\mame\saa1099.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\mame\sn76496.h">
-      <Filter>src\hardware\mame</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mame\ymdeltat.h">
-      <Filter>src\hardware\mame</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mame\ymf262.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\directserial.h">
