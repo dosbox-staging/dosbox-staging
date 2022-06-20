@@ -446,7 +446,7 @@ static const std::map<FilterState, std::string> filter_state_map = {
 static std::string filter_to_string(const uint8_t order, const uint16_t cutoff_freq)
 {
 	char buf[100] = {};
-	safe_sprintf(buf, "%d dB/oct at %d Hz", order * 6, cutoff_freq);
+	safe_sprintf(buf, " (%d dB/oct at %d Hz)", order * 6, cutoff_freq);
 	return std::string(buf);
 }
 
@@ -457,12 +457,15 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
 		const auto filter_state = it->second;
-		LOG_MSG("MIXER: %s channel highpass filter %s (%s)",
+		const auto filter_string =
+		        state == FilterState::Off
+		                ? ""
+		                : filter_to_string(filters.highpass.order,
+		                                   filters.highpass.cutoff_freq);
+		LOG_MSG("MIXER: %s channel highpass filter %s%s",
 		        name.c_str(),
 		        filter_state.c_str(),
-		        filter_to_string(filters.highpass.order,
-		                         filters.highpass.cutoff_freq)
-		                .c_str());
+		        filter_string.c_str());
 	}
 }
 
@@ -473,11 +476,15 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
 		const auto filter_state = it->second;
-		LOG_MSG("MIXER: %s channel lowpass filter %s (%s)",
+		const auto filter_string =
+		        state == FilterState::Off
+		                ? ""
+		                : filter_to_string(filters.lowpass.order,
+		                                   filters.lowpass.cutoff_freq);
+		LOG_MSG("MIXER: %s channel lowpass filter %s%s",
 		        name.c_str(),
 		        filter_state.c_str(),
-		        filter_to_string(filters.lowpass.order, filters.lowpass.cutoff_freq)
-		                .c_str());
+		        filter_string.c_str());
 	}
 }
 
