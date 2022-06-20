@@ -444,6 +444,7 @@ void DISNEY_Init(Section* sec) {
 
 	if (filter_pref == "on") {
 		disney.filter_enabled = true;
+		update_filter_freq(sample_rate);
 		disney.chan->SetLowPassFilter(FilterState::On);
 	} else {
 		if (filter_pref != "off")
