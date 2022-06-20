@@ -851,19 +851,19 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		MIXER_UnlockAudioDevice();
 		return;
 	}
-	//Target samples this inputs gets stretched into
-	auto outlen = frames_needed - frames_done;
-	auto index = 0;
-	auto index_add = (len << FREQ_SHIFT) / outlen;
+	// Target samples this inputs gets stretched into
+	auto frames_remaining = frames_needed - frames_done;
+	auto index            = 0;
+	auto index_add        = (len << FREQ_SHIFT) / frames_remaining;
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
-	auto pos = 0;
+	auto pos    = 0;
 
 	// read-only aliases to avoid dereferencing and inform compiler their
 	// values don't change
-	const auto mapped_output_left = output_map.left;
+	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
 
-	while (outlen--) {
+	while (frames_remaining--) {
 		const auto new_pos = index >> FREQ_SHIFT;
 		if (pos != new_pos) {
 			pos = new_pos;
@@ -871,18 +871,24 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 			prev_frame.left = data[0];
 			data++;
 		}
+		assert(prev_frame.left <= INT16_MAX);
+		assert(prev_frame.left >= INT16_MIN);
 		const auto diff = data[0] - static_cast<int16_t>(prev_frame.left);
+
 		const auto diff_mul = index & FREQ_MASK;
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
-		const auto sample = prev_frame.left + ((diff * diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][mapped_output_left]  += sample * volmul.left;
+
+		const auto sample = prev_frame.left +
+		                    ((diff * diff_mul) >> FREQ_SHIFT);
+
+		mixer.work[mixpos][mapped_output_left] += sample * volmul.left;
 		mixer.work[mixpos][mapped_output_right] += sample * volmul.right;
 		mixpos++;
 	}
 
 	frames_done = frames_needed;
-	
+
 	MIXER_UnlockAudioDevice();
 }
 
