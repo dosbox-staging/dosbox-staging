@@ -789,11 +789,10 @@ void DOSBOX_Init() {
 	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
 	const char* oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
-	Pstring = secprop->Add_string("oplemu", when_idle, "default");
+	Pstring = secprop->Add_string("oplemu", deprecated, "default");
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help(
-	        "Provider for the OPL emulation. 'compat' provides better quality,\n"
-	        "'nuked' is the default and most accurate (but the most CPU-intensive).");
+	        "oplemu is deprecated. Only 'nuked' is supported now.");
 
 	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
 	Pstring->Set_help(
