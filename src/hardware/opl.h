@@ -32,17 +32,17 @@
 
 class Timer {
 	// Rounded down start time
-	double start;
+	double start = 0.0;
 	// Time when you overflow
-	double trigger;
+	double trigger = 0.0;
 	// Clock interval
-	double clockInterval;
+	double clockInterval = 0.0;
 	// cycle interval
-	double counterInterval;
-	uint8_t counter;
-	bool enabled;
-	bool overflow;
-	bool masked;
+	double counterInterval = 0.0;
+	uint8_t counter        = 0;
+	bool enabled           = false;
+	bool overflow          = false;
+	bool masked            = false;
 
 public:
 	Timer(int16_t micros)
@@ -119,9 +119,12 @@ public:
 
 struct Chip {
 	// Last selected register
-	Timer timer0, timer1;
+	Timer timer0;
+	Timer timer1;
+
 	// Check for it being a write to the timer
 	bool Write(uint32_t addr, uint8_t val);
+
 	// Read the current timer state, will use current double
 	uint8_t Read();
 
@@ -151,20 +154,21 @@ class OPL : public Module_base {
 	IO_WriteHandleObject WriteHandler[3];
 
 	// Mode we're running in
-	Mode mode;
+	Mode mode = {};
+
 	// Last selected address in the chip for the different modes
 	union {
-		uint32_t normal;
+		uint32_t normal = 0;
 		uint8_t dual[2];
-	} reg;
+	} reg = {};
 
 	struct {
-		bool active;
-		uint8_t index;
-		uint8_t lvol;
-		uint8_t rvol;
-		bool mixer;
-	} ctrl;
+		bool active   = false;
+		uint8_t index = 0;
+		uint8_t lvol  = 0;
+		uint8_t rvol  = 0;
+		bool mixer    = false;
+	} ctrl = {};
 
 	void CacheWrite(uint32_t reg, uint8_t val);
 	void DualWrite(uint8_t index, uint8_t reg, uint8_t val);
@@ -174,14 +178,14 @@ class OPL : public Module_base {
 
 public:
 	static OPL_Mode oplmode;
-	mixer_channel_t mixerChan;
+	mixer_channel_t mixerChan = {};
 
-	uint32_t lastUsed; // Ticks when adlib was last used to turn of mixing
-	                   // after a few second
+	// Ticks when adlib was last used to turn of mixing after a few second
+	uint32_t lastUsed = 0;
 
-	RegisterCache cache;
-	Capture *capture;
-	Chip chip[2];
+	RegisterCache cache = {};
+	Capture *capture    = nullptr;
+	Chip chip[2]        = {};
 
 	opl3_chip oplchip = {};
 	uint8_t newm      = 0;
@@ -194,8 +198,11 @@ public:
 	OPL(Section *configuration);
 	~OPL() override;
 
-	OPL(const OPL &)            = delete; // prevent copy
-	OPL &operator=(const OPL &) = delete; // prevent assignment
+	// prevent copy
+	OPL(const OPL &) = delete;
+
+	// prevent assignment
+	OPL &operator=(const OPL &) = delete;
 
 public:
 	// Generate a certain amount of frames
