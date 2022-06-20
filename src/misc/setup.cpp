@@ -703,8 +703,8 @@ bool Section_prop::HandleInputline(string const& gegevens){
 			continue;
 
 		if (p->IsDeprecated()) {
-			LOG_MSG("CONFIG: Deprecated option '%s'", name.c_str());
-			LOG_MSG("CONFIG: %s", p->GetHelp());
+			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
+			LOG_WARNING("CONFIG: %s", p->GetHelp());
 			return false;
 		}
 
