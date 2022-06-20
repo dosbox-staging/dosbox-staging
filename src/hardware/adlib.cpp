@@ -25,153 +25,16 @@
 
 #include "adlib_gold.h"
 #include "cpu.h"
-#include "dbopl.h"
 #include "mapper.h"
 #include "mem.h"
 #include "setup.h"
 #include "support.h"
 #include "../libs/nuked/opl3.h"
 
-#include "mame/emu.h"
-#include "mame/fmopl.h"
-#include "mame/ymf262.h"
-
-
-#define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
-#define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
-
 static Adlib::Module *module = nullptr;
 static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
-
-namespace OPL2 {
-	#include "opl.cpp"
-
-struct Handler : public Adlib::Handler {
-	virtual void WriteReg(uint32_t reg, uint8_t val) { adlib_write(reg, val); }
-	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
-
-	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
-	{
-		int16_t buf[render_frames];
-		int remaining = frames;
-		while (remaining > 0) {
-			const auto todo = std::min(remaining, render_frames);
-			adlib_getsample(buf, todo);
-			chan->AddSamples_m16(todo, buf);
-			remaining -= todo;
-		}
-	}
-	virtual void Init(uint32_t rate) { adlib_init(rate); }
-	~Handler() {}
-};
-
-} // namespace OPL2
-
-namespace OPL3 {
-	#define OPLTYPE_IS_OPL3
-	#include "opl.cpp"
-
-struct Handler : public Adlib::Handler {
-	virtual void WriteReg(uint32_t reg, uint8_t val) { adlib_write(reg, val); }
-	virtual uint32_t WriteAddr(io_port_t port, uint8_t val)
-	{
-		adlib_write_index(port, val);
-		return opl_index;
-	}
-	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
-	{
-		int16_t buf[render_frames * 2];
-		int remaining = frames;
-
-		while (remaining > 0) {
-			const auto todo = std::min(remaining, render_frames);
-			adlib_getsample(buf, todo);
-			chan->AddSamples_s16(todo, buf);
-			remaining -= todo;
-		}
-	}
-	virtual void Init(uint32_t rate) { adlib_init(rate); }
-	~Handler() {}
-};
-
-} // namespace OPL3
-
-namespace MAMEOPL2 {
-
-struct Handler : public Adlib::Handler {
-	void *chip = nullptr;
-
-	virtual void WriteReg(uint32_t reg, uint8_t val) {
-		ym3812_write(chip, 0, reg);
-		ym3812_write(chip, 1, val);
-	}
-	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
-	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
-	{
-		int16_t buf[render_frames * 2];
-		int remaining = frames;
-		while (remaining > 0) {
-			const auto todo = std::min(remaining, render_frames);
-			ym3812_update_one(chip, buf, todo);
-			chan->AddSamples_m16(todo, buf);
-			remaining -= todo;
-		}
-	}
-	virtual void Init(uint32_t rate)
-	{
-		chip = ym3812_init(0, OPL2_INTERNAL_FREQ, rate);
-	}
-	~Handler() {
-		ym3812_shutdown(chip);
-	}
-};
-
-}
-
-
-namespace MAMEOPL3 {
-
-struct Handler : public Adlib::Handler {
-	void *chip = nullptr;
-
-	virtual void WriteReg(uint32_t reg, uint8_t val) {
-		ymf262_write(chip, 0, reg);
-		ymf262_write(chip, 1, val);
-	}
-	virtual uint32_t WriteAddr(io_port_t, uint8_t val) { return val; }
-	virtual void Generate(mixer_channel_t &chan, const uint16_t frames)
-	{
-		// We generate data for 4 channels, but only the first 2 are
-		// connected on a pc
-		int16_t buf[4][render_frames];
-		int16_t result[render_frames][2];
-		int16_t* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
-
-		int remaining = frames;
-		while (remaining > 0) {
-			const auto todo = std::min(remaining, render_frames);
-			ymf262_update_one(chip, buffers, todo);
-			//Interleave the samples before mixing
-			for (int i = 0; i < todo; i++) {
-				result[i][0] = buf[0][i];
-				result[i][1] = buf[1][i];
-			}
-			chan->AddSamples_s16(todo, result[0]);
-			remaining -= todo;
-		}
-	}
-	virtual void Init(uint32_t rate)
-	{
-		chip = ymf262_init(0, OPL3_INTERNAL_FREQ, rate);
-	}
-	~Handler() {
-		ymf262_shutdown(chip);
-	}
-};
-
-}
 
 namespace NukedOPL {
 
@@ -859,30 +722,6 @@ static void OPL_SaveRawEvent(bool pressed) {
 
 namespace Adlib {
 
-static Handler * make_opl_handler(const std::string &oplemu, OPL_Mode mode)
-{
-	if (oplemu == "fast") {
-		const bool is_opl3 = (mode >= OPL_opl3);
-		return new DBOPL::Handler(is_opl3);
-	}
-	if (oplemu == "compat") {
-		if (mode == OPL_opl2)
-			return new OPL2::Handler();
-		else
-			return new OPL3::Handler();
-	}
-	if (oplemu == "mame") {
-		if (mode == OPL_opl2)
-			return new MAMEOPL2::Handler();
-		else
-			return new MAMEOPL3::Handler();
-	}
-	if (oplemu == "nuked") {
-		return new NukedOPL::Handler();
-	}
-	return new NukedOPL::Handler();
-}
-
 Module::Module(Section *configuration)
         : Module_base(configuration),
           mode(MODE_OPL2), // TODO this is set in Init and there's no good default
@@ -907,7 +746,7 @@ Module::Module(Section *configuration)
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 
-	handler = make_opl_handler(section->Get_string("oplemu"), oplmode);
+	handler = new NukedOPL::Handler();
 	handler->Init(mixerChan->GetSampleRate());
 
 	bool single = false;
