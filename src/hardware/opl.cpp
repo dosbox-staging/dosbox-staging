@@ -78,7 +78,7 @@ class Capture {
 	uint8_t to_reg[127];  // 127 entries to go from raw data to registers
 	uint8_t raw_used = 0; // How many entries in the ToPort are used
 	uint8_t to_raw[256];  // 256 entries to go from port index to raw data
-						  //
+	                      //
 	uint8_t delay256     = 0;
 	uint8_t delay_shift8 = 0;
 
@@ -549,7 +549,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 	}
 	if (port & 1) {
 		switch (mode) {
-		case MODE_OPL3GOLD:
+		case Mode::OPL3Gold:
 			if (port == 0x38b) {
 				if (ctrl.active) {
 					CtrlWrite(val);
@@ -557,14 +557,14 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case MODE_OPL2:
-		case MODE_OPL3:
+		case Mode::OPL2:
+		case Mode::OPL3:
 			if (!chip[0].Write(reg.normal, val)) {
 				WriteReg(reg.normal, val);
 				CacheWrite(reg.normal, val);
 			}
 			break;
-		case MODE_DUALOPL2:
+		case Mode::DualOPL2:
 			// Not a 0x??8 port, then write to a specific port
 			if (!(port & 0x8)) {
 				uint8_t index = (port & 2) >> 1;
@@ -580,8 +580,10 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 		// Ask the handler to write the address
 		// Make sure to clip them in the right range
 		switch (mode) {
-		case MODE_OPL2: reg.normal = WriteAddr(port, val) & 0xff; break;
-		case MODE_OPL3GOLD:
+		case Mode::OPL2:
+			reg.normal = WriteAddr(port, val) & 0xff;
+			break;
+		case Mode::OPL3Gold:
 			if (port == 0x38a) {
 				if (val == 0xff) {
 					ctrl.active = true;
@@ -595,10 +597,8 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case MODE_OPL3:
-			reg.normal = WriteAddr(port, val) & 0x1ff;
-			break;
-		case MODE_DUALOPL2:
+		case Mode::OPL3: reg.normal = WriteAddr(port, val) & 0x1ff; break;
+		case Mode::DualOPL2:
 			// Not a 0x?88 port, when write to a specific side
 			if (!(port & 0x8)) {
 				uint8_t index   = (port & 2) >> 1;
@@ -624,7 +624,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	CPU_IODelayRemoved += delaycyc;
 
 	switch (mode) {
-	case MODE_OPL2:
+	case Mode::OPL2:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3))
 			// Make sure the low bits are 6 on opl2
@@ -632,7 +632,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 		else
 			return 0xff;
 
-	case MODE_OPL3GOLD:
+	case Mode::OPL3Gold:
 		if (ctrl.active) {
 			if (port == 0x38a)
 				return 0; // Control status, not busy
@@ -640,14 +640,14 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 				return CtrlRead();
 		}
 		[[fallthrough]];
-	case MODE_OPL3:
+	case Mode::OPL3:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3))
 			return chip[0].Read();
 		else
 			return 0xff;
 
-	case MODE_DUALOPL2:
+	case Mode::DualOPL2:
 		// Only return for the lower ports
 		if (port & 1)
 			return 0xff;
@@ -664,12 +664,12 @@ void OPL::Init(const Mode _mode)
 	memset(cache, 0, ARRAY_LEN(cache));
 
 	switch (mode) {
-	case MODE_OPL3: break;
-	case MODE_OPL3GOLD:
+	case Mode::OPL3: break;
+	case Mode::OPL3Gold:
 		adlib_gold = new AdlibGold(mixerChan->GetSampleRate());
 		break;
-	case MODE_OPL2: break;
-	case MODE_DUALOPL2:
+	case Mode::OPL2: break;
+	case Mode::DualOPL2:
 		// Setup opl3 mode in the hander
 		WriteReg(0x105, 1);
 		// Also set it up in the cache so the capturing will start opl3
@@ -759,8 +759,8 @@ static void OPL_SaveRawEvent(const bool pressed)
 
 OPL::OPL(Section *configuration)
         : Module_base(configuration),
-          mode(MODE_OPL2), // TODO this is set in Init and there's no good default
-          reg{0},          // union
+          mode(Mode::OPL2), // TODO this is set in Init and there's no good default
+          reg{0},           // union
           ctrl{false, 0, 0xff, 0xff, false},
           mixerChan(nullptr),
           lastUsed(0),
@@ -788,11 +788,11 @@ OPL::OPL(Section *configuration)
 	switch (oplmode) {
 	case OPL_opl2:
 		single = true;
-		Init(MODE_OPL2);
+		Init(Mode::OPL2);
 		break;
-	case OPL_dualopl2: Init(MODE_DUALOPL2); break;
-	case OPL_opl3: Init(MODE_OPL3); break;
-	case OPL_opl3gold: Init(MODE_OPL3GOLD); break;
+	case OPL_dualopl2: Init(Mode::DualOPL2); break;
+	case OPL_opl3: Init(Mode::OPL3); break;
+	case OPL_opl3gold: Init(Mode::OPL3Gold); break;
 	case OPL_cms:
 	case OPL_none: break;
 	}
