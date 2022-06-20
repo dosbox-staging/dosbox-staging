@@ -31,8 +31,6 @@
 
 #include <cmath>
 
-namespace Adlib {
-
 class Timer {
 	//Rounded down start time
 	double start;
@@ -141,7 +139,7 @@ typedef uint8_t RegisterCache[512];
 //Internal class used for dro capturing
 class Capture;
 
-class Module: public Module_base {
+class OPL: public Module_base {
 	// Write an address to a chip, returns the address the chip sets
 	uint32_t WriteAddr(io_port_t port, uint8_t val);
 
@@ -190,17 +188,15 @@ class Module: public Module_base {
 	uint8_t PortRead(io_port_t port, io_width_t width);
 	void Init(Mode m);
 
-	Module(Section *configuration);
-	~Module() override;
+	OPL(Section *configuration);
+	~OPL() override;
 
-	Module(const Module&) = delete; // prevent copy
-	Module& operator=(const Module&) = delete; // prevent assignment
+	OPL(const OPL&) = delete; // prevent copy
+	OPL& operator=(const OPL&) = delete; // prevent assignment
 
 public:
 	// Generate a certain amount of frames
 	void Generate(mixer_channel_t &chan, uint16_t frames);
 };
-
-} // namespace Adlib
 
 #endif
