@@ -99,19 +99,11 @@ public:
 	}
 
 private:
-	// Rounded down start time
-	double start = 0.0;
-
-	// Time when you overflow
-	double trigger = 0.0;
-
-	// Clock interval
-	double clock_interval = 0.0;
-
-	// Cycle interval
-	double counter_interval = 0.0;
-
-	uint8_t counter = 0;
+	double start            = 0.0; // Rounded down start time
+	double trigger          = 0.0; // Time when you overflow
+	double clock_interval   = 0.0; // Clock interval
+	double counter_interval = 0.0; // Cycle interval
+	uint8_t counter         = 0;
 
 	bool enabled  = false;
 	bool overflow = false;
