@@ -342,7 +342,6 @@ private:
 			handle = 0;
 		}
 	}
-
 };
 
 /* Chip */
@@ -698,28 +697,31 @@ static void OPL_CallBack(const uint16_t len)
 	}
 }
 
-/*
-        Save the current state of the operators as instruments in an reality
-   adlib tracker file
-*/
+
+// Save the current state of the operators as instruments in an Reality AdLib
+// Tracker (RAD) file
 #if 0
-static void SaveRad() {
+static void SaveRad()
+{
 	char b[16 * 1024];
 	int w = 0;
 
-	FILE* handle = OpenCaptureFile("RAD Capture",".rad");
-	if ( !handle )
+	FILE *handle = OpenCaptureFile("RAD Capture", ".rad");
+	if (!handle)
 		return;
-	//Header
-	fwrite( "RAD by REALiTY!!", 1, 16, handle );
-	b[w++] = 0x10;		//version
-	b[w++] = 0x06;		//default speed and no description
-	//Write 18 instuments for all operators in the cache
-	for ( int i = 0; i < 18; i++ ) {
-		uint8_t* set = opl->cache + ( i / 9 ) * 256;
-		const auto offset = ((i % 9) / 3) * 8 + (i % 3);
-		uint8_t* base = set + offset;
-		b[w++] = 1 + i;		//instrument number
+
+	// Header
+	fwrite("RAD by REALiTY!!", 1, 16, handle);
+	b[w++] = 0x10; // version
+	b[w++] = 0x06; // default speed and no description
+	               //
+	// Write 18 instuments for all operators in the cache
+	for (int i = 0; i < 18; i++) {
+		const uint8_t *set  = opl->cache + (i / 9) * 256;
+		const auto offset   = ((i % 9) / 3) * 8 + (i % 3);
+		const uint8_t *base = set + offset;
+
+		b[w++] = 1 + i; // instrument number
 		b[w++] = base[0x23];
 		b[w++] = base[0x20];
 		b[w++] = base[0x43];
@@ -732,15 +734,16 @@ static void SaveRad() {
 		b[w++] = base[0xe3];
 		b[w++] = base[0xe0];
 	}
-	b[w++] = 0;		//instrument 0, no more instruments following
-	b[w++] = 1;		//1 pattern following
-	//Zero out the remaining part of the file a bit to make rad happy
-	for ( int i = 0; i < 64; i++ ) {
+	b[w++] = 0; // instrument 0, no more instruments following
+	b[w++] = 1; // 1 pattern following
+
+	// Zero out the remaining part of the file a bit to make rad happy
+	for (int i = 0; i < 64; i++)
 		b[w++] = 0;
-	}
-	fwrite( b, 1, w, handle );
-	fclose( handle );
-};
+
+	fwrite(b, 1, w, handle);
+	fclose(handle);
+}
 #endif
 
 static void OPL_SaveRawEvent(const bool pressed)
