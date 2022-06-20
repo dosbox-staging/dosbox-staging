@@ -31,6 +31,7 @@
 #include "support.h"
 
 static OPL *opl = nullptr;
+
 static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
@@ -38,247 +39,286 @@ constexpr auto render_frames = 128;
 /* Raw DRO capture stuff */
 
 #ifdef _MSC_VER
-#pragma pack (1)
+#	pragma pack(1)
 #endif
 
-#define HW_OPL2 0
+#define HW_OPL2     0
 #define HW_DUALOPL2 1
-#define HW_OPL3 2
+#define HW_OPL3     2
 
 struct RawHeader {
-	uint8_t id[8];				/* 0x00, "DBRAWOPL" */
-	uint16_t versionHigh;			/* 0x08, size of the data following the m */
-	uint16_t versionLow;			/* 0x0a, size of the data following the m */
-	uint32_t commands;			/* 0x0c, uint32_t amount of command/data pairs */
-	uint32_t milliseconds;		/* 0x10, uint32_t Total milliseconds of data in this chunk */
-	uint8_t hardware;				/* 0x14, uint8_t Hardware Type 0=opl2,1=dual-opl2,2=opl3 */
-	uint8_t format;				/* 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe all cdms, followed by all data */
-	uint8_t compression;			/* 0x16, uint8_t Compression Type, 0 = No Compression */
-	uint8_t delay256;				/* 0x17, uint8_t Delay 1-256 msec command */
-	uint8_t delayShift8;			/* 0x18, uint8_t (delay + 1)*256 */			
-	uint8_t conversionTableSize;	/* 0x191, uint8_t Raw Conversion Table size */
+	uint8_t id[8];         /* 0x00, "DBRAWOPL" */
+	uint16_t versionHigh;  /* 0x08, size of the data following the m */
+	uint16_t versionLow;   /* 0x0a, size of the data following the m */
+	uint32_t commands;     /* 0x0c, uint32_t amount of command/data pairs */
+	uint32_t milliseconds; /* 0x10, uint32_t Total milliseconds of data in
+	                          this chunk */
+	uint8_t hardware;      /* 0x14, uint8_t Hardware Type
+	                          0=opl2,1=dual-opl2,2=opl3 */
+	uint8_t format; /* 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe
+	                   all cdms, followed by all data */
+	uint8_t compression; /* 0x16, uint8_t Compression Type, 0 = No
+	                        Compression */
+	uint8_t delay256;    /* 0x17, uint8_t Delay 1-256 msec command */
+	uint8_t delayShift8; /* 0x18, uint8_t (delay + 1)*256 */
+	uint8_t conversionTableSize; /* 0x191, uint8_t Raw Conversion Table size */
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
-#pragma pack()
+#	pragma pack()
 #endif
 /*
-	The Raw Tables is < 128 and is used to convert raw commands into a full register index 
-	When the high bit of a raw command is set it indicates the cmd/data pair is to be sent to the 2nd port
-	After the conversion table the raw data follows immediatly till the end of the chunk
+        The Raw Tables is < 128 and is used to convert raw commands into a full
+   register index When the high bit of a raw command is set it indicates the
+   cmd/data pair is to be sent to the 2nd port After the conversion table the
+   raw data follows immediatly till the end of the chunk
 */
 
-//Table to map the opl register to one <127 for dro saving
+// Table to map the opl register to one <127 for dro saving
 class Capture {
-	uint8_t ToReg[127];       // 127 entries to go from raw data to registers
-	uint8_t RawUsed = 0;      // How many entries in the ToPort are used
-	uint8_t ToRaw[256];       // 256 entries to go from port index to raw data
-	uint8_t delay256 = 0;
+	uint8_t ToReg[127];  // 127 entries to go from raw data to registers
+	uint8_t RawUsed = 0; // How many entries in the ToPort are used
+	uint8_t ToRaw[256];  // 256 entries to go from port index to raw data
+	uint8_t delay256    = 0;
 	uint8_t delayShift8 = 0;
 	RawHeader header;
 
-	FILE*  handle = nullptr;  // File used for writing
-	uint32_t startTicks = 0;    // Start used to check total raw length on end
-	uint32_t lastTicks = 0;     // Last ticks when last last cmd was added
-	uint8_t  buf[1024];         // 16 added for delay commands and what not
+	FILE *handle        = nullptr; // File used for writing
+	uint32_t startTicks = 0; // Start used to check total raw length on end
+	uint32_t lastTicks  = 0; // Last ticks when last last cmd was added
+	uint8_t buf[1024];       // 16 added for delay commands and what not
 	uint32_t bufUsed = 0;
 
-	RegisterCache* cache;
+	RegisterCache *cache;
 
-	void MakeEntry( uint8_t reg, uint8_t& raw ) {
-		ToReg[ raw ] = reg;
-		ToRaw[ reg ] = raw;
+	void MakeEntry(uint8_t reg, uint8_t &raw)
+	{
+		ToReg[raw] = reg;
+		ToRaw[reg] = raw;
 		raw++;
 	}
-	void MakeTables( void ) {
+
+	void MakeTables(void)
+	{
 		uint8_t index = 0;
-		memset( ToReg, 0xff, sizeof ( ToReg ) );
-		memset( ToRaw, 0xff, sizeof ( ToRaw ) );
-		//Select the entries that are valid and the index is the mapping to the index entry
-		MakeEntry( 0x01, index );					//0x01: Waveform select
-		MakeEntry( 0x04, index );					//104: Four-Operator Enable
-		MakeEntry( 0x05, index );					//105: OPL3 Mode Enable
-		MakeEntry( 0x08, index );					//08: CSW / NOTE-SEL
-		MakeEntry( 0xbd, index );					//BD: Tremolo Depth / Vibrato Depth / Percussion Mode / BD/SD/TT/CY/HH On
-		//Add the 32 byte range that hold the 18 operators
-		for ( int i = 0 ; i < 24; i++ ) {
-			if ( (i & 7) < 6 ) {
-				MakeEntry(0x20 + i, index );		//20-35: Tremolo / Vibrato / Sustain / KSR / Frequency Multiplication Facto
-				MakeEntry(0x40 + i, index );		//40-55: Key Scale Level / Output Level 
-				MakeEntry(0x60 + i, index );		//60-75: Attack Rate / Decay Rate 
-				MakeEntry(0x80 + i, index );		//80-95: Sustain Level / Release Rate
-				MakeEntry(0xe0 + i, index );		//E0-F5: Waveform Select
+		memset(ToReg, 0xff, sizeof(ToReg));
+		memset(ToRaw, 0xff, sizeof(ToRaw));
+
+		// Select the entries that are valid and the index is the
+		// mapping to the index entry
+		MakeEntry(0x01, index); // 0x01: Waveform select
+		MakeEntry(0x04, index); // 104: Four-Operator Enable
+		MakeEntry(0x05, index); // 105: OPL3 Mode Enable
+		MakeEntry(0x08, index); // 08: CSW / NOTE-SEL
+		MakeEntry(0xbd, index); // BD: Tremolo Depth / Vibrato Depth /
+		                        // Percussion Mode / BD/SD/TT/CY/HH On
+
+		// Add the 32 byte range that hold the 18 operators
+		for (int i = 0; i < 24; i++) {
+			if ((i & 7) < 6) {
+				MakeEntry(0x20 + i, index); // 20-35: Tremolo /
+				                            // Vibrato / Sustain
+				                            // / KSR / Frequency
+				                            // Multiplication Facto
+				MakeEntry(0x40 + i, index); // 40-55: Key Scale
+				                            // Level / Output Level
+				MakeEntry(0x60 + i, index); // 60-75: Attack
+				                            // Rate / Decay Rate
+				MakeEntry(0x80 + i, index); // 80-95: Sustain
+				                            // Level / Release
+				                            // Rate
+				MakeEntry(0xe0 + i, index); // E0-F5: Waveform
+				                            // Select
 			}
 		}
-		//Add the 9 byte range that hold the 9 channels
-		for ( int i = 0 ; i < 9; i++ ) {
-			MakeEntry(0xa0 + i, index );			//A0-A8: Frequency Number
-			MakeEntry(0xb0 + i, index );			//B0-B8: Key On / Block Number / F-Number(hi bits) 
-			MakeEntry(0xc0 + i, index );			//C0-C8: FeedBack Modulation Factor / Synthesis Type
+
+		// Add the 9 byte range that hold the 9 channels
+		for (int i = 0; i < 9; i++) {
+			MakeEntry(0xa0 + i, index); // A0-A8: Frequency Number
+			MakeEntry(0xb0 + i, index); // B0-B8: Key On / Block
+			                            // Number / F-Number(hi
+			                            // bits)
+			MakeEntry(0xc0 + i, index); // C0-C8: FeedBack Modulation
+			                            // Factor / Synthesis Type
 		}
-		//Store the amount of bytes the table contains
+
+		// Store the amount of bytes the table contains
 		RawUsed = index;
-//		assert( RawUsed <= 127 );
-		delay256 = RawUsed;
-		delayShift8 = RawUsed+1; 
+
+		//	assert( RawUsed <= 127 );
+		delay256    = RawUsed;
+		delayShift8 = RawUsed + 1;
 	}
 
-	void ClearBuf( void ) {
-		fwrite( buf, 1, bufUsed, handle );
+	void ClearBuf(void)
+	{
+		fwrite(buf, 1, bufUsed, handle);
 		header.commands += bufUsed / 2;
 		bufUsed = 0;
 	}
-	void AddBuf( uint8_t raw, uint8_t val ) {
+
+	void AddBuf(uint8_t raw, uint8_t val)
+	{
 		buf[bufUsed++] = raw;
 		buf[bufUsed++] = val;
-		if ( bufUsed >= sizeof( buf ) ) {
+		if (bufUsed >= sizeof(buf)) {
 			ClearBuf();
 		}
 	}
-	void AddWrite( uint32_t regFull, uint8_t val ) {
+
+	void AddWrite(uint32_t regFull, uint8_t val)
+	{
 		uint8_t regMask = regFull & 0xff;
 		/*
-			Do some special checks if we're doing opl3 or dualopl2 commands
-			Although you could pretty much just stick to always doing opl3 on the player side
+		   Do some special checks if we're doing opl3 or dualopl2
+		   commands Although you could pretty much just stick to always
+		   doing opl3 on the player side
 		*/
-		//Enabling opl3 4op modes will make us go into opl3 mode
-		if ( header.hardware != HW_OPL3 && regFull == 0x104 && val && (*cache)[0x105] ) {
+		// Enabling opl3 4op modes will make us go into opl3 mode
+		if (header.hardware != HW_OPL3 && regFull == 0x104 && val &&
+		    (*cache)[0x105]) {
 			header.hardware = HW_OPL3;
-		} 
-		//Writing a keyon to a 2nd address enables dual opl2 otherwise
-		//Maybe also check for rhythm
-		if ( header.hardware == HW_OPL2 && regFull >= 0x1b0 && regFull <=0x1b8 && val ) {
+		}
+		// Writing a keyon to a 2nd address enables dual opl2 otherwise
+		// Maybe also check for rhythm
+		if (header.hardware == HW_OPL2 && regFull >= 0x1b0 &&
+		    regFull <= 0x1b8 && val) {
 			header.hardware = HW_DUALOPL2;
 		}
-		uint8_t raw = ToRaw[ regMask ];
-		if ( raw == 0xff )
+		uint8_t raw = ToRaw[regMask];
+		if (raw == 0xff)
 			return;
-		if ( regFull & 0x100 )
+		if (regFull & 0x100)
 			raw |= 128;
-		AddBuf( raw, val );
+		AddBuf(raw, val);
 	}
+
 	void WriteCache(void)
 	{
 		/* Check the registers to add */
 		for (uint16_t i = 0; i < 256; i++) {
 			auto val = (*cache)[i];
 			// Silence the note on entries
-			if (i >= 0xb0 && i <= 0xb8) {
+			if (i >= 0xb0 && i <= 0xb8)
 				val &= ~0x20;
-			}
-			if (i == 0xbd) {
+			if (i == 0xbd)
 				val &= ~0x1f;
-			}
+			if (val)
+				AddWrite(i, val);
 
-			if (val) {
-				AddWrite( i, val );
-			}
-			val = (*cache)[ 0x100 + i ];
+			val = (*cache)[0x100 + i];
 
-			if (i >= 0xb0 && i <= 0xb8) {
+			if (i >= 0xb0 && i <= 0xb8)
 				val &= ~0x20;
-			}
-			if (val) {
-				AddWrite( 0x100 + i, val );
-			}
+			if (val)
+				AddWrite(0x100 + i, val);
 		}
 	}
-	void InitHeader( void ) {
-		memset( &header, 0, sizeof( header ) );
-		memcpy( header.id, "DBRAWOPL", 8 );
-		header.versionLow = 0;
-		header.versionHigh = 2;
-		header.delay256 = delay256;
-		header.delayShift8 = delayShift8;
+
+	void InitHeader(void)
+	{
+		memset(&header, 0, sizeof(header));
+		memcpy(header.id, "DBRAWOPL", 8);
+		header.versionLow          = 0;
+		header.versionHigh         = 2;
+		header.delay256            = delay256;
+		header.delayShift8         = delayShift8;
 		header.conversionTableSize = RawUsed;
 	}
-	void CloseFile( void ) {
-		if ( handle ) {
+
+	void CloseFile(void)
+	{
+		if (handle) {
 			ClearBuf();
-			/* Endianize the header and write it to beginning of the file */
+			/* Endianize the header and write it to beginning of the
+			 * file */
 			header.versionHigh  = host_to_le(header.versionHigh);
 			header.versionLow   = host_to_le(header.versionLow);
 			header.commands     = host_to_le(header.commands);
 			header.milliseconds = host_to_le(header.milliseconds);
-			fseek( handle, 0, SEEK_SET );
-			fwrite( &header, 1, sizeof( header ), handle );
-			fclose( handle );
+			fseek(handle, 0, SEEK_SET);
+			fwrite(&header, 1, sizeof(header), handle);
+			fclose(handle);
 			handle = 0;
 		}
 	}
+
 public:
-	bool DoWrite( uint32_t regFull, uint8_t val ) {
+	bool DoWrite(uint32_t regFull, uint8_t val)
+	{
 		uint8_t regMask = regFull & 0xff;
-		//Check the raw index for this register if we actually have to save it
-		if ( handle ) {
+		// Check the raw index for this register if we actually have to
+		// save it
+		if (handle) {
 			/*
-				Check if we actually care for this to be logged, else just ignore it
+			        Check if we actually care for this to be logged,
+			   else just ignore it
 			*/
-			uint8_t raw = ToRaw[ regMask ];
-			if ( raw == 0xff ) {
+			uint8_t raw = ToRaw[regMask];
+			if (raw == 0xff) {
 				return true;
 			}
-			/* Check if this command will not just replace the same value 
-			   in a reg that doesn't do anything with it
+			/* Check if this command will not just replace the same
+			   value in a reg that doesn't do anything with it
 			*/
-			if ( (*cache)[ regFull ] == val )
+			if ((*cache)[regFull] == val)
 				return true;
 			/* Check how much time has passed */
 			uint32_t passed = PIC_Ticks - lastTicks;
-			lastTicks = PIC_Ticks;
+			lastTicks       = PIC_Ticks;
 			header.milliseconds += passed;
 
-			//if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
-			
-			// If we passed more than 30 seconds since the last command, we'll restart the the capture
-			if ( passed > 30000 ) {
+			// if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
+
+			// If we passed more than 30 seconds since the last
+			// command, we'll restart the the capture
+			if (passed > 30000) {
 				CloseFile();
-				goto skipWrite; 
+				goto skipWrite;
 			}
 			while (passed > 0) {
-				if (passed < 257) {			//1-256 millisecond delay
-					AddBuf( delay256, passed - 1 );
+				if (passed < 257) { // 1-256 millisecond delay
+					AddBuf(delay256, passed - 1);
 					passed = 0;
 				} else {
 					const auto shift = (passed >> 8);
 					passed -= shift << 8;
-					AddBuf( delayShift8, shift - 1 );
+					AddBuf(delayShift8, shift - 1);
 				}
 			}
-			AddWrite( regFull, val );
+			AddWrite(regFull, val);
 			return true;
 		}
-skipWrite:
-		//Not yet capturing to a file here
-		//Check for commands that would start capturing, if it's not one of them return
-		if ( !(
-			//note on in any channel 
-			( regMask>=0xb0 && regMask<=0xb8 && (val&0x020) ) ||
-			//Percussion mode enabled and a note on in any percussion instrument
-			( regMask == 0xbd && ( (val&0x3f) > 0x20 ) )
-		)) {
+	skipWrite:
+		// Not yet capturing to a file here
+		// Check for commands that would start capturing, if it's not
+		// one of them return
+		if (!(
+		            // note on in any channel
+		            (regMask >= 0xb0 && regMask <= 0xb8 && (val & 0x020)) ||
+		            // Percussion mode enabled and a note on in any
+		            // percussion instrument
+		            (regMask == 0xbd && ((val & 0x3f) > 0x20)))) {
 			return true;
 		}
-	  	handle = OpenCaptureFile("Raw Opl",".dro");
+		handle = OpenCaptureFile("Raw Opl", ".dro");
 		if (!handle)
 			return false;
 		InitHeader();
-		//Prepare space at start of the file for the header
-		fwrite( &header, 1, sizeof(header), handle );
+		// Prepare space at start of the file for the header
+		fwrite(&header, 1, sizeof(header), handle);
 		/* write the Raw To Reg table */
-		fwrite( &ToReg, 1, RawUsed, handle );
+		fwrite(&ToReg, 1, RawUsed, handle);
 		/* Write the cache of last commands */
-		WriteCache( );
+		WriteCache();
 		/* Write the command that triggered this */
-		AddWrite( regFull, val );
-		//Init the timing information for the next commands
-		lastTicks = PIC_Ticks;	
+		AddWrite(regFull, val);
+		// Init the timing information for the next commands
+		lastTicks  = PIC_Ticks;
 		startTicks = PIC_Ticks;
 		return true;
 	}
 
-	Capture(RegisterCache *_cache)
-		: header(),
-		  cache(_cache)
+	Capture(RegisterCache *_cache) : header(), cache(_cache)
 	{
 		MakeTables();
 	}
@@ -288,22 +328,21 @@ skipWrite:
 		CloseFile();
 	}
 
-	Capture(const Capture&) = delete; // prevent copy
-	Capture& operator=(const Capture&) = delete; // prevent assignment
+	Capture(const Capture &)            = delete; // prevent copy
+	Capture &operator=(const Capture &) = delete; // prevent assignment
 };
 
-/*
-Chip
-*/
+/* Chip */
 
-Chip::Chip() : timer0(80), timer1(320) {
-}
+Chip::Chip() : timer0(80), timer1(320) {}
 
-bool Chip::Write( uint32_t reg, uint8_t val ) {
-	//if(reg == 0x02 || reg == 0x03 || reg == 0x04) LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
-	switch ( reg ) {
+bool Chip::Write(uint32_t reg, uint8_t val)
+{
+	// if(reg == 0x02 || reg == 0x03 || reg == 0x04)
+	// LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
+	switch (reg) {
 	case 0x02:
-		timer0.Update(PIC_FullIndex() );
+		timer0.Update(PIC_FullIndex());
 		timer0.SetCounter(val);
 		return true;
 	case 0x03:
@@ -311,22 +350,20 @@ bool Chip::Write( uint32_t reg, uint8_t val ) {
 		timer1.SetCounter(val);
 		return true;
 	case 0x04:
-		//Reset overflow in both timers
-		if ( val & 0x80 ) {
+		// Reset overflow in both timers
+		if (val & 0x80) {
 			timer0.Reset();
 			timer1.Reset();
 		} else {
 			const auto time = PIC_FullIndex();
 			if (val & 0x1) {
 				timer0.Start(time);
-			}
-			else {
+			} else {
 				timer0.Stop();
 			}
 			if (val & 0x2) {
 				timer1.Start(time);
-			}
-			else {
+			} else {
 				timer1.Stop();
 			}
 			timer0.SetMask((val & 0x40) > 0);
@@ -337,11 +374,11 @@ bool Chip::Write( uint32_t reg, uint8_t val ) {
 	return false;
 }
 
-
-uint8_t Chip::Read( ) {
+uint8_t Chip::Read()
+{
 	const auto time(PIC_FullIndex());
 	uint8_t ret = 0;
-	//Overflow won't be set if a channel is masked
+	// Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
 		ret |= 0x40;
 		ret |= 0x80;
@@ -402,7 +439,7 @@ void OPL::CacheWrite(uint32_t port, uint8_t val)
 	if (capture) {
 		capture->DoWrite(port, val);
 	}
-	//Store it into the cache
+	// Store it into the cache
 	cache[port] = val;
 }
 
@@ -413,14 +450,15 @@ void OPL::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 	if (port == 5) {
 		return;
 	}
-	//Only allow 4 waveforms
+	// Only allow 4 waveforms
 	if (port >= 0xE0) {
 		val &= 3;
 	}
-	//Write to the timer?
+	// Write to the timer?
 	if (chip[index].Write(port, val))
 		return;
-	//Enabling panning
+
+	// Enabling panning
 	if (port >= 0xc0 && port <= 0xc8) {
 		val &= 0x0f;
 		val |= index ? 0xA0 : 0x50;
@@ -472,10 +510,11 @@ void OPL::CtrlWrite(uint8_t val)
 uint8_t OPL::CtrlRead(void)
 {
 	switch (ctrl.index) {
-	case 0x00: /* Board Options */
+	case 0x00:           /* Board Options */
 		return 0x50; // 16-bit ISA, surround module, no
-					 // telephone/CDROM
-//		return 0x70; // 16-bit ISA, no telephone/surround/CD-ROM
+		             // telephone/CDROM
+		             //		return 0x70; // 16-bit ISA, no
+		             // telephone/surround/CD-ROM
 
 	case 0x09: /* Left FM Volume */ return ctrl.lvol;
 	case 0x0a: /* Right FM Volume */ return ctrl.rvol;
@@ -490,67 +529,65 @@ void OPL::PortWrite(io_port_t port, io_val_t value, io_width_t)
 	const auto val = check_cast<uint8_t>(value);
 	// Keep track of last write time
 	lastUsed = PIC_Ticks;
-	//Maybe only enable with a keyon?
+	// Maybe only enable with a keyon?
 	if (!mixerChan->is_enabled) {
 		mixerChan->Enable(true);
 	}
-	if ( port&1 ) {
-		switch ( mode ) {
+	if (port & 1) {
+		switch (mode) {
 		case MODE_OPL3GOLD:
-			if ( port == 0x38b ) {
-				if ( ctrl.active ) {
-					CtrlWrite( val );
+			if (port == 0x38b) {
+				if (ctrl.active) {
+					CtrlWrite(val);
 					break;
 				}
 			}
 			[[fallthrough]];
 		case MODE_OPL2:
 		case MODE_OPL3:
-			if ( !chip[0].Write( reg.normal, val ) ) {
-				WriteReg( reg.normal, val );
-				CacheWrite( reg.normal, val );
+			if (!chip[0].Write(reg.normal, val)) {
+				WriteReg(reg.normal, val);
+				CacheWrite(reg.normal, val);
 			}
 			break;
 		case MODE_DUALOPL2:
-			//Not a 0x??8 port, then write to a specific port
-			if ( !(port & 0x8) ) {
-				uint8_t index = ( port & 2 ) >> 1;
-				DualWrite( index, reg.dual[index], val );
+			// Not a 0x??8 port, then write to a specific port
+			if (!(port & 0x8)) {
+				uint8_t index = (port & 2) >> 1;
+				DualWrite(index, reg.dual[index], val);
 			} else {
-				//Write to both ports
-				DualWrite( 0, reg.dual[0], val );
-				DualWrite( 1, reg.dual[1], val );
+				// Write to both ports
+				DualWrite(0, reg.dual[0], val);
+				DualWrite(1, reg.dual[1], val);
 			}
 			break;
 		}
 	} else {
-		//Ask the handler to write the address
-		//Make sure to clip them in the right range
-		switch ( mode ) {
-		case MODE_OPL2:
-			reg.normal = WriteAddr( port, val ) & 0xff;
-			break;
+		// Ask the handler to write the address
+		// Make sure to clip them in the right range
+		switch (mode) {
+		case MODE_OPL2: reg.normal = WriteAddr(port, val) & 0xff; break;
 		case MODE_OPL3GOLD:
-			if ( port == 0x38a ) {
-				if ( val == 0xff ) {
+			if (port == 0x38a) {
+				if (val == 0xff) {
 					ctrl.active = true;
 					break;
-				} else if ( val == 0xfe ) {
+				} else if (val == 0xfe) {
 					ctrl.active = false;
 					break;
-				} else if ( ctrl.active ) {
+				} else if (ctrl.active) {
 					ctrl.index = val & 0xff;
 					break;
 				}
 			}
 			[[fallthrough]];
 		case MODE_OPL3:
-			reg.normal = WriteAddr( port, val ) & 0x1ff;
+			reg.normal = WriteAddr(port, val) & 0x1ff;
 			break;
 		case MODE_DUALOPL2:
-			//Not a 0x?88 port, when write to a specific side
-			if ( !(port & 0x8) ) {
-				uint8_t index = ( port & 2 ) >> 1;
+			// Not a 0x?88 port, when write to a specific side
+			if (!(port & 0x8)) {
+				uint8_t index   = (port & 2) >> 1;
 				reg.dual[index] = val & 0xff;
 			} else {
 				reg.dual[0] = val & 0xff;
@@ -568,41 +605,40 @@ uint8_t OPL::PortRead(io_port_t port, io_width_t)
 	auto delaycyc = (CPU_CycleMax / 2048);
 	if (GCC_UNLIKELY(delaycyc > CPU_Cycles))
 		delaycyc = CPU_Cycles;
+
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 
-	switch ( mode ) {
+	switch (mode) {
 	case MODE_OPL2:
-		//We allocated 4 ports, so just return -1 for the higher ones
-		if ( !(port & 3 ) ) {
-			//Make sure the low bits are 6 on opl2
+		// We allocated 4 ports, so just return -1 for the higher ones
+		if (!(port & 3))
+			// Make sure the low bits are 6 on opl2
 			return chip[0].Read() | 0x6;
-		} else {
+		else
 			return 0xff;
-		}
+
 	case MODE_OPL3GOLD:
-		if ( ctrl.active ) {
-			if ( port == 0x38a ) {
-				return 0; //Control status, not busy
-			} else if ( port == 0x38b ) {
+		if (ctrl.active) {
+			if (port == 0x38a)
+				return 0; // Control status, not busy
+			else if (port == 0x38b)
 				return CtrlRead();
-			}
 		}
 		[[fallthrough]];
 	case MODE_OPL3:
-		//We allocated 4 ports, so just return -1 for the higher ones
-		if ( !(port & 3 ) ) {
+		// We allocated 4 ports, so just return -1 for the higher ones
+		if (!(port & 3))
 			return chip[0].Read();
-		} else {
+		else
 			return 0xff;
-		}
+
 	case MODE_DUALOPL2:
-		//Only return for the lower ports
-		if ( port & 1 ) {
+		// Only return for the lower ports
+		if (port & 1)
 			return 0xff;
-		}
-		//Make sure the low bits are 6 on opl2
-		return chip[ (port >> 1) & 1].Read() | 0x6;
+		// Make sure the low bits are 6 on opl2
+		return chip[(port >> 1) & 1].Read() | 0x6;
 	}
 	return 0;
 }
@@ -613,8 +649,7 @@ void OPL::Init(Mode m)
 	memset(cache, 0, ARRAY_LEN(cache));
 
 	switch (mode) {
-	case MODE_OPL3:
-		break;
+	case MODE_OPL3: break;
 	case MODE_OPL3GOLD:
 		adlib_gold = new AdlibGold(mixerChan->GetSampleRate());
 		break;
@@ -631,17 +666,23 @@ void OPL::Init(Mode m)
 static void OPL_CallBack(uint16_t len)
 {
 	opl->Generate(opl->mixerChan, len);
+
 	// Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - opl->lastUsed) > 30000) {
 		uint8_t i;
-		for (i=0xb0;i<0xb9;i++) if (opl->cache[i]&0x20||opl->cache[i+0x100]&0x20) break;
-		if (i==0xb9) opl->mixerChan->Enable(false);
-		else opl->lastUsed = PIC_Ticks;
+		for (i = 0xb0; i < 0xb9; i++)
+			if (opl->cache[i] & 0x20 || opl->cache[i + 0x100] & 0x20)
+				break;
+		if (i == 0xb9)
+			opl->mixerChan->Enable(false);
+		else
+			opl->lastUsed = PIC_Ticks;
 	}
 }
 
 /*
-	Save the current state of the operators as instruments in an reality adlib tracker file
+        Save the current state of the operators as instruments in an reality
+   adlib tracker file
 */
 #if 0
 static void SaveRad() {
@@ -684,18 +725,20 @@ static void SaveRad() {
 };
 #endif
 
-static void OPL_SaveRawEvent(bool pressed) {
+static void OPL_SaveRawEvent(bool pressed)
+{
 	if (!pressed)
 		return;
-//	SaveRad();return;
-	/* Check for previously opened wave file */
-	if ( opl->capture ) {
+	//	SaveRad();return;
+	
+	// Check for previously opened wave file
+	if (opl->capture) {
 		delete opl->capture;
 		opl->capture = 0;
 		LOG_MSG("Stopped Raw OPL capturing.");
 	} else {
 		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
-		opl->capture = new Capture( &opl->cache );
+		opl->capture = new Capture(&opl->cache);
 	}
 }
 
@@ -708,45 +751,40 @@ OPL::OPL(Section *configuration)
           lastUsed(0),
           capture(nullptr)
 {
-	Section_prop * section=static_cast<Section_prop *>(configuration);
+	Section_prop *section = static_cast<Section_prop *>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
-	std::set channel_features = {ChannelFeature::ReverbSend, ChannelFeature::ChorusSend};
+	std::set channel_features = {ChannelFeature::ReverbSend,
+	                             ChannelFeature::ChorusSend};
 	if (oplmode != OPL_opl2)
 		channel_features.emplace(ChannelFeature::Stereo);
 
 	mixerChan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
 
-	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
-	mixerChan->SetScale( 1.5f );  
+	// Used to be 2.0, which was measured to be too high. Exact value
+	// depends on card/clone.
+	mixerChan->SetScale(1.5f);
 
 	Init(mixerChan->GetSampleRate());
 
 	bool single = false;
-	switch ( oplmode ) {
+	switch (oplmode) {
 	case OPL_opl2:
 		single = true;
-		Init( MODE_OPL2 );
+		Init(MODE_OPL2);
 		break;
-	case OPL_dualopl2:
-		Init( MODE_DUALOPL2 );
-		break;
-	case OPL_opl3:
-		Init( MODE_OPL3 );
-		break;
-	case OPL_opl3gold:
-		Init( MODE_OPL3GOLD );
-		break;
+	case OPL_dualopl2: Init(MODE_DUALOPL2); break;
+	case OPL_opl3: Init(MODE_OPL3); break;
+	case OPL_opl3gold: Init(MODE_OPL3GOLD); break;
 	case OPL_cms:
-	case OPL_none:
-		break;
+	case OPL_none: break;
 	}
 	using namespace std::placeholders;
 
 	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
-	const auto write_to = std::bind(&OPL::PortWrite, this, _1, _2, _3);
+	const auto write_to  = std::bind(&OPL::PortWrite, this, _1, _2, _3);
 
 	// 0x388-0x38b ports (read/write)
 	constexpr io_port_t port_0x388 = 0x388;
@@ -764,8 +802,7 @@ OPL::OPL(Section *configuration)
 	// 0x228 port (read)
 	ReadHandler[2].Install(base + 8u, read_from, io_width_t::byte, 1);
 
-	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0,
-	                  "caprawopl", "Rec. OPL");
+	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawopl", "Rec. OPL");
 }
 
 OPL::~OPL()
@@ -777,12 +814,14 @@ OPL::~OPL()
 	adlib_gold = nullptr;
 }
 
-//Initialize static members
-OPL_Mode OPL::oplmode=OPL_none;
+// Initialize static members
+OPL_Mode OPL::oplmode = OPL_none;
 
-void OPL_Init(Section* sec,OPL_Mode oplmode) {
+void OPL_Init(Section *sec, OPL_Mode oplmode)
+{
 	OPL::oplmode = oplmode;
-	opl = new OPL( sec );
+
+	opl = new OPL(sec);
 }
 
 void OPL_ShutDown(Section * /*sec*/)
