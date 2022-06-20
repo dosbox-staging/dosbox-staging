@@ -779,7 +779,7 @@ void DOSBOX_Init() {
 	pint->SetMinMax(0, 100);
 
 	pint = secprop->Add_int("oplrate", deprecated, false);
-	pint->Set_help("oplrate is deprecated. The OPL waveform is now sampled\n"
+	pint->Set_help("'oplrate' is deprecated. The OPL waveform is now sampled\n"
 	               "        at the mixer's playback rate to avoid resampling.");
 
 	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
@@ -792,7 +792,7 @@ void DOSBOX_Init() {
 	Pstring = secprop->Add_string("oplemu", deprecated, "default");
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help(
-	        "oplemu is deprecated. Only 'nuked' is supported now.");
+	        "'oplemu' is deprecated. Only 'nuked' is supported now.");
 
 	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
 	Pstring->Set_help(
