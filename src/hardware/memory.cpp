@@ -426,6 +426,14 @@ bool MEM_A20_Enabled(void) {
 	return memory.a20.enabled;
 }
 
+// Use this function for initialization since the public 
+// function is optimized to return on the same state, and
+// we need the page mappings initialized for disabled.
+static void InitA20() {
+	memory.a20.enabled = true;
+	MEM_A20_Enable(false);
+}
+
 void MEM_A20_Enable(bool enabled) {
 	if (enabled == memory.a20.enabled) return;
 	const uint32_t phys_base=enabled ? (1024/4) : 0;
@@ -623,7 +631,7 @@ public:
 		// A20 Line - PS/2 system control port A
 		WriteHandler.Install(0x92, write_p92, io_width_t::byte);
 		ReadHandler.Install(0x92, read_p92, io_width_t::byte);
-		MEM_A20_Enable(false);
+		InitA20();
 	}
 };
 
