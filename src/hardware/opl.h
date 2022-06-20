@@ -17,8 +17,8 @@
  */
 
 
-#ifndef DOSBOX_ADLIB_H
-#define DOSBOX_ADLIB_H
+#ifndef DOSBOX_OPL_H
+#define DOSBOX_OPL_H
 
 #include "dosbox.h"
 #include "mixer.h"
