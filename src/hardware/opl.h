@@ -199,7 +199,7 @@ public:
 	               const io_width_t width);
 
 	uint8_t PortRead(const io_port_t port, const io_width_t width);
-	void Init(const Mode m);
+	void Init(const Mode _mode);
 
 	OPL(Section *configuration);
 	~OPL() override;
