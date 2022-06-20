@@ -27,6 +27,8 @@
 #include "pic.h"
 #include "hardware.h"
 
+#include "../libs/nuked/opl3.h"
+
 #include <cmath>
 
 namespace Adlib {
@@ -133,23 +135,6 @@ typedef enum {
 	MODE_OPL3GOLD
 } Mode;
 
-class Handler {
-public:
-	// Write an address to a chip, returns the address the chip sets
-	virtual uint32_t WriteAddr(io_port_t port, uint8_t val) = 0;
-
-	// Write to a specific register in the chip
-	virtual void WriteReg(uint32_t addr, uint8_t val) = 0;
-
-	// Generate a certain amount of frames
-	virtual void Generate(mixer_channel_t &chan, uint16_t frames) = 0;
-
-	// Initialize at a specific sample rate and mode
-	virtual void Init(uint32_t rate) = 0;
-
-	virtual ~Handler() = default;
-};
-
 //The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
 
@@ -157,6 +142,15 @@ typedef uint8_t RegisterCache[512];
 class Capture;
 
 class Module: public Module_base {
+	// Write an address to a chip, returns the address the chip sets
+	uint32_t WriteAddr(io_port_t port, uint8_t val);
+
+	// Write to a specific register in the chip
+	void WriteReg(uint32_t addr, uint8_t val);
+
+	// Initialize at a specific sample rate and mode
+	void Init(uint32_t rate);
+
 	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[3];
 
@@ -179,15 +173,17 @@ class Module: public Module_base {
 	void CtrlWrite( uint8_t val );
 	uint8_t CtrlRead(void);
 
-public:
+	public:
 	static OPL_Mode oplmode;
 	mixer_channel_t mixerChan;
 	uint32_t lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
 
-	Handler* handler;				//Handler that will generate the sound
 	RegisterCache cache;
 	Capture* capture;
 	Chip	chip[2];
+
+	opl3_chip oplchip = {};
+	uint8_t newm = 0;
 
 	//Handle port writes
 	void PortWrite(io_port_t port, io_val_t value, io_width_t width);
@@ -199,6 +195,10 @@ public:
 
 	Module(const Module&) = delete; // prevent copy
 	Module& operator=(const Module&) = delete; // prevent assignment
+
+public:
+	// Generate a certain amount of frames
+	void Generate(mixer_channel_t &chan, uint16_t frames);
 };
 
 } // namespace Adlib

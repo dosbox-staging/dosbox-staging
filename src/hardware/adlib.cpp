@@ -29,73 +29,13 @@
 #include "mem.h"
 #include "setup.h"
 #include "support.h"
-#include "../libs/nuked/opl3.h"
 
 static Adlib::Module *module = nullptr;
 static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
 
-namespace NukedOPL {
-
-struct Handler : public Adlib::Handler {
-	opl3_chip chip = {};
-	uint8_t newm = 0;
-
-	void WriteReg(uint32_t reg, uint8_t val) override
-	{
-		OPL3_WriteRegBuffered(&chip, (uint16_t)reg, val);
-		if (reg == 0x105)
-			newm = reg & 0x01;
-	}
-
-	uint32_t WriteAddr(io_port_t port, uint8_t val) override
-	{
-		uint16_t addr;
-		addr = val;
-		if ((port & 2) && (addr == 0x05 || newm)) {
-			addr |= 0x100;
-		}
-		return addr;
-	}
-
-	void Generate(mixer_channel_t &chan, const uint16_t frames) override
-	{
-		int16_t buf[render_frames * 2];
-		float float_buf[render_frames * 2];
-
-		int remaining = frames;
-		while (remaining > 0) {
-			const auto todo = std::min(remaining, render_frames);
-			OPL3_GenerateStream(&chip, buf, todo);
-
-			if (adlib_gold) {
-				adlib_gold->Process(buf, todo, float_buf);
-				chan->AddSamples_sfloat(todo, float_buf);
-			} else {
-				chan->AddSamples_s16(todo, buf);
-			}
-			remaining -= todo;
-		}
-	}
-
-	void Init(uint32_t rate) override
-	{
-		newm = 0;
-		OPL3_Reset(&chip, rate);
-	}
-};
-
-} // namespace NukedOPL
-
-
-/*
-	Main Adlib implementation
-
-*/
-
 namespace Adlib {
-
 
 /* Raw DRO capture stuff */
 
@@ -415,6 +355,49 @@ uint8_t Chip::Read( ) {
 	return ret;
 }
 
+void Module::Init(uint32_t rate)
+{
+	newm = 0;
+	OPL3_Reset(&oplchip, rate);
+}
+
+void Module::WriteReg(uint32_t reg, uint8_t val)
+{
+	OPL3_WriteRegBuffered(&oplchip, (uint16_t)reg, val);
+	if (reg == 0x105)
+		newm = reg & 0x01;
+}
+
+uint32_t Module::WriteAddr(io_port_t port, uint8_t val)
+{
+	uint16_t addr;
+	addr = val;
+	if ((port & 2) && (addr == 0x05 || newm)) {
+		addr |= 0x100;
+	}
+	return addr;
+}
+
+void Module::Generate(mixer_channel_t &chan, const uint16_t frames)
+{
+	int16_t buf[render_frames * 2];
+	float float_buf[render_frames * 2];
+
+	int remaining = frames;
+	while (remaining > 0) {
+		const auto todo = std::min(remaining, render_frames);
+		OPL3_GenerateStream(&oplchip, buf, todo);
+
+		if (adlib_gold) {
+			adlib_gold->Process(buf, todo, float_buf);
+			chan->AddSamples_sfloat(todo, float_buf);
+		} else {
+			chan->AddSamples_s16(todo, buf);
+		}
+		remaining -= todo;
+	}
+}
+
 void Module::CacheWrite(uint32_t port, uint8_t val)
 {
 	// capturing?
@@ -445,7 +428,7 @@ void Module::DualWrite(uint8_t index, uint8_t port, uint8_t val)
 		val |= index ? 0xA0 : 0x50;
 	}
 	const uint32_t full_port = port + (index ? 0x100 : 0);
-	handler->WriteReg(full_port, val);
+	WriteReg(full_port, val);
 	CacheWrite(full_port, val);
 }
 
@@ -526,7 +509,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 		case MODE_OPL2:
 		case MODE_OPL3:
 			if ( !chip[0].Write( reg.normal, val ) ) {
-				handler->WriteReg( reg.normal, val );
+				WriteReg( reg.normal, val );
 				CacheWrite( reg.normal, val );
 			}
 			break;
@@ -547,7 +530,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 		//Make sure to clip them in the right range
 		switch ( mode ) {
 		case MODE_OPL2:
-			reg.normal = handler->WriteAddr( port, val ) & 0xff;
+			reg.normal = WriteAddr( port, val ) & 0xff;
 			break;
 		case MODE_OPL3GOLD:
 			if ( port == 0x38a ) {
@@ -564,7 +547,7 @@ void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 			}
 			[[fallthrough]];
 		case MODE_OPL3:
-			reg.normal = handler->WriteAddr( port, val ) & 0x1ff;
+			reg.normal = WriteAddr( port, val ) & 0x1ff;
 			break;
 		case MODE_DUALOPL2:
 			//Not a 0x?88 port, when write to a specific side
@@ -640,7 +623,7 @@ void Module::Init(Mode m)
 	case MODE_OPL2: break;
 	case MODE_DUALOPL2:
 		// Setup opl3 mode in the hander
-		handler->WriteReg(0x105, 1);
+		WriteReg(0x105, 1);
 		// Also set it up in the cache so the capturing will start opl3
 		CacheWrite(0x105, 1);
 		break;
@@ -651,7 +634,7 @@ void Module::Init(Mode m)
 
 static void OPL_CallBack(uint16_t len)
 {
-	module->handler->Generate(module->mixerChan, len);
+	module->Generate(module->mixerChan, len);
 	// Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - module->lastUsed) > 30000) {
 		uint8_t i;
@@ -729,7 +712,6 @@ Module::Module(Section *configuration)
           ctrl{false, 0, 0xff, 0xff, false},
           mixerChan(nullptr),
           lastUsed(0),
-          handler(nullptr),
           capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
@@ -746,8 +728,7 @@ Module::Module(Section *configuration)
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 
-	handler = new NukedOPL::Handler();
-	handler->Init(mixerChan->GetSampleRate());
+	Init(mixerChan->GetSampleRate());
 
 	bool single = false;
 	switch ( oplmode ) {
@@ -797,8 +778,6 @@ Module::~Module()
 {
 	delete capture;
 	capture = nullptr;
-	delete handler;
-	handler = nullptr;
 
 	delete adlib_gold;
 	adlib_gold = nullptr;
