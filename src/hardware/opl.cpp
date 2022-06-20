@@ -48,8 +48,8 @@ constexpr auto render_frames = 128;
 
 struct RawHeader {
 	uint8_t id[8];         /* 0x00, "DBRAWOPL" */
-	uint16_t versionHigh;  /* 0x08, size of the data following the m */
-	uint16_t versionLow;   /* 0x0a, size of the data following the m */
+	uint16_t version_high; /* 0x08, size of the data following the m */
+	uint16_t version_low;  /* 0x0a, size of the data following the m */
 	uint32_t commands;     /* 0x0c, uint32_t amount of command/data pairs */
 	uint32_t milliseconds; /* 0x10, uint32_t Total milliseconds of data in
 	                          this chunk */
@@ -57,11 +57,11 @@ struct RawHeader {
 	                          0=opl2,1=dual-opl2,2=opl3 */
 	uint8_t format; /* 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe
 	                   all cdms, followed by all data */
-	uint8_t compression; /* 0x16, uint8_t Compression Type, 0 = No
-	                        Compression */
-	uint8_t delay256;    /* 0x17, uint8_t Delay 1-256 msec command */
-	uint8_t delayShift8; /* 0x18, uint8_t (delay + 1)*256 */
-	uint8_t conversionTableSize; /* 0x191, uint8_t Raw Conversion Table size */
+	uint8_t compression;     /* 0x16, uint8_t Compression Type, 0 = No
+	                            Compression */
+	uint8_t delay256;        /* 0x17, uint8_t Delay 1-256 msec command */
+	uint8_t delay_shift8;    /* 0x18, uint8_t (delay + 1)*256 */
+	uint8_t conv_table_size; /* 0x191, uint8_t Raw Conversion Table size */
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #	pragma pack()
@@ -75,14 +75,17 @@ struct RawHeader {
 
 // Table to map the opl register to one <127 for dro saving
 class Capture {
-	uint8_t ToReg[127];  // 127 entries to go from raw data to registers
-	uint8_t RawUsed = 0; // How many entries in the ToPort are used
-	uint8_t ToRaw[256];  // 256 entries to go from port index to raw data
-	uint8_t delay256    = 0;
-	uint8_t delayShift8 = 0;
+	uint8_t to_reg[127];  // 127 entries to go from raw data to registers
+	uint8_t raw_used = 0; // How many entries in the ToPort are used
+	uint8_t to_raw[256];  // 256 entries to go from port index to raw data
+						  //
+	uint8_t delay256     = 0;
+	uint8_t delay_shift8 = 0;
+
 	RawHeader header;
 
-	FILE *handle        = nullptr; // File used for writing
+	FILE *handle = nullptr;  // File used for writing
+	                         //
 	uint32_t startTicks = 0; // Start used to check total raw length on end
 	uint32_t lastTicks  = 0; // Last ticks when last last cmd was added
 	uint8_t buf[1024];       // 16 added for delay commands and what not
@@ -92,16 +95,16 @@ class Capture {
 
 	void MakeEntry(const uint8_t reg, uint8_t &raw)
 	{
-		ToReg[raw] = reg;
-		ToRaw[reg] = raw;
-		raw++;
+		to_reg[raw] = reg;
+		to_raw[reg] = raw;
+		++raw;
 	}
 
 	void MakeTables()
 	{
 		uint8_t index = 0;
-		memset(ToReg, 0xff, sizeof(ToReg));
-		memset(ToRaw, 0xff, sizeof(ToRaw));
+		memset(to_reg, 0xff, sizeof(to_reg));
+		memset(to_raw, 0xff, sizeof(to_raw));
 
 		// Select the entries that are valid and the index is the
 		// mapping to the index entry
@@ -113,7 +116,7 @@ class Capture {
 		                        // Percussion Mode / BD/SD/TT/CY/HH On
 
 		// Add the 32 byte range that hold the 18 operators
-		for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < 24; ++i) {
 			if ((i & 7) < 6) {
 				MakeEntry(0x20 + i, index); // 20-35: Tremolo /
 				                            // Vibrato / Sustain
@@ -132,7 +135,7 @@ class Capture {
 		}
 
 		// Add the 9 byte range that hold the 9 channels
-		for (int i = 0; i < 9; i++) {
+		for (int i = 0; i < 9; ++i) {
 			MakeEntry(0xa0 + i, index); // A0-A8: Frequency Number
 			MakeEntry(0xb0 + i, index); // B0-B8: Key On / Block
 			                            // Number / F-Number(hi
@@ -142,11 +145,11 @@ class Capture {
 		}
 
 		// Store the amount of bytes the table contains
-		RawUsed = index;
+		raw_used = index;
 
-		//	assert( RawUsed <= 127 );
-		delay256    = RawUsed;
-		delayShift8 = RawUsed + 1;
+		//	assert( raw_used <= 127 );
+		delay256     = raw_used;
+		delay_shift8 = raw_used + 1;
 	}
 
 	void ClearBuf()
@@ -165,37 +168,39 @@ class Capture {
 		}
 	}
 
-	void AddWrite(const uint32_t regFull, const uint8_t val)
+	void AddWrite(const uint32_t reg_full, const uint8_t val)
 	{
-		uint8_t regMask = regFull & 0xff;
-		/*
-		   Do some special checks if we're doing opl3 or dualopl2
-		   commands Although you could pretty much just stick to always
-		   doing opl3 on the player side
-		*/
+		const uint8_t reg_mask = reg_full & 0xff;
+		//  Do some special checks if we're doing opl3 or dualopl2
+		// commands Although you could pretty much just stick to always
+		// doing opl3 on the player side
+
 		// Enabling opl3 4op modes will make us go into opl3 mode
-		if (header.hardware != HW_OPL3 && regFull == 0x104 && val &&
+		if (header.hardware != HW_OPL3 && reg_full == 0x104 && val &&
 		    (*cache)[0x105]) {
 			header.hardware = HW_OPL3;
 		}
+
 		// Writing a keyon to a 2nd address enables dual opl2 otherwise
 		// Maybe also check for rhythm
-		if (header.hardware == HW_OPL2 && regFull >= 0x1b0 &&
-		    regFull <= 0x1b8 && val) {
+		if (header.hardware == HW_OPL2 && reg_full >= 0x1b0 &&
+		    reg_full <= 0x1b8 && val) {
 			header.hardware = HW_DUALOPL2;
 		}
-		uint8_t raw = ToRaw[regMask];
+
+		uint8_t raw = to_raw[reg_mask];
 		if (raw == 0xff)
 			return;
-		if (regFull & 0x100)
+		if (reg_full & 0x100)
 			raw |= 128;
+
 		AddBuf(raw, val);
 	}
 
 	void WriteCache()
 	{
 		/* Check the registers to add */
-		for (uint16_t i = 0; i < 256; i++) {
+		for (uint16_t i = 0; i < 256; ++i) {
 			auto val = (*cache)[i];
 			// Silence the note on entries
 			if (i >= 0xb0 && i <= 0xb8)
@@ -218,51 +223,54 @@ class Capture {
 	{
 		memset(&header, 0, sizeof(header));
 		memcpy(header.id, "DBRAWOPL", 8);
-		header.versionLow          = 0;
-		header.versionHigh         = 2;
-		header.delay256            = delay256;
-		header.delayShift8         = delayShift8;
-		header.conversionTableSize = RawUsed;
+
+		header.version_low     = 0;
+		header.version_high    = 2;
+		header.delay256        = delay256;
+		header.delay_shift8    = delay_shift8;
+		header.conv_table_size = raw_used;
 	}
 
 	void CloseFile()
 	{
 		if (handle) {
 			ClearBuf();
-			/* Endianize the header and write it to beginning of the
-			 * file */
-			header.versionHigh  = host_to_le(header.versionHigh);
-			header.versionLow   = host_to_le(header.versionLow);
+
+			// Endianize the header and write it to beginning of the
+			// file
+			header.version_high = host_to_le(header.version_high);
+			header.version_low  = host_to_le(header.version_low);
 			header.commands     = host_to_le(header.commands);
 			header.milliseconds = host_to_le(header.milliseconds);
+
 			fseek(handle, 0, SEEK_SET);
 			fwrite(&header, 1, sizeof(header), handle);
 			fclose(handle);
+
 			handle = 0;
 		}
 	}
 
 public:
-	bool DoWrite(const uint32_t regFull, const uint8_t val)
+	bool DoWrite(const uint32_t reg_full, const uint8_t val)
 	{
-		uint8_t regMask = regFull & 0xff;
+		const auto reg_mask = reg_full & 0xff;
+
 		// Check the raw index for this register if we actually have to
 		// save it
 		if (handle) {
-			/*
-			        Check if we actually care for this to be logged,
-			   else just ignore it
-			*/
-			uint8_t raw = ToRaw[regMask];
+			// Check if we actually care for this to be logged,
+			// else just ignore it
+			uint8_t raw = to_raw[reg_mask];
 			if (raw == 0xff) {
 				return true;
 			}
-			/* Check if this command will not just replace the same
-			   value in a reg that doesn't do anything with it
-			*/
-			if ((*cache)[regFull] == val)
+			// Check if this command will not just replace the same
+			// value in a reg that doesn't do anything with it
+			if ((*cache)[reg_full] == val)
 				return true;
-			/* Check how much time has passed */
+
+			// Check how much time has passed
 			uint32_t passed = PIC_Ticks - lastTicks;
 			lastTicks       = PIC_Ticks;
 			header.milliseconds += passed;
@@ -282,36 +290,37 @@ public:
 				} else {
 					const auto shift = (passed >> 8);
 					passed -= shift << 8;
-					AddBuf(delayShift8, shift - 1);
+					AddBuf(delay_shift8, shift - 1);
 				}
 			}
-			AddWrite(regFull, val);
+			AddWrite(reg_full, val);
 			return true;
 		}
 	skipWrite:
 		// Not yet capturing to a file here
 		// Check for commands that would start capturing, if it's not
 		// one of them return
-		if (!(
-		            // note on in any channel
-		            (regMask >= 0xb0 && regMask <= 0xb8 && (val & 0x020)) ||
+		if (!( // note on in any channel
+		            (reg_mask >= 0xb0 && reg_mask <= 0xb8 && (val & 0x020)) ||
 		            // Percussion mode enabled and a note on in any
 		            // percussion instrument
-		            (regMask == 0xbd && ((val & 0x3f) > 0x20)))) {
+		            (reg_mask == 0xbd && ((val & 0x3f) > 0x20)))) {
 			return true;
 		}
 		handle = OpenCaptureFile("Raw Opl", ".dro");
 		if (!handle)
 			return false;
+
 		InitHeader();
+
 		// Prepare space at start of the file for the header
 		fwrite(&header, 1, sizeof(header), handle);
-		/* write the Raw To Reg table */
-		fwrite(&ToReg, 1, RawUsed, handle);
-		/* Write the cache of last commands */
+		// write the Raw To Reg table
+		fwrite(&to_reg, 1, raw_used, handle);
+		// Write the cache of last commands
 		WriteCache();
-		/* Write the command that triggered this */
-		AddWrite(regFull, val);
+		// Write the command that triggered this
+		AddWrite(reg_full, val);
 		// Init the timing information for the next commands
 		lastTicks  = PIC_Ticks;
 		startTicks = PIC_Ticks;
@@ -328,8 +337,11 @@ public:
 		CloseFile();
 	}
 
-	Capture(const Capture &)            = delete; // prevent copy
-	Capture &operator=(const Capture &) = delete; // prevent assignment
+	// prevent copy
+	Capture(const Capture &) = delete;
+
+	// prevent assignment
+	Capture &operator=(const Capture &) = delete;
 };
 
 /* Chip */
@@ -356,16 +368,16 @@ bool Chip::Write(const uint32_t reg, const uint8_t val)
 			timer1.Reset();
 		} else {
 			const auto time = PIC_FullIndex();
-			if (val & 0x1) {
+			if (val & 0x1)
 				timer0.Start(time);
-			} else {
+			else
 				timer0.Stop();
-			}
-			if (val & 0x2) {
+
+			if (val & 0x2)
 				timer1.Start(time);
-			} else {
+			else
 				timer1.Stop();
-			}
+
 			timer0.SetMask((val & 0x40) > 0);
 			timer1.SetMask((val & 0x20) > 0);
 		}
@@ -378,6 +390,7 @@ uint8_t Chip::Read()
 {
 	const auto time(PIC_FullIndex());
 	uint8_t ret = 0;
+
 	// Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
 		ret |= 0x40;
@@ -398,7 +411,7 @@ void OPL::Init(const uint32_t rate)
 
 void OPL::WriteReg(const uint32_t reg, const uint8_t val)
 {
-	OPL3_WriteRegBuffered(&oplchip, (uint16_t)reg, val);
+	OPL3_WriteRegBuffered(&oplchip, static_cast<uint16_t>(reg), val);
 	if (reg == 0x105)
 		newm = reg & 0x01;
 }
@@ -436,9 +449,9 @@ void OPL::Generate(const mixer_channel_t &chan, const uint16_t frames)
 void OPL::CacheWrite(const uint32_t port, const uint8_t val)
 {
 	// capturing?
-	if (capture) {
+	if (capture)
 		capture->DoWrite(port, val);
-	}
+
 	// Store it into the cache
 	cache[port] = val;
 }
@@ -447,14 +460,14 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 {
 	// Make sure you don't use opl3 features
 	// Don't allow write to disable opl3
-	if (port == 5) {
+	if (port == 5)
 		return;
-	}
+
 	// Only allow 4 waveforms
 	auto val = value;
-	if (port >= 0xE0) {
+	if (port >= 0xE0)
 		val &= 3;
-	}
+
 	// Write to the timer?
 	if (chip[index].Write(port, val))
 		return;
@@ -644,9 +657,10 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	return 0;
 }
 
-void OPL::Init(const Mode m)
+void OPL::Init(const Mode _mode)
 {
-	mode = m;
+	mode = _mode;
+
 	memset(cache, 0, ARRAY_LEN(cache));
 
 	switch (mode) {
@@ -671,7 +685,7 @@ static void OPL_CallBack(const uint16_t len)
 	// Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - opl->lastUsed) > 30000) {
 		uint8_t i;
-		for (i = 0xb0; i < 0xb9; i++)
+		for (i = 0xb0; i < 0xb9; ++i)
 			if (opl->cache[i] & 0x20 || opl->cache[i + 0x100] & 0x20)
 				break;
 		if (i == 0xb9)
