@@ -110,7 +110,7 @@ StereoProcessor::StereoProcessor(const uint16_t _sample_rate)
 	SetHighShelfGain(0.0);
 }
 
-void StereoProcessor::SetLowShelfGain(const double gain_db) noexcept
+void StereoProcessor::SetLowShelfGain(const double gain_db)
 {
 	constexpr auto cutoff_freq = 400.0;
 	constexpr auto slope       = 0.5;
@@ -118,7 +118,7 @@ void StereoProcessor::SetLowShelfGain(const double gain_db) noexcept
 		f.setup(sample_rate, cutoff_freq, gain_db, slope);
 }
 
-void StereoProcessor::SetHighShelfGain(const double gain_db) noexcept
+void StereoProcessor::SetHighShelfGain(const double gain_db)
 {
 	constexpr auto cutoff_freq = 2500.0;
 	constexpr auto slope       = 0.5;

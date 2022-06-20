@@ -93,8 +93,8 @@ public:
 	void ControlWrite(const StereoProcessorControlReg, const uint8_t data) noexcept;
 	AudioFrame Process(const AudioFrame &frame) noexcept;
 
-	void SetLowShelfGain(const double gain_db) noexcept;
-	void SetHighShelfGain(const double gain_db) noexcept;
+	void SetLowShelfGain(const double gain_db);
+	void SetHighShelfGain(const double gain_db);
 
 	// prevent copying
 	StereoProcessor(const StereoProcessor &) = delete;
