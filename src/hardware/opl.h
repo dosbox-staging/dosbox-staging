@@ -19,6 +19,7 @@
 #ifndef DOSBOX_OPL_H
 #define DOSBOX_OPL_H
 
+#include "adlib_gold.h"
 #include "dosbox.h"
 #include "mixer.h"
 #include "inout.h"
@@ -31,33 +32,9 @@
 #include <cmath>
 
 class Timer {
-	// Rounded down start time
-	double start = 0.0;
-
-	// Time when you overflow
-	double trigger = 0.0;
-
-	// Clock interval
-	double clockInterval = 0.0;
-
-	// cycle interval
-	double counterInterval = 0.0;
-
-	uint8_t counter = 0;
-	bool enabled    = false;
-	bool overflow   = false;
-	bool masked     = false;
-
 public:
 	Timer(int16_t micros)
-	        : start(0.0),
-	          trigger(0.0),
-	          clockInterval(micros * 0.001), // interval in milliseconds
-	          counterInterval(0.0),
-	          counter(0),
-	          enabled(false),
-	          overflow(false),
-	          masked(false)
+	        : clock_interval(micros * 0.001) // interval in milliseconds
 	{
 		SetCounter(0);
 	}
@@ -70,13 +47,13 @@ public:
 			// How far into the next cycle
 			const double deltaTime = time - trigger;
 			// Sync start to last cycle
-			const auto counterMod = fmod(deltaTime, counterInterval);
-			start                 = time - counterMod;
-			trigger               = start + counterInterval;
+			const auto counter_mod = fmod(deltaTime, counter_interval);
+
+			start   = time - counter_mod;
+			trigger = start + counter_interval;
 			// Only set the overflow flag when not masked
-			if (!masked) {
+			if (!masked)
 				overflow = true;
-			}
 		}
 		return overflow;
 	}
@@ -91,7 +68,7 @@ public:
 	{
 		counter = val;
 		// Interval for next cycle
-		counterInterval = (256 - counter) * clockInterval;
+		counter_interval = (256 - counter) * clock_interval;
 	}
 
 	void SetMask(const bool set)
@@ -113,15 +90,38 @@ public:
 			enabled  = true;
 			overflow = false;
 			// Sync start to the last clock interval
-			const auto clockMod = fmod(time, clockInterval);
-			start               = time - clockMod;
+			const auto clockMod = fmod(time, clock_interval);
+
+			start = time - clockMod;
 			// Overflow trigger
-			trigger = start + counterInterval;
+			trigger = start + counter_interval;
 		}
 	}
+
+private:
+	// Rounded down start time
+	double start = 0.0;
+
+	// Time when you overflow
+	double trigger = 0.0;
+
+	// Clock interval
+	double clock_interval = 0.0;
+
+	// Cycle interval
+	double counter_interval = 0.0;
+
+	uint8_t counter = 0;
+
+	bool enabled  = false;
+	bool overflow = false;
+	bool masked   = false;
 };
 
-struct Chip {
+class Chip {
+public:
+	Chip();
+
 	// Last selected register
 	Timer timer0;
 	Timer timer1;
@@ -131,13 +131,9 @@ struct Chip {
 
 	// Read the current timer state, will use current double
 	uint8_t Read();
-
-	Chip();
 };
 
-enum class Mode {
-	OPL2, DualOPL2, OPL3, OPL3Gold
-};
+enum class Mode { OPL2, DualOPL2, OPL3, OPL3Gold };
 
 // The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
@@ -146,41 +142,6 @@ typedef uint8_t RegisterCache[512];
 class Capture;
 
 class OPL : public Module_base {
-	// Write an address to a chip, returns the address the chip sets
-	uint32_t WriteAddr(const io_port_t port, const uint8_t val);
-
-	// Write to a specific register in the chip
-	void WriteReg(const uint32_t addr, const uint8_t val);
-
-	// Initialize at a specific sample rate and mode
-	void Init(const uint32_t rate);
-
-	IO_ReadHandleObject ReadHandler[3];
-	IO_WriteHandleObject WriteHandler[3];
-
-	// Mode we're running in
-	Mode mode = {};
-
-	// Last selected address in the chip for the different modes
-	union {
-		uint32_t normal = 0;
-		uint8_t dual[2];
-	} reg = {};
-
-	struct {
-		bool active   = false;
-		uint8_t index = 0;
-		uint8_t lvol  = 0;
-		uint8_t rvol  = 0;
-		bool mixer    = false;
-	} ctrl = {};
-
-	void CacheWrite(const uint32_t reg, const uint8_t val);
-	void DualWrite(const uint8_t index, const uint8_t reg, const uint8_t value);
-	void CtrlWrite(const uint8_t val);
-
-	uint8_t CtrlRead(void);
-
 public:
 	static OPL_Mode oplmode;
 	mixer_channel_t mixerChan = {};
@@ -189,21 +150,13 @@ public:
 	uint32_t lastUsed = 0;
 
 	RegisterCache cache = {};
-	Capture *capture    = nullptr;
-	Chip chip[2]        = {};
 
-	opl3_chip oplchip = {};
-	uint8_t newm      = 0;
-
-	// Handle port writes
-	void PortWrite(const io_port_t port, const io_val_t value,
-	               const io_width_t width);
-
-	uint8_t PortRead(const io_port_t port, const io_width_t width);
-	void Init(const Mode _mode);
+	Capture *capture = nullptr;
 
 	OPL(Section *configuration);
 	~OPL() override;
+
+	void Generate(const mixer_channel_t &chan, const uint16_t frames);
 
 	// prevent copy
 	OPL(const OPL &) = delete;
@@ -211,9 +164,46 @@ public:
 	// prevent assignment
 	OPL &operator=(const OPL &) = delete;
 
-public:
-	// Generate a certain amount of frames
-	void Generate(const mixer_channel_t &chan, const uint16_t frames);
+private:
+	IO_ReadHandleObject ReadHandler[3];
+	IO_WriteHandleObject WriteHandler[3];
+
+	Mode mode = {};
+
+	Chip chip[2] = {};
+
+	opl3_chip oplchip = {};
+	uint8_t newm      = 0;
+
+	// Last selected address in the chip for the different modes
+	union {
+		uint32_t normal = 0;
+		uint8_t dual[2];
+	} reg = {};
+
+	static constexpr auto default_volume = 0xff;
+	struct {
+		uint8_t index = 0;
+		uint8_t lvol  = default_volume;
+		uint8_t rvol  = default_volume;
+		bool active   = false;
+		bool mixer    = false;
+	} ctrl = {};
+
+	void Init(const uint32_t rate);
+	void Init(const Mode mode);
+
+	void PortWrite(const io_port_t port, const io_val_t value,
+	               const io_width_t width);
+
+	uint8_t PortRead(const io_port_t port, const io_width_t width);
+
+	uint32_t WriteAddr(const io_port_t port, const uint8_t val);
+	void WriteReg(const uint32_t addr, const uint8_t val);
+	void CacheWrite(const uint32_t reg, const uint8_t val);
+	void DualWrite(const uint8_t index, const uint8_t reg, const uint8_t value);
+	void CtrlWrite(const uint8_t val);
+	uint8_t CtrlRead(void);
 };
 
 #endif

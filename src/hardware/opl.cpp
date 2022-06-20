@@ -23,7 +23,6 @@
 #include <math.h>
 #include <sys/types.h>
 
-#include "adlib_gold.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"
@@ -597,7 +596,9 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case Mode::OPL3: reg.normal = WriteAddr(port, val) & 0x1ff; break;
+		case Mode::OPL3:
+			reg.normal = WriteAddr(port, val) & 0x1ff;
+			break;
 		case Mode::DualOPL2:
 			// Not a 0x?88 port, when write to a specific side
 			if (!(port & 0x8)) {
@@ -757,14 +758,7 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 }
 
-OPL::OPL(Section *configuration)
-        : Module_base(configuration),
-          mode(Mode::OPL2), // TODO this is set in Init and there's no good default
-          reg{0},           // union
-          ctrl{false, 0, 0xff, 0xff, false},
-          mixerChan(nullptr),
-          lastUsed(0),
-          capture(nullptr)
+OPL::OPL(Section *configuration) : Module_base(configuration)
 {
 	Section_prop *section = static_cast<Section_prop *>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
