@@ -431,6 +431,7 @@
     <ClCompile Include="..\src\hardware\opl.cpp" />
     <ClCompile Include="..\src\hardware\pci_bus.cpp" />
     <ClCompile Include="..\src\hardware\pcspeaker.cpp" />
+    <ClCompile Include="..\src\hardware\pcspeaker_discrete.cpp" />
     <ClCompile Include="..\src\hardware\pcspeaker_impulse.cpp" />
     <ClCompile Include="..\src\hardware\pic.cpp" />
     <ClCompile Include="..\src\hardware\ps1audio.cpp" />

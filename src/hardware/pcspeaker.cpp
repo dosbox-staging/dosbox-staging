@@ -21,6 +21,7 @@
 // NOTE: a lot of this code assumes that the callback is called every emulated
 // millisecond
 
+#include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
 
 // The PC Speaker managed pointer
@@ -41,7 +42,8 @@ void PCSPEAKER_Init(Section *section)
 
 	// Create the PC Speaker
 	if (!pc_speaker)
-		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
+	//		pc_speaker = std::make_unique<PcSpeakerImpulse>();
 
 	// Get the user's filering preference
 	const auto filter_pref  = std::string_view(prop->Get_string("pcspeaker_filter"));
