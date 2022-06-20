@@ -350,76 +350,88 @@ void PcSpeakerDiscrete::PlayOrFadeout(const uint16_t speaker_movements,
 
 void PcSpeakerDiscrete::ChannelCallback(uint16_t frames)
 {
-	auto stream = reinterpret_cast<int16_t *>(MixTemp);
+	constexpr uint16_t render_frames = 64;
+	int16_t buf[render_frames];
+
 	ForwardPIT(1);
 	last_index            = 0.0;
-	auto count            = frames;
 	uint16_t pos          = 0u;
 	auto sample_base      = 0.0;
 	const auto sample_add = (1.0001) / frames;
-	while (count--) {
-		auto index = sample_base;
-		sample_base += sample_add;
-		const auto end = sample_base;
-		auto value     = 0.0;
-		while (index < end) {
-			/* Check if there is an upcoming event */
-			if (entries_queued && entries[pos].index <= index) {
-				volwant = entries[pos].vol;
-				pos++;
-				entries_queued--;
-				continue;
-			}
-			double vol_end;
-			if (entries_queued && entries[pos].index < end) {
-				vol_end = entries[pos].index;
-			} else
-				vol_end = end;
-			const auto vol_len = vol_end - index;
-			/* Check if we have to slide the volume */
-			const auto vol_diff = volwant - volcur;
-			if (vol_diff == 0) {
-				value += volcur * vol_len;
-				index += vol_len;
-			} else {
-				// Check how long it will take to goto new level
-				// TODO: describe the basis for these magic
-				// numbers and their effects
-				constexpr auto spkr_speed = amp_positive * 2.0 / 0.070;
-				const auto vol_time       = fabs(vol_diff) / spkr_speed;
-				if (vol_time <= vol_len) {
-					/* Volume reaches endpoint in this
-					 * block, calc until that point */
-					value += vol_time * volcur;
-					value += vol_time * vol_diff / 2;
-					index += vol_time;
-					volcur = volwant;
-				} else {
-					/* Volume still not reached in this
-					 * block */
+
+	auto remaining = frames;
+	while (remaining > 0) {
+		const auto todo = std::min(remaining, render_frames);
+		for (auto i = 0; i < todo; ++i) {
+			auto index = sample_base;
+			sample_base += sample_add;
+			const auto end = sample_base;
+			auto value     = 0.0;
+			while (index < end) {
+				/* Check if there is an upcoming event */
+				if (entries_queued && entries[pos].index <= index) {
+					volwant = entries[pos].vol;
+					pos++;
+					entries_queued--;
+					continue;
+				}
+				double vol_end;
+				if (entries_queued && entries[pos].index < end) {
+					vol_end = entries[pos].index;
+				} else
+					vol_end = end;
+				const auto vol_len = vol_end - index;
+				/* Check if we have to slide the volume */
+				const auto vol_diff = volwant - volcur;
+				if (vol_diff == 0) {
 					value += volcur * vol_len;
-					const auto speed_by_len    = spkr_speed * vol_len;
-					const auto speed_by_len_sq = speed_by_len * vol_len / 2.0;
-					if (vol_diff < 0) {
-						value -= speed_by_len_sq;
-						volcur -= speed_by_len;
-					} else {
-						value += speed_by_len_sq;
-						volcur += speed_by_len;
-					}
 					index += vol_len;
+				} else {
+					// Check how long it will take to goto
+					// new level
+					// TODO: describe the basis for these
+					// magic numbers and their effects
+					constexpr auto spkr_speed = amp_positive *
+					                            2.0 / 0.070;
+					const auto vol_time = fabs(vol_diff) /
+					                      spkr_speed;
+					if (vol_time <= vol_len) {
+						/* Volume reaches endpoint in
+						 * this block, calc until that
+						 * point */
+						value += vol_time * volcur;
+						value += vol_time * vol_diff / 2;
+						index += vol_time;
+						volcur = volwant;
+					} else {
+						/* Volume still not reached in
+						 * this block */
+						value += volcur * vol_len;
+						const auto speed_by_len = spkr_speed *
+						                          vol_len;
+						const auto speed_by_len_sq =
+						        speed_by_len * vol_len / 2.0;
+						if (vol_diff < 0) {
+							value -= speed_by_len_sq;
+							volcur -= speed_by_len;
+						} else {
+							value += speed_by_len_sq;
+							volcur += speed_by_len;
+						}
+						index += vol_len;
+					}
 				}
 			}
+			prev_pos = pos;
+			buf[i] = check_cast<int16_t>(iround(value / sample_add));
 		}
-		prev_pos  = pos;
-		*stream++ = (int16_t)(value / sample_add);
-	}
+		if (neutralize_dc_offset)
+			PlayOrFadeout(pos, todo, buf);
+		else
+			channel->AddSamples_m16(todo, buf);
 
-	int16_t *buffer = reinterpret_cast<int16_t *>(MixTemp);
-	if (neutralize_dc_offset)
-		PlayOrFadeout(pos, frames, buffer);
-	else
-		channel->AddSamples_m16(frames, buffer);
+		remaining = check_cast<uint16_t>(remaining - todo);
+	}
 }
 
 void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
