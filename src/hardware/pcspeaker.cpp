@@ -40,28 +40,34 @@ void PCSPEAKER_Init(Section *section)
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
 
-	const auto model_pref = std::string_view(prop->Get_string("pcspeaker"));
-
-	// Maybe create the PC Speaker
-	if (model_pref == "none")
+	// Get the user's PC Speaker model choice
+	const auto model_choice = std::string_view(prop->Get_string("pcspeaker"));
+	if (model_choice == "none")
 		return;
-	else if (model_pref == "discrete")
+	else if (model_choice == "discrete")
 		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
-	else if (model_pref == "impulse")
+	else if (model_choice == "impulse")
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
 	else {
 		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
-		        model_pref.data());
+		        model_choice.data());
 		return;
 	}
 
-	// Get the user's filering preference
-	const auto filter_pref  = std::string_view(prop->Get_string("pcspeaker_filter"));
-	const auto filter_state = filter_pref == "on" ? FilterState::On : FilterState::Off;
+	// Get the user's filering choice
+	const auto filter_choice = std::string_view(
+	        prop->Get_string("pcspeaker_filter"));
 
-	// Apply the user's filtering preference
 	assert(pc_speaker);
-	pc_speaker->SetFilterState(filter_state);
+	if (filter_choice == "on") {
+		pc_speaker->SetFilterState(FilterState::On);
+	} else {
+		if (filter_choice != "off") {
+			LOG_WARNING("PCSPEAKER: Invalid filter setting '%s', using off",
+			            filter_choice.data());
+		}
+		pc_speaker->SetFilterState(FilterState::Off);
+	}
 
 	section->AddDestroyFunction(&PCSPEAKER_ShutDown, true);
 }
