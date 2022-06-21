@@ -1,5 +1,5 @@
 /*
- *  SPDX-License-Identifier: GPL-2.0-or-later
+ *  SPDX-License-Identifier: GPL-2.0f-or-later
  *
  *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
@@ -40,32 +40,31 @@ public:
 
 private:
 	void ChannelCallback(const uint16_t len);
-	void AddDelayEntry(const double index, double vol);
-	void ForwardPIT(const double newindex);
+	void AddDelayEntry(const float index, float vol);
+	void ForwardPIT(const float newindex);
 	bool IsWaveSquare() const;
-	double NeutralOr(const double fallback) const;
-	double NeutralLastPitOr(const double fallback) const;
+	float NeutralOr(const float fallback) const;
+	float NeutralLastPitOr(const float fallback) const;
 	void PlayOrSleep(const uint16_t speaker_movements,
-	                 size_t requested_samples, int16_t *buffer);
+	                 uint16_t requested_samples, float buffer[]);
 
 	// Constants
 	static constexpr char device_name[] = "PCSPEAKER";
 	static constexpr char model_name[]  = "discrete";
 
-	// RMS levels for the pulse-width-modulation (PWM) and the square wave
-	static constexpr double pwm_scalar = 0.9 * M_SQRT1_2;
-	static constexpr double sqw_scalar = pwm_scalar / 2.0;
+	static constexpr float pwm_scalar = 0.5f; // accomodate a full doubling
+	static constexpr float sqw_scalar = pwm_scalar / 2.0f;
 
 	// Amplitude constants
-	static constexpr double amp_positive = MAX_AUDIO * pwm_scalar;
-	static constexpr double amp_negative = MIN_AUDIO * pwm_scalar;
-	static constexpr double amp_neutral = (amp_positive + amp_negative) / 2.0;
+	static constexpr float amp_positive = MAX_AUDIO * pwm_scalar;
+	static constexpr float amp_negative = MIN_AUDIO * pwm_scalar;
+	static constexpr float amp_neutral = (amp_positive + amp_negative) / 2.0f;
 
 	static constexpr int idle_grace_time_ms = 100;
 
 	struct DelayEntry {
-		double index = 0.0;
-		double vol   = 0.0;
+		float index = 0.0f;
+		float vol   = 0.0f;
 	};
 
 	std::array<DelayEntry, 1024> entries = {};
@@ -78,15 +77,15 @@ private:
 	PitMode pit_mode      = PitMode::SquareWave;
 	PitMode prev_pit_mode = PitMode::SquareWave;
 
-	double pit_last     = 0.0;
-	double pit_max      = period_of_1k_pit_ticks * 1320.0;
-	double pit_half     = pit_max / 2.0;
-	double pit_new_max  = pit_max;
-	double pit_new_half = pit_half;
-	double pit_index    = 0.0;
-	double volwant      = 0.0;
-	double volcur       = 0.0;
-	double last_index   = 0.0;
+	float pit_last     = 0.0f;
+	float pit_max      = period_of_1k_pit_ticks_f * 1320.0f;
+	float pit_half     = pit_max / 2.0f;
+	float pit_new_max  = pit_max;
+	float pit_new_half = pit_half;
+	float pit_index    = 0.0f;
+	float volwant      = 0.0f;
+	float volcur       = 0.0f;
+	float last_index   = 0.0f;
 
 	int min_tr      = 0;
 	int sample_rate = 0;
@@ -95,6 +94,4 @@ private:
 
 	uint16_t entries_queued = 0u;
 	uint16_t prev_pos       = 0u;
-
-	int16_t last_played_sample = 0;
 };
