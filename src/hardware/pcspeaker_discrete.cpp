@@ -214,23 +214,27 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 }
 
 // PIT-mode activation
-void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
+void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 {
 	const auto newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
 
 	prev_pit_mode = pit_mode;
 	pit_mode      = mode;
-	switch (pit_mode) {
 
+	// more documentation needed for these constants
+	constexpr auto max_terminal_count = 80;
+	constexpr auto last_count_offset  = 40.0;
+	constexpr auto last_count_scalar  = amp_positive / last_count_offset;
+
+	switch (pit_mode) {
 	// Mode 0 one shot, used with realsound
 	case PitMode::InterruptOnTerminalCount:
 		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
-		if (cntr > 80) {
-			cntr = 80;
-		}
-		pit_last = ((double)cntr - 40) * (amp_positive / 40.0);
+
+		count    = std::min(count, max_terminal_count);
+		pit_last = (count - max_terminal_count) * last_count_scalar;
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
 		break;
@@ -249,18 +253,18 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		pit_last  = amp_negative;
 		AddDelayEntry(newindex, pit_last);
 		pit_half = PERIOD_OF_1K_PIT_TICKS * 1;
-		pit_max  = PERIOD_OF_1K_PIT_TICKS * cntr;
+		pit_max  = PERIOD_OF_1K_PIT_TICKS * count;
 		break;
 
 	case PitMode::SquareWaveAlias:
 	case PitMode::SquareWave:
-		if (cntr == 0 || cntr < min_tr) {
+		if (count == 0 || count < min_tr) {
 			// skip frequencies that can't be represented
 			pit_last = 0;
 			pit_mode = PitMode::InterruptOnTerminalCount;
 			return;
 		}
-		pit_new_max  = PERIOD_OF_1K_PIT_TICKS * cntr;
+		pit_new_max  = PERIOD_OF_1K_PIT_TICKS * count;
 		pit_new_half = pit_new_max / 2;
 		break;
 
@@ -268,7 +272,7 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		pit_last = amp_positive;
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
-		pit_max   = PERIOD_OF_1K_PIT_TICKS * cntr;
+		pit_max   = PERIOD_OF_1K_PIT_TICKS * count;
 		break;
 	default:
 #if C_DEBUG
