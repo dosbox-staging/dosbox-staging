@@ -32,7 +32,7 @@ CHECK_NARROWING();
 
 // Determines if the inbound wave is square by inspecting
 // current and previous states.
-bool PcSpeakerDiscrete::IsWaveSquare()
+bool PcSpeakerDiscrete::IsWaveSquare() const
 {
 	// When compared across time, this value describe an active PIT-state
 	// being toggled
@@ -63,7 +63,7 @@ bool PcSpeakerDiscrete::IsWaveSquare()
 	return true;
 }
 
-void PcSpeakerDiscrete::AddDelayEntry(double index, double vol)
+void PcSpeakerDiscrete::AddDelayEntry(const double index, double vol)
 {
 	if (IsWaveSquare()) {
 		vol *= sqw_scalar;
@@ -99,7 +99,7 @@ void PcSpeakerDiscrete::AddDelayEntry(double index, double vol)
 #endif
 }
 
-void PcSpeakerDiscrete::ForwardPIT(double newindex)
+void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 {
 	auto passed     = (newindex - last_index);
 	auto delay_base = last_index;
@@ -279,7 +279,7 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 
 // Returns the amp_neutral voltage if the speaker's  fully faded,
 // otherwise returns the fallback if the speaker is active.
-double PcSpeakerDiscrete::NeutralOr(double fallback)
+double PcSpeakerDiscrete::NeutralOr(const double fallback) const
 {
 	return !idle_countdown ? amp_neutral : fallback;
 }
@@ -288,7 +288,7 @@ double PcSpeakerDiscrete::NeutralOr(double fallback)
 // - Neutral voltage, if the speaker's fully faded
 // - The last active PIT voltage to stitch on-going playback
 // - The fallback voltage to kick start a new sound pattern
-double PcSpeakerDiscrete::NeutralLastPitOr(double fallback)
+double PcSpeakerDiscrete::NeutralLastPitOr(const double fallback) const
 {
 	const bool use_last = std::isgreater(fabs(pit_last), amp_neutral);
 	return NeutralOr(use_last ? pit_last : fallback);
@@ -333,7 +333,7 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 // movements is zero) for a short time, wind down the DC-offset, and
 // then halt the channel.
 void PcSpeakerDiscrete::PlayOrFadeout(const uint16_t speaker_movements,
-                                      size_t requested_samples, int16_t *buffer)
+                                      const size_t requested_samples, int16_t *buffer)
 {
 	if (speaker_movements && requested_samples) {
 		static_assert(idle_grace_time_ms > 0, "Algorithm depends on a non-zero grace time");
@@ -349,7 +349,7 @@ void PcSpeakerDiscrete::PlayOrFadeout(const uint16_t speaker_movements,
 	channel->AddSamples_m16(check_cast<uint16_t>(requested_samples), buffer);
 }
 
-void PcSpeakerDiscrete::ChannelCallback(uint16_t frames)
+void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 {
 	constexpr uint16_t render_frames = 64;
 	int16_t buf[render_frames];

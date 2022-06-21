@@ -40,14 +40,14 @@ public:
 	void SetType(const PpiPortB &b) final;
 
 private:
-	void ChannelCallback(uint16_t len);
-	void AddDelayEntry(double index, double vol);
-	void ForwardPIT(double newindex);
-	bool IsWaveSquare();
-	double NeutralOr(double fallback);
-	double NeutralLastPitOr(double fallback);
-	void PlayOrFadeout(const uint16_t speaker_movements, size_t requested_samples,
-	                   int16_t *buffer);
+	void ChannelCallback(const uint16_t len);
+	void AddDelayEntry(const double index, double vol);
+	void ForwardPIT(const double newindex);
+	bool IsWaveSquare() const;
+	double NeutralOr(const double fallback) const;
+	double NeutralLastPitOr(const double fallback) const;
+	void PlayOrFadeout(const uint16_t speaker_movements,
+	                   size_t requested_samples, int16_t *buffer);
 
 	// Constants
 	static constexpr char device_name[] = "PCSPEAKER";
