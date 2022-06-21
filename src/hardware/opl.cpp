@@ -31,8 +31,6 @@
 
 static OPL *opl = nullptr;
 
-static AdlibGold *adlib_gold = nullptr;
-
 constexpr auto render_frames = 128;
 
 // Raw DRO capture stuff
@@ -549,7 +547,7 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 	CacheWrite(full_port, val);
 }
 
-void OPL::CtrlWrite(const uint8_t val)
+void OPL::AdlibGoldControlWrite(const uint8_t val)
 {
 	switch (ctrl.index) {
 	case 0x04:
@@ -591,7 +589,7 @@ void OPL::CtrlWrite(const uint8_t val)
 	}
 }
 
-uint8_t OPL::CtrlRead()
+uint8_t OPL::AdlibGoldControlRead()
 {
 	switch (ctrl.index) {
 	case 0x00: // Board Options
@@ -625,7 +623,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 		case Mode::OPL3Gold:
 			if (port == 0x38b) {
 				if (ctrl.active) {
-					CtrlWrite(val);
+					AdlibGoldControlWrite(val);
 					break;
 				}
 			}
@@ -712,7 +710,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 			if (port == 0x38a)
 				return 0; // Control status, not busy
 			else if (port == 0x38b)
-				return CtrlRead();
+				return AdlibGoldControlRead();
 		}
 		[[fallthrough]];
 	case Mode::OPL3:
@@ -741,7 +739,7 @@ void OPL::Init(const Mode _mode)
 	switch (mode) {
 	case Mode::OPL3: break;
 	case Mode::OPL3Gold:
-		adlib_gold = new AdlibGold(mixer_chan->GetSampleRate());
+		adlib_gold = std::make_unique<AdlibGold>(mixer_chan->GetSampleRate());
 		break;
 	case Mode::OPL2: break;
 	case Mode::DualOPL2:
@@ -895,9 +893,6 @@ OPL::~OPL()
 {
 	delete capture;
 	capture = nullptr;
-
-	delete adlib_gold;
-	adlib_gold = nullptr;
 }
 
 // Initialize static members
