@@ -24,9 +24,9 @@
 #include <stdio.h>
 
 class Section;
-enum OPL_Mode {
-	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3,OPL_opl3gold
-};
+
+enum class OplMode { None, Cms, Opl2, DualOpl2, Opl3, Opl3Gold };
+
 #define CAPTURE_WAVE	0x01
 #define CAPTURE_OPL		0x02
 #define CAPTURE_MIDI	0x04
@@ -35,10 +35,10 @@ enum OPL_Mode {
 
 extern Bitu CaptureState;
 
-void OPL_Init(Section* sec,OPL_Mode mode);
-void CMS_Init(Section* sec);
-void OPL_ShutDown(Section* sec);
-void CMS_ShutDown(Section* sec);
+void OPL_Init(Section *sec, OplMode mode);
+void CMS_Init(Section *sec);
+void OPL_ShutDown(Section *sec);
+void CMS_ShutDown(Section *sec);
 
 bool PS1AUDIO_IsEnabled();
 bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
