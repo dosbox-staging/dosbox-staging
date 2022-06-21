@@ -35,7 +35,7 @@ static AdlibGold *adlib_gold = nullptr;
 
 constexpr auto render_frames = 128;
 
-/* Raw DRO capture stuff */
+// Raw DRO capture stuff
 
 #ifdef _MSC_VER
 #	pragma pack(1)
@@ -111,31 +111,30 @@ void Timer::Start(const double time)
 }
 
 struct RawHeader {
-	uint8_t id[8];         /* 0x00, "DBRAWOPL" */
-	uint16_t version_high; /* 0x08, size of the data following the m */
-	uint16_t version_low;  /* 0x0a, size of the data following the m */
-	uint32_t commands;     /* 0x0c, uint32_t amount of command/data pairs */
-	uint32_t milliseconds; /* 0x10, uint32_t Total milliseconds of data in
-	                          this chunk */
-	uint8_t hardware;      /* 0x14, uint8_t Hardware Type
-	                          0=opl2,1=dual-opl2,2=opl3 */
-	uint8_t format; /* 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe
-	                   all cdms, followed by all data */
-	uint8_t compression;     /* 0x16, uint8_t Compression Type, 0 = No
-	                            Compression */
-	uint8_t delay256;        /* 0x17, uint8_t Delay 1-256 msec command */
-	uint8_t delay_shift8;    /* 0x18, uint8_t (delay + 1)*256 */
-	uint8_t conv_table_size; /* 0x191, uint8_t Raw Conversion Table size */
+	uint8_t id[8];         // 0x00, "DBRAWOPL"
+	uint16_t version_high; // 0x08, size of the data following the m
+	uint16_t version_low;  // 0x0a, size of the data following the m
+	uint32_t commands;     // 0x0c, uint32_t amount of command/data pairs
+	uint32_t milliseconds; // 0x10, uint32_t Total milliseconds of data in
+	                       // this chunk
+	uint8_t hardware;      // 0x14, uint8_t Hardware Type
+	                       // 0=opl2,1=dual-opl2,2=opl3
+	uint8_t format; // 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe
+	                // all cdms, followed by all data
+	uint8_t compression;     // 0x16, uint8_t Compression Type, 0 = No
+	                         // Compression
+	uint8_t delay256;        // 0x17, uint8_t Delay 1-256 msec command
+	uint8_t delay_shift8;    // 0x18, uint8_t (delay + 1)*256
+	uint8_t conv_table_size; // 0x191, uint8_t Raw Conversion Table size
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #	pragma pack()
 #endif
-/*
-        The Raw Tables is < 128 and is used to convert raw commands into a full
-   register index When the high bit of a raw command is set it indicates the
-   cmd/data pair is to be sent to the 2nd port After the conversion table the
-   raw data follows immediatly till the end of the chunk
-*/
+
+// The Raw Tables is < 128 and is used to convert raw commands into a full
+// register index. When the high bit of a raw command is set it indicates the
+// cmd/data pair is to be sent to the 2nd port. After the conversion table the
+// raw data follows immediatly till the end of the chunk.
 
 // Table to map the opl register to one <127 for dro saving
 class Capture {
@@ -185,16 +184,20 @@ public:
 			return true;
 		}
 	skipWrite:
-		// Not yet capturing to a file here
-		// Check for commands that would start capturing, if it's not
-		// one of them return
-		if (!( // note on in any channel
-		            (reg_mask >= 0xb0 && reg_mask <= 0xb8 && (val & 0x020)) ||
-		            // Percussion mode enabled and a note on in any
-		            // percussion instrument
-		            (reg_mask == 0xbd && ((val & 0x3f) > 0x20)))) {
+		// Not yet capturing to a file here. Check for commands that
+		// would start capturing, if it's not one of them return.
+
+		// Note on in any channel
+		const auto note_on = reg_mask >= 0xb0 && reg_mask <= 0xb8 &&
+		                     (val & 0x020);
+
+		// Percussion mode enabled and a note on in any percussion
+		// instrument
+		const auto percussion_on = reg_mask == 0xbd && ((val & 0x3f) > 0x20);
+
+		if (!(note_on || percussion_on))
 			return true;
-		}
+
 		handle = OpenCaptureFile("Raw Opl", ".dro");
 		if (!handle)
 			return false;
@@ -203,12 +206,13 @@ public:
 
 		// Prepare space at start of the file for the header
 		fwrite(&header, 1, sizeof(header), handle);
-		// write the Raw To Reg table
+		// Write the Raw To Reg table
 		fwrite(&to_reg, 1, raw_used, handle);
 		// Write the cache of last commands
 		WriteCache();
 		// Write the command that triggered this
 		AddWrite(reg_full, val);
+
 		// Init the timing information for the next commands
 		lastTicks  = PIC_Ticks;
 		startTicks = PIC_Ticks;
@@ -356,7 +360,7 @@ private:
 
 	void WriteCache()
 	{
-		/* Check the registers to add */
+		// Check the registers to add
 		for (uint16_t i = 0; i < 256; ++i) {
 			auto val = (*cache)[i];
 			// Silence the note on entries
@@ -408,8 +412,6 @@ private:
 		}
 	}
 };
-
-/* Chip */
 
 Chip::Chip() : timer0(80), timer1(320) {}
 
@@ -530,7 +532,7 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 
 	// Only allow 4 waveforms
 	auto val = value;
-	if (port >= 0xE0)
+	if (port >= 0xe0)
 		val &= 3;
 
 	// Write to the timer?
@@ -570,8 +572,10 @@ void OPL::CtrlWrite(const uint8_t val)
 		                               val);
 		break;
 
-	case 0x09: /* Left FM Volume */ ctrl.lvol = val; goto setvol;
-	case 0x0a: /* Right FM Volume */
+	case 0x09: // Left FM Volume
+		ctrl.lvol = val;
+		goto setvol;
+	case 0x0a: // Right FM Volume
 		ctrl.rvol = val;
 	setvol:
 		if (ctrl.mixer) {
@@ -582,22 +586,25 @@ void OPL::CtrlWrite(const uint8_t val)
 		}
 		break;
 
-	case 0x18: /* Surround */ adlib_gold->SurroundControlWrite(val);
+	case 0x18: // Surround
+		adlib_gold->SurroundControlWrite(val);
 	}
 }
 
 uint8_t OPL::CtrlRead()
 {
 	switch (ctrl.index) {
-	case 0x00:           /* Board Options */
+	case 0x00: // Board Options
 		return 0x50; // 16-bit ISA, surround module, no
 		             // telephone/CDROM
 		// return 0x70; // 16-bit ISA, no
 		             // telephone/surround/CD-ROM
 
-	case 0x09: /* Left FM Volume */ return ctrl.lvol;
-	case 0x0a: /* Right FM Volume */ return ctrl.rvol;
-	case 0x15:                 /* Audio Relocation */
+	case 0x09: // Left FM Volume
+		return ctrl.lvol;
+	case 0x0a: // Right FM Volume
+		return ctrl.rvol;
+	case 0x15: // Audio Relocation
 		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
@@ -608,10 +615,11 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 	const auto val = check_cast<uint8_t>(value);
 	// Keep track of last write time
 	lastUsed = PIC_Ticks;
+
 	// Maybe only enable with a keyon?
-	if (!mixer_chan->is_enabled) {
+	if (!mixer_chan->is_enabled)
 		mixer_chan->Enable(true);
-	}
+
 	if (port & 1) {
 		switch (mode) {
 		case Mode::OPL3Gold:
@@ -902,7 +910,7 @@ void OPL_Init(Section *sec, const OPL_Mode oplmode)
 	opl = new OPL(sec);
 }
 
-void OPL_ShutDown(Section * /*sec*/)
+void OPL_ShutDown(Section *)
 {
 	delete opl;
 	opl = nullptr;
