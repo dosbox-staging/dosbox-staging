@@ -31,7 +31,7 @@ CHECK_NARROWING();
 
 void PcSpeakerImpulse::AddPITOutput(const float index)
 {
-	if (prev_port_b_state.speakerOutput) {
+	if (prev_port_b.speaker_output) {
 		AddImpulse(index, pit.amplitude);
 	}
 }
@@ -268,7 +268,7 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 
 			pit.max_ms  = pit.new_max_ms;
 			pit.half_ms = pit.new_half_ms;
-			if (prev_port_b_state.timerGateOutput) {
+			if (prev_port_b.timer2_gating) {
 				pit.mode3_counting = true;
 				// probably not necessary
 				pit.amplitude = positive_amplitude;
@@ -293,20 +293,20 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 	pit.mode = pit_mode;
 }
 
-void PcSpeakerImpulse::SetType(const PpiPortB &port_b_state)
+void PcSpeakerImpulse::SetType(const PpiPortB &port_b)
 {
 #ifdef SPKR_DEBUGGING
 	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
 	         PIC_FullIndex(),
-	         port_b_state.speakerOutput ? "pit" : "forced low",
-	         port_b_state.timerGateOutput ? "on" : "off");
+	         port_b.speaker_output ? "pit" : "forced low",
+	         port_b.timer2_gating ? "on" : "off");
 #endif
 	const auto new_index = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(new_index);
 	// pit clock gate enable rising edge is a trigger
-	const bool pit_trigger = !prev_port_b_state.timerGateOutput && port_b_state.timerGateOutput;
+	const bool pit_trigger = !prev_port_b.timer2_gating && port_b.timer2_gating;
 
-	prev_port_b_state.data = port_b_state.data;
+	prev_port_b.data = port_b.data;
 	if (pit_trigger) {
 		switch (pit.mode) {
 		case PitMode::OneShot:
@@ -336,7 +336,7 @@ void PcSpeakerImpulse::SetType(const PpiPortB &port_b_state)
 			// TODO: implement other modes
 			break;
 		}
-	} else if (!port_b_state.timerGateOutput) {
+	} else if (!port_b.timer2_gating) {
 		switch (pit.mode) {
 		case PitMode::OneShot:
 			// gate amplitude does not affect mode1
@@ -354,7 +354,7 @@ void PcSpeakerImpulse::SetType(const PpiPortB &port_b_state)
 			break;
 		}
 	}
-	if (port_b_state.speakerOutput) {
+	if (port_b.speaker_output) {
 		AddImpulse(new_index, pit.amplitude);
 	} else {
 		AddImpulse(new_index, negative_amplitude);

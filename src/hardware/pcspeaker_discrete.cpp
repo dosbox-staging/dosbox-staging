@@ -40,11 +40,12 @@ bool PcSpeakerDiscrete::IsWaveSquare()
 	constexpr auto was_steadily_on = 0b11;
 	constexpr auto was_toggled_on  = 0b01;
 
-	// The sum of the previous port_b_state with the current port_b_state
+	// The sum of the previous port_b with the current port_b
 	// becomes a temporal-state
 	const auto temporal_pit_state = static_cast<int>(prev_pit_mode) + static_cast<int>(pit_mode);
-	const auto temporal_pwm_state = static_cast<int>(prev_port_b_state.timerGateAndSpeakerOutput) +
-	                                static_cast<int>(port_b_state.timerGateAndSpeakerOutput);
+	const auto temporal_pwm_state =
+	        static_cast<int>(prev_port_b.timer2_gating_and_speaker_out) +
+	        static_cast<int>(port_b.timer2_gating_and_speaker_out);
 
 	// We have a sine-wave if the PIT was steadily off and ...
 	if (temporal_pit_state == 0)
@@ -68,17 +69,17 @@ void PcSpeakerDiscrete::AddDelayEntry(double index, double vol)
 		vol *= sqw_scalar;
 // #define DEBUG_SQUARE_WAVE 1
 #ifdef DEBUG_SQUARE_WAVE
-		LOG_MSG("PCSPEAKER: square-wave [prev_pos=%u, prev_port_b_state=%u, port_b_state=%u, prev_pit=%lu, pit=%lu]",
+		LOG_MSG("PCSPEAKER: square-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu]",
 		        prev_pos,
-		        prev_port_b_state,
-		        port_b_state,
+		        prev_port_b,
+		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 	} else {
-		LOG_MSG("PCSPEAKER: sine-wave [prev_pos=%u, prev_port_b_state=%u, port_b_state=%u, prev_pit=%lu, pit=%lu], ",
+		LOG_MSG("PCSPEAKER: sine-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu], ",
 		        prev_pos,
-		        prev_port_b_state,
-		        port_b_state,
+		        prev_port_b,
+		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 #endif
@@ -93,7 +94,7 @@ void PcSpeakerDiscrete::AddDelayEntry(double index, double vol)
 		LOG_MSG("PCSPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
 		        ", pwm=%d|%d, volume=%6.0f",
 		        prev_pos > 0 ? "yes" : "no", prev_pit_mode,
-		        pit_mode, prev_port_b_state, port_b_state,
+		        pit_mode, prev_port_b, port_b,
 		        static_cast<double>(vol));
 #endif
 }
@@ -119,7 +120,7 @@ void PcSpeakerDiscrete::ForwardPIT(double newindex)
 					delay_base += delay;
 					passed -= delay;
 					pit_last = amp_negative;
-					if (port_b_state.timerGateAndSpeakerOutput.all())
+					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = 0;
 				} else {
@@ -132,7 +133,7 @@ void PcSpeakerDiscrete::ForwardPIT(double newindex)
 					delay_base += delay;
 					passed -= delay;
 					pit_last = amp_positive;
-					if (port_b_state.timerGateAndSpeakerOutput.all())
+					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = pit_half;
 				} else {
@@ -154,7 +155,7 @@ void PcSpeakerDiscrete::ForwardPIT(double newindex)
 					delay_base += delay;
 					passed -= delay;
 					pit_last = amp_positive;
-					if (port_b_state.timerGateAndSpeakerOutput.all())
+					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = 0;
 					/* Load the new count */
@@ -170,7 +171,7 @@ void PcSpeakerDiscrete::ForwardPIT(double newindex)
 					delay_base += delay;
 					passed -= delay;
 					pit_last = amp_negative;
-					if (port_b_state.timerGateAndSpeakerOutput.all())
+					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = pit_half;
 					/* Load the new count */
@@ -193,7 +194,7 @@ void PcSpeakerDiscrete::ForwardPIT(double newindex)
 				delay_base += delay;
 				// passed -= delay; // not currently used
 				pit_last = amp_negative;
-				if (port_b_state.timerGateAndSpeakerOutput.all())
+				if (port_b.timer2_gating_and_speaker_out.all())
 					AddDelayEntry(delay_base,
 					              pit_last); // No new events
 					                         // unless
@@ -222,7 +223,7 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 	pit_mode      = mode;
 	switch (pit_mode) {
 	case PitMode::InterruptOnTC: /* Mode 0 one shot, used with realsound */
-		if (!port_b_state.timerGateAndSpeakerOutput.all())
+		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
 		if (cntr > 80) {
 			cntr = 80;
@@ -233,7 +234,7 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		break;
 
 	case PitMode::OneShot:
-		if (!port_b_state.timerGateAndSpeakerOutput.all())
+		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
 		pit_last = amp_positive;
 		AddDelayEntry(newindex, pit_last);
@@ -299,27 +300,27 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 	const auto newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
 
-	prev_port_b_state.data = port_b_state.data;
+	prev_port_b.data = port_b.data;
 
-	switch (b.timerGateAndSpeakerOutput) {
+	switch (b.timer2_gating_and_speaker_out) {
 	case 0b00:
-		port_b_state.timerGateOutput = false;
-		port_b_state.speakerOutput   = false;
+		port_b.timer2_gating  = false;
+		port_b.speaker_output = false;
 		AddDelayEntry(newindex, NeutralOr(amp_negative));
 		break;
 	case 0b01:
-		port_b_state.timerGateOutput = false;
-		port_b_state.speakerOutput   = true;
+		port_b.timer2_gating  = false;
+		port_b.speaker_output = true;
 		AddDelayEntry(newindex, NeutralOr(amp_negative));
 		break;
 	case 0b10:
-		port_b_state.timerGateOutput = true;
-		port_b_state.speakerOutput   = false;
+		port_b.timer2_gating  = true;
+		port_b.speaker_output = false;
 		AddDelayEntry(newindex, NeutralOr(amp_positive));
 		break;
 	case 0b11:
-		port_b_state.timerGateOutput = true;
-		port_b_state.speakerOutput   = true;
+		port_b.timer2_gating  = true;
+		port_b.speaker_output = true;
 		AddDelayEntry(newindex, NeutralLastPitOr(amp_positive));
 		break;
 	};

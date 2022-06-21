@@ -79,8 +79,8 @@ void PCSPEAKER_SetPITControl(const PitMode pit_mode)
 		pc_speaker->SetPITControl(pit_mode);
 }
 
-void PCSPEAKER_SetType(const PpiPortB &port_b_state)
+void PCSPEAKER_SetType(const PpiPortB &port_b)
 {
 	if (pc_speaker)
-		pc_speaker->SetType(port_b_state);
+		pc_speaker->SetType(port_b);
 }

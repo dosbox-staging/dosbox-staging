@@ -75,8 +75,8 @@ private:
 
 	mixer_channel_t channel = nullptr;
 
-	PpiPortB port_b_state      = {};
-	PpiPortB prev_port_b_state = {};
+	PpiPortB port_b      = {};
+	PpiPortB prev_port_b = {};
 
 	PitMode pit_mode      = PitMode::SquareWave;
 	PitMode prev_pit_mode = PitMode::SquareWave;

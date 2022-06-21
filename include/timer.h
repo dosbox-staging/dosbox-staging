@@ -76,21 +76,21 @@ enum class PitMode : uint8_t {
 
 union PpiPortB {
 	uint8_t data = {0};
-	bit_view<0, 1> timerGateOutput;
-	bit_view<1, 1> speakerOutput;
-	bit_view<4, 1> toggleOnRead;
-	bit_view<5, 1> toggleOnReadXt;
-	bit_view<5, 1> timerGateOutputAlias;
-	bit_view<7, 1> clearKeyboardXt;
-	// virtual view of the timer and speaker fields
-	bit_view<0, 2> timerGateAndSpeakerOutput;
+	bit_view<0, 1> timer2_gating;
+	bit_view<1, 1> speaker_output;
+	bit_view<4, 1> read_toggle;
+	bit_view<5, 1> xt_read_toggle;
+	bit_view<5, 1> timer2_gating_alias;
+	bit_view<7, 1> xt_clear_keyboard;
+	// virtual view of the timer and speaker output fields
+	bit_view<0, 2> timer2_gating_and_speaker_out;
 };
 
 const char *PitModeToString(const PitMode mode);
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(int cntr, PitMode pit_mode);
-void PCSPEAKER_SetType(const PpiPortB &port_b_state);
+void PCSPEAKER_SetType(const PpiPortB &port_b);
 void PCSPEAKER_SetPITControl(PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
