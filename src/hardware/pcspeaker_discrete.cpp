@@ -63,7 +63,7 @@ bool PcSpeakerDiscrete::IsWaveSquare() const
 	return true;
 }
 
-void PcSpeakerDiscrete::AddDelayEntry(const double index, double vol)
+void PcSpeakerDiscrete::AddDelayEntry(const float index, float vol)
 {
 	if (IsWaveSquare()) {
 		vol *= sqw_scalar;
@@ -90,16 +90,16 @@ void PcSpeakerDiscrete::AddDelayEntry(const double index, double vol)
 #if 0
 	// This is extremely verbose; pipe the output to a file.
 	// Display the previous and current speaker modes w/ requested volume
-	if (fabs(vol) > amp_neutral)
+	if (fabsf(vol) > amp_neutral)
 		LOG_MSG("PCSPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
 		        ", pwm=%d|%d, volume=%6.0f",
 		        prev_pos > 0 ? "yes" : "no", prev_pit_mode,
 		        pit_mode, prev_port_b, port_b,
-		        static_cast<double>(vol));
+		        static_cast<float>(vol));
 #endif
 }
 
-void PcSpeakerDiscrete::ForwardPIT(const double newindex)
+void PcSpeakerDiscrete::ForwardPIT(const float newindex)
 {
 	auto passed     = (newindex - last_index);
 	auto delay_base = last_index;
@@ -216,16 +216,18 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 // PIT-mode activation
 void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 {
-	const auto newindex = PIC_TickIndex();
+	const auto newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 
 	prev_pit_mode = pit_mode;
 	pit_mode      = mode;
 
 	// more documentation needed for these constants
-	constexpr auto max_terminal_count = 80;
-	constexpr auto last_count_offset  = 40.0;
+	constexpr auto max_terminal_count = 80.0f;
+	constexpr auto last_count_offset  = 40.0f;
 	constexpr auto last_count_scalar  = amp_positive / last_count_offset;
+
+	auto count_f = static_cast<float>(count);
 
 	switch (pit_mode) {
 	// Mode 0 one shot, used with realsound
@@ -233,8 +235,10 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
 
-		count    = std::min(count, max_terminal_count);
-		pit_last = (count - max_terminal_count) * last_count_scalar;
+		count_f = std::min(count_f, max_terminal_count);
+
+		pit_last = (count_f - max_terminal_count) * last_count_scalar;
+
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
 		break;
@@ -252,8 +256,8 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		pit_index = 0;
 		pit_last  = amp_negative;
 		AddDelayEntry(newindex, pit_last);
-		pit_half = period_of_1k_pit_ticks * 1;
-		pit_max  = period_of_1k_pit_ticks * count;
+		pit_half = period_of_1k_pit_ticks_f * 1;
+		pit_max  = period_of_1k_pit_ticks_f * count_f;
 		break;
 
 	case PitMode::SquareWaveAlias:
@@ -264,7 +268,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 			pit_mode = PitMode::InterruptOnTerminalCount;
 			return;
 		}
-		pit_new_max  = period_of_1k_pit_ticks * count;
+		pit_new_max  = period_of_1k_pit_ticks_f * count_f;
 		pit_new_half = pit_new_max / 2;
 		break;
 
@@ -272,7 +276,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		pit_last = amp_positive;
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
-		pit_max   = period_of_1k_pit_ticks * count;
+		pit_max   = period_of_1k_pit_ticks_f * count_f;
 		break;
 	default:
 #if C_DEBUG
@@ -286,7 +290,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 
 // Returns the amp_neutral voltage if the speaker's  fully faded,
 // otherwise returns the fallback if the speaker is active.
-double PcSpeakerDiscrete::NeutralOr(const double fallback) const
+float PcSpeakerDiscrete::NeutralOr(const float fallback) const
 {
 	return !idle_countdown ? amp_neutral : fallback;
 }
@@ -295,16 +299,16 @@ double PcSpeakerDiscrete::NeutralOr(const double fallback) const
 // - Neutral voltage, if the speaker's fully faded
 // - The last active PIT voltage to stitch on-going playback
 // - The fallback voltage to kick start a new sound pattern
-double PcSpeakerDiscrete::NeutralLastPitOr(const double fallback) const
+float PcSpeakerDiscrete::NeutralLastPitOr(const float fallback) const
 {
-	const bool use_last = std::isgreater(fabs(pit_last), amp_neutral);
+	const bool use_last = std::isgreater(fabsf(pit_last), amp_neutral);
 	return NeutralOr(use_last ? pit_last : fallback);
 }
 
 // PWM-mode activation
 void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 {
-	const auto newindex = PIC_TickIndex();
+	const auto newindex = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(newindex);
 
 	prev_port_b.data = port_b.data;
@@ -338,31 +342,30 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 
 // Halt the channel after the speaker has idled
 void PcSpeakerDiscrete::PlayOrSleep(const uint16_t speaker_movements,
-                                    const size_t requested_samples, int16_t *buffer)
+                                    const uint16_t requested_samples,
+                                    float buffer[])
 {
-	if (speaker_movements && requested_samples) {
-		static_assert(idle_grace_time_ms > 0, "Algorithm depends on a non-zero grace time");
-		idle_countdown = idle_grace_time_ms;
-	} else if (idle_countdown > 0) {
-		idle_countdown--;
-		last_played_sample = buffer[requested_samples - 1];
-	} else {
-		channel->Enable(false);
-	}
+	channel->AddSamples_mfloat(requested_samples, buffer);
 
-	channel->AddSamples_m16(check_cast<uint16_t>(requested_samples), buffer);
+	// Maybe sleep the channel
+	if (speaker_movements && requested_samples)
+		idle_countdown = idle_grace_time_ms;
+	else if (idle_countdown > 0)
+		idle_countdown--;
+	else
+		channel->Enable(false);
 }
 
 void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 {
 	constexpr uint16_t render_frames = 64;
-	int16_t buf[render_frames];
+	float buf[render_frames];
 
 	ForwardPIT(1);
-	last_index            = 0.0;
+	last_index            = 0.0f;
 	uint16_t pos          = 0u;
-	auto sample_base      = 0.0;
-	const auto sample_add = (1.0001) / frames;
+	auto sample_base      = 0.0f;
+	const auto sample_add = 1.0001f / frames;
 
 	auto remaining = frames;
 	while (remaining > 0) {
@@ -371,7 +374,9 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 			auto index = sample_base;
 			sample_base += sample_add;
 			const auto end = sample_base;
-			auto value     = 0.0;
+
+			auto value = 0.0f;
+
 			while (index < end) {
 				// Check if there is an upcoming event
 				if (entries_queued && entries[pos].index <= index) {
@@ -380,7 +385,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 					entries_queued--;
 					continue;
 				}
-				double vol_end;
+				float vol_end;
 				if (entries_queued && entries[pos].index < end) {
 					vol_end = entries[pos].index;
 				} else
@@ -396,10 +401,8 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 					// new level
 					// TODO: describe the basis for these
 					// magic numbers and their effects
-					constexpr auto spkr_speed = amp_positive *
-					                            2.0 / 0.070;
-					const auto vol_time = fabs(vol_diff) /
-					                      spkr_speed;
+					constexpr float spkr_speed = amp_positive * 2.0f / 0.070f;
+					const auto vol_time = fabsf(vol_diff) / spkr_speed;
 					if (vol_time <= vol_len) {
 						// Volume reaches endpoint in
 						// this block, calc until that
@@ -414,8 +417,8 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 						value += volcur * vol_len;
 						const auto speed_by_len = spkr_speed *
 						                          vol_len;
-						const auto speed_by_len_sq =
-						        speed_by_len * vol_len / 2.0;
+						const auto speed_by_len_sq = speed_by_len *
+						                             vol_len / 2.0f;
 						if (vol_diff < 0) {
 							value -= speed_by_len_sq;
 							volcur -= speed_by_len;
@@ -428,7 +431,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 				}
 			}
 			prev_pos = pos;
-			buf[i] = check_cast<int16_t>(iround(value / sample_add));
+			buf[i]   = value / sample_add;
 		}
 		PlayOrSleep(pos, todo, buf);
 
