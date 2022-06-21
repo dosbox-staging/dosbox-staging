@@ -23,7 +23,6 @@
 #include <array>
 
 #include "mixer.h"
-#include "dc_silencer.h"
 #include "pic.h"
 #include "setup.h"
 #include "support.h"
@@ -46,8 +45,8 @@ private:
 	bool IsWaveSquare() const;
 	double NeutralOr(const double fallback) const;
 	double NeutralLastPitOr(const double fallback) const;
-	void PlayOrFadeout(const uint16_t speaker_movements,
-	                   size_t requested_samples, int16_t *buffer);
+	void PlayOrSleep(const uint16_t speaker_movements,
+	                 size_t requested_samples, int16_t *buffer);
 
 	// Constants
 	static constexpr char device_name[] = "PCSPEAKER";
@@ -70,8 +69,6 @@ private:
 	};
 
 	std::array<DelayEntry, 1024> entries = {};
-
-	DCSilencer dc_silencer = {};
 
 	mixer_channel_t channel = nullptr;
 
@@ -100,7 +97,4 @@ private:
 	uint16_t prev_pos       = 0u;
 
 	int16_t last_played_sample = 0;
-
-	// to-be-removed, the DC filters take care of DC offset correction
-	bool neutralize_dc_offset = false;
 };
