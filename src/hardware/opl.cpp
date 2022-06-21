@@ -827,7 +827,7 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 }
 
-OPL::OPL(Section *configuration) : Module_base(configuration)
+OPL::OPL(Section *configuration)
 {
 	Section_prop *section = static_cast<Section_prop *>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
