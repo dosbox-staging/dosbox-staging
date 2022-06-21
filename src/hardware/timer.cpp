@@ -142,7 +142,8 @@ static bool latched_timerstatus_locked;
 const char *PitModeToString(const PitMode mode)
 {
 	switch (mode) {
-	case PitMode::InterruptOnTC: return "Interrupt on terminal count";
+	case PitMode::InterruptOnTerminalCount:
+		return "Interrupt on terminal count";
 	case PitMode::OneShot: return "One-shot";
 	case PitMode::RateGenerator: return "Rate generator";
 	case PitMode::SquareWave: return "Square wave generator";
@@ -181,7 +182,7 @@ constexpr int update_channel_delay(PIT_Block &channel)
 static void PIT0_Event(uint32_t /*val*/)
 {
 	PIC_ActivateIRQ(0);
-	if (channel_0.mode != PitMode::InterruptOnTC) {
+	if (channel_0.mode != PitMode::InterruptOnTerminalCount) {
 		channel_0.start += channel_0.delay;
 
 		if (GCC_UNLIKELY(channel_0.update_count)) {
@@ -196,7 +197,7 @@ static bool counter_output(const PIT_Block &channel)
 {
 	auto index = PIC_FullIndex() - channel.start;
 	switch (channel.mode) {
-	case PitMode::InterruptOnTC:
+	case PitMode::InterruptOnTerminalCount:
 		if (channel.mode_changed)
 			return false;
 		return (index > channel.delay);
@@ -288,7 +289,7 @@ static void counter_latch(PIT_Block &channel)
 	const auto count = static_cast<double>(channel.count);
 	switch (channel.mode) {
 	case PitMode::SoftwareStrobe:
-	case PitMode::InterruptOnTC:
+	case PitMode::InterruptOnTerminalCount:
 		/* Counter keeps on counting after passing terminal count */
 		if (elapsed_ms > channel.delay) {
 			elapsed_ms -= channel.delay;
@@ -398,8 +399,10 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 		switch (channel_num) {
 		case 0: /* Timer hooked to IRQ 0 */
 			if (channel.mode_changed ||
-			    channel.mode == PitMode::InterruptOnTC) {
-				if (channel.mode == PitMode::InterruptOnTC) { // DoWhackaDo demo
+			    channel.mode == PitMode::InterruptOnTerminalCount) {
+				if (channel.mode ==
+				    PitMode::InterruptOnTerminalCount) { // DoWhackaDo
+					                                 // demo
 					PIC_RemoveEvents(PIT0_Event);
 				}
 				PIC_AddEvent(PIT0_Event, channel.delay);
@@ -507,7 +510,8 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 
 	if (channel_num == 0) {
 		PIC_RemoveEvents(PIT0_Event);
-		if ((channel.mode != PitMode::InterruptOnTC) && !old_output) {
+		if ((channel.mode != PitMode::InterruptOnTerminalCount) &&
+		    !old_output) {
 			PIC_ActivateIRQ(0);
 		} else {
 			PIC_DeActivateIRQ(0);
@@ -565,7 +569,7 @@ void TIMER_SetGate2(bool in)
 		return;
 	const auto &mode = channel_2.mode;
 	switch (mode) {
-	case PitMode::InterruptOnTC:
+	case PitMode::InterruptOnTerminalCount:
 		if (in)
 			channel_2.start = PIC_FullIndex();
 		else {

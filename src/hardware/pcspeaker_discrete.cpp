@@ -34,7 +34,7 @@ CHECK_NARROWING();
 // current and previous states.
 bool PcSpeakerDiscrete::IsWaveSquare() const
 {
-	// When compared across time, this value describe an active PIT-state
+	// When compared across time, this value describes an active PIT-state
 	// being toggled
 	constexpr auto was_toggled     = 0b10 + 0b11;
 	constexpr auto was_steadily_on = 0b11;
@@ -105,7 +105,7 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 	auto delay_base = last_index;
 	last_index      = newindex;
 	switch (pit_mode) {
-	case PitMode::InterruptOnTC: return;
+	case PitMode::InterruptOnTerminalCount: return;
 
 	case PitMode::OneShot: return;
 
@@ -222,7 +222,8 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 	prev_pit_mode = pit_mode;
 	pit_mode      = mode;
 	switch (pit_mode) {
-	case PitMode::InterruptOnTC: /* Mode 0 one shot, used with realsound */
+	case PitMode::InterruptOnTerminalCount: /* Mode 0 one shot, used with
+	                                           realsound */
 		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
 		if (cntr > 80) {
@@ -255,7 +256,7 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		if (cntr == 0 || cntr < min_tr) {
 			/* skip frequencies that can't be represented */
 			pit_last = 0;
-			pit_mode = PitMode::InterruptOnTC;
+			pit_mode = PitMode::InterruptOnTerminalCount;
 			return;
 		}
 		pit_new_max  = PERIOD_OF_1K_PIT_TICKS * cntr;
