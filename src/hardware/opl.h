@@ -111,6 +111,8 @@ private:
 	opl3_chip oplchip = {};
 	uint8_t newm      = 0;
 
+	std::unique_ptr<AdlibGold> adlib_gold = {};
+
 	// Last selected address in the chip for the different modes
 	union {
 		uint32_t normal = 0;
@@ -138,8 +140,9 @@ private:
 	void WriteReg(const uint32_t addr, const uint8_t val);
 	void CacheWrite(const uint32_t reg, const uint8_t val);
 	void DualWrite(const uint8_t index, const uint8_t reg, const uint8_t value);
-	void CtrlWrite(const uint8_t val);
-	uint8_t CtrlRead(void);
+
+	void AdlibGoldControlWrite(const uint8_t val);
+	uint8_t AdlibGoldControlRead(void);
 };
 
 #endif
