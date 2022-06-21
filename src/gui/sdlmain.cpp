@@ -1159,6 +1159,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 				sdl.renderer = nullptr;
 			}
 
+			assert(sdl.renderer == nullptr);
 			sdl.renderer = SDL_CreateRenderer(sdl.window, -1, 0);
 			if (!sdl.renderer) {
 				LOG_ERR("SDL: Failed to create renderer: %s",
@@ -1166,7 +1167,27 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 				return nullptr;
 			}
 		}
+#if C_OPENGL
+		if (screen_type == SCREEN_OPENGL) {
+			if (sdl.opengl.context) {
+				SDL_GL_DeleteContext(sdl.opengl.context);
+				sdl.opengl.context = nullptr;
+			}
 
+			assert(sdl.opengl.context == nullptr);
+			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+			if (sdl.opengl.context == nullptr) {
+				LOG_ERR("SDL: OPENGL: Can't create OpenGL context: %s",
+				        SDL_GetError());
+				return nullptr;
+			}
+			if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
+				LOG_ERR("SDL: OPENGL: Can't make OpenGL context current: %s",
+				        SDL_GetError());
+				return nullptr;
+			}
+		}
+#endif
 		if (resizable) {
 			SDL_AddEventWatch(watch_sdl_events, sdl.window);
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
@@ -1753,6 +1774,8 @@ dosurface:
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 
+		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
 
@@ -1794,15 +1817,6 @@ dosurface:
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
 			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
-			goto dosurface;
-		}
-		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		if (sdl.opengl.context == NULL) {
-			LOG_WARNING("SDL:OPENGL: Can't create OpenGL context, falling back to surface");
-			goto dosurface;
-		}
-		if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
-			LOG_WARNING("SDL:OPENGL: Can't make OpenGL context current, falling back to surface");
 			goto dosurface;
 		}
 
@@ -2344,7 +2358,7 @@ static bool present_frame_texture()
 	const auto is_presenting = render_pacer.CanRun();
 	if (is_presenting) {
 		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, &sdl.clip);
+		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
 		SDL_RenderPresent(sdl.renderer);
 	}
 	render_pacer.Checkpoint();
@@ -2508,12 +2522,6 @@ static void CleanupSDLResources()
 		SDL_FreeSurface(sdl.texture.input_surface);
 		sdl.texture.input_surface = nullptr;
 	}
-#if C_OPENGL
-	if (sdl.opengl.context) {
-		SDL_GL_DeleteContext(sdl.opengl.context);
-		sdl.opengl.context = nullptr;
-	}
-#endif
 }
 
 static void GUI_ShutDown(Section *)
@@ -2525,7 +2533,18 @@ static void GUI_ShutDown(Section *)
 		GFX_SwitchFullScreen();
 	if (mouse_is_captured)
 		GFX_ToggleMouseCapture();
+
 	CleanupSDLResources();
+	if (sdl.renderer) {
+		SDL_DestroyRenderer(sdl.renderer);
+		sdl.renderer = nullptr;
+	}
+#if C_OPENGL
+	if (sdl.opengl.context) {
+		SDL_GL_DeleteContext(sdl.opengl.context);
+		sdl.opengl.context = nullptr;
+	}
+#endif
 
 	remove_window();
 }
