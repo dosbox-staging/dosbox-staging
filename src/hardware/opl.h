@@ -77,7 +77,7 @@ typedef uint8_t RegisterCache[512];
 // Internal class used for dro capturing
 class Capture;
 
-class OPL : public Module_base {
+class OPL {
 public:
 	static OPL_Mode oplmode;
 	mixer_channel_t mixer_chan = {};
@@ -90,7 +90,7 @@ public:
 	Capture *capture = nullptr;
 
 	OPL(Section *configuration);
-	~OPL() override;
+	~OPL();
 
 	void Generate(const mixer_channel_t &chan, const uint16_t frames);
 
