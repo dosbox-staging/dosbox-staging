@@ -69,17 +69,16 @@ public:
 	uint8_t Read();
 };
 
-enum class Mode { OPL2, DualOPL2, OPL3, OPL3Gold };
-
 // The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
 
 // Internal class used for dro capturing
 class Capture;
 
+enum class Mode { Opl2, DualOpl2, Opl3, Opl3Gold };
+
 class OPL {
 public:
-	static OplMode oplmode;
 	mixer_channel_t mixer_chan = {};
 
 	// Ticks when adlib was last used to turn of mixing after a few second
@@ -89,7 +88,7 @@ public:
 
 	Capture *capture = nullptr;
 
-	OPL(Section *configuration);
+	OPL(Section *configuration, const OplMode _oplmode);
 	~OPL();
 
 	void Generate(const mixer_channel_t &chan, const uint16_t frames);
@@ -124,12 +123,12 @@ private:
 		uint8_t index = 0;
 		uint8_t lvol  = default_volume;
 		uint8_t rvol  = default_volume;
-		bool active   = false;
-		bool mixer    = false;
+
+		bool active = false;
+		bool mixer  = false;
 	} ctrl = {};
 
-	void Init(const uint32_t rate);
-	void Init(const Mode mode);
+	void Init(const uint16_t sample_rate);
 
 	void PortWrite(const io_port_t port, const io_val_t value,
 	               const io_width_t width);

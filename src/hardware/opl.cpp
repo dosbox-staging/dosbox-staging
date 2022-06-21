@@ -31,8 +31,6 @@
 
 static OPL *opl = nullptr;
 
-constexpr auto render_frames = 128;
-
 // Raw DRO capture stuff
 
 #ifdef _MSC_VER
@@ -468,10 +466,26 @@ uint8_t Chip::Read()
 	return ret;
 }
 
-void OPL::Init(const uint32_t rate)
+void OPL::Init(const uint16_t sample_rate)
 {
 	newm = 0;
-	OPL3_Reset(&oplchip, rate);
+	OPL3_Reset(&oplchip, sample_rate);
+
+	memset(cache, 0, ARRAY_LEN(cache));
+
+	switch (mode) {
+	case Mode::Opl3: break;
+	case Mode::Opl3Gold:
+		adlib_gold = std::make_unique<AdlibGold>(sample_rate);
+		break;
+	case Mode::Opl2: break;
+	case Mode::DualOpl2:
+		// Setup opl3 mode in the hander
+		WriteReg(0x105, 1);
+		// Also set it up in the cache so the capturing will start opl3
+		CacheWrite(0x105, 1);
+		break;
+	}
 }
 
 void OPL::WriteReg(const uint32_t reg, const uint8_t val)
@@ -493,6 +507,8 @@ uint32_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 
 void OPL::Generate(const mixer_channel_t &chan, const uint16_t frames)
 {
+	constexpr auto render_frames = 128;
+
 	int16_t buf[render_frames * 2];
 	float float_buf[render_frames * 2];
 
@@ -620,7 +636,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 
 	if (port & 1) {
 		switch (mode) {
-		case Mode::OPL3Gold:
+		case Mode::Opl3Gold:
 			if (port == 0x38b) {
 				if (ctrl.active) {
 					AdlibGoldControlWrite(val);
@@ -628,14 +644,14 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case Mode::OPL2:
-		case Mode::OPL3:
+		case Mode::Opl2:
+		case Mode::Opl3:
 			if (!chip[0].Write(reg.normal, val)) {
 				WriteReg(reg.normal, val);
 				CacheWrite(reg.normal, val);
 			}
 			break;
-		case Mode::DualOPL2:
+		case Mode::DualOpl2:
 			// Not a 0x??8 port, then write to a specific port
 			if (!(port & 0x8)) {
 				uint8_t index = (port & 2) >> 1;
@@ -651,10 +667,10 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 		// Ask the handler to write the address
 		// Make sure to clip them in the right range
 		switch (mode) {
-		case Mode::OPL2:
+		case Mode::Opl2:
 			reg.normal = WriteAddr(port, val) & 0xff;
 			break;
-		case Mode::OPL3Gold:
+		case Mode::Opl3Gold:
 			if (port == 0x38a) {
 				if (val == 0xff) {
 					ctrl.active = true;
@@ -668,10 +684,10 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case Mode::OPL3:
+		case Mode::Opl3:
 			reg.normal = WriteAddr(port, val) & 0x1ff;
 			break;
-		case Mode::DualOPL2:
+		case Mode::DualOpl2:
 			// Not a 0x?88 port, when write to a specific side
 			if (!(port & 0x8)) {
 				uint8_t index   = (port & 2) >> 1;
@@ -680,6 +696,9 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				reg.dual[0] = val & 0xff;
 				reg.dual[1] = val & 0xff;
 			}
+			break;
+		default:
+			// TODO CMS and None must be removed as they're not real OPL modes
 			break;
 		}
 	}
@@ -697,7 +716,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	CPU_IODelayRemoved += delaycyc;
 
 	switch (mode) {
-	case Mode::OPL2:
+	case Mode::Opl2:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3))
 			// Make sure the low bits are 6 on opl2
@@ -705,7 +724,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 		else
 			return 0xff;
 
-	case Mode::OPL3Gold:
+	case Mode::Opl3Gold:
 		if (ctrl.active) {
 			if (port == 0x38a)
 				return 0; // Control status, not busy
@@ -713,42 +732,25 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 				return AdlibGoldControlRead();
 		}
 		[[fallthrough]];
-	case Mode::OPL3:
+	case Mode::Opl3:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3))
 			return chip[0].Read();
 		else
 			return 0xff;
 
-	case Mode::DualOPL2:
+	case Mode::DualOpl2:
 		// Only return for the lower ports
 		if (port & 1)
 			return 0xff;
 		// Make sure the low bits are 6 on opl2
 		return chip[(port >> 1) & 1].Read() | 0x6;
+
+	default:
+		// TODO CMS and None must be removed as they're not real OPL modes
+		break;
 	}
 	return 0;
-}
-
-void OPL::Init(const Mode _mode)
-{
-	mode = _mode;
-
-	memset(cache, 0, ARRAY_LEN(cache));
-
-	switch (mode) {
-	case Mode::OPL3: break;
-	case Mode::OPL3Gold:
-		adlib_gold = std::make_unique<AdlibGold>(mixer_chan->GetSampleRate());
-		break;
-	case Mode::OPL2: break;
-	case Mode::DualOPL2:
-		// Setup opl3 mode in the hander
-		WriteReg(0x105, 1);
-		// Also set it up in the cache so the capturing will start opl3
-		CacheWrite(0x105, 1);
-		break;
-	}
 }
 
 static void OPL_CallBack(const uint16_t len)
@@ -756,7 +758,7 @@ static void OPL_CallBack(const uint16_t len)
 	opl->Generate(opl->mixer_chan, len);
 
 	// Disable the sound generation after 30 seconds of silence
-	if ((PIC_Ticks - opl->lastUsed) > 30000) {
+	if ((PIC_Ticks - opl->lastUsed) > 30'000) {
 		uint8_t i;
 		for (i = 0xb0; i < 0xb9; ++i)
 			if (opl->cache[i] & 0x20 || opl->cache[i + 0x100] & 0x20)
@@ -833,8 +835,19 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 }
 
-OPL::OPL(Section *configuration)
+OPL::OPL(Section *configuration, const OplMode oplmode)
 {
+	assert(oplmode != OplMode::Cms);
+	assert(oplmode != OplMode::None);
+
+	switch (oplmode) {
+	case OplMode::Opl2:     mode = Mode::Opl2;     break;
+	case OplMode::DualOpl2: mode = Mode::DualOpl2; break;
+	case OplMode::Opl3:     mode = Mode::Opl3;     break;
+	case OplMode::Opl3Gold: mode = Mode::Opl3Gold; break;
+	default: break;
+	}
+
 	Section_prop *section = static_cast<Section_prop *>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
@@ -842,7 +855,10 @@ OPL::OPL(Section *configuration)
 
 	std::set channel_features = {ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend};
-	if (oplmode != OplMode::Opl2)
+
+	const auto dual_opl = mode != Mode::Opl2;
+
+	if (dual_opl)
 		channel_features.emplace(ChannelFeature::Stereo);
 
 	mixer_chan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
@@ -853,18 +869,6 @@ OPL::OPL(Section *configuration)
 
 	Init(mixer_chan->GetSampleRate());
 
-	bool single = false;
-	switch (oplmode) {
-	case OplMode::Opl2:
-		single = true;
-		Init(Mode::OPL2);
-		break;
-	case OplMode::DualOpl2: Init(Mode::DualOPL2); break;
-	case OplMode::Opl3: Init(Mode::OPL3); break;
-	case OplMode::Opl3Gold: Init(Mode::OPL3Gold); break;
-	case OplMode::Cms:
-	case OplMode::None: break;
-	}
 	using namespace std::placeholders;
 
 	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
@@ -876,7 +880,7 @@ OPL::OPL(Section *configuration)
 	ReadHandler[0].Install(port_0x388, read_from, io_width_t::byte, 4);
 
 	// 0x220-0x223 ports (read/write)
-	if (!single) {
+	if (dual_opl) {
 		WriteHandler[1].Install(base, write_to, io_width_t::byte, 4);
 		ReadHandler[1].Install(base, read_from, io_width_t::byte, 4);
 	}
@@ -895,13 +899,9 @@ OPL::~OPL()
 	capture = nullptr;
 }
 
-OplMode OPL::oplmode = OplMode::None;
-
 void OPL_Init(Section *sec, const OplMode oplmode)
 {
-	OPL::oplmode = oplmode;
-
-	opl = new OPL(sec);
+	opl = new OPL(sec, oplmode);
 }
 
 void OPL_ShutDown(Section *)
