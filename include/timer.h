@@ -52,14 +52,14 @@ Refs: http://www.osdever.net/bkerndev/Docs/pit.htm
       https://wiki.osdev.org/Programmable_Interval_Timer#Operating_Modes
 */
 enum class PitMode : uint8_t {
-	InterruptOnTC      = 0b0'0'0,
-	OneShot            = 0b0'0'1,
-	RateGenerator      = 0b0'1'0,
-	SquareWave         = 0b0'1'1,
-	SoftwareStrobe     = 0b1'0'0,
-	HardwareStrobe     = 0b1'0'1,
-	RateGeneratorAlias = 0b1'1'0,
-	SquareWaveAlias    = 0b1'1'1,
+	InterruptOnTerminalCount = 0b0'0'0,
+	OneShot                  = 0b0'0'1,
+	RateGenerator            = 0b0'1'0,
+	SquareWave               = 0b0'1'1,
+	SoftwareStrobe           = 0b1'0'0,
+	HardwareStrobe           = 0b1'0'1,
+	RateGeneratorAlias       = 0b1'1'0,
+	SquareWaveAlias          = 0b1'1'1,
 	Inactive,
 };
 

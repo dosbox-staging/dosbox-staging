@@ -47,7 +47,7 @@ void PcSpeakerImpulse::ForwardPIT(const float new_index)
 	switch (pit.mode) {
 	case PitMode::Inactive: return;
 
-	case PitMode::InterruptOnTC:
+	case PitMode::InterruptOnTerminalCount:
 		if (pit.index >= pit.max_ms) {
 			/// counter reached zero before previous call so do nothing
 			return;
@@ -220,7 +220,7 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 	ForwardPIT(new_index);
 
 	switch (pit_mode) {
-	case PitMode::InterruptOnTC:
+	case PitMode::InterruptOnTerminalCount:
 		// used with "realsound" (PWM)
 		pit.index = 0;
 
