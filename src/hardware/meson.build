@@ -1,7 +1,6 @@
 libhardware_sources = files([
   'adlib_gold.cpp',
   'cmos.cpp',
-  'dc_silencer.cpp',
   'disney.cpp',
   'dma.cpp',
   'envelope.cpp',

@@ -336,20 +336,17 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 	channel->Enable(true);
 }
 
-// After the speaker has idled (as defined when the number of speaker
-// movements is zero) for a short time, wind down the DC-offset, and
-// then halt the channel.
-void PcSpeakerDiscrete::PlayOrFadeout(const uint16_t speaker_movements,
-                                      const size_t requested_samples, int16_t *buffer)
+// Halt the channel after the speaker has idled
+void PcSpeakerDiscrete::PlayOrSleep(const uint16_t speaker_movements,
+                                    const size_t requested_samples, int16_t *buffer)
 {
 	if (speaker_movements && requested_samples) {
 		static_assert(idle_grace_time_ms > 0, "Algorithm depends on a non-zero grace time");
 		idle_countdown = idle_grace_time_ms;
-		dc_silencer.Reset();
 	} else if (idle_countdown > 0) {
 		idle_countdown--;
 		last_played_sample = buffer[requested_samples - 1];
-	} else if (!dc_silencer.Generate(last_played_sample, requested_samples, buffer)) {
+	} else {
 		channel->Enable(false);
 	}
 
@@ -433,10 +430,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 			prev_pos = pos;
 			buf[i] = check_cast<int16_t>(iround(value / sample_add));
 		}
-		if (neutralize_dc_offset)
-			PlayOrFadeout(pos, todo, buf);
-		else
-			channel->AddSamples_m16(todo, buf);
+		PlayOrSleep(pos, todo, buf);
 
 		remaining = check_cast<uint16_t>(remaining - todo);
 	}
