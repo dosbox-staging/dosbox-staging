@@ -738,15 +738,24 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			bytes_read = ReadDMA8(bytes_to_read, sb.dma.remain_size);
 			samples = bytes_read + sb.dma.remain_size;
 			frames = check_cast<uint16_t>(samples / channels);
-			if (sb.dma.sign) {
-				sb.chan->AddSamples_s8s(frames,
-				         maybe_silence(samples,
-				                       reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
-			} else {
-				sb.chan->AddSamples_s8(frames,
-				         maybe_silence(samples, sb.dma.buf.b8));
+
+			// Only add whole frames when in stereo DMA mode. The
+			// number of frames comes from the DMA request, and
+			// therefore user-space data.
+			if (frames) {
+				if (sb.dma.sign) {
+					const auto signed_buf = reinterpret_cast<int8_t *>(sb.dma.buf.b8);
+					sb.chan->AddSamples_s8s(
+					        frames,
+					        maybe_silence(samples, signed_buf));
+				} else {
+					sb.chan->AddSamples_s8(
+					        frames,
+					        maybe_silence(samples, sb.dma.buf.b8));
+				}
 			}
-			// Was there an unhandled dangling sample that we should handle next round?
+			// Otherwise there's an unhandled dangling sample from
+			// the last round
 			if (samples & 1) {
 				sb.dma.remain_size = 1;
 				sb.dma.buf.b8[0] = sb.dma.buf.b8[samples - 1];
