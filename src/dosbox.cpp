@@ -185,7 +185,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		constexpr auto duration = std::chrono::milliseconds(1);
+		constexpr auto duration = std::chrono::microseconds(100);
 		std::this_thread::sleep_for(duration);
 
 		const auto timeslept = GetTicksSince(ticksNew);
