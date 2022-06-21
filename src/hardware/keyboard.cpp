@@ -198,31 +198,30 @@ bit 2      reserved, often used as turbo switch
 bit 1 = 1  speaker data enable
 bit 0 = 1  timer 2 gate to speaker enable
 */
-static PpiPortB port_b_state = {0};
+static PpiPortB port_b = {0};
 extern void TIMER_SetGate2(bool);
 static void write_p61(io_port_t, io_val_t value, io_width_t)
 {
-	const PpiPortB new_state = {check_cast<uint8_t>(value)};
+	const PpiPortB new_port_b = {check_cast<uint8_t>(value)};
 
 	// Determine how the state changed
-	const auto output_changed = new_state.timerGateAndSpeakerOutput !=
-	                            port_b_state.timerGateAndSpeakerOutput;
-	const auto timer_changed = new_state.timerGateOutput !=
-	                           port_b_state.timerGateOutput;
+	const auto output_changed = new_port_b.timer2_gating_and_speaker_out !=
+	                            port_b.timer2_gating_and_speaker_out;
+	const auto timer_changed = new_port_b.timer2_gating != port_b.timer2_gating;
 
 	// Update the state
-	port_b_state.data = new_state.data;
+	port_b.data = new_port_b.data;
 
-	if (machine < MCH_EGA && port_b_state.clearKeyboardXt)
+	if (machine < MCH_EGA && port_b.xt_clear_keyboard)
 		KEYBOARD_ClrBuffer();
 
 	if (!output_changed)
 		return;
 
 	if (timer_changed)
-		TIMER_SetGate2(port_b_state.timerGateOutput);
+		TIMER_SetGate2(port_b.timer2_gating);
 
-	PCSPEAKER_SetType(port_b_state);
+	PCSPEAKER_SetType(port_b);
 }
 
 /* Bochs: 8255 Programmable Peripheral Interface
@@ -242,16 +241,16 @@ extern bool TIMER_GetOutput2(void);
 static uint8_t read_p61(io_port_t, io_width_t)
 {
 	// Bit 4 must be toggled each request
-	port_b_state.toggleOnRead.flip();
+	port_b.read_toggle.flip();
 
 	// On PC/AT systems, bit 5 sets the timer 2 output status
 	if (is_machine(MCH_EGA | MCH_VGA))
-		port_b_state.timerGateOutputAlias = TIMER_GetOutput2();
+		port_b.timer2_gating_alias = TIMER_GetOutput2();
 	else
 		// On XT systems always toggle bit 5 (Spellicopter CGA)
-		port_b_state.toggleOnReadXt.flip();
+		port_b.xt_read_toggle.flip();
 
-	return port_b_state.data;
+	return port_b.data;
 }
 
 /* Bochs: 8255 Programmable Peripheral Interface

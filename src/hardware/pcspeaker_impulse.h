@@ -37,7 +37,7 @@ public:
 	void SetFilterState(const FilterState filter_state) final;
 	void SetCounter(const int cntr, const PitMode pit_mode) final;
 	void SetPITControl(const PitMode pit_mode) final;
-	void SetType(const PpiPortB &port_b_state) final;
+	void SetType(const PpiPortB &port_b) final;
 
 private:
 	void AddImpulse(float index, const int16_t amplitude);
@@ -104,7 +104,7 @@ private:
 
 	mixer_channel_t channel = {};
 
-	PpiPortB prev_port_b_state = {};
+	PpiPortB prev_port_b = {};
 
 	int tally_of_silence = 0;
 };
