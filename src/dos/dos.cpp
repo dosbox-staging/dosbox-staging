@@ -825,6 +825,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x4d:					/* Get Return code */
 		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
 		reg_ah=dos.return_mode;
+		CALLBACK_SCF(false);
 		break;
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
@@ -895,13 +896,14 @@ static Bitu DOS_21Handler(void) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Set File Date Time Faked");
 			CALLBACK_SCF(false);		
 		} else {
-			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subtion %X",reg_al);
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subfunction %X",reg_al);
 		}
 		break;
 	case 0x58:					/* Get/Set Memory allocation strategy */
 		switch (reg_al) {
 		case 0:					/* Get Strategy */
 			reg_ax=DOS_GetMemAllocStrategy();
+			CALLBACK_SCF(false);
 			break;
 		case 1:					/* Set Strategy */
 			if (DOS_SetMemAllocStrategy(reg_bx)) CALLBACK_SCF(false);
@@ -935,7 +937,8 @@ static Bitu DOS_21Handler(void) {
 			reg_bh=0;	//Unspecified error class
 		}
 		reg_bl=1;	//Retry retry retry
-		reg_ch=0;	//Unkown error locus
+		reg_ch=0;	//Unknown error locus
+		CALLBACK_SCF(false); //undocumented
 		break;
 	case 0x5a:					/* Create temporary file */
 		{
@@ -982,7 +985,10 @@ static Bitu DOS_21Handler(void) {
 			reg_si = DOS_SDA_OFS;
 			reg_cx = 0x80;  // swap if in dos
 			reg_dx = 0x1a;  // swap always
+			CALLBACK_SCF(false);
 			LOG(LOG_DOSMISC,LOG_ERROR)("Get SDA, Let's hope for the best!");
+		} else {
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:5D:Unsupported subfunction %X",reg_al);
 		}
 		break;
 	case 0x5f:					/* Network redirection */
@@ -992,13 +998,13 @@ static Bitu DOS_21Handler(void) {
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
-				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));	
-				CALLBACK_SCF(false);
-			} else {
-				reg_ax=dos.errorcode;
-				CALLBACK_SCF(true);
-			}
-			break;
+			MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));	
+			CALLBACK_SCF(false);
+		} else {
+			reg_ax=dos.errorcode;
+			CALLBACK_SCF(true);
+		}
+		break;
 	case 0x62:					/* Get Current PSP Address */
 		reg_bx=dos.psp();
 		break;
@@ -1109,8 +1115,10 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(false);
 			break;
 		};
-	case 0x68:                  /* FFLUSH Commit file */
+	case 0x6a:					/* Same as commit file */
+	case 0x68:					/* FFLUSH Commit file */
 		if(DOS_FlushFile(reg_bl)) {
+			reg_ah = 0x68;
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax = dos.errorcode;
