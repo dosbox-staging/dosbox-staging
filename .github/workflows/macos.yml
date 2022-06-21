@@ -119,7 +119,7 @@ jobs:
       - name: Log environment
         run:  arch -arch=${{ matrix.conf.arch }} ./scripts/log-env.sh
 
-      - run:  arch -arch=${{ matrix.conf.arch }} meson setup ${{ matrix.conf.build_flags }} build
+      - run:  arch -arch=${{ matrix.conf.arch }} ./scripts/retry_command.sh 3 meson setup ${{ matrix.conf.build_flags }} build
 
       - name: Build
         run: |
@@ -229,14 +229,14 @@ jobs:
         if:   matrix.runner.needs_libintl_workaround
         run:  |
           set -ex
-          meson setup -Ddefault_library=static --wrap-mode=forcefallback -Dfluidsynth:try-static-deps=true build
-          git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
+          ./scripts/retry_command.sh 3 meson setup -Ddefault_library=static --wrap-mode=forcefallback -Dfluidsynth:try-static-deps=true build
+          ./scripts/retry_command.sh 3 git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
           brew uninstall -f --ignore-dependencies gettext
           rm -rf build
 
       - name: Setup release build
         run: >-
-          arch -arch=${{ matrix.runner.arch }} meson setup
+          arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
           ${{ matrix.conf.build_flags }}
           --wrap-mode=forcefallback
           -Dbuildtype=release
