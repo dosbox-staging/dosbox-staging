@@ -57,11 +57,7 @@ static struct MemoryBlock {
 	} a20;
 } memory;
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-
-alignas(PAGESIZE) uint8_t MemBase[MAX_MEMORY*1024*1024];
+alignas(host_pagesize) uint8_t MemBase[MAX_MEMORY*1024*1024];
 
 class IllegalPageHandler final : public PageHandler {
 public:
@@ -101,10 +97,10 @@ public:
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
 	HostPt GetHostReadPt(Bitu phys_page) {
-		return MemBase+phys_page*MEM_PAGESIZE;
+		return MemBase+phys_page*dos_pagesize;
 	}
 	HostPt GetHostWritePt(Bitu phys_page) {
-		return MemBase+phys_page*MEM_PAGESIZE;
+		return MemBase+phys_page*dos_pagesize;
 	}
 };
 

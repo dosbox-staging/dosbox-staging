@@ -38,10 +38,6 @@
 
 #include <limits.h>
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-
 #endif // HAVE_MPROTECT
 
 #include "callback.h"

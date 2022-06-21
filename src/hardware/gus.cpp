@@ -259,7 +259,7 @@ private:
 	std::vector<float> render_buffer = {};
 	std::vector<int16_t> play_buffer = {};
 	pan_scalars_array_t pan_scalars = {{}};
-	ram_array_t ram = {{0u}};
+	alignas(sizeof(int16_t)) ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
 	write_io_array_t write_handlers = {}; // std::functions
 	const address_array_t dma_addresses = {

@@ -736,14 +736,7 @@ static void cache_block_before_close();
 static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
-/* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
-#if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
-#define PAGESIZE_TEMP PAGESIZE
-#else
-#define PAGESIZE_TEMP 4096
-#endif
-
-static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
+static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + host_pagesize - 1 + host_pagesize;
 constexpr bool is_64bit_platform = sizeof(void *) == 8;
 
 static inline void dyn_mem_adjust(void *&ptr, size_t &size)
@@ -751,7 +744,7 @@ static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 	// Align to page boundary and adjust size. The -1/+1 voodoo
 	// is required to avoid segfaults on 32-bit builds.
 	const auto p = reinterpret_cast<uintptr_t>(ptr) - 1;
-	const auto align_adjust = p % PAGESIZE_TEMP;
+	const auto align_adjust = p % host_pagesize;
 	const auto p_aligned = p - align_adjust;
 	size += align_adjust + 1;
 	ptr = reinterpret_cast<void *>(p_aligned);
@@ -868,10 +861,10 @@ static void cache_init(bool enable) {
 			// align the cache at a page boundary
 			cache_code = reinterpret_cast<uint8_t *>(
 			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
-			    PAGESIZE_TEMP - 1) & ~(PAGESIZE_TEMP - 1));
+			    host_pagesize - 1) & ~(host_pagesize - 1));
 
 			cache_code_link_blocks=cache_code;
-			cache_code=cache_code+PAGESIZE_TEMP;
+			cache_code=cache_code+host_pagesize;
 			CacheBlock *block = cache_getblock();
 			cache.block.first=block;
 			cache.block.active=block;
