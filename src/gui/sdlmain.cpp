@@ -1149,8 +1149,22 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		assert(sdl.window == nullptr); // enusre we don't leak
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 		if (!sdl.window) {
-			LOG_ERR("SDL: %s", SDL_GetError());
+			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
+		}
+
+		if (screen_type == SCREEN_TEXTURE) {
+			if (sdl.renderer) {
+				SDL_DestroyRenderer(sdl.renderer);
+				sdl.renderer = nullptr;
+			}
+
+			sdl.renderer = SDL_CreateRenderer(sdl.window, -1, 0);
+			if (!sdl.renderer) {
+				LOG_ERR("SDL: Failed to create renderer: %s",
+				        SDL_GetError());
+				return nullptr;
+			}
 		}
 
 		if (resizable) {
@@ -1682,26 +1696,16 @@ dosurface:
 		break; // SCREEN_SURFACE
 
 	case SCREEN_TEXTURE: {
+		if (sdl.render_driver != "auto")
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER,
+			            sdl.render_driver.c_str());
+		SDL_SetHint(SDL_HINT_RENDER_VSYNC, wants_vsync ? "1" : "0");
+
 		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
 			E_Exit("Creating window failed");
 		}
 
-		if (sdl.render_driver != "auto")
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
-
-		assert(sdl.renderer == nullptr); // ensure we don't leak
-
-		const auto vsync_bit = wants_vsync ? SDL_RENDERER_PRESENTVSYNC : 0;
-		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
-		                                  SDL_RENDERER_ACCELERATED |
-		                                          vsync_bit);
-
-		if (!sdl.renderer) {
-			LOG_ERR("%s\n", SDL_GetError());
-			LOG_WARNING("SDL: Can't create renderer, falling back to surface");
-			goto dosurface;
-		}
 		/* Use renderer's default format */
 		SDL_RendererInfo rinfo;
 		SDL_GetRendererInfo(sdl.renderer, &rinfo);
@@ -2503,10 +2507,6 @@ static void CleanupSDLResources()
 	if (sdl.texture.input_surface) {
 		SDL_FreeSurface(sdl.texture.input_surface);
 		sdl.texture.input_surface = nullptr;
-	}
-	if (sdl.renderer) {
-		SDL_DestroyRenderer(sdl.renderer);
-		sdl.renderer = nullptr;
 	}
 #if C_OPENGL
 	if (sdl.opengl.context) {
