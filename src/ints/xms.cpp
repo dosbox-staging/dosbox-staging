@@ -391,7 +391,7 @@ Bitu XMS_Handler(void) {
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
 		reg_eax &= 0xffff;
 		reg_edx &= 0xffff;
-		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
+		reg_ecx = (MEM_TotalPages()*dos_pagesize)-1;			// highest known physical memory address
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
 		uint8_t free_handles;

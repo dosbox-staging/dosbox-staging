@@ -121,11 +121,7 @@ struct mixer_t {
 
 static struct mixer_t mixer = {};
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-
-alignas(PAGESIZE) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
 static void MIXER_LockAudioDevice()
 {

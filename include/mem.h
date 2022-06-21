@@ -33,8 +33,6 @@ typedef uint8_t *HostPt;
 typedef uint32_t RealPt;
 typedef int32_t MemHandle;
 
-#define MEM_PAGESIZE 4096
-
 extern uint8_t MemBase[];
 HostPt GetMemBase();
 
