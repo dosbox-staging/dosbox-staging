@@ -82,7 +82,7 @@ private:
 	PitMode prev_pit_mode = PitMode::SquareWave;
 
 	double pit_last     = 0.0;
-	double pit_max      = PERIOD_OF_1K_PIT_TICKS * 1320.0;
+	double pit_max      = period_of_1k_pit_ticks * 1320.0;
 	double pit_half     = pit_max / 2.0;
 	double pit_new_max  = pit_max;
 	double pit_new_half = pit_half;

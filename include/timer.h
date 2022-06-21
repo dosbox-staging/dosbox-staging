@@ -36,7 +36,7 @@ constexpr auto PIT_TICK_RATE_KHZ = static_cast<double>(PIT_TICK_RATE) / 1000.0;
 
 // The inverse of frequency is the time between events, called 'period'.
 // In this case, we want the period of every 1000 PIT tick events.
-constexpr auto PERIOD_OF_1K_PIT_TICKS = 1000.0 / static_cast<double>(PIT_TICK_RATE);
+constexpr auto period_of_1k_pit_ticks = 1000.0 / static_cast<double>(PIT_TICK_RATE);
 
 /* PIT operating modes represented in 3 bits:
 1 to 3       Operating mode :

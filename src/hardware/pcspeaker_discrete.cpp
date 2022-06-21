@@ -252,8 +252,8 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		pit_index = 0;
 		pit_last  = amp_negative;
 		AddDelayEntry(newindex, pit_last);
-		pit_half = PERIOD_OF_1K_PIT_TICKS * 1;
-		pit_max  = PERIOD_OF_1K_PIT_TICKS * count;
+		pit_half = period_of_1k_pit_ticks * 1;
+		pit_max  = period_of_1k_pit_ticks * count;
 		break;
 
 	case PitMode::SquareWaveAlias:
@@ -264,7 +264,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 			pit_mode = PitMode::InterruptOnTerminalCount;
 			return;
 		}
-		pit_new_max  = PERIOD_OF_1K_PIT_TICKS * count;
+		pit_new_max  = period_of_1k_pit_ticks * count;
 		pit_new_half = pit_new_max / 2;
 		break;
 
@@ -272,7 +272,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		pit_last = amp_positive;
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
-		pit_max   = PERIOD_OF_1K_PIT_TICKS * count;
+		pit_max   = period_of_1k_pit_ticks * count;
 		break;
 	default:
 #if C_DEBUG

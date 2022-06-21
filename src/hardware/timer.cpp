@@ -278,8 +278,8 @@ static void counter_latch(PIT_Block &channel)
 	};
 
 	if (GCC_UNLIKELY(channel.mode_changed)) {
-		const auto total_ticks = static_cast<uint32_t>(elapsed_ms /
-		                                               PERIOD_OF_1K_PIT_TICKS);
+		const auto total_ticks = static_cast<uint32_t>(
+		        elapsed_ms / period_of_1k_pit_ticks);
 		// if (channel.mode== PitMode::SquareWave) ticks_since_then /=
 		// 2; //
 		// TODO figure this out on real hardware
@@ -295,10 +295,11 @@ static void counter_latch(PIT_Block &channel)
 			elapsed_ms -= channel.delay;
 			if (channel.bcd) {
 				elapsed_ms = fmod(elapsed_ms,
-				                  PERIOD_OF_1K_PIT_TICKS * 10000.0);
+				                  period_of_1k_pit_ticks * 10000.0);
 				save_read_latch(9999 - elapsed_ms * PIT_TICK_RATE_KHZ);
 			} else {
-				elapsed_ms = fmod(elapsed_ms, PERIOD_OF_1K_PIT_TICKS * 0x10000);
+				elapsed_ms = fmod(elapsed_ms,
+				                  period_of_1k_pit_ticks * 0x10000);
 				save_read_latch(0xffff - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		} else {
