@@ -79,7 +79,7 @@ class Capture;
 
 class OPL {
 public:
-	static OPL_Mode oplmode;
+	static OplMode oplmode;
 	mixer_channel_t mixer_chan = {};
 
 	// Ticks when adlib was last used to turn of mixing after a few second

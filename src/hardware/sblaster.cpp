@@ -308,7 +308,7 @@ static void InitializeSpeakerState()
 	}
 }
 
-static void configure_filters(const Section_prop* config, const OPL_Mode opl_mode)
+static void configure_filters(const Section_prop *config, const OplMode opl_mode)
 {
 	auto get_filter_params = [&](const char * conf) {
 		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
@@ -364,7 +364,7 @@ static void configure_filters(const Section_prop* config, const OPL_Mode opl_mod
 	// to disable the low-pass filter on auto, but as AdLib Gold is not tied
 	// to any particular Sound Blaster model, we need special handling for
 	// this case.
-	if (opl_mode == OPL_opl3gold) {
+	if (opl_mode == OplMode::Opl3Gold) {
 		const std::string opl_filter_prefs = config->Get_string("opl_filter");
 		if (opl_filter_prefs == "auto") {
 			sb.opl_filter_type = FilterType::None;
@@ -1909,52 +1909,59 @@ private:
 	IO_ReadHandleObject ReadHandler[0x10];
 	IO_WriteHandleObject WriteHandler[0x10];
 	AutoexecObject autoexecline;
-	OPL_Mode oplmode;
+	OplMode oplmode;
 
 	/* Support Functions */
-	void Find_Type_And_Opl(Section_prop* config,SB_TYPES& type, OPL_Mode& opl_mode){
-		const char * sbtype=config->Get_string("sbtype");
-		if (!strcasecmp(sbtype,"sb1")) type=SBT_1;
-		else if (!strcasecmp(sbtype,"sb2")) type=SBT_2;
-		else if (!strcasecmp(sbtype,"sbpro1")) type=SBT_PRO1;
-		else if (!strcasecmp(sbtype,"sbpro2")) type=SBT_PRO2;
-		else if (!strcasecmp(sbtype,"sb16")) type=SBT_16;
-		else if (!strcasecmp(sbtype,"gb")) type=SBT_GB;
-		else if (!strcasecmp(sbtype,"none")) type=SBT_NONE;
-		else type=SBT_16;
+	void Find_Type_And_Opl(Section_prop *config, SB_TYPES &type, OplMode &opl_mode)
+	{
+		const char *sbtype = config->Get_string("sbtype");
+		if (!strcasecmp(sbtype, "sb1"))
+			type = SBT_1;
+		else if (!strcasecmp(sbtype, "sb2"))
+			type = SBT_2;
+		else if (!strcasecmp(sbtype, "sbpro1"))
+			type = SBT_PRO1;
+		else if (!strcasecmp(sbtype, "sbpro2"))
+			type = SBT_PRO2;
+		else if (!strcasecmp(sbtype, "sb16"))
+			type = SBT_16;
+		else if (!strcasecmp(sbtype, "gb"))
+			type = SBT_GB;
+		else if (!strcasecmp(sbtype, "none"))
+			type = SBT_NONE;
+		else
+			type = SBT_16;
 
-		if (type==SBT_16) {
-			if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable()) type=SBT_PRO2;
+		if (type == SBT_16) {
+			if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable())
+				type = SBT_PRO2;
 		}
 
-		/* OPL/CMS Init */
-		const char * omode=config->Get_string("oplmode");
-		if (!strcasecmp(omode,"none")) opl_mode=OPL_none;
-		else if (!strcasecmp(omode,"cms")) opl_mode=OPL_cms;
-		else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
-		else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
-		else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
-		else if (!strcasecmp(omode,"opl3gold")) opl_mode=OPL_opl3gold;
-		/* Else assume auto */
+		// OPL/CMS Init
+		const char *omode = config->Get_string("oplmode");
+		if (!strcasecmp(omode, "none"))
+			opl_mode = OplMode::None;
+		else if (!strcasecmp(omode, "cms"))
+			opl_mode = OplMode::Cms;
+		else if (!strcasecmp(omode, "opl2"))
+			opl_mode = OplMode::Opl2;
+		else if (!strcasecmp(omode, "dualopl2"))
+			opl_mode = OplMode::DualOpl2;
+		else if (!strcasecmp(omode, "opl3"))
+			opl_mode = OplMode::Opl3;
+		else if (!strcasecmp(omode, "opl3gold"))
+			opl_mode = OplMode::Opl3Gold;
+
+		// Else assume auto
 		else {
 			switch (type) {
-			case SBT_NONE:
-				opl_mode=OPL_none;
-				break;
-			case SBT_GB:
-				opl_mode=OPL_cms;
-				break;
+			case SBT_NONE: opl_mode = OplMode::None; break;
+			case SBT_GB: opl_mode = OplMode::Cms; break;
 			case SBT_1:
-			case SBT_2:
-				opl_mode=OPL_opl2;
-				break;
-			case SBT_PRO1:
-				opl_mode=OPL_dualopl2;
-				break;
+			case SBT_2: opl_mode = OplMode::Opl2; break;
+			case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
 			case SBT_PRO2:
-			case SBT_16:
-				opl_mode=OPL_opl3;
-				break;
+			case SBT_16: opl_mode = OplMode::Opl3; break;
 			}
 		}
 	}
@@ -1963,7 +1970,7 @@ public:
 	SBLASTER(Section *configuration)
 	        : Module_base(configuration),
 	          autoexecline{},
-	          oplmode(OPL_none)
+	          oplmode(OplMode::None)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
@@ -1982,18 +1989,24 @@ public:
 		configure_filters(section, oplmode);
 
 		switch (oplmode) {
-		case OPL_none: WriteHandler[0].Install(0x388, adlib_gusforward, io_width_t::byte); break;
-		case OPL_cms:
-			WriteHandler[0].Install(0x388, adlib_gusforward, io_width_t::byte);
+		case OplMode::None:
+			WriteHandler[0].Install(0x388,
+			                        adlib_gusforward,
+			                        io_width_t::byte);
+			break;
+		case OplMode::Cms:
+			WriteHandler[0].Install(0x388,
+			                        adlib_gusforward,
+			                        io_width_t::byte);
 			CMS_Init(section);
 			break;
-		case OPL_opl2:
+		case OplMode::Opl2:
 			CMS_Init(section);
 			[[fallthrough]];
-		case OPL_dualopl2:
-		case OPL_opl3:
-		case OPL_opl3gold:
-			OPL_Init(section,oplmode);
+		case OplMode::DualOpl2:
+		case OplMode::Opl3:
+		case OplMode::Opl3Gold:
+			OPL_Init(section, oplmode);
 			configure_opl_filter();
 			break;
 		}
@@ -2066,23 +2079,25 @@ public:
 		else sb.midi = true;
 	}
 
-	~SBLASTER() {
+	~SBLASTER()
+	{
 		switch (oplmode) {
-		case OPL_none:
+		case OplMode::None:
 			break;
-		case OPL_cms:
+		case OplMode::Cms:
 			CMS_ShutDown(m_configuration);
 			break;
-		case OPL_opl2:
+		case OplMode::Opl2:
 			CMS_ShutDown(m_configuration);
 			[[fallthrough]];
-		case OPL_dualopl2:
-		case OPL_opl3:
-		case OPL_opl3gold:
+		case OplMode::DualOpl2:
+		case OplMode::Opl3:
+		case OplMode::Opl3Gold:
 			OPL_ShutDown(m_configuration);
 			break;
 		}
-		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
+		if (sb.type == SBT_NONE || sb.type == SBT_GB)
+			return;
 		DSP_Reset(); // Stop everything
 		sb.dsp.reset_tally = 0;
 	}

@@ -842,7 +842,7 @@ OPL::OPL(Section *configuration)
 
 	std::set channel_features = {ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend};
-	if (oplmode != OPL_opl2)
+	if (oplmode != OplMode::Opl2)
 		channel_features.emplace(ChannelFeature::Stereo);
 
 	mixer_chan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
@@ -855,15 +855,15 @@ OPL::OPL(Section *configuration)
 
 	bool single = false;
 	switch (oplmode) {
-	case OPL_opl2:
+	case OplMode::Opl2:
 		single = true;
 		Init(Mode::OPL2);
 		break;
-	case OPL_dualopl2: Init(Mode::DualOPL2); break;
-	case OPL_opl3: Init(Mode::OPL3); break;
-	case OPL_opl3gold: Init(Mode::OPL3Gold); break;
-	case OPL_cms:
-	case OPL_none: break;
+	case OplMode::DualOpl2: Init(Mode::DualOPL2); break;
+	case OplMode::Opl3: Init(Mode::OPL3); break;
+	case OplMode::Opl3Gold: Init(Mode::OPL3Gold); break;
+	case OplMode::Cms:
+	case OplMode::None: break;
 	}
 	using namespace std::placeholders;
 
@@ -895,10 +895,9 @@ OPL::~OPL()
 	capture = nullptr;
 }
 
-// Initialize static members
-OPL_Mode OPL::oplmode = OPL_none;
+OplMode OPL::oplmode = OplMode::None;
 
-void OPL_Init(Section *sec, const OPL_Mode oplmode)
+void OPL_Init(Section *sec, const OplMode oplmode)
 {
 	OPL::oplmode = oplmode;
 
