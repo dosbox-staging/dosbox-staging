@@ -112,9 +112,9 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 	case PitMode::RateGeneratorAlias:
 	case PitMode::RateGenerator:
 		while (passed > 0) {
-			/* passed the initial low cycle? */
+			// passed the initial low cycle?
 			if (pit_index >= pit_half) {
-				/* Start a new low cycle */
+				// Start a new low cycle
 				if ((pit_index + passed) >= pit_max) {
 					const auto delay = pit_max - pit_index;
 					delay_base += delay;
@@ -148,7 +148,7 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 	case PitMode::SquareWaveAlias:
 	case PitMode::SquareWave:
 		while (passed > 0) {
-			/* Determine where in the wave we're located */
+			// Determine where in the wave we're located
 			if (pit_index >= pit_half) {
 				if ((pit_index + passed) >= pit_max) {
 					const auto delay = pit_max - pit_index;
@@ -158,7 +158,7 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = 0;
-					/* Load the new count */
+					// Load the new count
 					pit_half = pit_new_half;
 					pit_max  = pit_new_max;
 				} else {
@@ -174,7 +174,7 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 					if (port_b.timer2_gating_and_speaker_out.all())
 						AddDelayEntry(delay_base, pit_last);
 					pit_index = pit_half;
-					/* Load the new count */
+					// Load the new count
 					pit_half = pit_new_half;
 					pit_max  = pit_new_max;
 				} else {
@@ -188,7 +188,7 @@ void PcSpeakerDiscrete::ForwardPIT(const double newindex)
 
 	case PitMode::SoftwareStrobe:
 		if (pit_index < pit_max) {
-			/* Check if we're gonna pass the end this block */
+			// Check if we're gonna pass the end this block
 			if (pit_index + passed >= pit_max) {
 				const auto delay = pit_max - pit_index;
 				delay_base += delay;
@@ -222,8 +222,9 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 	prev_pit_mode = pit_mode;
 	pit_mode      = mode;
 	switch (pit_mode) {
-	case PitMode::InterruptOnTerminalCount: /* Mode 0 one shot, used with
-	                                           realsound */
+
+	// Mode 0 one shot, used with realsound
+	case PitMode::InterruptOnTerminalCount:
 		if (!port_b.timer2_gating_and_speaker_out.all())
 			return;
 		if (cntr > 80) {
@@ -241,9 +242,9 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		AddDelayEntry(newindex, pit_last);
 		break;
 
+	// The RateGenerator is a single cycle low, rest low high generator
 	case PitMode::RateGeneratorAlias:
-	case PitMode::RateGenerator: /* Single cycle low, rest low high
-	                                generator */
+	case PitMode::RateGenerator:
 		pit_index = 0;
 		pit_last  = amp_negative;
 		AddDelayEntry(newindex, pit_last);
@@ -252,9 +253,9 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		break;
 
 	case PitMode::SquareWaveAlias:
-	case PitMode::SquareWave: /* Square wave generator */
+	case PitMode::SquareWave:
 		if (cntr == 0 || cntr < min_tr) {
-			/* skip frequencies that can't be represented */
+			// skip frequencies that can't be represented
 			pit_last = 0;
 			pit_mode = PitMode::InterruptOnTerminalCount;
 			return;
@@ -262,7 +263,8 @@ void PcSpeakerDiscrete::SetCounter(int cntr, const PitMode mode)
 		pit_new_max  = PERIOD_OF_1K_PIT_TICKS * cntr;
 		pit_new_half = pit_new_max / 2;
 		break;
-	case PitMode::SoftwareStrobe: /* Software triggered strobe */
+
+	case PitMode::SoftwareStrobe:
 		pit_last = amp_positive;
 		AddDelayEntry(newindex, pit_last);
 		pit_index = 0;
@@ -370,7 +372,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 			const auto end = sample_base;
 			auto value     = 0.0;
 			while (index < end) {
-				/* Check if there is an upcoming event */
+				// Check if there is an upcoming event
 				if (entries_queued && entries[pos].index <= index) {
 					volwant = entries[pos].vol;
 					pos++;
@@ -383,7 +385,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 				} else
 					vol_end = end;
 				const auto vol_len = vol_end - index;
-				/* Check if we have to slide the volume */
+				// Check if we have to slide the volume
 				const auto vol_diff = volwant - volcur;
 				if (vol_diff == 0) {
 					value += volcur * vol_len;
@@ -398,16 +400,16 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 					const auto vol_time = fabs(vol_diff) /
 					                      spkr_speed;
 					if (vol_time <= vol_len) {
-						/* Volume reaches endpoint in
-						 * this block, calc until that
-						 * point */
+						// Volume reaches endpoint in
+						// this block, calc until that
+						// point
 						value += vol_time * volcur;
 						value += vol_time * vol_diff / 2;
 						index += vol_time;
 						volcur = volwant;
 					} else {
-						/* Volume still not reached in
-						 * this block */
+						// Volume still not reached in
+						// this block
 						value += volcur * vol_len;
 						const auto speed_by_len = spkr_speed *
 						                          vol_len;
@@ -464,7 +466,7 @@ void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
 
 PcSpeakerDiscrete::PcSpeakerDiscrete()
 {
-	/* Register the sound channel */
+	// Register the sound channel
 	const auto callback = std::bind(&PcSpeakerDiscrete::ChannelCallback,
 	                                this,
 	                                std::placeholders::_1);
