@@ -577,8 +577,8 @@ void OPL::CtrlWrite(const uint8_t val)
 		if (ctrl.mixer) {
 			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
-			mixerChan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
-			                     (float)(ctrl.rvol & 0x1f) / 31.0f);
+			mixer_chan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
+			                      (float)(ctrl.rvol & 0x1f) / 31.0f);
 		}
 		break;
 
@@ -592,7 +592,7 @@ uint8_t OPL::CtrlRead()
 	case 0x00:           /* Board Options */
 		return 0x50; // 16-bit ISA, surround module, no
 		             // telephone/CDROM
-		             //		return 0x70; // 16-bit ISA, no
+		// return 0x70; // 16-bit ISA, no
 		             // telephone/surround/CD-ROM
 
 	case 0x09: /* Left FM Volume */ return ctrl.lvol;
@@ -609,8 +609,8 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 	// Keep track of last write time
 	lastUsed = PIC_Ticks;
 	// Maybe only enable with a keyon?
-	if (!mixerChan->is_enabled) {
-		mixerChan->Enable(true);
+	if (!mixer_chan->is_enabled) {
+		mixer_chan->Enable(true);
 	}
 	if (port & 1) {
 		switch (mode) {
@@ -733,7 +733,7 @@ void OPL::Init(const Mode _mode)
 	switch (mode) {
 	case Mode::OPL3: break;
 	case Mode::OPL3Gold:
-		adlib_gold = new AdlibGold(mixerChan->GetSampleRate());
+		adlib_gold = new AdlibGold(mixer_chan->GetSampleRate());
 		break;
 	case Mode::OPL2: break;
 	case Mode::DualOPL2:
@@ -747,7 +747,7 @@ void OPL::Init(const Mode _mode)
 
 static void OPL_CallBack(const uint16_t len)
 {
-	opl->Generate(opl->mixerChan, len);
+	opl->Generate(opl->mixer_chan, len);
 
 	// Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - opl->lastUsed) > 30000) {
@@ -756,7 +756,7 @@ static void OPL_CallBack(const uint16_t len)
 			if (opl->cache[i] & 0x20 || opl->cache[i + 0x100] & 0x20)
 				break;
 		if (i == 0xb9)
-			opl->mixerChan->Enable(false);
+			opl->mixer_chan->Enable(false);
 		else
 			opl->lastUsed = PIC_Ticks;
 	}
@@ -839,13 +839,13 @@ OPL::OPL(Section *configuration) : Module_base(configuration)
 	if (oplmode != OPL_opl2)
 		channel_features.emplace(ChannelFeature::Stereo);
 
-	mixerChan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
+	mixer_chan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
-	mixerChan->SetScale(1.5f);
+	mixer_chan->SetScale(1.5f);
 
-	Init(mixerChan->GetSampleRate());
+	Init(mixer_chan->GetSampleRate());
 
 	bool single = false;
 	switch (oplmode) {
