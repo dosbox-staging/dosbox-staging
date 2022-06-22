@@ -100,8 +100,6 @@ private:
 
 	std::array<float, filter_width> impulse_lut = {};
 
-	std::unique_ptr<SoftLimiter> soft_limiter = {};
-
 	mixer_channel_t channel = {};
 
 	PpiPortB prev_port_b = {};
