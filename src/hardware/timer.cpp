@@ -466,11 +466,41 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 	return ret;
 }
 
+/*
+Read Back Status Byte
+Bit/s        Usage
+7            Output pin state
+6            Null count flags
+4 and 5      Access mode :
+                0 0 = Latch count value command
+                0 1 = Access mode: lobyte only
+                1 0 = Access mode: hibyte only
+                1 1 = Access mode: lobyte/hibyte
+1 to 3       Operating mode :
+                0 0 0 = Mode 0 (interrupt on terminal count)
+                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+                0 1 0 = Mode 2 (rate generator)
+                0 1 1 = Mode 3 (square wave generator)
+                1 0 0 = Mode 4 (software triggered strobe)
+                1 0 1 = Mode 5 (hardware triggered strobe)
+                1 1 0 = Mode 2 (rate generator, same as 010b)
+                1 1 1 = Mode 3 (square wave generator, same as 011b)
+0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
+*/
+union ReadBackStatus {
+	uint8_t data = {0};
+	bit_view<0, 1> bcd_state;
+	bit_view<1, 3> pit_mode;
+	bit_view<4, 2> access_mode;
+};
+
 static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 {
 	auto &channel = pit.at(channel_num);
 
-	if ((val & 0x30) == 0) {
+	const ReadBackStatus rbs = {val};
+
+	if (rbs.access_mode.none()) {
 		counter_latch(channel);
 		return;
 	}
@@ -480,7 +510,7 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	// save the current count value to be re-used in
 	// undocumented newmode
 	counter_latch(channel);
-	channel.bcd = (val & 1) > 0;
+	channel.bcd = rbs.bcd_state;
 	if (channel.bcd)
 		channel.count = std::min(channel.count, max_bcd_count);
 
@@ -493,9 +523,9 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	channel.go_read_latch = true;
 	channel.update_count = false;
 	channel.counting = false;
-	channel.read_mode = static_cast<AccessMode>((val >> 4) & 0x03);
-	channel.write_mode = static_cast<AccessMode>((val >> 4) & 0x03);
-	channel.mode = static_cast<PitMode>((val >> 1) & 0x07);
+	channel.read_mode     = static_cast<AccessMode>(rbs.access_mode.val());
+	channel.write_mode    = static_cast<AccessMode>(rbs.access_mode.val());
+	channel.mode          = static_cast<PitMode>(rbs.pit_mode.val());
 
 	/* If the line goes from low to up => generate irq.
 	 * ( BUT needs to stay up until acknowlegded by the
