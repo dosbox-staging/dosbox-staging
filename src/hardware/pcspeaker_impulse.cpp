@@ -438,32 +438,25 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 	ForwardPIT(1.0f);
 	pit.last_index = 0;
 
-	constexpr auto num_channels = 2;
-	// Static vectors and samples re-used for all callbacks
-	static std::vector<float> in_buffer(num_channels);
-	static std::vector<int16_t> out_buffer(num_channels);
-	static auto &out_sample = out_buffer.front();
-	static auto &in_sample  = in_buffer.front();
-
+	static float accumulator = 0;
 	while (requested_frames > 0 && waveform_deque.size()) {
 		// Pop the first sample off the waveform
-		in_sample += waveform_deque.front();
+		accumulator += waveform_deque.front();
 		waveform_deque.pop_front();
 		waveform_deque.push_back(0.0f);
 
-		// Soft-limit the sample, if needed
-		soft_limiter->Process(in_buffer, 1, out_buffer);
-
 		// Pass the sample to the mixer and decrement the requested frames
-		channel->AddSamples_m16(1, &out_sample);
+		channel->AddSamples_mfloat(1, &accumulator);
 		--requested_frames;
 
 		// Keep a tally of sequential silence so we can sleep the channel
-		tally_of_silence = out_sample ? 0 : tally_of_silence + 1;
+		tally_of_silence = fabsf(accumulator) > 1.0f
+		                         ? 0
+		                         : tally_of_silence + 1;
 
 		// Scale down the running volume amplitude. Eventually it will
 		// hit 0 if no other waveforms are generated.
-		in_sample *= high_pass_amount;
+		accumulator *= high_pass_amount;
 	}
 
 	// Write silence if the waveform deque ran out
@@ -524,10 +517,6 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	// Size the waveform queue
 	constexpr auto waveform_size = filter_quality + sample_rate_per_ms;
 	waveform_deque.resize(waveform_size, 0.0f);
-
-	// Setup the soft limiter
-	soft_limiter = std::make_unique<SoftLimiter>(device_name);
-	assert(soft_limiter);
 
 	// Register the sound channel
 	const auto callback = std::bind(&PcSpeakerImpulse::ChannelCallback, this, std::placeholders::_1);
