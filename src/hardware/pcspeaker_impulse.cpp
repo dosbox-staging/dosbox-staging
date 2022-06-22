@@ -381,7 +381,7 @@ float PcSpeakerImpulse::CalcImpulse(const double t) const
 	// raised-cosine-windowed sinc function
 	const double fs = sample_rate;
 	const auto fc   = fs / (2 + static_cast<double>(cutoff_margin));
-	const auto q    = static_cast<double>(filter_quality);
+	const auto q    = static_cast<double>(sinc_filter_quality);
 	if ((0 < t) && (t * fs < q)) {
 		const auto window    = 1.0 + cos(2 * fs * M_PI * (q / (2 * fs) - t) / q);
 		const auto amplitude = window * (sinc(2 * fc * M_PI * (t - q / (2 * fs)))) / 2.0;
@@ -408,16 +408,18 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 #ifdef USE_LOOKUP_TABLES
 	// Use pre-calculated sinc lookup tables
 	const auto samples_in_impulse = index * sample_rate_per_ms;
-	auto phase = static_cast<int>(samples_in_impulse * oversampling_factor) % oversampling_factor;
+	auto phase = static_cast<int>(samples_in_impulse * sinc_oversampling_factor) %
+	             sinc_oversampling_factor;
 	auto offset = static_cast<int>(samples_in_impulse);
 	if (phase != 0) {
 		offset++;
-		phase = oversampling_factor - phase;
+		phase = sinc_oversampling_factor - phase;
 	}
 
-	for (uint16_t i = 0; i < filter_quality; ++i) {
+	for (uint16_t i = 0; i < sinc_filter_quality; ++i) {
 		const auto wave_i    = check_cast<uint16_t>(offset + i);
-		const auto impulse_i = check_cast<uint16_t>(phase + i * oversampling_factor);
+		const auto impulse_i = check_cast<uint16_t>(
+		        phase + i * sinc_oversampling_factor);
 		waveform_deque.at(wave_i) += amplitude * impulse_lut.at(impulse_i);
 	}
 }
@@ -456,7 +458,7 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 
 		// Scale down the running volume amplitude. Eventually it will
 		// hit 0 if no other waveforms are generated.
-		accumulator *= amplitude_fade;
+		accumulator *= sinc_amplitude_fade;
 	}
 
 	// Write silence if the waveform deque ran out
@@ -477,9 +479,10 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 
 void PcSpeakerImpulse::InitializeImpulseLUT()
 {
-	assert(impulse_lut.size() == filter_width);
-	for (auto i = 0u; i < filter_width; ++i)
-		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate) * oversampling_factor));
+	assert(impulse_lut.size() == sinc_filter_width);
+	for (auto i = 0u; i < sinc_filter_width; ++i)
+		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate) *
+		                                  sinc_oversampling_factor));
 }
 
 void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
@@ -519,7 +522,7 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	InitializeImpulseLUT();
 
 	// Size the waveform queue
-	constexpr auto waveform_size = filter_quality + sample_rate_per_ms;
+	constexpr auto waveform_size = sinc_filter_quality + sample_rate_per_ms;
 	waveform_deque.resize(waveform_size, 0.0f);
 
 	// Register the sound channel

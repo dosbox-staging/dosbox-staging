@@ -67,10 +67,11 @@ private:
 	static constexpr float cutoff_margin = 0.2f;
 
 	// Should be selected based on sampling rate
-	static constexpr float amplitude_fade         = 0.999f;
-	static constexpr uint16_t filter_quality      = 100u;
-	static constexpr uint16_t oversampling_factor = 32u;
-	static constexpr uint16_t filter_width        = filter_quality * oversampling_factor;
+	static constexpr float sinc_amplitude_fade         = 0.999f;
+	static constexpr uint16_t sinc_filter_quality      = 100u;
+	static constexpr uint16_t sinc_oversampling_factor = 32u;
+	static constexpr uint16_t sinc_filter_width = sinc_filter_quality *
+	                                              sinc_oversampling_factor;
 
 	// Compound types and containers
 	struct PitState {
@@ -97,7 +98,7 @@ private:
 
 	std::deque<float> waveform_deque = {};
 
-	std::array<float, filter_width> impulse_lut = {};
+	std::array<float, sinc_filter_width> impulse_lut = {};
 
 	mixer_channel_t channel = {};
 
