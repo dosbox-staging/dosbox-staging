@@ -106,8 +106,7 @@ StereoProcessor::StereoProcessor(const uint16_t _sample_rate)
 	constexpr auto q_factor     = 1.7;
 	allpass.setup(sample_rate, allpass_freq, q_factor);
 
-	SetLowShelfGain(0.0);
-	SetHighShelfGain(0.0);
+	Reset();
 }
 
 void StereoProcessor::SetLowShelfGain(const double gain_db)
