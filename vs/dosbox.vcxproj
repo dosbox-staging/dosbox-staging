@@ -838,6 +838,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\iir1\iir\State.h" />
     <ClInclude Include="..\src\libs\iir1\iir\Types.h" />
     <ClInclude Include="..\src\libs\iir1\iir.h" />
+    <ClInclude Include="..\src\libs\mverb\MVerb.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h" />
     <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
