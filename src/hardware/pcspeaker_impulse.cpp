@@ -509,6 +509,9 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 
 PcSpeakerImpulse::PcSpeakerImpulse()
 {
+	// The implementation is tuned to working with sample rates that are
+	// multiples of 8000, such as 8 Khz, 16 Khz, or 32 Khz. Anything besides
+	// these will produce unwanted artifacts.
 	static_assert(sample_rate >= 8000, "Sample rate must be at least 8 kHz");
 	static_assert(sample_rate % 1000 == 0, "PC Speaker sample must be a multiple of 1000");
 
