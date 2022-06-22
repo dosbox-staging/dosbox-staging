@@ -187,7 +187,7 @@ void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
 	const auto new_index = static_cast<float>(PIC_TickIndex());
 	ForwardPIT(new_index);
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f pit command: %s", PIC_FullIndex(), PitModeToString(pit_mode));
+	LOG_INFO("PCSPEAKER: %f pit command: %s", PIC_FullIndex(), pit_mode_to_string(pit_mode));
 #endif
 	// TODO: implement all modes
 	switch (pit_mode) {
@@ -215,7 +215,7 @@ void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
 void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 {
 #ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s", PIC_FullIndex(), cntr, PitModeToString(pit_mode));
+	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s", PIC_FullIndex(), cntr, pit_mode_to_string(pit_mode));
 #endif
 	const auto new_index = static_cast<float>(PIC_TickIndex());
 
@@ -289,7 +289,7 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 
 	default:
 #ifdef SPKR_DEBUGGING
-		LOG_WARNING("Unhandled speaker PIT mode: %s at %f", PitModeToString(pit_mode), PIC_FullIndex());
+		LOG_WARNING("Unhandled speaker PIT mode: %s at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
 #endif
 		return;
 	}

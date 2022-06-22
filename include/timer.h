@@ -87,7 +87,7 @@ union PpiPortB {
 	bit_view<0, 2> timer2_gating_and_speaker_out;
 };
 
-const char *PitModeToString(const PitMode mode);
+const char *pit_mode_to_string(const PitMode mode);
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(const int count, const PitMode pit_mode);
