@@ -366,8 +366,8 @@ static double sinc(const double t)
 {
 	double result = 1.0;
 
-	constexpr auto SINC_ACCURACY = 20;
-	for (auto k = 1; k < SINC_ACCURACY; ++k) {
+	constexpr auto sinc_accuracy = 20;
+	for (auto k = 1; k < sinc_accuracy; ++k) {
 		result *= cos(t / pow(2.0, k));
 	}
 	return result;
