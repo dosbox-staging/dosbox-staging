@@ -87,8 +87,9 @@ private:
 	float volcur       = 0.0f;
 	float last_index   = 0.0f;
 
-	int min_tr      = 0;
 	int sample_rate = 0;
+
+	int minimum_tick_rate = 0;
 
 	int idle_countdown = idle_grace_time_ms;
 
