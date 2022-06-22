@@ -94,9 +94,9 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,rows-1);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(uint8_t)height);
 		//Page size
-		Bitu pagesize=rows*real_readb(BIOSMEM_SEG,BIOSMEM_NB_COLS)*2;
-		pagesize+=0x100; // bios adds extra on reload
-		real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,pagesize);
+		Bitu bios_pagesize=rows*real_readb(BIOSMEM_SEG,BIOSMEM_NB_COLS)*2;
+		bios_pagesize+=0x100; // bios adds extra on reload
+		real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,bios_pagesize);
 		//Cursor shape
 		if (height>=14) height--; // move up one line on 14+ line fonts
 		INT10_SetCursorShape(height-2,height-1);
