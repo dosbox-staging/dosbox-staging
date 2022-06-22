@@ -1774,7 +1774,34 @@ dosurface:
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 
-		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+		// Copied from the OpenGL path below; used to center texturepp output
+		int window_width  = 0;
+		int window_height = 0;
+		SDL_GetWindowSize(sdl.window, &window_width, &window_height);
+
+		const auto &desired_w = sdl.desktop.window.width;
+		const auto &desired_h = sdl.desktop.window.height;
+		const bool window_doesnt_match_desired = (desired_w != window_width ||
+		                                          desired_h != window_height);
+		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
+
+		// Adjust the window size if needed and permitted
+		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
+		    window_doesnt_match_desired && desired_size_is_valid &&
+		    !sdl.desktop.window.adjusted_initial_size) {
+			sdl.desktop.window.adjusted_initial_size = true;
+			safe_set_window_size(desired_w, desired_h);
+		}
+
+		const auto canvas = get_canvas_size(sdl.desktop.want_type);
+		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+		//         (canvas.w - sdl.clip.w) / 2,
+		//         (canvas.h - sdl.clip.h) / 2,
+		//         sdl.clip.w,
+		//         sdl.clip.h);
+		sdl.clip = calc_viewport(canvas.w, canvas.h);
+		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip) != 0)
+			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
@@ -1937,32 +1964,16 @@ dosurface:
 		    !sdl.desktop.window.adjusted_initial_size) {
 			sdl.desktop.window.adjusted_initial_size = true;
 			safe_set_window_size(desired_w, desired_h);
-			SDL_GetWindowSize(sdl.window, &window_width, &window_height);
 		}
 
-		int canvas_width  = 0;
-		int canvas_height = 0;
-		SDL_GL_GetDrawableSize(sdl.window, &canvas_width, &canvas_height);
-		assert(canvas_width > 0 && canvas_height > 0);
-
-		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
-		    sdl.desktop.fullscreen && !sdl.desktop.full.fixed &&
-		    (sdl.clip.w != canvas_width || sdl.clip.h != canvas_height)) {
-			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(canvas_width-sdl.clip.w)/2,(canvas_height-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
-			sdl.clip = calc_viewport(canvas_width, canvas_height);
-			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
-		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = calc_viewport(canvas_width, canvas_height);
-			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
-		} else {
-			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
-			 * centering on Android (in order to leave room for the on-screen keyboard)
-			 */
-			sdl.clip = calc_viewport(canvas_width, canvas_height);
-			glViewport(sdl.clip.x,
-			           canvas_height - (sdl.clip.y + sdl.clip.h),
-			           sdl.clip.w, sdl.clip.h);
-		}
+		const auto canvas = get_canvas_size(sdl.desktop.want_type);
+		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+		//         (canvas.w - sdl.clip.w) / 2,
+		//         (canvas.h - sdl.clip.h) / 2,
+		//         sdl.clip.w,
+		//         sdl.clip.h);
+		sdl.clip = calc_viewport(canvas.w, canvas.h);
+		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
