@@ -456,7 +456,7 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 
 		// Scale down the running volume amplitude. Eventually it will
 		// hit 0 if no other waveforms are generated.
-		accumulator *= high_pass_amount;
+		accumulator *= amplitude_fade;
 	}
 
 	// Write silence if the waveform deque ran out
