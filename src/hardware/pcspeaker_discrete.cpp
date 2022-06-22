@@ -365,14 +365,16 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	last_index            = 0.0f;
 	uint16_t pos          = 0u;
 	auto sample_base      = 0.0f;
-	const auto sample_add = 1.0001f / frames;
+
+	const auto period_per_frame_ms = 1.0f / frames - FLT_EPSILON;
+	// The epsilon reduction ensures the sum of the periods is <= 1ms
 
 	auto remaining = frames;
 	while (remaining > 0) {
 		const auto todo = std::min(remaining, render_frames);
 		for (auto i = 0; i < todo; ++i) {
 			auto index = sample_base;
-			sample_base += sample_add;
+			sample_base += period_per_frame_ms;
 			const auto end = sample_base;
 
 			auto value = 0.0f;
@@ -431,7 +433,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 				}
 			}
 			prev_pos = pos;
-			buf[i]   = value / sample_add;
+			buf[i]   = value / period_per_frame_ms;
 		}
 		PlayOrSleep(pos, todo, buf);
 
