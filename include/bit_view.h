@@ -264,6 +264,13 @@ public:
 	{
 		bit::clear(data, mask::shifted);
 	}
+
+	// get the numeric value of the view's bits
+	constexpr data_type val() const noexcept
+	{
+		// use the view's value-cast operator to get the shifted and masked bits
+		return static_cast<data_type>(*this);
+	}
 };
 
 #endif
