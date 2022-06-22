@@ -151,7 +151,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
 	PhysPt buf=PhysMake(seg,off);
-	int pageSize = 0;
+	int modePageSize = 0;
 	uint8_t modeAttributes;
 
 	mode&=0x3fff;	// vbe2 compatible, ignore lfb and keep screen content bits
@@ -181,7 +181,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	bool ok_per_mode_pref;
 	switch (mblock.type) {
 	case M_LIN4:
-		pageSize = mblock.sheight * mblock.swidth/8;
+		modePageSize = mblock.sheight * mblock.swidth/8;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth / 8);
 		minfo.NumberOfPlanes = 0x4;
 		minfo.BitsPerPixel = 4u;
@@ -189,7 +189,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		modeAttributes = 0x1b; // Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
-		pageSize = mblock.sheight * mblock.swidth;
+		modePageSize = mblock.sheight * mblock.swidth;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 8u;
@@ -207,7 +207,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN15:
-		pageSize = mblock.sheight * mblock.swidth*2;
+		modePageSize = mblock.sheight * mblock.swidth*2;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 15u;
@@ -225,7 +225,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN16:
-		pageSize = mblock.sheight * mblock.swidth*2;
+		modePageSize = mblock.sheight * mblock.swidth*2;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 16u;
@@ -244,10 +244,10 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		// Mode 0x212 has 128 extra bytes per scan line for
 		// compatibility with Windows 640x480 24-bit S3 Trio drivers
 		if (mode == 0x212) {
-			pageSize = mblock.sheight * (mblock.swidth * 3 + 128);
+			modePageSize = mblock.sheight * (mblock.swidth * 3 + 128);
 			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3 + 128);
 		} else {
-			pageSize = mblock.sheight * (mblock.swidth * 3);
+			modePageSize = mblock.sheight * (mblock.swidth * 3);
 			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3);
 		}
 		minfo.NumberOfPlanes = 0x1u;
@@ -264,7 +264,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN32:
-		pageSize = mblock.sheight * mblock.swidth*4;
+		modePageSize = mblock.sheight * mblock.swidth*4;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 4);
 		minfo.NumberOfPlanes = 0x1u;
 		minfo.BitsPerPixel = 32u;
@@ -282,7 +282,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_TEXT:
-		pageSize = 0;
+		modePageSize = 0;
 		minfo.BytesPerScanLine = host_to_le16(mblock.twidth * 2);
 		minfo.NumberOfPlanes = 0x4;
 		minfo.BitsPerPixel = 4u;
@@ -292,21 +292,21 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	default:
 		return VESA_FAIL;
 	}
-	if (pageSize & 0xFFFF) {
+	if (modePageSize & 0xFFFF) {
 		// It is documented that many applications assume 64k-aligned page sizes
 		// VBETEST is one of them
-		pageSize += 0x10000;
-		pageSize &= ~0xFFFF;
+		modePageSize += 0x10000;
+		modePageSize &= ~0xFFFF;
 	}
-	int pages = 0;
-	if (pageSize > static_cast<int>(vga.vmemsize)) {
+	int modePages = 0;
+	if (modePageSize > static_cast<int>(vga.vmemsize)) {
 		// mode not supported by current hardware configuration
 		modeAttributes &= ~0x1;
-	} else if (pageSize) {
-		pages = (vga.vmemsize / pageSize)-1;
+	} else if (modePageSize) {
+		modePages = (vga.vmemsize / modePageSize)-1;
 	}	
-	assert(pages <= UINT8_MAX);
-	minfo.NumberOfImagePages = static_cast<uint8_t>(pages);
+	assert(modePages <= UINT8_MAX);
+	minfo.NumberOfImagePages = static_cast<uint8_t>(modePages);
 	minfo.ModeAttributes = host_to_le16(modeAttributes);
 	minfo.WinAAttributes = 0x7; // Exists/readable/writable
 
