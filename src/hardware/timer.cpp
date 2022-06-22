@@ -347,7 +347,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	const auto channel_num = check_cast<uint8_t>(port - 0x40);
 	auto &channel = pit.at(channel_num);
 
-	if (channel.bcd == true)
+	if (channel.bcd)
 		decimal_to_bcd(channel.write_latch);
 
 	switch (channel.write_mode) {
@@ -367,7 +367,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 		break;
 	}
 
-	if (channel.bcd == true)
+	if (channel.bcd)
 		bcd_to_decimal(channel.write_latch);
 
 	if (channel.write_mode != AccessMode::Latch) {
@@ -435,10 +435,10 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 		latched_timerstatus_locked = false;
 		ret = latched_timerstatus;
 	} else {
-		if (channel.go_read_latch == true)
+		if (channel.go_read_latch)
 			counter_latch(channel);
 
-		if (channel.bcd == true)
+		if (channel.bcd)
 			decimal_to_bcd(channel.read_latch);
 
 		switch (channel.read_mode) {
@@ -461,7 +461,7 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 			break;
 		default: E_Exit("Timer.cpp: error in readlatch"); break;
 		}
-		if (channel.bcd == true)
+		if (channel.bcd)
 			bcd_to_decimal(channel.read_latch);
 	}
 	return ret;
