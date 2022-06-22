@@ -1227,6 +1227,9 @@
     <ClInclude Include="..\src\libs\iir1\iir.h">
       <Filter>src\libs\iir1</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\mverb\MVerb.h">
+      <Filter>src\libs\mverb</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\zmbv\Resource.h" />
     <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
   </ItemGroup>
@@ -1300,6 +1303,9 @@
     </Filter>
     <Filter Include="src\libs\iir1">
       <UniqueIdentifier>{7c8fbcd1-aca6-40ad-b24d-df51c89fbf2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\mverb">
+      <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\nuked">
       <UniqueIdentifier>{69d13cb3-0db7-4e3c-92a0-c2b1a79b5b63}</UniqueIdentifier>
