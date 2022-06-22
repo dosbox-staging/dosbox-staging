@@ -828,11 +828,22 @@ static void OPL_SaveRawEvent(const bool pressed)
 	if (opl->capture) {
 		delete opl->capture;
 		opl->capture = 0;
-		LOG_MSG("Stopped Raw OPL capturing.");
+		LOG_MSG("OPL: Stopped Raw OPL capturing.");
 	} else {
-		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
+		LOG_MSG("OPL: Preparing to capture Raw OPL, will start with first note played.");
 		opl->capture = new Capture(&opl->cache);
 	}
+}
+
+static std::string opl_mode_to_string(const Mode mode)
+{
+	switch (mode) {
+	case Mode::Opl2:     return "OPL2";
+	case Mode::DualOpl2: return "DualOPL2";
+	case Mode::Opl3:     return "OPL3";
+	case Mode::Opl3Gold: return "OPL3Gold";
+	}
+	return "Unknown";
 }
 
 OPL::OPL(Section *configuration, const OplMode oplmode)
@@ -891,6 +902,8 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	ReadHandler[2].Install(base + 8u, read_from, io_width_t::byte, 1);
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawopl", "Rec. OPL");
+
+	LOG_MSG("OPL: Mode: %s", opl_mode_to_string(mode).c_str());
 }
 
 OPL::~OPL()
