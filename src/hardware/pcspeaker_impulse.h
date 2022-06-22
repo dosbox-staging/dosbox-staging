@@ -61,8 +61,7 @@ private:
 	static constexpr uint16_t sample_rate        = 32000u;
 	static constexpr uint16_t sample_rate_per_ms = sample_rate / 1000u;
 
-	static constexpr auto lowpass_cutoff_freq = 4300;
-	static constexpr auto minimum_counter     = 2 * PIT_TICK_RATE / sample_rate;
+	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate;
 
 	// must be greater than 0.0f
 	static constexpr float cutoff_margin = 0.2f;
