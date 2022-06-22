@@ -29,6 +29,9 @@
 
 CHECK_NARROWING();
 
+// Comment out the following to use the reference implementation.
+#define USE_LOOKUP_TABLES 1
+
 void PcSpeakerImpulse::AddPITOutput(const float index)
 {
 	if (prev_port_b.speaker_output) {
@@ -401,7 +404,9 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 
 	// Make sure the time index is valid
 	index = clamp(index, 0.0f, 1.0f);
-#ifndef REFERENCE
+
+#ifdef USE_LOOKUP_TABLES
+	// Use pre-calculated sinc lookup tables
 	const auto samples_in_impulse = index * sample_rate_per_ms;
 	auto phase = static_cast<int>(samples_in_impulse * oversampling_factor) % oversampling_factor;
 	auto offset = static_cast<int>(samples_in_impulse);
@@ -416,7 +421,9 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 		waveform_deque.at(wave_i) += amplitude * impulse_lut.at(impulse_i);
 	}
 }
+
 #else
+	// Mathematically intensive reference implementation
 	const auto portion_of_ms = static_cast < double(index) / 1000.0;
 	for (size_t i = 0; i < waveform_deque.size(); ++i) {
 		const auto impulse_time = static_cast<double>(i) / sample_rate - portion_of_ms;
