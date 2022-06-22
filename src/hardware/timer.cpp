@@ -139,7 +139,7 @@ static uint8_t latched_timerstatus;
 // reprogrammed.
 static bool latched_timerstatus_locked;
 
-const char *PitModeToString(const PitMode mode)
+const char *pit_mode_to_string(const PitMode mode)
 {
 	switch (mode) {
 	case PitMode::InterruptOnTerminalCount:
@@ -223,7 +223,7 @@ static bool counter_output(const PIT_Block &channel)
 		return true;
 	default:
 		LOG(LOG_PIT, LOG_ERROR)("Illegal Mode %s for reading output",
-		                        PitModeToString(channel.mode));
+		                        pit_mode_to_string(channel.mode));
 		return true;
 	}
 }
@@ -334,7 +334,7 @@ static void counter_latch(PIT_Block &channel)
 		break;
 	default:
 		LOG(LOG_PIT, LOG_ERROR)("Illegal Mode %s for reading counter %f",
-		                        PitModeToString(channel.mode),
+		                        pit_mode_to_string(channel.mode),
 		                        count);
 		save_read_latch(0xffff);
 		break;
@@ -412,7 +412,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 			}
 			LOG(LOG_PIT, LOG_NORMAL)("PIT 0 Timer at %.4f Hz %s",
 			                         1000.0 / channel.delay,
-			                         PitModeToString(channel.mode));
+			                         pit_mode_to_string(channel.mode));
 			break;
 		case 2: // Timer hooked to PC-Speaker
 			PCSPEAKER_SetCounter(channel.count, channel.mode);
@@ -601,7 +601,7 @@ void TIMER_SetGate2(bool in)
 	case PitMode::HardwareStrobe:
 	case PitMode::Inactive:
 		LOG(LOG_MISC, LOG_WARN)("unsupported gate 2 mode %s",
-		                        PitModeToString(mode));
+		                        pit_mode_to_string(mode));
 		break;
 	}
 	gate2 = in; //Set it here so the counter_latch above works

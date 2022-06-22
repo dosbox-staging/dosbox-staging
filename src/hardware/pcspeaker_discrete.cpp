@@ -208,7 +208,7 @@ void PcSpeakerDiscrete::ForwardPIT(const float newindex)
 	case PitMode::HardwareStrobe:
 	case PitMode::Inactive:
 	default:
-		LOG_WARNING("PCSPEAKER: Unhandled PIT mode %s", PitModeToString(pit_mode));
+		LOG_WARNING("PCSPEAKER: Unhandled PIT mode %s", pit_mode_to_string(pit_mode));
 		break;
 	}
 }
@@ -280,7 +280,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		break;
 	default:
 #if C_DEBUG
-		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: %s", PitModeToString(pit_mode));
+		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: %s", pit_mode_to_string(pit_mode));
 #endif
 		return;
 	}
