@@ -508,12 +508,10 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 
 	if (channel_num == 0) {
 		PIC_RemoveEvents(PIT0_Event);
-		if ((channel.mode != PitMode::InterruptOnTerminalCount) &&
-		    !old_output) {
+		if ((channel.mode != PitMode::InterruptOnTerminalCount) && !old_output)
 			PIC_ActivateIRQ(0);
-		} else {
+		else
 			PIC_DeActivateIRQ(0);
-		}
 	} else if (channel_num == 2) {
 		PCSPEAKER_SetCounter(0, PitMode::SquareWave);
 	}
