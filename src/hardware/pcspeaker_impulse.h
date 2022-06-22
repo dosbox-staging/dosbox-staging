@@ -68,7 +68,7 @@ private:
 	static constexpr float cutoff_margin = 0.2f;
 
 	// Should be selected based on sampling rate
-	static constexpr float high_pass_amount   = 0.999f;
+	static constexpr float amplitude_fade         = 0.999f;
 	static constexpr uint16_t filter_quality      = 100u;
 	static constexpr uint16_t oversampling_factor = 32u;
 	static constexpr uint16_t filter_width        = filter_quality * oversampling_factor;
