@@ -373,7 +373,7 @@ static double sinc(const double t)
 	return result;
 }
 
-float PcSpeakerImpulse::CalcImpulse(const double t)
+float PcSpeakerImpulse::CalcImpulse(const double t) const
 {
 	// raised-cosine-windowed sinc function
 	const double fs = sample_rate;
@@ -387,7 +387,7 @@ float PcSpeakerImpulse::CalcImpulse(const double t)
 		return 0.0f;
 }
 
-void PcSpeakerImpulse::AddImpulse(float index, int16_t amplitude)
+void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 {
 	// Did the amplitude change?
 	if (amplitude == pit.prev_amplitude)

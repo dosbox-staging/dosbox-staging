@@ -44,7 +44,7 @@ private:
 	void AddPITOutput(const float index);
 	void ChannelCallback(uint16_t requested_frames);
 	void ForwardPIT(const float new_index);
-	float CalcImpulse(const double t);
+	float CalcImpulse(const double t) const;
 	void InitializeImpulseLUT();
 
 	// Constants
