@@ -158,10 +158,10 @@ const char *pit_mode_to_string(const PitMode mode)
 
 // The maximum decimal count can go beyond 16-bit, beacuse a
 // count of zero was used to represent 65536 ticks.
+constexpr int32_t max_bcd_count = 9999;
+constexpr int32_t max_dec_count = 0x10000;
 constexpr int32_t get_max_count(const PIT_Block &channel)
 {
-	constexpr int32_t max_dec_count = 0x10000;
-	constexpr int32_t max_bcd_count = 9999;
 	return channel.bcd ? max_bcd_count : max_dec_count;
 }
 
@@ -296,10 +296,9 @@ static void counter_latch(PIT_Block &channel)
 			if (channel.bcd) {
 				elapsed_ms = fmod(elapsed_ms,
 				                  period_of_1k_pit_ticks * 10000.0);
-				save_read_latch(9999 - elapsed_ms * PIT_TICK_RATE_KHZ);
+				save_read_latch(max_bcd_count - elapsed_ms * PIT_TICK_RATE_KHZ);
 			} else {
-				elapsed_ms = fmod(elapsed_ms,
-				                  period_of_1k_pit_ticks * 0x10000);
+				elapsed_ms = fmod(elapsed_ms, period_of_1k_pit_ticks * max_dec_count);
 				save_read_latch(0xffff - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		} else {
@@ -482,10 +481,8 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	// undocumented newmode
 	counter_latch(channel);
 	channel.bcd = (val & 1) > 0;
-	if (val & 1) {
-		if (channel.count >= 9999)
-			channel.count = 9999;
-	}
+	if (channel.bcd)
+		channel.count = std::min(channel.count, max_bcd_count);
 
 	// Timer is being reprogrammed, unlock the status
 	if (channel.counterstatus_set) {
