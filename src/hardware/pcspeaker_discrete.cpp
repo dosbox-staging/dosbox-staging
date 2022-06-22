@@ -262,7 +262,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 
 	case PitMode::SquareWaveAlias:
 	case PitMode::SquareWave:
-		if (count == 0 || count < min_tr) {
+		if (count == 0 || count < minimum_tick_rate) {
 			// skip frequencies that can't be represented
 			pit_last = 0;
 			pit_mode = PitMode::InterruptOnTerminalCount;
@@ -478,7 +478,8 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 
 	sample_rate = channel->GetSampleRate();
 
-	min_tr = (PIT_TICK_RATE + sample_rate / 2 - 1) / (sample_rate / 2);
+	minimum_tick_rate = (PIT_TICK_RATE + sample_rate / 2 - 1) /
+	                    (sample_rate / 2);
 
 	channel->SetPeakAmplitude(static_cast<uint32_t>(amp_positive));
 
