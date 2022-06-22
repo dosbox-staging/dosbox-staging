@@ -467,7 +467,8 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 	}
 
 	// Maybe put the channel to sleep after 10s
-	if (tally_of_silence > 100000) {
+	constexpr int num_samples_in_10s = 10 * sample_rate;
+	if (tally_of_silence > num_samples_in_10s) {
 		pit.prev_amplitude = neutral_amplitude;
 		channel->Enable(false);
 		tally_of_silence = 0;
