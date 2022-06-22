@@ -417,17 +417,12 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 						// Volume still not reached in
 						// this block
 						value += volcur * vol_len;
-						const auto speed_by_len = spkr_speed *
-						                          vol_len;
-						const auto speed_by_len_sq = speed_by_len *
-						                             vol_len / 2.0f;
-						if (vol_diff < 0) {
-							value -= speed_by_len_sq;
-							volcur -= speed_by_len;
-						} else {
-							value += speed_by_len_sq;
-							volcur += speed_by_len;
-						}
+
+						const auto vol_cur_delta = spkr_speed * vol_len;
+						volcur += std::copysign(vol_cur_delta, vol_diff);
+
+						const auto value_delta = vol_cur_delta * vol_len / 2.0f;
+						value += std::copysign(value_delta, vol_diff);
 						index += vol_len;
 					}
 				}
