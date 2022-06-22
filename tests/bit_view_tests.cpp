@@ -122,6 +122,21 @@ TEST(bit_view, flip)
 	EXPECT_EQ(r.last_3, 0b111);
 }
 
+TEST(bit_view, val)
+{
+	Register r = {0b111'000'11};
+
+	EXPECT_EQ(r.first_2.val(), 3);
+	EXPECT_EQ(r.middle_3.val(), 0);
+	EXPECT_EQ(r.last_3.val(), 7);
+
+	r.middle_3.flip();
+
+	EXPECT_EQ(r.first_2.val(), 3);
+	EXPECT_EQ(r.middle_3.val(), 7);
+	EXPECT_EQ(r.last_3.val(), 7);
+}
+
 TEST(bit_view, increment)
 {
 	Register r = {0b111'000'00};
