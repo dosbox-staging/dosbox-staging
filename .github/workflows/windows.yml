@@ -203,17 +203,6 @@ jobs:
           ls "vs/$RELEASE_DIR"
           cp vs/$RELEASE_DIR/dosbox.exe   ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
-      - name: Windows Defender AV Scan
-        shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\${{ steps.set_pkg_dir.outputs.pkg_dir }}"
-          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
-          if( $LASTEXITCODE -ne 0 ) {
-              Get-Content -Path $env:TEMP\MpCmdRun.log
-              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
-          }
-
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v3
