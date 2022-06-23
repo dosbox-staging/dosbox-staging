@@ -130,7 +130,7 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          scripts/retry_command.sh 2 meson compile -C build |& tee build.log
+          scripts/retry_command.sh 10 meson compile -C build |& tee build.log
           ccache -s
           #
           # Reason for retry is due to intermittent Python symbol extractor failure
