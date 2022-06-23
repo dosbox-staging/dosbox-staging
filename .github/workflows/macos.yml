@@ -168,7 +168,7 @@ jobs:
 
       # Let self-hosted runners, which don't need_deps, leverage their own ccache.
       - name:  Add the ccache environment to GitHub-hosted runners
-        if:    matrix.conf.needs_deps
+        if:    matrix.runner.needs_deps
         shell: bash
         run: |
           set -eu
