@@ -26,7 +26,7 @@
 #include <memory>
 #include <string>
 #include <unistd.h>
-#include <vector>
+#include <queue>
 
 #include "control.h"
 #include "dma.h"
@@ -35,7 +35,6 @@
 #include "pic.h"
 #include "setup.h"
 #include "shell.h"
-#include "soft_limiter.h"
 #include "string_utils.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
@@ -47,8 +46,7 @@
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 
 // Buffer and memory constants
-constexpr int BUFFER_FRAMES = 48;
-constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
+constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
 
 // DMA transfer size and rate constants
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
@@ -119,7 +117,7 @@ using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
-// Each voice represents a single "mono" render_buffer of audio having its own
+// Each voice represents a single "mono" stream of audio having its own
 // characteristics defined by the running program, such as:
 //   - being 8bit or 16bit
 //   - having a "position" along a left-right axis (panned)
@@ -130,11 +128,10 @@ using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
-	void GenerateSamples(std::vector<float> &render_buffer,
-	                     const ram_array_t &ram,
-	                     const vol_scalars_array_t &vol_scalars,
-	                     const pan_scalars_array_t &pan_scalars,
-	                     uint16_t requested_frames);
+
+	AudioFrame RenderFrame(const ram_array_t &ram,
+	                       const vol_scalars_array_t &vol_scalars,
+	                       const pan_scalars_array_t &pan_scalars);
 
 	uint8_t ReadVolState() const noexcept;
 	uint8_t ReadWaveState() const noexcept;
@@ -197,7 +194,7 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 //   - Provides shared resources to all of the Voices, such as the volume
 //     reducing table, constant-power panning table, and IRQ states.
 //   - Accumulates the audio from each active voice into a floating point
-//     vector (the render_buffer), without resampling.
+//     audio frame.
 //   - Populates an autoexec line (ULTRASND=...) with its port, irq, and dma
 //     addresses.
 //
@@ -225,11 +222,13 @@ private:
 	Gus(const Gus &) = delete;            // prevent copying
 	Gus &operator=(const Gus &) = delete; // prevent assignment
 
+
 	void ActivateVoices(uint8_t requested_voices);
 	void AudioCallback(uint16_t requested_frames);
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
+	double ConvertFramesToMs(const int frames) const;
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
@@ -245,6 +244,9 @@ private:
 
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
+	AudioFrame RenderFrame();
+	bool RenderForMs(const double interval_ms);
+	void RenderUpToNow();
 	void SetLevelCallback(const AudioFrame &levels);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
@@ -255,9 +257,8 @@ private:
 	void WriteToRegister();
 
 	// Collections
+	std::queue<AudioFrame> fifo = {};
 	vol_scalars_array_t vol_scalars = {{}};
-	std::vector<float> render_buffer = {};
-	std::vector<int16_t> play_buffer = {};
 	pan_scalars_array_t pan_scalars = {{}};
 	alignas(sizeof(int16_t)) ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -271,10 +272,17 @@ private:
 
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
-	SoftLimiter soft_limiter;
 	Voice *target_voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	mixer_channel_t audio_channel = nullptr;
+	AudioFrame accumulator_scalar = {};
+
+	// Playback related
+	double last_render_time_ms = 0.0;
+	double frame_rate_per_ms = 0.0;
+	int frame_rate_hz = 0;
+	uint16_t unused_for_ms = 0;
+
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
@@ -286,9 +294,8 @@ private:
 	uint8_t active_voices = 0u;
 	uint8_t prev_logged_voices = 0u;
 
-	// Register and playback rate
+	// RAM and register data 
 	uint32_t dram_addr = 0u;
-	int playback_rate = 0;
 	uint16_t register_data = 0u;
 	uint8_t selected_register = 0u;
 
@@ -428,30 +435,21 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	return sample;
 }
 
-void Voice::GenerateSamples(std::vector<float> &render_buffer,
-                            const ram_array_t &ram,
-                            const vol_scalars_array_t &vol_scalars,
-                            const pan_scalars_array_t &pan_scalars,
-                            const uint16_t requested_frames)
+AudioFrame Voice::RenderFrame(const ram_array_t &ram,
+                              const vol_scalars_array_t &vol_scalars,
+                              const pan_scalars_array_t &pan_scalars)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
-		return;
+		return {0.0f, 0.0f};
 
-	// Setup our iterators and pan percents
-	auto val = render_buffer.begin();
-	const auto last_val = val + requested_frames * 2; // L * R channels
-	assert(last_val <= render_buffer.end());
+	// Keep track of how many ms this voice has generated
+	Is16Bit() ? ++generated_16bit_ms : ++generated_8bit_ms;
+
+	const auto sample = GetSample(ram) * PopVolScalar(vol_scalars);
+
 	const auto pan_scalar = pan_scalars.at(pan_position);
 
-	// Add the samples to the render_buffer, angled in L-R space
-	while (val < last_val) {
-		float sample = GetSample(ram);
-		sample *= PopVolScalar(vol_scalars);
-		*val++ += sample * pan_scalar.left;
-		*val++ += sample * pan_scalar.right;
-	}
-	// Keep track of how many ms this voice has generated
-	Is16Bit() ? generated_16bit_ms++ : generated_8bit_ms++;
+	return {sample * pan_scalar.left, sample * pan_scalar.right};
 }
 
 // Returns the current wave position and increments the position
@@ -584,10 +582,7 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame, L & R channels
-          play_buffer(BUFFER_FRAMES * 2),   // 2 samples/frame, L & R channels
-          soft_limiter("GUS"),
-          port_base(port - 0x200u),
+        : port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
           irq2(irq)
@@ -628,45 +623,111 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		active_voices = requested_voices;
 		assert(active_voices <= voices.size());
 		active_voice_mask = 0xffffffffu >> (MAX_VOICES - active_voices);
-		playback_rate = static_cast<int>(
-		        round(1000000.0 / (1.619695497 * active_voices)));
-		audio_channel->SetSampleRate(playback_rate);
+
+		// Gravis' calculation to convert from number of active voices
+		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
+		// v2.22 (21 December 1994), pp. 3 of 113.
+		frame_rate_per_ms = 1000.0 / (1.619695497 * active_voices);
+
+		frame_rate_hz = iround(frame_rate_per_ms * 1000.0);
+
+		audio_channel->SetSampleRate(frame_rate_hz);
 	}
 }
 
 void Gus::SetLevelCallback(const AudioFrame &levels)
 {
-	soft_limiter.UpdateLevels(levels, 1);
+	// GUS is prone to accumulating beyond the 16-bit range. Until we have
+	// an auto-volume-dampen-on-clip at the mixer-level, this function will
+	// scale the user-provided channel level by RMS.
+	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
+
+	accumulator_scalar = {levels.left * rms_squared, levels.right * rms_squared};
 }
 
-void Gus::AudioCallback(const uint16_t requested_frames)
+AudioFrame Gus::RenderFrame()
 {
-	uint16_t generated_frames = 0;
-	while (generated_frames < requested_frames) {
-		const uint16_t frames = static_cast<uint16_t>(
-		        std::min(BUFFER_FRAMES, requested_frames - generated_frames));
+	AudioFrame accumulator = {};
 
-		// Zero our buffer. The audio sequence for each active voice
-		// will be accumulated one at a time by the buffer's elements.
-		assert(frames <= render_buffer.size());
-		const auto num_samples = frames * 2;
-		std::fill_n(render_buffer.begin(), num_samples, 0.0f);
+	if (dac_enabled) {
 
-		if (dac_enabled) {
-			auto voice = voices.begin();
-			const auto last_voice = voice + active_voices;
-			while (voice < last_voice && *voice) {
-				voice->get()->GenerateSamples(render_buffer,
-				                              ram, vol_scalars,
-				                              pan_scalars, frames);
-				++voice;
-			}
+		auto voice = voices.begin();
+		const auto voice_end = voice + active_voices;
+
+		while (voice < voice_end && *voice) {
+			const auto voice_frame = voice->get()->RenderFrame(
+			        ram, vol_scalars, pan_scalars);
+
+			accumulator.left += voice_frame.left;
+			accumulator.right += voice_frame.right;
+
+			++voice;
 		}
-		soft_limiter.Process(render_buffer, frames, play_buffer);
-		audio_channel->AddSamples_s16(frames, play_buffer.data());
-		CheckVoiceIrq();
-		generated_frames += frames;
+		accumulator.left *= accumulator_scalar.left;
+		accumulator.right *= accumulator_scalar.right;
 	}
+	CheckVoiceIrq();
+	return accumulator;
+}
+
+bool Gus::RenderForMs(const double interval_ms)
+{
+	// How many frames fall within the given duration?
+	auto frames_to_render = static_cast<int>(interval_ms * frame_rate_per_ms);
+
+	// Capture our return state
+	const auto did_some_rendering = frames_to_render > 0;
+
+	// Render and queue the frames, which will be drained by the callback
+	while (frames_to_render-- > 0)
+		fifo.emplace(RenderFrame());
+
+	return did_some_rendering;
+}
+
+void Gus::RenderUpToNow()
+{
+	unused_for_ms = 0;
+	const auto now = PIC_FullIndex();
+
+	if (audio_channel->is_enabled) {
+		if (RenderForMs(now - last_render_time_ms)) {
+			last_render_time_ms = now;
+		}
+		return;
+	}
+
+	// Otherwise wake up the channel and mark the new last-update time.
+	// Subsequent renderings will get the new stream of frames.
+	audio_channel->Enable(true);
+	last_render_time_ms = now;
+}
+
+double Gus::ConvertFramesToMs(const int frames) const
+{
+	return frames / frame_rate_per_ms;
+}
+
+void Gus::AudioCallback(uint16_t requested_frames)
+{
+	assert(audio_channel);
+	while (requested_frames && fifo.size()) {
+		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		fifo.pop();
+		--requested_frames;
+	}
+
+	if (requested_frames) {
+		last_render_time_ms += ConvertFramesToMs(requested_frames);
+		while (requested_frames--) {
+			const auto frame = RenderFrame();
+			audio_channel->AddSamples_sfloat(1, &frame[0]);
+		}
+	}
+	// Pause the channel if the card hasn't been written to for 3 seconds
+	constexpr uint16_t three_seconds_of_ticks = 3 * 1000;
+	if (++unused_for_ms > three_seconds_of_ticks)
+		audio_channel->Enable(false);
 }
 
 void Gus::BeginPlayback()
@@ -675,8 +736,7 @@ void Gus::BeginPlayback()
 	irq_enabled = ((register_data & 0x400) != 0);
 	audio_channel->Enable(true);
 	if (prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %d Hz", active_voices,
-		        playback_rate);
+		LOG_MSG("GUS: Activated %u voices at %d Hz", active_voices, frame_rate_hz);
 		prev_logged_voices = active_voices;
 	}
 	is_running = true;
@@ -987,9 +1047,7 @@ void Gus::PrintStats()
 	const uint32_t combined_ms = combined_8bit_ms + combined_16bit_ms;
 
 	// Is there enough information to be meaningful?
-	const auto peak = soft_limiter.GetPeaks();
-	if (combined_ms < 10000u || (peak.left + peak.right) < 10 ||
-	    !(used_8bit_voices + used_16bit_voices))
+	if (combined_ms < 10000u || !(used_8bit_voices + used_16bit_voices))
 		return;
 
 	// Print info about the type of audio and voices used
@@ -1009,7 +1067,6 @@ void Gus::PrintStats()
 		        ratio_8bit, used_8bit_voices, ratio_16bit,
 		        used_16bit_voices);
 	}
-	soft_limiter.PrintStats();
 }
 
 uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
@@ -1174,8 +1231,6 @@ void Gus::StopPlayback()
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
 
-	soft_limiter.Reset();
-
 	dac_enabled = false;
 	irq_enabled = false;
 	irq_status = 0;
@@ -1228,6 +1283,8 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 
 void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
+	RenderUpToNow();
+
 	const auto val = check_cast<uint16_t>(value);
 
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
@@ -1334,6 +1391,8 @@ void Gus::UpdateWaveMsw(int32_t &addr) const noexcept
 
 void Gus::WriteToRegister()
 {
+	RenderUpToNow();
+
 	// Registers that write to the general DSP
 	switch (selected_register) {
 	case 0xe: // Set number of active voices
