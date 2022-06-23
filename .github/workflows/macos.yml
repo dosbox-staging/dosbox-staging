@@ -238,13 +238,16 @@ jobs:
           brew uninstall -f --ignore-dependencies gettext
           rm -rf build
 
+      # LTO prevent ccache from being used, which greatly speeds up routine CI runs.
+      # However, it does add a small speed-up, so can be switched on during the
+      # release-candidate testing phase.
       - name: Setup release build
         run: >-
           arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
           ${{ matrix.conf.build_flags }}
           --wrap-mode=forcefallback
           -Dbuildtype=release
-          -Db_lto=true
+          -Db_lto=false
           -Db_asneeded=true
           -Ddefault_library=static
           -Dtry_static_libs=opusfile,sdl2,sdl2_net,speexdsp,zlib
