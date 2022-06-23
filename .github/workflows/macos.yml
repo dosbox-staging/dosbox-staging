@@ -6,12 +6,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  CCACHE_DIR:      "${{ github.workspace }}/.ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
-  CLAMDB_DIR:      "/usr/local/Cellar/clamav"
-
 jobs:
   build_macos:
     name: ${{ matrix.conf.name }} (${{ matrix.conf.arch }})
@@ -70,6 +64,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      # Let self-hosted runners, which don't need_deps, leverage their own ccache.
+      - name:  Add the ccache environment to GitHub-hosted runners
+        if:    matrix.conf.needs_deps
+        shell: bash
+        run: |
+          set -eu
+          echo 'CCACHE_DIR="${{ github.workspace }}/.ccache"' >> $GITHUB_ENV
+          echo 'CCACHE_MAXSIZE="64M"' >> $GITHUB_ENV
+          echo 'CCACHE_COMPRESS="true"' >> $GITHUB_ENV
 
       - name:  Prepare brew and compiler caches
         if:    matrix.conf.needs_deps
@@ -313,6 +317,7 @@ jobs:
         shell: bash
         run: |
           brew install clamav
+          export CLAMDB_DIR="/usr/local/Cellar/clamav"
           clamscan --heuristic-scan-precedence=yes --recursive --infected dist || true
 
       - name: Upload disk image
