@@ -381,4 +381,33 @@ TEST(Support_left_shift_signed, NegativeOverflow)
 	EXPECT_DEBUG_DEATH({ left_shift_signed(var_32bit, -10000); }, "");
 }
 
+TEST(iroundf, valid)
+{
+	EXPECT_EQ(iroundf(0.0f), 0);
+
+	EXPECT_EQ(iroundf(0.00000000001f), 0);
+	EXPECT_EQ(iroundf(-0.00000000001f), 0);
+
+	EXPECT_EQ(iroundf(0.5f), 1);
+	EXPECT_EQ(iroundf(-0.5f), -1);
+
+	EXPECT_EQ(iroundf(0.50001f), 1);
+	EXPECT_EQ(iroundf(-0.50001f), -1);
+
+	EXPECT_EQ(iroundf(0.499999f), 0);
+	EXPECT_EQ(iroundf(-0.499999f), 0);
+
+	assert(iroundf(1000000.4f) == 1000000);
+	assert(iroundf(-1000000.4f) == -1000000);
+
+	assert(iroundf(1000000.5f) == 1000001);
+	assert(iroundf(-1000000.5f) == -1000001);
+}
+
+TEST(iroundf, invalid)
+{
+	EXPECT_DEBUG_DEATH({ iroundf(80000000000.0f); }, "");
+	EXPECT_DEBUG_DEATH({ iroundf(-80000000000.0f); }, "");
+}
+
 } // namespace

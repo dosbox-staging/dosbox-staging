@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cfloat>
 #include <functional>
 #include <limits>
 #include <map>
@@ -135,6 +136,14 @@ inline int iround(double x)
 	assert(x >= (std::numeric_limits<int>::min)());
 	assert(x <= (std::numeric_limits<int>::max)());
 	return static_cast<int>(round(x));
+}
+
+inline int iroundf(const float x)
+{
+	assert(std::isfinite(x));
+	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
+	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
+	return static_cast<int>(roundf(x));
 }
 
 // Select the nearest unsigned integer capable of holding the given bits
