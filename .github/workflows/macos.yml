@@ -166,6 +166,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Let self-hosted runners, which don't need_deps, leverage their own ccache.
+      - name:  Add the ccache environment to GitHub-hosted runners
+        if:    matrix.conf.needs_deps
+        shell: bash
+        run: |
+          set -eu
+          echo 'CCACHE_DIR="${{ github.workspace }}/.ccache"' >> $GITHUB_ENV
+          echo 'CCACHE_MAXSIZE="64M"' >> $GITHUB_ENV
+          echo 'CCACHE_COMPRESS="true"' >> $GITHUB_ENV
+
       - name:  Prepare brew and compiler caches
         if:    matrix.runner.needs_deps
         id:    prep-caches
