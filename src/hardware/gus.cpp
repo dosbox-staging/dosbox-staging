@@ -320,6 +320,7 @@ private:
 
 	bool dac_enabled = false;
 	bool irq_enabled = false;
+	bool irq_previously_interrupted = false;
 	bool is_running = false;
 	bool should_change_irq_dma = false;
 };
@@ -748,6 +749,20 @@ void Gus::CheckIrq()
 	const bool lines_enabled = mix_ctrl & 0x08;
 	if (should_interrupt && lines_enabled)
 		PIC_ActivateIRQ(irq1);
+	else if (irq_previously_interrupted)
+		PIC_DeActivateIRQ(irq1);
+
+#if LOG_GUS
+	const auto state_str = should_interrupt && lines_enabled ? "activated"
+	                     : irq_previously_interrupted        ? "deactivated"
+	                                                         : "unchanged";
+	LOG_MSG("GUS: CheckIrq: IRQ %s (should_interrupt: %d, lines: %d)",
+	        state_str,
+	        should_interrupt,
+	        lines_enabled);
+#endif
+
+	irq_previously_interrupted = should_interrupt;
 }
 
 bool Gus::CheckTimer(const size_t t)
@@ -1234,6 +1249,7 @@ void Gus::StopPlayback()
 	dac_enabled = false;
 	irq_enabled = false;
 	irq_status = 0;
+	irq_previously_interrupted = false;
 
 	dma_ctrl = 0u;
 	mix_ctrl = 0xb; // latches enabled, LINEs disabled
@@ -1432,6 +1448,8 @@ void Gus::WriteToRegister()
 		timer_two.should_raise_irq = (timer_ctrl & 0x08) > 0;
 		if (!timer_two.should_raise_irq)
 			irq_status &= ~0x08;
+		if (!timer_one.should_raise_irq && !timer_two.should_raise_irq)
+			CheckIrq();
 		return;
 	case 0x46: // Timer 1 control
 		timer_one.value = static_cast<uint8_t>(register_data >> 8);
