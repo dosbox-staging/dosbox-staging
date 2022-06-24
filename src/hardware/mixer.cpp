@@ -227,26 +227,26 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
 {
 	apply_level = cb;
-	apply_level(volmain);
+	apply_level(volume);
 }
 
 void MixerChannel::UpdateVolume()
 {
-	// Don't scale by volmain[] if the level is being managed by the source
-	const float level_left  = apply_level ? 1 : volmain.left;
-	const float level_right = apply_level ? 1 : volmain.right;
+	// Don't scale by volume if the level is being managed by the source
+	const float gain_left  = apply_level ? 1.0f : volume.left;
+	const float gain_right = apply_level ? 1.0f : volume.right;
 
-	volmul.left = scale.left * level_left * mixer.mastervol.left;
-	volmul.right = scale.right * level_right * mixer.mastervol.right;
+	volume_gain.left = scale.left * gain_left * mixer.mastervol.left;
+	volume_gain.right = scale.right * gain_right * mixer.mastervol.right;
 }
 
 void MixerChannel::SetVolume(float left, float right)
 {
 	// Allow unconstrained user-defined values
-	volmain = {left, right};
+	volume = {left, right};
 
 	if (apply_level)
-		apply_level(volmain);
+		apply_level(volume);
 
 	UpdateVolume();
 }
@@ -430,11 +430,11 @@ void MixerChannel::AddSilence()
 				mixpos &= MIXER_BUFMASK;
 
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_frame.left * volmul.left;
+				        prev_frame.left * volume_gain.left;
 
 				mixer.work[mixpos][mapped_output_right] +=
 				        (stereo ? prev_frame.right : prev_frame.left) *
-				        volmul.right;
+				        volume_gain.right;
 
 				prev_frame = next_frame;
 				mixpos++;
@@ -740,10 +740,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, prev_frame);
 
-		const auto left  = prev_frame[mapped_channel_left] * volmul.left;
+		const auto left = prev_frame[mapped_channel_left] * volume_gain.left;
 		const auto right = (stereo ? prev_frame[mapped_channel_right]
 		                           : prev_frame[mapped_channel_left]) *
-		                   volmul.right;
+		                   volume_gain.right;
 
 		out_frame = {0.0f, 0.0f};
 		out_frame[mapped_output_left] += left;
@@ -901,8 +901,8 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		const auto sample = prev_frame.left +
 		                    ((diff * diff_mul) >> FREQ_SHIFT);
 
-		mixer.work[mixpos][mapped_output_left] += sample * volmul.left;
-		mixer.work[mixpos][mapped_output_right] += sample * volmul.right;
+		mixer.work[mixpos][mapped_output_left] += sample * volume_gain.left;
+		mixer.work[mixpos][mapped_output_right] += sample * volume_gain.right;
 		mixpos++;
 	}
 
@@ -1516,7 +1516,7 @@ private:
 			                    : "Mono";
 
 			show_channel(convert_ansi_markup(channel_name),
-			             chan->volmain,
+			             chan->volume,
 			             chan->GetSampleRate(),
 			             mode,
 			             xfeed);
