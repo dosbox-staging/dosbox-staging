@@ -191,7 +191,7 @@ public:
 	void Enable(bool should_enable);
 	void FlushSamples();
 
-	AudioFrame volmain = {1.0f, 1.0f};
+	AudioFrame volume = {1.0f, 1.0f};
 	std::atomic<int> frames_done = 0; // Timing on how many sample frames
 	                                  // have been done by the mixer
 	bool is_enabled = false;
@@ -230,7 +230,7 @@ private:
 	// >0. Still work in progress and thus disabled for now.
 	int offset[2] = {0, 0};
 	int sample_rate = 0u;
-	AudioFrame volmul = {1.0f, 1.0f};
+	AudioFrame volume_gain = {1.0f, 1.0f};
 	AudioFrame scale = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
@@ -257,7 +257,7 @@ private:
 
 	// The RegisterLevelCallBack() assigns this callback that can be used by
 	// the channel's source to manage the stream's level prior to mixing,
-	// in-place of scaling by volmain[]
+	// in-place of scaling by volume.
 	apply_level_callback_f apply_level = nullptr;
 
 	bool last_samples_were_stereo = false;
