@@ -420,4 +420,16 @@ constexpr auto enum_val(enum_t e)
 double decibel_to_gain(const double decibel);
 double gain_to_decibel(const double gain);
 
+float lerp(const float a, const float b, const float t);
+double lerp(const double a, const double b, const double t);
+
+float invlerp(const float a, const float b, const float t);
+double invlerp(const double a, const double b, const double t);
+
+float remap(const float in_min, const float in_max, const float out_min,
+            const float out_max, const float v);
+
+double remap(const double in_min, const double in_max, const double out_min,
+             const double out_max, const double v);
+
 #endif
