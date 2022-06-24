@@ -139,8 +139,8 @@ public:
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
 	void SetVolume(float left, float right);
-	void SetScale(float f);
-	void SetScale(float left, float right);
+	void SetVolumeScale(float f);
+	void SetVolumeScale(float left, float right);
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;

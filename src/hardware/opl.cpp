@@ -912,7 +912,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
-	channel->SetScale(1.5f);
+	channel->SetVolumeScale(1.5f);
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 

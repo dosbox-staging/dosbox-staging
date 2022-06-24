@@ -833,8 +833,8 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 	}
 
 	// Adjust the volume of our mixer channel as defined by the application
-	player.channel->SetScale(static_cast<float>(ctrl.vol[0]/255.0),  // left vol
-	                         static_cast<float>(ctrl.vol[1]/255.0)); // right vol
+	player.channel->SetVolumeScale(static_cast<float>(ctrl.vol[0] / 255.0), // left vol
+	                               static_cast<float>(ctrl.vol[1] / 255.0)); // right vol
 
 	// Map the audio channels in our mixer channel as defined by the application
 	const auto left_mapped = static_cast<LINE_INDEX>(ctrl.out[0]);
