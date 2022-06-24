@@ -184,7 +184,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
-	chan->SetScale(1.0);
+	chan->SetVolumeScale(1.0);
 	chan->SetVolume(1, 1);
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
@@ -236,7 +236,7 @@ void MixerChannel::UpdateVolume()
 	const float gain_left  = apply_level ? 1.0f : volume.left;
 	const float gain_right = apply_level ? 1.0f : volume.right;
 
-	volume_gain.left = scale.left * gain_left * mixer.mastervol.left;
+	volume_gain.left  = scale.left  * gain_left  * mixer.mastervol.left;
 	volume_gain.right = scale.right * gain_right * mixer.mastervol.right;
 }
 
@@ -251,11 +251,11 @@ void MixerChannel::SetVolume(float left, float right)
 	UpdateVolume();
 }
 
-void MixerChannel::SetScale(float f) {
-	SetScale(f, f);
+void MixerChannel::SetVolumeScale(float f) {
+	SetVolumeScale(f, f);
 }
 
-void MixerChannel::SetScale(float left, float right)
+void MixerChannel::SetVolumeScale(float left, float right)
 {
 	// Constrain application-defined volume between 0% and 100%
 	constexpr auto min_volume = 0.0f;
@@ -901,7 +901,7 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		const auto sample = prev_frame.left +
 		                    ((diff * diff_mul) >> FREQ_SHIFT);
 
-		mixer.work[mixpos][mapped_output_left] += sample * volume_gain.left;
+		mixer.work[mixpos][mapped_output_left]  += sample * volume_gain.left;
 		mixer.work[mixpos][mapped_output_right] += sample * volume_gain.right;
 		mixpos++;
 	}
