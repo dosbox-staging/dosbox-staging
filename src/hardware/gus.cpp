@@ -782,8 +782,10 @@ void Gus::CheckVoiceIrq()
 	irq_status &= 0x9f;
 	const Bitu totalmask = (voice_irq.vol_state | voice_irq.wave_state) &
 	                       active_voice_mask;
-	if (!totalmask)
+	if (!totalmask) {
+		CheckIrq();
 		return;
+	}
 	if (voice_irq.vol_state)
 		irq_status |= 0x40;
 	if (voice_irq.wave_state)
