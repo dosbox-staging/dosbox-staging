@@ -131,22 +131,6 @@ jobs:
             logs: gcc-usan-logs
             max_issues: 0
 
-          # Clang allows enabling both AddressSanitizer and
-          # UndefinedBehaviorSanitizer at the same time.
-          # See Clang manual to learn more.
-          - name: Clang undefined+address sanitizer
-            build_flags: >-
-              --native-file=.github/meson/native-clang.ini
-              -Db_sanitize=address,undefined
-              -Dc_args=-fsanitize-recover=all
-              -Dcpp_args=-fsanitize-recover=all
-              -Db_asneeded=true
-              -Db_lundef=false
-              -Ddefault_library=static
-              --wrap-mode=forcefallback
-              -Dfluidsynth:try-static-deps=true
-            logs: clang-uasan-logs
-            max_issues: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
