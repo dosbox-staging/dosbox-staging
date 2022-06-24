@@ -133,7 +133,7 @@ static void CmdAbsPointerCommand()
 	}
 }
 
-static uint16_t PortReadVMware(const io_port_t, const io_width_t)
+static uint32_t PortReadVMware(const io_port_t, const io_width_t)
 {
 	if (reg_eax != VMWARE_MAGIC)
 		return 0;
@@ -149,7 +149,7 @@ static uint16_t PortReadVMware(const io_port_t, const io_width_t)
 		break;
 	}
 
-	return reg_ax;
+	return reg_eax;
 }
 
 bool MOUSEVMWARE_NotifyMoved(const uint16_t x_abs, const uint16_t y_abs)
@@ -254,5 +254,5 @@ void MOUSEVMWARE_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs)
 
 void MOUSEVMWARE_Init()
 {
-	IO_RegisterReadHandler(VMWARE_PORT, PortReadVMware, io_width_t::word, 1);
+	IO_RegisterReadHandler(VMWARE_PORT, PortReadVMware, io_width_t::dword);
 }
