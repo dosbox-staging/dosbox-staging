@@ -15,7 +15,7 @@ jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
     runs-on: windows-2022
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,johnnovak,FeralChild64', github.actor) == false
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     strategy:
       matrix:
         conf:
@@ -84,6 +84,7 @@ jobs:
 
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: windows-2022
     strategy:
       matrix:

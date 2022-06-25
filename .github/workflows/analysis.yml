@@ -14,8 +14,8 @@ env:
 jobs:
   run_linters:
     name: Script linters
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-20.04
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,johnnovak,FeralChild64', github.actor) == false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
