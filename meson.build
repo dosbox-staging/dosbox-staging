@@ -450,10 +450,21 @@ subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
-subdir('src/libs/PDCurses')
 subdir('src/libs/iir1')
 subdir('src/libs/YM7128B_emu')
 
+# A list of DOSBox's bundled 3rd party dependencies,
+# as defined by the above subdir includes. Used for
+# both the execuatble and libdosbox (unit testing).
+third_party_deps = [atomic_dep,
+                    stdcppfs_dep,
+                    sdl2_dep,
+                    threads_dep,
+                    libiir1_dep,
+                    libghc_dep,
+                    libloguru_dep,
+                    libsdlcd_dep,
+                    libwhereami_dep]
 
 # A list of DOSBox's internal libraries populated
 # by each of the src/ subdir imports below.
@@ -467,7 +478,6 @@ subdir('src/libs/zmbv')
 
 # internal libs
 subdir('src/cpu')
-subdir('src/debug')
 subdir('src/dos')
 subdir('src/fpu')
 subdir('src/gui')
@@ -476,6 +486,12 @@ subdir('src/ints')
 subdir('src/midi')
 subdir('src/shell')
 
+# debugger-specific libs
+if get_option('enable_debugger') != 'none'
+  subdir('src/libs/PDCurses')
+  subdir('src/debug')
+  third_party_deps += libpdcurses_dep
+endif
 
 # generate config.h
 #
@@ -496,33 +512,16 @@ if host_machine.system() == 'windows'
 endif
 
 executable('dosbox', dosbox_sources,
-           dependencies : [atomic_dep,
-                           stdcppfs_dep,
-                           sdl2_dep,
-                           threads_dep,
-                           libiir1_dep,
-                           libghc_dep,
-                           libloguru_dep,
-                           libpdcurses_dep,
-                           libsdlcd_dep,
-                           libwhereami_dep]
-                          + internal_deps,
+           dependencies : internal_deps + third_party_deps,
            include_directories : incdir,
            install : true)
+
 # create a library so we can test things inside DOSBOX dep path
 libdosbox = static_library('dosbox', ['src/dosbox.cpp', version_file],
                         include_directories : incdir,
-                        dependencies : [atomic_dep,
-                                        threads_dep,
-                                        sdl2_dep,
-                                        libiir1_dep,
-                                        libghc_dep,
-                                        libloguru_dep,
-                                        libsdlcd_dep]
-                                      + internal_deps)
+                        dependencies : internal_deps + third_party_deps)
 
 dosbox_dep = declare_dependency(link_with : libdosbox)
-
 
 
 # tests
@@ -531,7 +530,6 @@ dosbox_dep = declare_dependency(link_with : libdosbox)
 # with meson.project_source_root().
 project_source_root = meson.current_source_dir()
 subdir('tests')
-
 
 
 # additional files for installation
