@@ -18,7 +18,7 @@ jobs:
   build_msys2:
     name: ${{ matrix.conf.name }}
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,johnnovak,FeralChild64', github.actor) == false
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
 
     strategy:
       matrix:
@@ -149,7 +149,7 @@ jobs:
   build_msys2_release:
     name: ${{ matrix.conf.name }} Release
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe,shermp,johnnovak,FeralChild64', github.actor) == false
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
 
     strategy:
       matrix:
