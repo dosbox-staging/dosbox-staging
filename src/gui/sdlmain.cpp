@@ -1361,17 +1361,6 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 		                                dpi_scale));
 	}
 
-	sdl.clip.w = img_width;
-	sdl.clip.h = img_height;
-	sdl.clip.x = sdl.desktop.fullscreen
-	                   ? (canvas.w - img_width) / 2
-	                   : (iroundf(static_cast<float>(win_width) * dpi_scale) -
-	                      img_width) / 2;
-	sdl.clip.y = sdl.desktop.fullscreen
-	                   ? (canvas.h - img_height) / 2
-	                   : (iroundf(static_cast<float>(win_height) * dpi_scale) -
-	                      img_height) / 2;
-
 	sdl.window = SetWindowMode(screen_type, win_width, win_height,
 	                           sdl.desktop.fullscreen, resizable);
 	return sdl.window;
@@ -1402,38 +1391,18 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 		window_height = sdl.desktop.window.height;
 	}
 
-	if (window_width > 0 && window_height > 0) {
-		sdl.window = SetWindowMode(screen_type,
-		                           window_width,
-		                           window_height,
-		                           sdl.desktop.fullscreen,
-		                           resizable);
-
-		const auto canvas = get_canvas_size(screen_type);
-
-		sdl.clip = calc_viewport_fit(canvas.w, canvas.h);
-
-		const auto is_window_fullscreen = SDL_GetWindowFlags(sdl.window) &
-		                                  SDL_WINDOW_FULLSCREEN;
-		if (sdl.window && is_window_fullscreen) {
-			sdl.clip.x = (canvas.w - sdl.clip.w) / 2;
-			sdl.clip.y = (canvas.h - sdl.clip.h) / 2;
-		}
-		return sdl.window;
-
-	} else {
-		const auto win_width = iround(sdl.draw.width * sdl.draw.scalex);
-		const auto win_height = iround(sdl.draw.height * sdl.draw.scaley);
-
-		sdl.window = SetWindowMode(screen_type, win_width, win_height,
-		                           sdl.desktop.fullscreen, resizable);
-
-		const auto canvas = get_canvas_size(screen_type);
-
-		sdl.clip = calc_viewport_fit(canvas.w, canvas.h);
-
-		return sdl.window;
+	if (window_width == 0 && window_height == 0) {
+		window_width  = iround(sdl.draw.width * sdl.draw.scalex);
+		window_height = iround(sdl.draw.height * sdl.draw.scaley);
 	}
+
+	sdl.window = SetWindowMode(screen_type,
+	                           window_width,
+	                           window_height,
+	                           sdl.desktop.fullscreen,
+	                           resizable);
+
+	return sdl.window;
 }
 
 #if C_OPENGL
