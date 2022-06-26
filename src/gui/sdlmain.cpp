@@ -3090,18 +3090,21 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 		sdl.scaling_mode = SCALING_MODE::PERFECT;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #if C_OPENGL
-	} else if (output == "opengl") {
-		sdl.desktop.want_type = SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::NONE;
-		sdl.opengl.bilinear = true;
-	} else if (output == "openglnb") {
-		sdl.desktop.want_type = SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::NEAREST;
-		sdl.opengl.bilinear = false;
-	} else if (output == "openglpp") {
-		sdl.desktop.want_type = SCREEN_OPENGL;
-		sdl.scaling_mode = SCALING_MODE::PERFECT;
-		sdl.opengl.bilinear = false;
+	} else if (starts_with("opengl", output)) {
+		RENDER_InitShaderSource(sec);
+		if (output == "opengl") {
+			sdl.desktop.want_type = SCREEN_OPENGL;
+			sdl.scaling_mode      = SCALING_MODE::NONE;
+			sdl.opengl.bilinear   = true;
+		} else if (output == "openglnb") {
+			sdl.desktop.want_type = SCREEN_OPENGL;
+			sdl.scaling_mode      = SCALING_MODE::NEAREST;
+			sdl.opengl.bilinear   = false;
+		} else if (output == "openglpp") {
+			sdl.desktop.want_type = SCREEN_OPENGL;
+			sdl.scaling_mode      = SCALING_MODE::PERFECT;
+			sdl.opengl.bilinear   = false;
+		}
 #endif
 	} else {
 		LOG_WARNING("SDL: Unsupported output device %s, switching back to surface",

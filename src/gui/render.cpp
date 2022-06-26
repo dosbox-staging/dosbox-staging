@@ -777,9 +777,12 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	const bool using_opengl = starts_with("opengl",
 	                                      sdl_sec->GetPropValue("output"));
 
-	const auto section = static_cast<Section_prop *>(sec);
-	Prop_path *sh = section->Get_path("glshader");
-	auto filename = (std::string)sh->GetValue();
+	const auto render_sec = static_cast<const Section_prop *>(
+	        control->GetSection("render"));
+
+	assert(render_sec);
+	auto sh = render_sec->Get_path("glshader");
+	auto filename = std::string(sh->GetValue());
 
 	constexpr auto fallback_shader = "none";
 	if (filename.empty())
