@@ -1255,9 +1255,6 @@ finish:
 		                       height);
 	}
 
-	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
-
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
 		sdl.draw.callback(GFX_CallBackRedraw);
@@ -2052,6 +2049,8 @@ dosurface:
 #endif // C_OPENGL
 	}
 
+	// Ensure mouse emulation knows the current parameters
+	NewMouseScreenParams();
 	update_vsync_state();
 
 	if (retFlags)
