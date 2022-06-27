@@ -782,8 +782,7 @@ void DOSBOX_Init() {
 	pint->SetMinMax(0, 100);
 
 	pint = secprop->Add_int("oplrate", deprecated, false);
-	pint->Set_help("'oplrate' is deprecated. The OPL waveform is now sampled\n"
-	               "        at the mixer's playback rate to avoid resampling.");
+	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid resampling.");
 
 	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
 	Pstring = secprop->Add_string("oplmode", when_idle, "auto");
@@ -791,11 +790,10 @@ void DOSBOX_Init() {
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
 	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
-	const char* oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
+	const char *oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
 	Pstring = secprop->Add_string("oplemu", deprecated, "default");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help(
-	        "'oplemu' is deprecated. Only 'nuked' is supported now.");
+	Pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
 	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
 	Pstring->Set_help(
@@ -853,7 +851,7 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	pstring = secprop->Add_string("zero_offset", deprecated, zero_offset_opts[0]);
 	pstring->Set_values(zero_offset_opts);
 	pstring->Set_help(
-	        "'zero_offset' is deprecated. DC-offset is now removed globally from the master mixer output.");
+	        "DC-offset is now eliminated globally from the master mixer output.");
 
 	Pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	Pstring->Set_help("Filter for the PC speaker output:\n"
