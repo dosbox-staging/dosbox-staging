@@ -10,7 +10,7 @@ jobs:
   build_macos:
     name: ${{ matrix.conf.name }} (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:
@@ -143,7 +143,7 @@ jobs:
   build_macos_release:
     name: Release build (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.host }}
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       MIN_SUPPORTED_MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runner.minimum_deployment }}
 

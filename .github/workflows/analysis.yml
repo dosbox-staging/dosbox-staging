@@ -14,7 +14,7 @@ env:
 jobs:
   run_linters:
     name: Script linters
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository

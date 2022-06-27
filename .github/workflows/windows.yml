@@ -15,7 +15,7 @@ jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
     runs-on: windows-2022
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       matrix:
         conf:
@@ -84,7 +84,7 @@ jobs:
 
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: windows-2022
     strategy:
       matrix:
