@@ -6,7 +6,7 @@ jobs:
   build_windows_msys2:
     name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
     runs-on: windows-latest
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       # Because Clang depends on GCC, we run the Clang-32/64bit jobs
       # first to create combined caches that include both Clang and GCC.
