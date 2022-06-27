@@ -1626,12 +1626,12 @@ void MIXER_Init(Section *sec)
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
 
-	spec.freq = static_cast<int>(mixer.sample_rate);
-	spec.format = AUDIO_S16SYS;
+	spec.freq     = static_cast<int>(mixer.sample_rate);
+	spec.format   = AUDIO_S16SYS;
 	spec.channels = 2;
 	spec.callback = MIXER_CallBack;
 	spec.userdata = nullptr;
-	spec.samples = mixer.blocksize;
+	spec.samples  = mixer.blocksize;
 
 	int sdl_allow_flags = 0;
 
@@ -1650,19 +1650,26 @@ void MIXER_Init(Section *sec)
 		LOG_MSG("MIXER: No Sound Mode Selected.");
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		MIXER_SetState(MixerState::NoSound);
-	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained, sdl_allow_flags)) ==0 ) {
-		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
+
+	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(
+	                    NULL, 0, &spec, &obtained, sdl_allow_flags)) == 0) {
+		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",
+		            SDL_GetError());
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		MIXER_SetState(MixerState::NoSound);
+
 	} else {
 		// Does SDL want something other than stereo output?
 		if (obtained.channels != spec.channels)
 			E_Exit("SDL gave us %u-channel output but we require %u channels",
-			       obtained.channels, spec.channels);
+			       obtained.channels,
+			       spec.channels);
 
 		// Does SDL want a different playback rate?
 		if (obtained.freq != mixer.sample_rate) {
-			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz", mixer.sample_rate.load(), obtained.freq);
+			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz",
+			            mixer.sample_rate.load(),
+			            obtained.freq);
 			mixer.sample_rate = obtained.freq;
 		}
 
@@ -1670,14 +1677,17 @@ void MIXER_Init(Section *sec)
 		const auto obtained_blocksize = obtained.samples;
 		if (obtained_blocksize != mixer.blocksize) {
 			LOG_WARNING("MIXER: SDL changed the blocksize from %u to %u frames",
-			        mixer.blocksize, obtained_blocksize);
+			            mixer.blocksize,
+			            obtained_blocksize);
 			mixer.blocksize = obtained_blocksize;
 		}
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		MIXER_SetState(MixerState::On);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
-		        obtained.channels, mixer.sample_rate.load(), mixer.blocksize);
+		        obtained.channels,
+		        mixer.sample_rate.load(),
+		        mixer.blocksize);
 	}
 
 	// 1000 = 8 *125
@@ -1705,9 +1715,10 @@ void MIXER_Init(Section *sec)
 	//
 	// - Remove any DC offset from the summed master output (any high-pass
 	//   filter can achieve this, even a 6dB/oct HPF at 1Hz). Virtually all
-	//   synth modules (CMS, OPL, etc.) can introduce DC offset; this usually
-	//   isn't a problem on real hardware as most audio interfaces include
-	//   a DC-blocking or high-pass filter in the analog output stages.
+	//   synth modules (CMS, OPL, etc.) can introduce DC offset; this
+	//   usually isn't a problem on real hardware as most audio interfaces
+	//   include a DC-blocking or high-pass filter in the analog output
+	//   stages.
 	//
 	// - Get rid of (or more precisely, attenuate) unnecessary rumble below
 	//   20Hz that serves no musical purpose and only eats up headroom.
@@ -1718,14 +1729,13 @@ void MIXER_Init(Section *sec)
 	//   unnecessary ultra low-frequency content never became an issue back
 	//   then.
 	//
-	// Thanks to the float mixbuffer, it is sufficient to peform the high-pass
-	// filtering only once at the very end of the processing chain, instead of
-	// doing it on every single mixer channel.
-	//
+	// Thanks to the float mixbuffer, it is sufficient to peform the
+	// high-pass filtering only once at the very end of the processing
+	// chain, instead of doing it on every single mixer channel.
+
 	constexpr auto highpass_cutoff_freq = 20.0;
-	for (auto &f : mixer.highpass_filter) {
+	for (auto &f : mixer.highpass_filter)
 		f.setup(mixer.sample_rate, highpass_cutoff_freq);
-	}
 }
 
 // Toggle the mixer on/off when a true-bool is passed.
