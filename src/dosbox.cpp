@@ -850,12 +850,10 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	pstring->Set_values(filter_on_or_off);
 
 	const char *zero_offset_opts[] = {"auto", "true", "false", 0};
-	pstring = secprop->Add_string("zero_offset", when_idle, zero_offset_opts[0]);
+	pstring = secprop->Add_string("zero_offset", deprecated, zero_offset_opts[0]);
 	pstring->Set_values(zero_offset_opts);
 	pstring->Set_help(
-	        "Neutralizes and prevents the PC speaker's DC-offset from harming other sources.\n"
-	        "'auto' enables this for non-Windows systems and disables it on Windows.\n"
-	        "If your OS performs its own DC-offset correction, then set this to 'false'.");
+	        "'zero_offset' is deprecated. DC-offset is now removed globally from the master mixer output.");
 
 	Pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	Pstring->Set_help("Filter for the PC speaker output:\n"
