@@ -1677,12 +1677,14 @@ void MIXER_Init(Section *sec)
 
 		// Does SDL want a different blocksize?
 		const auto obtained_blocksize = obtained.samples;
+
 		if (obtained_blocksize != mixer.blocksize) {
 			LOG_WARNING("MIXER: SDL changed the blocksize from %u to %u frames",
 			            mixer.blocksize,
 			            obtained_blocksize);
 			mixer.blocksize = obtained_blocksize;
 		}
+
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		MIXER_SetState(MixerState::On);
 
