@@ -896,7 +896,8 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	ctrl.mixer = section->Get_bool("sbmixer");
 
 	std::set channel_features = {ChannelFeature::ReverbSend,
-	                             ChannelFeature::ChorusSend};
+	                             ChannelFeature::ChorusSend,
+	                             ChannelFeature::Synthesizer};
 
 	const auto dual_opl = mode != Mode::Opl2;
 

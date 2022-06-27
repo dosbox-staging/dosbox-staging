@@ -2022,7 +2022,8 @@ public:
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
 		std::set channel_features = {ChannelFeature::ReverbSend,
-		                             ChannelFeature::ChorusSend};
+		                             ChannelFeature::ChorusSend,
+		                             ChannelFeature::DigitalAudio};
 
 		if (sb.type == SBT_PRO1 || sb.type == SBT_PRO2 || sb.type == SBT_16)
 			channel_features.insert(ChannelFeature::Stereo);

@@ -430,7 +430,8 @@ void DISNEY_Init(Section* sec) {
 	                               0,
 	                               "DISNEY",
 	                               {ChannelFeature::ReverbSend,
-	                                ChannelFeature::ChorusSend});
+	                                ChannelFeature::ChorusSend,
+	                                ChannelFeature::DigitalAudio});
 
 	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
 	// DACs
