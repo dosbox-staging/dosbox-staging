@@ -219,7 +219,8 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	                           0,
 	                           "TANDYDAC",
 	                           {ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::DigitalAudio});
 
 	sample_rate = channel->GetSampleRate();
 
@@ -429,11 +430,13 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 
 	// Run the audio channel at the mixer's native rate
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
+
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "TANDY",
 	                           {ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::Synthesizer});
 
 	// Setup filters
 	if (filter_choice == "on") {

@@ -595,12 +595,14 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	// Register the Audio and DMA channels
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
+
 	audio_channel = MIXER_AddChannel(mixer_callback,
 	                                 0,
 	                                 "GUS",
 	                                 {ChannelFeature::Stereo,
 	                                  ChannelFeature::ReverbSend,
-	                                  ChannelFeature::ChorusSend});
+	                                  ChannelFeature::ChorusSend,
+	                                  ChannelFeature::DigitalAudio});
 
 	assert(audio_channel);
 	ms_per_render = 1000.0 / audio_channel->GetSampleRate();

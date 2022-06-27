@@ -473,7 +473,8 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 	                           0,
 	                           device_name,
 	                           {ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
 	sample_rate = channel->GetSampleRate();

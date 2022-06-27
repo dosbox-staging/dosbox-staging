@@ -491,10 +491,12 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 		if (!player.channel) {
 			const auto mixer_callback = std::bind(&CDROM_Interface_Image::CDAudioCallBack,
 			                                      this, std::placeholders::_1);
+
 			player.channel = MIXER_AddChannel(mixer_callback,
 			                                  0,
 			                                  "CDAUDIO",
-			                                  {ChannelFeature::Stereo});
+			                                  {ChannelFeature::Stereo,
+			                                   ChannelFeature::DigitalAudio});
 
 			player.channel->Enable(false); // only enabled during playback periods
 		}

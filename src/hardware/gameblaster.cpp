@@ -83,12 +83,14 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// Setup the mixer and level controls
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 	const auto level_callback = std::bind(&GameBlaster::LevelCallback, this, _1);
+
 	channel = MIXER_AddChannel(audio_callback,
 	                           0,
 	                           CardName(),
 	                           {ChannelFeature::Stereo,
 	                            ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::Synthesizer});
 
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the

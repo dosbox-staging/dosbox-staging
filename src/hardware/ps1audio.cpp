@@ -141,7 +141,8 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 	                           0,
 	                           "PS1DAC",
 	                           {ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::DigitalAudio});
 
 	// Setup filters
 	if (filter_choice == "on") {
@@ -428,7 +429,8 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	                           0,
 	                           "PS1",
 	                           {ChannelFeature::ReverbSend,
-	                            ChannelFeature::ChorusSend});
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::Synthesizer});
 
 	// Setup filters
 	if (filter_choice == "on") {

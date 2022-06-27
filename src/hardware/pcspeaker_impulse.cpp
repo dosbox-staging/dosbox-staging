@@ -531,7 +531,9 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	channel = MIXER_AddChannel(callback,
 	                           sample_rate,
 	                           device_name,
-	                           {ChannelFeature::ReverbSend, ChannelFeature::ChorusSend});
+	                           {ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
 	LOG_MSG("%s: Initialized %s model", device_name, model_name);
