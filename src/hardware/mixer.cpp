@@ -1642,8 +1642,6 @@ void MIXER_Init(Section *sec)
 #endif
 	}
 
-	mixer.tick_counter=0;
-
 	const auto configured_state = section->Get_bool("nosound")
 	                                    ? MixerState::NoSound
 	                                    : MixerState::On;
@@ -1692,8 +1690,11 @@ void MIXER_Init(Section *sec)
 
 	const auto prebuffer_frames = (mixer.sample_rate * prebuffer_ms) / 1000;
 
-	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
+	mixer.pos               = 0;
+	mixer.frames_done       = 0;
 	mixer.frames_needed     = mixer.min_frames_needed + 1;
+	mixer.min_frames_needed = 0;
+	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
