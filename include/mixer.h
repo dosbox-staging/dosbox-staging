@@ -118,7 +118,13 @@ enum LINE_INDEX : uint8_t {
 	// standard at the host-level, then additional line indexes would go here.
 };
 
-enum class ChannelFeature { Stereo, ReverbSend, ChorusSend };
+enum class ChannelFeature {
+	Stereo,
+	ReverbSend,
+	ChorusSend,
+	Synthesizer,
+	DigitalAudio
+};
 
 enum class FilterState { Off, On, ForcedOn };
 
