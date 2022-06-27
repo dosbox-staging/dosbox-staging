@@ -6,7 +6,8 @@ set -eu
 #
 # Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
 
-readonly SCRIPT=$(basename "$0")
+SCRIPT=$(basename "$0")
+readonly SCRIPT
 
 print_usage () {
 	echo "usage: $SCRIPT [-V|--verify|-d|--diff|-a|--amend] [<commit>]"

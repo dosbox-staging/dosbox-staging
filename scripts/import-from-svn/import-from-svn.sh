@@ -12,9 +12,11 @@ set -euo pipefail
 
 readonly svn_url="https://svn.code.sf.net/p/dosbox/code-0/dosbox"
 
-readonly git_destination_repo=$(git config --get remote.origin.url)
+git_destination_repo=$(git config --get remote.origin.url)
+readonly git_destination_repo
 
-readonly git_default_branch=$(git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev)
+git_default_branch=$(git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev)
+readonly git_default_branch
 
 echo_err () {
 	echo "$@" 1>&2
