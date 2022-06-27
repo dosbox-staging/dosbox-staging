@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <atomic>
 #include <vector>
 #include <string>
@@ -101,13 +102,16 @@ public:
 
 	SoftLimiter(const std::string &name);
 
-	void Process(const std::vector<float> &in,
-	             uint16_t req_frames,
+	void AdjustRelease(const int frame_rate_hz,
+	                   const int frames_per_process) noexcept;
+
+	void ProcessFrame(const AudioFrame &frame, std::array<int16_t, 2> &out) noexcept;
+
+	void Process(const std::vector<float> &in, const uint16_t req_frames,
 	             std::vector<int16_t> &out) noexcept;
 	const AudioFrame &GetPeaks() const noexcept { return global_peaks; }
 	void PrintStats() const;
 	void Reset() noexcept;
-	void SetBounds(const int val) noexcept;
 	void UpdateLevels(const AudioFrame &desired_levels, float desired_multiplier);
 
 private:
@@ -147,13 +151,17 @@ private:
 	                 float tail,
 	                 std::vector<int16_t> &out);
 
+	// Fixed constants
+	static constexpr auto bounds = static_cast<float>(INT16_MAX - 1);
+	static constexpr auto max_release = bounds * 0.002709201f; // 0.0235 dB
+	// Taken from the Gravis Ultrasounds's volume ramp
+
 	// Mutable members
 	std::string channel_name = {};
 	std::atomic<AudioFrame> prescale = {};
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
-	float bounds = 0.0f;
-	float release_amplitude = 0.0f;
+	float release_amplitude = max_release;
 	float range_multiplier = 1.0f;
 	int limited_tally = 0;
 	int non_limited_tally = 0;
