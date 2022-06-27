@@ -20,8 +20,14 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: Clang, Ubuntu 20.04
-            os: ubuntu-20.04
+          - name: GCC 12, Ubuntu 22.04
+            os: ubuntu-22.04
+            packages: g++-12
+            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-12.ini
+            max_warnings: 0
+
+          - name: Clang, Ubuntu 22.04
+            os: ubuntu-22.04
             packages: clang
             build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini
             max_warnings: 0
@@ -36,39 +42,33 @@ jobs:
             build_flags: -Dunit_tests=disabled
             max_warnings: 0
 
-          - name: GCC 7, Ubuntu 18.04
-            os: ubuntu-18.04
-            packages: g++-7
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-7.ini
-            max_warnings: 0
-
           - name: GCC, +tests
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             run_tests: true
             max_warnings: -1
 
           - name: GCC, +debugger
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dunit_tests=disabled -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -dyn-x86
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec
             max_warnings: 0
 
           - name: GCC, -dyn-x86, +debugger
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -network
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
             max_warnings: 0
 
           - name: GCC, minimum build
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: >-
               --wrap-mode=nofallback
               -Dunit_tests=disabled

@@ -1,0 +1,15 @@
+cmake
+g++
+build-essential
+ccache
+libasound2-dev
+libfluidsynth-dev
+libgtest-dev
+libopusfile-dev
+libpng-dev
+libsdl2-dev
+libsdl2-net-dev
+libslirp-dev
+libspeexdsp-dev
+python3-setuptools
+meson

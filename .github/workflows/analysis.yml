@@ -15,7 +15,7 @@ jobs:
   run_linters:
     name: Script linters
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -42,7 +42,7 @@ jobs:
 
   build_clang_static_analyser:
     name: Clang static analyzer
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: run_linters
     steps:
       - name: Checkout repository
@@ -51,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install clang-tools python3-bs4 $(cat packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install clang-tools python3-bs4 $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
@@ -107,7 +107,7 @@ jobs:
   dynamic_matrix:
     name: ${{ matrix.conf.name }}
     needs: run_linters
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         conf:
@@ -138,7 +138,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install $(cat packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       # Workaround frequent HTTPS-based connectivity issues
