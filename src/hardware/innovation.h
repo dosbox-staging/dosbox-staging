@@ -43,37 +43,31 @@ public:
 	~Innovation() { Close(); }
 
 private:
-	void Render();
-	double ConvertFramesToMs(const int samples);
-
-	int16_t RenderOnce();
-	void RenderForMs(const double duration_ms);
-
-	void MixerCallBack(uint16_t requested_frames);
+	bool MaybeRenderFrame(float &frame);
+	void AudioCallback(const uint16_t requested_frames);
 	uint8_t ReadFromPort(io_port_t port, io_width_t width);
+	void RenderUpToNow();
+	int16_t TallySilence(const int16_t sample);
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
-
-	IO_ReadHandleObject read_handler = {};
-	IO_WriteHandleObject write_handler = {};
-
+	mixer_channel_t channel               = nullptr;
+	IO_ReadHandleObject read_handler      = {};
+	IO_WriteHandleObject write_handler    = {};
 	std::unique_ptr<reSIDfp::SID> service = {};
-	std::queue<int16_t> fifo = {};
+	std::queue<float> fifo                = {};
 
 	// Initial configuration
-	io_port_t base_port = 0;
-	double chip_clock = 0;
-	double frame_rate_per_ms = 0;
+	double chip_clock            = 0.0;
+	double ms_per_clock          = 0.0;
+	io_port_t base_port          = 0;
 	int idle_after_silent_frames = 0;
 
 	// Runtime states
-	double last_render_time = 0;
-	int unwritten_for_ms = 0;
-	int silent_frames = 0;
-	bool is_enabled = false;
-	bool is_open = false;
+	double last_rendered_ms = 0.0;
+	int unused_for_ms       = 0;
+	int silent_frames       = 0;
+	bool is_open            = false;
 };
 
 #endif
