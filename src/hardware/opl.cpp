@@ -920,7 +920,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	// universally "good" setting that would work well in all games in
 	// existence.
 	constexpr auto opl_volume_scale_factor = 1.5f;
-	mixer_chan->SetVolumeScale(opl_volume_scale_factor);
+	channel->SetVolumeScale(opl_volume_scale_factor);
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 

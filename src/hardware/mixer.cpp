@@ -61,6 +61,8 @@
 #include "programs.h"
 #include "midi.h"
 
+#include "../src/libs/mverb/MVerb.h"
+
 constexpr auto mixer_frame_size = 4;
 
 #define FREQ_SHIFT 14
@@ -92,9 +94,26 @@ static constexpr int16_t MIXER_CLIP(const int sample)
 	return static_cast<int16_t>(sample);
 }
 
+using EmVerb = MVerb<float>;
+
+enum ReverbPreset { Tiny, Small, Medium, Large, Huge, NumPresets };
+
+struct reverb_preset_t {
+	std::array<float, EmVerb::NUM_PARAMS> params = {};
+
+	float synthesizer_send_level   = 0.0f;
+	float digital_audio_send_level = 0.0f;
+
+	float highpass_cutoff_freq = 1.0f;
+};
+
+static std::array<reverb_preset_t, ReverbPreset::NumPresets> reverb_presets = {};
+
 struct mixer_t {
 	// complex types
 	matrix<float, MIXER_BUFSIZE, 2> work = {};
+	matrix<float, MIXER_BUFSIZE, 2> aux_reverb = {};
+
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out = {};
 
@@ -118,6 +137,19 @@ struct mixer_t {
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
 
 	std::array<Iir::Butterworth::HighPass<2>, 2> highpass_filter = {};
+
+	struct {
+		bool enabled = false;
+		ReverbPreset current_preset = {};
+
+		EmVerb mverb = {};
+
+		// MVerb does not have an integrated high-pass filter to shape
+		// the low-end response like other reverbs. So we're adding one
+		// here. This helps take control over low-frequency build-up,
+		// resulting in a more pleasant sound.
+		std::array<Iir::Butterworth::HighPass<2>, 2> highpass_filter = {};
+	} reverb = {};
 };
 
 static struct mixer_t mixer = {};
@@ -178,6 +210,173 @@ static void set_global_crossfeed(mixer_channel_t channel)
 	channel->SetCrossfeedStrength(crossfeed);
 }
 
+static void init_reverb_presets()
+{
+	// tiny
+	auto &tiny = reverb_presets[ReverbPreset::Tiny];
+
+	tiny.params[EmVerb::PREDELAY]      = 0.0f;
+	tiny.params[EmVerb::EARLYMIX]      = 1.0f;
+	tiny.params[EmVerb::SIZE]          = 0.05f;
+	tiny.params[EmVerb::DENSITY]       = 0.5f;
+	tiny.params[EmVerb::BANDWIDTHFREQ] = 0.5f;
+	tiny.params[EmVerb::DECAY]         = 0.0f;
+	tiny.params[EmVerb::DAMPINGFREQ]   = 1.0f;
+
+	tiny.synthesizer_send_level   = 0.87f; // -5.2 dB
+	tiny.digital_audio_send_level = 0.87f; // -5.2 dB
+
+	tiny.highpass_cutoff_freq = 200.0f;
+
+	// small
+	auto &small = reverb_presets[ReverbPreset::Small];
+
+	small.params[EmVerb::PREDELAY]      = 0.0f;
+	small.params[EmVerb::EARLYMIX]      = 1.0f;
+	small.params[EmVerb::SIZE]          = 0.17f;
+	small.params[EmVerb::DENSITY]       = 0.42f;
+	small.params[EmVerb::BANDWIDTHFREQ] = 0.50f;
+	small.params[EmVerb::DECAY]         = 0.50f;
+	small.params[EmVerb::DAMPINGFREQ]   = 0.70f;
+
+	small.synthesizer_send_level   = 0.40f; // -24.0 dB
+	small.digital_audio_send_level = 0.08f; // -36.8 dB
+
+	small.highpass_cutoff_freq = 200.0f;
+
+	// medium
+	auto &medium = reverb_presets[ReverbPreset::Medium];
+
+	medium.params[EmVerb::PREDELAY]      = 0.0f;
+	medium.params[EmVerb::EARLYMIX]      = 0.75f;
+	medium.params[EmVerb::SIZE]          = 0.50f;
+	medium.params[EmVerb::DENSITY]       = 0.50f;
+	medium.params[EmVerb::BANDWIDTHFREQ] = 0.95f;
+	medium.params[EmVerb::DECAY]         = 0.42f;
+	medium.params[EmVerb::DAMPINGFREQ]   = 0.21f;
+
+	medium.synthesizer_send_level   = 0.54f; // -18.4 dB
+	medium.digital_audio_send_level = 0.07f; // -37.2 dB
+
+	medium.highpass_cutoff_freq = 170.0f;
+
+	// large
+	auto &large = reverb_presets[ReverbPreset::Large];
+
+	large.params[EmVerb::PREDELAY]      = 0.0f;
+	large.params[EmVerb::EARLYMIX]      = 0.75f;
+	large.params[EmVerb::SIZE]          = 0.75f;
+	large.params[EmVerb::DENSITY]       = 0.50f;
+	large.params[EmVerb::BANDWIDTHFREQ] = 0.95f;
+	large.params[EmVerb::DECAY]         = 0.52f;
+	large.params[EmVerb::DAMPINGFREQ]   = 0.21f;
+
+	large.synthesizer_send_level   = 0.70f; // -12.0 dB
+	large.digital_audio_send_level = 0.05f; // -38.0 dB
+
+	large.highpass_cutoff_freq = 140.0f;
+
+	// huge
+	auto &huge = reverb_presets[ReverbPreset::Huge];
+
+	huge                        = large;
+	huge.synthesizer_send_level = 0.85f; // -6.0 dB
+}
+
+static void set_reverb_preset(const ReverbPreset preset)
+{
+	assert(preset >= 0);
+	assert(preset < ReverbPreset::NumPresets);
+
+	auto &param_values = reverb_presets[preset].params;
+	for (auto param = 0; param < EmVerb::NUM_PARAMS; ++param) {
+		const auto value = param_values[param];
+		assert(value >= 0.0f);
+		assert(value <= 1.0f);
+		mixer.reverb.mverb.setParameter(param, value);
+	}
+
+	// Always max gain (no attenuation)
+	mixer.reverb.mverb.setParameter(EmVerb::GAIN, 1.0f);
+
+	// Always 100% wet signal
+	mixer.reverb.mverb.setParameter(EmVerb::MIX, 1.0f);
+
+	// Configure input high-pass filter
+	for (auto &f : mixer.reverb.highpass_filter)
+		f.setup(mixer.sample_rate,
+		        reverb_presets[preset].highpass_cutoff_freq);
+
+	mixer.reverb.current_preset = preset;
+	mixer.reverb.enabled        = true;
+}
+
+static void set_reverb_level_from_current_preset(mixer_channel_t channel)
+{
+	if (!channel->HasFeature(ChannelFeature::ReverbSend))
+		return;
+
+	auto &p = reverb_presets[mixer.reverb.current_preset];
+
+	if (channel->HasFeature(ChannelFeature::Synthesizer)) {
+		channel->SetReverbLevel(p.synthesizer_send_level);
+
+	} else if (channel->HasFeature(ChannelFeature::DigitalAudio)) {
+		channel->SetReverbLevel(p.digital_audio_send_level);
+	}
+}
+
+static void configure_reverb()
+{
+	const auto sect = static_cast<Section_prop *>(control->GetSection("mixer"));
+	assert(sect);
+
+	const std::string reverb_pref = sect->Get_string("reverb");
+
+	auto enable_reverb = [&reverb_pref](const ReverbPreset preset) {
+		mixer.reverb.mverb.setSampleRate(mixer.sample_rate);
+		set_reverb_preset(preset);
+		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
+	};
+
+	if (reverb_pref == "off") {
+		mixer.reverb.enabled = false;
+
+	} else if (reverb_pref == "on") {
+		enable_reverb(ReverbPreset::Medium);
+
+	} else if (reverb_pref == "tiny") {
+		enable_reverb(ReverbPreset::Tiny);
+
+	} else if (reverb_pref == "small") {
+		enable_reverb(ReverbPreset::Small);
+
+	} else if (reverb_pref == "medium") {
+		enable_reverb(ReverbPreset::Medium);
+
+	} else if (reverb_pref == "large") {
+		enable_reverb(ReverbPreset::Large);
+
+	} else if (reverb_pref == "huge") {
+		enable_reverb(ReverbPreset::Huge);
+
+	} else {
+		LOG_WARNING("MIXER: Invalid reverb setting '%s', using off",
+		            reverb_pref.c_str());
+		mixer.reverb.enabled = false;
+	}
+
+	if (mixer.reverb.enabled) {
+		for (auto &it : mixer.channels)
+			set_reverb_level_from_current_preset(it.second);
+	} else {
+		for (auto &it : mixer.channels)
+			it.second->SetReverbLevel(0.0f);
+
+		LOG_MSG("MIXER: Reverb disabled");
+	}
+}
+
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
                                  const char *name,
                                  const std::set<ChannelFeature> &features)
@@ -190,6 +389,9 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 	chan->Enable(false);
 
 	set_global_crossfeed(chan);
+
+	if (mixer.reverb.enabled)
+		set_reverb_level_from_current_preset(chan);
 
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate)
@@ -567,6 +769,43 @@ float MixerChannel::GetCrossfeedStrength()
 	return crossfeed.strength;
 }
 
+void MixerChannel::SetReverbLevel(const float level)
+{
+	constexpr auto level_min    = 0.0f;
+	constexpr auto level_max    = 1.0f;
+	constexpr auto level_min_db = -40.0f;
+	constexpr auto level_max_db = 0.0f;
+
+	assert(level >= level_min);
+	assert(level <= level_max);
+
+	if (!HasFeature(ChannelFeature::ReverbSend))
+		return;
+
+	reverb.level = level;
+
+	float level_db = {};
+	if (level == level_min) {
+		level_db = -INFINITY;
+
+		reverb.send_gain = 0.0f;
+
+	} else {
+		level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
+		reverb.send_gain = decibel_to_gain(level_db);
+	}
+
+	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4f, level_db: %.4f, gain: %.4f",
+	              level,
+	              level_db,
+	              reverb.send_gain);
+}
+
+float MixerChannel::GetReverbLevel()
+{
+	return reverb.level;
+}
+
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
 // This is only used to populate a lookup table that's 20-fold faster.
 constexpr int16_t u8to16(const int u_val)
@@ -819,8 +1058,9 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	}
 
 	MIXER_LockAudioDevice();
-	// Optionally low-pass filter, apply crossfeed, then mix the results
-	// to the master output
+
+	// Optionally filter, apply crossfeed, then mix the results to the master
+	// output
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 
@@ -833,13 +1073,17 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	const auto do_crossfeed = crossfeed.strength > 0.0f;
 
+	const auto do_reverb_send = mixer.reverb.enabled &&
+	                            HasFeature(ChannelFeature::ReverbSend) &&
+	                            reverb.send_gain > 0.0f;
+
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
 
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
-			frame.left = filters.highpass.hpf[0].filter(frame.left);
+			frame.left  = filters.highpass.hpf[0].filter(frame.left);
 			frame.right = filters.highpass.hpf[1].filter(frame.right);
 		}
 		if (do_lowpass_filter) {
@@ -849,8 +1093,17 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		if (do_crossfeed)
 			frame = ApplyCrossfeed(frame);
 
+		// Mix samples to the master output
 		mixer.work[mixpos][0] += frame.left;
 		mixer.work[mixpos][1] += frame.right;
+
+		if (do_reverb_send) {
+			// Mix samples to the reverb aux buffer, scaled by the
+			// reverb send volume
+			mixer.aux_reverb[mixpos][0] += frame.left  * reverb.send_gain;
+			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
+		}
+
 		++mixpos;
 	}
 
@@ -1050,21 +1303,59 @@ static constexpr int calc_tickadd(const int freq)
 #endif
 }
 
-/* Mix a certain amount of new sample frames */
+// Mix a certain amount of new sample frames
 static void MIXER_MixData(int frames_requested)
 {
+	constexpr auto capture_buf_frames = 1024;
+
+	const auto frames_added = check_cast<work_index_t>(
+	        std::min(frames_requested - mixer.frames_done, capture_buf_frames));
+
+	const auto start_pos = check_cast<work_index_t>(
+	        (mixer.pos + mixer.frames_done) & MIXER_BUFMASK);
+
+	// Render all channels and accumulate results in the master mixbuffer
 	for (auto &it : mixer.channels)
 		it.second->Mix(frames_requested);
 
-	// Master high-pass filter
-	constexpr auto capture_buf_len = 1024;
-	const auto added = check_cast<work_index_t>(
-	        std::min(frames_requested - mixer.frames_done, capture_buf_len));
+	if (mixer.reverb.enabled) {
+		// Apply reverb to the reverb aux buffer, then mix the results
+		// to the master output
+		auto pos = start_pos;
 
-	auto pos = check_cast<work_index_t>((mixer.pos + mixer.frames_done) &
-	                                    MIXER_BUFMASK);
+		for (work_index_t i = 0; i < frames_added; ++i) {
+			AudioFrame frame = {mixer.aux_reverb[pos][0],
+			                    mixer.aux_reverb[pos][1]};
 
-	for (work_index_t i = 0; i < added; ++i) {
+			// High-pass filter the reverb input
+			for (auto ch = 0; ch < 2; ++ch)
+				frame[ch] = mixer.reverb.highpass_filter[ch].filter(
+				        frame[ch]);
+
+			// MVerb operates on two non-interleaved sample streams
+			static float in_left[1]     = {};
+			static float in_right[1]    = {};
+			static float *reverb_buf[2] = {in_left, in_right};
+
+			in_left[0]  = frame.left;
+			in_right[0] = frame.right;
+
+			const auto in         = reverb_buf;
+			auto out              = reverb_buf;
+			constexpr auto frames = 1;
+			mixer.reverb.mverb.process(in, out, frames);
+
+			mixer.work[pos][0] += reverb_buf[0][0];
+			mixer.work[pos][1] += reverb_buf[1][0];
+
+			pos = (pos + 1) & MIXER_BUFMASK;
+		}
+	}
+
+	// Apply high-pass filter to the master output as the very last step
+	auto pos = start_pos;
+
+	for (work_index_t i = 0; i < frames_added; ++i) {
 		for (auto ch = 0; ch < 2; ++ch) {
 			mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
 			        mixer.work[pos][ch]);
@@ -1072,13 +1363,12 @@ static void MIXER_MixData(int frames_requested)
 		pos = (pos + 1) & MIXER_BUFMASK;
 	}
 
+	// Capture audio output if requested
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
-		int16_t out[capture_buf_len][2];
+		int16_t out[capture_buf_frames][2];
+		auto pos = start_pos;
 
-		auto pos = check_cast<work_index_t>(
-		        (mixer.pos + mixer.frames_done) & MIXER_BUFMASK);
-
-		for (work_index_t i = 0; i < added; i++) {
+		for (work_index_t i = 0; i < frames_added; i++) {
 			const auto left = static_cast<uint16_t>(
 			        MIXER_CLIP(static_cast<int>(mixer.work[pos][0])));
 
@@ -1090,10 +1380,12 @@ static void MIXER_MixData(int frames_requested)
 
 			pos = (pos + 1) & MIXER_BUFMASK;
 		}
+
 		CAPTURE_AddWave(mixer.sample_rate,
-		                added,
+		                frames_added,
 		                reinterpret_cast<int16_t *>(out));
 	}
+
 	// Reset the the tick_add for constant speed
 	if (Mixer_irq_important())
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
@@ -1130,6 +1422,7 @@ static void MIXER_Mix_NoSound()
 
 		mixer.pos = (mixer.pos + 1) & MIXER_BUFMASK;
 	}
+
 	MIXER_ReduceChannelsDoneCounts(mixer.frames_needed);
 
 	/* Set values for next tick */
@@ -1157,8 +1450,6 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 	// to the callback
 	auto index_add = (1 << INDEX_SHIFT_LOCAL);
 	auto index     = (index_add % frames_requested) ? frames_requested : 0;
-
-	auto sample = 0;
 
 	/* Enough room in the buffer ? */
 	if (mixer.frames_done < frames_requested) {
@@ -1269,28 +1560,35 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
 			index += index_add;
 
-			sample    = static_cast<int>(mixer.work[i][0]);
-			*output++ = MIXER_CLIP(sample);
-			sample    = static_cast<int>(mixer.work[i][1]);
-			*output++ = MIXER_CLIP(sample);
+			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[i][0]));
+			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[i][1]));
 		}
-		/* Clean the used buffer */
+		// Clean the used buffers
 		while (reduce_frames--) {
 			pos &= MIXER_BUFMASK;
+
 			mixer.work[pos][0] = 0.0f;
 			mixer.work[pos][1] = 0.0f;
-			pos++;
+
+			mixer.aux_reverb[pos][0] = 0.0f;
+			mixer.aux_reverb[pos][1] = 0.0f;
+
+			++pos;
 		}
 	} else {
 		while (reduce_frames--) {
 			pos &= MIXER_BUFMASK;
-			sample    = static_cast<int>(mixer.work[pos][0]);
-			*output++ = MIXER_CLIP(sample);
-			sample    = static_cast<int>(mixer.work[pos][1]);
-			*output++ = MIXER_CLIP(sample);
+
+			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[pos][0]));
+			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[pos][1]));
+
 			mixer.work[pos][0] = 0.0f;
 			mixer.work[pos][1] = 0.0f;
-			pos++;
+
+			mixer.aux_reverb[pos][0] = 0.0f;
+			mixer.aux_reverb[pos][1] = 0.0f;
+
+			++pos;
 		}
 	}
 }
@@ -1327,7 +1625,7 @@ public:
 		cmd->FillVector(args);
 
 		mixer_channel_t curr_chan = {};
-		auto is_master = false;
+		auto is_master            = false;
 
 		MIXER_LockAudioDevice();
 		for (auto &arg : args) {
@@ -1360,28 +1658,36 @@ public:
 				return false;
 			};
 
-			// Global commands that apply to all channels
 			if (!is_master && !curr_chan) {
-
+				// Global commands that apply to all channels
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
 					for (auto &it : mixer.channels) {
 						it.second->SetCrossfeedStrength(value);
 					}
 					continue;
+				} else if (parse_prefixed_percentage('R', arg, value)) {
+					for (auto &it : mixer.channels) {
+						if (mixer.reverb.enabled)
+							it.second->SetReverbLevel(value);
+					}
+					continue;
 				}
 
-			// Only setting the volume is allowed for the
-			// MASTER channel
 			} else if (is_master) {
+				// Only setting the volume is allowed for the
+				// MASTER channel
 				ParseVolume(arg, mixer.mastervol);
 
-			// Adjust settings of a regular non-master channel
 			} else if (curr_chan) {
-
+				// Adjust settings of a regular non-master channel
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
 					curr_chan->SetCrossfeedStrength(value);
+					continue;
+				} else if (parse_prefixed_percentage('R', arg, value)) {
+					if (mixer.reverb.enabled)
+						curr_chan->SetReverbLevel(value);
 					continue;
 				}
 
@@ -1417,7 +1723,7 @@ private:
 		        "    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])\n"
 		        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
 		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
-		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]\n"
+		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]\n"
 		        "\n"
 		        "Notes:\n"
 		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
@@ -1428,7 +1734,7 @@ private:
 		        "\n"
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
 	void ParseVolume(const std::string &s, AudioFrame &volume)
@@ -1446,12 +1752,16 @@ private:
 			const auto vol = to_finite<float>(vol_pref);
 			if (std::isfinite(vol)) {
 				if (is_decibel)
-					vol_out = static_cast<float>(decibel_to_gain(vol));
+					vol_out = static_cast<float>(
+					        decibel_to_gain(vol));
 				else
 					vol_out = vol / 100.0f;
 
-				const auto min_vol = static_cast<float>(decibel_to_gain(-99.99));
+				const auto min_vol = static_cast<float>(
+				        decibel_to_gain(-99.99));
+
 				constexpr auto max_vol = 99.99f;
+
 				if (vol_out < min_vol)
 					vol_out = 0;
 				else
@@ -1474,8 +1784,9 @@ private:
 		                           const AudioFrame &volume,
 		                           const int rate,
 		                           const std::string &mode,
-		                           const std::string &xfeed) {
-			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s\n",
+		                           const std::string &xfeed,
+		                           const std::string &reverb) {
+			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s\n",
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
@@ -1483,10 +1794,11 @@ private:
 			         gain_to_decibel(volume.right),
 			         rate,
 			         mode.c_str(),
-			         xfeed.c_str());
+			         xfeed.c_str(),
+			         reverb.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed[reset]\n")
+		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb[reset]\n")
 		                 .c_str());
 
 		MIXER_LockAudioDevice();
@@ -1494,6 +1806,7 @@ private:
 		             mixer.mastervol,
 		             mixer.sample_rate,
 		             "Stereo",
+		             "-",
 		             "-");
 
 		for (auto &[name, chan] : mixer.channels) {
@@ -1508,18 +1821,29 @@ private:
 				}
 			}
 
+			std::string reverb = "-";
+			if (chan->HasFeature(ChannelFeature::ReverbSend)) {
+				if (chan->GetReverbLevel() > 0.0f) {
+					reverb = std::to_string(static_cast<uint8_t>(
+					        round(chan->GetReverbLevel() * 100)));
+				} else {
+					reverb = "off";
+				}
+			}
+
 			auto channel_name = std::string("[color=cyan]") + name +
 			                    std::string("[reset]");
 
 			auto mode = chan->HasFeature(ChannelFeature::Stereo)
-			                    ? chan->DescribeLineout()
-			                    : "Mono";
+			                  ? chan->DescribeLineout()
+			                  : "Mono";
 
 			show_channel(convert_ansi_markup(channel_name),
 			             chan->volume,
 			             chan->GetSampleRate(),
 			             mode,
-			             xfeed);
+			             xfeed,
+			             reverb);
 		}
 		MIXER_UnlockAudioDevice();
 	}
@@ -1740,6 +2064,10 @@ void MIXER_Init(Section *sec)
 	constexpr auto highpass_cutoff_freq = 20.0;
 	for (auto &f : mixer.highpass_filter)
 		f.setup(mixer.sample_rate, highpass_cutoff_freq);
+
+	// Initialise send effects
+	init_reverb_presets();
+	configure_reverb();
 }
 
 // Toggle the mixer on/off when a true-bool is passed.
@@ -1823,6 +2151,23 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
+
+	string_prop = sec_prop.Add_string("reverb", when_idle, "off");
+	string_prop->Set_help(
+	        "Enable reverb globally to add a sense of space to the sound:\n"
+	        "  off:     No reverb (default).\n"
+	        "  on:      Enable reverb (medium preset).\n"
+	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
+	        "           specifically designed for small-speaker audio systems\n"
+	        "           (PC Speaker, Tandy, PS/1 Audio, and Disney).\n"
+	        "  small:   Adds a subtle sense of space; good for games that use a single\n"
+	        "           synth channel (typically OPL) for both music and sound effects.\n"
+	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
+	        "  large:   Large hall preset recommended for games that use separate\n"
+	        "  			channels for music and digital audio.\n"
+	        "  huge:    A stronger variant of the large hall preset; works really well\n"
+	        "           in some games with more atmospheric soundtracks.\n"
+	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }

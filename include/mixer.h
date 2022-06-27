@@ -168,6 +168,9 @@ public:
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength();
 
+	void SetReverbLevel(const float level);
+	float GetReverbLevel();
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(uint16_t len, const Type *data);
 
@@ -200,6 +203,7 @@ public:
 	AudioFrame volume = {1.0f, 1.0f};
 	std::atomic<int> frames_done = 0; // Timing on how many sample frames
 	                                  // have been done by the mixer
+
 	bool is_enabled = false;
 
 private:
@@ -302,6 +306,11 @@ private:
 		float pan_left = 0.0f;
 		float pan_right = 0.0f;
 	} crossfeed = {};
+
+	struct {
+		float level     = 0.0f;
+		float send_gain = 0.0f;
+	} reverb = {};
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
