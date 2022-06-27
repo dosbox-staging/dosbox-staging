@@ -76,8 +76,9 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		                                    12);
 	}
 
-	// Setup the soft limiter
+	// Setup the soft limiter at the rendering rate
 	soft_limiter = std::make_unique<SoftLimiter>(CardName());
+	soft_limiter->AdjustRelease(render_rate_hz, 1); // one-frame per processing
 
 	// Setup the mixer and level controls
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
@@ -110,8 +111,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	// Calculate rates and ratio based on the mixer's rate
 	const auto frame_rate_hz = channel->GetSampleRate();
-	frame_rate_per_ms = frame_rate_hz / 1000.0;
-	render_to_play_ratio = static_cast<double>(render_rate_hz) / frame_rate_hz;
 
 	// Setup the resampler to convert from the render rate to the mixer's frame rate
 	const auto max_freq = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
@@ -133,110 +132,115 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	is_open = true;
 }
 
-bool GameBlaster::RenderOnce()
+bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
 {
 	// Static containers setup once and reused
-	constexpr auto num_channels = 2; // left and right
-	static std::vector<int16_t> frame(num_channels);
-	static int16_t *buffer[] = {&frame[0], &frame[1]};
-	static std::vector<float> accumulator(num_channels);
+	static std::array<int16_t, 2> buf = {}; // left and right
+	static int16_t *p_buf[] = {&buf[0], &buf[1]};
 	static device_sound_interface::sound_stream stream;
 
 	// Accumulate the samples from both SAA-1099 devices
-	devices[0]->sound_stream_update(stream, 0, buffer, 1);
-	accumulator[0] = frame[0];
-	accumulator[1] = frame[1];
-	devices[1]->sound_stream_update(stream, 0, buffer, 1);
-	accumulator[0] += frame[0];
-	accumulator[1] += frame[1];
+	devices[0]->sound_stream_update(stream, 0, p_buf, 1);
+	frame.left  = buf[0];
+	frame.right = buf[1];
+	devices[1]->sound_stream_update(stream, 0, p_buf, 1);
+	frame.left += buf[0];
+	frame.right += buf[1];
+
+	// Increment our time datum up to which the device has rendered
+	last_rendered_ms += ms_per_render;
 
 	// Limit the accumulated frame to avoid hard-clipping
-	soft_limiter->Process(accumulator, 1, frame);
+	soft_limiter->ProcessFrame(frame, buf);
 
-	// Pass the resulting samples into the resamplers
-	const auto l_sample_ready = resamplers[0]->input(frame[0]);
-	const auto r_sample_ready = resamplers[1]->input(frame[1]);
+	// Resample the limited frame
+	const auto l_ready = resamplers[0]->input(buf[0]);
+	const auto r_ready = resamplers[1]->input(buf[1]);
+	assert(l_ready == r_ready);
+	const auto frame_is_ready = l_ready && r_ready;
 
-	// The resamplers should always have samples ready at the same time
-	assert(l_sample_ready == r_sample_ready);
-	return l_sample_ready && r_sample_ready;
-}
-
-std::vector<int16_t> GameBlaster::GetFrame()
-{
-	const auto l_sample = check_cast<int16_t>(resamplers[0]->output());
-	const auto r_sample = check_cast<int16_t>(resamplers[1]->output());
-	return {l_sample, r_sample};
-}
-
-void GameBlaster::RenderForMs(const double duration_ms)
-{
-	auto render_count = iround(duration_ms * render_rate_per_ms);
-	while (render_count-- > 0)
-		if (RenderOnce())
-			fifo.emplace(GetFrame());
+	// Get the frame from the resampler
+	if (frame_is_ready) {
+		frame.left  = static_cast<float>(resamplers[0]->output());
+		frame.right = static_cast<float>(resamplers[1]->output());
+	}
+	return frame_is_ready;
 }
 
 void GameBlaster::RenderUpToNow()
 {
 	const auto now = PIC_FullIndex();
-	if (channel->is_enabled)
-		RenderForMs(now - last_render_time);
-	else
+
+	// Wake up the channel and update the last rendered time datum.
+	assert(channel);
+	if (!channel->is_enabled) {
 		channel->Enable(true);
-	last_render_time = now;
-	unwritten_for_ms = 0;
+		last_rendered_ms = now;
+		return;
+	}
+	// Keep rendering until we're current
+	while (last_rendered_ms < now) {
+		last_rendered_ms += ms_per_render;
+		if (AudioFrame f = {}; MaybeRenderFrame(f))
+			fifo.emplace(f);
+	}
 }
 
 void GameBlaster::WriteDataToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[0]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[0]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteDataToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[1]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[1]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
-double GameBlaster::ConvertFramesToMs(const int frames) const
-{
-	return frames / frame_rate_per_ms;
-}
-
-void GameBlaster::AudioCallback(uint16_t requested_frames)
+void GameBlaster::AudioCallback(const uint16_t requested_frames)
 {
 	assert(channel);
-	while (requested_frames && fifo.size()) {
-		channel->AddSamples_s16(1, fifo.front().data());
-		fifo.pop();
-		--requested_frames;
-	}
 
-	if (requested_frames) {
-		last_render_time += ConvertFramesToMs(requested_frames);
-		while (requested_frames--) {
-			while (!RenderOnce())
-				; // render until a frame is ready
-			const auto frame = GetFrame();
-			channel->AddSamples_s16(1, frame.data());
-		}
+	//if (fifo.size())
+	//	LOG_MSG("%s: Queued %2lu cycle-accurate frames", CardName(), fifo.size());
+
+	auto frames_remaining = requested_frames;
+
+	// First, add any frames we've queued since the last callback
+	while (frames_remaining && fifo.size()) {
+		channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		fifo.pop();
+		--frames_remaining;
 	}
-	// Pause the card if it hasn't been written to for 10 seconds
-	if (unwritten_for_ms++ > 10000)
+	// If the queue's run dry, render the remainder and sync-up our time datum
+	while (frames_remaining) {
+		if (AudioFrame f = {}; MaybeRenderFrame(f)) {
+			channel->AddSamples_sfloat(1, &f[0]);
+		}
+		--frames_remaining;
+	}
+	last_rendered_ms = PIC_FullIndex();
+
+	// Maybe idle the channel if the device has been unused for some time
+	constexpr auto ten_ms_of_callbacks = 10 * 1000;
+	if (unused_for_ms++ > ten_ms_of_callbacks)
 		channel->Enable(false);
 }
 

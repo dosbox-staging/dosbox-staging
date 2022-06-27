@@ -47,12 +47,10 @@ public:
 	~GameBlaster() { Close(); }
 
 private:
-	// Autio rendering
-	bool RenderOnce();
+	// Audio rendering
+	bool MaybeRenderFrame(AudioFrame &frame);
 	std::vector<int16_t> GetFrame();
-	double ConvertFramesToMs(const int frames) const;
-	void RenderForMs(const double duration_ms);
-	void AudioCallback(uint16_t requested_frames);
+	void AudioCallback(const uint16_t requested_frames);
 	void LevelCallback(const AudioFrame &levels);
 	void RenderUpToNow();
 
@@ -72,30 +70,31 @@ private:
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
-	IO_WriteHandleObject write_handlers[4] = {};
-	IO_WriteHandleObject write_handler_for_detection = {};
-	IO_ReadHandleObject read_handler_for_detection = {};
-	std::unique_ptr<saa1099_device> devices[2] = {};
-	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
-	std::unique_ptr<SoftLimiter> soft_limiter = {};
-	std::queue<std::vector<int16_t>> fifo = {};
 
-	// Initial configuration
-	static constexpr auto chip_clock = 14318180 / 2;
+	IO_WriteHandleObject write_handlers[4]           = {};
+	IO_WriteHandleObject write_handler_for_detection = {};
+	IO_ReadHandleObject read_handler_for_detection   = {};
+
+	std::unique_ptr<saa1099_device> devices[2]                   = {};
+	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
+	std::unique_ptr<SoftLimiter> soft_limiter                    = {};
+
+	std::queue<AudioFrame> fifo = {};
+
+	// Static rate-related configuration
+	static constexpr auto chip_clock     = 14318180 / 2;
 	static constexpr auto render_divisor = 32;
 	static constexpr auto render_rate_hz = ceil_sdivide(chip_clock,
 	                                                    render_divisor);
-	static constexpr auto render_rate_per_ms = render_rate_hz / 1000.0;
-	double render_to_play_ratio = 0.0; // derived from mixer-rate
-	double frame_rate_per_ms = 0.0; // derived from mixer-rate
-	io_port_t base_port = 0;
+	static constexpr auto ms_per_render  = 1000.0 / render_rate_hz;
 
 	// Runtime states
-	double last_render_time = 0;
-	int unwritten_for_ms = 0;
+	double last_rendered_ms        = 0;
+	int unused_for_ms              = 0;
+	io_port_t base_port            = 0;
 	bool is_standalone_gameblaster = false;
-	bool is_open = false;
-	uint8_t cms_detect_register = 0xff;
+	bool is_open                   = false;
+	uint8_t cms_detect_register    = 0xff;
 };
 
 #endif

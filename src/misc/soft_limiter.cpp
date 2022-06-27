@@ -29,13 +29,36 @@
 
 constexpr static auto relaxed = std::memory_order_relaxed;
 
-SoftLimiter::SoftLimiter(const std::string &name)
-        : channel_name(name)
+void SoftLimiter::AdjustRelease(const int frame_rate_hz, const int frames_per_proc) noexcept
 {
-	SetBounds(INT16_MAX - 1);
+	assert(frame_rate_hz > 0);
+	assert(frames_per_proc > 0);
+
+	// Baseline rates come from the Gravis UltraSound's volume ramp maximum
+	// rate of change. Note that the proc_ratio is inversely
+	// proportional: the fewer frames per processing event, the faster the
+	// release will be performed and therefore needs to shrink proportional
+	// to the processing rate.
+	constexpr auto base_rate_hz  = 44100.0;
+	constexpr auto base_per_proc = base_rate_hz / 1000.0;
+
+	const auto rate_ratio = base_rate_hz / frame_rate_hz;
+	const auto proc_ratio = frames_per_proc / base_per_proc;
+
+	// Limit the release to the maximum, but not greater
+	if (const auto scalar = rate_ratio * proc_ratio; scalar < 1.0)
+		release_amplitude = max_release * static_cast<float>(scalar);
+
+	assert(release_amplitude > 0.0f && release_amplitude <= max_release);
+}
+
+SoftLimiter::SoftLimiter(const std::string &name) : channel_name(name)
+{
+	assert(bounds > 0.0f);
+	assert(channel_name.length());
+	assert(release_amplitude > 0.0f);
+
 	UpdateLevels({1, 1}, 1); // default to unity (ie: no) scaling
-	limited_tally = 0;
-	non_limited_tally = 0;
 }
 
 void SoftLimiter::UpdateLevels(const AudioFrame &desired_levels,
@@ -46,14 +69,19 @@ void SoftLimiter::UpdateLevels(const AudioFrame &desired_levels,
 	            desired_levels.right * desired_multiplier};
 }
 
-void SoftLimiter::SetBounds(const int val) noexcept
+//  A simple wrapper to process one AudioFrame at-a-time
+void SoftLimiter::ProcessFrame(const AudioFrame &in, std::array<int16_t, 2> &out) noexcept
 {
-	assert(val >= 0 && val <= INT16_MAX);
-	bounds = static_cast<float>(val);
+	static std::vector<float> in_buf(2);    // left and right channels
+	static std::vector<int16_t> out_buf(2); // left and right channels
 
-	// Calculate the new release amount based on the bounds
-	static constexpr float delta_db = 0.002709201f; // 0.0235 dB increments
-	release_amplitude = bounds * delta_db;
+	in_buf[0] = in.left;
+	in_buf[1] = in.right;
+
+	Process(in_buf, 1, out_buf);
+
+	out[0] = out_buf[0];
+	out[1] = out_buf[1];
 }
 
 //  Limit the input array and returned as integer array
