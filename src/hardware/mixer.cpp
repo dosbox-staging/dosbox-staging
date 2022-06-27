@@ -152,7 +152,7 @@ bool MixerChannel::StereoLine::operator==(const StereoLine &other) const
 	return left == other.left && right == other.right;
 }
 
-static void set_global_channel_settings(mixer_channel_t channel)
+static void set_global_crossfeed(mixer_channel_t channel)
 {
 	const auto sect = static_cast<Section_prop *>(control->GetSection("mixer"));
 	assert(sect);
@@ -189,7 +189,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
-	set_global_channel_settings(chan);
+	set_global_crossfeed(chan);
 
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate)
