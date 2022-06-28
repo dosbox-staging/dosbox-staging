@@ -3568,8 +3568,8 @@ static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 	    sdl.mouse.control_choice == Seamless)
 		MOUSE_EventMoved(check_cast<int16_t>(motion->xrel),
 		                 check_cast<int16_t>(motion->yrel),
-		                 check_cast<uint16_t>(motion->x),
-		                 check_cast<uint16_t>(motion->y),
+		                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
+		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)),
 		                 mouse_is_captured);
 }
 
