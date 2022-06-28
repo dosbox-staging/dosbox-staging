@@ -138,7 +138,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
+IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -180,7 +181,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
+IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -234,7 +236,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
+IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -289,7 +292,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
+IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
