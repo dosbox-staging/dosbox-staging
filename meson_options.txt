@@ -21,6 +21,13 @@ option(
 )
 
 option(
+    'use_oplhw',
+    type : 'boolean',
+    value : false,
+    description : 'Enable support for real OPL2/3 soundcards via liboplhw'
+)
+
+option(
     'use_fluidsynth',
     type: 'boolean',
     value: true,

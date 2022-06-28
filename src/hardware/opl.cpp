@@ -495,6 +495,11 @@ void OPL::Init(const uint16_t sample_rate)
 
 void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
+#ifdef C_OPLHW
+	if (oplhw_dev) {
+		oplhw_Write(oplhw_dev, selected_reg, val);
+	} else
+#endif
 	OPL3_WriteRegBuffered(&oplchip, selected_reg, val);
 	if (selected_reg == 0x105)
 		newm = selected_reg & 0x01;
@@ -890,6 +895,23 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
 
+#ifdef C_OPLHW
+	const std::string oplhw_path = section->Get_string("oplhw");
+	if (!oplhw_path.empty()) {
+		LOG_MSG("OPL: Attempting to connect to hardware opl on \"%s\"", oplhw_path.c_str());
+		oplhw_dev = oplhw_OpenDevice(oplhw_path.c_str());
+		if (oplhw_dev) {
+			if (!oplhw_IsOPL3(oplhw_dev) && mode != Mode::Opl2) {
+				LOG_ERR("OPL: Using an OPL2-only hardware device, but requested %s. Falling back to OPL2.", 
+					opl_mode_to_string(mode).c_str());
+			}
+			oplhw_Reset(oplhw_dev);
+		} else {
+			LOG_ERR("OPL: Unable to connect to hardware OPL device \"%s\"", oplhw_path.c_str());
+		}
+	}
+#endif
+
 	const auto dual_opl = mode != Mode::Opl2;
 
 	if (dual_opl)
@@ -964,6 +986,13 @@ OPL::~OPL()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
+
+#ifdef C_OPLHW
+	if (oplhw_dev) {
+		oplhw_Reset(oplhw_dev);
+		oplhw_CloseDevice(oplhw_dev);
+	}
+#endif
 }
 
 void OPL_ShutDown([[maybe_unused]] Section* sec)

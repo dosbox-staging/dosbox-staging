@@ -203,6 +203,7 @@ conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
 conf_data.set10('C_SDL_IMAGE', get_option('use_sdl2_image'))
 conf_data.set10('C_TRACY', get_option('tracy'))
+conf_data.set10('C_OPLHW', get_option('use_oplhw'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
@@ -620,6 +621,17 @@ if get_option('tracy')
     add_project_arguments('-fno-omit-frame-pointer', language: ['c', 'cpp'])
 endif
 
+# OPLHW
+oplhw_dep = optional_dep
+if (get_option('use_oplhw'))
+    oplhw_dep = dependency(
+        'oplhw',
+        static: ('oplhw' in static_libs_list or prefers_static_libs),
+        not_found_message: msg.format('use_oplhw'),
+    )
+endif
+summary('OPLHW support', oplhw_dep.found())
+
 # macOS-only dependencies
 coreaudio_dep = optional_dep
 coremidi_dep = optional_dep
@@ -844,6 +856,7 @@ third_party_deps = [
     tracy_dep,
     libwhereami_dep,
     libtalchorus_dep,
+    oplhw_dep,
 ]
 
 if conf_data.get('C_MANYMOUSE') != 0

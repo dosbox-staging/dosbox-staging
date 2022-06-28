@@ -805,6 +805,10 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("oplemu", deprecated, "");
 	Pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
+	Pstring = secprop->Add_string("oplhw", when_idle, "");
+	Pstring->Set_help("Path to a real OPL2/3 hardware device.\n"
+			  "For example, \"alsa:\", \"opl2lpt:parport0\", or \"retrowave:/dev/ttyACM0\"");
+
 	Pstring = secprop->Add_string("sb_filter", when_idle, "modern");
 	Pstring->Set_help(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"

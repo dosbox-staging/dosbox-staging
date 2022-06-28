@@ -157,6 +157,9 @@
 // Define to 1 to enable ALSA MIDI support
 #mesondefine C_ALSA
 
+// Define to 1 to enable OPL hardware support via liboplhw
+#mesondefine C_OPLHW
+
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during

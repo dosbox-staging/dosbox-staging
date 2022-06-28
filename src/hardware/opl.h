@@ -33,6 +33,9 @@
 #include "hardware.h"
 
 #include "../libs/nuked/opl3.h"
+#ifdef C_OPLHW
+#include "oplhw.h"
+#endif
 
 class Timer {
 public:
@@ -109,6 +112,10 @@ private:
 
 	opl3_chip oplchip = {};
 	uint8_t newm      = 0;
+
+#ifdef C_OPLHW
+	oplhw_device *oplhw_dev = nullptr;
+#endif
 
 	std::unique_ptr<AdlibGold> adlib_gold = {};
 
