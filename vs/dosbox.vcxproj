@@ -138,8 +138,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
-%systemroot%\System32\xcopy "$(VcpkgManifestRoot)\vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\bin\speexdsp.dll" "$(OutDir)libspeexdsp.dll*" /y</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -181,8 +180,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
-%systemroot%\System32\xcopy "$(VcpkgManifestRoot)\vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\bin\speexdsp.dll" "$(OutDir)libspeexdsp.dll*" /y</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -236,8 +234,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
-%systemroot%\System32\xcopy "$(VcpkgManifestRoot)\vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\bin\speexdsp.dll" "$(OutDir)libspeexdsp.dll*" /y</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -292,8 +289,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"
-%systemroot%\System32\xcopy "$(VcpkgManifestRoot)\vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\bin\speexdsp.dll" "$(OutDir)libspeexdsp.dll*" /y</Command>
+      <Command>%systemroot%\System32\robocopy ..\contrib\resources "$(OutDir)resources" /mir /xf "meson.build" "*.sh"</Command>
       <Message>Copy resources to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
