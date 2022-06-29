@@ -135,7 +135,7 @@ struct RawHeader {
 // Table to map the opl register to one <127 for dro saving
 class Capture {
 public:
-	bool DoWrite(const uint32_t reg_full, const uint8_t val)
+	bool DoWrite(const io_port_t reg_full, const uint8_t val)
 	{
 		const auto reg_mask = reg_full & 0xff;
 
@@ -168,12 +168,14 @@ public:
 			}
 			while (passed > 0) {
 				if (passed < 257) { // 1-256 millisecond delay
-					AddBuf(delay256, passed - 1);
+					AddBuf(delay256,
+					       check_cast<uint8_t>(passed - 1));
 					passed = 0;
 				} else {
 					const auto shift = (passed >> 8);
 					passed -= shift << 8;
-					AddBuf(delay_shift8, shift - 1);
+					AddBuf(delay_shift8,
+					       check_cast<uint8_t>(shift - 1));
 				}
 			}
 			AddWrite(reg_full, val);
@@ -273,7 +275,7 @@ private:
 		                        // Percussion Mode / BD/SD/TT/CY/HH On
 
 		// Add the 32 byte range that hold the 18 operators
-		for (int i = 0; i < 24; ++i) {
+		for (uint8_t i = 0; i < 24; ++i) {
 			if ((i & 7) < 6) {
 				MakeEntry(0x20 + i, index); // 20-35: Tremolo /
 				                            // Vibrato / Sustain
@@ -292,7 +294,7 @@ private:
 		}
 
 		// Add the 9 byte range that hold the 9 channels
-		for (int i = 0; i < 9; ++i) {
+		for (uint8_t i = 0; i < 9; ++i) {
 			MakeEntry(0xa0 + i, index); // A0-A8: Frequency Number
 			MakeEntry(0xb0 + i, index); // B0-B8: Key On / Block
 			                            // Number / F-Number(hi
@@ -325,7 +327,7 @@ private:
 		}
 	}
 
-	void AddWrite(const uint32_t reg_full, const uint8_t val)
+	void AddWrite(const io_port_t reg_full, const uint8_t val)
 	{
 		const uint8_t reg_mask = reg_full & 0xff;
 		//  Do some special checks if we're doing opl3 or dualopl2
@@ -411,7 +413,7 @@ private:
 
 Chip::Chip() : timer0(80), timer1(320) {}
 
-bool Chip::Write(const uint32_t reg, const uint8_t val)
+bool Chip::Write(const io_port_t reg, const uint8_t val)
 {
 	// if(reg == 0x02 || reg == 0x03 || reg == 0x04)
 	// LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
@@ -490,17 +492,16 @@ void OPL::Init(const uint16_t sample_rate)
 	}
 }
 
-void OPL::WriteReg(const uint32_t reg, const uint8_t val)
+void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
-	OPL3_WriteRegBuffered(&oplchip, static_cast<uint16_t>(reg), val);
-	if (reg == 0x105)
-		newm = reg & 0x01;
+	OPL3_WriteRegBuffered(&oplchip, selected_reg, val);
+	if (selected_reg == 0x105)
+		newm = selected_reg & 0x01;
 }
 
-uint32_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
+io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 {
-	uint16_t addr;
-	addr = val;
+	io_port_t addr = val;
 	if ((port & 2) && (addr == 0x05 || newm)) {
 		addr |= 0x100;
 	}
@@ -576,7 +577,7 @@ void OPL::AudioCallback(const uint16_t requested_frames)
 		channel->Enable(false);
 }
 
-void OPL::CacheWrite(const uint32_t port, const uint8_t val)
+void OPL::CacheWrite(const io_port_t port, const uint8_t val)
 {
 	// capturing?
 	if (capture)
@@ -607,7 +608,7 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 		val &= 0x0f;
 		val |= index ? 0xA0 : 0x50;
 	}
-	const uint32_t full_port = port + (index ? 0x100 : 0);
+	const auto full_port = check_cast<io_port_t>(port + (index ? 0x100 : 0u));
 	WriteReg(full_port, val);
 	CacheWrite(full_port, val);
 }

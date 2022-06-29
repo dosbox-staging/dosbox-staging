@@ -65,7 +65,7 @@ public:
 	Timer timer1;
 
 	// Check for it being a write to the timer
-	bool Write(const uint32_t addr, const uint8_t val);
+	bool Write(const io_port_t addr, const uint8_t val);
 
 	// Read the current timer state, will use current double
 	uint8_t Read();
@@ -118,7 +118,7 @@ private:
 
 	// Last selected address in the chip for the different modes
 	union {
-		uint32_t normal = 0;
+		uint16_t normal = 0;
 		uint8_t dual[2];
 	} reg = {};
 
@@ -144,9 +144,9 @@ private:
 
 	uint8_t PortRead(const io_port_t port, const io_width_t width);
 
-	uint32_t WriteAddr(const io_port_t port, const uint8_t val);
-	void WriteReg(const uint32_t addr, const uint8_t val);
-	void CacheWrite(const uint32_t reg, const uint8_t val);
+	io_port_t WriteAddr(const io_port_t port, const uint8_t val);
+	void WriteReg(const io_port_t selected_reg, const uint8_t val);
+	void CacheWrite(const io_port_t port, const uint8_t val);
 	void DualWrite(const uint8_t index, const uint8_t reg, const uint8_t value);
 
 	void AdlibGoldControlWrite(const uint8_t val);
