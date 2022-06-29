@@ -18,6 +18,8 @@
 
 #include "dosbox.h"
 
+#include <Tracy.hpp>
+
 #include "pic.h"
 #include "regs.h"
 #include "cpu.h"
@@ -27,7 +29,6 @@
 #include "debug.h"
 #include "inout.h"
 #include "callback.h"
-
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
@@ -62,6 +63,7 @@ typedef PhysPt EAPoint;
 	}
 
 Bits CPU_Core_Full_Run(void) {
+	ZoneScoped
 	FullData inst{};
 	while (CPU_Cycles-->0) {
 #if C_DEBUG

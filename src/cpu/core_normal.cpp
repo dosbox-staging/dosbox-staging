@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 
+#include <Tracy.hpp>
+
 #include "dosbox.h"
 #include "mem.h"
 #include "cpu.h"
@@ -139,6 +141,7 @@ static inline uint32_t Fetchd() {
 #define EALookupTable (core.ea_table)
 
 Bits CPU_Core_Normal_Run(void) {
+	ZoneScoped
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;

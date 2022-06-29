@@ -31,6 +31,8 @@
 #include <chrono>
 #include <thread>
 
+#include <Tracy.hpp>
+
 #include "debug.h"
 #include "cpu.h"
 #include "video.h"
@@ -170,6 +172,7 @@ static Bitu Normal_Loop() {
 }
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
+	ZoneScoped
 	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
 		ticksRemain=5;
 		/* Reset any auto cycle guessing for this frame */
