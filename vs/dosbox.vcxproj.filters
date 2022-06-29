@@ -727,6 +727,9 @@
     <ClCompile Include="..\src\libs\iir1\iir\RBJ.cpp">
       <Filter>src\libs\iir1</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
+    <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
+    <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\bios.h">
@@ -1224,6 +1227,8 @@
     <ClInclude Include="..\src\libs\iir1\iir.h">
       <Filter>src\libs\iir1</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\zmbv\Resource.h" />
+    <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
