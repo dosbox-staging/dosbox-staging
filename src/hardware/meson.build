@@ -70,6 +70,7 @@ libhardware = static_library('hardware', libhardware_sources,
                                sdl2_dep,
                                sdl2_net_dep,
                                speexdsp_dep,
+                               tracy_dep,
                                winsock2_dep,
                                zlib_dep,
                              ])
