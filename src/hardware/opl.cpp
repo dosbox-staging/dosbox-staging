@@ -471,6 +471,8 @@ void OPL::Init(const uint16_t sample_rate)
 	newm = 0;
 	OPL3_Reset(&oplchip, sample_rate);
 
+	ms_per_frame = 1000.0 / sample_rate;
+
 	memset(cache, 0, ARRAY_LEN(cache));
 
 	switch (mode) {
@@ -505,26 +507,73 @@ uint32_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 	return addr;
 }
 
-void OPL::Generate(const mixer_channel_t &chan, const uint16_t frames)
+AudioFrame OPL::RenderFrame()
 {
-	constexpr auto render_frames = 128;
+	static int16_t buf[2] = {};
+	OPL3_GenerateStream(&oplchip, buf, 1);
 
-	int16_t buf[render_frames * 2];
-	float float_buf[render_frames * 2];
-
-	int remaining = frames;
-	while (remaining > 0) {
-		const auto todo = std::min(remaining, render_frames);
-		OPL3_GenerateStream(&oplchip, buf, todo);
-
-		if (adlib_gold) {
-			adlib_gold->Process(buf, todo, float_buf);
-			chan->AddSamples_sfloat(todo, float_buf);
-		} else {
-			chan->AddSamples_s16(todo, buf);
-		}
-		remaining -= todo;
+	AudioFrame frame = {};
+	if (adlib_gold) {
+		adlib_gold->Process(buf, 1, &frame[0]);
+	} else {
+		frame.left  = buf[0];
+		frame.right = buf[1];
 	}
+	return frame;
+}
+
+void OPL::RenderUpToNow()
+{
+	const auto now = PIC_FullIndex();
+
+	// Wake up the channel and update the last rendered time datum.
+	if (!channel->is_enabled) {
+		channel->Enable(true);
+		last_rendered_ms = now;
+		return;
+	}
+	// Keep rendering until we're current
+	while (last_rendered_ms < now) {
+		last_rendered_ms += ms_per_frame;
+		fifo.emplace(RenderFrame());
+	}
+}
+
+bool OPL::ChannelCanSleep()
+{
+	for (auto i = 0xb0; i < 0xb9; ++i)
+		if (cache[i] & 0x20 || cache[i + 0x100] & 0x20)
+			return false;
+	return true;
+}
+
+void OPL::AudioCallback(const uint16_t requested_frames)
+{
+	assert(channel);
+
+	//if (fifo.size())
+	//	LOG_MSG("OPL: Queued %2lu cycle-accurate frames", fifo.size());
+
+	auto frames_remaining = requested_frames;
+
+	// First, send any frames we've queued since the last callback
+	while (frames_remaining && fifo.size()) {
+		channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		fifo.pop();
+		--frames_remaining;
+	}
+	// If the queue's run dry, render the remainder and sync-up our time datum
+	while (frames_remaining) {
+		const auto frame = RenderFrame();
+		channel->AddSamples_sfloat(1, &frame[0]);
+		--frames_remaining;
+	}
+	last_rendered_ms = PIC_FullIndex();
+
+	// Maybe idle the channel if the device has been unused for some time
+	constexpr uint16_t three_seconds_of_callbacks = 3 * 1000;
+	if (++unused_for_ms > three_seconds_of_callbacks && ChannelCanSleep())
+		channel->Enable(false);
 }
 
 void OPL::CacheWrite(const uint32_t port, const uint8_t val)
@@ -595,8 +644,8 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 		if (ctrl.mixer) {
 			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
-			mixer_chan->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
-			                      (float)(ctrl.rvol & 0x1f) / 31.0f);
+			channel->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
+			                   (float)(ctrl.rvol & 0x1f) / 31.0f);
 		}
 		break;
 
@@ -626,13 +675,11 @@ uint8_t OPL::AdlibGoldControlRead()
 
 void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
 {
-	const auto val = check_cast<uint8_t>(value);
-	// Keep track of last write time
-	lastUsed = PIC_Ticks;
+	unused_for_ms = 0;
 
-	// Maybe only enable with a keyon?
-	if (!mixer_chan->is_enabled)
-		mixer_chan->Enable(true);
+	RenderUpToNow();
+
+	const auto val = check_cast<uint8_t>(value);
 
 	if (port & 1) {
 		switch (mode) {
@@ -753,23 +800,6 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	return 0;
 }
 
-static void OPL_CallBack(const uint16_t len)
-{
-	opl->Generate(opl->mixer_chan, len);
-
-	// Disable the sound generation after 30 seconds of silence
-	if ((PIC_Ticks - opl->lastUsed) > 30'000) {
-		uint8_t i;
-		for (i = 0xb0; i < 0xb9; ++i)
-			if (opl->cache[i] & 0x20 || opl->cache[i + 0x100] & 0x20)
-				break;
-		if (i == 0xb9)
-			opl->mixer_chan->Enable(false);
-		else
-			opl->lastUsed = PIC_Ticks;
-	}
-}
-
 // Save the current state of the operators as instruments in an Reality AdLib
 // Tracker (RAD) file
 #if 0
@@ -872,13 +902,18 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	if (dual_opl)
 		channel_features.emplace(ChannelFeature::Stereo);
 
-	mixer_chan = MIXER_AddChannel(OPL_CallBack, 0, "FM", channel_features);
+	const auto mixer_callback = std::bind(&OPL::AudioCallback,
+	                                      this,
+	                                      std::placeholders::_1);
+
+	// Register the Audio channel
+	channel = MIXER_AddChannel(mixer_callback, 0, "FM", channel_features);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
-	mixer_chan->SetScale(1.5f);
+	channel->SetScale(1.5f);
 
-	Init(mixer_chan->GetSampleRate());
+	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 
 	using namespace std::placeholders;
 

@@ -19,8 +19,12 @@
 #ifndef DOSBOX_OPL_H
 #define DOSBOX_OPL_H
 
-#include "adlib_gold.h"
 #include "dosbox.h"
+
+#include <cmath>
+#include <queue>
+
+#include "adlib_gold.h"
 #include "mixer.h"
 #include "inout.h"
 #include "setup.h"
@@ -28,8 +32,6 @@
 #include "hardware.h"
 
 #include "../libs/nuked/opl3.h"
-
-#include <cmath>
 
 class Timer {
 public:
@@ -79,10 +81,7 @@ enum class Mode { Opl2, DualOpl2, Opl3, Opl3Gold };
 
 class OPL {
 public:
-	mixer_channel_t mixer_chan = {};
-
-	// Ticks when adlib was last used to turn of mixing after a few second
-	uint32_t lastUsed = 0;
+	mixer_channel_t channel = {};
 
 	RegisterCache cache = {};
 
@@ -90,8 +89,6 @@ public:
 
 	OPL(Section *configuration, const OplMode _oplmode);
 	~OPL();
-
-	void Generate(const mixer_channel_t &chan, const uint16_t frames);
 
 	// prevent copy
 	OPL(const OPL &) = delete;
@@ -103,6 +100,8 @@ private:
 	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[3];
 
+	std::queue<AudioFrame> fifo = {};
+
 	Mode mode = {};
 
 	Chip chip[2] = {};
@@ -111,6 +110,11 @@ private:
 	uint8_t newm      = 0;
 
 	std::unique_ptr<AdlibGold> adlib_gold = {};
+
+	// Playback related
+	double last_rendered_ms = 0.0;
+	double ms_per_frame     = 0.0;
+	uint16_t unused_for_ms  = 0;
 
 	// Last selected address in the chip for the different modes
 	union {
@@ -129,6 +133,11 @@ private:
 	} ctrl = {};
 
 	void Init(const uint16_t sample_rate);
+
+	void AudioCallback(const uint16_t frames);
+	bool ChannelCanSleep();
+	AudioFrame RenderFrame();
+	void RenderUpToNow();
 
 	void PortWrite(const io_port_t port, const io_val_t value,
 	               const io_width_t width);
