@@ -16,6 +16,9 @@ option('use_png', type : 'boolean', value : true,
 option('use_slirp', type : 'boolean', value : true,
        description : 'Enable Ethernet emulation using Libslirp')
 
+option('tracy', type : 'boolean', value : false,
+       description : 'Enable profiling using Tracy')
+
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
 #
@@ -53,6 +56,7 @@ option('try_static_libs',
            'sdl2_net',
            'slirp',
            'speexdsp',
+           'tracy',
            'zlib'],
        value : [],
        description : 'Attempt to statically link selected libraries.'
