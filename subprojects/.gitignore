@@ -6,4 +6,5 @@ libslirp-*
 munt-libmt32emu*
 packagecache
 pcre*
+tracy-*
 zlib*
