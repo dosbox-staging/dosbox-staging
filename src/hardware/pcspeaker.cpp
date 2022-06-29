@@ -42,7 +42,7 @@ void PCSPEAKER_Init(Section *section)
 
 	// Get the user's PC Speaker model choice
 	const auto model_choice = std::string_view(prop->Get_string("pcspeaker"));
-	if (model_choice == "none")
+	if (model_choice == "none" || model_choice == "off")
 		return;
 	else if (model_choice == "discrete")
 		pc_speaker = std::make_unique<PcSpeakerDiscrete>();

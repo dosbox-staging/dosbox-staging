@@ -828,16 +828,16 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 
-	const char *pcspeaker_models[] = {"discrete", "impulse", "none", 0};
+	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", 0};
 	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
 	pstring->Set_help(
 	        "PC speaker emulation model:\n"
 	        "  discrete: Waveform is created using discrete steps (default).\n"
-	        "            Work well for game that use RealSound-type effects.\n"
+	        "            Works well for games that use RealSound-type effects.\n"
 	        "  impulse:  Waveform is created using sinc impulses.\n"
 	        "            Recommended for square-wave games, like Commander Keen.\n"
-	        "            Higher accuracy but also higher host CPU usage.\n"
-	        "  none:     Disable the PC Speaker.");
+	        "            While improving accuracy, it is more CPU intensive.\n"
+	        "  none/off: Don't use the PC Speaker.");
 	pstring->Set_values(pcspeaker_models);
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
