@@ -1,7 +1,7 @@
-# This file uses configuration options available in clang-format 8.0.
+# This file uses configuration options available in clang-format 12.0.
 #
 # More detailed description of all options:
-# https://releases.llvm.org/9.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+# https://releases.llvm.org/12.0.0/tools/clang/docs/ClangFormatStyleOptions.html
 #
 # Note that version of clang-format provided by your distribution might be
 # newer and provide additional options, that won't work in 8.x.
@@ -40,7 +40,7 @@ AccessModifierOffset: -8
 #
 AlignAfterOpenBracket: Align
 
-# If true, aligns consecutive C/C++ preprocessor macros.
+# If Consecutive, aligns consecutive C/C++ preprocessor macros.
 #
 # This will align the C/C++ preprocessor macros of consecutive lines. This will
 # result in formattings like
@@ -51,7 +51,7 @@ AlignAfterOpenBracket: Align
 # #define foo(x)           (x * x)
 # #define bar(y, z)        (y + z)
 #
-AlignConsecutiveMacros: true
+AlignConsecutiveMacros: Consecutive
 
 # Don't align backslash character in macros, as it's unexpected during review
 # and does not look right when user changes the tab size character in their editor.
@@ -69,16 +69,7 @@ AlignEscapedNewlines: DontAlign
 #    SIX   = 6,
 #    SEVEN = 7
 # };
-AlignConsecutiveAssignments: true
-
-##
-#  If set to Left, backslashes are aligned and pushed to the left:
-#   #define A   \
-#     int aaaa; \
-#     int b;    \
-#     int dddddddddd;
-#
-AlignEscapedNewlinesLeft: false
+AlignConsecutiveAssignments: Consecutive
 
 ##
 #  the operator is un-indented so that the wrapped operand is aligned with the operand on the first line.
@@ -213,7 +204,7 @@ AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: false
-  AfterControlStatement: false
+  AfterControlStatement: Never
   AfterEnum: false
   AfterFunction: true
   AfterNamespace: false
@@ -380,4 +371,4 @@ PenaltyReturnTypeOnItsOwnLine: 200
 #
 # See https://github.com/dosbox-staging/dosbox-staging/issues/196 for details.
 #
-SortIncludes: false
+SortIncludes: Never
