@@ -52,7 +52,7 @@ void Filter8580::updatedCenterFrequency()
             {
                 wl += dacWL;
             }
-            dacWL *= 2;
+            dacWL *= 2.;
         }
     }
     else
