@@ -97,6 +97,7 @@ int convolve(const short* a, const short* b, int bLength)
 
     const uintptr_t offset = (uintptr_t)(a) & 0x0f;
 
+    // check for aligned accesses
     if (offset == ((uintptr_t)(b) & 0x0f))
     {
         if (offset)
@@ -336,7 +337,9 @@ SincResampler::SincResampler(double clockFrequency, double samplingFrequency, do
         // Calculate the sinc tables.
         const double scale = 32768.0 * wc / cyclesPerSampleD / M_PI;
 
-        const double firN_2 = static_cast<double>(firN / 2);
+        // we're not interested in the fractional part
+        // so use int division before converting to double
+        const auto firN_2 = static_cast<double>(firN / 2);
 
         for (int i = 0; i < firRES; i++)
         {
