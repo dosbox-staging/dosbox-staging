@@ -53,6 +53,40 @@ Heavy debugger:
 
 Then perform a release build.
 
+## Make a build with profiling enabled
+
+Staging includes the [Tracy](https://github.com/wolfpld/tracy) profiler, which
+is disabled by default. To enable it for Meson builds, set the `tracy` option
+to `true`:
+
+``` shell
+# enable Tracy profiling
+meson setup -Dbuildtype=release -Dtracy=true build/release-tracy
+# build
+ninja -C build/release-tracy
+```
+
+If using Visual Studio, select the `Tracy` build configuration.
+
+We have instrumented a very small core of subsystem functions for baseline 
+demonstration purposes. You can add additional profiling macros to your functions
+of interest.
+
+The resulting binary requires the Tracy profiler server to view profiling
+data. If using Meson on a *nix system, switch to 
+`subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
+
+If using Windows, binaries are available from the [releases](https://github.com/wolfpld/tracy/releases)
+page, or you can build it locally with Visual Studio using the solution at
+`subprojects/tracy.x.x.x.x/profiler/build/win32/Tracy.sln`
+
+Start the instrumented Staging binary, then start the server. You should see
+Staging as an available client for Connect.
+
+You can also run the server on a different machine on the network, even on a 
+different platform, profiling Linux from Windows or vice versa, for example.
+
+Please refer to the Tracy documentation for further information.
 
 ## Meson build snippets
 
