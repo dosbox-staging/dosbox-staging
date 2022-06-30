@@ -47,6 +47,8 @@
 #include <SDL_opengl.h>
 #endif
 
+#include <Tracy.hpp>
+
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
@@ -2318,6 +2320,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		break;
 	}
 	sdl.updating = false;
+	FrameMark
 }
 
 // Texture update and presentation

@@ -23,7 +23,7 @@ project('dosbox-staging', 'c', 'cpp',
     'glib:xattr=false',
     'gtest:warning_level=0',
     'mt32emu:warning_level=0',
-    'slirp:warning_level=0',
+    'slirp:warning_level=0'
   ]
 )
 
@@ -340,6 +340,14 @@ if get_option('use_png')
                        not_found_message : msg.format('use_png'))
 endif
 
+tracy_proj = subproject('tracy')
+tracy_dep = tracy_proj.get_variable('tracy_dep')
+
+if get_option('tracy')
+  add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
+  add_project_arguments('-g', language : ['c','cpp'])
+  add_project_arguments('-fno-omit-frame-pointer', language : ['c','cpp'])
+endif
 # macOS-only dependencies
 #
 if host_machine.system() == 'darwin'
@@ -464,6 +472,7 @@ third_party_deps = [atomic_dep,
                     libghc_dep,
                     libloguru_dep,
                     libsdlcd_dep,
+                    tracy_dep,
                     libwhereami_dep]
 
 # A list of DOSBox's internal libraries populated

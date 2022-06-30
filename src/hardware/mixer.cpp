@@ -44,6 +44,7 @@
 
 #include <SDL.h>
 #include <speex/speex_resampler.h>
+#include <Tracy.hpp>
 
 #include "ansi_code_markup.h"
 #include "control.h"
@@ -1144,6 +1145,7 @@ static void MIXER_Mix_NoSound()
 static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
                                    Uint8 *stream, int len)
 {
+	ZoneScoped
 	memset(stream, 0, len);
 
 	auto frames_requested = len / mixer_frame_size;

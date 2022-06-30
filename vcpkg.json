@@ -11,6 +11,7 @@
         "opusfile",
         "fluidsynth",
         "gtest",
-        "speexdsp"
+        "speexdsp",
+        "tracy"
     ]
 }

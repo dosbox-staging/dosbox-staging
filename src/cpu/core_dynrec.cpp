@@ -40,6 +40,8 @@
 
 #endif // HAVE_MPROTECT
 
+#include <Tracy.hpp>
+
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"
@@ -208,6 +210,7 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 */
 
 Bits CPU_Core_Dynrec_Run(void) {
+	ZoneScoped
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;
