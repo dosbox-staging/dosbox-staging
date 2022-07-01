@@ -913,7 +913,14 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
-	channel->SetVolumeScale(1.5f);
+	//
+	// Please don't touch this value *EVER* again as many people fine-tune
+	// their mixer volumes per game, so changing this would break their
+	// settings. The value cannot be "improved"; there's simply no
+	// universally "good" setting that would work well in all games in
+	// existence.
+	constexpr auto opl_volume_scale_factor = 1.5f;
+	mixer_chan->SetVolumeScale(opl_volume_scale_factor);
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 
