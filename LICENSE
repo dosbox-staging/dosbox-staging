@@ -1,0 +1,84 @@
+DOSBox Staging License
+----------------------
+
+The DOSBox Staging project is a fork of the DOSBox project, and as
+such, all works derived from the DOSBox project carry the same
+license terms as granted by the DOSBox authors, which is the "GNU
+General Public License version 2 or later" (GPL-2.0-or-later).
+
+Original works authored by the DOSBox Staging team are also
+licensed under the GPL-2.0-or-later terms to maximize portability
+of code with both upstream and other DOSBox forks.
+
+Most third party libraries used by Staging are licensed under the
+GPL-2.0-or-later terms, however there are some exceptions:
+
+- MAME's Philips SAA1099 and Texas Instruments SN76489 emulators,
+  under the src/hardware/mame directory, are both licensed under
+  the BSD 3-Clause terms.
+
+- MandrakeSoft's National Semiconductor NE2000 emulator, in file
+  src/hardware/ne2000.cpp, which is licensed under the
+  LGPL-2.1-or-later terms.
+
+- Timothy Lottes' has dedicated his CRT-styled scan-line GLSL
+  shader, in file contrib/resources/glshaders/crt-fakelottes-flat.glsl,
+  to the public domain.
+
+- Libraries in src/libs directory, are licensed as follows:
+   - decoders/archive.h, stb.h, and stb_vorbis.h: Public Domain
+   - decoders/dr_flac.h, dr_mp3.h, and dr_wav.h: Public Domain or MIT
+   - decoders/xxhash.h: BSD 2-Clause
+   - enet: MIT
+   - ghc: MIT
+   - gui_tk: GPL-3.0-or-later
+   - iir1: MIT
+   - loguru: Public Domain
+   - PDcurses: Public Domain
+   - whereami: MIT or WTFPL
+   - YM7128B_emu: BSD 2-Clause
+
+The above licenses meet GNU's qualifications for being free
+software (https://www.gnu.org/licenses/license-list.en.html) and
+are compatible with the GNU GPL.
+
+
+Individual Source File Licenses 
+-------------------------------
+
+The license of each individual DOSBox Staging source file can be
+found in the first few lines after "SPDX-License-Identifier". The
+full text for each license can be found in the licenses/
+directory.
+
+Some libraries have their own COPYING or LICENSE file in their
+respective subdirectories, however, when not available, the license
+is described in the source files themselves.
+
+See also https://spdx.org/licenses/ for the full license texts,
+and https://spdx.org/ids for the standardized header format.
+
+
+License Compatibility
+---------------------
+
+As depicted in GNU's license compatibility flow chart [1],
+answered in their frequently asked questions [2], and described
+in each licenses' text, we understand that the following license
+changes are permitted:
+
+ - LGPL-2.1-or-later -> GPL-2.0-or-later -> GPL-3.0-or-later
+
+ - LGPL-3.0-or-later -> GPL-3.0-or-later
+
+Taken as a whole, the compiled binaries of DOSBox Staging project
+are covered by the terms of GPL-3.0-or-later license.
+
+[1] "A Quick Guide to GPLv3", GNU license FAQ website, GNU
+    Organizion, accessed 1 July 2022,
+    https://www.gnu.org/licenses/quick-guide-gplv3.en.html.
+
+[2] "Frequently Asked Questions about the GNU Licenses", GNU
+    license FAQ website, GNU Organizion, accessed 1 July 2022,
+    https://www.gnu.org/licenses/gpl-faq.html#AllCompatibility.
+
