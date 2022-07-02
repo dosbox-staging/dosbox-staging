@@ -328,6 +328,12 @@
     <ClCompile Include="..\src\ints\mouse.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ints\mouse_dos_driver.cpp">
+      <Filter>src\ints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ints\mouse_ps2_bios.cpp">
+      <Filter>src\ints</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ints\mouse_serial.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
@@ -1020,10 +1026,13 @@
     <ClInclude Include="..\src\hardware\serialport\softmodem.h">
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hardware\serialport\softmouse.h">
+    <ClInclude Include="..\src\hardware\serialport\serialmouse.h">
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ints\int10.h">
+      <Filter>src\ints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ints\mouse_core.h">
       <Filter>src\ints</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ints\xms.h">

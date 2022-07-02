@@ -1101,11 +1101,11 @@ static void NewMouseScreenParams()
 {
 	int abs_x, abs_y;
 	SDL_GetMouseState(&abs_x, &abs_y);
+	abs_x = std::clamp(abs_x, 0, static_cast<int>(UINT16_MAX));
+	abs_y =	std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
 
-	MOUSE_NewScreenParams(sdl.clip.x,
-	                      sdl.clip.y,
-	                      sdl.clip.w,
-	                      sdl.clip.h,
+	MOUSE_NewScreenParams(sdl.clip.x, sdl.clip.y,
+	                      sdl.clip.w, sdl.clip.h,
 	                      sdl.desktop.fullscreen,
 	                      check_cast<uint16_t>(abs_x),
 	                      check_cast<uint16_t>(abs_y));
@@ -2133,7 +2133,7 @@ static void FocusInput()
  *  Assesses the following:
  *   - current window size (full or not),
  *   - mouse capture state (yes or no),
- *   - whether VMware mouse driver is running,
+ *   - whether VMware type mouse driver is running,
  *   - desired capture type (start, click, seamless), and
  *   - if we're starting up for the first time,
  *  to determine if the mouse-capture state should be toggled.
@@ -2143,44 +2143,38 @@ static void FocusInput()
  */
 void GFX_UpdateMouseState()
 {
-	// This function is only be run when the window is shown or has focus
-	sdl.mouse.has_focus = true;
+	// Don't change anything if we do not have focus
+	if (!sdl.mouse.has_focus)
+		return;
 
 	// Used below
 	static bool has_run_once = false;
 
-	/*
-	 *  We've switched to or started in fullscreen, so capture the mouse
-	 *  This is valid for all modes except for nomouse.
-	 */
+	// We've switched to or started in fullscreen, so capture the mouse
+	// This is valid for all modes except for nomouse
 	if (sdl.desktop.fullscreen && !mouse_is_captured &&
 	    sdl.mouse.control_choice != NoMouse) {
 		GFX_ToggleMouseCapture();
 
-		/*
-		 * If we've switched-back from fullscreen, then release the
-		 * mouse if it is controlled by a VMware compatible driver or
-		 * it's auto-captured (but not manually requested) and
-		 * in seamless-mode.
-		 */
+	// If we've switched-back from fullscreen, then release the
+	// mouse if it is controlled by a VMware type driver or
+	// it's auto-captured (but not manually requested) and
+	// in seamless-mode
 	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
-	           (mouse_vmware || (!mouse_capture_requested &&
-	                             sdl.mouse.control_choice == Seamless))) {
+	           (mouse_seamless_driver || (!mouse_capture_requested && sdl.mouse.control_choice == Seamless))) {
 		GFX_ToggleMouseCapture();
 		SDL_ShowCursor(SDL_DISABLE);
 
-		/*
-		 *  If none of the above are true /and/ we're starting
-		 *  up the first time, then:
-		 *  - Capture the mouse if configured onstart is set.
-		 *  - Hide the mouse if seamless or nomouse are set.
-		 *  - Also hide if it is handled by a VMware compatible driver.
-		 */
+	// If none of the above are true /and/ we're starting
+	// up the first time, then:
+	// - Capture the mouse if configured onstart is set
+	// - Hide the mouse if seamless or nomouse are set
+	// - Also hide if it is handled by a VMware type driver
 	} else if (!has_run_once) {
 		if (sdl.mouse.control_choice == CaptureOnStart) {
 			SDL_RaiseWindow(sdl.window);
 			toggle_mouse_capture_from_user(true);
-		} else if (mouse_vmware ||
+		} else if (mouse_seamless_driver ||
 		           (sdl.mouse.control_choice & (Seamless | NoMouse))) {
 			SDL_ShowCursor(SDL_DISABLE);
 		}
@@ -3531,13 +3525,17 @@ static void GUI_StartUp(Section *sec)
 
 		// Apply the user's mouse sensitivity settings
 		Prop_multival *p3 = section->Get_multival("sensitivity");
-		MOUSE_SetSensitivity(p3->GetSection()->Get_int("xsens"),
-		                     p3->GetSection()->Get_int("ysens"));
+		sdl.mouse.xsensitivity = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
+		sdl.mouse.ysensitivity = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
 
 		// Apply raw mouse input setting
+		const auto raw_mouse_input = section->Get_bool("raw_mouse_input");
 		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-		                        section->Get_bool("raw_mouse_input") ? "0" : "1",
+		                        raw_mouse_input ? "0" : "1",
 		                        SDL_HINT_OVERRIDE);
+
+		// Notify mouse emulation routines about the configuration
+		MOUSE_SetConfig(raw_mouse_input);
 	}
 	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
@@ -3567,13 +3565,12 @@ static void GUI_StartUp(Section *sec)
 
 static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 {
-	if (mouse_vmware || mouse_is_captured ||
+	if (mouse_seamless_driver || mouse_is_captured ||
 	    sdl.mouse.control_choice == Seamless)
-		MOUSE_EventMoved(check_cast<int16_t>(motion->xrel),
-		                 check_cast<int16_t>(motion->yrel),
+		MOUSE_EventMoved(static_cast<float>(motion->xrel) * sdl.mouse.xsensitivity,
+		                 static_cast<float>(motion->yrel) * sdl.mouse.ysensitivity,
 		                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
-		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)),
-		                 mouse_is_captured);
+		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)));
 }
 
 static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
@@ -3582,35 +3579,51 @@ static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 	MOUSE_EventWheel(check_cast<int16_t>(tmp));
 }
 
-static void HandleMouseButton(SDL_MouseButtonEvent * button) {
-	switch (button->state) {
-	case SDL_PRESSED:
-		if (!sdl.desktop.fullscreen && !mouse_vmware &&
-		    ((sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick) &&
-		      !mouse_is_captured) ||
-		     (sdl.mouse.control_choice != NoMouse && sdl.mouse.middle_will_release &&
-		      button->button == SDL_BUTTON_MIDDLE))) {
-			toggle_mouse_capture_from_user(true);
-			break; // Don't pass click to mouse handler
-		}
-		switch (button->button) {
+static void HandleMouseButton(SDL_MouseButtonEvent * button)
+{
+    auto notify_pressed = [](uint8_t button) {
+		switch (button) {
 		case SDL_BUTTON_LEFT:   MOUSE_EventPressed(0); break;
 		case SDL_BUTTON_RIGHT:  MOUSE_EventPressed(1); break;
 		case SDL_BUTTON_MIDDLE: MOUSE_EventPressed(2); break;
 		case SDL_BUTTON_X1:     MOUSE_EventPressed(3); break;
 		case SDL_BUTTON_X2:     MOUSE_EventPressed(4); break;
 		}
-		break;
-	case SDL_RELEASED:
-		switch (button->button) {
+	};
+
+    auto notify_released = [](uint8_t button) {
+		switch (button) {
 		case SDL_BUTTON_LEFT:   MOUSE_EventReleased(0); break;
 		case SDL_BUTTON_RIGHT:  MOUSE_EventReleased(1); break;
 		case SDL_BUTTON_MIDDLE: MOUSE_EventReleased(2); break;
 		case SDL_BUTTON_X1:     MOUSE_EventReleased(3); break;
 		case SDL_BUTTON_X2:     MOUSE_EventReleased(4); break;
 		}
-		break;
+	};
+	
+	if (button->state == SDL_RELEASED) {
+		notify_released(button->button);
+		return;
 	}
+	
+	assert(button->state == SDL_PRESSED);
+	
+	if (sdl.desktop.fullscreen || mouse_seamless_driver) {
+		notify_pressed(button->button);
+		return;
+	}
+
+	if (!mouse_is_captured && (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick))) {
+		toggle_mouse_capture_from_user(true);
+		return; // Don't pass click to mouse handler
+	}
+
+	if (button->button == SDL_BUTTON_MIDDLE && sdl.mouse.control_choice != NoMouse) {
+		toggle_mouse_capture_from_user(true);
+		return; // Don't pass click to mouse handler
+	}
+
+	notify_pressed(button->button);
 }
 
 void GFX_LosingFocus()
@@ -3809,6 +3822,7 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
+				sdl.mouse.has_focus = true;
 				GFX_UpdateMouseState();
 
 				ApplyActiveSettings();
