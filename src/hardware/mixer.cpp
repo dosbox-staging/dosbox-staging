@@ -194,7 +194,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 
 	const std::string crossfeed_pref = sect->Get_string("crossfeed");
 	if (crossfeed_pref == "on") {
-		constexpr auto default_crossfeed_strength = 0.3f;
+		constexpr auto default_crossfeed_strength = 0.40f;
 		crossfeed = default_crossfeed_strength;
 	} else if (crossfeed_pref == "off") {
 		crossfeed = 0.0f;
@@ -2160,7 +2160,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	string_prop->Set_help(
 	        "Set crossfeed globally on all stereo channels for headphone listening:\n"
 	        "  off:         No crossfeed (default).\n"
-	        "  on:          Enable crossfeed (at strength 30).\n"
+	        "  on:          Enable crossfeed (at strength 40).\n"
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
