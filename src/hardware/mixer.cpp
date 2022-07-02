@@ -190,7 +190,9 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
         : name(_name),
           envelope(_name),
           handler(_handler),
-          features(_features)
+          features(_features),
+          sleeper(*this),
+          do_sleep(HasFeature(ChannelFeature::Sleep))
 {}
 
 bool MixerChannel::HasFeature(const ChannelFeature feature)
@@ -445,6 +447,7 @@ void MixerChannel::Enable(const bool should_enable)
 		next_frame = {0.0f, 0.0f};
 	}
 	is_enabled = should_enable;
+
 	MIXER_UnlockAudioDevice();
 }
 
@@ -514,8 +517,11 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 
 void MixerChannel::Mix(const int frames_requested)
 {
+	if (!is_enabled)
+		return;
+
 	frames_needed = frames_requested;
-	while (is_enabled && frames_needed > frames_done) {
+	while (frames_needed > frames_done) {
 		auto frames_remaining = frames_needed - frames_done;
 		frames_remaining *= freq_add;
 		frames_remaining = (frames_remaining >> FREQ_SHIFT) +
@@ -525,6 +531,8 @@ void MixerChannel::Mix(const int frames_requested)
 		frames_remaining = std::min(frames_remaining, MIXER_BUFSIZE); // avoid overflow
 		handler(check_cast<uint16_t>(frames_remaining));
 	}
+	if (do_sleep)
+		sleeper.MaybeSleep();
 }
 
 void MixerChannel::AddSilence()
@@ -994,6 +1002,63 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame &frame) const
 	return {a.left + b.left, a.right + b.right};
 }
 
+MixerChannel::Sleeper::Sleeper(MixerChannel &c) : channel(c) {}
+
+// If the AudioFrame holds samples with magnitudes larger than 1 (either
+// positive or negative), then this function updates the "accumulated_noise"
+// member integer to evaluate to true (or be non-zero).
+void MixerChannel::Sleeper::Listen(const AudioFrame &frame)
+{
+	// Samples with magnitudes less than 1 (between the -1 and 1 range,
+	// exclusively) are truncated to zero as we consider them "silent
+	// enough". This cast-and-add approach works because our float sample
+	// values span the signed 16-bit integer range (our 0dBFS point is at
+	// INT16.MAX/MIN).
+	accumulated_noise += abs(static_cast<int16_t>(frame.left)) +
+	                     abs(static_cast<int16_t>(frame.right));
+}
+
+void MixerChannel::Sleeper::MaybeSleep()
+{
+	constexpr auto consider_sleeping_after_ms = 250;
+
+	// Not enough time has passed.. try again later
+	if (GetTicksSince(woken_at_ms) < consider_sleeping_after_ms)
+		return;
+
+	// Stay awake if it's been noisy, otherwise we can sleep
+	if (accumulated_noise) {
+		WakeUp();
+	} else {
+		channel.Enable(false);
+		// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
+	}
+}
+
+// Returns true when actually awoken otherwise false if already awake.
+bool MixerChannel::Sleeper::WakeUp()
+{
+	// Always reset for another round of awakeness
+	woken_at_ms = GetTicks();
+	accumulated_noise = 0;
+
+	const auto was_sleeping = !channel.is_enabled;
+	if (was_sleeping) {
+		channel.Enable(true);
+		// LOG_INFO("MIXER: %s woke up", channel.name.c_str());
+	}
+	return was_sleeping;
+}
+
+// Audio devices that use the sleep feature need to wake up the channel whenever
+// they might prepare new samples for it. Typically this is on IO port
+// writes into the card.
+bool MixerChannel::WakeUp()
+{
+	assert(do_sleep);
+	return sleeper.WakeUp();
+}
+
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 {
@@ -1048,10 +1113,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		if (do_crossfeed)
 			frame = ApplyCrossfeed(frame);
 
-		// Mix samples to the master output
-		mixer.work[mixpos][0] += frame.left;
-		mixer.work[mixpos][1] += frame.right;
-
 		if (do_reverb_send) {
 			// Mix samples to the reverb aux buffer, scaled by the
 			// reverb send volume
@@ -1059,11 +1120,17 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
 		}
 
+		if (do_sleep)
+			sleeper.Listen(frame);
+
+		// Mix samples to the master output
+		mixer.work[mixpos][0] += frame.left;
+		mixer.work[mixpos][1] += frame.right;
+
 		++mixpos;
 	}
 	frames_done += out_frames;
 
-	last_samples_were_silence = false;
 	MIXER_UnlockAudioDevice();
 }
 
@@ -1107,8 +1174,14 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 		const auto sample = prev_frame.left +
 		                    ((diff * diff_mul) >> FREQ_SHIFT);
 
-		mixer.work[mixpos][mapped_output_left]  += sample * volume_gain.left;
-		mixer.work[mixpos][mapped_output_right] += sample * volume_gain.right;
+		const AudioFrame frame_with_gain = {sample * volume_gain.left,
+		                                    sample * volume_gain.right};
+		if (do_sleep)
+			sleeper.Listen(frame_with_gain);
+
+		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
+		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
+
 		mixpos++;
 	}
 
