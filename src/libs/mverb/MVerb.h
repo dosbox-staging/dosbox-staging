@@ -91,7 +91,7 @@ public:
         PreviousRightTank = 0.;
         PreDelayTime = 100 * (SampleRate / 1000);
         MixSmooth = EarlyLateSmooth = BandwidthSmooth = DampingSmooth = PredelaySmooth = SizeSmooth = DecaySmooth = DensitySmooth = 0.;
-        ControlRate = SampleRate / 1000;
+        ControlRate = static_cast<int>(SampleRate / 1000);
         ControlRateCounter = 0;
         reset();
     }
@@ -101,15 +101,15 @@ public:
     }
 
     void process(T **inputs, T **outputs, int sampleFrames){
-        T OneOverSampleFrames = 1. / sampleFrames;
+        T OneOverSampleFrames = static_cast<T>(1. / sampleFrames);
         T MixDelta	= (Mix - MixSmooth) * OneOverSampleFrames;
         T EarlyLateDelta = (EarlyMix - EarlyLateSmooth) * OneOverSampleFrames;
-        T BandwidthDelta = (((BandwidthFreq * 18400.) + 100.) - BandwidthSmooth) * OneOverSampleFrames;
-        T DampingDelta = (((DampingFreq * 18400.) + 100.) - DampingSmooth) * OneOverSampleFrames;
-        T PredelayDelta = ((PreDelayTime * 200 * (SampleRate / 1000)) - PredelaySmooth) * OneOverSampleFrames;
-        T SizeDelta	= (Size - SizeSmooth) * OneOverSampleFrames;
-        T DecayDelta = (((0.7995f * Decay) + 0.005) - DecaySmooth) * OneOverSampleFrames;
-        T DensityDelta = (((0.7995f * Density1) + 0.005) - DensitySmooth) * OneOverSampleFrames;
+        T BandwidthDelta = static_cast<T>((((BandwidthFreq * 18400.) + 100.) - BandwidthSmooth) * OneOverSampleFrames);
+        T DampingDelta = static_cast<T>((((DampingFreq * 18400.) + 100.) - DampingSmooth) * OneOverSampleFrames);
+        T PredelayDelta = static_cast<T>(((PreDelayTime * 200 * (SampleRate / 1000)) - PredelaySmooth) * OneOverSampleFrames);
+        T SizeDelta	= static_cast<T>((Size - SizeSmooth) * OneOverSampleFrames);
+        T DecayDelta = static_cast<T>((((0.7995f * Decay) + 0.005) - DecaySmooth) * OneOverSampleFrames);
+        T DensityDelta = static_cast<T>((((0.7995f * Density1) + 0.005) - DensitySmooth) * OneOverSampleFrames);
         for(int i=0;i<sampleFrames;++i){
             T left = inputs[0][i];
             T right = inputs[1][i];
@@ -129,8 +129,8 @@ public:
                 damping[1].Frequency(DampingSmooth);
             }
             ++ControlRateCounter;
-            predelay.SetLength(PredelaySmooth);
-            Density2 = DecaySmooth + 0.15;
+            predelay.SetLength(static_cast<int>(PredelaySmooth));
+            Density2 = static_cast<T>(DecaySmooth + 0.15);
             if (Density2 > 0.5)
                 Density2 = 0.5;
             if (Density2 < 0.25)
@@ -141,22 +141,22 @@ public:
             allpassFourTap[2].SetFeedback(Density1);
             T bandwidthLeft = bandwidthFilter[0](left) ;
             T bandwidthRight = bandwidthFilter[1](right) ;
-            T earlyReflectionsL = earlyReflectionsDelayLine[0] ( bandwidthLeft * 0.5 + bandwidthRight * 0.3 )
+            T earlyReflectionsL = static_cast<T>(earlyReflectionsDelayLine[0] ( bandwidthLeft * 0.5 + bandwidthRight * 0.3 )
                                 + earlyReflectionsDelayLine[0].GetIndex(2) * 0.6
                                 + earlyReflectionsDelayLine[0].GetIndex(3) * 0.4
                                 + earlyReflectionsDelayLine[0].GetIndex(4) * 0.3
                                 + earlyReflectionsDelayLine[0].GetIndex(5) * 0.3
                                 + earlyReflectionsDelayLine[0].GetIndex(6) * 0.1
                                 + earlyReflectionsDelayLine[0].GetIndex(7) * 0.1
-                                + ( bandwidthLeft * 0.4 + bandwidthRight * 0.2 ) * 0.5 ;
-            T earlyReflectionsR = earlyReflectionsDelayLine[1] ( bandwidthLeft * 0.3 + bandwidthRight * 0.5 )
+                                + ( bandwidthLeft * 0.4 + bandwidthRight * 0.2 ) * 0.5);
+            T earlyReflectionsR = static_cast<T>(earlyReflectionsDelayLine[1] ( bandwidthLeft * 0.3 + bandwidthRight * 0.5 )
                                 + earlyReflectionsDelayLine[1].GetIndex(2) * 0.6
                                 + earlyReflectionsDelayLine[1].GetIndex(3) * 0.4
                                 + earlyReflectionsDelayLine[1].GetIndex(4) * 0.3
                                 + earlyReflectionsDelayLine[1].GetIndex(5) * 0.3
                                 + earlyReflectionsDelayLine[1].GetIndex(6) * 0.1
                                 + earlyReflectionsDelayLine[1].GetIndex(7) * 0.1
-                                + ( bandwidthLeft * 0.2 + bandwidthRight * 0.4 ) * 0.5 ;
+                                + ( bandwidthLeft * 0.2 + bandwidthRight * 0.4 ) * 0.5);
             T predelayMonoInput = predelay(( bandwidthRight + bandwidthLeft ) * 0.5f);
             T smearedInput = predelayMonoInput;
             for(int j=0;j<4;j++)
@@ -173,20 +173,20 @@ public:
             rightTank = staticDelayLine[3](rightTank);
             PreviousLeftTank = leftTank * DecaySmooth;
             PreviousRightTank = rightTank * DecaySmooth;
-            T accumulatorL = (0.6*staticDelayLine[2].GetIndex(1))
+            T accumulatorL = static_cast<T>((0.6*staticDelayLine[2].GetIndex(1))
                             +(0.6*staticDelayLine[2].GetIndex(2))
                             -(0.6*allpassFourTap[3].GetIndex(1))
                             +(0.6*staticDelayLine[3].GetIndex(1))
                             -(0.6*staticDelayLine[0].GetIndex(1))
                             -(0.6*allpassFourTap[1].GetIndex(1))
-                            -(0.6*staticDelayLine[1].GetIndex(1));
-            T accumulatorR = (0.6*staticDelayLine[0].GetIndex(2))
+                            -(0.6*staticDelayLine[1].GetIndex(1)));
+            T accumulatorR = static_cast<T>((0.6*staticDelayLine[0].GetIndex(2))
                             +(0.6*staticDelayLine[0].GetIndex(3))
                             -(0.6*allpassFourTap[1].GetIndex(2))
                             +(0.6*staticDelayLine[1].GetIndex(2))
                             -(0.6*staticDelayLine[2].GetIndex(3))
                             -(0.6*allpassFourTap[3].GetIndex(2))
-                            -(0.6*staticDelayLine[3].GetIndex(2));
+                            -(0.6*staticDelayLine[3].GetIndex(2)));
             accumulatorL = ((accumulatorL * EarlyMix) + ((1 - EarlyMix) * earlyReflectionsL));
             accumulatorR = ((accumulatorR * EarlyMix) + ((1 - EarlyMix) * earlyReflectionsR));
             left = ( left + MixSmooth * ( accumulatorL - left ) ) * Gain;
@@ -198,68 +198,68 @@ public:
 
     void reset(){
         ControlRateCounter = 0;
-        bandwidthFilter[0].SetSampleRate (SampleRate );
-        bandwidthFilter[1].SetSampleRate (SampleRate );
+        bandwidthFilter[0].SetSampleRate(SampleRate);
+        bandwidthFilter[1].SetSampleRate(SampleRate);
         bandwidthFilter[0].Reset();
         bandwidthFilter[1].Reset();
-        damping[0].SetSampleRate (SampleRate );
-        damping[1].SetSampleRate (SampleRate );
+        damping[0].SetSampleRate(SampleRate);
+        damping[1].SetSampleRate(SampleRate);
         damping[0].Reset();
         damping[1].Reset();
         predelay.Clear();
-        predelay.SetLength(PreDelayTime);
+        predelay.SetLength(static_cast<int>(PreDelayTime));
         allpass[0].Clear();
         allpass[1].Clear();
         allpass[2].Clear();
         allpass[3].Clear();
-        allpass[0].SetLength (0.0048 * SampleRate);
-        allpass[1].SetLength (0.0036 * SampleRate);
-        allpass[2].SetLength (0.0127 * SampleRate);
-        allpass[3].SetLength (0.0093 * SampleRate);
-        allpass[0].SetFeedback (0.75);
-        allpass[1].SetFeedback (0.75);
-        allpass[2].SetFeedback (0.625);
-        allpass[3].SetFeedback (0.625);
+        allpass[0].SetLength(static_cast<int>(0.0048 * SampleRate));
+        allpass[1].SetLength(static_cast<int>(0.0036 * SampleRate));
+        allpass[2].SetLength(static_cast<int>(0.0127 * SampleRate));
+        allpass[3].SetLength(static_cast<int>(0.0093 * SampleRate));
+        allpass[0].SetFeedback(0.75);
+        allpass[1].SetFeedback(0.75);
+        allpass[2].SetFeedback(0.625);
+        allpass[3].SetFeedback(0.625);
         allpassFourTap[0].Clear();
         allpassFourTap[1].Clear();
         allpassFourTap[2].Clear();
         allpassFourTap[3].Clear();
-        allpassFourTap[0].SetLength(0.020 * SampleRate * Size);
-        allpassFourTap[1].SetLength(0.060 * SampleRate * Size);
-        allpassFourTap[2].SetLength(0.030 * SampleRate * Size);
-        allpassFourTap[3].SetLength(0.089 * SampleRate * Size);
+        allpassFourTap[0].SetLength(static_cast<int>(0.020 * SampleRate * Size));
+        allpassFourTap[1].SetLength(static_cast<int>(0.060 * SampleRate * Size));
+        allpassFourTap[2].SetLength(static_cast<int>(0.030 * SampleRate * Size));
+        allpassFourTap[3].SetLength(static_cast<int>(0.089 * SampleRate * Size));
         allpassFourTap[0].SetFeedback(Density1);
         allpassFourTap[1].SetFeedback(Density2);
         allpassFourTap[2].SetFeedback(Density1);
         allpassFourTap[3].SetFeedback(Density2);
-        allpassFourTap[0].SetIndex(0,0,0,0);
-        allpassFourTap[1].SetIndex(0,0.006 * SampleRate * Size, 0.041 * SampleRate * Size, 0);
-        allpassFourTap[2].SetIndex(0,0,0,0);
-        allpassFourTap[3].SetIndex(0,0.031 * SampleRate * Size, 0.011 * SampleRate * Size, 0);
+        allpassFourTap[0].SetIndex(0, 0, 0, 0);
+        allpassFourTap[1].SetIndex(0, static_cast<int>(0.006 * SampleRate * Size), static_cast<int>(0.041 * SampleRate * Size), 0);
+        allpassFourTap[2].SetIndex(0, 0, 0, 0);
+        allpassFourTap[3].SetIndex(0, static_cast<int>(0.031 * SampleRate * Size), static_cast<int>(0.011 * SampleRate * Size), 0);
         staticDelayLine[0].Clear();
         staticDelayLine[1].Clear();
         staticDelayLine[2].Clear();
         staticDelayLine[3].Clear();
-        staticDelayLine[0].SetLength(0.15 * SampleRate * Size);
-        staticDelayLine[1].SetLength(0.12 * SampleRate * Size);
-        staticDelayLine[2].SetLength(0.14 * SampleRate * Size);
-        staticDelayLine[3].SetLength(0.11 * SampleRate * Size);
-        staticDelayLine[0].SetIndex(0, 0.067 * SampleRate * Size, 0.011 * SampleRate * Size , 0.121 * SampleRate * Size);
-        staticDelayLine[1].SetIndex(0, 0.036 * SampleRate * Size, 0.089 * SampleRate * Size , 0);
-        staticDelayLine[2].SetIndex(0, 0.0089 * SampleRate * Size, 0.099 * SampleRate * Size , 0);
-        staticDelayLine[3].SetIndex(0, 0.067 * SampleRate * Size, 0.0041 * SampleRate * Size , 0);
+        staticDelayLine[0].SetLength(static_cast<int>(0.15 * SampleRate * Size));
+        staticDelayLine[1].SetLength(static_cast<int>(0.12 * SampleRate * Size));
+        staticDelayLine[2].SetLength(static_cast<int>(0.14 * SampleRate * Size));
+        staticDelayLine[3].SetLength(static_cast<int>(0.11 * SampleRate * Size));
+        staticDelayLine[0].SetIndex(0, static_cast<int>(0.067 * SampleRate * Size), static_cast<int>(0.011 * SampleRate * Size), static_cast<int>(0.121 * SampleRate * Size));
+        staticDelayLine[1].SetIndex(0, static_cast<int>(0.036 * SampleRate * Size), static_cast<int>(0.089 * SampleRate * Size), 0);
+        staticDelayLine[2].SetIndex(0, static_cast<int>(0.0089 * SampleRate * Size), static_cast<int>(0.099 * SampleRate * Size), 0);
+        staticDelayLine[3].SetIndex(0, static_cast<int>(0.067 * SampleRate * Size), static_cast<int>(0.0041 * SampleRate * Size), 0);
         earlyReflectionsDelayLine[0].Clear();
         earlyReflectionsDelayLine[1].Clear();
-        earlyReflectionsDelayLine[0].SetLength(0.089 * SampleRate);
-        earlyReflectionsDelayLine[0].SetIndex (0, 0.0199*SampleRate, 0.0219*SampleRate, 0.0354*SampleRate,0.0389*SampleRate, 0.0414*SampleRate, 0.0692*SampleRate, 0);
-        earlyReflectionsDelayLine[1].SetLength(0.069 * SampleRate);
-        earlyReflectionsDelayLine[1].SetIndex (0, 0.0099*SampleRate, 0.011*SampleRate, 0.0182*SampleRate,0.0189*SampleRate, 0.0213*SampleRate, 0.0431*SampleRate, 0);
+        earlyReflectionsDelayLine[0].SetLength(static_cast<int>(0.089 * SampleRate));
+        earlyReflectionsDelayLine[0].SetIndex(0, static_cast<int>(0.0199 * SampleRate), static_cast<int>(0.0219 * SampleRate), static_cast<int>(0.0354 * SampleRate), static_cast<int>(0.0389 * SampleRate), static_cast<int>(0.0414 * SampleRate), static_cast<int>(0.0692 * SampleRate), 0);
+        earlyReflectionsDelayLine[1].SetLength(static_cast<int>(0.069 * SampleRate));
+        earlyReflectionsDelayLine[1].SetIndex(0, static_cast<int>(0.0099 * SampleRate), static_cast<int>(0.011 * SampleRate), static_cast<int>(0.0182 * SampleRate), static_cast<int>(0.0189 * SampleRate), static_cast<int>(0.0213 * SampleRate), static_cast<int>(0.0431 * SampleRate), 0);
     }
 
     void setParameter(int index, T value){
         switch(index){
             case DAMPINGFREQ:
-                    DampingFreq =  1. - value;
+                    DampingFreq = static_cast<T>(1. - value);
                     break;
             case DENSITY:
                     Density1 = value;
@@ -271,29 +271,29 @@ public:
                     PreDelayTime = value;
                     break;
             case SIZE:
-                    Size = (0.95 * value) + 0.05;
+                    Size = static_cast<T>((0.95 * value) + 0.05);
 					allpassFourTap[0].Clear();
 					allpassFourTap[1].Clear();
 					allpassFourTap[2].Clear();
 					allpassFourTap[3].Clear();
-                    allpassFourTap[0].SetLength(0.020 * SampleRate * Size);
-                    allpassFourTap[1].SetLength(0.060 * SampleRate * Size);
-                    allpassFourTap[2].SetLength(0.030 * SampleRate * Size);
-                    allpassFourTap[3].SetLength(0.089 * SampleRate * Size);
-                    allpassFourTap[1].SetIndex(0,0.006 * SampleRate * Size, 0.041 * SampleRate * Size, 0);
-                    allpassFourTap[3].SetIndex(0,0.031 * SampleRate * Size, 0.011 * SampleRate * Size, 0);
+                    allpassFourTap[0].SetLength(static_cast<int>(0.020 * SampleRate * Size));
+                    allpassFourTap[1].SetLength(static_cast<int>(0.060 * SampleRate * Size));
+                    allpassFourTap[2].SetLength(static_cast<int>(0.030 * SampleRate * Size));
+                    allpassFourTap[3].SetLength(static_cast<int>(0.089 * SampleRate * Size));
+                    allpassFourTap[1].SetIndex(0, static_cast<int>(0.006 * SampleRate * Size), static_cast<int>(0.041 * SampleRate * Size), 0);
+                    allpassFourTap[3].SetIndex(0, static_cast<int>(0.031 * SampleRate * Size), static_cast<int>(0.011 * SampleRate * Size), 0);
 					staticDelayLine[0].Clear();
 					staticDelayLine[1].Clear();
 					staticDelayLine[2].Clear();
 					staticDelayLine[3].Clear();
-                    staticDelayLine[0].SetLength(0.15 * SampleRate * Size);
-                    staticDelayLine[1].SetLength(0.12 * SampleRate * Size);
-                    staticDelayLine[2].SetLength(0.14 * SampleRate * Size);
-                    staticDelayLine[3].SetLength(0.11 * SampleRate * Size);
-                    staticDelayLine[0].SetIndex(0, 0.067 * SampleRate * Size, 0.011 * SampleRate * Size , 0.121 * SampleRate * Size);
-                    staticDelayLine[1].SetIndex(0, 0.036 * SampleRate * Size, 0.089 * SampleRate * Size , 0);
-                    staticDelayLine[2].SetIndex(0, 0.0089 * SampleRate * Size, 0.099 * SampleRate * Size , 0);
-                    staticDelayLine[3].SetIndex(0, 0.067 * SampleRate * Size, 0.0041 * SampleRate * Size , 0);
+                    staticDelayLine[0].SetLength(static_cast<int>(0.15 * SampleRate * Size));
+                    staticDelayLine[1].SetLength(static_cast<int>(0.12 * SampleRate * Size));
+                    staticDelayLine[2].SetLength(static_cast<int>(0.14 * SampleRate * Size));
+                    staticDelayLine[3].SetLength(static_cast<int>(0.11 * SampleRate * Size));
+                    staticDelayLine[0].SetIndex(0, static_cast<int>(0.067 * SampleRate * Size), static_cast<int>(0.011 * SampleRate * Size), static_cast<int>(0.121 * SampleRate * Size));
+                    staticDelayLine[1].SetIndex(0, static_cast<int>(0.036 * SampleRate * Size), static_cast<int>(0.089 * SampleRate * Size), 0);
+                    staticDelayLine[2].SetIndex(0, static_cast<int>(0.0089 * SampleRate * Size), static_cast<int>(0.099 * SampleRate * Size), 0);
+                    staticDelayLine[3].SetIndex(0, static_cast<int>(0.067 * SampleRate * Size), static_cast<int>(0.0041 * SampleRate * Size), 0);
                     break;
             case DECAY:
                     Decay = value;
@@ -347,7 +347,7 @@ public:
 
     void setSampleRate(T sr){
         SampleRate = sr;
-        ControlRate = SampleRate / 1000;
+        ControlRate = static_cast<int>(SampleRate / 1000);
         reset();
     }
 };
@@ -815,7 +815,7 @@ template<typename T, int OverSampleCount>
         {
             for(unsigned int i = 0; i < OverSampleCount; i++)
             {
-                low += f * band + 1e-25;
+                low += static_cast<T>(f * band + 1e-25);
                 high = input - low - q * band;
                 band += f * high;
                 notch = low + high;
@@ -874,7 +874,7 @@ template<typename T, int OverSampleCount>
     private:
         void UpdateCoefficient()
         {
-            f = 2. * sinf(3.141592654 * frequency / sampleRate);
+            f = static_cast<T>(2. * sinf(3.141592654 * frequency / sampleRate));
         }
 	};
 #endif
