@@ -608,7 +608,7 @@ void MOUSEDOS_BeforeNewVideoMode()
     state.background = false;
 }
 
-// FIXME: Does way to much. Many things should be moved to mouse reset one day
+// TODO: Does way to much. Many things should be moved to mouse reset one day
 void MOUSEDOS_AfterNewVideoMode(const bool setmode)
 {
     state.inhibit_draw = false;
@@ -677,7 +677,6 @@ void MOUSEDOS_AfterNewVideoMode(const bool setmode)
     MOUSE_NotifyResetDOS();
 }
 
-// FIXME: Much too empty, NewVideoMode contains stuff that should be in here
 static void Reset()
 {
     MOUSEDOS_BeforeNewVideoMode();
@@ -787,7 +786,8 @@ static void MoveCursorSeamless(const float x_rel, const float y_rel,
                         const uint16_t res,
                         const uint16_t clip) {
         assert(res > 1u);
-        return (static_cast<float>(absolute) - clip) / (res - 1);
+        return (static_cast<float>(absolute) - clip) /
+                static_cast<float>(res - 1);
     };
 
     // Apply mouse movement to mimic host OS
@@ -801,8 +801,8 @@ static void MoveCursorSeamless(const float x_rel, const float y_rel,
         pos_x *= real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
         pos_y = y * 8;
         pos_y *= IS_EGAVGA_ARCH
-                       ? (real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
-                       : 25.0f;
+            ? static_cast<float>(real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
+            : 25.0f;
     } else if ((state.maxpos_x < 2048) || (state.maxpos_y < 2048) ||
                (state.maxpos_x != state.maxpos_y)) {
         if ((state.maxpos_x > 0) && (state.maxpos_y > 0)) {
@@ -1143,7 +1143,7 @@ static Bitu INT33_Handler()
         LOG(LOG_MOUSE, LOG_WARN)("Loading driver state...");
         MEM_BlockRead(SegPhys(es) + reg_dx, &state, sizeof(state));
         UpdateDriverActive();
-        // FIXME: we should probably fake an event for mouse movement,
+        // TODO: we should probably fake an event for mouse movement,
         // redraw cursor, etc.
         break;
     case 0x18: // MS MOUSE v6.0+ - set alternate mouse user handler
@@ -1310,10 +1310,10 @@ static Bitu INT33_Handler()
 static uintptr_t MOUSE_BD_Handler()
 {
     // the stack contains offsets to register values
-    uint16_t raxpt = real_readw(SegValue(ss), reg_sp + 0x0a);
-    uint16_t rbxpt = real_readw(SegValue(ss), reg_sp + 0x08);
-    uint16_t rcxpt = real_readw(SegValue(ss), reg_sp + 0x06);
-    uint16_t rdxpt = real_readw(SegValue(ss), reg_sp + 0x04);
+    uint16_t raxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x0a));
+    uint16_t rbxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x08));
+    uint16_t rcxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x06));
+    uint16_t rdxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x04));
 
     // read out the actual values, registers ARE overwritten
     const uint16_t rax = real_readw(SegValue(ds), raxpt);
@@ -1338,9 +1338,9 @@ static uintptr_t MOUSE_BD_Handler()
         break;
     case 0x10: // Define screen region for updating
         reg_cx = real_readw(SegValue(ds), rdxpt);
-        reg_dx = real_readw(SegValue(ds), rdxpt + 2);
-        reg_si = real_readw(SegValue(ds), rdxpt + 4);
-        reg_di = real_readw(SegValue(ds), rdxpt + 6);
+        reg_dx = real_readw(SegValue(ds), static_cast<uint16_t>(rdxpt + 2));
+        reg_si = real_readw(SegValue(ds), static_cast<uint16_t>(rdxpt + 4));
+        reg_di = real_readw(SegValue(ds), static_cast<uint16_t>(rdxpt + 6));
         break;
     default: break;
     }

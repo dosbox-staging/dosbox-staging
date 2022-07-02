@@ -100,8 +100,8 @@ static void MOUSEVMM_Activate()
             // (center of the screen, will trigger mouse move event)
             pos_x    = mouse_video.res_x / 2.0f;
             pos_y    = mouse_video.res_y / 2.0f;
-            scaled_x = 0.0f;
-            scaled_y = 0.0f;
+            scaled_x = 0;
+            scaled_y = 0;
         }
         MOUSEPS2_UpdateButtonSquish();
         MOUSE_NotifyStateChanged();

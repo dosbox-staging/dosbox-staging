@@ -169,14 +169,14 @@ static float GetScaledValue(const float x)
 
 static int16_t GetScaledMovement(const float d)
 {
-    if (iszero(d))
-        return 0;
+    if (!std::isnormal(d))
+        return 0; // if movement is 0, very near 0, etc.
 
     const auto tmp = static_cast<int32_t>(std::lround(GetScaledValue(d)));
     if (tmp > 0)
-        return static_cast<int16_t>(std::min(tmp, INT16_MAX));
+        return static_cast<int16_t>(std::min(tmp, static_cast<int32_t>(INT16_MAX)));
     else
-        return static_cast<int16_t>(std::max(tmp, INT16_MIN));
+        return static_cast<int16_t>(std::max(tmp, static_cast<int32_t>(INT16_MIN)));
 }
 
 static void ResetCounters()
@@ -370,7 +370,9 @@ bool MOUSEPS2_NotifyWheel(const int16_t w_rel)
         return false;
 #endif
 
-    wheel = static_cast<int8_t>(std::clamp(w_rel + wheel, INT8_MIN, INT8_MAX));
+    wheel = static_cast<int8_t>(std::clamp(static_cast<int32_t>(w_rel + wheel),
+                                           static_cast<int32_t>(INT8_MIN),
+                                           static_cast<int32_t>(INT8_MAX)));
     return true;
 }
 

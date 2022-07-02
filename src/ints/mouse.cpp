@@ -21,6 +21,7 @@
 #include "mouse_core.h"
 
 #include <algorithm>
+#include <array>
 
 #include "callback.h"
 #include "checks.h"
@@ -343,10 +344,10 @@ void MouseQueue::AggregateEventsDOS(MouseEvent &event)
     // events now)
     if (event.mask & aggr_mask_pressed)
         // Set 'pressed+released' for every 'pressed' bit
-        event.aggr_mask = event.mask | (event.mask << 1);
+        event.aggr_mask = static_cast<uint8_t>(event.mask | (event.mask << 1));
     else if (event.mask & aggr_mask_released)
         // Set 'pressed+released' for every 'released' bit
-        event.aggr_mask = event.mask | (event.mask >> 1);
+        event.aggr_mask = static_cast<uint8_t>(event.mask | (event.mask >> 1));
 
     // If no button events in the queue, skip further processing
     if (!num_events)
