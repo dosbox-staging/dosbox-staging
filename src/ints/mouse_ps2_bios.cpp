@@ -159,24 +159,24 @@ static uint8_t GetResetWheel8bit()
     return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x100 + tmp);
 }
 
-static float GetScaledValue(const float x)
+static int16_t GetScaledMovement(const int16_t d)
 {
     if (!scaling_21)
-        return x;
-    else
-        return x * MOUSE_GetBallisticsCoeff(x) * 2.0f;
-}
+        return d;
 
-static int16_t GetScaledMovement(const float d)
-{
-    if (!std::isnormal(d))
-        return 0; // if movement is 0, very near 0, etc.
-
-    const auto tmp = static_cast<int32_t>(std::lround(GetScaledValue(d)));
-    if (tmp > 0)
-        return static_cast<int16_t>(std::min(tmp, static_cast<int32_t>(INT16_MAX)));
-    else
-        return static_cast<int16_t>(std::max(tmp, static_cast<int32_t>(INT16_MIN)));
+    switch (d) {
+    case -5: return -9;
+    case -4: return -6;
+    case -3: return -3;
+    case -2: return -1;
+    case -1: return -1;
+    case  1: return  1;
+    case  2: return  1;
+    case  3: return  3;
+    case  4: return  6;
+    case  5: return  9;
+    default: return 2 * d;
+    }
 }
 
 static void ResetCounters()
@@ -344,8 +344,7 @@ bool MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
     delta_x = MOUSE_ClampRelMov(delta_x + x_rel);
     delta_y = MOUSE_ClampRelMov(delta_y + y_rel);
 
-    return (std::fabs(GetScaledValue(delta_x)) >= 0.5f) ||
-           (std::fabs(GetScaledValue(delta_y)) >= 0.5f);
+    return (std::fabs(delta_x) >= 0.5f) || (std::fabs(delta_y) >= 0.5f);
 }
 
 bool MOUSEPS2_NotifyPressedReleased(const MouseButtons12S new_buttons_12S,
