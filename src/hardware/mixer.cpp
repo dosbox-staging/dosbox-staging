@@ -334,7 +334,7 @@ static void configure_reverb()
 	const std::string reverb_pref = sect->Get_string("reverb");
 
 	auto enable_reverb = [&reverb_pref](const ReverbPreset preset) {
-		mixer.reverb.mverb.setSampleRate(mixer.sample_rate);
+		mixer.reverb.mverb.setSampleRate(static_cast<float>(mixer.sample_rate));
 		set_reverb_preset(preset);
 		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
 	};
@@ -802,7 +802,7 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	} else {
 		level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
-		reverb.send_gain = decibel_to_gain(level_db);
+		reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 	}
 
 	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4f, level_db: %.4f, gain: %.4f",
