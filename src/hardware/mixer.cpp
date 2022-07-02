@@ -479,6 +479,16 @@ void MixerChannel::SetVolumeScale(float left, float right)
 	}
 }
 
+static void MIXER_UpdateAllChannelVolumes()
+{
+	MIXER_LockAudioDevice();
+
+	for (auto &it : mixer.channels)
+		it.second->UpdateVolume();
+
+	MIXER_UnlockAudioDevice();
+}
+
 void MixerChannel::ChangeChannelMap(const LINE_INDEX mapped_as_left,
                                     const LINE_INDEX mapped_as_right)
 {
@@ -1698,10 +1708,11 @@ public:
 				ParseVolume(arg, volume);
 
 				curr_chan->SetVolume(volume.left, volume.right);
-				curr_chan->UpdateVolume();
 			}
 		}
 		MIXER_UnlockAudioDevice();
+
+		MIXER_UpdateAllChannelVolumes();
 
 		if (showStatus)
 			ShowMixerStatus();
