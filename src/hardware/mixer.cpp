@@ -1634,7 +1634,7 @@ public:
 		std::vector<std::string> args = {};
 		cmd->FillVector(args);
 
-		mixer_channel_t curr_chan = {};
+		mixer_channel_t channel = {};
 		auto is_master            = false;
 
 		MIXER_LockAudioDevice();
@@ -1643,13 +1643,13 @@ public:
 			// subsequent commands?
 			upcase(arg);
 			if (arg == "MASTER") {
-				curr_chan = nullptr;
+				channel   = nullptr;
 				is_master = true;
 				continue;
 			} else {
 				auto chan = MIXER_FindChannel(arg.c_str());
 				if (chan) {
-					curr_chan = chan;
+					channel   = chan;
 					is_master = false;
 					continue;
 				}
@@ -1668,8 +1668,10 @@ public:
 				return false;
 			};
 
-			if (!is_master && !curr_chan) {
-				// Global commands that apply to all channels
+			const auto global_command = !is_master && !channel;
+
+			if (global_command) {
+				// Global commands apply to all non-master channels
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
 					for (auto &it : mixer.channels) {
@@ -1686,28 +1688,28 @@ public:
 
 			} else if (is_master) {
 				// Only setting the volume is allowed for the
-				// MASTER channel
+				// master channel
 				ParseVolume(arg, mixer.mastervol);
 
-			} else if (curr_chan) {
+			} else if (channel) {
 				// Adjust settings of a regular non-master channel
 				float value = 0.0f;
 				if (parse_prefixed_percentage('X', arg, value)) {
-					curr_chan->SetCrossfeedStrength(value);
+					channel->SetCrossfeedStrength(value);
 					continue;
 				} else if (parse_prefixed_percentage('R', arg, value)) {
 					if (mixer.reverb.enabled)
-						curr_chan->SetReverbLevel(value);
+						channel->SetReverbLevel(value);
 					continue;
 				}
 
-				if (curr_chan->ChangeLineoutMap(arg))
+				if (channel->ChangeLineoutMap(arg))
 					continue;
 
 				AudioFrame volume = {};
 				ParseVolume(arg, volume);
 
-				curr_chan->SetVolume(volume.left, volume.right);
+				channel->SetVolume(volume.left, volume.right);
 			}
 		}
 		MIXER_UnlockAudioDevice();
