@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022       The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -15,7 +16,6 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
 
 #include "dosbox.h"
 #include "mem.h"
@@ -34,12 +34,17 @@
 #include <time.h>
 
 #if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
-//time.h is already included
+// time.h is already included
 #else
 #include <sys/timeb.h>
 #endif
 
-/* if mem_systems 0 then size_extended is reported as the real size else 
+// Reference:
+// - Ralf Brown's Interrupt List
+// - https://www.stanislavs.org/helppc/idx_interrupt.html
+// - http://www2.ift.ulaval.ca/~marchand/ift17583/dosints.pdf
+
+/* if mem_systems 0 then size_extended is reported as the real size else
  * zero is reported. ems and xms can increase or decrease the other_memsystems
  * counter using the BIOS_ZeroExtendedSize call */
 static uint16_t size_extended;
@@ -946,64 +951,84 @@ static Bitu INT15_Handler(void) {
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
 		case 0x00:                      // enable/disable
-			if (reg_bh==0) {	// disable
-				MOUSE_SetPS2State(false);
-				reg_ah=0;
+			if (reg_bh == 0) {      // disable
+				MOUSEBIOS_SetState(false);
+				reg_ah = 0;
 				CALLBACK_SCF(false);
-			} else if (reg_bh==0x01) {	//enable
-				if (!MOUSE_SetPS2State(true)) {
-					reg_ah=5;
+			} else if (reg_bh == 0x01) { // enable
+				if (!MOUSEBIOS_SetState(true)) {
+					reg_ah = 5;
 					CALLBACK_SCF(true);
 					break;
 				}
-				reg_ah=0;
+				reg_ah = 0;
 				CALLBACK_SCF(false);
 			} else {
 				CALLBACK_SCF(true);
-				reg_ah=1;
+				reg_ah = 1;
 			}
 			break;
-		case 0x01:               // reset
+		case 0x01: // reset
+			MOUSEBIOS_Reset();
 			reg_bx = 0x00aa; // mouse
 			[[fallthrough]];
 		case 0x05:		// initialize
-			if ((reg_al==0x05) && (reg_bh!=0x03)) {
-				// non-standard data packet sizes not supported
+			if ((reg_al == 0x05) && !MOUSEBIOS_SetPacketSize(reg_bh)) {
 				CALLBACK_SCF(true);
-				reg_ah=2;
+				reg_ah = 2;
 				break;
 			}
-			MOUSE_SetPS2State(false);
+			MOUSEBIOS_SetState(false);
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
 		case 0x02:		// set sampling rate
-		case 0x03:		// set resolution
+			if (!MOUSEBIOS_SetSampleRate(reg_bh)) {
+				CALLBACK_SCF(true);
+				reg_ah = 2;
+				break;
+			}
+			CALLBACK_SCF(false);
+			reg_ah = 0;
+			break;
+		case 0x03: // set resolution
+			if (!MOUSEBIOS_SetResolution(reg_bh)) {
+				CALLBACK_SCF(true);
+				reg_ah = 2;
+				break;
+			}
+			CALLBACK_SCF(false);
+			reg_ah = 0;
+			break;
+		case 0x04: // get type
+			reg_bh = MOUSEBIOS_GetType();
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
-		case 0x04:		// get type
-			reg_bh=0;	// ID
-			CALLBACK_SCF(false);
-			reg_ah=0;
-			break;
-		case 0x06:		// extended commands
-			if ((reg_bh==0x01) || (reg_bh==0x02)) {
-				CALLBACK_SCF(false); 
-				reg_ah=0;
+		case 0x06: // extended commands
+			if (reg_bh == 0x00) { // get mouse status
+				reg_bx = MOUSEBIOS_GetStatus();
+				reg_cx = MOUSEBIOS_GetResolution();
+				reg_dx = MOUSEBIOS_GetSampleRate();
+				CALLBACK_SCF(false);
+				reg_ah = 0;
+			} else if (reg_bh == 0x01 || reg_bh == 0x02) { // scaling
+				MOUSEBIOS_SetScaling21(reg_bh == 0x02);
+				CALLBACK_SCF(false);
+				reg_ah = 0;
 			} else {
 				CALLBACK_SCF(true);
-				reg_ah=1;
+				reg_ah = 1;
 			}
 			break;
 		case 0x07:		// set callback
-			MOUSE_ChangePS2Callback(SegValue(es), reg_bx);
+			MOUSEBIOS_SetCallback(SegValue(es), reg_bx);
 			CALLBACK_SCF(false);
-			reg_ah=0;
+			reg_ah = 0;
 			break;
 		default:
 			CALLBACK_SCF(true);
-			reg_ah=1;
+			reg_ah = 1;
 			break;
 		}
 		break;
