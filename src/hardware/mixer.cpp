@@ -1799,7 +1799,7 @@ private:
 		                           const std::string &mode,
 		                           const std::string &xfeed,
 		                           const std::string &reverb) {
-			WriteOut("%-21s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s\n",
+			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s\n",
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
@@ -1811,7 +1811,7 @@ private:
 			         reverb.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel     Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb[reset]\n")
+		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb[reset]\n")
 		                 .c_str());
 
 		MIXER_LockAudioDevice();
