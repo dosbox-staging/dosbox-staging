@@ -46,7 +46,7 @@ static MouseButtons345 buttons_345 = 0; // host side buttons 3 (middle), 4, and 
 static bool raw_input = true; // true = relative input is raw data, without
                               // host OS mouse acceleration applied
 
-static uintptr_t int74_ret_callback = 0;
+static Bitu int74_ret_callback = 0;
 
 // ***************************************************************************
 // Debug code, normally not enabled
@@ -305,7 +305,8 @@ void MouseQueue::AddEvent(MouseEvent &event)
             queue_overflow  = true;
         } else {
             // Button press/release - put into the queue
-            const auto idx = (idx_first + num_events++) % events.size();
+            const auto idx = static_cast<uint8_t>(idx_first + num_events++) %
+                events.size();
             event.buttons_12S.data = GetButtonsSquished().data;
             events[idx]            = event;
         }
@@ -354,7 +355,8 @@ void MouseQueue::AggregateEventsDOS(MouseEvent &event)
         return;
 
     // Try to aggregate with the last queue event
-    auto &last_event = events[(idx_first + num_events) % events.size()];
+    auto &last_event = events[static_cast<uint8_t>(idx_first + num_events) % 
+        events.size()];
     if (GCC_UNLIKELY(last_event.aggr_mask & event.aggr_mask))
         return; // no aggregation possible
 
@@ -594,7 +596,7 @@ float MOUSE_ClampRelMov(const float rel)
 // Interrupt 74 implementation
 // ***************************************************************************
 
-static uintptr_t INT74_Exit()
+static Bitu INT74_Exit()
 {
     SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
     reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
@@ -602,7 +604,7 @@ static uintptr_t INT74_Exit()
     return CBRET_NONE;
 }
 
-static uintptr_t INT74_Handler()
+static Bitu INT74_Handler()
 {
     MouseEvent event;
     queue.FetchEvent(event);
@@ -627,7 +629,7 @@ static uintptr_t INT74_Handler()
             return INT74_Exit();
 
         CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
-        CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)) + 7);
+        CPU_Push16(RealOff(static_cast<RealPt>(CALLBACK_RealPointer(int74_ret_callback)) + 7));
 
         DEBUG_QUEUE("INT74: %s", "DOS");
         return MOUSEDOS_DoCallback(event.mask, event.buttons_12S);
@@ -647,7 +649,7 @@ static uintptr_t INT74_Handler()
     return INT74_Exit();
 }
 
-uintptr_t INT74_Ret_Handler()
+Bitu INT74_Ret_Handler()
 {
     queue.StartTimerIfNeeded();
     return CBRET_NONE;

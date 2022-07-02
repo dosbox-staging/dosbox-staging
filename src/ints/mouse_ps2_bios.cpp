@@ -175,7 +175,7 @@ static int16_t GetScaledMovement(const int16_t d)
     case  3: return  3;
     case  4: return  6;
     case  5: return  9;
-    default: return 2 * d;
+    default: return static_cast<int16_t>(2 * d);
     }
 }
 
@@ -211,7 +211,7 @@ void MOUSEPS2_UpdatePacket()
     delta_y -= dy;
 
     dx = GetScaledMovement(dx);
-    dy = GetScaledMovement(-dy);
+    dy = GetScaledMovement(static_cast<int16_t>(-dy));
 
 #ifdef ENABLE_EXPLORER_MOUSE
     if (type == MouseType::Explorer) {
@@ -234,13 +234,13 @@ void MOUSEPS2_UpdatePacket()
 
     dx %= 0x100;
     if (dx < 0) {
-        dx += 0x100;
+        dx = static_cast<int16_t>(dx + 0x100);
         mdat.sign_x = 1;
     }
 
     dy %= 0x100;
     if (dy < 0) {
-        dy += 0x100;
+        dy = static_cast<int16_t>(dy + 0x100);
         mdat.sign_y = 1;
     }
 
@@ -296,11 +296,11 @@ static void CmdSetSampleRate(const uint8_t new_rate_hz)
     // Handle extended mouse protocol unlock sequences
     auto unlock = [](const std::vector<uint8_t> &sequence,
                      uint8_t &idx,
-                     const MouseType type) {
+                     const MouseType potential_type) {
         if (sequence[idx] != rate_hz)
             idx = 0;
         else if (sequence.size() == ++idx) {
-            SetType(type);
+            SetType(potential_type);
         }
     };
 

@@ -242,10 +242,10 @@ void DrawCursorText()
     }
 
     // Save Background
-    state.backposx = x >> 3;
-    state.backposy = y >> 3;
+    state.backposx = static_cast<uint16_t>(x >> 3);
+    state.backposy = static_cast<uint16_t>(y >> 3);
     if (state.mode < 2)
-        state.backposx >>= 1;
+        state.backposx = static_cast<uint16_t>(state.backposx >> 1);
 
     // use current page (CV program)
     uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
@@ -265,17 +265,19 @@ void DrawCursorText()
                   (uint8_t)(result >> 8),
                   true);
     } else {
-        uint16_t address = page * real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE);
-        address += static_cast<uint16_t>(
+        uint16_t address = static_cast<uint16_t>(page *
+            real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
+        address = static_cast<uint16_t>(address +
                 (state.backposy * real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) +
-                 state.backposx) *
-                2);
+                    state.backposx) * 2);
         address /= 2;
         uint16_t cr = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
         IO_Write(cr, 0xe);
-        IO_Write(cr + 1, static_cast<uint8_t>((address >> 8) & 0xff));
+        IO_Write(static_cast<io_port_t>(cr + 1),
+                 static_cast<uint8_t>((address >> 8) & 0xff));
         IO_Write(cr, 0xf);
-        IO_Write(cr + 1, static_cast<uint8_t>(address & 0xff));
+        IO_Write(static_cast<io_port_t>(cr + 1),
+                 static_cast<uint8_t>(address & 0xff));
     }
 }
 
@@ -328,10 +330,12 @@ static void RestoreVgaRegisters()
 static void ClipCursorArea(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
                            uint16_t &addx1, uint16_t &addx2, uint16_t &addy)
 {
-    addx1 = addx2 = addy = 0;
+    addx1 = 0;
+    addx2 = 0;
+    addy  = 0;
     // Clip up
     if (y1 < 0) {
-        addy += static_cast<uint16_t>(-y1);
+        addy = static_cast<uint16_t>(addy - y1);
         y1 = 0;
     }
     // Clip down
@@ -340,7 +344,7 @@ static void ClipCursorArea(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
     };
     // Clip left
     if (x1 < 0) {
-        addx1 += static_cast<uint16_t>(-x1);
+        addx1 = static_cast<uint16_t>(addx1 - x1);
         x1 = 0;
     };
     // Clip right
@@ -363,21 +367,21 @@ static void RestoreCursorBackground()
     uint16_t dataPos = 0;
     int16_t x1       = static_cast<int16_t>(state.backposx);
     int16_t y1       = static_cast<int16_t>(state.backposy);
-    int16_t x2       = x1 + CURSOR_SIZE_X - 1;
-    int16_t y2       = y1 + CURSOR_SIZE_Y - 1;
+    int16_t x2       = static_cast<int16_t>(x1 + CURSOR_SIZE_X - 1);
+    int16_t y2       = static_cast<int16_t>(y1 + CURSOR_SIZE_Y - 1);
 
     ClipCursorArea(x1, x2, y1, y2, addx1, addx2, addy);
 
-    dataPos = addy * CURSOR_SIZE_X;
+    dataPos = static_cast<uint16_t>(addy * CURSOR_SIZE_X);
     for (y = y1; y <= y2; y++) {
-        dataPos += addx1;
+        dataPos = static_cast<uint16_t>(dataPos + addx1);
         for (x = x1; x <= x2; x++) {
             INT10_PutPixel(static_cast<uint16_t>(x),
                            static_cast<uint16_t>(y),
                            state.page,
                            state.backData[dataPos++]);
         };
-        dataPos += addx2;
+        dataPos = static_cast<uint16_t>(dataPos + addx2);
     };
     state.background = false;
 
@@ -421,7 +425,7 @@ void MOUSEDOS_DrawCursor()
     // might be vidmode == 0x13?2:1
     int16_t xratio = 640;
     if (CurMode->swidth > 0)
-        xratio /= static_cast<int16_t>(CurMode->swidth);
+        xratio = static_cast<int16_t>(xratio / CurMode->swidth);
     if (xratio == 0)
         xratio = 1;
 
@@ -440,23 +444,23 @@ void MOUSEDOS_DrawCursor()
 
     ClipCursorArea(x1, x2, y1, y2, addx1, addx2, addy);
 
-    dataPos = addy * CURSOR_SIZE_X;
+    dataPos = static_cast<uint16_t>(addy * CURSOR_SIZE_X);
     for (y = y1; y <= y2; y++) {
-        dataPos += addx1;
+        dataPos = static_cast<uint16_t>(dataPos + addx1);
         for (x = x1; x <= x2; x++) {
             INT10_GetPixel(static_cast<uint16_t>(x),
                            static_cast<uint16_t>(y),
                            state.page,
                            &state.backData[dataPos++]);
         };
-        dataPos += addx2;
+        dataPos = static_cast<uint16_t>(dataPos + addx2);
     };
     state.background = true;
     state.backposx = static_cast<uint16_t>(GetPosX() / xratio - state.hot_x);
     state.backposy = static_cast<uint16_t>(GetPosY() - state.hot_y);
 
     // Draw Mousecursor
-    dataPos               = addy * CURSOR_SIZE_X;
+    dataPos = static_cast<uint16_t>(addy * CURSOR_SIZE_X);
     const auto screenMask = state.user_screen_mask ? state.user_def_screen_mask
                                                    : DEFAULT_SCREEN_MASK;
     const auto cursorMask = state.user_cursor_mask ? state.user_def_cursor_mask
@@ -465,9 +469,9 @@ void MOUSEDOS_DrawCursor()
         uint16_t scMask = screenMask[addy + y - y1];
         uint16_t cuMask = cursorMask[addy + y - y1];
         if (addx1 > 0) {
-            scMask <<= addx1;
-            cuMask <<= addx1;
-            dataPos += addx1;
+            scMask  = static_cast<uint16_t>(scMask << addx1);
+            cuMask  = static_cast<uint16_t>(cuMask << addx1);
+            dataPos = static_cast<uint16_t>(dataPos + addx1);
         };
         for (x = x1; x <= x2; x++) {
             constexpr auto HIGHESTBIT = (1 << (CURSOR_SIZE_X - 1));
@@ -475,11 +479,11 @@ void MOUSEDOS_DrawCursor()
             // ScreenMask
             if (scMask & HIGHESTBIT)
                 pixel = state.backData[dataPos];
-            scMask <<= 1;
+            scMask = static_cast<uint16_t>(scMask << 1);
             // CursorMask
             if (cuMask & HIGHESTBIT)
                 pixel = pixel ^ 0x0f;
-            cuMask <<= 1;
+            cuMask = static_cast<uint16_t>(cuMask << 1);
             // Set Pixel
             INT10_PutPixel(static_cast<uint16_t>(x),
                            static_cast<uint16_t>(y),
@@ -487,7 +491,7 @@ void MOUSEDOS_DrawCursor()
                            pixel);
             dataPos++;
         };
-        dataPos += addx2;
+        dataPos = static_cast<uint16_t>(addx2 + dataPos);
     };
 
     RestoreVgaRegisters();
@@ -1178,7 +1182,7 @@ static Bitu INT33_Handler()
         // According to Ralf Brown Interrupt List it returns 0x20 if
         // success,  but CuteMouse source code claims the code for
         // success if 0x1f. Both agree that 0xffff means failure.
-        reg_ax = 0x1f;
+        // Since reg_ax is 0x1f here, no need to change anything.
         break;
     case 0x20: // MS MOUSE v6.0+ - enable mouse driver
         state.enabled = true;
@@ -1362,7 +1366,6 @@ static uintptr_t MOUSE_BD_Handler()
     default: break;
     }
 
-    reg_ax = rax;
     return CBRET_NONE;
 }
 
@@ -1403,7 +1406,7 @@ void MOUSEDOS_Init()
     // Callback for mouse interrupt 0x33
     auto call_int33 = CALLBACK_Allocate();
     // RealPt i33loc = RealMake(CB_SEG + 1,(call_int33 * CB_SIZE) - 0x10);
-    RealPt i33loc = RealMake(DOS_GetMemory(0x1) - 1, 0x10);
+    RealPt i33loc = RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1), 0x10);
     CALLBACK_Setup(call_int33, &INT33_Handler, CB_MOUSE, Real2Phys(i33loc), "Mouse");
     // Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
     real_writed(0, 0x33 << 2, i33loc);
@@ -1412,7 +1415,7 @@ void MOUSEDOS_Init()
     CALLBACK_Setup(call_mouse_bd,
                    &MOUSE_BD_Handler,
                    CB_RETF8,
-                   PhysMake(RealSeg(i33loc), RealOff(i33loc) + 2),
+                   PhysMake(RealSeg(i33loc), static_cast<uint16_t>(RealOff(i33loc) + 2)),
                    "MouseBD");
     // pseudocode for CB_MOUSE (including the special backdoor entry point):
     //    jump near i33hd
