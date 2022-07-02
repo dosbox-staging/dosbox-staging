@@ -371,4 +371,4 @@ PenaltyReturnTypeOnItsOwnLine: 200
 #
 # See https://github.com/dosbox-staging/dosbox-staging/issues/196 for details.
 #
-SortIncludes: Never
+# SortIncludes: false
