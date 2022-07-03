@@ -442,7 +442,7 @@ void MixerChannel::UpdateVolume()
 	volume_gain.right = scale.right * gain_right * mixer.mastervol.right;
 }
 
-void MixerChannel::SetVolume(float left, float right)
+void MixerChannel::SetVolume(const float left, const float right)
 {
 	// Allow unconstrained user-defined values
 	volume = {left, right};
@@ -453,22 +453,22 @@ void MixerChannel::SetVolume(float left, float right)
 	UpdateVolume();
 }
 
-void MixerChannel::SetVolumeScale(float f) {
+void MixerChannel::SetVolumeScale(const float f) {
 	SetVolumeScale(f, f);
 }
 
-void MixerChannel::SetVolumeScale(float left, float right)
+void MixerChannel::SetVolumeScale(const float left, const float right)
 {
 	// Constrain application-defined volume between 0% and 100%
 	constexpr auto min_volume = 0.0f;
 	constexpr auto max_volume = 1.0f;
 
-	left  = clamp(left, min_volume, max_volume);
-	right = clamp(right, min_volume, max_volume);
+	auto new_left  = clamp(left, min_volume, max_volume);
+	auto new_right = clamp(right, min_volume, max_volume);
 
-	if (scale.left != left || scale.right != right) {
-		scale.left  = left;
-		scale.right = right;
+	if (scale.left != new_left || scale.right != new_right) {
+		scale.left  = new_left;
+		scale.right = new_right;
 		UpdateVolume();
 #ifdef DEBUG
 		LOG_MSG("MIXER %-7s channel: application changed left and right volumes to %3.0f%% and %3.0f%%, respectively",
@@ -1124,7 +1124,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::AddStretched(uint16_t len, int16_t *data)
+void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 {
 	MIXER_LockAudioDevice();
 
@@ -1174,75 +1174,75 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::AddSamples_m8(uint16_t len, const uint8_t *data)
+void MixerChannel::AddSamples_m8(const uint16_t len, const uint8_t *data)
 {
 	AddSamples<uint8_t, false, false, true>(len, data);
 }
-void MixerChannel::AddSamples_s8(uint16_t len, const uint8_t *data)
+void MixerChannel::AddSamples_s8(const uint16_t len, const uint8_t *data)
 {
 	AddSamples<uint8_t, true, false, true>(len, data);
 }
-void MixerChannel::AddSamples_m8s(uint16_t len, const int8_t *data)
+void MixerChannel::AddSamples_m8s(const uint16_t len, const int8_t *data)
 {
 	AddSamples<int8_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s8s(uint16_t len, const int8_t *data)
+void MixerChannel::AddSamples_s8s(const uint16_t len, const int8_t *data)
 {
 	AddSamples<int8_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16(uint16_t len, const int16_t *data)
+void MixerChannel::AddSamples_m16(const uint16_t len, const int16_t *data)
 {
 	AddSamples<int16_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s16(uint16_t len, const int16_t *data)
+void MixerChannel::AddSamples_s16(const uint16_t len, const int16_t *data)
 {
 	AddSamples<int16_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16u(uint16_t len, const uint16_t *data)
+void MixerChannel::AddSamples_m16u(const uint16_t len, const uint16_t *data)
 {
 	AddSamples<uint16_t, false, false, true>(len, data);
 }
-void MixerChannel::AddSamples_s16u(uint16_t len, const uint16_t *data)
+void MixerChannel::AddSamples_s16u(const uint16_t len, const uint16_t *data)
 {
 	AddSamples<uint16_t, true, false, true>(len, data);
 }
-void MixerChannel::AddSamples_m32(uint16_t len, const int32_t *data)
+void MixerChannel::AddSamples_m32(const uint16_t len, const int32_t *data)
 {
 	AddSamples<int32_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s32(uint16_t len, const int32_t *data)
+void MixerChannel::AddSamples_s32(const uint16_t len, const int32_t *data)
 {
 	AddSamples<int32_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_mfloat(uint16_t len, const float *data)
+void MixerChannel::AddSamples_mfloat(const uint16_t len, const float *data)
 {
 	AddSamples<float, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_sfloat(uint16_t len, const float *data)
+void MixerChannel::AddSamples_sfloat(const uint16_t len, const float *data)
 {
 	AddSamples<float, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16_nonnative(uint16_t len, const int16_t *data)
+void MixerChannel::AddSamples_m16_nonnative(const uint16_t len, const int16_t *data)
 {
 	AddSamples<int16_t, false, true, false>(len, data);
 }
-void MixerChannel::AddSamples_s16_nonnative(uint16_t len, const int16_t *data)
+void MixerChannel::AddSamples_s16_nonnative(const uint16_t len, const int16_t *data)
 {
 	AddSamples<int16_t, true, true, false>(len, data);
 }
-void MixerChannel::AddSamples_m16u_nonnative(uint16_t len, const uint16_t *data)
+void MixerChannel::AddSamples_m16u_nonnative(const uint16_t len, const uint16_t *data)
 {
 	AddSamples<uint16_t, false, false, false>(len, data);
 }
-void MixerChannel::AddSamples_s16u_nonnative(uint16_t len, const uint16_t *data)
+void MixerChannel::AddSamples_s16u_nonnative(const uint16_t len, const uint16_t *data)
 {
 	AddSamples<uint16_t, true, false, false>(len, data);
 }
-void MixerChannel::AddSamples_m32_nonnative(uint16_t len, const int32_t *data)
+void MixerChannel::AddSamples_m32_nonnative(const uint16_t len, const int32_t *data)
 {
 	AddSamples<int32_t, false, true, false>(len, data);
 }
-void MixerChannel::AddSamples_s32_nonnative(uint16_t len, const int32_t *data)
+void MixerChannel::AddSamples_s32_nonnative(const uint16_t len, const int32_t *data)
 {
 	AddSamples<int32_t, true, true, false>(len, data);
 }
@@ -1314,7 +1314,7 @@ static constexpr int calc_tickadd(const int freq)
 }
 
 // Mix a certain amount of new sample frames
-static void MIXER_MixData(int frames_requested)
+static void MIXER_MixData(const int frames_requested)
 {
 	constexpr auto capture_buf_frames = 1024;
 
