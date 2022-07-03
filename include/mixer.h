@@ -235,9 +235,6 @@ private:
 	AudioFrame prev_frame = {}; // Previous and next samples
 	AudioFrame next_frame = {};
 
-	// Simple way to lower the impact of DC offset. if MIXER_UPRAMP_STEPS is
-	// >0. Still work in progress and thus disabled for now.
-	int offset[2] = {0, 0};
 	int sample_rate = 0u;
 	AudioFrame volume_gain = {1.0f, 1.0f};
 	AudioFrame scale = {1.0f, 1.0f};

@@ -656,7 +656,6 @@ void MixerChannel::AddSilence()
 		}
 	}
 	last_samples_were_silence = true;
-	offset[0] = offset[1] = 0;
 
 	MIXER_UnlockAudioDevice();
 }
