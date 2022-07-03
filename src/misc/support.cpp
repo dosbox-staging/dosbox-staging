@@ -635,37 +635,3 @@ double gain_to_decibel(const double gain)
 	return 20.0 * log(gain) / log(10.0);
 }
 
-float lerp(const float a, const float b, const float t)
-{
-	return a * (1 - t) + b * t;
-}
-
-double lerp(const double a, const double b, const double t)
-{
-	return a * (1 - t) + b * t;
-}
-
-float invlerp(const float a, const float b, const float v)
-{
-	return (v - a) / (b - a);
-}
-
-double invlerp(const double a, const double b, const double v)
-{
-	return (v - a) / (b - a);
-}
-
-float remap(const float in_min, const float in_max, const float out_min,
-            const float out_max, const float v)
-{
-	float t = invlerp(in_min, in_max, v);
-	return lerp(out_min, out_max, t);
-}
-
-double remap(const double in_min, const double in_max, const double out_min,
-             const double out_max, const double v)
-{
-	double t = invlerp(in_min, in_max, v);
-	return lerp(out_min, out_max, t);
-}
-

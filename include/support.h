@@ -420,16 +420,39 @@ constexpr auto enum_val(enum_t e)
 double decibel_to_gain(const double decibel);
 double gain_to_decibel(const double gain);
 
-float lerp(const float a, const float b, const float t);
-double lerp(const double a, const double b, const double t);
+template <typename T>
+constexpr T lerp(const T a, const T b, const T t)
+{
+	return a * (1 - t) + b * t;
+}
 
-float invlerp(const float a, const float b, const float t);
-double invlerp(const double a, const double b, const double t);
+template <typename T>
+constexpr T invlerp(const T a, const T b, const T v)
+{
+	return (v - a) / (b - a);
+}
 
-float remap(const float in_min, const float in_max, const float out_min,
-            const float out_max, const float v);
+template <typename T>
+constexpr T remap(const T in_min, const T in_max, const T out_min,
+                  const T out_max, const T v)
+{
+	const auto t = invlerp(in_min, in_max, v);
+	return lerp(out_min, out_max, t);
+}
 
-double remap(const double in_min, const double in_max, const double out_min,
-             const double out_max, const double v);
+// Explicit instantiations for lerp, invlerp, and remap
+
+template float lerp<float>(const float a, const float b, const float t);
+template double lerp<double>(const double a, const double b, const double t);
+
+template float invlerp<float>(const float a, const float b, const float v);
+template double invlerp<double>(const double a, const double b, const double v);
+
+template float remap<float>(const float in_min, const float in_max,
+                            const float out_min, const float out_max, const float v);
+
+template double remap<double>(const double in_min, const double in_max,
+                              const double out_min, const double out_max,
+                              const double v);
 
 #endif
