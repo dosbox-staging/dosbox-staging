@@ -790,9 +790,7 @@ void DOSBOX_Init() {
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
 	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
-	const char *oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
-	Pstring = secprop->Add_string("oplemu", deprecated, "default");
-	Pstring->Set_values(oplemus);
+	Pstring = secprop->Add_string("oplemu", deprecated, "");
 	Pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
 	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
@@ -847,9 +845,7 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                  "  off:  Don't filter the output.");
 	pstring->Set_values(filter_on_or_off);
 
-	const char *zero_offset_opts[] = {"auto", "true", "false", 0};
-	pstring = secprop->Add_string("zero_offset", deprecated, zero_offset_opts[0]);
-	pstring->Set_values(zero_offset_opts);
+	pstring = secprop->Add_string("zero_offset", deprecated, "");
 	pstring->Set_help(
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
