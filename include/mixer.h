@@ -144,17 +144,17 @@ public:
 	int GetSampleRate() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
-	void SetVolume(float left, float right);
-	void SetVolumeScale(float f);
-	void SetVolumeScale(float left, float right);
+	void SetVolume(const float left, const float right);
+	void SetVolumeScale(const float f);
+	void SetVolumeScale(const float left, const float right);
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
 	void UpdateVolume();
 	void ReactivateEnvelope();
-	void SetSampleRate(int _freq);
-	void SetPeakAmplitude(int peak);
-	void Mix(int frames_requested);
+	void SetSampleRate(const int _freq);
+	void SetPeakAmplitude(const int peak);
+	void Mix(const int frames_requested);
 	void AddSilence(); // Fill up until needed
 
 	void SetHighPassFilter(const FilterState state);
@@ -172,32 +172,31 @@ public:
 	float GetReverbLevel();
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void AddSamples(uint16_t len, const Type *data);
+	void AddSamples(const uint16_t len, const Type *data);
 
-	void AddSamples_m8(uint16_t len, const uint8_t *data);
-	void AddSamples_s8(uint16_t len, const uint8_t *data);
-	void AddSamples_m8s(uint16_t len, const int8_t *data);
-	void AddSamples_s8s(uint16_t len, const int8_t *data);
-	void AddSamples_m16(uint16_t len, const int16_t *data);
-	void AddSamples_s16(uint16_t len, const int16_t *data);
-	void AddSamples_m16u(uint16_t len, const uint16_t *data);
-	void AddSamples_s16u(uint16_t len, const uint16_t *data);
-	void AddSamples_m32(uint16_t len, const int32_t *data);
-	void AddSamples_s32(uint16_t len, const int32_t *data);
-	void AddSamples_mfloat(uint16_t len, const float *data);
-	void AddSamples_sfloat(uint16_t len, const float *data);
-	void AddSamples_m16_nonnative(uint16_t len, const int16_t *data);
-	void AddSamples_s16_nonnative(uint16_t len, const int16_t *data);
-	void AddSamples_m16u_nonnative(uint16_t len, const uint16_t *data);
-	void AddSamples_s16u_nonnative(uint16_t len, const uint16_t *data);
-	void AddSamples_m32_nonnative(uint16_t len, const int32_t *data);
-	void AddSamples_s32_nonnative(uint16_t len, const int32_t *data);
+	void AddSamples_m8(const uint16_t len, const uint8_t *data);
+	void AddSamples_s8(const uint16_t len, const uint8_t *data);
+	void AddSamples_m8s(const uint16_t len, const int8_t *data);
+	void AddSamples_s8s(const uint16_t len, const int8_t *data);
+	void AddSamples_m16(const uint16_t len, const int16_t *data);
+	void AddSamples_s16(const uint16_t len, const int16_t *data);
+	void AddSamples_m16u(const uint16_t len, const uint16_t *data);
+	void AddSamples_s16u(const uint16_t len, const uint16_t *data);
+	void AddSamples_m32(const uint16_t len, const int32_t *data);
+	void AddSamples_s32(const uint16_t len, const int32_t *data);
+	void AddSamples_mfloat(const uint16_t len, const float *data);
+	void AddSamples_sfloat(const uint16_t len, const float *data);
+	void AddSamples_m16_nonnative(const uint16_t len, const int16_t *data);
+	void AddSamples_s16_nonnative(const uint16_t len, const int16_t *data);
+	void AddSamples_m16u_nonnative(const uint16_t len, const uint16_t *data);
+	void AddSamples_s16u_nonnative(const uint16_t len, const uint16_t *data);
+	void AddSamples_m32_nonnative(const uint16_t len, const int32_t *data);
+	void AddSamples_s32_nonnative(const uint16_t len, const int32_t *data);
 
-	void AddStretched(uint16_t len, int16_t *data); // Stretch block up into
-	                                                // needed data
+	void AddStretched(const uint16_t len, int16_t *data);
 
 	void FillUp();
-	void Enable(bool should_enable);
+	void Enable(const bool should_enable);
 	void FlushSamples();
 
 	AudioFrame volume = {1.0f, 1.0f};
