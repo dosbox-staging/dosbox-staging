@@ -237,7 +237,7 @@ private:
 
 	int sample_rate = 0u;
 	AudioFrame volume_gain = {1.0f, 1.0f};
-	AudioFrame scale = {1.0f, 1.0f};
+	AudioFrame volume_scale = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
 	// Default to signed 16bit max, however channel's that know their own

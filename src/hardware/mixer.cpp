@@ -117,7 +117,7 @@ struct mixer_t {
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out = {};
 
-	AudioFrame mastervol = {1.0f, 1.0f};
+	AudioFrame master_volume = {1.0f, 1.0f};
 	std::map<std::string, mixer_channel_t> channels = {};
 
 	// Counters accessed by multiple threads
@@ -438,8 +438,8 @@ void MixerChannel::UpdateVolume()
 	const float gain_left  = apply_level ? 1.0f : volume.left;
 	const float gain_right = apply_level ? 1.0f : volume.right;
 
-	volume_gain.left  = scale.left  * gain_left  * mixer.mastervol.left;
-	volume_gain.right = scale.right * gain_right * mixer.mastervol.right;
+	volume_gain.left  = volume_scale.left  * gain_left  * mixer.master_volume.left;
+	volume_gain.right = volume_scale.right * gain_right * mixer.master_volume.right;
 }
 
 void MixerChannel::SetVolume(const float left, const float right)
@@ -466,15 +466,15 @@ void MixerChannel::SetVolumeScale(const float left, const float right)
 	auto new_left  = clamp(left, min_volume, max_volume);
 	auto new_right = clamp(right, min_volume, max_volume);
 
-	if (scale.left != new_left || scale.right != new_right) {
-		scale.left  = new_left;
-		scale.right = new_right;
+	if (volume_scale.left != new_left || volume_scale.right != new_right) {
+		volume_scale.left  = new_left;
+		volume_scale.right = new_right;
 		UpdateVolume();
 #ifdef DEBUG
 		LOG_MSG("MIXER %-7s channel: application changed left and right volumes to %3.0f%% and %3.0f%%, respectively",
 		        name,
-		        scale.left * 100.0f,
-		        scale.right * 100.0f);
+		        volume_scale.left * 100.0f,
+		        volume_scale.right * 100.0f);
 #endif
 	}
 }
@@ -1688,7 +1688,7 @@ public:
 			} else if (is_master) {
 				// Only setting the volume is allowed for the
 				// master channel
-				ParseVolume(arg, mixer.mastervol);
+				ParseVolume(arg, mixer.master_volume);
 
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
@@ -1815,7 +1815,7 @@ private:
 
 		MIXER_LockAudioDevice();
 		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
-		             mixer.mastervol,
+		             mixer.master_volume,
 		             mixer.sample_rate,
 		             "Stereo",
 		             "-",
