@@ -79,18 +79,18 @@ public:
 		};
 
     MVerb(){
-        DampingFreq = 0.9;
-        BandwidthFreq = 0.9;
-        SampleRate = 44100.;
-        Decay = 0.5;
-        Gain = 1.;
-        Mix = 1.;
-        Size = 1.;
-        EarlyMix = 1.;
-        PreviousLeftTank = 0.;
-        PreviousRightTank = 0.;
-        PreDelayTime = 100 * (SampleRate / 1000);
-        MixSmooth = EarlyLateSmooth = BandwidthSmooth = DampingSmooth = PredelaySmooth = SizeSmooth = DecaySmooth = DensitySmooth = 0.;
+        DampingFreq = 0.9f;
+        BandwidthFreq = 0.9f;
+        SampleRate = 44100.0f;
+        Decay = 0.5f;
+        Gain = 1.0f;
+        Mix = 1.0f;
+        Size = 1.0f;
+        EarlyMix = 1.0f;
+        PreviousLeftTank = 0.0f;
+        PreviousRightTank = 0.0f;
+        PreDelayTime = 100.0f * (SampleRate / 1000.0f);
+        MixSmooth = EarlyLateSmooth = BandwidthSmooth = DampingSmooth = PredelaySmooth = SizeSmooth = DecaySmooth = DensitySmooth = 0.0f;
         ControlRate = static_cast<int>(SampleRate / 1000);
         ControlRateCounter = 0;
         reset();
@@ -141,7 +141,7 @@ public:
             allpassFourTap[2].SetFeedback(Density1);
             T bandwidthLeft = bandwidthFilter[0](left) ;
             T bandwidthRight = bandwidthFilter[1](right) ;
-            T earlyReflectionsL = static_cast<T>(earlyReflectionsDelayLine[0] ( bandwidthLeft * 0.5 + bandwidthRight * 0.3 )
+            T earlyReflectionsL = static_cast<T>(earlyReflectionsDelayLine[0](static_cast<T>(bandwidthLeft * 0.5 + bandwidthRight * 0.3))
                                 + earlyReflectionsDelayLine[0].GetIndex(2) * 0.6
                                 + earlyReflectionsDelayLine[0].GetIndex(3) * 0.4
                                 + earlyReflectionsDelayLine[0].GetIndex(4) * 0.3
@@ -149,7 +149,7 @@ public:
                                 + earlyReflectionsDelayLine[0].GetIndex(6) * 0.1
                                 + earlyReflectionsDelayLine[0].GetIndex(7) * 0.1
                                 + ( bandwidthLeft * 0.4 + bandwidthRight * 0.2 ) * 0.5);
-            T earlyReflectionsR = static_cast<T>(earlyReflectionsDelayLine[1] ( bandwidthLeft * 0.3 + bandwidthRight * 0.5 )
+            T earlyReflectionsR = static_cast<T>(earlyReflectionsDelayLine[1](static_cast<T>(bandwidthLeft * 0.3 + bandwidthRight * 0.5))
                                 + earlyReflectionsDelayLine[1].GetIndex(2) * 0.6
                                 + earlyReflectionsDelayLine[1].GetIndex(3) * 0.4
                                 + earlyReflectionsDelayLine[1].GetIndex(4) * 0.3
