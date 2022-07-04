@@ -4710,6 +4710,10 @@ int sdl_main(int argc, char *argv[])
 			Sleep(5000);
 #endif
 		}
+	} catch (const std::exception &e) {
+		// catch all exceptions that derive from the standard library
+		LOG_ERR("EXCEPTION: Standard library exception: %s", e.what());
+		rcode = 1;
 	} catch (...) {
 		// just exit
 		rcode = 1;
