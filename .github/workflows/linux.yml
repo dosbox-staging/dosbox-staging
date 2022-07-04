@@ -37,9 +37,9 @@ jobs:
             build_flags: -Dunit_tests=disabled
             max_warnings: 0
 
-          - name: GCC, Ubuntu 18.04
+          - name: GCC 9, Ubuntu 18.04
             os: ubuntu-18.04
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
 
           - name: GCC, +tests
@@ -209,6 +209,7 @@ jobs:
             -Db_asneeded=true \
             -Db_lto=true \
             -Dfluidsynth:try-static-deps=true \
+            --native-file=.github/meson/native-gcc-9.ini \
             build
 
       - name: Build
