@@ -98,18 +98,52 @@ using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
 
-enum ReverbPreset { Tiny, Small, Medium, Large, Huge, NumPresets };
+struct reverb_settings_t {
+	EmVerb mverb = {};
 
-struct reverb_preset_t {
-	std::array<float, EmVerb::NUM_PARAMS> params = {};
+	// MVerb does not have an integrated high-pass filter to shape
+	// the low-end response like other reverbs. So we're adding one
+	// here. This helps take control over low-frequency build-up,
+	// resulting in a more pleasant sound.
+	highpass_filter_t highpass_filter = {};
 
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
+	float highpass_cutoff_freq     = 1.0f;
 
-	float highpass_cutoff_freq = 1.0f;
+	bool enabled = false;
+
+	void Config(const float predelay, const float early_mix, const float size,
+	            const float density, const float bandwidth_freq,
+	            const float decay, const float dampening_freq,
+	            const float synth_level, const float digital_level,
+	            const float highpass_freq, const int sample_rate)
+	{
+		// Zero-sized reverb is effectively disabled
+		enabled = size > 0.0f;
+		if (!enabled)
+			return;
+
+		synthesizer_send_level   = synth_level;
+		digital_audio_send_level = digital_level;
+		highpass_cutoff_freq     = highpass_freq;
+
+		mverb.setParameter(EmVerb::PREDELAY, predelay);
+		mverb.setParameter(EmVerb::EARLYMIX, early_mix);
+		mverb.setParameter(EmVerb::SIZE, size);
+		mverb.setParameter(EmVerb::DENSITY, density);
+		mverb.setParameter(EmVerb::BANDWIDTHFREQ, bandwidth_freq);
+		mverb.setParameter(EmVerb::DECAY, decay);
+		mverb.setParameter(EmVerb::DAMPINGFREQ, dampening_freq);
+		mverb.setParameter(EmVerb::GAIN, 1.0f); // Always max gain (no attenuation)
+		mverb.setParameter(EmVerb::MIX, 1.0f); // Always 100% wet signal
+
+		mverb.setSampleRate(static_cast<float>(sample_rate));
+
+		for (auto &f : highpass_filter)
+			f.setup(sample_rate, highpass_freq);
+	}
 };
-
-static std::array<reverb_preset_t, ReverbPreset::NumPresets> reverb_presets = {};
 
 struct mixer_t {
 	// complex types
