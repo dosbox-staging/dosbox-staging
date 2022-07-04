@@ -23,7 +23,8 @@ project('dosbox-staging', 'c', 'cpp',
     'glib:xattr=false',
     'gtest:warning_level=0',
     'mt32emu:warning_level=0',
-    'slirp:warning_level=0'
+    'slirp:warning_level=0',
+    'tracy:warning_level=0'
   ]
 )
 
