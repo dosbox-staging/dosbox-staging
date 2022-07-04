@@ -806,10 +806,11 @@ void MixerChannel::SetReverbLevel(const float level)
 		reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 	}
 
-	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4f, level_db: %.4f, gain: %.4f",
+	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
 	              level,
 	              level_db,
-	              reverb.send_gain);
+	              reverb.send_gain,
+	              name.c_str());
 }
 
 float MixerChannel::GetReverbLevel()
