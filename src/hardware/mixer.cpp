@@ -2164,7 +2164,8 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
 
-	string_prop = sec_prop.Add_string("reverb", when_idle, "off");
+	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
+	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
 	string_prop->Set_help(
 	        "Enable reverb globally to add a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
@@ -2180,6 +2181,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
+	string_prop->Set_values(reverb_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
