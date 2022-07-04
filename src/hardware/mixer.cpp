@@ -94,6 +94,8 @@ static constexpr int16_t MIXER_CLIP(const int sample)
 	return static_cast<int16_t>(sample);
 }
 
+using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
+
 using EmVerb = MVerb<float>;
 
 enum ReverbPreset { Tiny, Small, Medium, Large, Huge, NumPresets };
