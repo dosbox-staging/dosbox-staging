@@ -58,8 +58,8 @@ void MOUSESERIAL_NotifyMoved(const float x_rel, const float y_rel)
     delta_y += y_rel;
 
     // Clamp the resulting values to something sane, just in case
-    delta_x = MOUSE_ClampRelMov(delta_x);
-    delta_y = MOUSE_ClampRelMov(delta_y);
+    delta_x = MOUSE_ClampRelativeMovement(delta_x);
+    delta_y = MOUSE_ClampRelativeMovement(delta_y);
 
     const int16_t dx = static_cast<int16_t>(std::lround(delta_x));
     const int16_t dy = static_cast<int16_t>(std::lround(delta_y));
