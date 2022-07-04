@@ -1102,7 +1102,7 @@ static void NewMouseScreenParams()
 	int abs_x, abs_y;
 	SDL_GetMouseState(&abs_x, &abs_y);
 	abs_x = std::clamp(abs_x, 0, static_cast<int>(UINT16_MAX));
-	abs_y =	std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
+	abs_y = std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
 
 	MOUSE_NewScreenParams(sdl.clip.x, sdl.clip.y,
 	                      sdl.clip.w, sdl.clip.h,
@@ -3519,9 +3519,8 @@ static void GUI_StartUp(Section *sec)
 		                             : " and middle-clicks will be sent to the game";
 
 		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
-		if (sdl.mouse.control_choice != NoMouse)
-			MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
-			                  PRIMARY_MOD, "capmouse", "Cap Mouse");
+		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
+			              PRIMARY_MOD, "capmouse", "Cap Mouse");
 
 		// Apply the user's mouse sensitivity settings
 		Prop_multival *p3 = section->Get_multival("sensitivity");

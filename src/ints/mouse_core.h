@@ -37,12 +37,12 @@
 // Mouse equalization for consistent user experience - please adjust values
 // so that on full screen, with RAW mouse input, the mouse feel is similar
 // to Windows 3.11 for Workgroups with PS/2 mouse driver and default settings
-#define SENS_DOS 1.0f // for DOS driver
-#define SENS_VMM 3.0f // for VMware-type drivers
+constexpr float sensitivity_dos  = 1.0f;
+constexpr float sensitivity_vmm  = 3.0f;
 // Constants to move 'intersection point' for the acceleration curve
 // Requires raw mouse input, otherwise there is no effect
 // Larger values = higher mouse acceleration
-#define ACCEL_VMM 1.0f
+constexpr float acceleration_vmm = 1.0f;
 
 // ***************************************************************************
 // Common structures and variables
@@ -159,7 +159,7 @@ union MouseButtons12S { // use where buttons 3/4/5 are squished into a virtual
 // ***************************************************************************
 
 float MOUSE_GetBallisticsCoeff(const float speed);
-float MOUSE_ClampRelMov(const float rel);
+float MOUSE_ClampRelativeMovement(const float rel);
 
 void MOUSE_NotifyMovedFake(); // for VMware protocol support
 void MOUSE_NotifyRateDOS(const uint8_t rate_hz);

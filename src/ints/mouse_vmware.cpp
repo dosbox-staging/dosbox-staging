@@ -74,15 +74,15 @@ static bool updated = false;  // true = mouse state update waits to be picked up
 static VMwareButtons buttons; // state of mouse buttons, in VMware format
 static uint16_t scaled_x = 0x7fff; // absolute position scaled from 0 to 0xffff
 static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
-static int8_t wheel      = 0;      // wheel movement counter
+static int8_t wheel_counter = 0;      // wheel movement counter
 
 static float pos_x = 0.0;
 static float pos_y = 0.0;
 
 // Speed measurement
-static auto time_start  = std::chrono::steady_clock::now();
-static auto ticks_start = PIC_Ticks;
-static float distance   = 0.0f; // distance since last measurement
+static auto time_start      = std::chrono::steady_clock::now();
+static auto pic_ticks_start = PIC_Ticks;
+static float distance       = 0.0f; // distance since last measurement
 
 static float speed = 0.0f;
 
@@ -106,8 +106,8 @@ static void MOUSEVMM_Activate()
         MOUSEPS2_UpdateButtonSquish();
         MOUSE_NotifyStateChanged();
     }
-    buttons.data = 0;
-    wheel        = 0;
+    buttons.data  = 0;
+    wheel_counter = 0;
 }
 
 void MOUSEVMM_Deactivate()
@@ -118,33 +118,33 @@ void MOUSEVMM_Deactivate()
         MOUSEPS2_UpdateButtonSquish();
         MOUSE_NotifyStateChanged();
     }
-    buttons.data = 0;
-    wheel        = 0;
+    buttons.data  = 0;
+    wheel_counter = 0;
 }
 
-static void CmdGetVersion()
+static void cmd_get_version()
 {
     reg_eax = 0; // protocol version
     reg_ebx = VMWARE_MAGIC;
 }
 
-static void CmdAbsPointerData()
+static void cmd_abs_pointer_data()
 {
     reg_eax = buttons.data;
     reg_ebx = scaled_x;
     reg_ecx = scaled_y;
-    reg_edx = static_cast<uint32_t>((wheel >= 0) ? wheel : 0x100 + wheel);
+    reg_edx = static_cast<uint32_t>((wheel_counter >= 0) ? wheel_counter : 0x100 + wheel_counter);
 
-    wheel = 0;
+    wheel_counter = 0;
 }
 
-static void CmdAbsPointerStatus()
+static void cmd_abs_pointer_status()
 {
     reg_eax = updated ? ABS_UPDATED : ABS_NOT_UPDATED;
     updated = false;
 }
 
-static void CmdAbsPointerCommand()
+static void cmd_abs_pointer_command()
 {
     switch (static_cast<VMwareAbsPointer>(reg_ebx)) {
     case VMwareAbsPointer::Enable: break; // can be safely ignored
@@ -157,16 +157,16 @@ static void CmdAbsPointerCommand()
     }
 }
 
-static uint32_t PortReadVMware(const io_port_t, const io_width_t)
+static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 {
     if (reg_eax != VMWARE_MAGIC)
         return 0;
 
     switch (static_cast<VMwareCmd>(reg_cx)) {
-    case VMwareCmd::GetVersion:        CmdGetVersion();        break;
-    case VMwareCmd::AbsPointerData:    CmdAbsPointerData();    break;
-    case VMwareCmd::AbsPointerStatus:  CmdAbsPointerStatus();  break;
-    case VMwareCmd::AbsPointerCommand: CmdAbsPointerCommand(); break;
+    case VMwareCmd::GetVersion:        cmd_get_version();        break;
+    case VMwareCmd::AbsPointerData:    cmd_abs_pointer_data();    break;
+    case VMwareCmd::AbsPointerStatus:  cmd_abs_pointer_status();  break;
+    case VMwareCmd::AbsPointerCommand: cmd_abs_pointer_command(); break;
     default:
         LOG_WARNING("MOUSE (PS/2): unimplemented VMware command 0x%08x",
                     reg_ecx);
@@ -176,7 +176,7 @@ static uint32_t PortReadVMware(const io_port_t, const io_width_t)
     return reg_eax;
 }
 
-void SpeedUpdate(float x_rel, float y_rel)
+static void speed_update(const float x_rel, const float y_rel)
 {
     constexpr auto n = static_cast<float>(std::chrono::steady_clock::period::num);
     constexpr auto d = static_cast<float>(std::chrono::steady_clock::period::den);
@@ -192,7 +192,7 @@ void SpeedUpdate(float x_rel, float y_rel)
 
     const auto time_now   = std::chrono::steady_clock::now();
     const auto diff_time  = time_now - time_start;
-    const auto diff_ticks = PIC_Ticks - ticks_start;
+    const auto diff_ticks = PIC_Ticks - pic_ticks_start;
 
     const auto diff_ms =
             std::chrono::duration_cast<std::chrono::milliseconds>(diff_time).count();
@@ -208,15 +208,15 @@ void SpeedUpdate(float x_rel, float y_rel)
         if (diff_ms < min_diff_ms || diff_ticks < min_diff_ticks)
             return;
 
-        // Update cursor speed (multiply it by 20.0f to put ACCEL_VMM in
-        // a reasonable range, similar to SENS_DOS or SENS_VMM)
-        speed = 20.0f * ACCEL_VMM * distance / static_cast<float>(diff_ms);
+        // Update cursor speed (multiply it by 20.0f to put acceleration_vmm in
+        // a reasonable range, similar to sensitivity_dos or sensitivity_vmm)
+        speed = 20.0f * acceleration_vmm * distance / static_cast<float>(diff_ms);
     }
 
     // Start new measurement
-    distance    = 0.0f;
-    time_start  = time_now;
-    ticks_start = PIC_Ticks;
+    distance        = 0.0f;
+    time_start      = time_now;
+    pic_ticks_start = PIC_Ticks;
 }
 
 bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
@@ -225,10 +225,10 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
     if (!mouse_shared.active_vmm)
         return false;
 
-    const auto x_mov = x_rel * SENS_VMM;
-    const auto y_mov = y_rel * SENS_VMM;
+    const auto x_mov = x_rel * sensitivity_vmm;
+    const auto y_mov = y_rel * sensitivity_vmm;
 
-    SpeedUpdate(x_mov, y_mov);
+    speed_update(x_mov, y_mov);
 
     const auto old_x = scaled_x;
     const auto old_y = scaled_y;
@@ -249,7 +249,7 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
             const auto coeff = MOUSE_GetBallisticsCoeff(speed);
             const auto delta = relative * coeff;
 
-            position += MOUSE_ClampRelMov(delta);
+            position += MOUSE_ClampRelativeMovement(delta);
         } else
             // Cursor position controlled by the host OS
             position = static_cast<float>(std::max(absolute - clip, 0));
@@ -300,11 +300,11 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel)
     if (!mouse_shared.active_vmm)
         return false;
 
-    const auto tmp = std::clamp(static_cast<int32_t>(w_rel + wheel),
+    const auto tmp = std::clamp(static_cast<int32_t>(w_rel + wheel_counter),
                                 static_cast<int32_t>(INT8_MIN),
                                 static_cast<int32_t>(INT8_MAX));
-    wheel          = static_cast<int8_t>(tmp);
-    updated        = true;
+    wheel_counter = static_cast<int8_t>(tmp);
+    updated       = true;
 
     return true;
 }
@@ -319,5 +319,5 @@ void MOUSEVMM_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs)
 
 void MOUSEVMM_Init()
 {
-    IO_RegisterReadHandler(VMWARE_PORT, PortReadVMware, io_width_t::dword);
+    IO_RegisterReadHandler(VMWARE_PORT, port_read_vmware, io_width_t::dword);
 }
