@@ -1680,9 +1680,10 @@ public:
 					}
 					continue;
 				} else if (parse_prefixed_percentage('R', arg, value)) {
-					for (auto &it : mixer.channels) {
-						if (mixer.reverb.enabled)
+					if (mixer.reverb.enabled) {
+						for (auto &it : mixer.channels) {
 							it.second->SetReverbLevel(value);
+						}
 					}
 					continue;
 				}
