@@ -674,8 +674,14 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	assert(strength >= 0.0f);
 	assert(strength <= 1.0f);
 
-	if (!HasFeature(ChannelFeature::Stereo))
+	do_crossfeed = (HasFeature(ChannelFeature::Stereo) && strength > 0.0f);
+
+	if (!do_crossfeed) {
+		DEBUG_LOG_MSG("MIXER: Crossfeed is off for channel: %s",
+		              name.c_str());
+		crossfeed.strength = 0.0f;
 		return;
+	}
 
 	crossfeed.strength = strength;
 
@@ -684,6 +690,10 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	constexpr auto center = 0.5f;
 	crossfeed.pan_left = center - p;
 	crossfeed.pan_right = center + p;
+
+	DEBUG_LOG_MSG("MIXER: Crossfeed is on (strength: %.3f) for channel: %s",
+	              static_cast<double>(crossfeed.strength),
+	              name.c_str());
 }
 
 float MixerChannel::GetCrossfeedStrength()
@@ -997,7 +1007,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	                                filters.highpass.state ==
 	                                        FilterState::ForcedOn;
 
-	const auto do_crossfeed = crossfeed.strength > 0.0f;
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
 
