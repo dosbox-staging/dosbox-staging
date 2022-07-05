@@ -58,8 +58,6 @@ private:
 	static constexpr float amp_negative = MIN_AUDIO * pwm_scalar;
 	static constexpr float amp_neutral = (amp_positive + amp_negative) / 2.0f;
 
-	static constexpr int idle_grace_time_ms = 100;
-
 	struct DelayEntry {
 		float index = 0.0f;
 		float vol   = 0.0f;
@@ -85,7 +83,6 @@ private:
 	float volcur       = 0.0f;
 	float last_index   = 0.0f;
 
-	int sample_rate = 0;
-
+	int sample_rate       = 0;
 	int minimum_tick_rate = 0;
 };
