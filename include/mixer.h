@@ -275,11 +275,11 @@ private:
 	} resampler = {};
 
 	struct {
-		bool enabled = false;
 		uint16_t target_freq = 0;
 		float pos = 0.0f;
 		float step = 0.0f;
 	} zoh_upsampler = {};
+	bool do_zoh_upsampler = false;
 
 	struct {
 		struct {

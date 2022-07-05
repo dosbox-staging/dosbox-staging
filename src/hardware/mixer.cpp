@@ -450,8 +450,8 @@ void MixerChannel::Enable(const bool should_enable)
 
 void MixerChannel::ConfigureResampler()
 {
-	const auto in_rate = zoh_upsampler.enabled ? zoh_upsampler.target_freq
-	                                           : sample_rate;
+	const auto in_rate  = do_zoh_upsampler ? zoh_upsampler.target_freq
+	                                       : sample_rate;
 	const auto out_rate = mixer.sample_rate.load();
 	if (in_rate == out_rate) {
 		resampler.enabled = false;
@@ -667,9 +667,20 @@ void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 
 void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 {
-	zoh_upsampler.enabled = enabled;
+	do_zoh_upsampler = enabled;
+
+	if (!do_zoh_upsampler) {
+		DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is off for channel: %s",
+		              name.c_str());
+		return;
+	}
+
 	ConfigureResampler();
 	UpdateZOHUpsamplerState();
+
+	DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is on (target_freq: %d Hz) for channel: %s",
+	              zoh_upsampler.target_freq,
+	              name.c_str());
 }
 
 void MixerChannel::UpdateZOHUpsamplerState()
@@ -936,7 +947,7 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (zoh_upsampler.enabled) {
+		if (do_zoh_upsampler) {
 			zoh_upsampler.pos += zoh_upsampler.step;
 			if (zoh_upsampler.pos > 1.0f) {
 				zoh_upsampler.pos -= 1.0f;
