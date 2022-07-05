@@ -588,7 +588,13 @@ static std::string filter_to_string(const uint8_t order, const uint16_t cutoff_f
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
-	filters.highpass.state = state;
+	do_highpass_filter = state != FilterState::Off;
+
+	if (!do_lowpass_filter) {
+		DEBUG_LOG_MSG("MIXER: Highpass filter is off for channel: %s",
+		              name.c_str());
+		return;
+	}
 
 	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
@@ -607,7 +613,13 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
-	filters.lowpass.state = state;
+	do_lowpass_filter = state != FilterState::Off;
+
+	if (!do_lowpass_filter) {
+		DEBUG_LOG_MSG("MIXER: Lowpass filter is off for channel: %s",
+		              name.c_str());
+		return;
+	}
 
 	const auto it = filter_state_map.find(state);
 	if (it != filter_state_map.end()) {
@@ -999,13 +1011,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	// output
 	auto pos = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
-
-	const auto do_lowpass_filter = filters.lowpass.state == FilterState::On ||
-	                               filters.lowpass.state == FilterState::ForcedOn;
-
-	const auto do_highpass_filter = filters.highpass.state == FilterState::On ||
-	                                filters.highpass.state ==
-	                                        FilterState::ForcedOn;
 
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;

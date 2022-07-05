@@ -283,19 +283,19 @@ private:
 
 	struct {
 		struct {
-			FilterState state = FilterState::Off;
 			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
 			uint8_t order = 0;
 			uint16_t cutoff_freq = 0;
 		} highpass = {};
 
 		struct {
-			FilterState state = FilterState::Off;
 			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
 			uint8_t order = 0;
 			uint16_t cutoff_freq = 0;
 		} lowpass = {};
 	} filters = {};
+	bool do_highpass_filter = false;
+	bool do_lowpass_filter  = false;
 
 	struct {
 		float strength = 0.0f;
