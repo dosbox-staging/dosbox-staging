@@ -307,6 +307,7 @@ private:
 		float level     = 0.0f;
 		float send_gain = 0.0f;
 	} reverb = {};
+	bool do_reverb_send = false;
 };
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 

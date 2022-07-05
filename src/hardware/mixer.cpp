@@ -701,21 +701,21 @@ void MixerChannel::SetReverbLevel(const float level)
 	assert(level >= level_min);
 	assert(level <= level_max);
 
-	if (!HasFeature(ChannelFeature::ReverbSend))
+	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
+
+	if (!do_reverb_send) {
+		DEBUG_LOG_MSG("MIXER: Reverb send is off for channel: %s",
+		              name.c_str());
+		reverb.level = level_min;
+		reverb.send_gain = level_min_db;
 		return;
+	}
 
 	reverb.level = level;
 
-	float level_db = {};
-	if (level == level_min) {
-		level_db = -INFINITY;
+	const auto level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
 
-		reverb.send_gain = 0.0f;
-
-	} else {
-		level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
-		reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
-	}
+	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
 	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
 	              level,
@@ -998,11 +998,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	                                        FilterState::ForcedOn;
 
 	const auto do_crossfeed = crossfeed.strength > 0.0f;
-
-	const auto do_reverb_send = mixer.reverb.enabled &&
-	                            HasFeature(ChannelFeature::ReverbSend) &&
-	                            reverb.send_gain > 0.0f;
-
 	while (pos != mixer.resample_out.end()) {
 		mixpos &= MIXER_BUFMASK;
 
