@@ -966,10 +966,13 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	                                      : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
+	auto out_frames = check_cast<spx_uint32_t>(convert_out.size()) / 2u;
+
 	if (resampler.enabled) {
-		spx_uint32_t in_frames = mixer.resample_temp.size() / 2;
-		spx_uint32_t out_frames = estimate_max_out_frames(resampler.state,
-		                                                  in_frames);
+		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) / 2u;
+
+		out_frames = estimate_max_out_frames(resampler.state, in_frames);
+
 		mixer.resample_out.resize(out_frames * 2);
 
 		speex_resampler_process_interleaved_float(resampler.state,
@@ -1033,8 +1036,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 		++mixpos;
 	}
-
-	auto out_frames = mixer.resample_out.size() / 2;
 	frames_done += out_frames;
 
 	last_samples_were_silence = false;
