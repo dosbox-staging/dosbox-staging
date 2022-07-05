@@ -111,19 +111,12 @@ struct reverb_settings_t {
 	float digital_audio_send_level = 0.0f;
 	float highpass_cutoff_freq     = 1.0f;
 
-	bool enabled = false;
-
-	void Config(const float predelay, const float early_mix, const float size,
-	            const float density, const float bandwidth_freq,
-	            const float decay, const float dampening_freq,
-	            const float synth_level, const float digital_level,
-	            const float highpass_freq, const int sample_rate)
+	void Setup(const float predelay, const float early_mix, const float size,
+	           const float density, const float bandwidth_freq,
+	           const float decay, const float dampening_freq,
+	           const float synth_level, const float digital_level,
+	           const float highpass_freq, const int sample_rate)
 	{
-		// Zero-sized reverb is effectively disabled
-		enabled = size > 0.0f;
-		if (!enabled)
-			return;
-
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
 		highpass_cutoff_freq     = highpass_freq;
@@ -175,6 +168,7 @@ struct mixer_t {
 	highpass_filter_t highpass_filter = {};
 
 	reverb_settings_t reverb = {};
+	bool do_reverb = false;
 };
 
 static struct mixer_t mixer = {};
@@ -239,10 +233,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 static void set_global_reverb(const mixer_channel_t channel)
 {
 	assert(channel);
-	if (!channel->HasFeature(ChannelFeature::ReverbSend))
-		return;
-
-	if (!mixer.reverb.enabled)
+	if (!mixer.do_reverb || !channel->HasFeature(ChannelFeature::ReverbSend))
 		channel->SetReverbLevel(0.0f);
 	else if (channel->HasFeature(ChannelFeature::Synthesizer))
 		channel->SetReverbLevel(mixer.reverb.synthesizer_send_level);
@@ -252,13 +243,23 @@ static void set_global_reverb(const mixer_channel_t channel)
 
 static void configure_reverb(std::string reverb_pref)
 {
+	mixer.do_reverb = (reverb_pref != "off");
+
+	if (!mixer.do_reverb) {
+		// Disable reverb sending in each channel
+		for (auto &it : mixer.channels)
+			set_global_reverb(it.second);
+
+		LOG_MSG("MIXER: Reverb disabled");
+		return;
+	}
+
 	// "on" is an alias for the medium room size preset
 	if (reverb_pref == "on")
 		reverb_pref = "medium";
 
-	enum class Preset { off, tiny, small, medium, large, huge };
-
-	const auto preset = enum_cast<Preset>(reverb_pref).value();
+	enum class RoomSize { tiny, small, medium, large, huge };
+	const auto room_size = enum_cast<RoomSize>(reverb_pref).value();
 
 	auto &r = mixer.reverb; // short-hand reference
 
@@ -275,13 +276,12 @@ static void configure_reverb(std::string reverb_pref)
 	constexpr auto _38_0dB = 0.05f;
 
 	// clang-format off
-	switch (preset) { //         PDELAY  EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case Preset::tiny:   r.Config(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case Preset::small:  r.Config(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case Preset::medium: r.Config(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case Preset::large:  r.Config(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case Preset::huge:   r.Config(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case Preset::off:    r.enabled = false; break;
+	switch (room_size) { //       PDELAY  EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
+	case RoomSize::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case RoomSize::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case RoomSize::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case RoomSize::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case RoomSize::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -289,11 +289,7 @@ static void configure_reverb(std::string reverb_pref)
 	for (auto &it : mixer.channels)
 		set_global_reverb(it.second);
 
-	if (mixer.reverb.enabled)
-		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
-	else
-		LOG_MSG("MIXER: Reverb disabled");
-
+	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
@@ -1246,7 +1242,7 @@ static void MIXER_MixData(const int frames_requested)
 	for (auto &it : mixer.channels)
 		it.second->Mix(frames_requested);
 
-	if (mixer.reverb.enabled) {
+	if (mixer.do_reverb) {
 		// Apply reverb to the reverb aux buffer, then mix the results
 		// to the master output
 		auto pos = start_pos;
@@ -1597,7 +1593,7 @@ public:
 					}
 					continue;
 				} else if (parse_prefixed_percentage('R', arg, value)) {
-					if (mixer.reverb.enabled) {
+					if (mixer.do_reverb) {
 						for (auto &it : mixer.channels) {
 							it.second->SetReverbLevel(value);
 						}
@@ -1617,8 +1613,9 @@ public:
 					channel->SetCrossfeedStrength(value);
 					continue;
 				} else if (parse_prefixed_percentage('R', arg, value)) {
-					if (mixer.reverb.enabled)
+					if (mixer.do_reverb) {
 						channel->SetReverbLevel(value);
+					}
 					continue;
 				}
 
