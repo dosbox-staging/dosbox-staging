@@ -17,6 +17,9 @@
 #ifndef EMVERB_H
 #define EMVERB_H
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 //forward declaration
 template<typename T, int maxLength> class Allpass;
 template<typename T, int maxLength> class StaticAllpassFourTap;
@@ -874,7 +877,7 @@ template<typename T, int OverSampleCount>
     private:
         void UpdateCoefficient()
         {
-            f = static_cast<T>(2. * sinf(3.141592654 * frequency / sampleRate));
+            f = static_cast<T>(2.0 * sin(M_PI * frequency / sampleRate));
         }
 	};
 #endif
