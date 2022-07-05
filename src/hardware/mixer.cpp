@@ -1849,6 +1849,23 @@ void MIXER_SetState(MixerState requested)
 	// use MIXER_Mix_NoSound (to throw away frames instead of queuing).
 }
 
+using channel_state_t = std::pair<std::string, bool>;
+
+static std::vector<channel_state_t> save_channel_states()
+{
+	std::vector<channel_state_t> states = {};
+	for (const auto &[name, channel] : mixer.channels)
+		states.emplace_back(name, channel->is_enabled);
+	return states;
+}
+
+static void restore_channel_states(const std::vector<channel_state_t> &states)
+{
+	for (const auto &[name, was_enabled] : states)
+		if (auto channel = MIXER_FindChannel(name.c_str()); channel)
+			channel->Enable(was_enabled);
+}
+
 void MIXER_CloseAudioDevice()
 {
 	// Stop either mixing method
@@ -1869,6 +1886,8 @@ void MIXER_CloseAudioDevice()
 
 void MIXER_Init(Section *sec)
 {
+	const auto channel_states = save_channel_states();
+
 	MIXER_CloseAudioDevice();
 
 	sec->AddDestroyFunction(&MIXER_Stop);
@@ -1999,6 +2018,8 @@ void MIXER_Init(Section *sec)
 
 	// Initialise send effects
 	configure_reverb(section->Get_string("reverb"));
+
+	restore_channel_states(channel_states);
 }
 
 // Toggle the mixer on/off when a true-bool is passed.
