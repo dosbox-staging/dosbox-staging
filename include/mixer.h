@@ -302,6 +302,7 @@ private:
 		float pan_left = 0.0f;
 		float pan_right = 0.0f;
 	} crossfeed = {};
+	bool do_crossfeed = false;
 
 	struct {
 		float level     = 0.0f;
