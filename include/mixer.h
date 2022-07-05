@@ -270,9 +270,9 @@ private:
 	bool last_samples_were_silence = true;
 
 	struct {
-		bool enabled = false;
 		SpeexResamplerState *state = nullptr;
 	} resampler = {};
+	bool do_resampler = false;
 
 	struct {
 		uint16_t target_freq = 0;

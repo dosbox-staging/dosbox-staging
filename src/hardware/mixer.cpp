@@ -453,18 +453,28 @@ void MixerChannel::ConfigureResampler()
 	const auto in_rate  = do_zoh_upsampler ? zoh_upsampler.target_freq
 	                                       : sample_rate;
 	const auto out_rate = mixer.sample_rate.load();
-	if (in_rate == out_rate) {
-		resampler.enabled = false;
-	} else {
-		if (!resampler.state) {
-			constexpr auto num_channels = 2; // always stereo
-			constexpr auto quality = 5;
-			resampler.state = speex_resampler_init(
-			        num_channels, in_rate, out_rate, quality, nullptr);
-		}
-		speex_resampler_set_rate(resampler.state, in_rate, out_rate);
-		resampler.enabled = true;
+
+	do_resampler = (in_rate != out_rate);
+
+	if (!do_resampler) {
+		DEBUG_LOG_MSG("MIXER: Resampler is off for channel: %s",
+		              name.c_str());
+		return;
 	}
+
+	if (!resampler.state) {
+		constexpr auto num_channels = 2; // always stereo
+		constexpr auto quality      = 5;
+
+		resampler.state = speex_resampler_init(
+		        num_channels, in_rate, out_rate, quality, nullptr);
+	}
+	speex_resampler_set_rate(resampler.state, in_rate, out_rate);
+
+	DEBUG_LOG_MSG("MIXER: Resamper is on (in %d Hz to out: %d Hz) for channel: %s",
+	              in_rate,
+	              out_rate,
+	              name.c_str());
 }
 
 void MixerChannel::SetSampleRate(const int rate)
@@ -991,13 +1001,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	last_samples_were_stereo = stereo;
 
-	auto &convert_out = resampler.enabled ? mixer.resample_temp
-	                                      : mixer.resample_out;
+	auto &convert_out = do_resampler ? mixer.resample_temp : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
 	auto out_frames = check_cast<spx_uint32_t>(convert_out.size()) / 2u;
 
-	if (resampler.enabled) {
+	if (do_resampler) {
 		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) / 2u;
 
 		out_frames = estimate_max_out_frames(resampler.state, in_frames);
