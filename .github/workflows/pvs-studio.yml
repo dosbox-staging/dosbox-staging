@@ -17,7 +17,10 @@ jobs:
       debfile: pvs-studio-7.19.61166.216-amd64.deb
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - run:  sudo apt-get update
 
       - name: Log and setup environment

@@ -63,7 +63,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       # Let self-hosted runners, which don't need_deps, leverage their own ccache.
       - name:  Add the ccache environment to GitHub-hosted runners
@@ -164,7 +166,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       # Let self-hosted runners, which don't need_deps, leverage their own ccache.
       - name:  Add the ccache environment to GitHub-hosted runners
@@ -289,7 +293,9 @@ jobs:
     runs-on: macos-10.15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       - name: Inject version string
         run: |
@@ -351,7 +357,10 @@ jobs:
     runs-on: macos-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - name: Generate changelog
         run: |
           set +x

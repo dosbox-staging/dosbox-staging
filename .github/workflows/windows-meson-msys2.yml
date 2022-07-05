@@ -74,7 +74,9 @@ jobs:
           git config --global core.eol lf
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       - name: Setup MSYS2 and install packages
         uses: msys2/setup-msys2@v2
@@ -169,10 +171,10 @@ jobs:
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout repository and submodules
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: false
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -292,7 +294,10 @@ jobs:
     runs-on: windows-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - name: Generate changelog
         shell: bash
         run: |

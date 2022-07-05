@@ -27,7 +27,9 @@ jobs:
             max_warnings: 924
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       - name:  Prepare VCPKG
         id: prep-vcpkg
@@ -108,7 +110,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
 
       - name:  Prepare VCPKG
         id: prep-vcpkg
@@ -228,7 +232,10 @@ jobs:
     runs-on: windows-2022
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - name: Generate changelog
         shell: bash
         run: |

@@ -58,7 +58,7 @@ jobs:
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name:  Log environment
         shell: pwsh
@@ -129,7 +129,7 @@ jobs:
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name:  Log environment
         shell: pwsh
@@ -219,7 +219,7 @@ jobs:
     runs-on: windows-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Generate changelog
         shell: bash
         run: |

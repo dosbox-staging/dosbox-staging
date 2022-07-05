@@ -36,7 +36,7 @@ jobs:
       CCACHE_MAXSIZE:  "64M"
       CCACHE_COMPRESS: "true"
     steps:
-      - uses:  actions/checkout@v2
+      - uses:  actions/checkout@v3
       - name:  Get Date
         id:    get-date
         shell: bash

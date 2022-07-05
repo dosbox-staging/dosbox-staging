@@ -13,7 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - id: commit-check
         run: 'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
     outputs:
@@ -46,7 +49,10 @@ jobs:
             distro: fedora_latest
 
     steps:
-      - uses: actions/checkout@v2.1.0
+      - uses: actions/checkout@v3
+        with:
+          submodules: false
+
       - uses: uraimo/run-on-arch-action@master
         name: Build artifact
         id: build
