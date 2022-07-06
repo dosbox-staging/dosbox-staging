@@ -53,13 +53,9 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 	} break;
 	case MONO: {
 		// LOG_MSG("Monitor MONO");
-		for (Bitu i = 0; i < 64; ++i) {
-			uint8_t value = ((i & 0x8) ? 0x2a : 0) +
-			                ((i & 0x10) ? 0x15 : 0);
-			vga.dac.rgb[i].red   = value;
-			vga.dac.rgb[i].green = value;
-			vga.dac.rgb[i].blue  = value;
-		}
+		size_t i = 0;
+		for (auto color : palette.mono_text)
+			vga.dac.rgb[i++] = color;
 	} break;
 	}
 
