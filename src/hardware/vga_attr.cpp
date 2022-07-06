@@ -21,6 +21,8 @@
 #include "inout.h"
 #include "vga.h"
 
+#include "../ints/int10.h"
+
 #define attr(blah) vga.attr.blah
 
 void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
@@ -38,23 +40,13 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
 	switch(m) {
 		case CGA:
 			//LOG_MSG("Monitor CGA");
-			for (Bitu i=0;i<64;i++) {
-				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				
-				// replace yellow with brown
-				if ((i & 0x17) == 0x6) vga.dac.rgb[i].green = 0x15;
-				else vga.dac.rgb[i].green =
-					((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-			}
+			for (size_t i = 0; i < cga64_palette.size(); ++i)
+				vga.dac.rgb[i] = cga64_palette[i];
 			break;
 		case EGA:
 			//LOG_MSG("Monitor EGA");
-			for (Bitu i=0;i<64;i++) {
-				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x20)? 0x15:0);
-				vga.dac.rgb[i].green=((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x8)? 0x15:0);
-			}
+			for (size_t i = 0; i < ega_palette.size(); ++i)
+				vga.dac.rgb[i] = ega_palette[i];
 			break;
 		case MONO:
 			//LOG_MSG("Monitor MONO");
