@@ -25,6 +25,12 @@
 
 #define attr(blah) vga.attr.blah
 
+static void update_palette_mappings()
+{
+	for (uint8_t i = 0; i < 16; ++i)
+		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
+}
+
 void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 {
 	// palette bit assignment:
@@ -59,9 +65,7 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 	} break;
 	}
 
-	// update the mappings
-	for (uint8_t i = 0; i < 0x10; ++i)
-		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
+	update_palette_mappings();
 }
 
 void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
@@ -126,10 +130,9 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			Bitu difference = attr(mode_control)^val;
 			attr(mode_control) = val;
 
-			if (difference & 0x80) {
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
-			}
+			if (difference & 0x80)
+				update_palette_mappings();
+
 			if (difference & 0x08)
 				VGA_SetBlinking(val & 0x8);
 			
@@ -176,8 +179,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			if ((attr(color_plane_enable)^val) & 0xf) {
 				// in case the plane enable bits change...
 				attr(color_plane_enable) = val;
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				update_palette_mappings();
 			} else
 				attr(color_plane_enable) = val;
 			/* 
@@ -233,8 +235,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			}
 			if (attr(color_select) ^ val) {
 				attr(color_select) = val;
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				update_palette_mappings();
 			}
 			/*
 				0-1	If 3C0h index 10h bit 7 is set these 2 bits are used as bits 4-5 of
