@@ -457,8 +457,8 @@ void MixerChannel::ConfigureResampler()
 	do_resampler = (in_rate != out_rate);
 
 	if (!do_resampler) {
-		DEBUG_LOG_MSG("MIXER: Resampler is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Resampler is off for channel: %s",
+		//              name.c_str());
 		return;
 	}
 
@@ -471,10 +471,10 @@ void MixerChannel::ConfigureResampler()
 	}
 	speex_resampler_set_rate(resampler.state, in_rate, out_rate);
 
-	DEBUG_LOG_MSG("MIXER: Resamper is on (in %d Hz to out: %d Hz) for channel: %s",
-	              in_rate,
-	              out_rate,
-	              name.c_str());
+	// DEBUG_LOG_MSG("MIXER: Resamper is on (in %d Hz to out: %d Hz) for channel: %s",
+	//              in_rate,
+	//              out_rate,
+	//              name.c_str());
 }
 
 void MixerChannel::SetSampleRate(const int rate)
@@ -601,8 +601,8 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 	do_highpass_filter = state != FilterState::Off;
 
 	if (!do_lowpass_filter) {
-		DEBUG_LOG_MSG("MIXER: Highpass filter is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Highpass filter is off for channel: %s",
+		//               name.c_str());
 		return;
 	}
 
@@ -626,8 +626,8 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	do_lowpass_filter = state != FilterState::Off;
 
 	if (!do_lowpass_filter) {
-		DEBUG_LOG_MSG("MIXER: Lowpass filter is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Lowpass filter is off for channel: %s",
+		//               name.c_str());
 		return;
 	}
 
@@ -680,17 +680,17 @@ void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 	do_zoh_upsampler = enabled;
 
 	if (!do_zoh_upsampler) {
-		DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is off for channel: %s",
+		//               name.c_str());
 		return;
 	}
 
 	ConfigureResampler();
 	UpdateZOHUpsamplerState();
 
-	DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is on (target_freq: %d Hz) for channel: %s",
-	              zoh_upsampler.target_freq,
-	              name.c_str());
+	// DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is on (target_freq: %d Hz) for channel: %s",
+	//               zoh_upsampler.target_freq,
+	//               name.c_str());
 }
 
 void MixerChannel::UpdateZOHUpsamplerState()
@@ -710,8 +710,8 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	do_crossfeed = (HasFeature(ChannelFeature::Stereo) && strength > 0.0f);
 
 	if (!do_crossfeed) {
-		DEBUG_LOG_MSG("MIXER: Crossfeed is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Crossfeed is off for channel: %s",
+		//               name.c_str());
 		crossfeed.strength = 0.0f;
 		return;
 	}
@@ -724,9 +724,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.pan_left = center - p;
 	crossfeed.pan_right = center + p;
 
-	DEBUG_LOG_MSG("MIXER: Crossfeed is on (strength: %.3f) for channel: %s",
-	              static_cast<double>(crossfeed.strength),
-	              name.c_str());
+	// DEBUG_LOG_MSG("MIXER: Crossfeed is on (strength: %.3f) for channel: %s",
+	//               static_cast<double>(crossfeed.strength),
+	//               name.c_str());
 }
 
 float MixerChannel::GetCrossfeedStrength()
@@ -747,8 +747,8 @@ void MixerChannel::SetReverbLevel(const float level)
 	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
 
 	if (!do_reverb_send) {
-		DEBUG_LOG_MSG("MIXER: Reverb send is off for channel: %s",
-		              name.c_str());
+		// DEBUG_LOG_MSG("MIXER: Reverb send is off for channel: %s",
+		//               name.c_str());
 		reverb.level = level_min;
 		reverb.send_gain = level_min_db;
 		return;
@@ -760,11 +760,11 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
-	              level,
-	              level_db,
-	              reverb.send_gain,
-	              name.c_str());
+	// DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
+	//               level,
+	//               level_db,
+	//               reverb.send_gain,
+	//               name.c_str());
 }
 
 float MixerChannel::GetReverbLevel()
