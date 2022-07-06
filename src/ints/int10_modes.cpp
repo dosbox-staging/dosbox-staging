@@ -534,7 +534,7 @@ static void FinishSetMode(bool clearmem) {
 			if ((machine==MCH_PCJR) && (CurMode->mode >= 9)) {
 				// PCJR cannot access the full 32k at 0xb800
 				for (uint16_t ct=0;ct<16*1024;ct++) {
-					// 0x1800 is the last 32k block in 128k, as set in the CRTCPU_PAGE register 
+					// 0x1800 is the last 32k block in 128k, as set in the CRTCPU_PAGE register
 					real_writew(0x1800,ct*2,0x0000);
 				}
 				break;
@@ -707,7 +707,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	};
 	uint8_t mode_control_list_pcjr[0xa+1]={
 		0x0c,0x08,0x0d,0x09,	//0-3
-		0x0a,0x0e,0x0e,0x09,	//4-7		
+		0x0a,0x0e,0x0e,0x09,	//4-7
 		0x1a,0x1b,0x0b			//8-a
 	};
 	uint8_t mode_control,color_select;
@@ -738,7 +738,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//black border
 		IO_WriteB(0x3da,0x3);							//Tandy color overrides?
 		switch (CurMode->mode) {
-		case 0x8:	
+		case 0x8:
 			IO_WriteB(0x3de,0x14);break;
 		case 0x9:
 			IO_WriteB(0x3de,0x14);break;
@@ -821,7 +821,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 
 		// init CRTC registers
 		for (uint16_t i = 0; i < 16; i++)
-			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams), 
+			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams),
 				RealOff(vparams) + i + crtc_block_index*16) << 8));
 	}
 	FinishSetMode(clearmem);
@@ -888,7 +888,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  Setup the VGA to the correct mode
 
 	uint16_t crtc_base;
-	bool mono_mode=(mode == 7) || (mode==0xf);  
+	bool mono_mode=(mode == 7) || (mode==0xf);
 	if (mono_mode) crtc_base=0x3b4;
 	else crtc_base=0x3d4;
 
@@ -910,7 +910,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	}
 
 	switch (CurMode->vdispend) {
-	case 400: 
+	case 400:
 		misc_output|=0x60;
 		break;
 	case 480:
@@ -976,7 +976,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
-		assert(false); 
+		assert(false);
 		break;
 	}
 	for (uint8_t ct=0;ct<SEQ_REGS;ct++) {
@@ -1074,7 +1074,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	overflow|=((CurMode->vdispend-1) & 0x100) >> 7;
 	overflow|=((CurMode->vdispend-1) & 0x200) >> 3;
 	ver_overflow|=((CurMode->vdispend-1) & 0x400) >> 9;
-	
+
 	Bitu vblank_trim;
 	if (IS_VGA_ARCH) {
 		switch (CurMode->vdispend) {
@@ -1239,7 +1239,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
-		assert(false); 
+		assert(false);
 		break;
 	}
 
@@ -1352,7 +1352,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
-		assert(false); 
+		assert(false);
 		break;
 	}
 	for (uint8_t ct=0;ct<GFX_REGS;ct++) {
@@ -1371,7 +1371,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		case 0x0f:
 			att_data[0x12]=0x05;	// planes 0 and 2 enabled
 			att_data[0x10]|=0x0a;	// monochrome and blinking
-	
+
 			att_data[0x01]=0x08; // low-intensity
 			att_data[0x04]=0x18; // blink-on case
 			att_data[0x05]=0x18; // high-intensity
@@ -1382,7 +1382,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			for (i=1;i<16;i++) att_data[i]=0x3f;
 			break;
 		case 0x10:
-		case 0x12: 
+		case 0x12:
 			goto att_text16;
 		default:
 			if ( CurMode->type == M_LIN4 )
@@ -1443,7 +1443,7 @@ att_text16:
 		att_data[5]=0x04;
 		att_data[6]=0x06;
 		att_data[7]=0x07;
-		for (uint8_t ct=0x8;ct<0x10;ct++) 
+		for (uint8_t ct=0x8;ct<0x10;ct++)
 			att_data[ct] = ct + 0x8;
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 		break;
@@ -1469,7 +1469,7 @@ att_text16:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
-		assert(false); 
+		assert(false);
 		break;
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
@@ -1567,7 +1567,7 @@ dac_text16:
 		case M_ERROR:
 			// This code should be unreachable, as this function deals only
 			// with MCH_EGA and MCH_VGA.
-			assert(false); 
+			assert(false);
 			break;
 		}
 		if (IS_VGA_ARCH) {
@@ -1638,7 +1638,7 @@ dac_text16:
 		IO_Write(0x3c4,0x15);
 		IO_Write(0x3c5,0x03);
 
-		// Accellerator setup 
+		// Accelerator setup
 		Bitu reg_50=S3_XGA_8BPP;
 		switch (CurMode->type) {
 			case M_LIN15:
