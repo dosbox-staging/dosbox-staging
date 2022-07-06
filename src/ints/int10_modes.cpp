@@ -371,21 +371,21 @@ static void init_all_palettes()
 	palette.mono_text = {
 			black,    black,    black,    black,    black,    black,    black,    black,
 			white,    white,    white,    white,    white,    white,    white,    white,
-			black,    black,    black,    black,    black,    black,    black,    black,
+			br_black, br_black, br_black, br_black, br_black, br_black, br_black, br_black,
 			br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 			black,    black,    black,    black,    black,    black,    black,    black,
 			white,    white,    white,    white,    white,    white,    white,    white,
-			black,    black,    black,    black,    black,    black,    black,    black,
+			br_black, br_black, br_black, br_black, br_black, br_black, br_black, br_black,
 			br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 	};
 
 	palette.mono_text_s3 = {
 			black,    black,    black,    black,    black,    black,    black,    black,
-			white,    white,    white,    white,    white,    white,    white,    white,
+			br_black, br_black, br_black, br_black, br_black, br_black, br_black, br_black,
 			white,    white,    white,    white,    white,    white,    white,    white,
 			br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 			black,    black,    black,    black,    black,    black,    black,    black,
-			white,    white,    white,    white,    white,    white,    white,    white,
+			br_black, br_black, br_black, br_black, br_black, br_black, br_black, br_black,
 			white,    white,    white,    white,    white,    white,    white,    white,
 			br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 	};
