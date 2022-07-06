@@ -344,7 +344,7 @@ constexpr RGBEntry br_magenta = {0x3f, 0x15, 0x3f};
 constexpr RGBEntry br_brown   = {0x3f, 0x3f, 0x15};
 constexpr RGBEntry br_white   = {0x3f, 0x3f, 0x3f};
 
-static std::vector<RGBEntry> text_palette =
+std::vector<RGBEntry> ega_palette =
 {
   black,              blue,               green,              cyan,
   red,                magenta,            {0x2a, 0x2a, 0x00}, white,
@@ -364,7 +364,7 @@ static std::vector<RGBEntry> text_palette =
   br_red,             br_magenta,         br_brown,           br_white
 };
 
-static std::vector<RGBEntry> mtext_palette = {
+static std::vector<RGBEntry> mono_text_palette = {
         black,    black,    black,    black,    black,    black,    black,    black,
 		white,    white,    white,    white,    white,    white,    white,    white,
 		black,    black,    black,    black,    black,    black,    black,    black,
@@ -375,7 +375,7 @@ static std::vector<RGBEntry> mtext_palette = {
         br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 };
 
-static std::vector<RGBEntry> mtext_s3_palette = {
+static std::vector<RGBEntry> mono_text_s3_palette = {
         black,    black,    black,    black,    black,    black,    black,    black,
 		white,    white,    white,    white,    white,    white,    white,    white,
 		white,    white,    white,    white,    white,    white,    white,    white,
@@ -386,12 +386,12 @@ static std::vector<RGBEntry> mtext_s3_palette = {
         br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 };
 
-static std::vector<RGBEntry> cga_palette = {
+static std::vector<RGBEntry> cga16_palette = {
         black, 	  blue,    green,    cyan,    red,    magenta,    brown,    white,
 		br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 };
 
-static std::vector<RGBEntry> cga_palette_2 = {
+std::vector<RGBEntry> cga64_palette = {
         black,    blue,    green,    cyan,    red,    magenta,    brown,    white,
 		black,    blue,    green,    cyan,    red,    magenta,    brown,    white,
         br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
@@ -401,8 +401,6 @@ static std::vector<RGBEntry> cga_palette_2 = {
         br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 		br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 };
-
-static std::vector<RGBEntry> ega_palette = cga_palette_2;
 
 static std::vector<RGBEntry> vga_palette =
 {
@@ -692,11 +690,11 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	}
 	IO_WriteW(crtc_base,0x09 | (scanline-1) << 8);
 	// Setup the CGA palette using VGA DAC palette
-	for (uint8_t ct = 0; ct < cga_palette.size(); ++ct)
+	for (uint8_t ct = 0; ct < cga16_palette.size(); ++ct)
 		VGA_DAC_SetEntry(ct,
-		                 cga_palette[ct].red,
-		                 cga_palette[ct].green,
-		                 cga_palette[ct].blue);
+		                 cga16_palette[ct].red,
+		                 cga16_palette[ct].green,
+		                 cga16_palette[ct].blue);
 	//Setup the tandy palette
 	for (uint8_t ct=0;ct<16;ct++) VGA_DAC_CombineColor(ct,ct);
 	//Setup the special registers for each machine type
@@ -1497,9 +1495,9 @@ att_text16:
 			if (CurMode->mode > 0xf)
 				goto dac_text16;
 			else if (CurMode->mode == 0xf)
-				write_palette_dac_data(mtext_s3_palette);
+				write_palette_dac_data(mono_text_s3_palette);
 			else
-				write_palette_dac_data(ega_palette);
+				write_palette_dac_data(cga64_palette);
 			break;
 		case M_CGA2:
 		case M_CGA4:
@@ -1507,20 +1505,20 @@ att_text16:
 			// TODO: TANDY_16 seems like an oversight here, as
 			//       this function is supposed to deal with
 			//       MCH_EGA and MCH_VGA only.
-			write_palette_dac_data(cga_palette_2);
+			write_palette_dac_data(cga64_palette);
 			break;
 		case M_TEXT:
 			if (CurMode->mode==7) {
 				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio))
-					write_palette_dac_data(mtext_s3_palette);
+					write_palette_dac_data(mono_text_s3_palette);
 				else
-					write_palette_dac_data(mtext_palette);
+					write_palette_dac_data(mono_text_palette);
 				break;
 			}
 			[[fallthrough]];
 		case M_LIN4: //Added for CAD Software
 dac_text16:
-			write_palette_dac_data(text_palette);
+			write_palette_dac_data(ega_palette);
 			break;
 		case M_VGA:
 		case M_LIN8:
