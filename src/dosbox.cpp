@@ -582,6 +582,27 @@ void DOSBOX_Init() {
 	const char *mono_pal[] = {"white", "paperwhite", "green", "amber", 0};
 	pstring->Set_values(mono_pal);
 
+	pstring = secprop->Add_string("cga_colors", only_at_start, "default");
+	pstring->Set_help(
+	        "Sets the interpretation of CGA RGBI colors. Affects all machine types capable of\n"
+	        "displaying CGA or better graphics. Built-in presets:\n"
+	        "  default:       The canonical CGA palette, as emulated by VGA adapters (default).\n"
+	        "  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level\n"
+	        "                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).\n"
+	        "  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.\n"
+	        "  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with\n"
+	        "                 a unique Contrast control that dims non-bright colors only\n"
+	        "                 (0 to 100; defaults to 100).\n"
+	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
+	        "                 Palettes used by the Amiga ports of Sierra AGI games\n"
+	        "                 (see the manual for further details).\n"
+	        "  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.\n"
+	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
+	        "  colodore:      Commodore 64 inspired colors based on the Colodore palette.\n"
+	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
+			"You can also set custom colors by specifying 16 space-separated, 6-bit hex color codes\n"
+			"(e.g. black is 000000, white is 3f3f3f, full red is 3f0000).");
+
 	pmulti = secprop->Add_multi("scaler", always, " ");
 	pmulti->SetValue("none");
 	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"

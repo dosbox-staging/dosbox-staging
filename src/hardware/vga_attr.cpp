@@ -284,7 +284,7 @@ uint8_t read_p3c1(io_port_t, io_width_t)
 	return 0;
 }
 
-void VGA_SetupAttr(void) {
+void VGA_SetupAttr() {
 	if (IS_EGAVGA_ARCH) {
 		IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
 		if (machine==MCH_EGA)
