@@ -344,7 +344,7 @@ constexpr RGBEntry br_magenta = {0x3f, 0x15, 0x3f};
 constexpr RGBEntry br_brown   = {0x3f, 0x3f, 0x15};
 constexpr RGBEntry br_white   = {0x3f, 0x3f, 0x3f};
 
-static std::array<RGBEntry, 64> text_palette =
+static std::vector<RGBEntry> text_palette =
 {
   black,              blue,               green,              cyan,
   red,                magenta,            {0x2a, 0x2a, 0x00}, white,
@@ -364,7 +364,7 @@ static std::array<RGBEntry, 64> text_palette =
   br_red,             br_magenta,         br_brown,           br_white
 };
 
-static std::array<RGBEntry, 64> mtext_palette = {
+static std::vector<RGBEntry> mtext_palette = {
         black,    black,    black,    black,    black,    black,    black,    black,
 		white,    white,    white,    white,    white,    white,    white,    white,
 		black,    black,    black,    black,    black,    black,    black,    black,
@@ -375,7 +375,7 @@ static std::array<RGBEntry, 64> mtext_palette = {
         br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 };
 
-static std::array<RGBEntry, 64> mtext_s3_palette = {
+static std::vector<RGBEntry> mtext_s3_palette = {
         black,    black,    black,    black,    black,    black,    black,    black,
 		white,    white,    white,    white,    white,    white,    white,    white,
 		white,    white,    white,    white,    white,    white,    white,    white,
@@ -386,12 +386,12 @@ static std::array<RGBEntry, 64> mtext_s3_palette = {
         br_white, br_white, br_white, br_white, br_white, br_white, br_white, br_white,
 };
 
-static std::array<RGBEntry, 16> cga_palette = {
+static std::vector<RGBEntry> cga_palette = {
         black, 	  blue,    green,    cyan,    red,    magenta,    brown,    white,
 		br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 };
 
-static std::array<RGBEntry, 64> cga_palette_2 = {
+static std::vector<RGBEntry> cga_palette_2 = {
         black,    blue,    green,    cyan,    red,    magenta,    brown,    white,
 		black,    blue,    green,    cyan,    red,    magenta,    brown,    white,
         br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
@@ -402,9 +402,9 @@ static std::array<RGBEntry, 64> cga_palette_2 = {
 		br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 };
 
-static std::array<RGBEntry, 64> ega_palette = cga_palette_2;
+static std::vector<RGBEntry> ega_palette = cga_palette_2;
 
-static std::array<RGBEntry, 248> vga_palette =
+static std::vector<RGBEntry> vga_palette =
 {
 		black,            blue,             green,            cyan,             red,              magenta,          brown,            white,
 		br_black,         br_blue,          br_green,         br_cyan,          br_red,           br_magenta,       br_brown,         br_white,
@@ -826,6 +826,15 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	}
 	FinishSetMode(clearmem);
 	return true;
+}
+
+static void write_palette_dac_data(const std::vector<RGBEntry> &palette)
+{
+	for (const auto &c : palette) {
+		IO_Write(VGAREG_DAC_DATA, c.red);
+		IO_Write(VGAREG_DAC_DATA, c.green);
+		IO_Write(VGAREG_DAC_DATA, c.blue);
+	}
 }
 
 bool INT10_SetVideoMode(uint16_t mode)
@@ -1485,21 +1494,12 @@ att_text16:
 		IO_Write(0x3c8,0);
 		switch (CurMode->type) {
 		case M_EGA:
-			if (CurMode->mode>0xf) {
+			if (CurMode->mode > 0xf)
 				goto dac_text16;
-			} else if (CurMode->mode==0xf) {
-				for (i = 0; i < mtext_s3_palette.size(); ++i) {
-					IO_Write(0x3c9, mtext_s3_palette[i].red);
-					IO_Write(0x3c9, mtext_s3_palette[i].green);
-					IO_Write(0x3c9, mtext_s3_palette[i].blue);
-				}
-			} else {
-				for (i = 0; i < ega_palette.size(); ++i) {
-					IO_Write(0x3c9, ega_palette[i].red);
-					IO_Write(0x3c9, ega_palette[i].green);
-					IO_Write(0x3c9, ega_palette[i].blue);
-				}
-			}
+			else if (CurMode->mode == 0xf)
+				write_palette_dac_data(mtext_s3_palette);
+			else
+				write_palette_dac_data(ega_palette);
 			break;
 		case M_CGA2:
 		case M_CGA4:
@@ -1507,37 +1507,20 @@ att_text16:
 			// TODO: TANDY_16 seems like an oversight here, as
 			//       this function is supposed to deal with
 			//       MCH_EGA and MCH_VGA only.
-			for (i = 0; i < cga_palette_2.size(); ++i) {
-				IO_Write(0x3c9, cga_palette_2[i].red);
-				IO_Write(0x3c9, cga_palette_2[i].green);
-				IO_Write(0x3c9, cga_palette_2[i].blue);
-			}
+			write_palette_dac_data(cga_palette_2);
 			break;
 		case M_TEXT:
 			if (CurMode->mode==7) {
-				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio)) {
-					for (i = 0; i < mtext_s3_palette.size(); ++i) {
-						IO_Write(0x3c9, mtext_s3_palette[i].red);
-						IO_Write(0x3c9, mtext_s3_palette[i].green);
-						IO_Write(0x3c9, mtext_s3_palette[i].blue);
-					}
-				} else {
-					for (i = 0; i < mtext_palette.size(); ++i) {
-						IO_Write(0x3c9, mtext_palette[i].red);
-						IO_Write(0x3c9, mtext_palette[i].green);
-						IO_Write(0x3c9, mtext_palette[i].blue);
-					}
-				}
+				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio))
+					write_palette_dac_data(mtext_s3_palette);
+				else
+					write_palette_dac_data(mtext_palette);
 				break;
 			}
 			[[fallthrough]];
 		case M_LIN4: //Added for CAD Software
 dac_text16:
-			for (i = 0; i < text_palette.size(); ++i) {
-				IO_Write(0x3c9, text_palette[i].red);
-				IO_Write(0x3c9, text_palette[i].green);
-				IO_Write(0x3c9, text_palette[i].blue);
-			}
+			write_palette_dac_data(text_palette);
 			break;
 		case M_VGA:
 		case M_LIN8:
@@ -1548,11 +1531,7 @@ dac_text16:
 			// IBM and clones use 248 default colors in the palette for 256-color mode.
 			// The last 8 colors of the palette are only initialized to 0 at BIOS init.
 			// Palette index is left at 0xf8 as on most clones, IBM leaves it at 0x10.
-			for (i = 0; i < vga_palette.size(); i++) {
-				IO_Write(0x3c9, vga_palette[i].red);
-				IO_Write(0x3c9, vga_palette[i].green);
-				IO_Write(0x3c9, vga_palette[i].blue);
-			}
+			write_palette_dac_data(vga_palette);
 			break;
 		case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 		case M_CGA2_COMPOSITE:     // only in MCH_CGA
