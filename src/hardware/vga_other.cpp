@@ -406,17 +406,17 @@ constexpr uint8_t mono_cga_palettes[8][16][3] = {
                 {0x3f, 0x3f, 0x3b},
         }};
 
-constexpr float get_rgbi_coefficient(const bool is_new_cga, const uint8_t ovescan)
+constexpr float get_rgbi_coefficient(const bool is_new_cga, const uint8_t overscan)
 {
 	const auto r_coefficient = is_new_cga ? 0.10f : 0.0f;
 	const auto g_coefficient = is_new_cga ? 0.22f : 0.0f;
 	const auto b_coefficient = is_new_cga ? 0.07f : 0.0f;
 	const auto i_coefficient = is_new_cga ? 0.32f : 0.28f;
 
-	const auto r = (ovescan & 4) ? r_coefficient : 0.0f;
-	const auto g = (ovescan & 2) ? g_coefficient : 0.0f;
-	const auto b = (ovescan & 1) ? b_coefficient : 0.0f;
-	const auto i = (ovescan & 8) ? i_coefficient : 0.0f;
+	const auto r = (overscan & 4) ? r_coefficient : 0.0f;
+	const auto g = (overscan & 2) ? g_coefficient : 0.0f;
+	const auto b = (overscan & 1) ? b_coefficient : 0.0f;
+	const auto i = (overscan & 8) ? i_coefficient : 0.0f;
 	return r + g + b + i;
 }
 
