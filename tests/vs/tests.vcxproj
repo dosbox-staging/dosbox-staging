@@ -159,7 +159,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gmock_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
@@ -254,7 +254,7 @@ $(TargetPath)</Command>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gmock_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>%systemroot%\System32\xcopy ..\..\contrib\resources $(OutDir)resources /s /i /y  &amp;&amp; ^
