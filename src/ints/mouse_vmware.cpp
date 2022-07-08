@@ -76,8 +76,8 @@ static uint16_t scaled_x = 0x7fff; // absolute position scaled from 0 to 0xffff
 static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
 static int8_t wheel_counter = 0;      // wheel movement counter
 
-static float pos_x = 0.0;
-static float pos_y = 0.0;
+static float pos_x = 0.0f;
+static float pos_y = 0.0f;
 
 // Speed measurement
 static auto time_start      = std::chrono::steady_clock::now();
@@ -184,7 +184,7 @@ static void speed_update(const float x_rel, const float y_rel)
     // For the measurement duration require no more than 400 milliseconds
     // and at least 10 times the clock granularity
     constexpr uint32_t max_diff_ms = 400;
-    constexpr uint32_t min_diff_ms = std::min(static_cast<uint32_t>(1),
+    constexpr uint32_t min_diff_ms = std::max(static_cast<uint32_t>(1),
                                               static_cast<uint32_t>(period_ms * 10));
 
     // Require at least 40 ticks of PIC emulator to pass
