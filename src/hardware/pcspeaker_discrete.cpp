@@ -366,8 +366,24 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	uint16_t pos          = 0u;
 	auto sample_base      = 0.0f;
 
-	const auto period_per_frame_ms = 1.0f / frames - FLT_EPSILON;
-	// The epsilon reduction ensures the sum of the periods is <= 1ms
+	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / frames;
+	// The addition of epsilon ensures that queued entries
+	// having time indexes at the end of the tick cycle (ie: .index == ~1.0)
+	// will still be accepted in the comparison below:
+	//    "entries.front().index <= index"
+	//
+	// Without epsilon, then we risk some of these comparisons failing, in
+	// which case these marginal end-of-cycle entries won't be processed
+	// this round and instead will stay queued for processing next round. If
+	// this pattern persists for some number of seconds, then more and more
+	// entries can be queued versus processed.
+
+	// An example of this behavior can be seen in Narco Police, where
+	// repeated gunfire from enemy soldiers during the first wave can drive
+	// the entry queue into the thousands (if epsilon is removed).
+
+	// Therefore, it's better to err on the side of accepting and processing
+	// entries versus queuing, to keep the queue under control.
 
 	auto remaining = frames;
 	while (remaining > 0) {
