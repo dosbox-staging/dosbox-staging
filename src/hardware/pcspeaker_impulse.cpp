@@ -392,16 +392,14 @@ float PcSpeakerImpulse::CalcImpulse(const double t) const
 
 void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 {
+	if (channel->WakeUp())
+		pit.prev_amplitude = neutral_amplitude;
+
 	// Did the amplitude change?
 	if (amplitude == pit.prev_amplitude)
 		return;
 
 	pit.prev_amplitude = amplitude;
-
-	// Wake the channel if it was sleeping
-	if (!channel->is_enabled)
-		channel->Enable(true);
-
 	// Make sure the time index is valid
 	index = clamp(index, 0.0f, 1.0f);
 
@@ -462,18 +460,13 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 	}
 
 	// Write silence if the waveform deque ran out
+	if (requested_frames)
+		pit.prev_amplitude = neutral_amplitude;
+
 	while (requested_frames) {
 		channel->AddSamples_m16(1, &neutral_amplitude);
 		++tally_of_silence;
 		--requested_frames;
-	}
-
-	// Maybe put the channel to sleep after 10s
-	constexpr int num_samples_in_10s = 10 * sample_rate;
-	if (tally_of_silence > num_samples_in_10s) {
-		pit.prev_amplitude = neutral_amplitude;
-		channel->Enable(false);
-		tally_of_silence = 0;
 	}
 }
 
@@ -531,8 +524,9 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	channel = MIXER_AddChannel(callback,
 	                           sample_rate,
 	                           device_name,
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
