@@ -69,24 +69,21 @@ void PcSpeakerDiscrete::AddDelayEntry(const float index, float vol)
 		vol *= sqw_scalar;
 // #define DEBUG_SQUARE_WAVE 1
 #ifdef DEBUG_SQUARE_WAVE
-		LOG_MSG("PCSPEAKER: square-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu]",
-		        prev_pos,
+		LOG_MSG("PCSPEAKER: square-wave [prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu]",
 		        prev_port_b,
 		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 	} else {
-		LOG_MSG("PCSPEAKER: sine-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu], ",
-		        prev_pos,
+		LOG_MSG("PCSPEAKER: sine-wave [prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu], ",
 		        prev_port_b,
 		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 #endif
 	}
-	entries.at(entries_queued) = {index, vol};
-	entries_queued++;
-
+	const auto entry = DelayEntry{index, vol};
+	entries.emplace(entry);
 #if 0
 	// This is extremely verbose; pipe the output to a file.
 	// Display the previous and current speaker modes w/ requested volume
@@ -341,14 +338,14 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 }
 
 // Halt the channel after the speaker has idled
-void PcSpeakerDiscrete::PlayOrSleep(const uint16_t speaker_movements,
+void PcSpeakerDiscrete::PlayOrSleep(const bool samples_were_processed,
                                     const uint16_t requested_samples,
                                     float buffer[])
 {
 	channel->AddSamples_mfloat(requested_samples, buffer);
 
 	// Maybe sleep the channel
-	if (speaker_movements && requested_samples)
+	if (samples_were_processed && requested_samples)
 		idle_countdown = idle_grace_time_ms;
 	else if (idle_countdown > 0)
 		idle_countdown--;
@@ -362,9 +359,10 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	float buf[render_frames];
 
 	ForwardPIT(1);
-	last_index            = 0.0f;
-	uint16_t pos          = 0u;
-	auto sample_base      = 0.0f;
+	last_index       = 0.0f;
+	auto sample_base = 0.0f;
+
+	bool samples_were_processed = false;
 
 	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / frames;
 	// The addition of epsilon ensures that queued entries
@@ -397,15 +395,15 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 
 			while (index < end) {
 				// Check if there is an upcoming event
-				if (entries_queued && entries[pos].index <= index) {
-					volwant = entries[pos].vol;
-					pos++;
-					entries_queued--;
+				if (entries.size() && entries.front().index <= index) {
+					volwant = entries.front().vol;
+					entries.pop();
+					samples_were_processed = true;
 					continue;
 				}
 				float vol_end;
-				if (entries_queued && entries[pos].index < end) {
-					vol_end = entries[pos].index;
+				if (entries.size() && entries.front().index < end) {
+					vol_end = entries.front().index;
 				} else
 					vol_end = end;
 				const auto vol_len = vol_end - index;
@@ -443,10 +441,9 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 					}
 				}
 			}
-			prev_pos = pos;
 			buf[i]   = value / period_per_frame_ms;
 		}
-		PlayOrSleep(pos, todo, buf);
+		PlayOrSleep(samples_were_processed, todo, buf);
 
 		remaining = check_cast<uint16_t>(remaining - todo);
 	}
