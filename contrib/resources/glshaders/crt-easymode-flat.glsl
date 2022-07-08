@@ -263,3 +263,5 @@ void main()
 
 	FragColor = vec4(col * BRIGHT_BOOST, 1.0);
 }
+
+#endif
