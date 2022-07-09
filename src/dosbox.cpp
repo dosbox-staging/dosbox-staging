@@ -849,11 +849,6 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	pstring->Set_help(
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
-	Pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the PC speaker output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
-
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, true);
 
