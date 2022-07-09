@@ -146,7 +146,7 @@ private:
 enum SERIAL_PORT_TYPE { // Also change src/dos/program_serial.cpp
 	DISABLED = 0,
 	DUMMY,
-	DIRECT_SERIAL,
+	DIRECT,
 	MODEM,
 	NULL_MODEM,
 	MOUSE,
