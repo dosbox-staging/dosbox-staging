@@ -231,6 +231,7 @@ protected:
 	                              // false: send text (i.e. NO DIALTONE)
 	bool telnet_mode = false; // Default to direct null modem connection;
 	                         // Telnet mode interprets IAC
+	char connect_string[14] = {"CONNECT 57600"}; // default connect string
 	bool connected = false;
 	uint32_t doresponse = 0;
 	uint8_t waiting_tx_character = 0;
