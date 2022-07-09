@@ -1570,7 +1570,8 @@ Typically these are:
   COM1:
     - COM port 1
     - 8N1, meaning: data-bits (8), parity (none), and stop-bits (1).
-    - 57600 baud
+    - 57600 baud, which can be changed to 300 <= VALUE <= 57600 with the
+      baudrate:VALUE setting.
     - 03F8 address
     - IRQ4 interrupt
     - 16550 fifo enabled
