@@ -942,10 +942,10 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
 	const char *serials[] = {"dummy",
 	                         "disabled",
-	                         "serialmouse",
+	                         "mouse",
 	                         "modem",
 	                         "nullmodem",
-	                         "directserial",
+	                         "direct",
 	                         0};
 
 	Pmulti_remain = secprop->Add_multiremain("serial1", when_idle, " ");
@@ -955,10 +955,10 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help(
 	        "set type of device connected to com port.\n"
-	        "Can be disabled, dummy, serialmouse, modem, nullmodem, directserial.\n"
+	        "Can be disabled, dummy, mouse, modem, nullmodem, direct.\n"
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. Parameter for all types is irq (optional).\n"
-	        "for serialmouse:\n"
+	        "for mouse:\n"
 	        "   type, can be one of:\n"
 	        "      2btn:  2 buttons, Microsoft serial mouse\n"
 	        "      3btn:  3 buttons, Logitech serial mouse\n"
@@ -967,7 +967,7 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	        "      2btn+msm, 3btn+msm, wheel+msm : autoselection\n"
 	        "   rate, can be normal or smooth (more frequent updates than on real PC)\n"
 	        "   Default is type:wheel+msm rate:smooth\n"
-	        "for directserial: realport (required), rxdelay (optional).\n"
+	        "for direct: realport (required), rxdelay (optional).\n"
 	        "   (realport:COM1 realport:ttyS0).\n"
 	        "for modem: listenport sock (all optional).\n"
 	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
