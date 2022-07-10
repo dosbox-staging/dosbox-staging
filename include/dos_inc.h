@@ -206,6 +206,7 @@ bool DOS_FreeMemory(uint16_t segment);
 void DOS_FreeProcessMemory(uint16_t pspseg);
 uint16_t DOS_GetMemory(uint16_t pages);
 bool DOS_SetMemAllocStrategy(uint16_t strat);
+void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref);
 uint16_t DOS_GetMemAllocStrategy(void);
 void DOS_BuildUMBChain(bool umb_active,bool ems_active);
 bool DOS_LinkUMBsToMemChain(uint16_t linkstate);

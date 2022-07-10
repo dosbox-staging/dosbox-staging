@@ -18,23 +18,90 @@
 
 #include "dosbox.h"
 
-#include "mem.h"
 #include "dos_inc.h"
+#include "enum.h"
+#include "mem.h"
 
-#define UMB_START_SEG 0x9fff
+enum class McbFaultStrategy { deny, repair, report, allow };
 
-static uint16_t memAllocStrategy = 0x00;
+// Constants
+// ~~~~~~~~~
 
-static void DOS_CompressMemory(void) {
-	uint16_t mcb_segment=dos.firstMCB;
+// MCB - DOS Memory Control Block Format
+// Offset Size   Description
+// 00     byte   'M' 4Dh  member of a MCB chain, (not last)
+//               'Z' 5Ah  indicates last entry in MCB chain
+// - the 'M' and 'Z' are said to represent Mark Zbikowski
+constexpr uint8_t mcb_type_M = {0x4d};
+constexpr uint8_t mcb_type_Z = {0x5a};
+
+// Upper member block starting segment
+constexpr uint16_t UMB_START_SEG = {0x9fff};
+
+static uint16_t memAllocStrategy = {0x00};
+
+constexpr uint16_t max_allowed_faults = {100};
+// not based on anything in particular. Player Manager 2 requires ~17 corrections.
+
+static auto mcb_fault_strategy = McbFaultStrategy::repair;
+
+void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref)
+{
+	assert(mcb_fault_strategy_pref);
+	mcb_fault_strategy =
+	        enum_cast<McbFaultStrategy>(mcb_fault_strategy_pref).value();
+}
+
+// returns true if the MCB block needed triaging
+static bool triage_block(DOS_MCB &mcb, const uint8_t repair_type)
+{
+	auto mcb_type_is_valid = [&]() -> bool {
+		const auto t = mcb.GetType();
+		return t == mcb_type_M || t == mcb_type_Z;
+	};
+	if (mcb_type_is_valid())
+		return false;
+
+	switch (mcb_fault_strategy) {
+	case McbFaultStrategy::deny:
+		E_Exit("DOS_MEMORY: Exiting due corrupt MCB chain");
+		break;
+
+	case McbFaultStrategy::repair:
+		LOG_INFO("DOS_MEMORY: Repairing MCB block in segment %04xh from type '%02x' to '%02x'",
+		         mcb.GetPSPSeg(),
+		         mcb.GetType(),
+		         repair_type);
+		mcb.SetType(repair_type);
+		assert(mcb_type_is_valid());
+		break;
+
+	case McbFaultStrategy::report:
+		LOG_WARNING("DOS_MEMORY: Reporting MCB block in segment %04xh with corrupt type '%02x'",
+		            mcb.GetPSPSeg(),
+		            mcb.GetType());
+		break;
+
+	case McbFaultStrategy::allow:
+		break;
+	}
+	return true;
+}
+
+static void DOS_CompressMemory()
+{
+	uint16_t mcb_segment = dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
 	DOS_MCB mcb_next(0);
 
-	while (mcb.GetType()!=0x5a) {
-		mcb_next.SetPt((uint16_t)(mcb_segment+mcb.GetSize()+1));
-		if (GCC_UNLIKELY((mcb_next.GetType()!=0x4d) && (mcb_next.GetType()!=0x5a))) E_Exit("Corrupt MCB chain");
-		if ((mcb.GetPSPSeg()==MCB_FREE) && (mcb_next.GetPSPSeg()==MCB_FREE)) {
-			mcb.SetSize(mcb.GetSize()+mcb_next.GetSize()+1);
+	uint16_t faults = {0u};
+
+	while (mcb.GetType() != 0x5a && faults < max_allowed_faults) {
+		mcb_next.SetPt((uint16_t)(mcb_segment + mcb.GetSize() + 1));
+		if ((mcb.GetPSPSeg() == MCB_FREE) &&
+		    (mcb_next.GetPSPSeg() == MCB_FREE)) {
+			faults += triage_block(mcb_next, mcb.GetType());
+			mcb.SetSize(mcb.GetSize() + mcb_next.GetSize() + 1);
 			mcb.SetType(mcb_next.GetType());
 		} else {
 			mcb_segment+=mcb.GetSize()+1;
@@ -46,12 +113,14 @@ static void DOS_CompressMemory(void) {
 void DOS_FreeProcessMemory(uint16_t pspseg) {
 	uint16_t mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
-	for (;;) {
-		if (mcb.GetPSPSeg()==pspseg) {
+
+	uint16_t faults = {0u};
+	while (faults < max_allowed_faults) {
+		if (mcb.GetPSPSeg() == pspseg) {
 			mcb.SetPSPSeg(MCB_FREE);
 		}
 		if (mcb.GetType()==0x5a) break;
-		if (GCC_UNLIKELY(mcb.GetType()!=0x4d)) E_Exit("Corrupt MCB chain");
+		faults += triage_block(mcb, 0x4d);
 		mcb_segment+=mcb.GetSize()+1;
 		mcb.SetPt(mcb_segment);
 	}
@@ -59,12 +128,16 @@ void DOS_FreeProcessMemory(uint16_t pspseg) {
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
 	if (umb_start==UMB_START_SEG) {
 		DOS_MCB umb_mcb(umb_start);
-		for (;;) {
-			if (umb_mcb.GetPSPSeg()==pspseg) {
+
+		faults = {0u};
+		while (faults < max_allowed_faults) {
+			if (umb_mcb.GetPSPSeg() == pspseg) {
 				umb_mcb.SetPSPSeg(MCB_FREE);
 			}
-			if (umb_mcb.GetType()!=0x4d) break;
-			umb_start+=umb_mcb.GetSize()+1;
+			if (mcb.GetType() == 0x5a)
+				break;
+			faults += triage_block(mcb, 0x4d);
+			umb_start += umb_mcb.GetSize() + 1;
 			umb_mcb.SetPt(umb_start);
 		}
 	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
@@ -260,6 +333,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 		mcb_next.SetPSPSeg(MCB_FREE);
 		mcb.SetType(0x4d);
 		mcb.SetPSPSeg(dos.psp());
+		DOS_CompressMemory();
 		return true;
 	}
 
