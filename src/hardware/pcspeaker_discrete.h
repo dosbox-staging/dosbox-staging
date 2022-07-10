@@ -45,8 +45,6 @@ private:
 	bool IsWaveSquare() const;
 	float NeutralOr(const float fallback) const;
 	float NeutralLastPitOr(const float fallback) const;
-	void PlayOrSleep(const bool samples_were_processed,
-	                 uint16_t requested_samples, float buffer[]);
 
 	// Constants
 	static constexpr char device_name[] = "PCSPEAKER";
@@ -90,6 +88,4 @@ private:
 	int sample_rate = 0;
 
 	int minimum_tick_rate = 0;
-
-	int idle_countdown = idle_grace_time_ms;
 };
