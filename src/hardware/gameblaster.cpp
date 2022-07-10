@@ -87,7 +87,8 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	channel = MIXER_AddChannel(audio_callback,
 	                           0,
 	                           CardName(),
-	                           {ChannelFeature::Stereo,
+	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::Stereo,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::Synthesizer});
@@ -175,8 +176,7 @@ void GameBlaster::RenderUpToNow()
 
 	// Wake up the channel and update the last rendered time datum.
 	assert(channel);
-	if (!channel->is_enabled) {
-		channel->Enable(true);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -191,28 +191,24 @@ void GameBlaster::RenderUpToNow()
 void GameBlaster::WriteDataToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
-	unused_for_ms = 0;
 	devices[0]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
-	unused_for_ms = 0;
 	devices[0]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteDataToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
-	unused_for_ms = 0;
 	devices[1]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
-	unused_for_ms = 0;
 	devices[1]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
@@ -239,11 +235,6 @@ void GameBlaster::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused for some time
-	constexpr auto ten_ms_of_callbacks = 10 * 1000;
-	if (unused_for_ms++ > ten_ms_of_callbacks)
-		channel->Enable(false);
 }
 
 // The "Z:\> mixer CHANNEL VOLUME" normally scales a channels' samples after
