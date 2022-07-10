@@ -90,7 +90,6 @@ private:
 
 	// Runtime states
 	double last_rendered_ms        = 0;
-	int unused_for_ms              = 0;
 	io_port_t base_port            = 0;
 	bool is_standalone_gameblaster = false;
 	bool is_open                   = false;
