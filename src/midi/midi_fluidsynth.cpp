@@ -216,7 +216,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                            0,
 	                                            "FSYNTH",
-	                                            {ChannelFeature::ReverbSend,
+	                                            {ChannelFeature::Sleep,
+	                                             ChannelFeature::ReverbSend,
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
 
@@ -359,7 +360,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
-	channel->Enable(true);
+	// channel->Enable(true);
 	is_open = true;
 	return true;
 }
@@ -404,6 +405,9 @@ void MidiHandlerFluidsynth::Close()
 
 void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 {
+	assert(channel);
+	channel->WakeUp();
+
 	const int chanID = msg[0] & 0b1111;
 
 	switch (msg[0] & 0b1111'0000) {
@@ -439,6 +443,9 @@ void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 
 void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 {
+	assert(channel);
+	channel->WakeUp();
+
 	const char *data = reinterpret_cast<const char *>(sysex);
 	const auto n = static_cast<int>(len);
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
