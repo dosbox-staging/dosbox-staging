@@ -387,6 +387,9 @@ static void DOSBOX_RealInit(Section * sec) {
 	} else
 		E_Exit("DOSBOX:Unknown machine type %s", mtype.c_str());
 
+	// Set the user's prefered MCB fault handling strategy
+	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy"));
+
 	// Convert the users video memory in either MB or KiB to bytes
 	const auto vmemsize_string = std::string(section->Get_string("vmemsize"));
 
@@ -468,10 +471,32 @@ void DOSBOX_Init() {
 	        "though few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
 
+	const char *mcb_fault_strategies[] = {"deny", "repair", "report", "allow", nullptr};
+	pstring = secprop->Add_string("mcb_fault_strategy",
+	                              only_at_start,
+	                              mcb_fault_strategies[0]);
+	pstring->Set_help(
+	        "How software-corrupted memory chain blocks should be handled:\n"
+	        "  deny:    Quit (and report) when faults are detected (default).\n"
+	        "  repair:  Repair (and report) faults using adjacent chain blocks.\n"
+	        "  report:  Report faults but otherwise proceed as-is.\n"
+	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
+	        "The default (deny) is recommended unless a game is failing with MCB corruption errors.");
+	pstring->Set_values(mcb_fault_strategies);
+
 	const char *vmemsize_choices[] = {
 	        "auto",
-	        "1",    "2",    "4",    "8", // MiB
-	        "256", "512",  "1024", "2048", "4096", "8192", 0, // KiB
+	        "1",
+	        "2",
+	        "4",
+	        "8", // MiB
+	        "256",
+	        "512",
+	        "1024",
+	        "2048",
+	        "4096",
+	        "8192",
+	        0, // KiB
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
