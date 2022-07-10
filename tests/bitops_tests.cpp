@@ -46,7 +46,7 @@ TEST(bitops, enum_vals)
 	EXPECT_FALSE(b22 == 1 << 23);
 
 	EXPECT_FALSE(b31 == 1 << 30);
-	EXPECT_TRUE(b31 == 1 << 31);
+	EXPECT_TRUE(b31 == 0b1u << 31);
 
 	// check against bit literals
 	EXPECT_TRUE(b0 == 0b1);
@@ -176,8 +176,8 @@ TEST(bitops, nominal_word)
 
 TEST(bitops, nominal_dword)
 {
-	const auto even_bits = (b16 | b18 | b20 | b22 | b24 | b26 | b28 | b30);
-	const auto odd_bits = (b17 | b19 | b21 | b23 | b25 | b27 | b29 | b31);
+	constexpr uint32_t even_bits = {b16 | b18 | b20 | b22 | b24 | b26 | b28 | b30};
+	constexpr uint32_t odd_bits = {b17 | b19 | b21 | b23 | b25 | b27 | b29 | b31};
 
 	uint32_t reg = 0;
 
