@@ -528,8 +528,7 @@ void OPL::RenderUpToNow()
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
-	if (!channel->is_enabled) {
-		channel->Enable(true);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -538,14 +537,6 @@ void OPL::RenderUpToNow()
 		last_rendered_ms += ms_per_frame;
 		fifo.emplace(RenderFrame());
 	}
-}
-
-bool OPL::ChannelCanSleep()
-{
-	for (auto i = 0xb0; i < 0xb9; ++i)
-		if (cache[i] & 0x20 || cache[i + 0x100] & 0x20)
-			return false;
-	return true;
 }
 
 void OPL::AudioCallback(const uint16_t requested_frames)
@@ -570,11 +561,6 @@ void OPL::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused for some time
-	constexpr uint16_t three_seconds_of_callbacks = 3 * 1000;
-	if (++unused_for_ms > three_seconds_of_callbacks && ChannelCanSleep())
-		channel->Enable(false);
 }
 
 void OPL::CacheWrite(const io_port_t port, const uint8_t val)
@@ -676,8 +662,6 @@ uint8_t OPL::AdlibGoldControlRead()
 
 void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
 {
-	unused_for_ms = 0;
-
 	RenderUpToNow();
 
 	const auto val = check_cast<uint8_t>(value);
@@ -895,7 +879,8 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
-	std::set channel_features = {ChannelFeature::ReverbSend,
+	std::set channel_features = {ChannelFeature::Sleep,
+	                             ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
 
