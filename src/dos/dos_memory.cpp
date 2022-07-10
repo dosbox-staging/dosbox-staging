@@ -26,24 +26,21 @@ enum class McbFaultStrategy { deny, repair, report, allow };
 
 // Constants
 // ~~~~~~~~~
-
-// MCB - DOS Memory Control Block Format
-// Offset Size   Description
-// 00     byte   'M' 4Dh  member of a MCB chain, (not last)
-//               'Z' 5Ah  indicates last entry in MCB chain
-// - the 'M' and 'Z' are said to represent Mark Zbikowski
-constexpr uint8_t mcb_type_M = {0x4d};
-constexpr uint8_t mcb_type_Z = {0x5a};
+constexpr uint8_t middle_mcb_type = 0x4d; // 'M', middle or member of a MCB chain
+constexpr uint8_t ending_mcb_type = 0x5a; // 'Z', last entry of the MCB chain
 
 // Upper member block starting segment
 constexpr uint16_t UMB_START_SEG = {0x9fff};
 
 static uint16_t memAllocStrategy = {0x00};
 
-constexpr uint16_t max_allowed_faults = {100};
+constexpr uint16_t max_allowed_faults = 100;
 // not based on anything in particular. Player Manager 2 requires ~17 corrections.
 
 static auto mcb_fault_strategy = McbFaultStrategy::repair;
+
+// not based on anything in particular. Player Manager 2 requires ~17 corrections.
+constexpr uint16_t max_allowed_faults = 100;
 
 void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref)
 {
@@ -57,7 +54,7 @@ static bool triage_block(DOS_MCB &mcb, const uint8_t repair_type)
 {
 	auto mcb_type_is_valid = [&]() -> bool {
 		const auto t = mcb.GetType();
-		return t == mcb_type_M || t == mcb_type_Z;
+		return t == middle_mcb_type || t == ending_mcb_type;
 	};
 	if (mcb_type_is_valid())
 		return false;
@@ -94,9 +91,9 @@ static void DOS_CompressMemory()
 	DOS_MCB mcb(mcb_segment);
 	DOS_MCB mcb_next(0);
 
-	uint16_t faults = {0u};
+	uint16_t faults = 0;
 
-	while (mcb.GetType() != 0x5a && faults < max_allowed_faults) {
+	while (mcb.GetType() != ending_mcb_type && faults < max_allowed_faults) {
 		mcb_next.SetPt((uint16_t)(mcb_segment + mcb.GetSize() + 1));
 		if ((mcb.GetPSPSeg() == MCB_FREE) &&
 		    (mcb_next.GetPSPSeg() == MCB_FREE)) {
@@ -114,33 +111,35 @@ void DOS_FreeProcessMemory(uint16_t pspseg) {
 	uint16_t mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
 
-	uint16_t faults = {0u};
+	uint16_t faults = 0;
 	while (faults < max_allowed_faults) {
 		if (mcb.GetPSPSeg() == pspseg) {
 			mcb.SetPSPSeg(MCB_FREE);
 		}
-		if (mcb.GetType()==0x5a) break;
-		faults += triage_block(mcb, 0x4d);
-		mcb_segment+=mcb.GetSize()+1;
+		if (mcb.GetType() == ending_mcb_type)
+			break;
+		faults += triage_block(mcb, middle_mcb_type);
+		mcb_segment += mcb.GetSize() + 1;
 		mcb.SetPt(mcb_segment);
 	}
 
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
-	if (umb_start==UMB_START_SEG) {
+	if (umb_start == umb_start_seg) {
 		DOS_MCB umb_mcb(umb_start);
 
-		faults = {0u};
+		faults = 0;
 		while (faults < max_allowed_faults) {
 			if (umb_mcb.GetPSPSeg() == pspseg) {
 				umb_mcb.SetPSPSeg(MCB_FREE);
 			}
-			if (mcb.GetType() == 0x5a)
+			if (mcb.GetType() == ending_mcb_type)
 				break;
-			faults += triage_block(mcb, 0x4d);
+			faults += triage_block(mcb, middle_mcb_type);
 			umb_start += umb_mcb.GetSize() + 1;
 			umb_mcb.SetPt(umb_start);
 		}
-	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
+	} else if (umb_start != 0xffff)
+		LOG(LOG_DOSMISC, LOG_ERROR)("Corrupt UMB chain: %x", umb_start);
 
 	DOS_CompressMemory();
 }
@@ -165,7 +164,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 	uint16_t mcb_segment=dos.firstMCB;
 
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
-	if (umb_start==UMB_START_SEG) {
+	if (umb_start == umb_start_seg) {
 		/* start with UMBs if requested (bits 7 or 6 set) */
 		if (mem_strat&0xc0) mcb_segment=umb_start;
 	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
@@ -200,7 +199,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 						mcb_next.SetType(mcb.GetType());
 						mcb_next.SetSize(block_size-*blocks-1);
 						mcb.SetSize(*blocks);
-						mcb.SetType(0x4d);		
+						mcb.SetType(middle_mcb_type);
 						mcb.SetPSPSeg(dos.psp());
 						mcb.SetFileName(psp_name);
 						//TODO Filename
@@ -222,7 +221,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 			}
 		}
 		/* Onward to the next MCB if there is one */
-		if (mcb.GetType()==0x5a) {
+		if (mcb.GetType() == ending_mcb_type) {
 			if ((mem_strat&0x80) && (umb_start==UMB_START_SEG)) {
 				/* bit 7 set: try high memory first, then low */
 				mcb_segment=dos.firstMCB;
@@ -241,7 +240,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 						mcb_next.SetSize(found_seg_size-*blocks-1);
 
 						mcb.SetSize(*blocks);
-						mcb.SetType(0x4d);		
+						mcb.SetType(middle_mcb_type);
 						mcb.SetPSPSeg(dos.psp());
 						mcb.SetFileName(psp_name);
 						//TODO Filename
@@ -266,7 +265,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 						// Old Block
 						mcb.SetSize(found_seg_size-*blocks-1);
 						mcb.SetPSPSeg(MCB_FREE);
-						mcb.SetType(0x4D);
+						mcb.SetType(middle_mcb_type);
 					}
 					return true;
 				}
@@ -275,7 +274,8 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 				return false;
 			}
-		} else mcb_segment+=mcb.GetSize()+1;
+		} else
+			mcb_segment += mcb.GetSize() + 1;
 	}
 	return false;
 }
@@ -287,7 +287,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	}
       
 	DOS_MCB mcb(segment-1);
-	if ((mcb.GetType()!=0x4d) && (mcb.GetType()!=0x5a)) {
+	if ((mcb.GetType() != middle_mcb_type) && (mcb.GetType() != ending_mcb_type)) {
 		DOS_SetError(DOSERR_MCB_DESTROYED);
 		return false;
 	}
@@ -304,9 +304,9 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 		DOS_MCB	mcb_new_next(segment+(*blocks));
 		mcb.SetSize(*blocks);
 		mcb_new_next.SetType(mcb.GetType());
-		if (mcb.GetType()==0x5a) {
+		if (mcb.GetType() == ending_mcb_type) {
 			/* Further blocks follow */
-			mcb.SetType(0x4d);
+			mcb.SetType(middle_mcb_type);
 		}
 
 		mcb_new_next.SetSize(total-*blocks-1);
@@ -316,13 +316,13 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 		return true;
 	}
 	/* MCB will grow, try to join with following MCB */
-	if (mcb.GetType()!=0x5a) {
+	if (mcb.GetType() != ending_mcb_type) {
 		if (mcb_next.GetPSPSeg()==MCB_FREE) {
 			total+=mcb_next.GetSize()+1;
 		}
 	}
 	if (*blocks<total) {
-		if (mcb.GetType()!=0x5a) {
+		if (mcb.GetType() != ending_mcb_type) {
 			/* save type of following MCB */
 			mcb.SetType(mcb_next.GetType());
 		}
@@ -331,7 +331,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 		mcb_next.SetSize(total-*blocks-1);
 		mcb_next.SetType(mcb.GetType());
 		mcb_next.SetPSPSeg(MCB_FREE);
-		mcb.SetType(0x4d);
+		mcb.SetType(middle_mcb_type);
 		mcb.SetPSPSeg(dos.psp());
 		DOS_CompressMemory();
 		return true;
@@ -340,7 +340,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	/* at this point: *blocks==total (fits) or *blocks>total,
 	   in the second case resize block to maximum */
 
-	if ((mcb_next.GetPSPSeg()==MCB_FREE) && (mcb.GetType()!=0x5a)) {
+	if ((mcb_next.GetPSPSeg() == MCB_FREE) && (mcb.GetType() != ending_mcb_type)) {
 		/* adjust type of joined MCB */
 		mcb.SetType(mcb_next.GetType());
 	}
@@ -363,7 +363,7 @@ bool DOS_FreeMemory(uint16_t segment) {
 	}
       
 	DOS_MCB mcb(segment-1);
-	if ((mcb.GetType()!=0x4d) && (mcb.GetType()!=0x5a)) {
+	if ((mcb.GetType() != middle_mcb_type) && (mcb.GetType() != ending_mcb_type)) {
 		DOS_SetError(DOSERR_MB_ADDRESS_INVALID);
 		return false;
 	}
@@ -385,12 +385,12 @@ void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
 		DOS_MCB umb_mcb(first_umb_seg);
 		umb_mcb.SetPSPSeg(0);		// currently free
 		umb_mcb.SetSize(first_umb_size-1);
-		umb_mcb.SetType(0x5a);
+		umb_mcb.SetType(ending_mcb_type);
 
 		/* Scan MCB-chain for last block */
 		uint16_t mcb_segment=dos.firstMCB;
 		DOS_MCB mcb(mcb_segment);
-		while (mcb.GetType()!=0x5a) {
+		while (mcb.GetType() != ending_mcb_type) {
 			mcb_segment+=mcb.GetSize()+1;
 			mcb.SetPt(mcb_segment);
 		}
@@ -399,7 +399,7 @@ void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
 		   regular MCB-chain and the UMBs */
 		uint16_t cover_mcb=(uint16_t)(mcb_segment+mcb.GetSize()+1);
 		mcb.SetPt(cover_mcb);
-		mcb.SetType(0x4d);
+		mcb.SetType(middle_mcb_type);
 		mcb.SetPSPSeg(0x0008);
 		mcb.SetSize(first_umb_seg-cover_mcb-1);
 		mcb.SetFileName("SC      ");
@@ -424,7 +424,7 @@ bool DOS_LinkUMBsToMemChain(uint16_t linkstate) {
 	uint16_t mcb_segment=dos.firstMCB;
 	uint16_t prev_mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
-	while ((mcb_segment!=umb_start) && (mcb.GetType()!=0x5a)) {
+	while ((mcb_segment != umb_start) && (mcb.GetType() != ending_mcb_type)) {
 		prev_mcb_segment=mcb_segment;
 		mcb_segment+=mcb.GetSize()+1;
 		mcb.SetPt(mcb_segment);
@@ -433,17 +433,18 @@ bool DOS_LinkUMBsToMemChain(uint16_t linkstate) {
 
 	switch (linkstate) {
 		case 0x0000:	// unlink
-			if ((prev_mcb.GetType()==0x4d) && (mcb_segment==umb_start)) {
-				prev_mcb.SetType(0x5a);
-			}
-			dos_infoblock.SetUMBChainState(0);
-			break;
-		case 0x0001:	// link
-			if (mcb.GetType()==0x5a) {
-				mcb.SetType(0x4d);
-				dos_infoblock.SetUMBChainState(1);
-			}
-			break;
+		        if ((prev_mcb.GetType() == middle_mcb_type) &&
+		            (mcb_segment == umb_start)) {
+			        prev_mcb.SetType(ending_mcb_type);
+		        }
+		        dos_infoblock.SetUMBChainState(0);
+		        break;
+	        case 0x0001: // link
+		        if (mcb.GetType() == ending_mcb_type) {
+			        mcb.SetType(middle_mcb_type);
+			        dos_infoblock.SetUMBChainState(1);
+		        }
+		        break;
 		default:
 			LOG_MSG("Invalid link state %x when reconfiguring MCB chain",linkstate);
 			return false;
@@ -470,8 +471,8 @@ void DOS_SetupMemory(void) {
 	DOS_MCB mcb_devicedummy((uint16_t)DOS_MEM_START);
 	mcb_devicedummy.SetPSPSeg(MCB_DOS);	// Devices
 	mcb_devicedummy.SetSize(1);
-	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
-//	mcb_devicedummy.SetFileName("SD      ");
+	mcb_devicedummy.SetType(middle_mcb_type); // More blocks will follow
+	//	mcb_devicedummy.SetFileName("SD      ");
 
 	uint16_t mcb_sizes=2;
 	// Create a small empty MCB (result from a growing environment block)
@@ -479,18 +480,18 @@ void DOS_SetupMemory(void) {
 	tempmcb.SetPSPSeg(MCB_FREE);
 	tempmcb.SetSize(4);
 	mcb_sizes+=5;
-	tempmcb.SetType(0x4d);
+	tempmcb.SetType(middle_mcb_type);
 
 	// Lock the previous empty MCB
 	DOS_MCB tempmcb2((uint16_t)DOS_MEM_START+mcb_sizes);
 	tempmcb2.SetPSPSeg(0x40);	// can be removed by loadfix
 	tempmcb2.SetSize(16);
 	mcb_sizes+=17;
-	tempmcb2.SetType(0x4d);
+	tempmcb2.SetType(middle_mcb_type);
 
 	DOS_MCB mcb((uint16_t)DOS_MEM_START+mcb_sizes);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
-	mcb.SetType(0x5a);								//Last Block
+	mcb.SetType(ending_mcb_type); // Last Block
 	if (machine==MCH_TANDY) {
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
@@ -500,17 +501,17 @@ void DOS_SetupMemory(void) {
 		mcb_devicedummy.SetPt((uint16_t)0x2000);
 		mcb_devicedummy.SetPSPSeg(MCB_FREE);
 		mcb_devicedummy.SetSize(0x9FFF - 0x2000);
-		mcb_devicedummy.SetType(0x5a);
+		mcb_devicedummy.SetType(ending_mcb_type);
 
 		/* exclude PCJr graphics region */
 		mcb_devicedummy.SetPt((uint16_t)0x17ff);
 		mcb_devicedummy.SetPSPSeg(MCB_DOS);
 		mcb_devicedummy.SetSize(0x800);
-		mcb_devicedummy.SetType(0x4d);
+		mcb_devicedummy.SetType(middle_mcb_type);
 
 		/* memory below 96k */
 		mcb.SetSize(0x1800 - DOS_MEM_START - (2+mcb_sizes));
-		mcb.SetType(0x4d);
+		mcb.SetType(middle_mcb_type);
 	} else {
 		/* complete memory up to 640k available */
 		/* last paragraph used to add UMB chain to low-memory MCB chain */
