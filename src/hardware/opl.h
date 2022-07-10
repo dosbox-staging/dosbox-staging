@@ -114,7 +114,6 @@ private:
 	// Playback related
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
-	uint16_t unused_for_ms  = 0;
 
 	// Last selected address in the chip for the different modes
 	union {
@@ -135,7 +134,6 @@ private:
 	void Init(const uint16_t sample_rate);
 
 	void AudioCallback(const uint16_t frames);
-	bool ChannelCanSleep();
 	AudioFrame RenderFrame();
 	void RenderUpToNow();
 
