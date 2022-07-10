@@ -535,7 +535,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                            0,
 	                                            "MT32",
-	                                            {ChannelFeature::Stereo,
+	                                            {ChannelFeature::Sleep,
+	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
 
 	// Let the mixer command adjust the MT32's services gain-level
@@ -569,9 +570,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	set_thread_name(renderer, "dosbox:mt32");
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
-	// Start playback
-	channel->Enable(true);
 	is_open = true;
+
 	return true;
 }
 
@@ -652,6 +652,9 @@ uint32_t MidiHandler_mt32::GetMidiEventTimestamp() const
 
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
+	assert(channel);
+	channel->WakeUp();
+
 	const auto msg_words = reinterpret_cast<const uint32_t *>(msg);
 	const std::lock_guard<std::mutex> lock(service_mutex);
 	service->playMsgAt(SDL_SwapLE32(*msg_words), GetMidiEventTimestamp());
@@ -659,6 +662,9 @@ void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 
 void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 {
+	assert(channel);
+	channel->WakeUp();
+
 	assert(len <= UINT32_MAX);
 	const auto msg_len = static_cast<uint32_t>(len);
 	const std::lock_guard<std::mutex> lock(service_mutex);
