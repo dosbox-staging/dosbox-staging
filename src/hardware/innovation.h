@@ -65,8 +65,6 @@ private:
 
 	// Runtime states
 	double last_rendered_ms = 0.0;
-	int unused_for_ms       = 0;
-	int silent_frames       = 0;
 	bool is_open            = false;
 };
 
