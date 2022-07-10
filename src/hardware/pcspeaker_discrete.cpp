@@ -289,7 +289,10 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 // otherwise returns the fallback if the speaker is active.
 float PcSpeakerDiscrete::NeutralOr(const float fallback) const
 {
-	return !idle_countdown ? amp_neutral : fallback;
+	// when auto-sleep is added, return "amp_neutral" when the
+	// speaker is sleeping or just woken up, and "fallback" otherwise.
+	// return !idle_countdown ? amp_neutral : fallback;
+	return fallback;
 }
 
 // Returns, in order of preference:
@@ -337,22 +340,6 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 	channel->Enable(true);
 }
 
-// Halt the channel after the speaker has idled
-void PcSpeakerDiscrete::PlayOrSleep(const bool samples_were_processed,
-                                    const uint16_t requested_samples,
-                                    float buffer[])
-{
-	channel->AddSamples_mfloat(requested_samples, buffer);
-
-	// Maybe sleep the channel
-	if (samples_were_processed && requested_samples)
-		idle_countdown = idle_grace_time_ms;
-	else if (idle_countdown > 0)
-		idle_countdown--;
-	else
-		channel->Enable(false);
-}
-
 void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 {
 	constexpr uint16_t render_frames = 64;
@@ -361,8 +348,6 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	ForwardPIT(1);
 	last_index       = 0.0f;
 	auto sample_base = 0.0f;
-
-	bool samples_were_processed = false;
 
 	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / frames;
 	// The addition of epsilon ensures that queued entries
@@ -398,7 +383,6 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 				if (entries.size() && entries.front().index <= index) {
 					volwant = entries.front().vol;
 					entries.pop();
-					samples_were_processed = true;
 					continue;
 				}
 				float vol_end;
@@ -443,7 +427,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 			}
 			buf[i]   = value / period_per_frame_ms;
 		}
-		PlayOrSleep(samples_were_processed, todo, buf);
+		channel->AddSamples_mfloat(todo, buf);
 
 		remaining = check_cast<uint16_t>(remaining - todo);
 	}
