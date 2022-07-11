@@ -30,12 +30,9 @@ constexpr uint8_t middle_mcb_type = 0x4d; // 'M', middle or member of a MCB chai
 constexpr uint8_t ending_mcb_type = 0x5a; // 'Z', last entry of the MCB chain
 
 // Upper member block starting segment
-constexpr uint16_t UMB_START_SEG = {0x9fff};
+constexpr uint16_t umb_start_seg = 0x9fff;
 
-static uint16_t memAllocStrategy = {0x00};
-
-constexpr uint16_t max_allowed_faults = 100;
-// not based on anything in particular. Player Manager 2 requires ~17 corrections.
+static uint16_t allocation_strategy = 0x00;
 
 static auto mcb_fault_strategy = McbFaultStrategy::repair;
 
@@ -144,13 +141,15 @@ void DOS_FreeProcessMemory(uint16_t pspseg) {
 	DOS_CompressMemory();
 }
 
-uint16_t DOS_GetMemAllocStrategy() {
-	return memAllocStrategy;
+uint16_t DOS_GetMemAllocStrategy()
+{
+	return allocation_strategy;
 }
 
-bool DOS_SetMemAllocStrategy(uint16_t strat) {
-	if ((strat&0x3f)<3) {
-		memAllocStrategy = strat;
+bool DOS_SetMemAllocStrategy(const uint16_t strat)
+{
+	if ((strat & 0x3f) < 3) {
+		allocation_strategy = strat;
 		return true;
 	}
 	/* otherwise an invalid allocation strategy was specified */
@@ -160,14 +159,15 @@ bool DOS_SetMemAllocStrategy(uint16_t strat) {
 bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 	DOS_CompressMemory();
 	uint16_t bigsize=0;
-	uint16_t mem_strat=memAllocStrategy;
+	uint16_t mem_strat  = allocation_strategy;
 	uint16_t mcb_segment=dos.firstMCB;
 
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
 	if (umb_start == umb_start_seg) {
 		/* start with UMBs if requested (bits 7 or 6 set) */
 		if (mem_strat&0xc0) mcb_segment=umb_start;
-	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
+	} else if (umb_start != 0xffff)
+		LOG(LOG_DOSMISC, LOG_ERROR)("Corrupt UMB chain: %x", umb_start);
 
 	DOS_MCB mcb(0);
 	DOS_MCB mcb_next(0);
@@ -222,7 +222,7 @@ bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks) {
 		}
 		/* Onward to the next MCB if there is one */
 		if (mcb.GetType() == ending_mcb_type) {
-			if ((mem_strat&0x80) && (umb_start==UMB_START_SEG)) {
+			if ((mem_strat & 0x80) && (umb_start == umb_start_seg)) {
 				/* bit 7 set: try high memory first, then low */
 				mcb_segment=dos.firstMCB;
 				mem_strat&=(~0xc0);
@@ -379,7 +379,7 @@ void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
 		uint16_t first_umb_size = 0x2000;
 		if(ems_active) first_umb_size = 0x1000;
 
-		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
+		dos_infoblock.SetStartOfUMBChain(umb_start_seg);
 		dos_infoblock.SetUMBChainState(0);		// UMBs not linked yet
 
 		DOS_MCB umb_mcb(first_umb_seg);
@@ -413,7 +413,7 @@ void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
 bool DOS_LinkUMBsToMemChain(uint16_t linkstate) {
 	/* Get start of UMB-chain */
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
-	if (umb_start!=UMB_START_SEG) {
+	if (umb_start != umb_start_seg) {
 		if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
 		return false;
 	}
@@ -445,10 +445,11 @@ bool DOS_LinkUMBsToMemChain(uint16_t linkstate) {
 			        dos_infoblock.SetUMBChainState(1);
 		        }
 		        break;
-		default:
-			LOG_MSG("Invalid link state %x when reconfiguring MCB chain",linkstate);
-			return false;
-	}
+	        default:
+		        LOG_MSG("Invalid link state %x when reconfiguring MCB chain",
+		                linkstate);
+		        return false;
+	        }
 
 	return true;
 }
@@ -500,7 +501,7 @@ void DOS_SetupMemory(void) {
 		/* memory from 128k to 640k is available */
 		mcb_devicedummy.SetPt((uint16_t)0x2000);
 		mcb_devicedummy.SetPSPSeg(MCB_FREE);
-		mcb_devicedummy.SetSize(0x9FFF - 0x2000);
+		mcb_devicedummy.SetSize(umb_start_seg - 0x2000);
 		mcb_devicedummy.SetType(ending_mcb_type);
 
 		/* exclude PCJr graphics region */
