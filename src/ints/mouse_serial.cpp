@@ -72,13 +72,8 @@ void MOUSESERIAL_NotifyMoved(const float x_rel, const float y_rel)
     }
 }
 
-void MOUSESERIAL_NotifyPressed(const MouseButtons12S buttons_12S, const uint8_t idx)
-{
-    for (auto &listener : listeners)
-        listener->OnMouseEventButton(buttons_12S.data, idx);
-}
-
-void MOUSESERIAL_NotifyReleased(const MouseButtons12S buttons_12S, const uint8_t idx)
+void MOUSESERIAL_NotifyPressedReleased(const MouseButtons12S buttons_12S,
+                                       const uint8_t idx)
 {
     for (auto &listener : listeners)
         listener->OnMouseEventButton(buttons_12S.data, idx);
