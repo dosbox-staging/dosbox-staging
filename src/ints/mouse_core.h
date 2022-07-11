@@ -176,8 +176,8 @@ void MOUSE_NotifyStateChanged();
 // - needs index of button which changed state
 
 void MOUSESERIAL_NotifyMoved(const float x_rel, const float y_rel);
-void MOUSESERIAL_NotifyPressed(const MouseButtons12S buttons_12S, const uint8_t idx);
-void MOUSESERIAL_NotifyReleased(const MouseButtons12S buttons_12S, const uint8_t idx);
+void MOUSESERIAL_NotifyPressedReleased(const MouseButtons12S buttons_12S,
+                                       const uint8_t idx);
 void MOUSESERIAL_NotifyWheel(const int16_t w_rel);
 
 // ***************************************************************************

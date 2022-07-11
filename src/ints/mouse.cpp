@@ -888,7 +888,7 @@ void MOUSE_EventPressed(uint8_t idx)
 
     if (!mouse_video.autoseamless || mouse_is_captured) {
         if (changed_12S) {
-            MOUSESERIAL_NotifyPressed(buttons_12S, idx_12S);
+            MOUSESERIAL_NotifyPressedReleased(buttons_12S, idx_12S);
         }
         event.request_ps2 = MOUSEPS2_NotifyPressedReleased(buttons_12S,
                                                            get_buttons_joined());
@@ -896,7 +896,6 @@ void MOUSE_EventPressed(uint8_t idx)
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
         event.request_dos = MOUSEDOS_NotifyPressed(buttons_12S, idx_12S, event.id);
-        MOUSESERIAL_NotifyPressed(buttons_12S, idx_12S);
     }
 
     queue.AddEvent(event);
@@ -951,7 +950,7 @@ void MOUSE_EventReleased(uint8_t idx)
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
         event.request_dos = MOUSEDOS_NotifyReleased(buttons_12S, idx_12S, event.id);
-        MOUSESERIAL_NotifyReleased(buttons_12S, idx_12S);
+        MOUSESERIAL_NotifyPressedReleased(buttons_12S, idx_12S);
     }
 
     queue.AddEvent(event);
