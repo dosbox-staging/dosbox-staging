@@ -328,15 +328,20 @@ in cuffia:
 Nota: È possibile impostare il crossfeed per canale tramite i comandi del mixer
 .
 :CONFIG_REVERB
-Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
-Quando si utilizzano valori personalizzati:
-  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
-  - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
-  - smorzamento è un numero decimale compreso tra 0.0 e 1.0
-  - ampiezza è un numero decimale compreso tra 0.0 e 100.0
-  - livello è un numero decimale compreso tra 0.0 e 1.0
-  Per esempio: reverb = 0.61 0.23 0.76 0.56
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
 .
 :CONFIG_MIDIDEVICE
 Dispositivo che riceverà i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
