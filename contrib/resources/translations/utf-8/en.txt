@@ -92,8 +92,15 @@ fullscreen or when the mouse is captured in window mode.
 Wait before closing the console if dosbox has an error.
 .
 :CONFIG_PRIORITY
-Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.
-pause is only valid for the second entry. auto disables priority levels and uses OS defaults
+Priority levels to apply when active and inactive, respectively. 
+   auto:  Let the host operating system manage the priority (valid for both).
+Default is: 'auto auto'
+.
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
 .
 :CONFIG_MAPPERFILE
 File used to load/save the key/event mappings from.
@@ -121,6 +128,14 @@ Amount of memory DOSBox has in megabytes.
 This value is best left at its default to avoid problems with some games,
 though few games might require a higher value.
 There is generally no speed advantage when raising this value.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
 Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
@@ -189,7 +204,7 @@ fullresolution output.
 Either 'none' or a GLSL shader name. Works only with
 OpenGL output.  Can be either an absolute path, a file
 in the 'glshaders' subdirectory of the DOSBox
-configuration directory, or one of the built-in shaders:
+configuration directory, one of the bundled shaders:
 advinterp2x, advinterp3x, advmame2x, advmame3x,
 crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
 scan2x, scan3x, tv2x, tv3x, sharp (default).
@@ -246,16 +261,40 @@ Setting it lower than 100 will be a percentage.
 Enable silent mode, sound is still emulated though.
 .
 :CONFIG_RATE
-Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.
+Mixer sample rate.
 .
 :CONFIG_BLOCKSIZE
-Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.
+Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.
 .
 :CONFIG_PREBUFFER
-How many milliseconds of data to keep on top of the blocksize.
+How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.
 .
 :CONFIG_NEGOTIATE
 Let the system audio driver negotiate (possibly) better rate and blocksize settings.
+.
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
 .
 :CONFIG_MIDIDEVICE
 Device that will receive the MIDI data (from the emulated MIDI
@@ -306,17 +345,6 @@ When using custom values:
   - modulation-wave is either 'sine' or 'triangle'
   For example: chorus = 3 1.2 0.3 8.0 sine
 .
-:CONFIG_REVERB
-Reverb effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All four must be provided in-order and space-separated.
-  They are: room-size damping width level, where:
-  - room-size is a decimal from 0.0 to 1.0
-  - damping is a decimal from 0.0 to 1.0
-  - width is a decimal from 0.0 to 100.0
-  - level is a decimal from 0.0 to 1.0
-  For example: reverb = 0.61 0.23 0.76 0.56
-.
 :CONFIG_MODEL
 Model of synthesizer to use.
 'auto' picks the first model with available ROMs, in order as listed.
@@ -357,16 +385,35 @@ This mitigates pops heard when starting many SB-based games.
 Reduce this if you notice intial playback is missing audio.
 .
 :CONFIG_OPLRATE
-oplrate is deprecated. The OPL waveform is now sampled
-        at the mixer's playback rate to avoid resampling.
+The OPL waveform is now sampled at the mixer's playback rate to avoid resampling.
 .
 :CONFIG_OPLMODE
 Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.
 All OPL modes are AdLib-compatible, except for 'cms'.
 .
 :CONFIG_OPLEMU
-Provider for the OPL emulation. 'compat' provides better quality,
-'nuked' is the default and most accurate (but the most CPU-intensive).
+Only 'nuked' OPL emulation is supported now.
+.
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_GUS
 Enable Gravis UltraSound emulation.
@@ -413,24 +460,55 @@ Adjusts the 6581's filtering strength as a percent from 0 to 100.
 Adjusts the 8580's filtering strength as a percent from 0 to 100.
 .
 :CONFIG_PCSPEAKER
-Enable PC-Speaker emulation.
+PC speaker emulation model:
+  discrete: Waveform is created using discrete steps (default).
+            Works well for games that use RealSound-type effects.
+  impulse:  Waveform is created using sinc impulses.
+            Recommended for square-wave games, like Commander Keen.
+            While improving accuracy, it is more CPU intensive.
+  none/off: Don't use the PC Speaker.
 .
-:CONFIG_PCRATE
-Sample rate of the PC-Speaker sound generation.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
-Neutralizes and prevents the PC speaker's DC-offset from harming other sources.
-'auto' enables this for non-Windows systems and disables it on Windows.
-If your OS performs its own DC-offset correction, then set this to 'false'.
+DC-offset is now eliminated globally from the master mixer output.
 .
 :CONFIG_TANDY
-Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.
+Enable Tandy Sound System emulation.For 'auto', emulation is present only if machine is set to 'tandy'.
+.
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_DISNEY
 Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Enable IBM PS/1 Audio emulation.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Type of joystick to emulate: auto (default),
@@ -465,16 +543,25 @@ the percentage of motion to ignore. 100 turns the stick into a digital one.
 .
 :CONFIG_SERIAL1
 set type of device connected to com port.
-Can be disabled, dummy, modem, nullmodem, directserial.
-Additional parameters must be in the same line in the form of
+Can be disabled, dummy, mouse, modem, nullmodem, direct.
+Additional parameters must be on the same line in the form of
 parameter:value. Parameter for all types is irq (optional).
-for directserial: realport (required), rxdelay (optional).
-                 (realport:COM1 realport:ttyS0).
+for mouse:
+   type, can be one of:
+      2btn:  2 buttons, Microsoft serial mouse
+      3btn:  3 buttons, Logitech serial mouse
+      wheel: 3 buttons + wheel serial mouse
+      msm:   3 buttons, Mouse Systems Mouse
+      2btn+msm, 3btn+msm, wheel+msm : autoselection
+   rate, can be normal or smooth (more frequent updates than on real PC)
+   Default is type:wheel+msm rate:smooth
+for direct: realport (required), rxdelay (optional).
+   (realport:COM1 realport:ttyS0).
 for modem: listenport sock (all optional).
 for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket, sock (all optional).
+   transparent, port, inhsocket, sock (all optional).
 SOCK parameter specifies the protocol to be used by both sides
-     of the conection. 0 for TCP and 1 for ENet reliable UDP.
+of the conection. 0 for TCP and 1 for ENet reliable UDP.
 Example: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
@@ -716,222 +803,110 @@ The path "%s" exceeds the DOS maximum length of %d characters
 Executable file not found: %s
 
 .
-:PROGRAM_MOUNT_CDROMS_FOUND
-CDROMs found: %d
-
+:WIKI_ADD_UTILITIES_ARTICLE
+https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .
-:PROGRAM_MOUNT_STATUS_DRIVE
-Drive
-.
-:PROGRAM_MOUNT_STATUS_TYPE
-Type
-.
-:PROGRAM_MOUNT_STATUS_LABEL
-Label
-.
-:PROGRAM_MOUNT_STATUS_NAME
-Image name
-.
-:PROGRAM_MOUNT_STATUS_SLOT
-Swap slot
-.
-:PROGRAM_MOUNT_STATUS_2
-Drive %c is mounted as %s
-
-.
-:PROGRAM_MOUNT_STATUS_1
-The currently mounted drives are:
-
-.
-:PROGRAM_MOUNT_ERROR_1
-Directory %s doesn't exist.
-
-.
-:PROGRAM_MOUNT_ERROR_2
-%s isn't a directory
-
-.
-:PROGRAM_MOUNT_ILL_TYPE
-Illegal type %s
-
-.
-:PROGRAM_MOUNT_ALREADY_MOUNTED
-Drive %c already mounted with %s
-
-.
-:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
-Drive %c isn't mounted.
-
-.
-:PROGRAM_MOUNT_UMOUNT_SUCCESS
-Drive %c has successfully been removed.
-
-.
-:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
-Virtual Drives can not be unMOUNTed.
-
-.
-:PROGRAM_MOUNT_DRIVEID_ERROR
-'%c' is not a valid drive identifier.
-
-.
-:PROGRAM_MOUNT_WARNING_WIN
-[31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
-
-.
-:PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.[0m
-
-.
-:PROGRAM_MOUNT_NO_OPTION
-Warning: Ignoring unsupported option '%s'.
-
-.
-:PROGRAM_MOUNT_OVERLAY_NO_BASE
-A normal directory needs to be MOUNTed first before an overlay can be added on top.
-
-.
-:PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
-The overlay is NOT compatible with the drive that is specified.
-
-.
-:PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-The overlay needs to be specified using the same addressing as the underlying drive. No mixing of relative and absolute paths.
-.
-:PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-The overlay directory can not be the same as underlying drive.
-
-.
-:PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
-Something went wrong.
-
-.
-:PROGRAM_MOUNT_OVERLAY_STATUS
-Overlay %s on drive %c mounted.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Can't move drive Z. Drive %c is mounted already.
-
-.
-:SHELL_CMD_MEM_HELP_LONG
-Displays the DOS memory information.
-
-Usage:
-  [32;1mmem[0m
-
-Where:
-  This command has no parameters.
-
-Notes:
-  This command shows the DOS memory status, including the free conventional
-  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.
-
-Examples:
-  [32;1mmem[0m
-
-.
-:PROGRAM_MEM_CONVEN
-%10d kB free conventional memory
-
-.
-:PROGRAM_MEM_EXTEND
-%10d kB free extended memory
-
-.
-:PROGRAM_MEM_EXPAND
-%10d kB free expanded memory
-
-.
-:PROGRAM_MEM_UPPER
-%10d kB free upper memory in %d blocks (largest UMB %d kB)
-
-.
-:SHELL_CMD_LOADFIX_HELP_LONG
-Loads a program in the specific memory region and then runs it.
-
-Usage:
-  [32;1mloadfix[0m [36;1mGAME[0m [37;1m[PARAMETERS][0m
-  [32;1mloadfix[0m [/d] (or [/f])[0m
-
-Where:
-  [36;1mGAME[0m is a game or program to be loaded, optionally with parameters.
-
-Notes:
-  The most common use cases of this command are to fix DOS games or programs
-  which show either the "[37;1mPacked File Corrupt[0m" or "[37;1mNot enough memory"[0m (e.g.,
-  from some 1980's games such as California Games II) error message when run.
-  Running [32;1mloadfix[0m without an argument simply allocates memory for your game
-  to run; you can free the memory with either /d or /f option when it finishes.
-
-Examples:
-  [32;1mloadfix[0m [36;1mmygame[0m [37;1margs[0m
-  [32;1mloadfix[0m /d
-
-.
-:PROGRAM_LOADFIX_ALLOC
-%d kB allocated.
-
-.
-:PROGRAM_LOADFIX_DEALLOC
-%d kB freed.
-
-.
-:PROGRAM_LOADFIX_DEALLOCALL
-Used memory freed.
-
-.
-:PROGRAM_LOADFIX_ERROR
-Memory allocation error.
-
+:WIKI_URL
+https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :SHELL_CMD_AUTOTYPE_HELP_LONG
 Performs scripted keyboard entry into a running DOS game.
 
 Usage:
-  [32;1mautotype[0m -list
-  [32;1mautotype[0m [-w [37;1mWAIT[0m] [-p [37;1mPACE[0m] [36;1mBUTTONS[0m
+  [color=green]autotype[reset] -list
+  [color=green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=cyan]BUTTONS[reset]
 
 Where:
-  [37;1mWAIT[0m    is the number of seconds to wait before typing begins (max of 30).
-  [37;1mPACE[0m    is the number of seconds before each keystroke (max of 10).
-  [36;1mBUTTONS[0m is one or more space-separated buttons.
+  [color=white]WAIT[reset]    is the number of seconds to wait before typing begins (max of 30).
+  [color=white]PACE[reset]    is the number of seconds before each keystroke (max of 10).
+  [color=cyan]BUTTONS[reset] is one or more space-separated buttons.
 
 Notes:
-  The [36;1mBUTTONS[0m supplied in the command will be autotyped into running DOS games
-  after they start. Autotyping begins after [36;1mWAIT[0m seconds, and each button is
-  entered every [37;1mPACE[0m seconds. The [36;1m,[0m character inserts an extra [37;1mPACE[0m delay.
-  [37;1mWAIT[0m and [37;1mPACE[0m default to 2 and 0.5 seconds respectively if not specified.
+  The [color=cyan]BUTTONS[reset] supplied in the command will be autotyped into running DOS games
+  after they start. Autotyping begins after [color=cyan]WAIT[reset] seconds, and each button is
+  entered every [color=white]PACE[reset] seconds. The [color=cyan],[reset] character inserts an extra [color=white]PACE[reset] delay.
+  [color=white]WAIT[reset] and [color=white]PACE[reset] default to 2 and 0.5 seconds respectively if not specified.
   A list of all available button names can be obtained using the -list option.
 
 Examples:
-  [32;1mautotype[0m -list
-  [32;1mautotype[0m -w [37;1m1[0m -p [37;1m0.3[0m [36;1mup enter , right enter[0m
-  [32;1mautotype[0m -p [37;1m0.2[0m [36;1mf1 kp_8 , , enter[0m
-  [32;1mautotype[0m -w [37;1m1.3[0m [36;1mesc enter , p l a y e r enter
-[0m
+  [color=green]autotype[reset] -list
+  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
+  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
+  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
+[reset]
 .
-:SHELL_CMD_MIXER_HELP_LONG
-Displays or changes the current sound mixer volumes.
+:SHELL_CMD_BOOT_HELP_LONG
+Boots DOSBox Staging from a DOS drive or disk image.
 
 Usage:
-  [32;1mmixer[0m [36;1mCHANNEL[0m [37;1mVOLUME[0m [/noshow]
-  [32;1mmixer[0m [/listmidi][0m
+  [color=green]boot[reset] [color=white]DRIVE[reset]
+  [color=green]boot[reset] [color=cyan]IMAGEFILE[reset]
 
 Where:
-  [36;1mCHANNEL[0m is the sound channel you want to change the volume.
-  [37;1mVOLUME[0m  is an integer between 0 and 100 representing the volume.
+  [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].
+  [color=cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.
 
 Notes:
-  Running [32;1mmixer[0m without an argument shows the volumes of all sound channels.
-  You can view available MIDI devices and user options with /listmidi option.
-  You may change the volumes of more than one sound channels in one command.
-  The /noshow option causes mixer not to show the volumes when making a change.
+  A DOS drive letter must have been mounted previously with [color=green]imgmount[reset] command.
+  The DOS drive or disk image must be bootable, containing DOS system files.
+  If more than one disk images are specified, you can swap them with a hotkey.
 
 Examples:
-  [32;1mmixer[0m
-  [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
-  [32;1mmixer[0m /listmidi
+  [color=green]boot[reset] [color=white]c:[reset]
+  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Bootdisk file does not exist.  Failing.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Cannot open bootdisk file.  Failing.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Image file is read-only! Might create problems.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+This command boots DOSBox Staging from either a floppy or hard disk image.
+
+For this command, one can specify a succession of floppy disks swappable
+by pressing %s+F4, and -l specifies the mounted drive to boot from.  If
+no drive letter is specified, this defaults to booting from the A drive.
+The only bootable drive letters are A, C, and D.  For booting from a hard
+drive (C or D), the image should have already been mounted using the
+[34;1mIMGMOUNT[0m command.
+
+Type [34;1mBOOT /?[0m for the syntax of this command.[0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Unable to boot off of drive %c
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Opening image file: %s
+
+.
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Cannot open %s
+.
+:PROGRAM_BOOT_BOOT
+Booting from drive %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr cartridge found, but machine is not PCjr
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Available PCjr cartridge commands: %s
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+No PCjr cartridge commands found
 .
 :MSCDEX_SUCCESS
 MSCDEX installed.
@@ -973,28 +948,132 @@ MSCDEX: Failure: Unknown error.
 MSCDEX: Warning: Ignoring unsupported option '%s'.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
-Scans for changes on mounted DOS drives.
-
-Usage:
-  [32;1mrescan[0m [36;1mDRIVE[0m
-  [32;1mrescan[0m [/a]
-
-Where:
-  [36;1mDRIVE[0m is the drive to scan for changes.
-
-Notes:
-  - Running [32;1mrescan[0m without an argument scans for changes of the current drive.
-  - Changes to this drive made on the host will then be reflected inside DOS.
-  - You can also scan for changes on all mounted drives with the /a option.
-
-Examples:
-  [32;1mrescan[0m [36;1mc:[0m
-  [32;1mrescan[0m /a
+:PROGRAM_MOUNT_STATUS_DRIVE
+Drive
+.
+:PROGRAM_MOUNT_STATUS_TYPE
+Type
+.
+:PROGRAM_MOUNT_STATUS_LABEL
+Label
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
+.
+:PROGRAM_MOUNT_STATUS_2
+Drive %c is mounted as %s
 
 .
-:PROGRAM_RESCAN_SUCCESS
-Drive re-scanned.
+:PROGRAM_MOUNT_STATUS_1
+The currently mounted drives are:
+
+.
+:SHELL_CMD_IMGMOUNT_HELP_LONG
+Mount a CD-ROM, floppy, or disk image to a drive letter.
+
+Usage:
+  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro
+  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)
+
+Where:
+  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...
+  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format
+  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:
+            bytes-per-sector,sectors-per-head,heads,cylinders
+Notes:
+  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.
+  - The -ro flag mounts the disk image in read-only (write-protected) mode.
+  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
+    for CD-based games that need a real DOS environment via bootable HDD image.
+Examples:
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Must specify drive letter to mount image at.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t iso[0m
+
+For [33mhardrive[0m images: Must specify drive geometry for hard drives:
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+No available IDE controllers. Drive will not have IDE emulation.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Could not load image file.
+Check that the path is correct and the image is accessible.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Could not extract drive geometry from image.
+Use parameter -size bps,spc,hpc,cyl to specify the geometry.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" is unsupported. Specify "fat" or "iso" or "none".
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Must specify file-image to mount.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Image file not found.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+To mount directories, use the [34;1mMOUNT[0m command, not the [34;1mIMGMOUNT[0m command.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Drive already mounted at that letter.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Can't create drive from file.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Drive number %d mounted as %s
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+The image must be on a host or local drive.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Using multiple files is only supported for cue/iso images.
 
 .
 :PROGRAM_INTRO
@@ -1097,6 +1176,7 @@ They can be changed in the [33mkeymapper[0m.
 [33;1m%s+F5[0m   %s Save a screenshot.
 [33;1m%s+F6[0m   %s Start/Stop recording sound output to a wave file.
 [33;1m%s+F7[0m   %s Start/Stop recording video output to a zmbv file.
+[33;1m%s+F8[0m   %s Mute/Unmute the audio.
 [33;1m%s+F9[0m   %s Shutdown emulator.
 [33;1m%s+F10[0m  %s Capture/Release the mouse.
 [33;1m%s+F11[0m  %s Slow down emulation.
@@ -1104,90 +1184,116 @@ They can be changed in the [33mkeymapper[0m.
 [33;1m%s+F12[0m    Unlock speed (turbo button/fast forward).
 
 .
-:SHELL_CMD_BOOT_HELP_LONG
-Boots DOSBox Staging from a DOS drive or disk image.
+:PROGRAM_KEYB_INFO
+Codepage %i has been loaded
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+Codepage %i has been loaded for layout %s
+
+.
+:SHELL_CMD_KEYB_HELP_LONG
+Configures a keyboard for a specific language.
 
 Usage:
-  [32;1mboot[0m [37;1mDRIVE[0m
-  [32;1mboot[0m [36;1mIMAGEFILE[0m
+  [color=green]keyb[reset] [color=cyan][LANGCODE][reset]
+  [color=green]keyb[reset] [color=cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]
 
 Where:
-  [37;1mDRIVE[0m is a drive to boot from, must be [37;1mA:[0m, [37;1mC:[0m, or [37;1mD:[0m.
-  [36;1mIMAGEFILE[0m is one or more floppy images, separated by spaces.
+  [color=cyan]LANGCODE[reset]     is a language code or keyboard layout ID.
+  [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].
+  CODEPAGEFILE is a file containing information for a code page.
 
 Notes:
-  A DOS drive letter must have been mounted previously with [32;1mimgmount[0m command.
-  The DOS drive or disk image must be bootable, containing DOS system files.
-  If more than one disk images are specified, you can swap them with a hotkey.
+  Running [color=green]keyb[reset] without an argument shows the currently loaded keyboard layout
+  and code page. It will change to [color=cyan]LANGCODE[reset] if provided, optionally with a
+  [color=white]CODEPAGE[reset] and an additional CODEPAGEFILE to load the specified code page
+  number and code page file if provided. This command is especially useful if
+  you use a non-US keyboard, and [color=cyan]LANGCODE[reset] can also be set in the configuration
+  file under the [dos] section using the "keyboardlayout = [color=cyan]LANGCODE[reset]" setting.
 
 Examples:
-  [32;1mboot[0m [37;1mc:[0m
-  [32;1mboot[0m [36;1mdisk1.ima disk2.ima[0m
+  [color=green]KEYB[reset]
+  [color=green]KEYB[reset] [color=cyan]uk[reset]
+  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
+  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
 
 .
-:PROGRAM_BOOT_NOT_EXIST
-Bootdisk file does not exist.  Failing.
+:PROGRAM_KEYB_NOERROR
+Keyboard layout %s loaded for codepage %i
 
 .
-:PROGRAM_BOOT_NOT_OPEN
-Cannot open bootdisk file.  Failing.
+:PROGRAM_KEYB_FILENOTFOUND
+Keyboard file %s not found
+
 
 .
-:PROGRAM_BOOT_WRITE_PROTECTED
-Image file is read-only! Might create problems.
+:PROGRAM_KEYB_INVALIDFILE
+Keyboard file %s invalid
 
 .
-:PROGRAM_BOOT_PRINT_ERROR
-This command boots DOSBox Staging from either a floppy or hard disk image.
-
-For this command, one can specify a succession of floppy disks swappable
-by pressing %s+F4, and -l specifies the mounted drive to boot from.  If
-no drive letter is specified, this defaults to booting from the A drive.
-The only bootable drive letters are A, C, and D.  For booting from a hard
-drive (C or D), the image should have already been mounted using the
-[34;1mIMGMOUNT[0m command.
-
-Type [34;1mBOOT /?[0m for the syntax of this command.[0m
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+No layout in %s for codepage %i
 
 .
-:PROGRAM_BOOT_UNABLE
-Unable to boot off of drive %c
-.
-:PROGRAM_BOOT_IMAGE_OPEN
-Opening image file: %s
+:PROGRAM_KEYB_INVCPFILE
+None or invalid codepage file for layout %s
+
 
 .
-:PROGRAM_BOOT_IMAGE_NOT_OPEN
-Cannot open %s
-.
-:PROGRAM_BOOT_BOOT
-Booting from drive %c...
+:SHELL_CMD_LOADFIX_HELP_LONG
+Loads a program in the specific memory region and then runs it.
+
+Usage:
+  [color=green]loadfix[reset] [color=cyan]GAME[reset] [color=white][PARAMETERS][reset]
+  [color=green]loadfix[reset] [/d] (or [/f])[reset]
+
+Where:
+  [color=cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.
+
+Notes:
+  The most common use cases of this command are to fix DOS games or programs
+  which show either the "[color=white]Packed File Corrupt[reset]" or "[color=white]Not enough memory"[reset] (e.g.,
+  from some 1980's games such as California Games II) error message when run.
+  Running [color=green]loadfix[reset] without an argument simply allocates memory for your game
+  to run; you can free the memory with either /d or /f option when it finishes.
+
+Examples:
+  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
+  [color=green]loadfix[reset] /d
 
 .
-:PROGRAM_BOOT_CART_WO_PCJR
-PCjr cartridge found, but machine is not PCjr
+:PROGRAM_LOADFIX_ALLOC
+%d kB allocated.
+
 .
-:PROGRAM_BOOT_CART_LIST_CMDS
-Available PCjr cartridge commands: %s
+:PROGRAM_LOADFIX_DEALLOC
+%d kB freed.
+
 .
-:PROGRAM_BOOT_CART_NO_CMDS
-No PCjr cartridge commands found
+:PROGRAM_LOADFIX_DEALLOCALL
+Used memory freed.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Memory allocation error.
+
 .
 :SHELL_CMD_LOADROM_HELP_LONG
 Loads a ROM image of the video BIOS or IBM BASIC.
 
 Usage:
-  [32;1mloadrom [36;1mIMAGEFILE[0m
+  [color=green]loadrom [color=cyan]IMAGEFILE[reset]
 
 Where:
-  [36;1mIMAGEFILE[0m is a video BIOS or IBM BASIC ROM image.
+  [color=cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.
 
 Notes:
    After loading an IBM BASIC ROM image into the emulated ROM with the command,
    you can run the original IBM BASIC interpreter program in DOSBox Staging.
 
 Examples:
-  [32;1mloadrom[0m [36;1mbios.rom[0m
+  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
 
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
@@ -1214,35 +1320,37 @@ ROM file not recognized.
 BASIC ROM loaded.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-mounts compact disc image(s) or floppy disk image(s) to a given drive letter.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP_LONG
-Mount a CD-ROM, floppy, or disk image to a drive letter.
+:SHELL_CMD_MEM_HELP_LONG
+Displays the DOS memory information.
 
 Usage:
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [-fs iso] [-ide] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY -ro
-  [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the [37;1mDRIVE[0m's image)
+  [color=green]mem[reset]
 
 Where:
-  [37;1mDRIVE[0m     is the drive letter where the image will be mounted: a, c, d, ...
-  [36;1mCDROM-SET[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mIMAGEFILE[0m is a hard drive or floppy image in FAT16 or FAT12 format
-  [36;1mBOOTIMAGE[0m is a bootable disk image with specified -size GEOMETRY:
-            bytes-per-sector,sectors-per-head,heads,cylinders
+  This command has no parameters.
+
 Notes:
-  - %s+F4 swaps & mounts the next [36;1mCDROM-SET[0m or [36;1mBOOTIMAGE[0m, if provided.
-  - The -ro flag mounts the disk image in read-only (write-protected) mode.
-  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
-    for CD-based games that need a real DOS environment via bootable HDD image.
+  This command shows the DOS memory status, including the free conventional
+  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.
+
 Examples:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
-  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy -ro
-  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
+  [color=green]mem[reset]
+
+.
+:PROGRAM_MEM_CONVEN
+%10d kB free conventional memory
+
+.
+:PROGRAM_MEM_EXTEND
+%10d kB free extended memory
+
+.
+:PROGRAM_MEM_EXPAND
+%10d kB free expanded memory
+
+.
+:PROGRAM_MEM_UPPER
+%10d kB free upper memory in %d blocks (largest UMB %d kB)
 
 .
 :SHELL_CMD_MOUNT_HELP
@@ -1253,13 +1361,13 @@ maps physical folders or drives to a virtual drive letter.
 Mount a directory from the host OS to a drive letter.
 
 Usage:
-  [32;1mmount[0m [37;1mDRIVE[0m [36;1mDIRECTORY[0m [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
-  [32;1mmount[0m -listcd / -cd (lists all detected CD-ROM drives and their numbers)
-  [32;1mmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's directory)
+  [color=green]mount[reset] [color=white]DRIVE[reset] [color=cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
+  [color=green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)
+  [color=green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)
 
 Where:
-  [37;1mDRIVE[0m     the drive letter where the directory will be mounted: A, C, D, ...
-  [36;1mDIRECTORY[0m is the directory on the host OS to be mounted
+  [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...
+  [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted
   TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay
   SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)
   LABEL     drive label name to be used
@@ -1269,171 +1377,161 @@ Notes:
   - Additional options are described in the manual (README file, chapter 4).
 
 Examples:
-  [32;1mmount[0m [37;1mC[0m [36;1m~/dosgames[0m
-  [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/Game CD"[0m -t cdrom
-  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay
+  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
+  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
 
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-The currently mounted disk and CD image drives are:
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROMs found: %d
 
 .
-:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
-Must specify drive letter to mount image at.
+:PROGRAM_MOUNT_ERROR_1
+Directory %s doesn't exist.
 
 .
-:PROGRAM_IMGMOUNT_SPECIFY2
-Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
+:PROGRAM_MOUNT_ERROR_2
+%s isn't a directory
 
 .
-:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t iso[0m
-
-For [33mhardrive[0m images: Must specify drive geometry for hard drives:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+:PROGRAM_MOUNT_ILL_TYPE
+Illegal type %s
 
 .
-:PROGRAM_IMGMOUNT_STATUS_NONE
-No drive available
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Drive %c already mounted with %s
 
 .
-:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Drive %c isn't mounted.
 
 .
-:PROGRAM_IMGMOUNT_INVALID_IMAGE
-Could not load image file.
-Check that the path is correct and the image is accessible.
+:PROGRAM_MOUNT_UMOUNT_SUCCESS
+Drive %c has successfully been removed.
 
 .
-:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
-Could not extract drive geometry from image.
-Use parameter -size bps,spc,hpc,cyl to specify the geometry.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtual Drives can not be unMOUNTed.
 
 .
-:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
-Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.
+:PROGRAM_MOUNT_DRIVEID_ERROR
+'%c' is not a valid drive identifier.
 
 .
-:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Format "%s" is unsupported. Specify "fat" or "iso" or "none".
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
 
 .
-:PROGRAM_IMGMOUNT_SPECIFY_FILE
-Must specify file-image to mount.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.[0m
 
 .
-:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
-Image file not found.
+:PROGRAM_MOUNT_NO_OPTION
+Warning: Ignoring unsupported option '%s'.
 
 .
-:PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [34;1mMOUNT[0m command, not the [34;1mIMGMOUNT[0m command.
+:PROGRAM_MOUNT_OVERLAY_NO_BASE
+A normal directory needs to be MOUNTed first before an overlay can be added on top.
 
 .
-:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
-Drive already mounted at that letter.
+:PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
+The overlay is NOT compatible with the drive that is specified.
 
 .
-:PROGRAM_IMGMOUNT_CANT_CREATE
-Can't create drive from file.
+:PROGRAM_MOUNT_OVERLAY_MIXED_BASE
+The overlay needs to be specified using the same addressing as the underlying drive. No mixing of relative and absolute paths.
+.
+:PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
+The overlay directory can not be the same as underlying drive.
 
 .
-:PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Drive number %d mounted as %s
+:PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
+Something went wrong.
 
 .
-:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-The image must be on a host or local drive.
+:PROGRAM_MOUNT_OVERLAY_STATUS
+Overlay %s on drive %c mounted.
 
 .
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Using multiple files is only supported for cue/iso images.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Can't move drive Z. Drive %c is mounted already.
 
 .
-:PROGRAM_KEYB_INFO
-Codepage %i has been loaded
-
-.
-:PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s
-
-.
-:SHELL_CMD_KEYB_HELP_LONG
-Configures a keyboard for a specific language.
+:SHELL_CMD_RESCAN_HELP_LONG
+Scans for changes on mounted DOS drives.
 
 Usage:
-  [32;1mkeyb[0m [36;1m[LANGCODE][0m
-  [32;1mkeyb[0m [36;1mLANGCODE[0m [37;1mCODEPAGE[0m [CODEPAGEFILE]
+  [color=green]rescan[reset] [color=cyan]DRIVE[reset]
+  [color=green]rescan[reset] [/a]
 
 Where:
-  [36;1mLANGCODE[0m     is a language code or keyboard layout ID.
-  [37;1mCODEPAGE[0m     is a code page number, such as [37;1m437[0m and [37;1m850[0m.
-  CODEPAGEFILE is a file containing information for a code page.
+  [color=cyan]DRIVE[reset] is the drive to scan for changes.
 
 Notes:
-  Running [32;1mkeyb[0m without an argument shows the currently loaded keyboard layout
-  and code page. It will change to [36;1mLANGCODE[0m if provided, optionally with a
-  [37;1mCODEPAGE[0m and an additional CODEPAGEFILE to load the specified code page
-  number and code page file if provided. This command is especially useful if
-  you use a non-US keyboard, and [36;1mLANGCODE[0m can also be set in the configuration
-  file under the [dos] section using the "keyboardlayout = [36;1mLANGCODE[0m" setting.
+  - Running [color=green]rescan[reset] without an argument scans for changes of the current drive.
+  - Changes to this drive made on the host will then be reflected inside DOS.
+  - You can also scan for changes on all mounted drives with the /a option.
 
 Examples:
-  [32;1mKEYB[0m
-  [32;1mKEYB[0m [36;1muk[0m
-  [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
-  [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
+  [color=green]rescan[reset] [color=cyan]c:[reset]
+  [color=green]rescan[reset] /a
 
 .
-:PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+:PROGRAM_RESCAN_SUCCESS
+Drive re-scanned.
 
 .
-:PROGRAM_KEYB_FILENOTFOUND
-Keyboard file %s not found
+:SHELL_CMD_MIXER_HELP_LONG
+Displays or changes the sound mixer settings.
 
+Usage:
+  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]
+  [color=green]mixer[reset] [/listmidi]
 
-.
-:PROGRAM_KEYB_INVALIDFILE
-Keyboard file %s invalid
+Where:
+  [color=cyan]CHANNEL[reset]  is the sound channel to change the settings of.
+  [color=white]COMMANDS[reset] is one or more of the following commands:
+    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])
+               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
+    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
+    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]
 
-.
-:PROGRAM_KEYB_LAYOUTNOTFOUND
-No layout in %s for codepage %i
+Notes:
+  Running [color=green]mixer[reset] without an argument shows the current mixer settings.
+  You may change the settings of more than one channel in a single command.
+  If channel is unspecified, you can set crossfeed, reverb or chorus globally.
+  You can view the list of available MIDI devices with /listmidi.
+  The /noshow option applies the changes without showing the mixer settings.
 
-.
-:PROGRAM_KEYB_INVCPFILE
-None or invalid codepage file for layout %s
-
-
+Examples:
+  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Manages the serial ports.
 
 Usage:
-  [32;1mserial[0m [37;1m[PORT#][0m                List all or specified serial ports.
-  [32;1mserial[0m [37;1mPORT#[0m [36;1mTYPE[0m [settings]  Set the specified port to the given type.
+  [color=green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.
+  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]DEVICE[reset] [settings]   Attach specified device to the given port.
 
 Where:
-  [37;1mPORT#[0m The port number: [37;1m1[0m, [37;1m2[0m, [37;1m3[0m, or [37;1m4[0m
-  [36;1mTYPE[0m  The port type: [36;1mMODEM[0m, [36;1mNULLMODEM[0m, [36;1mDIRECTSERIAL[0m, [36;1mDUMMY[0m, or [36;1mDISABLED[0m
+  [color=cyan]DEVICE[reset]   One of: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], or [color=cyan]DISABLED[reset]
 
-Notes:
-  Optional settings for each [36;1mTYPE[0m:
-  For [36;1mMODEM[0m        : IRQ, LISTENPORT, SOCK
-  For [36;1mNULLMODEM[0m    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
-                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  For [36;1mDIRECTSERIAL[0m : IRQ, REALPORT (required), RXDELAY
-  For [36;1mDUMMY[0m        : IRQ
+  Optional settings for each [color=cyan]DEVICE[reset]:
+  For [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  For [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+                   PORT, INHSOCKET, SOCK
+  For [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+                   2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
+  For [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
+  For [color=cyan]DUMMY[reset]      : IRQ
 
 Examples:
-  [32;1mSERIAL[0m                                       : List the current serial ports
-  [32;1mSERIAL[0m [37;1m1[0m [36;1mNULLMODEM[0m PORT:1250                 : Listen on TCP:1250 as server
-  [32;1mSERIAL[0m [37;1m2[0m [36;1mNULLMODEM[0m SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  [32;1mSERIAL[0m [37;1m3[0m [36;1mMODEM[0m LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  [32;1mSERIAL[0m [37;1m4[0m [36;1mDIRECTSERIAL[0m REALPORT:ttyUSB0       : Use a physical port on Linux
+  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server
+  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
+  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
+  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux
+  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -1452,33 +1550,6 @@ Type must be one of the following:
   %s
 
 .
-:SHELL_CMD_PLACEHOLDER_HELP
-This program is a placeholder
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s is only a placeholder.
-
-Install a 3rd-party and give its PATH precedence.
-
-For example:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utils
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Visit the following for more help:
-.
-:WIKI_ADD_UTILITIES_ARTICLE
-https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
-.
-:WIKI_URL
-https://github.com/dosbox-staging/dosbox-staging/wiki
-.
 :SHELL_ILLEGAL_PATH
 Illegal Path.
 
@@ -1491,23 +1562,23 @@ A short list of the most often used commands:
 :SHELL_CMD_COMMAND_HELP_LONG
 Starts the DOSBox Staging command shell.
 Usage:
-  [32;1mcommand[0m
-  [32;1mcommand[0m /c (or /init) [36;1mCOMMAND[0m
+  [color=green]command[reset]
+  [color=green]command[reset] /c (or /init) [color=cyan]COMMAND[reset]
 
 Where:
-  [36;1mCOMMAND[0m is a DOS command, game, or program to run.
+  [color=cyan]COMMAND[reset] is a DOS command, game, or program to run.
 
 Notes:
   DOSBox Staging automatically starts a DOS command shell by invoking this
   command with /init option when it starts, which shows the welcome banner.
-  You can load a new instance of the command shell by running [32;1mcommand[0m.
-  Adding a /c option along with [36;1mCOMMAND[0m allows this command to run the
+  You can load a new instance of the command shell by running [color=green]command[reset].
+  Adding a /c option along with [color=cyan]COMMAND[reset] allows this command to run the
   specified command (optionally with parameters) and then exit automatically.
 
 Examples:
-  [32;1mcommand[0m
-  [32;1mcommand[0m /c [36;1mecho[0m [37;1mHello world![0m
-  [32;1mcommand[0m /init [36;1mdir[0m
+  [color=green]command[reset]
+  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
+  [color=green]command[reset] /init [color=cyan]dir[reset]
 
 .
 :SHELL_CMD_ECHO_ON
@@ -1563,22 +1634,22 @@ Type 'date %s' to change.
 .
 :SHELL_CMD_DATE_HELP_LONG
 Usage:
-  [32;1mdate[0m [/t]
-  [32;1mdate[0m /h
-  [32;1mdate[0m [36;1mDATE[0m
+  [color=green]date[reset] [/t]
+  [color=green]date[reset] /h
+  [color=green]date[reset] [color=cyan]DATE[reset]
 
 Where:
-  [36;1mDATE[0m is the new date to set to, in the format of [36;1m%s[0m.
+  [color=cyan]DATE[reset] is the new date to set to, in the format of [color=cyan]%s[reset].
 
 Notes:
-  Running [32;1mdate[0m without an argument shows the current date, or only a date
+  Running [color=green]date[reset] without an argument shows the current date, or only a date
   with the /t option. You can force a date synchronization of with the host
   system with the /h option, or manually specify a new date to set to.
 
 Examples:
-  [32;1mdate[0m
-  [32;1mdate[0m /h
-  [32;1mdate[0m [36;1m%s[0m
+  [color=green]date[reset]
+  [color=green]date[reset] /h
+  [color=green]date[reset] [color=cyan]%s[reset]
 
 .
 :SHELL_CMD_TIME_HELP
@@ -1598,22 +1669,22 @@ Type 'time %s' to change.
 .
 :SHELL_CMD_TIME_HELP_LONG
 Usage:
-  [32;1mtime[0m [/t]
-  [32;1mtime[0m /h
-  [32;1mtime[0m [36;1mTIME[0m
+  [color=green]time[reset] [/t]
+  [color=green]time[reset] /h
+  [color=green]time[reset] [color=cyan]TIME[reset]
 
 Where:
-  [36;1mTIME[0m is the new time to set to, in the format of [36;1m%s[0m.
+  [color=cyan]TIME[reset] is the new time to set to, in the format of [color=cyan]%s[reset].
 
 Notes:
-  Running [32;1mtime[0m without an argument shows the current time, or a simple time
+  Running [color=green]time[reset] without an argument shows the current time, or a simple time
   with the /t option. You can force a time synchronization of with the host
   system with the /h option, or manually specify a new time to set to.
 
 Examples:
-  [32;1mtime[0m
-  [32;1mtime[0m /h
-  [32;1mtime[0m [36;1m%s[0m
+  [color=green]time[reset]
+  [color=green]time[reset] /h
+  [color=green]time[reset] [color=cyan]%s[reset]
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -1723,7 +1794,7 @@ Waits for a keystroke to continue.
 .
 :SHELL_CMD_PAUSE_HELP_LONG
 Usage:
-  [32;1mpause[0m
+  [color=green]pause[reset]
 
 Where:
   This command has no parameters.
@@ -1734,7 +1805,7 @@ Notes:
   any key on the keyboard (except for certain control keys) to continue.
 
 Examples:
-  [32;1mpause[0m
+  [color=green]pause[reset]
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -1795,7 +1866,7 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_SUB
-[32;1mdosbox-staging %s[0m
+[color=green]dosbox-staging %s[0m
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -1804,19 +1875,19 @@ Displays or changes the current directory.
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Usage:
-  [32;1mcd[0m [36;1mDIRECTORY[0m
-  [32;1mchdir[0m [36;1mDIRECTORY[0m
+  [color=green]cd[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]chdir[reset] [color=cyan]DIRECTORY[reset]
 
 Where:
-  [36;1mDIRECTORY[0m is the name of the directory to change to.
+  [color=cyan]DIRECTORY[reset] is the name of the directory to change to.
 
 Notes:
-  Running [32;1mcd[0m without an argument displays the current directory.
-  With [36;1mDIRECTORY[0m the command only changes the directory, not the current drive.
+  Running [color=green]cd[reset] without an argument displays the current directory.
+  With [color=cyan]DIRECTORY[reset] the command only changes the directory, not the current drive.
 
 Examples:
-  [32;1mcd[0m
-  [32;1mcd[0m [36;1mmydir[0m
+  [color=green]cd[reset]
+  [color=green]cd[reset] [color=cyan]mydir[reset]
 
 .
 :SHELL_CMD_CLS_HELP
@@ -1825,17 +1896,17 @@ Clears the DOS screen.
 .
 :SHELL_CMD_CLS_HELP_LONG
 Usage:
-  [32;1mcls[0m
+  [color=green]cls[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
-  Running [32;1mcls[0m clears all texts on the DOS screen, except for the command
-  prompt (e.g. [37;1mZ:\>[0m or [37;1mC:\GAMES>[0m) on the top-left corner of the screen.
+  Running [color=green]cls[reset] clears all texts on the DOS screen, except for the command
+  prompt (e.g. [color=white]Z:\>[reset] or [color=white]C:\GAMES>[reset]) on the top-left corner of the screen.
 
 Examples:
-  [32;1mcls[0m
+  [color=green]cls[reset]
 
 .
 :SHELL_CMD_DIR_HELP
@@ -1844,27 +1915,27 @@ Displays a list of files and subdirectories in a directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Usage:
-  [32;1mdir[0m [36;1m[PATTERN][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDER[0m]
+  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]
 
 Where:
-  [36;1mPATTERN[0m is either an exact filename or an inexact filename with wildcards,
+  [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,
           which are the asterisk (*) and the question mark (?). A path can be
           specified in the pattern to list contents in the specified directory.
-  [37;1mORDER[0m   is a listing order, including [37;1mn[0m (by name, alphabetic), [37;1ms[0m (by size,
-          smallest first), [37;1me[0m (by extension, alphabetic), [37;1md[0m (by date/time,
-          oldest first), with an optional [37;1m-[0m prefix to reverse order.
+  [color=white]ORDER[reset]   is a listing order, including [color=white]n[reset] (by name, alphabetic), [color=white]s[reset] (by size,
+          smallest first), [color=white]e[reset] (by extension, alphabetic), [color=white]d[reset] (by date/time,
+          oldest first), with an optional [color=white]-[reset] prefix to reverse order.
   /w      lists 5 files/directories in a row; /b      lists the names only.
-  /o[37;1mORDER[0m orders the list (see above)         /p      pauses after each screen.
+  /o[color=white]ORDER[reset] orders the list (see above)         /p      pauses after each screen.
   /ad     lists all directories;              /a-d    lists all files.
 
 Notes:
-  Running [32;1mdir[0m without an argument lists all files and subdirectories in the
-  current directory, which is the same as [32;1mdir[0m [36;1m*.*[0m.
+  Running [color=green]dir[reset] without an argument lists all files and subdirectories in the
+  current directory, which is the same as [color=green]dir[reset] [color=cyan]*.*[reset].
 
 Examples:
-  [32;1mdir[0m [36;1m[0m
-  [32;1mdir[0m [36;1mgames.*[0m /p
-  [32;1mdir[0m [36;1mc:\games\*.exe[0m /b /o[37;1m-d[0m
+  [color=green]dir[reset] [color=cyan][reset]
+  [color=green]dir[reset] [color=cyan]games.*[reset] /p
+  [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 
 .
 :SHELL_CMD_ECHO_HELP
@@ -1873,20 +1944,20 @@ Displays messages and enables/disables command echoing.
 .
 :SHELL_CMD_ECHO_HELP_LONG
 Usage:
-  [32;1mecho[0m [36;1m[on|off][0m
-  [32;1mecho[0m [36;1m[MESSAGE][0m
+  [color=green]echo[reset] [color=cyan][on|off][reset]
+  [color=green]echo[reset] [color=cyan][MESSAGE][reset]
 
 Where:
-  [36;1mon|off[0m  Turns on/off command echoing.
-  [36;1mMESSAGE[0m The message to display.
+  [color=cyan]on|off[reset]  Turns on/off command echoing.
+  [color=cyan]MESSAGE[reset] The message to display.
 
 Notes:
-  - Running [32;1mecho[0m without an argument shows the current on or off status.
+  - Running [color=green]echo[reset] without an argument shows the current on or off status.
   - Echo is especially useful when writing or debugging batch files.
 
 Examples:
-  [32;1mecho[0m [36;1moff[0m
-  [32;1mecho[0m [36;1mHello world![0m
+  [color=green]echo[reset] [color=cyan]off[reset]
+  [color=green]echo[reset] [color=cyan]Hello world![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -1895,17 +1966,17 @@ Exits from the DOS shell.
 .
 :SHELL_CMD_EXIT_HELP_LONG
 Usage:
-  [32;1mexit[0m
+  [color=green]exit[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
-  If you start a DOS shell from a program, running [32;1mexit[0m returns to the program.
+  If you start a DOS shell from a program, running [color=green]exit[reset] returns to the program.
   If there is no DOS program running, the command quits from DOSBox Staging.
 
 Examples:
-  [32;1mexit[0m
+  [color=green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
@@ -1918,21 +1989,21 @@ Displays help information for DOS commands.
 .
 :SHELL_CMD_HELP_HELP_LONG
 Usage:
-  [32;1mhelp[0m
-  [32;1mhelp[0m /a[ll]
-  [32;1mhelp[0m [36;1mCOMMAND[0m
+  [color=green]help[reset]
+  [color=green]help[reset] /a[ll]
+  [color=green]help[reset] [color=cyan]COMMAND[reset]
 
 Where:
-  [36;1mCOMMAND[0m is the name of an internal DOS command, such as [36;1mdir[0m.
+  [color=cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=cyan]dir[reset].
 
 Notes:
-  - Running [32;1mecho[0m without an argument displays a DOS command list.
+  - Running [color=green]echo[reset] without an argument displays a DOS command list.
   - You can view a full list of internal commands with the /a or /all option.
-  - Instead of [32;1mhelp[0m [36;1mCOMMAND[0m, you can also get command help with [36;1mCOMMAND[0m /?.
+  - Instead of [color=green]help[reset] [color=cyan]COMMAND[reset], you can also get command help with [color=cyan]COMMAND[reset] /?.
 
 Examples:
-  [32;1mhelp[0m [36;1mdir[0m
-  [32;1mhelp[0m /all
+  [color=green]help[reset] [color=cyan]dir[reset]
+  [color=green]help[reset] /all
 
 .
 :SHELL_CMD_INTRO_HELP
@@ -1941,20 +2012,20 @@ Displays a full-screen introduction to DOSBox Staging.
 .
 :SHELL_CMD_INTRO_HELP_LONG
 Usage:
-  [32;1mintro[0m
-  [32;1mintro[0m [37;1mPAGE[0m
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]PAGE[reset]
 
 Where:
-  [37;1mPAGE[0m is the page name to display, including [37;1mcdrom[0m, [37;1mmount[0m, and [37;1mspecial[0m.
+  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].
 
 Notes:
-  Running [32;1mintro[0m without an argument displays one information page at a time;
+  Running [color=green]intro[reset] without an argument displays one information page at a time;
   press any key to move to the next page. If a page name is provided, then the
   specified page will be displayed directly.
 
 Examples:
-  [32;1mintro[0m
-  [32;1mintro[0m [37;1mcdrom[0m
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -1963,19 +2034,19 @@ Creates a directory.
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Usage:
-  [32;1mmd[0m [36;1mDIRECTORY[0m
-  [32;1mmkdir[0m [36;1mDIRECTORY[0m
+  [color=green]md[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]mkdir[reset] [color=cyan]DIRECTORY[reset]
 
 Where:
-  [36;1mDIRECTORY[0m is the name of the directory to create.
+  [color=cyan]DIRECTORY[reset] is the name of the directory to create.
 
 Notes:
   - The directory must be an exact name and does not yet exist.
   - You can specify a path where the directory will be created.
 
 Examples:
-  [32;1mmd[0m [36;1mnewdir[0m
-  [32;1mmd[0m [36;1mc:\games\dir[0m
+  [color=green]md[reset] [color=cyan]newdir[reset]
+  [color=green]md[reset] [color=cyan]c:\games\dir[reset]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -1984,17 +2055,17 @@ Removes a directory.
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Usage:
-  [32;1mrd[0m [36;1mDIRECTORY[0m
-  [32;1mrmdir[0m [36;1mDIRECTORY[0m
+  [color=green]rd[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]rmdir[reset] [color=cyan]DIRECTORY[reset]
 
 Where:
-  [36;1mDIRECTORY[0m is the name of the directory to remove.
+  [color=cyan]DIRECTORY[reset] is the name of the directory to remove.
 
 Notes:
   The directory must be empty with no files or subdirectories.
 
 Examples:
-  [32;1mrd[0m [36;1memptydir[0m
+  [color=green]rd[reset] [color=cyan]emptydir[reset]
 
 .
 :SHELL_CMD_SET_HELP
@@ -2003,20 +2074,20 @@ Displays or changes environment variables.
 .
 :SHELL_CMD_SET_HELP_LONG
 Usage:
-  [32;1mset[0m
-  [32;1mset[0m [37;1mVARIABLE[0m=[36;1m[STRING][0m
+  [color=green]set[reset]
+  [color=green]set[reset] [color=white]VARIABLE[reset]=[color=cyan][STRING][reset]
 
 Where:
-  [37;1mVARIABLE[0m The name of the environment variable.
-  [36;1mSTRING[0m   A series of characters to assign to the variable.
+  [color=white]VARIABLE[reset] The name of the environment variable.
+  [color=cyan]STRING[reset]   A series of characters to assign to the variable.
 
 Notes:
   - Assigning an empty string to the variable removes the variable.
   - The command without a parameter displays current environment variables.
 
 Examples:
-  [32;1mset[0m
-  [32;1mset[0m [37;1mname[0m=[36;1mvalue[0m
+  [color=green]set[reset]
+  [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]
 
 .
 :SHELL_CMD_IF_HELP
@@ -2025,26 +2096,26 @@ Performs conditional processing in batch programs.
 .
 :SHELL_CMD_IF_HELP_LONG
 Usage:
-  [32;1mif[0m [35;1m[not][0m [36;1merrorlevel[0m [37;1mNUMBER[0m COMMAND
-  [32;1mif[0m [35;1m[not][0m [37;1mSTR1==STR2[0m COMMAND
-  [32;1mif[0m [35;1m[not][0m [36;1mexist[0m [37;1mFILE[0m COMMAND
+  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND
+  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND
+  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] COMMAND
 
 Where:
-  [37;1mNUMBER[0m     is a positive integer less or equal to the desired value.
-  [37;1mSTR1==STR2[0m compares two text strings (case-sensitive).
-  [37;1mFILE[0m       is an exact file name to check for existence.
+  [color=white]NUMBER[reset]     is a positive integer less or equal to the desired value.
+  [color=white]STR1==STR2[reset] compares two text strings (case-sensitive).
+  [color=white]FILE[reset]       is an exact file name to check for existence.
   COMMAND    is a DOS command or program to run, optionally with parameters.
 
 Notes:
   The COMMAND is run if any of the three conditions in the usage are met.
-  If [35;1mnot[0m is specified, then the command runs only with the false condition.
-  The [36;1merrorlevel[0m condition is useful for checking if a programs ran correctly.
-  If either [37;1mSTR1[0m or [37;1mSTR2[0m may be empty, you can enclose them in quotes (").
+  If [color=magenta]not[reset] is specified, then the command runs only with the false condition.
+  The [color=cyan]errorlevel[reset] condition is useful for checking if a programs ran correctly.
+  If either [color=white]STR1[reset] or [color=white]STR2[reset] may be empty, you can enclose them in quotes (").
 
 Examples:
-  [32;1mif[0m [36;1merrorlevel[0m [37;1m2[0m dir
-  [32;1mif[0m [37;1m"%%myvar%%"=="mystring"[0m echo Hello world!
-  [32;1mif[0m [35;1mnot[0m [36;1mexist[0m [37;1mfile.txt[0m exit
+  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Hello world!
+  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
 
 .
 :SHELL_CMD_GOTO_HELP
@@ -2053,17 +2124,17 @@ Jumps to a labeled line in a batch program.
 .
 :SHELL_CMD_GOTO_HELP_LONG
 Usage:
-  [32;1mgoto[0m [36;1mLABEL[0m
+  [color=green]goto[reset] [color=cyan]LABEL[reset]
 
 Where:
-  [36;1mLABEL[0m is text string used in the batch program as a label.
+  [color=cyan]LABEL[reset] is text string used in the batch program as a label.
 
 Notes:
   A label is on a line by itself, beginning with a colon (:).
   The label must be unique, and can be anywhere within the batch program.
 
 Examples:
-  [32;1mgoto[0m [36;1mmylabel[0m
+  [color=green]goto[reset] [color=cyan]mylabel[reset]
 
 .
 :SHELL_CMD_SHIFT_HELP
@@ -2072,17 +2143,17 @@ Left-shifts command-line parameters in a batch program.
 .
 :SHELL_CMD_SHIFT_HELP_LONG
 Usage:
-  [32;1mshift[0m
+  [color=green]shift[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
   This command allows a DOS batch program to accept more than 9 parameters.
-  Running [32;1mshift[0m left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
+  Running [color=green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
 
 Examples:
-  [32;1mshift[0m
+  [color=green]shift[reset]
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -2091,18 +2162,18 @@ Display the contents of a text file.
 .
 :SHELL_CMD_TYPE_HELP_LONG
 Usage:
-  [32;1mtype[0m [36;1mFILE[0m
+  [color=green]type[reset] [color=cyan]FILE[reset]
 
 Where:
-  [36;1mFILE[0m is the name of the file to display.
+  [color=cyan]FILE[reset] is the name of the file to display.
 
 Notes:
   The file must be an exact file name, optionally with a path.
   This command is only for viewing text files, not binary files.
 
 Examples:
-  [32;1mtype[0m [36;1mtext.txt[0m
-  [32;1mtype[0m [36;1mc:\dos\readme.txt[0m
+  [color=green]type[reset] [color=cyan]text.txt[reset]
+  [color=green]type[reset] [color=cyan]c:\dos\readme.txt[reset]
 
 .
 :SHELL_CMD_REM_HELP
@@ -2111,17 +2182,17 @@ Adds comments in a batch program.
 .
 :SHELL_CMD_REM_HELP_LONG
 Usage:
-  [32;1mrem[0m [36;1mCOMMENT[0m
+  [color=green]rem[reset] [color=cyan]COMMENT[reset]
 
 Where:
-  [36;1mCOMMENT[0m is any comment you want to add.
+  [color=cyan]COMMENT[reset] is any comment you want to add.
 
 Notes:
   Adding comments to a batch program can make it easier to understand.
   You can also temporarily comment out some commands with this command.
 
 Examples:
-  [32;1mrem[0m [36;1mThis is my test batch program.[0m
+  [color=green]rem[reset] [color=cyan]This is my test batch program.[reset]
 
 .
 :SHELL_CMD_NO_WILD
@@ -2134,20 +2205,20 @@ Renames one or more files.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Usage:
-  [32;1mren[0m [37;1mSOURCE[0m [36;1mDESTINATION[0m
-  [32;1mrename[0m [37;1mSOURCE[0m [36;1mDESTINATION[0m
+  [color=green]ren[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]
+  [color=green]rename[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]
 
 Where:
-  [37;1mSOURCE[0m      is the name of the file to rename.
-  [36;1mDESTINATION[0m is the new name for the renamed file.
+  [color=white]SOURCE[reset]      is the name of the file to rename.
+  [color=cyan]DESTINATION[reset] is the new name for the renamed file.
 
 Notes:
   - The source file must be an exact file name, optionally with a path.
   - The destination file must be an exact file name without a path.
 
 Examples:
-  [32;1mren[0m [37;1moldname[0m [36;1mnewname[0m
-  [32;1mren[0m [37;1mc:\dos\file.txt[0m [36;1mf.txt[0m
+  [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]
+  [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -2156,23 +2227,23 @@ Removes one or more files.
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Usage:
-  [32;1mdel[0m [36;1mPATTERN[0m
-  [32;1merase[0m [36;1mPATTERN[0m
+  [color=green]del[reset] [color=cyan]PATTERN[reset]
+  [color=green]erase[reset] [color=cyan]PATTERN[reset]
 
 Where:
-  [36;1mPATTERN[0m can be either an exact filename (such as [36;1mfile.txt[0m) or an inexact
+  [color=cyan]PATTERN[reset] can be either an exact filename (such as [color=cyan]file.txt[reset]) or an inexact
           filename using one or more wildcards, which are the asterisk (*)
           representing any sequence of one or more characters, and the question
-          mark (?) representing any single character, such as [36;1m*.bat[0m and [36;1mc?.txt[0m.
+          mark (?) representing any single character, such as [color=cyan]*.bat[reset] and [color=cyan]c?.txt[reset].
 
 Warning:
-  Be careful when using a pattern with wildcards, especially [36;1m*.*[0m, as all files
+  Be careful when using a pattern with wildcards, especially [color=cyan]*.*[reset], as all files
   matching the pattern will be deleted.
 
 Examples:
-  [32;1mdel[0m [36;1mtest.bat[0m
-  [32;1mdel[0m [36;1mc*.*[0m
-  [32;1mdel[0m [36;1ma?b.c*[0m
+  [color=green]del[reset] [color=cyan]test.bat[reset]
+  [color=green]del[reset] [color=cyan]c*.*[reset]
+  [color=green]del[reset] [color=cyan]a?b.c*[reset]
 
 .
 :SHELL_CMD_COPY_HELP
@@ -2181,22 +2252,22 @@ Copies one or more files.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Usage:
-  [32;1mcopy[0m [37;1mSOURCE[0m [36;1m[DESTINATION][0m
-  [32;1mcopy[0m [37;1mSOURCE1+SOURCE2[+...][0m [36;1m[DESTINATION][0m
+  [color=green]copy[reset] [color=white]SOURCE[reset] [color=cyan][DESTINATION][reset]
+  [color=green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=cyan][DESTINATION][reset]
 
 Where:
-  [37;1mSOURCE[0m      Can be either an exact filename or an inexact filename with
+  [color=white]SOURCE[reset]      Can be either an exact filename or an inexact filename with
               wildcards, which are the asterisk (*) and the question mark (?).
-  [36;1mDESTINATION[0m An exact filename or directory, not containing any wildcards.
+  [color=cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.
 
 Notes:
-  The [37;1m+[0m operator combines multiple source files provided to a single file.
+  The [color=white]+[reset] operator combines multiple source files provided to a single file.
   Destination is optional: if omitted, files are copied to the current path.
 
 Examples:
-  [32;1mcopy[0m [37;1msource.bat[0m [36;1mnew.bat[0m
-  [32;1mcopy[0m [37;1mfile1.txt+file2.txt[0m [36;1mfile3.txt[0m
-  [32;1mcopy[0m [37;1m..\c*.*[0m
+  [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]
+  [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
+  [color=green]copy[reset] [color=white]..\c*.*[reset]
 
 .
 :SHELL_CMD_CALL_HELP
@@ -2205,19 +2276,19 @@ Starts a batch program from within another batch program.
 .
 :SHELL_CMD_CALL_HELP_LONG
 Usage:
-  [32;1mcall[0m [37;1mBATCH[0m [36;1m[PARAMETERS][0m
+  [color=green]call[reset] [color=white]BATCH[reset] [color=cyan][PARAMETERS][reset]
 
 Where:
-  [37;1mBATCH[0m      is a batch program to launch.
-  [36;1mPARAMETERS[0m are optional parameters for the batch program.
+  [color=white]BATCH[reset]      is a batch program to launch.
+  [color=cyan]PARAMETERS[reset] are optional parameters for the batch program.
 
 Notes:
   After calling another batch program, the original batch program will
   resume running after the other batch program ends.
 
 Examples:
-  [32;1mcall[0m [37;1mmybatch.bat[0m
-  [32;1mcall[0m [37;1mfile.bat[0m [36;1mHello world![0m
+  [color=green]call[reset] [color=white]mybatch.bat[reset]
+  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Hello world![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
@@ -2226,20 +2297,20 @@ Assign an internal directory to a drive.
 .
 :SHELL_CMD_SUBST_HELP_LONG
 Usage:
-  [32;1msubst[0m [37;1mDRIVE[0m [36;1mPATH[0m
-  [32;1msubst[0m [37;1mDRIVE[0m /d
+  [color=green]subst[reset] [color=white]DRIVE[reset] [color=cyan]PATH[reset]
+  [color=green]subst[reset] [color=white]DRIVE[reset] /d
 
 Where:
-  [37;1mDRIVE[0m is a drive to which you want to assign a path.
-  [36;1mPATH[0m  is a mounted DOS path you want to assign to.
+  [color=white]DRIVE[reset] is a drive to which you want to assign a path.
+  [color=cyan]PATH[reset]  is a mounted DOS path you want to assign to.
 
 Notes:
-  The path must be on a drive mounted by the [32;1mmount[0m command.
+  The path must be on a drive mounted by the [color=green]mount[reset] command.
   You can remove an assigned drive with the /d option.
 
 Examples:
-  [32;1msubst[0m [37;1md:[0m [36;1mc:\games[0m
-  [32;1msubst[0m [37;1me:[0m [36;1m/d[0m
+  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\games[reset]
+  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP
@@ -2248,11 +2319,11 @@ Loads a DOS program into upper memory.
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
 Usage:
-  [32;1mlh[0m [36;1mPROGRAM[0m [37;1m[PARAMETERS][0m
-  [32;1mloadhigh[0m [36;1mPROGRAM[0m [37;1m[PARAMETERS][0m
+  [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
+  [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
 
 Where:
-  [36;1mPROGRAM[0m is a DOS TSR program to be loaded, optionally with parameters.
+  [color=cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.
 
 Notes:
   This command intends to save the conventional memory by loading specified DOS
@@ -2261,7 +2332,7 @@ Notes:
   Not all DOS TSR programs can be loaded into upper memory with this command.
 
 Examples:
-  [32;1mlh[0m [36;1mtsrapp[0m [37;1margs[0m
+  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
 
 .
 :SHELL_CMD_LS_HELP
@@ -2270,21 +2341,21 @@ Displays directory contents in the wide list format.
 .
 :SHELL_CMD_LS_HELP_LONG
 Usage:
-  [32;1mls[0m [36;1mPATTERN[0m
-  [32;1mls[0m [36;1mPATH[0m
+  [color=green]ls[reset] [color=cyan]PATTERN[reset]
+  [color=green]ls[reset] [color=cyan]PATH[reset]
 
 Where:
-  [36;1mPATTERN[0m can be either an exact filename or an inexact filename with
+  [color=cyan]PATTERN[reset] can be either an exact filename or an inexact filename with
           wildcards, which are the asterisk (*) and the question mark (?).
-  [36;1mPATH[0m    is an exact path in a mounted DOS drive to list contents.
+  [color=cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.
 
 Notes:
-  The command will list directories in [34;1mblue[0m, executable DOS programs
-   (*.com, *.exe, *.bat) in [32;1mgreen[0m, and other files in the normal color.
+  The command will list directories in [color=blue]blue[reset], executable DOS programs
+   (*.com, *.exe, *.bat) in [color=green]green[reset], and other files in the normal color.
 
 Examples:
-  [32;1mls[0m [36;1mfile.txt[0m
-  [32;1mls[0m [36;1mc*.ba?[0m
+  [color=green]ls[reset] [color=cyan]file.txt[reset]
+  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
 
 .
 :SHELL_CMD_LS_PATH_ERR
@@ -2297,7 +2368,7 @@ Displays or changes file attributes.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
 
 Where:
   [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
@@ -2329,25 +2400,25 @@ Waits for a keypress and sets an ERRORLEVEL value.
 .
 :SHELL_CMD_CHOICE_HELP_LONG
 Usage:
-  [32;1mchoice[0m [36;1m[TEXT][0m
-  [32;1mchoice[0m /c[:][37;1mCHOICES[0m /n /s /t[:][37;1mc[0m,[35;1mnn[0m [36;1m[TEXT][0m
+  [color=green]choice[reset] [color=cyan][TEXT][reset]
+  [color=green]choice[reset] /c[:][color=white]CHOICES[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEXT][reset]
 
 Where:
-  [36;1mTEXT[0m         is the text to display as a prompt, or empty.
-  /c[:][37;1mCHOICES[0m Specifies allowable keys, which default to [37;1myn[0m.
+  [color=cyan]TEXT[reset]         is the text to display as a prompt, or empty.
+  /c[:][color=white]CHOICES[reset] Specifies allowable keys, which default to [color=white]yn[reset].
   /n           Do not display the choices at end of prompt.
   /s           Enables case-sensitive choices to be selected.
-  /t[:][37;1mc[0m,[35;1mnn[0m    Default choice to [37;1mc[0m after [35;1mnn[0m seconds.
+  /t[:][color=white]c[reset],[color=magenta]nn[reset]    Default choice to [color=white]c[reset] after [color=magenta]nn[reset] seconds.
 
 Notes:
   This command sets an ERRORLEVEL value starting from 1 according to the
   allowable keys specified in /c option, and the user input can then be checked
-  with [32;1mif[0m command. With /n option only the specified text will be displayed,
-  but not the actual choices (such as the default [37;1m[Y,N]?[0m) in the end.
+  with [color=green]if[reset] command. With /n option only the specified text will be displayed,
+  but not the actual choices (such as the default [color=white][Y,N]?[reset]) in the end.
 
 Examples:
-  [32;1mchoice[0m /t:[37;1my[0m,[35;1m2[0m [36;1mContinue?[0m
-  [32;1mchoice[0m /c:[37;1mabc[0m /s [36;1mType the letter a, b, or c[0m
+  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Continue?[reset]
+  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Type the letter a, b, or c[reset]
 
 .
 :SHELL_CMD_CHOICE_ABORTED
@@ -2361,20 +2432,20 @@ Displays or sets a search path for executable files.
 .
 :SHELL_CMD_PATH_HELP_LONG
 Usage:
-  [32;1mpath[0m
-  [32;1mpath[0m [36;1m[[drive:]path[;...][0m
+  [color=green]path[reset]
+  [color=green]path[reset] [color=cyan][[drive:]path[;...][reset]
 
 Where:
-  [36;1m[[drive:]path[;...][0m is a path containing a drive and directory.
+  [color=cyan][[drive:]path[;...][reset] is a path containing a drive and directory.
   More than one path can be specified, separated by a semi-colon (;).
 
 Notes:
   Parameter with a semi-colon (;) only clears all search path settings.
-  The path can also be set using [32;1mset[0m command, e.g. [32;1mset[0m [37;1mpath[0m=[36;1mZ:[reset]
+  The path can also be set using [color=green]set[reset] command, e.g. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\[reset]
 
 Examples:
-  [32;1mpath[0m
-  [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
+  [color=green]path[reset]
+  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
 
 .
 :SHELL_CMD_VER_HELP
@@ -2383,21 +2454,21 @@ View or set the reported DOS version.
 .
 :SHELL_CMD_VER_HELP_LONG
 Usage:
-  [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+  [color=green]ver[reset]
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]
 
 Where:
-  [36;1mVERSION[0m can be a whole number, such as [36;1m5[0m, or include a two-digit decimal
-          value, such as: [36;1m6.22[0m, [36;1m7.01[0m, or [36;1m7.10[0m. The decimal can alternatively be
-          space-separated, such as: [36;1m6 22[0m, [36;1m7 01[0m, or [36;1m7 10[0m.
+  [color=cyan]VERSION[reset] can be a whole number, such as [color=cyan]5[reset], or include a two-digit decimal
+          value, such as: [color=cyan]6.22[reset], [color=cyan]7.01[reset], or [color=cyan]7.10[reset]. The decimal can alternatively be
+          space-separated, such as: [color=cyan]6 22[reset], [color=cyan]7 01[reset], or [color=cyan]7 10[reset].
 
 Notes:
   The DOS version can also be set in the configuration file under the [dos]
-  section using the "ver = [36;1mVERSION[0m" setting.
+  section using the "ver = [color=cyan]VERSION[reset]" setting.
 
 Examples:
-  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
-  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
 
 .
 :SHELL_CMD_VER_VER
@@ -2408,4 +2479,19 @@ DOS version %d.%02d
 :SHELL_CMD_VER_INVALID
 The specified DOS version is not correct.
 
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox Commands
+.
+:HELP_UTIL_CATEGORY_FILE
+File/Directory Commands
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch File Commands
+.
+:HELP_UTIL_CATEGORY_MISC
+Miscellaneous Commands
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unknown Command
 .
