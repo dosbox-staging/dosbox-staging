@@ -29,9 +29,9 @@
 #include "support.h"
 
 // Disney Sound Source Constants
-constexpr uint16_t DISNEY_BASE = 0x0378;
-constexpr uint8_t BUFFER_SAMPLES = 128;
-constexpr uint8_t DISNEY_INIT_STATUS = 0x84;
+constexpr uint16_t base_port = 0x0378;
+
+constexpr uint8_t buffer_samples = 128;
 
 // The Disney Sound Source is an LPT DAC with a fixed sample rate of 7kHz.
 constexpr auto disney_sample_rate = 7000;
@@ -39,7 +39,7 @@ constexpr auto disney_sample_rate = 7000;
 enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
 struct dac_channel {
-	uint8_t buffer[BUFFER_SAMPLES] = {};
+	uint8_t buffer[buffer_samples] = {};
 	uint8_t used = 0; // current data buffer level
 	double speedcheck_sum = 0.0;
 	double speedcheck_last = 0.0;
@@ -220,7 +220,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 
 	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
 	disney.last_used = PIC_Ticks;
-	switch (port - DISNEY_BASE) {
+	switch (port - base_port) {
 	case 0: /* Data Port */
 	{
 		disney.data=val;
@@ -232,7 +232,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 				DISNEY_analyze(0);
 		}
 		if (disney.interface_det > 5) {
-			if (disney.da[0].used < BUFFER_SAMPLES) {
+			if (disney.da[0].used < buffer_samples) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
 			} // else LOG_MSG("disney overflow 0");
@@ -251,7 +251,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 			}
 
 			// stereo channel latch
-			if (disney.da[1].used < BUFFER_SAMPLES) {
+			if (disney.da[1].used < buffer_samples) {
 				disney.da[1].buffer[disney.da[1].used] = disney.data;
 				disney.da[1].used++;
 			} // else LOG_MSG("disney overflow 1");
@@ -264,7 +264,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 				DISNEY_analyze(0);
 			}
 			// stereo channel latch
-			if (disney.da[0].used < BUFFER_SAMPLES) {
+			if (disney.da[0].used < buffer_samples) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
 			} // else LOG_MSG("disney overflow 0");
@@ -281,7 +281,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 				}
 			}
 			if (disney.interface_det_ext > 5) {
-				if (disney.da[0].used < BUFFER_SAMPLES) {
+				if (disney.da[0].used < buffer_samples) {
 					disney.da[0].buffer[disney.da[0].used] = disney.data;
 					disney.da[0].used++;
 				}
@@ -298,7 +298,7 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 static uint8_t disney_read(io_port_t port, io_width_t)
 {
 	uint8_t retval;
-	switch (port - DISNEY_BASE) {
+	switch (port - base_port) {
 	case 0: /* Data Port */
 		// LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
@@ -325,7 +325,7 @@ static uint8_t disney_read(io_port_t port, io_width_t)
 
 static void DISNEY_PlayStereo(uint16_t len, const uint8_t *l, const uint8_t *r)
 {
-	static uint8_t stereodata[BUFFER_SAMPLES * 2];
+	static uint8_t stereodata[buffer_samples * 2];
 	for (uint16_t i = 0; i < len; ++i) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
@@ -353,7 +353,7 @@ static void DISNEY_CallBack(uint16_t len) {
 		for (uint8_t i = 0; i < 2; ++i) {
 			// TODO for mono only one
 			memmove(disney.da[i].buffer, &disney.da[i].buffer[len],
-			        BUFFER_SAMPLES /*real_used*/ - len);
+			        buffer_samples /*real_used*/ - len);
 			disney.da[i].used -= len;
 		}
 	// TODO: len > DISNEY
@@ -461,8 +461,8 @@ void DISNEY_Init(Section* sec) {
 	}
 
 	// Register port handlers for 8-bit IO
-	disney.write_handler.Install(DISNEY_BASE, disney_write, io_width_t::byte, 3);
-	disney.read_handler.Install(DISNEY_BASE, disney_read, io_width_t::byte, 3);
+	disney.write_handler.Install(base_port, disney_write, io_width_t::byte, 3);
+	disney.read_handler.Install(base_port, disney_read, io_width_t::byte, 3);
 
 	// Initialize the Disney states
 	disney.status = DISNEY_INIT_STATUS;
