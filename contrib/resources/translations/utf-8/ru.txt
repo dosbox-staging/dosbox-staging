@@ -107,6 +107,12 @@ Optionally select the frame presentation mode:
 Уровни приоритета для DOSBox. Второй параметр действует, когда окно DOSBox без фокуса или свёрнуто.
 Значение 'pause' доступно только для второго параметра.
 .
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
+.
 :CONFIG_MAPPERFILE
 Файл, используемый для загрузки/сохранения сопоставлений из ключей/событий.
 Сброс сопоставления работает только со значением по умолчанию.
@@ -130,6 +136,14 @@ Optionally select the frame presentation mode:
 Это значение лучше оставить по умолчанию, чтобы избежать проблем с некоторыми играми,
 хотя несколько игр могут потребовать более высоких значений.
 Как правило, нет никакого преимущества в скорости при повышении этой величины.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
 Объём видеопамяти в МиБ (1-8) или КиБ (с 256 по 8192). 'auto' использует умолчание видеоадаптера.
@@ -265,6 +279,25 @@ auto        | 'low', если передан исполняемый файл и�
 Позволить системному звуковому драйверу согласовать оптимальные частоту
 и размер блока, приближенные к заданным значениям насколько возможно.
 .
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Эффект реверберации: 'auto', 'on', 'off' или собственные значения.
+При использовании своих значений:
+  Все четыре должны быть указаны по порядку и разделены пробелом.
+  Параметры: размер_помещения затухание ширина громкость, где:
+  - размер_помещения - десятичное число от 0.0 до 1.0
+  - затухание - десятичное число от 0.0 до 1.0
+  - ширина - десятичное число от 0.0 до 100.0
+  - громкость - десятичное число от 0.0 до 1.0
+  Пример: reverb = 0.61 0.23 0.76 0.56
+.
 :CONFIG_MIDIDEVICE
 Устройство, которое будет принимать MIDI-данные (от эмулированного MIDI
 интерфейса - MPU-401). Выберите один из следующих вариантов:
@@ -312,17 +345,6 @@ auto        | 'low', если передан исполняемый файл и�
   - глубина - десятичное число от 0.0 до 21.0
   - волна_модуляции - 'sine' (синусоида) или 'triangle' (треугольная)
   Пример: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Эффект реверберации: 'auto', 'on', 'off' или собственные значения.
-При использовании своих значений:
-  Все четыре должны быть указаны по порядку и разделены пробелом.
-  Параметры: размер_помещения затухание ширина громкость, где:
-  - размер_помещения - десятичное число от 0.0 до 1.0
-  - затухание - десятичное число от 0.0 до 1.0
-  - ширина - десятичное число от 0.0 до 100.0
-  - громкость - десятичное число от 0.0 до 1.0
-  Пример: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Модель синтезатора для использования. По умолчанию 'auto' предпочитает CM-32L,
@@ -374,6 +396,27 @@ DOSBox, с последующей проверкой других мест в с
 Источник эмуляции OPL. 'compat' обеспечивает лучшее качество,
 По умолчанию используется 'nuked', он наиболее точный, но самый ресурсоёмкий.
 .
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_GUS
 Включить эмуляцию Gravis UltraSound.
 .
@@ -421,8 +464,10 @@ DOSBox, с последующей проверкой других мест в с
 :CONFIG_PCSPEAKER
 Включить эмуляцию PC-Speaker.
 .
-:CONFIG_PCRATE
-Частота дискретизации генерации звука для PC-Speaker.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
 Нейтрализует и предотвращает DC-смещение PC-Speaker от воздействия других источников.
@@ -432,11 +477,36 @@ DOSBox, с последующей проверкой других мест в с
 :CONFIG_TANDY
 Включить эмуляцию Tandy Sound System. Для 'auto', эмуляция включается только тогда, когда 'machine = tandy'.
 .
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_DISNEY
 Включение эмуляции Disney Sound Source. (Covox Voice Master и Speech Thing совместимых).
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Включить эмуляцию IBM PS/1 Audio.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Тип джойстика для эмуляции: 'auto' (по умолчанию),
@@ -1009,10 +1079,6 @@ PCjr картридж найден, но машина не PCjr.
 Базовое ПЗУ загружено.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-Монтировать образы компакт-дисков или дискет на указанную букву диска.
-
-.
 :SHELL_CMD_IMGMOUNT_HELP_LONG
 Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
@@ -1143,15 +1209,6 @@ PCjr картридж найден, но машина не PCjr.
 Для раскладки клавиатуры %s загружена кодовая страница %i.
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mkeyb[0m [ID_раскладки_клавиатуры[ №_кодовой_страницы[ файл_кодовой_страницы]]]
-
-Примеры:
-  [32;1mkeyb[0m: Отобразить текущую кодовую страницу.
-  [32;1mkeyb[0m ru: Загрузить русскую раскладку (ru), с подходящей кодовой страницей.
-  [32;1mkeyb[0m ru 808: Загрузить русскую раскладку (ru), с кодовой страницей 808.
-  [32;1mkeyb[0m ru 808 russian.txt: То же самое, но использовать файл russian.txt.
-.
 :PROGRAM_KEYB_NOERROR
 Раскладка клавиатуры %s загружена для кодовой страницы %i.
 
@@ -1235,7 +1292,7 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
-date [[/t] [/h] [29m | MM-DD-YYYY]
+date [[/t] [/h] [/s] | MM-DD-YYYY]
   MM-DD-YYYY: Установить новую дату.
   /s:         Использовать время и дату операционной системы для времени DOS.
   /f:         Вернуться к внутреннему времени DOSBox (противоположность /s).
@@ -1554,7 +1611,7 @@ ls: невозможно получить доступ к "%s": Нет тако�
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-choice [/c:клавиши] [/n] [29m текст
+choice [/c:клавиши] [/n] [/s] текст
   /c[:]клавиши - Определяет допустимые клавиши. По умолчанию: yn.
   /n           - Не отображать варианты в конце запроса.
   /s           - Определить регистрозависимый выбор.
@@ -1862,27 +1919,6 @@ Must specify a numeric port value between 1 and %d, inclusive.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-This program is a placeholder
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s is only a placeholder.
-
-Install a 3rd-party and give its PATH precedence.
-
-For example:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utils
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Visit the following for more help:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -2213,6 +2249,10 @@ Examples:
   [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
 
 .
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
+.
 :PROGRAM_MOUNT_STATUS_NAME
 Image name
 .
@@ -2254,7 +2294,7 @@ File open error - %s
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
 
 Where:
   [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
@@ -2284,4 +2324,19 @@ Unable to set attributes: %s
 
 Choice aborted.
 
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox Commands
+.
+:HELP_UTIL_CATEGORY_FILE
+File/Directory Commands
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch File Commands
+.
+:HELP_UTIL_CATEGORY_MISC
+Miscellaneous Commands
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unknown Command
 .
