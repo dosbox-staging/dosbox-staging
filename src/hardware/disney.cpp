@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -53,7 +54,6 @@ struct Disney {
 
 	// parallel port stuff
 	uint8_t data = 0;
-	uint8_t status = DISNEY_INIT_STATUS;
 	uint8_t control = 0;
 	// the D/A channels
 	dac_channel da[2] = {};
@@ -304,7 +304,6 @@ static uint8_t disney_read(io_port_t port, io_width_t)
 		return disney.data;
 		break;
 	case 1:		/* Status Port */
-//		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
 		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
 		if (disney.interface_det_ext > 5) {
 			if (disney.leader && disney.leader->used >= 16){
@@ -465,7 +464,6 @@ void DISNEY_Init(Section* sec) {
 	disney.read_handler.Install(base_port, disney_read, io_width_t::byte, 3);
 
 	// Initialize the Disney states
-	disney.status = DISNEY_INIT_STATUS;
 	disney.control = 0;
 	disney.last_used = 0;
 	DISNEY_disable(0);
