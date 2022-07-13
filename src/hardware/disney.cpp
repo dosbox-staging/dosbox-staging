@@ -29,17 +29,9 @@
 #include "setup.h"
 #include "support.h"
 
-// Disney Sound Source Constants
-constexpr uint16_t base_port = 0x0378;
+static constexpr uint8_t buffer_samples = 128;
 
-constexpr uint8_t buffer_samples = 128;
-
-// The Disney Sound Source is an LPT DAC with a fixed sample rate of 7kHz.
-constexpr auto disney_sample_rate = 7000;
-
-enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
-
-struct dac_channel {
+struct DisneyDac {
 	uint8_t buffer[buffer_samples] = {};
 	uint8_t used = 0; // current data buffer level
 	double speedcheck_sum = 0.0;
@@ -48,51 +40,69 @@ struct dac_channel {
 	bool speedcheck_init = false;
 };
 
-struct Disney {
+class Disney {
+public:
+	Disney(const std::string &filter_pref);
+	~Disney();
+
+private:
+	Disney()                          = delete;
+	Disney(const Disney &)            = delete;
+	Disney &operator=(const Disney &) = delete;
+
+	// Types and enums
+	enum State { Idle, Running, Finished, Analyzing };
+
+	void Analyze(DisneyDac &dac);
+	void Enable(const int rate_hz);
+
+	int CalcSampleRate(const DisneyDac &dac);
+	void PlayStereo(uint16_t len, const uint8_t *l, const uint8_t *r);
+
+	void AudioCallback(uint16_t len);
+	void UpdateFilterFreq(const uint16_t rate_hz);
+
+	uint8_t ReadFromPort(const io_port_t port, io_width_t);
+	void WriteToPort(const io_port_t port, const io_val_t value, io_width_t);
+
+	// Constants
+	static constexpr uint16_t base_port = 0x0378;
+
+	// The Disney Sound Source is an LPT DAC with a fixed sample rate of 7kHz.
+	static constexpr auto base_rate_hz = 7000;
+
+	// Managed and compound objects
 	IO_ReadHandleObject read_handler{};
 	IO_WriteHandleObject write_handler{};
 
-	// parallel port stuff
-	uint8_t data = 0;
-	uint8_t control = 0;
-	// the D/A channels
-	dac_channel da[2] = {};
+	mixer_channel_t channel = nullptr;
 
-	Bitu last_used = 0;
-	mixer_channel_t chan = nullptr;
-	bool stereo = false;
-	bool filter_enabled = false;
+	// the D/A channels
+	DisneyDac da[2] = {};
 
 	// For mono-output, the analysis step points the leader to the channel
 	// with the most rendered-samples. We use the left channel as a valid
 	// place-holder prior to the first analysis. This ensures the
 	// leader is always valid, such as in cases where the callback in
 	// enabled before the analysis.
-	dac_channel *leader = &da[0];
+	DisneyDac *leader = &da[0];
 
-	DISNEY_STATE state = DISNEY_STATE::IDLE;
+	State state = State::Idle;
+
 	uint32_t interface_det = 0;
 	uint32_t interface_det_ext = 0;
+
+	bool stereo         = false;
+	bool filter_enabled = false;
+
+	// parallel port registers
+	uint8_t data    = 0;
+	uint8_t control = 0;
 };
 
-static Disney disney;
-
-static void DISNEY_disable(uint32_t)
+void Disney::UpdateFilterFreq(const uint16_t rate_hz)
 {
-	if (disney.chan) {
-		disney.chan->AddSilence();
-		disney.chan->Enable(false);
-	}
-	disney.last_used = 0;
-	disney.state = DISNEY_STATE::IDLE;
-	disney.interface_det = 0;
-	disney.interface_det_ext = 0;
-	disney.stereo = false;
-}
-
-static void update_filter_freq(const uint32_t sample_rate)
-{
-	if (!disney.filter_enabled)
+	if (!filter_enabled)
 		return;
 
 	// Disney only supports a single fixed 7kHz sample rate; the 6dB/oct LPF @
@@ -105,136 +115,138 @@ static void update_filter_freq(const uint32_t sample_rate)
 	// we'll apply a gentle 6dB/oct LPF at a bit below half the sample rate to
 	// tame the harshest aliased frequencies while still retaining a good dose
 	// of the "raw crunchy DAC sound".
-	constexpr auto order              = 1;
-	constexpr auto disney_cutoff_freq = 1000;
+	constexpr uint16_t default_cutoff_freq = 1000;
+	const auto cutoff_freq                 = (rate_hz == base_rate_hz)
+	                                               ? default_cutoff_freq
+	                                               : static_cast<uint16_t>(rate_hz * 0.45f);
 
-	const auto cutoff_freq = (sample_rate == disney_sample_rate)
-	                               ? disney_cutoff_freq
-	                               : static_cast<uint16_t>(sample_rate * 0.45);
-
-	disney.chan->ConfigureLowPassFilter(order, cutoff_freq);
+	constexpr auto order = 1;
+	channel->ConfigureLowPassFilter(order, cutoff_freq);
 }
 
-static void DISNEY_enable(uint32_t sample_rate)
+void Disney::Enable(const int rate_hz)
 {
-	if (sample_rate < 500 || sample_rate > 100000) {
+	if (rate_hz < 500 || rate_hz > 100000) {
 		// try again..
-		disney.state = DISNEY_STATE::IDLE;
+		state = State::Idle;
 		return;
 	}
 #if 0
-	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", sample_rate,
-	                         disney.stereo ? "stereo" : "mono");
+	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", rate_hz,
+	                         stereo ? "stereo" : "mono");
 #endif
-	disney.chan->SetSampleRate(sample_rate);
-	disney.chan->Enable(true);
-	disney.state = DISNEY_STATE::RUNNING;
-	update_filter_freq(sample_rate);
+	channel->SetSampleRate(rate_hz);
+	channel->Enable(true);
+
+	constexpr auto max_filter_freq = 44100;
+	const auto filter_freq         = std::min(rate_hz, max_filter_freq);
+	UpdateFilterFreq(check_cast<uint16_t>(filter_freq));
+
+	state = State::Running;
 }
 
 // Calculate the sample rate from DAC samples and speed parameters.
 // The maximum possible sample rate is 127,000 Hz which occurs when all 128
 // samples are used and the speedcheck_sum has accumulated only one single
 // tick.
-static uint32_t calc_sample_rate(const dac_channel &dac)
+int Disney::CalcSampleRate(const DisneyDac &dac)
 {
 	if (dac.used <= 1)
 		return 0;
-	const uint32_t k_samples = 1000 * (dac.used - 1);
-	const auto sample_rate   = k_samples / dac.speedcheck_sum;
-	return static_cast<uint32_t>(sample_rate);
+
+	const auto k_samples = 1000 * (dac.used - 1);
+
+	const auto rate_hz = k_samples / dac.speedcheck_sum;
+
+	return iround(rate_hz);
 }
 
-static void DISNEY_analyze(Bitu channel){
-	switch (disney.state) {
-	case DISNEY_STATE::RUNNING: // should not get here
+void Disney::Analyze(DisneyDac &dac)
+{
+	switch (state) {
+	case State::Running: // should not get here
 		break;
-	case DISNEY_STATE::IDLE:
+	case State::Idle:
 		// initialize channel data
 		for (int i = 0; i < 2; i++) {
-			disney.da[i].used = 0;
-			disney.da[i].speedcheck_sum = 0;
-			disney.da[i].speedcheck_failed = false;
-			disney.da[i].speedcheck_init = false;
+			da[i].used              = 0;
+			da[i].speedcheck_sum    = 0;
+			da[i].speedcheck_failed = false;
+			da[i].speedcheck_init   = false;
 		}
-		disney.da[channel].speedcheck_last = PIC_FullIndex();
-		disney.da[channel].speedcheck_init = true;
+		dac.speedcheck_last = PIC_FullIndex();
+		dac.speedcheck_init = true;
 
-		disney.state = DISNEY_STATE::ANALYZING;
+		state = State::Analyzing;
 		break;
 
-	case DISNEY_STATE::FINISHED: {
+	case State::Finished: {
 		// The leading channel has the most populated samples
-		disney.leader = disney.da[0].used > disney.da[1].used
-		                        ? &disney.da[0]
-		                        : &disney.da[1];
+		leader = da[0].used > da[1].used ? &da[0] : &da[1];
 
 		// Stereo-mode if both DACs are similarly filled
-		const auto st_diff = abs(disney.da[0].used - disney.da[1].used);
-		disney.stereo = (st_diff < 5);
+		const auto st_diff = abs(da[0].used - da[1].used);
+		stereo             = (st_diff < 5);
 
 		// Run with the greater DAC sample rate
-		const auto max_sample_rate = std::max(calc_sample_rate(disney.da[0]),
-		                                      calc_sample_rate(disney.da[1]));
-		DISNEY_enable(max_sample_rate);
+		const auto max_rate_hz = std::max(CalcSampleRate(da[0]),
+		                                  CalcSampleRate(da[1]));
+		Enable(max_rate_hz);
 	} break;
 
-	case DISNEY_STATE::ANALYZING: {
+	case State::Analyzing: {
 		const auto current = PIC_FullIndex();
-		dac_channel *cch = &disney.da[channel];
 
-		if (!cch->speedcheck_init) {
-			cch->speedcheck_init = true;
-			cch->speedcheck_last = current;
+		if (!dac.speedcheck_init) {
+			dac.speedcheck_init = true;
+			dac.speedcheck_last = current;
 			break;
 		}
-		const auto speed_delta = current - cch->speedcheck_last;
-		cch->speedcheck_sum += speed_delta;
-		// LOG_MSG("t=%f",current - cch->speedcheck_last);
+		const auto speed_delta = current - dac.speedcheck_last;
+		dac.speedcheck_sum += speed_delta;
+		// LOG_MSG("t=%f",current - dac.speedcheck_last);
 
 		// sanity checks (printer...)
 		if (speed_delta < 0.01 || speed_delta > 2)
-			cch->speedcheck_failed = true;
+			dac.speedcheck_failed = true;
 
 		// if both are failed we are back at start
-		if (disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
-			disney.state = DISNEY_STATE::IDLE;
+		if (da[0].speedcheck_failed && da[1].speedcheck_failed) {
+			state = State::Idle;
 			break;
 		}
 
-		cch->speedcheck_last = current;
+		dac.speedcheck_last = current;
 
 		// analyze finish condition
-		if (disney.da[0].used > 30 || disney.da[1].used > 30)
-			disney.state = DISNEY_STATE::FINISHED;
+		if (da[0].used > 30 || da[1].used > 30)
+			state = State::Finished;
 	} break;
 	}
 }
 
-static void disney_write(io_port_t port, io_val_t value, io_width_t)
+void Disney::WriteToPort(const io_port_t port, const io_val_t value, io_width_t)
 {
-	assert(disney.chan);
-	disney.chan->WakeUp();
+	assert(channel);
+	channel->WakeUp();
 
 	const auto val = check_cast<uint8_t>(value);
 
-	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
-	disney.last_used = PIC_Ticks;
 	switch (port - base_port) {
 	case 0: /* Data Port */
 	{
-		disney.data=val;
+		data = val;
 		// if data is written here too often without using the stereo
 		// mechanism we use the simple DAC machanism.
-		if (disney.state != DISNEY_STATE::RUNNING) {
-			disney.interface_det++;
-			if(disney.interface_det > 5)
-				DISNEY_analyze(0);
+		if (state != State::Running) {
+			interface_det++;
+			if (interface_det > 5)
+				Analyze(da[0]);
 		}
-		if (disney.interface_det > 5) {
-			if (disney.da[0].used < buffer_samples) {
-				disney.da[0].buffer[disney.da[0].used] = disney.data;
-				disney.da[0].used++;
+		if (interface_det > 5) {
+			if (da[0].used < buffer_samples) {
+				da[0].buffer[da[0].used] = data;
+				da[0].used++;
 			} // else LOG_MSG("disney overflow 0");
 		}
 		break;
@@ -243,189 +255,182 @@ static void disney_write(io_port_t port, io_val_t value, io_width_t)
 		LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Status write %u", val);
 		break;
 	case 2:		/* Control Port */
-		if ((disney.control & 0x2) && !(val & 0x2)) {
-			if (disney.state != DISNEY_STATE::RUNNING) {
-				disney.interface_det = 0;
-				disney.interface_det_ext = 0;
-				DISNEY_analyze(1);
+		if ((control & 0x2) && !(val & 0x2)) {
+			if (state != State::Running) {
+				interface_det     = 0;
+				interface_det_ext = 0;
+				Analyze(da[1]);
 			}
 
 			// stereo channel latch
-			if (disney.da[1].used < buffer_samples) {
-				disney.da[1].buffer[disney.da[1].used] = disney.data;
-				disney.da[1].used++;
+			if (da[1].used < buffer_samples) {
+				da[1].buffer[da[1].used] = data;
+				da[1].used++;
 			} // else LOG_MSG("disney overflow 1");
 		}
 
-		if ((disney.control & 0x1) && !(val & 0x1)) {
-			if (disney.state != DISNEY_STATE::RUNNING) {
-				disney.interface_det = 0;
-				disney.interface_det_ext = 0;
-				DISNEY_analyze(0);
+		if ((control & 0x1) && !(val & 0x1)) {
+			if (state != State::Running) {
+				interface_det     = 0;
+				interface_det_ext = 0;
+				Analyze(da[0]);
 			}
 			// stereo channel latch
-			if (disney.da[0].used < buffer_samples) {
-				disney.da[0].buffer[disney.da[0].used] = disney.data;
-				disney.da[0].used++;
+			if (da[0].used < buffer_samples) {
+				da[0].buffer[da[0].used] = data;
+				da[0].used++;
 			} // else LOG_MSG("disney overflow 0");
 		}
 
-		if ((disney.control & 0x8) && !(val & 0x8)) {
+		if ((control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
-			if (disney.state != DISNEY_STATE::RUNNING) {
-				disney.interface_det_ext++;
-				disney.interface_det = 0;
-				if(disney.interface_det_ext > 5) {
-					disney.leader = &disney.da[0];
-					DISNEY_enable(disney_sample_rate);
+			if (state != State::Running) {
+				interface_det_ext++;
+				interface_det = 0;
+				if (interface_det_ext > 5) {
+					leader = &da[0];
+					Enable(base_rate_hz);
 				}
 			}
-			if (disney.interface_det_ext > 5) {
-				if (disney.da[0].used < buffer_samples) {
-					disney.da[0].buffer[disney.da[0].used] = disney.data;
-					disney.da[0].used++;
+			if (interface_det_ext > 5) {
+				if (da[0].used < buffer_samples) {
+					da[0].buffer[da[0].used] = data;
+					da[0].used++;
 				}
 			}
 		}
 
 //		LOG_WARN("DISNEY:Control write %x",val);
 		if (val&0x10) LOG(LOG_MISC,LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
-		disney.control=val;
+		control = val;
 		break;
 	}
 }
 
-static uint8_t disney_read(io_port_t port, io_width_t)
+uint8_t Disney::ReadFromPort(const io_port_t port, io_width_t)
 {
 	uint8_t retval;
 	switch (port - base_port) {
 	case 0: /* Data Port */
 		// LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
-		return disney.data;
+		return data;
 		break;
-	case 1:		/* Status Port */
+	case 1:               /* Status Port */
 		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
-		if (disney.interface_det_ext > 5) {
-			if (disney.leader && disney.leader->used >= 16){
+		if (interface_det_ext > 5) {
+			if (leader && leader->used >= 16) {
 				retval |= 0x40; // ack
 				retval &= ~0x4; // interrupt
 			}
 		}
-		if (!(disney.data&0x80)) retval |= 0x80; // pin 9 is wired to pin 11
+		if (!(data & 0x80))
+			retval |= 0x80; // pin 9 is wired to pin 11
 		return retval;
 		break;
 	case 2:		/* Control Port */
 		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from control port");
-		return disney.control;
+		return control;
 		break;
 	}
 	return 0xff;
 }
 
-static void DISNEY_PlayStereo(uint16_t len, const uint8_t *l, const uint8_t *r)
+void Disney::PlayStereo(uint16_t len, const uint8_t *l, const uint8_t *r)
 {
 	static uint8_t stereodata[buffer_samples * 2];
 	for (uint16_t i = 0; i < len; ++i) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
 	}
-	disney.chan->AddSamples_s8(len,stereodata);
+	channel->AddSamples_s8(len, stereodata);
 }
 
-static void DISNEY_CallBack(uint16_t len) {
-	if (!len || !disney.chan)
+void Disney::AudioCallback(uint16_t len)
+{
+	if (!len || !channel)
 		return;
 
 	// get the smaller used
 	uint16_t real_used;
-	if (disney.stereo) {
-		real_used = disney.da[0].used;
-		if(disney.da[1].used < real_used) real_used = disney.da[1].used;
+	if (stereo) {
+		real_used = da[0].used;
+		if (da[1].used < real_used)
+			real_used = da[1].used;
 	} else
-		real_used = disney.leader->used;
+		real_used = leader->used;
 
 	if (real_used >= len) { // enough data for now
-		if (disney.stereo) DISNEY_PlayStereo(len, disney.da[0].buffer, disney.da[1].buffer);
-		else disney.chan->AddSamples_m8(len,disney.leader->buffer);
+		if (stereo)
+			PlayStereo(len, da[0].buffer, da[1].buffer);
+		else
+			channel->AddSamples_m8(len, leader->buffer);
 
 		// put the rest back to start
 		for (uint8_t i = 0; i < 2; ++i) {
 			// TODO for mono only one
-			memmove(disney.da[i].buffer, &disney.da[i].buffer[len],
+			memmove(da[i].buffer,
+			        &da[i].buffer[len],
 			        buffer_samples /*real_used*/ - len);
-			disney.da[i].used -= len;
+			da[i].used = check_cast<uint8_t>(da[i].used - len);
 		}
 	// TODO: len > DISNEY
 	} else { // not enough data
-		if(disney.stereo) {
+		if (stereo) {
 			uint8_t gapfiller0 = 128;
 			uint8_t gapfiller1 = 128;
 			if (real_used) {
-				gapfiller0 = disney.da[0].buffer[real_used-1];
-				gapfiller1 = disney.da[1].buffer[real_used-1];
+				gapfiller0 = da[0].buffer[real_used - 1];
+				gapfiller1 = da[1].buffer[real_used - 1];
 			};
 
-			memset(disney.da[0].buffer+real_used,
-				gapfiller0,len-real_used);
-			memset(disney.da[1].buffer+real_used,
-				gapfiller1,len-real_used);
+			memset(da[0].buffer + real_used, gapfiller0, len - real_used);
+			memset(da[1].buffer + real_used, gapfiller1, len - real_used);
 
-			DISNEY_PlayStereo(len, disney.da[0].buffer, disney.da[1].buffer);
+			PlayStereo(len, da[0].buffer, da[1].buffer);
 			len -= real_used;
 
-		} else { // mono
+		} else {                         // mono
 			uint8_t gapfiller = 128; // Keep the middle
 			if (real_used) {
 				// fix for some stupid game; it outputs 0 at the end of the stream
 				// causing a click. So if we have at least two bytes availible in the
 				// buffer and the last one is a 0 then ignore that.
-				if(disney.leader->buffer[real_used-1]==0)
+				if (leader->buffer[real_used - 1] == 0)
 					real_used--;
 			}
 			// do it this way because AddSilence sounds like a gnawing mouse
 			if (real_used)
-				gapfiller = disney.leader->buffer[real_used-1];
+				gapfiller = leader->buffer[real_used - 1];
 			//LOG_MSG("gapfiller %x, fill len %d, realused %d",gapfiller,len-real_used,real_used);
-			memset(disney.leader->buffer+real_used,	gapfiller, len-real_used);
-			disney.chan->AddSamples_m8(len, disney.leader->buffer);
+			memset(leader->buffer + real_used, gapfiller, len - real_used);
+			channel->AddSamples_m8(len, leader->buffer);
 		}
-		disney.da[0].used =0;
-		disney.da[1].used =0;
+		da[0].used = 0;
+		da[1].used = 0;
 
 		//LOG_MSG("disney underflow %d",len - real_used);
 	}
-	if (disney.last_used+100<PIC_Ticks) {
-		// disable sound output
-		PIC_AddEvent(DISNEY_disable, 0.0001); // I think we shouldn't delete the
-		                                      // mixer while we are inside it
-	}
 }
 
-static void DISNEY_ShutDown([[maybe_unused]] Section *sec)
+Disney::~Disney()
 {
 	DEBUG_LOG_MSG("DISNEY: Shutting down");
 
-	// Remove interrupt events
-	PIC_RemoveEvents(DISNEY_disable);
-
-	// Stop the game from accessing the IO ports
-	disney.read_handler.Uninstall();
-	disney.write_handler.Uninstall();
-
 	// Stop and remove the mixer callback
-	if (disney.chan) {
-		disney.chan->Enable(false);
-		disney.chan.reset();
+	if (channel) {
+		channel->Enable(false);
+		channel.reset();
 	}
 
-	DISNEY_disable(0);
+	// Stop the game from accessing the IO ports
+	read_handler.Uninstall();
+	write_handler.Uninstall();
 }
 
-void DISNEY_Init(Section* sec) {
-	Section_prop *section = static_cast<Section_prop *>(sec);
-	assert(section);
-	if (!section->Get_bool("disney"))
-		return;
+Disney::Disney(const std::string &filter_pref)
+{
+	using namespace std::placeholders;
+	const auto audio_callback = std::bind(&Disney::AudioCallback, this, _1);
 
 	// Setup the mixer callback
 	disney.chan = MIXER_AddChannel(DISNEY_CallBack,
@@ -438,35 +443,57 @@ void DISNEY_Init(Section* sec) {
 
 	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
 	// DACs
-	const auto sample_rate = disney.chan->GetSampleRate();
+	assert(channel);
+	const auto rate_hz = check_cast<uint16_t>(channel->GetSampleRate());
 
-	disney.chan->ConfigureZeroOrderHoldUpsampler(sample_rate);
-	disney.chan->EnableZeroOrderHoldUpsampler();
-
-	// Parse filter setting
-	std::string filter_pref = section->Get_string("disney_filter");
+	channel->ConfigureZeroOrderHoldUpsampler(rate_hz);
+	channel->EnableZeroOrderHoldUpsampler();
 
 	if (filter_pref == "on") {
-		disney.filter_enabled = true;
-		update_filter_freq(sample_rate);
-		disney.chan->SetLowPassFilter(FilterState::On);
+		filter_enabled = true;
+		UpdateFilterFreq(rate_hz);
+		channel->SetLowPassFilter(FilterState::On);
 	} else {
 		if (filter_pref != "off")
 			LOG_WARNING("DISNEY: Invalid filter setting '%s', using off",
 			            filter_pref.c_str());
 
-		disney.filter_enabled = false;
-		disney.chan->SetLowPassFilter(FilterState::Off);
+		filter_enabled = false;
+		channel->SetLowPassFilter(FilterState::Off);
 	}
 
 	// Register port handlers for 8-bit IO
-	disney.write_handler.Install(base_port, disney_write, io_width_t::byte, 3);
-	disney.read_handler.Install(base_port, disney_read, io_width_t::byte, 3);
+	const auto read_from_port = std::bind(&Disney::ReadFromPort, this, _1, _2);
+	const auto write_to_port = std::bind(&Disney::WriteToPort, this, _1, _2, _3);
+
+	write_handler.Install(base_port, write_to_port, io_width_t::byte, 3);
+	read_handler.Install(base_port, read_from_port, io_width_t::byte, 3);
 
 	// Initialize the Disney states
-	disney.control = 0;
-	disney.last_used = 0;
-	DISNEY_disable(0);
+	control = 0;
+}
+
+// The Tandy DAC and PSG (programmable sound generator) managed pointers
+std::unique_ptr<Disney> disney = {};
+
+void DISNEY_ShutDown([[maybe_unused]] Section *sec)
+{
+	disney.reset();
+}
+
+void DISNEY_Init(Section *sec)
+{
+	Section_prop *section = static_cast<Section_prop *>(sec);
+	assert(section);
+
+	if (!section->Get_bool("disney")) {
+		DISNEY_ShutDown(sec);
+		return;
+	}
+
+	std::string filter_pref = section->Get_string("filter");
+
+	disney = std::make_unique<Disney>(filter_pref);
 
 	sec->AddDestroyFunction(&DISNEY_ShutDown, true);
 }
