@@ -86,8 +86,8 @@ static Bitu stop_handler(void) {
 
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off) {
 	reg_sp-=4;
-	mem_writew(SegPhys(ss)+reg_sp,RealOff(CALLBACK_RealPointer(call_stop)));
-	mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(CALLBACK_RealPointer(call_stop)));
+	real_writew(SegValue(ss),reg_sp+0,RealOff(CALLBACK_RealPointer(call_stop)));
+	real_writew(SegValue(ss),reg_sp+2,RealSeg(CALLBACK_RealPointer(call_stop)));
 	Bit32u oldeip=reg_eip;
 	Bit16u oldcs=SegValue(cs);
 	reg_eip=off;
@@ -108,24 +108,24 @@ void CALLBACK_RunRealInt(Bit8u intnum) {
 }
 
 void CALLBACK_SZF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	Bit16u tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_ZF;
 	else tempf &= ~FLAG_ZF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SCF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	Bit16u tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_CF;
 	else tempf &= ~FLAG_CF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SIF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	Bit16u tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_IF;
 	else tempf &= ~FLAG_IF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
