@@ -87,10 +87,10 @@ static Bitu stop_handler(void) {
 
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off) {
 	reg_sp-=4;
-	mem_writew(SegPhys(ss)+reg_sp,RealOff(CALLBACK_RealPointer(call_stop)));
-	mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(CALLBACK_RealPointer(call_stop)));
-	uint32_t oldeip=reg_eip;
-	uint16_t oldcs=SegValue(cs);
+	real_writew(SegValue(ss),reg_sp+0,RealOff(CALLBACK_RealPointer(call_stop)));
+	real_writew(SegValue(ss),reg_sp+2,RealSeg(CALLBACK_RealPointer(call_stop)));
+	auto oldeip=reg_eip;
+	auto oldcs=SegValue(cs);
 	reg_eip=off;
 	SegSet16(cs,seg);
 	DOSBOX_RunMachine();
@@ -109,24 +109,24 @@ void CALLBACK_RunRealInt(uint8_t intnum) {
 }
 
 void CALLBACK_SZF(bool val) {
-	uint16_t tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	auto tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_ZF;
 	else tempf &= ~FLAG_ZF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SCF(bool val) {
-	uint16_t tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	auto tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_CF;
 	else tempf &= ~FLAG_CF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SIF(bool val) {
-	uint16_t tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	auto tempf = real_readw(SegValue(ss),reg_sp+4);
 	if (val) tempf |= FLAG_IF;
 	else tempf &= ~FLAG_IF;
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
+	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
