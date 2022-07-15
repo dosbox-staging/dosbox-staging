@@ -894,38 +894,43 @@ static void ReloadShader(const bool pressed)
 void RENDER_Init(Section *sec)
 {
 	Section_prop *section = static_cast<Section_prop *>(sec);
+	assert(section);
 
-	// For restarting the renderer.
-	static bool running       = false;
-	bool aspect               = render.aspect;
-	Bitu scalersize           = render.scale.size;
-	bool scalerforced         = render.scale.forced;
-	scalerOperation_t scaleOp = render.scale.op;
+	// For restarting the renderer
+	static auto running = false;
 
-	render.pal.first       = 256;
-	render.pal.last        = 0;
-	render.aspect          = section->Get_bool("aspect");
+	auto prev_aspect       = render.aspect;
+	auto prev_scale_size   = render.scale.size;
+	auto prev_scale_forced = render.scale.forced;
+	auto prev_scale_op     = render.scale.op;
+
+	render.pal.first = 256;
+	render.pal.last  = 0;
+	render.aspect    = section->Get_bool("aspect");
+
 	render.frameskip.max   = section->Get_int("frameskip");
 	render.frameskip.count = 0;
+
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
-	std::string cline;
-	std::string scaler;
+
 	// Check for commandline paramters and parse them through the
 	// configclass so they get checked against allowed values
-	if (control->cmdline->FindString("-scaler", cline, true)) {
-		section->HandleInputline(std::string("scaler=") + cline);
-	} else if (control->cmdline->FindString("-forcescaler", cline, true)) {
-		section->HandleInputline(std::string("scaler=") + cline + " forced");
+	std::string cmd_line;
+	if (control->cmdline->FindString("-scaler", cmd_line, true)) {
+		section->HandleInputline(std::string("scaler=") + cmd_line);
+
+	} else if (control->cmdline->FindString("-forcescaler", cmd_line, true)) {
+		section->HandleInputline(std::string("scaler=") + cmd_line + " forced");
 	}
 
-	Prop_multival *prop = section->Get_multival("scaler");
-	scaler              = prop->GetSection()->Get_string("type");
-	std::string f       = prop->GetSection()->Get_string("force");
-	render.scale.forced = false;
-	if (f == "forced")
-		render.scale.forced = true;
+	auto *prop = section->Get_multival("scaler");
+
+	std::string force   = prop->GetSection()->Get_string("force");
+	render.scale.forced = force == "forced";
 
 	const bool in_pixel_perfect_mode = (GFX_GetBestMode(0) & GFX_UNITY_SCALE);
+
+	std::string scaler = prop->GetSection()->Get_string("type");
 
 	if (scaler == "none" || in_pixel_perfect_mode) {
 		render.scale.op   = scalerOpNormal;
@@ -998,14 +1003,15 @@ void RENDER_Init(Section *sec)
 	//  Only ReInit when there is a src.bpp (fixes crashes on startup and
 	//  directly changing the scaler without a screen specified yet)
 	if (running && render.src.bpp &&
-	    ((render.aspect != aspect) || (render.scale.op != scaleOp) ||
-	     (render.scale.size != scalersize) ||
-	     (render.scale.forced != scalerforced) ||
+	    ((render.aspect != prev_aspect) || (render.scale.op != prev_scale_op) ||
+	     (render.scale.size != prev_scale_size) ||
+	     (render.scale.forced != prev_scale_forced) ||
 #if C_OPENGL
 	     (previous_shader_filename != render.shader.filename) ||
 #endif
-	     render.scale.forced))
+	     render.scale.forced)) {
 		RENDER_CallBack(GFX_CallBackReset);
+	}
 
 	if (!running)
 		render.updating = true;
