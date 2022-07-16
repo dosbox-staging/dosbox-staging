@@ -1854,8 +1854,6 @@ static uint8_t read_sb(io_port_t port, io_width_t)
 
 static void write_sb(io_port_t port, io_val_t value, io_width_t)
 {
-	sb.chan->WakeUp();
-
 	const auto val = check_cast<uint8_t>(value);
 	switch (port - sb.hw.base) {
 	case DSP_RESET: DSP_DoReset(val); break;
@@ -2023,18 +2021,14 @@ public:
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
-		std::set<ChannelFeature> channel_features = {
-		        ChannelFeature::Sleep,
-		        ChannelFeature::ReverbSend,
-		        ChannelFeature::ChorusSend,
-		        ChannelFeature::DigitalAudio};
+		std::set channel_features = {ChannelFeature::ReverbSend,
+		                             ChannelFeature::ChorusSend,
+		                             ChannelFeature::DigitalAudio};
 
 		if (sb.type == SBT_PRO1 || sb.type == SBT_PRO2 || sb.type == SBT_16)
 			channel_features.insert(ChannelFeature::Stereo);
 
 		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB", channel_features);
-		assert(sb.chan);
-
 		configure_sb_filter();
 
 		sb.dsp.state=DSP_S_NORMAL;
