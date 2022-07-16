@@ -278,7 +278,6 @@ private:
 	double last_rendered_ms = 0.0;
 	double ms_per_render    = 0.0;
 	int frame_rate_hz       = 0;
-	uint16_t unused_for_ms = 0;
 
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
@@ -599,7 +598,8 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	audio_channel = MIXER_AddChannel(mixer_callback,
 	                                 0,
 	                                 "GUS",
-	                                 {ChannelFeature::Stereo,
+	                                 {ChannelFeature::Sleep,
+	                                  ChannelFeature::Stereo,
 	                                  ChannelFeature::ReverbSend,
 	                                  ChannelFeature::ChorusSend,
 	                                  ChannelFeature::DigitalAudio});
@@ -679,8 +679,7 @@ void Gus::RenderUpToNow()
 
 	// Wake up the channel and update the last rendered time datum.
 	assert(audio_channel);
-	if (!audio_channel->is_enabled) {
-		audio_channel->Enable(true);
+	if (audio_channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -713,11 +712,6 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused for some time
-	constexpr uint16_t three_seconds_of_callbacks = 3 * 1000;
-	if (++unused_for_ms > three_seconds_of_callbacks)
-		audio_channel->Enable(false);
 }
 
 void Gus::BeginPlayback()
@@ -1292,8 +1286,6 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
 	RenderUpToNow();
 
-	unused_for_ms = 0;
-
 	const auto val = check_cast<uint16_t>(value);
 
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
@@ -1401,8 +1393,6 @@ void Gus::UpdateWaveMsw(int32_t &addr) const noexcept
 void Gus::WriteToRegister()
 {
 	RenderUpToNow();
-
-	unused_for_ms = 0;
 
 	// Registers that write to the general DSP
 	switch (selected_register) {

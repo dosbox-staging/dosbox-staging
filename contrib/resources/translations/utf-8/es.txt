@@ -98,6 +98,12 @@ Espere antes de cerrar la consola si DOSBox tiene un error.
 Niveles de prioridad para DOSBox. La segunda entrada detrás de la coma es para cuando DOSBox no está enfocado/minimizado.
 pause sólo es válido para la segunda entrada. auto deshabilita niveles de prioridad y usa valores predeterminados del SO
 .
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
+.
 :CONFIG_MAPPERFILE
 Archivo usado para cargar/guardar las asignaciones de teclas/eventos.
 Resetmapper sólo funciona con el valor por defecto.
@@ -124,6 +130,14 @@ Cantidad de memoria que tiene DOSBox en megabytes.
 Es mejor dejar este valor por defecto para evitar problemas con algunos juegos,
 aunque algunos juegos pueden requerir un valor más alto.
 Por lo general, no hay ninguna ventaja de velocidad al aumentar este valor.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
 Memoria de vídeo en MiB (1-8) o KiB (256 a 8192). 'auto' usa el valor preterminado por adaptador de vídeo.
@@ -261,6 +275,30 @@ Cuántos milisegundos de datos para mantener encima del tamaño de bloque.
 Permite que el controlador de audio del sistema negocie la tasa óptima y el tamaño de bloque
 tan cerca de los valores especificados como sea posible.
 .
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
+.
 :CONFIG_MIDIDEVICE
 Dispositivo que recibirá los datos MIDI (de la interfaz emulada
 MIDI - MPU-401). Elija uno de los siguientes:
@@ -309,17 +347,6 @@ Cuando se usan valores personalizados:
   - profundidad es un decimal desde 0.0 a 21.0
   - onda-modulada es 'sine' o 'triangle'
   Por ejemplo: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Efecto de reverberación: 'auto', 'on', 'off', o valores personalizados.
-Cuando se usan valores personalizados:
-  Los cuatro deben ser proporcionados en orden y separados por espacios.
-  Ellos son: tamaño-de-habitación amortiguación ancho nivel, donde:
-  - tamaño-de-habitación es un decimal desde 0.0 a 1.0
-  - amortiguación es un decimal desde 0.0 a 1.0
-  - ancho es un decimal desde 0.0 a 100.0
-  - nivel es un decimal desde 0.0 a 1.0
-  Por ejemplo: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Modelo de sintetizador a utilizar.
@@ -372,6 +399,27 @@ Todos los modos OPL son compatibles con AdLib, excepto 'cms'.
 Proveedor para la emulación OPL. 'compat' proporciona una mejor calidad,
 'nuked' es la opción por defecto y la más precisa (pero la que consume más CPU).
 .
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_GUS
 Habilita emulación Gravis UltraSound.
 .
@@ -419,8 +467,10 @@ Ajusta la intensidad de filtrado del 8580 como un porcentaje desde 0 a 100.
 :CONFIG_PCSPEAKER
 Habilita emulación del PC-Speaker.
 .
-:CONFIG_PCRATE
-Frecuencia de muestreo del generador de sonido PC-Speaker.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
 Neutraliza y evita que el DC-offset del PC speaker perjudique a otras fuentes.
@@ -430,11 +480,36 @@ Si tu SO realiza su propia corrección de DC-offset, entonces establezca esto en
 :CONFIG_TANDY
 Habilita emulación del sistema de sonido Tandy. Para 'auto', la emulación está presente sólo si la máquina está establecida en 'tandy'.
 .
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_DISNEY
 Habilita emulación Disney Sound Source. (compatible con Covox Voice Master y Speech Thing).
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Habilita emulación de audio del IBM PS/1.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo de joystick a emular: auto (por defecto),
@@ -1211,10 +1286,6 @@ Archivo ROM no reconocido.
 ROM BASIC cargada.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-monta imagen(es) de disco compacto o de disquete a una letra de unidad determinada.
-
-.
 :SHELL_CMD_IMGMOUNT_HELP_LONG
 Monta un CD-ROM, disquete, o imagen de disco a una letra de unidad.
 
@@ -1429,27 +1500,6 @@ Debes especificar un valor de puerto numérico entre 1 y %d, incluido.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-Este programa es un marcador de posición
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s es sólo un marcador de posición.
-
-Instale un tercero y de prioridad a su PATH.
-
-Por ejemplo:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utilidades
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Visite lo siguiente para más ayuda:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1796,7 +1846,7 @@ Muestra una lista de archivos y subdirectorios de un directorio.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Uso:
-  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [22m [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
+  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
 
 Dónde:
   [36;1mPATRÓN[0m es un nombre de archivo exacto o un nombre de archivo inexacto con comodines,
@@ -2250,7 +2300,7 @@ Espera a que se presione una tecla y establece un valor ERRORLEVEL.
 :SHELL_CMD_CHOICE_HELP_LONG
 Uso:
   [32;1mchoice[0m [36;1m[TEXTO][0m
-  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [29m [36;1m[TEXTO][0m
+  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [/s] [36;1m[TEXTO][0m
 
 Dónde:
   [36;1mTEXTO[0m         es el texto a mostrar como un aviso, o vacío.
@@ -2323,6 +2373,10 @@ DOS versión %d.%02d
 La versión DOS especificada no es correcta.
 
 .
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
+.
 :PROGRAM_MOUNT_STATUS_NAME
 Image name
 .
@@ -2368,7 +2422,7 @@ Displays or changes file attributes.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
 
 Where:
   [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
@@ -2398,4 +2452,19 @@ Unable to set attributes: %s
 
 Choice aborted.
 
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox Commands
+.
+:HELP_UTIL_CATEGORY_FILE
+File/Directory Commands
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch File Commands
+.
+:HELP_UTIL_CATEGORY_MISC
+Miscellaneous Commands
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unknown Command
 .

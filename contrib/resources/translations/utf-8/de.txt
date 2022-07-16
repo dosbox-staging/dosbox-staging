@@ -107,6 +107,12 @@ Wartet bevor die Konsole geschlossen wird, wenn Dosbox eine Fehlermeldung anzeig
 Prioritätsstufen für Dosbox. Der zweite Eintrag hinter dem Komma ist für den Fall, dass die Dosbox nicht fokussiert/minimiert ist.
 Pause ist nur für den zweiten Eintrag gültig.
 .
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
+.
 :CONFIG_MAPPERFILE
 Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
 Resetmapper funktioniert nur mit dem Standardwert.
@@ -130,6 +136,14 @@ Die Menge an Speicher, die DOSBox hat, in Megabyte.
 Dieser Wert wird am besten auf dem Standardwert belassen, um Probleme mit einigen Programmen zu vermeiden,
 obwohl einige wenige Programme einen höheren Wert benötigen könnten.
 Es gibt generell keinen Geschwindigkeitsvorteil, wenn du diesen Wert erhöhst.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
 Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den Standardwert pro Videoadapter.
@@ -264,6 +278,30 @@ Wie viele Millisekunden an Daten zusätzlich zur Blockgröße vorgehalten werden
 Erlaube dem System-Audiotreiber, die optimale Rate und Blockgröße
 so nah wie möglich an den angegebenen Werten auszuhandeln.
 .
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
+.
 :CONFIG_MIDIDEVICE
 Gerät, das die MIDI-Daten empfangen wird (von der emulierten MIDI
 Schnittstelle - MPU-401). Wähle eine der folgenden Möglichkeiten:
@@ -310,17 +348,6 @@ Wenn du benutzerdefinierte Werte verwendest:
   - depth eine Dezimalzahl von 0.0 bis 21.0 ist
   - modulation-wave ist entweder "sine" oder "triangle"
   Zum Beispiel: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Reverb-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
-Wenn du benutzerdefinierte Werte verwendest:
-  Alle vier müssen in der richtigen Reihenfolge und mit Leerzeichen  voneinander getrennt angegeben werden.
-  Sie lauten: room-size, damping, width und level, wobei:
-  - room-size eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  - damping eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  - width eine Dezimalzahl zwischen 0.0 to 100.0 ist
-  - level eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  Zum Beispiel: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt CM-32L
@@ -372,6 +399,27 @@ Alle OPL-Modi sind AdLib-kompatibel, ausser "cms".
 Auswahl des OPL-Emulators. "compat" bietet eine bessere Qualität,
 "nuked" ist der Standard und am genauesten (aber am CPU-intensivsten).
 .
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_GUS
 Aktiviere die Gravis UltraSound Emulation.
 .
@@ -420,8 +468,10 @@ Passt die Filterstärke des 8580 als Prozentwert von 0 bis 100 an.
 :CONFIG_PCSPEAKER
 Aktiviere die PC-Lautsprecher-Emulation.
 .
-:CONFIG_PCRATE
-Sample-Rate der PC-Speaker Klangerzeugung.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
 Verhindert, dass der DC-Offset des PC-Lautsprechers andere Quellen beeinträchtigt.
@@ -431,11 +481,36 @@ Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchführt, dann setz
 :CONFIG_TANDY
 Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur vorhanden, wenn "machine" auf "tandy" eingestellt ist.
 .
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_DISNEY
 Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und Speech Thing kompatibel).
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Aktiviere die IBM PS/1 Audio Emulation.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Typ des zu emulierenden Joysticks: auto (Standard),
@@ -592,7 +667,8 @@ Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
 Korrekte Syntax: config -set "section property".
 
 .
-:CONFIG_FULLSCREEN
+:
+ :CONFIG_FULLSCREEN
 Startet DOSBox direkt im Vollbildmodus.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -1024,38 +1100,6 @@ ROM-Datei nicht erkannt.
 BASIC ROM geladen.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-Bindet CD-ROM- oder Floppy Disk-Imagedateien auf einen bestimmten
-Laufwerksbuchstaben ein.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP_LONG
-Einbinden von CD-ROM-, Floppy- und Festplatten-Imagedateien
-mit Laufwerksbuchstaben.
-
-Verwendung:
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
-  [32;1mimgmount[0m -u [37;1mLAUFWERK[0m  (Image des LAUFWERKS auswerfen)
-
-Wobei:
-  [37;1mLAUFWERK[0m  ist der Laufwerksbuchstabe, auf dem das Image eingebunden wird
-  [36;1mCDROM-SET[0m ist ein ISO, CUE+BIN, CUE+ISO, oder CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mIMAGEFILE[0m ist ein Festplatten- oder Disketten-Image im FAT12/16 Format
-  [36;1mBOOTIMAGE[0m ist ein bootfähiges Disk-Image mit der angegebenen -size GEOMETRY:
-            bytes-pro-sektor, sektoren-pro-kopf, köpfe, zylinder
-Anmerkungen:
-  - %s+F4 wechselt auf das nächste angegebene CDROM-SET oder IMAGEFILE.
-
-Beispiele:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
-  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd
-  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
-
-.
 :SHELL_CMD_MOUNT_HELP
 Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerksbuchstaben zu.
 
@@ -1160,17 +1204,7 @@ Zeichentabelle %i wurde geladen
 Zeichentabelle %i wurde für Layout %s geladen
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [Tastaturlayout ID[ Zeichentabellen-Nummer[ Zeichentabellendatei]]]
-
-Einige Beispiele:
-  [32;1mKEYB[0m: Aktuell geladene Zeichentabelle anzeigen.
-  [32;1mKEYB[0m sp: Lade das spanische (SP) Layout, verwende eine entsprechende Zeichentabelle.
-  [32;1mKEYB[0m sp 850: Lade das spanische (SP) Layout, verwende die Zeichentabelle 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Dasselbe wie oben, aber benutze die Datei mycp.cpi.
-
-.
-:PROGRAM_KEYB_NOERROR
+:PROGRAM_PLACEHOLDER_LONG_HELP
 Tastaturlayout %s für Zeichentabelle %i geladen
 
 .
@@ -1252,7 +1286,7 @@ Tippe "date MM-TT-JJJJ" um es zu ändern.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [/T] [/H] [29m | MM-TT-JJJJ]
+DATE [/T] [/H] [/S] | MM-TT-JJJJ]
   MM-TT-JJJJ: neues zu setzendes Datum
   /S: Host-Zeit und -Datum permanent als DOS-Zeit verwenden
   /F: Zurückschalten auf DOSBox-interne Zeit (Gegenteil von /S)
@@ -1575,7 +1609,7 @@ Wartet auf einen Tastendruck und setzt ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:choices] [/N] [29m text
+CHOICE [/C:choices] [/N] [/S] text
   /C[:]choices - Legt die erlaubten Tasten fest.  Standard ist: jn.
   /N - Zeigt die Auswahlmöglichkeiten am Ende der Eingabeaufforderung nicht an.
   /S - Ermöglicht die Eingabe in Groß- und Kleinschreibung.
@@ -1883,28 +1917,6 @@ Beispiele:
   [32;1mKEYB[0m [36;1muk[0m
   [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-Dieses Programm ist ein Platzhalter.
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s ist nur ein Platzhalter.
-
-Installiere eine Anwendung eines Drittanbieters 
-und gib ihr in der PATH-Variable Priorität.
-
-Beispiel:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utils
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Weitere Hilfe findest du hier:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -2251,6 +2263,10 @@ Ein numerischer Port-Wert zwischen 1 und %d (einschließlich) muss angegeben wer
   %s
 
 .
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
+.
 :PROGRAM_MOUNT_STATUS_NAME
 Image name
 .
@@ -2292,7 +2308,7 @@ File open error - %s
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [29m
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
 
 Where:
   [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
@@ -2322,4 +2338,19 @@ Unable to set attributes: %s
 
 Choice aborted.
 
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox Commands
+.
+:HELP_UTIL_CATEGORY_FILE
+File/Directory Commands
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch File Commands
+.
+:HELP_UTIL_CATEGORY_MISC
+Miscellaneous Commands
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unknown Command
 .

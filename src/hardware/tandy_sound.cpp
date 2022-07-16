@@ -166,7 +166,6 @@ private:
 	void AudioCallback(uint16_t requested_frames);
 	bool MaybeRenderFrame(float &frame);
 	void RenderUpToNow();
-	int TallySilence(const int sample);
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
 
 	// Managed objects
@@ -181,14 +180,10 @@ private:
 	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
 	                                                    render_divisor);
 	static constexpr auto ms_per_render  = 1000.0 / render_rate_hz;
-	static constexpr int16_t idle_after_ms = 200;
 
 	// Runtime states
 	device_sound_interface *dsi       = nullptr;
 	double last_rendered_ms           = 0.0;
-	int16_t idle_after_silent_samples = 0;
-	int16_t unused_for_ms             = 0;
-	int16_t silent_samples            = 0;
 };
 
 static void setup_filters(mixer_channel_t &channel) {
@@ -218,8 +213,9 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "TANDYDAC",
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::DigitalAudio});
 
 	sample_rate = channel->GetSampleRate();
@@ -434,7 +430,8 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "TANDY",
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::Synthesizer});
 
@@ -457,10 +454,6 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	                                                      sample_rate,
 	                                                      max_freq));
 
-	// Compute how many silent samples before idling the PSG
-	idle_after_silent_samples = check_cast<int16_t>(sample_rate *
-	                                                idle_after_ms / 1000);
-
 	// Configure and start the MAME device
 	dsi = static_cast<device_sound_interface *>(device.get());
 	const auto base_device = static_cast<device_t *>(device.get());
@@ -471,15 +464,6 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	        base_device->shortName,
 	        is_dac_enabled ? "and 8-bit DAC"
 	                       : "but no DAC, because a Sound Blaster is present");
-}
-
-int TandyPSG::TallySilence(const int sample)
-{
-	if (!sample)
-		++silent_samples;
-	else
-		silent_samples = 0;
-	return sample;
 }
 
 bool TandyPSG::MaybeRenderFrame(float &frame)
@@ -495,9 +479,9 @@ bool TandyPSG::MaybeRenderFrame(float &frame)
 
 	const auto frame_is_ready = resampler->input(sample);
 
-	// Get the frame and pass it through the silence-tracker
+	// Get the frame
 	if (frame_is_ready)
-		frame = static_cast<float>(TallySilence(resampler->output()));
+		frame = static_cast<float>(resampler->output());
 
 	return frame_is_ready;
 }
@@ -508,8 +492,7 @@ void TandyPSG::RenderUpToNow()
 
 	// Wake up the channel and update the last rendered time datum.
 	assert(channel);
-	if (!channel->is_enabled) {
-		channel->Enable(true);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -524,8 +507,6 @@ void TandyPSG::RenderUpToNow()
 void TandyPSG::WriteToPort(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
-
-	unused_for_ms = 0;
 
 	const auto data = check_cast<uint8_t>(value);
 	device->write(data);
@@ -554,12 +535,6 @@ void TandyPSG::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused and playing silence
-	if (unused_for_ms++ > idle_after_ms &&
-	    silent_samples > idle_after_silent_samples) {
-		channel->Enable(false);
-	}
 }
 
 // The Tandy DAC and PSG (programmable sound generator) managed pointers

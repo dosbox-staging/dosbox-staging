@@ -387,6 +387,9 @@ static void DOSBOX_RealInit(Section * sec) {
 	} else
 		E_Exit("DOSBOX:Unknown machine type %s", mtype.c_str());
 
+	// Set the user's prefered MCB fault handling strategy
+	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy"));
+
 	// Convert the users video memory in either MB or KiB to bytes
 	const auto vmemsize_string = std::string(section->Get_string("vmemsize"));
 
@@ -468,10 +471,32 @@ void DOSBOX_Init() {
 	        "though few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
 
+	const char *mcb_fault_strategies[] = {"deny", "repair", "report", "allow", nullptr};
+	pstring = secprop->Add_string("mcb_fault_strategy",
+	                              only_at_start,
+	                              mcb_fault_strategies[0]);
+	pstring->Set_help(
+	        "How software-corrupted memory chain blocks should be handled:\n"
+	        "  deny:    Quit (and report) when faults are detected (default).\n"
+	        "  repair:  Repair (and report) faults using adjacent chain blocks.\n"
+	        "  report:  Report faults but otherwise proceed as-is.\n"
+	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
+	        "The default (deny) is recommended unless a game is failing with MCB corruption errors.");
+	pstring->Set_values(mcb_fault_strategies);
+
 	const char *vmemsize_choices[] = {
 	        "auto",
-	        "1",    "2",    "4",    "8", // MiB
-	        "256", "512",  "1024", "2048", "4096", "8192", 0, // KiB
+	        "1",
+	        "2",
+	        "4",
+	        "8", // MiB
+	        "256",
+	        "512",
+	        "1024",
+	        "2048",
+	        "4096",
+	        "8192",
+	        0, // KiB
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
@@ -849,11 +874,6 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	pstring->Set_help(
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
-	Pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the PC speaker output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
-
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, true);
 
@@ -947,10 +967,10 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
 	const char *serials[] = {"dummy",
 	                         "disabled",
-	                         "serialmouse",
+	                         "mouse",
 	                         "modem",
 	                         "nullmodem",
-	                         "directserial",
+	                         "direct",
 	                         0};
 
 	Pmulti_remain = secprop->Add_multiremain("serial1", when_idle, " ");
@@ -960,10 +980,10 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help(
 	        "set type of device connected to com port.\n"
-	        "Can be disabled, dummy, serialmouse, modem, nullmodem, directserial.\n"
+	        "Can be disabled, dummy, mouse, modem, nullmodem, direct.\n"
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. Parameter for all types is irq (optional).\n"
-	        "for serialmouse:\n"
+	        "for mouse:\n"
 	        "   type, can be one of:\n"
 	        "      2btn:  2 buttons, Microsoft serial mouse\n"
 	        "      3btn:  3 buttons, Logitech serial mouse\n"
@@ -972,7 +992,7 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	        "      2btn+msm, 3btn+msm, wheel+msm : autoselection\n"
 	        "   rate, can be normal or smooth (more frequent updates than on real PC)\n"
 	        "   Default is type:wheel+msm rate:smooth\n"
-	        "for directserial: realport (required), rxdelay (optional).\n"
+	        "for direct: realport (required), rxdelay (optional).\n"
 	        "   (realport:COM1 realport:ttyS0).\n"
 	        "for modem: listenport sock (all optional).\n"
 	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"

@@ -28,10 +28,6 @@
 
 CHECK_NARROWING();
 
-// Constants
-// ---------
-constexpr auto idle_after_ms = 200;
-
 void Innovation::Open(const std::string &model_choice,
                       const std::string &clock_choice,
                       const int filter_strength_6581,
@@ -86,14 +82,12 @@ void Innovation::Open(const std::string &model_choice,
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                            0,
 	                                            "INNOVATION",
-	                                            {ChannelFeature::ReverbSend,
+	                                            {ChannelFeature::Sleep,
+	                                             ChannelFeature::ReverbSend,
 	                                             ChannelFeature::ChorusSend,
 	                                             ChannelFeature::Synthesizer});
 
 	const auto frame_rate_hz = mixer_channel->GetSampleRate();
-
-	// Compute how many silent samples before idling the service
-	idle_after_silent_frames = iround(idle_after_ms * frame_rate_hz / 1000.0);
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.
 	const double passband = 0.9 * frame_rate_hz / 2;
@@ -115,8 +109,6 @@ void Innovation::Open(const std::string &model_choice,
 
 	// Ready state-values for rendering
 	last_rendered_ms = 0.0;
-	unused_for_ms    = 0;
-	silent_frames    = 0;
 
 	constexpr auto us_per_s = 1'000'000.0;
 	if (filter_strength == 0)
@@ -161,8 +153,6 @@ void Innovation::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
 
-	unused_for_ms = 0;
-
 	const auto data = check_cast<uint8_t>(value);
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
 	service->write(sid_port, data);
@@ -174,8 +164,7 @@ void Innovation::RenderUpToNow()
 
 	// Wake up the channel and update the last rendered time datum.
 	assert(channel);
-	if (!channel->is_enabled) {
-		channel->Enable(true);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -187,15 +176,6 @@ void Innovation::RenderUpToNow()
 	}
 }
 
-int16_t Innovation::TallySilence(const int16_t sample)
-{
-	if (!sample)
-		++silent_frames;
-	else
-		silent_frames = 0;
-	return sample;
-}
-
 bool Innovation::MaybeRenderFrame(float &frame)
 {
 	assert(service);
@@ -204,9 +184,9 @@ bool Innovation::MaybeRenderFrame(float &frame)
 
 	const auto frame_is_ready = service->clock(1, &sample);
 
-	// Get the frame and pass it through the silence-tracker
+	// Get the frame
 	if (frame_is_ready)
-		frame = static_cast<float>(TallySilence(sample) * 2);
+		frame = static_cast<float>(sample * 2);
 
 	return frame_is_ready;
 }
@@ -234,12 +214,6 @@ void Innovation::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused and playing silence
-	if (unused_for_ms++ > idle_after_ms &&
-	    silent_frames > idle_after_silent_frames) {
-		channel->Enable(false);
-	}
 }
 
 Innovation innovation;

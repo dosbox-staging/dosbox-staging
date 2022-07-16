@@ -213,6 +213,9 @@ static void DISNEY_analyze(Bitu channel){
 
 static void disney_write(io_port_t port, io_val_t value, io_width_t)
 {
+	assert(disney.chan);
+	disney.chan->WakeUp();
+
 	const auto val = check_cast<uint8_t>(value);
 
 	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
@@ -429,7 +432,8 @@ void DISNEY_Init(Section* sec) {
 	disney.chan = MIXER_AddChannel(DISNEY_CallBack,
 	                               0,
 	                               "DISNEY",
-	                               {ChannelFeature::ReverbSend,
+	                               {ChannelFeature::Sleep,
+	                                ChannelFeature::ReverbSend,
 	                                ChannelFeature::ChorusSend,
 	                                ChannelFeature::DigitalAudio});
 

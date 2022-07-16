@@ -1314,9 +1314,9 @@ public:
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 			}
 #ifdef C_DIRECTSERIAL
-			else if (type=="directserial") {
+			else if (type=="direct") {
 				serialports[i] = new CDirectSerial (i, &cmd);
-				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT_SERIAL;
+				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful) {
 					// serial port name was wrong or already in use
@@ -1345,7 +1345,7 @@ public:
 				}
 			}
 #endif
-			else if(type=="serialmouse") {
+			else if(type=="mouse") {
 				serialports[i] = new CSerialMouse (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MOUSE;
 				cmd.GetStringRemain(serialports[i]->commandLineString);

@@ -1,1 +1,0 @@
-﻿INSTALL.txt ile README.txt dosyalarının çevirileri tamamlanmamıştır.

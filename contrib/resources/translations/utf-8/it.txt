@@ -120,6 +120,12 @@ DOSBox è minimizzato o non in primo piano.
 'auto' disabilita i livelli di priorità e utilizza le impostazioni predefinite
 del sistema operativo.
 .
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
+.
 :CONFIG_MAPPERFILE
 File utilizzato per caricare/salvare le corrispondenze tasto/evento.
 Resetmapper funziona solo con i valori predefiniti.
@@ -147,6 +153,14 @@ Quantità di memoria a disposizione di DOSBox, in megabyte.
 Si consiglia di non modificare questo valore per evitare problemi con alcuni
 giochi, anche se potrebbe essere necessario aumentarlo per farne funzionare
 alcuni. Di solito non vi è nessun guadagno in velocità alzando questo valore.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
 Memoria video in MiB (1-8) o KiB (da 256 a 8192). 
@@ -313,6 +327,22 @@ in cuffia:
                (trasformando di fatto il contenuto stereo in mono).
 Nota: È possibile impostare il crossfeed per canale tramite i comandi del mixer
 .
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
+.
 :CONFIG_MIDIDEVICE
 Dispositivo che riceverà i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
 Scegli uno dei seguenti:
@@ -357,17 +387,6 @@ Quando si utilizzano valori personalizzati:
   - profondità è un numero decimale compreso tra 0.0 e 21.0
   - modulazione-onda è 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
-Quando si utilizzano valori personalizzati:
-  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
-  - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
-  - smorzamento è un numero decimale compreso tra 0.0 e 1.0
-  - ampiezza è un numero decimale compreso tra 0.0 e 100.0
-  - livello è un numero decimale compreso tra 0.0 e 1.0
-  Per esempio: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
@@ -492,8 +511,10 @@ Regola la forza di filtraggio del chip 8580 come percentuale da 0 a 100.
 :CONFIG_PCSPEAKER
 Abilita l'emulazione dell'altoparlante interno del PC (PC-Speaker).
 .
-:CONFIG_PCRATE
-Frequenza di campionamento della generazione del suono del PC-Speaker.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
 Neutralizza e impedisce che il DC-offset dell'altoparlante del PC danneggi
@@ -505,12 +526,37 @@ DC-offset, impostalo su 'false'.
 Abilita l'emulazione del sistema audio Tandy.
 Se 'auto', l'emulazione è presente solo se la macchina è impostata su 'tandy'.
 .
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_DISNEY
 Abilita l'emulazione Disney Sound Source.
 (Compatibile con Covox Voice Master e Speech Thing)
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Abilita l'emulazione audio IBM PS/1.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
@@ -2539,4 +2585,8 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
+.
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
 .

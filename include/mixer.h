@@ -119,11 +119,12 @@ enum LINE_INDEX : uint8_t {
 };
 
 enum class ChannelFeature {
-	Stereo,
-	ReverbSend,
 	ChorusSend,
+	DigitalAudio,
+	ReverbSend,
+	Sleep,
+	Stereo,
 	Synthesizer,
-	DigitalAudio
 };
 
 enum class FilterState { Off, On, ForcedOn };
@@ -197,6 +198,7 @@ public:
 
 	void FillUp();
 	void Enable(const bool should_enable);
+	bool WakeUp(); // pass-through to the sleeper
 	void FlushSamples();
 
 	AudioFrame volume = {1.0f, 1.0f};
@@ -309,7 +311,24 @@ private:
 		float send_gain = 0.0f;
 	} reverb = {};
 	bool do_reverb_send = false;
+
+	class Sleeper {
+	public:
+		Sleeper() = delete;
+		Sleeper(MixerChannel &c);
+		void Listen(const AudioFrame &frame);
+		void MaybeSleep();
+		bool WakeUp();
+
+	private:
+		MixerChannel &channel;
+		int64_t woken_at_ms   = 0;
+		int accumulated_noise = 0;
+	};
+	Sleeper sleeper;
+	const bool do_sleep = false;
 };
+
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,

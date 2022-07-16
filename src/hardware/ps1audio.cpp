@@ -106,20 +106,6 @@ private:
 	bool can_trigger_irq = false;
 };
 
-static void keep_alive_channel(size_t &last_used_on, mixer_channel_t &channel)
-{
-	last_used_on = PIC_Ticks;
-	if (!channel->is_enabled)
-		channel->Enable(true);
-}
-
-static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &channel)
-{
-	const bool last_used_five_seconds_ago = PIC_Ticks > last_used_on + 5000;
-	if (last_used_five_seconds_ago)
-		channel->Enable(false);
-}
-
 static void setup_filter(mixer_channel_t &channel)
 {
 	constexpr auto hp_order       = 3;
@@ -140,7 +126,8 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "PS1DAC",
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::DigitalAudio});
 
@@ -218,8 +205,9 @@ void Ps1Dac::Reset(bool should_clear_adder)
 
 void Ps1Dac::WriteDataPort200(io_port_t, io_val_t value, io_width_t)
 {
+	channel->WakeUp();
+
 	const auto data = check_cast<uint8_t>(value);
-	keep_alive_channel(last_write, channel);
 	if (is_new_transfer) {
 		is_new_transfer = false;
 		if (data) {
@@ -241,8 +229,9 @@ void Ps1Dac::WriteDataPort200(io_port_t, io_val_t value, io_width_t)
 
 void Ps1Dac::WriteControlPort202(io_port_t, io_val_t value, io_width_t)
 {
+	channel->WakeUp();
+
 	const auto data = check_cast<uint8_t>(value);
-	keep_alive_channel(last_write, channel);
 	regs.command = data;
 	if (data & 3)
 		can_trigger_irq = true;
@@ -250,8 +239,9 @@ void Ps1Dac::WriteControlPort202(io_port_t, io_val_t value, io_width_t)
 
 void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 {
+	channel->WakeUp();
+
 	auto data = check_cast<uint8_t>(value);
-	keep_alive_channel(last_write, channel);
 	// Clock divisor (maybe trigger first IRQ here).
 	regs.divisor = data;
 
@@ -271,8 +261,9 @@ void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 
 void Ps1Dac::WriteFifoLevelPort204(io_port_t, io_val_t value, io_width_t)
 {
+	channel->WakeUp();
+
 	const auto data = check_cast<uint8_t>(value);
-	keep_alive_channel(last_write, channel);
 	regs.fifo_level = data;
 	if (!data)
 		Reset(true);
@@ -283,20 +274,17 @@ void Ps1Dac::WriteFifoLevelPort204(io_port_t, io_val_t value, io_width_t)
 
 uint8_t Ps1Dac::ReadPresencePort02F(io_port_t, io_width_t)
 {
-	keep_alive_channel(last_write, channel);
 	return 0xff;
 }
 
 uint8_t Ps1Dac::ReadCmdResultPort200(io_port_t, io_width_t)
 {
-	keep_alive_channel(last_write, channel);
 	regs.status &= ~fifo_status_ready_flag;
 	return regs.command;
 }
 
 uint8_t Ps1Dac::ReadStatusPort202(io_port_t, io_width_t)
 {
-	keep_alive_channel(last_write, channel);
 	regs.status = CalcStatus();
 	return regs.status;
 }
@@ -304,14 +292,12 @@ uint8_t Ps1Dac::ReadStatusPort202(io_port_t, io_width_t)
 // Used by Stunt Island and Roger Rabbit 2 during setup.
 uint8_t Ps1Dac::ReadTimingPort203(io_port_t, io_width_t)
 {
-	keep_alive_channel(last_write, channel);
 	return regs.divisor;
 }
 
 // Used by Bush Buck as an alternate detection method.
 uint8_t Ps1Dac::ReadJoystickPorts204To207(io_port_t, io_width_t)
 {
-	keep_alive_channel(last_write, channel);
 	return 0;
 }
 
@@ -361,7 +347,6 @@ void Ps1Dac::Update(uint16_t samples)
 	bytes_pending = static_cast<uint32_t>(pending);
 
 	channel->AddSamples_m8(samples, MixTemp);
-	maybe_suspend_channel(last_write, channel);
 }
 
 Ps1Dac::~Ps1Dac()
@@ -393,7 +378,6 @@ private:
 	void AudioCallback(uint16_t requested_frames);
 	bool MaybeRenderFrame(float &frame);
 	void RenderUpToNow();
-	int TallySilence(const int sample);
 
 	void WriteSoundGeneratorPort205(io_port_t port, io_val_t, io_width_t);
 
@@ -410,14 +394,10 @@ private:
 	static constexpr auto render_rate_hz   = ceil_sdivide(ps1_psg_clock_hz,
                                                             render_divisor);
 	static constexpr auto ms_per_render    = 1000.0 / render_rate_hz;
-	static constexpr auto idle_after_ms    = 2000;
 
 	// Runtime states
 	device_sound_interface *dsi = static_cast<sn76496_base_device *>(&device);
 	double last_rendered_ms     = 0.0;
-	int idle_after_silent_samples = 0;
-	int silent_samples            = 0;
-	int unused_for_ms             = 0;
 };
 
 Ps1Synth::Ps1Synth(const std::string &filter_choice)
@@ -428,7 +408,8 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           "PS1",
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::Synthesizer});
 
@@ -454,23 +435,11 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	                                                      channel_rate_hz,
 	                                                      max_freq));
 
-	// Compute how many silent samples before idling the PSG
-	idle_after_silent_samples = channel_rate_hz * idle_after_ms / 1000;
-
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t &>(device).device_start();
 	device.convert_samplerate(render_rate_hz);
-}
-
-int Ps1Synth::TallySilence(const int sample)
-{
-	if (!sample)
-		++silent_samples;
-	else
-		silent_samples = 0;
-	return sample;
 }
 
 bool Ps1Synth::MaybeRenderFrame(float &frame)
@@ -486,9 +455,9 @@ bool Ps1Synth::MaybeRenderFrame(float &frame)
 
 	const auto frame_is_ready = resampler->input(sample);
 
-	// Get the frame and pass it through the silence-tracker
+	// Get the frame
 	if (frame_is_ready)
-		frame = static_cast<float>(TallySilence(resampler->output()));
+		frame = static_cast<float>(resampler->output());
 
 	return frame_is_ready;
 }
@@ -498,9 +467,7 @@ void Ps1Synth::RenderUpToNow()
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
-	assert(channel);
-	if (!channel->is_enabled) {
-		channel->Enable(true);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -514,8 +481,6 @@ void Ps1Synth::RenderUpToNow()
 
 void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 {
-	unused_for_ms = 0;
-
 	RenderUpToNow();
 
 	const auto data = check_cast<uint8_t>(value);
@@ -545,12 +510,6 @@ void Ps1Synth::AudioCallback(const uint16_t requested_frames)
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
-
-	// Maybe idle the channel if the device has been unused and playing silence
-	if (unused_for_ms++ > idle_after_ms &&
-	    silent_samples > idle_after_silent_samples) {
-		channel->Enable(false);
-	}
 }
 
 Ps1Synth::~Ps1Synth()

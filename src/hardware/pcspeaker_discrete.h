@@ -20,7 +20,7 @@
 
 #include "pcspeaker.h"
 
-#include <array>
+#include <queue>
 
 #include "mixer.h"
 #include "pic.h"
@@ -45,8 +45,6 @@ private:
 	bool IsWaveSquare() const;
 	float NeutralOr(const float fallback) const;
 	float NeutralLastPitOr(const float fallback) const;
-	void PlayOrSleep(const uint16_t speaker_movements,
-	                 uint16_t requested_samples, float buffer[]);
 
 	// Constants
 	static constexpr char device_name[] = "PCSPEAKER";
@@ -60,14 +58,12 @@ private:
 	static constexpr float amp_negative = MIN_AUDIO * pwm_scalar;
 	static constexpr float amp_neutral = (amp_positive + amp_negative) / 2.0f;
 
-	static constexpr int idle_grace_time_ms = 100;
-
 	struct DelayEntry {
 		float index = 0.0f;
 		float vol   = 0.0f;
 	};
 
-	std::array<DelayEntry, 1024> entries = {};
+	std::queue<DelayEntry> entries = {};
 
 	mixer_channel_t channel = nullptr;
 
@@ -87,12 +83,6 @@ private:
 	float volcur       = 0.0f;
 	float last_index   = 0.0f;
 
-	int sample_rate = 0;
-
+	int sample_rate       = 0;
 	int minimum_tick_rate = 0;
-
-	int idle_countdown = idle_grace_time_ms;
-
-	uint16_t entries_queued = 0u;
-	uint16_t prev_pos       = 0u;
 };

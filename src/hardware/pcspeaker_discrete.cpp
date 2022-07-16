@@ -69,31 +69,30 @@ void PcSpeakerDiscrete::AddDelayEntry(const float index, float vol)
 		vol *= sqw_scalar;
 // #define DEBUG_SQUARE_WAVE 1
 #ifdef DEBUG_SQUARE_WAVE
-		LOG_MSG("PCSPEAKER: square-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu]",
-		        prev_pos,
+		LOG_MSG("PCSPEAKER: square-wave [vol=%f, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu]",
+		        vol,
 		        prev_port_b,
 		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 	} else {
-		LOG_MSG("PCSPEAKER: sine-wave [prev_pos=%u, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu], ",
-		        prev_pos,
+		LOG_MSG("PCSPEAKER: sine-wave [vol=%f, prev_port_b=%u, port_b=%u, prev_pit=%lu, pit=%lu], ",
+		        vol,
 		        prev_port_b,
 		        port_b,
 		        prev_pit_mode,
 		        pit_mode);
 #endif
 	}
-	entries.at(entries_queued) = {index, vol};
-	entries_queued++;
-
+	const auto entry = DelayEntry{index, vol};
+	entries.emplace(entry);
 #if 0
 	// This is extremely verbose; pipe the output to a file.
 	// Display the previous and current speaker modes w/ requested volume
 	if (fabsf(vol) > amp_neutral)
-		LOG_MSG("PCSPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
+		LOG_MSG("PCSPEAKER: Adding pit=%" PRIuPTR "|%" PRIuPTR
 		        ", pwm=%d|%d, volume=%6.0f",
-		        prev_pos > 0 ? "yes" : "no", prev_pit_mode,
+		        prev_pit_mode,
 		        pit_mode, prev_port_b, port_b,
 		        static_cast<float>(vol));
 #endif
@@ -285,14 +284,14 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		return;
 	}
 	// Activate the channel after queuing new speaker entries
-	channel->Enable(true);
+	channel->WakeUp();
 }
 
 // Returns the amp_neutral voltage if the speaker's  fully faded,
 // otherwise returns the fallback if the speaker is active.
 float PcSpeakerDiscrete::NeutralOr(const float fallback) const
 {
-	return !idle_countdown ? amp_neutral : fallback;
+	return channel->is_enabled ? fallback : amp_neutral;
 }
 
 // Returns, in order of preference:
@@ -336,24 +335,7 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 		break;
 	};
 
-	// Activate the channel after queuing new speaker entries
-	channel->Enable(true);
-}
-
-// Halt the channel after the speaker has idled
-void PcSpeakerDiscrete::PlayOrSleep(const uint16_t speaker_movements,
-                                    const uint16_t requested_samples,
-                                    float buffer[])
-{
-	channel->AddSamples_mfloat(requested_samples, buffer);
-
-	// Maybe sleep the channel
-	if (speaker_movements && requested_samples)
-		idle_countdown = idle_grace_time_ms;
-	else if (idle_countdown > 0)
-		idle_countdown--;
-	else
-		channel->Enable(false);
+	channel->WakeUp();
 }
 
 void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
@@ -362,12 +344,27 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	float buf[render_frames];
 
 	ForwardPIT(1);
-	last_index            = 0.0f;
-	uint16_t pos          = 0u;
-	auto sample_base      = 0.0f;
+	last_index       = 0.0f;
+	auto sample_base = 0.0f;
 
-	const auto period_per_frame_ms = 1.0f / frames - FLT_EPSILON;
-	// The epsilon reduction ensures the sum of the periods is <= 1ms
+	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / frames;
+	// The addition of epsilon ensures that queued entries
+	// having time indexes at the end of the tick cycle (ie: .index == ~1.0)
+	// will still be accepted in the comparison below:
+	//    "entries.front().index <= index"
+	//
+	// Without epsilon, then we risk some of these comparisons failing, in
+	// which case these marginal end-of-cycle entries won't be processed
+	// this round and instead will stay queued for processing next round. If
+	// this pattern persists for some number of seconds, then more and more
+	// entries can be queued versus processed.
+
+	// An example of this behavior can be seen in Narco Police, where
+	// repeated gunfire from enemy soldiers during the first wave can drive
+	// the entry queue into the thousands (if epsilon is removed).
+
+	// Therefore, it's better to err on the side of accepting and processing
+	// entries versus queuing, to keep the queue under control.
 
 	auto remaining = frames;
 	while (remaining > 0) {
@@ -381,15 +378,14 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 
 			while (index < end) {
 				// Check if there is an upcoming event
-				if (entries_queued && entries[pos].index <= index) {
-					volwant = entries[pos].vol;
-					pos++;
-					entries_queued--;
+				if (entries.size() && entries.front().index <= index) {
+					volwant = entries.front().vol;
+					entries.pop();
 					continue;
 				}
 				float vol_end;
-				if (entries_queued && entries[pos].index < end) {
-					vol_end = entries[pos].index;
+				if (entries.size() && entries.front().index < end) {
+					vol_end = entries.front().index;
 				} else
 					vol_end = end;
 				const auto vol_len = vol_end - index;
@@ -427,10 +423,9 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 					}
 				}
 			}
-			prev_pos = pos;
 			buf[i]   = value / period_per_frame_ms;
 		}
-		PlayOrSleep(pos, todo, buf);
+		channel->AddSamples_mfloat(todo, buf);
 
 		remaining = check_cast<uint16_t>(remaining - todo);
 	}
@@ -472,8 +467,9 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 	channel = MIXER_AddChannel(callback,
 	                           0,
 	                           device_name,
-	                           {ChannelFeature::ReverbSend,
+	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
@@ -490,6 +486,6 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 PcSpeakerDiscrete::~PcSpeakerDiscrete()
 {
 	assert(channel);
-	channel->Enable(false);
+	channel.reset();
 	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
 }
