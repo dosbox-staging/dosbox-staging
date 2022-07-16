@@ -794,7 +794,7 @@ constexpr int16_t u8to16(const int u_val)
 }
 
 // 8-bit to 16-bit lookup tables
-static int16_t lut_u8to16[UINT8_MAX + 1] = {};
+int16_t lut_u8to16[UINT8_MAX + 1] = {};
 constexpr int16_t *lut_s8to16 = lut_u8to16 + 128;
 
 constexpr void fill_8to16_lut()
