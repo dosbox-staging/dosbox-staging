@@ -508,6 +508,9 @@
     <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp">
       <Filter>src\libs\residfp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\tal-chorus\Lfo.cpp">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libs\YM7128B_emu\YM7128B_emu.c">
       <Filter>src\libs\YM7128B_emu</Filter>
     </ClCompile>
@@ -1173,6 +1176,27 @@
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Chorus.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\ChorusEngine.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\DCBlock.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Lfo.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\OnePoleLP.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\OscNoise.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Params.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\YM7128B_emu\YM7128B_emu.h">
       <Filter>src\libs\YM7128B_emu</Filter>
     </ClInclude>
@@ -1339,6 +1363,9 @@
     </Filter>
     <Filter Include="src\libs\residfp">
       <UniqueIdentifier>{e8ef008d-ceb9-4224-9b9e-b5b62933ca0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\tal-chorus">
+      <UniqueIdentifier>{033fc91c-5316-48fd-a3f8-0d7a1b0839ae}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\YM7128B_emu">
       <UniqueIdentifier>{033fc9cc-5916-480d-a3f8-839ae0d7a1b0}</UniqueIdentifier>
