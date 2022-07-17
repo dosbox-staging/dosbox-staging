@@ -823,6 +823,31 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 #endif
 }
 
+void RENDER_Init(Section *sec);
+
+static void ReloadShader(const bool pressed)
+{
+	// Quick and dirty hack to reload the current shader. Very useful when
+	// tweaking shader presets. Ultimately, this code will go away once the
+	// new shading system has been introduced, so massaging the current code
+	// to make this "nicer" would be largely a wasted effort...
+	if (!pressed)
+		return;
+
+	auto render_section = control->GetSection("render");
+	assert(render_section);
+
+	auto sec           = static_cast<const Section_prop *>(render_section);
+	auto glshader_prop = sec->Get_path("glshader");
+	auto shader_path   = std::string(glshader_prop->GetValue());
+
+	glshader_prop->SetValue("none");
+	RENDER_Init(render_section);
+
+	glshader_prop->SetValue(shader_path);
+	RENDER_Init(render_section);
+}
+
 void RENDER_Init(Section *sec)
 {
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -904,5 +929,9 @@ void RENDER_Init(Section *sec)
 	                  "decfskip", "Dec Fskip");
 	MAPPER_AddHandler(IncreaseFrameSkip, SDL_SCANCODE_UNKNOWN, 0,
 	                  "incfskip", "Inc Fskip");
+
+	MAPPER_AddHandler(ReloadShader, SDL_SCANCODE_F2, PRIMARY_MOD,
+	                  "reloadshader", "Reload Shader");
+
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
