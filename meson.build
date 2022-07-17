@@ -461,10 +461,11 @@ subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/iir1')
 subdir('src/libs/YM7128B_emu')
+subdir('src/libs/tal-chorus')
 
 # A list of DOSBox's bundled 3rd party dependencies,
 # as defined by the above subdir includes. Used for
-# both the execuatble and libdosbox (unit testing).
+# both the executable and libdosbox (unit testing).
 third_party_deps = [atomic_dep,
                     stdcppfs_dep,
                     sdl2_dep,
@@ -474,7 +475,8 @@ third_party_deps = [atomic_dep,
                     libloguru_dep,
                     libsdlcd_dep,
                     tracy_dep,
-                    libwhereami_dep]
+                    libwhereami_dep,
+                    libtalchorus_dep]
 
 # A list of DOSBox's internal libraries populated
 # by each of the src/ subdir imports below.
