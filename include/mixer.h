@@ -173,6 +173,9 @@ public:
 	void SetReverbLevel(const float level);
 	float GetReverbLevel();
 
+	void SetChorusLevel(const float level);
+	float GetChorusLevel();
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(const uint16_t len, const Type *data);
 
@@ -312,6 +315,12 @@ private:
 		float send_gain = 0.0f;
 	} reverb = {};
 	bool do_reverb_send = false;
+
+	struct {
+		float level     = 0.0f;
+		float send_gain = 0.0f;
+	} chorus = {};
+	bool do_chorus_send = false;
 
 	class Sleeper {
 	public:
