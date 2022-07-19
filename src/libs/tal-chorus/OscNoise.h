@@ -35,7 +35,7 @@ public:
     float currentValueFiltered;
     float valueUnfiltered;
 
-    OscNoise(float sampleRate)
+    OscNoise([[maybe_unused]] float sampleRate)
     {
         this->resetOsc();
     }
