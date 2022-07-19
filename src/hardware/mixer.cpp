@@ -99,6 +99,8 @@ using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
 
+enum class ReverbPreset { none, tiny, small, medium, large, huge };
+
 struct reverb_settings_t {
 	EmVerb mverb = {};
 
@@ -108,6 +110,7 @@ struct reverb_settings_t {
 	// resulting in a more pleasant sound.
 	highpass_filter_t highpass_filter = {};
 
+	ReverbPreset preset = ReverbPreset::none;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
 	float highpass_cutoff_freq     = 1.0f;
@@ -139,9 +142,12 @@ struct reverb_settings_t {
 	}
 };
 
+enum class ChorusPreset { none, light, normal, strong };
+
 struct chorus_settings_t {
 	ChorusEngine chorus_engine = ChorusEngine(48000);
 
+	ChorusPreset preset = ChorusPreset::none;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
 
@@ -282,6 +288,7 @@ static void set_global_chorus(const mixer_channel_t channel)
 
 static void configure_reverb(std::string reverb_pref)
 {
+	auto was_reverb_on = mixer.do_reverb;
 	mixer.do_reverb = (reverb_pref != "off");
 
 	if (!mixer.do_reverb) {
@@ -297,10 +304,16 @@ static void configure_reverb(std::string reverb_pref)
 	if (reverb_pref == "on")
 		reverb_pref = "medium";
 
-	enum class RoomSize { tiny, small, medium, large, huge };
-	const auto room_size = enum_cast<RoomSize>(reverb_pref).value();
-
 	auto &r = mixer.reverb; // short-hand reference
+
+	auto current_preset = r.preset;
+	auto new_preset = enum_cast<ReverbPreset>(reverb_pref).value();
+	auto preset_unchanged = (current_preset == new_preset);
+
+	if (was_reverb_on && preset_unchanged)
+		return;
+
+	r.preset = new_preset;
 
 	const auto rate_hz = mixer.sample_rate.load();
 
@@ -315,12 +328,13 @@ static void configure_reverb(std::string reverb_pref)
 	constexpr auto _38_0dB = 0.05f;
 
 	// clang-format off
-	switch (room_size) { //       PDELAY  EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case RoomSize::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case RoomSize::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case RoomSize::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case RoomSize::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case RoomSize::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
+	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
+	case ReverbPreset::none:   break;
+	case ReverbPreset::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case ReverbPreset::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case ReverbPreset::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case ReverbPreset::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -333,6 +347,7 @@ static void configure_reverb(std::string reverb_pref)
 
 static void configure_chorus(std::string chorus_pref)
 {
+	auto was_chorus_on = mixer.do_chorus;
 	mixer.do_chorus = (chorus_pref != "off");
 
 	if (!mixer.do_chorus) {
@@ -349,17 +364,29 @@ static void configure_chorus(std::string chorus_pref)
 		chorus_pref = "normal";
 
 	auto &c = mixer.chorus; // short-hand reference
-							//
+
 	const auto rate_hz = mixer.sample_rate.load();
 
-	enum class ChorusStrength { subtle, normal, strong };
-	const auto chorus_strength = enum_cast<ChorusStrength>(chorus_pref).value();
+	auto current_preset = c.preset;
+	auto new_preset = enum_cast<ChorusPreset>(chorus_pref).value();
+	auto preset_unchanged = (current_preset == new_preset);
+
+	if (was_chorus_on && preset_unchanged)
+		return;
+
+	c.preset = new_preset;
+
+	// Pre-computed (negative) decibel scalars
+	constexpr auto __6dB = 0.75f;
+	constexpr auto _11dB = 0.54f;
+	constexpr auto _16dB = 0.33f;
 
 	// clang-format off
-	switch (chorus_strength) { //       -SYNLV -DIGLV  RATE_HZ
-	case ChorusStrength::subtle: c.Setup(0.20f, 0.00f, rate_hz); break;
-	case ChorusStrength::normal: c.Setup(0.50f, 0.00f, rate_hz); break;
-	case ChorusStrength::strong: c.Setup(0.80f, 0.00f, rate_hz); break;
+	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
+	case ChorusPreset::none:   break;
+	case ChorusPreset::light:  c.Setup(_16dB, 0.00f, rate_hz); break;
+	case ChorusPreset::normal: c.Setup(_11dB, 0.00f, rate_hz); break;
+	case ChorusPreset::strong: c.Setup(__6dB, 0.00f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -861,7 +888,7 @@ void MixerChannel::SetChorusLevel(const float level)
 {
 	constexpr auto level_min    = 0.0f;
 	constexpr auto level_max    = 1.0f;
-	constexpr auto level_min_db = -40.0f;
+	constexpr auto level_min_db = -24.0f;
 	constexpr auto level_max_db = 0.0f;
 
 	assert(level >= level_min);
@@ -883,11 +910,11 @@ void MixerChannel::SetChorusLevel(const float level)
 
 	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	// DEBUG_LOG_MSG("MIXER: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
-	//               level,
-	//               level_db,
-	//               chorus.send_gain,
-	//               name.c_str());
+	//DEBUG_LOG_MSG("MIXER: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
+	//              level,
+	//              level_db,
+	//              chorus.send_gain,
+	//              name.c_str());
 }
 
 float MixerChannel::GetChorusLevel()
@@ -2394,17 +2421,18 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
+	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
 	string_prop = sec_prop.Add_string("chorus", when_idle, "off");
 	string_prop->Set_help(
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
-	        "  subtle:  A barely perceptible chorus; especially suited for\n"
-	        "           synth music that features a lot of white noise.\n"
+	        "  light:   A light chorus effect (especially suited for\n"
+	        "           synth music that features lots of white noise.)\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
-	        "  strong:  For lovers of an obvious and upfront chorus effect.\n"
+	        "  strong:  An obvious and upfront chorus effect.\n"
 	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
-	string_prop->Set_values(reverb_presets);
+	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
