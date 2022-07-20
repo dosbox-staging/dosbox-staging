@@ -1971,9 +1971,9 @@ static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string
 	if (cga_colors_prefs.size() != num_cga_colors) {
 		LOG_WARNING("INT10: Invalid 'cga_colors' value: custom colors "
 		            "must be specified as %d space-separated, 6-digit hex colors "
-		            "(%ld specified), using default CGA colors",
+		            "(%u specified), using default CGA colors",
 		            num_cga_colors,
-		            cga_colors_prefs.size());
+		            static_cast<uint32_t>(cga_colors_prefs.size()));
 		return cga_colors_default;
 	}
 
@@ -1982,7 +1982,7 @@ static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string
 	for (size_t i = 0; i < cga_colors_prefs.size(); ++i) {
 		auto color = cga_colors_prefs[i];
 
-		if (int c; (color.size() == 6) && sscanf(color.c_str(), "%x", &c)) {
+		if (uint32_t c; (color.size() == 6) && sscanf(color.c_str(), "%x", &c)) {
 			auto to_uint8 = [](const int c) {
 				constexpr auto col_min = 0;
 				constexpr auto col_max = 0x3f;
@@ -1995,10 +1995,10 @@ static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string
 			const auto blue  = to_uint8(c & 0xff);
 			cga_colors[i]    = {red, green, blue};
 		} else {
-			LOG_WARNING("INT10: Error parsing 'cga_colors': invalid value '%s' at index %ld, "
+			LOG_WARNING("INT10: Error parsing 'cga_colors': invalid value '%s' at index %u, "
 			            "using default CGA colors",
 			            color.c_str(),
-			            i);
+			            static_cast<uint32_t>(i));
 			return cga_colors_default;
 		}
 	}
