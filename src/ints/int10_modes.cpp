@@ -819,11 +819,13 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	}
 	IO_WriteW(crtc_base,0x09 | (scanline-1) << 8);
 	// Setup the CGA palette using VGA DAC palette
-	for (uint8_t ct = 0; ct < palette.cga16.size(); ++ct)
+	for (size_t i = 0; i < palette.cga16.size(); ++i) {
+		auto ct = static_cast<uint8_t>(i);
 		VGA_DAC_SetEntry(ct,
 		                 palette.cga16[ct].red,
 		                 palette.cga16[ct].green,
 		                 palette.cga16[ct].blue);
+	}
 	//Setup the tandy palette
 	for (uint8_t ct=0;ct<16;ct++) VGA_DAC_CombineColor(ct,ct);
 	//Setup the special registers for each machine type
@@ -955,9 +957,9 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	return true;
 }
 
-static void write_palette_dac_data(const std::vector<RGBEntry> &palette)
+static void write_palette_dac_data(const std::vector<RGBEntry> &_palette)
 {
-	for (const auto &c : palette) {
+	for (const auto &c : _palette) {
 		IO_Write(VGAREG_DAC_DATA, c.red);
 		IO_Write(VGAREG_DAC_DATA, c.green);
 		IO_Write(VGAREG_DAC_DATA, c.blue);
