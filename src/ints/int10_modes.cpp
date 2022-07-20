@@ -431,9 +431,6 @@ constexpr cga_colors_t cga_colors_tandy_warm = { RGBEntry
 };
 // clang-format on
 
-static std::vector<cga_colors_t> cga_colors = {
-};
-
 static void init_all_palettes(const cga_colors_t &cga_colors)
 {
 	auto i = 0;
