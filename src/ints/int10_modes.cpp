@@ -351,14 +351,14 @@ constexpr RGBEntry br_brown   = {0x3f, 0x3f, 0x15};
 constexpr RGBEntry br_white   = {0x3f, 0x3f, 0x3f};
 
 // The canonical CGA palette as emulated by VGA cards.
-static cga_colors_t cga_colors_default = {
+constexpr cga_colors_t cga_colors_default = {
 		black, 	  blue,    green,    cyan,    red,    magenta,    brown,    white,
 		br_black, br_blue, br_green, br_cyan, br_red, br_magenta, br_brown, br_white,
 };
 
 // Emulation of the actual color output of an IBM 5153 monitor (maximum contrast).
 // https://int10h.org/blog/2022/06/ibm-5153-color-true-cga-palette/
-static cga_colors_t cga_colors_ibm5153 = { RGBEntry
+constexpr cga_colors_t cga_colors_ibm5153 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x29}, {0x00, 0x29, 0x00}, {0x00, 0x29, 0x29},
 		{0x29, 0x00, 0x00}, {0x29, 0x00, 0x29}, {0x29, 0x1a, 0x00}, {0x29, 0x29, 0x29},
 
@@ -368,35 +368,35 @@ static cga_colors_t cga_colors_ibm5153 = { RGBEntry
 
 // Original LucasArts/SCUMM and Sierra/AGI Amiga palettes (from ScummVM)
 // https://github.com/scummvm/scummvm/blob/master/engines/agi/palette.h
-static cga_colors_t cga_colors_scumm_amiga = { RGBEntry
+constexpr cga_colors_t cga_colors_scumm_amiga = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x2e}, {0x00, 0x2e, 0x00}, {0x00, 0x2e, 0x2e},
 		{0x2e, 0x00, 0x00}, {0x2e, 0x00, 0x2e}, {0x2e, 0x1d, 0x00}, {0x2e, 0x2e, 0x2e},
 		{0x1d, 0x1d, 0x1d}, {0x1d, 0x1d, 0x3f}, {0x00, 0x3f, 0x00}, {0x00, 0x3f, 0x3f},
 		{0x3f, 0x22, 0x22}, {0x3f, 0x00, 0x3f}, {0x3f, 0x3f, 0x00}, {0x3f, 0x3f, 0x3f}
 };
 
-static cga_colors_t cga_colors_agi_amiga_v1 = { RGBEntry
+constexpr cga_colors_t cga_colors_agi_amiga_v1 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x20, 0x00}, {0x00, 0x35, 0x2f},
 		{0x30, 0x00, 0x00}, {0x2f, 0x1f, 0x35}, {0x20, 0x15, 0x00}, {0x2f, 0x2f, 0x2f},
 		{0x1f, 0x1f, 0x1f}, {0x00, 0x2f, 0x3f}, {0x00, 0x3a, 0x00}, {0x00, 0x3f, 0x35},
 		{0x3f, 0x25, 0x20}, {0x3f, 0x1f, 0x00}, {0x3a, 0x3a, 0x00}, {0x3f, 0x3f, 0x3f},
 };
 
-static cga_colors_t cga_colors_agi_amiga_v2 = { RGBEntry
+constexpr cga_colors_t cga_colors_agi_amiga_v2 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x20, 0x00}, {0x00, 0x35, 0x2f},
 		{0x30, 0x00, 0x00}, {0x2f, 0x1f, 0x35}, {0x20, 0x15, 0x00}, {0x2f, 0x2f, 0x2f},
 		{0x1f, 0x1f, 0x1f}, {0x00, 0x2f, 0x3f}, {0x00, 0x3a, 0x00}, {0x00, 0x3f, 0x35},
 		{0x3f, 0x25, 0x20}, {0x35, 0x00, 0x3f}, {0x3a, 0x3a, 0x00}, {0x3f, 0x3f, 0x3f},
 };
 
-static cga_colors_t cga_colors_agi_amiga_v3 = { RGBEntry
+constexpr cga_colors_t cga_colors_agi_amiga_v3 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x2f}, {0x00, 0x2f, 0x00}, {0x00, 0x2f, 0x2f},
 		{0x2f, 0x00, 0x00}, {0x2f, 0x00, 0x2f}, {0x30, 0x1f, 0x00}, {0x2f, 0x2f, 0x2f},
 		{0x1f, 0x1f, 0x1f}, {0x00, 0x00, 0x3f}, {0x00, 0x3f, 0x00}, {0x00, 0x3f, 0x3f},
 		{0x3f, 0x00, 0x00}, {0x3f, 0x00, 0x3f}, {0x3f, 0x3f, 0x00}, {0x3f, 0x3f, 0x3f},
 };
 
-static cga_colors_t cga_colors_agi_amigaish = { RGBEntry
+constexpr cga_colors_t cga_colors_agi_amigaish = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x2a, 0x00}, {0x00, 0x2a, 0x2a},
 		{0x33, 0x00, 0x00}, {0x2f, 0x1c, 0x37}, {0x23, 0x14, 0x00}, {0x2f, 0x2f, 0x2f},
 		{0x15, 0x15, 0x15}, {0x00, 0x2f, 0x3f}, {0x00, 0x33, 0x15}, {0x15, 0x3f, 0x3f},
@@ -407,7 +407,7 @@ static cga_colors_t cga_colors_agi_amigaish = { RGBEntry
 // (brightness=50, contrast=50, saturation=50; custom dark cyan and bright
 // magenta as those colours are missing from the C64 palette)
 // https://www.colodore.com/
-static cga_colors_t cga_colors_colodore_sat50 = { RGBEntry
+constexpr cga_colors_t cga_colors_colodore_sat50 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x0b, 0x0b, 0x26}, {0x15, 0x2b, 0x13}, {0x0e, 0x22, 0x21},
 		{0x20, 0x0c, 0x0e}, {0x23, 0x0f, 0x26}, {0x23, 0x14, 0x0a}, {0x2c, 0x2c, 0x2c},
 		{0x12, 0x12, 0x12}, {0x1c, 0x1b, 0x3b}, {0x2a, 0x3f, 0x28}, {0x1d, 0x33, 0x32},
@@ -415,7 +415,7 @@ static cga_colors_t cga_colors_colodore_sat50 = { RGBEntry
 };
 
 // A 20% more saturated version of the Colodore palette (saturation=60)
-static cga_colors_t cga_colors_colodore_sat60 = { RGBEntry
+constexpr cga_colors_t cga_colors_colodore_sat60 = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x0b, 0x0a, 0x2c}, {0x13, 0x2d, 0x10}, {0x0c, 0x24, 0x22},
 		{0x23, 0x0b, 0x0d}, {0x26, 0x0d, 0x29}, {0x26, 0x13, 0x08}, {0x2c, 0x2c, 0x2c},
 		{0x12, 0x12, 0x12}, {0x1b, 0x1a, 0x3f}, {0x27, 0x3f, 0x24}, {0x1a, 0x35, 0x33},
@@ -423,7 +423,7 @@ static cga_colors_t cga_colors_colodore_sat60 = { RGBEntry
 };
 
 // Emulation of the actual color output of an unknown Tandy monitor.
-static cga_colors_t cga_colors_tandy_warm = { RGBEntry
+constexpr cga_colors_t cga_colors_tandy_warm = { RGBEntry
 		{0x03, 0x03, 0x03}, {0x00, 0x03, 0x27}, {0x02, 0x1d, 0x05}, {0x0c, 0x23, 0x27},
 		{0x2a, 0x06, 0x00}, {0x2b, 0x0c, 0x27}, {0x2c, 0x18, 0x09}, {0x2a, 0x2a, 0x2a},
 		{0x14, 0x14, 0x14}, {0x16, 0x1a, 0x3c}, {0x11, 0x2f, 0x14}, {0x10, 0x37, 0x3e},
@@ -434,7 +434,7 @@ static cga_colors_t cga_colors_tandy_warm = { RGBEntry
 static std::vector<cga_colors_t> cga_colors = {
 };
 
-static void init_all_palettes(const cga_colors_t cga_colors)
+static void init_all_palettes(const cga_colors_t &cga_colors)
 {
 	auto i = 0;
 
@@ -1902,7 +1902,7 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	return static_cast<uint32_t>(mem_bytes);
 }
 
-static cga_colors_t handle_cga_colors_prefs_tandy(const std::vector<std::string> cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_tandy(const std::vector<std::string> &cga_colors_prefs)
 {
 	constexpr auto default_brown_level = 0.5f;
 
@@ -1930,7 +1930,7 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::vector<std::string>
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::string> cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::string> &cga_colors_prefs)
 {
 	constexpr auto default_contrast = 1.0f;
 
@@ -1946,10 +1946,10 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::strin
 			for (size_t i = 0; i < cga_colors.size() / 2; ++i) {
 				// The contrast control effectively dims the
 				// first 8 non-bright colours only
-				auto c = cga_colors[i];
-				auto r = static_cast<float>(c.red) * contrast;
-				auto g = static_cast<float>(c.green) * contrast;
-				auto b = static_cast<float>(c.blue) * contrast;
+				const auto c = cga_colors[i];
+				const auto r = static_cast<float>(c.red) * contrast;
+				const auto g = static_cast<float>(c.green) * contrast;
+				const auto b = static_cast<float>(c.blue) * contrast;
 
 				cga_colors[i] = {static_cast<uint8_t>(r),
 				                 static_cast<uint8_t>(g),
@@ -1966,7 +1966,7 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::strin
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string> cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string> &cga_colors_prefs)
 {
 	if (cga_colors_prefs.size() != num_cga_colors) {
 		LOG_WARNING("INT10: Invalid 'cga_colors' value: custom colors "
@@ -2019,7 +2019,7 @@ static cga_colors_t configure_cga_colors()
 		return cga_colors_default;
 	}
 
-	auto preset = cga_colors_prefs[0];
+	const auto preset = cga_colors_prefs[0];
 
 	if (preset == "default")
 		return cga_colors_default;
