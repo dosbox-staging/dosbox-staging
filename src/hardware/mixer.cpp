@@ -2034,44 +2034,47 @@ private:
 		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb  Chorus[reset]\n")
 		                 .c_str());
 
+		constexpr auto off_value  = "off";
+		constexpr auto none_value = "-";
+
 		MIXER_LockAudioDevice();
 		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
 		             mixer.master_volume,
 		             mixer.sample_rate,
 		             "Stereo",
-		             "-",
-		             "-",
-		             "-");
+		             none_value,
+		             none_value,
+		             none_value);
 
 		for (auto &[name, chan] : mixer.channels) {
-			std::string xfeed = "-";
+			std::string xfeed = none_value;
 			if (chan->HasFeature(ChannelFeature::Stereo)) {
 				if (chan->GetCrossfeedStrength() > 0.0f) {
 					xfeed = std::to_string(static_cast<uint8_t>(
 					        round(chan->GetCrossfeedStrength() *
 					              100)));
 				} else {
-					xfeed = "off";
+					xfeed = off_value;
 				}
 			}
 
-			std::string reverb = "-";
+			std::string reverb = none_value;
 			if (chan->HasFeature(ChannelFeature::ReverbSend)) {
 				if (chan->GetReverbLevel() > 0.0f) {
 					reverb = std::to_string(static_cast<uint8_t>(
 					        round(chan->GetReverbLevel() * 100)));
 				} else {
-					reverb = "off";
+					reverb = off_value;
 				}
 			}
 
-			std::string chorus = "-";
+			std::string chorus = none_value;
 			if (chan->HasFeature(ChannelFeature::ChorusSend)) {
 				if (chan->GetChorusLevel() > 0.0f) {
 					chorus = std::to_string(static_cast<uint8_t>(
 					        round(chan->GetChorusLevel() * 100)));
 				} else {
-					chorus = "off";
+					chorus = off_value;
 				}
 			}
 
