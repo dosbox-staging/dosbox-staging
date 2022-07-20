@@ -1858,22 +1858,32 @@ public:
 
 			const auto global_command = !is_master && !channel;
 
+			constexpr auto crossfeed_command = 'X';
+			constexpr auto reverb_command    = 'R';
+			constexpr auto chorus_command    = 'C';
+
 			if (global_command) {
 				// Global commands apply to all non-master channels
 				float value = 0.0f;
-				if (parse_prefixed_percentage('X', arg, value)) {
+				if (parse_prefixed_percentage(crossfeed_command,
+				                              arg,
+				                              value)) {
 					for (auto &it : mixer.channels) {
 						it.second->SetCrossfeedStrength(value);
 					}
 					continue;
-				} else if (parse_prefixed_percentage('R', arg, value)) {
+				} else if (parse_prefixed_percentage(reverb_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_reverb) {
 						for (auto &it : mixer.channels) {
 							it.second->SetReverbLevel(value);
 						}
 					}
 					continue;
-				} else if (parse_prefixed_percentage('C', arg, value)) {
+				} else if (parse_prefixed_percentage(chorus_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_chorus) {
 						for (auto &it : mixer.channels) {
 							it.second->SetChorusLevel(value);
@@ -1890,15 +1900,21 @@ public:
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
 				float value = 0.0f;
-				if (parse_prefixed_percentage('X', arg, value)) {
+				if (parse_prefixed_percentage(crossfeed_command,
+				                              arg,
+				                              value)) {
 					channel->SetCrossfeedStrength(value);
 					continue;
-				} else if (parse_prefixed_percentage('R', arg, value)) {
+				} else if (parse_prefixed_percentage(reverb_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_reverb) {
 						channel->SetReverbLevel(value);
 					}
 					continue;
-				} else if (parse_prefixed_percentage('C', arg, value)) {
+				} else if (parse_prefixed_percentage(chorus_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_chorus) {
 						channel->SetChorusLevel(value);
 					}
