@@ -157,7 +157,7 @@ struct chorus_settings_t {
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
 
-		chorus_engine.setSampleRate(sample_rate);
+		chorus_engine.setSampleRate(static_cast<float>(sample_rate));
 
 		constexpr auto chorus1Enabled  = true;
 		constexpr auto chorus2Disabled = false;
