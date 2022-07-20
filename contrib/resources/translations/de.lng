@@ -21,6 +21,12 @@ Bestimmt die Fenstergrî·e, die verwendet werden soll:
              Abmessungen, im Format BxH. Zum Beispiel: 1024x768.
              Die Skalierung wird bei output=surface nicht durchgefÅhrt.
 .
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
 :CONFIG_WINDOW_POSITION
 Lege die anfÑngliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
   auto:      Lass den Fenstermanager die Position bestimmen.
@@ -30,17 +36,35 @@ Lege die anfÑngliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
 :CONFIG_WINDOW_DECORATIONS
 Legt fest, ob der Rahmen im Fenster-Modus angezeigt werden soll.
 .
-:CONFIG_VSYNC
-Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert).
-.
-:CONFIG_VSYNC_SKIP
-Anzahl der Mikrosekunden, die das Rendering verzîgert sein darf, bevor der nÑchste Frame Åbersprungen wird.
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
 .
 :CONFIG_MAX_RESOLUTION
 SchrÑnkt optional die Auflîsung des Darstellungsbereichs innerhalb des Fensters/Bildschirms ein:
   auto:      Der Darstellungsbereich fÅllt das Fenster/den Bildschirm aus (Standard).
   <custom>:  Lege die maximale Auflîsung des Darstellungsbereichs im Format WxH fest.
              Zum Beispiel: 960x720
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
+:CONFIG_VSYNC
+Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert).
+.
+:CONFIG_VSYNC_SKIP
+Anzahl der Mikrosekunden, die das Rendering verzîgert sein darf, bevor der nÑchste Frame Åbersprungen wird.
+.
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 Welches Videosystem soll fÅr die Ausgabe verwendet werden.
@@ -83,6 +107,12 @@ Wartet bevor die Konsole geschlossen wird, wenn Dosbox eine Fehlermeldung anzeig
 PrioritÑtsstufen fÅr Dosbox. Der zweite Eintrag hinter dem Komma ist fÅr den Fall, dass die Dosbox nicht fokussiert/minimiert ist.
 Pause ist nur fÅr den zweiten Eintrag gÅltig.
 .
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
+.
 :CONFIG_MAPPERFILE
 Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
 Resetmapper funktioniert nur mit dem Standardwert.
@@ -107,8 +137,23 @@ Dieser Wert wird am besten auf dem Standardwert belassen, um Probleme mit einige
 obwohl einige wenige Programme einen hîheren Wert benîtigen kînnten.
 Es gibt generell keinen Geschwindigkeitsvorteil, wenn du diesen Wert erhîhst.
 .
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
+.
 :CONFIG_VMEMSIZE
 Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den Standardwert pro Videoadapter.
+.
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
 .
 :CONFIG_VESA_MODES
 Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
@@ -117,6 +162,11 @@ Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
   all          Bietet alle Modi fÅr eine bestimmte Videospeichergrî·e, allerdings
                kînnen einige Programme sie nicht richtig nutzen (Flackern) oder benîtigen
                mehr Systemspeicher (mem = ), um sie zu nutzen.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 Wie Autoexec-Abschnitte aus mehreren Konfigurationsdateien behandelt werden.
@@ -228,6 +278,30 @@ Wie viele Millisekunden an Daten zusÑtzlich zur Blockgrî·e vorgehalten werden so
 Erlaube dem System-Audiotreiber, die optimale Rate und Blockgrî·e
 so nah wie mîglich an den angegebenen Werten auszuhandeln.
 .
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+  			channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
+.
 :CONFIG_MIDIDEVICE
 GerÑt, das die MIDI-Daten empfangen wird (von der emulierten MIDI
 Schnittstelle - MPU-401). WÑhle eine der folgenden Mîglichkeiten:
@@ -274,17 +348,6 @@ Wenn du benutzerdefinierte Werte verwendest:
   - depth eine Dezimalzahl von 0.0 bis 21.0 ist
   - modulation-wave ist entweder "sine" oder "triangle"
   Zum Beispiel: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Reverb-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
-Wenn du benutzerdefinierte Werte verwendest:
-  Alle vier mÅssen in der richtigen Reihenfolge und mit Leerzeichen  voneinander getrennt angegeben werden.
-  Sie lauten: room-size, damping, width und level, wobei:
-  - room-size eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  - damping eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  - width eine Dezimalzahl zwischen 0.0 to 100.0 ist
-  - level eine Dezimalzahl zwischen 0.0 to 1.0 ist
-  Zum Beispiel: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt CM-32L
@@ -336,6 +399,27 @@ Alle OPL-Modi sind AdLib-kompatibel, ausser "cms".
 Auswahl des OPL-Emulators. "compat" bietet eine bessere QualitÑt,
 "nuked" ist der Standard und am genauesten (aber am CPU-intensivsten).
 .
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_GUS
 Aktiviere die Gravis UltraSound Emulation.
 .
@@ -384,8 +468,10 @@ Passt die FilterstÑrke des 8580 als Prozentwert von 0 bis 100 an.
 :CONFIG_PCSPEAKER
 Aktiviere die PC-Lautsprecher-Emulation.
 .
-:CONFIG_PCRATE
-Sample-Rate der PC-Speaker Klangerzeugung.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
 Verhindert, dass der DC-Offset des PC-Lautsprechers andere Quellen beeintrÑchtigt.
@@ -395,14 +481,36 @@ Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchfÅhrt, dann setze
 :CONFIG_TANDY
 Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur vorhanden, wenn "machine" auf "tandy" eingestellt ist.
 .
-:CONFIG_TANDYRATE
-Sample-Rate des Tandy 3-Voice Generators.
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_DISNEY
 Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und Speech Thing kompatibel).
 .
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
 :CONFIG_PS1AUDIO
 Aktiviere die IBM PS/1 Audio Emulation.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Typ des zu emulierenden Joysticks: auto (Standard),
@@ -473,6 +581,12 @@ Setzt die DOS Version (5.0 als Standard). Anzugeben als major.minor Format.
 Eine einzelne Zahl wird als die Hauptversion behandelt.
 öbliche Einstellungen sind 3.3, 5.0, 6.22, und 7.1.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts (oder keines).
 .
@@ -540,6 +654,18 @@ Du kannst deine MOUNT-Zeilen hier einfÅgen.
 .
 :CONFIG_SUGGESTED_VALUES
 Mîgliche Werte
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Keine solche Sektion oder Eigenschaft.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Korrekte Syntax: config -set "section property".
+
 .
 :
  :CONFIG_FULLSCREEN
@@ -646,18 +772,6 @@ Abschnitt "%s" existiert nicht.
 .
 :PROGRAM_CONFIG_VALUE_ERROR
 "%s" ist kein gÅltiger Wert fÅr die Eigenschaft %s.
-
-.
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Keine solche Sektion oder Eigenschaft.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Korrekte Syntax: config -set "section property".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -986,38 +1100,6 @@ ROM-Datei nicht erkannt.
 BASIC ROM geladen.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-Bindet CD-ROM- oder Floppy Disk-Imagedateien auf einen bestimmten
-Laufwerksbuchstaben ein.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP_LONG
-Einbinden von CD-ROM-, Floppy- und Festplatten-Imagedateien
-mit Laufwerksbuchstaben.
-
-Verwendung:
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mLAUFWERK[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
-  [32;1mimgmount[0m -u [37;1mLAUFWERK[0m  (Image des LAUFWERKS auswerfen)
-
-Wobei:
-  [37;1mLAUFWERK[0m  ist der Laufwerksbuchstabe, auf dem das Image eingebunden wird
-  [36;1mCDROM-SET[0m ist ein ISO, CUE+BIN, CUE+ISO, oder CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mIMAGEFILE[0m ist ein Festplatten- oder Disketten-Image im FAT12/16 Format
-  [36;1mBOOTIMAGE[0m ist ein bootfÑhiges Disk-Image mit der angegebenen -size GEOMETRY:
-            bytes-pro-sektor, sektoren-pro-kopf, kîpfe, zylinder
-Anmerkungen:
-  - %s+F4 wechselt auf das nÑchste angegebene CDROM-SET oder IMAGEFILE.
-
-Beispiele:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
-  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd
-  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
-
-.
 :SHELL_CMD_MOUNT_HELP
 Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerksbuchstaben zu.
 
@@ -1122,23 +1204,8 @@ Zeichentabelle %i wurde geladen
 Zeichentabelle %i wurde fÅr Layout %s geladen
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [Tastaturlayout ID[ Zeichentabellen-Nummer[ Zeichentabellendatei]]]
-
-Einige Beispiele:
-  [32;1mKEYB[0m: Aktuell geladene Zeichentabelle anzeigen.
-  [32;1mKEYB[0m sp: Lade das spanische (SP) Layout, verwende eine entsprechende Zeichentabelle.
-  [32;1mKEYB[0m sp 850: Lade das spanische (SP) Layout, verwende die Zeichentabelle 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Dasselbe wie oben, aber benutze die Datei mycp.cpi.
-
-.
-:PROGRAM_KEYB_NOERROR
-Tastaturlayout %s fÅr Zeichentabelle %i geladen
-
-.
 :PROGRAM_KEYB_FILENOTFOUND
 Tastaturdatei %s nicht gefunden
-
 
 .
 :PROGRAM_KEYB_INVALIDFILE
@@ -1212,9 +1279,6 @@ Aktuelles Datum:
 :SHELL_CMD_DATE_SETHLP
 Tippe "date MM-TT-JJJJ" um es zu Ñndern.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [/T] [/H] [/S] | MM-TT-JJJJ]
@@ -1737,30 +1801,6 @@ Beispiele:
   [32;1mautotype[0m -w [37;1m1.3[0m [36;1mesc enter , p l a y e r enter
 [0m
 .
-:SHELL_CMD_MIXER_HELP_LONG
-Zeigt die aktuelle LautstÑrke des Mixers an oder Ñndert sie.
-
-Verwendung:
-  [32;1mmixer[0m [36;1mCHANNEL[0m [37;1mVOLUME[0m [/noshow]
-  [32;1mmixer[0m [/listmidi][0m
-
-Wobei:
-  [36;1mCHANNEL[0m ist der Tonkanal, dessen LautstÑrke du Ñndern mîchtest.
-  [37;1mVOLUME[0m  ist eine ganze Zahl zwischen 0 und 100, die das Volumen angibt.
-
-Anmerkungen:
-  Wenn du [32;1mmixer[0m ohne ein Argument ausfÅhrst, werden die LautstÑrken aller
-  SoundkanÑle angezeigt.
-  Mit der Option /listmidi kannst du die verfÅgbaren MIDI-GerÑte und 
-  Benutzeroptionen anzeigen. Du kannst die LautstÑrke mehrerer TonkanÑle mit 
-  einem Befehl Ñndern. Die Option /noshow bewirkt, dass der Mixer die LautstÑrke
-  nicht anzeigt, wenn du eine énderung vornimmst.
-
-Beispiele:
-  [32;1mmixer[0m
-  [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
-  [32;1mmixer[0m /listmidi
-.
 :SHELL_CMD_RESCAN_HELP_LONG
 Sucht nach énderungen auf eingebundenen DOS-Laufwerken.
 
@@ -1848,28 +1888,6 @@ Beispiele:
   [32;1mKEYB[0m [36;1muk[0m
   [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-Dieses Programm ist ein Platzhalter.
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s ist nur ein Platzhalter.
-
-Installiere eine Anwendung eines Drittanbieters 
-und gib ihr in der PATH-Variable PrioritÑt.
-
-Beispiel:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utils
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Weitere Hilfe findest du hier:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -2212,11 +2230,98 @@ COM%d: %s %s
 Ein numerischer Port-Wert zwischen 1 und %d (einschlie·lich) muss angegeben werden.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-Der Modus muss einer der folgenden sein:
-
-.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
+.
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Floppy image(s) already mounted.
+
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Swap slot
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+The currently mounted disk and CD image drives are:
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+No drive available
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Type must be one of the following:
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Access denied - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Duplicate redirection - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+File creation error - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+File open error - %s
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Usage:
+  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
+
+Where:
+  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Where: R = Read-only, A = Archive, S = System, H = Hidden
+  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+             wildcards, which are the asterisk (*) and the question mark (?),
+             or an exact name of a directory.
+Notes:
+  Multiple attributes can be specified in the command, separated by spaces.
+  If not specified, the command shows the current file/directory attributes.
+
+Examples:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Unable to get attributes: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Unable to set attributes: %s
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Choice aborted.
+
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox Commands
+.
+:HELP_UTIL_CATEGORY_FILE
+File/Directory Commands
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch File Commands
+.
+:HELP_UTIL_CATEGORY_MISC
+Miscellaneous Commands
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unknown Command
 .

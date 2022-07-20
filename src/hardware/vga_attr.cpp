@@ -21,9 +21,18 @@
 #include "inout.h"
 #include "vga.h"
 
+#include "../ints/int10.h"
+
 #define attr(blah) vga.attr.blah
 
-void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
+static void update_palette_mappings()
+{
+	for (uint8_t i = 0; i < 16; ++i)
+		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
+}
+
+void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
+{
 	// palette bit assignment:
 	// bit | pin | EGA        | CGA       | monochrome
 	// ----+-----+------------+-----------+------------
@@ -33,42 +42,30 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
 	// 3   | 7   | blue sec.  | nc        | video
 	// 4   | 6   | green sec. | intensity | intensity
 	// 5   | 2   | red sec.   | nc        | nc
-    // 6-7 | not used
+	// 6-7 | not used
 	// * additive color brown instead of yellow
-	switch(m) {
-		case CGA:
-			//LOG_MSG("Monitor CGA");
-			for (Bitu i=0;i<64;i++) {
-				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				
-				// replace yellow with brown
-				if ((i & 0x17) == 0x6) vga.dac.rgb[i].green = 0x15;
-				else vga.dac.rgb[i].green =
-					((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-			}
-			break;
-		case EGA:
-			//LOG_MSG("Monitor EGA");
-			for (Bitu i=0;i<64;i++) {
-				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x20)? 0x15:0);
-				vga.dac.rgb[i].green=((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x8)? 0x15:0);
-			}
-			break;
-		case MONO:
-			//LOG_MSG("Monitor MONO");
-			for (Bitu i=0;i<64;i++) {
-				uint8_t value = ((i & 0x8)? 0x2a:0) + ((i & 0x10)? 0x15:0);
-				vga.dac.rgb[i].red = vga.dac.rgb[i].green =
-					vga.dac.rgb[i].blue = value;
-			}
-			break;
+	switch (m) {
+	case CGA: {
+		// LOG_MSG("Monitor CGA");
+		size_t i = 0;
+		for (auto color : palette.cga64)
+			vga.dac.rgb[i++] = color;
+	} break;
+	case EGA: {
+		// LOG_MSG("Monitor EGA");
+		size_t i = 0;
+		for (auto color : palette.ega)
+			vga.dac.rgb[i++] = color;
+	} break;
+	case MONO: {
+		// LOG_MSG("Monitor MONO");
+		size_t i = 0;
+		for (auto color : palette.mono_text)
+			vga.dac.rgb[i++] = color;
+	} break;
 	}
 
-	// update the mappings
-	for (uint8_t i=0;i<0x10;i++)
-		VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+	update_palette_mappings();
 }
 
 void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
@@ -133,10 +130,9 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			Bitu difference = attr(mode_control)^val;
 			attr(mode_control) = val;
 
-			if (difference & 0x80) {
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
-			}
+			if (difference & 0x80)
+				update_palette_mappings();
+
 			if (difference & 0x08)
 				VGA_SetBlinking(val & 0x8);
 			
@@ -183,8 +179,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			if ((attr(color_plane_enable)^val) & 0xf) {
 				// in case the plane enable bits change...
 				attr(color_plane_enable) = val;
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				update_palette_mappings();
 			} else
 				attr(color_plane_enable) = val;
 			/* 
@@ -240,8 +235,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			}
 			if (attr(color_select) ^ val) {
 				attr(color_select) = val;
-				for (uint8_t i=0;i<0x10;i++)
-					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				update_palette_mappings();
 			}
 			/*
 				0-1	If 3C0h index 10h bit 7 is set these 2 bits are used as bits 4-5 of
@@ -290,7 +284,7 @@ uint8_t read_p3c1(io_port_t, io_width_t)
 	return 0;
 }
 
-void VGA_SetupAttr(void) {
+void VGA_SetupAttr() {
 	if (IS_EGAVGA_ARCH) {
 		IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
 		if (machine==MCH_EGA)

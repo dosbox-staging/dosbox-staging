@@ -114,11 +114,17 @@ schermo intero o quando il mouse viene catturato in modalit… finestra.
 Attendi prima di chiudere la console in caso di errore di DOSBox.
 .
 :CONFIG_PRIORITY
-Livelli di priorit… per DOSBox. La seconda voce dopo la virgola Š per quando
-DOSBox Š minimizzato o non in primo piano. 
-'pause' pu• essere usato solo per la seconda voce.
-'auto' disabilita i livelli di priorit… e utilizza le impostazioni predefinite
-del sistema operativo.
+Livelli di priorit… da applicare rispettivamente quando la finestra Š
+in primo piano o inattiva. 
+   auto:  Lascia che sia il sistema operativo host a gestire la priorit…
+          (valida per entrambi).
+Predefinito: 'auto auto'
+.
+:CONFIG_MUTE_WHEN_INACTIVE
+Disattiva il suono quando la finestra Š inattiva.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Mette in pausa l'emulazione quando la finestra Š inattiva.
 .
 :CONFIG_MAPPERFILE
 File utilizzato per caricare/salvare le corrispondenze tasto/evento.
@@ -147,6 +153,15 @@ Quantit… di memoria a disposizione di DOSBox, in megabyte.
 Si consiglia di non modificare questo valore per evitare problemi con alcuni
 giochi, anche se potrebbe essere necessario aumentarlo per farne funzionare
 alcuni. Di solito non vi Š nessun guadagno in velocit… alzando questo valore.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+Come gestire i blocchi della catena di memoria software corrotti:
+  deny:    Chiude (e segnala) quando vengono rilevati errori (predefinito).
+  repair:  Ripara (e segnala) gli errori con blocchi di catena adiacenti.
+  report:  Segnala solo gli errori.
+  allow:   Gli errori non vengono segnalati (comportamento hardware).
+L'impostazione predefinita (deny) Š consigliata a meno che un gioco non abbia
+errori di corruzione MCB.
 .
 :CONFIG_VMEMSIZE
 Memoria video in MiB (1-8) o KiB (da 256 a 8192). 
@@ -222,7 +237,7 @@ desiderato, prova uno scaler diverso o attiva l'uscita a piena risoluzione.
 Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con
 l'uscita OpenGL. Pu• essere un percorso assoluto, un file nella sottocartella
 'glshaders' della cartella di configurazione di DOSBox, o uno degli shader
-incorporati:
+inclusi:
 advinterp2x, advinterp3x, advmame2x, advmame3x,
 crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
 scan2x, scan3x, tv2x, tv3x, sharp (predefinito).
@@ -287,8 +302,7 @@ scelta rapida.
 Attiva la modalit… silenziosa, ma il suono viene comunque emulato.
 .
 :CONFIG_RATE
-Frequenza di campionamento del mixer. Impostare la frequenza di qualsiasi
-dispositivo ad un valore pi— alto di questo, ne peggiorer… la qualit… sonora.
+Frequenza di campionamento del mixer.
 .
 :CONFIG_BLOCKSIZE
 Dimensione blocchi mixer; Valori pi— grandi potrebbero ridurre l'audio a
@@ -307,11 +321,31 @@ impostazioni di frequenza e dimensione dei blocchi.
 Imposta il crossfeed a livello globale su tutti i canali stereo per l'ascolto
 in cuffia:
   off:         Nessun crossfeed (predefinito).
-  on:          Abilita il crossfeed (ad una intensit… di 30).
+  on:          Abilita il crossfeed (ad una intensit… di 40).
   <intensit…>: Imposta l'intensit… del crossfeed da 0 a 100, dove 0 significa
                nessun crossfeed (off) e 100 crossfeed completo 
                (trasformando di fatto il contenuto stereo in mono).
-Nota: Ô possibile impostare il crossfeed per canale tramite i comandi del mixer
+Nota: Ô possibile regolare l'intensit… del crossfeed per ogni canale tramite i
+      comandi del mixer.
+.
+:CONFIG_REVERB
+Abilita il riverbero a livello globale per aggiungere un senso di
+spazializzazione del suono:
+  off:     Nessun riverbero (predefinito).
+  on:      Abilita riverbero (preset medio).
+  tiny:    Simula il suono di un piccolo altoparlante integrato in una stanza;
+           specificamente progettato per sistemi audio di piccole dimensioni
+           (PC Speaker, Tandy, PS/1 Audio, e Disney).
+  small:   Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
+           che usano un singolo canale del sintetizzatore (tipicamente OPL)
+           sia per la musica che per gli effetti sonori.
+  medium:  Preset stanza media che funziona bene con un'ampia variet… di giochi
+  large:   Preset salone consigliato per giochi che utilizzano canali separati
+           per musica e audio digitale.
+  huge:    Variante del preset salone con maggiore intensit…; funziona davvero
+           bene nei giochi con colonne sonore pi— suggestive
+Nota: Ô possibile regolare con precisione i livelli di riverbero per ogni canale
+      tramite i comandi del mixer.
 .
 :CONFIG_MIDIDEVICE
 Dispositivo che ricever… i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
@@ -358,17 +392,6 @@ Quando si utilizzano valori personalizzati:
   - modulazione-onda Š 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
 .
-:CONFIG_REVERB
-Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
-Quando si utilizzano valori personalizzati:
-  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
-  - dimensione-stanza Š un numero decimale compreso tra 0.0 e 1.0
-  - smorzamento Š un numero decimale compreso tra 0.0 e 1.0
-  - ampiezza Š un numero decimale compreso tra 0.0 e 100.0
-  - livello Š un numero decimale compreso tra 0.0 e 1.0
-  Per esempio: reverb = 0.61 0.23 0.76 0.56
-.
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
 'auto' sceglie il primo modello con ROM disponibili, nell'ordine indicato.
@@ -411,38 +434,37 @@ avviano molti giochi compatibili con Sound Blaster. Riduci questo valore se
 noti che nella riproduzione iniziale manca l'audio.
 .
 :CONFIG_OPLRATE
-oplrate Š deprecato. La forma d'onda OPL viene ora campionata alla velocit… di
-riproduzione del mixer per evitare il ricampionamento.
+La forma d'onda OPL viene ora campionata alla frequenza di riproduzione
+del mixer per evitare il ricampionamento.
 .
 :CONFIG_OPLMODE
 Tipo di emulazione OPL. Se 'auto', la modalit… Š determinata da 'sbtype'.
 Tutte le modalit… OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
 :CONFIG_OPLEMU
-Provider per l'emulazione OPL. 'compat' fornisce la migliore qualit…, 'nuked'
-Š l'impostazione predefinita e pi— accurata (ma la pi— impegnativa per la CPU).
+Ora Š supportata solo l'emulazione OPL "nuked".
 .
 :CONFIG_SB_FILTER
 Tipo di filtro da emulare per l'uscita audio digitale della scheda
 Sound Blaster:
-  auto:    Utilizza il filtro appropriato determinato da 'sbtype' (predefinito)
+  auto:  Utilizza il filtro appropriato determinato da 'sbtype' (predefinito).
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Utilizza il filtro di questo modello di Sound Blaster.
-  none:    Non filtra l'uscita audio.
+         Utilizza il filtro di questo modello di Sound Blaster.
+  off:   Non filtra l'uscita audio.
 Ô possibile fornire un secondo parametro 'always_on' per impedire ai programmi
 di disattivare il filtro. (Esempio: sbpro1 always_on)
 .
 :CONFIG_OPL_FILTER
 Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
-  auto:    Utilizza il filtro appropriato determinato da 'sbtype' (predefinito)
+  auto:  Utilizza il filtro appropriato determinato da 'sbtype' (predefinito)
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Utilizza il filtro di questo modello di Sound Blaster.
-  none:    Non filtra l'uscita audio.
+         Utilizza il filtro di questo modello di Sound Blaster.
+  off:   Non filtra l'uscita audio.
 .
 :CONFIG_CMS_FILTER
-Filtro per l'uscita CMS della scheda Sound Blaster:
-  on:    Filtra l'uscita audio (predefinito).
-  none:  Non filtra l'uscita audio.
+Filtro per l'uscita audio CMS della scheda Sound Blaster:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
 .
 :CONFIG_GUS
 Abilita l'emulazione della scheda audio Gravis UltraSound.
@@ -490,27 +512,59 @@ Regola la forza di filtraggio del chip 6581 come percentuale da 0 a 100.
 Regola la forza di filtraggio del chip 8580 come percentuale da 0 a 100.
 .
 :CONFIG_PCSPEAKER
-Abilita l'emulazione dell'altoparlante interno del PC (PC-Speaker).
+Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
+  discrete: La forma d'onda viene creata utilizzando passaggi discreti
+            (predefinito).
+            Funziona bene per i giochi che utilizzano effetti di tipo RealSound
+  impulse:  La forma d'onda viene creata utilizzando gli impulsi sinc.
+            Consigliato per i giochi che utilizzano forme d'onda quadra, come
+            Commander Keen. Pur migliorando la precisione, richiede pi— potenza
+            di calcolo da parte della CPU.
+  none/off: Disabilita l'altoparlante interno del PC.
 .
-:CONFIG_PCRATE
-Frequenza di campionamento della generazione del suono del PC-Speaker.
+:CONFIG_PCSPEAKER_FILTER
+Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
 .
 :CONFIG_ZERO_OFFSET
-Neutralizza e impedisce che il DC-offset dell'altoparlante del PC danneggi
-altre sorgenti. 'auto' lo abilita per i sistemi non Windows e lo disabilita
-su Windows. Se il tuo sistema operativo esegue la propria correzione del
-DC-offset, impostalo su 'false'.
+Il DC offset Š ora eliminato globalmente dall'uscita del mixer principale.
 .
 :CONFIG_TANDY
 Abilita l'emulazione del sistema audio Tandy.
 Se 'auto', l'emulazione Š presente solo se la macchina Š impostata su 'tandy'.
 .
+:CONFIG_TANDY_FILTER
+Filtro per l'uscita audio del sintetizzatore Tandy:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filtro per l'uscita audio del DAC Tandy:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
+.
 :CONFIG_DISNEY
 Abilita l'emulazione Disney Sound Source.
 (Compatibile con Covox Voice Master e Speech Thing)
 .
+:CONFIG_DISNEY_FILTER
+Filtro per l'uscita audio Disney:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
+.
 :CONFIG_PS1AUDIO
 Abilita l'emulazione audio IBM PS/1.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filtro per l'uscita audio del sintetizzatore PS/1:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filtro per l'uscita audio del DAC PS/1:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
@@ -550,14 +604,23 @@ Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
 :CONFIG_SERIAL1
 Imposta il tipo di dispositivo connesso alla porta com.
-Pu• essere: disabled, dummy, modem, nullmodem, directserial.
+Pu• essere: disabled, dummy, mouse, modem, nullmodem, direct.
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi Š 'irq' (facoltativo).
-per directserial: realport (richiesto), rxdelay (facoltativo).
-                 (realport:COM1 realport:ttyS0).
+per mouse:
+   type (tipo), pu• essere uno dei seguenti:
+      2btn:  2 pulsanti, mouse seriale Microsoft
+      3btn:  3 pulsanti, mouse seriale Logitech
+      wheel: mouse seriale 3 pulsanti + rotellina
+      msm:   3 pulsanti, mouse Mouse Systems
+      2btn+msm, 3btn+msm, wheel+msm : selezione automatica
+   rate (tasso), pu• essere normal o smooth (aggiornamenti pi— frequenti)
+   Predefinito type:wheel+msm rate:smooth
+per direct: realport (richiesto), rxdelay (facoltativo).
+   (realport:COM1 realport:ttyS0).
 per modem: listenport sock (tutti facoltativi).
 per nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket, sock (tutti facoltativi).
+   transparent, port, inhsocket, sock (tutti facoltativi).
 Il parametro SOCK specifica il protocollo da utilizzare da entrambi i lati
 della connessione. 0 per TCP e 1 per UDP affidabile ENet.
 Esempio: serial1=modem listenport:5000 sock:1
@@ -892,6 +955,10 @@ Impossibile avviare dall'unit… %c
 Apertura del file immagine: %s
 
 .
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Immagine/i floppy gi… montata/e.
+
+.
 :PROGRAM_BOOT_IMAGE_NOT_OPEN
 Impossibile aprire %s
 .
@@ -1175,13 +1242,14 @@ Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
 [color=yellow]%s+Enter[reset]  Passa dalla modalit… a schermo intero a quella a finestra
            e viceversa.
-[color=yellow]%s+Pause[reset]  Mette in pausa/riavvia l'emulatore.
-[color=yellow]%s+F1[reset]   %s Avvia il [33mkeymapper[0m.
+[color=yellow]%s+Pause[reset]  Mette in pausa/Riavvia l'emulatore.
+[color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unit… per
            rilevare modifiche.               
 [color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (screenshot).
 [color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
 [color=yellow]%s+F7[reset]   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.
+[color=yellow]%s+F8[reset]   %s Disattiva/Riattiva l'audio.
 [color=yellow]%s+F9[reset]   %s Chiude l'emulatore.
 [color=yellow]%s+F10[reset]  %s Cattura/Rilascia il mouse.
 [color=yellow]%s+F11[reset]  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
@@ -1511,7 +1579,7 @@ Dove:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    Crossfeed: da [color=white]x0[reset] a [color=white]x100[reset]
+    Crossfeed: da [color=white]x0[reset] a [color=white]x100[reset]    Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]
 Note:
   L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
   Ô possibile modificare le impostazioni di pi— canali con un unico comando.
@@ -1522,33 +1590,33 @@ Note:
 
 Esempi:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
-  [color=green]serial[reset] [color=white][PORTA#][reset]           Elenca tutte le porte seriali o quelle specificate.
-  [color=green]serial[reset] [color=white]PORTA#[reset] [color=cyan]TIPO[reset] [impostaz.]  Imposta la porta in base al tipo specificato.
-
+  [color=green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset]).
+  [color=green]serial[reset] [color=white]PORTA#[reset] [color=cyan]DISPOSITIVO[reset] [impostazioni]  Collega il dispositivo alla porta
+					    specificata.
 Dove:
-  [color=white]PORTA#[reset] Š il numero della porta: [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset]
-  [color=cyan]TIPO[reset]   Š il tipo di porta: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]DIRECTSERIAL[reset], [color=cyan]DUMMY[reset], o [color=cyan]DISABLED[reset]
+  [color=cyan]DISPOSITIVO[reset]   Pu• essere: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], o [color=cyan]DISABLED[reset]
 
-Note:
   Impostazioni facoltative per ogni [color=cyan]TIPO[reset]:
-  Per [color=cyan]MODEM[reset]        : IRQ, LISTENPORT, SOCK
-  Per [color=cyan]NULLMODEM[reset]    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
-                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
-  Per [color=cyan]DIRECTSERIAL[reset] : IRQ, REALPORT (richiesto), RXDELAY
-  Per [color=cyan]DUMMY[reset]        : IRQ
+  Per [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  Per [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+                   PORT, INHSOCKET, SOCK
+  Per [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL o SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+                   2BTN+MSM, 3BTN+MSM, o WHEEL+MSM)
+  Per [color=cyan]DIRECT[reset]     : IRQ, REALPORT (richiesto), RXDELAY
+  Per [color=cyan]DUMMY[reset]      : IRQ
 
 Esempi:
- [color=green]serial[reset]                                      : Elenca le porte seriali correnti
- [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                : Ascolto su TCP:1250 come server
- [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
- [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
- [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECTSERIAL[reset] REALPORT:ttyUSB0      : Usa una porta fisica su Linux
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Ascolto su TCP:1250 come server
+  [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connesso a TCP:1250 come client
+  [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Ascolto su UDP:5000 come server
+  [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Usa una porta fisica su Linux
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse di tipo Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT

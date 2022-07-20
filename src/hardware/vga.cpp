@@ -34,7 +34,6 @@ SVGA_Driver svga;
 uint32_t CGA_2_Table[16];
 uint32_t CGA_4_Table[256];
 uint32_t CGA_4_HiRes_Table[256];
-uint32_t CGA_16_Table[256];
 int CGA_Composite_Table[1024];
 uint32_t TXT_Font_Table[16];
 uint32_t TXT_FG_Table[16];
@@ -42,7 +41,6 @@ uint32_t TXT_BG_Table[16];
 uint32_t ExpandTable[256];
 uint32_t Expand16Table[4][16];
 uint32_t FillTable[16];
-uint32_t ColorTable[16];
 
 std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
 {

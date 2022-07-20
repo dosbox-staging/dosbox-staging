@@ -113,6 +113,17 @@ extern uint8_t int10_font_16[256 * 16];
 extern uint8_t int10_font_14_alternate[20 * 15 + 1];
 extern uint8_t int10_font_16_alternate[19 * 17 + 1];
 
+struct palette_t {
+	std::vector<RGBEntry> mono_text = {};
+	std::vector<RGBEntry> mono_text_s3 = {};
+	std::vector<RGBEntry> cga16 = {};
+	std::vector<RGBEntry> cga64 = {};
+	std::vector<RGBEntry> ega = {};
+	std::vector<RGBEntry> vga = {};
+};
+
+extern palette_t palette;
+
 struct VideoModeBlock {
 	uint16_t mode;
 	VGAModes type;
@@ -178,6 +189,8 @@ static inline uint8_t CURSOR_POS_COL(uint8_t page) {
 static inline uint8_t CURSOR_POS_ROW(uint8_t page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
 }
+
+void INT10_SetupPalette();
 
 bool INT10_SetVideoMode(uint16_t mode);
 void INT10_SetCurMode(void);
