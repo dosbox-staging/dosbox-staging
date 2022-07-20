@@ -31,11 +31,11 @@
 class OscNoise
 {
 public:
-    int randSeed;
-    float currentValueFiltered;
-    float valueUnfiltered;
+    int randSeed = {};
+    float currentValueFiltered = {};
+    float valueUnfiltered = {};
 
-    OscNoise([[maybe_unused]] float sampleRate)
+    OscNoise()
     {
         this->resetOsc();
     }

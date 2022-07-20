@@ -10,7 +10,9 @@ Implementation file for LFO.hpp
 #include <cmath>
 #include "Lfo.h"
 
-Lfo::Lfo(float samplerate_) : phase(0), inc(0), samplerate(samplerate_) {
+Lfo::Lfo(float samplerate_) :
+	phase(0), inc(0), samplerate(samplerate_)
+{
 	setWaveform(0);
 	setWaveform(1);
 	setWaveform(2);
@@ -18,7 +20,6 @@ Lfo::Lfo(float samplerate_) : phase(0), inc(0), samplerate(samplerate_) {
 	setWaveform(4);
 	setRate(1.0f); //1Hz
 
-	noiseOsc= new OscNoise(samplerate);
 	randomValue= 0.0f;
 	randomValueOld= 0.0f;
 	resultSmooth= 0.0f;
@@ -26,7 +27,6 @@ Lfo::Lfo(float samplerate_) : phase(0), inc(0), samplerate(samplerate_) {
 
 Lfo::~Lfo()
 {
-    delete noiseOsc;
 }
 
 // static const float k1Div24lowerBits =1.0f/16777216.0f; //(float)(1<<24);
@@ -75,7 +75,7 @@ float Lfo::tick(int waveform)
 	}
     else
     {
-		result = noiseOsc->getNextSample();
+		result = noiseOsc.getNextSample();
 	}
 
 	resultSmooth = (resultSmooth * 19 + result) * 0.05f;
