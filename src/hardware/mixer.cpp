@@ -1849,7 +1849,7 @@ public:
 				if (s.size() > 1 && s[0] == prefix) {
 					float p = 0.0f;
 					if (sscanf(s.c_str() + 1, "%f", &p)) {
-						value_out = clamp(p / 100, 0.0f, 1.0f);
+						value_out = clamp(p / 100.0f, 0.0f, 1.0f);
 						return true;
 					}
 				}
@@ -2052,7 +2052,7 @@ private:
 				if (chan->GetCrossfeedStrength() > 0.0f) {
 					xfeed = std::to_string(static_cast<uint8_t>(
 					        round(chan->GetCrossfeedStrength() *
-					              100)));
+					              100.0f)));
 				} else {
 					xfeed = off_value;
 				}
@@ -2062,7 +2062,7 @@ private:
 			if (chan->HasFeature(ChannelFeature::ReverbSend)) {
 				if (chan->GetReverbLevel() > 0.0f) {
 					reverb = std::to_string(static_cast<uint8_t>(
-					        round(chan->GetReverbLevel() * 100)));
+					        round(chan->GetReverbLevel() * 100.0f)));
 				} else {
 					reverb = off_value;
 				}
@@ -2072,7 +2072,7 @@ private:
 			if (chan->HasFeature(ChannelFeature::ChorusSend)) {
 				if (chan->GetChorusLevel() > 0.0f) {
 					chorus = std::to_string(static_cast<uint8_t>(
-					        round(chan->GetChorusLevel() * 100)));
+					        round(chan->GetChorusLevel() * 100.0f)));
 				} else {
 					chorus = off_value;
 				}
