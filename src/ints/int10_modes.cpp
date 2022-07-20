@@ -519,10 +519,10 @@ static void init_all_palettes(const cga_colors_t &cga_colors)
 	// the default palette at startup, this has the cool side effect of the
 	// user getting the overridden CGA colours in the first 16 palette slots.
 	palette.vga = {
-			black,            	blue,             	green,            	cyan,
-			red,              	magenta,          	brown,            	white,
-			br_black,         	br_blue,          	br_green,         	br_cyan,
-			br_red,           	br_magenta,       	br_brown,         	br_white,
+			black,              blue,               green,              cyan,
+			red,                magenta,            brown,              white,
+			br_black,           br_blue,            br_green,           br_cyan,
+			br_red,             br_magenta,         br_brown,           br_white,
 			{0x00, 0x00, 0x00}, {0x05, 0x05, 0x05}, {0x08, 0x08, 0x08}, {0x0b, 0x0b, 0x0b},
 			{0x0e, 0x0e, 0x0e}, {0x11, 0x11, 0x11}, {0x14, 0x14, 0x14}, {0x18, 0x18, 0x18},
 			{0x1c, 0x1c, 0x1c}, {0x20, 0x20, 0x20}, {0x24, 0x24, 0x24}, {0x28, 0x28, 0x28},
