@@ -23,9 +23,14 @@ class Lfo
 public:
 
   /** phase type */
-  float phase;
-  float result;
-  float resultSmooth;
+  float phase = {};
+  float result = {};
+  float resultSmooth = {};
+
+  // prevent copying
+  Lfo(const Lfo &) = delete;
+  // prevent assignment
+  Lfo &operator=(const Lfo &) = delete;
 
   /**  @param samplerate the samplerate in Hz */
   Lfo(float samplerate);
@@ -51,16 +56,16 @@ public:
   // void setWaveform(waveform_t index);
   void setWaveform(int index);
 
-  float inc;
+  float inc = {};
 
-  float samplerate;
-  float randomValue;
-  float randomValueOld;
+  float samplerate = {};
+  float randomValue = {};
+  float randomValueOld = {};
 
 
 private:
-  OscNoise *noiseOsc;
-  bool freqWrap;
+  OscNoise noiseOsc = {};
+  bool freqWrap = {};
 
   /** table length is 256+1, with table[0] = table[256]
       that way we can perform linear interpolation:
@@ -73,8 +78,8 @@ private:
   float tableRec[257];
   float tableExp[257];
 
-  int i;
-  float frac;
+  int i = {};
+  float frac = {};
 };
 
 #endif	// #ifndef LFO_H

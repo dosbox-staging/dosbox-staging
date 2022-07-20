@@ -29,9 +29,8 @@ class DCBlock
  public:
   float inputs, outputs, lastOutput;
 
-  DCBlock()
+  DCBlock() : inputs(0.0f), outputs(0.0f), lastOutput(0.0f)
   {
-    lastOutput = inputs = outputs = 0.0f;
   }
 
   ~DCBlock()

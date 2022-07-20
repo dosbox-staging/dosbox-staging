@@ -29,9 +29,8 @@ class OnePoleLP
  public:
   float inputs, outputs, lastOutput;
 
-  OnePoleLP()
+  OnePoleLP() : inputs(0.0f), outputs(0.0f), lastOutput(0.0f)
   {
-    lastOutput = inputs = outputs = 0.0f;
   }
 
   ~OnePoleLP()

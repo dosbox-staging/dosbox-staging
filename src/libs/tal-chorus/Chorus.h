@@ -31,65 +31,83 @@
 class Chorus
 {
 public:
-	Lfo *lfo;
-	float *delayLineStart;
-	float *delayLineEnd;
-	float *writePtr;
+	float sampleRate = {};
+	float delayTime = {};
 
-	int delayLineLength;
+	Lfo *lfo = {};
+	OnePoleLP *lp = {};
+
+	int delayLineLength = {};
+	float *delayLineStart = {};
+	float *delayLineEnd = {};
+	float *writePtr = {};
+	float delayLineOutput = {};
+
 	float rate;
-	float delayLineOutput;
-
-	float sampleRate;
-	float delayTime;
 
 	// Runtime variables
-	float offset, diff, frac, *ptr, *ptr2;
+	float offset = {};
+	float diff = {};
+	float frac = {};
+	float *ptr = {};
+	float *ptr2 = {};
 
-	int readPos;
+	int readPos = {};
 
-	OnePoleLP *lp;
-	float z1, z2;
-	float mult, sign;
+	float z1 = {};
+	float z2 = {};
+	float mult = {};
+	float sign = {};
 
 	// lfo
-	float lfoPhase, lfoStepSize, lfoSign;
+	float lfoPhase = {};
+	float lfoStepSize = {};
+	float lfoSign = {};
 
-	Chorus(float sampleRate, float phase, float rate, float delayTime)
-	{
-		this->rate= rate;
-		this->sampleRate= sampleRate;
-		this->delayTime= delayTime;
-		lfo= new Lfo(sampleRate);
-		lfo->phase= phase;
-		lfo->setRate(rate);
-		z1= z2= 0.0f;
-		sign= 0;
-		lfoPhase= phase*2.0f-1.0f;
-		lfoStepSize= (4.0f*rate/sampleRate);
-		lfoSign= 1.0f;
+	// prevent copying
+	Chorus(const Chorus &) = delete;
+	// prevent assignment
+	Chorus &operator=(const Chorus &) = delete;
 
-		//compute required buffer size for desired d0elay and allocate for it
+	Chorus(float _sampleRate, float phase, float _rate, float _delayTime) :
+		sampleRate(_sampleRate),
+		delayTime(_delayTime),
+
+		lfo(new Lfo(sampleRate)),
+		lp(new OnePoleLP()),
+
+		delayLineLength((int) floorf(delayTime * sampleRate * 0.001f) * 2),
+
+		//compute required buffer size for desired delay and allocate for it
 		//add extra point to aid in interpolation later
-		delayLineLength= ((int)floorf(delayTime*sampleRate*0.001f) * 2);
-		delayLineStart= new float[delayLineLength];
+		delayLineStart(new float[delayLineLength]),
 
 		//set up pointers for delay line
-		delayLineEnd= delayLineStart + delayLineLength;
-		writePtr= delayLineStart;
+		delayLineEnd(delayLineStart + delayLineLength),
+
+		//set read pointer to end of delayline. Setting it to the end
+		//ensures the interpolation below works correctly to produce
+		//the first non-zero sample.
+		writePtr(delayLineStart),
+
+		delayLineOutput(0.0f),
+
+		rate(_rate),
+		z1(0.0f),
+		z2(0.0f),
+		sign(0.0f),
+		lfoPhase(phase * 2.0f - 1.0f),
+		lfoStepSize(4.0f * rate / sampleRate),
+		lfoSign(1.0f)
+	{
+		lfo->phase= phase;
+		lfo->setRate(rate);
 
 		//zero out the buffer (silence)
 		do {
 			*writePtr= 0.0f;
 		}
 		while (++writePtr < delayLineEnd);
-
-		//set read pointer to end of delayline. Setting it to the end
-		//ensures the interpolation below works correctly to produce
-		//the first non-zero sample.
-		writePtr = delayLineStart + delayLineLength -1;
-		delayLineOutput = 0.0f;
-		lp = new OnePoleLP();
 	}
 
     ~Chorus()

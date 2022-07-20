@@ -32,26 +32,26 @@
 class ChorusEngine
 {
 public:
-    Chorus *chorus1L;
-    Chorus *chorus1R;
-    Chorus *chorus2L;
-    Chorus *chorus2R;
+    Chorus *chorus1L = {};
+    Chorus *chorus1R = {};
+    Chorus *chorus2L = {};
+    Chorus *chorus2R = {};
 
-    DCBlock *dcBlock1L;
-    DCBlock *dcBlock1R;
-    DCBlock *dcBlock2L;
-    DCBlock *dcBlock2R;
+    DCBlock dcBlock1L = {};
+    DCBlock dcBlock1R = {};
+    DCBlock dcBlock2L = {};
+    DCBlock dcBlock2R = {};
 
-    bool isChorus1Enabled;
-    bool isChorus2Enabled;
+    bool isChorus1Enabled = false;
+    bool isChorus2Enabled = false;
+
+	// prevent copying
+	ChorusEngine(const ChorusEngine &) = delete;
+	// prevent assignment
+	ChorusEngine &operator=(const ChorusEngine &) = delete;
 
     ChorusEngine(float sampleRate)
     {
-        dcBlock1L= new DCBlock();
-        dcBlock1R= new DCBlock();
-        dcBlock2L= new DCBlock();
-        dcBlock2R= new DCBlock();
-
         setUpChorus(sampleRate);
     }
 
@@ -61,11 +61,6 @@ public:
         delete chorus1R;
         delete chorus2L;
         delete chorus2R;
-        delete dcBlock1L;
-        delete dcBlock1R;
-        delete dcBlock2L;
-        delete dcBlock2R;
-
     }
 
     void setSampleRate(float sampleRate)
@@ -96,15 +91,15 @@ public:
         {
             resultL+= chorus1L->process(sampleL);
             resultR+= chorus1R->process(sampleR);
-            dcBlock1L->tick(&resultL, 0.01f);
-            dcBlock1R->tick(&resultR, 0.01f);
+            dcBlock1L.tick(&resultL, 0.01f);
+            dcBlock1R.tick(&resultR, 0.01f);
         }
         if (isChorus2Enabled)
         {
             resultL+= chorus2L->process(sampleL);
             resultR+= chorus2R->process(sampleR);
-            dcBlock2L->tick(&resultL, 0.01f);
-            dcBlock2R->tick(&resultR, 0.01f);
+            dcBlock2L.tick(&resultL, 0.01f);
+            dcBlock2R.tick(&resultR, 0.01f);
         }
         *sampleL= *sampleL+resultL*1.4f;
         *sampleR= *sampleR+resultR*1.4f;
