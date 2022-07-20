@@ -158,7 +158,25 @@ void Disney::AudioCallback(const uint16_t requested_frames)
 
 std::unique_ptr<Disney> disney = {};
 
-Disney::Disney(const io_port_t base_port, const std::string_view filter_pref)
+static void setup_filters(mixer_channel_t &channel)
+{
+	// The filters are meant to emulate the Disney's bandwidth limitations
+	// both by ear and spectrum analysis when compared against LGR Oddware's
+	// recordings of an authentic Disney Sound Source in ref:
+	// https://youtu.be/A1YThKmV2dk?t=1126
+
+	constexpr auto hp_order       = 2;
+	constexpr auto hp_cutoff_freq = 100;
+	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+	channel->SetHighPassFilter(FilterState::On);
+
+	constexpr auto lp_order       = 2;
+	constexpr auto lp_cutoff_freq = 2000;
+	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	channel->SetLowPassFilter(FilterState::On);
+}
+
+Disney::Disney(const io_port_t base_port, const std::string_view filter_choice)
 {
 	// Prime the FIFO with a single silent sample
 	fifo.emplace(data_reg);
@@ -184,20 +202,15 @@ Disney::Disney(const io_port_t base_port, const std::string_view filter_pref)
 	// Pull audio frames from the Disney at the DAC's 7 kHz rate
 	channel->SetSampleRate(dss_7khz_rate);
 
-	if (filter_pref == "on") {
-		// Disney only supports a single fixed 7kHz sample rate. We'll
-		// apply a gentle 6dB/oct LPF at a bit below half the sample
-		// rate to tame the harshest aliased frequencies while still
-		// retaining a good dose of the "raw crunchy DAC sound".
-		constexpr auto lowpass_order = 1;
-		constexpr auto lowpass_freq  = static_cast<uint16_t>(
-                        dss_7khz_rate * 0.45);
-		channel->ConfigureLowPassFilter(lowpass_order, lowpass_freq);
-		channel->SetLowPassFilter(FilterState::On);
+	// Setup filters
+	if (filter_choice == "on") {
+		setup_filters(channel);
 	} else {
-		if (filter_pref != "off")
+		if (filter_choice != "off")
 			LOG_WARNING("DISNEY: Invalid filter setting '%s', using off",
-			            filter_pref.data());
+			            filter_choice.data());
+
+		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
 	}
 
