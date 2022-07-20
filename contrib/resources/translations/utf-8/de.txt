@@ -1204,13 +1204,8 @@ Zeichentabelle %i wurde geladen
 Zeichentabelle %i wurde für Layout %s geladen
 
 .
-:PROGRAM_PLACEHOLDER_LONG_HELP
-Tastaturlayout %s für Zeichentabelle %i geladen
-
-.
 :PROGRAM_KEYB_FILENOTFOUND
 Tastaturdatei %s nicht gefunden
-
 
 .
 :PROGRAM_KEYB_INVALIDFILE
@@ -1805,30 +1800,6 @@ Beispiele:
   [32;1mautotype[0m -p [37;1m0.2[0m [36;1mf1 kp_8 , , enter[0m
   [32;1mautotype[0m -w [37;1m1.3[0m [36;1mesc enter , p l a y e r enter
 [0m
-.
-:SHELL_CMD_MIXER_HELP_LONG
-Zeigt die aktuelle Lautstärke des Mixers an oder ändert sie.
-
-Verwendung:
-  [32;1mmixer[0m [36;1mCHANNEL[0m [37;1mVOLUME[0m [/noshow]
-  [32;1mmixer[0m [/listmidi][0m
-
-Wobei:
-  [36;1mCHANNEL[0m ist der Tonkanal, dessen Lautstärke du ändern möchtest.
-  [37;1mVOLUME[0m  ist eine ganze Zahl zwischen 0 und 100, die das Volumen angibt.
-
-Anmerkungen:
-  Wenn du [32;1mmixer[0m ohne ein Argument ausführst, werden die Lautstärken aller
-  Soundkanäle angezeigt.
-  Mit der Option /listmidi kannst du die verfügbaren MIDI-Geräte und 
-  Benutzeroptionen anzeigen. Du kannst die Lautstärke mehrerer Tonkanäle mit 
-  einem Befehl ändern. Die Option /noshow bewirkt, dass der Mixer die Lautstärke
-  nicht anzeigt, wenn du eine Änderung vornimmst.
-
-Beispiele:
-  [32;1mmixer[0m
-  [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
-  [32;1mmixer[0m /listmidi
 .
 :SHELL_CMD_RESCAN_HELP_LONG
 Sucht nach Änderungen auf eingebundenen DOS-Laufwerken.
