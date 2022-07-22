@@ -918,12 +918,13 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, true);
-	const char *lpt_dac_types[] = {"none", "disney", "covox", "off", 0};
+	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", 0};
 	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
-	                  "  disney:     Disney Sound Source.\n"
-	                  "  covox:      Covox Speech Thing.\n"
-	                  "  none/off:   Don't use a parallel port DAC (default).\n");
+	                  "  disney:    Disney Sound Source.\n"
+	                  "  covox:     Covox Speech Thing.\n"
+	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
+	                  "  none/off:  Don't use a parallel port DAC (default).\n");
 	pstring->Set_values(lpt_dac_types);
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
