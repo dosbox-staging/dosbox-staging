@@ -97,7 +97,7 @@ void SBLASTER_Init(Section*);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
-void DISNEY_Init(Section*);
+void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
 void INNOVA_Init(Section*);
 void SERIAL_Init(Section*);
@@ -917,15 +917,22 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                  "  off:  Don't filter the output.");
 
 	// Disney Audio emulation
-	secprop->AddInitFunction(&DISNEY_Init,true);//done
+	secprop->AddInitFunction(&LPT_DAC_Init, true);
+	const char *lpt_dac_types[] = {"none", "disney", "off", 0};
+	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
+	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
+	                  "  disney:     Disney Sound Source.\n"
+	                  "  none/off:   Don't use a parallel port DAC (default).\n");
+	pstring->Set_values(lpt_dac_types);
 
-	Pbool = secprop->Add_bool("disney", when_idle, true);
-	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
-
-	Pstring = secprop->Add_string("disney_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the Disney audio output:\n"
+	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
+	pstring->Set_help("Filter for the LPT DAC audio device(s):\n"
 	                  "  on:   Filter the output (default).\n"
 	                  "  off:  Don't filter the output.");
+
+	// Deprecate the overloaded Disney setting
+	Pbool = secprop->Add_bool("disney", deprecated, false);
+	Pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, true);

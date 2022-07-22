@@ -172,6 +172,9 @@
     <ClCompile Include="..\src\hardware\keyboard.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\lpt_dac.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\mame\saa1099.cpp">
       <Filter>src\hardware\mame</Filter>
     </ClCompile>
