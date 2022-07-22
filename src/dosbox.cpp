@@ -916,12 +916,13 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                  "  on:   Filter the output (default).\n"
 	                  "  off:  Don't filter the output.");
 
-	// Disney Audio emulation
+	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, true);
-	const char *lpt_dac_types[] = {"none", "disney", "off", 0};
+	const char *lpt_dac_types[] = {"none", "disney", "covox", "off", 0};
 	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
 	                  "  disney:     Disney Sound Source.\n"
+	                  "  covox:      Covox Speech Thing.\n"
 	                  "  none/off:   Don't use a parallel port DAC (default).\n");
 	pstring->Set_values(lpt_dac_types);
 
