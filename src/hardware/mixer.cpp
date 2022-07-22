@@ -702,67 +702,46 @@ void MixerChannel::AddSilence()
 	MIXER_UnlockAudioDevice();
 }
 
-static const std::map<FilterState, std::string> filter_state_map = {
-        {FilterState::Off, "disabled"},
-        {FilterState::On, "enabled"},
-        {FilterState::ForcedOn, "enabled (forced)"},
-};
-
-static std::string filter_to_string(const uint8_t order, const uint16_t cutoff_freq)
+static void log_filter_settings(const std::string &channel_name,
+                                const std::string_view filter_name,
+                                const FilterState state, const uint8_t order,
+                                const uint16_t cutoff_freq)
 {
-	char buf[100] = {};
-	safe_sprintf(buf, " (%d dB/oct at %d Hz)", order * 6, cutoff_freq);
-	return std::string(buf);
+	assert(state != FilterState::Off);      // we expect only enabled states
+	assert(enum_count<FilterState>() == 3); // catch enum additions/removals
+
+	constexpr auto db_per_order = 6;
+
+	LOG_MSG("MIXER: %s channel %s filter enabled%s (%d dB/oct at %u Hz)",
+	        channel_name.c_str(),
+	        filter_name.data(),
+	        state == FilterState::ForcedOn ? " (forced)" : "",
+	        order * db_per_order,
+	        cutoff_freq);
 }
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
 	do_highpass_filter = state != FilterState::Off;
 
-	if (!do_lowpass_filter) {
-		// DEBUG_LOG_MSG("MIXER: Highpass filter is off for channel: %s",
-		//               name.c_str());
-		return;
-	}
-
-	const auto it = filter_state_map.find(state);
-	if (it != filter_state_map.end()) {
-		const auto filter_state = it->second;
-		const auto filter_string =
-		        state == FilterState::Off
-		                ? ""
-		                : filter_to_string(filters.highpass.order,
-		                                   filters.highpass.cutoff_freq);
-		LOG_MSG("MIXER: %s channel highpass filter %s%s",
-		        name.c_str(),
-		        filter_state.c_str(),
-		        filter_string.c_str());
-	}
+	if (do_highpass_filter)
+		log_filter_settings(name,
+		                    "highpass",
+		                    state,
+		                    filters.highpass.order,
+		                    filters.highpass.cutoff_freq);
 }
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
 	do_lowpass_filter = state != FilterState::Off;
 
-	if (!do_lowpass_filter) {
-		// DEBUG_LOG_MSG("MIXER: Lowpass filter is off for channel: %s",
-		//               name.c_str());
-		return;
-	}
-
-	const auto it = filter_state_map.find(state);
-	if (it != filter_state_map.end()) {
-		const auto filter_state = it->second;
-		const auto filter_string =
-		        state == FilterState::Off
-		                ? ""
-		                : filter_to_string(filters.lowpass.order,
-		                                   filters.lowpass.cutoff_freq);
-		LOG_MSG("MIXER: %s channel lowpass filter %s%s",
-		        name.c_str(),
-		        filter_state.c_str(),
-		        filter_string.c_str());
-	}
+	if (do_lowpass_filter)
+		log_filter_settings(name,
+		                    "lowpass",
+		                    state,
+		                    filters.lowpass.order,
+		                    filters.lowpass.cutoff_freq);
 }
 
 void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
