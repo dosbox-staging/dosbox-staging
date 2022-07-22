@@ -15,6 +15,7 @@ libhardware_sources = files([
   'ipxserver.cpp',
   'joystick.cpp',
   'keyboard.cpp',
+  'lpt_dac.cpp',
   'mame/saa1099.cpp',
   'mame/sn76496.cpp',
   'memory.cpp',

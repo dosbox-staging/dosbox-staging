@@ -71,7 +71,8 @@ union LptControlRegister {
 	bit_view<3, 1> select;
 	bit_view<4, 1> irq_ack;
 	bit_view<5, 1> bidi;
-	// bits 6 and 7 are unused
+	bit_view<6, 1> bit6; // unused
+	bit_view<7, 1> bit7; // unused
 };
 // The INITIALISE signal is active low when writing to the IO port.
 
