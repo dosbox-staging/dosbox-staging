@@ -131,6 +131,7 @@ enum class ChannelFeature {
 	Stereo,
 	Synthesizer,
 };
+using channel_features_t = std::set<ChannelFeature>;
 
 enum class FilterState { Off, On, ForcedOn };
 
