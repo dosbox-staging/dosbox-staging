@@ -1111,6 +1111,8 @@ static void NewMouseScreenParams()
 	                      check_cast<uint16_t>(abs_y));
 }
 
+static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -1195,6 +1197,12 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 		}
 		sdl.desktop.window.resizable = resizable;
+
+		int window_width = 0;
+		SDL_GetWindowSize(sdl.window, &window_width, nullptr);
+		const auto canvas = get_canvas_size(screen_type);
+
+		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
 
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
@@ -1325,19 +1333,14 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	SDL_GetWindowSize(sdl.window, &window_width, &window_height);
 	assert(window_width > 0 && window_height > 0);
 
-	const auto canvas = get_canvas_size(screen_type);
-
-	const auto dpi_scale = static_cast<float>(canvas.w) /
-	                       static_cast<float>(window_width);
-
 	if (!sdl.desktop.fullscreen) {
 		window_width  = sdl.desktop.requested_window_bounds.width;
 		window_height = sdl.desktop.requested_window_bounds.height;
 	}
 
 	const auto render_resolution = restrict_to_viewport_resolution(
-	        iroundf(static_cast<float>(window_width) * dpi_scale),
-	        iroundf(static_cast<float>(window_height) * dpi_scale));
+	        iround(window_width * sdl.desktop.dpi_scale),
+	        iround(window_height * sdl.desktop.dpi_scale));
 
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
@@ -1352,12 +1355,10 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	} else {
 		win_width  = (sdl.desktop.fullscreen
 		                      ? window_width
-		                      : iroundf(static_cast<float>(img_width) /
-                                        dpi_scale));
+		                      : iround(img_width / sdl.desktop.dpi_scale));
 		win_height = (sdl.desktop.fullscreen
 		                      ? window_height
-		                      : iroundf(static_cast<float>(img_height) /
-		                                dpi_scale));
+		                      : iround(img_height / sdl.desktop.dpi_scale));
 	}
 
 	sdl.window = SetWindowMode(screen_type, win_width, win_height,

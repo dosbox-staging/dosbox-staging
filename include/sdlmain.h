@@ -149,6 +149,7 @@ struct SDL_Block {
 		} requested_window_bounds = {};
 
 		uint8_t bpp = 0;
+		double dpi_scale = 1.0;
 		bool fullscreen = false;
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
