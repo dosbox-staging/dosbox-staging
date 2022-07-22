@@ -27,6 +27,7 @@
 #include "setup.h"
 #include "support.h"
 
+#include "covox.h"
 #include "disney.h"
 
 LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
@@ -144,6 +145,8 @@ void LPT_DAC_Init(Section *section)
 
 	if (dac_choice == "disney")
 		lpt_dac = std::make_unique<Disney>();
+	else if (dac_choice == "covox")
+		lpt_dac = std::make_unique<Covox>();
 	else if (dac_choice == "none" || dac_choice == "off")
 		return;
 
