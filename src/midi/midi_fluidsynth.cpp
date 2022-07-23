@@ -61,17 +61,6 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "The scaling percentage can range from 1 to 500.");
 }
 
-// SetMixerLevel is a callback that's given the user-desired mixer level,
-// which is a floating point multiplier that we apply internally as
-// FluidSynth's gain value. We then read-back the gain, and use that to
-// derive a pre-scale level.
-void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &levels) noexcept
-{
-	// FluidSynth generates floats between -1 and 1, so we ask the
-	// limiter to scale these up to the INT16 range
-	soft_limiter.UpdateLevels(levels, INT16_MAX);
-}
-
 // Takes in the user's soundfont = configuration value consisting
 // of the SF2 filename followed by an optional scaling percentage.
 // This function returns the filename and percentage as a tuple.
@@ -181,10 +170,7 @@ static std::string find_sf_file(const std::string &name)
 	return "";
 }
 
-MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH"),
-          keep_rendering(false)
-{}
+MidiHandlerFluidsynth::MidiHandlerFluidsynth() : keep_rendering(false) {}
 
 bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 {
@@ -208,10 +194,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                             ChannelFeature::ReverbSend,
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
-
-	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
-	                                       this, std::placeholders::_1);
-	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
@@ -314,13 +296,10 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
-	soft_limiter.PrintStats();
-
 	// Reset the members
 	channel.reset();
 	synth.reset();
 	settings.reset();
-	soft_limiter.Reset();
 	last_played_frame = 0;
 	selected_font = "";
 
@@ -417,6 +396,7 @@ void MidiHandlerFluidsynth::Render()
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
 		backstock.Enqueue(playable_buffer);
+
 	backstock.Enqueue(std::move(playable_buffer));
 	assert(backstock.Size() == backstock.MaxCapacity());
 
@@ -427,8 +407,21 @@ void MidiHandlerFluidsynth::Render()
 
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
-		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
-		                     playable_buffer);
+
+		// Scale and copy to playable buffer
+		auto in_pos  = render_buffer.begin();
+		auto out_pos = playable_buffer.begin();
+
+		while (in_pos != render_buffer.end()) {
+			AudioFrame frame = {*in_pos++, *in_pos++};
+
+			frame.left *= INT16_MAX;
+			frame.right *= INT16_MAX;
+
+			*out_pos++ = frame.left;
+			*out_pos++ = frame.right;
+		}
+
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));
 	}
