@@ -35,7 +35,6 @@
 
 #include "mixer.h"
 #include "rwqueue.h"
-#include "soft_limiter.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
 public:
@@ -70,7 +69,6 @@ private:
 	RWQueue<std::vector<int16_t>> backstock{num_buffers};
 
 	std::thread renderer = {};
-	SoftLimiter soft_limiter;
 
 	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
 	std::atomic_bool keep_rendering = {};
