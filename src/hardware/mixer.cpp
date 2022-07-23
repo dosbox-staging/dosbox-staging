@@ -193,6 +193,7 @@ struct mixer_t {
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
 
 	highpass_filter_t highpass_filter = {};
+	Compressor compressor = {};
 
 	reverb_settings_t reverb = {};
 	bool do_reverb = false;
@@ -1566,7 +1567,7 @@ static void MIXER_MixData(const int frames_requested)
 		}
 	}
 
-	// Apply high-pass filter to the master output as the very last step
+	// Apply high-pass filter to the master output
 	auto pos = start_pos;
 
 	for (work_index_t i = 0; i < frames_added; ++i) {
@@ -1576,6 +1577,23 @@ static void MIXER_MixData(const int frames_requested)
 		}
 		pos = (pos + 1) & MIXER_BUFMASK;
 	}
+
+	// Apply compressor to the master output as the very last step
+	pos = start_pos;
+
+/*	for (work_index_t i = 0; i < frames_added; ++i) {
+		AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
+
+		frame.left /= INT16_MAX;
+		frame.right /= INT16_MAX;
+
+		frame = mixer.compressor.Process(frame);
+
+		mixer.work[pos][0] = frame.left * INT16_MAX;
+		mixer.work[pos][1] = frame.right * INT16_MAX;
+
+		pos = (pos + 1) & MIXER_BUFMASK;
+	} */
 
 	// Capture audio output if requested
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
@@ -2359,6 +2377,18 @@ void MIXER_Init(Section *sec)
 	// Initialise send effects
 	configure_reverb(section->Get_string("reverb"));
 	configure_chorus(section->Get_string("chorus"));
+
+	// Initialise compressor
+	const auto threshold_db    = -3.0f;
+	const auto ratio           = 4.0f;
+	const auto release_time_ms = 5000.0f;
+	const auto rms_window_ms   = 10.0;
+
+	mixer.compressor.Configure(mixer.sample_rate,
+	                           threshold_db,
+	                           ratio,
+	                           release_time_ms,
+	                           rms_window_ms);
 
 	restore_channel_states(channel_states);
 }

@@ -136,6 +136,9 @@
     <ClCompile Include="..\src\hardware\covox.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\compressor.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\disney.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>

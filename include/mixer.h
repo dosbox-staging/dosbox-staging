@@ -31,6 +31,7 @@
 #include <set>
 
 #include "envelope.h"
+#include "../src/hardware/compressor.h"
 
 // Disable effc++ for Iir until its release.
 // Ref: https://github.com/berndporr/iir1/pull/39
