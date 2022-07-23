@@ -37,7 +37,6 @@
 
 #include "mixer.h"
 #include "rwqueue.h"
-#include "soft_limiter.h"
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
@@ -76,7 +75,6 @@ private:
 	std::mutex service_mutex = {};
 	service_t service = {};
 	std::thread renderer = {};
-	SoftLimiter soft_limiter;
 
 	// The following two members let us determine the total number of played
 	// frames, which is used by GetMidiEventTimestamp() to calculate a total

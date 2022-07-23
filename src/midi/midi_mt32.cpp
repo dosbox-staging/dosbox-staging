@@ -363,9 +363,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-MidiHandler_mt32::MidiHandler_mt32()
-        : soft_limiter("MT32"),
-          keep_rendering(false)
+MidiHandler_mt32::MidiHandler_mt32() : keep_rendering(false)
 {}
 
 MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
@@ -539,11 +537,6 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
 
-	// Let the mixer command adjust the MT32's services gain-level
-	const auto set_mixer_level = std::bind(&MidiHandler_mt32::SetMixerLevel,
-	                                       this, std::placeholders::_1);
-	mixer_channel->RegisterLevelCallBack(set_mixer_level);
-
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
 	mt32_service->setAnalogOutputMode(ANALOG_MODE);
@@ -580,31 +573,6 @@ MidiHandler_mt32::~MidiHandler_mt32()
 	Close();
 }
 
-// When the user runs "mixer MT32 <percent-left>:<percent-right>", this function
-// get those percents as floating point ratios (100% being 1.0f). Instead of
-// post-scaling the rendered integer stream in the mixer, we instead provide the
-// desired floating point scalar to the MT32 service via its gain() interface
-// where it can more elegantly adjust the level of the synthesis.
-
-// Another nuance is that MT32's gain interface takes in a single float, but
-// DOSBox's mixer accept left-and-right, so we apply gain using the larger of
-// the two and then use the limiter's left-right ratios to scale down by lesser
-// ratio.
-void MidiHandler_mt32::SetMixerLevel(const AudioFrame &levels) noexcept
-{
-	const float gain = std::max(levels.left, levels.right);
-	{
-		const std::lock_guard<std::mutex> lock(service_mutex);
-		if (service)
-			service->setOutputGain(gain);
-	}
-
-	const AudioFrame desired = {levels.left / gain, levels.right / gain};
-	// mt32emu generates floats between -1 and 1, so we ask the
-	// soft limiter to scale these up to the INT16 range
-	soft_limiter.UpdateLevels(desired, INT16_MAX);
-}
-
 void MidiHandler_mt32::Close()
 {
 	if (!is_open)
@@ -631,12 +599,9 @@ void MidiHandler_mt32::Close()
 		service->freeContext();
 	}
 
-	soft_limiter.PrintStats();
-
 	// Reset the members
 	channel.reset();
 	service.reset();
-	soft_limiter.Reset();
 	total_buffers_played = 0;
 	last_played_frame = 0;
 
@@ -713,6 +678,7 @@ void MidiHandler_mt32::Render()
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
 		backstock.Enqueue(playable_buffer);
+
 	backstock.Enqueue(std::move(playable_buffer));
 	assert(backstock.Size() == backstock.MaxCapacity());
 
@@ -723,7 +689,20 @@ void MidiHandler_mt32::Render()
 		}
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
-		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
+
+		// Scale and copy to playable buffer
+		auto in_pos  = render_buffer.begin();
+		auto out_pos = playable_buffer.begin();
+
+		while (in_pos != render_buffer.end()) {
+			AudioFrame frame = {*in_pos++, *in_pos++};
+
+			frame.left *= INT16_MAX;
+			frame.right *= INT16_MAX;
+
+			*out_pos++ = frame.left;
+			*out_pos++ = frame.right;
+		}
 
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));
