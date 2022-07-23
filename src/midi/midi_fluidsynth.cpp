@@ -183,7 +183,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		return false;
 	}
 
-	// Setup the mixer channel and level callback
+	// Setup the mixer callback
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
 
@@ -363,7 +363,8 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 		                                     last_played_frame * 2;
 
 		assert(frames_to_be_played <= play_buffer.size());
-		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
+		channel->AddSamples_sfloat(frames_to_be_played,
+		                           sample_offset_in_buffer);
 
 		requested_frames -= frames_to_be_played;
 		last_played_frame += frames_to_be_played;
@@ -391,7 +392,7 @@ void MidiHandlerFluidsynth::Render()
 	// Allocate our buffers once and reuse for the duration.
 	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
