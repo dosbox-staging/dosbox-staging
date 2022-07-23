@@ -11,7 +11,6 @@ libmisc_sources = [
   'programs.cpp',
   'rwqueue.cpp',
   'setup.cpp',
-  'soft_limiter.cpp',
   'support.cpp',
 ]
 
