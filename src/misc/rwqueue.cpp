@@ -95,5 +95,9 @@ T RWQueue<T>::Dequeue()
 // Explicit template instantiations
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #include <vector>
-template class RWQueue<int>; // Unit tests
-template class RWQueue<std::vector<int16_t>>; // MT-32 and FluidSynth
+// Unit tests
+template class RWQueue<int>;
+template class RWQueue<std::vector<int16_t>>;
+
+// MT-32 and FluidSynth
+template class RWQueue<std::vector<float>>;
