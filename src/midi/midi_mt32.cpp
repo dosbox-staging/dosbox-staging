@@ -645,7 +645,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t requested_frames)
 		                                          requested_frames);
 		const auto sample_offset_in_buffer = play_buffer.data() +
 		                                     last_played_frame * 2;
-		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
+		channel->AddSamples_sfloat(frames_to_be_played, sample_offset_in_buffer);
 		requested_frames -= frames_to_be_played;
 		last_played_frame += frames_to_be_played;
 	}
@@ -673,7 +673,7 @@ void MidiHandler_mt32::Render()
 	// Allocate our buffers once and reuse for the duration.
 	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
