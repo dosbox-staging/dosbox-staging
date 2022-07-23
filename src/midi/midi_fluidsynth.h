@@ -50,7 +50,6 @@ public:
 
 private:
 	void MixerCallBack(uint16_t requested_frames);
-	void SetMixerLevel(const AudioFrame &levels) noexcept;
 	uint16_t GetRemainingFrames();
 	void Render();
 
@@ -63,10 +62,10 @@ private:
 	mixer_channel_t channel = nullptr;
 	std::string selected_font = "";
 
-	std::vector<int16_t> play_buffer = {};
+	std::vector<float> play_buffer = {};
 	static constexpr auto num_buffers = 8;
-	RWQueue<std::vector<int16_t>> playable{num_buffers};
-	RWQueue<std::vector<int16_t>> backstock{num_buffers};
+	RWQueue<std::vector<float>> playable{num_buffers};
+	RWQueue<std::vector<float>> backstock{num_buffers};
 
 	std::thread renderer = {};
 
