@@ -25,7 +25,6 @@
 
 #include "inout.h"
 #include "setup.h"
-#include "soft_limiter.h"
 #include "support.h"
 #include "pic.h"
 
