@@ -994,7 +994,29 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
-	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
+	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
+	Pbool->Set_help(
+	        "Activates hotkeys to allow realtime calibration of the joystick's x and y axis.\n"
+	        "Only consider this if in-game calibration fails and other settings have been tried.\n"
+	        " - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:\n"
+	        "     - left and right diminish or magnify the x-axis scalar, respectively.\n"
+	        "     - down and up diminish or magnify the y-axis scalar, respectively.\n"
+	        " - Alt+Arrow-keys adjusts the axis' offset position:\n"
+	        "     - left and right shift x-axis offset in the given direction.\n"
+	        "     - down and up shift the y-axis offset in the given direction.\n"
+	        " - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.\n"
+	        "Each tap will report X or Y calibration values you can set below. When you find parameters that work,\n"
+	        "quit the game, switch this setting back to false, and populate the reported calibration parameters.");
+
+	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
+	pstring->Set_help(
+	        "Apply y-axis calibration parameters from the hotkeys. Default is 'auto'.");
+
+	pstring = secprop->Add_string("joy_y_calibration", when_idle, "auto");
+	pstring->Set_help(
+	        "Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.");
+
+	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
 	const char *serials[] = {"dummy",
 	                         "disabled",
 	                         "mouse",
