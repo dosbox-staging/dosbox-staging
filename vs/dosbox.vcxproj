@@ -567,6 +567,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\hardware\adlib_gold.cpp" />
     <ClCompile Include="..\src\hardware\cmos.cpp" />
     <ClCompile Include="..\src\hardware\covox.cpp" />
+    <ClCompile Include="..\src\hardware\compressor.cpp" />
     <ClCompile Include="..\src\hardware\disney.cpp" />
     <ClCompile Include="..\src\hardware\dma.cpp" />
     <ClCompile Include="..\src\hardware\envelope.cpp" />
