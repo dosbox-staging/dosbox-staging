@@ -242,9 +242,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_synth_set_interp_method(fluid_synth.get(), fx_group,
 	                              FLUID_INTERP_HIGHEST);
 
-	// Disable customization of FluidSynth's reverb and chorus in favour of
-	// the mixer's controls, which ensures similar dynamics are applied to all
-	// channels.
+	// Disable FluidSynth's reverb and chorus in favour of the mixer's, which
+	// ensures similar effects are applied to all channels.
 	fluid_synth_reverb_on(fluid_synth.get(), fx_group, false);
 	fluid_synth_chorus_on(fluid_synth.get(), fx_group, false);
 
