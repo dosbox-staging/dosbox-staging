@@ -144,6 +144,7 @@ public:
 
 	bool HasFeature(ChannelFeature feature);
 	int GetSampleRate() const;
+	std::string GetName() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
 	void SetVolume(const float left, const float right);

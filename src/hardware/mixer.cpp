@@ -91,7 +91,7 @@ static constexpr int16_t MIXER_CLIP(const int sample)
 {
 	if (sample <= MIN_AUDIO) return MIN_AUDIO;
 	if (sample >= MAX_AUDIO) return MAX_AUDIO;
-	
+
 	return static_cast<int16_t>(sample);
 }
 
@@ -110,6 +110,7 @@ struct reverb_settings_t {
 	// resulting in a more pleasant sound.
 	highpass_filter_t highpass_filter = {};
 
+	bool default_behaviour = false;
 	ReverbPreset preset = ReverbPreset::none;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
@@ -266,12 +267,28 @@ static void set_global_crossfeed(mixer_channel_t channel)
 static void set_global_reverb(const mixer_channel_t channel)
 {
 	assert(channel);
-	if (!mixer.do_reverb || !channel->HasFeature(ChannelFeature::ReverbSend))
-		channel->SetReverbLevel(0.0f);
-	else if (channel->HasFeature(ChannelFeature::Synthesizer))
-		channel->SetReverbLevel(mixer.reverb.synthesizer_send_level);
-	else if (channel->HasFeature(ChannelFeature::DigitalAudio))
-		channel->SetReverbLevel(mixer.reverb.digital_audio_send_level);
+
+	if (mixer.reverb.default_behaviour) {
+		// The "default" preset requires special handling: it's an alias
+		// to the "large" preset, but reverb is only enabled on the
+		// FluidSynth channel and nothing else. This is partly for
+		// backwards-compatibility, and partly because this is a
+		// reasonable default even when not explictly enabling
+		// the reverb.
+		if (channel->GetName() == "FSYNTH")
+			channel->SetReverbLevel(mixer.reverb.synthesizer_send_level);
+		else
+			channel->SetReverbLevel(0.0f);
+
+	} else {
+		if (!mixer.do_reverb ||
+		    !channel->HasFeature(ChannelFeature::ReverbSend))
+			channel->SetReverbLevel(0.0f);
+		else if (channel->HasFeature(ChannelFeature::Synthesizer))
+			channel->SetReverbLevel(mixer.reverb.synthesizer_send_level);
+		else if (channel->HasFeature(ChannelFeature::DigitalAudio))
+			channel->SetReverbLevel(mixer.reverb.digital_audio_send_level);
+	}
 }
 
 // Apply the global chorus settings to the given channel
@@ -288,8 +305,14 @@ static void set_global_chorus(const mixer_channel_t channel)
 
 static void configure_reverb(std::string reverb_pref)
 {
+	auto &r = mixer.reverb; // short-hand reference
+
 	auto was_reverb_on = mixer.do_reverb;
+	auto was_default   = r.default_behaviour;
+
 	mixer.do_reverb = (reverb_pref != "off");
+
+	r.default_behaviour = false;
 
 	if (!mixer.do_reverb) {
 		// Disable reverb sending in each channel
@@ -300,17 +323,23 @@ static void configure_reverb(std::string reverb_pref)
 		return;
 	}
 
-	// "on" is an alias for the medium room size preset
-	if (reverb_pref == "on")
+	if (reverb_pref == "default") {
+		// "default" mode needs special handling (only enables the large
+		// preset on the FluidSynth channel)
+		reverb_pref         = "large";
+		r.default_behaviour = true;
+
+	} else if (reverb_pref == "on") {
+		// "on" is an alias for the medium room size preset
 		reverb_pref = "medium";
+	}
 
-	auto &r = mixer.reverb; // short-hand reference
+	auto current_preset    = r.preset;
+	auto new_preset        = enum_cast<ReverbPreset>(reverb_pref).value();
+	auto preset_unchanged  = (current_preset == new_preset);
+	auto default_unchanged = (was_default == r.default_behaviour);
 
-	auto current_preset = r.preset;
-	auto new_preset = enum_cast<ReverbPreset>(reverb_pref).value();
-	auto preset_unchanged = (current_preset == new_preset);
-
-	if (was_reverb_on && preset_unchanged)
+	if (was_reverb_on && default_unchanged && preset_unchanged)
 		return;
 
 	r.preset = new_preset;
@@ -329,12 +358,12 @@ static void configure_reverb(std::string reverb_pref)
 
 	// clang-format off
 	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case ReverbPreset::none:   break;
-	case ReverbPreset::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case ReverbPreset::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case ReverbPreset::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case ReverbPreset::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case ReverbPreset::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::none:    break;
+	case ReverbPreset::tiny:    r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case ReverbPreset::small:   r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case ReverbPreset::medium:  r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case ReverbPreset::large:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::huge:    r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -612,6 +641,11 @@ void MixerChannel::SetSampleRate(const int rate)
 int MixerChannel::GetSampleRate() const
 {
 	return sample_rate;
+}
+
+std::string MixerChannel::GetName() const
+{
+	return name;
 }
 
 void MixerChannel::ReactivateEnvelope()
@@ -2428,22 +2462,24 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
 
-	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
+	const char *reverb_presets[] = {
+	        "default", "off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
 	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
 	string_prop->Set_help(
 	        "Enable reverb globally to add a sense of space to the sound:\n"
-	        "  off:     No reverb (default).\n"
-	        "  on:      Enable reverb (medium preset).\n"
-	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
-	        "           specifically designed for small-speaker audio systems\n"
-	        "           (PC Speaker, Tandy, PS/1 Audio, and Disney).\n"
-	        "  small:   Adds a subtle sense of space; good for games that use a single\n"
-	        "           synth channel (typically OPL) for both music and sound effects.\n"
-	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
-	        "  large:   Large hall preset recommended for games that use separate\n"
-	        "  			channels for music and digital audio.\n"
-	        "  huge:    A stronger variant of the large hall preset; works really well\n"
-	        "           in some games with more atmospheric soundtracks.\n"
+	        "  default:  'large' preset enabled for FluidSynth only.\n"
+	        "  off:      No reverb.\n"
+	        "  on:       Enable reverb (medium preset).\n"
+	        "  tiny:     Simulates the sound of a small integrated speaker in a room;\n"
+	        "            specifically designed for small-speaker audio systems\n"
+	        "            (PC Speaker, Tandy, PS/1 Audio, and Disney).\n"
+	        "  small:    Adds a subtle sense of space; good for games that use a single\n"
+	        "            synth channel (typically OPL) for both music and sound effects.\n"
+	        "  medium:   Medium room preset that works well with a wide variety of games.\n"
+	        "  large:    Large hall preset recommended for games that use separate\n"
+	        "  			 channels for music and digital audio.\n"
+	        "  huge:     A stronger variant of the large hall preset; works really well\n"
+	        "            in some games with more atmospheric soundtracks.\n"
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
