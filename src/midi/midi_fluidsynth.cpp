@@ -61,7 +61,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "change the FluidSynth audio channel's volume, e.g.:\n"
 	        "  MIXER FSYNTH 200");
 
-	str_prop = secprop.Add_string("chorus", when_idle, "auto");
+	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
 	str_prop->Set_help("Chorus effect: 'auto', 'on', 'off', or custom values.\n"
 	                   "When using custom values:\n"
 	                   "  All five must be provided in-order and space-separated.\n"
@@ -73,7 +73,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
 	                   "  For example: chorus = 3 1.2 0.3 8.0 sine");
 
-	str_prop = secprop.Add_string("reverb", when_idle, "auto");
+	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
 	str_prop->Set_help("Reverb effect: 'auto', 'on', 'off', or custom values.\n"
 	                   "When using custom values:\n"
 	                   "  All four must be provided in-order and space-separated.\n"
@@ -279,7 +279,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	};
 
 	// get the users chorus settings
-	const auto chorus = split(section->Get_string("chorus"));
+	const auto chorus = split(section->Get_string("fsynth_chorus"));
 	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
 
 	// does the soundfont have known-issues with chorus?
@@ -321,7 +321,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
 
 	// get the users reverb settings
-	const auto reverb = split(section->Get_string("reverb"));
+	const auto reverb = split(section->Get_string("fsynth_reverb"));
 	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
 
 	// default reverb settings
