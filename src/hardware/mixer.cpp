@@ -148,6 +148,7 @@ enum class ChorusPreset { none, light, normal, strong };
 struct chorus_settings_t {
 	ChorusEngine chorus_engine = ChorusEngine(48000);
 
+	bool default_behaviour = false;
 	ChorusPreset preset = ChorusPreset::none;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
@@ -295,12 +296,27 @@ static void set_global_reverb(const mixer_channel_t channel)
 static void set_global_chorus(const mixer_channel_t channel)
 {
 	assert(channel);
-	if (!mixer.do_chorus || !channel->HasFeature(ChannelFeature::ChorusSend))
-		channel->SetChorusLevel(0.0f);
-	else if (channel->HasFeature(ChannelFeature::Synthesizer))
-		channel->SetChorusLevel(mixer.chorus.synthesizer_send_level);
-	else if (channel->HasFeature(ChannelFeature::DigitalAudio))
-		channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
+
+	if (mixer.chorus.default_behaviour) {
+		// The "default" preset requires special handling: it's an alias
+		// to the "normal" preset, but chorus is only enabled on the
+		// FluidSynth channel and nothing else. This is partly for
+		// backwards-compatibility, and partly because this is a
+		// reasonable default even when not explictly enabling
+		// the chorus.
+		if (channel->GetName() == "FSYNTH")
+			channel->SetChorusLevel(mixer.chorus.synthesizer_send_level);
+		else
+			channel->SetChorusLevel(0.0f);
+
+	} else {
+		if (!mixer.do_chorus || !channel->HasFeature(ChannelFeature::ChorusSend))
+			channel->SetChorusLevel(0.0f);
+		else if (channel->HasFeature(ChannelFeature::Synthesizer))
+			channel->SetChorusLevel(mixer.chorus.synthesizer_send_level);
+		else if (channel->HasFeature(ChannelFeature::DigitalAudio))
+			channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
+	}
 }
 
 static void configure_reverb(std::string reverb_pref)
@@ -376,8 +392,14 @@ static void configure_reverb(std::string reverb_pref)
 
 static void configure_chorus(std::string chorus_pref)
 {
+	auto &c = mixer.chorus; // short-hand reference
+
 	auto was_chorus_on = mixer.do_chorus;
+	auto was_default   = c.default_behaviour;
+
 	mixer.do_chorus = (chorus_pref != "off");
+
+	c.default_behaviour = false;
 
 	if (!mixer.do_chorus) {
 		// Disable chorus sending in each channel
@@ -388,19 +410,25 @@ static void configure_chorus(std::string chorus_pref)
 		return;
 	}
 
-	// "on" is an alias for the "normal" preset
-	if (chorus_pref == "on")
-		chorus_pref = "normal";
+	if (chorus_pref == "default") {
+		// "default" mode needs special handling (only enables the
+		// normal preset on the FluidSynth channel)
+		chorus_pref         = "normal";
+		c.default_behaviour = true;
 
-	auto &c = mixer.chorus; // short-hand reference
+	} else if (chorus_pref == "on") {
+		// "on" is an alias for the "normal" preset
+		chorus_pref = "normal";
+	}
 
 	const auto rate_hz = mixer.sample_rate.load();
 
-	auto current_preset = c.preset;
-	auto new_preset = enum_cast<ChorusPreset>(chorus_pref).value();
-	auto preset_unchanged = (current_preset == new_preset);
+	auto current_preset    = c.preset;
+	auto new_preset        = enum_cast<ChorusPreset>(chorus_pref).value();
+	auto preset_unchanged  = (current_preset == new_preset);
+	auto default_unchanged = (was_default == c.default_behaviour);
 
-	if (was_chorus_on && preset_unchanged)
+	if (was_chorus_on && default_unchanged && preset_unchanged)
 		return;
 
 	c.preset = new_preset;
@@ -2483,16 +2511,18 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
-	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
-	string_prop = sec_prop.Add_string("chorus", when_idle, "off");
+	const char *chorus_presets[] = {
+	        "default", "off", "on", "light", "normal", "strong", nullptr};
+	string_prop = sec_prop.Add_string("chorus", when_idle, chorus_presets[0]);
 	string_prop->Set_help(
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
-	        "  off:     No chorus (default).\n"
-	        "  on:      Enable chorus (normal preset).\n"
-	        "  light:   A light chorus effect (especially suited for\n"
-	        "           synth music that features lots of white noise.)\n"
-	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
-	        "  strong:  An obvious and upfront chorus effect.\n"
+	        "  default:  'normal' preset enabled for FluidSynth only.\n"
+	        "  off:      No chorus (default).\n"
+	        "  on:       Enable chorus (normal preset).\n"
+	        "  light:    A light chorus effect (especially suited for\n"
+	        "            synth music that features lots of white noise.)\n"
+	        "  normal:   Normal chorus that works well with a wide variety of games.\n"
+	        "  strong:   An obvious and upfront chorus effect.\n"
 	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
 	string_prop->Set_values(chorus_presets);
 
