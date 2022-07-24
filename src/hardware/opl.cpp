@@ -894,7 +894,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	                                      std::placeholders::_1);
 
 	// Register the Audio channel
-	channel = MIXER_AddChannel(mixer_callback, 0, "FM", channel_features);
+	channel = MIXER_AddChannel(mixer_callback, 0, "OPL", channel_features);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.

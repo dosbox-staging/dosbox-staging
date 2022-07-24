@@ -431,12 +431,19 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 	MIXER_LockAudioDevice();
 	auto it = mixer.channels.find(name);
 
-	// Deprecated alias SPKR to PCSPEAKER
-	if (it == mixer.channels.end() && std::string_view(name) == "SPKR") {
-		LOG_WARNING("MIXER: '%s' is deprecated due to inconsistent "
-		            "naming, please use 'PCSPEAKER' instead",
-		            name);
-		it = mixer.channels.find("PCSPEAKER");
+	if (it == mixer.channels.end()) {
+		// Deprecated alias SPKR to PCSPEAKER
+		if (std::string_view(name) == "SPKR") {
+			LOG_WARNING("MIXER: 'SPKR' is deprecated due to inconsistent "
+						"naming, please use 'PCSPEAKER' instead");
+			it = mixer.channels.find("PCSPEAKER");
+
+		// Deprecated alias FM to OPL
+		} else if (std::string_view(name) == "FM") {
+			LOG_WARNING("MIXER: 'FM' is deprecated due to inconsistent "
+						"naming, please use 'OPL' instead");
+			it = mixer.channels.find("OPL");
+		}
 	}
 
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
