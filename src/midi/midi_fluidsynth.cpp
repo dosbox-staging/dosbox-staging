@@ -60,6 +60,18 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "has been deprecated. Please use a mixer command instead to\n"
 	        "change the FluidSynth audio channel's volume, e.g.:\n"
 	        "  MIXER FSYNTH 200");
+
+	str_prop = secprop.Add_string("chorus", when_idle, "auto");
+	str_prop->Set_help("Chorus effect: 'auto', 'on', 'off', or custom values.\n"
+	                   "When using custom values:\n"
+	                   "  All five must be provided in-order and space-separated.\n"
+	                   "  They are: voice-count level speed depth modulation-wave, where:\n"
+	                   "  - voice-count is an integer from 0 to 99.\n"
+	                   "  - level is a decimal from 0.0 to 10.0\n"
+	                   "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
+	                   "  - depth is a decimal from 0.0 to 21.0\n"
+	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
+	                   "  For example: chorus = 3 1.2 0.3 8.0 sine");
 }
 
 // Takes in the user's SoundFont configuration value consisting of the SF2
@@ -242,10 +254,75 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_synth_set_interp_method(fluid_synth.get(), fx_group,
 	                              FLUID_INTERP_HIGHEST);
 
-	// Disable FluidSynth's reverb and chorus in favour of the mixer's, which
-	// ensures similar effects are applied to all channels.
+	auto apply_setting = [=](const char *name, const std::string &str_val, const double &def_val,
+	                         const double &min_val, const double &max_val) {
+		// convert the string to a double
+		const auto val = atof(str_val.c_str());
+		if (val < min_val || val > max_val) {
+			LOG_WARNING("MIDI: Invalid %s setting (%s), needs to be between %.2f and %.2f: using default (%.2f)",
+			            name, str_val.c_str(), min_val, max_val, def_val);
+			return def_val;
+		}
+		return val;
+	};
+
+	// get the users chorus settings
+	const auto chorus = split(section->Get_string("chorus"));
+	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
+
+	// does the soundfont have known-issues with chorus?
+	const auto is_problematic_font = find_in_case_insensitive("FluidR3", soundfont) ||
+	                                 find_in_case_insensitive("zdoom", soundfont);
+	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
+		chorus_enabled = false;
+		LOG_INFO("MIDI: Chorus auto-disabled due to known issues with the %s soundfont",
+		         soundfont.c_str());
+	}
+
+	// default chorus settings courtesy of ScummVM's defaults
+	auto chorus_voice_count_f = 3.0;
+	auto chorus_level = 1.2;
+	auto chorus_speed = 0.3;
+	auto chorus_depth = 8.0;
+	auto chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
+
+	// apply custom chorus settings if provided
+	if (chorus_enabled && chorus.size() > 1) {
+		if (chorus.size() == 5) {
+			apply_setting("chorus voice-count", chorus[0], chorus_voice_count_f, 0, 99);
+			apply_setting("chorus level", chorus[1], chorus_level, 0.0, 10.0);
+			apply_setting("chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
+			apply_setting("chorus depth", chorus[3], chorus_depth, 0.0, 21.0);
+
+			if (chorus[4] == "triange")
+				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
+			else if (chorus[4] != "sine") // default is sine
+				LOG_WARNING("MIDI: Invalid chorus modulation wave type ('%s'), needs to be 'sine' or 'triangle'",
+				            chorus[4].c_str());
+
+		} else {
+			LOG_WARNING("MIDI: Invalid number of custom chorus settings (%d), should be five",
+			            static_cast<int>(chorus.size()));
+		}
+	}
+	// API accept an integer voice-count
+	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
+
+	fluid_synth_chorus_on(fluid_synth.get(), fx_group, chorus_enabled);
+	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_voice_count);
+	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
+	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
+	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
+	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, chorus_mod_wave);
+
+	if (chorus_enabled)
+		LOG_MSG("MIDI: Chorus enabled with %d voices at level %.2f, %.2f Hz speed, %.2f depth, and %s-wave modulation",
+		        chorus_voice_count, chorus_level, chorus_speed, chorus_depth,
+		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE ? "sine" : "triangle");
+
+	// Disable customization of FluidSynth's reverb in favour of the mixer's
+	// controls, which ensures similar dynamics are applied to all channels.
 	fluid_synth_reverb_on(fluid_synth.get(), fx_group, false);
-	fluid_synth_chorus_on(fluid_synth.get(), fx_group, false);
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
