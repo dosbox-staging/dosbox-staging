@@ -260,7 +260,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
-	// channel->Enable(true);
 	is_open = true;
 	return true;
 }
