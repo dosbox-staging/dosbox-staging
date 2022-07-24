@@ -205,8 +205,9 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                            0,
 	                                            "FSYNTH",
 	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::ReverbSend,
 	                                             ChannelFeature::Stereo,
+	                                             ChannelFeature::ReverbSend,
+	                                             ChannelFeature::ChorusSend,
 	                                             ChannelFeature::Synthesizer});
 
 	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
