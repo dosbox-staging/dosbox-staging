@@ -402,19 +402,10 @@ void MidiHandlerFluidsynth::Render()
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
 
-		// Scale and copy to playable buffer
-		auto in_pos  = render_buffer.begin();
-		auto out_pos = playable_buffer.begin();
-
-		while (in_pos != render_buffer.end()) {
-			AudioFrame frame = {*in_pos++, *in_pos++};
-
-			frame.left *= INT16_MAX;
-			frame.right *= INT16_MAX;
-
-			*out_pos++ = frame.left;
-			*out_pos++ = frame.right;
-		}
+		// Swap buffers & scale
+		std::swap(render_buffer, playable_buffer);
+		for (auto &s : playable_buffer)
+			s *= INT16_MAX;
 
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));
