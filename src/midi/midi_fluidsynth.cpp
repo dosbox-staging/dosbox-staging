@@ -71,7 +71,12 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	                   "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
 	                   "  - depth is a decimal from 0.0 to 21.0\n"
 	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
-	                   "  For example: chorus = 3 1.2 0.3 8.0 sine");
+	                   "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
+					   "Note: You can disable the FluidSynth chorus and enable the\n"
+					   "mixer-level chorus on the FluidSynth channel instead, or\n"
+					   "enable both chorus effects at the same time. Whether this\n"
+					   "sounds good depends on the SoundFont and the chorus settings\n"
+					   "being used.");
 
 	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
 	str_prop->Set_help("Reverb effect: 'auto', 'on', 'off', or custom values.\n"
@@ -82,7 +87,12 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	                   "  - damping is a decimal from 0.0 to 1.0\n"
 	                   "  - width is a decimal from 0.0 to 100.0\n"
 	                   "  - level is a decimal from 0.0 to 1.0\n"
-	                   "  For example: reverb = 0.61 0.23 0.76 0.56");
+	                   "  For example: reverb = 0.61 0.23 0.76 0.56\n"
+					   "Note: You can disable the FluidSynth reverb and enable the\n"
+					   "mixer-level reverb on the FluidSynth channel instead, or\n"
+					   "enable both reverb effects at the same time. Whether this\n"
+					   "sounds good depends on the SoundFont and the reverb settings\n"
+					   "being used.");
 }
 
 // Takes in the user's SoundFont configuration value consisting of the SF2
