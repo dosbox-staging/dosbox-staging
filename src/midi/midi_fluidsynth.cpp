@@ -226,6 +226,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                            "FSYNTH",
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::Stereo,
+	                                             ChannelFeature::ReverbSend,
+	                                             ChannelFeature::ChorusSend,
 	                                             ChannelFeature::Synthesizer});
 
 	// Detailed explanation of all available FluidSynth settings:
