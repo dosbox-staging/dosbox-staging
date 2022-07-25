@@ -33,10 +33,13 @@ extern uint8_t MIDI_evt_len[256];
 constexpr auto MIDI_SYSEX_SIZE = 8192;
 
 bool MIDI_Available();
+void MIDI_Disengage();
+void MIDI_Engage();
 void MIDI_HaltSequence();
 void MIDI_Init(Section *sec);
 void MIDI_ListAll(Program *output_handler);
 void MIDI_RawOutByte(uint8_t data);
+void MIDI_ResumeSequence();
 
 #if C_FLUIDSYNTH
 void FLUID_AddConfigSection(const config_ptr_t &conf);
