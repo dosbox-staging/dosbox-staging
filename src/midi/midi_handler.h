@@ -49,12 +49,11 @@ public:
 		return true;
 	}
 
-	virtual void Close() {}
-
-	void HaltSequence();
-
+	virtual void Close()
+	{
+		HaltSequence();
+	}
 	virtual void PlayMsg([[maybe_unused]] const uint8_t *msg) {}
-
 	virtual void PlaySysex([[maybe_unused]] uint8_t *sysex, [[maybe_unused]] size_t len) {}
 
 	virtual MIDI_RC ListAll(Program *)
@@ -62,7 +61,10 @@ public:
 		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
 	}
 
-	MidiHandler *next;
+	void HaltSequence();
+	void ResumeSequence();
+
+	MidiHandler *next = nullptr;
 };
 
 #endif
