@@ -2067,9 +2067,16 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	// Begin waiting for input, but maybe break on some conditions
 	constexpr char ctrl_c = 3;
 	char choice = '\0';
+	uint16_t bytes_read = 1;
 	while (!contains(choices, choice)) {
-		uint16_t n = 1;
-		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &n);
+		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &bytes_read);
+		if (!bytes_read) {
+			WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_EOF"));
+			dos.return_code = 255;
+			LOG_ERR("CHOICE: Failed, returing errorlevel %u",
+			        dos.return_code);
+			return;
+		}
 		if (always_capitalize)
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
@@ -2091,8 +2098,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	} else {
 		WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_ABORTED"));
 		dos.return_code = 0;
-		LOG_MSG("CHOICE: Aborted, returning %u (from %d choices)",
-		        dos.return_code, num_choices);
+		LOG_WARNING("CHOICE: Aborted, returning errorlevel %u (from %d choices)",
+		            dos.return_code,
+		            num_choices);
 	}
 }
 
