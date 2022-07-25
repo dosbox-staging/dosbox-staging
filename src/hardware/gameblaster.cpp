@@ -80,7 +80,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
-	                           0,
+	                           use_mixer_rate,
 	                           CardName(),
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,

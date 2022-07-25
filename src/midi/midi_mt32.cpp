@@ -531,7 +531,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                      this, std::placeholders::_1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            0,
+	                                            use_mixer_rate,
 	                                            "MT32",
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::Stereo,

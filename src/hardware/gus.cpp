@@ -52,7 +52,7 @@ constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
 constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MiB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
-constexpr double MS_PER_DMA_XFER = 1000.0 / DMA_TRANSFERS_PER_S;
+constexpr double MS_PER_DMA_XFER = millis_in_second / DMA_TRANSFERS_PER_S;
 
 // Voice-channel and state related constants
 constexpr uint8_t MAX_VOICES = 32u;
@@ -596,7 +596,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	                                      std::placeholders::_1);
 
 	audio_channel = MIXER_AddChannel(mixer_callback,
-	                                 0,
+	                                 use_mixer_rate,
 	                                 "GUS",
 	                                 {ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
@@ -605,7 +605,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	                                  ChannelFeature::DigitalAudio});
 
 	assert(audio_channel);
-	ms_per_render = 1000.0 / audio_channel->GetSampleRate();
+	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
 
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
@@ -632,7 +632,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// v2.22 (21 December 1994), pp. 3 of 113.
 		frame_rate_hz = static_cast<int>(1000000.0 /
 		                                 (1.619695497 * active_voices));
-		ms_per_render = 1000.0 / frame_rate_hz;
+		ms_per_render = millis_in_second / frame_rate_hz;
 
 		audio_channel->SetSampleRate(frame_rate_hz);
 	}
