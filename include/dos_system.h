@@ -36,6 +36,7 @@
 #define DOS_TEMPSIZE 1024
 #define DOS_MFNLENGTH 8
 #define DOS_EXTLENGTH 3
+
 #define LFN_NAMELENGTH 255
 
 enum {
