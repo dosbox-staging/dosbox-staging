@@ -45,22 +45,27 @@ std::unique_ptr<Config> control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std::string current_config_dir;
-void Value::destroy() throw(){
-	if (type == V_STRING) delete _string;
+void Value::destroy()
+{
+	if (type == V_STRING) {
+		delete _string;
+		_string = nullptr;
+	}
 }
 
-Value& Value::copy(Value const& in) {
-	if (this != &in) { //Selfassigment!
-		if(type != V_NONE && type != in.type) throw WrongType();
-		destroy();
-		plaincopy(in);
-	}
+Value &Value::copy(const Value &in)
+{
+	assert(this != &in);
+	assert(type == V_NONE || type == in.type);
+	destroy();
+	plaincopy(in);
 	return *this;
 }
 
-void Value::plaincopy(Value const& in) throw(){
-	type = in.type;
-	_int = in._int;
+void Value::plaincopy(const Value &in)
+{
+	type    = in.type;
+	_int    = in._int;
 	_double = in._double;
 	_bool = in._bool;
 	_hex = in._hex;
@@ -68,33 +73,36 @@ void Value::plaincopy(Value const& in) throw(){
 }
 
 Value::operator bool () const {
-	if(type != V_BOOL) throw WrongType();
+	assert(type == V_BOOL);
 	return _bool;
 }
 
 Value::operator Hex () const {
-	if(type != V_HEX) throw WrongType();
+	assert(type == V_HEX);
 	return _hex;
 }
 
 Value::operator int () const {
-	if(type != V_INT) throw WrongType();
+	assert(type == V_INT);
 	return _int;
 }
 
 Value::operator double () const {
-	if(type != V_DOUBLE) throw WrongType();
+	assert(type == V_DOUBLE);
 	return _double;
 }
 
 Value::operator char const* () const {
-	if(type != V_STRING) throw WrongType();
+	assert(type == V_STRING);
 	return _string->c_str();
 }
 
-bool Value::operator==(Value const& other) const {
-	if(this == &other) return true;
-	if(type != other.type) return false;
+bool Value::operator==(const Value &other) const
+{
+	if (this == &other)
+		return true;
+	if (type != other.type)
+		return false;
 	switch(type){
 		case V_BOOL: 
 			if(_bool == other._bool) return true;
@@ -112,44 +120,30 @@ bool Value::operator==(Value const& other) const {
 			if((*_string) == (*other._string)) return true;
 			break;
 		default:
-			E_Exit("comparing stuff that doesn't make sense");
-			break;
+		        LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
+		        break;
 	}
 	return false;
 }
-bool Value::SetValue(string const& in,Etype _type) {
-	/* Throw exception if the current type isn't the wanted type 
-	 * Unless the wanted type is current.
-	 */
-	if(_type == V_CURRENT && type == V_NONE) throw WrongType();
-	if(_type != V_CURRENT) { 
-		if(type != V_NONE && type != _type) throw WrongType();
-		type = _type;
-	}
-	bool retval = true;
-	switch(type){
-		case V_HEX:
-			retval = set_hex(in);
-			break;
-		case V_INT:
-			retval = set_int(in);
-			break;
-		case V_BOOL:
-			retval = set_bool(in);
-			break;
-		case V_STRING:
-			set_string(in);
-			break;
-		case V_DOUBLE:
-			retval = set_double(in);
-			break;
+bool Value::SetValue(const std::string &in, const Etype _type)
+{
+	assert(type == V_NONE || type == _type);
+	type = _type;
 
-		case V_NONE:
-		case V_CURRENT:
-		default:
-			/* Shouldn't happen!/Unhandled */
-			throw WrongType();
-			break;
+	bool retval = true;
+	switch (type) {
+	case V_HEX: retval = set_hex(in); break;
+	case V_INT: retval = set_int(in); break;
+	case V_BOOL: retval = set_bool(in); break;
+	case V_STRING: set_string(in); break;
+	case V_DOUBLE: retval = set_double(in); break;
+
+	case V_NONE:
+	case V_CURRENT:
+	default:
+		LOG_ERR("SETUP: Unhandled type when setting value: %s", in.c_str());
+		retval = false;
+		break;
 	}
 	return retval;
 }

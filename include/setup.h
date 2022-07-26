@@ -126,9 +126,9 @@ public:
 	std::string ToString() const;
 
 private:
-	void destroy() throw();
+	void destroy();
 	Value &copy(const Value &in);
-	void plaincopy(const Value &in) throw();
+	void plaincopy(const Value &in);
 	bool set_hex(const std::string &in);
 	bool set_int(const std::string &in);
 	bool set_bool(const std::string &in);
