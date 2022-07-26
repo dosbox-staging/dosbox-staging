@@ -2715,7 +2715,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 					 *       Windows 95 OSR2 for example, will happily ask for 63
 					 *       sectors starting at C/H/S 30/9/42 without regard for
 					 *       track boundaries. */
-					if (sect > dsk->sectors) {
+					if (dsk && sect > dsk->sectors) {
 #if 0 /* this warning is pointless */
                         static bool int13_fix_wrap_warned = false;
                         if (!int13_fix_wrap_warned) {
