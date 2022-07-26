@@ -344,7 +344,9 @@ template <typename L, typename R>
 constexpr bool cmp_less(L lhs, R rhs) noexcept {
   static_assert(std::is_integral_v<L> && std::is_integral_v<R>, "magic_enum::detail::cmp_less requires integral type.");
 
-  if constexpr (std::is_signed_v<L> == std::is_signed_v<R>) {
+  if constexpr (std::is_same_v<L, R>) {
+    return lhs < rhs;
+  } else if constexpr (std::is_signed_v<L> == std::is_signed_v<R>) {
     // If same signedness (both signed or both unsigned).
     return lhs < rhs;
   } else if constexpr (std::is_same_v<L, bool>) { // bool special case
