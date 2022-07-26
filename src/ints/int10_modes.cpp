@@ -759,7 +759,11 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	case MCH_HERC:
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
-			SetCurMode(ModeList_OTHER,mode);
+			if (!SetCurMode(ModeList_OTHER, mode)) {
+				LOG(LOG_INT10, LOG_ERROR)
+				("Trying to set illegal mode %X", mode);
+				return false;
+			}
 			FinishSetMode(clearmem);
 			return true;
 		}
