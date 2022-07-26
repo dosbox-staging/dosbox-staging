@@ -150,17 +150,23 @@ public:
 
 	void Set_values(const char * const * in);
 	void Set_values(const std::vector<std::string> &in);
-	void Set_help(std::string const& str);
+	void Set_help(const std::string &str);
 
 	const char* GetHelp() const;
 
-	virtual	bool SetValue(std::string const& str)=0;
-	Value const& GetValue() const { return value;}
-	Value const& Get_Default_Value() const { return default_value; }
-	//CheckValue returns true, if value is in suggested_values;
-	//Type specific properties are encouraged to override this and check for type
-	//specific features.
-	virtual bool CheckValue(Value const& in, bool warn);
+	virtual bool SetValue(const std::string &str) = 0;
+	const Value &GetValue() const
+	{
+		return value;
+	}
+	const Value &Get_Default_Value() const
+	{
+		return default_value;
+	}
+	// CheckValue returns true, if value is in suggested_values;
+	// Type specific properties are encouraged to override this and check
+	// for type specific features.
+	virtual bool CheckValue(const Value &in, bool warn);
 
 	Changeable::Value GetChange() const { return change; }
 	bool IsDeprecated() const { return (change == Changeable::Value::Deprecated); }
@@ -171,9 +177,11 @@ public:
 protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
 	//Can be overridden to set a different value if invalid.
-	virtual bool SetVal(Value const& in, bool forced,bool warn=true) {
-		if(forced || CheckValue(in,warn)) {
-			value = in; return true;
+	virtual bool SetVal(const Value &in, bool forced, bool warn = true)
+	{
+		if (forced || CheckValue(in, warn)) {
+			value = in;
+			return true;
 		} else {
 			value = default_value; return false;
 		}
@@ -227,17 +235,18 @@ public:
 		:Property(_propname,when){
 		default_value = value = _value;
 	}
-	bool SetValue(std::string const& input);
+	bool SetValue(const std::string &input);
 	~Prop_double(){ }
 };
 
 class Prop_bool final : public Property {
 public:
-	Prop_bool(std::string const& _propname, Changeable::Value when, bool _value)
-		:Property(_propname,when) {
+	Prop_bool(const std::string &_propname, Changeable::Value when, bool _value)
+	        : Property(_propname, when)
+	{
 		default_value = value = _value;
 	}
-	bool SetValue(std::string const& in);
+	bool SetValue(const std::string &in);
 	~Prop_bool(){ }
 };
 
@@ -273,11 +282,12 @@ public:
 
 class Prop_hex final : public Property {
 public:
-	Prop_hex(std::string const& _propname, Changeable::Value when, Hex _value)
-		:Property(_propname,when) {
+	Prop_hex(const std::string &_propname, Changeable::Value when, Hex _value)
+	        : Property(_propname, when)
+	{
 		default_value = value = _value;
 	}
-	bool SetValue(std::string const& in);
+	bool SetValue(const std::string &in);
 	~Prop_hex(){ }
 };
 
@@ -339,24 +349,35 @@ public:
 
 	~Section_prop() override;
 
-	Prop_int* Add_int(std::string const& _propname, Property::Changeable::Value when, int _value=0);
-	Prop_string* Add_string(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
-	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
-	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
-	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
-//	void Add_double(char const * const _propname, double _value=0.0);
-	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
-	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
+	Prop_int *Add_int(const std::string &_propname,
+	                  Property::Changeable::Value when, int _value = 0);
+	Prop_string *Add_string(const std::string &_propname,
+	                        Property::Changeable::Value when,
+	                        const char *_value = NULL);
+	Prop_path *Add_path(const std::string &_propname,
+	                    Property::Changeable::Value when,
+	                    const char *_value = NULL);
+	Prop_bool *Add_bool(const std::string &_propname,
+	                    Property::Changeable::Value when, bool _value = false);
+	Prop_hex *Add_hex(const std::string &_propname,
+	                  Property::Changeable::Value when, Hex _value = 0);
+	//	void Add_double(const char * _propname, double _value=0.0);
+	Prop_multival *Add_multi(const std::string &_propname,
+	                         Property::Changeable::Value when,
+	                         const std::string &sep);
+	Prop_multival_remain *Add_multiremain(const std::string &_propname,
+	                                      Property::Changeable::Value when,
+	                                      const std::string &sep);
 
 	Property* Get_prop(int index);
-	int Get_int(std::string const& _propname) const;
-	const char* Get_string(std::string const& _propname) const;
-	bool Get_bool(std::string const& _propname) const;
-	Hex Get_hex(std::string const& _propname) const;
-	double Get_double(std::string const& _propname) const;
-	Prop_path* Get_path(std::string const& _propname) const;
-	Prop_multival* Get_multival(std::string const& _propname) const;
-	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
+	int Get_int(const std::string &_propname) const;
+	const char *Get_string(const std::string &_propname) const;
+	bool Get_bool(const std::string &_propname) const;
+	Hex Get_hex(const std::string &_propname) const;
+	double Get_double(const std::string &_propname) const;
+	Prop_path *Get_path(const std::string &_propname) const;
+	Prop_multival *Get_multival(const std::string &_propname) const;
+	Prop_multival_remain *Get_multivalremain(const std::string &_propname) const;
 	bool HandleInputline(const std::string &line) override;
 	void PrintData(FILE* outfile) const override;
 	std::string GetPropValue(const std::string &property) const override;
@@ -392,9 +413,12 @@ public:
 
 class Prop_multival_remain final : public Prop_multival{
 public:
-	Prop_multival_remain(std::string const& _propname, Changeable::Value when,std::string const& sep):Prop_multival(_propname,when,sep){ }
+	Prop_multival_remain(const std::string &_propname,
+	                     Changeable::Value when, const std::string &sep)
+	        : Prop_multival(_propname, when, sep)
+	{}
 
-	virtual bool SetValue(std::string const& input);
+	virtual bool SetValue(const std::string &input);
 };
 
 class Section_line final : public Section {

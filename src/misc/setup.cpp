@@ -148,7 +148,8 @@ bool Value::SetValue(const std::string &in, const Etype _type)
 	return retval;
 }
 
-bool Value::set_hex(std::string const& in) {
+bool Value::set_hex(const std::string &in)
+{
 	istringstream input(in);
 	input.flags(ios::hex);
 	int result = INT_MIN;
@@ -158,7 +159,8 @@ bool Value::set_hex(std::string const& in) {
 	return true;
 }
 
-bool Value::set_int(string const &in) {
+bool Value::set_int(const std::string &in)
+{
 	istringstream input(in);
 	int result = INT_MIN;
 	input >> result;
@@ -166,7 +168,8 @@ bool Value::set_int(string const &in) {
 	_int = result;
 	return true;
 }
-bool Value::set_double(string const &in) {
+bool Value::set_double(const std::string &in)
+{
 	istringstream input(in);
 	double result = std::numeric_limits<double>::infinity();
 	input >> result;
@@ -175,7 +178,8 @@ bool Value::set_double(string const &in) {
 	return true;
 }
 
-bool Value::set_bool(string const &in) {
+bool Value::set_bool(const std::string &in)
+{
 	istringstream input(in);
 	string result;
 	input >> result;
@@ -192,8 +196,10 @@ bool Value::set_bool(string const &in) {
 	return true;
 }
 
-void Value::set_string(string const & in) {
-	if(!_string) _string = new string();
+void Value::set_string(const std::string &in)
+{
+	if (!_string)
+		_string = new string();
 	_string->assign(in);
 }
 
@@ -237,9 +243,12 @@ Property::Property(const std::string &name, Changeable::Value when)
 	        "Only letters, digits, and underscores are allowed in property name");
 }
 
-bool Property::CheckValue(Value const& in, bool warn){
-	if (suggested_values.empty()) return true;
-	for(const_iter it = suggested_values.begin();it != suggested_values.end();++it) {
+bool Property::CheckValue(const Value &in, bool warn)
+{
+	if (suggested_values.empty())
+		return true;
+	for (const_iter it = suggested_values.begin(); it != suggested_values.end();
+	     ++it) {
 		if ( (*it) == in) { //Match!
 			return true;
 		}
@@ -248,7 +257,8 @@ bool Property::CheckValue(Value const& in, bool warn){
 	return false;
 }
 
-void Property::Set_help(string const& in) {
+void Property::Set_help(const std::string &in)
+{
 	string result = string("CONFIG_") + propname;
 	upcase(result);
 	MSG_Add(result.c_str(),in.c_str());
@@ -261,11 +271,12 @@ const char * Property::GetHelp() const
 	return MSG_Get(result.c_str());
 }
 
-bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
+bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
+{
 	if (forced) {
 		value = in;
 		return true;
-	} else if (!suggested_values.empty()){
+	} else if (!suggested_values.empty()) {
 		if ( CheckValue(in,warn) ) {
 			value = in;
 			return true;
@@ -302,11 +313,14 @@ bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
 		return true;
 	}
 }
-bool Prop_int::CheckValue(Value const& in, bool warn) {
-//	if(!suggested_values.empty() && Property::CheckValue(in,warn)) return true;
-	if(!suggested_values.empty()) return Property::CheckValue(in,warn);
+bool Prop_int::CheckValue(const Value &in, bool warn)
+{
+	//	if(!suggested_values.empty() && Property::CheckValue(in,warn))
+	// return true;
+	if (!suggested_values.empty())
+		return Property::CheckValue(in, warn);
 	// LOG_MSG("still used ?");
-	//No >= and <= in Value type and == is ambigious
+	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
 	const int ma = max_value;
 	int va = static_cast<int>(Value(in));
@@ -325,7 +339,8 @@ bool Prop_int::CheckValue(Value const& in, bool warn) {
 	return false;
 }
 
-bool Prop_double::SetValue(std::string const& input) {
+bool Prop_double::SetValue(const std::string &input)
+{
 	Value val;
 	if(!val.SetValue(input,Value::V_DOUBLE)) return false;
 	return SetVal(val,false,true);
@@ -334,15 +349,17 @@ bool Prop_double::SetValue(std::string const& input) {
 //void Property::SetValue(char* input){
 //	value.SetValue(input, Value::V_CURRENT);
 //}
-bool Prop_int::SetValue(std::string const& input) {
+bool Prop_int::SetValue(const std::string &input)
+{
 	Value val;
 	if (!val.SetValue(input,Value::V_INT)) return false;
 	bool retval = SetVal(val,false,true);
 	return retval;
 }
 
-bool Prop_string::SetValue(std::string const& input) {
-	//Special version for lowcase stuff
+bool Prop_string::SetValue(const std::string &input)
+{
+	// Special version for lowcase stuff
 	std::string temp(input);
 	//suggested values always case insensitive.
 	//If there are none then it can be paths and such which are case sensitive
@@ -350,8 +367,10 @@ bool Prop_string::SetValue(std::string const& input) {
 	Value val(temp,Value::V_STRING);
 	return SetVal(val,false,true);
 }
-bool Prop_string::CheckValue(Value const& in, bool warn) {
-	if (suggested_values.empty()) return true;
+bool Prop_string::CheckValue(const Value &in, bool warn)
+{
+	if (suggested_values.empty())
+		return true;
 	for (const auto &val : suggested_values) {
 		if (val == in) { // Match!
 			return true;
@@ -367,8 +386,9 @@ bool Prop_string::CheckValue(Value const& in, bool warn) {
 	return false;
 }
 
-bool Prop_path::SetValue(std::string const& input) {
-	//Special version to merge realpath with it
+bool Prop_path::SetValue(const std::string &input)
+{
+	// Special version to merge realpath with it
 
 	Value val(input,Value::V_STRING);
 	bool retval = SetVal(val,false,true);
@@ -387,11 +407,13 @@ bool Prop_path::SetValue(std::string const& input) {
 	return retval;
 }
 
-bool Prop_bool::SetValue(std::string const& input) {
-	return value.SetValue(input,Value::V_BOOL);
+bool Prop_bool::SetValue(const std::string &input)
+{
+	return value.SetValue(input, Value::V_BOOL);
 }
 
-bool Prop_hex::SetValue(std::string const& input) {
+bool Prop_hex::SetValue(const std::string &input)
+{
 	Value val;
 	val.SetValue(input,Value::V_HEX);
 	return SetVal(val,false,true);
@@ -414,9 +436,10 @@ void Prop_multival::make_default_value()
 }
 
 //TODO checkvalue stuff
-bool Prop_multival_remain::SetValue(std::string const& input) {
-	Value val(input,Value::V_STRING);
-	bool retval = SetVal(val,false,true);
+bool Prop_multival_remain::SetValue(const std::string &input)
+{
+	Value val(input, Value::V_STRING);
+	bool retval = SetVal(val, false, true);
 
 	std::string local(input);
 	int i = 0,number_of_properties = 0;
@@ -455,9 +478,10 @@ bool Prop_multival_remain::SetValue(std::string const& input) {
 }
 
 //TODO checkvalue stuff
-bool Prop_multival::SetValue(std::string const& input) {
-	Value val(input,Value::V_STRING);
-	bool retval = SetVal(val,false,true);
+bool Prop_multival::SetValue(const std::string &input)
+{
+	Value val(input, Value::V_STRING);
+	bool retval = SetVal(val, false, true);
 
 	std::string local(input);
 	int i = 0;
@@ -528,9 +552,9 @@ const std::vector<Value>& Prop_multival::GetValues() const {
 }
 
 /*
-void Section_prop::Add_double(char const * const _propname, double _value) {
-	Property* test=new Prop_double(_propname,_value);
-	properties.push_back(test);
+void Section_prop::Add_double(const char * _propname, double _value) {
+        Property* test=new Prop_double(_propname,_value);
+        properties.push_back(test);
 }*/
 
 void Property::Set_values(const char * const *in) {
@@ -551,78 +575,99 @@ void Property::Set_values(const std::vector<std::string> & in) {
 	}
 }
 
-Prop_int* Section_prop::Add_int(string const& _propname, Property::Changeable::Value when, int _value) {
-	Prop_int* test=new Prop_int(_propname,when,_value);
+Prop_int *Section_prop::Add_int(const std::string &_propname,
+                                Property::Changeable::Value when, int _value)
+{
+	Prop_int *test = new Prop_int(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_string* Section_prop::Add_string(string const& _propname, Property::Changeable::Value when, char const * const _value) {
-	Prop_string* test=new Prop_string(_propname,when,_value);
+Prop_string *Section_prop::Add_string(const std::string &_propname,
+                                      Property::Changeable::Value when,
+                                      const char *_value)
+{
+	Prop_string *test = new Prop_string(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_path* Section_prop::Add_path(string const& _propname, Property::Changeable::Value when, char const * const _value) {
-	Prop_path* test=new Prop_path(_propname,when,_value);
+Prop_path *Section_prop::Add_path(const std::string &_propname,
+                                  Property::Changeable::Value when, const char *_value)
+{
+	Prop_path *test = new Prop_path(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_bool* Section_prop::Add_bool(string const& _propname, Property::Changeable::Value when, bool _value) {
-	Prop_bool* test=new Prop_bool(_propname,when,_value);
+Prop_bool *Section_prop::Add_bool(const std::string &_propname,
+                                  Property::Changeable::Value when, bool _value)
+{
+	Prop_bool *test = new Prop_bool(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_hex* Section_prop::Add_hex(string const& _propname, Property::Changeable::Value when, Hex _value) {
-	Prop_hex* test=new Prop_hex(_propname,when,_value);
+Prop_hex *Section_prop::Add_hex(const std::string &_propname,
+                                Property::Changeable::Value when, Hex _value)
+{
+	Prop_hex *test = new Prop_hex(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_multival* Section_prop::Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep) {
-	Prop_multival* test = new Prop_multival(_propname,when,sep);
+Prop_multival *Section_prop::Add_multi(const std::string &_propname,
+                                       Property::Changeable::Value when,
+                                       const std::string &sep)
+{
+	Prop_multival *test = new Prop_multival(_propname, when, sep);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_multival_remain* Section_prop::Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep) {
-	Prop_multival_remain* test = new Prop_multival_remain(_propname,when,sep);
+Prop_multival_remain *Section_prop::Add_multiremain(const std::string &_propname,
+                                                    Property::Changeable::Value when,
+                                                    const std::string &sep)
+{
+	Prop_multival_remain *test = new Prop_multival_remain(_propname, when, sep);
 	properties.push_back(test);
 	return test;
 }
 
-int Section_prop::Get_int(string const&_propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if ((*tel)->propname==_propname){
+int Section_prop::Get_int(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); tel++) {
+		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
 	}
 	return 0;
 }
 
-bool Section_prop::Get_bool(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+bool Section_prop::Get_bool(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
 	}
 	return false;
 }
 
-double Section_prop::Get_double(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+double Section_prop::Get_double(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
 	}
 	return 0.0;
 }
 
-Prop_path* Section_prop::Get_path(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+Prop_path *Section_prop::Get_path(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			Prop_path* val = dynamic_cast<Prop_path*>((*tel));
 			if (val) return val; else return NULL;
 		}
@@ -630,9 +675,10 @@ Prop_path* Section_prop::Get_path(string const& _propname) const {
 	return NULL;
 }
 
-Prop_multival* Section_prop::Get_multival(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+Prop_multival *Section_prop::Get_multival(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			Prop_multival* val = dynamic_cast<Prop_multival*>((*tel));
 			if(val) return val; else return NULL;
 		}
@@ -640,9 +686,10 @@ Prop_multival* Section_prop::Get_multival(string const& _propname) const {
 	return NULL;
 }
 
-Prop_multival_remain* Section_prop::Get_multivalremain(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+Prop_multival_remain *Section_prop::Get_multivalremain(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			Prop_multival_remain* val = dynamic_cast<Prop_multival_remain*>((*tel));
 			if (val) return val; else return NULL;
 		}
@@ -656,25 +703,28 @@ Property* Section_prop::Get_prop(int index){
 	return NULL;
 }
 
-const char* Section_prop::Get_string(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+const char *Section_prop::Get_string(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
 	}
 	return "";
 }
-Hex Section_prop::Get_hex(string const& _propname) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if ((*tel)->propname == _propname){
+Hex Section_prop::Get_hex(const std::string &_propname) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
 	}
 	return 0;
 }
 
-bool Section_prop::HandleInputline(string const& gegevens){
-	string str1 = gegevens;
+bool Section_prop::HandleInputline(const std::string &gegevens)
+{
+	string str1           = gegevens;
 	string::size_type loc = str1.find('=');
 	if (loc == string::npos) return false;
 	string name = str1.substr(0,loc);
@@ -730,9 +780,10 @@ void Section_prop::PrintData(FILE* outfile) const {
 	}
 }
 
-string Section_prop::GetPropValue(string const& _property) const {
-	for(const_it tel = properties.begin();tel != properties.end();++tel){
-		if (!strcasecmp((*tel)->propname.c_str(),_property.c_str())){
+string Section_prop::GetPropValue(const std::string &_property) const
+{
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+		if (!strcasecmp((*tel)->propname.c_str(), _property.c_str())) {
 			return (*tel)->GetValue().ToString();
 		}
 	}
@@ -1129,25 +1180,30 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-bool CommandLine::FindExist(char const * const name,bool remove) {
+bool CommandLine::FindExist(const char *name, bool remove)
+{
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
 	if (remove) cmds.erase(it);
 	return true;
 }
 
-bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
-	cmd_it it,it_next;
-	if (!(FindEntry(name,it,true))) return false;
+bool CommandLine::FindInt(const char *name, int &value, bool remove)
+{
+	cmd_it it, it_next;
+	if (!(FindEntry(name, it, true)))
+		return false;
 	it_next=it;++it_next;
 	value=atoi((*it_next).c_str());
 	if (remove) cmds.erase(it,++it_next);
 	return true;
 }
 
-bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
-	cmd_it it,it_next;
-	if (!(FindEntry(name,it,true))) return false;
+bool CommandLine::FindString(const char *name, std::string &value, bool remove)
+{
+	cmd_it it, it_next;
+	if (!(FindEntry(name, it, true)))
+		return false;
 	it_next=it;++it_next;
 	value=*it_next;
 	if (remove) cmds.erase(it,++it_next);
@@ -1181,7 +1237,8 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
+bool CommandLine::FindEntry(const char *name, cmd_it &it, bool neednext)
+{
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(),name)) {
 			cmd_it itnext=it;++itnext;
@@ -1204,9 +1261,12 @@ bool CommandLine::FindStringBegin(char const* const begin,std::string & value, b
 	return false;
 }
 
-bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
-	cmd_it it;value.clear();
-	if (!FindEntry(name,it)) return false;
+bool CommandLine::FindStringRemain(const char *name, std::string &value)
+{
+	cmd_it it;
+	value.clear();
+	if (!FindEntry(name, it))
+		return false;
 	++it;
 	for (;it != cmds.end();++it) {
 		value += " ";
@@ -1219,9 +1279,11 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
  * Allowing /C dir and /Cdir
  * Restoring quotes back into the commands so command /C mount d "/tmp/a b" works as intended
  */
-bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
-	cmd_it it;value.clear();
-	if (!FindEntry(name,it)) {
+bool CommandLine::FindStringRemainBegin(const char *name, std::string &value)
+{
+	cmd_it it;
+	value.clear();
+	if (!FindEntry(name, it)) {
 		size_t len = strlen(name);
 			for (it = cmds.begin();it != cmds.end();++it) {
 				if (strncasecmp(name,(*it).c_str(),len)==0) {
@@ -1323,30 +1385,6 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	}
 
 	return retval;
-/*
-bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
-	for (it=cmds.begin();it!=cmds.end();it++) {
-		if (!strcasecmp((*it).c_str(),name)) {
-			cmd_it itnext=it;itnext++;
-			if (neednext && (itnext==cmds.end())) return false;
-			return true;
-		}
-	}
-	return false;
-*/
-
-
-/*
-	cmd_it it=cmds.begin();value=(*it++);
-	while(it != cmds.end()) {
-		if(params.
-
-		it++;
-	}
-*/
-	// find next parameter
-	//return -1;
-
 }
 
 CommandLine::CommandLine(int argc, char const *const argv[])
