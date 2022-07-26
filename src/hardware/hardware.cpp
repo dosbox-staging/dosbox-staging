@@ -792,7 +792,12 @@ static void CAPTURE_MidiEvent(bool pressed) {
 		/* clear out the final data in the buffer if any */
 		fwrite(capture.midi.buffer,1,capture.midi.used,capture.midi.handle);
 		capture.midi.done+=capture.midi.used;
-		fseek(capture.midi.handle,18, SEEK_SET);
+		if (fseek(capture.midi.handle, 18, SEEK_SET) != 0) {
+			LOG_WARNING("CAPTURE: Failed seeking in MIDI capture file: %s",
+			            strerror(errno));
+			CaptureState ^= CAPTURE_MIDI;
+			return;
+		}
 		uint8_t size[4];
 		size[0]=(uint8_t)(capture.midi.done >> 24);
 		size[1]=(uint8_t)(capture.midi.done >> 16);
