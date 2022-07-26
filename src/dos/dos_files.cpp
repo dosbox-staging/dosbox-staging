@@ -983,33 +983,54 @@ savefcb:
 	return ret;
 }
 
-static void DTAExtendName(char * const name,char * const filename,char * const ext) {
-	char * find=strchr(name,'.');
-	if (find && find!=name) {
-		strcpy(ext,find+1);
-		*find=0;
-	} else ext[0]=0;
-	strcpy(filename,name);
-	size_t i;
-	for (i=strlen(name);i<8;i++) filename[i]=' ';
-	filename[8]=0;
-	for (i=strlen(ext);i<3;i++) ext[i]=' ';
-	ext[3]=0;
+// DTAExtendName splits the fullname into name and extension portions space-pads
+// them up to their full 8.3 lengths, if needed. The space-padding is required
+// to fully populate DOS data memory structures. Also note that DOS filenames
+// might not have a dot or extension.
+static std::pair<std::string, std::string> DTAExtendName(const char *fullname)
+{
+	auto truncate_or_pad = [](std::string s, const size_t desired_length) {
+		const auto l = s.length();
+		if (l < desired_length)
+			s.append(desired_length - l, ' ');
+		else if (l > desired_length)
+			s.resize(desired_length);
+		assert(s.length() == desired_length);
+		return s;
+	};
+
+	// Split the string on the dot (if it has one)
+	auto v = split(fullname, '.');
+
+	// append placeholders until our vector has two chunks
+	while (v.size() < 2)
+		v.emplace_back("");
+
+	const auto name = truncate_or_pad(std::move(v[0]), DOS_MFNLENGTH);
+	const auto ext  = truncate_or_pad(std::move(v[1]), DOS_EXTLENGTH);
+	return {name, ext};
 }
 
 static void SaveFindResult(DOS_FCB & find_fcb) {
 	DOS_DTA find_dta(dos.tables.tempdta);
-	char name[DOS_NAMELENGTH_ASCII];uint32_t size;uint16_t date;uint16_t time;uint8_t attr;uint8_t drive;
-	char file_name[9];char ext[4];
-	find_dta.GetResult(name,size,date,time,attr);
-	drive=find_fcb.GetDrive()+1;
+
+	uint32_t size = 0;
+	uint16_t date = 0;
+	uint16_t time = 0;
+	uint8_t attr  = 0;
+
+	char name[DOS_NAMELENGTH_ASCII] = {};
+
+	find_dta.GetResult(name, size, date, time, attr);
+	const uint8_t drive = find_fcb.GetDrive() + 1u;
+
 	uint8_t find_attr = DOS_ATTR_ARCHIVE;
 	find_fcb.GetAttr(find_attr); /* Gets search attributes if extended */
 	/* Create a correct file and extention */
-	DTAExtendName(name,file_name,ext);	
+	const auto [file_name, ext] = DTAExtendName(name);
 	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));//TODO
 	fcb.Create(find_fcb.Extended());
-	fcb.SetName(drive,file_name,ext);
+	fcb.SetName(drive, file_name.c_str(), ext.c_str());
 	fcb.SetAttr(find_attr);      /* Only adds attribute if fcb is extended */
 	fcb.SetResult(size,date,time,attr);
 }
@@ -1037,11 +1058,17 @@ bool DOS_FCBOpen(uint16_t seg,uint16_t offset) {
 		if (!DOS_FCBFindFirst(seg,offset)) return false;
 		DOS_DTA find_dta(dos.tables.tempdta);
 		DOS_FCB find_fcb(RealSeg(dos.tables.tempdta),RealOff(dos.tables.tempdta));
-		char name[DOS_NAMELENGTH_ASCII],file_name[9],ext[4];
-		uint32_t size;uint16_t date,time;uint8_t attr;
-		find_dta.GetResult(name,size,date,time,attr);
-		DTAExtendName(name,file_name,ext);
-		find_fcb.SetName(fcb.GetDrive()+1,file_name,ext);
+
+		uint32_t size = 0;
+		uint16_t date = 0;
+		uint16_t time = 0;
+		uint8_t attr  = 0;
+
+		char name[DOS_NAMELENGTH_ASCII] = {};
+
+		find_dta.GetResult(name, size, date, time, attr);
+		const auto [file_name, ext] = DTAExtendName(name);
+		find_fcb.SetName(fcb.GetDrive() + 1, file_name.c_str(), ext.c_str());
 		find_fcb.GetName(shortname);
 	}
 
