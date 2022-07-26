@@ -91,7 +91,7 @@ public:
 	~StereoProcessor();
 
 	void Reset() noexcept;
-	void ControlWrite(const StereoProcessorControlReg, const uint8_t data) noexcept;
+	void ControlWrite(const StereoProcessorControlReg, const uint8_t data);
 	AudioFrame Process(const AudioFrame &frame) noexcept;
 
 	void SetLowShelfGain(const double gain_db);

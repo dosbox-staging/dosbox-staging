@@ -146,7 +146,7 @@ void StereoProcessor::Reset() noexcept
 }
 
 void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
-                                   const uint8_t data) noexcept
+                                   const uint8_t data)
 {
 	auto calc_volume_gain = [](const int value) {
 		constexpr auto min_gain_db = -128.0;
