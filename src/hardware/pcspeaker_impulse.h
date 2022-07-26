@@ -76,7 +76,7 @@ private:
 	struct PitState {
 		// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with
 		// positive amplitude
-		float max_ms            = ms_per_pit_tick * 1320.0f;
+		float max_ms            = 1320000.0f / PIT_TICK_RATE;
 		float new_max_ms        = max_ms;
 		float half_ms           = max_ms / 2.0f;
 		float new_half_ms       = half_ms;
