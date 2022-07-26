@@ -228,25 +228,23 @@ Funziona solo quando si emula hercules o cga_mono.
 :CONFIG_CGA_COLORS
 Imposta l'interpretazione dei colori CGA RGBI. Influisce su tutti i tipi di
 macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
-  default:       La tavolozza CGA canonica, emulata dagli adattatori VGA 
-                 (predefinito).
+  default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy [BL]:    Emulazione di un monitor Tandy con livello marrone regolabile
-                 (0 - rosso, 50 - marrone, 100 - giallo scuro; predefinito è 50)
-  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy
-                 sconosciuto.
-  ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor IBM 5153
-                 con un esclusivo controllo del contrasto che attenua solo i
-                 colori non luminosi (da 0 a 100; predefinito è 100).
+                 (0 - rosso, 50 - marrone, 100 - giallo scuro; predefinito 50).
+  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy.
+  ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor
+                 IBM 5153 con un esclusivo controllo del contrasto che attenua
+                 solo i colori non luminosi (da 0 a 100; predefinito 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Tavolozze utilizzate dai port Amiga dei giochi Sierra AGI
+                 Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra
                  (fare riferimento al manuale per ulteriori dettagli).
-  agi-amigaish:  Un mix di colori EGA e Amiga usati dall'interprete Sarien AGI.
+  agi-amigaish:  Mix di colori EGA e Amiga usati dall'interprete AGI Sarien.
   scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
-  colodore:      Colori ispirati al Commodore 64 basati sulla tavolozza Colodore
+  colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
   colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
 È possibile impostare colori personalizzati specificando 16 codici colore
-esadecimali a 6 bit separati da spazi
-(es. nero è 000000, bianco è 3f3f3f, rosso pieno è 3f0000).
+esadecimali a 6 bit separati da spazi 
+(es. nero è 000000, bianco è 3f3f3f, rosso è 3f0000).
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
@@ -367,8 +365,8 @@ spazializzazione del suono:
            per musica e audio digitale.
   huge:    Variante del preset salone con maggiore intensità; funziona davvero
            bene nei giochi con colonne sonore più suggestive
-Nota: È possibile regolare con precisione i livelli di riverbero per ogni canale
-      tramite i comandi del mixer.
+Nota: È possibile regolare con precisione i livelli di riverbero per ogni
+      canale tramite i comandi del mixer.
 .
 :CONFIG_CHORUS
 Abilita l'effetto coro (Chorus) a livello globale per aggiungere un senso di
@@ -377,7 +375,7 @@ movimento stereo al suono:
   on:      Abilita effetto coro (preset normale).
   light:   Effetto coro leggero (particolarmente adatto per la musica
            sintetizzata che presenta molto rumore bianco).
-  normal:  Effetto coro normale che funziona bene con un'ampia varietà di giochi
+  normal:  Effetto coro normale, funziona bene con un'ampia varietà di giochi.
   strong:  Effetto coro molto evidente.
 Nota: È possibile regolare con precisione i livelli di coro per ogni canale
       tramite i comandi del mixer.
@@ -432,8 +430,8 @@ Quando si utilizzano valori personalizzati:
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
 Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
       il coro a livello del mixer sul canale FluidSynth, oppure abilitare 
-      entrambi gli effetti contemporaneamente. Il modo in cui il suono viene
-      riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate.
+      entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
+      riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
 .
 :CONFIG_FSYNTH_REVERB
 Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
@@ -447,9 +445,9 @@ Quando si utilizzano valori personalizzati:
   Per esempio: reverb = 0.61 0.23 0.76 0.56
 Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
       invece il riverbero a livello del mixer sul canale FluidSynth, oppure
-      abilitare entrambi gli effetti contemporaneamente. Il modo in cui il suono
-      viene riprodotto dipende dal SoundFont e dalle impostazioni di riverbero
-      utilizzate.
+      abilitare entrambi gli effetti contemporaneamente. Il modo in cui il
+      suono verrà riprodotto dipende dal SoundFont e dalle impostazioni di
+      riverbero utilizzate.
 .
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
@@ -674,28 +672,29 @@ Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Attiva i tasti di scelta rapida per consentire la calibrazione in tempo reale
-degli assi x e y del joystick. Consideralo solo se la calibrazione all'interno
+degli assi X e Y del joystick. Consideralo solo se la calibrazione all'interno
 del gioco fallisce e sono state provate altre impostazioni.
  - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
-     - sinistra e destra diminuiscono o ingrandiscono rispettivamente lo scalare
-       dell'asse x.
-     - in basso ed in alto ddiminuiscono o ingrandiscono rispettivamente lo
-       scalare dell'asse y.
+     - Sinistra e Destra diminuiscono o ingrandiscono rispettivamente lo
+       scalare dell'asse X.
+     - In basso ed In alto diminuiscono o ingrandiscono rispettivamente lo
+       scalare dell'asse Y.
  - Alt+TastiFreccia regola la posizione di offset dell'asse:
-     - sinistra e destra sposta l'offset dell'asse x nella direzione data.
-     - in basso ed in alto sposta l'offset dell'asse y nella direzione data.
+     - Sinistra e Destra sposta l'offset dell'asse X nella direzione data.
+     - In basso ed In alto sposta l'offset dell'asse Y nella direzione data.
  - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
    Ctrl+Home.
-Ogni tocco riporterà i valori di calibrazione X o Y che puoi impostare di seguito.
-Quando hai trovato i parametri che funzionano, esci dal gioco, ripristina questa
-impostazione su 'false' e inserisci i parametri di calibrazione segnalati.
+Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
+valori di calibrazione X o Y che puoi impostare di seguito. Quando hai trovato
+i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
+'false' e inserisci i parametri di calibrazione segnalati.
 .
 :CONFIG_JOY_X_CALIBRATION
-Applica i parametri di calibrazione dell'asse x dai tasti di scelta rapida.
+Applica i parametri di calibrazione dell'asse X dai tasti di scelta rapida.
 L'impostazione predefinita è "auto".
 .
 :CONFIG_JOY_Y_CALIBRATION
-Applica i parametri di calibrazione dell'asse y dai tasti di scelta rapida.
+Applica i parametri di calibrazione dell'asse Y dai tasti di scelta rapida.
 L'impostazione predefinita è "auto"
 .
 :CONFIG_SERIAL1

@@ -1010,7 +1010,7 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 
 	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
 	pstring->Set_help(
-	        "Apply y-axis calibration parameters from the hotkeys. Default is 'auto'.");
+	        "Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.");
 
 	pstring = secprop->Add_string("joy_y_calibration", when_idle, "auto");
 	pstring->Set_help(
