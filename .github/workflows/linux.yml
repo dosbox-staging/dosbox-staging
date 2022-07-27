@@ -70,7 +70,6 @@ jobs:
           - name: GCC, minimum build
             os: ubuntu-20.04
             build_flags: >-
-              --wrap-mode=nofallback
               -Dunit_tests=disabled
               -Duse_alsa=false
               -Duse_fluidsynth=false

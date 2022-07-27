@@ -18,6 +18,7 @@ libmidi = static_library('midi', libmidi_sources,
                            coremidi_dep,
                            winmm_dep,
                            libghc_dep,
+                           libiir_dep,
                            libloguru_dep,
                          ])
 

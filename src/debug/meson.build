@@ -10,6 +10,7 @@ libdebug = static_library('debug', libdebug_sources,
                             sdl2_dep,
                             libpdcurses_dep,
                             libghc_dep,
+                            libiir_dep,
                             libloguru_dep,
                          ])
 

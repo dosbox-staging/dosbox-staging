@@ -22,6 +22,7 @@ project('dosbox-staging', 'c', 'cpp',
     'glib:warning_level=0',
     'glib:xattr=false',
     'gtest:warning_level=0',
+    'iir:warning_level=0',
     'mt32emu:warning_level=0',
     'slirp:warning_level=0',
     'tracy:warning_level=0'
@@ -270,6 +271,8 @@ static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 optional_dep       = dependency('', required : false)
 dl_dep             = cc.find_library('dl', required : false)
+libiir_dep         = dependency('iir', version : '>= 1.9.3',
+                                static : ('iir' in static_libs_list))
 atomic_dep         = cxx.find_library('atomic', required : false)
 stdcppfs_dep       = cxx.find_library('stdc++fs', required : false)
 opus_dep           = dependency('opusfile',
@@ -459,7 +462,6 @@ subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
-subdir('src/libs/iir1')
 subdir('src/libs/YM7128B_emu')
 subdir('src/libs/tal-chorus')
 
@@ -470,8 +472,8 @@ third_party_deps = [atomic_dep,
                     stdcppfs_dep,
                     sdl2_dep,
                     threads_dep,
-                    libiir1_dep,
                     libghc_dep,
+                    libiir_dep,
                     libloguru_dep,
                     libsdlcd_dep,
                     tracy_dep,

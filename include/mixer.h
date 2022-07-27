@@ -32,7 +32,7 @@
 
 #include "envelope.h"
 
-#include "../src/libs/iir1/Iir.h"
+#include <Iir.h>
 
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 

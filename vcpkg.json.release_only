@@ -6,6 +6,7 @@
     "builtin-baseline": "19fafcdb3557f8a029ee1a4eb203600ff638448e",
     "dependencies": [
         {"name": "libpng", "version>=": "1.6.37#17"}, 
+        {"name": "iir1", "version>=": "1.9.0"}, 
         {"name": "sdl2", "version>=": "2.0.22#1"},
         {"name": "sdl2-net", "version>=": "2.0.1#9"},
         {"name": "libmt32emu", "version>=": "2.6.2"},
