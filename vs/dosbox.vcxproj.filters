@@ -718,30 +718,6 @@
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\window.c">
       <Filter>src\libs\pdcurses</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Biquad.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Butterworth.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Cascade.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevI.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevII.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Custom.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\PoleFilter.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\RBJ.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
@@ -1221,48 +1197,6 @@
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h">
       <Filter>src\libs\pdcurses</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Biquad.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Butterworth.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Cascade.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevI.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevII.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Common.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Custom.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Layout.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\MathSupplement.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\PoleFilter.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\RBJ.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\State.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Types.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\mverb\MVerb.h">
       <Filter>src\libs\mverb</Filter>
     </ClInclude>
@@ -1336,9 +1270,6 @@
     </Filter>
     <Filter Include="src\libs\gui_tk">
       <UniqueIdentifier>{c1d4aca1-2ddd-4dc2-ba93-8b2279ef4d30}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\libs\iir1">
-      <UniqueIdentifier>{7c8fbcd1-aca6-40ad-b24d-df51c89fbf2f}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\mverb">
       <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>

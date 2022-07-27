@@ -10,14 +10,6 @@
     <ClCompile Include="..\..\src\libs\ghc\fs_std_impl.cpp" />
     <ClCompile Include="..\..\src\libs\loguru\loguru.cpp" />
     <ClCompile Include="..\..\src\libs\whereami\whereami.c" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Biquad.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Butterworth.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Cascade.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\ChebyshevI.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\ChebyshevII.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Custom.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\PoleFilter.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\RBJ.cpp" />
     <ClCompile Include="..\ansi_code_markup_tests.cpp" />
     <ClCompile Include="..\bitops_tests.cpp" />
     <ClCompile Include="..\bit_view_tests.cpp" />

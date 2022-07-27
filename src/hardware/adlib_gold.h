@@ -21,11 +21,12 @@
 #ifndef DOSBOX_ADLIB_GOLD_H
 #define DOSBOX_ADLIB_GOLD_H
 
-#include "bit_view.h"
 #include "dosbox.h"
-#include "mixer.h"
 
-#include "../libs/iir1/Iir.h"
+#include <Iir.h>
+
+#include "bit_view.h"
+#include "mixer.h"
 #include "../libs/YM7128B_emu/YM7128B_emu.h"
 
 class SurroundProcessor {

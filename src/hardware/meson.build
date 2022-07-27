@@ -62,7 +62,7 @@ libhardware = static_library('hardware', libhardware_sources,
                              include_directories : incdir,
                              dependencies : [
                                libghc_dep,
-                               libiir1_dep,
+                               libiir_dep,
                                libloguru_dep,
                                libnuked_dep,
                                libresidfp_dep,
