@@ -32,9 +32,8 @@ meson setup -Dbuildtype=release -Denable_debugger=heavy build/debugger
 ninja -C build/debugger
 ```
 
-If using Visual Studio, install `pdcurses` using vcpkg and change
-the `C_DEBUG` and optionally the `C_HEAVY_DEBUG` lines inside
-`src/platform/visualc/config.h`.
+If using Visual Studio change the `C_DEBUG` and optionally the
+`C_HEAVY_DEBUG` lines inside `src/platform/visualc/config.h`.
 
 Default debugger:
 
