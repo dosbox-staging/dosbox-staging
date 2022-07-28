@@ -62,17 +62,16 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer,
 	if (cdrom_fd == -1)
 		return false;
 
-	Bitu buflen = raw ? num * (unsigned int)CD_FRAMESIZE_RAW
-	                  : num * (unsigned int)CD_FRAMESIZE;
-	assert(buflen != 0u);
-
-	uint8_t *buf = new uint8_t[buflen];
-	int ret;
+	const auto buflen = raw ? num * (unsigned int)CD_FRAMESIZE_RAW
+	                        : num * (unsigned int)CD_FRAMESIZE;
+	assert(buflen);
+	std::vector<uint8_t> buf(buflen, 0);
+	int ret = 0;
 
 	if (raw) {
 		struct cdrom_read cdrom_read;
 		cdrom_read.cdread_lba = (int)sector;
-		cdrom_read.cdread_bufaddr = (char *)buf;
+		cdrom_read.cdread_bufaddr = reinterpret_cast<char *>(buf.data());
 		cdrom_read.cdread_buflen = (int)buflen;
 
 		ret = ioctl(cdrom_fd, CDROMREADRAW, &cdrom_read);
@@ -80,14 +79,13 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer,
 		ret = lseek(cdrom_fd, (off_t)(sector * (unsigned long)CD_FRAMESIZE),
 		            SEEK_SET);
 		if (ret >= 0)
-			ret = read(cdrom_fd, buf, buflen);
+			ret = read(cdrom_fd, buf.data(), buflen);
 		if ((Bitu)ret != buflen)
 			ret = -1;
 	}
 	close(cdrom_fd);
 
-	MEM_BlockWrite(buffer, buf, buflen);
-	delete[] buf;
+	MEM_BlockWrite(buffer, buf.data(), buflen);
 
 	return (ret > 0);
 }
