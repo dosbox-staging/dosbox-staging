@@ -68,7 +68,7 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	}
 	if (!filename_not_8x3(name)) {
 		assert(strlen(name) < DOS_NAMELENGTH_ASCII);
-		strcpy(sfn, name);
+		safe_strcpy(sfn, name);
 		upcase(sfn);
 		return sfn;
 	}
@@ -80,7 +80,7 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	// Get 8.3 names for LFNs by iterating the numbers
 	while (1) {
 		const auto str = generate_8x3(lfn.c_str(), num);
-		strcpy(sfn, str.length() < DOS_NAMELENGTH_ASCII ? str.c_str() : "");
+		safe_strcpy(sfn, str.length() < DOS_NAMELENGTH_ASCII ? str.c_str() : "");
 		if (!*sfn)
 			return sfn;
 		cur_file = first_file;
@@ -350,7 +350,7 @@ uint16_t Virtual_File::GetInformation() {
 
 Virtual_Drive::Virtual_Drive() : search_file(nullptr)
 {
-	strcpy(info, "Internal Virtual Drive");
+	safe_strcpy(info, "Internal Virtual Drive");
 	if (!parent_dir)
 		parent_dir = new VFILE_Block;
 }

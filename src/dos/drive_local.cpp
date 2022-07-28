@@ -425,8 +425,8 @@ bool localDrive::GetFileAttr(char *name, uint16_t *attr)
 bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
 {
 	char newname[CROSS_LEN];
-	strcpy(newname, basedir);
-	strcat(newname, name);
+	safe_strcpy(newname, basedir);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
