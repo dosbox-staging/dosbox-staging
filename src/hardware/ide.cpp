@@ -353,7 +353,7 @@ static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -381,7 +381,7 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -410,7 +410,7 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -3976,7 +3976,9 @@ static uint32_t ide_baseio_r(io_port_t port, io_width_t width)
 	case 7: /* 1F7 */
 		/* if an IDE device exists at selection return it's status, else return our status */
 		if (dev && dev->status & IDE_STATUS_BUSY) {
+			// no-op
 		} else if (dev == nullptr && ide->status & IDE_STATUS_BUSY) {
+			// no-op
 		} else {
 			ide->lower_irq();
 		}
