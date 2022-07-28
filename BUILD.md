@@ -21,8 +21,7 @@ on any modern system. Documentation for programmers using other systems:
 
 ## Make a build with the built-in debugger
 
-On Linux, BSD, macOS, or MSYS2: install the `ncurses` development library
-with headers included (as opposed to the bare library), and then:
+On Linux, BSD, macOS, or MSYS2:
 
 ``` shell
 # setup the default debugger
