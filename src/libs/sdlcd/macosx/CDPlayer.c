@@ -233,13 +233,12 @@ int ReadTOCData (FSVolumeRefNum theVolume, SDL_CD *theCD)
     {
         CFDictionaryRef dictRef = (CFDictionaryRef)propertyListRef;
         
-        CFDataRef   theRawTOCDataRef;
         CFArrayRef  theSessionArrayRef;
         CFIndex     numSessions;
         CFIndex     index;
         
         /* This is how we get the Raw TOC Data */
-        theRawTOCDataRef = (CFDataRef)CFDictionaryGetValue (dictRef, CFSTR(kRawTOCDataString));
+        (void /* unused rawTOC rvalue */) CFDictionaryGetValue (dictRef, CFSTR(kRawTOCDataString));
         
         /* Get the session array info. */
         theSessionArrayRef = (CFArrayRef)CFDictionaryGetValue (dictRef, CFSTR(kSessionsString));
@@ -271,7 +270,6 @@ int ReadTOCData (FSVolumeRefNum theVolume, SDL_CD *theCD)
                     
                 CFDictionaryRef theTrackDict;
                 CFNumberRef     trackNumber;
-                CFNumberRef     sessionNumber;
                 CFNumberRef     startBlock;
                 CFBooleanRef    isDataTrack;
                 UInt32          value;
@@ -279,7 +277,7 @@ int ReadTOCData (FSVolumeRefNum theVolume, SDL_CD *theCD)
                 theTrackDict  = (CFDictionaryRef) CFArrayGetValueAtIndex (trackArray, trackIndex);
                 
                 trackNumber   = (CFNumberRef)  CFDictionaryGetValue (theTrackDict, CFSTR(kPointKeyString));
-                sessionNumber = (CFNumberRef)  CFDictionaryGetValue (theTrackDict, CFSTR(kSessionNumberKeyString));
+                (void /* unused sessionNum*/)  CFDictionaryGetValue (theTrackDict, CFSTR(kSessionNumberKeyString));
                 startBlock    = (CFNumberRef)  CFDictionaryGetValue (theTrackDict, CFSTR(kStartBlockKeyString));
                 isDataTrack   = (CFBooleanRef) CFDictionaryGetValue (theTrackDict, CFSTR(kDataKeyString));
                                                         
