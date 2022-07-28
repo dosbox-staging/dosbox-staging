@@ -16,7 +16,7 @@ jobs:
       matrix:
         conf:
           - name: Clang
-            host: macos-latest
+            host: macos-12
             arch: x86_64
             needs_deps: true
             packages: meson
@@ -31,8 +31,8 @@ jobs:
             build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
             max_warnings: 0
 
-          - name: Clang, +tests
-            host: macos-latest
+          - name: Clang, +tests (macOS 12)
+            host: macos-12
             arch: x86_64
             needs_deps: true
             run_tests: true
