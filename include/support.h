@@ -219,10 +219,15 @@ constexpr cast_t check_cast(const check_t in)
 	              "The argument must be an integer type");
 
 	// ensure the inbound value is within the limits of the casting type
-	assert(static_cast<next_int_t<check_t>>(in) >=
-	       static_cast<next_int_t<cast_t>>(std::numeric_limits<cast_t>::min()));
-	assert(static_cast<next_int_t<check_t>>(in) <=
-	       static_cast<next_int_t<cast_t>>(std::numeric_limits<cast_t>::max()));
+	assert(std::is_unsigned_v<check_t> ||
+	       static_cast<next_int_t<check_t>>(in) >=
+	               static_cast<next_int_t<cast_t>>(
+	                       std::numeric_limits<cast_t>::min()));
+
+	assert(sizeof(check_t) < sizeof(cast_t) ||
+	       static_cast<next_int_t<check_t>>(in) <=
+	               static_cast<next_int_t<cast_t>>(
+	                       std::numeric_limits<cast_t>::max()));
 
 	return static_cast<cast_t>(in);
 }
