@@ -132,7 +132,7 @@ bool Value::SetValue(const std::string &in, const Etype _type)
 
 	bool retval = true;
 	switch (type) {
-	case V_HEX: retval = set_hex(in); break;
+	case V_HEX: retval = SetHex(in); break;
 	case V_INT: retval = set_int(in); break;
 	case V_BOOL: retval = set_bool(in); break;
 	case V_STRING: set_string(in); break;
@@ -148,7 +148,7 @@ bool Value::SetValue(const std::string &in, const Etype _type)
 	return retval;
 }
 
-bool Value::set_hex(const std::string &in)
+bool Value::SetHex(const std::string &in)
 {
 	istringstream input(in);
 	input.flags(ios::hex);
@@ -425,9 +425,9 @@ void Prop_multival::make_default_value()
 	if (!p) return;
 
 	int i = 1;
-	std::string result = p->Get_Default_Value().ToString();
+	std::string result = p->GetDefaultValue().ToString();
 	while( (p = section->Get_prop(i++)) ) {
-		std::string props = p->Get_Default_Value().ToString();
+		std::string props = p->GetDefaultValue().ToString();
 		if (props.empty()) continue;
 		result += separator; result += props;
 	}
