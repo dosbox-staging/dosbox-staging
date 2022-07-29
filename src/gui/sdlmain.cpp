@@ -4611,10 +4611,6 @@ int sdl_main(int argc, char *argv[])
 			return 0;
 		}
 
-#if C_DEBUG
-		DEBUG_SetupConsole();
-#endif
-
 #if defined(WIN32)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
