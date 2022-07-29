@@ -35,6 +35,7 @@
 #ifndef ENET_INCLUDE_H
 #define ENET_INCLUDE_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -2217,17 +2218,16 @@ extern "C" {
         if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER) {
             return -1;
         }
-
         if (peer->incomingBandwidth != 0) {
             --host->bandwidthLimitedPeers;
         }
 
         peer->incomingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.incomingBandwidth);
-        peer->outgoingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.outgoingBandwidth);
-
         if (peer->incomingBandwidth != 0) {
             ++host->bandwidthLimitedPeers;
         }
+
+        peer->outgoingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.outgoingBandwidth);
 
         if (peer->incomingBandwidth == 0 && host->outgoingBandwidth == 0) {
             peer->windowSize = ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE;
@@ -2641,7 +2641,8 @@ extern "C" {
                     goto commandError;
             }
 
-            if (peer != NULL && (command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
+            assert(peer);
+            if ((command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
                 enet_uint16 sentTime;
 
                 if (!(flags & ENET_PROTOCOL_HEADER_FLAG_SENT_TIME)) {
@@ -3133,12 +3134,12 @@ extern "C" {
                     currentPeer->packetsLost     = 0;
                 }
 
-                host->buffers->data = headerData;
+                host->buffers[0].data = headerData;
                 if (host->headerFlags & ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) {
                     header->sentTime = ENET_HOST_TO_NET_16(host->serviceTime & 0xFFFF);
-                    host->buffers->dataLength = sizeof(ENetProtocolHeader);
+                    host->buffers[0].dataLength = sizeof(ENetProtocolHeader);
                 } else {
-                    host->buffers->dataLength = (size_t) &((ENetProtocolHeader *) 0)->sentTime;
+                    host->buffers[0].dataLength = (size_t) &((ENetProtocolHeader *) 0)->sentTime;
                 }
 
                 shouldCompress = 0;
@@ -3159,9 +3160,9 @@ extern "C" {
                 }
                 header->peerID = ENET_HOST_TO_NET_16(currentPeer->outgoingPeerID | host->headerFlags);
                 if (host->checksum != NULL) {
-                    enet_uint32 *checksum = (enet_uint32 *) &headerData[host->buffers->dataLength];
+                    enet_uint32 *checksum = (enet_uint32 *) &headerData[host->buffers[0].dataLength];
                     *checksum = currentPeer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID ? currentPeer->connectID : 0;
-                    host->buffers->dataLength += sizeof(enet_uint32);
+                    host->buffers[0].dataLength += sizeof(enet_uint32);
                     *checksum = host->checksum(host->buffers, host->bufferCount);
                 }
 
@@ -3176,6 +3177,9 @@ extern "C" {
                 enet_protocol_remove_sent_unreliable_commands(currentPeer);
 
                 if (sentLength < 0) {
+                    // The local 'headerData' array (to which 'data' is assigned) goes out
+                    // of scope on return from this function, so ensure we no longer point to it.
+                    host->buffers[0].data = NULL;
                     return -1;
                 }
 
@@ -3183,6 +3187,10 @@ extern "C" {
                 currentPeer->totalDataSent += sentLength;
                 host->totalSentPackets++;
             }
+
+        // The local 'headerData' array (to which 'data' is assigned) goes out
+        // of scope on return from this function, so ensure we no longer point to it.
+        host->buffers[0].data = NULL;
 
         return 0;
     } /* enet_protocol_send_outgoing_commands */
@@ -3498,7 +3506,7 @@ extern "C" {
     }
 
     void * enet_peer_get_data(ENetPeer *peer) {
-        return peer->data;
+        return (void *) peer->data;
     }
 
     void enet_peer_set_data(ENetPeer *peer, const void *data) {
@@ -4329,10 +4337,9 @@ extern "C" {
             memset(incomingCommand->fragments, 0, (fragmentCount + 31) / 32 * sizeof(enet_uint32));
         }
 
-        if (packet != NULL) {
-            ++packet->referenceCount;
-            peer->totalWaitingData += packet->dataLength;
-        }
+        assert(packet != NULL);
+        ++packet->referenceCount;
+        peer->totalWaitingData += packet->dataLength;
 
         enet_list_insert(enet_list_next(currentCommand), incomingCommand);
 
@@ -4354,7 +4361,8 @@ extern "C" {
             goto notifyError;
         }
 
-        if (packet != NULL && packet->referenceCount == 0) {
+        assert(packet != NULL);
+        if (packet->referenceCount == 0) {
             callbacks.packet_destroy(packet);
         }
 
@@ -4437,11 +4445,9 @@ extern "C" {
 
         if (!channelLimit || channelLimit > ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT) {
             channelLimit = ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT;
-        } else if (channelLimit < ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT) {
-            channelLimit = ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT;
         }
 
-        host->randomSeed                    = (enet_uint32) (size_t) host;
+        host->randomSeed                    = (enet_uint32) ((uintptr_t) host % UINT32_MAX);
         host->randomSeed                    += enet_host_random_seed();
         host->randomSeed                    = (host->randomSeed << 16) | (host->randomSeed >> 16);
         host->channelLimit                  = channelLimit;
@@ -4690,10 +4696,7 @@ extern "C" {
     void enet_host_channel_limit(ENetHost *host, size_t channelLimit) {
         if (!channelLimit || channelLimit > ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT) {
             channelLimit = ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT;
-        } else if (channelLimit < ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT) {
-            channelLimit = ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT;
         }
-
         host->channelLimit = channelLimit;
     }
 
@@ -4901,7 +4904,6 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-
         int clock_gettime(int /* X */, struct timespec *tv) {
             LARGE_INTEGER t;
             FILETIME f;
@@ -5046,10 +5048,7 @@ extern "C" {
         }
 
         if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
-            if (resultList != NULL) {
-                freeaddrinfo(resultList);
-            }
-
+            freeaddrinfo(resultList);
             return -1;
         }
 
@@ -5058,29 +5057,18 @@ extern "C" {
                 if (result->ai_family == AF_INET || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in))) {
                     enet_inaddr_map4to6(((struct sockaddr_in*)result->ai_addr)->sin_addr, &out->host);
                     out->sin6_scope_id = 0;
-
-                    if (resultList != NULL) {
-                        freeaddrinfo(resultList);
-                    }
-
+                    freeaddrinfo(resultList);
                     return 0;
+
                 } else if (result->ai_family == AF_INET6 || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in6))) {
                     memcpy(&out->host, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct in6_addr));
                     out->sin6_scope_id = (enet_uint16) ((struct sockaddr_in6*)result->ai_addr)->sin6_scope_id;
-
-                    if (resultList != NULL) {
-                        freeaddrinfo(resultList);
-                    }
-
+                    freeaddrinfo(resultList);
                     return 0;
                 }
             }
         }
-
-        if (resultList != NULL) {
-            freeaddrinfo(resultList);
-        }
-
+        freeaddrinfo(resultList);
         return -1;
     }
 
@@ -5365,7 +5353,6 @@ extern "C" {
                     ((uint32_t *)&address->host.s6_addr)[3] = sin->sin_addr.s_addr;
 
                     freeaddrinfo(resultList);
-
                     return 0;
                 }
                 else if(result->ai_family == AF_INET6) {
@@ -5375,16 +5362,11 @@ extern "C" {
                     address->sin6_scope_id = sin->sin6_scope_id;
 
                     freeaddrinfo(resultList);
-
                     return 0;
                 }
             }
         }
-
-
-        if (resultList != NULL) {
-            freeaddrinfo(resultList);
-        }
+        freeaddrinfo(resultList);
 
         return enet_address_set_host_ip(address, name);
     } /* enet_address_set_host_old */
@@ -5456,7 +5438,7 @@ extern "C" {
     }
 
     ENetSocket enet_socket_create(ENetSocketType type) {
-        return socket(PF_INET6, type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
+        return socket(PF_INET6, (int)type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
     }
 
     int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) {
