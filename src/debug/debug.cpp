@@ -107,20 +107,28 @@ static bool zeroProtect = false;
 bool	logHeavy	= false;
 #endif
 
-
-
 static struct  {
-	uint32_t eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
-} oldregs;
+	uint32_t eax = 0;
+	uint32_t ebx = 0;
+	uint32_t ecx = 0;
+	uint32_t edx = 0;
+	uint32_t esi = 0;
+	uint32_t edi = 0;
+	uint32_t ebp = 0;
+	uint32_t esp = 0;
+	uint32_t eip = 0;
+} oldregs = {};
 
 static char curSelectorName[3] = { 0,0,0 };
 
-static Segment oldsegs[6];
-static Bitu oldflags,oldcpucpl;
-DBGBlock dbg;
-Bitu cycle_count;
-static bool debugging;
+static Segment oldsegs[6] = {};
 
+static auto oldflags  = cpu_regs.flags;
+static auto oldcpucpl = cpu.cpl;
+
+DBGBlock dbg = {};
+Bitu cycle_count = 0;
+static bool debugging = false;
 
 static void SetColor(Bitu test) {
 	if (test) {
@@ -132,23 +140,28 @@ static void SetColor(Bitu test) {
 
 #define MAXCMDLEN 254
 struct SCodeViewData {
-	int     cursorPos;
-	uint16_t  firstInstSize;
-	uint16_t  useCS;
-	uint32_t  useEIPlast, useEIPmid;
-	uint32_t  useEIP;
-	uint16_t  cursorSeg;
-	uint32_t  cursorOfs;
-	bool    ovrMode;
-	char    inputStr[MAXCMDLEN+1];
-	char    suspInputStr[MAXCMDLEN+1];
-	int     inputPos;
-} codeViewData;
+	int cursorPos          = 0;
+	uint16_t firstInstSize = 0;
+	uint16_t useCS         = 0;
+	uint32_t useEIPlast    = 0;
+	uint32_t useEIPmid     = 0;
+	uint32_t useEIP        = 0;
+	uint16_t cursorSeg     = 0;
+	uint32_t cursorOfs     = 0;
 
-static uint16_t  dataSeg;
-static uint32_t  dataOfs;
-static bool    showExtend = true;
-static bool    showPrintable = true;
+	bool ovrMode = false;
+
+	char inputStr[MAXCMDLEN + 1]     = {};
+	char suspInputStr[MAXCMDLEN + 1] = {};
+
+	int inputPos = 0;
+} codeViewData = {};
+
+static uint16_t dataSeg = 0;
+static uint32_t dataOfs = 0;
+
+static bool showExtend    = true;
+static bool showPrintable = true;
 
 static void ClearInputLine(void) {
 	codeViewData.inputStr[0] = 0;
@@ -157,8 +170,8 @@ static void ClearInputLine(void) {
 
 // History stuff
 #define MAX_HIST_BUFFER 50
-static list<string> histBuff;
-static list<string>::iterator histBuffPos = histBuff.end();
+static list<string> histBuff = {};
+static auto histBuffPos = histBuff.end();
 
 /***********/
 /* Helpers */
@@ -242,10 +255,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 class CDebugVar
 {
 public:
-	CDebugVar(const char *vname, PhysPt address)
-	        : adr(address),
-	          hasvalue(false),
-	          value(0)
+	CDebugVar(const char *vname, PhysPt address) : adr(address)
 	{
 		safe_strcpy(name, vname);
 	}
@@ -257,10 +267,10 @@ public:
 	bool   HasValue(void)                 { return hasvalue; }
 
 private:
-	PhysPt  adr;
-	char    name[16];
-	bool    hasvalue;
-	uint16_t  value;
+	const PhysPt adr = 0;
+	char name[16]    = {};
+	bool hasvalue    = false;
+	uint16_t value   = 0;
 
 public:
 	static void       InsertVariable(char* name, PhysPt adr);
@@ -268,12 +278,9 @@ public:
 	static void       DeleteAll     ();
 	static bool       SaveVars      (char* name);
 	static bool       LoadVars      (char* name);
-
-	static std::vector<CDebugVar*> varList;
 };
 
-std::vector<CDebugVar*> CDebugVar::varList;
-
+static std::vector<CDebugVar *> varList = {};
 
 /********************/
 /* Breakpoint stuff */
@@ -330,24 +337,23 @@ public:
 
 
 private:
-	EBreakpoint	type;
+	EBreakpoint type = {};
 	// Physical
-	PhysPt		location;
-	uint8_t		oldData;
-	uint16_t		segment;
-	uint32_t		offset;
+	PhysPt location  = 0;
+	uint8_t oldData  = 0;
+	uint16_t segment = 0;
+	uint32_t offset  = 0;
 	// Int
-	uint8_t		intNr;
-	uint16_t		ahValue;
-	uint16_t		alValue;
+	uint8_t intNr    = 0;
+	uint16_t ahValue = 0;
+	uint16_t alValue = 0;
 	// Shared
-	bool		active;
-	bool		once;
+	bool active = 0;
+	bool once   = 0;
 
-	static std::list<CBreakpoint*>	BPoints;
-#if C_HEAVY_DEBUG
+#	if C_HEAVY_DEBUG
 	friend bool DEBUG_HeavyIsBreakpoint(void);
-#endif
+#	endif
 };
 
 CBreakpoint::CBreakpoint(void):
@@ -397,7 +403,7 @@ void CBreakpoint::Activate(bool _active)
 }
 
 // Statics
-std::list<CBreakpoint*> CBreakpoint::BPoints;
+static std::list<CBreakpoint *> BPoints = {};
 
 CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 {
@@ -2268,7 +2274,7 @@ void DEBUG_Init(Section* sec) {
 	MAPPER_AddHandler(DEBUG_Enable, SDL_SCANCODE_PAUSE, MMOD2, "debugger",
 	                  "Debugger");
 	/* Reset code overview and input line */
-	memset((void*)&codeViewData,0,sizeof(codeViewData));
+	codeViewData = {};
 	/* setup debug.com */
 	PROGRAMS_MakeFile("DEBUG.COM",ProgramCreate<DEBUG>);
 	PROGRAMS_MakeFile("DBXDEBUG.COM",ProgramCreate<DEBUG>);
@@ -2432,21 +2438,19 @@ static void OutputVecTable(char* filename) {
 #define DEBUG_VAR_BUF_LEN 16
 static void DrawVariables()
 {
-	if (CDebugVar::varList.empty()) return;
+	if (varList.empty())
+		return;
 
-	CDebugVar *dv;
-	char buffer[DEBUG_VAR_BUF_LEN];
-	std::vector<CDebugVar*>::size_type s = CDebugVar::varList.size();
+	char buffer[DEBUG_VAR_BUF_LEN] = {};
 	bool windowchanges = false;
 
-	for(std::vector<CDebugVar*>::size_type i = 0; i != s; i++) {
-
+	for (size_t i = 0; i != varList.size(); ++i) {
 		if (i == 4*3) {
 			/* too many variables */
 			break;
 		}
 
-		dv = static_cast<CDebugVar*>(CDebugVar::varList[i]);
+		auto dv = varList[i];
 		uint16_t value;
 		bool varchanges = false;
 		bool has_no_value = mem_readw_checked(dv->GetAdr(),&value);
@@ -2633,9 +2637,9 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 		skipFirstInstruction = false;
 		return false;
 	}
-	if (!CBreakpoint::BPoints.empty() && CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
+	if (BPoints.size() && CBreakpoint::CheckBreakpoint(SegValue(cs), reg_eip))
 		return true;
-	}
+
 	return false;
 }
 
