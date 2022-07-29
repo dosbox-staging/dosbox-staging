@@ -129,7 +129,7 @@ private:
 	void destroy();
 	Value &copy(const Value &in);
 	void plaincopy(const Value &in);
-	bool set_hex(const std::string &in);
+	bool SetHex(const std::string &in);
 	bool set_int(const std::string &in);
 	bool set_bool(const std::string &in);
 	void set_string(const std::string &in);
@@ -159,7 +159,7 @@ public:
 	{
 		return value;
 	}
-	const Value &Get_Default_Value() const
+	const Value &GetDefaultValue() const
 	{
 		return default_value;
 	}

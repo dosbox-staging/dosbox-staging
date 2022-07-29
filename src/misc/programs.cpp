@@ -611,7 +611,7 @@ void CONFIG::Run(void) {
 							p->propname.c_str(),
 							sec->GetName(),
 							p->GetHelp(), propvalues.c_str(),
-							p->Get_Default_Value().ToString().c_str(),
+							p->GetDefaultValue().ToString().c_str(),
 							p->GetValue().ToString().c_str());
 						// print 'changability'
 						if (p->GetChange() == Property::Changeable::OnlyAtStart) {
