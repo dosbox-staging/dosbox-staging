@@ -204,9 +204,6 @@ SDL_Block sdl;
 bool mouse_is_captured = false;       // the actual state of the mouse
 bool mouse_capture_requested = false; // if the user manually requested the capture
 
-// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
-constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
-
 // Masks to be passed when creating SDL_Surface.
 // Remove ifndef if they'll be needed for MacOS X builds.
 #ifndef MACOSX
@@ -286,6 +283,11 @@ SDL_Window *GFX_GetSDLWindow(void)
 #endif
 
 #if C_OPENGL
+
+// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
+constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
+
+
 #ifdef DB_OPENGL_ERROR
 void OPENGL_ERROR(const char* message) {
 	GLenum r = glGetError();
