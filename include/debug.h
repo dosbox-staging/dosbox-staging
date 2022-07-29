@@ -21,7 +21,6 @@
 
 #include "dosbox.h"
 
-void DEBUG_SetupConsole(void);
 void DEBUG_DrawScreen(void);
 bool DEBUG_Breakpoint(void);
 bool DEBUG_IntBreakpoint(uint8_t intNum);

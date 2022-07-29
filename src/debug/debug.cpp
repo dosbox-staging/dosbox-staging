@@ -1879,22 +1879,43 @@ Bitu DEBUG_Loop(void) {
 extern SDL_Window *pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
-void DEBUG_Enable(bool pressed) {
+void DEBUG_Enable(bool pressed)
+{
 	if (!pressed)
 		return;
-	static bool showhelp=false;
-	debugging=true;
 
+	// Maybe construct the debugger's UI
+	static bool was_ui_started = false;
+	if (!was_ui_started) {
+		DBGUI_StartUp();
+		was_ui_started = (pdc_window != nullptr);
+	}
+
+	// The debugger is run in release mode so cannot use asserts
+	if (!was_ui_started) {
+		LOG_ERR("DEBUG: Failed to start up the debug window");
+		return;
+	}
+
+	// Defocus the graphical UI and bring the debugger UI into focus
+	GFX_LosingFocus();
 	pdc_event_queue = {};
-
 	SDL_RaiseWindow(pdc_window);
+	SDL_SetWindowInputFocus(pdc_window);
 	SetCodeWinStart();
 	DEBUG_DrawScreen();
-	DOSBOX_SetLoop(&DEBUG_Loop);
-	if(!showhelp) { 
-		showhelp=true;
+
+	// Maybe show help for the first time in the debugger
+	static bool was_help_shown = false;
+	if (!was_help_shown) {
 		DEBUG_ShowMsg("***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\n");
+		was_help_shown = true;
 	}
+
+	// Start the debugging loops
+	debugging = true;
+	DOSBOX_SetLoop(&DEBUG_Loop);
+
 	KEYBOARD_ClrBuffer();
 }
 
@@ -2222,20 +2243,6 @@ Bitu DEBUG_EnableDebugger()
 	DEBUG_Enable(true);
 	CPU_Cycles=CPU_CycleLeft=0;
 	return 0;
-}
-
-// INIT
-
-void DEBUG_SetupConsole(void) {
-	// tcgetattr(0,&consolesettings);
-	// curses must be inited first in order to catch the resize (is an event)
-	// printf("\e[8;50;80t"); //resize terminal
-	// fflush(NULL);
-	memset((void *)&dbg,0,sizeof(dbg));
-	debugging=false;
-	// dbg.active_win=3;
-	/* Start the Debug Gui */
-	DBGUI_StartUp();
 }
 
 void DEBUG_ShutDown(Section * /*sec*/) {
