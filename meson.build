@@ -136,7 +136,6 @@ conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_SLIRP', get_option('use_slirp'))
 conf_data.set10('C_NE2000', get_option('use_slirp'))
-conf_data.set10('C_OPENGL', get_option('use_opengl'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
@@ -306,9 +305,25 @@ if get_option('use_sdl2_net')
                             not_found_message : msg.format('use_sdl2_net'))
 endif
 
-if get_option('use_opengl')
+# OpenGL setup
+opengl_summary_msg = 'Disabled'
+if get_option('use_opengl') != 'false'
   opengl_dep = dependency('gl', not_found_message : msg.format('use_opengl'))
 endif
+
+if (opengl_dep.found()
+    and get_option('use_opengl') == 'auto'
+    and get_option('enable_debugger') != 'none')
+  warning('''
+    Disabling OpenGL because it's incompatible with the debugger.
+    To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
+  conf_data.set10('C_OPENGL', false)
+  opengl_summary_msg = 'Found, but disabled due to conflict with debugger'
+else
+  conf_data.set10('C_OPENGL', opengl_dep.found())
+  opengl_summary_msg = opengl_dep.found()
+endif
+summary('OpenGL support', opengl_summary_msg)
 
 # Use a single static setting for the pool of libraries that use glib
 is_glib_realm_static = prefers_static_libs
@@ -446,7 +461,7 @@ if host_machine.system() in ['windows', 'cygwin']
   winmm_dep = cxx.find_library('winmm', required : true)
 endif
 
-summary('OpenGL support', get_option('use_opengl'))
+summary('OpenGL support', conf_data.get('C_OPENGL'))
 
 
 # include directories

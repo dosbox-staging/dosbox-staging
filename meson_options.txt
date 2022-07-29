@@ -1,7 +1,8 @@
 option('use_sdl2_net', type : 'boolean', value : true,
        description : 'Enable networking features via SDL2_net (modem, ipx)')
 
-option('use_opengl', type : 'boolean', value : true,
+option('use_opengl', type : 'combo',
+       choices : ['auto', 'true', 'false'], value : 'auto',
        description : 'Enable OpenGL support')
 
 option('use_fluidsynth', type : 'boolean', value : true,
