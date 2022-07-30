@@ -4361,8 +4361,7 @@ extern "C" {
             goto notifyError;
         }
 
-        assert(packet != NULL);
-        if (packet->referenceCount == 0) {
+        if (packet != NULL && packet->referenceCount == 0) {
             callbacks.packet_destroy(packet);
         }
 
