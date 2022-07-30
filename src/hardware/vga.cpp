@@ -174,6 +174,10 @@ void VGA_SetRatePreference(const std::string &pref)
 	}
 }
 
+void VGA_UseStrictEgaModes(const bool enabled) {
+	vga.draw.use_strict_ega_modes = enabled;
+}
+
 double VGA_GetPreferredRate()
 {
 	// If we're in a text-mode, always use the as-indicated DOS rate because

@@ -21,11 +21,12 @@
 #include <cstring>
 #include <cmath>
 
+#include "../gui/render_scalers.h"
 #include "../ints/int10.h"
+#include "bitops.h"
 #include "mem_unaligned.h"
 #include "pic.h"
 #include "render.h"
-#include "../gui/render_scalers.h"
 #include "support.h"
 #include "vga.h"
 #include "video.h"
@@ -1198,6 +1199,38 @@ static void maybe_aspect_correct_tall_modes(double &current_ratio)
 	current_ratio *= 2;
 }
 
+// Slow the VGA clock to be more period-correct when using CGA, EGA, and Tandy
+// modes, which ran with a horizonal sync rate of 15.7 kHz (200-lines) or 21.85
+// kHz (350-lines), both producing a vertical sync rate of 60 Hz on those old
+// systems. Ref: http://minuszerodegrees.net/video/bios_video_modes.htm
+//
+static void maybe_adjust_vga_clock_for_pre_vga_mode(uint32_t &clock_hz,
+                                                    const VGAModes current_mode,
+                                                    const uint32_t htotal,
+                                                    const uint32_t vtotal)
+{
+	assert(is_machine(MCH_VGA));
+
+	constexpr uint32_t pre_vga_modes = (M_EGA | M_CGA2 | M_CGA2_COMPOSITE |
+	                                    M_CGA4 | M_CGA4_COMPOSITE | M_CGA16 |
+	                                    M_TANDY2 | M_TANDY4 | M_TANDY16);
+
+	const auto is_pre_vga_mode = bit::any(static_cast<uint32_t>(current_mode),
+	                                      pre_vga_modes);
+
+	const auto is_lowres_mode = (CurMode->sheight == 200 ||
+	                             CurMode->sheight == 350);
+
+	if (!is_pre_vga_mode || !is_lowres_mode)
+		return;
+
+	constexpr auto pre_vga_lowres_vsync_rate_hz = 60u;
+	const auto target_clock_hz = pre_vga_lowres_vsync_rate_hz * htotal * vtotal;
+
+	assert(clock_hz > target_clock_hz);
+	clock_hz = target_clock_hz;
+}
+
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
@@ -1318,6 +1351,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		if (vga.seq.clocking_mode & 0x8) {
 			htotal *= 2;
 		}
+
+		if (is_machine(MCH_VGA) && vga.draw.use_strict_ega_modes) {
+			maybe_adjust_vga_clock_for_pre_vga_mode(clock,
+			                                        vga.mode,
+			                                        htotal,
+			                                        vtotal);
+		}
+
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
 		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
 			// vgaonly; can't use with CGA because these use address_line for their

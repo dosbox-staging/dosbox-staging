@@ -196,6 +196,7 @@ struct VGA_Draw {
 	Bitu blinking = 0;
 	bool blink = false;
 	bool char9dot = false;
+	bool use_strict_ega_modes = true;
 	struct {
 		Bitu address = 0;
 		uint8_t sline = 0;
@@ -510,6 +511,8 @@ void VGA_AddCompositeSettings(Config &conf);
 /* Some Support Functions */
 std::pair<const char *, const char *> VGA_DescribeType(VGAModes type);
 void VGA_SetClock(Bitu which, uint32_t target);
+
+void VGA_UseStrictEgaModes(const bool enabled);
 
 // Save, get, and limit refresh and clock functions
 void VGA_SetHostRate(const double refresh_hz);

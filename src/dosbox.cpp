@@ -408,6 +408,8 @@ static void DOSBOX_RealInit(Section * sec) {
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 
+	VGA_UseStrictEgaModes(section->Get_bool("strict_ega_modes"));
+
 	CPU_AllowSpeedMods = section->Get_bool("speed_mods");
 	LOG_MSG("SYSTEM: Speed modifications are %s",
 	        CPU_AllowSpeedMods ? "enabled" : "disabled");
@@ -521,6 +523,9 @@ void DOSBOX_Init() {
 	        "  all          Offers all modes for a given video memory size, however\n"
 	        "               some games may not use them properly (flickering) or may need\n"
 	        "               more system memory (mem = ) to use them.");
+
+	Pbool = secprop->Add_bool("strict_ega_modes", only_at_start, true);
+	Pbool->Set_help("Use original CGA and EGA clock rates instead of SVGA vendor's higher rates.");
 
 	Pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	Pbool->Set_help(
