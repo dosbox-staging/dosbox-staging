@@ -2274,7 +2274,7 @@ public:
 				value = v;
 		};
 
-		Prop_multival *p = section->Get_multival("cycles");
+		PropMultiVal *p = section->GetMultiVal("cycles");
 		std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd(0, p->GetSection()->Get_string("parameters"));

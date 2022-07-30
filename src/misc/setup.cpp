@@ -419,7 +419,7 @@ bool Prop_hex::SetValue(const std::string &input)
 	return SetVal(val,false,true);
 }
 
-void Prop_multival::make_default_value()
+void PropMultiVal::make_default_value()
 {
 	Property *p = section->Get_prop(0);
 	if (!p) return;
@@ -436,7 +436,7 @@ void Prop_multival::make_default_value()
 }
 
 //TODO checkvalue stuff
-bool Prop_multival_remain::SetValue(const std::string &input)
+bool PropMultiValRemain::SetValue(const std::string &input)
 {
 	Value val(input, Value::V_STRING);
 	bool retval = SetVal(val, false, true);
@@ -478,7 +478,7 @@ bool Prop_multival_remain::SetValue(const std::string &input)
 }
 
 //TODO checkvalue stuff
-bool Prop_multival::SetValue(const std::string &input)
+bool PropMultiVal::SetValue(const std::string &input)
 {
 	Value val(input, Value::V_STRING);
 	bool retval = SetVal(val, false, true);
@@ -539,7 +539,7 @@ bool Prop_multival::SetValue(const std::string &input)
 const std::vector<Value>& Property::GetValues() const {
 	return suggested_values;
 }
-const std::vector<Value>& Prop_multival::GetValues() const {
+const std::vector<Value>& PropMultiVal::GetValues() const {
 	Property *p = section->Get_prop(0);
 	//No properties in this section. do nothing
 	if (!p) return suggested_values;
@@ -616,20 +616,20 @@ Prop_hex *Section_prop::Add_hex(const std::string &_propname,
 	return test;
 }
 
-Prop_multival *Section_prop::Add_multi(const std::string &_propname,
+PropMultiVal *Section_prop::AddMultiVal(const std::string &_propname,
                                        Property::Changeable::Value when,
                                        const std::string &sep)
 {
-	Prop_multival *test = new Prop_multival(_propname, when, sep);
+	PropMultiVal *test = new PropMultiVal(_propname, when, sep);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_multival_remain *Section_prop::Add_multiremain(const std::string &_propname,
+PropMultiValRemain *Section_prop::AddMultiValRemain(const std::string &_propname,
                                                     Property::Changeable::Value when,
                                                     const std::string &sep)
 {
-	Prop_multival_remain *test = new Prop_multival_remain(_propname, when, sep);
+	PropMultiValRemain *test = new PropMultiValRemain(_propname, when, sep);
 	properties.push_back(test);
 	return test;
 }
@@ -675,22 +675,22 @@ Prop_path *Section_prop::Get_path(const std::string &_propname) const
 	return NULL;
 }
 
-Prop_multival *Section_prop::Get_multival(const std::string &_propname) const
+PropMultiVal *Section_prop::GetMultiVal(const std::string &_propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
-			Prop_multival* val = dynamic_cast<Prop_multival*>((*tel));
+			PropMultiVal* val = dynamic_cast<PropMultiVal*>((*tel));
 			if(val) return val; else return NULL;
 		}
 	}
 	return NULL;
 }
 
-Prop_multival_remain *Section_prop::Get_multivalremain(const std::string &_propname) const
+PropMultiValRemain *Section_prop::GetMultiValRemain(const std::string &_propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
-			Prop_multival_remain* val = dynamic_cast<Prop_multival_remain*>((*tel));
+			PropMultiValRemain* val = dynamic_cast<PropMultiValRemain*>((*tel));
 			if (val) return val; else return NULL;
 		}
 	}

@@ -3384,7 +3384,7 @@ static void GUI_StartUp(Section *sec)
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 
-	auto priority_conf = section->Get_multival("priority")->GetSection();
+	auto priority_conf = section->GetMultiVal("priority")->GetSection();
 	SetPriorityLevels(priority_conf->Get_string("active"),
 	                  priority_conf->Get_string("inactive"));
 
@@ -3493,7 +3493,7 @@ static void GUI_StartUp(Section *sec)
 	}
 
 	// Apply the user's mouse settings
-	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
+	Section_prop* s = section->GetMultiVal("capture_mouse")->GetSection();
 	const std::string control_choice = s->Get_string("capture_mouse_first_value");
 	std::string mouse_control_msg;
 	if (control_choice == "onclick") {
@@ -3530,7 +3530,7 @@ static void GUI_StartUp(Section *sec)
 			              PRIMARY_MOD, "capmouse", "Cap Mouse");
 
 		// Apply the user's mouse sensitivity settings
-		Prop_multival *p3 = section->Get_multival("sensitivity");
+		PropMultiVal *p3 = section->GetMultiVal("sensitivity");
 		sdl.mouse.xsensitivity = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
 		sdl.mouse.ysensitivity = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
 
@@ -4073,7 +4073,7 @@ void Config_Add_SDL() {
 	Prop_string *pstring;
 	Prop_int *Pint; // use pint for new properties
 	Prop_int *pint;
-	Prop_multival* Pmulti;
+	PropMultiVal* Pmulti;
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
@@ -4181,7 +4181,7 @@ void Config_Add_SDL() {
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	// Define mouse control settings
-	Pmulti = sdl_sec->Add_multi("capture_mouse", always, " ");
+	Pmulti = sdl_sec->AddMultiVal("capture_mouse", always, " ");
 	const char *mouse_controls[] = {
 	        "seamless", // default
 	        "onclick",  "onstart", "nomouse", 0,
@@ -4219,7 +4219,7 @@ void Config_Add_SDL() {
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
-	Pmulti = sdl_sec->Add_multi("sensitivity", always, ",");
+	Pmulti = sdl_sec->AddMultiVal("sensitivity", always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
 	Pmulti->SetValue("100");
 	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
@@ -4236,7 +4236,7 @@ void Config_Add_SDL() {
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
-	Pmulti = sdl_sec->Add_multi("priority", always, " ");
+	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
 	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively. \n"
 	                 "   auto:  Let the host operating system manage the priority (valid for both).\n"

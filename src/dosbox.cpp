@@ -421,8 +421,8 @@ void DOSBOX_Init() {
 	Prop_string* Pstring; // use pstring when touching properties
 	Prop_string *pstring;
 	Prop_bool* Pbool;
-	Prop_multival *pmulti;
-	Prop_multival_remain* Pmulti_remain;
+	PropMultiVal *pmulti;
+	PropMultiValRemain* pmulti_remain;
 
 	// Specifies if and when a setting can be changed
 	constexpr auto always = Property::Changeable::Always;
@@ -603,7 +603,7 @@ void DOSBOX_Init() {
 			"You can also set custom colors by specifying 16 space-separated, 6-bit hex color codes\n"
 			"(e.g. black is 000000, white is 3f3f3f, full red is 3f0000).");
 
-	pmulti = secprop->Add_multi("scaler", always, " ");
+	pmulti = secprop->AddMultiVal("scaler", always, " ");
 	pmulti->SetValue("none");
 	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
 	                 "If 'forced' is appended, then the scaler will be used even if\n"
@@ -662,8 +662,8 @@ void DOSBOX_Init() {
 	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
 
 
-	Pmulti_remain = secprop->Add_multiremain("cycles", always, " ");
-	Pmulti_remain->Set_help(
+	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
+	pmulti_remain->Set_help(
 		"Number of instructions DOSBox tries to emulate each millisecond.\n"
 		"Setting this value too high results in sound dropouts and lags.\n"
 		"Cycles can be set in 3 ways:\n"
@@ -675,11 +675,11 @@ void DOSBOX_Init() {
 		"                  handle.");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", always, "auto");
-	Pmulti_remain->SetValue("auto");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
+	pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
-	Pmulti_remain->GetSection()->Add_string("parameters", always, "");
+	pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
 	Pint = secprop->Add_int("cycleup", always, 10);
 	Pint->SetMinMax(1,1000000);
@@ -1025,12 +1025,12 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                         "direct",
 	                         0};
 
-	Pmulti_remain = secprop->Add_multiremain("serial1", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
-	Pmulti_remain->SetValue("dummy");
+	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
+	pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help(
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help(
 	        "set type of device connected to com port.\n"
 	        "Can be disabled, dummy, mouse, modem, nullmodem, direct.\n"
 	        "Additional parameters must be on the same line in the form of\n"
@@ -1053,26 +1053,26 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	        "of the conection. 0 for TCP and 1 for ENet reliable UDP.\n"
 	        "Example: serial1=modem listenport:5000 sock:1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
-	Pmulti_remain->SetValue("dummy");
+	pmulti_remain = secprop->AddMultiValRemain("serial2", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
+	pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial3", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
-	Pmulti_remain->SetValue("disabled");
+	pmulti_remain = secprop->AddMultiValRemain("serial3", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
+	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial4", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
-	Pmulti_remain->SetValue("disabled");
+	pmulti_remain = secprop->AddMultiValRemain("serial4", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
+	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
 	pstring->Set_help("File used to map fake phone numbers to addresses.");
