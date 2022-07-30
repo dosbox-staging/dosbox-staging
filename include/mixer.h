@@ -32,7 +32,16 @@
 
 #include "envelope.h"
 
+// Disable effc++ for Iir until its release.
+// Ref: https://github.com/berndporr/iir1/pull/39
+#if defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Weffc++"
+#endif
 #include <Iir.h>
+#if defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#endif
 
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 

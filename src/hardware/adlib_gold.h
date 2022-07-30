@@ -23,8 +23,6 @@
 
 #include "dosbox.h"
 
-#include <Iir.h>
-
 #include "bit_view.h"
 #include "mixer.h"
 #include "../libs/YM7128B_emu/YM7128B_emu.h"
