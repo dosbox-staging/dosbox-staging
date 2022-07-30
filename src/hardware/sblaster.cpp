@@ -693,14 +693,18 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_3:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -710,13 +714,17 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7);
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7);
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames,maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_4:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -726,12 +734,16 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
-			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
+			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] & 0xf);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_8:
  		if (sb.dma.stereo) {
