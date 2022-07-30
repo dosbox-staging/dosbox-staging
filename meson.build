@@ -2,6 +2,13 @@ project('dosbox-staging', 'c', 'cpp',
   version : '0.79.0',
   license : 'GPL-2.0-or-later',
   meson_version : '>= 0.54.2',
+  # After increasing the minimum-required meson version, make the following
+  # improvements:
+  #
+  # - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
+  #            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
+  # - 0.56.0 - use meson.current_source_dir() in unit tests
+
   default_options : [
     'cpp_std=c++17',
     'warning_level=3',
@@ -30,13 +37,27 @@ project('dosbox-staging', 'c', 'cpp',
   ]
 )
 
-# After increasing the minimum-required meson version, make the following
-# improvements:
-#
-# - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
-#            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
-# - 0.56.0 - use meson.current_source_dir() in unit tests
 
+# Gather internal resource dependencies
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# These are always present regardless of host, compiler, dependencies, or options.
+#
+data_dir     = get_option('datadir')
+licenses_dir = data_dir / 'licenses' / 'dosbox-staging'
+doc_dir      = data_dir / 'doc' / 'dosbox-staging'
+
+install_man('docs/dosbox.1')
+install_data('COPYING', install_dir : licenses_dir)
+install_data('AUTHORS', 'README', 'THANKS', install_dir : doc_dir)
+
+subdir('contrib/linux')
+subdir('contrib/icons')
+subdir('contrib/resources')
+
+
+# Gather compiler settings
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 prefers_static_libs = (get_option('default_library') == 'static')
@@ -112,10 +133,11 @@ foreach flag : extra_flags
   endif
 endforeach
 
-# gather data for config file
-#
-# Actual config.h file will be generated after all interpreting build files 
-# for all subdirs.
+
+# Gather data to populate config.h
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The actual config.h file will be generated after interpreting
+# all the build files in all the subdirs.
 #
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
@@ -265,7 +287,8 @@ if cxx.compiles(builtin_expect_code, name : 'test for __builtin_expect support')
 endif
 
 
-# external dependencies
+# Gather external dependencies
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
@@ -368,6 +391,7 @@ if get_option('tracy')
   add_project_arguments('-g', language : ['c','cpp'])
   add_project_arguments('-fno-omit-frame-pointer', language : ['c','cpp'])
 endif
+
 # macOS-only dependencies
 #
 if host_machine.system() == 'darwin'
@@ -461,11 +485,7 @@ if host_machine.system() in ['windows', 'cygwin']
   winmm_dep = cxx.find_library('winmm', required : true)
 endif
 
-summary('OpenGL support', conf_data.get('C_OPENGL'))
-
-
-# include directories
-#
+# Setup include directories
 incdir = include_directories('include', '.')
 
 # bundled dependencies, in dependency-order
@@ -524,12 +544,12 @@ if get_option('enable_debugger') != 'none'
 endif
 
 # generate config.h
-#
 configure_file(input : 'src/config.h.in', output : 'config.h',
                configuration : conf_data)
 
 
-# dosbox executable
+# Setup the executable and libraries
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp', version_file]
@@ -554,24 +574,10 @@ libdosbox = static_library('dosbox', ['src/dosbox.cpp', version_file],
 dosbox_dep = declare_dependency(link_with : libdosbox)
 
 
-# tests
-#
+# Setup unit tests
+# ~~~~~~~~~~~~~~~~
 # Some tests use relative paths; in meson 0.56.0 this can be replaced
 # with meson.project_source_root().
+#
 project_source_root = meson.current_source_dir()
 subdir('tests')
-
-
-# additional files for installation
-#
-data_dir     = get_option('datadir')
-licenses_dir = data_dir / 'licenses' / 'dosbox-staging'
-doc_dir      = data_dir / 'doc' / 'dosbox-staging'
-
-install_man('docs/dosbox.1')
-install_data('COPYING', install_dir : licenses_dir)
-install_data('AUTHORS', 'README', 'THANKS', install_dir : doc_dir)
-
-subdir('contrib/linux')
-subdir('contrib/icons')
-subdir('contrib/resources')
