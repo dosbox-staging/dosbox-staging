@@ -32,8 +32,8 @@ public:
 	SurroundProcessor(const uint16_t sample_rate);
 	~SurroundProcessor();
 
-	void ControlWrite(const uint8_t val) noexcept;
-	AudioFrame Process(const AudioFrame &frame) noexcept;
+	void ControlWrite(const uint8_t val);
+	AudioFrame Process(const AudioFrame &frame);
 
 	// prevent copying
 	SurroundProcessor(const SurroundProcessor &) = delete;
@@ -88,9 +88,9 @@ public:
 	StereoProcessor(const uint16_t sample_rate);
 	~StereoProcessor();
 
-	void Reset() noexcept;
+	void Reset();
 	void ControlWrite(const StereoProcessorControlReg, const uint8_t data);
-	AudioFrame Process(const AudioFrame &frame) noexcept;
+	AudioFrame Process(const AudioFrame &frame);
 
 	void SetLowShelfGain(const double gain_db);
 	void SetHighShelfGain(const double gain_db);
@@ -115,9 +115,9 @@ private:
 	// All-pass filter for pseudo-stereo processing
 	Iir::RBJ::AllPass allpass = {};
 
-	AudioFrame ProcessSourceSelection(const AudioFrame &frame) noexcept;
-	AudioFrame ProcessShelvingFilters(const AudioFrame &frame) noexcept;
-	AudioFrame ProcessStereoProcessing(const AudioFrame &frame) noexcept;
+	AudioFrame ProcessSourceSelection(const AudioFrame &frame);
+	AudioFrame ProcessShelvingFilters(const AudioFrame &frame);
+	AudioFrame ProcessStereoProcessing(const AudioFrame &frame);
 };
 
 class AdlibGold {
@@ -125,11 +125,11 @@ public:
 	AdlibGold(const uint16_t sample_rate);
 	~AdlibGold();
 
-	void SurroundControlWrite(const uint8_t val) noexcept;
+	void SurroundControlWrite(const uint8_t val);
 	void StereoControlWrite(const StereoProcessorControlReg reg,
-	                        const uint8_t data) noexcept;
+	                        const uint8_t data);
 
-	void Process(const int16_t *in, const uint32_t frames, float *out) noexcept;
+	void Process(const int16_t *in, const uint32_t frames, float *out);
 
 private:
 	std::unique_ptr<SurroundProcessor> surround_processor = {};

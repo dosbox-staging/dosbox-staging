@@ -49,7 +49,7 @@ union SurroundControlReg {
 	bit_view<2, 1> a0;  // word clock
 };
 
-void SurroundProcessor::ControlWrite(const uint8_t val) noexcept
+void SurroundProcessor::ControlWrite(const uint8_t val)
 {
 	SurroundControlReg reg = {val};
 
@@ -83,7 +83,7 @@ void SurroundProcessor::ControlWrite(const uint8_t val) noexcept
 	control_state.a0  = reg.a0;
 }
 
-AudioFrame SurroundProcessor::Process(const AudioFrame &frame) noexcept
+AudioFrame SurroundProcessor::Process(const AudioFrame &frame)
 {
 	YM7128B_ChipIdeal_Process_Data data = {};
 
@@ -130,7 +130,7 @@ StereoProcessor::~StereoProcessor() = default;
 constexpr auto volume_0db_value       = 60;
 constexpr auto shelf_filter_0db_value = 6;
 
-void StereoProcessor::Reset() noexcept
+void StereoProcessor::Reset()
 {
 	ControlWrite(StereoProcessorControlReg::VolumeLeft, volume_0db_value);
 	ControlWrite(StereoProcessorControlReg::VolumeRight, volume_0db_value);
@@ -228,7 +228,7 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 	}
 }
 
-AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame) noexcept
+AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame)
 {
 	switch (source_selector) {
 	case StereoProcessorSourceSelector::SoundA1:
@@ -248,7 +248,7 @@ AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame) noex
 	}
 }
 
-AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame) noexcept
+AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame)
 {
 	AudioFrame out_frame = {};
 
@@ -259,7 +259,7 @@ AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame) noex
 	return out_frame;
 }
 
-AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame) noexcept
+AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame)
 {
 	AudioFrame out_frame = {};
 
@@ -290,7 +290,7 @@ AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame) noe
 	return out_frame;
 }
 
-AudioFrame StereoProcessor::Process(const AudioFrame &frame) noexcept
+AudioFrame StereoProcessor::Process(const AudioFrame &frame)
 {
 	auto out_frame = ProcessSourceSelection(frame);
 	out_frame      = ProcessShelvingFilters(out_frame);
@@ -316,17 +316,17 @@ AdlibGold::AdlibGold(const uint16_t sample_rate)
 AdlibGold::~AdlibGold() = default;
 
 void AdlibGold::StereoControlWrite(const StereoProcessorControlReg reg,
-                                   const uint8_t data) noexcept
+                                   const uint8_t data)
 {
 	stereo_processor->ControlWrite(reg, data);
 }
 
-void AdlibGold::SurroundControlWrite(const uint8_t val) noexcept
+void AdlibGold::SurroundControlWrite(const uint8_t val)
 {
 	surround_processor->ControlWrite(val);
 }
 
-void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out) noexcept
+void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out)
 {
 	auto frames_remaining = frames;
 
