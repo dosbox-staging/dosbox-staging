@@ -335,8 +335,8 @@ public:
 	virtual void PrintData(FILE *outfile) const = 0;
 };
 
-class Prop_multival;
-class Prop_multival_remain;
+class PropMultiVal;
+class PropMultiValRemain;
 
 class Section_prop final : public Section {
 private:
@@ -362,10 +362,10 @@ public:
 	Prop_hex *Add_hex(const std::string &_propname,
 	                  Property::Changeable::Value when, Hex _value = 0);
 	//	void Add_double(const char * _propname, double _value=0.0);
-	Prop_multival *Add_multi(const std::string &_propname,
+	PropMultiVal *AddMultiVal(const std::string &_propname,
 	                         Property::Changeable::Value when,
 	                         const std::string &sep);
-	Prop_multival_remain *Add_multiremain(const std::string &_propname,
+	PropMultiValRemain *AddMultiValRemain(const std::string &_propname,
 	                                      Property::Changeable::Value when,
 	                                      const std::string &sep);
 
@@ -376,21 +376,21 @@ public:
 	Hex Get_hex(const std::string &_propname) const;
 	double Get_double(const std::string &_propname) const;
 	Prop_path *Get_path(const std::string &_propname) const;
-	Prop_multival *Get_multival(const std::string &_propname) const;
-	Prop_multival_remain *Get_multivalremain(const std::string &_propname) const;
+	PropMultiVal *GetMultiVal(const std::string &_propname) const;
+	PropMultiValRemain *GetMultiValRemain(const std::string &_propname) const;
 	bool HandleInputline(const std::string &line) override;
 	void PrintData(FILE* outfile) const override;
 	std::string GetPropValue(const std::string &property) const override;
 };
 
-class Prop_multival : public Property {
+class PropMultiVal : public Property {
 protected:
 	std::unique_ptr<Section_prop> section;
 	std::string separator;
 	void make_default_value();
 
 public:
-	Prop_multival(const std::string &name,
+	PropMultiVal(const std::string &name,
 	              Changeable::Value when,
 	              const std::string &sep)
 	        : Property(name, when),
@@ -411,11 +411,11 @@ public:
 	const std::vector<Value> &GetValues() const override;
 };
 
-class Prop_multival_remain final : public Prop_multival{
+class PropMultiValRemain final : public PropMultiVal{
 public:
-	Prop_multival_remain(const std::string &_propname,
+	PropMultiValRemain(const std::string &_propname,
 	                     Changeable::Value when, const std::string &sep)
-	        : Prop_multival(_propname, when, sep)
+	        : PropMultiVal(_propname, when, sep)
 	{}
 
 	virtual bool SetValue(const std::string &input);

@@ -925,7 +925,7 @@ void RENDER_Init(Section *sec)
 		section->HandleInputline(std::string("scaler=") + cmd_line + " forced");
 	}
 
-	auto *prop = section->Get_multival("scaler");
+	auto *prop = section->GetMultiVal("scaler");
 
 	std::string force   = prop->GetSection()->Get_string("force");
 	render.scale.forced = force == "forced";
