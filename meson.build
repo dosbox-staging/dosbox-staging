@@ -335,10 +335,11 @@ if get_option('use_opengl') != 'false'
 endif
 
 if (opengl_dep.found()
+    and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
     and get_option('enable_debugger') != 'none')
   warning('''
-    Disabling OpenGL because it's incompatible with the debugger.
+    Disabling OpenGL because it's incompatible with the debugger on Linux.
     To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
   conf_data.set10('C_OPENGL', false)
   opengl_summary_msg = 'Found, but disabled due to conflict with debugger'
