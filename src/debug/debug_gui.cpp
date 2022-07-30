@@ -93,7 +93,7 @@ void DEBUG_ShowMsg(char const* format,...) {
 	wrefresh(dbg.win_out);
 }
 
-void DEBUG_RefreshPage(char scroll) {
+void DEBUG_RefreshPage(int scroll) {
 	// Quit early if the window hasn't been created yet
 	if (!dbg.win_out)
 		return;
