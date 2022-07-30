@@ -866,19 +866,18 @@ bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
     if (!abs_changed && !rel_changed)
         return false;
 
-    // If we are here, there is some noticeable change in mouse
-    // state - if callback is registered for mouse movement,
-    // then we definitely need the event
-    if (MOUSEDOS_HasCallback(static_cast<uint8_t>(MouseEventId::MouseHasMoved)))
-        return true;
+    // NOTE: It might be tempting to optimize the flow here, by skipping
+    // the whole event-queue-callback flow if there is no callback
+    // registered, no graphic cursor to draw, etc. Don't do this - there
+    // is at least one game (Master of Orion II), which does INT 0x33
+    // calls with 0x0F parameter (changing the callback settings)
+    // constantly (don't ask me, why) - doing too much optimization
+    // can cause the game to skip mouse events.
 
-    // Noticeable change, but no callback; we might still need the
-    // event for cursor redraw routine - check this
-    return abs_changed && !state.hidden && !state.inhibit_draw;
+    return true;
 }
 
-bool MOUSEDOS_NotifyPressed(const MouseButtons12S new_buttons_12S,
-                            const uint8_t idx, const MouseEventId event_id)
+bool MOUSEDOS_NotifyPressed(const MouseButtons12S new_buttons_12S, const uint8_t idx)
 {
     assert(idx < num_buttons);
 
@@ -888,11 +887,11 @@ bool MOUSEDOS_NotifyPressed(const MouseButtons12S new_buttons_12S,
     state.last_pressed_x[idx] = get_pos_x();
     state.last_pressed_y[idx] = get_pos_y();
 
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(event_id));
+    // See comment in 'MOUSEDOS_NotifyMoved' about optimizing this
+    return true;
 }
 
-bool MOUSEDOS_NotifyReleased(const MouseButtons12S new_buttons_12S,
-                             const uint8_t idx, const MouseEventId event_id)
+bool MOUSEDOS_NotifyReleased(const MouseButtons12S new_buttons_12S, const uint8_t idx)
 {
     assert(idx < num_buttons);
 
@@ -902,7 +901,8 @@ bool MOUSEDOS_NotifyReleased(const MouseButtons12S new_buttons_12S,
     state.last_released_x[idx] = get_pos_x();
     state.last_released_y[idx] = get_pos_y();
 
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(event_id));
+    // See comment in 'MOUSEDOS_NotifyMoved' about optimizing this
+    return true;
 }
 
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
@@ -919,7 +919,8 @@ bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
     state.last_wheel_moved_x = get_pos_x();
     state.last_wheel_moved_y = get_pos_y();
 
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(MouseEventId::WheelHasMoved));
+    // See comment in 'MOUSEDOS_NotifyMoved' about optimizing this
+    return true;
 }
 
 static Bitu int33_handler()

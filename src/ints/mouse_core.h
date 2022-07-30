@@ -250,10 +250,8 @@ uintptr_t MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_
 
 bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                           const uint16_t x_abs, const uint16_t y_abs);
-bool MOUSEDOS_NotifyPressed(const MouseButtons12S buttons_12S,
-                            const uint8_t idx, const MouseEventId event_id);
-bool MOUSEDOS_NotifyReleased(const MouseButtons12S buttons_12S,
-                             const uint8_t idx, const MouseEventId event_id);
+bool MOUSEDOS_NotifyPressed(const MouseButtons12S buttons_12S, const uint8_t idx);
+bool MOUSEDOS_NotifyReleased(const MouseButtons12S buttons_12S, const uint8_t idx);
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel);
 
 #endif // DOSBOX_MOUSE_CORE_H

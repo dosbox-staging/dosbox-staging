@@ -895,7 +895,7 @@ void MOUSE_EventPressed(uint8_t idx)
     }
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
-        event.request_dos = MOUSEDOS_NotifyPressed(buttons_12S, idx_12S, event.id);
+        event.request_dos = MOUSEDOS_NotifyPressed(buttons_12S, idx_12S);
     }
 
     queue.AddEvent(event);
@@ -949,7 +949,7 @@ void MOUSE_EventReleased(uint8_t idx)
                                                        get_buttons_joined());
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
-        event.request_dos = MOUSEDOS_NotifyReleased(buttons_12S, idx_12S, event.id);
+        event.request_dos = MOUSEDOS_NotifyReleased(buttons_12S, idx_12S);
         MOUSESERIAL_NotifyPressedReleased(buttons_12S, idx_12S);
     }
 
