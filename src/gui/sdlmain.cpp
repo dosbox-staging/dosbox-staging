@@ -1822,7 +1822,8 @@ dosurface:
 #	endif
 		if (is_vendors_srgb_unreliable) {
 			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
-			            " because %s's driver is unreliable", gl_vendor.data());
+			            " because %s's driver is unreliable",
+			            gl_vendor.data());
 		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
@@ -1991,9 +1992,11 @@ dosurface:
 
 		memset(emptytex, 0, texture_area_bytes);
 
-		int is_framebuffer_srgb_capable;
-		SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                    &is_framebuffer_srgb_capable);
+		int is_framebuffer_srgb_capable = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+		                        &is_framebuffer_srgb_capable))
+			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
+			            SDL_GetError());
 
 		sdl.opengl.framebuffer_is_srgb_encoded = RENDER_UseSRGBFramebuffer() && is_framebuffer_srgb_capable > 0;
 
