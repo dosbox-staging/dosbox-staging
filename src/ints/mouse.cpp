@@ -451,25 +451,24 @@ void MouseQueue::StartTimerIfNeeded()
         return;
 
     bool timer_needed = false;
-    uint8_t delay_ms  = UINT8_MAX;
+    uint8_t delay_ms  = UINT8_MAX; // dummy delay, will never be used
 
-    if (delay.ps2_ms) {
+    if (HasEventPS2() || delay.ps2_ms) {
         timer_needed = true;
         delay_ms     = std::min(delay_ms, delay.ps2_ms);
     }
-    if (delay.dos_moved_wheel_ms) {
+    if (HasEventDosMoved() || delay.dos_moved_wheel_ms) {
         timer_needed = true;
         delay_ms     = std::min(delay_ms, delay.dos_moved_wheel_ms);
-    } else if (delay.dos_button_ms) {
+    } else if (HasEventDosButton() || delay.dos_button_ms) {
         // Do not report button before the movement
         timer_needed = true;
         delay_ms     = std::min(delay_ms, delay.dos_button_ms);
     }
 
     // If queue is empty and all expired, we need no timer
-    if (!timer_needed) {
+    if (!timer_needed)
         return;
-    }
 
     // Enforce some non-zero delay between events; needed
     // for example if DOS interrupt handler is busy
