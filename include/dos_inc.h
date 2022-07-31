@@ -794,7 +794,7 @@ static inline uint8_t RealHandle(uint16_t handle) {
 #define DOS_THOUSANDS_SEPARATOR_OFS 7
 #define DOS_DECIMAL_SEPARATOR_OFS   9
 
-enum COUNTRY {
+enum class Country : uint16_t {
 	United_States = 1,
 	Candian_French = 2,
 	Latin_America = 3,
