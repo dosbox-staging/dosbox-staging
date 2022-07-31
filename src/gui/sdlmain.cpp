@@ -1812,7 +1812,22 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+
+		const auto gl_vendor = std::string_view(
+		        reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+#	if WIN32
+		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
+#	else
+		constexpr auto is_vendors_srgb_unreliable = false;
+#	endif
+		if (is_vendors_srgb_unreliable) {
+			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
+			            " because %s's driver is unreliable", gl_vendor.data());
+		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
+			        SDL_GetError());
+		}
+
 		SetupWindowScaled(SCREEN_OPENGL, sdl.desktop.want_resizable_window);
 
 		/* We may simply use SDL_BYTESPERPIXEL
