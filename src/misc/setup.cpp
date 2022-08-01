@@ -1453,6 +1453,72 @@ void CommandLine::Shift(unsigned int amount) {
 	}
 }
 
+const std::string &SETUP_GetLanguage()
+{
+	static bool lang_is_cached = false;
+	static std::string lang = {};
+	if (lang_is_cached)
+		return lang;
+
+	// Did the user provide a language on the command line?
+	(void)control->cmdline->FindString("-lang", lang, true);
+
+	// Is a language provided in the conf file?
+	if (lang.empty()) {
+		const auto section = control->GetSection("dosbox");
+		assert(section);
+		lang = static_cast<const Section_prop *>(section)->Get_string(
+		        "language");
+	}
+	// Clear the language if it's set to the POSIX default
+	auto clear_if_default = [](std::string &l) {
+		lowcase(l);
+		if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
+			l.clear();
+		}
+	};
+	// Check the LANG environment variable
+	if (lang.empty()) {
+		const char *envlang = getenv("LANG");
+		if (envlang) {
+			lang = envlang;
+			clear_if_default(lang);
+		}
+	}
+	// Avoid changing locales already established by the ncurses debugger
+	// frame. Test it by running "debug.com ls.com" in a debugger build,
+	// then Alt+TAB to the debugger window, and finally press F10. You
+	// should be able to use the up and down arrows keys to select an
+	// instruction from the middle pane.
+#if !(C_DEBUG)
+	// Check if the locale is set
+	if (lang.empty()) {
+		const auto envlang = setlocale(LC_ALL, "");
+		if (envlang) {
+			lang = envlang;
+			clear_if_default(lang);
+		}
+	}
+
+	// Query the OS using OS-specific calls
+	if (lang.empty()) {
+		lang = get_language_from_os();
+		clear_if_default(lang);
+	}
+#endif
+	// Drop the dialect part of the language
+	// (e.g. "en_GB.UTF8" -> "en")
+	if (lang.size() > 2) {
+		lang = lang.substr(0, 2);
+	}
+
+	// return it as lowercase
+	lowcase(lang);
+
+	lang_is_cached = true;
+	return lang;
+}
+
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
 void SETUP_ParseConfigFiles(const std::string &config_path)
