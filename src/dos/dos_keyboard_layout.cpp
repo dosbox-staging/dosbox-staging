@@ -21,25 +21,26 @@
 #include <string_view>
 using sv = std::string_view;
 
+#if defined(WIN32)
+#	include <windows.h>
+#endif
+#include <map>
+#include <memory>
+
+#include "../ints/int10.h"
 #include "bios.h"
 #include "bios_disk.h"
-#include "setup.h"
-#include "support.h"
-#include "string_utils.h"
-#include "../ints/int10.h"
-#include "regs.h"
 #include "callback.h"
-#include "mapper.h"
-#include "drives.h"
 #include "dos_inc.h"
+#include "drives.h"
+#include "mapper.h"
+#include "regs.h"
+#include "setup.h"
+#include "string_utils.h"
+#include "support.h"
 
 #include "dos_keyboard_layout.h"
 #include "dos_resources.h"
-
-#if defined (WIN32)
-#include <windows.h>
-#endif
-#include <map>
 
 static FILE_unique_ptr OpenDosboxFile(const char *name)
 {
@@ -1586,28 +1587,48 @@ public:
 	}
 };
 
-static DOS_KeyboardLayout* test;
+static std::unique_ptr<DOS_KeyboardLayout> keyboard_layout = {};
 
 void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
-	delete test;	
+	keyboard_layout.reset();
 }
 
 const char *DOS_GetLoadedLayout();
 
 void DOS_SetCountry(uint16_t countryNo);
-void DOS_KeyboardLayout_Init(Section* sec) {
-	test = new DOS_KeyboardLayout(sec);
-	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown,true);
-	// MAPPER_AddHandler(switch_keyboard_layout, SDL_SCANCODE_F2,
-	//                   MMOD1 | MMOD2, "sw_layout", "Switch Layout");
 
-	uint16_t countryNo = check_cast<uint16_t>(static_cast<Section_prop*>(sec)->Get_int("country"));
-	if (!countryNo) {
-		const char *layout = DOS_GetLoadedLayout();
-		if (layout == NULL)
-			countryNo = static_cast<uint16_t>(Country::United_States);
-		else if (country_code_map.find(layout) != country_code_map.end())
-			countryNo = static_cast<uint16_t>(country_code_map.find(layout)->second);
-	}
-	DOS_SetCountry(countryNo);
+static void set_country_from_pref(const int country_pref)
+{
+	// default to the US
+	auto country_number = static_cast<uint16_t>(Country::United_States);
+
+	// if the user hasn't provided a country, get it from their layout
+	if (!country_pref)
+		country_number = static_cast<uint16_t>(
+		        lookup_country_from_code(DOS_GetLoadedLayout()));
+
+	// If the country they provided is valid, use that
+	else if (country_number_exists(country_pref))
+		country_number = static_cast<uint16_t>(country_pref);
+
+	// But if it's invalid, fallback to the default
+	else
+		LOG_ERR("LANGUAGE: The country number: %d could not be found, using '%u' instead.",
+		        country_pref,
+		        country_number);
+
+	assert(country_number_exists(country_number));
+	DOS_SetCountry(country_number);
+}
+
+void DOS_KeyboardLayout_Init(Section *sec)
+{
+	assert(sec);
+	keyboard_layout = std::make_unique<DOS_KeyboardLayout>(sec);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown, changeable_at_runtime);
+
+	const auto settings = static_cast<const Section_prop *>(sec);
+	set_country_from_pref(settings->Get_int("country"));
 }
