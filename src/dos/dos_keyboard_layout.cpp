@@ -21,9 +21,6 @@
 #include <string_view>
 using sv = std::string_view;
 
-#if defined(WIN32)
-#	include <windows.h>
-#endif
 #include <map>
 #include <memory>
 
@@ -1387,6 +1384,99 @@ static Country lookup_country_from_code(const char *country_code)
 		}
 	}
 	return Country::United_States;
+}
+
+constexpr uint16_t assert_codepage(const uint16_t codepage)
+{
+	assert(get_cpx_file_id(codepage) != -1);
+	return codepage;
+}
+
+[[maybe_unused]] constexpr uint16_t lookup_codepage_from_country(const Country country)
+{
+	// grouped in ascending ordered by codepage value
+	switch (country) {
+	case Country::Bosnia:
+	case Country::Croatia:
+	case Country::Macedonia:
+	case Country::Montenegro:
+	case Country::Serbia:
+	case Country::Slovenia:
+	case Country::Yugoslavia: return assert_codepage(113);
+
+	case Country::Poland: return assert_codepage(668);
+
+	case Country::Lithuania: return assert_codepage(774);
+
+	case Country::Ukraine: return assert_codepage(848);
+
+	case Country::Latin_America: return assert_codepage(850);
+
+	case Country::Romania: return assert_codepage(852);
+
+	case Country::Turkey: return assert_codepage(857);
+
+	case Country::Belgium:
+	case Country::Finland:
+	case Country::France:
+	case Country::Germany:
+	case Country::Italy:
+	case Country::Netherlands:
+	case Country::Spain:
+	case Country::Sweden:
+	case Country::Switzerland: return assert_codepage(858);
+
+	case Country::Brazil:
+	case Country::Portugal: return assert_codepage(860);
+
+	case Country::Iceland: return assert_codepage(861);
+
+	case Country::Israel: return assert_codepage(862);
+
+	case Country::Candian_French: return assert_codepage(863);
+
+	case Country::Arabic: return assert_codepage(864);
+
+	case Country::Denmark:
+	case Country::Norway: return assert_codepage(865);
+
+	case Country::Russia: return assert_codepage(866);
+
+	case Country::Czech_Slovak: return assert_codepage(867);
+
+	case Country::Greece: return assert_codepage(869);
+
+	case Country::Estonia: return assert_codepage(1116);
+
+	case Country::Latvia: return assert_codepage(1117);
+
+	case Country::Hungary: return assert_codepage(3845);
+
+	case Country::Nigeria: return assert_codepage(30005);
+
+	case Country::Azerbaijan: return assert_codepage(58210);
+
+	case Country::Georgia: return assert_codepage(59829);
+
+	default: return assert_codepage(437);
+	}
+}
+
+// A helper that loads a layout given only a language
+KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
+{
+	assert(language_pref);
+	const std::string language = language_pref == "auto" ? SETUP_GetLanguage() : language_pref;
+	const auto country  = lookup_country_from_code(language.c_str());
+	const auto codepage = lookup_codepage_from_country(country);
+	const auto result   = DOS_LoadKeyboardLayout(language.c_str(), codepage, "auto");
+
+	if (result == KEYB_NOERROR) {
+		LOG_MSG("LAYOUT: Loaded codepage %d for detected language %s", codepage, language.c_str());
+	} else if (country != Country::United_States) {
+		LOG_WARNING("LAYOUT: Failed loading codepage %d for detected language %s", codepage, language.c_str());
+	}
+	return result;
 }
 
 class DOS_KeyboardLayout final : public Module_base {
