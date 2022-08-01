@@ -39,25 +39,6 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
-#if C_COREFOUNDATION
-#include <CoreFoundation/CoreFoundation.h>
-[[maybe_unused]] static std::string get_language_from_os()
-{
-	auto cflocale = CFLocaleCopyCurrent();
-	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
-	auto locale_str_ref = static_cast<CFStringRef>(locale);
-	const auto cstr = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
-	std::string locale_string(cstr ? cstr : "");
-	CFRelease(cflocale);
-	return locale_string;
-}
-#else
-[[maybe_unused]] static std::string get_language_from_os()
-{
-	return "";
-}
-#endif
-
 #define LINE_IN_MAXLEN 2048
 
 class Message {
