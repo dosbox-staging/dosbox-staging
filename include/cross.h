@@ -136,4 +136,6 @@ bool get_expanded_files(const std::string &path,
                         bool files_only,
                         bool skip_native_path = false) noexcept;
 
+std::string get_language_from_os();
+
 #endif
