@@ -2007,8 +2007,15 @@ dosurface:
 		const auto texformat = RENDER_UseSRGBTexture() && sdl.opengl.framebuffer_is_srgb_encoded
 		                             ? GL_SRGB8_ALPHA8
 		                             : GL_RGB8;
-		glTexImage2D(GL_TEXTURE_2D, 0, texformat, texsize_w, texsize_h,
-		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
+		glTexImage2D(GL_TEXTURE_2D,
+		             0,
+		             texformat,
+		             texsize_w,
+		             texsize_h,
+		             0,
+		             GL_BGRA_EXT,
+		             GL_UNSIGNED_BYTE,
+		             emptytex);
 		delete[] emptytex;
 
 		if (sdl.opengl.framebuffer_is_srgb_encoded) {
