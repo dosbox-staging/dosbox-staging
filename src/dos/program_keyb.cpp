@@ -24,15 +24,48 @@
 #include "string_utils.h"
 
 void KEYB::Run(void) {
-	if (cmd->FindCommand(1,temp_line)) {
+	auto log_keyboard_code = [&](const KeyboardErrorCode rcode, const std::string &layout, const int codepage) {
+		switch (rcode) {
+		case KEYB_NOERROR:
+			WriteOut(MSG_Get("PROGRAM_KEYB_NOERROR"), layout.c_str(), dos.loaded_codepage);
+			break;
+		case KEYB_FILENOTFOUND:
+			WriteOut(MSG_Get("PROGRAM_KEYB_FILENOTFOUND"), layout.c_str());
+			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
+			break;
+		case KEYB_INVALIDFILE: WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"), layout.c_str()); break;
+		case KEYB_LAYOUTNOTFOUND:
+			WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"), layout.c_str(), codepage);
+			break;
+		case KEYB_INVALIDCPFILE:
+			WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"), layout.c_str());
+			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
+			break;
+		default:
+			LOG(LOG_DOSMISC, LOG_ERROR)
+			("KEYB:Invalid returncode %x", static_cast<uint8_t>(rcode));
+			break;
+		}
+	};
+
+	if (cmd->FindCommand(1, temp_line)) {
 		if (HelpRequested()) {
 			WriteOut(MSG_Get("SHELL_CMD_KEYB_HELP_LONG"));
 		} else {
 			/* first parameter is layout ID */
-			Bitu keyb_error=0;
-			std::string cp_string;
-			int32_t tried_cp = -1;
-			if (cmd->FindCommand(2,cp_string)) {
+			KeyboardErrorCode rcode = {};
+			std::string cp_string   = {};
+			int32_t tried_cp        = -1;
+
+			// If the use provided only the language, infer the
+			// codepage
+			if (cmd->GetCount() == 1) {
+				rcode = DOS_LoadKeyboardLayoutFromLanguage(temp_line.c_str());
+				log_keyboard_code(rcode, temp_line, tried_cp);
+				return;
+			}
+			// Otherwise load the user's specified codepage
+			if (cmd->FindCommand(2, cp_string)) {
 				/* second parameter is codepage number */
 				tried_cp=atoi(cp_string.c_str());
 				char cp_file_name[256];
@@ -44,33 +77,11 @@ void KEYB::Run(void) {
 					safe_strcpy(cp_file_name, "auto");
 				}
 
-				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);
+				rcode = DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);
 			} else {
-				keyb_error=DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
+				rcode = DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
 			}
-			switch (keyb_error) {
-				case KEYB_NOERROR:
-					WriteOut(MSG_Get("PROGRAM_KEYB_NOERROR"),temp_line.c_str(),dos.loaded_codepage);
-					break;
-				case KEYB_FILENOTFOUND:
-					WriteOut(MSG_Get("PROGRAM_KEYB_FILENOTFOUND"),temp_line.c_str());
-					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
-					break;
-				case KEYB_INVALIDFILE:
-					WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"),temp_line.c_str());
-					break;
-				case KEYB_LAYOUTNOTFOUND:
-					WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"),temp_line.c_str(),tried_cp);
-					break;
-				case KEYB_INVALIDCPFILE:
-					WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"),temp_line.c_str());
-					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
-					break;
-				default:
-				        LOG(LOG_DOSMISC, LOG_ERROR)("KEYB:Invalid returncode %x",
-				         static_cast<uint32_t>(keyb_error));
-				        break;
-			}
+			log_keyboard_code(rcode, temp_line, tried_cp);
 		}
 	} else {
 		/* no parameter in the command line, just output codepage info and possibly loaded layout ID */
