@@ -2004,7 +2004,9 @@ dosurface:
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = RENDER_UseSRGBTexture() ? GL_SRGB8_ALPHA8 : GL_RGB8;
+		const auto texformat = RENDER_UseSRGBTexture() && sdl.opengl.framebuffer_is_srgb_encoded
+		                             ? GL_SRGB8_ALPHA8
+		                             : GL_RGB8;
 		glTexImage2D(GL_TEXTURE_2D, 0, texformat, texsize_w, texsize_h,
 		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
 		delete[] emptytex;
