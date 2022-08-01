@@ -1645,7 +1645,15 @@ public:
 			}
 		}
 #else
-		// On non-Windows systems, alwaays find a good codepage for the requested layout
+		// On non-Windows systems, if the use only provided a single
+		// value (language), then try loading the layout using it:
+		const auto layout_is_one_value = sv(layoutname).find(' ') == std::string::npos;
+		if (layout_is_one_value) {
+			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname)) {
+				return; // success
+			}
+		}
+		// Otherwise use the layout to get the codepage
 		const auto req_codepage = loaded_layout->extract_codepage(layoutname);
 		loaded_layout->read_codepage_file("auto", req_codepage);
 #endif
