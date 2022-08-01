@@ -452,6 +452,8 @@ public:
 
 void SETUP_ParseConfigFiles(const std::string &config_path);
 
+const std::string &SETUP_GetLanguage();
+
 const char *SetProp(std::vector<std::string> &pvars);
 
 #endif
