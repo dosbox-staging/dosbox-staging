@@ -244,14 +244,13 @@ bool DOS_LayoutKey(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3);
 
 DOS_Version DOS_ParseVersion(const char *word, const char *args);
 
-enum {
-	KEYB_NOERROR=0,
+enum KeyboardErrorCode : uint8_t {
+	KEYB_NOERROR = 0,
 	KEYB_FILENOTFOUND,
 	KEYB_INVALIDFILE,
 	KEYB_LAYOUTNOTFOUND,
 	KEYB_INVALIDCPFILE
 };
-
 
 static inline uint16_t long2para(uint32_t size) {
 	if (size>0xFFFF0) return 0xffff;
