@@ -1536,32 +1536,130 @@ std::string get_lang_from_host_layout()
 	}
 	// try to match emulated keyboard layout with host-keyboardlayout
 	switch (cur_kb_layout) {
-	case 1029: return "cz243";
-	case 1030: return "dk";
-	case 1031: return "gr";
-	case 1032: return "gk";
-	case 1034: return "sp";
-	case 1035: return "su";
-	case 1036: return "fr";
+	case 1025:  // Saudi Arabia
+	case 1119:  // Tamazight
+	case 1120:  // Kashmiri
+	case 2049:  // Iraq
+	case 3073:  // Egypt
+	case 4097:  // Libya
+	case 5121:  // Algeria
+	case 6145:  // Morocco
+	case 7169:  // Tunisia
+	case 8193:  // Oman
+	case 9217:  // Yemen
+	case 10241: // Syria
+	case 11265: // Jordan
+	case 12289: // Lebanon
+	case 13313: // Kuwait
+	case 14337: // U.A.E
+	case 15361: // Bahrain
+	case 16385: // Qatar
+		return "ar462";
+
+	case 1026: return "bg";    // Bulgarian
+	case 1029: return "cz243"; // Czech
+	case 1030: return "dk";    // Danish
+
+	case 2055: // German - Switzerland
+	case 3079: // German - Austria
+	case 4103: // German - Luxembourg
+	case 5127: // German - Liechtenstein
+	case 1031: // German - Germany
+		return "gr";
+
+	case 1032: return "gk"; // Greek
+	case 1034: return "sp"; // Spanish - Spain (Traditional Sort)
+	case 1035: return "su"; // Finnish
+
+	case 1036:  // French - France
+	case 2060:  // French - Belgium
+	case 4108:  // French - Switzerland
+	case 5132:  // French - Luxembourg
+	case 6156:  // French - Monaco
+	case 7180:  // French - West Indies
+	case 8204:  // French - Reunion
+	case 9228:  // French - Democratic Rep. of Congo
+	case 10252: // French - Senegal
+	case 11276: // French - Cameroon
+	case 12300: // French - Cote d'Ivoire
+	case 13324: // French - Mali
+	case 14348: // French - Morocco
+	case 15372: // French - Haiti
+	case 58380: // French - North Africa
+		return "fr";
+
+	case 1037: return "il"; // Hebrew
 	case 1038: return cur_kb_sub_id ? "hu" : "hu208";
-	case 1039: return "is161";
-	case 1040: return "it";
-	case 1043: return "nl";
-	case 1044: return "no";
-	case 1045: return "pl";
-	case 1046: return "br";
-	case 1049: return "ru";
-	case 1050: return "hr";
-	case 1051: return "sk";
-	case 1053: return "sv";
-	case 1055: return "tr";
-	case 1058: return "ur";
-	case 1059: return "bl";
-	case 1060: return "si";
-	case 1061: return "et";
-	case 2055: return "sg";
-	case 2070: return "po";
-	case 4108: return "sf";
+	case 1039: return "is161"; // Icelandic
+
+	case 2064: // Italian - Switzerland
+	case 1040: // Italian - Italy
+		return "it";
+
+	case 3084: return "ca"; // French - Canada
+	case 1041: return "jp"; // Japanese
+
+	case 2067: // Dutch - Belgium
+	case 1043: // Dutch - Netherlands
+		return "nl";
+
+	case 1044: return "no"; // Norwegian (Bokmål)
+	case 1045: return "pl"; // Polish
+	case 1046: return "br"; // Portuguese - Brazil
+
+	case 2073: // Russian - Moldava
+	case 1049: // Russian
+		return "ru";
+
+	case 4122: // Croatian (Bosnia/Herzegovina)
+	case 1050: // Croatian
+		return "hr";
+
+	case 1051: return "sk"; // Slovak
+	case 1052: return "sq"; // Albanian - Albania
+
+	case 2077: // Swedish - Finland
+	case 1053: // Swedish
+		return "sv";
+
+	case 1055: return "tr"; // Turkish
+	case 1058: return "ur"; // Ukrainian
+	case 1059: return "bl"; // Belarusian
+	case 1060: return "si"; // Slovenian
+	case 1061: return "et"; // Estonian
+	case 1062: return "lv"; // Latvian
+	case 1063: return "lt"; // Lithuanian
+	case 1064: return "tj"; // Tajik
+	case 1066: return "vi"; // Vietnamese
+	case 1067: return "hy"; // Armenian - Armenia
+	case 1071: return "mk"; // F.Y.R.O. Macedonian
+	case 1079: return "ka"; // Georgian
+	case 2070: return "po"; // Portuguese - Portugal
+	case 2072: return "ro"; // Romanian - Moldava
+	case 5146: return "ba"; // Bosnian (Bosnia/Herzegovina)
+
+	case 2058:  // Spanish - Mexico
+	case 3082:  // Spanish - Spain (Modern Sort)
+	case 4106:  // Spanish - Guatemala
+	case 5130:  // Spanish - Costa Rica
+	case 6154:  // Spanish - Panama
+	case 7178:  // Spanish - Dominican Republic
+	case 8202:  // Spanish - Venezuela
+	case 9226:  // Spanish - Colombia
+	case 10250: // Spanish - Peru
+	case 11274: // Spanish - Argentina
+	case 12298: // Spanish - Ecuador
+	case 13322: // Spanish - Chile
+	case 14346: // Spanish - Uruguay
+	case 15370: // Spanish - Paraguay
+	case 16394: // Spanish - Bolivia
+	case 17418: // Spanish - El Salvador
+	case 18442: // Spanish - Honduras
+	case 19466: // Spanish - Nicaragua
+	case 20490: // Spanish - Puerto Rico
+	case 21514: // Spanish - United States
+	case 58378: // Spanish - Latin America
+		return "la";
 	}
 
 #endif
