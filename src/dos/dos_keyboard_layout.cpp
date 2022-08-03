@@ -52,7 +52,7 @@ static FILE_unique_ptr OpenDosboxFile(const char *name)
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
 			if (ldp) {
 				FILE *tmpfile=ldp->GetSystemFilePtr(fullname, "rb");
-				if (tmpfile != NULL)
+				if (tmpfile != nullptr)
 					return FILE_unique_ptr(tmpfile);
 			}
 		}
@@ -132,7 +132,7 @@ keyboard_layout::~keyboard_layout() {
 		for (Bitu i=0; i<language_code_count; i++)
 			delete[] language_codes[i];
 		delete[] language_codes;
-		language_codes=NULL;
+		language_codes=nullptr;
 	}
 }
 
@@ -304,7 +304,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t
 	read_buf_size = 0;
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		// try keyboard layout libraries next
 		auto try_file = [&](const char *file, const bool first_id_only) {
 			if (!(start_pos = read_kcl_file(file, keyboard_file_name,
@@ -878,7 +878,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	char nbuf[520];
 	sprintf(nbuf, "Z:\\CPI\\%s", cp_filename);
 	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		size_t strsz=strlen(nbuf);
 		if (strsz) {
 			char plc=(char)toupper(*reinterpret_cast<unsigned char*>(&nbuf[strsz-1]));
@@ -901,7 +901,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
 	size_t found_at_pos = 5;
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		// check if build-in codepage is available
 		const auto i = get_CPX_file_id(codepage_id);
 		if (i < 0)
@@ -1173,14 +1173,14 @@ const char* keyboard_layout::get_layout_name() {
 			return (const char*)&current_keyboard_file_name;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 const char* keyboard_layout::main_language_code() {
 	if (language_codes) {
 		return language_codes[0];
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -1233,12 +1233,12 @@ Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp) {
 	} else return 0xff;
 }
 
-// get currently loaded layout name (NULL if no layout is loaded)
+// get currently loaded layout name (nullptr if no layout is loaded)
 const char* DOS_GetLoadedLayout(void) {
 	if (loaded_layout) {
 		return loaded_layout->get_layout_name();
 	}
-	return NULL;
+	return nullptr;
 }
 
 static const std::map<std::string, Country> country_code_map{
