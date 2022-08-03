@@ -49,7 +49,6 @@
 #include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"
-#include "enum.h"
 #include "hardware.h"
 #include "mapper.h"
 #include "mem.h"
@@ -99,7 +98,7 @@ using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
 
-enum class ReverbPreset { none, tiny, small, medium, large, huge };
+enum class ReverbPreset { None, Tiny, Small, Medium, Large, Huge };
 
 struct reverb_settings_t {
 	EmVerb mverb = {};
@@ -110,7 +109,7 @@ struct reverb_settings_t {
 	// resulting in a more pleasant sound.
 	highpass_filter_t highpass_filter = {};
 
-	ReverbPreset preset = ReverbPreset::none;
+	ReverbPreset preset = ReverbPreset::None;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
 	float highpass_cutoff_freq     = 1.0f;
@@ -142,12 +141,12 @@ struct reverb_settings_t {
 	}
 };
 
-enum class ChorusPreset { none, light, normal, strong };
+enum class ChorusPreset { None, Light, Normal, Strong };
 
 struct chorus_settings_t {
 	ChorusEngine chorus_engine = ChorusEngine(48000);
 
-	ChorusPreset preset = ChorusPreset::none;
+	ChorusPreset preset = ChorusPreset::None;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
 
@@ -286,6 +285,26 @@ static void set_global_chorus(const mixer_channel_t channel)
 		channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
 }
 
+constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
+{
+	if (pref == "off")
+		return ReverbPreset::None;
+	if (pref == "tiny")
+		return ReverbPreset::Tiny;
+	if (pref == "small")
+		return ReverbPreset::Small;
+	if (pref == "medium" || pref == "on")
+		return ReverbPreset::Medium;
+	if (pref == "large")
+		return ReverbPreset::Large;
+	if (pref == "huge")
+		return ReverbPreset::Huge;
+
+	// the conf system programmatically guarantees only the above prefs are used
+	assertm(false, "Unhandled revert preset");
+	return ReverbPreset::None;
+}
+
 static void configure_reverb(std::string reverb_pref)
 {
 	auto was_reverb_on = mixer.do_reverb;
@@ -307,7 +326,7 @@ static void configure_reverb(std::string reverb_pref)
 	auto &r = mixer.reverb; // short-hand reference
 
 	auto current_preset = r.preset;
-	auto new_preset = enum_cast<ReverbPreset>(reverb_pref).value();
+	auto new_preset = reverb_pref_to_preset(reverb_pref);
 	auto preset_unchanged = (current_preset == new_preset);
 
 	if (was_reverb_on && preset_unchanged)
@@ -329,12 +348,12 @@ static void configure_reverb(std::string reverb_pref)
 
 	// clang-format off
 	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case ReverbPreset::none:   break;
-	case ReverbPreset::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case ReverbPreset::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case ReverbPreset::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case ReverbPreset::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case ReverbPreset::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::None:   break;
+	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -343,6 +362,22 @@ static void configure_reverb(std::string reverb_pref)
 		set_global_reverb(it.second);
 
 	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
+}
+
+constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
+{
+	if (pref == "off")
+		return ChorusPreset::None;
+	if (pref == "light")
+		return ChorusPreset::Light;
+	if (pref == "normal" || pref == "on")
+		return ChorusPreset::Normal;
+	if (pref == "strong")
+		return ChorusPreset::Strong;
+
+	// the conf system programmatically guarantees only the above prefs are used
+	assertm(false, "Unhandled chorus preset");
+	return ChorusPreset::None;
 }
 
 static void configure_chorus(std::string chorus_pref)
@@ -368,7 +403,7 @@ static void configure_chorus(std::string chorus_pref)
 	const auto rate_hz = mixer.sample_rate.load();
 
 	auto current_preset = c.preset;
-	auto new_preset = enum_cast<ChorusPreset>(chorus_pref).value();
+	auto new_preset = chorus_pref_to_preset(chorus_pref);
 	auto preset_unchanged = (current_preset == new_preset);
 
 	if (was_chorus_on && preset_unchanged)
@@ -383,10 +418,10 @@ static void configure_chorus(std::string chorus_pref)
 
 	// clang-format off
 	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
-	case ChorusPreset::none:   break;
-	case ChorusPreset::light:  c.Setup(_16dB, 0.00f, rate_hz); break;
-	case ChorusPreset::normal: c.Setup(_11dB, 0.00f, rate_hz); break;
-	case ChorusPreset::strong: c.Setup(__6dB, 0.00f, rate_hz); break;
+	case ChorusPreset::None:   break;
+	case ChorusPreset::Light:  c.Setup(_16dB, 0.00f, rate_hz); break;
+	case ChorusPreset::Normal: c.Setup(_11dB, 0.00f, rate_hz); break;
+	case ChorusPreset::Strong: c.Setup(__6dB, 0.00f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -707,8 +742,9 @@ static void log_filter_settings(const std::string &channel_name,
                                 const FilterState state, const uint8_t order,
                                 const uint16_t cutoff_freq)
 {
-	assert(state != FilterState::Off);      // we expect only enabled states
-	assert(enum_count<FilterState>() == 3); // catch enum additions/removals
+	// we programmatically expect only 'on' and 'forced-on' states:
+	assert(state != FilterState::Off);
+	assert(state == FilterState::On || state == FilterState::ForcedOn);
 
 	constexpr auto db_per_order = 6;
 
