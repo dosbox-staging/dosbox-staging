@@ -1507,11 +1507,77 @@ constexpr uint16_t assert_codepage(const uint16_t codepage)
 	}
 }
 
+// Use OS-specific calls to extra the layout and from there convert it into a language
+std::string get_lang_from_host_layout()
+{
+#if defined(WIN32)
+#	include <windows.h>
+
+	WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
+	WORD cur_kb_sub_id = 0;
+	char layout_id_string[KL_NAMELENGTH];
+	if (GetKeyboardLayoutName(layout_id_string)) {
+		if (safe_strlen(layout_id_string) == 8) {
+			const int cur_kb_layout_by_name = ConvHexWord(
+			        (char *)&layout_id_string[4]);
+			layout_id_string[4] = 0;
+			const int sub_id = ConvHexWord((char *)&layout_id_string[0]);
+			if ((cur_kb_layout_by_name > 0) &&
+			    (cur_kb_layout_by_name < 65536)) {
+				// use layout _id extracted from the layout string
+				cur_kb_layout = (WORD)cur_kb_layout_by_name;
+			}
+			if ((sub_id >= 0) && (sub_id < 100)) {
+				// use sublanguage ID extracted from the layout
+				// string
+				cur_kb_sub_id = (WORD)sub_id;
+			}
+		}
+	}
+	// try to match emulated keyboard layout with host-keyboardlayout
+	switch (cur_kb_layout) {
+	case 1029: return "cz243";
+	case 1030: return "dk";
+	case 1031: return "gr";
+	case 1032: return "gk";
+	case 1034: return "sp";
+	case 1035: return "su";
+	case 1036: return "fr";
+	case 1038: return cur_kb_sub_id ? "hu" : "hu208";
+	case 1039: return "is161";
+	case 1040: return "it";
+	case 1043: return "nl";
+	case 1044: return "no";
+	case 1045: return "pl";
+	case 1046: return "br";
+	case 1049: return "ru";
+	case 1050: return "hr";
+	case 1051: return "sk";
+	case 1053: return "sv";
+	case 1055: return "tr";
+	case 1058: return "ur";
+	case 1059: return "bl";
+	case 1060: return "si";
+	case 1061: return "et";
+	case 2055: return "sg";
+	case 2070: return "po";
+	case 4108: return "sf";
+	}
+
+#endif
+	return ""; // default to empty/US
+}
+
 // A helper that loads a layout given only a language
 KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 {
 	assert(language_pref);
-	const std::string language = language_pref == "auto" ? SETUP_GetLanguage() : language_pref;
+	std::string language = language_pref;
+	if (language == "auto") {
+		const auto lang_from_conf = SETUP_GetLanguage();
+		language = lang_from_conf.empty() ? get_lang_from_host_layout()
+		                                  : lang_from_conf;
+	}
 	const auto country  = lookup_country_from_code(language.c_str());
 	const auto codepage = lookup_codepage_from_country(country);
 	const auto result   = DOS_LoadKeyboardLayout(language.c_str(), codepage, "auto");
@@ -1534,165 +1600,7 @@ public:
 
 		const char * layoutname=section->Get_string("keyboardlayout");
 
-#if defined (WIN32)
-		Bits wants_dos_codepage = -1;
-		if (!strncmp(layoutname, "auto", 4)) {
-			WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
-			WORD cur_kb_subID  = 0;
-			char layoutID_string[KL_NAMELENGTH];
-			if (GetKeyboardLayoutName(layoutID_string)) {
-				if (safe_strlen(layoutID_string) == 8) {
-					int cur_kb_layout_by_name = ConvHexWord((char*)&layoutID_string[4]);
-					layoutID_string[4] = 0;
-					int subID = ConvHexWord((char*)&layoutID_string[0]);
-					if ((cur_kb_layout_by_name>0) && (cur_kb_layout_by_name<65536)) {
-						// use layout ID extracted from the layout string
-						cur_kb_layout = (WORD)cur_kb_layout_by_name;
-					}
-					if ((subID>=0) && (subID<100)) {
-						// use sublanguage ID extracted from the layout string
-						cur_kb_subID  = (WORD)subID;
-					}
-				}
-			}
-			// try to match emulated keyboard layout with host-keyboardlayout
-			// codepage 437 (standard) is preferred
-			switch (cur_kb_layout) {
-/*				case 1026:
-					layoutname = "bg241";
-					break; */
-				case 1029:
-					layoutname = "cz243";
-					break;
-				case 1030:
-					layoutname = "dk";
-					break;
-				case 1031:
-					layoutname = "gr";
-					wants_dos_codepage = 437;
-					break;
-				case 1033:
-					// US
-					return;
-				case 1032:
-					layoutname = "gk";
-					break;
-				case 1034:
-					layoutname = "sp";
-					wants_dos_codepage = 437;
-					break;
-				case 1035:
-					layoutname = "su";
-					wants_dos_codepage = 437;
-					break;
-				case 1036:
-					layoutname = "fr";
-					wants_dos_codepage = 437;
-					break;
-				case 1038:
-					if (cur_kb_subID==1) layoutname = "hu";
-					else layoutname = "hu208";
-					break;
-				case 1039:
-					layoutname = "is161";
-					break;
-				case 1040:
-					layoutname = "it";
-					wants_dos_codepage = 437;
-					break;
-				case 1043:
-					layoutname = "nl";
-					wants_dos_codepage = 437;
-					break;
-				case 1044:
-					layoutname = "no";
-					break;
-				case 1045:
-					layoutname = "pl";
-					break;
-				case 1046:
-					layoutname = "br";
-					wants_dos_codepage = 437;
-					break;
-/*				case 1048:
-					layoutname = "ro446";
-					break; */
-				case 1049:
-					layoutname = "ru";
-					wants_dos_codepage = 437;
-					break;
-				case 1050:
-					layoutname = "hr";
-					break;
-				case 1051:
-					layoutname = "sk";
-					break;
-/*				case 1052:
-					layoutname = "sq448";
-					break; */
-				case 1053:
-					layoutname = "sv";
-					wants_dos_codepage = 437;
-					break;
-				case 1055:
-					layoutname = "tr";
-					break;
-				case 1058:
-					layoutname = "ur";
-					wants_dos_codepage = 437;
-					break;
-				case 1059:
-					layoutname = "bl";
-					break;
-				case 1060:
-					layoutname = "si";
-					break;
-				case 1061:
-					layoutname = "et";
-					break;
-/*				case 1062:
-					layoutname = "lv";
-					break; */
-/*				case 1063:
-					layoutname = "lt221";
-					break; */
-/*				case 1064:
-					layoutname = "tj";
-					break;
-				case 1066:
-					layoutname = "vi";
-					break;
-				case 1067:
-					layoutname = "hy";
-					break; */
-				case 2055:
-					layoutname = "sg";
-					wants_dos_codepage = 437;
-					break;
-				case 2070:
-					layoutname = "po";
-					break;
-				case 4108:
-					layoutname = "sf";
-					wants_dos_codepage = 437;
-					break;
-				default:
-					break;
-			}
-		}
-		// this condition may only occur on Windows
-		if (wants_dos_codepage > 0) {
-			if ((loaded_layout->ReadCodePageFile("auto", (Bitu)wants_dos_codepage)) == KEYB_NOERROR) {
-				// preselected codepage was successfully loaded, so do nothing
-			} else {
-				// try to find a good codepage for the requested layout
-				const auto req_codepage = loaded_layout->ExtractCodePage(layoutname);
-				loaded_layout->ReadCodePageFile("auto", req_codepage);
-			}
-		}
-#else
-		// On non-Windows systems, if the use only provided a single
-		// value (language), then try loading the layout using it:
+		// If the use only provided a single value (language), then try using it
 		const auto layout_is_one_value = sv(layoutname).find(' ') == std::string::npos;
 		if (layout_is_one_value) {
 			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname)) {
@@ -1702,16 +1610,16 @@ public:
 		// Otherwise use the layout to get the codepage
 		const auto req_codepage = loaded_layout->ExtractCodePage(layoutname);
 		loaded_layout->ReadCodePageFile("auto", req_codepage);
-#endif
 
 		if (loaded_layout->ReadKeyboardFile(layoutname, dos.loaded_codepage)) {
 			if (strncmp(layoutname, "auto", 4)) {
-				LOG_ERR("Error loading keyboard layout %s", layoutname);
+				LOG_ERR("LAYOUT: Failed to load keyboard layout %s",
+				        layoutname);
 			}
 		} else {
 			const char *lcode = loaded_layout->GetMainLanguageCode();
 			if (lcode) {
-				LOG_MSG("DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
+				LOG_MSG("LAYOUT: DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
 			}
 		}
 	}
