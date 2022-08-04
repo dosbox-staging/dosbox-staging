@@ -40,17 +40,16 @@
 
 #endif // HAVE_MPROTECT
 
-#include <Tracy.hpp>
-
 #include "callback.h"
-#include "regs.h"
-#include "mem.h"
 #include "cpu.h"
 #include "debug.h"
-#include "paging.h"
 #include "inout.h"
 #include "lazyflags.h"
+#include "mem.h"
+#include "paging.h"
 #include "pic.h"
+#include "regs.h"
+#include "tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
