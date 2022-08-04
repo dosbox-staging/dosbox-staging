@@ -49,9 +49,20 @@ static bool raw_input = true; // true = relative input is raw data, without
 static Bitu int74_ret_callback = 0;
 
 // Original DOSBox forces mouse event delay of 5 milliseconds all the time, but
-// this is probably slightly too much - 7 milliseconds is already about twice the
-// typical 70 Hz screen refresh rate.
-static constexpr uint8_t boost_delay_ms = 7;
+// this is probably slightly too much - 8 milliseconds is already over twice the
+// 60 Hz rate the original Microsoft Mouse 8.20 driver sets
+// At least Ultima Underworld I and II do not like too high sampling rates
+static constexpr uint8_t boost_delay_ms = 8;
+
+static constexpr uint8_t mask_mouse_has_moved = static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+static constexpr uint8_t mask_wheel_has_moved = static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+static constexpr uint8_t mask_pressed  = static_cast<uint8_t>(MouseEventId::PressedLeft) +
+								         static_cast<uint8_t>(MouseEventId::PressedRight) +
+								         static_cast<uint8_t>(MouseEventId::PressedMiddle);
+static constexpr uint8_t mask_released = static_cast<uint8_t>(MouseEventId::ReleasedLeft) +
+								         static_cast<uint8_t>(MouseEventId::ReleasedRight) +
+								         static_cast<uint8_t>(MouseEventId::ReleasedMiddle);
+static constexpr uint8_t mask_button = mask_pressed + mask_released;
 
 // ***************************************************************************
 // Debug code, normally not enabled
@@ -172,19 +183,7 @@ private:
     bool event_dos_moved = false;
     bool event_dos_wheel = false;
 
-    bool prefer_ps2_next_time = false;
-
     uint32_t pic_ticks_start = 0; // PIC_Ticks value when timer starts
-
-    // Helper masks for aggregating DOS button events
-    static constexpr uint8_t aggregate_mask_pressed =
-            static_cast<uint8_t>(MouseEventId::PressedLeft)  |
-            static_cast<uint8_t>(MouseEventId::PressedRight) |
-            static_cast<uint8_t>(MouseEventId::PressedMiddle);
-    static constexpr uint8_t aggregate_mask_released =
-            static_cast<uint8_t>(MouseEventId::ReleasedLeft)  |
-            static_cast<uint8_t>(MouseEventId::ReleasedRight) |
-            static_cast<uint8_t>(MouseEventId::ReleasedMiddle);
 
     // Helpers to check if there are events in the queue
     bool HasEventDosMoved() const;
@@ -322,11 +321,11 @@ void MouseQueue::AggregateEventsDOS(MouseEvent &event)
     // Generate masks to detect whether two button events can be
     // aggregated (might be needed later even if we have no more
     // events now)
-    if (event.mask & aggregate_mask_pressed)
+    if (event.mask & mask_pressed)
         // Set 'pressed+released' for every 'pressed' bit
         event.aggregate_mask = static_cast<uint8_t>(event.mask |
                                                     (event.mask << 1));
-    else if (event.mask & aggregate_mask_released)
+    else if (event.mask & mask_released)
         // Set 'pressed+released' for every 'released' bit
         event.aggregate_mask = static_cast<uint8_t>(event.mask |
                                                     (event.mask >> 1));
@@ -392,14 +391,8 @@ void MouseQueue::FetchEvent(MouseEvent &event)
         return;
     }
 
-    // We should prefer PS/2 events now (as the last was DOS one),
-    // but we can't if there is no PS/2 event ready to be handled
-    if (!HasReadyEventPS2())
-        prefer_ps2_next_time = false;
-
     // Try DOS button events
-    if (HasReadyEventDosButton() && !prefer_ps2_next_time) {
-        prefer_ps2_next_time = true;
+    if (HasReadyEventDosButton()) {
         // Set delay before next DOS events
         delay.dos_button_ms = start_delay.dos_button_ms;
         delay.dos_moved_wheel_ms = std::max(delay.dos_moved_wheel_ms,
@@ -412,7 +405,6 @@ void MouseQueue::FetchEvent(MouseEvent &event)
 
     // Now try PS/2 event
     if (HasReadyEventPS2()) {
-        prefer_ps2_next_time = false;
         // Set delay before next PS/2 events
         delay.ps2_ms = start_delay.ps2_ms;
         // PS/2 events are really dummy - merely a notification
@@ -640,8 +632,18 @@ static Bitu int74_handler()
                 event.request_ps2 ? "PS2" : "---",
                 event.request_dos ? "DOS" : "---");
 
-    // If DOS driver is active, use it to handle the event
-    if (event.request_dos && mouse_shared.active_dos) {
+    // Handle DOS events
+    if (event.request_dos) {
+        if ((event.mask & mask_mouse_has_moved) &&
+            !MOUSEDOS_UpdateMoved())
+            event.mask &= static_cast<uint8_t>(~mask_mouse_has_moved & 0xff);
+        if ((event.mask & mask_wheel_has_moved) &&
+            !MOUSEDOS_UpdateWheel())
+            event.mask &= static_cast<uint8_t>(~mask_wheel_has_moved & 0xff);
+        if ((event.mask & mask_button) &&
+            !MOUSEDOS_UpdateButtons(event.buttons_12S))
+            event.mask &= static_cast<uint8_t>(~mask_button & 0xff);
+
         // Taken from DOSBox X: HERE within the IRQ 12 handler is the
         // appropriate place to redraw the cursor. OSes like Windows 3.1
         // expect real-mode code to do it in response to IRQ 12, not
@@ -743,27 +745,36 @@ void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
     MOUSE_NotifyStateChanged();
 }
 
+uint8_t clamp_start_delay(float value_ms)
+{
+    constexpr long min_ms = 3;   // 330 Hz sampling rate
+    constexpr long max_ms = 100; //  10 Hz sampling rate
+
+    const auto tmp = std::clamp(std::lround(value_ms), min_ms, max_ms);
+    return static_cast<uint8_t>(tmp);
+}
+
 void MOUSE_NotifyRateDOS(const uint8_t rate_hz)
 {
     auto &val_moved_wheel = queue.start_delay.dos_moved_wheel_ms;
     auto &val_button = queue.start_delay.dos_button_ms;
 
     // Convert rate in Hz to delay in milliseconds
-    val_moved_wheel = static_cast<uint8_t>(1000 / rate_hz);
+    val_moved_wheel = clamp_start_delay(1000.0f / rate_hz);
+
     // Cheat a little, do not allow to set too high delay. Some old
     // games might have tried to set lower rate to reduce number of IRQs
     // and save CPU power - this is no longer necessary. Windows 3.1 also
     // sets a suboptimal value in its PS/2 driver.
     val_moved_wheel = std::min(val_moved_wheel, boost_delay_ms);
+
     // Cheat a little once again - our delay for buttons is separate and
     // much smaller, so that button events can be sent to the DOS
-    // application with minimal latency. Due to hardware differences and
-    // multiple independent mouse driver implementations in the past, it is
-    // unlikely to cause problems. Besides, host OS and hardware have their
-    // limitations, too, they also introduce some latency.
-    val_button = val_moved_wheel / 5;
+    // application with minimal latency. So far this didin't cause any issues.
+    val_button = clamp_start_delay(val_moved_wheel / 5.0f);
 
-    // TODO: make a configuration option(s) for this, same for PS/2 mouse
+    // TODO: make a configuration option(s) for boosting sampling rates,
+	//       for DOS and PS/2 mice alike
 }
 
 void MOUSE_NotifyRatePS2(const uint8_t rate_hz)
@@ -771,7 +782,8 @@ void MOUSE_NotifyRatePS2(const uint8_t rate_hz)
     auto &val_ps2 = queue.start_delay.ps2_ms;
 
     // Convert rate in Hz to delay in milliseconds
-    val_ps2 = static_cast<uint8_t>(1000 / rate_hz);
+    val_ps2 = clamp_start_delay(1000.0f / rate_hz);
+
     // Cheat a little, like with DOS driver
     val_ps2 = std::min(val_ps2, boost_delay_ms);
 }
@@ -894,7 +906,7 @@ void MOUSE_EventPressed(uint8_t idx)
     }
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
-        event.request_dos = MOUSEDOS_NotifyPressed(buttons_12S, idx_12S);
+        event.request_dos = true;
     }
 
     queue.AddEvent(event);
@@ -948,7 +960,7 @@ void MOUSE_EventReleased(uint8_t idx)
                                                        get_buttons_joined());
     if (changed_12S) {
         event.request_vmm = MOUSEVMM_NotifyPressedReleased(buttons_12S);
-        event.request_dos = MOUSEDOS_NotifyReleased(buttons_12S, idx_12S);
+        event.request_dos = true;
         MOUSESERIAL_NotifyPressedReleased(buttons_12S, idx_12S);
     }
 
