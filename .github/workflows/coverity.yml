@@ -62,7 +62,18 @@ jobs:
       - name: Build and instrument the project
         run: |
           set -xeu
-          CC="clang" CXX="clang++" meson setup -Duse_slirp=false -Duse_mt32emu=false -Duse_fluidsynth=false -Dunit_tests=disabled build
+          CC="clang" CXX="clang++" meson setup \
+          -Dbuildtype=debug \
+          -Dunit_tests=disabled \
+          -Ddefault_library=shared \
+          -Duse_alsa=false \
+          -Duse_fluidsynth=false \
+          -Duse_mt32emu=false \
+          -Duse_opengl=false \
+          -Duse_png=false \
+          -Duse_sdl2_net=false \
+          -Duse_slirp=false \
+          build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int meson compile -C build
           tar -cvaf package.tar.gz cov-int

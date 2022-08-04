@@ -20,56 +20,53 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC 12, Ubuntu 20.04
+          - name: GCC 10, Ubuntu 20.04
             os: ubuntu-20.04
             packages: g++-10
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-10.ini
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-10.ini
             max_warnings: 0
 
           - name: Clang 12, Ubuntu 20.04
             os: ubuntu-20.04
             packages: clang-12
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-clang-12.ini
-            max_warnings: 0
-
-          - name: GCC, Ubuntu 20.04
-            os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-12.ini
             max_warnings: 0
 
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
 
           - name: GCC, +tests
             os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug
             run_tests: true
             max_warnings: -1
 
           - name: GCC, +debugger
             os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled -Denable_debugger=normal
+            build_flags: -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddynamic_core=dynrec
             max_warnings: 0
 
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec -Denable_debugger=normal
+            build_flags: -Ddynamic_core=dynrec -Dunit_tests=disabled -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -network
             os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
             max_warnings: 0
 
           - name: GCC, minimum build
             os: ubuntu-20.04
             build_flags: >-
+              -Dbuildtype=debug
               -Dunit_tests=disabled
               -Duse_alsa=false
               -Duse_fluidsynth=false
@@ -218,11 +215,7 @@ jobs:
         run: |
           meson setup \
             --wrap-mode=forcefallback \
-            -Dbuildtype=release \
-            -Ddefault_library=static \
-            -Db_asneeded=true \
             -Db_lto=true \
-            -Dfluidsynth:try-static-deps=true \
             --native-file=.github/meson/native-gcc-9.ini \
             build
 

@@ -208,14 +208,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
     cleaning your working directories:
 
     ``` shell
-    meson setup \
-        -Dbuildtype=release \
-        -Ddefault_library=static \
-        -Db_asneeded=true \
-        -Dtry_static_libs=png \
-        -Dfluidsynth:enable-floats=true \
-        -Dfluidsynth:try-static-deps=true \
-      build
+    meson setup build
     ```
 
     The above enables all of DOSBox Staging's functional features. If you're
@@ -228,8 +221,11 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
     meson compile -C build
     ```
 
-    Your binary is: `build/dosbox` -- have fun!
+    Your binary is: `build/dosbox`
 
+    The binary depends on local resources relative to it, so we suggest
+    symlinking to the binary from your PATH, such as into ~/.local/bin/
+    -- Have fun!
 
 ### Windows - Visual Studio (2019 or newer)
 

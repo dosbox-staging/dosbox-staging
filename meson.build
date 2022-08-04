@@ -1,33 +1,16 @@
 project('dosbox-staging', 'c', 'cpp',
   version : '0.79.0',
   license : 'GPL-2.0-or-later',
-  meson_version : '>= 0.54.2',
-  # After increasing the minimum-required meson version, make the following
-  # improvements:
-  #
-  # - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
-  #            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
-  # - 0.56.0 - use meson.current_source_dir() in unit tests
+  meson_version : '>= 0.56.0',
 
   default_options : [
     'cpp_std=c++17',
+    'buildtype=release',
+    'default_library=static',
     'warning_level=3',
     'b_ndebug=if-release',
     'b_staticpic=false',
-    'fluidsynth:enable-floats=true',
-    'fluidsynth:openmp=disabled',
-    'fluidsynth:enable-threads=false',
-    'fluidsynth:try-static-deps=false',
-    'fluidsynth:warning_level=0',
-    'glib:glib_assert=false',
-    'glib:glib_checks=false',
-    'glib:glib_debug=disabled',
-    'glib:libmount=disabled',
-    'glib:libelf=disabled',
-    'glib:nls=disabled',
-    'glib:tests=false',
-    'glib:warning_level=0',
-    'glib:xattr=false',
+    'b_pie=false',
     'gtest:warning_level=0',
     'iir:warning_level=0',
     'mt32emu:warning_level=0',
@@ -37,6 +20,7 @@ project('dosbox-staging', 'c', 'cpp',
   ]
 )
 
+#        'wrap_mode=forcefallback',
 
 # Gather internal resource dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,8 +49,9 @@ prefers_static_libs = (get_option('default_library') == 'static')
 summary('Build type',     get_option('buildtype'), section : 'Build Summary')
 summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 
-# extra compiler flags
+# extra build flags
 extra_flags = ['-Wno-unknown-pragmas']
+extra_link_flags = []
 
 # If the compiler provides std::filesystem, then we consider it modern enough
 # that we can trust it's extra helpful warnings to let us improve the code quality.
@@ -104,8 +89,10 @@ endif
 if host_machine.system() == 'windows'
   extra_flags += '-Wno-pedantic-ms-format'
 endif
+
 if prefers_static_libs
   extra_flags += ['-static-libstdc++', '-static-libgcc']
+  extra_link_flags += ['-no-pie']
 else
   extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
 endif
@@ -291,26 +278,43 @@ endif
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# system and compiler libraries
+dl_dep       = cc.find_library('dl', required : false)
+atomic_dep   = cxx.find_library('atomic', required : false)
+stdcppfs_dep = cxx.find_library('stdc++fs', required : false)
+threads_dep  = dependency('threads')
+
+# 3rd party libraries
 static_libs_list = get_option('try_static_libs')
+system_libs_list = get_option('use_system_libs')
+
+libiir_dep = dependency('iir', version : '>= 1.9.3',
+                        allow_fallback : ('iir' not in system_libs_list),
+                        static : ('iir' in static_libs_list or prefers_static_libs))
+
+opus_dep = dependency('opusfile',
+                       allow_fallback : ('opusfile' not in system_libs_list),
+                       static : ('opusfile' in static_libs_list or prefers_static_libs))
+
+sdl2_dep = dependency('sdl2', version : '>= 2.0.5',
+                       allow_fallback : ('sdl2' not in system_libs_list),
+                       static : ('sdl2' in static_libs_list))
+
+zlib_dep = dependency('zlib', version : '>= 1.2.11',
+                      allow_fallback : ('zlib' not in system_libs_list),
+                      static : ('zlib' in static_libs_list or prefers_static_libs))
+
+speexdsp_dep = dependency('speexdsp',
+                          allow_fallback : ('speexdsp' not in system_libs_list),
+                          static : ('speexdsp' in static_libs_list or prefers_static_libs))
+
+# Optional libraries
 msg = 'You can disable this dependency with: -D@0@=false'
 optional_dep       = dependency('', required : false)
-dl_dep             = cc.find_library('dl', required : false)
-libiir_dep         = dependency('iir', version : '>= 1.9.3',
-                                static : ('iir' in static_libs_list))
-atomic_dep         = cxx.find_library('atomic', required : false)
-stdcppfs_dep       = cxx.find_library('stdc++fs', required : false)
-opus_dep           = dependency('opusfile',
-                                static : ('opusfile' in static_libs_list))
-threads_dep        = dependency('threads')
-sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
-                                static : ('sdl2' in static_libs_list))
-zlib_dep           = dependency('zlib', version : '>= 1.2.11',
-                                static : ('zlib' in static_libs_list))
-speexdsp_dep       = dependency('speexdsp', version : '> 1.1.9',
-                                static : ('speexdsp' in static_libs_list))
 sdl2_net_dep       = optional_dep
 opengl_dep         = optional_dep
 fluid_dep          = optional_dep
+glib_dep           = optional_dep
 libslirp_dep       = optional_dep
 mt32emu_dep        = optional_dep
 png_dep            = optional_dep
@@ -323,19 +327,19 @@ coremidi_dep       = optional_dep # macOS-only
 winsock2_dep       = optional_dep # Windows-only
 winmm_dep          = optional_dep # Windows-only
 
-
+# SDL Networking
 if get_option('use_sdl2_net')
   sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.0',
                             static : ('sdl2_net' in static_libs_list),
                             not_found_message : msg.format('use_sdl2_net'))
 endif
 
-# OpenGL setup
+# OpenGL
 opengl_summary_msg = 'Disabled'
 if get_option('use_opengl') != 'false'
-  opengl_dep = dependency('gl', not_found_message : msg.format('use_opengl'))
+  opengl_dep = dependency('gl',
+                          not_found_message : msg.format('use_opengl'))
 endif
-
 if (opengl_dep.found()
     and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
@@ -351,40 +355,66 @@ else
 endif
 summary('OpenGL support', opengl_summary_msg)
 
-# Use a single static setting for the pool of libraries that use glib
-is_glib_realm_static = prefers_static_libs
-foreach l : ['fluidsynth', 'slirp']
-  if l in static_libs_list
-    is_glib_realm_static = true
-  endif
-endforeach
-
+# FluidSynth
 if get_option('use_fluidsynth')
-  fluid_dep = dependency('fluidsynth', version : '>= 2.2.3',
-                         static : is_glib_realm_static,
-                         fallback : ['fluidsynth', 'fluidsynth_dep'],
-                         not_found_message : msg.format('use_fluidsynth'))
-endif
+  glib_dep = dependency('glib-2.0', version : '>= 2.72.2',
+                         allow_fallback : ('glib' not in system_libs_list),
+                         static : ('glib' in static_libs_list or prefers_static_libs),
+                         default_options : [
+                           'default_library=' + get_option('default_library'),
+                           'b_staticpic=true',
+                           'glib_assert=false',
+                           'glib_checks=false',
+                           'glib_debug=disabled',
+                           'libmount=disabled',
+                           'libelf=disabled',
+                           'nls=disabled',
+                           'tests=false',
+                           'warning_level=0',
+                           'xattr=false'])
 
+#' + (get_option('default_library') == 'shared' or get_option('b_staticpic')).to_string(),
+
+  fluid_dep = dependency('fluidsynth', version : '>= 2.2.3',
+                         allow_fallback : ('fluidsynth' not in system_libs_list),
+                         static : ('fluidsynth' in static_libs_list or prefers_static_libs),
+                         not_found_message : msg.format('use_fluidsynth'),
+                         default_options : [
+                            'try-static-deps=' + ('fluidsynth' in static_libs_list or prefers_static_libs).to_string(),
+                            'enable-floats=true',
+                            'openmp=disabled',
+                            'enable-threads=false',
+                            'warning_level=0'])
+
+endif
+summary('FluidSynth support', fluid_dep.found())
+
+# slirp
 if get_option('use_slirp')
   libslirp_dep = dependency('slirp', version : '>= 4.6.1',
-                            static : is_glib_realm_static,
-                            fallback : ['slirp', 'libslirp_dep'],
+                            allow_fallback : ('slirp' not in system_libs_list),
+                            static : ('slirp' in static_libs_list or prefers_static_libs),
                             not_found_message : msg.format('use_slirp'))
 endif
+summary('slirp support', libslirp_dep.found())
 
+# mt32emu
 if get_option('use_mt32emu')
   mt32emu_dep = dependency('mt32emu', version : '>= 2.5.3',
-                           static : prefers_static_libs or ('mt32emu' in static_libs_list),
-                           fallback : ['mt32emu', 'mt32emu_dep'],
+                           allow_fallback : ('mt32emu' not in system_libs_list),
+                           static : ('mt32emu' in static_libs_list or prefers_static_libs),
                            not_found_message : msg.format('use_mt32emu'))
 endif
+summary('mt32emu support', mt32emu_dep.found())
 
+# PNG
 if get_option('use_png')
   png_dep = dependency('libpng',
-                       static : prefers_static_libs or ('png' in static_libs_list),
+                       allow_fallback : ('png' not in system_libs_list),
+                       static : ('png' in static_libs_list or prefers_static_libs),
                        not_found_message : msg.format('use_png'))
 endif
+summary('PNG support', mt32emu_dep.found())
 
 # Tracy
 if get_option('tracy')
@@ -416,6 +446,7 @@ if host_machine.system() == 'darwin'
   else
     warning('''Core Audio support disabled: compiler can't detect/use Apple Frameworks''')
   endif
+  summary('CoreAudio support', coreaudio_dep.found())
 
   # Core MIDI
   coremidi_dep = dependency('appleframeworks',
@@ -430,6 +461,7 @@ if host_machine.system() == 'darwin'
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
   endif
+  summary('CoreMIDI support', coremidi_dep.found())
 
   # Locale discovery
   corefoundation_dep = dependency('appleframeworks',
@@ -444,6 +476,7 @@ if host_machine.system() == 'darwin'
   else
     warning('''Core Foundation support disabled: compiler can't detect/use Apple Frameworks''')
   endif
+  summary('CoreFoundation support', corefoundation_dep.found())
 
   # SDL CD dependency
   coreservices_dep = dependency('appleframeworks',
@@ -458,6 +491,7 @@ if host_machine.system() == 'darwin'
   else
     warning('''Core Services support disabled: compiler can't detect/use Apple Frameworks''')
   endif
+  summary('CoreServices support', coreservices_dep.found())
 
   # Apple Silicon has 16k pages
   pagesize_cmd = run_command('pagesize')
@@ -478,13 +512,17 @@ force_alsa  = (get_option('use_alsa') == 'true')
 if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
   alsa_dep = dependency('alsa')
   conf_data.set('C_ALSA', 1)
+  summary('ALSA support', alsa_dep.found())
 endif
 
 # Windows-only dependencies
 #
 if host_machine.system() in ['windows', 'cygwin']
   winsock2_dep = cxx.find_library('ws2_32', required : true)
+  summary('Winsock 2 support', winsock2_dep.found())
+
   winmm_dep = cxx.find_library('winmm', required : true)
+  summary('Windows Multimedia support', winmm_dep.found())
 endif
 
 # Setup include directories
@@ -565,6 +603,7 @@ endif
 
 executable('dosbox', dosbox_sources,
            dependencies : internal_deps + third_party_deps,
+           link_args : extra_link_flags,
            include_directories : incdir,
            install : true)
 

@@ -20,7 +20,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: meson
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
             max_warnings: 0
 
           - name: GCC 11
@@ -28,13 +28,14 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: gcc@11
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
             max_warnings: 0
 
           - name: Clang, +tests (macOS 12)
             host: macos-12
             arch: x86_64
             needs_deps: true
+            build_flags: -Dbuildtype=debug -Ddefault_library=shared
             run_tests: true
             max_warnings: -1
 
@@ -42,7 +43,7 @@ jobs:
             host: macos-latest
             arch: x86_64
             needs_deps: true
-            build_flags: -Dunit_tests=disabled -Denable_debugger=normal
+            build_flags: -Denable_debugger=normal -Ddefault_library=shared
             max_warnings: 0
 
           - name: Clang
@@ -50,7 +51,7 @@ jobs:
             arch: arm64
             needs_deps: false
             packages: meson
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
             max_warnings: 0
 
     steps:
@@ -239,7 +240,7 @@ jobs:
         if:   matrix.runner.needs_libintl_workaround
         run:  |
           set -ex
-          ./scripts/retry_command.sh 3 meson setup -Ddefault_library=static --wrap-mode=forcefallback -Dfluidsynth:try-static-deps=true build
+          ./scripts/retry_command.sh 3 meson setup build
           ./scripts/retry_command.sh 3 git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
           brew uninstall -f --ignore-dependencies gettext
           rm -rf build
@@ -251,14 +252,10 @@ jobs:
         run: >-
           arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
           ${{ matrix.conf.build_flags }}
-          --wrap-mode=forcefallback
-          -Dbuildtype=release
-          -Db_lto=false
-          -Db_asneeded=true
-          -Ddefault_library=static
-          -Dtry_static_libs=iir,opusfile,sdl2,sdl2_net,speexdsp,zlib
-          -Dfluidsynth:try-static-deps=true
+          -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net
           build
+          # -Ddefault_library=shared
+          # -Dtry_static_libs=fluidsynth,glib,iir,mt32emu,opusfile,png,sdl2,sdl2_net,slirp,speexdsp,zlib
 
       - name: Build
         run:  arch -arch=${{ matrix.runner.arch }} meson compile -C build

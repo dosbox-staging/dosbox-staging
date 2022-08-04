@@ -65,20 +65,13 @@ you build a binary optimized for gaming.
 7. Setup a GCC build from an *MSYS2 MinGW x64* terminal:
 
    ``` shell
-   meson setup build/release-gcc -Dbuildtype=release -Db_asneeded=true \
-     --force-fallback-for=fluidsynth,mt32emu,slirp \
-     -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp,speexdsp \
-     -Dfluidsynth:try-static-deps=true
+   meson setup build/release-gcc
    ```
 
 8. Setup a Clang build from an *MSYS2 MinGW Clang x64* terminal:
 
    ``` shell
-   meson setup build/release-clang --native-file=.github/meson/native-clang.ini \
-     -Dbuildtype=release -Db_asneeded=true \
-     --force-fallback-for=fluidsynth,mt32emu,slirp \
-     -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp,speexdsp \
-     -Dfluidsynth:try-static-deps=true
+   meson setup build/release-clang --native-file=.github/meson/native-clang.ini
    ```
 
 9. Compile:
