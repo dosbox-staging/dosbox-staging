@@ -70,11 +70,18 @@ unit_tests = [
   {'name' : 'ansi_code_markup',     'deps' : [libmisc_dep]},
 ]
 
+extra_link_flags = []
+if get_option('b_pie') == false
+  extra_link_flags += ['-no-pie']
+endif
+
 foreach ut : unit_tests
   name = ut.get('name')
   extra_cpp = ut.get('extra_cpp', ['stubs.cpp'])
   exe = executable(name, [name + '_tests.cpp'] + extra_cpp,
+                   link_args : extra_link_flags,
                    dependencies : [gmock_dep, libghc_dep, libloguru_dep] + ut.get('deps'),
                    include_directories : incdir, cpp_args : cpp_args)
+
   test('gtest ' + name, exe)
 endforeach

@@ -1,10 +1,15 @@
 ## Minimum build requirements
 
+Install dependencies listed in [README.md](README.md).  Although `ccache` is
+optional, we recommend installing it because Meson will use it to greatly speed
+up builds. The minimum set of dependencies is:
+
   - C/C++ compiler with support for C++17
   - SDL >= 2.0.5
   - Opusfile
-  - Meson >= 0.54.2, or Visual Studio Community Edition 2019 or 2022
+  - Meson >= 0.56, or Visual Studio Community Edition 2019 or 2022
   - OS that is mostly POSIX-compliant or up-to-date Windows system
+
 
 All other dependencies are optional and can be disabled while configuring the
 build (in `meson setup` step).
@@ -19,37 +24,41 @@ on any modern system. Documentation for programmers using other systems:
 [macOS]: docs/build-macos.md
 [Haiku]: docs/build-haiku.md
 
-## Make a build with the built-in debugger
-
-On Linux, BSD, macOS, or MSYS2:
+## Standard release build, all features enabled
 
 ``` shell
-# setup the default debugger
-meson setup -Dbuildtype=release -Denable_debugger=normal build/debugger
-# -or- setup the heavy debugger
-meson setup -Dbuildtype=release -Denable_debugger=heavy build/debugger
-# build
-ninja -C build/debugger
+meson setup build/release
+meson compile -C build/release
 ```
 
-If using Visual Studio change the `C_DEBUG` and optionally the
-`C_HEAVY_DEBUG` lines inside `src/platform/visualc/config.h`.
+Your binary is `build/release/dosbox`.
 
-Default debugger:
+If you're using Visual Studio, use the x86-64 release build target.
 
-``` c++
-#define C_DEBUG 1
-#define C_HEAVY_DEBUG 0
+The binary is supported by resource files relative to it, so we recommend
+running it from it's present location.  However, if you want to package
+up the binary along with its dependencies and resource tree, you can run:
+`./scripts/create-package.sh` to learn more.
+
+## Debug build (for code contributors or diagnosing a crash)
+
+``` shell
+meson setup -Dbuildtype=debug build/debug
+meson compile -C build/debug
 ```
 
-Heavy debugger:
+## Built-in debugger build
 
-``` c++
-#define C_DEBUG 1
-#define C_HEAVY_DEBUG 1
+``` shell
+meson setup -Denable_debugger=normal build/debugger
+meson compile -C build/debugger
 ```
 
-Then perform a release build.
+For the heavy debugger, use `heavy` instead of `normal`.
+
+If using Visual Studio set the `C_DEBUG` and optionally the
+`C_HEAVY_DEBUG` values to `1` inside `src/platform/visualc/config.h`,
+and then perform a release build.
 
 ## Make a build with profiling enabled
 
@@ -58,10 +67,8 @@ is disabled by default. To enable it for Meson builds, set the `tracy` option
 to `true`:
 
 ``` shell
-# enable Tracy profiling
-meson setup -Dbuildtype=release -Dtracy=true build/release-tracy
-# build
-ninja -C build/release-tracy
+meson setup -Dtracy=true build/release-tracy build
+meson compile -C build/release-tracy
 ```
 
 If using Visual Studio, select the `Tracy` build configuration.
@@ -86,42 +93,24 @@ different platform, profiling Linux from Windows or vice versa, for example.
 
 Please refer to the Tracy documentation for further information.
 
-## Meson build snippets
+## Repository maintainer / packager builds
 
-### Make a debug build
-
-Install dependencies listed in [README.md](README.md).  Although `ccache` is
-optional, we recommend installing it because Meson will use it to greatly speed
-up builds.
-
-Build steps:
+Packagers interested in using shared libraries can use
+`-Ddefault_library=shared` and `-Duse_system_libs=lib1,lib2,etc` to
+ensure specific dependencies are provided by the system instead of
+via the Meson wraps. For example:
 
 ``` shell
-meson setup build
-ninja -C build
-```
-Directory `build` will contain all compiled files.
-
-### Other build types
-
-Meson supports several build types, appropriate for various situations:
-`release` for creating optimized release binaries, `debug` (default) for
-for development or `plain` for packaging.
-
-``` shell
-meson setup -Dbuildtype=release build
+meson setup -Duse_system_libs=fluidsynth,speexdsp build/package
+meson compile -C build/package
 ```
 
-For those interested in performing many different build types, separate
-build/ directories (or subdirectories) can be used. This allows builds to
-be organized by type as well as allows easy side-by-side comparison of
-builds.
+For the full list libraries available to use with `-Duse_system_libs`,
+see the `meson_options.txt` file. 
 
-One thing to note: If you use the VSCode editor with the clangd plugin,
-this plugin assumes Meson setup's "compile_commands.json" output file
-always resides in the hardcoded build/ directory. To work-around this bug,
-feel free to symlink this file from your active build directory into
-the hardcoded build/ location.
+Alternately, wraps can be fully disabled using `-Dwrap_mode=nofallback`,
+however this will require the operating system can satify all of
+DOSBox Staging's library dependencies.
 
 Detailed documentation: [Meson: Core options][meson-core]
 
@@ -135,7 +124,7 @@ For example, to compile without OpenGL dependency try:
 
 ``` shell
 meson setup -Duse_opengl=false build
-ninja -C build
+meson compile -C build
 ```
 
 ### List Meson's setup options
@@ -198,7 +187,7 @@ automatically.
 Build and run tests:
 
 ``` shell
-meson setup build
+meson setup -Dbuildtype=debug build
 meson test -C build
 ```
 
@@ -211,7 +200,7 @@ Place files described in `subprojects/gtest.wrap` file in
 `subprojects/packagecache/` directory, and then:
 
 ``` shell
-meson setup --wrap-mode=nodownload build
+meson setup -Dbuildtype=debug --wrap-mode=nodownload build
 meson test -C build
 ```
 
@@ -227,9 +216,9 @@ sudo dnf install gcovr lcov
 Run tests and generate report:
 
 ``` shell
-meson setup -Db_coverage=true build
+meson setup -Dbuildtype=debug -Db_coverage=true build
 meson test -C build
-ninja -C build coverage-html
+meson compile -C build coverage-html
 ```
 
 Open the report with your browser:
@@ -254,8 +243,8 @@ sudo apt install clang-tools
 Build and generate report:
 
 ``` shell
-meson setup build
-ninja -C build scan-build
+meson setup -Dbuildtype=debug build
+meson compile -C build scan-build
 ```
 
 ### Make a sanitizer build
@@ -280,9 +269,9 @@ classes of issues. See Meson's list of built-in options for other
 sanitizer types.
 
 ``` shell
-meson setup --native-file=.github/meson/native-clang.ini \
+meson setup -Dbuildtype=debug --native-file=.github/meson/native-clang.ini \
   -Doptimization=0 -Db_sanitize=address,undefined build/sanitizer
-ninja -C build/sanitizer
+meson compile -C build/sanitizer
 ```
 
 The directory `build/sanitizer` will contain the compiled files, which

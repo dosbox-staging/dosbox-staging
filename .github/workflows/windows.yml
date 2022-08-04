@@ -24,7 +24,7 @@ jobs:
             max_warnings: 20
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 921
+            max_warnings: 919
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

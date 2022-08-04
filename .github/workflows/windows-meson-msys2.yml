@@ -10,7 +10,6 @@ env:
   CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
-  BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu -Dtry_static_libs=fluidsynth,iir,mt32emu,opusfile,png,slirp,zlib,speexdsp -Dfluidsynth:try-static-deps=true"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 
@@ -29,24 +28,28 @@ jobs:
             sys: MINGW32
             cc: gcc
             max_warnings: 0
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
           - name: GCC (MinGW) x86_64
             toolchain: ""
             arch: x86_64
             sys: MINGW64
             cc: gcc
             max_warnings: 0
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
           - name: GCC (UCRT) x86_64
             toolchain: ucrt-
             arch: x86_64
             sys: UCRT64
             cc: gcc
             max_warnings: 0
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
           - name: Clang x86_64
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
             cc: clang
             max_warnings: 0
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
           - name: GCC +tests
             toolchain: ""
             arch: x86_64
@@ -54,6 +57,7 @@ jobs:
             run_tests: true
             cc: gcc
             max_warnings: 0
+            build_flags: -Dbuildtype=debug
           - name: GCC +debugger
             toolchain: ""
             arch: x86_64
@@ -236,10 +240,10 @@ jobs:
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
 
       - name: Setup release build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS $BUILD_RELEASE_DIR
+        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
+        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |
