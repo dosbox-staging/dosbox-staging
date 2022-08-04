@@ -161,6 +161,7 @@ conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
+conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
@@ -314,6 +315,7 @@ libslirp_dep       = optional_dep
 mt32emu_dep        = optional_dep
 png_dep            = optional_dep
 slirp_dep          = optional_dep
+tracy_dep          = optional_dep
 alsa_dep           = optional_dep # Linux-only
 coreaudio_dep      = optional_dep # macOS-only
 corefoundation_dep = optional_dep # macOS-only
@@ -384,11 +386,10 @@ if get_option('use_png')
                        not_found_message : msg.format('use_png'))
 endif
 
-tracy_proj = subproject('tracy')
-tracy_dep = tracy_proj.get_variable('tracy_dep')
-
+# Tracy
 if get_option('tracy')
-  add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
+  tracy_proj = subproject('tracy')
+  tracy_dep = tracy_proj.get_variable('tracy_dep')
   add_project_arguments('-g', language : ['c','cpp'])
   add_project_arguments('-fno-omit-frame-pointer', language : ['c','cpp'])
 endif

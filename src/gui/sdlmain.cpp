@@ -47,15 +47,13 @@
 #include <SDL_opengl.h>
 #endif
 
-#include <Tracy.hpp>
-
+#include "../ints/int10.h"
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
-#include "../ints/int10.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -64,11 +62,12 @@
 #include "pacer.h"
 #include "pic.h"
 #include "render.h"
+#include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
-#include "sdlmain.h"
 #include "timer.h"
+#include "tracy.h"
 #include "vga.h"
 #include "video.h"
 

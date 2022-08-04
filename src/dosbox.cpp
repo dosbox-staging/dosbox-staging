@@ -21,41 +21,38 @@
 
 #include "dosbox.h"
 
+#include <chrono>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <thread>
 #include <unistd.h>
 
-#include <chrono>
-#include <thread>
-
-#include <Tracy.hpp>
-
-#include "debug.h"
-#include "cpu.h"
-#include "video.h"
-#include "pic.h"
-#include "cpu.h"
 #include "callback.h"
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
+#include "control.h"
+#include "cpu.h"
+#include "cross.h"
+#include "debug.h"
 #include "dos_inc.h"
+#include "hardware.h"
+#include "inout.h"
+#include "ints/int10.h"
+#include "mapper.h"
+#include "midi.h"
+#include "mixer.h"
+#include "ne2000.h"
+#include "pci_bus.h"
+#include "pic.h"
+#include "programs.h"
+#include "render.h"
 #include "setup.h"
 #include "shell.h"
-#include "control.h"
-#include "cross.h"
-#include "programs.h"
 #include "support.h"
-#include "mapper.h"
-#include "ints/int10.h"
-#include "render.h"
-#include "pci_bus.h"
-#include "midi.h"
-#include "hardware.h"
-#include "ne2000.h"
+#include "timer.h"
+#include "tracy.h"
+#include "video.h"
 
 bool shutdown_requested = false;
 MachineType machine;

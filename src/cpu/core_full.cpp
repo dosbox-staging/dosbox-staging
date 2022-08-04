@@ -18,17 +18,16 @@
 
 #include "dosbox.h"
 
-#include <Tracy.hpp>
-
-#include "pic.h"
-#include "regs.h"
+#include "callback.h"
 #include "cpu.h"
+#include "debug.h"
+#include "fpu.h"
+#include "inout.h"
 #include "lazyflags.h"
 #include "paging.h"
-#include "fpu.h"
-#include "debug.h"
-#include "inout.h"
-#include "callback.h"
+#include "pic.h"
+#include "regs.h"
+#include "tracy.h"
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)

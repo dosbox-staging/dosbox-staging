@@ -15,20 +15,17 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-#include <stdio.h>
-
-#include <Tracy.hpp>
-
 #include "dosbox.h"
-#include "mem.h"
-#include "cpu.h"
-#include "lazyflags.h"
-#include "inout.h"
+
 #include "callback.h"
-#include "pic.h"
+#include "cpu.h"
 #include "fpu.h"
+#include "inout.h"
+#include "lazyflags.h"
+#include "mem.h"
 #include "paging.h"
+#include "pic.h"
+#include "tracy.h"
 
 #if C_DEBUG
 #include "debug.h"

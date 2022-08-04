@@ -44,7 +44,6 @@
 
 #include <SDL.h>
 #include <speex/speex_resampler.h>
-#include <Tracy.hpp>
 
 #include "ansi_code_markup.h"
 #include "control.h"
@@ -59,6 +58,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
+#include "tracy.h"
 
 #include "../src/libs/mverb/MVerb.h"
 #include "../src/libs/tal-chorus/ChorusEngine.h"
