@@ -392,12 +392,13 @@ int SERIAL_getextchar(COMPORT port) {
 	if (dwRead==1) {
 		if(chRead==0xff) // error escape
 		{
-			dwRead=read(port->porthandle,&chRead,1);
-			if(chRead==0x00) // an error 
+			dwRead = read(port->porthandle, &chRead, 1);
+			if (dwRead && chRead == 0x00) // an error
 			{
 				dwRead=read(port->porthandle,&chRead,1);
-				if(chRead==0x0) error=SERIAL_BREAK_ERR;
-				else error=SERIAL_FRAMING_ERR;
+				error = (!dwRead || chRead == 0x0)
+				              ? SERIAL_BREAK_ERR
+				              : SERIAL_FRAMING_ERR;
 			}
 		}
 		retval |= (error<<8);
