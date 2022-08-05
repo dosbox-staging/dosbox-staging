@@ -3,7 +3,7 @@ project(
     'c',
     'cpp',
     version: '0.79.0',
-    license: 'GPL-2.0-or-later',
+    license: 'GPL-3.0-or-later',
     meson_version: '>= 0.56.0',
     default_options: [
         'cpp_std=c++17',
