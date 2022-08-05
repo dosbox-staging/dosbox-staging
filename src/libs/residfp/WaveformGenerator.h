@@ -136,10 +136,6 @@ private:
     bool msb_rising = false;
 
     bool is6581 = false;
-
-    /// The DAC LUT for analog output
-    float* dac = nullptr;
-
 private:
     void clock_shift_register(unsigned int bit0);
 
@@ -157,15 +153,6 @@ private:
 
 public:
     void setWaveformModels(matrix_t* models);
-
-    /**
-     * Set the analog DAC emulation:
-     * 8580 is perfectly linear while 6581 is nonlinear.
-     * Must be called before any operation.
-     *
-     * @param dac
-     */
-    void setDAC(float* dac) { this->dac = dac; }
 
     /**
      * Set the chip model.
@@ -258,12 +245,12 @@ public:
     void reset();
 
     /**
-     * 12-bit waveform output as an analogue float value.
+     * 12-bit waveform output.
      *
      * @param ringModulator The oscillator ring-modulating current one.
-     * @return output the waveform generator output
+     * @return the waveform generator digital output
      */
-    float output(const WaveformGenerator* ringModulator);
+    unsigned int output(const WaveformGenerator* ringModulator);
 
     /**
      * Read OSC3 value.
@@ -342,7 +329,7 @@ void WaveformGenerator::clock()
 }
 
 RESID_INLINE
-float WaveformGenerator::output(const WaveformGenerator* ringModulator)
+unsigned int WaveformGenerator::output(const WaveformGenerator* ringModulator)
 {
     // Set output value.
     if (likely(waveform != 0))
@@ -396,9 +383,7 @@ float WaveformGenerator::output(const WaveformGenerator* ringModulator)
     // Push next pulse level into pulse level pipeline.
     pulse_output = ((accumulator >> 12) >= pw) ? 0xfff : 0x000;
 
-    // DAC imperfections are emulated by using waveform_output as an index
-    // into a DAC lookup table. readOSC() uses waveform_output directly.
-    return dac[waveform_output];
+    return waveform_output;
 }
 
 } // namespace reSIDfp
