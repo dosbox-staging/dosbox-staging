@@ -210,7 +210,7 @@ void MIDI_RawOutByte(uint8_t data)
 
 void MidiHandler::HaltSequence()
 {
-	uint8_t message[3] = {}; // see MIDI_evt_len for length lookup-table
+	uint8_t message[4] = {}; // see MIDI_evt_len for length lookup-table
 	constexpr uint8_t all_notes_off = 0x7b;
 	constexpr uint8_t all_controllers_off = 0x79;
 	constexpr uint8_t controller = 0xb0;
@@ -235,7 +235,7 @@ void MidiHandler::ResumeSequence()
 	constexpr uint8_t omni_on_cmd   = 0x7d;
 
 	// see MIDI_evt_len for length lookup-table
-	uint8_t message[3] = {controller, omni_on_cmd};
+	uint8_t message[4] = {controller, omni_on_cmd};
 
 	// from the first to last channel
 	for (auto channel = first_channel; channel <= last_channel; ++channel) {
