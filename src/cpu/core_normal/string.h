@@ -156,7 +156,7 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_SCASB:
 		{
-			uint8_t val2;
+			uint8_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMb(di_base+di_index);
@@ -169,7 +169,7 @@ static void DoString(STRING_OP type) {
 	case R_SCASW:
 		{
 			add_index *= 2;
-			uint16_t val2;
+			uint16_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMw(di_base+di_index);
@@ -182,7 +182,7 @@ static void DoString(STRING_OP type) {
 	case R_SCASD:
 		{
 			add_index *= 4;
-			uint32_t val2;
+			uint32_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMd(di_base+di_index);
@@ -194,7 +194,8 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_CMPSB:
 		{
-			uint8_t val1,val2;
+			uint8_t val1 = 0;
+			uint8_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMb(si_base+si_index);
@@ -209,7 +210,8 @@ static void DoString(STRING_OP type) {
 	case R_CMPSW:
 		{
 			add_index *= 2;
-			uint16_t val1,val2;
+			uint16_t val1 = 0;
+			uint16_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMw(si_base+si_index);
@@ -224,7 +226,8 @@ static void DoString(STRING_OP type) {
 	case R_CMPSD:
 		{
 			add_index *= 4;
-			uint32_t val1,val2;
+			uint32_t val1 = 0;
+			uint32_t val2 = 0;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMd(si_base+si_index);
