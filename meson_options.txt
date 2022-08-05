@@ -1,41 +1,81 @@
-option('use_sdl2_net', type : 'boolean', value : true,
-       description : 'Enable networking features via SDL2_net (modem, ipx)')
+option(
+    'use_sdl2_net',
+    type: 'boolean',
+    value: true,
+    description: 'Enable networking features via SDL2_net (modem, ipx)',
+)
 
-option('use_opengl', type : 'combo',
-       choices : ['auto', 'true', 'false'], value : 'auto',
-       description : 'Enable OpenGL support')
+option(
+    'use_opengl',
+    type: 'combo',
+    choices: ['auto', 'true', 'false'],
+    value: 'auto',
+    description: 'Enable OpenGL support',
+)
 
-option('use_fluidsynth', type : 'boolean', value : true,
-       description : 'Enable built-in MIDI support via FluidSynth')
+option(
+    'use_fluidsynth',
+    type: 'boolean',
+    value: true,
+    description: 'Enable built-in MIDI support via FluidSynth',
+)
 
-option('use_mt32emu', type : 'boolean', value : true,
-       description : 'Enable built-in MT-32 emulation support')
+option(
+    'use_mt32emu',
+    type: 'boolean',
+    value: true,
+    description: 'Enable built-in MT-32 emulation support',
+)
 
-option('use_png', type : 'boolean', value : true,
-       description : 'Enable saving screenshots in .png format')
+option(
+    'use_png',
+    type: 'boolean',
+    value: true,
+    description: 'Enable saving screenshots in .png format',
+)
 
-option('use_slirp', type : 'boolean', value : true,
-       description : 'Enable Ethernet emulation using Libslirp')
+option(
+    'use_slirp',
+    type: 'boolean',
+    value: true,
+    description: 'Enable Ethernet emulation using Libslirp',
+)
 
-option('tracy', type : 'boolean', value : false,
-       description : 'Enable profiling using Tracy')
+option(
+    'tracy',
+    type: 'boolean',
+    value: false,
+    description: 'Enable profiling using Tracy',
+)
 
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
 #
 # 'auto' translates to 'true' on Linux systems and 'false' everywhere else.
 #
-option('use_alsa', type : 'combo',
-       choices : ['auto', 'true', 'false'], value : 'auto',
-       description : 'Enable ALSA MIDI support')
+option(
+    'use_alsa',
+    type: 'combo',
+    choices: ['auto', 'true', 'false'],
+    value: 'auto',
+    description: 'Enable ALSA MIDI support',
+)
 
-option('enable_debugger', type : 'combo',
-       choices : ['normal', 'heavy', 'none'], value : 'none',
-       description : 'Build emulator with internal debugger feature.')
+option(
+    'enable_debugger',
+    type: 'combo',
+    choices: ['normal', 'heavy', 'none'],
+    value: 'none',
+    description: 'Build emulator with internal debugger feature.',
+)
 
-option('dynamic_core', type : 'combo',
-       choices : ['auto', 'dyn-x86', 'dynrec', 'none'], value : 'auto',
-       description : 'Select the dynamic core implementation.')
+option(
+    'dynamic_core',
+    type: 'combo',
+    choices: ['auto', 'dyn-x86', 'dynrec', 'none'],
+    value: 'auto',
+    description: 'Select the dynamic core implementation.',
+)
 
 # Use this option for selectively switching dependencies to look for static
 # libraries first. This behaves differently than passing
@@ -46,52 +86,72 @@ option('dynamic_core', type : 'combo',
 # This is NOT guaranteed to work - the end results will vary depending on your
 # OS, installed libraries, and dependencies of those libraries.
 #
-option('try_static_libs',
-       type : 'array',
-       choices : [
-           'fluidsynth',
-           'glib',
-           'iir',
-           'mt32emu',
-           'opusfile',
-           'png',
-           'sdl2',
-           'sdl2_net',
-           'slirp',
-           'speexdsp',
-           'tracy',
-           'zlib'],
-       value : [],
-       description : 'Attempt to statically link selected libraries.'
+option(
+    'try_static_libs',
+    type: 'array',
+    choices: [
+        'fluidsynth',
+        'glib',
+        'iir',
+        'mt32emu',
+        'opusfile',
+        'png',
+        'sdl2',
+        'sdl2_net',
+        'slirp',
+        'speexdsp',
+        'tracy',
+        'zlib',
+    ],
+    value: [],
+    description: 'Attempt to statically link selected libraries.',
 )
 
-option('use_system_libs',
-       type : 'array',
-       choices : [
-           'fluidsynth',
-           'glib',
-           'iir',
-           'mt32emu',
-           'opusfile',
-           'png',
-           'sdl2',
-           'sdl2_net',
-           'slirp',
-           'speexdsp',
-           'tracy',
-           'zlib'],
-       value : [],
-       description : 'Use system libraries (not wraps) for the selected dependencies.'
+option(
+    'use_system_libs',
+    type: 'array',
+    choices: [
+        'fluidsynth',
+        'glib',
+        'iir',
+        'mt32emu',
+        'opusfile',
+        'png',
+        'sdl2',
+        'sdl2_net',
+        'slirp',
+        'speexdsp',
+        'tracy',
+        'zlib',
+    ],
+    value: [],
+    description: 'Use system libraries (not wraps) for the selected dependencies.',
 )
 
-option('unit_tests', type : 'feature', value : 'auto',
-       description : 'Build unit tests. Auto skips for release builds.')
+option(
+    'unit_tests',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build unit tests. Auto skips for release builds.',
+)
 
-option('narrowing_warnings', type : 'boolean', value : false,
-       description : 'Warn about implicit type narrowing')
+option(
+    'narrowing_warnings',
+    type: 'boolean',
+    value: false,
+    description: 'Warn about implicit type narrowing',
+)
 
-option('autovec_info', type : 'boolean', value : false,
-       description : 'Inform about auto-vectorizion results')
+option(
+    'autovec_info',
+    type: 'boolean',
+    value: false,
+    description: 'Inform about auto-vectorizion results',
+)
 
-option('asm', type : 'boolean', value : false,
-       description : 'Save intermediate assembly output')
+option(
+    'asm',
+    type: 'boolean',
+    value: false,
+    description: 'Save intermediate assembly output',
+)
