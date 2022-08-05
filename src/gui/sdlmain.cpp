@@ -384,8 +384,8 @@ static double get_host_refresh_rate()
 	};
 
 	// To be populated in the switch
-	auto rate = 0.0;              // refresh rate as a floating point number
-	const char *rate_description; // description of the refresh rate
+	auto rate = 0.0;                   // refresh rate as a floating point number
+	const char *rate_description = ""; // description of the refresh rate
 
 	switch (sdl.desktop.host_rate_mode) {
 	case HOST_RATE_MODE::AUTO:
