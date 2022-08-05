@@ -9,20 +9,23 @@ project(
         'cpp_std=c++17',
         'buildtype=release',
         'default_library=static',
-        'warning_level=3',
         'b_ndebug=if-release',
         'b_staticpic=false',
         'b_pie=false',
+        'warning_level=3',
+        'glib:b_staticpic=true',
+        'glib:glib_assert=false',
+        'glib:glib_checks=false',
+        'glib:glib_debug=disabled',
+        'glib:libmount=disabled',
+        'glib:libelf=disabled',
+        'glib:nls=disabled',
+        'glib:tests=false',
+        'glib:warning_level=0',
+        'glib:xattr=false',
         'gtest:warning_level=0',
-        'iir:warning_level=0',
-        'mt32emu:warning_level=0',
-        'slirp:warning_level=0',
-        'speexdsp:warning_level=0',
-        'tracy:warning_level=0',
     ],
 )
-
-#        'wrap_mode=forcefallback',
 
 # Gather internal resource dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,20 +312,22 @@ system_libs_list = get_option('use_system_libs')
 libiir_dep = dependency(
     'iir',
     version: '>= 1.9.3',
+    default_options: [
+        'default_library=static',
+        'warning_level=0',
+    ],
     allow_fallback: ('iir' not in system_libs_list),
     static: ('iir' in static_libs_list or prefers_static_libs),
 )
 
 opus_dep = dependency(
     'opusfile',
-    allow_fallback: ('opusfile' not in system_libs_list),
     static: ('opusfile' in static_libs_list or prefers_static_libs),
 )
 
 sdl2_dep = dependency(
     'sdl2',
     version: '>= 2.0.5',
-    allow_fallback: ('sdl2' not in system_libs_list),
     static: ('sdl2' in static_libs_list),
 )
 
@@ -335,30 +340,17 @@ zlib_dep = dependency(
 
 speexdsp_dep = dependency(
     'speexdsp',
+    default_options: ['warning_level=0'],
     allow_fallback: ('speexdsp' not in system_libs_list),
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
 )
 
 # Optional libraries
+optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
-optional_dep       = dependency('', required : false)
-sdl2_net_dep       = optional_dep
-opengl_dep         = optional_dep
-fluid_dep          = optional_dep
-glib_dep           = optional_dep
-libslirp_dep       = optional_dep
-mt32emu_dep        = optional_dep
-png_dep            = optional_dep
-slirp_dep          = optional_dep
-tracy_dep          = optional_dep
-alsa_dep           = optional_dep # Linux-only
-coreaudio_dep      = optional_dep # macOS-only
-corefoundation_dep = optional_dep # macOS-only
-coremidi_dep       = optional_dep # macOS-only
-winsock2_dep       = optional_dep # Windows-only
-winmm_dep          = optional_dep # Windows-only
 
 # SDL Networking
+sdl2_net_dep = optional_dep
 if get_option('use_sdl2_net')
     sdl2_net_dep = dependency(
         'SDL2_net',
@@ -369,20 +361,19 @@ if get_option('use_sdl2_net')
 endif
 
 # OpenGL
+opengl_dep = optional_dep
 opengl_summary_msg = 'Disabled'
 if get_option('use_opengl') != 'false'
     opengl_dep = dependency('gl', not_found_message: msg.format('use_opengl'))
 endif
-if (
-    opengl_dep.found()
+if (opengl_dep.found()
     and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
-    and get_option('enable_debugger') != 'none'
-)
-    warning(
-        '''OpenGL is disabled because it's not compatible with the debugger.
-    To use OpenGL with the debugger, force it with "-Duse_opengl=true"''',
-    )
+    and get_option('enable_debugger') != 'none')
+
+    warning('''OpenGL is disabled because it's not compatible with the debugger.
+            To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
+
     conf_data.set10('C_OPENGL', false)
     opengl_summary_msg = 'Found, but disabled due to conflict with debugger'
 else
@@ -391,28 +382,10 @@ else
 endif
 summary('OpenGL support', opengl_summary_msg)
 
-# FluidSynth
+# FluidSynth (depends on glib)
+fluid_dep = optional_dep
 if get_option('use_fluidsynth')
-    glib_dep = dependency(
-        'glib-2.0',
-        version: '>= 2.72.2',
-        allow_fallback: ('glib' not in system_libs_list),
-        static: ('glib' in static_libs_list or prefers_static_libs),
-        default_options: [
-            'default_library=' + get_option('default_library'),
-            'b_staticpic=true',
-            'glib_assert=false',
-            'glib_checks=false',
-            'glib_debug=disabled',
-            'libmount=disabled',
-            'libelf=disabled',
-            'nls=disabled',
-            'tests=false',
-            'warning_level=0',
-            'xattr=false',
-        ],
-    )
-
+    lib_type = ('fluidsynth' in static_libs_list or prefers_static_libs).to_string()
     fluid_dep = dependency(
         'fluidsynth',
         version: '>= 2.2.3',
@@ -420,25 +393,23 @@ if get_option('use_fluidsynth')
         static: ('fluidsynth' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_fluidsynth'),
         default_options: [
-            'try-static-deps=' + (
-                'fluidsynth' in static_libs_list
-                or prefers_static_libs
-            ).to_string(),
+            'try-static-deps=' + lib_type,
             'enable-floats=true',
             'openmp=disabled',
             'enable-threads=false',
             'warning_level=0',
         ],
     )
-
 endif
 summary('FluidSynth support', fluid_dep.found())
 
-# slirp
+# slirp (depends on glib)
+libslirp_dep = optional_dep
 if get_option('use_slirp')
     libslirp_dep = dependency(
         'slirp',
         version: '>= 4.6.1',
+        default_options: ['warning_level=0'],
         allow_fallback: ('slirp' not in system_libs_list),
         static: ('slirp' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_slirp'),
@@ -447,10 +418,12 @@ endif
 summary('slirp support', libslirp_dep.found())
 
 # mt32emu
+mt32emu_dep = optional_dep
 if get_option('use_mt32emu')
     mt32emu_dep = dependency(
         'mt32emu',
         version: '>= 2.5.3',
+        default_options: ['warning_level=0'],
         allow_fallback: ('mt32emu' not in system_libs_list),
         static: ('mt32emu' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_mt32emu'),
@@ -459,10 +432,10 @@ endif
 summary('mt32emu support', mt32emu_dep.found())
 
 # PNG
+png_dep = optional_dep
 if get_option('use_png')
     png_dep = dependency(
         'libpng',
-        allow_fallback: ('png' not in system_libs_list),
         static: ('png' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_png'),
     )
@@ -470,15 +443,24 @@ endif
 summary('PNG support', mt32emu_dep.found())
 
 # Tracy
+tracy_dep = optional_dep
 if get_option('tracy')
-    tracy_proj = subproject('tracy')
-    tracy_dep = tracy_proj.get_variable('tracy_dep')
+    tracy_dep = dependency(
+        'tracy',
+        default_options: ['warning_level=0'],
+        static: ('tracy' in static_libs_list or prefers_static_libs),
+        not_found_message: msg.format('tracy'),
+    )
+    #tracy_proj = subproject('tracy')
+    #tracy_dep = tracy_proj.get_variable('tracy_dep')
     add_project_arguments('-g', language: ['c', 'cpp'])
     add_project_arguments('-fno-omit-frame-pointer', language: ['c', 'cpp'])
 endif
 
 # macOS-only dependencies
-#
+coreaudio_dep = optional_dep
+coremidi_dep = optional_dep
+corefoundation_dep = optional_dep
 if host_machine.system() == 'darwin'
 
     # ObjectiveC parsing, if possible
@@ -567,7 +549,7 @@ if host_machine.system() == 'darwin'
 endif
 
 # Linux-only dependencies
-#
+alsa_dep = optional_dep
 using_linux = (host_machine.system() == 'linux')
 force_alsa = (get_option('use_alsa') == 'true')
 if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
@@ -577,7 +559,8 @@ if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
 endif
 
 # Windows-only dependencies
-#
+winsock2_dep = optional_dep
+winmm_dep = optional_dep
 if host_machine.system() in ['windows', 'cygwin']
     winsock2_dep = cxx.find_library('ws2_32', required: true)
     summary('Winsock 2 support', winsock2_dep.found())
