@@ -27,7 +27,7 @@
 class counter
 {
 private:
-    unsigned int c;
+    unsigned int c = 0;
 
 public:
     counter() : c(1) {}
@@ -42,14 +42,14 @@ template<typename T>
 class matrix
 {
 private:
-    T* data;
-    counter* count;
-    const unsigned int x, y;
+    T* data = nullptr;
+    counter count = {};
+    const unsigned int x = 0;
+    const unsigned int y = 0;
 
 public:
     matrix(unsigned int x, unsigned int y) :
         data(new T[x * y]),
-        count(new counter()),
         x(x),
         y(y) {}
 
@@ -57,9 +57,9 @@ public:
         data(p.data),
         count(p.count),
         x(p.x),
-        y(p.y) { count->increase(); }
+        y(p.y) { count.increase(); }
 
-    ~matrix() { if (count->decrease() == 0) { delete count; delete [] data; } }
+    ~matrix() { if (count.decrease() == 0) { delete [] data; data = nullptr; } }
 
     matrix &operator=(const matrix&) = delete; // prevent assignment
 
