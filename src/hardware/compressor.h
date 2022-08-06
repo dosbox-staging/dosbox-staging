@@ -56,6 +56,10 @@
 #ifndef DOSBOX_COMPRESSOR_H
 #define DOSBOX_COMPRESSOR_H
 
+#include "dosbox.h"
+
+#include <cstdint>
+
 typedef struct AudioFrame AudioFrame_;
 
 class Compressor {
