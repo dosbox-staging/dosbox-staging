@@ -26,10 +26,18 @@
 constexpr double log_to_db = 8.685889638065035;  // 20.0 / log(10.0)
 constexpr double db_to_log = 0.1151292546497022; // log(10.0) / 20.0
 
+std::array<double, 120> attack_times_ms = {};
+
+constexpr void fill_attack_times_lut()
+{
+	for (size_t i = 0; i < attack_times_ms.size(); ++i) {
+		const auto n = i + 1;
+		attack_times_ms[i] = ((0.08924 / n) + (0.60755 / (n * n)) - 0.00006);
+	}
+}
+
 Compressor::Compressor()
 {
-	for (int i = 0; i < num_attack_times; ++i)
-		attack_times_ms[i] = ((0.08924 / i) + (0.60755 / (i * i)) - 0.00006);
 }
 
 Compressor::~Compressor() {}
@@ -38,12 +46,15 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
                            const float threshold_db, const float _ratio,
                            const float release_time_ms, const float rms_window_ms)
 {
+	assert(_sample_rate_hz > 0);
+	assert(_ratio > 0.0f);
+	assert(release_time_ms > 0.0f);
+	assert(rms_window_ms > 0.0f);
+
 	sample_rate_hz = _sample_rate_hz;
 	ratio          = _ratio;
 
 	threshold_value = exp(threshold_db * db_to_log);
-
-	constexpr auto millis_in_second = 1000.0;
 
 	release_coeff = exp(-millis_in_second / (release_time_ms * sample_rate_hz));
 	rms_coeff     = exp(-millis_in_second / (rms_window_ms   * sample_rate_hz));
@@ -53,13 +64,14 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 
 void Compressor::Reset()
 {
-	attack_time_ms = 0.010;
-	comp_ratio     = 0.0;
-	run_db         = 0.0;
-	over_db        = 0.0;
-	run_max_db     = 0.0;
-	max_over_db    = 0.0;
-	attack_coeff   = exp(-1.0 / (attack_time_ms * sample_rate_hz));
+	attack_time_ms  = 0.010;
+	attack_coeff    = exp(-1.0 / (attack_time_ms * sample_rate_hz));
+	comp_ratio      = 0.0;
+	run_db          = 0.0;
+	run_sum_squares = 0.0;
+	over_db         = 0.0;
+	run_max_db      = 0.0;
+	max_over_db     = 0.0;
 }
 
 AudioFrame Compressor::Process(const AudioFrame &in)
@@ -67,15 +79,17 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 	const double left  = in.left;
 	const double right = in.right;
 
-	const auto average = (left * left) + (right * right);
-	run_average        = average + rms_coeff * (run_average - average);
-	const auto det     = sqrt(fmax(0.0, run_average));
+	const auto sum_squares = (left * left) + (right * right);
+	run_sum_squares = sum_squares + rms_coeff * (run_sum_squares - sum_squares);
+	const auto det = sqrt(fmax(0.0, run_sum_squares));
 
 	over_db = 2.08136898 * log(det / threshold_value) * log_to_db;
 
 	if (over_db > max_over_db) {
-		max_over_db    = over_db;
-		const auto i   = static_cast<size_t>(fmax(0.0, floor(fabs(over_db))));
+		max_over_db = over_db;
+		const auto i = std::clamp(static_cast<unsigned long>(std::fabs(over_db)),
+		                          0ul,
+		                          attack_times_ms.size() - 1);
 		attack_time_ms = attack_times_ms[i];
 		attack_coeff   = exp(-1.0 / (attack_time_ms * sample_rate_hz));
 	}

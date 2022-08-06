@@ -62,6 +62,15 @@
 
 typedef struct AudioFrame AudioFrame_;
 
+// Implements a dynamic-range reducing audio signal compressor to reduce the
+// volume of loud sounds above a given threshold.
+//
+// The compressor uses the standard set of of adjustable control parameters
+// common to all compressors; the following Wikipedia page gives a good
+// overview about them:
+//
+// https://en.wikipedia.org/wiki/Dynamic_range_compression#Controls_and_features
+//
 class Compressor {
 public:
 	Compressor();
@@ -82,23 +91,22 @@ public:
 private:
 	uint16_t sample_rate_hz = {};
 
-	static constexpr auto num_attack_times = 120;
-	double attack_times_ms[num_attack_times] = {};
+//	std::array<double, 120> attack_times_ms = {};
 
 	double threshold_value = {};
 	double ratio           = {};
 	double release_coeff   = {};
 	double rms_coeff       = {};
 
-	// state vars
-	double attack_time_ms = {};
-	double attack_coeff   = {};
-	double comp_ratio     = {};
-	double run_db         = {};
-	double run_average    = {};
-	double over_db        = {};
-	double run_max_db     = {};
-	double max_over_db    = {};
+	// state variables
+	double attack_time_ms  = {};
+	double attack_coeff    = {};
+	double comp_ratio      = {};
+	double run_db          = {};
+	double run_sum_squares = {};
+	double over_db         = {};
+	double run_max_db      = {};
+	double max_over_db     = {};
 };
 
 #endif
