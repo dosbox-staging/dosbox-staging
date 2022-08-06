@@ -1337,7 +1337,7 @@ Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
 [color=yellow]%s+Enter[reset]  Passa dalla modalità a schermo intero a quella a finestra
            e viceversa.
-[color=yellow]%s+Pause[reset]  Mette in pausa/Riavvia l'emulatore.
+[color=yellow]%s+Pause[reset]  Mette in Pausa/Riavvia l'emulatore.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
@@ -1552,7 +1552,7 @@ Note:
 
 Esempi:
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]C:\giochiDos[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\[reset] -t cdrom
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\ [reset]-t cdrom
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]file_di_salvataggio[reset] -t overlay
 
 .
@@ -1691,7 +1691,7 @@ Esempi:
 Gestisce le porte seriali.
 
 Utilizzo:
-  [color=green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset]).
+  [color=green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset])
   [color=green]serial[reset] [color=white]PORTA#[reset] [color=cyan]DISPOSITIVO[reset] [impostazioni]  Collega il dispositivo alla porta
 					    specificata.
 Dove:
@@ -1707,11 +1707,11 @@ Dove:
   Per [color=cyan]DUMMY[reset]      : IRQ
 
 Esempi:
-  [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Ascolto su TCP:1250 come server
-  [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connesso a TCP:1250 come client
-  [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Ascolto su UDP:5000 come server
-  [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Usa una porta fisica su Linux
-  [color=green]serial[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse di tipo Mouse Systems
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                : Ascolto su TCP:1250 come server
+  [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
+  [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
+  [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0            : Usa una porta fisica su Linux
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                     : Mouse di tipo Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
