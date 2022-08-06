@@ -1584,13 +1584,10 @@ static void MIXER_MixData(const int frames_requested)
 	for (work_index_t i = 0; i < frames_added; ++i) {
 		AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
 
-		frame.left /= INT16_MAX;
-		frame.right /= INT16_MAX;
-
 		frame = mixer.compressor.Process(frame);
 
-		mixer.work[pos][0] = frame.left * INT16_MAX;
-		mixer.work[pos][1] = frame.right * INT16_MAX;
+		mixer.work[pos][0] = frame.left;
+		mixer.work[pos][1] = frame.right;
 
 		pos = (pos + 1) & MIXER_BUFMASK;
 	}
@@ -2379,12 +2376,14 @@ void MIXER_Init(Section *sec)
 	configure_chorus(section->Get_string("chorus"));
 
 	// Initialise compressor
-	const auto threshold_db    = -6.0f;
-	const auto ratio           = 2.0f;
-	const auto release_time_ms = 5000.0f;
-	const auto rms_window_ms   = 10.0;
+	const auto _0dbfs_sample_value = INT16_MAX;
+	const auto threshold_db        = -6.0f;
+	const auto ratio               = 2.0f;
+	const auto release_time_ms     = 5000.0f;
+	const auto rms_window_ms       = 10.0;
 
 	mixer.compressor.Configure(mixer.sample_rate,
+	                           _0dbfs_sample_value,
 	                           threshold_db,
 	                           ratio,
 	                           release_time_ms,

@@ -76,9 +76,9 @@ public:
 	Compressor();
 	~Compressor();
 
-	void Configure(const uint16_t sample_rate_hz, const float threshold_db,
-	               const float ratio, const float release_time_ms,
-	               const float rms_window_ms);
+	void Configure(const uint16_t sample_rate_hz, const float _0dbfs_sample_value,
+	               const float threshold_db, const float ratio,
+	               const float release_time_ms, const float rms_window_ms);
 	void Reset();
 
 	AudioFrame Process(const AudioFrame &in);
@@ -90,8 +90,8 @@ public:
 
 private:
 	uint16_t sample_rate_hz = {};
-
-//	std::array<double, 120> attack_times_ms = {};
+	double scale_in         = {};
+	double scale_out        = {};
 
 	double threshold_value = {};
 	double ratio           = {};
