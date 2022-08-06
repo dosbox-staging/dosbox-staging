@@ -1581,7 +1581,7 @@ static void MIXER_MixData(const int frames_requested)
 	// Apply compressor to the master output as the very last step
 	pos = start_pos;
 
-/*	for (work_index_t i = 0; i < frames_added; ++i) {
+	for (work_index_t i = 0; i < frames_added; ++i) {
 		AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
 
 		frame.left /= INT16_MAX;
@@ -1593,7 +1593,7 @@ static void MIXER_MixData(const int frames_requested)
 		mixer.work[pos][1] = frame.right * INT16_MAX;
 
 		pos = (pos + 1) & MIXER_BUFMASK;
-	} */
+	}
 
 	// Capture audio output if requested
 	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
@@ -2379,8 +2379,8 @@ void MIXER_Init(Section *sec)
 	configure_chorus(section->Get_string("chorus"));
 
 	// Initialise compressor
-	const auto threshold_db    = -3.0f;
-	const auto ratio           = 4.0f;
+	const auto threshold_db    = -6.0f;
+	const auto ratio           = 2.0f;
 	const auto release_time_ms = 5000.0f;
 	const auto rms_window_ms   = 10.0;
 
