@@ -194,6 +194,7 @@ struct mixer_t {
 
 	highpass_filter_t highpass_filter = {};
 	Compressor compressor = {};
+	bool do_compressor = false;
 
 	reverb_settings_t reverb = {};
 	bool do_reverb = false;
@@ -431,6 +432,30 @@ static void configure_chorus(std::string chorus_pref)
 		set_global_chorus(it.second);
 
 	LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.c_str());
+}
+
+static void configure_compressor(const bool compressor_enabled)
+{
+	mixer.do_compressor = compressor_enabled;
+	if (!mixer.do_compressor) {
+		LOG_MSG("MIXER: Master compressor disabled");
+		return;
+	}
+
+	const auto _0dbfs_sample_value = INT16_MAX;
+	const auto threshold_db        = -6.0f;
+	const auto ratio               = 2.0f;
+	const auto release_time_ms     = 5000.0f;
+	const auto rms_window_ms       = 10.0;
+
+	mixer.compressor.Configure(mixer.sample_rate,
+							   _0dbfs_sample_value,
+							   threshold_db,
+							   ratio,
+							   release_time_ms,
+							   rms_window_ms);
+
+	LOG_MSG("MIXER: Master compressor enabled");
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
@@ -1578,18 +1603,20 @@ static void MIXER_MixData(const int frames_requested)
 		pos = (pos + 1) & MIXER_BUFMASK;
 	}
 
-	// Apply compressor to the master output as the very last step
-	pos = start_pos;
+	if (mixer.do_compressor) {
+		// Apply compressor to the master output as the very last step
+		pos = start_pos;
 
-	for (work_index_t i = 0; i < frames_added; ++i) {
-		AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
+		for (work_index_t i = 0; i < frames_added; ++i) {
+			AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
 
-		frame = mixer.compressor.Process(frame);
+			frame = mixer.compressor.Process(frame);
 
-		mixer.work[pos][0] = frame.left;
-		mixer.work[pos][1] = frame.right;
+			mixer.work[pos][0] = frame.left;
+			mixer.work[pos][1] = frame.right;
 
-		pos = (pos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MIXER_BUFMASK;
+		}
 	}
 
 	// Capture audio output if requested
@@ -2376,18 +2403,7 @@ void MIXER_Init(Section *sec)
 	configure_chorus(section->Get_string("chorus"));
 
 	// Initialise compressor
-	const auto _0dbfs_sample_value = INT16_MAX;
-	const auto threshold_db        = -6.0f;
-	const auto ratio               = 2.0f;
-	const auto release_time_ms     = 5000.0f;
-	const auto rms_window_ms       = 10.0;
-
-	mixer.compressor.Configure(mixer.sample_rate,
-	                           _0dbfs_sample_value,
-	                           threshold_db,
-	                           ratio,
-	                           release_time_ms,
-	                           rms_window_ms);
+	configure_compressor(section->Get_bool("compressor"));
 
 	restore_channel_states(channel_states);
 }
@@ -2466,6 +2482,13 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	                              default_allow_negotiate);
 	bool_prop->Set_help(
 	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
+
+	const auto default_on = true;
+	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
+	bool_prop->Set_help("Enable compressor/auto-leveler on the master channel to prevent clipping\n"
+	                    "of the audio output:\n"
+	                    "  off:  Disable compressor.\n"
+	                    "  on:   Enable compressor (default).\n");
 
 	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
 	string_prop->Set_help(
