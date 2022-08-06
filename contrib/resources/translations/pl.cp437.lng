@@ -1,28 +1,66 @@
 :CONFIG_FULLSCREEN
-Wlacz DOSBoxa na pelnym ekranie.
+Start directly in fullscreen.
+Run INTRO and see Special Keys for window control hotkeys.
 .
 :CONFIG_DISPLAY
-Numer ekranu do uzycia; wartosc zalezy od ustawien uzytkownika.
-.
-:CONFIG_VSYNC
-Vertical sync setting not implemented (setting ignored)
+Number of display to use; values depend on OS and user settings.
 .
 :CONFIG_FULLRESOLUTION
-Jakiej rozdzielczosci uzyc w pelnym ekranie: 'original', 'desktop',
-lub dokladna rozdzielczosc (np. 1024x768).
+What resolution to use for fullscreen: 'original', 'desktop'
+or a fixed size (e.g. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
-Ustaw wielkosc okna w trybie okienkowym:
-  default:   Wybierz najlepsza opcje dla twojego
-             srodowiska.
-  original:  Zmien wielkosc okna do rozdzielczosci wybranej przez
-             emulowany program.
-  resizable: Ustaw okno o zmiennej wielkosci.
-             To jest eksperymentalna opcja, dziala tylko z
-             output=opengl i glshader=sharp (lub none)
-  <custom>:  Skaluj zawartosc okna do wybranej wielkosci, uzyj
-             wielkosci w formacie XxY, na przyklad: 1024x768.
-             Skalowanie nie dziala dla output=surface.
+Set window size when running in windowed mode:
+  default:   Select the best option based on your
+             environment and other settings.
+  small, medium, or large (or s, m, l):
+             Size the window relative to the desktop.
+  <custom>:  Scale the window to the given dimensions in
+             WxH format. For example: 1024x768.
+             Scaling is not performed for output=surface.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Set the viewport size (drawable area) within the window/screen:
+  fit:       Fit the viewport to the available window/screen (default).
+  <custom>:  Limit the viewport within to a custom resolution or percentage of
+             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+.
+:CONFIG_WINDOW_POSITION
+Set initial window position when running in windowed mode:
+  auto:      Let the window manager decide the position.
+  <custom>:  Set window position in X,Y format. For example: 250,100
+             0,0 is the top-left corner of the screen.
+.
+:CONFIG_WINDOW_DECORATIONS
+Controls whether to display window decorations in windowed mode.
+.
+:CONFIG_TRANSPARENCY
+Set the transparency of the DOSBox Staging screen.
+From 0 (no transparency) to 90 (high transparency).
+.
+:CONFIG_MAX_RESOLUTION
+This setting has been renamed to viewport_resolution.
+.
+:CONFIG_HOST_RATE
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
+  sdi:       Use serial device interface (SDI) rates, without further adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+.
+:CONFIG_VSYNC
+Synchronize with display refresh rate if supported. This can
+reduce flickering and tearing, but may also impact performance.
+.
+:CONFIG_VSYNC_SKIP
+Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
+.
+:CONFIG_PRESENTATION_MODE
+Optionally select the frame presentation mode:
+  auto:  Intelligently time and drop frames to prevent
+         emulation stalls, based on host and DOS frame rates.
+  cfr:   Always present DOS frames at a constant frame rate.
+  vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
 What video system to use for output.
@@ -32,21 +70,15 @@ Choose a renderer driver when using a texture output mode.
 Use texture_renderer=auto for an automatic choice.
 .
 :CONFIG_CAPTURE_MOUSE
-Wybierz tryb zachowanie myszy:
-   onclick:        Kursor myszy zostanie zlapany przy pierwszym kliknieciu
-                   w obszarze okna.
-   onstart:        Kursor myszy zostanie zlapany na starcie
-                   (jak w prawdziwym DOS).
-   seamless:       Kursor moze swobodnie opuscic okno DOSBoxa
-                   i nie bedzie zlapany.
-   nomouse:        Emulacja myszy jest wylaczona.
-Wybierz jaka role pelni srodkowy przycisk myszy (drugi parametr):
-   middlegame:     Klikniecie srodkowym przyciskiem jest wyslane do gry
-   middlerelease:  Klikniecie srodkowym przyciskiem puszcza mysz
-                   (zdarzenie nie bedzie wyslane do gry).
-                   W pelnym ekranie lub w trybie 'seamless' klikniecie
-                   zostanie wyslane do gry.
-Domyslne ustawienie to: seamless middlerelease
+Choose a mouse control method:
+   onclick:        Capture the mouse when clicking any button in the window.
+   onstart:        Capture the mouse immediately on start.
+   seamless:       Let the mouse move seamlessly; captures only with middle-click or hotkey.
+   nomouse:        Hide the mouse and don't send input to the game.
+Choose how middle-clicks are handled (second parameter):
+   middlegame:     Middle-clicks are sent to the game.
+   middlerelease:  Middle-click will release the captured mouse, and also capture when seamless.
+Defaults (if not present or incorrect): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
 Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).
@@ -57,14 +89,22 @@ acceleration and sensitivity settings. This works in
 fullscreen or when the mouse is captured in window mode.
 .
 :CONFIG_WAITONERROR
-Zatrzymuje przed zamknieciem konsoli, jesli dosbox zglosil blad.
+Wait before closing the console if dosbox has an error.
 .
 :CONFIG_PRIORITY
-Priorytety dla DOSBoxa. Druga wartosc po przecinku dotyczy okna DOSBoxa, kt¢re jest
-nieaktywne/zminimalizowane. Wartosci 'pause' mozna uzywac tylko na drugiej pozycji.
+Priority levels to apply when active and inactive, respectively. 
+   auto:  Let the host operating system manage the priority (valid for both).
+Default is: 'auto auto'
+.
+:CONFIG_MUTE_WHEN_INACTIVE
+Mute the sound when the window is inactive.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Pause emulation when the window is inactive.
 .
 :CONFIG_MAPPERFILE
-Plik uzywany do wczytywania/zapisywania skr¢t¢w klawiszowych.
+File used to load/save the key/event mappings from.
+Resetmapper only works with the default value.
 .
 :CONFIG_SCREENSAVER
 Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER
@@ -72,32 +112,71 @@ environment variable (which usually blocks the OS screensaver
 while the emulator is running).
 .
 :CONFIG_LANGUAGE
-Wybiera inny plik jezykowy.
+Select a language to use: de, en, es, fr, it, pl, and ru
+Notes: This setting will override the 'LANG' environment, if set.
+       The 'resources/translations' directory bundled with the executable holds
+       these files. Please keep it along-side the executable to support this feature.
 .
 :CONFIG_MACHINE
-Typ maszyny, kt¢ry DOSBox pr¢buje nasladowac.
+The type of machine DOSBox tries to emulate.
 .
 :CONFIG_CAPTURES
-Katalog, w kt¢rym sa przechowywane przechwycone pliki wave, midi oraz zrzuty ekranu.
+Directory where things like wave, midi, screenshot get captured.
 .
 :CONFIG_MEMSIZE
-Rozmiar pamieci DOSBoxa w megabajtach.
-Tej wartosci lepiej nie zmieniac aby uniknac problem¢w z niekt¢rymi grami,
-choc czasem gry moga wymagac wiekszej wartosci.
-Generalnie podniesienie tej wartosci nie powoduje przyspieszenia.
+Amount of memory DOSBox has in megabytes.
+This value is best left at its default to avoid problems with some games,
+though few games might require a higher value.
+There is generally no speed advantage when raising this value.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+How software-corrupted memory chain blocks should be handled:
+  deny:    Quit (and report) when faults are detected (default).
+  repair:  Repair (and report) faults using adjacent chain blocks.
+  report:  Report faults but otherwise proceed as-is.
+  allow:   Allow faults to go unreported (hardware behavior).
+The default (deny) is recommended unless a game is failing with MCB corruption errors.
+.
+:CONFIG_VMEMSIZE
+Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+.
+:CONFIG_DOS_RATE
+Customize the emulated video mode's frame rate, in Hz:
+default:  The DOS video mode determines the rate (recommended).
+host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+We recommend the 'default' rate; otherwise test and set on a per-game basis.
+.
+:CONFIG_VESA_MODES
+Controls the selection of VESA 1.2 and 2.0 modes offered:
+  compatible   A tailored selection that maximizes game compatibility.
+               This is recommended along with 4 or 8 MB of video memory.
+  all          Offers all modes for a given video memory size, however
+               some games may not use them properly (flickering) or may need
+               more system memory (mem = ) to use them.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
+.
+:CONFIG_AUTOEXEC_SECTION
+How autoexec sections are handled from multiple config files.
+join      : combines them into one big section (legacy behavior).
+overwrite : use the last one encountered, like other conf settings.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program:
-            | Splash | Welcome | Early stdout
-high        |  yes   |   yes   |     yes
-medium      |  no    |   yes   |     yes
-low         |  no    |   no    |     yes
-quiet       |  no    |   no    |     no
-splash_only |  yes   |   no    |     no
+Verbosity   | Splash | Welcome | Early stdout
+high        |  yes   |   yes   |    yes
+medium      |  no    |   yes   |    yes
+low         |  no    |   no    |    yes
+quiet       |  no    |   no    |    no
+splash_only |  yes   |   no    |    no
 auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
 :CONFIG_FRAMESKIP
-Jak wiele klatek DOSBox pomija zanim jakas narysuje.
+How many frames DOSBox skips before drawing one.
 .
 :CONFIG_ASPECT
 Scales the vertical resolution to produce a 4:3 display aspect
@@ -125,10 +204,33 @@ fullresolution output.
 Either 'none' or a GLSL shader name. Works only with
 OpenGL output.  Can be either an absolute path, a file
 in the 'glshaders' subdirectory of the DOSBox
-configuration directory, or one of the built-in shaders:
+configuration directory, one of the bundled shaders:
 advinterp2x, advinterp3x, advmame2x, advmame3x,
 crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
 scan2x, scan3x, tv2x, tv3x, sharp (default).
+.
+:CONFIG_COMPOSITE
+Enable composite mode on start. 'auto' lets the program decide.
+Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
+      Then read the new settings from your console and enter them here.
+.
+:CONFIG_ERA
+Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.
+.
+:CONFIG_HUE
+Appearance of RGB palette. For example, adjust until sky is blue.
+.
+:CONFIG_SATURATION
+Intensity of colors, from washed out to vivid.
+.
+:CONFIG_CONTRAST
+Ratio between the dark and light area.
+.
+:CONFIG_BRIGHTNESS
+Luminosity of the image, from dark to light.
+.
+:CONFIG_CONVERGENCE
+Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
 .
 :CONFIG_CORE
 CPU Core used in emulation. auto will switch to dynamic if available and
@@ -138,33 +240,61 @@ appropriate.
 CPU Type used in emulation. auto is the fastest choice.
 .
 :CONFIG_CYCLES
-Amount of instructions DOSBox tries to emulate each millisecond.
+Number of instructions DOSBox tries to emulate each millisecond.
 Setting this value too high results in sound dropouts and lags.
 Cycles can be set in 3 ways:
   'auto'          tries to guess what a game needs.
                   It usually works, but can fail for certain games.
-  'fixed #number' will set a fixed amount of cycles. This is what you usually
+  'fixed #number' will set a fixed number of cycles. This is what you usually
                   need if 'auto' fails (Example: fixed 4000).
   'max'           will allocate as much cycles as your computer is able to
                   handle.
 .
 :CONFIG_CYCLEUP
-Liczba cykli o kt¢ra wartosc zwieksza/zmniejsza kombinacja klawiszy.
+Number of cycles added or subtracted with speed control hotkeys.
+Run INTRO and see Special Keys for list of hotkeys.
 .
 :CONFIG_CYCLEDOWN
-Wartosc mniejsza niz 100 jest traktowana jako ustawienie zmiany procentowej.
+Setting it lower than 100 will be a percentage.
 .
 :CONFIG_NOSOUND
-Wlacz tryb cichy (dzwiek nadal jest emulowany).
+Enable silent mode, sound is still emulated though.
 .
 :CONFIG_RATE
-Czestotliwosc pr¢bkowania miksera, ustawienie czestotliwosci urzadzenia ponad te wartosc prawdopodobnie obnizy jakosc dzwieku.
+Mixer sample rate.
 .
 :CONFIG_BLOCKSIZE
-Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.
+Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.
 .
 :CONFIG_PREBUFFER
-How many milliseconds of data to keep on top of the blocksize.
+How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.
+.
+:CONFIG_NEGOTIATE
+Let the system audio driver negotiate (possibly) better rate and blocksize settings.
+.
+:CONFIG_CROSSFEED
+Set crossfeed globally on all stereo channels for headphone listening:
+  off:         No crossfeed (default).
+  on:          Enable crossfeed (at strength 40).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
+               and 100 full crossfeed (effectively turning stereo content into mono).
+Note: You can set per-channel crossfeed via mixer commands.
+.
+:CONFIG_REVERB
+Enable reverb globally to add a sense of space to the sound:
+  off:     No reverb (default).
+  on:      Enable reverb (medium preset).
+  tiny:    Simulates the sound of a small integrated speaker in a room;
+           specifically designed for small-speaker audio systems
+           (PC Speaker, Tandy, PS/1 Audio, and Disney).
+  small:   Adds a subtle sense of space; good for games that use a single
+           synth channel (typically OPL) for both music and sound effects.
+  medium:  Medium room preset that works well with a wide variety of games.
+  large:   Large hall preset recommended for games that use separate
+           channels for music and digital audio.
+  huge:    A stronger variant of the large hall preset; works really well
+           in some games with more atmospheric soundtracks.
+Note: You can fine-tune per-channel reverb levels via mixer commands.
 .
 :CONFIG_MIDIDEVICE
 Device that will receive the MIDI data (from the emulated MIDI
@@ -192,7 +322,7 @@ to use (find the id/name with DOS command 'mixer /listmidi').
 See the README/Manual for more details.
 .
 :CONFIG_MPU401
-Typ emulowanego MPU-401.
+Type of MPU-401 to emulate.
 .
 :CONFIG_SOUNDFONT
 Path to a SoundFont file in .sf2 format. You can use an
@@ -203,97 +333,193 @@ An optional percentage will scale the SoundFont's volume.
 For example: 'soundfont.sf2 50' will attenuate it by 50 percent.
 The scaling percentage can range from 1 to 500.
 .
+:CONFIG_CHORUS
+Chorus effect: 'auto', 'on', 'off', or custom values.
+When using custom values:
+  All five must be provided in-order and space-separated.
+  They are: voice-count level speed depth modulation-wave, where:
+  - voice-count is an integer from 0 to 99.
+  - level is a decimal from 0.0 to 10.0
+  - speed is a decimal, measured in Hz, from 0.1 to 5.0
+  - depth is a decimal from 0.0 to 21.0
+  - modulation-wave is either 'sine' or 'triangle'
+  For example: chorus = 3 1.2 0.3 8.0 sine
+.
 :CONFIG_MODEL
-Model of synthesizer to use. The default (auto) prefers CM-32L
-if both sets of ROMs are provided. For early Sierra games and Dune 2
-it's recommended to use 'mt32', while newer games typically made
-use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')
+Model of synthesizer to use.
+'auto' picks the first model with available ROMs, in order as listed.
+'cm32l' and 'mt32' pick the first model of their type, in the order listed.
+'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.
 .
 :CONFIG_ROMDIR
-The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.
-The files must be named in capitals, as follows:
-  - MT-32 ROM pair: MT32_CONTROL.ROM and MT32_PCM.ROM
-  - CM-32L ROM pair: CM32L_CONTROL.ROM and CM32L_PCM.ROM
+The directory containing ROMs for one or more models.
 The directory can be absolute or relative, or leave it blank to
 use the 'mt32-roms' directory in your DOSBox configuration
-directory, followed by checking other common system locations.
+directory. Other common system locations will be checked as well.
+ROM files inside this directory may include any of the following:
+  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.
+  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.
+  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.
 .
 :CONFIG_SBTYPE
-Typ emulowanego Sound Blastera 'gb' to Game Blaster.
+Type of Sound Blaster to emulate. 'gb' is Game Blaster.
 .
 :CONFIG_SBBASE
-Adres We/Wy (I/O) Sound Blastera.
+The IO address of the Sound Blaster.
 .
 :CONFIG_IRQ
-Numer IRQ Sound Blastera.
+The IRQ number of the Sound Blaster.
 .
 :CONFIG_DMA
-Numer DMA Sound Blastera.
+The DMA number of the Sound Blaster.
 .
 :CONFIG_HDMA
-Numer HDMA Sound Blastera.
+The High DMA number of the Sound Blaster.
 .
 :CONFIG_SBMIXER
 Allow the Sound Blaster mixer to modify the DOSBox mixer.
 .
+:CONFIG_SBWARMUP
+Silence initial DMA audio after card power-on, in milliseconds.
+This mitigates pops heard when starting many SB-based games.
+Reduce this if you notice intial playback is missing audio.
+.
 :CONFIG_OPLRATE
-oplrate is deprecated. The OPL waveform is now sampled
-        at the mixer's playback rate to avoid resampling.
+The OPL waveform is now sampled at the mixer's playback rate to avoid resampling.
 .
 :CONFIG_OPLMODE
 Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.
 All OPL modes are AdLib-compatible, except for 'cms'.
 .
 :CONFIG_OPLEMU
-Provider for the OPL emulation. 'compat' provides better quality,
-'nuked' is the default and most accurate (but the most CPU-intensive).
+Only 'nuked' OPL emulation is supported now.
+.
+:CONFIG_SB_FILTER
+Type of filter to emulate for the Sound Blaster digital sound output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
+(Example: sbpro1 always_on)
+.
+:CONFIG_OPL_FILTER
+Type of filter to emulate for the Sound Blaster OPL output:
+  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Use the filter of this Sound Blaster model.
+  off:   Don't filter the output.
+.
+:CONFIG_CMS_FILTER
+Filter for the Sound Blaster CMS output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_GUS
-Wlacz emulacje karty Gravis UltraSound.
+Enable Gravis UltraSound emulation.
 .
 :CONFIG_GUSBASE
-Bazowe adres We/Wy karty Gravis UltraSound.
+The IO base address of the Gravis UltraSound.
 .
 :CONFIG_GUSIRQ
-Numer IRQ karty Gravis UltraSound.
+The IRQ number of the Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-Kanal DMA karty Gravis UltraSound.
+The DMA channel of the Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-Sciezka do katalogu UltraSound. W tym katalogu
-powinien znajdowac sie katalog MIDI, zawierajacy
-patche dla emulacji MIDI przez GUS. Zestawy patchy
-uzywane z Timidity powinny dzialac dobrze.
+Path to UltraSound directory. In this directory
+there should be a MIDI directory that contains
+the patch files for GUS playback. Patch sets used
+with Timidity should work fine.
+.
+:CONFIG_SIDMODEL
+Model of chip to emulate in the Innovation SSI-2001 card:
+ - auto:  Selects the 6581 chip.
+ - 6581:  The original chip, known for its bassy and rich character.
+ - 8580:  A later revision that more closely matched the SID specification.
+          It fixed the 6581's DC bias and is less prone to distortion.
+          The 8580 is an option on reproduction cards, like the DuoSID.
+ - none:  Disables the card.
+.
+:CONFIG_SIDCLOCK
+The SID chip's clock frequency, which is jumperable on reproduction cards.
+ - default: uses 0.895 MHz, per the original SSI-2001 card.
+ - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
+ - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
+ - hardsid: uses 1.000 MHz, available on the DuoSID.
+.
+:CONFIG_SIDPORT
+The IO port address of the Innovation SSI-2001.
+.
+:CONFIG_6581FILTER
+The SID's analog filtering meant that each chip was physically unique.
+Adjusts the 6581's filtering strength as a percent from 0 to 100.
+.
+:CONFIG_8580FILTER
+Adjusts the 8580's filtering strength as a percent from 0 to 100.
 .
 :CONFIG_PCSPEAKER
-Wlacz emulacje PC-Speakera.
+PC speaker emulation model:
+  discrete: Waveform is created using discrete steps (default).
+            Works well for games that use RealSound-type effects.
+  impulse:  Waveform is created using sinc impulses.
+            Recommended for square-wave games, like Commander Keen.
+            While improving accuracy, it is more CPU intensive.
+  none/off: Don't use the PC Speaker.
 .
-:CONFIG_PCRATE
-Czestotliwosc pr¢bkowania dzwieku generowanego przez PC-Speakera.
+:CONFIG_PCSPEAKER_FILTER
+Filter for the PC Speaker output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_ZERO_OFFSET
-Neutralizes and prevents the PC speaker's DC-offset from harming other sources.
-'auto' enables this for non-Windows systems and disables it on Windows.
-If your OS performs its own DC-offset correction, then set this to 'false'.
+DC-offset is now eliminated globally from the master mixer output.
 .
 :CONFIG_TANDY
-Wlacz emulacje Tandy Sound System. Przy 'auto' emulacja odbywa sie tylko jesli maszyna jest ustawiona na 'tandy'..
+Enable Tandy Sound System emulation.For 'auto', emulation is present only if machine is set to 'tandy'.
 .
-:CONFIG_TANDYRATE
-Czestotliwosc pr¢bkowania Tandy 3-Voice.
+:CONFIG_TANDY_FILTER
+Filter for the Tandy synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter for the Tandy DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_DISNEY
-Wlacza emulacje Disney Sound Source. (kompatybilne z Covox Voice Master oraz Covox Speech Thing).
+Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
+.
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO
+Enable IBM PS/1 Audio emulation.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter for the PS/1 Audio synth output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter for the PS/1 Audio DAC output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
 .
 :CONFIG_JOYSTICKTYPE
 Type of joystick to emulate: auto (default),
-none (disables joystick emulation),
-2axis (supports two joysticks),
-4axis (supports one joystick, first joystick used),
-4axis_2 (supports one joystick, second joystick used),
-fcs (Thrustmaster), ch (CH Flightstick).
-auto chooses emulation depending on real joystick(s).
+auto     : Detect and use any joystick(s), if possible.,
+2axis    : Support up to two joysticks.
+4axis    : Support the first joystick only.
+4axis_2  : Support the second joystick only.
+fcs      : Support a Thrustmaster-type joystick.
+ch       : Support a CH Flightstick-type joystick.
+hidden   : Prevent DOS from seeing the joystick(s), but enable them for mapping.
+disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.
 (Remember to reset DOSBox's mapperfile if you saved it earlier)
 .
 :CONFIG_TIMED
@@ -317,15 +543,26 @@ the percentage of motion to ignore. 100 turns the stick into a digital one.
 .
 :CONFIG_SERIAL1
 set type of device connected to com port.
-Can be disabled, dummy, modem, nullmodem, directserial.
-Additional parameters must be in the same line in the form of
+Can be disabled, dummy, mouse, modem, nullmodem, direct.
+Additional parameters must be on the same line in the form of
 parameter:value. Parameter for all types is irq (optional).
-for directserial: realport (required), rxdelay (optional).
-                 (realport:COM1 realport:ttyS0).
-for modem: listenport (optional).
+for mouse:
+   type, can be one of:
+      2btn:  2 buttons, Microsoft serial mouse
+      3btn:  3 buttons, Logitech serial mouse
+      wheel: 3 buttons + wheel serial mouse
+      msm:   3 buttons, Mouse Systems Mouse
+      2btn+msm, 3btn+msm, wheel+msm : autoselection
+   rate, can be normal or smooth (more frequent updates than on real PC)
+   Default is type:wheel+msm rate:smooth
+for direct: realport (required), rxdelay (optional).
+   (realport:COM1 realport:ttyS0).
+for modem: listenport sock (all optional).
 for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket (all optional).
-Example: serial1=modem listenport:5000
+   transparent, port, inhsocket, sock (all optional).
+SOCK parameter specifies the protocol to be used by both sides
+of the conection. 0 for TCP and 1 for ENet reliable UDP.
+Example: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
 see serial1
@@ -340,7 +577,7 @@ see serial1
 File used to map fake phone numbers to addresses.
 .
 :CONFIG_XMS
-Wlacz obsluge XMS.
+Enable XMS support.
 .
 :CONFIG_EMS
 Enable EMS support. The default (=true) provides the best
@@ -349,162 +586,360 @@ other choices, or require EMS support to be disabled (=false)
 to work at all.
 .
 :CONFIG_UMB
-Wlacz obsluge UMB.
+Enable UMB support.
 .
 :CONFIG_VER
 Set DOS version (5.0 by default). Specify as major.minor format.
 A single number is treated as the major version.
 Common settings are 3.3, 5.0, 6.22, and 7.1.
 .
+:CONFIG_COUNTRY
+Set DOS country code which will affect country-specific
+information such as date, time, and decimal formats.
+If set to 0, the country code corresponding to the
+selected keyboard layout will be used.
+.
 :CONFIG_KEYBOARDLAYOUT
-Kod jezyka ukladu klawiatury (lub none).
+Language code of the keyboard layout (or none).
 .
 :CONFIG_IPX
-Wlacz emulacje IPX po UDP/IP.
+Enable ipx over UDP/IP emulation.
+.
+:CONFIG_NE2000
+Enable emulation of a Novell NE2000 network card on a software-based
+network (using libslirp) with properties as follows:
+ - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
+ - 10.0.2.2      : IP of the gateway and DHCP service.
+ - 10.0.2.3      : IP of the virtual DNS server.
+ - 10.0.2.15     : First IP provided by DHCP, your IP!
+Note: Inside DOS, setting this up requires an NE2000 packet driver,
+      DHCP client, and TCP/IP stack. You might need port-forwarding
+      from the host into the DOS guest, and from your router to your
+      host when acting as the server for multiplayer games.
+.
+:CONFIG_NICBASE
+The base address of the NE2000 card.
+Note: Addresses 220 and 240 might not be available as they're assigned
+      to the Sound Blaster and Gravis UltraSound by default.
+.
+:CONFIG_NICIRQ
+The interrupt used by the NE2000 card.
+Note: IRQs 3 and 5 might not be available as they're assigned
+      to 'serial2' and the Gravis UltraSound by default.
+.
+:CONFIG_MACADDR
+The MAC address of the NE2000 card.
+.
+:CONFIG_TCP_PORT_FORWARDS
+Forwards one or more TCP ports from the host into the DOS guest.
+The format is:
+  port1  port2  port3 ... (e.g., 21 80 443)
+  This will forward FTP, HTTP, and HTTPS into the DOS guest.
+If the ports are privileged on the host, a mapping can be used
+  host:guest  ..., (e.g., 8021:21 8080:80)
+  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
+A range of adjacent ports can be abbreviated with a dash:
+  start-end ... (e.g., 27910-27960)
+  This will forward ports 27910 to 27960 into the DOS guest.
+Mappings and ranges can be combined, too:
+  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
+  This forwards ports 8040 to 8080 into 20 to 60 in the guest
+Uwagi:
+  - If mapped ranges differ, the shorter range is extended to fit.
+  - If conflicting host ports are given, only the first one is setup.
+  - If conflicting guest ports are given, the latter rule takes precedent.
+.
+:CONFIG_UDP_PORT_FORWARDS
+Forwards one or more UDP ports from the host into the DOS guest.
+The format is the same as for TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Linie w tej sekcji zostana uruchomione przy starcie.
-Mozesz umiescic tu np. komendy MOUNT.
+Lines in this section will be run at startup.
+You can put your MOUNT lines here.
 
 .
 :CONFIGFILE_INTRO
-# To jest plik konfiguracyjny dla dosbox-staging (%s).
-# Linie zaczynajace sie od # sa komentarzami.
+# DOSBox Staging %s - plik konfiguracyjny.
+# Linie zaczynaj?ce si? od # s? komentarzami.
+
 .
 :CONFIG_SUGGESTED_VALUES
-Mozliwe wartosci.
+Mo?liwe warto?ci
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Brak sekcji lub parametru: '%s'
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Brak parametru '%s' w sekcji '%s'.
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Sk?adnia: config -set "[sekcja] parametr=warto??".
+
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
-No config file loaded!
+Nie zosta? za?adowany ?aden plik konfiguracyjny!
 
 .
 :PROGRAM_CONFIG_PRIMARY_CONF
-Primary config file: 
+G?¢wny plik konfiguracyjny:
 %s
 
 .
 :PROGRAM_CONFIG_ADDITIONAL_CONF
-Additional config files:
+Dodatkowe pliki konfiguracyjne:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-Katalog z konfiguracja DOSBox Staging %s: 
+Katalog z konfiguracj? DOSBox Staging %s:
 %s
 
 
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Nie mozna otworzyc pliku %s
+Nie mo?na otworzy? pliku %s
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
-Writing config file %s
+Zapisywanie pliku konfiguracyjnego %s
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Config tool:
--writeconf or -wc without parameter: write to primary loaded config file.
--writeconf or -wc with filename: write file to config directory.
-Use -writelang or -wl filename to write the current language strings.
--r [parameters]
- Restart DOSBox, either using the previous parameters or any that are appended.
--wcp [filename]
- Write config file to the program directory, dosbox.conf or the specified
- filename.
--wcd
- Write to the default config file in the config directory.
--l lists configuration parameters.
--h, -help, -? sections / sectionname / propertyname
- Without parameters, displays this help screen. Add "sections" for a list of
- sections. For info about a specific section or property add its name behind.
--axclear clears the autoexec section.
--axadd [line] adds a line to the autoexec section.
--axtype prints the content of the autoexec section.
--securemode switches to secure mode.
--avistart starts AVI recording.
--avistop stops AVI recording.
--startmapper starts the keymapper.
--get "section property" returns the value of the property.
--set "section property=value" sets the value.
+Narz?dzie konfiguracyjne:
+-writeconf lub -wc : zapisz ustawienia do g?¢wnego pliku konfiguracyjnego.
+-writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracj?.
+-writelang lub -wl nazwa_pliku : zapisz teksty aktualnego j?zyka.
+-r [argumenty] : restart z poprzednimi lub z podanymi argumentami.
+-wcp [nazwa_pliku] : zapisz plik konfiguracyjny (dosbox.conf lub o podanej
+  nazwie) do katalogu programu.
+-wcd : zapisz do domy?lnego pliku konfiguracyjnego w katalogu z konfiguracj?.
+-l : wy?wietl parametry konfiguracji.
+-h, -help, -? sections / nazwa_sekcji_lub_parametru
+  Bez parametru, wy?wietl t? pomoc. Parametr "sections" - wy?wietl list?
+  istniej?cych sekcji. Aby wy?wietli? pomoc na temat sekcji/parametru,
+  podaj jego nazw?.
+-axclear                        : skasuj sekcj? [autoexec].
+-axadd [linia]                  : dodaj lini? do sekcji [autoexec].
+-axtype                         : wy?wietl zawarto?? sekcji [autoexec].
+-securemode                     : prze??cz w tryb bezpieczny.
+-avistart                       : rozpocznij nagrywanie do pliku AVI.
+-avistop                        : zako?cz nagrywanie do pliku AVI.
+-startmapper                    : uruchom narz?dzie mapuj?ce.
+-get "sekcja parametr"          : wy?wietl warto?? parametru.
+-set "sekcja parametr=warto??"  : ustaw warto?? parametru.
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Purpose of property "%s" (contained in section "%s"):
+Informacja o parametrze '%s' (zawartym w sekcji '%s'):
 %s
 
-Possible Values: %s
-Default value: %s
-Current value: %s
+Mo?liwe warto?ci: %s
+Domy?lna warto??: %s
+Aktualna warto??: %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-Purpose of section "%s":
+Informacja o sekcji '%s':
 %s
-Current value:
+Aktualna warto??:
 %s
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-This property cannot be changed at runtime.
+Ten parametr nie mo?e by? zmieniony po uruchomieniu.
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
-positive integer
+dodatnia liczba ca?kowita
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-Section %s contains the following properties:
+Sekcja '%s' zawiera nast?puj?ce parametry:
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-DOSBox configuration contains the following sections:
+Konfiguracja sk?ada si? z nast?puj?cych sekcji:
 
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Przelaczono w tryb bezpieczny.
+Prze??czono w tryb bezpieczny.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
-Ta operacja nie jest mozliwa w trybie bezpiecznym.
+Ta operacja nie jest dozwolona w trybie bezpiecznym.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-Sekcja %s nie istnieje.
+Sekcja '%s' nie istnieje.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" nie jest poprawna wartoscia parametru %s.
-
-.
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Brak takiej sekcji lub parametru.
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Brak parametru %s w sekcji %s.
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Poprawna skladnia: config -set "sekcja parametr".
+'%s' nie jest poprawn? warto?ci? parametru '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Poprawna skladnia: config -get "sekcja parametr".
+Sk?adnia: config -get "sekcja parametr".
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
 
-DOSBox was started with the following command line parameters:
+DOSBox zosta? uruchomiony z nast?puj?cymi parametrami wiersza polece?:
 %s
 
 .
 :PROGRAM_CONFIG_MISSINGPARAM
-Zabraklo parametru.
+Brakuj?cy parametr.
 
 .
-:PROGRAM_MOUNT_CDROMS_FOUND
-Znalezione CD-ROMy: %d
+:PROGRAM_PATH_TOO_LONG
+?cie?ka '%s' przekracza dozwolon? d?ugo?? %d znak¢w.
+
+.
+:PROGRAM_EXECUTABLE_MISSING
+Nie znaleziono pliku wykonywalnego: '%s'.
+
+.
+:WIKI_ADD_UTILITIES_ARTICLE
+https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+.
+:WIKI_URL
+https://github.com/dosbox-staging/dosbox-staging/wiki
+.
+:SHELL_CMD_AUTOTYPE_HELP_LONG
+Symuluje naci?ni?cia klawiszy dla uruchomionego programu.
+
+Sk?adnia:
+  [color=green]autotype[reset] -list
+  [color=green]autotype[reset] [-w [color=white]CZAS[reset]] [-p [color=white]TEMPO[reset]] [color=cyan]KLAWISZE[reset]
+
+Gdzie:
+  [color=white]CZAS[reset]      pocz?tkowe oczekiwanie, w sekundach (maksymalnie 30).
+  [color=white]TEMPO[reset]     oczekiwanie przed ka?dym klawiszem, w sekundach (maksymalnie 10).
+  [color=cyan]KLAWISZE[reset]  jeden lub wi?cej klawiszy oddzielonych spacjami.
+
+Uwagi:
+  Symulowane naci?ni?cia klawiszy [color=cyan]KLAWISZE[reset] rozpoczn? si? po [color=white]CZAS[reset] sekund,
+  co [color=white]TEMPO[reset] sekund ka?de. Dodatkowe [color=white]TEMPO[reset] sekund op¢?nienia mo?e zosta? dodane
+  przy u?yciu przecinka ('[color=cyan],[reset]'). Domy?lne warto?ci [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
+  sekundy odpowiednio. List? klawiszy mo?na wy?wietli? u?ywaj?c opcji -list.
+
+Przyk?ady:
+  [color=green]autotype[reset] -list
+  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
+  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
+  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
+.
+:SHELL_CMD_BOOT_HELP_LONG
+Startuje system operacyjny z obrazu dyskietki lub z zamontowanego dysku.
+
+Sk?adnia:
+  [color=green]boot[reset] [color=white]DYSK[reset]:
+  [color=green]boot[reset] -l [color=white]DYSK[reset]
+  [color=green]boot[reset] [color=cyan]OBRAZ[reset] [[color=cyan]OBRAZ[reset] ...]
+
+Gdzie:
+  [color=white]DYSK[reset]   litera dysku, [color=white]A:[reset], [color=white]C:[reset] lub [color=white]D:[reset].
+  [color=cyan]OBRAZ[reset]  obraz dyskietki.
+
+Uwagi:
+  [color=white]DYSK[reset] musi zosta? wcze?niej zamontowany poleceniem [color=green]imgmount[reset].
+  Dysk lub obrazy musz? by? bootowalne. Je?li podano wi?cej obraz¢w, mo?na
+  si? pomi?dzy nimi prze??cza? skr¢tem klawiszowym.
+
+Przyk?ady:
+  [color=green]boot[reset] [color=white]c:[reset]
+  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+.
+:PROGRAM_BOOT_NOT_EXIST
+B??d: Obraz dysku lub dyskietki nie istnieje.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+B??d: Nie mo?na otworzy? obrazu dysku lub dyskietki.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Obraz dysku jest tylko do odczytu! To mo?e powodowa? problemy.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+To polecenie startuje system operacyjny z obrazu dyskietki lub dysku twardego.
+
+Mo?na poda? kilka obraz¢w dyskietek, prze??czanych za pomoc? %s+F4. Opcj? -l
+mo?na poda? dysk, z kt¢rego ma zosta? wystartowany system, domy?lny to A.
+Jedyne dozwolone litery dysk¢w to A, C, oraz D. Aby wystartowa? system z
+obrazu dysku twardego (C lub D) musi on by? wczesniej zamontowany poleceniem
+[color=green]imgmount[reset].
+
+Polecenie [color=green]boot[reset] /? wy?wietla pe?en tekst pomocy.
+.
+:PROGRAM_BOOT_UNABLE
+Nie mo?na wystartowa? systemu z dysku %c
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Otwieranie pliku obrazu: '%s'
+
+.
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Obraz dyskietki ju? zamontowany.
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Nie mo?na otworzy? '%s'.
+.
+:PROGRAM_BOOT_BOOT
+Startowanie systemu z dysku %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+Znaleziono kartrid? PCjr, ale maszyna nie jest typu PCjr.
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Dost?pne komendy kartrid?y PCjr: %s
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Komend kartrid?a PCjr nie znaleziono.
+.
+:MSCDEX_SUCCESS
+MSCDEX zainstalowany.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: B??d: Litery dysk¢w nap?d¢w CD-ROM musz? nast?powa? po sobie.
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: B??d: Jeszcze nie obs?ugiwane.
+
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: B??d: Podana ?cie?ka nie prowadzi do nap?du CD-ROM.
+
+.
+:MSCDEX_ERROR_OPEN
+MSCDEX: B??d: Nieprawid?owy plik lub brak dost?pu.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: B??d: Za du?o nap?d¢w CD-ROM (maksymalnie: 5). Instalacja MSCDEX nieudana.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Zamontowano podkatalog: ograniczone wsparcie.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: B??d: Plik nie jest obrazem ISO/CUE lub zawiera b??dy.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: B??d: Nieznany problem.
+
+.
+:MSCDEX_WARNING_NO_OPTION
+MSCDEX: Ostrze?enie: Zignorowano niewspieran? opcj? '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_DRIVE
@@ -516,409 +951,89 @@ Typ
 :PROGRAM_MOUNT_STATUS_LABEL
 Etykieta
 .
+:PROGRAM_MOUNT_STATUS_NAME
+Obraz
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Slot
+.
 :PROGRAM_MOUNT_STATUS_2
-Dysk %c jest zamontowany jako %s
+Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
 Zamontowane dyski:
 
 .
-:PROGRAM_MOUNT_ERROR_1
-Katalog %s nie istnieje.
-
-.
-:PROGRAM_MOUNT_ERROR_2
-%s nie jest katalogiem
-
-.
-:PROGRAM_MOUNT_ILL_TYPE
-Nieprawidlowy typ %s
-
-.
-:PROGRAM_MOUNT_ALREADY_MOUNTED
-Dysk %c jest juz zamontowany jako %s
-
-.
-:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
-Dysk %c nie jest zamontowany.
-
-.
-:PROGRAM_MOUNT_UMOUNT_SUCCESS
-Dysk %c zostal pomyslnie odmontowany.
-
-.
-:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
-Dyski wirtualne nie moga zostac odmontowane.
-
-.
-:PROGRAM_MOUNT_DRIVEID_ERROR
-'%c' nie jest prawidlowym identyfikatorem dysku.
-
-.
-:PROGRAM_MOUNT_WARNING_WIN
-[31;1mMontowanie dysku C:\ nie jest zalecane. Prosze nastepnym razem zamontowac (pod)katalog.[0m
-
-.
-:PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMontowanie katalogu / nie jest zalecane.Prosze nastepnym razem zamontowac (pod)katalog.[0m
-
-.
-:PROGRAM_MOUNT_NO_OPTION
-Warning: Ignoring unsupported option '%s'.
-
-.
-:PROGRAM_MOUNT_OVERLAY_NO_BASE
-A normal directory needs to be MOUNTed first before an overlay can be added on top.
-
-.
-:PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
-The overlay is NOT compatible with the drive that is specified.
-
-.
-:PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-The overlay needs to be specified using the same addressing as the underlying drive. No mixing of relative and absolute paths.
-.
-:PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-The overlay directory can not be the same as underlying drive.
-
-.
-:PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
-Cos poszlo nie tak.
-
-.
-:PROGRAM_MOUNT_OVERLAY_STATUS
-Overlay %s on drive %c mounted.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Nie mozna przeniesc dysku Z. Dysk %c jest juz zamontowany.
-
-.
-:PROGRAM_MEM_CONVEN
-%10d kB wolnej pamieci konwencjonalnej
-
-.
-:PROGRAM_MEM_EXTEND
-%10d kB wolnej pamieci rozszerzonej
-
-.
-:PROGRAM_MEM_EXPAND
-%10d kB wolnej pamieci stronicowej
-
-.
-:PROGRAM_MEM_UPPER
-%10d kB wolnej pamieci g¢rnej w %d blokach (najwiekszy blok %d kB)
-
-.
-:PROGRAM_LOADFIX_ALLOC
-%d kB zaalokowanych.
-
-.
-:PROGRAM_LOADFIX_DEALLOC
-%d kB zwolnionych.
-
-.
-:PROGRAM_LOADFIX_DEALLOCALL
-Uzyta pamiec zwolniona.
-
-.
-:PROGRAM_LOADFIX_ERROR
-Blad alokacji pamieci.
-
-.
-:MSCDEX_SUCCESS
-MSCDEX zainstalowany.
-
-.
-:MSCDEX_ERROR_MULTIPLE_CDROMS
-MSCDEX: Blad: Litery dysk¢w wielu naped¢w CD-ROM musza nastepowac po sobie.
-
-.
-:MSCDEX_ERROR_NOT_SUPPORTED
-MSCDEX: Blad: jeszcze nie obslugiwane.
-
-.
-:MSCDEX_ERROR_PATH
-MSCDEX: Blad: Podana sciezka nie prowadzi do napedu CD-ROM.
-
-.
-:MSCDEX_ERROR_OPEN
-MSCDEX: Blad: Nieprawidlowy plik lub brak dostepu.
-
-.
-:MSCDEX_TOO_MANY_DRIVES
-MSCDEX: Blad: Za duzo naped¢w CD-ROM (maksymalnie: 5). Instalacja MSCDEX nieudana.
-
-.
-:MSCDEX_LIMITED_SUPPORT
-MSCDEX: Zamontowano podkatalog: ograniczone wsparcie.
-
-.
-:MSCDEX_INVALID_FILEFORMAT
-MSCDEX: Blad: Plik nie jest obrazem ISO/CUE lub zawiera bledy.
-
-.
-:MSCDEX_UNKNOWN_ERROR
-MSCDEX: Blad: Nieznany blad.
-
-.
-:MSCDEX_WARNING_NO_OPTION
-MSCDEX: Ostrzezenie: Zignorowano niewspierana opcje '%s'.
-
-.
-:PROGRAM_RESCAN_SUCCESS
-Pamiec podreczna dysku wyczyszczona.
-
-.
-:PROGRAM_INTRO
-[2J[32;1mWitaj w DOSBox Staging[0m, emulatorze x86 z dzwiekiem i grafika.
-DOSBox tworzy dla Ciebie powloke, kt¢ry wyglada jest stary, prosty DOS.
-
-Informacje o montowaniu dysk¢w, wpisz: [34;1mintro mount[0m
-Informacje o wsparciu dla CD-ROM, wpisz: [34;1mintro cdrom[0m
-Informacje o klawiszach specjalnych, wpisz: [34;1mintro special[0m
-Wiecej informacji o DOSBox Staging znajdziesz na wiki:[34;1m
-https://github.com/dosbox-staging/dosbox-staging/wiki[0m
-
-[31;1mDOSBox zatrzyma/wylaczy sie bez ostrzezenia jesli wystapi blad![0m
-
-.
-:PROGRAM_INTRO_MOUNT_START
-[2J[32;1mHere are some commands to get you started:[0m
-Before you can use the files located on your own filesystem,
-You have to mount the directory containing the files.
-
-
-.
-:PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
-∫ [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawartoscia.       ∫
-∫                                                                         ∫
-∫ [32mc:\dosprog\[37m to przyklad. Zamien go na Tw¢j wlasny katalog z grami. [37m     ∫
-»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
-
-.
-:PROGRAM_INTRO_MOUNT_OTHER
-[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
-∫ [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawartoscia.      ∫
-∫                                                                     ∫
-∫ [32m~/dosprog[37m to przyklad. Zamien go na Tw¢j wlasny katalog z grami.  [37m  ∫
-»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
-
-.
-:PROGRAM_INTRO_MOUNT_END
-When the mount has successfully completed you can type [34;1mc:[0m to go to your freshly
-mounted C-drive. Typing [34;1mdir[0m there will show its contents. [34;1mcd[0m will allow you to
-enter a directory (recognised by the [33;1m[][0m in a directory listing).
-You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.
-
-.
-:PROGRAM_INTRO_CDROM
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
-
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
-
-[34;1mmount D C:\example -t cdrom[0m
-
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
-
-Additionally, you can use IMGMOUNT to mount ISO images or CUE files:
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-
-.
-:PROGRAM_INTRO_SPECIAL
-[2J[32;1mKlawisze specjalne:[0m
-Domyslne skr¢ty klawiaturowe.
-Moga zostac zmienione narzedziem [33mkeymapper[0m.
-
-[33;1m%s+Enter[0m   Przejdz do trybu pelnoekranowego i z powrotem.
-[33;1m%s+Pauza[0m   Zapauzuj emulator.
-[33;1m%s+F1[0m    %s Uruchom [33mkeymappera[0m.
-[33;1m%s+F4[0m    %s Zamien zamontowany obraz dysku. Aktualizuj pamiec podreczna zamontowanego katalogu.
-[33;1m%s+F5[0m    %s Zr¢b zrzut ekranu.
-[33;1m%s+F6[0m    %s Rozpocznij/zatrzymaj nagrywanie audio do pliku wave.
-[33;1m%s+F7[0m    %s Rozpocznij/zatrzymaj nagrywanie wideo do pliku zmbv.
-[33;1m%s+F9[0m    %s Wylacz emulator.
-[33;1m%s+F10[0m   %s Przechwyc/zwolnij myszke.
-[33;1m%s+F11[0m   %s Spowolnij emulacje.
-[33;1m%s+F12[0m   %s Przyspiesz emulacje.
-[33;1m%s+F12[0m     Uwolnij predkosc (przycisk "turbo" / przyspiesz).
-
-.
-:PROGRAM_BOOT_NOT_EXIST
-Bootdisk file does not exist.  Failing.
-
-.
-:PROGRAM_BOOT_NOT_OPEN
-Cannot open bootdisk file.  Failing.
-
-.
-:PROGRAM_BOOT_WRITE_PROTECTED
-Plik obrazu jest tylko do odczytu! Moze to spowodowac problemy.
-
-.
-:PROGRAM_BOOT_PRINT_ERROR
-Ta komenda bootuje DOSBoxa z dyskietki lub obrazu dysku twardego.
-
-Do tej komendy mozna wlaczyc wyb¢r kolejnosci dysk¢w
-kombinacja klawiszy %s+F4, wtedy opcja -l okresla zamontowany dysk do zbootowania.
-Jesli nie podano litery dysku, domyslnie bootowany jest dysk A.
-Jedynymi literami bootowalnych dysk¢w sa litery A, C i D. Aby zbootowac z dysku
-twardego (C lub D), obraz powinien byc zamontowany komenda
-[34;1mIMGMOUNT[0m.
-
-Skladnia tej komendy jest nastepujaca:
-
-[34;1mBOOT [obrazdysku1.img obrazdysku1.img] [-l literadysku][0m
-
-.
-:PROGRAM_BOOT_UNABLE
-Nie udalo sie zbootowac z dysku %c.
-
-:PROGRAM_BOOT_IMAGE_OPEN
-Otwieranie pliku obrazu: %s
-
-.
-:PROGRAM_BOOT_IMAGE_NOT_OPEN
-Nie mozna otworzyc %s
-.
-:PROGRAM_BOOT_BOOT
-Bootowanie z dysku %c...
-
-.
-:PROGRAM_BOOT_CART_WO_PCJR
-Znaleziono kartridz PCjr, ale maszyna nie jest typu PCjr
-.
-:PROGRAM_BOOT_CART_LIST_CMDS
-Dostepne komendy kartridzy PCjr: %s
-.
-:PROGRAM_BOOT_CART_NO_CMDS
-Nie znaleziono komend kartidzy PCjr
-.
-:PROGRAM_LOADROM_SPECIFY_FILE
-Must specify ROM file to load.
-
-.
-:PROGRAM_LOADROM_CANT_OPEN
-ROM file not accessible.
-
-.
-:PROGRAM_LOADROM_TOO_LARGE
-ROM file too large.
-
-.
-:PROGRAM_LOADROM_INCOMPATIBLE
-Video BIOS not supported by machine type.
-
-.
-:PROGRAM_LOADROM_UNRECOGNIZED
-ROM file not recognized.
-
-.
-:PROGRAM_LOADROM_BASIC_LOADED
-BASIC ROM loaded.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP
-Zamontuj obraz dysku CD, dyskietki lub dysku twardego do wybranej litery dysku.
-
-.
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Zamontuj obraz dysku CD, dyskietki lub dysku twardego do wybranej litery dysku.
+Montuje obraz dyskietki, p?yty CD lub dysku twardego pod wybran? liter? dysku.
 
-Uzycie:
-  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ-CD[0m [OBRAZ-CD2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ[0m [OBRAZ2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ-STARTOWY[0m [-fs fat|none] -t hdd -size GEOMETRIA
-  [32;1mimgmount[0m -u [37;1mDYSK[0m  (odmontuj obraz DYSKu)
+Sk?adnia:
+  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]CD-LISTA[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]PLIKOBRAZ[reset] [[color=cyan]PLIKOBRAZ[reset] [..]] [-fs fat] -t hdd|floppy -ro
+  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]BOOTOBRAZ[reset] [-fs fat|none] -t hdd -size [color=white]GEOMETRIA[reset] -ro
+  [color=green]imgmount[reset] -u [color=white]DYSK[reset]  (odmontowuje obraz)
 
 Gdzie:
-  [37;1mDYSK[0m           jest litera do kt¢rej obraz bedzie zamontowany: A, C, D, ...
-  [36;1mOBRAZ-CD[0m       to ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mOBRAZ[0m          jest obrazem dysku twardego lub dyskietki (FAT16 lub FAT12)
-  [36;1mOBRAZ-STARTOWY[0m jest startowym obrazem dysku ze specyficzna geometria
-  GEOMETRIA      pliki-w-sektorze,sektory-w-glowicy,glowice,cylindry
+  [color=white]DYSK[reset]      litera dysku, pod kt¢r? obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
+  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO, lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
+  [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcj? -size [color=white]GEOMETRIA[reset]:
+            bajt¢w-na-sektor,sektor¢w-na-g?owic?,g?owice,cylindry
+Uwagi:
+  - %s+F4 przechodzi do nast?pnego dysku z listy [color=cyan]CD-LISTA[reset] lub [color=cyan]BOOTOBRAZ[reset].
+  - Flaga -ro montuje dysk tylko do odczytu (read-only).
+  - Flaga -ide w??cza emulacj? kontrolera IDE z zamontowanym obrazem CD.
 
-Notatki:
-  - %s+F4 zamienia i montuje nastepny OBRAZ lub OBRAZ-CD.
-Przyklady:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/UZYTKOWNIK/gry/doom.iso[0m -t cdrom
-  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mdyskietka1.img dyskietka2.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/dysk_c.img[0m -t hdd
-  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
-
+Przyk?ady:
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 .
-:SHELL_CMD_MOUNT_HELP
-maps physical folders or drives to a virtual drive letter.
-
-.
-:SHELL_CMD_MOUNT_HELP_LONG
-Mount a directory from the host OS to a drive letter.
-
-Usage:
-  [32;1mmount[0m [37;1mDRIVE[0m [36;1mDIRECTORY[0m [-t TYPE] [-freesize SIZE] [-label LABEL]
-  [32;1mmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's directory)
-
-Where:
-  [37;1mDRIVE[0m     the drive letter where the directory will be mounted: A, C, D, ...
-  [36;1mDIRECTORY[0m is the directory on the host OS to be mounted
-  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay
-  SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)
-  LABEL     drive label name to be used
-
-Notes:
-  - '-t overlay' redirects writes for mounted drive to another directory.
-  - Additional options are described in the manual (README file, chapter 4).
-
-Examples:
-  [32;1mmount[0m [37;1mC[0m [36;1m~/dosgames[0m
-  [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/Game CD"[0m -t cdrom
-  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay
+:PROGRAM_IMGMOUNT_STATUS_1
+Aktualnie zamontowane obrazy dyskietek, p?yt CD i dysk¢w twardych:
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
-Musisz podac litere dysku, na kt¢rym zamontowany bedzie obraz.
+Podaj liter? dysku, pod kt¢r? zamontowany b?dzie obraz.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Musisz podac numer dysku (0 - 3), gdzie zamontowany bedzie obraz (0=fda, 1=fdb, 2=hda, 3=hdb).
+Podaj numer dysku (0 - 3), gdzie zamontowany b?dzie obraz (0=fda, 1=fdb, 2=hda, 3=hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t iso[0m
+Podaj geometri? dysku.
 
-For [33mhardrive[0m images: Must specify drive geometry for hard drives:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+?aden obraz nie zosta? zamontowany.
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+?aden kontroler IDE nie jest dost?pny. Dysk nie b?dzie dost?pny przez kontroler IDE.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
-Could not load image file.
-Check that the path is correct and the image is accessible.
+Nie mo?na za?adowa? obrazu dysku.
+Sprawd? czy ?cie?ka jest poprawna i czy obraz jest mo?liwy do odczytania.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_GEOMETRY
-Could not extract drive geometry from image.
-Use parameter -size bps,spc,hpc,cyl to specify the geometry.
+Nie uda?o si? okre?li? geometrii dysku.
+U?yj parametru '-size bajt¢w-na-sektor,sektor¢w-na-g?owic?,g?owice,cylindry'
 
 .
 :PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
-Typ '%s' nie jest obslugiwany. Uzyj 'hdd', 'floppy' lub 'iso'.
+Typ '%s' nie jest obs?ugiwany. Podaj 'floppy', 'hdd', 'cdrom' lub 'iso'.
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Format "%s" nie jest obslugiwany. Uzyj "fat", "iso" lub "none".
+Format '%s' nie jest obs?ugiwany. Podaj 'fat', 'iso' lub "none".
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_FILE
-Musisz podac plik obrazu do zamontowania.
+Podaj plik obrazu do zamontowania.
 
 .
 :PROGRAM_IMGMOUNT_FILE_NOT_FOUND
@@ -926,88 +1041,544 @@ Nie znaleziono pliku obrazu.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Do montowania katalog¢w sluzy komenda [34;1mMOUNT[0m, a nie [34;1mIMGMOUNT[0m.
+Aby zamontowa? katalog u?yj polecenia '[color=green]mount[reset], a nie [color=green]imgmount[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
-Drive already mounted at that letter.
+Ju? zamontowano dysk pod t? liter?.
 
 .
 :PROGRAM_IMGMOUNT_CANT_CREATE
-Nie da sie utworzyc dysku z tego pliku.
+Nie mo?na utworzy? dysku z tego pliku.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Dysku %d jst zamontowany jako %s
+Dysk %d jest zamontowany jako '%s'.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-The image must be on a host or local drive.
+Obraz musi znajdowa? si? na dysku widocznym dla systemu gospodarza.
 
 .
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Uzywanie wielu plik¢w jest obslugiwane tylko dla obraz¢w cue/iso.
+U?ywanie wielu plik¢w jest obs?ugiwane tylko dla obraz¢w cue/iso.
+
+.
+:PROGRAM_INTRO
+[2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z d?wi?kiem i grafik?.
+DOSBox tworzy dla Ciebie pow?ok?, kt¢ra wygl?da jest stary, poczciwy DOS.
+
+Informacje o montowaniu dysk¢w, wpisz:      [color=blue]intro mount[reset]
+Informacje o wsparciu dla CD-ROM, wpisz:    [color=blue]intro cdrom[reset]
+Informacje o skr¢tach klawiszowych, wpisz:  [color=blue]intro special[reset]
+
+Wi?cej informacji o DOSBox Staging znajdziesz (po angielsku) na wiki:
+[color=blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
+
+[color=red]DOSBox zatrzyma/wy??czy si? bez ostrze?enia je?li wyst?pi powa?ny b??d![reset]
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[2J[color=green]Kilka polece? na pocz?tek[reset]
+Zanim uzyskasz dost?p do plik¢w na Twoim dysku,
+musisz zamontowa? zawieraj?cy je katalog.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mmount c c:\dosgames\[37m stworzy dysk C z zawarto?ci? z katalogu c:\dosgames. ∫
+∫                                                                           ∫
+∫ [32mc:\dosgames\[37m to tylko przyk?ad. Zast?p go swoim w?asnym katalogiem.[37m       ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mmount c ~/dosgames[37m stworzy dysk C z zawarto?ci? z katalogu ~/dosgames. ∫
+∫                                                                        ∫
+∫ [32m~/dosgames[37m to tylko przyk?ad. Zast?p go swoim w?asnym katalogiem.[37m      ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_END
+Po pomy?lnym zamontowaniu katalogu, wpisz [color=blue]c:[reset] aby przej?? na Tw¢j ?wie?o
+utworzony dysk. Wpisz [color=blue]dir[reset], ?eby obejrze? jego zawarto??. Polecenie [color=blue]cd[reset]
+pozwoli Ci przej?? do wybranego katalogu (rozpoznasz je po oznaczeniu
+[color=yellow]<DIR>[reset] w wy?wietlonej zawarto?ci).
+Mo?esz uruchamia? programy o rozszerzeniach [31m.exe[reset], [31m.bat[reset] oraz [31m.com[reset], wpisuj?c
+ich nazwy w wierszu polece?.
+
+.
+:PROGRAM_INTRO_CDROM_WINDOWS
+[2J[color=green]U?ywanie rzeczywistych/wirtualnych dysk¢w CD-ROM[reset]
+DOSBox emuluje nap?dy CD-ROM na dw¢ch poziomach.
+
+Poziom [33mpodstawowy[0m u?ywa zwyk?ych katalog¢w; instaluje sterownik MSCDEX
+i oznacza ich zawarto?? jako tylko do odczytu. To wystarcza do wi?kszo?ci gier:
+[34;1mmount D C:\katalog -t cdrom[0m
+Je?li to nie dzia?a, podaj dodatkowo etykiet? symulowanego dysku CD-ROM:
+[34;1mmount D C:\katalog -t cdrom -label ETYKIETA[0m
+
+Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obs?uga.
+Dzia?a tylko z rzeczywistymi nap?dami CD-ROM:
+[34;1mmount d [0;31mX:\[34;1m -t cdrom -usecd [33m0[0m
+Zast?p [0;31mX:\[0m przez lokacj? Twojego nap?du CD-ROM.
+Zast?p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego nap?du CD-ROM, wy?wietlanego przez polecenie:
+[34;1mmount -listcd[0m
+
+Dodatkowo, poleceniem [color=blue]imgmount[reset] mo?esz u?y? montowa? obrazy w formatach ISO oraz CUE/BIN:
+[34;1mimgmount D C:\cd.iso -t cdrom[0m
+[34;1mimgmount D C:\cd.cue -t cdrom[0m
+
+.
+:PROGRAM_INTRO_CDROM_OTHER
+[2J[color=green]U?ywanie rzeczywistych/wirtualnych dysk¢w CD-ROM[reset]
+DOSBox emuluje nap?dy CD-ROM na dw¢ch poziomach.
+
+Poziom [33mpodstawowy[0m u?ywa zwyk?ych katalog¢w; instaluje sterownik MSCDEX
+i oznacza ich zawarto?? jako tylko do odczytu. To wystarcza do wi?kszo?ci gier:
+[34;1mmount D ~/katalog -t cdrom[0m
+Je?li to nie dzia?a, podaj dodatkowo etykiet? symulowanego dysku CD-ROM:
+[34;1mmount D ~/katalog -t cdrom -label ETYKIETA[0m
+
+Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obs?uga.
+Dzia?a tylko z rzeczywistymi nap?dami CD-ROM:
+[34;1mmount d [0;31m/dev/przyk?ad[34;1m -t cdrom -usecd [33m0[0m
+
+Zast?p [0;31m~/dev//dev/przyk?ad[0m przez lokacj? Twojego nap?du CD-ROM.
+Zast?p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego nap?du CD-ROM, wy?wietlanego przez polecenie:
+[34;1mmount -listcd[0m
+
+Dodatkowo, poleceniem [color=blue]imgmount[reset] mo?esz montowa? obrazy p?yt w formatach ISO
+oraz CUE/BIN:
+[34;1mimgmount D ~/cd.iso -t cdrom[0m
+[34;1mimgmount D ~/cd.cue -t cdrom[0m
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[color=green]Skr¢ty klawiszowe[reset]
+To s? domy?lne skr¢ty klawiszowe. Mo?na je zmieni? za pomoc? [33mmapera klawiatury[0m.
+
+[33;1m%s+Enter[0m  Prze??cz pomi?dzy pe?nym ekranem a trybem okienkowym.
+[33;1m%s+Pause[0m  Pauza lub wznowienie dzia?ania emulatora..
+[33;1m%s+F1[0m   %s Uruchom [33mmapera klawiatury[0m.
+[33;1m%s+F4[0m   %s Podmie? zamontowany obraz na kolejny, sprawd? zmiany
+           na zamontowanych dyskach.
+[33;1m%s+F5[0m   %s Zapisz zrzut ekranu.
+[33;1m%s+F6[0m   %s Start/Stop nagrywania d?wi?ku do pliku WAV.
+[33;1m%s+F7[0m   %s Start/Stop nagrywania wideo do pliku AVI, z kodekiem ZMBV.
+[33;1m%s+F8[0m   %s Wy??cz/W??cz d?wi?k.
+[33;1m%s+F9[0m   %s Zako?cz prac? emulatora.
+[33;1m%s+F10[0m  %s Przejmij/Zwolnij kursor myszy.
+[33;1m%s+F11[0m  %s Zwolnij emulacj?.
+[33;1m%s+F12[0m  %s Przyspiesz emulacj?.
+[33;1m%s+F12[0m    Odblokuj maksymaln? pr?dko?? (tryb turbo).
 
 .
 :PROGRAM_KEYB_INFO
-Strona kodowa %i zostala zaladowana
+Strona kodowa %i zosta?a za?adowana.
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Strona kodowa %i zostala zaladowana dla ukladu klawiatury %s
+Strona kodowa %i dla uk?adu klawiatury '%s' zosta?a za?adowana.
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [keyboard layout ID[ codepage number[ codepage file]]]
+:SHELL_CMD_KEYB_HELP_LONG
+Konfiguruje klawiatur? dla danego j?zyka.
 
-Some examples:
-  [32;1mKEYB[0m: Display currently loaded codepage.
-  [32;1mKEYB[0m sp: Load the spanish (SP) layout, use an appropriate codepage.
-  [32;1mKEYB[0m sp 850: Load the spanish (SP) layout, use codepage 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Same as above, but use file mycp.cpi.
+Sk?adnia:
+  [color=green]keyb[reset] [color=cyan][KLAWIATURA][reset]
+  [color=green]keyb[reset] [color=cyan]KLAWIATURA[reset] [color=white]KODOWANIE[reset] [PLIK]
 
+Gdzie:
+  [color=cyan]KLAWIATURA[reset]  uk?ad klawiatury, np. [color=cyan]pl[reset] (programisty), lub [color=cyan]pl214[reset] (maszynistki).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska - zalecana; podobna do 852, ale
+              zachowuje wi?cej znak¢w graficznych), [color=white]667[reset] (Polska - MAZOVIA),
+              [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia ze znakiem Euro),
+              [color=white]852[reset] (Europa ?rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+  PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
+
+Uwagi:
+  Uruchomienie bez argument¢w pokazuje aktualny uk?ad klawiatury i stron?
+  kodow?. [color=cyan]KLAWIATURA[reset] mo?e by? tak?e zmieniona w pliku konfiguracyjnym
+  w sekcji [dos], parametrem 'keyboardlayout = [color=cyan]KLAWIATURA[reset]'.
+
+Przyk?ady:
+  [color=green]KEYB[reset] [color=cyan]us[reset]
+  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
+  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
 .
 :PROGRAM_KEYB_NOERROR
-Uklad klawiatury %s zostal wczytany dla strony kodowej %i
+Uk?ad klawiatury '%s' dla strony kodowej %i zosta? za?adowany.
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
-Nie znaleziono pliku klawiatury %s
+Nie znaleziono pliku uk?adu klawiatury '%s'.
 
 
 .
 :PROGRAM_KEYB_INVALIDFILE
-Plik klawiatury %s jest nieprawidlowy
+Plik uk?adu klawiatury '%s' jest nieprawid?owy.
 
 .
 :PROGRAM_KEYB_LAYOUTNOTFOUND
-Brak ukladu klawiatury w %s dla strony kodowej %i
+Brak uk?adu klawiatury w '%s' dla strony kodowej %i.
 
 .
 :PROGRAM_KEYB_INVCPFILE
-Brak lub nieprawidlowy plik strony kodowej dla ukladu klawiatury %s
+Brak lub nieprawid?owy plik strony kodowej dla uk?adu klawiatury '%s'.
 
+
+.
+:SHELL_CMD_LOADFIX_HELP_LONG
+?aduje program w okre?lone miejsce pami?ci i uruchamia go.
+
+Sk?adnia:
+  [color=green]loadfix[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=green]loadfix[reset] [/d] (lub [/f])
+
+Gdzie:
+  [color=cyan]PROGRAM[reset]  program lub gra do za?adowania, opcjonalnie z argumentami.
+
+Uwagi:
+  Typowy przyk?ad u?ycia to uruchomienie gry lub programu, kt¢ry normalnie
+  zg?asza b??d '[color=white]Packed File Corrupt[reset]' lub '[color=white]Not enough memory[reset]', jak
+  niekt¢re gry z lat 1980-tych (California Games II, itd.).
+  Uruchomienie bez argument¢w tylko alokuje pami?? na gr?; pami?? mo?na p¢?niej
+  zwolni? prze??cznikiem /d lub /f.
+
+Przyk?ady:
+  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
+  [color=green]loadfix[reset] /d
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kB zaalokowane.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kB zwolnione.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+U?ywana pami?? zosta?a zwolniona.
+
+.
+:PROGRAM_LOADFIX_ERROR
+B??d alokacji pami?ci.
+
+.
+:SHELL_CMD_LOADROM_HELP_LONG
+?aduje obraz ROM interpretera IBM BASIC lub BIOSu karty graficznej.
+
+Sk?adnia:
+  [color=green]loadrom [color=cyan]OBRAZ[reset]
+
+Gdzie:
+  [color=cyan]OBRAZ[reset]  obraz ROMu do za?adowania.
+
+Uwagi:
+   Po za?adowaniu obrazu ROMu interpretera IBM BASIC, mo?na ten interpreter
+   uruchomi?.
+
+Przyk?ady:
+  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
+.
+:PROGRAM_LOADROM_SPECIFY_FILE
+Podaj obraz ROMu do za?adowania.
+
+.
+:PROGRAM_LOADROM_CANT_OPEN
+Nie mo?na odczyta? obrazu ROMu.
+
+.
+:PROGRAM_LOADROM_TOO_LARGE
+Obraz ROMu zbyt du?y.
+
+.
+:PROGRAM_LOADROM_INCOMPATIBLE
+BIOS karty graficznej nie jest obs?ugiwany na maszynie tego typu.
+
+.
+:PROGRAM_LOADROM_UNRECOGNIZED
+Nie mo?na rozpozna? ROMu.
+
+.
+:PROGRAM_LOADROM_BASIC_LOADED
+Za?adowano BASIC ROM.
+
+.
+:SHELL_CMD_MEM_HELP_LONG
+Wy?wietla informacje o u?yciu pami?ci.
+
+Sk?adnia:
+  [color=green]mem[reset]
+
+Gdzie:
+  To polecenie nie obs?uguje ?adnych argument¢w.
+
+Uwagi:
+  Polecenie pokazuje u?ycie pami?ci przez DOS, w??czaj?c woln? pami??
+  konwencjonaln?, UMB (g¢rn?), XMS (rozszerzon?) i EMS (stronicowan?).
+
+Przyk?ady:
+  [color=green]mem[reset]
+.
+:PROGRAM_MEM_CONVEN
+%10d kB wolnej pami?ci konwencjonalnej
+
+.
+:PROGRAM_MEM_EXTEND
+%10d kB wolnej pami?ci XMS (rozszerzonej)
+
+.
+:PROGRAM_MEM_EXPAND
+%10d kB wolnej pami?ci EMS (stronicowanej)
+
+.
+:PROGRAM_MEM_UPPER
+%10d kB wolnej pami?ci UMB (g¢rnej) w %d blokach (najwi?kszy %d kB)
+
+.
+:SHELL_CMD_MOUNT_HELP
+maps physical folders or drives to a virtual drive letter.
+
+.
+:SHELL_CMD_MOUNT_HELP_LONG
+Montuje katalog z systemu gospodarza pod liter? dysku.
+
+Sk?adnia:
+  [color=green]mount[reset] [color=white]DYSK[reset] [color=cyan]KATALOG[reset] [-t TYP] [-usecd #] [-freesize ROZMIAR] [-label ETYKIETA]
+  [color=green]mount[reset] -listcd / -cd  (wy?wietla wykryte nap?dy CD-ROM i ich numery)
+  [color=green]mount[reset] -u [color=white]DYSK[reset]        (odmontowuje dysk)
+
+Gdzie:
+  [color=white]DYSK[reset]      litera, pod kt¢r? katalog zostanie zamontowany: A, C, D, ...
+  [color=cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
+  TYP       typ katalogu do zamontowania: dir, floppy, cdrom, lub overlay
+  ROZMIAR   ile wolnego miejsca raportowa? programom (kilobajty dla dyskietek,
+            megabajty dla pozosta?ych dysk¢w)
+  ETYKIETA  etykieta utworzonego dysku
+
+Uwagi:
+  Parametr '-t overlay' przekierowuje operacje zapisu do innego katalogu.
+  Dodatkowe opcje s? opisane (po angielsku) w podr?czniku (README, chapter 4).
+
+Przyk?ady:
+  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
+  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+Znalezione nap?dy CD-ROM: %d
+
+.
+:PROGRAM_MOUNT_ERROR_1
+Katalog '%s' nie istnieje.
+
+.
+:PROGRAM_MOUNT_ERROR_2
+'%s' nie jest katalogiem.
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Nieprawid?owy typ '%s'.
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Dysk %c jest ju? zamontowany jako '%s'.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Dysk %c nie jest zamontowany.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCESS
+Dysk %c zosta? pomy?lnie odmontowany.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Dyski wirtualne nie mog? zosta? odmontowane.
+
+.
+:PROGRAM_MOUNT_DRIVEID_ERROR
+'%c' nie jest prawid?owym identyfikatorem dysku.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[color=red]Montowanie dysku C:\ nie jest zalecane. Prosz? nast?pnym razem zamontowa? (pod)katalog.[reset]
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[color=red]Montowanie katalogu / nie jest zalecane. Prosz? nast?pnym razem zamontowa? (pod)katalog.[reset]
+
+.
+:PROGRAM_MOUNT_NO_OPTION
+Zignorowano nieobs?ugiwan? opcj? '%s".
+
+.
+:PROGRAM_MOUNT_OVERLAY_NO_BASE
+Katalog musi zosta? zamontowany, zanim b?dzie mo?e doda? nak?adk? ('overlay').
+
+.
+:PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
+Nak?adka ('overlay') nie jest kompatybilna z podanym dyskiem.
+
+.
+:PROGRAM_MOUNT_OVERLAY_MIXED_BASE
+Nak?adka ('overlay') musi mie? tak? sam? lokacj?, jak zamontowany dysk.
+Nie mo?na miesza? ?cie?ek wzgl?dnych i bezwzgl?dnych.
+
+.
+:PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
+Katalog nak?adki ('overlay') musi by? inny, ni? katalog dysku.
+
+.
+:PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
+B??d montowania nak?adki ('overlay').
+
+.
+:PROGRAM_MOUNT_OVERLAY_STATUS
+Nak?adka ('overlay') '%s' zamontowana na dysku %c.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Nie mo?na przenie?? dysku Z. Dysk %c jest ju? zamontowany.
+
+.
+:SHELL_CMD_RESCAN_HELP_LONG
+Sprawdza zmiany na zamontowanych dyskach.
+
+Sk?adnia:
+  [color=green]rescan[reset] [color=cyan]DYSK[reset]
+  [color=green]rescan[reset] [/a]
+
+Gdzie:
+  [color=cyan]DYSK[reset]  dysk do sprawdzenia pod k?tem zmian.
+
+Uwagi:
+  Zmiany dokonane w systemie gospodarza zostan? uwzgl?dnione wewn?trz DOSu.
+  Uruchomienie bez argumentu sprawdzi aktualny dysk.
+  Prze??cznik /a powoduje sprawdzenie wszystkich dysk¢w.
+
+Przyk?ady:
+  [color=green]rescan[reset] [color=cyan]c:[reset]
+  [color=green]rescan[reset] /a
+.
+:PROGRAM_RESCAN_SUCCESS
+Sprawdzono zmiany na dysku.
+
+.
+:SHELL_CMD_MIXER_HELP_LONG
+Wy?wietla lub zmienia ustawienia miksera d?wi?ku.
+
+Sk?adnia:
+  [color=green]mixer[reset] [color=cyan][KANA?][reset] [color=white]POLECENIE[reset] [/noshow]
+  [color=green]mixer[reset] [/listmidi]  (wy?wietla dost?pne urz?dzenia MIDI)
+
+Gdzie:
+  [color=cyan]KANA?[reset]      to nazwa kana?u, kt¢rego dotyczy? b?d? zmiany.
+  [color=white]POLECENIE[reset]  jest jednym z poni?szych:
+    G?o?no??:        od [color=white]0[reset] do [color=white]100[reset] lub w decybelach poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset])
+                     [color=white]L:P[reset] osobne ustawienia Lewej/Prawej strony (np. [color=white]10:20[reset])
+    Wyj?cie:         [color=white]stereo[reset], [color=white]reverse[reset] (zamienione kana?y stereo)
+    Przenikanie:     od [color=white]x0[reset] do [color=white]x100[reset]
+    Efekt 'reverb':  od [color=white]r0[reset] do [color=white]r100[reset]
+
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietli aktualne ustawienia.
+  Jednym poleceniem mo?na zmieni? ustawienia kilku kana?¢w; ustawienia
+  przenikania lub efektu 'reverb' mo?na zmieni? globalnie pomijaj?c kana?.
+  Prze??cznik /noshow pozwala zmieni? ustawienia bez ich wy?wietlenia.
+
+Przyk?ady:
+  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_SERIAL_HELP_LONG
+Zarz?dza portami szeregowymi.
+
+Sk?adnia:
+  [color=green]serial[reset] [color=white][PORT#][reset]  (wy?wietla ustawienia port¢w lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
+  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZ?DZENIE[reset] [ustawienia]  (pod??cz urz?dzenie do portu)
+
+Gdzie:
+  [color=cyan]URZ?DZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], lub [color=cyan]DISABLED[reset]
+
+  Dodatkowe opcje dla poszczeg¢lnych urz?dze?:
+  [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+               PORT, INHSOCKET, SOCK
+  [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+               2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
+  [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
+  [color=cyan]DUMMY[reset]      : IRQ
+
+Przyk?ady:
+  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                  : S?uchaj na TCP:1250 - serwer
+  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250  : Pod??cz do TCP:1250 - klient
+  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1         : S?uchaj na UDP:5000 - serwer
+  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0              : U?yj fizycznego portu (Linux)
+  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                       : Mysz typu Mouse Systems
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+Podaj numer portu pomi?dzy 1 a %d (w??cznie).
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Typ musi by? jednym z:
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
 
 .
 :SHELL_ILLEGAL_PATH
-Nieprawidlowa sciezka
+Nieprawid?owa ?cie?ka.
 
 .
 :SHELL_CMD_HELP
-Jesli chcesz zobaczyc liste wszystkich obslugiwanych komend, wpisz [33;1mhelp /all[0m .
-Kr¢tka lista najczesciej uzywanych komend:
+Aby zobaczy? list? wszystkich obs?ugiwanych komend, wpisz [33;1mhelp /all[0m .
+Kr¢tka lista najcz??ciej u?ywanych komend:
 
 .
+:SHELL_CMD_COMMAND_HELP_LONG
+Uruchamia interpreter wiersza polece?.
+
+Sk?adnia:
+  [color=green]command[reset]
+  [color=green]command[reset] /c (lub /init) [color=cyan]POLECENIE[reset]
+
+Gdzie:
+  [color=cyan]POLECENIE[reset]  polecenie, program, lub gra do uruchomienia.
+
+Uwagi:
+  DOSBox Staging automatycznie uruchamia interpreter wiersza polece? z opcj?
+  /init podczas startu, pokazuj?c baner powitalny.
+  Poleceniem [color=green]command[reset] mo?na uruchomi? now? instancj?.
+  Opcja /c wykonuje podane [color=cyan]POLECENIE[reset], po czym ko?czy prac? wiersza polece?.
+
+Przyk?ady:
+  [color=green]command[reset]
+  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
+  [color=green]command[reset] /init [color=cyan]dir[reset]
+.
 :SHELL_CMD_ECHO_ON
-ECHO jest wlaczone.
+ECHO jest w??czone.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO jest wylaczone.
+ECHO jest wy??czone.
 
 .
 :SHELL_ILLEGAL_SWITCH
-Nieprawidlowy przelacznik: %s.
+Nieprawid?owy prze??cznik '%s'.
 
 .
 :SHELL_MISSING_PARAMETER
@@ -1015,87 +1586,115 @@ Brak wymaganego parametru.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Nie mozna przejsc do: %s.
+Nie mo?na przej?? do '%s'.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Aby przejsc do innego dysku wpisz [31m%c:[0m
+Aby przej?? do innego dysku wpisz np. [31m%c:[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-Nazwa katalogu jest dluzsza niz 8 znak¢w i/lub zawiera spacje.
+Nazwa katalogu jest d?u?sza ni? 8 znak¢w i/lub zawiera spacje.
 Spr¢buj [31mcd %s[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Ciagle jestes na dysku Z:, Wpisz [31mC:[0m aby przejsc na zamontowany dysk.
+Wci?? jeste? na dysku Z:, wpisz [31mC:[0m aby przej?? na zamontowany dysk.
 
 .
 :SHELL_CMD_DATE_HELP
-Displays or changes the internal date.
+Wy?wietla lub zmienia dat? systemow?.
 
 .
 :SHELL_CMD_DATE_ERROR
-The specified date is not correct.
+Podana data jest nieprawid?owa.
 
 .
 :SHELL_CMD_DATE_DAYS
-3SunMonTueWedThuFriSat
+3NiePonWtr?rdCzwPi?Sob
 .
 :SHELL_CMD_DATE_NOW
-Current date: 
+Aktualna data: 
 .
 :SHELL_CMD_DATE_SETHLP
-Type 'date MM-DD-YYYY' to change.
+Wpisz 'date %s' aby zmieni? dat?.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/Y
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [[/T] [/H] [/S] | MM-DD-YYYY]
-  MM-DD-YYYY: new date to set
-  /S:         Permanently use host time and date as DOS time
-  /F:         Switch back to DOSBox internal time (opposite of /S)
-  /T:         Only display date
-  /H:         Synchronize with host
+Sk?adnia:
+  [color=green]date[reset] [/t]
+  [color=green]date[reset] /h
+  [color=green]date[reset] [color=cyan]DATA[reset]
 
+Gdzie:
+  [color=cyan]DATA[reset]  data do ustawienia, w formacie [color=cyan]%s[reset].
+
+Uwagi:
+  Uruchomienie bez argument¢w pokazuje aktualn? dat?, w kr¢tkim formacie
+  je?li podano prze??cznik /t.
+  Prze??cznik /h synchronizuje dat? z systemem gospodarza.
+
+Przyk?ady:
+  [color=green]date[reset]
+  [color=green]date[reset] /h
+  [color=green]date[reset] [color=cyan]%s[reset]
 .
 :SHELL_CMD_TIME_HELP
-Displays the internal time.
+Wy?wietla lub zmienia godzin? systemow?.
+
+.
+:SHELL_CMD_TIME_ERROR
+Podana godzina jest nieprawid?owa.
 
 .
 :SHELL_CMD_TIME_NOW
-Current time: 
+Aktualny czas: 
 .
-:SHELL_CMD_TIME_HELP_LONG
-TIME [/T] [/H]
-  /T:         Display simple time
-  /H:         Synchronize with host
+:SHELL_CMD_TIME_SETHLP
+Wpisz 'time %s' aby zmieni? godzin?.
 
 .
+:SHELL_CMD_TIME_HELP_LONG
+Sk?adnia:
+  [color=green]time[reset] [/t]
+  [color=green]time[reset] /h
+  [color=green]time[reset] [color=cyan]GODZINA[reset]
+
+Gdzie:
+  [color=cyan]GODZINA[reset]  nowy czas do ustawienia, w formacie [color=cyan]%s[reset].
+
+Uwagi:
+  Uruchomienie bez argument¢w pokazuje aktualn? godzin?, w kr¢tkim formacie
+  je?li podano prze??cznik /t.
+  Prze??cznik /h synchronizuje godzin? z systemem gospodarza.
+
+Przyk?ady:
+  [color=green]time[reset]
+  [color=green]time[reset] /h
+  [color=green]time[reset] [color=cyan]%s[reset]
+.
 :SHELL_CMD_MKDIR_ERROR
-Nie mozna utworzyc: %s.
+Nie mo?na utworzy? katalogu '%s'.
 
 .
 :SHELL_CMD_RMDIR_ERROR
-Nie mozna usunac: %s.
+Nie mo?na usun?? katalogu '%s'.
 
 .
 :SHELL_CMD_DEL_ERROR
-Nie mozna usunac: %s.
+Nie mo?na usun?? '%s'.
 
 .
 :SHELL_SYNTAXERROR
-Skladnia komendy jest nieprawidlowa.
+Nieprawid?owa sk?adnia.
 
 .
 :SHELL_CMD_SET_NOT_SET
-Zmienna srodowiskowa %s nie jest zdefiniowana.
+Zmienna ?rodowiskowa %s nie jest zdefiniowana.
 
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
-Niewystarczajaca ilosc miejsca w srodowisku.
+Niewystarczaj?ca ilo?? miejsca w ?rodowisku.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
@@ -1107,31 +1706,53 @@ IF ERRORLEVEL: Brakuje numeru.
 
 .
 :SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
-IF ERRORLEVEL: Nieprawidlowy numer.
+IF ERRORLEVEL: Nieprawid?owy numer.
 
 .
 :SHELL_CMD_GOTO_MISSING_LABEL
-Brakuje etykiety dla komendy GOTO.
+GOTO: Brakuje etykiety.
 
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO: Nie odnaleziono etykiety %s.
 
 .
+:SHELL_CMD_FILE_ACCESS_DENIED
+Brak dost?pu - '%s'.
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Podw¢jne przekierowanie - '%s'.
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Nie mo?na utworzy? lub otworzy? pliku tymczasowego dla strumienia.
+Sprawd? zmienn? ?rodowiskow? %%TEMP%%.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+Nie mo?na utworzy? pliku '%s'.
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+Nie mo?na otworzy? pliku '%s'.
+
+.
 :SHELL_CMD_FILE_NOT_FOUND
-Nie odnaleziono pliku %s.
+Nie odnaleziono pliku '%s'.
 
 .
 :SHELL_CMD_FILE_EXISTS
-Plik %s juz istnieje.
+Plik '%s' ju? istnieje.
 
 .
 :SHELL_CMD_DIR_VOLUME
- Wolumin w stacji %c to %s
+ Wolumin w nap?dzie %c to '%s'
 
 .
 :SHELL_CMD_DIR_INTRO
- Katalog: %s
+ Katalog dysku '%s'
 
 .
 :SHELL_CMD_DIR_BYTES_USED
@@ -1144,21 +1765,37 @@ Plik %s juz istnieje.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Dysk %c nie istnieje!
-Musisz go najpierw [31mzamontowac[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyskac wiecej informacji.
+Musisz go najpierw [31mzamontowa?[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyska? wi?cej informacji.
+
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Nieprawidlowa komenda: %s.
+Nieprawid?owe polecenie lub nazwa pliku: '%s'.
 
 .
 :SHELL_CMD_PAUSE
-Nacisnij dowolny klawisz, aby kontynuowac...
+Naci?nij dowolny klawisz, aby kontynuowa?...
 .
 :SHELL_CMD_PAUSE_HELP
-Czekaj na wcisniecie klawisza aby kontynuowac.
+Czeka na wci?ni?cie klawisza aby kontynuowa?.
 
 .
+:SHELL_CMD_PAUSE_HELP_LONG
+Sk?adnia:
+  [color=green]pause[reset]
+
+Gdzie:
+  To polecenie nie obs?uguje ?adnych argument¢w.
+
+Uwagi:
+  To polecenie jest zazwyczaj stosowane w plikach BAT (wsadowych). U?ytkownik
+  mo?e wcisn?? dowolny klawisz (z wyj?tkiem kilku klawiszy steruj?cych),
+  aby kontynuowa?.
+
+Przyk?ady:
+  [color=green]pause[reset]
+.
 :SHELL_CMD_COPY_FAILURE
-Nie udalo sie skopiowac: %s.
+Nie mo?na skopiowa? '%s'.
 
 .
 :SHELL_CMD_COPY_SUCCESS
@@ -1166,256 +1803,663 @@ Nie udalo sie skopiowac: %s.
 
 .
 :SHELL_CMD_SUBST_NO_REMOVE
-Unable to remove, drive not in use.
+Nie mo?na usun??, nie ma takiego dysku.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-Wykonanie polecenia SUBST nie powiodlo sie. Moze to byc spowodowane bledem w linii komend lub tym, ze docelowy dysk jest uzywany.
-Polecenia SUBST mozna uzyc jedynie na lokalnych dyskach
+Wykonanie polecenia SUBST nie powiod?o si?. Mo?e to by? spowodowane b??dem w
+sk?adni lub tym, ?e docelowy dysk jest u?ywany.
+Polecenia SUBST mo?na u?y? jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_BEGIN
 [44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
 ∫ [32mWitaj w DOSBox Staging %-43s[37m ∫
 ∫                                                                    ∫
-∫ Kr¢tki wstep dla nowych uzytkownik¢w, wpisz: [33mINTRO[37m                 ∫
-∫ Aby zobaczyc liste wspieranych komend, wpisz: [33mHELP[37m                 ∫
+∫ Kr¢tki wst?p dla nowych u?ytkownik¢w, wpisz: [33mINTRO[37m                 ∫
+∫ Aby zobaczy? list? wspieranych komend, wpisz: [33mHELP[37m                 ∫
 ∫                                                                    ∫
-∫ Aby dostosowac predkosc emulatora, uzyj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       ∫
-∫ Aby zmienic skr¢ty klawiaturowe [31m%s+F1[37m.%s                           ∫
-∫ Wiecej informacji w pliku [36mREADME[37m w katalogu DOSBoxa.               ∫
+∫ Aby dostosowa? pr?dko?? emulatora, u?yj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       ∫
+∫ Aby zmieni? skr¢ty klawiszowe [31m%s+F1[37m.%s                             ∫
+∫ Wi?cej (po angielsku) w pliku [36mREADME[37m w katalogu DOSBoksa.          ∫
 ∫                                                                    ∫
 
 .
 :SHELL_STARTUP_CGA
 ∫ DOSBox wspiera tryb Composite CGA.                                 ∫
-∫ Wcisnij [31mF12[37m aby wlaczyc lub wylaczyc tryb composite.               ∫
-∫ [31m(%s+)F11[37m zmienia barwe; [31m%s+%s+F11[37m zmienia model CGA.%s           ∫
+∫ Wci?nij [31mF12[37m aby w??czy? lub wy??czy? tryb composite.               ∫
+∫ [31m(%s+)F11[37m zmienia barw?; [31m%s+%s+F11[37m zmienia model CGA.%s           ∫
 ∫                                                                    ∫
 
 .
 :SHELL_STARTUP_CGA_MONO
-∫ Wcisnij [31mF11[37m kolor mono: jasny bialy, bialy, pomaranczowy, zielony. ∫
-∫ i [31m%s+F11[37m aby zmienic kontrast/jasnosc.                            ∫
+∫ Wci?nij [31mF11[37m kolor mono: jasny bia?y, bia?y, pomara?czowy, zielony. ∫
+∫ i [31m%s+F11[37m aby zmieni? kontrast/jasno??.                            ∫
 
 .
 :SHELL_STARTUP_HERC
-∫ Wcisnij [31mF11[37m aby zmienic kolor ekaranu mono: jasny bialy, bialy, pomaranczowy, zielony. ∫
+∫ Wci?nij [31mF11[37m aby zmieni? kolor ekaranu mono: jasny bia?y, bia?y, pomara?czowy, zielony. ∫
 ∫                                                                    ∫
 
 .
 :SHELL_STARTUP_DEBUG
-∫ Wcisnij [31m%sPauza[37m aby wlaczyc debuggera albo wlacz plik exe komenda [33mDEBUG[37m. ∫
+∫ Wci?nij [31m%sPauza[37m aby w??czy? debuggera albo w??cz plik exe komend? [33mDEBUG[37m. ∫
 ∫                                                                    ∫
 
 .
 :SHELL_STARTUP_END
-∫ [33mhttps://dosbox-staging.github.io[37m                                   ∫
+ [33mhttps://dosbox-staging.github.io[37m                                   ∫
 »ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
 
 
 .
 :SHELL_STARTUP_SUB
-[32;1mdosbox-staging %s[0m
+[color=green]dosbox-staging %s[0m
 
 .
 :SHELL_CMD_CHDIR_HELP
-Wyswietl lub zmien aktualny katalog.
+Wy?wietla lub zmienia aktualny katalog.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-CHDIR [dysk:][sciezka]
-CHDIR [..]
-CD [dysk:][sciezka]
-CD [..]
+Sk?adnia:
+  [color=green]cd[reset] [color=cyan]KATALOG[reset]
+  [color=green]chdir[reset] [color=cyan]KATALOG[reset]
 
-  ..   oznacza, ze chcesz przejsc do katalogu powyzej.
+Gdzie:
+  [color=cyan]KATALOG[reset]  nazwa katalogu, do kt¢rego nale?y przej??.
 
-Wpisz CD dysk: aby wyswietlic aktualna sciezke na okreslonym dysku.
-Wpisz CD bez parametr¢w aby wyswietlic aktualny dysk i katalog.
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla aktualny katalog.
+  Polecenie zmienia jedynie katalog, nie aktualny dysk.
 
+Przyk?ady:
+  [color=green]cd[reset]
+  [color=green]cd[reset] [color=cyan]mydir[reset]
 .
 :SHELL_CMD_CLS_HELP
-Wyczysc ekran.
+Czy?ci zawarto?? ekranu.
 
 .
+:SHELL_CMD_CLS_HELP_LONG
+Sk?adnia:
+  [color=green]cls[reset]
+
+Gdzie:
+  To polecenie nie obs?uguje ?adnych argument¢w.
+
+Uwagi:
+  Polecenie [color=green]cls[reset] kasuje ca?y tekst na ekranie, z wyj?tkiem znaku zach?ty
+  (np. [color=white]Z:\>[reset] lub [color=white]C:\GAMES>[reset]) w lewym g¢rnym rogu ekranu.
+
+Przyk?ady:
+  [color=green]cls[reset]
+.
 :SHELL_CMD_DIR_HELP
-Displays a list of files and subdirectories in a directory.
+Wy?wietlenie listy plik¢w i podkatalog¢w.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
-DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
+Sk?adnia:
+  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]PORZ?DEK[reset]]
 
-  [drive:][path][filename]
-              Specifies drive, directory, and/or files to list.
-  /W          Uses wide list format.
-  /B          Uses bare format (no heading information or summary).
-  /P          Pauses after each screenful of information.
-  /AD         Displays all directories.
-  /A-D        Displays all files.
-  /O          List by files in sorted order.
-               -  Prefix to reverse order
-  sortorder    N  By name (alphabetic)       S  By size (smallest first)
-               E  By extension (alphabetic)  D  By date & time (oldest first)
+Gdzie:
+  [color=cyan]WZORZEC[reset]       dok?adna nazwa lub nazwa z symbolami wieloznaczno?ci (maskami),
+                kt¢rymi s? asterisk ('*') i znak zapytania ('?'). Mo?na poda?
+                ?cie?k?, aby wy?wietli? zawarto?? podanego katalogu.
+  [color=white]PORZ?DEK[reset]      porz?dek sortowania [color=white]n[reset] (po nazwie, alfabetycznie),
+                [color=white]s[reset] (od najmniejszego), [color=white]e[reset] (po rozszerzeniu, alfabetycznie),
+                [color=white]d[reset] (od najstarszego), opcjonalny prefiks [color=white]-[reset] odwraca porz?dek.
+  /w            wy?wietl 5 plik¢w/katalog¢w w jednym wierszu.
+  /b            wy?wietl tylko nazwy.
+  /p            pauza po ka?dorazowym zape?nieniu ekranu.
+  /ad lub /a-d  wy?wietl tylko katalogi lub pliki (odpowiednio).
 
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla wszystkie pliki i podkatalogi w
+  aktualnym katalogu, tak samo jak [color=green]dir[reset] [color=cyan]*.*[reset].
+
+Przyk?ady:
+  [color=green]dir[reset] [color=cyan]games.*[reset] /p
+  [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Wyswietla wiadomosci i wlacza/wylacza wypisywanie wykonywanych komend.
+Wy?wietlenie wiadomo?ci lub w??czenie/wy??czenie tryb powtarzania.
 
 .
+:SHELL_CMD_ECHO_HELP_LONG
+Sk?adnia:
+  [color=green]echo[reset] [color=cyan][on|off][reset]
+  [color=green]echo[reset] [color=cyan][WIADOMO??][reset]
+
+Gdzie:
+  [color=cyan]on|off[reset]     W??cz/Wy??cz wy?wietlanie wykonywanych polece? (tryb powtarzania).
+  [color=cyan]WIADOMO??[reset]  Wiadomo?? do wy?wietlenia.
+
+Uwagi:
+  Uruchomienie bez argument¢w pokazuje, czy tryb powtarzania jest w??czony.
+  Polecenie jest przydatne do debugowania plik¢w wsadowych (BAT).
+
+Przyk?ady:
+  [color=green]echo[reset] [color=cyan]off[reset]
+  [color=green]echo[reset] [color=cyan]Witaj, ?wiecie![reset]
+.
 :SHELL_CMD_EXIT_HELP
-Wylacz konsole.
+Wychodzi z wiersza polece?.
+
+.
+:SHELL_CMD_EXIT_HELP_LONG
+Sk?adnia:
+  [color=green]exit[reset]
+
+Gdzie:
+  To polecenie nie obs?uguje ?adnych argument¢w.
+
+Uwagi:
+  Je?li wiersz polece? zosta? wywo?any przez program, polecenie [color=green]exit[reset] powr¢ci
+  do tego programu.
+  Je?li ?aden program nie jest uruchomiony, polecenie zako?czy dzia?anie
+  emulatora DOSBox.
+
+Przyk?ady:
+  [color=green]exit[reset]
+.
+:SHELL_CMD_EXIT_TOO_SOON
+Pr¢ba zbyt wczesnego wykonania polecenia 'exit'.
 
 .
 :SHELL_CMD_HELP_HELP
-Pokaz pomoc.
+Wy?wietla pomoc dotycz?c? polece? DOS.
 
 .
+:SHELL_CMD_HELP_HELP_LONG
+Sk?adnia:
+  [color=green]help[reset]
+  [color=green]help[reset] /a[ll]
+  [color=green]help[reset] [color=cyan]POLECENIE[reset]
+
+Gdzie:
+  [color=cyan]POLECENIE[reset]  nazwa wewn?trznego polecenie DOS, np. [color=cyan]dir[reset].
+
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla list? polece? DOS (z parametrem /a
+  lub /all - pe?n? list?).
+  Zamiast [color=green]help[reset] [color=cyan]POLECENIE[reset], mo?esz uzyska? pomoc wpisuj?c [color=cyan]POLECENIE[reset] /?.
+
+Przyk?ady:
+  [color=green]help[reset] [color=cyan]dir[reset]
+  [color=green]help[reset] /all
+.
+:SHELL_CMD_INTRO_HELP
+Wy?wietla pe?noekranowy samouczek.
+
+.
+:SHELL_CMD_INTRO_HELP_LONG
+Sk?adnia:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]STRONA[reset]
+
+Gdzie:
+  [color=white]STRONA[reset]  nazwa strony do wy?wietlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
+
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla jedn? stron? na raz; wci?nij dowolny
+  klawisz, ?eby przej?? do kolejnej.
+  Podanie nazwy strony wy?wietla tylko ??dan? stron?.
+
+Przyk?ady:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
+.
 :SHELL_CMD_MKDIR_HELP
-Stw¢rz katalog.
+Tworzy nowy katalog.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-MKDIR [dysk:][sciezka]
-MD [dysk:][sciezka]
+Sk?adnia:
+  [color=green]md[reset] [color=cyan]KATALOG[reset]
+  [color=green]mkdir[reset] [color=cyan]KATALOG[reset]
 
+Gdzie:
+  [color=cyan]KATALOG[reset]  nazwa katalogu do utworzenia.
+
+Uwagi:
+  Nale?y poda? dok?adn? nazw?, katalog nie mo?e ju? istnie?.
+  Mo?na poda? ?cie?k?, gdzie katalog ma zosta? utworzony.
+
+Przyk?ady:
+  [color=green]md[reset] [color=cyan]newdir[reset]
+  [color=green]md[reset] [color=cyan]c:\games\dir[reset]
 .
 :SHELL_CMD_RMDIR_HELP
-Usun katalog.
+Usuwa katalog.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-RMDIR [dysk:][sciezka]
-RD [dysk:][sciezka]
+Sk?adnia:
+  [color=green]rd[reset] [color=cyan]KATALOG[reset]
+  [color=green]rmdir[reset] [color=cyan]KATALOG[reset]
 
+Gdzie:
+  [color=cyan]KATALOG[reset]  nazwa katalogu do usuni?cia.
+
+Uwagi:
+  Katalog musi by? pusty, nie zawiera? plik¢w ani podkatalog¢w.
+
+Przyk?ady:
+  [color=green]rd[reset] [color=cyan]emptydir[reset]
 .
 :SHELL_CMD_SET_HELP
-Zmien wartosci zmiennych srodowiskowych.
+Wy?wietla lub zmienia zawarto?? zmiennych ?rodowiskowych.
 
+.
+:SHELL_CMD_SET_HELP_LONG
+Sk?adnia:
+  [color=green]set[reset]
+  [color=green]set[reset] [color=white]ZMIENNA[reset]=[color=cyan][ZAWARTO??][reset]
+
+Gdzie:
+  [color=white]ZMIENNA[reset]    nazwa zmiennej ?rodowiskowej.
+  [color=cyan]ZAWARTO??[reset]  tekst (?a?cuch znak¢w) do przypisania do zmiennej.
+
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla wszystkie zmienne ?rodowiskowe.
+  Przypisanie pustej zawarto?ci usuwa zmienn? ?rodowiskow?.
+
+Przyk?ady:
+  [color=green]set[reset]
+  [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]
 .
 :SHELL_CMD_IF_HELP
-W skrypcie powoduje warunkowe przetwarzanie.
+Warunkowe wykonanie polecenia w pliku wsadowym (BAT).
 
+.
+:SHELL_CMD_IF_HELP_LONG
+Sk?adnia:
+  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMER[reset] POLECENIE
+  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] POLECENIE
+  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] POLECENIE
+
+Gdzie:
+  [color=white]NUMER[reset]       por¢wnanie dodatniej liczby ca?kowitej ze zwracan? warto?ci?.
+  [color=white]STR1==STR2[reset]  por¢wnanie dw¢ch ?a?cuch¢w, wielko?? liter ma znaczenie.
+  [color=white]FILE[reset]        sprawdzenie, czy plik istnieje.
+  POLECENIE   polecenie DOS'a lub program do uruchomienia wraz z argumentami.
+
+Uwagi:
+  POLECENIE zostaje wykonane, je?li podany warunek zostanie spe?niony.
+  Podanie [color=magenta]not[reset] wykonuje polecenie je?li warunek NIE B?DZIE spe?niony.
+  Warunek [color=cyan]errorlevel[reset] pozwala sprawdzi?, czy program wykona? si? poprawnie.
+  Je?li [color=white]STR1[reset] lub [color=white]STR2[reset] mo?e by? pusty, wpisz go w cudzys?owie (").
+
+Przyk?ady:
+  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Witaj, ?wiecie!
+  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
 .
 :SHELL_CMD_GOTO_HELP
-W skrypcie przeskakuje do linii o danej etykiecie.
+Skok do etykiety w pliku wsadowym (BAT).
 
+.
+:SHELL_CMD_GOTO_HELP_LONG
+Sk?adnia:
+  [color=green]goto[reset] [color=cyan]ETYKIETA[reset]
+
+Gdzie:
+  [color=cyan]ETYKIETA[reset]  ?a?cuch tekstowy u?yty w pliku wsadowym jako etykieta.
+
+Uwagi:
+  Etykieta musi by? jednolinijkowa i zaczyna? si? dwukropkiem (:).
+  Etykieta musi by? unikalna w danym pliku wsadowym.
+
+Przyk?ady:
+  [color=green]goto[reset] [color=cyan]koniec[reset]
 .
 :SHELL_CMD_SHIFT_HELP
-Leftshift commandline parameters in a batch script.
+Przesuni?cie argument¢w wiersza polece? w pliku wsadowym (BAT).
 
 .
+:SHELL_CMD_SHIFT_HELP_LONG
+Sk?adnia:
+  [color=green]shift[reset]
+
+Gdzie:
+  To polecenie nie obs?uguje ?adnych argument¢w.
+
+Uwagi:
+  Pozwala plikom wsadowym na akceptowanie wi?cej ni? 9 argument¢w.
+  Wykonanie [color=green]shift[reset] przesuwa zmienne z argumentami %%1 na %%0, %%2 na %%1, itd.
+
+Przyk?ady:
+  [color=green]shift[reset]
+.
 :SHELL_CMD_TYPE_HELP
-Wyswietl zawartosc pliku testowego.
+Wy?wietla zawarto?? pliku tekstowego.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-TYPE [DYSK:][SCIEZKA][PLIK]
+Sk?adnia:
+  [color=green]type[reset] [color=cyan]PLIK[reset]
 
+Gdzie:
+  [color=cyan]PLIK[reset]  nazwa pliku tekstowego do wy?wietlenia.
+
+Uwagi:
+  Nale?y poda? dok?adn? nazw? pliku, opcjonalnie ze ?cie?k?.
+  Polecenie s?u?y tylko do podgl?du plik¢w tekstowych, nie plik¢w binarnych.
+
+Przyk?ady:
+  [color=green]type[reset] [color=cyan]text.txt[reset]
+  [color=green]type[reset] [color=cyan]c:\dos\readme.txt[reset]
 .
 :SHELL_CMD_REM_HELP
-Dodaj komentarz w skrypcie.
+Komentarz w pliku wsadowym (BAT).
 
 .
 :SHELL_CMD_REM_HELP_LONG
-REM [komentarz]
+Sk?adnia:
+  [color=green]rem[reset] [color=cyan]KOMENTARZ[reset]
 
+Gdzie:
+  [color=cyan]KOMENTARZ[reset]  jest dowolnym komentarzem.
+
+Uwagi:
+  Komentarze sprawiaj?, ?e pliki wsadowe s? ?atwiejsze do zrozumienia.
+  Mo?na u?y? do tymczasowego wy??czenia wykonania jakiego? polecenia.
+
+Przyk?ady:
+  [color=green]rem[reset] [color=cyan]To jest m¢j testowy plik wsadowy.[reset]
 .
 :SHELL_CMD_NO_WILD
-To prosta wersja komendy, symbole wieloznaczne nie sa dozwolone!
+To jest prosta wersja polecenia, symbole wieloznaczne (maski) nie s? dozwolone!
 
 .
 :SHELL_CMD_RENAME_HELP
-Zmien nazwe jednego lub wielu plik¢w.
+Zmiana nazwy jednego lub wi?kszej ilo?ci plik¢w.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [dysk:][sciezka]nazwapliku1 nazwapliku2.
-REN [dysk:][sciezka]nazwapliku1 nazwapliku2.
+Sk?adnia:
+  [color=green]ren[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
+  [color=green]rename[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
 
-Pamietaj, ze nie mozesz okreslic nowego dysku i sciezki dla pliku docelowego.
+Gdzie:
+  [color=white]STARA[reset]  nazwa pliku, kt¢rego nazw? nale?y zmieni?.
+  [color=cyan]NOWA[reset]   docelowa nazwa pliku.
 
+Uwagi:
+  Nale?y poda? dok?adn? nazw? pliku, opcjonalnie ze ?cie?k?.
+  Docelowa nazwa pliku musi by? dok?adna i musi by? podana bez ?cie?ki.
+
+Przyk?ady:
+  [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]
+  [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
 .
 :SHELL_CMD_DELETE_HELP
-Usun pliki.
+Usuni?cie jednego lub wi?kszej ilo?ci plik¢w.
 
+.
+:SHELL_CMD_DELETE_HELP_LONG
+Sk?adnia:
+  [color=green]del[reset] [color=cyan]WZORZEC[reset]
+  [color=green]erase[reset] [color=cyan]WZORZEC[reset]
+
+Gdzie:
+  [color=cyan]WZORZEC[reset]  dok?adna nazwa lub nazwa z symbolami wieloznaczno?ci (maskami),
+           kt¢rymi s? asterisk ('*' - reprezentuje dowoln? liczb? znak¢w)
+           oraz znak zapytania ('?' - reprezentuje jeden znak)
+
+[color=red]Ostrze?enie:[reset] 
+  B?d? bardzo ostro?ny u?ywaj?c symboli wieloznaczno?ci, zw?aszcza [color=cyan]*.*[reset],
+  poniewa? usuni?te zostan? wszystkie pliki pasuj?ce do wzorca!
+
+Przyk?ady:
+  [color=green]del[reset] [color=cyan]test.bat[reset]
+  [color=green]del[reset] [color=cyan]c*.*[reset]
+  [color=green]del[reset] [color=cyan]a?b.c*[reset]
 .
 :SHELL_CMD_COPY_HELP
-Kopiuj plik.
+Kopiowanie jednego lub wi?kszej ilo?ci plik¢w.
 
+.
+:SHELL_CMD_COPY_HELP_LONG
+Sk?adnia:
+  [color=green]copy[reset] [color=white]?R?D?O[reset] [color=cyan][PRZEZNACZENIE][reset]
+  [color=green]copy[reset] [color=white]?R?D?O1+?R?D?O2[+...][reset] [color=cyan][PRZEZNACZENIE][reset]
+
+Gdzie:
+  [color=white]?R?D?O[reset]         dok?adna nazwa lub nazwa z symbolami wieloznaczno?ci
+                 (maskami), kt¢rymi s? asterisk ('*') i znak zapytania ('?').
+  [color=cyan]PRZEZNACZENIE[reset]  dok?adna nazwa pliku lub katalogu.
+
+Uwagi:
+  Operator [color=white]+[reset] pozwala z??czy? ze sob? kilka plik¢w.
+  Je?li przeznaczenie nie zostanie podane, zostanie u?yty aktualny katalog.
+
+Przyk?ady:
+  [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]
+  [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
+  [color=green]copy[reset] [color=white]..\c*.*[reset]
 .
 :SHELL_CMD_CALL_HELP
-Uruchom skrypt z innego skryptu.
+Uruchomienie pliku wsadowego (BAT) z innego pliku wsadowego.
 
+.
+:SHELL_CMD_CALL_HELP_LONG
+Sk?adnia:
+  [color=green]call[reset] [color=white]SKRYPT[reset] [color=cyan][ARGUMENTY][reset]
+
+Gdzie:
+  [color=white]SKRYPT[reset]     plik wsadowy do uruchomienia.
+  [color=cyan]ARGUMENTY[reset]  opcjonalne argumenty do przekazania.
+
+Uwagi:
+  Po zako?czeniu uruchomionego pliku wsadowego, dalsza cz??? obecnego pliku
+  wsadowego b?dzie wykonana.
+
+Przyk?ady:
+  [color=green]call[reset] [color=white]mybatch.bat[reset]
+  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Witaj, ?wiecie![reset]
 .
 :SHELL_CMD_SUBST_HELP
-Przyporzadkuj wewnetrzny katalog do dysku.
+Przypisanie ?cie?ki do litery dysku.
 
 .
-:SHELL_CMD_LOADHIGH_HELP
-Wczytaj program do pamieci g¢rnej (wymaga xms=true, umb=true).
+:SHELL_CMD_SUBST_HELP_LONG
+Sk?adnia:
+  [color=green]subst[reset] [color=white]DYSK[reset] [color=cyan]?CIE?KA[reset]
+  [color=green]subst[reset] [color=white]DYSK[reset] /d
 
+Gdzie:
+  [color=white]DYSK[reset]     litera dysku, do kt¢rego ma zosta? przypisana ?cie?ka.
+  [color=cyan]?CIE?KA[reset]  ?cie?ka na zamontowanym dysku.
+
+Uwagi:
+  ?cie?ka musi znajdowa? si? na dysku zamontowanym poleceniem [color=green]mount[reset].
+  Prze??cznik /d usuwa przypisanie.
+
+Przyk?ady:
+  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\games[reset]
+  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
+.
+?adowanie programu do pami?ci UMB (g¢rnej).
+
+.
+:SHELL_CMD_LOADHIGH_HELP_LONG
+Sk?adnia:
+  [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+
+Gdzie:
+  [color=cyan]PROGRAM[reset]  program rezydentny, opcjonalnie z argumentami.
+
+Uwagi:
+  Pozwala zaoszcz?dzi? pami?? konwencjonaln?, ?aduj?c program rezydentny (TSR)
+  do pami?ci g¢rnej, je?li jest to mo?liwe. Takie programy mog? by? wymagane
+  przez niekt¢re gry.
+  Pami?? XMS oraz UMB musi by? w??czona w pliku konfiguracyjnym ('xms=true'
+  oraz 'umb=true').
+  Nie wszystkie programy rezydentne da si? za?adowa? do pami?ci g¢rnej (UMB)
+  tym poleceniem.
+
+Przyk?ady:
+  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
 .
 :SHELL_CMD_LS_HELP
-Wypisz zawartosc katalogu.
+Wy?wietlenie zawarto?ci katalogu w formie szerokiej listy.
 
 .
 :SHELL_CMD_LS_HELP_LONG
-ls [/?] [PATTERN]
+Sk?adnia:
+  [color=green]ls[reset] [color=cyan]WZORZEC[reset]
+  [color=green]ls[reset] [color=cyan]?CIE?KA[reset]
 
+Gdzie:
+  [color=cyan]WZORZEC[reset]  dok?adna nazwa lub nazwa z symbolami wieloznaczno?ci (maskami),
+           kt¢rymi s? asterisk ('*') i znak zapytania ('?').
+  [color=cyan]?CIE?KA[reset]  dok?adna ?cie?ka na zamontowanym dysku.
+
+Uwagi:
+  Polecenie wy?wietla katalogi kolorem [color=blue]niebieskim[reset], pliki wykonywalne
+  (*.com, *.exe, *.bat) kolorem [color=green]zielonym[reset], a pozosta?e aktualnym kolorem.
+
+Przyk?ady:
+  [color=green]ls[reset] [color=cyan]file.txt[reset]
+  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
 .
 :SHELL_CMD_LS_PATH_ERR
-ls: nie ma dostepu do '%s': Nie ma takiego pliku ani katalogu
-
-.
-:SHELL_CMD_CHOICE_HELP
-Czeka na wcisniecie klawisza i ustawia ERRORLEVEL.
-
-.
-:SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:mozliwosci] [/N] [/S] tekst
-  /C[:]mozliwosci  -  Okresla dostepne klawisze.  Domyslnie: yn.
-  /N  -  Nie wyswietlaj mozliwosci na koniec zgloszenia.
-  /S  -  Wlacza rozr¢znianie wielkosci liter mozliwosci.
-  tekst  -  Tekst wyswietlany w zgloszeniu.
+Brak dost?pu do '%s'.
 
 .
 :SHELL_CMD_ATTRIB_HELP
-Nie powoduje zadnego efektu. Dostarczone dla zachowania kompatybilnosci.
+Wy?wietlenie lub zmiana atrybut¢w pliku.
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Sk?adnia:
+  [color=green]attrib[reset] [color=white][ATRYBUTY][reset] [color=cyan]WZORZEC[reset]
+
+Gdzie:
+  [color=white][ATRYBUTY][reset] atrybuty do nadania, jeden lub wi?cej z:
+               [color=white]+R[reset], [color=white]-R[reset] - tylko do odczytu ('read-only')
+               [color=white]+A[reset], [color=white]-A[reset] - zarchiwizowany
+               [color=white]+S[reset], [color=white]-S[reset] - systemowy
+               [color=white]+H[reset], [color=white]-H[reset] - ukryty
+  [color=cyan]WZORZEC[reset]   dok?adna nazwa pliku lub nazwa z symbolami wieloznaczno?ci
+            (maskami), kt¢rymi s? asterisk ('*') i znak zapytania ('?').
+
+Uwagi:
+  Uruchomienie bez argument¢w wy?wietla atrybuty pliku/katalogu.
+  Mo?na poda? wi?cej atrybut¢w, oddzielonych spacjami.
+
+Przyk?ady:
+    [color=green]attrib[reset] [color=cyan]file.txt[reset]
+    [color=green]attrib[reset] [color=white]+R -A[reset] [color=cyan]*.txt[reset]
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Nie mo?na odczyta? atrybut¢w: '%s'.
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Nie mo?na ustawi? atrybut¢w: '%s'.
+
+.
+:SHELL_CMD_CHOICE_HELP
+Oczekiwanie na wci?ni?cie klawisza i ustawienie warto?ci ERRORLEVEL.
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+Sk?adnia:
+  [color=green]choice[reset] [color=cyan][TEKST][reset]
+  [color=green]choice[reset] /c[:][color=white]WYB?R[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEKST][reset]
+
+Gdzie:
+  [color=cyan]TEKST[reset]       tekst do wy?wietlenia jako zach?ta, mo?e by? pusty.
+  /c[:][color=white]WYB?R[reset]  dozwolone klawisze, domy?lne to [color=white]yn[reset].
+  /n          nie wy?wietlaj dozwolonych klawiszy.
+  /s          w??cza sprawdzanie wielko?ci liter.
+  /t[:][color=white]c[reset],[color=magenta]nn[reset]   domy?lny wyb¢r po up?ywie [color=magenta]nn[reset] sekund to [color=white]c[reset].
+
+Uwagi:
+  Ustawia warto?? ERRORLEVEL w zale?no?ci od wci?ni?tego klawisza podanego
+  w opcji /c, pocz?wszy od 1. Numer wci?ni?tego klawisza mo?na sprawdzi? przy
+  pomocy polecenia [color=green]if[reset].
+  Prze??cznik /n powoduje wy?wietlenie tylko tekstu, bez mo?liwych wybor¢w,
+  jak domy?lnego [color=white][Y,N]?[reset]).
+
+Przyk?ady:
+  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowa??[reset]
+  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b, lub c[reset]
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Oczekiwanie na wyb¢r przerwane.
 
 .
 :SHELL_CMD_PATH_HELP
-Dostarczone dla zachowania kompatybilnosci.
+Wy?wietlenie lub ustawienie ?cie?ki wyszukiwania plik¢w wykonywalnych.
 
 .
+:SHELL_CMD_PATH_HELP_LONG
+Sk?adnia:
+  [color=green]path[reset]
+  [color=green]path[reset] [color=cyan][[dysk:]?cie?ka[;...][reset]
+
+Gdzie:
+  [color=cyan][[dysk:]?cie?ka[;...][reset]  ?cie?ki zawieraj?ce dysk oraz katalog.
+
+Uwagi:
+  Mo?na poda? wi?cej ni? jedn? ?cie?k?, musz? by? oddzielone ?rednikiem (;).
+  Podanie jedynie ?rednika czy?ci ca?? ?cie?k? wyszukiwania.
+  ?cie?k? wyszukiwania mo?na te? ustawi? poleceniem [color=green]set[reset]
+  (np. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\;C:\DOS;C:\WINDOWS[reset]).
+
+Przyk?ady:
+  [color=green]path[reset]
+  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
+.
 :SHELL_CMD_VER_HELP
-Pokaz lub ustaw raportowane wersje DOS.
+Wy?wietlenie lub ustawienie raportowanej wersji systemu DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-Uzycie:
-  [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mWERSJA[0m
+Sk?adnia:
+  [color=green]ver[reset]
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]
 
 Gdzie:
-  [36;1mWERSJA[0m moze zawierac numer gl¢wny, np. [36;1m5[0m lub takze dwucyfrowy numer
-         dodatkowy, jak np. [36;1m6.22[0m, [36;1m7.01[0m lub [36;1m7.10[0m.  Numer dodatkowy wersji
-         moze byc r¢wniez odseparowany spacja, np: [36;1m6 22[0m, [36;1m7 01[0m, lub [36;1m7 10[0m.
+  [color=cyan]WERSJA[reset]  mo?e by? numerem, np. [color=cyan]5[reset], lub liczb? z dwoma cyframi po kropce,
+          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset], lub [color=cyan]7.10[reset]. Alternatywnie mo?na oddzieli?
+          cz??? u?amkow? za pomoc? spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset], lub [color=cyan]7 10[reset].
 
-Notatki:
-  Wersja DOS moze byc r¢wniez zmieniona w pliku konfiguracyjnym w sekcji [dos]
-  ustawiajac "ver = [36;1mWERSJA[0m".
+Uwagi:
+  Raportowan? wersj? DOSu mo?na ustawi? w pliku konfiguracyjnym, w sekcji
+  [dos], wpisuj?c 'ver = [color=cyan]WERSJA[reset]'.
 
-Przyklady:
-  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
-  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
-
+Przyk?ady:
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
+  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
 .
 :SHELL_CMD_VER_VER
-DOSBox Staging wersja %s
-DOS wersja %d.%02d
+DOSBox Staging, wersja %s
+DOS, wersja %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
-Podana wersja DOSa jest nieprawidlowa.
+Podana wersja DOSa jest nieprawid?owa.
 
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+Polecenie DOSBoksa
+.
+:HELP_UTIL_CATEGORY_FILE
+Polecenie plik¢w/katalog¢w
+.
+:HELP_UTIL_CATEGORY_BATCH
+Polecenia plik¢w BAT
+.
+:HELP_UTIL_CATEGORY_MISC
+Inne polecenia
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Pozosta?e, bez kategorii
 .
