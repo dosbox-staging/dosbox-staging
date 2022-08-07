@@ -42,8 +42,10 @@ uint32_t ExpandTable[256];
 uint32_t Expand16Table[4][16];
 uint32_t FillTable[16];
 
-std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
+std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
+                                                       uint16_t mode)
 {
+	// clang-format off
 	switch (type) {
 	case M_TEXT:
 	case M_HERC_TEXT:
@@ -58,7 +60,12 @@ std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
 	case M_TANDY2:             return std::pair("Tandy", " 2 color");
 	case M_TANDY4:             return std::pair("Tandy", " 4 color");
 	case M_TANDY16:            return std::pair("Tandy", " 16 color");
-	case M_EGA:                return std::pair("EGA",   " 16 color");
+	case M_EGA: // see comment below
+	    switch (mode) {
+	    case 0x011:            return std::pair("VGA",   " monochrome");
+	    case 0x012:            return std::pair("VGA",   " 16 color");
+	    default:               return std::pair("EGA",   " 16 color");
+	    }
 	case M_VGA:                return std::pair("VGA",   " 8-bit");
 	case M_LIN4:               return std::pair("VESA",  " 16 color");
 	case M_LIN8:               return std::pair("VESA",  " 8-bit");
@@ -68,7 +75,17 @@ std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
 	case M_LIN32:              return std::pair("VESA",  " 32-bit");
 	case M_ERROR:
 	default: return std::pair("Unknown", "");
-	};
+	}
+	// clang-format on
+
+	// Modes 11h and 12h were supported by high-end EGA cards and because of
+	// that operate internally more like EGA modes (so DOBBox uses the EGA
+	// type for them), however they were classified as VGA from a standards
+	// perspective, so we report them as such.
+	// References:
+	// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12, 19 March, 1992.
+	// [2] "IBM PC Family- BIOS Video Modes", http://minuszerodegrees.net/video/bios_video_modes.htm
+
 }
 
 void VGA_LogInitialization(const char *adapter_name,
