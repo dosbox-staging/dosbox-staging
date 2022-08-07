@@ -97,7 +97,8 @@ extern int16_t lut_u8to16[UINT8_MAX + 1];
 
 static constexpr auto max_filter_order = 16;
 
-static constexpr auto millis_in_second = 1000.0;
+static constexpr auto millis_in_second   = 1000.0;
+static constexpr auto millis_in_second_f = 1000.0f;
 
 static constexpr uint8_t use_mixer_rate = 0;
 
