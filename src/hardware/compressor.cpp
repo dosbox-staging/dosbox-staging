@@ -59,8 +59,8 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 
 	ratio           = _ratio;
 	threshold_value = expf(threshold_db * db_to_log);
-	release_coeff   = expf(-millis_in_second / (release_time_ms * sample_rate_hz));
-	rms_coeff       = expf(-millis_in_second / (rms_window_ms   * sample_rate_hz));
+	release_coeff   = expf(-millis_in_second_f / (release_time_ms * sample_rate_hz));
+	rms_coeff       = expf(-millis_in_second_f / (rms_window_ms   * sample_rate_hz));
 
 	Reset();
 }
@@ -84,7 +84,7 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 
 	const auto sum_squares = (left * left) + (right * right);
 	run_sum_squares = sum_squares + rms_coeff * (run_sum_squares - sum_squares);
-	const auto det = sqrtf(fmax(0.0f, run_sum_squares));
+	const auto det = sqrtf(fmaxf(0.0f, run_sum_squares));
 
 	over_db = 2.08136898f * logf(det / threshold_value) * log_to_db;
 
@@ -100,7 +100,7 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 		attack_coeff = expf(-1.0f / (attack_time_ms * sample_rate_hz));
 	}
 
-	over_db = fmax(0.0, over_db);
+	over_db = fmaxf(0.0f, over_db);
 
 	if (over_db > run_db)
 		run_db = over_db + attack_coeff * (run_db - over_db);
