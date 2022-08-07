@@ -683,7 +683,8 @@ static void log_display_properties(int in_x, int in_y, const SCALING_MODE scalin
 	const auto scale_y = static_cast<double>(out_y) / in_y;
 	const auto out_par = scale_y / scale_x;
 
-	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
+	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type,
+	                                                        CurMode->mode);
 
 	const char *frame_mode = nullptr;
 	switch (sdl.frame.mode) {
