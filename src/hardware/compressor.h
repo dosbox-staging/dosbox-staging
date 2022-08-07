@@ -18,8 +18,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* This is a simplified port of the "Master Tom Compressor" JSFX effect
- * bundled with REAPER, originally written by Thomas Scott Stillwell.
+/* ---------------------------------------------------------------------------
+ * This is a simplified port of Thomas Scott Stillwell's "Master Tom
+ * Compressor" JSFX effect bundled with REAPER (just the RMS & feedforward
+ * path).
+ *
  * Copyright notice of the original effect plugin:
  *
  *
@@ -90,23 +93,23 @@ public:
 
 private:
 	uint16_t sample_rate_hz = {};
-	double scale_in         = {};
-	double scale_out        = {};
+	float scale_in          = {};
+	float scale_out         = {};
 
-	double threshold_value = {};
-	double ratio           = {};
-	double release_coeff   = {};
-	double rms_coeff       = {};
+	float threshold_value = {};
+	float ratio           = {};
+	float release_coeff   = {};
+	float rms_coeff       = {};
 
 	// state variables
-	double attack_time_ms  = {};
-	double attack_coeff    = {};
-	double comp_ratio      = {};
-	double run_db          = {};
-	double run_sum_squares = {};
-	double over_db         = {};
-	double run_max_db      = {};
-	double max_over_db     = {};
+	float attack_time_ms  = {};
+	float attack_coeff    = {};
+	float comp_ratio      = {};
+	float run_db          = {};
+	float run_sum_squares = {};
+	float over_db         = {};
+	float run_max_db      = {};
+	float max_over_db     = {};
 };
 
 #endif
