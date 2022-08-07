@@ -309,11 +309,20 @@ threads_dep = dependency('threads')
 static_libs_list = get_option('try_static_libs')
 system_libs_list = get_option('use_system_libs')
 
+wants_tests = true
+# tests are disabled for release builds unless requested
+if get_option('buildtype') == 'release' and get_option('unit_tests').auto()
+    wants_tests = false
+elif get_option('unit_tests').disabled()
+    wants_tests = false
+endif
+
 libiir_dep = dependency(
     'iir',
     version: '>= 1.9.3',
     default_options: [
         'default_library=static',
+        'tests=' + wants_tests.to_string(),
         'warning_level=0',
     ],
     allow_fallback: ('iir' not in system_libs_list),
@@ -675,5 +684,7 @@ dosbox_dep = declare_dependency(link_with: libdosbox)
 # Some tests use relative paths; in meson 0.56.0 this can be replaced
 # with meson.project_source_root().
 #
-project_source_root = meson.current_source_dir()
-subdir('tests')
+if wants_tests
+    project_source_root = meson.current_source_dir()
+    subdir('tests')
+endif
