@@ -926,11 +926,13 @@ bool MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
     auto mark_pressed = [](const uint8_t idx) {
         state.last_pressed_x[idx] = get_pos_x();
         state.last_pressed_y[idx] = get_pos_y();
+        ++state.times_pressed[idx];
     };
 
     auto mark_released = [](const uint8_t idx) {
         state.last_released_x[idx] = get_pos_x();
         state.last_released_y[idx] = get_pos_y();
+        ++state.times_released[idx];
     };
 
     if (new_buttons_12S.left && !buttons.left)
