@@ -18,10 +18,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <algorithm>
-#include <cmath>
-
 #include "compressor.h"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+ 
 #include "mixer.h"
 
 constexpr auto log_to_db = 8.685889638065035f;  // 20.0 / log(10.0)
@@ -47,12 +50,12 @@ Compressor::~Compressor() {}
 
 void Compressor::Configure(const uint16_t _sample_rate_hz,
                            const float _0dbfs_sample_value,
-                           const float threshold_db, const float _ratio,
+                           const float threshold_db, const float ratio,
                            const float release_time_ms, const float rms_window_ms)
 {
 	assert(_sample_rate_hz > 0);
 	assert(_0dbfs_sample_value > 0.0f);
-	assert(_ratio > 0.0f);
+	assert(ratio > 0.0f);
 	assert(release_time_ms > 0.0f);
 	assert(rms_window_ms > 0.0f);
 
@@ -61,7 +64,7 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 	scale_in  = 1.0f / _0dbfs_sample_value;
 	scale_out = _0dbfs_sample_value;
 
-	ratio           = _ratio;
+	ratio_minus_one = ratio;
 	threshold_value = expf(threshold_db * db_to_log);
 	release_coeff   = expf(-millis_in_second_f / (release_time_ms * sample_rate_hz));
 	rms_coeff       = expf(-millis_in_second_f / (rms_window_ms   * sample_rate_hz));
@@ -95,10 +98,12 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 	if (over_db > max_over_db) {
 		max_over_db = over_db;
 
+		constexpr size_t min_i = 0;
+		constexpr size_t max_i = attack_times_ms.size() - 1;
+
 		const auto i = std::clamp(static_cast<size_t>(fabsf(over_db)),
-		                          static_cast<size_t>(0),
-		                          static_cast<size_t>(
-		                                  attack_times_ms.size() - 1));
+		                          min_i,
+		                          max_i);
 
 		attack_time_ms = attack_times_ms[i];
 		attack_coeff = expf(-1.0f / (attack_time_ms * sample_rate_hz));
@@ -106,13 +111,14 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 
 	over_db = fmaxf(0.0f, over_db);
 
-	if (over_db > run_db)
-		run_db = over_db + attack_coeff * (run_db - over_db);
-	else
-		run_db = over_db + release_coeff * (run_db - over_db);
+	run_db = over_db + (run_db - over_db) * (over_db > run_db ? attack_coeff
+	                                                          : release_coeff);
 
-	over_db    = run_db;
-	comp_ratio = 1.0f + (ratio - 1.0f) * fmin(over_db, 6.0f) / 6.0f;
+	over_db = run_db;
+
+	constexpr auto ratio_threshold_db = 6.0f;
+	comp_ratio = 1.0f + ratio_minus_one * fmin(over_db, ratio_threshold_db) /
+	                            ratio_threshold_db;
 
 	const auto gain_reduction_db = -over_db * (comp_ratio - 1.0f) / comp_ratio;
 	const auto gain_reduction_factor = expf(gain_reduction_db * db_to_log);
@@ -120,7 +126,8 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 	run_max_db  = max_over_db + release_coeff * (run_max_db - max_over_db);
 	max_over_db = run_max_db;
 
-	return {left  * gain_reduction_factor * scale_out,
-	        right * gain_reduction_factor * scale_out};
+	const auto gain_scalar = gain_reduction_factor * scale_out;
+
+	return {left * gain_scalar, right * gain_scalar};
 }
 
