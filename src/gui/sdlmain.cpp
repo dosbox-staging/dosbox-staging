@@ -1692,9 +1692,6 @@ dosurface:
 		break; // SCREEN_SURFACE
 
 	case SCREEN_TEXTURE: {
-		if (sdl.render_driver != "auto")
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER,
-			            sdl.render_driver.c_str());
 		SDL_SetHint(SDL_HINT_RENDER_VSYNC, wants_vsync ? "1" : "0");
 
 		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
@@ -3211,6 +3208,13 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
+	if (sdl.render_driver != "auto") {
+		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
+		                sdl.render_driver.c_str()) == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; falling back to automatic selection",
+			            sdl.render_driver.c_str());
+		}
+	}
 
 	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
 
