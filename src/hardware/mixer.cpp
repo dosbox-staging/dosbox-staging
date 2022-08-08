@@ -2251,7 +2251,9 @@ void MIXER_Init(Section *sec)
 	int sdl_allow_flags = 0;
 
 	if (negotiate) {
-		sdl_allow_flags |= SDL_AUDIO_ALLOW_FREQUENCY_CHANGE;
+		// We allow chunk size changes (if supported), but don't allow
+		// frequency changes because we've only seen them go beyond
+		// SDL's desired 48 Khz limit
 #if defined(SDL_AUDIO_ALLOW_SAMPLES_CHANGE)
 		sdl_allow_flags |= SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 #endif
