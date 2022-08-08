@@ -24,18 +24,22 @@
 #include "compressor.h"
 #include "mixer.h"
 
-constexpr float log_to_db = 8.685889638065035f;  // 20.0 / log(10.0)
-constexpr float db_to_log = 0.1151292546497022f; // log(10.0) / 20.0
+constexpr auto log_to_db = 8.685889638065035f;  // 20.0 / log(10.0)
+constexpr auto db_to_log = 0.1151292546497022f; // log(10.0) / 20.0
 
-std::array<float, 120> attack_times_ms = {};
+using attack_times_lut_t = std::array<float, 120>;
 
-constexpr void fill_attack_times_lut()
+constexpr attack_times_lut_t fill_attack_times_lut()
 {
-	for (size_t i = 0; i < attack_times_ms.size(); ++i) {
-		const auto n = i + 1;
-		attack_times_ms[i] = ((0.08924f / n) + (0.60755f / (n * n)) - 0.00006f);
+	int16_t n = 1;
+	attack_times_lut_t lut = {};
+	for (auto &time_ms : lut) {
+		time_ms = ((0.08924f / n) + (0.60755f / (n * n)) - 0.00006f);
+		++n;
 	}
+	return lut;
 }
+constexpr auto attack_times_ms = fill_attack_times_lut();
 
 Compressor::Compressor() {}
 
