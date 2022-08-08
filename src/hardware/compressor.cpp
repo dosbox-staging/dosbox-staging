@@ -37,7 +37,7 @@ using attack_times_lut_t = std::array<float, 120>;
 
 constexpr attack_times_lut_t fill_attack_times_lut()
 {
-	int16_t n = 1;
+	auto n = 1.0f;
 	attack_times_lut_t lut = {};
 	for (auto &time_ms : lut) {
 		time_ms = ((0.08924f / n) + (0.60755f / (n * n)) - 0.00006f);
@@ -120,7 +120,7 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 	over_db = run_db;
 
 	constexpr auto ratio_threshold_db = 6.0f;
-	comp_ratio = 1.0f + ratio_minus_one * fmin(over_db, ratio_threshold_db) /
+	comp_ratio = 1.0f + ratio_minus_one * fminf(over_db, ratio_threshold_db) /
 	                            ratio_threshold_db;
 
 	const auto gain_reduction_db = -over_db * (comp_ratio - 1.0f) / comp_ratio;
