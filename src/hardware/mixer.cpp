@@ -444,7 +444,7 @@ static void configure_compressor(const bool compressor_enabled)
 
 	const auto _0dbfs_sample_value = INT16_MAX;
 	const auto threshold_db        = -6.0f;
-	const auto ratio               = 2.0f;
+	const auto ratio               = 3.0f;
 	const auto attack_time_ms      = 0.01f;
 	const auto release_time_ms     = 5000.0f;
 	const auto rms_window_ms       = 10.0;

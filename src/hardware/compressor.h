@@ -98,7 +98,7 @@ private:
 	float scale_out         = {};
 
 	float threshold_value = {};
-	float ratio_minus_one = {};
+	float ratio           = {};
 	float attack_coeff    = {};
 	float release_coeff   = {};
 	float rms_coeff       = {};
