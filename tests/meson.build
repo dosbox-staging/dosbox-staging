@@ -68,6 +68,7 @@ test(
 unit_tests = [
     {'name': 'bitops', 'deps': []},
     {'name': 'bit_view', 'deps': []},
+    {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'iohandler_containers', 'deps': [libmisc_dep]},
     {'name': 'rwqueue', 'deps': [libmisc_dep]},
     {'name': 'string_utils', 'deps': []},

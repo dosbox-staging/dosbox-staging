@@ -381,6 +381,9 @@ struct RGBEntry {
 	uint8_t blue = 0;
 };
 
+constexpr auto num_cga_colors = 16;
+typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
+
 struct VGA_Dac {
 	uint8_t bits = 0; /* DAC bits, usually 6 or 8 */
 	uint8_t pel_mask = 0;
