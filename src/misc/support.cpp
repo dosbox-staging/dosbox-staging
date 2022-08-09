@@ -111,6 +111,24 @@ bool is_executable_filename(const std::string &filename) noexcept
 	return (sfx == "exe" || sfx == "bat" || sfx == "com");
 }
 
+bool is_hex_digits(const std::string s) noexcept
+{
+	for (const auto ch : s) {
+		if (!isxdigit(ch))
+			return false;
+	}
+	return true;
+}
+
+bool is_digits(const std::string s) noexcept
+{
+	for (const auto ch : s) {
+		if (!isdigit(ch))
+			return false;
+	}
+	return true;
+}
+
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
@@ -120,15 +138,14 @@ std::string replace(const std::string &str, char old_char, char new_char) noexce
 	return str;
 }
 
-void trim(std::string &str)
+void trim(std::string &str, const char trim_chars[])
 {
-	constexpr char whitespace[] = " \r\t\f\n";
-	const auto empty_pfx = str.find_first_not_of(whitespace);
+	const auto empty_pfx = str.find_first_not_of(trim_chars);
 	if (empty_pfx == std::string::npos) {
-		str.clear(); // whole string is filled with whitespace
+		str.clear(); // whole string is filled with trim_chars
 		return;
 	}
-	const auto empty_sfx = str.find_last_not_of(whitespace);
+	const auto empty_sfx = str.find_last_not_of(trim_chars);
 	str.erase(empty_sfx + 1);
 	str.erase(0, empty_pfx);
 }
