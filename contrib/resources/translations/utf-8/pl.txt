@@ -300,6 +300,12 @@ pomóc na problem przycinania dźwięku, ale zwiększają opóźnienie (lag).
 Negocjacja potencjalnie lepszych ustawień częstotliwości i rozmiaru bloku
 ze sterownikiem dźwięku.
 .
+:CONFIG_COMPRESSOR
+Włączenie automatycznego kompresora dynamiki, który zapobiega przesterowaniu
+dźwięku:
+  off:  Wyłączenie kompresora.
+  on:   Włączenie kompresora (domyślne).
+.
 :CONFIG_CROSSFEED
 Włączenie (globalnie) efektu przenikania kanałów stereo, odpowiednie
 dla używających słuchawek:

@@ -300,6 +300,12 @@ pom¢c na problem przycinania d«wi©ku, ale zwi©kszaj¥ op¢«nienie (lag).
 Negocjacja potencjalnie lepszych ustawieä cz©stotliwo˜ci i rozmiaru bloku
 ze sterownikiem d«wi©ku.
 .
+:CONFIG_COMPRESSOR
+Wˆ¥czenie automatycznego kompresora dynamiki, kt¢ry zapobiega przesterowaniu
+d«wi©ku:
+  off:  Wyˆ¥czenie kompresora.
+  on:   Wˆ¥czenie kompresora (domy˜lne).
+.
 :CONFIG_CROSSFEED
 Wˆ¥czenie (globalnie) efektu przenikania kanaˆ¢w stereo, odpowiednie
 dla u¾ywaj¥cych sˆuchawek:
