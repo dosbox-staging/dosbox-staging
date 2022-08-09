@@ -186,12 +186,6 @@ Controlla la selezione delle modalit… VESA 1.2 e 2.0 offerte:
                correttamente (sfarfallio) o potrebbe essere necessaria pi—
                memoria di sistema (mem = ).
 .
-:CONFIG_SPEED_MODS
-Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
-Š noto per esserne influenzato. Se trovi un gioco che fallisce quando questa
-impostazione Š impostata su 'true', segnala il bug nel repository del progetto,
-in modo tale da poterlo elencare qui.
-.
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da pi— file di configurazione.
 join      : le combina in un'unica grande sezione (comportamento legacy).

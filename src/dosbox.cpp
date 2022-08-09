@@ -404,10 +404,6 @@ static void DOSBOX_RealInit(Section * sec) {
 		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
-
-	CPU_AllowSpeedMods = section->Get_bool("speed_mods");
-	LOG_MSG("SYSTEM: Speed modifications are %s",
-	        CPU_AllowSpeedMods ? "enabled" : "disabled");
 }
 
 void DOSBOX_Init() {

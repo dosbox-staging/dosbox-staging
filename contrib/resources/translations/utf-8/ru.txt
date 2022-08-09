@@ -163,11 +163,6 @@ We recommend the 'default' rate; otherwise test and set on a per-game basis.
                некоторые игры могут задействовать их неправильно (мерцание)
                или могут потребовать больше системной памяти (mem = ).
 .
-:CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
-.
 :CONFIG_AUTOEXEC_SECTION
 Как обрабатывать секции autoexec из нескольких конфигурационных файлов.
 join      : совмещает их в одну большую секцию (старое поведение).

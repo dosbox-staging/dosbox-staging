@@ -63,7 +63,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	PageHandler *handler = get_tlb_readhandler(lin_addr_as_physpt);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
-		if (CPU_AllowSpeedMods || (handler->flags & cflag)) {
+		if (CPU_ReuseCodepages || (handler->flags & cflag)) {
 			return false;
 		}
 		cph->ClearRelease();

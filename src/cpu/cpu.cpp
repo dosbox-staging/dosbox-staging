@@ -59,7 +59,6 @@ int64_t CPU_IODelayRemoved = 0;
 CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust = false;
 bool CPU_SkipCycleAutoAdjust = false;
-bool CPU_AllowSpeedMods = false;
 Bitu CPU_AutoDetermineMode = 0;
 
 Bitu CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;

@@ -767,7 +767,7 @@ static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
 	assert(mp_res == 0);
 
 #elif defined(WIN32)
-	if (CPU_AllowSpeedMods)
+	if (CPU_UseRwxMemProtect)
 		return; // the cache block is already marked RWX
 	dyn_mem_adjust(ptr, size);
 	DWORD old_protect = 0;
@@ -805,7 +805,7 @@ static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
 #endif
 		sys_icache_invalidate(ptr, size);
 #elif defined(WIN32)
-	if (CPU_AllowSpeedMods)
+	if (CPU_UseRwxMemProtect)
 		return;
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #else
@@ -831,7 +831,7 @@ static void cache_init(bool enable) {
 			// allocate the code cache memory
 #if defined (WIN32)
 			LPVOID lp_vmem = nullptr;
-			if (CPU_AllowSpeedMods) {
+			if (CPU_UseRwxMemProtect) {
 				lp_vmem = VirtualAlloc(nullptr, cache_code_size,
 				                       MEM_COMMIT,
 				                       PAGE_EXECUTE_READWRITE); // all operations allowed

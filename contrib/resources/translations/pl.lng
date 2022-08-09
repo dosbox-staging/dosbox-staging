@@ -164,12 +164,6 @@ Dost©pne tryby graficzne VESA 1.2 oraz 2.0:
               Niekt¢re gry mog¥ jednak niewˆa˜ciwie je obsˆugiwa† (migotanie),
               albo mog¥ wymaga† do ich obsˆugi wi©cej pami©ci.
 .
-:CONFIG_SPEED_MODS
-Zezwolenie na zachowania emulatora zwi©kszaj¥ce wydajno˜†, kt¢re teoretycznie
-mog¥ powodowa† zmniejszenie kompatybilno˜ci. Obecnie nie s¥ znane ¾adne gry,
-na kt¢re miaˆyby one negatywny wpˆyw. Je˜li tak¥ znajdziesz, zgˆo˜ to
-zespoˆowi rozwijaj¥cemu emulator DOSBox Staging.
-.
 :CONFIG_AUTOEXEC_SECTION
 Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
   join:       ˆ¥czy w jedn¥ sekcj© [autoexec] (stare zachowanie).

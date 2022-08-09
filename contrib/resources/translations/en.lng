@@ -155,11 +155,6 @@ Controls the selection of VESA 1.2 and 2.0 modes offered:
                some games may not use them properly (flickering) or may need
                more system memory (mem = ) to use them.
 .
-:CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
-.
 :CONFIG_AUTOEXEC_SECTION
 How autoexec sections are handled from multiple config files.
 join      : combines them into one big section (legacy behavior).
