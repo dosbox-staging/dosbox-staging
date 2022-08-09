@@ -79,8 +79,9 @@ public:
 	Compressor();
 	~Compressor();
 
-	void Configure(const uint16_t sample_rate_hz, const float _0dbfs_sample_value,
-	               const float threshold_db, const float ratio,
+	void Configure(const uint16_t sample_rate_hz,
+	               const float _0dbfs_sample_value, const float threshold_db,
+	               const float ratio, const float attack_time_ms,
 	               const float release_time_ms, const float rms_window_ms);
 	void Reset();
 
@@ -98,12 +99,11 @@ private:
 
 	float threshold_value = {};
 	float ratio_minus_one = {};
+	float attack_coeff    = {};
 	float release_coeff   = {};
 	float rms_coeff       = {};
 
 	// state variables
-	float attack_time_ms  = {};
-	float attack_coeff    = {};
 	float comp_ratio      = {};
 	float run_db          = {};
 	float run_sum_squares = {};
