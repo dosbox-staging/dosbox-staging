@@ -33,9 +33,9 @@ CHECK_NARROWING();
 constexpr auto log_to_db = 8.685889638065035f;  // 20.0 / log(10.0)
 constexpr auto db_to_log = 0.1151292546497022f; // log(10.0) / 20.0
 
-Compressor::Compressor() {}
+Compressor::Compressor() = default;
 
-Compressor::~Compressor() {}
+Compressor::~Compressor() = default;
 
 void Compressor::Configure(const uint16_t _sample_rate_hz,
                            const float _0dbfs_sample_value, const float threshold_db,
