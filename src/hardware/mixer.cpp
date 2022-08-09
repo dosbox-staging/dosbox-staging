@@ -2487,10 +2487,10 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	const auto default_on = true;
 	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
-	bool_prop->Set_help("Enable compressor/auto-leveler on the master channel to prevent clipping\n"
+	bool_prop->Set_help("Enable the auto-leveling compressor on the master channel to prevent clipping\n"
 	                    "of the audio output:\n"
 	                    "  off:  Disable compressor.\n"
-	                    "  on:   Enable compressor (default).\n");
+	                    "  on:   Enable compressor (default).");
 
 	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
 	string_prop->Set_help(
