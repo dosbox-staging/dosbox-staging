@@ -33,20 +33,6 @@ CHECK_NARROWING();
 constexpr auto log_to_db = 8.685889638065035f;  // 20.0 / log(10.0)
 constexpr auto db_to_log = 0.1151292546497022f; // log(10.0) / 20.0
 
-using attack_times_lut_t = std::array<float, 120>;
-
-constexpr attack_times_lut_t fill_attack_times_lut()
-{
-	auto n = 1.0f;
-	attack_times_lut_t lut = {};
-	for (auto &time_ms : lut) {
-		time_ms = ((0.08924f / n) + (0.60755f / (n * n)) - 0.00006f);
-		++n;
-	}
-	return lut;
-}
-constexpr auto attack_times_ms = fill_attack_times_lut();
-
 Compressor::Compressor() {}
 
 Compressor::~Compressor() {}
@@ -98,19 +84,8 @@ AudioFrame Compressor::Process(const AudioFrame &in)
 
 	over_db = 2.08136898f * logf(det / threshold_value) * log_to_db;
 
-	if (over_db > max_over_db) {
+	if (over_db > max_over_db)
 		max_over_db = over_db;
-
-		constexpr size_t min_i = 0;
-		constexpr size_t max_i = attack_times_ms.size() - 1;
-
-		const auto i = std::clamp(static_cast<size_t>(fabsf(over_db)),
-		                          min_i,
-		                          max_i);
-
-		attack_time_ms = attack_times_ms[i];
-		attack_coeff = expf(-1.0f / (attack_time_ms * sample_rate_hz));
-	}
 
 	over_db = fmaxf(0.0f, over_db);
 
