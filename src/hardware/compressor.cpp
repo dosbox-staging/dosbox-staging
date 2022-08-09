@@ -38,13 +38,14 @@ Compressor::Compressor() {}
 Compressor::~Compressor() {}
 
 void Compressor::Configure(const uint16_t _sample_rate_hz,
-                           const float _0dbfs_sample_value,
-                           const float threshold_db, const float ratio,
+                           const float _0dbfs_sample_value, const float threshold_db,
+                           const float ratio, const float attack_time_ms,
                            const float release_time_ms, const float rms_window_ms)
 {
 	assert(_sample_rate_hz > 0);
 	assert(_0dbfs_sample_value > 0.0f);
 	assert(ratio > 0.0f);
+	assert(attack_time_ms > 0.0f);
 	assert(release_time_ms > 0.0f);
 	assert(rms_window_ms > 0.0f);
 
@@ -53,18 +54,17 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 	scale_in  = 1.0f / _0dbfs_sample_value;
 	scale_out = _0dbfs_sample_value;
 
-	ratio_minus_one = ratio;
 	threshold_value = expf(threshold_db * db_to_log);
+	ratio_minus_one = ratio;
+	attack_coeff    = expf(-1.0f / (attack_time_ms * sample_rate_hz));
 	release_coeff   = expf(-millis_in_second_f / (release_time_ms * sample_rate_hz));
-	rms_coeff       = expf(-millis_in_second_f / (rms_window_ms   * sample_rate_hz));
+	rms_coeff       = expf(-millis_in_second_f / (rms_window_ms * sample_rate_hz));
 
 	Reset();
 }
 
 void Compressor::Reset()
 {
-	attack_time_ms  = 0.010f;
-	attack_coeff    = expf(-1.0f / (attack_time_ms * sample_rate_hz));
 	comp_ratio      = 0.0f;
 	run_db          = 0.0f;
 	run_sum_squares = 0.0f;
