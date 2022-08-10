@@ -2514,7 +2514,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           synth channel (typically OPL) for both music and sound effects.\n"
 	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
 	        "  large:   Large hall preset recommended for games that use separate\n"
-	        "  			channels for music and digital audio.\n"
+	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
