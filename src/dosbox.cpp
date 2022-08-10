@@ -540,18 +540,16 @@ void DOSBOX_Init() {
 	        "overwrite : use the last one encountered, like other conf settings.");
 
 	const char *verbosity_choices[] = {
-	        "auto", "high", "medium", "low", "splash_only", "quiet", 0,
+	        "auto", "high", "low", "quiet", 0,
 	};
 	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	Pstring->Set_values(verbosity_choices);
 	Pstring->Set_help(
 	        "Controls verbosity prior to displaying the program:\n"
-	        "Verbosity   | Splash | Welcome | Early stdout\n"
-	        "high        |  yes   |   yes   |    yes\n"
-	        "medium      |  no    |   yes   |    yes\n"
-	        "low         |  no    |   no    |    yes\n"
-	        "quiet       |  no    |   no    |    no\n"
-	        "splash_only |  yes   |   no    |    no\n"
+	        "Verbosity   | Welcome | Early stdout\n"
+	        "high        |   yes   |    yes\n"
+	        "low         |   no    |    yes\n"
+	        "quiet       |   no    |    no\n"
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);

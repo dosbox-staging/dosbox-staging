@@ -194,12 +194,10 @@ overwrite : usa l'ultima incontrata, come le altre impostazioni di
 .
 :CONFIG_STARTUP_VERBOSITY
 Determina il livello di verbosità prima di visualizzare il programma:
-Verbosità   | Schermata iniziale | Schermata di benvenuto | Registro di DOSBox
-high        |          sì        |           sì           |         sì
-medium      |          no        |           sì           |         sì
-low         |          no        |           no           |         sì
-quiet       |          no        |           no           |         no
-splash_only |          sì        |           no           |         no
+Verbosità   | Schermata di benvenuto | Registro di DOSBox
+high        |           sì           |         sì
+low         |           no           |         sì
+quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una cartella,
                (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
