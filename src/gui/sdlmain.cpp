@@ -2612,37 +2612,13 @@ static void SetPriority(PRIORITY_LEVELS level)
 	}
 }
 
-#ifdef WIN32
-extern uint8_t int10_font_14[256 * 14];
-static void OutputString(Bitu x,Bitu y,const char * text,uint32_t color,uint32_t color2,SDL_Surface * output_surface) {
-	uint32_t * draw=(uint32_t*)(((uint8_t *)output_surface->pixels)+((y)*output_surface->pitch))+x;
-	while (*text) {
-		uint8_t * font=&int10_font_14[(*text)*14];
-		Bitu i,j;
-		uint32_t * draw_line=draw;
-		for (i=0;i<14;i++) {
-			uint8_t map=*font++;
-			for (j=0;j<8;j++) {
-				*(draw_line + j) = map & 0x80 ? color : color2;
-				map<<=1;
-			}
-			draw_line+=output_surface->pitch/4;
-		}
-		text++;
-		draw+=8;
-	}
-}
-#endif
-
-#include "dosbox_staging_splash.c"
-
 static SDL_Window *SetDefaultWindowMode()
 {
 	if (sdl.window)
 		return sdl.window;
 
-	sdl.draw.width = splash_image.width;
-	sdl.draw.height = splash_image.height;
+	sdl.draw.width = FALLBACK_WINDOW_DIMENSIONS.x;
+	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
@@ -2654,61 +2630,6 @@ static SDL_Window *SetDefaultWindowMode()
 	return SetWindowMode(sdl.desktop.want_type, sdl.desktop.window.width,
 	                     sdl.desktop.window.height, sdl.desktop.fullscreen,
 	                     sdl.desktop.want_resizable_window);
-}
-
-/*
- * Please leave the Splash screen stuff in working order.
- * We spend a lot of time making DOSBox.
- */
-static void DisplaySplash(int time_ms)
-{
-	assert(sdl.window);
-
-	constexpr int src_w = splash_image.width;
-	constexpr int src_h = splash_image.height;
-	constexpr int src_bpp = splash_image.bytes_per_pixel;
-	static_assert(src_bpp == 3, "Source image expected in RGB format.");
-
-	const auto flags = GFX_SetSize(src_w, src_h, GFX_CAN_32, 1.0, 1.0, nullptr, 1.0);
-	if (!(flags & GFX_CAN_32)) {
-		LOG_WARNING("Can't show 32bpp splash.");
-		return;
-	}
-
-	uint8_t *out = nullptr;
-	int pitch = 0;
-	if (!GFX_StartUpdate(out, pitch))
-		E_Exit("%s", SDL_GetError());
-
-	uint32_t *pixels = reinterpret_cast<uint32_t *>(out);
-	assertm(pixels, "GFX_StartUpdate is supposed to give us buffer.");
-	const int buf_width = pitch / 4;
-	assertm(buf_width >= src_w, "Row length needs to be big enough.");
-
-	std::array<uint8_t, (src_w * src_h * src_bpp)> splash;
-	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), splash_image.rle_pixel_data,
-	                             src_w * src_h, src_bpp);
-	size_t i = 0;
-	size_t j = 0;
-
-	static_assert(splash.size() % 3 == 0, "Reading 3 bytes at a time.");
-	for (int y = 0; y < src_h; y++) {
-		// copy a row of pixels to output buffer
-		for (int x = 0; x < src_w; x++) {
-			const uint32_t r = splash[i++];
-			const uint32_t g = splash[i++];
-			const uint32_t b = splash[i++];
-			pixels[j++] = (r << 16) | (g << 8) | b;
-		}
-		// pad with black until the end of row
-		// only output=surface actually needs this
-		for (int x = src_w; x < buf_width; x++)
-			pixels[j++] = 0;
-	}
-
-	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
-	GFX_EndUpdate(lines);
-	Delay(time_ms);
 }
 
 static bool detect_resizable_window()
@@ -3511,18 +3432,6 @@ static void GUI_StartUp(Section *sec)
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
-	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
-	                                 splash_image.height > sdl.desktop.full.height;
-	if ((control->GetStartupVerbosity() == Verbosity::High ||
-	     control->GetStartupVerbosity() == Verbosity::SplashOnly) &&
-	    !(sdl.desktop.fullscreen && tiny_fullresolution)) {
-		GFX_Start();
-		DisplaySplash(1000);
-		GFX_Stop();
-		// don't count the splash screen as our initial size
-		sdl.desktop.window.adjusted_initial_size = false;
-	}
-
 	// Apply the user's mouse settings
 	Section_prop* s = section->GetMultiVal("capture_mouse")->GetSection();
 	const std::string control_choice = s->Get_string("capture_mouse_first_value");
@@ -4307,52 +4216,6 @@ void Config_Add_SDL() {
 	pstring->Set_values(ssopts);
 }
 
-static void show_warning(char const * const message) {
-#ifndef WIN32
-	fprintf(stderr, "%s", message);
-	return;
-#else
-	if (!sdl.initialized && SDL_Init(SDL_INIT_VIDEO) < 0) {
-		sdl.initialized = true;
-		fprintf(stderr, "%s", message);
-		return;
-	}
-
-	if (!sdl.window && !GFX_SetSDLSurfaceWindow(640, 400))
-		return;
-
-	sdl.surface = SDL_GetWindowSurface(sdl.window);
-	if (!sdl.surface)
-		return;
-
-	SDL_Surface *splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32,
-	                                                RMASK, GMASK, BMASK, 0);
-	if (!splash_surf) return;
-
-	int x = 120,y = 20;
-	std::string m(message),m2;
-	std::string::size_type a,b,c,d;
-
-	while(m.size()) { //Max 50 characters. break on space before or on a newline
-		c = m.find('\n');
-		d = m.rfind(' ',50);
-		if(c>d) a=b=d; else a=b=c;
-		if( a != std::string::npos) b++;
-		m2 = m.substr(0,a); m.erase(0,b);
-		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
-		y += 20;
-	}
-
-	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-	SDL_UpdateWindowSurface(sdl.window);
-
-	SDL_FreeSurface(splash_surf);
-	splash_surf = nullptr;
-
-	Delay(12000);
-#endif // WIN32
-}
-
 static int LaunchEditor()
 {
 	std::string path, file;
@@ -4493,7 +4356,7 @@ static void eraseconfigfile() {
 	FILE* f = fopen("dosbox.conf","r");
 	if(f) {
 		fclose(f);
-		show_warning("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
+		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
 	}
 	std::string path,file;
 	Cross::GetPlatformConfigDir(path);
@@ -4510,7 +4373,7 @@ static void erasemapperfile() {
 	FILE* g = fopen("dosbox.conf","r");
 	if(g) {
 		fclose(g);
-		show_warning("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
+		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
 	}
 

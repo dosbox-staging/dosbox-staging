@@ -170,12 +170,10 @@ overwrite : Verwende die zuletzt gefundene, wie bei anderen conf-Einstellungen.
 .
 :CONFIG_STARTUP_VERBOSITY
 Bestimmt die Ausführlichkeit der Anzeigen, bevor das Programm angezeigt wird:
-Verbosität  | Logo  |Willkommen| Frühe Ausgabe
-high        |  ja   |   ja     |    ja
-medium      | nein  |   ja     |    ja
-low         | nein  |  nein    |    ja
-quiet       | nein  |  nein    |   nein
-splash_only |  ja   |  nein    |   nein
+Verbosität  |Willkommen| Frühe Ausgabe
+high        |   ja     |    ja
+low         |  nein    |    ja
+quiet       |  nein    |   nein
 auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden, sonst "high".
 .
 :CONFIG_FRAMESKIP

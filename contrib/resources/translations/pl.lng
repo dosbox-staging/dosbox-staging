@@ -171,12 +171,10 @@ Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
 .
 :CONFIG_STARTUP_VERBOSITY
 Rodzaj informacji wy˜wietlanych po uruchomieniu emulatora:
-  Warto˜†     | Baner | Powitanie | Wczesna konsola
-  high        |  tak  |    tak    |    tak
-  medium      |  nie  |    tak    |    tak
-  low         |  nie  |    nie    |    tak
-  quiet       |  nie  |    nie    |    nie
-  splash_only |  tak  |    nie    |    nie
+  Warto˜†     | Powitanie | Wczesna konsola
+  high        |    tak    |    tak
+  low         |    nie    |    tak
+  quiet       |    nie    |    nie
   auto        | 'low' je˜li podano katalog lub plik wykonywalny,
               | 'high' w przeciwnym wypadku
 .

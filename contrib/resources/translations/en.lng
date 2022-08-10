@@ -162,12 +162,10 @@ overwrite : use the last one encountered, like other conf settings.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program:
-Verbosity   | Splash | Welcome | Early stdout
-high        |  yes   |   yes   |    yes
-medium      |  no    |   yes   |    yes
-low         |  no    |   no    |    yes
-quiet       |  no    |   no    |    no
-splash_only |  yes   |   no    |    no
+Verbosity   | Welcome | Early stdout
+high        |   yes   |    yes
+low         |   no    |    yes
+quiet       |   no    |    no
 auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
 :CONFIG_FRAMESKIP

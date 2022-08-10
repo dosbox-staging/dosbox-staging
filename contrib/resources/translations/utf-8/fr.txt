@@ -166,12 +166,10 @@ overwrite : use the last one encountered, like other conf settings.
 .
 :CONFIG_STARTUP_VERBOSITY
 Contrôle la verbosité avant l'affichage du programme :
-            | Écran de démarrage | Écran de bienvenue | Sorties écran de démarrage
-high        |        oui         |        oui         |            oui
-medium      |        non         |        oui         |            oui
-low         |        non         |        non         |            oui
-quiet       |        non         |        non         |            non
-splash_only |        oui         |        non         |            non
+            | Écran de bienvenue | Sorties écran de démarrage
+high        |        oui         |            oui
+low         |        non         |            oui
+quiet       |        non         |            non
 auto        | 'low' si exec ou dir sont utilisés, sinon 'high'
 .
 :CONFIG_FRAMESKIP

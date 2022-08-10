@@ -1162,12 +1162,8 @@ Verbosity Config::GetStartupVerbosity() const
 
 	if (user_choice == "high")
 		return Verbosity::High;
-	if (user_choice == "medium")
-		return Verbosity::Medium;
 	if (user_choice == "low")
 		return Verbosity::Low;
-	if (user_choice == "splash_only")
-		return Verbosity::SplashOnly;
 	if (user_choice == "quiet")
 		return Verbosity::Quiet;
 	if (user_choice == "auto")

@@ -119,12 +119,10 @@ overwrite : usa el £ltimo encontrado, como otras configuraciones conf.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controla la verbosidad antes de mostrar el programa:
-Verbosidad  | Inicio | Bienvenida | Salida anticipada
-high        |   S¡   |     S¡     |        S¡
-medium      |   No   |     S¡     |        S¡
-low         |   No   |     No     |        S¡
-quiet       |   No   |     No     |        No
-splash_only |   S¡   |     No     |        No
+Verbosidad  | Bienvenida | Salida anticipada
+high        |     S¡     |        S¡
+low         |     No     |        S¡
+quiet       |     No     |        No
 auto        | 'low' si exec o dir es pasado, de lo contrario 'high'
 .
 :CONFIG_FRAMESKIP
