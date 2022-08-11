@@ -48,11 +48,10 @@ static bool raw_input = true; // true = relative input is raw data, without
 
 static Bitu int74_ret_callback = 0;
 
-// Original DOSBox forces mouse event delay of 5 milliseconds all the time, but
-// this is probably slightly too much - 8 milliseconds is already over twice the
-// 60 Hz rate the original Microsoft Mouse 8.20 driver sets
-// At least Ultima Underworld I and II do not like too high sampling rates
-static constexpr uint8_t boost_delay_ms = 8;
+// 5 milliseconds delay corresponds to 200 Hz mouse sampling rate (minimum allowed);
+// this is a lot, Microsoft Mouse 8.20 sets 60 Hz on PS/2 mouse.
+// Note that at least least Ultima Underworld I and II do not like too high values.
+static constexpr uint8_t min_delay_ms = 5;
 
 static constexpr uint8_t mask_mouse_has_moved = static_cast<uint8_t>(MouseEventId::MouseHasMoved);
 static constexpr uint8_t mask_wheel_has_moved = static_cast<uint8_t>(MouseEventId::WheelHasMoved);
@@ -766,7 +765,7 @@ void MOUSE_NotifyRateDOS(const uint8_t rate_hz)
     // games might have tried to set lower rate to reduce number of IRQs
     // and save CPU power - this is no longer necessary. Windows 3.1 also
     // sets a suboptimal value in its PS/2 driver.
-    val_moved_wheel = std::min(val_moved_wheel, boost_delay_ms);
+    val_moved_wheel = std::min(val_moved_wheel, min_delay_ms);
 
     // Cheat a little once again - our delay for buttons is separate and
     // much smaller, so that button events can be sent to the DOS
@@ -785,7 +784,7 @@ void MOUSE_NotifyRatePS2(const uint8_t rate_hz)
     val_ps2 = clamp_start_delay(1000.0f / rate_hz);
 
     // Cheat a little, like with DOS driver
-    val_ps2 = std::min(val_ps2, boost_delay_ms);
+    val_ps2 = std::min(val_ps2, min_delay_ms);
 }
 
 void MOUSE_NotifyResetDOS()
