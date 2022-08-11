@@ -204,6 +204,31 @@ meson setup -Dbuildtype=debug --wrap-mode=nodownload build
 meson test -C build
 ```
 
+Re-running a single GTest test over and over can be done with the below
+command; this can be very useful during development.
+
+``` shell
+meson compile -C build && ./build/tests/<TEST_NAME>
+```
+
+To list the names of all GTest tests:
+
+``` shell
+meson test -C build --list | grep gtest
+```
+
+To run a single GTest test case:
+
+``` shell
+./build/tests/<TEST_NAME> --gtest_filter=<TEST_CASE_NAME>
+```
+
+Concrete example:
+
+``` shell
+./build/tests/bitops --gtest_filter=bitops.nominal_byte
+```
+
 ### Build test coverage report
 
 Prerequisites:
