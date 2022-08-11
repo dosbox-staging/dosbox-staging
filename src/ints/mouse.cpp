@@ -51,7 +51,7 @@ static Bitu int74_ret_callback = 0;
 // 5 milliseconds delay corresponds to 200 Hz mouse sampling rate (minimum allowed);
 // this is a lot, Microsoft Mouse 8.20 sets 60 Hz on PS/2 mouse.
 // Note that at least least Ultima Underworld I and II do not like too high values.
-static constexpr uint8_t min_delay_ms = 5;
+static constexpr uint8_t max_delay_ms = 5;
 
 static constexpr uint8_t mask_mouse_has_moved = static_cast<uint8_t>(MouseEventId::MouseHasMoved);
 static constexpr uint8_t mask_wheel_has_moved = static_cast<uint8_t>(MouseEventId::WheelHasMoved);
@@ -146,9 +146,8 @@ public:
     void Tick();
 
     struct { // intial value of delay counters, in milliseconds
-        uint8_t ps2_ms             = 5;
-        uint8_t dos_button_ms      = 1;
-        uint8_t dos_moved_wheel_ms = 5;
+        uint8_t ps2_ms = 5;
+        uint8_t dos_ms = 5;
     } start_delay = {};
 
 private:
@@ -172,9 +171,8 @@ private:
 
     // Time in milliseconds which has to elapse before event can take place
     struct {
-        uint8_t ps2_ms             = 0;
-        uint8_t dos_button_ms      = 0;
-        uint8_t dos_moved_wheel_ms = 0;
+        uint8_t ps2_ms = 0;
+        uint8_t dos_ms = 0;
     } delay = {};
 
     // Events for which a flag is enough to store them
@@ -258,8 +256,7 @@ void MouseQueue::AddEvent(MouseEvent &event)
     }
 
     if (event.request_dos) {
-        if (!HasEventDosAny() && timer_in_progress &&
-            !delay.dos_button_ms && !delay.dos_moved_wheel_ms) {
+        if (!HasEventDosAny() && timer_in_progress && !delay.dos_ms) {
             DEBUG_QUEUE("AddEvent: restart timer for %s", "DOS");
             // We do not want the timer to start only then PS/2
             // event gets processed - for minimum latency it is
@@ -366,8 +363,7 @@ void MouseQueue::FetchEvent(MouseEvent &event)
     // First try prioritized (move/wheel) DOS events
     if (HasReadyEventDosMoved()) {
         // Set delay before next DOS events
-        delay.dos_button_ms      = start_delay.dos_button_ms;
-        delay.dos_moved_wheel_ms = start_delay.dos_moved_wheel_ms;
+        delay.dos_ms = start_delay.dos_ms;
         // Fill in common event information
         event.request_dos = true;
         event.buttons_12S = last_buttons_12S;
@@ -393,9 +389,7 @@ void MouseQueue::FetchEvent(MouseEvent &event)
     // Try DOS button events
     if (HasReadyEventDosButton()) {
         // Set delay before next DOS events
-        delay.dos_button_ms = start_delay.dos_button_ms;
-        delay.dos_moved_wheel_ms = std::max(delay.dos_moved_wheel_ms,
-                                            delay.dos_button_ms);
+        delay.dos_ms = start_delay.dos_ms;
         // Take event from the queue
         event            = PopEventButton();
         last_buttons_12S = event.buttons_12S;
@@ -420,11 +414,10 @@ void MouseQueue::FetchEvent(MouseEvent &event)
 void MouseQueue::ClearEventsDOS()
 {
     // Clear DOS relevant part of the queue
-    num_events               = 0;
-    event_dos_moved          = false;
-    event_dos_wheel          = false;
-    delay.dos_moved_wheel_ms = 0;
-    delay.dos_button_ms      = 0;
+    num_events      = 0;
+    event_dos_moved = false;
+    event_dos_wheel = false;
+    delay.dos_ms    = 0;
 
     // The overflow reason is most likely gone
     queue_overflow = false;
@@ -448,13 +441,9 @@ void MouseQueue::StartTimerIfNeeded()
         timer_needed = true;
         delay_ms     = std::min(delay_ms, delay.ps2_ms);
     }
-    if (HasEventDosMoved() || delay.dos_moved_wheel_ms) {
+    if (HasEventDosAny() || delay.dos_ms) {
         timer_needed = true;
-        delay_ms     = std::min(delay_ms, delay.dos_moved_wheel_ms);
-    } else if (HasEventDosButton() || delay.dos_button_ms) {
-        // Do not report button before the movement
-        timer_needed = true;
-        delay_ms     = std::min(delay_ms, delay.dos_button_ms);
+        delay_ms     = std::min(delay_ms, delay.dos_ms);
     }
 
     // If queue is empty and all expired, we need no timer
@@ -485,9 +474,8 @@ void MouseQueue::UpdateDelayCounters()
                                                       : 0);
     };
 
-    delay.ps2_ms             = calc_new_delay(delay.ps2_ms, elapsed);
-    delay.dos_moved_wheel_ms = calc_new_delay(delay.dos_moved_wheel_ms, elapsed);
-    delay.dos_button_ms      = calc_new_delay(delay.dos_button_ms, elapsed);
+    delay.ps2_ms = calc_new_delay(delay.ps2_ms, elapsed);
+    delay.dos_ms = calc_new_delay(delay.dos_ms, elapsed);
 
     pic_ticks_start = 0;
 }
@@ -540,16 +528,16 @@ bool MouseQueue::HasReadyEventPS2() const
 
 bool MouseQueue::HasReadyEventDosMoved() const
 {
-    return HasEventDosMoved() && !delay.dos_moved_wheel_ms &&
-           !mouse_shared.dos_cb_running; // callback busy = no new
-                                         // event
+    return HasEventDosMoved() && !delay.dos_ms &&
+           // do not launch DOS callback if it's busy
+           !mouse_shared.dos_cb_running;
 }
 
 bool MouseQueue::HasReadyEventDosButton() const
 {
-    return HasEventDosButton() && !delay.dos_button_ms &&
-           !mouse_shared.dos_cb_running; // callback busy = no new
-                                         // event
+    return HasEventDosButton() && !delay.dos_ms &&
+           // do not launch DOS callback if it's busy
+           !mouse_shared.dos_cb_running;
 }
 
 bool MouseQueue::HasReadyEventAny() const
@@ -755,22 +743,16 @@ uint8_t clamp_start_delay(float value_ms)
 
 void MOUSE_NotifyRateDOS(const uint8_t rate_hz)
 {
-    auto &val_moved_wheel = queue.start_delay.dos_moved_wheel_ms;
-    auto &val_button = queue.start_delay.dos_button_ms;
+    auto &val_ms = queue.start_delay.dos_ms;
 
     // Convert rate in Hz to delay in milliseconds
-    val_moved_wheel = clamp_start_delay(1000.0f / rate_hz);
+    val_ms = clamp_start_delay(1000.0f / rate_hz);
 
     // Cheat a little, do not allow to set too high delay. Some old
     // games might have tried to set lower rate to reduce number of IRQs
     // and save CPU power - this is no longer necessary. Windows 3.1 also
     // sets a suboptimal value in its PS/2 driver.
-    val_moved_wheel = std::min(val_moved_wheel, min_delay_ms);
-
-    // Cheat a little once again - our delay for buttons is separate and
-    // much smaller, so that button events can be sent to the DOS
-    // application with minimal latency. So far this didin't cause any issues.
-    val_button = clamp_start_delay(val_moved_wheel / 5.0f);
+    val_ms = std::min(val_ms, max_delay_ms);
 
     // TODO: make a configuration option(s) for boosting sampling rates,
 	//       for DOS and PS/2 mice alike
@@ -784,7 +766,7 @@ void MOUSE_NotifyRatePS2(const uint8_t rate_hz)
     val_ps2 = clamp_start_delay(1000.0f / rate_hz);
 
     // Cheat a little, like with DOS driver
-    val_ps2 = std::min(val_ps2, min_delay_ms);
+    val_ps2 = std::min(val_ps2, max_delay_ms);
 }
 
 void MOUSE_NotifyResetDOS()
