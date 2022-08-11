@@ -254,8 +254,8 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
                           const uint16_t y_abs);
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel);
 
-bool MOUSEDOS_UpdateMoved();
-bool MOUSEDOS_UpdateButtons(const MouseButtons12S buttons_12S);
-bool MOUSEDOS_UpdateWheel();
+uint8_t MOUSEDOS_UpdateMoved();
+uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S buttons_12S);
+uint8_t MOUSEDOS_UpdateWheel();
 
 #endif // DOSBOX_MOUSE_CORE_H

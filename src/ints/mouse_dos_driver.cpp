@@ -154,7 +154,7 @@ static struct { // DOS driver state
 
     } background = {};
 
-    MouseCursor cursor_type          = MouseCursor::Software;
+    MouseCursor cursor_type = MouseCursor::Software;
 
     // cursor shape definition
     uint16_t text_and_mask = 0;
@@ -296,7 +296,7 @@ static void draw_cursor_text()
         union {
             uint16_t data;
             bit_view<0, 8> first;
-            bit_view<8, 8> second; 
+            bit_view<8, 8> second;
         } result;
         ReadCharAttr(state.background.pos_x,
                      state.background.pos_y,
@@ -734,7 +734,7 @@ static void reset()
     // reset them too to avoid any possible problems
     counter_w = 0;
     pending.Reset();
-	
+
     MOUSEDOS_BeforeNewVideoMode();
     MOUSEDOS_AfterNewVideoMode(false);
 
@@ -875,7 +875,7 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
     }
 }
 
-bool MOUSEDOS_UpdateMoved()
+uint8_t MOUSEDOS_UpdateMoved()
 {
     const auto old_pos_x = get_pos_x();
     const auto old_pos_y = get_pos_y();
@@ -915,13 +915,16 @@ bool MOUSEDOS_UpdateMoved()
     // constantly (don't ask me, why) - doing too much optimization
     // can cause the game to skip mouse events.
 
-    return abs_changed || rel_changed;
+    if (abs_changed || rel_changed)
+        return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+    else
+        return 0;
 }
 
-bool MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
+uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
 {
     if (buttons.data == new_buttons_12S.data)
-        return false;
+        return 0;
 
     auto mark_pressed = [](const uint8_t idx) {
         state.last_pressed_x[idx] = get_pos_x();
@@ -935,26 +938,37 @@ bool MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
         ++state.times_released[idx];
     };
 
-    if (new_buttons_12S.left && !buttons.left)
+    uint8_t mask = 0;
+    if (new_buttons_12S.left && !buttons.left) {
         mark_pressed(0);
-    else if (!new_buttons_12S.left && buttons.left)
+        mask |= static_cast<uint8_t>(MouseEventId::PressedLeft);
+    }
+    else if (!new_buttons_12S.left && buttons.left) {
         mark_released(0);
-
-    if (new_buttons_12S.right && !buttons.right)
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedLeft);
+    }
+    if (new_buttons_12S.right && !buttons.right) {
         mark_pressed(1);
-    else if (!new_buttons_12S.right && buttons.right)
+        mask |= static_cast<uint8_t>(MouseEventId::PressedRight);
+    }
+    else if (!new_buttons_12S.right && buttons.right) {
         mark_released(1);
-
-    if (new_buttons_12S.middle && !buttons.middle)
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedRight);
+    }
+    if (new_buttons_12S.middle && !buttons.middle) {
         mark_pressed(2);
-    else if (!new_buttons_12S.middle && buttons.middle)
+        mask |= static_cast<uint8_t>(MouseEventId::PressedMiddle);
+    }
+    else if (!new_buttons_12S.middle && buttons.middle) {
         mark_released(2);
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedMiddle);
+    }
 
     buttons = new_buttons_12S;
-    return true;
+    return mask;
 }
 
-bool MOUSEDOS_UpdateWheel()
+uint8_t MOUSEDOS_UpdateWheel()
 {
     counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
 
@@ -964,7 +978,10 @@ bool MOUSEDOS_UpdateWheel()
     state.last_wheel_moved_x = get_pos_x();
     state.last_wheel_moved_y = get_pos_y();
 
-    return (counter_w != 0);
+    if (counter_w != 0)
+        return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+    else
+        return 0;
 }
 
 bool MOUSEDOS_NotifyMoved(const float x_rel,
@@ -993,8 +1010,8 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
     pending.y_abs = y_abs;
 
     // NOTES:
-	//
-	// It might be tempting to optimize the flow here, by skipping
+    //
+    // It might be tempting to optimize the flow here, by skipping
     // the whole event-queue-callback flow if there is no callback
     // registered, no graphic cursor to draw, etc. Don't do this - there
     // is at least one game (Master of Orion II), which performs INT 0x33
@@ -1002,9 +1019,9 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
     // constantly (don't ask me, why) - doing too much optimization
     // can cause the game to skip mouse events.
     //
-	// Also, do not update mouse state here - Ultima Underworld I and II
-	// do not like mouse states updated in real time, it ends up with
-	// mouse movements being ignored by the game randomly.
+    // Also, do not update mouse state here - Ultima Underworld I and II
+    // do not like mouse states updated in real time, it ends up with
+    // mouse movements being ignored by the game randomly.
 
     return event_needed;
 }
