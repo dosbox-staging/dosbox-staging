@@ -270,6 +270,9 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		            "FluidSynth audio channel instead: MIXER FSYNTH %d",
 		            scale_by_percent);
 
+	// Set unity gain
+	fluid_synth_set_gain(fluid_synth.get(), 1.0f);
+
 	constexpr int fx_group = -1; // applies setting to all groups
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
