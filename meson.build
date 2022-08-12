@@ -347,12 +347,40 @@ zlib_dep = dependency(
     static: ('zlib' in static_libs_list or prefers_static_libs),
 )
 
-speexdsp_dep = dependency(
-    'speexdsp',
-    default_options: ['warning_level=0'],
-    allow_fallback: ('speexdsp' not in system_libs_list),
-    static: ('speexdsp' in static_libs_list or prefers_static_libs),
-)
+# SpeexDSP
+# ~~~~~~~~
+# If the user asked to use SpeexDSP from the system then
+# we need to ensure its floating-point API is reliable
+#
+use_speexdsp_from_system = 'speexdsp' in system_libs_list
+if use_speexdsp_from_system
+    check_cpp = files('contrib/check-speexdsp/test_speexdsp_float_api.cpp')
+    check_if_msg = 'SpeexDSP system library has reliable floating-point API'
+    check_result = cxx.run(
+        check_cpp,
+        dependencies: dependency('speexdsp'),
+        name: check_if_msg,
+    )
+    use_speexdsp_from_system = (
+        check_result.compiled()
+        and check_result.returncode() == 0
+    )
+endif
+if use_speexdsp_from_system
+    speexdsp_dep = dependency(
+        'speexdsp',
+        allow_fallback: false,
+        static: ('speexdsp' in static_libs_list or prefers_static_libs),
+    )
+    speexdsp_summary_msg = 'system library'
+else
+    speexdsp_dep = subproject(
+        'speexdsp',
+        default_options: ['default_library=static', 'warning_level=0'],
+    ).get_variable('speexdsp_dep')
+    speexdsp_summary_msg = 'built-in'
+endif
+summary('SpeexDSP provider', speexdsp_summary_msg)
 
 # Optional libraries
 optional_dep = dependency('', required: false)
