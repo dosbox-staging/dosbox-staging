@@ -254,8 +254,6 @@ jobs:
           ${{ matrix.conf.build_flags }}
           -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net
           build
-          # -Ddefault_library=shared
-          # -Dtry_static_libs=fluidsynth,glib,iir,mt32emu,opusfile,png,sdl2,sdl2_net,slirp,speexdsp,zlib
 
       - name: Build
         run:  arch -arch=${{ matrix.runner.arch }} meson compile -C build

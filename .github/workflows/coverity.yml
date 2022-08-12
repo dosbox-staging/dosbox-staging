@@ -65,6 +65,7 @@ jobs:
           CC="clang" CXX="clang++" meson setup \
           -Dbuildtype=debug \
           -Dunit_tests=disabled \
+          -Dsystem_libraries=speexdsp \
           -Ddefault_library=shared \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
