@@ -108,7 +108,7 @@ option(
 )
 
 option(
-    'use_system_libs',
+    'system_libraries',
     type: 'array',
     choices: [
         'fluidsynth',
