@@ -307,7 +307,7 @@ threads_dep = dependency('threads')
 
 # 3rd party libraries
 static_libs_list = get_option('try_static_libs')
-system_libs_list = get_option('use_system_libs')
+system_libs_list = get_option('system_libraries')
 
 wants_tests = true
 # tests are disabled for release builds unless requested

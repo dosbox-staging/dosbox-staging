@@ -96,16 +96,16 @@ Please refer to the Tracy documentation for further information.
 ## Repository maintainer / packager builds
 
 Packagers interested in using shared libraries can use
-`-Ddefault_library=shared` and `-Duse_system_libs=lib1,lib2,etc` to
+`-Ddefault_library=shared` and `-Dsystem_libraries=lib1,lib2,etc` to
 ensure specific dependencies are provided by the system instead of
 via the Meson wraps. For example:
 
 ``` shell
-meson setup -Duse_system_libs=fluidsynth,speexdsp build/package
+meson setup -Dsystem_libraries=fluidsynth,speexdsp build/package
 meson compile -C build/package
 ```
 
-For the full list libraries available to use with `-Duse_system_libs`,
+For the full list libraries available to use with `-Dsystem_libraries`,
 see the `meson_options.txt` file. 
 
 Alternately, wraps can be fully disabled using `-Dwrap_mode=nofallback`,
