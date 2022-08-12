@@ -90,6 +90,7 @@ jobs:
           meson setup \
           -Dbuildtype=debug \
           -Ddefault_library=shared \
+          -Dsystem_libraries=speexdsp \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
           -Duse_mt32emu=false \
