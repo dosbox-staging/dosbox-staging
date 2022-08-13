@@ -1516,12 +1516,20 @@ std::string get_lang_from_host_layout()
 	WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
 	WORD cur_kb_sub_id = 0;
 	char layout_id_string[KL_NAMELENGTH];
+
+	auto parse_hex_string = [](const char *s) {
+		uint32_t value = 0;
+		sscanf(s, "%x", &value);
+		return value;
+	};
+
 	if (GetKeyboardLayoutName(layout_id_string)) {
 		if (safe_strlen(layout_id_string) == 8) {
-			const int cur_kb_layout_by_name = ConvHexWord(
+			const int cur_kb_layout_by_name = parse_hex_string(
 			        (char *)&layout_id_string[4]);
 			layout_id_string[4] = 0;
-			const int sub_id = ConvHexWord((char *)&layout_id_string[0]);
+			const int sub_id    = parse_hex_string(
+                                (char *)&layout_id_string[0]);
 			if ((cur_kb_layout_by_name > 0) &&
 			    (cur_kb_layout_by_name < 65536)) {
 				// use layout _id extracted from the layout string
