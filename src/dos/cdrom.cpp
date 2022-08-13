@@ -26,10 +26,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "dosbox.h"
 #include "SDL.h"
-#include "support.h"
-#include "cdrom.h"
+
+#include "dosbox.h"
+#include "string_utils.h"
 
 CDROM_Interface_SDL::CDROM_Interface_SDL()
 {

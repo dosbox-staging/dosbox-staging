@@ -37,7 +37,7 @@
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
-#include "support.h"
+#include "string_utils.h"
 #include "timer.h"
 
 #define RAWBUF	1024

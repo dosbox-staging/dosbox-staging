@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 #include "logging.h"
-#include "support.h"
+#include "string_utils.h"
 
 bool path_exists(const char *path) noexcept
 {

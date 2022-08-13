@@ -29,7 +29,7 @@
 #include "dosbox.h"
 #include "ethernet_slirp.h"
 #include "setup.h"
-#include "support.h"
+#include "string_utils.h"
 #include "timer.h"
 
 /* Begin boilerplate to map libslirp's C-based callbacks to our C++
