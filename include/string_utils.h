@@ -153,7 +153,6 @@ inline bool is_empty(const char *str) noexcept
 	return str[0] == '\0';
 }
 
-Bits conv_hex_word(char *word);
 char *strip_word(char *&cmd);
 
 std::string replace(const std::string &str, char old_char, char new_char) noexcept;

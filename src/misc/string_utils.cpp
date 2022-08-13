@@ -97,20 +97,6 @@ void lowcase(std::string &str)
 	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
-Bits conv_hex_word(char *word)
-{
-	Bitu ret = 0;
-	while (char c = toupper(*reinterpret_cast<unsigned char *>(word))) {
-		ret *= 16;
-		if (c >= '0' && c <= '9')
-			ret += c - '0';
-		else if (c >= 'A' && c <= 'F')
-			ret += 10 + (c - 'A');
-		word++;
-	}
-	return ret;
-}
-
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
