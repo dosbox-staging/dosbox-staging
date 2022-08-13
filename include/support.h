@@ -304,9 +304,6 @@ std::vector<std::string> split(const std::string &seq);
 
 bool is_executable_filename(const std::string &filename) noexcept;
 
-bool is_hex_digits(const std::string s) noexcept;
-bool is_digits(const std::string s) noexcept;
-
 // Use ARRAY_LEN macro to safely calculate number of elements in a C-array.
 // This macro can be used in a constant expressions, even if array is a
 // non-static class member:
