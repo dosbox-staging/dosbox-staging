@@ -71,7 +71,7 @@ unit_tests = [
     {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'iohandler_containers', 'deps': [libmisc_dep]},
     {'name': 'rwqueue', 'deps': [libmisc_dep]},
-    {'name': 'string_utils', 'deps': []},
+    {'name': 'string_utils', 'deps': [libmisc_dep]},
     {'name': 'setup', 'deps': [libmisc_dep]},
     {'name': 'support', 'deps': [libmisc_dep]},
     {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},

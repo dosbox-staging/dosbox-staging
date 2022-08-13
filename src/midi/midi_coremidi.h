@@ -31,6 +31,7 @@
 #include <string>
 
 #include "programs.h"
+#include "string_utils.h"
 
 class MidiHandler_coremidi final : public MidiHandler {
 private:

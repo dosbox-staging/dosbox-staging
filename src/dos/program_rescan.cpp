@@ -20,6 +20,8 @@
 
 #include "program_rescan.h"
 
+#include "string_utils.h"
+
 void RESCAN::Run(void)
 {
 	bool all = false;
