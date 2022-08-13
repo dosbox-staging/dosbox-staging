@@ -19,7 +19,9 @@
  */
 
 #include "adlib_gold.h"
+
 #include "checks.h"
+#include "math_utils.h"
 
 CHECK_NARROWING();
 

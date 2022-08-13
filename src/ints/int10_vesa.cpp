@@ -23,6 +23,7 @@
 
 #include "callback.h"
 #include "regs.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "inout.h"
 #include "dos_inc.h"

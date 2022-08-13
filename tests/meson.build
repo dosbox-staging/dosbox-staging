@@ -66,19 +66,20 @@ test(
 # other unit tests
 
 unit_tests = [
-    {'name': 'bitops', 'deps': []},
+    {'name': 'ansi_code_markup', 'deps': [libmisc_dep]},
     {'name': 'bit_view', 'deps': []},
+    {'name': 'bitops', 'deps': []},
+    {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
+    {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'iohandler_containers', 'deps': [libmisc_dep]},
+    {'name': 'math_utils', 'deps': [libmisc_dep]},
     {'name': 'rwqueue', 'deps': [libmisc_dep]},
-    {'name': 'string_utils', 'deps': [libmisc_dep]},
     {'name': 'setup', 'deps': [libmisc_dep]},
-    {'name': 'support', 'deps': [libmisc_dep]},
-    {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
-    {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'shell_cmds', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'shell_redirection', 'deps': [dosbox_dep], 'extra_cpp': []},
-    {'name': 'ansi_code_markup', 'deps': [libmisc_dep]},
+    {'name': 'string_utils', 'deps': [libmisc_dep]},
+    {'name': 'support', 'deps': [libmisc_dep]},
 ]
 
 extra_link_flags = []

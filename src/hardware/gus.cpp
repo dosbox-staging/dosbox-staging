@@ -31,6 +31,7 @@
 #include "control.h"
 #include "dma.h"
 #include "hardware.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"

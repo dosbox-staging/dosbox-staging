@@ -50,6 +50,7 @@
 #include "cross.h"
 #include "hardware.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "midi.h"
 #include "mixer.h"

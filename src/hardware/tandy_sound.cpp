@@ -86,6 +86,7 @@ centerline.
 #include "hardware.h"
 #include "inout.h"
 #include "mem.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"

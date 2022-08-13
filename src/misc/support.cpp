@@ -183,12 +183,6 @@ void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] cons
 #endif
 }
 
-bool ends_with(const std::string &str, const std::string &suffix) noexcept
-{
-	return (str.size() >= suffix.size() &&
-	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
-}
-
 // Search for the needle in the haystack, case insensitive.
 bool find_in_case_insensitive(const std::string &needle, const std::string &haystack)
 {
@@ -447,15 +441,5 @@ bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t se
 	if (hour > 23 || minute > 59 || second > 59)
 		return false;
 	return true;
-}
-
-double decibel_to_gain(const double decibel)
-{
-	return pow(10.0, decibel / 20.0);
-}
-
-double gain_to_decibel(const double gain)
-{
-	return 20.0 * log(gain) / log(10.0);
 }
 

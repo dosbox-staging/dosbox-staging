@@ -25,11 +25,11 @@
 
 #include "control.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mapper.h"
 #include "mem.h"
 #include "pic.h"
 #include "render.h"
-#include "support.h"
 #include "vga.h"
 
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)

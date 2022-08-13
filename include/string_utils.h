@@ -27,6 +27,7 @@
 #include <cstdarg>
 #include <cstring>
 #include <string>
+#include <vector>
 
 template <size_t N>
 int safe_sprintf(char (&dst)[N], const char *fmt, ...)

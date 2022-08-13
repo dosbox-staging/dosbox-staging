@@ -43,6 +43,7 @@
 #include <opusfile.h>
 #include <SDL.h>
 
+#include "math_utils.h"
 #include "support.h"
 
 #include "SDL_sound.h"

@@ -20,7 +20,9 @@
 
 #include "string_utils.h"
 
+#include <algorithm>
 #include <vector>
+#include <string>
 
 bool is_hex_digits(const std::string_view s) noexcept
 {
@@ -206,5 +208,11 @@ void strip_punctuation(std::string &str)
 	                         str.end(),
 	                         [](unsigned char c) { return std::ispunct(c); }),
 	          str.end());
+}
+
+bool ends_with(const std::string &str, const std::string &suffix) noexcept
+{
+	return (str.size() >= suffix.size() &&
+	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
 }
 

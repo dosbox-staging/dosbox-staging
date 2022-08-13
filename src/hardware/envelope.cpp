@@ -21,7 +21,7 @@
 
 #include "envelope.h"
 
-#include "support.h"
+#include "math_utils.h"
 #include "mixer.h"
 
 Envelope::Envelope(const char *name) : channel_name(name)

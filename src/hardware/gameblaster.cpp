@@ -22,7 +22,6 @@
 #include "gameblaster.h"
 
 #include "setup.h"
-#include "support.h"
 #include "pic.h"
 
 void GameBlaster::Open(const int port_choice, const std::string &card_choice,

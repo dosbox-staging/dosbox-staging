@@ -27,13 +27,13 @@
 
 #include "dma.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "midi.h"
 #include "pic.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "support.h"
 
 constexpr uint8_t MIXER_INDEX = 0x04;
 constexpr uint8_t MIXER_DATA = 0x05;
