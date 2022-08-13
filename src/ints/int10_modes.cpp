@@ -1956,15 +1956,18 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_color
 	return cga_colors_ibm5153;
 }
 
+// Tokenize the `cga_colors` string into tokens that each correspond to a
+// single color definition. These tokens will be validated and parsed by
+// `parse_color_token`.
 std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_pref)
 {
 	std::vector<std::string> tokens;
 	if (cga_colors_pref.size() == 0)
 		return tokens;
 
-	enum Token { None, Hex, RgbTriplet };
+	enum class TokenType { None, Hex, RgbTriplet };
 
-	auto curr_token   = Token::None;
+	auto curr_token   = TokenType::None;
 	auto it           = cga_colors_pref.cbegin();
 	auto start        = it;
 	bool inside_paren = false;
@@ -1978,47 +1981,50 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_
 	while (it != cga_colors_pref.cend()) {
 		auto ch = *it;
 		switch (curr_token) {
-		case Token::None:
+		case TokenType::None:
 			if (is_separator(ch)) {
 				; // skip
 			} else if (ch == '#') {
-				curr_token = Token::Hex;
+				curr_token = TokenType::Hex;
 				start      = it;
 			} else if (ch == '(') {
-				curr_token   = Token::RgbTriplet;
+				curr_token   = TokenType::RgbTriplet;
 				inside_paren = true;
 				start        = it;
 			}
 			break;
 
-		case Token::Hex:
+		case TokenType::Hex:
 			if (is_separator(ch)) {
 				store_token();
-				curr_token = Token::None;
+				curr_token = TokenType::None;
 			}
 			break;
 
-		case Token::RgbTriplet:
+		case TokenType::RgbTriplet:
 			if (inside_paren) {
 				if (ch == ')')
 					inside_paren = false;
 			} else if (is_separator(ch)) {
 				store_token();
-				curr_token = Token::None;
+				curr_token = TokenType::None;
 			}
 			break;
 		}
 		++it;
 	}
 
-	if (curr_token != Token::None)
+	if (curr_token != TokenType::None)
 		store_token();
 
 	return tokens;
 }
 
-// Tokens are assumed to have no leading or trailing white-spaces
-std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_t color_index)
+// Input should be a token output by `tokenize_cga_colors_pref`, representing
+// a color definition. Tokens are assumed to have no leading or trailing
+// white-spaces
+std::optional<RGBEntry> parse_color_token(const std::string &token,
+                                          const uint8_t color_index)
 {
 	if (token.size() == 0)
 		return {};
@@ -2026,7 +2032,7 @@ std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_
 	auto log_warning = [&](const std::string &message) {
 		LOG_WARNING("INT10: Error parsing 'cga_colors' color value '%s' at index %u: %s",
 		            token.c_str(),
-					color_index,
+		            color_index,
 		            message.c_str());
 	};
 
@@ -2055,7 +2061,7 @@ std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_
 		if (is_hex3_token) {
 			auto r = static_cast<uint8_t>(value >> 8 & 0xf);
 			auto g = static_cast<uint8_t>(value >> 4 & 0xf);
-			auto b = static_cast<uint8_t>(value & 0xf);
+			auto b = static_cast<uint8_t>(value      & 0xf);
 
 			r = r | r << 4;
 			g = g | g << 4;
@@ -2064,8 +2070,8 @@ std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_
 			return RGBEntry{r, g, b};
 		} else {
 			auto r = static_cast<uint8_t>(value >> 16 & 0xff);
-			auto g = static_cast<uint8_t>(value >> 8 & 0xff);
-			auto b = static_cast<uint8_t>(value & 0xff);
+			auto g = static_cast<uint8_t>(value >>  8 & 0xff);
+			auto b = static_cast<uint8_t>(value       & 0xff);
 
 			return RGBEntry{r, g, b};
 		}
@@ -2083,7 +2089,7 @@ std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_
 
 		auto parse_component = [&](const std::string &component) {
 			constexpr char trim_chars[] = " \t,";
-			auto c = component;
+			auto c                      = component;
 			trim(c, trim_chars);
 
 			if (c.empty() || !is_digits(c)) {
@@ -2122,6 +2128,10 @@ std::optional<RGBEntry> parse_color_token(const std::string &token, const uint8_
 	}
 }
 
+// Parse `cga_colors` using a standard parsing approach:
+// 1. first tokenize the input into individual string tokens, one for each
+// color definition
+// 2. validate and parse the color tokens
 std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs)
 {
 	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);

@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "support.h"
+
 // Clamp: given a value that can be compared with the given minimum and maximum
 //        values, this function will:
 //          * return the value if it's in-between or equal to either bounds, or
