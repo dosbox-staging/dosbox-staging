@@ -85,17 +85,19 @@ char *lowcase(char *str)
 	return str;
 }
 
-void upcase(std::string &str) {
+void upcase(std::string &str)
+{
 	int (*tf)(int) = std::toupper;
 	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
-void lowcase(std::string &str) {
+void lowcase(std::string &str)
+{
 	int (*tf)(int) = std::tolower;
 	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
-Bits ConvHexWord(char *word)
+Bits conv_hex_word(char *word)
 {
 	Bitu ret = 0;
 	while (char c = toupper(*reinterpret_cast<unsigned char *>(word))) {
@@ -142,7 +144,7 @@ std::vector<std::string> split(const std::string &seq, const char delim)
 
 	std::string::size_type head = 0;
 	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(delim, head);
+		const auto tail     = seq.find_first_of(delim, head);
 		const auto word_len = tail - head;
 		words.emplace_back(seq.substr(head, word_len));
 		if (tail == std::string::npos) {
@@ -166,11 +168,11 @@ std::vector<std::string> split(const std::string &seq)
 	constexpr auto whitespace = " \f\n\r\t\v";
 
 	// count words to reserve space in our vector
-	size_t n = 0;
+	size_t n  = 0;
 	auto head = seq.find_first_not_of(whitespace, 0);
 	while (head != std::string::npos) {
 		const auto tail = seq.find_first_of(whitespace, head);
-		head = seq.find_first_not_of(whitespace, tail);
+		head            = seq.find_first_not_of(whitespace, tail);
 		++n;
 	}
 	words.reserve(n);
@@ -189,7 +191,7 @@ std::vector<std::string> split(const std::string &seq)
 	return words;
 }
 
-char *StripWord(char *&line)
+char *strip_word(char *&line)
 {
 	char *scan = line;
 	scan       = ltrim(scan);
@@ -212,12 +214,11 @@ char *StripWord(char *&line)
 	return begin;
 }
 
-void strip_punctuation(std::string &str) {
-	str.erase(
-		std::remove_if(
-			str.begin(),
-			str.end(),
-			[](unsigned char c){ return std::ispunct(c); }),
-		str.end());
+void strip_punctuation(std::string &str)
+{
+	str.erase(std::remove_if(str.begin(),
+	                         str.end(),
+	                         [](unsigned char c) { return std::ispunct(c); }),
+	          str.end());
 }
 

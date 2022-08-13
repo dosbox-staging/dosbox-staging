@@ -1566,7 +1566,7 @@ public:
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
 		char *args = const_cast<char *>(section->Get_string("ver"));
-		const char* word = StripWord(args);
+		const char* word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word, args);
 		if (new_version.major || new_version.minor) {
 			dos.version.major = new_version.major;
