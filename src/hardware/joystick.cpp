@@ -24,9 +24,9 @@
 
 #include "control.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mapper.h"
 #include "pic.h"
-#include "support.h"
 //TODO: higher axis can't be mapped. Find out why again
 
 //Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.

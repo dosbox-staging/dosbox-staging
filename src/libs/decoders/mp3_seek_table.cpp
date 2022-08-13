@@ -83,7 +83,7 @@
 #include <sys/stat.h>
 
 // Local headers
-#include "support.h"
+#include "math_utils.h"
 
 #define XXH_INLINE_ALL 1
 #define XXH_NO_INLINE_HINTS 1

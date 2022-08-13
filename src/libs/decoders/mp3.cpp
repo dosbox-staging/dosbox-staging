@@ -30,7 +30,7 @@
 
 #include "config.h"
 
-#include "support.h"
+#include "math_utils.h"
 
 #include "mp3_seek_table.h"
 #define DR_MP3_IMPLEMENTATION

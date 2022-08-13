@@ -30,6 +30,7 @@
 #include "control.h"
 #include "dma.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "mixer.h"
 #include "pic.h"

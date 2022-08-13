@@ -25,9 +25,9 @@
 #include <vector>
 
 #include "inout.h"
+#include "math_utils.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
 #include "video.h"
 #include "vga.h"
 

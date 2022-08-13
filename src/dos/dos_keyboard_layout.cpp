@@ -30,11 +30,11 @@ using sv = std::string_view;
 #include "callback.h"
 #include "dos_inc.h"
 #include "drives.h"
+#include "math_utils.h"
 #include "mapper.h"
 #include "regs.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
 
 #include "dos_keyboard_layout.h"
 #include "dos_resources.h"

@@ -22,10 +22,10 @@
 #include <cstring>
 #include <utility>
 
-#include "logging.h"
 #include "../ints/int10.h"
+#include "logging.h"
+#include "math_utils.h"
 #include "pic.h"
-#include "support.h"
 #include "video.h"
 
 VGA_Type vga;

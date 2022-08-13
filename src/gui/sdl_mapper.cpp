@@ -41,11 +41,11 @@
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "rgb24.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
 #include "timer.h"
 #include "video.h"
 

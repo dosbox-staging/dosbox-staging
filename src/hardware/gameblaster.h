@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "inout.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "support.h"
 

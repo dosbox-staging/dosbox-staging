@@ -22,11 +22,11 @@
 #include <cmath>
 
 #include "../ints/int10.h"
+#include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"
 #include "render.h"
 #include "../gui/render_scalers.h"
-#include "support.h"
 #include "vga.h"
 #include "video.h"
 

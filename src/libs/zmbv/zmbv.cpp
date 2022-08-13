@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "math_utils.h"
 #include "mem_unaligned.h"
 #include "support.h"
 #include "checks.h"

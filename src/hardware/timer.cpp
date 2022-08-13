@@ -25,9 +25,9 @@
 #include "inout.h"
 #include "pic.h"
 #include "mem.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "setup.h"
-#include "support.h"
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 

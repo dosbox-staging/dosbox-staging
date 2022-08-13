@@ -28,8 +28,8 @@
 #include <string>
 #include <sstream>
 
-#include "support.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "dosbox.h"
 #include "programs.h"
 
