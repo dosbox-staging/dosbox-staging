@@ -685,6 +685,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\misc\programs.cpp" />
     <ClCompile Include="..\src\misc\rwqueue.cpp" />
     <ClCompile Include="..\src\misc\setup.cpp" />
+    <ClCompile Include="..\src\misc\string_utils.cpp" />
     <ClCompile Include="..\src\misc\support.cpp" />
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />

@@ -137,4 +137,8 @@ void reset_str(T *str) noexcept
 	terminate_str_at(str, 0);
 }
 
+bool is_hex_digits(const std::string &s) noexcept;
+
+bool is_digits(const std::string &s) noexcept;
+
 #endif

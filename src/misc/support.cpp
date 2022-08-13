@@ -111,24 +111,6 @@ bool is_executable_filename(const std::string &filename) noexcept
 	return (sfx == "exe" || sfx == "bat" || sfx == "com");
 }
 
-bool is_hex_digits(const std::string s) noexcept
-{
-	for (const auto ch : s) {
-		if (!isxdigit(ch))
-			return false;
-	}
-	return true;
-}
-
-bool is_digits(const std::string s) noexcept
-{
-	for (const auto ch : s) {
-		if (!isdigit(ch))
-			return false;
-	}
-	return true;
-}
-
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
