@@ -434,6 +434,7 @@ if get_option('use_fluidsynth')
             'enable-floats=true',
             'openmp=disabled',
             'enable-threads=false',
+            'tests=' + wants_tests.to_string(),
             'warning_level=0',
         ],
     )
