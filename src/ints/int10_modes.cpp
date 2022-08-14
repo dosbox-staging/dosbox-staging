@@ -1976,7 +1976,7 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_
 		return (ch == ' ' || ch == '\t' || ch == ',');
 	};
 
-	auto store_token = [&]() { tokens.push_back(std::string(start, it)); };
+	auto store_token = [&]() { tokens.emplace_back(std::string(start, it)); };
 
 	while (it != cga_colors_pref.cend()) {
 		auto ch = *it;
@@ -2146,24 +2146,18 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 	bool found_errors = false;
 
 	for (size_t i = 0; i < tokens.size(); ++i) {
-		const auto token       = tokens[i];
-		const auto maybe_color = parse_color_token(token,
-		                                           static_cast<uint8_t>(i));
-
-		if (maybe_color.has_value()) {
-			auto color = maybe_color.value();
-
+		if (auto color = parse_color_token(tokens[i], static_cast<uint8_t>(i)); !color) {
+			found_errors = true;
+		} else {
 			// For now we only support 18-bit colours (6-bit
 			// components) when redefining CGA colors. There's not
 			// too much to be gained by adding full 24-bit support,
 			// and it would complicate the implementation a lot.
-			color.red   >>= 2;
-			color.green >>= 2;
-			color.blue  >>= 2;
+			color->red   >>= 2;
+			color->green >>= 2;
+			color->blue  >>= 2;
 
-			cga_colors[i] = color;
-		} else {
-			found_errors = true;
+			cga_colors[i] = *color;
 		}
 	}
 
@@ -2220,13 +2214,11 @@ static cga_colors_t configure_cga_colors()
 		return cga_colors_colodore_sat60;
 
 	else {
-		auto maybe_cga_colors = parse_cga_colors(cga_colors_prefs);
-		if (maybe_cga_colors.has_value()) {
-			return maybe_cga_colors.value();
-		} else {
+		const auto cga_colors = parse_cga_colors(cga_colors_prefs);
+		if (!cga_colors) {
 			LOG_WARNING("INT10: Using default CGA colors");
-			return cga_colors_default;
 		}
+		return cga_colors.value_or(cga_colors_default);
 	}
 }
 
