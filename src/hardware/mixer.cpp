@@ -831,6 +831,95 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 	filters.lowpass.cutoff_freq = cutoff_freq;
 }
 
+// Tries to set custom filter settings for the channel from the passed in
+// filter preferences. Returns true if the custom filters could be successfully
+// set, false otherwise and disabled all filters for the channel.
+bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
+{
+	SetLowPassFilter(FilterState::Off);
+	SetHighPassFilter(FilterState::Off);
+
+	if (!(starts_with("lpf", filter_prefs) || starts_with("hpf", filter_prefs)))
+		return false;
+
+	const auto parts = split(filter_prefs, ' ');
+
+	const auto single_filter = (parts.size() == 3);
+	const auto dual_filter   = (parts.size() == 6);
+
+	if (!(single_filter || dual_filter)) {
+		LOG_WARNING("Invalid custom filter definition: %s",
+		            filter_prefs.c_str());
+		return false;
+	}
+
+	auto set_filter = [&](const std::string &type_pref,
+	                      const std::string &order_pref,
+	                      const std::string &cutoff_freq_pref) {
+		int order;
+		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
+		    order > max_filter_order) {
+			LOG_WARNING("Invalid custom filter order: %s. "
+			            "Order must be an integer between 1 and %d.",
+			            order_pref.c_str(),
+			            max_filter_order);
+			return false;
+		}
+
+		float cutoff_freq_hz;
+		if (!sscanf(cutoff_freq_pref.c_str(), "%f", &cutoff_freq_hz) ||
+		    cutoff_freq_hz <= 0.0) {
+			LOG_WARNING("Invalid custom filter frequency: '%s'. "
+			            "Frequency must be a positive number.",
+			            cutoff_freq_pref.c_str());
+			return false;
+		}
+
+		if (type_pref == "lpf") {
+			ConfigureLowPassFilter(order, cutoff_freq_hz);
+			SetLowPassFilter(FilterState::On);
+		} else if (type_pref == "hpf") {
+			ConfigureHighPassFilter(order, cutoff_freq_hz);
+			SetHighPassFilter(FilterState::On);
+		} else {
+			LOG_WARNING("Invalid custom filter type: %s. Must be either 'lpf' or 'hpf'.",
+			            type_pref.c_str());
+			return false;
+		}
+		return true;
+	};
+
+	if (single_filter) {
+		auto i                        = 0;
+		const auto filter_type        = parts[i++];
+		const auto filter_order       = parts[i++];
+		const auto filter_cutoff_freq = parts[i++];
+
+		return set_filter(filter_type, filter_order, filter_cutoff_freq);
+	} else {
+		auto i                         = 0;
+		const auto filter1_type        = parts[i++];
+		const auto filter1_order       = parts[i++];
+		const auto filter1_cutoff_freq = parts[i++];
+
+		const auto filter2_type        = parts[i++];
+		const auto filter2_order       = parts[i++];
+		const auto filter2_cutoff_freq = parts[i++];
+
+		if (filter1_type == filter2_type) {
+			LOG_WARNING("Invalid custom filter definition: %s. "
+			            "The two filters must be of different types.",
+			            filter_prefs.c_str());
+			return false;
+		}
+
+		if (!set_filter(filter1_type, filter1_order, filter1_cutoff_freq))
+			return false;
+
+		return set_filter(filter2_type, filter2_order, filter2_cutoff_freq);
+	}
+}
+
 void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 {
 	zoh_upsampler.target_freq = target_freq;
