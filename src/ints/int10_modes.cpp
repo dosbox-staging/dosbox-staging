@@ -591,7 +591,7 @@ static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, uint16_t mo
 	while (modeblock[i].mode != 0xffff) {
 		if (modeblock[i].mode!=mode) i++;
 		else {
-			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
+			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
 				return true;
 			}
