@@ -85,9 +85,6 @@ public:
 		//set up pointers for delay line
 		delayLineEnd(delayLineStart + delayLineLength),
 
-		//set read pointer to end of delayline. Setting it to the end
-		//ensures the interpolation below works correctly to produce
-		//the first non-zero sample.
 		writePtr(delayLineStart),
 
 		delayLineOutput(0.0f),
@@ -108,6 +105,8 @@ public:
 			*writePtr= 0.0f;
 		}
 		while (++writePtr < delayLineEnd);
+
+		writePtr = delayLineStart;
 	}
 
     ~Chorus()
@@ -122,15 +121,21 @@ public:
 		// Get delay time
 		offset= (nextLFO()*0.3f+0.4f)*delayTime*sampleRate*0.001f;
 
-		//compute the largest read pointer based on the offset.  If ptr
-		//is before the first delayline location, wrap around end point
+		// Compute the largest read pointer based on the offset.  If ptr
+		// Is before the first delayline location, wrap around end point
 		ptr = writePtr-(int)floorf(offset);
 		if (ptr<delayLineStart)
 			ptr+= delayLineLength;
 
+		assert(ptr >= delayLineStart);
+		assert(ptr < delayLineEnd);
+
 		ptr2= ptr-1;
 		if (ptr2<delayLineStart)
 			ptr2+= delayLineLength;
+
+		assert(ptr2 >= delayLineStart);
+		assert(ptr2 < delayLineEnd);
 
 		frac= offset-(int)floorf(offset);
 		delayLineOutput= *ptr2+*ptr*(1-frac)-(1-frac)*z1;
@@ -139,13 +144,15 @@ public:
 		// Low pass
 		lp->tick(&delayLineOutput, 0.95f);
 
-		//write the input sample and any feedback to delayline
+		// Write the input sample and any feedback to delayline
+		assert(writePtr >= delayLineStart);
+		assert(writePtr < delayLineEnd);
 		*writePtr= *sample;
 
-		//increment buffer index and wrap if necesary
-		if (++writePtr>=delayLineEnd) {
-			writePtr= delayLineStart;
-		}
+		// Increment buffer index and wrap if necesary
+		if (++writePtr >= delayLineEnd)
+			writePtr = delayLineStart;
+
 		return delayLineOutput;
 	}
 
