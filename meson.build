@@ -478,7 +478,7 @@ if get_option('use_png')
         not_found_message: msg.format('use_png'),
     )
 endif
-summary('PNG support', mt32emu_dep.found())
+summary('PNG support', png_dep.found())
 
 # Tracy
 tracy_dep = optional_dep
