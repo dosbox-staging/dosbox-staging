@@ -16,9 +16,14 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
-// Based on information from:
-// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP862.TXT
+
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
+// Data taken from:
+// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT
 
 // License of the data can be found here:
 // - https://www.unicode.org/license.txt
@@ -73,38 +78,38 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
-// Hebrew
-static const CodePageImport cp_862 = {
-    { 0x80, 0x05d0 }, // HEBREW LETTER ALEF
-    { 0x81, 0x05d1 }, // HEBREW LETTER BET
-    { 0x82, 0x05d2 }, // HEBREW LETTER GIMEL
-    { 0x83, 0x05d3 }, // HEBREW LETTER DALET
-    { 0x84, 0x05d4 }, // HEBREW LETTER HE
-    { 0x85, 0x05d5 }, // HEBREW LETTER VAV
-    { 0x86, 0x05d6 }, // HEBREW LETTER ZAYIN
-    { 0x87, 0x05d7 }, // HEBREW LETTER HET
-    { 0x88, 0x05d8 }, // HEBREW LETTER TET
-    { 0x89, 0x05d9 }, // HEBREW LETTER YOD
-    { 0x8a, 0x05da }, // HEBREW LETTER FINAL KAF
-    { 0x8b, 0x05db }, // HEBREW LETTER KAF
-    { 0x8c, 0x05dc }, // HEBREW LETTER LAMED
-    { 0x8d, 0x05dd }, // HEBREW LETTER FINAL MEM
-    { 0x8e, 0x05de }, // HEBREW LETTER MEM
-    { 0x8f, 0x05df }, // HEBREW LETTER FINAL NUN
-    { 0x90, 0x05e0 }, // HEBREW LETTER NUN
-    { 0x91, 0x05e1 }, // HEBREW LETTER SAMEKH
-    { 0x92, 0x05e2 }, // HEBREW LETTER AYIN
-    { 0x93, 0x05e3 }, // HEBREW LETTER FINAL PE
-    { 0x94, 0x05e4 }, // HEBREW LETTER PE
-    { 0x95, 0x05e5 }, // HEBREW LETTER FINAL TSADI
-    { 0x96, 0x05e6 }, // HEBREW LETTER TSADI
-    { 0x97, 0x05e7 }, // HEBREW LETTER QOF
-    { 0x98, 0x05e8 }, // HEBREW LETTER RESH
-    { 0x99, 0x05e9 }, // HEBREW LETTER SHIN
-    { 0x9a, 0x05ea }, // HEBREW LETTER TAV
+// United States
+const CodePageImport cp_437 = {
+    { 0x80, 0x00c7 }, // LATIN CAPITAL LETTER C WITH CEDILLA
+    { 0x81, 0x00fc }, // LATIN SMALL LETTER U WITH DIAERESIS
+    { 0x82, 0x00e9 }, // LATIN SMALL LETTER E WITH ACUTE
+    { 0x83, 0x00e2 }, // LATIN SMALL LETTER A WITH CIRCUMFLEX
+    { 0x84, 0x00e4 }, // LATIN SMALL LETTER A WITH DIAERESIS
+    { 0x85, 0x00e0 }, // LATIN SMALL LETTER A WITH GRAVE
+    { 0x86, 0x00e5 }, // LATIN SMALL LETTER A WITH RING ABOVE
+    { 0x87, 0x00e7 }, // LATIN SMALL LETTER C WITH CEDILLA
+    { 0x88, 0x00ea }, // LATIN SMALL LETTER E WITH CIRCUMFLEX
+    { 0x89, 0x00eb }, // LATIN SMALL LETTER E WITH DIAERESIS
+    { 0x8a, 0x00e8 }, // LATIN SMALL LETTER E WITH GRAVE
+    { 0x8b, 0x00ef }, // LATIN SMALL LETTER I WITH DIAERESIS
+    { 0x8c, 0x00ee }, // LATIN SMALL LETTER I WITH CIRCUMFLEX
+    { 0x8d, 0x00ec }, // LATIN SMALL LETTER I WITH GRAVE
+    { 0x8e, 0x00c4 }, // LATIN CAPITAL LETTER A WITH DIAERESIS
+    { 0x8f, 0x00c5 }, // LATIN CAPITAL LETTER A WITH RING ABOVE
+    { 0x90, 0x00c9 }, // LATIN CAPITAL LETTER E WITH ACUTE
+    { 0x91, 0x00e6 }, // LATIN SMALL LIGATURE AE
+    { 0x92, 0x00c6 }, // LATIN CAPITAL LIGATURE AE
+    { 0x93, 0x00f4 }, // LATIN SMALL LETTER O WITH CIRCUMFLEX
+    { 0x94, 0x00f6 }, // LATIN SMALL LETTER O WITH DIAERESIS
+    { 0x95, 0x00f2 }, // LATIN SMALL LETTER O WITH GRAVE
+    { 0x96, 0x00fb }, // LATIN SMALL LETTER U WITH CIRCUMFLEX
+    { 0x97, 0x00f9 }, // LATIN SMALL LETTER U WITH GRAVE
+    { 0x98, 0x00ff }, // LATIN SMALL LETTER Y WITH DIAERESIS
+    { 0x99, 0x00d6 }, // LATIN CAPITAL LETTER O WITH DIAERESIS
+    { 0x9a, 0x00dc }, // LATIN CAPITAL LETTER U WITH DIAERESIS
     { 0x9b, 0x00a2 }, // CENT SIGN
     { 0x9c, 0x00a3 }, // POUND SIGN
     { 0x9d, 0x00a5 }, // YEN SIGN
@@ -175,7 +180,7 @@ static const CodePageImport cp_862 = {
     { 0xde, 0x2590 }, // RIGHT HALF BLOCK
     { 0xdf, 0x2580 }, // UPPER HALF BLOCK
     { 0xe0, 0x03b1 }, // GREEK SMALL LETTER ALPHA
-    { 0xe1, 0x00df }, // LATIN SMALL LETTER SHARP S (GERMAN)
+    { 0xe1, 0x00df }, // LATIN SMALL LETTER SHARP S
     { 0xe2, 0x0393 }, // GREEK CAPITAL LETTER GAMMA
     { 0xe3, 0x03c0 }, // GREEK SMALL LETTER PI
     { 0xe4, 0x03a3 }, // GREEK CAPITAL LETTER SIGMA

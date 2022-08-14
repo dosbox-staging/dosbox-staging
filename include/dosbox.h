@@ -36,9 +36,12 @@ extern bool shutdown_requested;
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
-void MSG_Add(const char*,const char*); //add messages to the internal languagefile
-const char* MSG_Get(char const *);     //get messages from the internal languagefile
-bool MSG_Exists(const char*);
+// add messages to the internal languagefile
+void MSG_Add(const char *, const char *);
+void MSG_Add(const char *, const char *, bool is_utf8);
+// get messages from the internal languagefile
+const char *MSG_Get(char const *);
+bool MSG_Exists(const char *);
 
 class Section;
 

@@ -412,6 +412,66 @@
     <ClCompile Include="..\src\misc\support.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\unicode.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_437.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_737.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_775.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_850.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_852.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_855.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_856.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_857.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_860.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_861.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_862.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_863.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_864.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_865.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_866.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_869.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_874.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_ascii.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\codepages-utf8/cp_main_definitions.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shell\shell.cpp">
       <Filter>src\shell</Filter>
     </ClCompile>
@@ -1084,6 +1144,9 @@
       <Filter>src\midi</Filter>
     </ClInclude>
     <ClInclude Include="..\src\midi\midi_handler.h">
+      <Filter>src\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\codepages-utf8\cp.h">
       <Filter>src\midi</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compiler.h">

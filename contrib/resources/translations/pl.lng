@@ -1284,10 +1284,10 @@ Skadnia:
 
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  ukad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska - zalecana; podobna do 852, ale
-              zachowuje wiฉcej znakขw graficznych), [color=white]667[reset] (Polska - MAZOVIA),
-              [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia, z symbolem euro),
-              [color=white]852[reset] (Europa —rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wiฉcej
+              znakขw graficznych, niพ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (jฉzyk
+              kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
+              z symbolem euro), [color=white]852[reset] (Europa —rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1935,7 +1935,7 @@ Polecenia SUBST moพna uพy jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_END
- [33mhttps://dosbox-staging.github.io[37m                                   บ
+บ [33mhttps://dosbox-staging.github.io[37m                                   บ
 ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 

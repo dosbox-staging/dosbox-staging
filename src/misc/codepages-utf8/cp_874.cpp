@@ -17,6 +17,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
 // Based on information from:
 // - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP874.TXT
 
@@ -73,11 +78,11 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
 // Thai
-static const CodePageImport cp_874 = {
+const CodePageImport cp_874 = {
     { 0x80, 0x20AC }, // EURO SIGN
 //  { 0x81, 0x???? }, // UNDEFINED
 //  { 0x82, 0x???? }, // UNDEFINED

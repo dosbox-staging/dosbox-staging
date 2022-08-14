@@ -21,39 +21,60 @@
 
 #include "dosbox.h"
 
+#include <clocale>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <clocale>
+#include <map>
 
 #include "std_filesystem.h"
 #include <string>
 #include <unordered_map>
 
+#include "ansi_code_markup.h"
+#include "checks.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
-#include "string_utils.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
-#include "ansi_code_markup.h"
 
 #define LINE_IN_MAXLEN 2048
+
+CHECK_NARROWING();
 
 class Message {
 private:
 	std::string markup_msg = {};
 	std::string rendered_msg = {};
 
+	std::map<uint16_t, std::string> markup_cp_msg   = {};
+	std::map<uint16_t, std::string> rendered_cp_msg = {};
+
+	bool is_utf8_msg = false;
+
 public:
 	Message() = delete;
-	Message(const char *markup) { Set(markup); }
+	Message(const char *markup, const bool is_utf8)
+	{
+		Set(markup, is_utf8);
+	}
 
 	const char *GetMarkup()
 	{
 		assert(markup_msg.length());
-		return markup_msg.c_str();
+
+		if (!is_utf8_msg)
+			return markup_msg.c_str();
+
+		const uint16_t cp = UTF8_GetCodePage();
+		if (markup_cp_msg[cp].empty()) {
+			UTF8_RenderForDos(markup_msg, markup_cp_msg[cp], cp);
+			assert(markup_cp_msg[cp].length());
+		}
+		return markup_cp_msg[cp].c_str();
 	}
 
 	const char *GetRendered()
@@ -62,14 +83,27 @@ public:
 		if (rendered_msg.empty())
 			rendered_msg = convert_ansi_markup(markup_msg.c_str());
 		assert(rendered_msg.length());
-		return rendered_msg.c_str();
+
+		if (!is_utf8_msg)
+			return rendered_msg.c_str();
+
+		const uint16_t cp = UTF8_GetCodePage();
+		if (rendered_cp_msg[cp].empty()) {
+			UTF8_RenderForDos(rendered_msg, rendered_cp_msg[cp], cp);
+			assert(rendered_cp_msg[cp].length());
+		}
+		return rendered_cp_msg[cp].c_str();
 	}
 
-	void Set(const char *markup)
+	void Set(const char *markup, const bool is_utf8)
 	{
 		assert(markup);
-		markup_msg = markup;
+		markup_msg  = markup;
+		is_utf8_msg = is_utf8;
+
 		rendered_msg.clear();
+		markup_cp_msg.clear();
+		rendered_cp_msg.clear();
 	}
 };
 
@@ -77,32 +111,58 @@ static std::unordered_map<std::string, Message> messages;
 static std::deque<std::string> messages_order;
 
 // Add the message if it doesn't exist yet
-void MSG_Add(const char *name, const char *markup_msg)
+void MSG_Add(const char *name, const char *markup_msg, bool is_utf8)
 {
-	const auto &pair = messages.try_emplace(name, markup_msg);
+	const auto &pair = messages.try_emplace(name, markup_msg, is_utf8);
 	if (pair.second) // if the insertion was successful
 		messages_order.emplace_back(name);
 }
 
+void MSG_Add(const char *name, const char *markup_msg)
+{
+	MSG_Add(name, markup_msg, false);
+}
+
 // Replace existing or add if it doesn't exist
-void MSG_Replace(const char *name, const char *markup_msg)
+void MSG_Replace(const char *name, const char *markup_msg, bool is_utf8)
 {
 	auto it = messages.find(name);
 	if (it == messages.end())
-		MSG_Add(name, markup_msg);
+		MSG_Add(name, markup_msg, is_utf8);
 	else
-		it->second.Set(markup_msg);
+		it->second.Set(markup_msg, is_utf8);
 }
 
-static bool LoadMessageFile(const std_fs::path &filename)
+static bool load_message_file(const std_fs::path &filename_plain,
+                              const std_fs::path &filename_utf8)
 {
-	if (filename.empty())
+	if (filename_plain.empty() && filename_utf8.empty())
 		return false;
 
-	const auto filename_str = filename.string();
+	auto check_file = [](const std_fs::path &filename) {
+		if (filename.empty())
+			return false;
+		return (std_fs::status(filename).type() !=
+		        std_fs::file_type::not_found);
+	};
 
-	// Was the file not found?
-	if (std_fs::status(filename).type() == std_fs::file_type::not_found) {
+	bool is_utf8 = false;
+
+	std::string filename_str;
+	if (check_file(filename_utf8)) {
+		filename_str = filename_utf8.string();
+		is_utf8      = true;
+	} else if (check_file(filename_plain))
+		filename_str = filename_plain.string();
+	else {
+		if (filename_utf8.empty())
+			filename_str = filename_plain.string();
+		else if (filename_plain.empty())
+			filename_str = filename_utf8.string();
+		else
+			filename_str = filename_plain.string() + " / " +
+			               filename_utf8.string();
+
 		LOG_MSG("LANG: Language file %s not found, skipping",
 		        filename_str.c_str());
 		return false;
@@ -145,7 +205,7 @@ static bool LoadMessageFile(const std_fs::path &filename)
 			// This second if should not be needed, but better be safe.
 			if (ll && message[ll - 1] == '\n')
 				message[ll - 1] = 0;
-			MSG_Replace(name, message);
+			MSG_Replace(name, message, is_utf8);
 		} else {
 			/* Normal message to be added */
 			safe_strcat(message, linein);
@@ -192,7 +252,7 @@ bool MSG_Write(const char * location) {
 
 // 2. It also supports the more convenient syntax without needing to provide a
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
-//    platform's config path/translations/<lang>.lng.
+//    platform's config path/translations/<lang>[-utf8].lng.
 
 void MSG_Init([[maybe_unused]] Section_prop *section)
 {
@@ -204,10 +264,20 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 		return;
 	}
 
-	// If a short-hand name was provided then add the file extension
-	const auto lng_file = lang + (ends_with(lang, ".lng") ? "" : ".lng");
+	bool result = false;
+	if (ends_with(lang, "-utf8.lng"))
+		result = load_message_file("", GetResourcePath("translations", lang));
+	else if (ends_with(lang, ".lng"))
+		result = load_message_file(GetResourcePath("translations", lang), "");
+	else {
+		// If a short-hand name was provided then add the file extension
+		result = load_message_file(GetResourcePath("translations",
+		                                           lang + ".lng"),
+		                           GetResourcePath("translations",
+		                                           lang + "-utf8.lng"));
+	}
 
-	if (LoadMessageFile(GetResourcePath("translations", lng_file)))
+	if (result)
 		return;
 
 	// If we got here, then the language was not found

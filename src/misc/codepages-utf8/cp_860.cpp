@@ -16,9 +16,14 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
-// Data taken from:
-// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT
+
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
+// Based on information from:
+// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP860.TXT
 
 // License of the data can be found here:
 // - https://www.unicode.org/license.txt
@@ -73,43 +78,43 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
-// United States
-static const CodePageImport cp_437 = {
+// Portuguese
+const CodePageImport cp_860 = {
     { 0x80, 0x00c7 }, // LATIN CAPITAL LETTER C WITH CEDILLA
     { 0x81, 0x00fc }, // LATIN SMALL LETTER U WITH DIAERESIS
     { 0x82, 0x00e9 }, // LATIN SMALL LETTER E WITH ACUTE
     { 0x83, 0x00e2 }, // LATIN SMALL LETTER A WITH CIRCUMFLEX
-    { 0x84, 0x00e4 }, // LATIN SMALL LETTER A WITH DIAERESIS
+    { 0x84, 0x00e3 }, // LATIN SMALL LETTER A WITH TILDE
     { 0x85, 0x00e0 }, // LATIN SMALL LETTER A WITH GRAVE
-    { 0x86, 0x00e5 }, // LATIN SMALL LETTER A WITH RING ABOVE
+    { 0x86, 0x00c1 }, // LATIN CAPITAL LETTER A WITH ACUTE
     { 0x87, 0x00e7 }, // LATIN SMALL LETTER C WITH CEDILLA
     { 0x88, 0x00ea }, // LATIN SMALL LETTER E WITH CIRCUMFLEX
-    { 0x89, 0x00eb }, // LATIN SMALL LETTER E WITH DIAERESIS
+    { 0x89, 0x00ca }, // LATIN CAPITAL LETTER E WITH CIRCUMFLEX
     { 0x8a, 0x00e8 }, // LATIN SMALL LETTER E WITH GRAVE
-    { 0x8b, 0x00ef }, // LATIN SMALL LETTER I WITH DIAERESIS
-    { 0x8c, 0x00ee }, // LATIN SMALL LETTER I WITH CIRCUMFLEX
+    { 0x8b, 0x00cd }, // LATIN CAPITAL LETTER I WITH ACUTE
+    { 0x8c, 0x00d4 }, // LATIN CAPITAL LETTER O WITH CIRCUMFLEX
     { 0x8d, 0x00ec }, // LATIN SMALL LETTER I WITH GRAVE
-    { 0x8e, 0x00c4 }, // LATIN CAPITAL LETTER A WITH DIAERESIS
-    { 0x8f, 0x00c5 }, // LATIN CAPITAL LETTER A WITH RING ABOVE
+    { 0x8e, 0x00c3 }, // LATIN CAPITAL LETTER A WITH TILDE
+    { 0x8f, 0x00c2 }, // LATIN CAPITAL LETTER A WITH CIRCUMFLEX
     { 0x90, 0x00c9 }, // LATIN CAPITAL LETTER E WITH ACUTE
-    { 0x91, 0x00e6 }, // LATIN SMALL LIGATURE AE
-    { 0x92, 0x00c6 }, // LATIN CAPITAL LIGATURE AE
+    { 0x91, 0x00c0 }, // LATIN CAPITAL LETTER A WITH GRAVE
+    { 0x92, 0x00c8 }, // LATIN CAPITAL LETTER E WITH GRAVE
     { 0x93, 0x00f4 }, // LATIN SMALL LETTER O WITH CIRCUMFLEX
-    { 0x94, 0x00f6 }, // LATIN SMALL LETTER O WITH DIAERESIS
+    { 0x94, 0x00f5 }, // LATIN SMALL LETTER O WITH TILDE
     { 0x95, 0x00f2 }, // LATIN SMALL LETTER O WITH GRAVE
-    { 0x96, 0x00fb }, // LATIN SMALL LETTER U WITH CIRCUMFLEX
+    { 0x96, 0x00da }, // LATIN CAPITAL LETTER U WITH ACUTE
     { 0x97, 0x00f9 }, // LATIN SMALL LETTER U WITH GRAVE
-    { 0x98, 0x00ff }, // LATIN SMALL LETTER Y WITH DIAERESIS
-    { 0x99, 0x00d6 }, // LATIN CAPITAL LETTER O WITH DIAERESIS
+    { 0x98, 0x00cc }, // LATIN CAPITAL LETTER I WITH GRAVE
+    { 0x99, 0x00d5 }, // LATIN CAPITAL LETTER O WITH TILDE
     { 0x9a, 0x00dc }, // LATIN CAPITAL LETTER U WITH DIAERESIS
     { 0x9b, 0x00a2 }, // CENT SIGN
     { 0x9c, 0x00a3 }, // POUND SIGN
-    { 0x9d, 0x00a5 }, // YEN SIGN
+    { 0x9d, 0x00d9 }, // LATIN CAPITAL LETTER U WITH GRAVE
     { 0x9e, 0x20a7 }, // PESETA SIGN
-    { 0x9f, 0x0192 }, // LATIN SMALL LETTER F WITH HOOK
+    { 0x9f, 0x00d3 }, // LATIN CAPITAL LETTER O WITH ACUTE
     { 0xa0, 0x00e1 }, // LATIN SMALL LETTER A WITH ACUTE
     { 0xa1, 0x00ed }, // LATIN SMALL LETTER I WITH ACUTE
     { 0xa2, 0x00f3 }, // LATIN SMALL LETTER O WITH ACUTE
@@ -119,7 +124,7 @@ static const CodePageImport cp_437 = {
     { 0xa6, 0x00aa }, // FEMININE ORDINAL INDICATOR
     { 0xa7, 0x00ba }, // MASCULINE ORDINAL INDICATOR
     { 0xa8, 0x00bf }, // INVERTED QUESTION MARK
-    { 0xa9, 0x2310 }, // REVERSED NOT SIGN
+    { 0xa9, 0x00d2 }, // LATIN CAPITAL LETTER O WITH GRAVE
     { 0xaa, 0x00ac }, // NOT SIGN
     { 0xab, 0x00bd }, // VULGAR FRACTION ONE HALF
     { 0xac, 0x00bc }, // VULGAR FRACTION ONE QUARTER

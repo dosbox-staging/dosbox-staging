@@ -62,4 +62,12 @@ tconv_t CP437 "utf-8/pl.txt" pl.cp437
 # keyb ru 808 - CP808 is CP866 with euro sign; iconv does not know 808 (?)
 tconv_l CP866 "utf-8/ru.txt" ru
 
+# UTF-8 locale
+cp "utf-8/en.txt" "en-utf8.lng"
+cp "utf-8/de.txt" "de-utf8.lng"
+cp "utf-8/es.txt" "es-utf8.lng"
+cp "utf-8/fr.txt" "fr-utf8.lng"
+cp "utf-8/it.txt" "it-utf8.lng"
+cp "utf-8/pl.txt" "pl-utf8.lng"
+
 popd > /dev/null || exit

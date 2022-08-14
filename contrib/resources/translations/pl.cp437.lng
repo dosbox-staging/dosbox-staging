@@ -1284,10 +1284,10 @@ Skladnia:
 
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  uklad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska - zalecana; podobna do 852, ale
-              zachowuje wiecej znakขw graficznych), [color=white]667[reset] (Polska - MAZOVIA),
-              [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia, z symbolem euro),
-              [color=white]852[reset] (Europa Srodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wiecej
+              znakขw graficznych, niz 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (jezyk
+              kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
+              z symbolem euro), [color=white]852[reset] (Europa Srodkowo-Wschodnia), lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1921,11 +1921,13 @@ Polecenia SUBST mozna uzyc jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_CGA_MONO
 บ Wcisnij [31mF11[37m kolor mono: jasny bialy, bialy, pomaranczowy, zielony. บ
+
 บ i [31m%s+F11[37m aby zmienic kontrast/jasnosc.                            บ
 
 .
 :SHELL_STARTUP_HERC
-บ Wcisnij [31mF11[37m aby zmienic kolor ekaranu mono: jasny bialy, bialy, pomaranczowy, zielony. บ
+บ Wcisnij [31mF11[37m aby zmienic kolor ekaranu mono: jasny bialy, bialy,    บ
+บ pomaranczowy, zielony.                                             บ
 บ                                                                    บ
 
 .
@@ -1935,7 +1937,7 @@ Polecenia SUBST mozna uzyc jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_END
- [33mhttps://dosbox-staging.github.io[37m                                   บ
+บ [33mhttps://dosbox-staging.github.io[37m                                   บ
 ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 

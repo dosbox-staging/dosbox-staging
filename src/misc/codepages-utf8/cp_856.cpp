@@ -16,7 +16,12 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
+
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
 // Based on information from:
 // - https://unicode.org/Public/MAPPINGS/VENDORS/MISC/CP856.TXT
 
@@ -38,11 +43,11 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
 // Hebrew-2
-static const CodePageImport cp_856 = {
+const CodePageImport cp_856 = {
     { 0x80, 0x05D0 }, // HEBREW LETTER ALEF
     { 0x81, 0x05D1 }, // HEBREW LETTER BET
     { 0x82, 0x05D2 }, // HEBREW LETTER GIMEL

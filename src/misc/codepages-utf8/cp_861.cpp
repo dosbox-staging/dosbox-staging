@@ -16,9 +16,14 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
+
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
 // Based on information from:
-// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP865.TXT
+// - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP861.TXT
 
 // License of the data can be found here:
 // - https://www.unicode.org/license.txt
@@ -73,11 +78,11 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
-// Nordic
-static const CodePageImport cp_865 = {
+// Icelandic
+const CodePageImport cp_861 = {
     { 0x80, 0x00c7 }, // LATIN CAPITAL LETTER C WITH CEDILLA
     { 0x81, 0x00fc }, // LATIN SMALL LETTER U WITH DIAERESIS
     { 0x82, 0x00e9 }, // LATIN SMALL LETTER E WITH ACUTE
@@ -89,9 +94,9 @@ static const CodePageImport cp_865 = {
     { 0x88, 0x00ea }, // LATIN SMALL LETTER E WITH CIRCUMFLEX
     { 0x89, 0x00eb }, // LATIN SMALL LETTER E WITH DIAERESIS
     { 0x8a, 0x00e8 }, // LATIN SMALL LETTER E WITH GRAVE
-    { 0x8b, 0x00ef }, // LATIN SMALL LETTER I WITH DIAERESIS
-    { 0x8c, 0x00ee }, // LATIN SMALL LETTER I WITH CIRCUMFLEX
-    { 0x8d, 0x00ec }, // LATIN SMALL LETTER I WITH GRAVE
+    { 0x8b, 0x00d0 }, // LATIN CAPITAL LETTER ETH
+    { 0x8c, 0x00f0 }, // LATIN SMALL LETTER ETH
+    { 0x8d, 0x00de }, // LATIN CAPITAL LETTER THORN
     { 0x8e, 0x00c4 }, // LATIN CAPITAL LETTER A WITH DIAERESIS
     { 0x8f, 0x00c5 }, // LATIN CAPITAL LETTER A WITH RING ABOVE
     { 0x90, 0x00c9 }, // LATIN CAPITAL LETTER E WITH ACUTE
@@ -99,10 +104,10 @@ static const CodePageImport cp_865 = {
     { 0x92, 0x00c6 }, // LATIN CAPITAL LIGATURE AE
     { 0x93, 0x00f4 }, // LATIN SMALL LETTER O WITH CIRCUMFLEX
     { 0x94, 0x00f6 }, // LATIN SMALL LETTER O WITH DIAERESIS
-    { 0x95, 0x00f2 }, // LATIN SMALL LETTER O WITH GRAVE
+    { 0x95, 0x00fe }, // LATIN SMALL LETTER THORN
     { 0x96, 0x00fb }, // LATIN SMALL LETTER U WITH CIRCUMFLEX
-    { 0x97, 0x00f9 }, // LATIN SMALL LETTER U WITH GRAVE
-    { 0x98, 0x00ff }, // LATIN SMALL LETTER Y WITH DIAERESIS
+    { 0x97, 0x00dd }, // LATIN CAPITAL LETTER Y WITH ACUTE
+    { 0x98, 0x00fd }, // LATIN SMALL LETTER Y WITH ACUTE
     { 0x99, 0x00d6 }, // LATIN CAPITAL LETTER O WITH DIAERESIS
     { 0x9a, 0x00dc }, // LATIN CAPITAL LETTER U WITH DIAERESIS
     { 0x9b, 0x00f8 }, // LATIN SMALL LETTER O WITH STROKE
@@ -114,10 +119,10 @@ static const CodePageImport cp_865 = {
     { 0xa1, 0x00ed }, // LATIN SMALL LETTER I WITH ACUTE
     { 0xa2, 0x00f3 }, // LATIN SMALL LETTER O WITH ACUTE
     { 0xa3, 0x00fa }, // LATIN SMALL LETTER U WITH ACUTE
-    { 0xa4, 0x00f1 }, // LATIN SMALL LETTER N WITH TILDE
-    { 0xa5, 0x00d1 }, // LATIN CAPITAL LETTER N WITH TILDE
-    { 0xa6, 0x00aa }, // FEMININE ORDINAL INDICATOR
-    { 0xa7, 0x00ba }, // MASCULINE ORDINAL INDICATOR
+    { 0xa4, 0x00c1 }, // LATIN CAPITAL LETTER A WITH ACUTE
+    { 0xa5, 0x00cd }, // LATIN CAPITAL LETTER I WITH ACUTE
+    { 0xa6, 0x00d3 }, // LATIN CAPITAL LETTER O WITH ACUTE
+    { 0xa7, 0x00da }, // LATIN CAPITAL LETTER U WITH ACUTE
     { 0xa8, 0x00bf }, // INVERTED QUESTION MARK
     { 0xa9, 0x2310 }, // REVERSED NOT SIGN
     { 0xaa, 0x00ac }, // NOT SIGN
@@ -125,7 +130,7 @@ static const CodePageImport cp_865 = {
     { 0xac, 0x00bc }, // VULGAR FRACTION ONE QUARTER
     { 0xad, 0x00a1 }, // INVERTED EXCLAMATION MARK
     { 0xae, 0x00ab }, // LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
-    { 0xaf, 0x00a4 }, // CURRENCY SIGN
+    { 0xaf, 0x00bb }, // RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
     { 0xb0, 0x2591 }, // LIGHT SHADE
     { 0xb1, 0x2592 }, // MEDIUM SHADE
     { 0xb2, 0x2593 }, // DARK SHADE

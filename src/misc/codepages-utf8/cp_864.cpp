@@ -16,7 +16,12 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
- 
+
+#include "cp.h"
+#include "checks.h"
+
+CHECK_NARROWING();
+
 // Based on information from:
 // - https://unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP864.TXT
 
@@ -73,11 +78,11 @@
 
 
 // When adding/updating code page, make sure all the UTF-8 codes
-// are also added to table in 'cp_ascii.h'!
+// are also added to table in 'cp_ascii.cpp'!
 
 
 // Arabic
-static const CodePageImport cp_864 = {
+const CodePageImport cp_864 = {
     { 0x60, 0x0060 }, // GRAVE ACCENT
     { 0x61, 0x0061 }, // LATIN SMALL LETTER A
     { 0x62, 0x0062 }, // LATIN SMALL LETTER B
