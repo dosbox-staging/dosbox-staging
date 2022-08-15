@@ -1106,11 +1106,23 @@ static void NewMouseScreenParams()
 	abs_x = std::clamp(abs_x, 0, static_cast<int>(UINT16_MAX));
 	abs_y = std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
 
+#ifdef __APPLE__
+	// macOS moves mouse cursor on "client points" grid, not physical pixels;
+	// it's unknown how Windows behaves with modern DPI scaling modes
+	MOUSE_NewScreenParams(sdl.clip.x / sdl.desktop.dpi_scale,
+	                      sdl.clip.y / sdl.desktop.dpi_scale,
+	                      sdl.clip.w / sdl.desktop.dpi_scale,
+	                      sdl.clip.h / sdl.desktop.dpi_scale,
+	                      sdl.desktop.fullscreen,
+	                      check_cast<uint16_t>(abs_x),
+	                      check_cast<uint16_t>(abs_y));
+#else
 	MOUSE_NewScreenParams(sdl.clip.x, sdl.clip.y,
 	                      sdl.clip.w, sdl.clip.h,
 	                      sdl.desktop.fullscreen,
 	                      check_cast<uint16_t>(abs_x),
 	                      check_cast<uint16_t>(abs_y));
+#endif
 }
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
