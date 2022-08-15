@@ -39,8 +39,7 @@
 #include "../ints/int10.h"
 #include "string_utils.h"
 
-
-static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
+static constexpr int FRAMES_PER_BUFFER = 48; // synth granularity
 
 MidiHandlerFluidsynth instance;
 
