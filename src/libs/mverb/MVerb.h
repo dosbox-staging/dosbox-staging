@@ -40,6 +40,7 @@ private:
     StaticDelayLineFourTap<T, 96000> staticDelayLine[4] = {};
     StaticDelayLineEightTap<T, 96000> earlyReflectionsDelayLine[2] = {};
     T SampleRate = {};
+    T MaxFreq = {};
     T DampingFreq = {};
     T Density1 = {};
     T Density2 = {};
@@ -85,6 +86,7 @@ public:
         DampingFreq = 0.9f;
         BandwidthFreq = 0.9f;
         SampleRate = 44100.0f;
+        MaxFreq = 18400.0f;
         Decay = 0.5f;
         Gain = 1.0f;
         Mix = 1.0f;
@@ -107,8 +109,13 @@ public:
         T OneOverSampleFrames = static_cast<T>(1. / sampleFrames);
         T MixDelta	= (Mix - MixSmooth) * OneOverSampleFrames;
         T EarlyLateDelta = (EarlyMix - EarlyLateSmooth) * OneOverSampleFrames;
-        T BandwidthDelta = static_cast<T>((((BandwidthFreq * 18400.) + 100.) - BandwidthSmooth) * OneOverSampleFrames);
-        T DampingDelta = static_cast<T>((((DampingFreq * 18400.) + 100.) - DampingSmooth) * OneOverSampleFrames);
+
+        T BandwidthDelta = static_cast<T>((((BandwidthFreq * MaxFreq) + 100.0f) - BandwidthSmooth) *
+                       OneOverSampleFrames);
+
+        T DampingDelta = static_cast<T>((((DampingFreq * MaxFreq) + 100.0f) - DampingSmooth) *
+                       OneOverSampleFrames);
+
         T PredelayDelta = static_cast<T>(((PreDelayTime * 200 * (SampleRate / 1000)) - PredelaySmooth) * OneOverSampleFrames);
         T SizeDelta	= static_cast<T>((Size - SizeSmooth) * OneOverSampleFrames);
         T DecayDelta = static_cast<T>((((0.7995f * Decay) + 0.005) - DecaySmooth) * OneOverSampleFrames);
@@ -351,6 +358,7 @@ public:
     void setSampleRate(T sr){
         SampleRate = sr;
         ControlRate = static_cast<int>(SampleRate / 1000);
+        MaxFreq = std::min(SampleRate * 0.41723f, 18400.0f);
         reset();
     }
 };
