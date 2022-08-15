@@ -49,8 +49,7 @@
 // Synth granularity in frames. We keep four buffers in-flight at any given
 // time: when playback exhausts the "head" buffer, we ask MT-32 to render the
 // next buffer, asynchronously, which is then placed at the back of the queue.
-// These four buffers mean we typically have 2048 frames or ~48 ms in backlog.
-static constexpr int FRAMES_PER_BUFFER = 512;
+static constexpr int FRAMES_PER_BUFFER = 48;
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;

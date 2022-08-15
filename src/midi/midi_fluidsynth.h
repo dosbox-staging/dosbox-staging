@@ -63,7 +63,7 @@ private:
 	std::string selected_font = "";
 
 	std::vector<float> play_buffer = {};
-	static constexpr auto num_buffers = 8;
+	static constexpr auto num_buffers = 20;
 	RWQueue<std::vector<float>> playable{num_buffers};
 	RWQueue<std::vector<float>> backstock{num_buffers};
 
