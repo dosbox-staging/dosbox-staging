@@ -591,6 +591,7 @@ void DOSBOX_Init() {
 	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
 	        "  colodore:      Commodore 64 inspired colors based on the Colodore palette.\n"
 	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
+	        "  dga16:         A modern take on the canonical CGA palette with dialed back contrast.\n"
 			"You can also set custom colors by specifying 16 space or comma separated color values,\n"
 			"either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal\n"
 			"RGB triplets (e.g. (255, 0, 255) for magenta).");
