@@ -251,7 +251,7 @@ jobs:
       - name: Setup release build
         run: >-
           arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
-          ${{ matrix.conf.build_flags }}
+          ${{ matrix.runner.build_flags }}
           -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net
           build
 
