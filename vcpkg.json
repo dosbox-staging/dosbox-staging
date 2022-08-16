@@ -13,6 +13,7 @@
         "sdl2",
         "sdl2-net",
         "speexdsp",
-        "tracy"
+        "tracy",
+        "zlib"
     ]
 }
