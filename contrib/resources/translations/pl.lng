@@ -1284,10 +1284,10 @@ Skˆadnia:
 
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  ukˆad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska - zalecana; podobna do 852, ale
-              zachowuje wi©cej znak¢w graficznych), [color=white]667[reset] (Polska - MAZOVIA),
-              [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia, z symbolem euro),
-              [color=white]852[reset] (Europa —rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wi©cej
+              znak¢w graficznych, ni¾ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (j©zyk
+              kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
+              z symbolem euro), [color=white]852[reset] (Europa —rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1921,11 +1921,13 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_CGA_MONO
 º Wci˜nij [31mF11[37m kolor mono: jasny biaˆy, biaˆy, pomaraäczowy, zielony. º
+
 º i [31m%s+F11[37m aby zmieni† kontrast/jasno˜†.                            º
 
 .
 :SHELL_STARTUP_HERC
-º Wci˜nij [31mF11[37m aby zmieni† kolor ekaranu mono: jasny biaˆy, biaˆy, pomaraäczowy, zielony. º
+º Wci˜nij [31mF11[37m aby zmieni† kolor ekaranu mono: jasny biaˆy, biaˆy,    º
+º pomaraäczowy, zielony.                                             º
 º                                                                    º
 
 .
@@ -1935,7 +1937,7 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_END
- [33mhttps://dosbox-staging.github.io[37m                                   º
+º [33mhttps://dosbox-staging.github.io[37m                                   º
 ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 

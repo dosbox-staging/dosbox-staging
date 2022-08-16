@@ -1284,10 +1284,10 @@ Składnia:
 
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  układ klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska - zalecana; podobna do 852, ale
-              zachowuje więcej znaków graficznych), [color=white]667[reset] (Polska - MAZOVIA),
-              [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia, z symbolem euro),
-              [color=white]852[reset] (Europa Środkowo-Wschodnia), lub [color=white]437[reset] (USA).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje więcej
+              znaków graficznych, niż 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (język
+              kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
+              z symbolem euro), [color=white]852[reset] (Europa Środkowo-Wschodnia), lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1921,11 +1921,13 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_CGA_MONO
 ║ Wciśnij [31mF11[37m kolor mono: jasny biały, biały, pomarańczowy, zielony. ║
+
 ║ i [31m%s+F11[37m aby zmienić kontrast/jasność.                            ║
 
 .
 :SHELL_STARTUP_HERC
-║ Wciśnij [31mF11[37m aby zmienić kolor ekaranu mono: jasny biały, biały, pomarańczowy, zielony. ║
+║ Wciśnij [31mF11[37m aby zmienić kolor ekaranu mono: jasny biały, biały,    ║
+║ pomarańczowy, zielony.                                             ║
 ║                                                                    ║
 
 .
@@ -1935,7 +1937,7 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_END
- [33mhttps://dosbox-staging.github.io[37m                                   ║
+║ [33mhttps://dosbox-staging.github.io[37m                                   ║
 ╚════════════════════════════════════════════════════════════════════╝[0m
 
 
