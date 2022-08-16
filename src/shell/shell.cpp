@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <memory>
+#include <list>
 
 #include "callback.h"
 #include "control.h"
@@ -560,15 +561,17 @@ extern int64_t ticks_at_program_launch;
 
 class AUTOEXEC final : public Module_base {
 private:
-	AutoexecObject autoexec[17];
-	AutoexecObject autoexec_echo;
+	std::list<AutoexecObject> autoexec_lines = {};
 	void ProcessConfigFileAutoexec(const Section_line &section,
 	                               const std::string &source_name);
 
+	void InstallLine(const std::string &line)
+	{
+		autoexec_lines.emplace_back().Install(line);
+	}
+
 public:
-	AUTOEXEC(Section* configuration)
-		: Module_base(configuration),
-		  autoexec_echo()
+	AUTOEXEC(Section *configuration) : Module_base(configuration)
 	{
 		const auto cmdline = control->cmdline; // short-lived copy
 
@@ -591,11 +594,10 @@ public:
 
 		/* Check to see for extra command line options to be added
 		 * (before the command specified on commandline) */
-		/* Maximum of extra commands: 10 */
-		uint8_t i = 1;
-		std::string line;
+		std::string line = {};
+
 		bool exit_call_exists = false;
-		while (cmdline->FindString("-c", line, true) && (i <= 11)) {
+		while (cmdline->FindString("-c", line, true)) {
 #if defined(WIN32)
 			// replace single with double quotes so that mount
 			// commands can contain spaces
@@ -611,7 +613,7 @@ public:
 				exit_call_exists = true;
 				continue;
 			}
-			autoexec[i++].Install(line);
+			InstallLine(line);
 		}
 
 		// Check for the -exit switch, which indicates they want to quit
@@ -651,10 +653,10 @@ public:
 					continue;
 			}
 			if (test.st_mode & S_IFDIR) {
-				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
-				autoexec[13].Install("C:");
+				InstallLine(std::string("MOUNT C \"") + buffer + "\"");
+				InstallLine("C:");
 				if (secure)
-					autoexec[14].Install("z:\\config.com -securemode");
+					InstallLine("z:\\config.com -securemode");
 			} else {
 				char *name = strrchr(buffer, CROSS_FILESPLIT);
 				if (!name) { // Only a filename
@@ -674,8 +676,8 @@ public:
 				*name++ = 0;
 				if (!path_exists(buffer))
 					continue;
-				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
-				autoexec[13].Install("C:");
+				InstallLine(std::string("MOUNT C \"") + buffer + "\"");
+				InstallLine("C:");
 				/* Save the non-modified filename (so boot and
 				 * imgmount can use it (long filenames, case
 				 * sensivitive)) */
@@ -683,25 +685,26 @@ public:
 				upcase(name);
 				if (strstr(name, ".BAT") != 0) {
 					if (secure)
-						autoexec[14].Install("z:\\config.com -securemode");
+						InstallLine("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */
-					autoexec[15].Install(std::string("CALL ") + name);
+					InstallLine(std::string("CALL ") + name);
 				} else if ((strstr(name, ".IMG") != 0) || (strstr(name, ".IMA") != 0)) {
 					// No secure mode here as boot is destructive and enabling securemode disables boot
 					/* Boot image files */
-					autoexec[15].Install(std::string("BOOT ") + orig);
+					InstallLine(std::string("BOOT ") + orig);
 				} else if ((strstr(name, ".ISO") != 0) || (strstr(name, ".CUE") != 0)) {
 					/* imgmount CD image files */
 					/* securemode gets a different number from the previous branches! */
-					autoexec[14].Install(std::string("IMGMOUNT D \"") + orig + std::string("\" -t iso"));
+					InstallLine(std::string("IMGMOUNT D \"") +
+					            orig + std::string("\" -t iso"));
 					// autoexec[16].Install("D:");
 					if (secure)
-						autoexec[15].Install("z:\\config.com -securemode");
+						InstallLine("z:\\config.com -securemode");
 					/* Makes no sense to exit here */
 				} else {
 					if (secure)
-						autoexec[14].Install("z:\\config.com -securemode");
-					autoexec[15].Install(name);
+						InstallLine("z:\\config.com -securemode");
+					InstallLine(name);
 				}
 			}
 			found_dir_or_command = true;
@@ -720,13 +723,13 @@ public:
 			}
 		} else if (secure && !found_dir_or_command) {
 			// If we're in secure mode without command line executabls, then seal off the configuration
-			autoexec[12].Install("z:\\config.com -securemode");
+			InstallLine("z:\\config.com -securemode");
 		}
 
 		// The last slot is always reserved for the exit call,
 		// regardless if we're in secure-mode or not.
 		if (addexit)
-			autoexec[16].Install("exit");
+			InstallLine("exit");
 
 		// Print the entire autoexec content, if needed:
 		// for (const auto &autoexec_line : autoexec)
@@ -759,7 +762,7 @@ void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
 
 	/* if "echo off" move it to the front of autoexec.bat */
 	if (echo_off) {
-		autoexec_echo.InstallBefore("@echo off");
+		autoexec_lines.emplace_back().InstallBefore("@echo off");
 		if (*extra == '\r')
 			extra++; // It can point to \0
 		if (*extra == '\n')
@@ -769,7 +772,7 @@ void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
 	/* Install the stuff from the configfile if anything
 	 * left after moving echo off */
 	if (*extra) {
-		autoexec[0].Install(std::string(extra));
+		InstallLine(extra);
 		LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
 	}
 }
