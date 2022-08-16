@@ -3820,11 +3820,17 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been hidden");
 				continue;
 
-#if 0 // ifdefed out only because it's too noisy
+#if defined C_OPENGL && defined __APPLE__
 			case SDL_WINDOWEVENT_MOVED:
 				// DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
 				//               event.window.data1,
 				//               event.window.data2);
+				if (sdl.desktop.type == SCREEN_OPENGL) {
+					glViewport(sdl.clip.x,
+					           sdl.clip.y,
+					           sdl.clip.w,
+					           sdl.clip.h);
+				}
 				continue;
 #endif
 
