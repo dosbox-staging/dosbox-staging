@@ -1157,25 +1157,16 @@ static void NewMouseScreenParams()
 	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-#ifdef __APPLE__
-	// macOS moves mouse cursor on "client points" grid, not physical pixels;
-	// it's unknown how Windows behaves with modern DPI scaling modes
-	MOUSE_NewScreenParams(sdl.clip.x / sdl.desktop.dpi_scale,
-	                      sdl.clip.y / sdl.desktop.dpi_scale,
-	                      sdl.clip.w / sdl.desktop.dpi_scale,
-	                      sdl.clip.h / sdl.desktop.dpi_scale,
-	                      check_cast<int32_t>(abs_x),
-	                      check_cast<int32_t>(abs_y),
-	                      sdl.desktop.fullscreen);
-#else
-	MOUSE_NewScreenParams(check_cast<uint32_t>(sdl.clip.x),
-	                      check_cast<uint32_t>(sdl.clip.y),
-	                      check_cast<uint32_t>(sdl.clip.w),
-	                      check_cast<uint32_t>(sdl.clip.h),
-	                      check_cast<int32_t>(abs_x),
-	                      check_cast<int32_t>(abs_y),
-	                      sdl.desktop.fullscreen);
-#endif
+	// When DPI scaling is enabled, mouse coordinates are reported on
+	// "client points" grid, not physical pixels.
+	MOUSE_NewScreenParams(
+	        check_cast<uint32_t>(lround(sdl.clip.x / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.y / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.w / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.h / sdl.desktop.dpi_scale)),
+	        check_cast<int32_t>(abs_x),
+	        check_cast<int32_t>(abs_y),
+	        sdl.desktop.fullscreen);
 }
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -4579,15 +4570,6 @@ static void erasemapperfile() {
 	exit(0);
 }
 
-void Disable_OS_Scaling() {
-#if defined (WIN32)
-	FARPROC function_set_dpi = GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
-	if (function_set_dpi) {
-		function_set_dpi();
-	}
-#endif
-}
-
 void OverrideWMClass()
 {
 #if !defined(WIN32)
@@ -4642,7 +4624,6 @@ int sdl_main(int argc, char *argv[])
 
 	int rcode = 0; // assume good until proven otherwise
 	try {
-		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CROSS_DetermineConfigPaths();
@@ -4702,6 +4683,13 @@ int sdl_main(int argc, char *argv[])
 
 #if defined(WIN32)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
+
+#	if SDL_VERSION_ATLEAST(2, 23, 0)
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
+		LOG_WARNING("SDL: Failed to set DPI awareness flag");
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE)
+		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+#	endif
 #endif
 
 	check_kmsdrm_setting();
