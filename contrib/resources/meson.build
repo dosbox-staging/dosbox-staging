@@ -13,13 +13,15 @@ resource_dirs = [
 # To add a new resources subdirectory, create a new directory
 # under ./contrib/resources/<here>.
 #  - Add files to it including non-deliverables
-#  - Create a meson.build inside it.
-#  - Make the file contain a single "resources" list of
-#    just the filenames to be bundled in the output.
-#    resources = [ 'file1', 'file2', ... ].
+#  - Create a meson.build inside it containing a
+#    "resource_files = []" and/or "resource_dirs = []" list
+#   containing either filenames and/or directories to be bundled.
+#    For example:
+#    resource_files = [ 'file1', 'file2', ... ]
+#    resource_dirs = [ 'dir1', 'dir2', ... ]
 #  - See the translations directory for a working example.
 #  - Finally, add the name of the directory to the above
-#    resource_dirs list.
+#    resource_dirs list at the top of this file.
 
 # ---- no further changes are needed to add new resources ----
 
@@ -44,26 +46,53 @@ foreach source_dir : resource_dirs
     target_dir = target_resources / source_dir
     configure_file(output: source_dir, command: ['mkdir', '-p', target_dir])
 
+    # These two variables get re-populated inside each subdir(..)
+    resource_files = []
+    resource_dirs = []
+
     subdir(source_dir)
 
     # Install each of the source_dir's resource files
-    foreach source_name : resources
-        source_file = source_dir / source_name
-        target_file = target_dir / source_name
+    foreach resource : resource_files
+        source_file = source_dir / resource
+        target_file = target_dir / resource
         configure_file(
-            output: source_name,
+            output: resource,
             command: ['install', '-m', '644', files(source_file), target_file],
         )
     endforeach
 
-    # Setup the translation files in the system
+    # Get this source_dir's full path
+    source_dir_cmd = run_command(
+        'dirname',
+        files(source_dir / 'meson.build'),
+        check: true,
+    )
+    source_dir_path = source_dir_cmd.stdout().strip()
+
+    # Install each of the source_dir's resource dirs
+    foreach resource : resource_dirs
+        configure_file(
+            output: resource,
+            command: ['cp', '-f', '-R', '-P', source_dir_path / resource, target_dir],
+        )
+    endforeach
+
+    # Setup the the source_dir's resource files and dirs into the system (if requested)
     if get_option('prefix') in ['/usr', '/usr/local']
         system_resources = (
             get_option('prefix') / 'share/dosbox-staging' / source_dir
         )
-        foreach source_name : resources
+        foreach resource : resource_files
             install_data(
-                target_dir / source_name,
+                target_dir / resource,
+                install_dir: system_resources,
+            )
+        endforeach
+
+        foreach resource : resource_dirs
+            install_subdir(
+                target_dir / resource,
                 install_dir: system_resources,
             )
         endforeach
