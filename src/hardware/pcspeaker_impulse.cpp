@@ -505,6 +505,12 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 	}
 }
 
+bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string filter_choice)
+{
+	assert(channel);
+	return channel->TryParseAndSetCustomFilter(filter_choice);
+}
+
 PcSpeakerImpulse::PcSpeakerImpulse()
 {
 	// The implementation is tuned to working with sample rates that are
