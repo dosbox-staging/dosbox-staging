@@ -121,12 +121,18 @@ if get_option('autovec_info')
     ]
 endif
 
+# Allow-list the flags against the compiler, and add them to the project
 foreach flag : extra_flags
     if cc.has_argument(flag)
         add_project_arguments(flag, language: 'c')
     endif
     if cxx.has_argument(flag)
         add_project_arguments(flag, language: 'cpp')
+    endif
+endforeach
+foreach flag : extra_link_flags
+    if cxx.has_link_argument(flag)
+        add_project_link_arguments(flag, language: 'cpp')
     endif
 endforeach
 
@@ -692,7 +698,6 @@ executable(
     'dosbox',
     dosbox_sources,
     dependencies: internal_deps + third_party_deps,
-    link_args: extra_link_flags,
     include_directories: incdir,
     install: true,
 )
