@@ -21,6 +21,7 @@ jobs:
             needs_deps: true
             packages: meson
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
           - name: GCC 11
@@ -29,6 +30,7 @@ jobs:
             needs_deps: true
             packages: gcc@11
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
           - name: Clang, +tests (macOS 12)
@@ -36,6 +38,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Dbuildtype=debug -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             run_tests: true
             max_warnings: -1
 
@@ -44,6 +47,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Denable_debugger=normal -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
           - name: Clang
@@ -52,6 +56,7 @@ jobs:
             needs_deps: false
             packages: meson
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            brew_path: /opt/homebrew
             max_warnings: 0
 
     steps:
@@ -115,25 +120,24 @@ jobs:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
 
-      - name: Log environment
-        run:  arch -arch=${{ matrix.conf.arch }} ./scripts/log-env.sh
-
-      - run:  arch -arch=${{ matrix.conf.arch }} ./scripts/retry_command.sh 3 meson setup ${{ matrix.conf.build_flags }} build
-
-      - name: Build
+      - name: Setup and build
         run: |
           set -xo pipefail
-          arch -arch=${{ matrix.conf.arch }} meson compile -C build 2>&1 | tee build.log
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+          eval "$(${{ matrix.conf.brew_path }}/bin/brew shellenv)"
+          ./scripts/log-env.sh
+          ./scripts/retry_command.sh 3 meson setup ${{ matrix.conf.build_flags }} build
+          meson compile -C build 2>&1 | tee build.log
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  arch -arch=${{ matrix.conf.arch }} meson test -C build --print-errorlogs
+        run:  meson test -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  arch -arch=${{ matrix.conf.arch }} python3 ./scripts/count-warnings.py -lf build.log
+        run:  python3 ./scripts/count-warnings.py -lf build.log
 
   build_macos_release:
     name: Release build (${{ matrix.runner.arch }})
