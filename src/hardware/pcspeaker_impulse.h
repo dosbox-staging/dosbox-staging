@@ -22,6 +22,7 @@
 
 #include <array>
 #include <deque>
+#include <string>
 
 #include "inout.h"
 #include "setup.h"
@@ -34,6 +35,7 @@ public:
 	~PcSpeakerImpulse() final;
 
 	void SetFilterState(const FilterState filter_state) final;
+	bool TryParseAndSetCustomFilter(const std::string filter_choice) final;
 	void SetCounter(const int cntr, const PitMode pit_mode) final;
 	void SetPITControl(const PitMode pit_mode) final;
 	void SetType(const PpiPortB &port_b) final;
@@ -99,7 +101,7 @@ private:
 
 	std::array<float, sinc_filter_width> impulse_lut = {};
 
-	mixer_channel_t channel = {};
+	mixer_channel_t channel = nullptr;
 
 	PpiPortB prev_port_b = {};
 
