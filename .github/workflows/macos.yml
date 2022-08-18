@@ -145,15 +145,25 @@ jobs:
     strategy:
       matrix:
         runner:
-          - host: macos-latest
+          # GitHub macOS 11.x CI runner doesn't have working 10.x SDK
+          #- host: macos-latest
+          #  arch: x86_64
+          #  build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
+          #  minimum_deployment: '10.15'
+          #  needs_deps: true
+          #  needs_libintl_workaround: true
+
+          - host: [self-hosted, macOS, arm64, release-builds]
             arch: x86_64
-            build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
+            build_flags: --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
+            brew_path: /usr/local/homebrew
             minimum_deployment: '10.15'
-            needs_deps: true
-            needs_libintl_workaround: true
+            needs_deps: false
+            needs_libintl_workaround: false
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: arm64
+            brew_path: /opt/homebrew
             minimum_deployment: '11.0'
             needs_deps: false
 
@@ -229,38 +239,12 @@ jobs:
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # KLUDGE: Work-around for the scenario where glib's wrap links with libintl 
-      # dynamically, which adds a dependency into a brew dynlib package (in /usr/local/..), 
-      # which some users won't have. So we knockout libintl.dynlib (by removing gettext 
-      # removal), however this also breaks git: so we do a mock-meson setup to fetch all the 
-      # git wraps before knocking it. then we re-add gettext after the build, so git can work 
-      # for subsequent steps.
-      #
-      - name: Fetch subprojects then remove libintl.8.dylib
-        if:   matrix.runner.needs_libintl_workaround
-        run:  |
-          set -ex
-          ./scripts/retry_command.sh 3 meson setup build
-          ./scripts/retry_command.sh 3 git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
-          brew uninstall -f --ignore-dependencies gettext
-          rm -rf build
-
-      # LTO prevent ccache from being used, which greatly speeds up routine CI runs.
-      # However, it does add a small speed-up, so can be switched on during the
-      # release-candidate testing phase.
-      - name: Setup release build
-        run: >-
-          arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
-          ${{ matrix.runner.build_flags }}
-          -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net
-          build
-
-      - name: Build
-        run:  arch -arch=${{ matrix.runner.arch }} meson compile -C build
-
-      - name: Reinstate libintl.8.dylib
-        if:   matrix.runner.needs_libintl_workaround
-        run:  brew install gettext
+      - name: Setup and build release
+        run: |
+          set -x
+          eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
+          meson setup ${{ matrix.runner.build_flags }} -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson compile -C build
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
