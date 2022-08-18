@@ -1,3 +1,4 @@
+
 fluidsynth-*
 glib-*
 googletest-release-*
@@ -7,6 +8,7 @@ libslirp-*
 munt-libmt32emu*
 packagecache
 pcre*
+proxy-libintl*
 speexdsp-*
 tracy-*
 zlib*
