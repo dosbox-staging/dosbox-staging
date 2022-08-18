@@ -95,7 +95,8 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		constexpr auto cutoff_freq = 6000;
 		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
-	} else {
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
 			LOG_WARNING("%s: Invalid filter setting '%s', using off",
 			            CardName(),
