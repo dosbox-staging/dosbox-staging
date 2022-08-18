@@ -139,10 +139,11 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 		// case, the filters do a good approximation of how a small
 		// integrated speaker would sound.
 		setup_filter(channel);
-	} else {
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
 			LOG_WARNING("PS1DAC: Invalid filter setting '%s', using off",
-			            filter_choice.c_str());
+						filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -420,7 +421,8 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 		// hardware recordings. The results are virtually
 		// indistinguishable from the real thing by ear only.
 		setup_filter(channel);
-	} else {
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
 			LOG_WARNING("PS1: Invalid filter setting '%s', using off",
 			            filter_choice.c_str());
