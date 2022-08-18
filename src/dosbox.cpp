@@ -544,6 +544,20 @@ void DOSBOX_Init() {
 	        "join      : combines them into one big section (legacy behavior).\n"
 	        "overwrite : use the last one encountered, like other conf settings.");
 
+	Pbool = secprop->Add_bool("automount", only_at_start, true);
+	Pbool->Set_help(
+	        "Mounts 'drives/[c]' directories as drives on startup, where [c] is\n"
+	        "a lower-case drive letter from a to y.  The 'drives' folder can be\n"
+	        "provided relative to the current directory or via built-in resources.\n"
+	        "Mount settings can be optionally provided using a [c].conf file along-\n"
+	        "-side the drive's directory, with content as follows:\n"
+	        "  [drive]\n"
+	        "  type    = dir, overlay, floppy, or cdrom\n"
+	        "  label   = custom_label\n"
+	        "  path    = path-specification, ie: path = %%path%%;c:\\tools\n"
+	        "  override_drive = mount the directory to this drive instead (default empty)\n"
+	        "  verbose = true or false");
+
 	const char *verbosity_choices[] = {
 	        "auto", "high", "low", "quiet", 0,
 	};
