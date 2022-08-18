@@ -861,20 +861,32 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		int order;
 		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
 		    order > max_filter_order) {
-			LOG_WARNING("Invalid custom filter order: %s. "
-			            "Order must be an integer between 1 and %d.",
+			LOG_WARNING("%s: Invalid custom filter order: %s. Must be an integer between 1 and %d.",
+			            name.c_str(),
 			            order_pref.c_str(),
 			            max_filter_order);
 			return false;
 		}
 
-		float cutoff_freq_hz;
-		if (!sscanf(cutoff_freq_pref.c_str(), "%f", &cutoff_freq_hz) ||
-		    cutoff_freq_hz <= 0.0) {
-			LOG_WARNING("Invalid custom filter frequency: '%s'. "
-			            "Frequency must be a positive number.",
+		int cutoff_freq_hz;
+		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
+		    cutoff_freq_hz <= 0) {
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: %s. Must be a positive number.",
+			            name.c_str(),
 			            cutoff_freq_pref.c_str());
 			return false;
+		}
+
+		const auto max_cutoff_freq_hz = GetSampleRate() / 2 - 1;
+
+		if (cutoff_freq_hz > max_cutoff_freq_hz) {
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: %s. "
+			            "Must be lower than half the sample rate, clamping to %d Hz.",
+			            name.c_str(),
+			            cutoff_freq_pref.c_str(),
+			            max_cutoff_freq_hz);
+
+			cutoff_freq_hz = max_cutoff_freq_hz;
 		}
 
 		if (type_pref == "lpf") {
@@ -884,7 +896,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			ConfigureHighPassFilter(order, cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
 		} else {
-			LOG_WARNING("Invalid custom filter type: %s. Must be either 'lpf' or 'hpf'.",
+			LOG_WARNING("%s: Invalid custom filter type: %s. Must be either 'lpf' or 'hpf'.",
+			            name.c_str(),
 			            type_pref.c_str());
 			return false;
 		}
@@ -892,14 +905,16 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 	};
 
 	if (single_filter) {
-		auto i                        = 0;
+		auto i = 0;
+
 		const auto filter_type        = parts[i++];
 		const auto filter_order       = parts[i++];
 		const auto filter_cutoff_freq = parts[i++];
 
 		return set_filter(filter_type, filter_order, filter_cutoff_freq);
 	} else {
-		auto i                         = 0;
+		auto i = 0;
+
 		const auto filter1_type        = parts[i++];
 		const auto filter1_order       = parts[i++];
 		const auto filter1_cutoff_freq = parts[i++];
@@ -909,8 +924,9 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		const auto filter2_cutoff_freq = parts[i++];
 
 		if (filter1_type == filter2_type) {
-			LOG_WARNING("Invalid custom filter definition: %s. "
+			LOG_WARNING("%s: Invalid custom filter definition: %s. "
 			            "The two filters must be of different types.",
+			            name.c_str(),
 			            filter_prefs.c_str());
 			return false;
 		}
