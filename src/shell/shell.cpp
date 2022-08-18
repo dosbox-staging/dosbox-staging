@@ -18,11 +18,11 @@
 
 #include "shell.h"
 
+#include <list>
+#include <memory>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <memory>
-#include <list>
 
 #include "callback.h"
 #include "control.h"
@@ -30,6 +30,7 @@
 #include "mapper.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "support.h"
 #include "timer.h"
 
 Bitu call_shellstop;
@@ -562,6 +563,9 @@ extern int64_t ticks_at_program_launch;
 class AUTOEXEC final : public Module_base {
 private:
 	std::list<AutoexecObject> autoexec_lines = {};
+
+	void AutomountDrive(const std::string &dir_letter);
+
 	void ProcessConfigFileAutoexec(const Section_line &section,
 	                               const std::string &source_name);
 
@@ -588,9 +592,12 @@ public:
 		                                                     true);
 
 		// Should autoexec sections be joined or overwritten?
-		const auto ds = control->GetSection("dosbox");
+		const auto ds = static_cast<Section_prop *>(
+		        control->GetSection("dosbox"));
 		assert(ds);
-		const bool should_join_autoexecs = ds->GetPropValue("autoexec_section") == "join";
+
+		const std::string_view section_pref = ds->Get_string("autoexec_section");
+		const bool should_join_autoexecs = (section_pref == "join");
 
 		/* Check to see for extra command line options to be added
 		 * (before the command specified on commandline) */
@@ -721,11 +728,19 @@ public:
 				        control->GetOverwrittenAutoexecSection(),
 				        control->GetOverwrittenAutoexecConf());
 			}
-		} else if (secure && !found_dir_or_command) {
-			// If we're in secure mode without command line executabls, then seal off the configuration
+		}
+		// Try automounting drives (except for Z:, which is DOSBox's).
+		if (ds->Get_bool("automount")) {
+			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
+			for (const auto letter : drives) {
+				AutomountDrive({letter});
+			}
+		}
+		if (secure && !found_dir_or_command) {
+			// If we're in secure mode without command line
+			// executables, then seal off the configuration
 			InstallLine("z:\\config.com -securemode");
 		}
-
 		// The last slot is always reserved for the exit call,
 		// regardless if we're in secure-mode or not.
 		if (addexit)
@@ -738,6 +753,98 @@ public:
 		VFILE_Register("AUTOEXEC.BAT",(uint8_t *)autoexec_data,(uint32_t)strlen(autoexec_data));
 	}
 };
+
+// Specify a 'Drive' config object with allowed key and value types
+static Config specify_drive_config()
+{
+	auto conf = Config();
+
+	// Define the [drive] section
+	constexpr auto changeable_at_runtime = false;
+	auto prop = conf.AddSection_prop("drive", nullptr, changeable_at_runtime);
+
+	// Define the allowed keys and types
+	constexpr auto on_startup = Property::Changeable::OnlyAtStart;
+	const char *drive_types[] = {"dir", "floppy", "cdrom", "overlay", nullptr};
+	(void)prop->Add_string("type", on_startup, "")->Set_values(drive_types);
+	(void)prop->Add_string("label", on_startup, "");
+	(void)prop->Add_string("path", on_startup, "");
+	(void)prop->Add_string("override_drive", on_startup, "");
+	(void)prop->Add_bool("verbose", on_startup, true);
+
+	return conf;
+}
+
+// Parse a 'Drive' config file and return object with allowed key and value types
+static std::tuple<std::string, std::string, std::string> parse_drive_conf(
+        std::string drive_letter, const std_fs::path &conf_path)
+{
+	// Default return values
+	constexpr auto default_args = "";
+	constexpr auto default_path = "";
+
+	// If the conf path doesn't exist, at least return the default quiet arg
+	if (!path_exists(conf_path))
+		return {drive_letter, default_args, default_path};
+
+	// If we couldn't parse it, return the defaults
+	auto conf = specify_drive_config();
+	if (!conf.ParseConfigFile("drive", conf_path.string()))
+		return {drive_letter, default_args, default_path};
+
+	const auto settings = static_cast<Section_prop *>(conf.GetSection("drive"));
+
+	// Construct the mount arguments
+	const auto override_drive = std::string(settings->Get_string("override_drive"));
+	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y')
+		drive_letter = override_drive;
+	else if (override_drive.length()) {
+		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid", conf_path.string().c_str(), override_drive.c_str());
+		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
+	}
+
+	std::string drive_type = settings->Get_string("type");
+	if (drive_type.length())
+		drive_type.insert(0, " -t ");
+
+	std::string drive_label = settings->Get_string("label");
+	if (drive_label.length())
+		drive_label.insert(0, " -label ");
+
+	const auto verbose_arg = settings->Get_bool("verbose") ? "" : " > NUL";
+
+	const auto mount_args = drive_type + drive_label + verbose_arg;
+
+	const std::string path_val = settings->Get_string("path");
+
+	return {drive_letter, mount_args, path_val};
+}
+
+// Takes in a drive letter (eg: 'c') and attempts to mount the 'drives/c'
+// resource using an autoexec 'mount' command.
+void AUTOEXEC::AutomountDrive(const std::string &dir_letter)
+{
+	// Does drives/[x] exist?
+	const auto drive_path = GetResourcePath("drives", dir_letter);
+	if (!path_exists(drive_path))
+		return;
+
+	// Try parsing the [x].conf file
+	const auto conf_path  = drive_path.string() + ".conf";
+	const auto [drive_letter,
+	            mount_args,
+	            path_val] = parse_drive_conf(dir_letter, conf_path);
+
+	// Wrap the drive path inside quotes, plus a prefix space.
+	const auto quoted_path = " \"" + simplify_path(drive_path).string() + "\"";
+
+	// Install mount as an autoexec command
+	InstallLine(std::string("@mount ") + drive_letter + quoted_path + mount_args);
+
+	// Install path as an autoexec command
+	if (path_val.length())
+		InstallLine(std::string("@set PATH=") + path_val);
+}
 
 void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
                                          const std::string &source_name)
