@@ -1,4 +1,5 @@
 resource_dirs = [
+    'drives',
     'freedos-cpi',
     'freedos-keyboard',
     'glshaders',
