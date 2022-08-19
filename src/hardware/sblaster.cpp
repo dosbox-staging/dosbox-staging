@@ -34,6 +34,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
+#include "support.h"
 
 constexpr uint8_t MIXER_INDEX = 0x04;
 constexpr uint8_t MIXER_DATA = 0x05;
@@ -1929,7 +1930,7 @@ static void SBLASTER_CallBack(uint32_t len)
 	}
 }
 
-class SBLASTER final : public Module_base {
+class SBLASTER final {
 private:
 	/* Data */
 	IO_ReadHandleObject ReadHandler[0x10];
@@ -1994,8 +1995,7 @@ private:
 
 public:
 	SBLASTER(Section *configuration)
-	        : Module_base(configuration),
-	          autoexecline{},
+	        : autoexecline{},
 	          oplmode(OplMode::None)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
@@ -2112,15 +2112,15 @@ public:
 		case OplMode::None:
 			break;
 		case OplMode::Cms:
-			CMS_ShutDown(m_configuration);
+			CMS_ShutDown();
 			break;
 		case OplMode::Opl2:
-			CMS_ShutDown(m_configuration);
+			CMS_ShutDown();
 			[[fallthrough]];
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold:
-			OPL_ShutDown(m_configuration);
+			OPL_ShutDown();
 			break;
 		}
 		if (sb.type == SBT_NONE || sb.type == SBT_GB)
