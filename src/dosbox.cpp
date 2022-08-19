@@ -96,7 +96,6 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
-void INNOVA_Init(Section*);
 void SERIAL_Init(Section*);
 
 
