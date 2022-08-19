@@ -135,8 +135,8 @@ bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
 
 	// Accumulate the samples from both SAA-1099 devices
 	devices[0]->sound_stream_update(stream, 0, p_buf, 1);
-	int16_t left_accum = buf[0];
-	int16_t right_accum = buf[1];
+	int left_accum = buf[0];
+	int right_accum = buf[1];
 
 	devices[1]->sound_stream_update(stream, 0, p_buf, 1);
 	left_accum += buf[0];
