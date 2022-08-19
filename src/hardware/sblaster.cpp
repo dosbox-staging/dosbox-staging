@@ -16,20 +16,21 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "hardware.h"
-
 #include <array>
+#include <cmath>
+#include <cstring>
 #include <iomanip>
-#include <string.h>
-#include <math.h>
 #include <map>
+#include <string>
 #include <tuple>
 
+#include "control.h"
 #include "dma.h"
+#include "hardware.h"
 #include "inout.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "midi.h"
+#include "mixer.h"
 #include "pic.h"
 #include "setup.h"
 #include "shell.h"
@@ -1930,6 +1931,76 @@ static void SBLASTER_CallBack(uint32_t len)
 	}
 }
 
+SB_TYPES find_sbtype()
+{
+	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
+	assert(sect);
+
+	const std::string pref = sect->Get_string("sbtype");
+
+	SB_TYPES sbtype = SBT_NONE;
+
+	if (pref == "sb1")
+		sbtype = SBT_1;
+	else if (pref == "sb2")
+		sbtype = SBT_2;
+	else if (pref == "sbpro1")
+		sbtype = SBT_PRO1;
+	else if (pref == "sbpro2")
+		sbtype = SBT_PRO2;
+	else if (pref == "sb16")
+		sbtype = SBT_16;
+	else if (pref == "gb")
+		sbtype = SBT_GB;
+	else if (pref == "none")
+		sbtype = SBT_NONE;
+	else
+		sbtype = SBT_16;
+
+	if (sbtype == SBT_16) {
+		if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable())
+			sbtype = SBT_PRO2;
+	}
+	return sbtype;
+}
+
+OplMode find_oplmode()
+{
+	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
+	assert(sect);
+
+	const std::string pref = sect->Get_string("oplmode");
+
+	OplMode opl_mode = OplMode::None;
+
+	if (pref == "none")
+		opl_mode = OplMode::None;
+	else if (pref == "cms")
+		opl_mode = OplMode::Cms;
+	else if (pref == "opl2")
+		opl_mode = OplMode::Opl2;
+	else if (pref == "dualopl2")
+		opl_mode = OplMode::DualOpl2;
+	else if (pref == "opl3")
+		opl_mode = OplMode::Opl3;
+	else if (pref == "opl3gold")
+		opl_mode = OplMode::Opl3Gold;
+
+	// Else assume auto
+	else {
+		switch (find_sbtype()) {
+		case SBT_NONE: opl_mode = OplMode::None; break;
+		case SBT_GB: opl_mode = OplMode::Cms; break;
+		case SBT_1:
+		case SBT_2: opl_mode = OplMode::Opl2; break;
+		case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
+		case SBT_PRO2:
+		case SBT_16: opl_mode = OplMode::Opl3; break;
+		}
+	}
+	return opl_mode;
+}
+
 class SBLASTER final {
 private:
 	/* Data */
@@ -1937,61 +2008,6 @@ private:
 	IO_WriteHandleObject WriteHandler[0x10];
 	AutoexecObject autoexecline;
 	OplMode oplmode;
-
-	/* Support Functions */
-	void Find_Type_And_Opl(Section_prop *config, SB_TYPES &type, OplMode &opl_mode)
-	{
-		const char *sbtype = config->Get_string("sbtype");
-		if (!strcasecmp(sbtype, "sb1"))
-			type = SBT_1;
-		else if (!strcasecmp(sbtype, "sb2"))
-			type = SBT_2;
-		else if (!strcasecmp(sbtype, "sbpro1"))
-			type = SBT_PRO1;
-		else if (!strcasecmp(sbtype, "sbpro2"))
-			type = SBT_PRO2;
-		else if (!strcasecmp(sbtype, "sb16"))
-			type = SBT_16;
-		else if (!strcasecmp(sbtype, "gb"))
-			type = SBT_GB;
-		else if (!strcasecmp(sbtype, "none"))
-			type = SBT_NONE;
-		else
-			type = SBT_16;
-
-		if (type == SBT_16) {
-			if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable())
-				type = SBT_PRO2;
-		}
-
-		// OPL/CMS Init
-		const char *omode = config->Get_string("oplmode");
-		if (!strcasecmp(omode, "none"))
-			opl_mode = OplMode::None;
-		else if (!strcasecmp(omode, "cms"))
-			opl_mode = OplMode::Cms;
-		else if (!strcasecmp(omode, "opl2"))
-			opl_mode = OplMode::Opl2;
-		else if (!strcasecmp(omode, "dualopl2"))
-			opl_mode = OplMode::DualOpl2;
-		else if (!strcasecmp(omode, "opl3"))
-			opl_mode = OplMode::Opl3;
-		else if (!strcasecmp(omode, "opl3gold"))
-			opl_mode = OplMode::Opl3Gold;
-
-		// Else assume auto
-		else {
-			switch (type) {
-			case SBT_NONE: opl_mode = OplMode::None; break;
-			case SBT_GB: opl_mode = OplMode::Cms; break;
-			case SBT_1:
-			case SBT_2: opl_mode = OplMode::Opl2; break;
-			case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
-			case SBT_PRO2:
-			case SBT_16: opl_mode = OplMode::Opl3; break;
-			}
-		}
-	}
 
 public:
 	SBLASTER(Section *configuration)
@@ -2011,7 +2027,8 @@ public:
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
 
-		Find_Type_And_Opl(section,sb.type,oplmode);
+		sb.type = find_sbtype();
+		oplmode = find_oplmode();
 		configure_filters(section, oplmode);
 
 		switch (oplmode) {
