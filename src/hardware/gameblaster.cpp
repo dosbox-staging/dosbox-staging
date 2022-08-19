@@ -133,21 +133,24 @@ bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
 	static int16_t *p_buf[]           = {&buf[0], &buf[1]};
 	static device_sound_interface::sound_stream stream;
 
+	int16_t leftAccum = 0;
+	int16_t rightAccum = 0;
+
 	// Accumulate the samples from both SAA-1099 devices
 	devices[0]->sound_stream_update(stream, 0, p_buf, 1);
-	frame.left  = buf[0];
-	frame.right = buf[1];
+	leftAccum = buf[0];
+	rightAccum = buf[1];
 
 	devices[1]->sound_stream_update(stream, 0, p_buf, 1);
-	frame.left += buf[0];
-	frame.right += buf[1];
+	leftAccum += buf[0];
+	rightAccum += buf[1];
 
 	// Increment our time datum up to which the device has rendered
 	last_rendered_ms += ms_per_render;
 
 	// Resample the limited frame
-	const auto l_ready = resamplers[0]->input(buf[0]);
-	const auto r_ready = resamplers[1]->input(buf[1]);
+	const auto l_ready = resamplers[0]->input(leftAccum);
+	const auto r_ready = resamplers[1]->input(rightAccum);
 	assert(l_ready == r_ready);
 	const auto frame_is_ready = l_ready && r_ready;
 
