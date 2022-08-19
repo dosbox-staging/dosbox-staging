@@ -290,6 +290,9 @@ void CMS_Init(Section *configuration)
 	                 section->Get_string("sbtype"),
 	                 section->Get_string("cms_filter"));
 }
-void CMS_ShutDown([[maybe_unused]] Section* sec) {
+
+void CMS_ShutDown()
+{
 	gameblaster.Close();
 }
+

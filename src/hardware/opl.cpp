@@ -946,7 +946,7 @@ void OPL_Init(Section *sec, const OplMode oplmode)
 	opl = new OPL(sec, oplmode);
 }
 
-void OPL_ShutDown(Section *)
+void OPL_ShutDown()
 {
 	delete opl;
 	opl = nullptr;
