@@ -313,8 +313,10 @@ private:
 	std::deque<Function_wrapper> early_init_functions = {};
 	std::deque<Function_wrapper> initfunctions = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
-	std::string sectionname;
+	std::string sectionname = {};
+
 public:
+	Section() = default;
 	Section(const std::string &name) : sectionname(name) {}
 
 	virtual ~Section() = default; // Children must call executedestroy!
@@ -423,6 +425,7 @@ public:
 
 class Section_line final : public Section {
 public:
+	Section_line() = default;
 	Section_line(std::string const &name) : Section(name), data() {}
 
 	~Section_line() override { ExecuteDestroy(true); }
@@ -431,7 +434,7 @@ public:
 	bool HandleInputline(const std::string &line) override;
 	void PrintData(FILE *outfile) const override;
 
-	std::string data;
+	std::string data = {};
 };
 
 /* Base for all hardware and software "devices" */

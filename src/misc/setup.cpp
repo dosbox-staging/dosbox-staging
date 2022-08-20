@@ -932,6 +932,42 @@ Section_line *Config::AddSection_line(const char *section_name, SectionFunction 
 	return blah;
 }
 
+// Move assignment operator
+Config &Config::operator=(Config &&source) noexcept
+{
+	if (this == &source)
+		return *this;
+
+	// Move each member
+	cmdline                      = std::move(source.cmdline);
+	sectionlist                  = std::move(source.sectionlist);
+	_start_function              = std::move(source._start_function);
+	secure_mode                  = std::move(source.secure_mode);
+	startup_params               = std::move(source.startup_params);
+	configfiles                  = std::move(source.configfiles);
+	configFilesCanonical         = std::move(source.configFilesCanonical);
+	overwritten_autoexec_section = std::move(source.overwritten_autoexec_section);
+	overwritten_autoexec_conf    = std::move(source.overwritten_autoexec_conf);
+
+	// Hollow-out the source
+	source.cmdline                      = {};
+	source.overwritten_autoexec_section = {};
+	source.overwritten_autoexec_conf    = {};
+	source._start_function              = {};
+	source.secure_mode                  = {};
+	source.startup_params               = {};
+	source.configfiles                  = {};
+	source.configFilesCanonical         = {};
+
+	return *this;
+}
+
+// Move constructor, leverages move by assignment
+Config::Config(Config &&source) noexcept
+{
+	*this = std::move(source);
+}
+
 void Config::Init() const
 {
 	for (const auto &sec : sectionlist)

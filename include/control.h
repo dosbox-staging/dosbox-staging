@@ -44,7 +44,7 @@ public:
 	CommandLine * cmdline = nullptr;
 private:
 	std::deque<Section*> sectionlist = {};
-	Section_line overwritten_autoexec_section;
+	Section_line overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf = {};
 	void (*_start_function)(void) = nullptr;
 	bool secure_mode = false; // Sandbox mode
@@ -62,8 +62,11 @@ public:
 		cmdline->FillVector(startup_params);
 	}
 
-	Config(const Config&) = delete; // prevent copying
-	Config& operator=(const Config&) = delete; // prevent assignment
+	Config() = default;
+	Config(Config &&source) noexcept;            // move constructor
+	Config(const Config &) = delete;             // block construct-by-value
+	Config &operator=(Config &&source) noexcept; // move assignment
+	Config &operator=(const Config &) = delete;  // block assign-by-value
 
 	~Config();
 
