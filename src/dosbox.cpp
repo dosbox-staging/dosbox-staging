@@ -398,10 +398,13 @@ static void DOSBOX_RealInit(Section * sec) {
 	vmemsize *= (vmemsize <= 8) ? 1024 * 1024 : 1024;
 	vga.vmemsize = check_cast<uint32_t>(vmemsize);
 
-	if (std::string(section->Get_string("vesa_modes")) == "all")
-		int10.vesa_mode_preference = VESA_MODE_PREF::ALL;
-	else
-		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
+	if (const auto pref = std::string_view(section->Get_string("vesa_modes")); pref == "compatible") {
+		int10.vesa_mode_preference = VesaModePref::Compatible;
+	} else if (pref == "halfline") {
+		int10.vesa_mode_preference = VesaModePref::Halfline;
+	} else {
+		int10.vesa_mode_preference = VesaModePref::All;
+	}
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 }
@@ -504,13 +507,15 @@ void DOSBOX_Init() {
 	        "<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
 	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
 
-	const char *vesa_modes_choices[] = {"compatible", "all", 0};
+	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", 0};
 	Pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
 	Pstring->Set_values(vesa_modes_choices);
 	Pstring->Set_help(
 	        "Controls the selection of VESA 1.2 and 2.0 modes offered:\n"
 	        "  compatible   A tailored selection that maximizes game compatibility.\n"
 	        "               This is recommended along with 4 or 8 MB of video memory.\n"
+	        "  halfline     Supports the low-resolution halfline VESA 2.0 mode used by\n"
+	        "               Extreme Assault. Use only if needed, as it's not S3 compatible.\n"
 	        "  all          Offers all modes for a given video memory size, however\n"
 	        "               some games may not use them properly (flickering) or may need\n"
 	        "               more system memory (mem = ) to use them.");

@@ -144,9 +144,10 @@ extern std::vector<VideoModeBlock> ModeList_VGA_Paradise;
 extern std::vector<VideoModeBlock> ModeList_VGA_Tseng;
 extern std::vector<VideoModeBlock>::const_iterator CurMode;
 
-enum class VESA_MODE_PREF {
-	COMPATIBLE, // optimizes out-of-the-box compatibility with games
-	ALL, // use all VESA modes (compromise being some games might not handle them properly)
+enum class VesaModePref {
+	Compatible,  // Prunes the available S3 modes to maximize DOS game compatibility
+	Halfline, // Replaces mode 120h with the halfline mode used by Extreme Assault
+	All, // Enables all S3 864 and Trio VESA modes (but some games might not handle them properly)
 };
 
 struct Int10Data {
@@ -175,7 +176,7 @@ struct Int10Data {
 	} rom = {};
 	uint16_t vesa_setmode = 0;
 
-	VESA_MODE_PREF vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
+	VesaModePref vesa_mode_preference = VesaModePref::Compatible;
 	bool vesa_nolfb = false;
 	bool vesa_oldvbe = false;
 };
