@@ -30,6 +30,7 @@
 #include "control.h"
 #include "dma.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "mixer.h"
 #include "pic.h"
@@ -124,7 +125,7 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           0,
+	                           use_mixer_rate,
 	                           "PS1DAC",
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
@@ -393,7 +394,7 @@ private:
 	static constexpr auto render_divisor   = 16;
 	static constexpr auto render_rate_hz   = ceil_sdivide(ps1_psg_clock_hz,
                                                             render_divisor);
-	static constexpr auto ms_per_render    = 1000.0 / render_rate_hz;
+	static constexpr auto ms_per_render    = millis_in_second / render_rate_hz;
 
 	// Runtime states
 	device_sound_interface *dsi = static_cast<sn76496_base_device *>(&device);
@@ -406,7 +407,7 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           0,
+	                           use_mixer_rate,
 	                           "PS1",
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,

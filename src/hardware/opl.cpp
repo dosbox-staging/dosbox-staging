@@ -473,7 +473,7 @@ void OPL::Init(const uint16_t sample_rate)
 	newm = 0;
 	OPL3_Reset(&oplchip, sample_rate);
 
-	ms_per_frame = 1000.0 / sample_rate;
+	ms_per_frame = millis_in_second / sample_rate;
 
 	memset(cache, 0, ARRAY_LEN(cache));
 
@@ -894,7 +894,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	                                      std::placeholders::_1);
 
 	// Register the Audio channel
-	channel = MIXER_AddChannel(mixer_callback, 0, "FM", channel_features);
+	channel = MIXER_AddChannel(mixer_callback, use_mixer_rate, "OPL", channel_features);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.

@@ -58,8 +58,28 @@ enum class MouseCursor : uint8_t { Software = 0, Hardware = 1, Text = 2 };
 static MouseButtons12S buttons = 0;
 static float pos_x = 0.0f;
 static float pos_y = 0.0f;
-static int16_t wheel_counter = 0;
+static int8_t counter_w = 0;
 static uint8_t rate_hz = 0; // TODO: add proper reaction for 0 (disable driver)
+
+static struct {
+    // Data from mouse events which were already received,
+    // but not necessary visible to the application
+
+    // Mouse movement
+    float x_rel    = 0.0f;
+    float y_rel    = 0.0f;
+    uint16_t x_abs = 0;
+    uint16_t y_abs = 0;
+
+    // Wheel movement
+    int16_t w_rel  = 0;
+
+    void Reset() {
+        x_rel = 0.0f;
+        y_rel = 0.0f;
+        w_rel = 0;
+    }
+} pending;
 
 static struct { // DOS driver state
 
@@ -134,7 +154,7 @@ static struct { // DOS driver state
 
     } background = {};
 
-    MouseCursor cursor_type          = MouseCursor::Software;
+    MouseCursor cursor_type = MouseCursor::Software;
 
     // cursor shape definition
     uint16_t text_and_mask = 0;
@@ -157,6 +177,15 @@ static RealPt user_callback;
 // Common helper routines
 // ***************************************************************************
 
+static uint8_t signed_to_reg8(const int8_t x)
+{
+    if (x >= 0)
+        return static_cast<uint8_t>(x);
+    else
+        // -1 for 0xff, -2 for 0xfe, etc.
+        return static_cast<uint8_t>(0x100 + x);
+}
+
 static uint16_t signed_to_reg16(const int16_t x)
 {
     if (x >= 0)
@@ -178,6 +207,15 @@ static int16_t reg_to_signed16(const uint16_t x)
         return static_cast<int16_t>(x - 0x10000);
     else
         return static_cast<int16_t>(x);
+}
+
+int8_t clamp_to_int8(const int32_t val)
+{
+    const auto tmp = std::clamp(val,
+                                static_cast<int32_t>(INT8_MIN),
+                                static_cast<int32_t>(INT8_MAX));
+
+    return static_cast<int8_t>(tmp);
 }
 
 static uint16_t get_pos_x()
@@ -258,7 +296,7 @@ static void draw_cursor_text()
         union {
             uint16_t data;
             bit_view<0, 8> first;
-            bit_view<8, 8> second; 
+            bit_view<8, 8> second;
         } result;
         ReadCharAttr(state.background.pos_x,
                      state.background.pos_y,
@@ -526,14 +564,11 @@ static uint8_t get_reset_wheel_8bit()
     if (!state.cute_mouse) // wheel requires CuteMouse extensions
         return 0;
 
-    const int16_t tmp = static_cast<int16_t>(
-            std::clamp(wheel_counter,
-                       static_cast<int16_t>(INT8_MIN),
-                       static_cast<int16_t>(INT8_MAX)));
-    wheel_counter = 0; // reading always clears the counter
+    const auto tmp = counter_w;
+    counter_w = 0; // reading always clears the counter
 
     // 0xff for -1, 0xfe for -2, etc.
-    return static_cast<uint8_t>((tmp >= 0) ? tmp : (0x100 + tmp));
+    return signed_to_reg8(tmp);
 }
 
 static uint16_t get_reset_wheel_16bit()
@@ -541,11 +576,10 @@ static uint16_t get_reset_wheel_16bit()
     if (!state.cute_mouse) // wheel requires CuteMouse extensions
         return 0;
 
-    const int16_t tmp = wheel_counter;
-    wheel_counter = 0; // reading always clears the counter
+    const int16_t tmp = counter_w;
+    counter_w = 0; // reading always clears the counter
 
-    // 0xffff for -1, 0xfffe for -2, etc.
-    return static_cast<uint16_t>((tmp >= 0) ? tmp : (0x10000 + tmp));
+    return signed_to_reg16(tmp);
 }
 
 static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
@@ -611,9 +645,10 @@ static void set_interrupt_rate(const uint16_t rate_id)
 
 static void reset_hardware()
 {
-    wheel_counter = 0;
+    counter_w = 0;
     set_interrupt_rate(4);
     PIC_SetIRQMask(12, false); // lower IRQ line
+    MOUSE_NotifyRateDOS(60); // same rate Microsoft Mouse 8.20 sets
 }
 
 void MOUSEDOS_BeforeNewVideoMode()
@@ -695,6 +730,11 @@ void MOUSEDOS_AfterNewVideoMode(const bool setmode)
 
 static void reset()
 {
+    // Although these do not belong to the driver state,
+    // reset them too to avoid any possible problems
+    counter_w = 0;
+    pending.Reset();
+
     MOUSEDOS_BeforeNewVideoMode();
     MOUSEDOS_AfterNewVideoMode(false);
 
@@ -835,8 +875,7 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
     }
 }
 
-bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint16_t x_abs, const uint16_t y_abs)
+uint8_t MOUSEDOS_UpdateMoved()
 {
     const auto old_pos_x = get_pos_x();
     const auto old_pos_y = get_pos_y();
@@ -844,13 +883,17 @@ bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
     const auto old_mickey_x = static_cast<int16_t>(state.mickey_x);
     const auto old_mickey_y = static_cast<int16_t>(state.mickey_y);
 
-    const auto x_mov = MOUSE_ClampRelativeMovement(x_rel * sensitivity_dos);
-    const auto y_mov = MOUSE_ClampRelativeMovement(y_rel * sensitivity_dos);
+    const auto x_mov = MOUSE_ClampRelativeMovement(pending.x_rel * sensitivity_dos);
+    const auto y_mov = MOUSE_ClampRelativeMovement(pending.y_rel * sensitivity_dos);
+
+    // Pending relative movement is now consummed
+    pending.x_rel = 0.0f;
+    pending.y_rel = 0.0f;
 
     if (mouse_is_captured)
         move_cursor_captured(x_mov, y_mov);
     else
-        move_cursor_seamless(x_mov, y_mov, x_abs, y_abs);
+        move_cursor_seamless(x_mov, y_mov, pending.x_abs, pending.y_abs);
 
     // Make sure cursor stays in the range defined by application
     limit_coordinates();
@@ -863,63 +906,138 @@ bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                               static_cast<int16_t>(state.mickey_x)) ||
                              (old_mickey_y !=
                               static_cast<int16_t>(state.mickey_y));
-    if (!abs_changed && !rel_changed)
-        return false;
 
-    // If we are here, there is some noticeable change in mouse
-    // state - if callback is registered for mouse movement,
-    // then we definitely need the event
-    if (MOUSEDOS_HasCallback(static_cast<uint8_t>(MouseEventId::MouseHasMoved)))
-        return true;
+    // NOTE: It might be tempting to optimize the flow here, by skipping
+    // the whole event-queue-callback flow if there is no callback
+    // registered, no graphic cursor to draw, etc. Don't do this - there
+    // is at least one game (Master of Orion II), which does INT 0x33
+    // calls with 0x0F parameter (changing the callback settings)
+    // constantly (don't ask me, why) - doing too much optimization
+    // can cause the game to skip mouse events.
 
-    // Noticeable change, but no callback; we might still need the
-    // event for cursor redraw routine - check this
-    return abs_changed && !state.hidden && !state.inhibit_draw;
+    if (abs_changed || rel_changed)
+        return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+    else
+        return 0;
 }
 
-bool MOUSEDOS_NotifyPressed(const MouseButtons12S new_buttons_12S,
-                            const uint8_t idx, const MouseEventId event_id)
+uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
 {
-    assert(idx < num_buttons);
+    if (buttons.data == new_buttons_12S.data)
+        return 0;
+
+    auto mark_pressed = [](const uint8_t idx) {
+        state.last_pressed_x[idx] = get_pos_x();
+        state.last_pressed_y[idx] = get_pos_y();
+        ++state.times_pressed[idx];
+    };
+
+    auto mark_released = [](const uint8_t idx) {
+        state.last_released_x[idx] = get_pos_x();
+        state.last_released_y[idx] = get_pos_y();
+        ++state.times_released[idx];
+    };
+
+    uint8_t mask = 0;
+    if (new_buttons_12S.left && !buttons.left) {
+        mark_pressed(0);
+        mask |= static_cast<uint8_t>(MouseEventId::PressedLeft);
+    }
+    else if (!new_buttons_12S.left && buttons.left) {
+        mark_released(0);
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedLeft);
+    }
+    if (new_buttons_12S.right && !buttons.right) {
+        mark_pressed(1);
+        mask |= static_cast<uint8_t>(MouseEventId::PressedRight);
+    }
+    else if (!new_buttons_12S.right && buttons.right) {
+        mark_released(1);
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedRight);
+    }
+    if (new_buttons_12S.middle && !buttons.middle) {
+        mark_pressed(2);
+        mask |= static_cast<uint8_t>(MouseEventId::PressedMiddle);
+    }
+    else if (!new_buttons_12S.middle && buttons.middle) {
+        mark_released(2);
+        mask |= static_cast<uint8_t>(MouseEventId::ReleasedMiddle);
+    }
 
     buttons = new_buttons_12S;
-
-    ++state.times_pressed[idx];
-    state.last_pressed_x[idx] = get_pos_x();
-    state.last_pressed_y[idx] = get_pos_y();
-
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(event_id));
+    return mask;
 }
 
-bool MOUSEDOS_NotifyReleased(const MouseButtons12S new_buttons_12S,
-                             const uint8_t idx, const MouseEventId event_id)
+uint8_t MOUSEDOS_UpdateWheel()
 {
-    assert(idx < num_buttons);
+    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
 
-    buttons = new_buttons_12S;
+    // Pending wheel scroll is now consummed
+    pending.w_rel = 0;
 
-    ++state.times_released[idx];
-    state.last_released_x[idx] = get_pos_x();
-    state.last_released_y[idx] = get_pos_y();
+    state.last_wheel_moved_x = get_pos_x();
+    state.last_wheel_moved_y = get_pos_y();
 
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(event_id));
+    if (counter_w != 0)
+        return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+    else
+        return 0;
+}
+
+bool MOUSEDOS_NotifyMoved(const float x_rel,
+                          const float y_rel,
+                          const uint16_t x_abs,
+                          const uint16_t y_abs)
+{
+    // Check if an event is needed
+    bool event_needed = false;
+    if (mouse_is_captured) {
+        // Uses relative mouse movements - processing is too complicated
+        // to easily predict whether the event can be safely omitted
+        event_needed = true;
+        // TODO: it actually can be done - but it will require some refactoring
+    } else {
+        // Uses absolute mouse position (seamless mode), relative movements
+        // can wait to be reported - they are completely unreliable anyway
+        if (pending.x_abs != x_abs || pending.y_abs != y_abs)
+            event_needed = true;
+    }
+
+    // Update values to be consummed when the event arrives
+    pending.x_rel = MOUSE_ClampRelativeMovement(pending.x_rel + x_rel);
+    pending.y_rel = MOUSE_ClampRelativeMovement(pending.y_rel + y_rel);
+    pending.x_abs = x_abs;
+    pending.y_abs = y_abs;
+
+    // NOTES:
+    //
+    // It might be tempting to optimize the flow here, by skipping
+    // the whole event-queue-callback flow if there is no callback
+    // registered, no graphic cursor to draw, etc. Don't do this - there
+    // is at least one game (Master of Orion II), which performs INT 0x33
+    // calls with 0x0f parameter (changing the callback settings)
+    // constantly (don't ask me, why) - doing too much optimization
+    // can cause the game to skip mouse events.
+    //
+    // Also, do not update mouse state here - Ultima Underworld I and II
+    // do not like mouse states updated in real time, it ends up with
+    // mouse movements being ignored by the game randomly.
+
+    return event_needed;
 }
 
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
 {
-    if (!state.cute_mouse) // wheel only available if CuteMouse extensions
-                           // are active
+    if (!state.cute_mouse)
         return false;
 
-    const auto tmp = std::clamp(static_cast<int32_t>(w_rel + wheel_counter),
-                                static_cast<int32_t>(INT16_MIN),
-                                static_cast<int32_t>(INT16_MAX));
+    // Although in some places it is possible for the guest code to get
+    // wheel counter in 16-bit format, scrolling hundreds of lines in one
+    // go would be insane - thus, limit the wheel counter to 8 bits and
+    // reuse the code written for other mouse modules
+    pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
 
-    wheel_counter            = static_cast<int16_t>(tmp);
-    state.last_wheel_moved_x = get_pos_x();
-    state.last_wheel_moved_y = get_pos_y();
-
-    return MOUSEDOS_HasCallback(static_cast<uint8_t>(MouseEventId::WheelHasMoved));
+    return (pending.w_rel != 0);
 }
 
 static Bitu int33_handler()
@@ -1116,11 +1234,11 @@ static Bitu int33_handler()
         MOUSEDOS_DrawCursor();
         break;
     case 0x11: // CuteMouse - get mouse capabilities
-        reg_ax           = 0x574d; // Identifier for detection purposes
-        reg_bx           = 0;      // Reserved capabilities flags
-        reg_cx           = 1;      // Wheel is supported
+        reg_ax    = 0x574d; // Identifier for detection purposes
+        reg_bx    = 0;      // Reserved capabilities flags
+        reg_cx    = 1;      // Wheel is supported
+        counter_w = 0;
         state.cute_mouse = true;   // This call enables CuteMouse extensions
-        wheel_counter    = 0;
         // Previous implementation provided Genius Mouse 9.06 function
         // to get number of buttons
         // (https://sourceforge.net/p/dosbox/patches/32/), it was

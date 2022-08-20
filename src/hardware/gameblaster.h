@@ -30,8 +30,8 @@
 #include <vector>
 
 #include "inout.h"
+#include "math_utils.h"
 #include "mixer.h"
-#include "soft_limiter.h"
 #include "support.h"
 
 #include "mame/emu.h"
@@ -51,7 +51,6 @@ private:
 	bool MaybeRenderFrame(AudioFrame &frame);
 	std::vector<int16_t> GetFrame();
 	void AudioCallback(const uint16_t requested_frames);
-	void LevelCallback(const AudioFrame &levels);
 	void RenderUpToNow();
 
 	// IO callbacks to the left SAA1099 device
@@ -77,7 +76,6 @@ private:
 
 	std::unique_ptr<saa1099_device> devices[2]                   = {};
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
-	std::unique_ptr<SoftLimiter> soft_limiter                    = {};
 
 	std::queue<AudioFrame> fifo = {};
 
@@ -86,7 +84,7 @@ private:
 	static constexpr auto render_divisor = 32;
 	static constexpr auto render_rate_hz = ceil_sdivide(chip_clock,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = 1000.0 / render_rate_hz;
+	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
 
 	// Runtime states
 	double last_rendered_ms        = 0;

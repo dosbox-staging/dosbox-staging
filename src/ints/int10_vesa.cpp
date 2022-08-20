@@ -23,6 +23,7 @@
 
 #include "callback.h"
 #include "regs.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "inout.h"
 #include "dos_inc.h"
@@ -175,7 +176,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		return VESA_FAIL;
 
 	// Was the found mode VESA 2.0 but the user requested VESA 1.2?
-	if (mblock.mode >= 0x120 && int10.vesa_oldvbe)
+	if (mblock.mode >= vesa_2_0_modes_start && int10.vesa_oldvbe)
 		return VESA_FAIL;
 
 	bool ok_per_mode_pref;

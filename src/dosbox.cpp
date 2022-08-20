@@ -21,41 +21,38 @@
 
 #include "dosbox.h"
 
+#include <chrono>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <thread>
 #include <unistd.h>
 
-#include <chrono>
-#include <thread>
-
-#include <Tracy.hpp>
-
-#include "debug.h"
-#include "cpu.h"
-#include "video.h"
-#include "pic.h"
-#include "cpu.h"
 #include "callback.h"
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
+#include "control.h"
+#include "cpu.h"
+#include "cross.h"
+#include "debug.h"
 #include "dos_inc.h"
+#include "hardware.h"
+#include "inout.h"
+#include "ints/int10.h"
+#include "mapper.h"
+#include "midi.h"
+#include "mixer.h"
+#include "ne2000.h"
+#include "pci_bus.h"
+#include "pic.h"
+#include "programs.h"
+#include "render.h"
 #include "setup.h"
 #include "shell.h"
-#include "control.h"
-#include "cross.h"
-#include "programs.h"
 #include "support.h"
-#include "mapper.h"
-#include "ints/int10.h"
-#include "render.h"
-#include "pci_bus.h"
-#include "midi.h"
-#include "hardware.h"
-#include "ne2000.h"
+#include "timer.h"
+#include "tracy.h"
+#include "video.h"
 
 bool shutdown_requested = false;
 MachineType machine;
@@ -97,7 +94,7 @@ void SBLASTER_Init(Section*);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
-void DISNEY_Init(Section*);
+void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
 void INNOVA_Init(Section*);
 void SERIAL_Init(Section*);
@@ -188,7 +185,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		constexpr auto duration = std::chrono::microseconds(100);
+		constexpr auto duration = std::chrono::milliseconds(1);
 		std::this_thread::sleep_for(duration);
 
 		const auto timeslept = GetTicksSince(ticksNew);
@@ -407,10 +404,6 @@ static void DOSBOX_RealInit(Section * sec) {
 		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
-
-	CPU_AllowSpeedMods = section->Get_bool("speed_mods");
-	LOG_MSG("SYSTEM: Speed modifications are %s",
-	        CPU_AllowSpeedMods ? "enabled" : "disabled");
 }
 
 void DOSBOX_Init() {
@@ -421,8 +414,8 @@ void DOSBOX_Init() {
 	Prop_string* Pstring; // use pstring when touching properties
 	Prop_string *pstring;
 	Prop_bool* Pbool;
-	Prop_multival *pmulti;
-	Prop_multival_remain* Pmulti_remain;
+	PropMultiVal *pmulti;
+	PropMultiValRemain* pmulti_remain;
 
 	// Specifies if and when a setting can be changed
 	constexpr auto always = Property::Changeable::Always;
@@ -547,18 +540,16 @@ void DOSBOX_Init() {
 	        "overwrite : use the last one encountered, like other conf settings.");
 
 	const char *verbosity_choices[] = {
-	        "auto", "high", "medium", "low", "splash_only", "quiet", 0,
+	        "auto", "high", "low", "quiet", 0,
 	};
 	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	Pstring->Set_values(verbosity_choices);
 	Pstring->Set_help(
 	        "Controls verbosity prior to displaying the program:\n"
-	        "Verbosity   | Splash | Welcome | Early stdout\n"
-	        "high        |  yes   |   yes   |    yes\n"
-	        "medium      |  no    |   yes   |    yes\n"
-	        "low         |  no    |   no    |    yes\n"
-	        "quiet       |  no    |   no    |    no\n"
-	        "splash_only |  yes   |   no    |    no\n"
+	        "Verbosity   | Welcome | Early stdout\n"
+	        "high        |   yes   |    yes\n"
+	        "low         |   no    |    yes\n"
+	        "quiet       |   no    |    no\n"
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
@@ -600,10 +591,12 @@ void DOSBOX_Init() {
 	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
 	        "  colodore:      Commodore 64 inspired colors based on the Colodore palette.\n"
 	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
-			"You can also set custom colors by specifying 16 space-separated, 6-bit hex color codes\n"
-			"(e.g. black is 000000, white is 3f3f3f, full red is 3f0000).");
+	        "  dga16:         A modern take on the canonical CGA palette with dialed back contrast.\n"
+			"You can also set custom colors by specifying 16 space or comma separated color values,\n"
+			"either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal\n"
+			"RGB triplets (e.g. (255, 0, 255) for magenta).");
 
-	pmulti = secprop->Add_multi("scaler", always, " ");
+	pmulti = secprop->AddMultiVal("scaler", always, " ");
 	pmulti->SetValue("none");
 	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
 	                 "If 'forced' is appended, then the scaler will be used even if\n"
@@ -662,8 +655,8 @@ void DOSBOX_Init() {
 	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
 
 
-	Pmulti_remain = secprop->Add_multiremain("cycles", always, " ");
-	Pmulti_remain->Set_help(
+	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
+	pmulti_remain->Set_help(
 		"Number of instructions DOSBox tries to emulate each millisecond.\n"
 		"Setting this value too high results in sound dropouts and lags.\n"
 		"Cycles can be set in 3 ways:\n"
@@ -675,11 +668,11 @@ void DOSBOX_Init() {
 		"                  handle.");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", always, "auto");
-	Pmulti_remain->SetValue("auto");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
+	pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
-	Pmulti_remain->GetSection()->Add_string("parameters", always, "");
+	pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
 	Pint = secprop->Add_int("cycleup", always, 10);
 	Pint->SetMinMax(1,1000000);
@@ -916,16 +909,25 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                  "  on:   Filter the output (default).\n"
 	                  "  off:  Don't filter the output.");
 
-	// Disney Audio emulation
-	secprop->AddInitFunction(&DISNEY_Init,true);//done
+	// LPT DAC device emulation
+	secprop->AddInitFunction(&LPT_DAC_Init, true);
+	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", 0};
+	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
+	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
+	                  "  disney:    Disney Sound Source.\n"
+	                  "  covox:     Covox Speech Thing.\n"
+	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
+	                  "  none/off:  Don't use a parallel port DAC (default).\n");
+	pstring->Set_values(lpt_dac_types);
 
-	Pbool = secprop->Add_bool("disney", when_idle, true);
-	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
-
-	Pstring = secprop->Add_string("disney_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the Disney audio output:\n"
+	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
+	pstring->Set_help("Filter for the LPT DAC audio device(s):\n"
 	                  "  on:   Filter the output (default).\n"
 	                  "  off:  Don't filter the output.");
+
+	// Deprecate the overloaded Disney setting
+	Pbool = secprop->Add_bool("disney", deprecated, false);
+	Pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, true);
@@ -985,7 +987,29 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
-	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
+	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
+	Pbool->Set_help(
+	        "Activates hotkeys to allow realtime calibration of the joystick's x and y axis.\n"
+	        "Only consider this if in-game calibration fails and other settings have been tried.\n"
+	        " - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:\n"
+	        "     - left and right diminish or magnify the x-axis scalar, respectively.\n"
+	        "     - down and up diminish or magnify the y-axis scalar, respectively.\n"
+	        " - Alt+Arrow-keys adjusts the axis' offset position:\n"
+	        "     - left and right shift x-axis offset in the given direction.\n"
+	        "     - down and up shift the y-axis offset in the given direction.\n"
+	        " - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.\n"
+	        "Each tap will report X or Y calibration values you can set below. When you find parameters that work,\n"
+	        "quit the game, switch this setting back to false, and populate the reported calibration parameters.");
+
+	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
+	pstring->Set_help(
+	        "Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.");
+
+	pstring = secprop->Add_string("joy_y_calibration", when_idle, "auto");
+	pstring->Set_help(
+	        "Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.");
+
+	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
 	const char *serials[] = {"dummy",
 	                         "disabled",
 	                         "mouse",
@@ -994,12 +1018,12 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	                         "direct",
 	                         0};
 
-	Pmulti_remain = secprop->Add_multiremain("serial1", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
-	Pmulti_remain->SetValue("dummy");
+	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
+	pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help(
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help(
 	        "set type of device connected to com port.\n"
 	        "Can be disabled, dummy, mouse, modem, nullmodem, direct.\n"
 	        "Additional parameters must be on the same line in the form of\n"
@@ -1015,33 +1039,33 @@ const char *filter_on_or_off[] = {"on", "off", 0};
 	        "   Default is type:wheel+msm rate:smooth\n"
 	        "for direct: realport (required), rxdelay (optional).\n"
 	        "   (realport:COM1 realport:ttyS0).\n"
-	        "for modem: listenport sock (all optional).\n"
+	        "for modem: listenport, sock, baudrate (all optional).\n"
 	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "   transparent, port, inhsocket, sock (all optional).\n"
 	        "SOCK parameter specifies the protocol to be used by both sides\n"
 	        "of the conection. 0 for TCP and 1 for ENet reliable UDP.\n"
 	        "Example: serial1=modem listenport:5000 sock:1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
-	Pmulti_remain->SetValue("dummy");
+	pmulti_remain = secprop->AddMultiValRemain("serial2", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
+	pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial3", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
-	Pmulti_remain->SetValue("disabled");
+	pmulti_remain = secprop->AddMultiValRemain("serial3", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
+	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial4", when_idle, " ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
-	Pmulti_remain->SetValue("disabled");
+	pmulti_remain = secprop->AddMultiValRemain("serial4", when_idle, " ");
+	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
+	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	Pmulti_remain->Set_help("see serial1");
+	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	pmulti_remain->Set_help("see serial1");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
 	pstring->Set_help("File used to map fake phone numbers to addresses.");

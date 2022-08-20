@@ -126,8 +126,8 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		// this is a codepage handler, make sure it matches current code size
-		cph = (CodePageHandler *)handler;
-		if (CPU_AllowSpeedMods || (handler->flags & cflag)) {
+		cph = static_cast<CodePageHandler *>(handler);
+		if (CPU_ReuseCodepages || (handler->flags & cflag)) {
 			return false;
 		}
 		// wrong code size/stale dynamic code, drop it

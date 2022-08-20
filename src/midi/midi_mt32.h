@@ -37,7 +37,6 @@
 
 #include "mixer.h"
 #include "rwqueue.h"
-#include "soft_limiter.h"
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
@@ -61,22 +60,20 @@ private:
 	uint32_t GetMidiEventTimestamp() const;
 	service_t GetService();
 	void MixerCallBack(uint16_t len);
-	void SetMixerLevel(const AudioFrame &desired) noexcept;
 	uint16_t GetRemainingFrames();
 	void Render();
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
 
-	std::vector<int16_t> play_buffer = {};
-	static constexpr auto num_buffers = 4;
-	RWQueue<std::vector<int16_t>> playable{num_buffers};
-	RWQueue<std::vector<int16_t>> backstock{num_buffers};
+	std::vector<float> play_buffer = {};
+	static constexpr auto num_buffers = 20;
+	RWQueue<std::vector<float>> playable{num_buffers};
+	RWQueue<std::vector<float>> backstock{num_buffers};
 
 	std::mutex service_mutex = {};
 	service_t service = {};
 	std::thread renderer = {};
-	SoftLimiter soft_limiter;
 
 	// The following two members let us determine the total number of played
 	// frames, which is used by GetMidiEventTimestamp() to calculate a total

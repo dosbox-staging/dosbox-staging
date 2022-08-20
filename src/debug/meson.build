@@ -1,18 +1,22 @@
-libdebug_sources = files([
-  'debug.cpp',
-  'debug_disasm.cpp',
-  'debug_gui.cpp',
-])
+libdebug_sources = files(
+    'debug.cpp',
+    'debug_disasm.cpp',
+    'debug_gui.cpp',
+)
 
-libdebug = static_library('debug', libdebug_sources,
-                          include_directories : incdir,
-                          dependencies: [
-                            sdl2_dep,
-                            libpdcurses_dep,
-                            libghc_dep,
-                            libloguru_dep,
-                         ])
+libdebug = static_library(
+    'debug',
+    libdebug_sources,
+    include_directories: incdir,
+    dependencies: [
+        sdl2_dep,
+        libpdcurses_dep,
+        libghc_dep,
+        libiir_dep,
+        libloguru_dep,
+    ],
+)
 
-libdebug_dep = declare_dependency(link_with : libdebug)
+libdebug_dep = declare_dependency(link_with: libdebug)
 
 internal_deps += libdebug_dep

@@ -1018,7 +1018,8 @@ static uint16_t MSCDEX_IOCTL_Input(PhysPt buffer,uint8_t drive_unit) {
 					mem_writeb(buffer+6,0x00);
 					break;
 		case 0x0B :{/* Audio Track Info */
-					uint8_t attr; TMSF start;
+					uint8_t attr = 0;
+					TMSF start = {};
 					uint8_t track = mem_readb(buffer+1);
 					mscdex->GetTrackInfo(drive_unit,track,attr,start);		
 					mem_writeb(buffer+2,start.fr);
@@ -1028,8 +1029,11 @@ static uint16_t MSCDEX_IOCTL_Input(PhysPt buffer,uint8_t drive_unit) {
 					mem_writeb(buffer+6,attr);
 					break; };
 		case 0x0C :{/* Get Audio Sub Channel data */
-					uint8_t attr,track,index; 
-					TMSF abs,rel;
+					uint8_t attr = 0;
+					uint8_t track = 0;
+					uint8_t index = 0;
+					TMSF abs = {};
+					TMSF rel = {};
 					mscdex->GetSubChannelData(drive_unit,attr,track,index,rel,abs);
 					mem_writeb(buffer+1,attr);
 					mem_writeb(buffer+2,((track/10)<<4)|(track%10)); // track in BCD
@@ -1044,7 +1048,8 @@ static uint16_t MSCDEX_IOCTL_Input(PhysPt buffer,uint8_t drive_unit) {
 					break;
 				   };
 		case 0x0E :{ /* Get UPC */	
-					uint8_t attr; char upc[8];
+					uint8_t attr = 0;
+					char upc[8] = {};
 					mscdex->GetUPC(drive_unit,attr,&upc[0]);
 					mem_writeb(buffer+1,attr);
 					for (int i=0; i<7; i++) mem_writeb(buffer+2+i,upc[i]);

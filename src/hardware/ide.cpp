@@ -353,7 +353,7 @@ static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -381,7 +381,7 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -410,7 +410,7 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 			continue;
 
 		if (dev->type == IDE_TYPE_HDD) {
-			// Empty
+			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
 			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
 
@@ -2715,7 +2715,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 					 *       Windows 95 OSR2 for example, will happily ask for 63
 					 *       sectors starting at C/H/S 30/9/42 without regard for
 					 *       track boundaries. */
-					if (sect > dsk->sectors) {
+					if (dsk && sect > dsk->sectors) {
 #if 0 /* this warning is pointless */
                         static bool int13_fix_wrap_warned = false;
                         if (!int13_fix_wrap_warned) {
@@ -3976,7 +3976,9 @@ static uint32_t ide_baseio_r(io_port_t port, io_width_t width)
 	case 7: /* 1F7 */
 		/* if an IDE device exists at selection return it's status, else return our status */
 		if (dev && dev->status & IDE_STATUS_BUSY) {
+			// no-op
 		} else if (dev == nullptr && ide->status & IDE_STATUS_BUSY) {
+			// no-op
 		} else {
 			ide->lower_irq();
 		}

@@ -42,6 +42,7 @@
 #include "cross.h"
 #include "debug.h"
 #include "fs_utils.h"
+#include "string_utils.h"
 #include "video.h"
 
 #include "whereami.h"
@@ -89,16 +90,6 @@ std::string get_basename(const std::string &filename)
 }
 
 
-void upcase(std::string &str) {
-	int (*tf)(int) = std::toupper;
-	std::transform(str.begin(), str.end(), str.begin(), tf);
-}
-
-void lowcase(std::string &str) {
-	int (*tf)(int) = std::tolower;
-	std::transform(str.begin(), str.end(), str.begin(), tf);
-}
-
 bool is_executable_filename(const std::string &filename) noexcept
 {
 	const size_t n = filename.length();
@@ -109,140 +100,6 @@ bool is_executable_filename(const std::string &filename) noexcept
 	std::string sfx = filename.substr(n - 3);
 	lowcase(sfx);
 	return (sfx == "exe" || sfx == "bat" || sfx == "com");
-}
-
-std::string replace(const std::string &str, char old_char, char new_char) noexcept
-{
-	std::string new_str = str;
-	for (char &c : new_str)
-		if (c == old_char)
-			c = new_char;
-	return str;
-}
-
-void trim(std::string &str)
-{
-	constexpr char whitespace[] = " \r\t\f\n";
-	const auto empty_pfx = str.find_first_not_of(whitespace);
-	if (empty_pfx == std::string::npos) {
-		str.clear(); // whole string is filled with whitespace
-		return;
-	}
-	const auto empty_sfx = str.find_last_not_of(whitespace);
-	str.erase(empty_sfx + 1);
-	str.erase(0, empty_pfx);
-}
-
-std::vector<std::string> split(const std::string &seq, const char delim)
-{
-	std::vector<std::string> words;
-	if (seq.empty())
-		return words;
-
-	// count delimeters to reserve space in our vector of words
-	const size_t n = 1u + std::count(seq.begin(), seq.end(), delim);
-	words.reserve(n);
-
-	std::string::size_type head = 0;
-	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(delim, head);
-		const auto word_len = tail - head;
-		words.emplace_back(seq.substr(head, word_len));
-		if (tail == std::string::npos) {
-			break;
-		}
-		head += word_len + 1;
-	}
-
-	// did we reserve the exact space needed?
-	assert(n == words.size());
-
-	return words;
-}
-
-std::vector<std::string> split(const std::string &seq)
-{
-	std::vector<std::string> words;
-	if (seq.empty())
-		return words;
-
-	constexpr auto whitespace = " \f\n\r\t\v";
-
-	// count words to reserve space in our vector
-	size_t n = 0;
-	auto head = seq.find_first_not_of(whitespace, 0);
-	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(whitespace, head);
-		head = seq.find_first_not_of(whitespace, tail);
-		++n;
-	}
-	words.reserve(n);
-
-	// populate the vector with the words
-	head = seq.find_first_not_of(whitespace, 0);
-	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(whitespace, head);
-		words.emplace_back(seq.substr(head, tail - head));
-		head = seq.find_first_not_of(whitespace, tail);
-	}
-
-	// did we reserve the exact space needed?
-	assert(n == words.size());
-
-	return words;
-}
-
-void strip_punctuation(std::string &str) {
-	str.erase(
-		std::remove_if(
-			str.begin(),
-			str.end(),
-			[](unsigned char c){ return std::ispunct(c); }),
-		str.end());
-}
-
-/*
-	Ripped some source from freedos for this one.
-
-*/
-
-
-/*
- * replaces all instances of character o with character c
- */
-
-
-void strreplace(char * str,char o,char n) {
-	while (*str) {
-		if (*str==o) *str=n;
-		str++;
-	}
-}
-char *ltrim(char *str) {
-	while (*str && isspace(*reinterpret_cast<unsigned char*>(str))) str++;
-	return str;
-}
-
-char *rtrim(char *str) {
-	char *p;
-	p = strchr(str, '\0');
-	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p))) {};
-	p[1] = '\0';
-	return str;
-}
-
-char *trim(char *str) {
-	return ltrim(rtrim(str));
-}
-
-char * upcase(char * str) {
-    for (char* idx = str; *idx ; idx++) *idx = toupper(*reinterpret_cast<unsigned char*>(idx));
-    return str;
-}
-
-char * lowcase(char * str) {
-	for(char* idx = str; *idx ; idx++)  *idx = tolower(*reinterpret_cast<unsigned char*>(idx));
-	return str;
 }
 
 // Scans the provided command-line string for a '/'flag, removes it (if found),
@@ -278,39 +135,6 @@ char * ScanCMDRemain(char * cmd) {
 		*scan=0;
 		return found;
 	} else return 0;
-}
-
-char * StripWord(char *&line) {
-	char * scan=line;
-	scan=ltrim(scan);
-	if (*scan=='"') {
-		char * end_quote=strchr(scan+1,'"');
-		if (end_quote) {
-			*end_quote=0;
-			line=ltrim(++end_quote);
-			return (scan+1);
-		}
-	}
-	char * begin=scan;
-	for (char c = *scan ;(c = *scan);scan++) {
-		if (isspace(*reinterpret_cast<unsigned char*>(&c))) {
-			*scan++=0;
-			break;
-		}
-	}
-	line=scan;
-	return begin;
-}
-
-Bits ConvHexWord(char * word) {
-	Bitu ret=0;
-	while (char c=toupper(*reinterpret_cast<unsigned char*>(word))) {
-		ret*=16;
-		if (c>='0' && c<='9') ret+=c-'0';
-		else if (c>='A' && c<='F') ret+=10+(c-'A');
-		word++;
-	}
-	return ret;
 }
 
 static char e_exit_buf[1024]; // greater scope as else it doesn't always gets
@@ -357,12 +181,6 @@ void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] cons
 	pthread_t handle = thread.native_handle();
 	pthread_setname_np(handle, name);
 #endif
-}
-
-bool ends_with(const std::string &str, const std::string &suffix) noexcept
-{
-	return (str.size() >= suffix.size() &&
-	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
 }
 
 // Search for the needle in the haystack, case insensitive.
@@ -623,15 +441,5 @@ bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t se
 	if (hour > 23 || minute > 59 || second > 59)
 		return false;
 	return true;
-}
-
-double decibel_to_gain(const double decibel)
-{
-	return pow(10.0, decibel / 20.0);
-}
-
-double gain_to_decibel(const double gain)
-{
-	return 20.0 * log(gain) / log(10.0);
 }
 

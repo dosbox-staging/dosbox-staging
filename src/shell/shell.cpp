@@ -501,7 +501,7 @@ void DOS_Shell::Run()
 	/* Start a normal shell and check for a first command init */
 	if (cmd->FindString("/INIT",line,true)) {
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
-		                                  Verbosity::Medium;
+		                                  Verbosity::High;
 		if (wants_welcome_banner) {
 			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),
 			         DOSBOX_GetDetailedVersion(), PRIMARY_MOD_NAME,
@@ -1408,7 +1408,8 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Continue?[reset]\n"
 	        "  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Type the letter a, b, or c[reset]\n");
-	MSG_Add("SHELL_CMD_CHOICE_ABORTED", "\nChoice aborted.\n");
+	MSG_Add("SHELL_CMD_CHOICE_EOF", "\n[color=red]Choice failed[reset]: the input stream ended without a valid choice.\n");
+	MSG_Add("SHELL_CMD_CHOICE_ABORTED", "\n[color=yellow]Choice aborted.[reset]\n");
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Displays or sets a search path for executable files.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP_LONG",

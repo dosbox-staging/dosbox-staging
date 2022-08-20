@@ -157,11 +157,6 @@ Controla la selección de los modos VESA 1.2 y 2.0 ofrecidos:
                algunos juegos pueden no usarlo correctamente (parpadeo) o pueden necesitar
                más memoria de sistema (mem = ) para usarlos.
 .
-:CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
-.
 :CONFIG_AUTOEXEC_SECTION
 Cómo se manejan secciones autoexec desde múltiples archivos de configuración.
 join      : los combina en una gran sección (comportamiento heredado).
@@ -169,12 +164,10 @@ overwrite : usa el último encontrado, como otras configuraciones conf.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controla la verbosidad antes de mostrar el programa:
-Verbosidad  | Inicio | Bienvenida | Salida anticipada
-high        |   Sí   |     Sí     |        Sí
-medium      |   No   |     Sí     |        Sí
-low         |   No   |     No     |        Sí
-quiet       |   No   |     No     |        No
-splash_only |   Sí   |     No     |        No
+Verbosidad  | Bienvenida | Salida anticipada
+high        |     Sí     |        Sí
+low         |     No     |        Sí
+quiet       |     No     |        No
 auto        | 'low' si exec o dir es pasado, de lo contrario 'high'
 .
 :CONFIG_FRAMESKIP

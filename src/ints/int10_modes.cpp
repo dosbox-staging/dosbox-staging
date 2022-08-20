@@ -21,11 +21,13 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <optional>
 #include <vector>
 
 #include "inout.h"
+#include "math_utils.h"
 #include "setup.h"
-#include "support.h"
+#include "string_utils.h"
 #include "video.h"
 #include "vga.h"
 
@@ -66,7 +68,10 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x069,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
         { 0x06A,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 128,  663, 100,  600,                                  0},
 
- // Follow VESA 1.2 mode list from 0x100 to 0x11B
+// Defined VESA modes (pre-VBE version 2.0)
+//      Video Electronics Standards Association (VESA), VESA BIOS EXTENSION (VBE),
+//      Core Functions Standard Version: 2.0, Document Revision 1.2, 18 Nov, 1994, pp. 6,7.
+//      Ref: https://www.ele.uva.es/~jesman/BigSeti/ftp/Perifericos/Vesa/vbe_2_0.pdf
         { 0x100,  M_LIN8,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                                  0},
         { 0x101,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
         { 0x102,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 132,  628, 100,  600,                                  0},
@@ -76,36 +81,38 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x106,  M_LIN4, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
         { 0x107,  M_LIN8, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
 
- // VESA text modes
         { 0x108,  M_TEXT,  640,  480,  80, 60, 8,  8, 2, 0xB8000,  0x4000, 100,  525,  80,  480,                                  0},
         { 0x109,  M_TEXT, 1056,  400, 132, 25, 8, 16, 1, 0xB8000,  0x2000, 160,  449, 132,  400,                                  0},
         { 0x10A,  M_TEXT, 1056,  688, 132, 43, 8,  8, 1, 0xB8000,  0x4000, 160,  449, 132,  344,                                  0},
         { 0x10B,  M_TEXT, 1056,  400, 132, 50, 8,  8, 1, 0xB8000,  0x4000, 160,  449, 132,  400,                                  0},
         { 0x10C,  M_TEXT, 1056,  480, 132, 60, 8,  8, 2, 0xB8000,  0x4000, 160,  531, 132,  480,                                  0},
 
- // VESA higher color modes
         { 0x10D, M_LIN15,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x10E, M_LIN16,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x10F, M_LIN32,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
+        { 0x10F, M_LIN24,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x110, M_LIN15,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 200,  525, 160,  480,                                  0},
         { 0x111, M_LIN16,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 200,  525, 160,  480,                                  0},
-        { 0x112, M_LIN32,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
+        { 0x112, M_LIN24,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
         { 0x113, M_LIN15,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 264,  628, 200,  600,                                  0},
         { 0x114, M_LIN16,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 264,  628, 200,  600,                                  0},
-        { 0x115, M_LIN32,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 132,  628, 100,  600,                                  0},
+        { 0x115, M_LIN24,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 132,  628, 100,  600,                                  0},
         { 0x116, M_LIN15, 1024,  768, 128, 48, 8, 16, 1, 0xA0000, 0x10000, 336,  806, 256,  768,                                  0},
         { 0x117, M_LIN16, 1024,  768, 128, 48, 8, 16, 1, 0xA0000, 0x10000, 336,  806, 256,  768,                                  0},
-        { 0x118, M_LIN32, 1024,  768, 128, 48, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768,                                  0},
+        { 0x118, M_LIN24, 1024,  768, 128, 48, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768,                                  0},
         { 0x119, M_LIN15, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 320, 1024,                                  0},
         { 0x11A, M_LIN16, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 320, 1024,                                  0},
-        { 0x11B, M_LIN32, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
+        { 0x11B, M_LIN24, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
 
- // 1600x1200 S3 specific modes
-        { 0x120,  M_LIN8, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 200, 1200,                                  0},
-        { 0x121, M_LIN15, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
-        { 0x122, M_LIN16, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
+// Typical VESA 2.0 modes
+        { 0x120, M_LIN16,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 200,  449, 160,  400,                                  0},
+        { 0x121, M_LIN32,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
+        { 0x122, M_LIN32,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 132,  628, 100,  600,                                  0},
+        { 0x123, M_LIN32, 1024,  768, 128, 48, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768,                                  0},
+        { 0x124, M_LIN32, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
+        { 0x145,  M_LIN8, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 200, 1200,                                  0},
+        { 0x146, M_LIN16, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
 
- // Custom modes
+ // S3-specific VESA 2.0 modes
         { 0x150,  M_LIN8,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x151,  M_LIN8,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x152,  M_LIN8,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
@@ -329,9 +336,6 @@ std::vector<VideoModeBlock> Hercules_Mode = {
 
 palette_t palette;
 
-constexpr auto num_cga_colors = 16;
-typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
-
 // The canonical CGA palette as emulated by VGA cards.
 constexpr cga_colors_t cga_colors_default = { RGBEntry
 		{0x00, 0x00, 0x00}, {0x00, 0x00, 0x2a}, {0x00, 0x2a, 0x00}, {0x00, 0x2a, 0x2a},
@@ -413,6 +417,16 @@ constexpr cga_colors_t cga_colors_tandy_warm = { RGBEntry
 		{0x14, 0x14, 0x14}, {0x16, 0x1a, 0x3c}, {0x11, 0x2f, 0x14}, {0x10, 0x37, 0x3e},
 		{0x3f, 0x1c, 0x14}, {0x3f, 0x21, 0x3d}, {0x3d, 0x38, 0x12}, {0x3c, 0x3c, 0x3e},
 };
+
+// A modern take on the canonical CGA palette with dialed back contrast.
+// https://lospec.com/palette-list/aap-dga16
+constexpr cga_colors_t cga_colors_dga16 = { RGBEntry
+		{0x00, 0x00, 0x00}, {0x00, 0x06, 0x1d}, {0x04, 0x23, 0x00}, {0x05, 0x2e, 0x34},
+		{0x1c, 0x03, 0x02}, {0x1b, 0x07, 0x27}, {0x2c, 0x14, 0x05}, {0x2e, 0x2c, 0x2a},
+		{0x12, 0x12, 0x10}, {0x02, 0x18, 0x31}, {0x26, 0x33, 0x00}, {0x1c, 0x3d, 0x35},
+		{0x3a, 0x27, 0x00}, {0x3f, 0x1e, 0x36}, {0x3f, 0x3c, 0x15}, {0x3f, 0x3f, 0x3f},
+};
+
 // clang-format on
 
 static void init_all_palettes(const cga_colors_t &cga_colors)
@@ -577,7 +591,7 @@ static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, uint16_t mo
 	while (modeblock[i].mode != 0xffff) {
 		if (modeblock[i].mode!=mode) i++;
 		else {
-			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
+			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
 				return true;
 			}
@@ -759,7 +773,11 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	case MCH_HERC:
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
-			SetCurMode(ModeList_OTHER,mode);
+			if (!SetCurMode(ModeList_OTHER, mode)) {
+				LOG(LOG_INT10, LOG_ERROR)
+				("Trying to set illegal mode %X", mode);
+				return false;
+			}
 			FinishSetMode(clearmem);
 			return true;
 		}
@@ -1885,14 +1903,16 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	return static_cast<uint32_t>(mem_bytes);
 }
 
-static cga_colors_t handle_cga_colors_prefs_tandy(const std::vector<std::string> &cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_tandy(const std::string &cga_colors_prefs)
 {
 	constexpr auto default_brown_level = 0.5f;
 
 	auto brown_level = default_brown_level;
 
-	if (cga_colors_prefs.size() > 1) {
-		auto brown_level_pref = cga_colors_prefs[1];
+	const auto tokens = split(cga_colors_prefs, ' ');
+
+	if (tokens.size() > 1) {
+		auto brown_level_pref = tokens[1];
 
 		if (float p; sscanf(brown_level_pref.c_str(), "%f", &p)) {
 			auto cga_colors = cga_colors_default;
@@ -1913,14 +1933,16 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::vector<std::string>
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::string> &cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_colors_prefs)
 {
 	constexpr auto default_contrast = 1.0f;
 
 	auto contrast = default_contrast;
 
-	if (cga_colors_prefs.size() > 1) {
-		auto contrast_pref = cga_colors_prefs[1];
+	const auto tokens = split(cga_colors_prefs, ' ');
+
+	if (tokens.size() > 1) {
+		auto contrast_pref = tokens[1];
 
 		if (float p; sscanf(contrast_pref.c_str(), "%f", &p)) {
 			contrast = clamp(p / 100, 0.0f, 1.0f);
@@ -1930,9 +1952,9 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::strin
 				// The contrast control effectively dims the
 				// first 8 non-bright colours only
 				const auto c = cga_colors[i];
-				const auto r = static_cast<float>(c.red) * contrast;
+				const auto r = static_cast<float>(c.red)   * contrast;
 				const auto g = static_cast<float>(c.green) * contrast;
-				const auto b = static_cast<float>(c.blue) * contrast;
+				const auto b = static_cast<float>(c.blue)  * contrast;
 
 				cga_colors[i] = {static_cast<uint8_t>(r),
 				                 static_cast<uint8_t>(g),
@@ -1949,44 +1971,215 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::vector<std::strin
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_custom(const std::vector<std::string> &cga_colors_prefs)
+// Tokenize the `cga_colors` string into tokens that each correspond to a
+// single color definition. These tokens will be validated and parsed by
+// `parse_color_token`.
+std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_pref)
 {
-	if (cga_colors_prefs.size() != num_cga_colors) {
-		LOG_WARNING("INT10: Invalid 'cga_colors' value: custom colors "
-		            "must be specified as %d space-separated, 6-digit hex colors "
-		            "(%u specified), using default CGA colors",
-		            num_cga_colors,
-		            static_cast<uint32_t>(cga_colors_prefs.size()));
-		return cga_colors_default;
+	std::vector<std::string> tokens;
+	if (cga_colors_pref.size() == 0)
+		return tokens;
+
+	enum class TokenType { None, Hex, RgbTriplet };
+
+	auto curr_token   = TokenType::None;
+	auto it           = cga_colors_pref.cbegin();
+	auto start        = it;
+	bool inside_paren = false;
+
+	auto is_separator = [](const char ch) {
+		return (ch == ' ' || ch == '\t' || ch == ',');
+	};
+
+	auto store_token = [&]() { tokens.emplace_back(std::string(start, it)); };
+
+	while (it != cga_colors_pref.cend()) {
+		auto ch = *it;
+		switch (curr_token) {
+		case TokenType::None:
+			if (is_separator(ch)) {
+				; // skip
+			} else if (ch == '#') {
+				curr_token = TokenType::Hex;
+				start      = it;
+			} else if (ch == '(') {
+				curr_token   = TokenType::RgbTriplet;
+				inside_paren = true;
+				start        = it;
+			}
+			break;
+
+		case TokenType::Hex:
+			if (is_separator(ch)) {
+				store_token();
+				curr_token = TokenType::None;
+			}
+			break;
+
+		case TokenType::RgbTriplet:
+			if (inside_paren) {
+				if (ch == ')')
+					inside_paren = false;
+			} else if (is_separator(ch)) {
+				store_token();
+				curr_token = TokenType::None;
+			}
+			break;
+		}
+		++it;
+	}
+
+	if (curr_token != TokenType::None)
+		store_token();
+
+	return tokens;
+}
+
+// Input should be a token output by `tokenize_cga_colors_pref`, representing
+// a color definition. Tokens are assumed to have no leading or trailing
+// white-spaces
+std::optional<RGBEntry> parse_color_token(const std::string &token,
+                                          const uint8_t color_index)
+{
+	if (token.size() == 0)
+		return {};
+
+	auto log_warning = [&](const std::string &message) {
+		LOG_WARNING("INT10: Error parsing 'cga_colors' color value '%s' at index %u: %s",
+		            token.c_str(),
+		            color_index,
+		            message.c_str());
+	};
+
+	switch (token[0]) {
+	case '#': {
+		const auto is_hex3_token = (token.size() == 3 + 1);
+		const auto is_hex6_token = (token.size() == 6 + 1);
+
+		if (!(is_hex3_token || is_hex6_token)) {
+			log_warning("hex colors must be either 3 or 6 digits long");
+			return {};
+		}
+		// Need to do this check because sscanf is way too lenient and
+		// would parse something like "xyz" as 0
+		if (!is_hex_digits(token.substr(1))) {
+			log_warning("hex colors must contain only digits and the letters A to F");
+			return {};
+		}
+
+		uint32_t value;
+		if (!sscanf(token.c_str(), "#%x", &value)) {
+			log_warning("could not parse hex color");
+			return {};
+		}
+
+		if (is_hex3_token) {
+			auto r = static_cast<uint8_t>(value >> 8 & 0xf);
+			auto g = static_cast<uint8_t>(value >> 4 & 0xf);
+			auto b = static_cast<uint8_t>(value      & 0xf);
+
+			r = r | r << 4;
+			g = g | g << 4;
+			b = b | b << 4;
+
+			return RGBEntry{r, g, b};
+		} else {
+			auto r = static_cast<uint8_t>(value >> 16 & 0xff);
+			auto g = static_cast<uint8_t>(value >>  8 & 0xff);
+			auto b = static_cast<uint8_t>(value       & 0xff);
+
+			return RGBEntry{r, g, b};
+		}
+	}
+	case '(': {
+		auto parts = split(token, ',');
+		if (parts.size() != 3) {
+			log_warning("RGB-triplets must have 3 comma-separated values");
+			return {};
+		}
+
+		const auto r_string = parts[0].substr(1);
+		const auto g_string = parts[1];
+		const auto b_string = parts[2].substr(0, parts[2].size() - 1);
+
+		auto parse_component = [&](const std::string &component) {
+			constexpr char trim_chars[] = " \t,";
+			auto c                      = component;
+			trim(c, trim_chars);
+
+			if (c.empty() || !is_digits(c)) {
+				log_warning("RGB-triplet values must contain only digits");
+				return -1;
+			}
+
+			int32_t value;
+			if (!sscanf(c.c_str(), "%d", &value)) {
+				log_warning("could not parse RGB-triplet value");
+				return -1;
+			}
+			if (value > 0xff) {
+				log_warning("RGB-triplet values must be between 0 and 255");
+				return -1;
+			}
+			return value;
+		};
+
+		const auto r = parse_component(r_string);
+		const auto g = parse_component(g_string);
+		const auto b = parse_component(b_string);
+
+		if (r < 0 || g < 0 || b < 0)
+			return {};
+		else
+			return RGBEntry{static_cast<uint8_t>(r),
+			                static_cast<uint8_t>(g),
+			                static_cast<uint8_t>(b)};
+	}
+	default:
+		log_warning("colors must be specified as 3 or 6 digit hex values "
+		            "(e.g. #f00, #ff0000 for full red) or decimal RGB-triplets "
+		            "(e.g. (255, 0, 255) for magenta)");
+		return {};
+	}
+}
+
+// Parse `cga_colors` using a standard parsing approach:
+// 1. first tokenize the input into individual string tokens, one for each
+// color definition
+// 2. validate and parse the color tokens
+std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs)
+{
+	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
+
+	if (tokens.size() != num_cga_colors) {
+		LOG_WARNING("INT10: Invalid 'cga_colors' value: 16 colors must be specified "
+				    "(found only %u)", static_cast<uint32_t>(tokens.size()));
+		return {};
 	}
 
 	cga_colors_t cga_colors = {};
+	bool found_errors = false;
 
-	for (size_t i = 0; i < cga_colors_prefs.size(); ++i) {
-		auto color = cga_colors_prefs[i];
-
-		if (uint32_t c; (color.size() == 6) && sscanf(color.c_str(), "%x", &c)) {
-			auto to_uint8 = [](const int c) {
-				constexpr auto col_min = 0;
-				constexpr auto col_max = 0x3f;
-				return static_cast<uint8_t>(
-				        clamp(c, col_min, col_max));
-			};
-
-			const auto red   = to_uint8(c >> 16 & 0xff);
-			const auto green = to_uint8(c >> 8 & 0xff);
-			const auto blue  = to_uint8(c & 0xff);
-			cga_colors[i]    = {red, green, blue};
+	for (size_t i = 0; i < tokens.size(); ++i) {
+		if (auto color = parse_color_token(tokens[i], static_cast<uint8_t>(i)); !color) {
+			found_errors = true;
 		} else {
-			LOG_WARNING("INT10: Error parsing 'cga_colors': invalid value '%s' at index %u, "
-			            "using default CGA colors",
-			            color.c_str(),
-			            static_cast<uint32_t>(i));
-			return cga_colors_default;
+			// For now we only support 18-bit colours (6-bit
+			// components) when redefining CGA colors. There's not
+			// too much to be gained by adding full 24-bit support,
+			// and it would complicate the implementation a lot.
+			color->red   >>= 2;
+			color->green >>= 2;
+			color->blue  >>= 2;
+
+			cga_colors[i] = *color;
 		}
 	}
 
-	return cga_colors;
+	if (found_errors)
+		return {};
+	else
+		return cga_colors;
 }
 
 static cga_colors_t configure_cga_colors()
@@ -1995,56 +2188,55 @@ static cga_colors_t configure_cga_colors()
 	        control->GetSection("render"));
 	assert(render_section);
 
-	const auto cga_colors_prefs = split(render_section->Get_string("cga_colors"));
+	const std::string cga_colors_prefs = render_section->Get_string("cga_colors");
 
-	if (cga_colors_prefs.size() == 0) {
+	if (cga_colors_prefs.empty()) {
 		LOG_WARNING("INT10: No value specified for 'cga_colors', using default CGA colors");
 		return cga_colors_default;
 	}
 
-	const auto preset = cga_colors_prefs[0];
-
-	if (preset == "default")
+	if (cga_colors_prefs == "default")
 		return cga_colors_default;
 
-	else if (preset == "tandy")
+	else if (starts_with("tandy", cga_colors_prefs))
 		return handle_cga_colors_prefs_tandy(cga_colors_prefs);
 
-	else if (preset == "ibm5153")
+	else if (starts_with("ibm5153", cga_colors_prefs))
 		return handle_cga_colors_prefs_ibm5153(cga_colors_prefs);
 
-	else if (preset == "tandy-warm")
+	else if (cga_colors_prefs == "tandy-warm")
 		return cga_colors_tandy_warm;
 
-	else if (preset == "agi-amiga-v1")
+	else if (cga_colors_prefs == "agi-amiga-v1")
 		return cga_colors_agi_amiga_v1;
 
-	else if (preset == "agi-amiga-v2")
+	else if (cga_colors_prefs == "agi-amiga-v2")
 		return cga_colors_agi_amiga_v2;
 
-	else if (preset == "agi-amiga-v3")
+	else if (cga_colors_prefs == "agi-amiga-v3")
 		return cga_colors_agi_amiga_v3;
 
-	else if (preset == "agi-amigaish")
+	else if (cga_colors_prefs == "agi-amigaish")
 		return cga_colors_agi_amigaish;
 
-	else if (preset == "scumm-amiga")
+	else if (cga_colors_prefs == "scumm-amiga")
 		return cga_colors_scumm_amiga;
 
-	else if (preset == "colodore")
+	else if (cga_colors_prefs == "colodore")
 		return cga_colors_colodore_sat50;
 
-	else if (preset == "colodore-sat")
+	else if (cga_colors_prefs == "colodore-sat")
 		return cga_colors_colodore_sat60;
 
+	else if (cga_colors_prefs == "dga16")
+		return cga_colors_dga16;
+
 	else {
-		if (cga_colors_prefs.size() == 1) {
-			LOG_WARNING("INT10: Invalid 'cga_colors' preset name '%s', "
-			            "using default CGA colors",
-			            preset.c_str());
-			return cga_colors_default;
+		const auto cga_colors = parse_cga_colors(cga_colors_prefs);
+		if (!cga_colors) {
+			LOG_WARNING("INT10: Using default CGA colors");
 		}
-		return handle_cga_colors_prefs_custom(cga_colors_prefs);
+		return cga_colors.value_or(cga_colors_default);
 	}
 }
 

@@ -355,7 +355,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 	StripSpaces(args);
 	if (!*args) {SyntaxError();return;}
 	if ((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
-	char * arg1=StripWord(args);
+	char * arg1=strip_word(args);
 	StripSpaces(args);
 	if (!*args) {SyntaxError();return;}
 	char* slash = strrchr(arg1,'\\');
@@ -1137,10 +1137,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 	// This construction allows them to be counted (only the non concat set)
 	char* source_p = NULL;
 	char source_x[DOS_PATHLENGTH+CROSS_LEN];
-	while ( (source_p = StripWord(args)) && *source_p ) {
+	while ( (source_p = strip_word(args)) && *source_p ) {
 		do {
 			char* plus = strchr(source_p,'+');
-			// If StripWord() previously cut at a space before a plus then
+			// If strip_word() previously cut at a space before a plus then
 			// set concatenate flag on last source and remove leading plus.
 			if (plus == source_p && sources.size()) {
 				sources[sources.size() - 1].concat = true;
@@ -1458,7 +1458,7 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 	char *arg1;
 	strcpy(sfull, "*.*");
 	do {
-		arg1 = StripWord(args);
+		arg1 = strip_word(args);
 		if (!strcasecmp(arg1, "+A"))
 			add_attr_a = true;
 		else if (!strcasecmp(arg1, "+S"))
@@ -1577,7 +1577,7 @@ void DOS_Shell::CMD_IF(char * args) {
 		args += 10;	//skip text
 		//Strip spaces and ==
 		StripSpaces(args,'=');
-		char* word = StripWord(args);
+		char* word = strip_word(args);
 		if (!isdigit(*word)) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"));
 			return;
@@ -1598,7 +1598,7 @@ void DOS_Shell::CMD_IF(char * args) {
 	if (strncasecmp(args,"EXIST ",6) == 0) {
 		args += 6; //Skip text
 		StripSpaces(args);
-		char* word = StripWord(args);
+		char* word = strip_word(args);
 		if (!*word) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_EXIST_MISSING_FILENAME"));
 			return;
@@ -1686,7 +1686,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 	uint16_t handle;
 	char * word;
 nextfile:
-	word=StripWord(args);
+	word=strip_word(args);
 	if (!DOS_OpenFile(word,0,&handle)) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),word);
 		return;
@@ -2067,9 +2067,16 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	// Begin waiting for input, but maybe break on some conditions
 	constexpr char ctrl_c = 3;
 	char choice = '\0';
+	uint16_t bytes_read = 1;
 	while (!contains(choices, choice)) {
-		uint16_t n = 1;
-		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &n);
+		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &bytes_read);
+		if (!bytes_read) {
+			WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_EOF"));
+			dos.return_code = 255;
+			LOG_ERR("CHOICE: Failed, returing errorlevel %u",
+			        dos.return_code);
+			return;
+		}
 		if (always_capitalize)
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
@@ -2091,8 +2098,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	} else {
 		WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_ABORTED"));
 		dos.return_code = 0;
-		LOG_MSG("CHOICE: Aborted, returning %u (from %d choices)",
-		        dos.return_code, num_choices);
+		LOG_WARNING("CHOICE: Aborted, returning errorlevel %u (from %d choices)",
+		            dos.return_code,
+		            num_choices);
 	}
 }
 
@@ -2120,10 +2128,10 @@ void DOS_Shell::CMD_VER(char *args)
 {
 	HELP("VER");
 	if (args && strlen(args)) {
-		char *word = StripWord(args);
+		char *word = strip_word(args);
 		if (strcasecmp(word, "set"))
 			return;
-		word = StripWord(args);
+		word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word, args);
 		if (new_version.major || new_version.minor) {
 			dos.version.major = new_version.major;

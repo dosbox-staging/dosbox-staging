@@ -147,11 +147,11 @@ void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
 	}
 
 	safe_strcpy(basePath, baseDir);
-	uint16_t id;
+	static uint16_t id = 0;
 	if (OpenDir(baseDir,id)) {
 		char* result = 0;
 		ReadDir(id,result);
-	};
+	}
 	// Get Volume Label
 #if defined (WIN32)
 	bool cdrom = false;

@@ -31,8 +31,18 @@
 #include <set>
 
 #include "envelope.h"
+#include "../src/hardware/compressor.h"
 
-#include "../src/libs/iir1/Iir.h"
+// Disable effc++ for Iir until its release.
+// Ref: https://github.com/berndporr/iir1/pull/39
+#if defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Weffc++"
+#endif
+#include <Iir.h>
+#if defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#endif
 
 typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 
@@ -87,6 +97,11 @@ extern int16_t lut_u8to16[UINT8_MAX + 1];
 
 static constexpr auto max_filter_order = 16;
 
+static constexpr auto millis_in_second   = 1000.0;
+static constexpr auto millis_in_second_f = 1000.0f;
+
+static constexpr uint8_t use_mixer_rate = 0;
+
 // Get a DOS-formatted silent-sample when there's a chance it will
 // be processed using AddSamples_nonnative()
 template <typename T>
@@ -127,6 +142,7 @@ enum class ChannelFeature {
 	Stereo,
 	Synthesizer,
 };
+using channel_features_t = std::set<ChannelFeature>;
 
 enum class FilterState { Off, On, ForcedOn };
 
@@ -172,6 +188,9 @@ public:
 
 	void SetReverbLevel(const float level);
 	float GetReverbLevel();
+
+	void SetChorusLevel(const float level);
+	float GetChorusLevel();
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(const uint16_t len, const Type *data);
@@ -312,6 +331,12 @@ private:
 		float send_gain = 0.0f;
 	} reverb = {};
 	bool do_reverb_send = false;
+
+	struct {
+		float level     = 0.0f;
+		float send_gain = 0.0f;
+	} chorus = {};
+	bool do_chorus_send = false;
 
 	class Sleeper {
 	public:

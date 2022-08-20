@@ -27,13 +27,13 @@
 
 #include "dma.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "midi.h"
 #include "pic.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "support.h"
 
 constexpr uint8_t MIXER_INDEX = 0x04;
 constexpr uint8_t MIXER_DATA = 0x05;
@@ -457,7 +457,7 @@ static void configure_opl_filter()
 		chan->SetLowPassFilter(FilterState::On);
 	};
 
-	auto chan = MIXER_FindChannel("FM");
+	auto chan = MIXER_FindChannel("OPL");
 	assert(chan);
 	if (!chan)
 		return;
@@ -693,14 +693,18 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
-			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
+			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_3:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -710,13 +714,17 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7);
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
-			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7);
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
+			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames,maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_4:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -726,12 +734,16 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<bytes_read; ++i) {
-			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
-			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf);
+		assert(samples == 0);
+		while (i < bytes_read) {
+			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
+			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] & 0xf);
+
+			frames = check_cast<uint16_t>(samples / channels);
+			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
+			samples = 0;
+			++i;
 		}
-		frames = check_cast<uint16_t>(samples / channels);
-		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_8:
  		if (sb.dma.stereo) {
@@ -785,30 +797,35 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
 			samples = bytes_read / dma16_to_sample_divisor + sb.dma.remain_size;
 			frames = check_cast<uint16_t>(samples / channels);
+
+			if (frames) {
+				// Only add whole frames when in stereo DMA mode, or
 #if defined(WORDS_BIGENDIAN)
-			if (sb.dma.sign) {
-				sb.chan->AddSamples_s16_nonnative(frames,
-				             maybe_silence(samples, sb.dma.buf.b16));
-			} else {
-				sb.chan->AddSamples_s16u_nonnative(frames,
-				             maybe_silence(samples,
-				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
-			}
+				if (sb.dma.sign) {
+					sb.chan->AddSamples_s16_nonnative(frames,
+					            maybe_silence(samples, sb.dma.buf.b16));
+				} else {
+					sb.chan->AddSamples_s16u_nonnative(frames,
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				}
 #else
-			if (sb.dma.sign) {
-				sb.chan->AddSamples_s16(frames,
-				             maybe_silence(samples, sb.dma.buf.b16));
-			} else {
-				sb.chan->AddSamples_s16u(frames,
-				             maybe_silence(samples,
-				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
-			}
+				if (sb.dma.sign) {
+					sb.chan->AddSamples_s16(frames,
+					            maybe_silence(samples, sb.dma.buf.b16));
+				} else {
+					sb.chan->AddSamples_s16u(frames,
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				}
 #endif
-			if (samples & 1) {
+			}
+			else if (samples & 1) {
+				// Carry over the dangling sample into the next round, or
 				sb.dma.remain_size = 1;
 				sb.dma.buf.b16[0] = sb.dma.buf.b16[samples - 1];
-			} else {
-			 sb.dma.remain_size=0;
+			}
+			 else {
+				// The DMA transfer is done
+				sb.dma.remain_size = 0;
 			}
 		} else { // 16-bit mono
 			bytes_read = ReadDMA16(bytes_to_read);
@@ -1521,7 +1538,7 @@ static void CTMIXER_UpdateVolumes() {
 	float m1 = calc_vol(sb.mixer.master[1]);
 	auto chan = MIXER_FindChannel("SB");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.dac[0]), m1 * calc_vol(sb.mixer.dac[1]));
-	chan = MIXER_FindChannel("FM");
+	chan = MIXER_FindChannel("OPL");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.fm[0]) , m1 * calc_vol(sb.mixer.fm[1]) );
 	chan = MIXER_FindChannel("CDAUDIO");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.cda[0]), m1 * calc_vol(sb.mixer.cda[1]));

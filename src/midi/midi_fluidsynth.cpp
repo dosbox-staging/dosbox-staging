@@ -39,8 +39,7 @@
 #include "../ints/int10.h"
 #include "string_utils.h"
 
-
-static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
+static constexpr int FRAMES_PER_BUFFER = 48; // synth granularity
 
 MidiHandlerFluidsynth instance;
 
@@ -56,11 +55,12 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "absolute or relative path, or the name of an .sf2 inside\n"
 	        "the 'soundfonts' directory within your DOSBox configuration\n"
 	        "directory.\n"
-	        "An optional percentage will scale the SoundFont's volume.\n"
-	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
-	        "The scaling percentage can range from 1 to 500.");
+	        "Note: The optional volume scaling percentage after the filename\n"
+	        "has been deprecated. Please use a mixer command instead to\n"
+	        "change the FluidSynth audio channel's volume, e.g.:\n"
+	        "  MIXER FSYNTH 200");
 
-	str_prop = secprop.Add_string("chorus", when_idle, "auto");
+	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
 	str_prop->Set_help("Chorus effect: 'auto', 'on', 'off', or custom values.\n"
 	                   "When using custom values:\n"
 	                   "  All five must be provided in-order and space-separated.\n"
@@ -70,26 +70,36 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	                   "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
 	                   "  - depth is a decimal from 0.0 to 21.0\n"
 	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
-	                   "  For example: chorus = 3 1.2 0.3 8.0 sine");
+	                   "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
+					   "Note: You can disable the FluidSynth chorus and enable the\n"
+					   "mixer-level chorus on the FluidSynth channel instead, or\n"
+					   "enable both chorus effects at the same time. Whether this\n"
+					   "sounds good depends on the SoundFont and the chorus settings\n"
+					   "being used.");
+
+	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
+	str_prop->Set_help("Reverb effect: 'auto', 'on', 'off', or custom values.\n"
+	                   "When using custom values:\n"
+	                   "  All four must be provided in-order and space-separated.\n"
+	                   "  They are: room-size damping width level, where:\n"
+	                   "  - room-size is a decimal from 0.0 to 1.0\n"
+	                   "  - damping is a decimal from 0.0 to 1.0\n"
+	                   "  - width is a decimal from 0.0 to 100.0\n"
+	                   "  - level is a decimal from 0.0 to 1.0\n"
+	                   "  For example: reverb = 0.61 0.23 0.76 0.56\n"
+					   "Note: You can disable the FluidSynth reverb and enable the\n"
+					   "mixer-level reverb on the FluidSynth channel instead, or\n"
+					   "enable both reverb effects at the same time. Whether this\n"
+					   "sounds good depends on the SoundFont and the reverb settings\n"
+					   "being used.");
 }
 
-// SetMixerLevel is a callback that's given the user-desired mixer level,
-// which is a floating point multiplier that we apply internally as
-// FluidSynth's gain value. We then read-back the gain, and use that to
-// derive a pre-scale level.
-void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &levels) noexcept
-{
-	// FluidSynth generates floats between -1 and 1, so we ask the
-	// limiter to scale these up to the INT16 range
-	soft_limiter.UpdateLevels(levels, INT16_MAX);
-}
-
-// Takes in the user's soundfont = configuration value consisting
-// of the SF2 filename followed by an optional scaling percentage.
-// This function returns the filename and percentage as a tuple.
-// If a percentage isn't provided, then it returns 'default_percent'.
+// Takes in the user's SoundFont configuration value consisting of the SF2
+// filename followed by an optional scaling percentage. The scaling
+// functionality has been deprecated; we're only parsing it here so we can
+// raise a deprecation warning if it's present.
 std::tuple<std::string, int> parse_sf_pref(const std::string &line,
-                                           const int default_percent)
+                                           const int default_percent = -1)
 {
 	if (line.empty())
 		return std::make_tuple(line, default_percent);
@@ -193,10 +203,7 @@ static std::string find_sf_file(const std::string &name)
 	return "";
 }
 
-MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH"),
-          keep_rendering(false)
-{}
+MidiHandlerFluidsynth::MidiHandlerFluidsynth() : keep_rendering(false) {}
 
 bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 {
@@ -209,21 +216,18 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		return false;
 	}
 
-	// Setup the mixer channel and level callback
+	// Setup the mixer callback
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            0,
+	                                            use_mixer_rate,
 	                                            "FSYNTH",
 	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::ReverbSend,
 	                                             ChannelFeature::Stereo,
+	                                             ChannelFeature::ReverbSend,
+	                                             ChannelFeature::ChorusSend,
 	                                             ChannelFeature::Synthesizer});
-
-	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
-	                                       this, std::placeholders::_1);
-	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
@@ -243,7 +247,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	// Load the requested SoundFont or quit if none provided
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
-	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
+	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"));
 	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
 	auto scale_by_percent = std::get<int>(sf_spec);
 
@@ -256,26 +260,25 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		return false;
 	}
 
-	if (scale_by_percent < 1 || scale_by_percent > 500) {
-		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
-		        scale_by_percent);
-		scale_by_percent = 100;
-	}
-	fluid_synth_set_gain(fluid_synth.get(),
-	                     static_cast<float>(scale_by_percent) / 100.0f);
-
 	// Let the user know that the SoundFont was loaded
-	if (scale_by_percent == 100)
-		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
-	else
-		LOG_MSG("MIDI: Using SoundFont '%s' with voices scaled by %d%%",
-		        soundfont.c_str(), scale_by_percent);
+	LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
+
+	if (scale_by_percent >= 0)
+		LOG_WARNING("MIDI: SoundFont volume scaling has been deprecated. "
+		            "Please use the MIXER command to set the volume of the "
+		            "FluidSynth audio channel instead: MIXER FSYNTH %d",
+		            scale_by_percent);
+
+	// Set unity gain
+	fluid_synth_set_gain(fluid_synth.get(), 1.0f);
 
 	constexpr int fx_group = -1; // applies setting to all groups
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	fluid_synth_set_interp_method(fluid_synth.get(), fx_group,
 	                              FLUID_INTERP_HIGHEST);
+
+	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
 	auto apply_setting = [=](const char *name, const std::string &str_val, const double &def_val,
 	                         const double &min_val, const double &max_val) {
@@ -290,7 +293,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	};
 
 	// get the users chorus settings
-	const auto chorus = split(section->Get_string("chorus"));
+	const auto chorus = split(section->Get_string("fsynth_chorus"));
 	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
 
 	// does the soundfont have known-issues with chorus?
@@ -302,7 +305,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		         soundfont.c_str());
 	}
 
-	// default chorus settings courtesy of ScummVM's defaults
+	// default chorus settings
 	auto chorus_voice_count_f = 3.0;
 	auto chorus_level = 1.2;
 	auto chorus_speed = 0.3;
@@ -331,6 +334,31 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// API accept an integer voice-count
 	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
 
+	// get the users reverb settings
+	const auto reverb = split(section->Get_string("fsynth_reverb"));
+	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
+
+	// default reverb settings
+	auto reverb_room_size = 0.61;
+	auto reverb_damping = 0.23;
+	auto reverb_width = 0.76;
+	auto reverb_level = 0.56;
+
+	// apply custom reverb settings if provided
+	if (reverb_enabled && reverb.size() > 1) {
+		if (reverb.size() == 4) {
+			apply_setting("reverb room-size", reverb[0], reverb_room_size, 0.0, 1.0);
+			apply_setting("reverb damping", reverb[1], reverb_damping, 0.0, 1.0);
+			apply_setting("reverb width", reverb[2], reverb_width, 0.0, 100.0);
+			apply_setting("reverb level", reverb[3], reverb_level, 0.0, 1.0);
+		} else {
+			LOG_WARNING("MIDI: Invalid number of custom reverb settings (%d), should be four",
+			            static_cast<int>(reverb.size()));
+		}
+	}
+
+// current API calls as of 2.2
+#if FLUIDSYNTH_VERSION_MINOR >= 2
 	fluid_synth_chorus_on(fluid_synth.get(), fx_group, chorus_enabled);
 	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_voice_count);
 	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
@@ -338,14 +366,31 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
 	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, chorus_mod_wave);
 
+	fluid_synth_reverb_on(fluid_synth.get(), fx_group, reverb_enabled);
+	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(), fx_group, reverb_room_size);
+	fluid_synth_set_reverb_group_damp(fluid_synth.get(), fx_group, reverb_damping);
+	fluid_synth_set_reverb_group_width(fluid_synth.get(), fx_group, reverb_width);
+	fluid_synth_set_reverb_group_level(fluid_synth.get(), fx_group, reverb_level);
+
+// deprecated API calls prior to 2.2
+#else
+	fluid_synth_set_chorus_on(fluid_synth.get(), chorus_enabled);
+	fluid_synth_set_chorus(fluid_synth.get(), chorus_voice_count, chorus_level, chorus_speed,
+	                       chorus_depth, chorus_mod_wave);
+
+	fluid_synth_set_reverb_on(fluid_synth.get(), reverb_enabled);
+	fluid_synth_set_reverb(fluid_synth.get(), reverb_room_size,
+	                       reverb_damping, reverb_width, reverb_level);
+#endif
+
 	if (chorus_enabled)
 		LOG_MSG("MIDI: Chorus enabled with %d voices at level %.2f, %.2f Hz speed, %.2f depth, and %s-wave modulation",
 		        chorus_voice_count, chorus_level, chorus_speed, chorus_depth,
 		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE ? "sine" : "triangle");
 
-	// Disable customization of FluidSynth's reverb in favour of the mixer's
-	// controls, which ensures similar dynamics are applied to all channels.
-	fluid_synth_reverb_on(fluid_synth.get(), fx_group, false);
+	if (reverb_enabled)
+		LOG_MSG("MIDI: Reverb enabled with a %.2f room size, %.2f damping, %.2f width, and level %.2f",
+		        reverb_room_size, reverb_damping, reverb_width, reverb_level);
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
@@ -360,7 +405,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
-	// channel->Enable(true);
 	is_open = true;
 	return true;
 }
@@ -390,13 +434,10 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
-	soft_limiter.PrintStats();
-
 	// Reset the members
 	channel.reset();
 	synth.reset();
 	settings.reset();
-	soft_limiter.Reset();
 	last_played_frame = 0;
 	selected_font = "";
 
@@ -460,7 +501,8 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 		                                     last_played_frame * 2;
 
 		assert(frames_to_be_played <= play_buffer.size());
-		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
+		channel->AddSamples_sfloat(frames_to_be_played,
+		                           sample_offset_in_buffer);
 
 		requested_frames -= frames_to_be_played;
 		last_played_frame += frames_to_be_played;
@@ -488,11 +530,12 @@ void MidiHandlerFluidsynth::Render()
 	// Allocate our buffers once and reuse for the duration.
 	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
 		backstock.Enqueue(playable_buffer);
+
 	backstock.Enqueue(std::move(playable_buffer));
 	assert(backstock.Size() == backstock.MaxCapacity());
 
@@ -503,8 +546,12 @@ void MidiHandlerFluidsynth::Render()
 
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
-		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
-		                     playable_buffer);
+
+		// Swap buffers & scale
+		std::swap(render_buffer, playable_buffer);
+		for (auto &s : playable_buffer)
+			s *= INT16_MAX;
+
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));
 	}
@@ -534,7 +581,7 @@ std::string format_sf2_line(size_t width, const std::string &name, const std::st
 MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 {
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
-	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
+	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"));
 	const auto sf_name = std::get<std::string>(sf_spec);
 	const size_t term_width = INT10_GetTextColumns();
 

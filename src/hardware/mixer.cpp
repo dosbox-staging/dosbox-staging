@@ -44,14 +44,13 @@
 
 #include <SDL.h>
 #include <speex/speex_resampler.h>
-#include <Tracy.hpp>
 
 #include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"
-#include "enum.h"
 #include "hardware.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "midi.h"
 #include "mixer.h"
@@ -60,8 +59,10 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
+#include "tracy.h"
 
 #include "../src/libs/mverb/MVerb.h"
+#include "../src/libs/tal-chorus/ChorusEngine.h"
 
 constexpr auto mixer_frame_size = 4;
 
@@ -98,6 +99,8 @@ using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
 
+enum class ReverbPreset { None, Tiny, Small, Medium, Large, Huge };
+
 struct reverb_settings_t {
 	EmVerb mverb = {};
 
@@ -107,6 +110,7 @@ struct reverb_settings_t {
 	// resulting in a more pleasant sound.
 	highpass_filter_t highpass_filter = {};
 
+	ReverbPreset preset = ReverbPreset::None;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
 	float highpass_cutoff_freq     = 1.0f;
@@ -138,10 +142,34 @@ struct reverb_settings_t {
 	}
 };
 
+enum class ChorusPreset { None, Light, Normal, Strong };
+
+struct chorus_settings_t {
+	ChorusEngine chorus_engine = ChorusEngine(48000);
+
+	ChorusPreset preset = ChorusPreset::None;
+	float synthesizer_send_level   = 0.0f;
+	float digital_audio_send_level = 0.0f;
+
+	void Setup(const float synth_level, const float digital_level,
+	           const int sample_rate)
+	{
+		synthesizer_send_level   = synth_level;
+		digital_audio_send_level = digital_level;
+
+		chorus_engine.setSampleRate(static_cast<float>(sample_rate));
+
+		constexpr auto chorus1Enabled  = true;
+		constexpr auto chorus2Disabled = false;
+		chorus_engine.setEnablesChorus(chorus1Enabled, chorus2Disabled);
+	}
+};
+
 struct mixer_t {
 	// complex types
 	matrix<float, MIXER_BUFSIZE, 2> work = {};
 	matrix<float, MIXER_BUFSIZE, 2> aux_reverb = {};
+	matrix<float, MIXER_BUFSIZE, 2> aux_chorus = {};
 
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out = {};
@@ -166,9 +194,14 @@ struct mixer_t {
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
 
 	highpass_filter_t highpass_filter = {};
+	Compressor compressor = {};
+	bool do_compressor = false;
 
 	reverb_settings_t reverb = {};
 	bool do_reverb = false;
+
+	chorus_settings_t chorus = {};
+	bool do_chorus = false;
 };
 
 static struct mixer_t mixer = {};
@@ -243,8 +276,41 @@ static void set_global_reverb(const mixer_channel_t channel)
 		channel->SetReverbLevel(mixer.reverb.digital_audio_send_level);
 }
 
+// Apply the global chorus settings to the given channel
+static void set_global_chorus(const mixer_channel_t channel)
+{
+	assert(channel);
+	if (!mixer.do_chorus || !channel->HasFeature(ChannelFeature::ChorusSend))
+		channel->SetChorusLevel(0.0f);
+	else if (channel->HasFeature(ChannelFeature::Synthesizer))
+		channel->SetChorusLevel(mixer.chorus.synthesizer_send_level);
+	else if (channel->HasFeature(ChannelFeature::DigitalAudio))
+		channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
+}
+
+constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
+{
+	if (pref == "off")
+		return ReverbPreset::None;
+	if (pref == "tiny")
+		return ReverbPreset::Tiny;
+	if (pref == "small")
+		return ReverbPreset::Small;
+	if (pref == "medium" || pref == "on")
+		return ReverbPreset::Medium;
+	if (pref == "large")
+		return ReverbPreset::Large;
+	if (pref == "huge")
+		return ReverbPreset::Huge;
+
+	// the conf system programmatically guarantees only the above prefs are used
+	assertm(false, "Unhandled revert preset");
+	return ReverbPreset::None;
+}
+
 static void configure_reverb(std::string reverb_pref)
 {
+	auto was_reverb_on = mixer.do_reverb;
 	mixer.do_reverb = (reverb_pref != "off");
 
 	if (!mixer.do_reverb) {
@@ -260,10 +326,16 @@ static void configure_reverb(std::string reverb_pref)
 	if (reverb_pref == "on")
 		reverb_pref = "medium";
 
-	enum class RoomSize { tiny, small, medium, large, huge };
-	const auto room_size = enum_cast<RoomSize>(reverb_pref).value();
-
 	auto &r = mixer.reverb; // short-hand reference
+
+	auto current_preset = r.preset;
+	auto new_preset = reverb_pref_to_preset(reverb_pref);
+	auto preset_unchanged = (current_preset == new_preset);
+
+	if (was_reverb_on && preset_unchanged)
+		return;
+
+	r.preset = new_preset;
 
 	const auto rate_hz = mixer.sample_rate.load();
 
@@ -278,12 +350,13 @@ static void configure_reverb(std::string reverb_pref)
 	constexpr auto _38_0dB = 0.05f;
 
 	// clang-format off
-	switch (room_size) { //       PDELAY  EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case RoomSize::tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case RoomSize::small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case RoomSize::medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case RoomSize::large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case RoomSize::huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
+	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
+	case ReverbPreset::None:   break;
+	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case ReverbPreset::Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -292,6 +365,100 @@ static void configure_reverb(std::string reverb_pref)
 		set_global_reverb(it.second);
 
 	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
+}
+
+constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
+{
+	if (pref == "off")
+		return ChorusPreset::None;
+	if (pref == "light")
+		return ChorusPreset::Light;
+	if (pref == "normal" || pref == "on")
+		return ChorusPreset::Normal;
+	if (pref == "strong")
+		return ChorusPreset::Strong;
+
+	// the conf system programmatically guarantees only the above prefs are used
+	assertm(false, "Unhandled chorus preset");
+	return ChorusPreset::None;
+}
+
+static void configure_chorus(std::string chorus_pref)
+{
+	auto was_chorus_on = mixer.do_chorus;
+	mixer.do_chorus = (chorus_pref != "off");
+
+	if (!mixer.do_chorus) {
+		// Disable chorus sending in each channel
+		for (auto &it : mixer.channels)
+			set_global_chorus(it.second);
+
+		LOG_MSG("MIXER: Chorus disabled");
+		return;
+	}
+
+	// "on" is an alias for the "normal" preset
+	if (chorus_pref == "on")
+		chorus_pref = "normal";
+
+	auto &c = mixer.chorus; // short-hand reference
+
+	const auto rate_hz = mixer.sample_rate.load();
+
+	auto current_preset = c.preset;
+	auto new_preset = chorus_pref_to_preset(chorus_pref);
+	auto preset_unchanged = (current_preset == new_preset);
+
+	if (was_chorus_on && preset_unchanged)
+		return;
+
+	c.preset = new_preset;
+
+	// Pre-computed (negative) decibel scalars
+	constexpr auto __6dB = 0.75f;
+	constexpr auto _11dB = 0.54f;
+	constexpr auto _16dB = 0.33f;
+
+	// clang-format off
+	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
+	case ChorusPreset::None:   break;
+	case ChorusPreset::Light:  c.Setup(_16dB, 0.00f, rate_hz); break;
+	case ChorusPreset::Normal: c.Setup(_11dB, 0.00f, rate_hz); break;
+	case ChorusPreset::Strong: c.Setup(__6dB, 0.00f, rate_hz); break;
+	}
+	// clang-format on
+
+	// Configure the channels
+	for (auto &it : mixer.channels)
+		set_global_chorus(it.second);
+
+	LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.c_str());
+}
+
+static void configure_compressor(const bool compressor_enabled)
+{
+	mixer.do_compressor = compressor_enabled;
+	if (!mixer.do_compressor) {
+		LOG_MSG("MIXER: Master compressor disabled");
+		return;
+	}
+
+	const auto _0dbfs_sample_value = INT16_MAX;
+	const auto threshold_db        = -6.0f;
+	const auto ratio               = 3.0f;
+	const auto attack_time_ms      = 0.01f;
+	const auto release_time_ms     = 5000.0f;
+	const auto rms_window_ms       = 10.0;
+
+	mixer.compressor.Configure(mixer.sample_rate,
+	                           _0dbfs_sample_value,
+	                           threshold_db,
+	                           ratio,
+	                           attack_time_ms,
+	                           release_time_ms,
+	                           rms_window_ms);
+
+	LOG_MSG("MIXER: Master compressor enabled");
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
@@ -307,6 +474,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 
 	set_global_crossfeed(chan);
 	set_global_reverb(chan);
+	set_global_chorus(chan);
 
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate)
@@ -327,12 +495,19 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 	MIXER_LockAudioDevice();
 	auto it = mixer.channels.find(name);
 
-	// Deprecated alias SPKR to PCSPEAKER
-	if (it == mixer.channels.end() && std::string_view(name) == "SPKR") {
-		LOG_WARNING("MIXER: '%s' is deprecated due to inconsistent "
-		            "naming, please use 'PCSPEAKER' instead",
-		            name);
-		it = mixer.channels.find("PCSPEAKER");
+	if (it == mixer.channels.end()) {
+		// Deprecated alias SPKR to PCSPEAKER
+		if (std::string_view(name) == "SPKR") {
+			LOG_WARNING("MIXER: 'SPKR' is deprecated due to inconsistent "
+						"naming, please use 'PCSPEAKER' instead");
+			it = mixer.channels.find("PCSPEAKER");
+
+		// Deprecated alias FM to OPL
+		} else if (std::string_view(name) == "FM") {
+			LOG_WARNING("MIXER: 'FM' is deprecated due to inconsistent "
+						"naming, please use 'OPL' instead");
+			it = mixer.channels.find("OPL");
+		}
 	}
 
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
@@ -591,67 +766,47 @@ void MixerChannel::AddSilence()
 	MIXER_UnlockAudioDevice();
 }
 
-static const std::map<FilterState, std::string> filter_state_map = {
-        {FilterState::Off, "disabled"},
-        {FilterState::On, "enabled"},
-        {FilterState::ForcedOn, "enabled (forced)"},
-};
-
-static std::string filter_to_string(const uint8_t order, const uint16_t cutoff_freq)
+static void log_filter_settings(const std::string &channel_name,
+                                const std::string_view filter_name,
+                                const FilterState state, const uint8_t order,
+                                const uint16_t cutoff_freq)
 {
-	char buf[100] = {};
-	safe_sprintf(buf, " (%d dB/oct at %d Hz)", order * 6, cutoff_freq);
-	return std::string(buf);
+	// we programmatically expect only 'on' and 'forced-on' states:
+	assert(state != FilterState::Off);
+	assert(state == FilterState::On || state == FilterState::ForcedOn);
+
+	constexpr auto db_per_order = 6;
+
+	LOG_MSG("MIXER: %s channel %s filter enabled%s (%d dB/oct at %u Hz)",
+	        channel_name.c_str(),
+	        filter_name.data(),
+	        state == FilterState::ForcedOn ? " (forced)" : "",
+	        order * db_per_order,
+	        cutoff_freq);
 }
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
 	do_highpass_filter = state != FilterState::Off;
 
-	if (!do_lowpass_filter) {
-		// DEBUG_LOG_MSG("MIXER: Highpass filter is off for channel: %s",
-		//               name.c_str());
-		return;
-	}
-
-	const auto it = filter_state_map.find(state);
-	if (it != filter_state_map.end()) {
-		const auto filter_state = it->second;
-		const auto filter_string =
-		        state == FilterState::Off
-		                ? ""
-		                : filter_to_string(filters.highpass.order,
-		                                   filters.highpass.cutoff_freq);
-		LOG_MSG("MIXER: %s channel highpass filter %s%s",
-		        name.c_str(),
-		        filter_state.c_str(),
-		        filter_string.c_str());
-	}
+	if (do_highpass_filter)
+		log_filter_settings(name,
+		                    "highpass",
+		                    state,
+		                    filters.highpass.order,
+		                    filters.highpass.cutoff_freq);
 }
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
 	do_lowpass_filter = state != FilterState::Off;
 
-	if (!do_lowpass_filter) {
-		// DEBUG_LOG_MSG("MIXER: Lowpass filter is off for channel: %s",
-		//               name.c_str());
-		return;
-	}
-
-	const auto it = filter_state_map.find(state);
-	if (it != filter_state_map.end()) {
-		const auto filter_state = it->second;
-		const auto filter_string =
-		        state == FilterState::Off
-		                ? ""
-		                : filter_to_string(filters.lowpass.order,
-		                                   filters.lowpass.cutoff_freq);
-		LOG_MSG("MIXER: %s channel lowpass filter %s%s",
-		        name.c_str(),
-		        filter_state.c_str(),
-		        filter_string.c_str());
-	}
+	if (do_lowpass_filter)
+		log_filter_settings(name,
+		                    "lowpass",
+		                    state,
+		                    filters.lowpass.order,
+		                    filters.lowpass.cutoff_freq);
 }
 
 void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
@@ -778,6 +933,44 @@ void MixerChannel::SetReverbLevel(const float level)
 float MixerChannel::GetReverbLevel()
 {
 	return reverb.level;
+}
+
+void MixerChannel::SetChorusLevel(const float level)
+{
+	constexpr auto level_min    = 0.0f;
+	constexpr auto level_max    = 1.0f;
+	constexpr auto level_min_db = -24.0f;
+	constexpr auto level_max_db = 0.0f;
+
+	assert(level >= level_min);
+	assert(level <= level_max);
+
+	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > level_min);
+
+	if (!do_chorus_send) {
+		// DEBUG_LOG_MSG("MIXER: Chorus send is off for channel: %s",
+		//               name.c_str());
+		chorus.level = level_min;
+		chorus.send_gain = level_min_db;
+		return;
+	}
+
+	chorus.level = level;
+
+	const auto level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
+
+	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
+
+	//DEBUG_LOG_MSG("MIXER: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
+	//              level,
+	//              level_db,
+	//              chorus.send_gain,
+	//              name.c_str());
+}
+
+float MixerChannel::GetChorusLevel()
+{
+	return chorus.level;
 }
 
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
@@ -1119,6 +1312,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 			mixer.aux_reverb[mixpos][0] += frame.left  * reverb.send_gain;
 			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
 		}
+		if (do_chorus_send) {
+			// Mix samples to the chorus aux buffer, scaled by the
+			// chorus send volume
+			mixer.aux_chorus[mixpos][0] += frame.left  * chorus.send_gain;
+			mixer.aux_chorus[mixpos][1] += frame.right * chorus.send_gain;
+		}
 
 		if (do_sleep)
 			sleeper.Listen(frame);
@@ -1345,8 +1544,8 @@ static void MIXER_MixData(const int frames_requested)
 		it.second->Mix(frames_requested);
 
 	if (mixer.do_reverb) {
-		// Apply reverb to the reverb aux buffer, then mix the results
-		// to the master output
+		// Apply reverb effect to the reverb aux buffer, then mix the
+		// results to the master output
 		auto pos = start_pos;
 
 		for (work_index_t i = 0; i < frames_added; ++i) {
@@ -1378,7 +1577,25 @@ static void MIXER_MixData(const int frames_requested)
 		}
 	}
 
-	// Apply high-pass filter to the master output as the very last step
+	if (mixer.do_chorus) {
+		// Apply chorus effect to the chorus aux buffer, then mix the
+		// results to the master output
+		auto pos = start_pos;
+
+		for (work_index_t i = 0; i < frames_added; ++i) {
+			AudioFrame frame = {mixer.aux_chorus[pos][0],
+			                    mixer.aux_chorus[pos][1]};
+
+			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
+
+			mixer.work[pos][0] += frame.left;
+			mixer.work[pos][1] += frame.right;
+
+			pos = (pos + 1) & MIXER_BUFMASK;
+		}
+	}
+
+	// Apply high-pass filter to the master output
 	auto pos = start_pos;
 
 	for (work_index_t i = 0; i < frames_added; ++i) {
@@ -1387,6 +1604,22 @@ static void MIXER_MixData(const int frames_requested)
 			        mixer.work[pos][ch]);
 		}
 		pos = (pos + 1) & MIXER_BUFMASK;
+	}
+
+	if (mixer.do_compressor) {
+		// Apply compressor to the master output as the very last step
+		pos = start_pos;
+
+		for (work_index_t i = 0; i < frames_added; ++i) {
+			AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
+
+			frame = mixer.compressor.Process(frame);
+
+			mixer.work[pos][0] = frame.left;
+			mixer.work[pos][1] = frame.right;
+
+			pos = (pos + 1) & MIXER_BUFMASK;
+		}
 	}
 
 	// Capture audio output if requested
@@ -1599,6 +1832,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 			mixer.aux_reverb[pos][0] = 0.0f;
 			mixer.aux_reverb[pos][1] = 0.0f;
 
+			mixer.aux_chorus[pos][0] = 0.0f;
+			mixer.aux_chorus[pos][1] = 0.0f;
+
 			++pos;
 		}
 	} else {
@@ -1613,6 +1849,9 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 
 			mixer.aux_reverb[pos][0] = 0.0f;
 			mixer.aux_reverb[pos][1] = 0.0f;
+
+			mixer.aux_chorus[pos][0] = 0.0f;
+			mixer.aux_chorus[pos][1] = 0.0f;
 
 			++pos;
 		}
@@ -1651,7 +1890,7 @@ public:
 		cmd->FillVector(args);
 
 		mixer_channel_t channel = {};
-		auto is_master            = false;
+		auto is_master          = false;
 
 		MIXER_LockAudioDevice();
 		for (auto &arg : args) {
@@ -1677,7 +1916,7 @@ public:
 				if (s.size() > 1 && s[0] == prefix) {
 					float p = 0.0f;
 					if (sscanf(s.c_str() + 1, "%f", &p)) {
-						value_out = clamp(p / 100, 0.0f, 1.0f);
+						value_out = clamp(p / 100.0f, 0.0f, 1.0f);
 						return true;
 					}
 				}
@@ -1686,18 +1925,35 @@ public:
 
 			const auto global_command = !is_master && !channel;
 
+			constexpr auto crossfeed_command = 'X';
+			constexpr auto reverb_command    = 'R';
+			constexpr auto chorus_command    = 'C';
+
 			if (global_command) {
 				// Global commands apply to all non-master channels
 				float value = 0.0f;
-				if (parse_prefixed_percentage('X', arg, value)) {
+				if (parse_prefixed_percentage(crossfeed_command,
+				                              arg,
+				                              value)) {
 					for (auto &it : mixer.channels) {
 						it.second->SetCrossfeedStrength(value);
 					}
 					continue;
-				} else if (parse_prefixed_percentage('R', arg, value)) {
+				} else if (parse_prefixed_percentage(reverb_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_reverb) {
 						for (auto &it : mixer.channels) {
 							it.second->SetReverbLevel(value);
+						}
+					}
+					continue;
+				} else if (parse_prefixed_percentage(chorus_command,
+				                                     arg,
+				                                     value)) {
+					if (mixer.do_chorus) {
+						for (auto &it : mixer.channels) {
+							it.second->SetChorusLevel(value);
 						}
 					}
 					continue;
@@ -1711,12 +1967,23 @@ public:
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
 				float value = 0.0f;
-				if (parse_prefixed_percentage('X', arg, value)) {
+				if (parse_prefixed_percentage(crossfeed_command,
+				                              arg,
+				                              value)) {
 					channel->SetCrossfeedStrength(value);
 					continue;
-				} else if (parse_prefixed_percentage('R', arg, value)) {
+				} else if (parse_prefixed_percentage(reverb_command,
+				                                     arg,
+				                                     value)) {
 					if (mixer.do_reverb) {
 						channel->SetReverbLevel(value);
+					}
+					continue;
+				} else if (parse_prefixed_percentage(chorus_command,
+				                                     arg,
+				                                     value)) {
+					if (mixer.do_chorus) {
+						channel->SetChorusLevel(value);
 					}
 					continue;
 				}
@@ -1754,7 +2021,7 @@ private:
 		        "    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])\n"
 		        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
 		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
-		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]\n"
+		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]\n"
 		        "\n"
 		        "Notes:\n"
 		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
@@ -1765,7 +2032,7 @@ private:
 		        "\n"
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 	}
 
 	void ParseVolume(const std::string &s, AudioFrame &volume)
@@ -1816,8 +2083,9 @@ private:
 		                           const int rate,
 		                           const std::string &mode,
 		                           const std::string &xfeed,
-		                           const std::string &reverb) {
-			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s\n",
+		                           const std::string &reverb,
+		                           const std::string &chorus) {
+			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s %7s\n",
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
@@ -1826,39 +2094,54 @@ private:
 			         rate,
 			         mode.c_str(),
 			         xfeed.c_str(),
-			         reverb.c_str());
+			         reverb.c_str(),
+			         chorus.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb[reset]\n")
+		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb  Chorus[reset]\n")
 		                 .c_str());
+
+		constexpr auto off_value  = "off";
+		constexpr auto none_value = "-";
 
 		MIXER_LockAudioDevice();
 		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
 		             mixer.master_volume,
 		             mixer.sample_rate,
 		             "Stereo",
-		             "-",
-		             "-");
+		             none_value,
+		             none_value,
+		             none_value);
 
 		for (auto &[name, chan] : mixer.channels) {
-			std::string xfeed = "-";
+			std::string xfeed = none_value;
 			if (chan->HasFeature(ChannelFeature::Stereo)) {
 				if (chan->GetCrossfeedStrength() > 0.0f) {
 					xfeed = std::to_string(static_cast<uint8_t>(
 					        round(chan->GetCrossfeedStrength() *
-					              100)));
+					              100.0f)));
 				} else {
-					xfeed = "off";
+					xfeed = off_value;
 				}
 			}
 
-			std::string reverb = "-";
+			std::string reverb = none_value;
 			if (chan->HasFeature(ChannelFeature::ReverbSend)) {
 				if (chan->GetReverbLevel() > 0.0f) {
 					reverb = std::to_string(static_cast<uint8_t>(
-					        round(chan->GetReverbLevel() * 100)));
+					        round(chan->GetReverbLevel() * 100.0f)));
 				} else {
-					reverb = "off";
+					reverb = off_value;
+				}
+			}
+
+			std::string chorus = none_value;
+			if (chan->HasFeature(ChannelFeature::ChorusSend)) {
+				if (chan->GetChorusLevel() > 0.0f) {
+					chorus = std::to_string(static_cast<uint8_t>(
+					        round(chan->GetChorusLevel() * 100.0f)));
+				} else {
+					chorus = off_value;
 				}
 			}
 
@@ -1874,7 +2157,8 @@ private:
 			             chan->GetSampleRate(),
 			             mode,
 			             xfeed,
-			             reverb);
+			             reverb,
+			             chorus);
 		}
 		MIXER_UnlockAudioDevice();
 	}
@@ -2012,7 +2296,9 @@ void MIXER_Init(Section *sec)
 	int sdl_allow_flags = 0;
 
 	if (negotiate) {
-		sdl_allow_flags |= SDL_AUDIO_ALLOW_FREQUENCY_CHANGE;
+		// We allow chunk size changes (if supported), but don't allow
+		// frequency changes because we've only seen them go beyond
+		// SDL's desired 48 Khz limit
 #if defined(SDL_AUDIO_ALLOW_SAMPLES_CHANGE)
 		sdl_allow_flags |= SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 #endif
@@ -2117,6 +2403,10 @@ void MIXER_Init(Section *sec)
 
 	// Initialise send effects
 	configure_reverb(section->Get_string("reverb"));
+	configure_chorus(section->Get_string("chorus"));
+
+	// Initialise compressor
+	configure_compressor(section->Get_bool("compressor"));
 
 	restore_channel_states(channel_states);
 }
@@ -2135,10 +2425,12 @@ static void ToggleMute(const bool was_pressed)
 		break;
 	case MixerState::Mute:
 		MIXER_SetState(MixerState::On);
+		MIDI_Engage();
 		LOG_MSG("MIXER: Unmuted");
 		break;
 	case MixerState::On:
 		MIXER_SetState(MixerState::Mute);
+		MIDI_Disengage();
 		LOG_MSG("MIXER: Muted");
 		break;
 	default: break;
@@ -2194,6 +2486,13 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	bool_prop->Set_help(
 	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
 
+	const auto default_on = true;
+	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
+	bool_prop->Set_help("Enable the auto-leveling compressor on the master channel to prevent clipping\n"
+	                    "of the audio output:\n"
+	                    "  off:  Disable compressor.\n"
+	                    "  on:   Enable compressor (default).");
+
 	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
 	string_prop->Set_help(
 	        "Set crossfeed globally on all stereo channels for headphone listening:\n"
@@ -2216,11 +2515,24 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           synth channel (typically OPL) for both music and sound effects.\n"
 	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
 	        "  large:   Large hall preset recommended for games that use separate\n"
-	        "  			channels for music and digital audio.\n"
+	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
 	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
+
+	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
+	string_prop = sec_prop.Add_string("chorus", when_idle, "off");
+	string_prop->Set_help(
+	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
+	        "  off:     No chorus (default).\n"
+	        "  on:      Enable chorus (normal preset).\n"
+	        "  light:   A light chorus effect (especially suited for\n"
+	        "           synth music that features lots of white noise.)\n"
+	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
+	        "  strong:  An obvious and upfront chorus effect.\n"
+	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
+	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }

@@ -236,7 +236,7 @@ int Integrator6581::solve(int vi) const
     const int nVg = static_cast<int>(fmc->getVcr_nVg((nVddt_Vw_2 + (Vgdt_2 >> 1)) >> 16));
 #ifdef SLOPE_FACTOR
     const double nVp = static_cast<double>(nVg - nVt) / n; // Pinch-off voltage
-    const int kVg = static_cast<int>(nVp) - nVmin;
+    const int kVg = static_cast<int>(nVp + 0.5) - nVmin;
 #else
     const int kVg = (nVg - nVt) - nVmin;
 #endif
@@ -251,9 +251,10 @@ int Integrator6581::solve(int vi) const
     const unsigned int If = static_cast<unsigned int>(fmc->getVcr_n_Ids_term(kVgt_Vs)) << 15;
     const unsigned int Ir = static_cast<unsigned int>(fmc->getVcr_n_Ids_term(kVgt_Vd)) << 15;
 #ifdef SLOPE_FACTOR
-    const int n_I_vcr = (If - Ir) * n;
+    const double iVcr = static_cast<double>(If - Ir);
+    const int n_I_vcr = static_cast<int>((iVcr * n) + 0.5);
 #else
-    const int n_I_vcr = (If - Ir);
+    const int n_I_vcr = If - Ir;
 #endif
 
 #ifdef SLOPE_FACTOR
@@ -261,7 +262,7 @@ int Integrator6581::solve(int vi) const
     const double gamma = 1.0;   // body effect factor
     const double phi = 0.8;     // bulk Fermi potential
     const double Vp = nVp / fmc->getN16();
-    n = 1. + (gamma / (2 * sqrt(Vp + phi + 4 * fmc->getUt())));
+    n = 1. + (gamma / (2. * sqrt(Vp + phi + 4. * fmc->getUt())));
     assert((n > 1.2) && (n < 1.8));
 #endif
 

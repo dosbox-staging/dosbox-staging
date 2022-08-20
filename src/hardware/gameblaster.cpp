@@ -22,7 +22,6 @@
 #include "gameblaster.h"
 
 #include "setup.h"
-#include "support.h"
 #include "pic.h"
 
 void GameBlaster::Open(const int port_choice, const std::string &card_choice,
@@ -76,16 +75,11 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		                                    12);
 	}
 
-	// Setup the soft limiter at the rendering rate
-	soft_limiter = std::make_unique<SoftLimiter>(CardName());
-	soft_limiter->AdjustRelease(render_rate_hz, 1); // one-frame per processing
-
 	// Setup the mixer and level controls
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
-	const auto level_callback = std::bind(&GameBlaster::LevelCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
-	                           0,
+	                           use_mixer_rate,
 	                           CardName(),
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,
@@ -110,8 +104,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		channel->SetLowPassFilter(FilterState::Off);
 	}
 
-	channel->RegisterLevelCallBack(level_callback);
-
 	// Calculate rates and ratio based on the mixer's rate
 	const auto frame_rate_hz = channel->GetSampleRate();
 
@@ -128,7 +120,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	assert(channel);
 	assert(devices[0]);
 	assert(devices[1]);
-	assert(soft_limiter);
 	assert(resamplers[0]);
 	assert(resamplers[1]);
 
@@ -139,26 +130,24 @@ bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
 {
 	// Static containers setup once and reused
 	static std::array<int16_t, 2> buf = {}; // left and right
-	static int16_t *p_buf[] = {&buf[0], &buf[1]};
+	static int16_t *p_buf[]           = {&buf[0], &buf[1]};
 	static device_sound_interface::sound_stream stream;
 
 	// Accumulate the samples from both SAA-1099 devices
 	devices[0]->sound_stream_update(stream, 0, p_buf, 1);
-	frame.left  = buf[0];
-	frame.right = buf[1];
+	int left_accum = buf[0];
+	int right_accum = buf[1];
+
 	devices[1]->sound_stream_update(stream, 0, p_buf, 1);
-	frame.left += buf[0];
-	frame.right += buf[1];
+	left_accum += buf[0];
+	right_accum += buf[1];
 
 	// Increment our time datum up to which the device has rendered
 	last_rendered_ms += ms_per_render;
 
-	// Limit the accumulated frame to avoid hard-clipping
-	soft_limiter->ProcessFrame(frame, buf);
-
 	// Resample the limited frame
-	const auto l_ready = resamplers[0]->input(buf[0]);
-	const auto r_ready = resamplers[1]->input(buf[1]);
+	const auto l_ready = resamplers[0]->input(left_accum);
+	const auto r_ready = resamplers[1]->input(right_accum);
 	assert(l_ready == r_ready);
 	const auto frame_is_ready = l_ready && r_ready;
 
@@ -237,14 +226,6 @@ void GameBlaster::AudioCallback(const uint16_t requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
-// The "Z:\> mixer CHANNEL VOLUME" normally scales a channels' samples after
-// hard-clipping.We can avoid this hard-clipping by letting the soft-limiter
-// manage the channel's level using this callback.
-void GameBlaster::LevelCallback(const AudioFrame &levels)
-{
-	soft_limiter->UpdateLevels(levels, 1);
-}
-
 void GameBlaster::WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t)
 {
 	switch (port - base_port) {
@@ -294,7 +275,6 @@ void GameBlaster::Close()
 	channel.reset();
 	devices[0].reset();
 	devices[1].reset();
-	soft_limiter.reset();
 	resamplers[0].reset();
 	resamplers[1].reset();
 

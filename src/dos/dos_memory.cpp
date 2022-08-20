@@ -19,10 +19,12 @@
 #include "dosbox.h"
 
 #include "dos_inc.h"
-#include "enum.h"
 #include "mem.h"
+#include "support.h"
 
-enum class McbFaultStrategy { deny, repair, report, allow };
+#include <string_view>
+
+enum class McbFaultStrategy { Deny, Repair, Report, Allow };
 
 // Constants
 // ~~~~~~~~~
@@ -34,16 +36,27 @@ constexpr uint16_t umb_start_seg = 0x9fff;
 
 static uint16_t allocation_strategy = 0x00;
 
-static auto mcb_fault_strategy = McbFaultStrategy::repair;
+static auto mcb_fault_strategy = McbFaultStrategy::Repair;
 
 // not based on anything in particular. Player Manager 2 requires ~17 corrections.
 constexpr uint16_t max_allowed_faults = 100;
 
-void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref)
+void DOS_SetMcbFaultStrategy(const char * mcb_fault_strategy_pref)
 {
 	assert(mcb_fault_strategy_pref);
-	mcb_fault_strategy =
-	        enum_cast<McbFaultStrategy>(mcb_fault_strategy_pref).value();
+	const std::string_view pref = mcb_fault_strategy_pref;
+
+	if (pref == "deny")
+		mcb_fault_strategy = McbFaultStrategy::Deny;
+	else if (pref == "repair")
+		mcb_fault_strategy = McbFaultStrategy::Repair;
+	else if (pref == "report")
+		mcb_fault_strategy = McbFaultStrategy::Report;
+	else if (pref == "allow")
+		mcb_fault_strategy = McbFaultStrategy::Allow;
+	else
+		// the conf system programmatically guarantees only the above prefs are used
+		assertm(false, "Unhandled MCB fault strategy");
 }
 
 // returns true if the MCB block needed triaging
@@ -57,11 +70,11 @@ static bool triage_block(DOS_MCB &mcb, const uint8_t repair_type)
 		return false;
 
 	switch (mcb_fault_strategy) {
-	case McbFaultStrategy::deny:
+	case McbFaultStrategy::Deny:
 		E_Exit("DOS_MEMORY: Exiting due corrupt MCB chain");
 		break;
 
-	case McbFaultStrategy::repair:
+	case McbFaultStrategy::Repair:
 		LOG_INFO("DOS_MEMORY: Repairing MCB block in segment %04xh from type '%02x' to '%02x'",
 		         mcb.GetPSPSeg(),
 		         mcb.GetType(),
@@ -70,13 +83,13 @@ static bool triage_block(DOS_MCB &mcb, const uint8_t repair_type)
 		assert(mcb_type_is_valid());
 		break;
 
-	case McbFaultStrategy::report:
+	case McbFaultStrategy::Report:
 		LOG_WARNING("DOS_MEMORY: Reporting MCB block in segment %04xh with corrupt type '%02x'",
 		            mcb.GetPSPSeg(),
 		            mcb.GetType());
 		break;
 
-	case McbFaultStrategy::allow:
+	case McbFaultStrategy::Allow:
 		break;
 	}
 	return true;

@@ -45,7 +45,7 @@
 #include "fs_utils.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
+#include "math_utils.h"
 
 using namespace std;
 
@@ -493,7 +493,7 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 			                                      this, std::placeholders::_1);
 
 			player.channel = MIXER_AddChannel(mixer_callback,
-			                                  0,
+			                                  use_mixer_rate,
 			                                  "CDAUDIO",
 			                                  {ChannelFeature::Stereo,
 			                                   ChannelFeature::DigitalAudio});
@@ -501,7 +501,7 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 			player.channel->Enable(false); // only enabled during playback periods
 		}
 #ifdef DEBUG
-		LOG_MSG("CDROM: Initialized the CDAUDIO mixer channel");
+		LOG_MSG("CDROM: Initialized the CDAUDIO audio channel");
 #endif
 	}
 	refCount++;

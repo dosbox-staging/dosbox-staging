@@ -1,10 +1,14 @@
+
 fluidsynth-*
 glib-*
 googletest-release-*
+iir1-*
 libffi*
 libslirp-*
 munt-libmt32emu*
 packagecache
 pcre*
+proxy-libintl*
+speexdsp-*
 tracy-*
 zlib*

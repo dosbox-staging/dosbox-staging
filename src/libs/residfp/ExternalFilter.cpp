@@ -50,11 +50,11 @@ void ExternalFilter::setClockFrequency(double frequency)
     const double dt = 1. / frequency;
 
     // Low-pass:  R = 10kOhm, C = 1000pF; w0l = dt/(dt+RC) = 1e-6/(1e-6+1e4*1e-9) = 0.091
-	// Cutoff 1/2*PI*RC = 1/2*PI*1e4*1e-9 = 15915.5 Hz
+    // Cutoff 1/2*PI*RC = 1/2*PI*1e4*1e-9 = 15915.5 Hz
     w0lp_1_s7 = static_cast<int>((dt / (dt + getRC(10e3, 1000e-12))) * (1 << 7) + 0.5);
 
     // High-pass: R = 10kOhm, C = 10uF;   w0h = dt/(dt+RC) = 1e-6/(1e-6+1e4*1e-5) = 0.00000999
-	// Cutoff 1/2*PI*RC = 1/2*PI*1e4*1e-5 = 1.59155 Hz
+    // Cutoff 1/2*PI*RC = 1/2*PI*1e4*1e-5 = 1.59155 Hz
     w0hp_1_s17 = static_cast<int>((dt / (dt + getRC(10e3, 10e-6))) * (1 << 17) + 0.5);
 }
 

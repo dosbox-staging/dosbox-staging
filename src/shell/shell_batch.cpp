@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "logging.h"
-#include "support.h"
+#include "string_utils.h"
 
 // Permitted ASCII control characters in batch files
 constexpr uint8_t BACKSPACE = 8;

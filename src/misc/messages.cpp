@@ -39,25 +39,6 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
-#if C_COREFOUNDATION
-#include <CoreFoundation/CoreFoundation.h>
-[[maybe_unused]] static std::string get_language_from_os()
-{
-	auto cflocale = CFLocaleCopyCurrent();
-	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
-	auto locale_str_ref = static_cast<CFStringRef>(locale);
-	const auto cstr = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
-	std::string locale_string(cstr ? cstr : "");
-	CFRelease(cflocale);
-	return locale_string;
-}
-#else
-[[maybe_unused]] static std::string get_language_from_os()
-{
-	return "";
-}
-#endif
-
 #define LINE_IN_MAXLEN 2048
 
 class Message {
@@ -203,67 +184,6 @@ bool MSG_Write(const char * location) {
 	return true;
 }
 
-static std::string get_language(const Section_prop *section)
-{
-	std::string lang = {};
-
-	// Did the user provide a language on the command line?
-	(void)control->cmdline->FindString("-lang", lang, true);
-
-	// Is a language provided in the conf file?
-	if (lang.empty()) {
-		assert(section);
-		lang = section->Get_string("language");
-	}
-
-	// Clear the language if it's set to the POSIX default
-	auto clear_if_default = [](std::string &l) {
-		lowcase(l);
-		if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
-			l.clear();
-		}
-	};
-
-	// Check the LANG environment variable
-	if (lang.empty()) {
-		const char *envlang = getenv("LANG");
-		if (envlang) {
-			lang = envlang;
-			clear_if_default(lang);
-		}
-	}
-	// Avoid changing locales already established by the ncurses debugger
-	// frame. Test it by running "debug.com ls.com" in a debugger build,
-	// then Alt+TAB to the debugger window, and finally press F10. You
-	// should be able to use the up and down arrows keys to select an
-	// instruction from the middle pane.
-#if !(C_DEBUG)
-	// Check if the locale is set
-	if (lang.empty()) {
-		const auto envlang = setlocale(LC_ALL, "");
-		if (envlang) {
-			lang = envlang;
-			clear_if_default(lang);
-		}
-	}
-
-	// Query the OS using OS-specific calls
-	if (lang.empty()) {
-		lang = get_language_from_os();
-		clear_if_default(lang);
-	}
-#endif
-	// Drop the dialect part of the language
-	// (e.g. "en_GB.UTF8" -> "en")
-	if (lang.size() > 2) {
-		lang = lang.substr(0, 2);
-	}
-
-	// return it as lowercase
-	lowcase(lang);
-	return lang;
-}
-
 // MSG_Init loads the requested language provided on the command line or
 // from the language = conf setting.
 
@@ -274,9 +194,9 @@ static std::string get_language(const Section_prop *section)
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
 //    platform's config path/translations/<lang>.lng.
 
-void MSG_Init(Section_prop *section)
+void MSG_Init([[maybe_unused]] Section_prop *section)
 {
-	const auto lang = get_language(section);
+	const auto lang = SETUP_GetLanguage();
 
 	// If the language is english, then use the internal message
 	if (lang.empty() || starts_with("en", lang)) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2018 VICE Project
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004,2010 Dag Lem <resid@nimrod.no>
@@ -110,9 +110,6 @@ private:
     /// The ENV3 value, sampled at the first phase of the clock
     unsigned char env3 = 0;
 
-    /// The DAC LUT for analog output
-    float* dac = nullptr; //-V730_NOINIT this is initialized in the SID constructor
-
 private:
     static const unsigned int adsrtable[16];
 
@@ -123,25 +120,14 @@ private:
 
 public:
     /**
-     * Set the analog DAC emulation:
-     * 8580 is perfectly linear while 6581 is nonlinear.
-     * Must be called before any operation.
-     *
-     * @param dac
-     */
-    void setDAC(float* dac) { this->dac = dac; }
-
-    /**
      * SID clocking.
      */
     void clock();
 
     /**
-     * Get the Envelope Generator output.
-     * DAC imperfections are emulated by using envelope_counter as an index
-     * into a DAC lookup table. readENV() uses envelope_counter directly.
+     * Get the Envelope Generator digital output.
      */
-    float output() const { return dac[envelope_counter]; }
+    unsigned int output() const { return envelope_counter; }
 
     /**
      * Constructor.

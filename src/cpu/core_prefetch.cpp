@@ -212,8 +212,7 @@ Bits CPU_Core_Prefetch_Run(void) {
 	bool invalidate_pq=false;
 	while (CPU_Cycles-->0) {
 		if (invalidate_pq) {
-			pq_valid=false;
-			invalidate_pq=false;
+			pq_valid = false;
 		}
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;
@@ -232,34 +231,48 @@ Bits CPU_Core_Prefetch_Run(void) {
 		cycle_count++;
 #endif
 restart_opcode:
-		uint8_t next_opcode=Fetchb();
-		invalidate_pq=false;
-		if (core.opcode_index&OPCODE_0F) invalidate_pq=true;
-		else switch (next_opcode) {
-			case 0x70:	case 0x71:	case 0x72:	case 0x73:
-			case 0x74:	case 0x75:	case 0x76:	case 0x77:
-			case 0x78:	case 0x79:	case 0x7a:	case 0x7b:
-			case 0x7c:	case 0x7d:	case 0x7e:	case 0x7f:	// jcc
-			case 0x9a:	// call
-			case 0xc2:	case 0xc3:	// retn
-			case 0xc8:	// enter
-			case 0xc9:	// leave
-			case 0xca:	case 0xcb:	// retf
-			case 0xcc:	// int3
-			case 0xcd:	// int
-			case 0xce:	// into
-			case 0xcf:	// iret
-			case 0xe0:	// loopnz
-			case 0xe1:	// loopz
-			case 0xe2:	// loop
-			case 0xe3:	// jcxz
-			case 0xe8:	// call
-			case 0xe9:	case 0xea:	case 0xeb:	// jmp
-			case 0xff:
-				invalidate_pq=true;
-				break;
-			default:
-				break;
+		const auto next_opcode = Fetchb();
+		invalidate_pq = core.opcode_index & OPCODE_0F;
+		if (!invalidate_pq) {
+			switch (next_opcode) {
+			case 0x70: // jcc (first)
+			case 0x71: // ...
+			case 0x72:
+			case 0x73:
+			case 0x74:
+			case 0x75:
+			case 0x76:
+			case 0x77:
+			case 0x78:
+			case 0x79:
+			case 0x7a:
+			case 0x7b:
+			case 0x7c:
+			case 0x7d:
+			case 0x7e: // ...
+			case 0x7f: // jcc (last)
+			case 0x9a: // call
+			case 0xc2: // retn
+			case 0xc3: // retn
+			case 0xc8: // enter
+			case 0xc9: // leave
+			case 0xca: // retf
+			case 0xcb: // retf
+			case 0xcc: // int3
+			case 0xcd: // int
+			case 0xce: // into
+			case 0xcf: // iret
+			case 0xe0: // loopnz
+			case 0xe1: // loopz
+			case 0xe2: // loop
+			case 0xe3: // jcxz
+			case 0xe8: // call
+			case 0xe9: // jmp (first)
+			case 0xea: // ...
+			case 0xeb: // jmp (last)
+			case 0xff: invalidate_pq = true; break;
+			default: break;
+			}
 		}
 		switch (core.opcode_index+next_opcode) {
 		#include "core_normal/prefix_none.h"

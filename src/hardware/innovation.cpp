@@ -73,14 +73,14 @@ void Innovation::Open(const std::string &model_choice,
 	else if (clock_choice == "hardsid")
 		chip_clock = 1000000.0;
 	assert(chip_clock);
-	ms_per_clock = 1000.0 / chip_clock;
+	ms_per_clock = millis_in_second / chip_clock;
 
 	// Setup the mixer and get it's sampling rate
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            0,
+	                                            use_mixer_rate,
 	                                            "INNOVATION",
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::ReverbSend,

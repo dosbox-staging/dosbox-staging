@@ -41,11 +41,11 @@
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "rgb24.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
 #include "timer.h"
 #include "video.h"
 
@@ -245,15 +245,21 @@ public:
 		if (flags & BFLG_Hold) strcat(buf," hold");
 	}
 
-	void SetFlags(char * buf) {
-		char * word;
-		while (*(word=StripWord(buf))) {
-			if (!strcasecmp(word,"mod1")) mods|=BMOD_Mod1;
-			if (!strcasecmp(word,"mod2")) mods|=BMOD_Mod2;
-			if (!strcasecmp(word,"mod3")) mods|=BMOD_Mod3;
-			if (!strcasecmp(word,"hold")) flags|=BFLG_Hold;
+	void SetFlags(char *buf)
+	{
+		char *word;
+		while (*(word = strip_word(buf))) {
+			if (!strcasecmp(word, "mod1"))
+				mods |= BMOD_Mod1;
+			if (!strcasecmp(word, "mod2"))
+				mods |= BMOD_Mod2;
+			if (!strcasecmp(word, "mod3"))
+				mods |= BMOD_Mod3;
+			if (!strcasecmp(word, "hold"))
+				flags |= BFLG_Hold;
 		}
 	}
+
 	void ActivateBind(Bits _value,bool ev_trigger,bool skip_action=false) {
 		if (event->IsTrigger()) {
 			/* use value-boundary for on/off events */
@@ -393,12 +399,12 @@ public:
 	CKeyBindGroup(const CKeyBindGroup&) = delete; // prevent copy
 	CKeyBindGroup& operator=(const CKeyBindGroup&) = delete; // prevent assignment
 
-	CBind * CreateConfigBind(char *& buf)
+	CBind *CreateConfigBind(char *&buf)
 	{
 		if (strncasecmp(buf, configname, strlen(configname)))
 			return nullptr;
-		StripWord(buf);
-		long code = atol(StripWord(buf));
+		strip_word(buf);
+		long code = atol(strip_word(buf));
 		assert(code > 0);
 		return CreateKeyBind((SDL_Scancode)code);
 	}
@@ -656,19 +662,19 @@ public:
 	CBind * CreateConfigBind(char *& buf)
 	{
 		if (strncasecmp(configname,buf,strlen(configname))) return 0;
-		StripWord(buf);
-		char *type = StripWord(buf);
+		strip_word(buf);
+		char *type = strip_word(buf);
 		CBind *bind = nullptr;
 		if (!strcasecmp(type,"axis")) {
-			int ax = atoi(StripWord(buf));
-			int pos = atoi(StripWord(buf));
+			int ax = atoi(strip_word(buf));
+			int pos = atoi(strip_word(buf));
 			bind = CreateAxisBind(ax, pos > 0); // TODO double check, previously it was != 0
 		} else if (!strcasecmp(type, "button")) {
-			int but = atoi(StripWord(buf));
+			int but = atoi(strip_word(buf));
 			bind = CreateButtonBind(but);
 		} else if (!strcasecmp(type, "hat")) {
-			uint8_t hat = static_cast<uint8_t>(atoi(StripWord(buf)));
-			uint8_t dir = static_cast<uint8_t>(atoi(StripWord(buf)));
+			uint8_t hat = static_cast<uint8_t>(atoi(strip_word(buf)));
+			uint8_t dir = static_cast<uint8_t>(atoi(strip_word(buf)));
 			bind = CreateHatBind(hat, dir);
 		}
 		return bind;
@@ -2331,7 +2337,7 @@ static SDL_Color map_pal[CLR_LAST]={
 
 static void CreateStringBind(char * line) {
 	line=trim(line);
-	char * eventname=StripWord(line);
+	char * eventname=strip_word(line);
 	CEvent * event = nullptr;
 	for (CEventVector_it ev_it = events.begin(); ev_it != events.end(); ++ev_it) {
 		if (!strcasecmp((*ev_it)->GetName(),eventname)) {
@@ -2343,7 +2349,7 @@ static void CreateStringBind(char * line) {
 	return ;
 foundevent:
 	CBind * bind = nullptr;
-	for (char * bindline=StripWord(line);*bindline;bindline=StripWord(line)) {
+	for (char * bindline=strip_word(line);*bindline;bindline=strip_word(line)) {
 		for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 			bind=(*it)->CreateConfigBind(bindline);
 			if (bind) {

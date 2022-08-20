@@ -163,11 +163,6 @@ Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
                kînnen einige Programme sie nicht richtig nutzen (Flackern) oder benîtigen
                mehr Systemspeicher (mem = ), um sie zu nutzen.
 .
-:CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
-.
 :CONFIG_AUTOEXEC_SECTION
 Wie Autoexec-Abschnitte aus mehreren Konfigurationsdateien behandelt werden.
 join      : Fasst sie in einem gro·en Abschnitt zusammen (altes Verhalten).
@@ -175,12 +170,10 @@ overwrite : Verwende die zuletzt gefundene, wie bei anderen conf-Einstellungen.
 .
 :CONFIG_STARTUP_VERBOSITY
 Bestimmt die AusfÅhrlichkeit der Anzeigen, bevor das Programm angezeigt wird:
-VerbositÑt  | Logo  |Willkommen| FrÅhe Ausgabe
-high        |  ja   |   ja     |    ja
-medium      | nein  |   ja     |    ja
-low         | nein  |  nein    |    ja
-quiet       | nein  |  nein    |   nein
-splash_only |  ja   |  nein    |   nein
+VerbositÑt  |Willkommen| FrÅhe Ausgabe
+high        |   ja     |    ja
+low         |  nein    |    ja
+quiet       |  nein    |   nein
 auto        | "low" wenn Dateiname oder Verzeichnis Åbergeben werden, sonst "high".
 .
 :CONFIG_FRAMESKIP

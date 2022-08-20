@@ -32,13 +32,11 @@
 #include "std_filesystem.h"
 
 enum class Verbosity : int8_t {
-	//                     Splash | Welcome | Early Stdout |
-	Quiet = 0,         //   no    |   no    |    no        |
-	SplashOnly = 1,    //   yes   |   no    |    no        |
-	InstantLaunch = 2, //   no    |   no    |    yes       |
-	Low = 3,           //   no    |   no    |    yes       |
-	Medium = 4,        //   no    |   yes   |    yes       |
-	High = 5,          //   yes   |   yes   |    yes       |
+	//                Welcome | Early Stdout |
+	Quiet,         //   no    |    no        |
+	InstantLaunch, //   no    |    yes       |
+	Low,           //   no    |    yes       |
+	High,          //   yes   |    yes       |
 };
 
 class Config {

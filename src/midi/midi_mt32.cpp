@@ -49,8 +49,7 @@
 // Synth granularity in frames. We keep four buffers in-flight at any given
 // time: when playback exhausts the "head" buffer, we ask MT-32 to render the
 // next buffer, asynchronously, which is then placed at the back of the queue.
-// These four buffers mean we typically have 2048 frames or ~48 ms in backlog.
-static constexpr int FRAMES_PER_BUFFER = 512;
+static constexpr int FRAMES_PER_BUFFER = 48;
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
@@ -363,9 +362,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-MidiHandler_mt32::MidiHandler_mt32()
-        : soft_limiter("MT32"),
-          keep_rendering(false)
+MidiHandler_mt32::MidiHandler_mt32() : keep_rendering(false)
 {}
 
 MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
@@ -533,16 +530,11 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                      this, std::placeholders::_1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            0,
+	                                            use_mixer_rate,
 	                                            "MT32",
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
-
-	// Let the mixer command adjust the MT32's services gain-level
-	const auto set_mixer_level = std::bind(&MidiHandler_mt32::SetMixerLevel,
-	                                       this, std::placeholders::_1);
-	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
@@ -580,31 +572,6 @@ MidiHandler_mt32::~MidiHandler_mt32()
 	Close();
 }
 
-// When the user runs "mixer MT32 <percent-left>:<percent-right>", this function
-// get those percents as floating point ratios (100% being 1.0f). Instead of
-// post-scaling the rendered integer stream in the mixer, we instead provide the
-// desired floating point scalar to the MT32 service via its gain() interface
-// where it can more elegantly adjust the level of the synthesis.
-
-// Another nuance is that MT32's gain interface takes in a single float, but
-// DOSBox's mixer accept left-and-right, so we apply gain using the larger of
-// the two and then use the limiter's left-right ratios to scale down by lesser
-// ratio.
-void MidiHandler_mt32::SetMixerLevel(const AudioFrame &levels) noexcept
-{
-	const float gain = std::max(levels.left, levels.right);
-	{
-		const std::lock_guard<std::mutex> lock(service_mutex);
-		if (service)
-			service->setOutputGain(gain);
-	}
-
-	const AudioFrame desired = {levels.left / gain, levels.right / gain};
-	// mt32emu generates floats between -1 and 1, so we ask the
-	// soft limiter to scale these up to the INT16 range
-	soft_limiter.UpdateLevels(desired, INT16_MAX);
-}
-
 void MidiHandler_mt32::Close()
 {
 	if (!is_open)
@@ -631,12 +598,9 @@ void MidiHandler_mt32::Close()
 		service->freeContext();
 	}
 
-	soft_limiter.PrintStats();
-
 	// Reset the members
 	channel.reset();
 	service.reset();
-	soft_limiter.Reset();
 	total_buffers_played = 0;
 	last_played_frame = 0;
 
@@ -680,7 +644,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t requested_frames)
 		                                          requested_frames);
 		const auto sample_offset_in_buffer = play_buffer.data() +
 		                                     last_played_frame * 2;
-		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
+		channel->AddSamples_sfloat(frames_to_be_played, sample_offset_in_buffer);
 		requested_frames -= frames_to_be_played;
 		last_played_frame += frames_to_be_played;
 	}
@@ -708,11 +672,12 @@ void MidiHandler_mt32::Render()
 	// Allocate our buffers once and reuse for the duration.
 	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
 	while (backstock.Size() < backstock.MaxCapacity() - 1)
 		backstock.Enqueue(playable_buffer);
+
 	backstock.Enqueue(std::move(playable_buffer));
 	assert(backstock.Size() == backstock.MaxCapacity());
 
@@ -723,7 +688,11 @@ void MidiHandler_mt32::Render()
 		}
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
-		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
+
+		// Swap buffers & scale
+		std::swap(render_buffer, playable_buffer);
+		for (auto &s : playable_buffer)
+			s *= INT16_MAX;
 
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));

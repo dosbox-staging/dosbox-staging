@@ -47,28 +47,27 @@
 #include <SDL_opengl.h>
 #endif
 
-#include <Tracy.hpp>
-
+#include "../ints/int10.h"
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
-#include "../ints/int10.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "mouse.h"
 #include "pacer.h"
 #include "pic.h"
 #include "render.h"
+#include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "support.h"
-#include "sdlmain.h"
 #include "timer.h"
+#include "tracy.h"
 #include "vga.h"
 #include "video.h"
 
@@ -204,9 +203,6 @@ SDL_Block sdl;
 bool mouse_is_captured = false;       // the actual state of the mouse
 bool mouse_capture_requested = false; // if the user manually requested the capture
 
-// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
-constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
-
 // Masks to be passed when creating SDL_Surface.
 // Remove ifndef if they'll be needed for MacOS X builds.
 #ifndef MACOSX
@@ -286,6 +282,11 @@ SDL_Window *GFX_GetSDLWindow(void)
 #endif
 
 #if C_OPENGL
+
+// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
+constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
+
+
 #ifdef DB_OPENGL_ERROR
 void OPENGL_ERROR(const char* message) {
 	GLenum r = glGetError();
@@ -382,8 +383,8 @@ static double get_host_refresh_rate()
 	};
 
 	// To be populated in the switch
-	auto rate = 0.0;              // refresh rate as a floating point number
-	const char *rate_description; // description of the refresh rate
+	auto rate = 0.0;                   // refresh rate as a floating point number
+	const char *rate_description = ""; // description of the refresh rate
 
 	switch (sdl.desktop.host_rate_mode) {
 	case HOST_RATE_MODE::AUTO:
@@ -682,7 +683,8 @@ static void log_display_properties(int in_x, int in_y, const SCALING_MODE scalin
 	const auto scale_y = static_cast<double>(out_y) / in_y;
 	const auto out_par = scale_y / scale_x;
 
-	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
+	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type,
+	                                                        CurMode->mode);
 
 	const char *frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -1104,12 +1106,26 @@ static void NewMouseScreenParams()
 	abs_x = std::clamp(abs_x, 0, static_cast<int>(UINT16_MAX));
 	abs_y = std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
 
+#ifdef __APPLE__
+	// macOS moves mouse cursor on "client points" grid, not physical pixels;
+	// it's unknown how Windows behaves with modern DPI scaling modes
+	MOUSE_NewScreenParams(sdl.clip.x / sdl.desktop.dpi_scale,
+	                      sdl.clip.y / sdl.desktop.dpi_scale,
+	                      sdl.clip.w / sdl.desktop.dpi_scale,
+	                      sdl.clip.h / sdl.desktop.dpi_scale,
+	                      sdl.desktop.fullscreen,
+	                      check_cast<uint16_t>(abs_x),
+	                      check_cast<uint16_t>(abs_y));
+#else
 	MOUSE_NewScreenParams(sdl.clip.x, sdl.clip.y,
 	                      sdl.clip.w, sdl.clip.h,
 	                      sdl.desktop.fullscreen,
 	                      check_cast<uint16_t>(abs_x),
 	                      check_cast<uint16_t>(abs_y));
+#endif
 }
+
+static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
@@ -1195,6 +1211,12 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 		}
 		sdl.desktop.window.resizable = resizable;
+
+		int window_width = 0;
+		SDL_GetWindowSize(sdl.window, &window_width, nullptr);
+		const auto canvas = get_canvas_size(screen_type);
+
+		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
 
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
@@ -1325,19 +1347,14 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	SDL_GetWindowSize(sdl.window, &window_width, &window_height);
 	assert(window_width > 0 && window_height > 0);
 
-	const auto canvas = get_canvas_size(screen_type);
-
-	const auto dpi_scale = static_cast<float>(canvas.w) /
-	                       static_cast<float>(window_width);
-
 	if (!sdl.desktop.fullscreen) {
 		window_width  = sdl.desktop.requested_window_bounds.width;
 		window_height = sdl.desktop.requested_window_bounds.height;
 	}
 
 	const auto render_resolution = restrict_to_viewport_resolution(
-	        iroundf(static_cast<float>(window_width) * dpi_scale),
-	        iroundf(static_cast<float>(window_height) * dpi_scale));
+	        iround(window_width * sdl.desktop.dpi_scale),
+	        iround(window_height * sdl.desktop.dpi_scale));
 
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
@@ -1352,12 +1369,10 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	} else {
 		win_width  = (sdl.desktop.fullscreen
 		                      ? window_width
-		                      : iroundf(static_cast<float>(img_width) /
-                                        dpi_scale));
+		                      : iround(img_width / sdl.desktop.dpi_scale));
 		win_height = (sdl.desktop.fullscreen
 		                      ? window_height
-		                      : iroundf(static_cast<float>(img_height) /
-		                                dpi_scale));
+		                      : iround(img_height / sdl.desktop.dpi_scale));
 	}
 
 	sdl.window = SetWindowMode(screen_type, win_width, win_height,
@@ -1368,9 +1383,13 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
 	return sdl.use_viewport_limits
-	               ? SDL_Point{std::min(sdl.viewport_resolution.x, w),
-	                           std::min(sdl.viewport_resolution.y, h)}
-	               : SDL_Point{w, h};
+	             ? SDL_Point{std::min(iround(sdl.viewport_resolution.x *
+	                                         sdl.desktop.dpi_scale),
+	                                  w),
+	                         std::min(iround(sdl.viewport_resolution.y *
+	                                         sdl.desktop.dpi_scale),
+	                                  h)}
+	             : SDL_Point{w, h};
 }
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height);
@@ -1685,9 +1704,6 @@ dosurface:
 		break; // SCREEN_SURFACE
 
 	case SCREEN_TEXTURE: {
-		if (sdl.render_driver != "auto")
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER,
-			            sdl.render_driver.c_str());
 		SDL_SetHint(SDL_HINT_RENDER_VSYNC, wants_vsync ? "1" : "0");
 
 		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
@@ -1805,7 +1821,23 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+
+		const auto gl_vendor = std::string_view(
+		        reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+#	if WIN32
+		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
+#	else
+		constexpr auto is_vendors_srgb_unreliable = false;
+#	endif
+		if (is_vendors_srgb_unreliable) {
+			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
+			            " because %s's driver is unreliable",
+			            gl_vendor.data());
+		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
+			        SDL_GetError());
+		}
+
 		SetupWindowScaled(SCREEN_OPENGL, sdl.desktop.want_resizable_window);
 
 		/* We may simply use SDL_BYTESPERPIXEL
@@ -1969,9 +2001,11 @@ dosurface:
 
 		memset(emptytex, 0, texture_area_bytes);
 
-		int is_framebuffer_srgb_capable;
-		SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                    &is_framebuffer_srgb_capable);
+		int is_framebuffer_srgb_capable = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+		                        &is_framebuffer_srgb_capable))
+			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
+			            SDL_GetError());
 
 		sdl.opengl.framebuffer_is_srgb_encoded = RENDER_UseSRGBFramebuffer() && is_framebuffer_srgb_capable > 0;
 
@@ -1979,9 +2013,18 @@ dosurface:
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = RENDER_UseSRGBTexture() ? GL_SRGB8_ALPHA8 : GL_RGB8;
-		glTexImage2D(GL_TEXTURE_2D, 0, texformat, texsize_w, texsize_h,
-		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
+		const auto texformat = RENDER_UseSRGBTexture() && sdl.opengl.framebuffer_is_srgb_encoded
+		                             ? GL_SRGB8_ALPHA8
+		                             : GL_RGB8;
+		glTexImage2D(GL_TEXTURE_2D,
+		             0,
+		             texformat,
+		             texsize_w,
+		             texsize_h,
+		             0,
+		             GL_BGRA_EXT,
+		             GL_UNSIGNED_BYTE,
+		             emptytex);
 		delete[] emptytex;
 
 		if (sdl.opengl.framebuffer_is_srgb_encoded) {
@@ -2581,37 +2624,13 @@ static void SetPriority(PRIORITY_LEVELS level)
 	}
 }
 
-#ifdef WIN32
-extern uint8_t int10_font_14[256 * 14];
-static void OutputString(Bitu x,Bitu y,const char * text,uint32_t color,uint32_t color2,SDL_Surface * output_surface) {
-	uint32_t * draw=(uint32_t*)(((uint8_t *)output_surface->pixels)+((y)*output_surface->pitch))+x;
-	while (*text) {
-		uint8_t * font=&int10_font_14[(*text)*14];
-		Bitu i,j;
-		uint32_t * draw_line=draw;
-		for (i=0;i<14;i++) {
-			uint8_t map=*font++;
-			for (j=0;j<8;j++) {
-				*(draw_line + j) = map & 0x80 ? color : color2;
-				map<<=1;
-			}
-			draw_line+=output_surface->pitch/4;
-		}
-		text++;
-		draw+=8;
-	}
-}
-#endif
-
-#include "dosbox_staging_splash.c"
-
 static SDL_Window *SetDefaultWindowMode()
 {
 	if (sdl.window)
 		return sdl.window;
 
-	sdl.draw.width = splash_image.width;
-	sdl.draw.height = splash_image.height;
+	sdl.draw.width = FALLBACK_WINDOW_DIMENSIONS.x;
+	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
@@ -2623,61 +2642,6 @@ static SDL_Window *SetDefaultWindowMode()
 	return SetWindowMode(sdl.desktop.want_type, sdl.desktop.window.width,
 	                     sdl.desktop.window.height, sdl.desktop.fullscreen,
 	                     sdl.desktop.want_resizable_window);
-}
-
-/*
- * Please leave the Splash screen stuff in working order.
- * We spend a lot of time making DOSBox.
- */
-static void DisplaySplash(int time_ms)
-{
-	assert(sdl.window);
-
-	constexpr int src_w = splash_image.width;
-	constexpr int src_h = splash_image.height;
-	constexpr int src_bpp = splash_image.bytes_per_pixel;
-	static_assert(src_bpp == 3, "Source image expected in RGB format.");
-
-	const auto flags = GFX_SetSize(src_w, src_h, GFX_CAN_32, 1.0, 1.0, nullptr, 1.0);
-	if (!(flags & GFX_CAN_32)) {
-		LOG_WARNING("Can't show 32bpp splash.");
-		return;
-	}
-
-	uint8_t *out = nullptr;
-	int pitch = 0;
-	if (!GFX_StartUpdate(out, pitch))
-		E_Exit("%s", SDL_GetError());
-
-	uint32_t *pixels = reinterpret_cast<uint32_t *>(out);
-	assertm(pixels, "GFX_StartUpdate is supposed to give us buffer.");
-	const int buf_width = pitch / 4;
-	assertm(buf_width >= src_w, "Row length needs to be big enough.");
-
-	std::array<uint8_t, (src_w * src_h * src_bpp)> splash;
-	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), splash_image.rle_pixel_data,
-	                             src_w * src_h, src_bpp);
-	size_t i = 0;
-	size_t j = 0;
-
-	static_assert(splash.size() % 3 == 0, "Reading 3 bytes at a time.");
-	for (int y = 0; y < src_h; y++) {
-		// copy a row of pixels to output buffer
-		for (int x = 0; x < src_w; x++) {
-			const uint32_t r = splash[i++];
-			const uint32_t g = splash[i++];
-			const uint32_t b = splash[i++];
-			pixels[j++] = (r << 16) | (g << 8) | b;
-		}
-		// pad with black until the end of row
-		// only output=surface actually needs this
-		for (int x = src_w; x < buf_width; x++)
-			pixels[j++] = 0;
-	}
-
-	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
-	GFX_EndUpdate(lines);
-	Delay(time_ms);
 }
 
 static bool detect_resizable_window()
@@ -3177,6 +3141,13 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
+	if (sdl.render_driver != "auto") {
+		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
+		                sdl.render_driver.c_str()) == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; falling back to automatic selection",
+			            sdl.render_driver.c_str());
+		}
+	}
 
 	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
 
@@ -3377,7 +3348,7 @@ static void GUI_StartUp(Section *sec)
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 
-	auto priority_conf = section->Get_multival("priority")->GetSection();
+	auto priority_conf = section->GetMultiVal("priority")->GetSection();
 	SetPriorityLevels(priority_conf->Get_string("active"),
 	                  priority_conf->Get_string("inactive"));
 
@@ -3473,20 +3444,8 @@ static void GUI_StartUp(Section *sec)
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
-	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
-	                                 splash_image.height > sdl.desktop.full.height;
-	if ((control->GetStartupVerbosity() == Verbosity::High ||
-	     control->GetStartupVerbosity() == Verbosity::SplashOnly) &&
-	    !(sdl.desktop.fullscreen && tiny_fullresolution)) {
-		GFX_Start();
-		DisplaySplash(1000);
-		GFX_Stop();
-		// don't count the splash screen as our initial size
-		sdl.desktop.window.adjusted_initial_size = false;
-	}
-
 	// Apply the user's mouse settings
-	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
+	Section_prop* s = section->GetMultiVal("capture_mouse")->GetSection();
 	const std::string control_choice = s->Get_string("capture_mouse_first_value");
 	std::string mouse_control_msg;
 	if (control_choice == "onclick") {
@@ -3523,7 +3482,7 @@ static void GUI_StartUp(Section *sec)
 			              PRIMARY_MOD, "capmouse", "Cap Mouse");
 
 		// Apply the user's mouse sensitivity settings
-		Prop_multival *p3 = section->Get_multival("sensitivity");
+		PropMultiVal *p3 = section->GetMultiVal("sensitivity");
 		sdl.mouse.xsensitivity = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
 		sdl.mouse.ysensitivity = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
 
@@ -4066,7 +4025,7 @@ void Config_Add_SDL() {
 	Prop_string *pstring;
 	Prop_int *Pint; // use pint for new properties
 	Prop_int *pint;
-	Prop_multival* Pmulti;
+	PropMultiVal* Pmulti;
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
@@ -4174,7 +4133,7 @@ void Config_Add_SDL() {
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	// Define mouse control settings
-	Pmulti = sdl_sec->Add_multi("capture_mouse", always, " ");
+	Pmulti = sdl_sec->AddMultiVal("capture_mouse", always, " ");
 	const char *mouse_controls[] = {
 	        "seamless", // default
 	        "onclick",  "onstart", "nomouse", 0,
@@ -4212,7 +4171,7 @@ void Config_Add_SDL() {
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
-	Pmulti = sdl_sec->Add_multi("sensitivity", always, ",");
+	Pmulti = sdl_sec->AddMultiVal("sensitivity", always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
 	Pmulti->SetValue("100");
 	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
@@ -4229,7 +4188,7 @@ void Config_Add_SDL() {
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
-	Pmulti = sdl_sec->Add_multi("priority", always, " ");
+	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
 	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively. \n"
 	                 "   auto:  Let the host operating system manage the priority (valid for both).\n"
@@ -4267,52 +4226,6 @@ void Config_Add_SDL() {
 	        "while the emulator is running).");
 	const char *ssopts[] = {"auto", "allow", "block", 0};
 	pstring->Set_values(ssopts);
-}
-
-static void show_warning(char const * const message) {
-#ifndef WIN32
-	fprintf(stderr, "%s", message);
-	return;
-#else
-	if (!sdl.initialized && SDL_Init(SDL_INIT_VIDEO) < 0) {
-		sdl.initialized = true;
-		fprintf(stderr, "%s", message);
-		return;
-	}
-
-	if (!sdl.window && !GFX_SetSDLSurfaceWindow(640, 400))
-		return;
-
-	sdl.surface = SDL_GetWindowSurface(sdl.window);
-	if (!sdl.surface)
-		return;
-
-	SDL_Surface *splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32,
-	                                                RMASK, GMASK, BMASK, 0);
-	if (!splash_surf) return;
-
-	int x = 120,y = 20;
-	std::string m(message),m2;
-	std::string::size_type a,b,c,d;
-
-	while(m.size()) { //Max 50 characters. break on space before or on a newline
-		c = m.find('\n');
-		d = m.rfind(' ',50);
-		if(c>d) a=b=d; else a=b=c;
-		if( a != std::string::npos) b++;
-		m2 = m.substr(0,a); m.erase(0,b);
-		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
-		y += 20;
-	}
-
-	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-	SDL_UpdateWindowSurface(sdl.window);
-
-	SDL_FreeSurface(splash_surf);
-	splash_surf = nullptr;
-
-	Delay(12000);
-#endif // WIN32
 }
 
 static int LaunchEditor()
@@ -4455,7 +4368,7 @@ static void eraseconfigfile() {
 	FILE* f = fopen("dosbox.conf","r");
 	if(f) {
 		fclose(f);
-		show_warning("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
+		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
 	}
 	std::string path,file;
 	Cross::GetPlatformConfigDir(path);
@@ -4472,7 +4385,7 @@ static void erasemapperfile() {
 	FILE* g = fopen("dosbox.conf","r");
 	if(g) {
 		fclose(g);
-		show_warning("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
+		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
 	}
 
@@ -4605,10 +4518,6 @@ int sdl_main(int argc, char *argv[])
 			ListGlShaders();
 			return 0;
 		}
-
-#if C_DEBUG
-		DEBUG_SetupConsole();
-#endif
 
 #if defined(WIN32)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);

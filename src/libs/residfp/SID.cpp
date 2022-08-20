@@ -258,8 +258,8 @@ void SID::setChipModel(ChipModel model)
     // set voice tables
     for (int i = 0; i < 3; i++)
     {
-        voice[i]->envelope()->setDAC(envDAC);
-        voice[i]->wave()->setDAC(oscDAC);
+        voice[i]->setEnvDAC(envDAC);
+        voice[i]->setWavDAC(oscDAC);
         voice[i]->wave()->setModel(is6581);
         voice[i]->wave()->setWaveformModels(tables);
     }

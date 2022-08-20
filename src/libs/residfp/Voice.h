@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2015 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004 Dag Lem <resid@nimrod.no>
  *
@@ -42,25 +42,37 @@ private:
 
     std::unique_ptr<EnvelopeGenerator> const envelopeGenerator;
 
+    /// The DAC LUT for analog waveform output
+    float* wavDAC = nullptr; //-V730_NOINIT this is initialized in the SID constructor
+
+    /// The DAC LUT for analog envelope output
+    float* envDAC = nullptr; //-V730_NOINIT this is initialized in the SID constructor
+
 public:
     /**
      * Amplitude modulated waveform output.
      *
-     * The waveform DAC generates a voltage between 5 and 12 V
-     * (4,76 - 9 V for the 8580) corresponding to oscillator state 0 .. 4095.
+     * The waveform DAC generates a voltage between virtual ground and Vdd
+     * (5-12 V for the 6581 and 4.75-9 V for the 8580)
+     * corresponding to oscillator state 0 .. 4095.
      *
      * The envelope DAC generates a voltage between waveform gen output and
-     * the 5V level, corresponding to envelope state 0 .. 255.
+     * the virtual ground level, corresponding to envelope state 0 .. 255.
      *
      * Ideal range [-2048*255, 2047*255].
      *
      * @param ringModulator Ring-modulator for waveform
-     * @return waveformgenerator output
+     * @return the voice analog output
      */
     RESID_INLINE
     int output(const WaveformGenerator* ringModulator) const
     {
-        return static_cast<int>(waveformGenerator->output(ringModulator) * envelopeGenerator->output());
+        unsigned int const wav = waveformGenerator->output(ringModulator);
+        unsigned int const env = envelopeGenerator->output();
+
+        // DAC imperfections are emulated by using the digital output
+        // as an index into a DAC lookup table.
+        return static_cast<int>(wavDAC[wav] * envDAC[env]);
     }
 
     /**
@@ -69,6 +81,25 @@ public:
     Voice() :
         waveformGenerator(new WaveformGenerator()),
         envelopeGenerator(new EnvelopeGenerator()) {}
+
+    Voice(const Voice&) = delete; // prevent copy-construction
+    Voice &operator=(const Voice&) = delete; // prevent assignment
+
+    /**
+     * Set the analog DAC emulation for waveform generator.
+     * Must be called before any operation.
+     *
+     * @param dac
+     */
+    void setWavDAC(float* dac) { wavDAC = dac; }
+
+    /**
+     * Set the analog DAC emulation for envelope.
+     * Must be called before any operation.
+     *
+     * @param dac
+     */
+    void setEnvDAC(float* dac) { envDAC = dac; }
 
     WaveformGenerator* wave() const { return waveformGenerator.get(); }
 

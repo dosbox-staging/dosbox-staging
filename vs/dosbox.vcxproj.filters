@@ -133,6 +133,12 @@
     <ClCompile Include="..\src\hardware\cmos.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\covox.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\compressor.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\disney.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -170,6 +176,9 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\keyboard.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\lpt_dac.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\mame\saa1099.cpp">
@@ -234,6 +243,9 @@
     </ClCompile>
     <ClCompile Include="..\src\hardware\serialport\softmodem.cpp">
       <Filter>src\hardware\serialport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\ston1_dac.cpp">
+      <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\tandy_sound.cpp">
       <Filter>src\hardware</Filter>
@@ -394,7 +406,7 @@
     <ClCompile Include="..\src\misc\setup.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\misc\soft_limiter.cpp">
+    <ClCompile Include="..\src\misc\string_utils.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\support.cpp">
@@ -507,6 +519,9 @@
     </ClCompile>
     <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp">
       <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\tal-chorus\Lfo.cpp">
+      <Filter>src\libs\tal-chorus</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\YM7128B_emu\YM7128B_emu.c">
       <Filter>src\libs\YM7128B_emu</Filter>
@@ -709,30 +724,6 @@
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\window.c">
       <Filter>src\libs\pdcurses</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Biquad.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Butterworth.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Cascade.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevI.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevII.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\Custom.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\PoleFilter.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\iir1\iir\RBJ.cpp">
-      <Filter>src\libs\iir1</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
@@ -850,9 +841,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shell.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\soft_limiter.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\support.h">
@@ -1173,6 +1161,27 @@
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Chorus.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\ChorusEngine.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\DCBlock.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Lfo.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\OnePoleLP.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\OscNoise.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\tal-chorus\Params.h">
+      <Filter>src\libs\tal-chorus</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\YM7128B_emu\YM7128B_emu.h">
       <Filter>src\libs\YM7128B_emu</Filter>
     </ClInclude>
@@ -1193,48 +1202,6 @@
     </ClInclude>
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h">
       <Filter>src\libs\pdcurses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Biquad.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Butterworth.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Cascade.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevI.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevII.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Common.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Custom.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Layout.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\MathSupplement.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\PoleFilter.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\RBJ.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\State.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir\Types.h">
-      <Filter>src\libs\iir1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\iir1\iir.h">
-      <Filter>src\libs\iir1</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\mverb\MVerb.h">
       <Filter>src\libs\mverb</Filter>
@@ -1310,9 +1277,6 @@
     <Filter Include="src\libs\gui_tk">
       <UniqueIdentifier>{c1d4aca1-2ddd-4dc2-ba93-8b2279ef4d30}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\libs\iir1">
-      <UniqueIdentifier>{7c8fbcd1-aca6-40ad-b24d-df51c89fbf2f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\libs\mverb">
       <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>
     </Filter>
@@ -1339,6 +1303,9 @@
     </Filter>
     <Filter Include="src\libs\residfp">
       <UniqueIdentifier>{e8ef008d-ceb9-4224-9b9e-b5b62933ca0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\tal-chorus">
+      <UniqueIdentifier>{033fc91c-5316-48fd-a3f8-0d7a1b0839ae}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\YM7128B_emu">
       <UniqueIdentifier>{033fc9cc-5916-480d-a3f8-839ae0d7a1b0}</UniqueIdentifier>

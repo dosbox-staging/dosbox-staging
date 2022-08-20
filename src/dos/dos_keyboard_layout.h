@@ -23,8 +23,11 @@
 
 #include "dosbox.h"
 
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp);
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, int32_t codepage, const char * codepagefile);
-const char* DOS_GetLoadedLayout(void);
+enum KeyboardErrorCode : uint8_t;
+
+KeyboardErrorCode DOS_SwitchKeyboardLayout(const char *new_layout, int32_t &tried_cp);
+KeyboardErrorCode DOS_LoadKeyboardLayout(const char *layoutname, int32_t codepage, const char *codepagefile);
+KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char *language_pref);
+const char *DOS_GetLoadedLayout();
 
 #endif

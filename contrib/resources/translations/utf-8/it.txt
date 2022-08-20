@@ -186,12 +186,6 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
                correttamente (sfarfallio) o potrebbe essere necessaria più
                memoria di sistema (mem = ).
 .
-:CONFIG_SPEED_MODS
-Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
-è noto per esserne influenzato. Se trovi un gioco che fallisce quando questa
-impostazione è impostata su 'true', segnala il bug nel repository del progetto,
-in modo tale da poterlo elencare qui.
-.
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
 join      : le combina in un'unica grande sezione (comportamento legacy).
@@ -200,12 +194,10 @@ overwrite : usa l'ultima incontrata, come le altre impostazioni di
 .
 :CONFIG_STARTUP_VERBOSITY
 Determina il livello di verbosità prima di visualizzare il programma:
-Verbosità   | Schermata iniziale | Schermata di benvenuto | Registro di DOSBox
-high        |          sì        |           sì           |         sì
-medium      |          no        |           sì           |         sì
-low         |          no        |           no           |         sì
-quiet       |          no        |           no           |         no
-splash_only |          sì        |           no           |         no
+Verbosità   | Schermata di benvenuto | Registro di DOSBox
+high        |           sì           |         sì
+low         |           no           |         sì
+quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una cartella,
                (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
@@ -224,6 +216,27 @@ come 640x480 e 800x600, verranno visualizzate così come sono.
 Seleziona la tavolozza predefinita per la visualizzazione monocromatica.
 Funziona solo quando si emula hercules o cga_mono.
 È possibile scorrere i colori disponibili usando il tasto F11.
+.
+:CONFIG_CGA_COLORS
+Imposta l'interpretazione dei colori CGA RGBI. Influisce su tutti i tipi di
+macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
+  default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
+  tandy [BL]:    Emulazione di un monitor Tandy con livello marrone regolabile
+                 (0 - rosso, 50 - marrone, 100 - giallo scuro; predefinito 50).
+  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy.
+  ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor
+                 IBM 5153 con un esclusivo controllo del contrasto che attenua
+                 solo i colori non luminosi (da 0 a 100; predefinito 100).
+  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
+                 Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra
+                 (fare riferimento al manuale per ulteriori dettagli).
+  agi-amigaish:  Mix di colori EGA e Amiga usati dall'interprete AGI Sarien.
+  scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
+  colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
+  colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
+È possibile impostare colori personalizzati specificando 16 codici colore
+esadecimali a 6 bit separati da spazi 
+(es. nero è 000000, bianco è 3f3f3f, rosso è 3f0000).
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
@@ -329,7 +342,7 @@ Nota: È possibile regolare l'intensità del crossfeed per ogni canale tramite i
       comandi del mixer.
 .
 :CONFIG_REVERB
-Abilita il riverbero a livello globale per aggiungere un senso di
+Abilita l'effetto riverbero a livello globale per aggiungere un senso di
 spazializzazione del suono:
   off:     Nessun riverbero (predefinito).
   on:      Abilita riverbero (preset medio).
@@ -344,7 +357,19 @@ spazializzazione del suono:
            per musica e audio digitale.
   huge:    Variante del preset salone con maggiore intensità; funziona davvero
            bene nei giochi con colonne sonore più suggestive
-Nota: È possibile regolare con precisione i livelli di riverbero per ogni canale
+Nota: È possibile regolare con precisione i livelli di riverbero per ogni
+      canale tramite i comandi del mixer.
+.
+:CONFIG_CHORUS
+Abilita l'effetto coro (Chorus) a livello globale per aggiungere un senso di
+movimento stereo al suono:
+  off:     Nessun effetto coro (predefinito).
+  on:      Abilita effetto coro (preset normale).
+  light:   Effetto coro leggero (particolarmente adatto per la musica
+           sintetizzata che presenta molto rumore bianco).
+  normal:  Effetto coro normale, funziona bene con un'ampia varietà di giochi.
+  strong:  Effetto coro molto evidente.
+Nota: È possibile regolare con precisione i livelli di coro per ogni canale
       tramite i comandi del mixer.
 .
 :CONFIG_MIDIDEVICE
@@ -363,6 +388,9 @@ Di solito è l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
 (trova l'id/nome con il comando DOS 'mixer /listmidi').
 - Questa opzione non ha effetto quando si utilizzano sintetizzatori intergrati.
   (mididevice = fluidsynth o mt32).
+- Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
+  elencare le porte MIDI aperte e selezionarne una
+  (ad esempio 'midiconfig=14:0' per il client sequencer 14, porta 0).
 - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
   potrebbe richiedere un ritardo per evitare che il suo buffer
   si sovraccarichi. In tal caso, aggiungi 'delaysysex', 
@@ -376,11 +404,12 @@ Tipo di MPU-401 da emulare.
 Percorso del file SoundFont in formato .sf2. Puoi utilizzare un percorso
 assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
 'soundfonts' situata nella cartella di configurazione di DOSBox.
-Una percentuale opzionale regolerà il volume del SoundFont.
-Ad esempio: 'soundfont.sf2 50' lo attenuerà del 50 percento.
-La percentuale del volume può variare da 1 a 500.
+Nota: La percentuale di ridimensionamento del volume dopo il nome del file è
+      stata deprecata. Si prega invece di utilizzare il comando del mixer per
+      modificare il volume del canale audio FluidSynth, ad es.:
+        MIXER FSYNTH 200
 .
-:CONFIG_CHORUS
+:CONFIG_FSYNTH_CHORUS
 Effetto coro (Chorus): 'auto', 'on', 'off', o valori personalizzati.
 Quando si utilizzano valori personalizzati:
   Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
@@ -391,6 +420,26 @@ Quando si utilizzano valori personalizzati:
   - profondità è un numero decimale compreso tra 0.0 e 21.0
   - modulazione-onda è 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
+Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
+      il coro a livello del mixer sul canale FluidSynth, oppure abilitare 
+      entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
+      riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
+.
+:CONFIG_FSYNTH_REVERB
+Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
+Quando si utilizzano valori personalizzati:
+  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
+  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
+  - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
+  - smorzamento è un numero decimale compreso tra 0.0 e 1.0
+  - ampiezza è un numero decimale compreso tra 0.0 e 100.0
+  - livello è un numero decimale compreso tra 0.0 e 1.0
+  Per esempio: reverb = 0.61 0.23 0.76 0.56
+Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
+      invece il riverbero a livello del mixer sul canale FluidSynth, oppure
+      abilitare entrambi gli effetti contemporaneamente. Il modo in cui il
+      suono verrà riprodotto dipende dal SoundFont e dalle impostazioni di
+      riverbero utilizzate.
 .
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
@@ -544,9 +593,20 @@ Filtro per l'uscita audio del DAC Tandy:
   on:   Filtra l'uscita audio (predefinito).
   off:  Non filtra l'uscita audio.
 .
+:CONFIG_LPT_DAC
+Tipo di DAC collegato alla porta parallela:
+  disney:    Disney Sound Source.
+  covox:     Covox Speech Thing.
+  ston1:     DAC Stereo-on-1, in stereo fino a 30 kHz.
+  none/off:  Non utilizzare un DAC su porta parallela (predefinito).
+.
+:CONFIG_LPT_DAC_FILTER
+Filtro per i dispositivi audio DAC LPT:
+  on:   Filtra l'uscita audio (predefinito).
+  off:  Non filtra l'uscita audio.
+.
 :CONFIG_DISNEY
-Abilita l'emulazione Disney Sound Source.
-(Compatibile con Covox Voice Master e Speech Thing)
+Usa 'lpt_dac=disney' per abilitare l'emulazione Disney Sound Source.
 .
 :CONFIG_DISNEY_FILTER
 Filtro per l'uscita audio Disney:
@@ -602,6 +662,33 @@ cerchio.
 Percentuale di movimento da ignorare.
 Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
+:CONFIG_USE_JOY_CALIBRATION_HOTKEYS
+Attiva i tasti di scelta rapida per consentire la calibrazione in tempo reale
+degli assi X e Y del joystick. Consideralo solo se la calibrazione all'interno
+del gioco fallisce e sono state provate altre impostazioni.
+ - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
+     - Sinistra e Destra diminuiscono o ingrandiscono rispettivamente lo
+       scalare dell'asse X.
+     - In basso ed In alto diminuiscono o ingrandiscono rispettivamente lo
+       scalare dell'asse Y.
+ - Alt+TastiFreccia regola la posizione di offset dell'asse:
+     - Sinistra e Destra sposta l'offset dell'asse X nella direzione data.
+     - In basso ed In alto sposta l'offset dell'asse Y nella direzione data.
+ - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
+   Ctrl+Home.
+Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
+valori di calibrazione X o Y che puoi impostare di seguito. Quando hai trovato
+i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
+'false' e inserisci i parametri di calibrazione segnalati.
+.
+:CONFIG_JOY_X_CALIBRATION
+Applica i parametri di calibrazione dell'asse X dai tasti di scelta rapida.
+L'impostazione predefinita è "auto".
+.
+:CONFIG_JOY_Y_CALIBRATION
+Applica i parametri di calibrazione dell'asse Y dai tasti di scelta rapida.
+L'impostazione predefinita è "auto"
+.
 :CONFIG_SERIAL1
 Imposta il tipo di dispositivo connesso alla porta com.
 Può essere: disabled, dummy, mouse, modem, nullmodem, direct.
@@ -618,7 +705,7 @@ per mouse:
    Predefinito type:wheel+msm rate:smooth
 per direct: realport (richiesto), rxdelay (facoltativo).
    (realport:COM1 realport:ttyS0).
-per modem: listenport sock (tutti facoltativi).
+per modem: listenport, sock, baudrate (tutti facoltativi).
 per nullmodem: server, rxdelay, txdelay, telnet, usedtr,
    transparent, port, inhsocket, sock (tutti facoltativi).
 Il parametro SOCK specifica il protocollo da utilizzare da entrambi i lati
@@ -1242,7 +1329,7 @@ Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
 [color=yellow]%s+Enter[reset]  Passa dalla modalità a schermo intero a quella a finestra
            e viceversa.
-[color=yellow]%s+Pause[reset]  Mette in pausa/Riavvia l'emulatore.
+[color=yellow]%s+Pause[reset]  Mette in Pausa/Riavvia l'emulatore.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
@@ -1457,7 +1544,7 @@ Note:
 
 Esempi:
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]C:\giochiDos[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\[reset] -t cdrom
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\ [reset]-t cdrom
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]file_di_salvataggio[reset] -t overlay
 
 .
@@ -1579,7 +1666,7 @@ Dove:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    Crossfeed: da [color=white]x0[reset] a [color=white]x100[reset]    Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]
+    Crossfeed: da [color=white]x0[reset] a [color=white]x100[reset]    Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]    Coro: da [color=white]c0[reset] a [color=white]c100[reset]
 Note:
   L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
   È possibile modificare le impostazioni di più canali con un unico comando.
@@ -1590,13 +1677,13 @@ Note:
 
 Esempi:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
-  [color=green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset]).
+  [color=green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset])
   [color=green]serial[reset] [color=white]PORTA#[reset] [color=cyan]DISPOSITIVO[reset] [impostazioni]  Collega il dispositivo alla porta
 					    specificata.
 Dove:
@@ -1612,11 +1699,11 @@ Dove:
   Per [color=cyan]DUMMY[reset]      : IRQ
 
 Esempi:
-  [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Ascolto su TCP:1250 come server
-  [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connesso a TCP:1250 come client
-  [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Ascolto su UDP:5000 come server
-  [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Usa una porta fisica su Linux
-  [color=green]serial[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse di tipo Mouse Systems
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                : Ascolto su TCP:1250 come server
+  [color=green]serial[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
+  [color=green]serial[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
+  [color=green]serial[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0            : Usa una porta fisica su Linux
+  [color=green]serial[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                     : Mouse di tipo Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2532,9 +2619,14 @@ Esempi:
   [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Digita la lettera a, b, o c[reset]
 
 .
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Scelta fallita[reset]: il flusso di input è terminato senza una scelta valida.
+
+.
 :SHELL_CMD_CHOICE_ABORTED
 
-Scelta annullata.
+[color=yellow]Scelta annullata.[reset]
 
 .
 :SHELL_CMD_PATH_HELP

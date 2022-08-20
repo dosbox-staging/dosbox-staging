@@ -30,6 +30,7 @@
 #include "string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
+#include "math_utils.h"
 #include "misc_util.h"
 
 class PhonebookEntry {
@@ -150,6 +151,21 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 		        GetPortNumber(), telnet_mode ? "enabled" : "disabled");
 	}
 
+	// Get the connect speed to report
+	constexpr auto min_baudrate = 300u;
+	constexpr auto max_baudrate = 57600u;
+	if (getUintFromString("baudrate:", val, cmd)) {
+		val = clamp(val, min_baudrate, max_baudrate);
+	} else {
+		val = max_baudrate;
+	}
+
+	assert(val >= min_baudrate && val <= max_baudrate);
+	safe_sprintf(connect_string, "CONNECT %d", val);
+
+	LOG_MSG("SERIAL: Port %" PRIu8 " will report baud rate %d",
+			GetPortNumber(), val);
+
 	InstallationSuccessful=true;
 }
 
@@ -237,7 +253,7 @@ void CSerialModem::SendRes(const ResTypes response) {
 	uint32_t code = -1;
 	switch (response) {
 		case ResOK:         code = 0; string = "OK"; break;
-		case ResCONNECT:    code = 1; string = "CONNECT 57600"; break;
+		case ResCONNECT:    code = 1; string = connect_string; break;
 		case ResRING:       code = 2; string = "RING"; break;
 		case ResNOCARRIER:  code = 3; string = "NO CARRIER"; break;
 		case ResERROR:      code = 4; string = "ERROR"; break;

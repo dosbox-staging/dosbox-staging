@@ -700,14 +700,11 @@ void filter_s3_modes_to_oem_only()
 	case 8192 * 1024: dram_size = mb_8; break;
 	}
 	auto mode_not_allowed = [&](const VideoModeBlock &m) -> bool {
-		// Allow all the standard VESA modes, which start prior to 0x120...
-		if (m.mode < 0x120) {
-			// ...except for 320x200x15/16/24 which were rarely supported until late 90s.
-			if (m.mode == 0x10d || m.mode == 0x10e || m.mode == 0x10f)
-				return true;
-
-			return false;
-		}
+		// Permit common VESA modes except 320x200 hi-color that were
+		// rarely properly supported until the late 90s.
+		constexpr auto s3_vesa_modes_start = 0x150;
+		if (m.mode < s3_vesa_modes_start)
+			return (m.mode == 0x10d || m.mode == 0x10e || m.mode == 0x10f);
 
 		// Allow all modes that aren't part of the VESA VGA set (CGA/EGA/Hercules/etc)
 		constexpr auto vesa_vga_modes = M_LIN4 | M_LIN8 | M_LIN15 | M_LIN16 | M_LIN24 | M_LIN32;

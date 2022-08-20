@@ -115,6 +115,7 @@ jobs:
         run: |
           export PATH="/mingw64/bin:$PATH"
           meson setup \
+            -Dbuildtype=debug \
             -Dunit_tests=disabled \
             -Duse_opengl=false \
             ${{ matrix.conf.configure_flags }} \

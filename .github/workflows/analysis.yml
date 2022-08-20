@@ -86,7 +86,20 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run:  meson setup -Dunit_tests=disabled build
+      - run: |
+          meson setup \
+          -Dbuildtype=debug \
+          -Ddefault_library=shared \
+          -Dsystem_libraries=speexdsp \
+          -Duse_alsa=false \
+          -Duse_fluidsynth=false \
+          -Duse_mt32emu=false \
+          -Duse_opengl=false \
+          -Duse_png=false \
+          -Duse_sdl2_net=false \
+          -Duse_slirp=false \
+          -Dunit_tests=disabled \
+          build
 
       - name: Build and run scan-build
         run: |
@@ -102,7 +115,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 19
+          MAX_BUGS: 4
         run: |
           # summary
           echo "Full report is included in build Artifacts"
@@ -180,7 +193,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run:  meson setup -Dunit_tests=disabled ${{ matrix.conf.build_flags }} build
+      - run:  meson setup -Dbuildtype=debug -Dunit_tests=disabled -Dunit_tests=disabled ${{ matrix.conf.build_flags }} build
 
       - run:  meson compile -C build
 

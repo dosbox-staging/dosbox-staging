@@ -15,20 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         conf:
-          - name: Clang (macos-10.15)
-            host: macos-10.15
-            arch: x86_64
-            needs_deps: true
-            packages: meson
-            build_flags: -Dunit_tests=disabled
-            max_warnings: 0
-
           - name: Clang
-            host: macos-latest
+            host: macos-12
             arch: x86_64
             needs_deps: true
             packages: meson
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
           - name: GCC 11
@@ -36,13 +29,16 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: gcc@11
-            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
-          - name: Clang, +tests
-            host: macos-latest
+          - name: Clang, +tests (macOS 12)
+            host: macos-12
             arch: x86_64
             needs_deps: true
+            build_flags: -Dbuildtype=debug -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             run_tests: true
             max_warnings: -1
 
@@ -50,7 +46,8 @@ jobs:
             host: macos-latest
             arch: x86_64
             needs_deps: true
-            build_flags: -Dunit_tests=disabled -Denable_debugger=normal
+            build_flags: -Denable_debugger=normal -Ddefault_library=shared
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
           - name: Clang
@@ -58,7 +55,8 @@ jobs:
             arch: arm64
             needs_deps: false
             packages: meson
-            build_flags: -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            brew_path: /opt/homebrew
             max_warnings: 0
 
     steps:
@@ -122,25 +120,24 @@ jobs:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
 
-      - name: Log environment
-        run:  arch -arch=${{ matrix.conf.arch }} ./scripts/log-env.sh
-
-      - run:  arch -arch=${{ matrix.conf.arch }} ./scripts/retry_command.sh 3 meson setup ${{ matrix.conf.build_flags }} build
-
-      - name: Build
+      - name: Setup and build
         run: |
           set -xo pipefail
-          arch -arch=${{ matrix.conf.arch }} meson compile -C build 2>&1 | tee build.log
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+          eval "$(${{ matrix.conf.brew_path }}/bin/brew shellenv)"
+          ./scripts/log-env.sh
+          ./scripts/retry_command.sh 3 meson setup ${{ matrix.conf.build_flags }} build
+          meson compile -C build 2>&1 | tee build.log
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  arch -arch=${{ matrix.conf.arch }} meson test -C build --print-errorlogs
+        run:  meson test -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  arch -arch=${{ matrix.conf.arch }} python3 ./scripts/count-warnings.py -lf build.log
+        run:  python3 ./scripts/count-warnings.py -lf build.log
 
   build_macos_release:
     name: Release build (${{ matrix.runner.arch }})
@@ -152,15 +149,25 @@ jobs:
     strategy:
       matrix:
         runner:
-          - host: macos-10.15
+          # GitHub macOS 11.x CI runner doesn't have working 10.x SDK
+          #- host: macos-latest
+          #  arch: x86_64
+          #  build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
+          #  minimum_deployment: '10.15'
+          #  needs_deps: true
+          #  needs_libintl_workaround: true
+
+          - host: [self-hosted, macOS, arm64, release-builds]
             arch: x86_64
-            build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
+            build_flags: --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
+            brew_path: /usr/local/homebrew
             minimum_deployment: '10.15'
-            needs_deps: true
-            needs_libintl_workaround: true
+            needs_deps: false
+            needs_libintl_workaround: false
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: arm64
+            brew_path: /opt/homebrew
             minimum_deployment: '11.0'
             needs_deps: false
 
@@ -236,44 +243,12 @@ jobs:
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # KLUDGE: Work-around for the scenario where glib's wrap links with libintl 
-      # dynamically, which adds a dependency into a brew dynlib package (in /usr/local/..), 
-      # which some users won't have. So we knockout libintl.dynlib (by removing gettext 
-      # removal), however this also breaks git: so we do a mock-meson setup to fetch all the 
-      # git wraps before knocking it. then we re-add gettext after the build, so git can work 
-      # for subsequent steps.
-      #
-      - name: Fetch subprojects then remove libintl.8.dylib
-        if:   matrix.runner.needs_libintl_workaround
-        run:  |
-          set -ex
-          ./scripts/retry_command.sh 3 meson setup -Ddefault_library=static --wrap-mode=forcefallback -Dfluidsynth:try-static-deps=true build
-          ./scripts/retry_command.sh 3 git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
-          brew uninstall -f --ignore-dependencies gettext
-          rm -rf build
-
-      # LTO prevent ccache from being used, which greatly speeds up routine CI runs.
-      # However, it does add a small speed-up, so can be switched on during the
-      # release-candidate testing phase.
-      - name: Setup release build
-        run: >-
-          arch -arch=${{ matrix.runner.arch }} ./scripts/retry_command.sh 3 meson setup
-          ${{ matrix.conf.build_flags }}
-          --wrap-mode=forcefallback
-          -Dbuildtype=release
-          -Db_lto=false
-          -Db_asneeded=true
-          -Ddefault_library=static
-          -Dtry_static_libs=opusfile,sdl2,sdl2_net,speexdsp,zlib
-          -Dfluidsynth:try-static-deps=true
-          build
-
-      - name: Build
-        run:  arch -arch=${{ matrix.runner.arch }} meson compile -C build
-
-      - name: Reinstate libintl.8.dylib
-        if:   matrix.runner.needs_libintl_workaround
-        run:  brew install gettext
+      - name: Setup and build release
+        run: |
+          set -x
+          eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
+          meson setup ${{ matrix.runner.build_flags }} -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson compile -C build
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
@@ -290,7 +265,7 @@ jobs:
   publish_universal_build:
     name: Publish universal build
     needs: build_macos_release
-    runs-on: macos-10.15
+    runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

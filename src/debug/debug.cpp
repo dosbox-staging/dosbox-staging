@@ -107,20 +107,28 @@ static bool zeroProtect = false;
 bool	logHeavy	= false;
 #endif
 
-
-
 static struct  {
-	uint32_t eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
-} oldregs;
+	uint32_t eax = 0;
+	uint32_t ebx = 0;
+	uint32_t ecx = 0;
+	uint32_t edx = 0;
+	uint32_t esi = 0;
+	uint32_t edi = 0;
+	uint32_t ebp = 0;
+	uint32_t esp = 0;
+	uint32_t eip = 0;
+} oldregs = {};
 
 static char curSelectorName[3] = { 0,0,0 };
 
-static Segment oldsegs[6];
-static Bitu oldflags,oldcpucpl;
-DBGBlock dbg;
-Bitu cycle_count;
-static bool debugging;
+static Segment oldsegs[6] = {};
 
+static auto oldflags  = cpu_regs.flags;
+static auto oldcpucpl = cpu.cpl;
+
+DBGBlock dbg = {};
+Bitu cycle_count = 0;
+static bool debugging = false;
 
 static void SetColor(Bitu test) {
 	if (test) {
@@ -132,23 +140,28 @@ static void SetColor(Bitu test) {
 
 #define MAXCMDLEN 254
 struct SCodeViewData {
-	int     cursorPos;
-	uint16_t  firstInstSize;
-	uint16_t  useCS;
-	uint32_t  useEIPlast, useEIPmid;
-	uint32_t  useEIP;
-	uint16_t  cursorSeg;
-	uint32_t  cursorOfs;
-	bool    ovrMode;
-	char    inputStr[MAXCMDLEN+1];
-	char    suspInputStr[MAXCMDLEN+1];
-	int     inputPos;
-} codeViewData;
+	int cursorPos          = 0;
+	uint16_t firstInstSize = 0;
+	uint16_t useCS         = 0;
+	uint32_t useEIPlast    = 0;
+	uint32_t useEIPmid     = 0;
+	uint32_t useEIP        = 0;
+	uint16_t cursorSeg     = 0;
+	uint32_t cursorOfs     = 0;
 
-static uint16_t  dataSeg;
-static uint32_t  dataOfs;
-static bool    showExtend = true;
-static bool    showPrintable = true;
+	bool ovrMode = false;
+
+	char inputStr[MAXCMDLEN + 1]     = {};
+	char suspInputStr[MAXCMDLEN + 1] = {};
+
+	int inputPos = 0;
+} codeViewData = {};
+
+static uint16_t dataSeg = 0;
+static uint32_t dataOfs = 0;
+
+static bool showExtend    = true;
+static bool showPrintable = true;
 
 static void ClearInputLine(void) {
 	codeViewData.inputStr[0] = 0;
@@ -157,8 +170,8 @@ static void ClearInputLine(void) {
 
 // History stuff
 #define MAX_HIST_BUFFER 50
-static list<string> histBuff;
-static list<string>::iterator histBuffPos = histBuff.end();
+static list<string> histBuff = {};
+static auto histBuffPos = histBuff.end();
 
 /***********/
 /* Helpers */
@@ -242,10 +255,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 class CDebugVar
 {
 public:
-	CDebugVar(const char *vname, PhysPt address)
-	        : adr(address),
-	          hasvalue(false),
-	          value(0)
+	CDebugVar(const char *vname, PhysPt address) : adr(address)
 	{
 		safe_strcpy(name, vname);
 	}
@@ -257,10 +267,10 @@ public:
 	bool   HasValue(void)                 { return hasvalue; }
 
 private:
-	PhysPt  adr;
-	char    name[16];
-	bool    hasvalue;
-	uint16_t  value;
+	const PhysPt adr = 0;
+	char name[16]    = {};
+	bool hasvalue    = false;
+	uint16_t value   = 0;
 
 public:
 	static void       InsertVariable(char* name, PhysPt adr);
@@ -268,12 +278,9 @@ public:
 	static void       DeleteAll     ();
 	static bool       SaveVars      (char* name);
 	static bool       LoadVars      (char* name);
-
-	static std::vector<CDebugVar*> varList;
 };
 
-std::vector<CDebugVar*> CDebugVar::varList;
-
+static std::vector<CDebugVar *> varList = {};
 
 /********************/
 /* Breakpoint stuff */
@@ -330,24 +337,23 @@ public:
 
 
 private:
-	EBreakpoint	type;
+	EBreakpoint type = {};
 	// Physical
-	PhysPt		location;
-	uint8_t		oldData;
-	uint16_t		segment;
-	uint32_t		offset;
+	PhysPt location  = 0;
+	uint8_t oldData  = 0;
+	uint16_t segment = 0;
+	uint32_t offset  = 0;
 	// Int
-	uint8_t		intNr;
-	uint16_t		ahValue;
-	uint16_t		alValue;
+	uint8_t intNr    = 0;
+	uint16_t ahValue = 0;
+	uint16_t alValue = 0;
 	// Shared
-	bool		active;
-	bool		once;
+	bool active = 0;
+	bool once   = 0;
 
-	static std::list<CBreakpoint*>	BPoints;
-#if C_HEAVY_DEBUG
+#	if C_HEAVY_DEBUG
 	friend bool DEBUG_HeavyIsBreakpoint(void);
-#endif
+#	endif
 };
 
 CBreakpoint::CBreakpoint(void):
@@ -397,11 +403,11 @@ void CBreakpoint::Activate(bool _active)
 }
 
 // Statics
-std::list<CBreakpoint*> CBreakpoint::BPoints;
+static std::list<CBreakpoint *> BPoints = {};
 
 CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 {
-	CBreakpoint* bp = new CBreakpoint();
+	auto bp = new CBreakpoint();
 	bp->SetAddress		(seg,off);
 	bp->SetOnce			(once);
 	BPoints.push_front	(bp);
@@ -410,7 +416,7 @@ CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 
 CBreakpoint* CBreakpoint::AddIntBreakpoint(uint8_t intNum, uint16_t ah, uint16_t al, bool once)
 {
-	CBreakpoint* bp = new CBreakpoint();
+	auto bp = new CBreakpoint();
 	bp->SetInt			(intNum,ah,al);
 	bp->SetOnce			(once);
 	BPoints.push_front	(bp);
@@ -419,7 +425,7 @@ CBreakpoint* CBreakpoint::AddIntBreakpoint(uint8_t intNum, uint16_t ah, uint16_t
 
 CBreakpoint* CBreakpoint::AddMemBreakpoint(uint16_t seg, uint32_t off)
 {
-	CBreakpoint* bp = new CBreakpoint();
+	auto bp = new CBreakpoint();
 	bp->SetAddress		(seg,off);
 	bp->SetOnce			(false);
 	bp->SetType			(BKPNT_MEMORY);
@@ -431,24 +437,22 @@ void CBreakpoint::ActivateBreakpoints()
 {
 	// activate all breakpoints
 	std::list<CBreakpoint*>::iterator i;
-	for (i = BPoints.begin(); i != BPoints.end(); ++i)
-		(*i)->Activate(true);
+	for (auto &bp : BPoints)
+		bp->Activate(true);
 }
 
 void CBreakpoint::DeactivateBreakpoints()
 {
 	// deactivate all breakpoints
-	std::list<CBreakpoint*>::iterator i;
-	for (i = BPoints.begin(); i != BPoints.end(); ++i)
-		(*i)->Activate(false);
+	for (auto &bp : BPoints)
+		bp->Activate(false);
 }
 
 void CBreakpoint::ActivateBreakpointsExceptAt(PhysPt adr)
 {
 	// activate all breakpoints, except those at adr
 	std::list<CBreakpoint*>::iterator i;
-	for (i = BPoints.begin(); i != BPoints.end(); ++i) {
-		CBreakpoint* bp = (*i);
+	for (auto &bp : BPoints) {
 		// Do not activate breakpoints at adr
 		if (bp->GetType() == BKPNT_PHYSICAL && bp->GetLocation() == adr)
 			continue;
@@ -464,14 +468,14 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 
 	// Search matching breakpoint
 	for (auto i = BPoints.begin(); i != BPoints.end(); ++i) {
-		CBreakpoint *bp = (*i);
+		auto bp = (*i);
 
 		if ((bp->GetType() == BKPNT_PHYSICAL) && bp->IsActive() &&
 		    (bp->GetLocation() == GetAddress(seg, off))) {
 			// Found
 			if (bp->GetOnce()) {
 				// delete it, if it should only be used once
-				(BPoints.erase)(i);
+				BPoints.erase(i);
 				bp->Activate(false);
 				delete bp;
 			} else {
@@ -523,17 +527,19 @@ bool CBreakpoint::CheckIntBreakpoint([[maybe_unused]] PhysPt adr, uint8_t intNr,
 	if (BPoints.empty()) return false;
 
 	// Search matching breakpoint
-	std::list<CBreakpoint*>::iterator i;
-	CBreakpoint* bp;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		bp = (*i);
-		if ((bp->GetType()==BKPNT_INTERRUPT) && bp->IsActive() && (bp->GetIntNr()==intNr)) {
-			if (((bp->GetValue()==BPINT_ALL) || (bp->GetValue()==ahValue)) && ((bp->GetOther()==BPINT_ALL) || (bp->GetOther()==alValue))) {
+	for (auto i = BPoints.begin(); i != BPoints.end(); ++i) {
+		auto bp = (*i);
+		if ((bp->GetType() == BKPNT_INTERRUPT) && bp->IsActive() &&
+		    (bp->GetIntNr() == intNr)) {
+			if (((bp->GetValue() == BPINT_ALL) ||
+			     (bp->GetValue() == ahValue)) &&
+			    ((bp->GetOther() == BPINT_ALL) ||
+			     (bp->GetOther() == alValue))) {
 				// Ignore it once ?
 				// Found
 				if (bp->GetOnce()) {
 					// delete it, if it should only be used once
-					(BPoints.erase)(i);
+					BPoints.erase(i);
 					bp->Activate(false);
 					delete bp;
 				}
@@ -546,33 +552,27 @@ bool CBreakpoint::CheckIntBreakpoint([[maybe_unused]] PhysPt adr, uint8_t intNr,
 
 void CBreakpoint::DeleteAll()
 {
-	std::list<CBreakpoint*>::iterator i;
-	CBreakpoint* bp;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		bp = (*i);
+	for (auto &bp : BPoints) {
 		bp->Activate(false);
 		delete bp;
 	}
-	(BPoints.clear)();
+	BPoints.clear();
 }
 
 bool CBreakpoint::DeleteByIndex(uint16_t index)
 {
-	// Search matching breakpoint
-	int nr = 0;
-	std::list<CBreakpoint*>::iterator i;
-	CBreakpoint* bp;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		if (nr==index) {
-			bp = (*i);
-			(BPoints.erase)(i);
-			bp->Activate(false);
-			delete bp;
-			return true;
-		}
-		nr++;
-	}
-	return false;
+	// Request is past the end
+	if (index >= BPoints.size())
+		return false;
+
+	auto it = BPoints.begin();
+	std::advance(it, index);
+	auto bp = *it;
+
+	BPoints.erase(it);
+	bp->Activate(false);
+	delete bp;
+	return true;
 }
 
 CBreakpoint* CBreakpoint::FindPhysBreakpoint(uint16_t seg, uint32_t off, bool once)
@@ -582,11 +582,8 @@ CBreakpoint* CBreakpoint::FindPhysBreakpoint(uint16_t seg, uint32_t off, bool on
 	PhysPt adr = GetAddress(seg, off);
 #endif
 	// Search for matching breakpoint
-	std::list<CBreakpoint*>::iterator i;
-	CBreakpoint* bp;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		bp = (*i);
-#if C_HEAVY_DEBUG
+	for (auto &bp : BPoints) {
+#	if C_HEAVY_DEBUG
 		// Heavy debugging breakpoints are triggered by matching seg:off
 		bool atLocation = bp->GetSegment() == seg && bp->GetOffset() == off;
 #else
@@ -603,12 +600,9 @@ CBreakpoint* CBreakpoint::FindPhysBreakpoint(uint16_t seg, uint32_t off, bool on
 
 CBreakpoint* CBreakpoint::FindOtherActiveBreakpoint(PhysPt adr, CBreakpoint* skip)
 {
-	std::list<CBreakpoint*>::iterator i;
-	for (i = BPoints.begin(); i != BPoints.end(); ++i) {
-		CBreakpoint* bp = (*i);
+	for (auto &bp : BPoints)
 		if (bp != skip && bp->GetType() == BKPNT_PHYSICAL && bp->GetLocation() == adr && bp->IsActive())
 			return bp;
-	}
 	return 0;
 }
 
@@ -635,9 +629,7 @@ void CBreakpoint::ShowList(void)
 {
 	// iterate list
 	int nr = 0;
-	std::list<CBreakpoint*>::iterator i;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		CBreakpoint* bp = (*i);
+	for (auto &bp : BPoints) {
 		if (bp->GetType()==BKPNT_PHYSICAL) {
 			DEBUG_ShowMsg("%02X. BP %04X:%04X\n",nr,bp->GetSegment(),bp->GetOffset());
 		} else if (bp->GetType()==BKPNT_INTERRUPT) {
@@ -1588,7 +1580,11 @@ int32_t DEBUG_Run(int32_t amount,bool quickexit) {
 	else {
 		// ensure all breakpoints are activated
 		CBreakpoint::ActivateBreakpoints();
-		SDL_RaiseWindow(GFX_GetSDLWindow());
+
+		const auto graphics_window = GFX_GetSDLWindow();
+		SDL_RaiseWindow(graphics_window);
+		SDL_SetWindowInputFocus(graphics_window);
+
 		DOSBOX_SetNormalLoop();
 	}
 	return ret;
@@ -1879,22 +1875,43 @@ Bitu DEBUG_Loop(void) {
 extern SDL_Window *pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
-void DEBUG_Enable(bool pressed) {
+void DEBUG_Enable(bool pressed)
+{
 	if (!pressed)
 		return;
-	static bool showhelp=false;
-	debugging=true;
 
+	// Maybe construct the debugger's UI
+	static bool was_ui_started = false;
+	if (!was_ui_started) {
+		DBGUI_StartUp();
+		was_ui_started = (pdc_window != nullptr);
+	}
+
+	// The debugger is run in release mode so cannot use asserts
+	if (!was_ui_started) {
+		LOG_ERR("DEBUG: Failed to start up the debug window");
+		return;
+	}
+
+	// Defocus the graphical UI and bring the debugger UI into focus
+	GFX_LosingFocus();
 	pdc_event_queue = {};
-
 	SDL_RaiseWindow(pdc_window);
+	SDL_SetWindowInputFocus(pdc_window);
 	SetCodeWinStart();
 	DEBUG_DrawScreen();
-	DOSBOX_SetLoop(&DEBUG_Loop);
-	if(!showhelp) { 
-		showhelp=true;
+
+	// Maybe show help for the first time in the debugger
+	static bool was_help_shown = false;
+	if (!was_help_shown) {
 		DEBUG_ShowMsg("***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\n");
+		was_help_shown = true;
 	}
+
+	// Start the debugging loops
+	debugging = true;
+	DOSBOX_SetLoop(&DEBUG_Loop);
+
 	KEYBOARD_ClrBuffer();
 }
 
@@ -2224,31 +2241,13 @@ Bitu DEBUG_EnableDebugger()
 	return 0;
 }
 
-// INIT
-
-void DEBUG_SetupConsole(void) {
-	// tcgetattr(0,&consolesettings);
-	// curses must be inited first in order to catch the resize (is an event)
-	// printf("\e[8;50;80t"); //resize terminal
-	// fflush(NULL);
-	memset((void *)&dbg,0,sizeof(dbg));
-	debugging=false;
-	// dbg.active_win=3;
-	/* Start the Debug Gui */
-	DBGUI_StartUp();
-}
-
 void DEBUG_ShutDown(Section * /*sec*/) {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
 	curs_set(old_cursor_state);
-	endwin();
-	//#ifndef WIN32
-	// tcsetattr(0, TCSANOW,&consolesettings);
-	// printf("\e[0m\e[2J"); //Seems to destroy scrolling
-	// printf("\ec"); //Doesn't seem to be needed anymore
-	// fflush(NULL);
-	//#endif
+
+	if (pdc_window)
+		endwin();
 }
 
 Bitu debugCallback;
@@ -2261,7 +2260,7 @@ void DEBUG_Init(Section* sec) {
 	MAPPER_AddHandler(DEBUG_Enable, SDL_SCANCODE_PAUSE, MMOD2, "debugger",
 	                  "Debugger");
 	/* Reset code overview and input line */
-	memset((void*)&codeViewData,0,sizeof(codeViewData));
+	codeViewData = {};
 	/* setup debug.com */
 	PROGRAMS_MakeFile("DEBUG.COM",ProgramCreate<DEBUG>);
 	PROGRAMS_MakeFile("DBXDEBUG.COM",ProgramCreate<DEBUG>);
@@ -2425,21 +2424,19 @@ static void OutputVecTable(char* filename) {
 #define DEBUG_VAR_BUF_LEN 16
 static void DrawVariables()
 {
-	if (CDebugVar::varList.empty()) return;
+	if (varList.empty())
+		return;
 
-	CDebugVar *dv;
-	char buffer[DEBUG_VAR_BUF_LEN];
-	std::vector<CDebugVar*>::size_type s = CDebugVar::varList.size();
+	char buffer[DEBUG_VAR_BUF_LEN] = {};
 	bool windowchanges = false;
 
-	for(std::vector<CDebugVar*>::size_type i = 0; i != s; i++) {
-
+	for (size_t i = 0; i != varList.size(); ++i) {
 		if (i == 4*3) {
 			/* too many variables */
 			break;
 		}
 
-		dv = static_cast<CDebugVar*>(CDebugVar::varList[i]);
+		auto dv = varList[i];
 		uint16_t value;
 		bool varchanges = false;
 		bool has_no_value = mem_readw_checked(dv->GetAdr(),&value);
@@ -2626,9 +2623,9 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 		skipFirstInstruction = false;
 		return false;
 	}
-	if (!CBreakpoint::BPoints.empty() && CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
+	if (BPoints.size() && CBreakpoint::CheckBreakpoint(SegValue(cs), reg_eip))
 		return true;
-	}
+
 	return false;
 }
 

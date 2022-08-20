@@ -21,25 +21,23 @@
 #include <string_view>
 using sv = std::string_view;
 
+#include <map>
+#include <memory>
+
+#include "../ints/int10.h"
 #include "bios.h"
 #include "bios_disk.h"
-#include "setup.h"
-#include "support.h"
-#include "string_utils.h"
-#include "../ints/int10.h"
-#include "regs.h"
 #include "callback.h"
-#include "mapper.h"
-#include "drives.h"
 #include "dos_inc.h"
+#include "drives.h"
+#include "math_utils.h"
+#include "mapper.h"
+#include "regs.h"
+#include "setup.h"
+#include "string_utils.h"
 
 #include "dos_keyboard_layout.h"
 #include "dos_resources.h"
-
-#if defined (WIN32)
-#include <windows.h>
-#endif
-#include <map>
 
 static FILE_unique_ptr OpenDosboxFile(const char *name)
 {
@@ -54,7 +52,7 @@ static FILE_unique_ptr OpenDosboxFile(const char *name)
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
 			if (ldp) {
 				FILE *tmpfile=ldp->GetSystemFilePtr(fullname, "rb");
-				if (tmpfile != NULL)
+				if (tmpfile != nullptr)
 					return FILE_unique_ptr(tmpfile);
 			}
 		}
@@ -64,82 +62,95 @@ static FILE_unique_ptr OpenDosboxFile(const char *name)
 	return FILE_unique_ptr(tmpfile);
 }
 
-class keyboard_layout {
+class KeyboardLayout {
 public:
-	keyboard_layout()
-	        : additional_planes(0),
-	          used_lock_modifiers(0x0f),
-	          diacritics_entries(0),
-	          diacritics_character(0),
-	          user_keys(0),
-	          use_foreign_layout(false),
-	          language_codes(nullptr),
-	          language_code_count(0)
+	KeyboardLayout()
 	{
-		this->reset();
+		Reset();
 		sprintf(current_keyboard_file_name, "none");
 	}
 
-	keyboard_layout(const keyboard_layout &) = delete; // prevent copying
-	keyboard_layout &operator=(const keyboard_layout &) = delete; // prevent assignment
+	KeyboardLayout(const KeyboardLayout &) = delete; // prevent copying
+	KeyboardLayout &operator=(const KeyboardLayout &) = delete; // prevent
+	                                                            // assignment
 
-	~keyboard_layout();
+	~KeyboardLayout();
 
 	// read in a codepage from a .cpi-file
-	Bitu read_codepage_file(const char* codepage_file_name, int32_t codepage_id);
-	uint16_t extract_codepage(const char* keyboard_file_name);
+	KeyboardErrorCode ReadCodePageFile(const char *codepage_file_name,
+	                                   const int32_t codepage_id);
+
+	uint16_t ExtractCodePage(const char *keyboard_file_name);
+
 	// read in a keyboard layout from a .kl-file
-	Bitu read_keyboard_file(const char* keyboard_file_name, int32_t req_cp);
+	KeyboardErrorCode ReadKeyboardFile(const char *keyboard_file_name,
+	                                   const int32_t req_cp);
 
-	// call layout_key to apply the current language layout
-	bool layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3);
+	// call SetLayoutKey to apply the current language layout
+	bool SetLayoutKey(const Bitu key, const uint8_t flags1,
+	                  const uint8_t flags2, const uint8_t flags3);
 
-	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout, int32_t& tried_cp);
-	void switch_foreign_layout();
-	const char* get_layout_name();
-	const char* main_language_code();
-
+	KeyboardErrorCode SwitchKeyboardLayout(const char *new_layout,
+	                                       KeyboardLayout *&created_layout,
+	                                       int32_t &tried_cp);
+	void SwitchForeignLayout();
+	const char *GetLayoutName();
+	const char *GetMainLanguageCode();
 
 private:
-	static const uint8_t layout_pages=12;
-	uint16_t current_layout[(MAX_SCAN_CODE+1)*layout_pages];
+	static constexpr uint8_t layout_pages = 12;
+
+	uint16_t current_layout[(MAX_SCAN_CODE + 1) * layout_pages] = {};
 	struct {
-		uint16_t required_flags,forbidden_flags;
-		uint16_t required_userflags,forbidden_userflags;
-	} current_layout_planes[layout_pages-4];
-	uint8_t additional_planes,used_lock_modifiers;
+		uint16_t required_flags      = 0;
+		uint16_t forbidden_flags     = 0;
+		uint16_t required_userflags  = 0;
+		uint16_t forbidden_userflags = 0;
+	} current_layout_planes[layout_pages - 4] = {};
+
+	uint8_t additional_planes   = 0;
+	uint8_t used_lock_modifiers = 0;
 
 	// diacritics table
-	uint8_t diacritics[2048];
-	uint16_t diacritics_entries;
-	uint16_t diacritics_character;
-	uint16_t user_keys;
+	uint8_t diacritics[2048] = {};
 
-	char current_keyboard_file_name[256];
-	bool use_foreign_layout;
+	uint16_t diacritics_entries   = 0;
+	uint16_t diacritics_character = 0;
+	uint16_t user_keys            = 0;
+
+	char current_keyboard_file_name[256] = {};
+
+	bool use_foreign_layout = false;
 
 	// language code storage used when switching layouts
-	char** language_codes;
-	Bitu language_code_count;
+	char **language_codes    = nullptr;
+	Bitu language_code_count = 0;
 
-	void reset();
-	void read_keyboard_file(int32_t specific_layout);
-	Bitu read_keyboard_file(const char* keyboard_file_name, int32_t specific_layout, int32_t requested_codepage);
-	bool map_key(Bitu key, uint16_t layouted_key, bool is_command, bool is_keypair);
-	int8_t get_CPX_file_id(uint32_t codepage_id);
+	void Reset();
+	void ReadKeyboardFile(int32_t specific_layout);
+
+	KeyboardErrorCode ReadKeyboardFile(const char *keyboard_file_name,
+	                                   const int32_t specific_layout,
+	                                   const int32_t requested_codepage);
+
+	bool SetMapKey(const Bitu key, const uint16_t layouted_key,
+	               const bool is_command, const bool is_keypair);
 };
 
-keyboard_layout::~keyboard_layout() {
+KeyboardLayout::~KeyboardLayout()
+{
 	if (language_codes) {
 		for (Bitu i=0; i<language_code_count; i++)
 			delete[] language_codes[i];
 		delete[] language_codes;
-		language_codes=NULL;
+		language_codes = nullptr;
 	}
 }
 
-void keyboard_layout::reset() {
-	for (uint32_t i=0; i<(MAX_SCAN_CODE+1)*layout_pages; i++) current_layout[i]=0;
+void KeyboardLayout::Reset()
+{
+	for (uint32_t i = 0; i < (MAX_SCAN_CODE + 1) * layout_pages; i++)
+		current_layout[i] = 0;
 	for (uint32_t i=0; i<layout_pages-4; i++) {
 		current_layout_planes[i].required_flags=0;
 		current_layout_planes[i].forbidden_flags=0xffff;
@@ -153,14 +164,19 @@ void keyboard_layout::reset() {
 	language_code_count=0;
 }
 
-Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t req_cp) {
-	return this->read_keyboard_file(keyboard_file_name, -1, req_cp);
+KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
+                                                   const int32_t req_cp)
+{
+	return ReadKeyboardFile(keyboard_file_name, -1, req_cp);
 }
 
 // switch to a different layout
-void keyboard_layout::read_keyboard_file(int32_t specific_layout) {
-	if (strcmp(current_keyboard_file_name,"none"))
-		this->read_keyboard_file(current_keyboard_file_name, specific_layout, dos.loaded_codepage);
+void KeyboardLayout::ReadKeyboardFile(const int32_t specific_layout)
+{
+	if (strcmp(current_keyboard_file_name, "none"))
+		ReadKeyboardFile(current_keyboard_file_name,
+		                 specific_layout,
+		                 dos.loaded_codepage);
 }
 
 static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, bool first_id_only) {
@@ -291,8 +307,11 @@ static uint32_t read_kcl_data(const std::vector<uint8_t> &kcl_data,
 	return 0;
 }
 
-Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t specific_layout, int32_t requested_codepage) {
-	this->reset();
+KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
+                                                   const int32_t specific_layout,
+                                                   const int32_t requested_codepage)
+{
+	Reset();
 
 	if (specific_layout == -1)
 		safe_strcpy(current_keyboard_file_name, keyboard_file_name);
@@ -306,7 +325,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t
 	read_buf_size = 0;
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		// try keyboard layout libraries next
 		auto try_file = [&](const char *file, const bool first_id_only) {
 			if (!(start_pos = read_kcl_file(file, keyboard_file_name,
@@ -507,21 +526,25 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, int32_t
 	if (found_matching_layout) {
 		if (specific_layout==-1) LOG(LOG_BIOS,LOG_NORMAL)("Keyboard layout %s successfully loaded",keyboard_file_name);
 		else LOG(LOG_BIOS,LOG_NORMAL)("Keyboard layout %s (%i) successfully loaded",keyboard_file_name,specific_layout);
-		this->use_foreign_layout=true;
+		use_foreign_layout = true;
 		return KEYB_NOERROR;
 	}
 
 	LOG(LOG_BIOS,LOG_ERROR)("No matching keyboard layout found in %s",keyboard_file_name);
 
-	// reset layout data (might have been changed by general layout)
-	this->reset();
+	// Reset layout data (might have been changed by general layout)
+	Reset();
 
 	return KEYB_LAYOUTNOTFOUND;
 }
 
-bool keyboard_layout::layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3) {
-	if (key>MAX_SCAN_CODE) return false;
-	if (!this->use_foreign_layout) return false;
+bool KeyboardLayout::SetLayoutKey(const Bitu key, const uint8_t flags1,
+                                  const uint8_t flags2, const uint8_t flags3)
+{
+	if (key > MAX_SCAN_CODE)
+		return false;
+	if (!use_foreign_layout)
+		return false;
 
 	bool is_special_pair=(current_layout[key*layout_pages+layout_pages-1] & 0x80)==0x80;
 
@@ -533,16 +556,22 @@ bool keyboard_layout::layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8
 			if (current_layout[key*layout_pages+1]!=0) {
 				// check if command-bit is set for shift plane
 				bool is_command=(current_layout[key*layout_pages+layout_pages-2]&2)!=0;
-				if (this->map_key(key, current_layout[key*layout_pages+1],
-					is_command, is_special_pair)) return true;
+				if (SetMapKey(key,
+				              current_layout[key * layout_pages + 1],
+				              is_command,
+				              is_special_pair))
+					return true;
 			}
 		} else {
 			// normal plane
 			if (current_layout[key*layout_pages]!=0) {
 				// check if command-bit is set for normal plane
 				bool is_command=(current_layout[key*layout_pages+layout_pages-2]&1)!=0;
-				if (this->map_key(key, current_layout[key*layout_pages],
-					is_command, is_special_pair)) return true;
+				if (SetMapKey(key,
+				              current_layout[key * layout_pages],
+				              is_command,
+				              is_special_pair))
+					return true;
 			}
 		}
 	}
@@ -553,22 +582,24 @@ bool keyboard_layout::layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8
 	if (flags3&2) current_flags|=0x1000;	// e0 prefixed
 
 	// check all planes if flags fit
-	for (uint16_t cplane=0; cplane<additional_planes; cplane++) {
-		uint16_t req_flags=current_layout_planes[cplane].required_flags;
-		uint16_t req_userflags=current_layout_planes[cplane].required_userflags;
+	for (uint16_t cplane = 0; cplane < additional_planes; cplane++) {
+		uint16_t req_flags     = current_layout_planes[cplane].required_flags;
+		uint16_t req_userflags = current_layout_planes[cplane].required_userflags;
 		// test flags
-		if (((current_flags & req_flags)==req_flags) &&
-			((user_keys & req_userflags)==req_userflags) &&
-			((current_flags & current_layout_planes[cplane].forbidden_flags)==0) &&
-			((user_keys & current_layout_planes[cplane].forbidden_userflags)==0)) {
-				// remap key
-				if (current_layout[key*layout_pages+2+cplane]!=0) {
-					// check if command-bit is set for this plane
-					bool is_command=((current_layout[key*layout_pages+layout_pages-2]>>(cplane+2))&1)!=0;
-					if (this->map_key(key, current_layout[key*layout_pages+2+cplane],
-						is_command, is_special_pair)) return true;
-				} else break;	// abort plane checking
+		if (((current_flags & req_flags) == req_flags) &&
+		    ((user_keys & req_userflags) == req_userflags) &&
+		    ((current_flags & current_layout_planes[cplane].forbidden_flags) == 0) &&
+		    ((user_keys & current_layout_planes[cplane].forbidden_userflags) == 0)) {
+			// remap key
+			if (current_layout[key * layout_pages + 2 + cplane] != 0) {
+				// check if command-bit is set for this plane
+				bool is_command = ((current_layout[key * layout_pages + layout_pages - 2] >> (cplane + 2)) & 1) != 0;
+				if (SetMapKey(key, current_layout[key * layout_pages + 2 + cplane], is_command, is_special_pair))
+					return true;
+			} else {
+				break; // abort plane checking
 			}
+		}
 	}
 
 	if (diacritics_character>0) {
@@ -600,7 +631,8 @@ bool keyboard_layout::layout_key(Bitu key, uint8_t flags1, uint8_t flags2, uint8
 	return false;
 }
 
-bool keyboard_layout::map_key(Bitu key, uint16_t layouted_key, bool is_command, bool is_keypair) {
+bool KeyboardLayout::SetMapKey(const Bitu key, const uint16_t layouted_key, const bool is_command, const bool is_keypair)
+{
 	if (is_command) {
 		uint8_t key_command=(uint8_t)(layouted_key&0xff);
 		// check if diacritics-command
@@ -612,7 +644,7 @@ bool keyboard_layout::map_key(Bitu key, uint16_t layouted_key, bool is_command, 
 			return true;
 		} else if ((key_command>=120) && (key_command<140)) {
 			// switch layout command
-			this->read_keyboard_file(key_command-119);
+			ReadKeyboardFile(key_command - 119);
 			return true;
 		} else if ((key_command>=180) && (key_command<188)) {
 			// switch user key off
@@ -659,8 +691,10 @@ bool keyboard_layout::map_key(Bitu key, uint16_t layouted_key, bool is_command, 
 	return false;
 }
 
-uint16_t keyboard_layout::extract_codepage(const char* keyboard_file_name) {
-	if (!strcmp(keyboard_file_name,"none")) return 437;
+uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
+{
+	if (!strcmp(keyboard_file_name, "none"))
+		return 437;
 
 	uint32_t read_buf_size;
 	static uint8_t read_buf[65535];
@@ -754,7 +788,7 @@ uint16_t keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	return 437;
 }
 
-int8_t keyboard_layout::get_CPX_file_id(uint32_t codepage_id)
+constexpr int8_t get_cpx_file_id(const int codepage_id)
 {
 	// reference:
 	// https://gitlab.com/FreeDOS/base/cpidos/-/blob/master/DOC/CPIDOS/CODEPAGE.TXT
@@ -858,8 +892,7 @@ int8_t keyboard_layout::get_CPX_file_id(uint32_t codepage_id)
 	}
 }
 
-Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
-                                         int32_t codepage_id)
+KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *codepage_file_name, const int32_t codepage_id)
 {
 	char cp_filename[512];
 	safe_strcpy(cp_filename, codepage_file_name);
@@ -869,7 +902,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 
 	if (!strcmp(cp_filename,"auto")) {
 		// select matching .cpi-file for specified codepage
-		const auto i = get_CPX_file_id(codepage_id);
+		const auto i = get_cpx_file_id(codepage_id);
 		if (i < 0) {
 			LOG_MSG("No matching cpi file for codepage %i", codepage_id);
 			return KEYB_INVALIDCPFILE;
@@ -880,7 +913,7 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	char nbuf[520];
 	sprintf(nbuf, "Z:\\CPI\\%s", cp_filename);
 	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		size_t strsz=strlen(nbuf);
 		if (strsz) {
 			char plc=(char)toupper(*reinterpret_cast<unsigned char*>(&nbuf[strsz-1]));
@@ -903,9 +936,9 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
 	size_t found_at_pos = 5;
-	if (tempfile==NULL) {
+	if (tempfile == nullptr) {
 		// check if build-in codepage is available
-		const auto i = get_CPX_file_id(codepage_id);
+		const auto i = get_cpx_file_id(codepage_id);
 		if (i < 0)
 			return KEYB_INVALIDCPFILE;
 		cpi_buf_size = BLOB_EGA_CPX[i].size();
@@ -1111,8 +1144,11 @@ Bitu keyboard_layout::read_codepage_file(const char *codepage_file_name,
 	return KEYB_INVALIDCPFILE;
 }
 
-Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_layout*& created_layout, int32_t& tried_cp) {
-	if (strncasecmp(new_layout,"US",2)) {
+KeyboardErrorCode KeyboardLayout::SwitchKeyboardLayout(const char *new_layout,
+                                                       KeyboardLayout *&created_layout,
+                                                       int32_t &tried_cp)
+{
+	if (strncasecmp(new_layout, "US", 2)) {
 		// switch to a foreign layout
 		char tbuf[256];
 		safe_strcpy(tbuf, new_layout);
@@ -1128,304 +1164,568 @@ Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_la
 		}
 
 		if (language_code_found) {
-			if (!this->use_foreign_layout) {
+			if (!use_foreign_layout) {
 				// switch to foreign layout
-				this->use_foreign_layout=true;
+				use_foreign_layout  = true;
 				diacritics_character=0;
 				LOG(LOG_BIOS,LOG_NORMAL)("Switched to layout %s",tbuf);
 			}
 		} else {
-			keyboard_layout * temp_layout=new keyboard_layout();
-			Bitu req_codepage=temp_layout->extract_codepage(new_layout);
-			tried_cp = req_codepage;
-			Bitu kerrcode=temp_layout->read_keyboard_file(new_layout, req_codepage);
-			if (kerrcode) {
+			KeyboardLayout *temp_layout = new KeyboardLayout();
+			auto req_codepage           = temp_layout->ExtractCodePage(new_layout);
+			tried_cp                    = req_codepage;
+			auto rcode                  = temp_layout->ReadKeyboardFile(new_layout, req_codepage);
+			if (rcode) {
 				delete temp_layout;
-				return kerrcode;
+				return rcode;
 			}
 			// ...else keyboard layout loaded successfully, change codepage accordingly
-			kerrcode=temp_layout->read_codepage_file("auto", req_codepage);
-			if (kerrcode) {
+			rcode = temp_layout->ReadCodePageFile("auto", req_codepage);
+			if (rcode) {
 				delete temp_layout;
-				return kerrcode;
+				return rcode;
 			}
 			// Everything went fine, switch to new layout
 			created_layout=temp_layout;
 		}
-	} else if (this->use_foreign_layout) {
+	} else if (use_foreign_layout) {
 		// switch to the US layout
-		this->use_foreign_layout=false;
+		use_foreign_layout  = false;
 		diacritics_character=0;
 		LOG(LOG_BIOS,LOG_NORMAL)("Switched to US layout");
 	}
 	return KEYB_NOERROR;
 }
 
-void keyboard_layout::switch_foreign_layout() {
-	this->use_foreign_layout=!this->use_foreign_layout;
-	diacritics_character=0;
-	if (this->use_foreign_layout) LOG(LOG_BIOS,LOG_NORMAL)("Switched to foreign layout");
-	else LOG(LOG_BIOS,LOG_NORMAL)("Switched to US layout");
+void KeyboardLayout::SwitchForeignLayout()
+{
+	use_foreign_layout   = !use_foreign_layout;
+	diacritics_character = 0;
+	if (use_foreign_layout)
+		LOG(LOG_BIOS, LOG_NORMAL)("Switched to foreign layout");
+	else
+		LOG(LOG_BIOS, LOG_NORMAL)("Switched to US layout");
 }
 
-const char* keyboard_layout::get_layout_name() {
-	// get layout name (language ID or NULL if default layout)
+const char *KeyboardLayout::GetLayoutName()
+{
+	// get layout name (language ID or nullptr if default layout)
 	if (use_foreign_layout) {
 		if (strcmp(current_keyboard_file_name,"none") != 0) {
 			return (const char*)&current_keyboard_file_name;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
-const char* keyboard_layout::main_language_code() {
+const char *KeyboardLayout::GetMainLanguageCode()
+{
 	if (language_codes) {
 		return language_codes[0];
 	}
-	return NULL;
+	return nullptr;
 }
 
-
-static keyboard_layout* loaded_layout=NULL;
+static std::unique_ptr<KeyboardLayout> loaded_layout = {};
 
 #if 0
 // Ctrl+Alt+F2 switches between foreign and US-layout using this function
-static void switch_keyboard_layout(bool pressed) {
+static void SwitchKeyboardLayout(bool pressed) {
 	if (!pressed)
 		return;
-	if (loaded_layout) loaded_layout->switch_foreign_layout();
+	if (loaded_layout) loaded_layout->SwitchForeignLayout();
 }
 #endif
 
 // called by int9-handler
 bool DOS_LayoutKey(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3) {
-	if (loaded_layout) return loaded_layout->layout_key(key, flags1, flags2, flags3);
-	else return false;
+	if (loaded_layout)
+		return loaded_layout->SetLayoutKey(key, flags1, flags2, flags3);
+	else
+		return false;
 }
 
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, int32_t codepage, const char * codepagefile) {
-	keyboard_layout * temp_layout=new keyboard_layout();
+KeyboardErrorCode DOS_LoadKeyboardLayout(const char *layoutname, const int32_t codepage, const char *codepagefile)
+{
+	auto temp_layout = std::make_unique<KeyboardLayout>();
+
 	// try to read the layout for the specified codepage
-	Bitu kerrcode=temp_layout->read_keyboard_file(layoutname, codepage);
-	if (kerrcode) {
-		delete temp_layout;
-		return kerrcode;
+	auto rcode = temp_layout->ReadKeyboardFile(layoutname, codepage);
+	if (rcode) {
+		return rcode;
 	}
 	// ...else keyboard layout loaded successfully, change codepage accordingly
-	kerrcode=temp_layout->read_codepage_file(codepagefile, codepage);
-	if (kerrcode) {
-		delete temp_layout;
-		return kerrcode;
+	rcode = temp_layout->ReadCodePageFile(codepagefile, codepage);
+	if (rcode) {
+		return rcode;
 	}
 	// Everything went fine, switch to new layout
-	loaded_layout=temp_layout;
+	loaded_layout = std::move(temp_layout);
 	return KEYB_NOERROR;
 }
 
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp) {
+KeyboardErrorCode DOS_SwitchKeyboardLayout(const char *new_layout, int32_t &tried_cp)
+{
 	if (loaded_layout) {
-		keyboard_layout* changed_layout=NULL;
-		Bitu ret_code=loaded_layout->switch_keyboard_layout(new_layout, changed_layout, tried_cp);
+		KeyboardLayout *changed_layout = nullptr;
+		const auto rcode = loaded_layout->SwitchKeyboardLayout(new_layout, changed_layout, tried_cp);
 		if (changed_layout) {
 			// Remove old layout, activate new layout
-			delete loaded_layout;
-			loaded_layout=changed_layout;
+			loaded_layout.reset(changed_layout);
 		}
-		return ret_code;
-	} else return 0xff;
+		return rcode;
+	} else
+		return KEYB_LAYOUTNOTFOUND;
 }
 
-// get currently loaded layout name (NULL if no layout is loaded)
+// get currently loaded layout name (nullptr if no layout is loaded)
 const char* DOS_GetLoadedLayout(void) {
 	if (loaded_layout) {
-		return loaded_layout->get_layout_name();
+		return loaded_layout->GetLayoutName();
 	}
-	return NULL;
+	return nullptr;
 }
 
+static const std::map<std::string, Country> country_code_map{
+        // clang-format off
+	// reference: https://gitlab.com/FreeDOS/base/keyb_lay/-/blob/master/DOC/KEYB/LAYOUTS/LAYOUTS.TXT
+	{"ar462",  Country::Arabic         },
+	{"ar470",  Country::Arabic         },
+	{"az",     Country::Azerbaijan     },
+	{"ba",     Country::Bosnia         },
+	{"be",     Country::Belgium        },
+	{"bg",     Country::Bulgaria       }, // 101-key
+	{"bg103",  Country::Bulgaria       }, // 101-key, Phonetic
+	{"bg241",  Country::Bulgaria       }, // 102-key
+	{"bl",     Country::Belarus        },
+	{"bn",     Country::Benin          },
+	{"br",     Country::Brazil         }, // ABNT layout
+	{"br274",  Country::Brazil         }, // US layout
+	{"bx",     Country::Belgium        }, // International
+	{"by",     Country::Belarus        },
+	{"ca",     Country::Candian_French }, // Standard
+	{"ce",     Country::Russia         }, // Chechnya Standard
+	{"ce443",  Country::Russia         }, // Chechnya Typewriter
+	{"cg",     Country::Montenegro     },
+	{"cf",     Country::Candian_French }, // Standard
+	{"cf445",  Country::Candian_French }, // Dual-layer
+	{"co",     Country::United_States  }, // Colemak
+	{"cz",     Country::Czech_Slovak   }, // Czechia, QWERTY
+	{"cz243",  Country::Czech_Slovak   }, // Czechia, Standard
+	{"cz489",  Country::Czech_Slovak   }, // Czechia, Programmers
+	{"de",     Country::Germany        }, // Standard
+	{"dk",     Country::Denmark        },
+	{"dv",     Country::United_States  }, // Dvorak
+	{"ee",     Country::Estonia        },
+	{"el",     Country::Greece         }, // 319
+	{"es",     Country::Spain          },
+	{"et",     Country::Estonia        },
+	{"fi",     Country::Finland        },
+	{"fo",     Country::Faeroe_Islands },
+	{"fr",     Country::France         }, // Standard
+	{"fx",     Country::France         }, // International
+	{"gk",     Country::Greece         }, // 319
+	{"gk220",  Country::Greece         }, // 220
+	{"gk459",  Country::Greece         }, // 101-key
+	{"gr",     Country::Germany        }, // Standard
+	{"gr453",  Country::Germany        }, // Dual-layer
+	{"hr",     Country::Croatia        },
+	{"hu",     Country::Hungary        }, // 101-key
+	{"hu208",  Country::Hungary        }, // 102-key
+	{"hy",     Country::Armenia        },
+	{"il",     Country::Israel         },
+	{"is",     Country::Iceland        }, // 101-key
+	{"is161",  Country::Iceland        }, // 102-key
+	{"it",     Country::Italy          }, // Standard
+	{"it142",  Country::Italy          }, // Comma on Numeric Pad
+	{"ix",     Country::Italy          }, // International
+	{"jp",     Country::Japan          },
+	{"ka",     Country::Georgia        },
+	{"kk",     Country::Kazakhstan     },
+	{"kk476",  Country::Kazakhstan     },
+	{"kx",     Country::United_Kingdom }, // International
+	{"ky",     Country::Kyrgyzstan     },
+	{"la",     Country::Latin_America  },
+	{"lh",     Country::United_States  }, // Left-Hand Dvorak
+	{"lt",     Country::Lithuania      }, // Baltic
+	{"lt210",  Country::Lithuania      }, // 101-key, Programmers
+	{"lt211",  Country::Lithuania      }, // AZERTY
+	{"lt221",  Country::Lithuania      }, // Standard
+	{"lt456",  Country::Lithuania      }, // Dual-layout
+	{"lv",     Country::Latvia         }, // Standard
+	{"lv455",  Country::Latvia         }, // Dual-layout
+	{"ml",     Country::Malta          }, // UK-based
+	{"mk",     Country::Macedonia      },
+	{"mn",     Country::Mongolia       },
+	{"mo",     Country::Mongolia       },
+	{"mt",     Country::Malta          }, // UK-based
+	{"mt103",  Country::Malta          }, // US-based
+	{"ne",     Country::Niger          },
+	{"ng",     Country::Nigeria        },
+	{"nl",     Country::Netherlands    }, // 102-key
+	{"no",     Country::Norway         },
+	{"ph",     Country::Philippines    },
+	{"pl",     Country::Poland         }, // 101-key, Programmers
+	{"pl214",  Country::Poland         }, // 102-key
+	{"po",     Country::Portugal       },
+	{"px",     Country::Portugal       }, // International
+	{"ro",     Country::Romania        }, // Standard
+	{"ro446",  Country::Romania        }, // QWERTY
+	{"rh",     Country::United_States  }, // Right-Hand Dvorak
+	{"ru",     Country::Russia         }, // Standard
+	{"ru443",  Country::Russia         }, // Typewriter
+	{"rx",     Country::Russia         }, // Extended Standard
+	{"rx443",  Country::Russia         }, // Extended Typewriter
+	{"sd",     Country::Switzerland    }, // German
+	{"sf",     Country::Switzerland    }, // French
+	{"sg",     Country::Switzerland    }, // German
+	{"si",     Country::Slovenia       },
+	{"sk",     Country::Czech_Slovak   }, // Slovakia
+	{"sp",     Country::Spain          },
+	{"sq",     Country::Albania        }, // No-deadkeys
+	{"sq448",  Country::Albania        }, // Deadkeys
+	{"sr",     Country::Serbia         }, // Deadkey
+	{"su",     Country::Finland        },
+	{"sv",     Country::Sweden         },
+	{"sx",     Country::Spain          }, // International
+	{"tj",     Country::Tadjikistan    },
+	{"tm",     Country::Turkmenistan   },
+	{"tr",     Country::Turkey         }, // QWERTY
+	{"tr440",  Country::Turkey         }, // Non-standard
+	{"tt",     Country::Russia         }, // Tatarstan Standard
+	{"tt443",  Country::Russia         }, // Tatarstan Typewriter
+	{"ua",     Country::Ukraine        }, // 101-key
+	{"uk",     Country::United_Kingdom }, // Standard
+	{"uk168",  Country::United_Kingdom }, // Allternate
+	{"ur",     Country::Ukraine        }, // 101-key
+	{"ur465",  Country::Ukraine        }, // 101-key
+	{"ur1996", Country::Ukraine        }, // 101-key
+	{"ur2001", Country::Ukraine        }, // 102-key
+	{"ur2007", Country::Ukraine        }, // 102-key
+	{"us",     Country::United_States  }, // Standard
+	{"ux",     Country::United_States  }, // International
+	{"uz",     Country::Uzbekistan     },
+	{"vi",     Country::Vietnam        },
+	{"yc",     Country::Serbia         }, // Deadkey
+	{"yc450",  Country::Serbia         }, // No-deadkey
+	{"yu",     Country::Yugoslavia     },
+        // clang-format on
+};
+
+static bool country_number_exists(const int requested_number)
+{
+	for ([[maybe_unused]] const auto &[code, number] : country_code_map)
+		if (requested_number == static_cast<int>(number))
+			return true;
+	return false;
+}
+
+static Country lookup_country_from_code(const char *country_code)
+{
+	if (country_code) {
+		const auto it = country_code_map.find(country_code);
+		if (it != country_code_map.end()) {
+			return it->second;
+		}
+	}
+	return Country::United_States;
+}
+
+constexpr uint16_t assert_codepage(const uint16_t codepage)
+{
+	assert(get_cpx_file_id(codepage) != -1);
+	return codepage;
+}
+
+[[maybe_unused]] constexpr uint16_t lookup_codepage_from_country(const Country country)
+{
+	// grouped in ascending ordered by codepage value
+	switch (country) {
+	case Country::Bosnia:
+	case Country::Croatia:
+	case Country::Macedonia:
+	case Country::Montenegro:
+	case Country::Serbia:
+	case Country::Slovenia:
+	case Country::Yugoslavia: return assert_codepage(113);
+
+	case Country::Poland: return assert_codepage(668);
+
+	case Country::Lithuania: return assert_codepage(774);
+
+	case Country::Ukraine: return assert_codepage(848);
+
+	case Country::Latin_America: return assert_codepage(850);
+
+	case Country::Romania: return assert_codepage(852);
+
+	case Country::Turkey: return assert_codepage(857);
+
+	case Country::Belgium:
+	case Country::Finland:
+	case Country::France:
+	case Country::Germany:
+	case Country::Italy:
+	case Country::Netherlands:
+	case Country::Spain:
+	case Country::Sweden:
+	case Country::Switzerland: return assert_codepage(858);
+
+	case Country::Brazil:
+	case Country::Portugal: return assert_codepage(860);
+
+	case Country::Iceland: return assert_codepage(861);
+
+	case Country::Israel: return assert_codepage(862);
+
+	case Country::Candian_French: return assert_codepage(863);
+
+	case Country::Arabic: return assert_codepage(864);
+
+	case Country::Denmark:
+	case Country::Norway: return assert_codepage(865);
+
+	case Country::Russia: return assert_codepage(866);
+
+	case Country::Czech_Slovak: return assert_codepage(867);
+
+	case Country::Greece: return assert_codepage(869);
+
+	case Country::Estonia: return assert_codepage(1116);
+
+	case Country::Latvia: return assert_codepage(1117);
+
+	case Country::Hungary: return assert_codepage(3845);
+
+	case Country::Nigeria: return assert_codepage(30005);
+
+	case Country::Azerbaijan: return assert_codepage(58210);
+
+	case Country::Georgia: return assert_codepage(59829);
+
+	default: return assert_codepage(437);
+	}
+}
+
+// Use OS-specific calls to extra the layout and from there convert it into a language
+std::string get_lang_from_host_layout()
+{
+#if defined(WIN32)
+#	include <windows.h>
+
+	WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
+	WORD cur_kb_sub_id = 0;
+	char layout_id_string[KL_NAMELENGTH];
+
+	auto parse_hex_string = [](const char *s) {
+		uint32_t value = 0;
+		sscanf(s, "%x", &value);
+		return value;
+	};
+
+	if (GetKeyboardLayoutName(layout_id_string)) {
+		if (safe_strlen(layout_id_string) == 8) {
+			const int cur_kb_layout_by_name = parse_hex_string(
+			        (char *)&layout_id_string[4]);
+			layout_id_string[4] = 0;
+			const int sub_id    = parse_hex_string(
+                                (char *)&layout_id_string[0]);
+			if ((cur_kb_layout_by_name > 0) &&
+			    (cur_kb_layout_by_name < 65536)) {
+				// use layout _id extracted from the layout string
+				cur_kb_layout = (WORD)cur_kb_layout_by_name;
+			}
+			if ((sub_id >= 0) && (sub_id < 100)) {
+				// use sublanguage ID extracted from the layout
+				// string
+				cur_kb_sub_id = (WORD)sub_id;
+			}
+		}
+	}
+	// try to match emulated keyboard layout with host-keyboardlayout
+	switch (cur_kb_layout) {
+	case 1025:  // Saudi Arabia
+	case 1119:  // Tamazight
+	case 1120:  // Kashmiri
+	case 2049:  // Iraq
+	case 3073:  // Egypt
+	case 4097:  // Libya
+	case 5121:  // Algeria
+	case 6145:  // Morocco
+	case 7169:  // Tunisia
+	case 8193:  // Oman
+	case 9217:  // Yemen
+	case 10241: // Syria
+	case 11265: // Jordan
+	case 12289: // Lebanon
+	case 13313: // Kuwait
+	case 14337: // U.A.E
+	case 15361: // Bahrain
+	case 16385: // Qatar
+		return "ar462";
+
+	case 1026: return "bg";    // Bulgarian
+	case 1029: return "cz243"; // Czech
+	case 1030: return "dk";    // Danish
+
+	case 2055: // German - Switzerland
+	case 3079: // German - Austria
+	case 4103: // German - Luxembourg
+	case 5127: // German - Liechtenstein
+	case 1031: // German - Germany
+		return "gr";
+
+	case 1032: return "gk"; // Greek
+	case 1034: return "sp"; // Spanish - Spain (Traditional Sort)
+	case 1035: return "su"; // Finnish
+
+	case 1036:  // French - France
+	case 2060:  // French - Belgium
+	case 4108:  // French - Switzerland
+	case 5132:  // French - Luxembourg
+	case 6156:  // French - Monaco
+	case 7180:  // French - West Indies
+	case 8204:  // French - Reunion
+	case 9228:  // French - Democratic Rep. of Congo
+	case 10252: // French - Senegal
+	case 11276: // French - Cameroon
+	case 12300: // French - Cote d'Ivoire
+	case 13324: // French - Mali
+	case 14348: // French - Morocco
+	case 15372: // French - Haiti
+	case 58380: // French - North Africa
+		return "fr";
+
+	case 1037: return "il"; // Hebrew
+	case 1038: return cur_kb_sub_id ? "hu" : "hu208";
+	case 1039: return "is161"; // Icelandic
+
+	case 2064: // Italian - Switzerland
+	case 1040: // Italian - Italy
+		return "it";
+
+	case 3084: return "ca"; // French - Canada
+	case 1041: return "jp"; // Japanese
+
+	case 2067: // Dutch - Belgium
+	case 1043: // Dutch - Netherlands
+		return "nl";
+
+	case 1044: return "no"; // Norwegian (Bokmål)
+	case 1045: return "pl"; // Polish
+	case 1046: return "br"; // Portuguese - Brazil
+
+	case 2073: // Russian - Moldava
+	case 1049: // Russian
+		return "ru";
+
+	case 4122: // Croatian (Bosnia/Herzegovina)
+	case 1050: // Croatian
+		return "hr";
+
+	case 1051: return "sk"; // Slovak
+	case 1052: return "sq"; // Albanian - Albania
+
+	case 2077: // Swedish - Finland
+	case 1053: // Swedish
+		return "sv";
+
+	case 1055: return "tr"; // Turkish
+	case 1058: return "ur"; // Ukrainian
+	case 1059: return "bl"; // Belarusian
+	case 1060: return "si"; // Slovenian
+	case 1061: return "et"; // Estonian
+	case 1062: return "lv"; // Latvian
+	case 1063: return "lt"; // Lithuanian
+	case 1064: return "tj"; // Tajik
+	case 1066: return "vi"; // Vietnamese
+	case 1067: return "hy"; // Armenian - Armenia
+	case 1071: return "mk"; // F.Y.R.O. Macedonian
+	case 1079: return "ka"; // Georgian
+	case 2070: return "po"; // Portuguese - Portugal
+	case 2072: return "ro"; // Romanian - Moldava
+	case 5146: return "ba"; // Bosnian (Bosnia/Herzegovina)
+
+	case 2058:  // Spanish - Mexico
+	case 3082:  // Spanish - Spain (Modern Sort)
+	case 4106:  // Spanish - Guatemala
+	case 5130:  // Spanish - Costa Rica
+	case 6154:  // Spanish - Panama
+	case 7178:  // Spanish - Dominican Republic
+	case 8202:  // Spanish - Venezuela
+	case 9226:  // Spanish - Colombia
+	case 10250: // Spanish - Peru
+	case 11274: // Spanish - Argentina
+	case 12298: // Spanish - Ecuador
+	case 13322: // Spanish - Chile
+	case 14346: // Spanish - Uruguay
+	case 15370: // Spanish - Paraguay
+	case 16394: // Spanish - Bolivia
+	case 17418: // Spanish - El Salvador
+	case 18442: // Spanish - Honduras
+	case 19466: // Spanish - Nicaragua
+	case 20490: // Spanish - Puerto Rico
+	case 21514: // Spanish - United States
+	case 58378: // Spanish - Latin America
+		return "la";
+	}
+
+#endif
+	return ""; // default to empty/US
+}
+
+// A helper that loads a layout given only a language
+KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
+{
+	assert(language_pref);
+	std::string language = language_pref;
+	if (language == "auto") {
+		const auto lang_from_conf = SETUP_GetLanguage();
+		language = lang_from_conf.empty() ? get_lang_from_host_layout()
+		                                  : lang_from_conf;
+	}
+	const auto country  = lookup_country_from_code(language.c_str());
+	const auto codepage = lookup_codepage_from_country(country);
+	const auto result   = DOS_LoadKeyboardLayout(language.c_str(), codepage, "auto");
+
+	if (result == KEYB_NOERROR) {
+		LOG_MSG("LAYOUT: Loaded codepage %d for detected language %s", codepage, language.c_str());
+	} else if (country != Country::United_States) {
+		LOG_WARNING("LAYOUT: Failed loading codepage %d for detected language %s", codepage, language.c_str());
+	}
+	return result;
+}
 
 class DOS_KeyboardLayout final : public Module_base {
 public:
 	DOS_KeyboardLayout(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		dos.loaded_codepage=437;	// US codepage already initialized
-		loaded_layout=new keyboard_layout();
+
+		loaded_layout = std::make_unique<KeyboardLayout>();
 
 		const char * layoutname=section->Get_string("keyboardlayout");
 
-#if defined (WIN32)
-		Bits wants_dos_codepage = -1;
-		if (!strncmp(layoutname, "auto", 4)) {
-			WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
-			WORD cur_kb_subID  = 0;
-			char layoutID_string[KL_NAMELENGTH];
-			if (GetKeyboardLayoutName(layoutID_string)) {
-				if (safe_strlen(layoutID_string) == 8) {
-					int cur_kb_layout_by_name = ConvHexWord((char*)&layoutID_string[4]);
-					layoutID_string[4] = 0;
-					int subID = ConvHexWord((char*)&layoutID_string[0]);
-					if ((cur_kb_layout_by_name>0) && (cur_kb_layout_by_name<65536)) {
-						// use layout ID extracted from the layout string
-						cur_kb_layout = (WORD)cur_kb_layout_by_name;
-					}
-					if ((subID>=0) && (subID<100)) {
-						// use sublanguage ID extracted from the layout string
-						cur_kb_subID  = (WORD)subID;
-					}
-				}
-			}
-			// try to match emulated keyboard layout with host-keyboardlayout
-			// codepage 437 (standard) is preferred
-			switch (cur_kb_layout) {
-/*				case 1026:
-					layoutname = "bg241";
-					break; */
-				case 1029:
-					layoutname = "cz243";
-					break;
-				case 1030:
-					layoutname = "dk";
-					break;
-				case 1031:
-					layoutname = "gr";
-					wants_dos_codepage = 437;
-					break;
-				case 1033:
-					// US
-					return;
-				case 1032:
-					layoutname = "gk";
-					break;
-				case 1034:
-					layoutname = "sp";
-					wants_dos_codepage = 437;
-					break;
-				case 1035:
-					layoutname = "su";
-					wants_dos_codepage = 437;
-					break;
-				case 1036:
-					layoutname = "fr";
-					wants_dos_codepage = 437;
-					break;
-				case 1038:
-					if (cur_kb_subID==1) layoutname = "hu";
-					else layoutname = "hu208";
-					break;
-				case 1039:
-					layoutname = "is161";
-					break;
-				case 1040:
-					layoutname = "it";
-					wants_dos_codepage = 437;
-					break;
-				case 1043:
-					layoutname = "nl";
-					wants_dos_codepage = 437;
-					break;
-				case 1044:
-					layoutname = "no";
-					break;
-				case 1045:
-					layoutname = "pl";
-					break;
-				case 1046:
-					layoutname = "br";
-					wants_dos_codepage = 437;
-					break;
-/*				case 1048:
-					layoutname = "ro446";
-					break; */
-				case 1049:
-					layoutname = "ru";
-					wants_dos_codepage = 437;
-					break;
-				case 1050:
-					layoutname = "hr";
-					break;
-				case 1051:
-					layoutname = "sk";
-					break;
-/*				case 1052:
-					layoutname = "sq448";
-					break; */
-				case 1053:
-					layoutname = "sv";
-					wants_dos_codepage = 437;
-					break;
-				case 1055:
-					layoutname = "tr";
-					break;
-				case 1058:
-					layoutname = "ur";
-					wants_dos_codepage = 437;
-					break;
-				case 1059:
-					layoutname = "bl";
-					break;
-				case 1060:
-					layoutname = "si";
-					break;
-				case 1061:
-					layoutname = "et";
-					break;
-/*				case 1062:
-					layoutname = "lv";
-					break; */
-/*				case 1063:
-					layoutname = "lt221";
-					break; */
-/*				case 1064:
-					layoutname = "tj";
-					break;
-				case 1066:
-					layoutname = "vi";
-					break;
-				case 1067:
-					layoutname = "hy";
-					break; */
-				case 2055:
-					layoutname = "sg";
-					wants_dos_codepage = 437;
-					break;
-				case 2070:
-					layoutname = "po";
-					break;
-				case 4108:
-					layoutname = "sf";
-					wants_dos_codepage = 437;
-					break;
-				default:
-					break;
+		// If the use only provided a single value (language), then try using it
+		const auto layout_is_one_value = sv(layoutname).find(' ') == std::string::npos;
+		if (layout_is_one_value) {
+			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname)) {
+				return; // success
 			}
 		}
-		// this condition may only occur on Windows
-		if (wants_dos_codepage > 0) {
-			if ((loaded_layout->read_codepage_file("auto", (Bitu)wants_dos_codepage)) == KEYB_NOERROR) {
-				// preselected codepage was successfully loaded, so do nothing
-			} else {
-				// try to find a good codepage for the requested layout
-				const auto req_codepage = loaded_layout->extract_codepage(layoutname);
-				loaded_layout->read_codepage_file("auto", req_codepage);
-			}
-		}
-#else
-		// On non-Windows systems, alwaays find a good codepage for the requested layout
-		const auto req_codepage = loaded_layout->extract_codepage(layoutname);
-		loaded_layout->read_codepage_file("auto", req_codepage);
-#endif
+		// Otherwise use the layout to get the codepage
+		const auto req_codepage = loaded_layout->ExtractCodePage(layoutname);
+		loaded_layout->ReadCodePageFile("auto", req_codepage);
 
-/*		if (strncmp(layoutname,"auto",4) && strncmp(layoutname,"none",4)) {
-			LOG_MSG("Loading DOS keyboard layout %s ...",layoutname);
-		} */
-		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage)) {
-			if (strncmp(layoutname,"auto",4)) {
-				LOG_ERR("Error loading keyboard layout %s",layoutname);
+		if (loaded_layout->ReadKeyboardFile(layoutname, dos.loaded_codepage)) {
+			if (strncmp(layoutname, "auto", 4)) {
+				LOG_ERR("LAYOUT: Failed to load keyboard layout %s",
+				        layoutname);
 			}
 		} else {
-			const char* lcode = loaded_layout->main_language_code();
+			const char *lcode = loaded_layout->GetMainLanguageCode();
 			if (lcode) {
-				LOG_MSG("DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
+				LOG_MSG("LAYOUT: DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
 			}
 		}
 	}
@@ -1436,157 +1736,53 @@ public:
 			dos.loaded_codepage=437;	// US codepage
 		}
 		if (loaded_layout) {
-			delete loaded_layout;
-			loaded_layout=NULL;
+			loaded_layout.reset();
 		}
 	}
 };
 
-static DOS_KeyboardLayout* test;
+static std::unique_ptr<DOS_KeyboardLayout> KeyboardLayout = {};
 
 void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
-	delete test;	
+	KeyboardLayout.reset();
 }
 
-const std::map<std::string, int> country_code_map {
-	// reference: https://gitlab.com/FreeDOS/base/keyb_lay/-/blob/master/DOC/KEYB/LAYOUTS/LAYOUTS.TXT
-	{"ar462",  COUNTRY::Arabic         },
-	{"ar470",  COUNTRY::Arabic         },
-	{"az",     COUNTRY::Azerbaijan     },
-	{"ba",     COUNTRY::Bosnia         },
-	{"be",     COUNTRY::Belgium        },
-	{"bg",     COUNTRY::Bulgaria       }, // 101-key
-	{"bg103",  COUNTRY::Bulgaria       }, // 101-key, Phonetic
-	{"bg241",  COUNTRY::Bulgaria       }, // 102-key
-	{"bl",     COUNTRY::Belarus        },
-	{"bn",     COUNTRY::Benin          },
-	{"br",     COUNTRY::Brazil         }, // ABNT layout
-	{"br274",  COUNTRY::Brazil         }, // US layout
-	{"bx",     COUNTRY::Belgium        }, // International
-	{"by",     COUNTRY::Belarus        },
-	{"ca",     COUNTRY::Candian_French }, // Standard
-	{"ce",     COUNTRY::Russia         }, // Chechnya Standard
-	{"ce443",  COUNTRY::Russia         }, // Chechnya Typewriter
-	{"cg",     COUNTRY::Montenegro     },
-	{"cf",     COUNTRY::Candian_French }, // Standard
-	{"cf445",  COUNTRY::Candian_French }, // Dual-layer
-	{"co",     COUNTRY::United_States  }, // Colemak
-	{"cz",     COUNTRY::Czech_Slovak   }, // Czechia, QWERTY
-	{"cz243",  COUNTRY::Czech_Slovak   }, // Czechia, Standard
-	{"cz489",  COUNTRY::Czech_Slovak   }, // Czechia, Programmers
-	{"de",     COUNTRY::Germany        }, // Standard
-	{"dk",     COUNTRY::Denmark        },
-	{"dv",     COUNTRY::United_States  }, // Dvorak
-	{"ee",     COUNTRY::Estonia        },
-	{"el",     COUNTRY::Greece         }, // 319
-	{"es",     COUNTRY::Spain          },
-	{"et",     COUNTRY::Estonia        },
-	{"fi",     COUNTRY::Finland        },
-	{"fo",     COUNTRY::Faeroe_Islands },
-	{"fr",     COUNTRY::France         }, // Standard
-	{"fx",     COUNTRY::France         }, // International
-	{"gk",     COUNTRY::Greece         }, // 319
-	{"gk220",  COUNTRY::Greece         }, // 220
-	{"gk459",  COUNTRY::Greece         }, // 101-key
-	{"gr",     COUNTRY::Germany        }, // Standard
-	{"gr453",  COUNTRY::Germany        }, // Dual-layer
-	{"hr",     COUNTRY::Croatia        },
-	{"hu",     COUNTRY::Hungary        }, // 101-key
-	{"hu208",  COUNTRY::Hungary        }, // 102-key
-	{"hy",     COUNTRY::Armenia        },
-	{"il",     COUNTRY::Israel         },
-	{"is",     COUNTRY::Iceland        }, // 101-key
-	{"is161",  COUNTRY::Iceland        }, // 102-key
-	{"it",     COUNTRY::Italy          }, // Standard
-	{"it142",  COUNTRY::Italy          }, // Comma on Numeric Pad
-	{"ix",     COUNTRY::Italy          }, // International
-	{"jp",     COUNTRY::Japan          },
-	{"ka",     COUNTRY::Georgia        },
-	{"kk",     COUNTRY::Kazakhstan     },
-	{"kk476",  COUNTRY::Kazakhstan     },
-	{"kx",     COUNTRY::United_Kingdom }, // International
-	{"ky",     COUNTRY::Kyrgyzstan     },
-	{"la",     COUNTRY::Latin_America  },
-	{"lh",     COUNTRY::United_States  }, // Left-Hand Dvorak
-	{"lt",     COUNTRY::Lithuania      }, // Baltic
-	{"lt210",  COUNTRY::Lithuania      }, // 101-key, Programmers
-	{"lt211",  COUNTRY::Lithuania      }, // AZERTY
-	{"lt221",  COUNTRY::Lithuania      }, // Standard
-	{"lt456",  COUNTRY::Lithuania      }, // Dual-layout
-	{"lv",     COUNTRY::Latvia         }, // Standard
-	{"lv455",  COUNTRY::Latvia         }, // Dual-layout
-	{"ml",     COUNTRY::Malta          }, // UK-based
-	{"mk",     COUNTRY::Macedonia      },
-	{"mn",     COUNTRY::Mongolia       },
-	{"mo",     COUNTRY::Mongolia       },
-	{"mt",     COUNTRY::Malta          }, // UK-based
-	{"mt103",  COUNTRY::Malta          }, // US-based
-	{"ne",     COUNTRY::Niger          },
-	{"ng",     COUNTRY::Nigeria        },
-	{"nl",     COUNTRY::Netherlands    }, // 102-key
-	{"no",     COUNTRY::Norway         },
-	{"ph",     COUNTRY::Philippines    },
-	{"pl",     COUNTRY::Poland         }, // 101-key, Programmers
-	{"pl214",  COUNTRY::Poland         }, // 102-key
-	{"po",     COUNTRY::Portugal       },
-	{"px",     COUNTRY::Portugal       }, // International
-	{"ro",     COUNTRY::Romania        }, // Standard
-	{"ro446",  COUNTRY::Romania        }, // QWERTY
-	{"rh",     COUNTRY::United_States  }, // Right-Hand Dvorak
-	{"ru",     COUNTRY::Russia         }, // Standard
-	{"ru443",  COUNTRY::Russia         }, // Typewriter
-	{"rx",     COUNTRY::Russia         }, // Extended Standard
-	{"rx443",  COUNTRY::Russia         }, // Extended Typewriter
-	{"sd",     COUNTRY::Switzerland    }, // German
-	{"sf",     COUNTRY::Switzerland    }, // French
-	{"sg",     COUNTRY::Switzerland    }, // German
-	{"si",     COUNTRY::Slovenia       },
-	{"sk",     COUNTRY::Czech_Slovak   }, // Slovakia
-	{"sp",     COUNTRY::Spain          },
-	{"sq",     COUNTRY::Albania        }, // No-deadkeys
-	{"sq448",  COUNTRY::Albania        }, // Deadkeys
-	{"sr",     COUNTRY::Serbia         }, // Deadkey
-	{"su",     COUNTRY::Finland        },
-	{"sv",     COUNTRY::Sweden         },
-	{"sx",     COUNTRY::Spain          }, // International
-	{"tj",     COUNTRY::Tadjikistan    },
-	{"tm",     COUNTRY::Turkmenistan   },
-	{"tr",     COUNTRY::Turkey         }, // QWERTY
-	{"tr440",  COUNTRY::Turkey         }, // Non-standard
-	{"tt",     COUNTRY::Russia         }, // Tatarstan Standard
-	{"tt443",  COUNTRY::Russia         }, // Tatarstan Typewriter
-	{"ua",     COUNTRY::Ukraine        }, // 101-key
-	{"uk",     COUNTRY::United_Kingdom }, // Standard
-	{"uk168",  COUNTRY::United_Kingdom }, // Allternate
-	{"ur",     COUNTRY::Ukraine        }, // 101-key
-	{"ur465",  COUNTRY::Ukraine        }, // 101-key
-	{"ur1996", COUNTRY::Ukraine        }, // 101-key
-	{"ur2001", COUNTRY::Ukraine        }, // 102-key
-	{"ur2007", COUNTRY::Ukraine        }, // 102-key
-	{"us",     COUNTRY::United_States  }, // Standard
-	{"ux",     COUNTRY::United_States  }, // International
-	{"uz",     COUNTRY::Uzbekistan     },
-	{"vi",     COUNTRY::Vietnam        },
-	{"yc",     COUNTRY::Serbia         }, // Deadkey
-	{"yc450",  COUNTRY::Serbia         }, // No-deadkey
-	{"yu",     COUNTRY::Yugoslavia     },
-};
+const char *DOS_GetLoadedLayout();
 
-const char *DOS_GetLoadedLayout(void);
 void DOS_SetCountry(uint16_t countryNo);
-void DOS_KeyboardLayout_Init(Section* sec) {
-	test = new DOS_KeyboardLayout(sec);
-	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown,true);
-	// MAPPER_AddHandler(switch_keyboard_layout, SDL_SCANCODE_F2,
-	//                   MMOD1 | MMOD2, "sw_layout", "Switch Layout");
 
-	int countryNo = static_cast<Section_prop*>(sec)->Get_int("country");
-	if (!countryNo) {
-		const char *layout = DOS_GetLoadedLayout();
-		if (layout == NULL)
-			countryNo = COUNTRY::United_States;
-		else if (country_code_map.find(layout) != country_code_map.end())
-			countryNo = country_code_map.find(layout)->second;
-	}
-	DOS_SetCountry(countryNo);
+static void set_country_from_pref(const int country_pref)
+{
+	// default to the US
+	auto country_number = static_cast<uint16_t>(Country::United_States);
+
+	// if the user hasn't provided a country, get it from their layout
+	if (!country_pref)
+		country_number = static_cast<uint16_t>(
+		        lookup_country_from_code(DOS_GetLoadedLayout()));
+
+	// If the country they provided is valid, use that
+	else if (country_number_exists(country_pref))
+		country_number = static_cast<uint16_t>(country_pref);
+
+	// But if it's invalid, fallback to the default
+	else
+		LOG_ERR("LANGUAGE: The country number: %d could not be found, using '%u' instead.",
+		        country_pref,
+		        country_number);
+
+	assert(country_number_exists(country_number));
+	DOS_SetCountry(country_number);
+}
+
+void DOS_KeyboardLayout_Init(Section *sec)
+{
+	assert(sec);
+	KeyboardLayout = std::make_unique<DOS_KeyboardLayout>(sec);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown, changeable_at_runtime);
+
+	const auto settings = static_cast<const Section_prop *>(sec);
+	set_country_from_pref(settings->Get_int("country"));
 }

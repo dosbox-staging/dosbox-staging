@@ -21,53 +21,55 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-/**
- * Counter.
- */
-class counter
-{
-private:
-    unsigned int c;
+#include <cassert>
+#include <memory>
+#include <vector>
 
-public:
-    counter() : c(1) {}
-    void increase() { ++c; }
-    unsigned int decrease() { return --c; }
-};
-
-/**
- * Reference counted pointer to matrix wrapper, for use with standard containers.
+/*
+ * Matrix wrapper using a shared pointer to data, for use with standard containers.
  */
 template<typename T>
 class matrix
 {
 private:
-    T* data;
-    counter* count;
-    const unsigned int x, y;
+    using data_t = std::vector<T>;
+    using data_ptr_t = std::shared_ptr<data_t>;
+
+    const data_ptr_t data_ptr = {};
+    const unsigned int x = 0;
+    const unsigned int y = 0;
+
+    void check_dimensions() {
+       // debug-only check
+       assert(data_ptr);
+       assert(x * y == data_ptr->size());
+    }
 
 public:
     matrix(unsigned int x, unsigned int y) :
-        data(new T[x * y]),
-        count(new counter()),
+        data_ptr(std::make_shared<data_t>(x * y, 0)),
         x(x),
-        y(y) {}
+        y(y) { check_dimensions(); }
 
+    // copy-constructor
     matrix(const matrix& p) :
-        data(p.data),
-        count(p.count),
+        data_ptr(p.data_ptr), // data is reference-counted
         x(p.x),
-        y(p.y) { count->increase(); }
+        y(p.y) { check_dimensions(); }
 
-    ~matrix() { if (count->decrease() == 0) { delete count; delete [] data; } }
-
+    matrix() = delete; // prevent default-construction
     matrix &operator=(const matrix&) = delete; // prevent assignment
 
-    unsigned int length() const { return x * y; }
+    unsigned int length() const { return static_cast<unsigned int>(data_ptr->size()); }
 
-    T* operator[](unsigned int a) { return &data[a * y]; }
+    T* operator[](unsigned int a) {
+        const auto index = a * y;
+        assert(index < length());
+        return data_ptr->data() + index;
+    }
 
-    T const* operator[](unsigned int a) const { return &data[a * y]; }
+    // Reuse the [] operate for const access
+    T const* operator[](unsigned int a) const { return this[a * y]; }
 };
 
 typedef matrix<short> matrix_t;

@@ -154,7 +154,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -185,7 +185,7 @@ $(TargetPath)</Command>
       <ConformanceMode>Default</ConformanceMode>
       <OmitFramePointers>true</OmitFramePointers>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -219,7 +219,7 @@ $(TargetPath)</Command>
       <ConformanceMode>Default</ConformanceMode>
       <OmitFramePointers>true</OmitFramePointers>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -249,7 +249,7 @@ $(TargetPath)</Command>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>false</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -281,7 +281,7 @@ $(TargetPath)</Command>
       <ConformanceMode>Default</ConformanceMode>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -315,7 +315,7 @@ $(TargetPath)</Command>
       <ConformanceMode>Default</ConformanceMode>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\iir1;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -333,32 +333,24 @@ $(TargetPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\libs\ghc\fs_std_impl.cpp" />
+    <ClCompile Include="..\..\src\libs\loguru\loguru.cpp" />
+    <ClCompile Include="..\..\src\libs\whereami\whereami.c" />
     <ClCompile Include="..\..\src\misc\ansi_code_markup.cpp" />
     <ClCompile Include="..\..\src\misc\cross.cpp" />
     <ClCompile Include="..\..\src\misc\fs_utils_win32.cpp" />
     <ClCompile Include="..\..\src\misc\rwqueue.cpp" />
     <ClCompile Include="..\..\src\misc\setup.cpp" />
-    <ClCompile Include="..\..\src\misc\soft_limiter.cpp" />
+    <ClCompile Include="..\..\src\misc\string_utils.cpp" />
     <ClCompile Include="..\..\src\misc\support.cpp" />
-    <ClCompile Include="..\..\src\libs\ghc\fs_std_impl.cpp" />
-    <ClCompile Include="..\..\src\libs\loguru\loguru.cpp" />
-    <ClCompile Include="..\..\src\libs\whereami\whereami.c" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Biquad.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Butterworth.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Cascade.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\ChebyshevI.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\ChebyshevII.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\Custom.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\PoleFilter.cpp" />
-    <ClCompile Include="..\..\src\libs\iir1\iir\RBJ.cpp" />
     <ClCompile Include="..\ansi_code_markup_tests.cpp" />
-    <ClCompile Include="..\bitops_tests.cpp" />
     <ClCompile Include="..\bit_view_tests.cpp" />
+    <ClCompile Include="..\bitops_tests.cpp" />
     <ClCompile Include="..\fs_utils_tests.cpp" />
     <ClCompile Include="..\iohandler_containers_tests.cpp" />
+    <ClCompile Include="..\math_utils_tests.cpp" />
     <ClCompile Include="..\rwqueue_tests.cpp" />
     <ClCompile Include="..\setup_tests.cpp" />
-    <ClCompile Include="..\soft_limiter_tests.cpp" />
     <ClCompile Include="..\string_utils_tests.cpp" />
     <ClCompile Include="..\stubs.cpp" />
     <ClCompile Include="..\support_tests.cpp" />

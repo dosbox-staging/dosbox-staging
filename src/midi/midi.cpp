@@ -37,7 +37,7 @@
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
-#include "support.h"
+#include "string_utils.h"
 #include "timer.h"
 
 #define RAWBUF	1024
@@ -103,23 +103,24 @@ MidiHandler_oss Midi_oss;
 MidiHandler_alsa Midi_alsa;
 #endif
 
-struct DB_Midi {
-	uint8_t status;
-	size_t cmd_len;
-	size_t cmd_pos;
-	uint8_t cmd_buf[8];
-	uint8_t rt_buf[8];
+struct Midi {
+	uint8_t status     = 0;
+	size_t cmd_len     = 0;
+	size_t cmd_pos     = 0;
+	uint8_t cmd_buf[8] = {};
+	uint8_t rt_buf[8]  = {};
 	struct {
-		uint8_t buf[MIDI_SYSEX_SIZE];
-		size_t used;
-		int delay; // ms
-		int64_t start;  // ms
-	} sysex;
-	bool available;
-	MidiHandler * handler;
+		uint8_t buf[MIDI_SYSEX_SIZE] = {};
+		size_t used                  = 0;
+		int delay                    = 0; // ms
+		int64_t start                = 0; // ms
+	} sysex              = {};
+	bool available       = false;
+	MidiHandler *handler = nullptr;
 };
 
-DB_Midi midi;
+static Midi midi            = {};
+static Midi disengaged_midi = {};
 
 /* When using a physical Roland MT-32 rev. 0 as MIDI output device,
  * some games may require a delay in order to prevent buffer overflow
@@ -137,6 +138,9 @@ int delay_in_ms(size_t sysex_bytes_num)
 
 void MIDI_RawOutByte(uint8_t data)
 {
+	if (!midi.available)
+		return;
+
 	if (midi.sysex.start) {
 		const auto passed_ticks = GetTicksSince(midi.sysex.start);
 		if (passed_ticks < midi.sysex.delay)
@@ -206,7 +210,7 @@ void MIDI_RawOutByte(uint8_t data)
 
 void MidiHandler::HaltSequence()
 {
-	uint8_t message[3] = {}; // see MIDI_evt_len for length lookup-table
+	uint8_t message[4] = {}; // see MIDI_evt_len for length lookup-table
 	constexpr uint8_t all_notes_off = 0x7b;
 	constexpr uint8_t all_controllers_off = 0x79;
 	constexpr uint8_t controller = 0xb0;
@@ -223,10 +227,55 @@ void MidiHandler::HaltSequence()
 	}
 }
 
+void MidiHandler::ResumeSequence()
+{
+	constexpr uint8_t controller    = 0xb0;
+	constexpr uint8_t first_channel = 0x00;
+	constexpr uint8_t last_channel  = 0x0f;
+	constexpr uint8_t omni_on_cmd   = 0x7d;
+
+	// see MIDI_evt_len for length lookup-table
+	uint8_t message[4] = {controller, omni_on_cmd};
+
+	// from the first to last channel
+	for (auto channel = first_channel; channel <= last_channel; ++channel) {
+		message[0] = controller | channel; // 0xb0 through 0xbf
+		PlayMsg(message);
+	}
+}
+
 void MIDI_HaltSequence()
 {
 	if (midi.handler)
 		midi.handler->HaltSequence();
+}
+
+void MIDI_ResumeSequence()
+{
+	if (midi.handler)
+		midi.handler->ResumeSequence();
+}
+
+void MIDI_Disengage()
+{
+	// nothing to disengage, so do nothing
+	if (!midi.handler)
+		return;
+
+	MIDI_HaltSequence();
+	std::swap(midi, disengaged_midi);
+	assert(midi.handler == nullptr);
+}
+
+void MIDI_Engage()
+{
+	// nothing to re-engage, so do nothing
+	if (!disengaged_midi.handler)
+		return;
+
+	std::swap(disengaged_midi, midi);
+	assert(midi.handler);
+	MIDI_ResumeSequence();
 }
 
 bool MIDI_Available()

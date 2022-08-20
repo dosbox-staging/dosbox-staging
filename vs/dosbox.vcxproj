@@ -169,7 +169,7 @@
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16.lib;SDL2main.lib;SDL2.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -213,7 +213,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16.lib;SDL2main.lib;SDL2.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -294,7 +294,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;C_TRACY;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -407,7 +407,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>..\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;C_TRACY;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -566,6 +566,8 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\gui\sdl_mapper.cpp" />
     <ClCompile Include="..\src\hardware\adlib_gold.cpp" />
     <ClCompile Include="..\src\hardware\cmos.cpp" />
+    <ClCompile Include="..\src\hardware\covox.cpp" />
+    <ClCompile Include="..\src\hardware\compressor.cpp" />
     <ClCompile Include="..\src\hardware\disney.cpp" />
     <ClCompile Include="..\src\hardware\dma.cpp" />
     <ClCompile Include="..\src\hardware\envelope.cpp" />
@@ -580,6 +582,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\hardware\ipxserver.cpp" />
     <ClCompile Include="..\src\hardware\joystick.cpp" />
     <ClCompile Include="..\src\hardware\keyboard.cpp" />
+    <ClCompile Include="..\src\hardware\lpt_dac.cpp" />
     <ClCompile Include="..\src\hardware\mame\saa1099.cpp" />
     <ClCompile Include="..\src\hardware\mame\sn76496.cpp" />
     <ClCompile Include="..\src\hardware\memory.cpp" />
@@ -601,6 +604,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\hardware\serialport\serialmouse.cpp" />
     <ClCompile Include="..\src\hardware\serialport\serialport.cpp" />
     <ClCompile Include="..\src\hardware\serialport\softmodem.cpp" />
+    <ClCompile Include="..\src\hardware\ston1_dac.cpp" />
     <ClCompile Include="..\src\hardware\tandy_sound.cpp" />
     <ClCompile Include="..\src\hardware\timer.cpp" />
     <ClCompile Include="..\src\hardware\vga.cpp" />
@@ -645,14 +649,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
-    <ClCompile Include="..\src\libs\iir1\iir\Biquad.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\Butterworth.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\Cascade.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevI.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\ChebyshevII.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\Custom.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\PoleFilter.cpp" />
-    <ClCompile Include="..\src\libs\iir1\iir\RBJ.cpp" />
     <ClCompile Include="..\src\libs\nuked\opl3.c" />
     <ClCompile Include="..\src\libs\ppscale\ppscale.c" />
     <ClCompile Include="..\src\libs\residfp\Dac.cpp" />
@@ -672,6 +668,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\libs\residfp\Spline.cpp" />
     <ClCompile Include="..\src\libs\residfp\WaveformCalculator.cpp" />
     <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp" />
+    <ClCompile Include="..\src\libs\tal-chorus\Lfo.cpp" />
     <ClCompile Include="..\src\libs\YM7128B_emu\YM7128B_emu.c" />
     <ClCompile Include="..\src\midi\midi.cpp" />
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp" />
@@ -688,7 +685,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\misc\programs.cpp" />
     <ClCompile Include="..\src\misc\rwqueue.cpp" />
     <ClCompile Include="..\src\misc\setup.cpp" />
-    <ClCompile Include="..\src\misc\soft_limiter.cpp" />
+    <ClCompile Include="..\src\misc\string_utils.cpp" />
     <ClCompile Include="..\src\misc\support.cpp" />
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />
@@ -749,7 +746,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\serialport.h" />
     <ClInclude Include="..\include\setup.h" />
     <ClInclude Include="..\include\shell.h" />
-    <ClInclude Include="..\include\soft_limiter.h" />
     <ClInclude Include="..\include\string_utils.h" />
     <ClInclude Include="..\include\support.h" />
     <ClInclude Include="..\include\timer.h" />
@@ -826,20 +822,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Biquad.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Butterworth.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Cascade.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevI.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\ChebyshevII.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Common.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Custom.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Layout.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\MathSupplement.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\PoleFilter.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\RBJ.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\State.h" />
-    <ClInclude Include="..\src\libs\iir1\iir\Types.h" />
-    <ClInclude Include="..\src\libs\iir1\iir.h" />
     <ClInclude Include="..\src\libs\mverb\MVerb.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h" />
@@ -864,6 +846,13 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\residfp\Voice.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformCalculator.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\Chorus.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\ChorusEngine.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\DCBlock.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\Lfo.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\OnePoleLP.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\OscNoise.h" />
+    <ClInclude Include="..\src\libs\tal-chorus\Params.h" />
     <ClInclude Include="..\src\libs\YM7128B_emu\YM7128B_emu.h" />
     <ClInclude Include="..\src\midi\midi_fluidsynth.h" />
     <ClInclude Include="..\src\midi\midi_lasynth_model.h" />

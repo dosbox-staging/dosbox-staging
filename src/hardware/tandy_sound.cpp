@@ -86,6 +86,7 @@ centerline.
 #include "hardware.h"
 #include "inout.h"
 #include "mem.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
@@ -179,7 +180,7 @@ private:
 	static constexpr auto render_divisor = 16;
 	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = 1000.0 / render_rate_hz;
+	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
 
 	// Runtime states
 	device_sound_interface *dsi       = nullptr;
@@ -211,7 +212,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           0,
+	                           use_mixer_rate,
 	                           "TANDYDAC",
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -428,7 +429,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           0,
+	                           use_mixer_rate,
 	                           "TANDY",
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,

@@ -61,6 +61,8 @@ enum VGAModes {
 
 constexpr auto M_TEXT_MODES = M_TEXT | M_HERC_TEXT | M_TANDY_TEXT | M_CGA_TEXT_COMPOSITE;
 
+constexpr auto vesa_2_0_modes_start = 0x120;
+
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
 constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
@@ -381,6 +383,9 @@ struct RGBEntry {
 	uint8_t blue = 0;
 };
 
+constexpr auto num_cga_colors = 16;
+typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
+
 struct VGA_Dac {
 	uint8_t bits = 0; /* DAC bits, usually 6 or 8 */
 	uint8_t pel_mask = 0;
@@ -508,7 +513,8 @@ void VGA_SetupXGA(void);
 void VGA_AddCompositeSettings(Config &conf);
 
 /* Some Support Functions */
-std::pair<const char *, const char *> VGA_DescribeType(VGAModes type);
+std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
+                                                       const uint16_t mode);
 void VGA_SetClock(Bitu which, uint32_t target);
 
 // Save, get, and limit refresh and clock functions

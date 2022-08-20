@@ -1303,7 +1303,7 @@ public:
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			// get the configuration property
 			s_property[6] = '1' + static_cast<char>(i);
-			Prop_multival* p = section->Get_multival(s_property);
+			PropMultiVal* p = section->GetMultiVal(s_property);
 			std::string type = p->GetSection()->Get_string("type");
 			CommandLine cmd(0,p->GetSection()->Get_string("parameters"));
 			

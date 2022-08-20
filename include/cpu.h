@@ -57,7 +57,6 @@ extern int32_t CPU_CycleLimit;
 extern int64_t CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
-extern bool CPU_AllowSpeedMods;
 extern Bitu CPU_AutoDetermineMode;
 
 extern Bitu CPU_ArchitectureType;
@@ -68,6 +67,11 @@ extern Bitu CPU_PrefetchQueueSize;
 /* A CPU Handler */
 typedef Bits (CPU_Decoder)(void);
 extern CPU_Decoder * cpudecoder;
+
+constexpr bool CPU_ReuseCodepages = true;
+#if defined(WIN32)
+constexpr bool CPU_UseRwxMemProtect = true;
+#endif
 
 Bits CPU_Core_Normal_Run(void);
 Bits CPU_Core_Normal_Trap_Run(void);

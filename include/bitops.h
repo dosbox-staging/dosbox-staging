@@ -115,14 +115,6 @@ static constexpr void check_reg_type()
 	              "register must not be a bool");
 }
 
-// ensure the bits aren't a bool
-template <typename B>
-static constexpr void check_bits_type()
-{
-	static_assert(std::is_same<B, bool>::value == false,
-	              "bits must not be a bool");
-}
-
 // ensure the bit state is a bool
 template <typename S>
 static constexpr void check_state_type()
@@ -131,20 +123,12 @@ static constexpr void check_state_type()
 }
 
 // Ensure the bits fall within the register's type size
-template <typename T, typename B>
-static constexpr void check_width([[maybe_unused]] const T reg, [[maybe_unused]] const B bits)
+template <typename T>
+static constexpr void check_width([[maybe_unused]] const T reg,
+                                  [[maybe_unused]] const unsigned int bits)
 {
 	check_reg_type<T>();
-	check_bits_type<B>();
-
-	// Note: if you'd like to extend this to 64-bits, double check that the
-	//       assertions still work.  Their purpose is to catch when the bit
-	//       value exceeds the maximum width of the template type.
-	//
-	static_assert(sizeof(B) <= sizeof(uint32_t), "bits type limited to 32-bit");
-
-	assert(static_cast<int64_t>(bits) <=
-	       static_cast<int64_t>(std::numeric_limits<T>::max()));
+	assert(sizeof(reg) >= sizeof(bits) || bits <= std::numeric_limits<T>::max());
 }
 
 // Set the indicated bits

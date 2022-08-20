@@ -405,9 +405,8 @@ dosbox -opencaptures program
         as the C: drive and execute "NAME".
 
         If "NAME" in an execuatble and the startup_verbosity configurable
-        setting is "auto" (or "low" or "quiet"), then the introductory
-        splash-screen and text help banner will not be shown.  This is known
-        as instant-launch.
+        setting is "auto" (or "low" or "quiet"), then the text help banner
+        will not be shown.
 
   -exit
         DOSBox will close itself when the DOS application "name" ends.
@@ -1570,7 +1569,8 @@ Typically these are:
   COM1:
     - COM port 1
     - 8N1, meaning: data-bits (8), parity (none), and stop-bits (1).
-    - 57600 baud
+    - 57600 baud, which can be changed to 300 <= VALUE <= 57600 with the
+      baudrate:VALUE setting.
     - 03F8 address
     - IRQ4 interrupt
     - 16550 fifo enabled
