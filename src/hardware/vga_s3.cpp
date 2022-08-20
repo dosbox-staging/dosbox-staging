@@ -633,6 +633,40 @@ bool SVGA_S3_AcceptsMode(Bitu mode) {
 	return VideoModeMemSize(mode) < vga.vmemsize;
 }
 
+void replace_mode_120h_with_halfline()
+{
+	// when C++20 is available, replace this with designated initializers
+	auto make_halfline_block = []() {
+		VideoModeBlock block = {};
+
+		block.mode     = 0x120;
+		block.type     = M_LIN16;
+		block.swidth   = 640;
+		block.sheight  = 400;
+		block.twidth   = 80;
+		block.theight  = 25;
+		block.cwidth   = 8;
+		block.cheight  = 16;
+		block.ptotal   = 1;
+		block.pstart   = 0xA0000;
+		block.plength  = 0x10000;
+		block.htotal   = 200;
+		block.vtotal   = 449;
+		block.hdispend = 160;
+		block.vdispend = 400;
+		return block;
+	};
+	constexpr auto halfline_block = make_halfline_block();
+	constexpr auto halfline_mode  = halfline_block.mode;
+
+	for (auto &block : ModeList_VGA) {
+		if (block.mode == halfline_mode) {
+			block = halfline_block;
+			break;
+		}
+	}
+}
+
 void filter_s3_modes_to_oem_only()
 {
 	enum dram_size_t {
@@ -772,9 +806,16 @@ void SVGA_Setup_S3Trio(void)
 
 	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
 
-	if (int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE) {
+	switch (int10.vesa_mode_preference) {
+	case VesaModePref::Compatible:
 		filter_s3_modes_to_oem_only();
 		description += " compatible";
+		break;
+	case VesaModePref::Halfline:
+		replace_mode_120h_with_halfline();
+		description += " halfline";
+		break;
+	case VesaModePref::All: break;
 	}
 	if (int10.vesa_nolfb)
 		description += " without LFB";

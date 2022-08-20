@@ -179,7 +179,8 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	if (mblock.mode >= vesa_2_0_modes_start && int10.vesa_oldvbe)
 		return VESA_FAIL;
 
-	bool ok_per_mode_pref;
+	// assume mode is OK until proven otherwise
+	bool ok_per_mode_pref = true;
 	switch (mblock.type) {
 	case M_LIN4:
 		modePageSize = mblock.sheight * mblock.swidth/8;
@@ -197,10 +198,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		minfo.MemoryModel = 4u; // packed pixel
 		modeAttributes = 0x1b; // Color, graphics
 
-		if (int10.vesa_mode_preference == VESA_MODE_PREF::ALL)
-			ok_per_mode_pref = true;
-		else {
-			assert(int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE);
+		if (int10.vesa_mode_preference == VesaModePref::Compatible) {
 			ok_per_mode_pref = can_triple_buffer_8bit(mblock) &&
 			                   !on_build_engine_denylist(mblock);
 		}
