@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 
 #include <cinttypes>
 #include <string>
+
+#include "std_filesystem.h"
 
 /* Check if the given path corresponds to an existing file or directory.
  */
@@ -54,6 +56,11 @@ inline bool path_exists(const std::string &path) noexcept
  */
 
 std::string to_native_path(const std::string &path) noexcept;
+
+// Returns a simplified representation of the path, be it relative,
+// absolute, or in its original (as-provided) form.
+// The shortest valid path is considered the simplest form.
+std_fs::path simplify_path(const std_fs::path &path) noexcept;
 
 /* Cross-platform wrapper for following functions:
  *
