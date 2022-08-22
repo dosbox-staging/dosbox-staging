@@ -169,6 +169,19 @@ Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
   join:       laczy w jedna sekcje [autoexec] (stare zachowanie).
   overwrite:  uzywa tylko ostatniej napotkanej sekcji.
 .
+:CONFIG_AUTOMOUNT
+Podczas startu montuje katalog 'drives/[c]' jako dysk, gdzie [c] jest nazwa
+dysku podana jako mala litera od a do y. Katalog 'drives' powinien znajdowac
+sie w aktualnym katalogu, w przeciwnym razie uzywany jest katalog z zasob¢w
+emulatora. Dodatkowe ustawienia moga byc podane w formie pliku [c].conf,
+znajdujacego sie tam, gdzie montowany katalog, z zawartoscia jak ponizej:
+  [drive]
+  type    = dir, overlay, floppy, lub cdrom
+  label   = etykieta_dysku
+  path    = ustawienia sciezki wyszukiwania, np. path = %%path%%;c:\tools
+  override_drive = nadpisanie litery dysku (domyslnie puste)
+  verbose = true lub false
+.
 :CONFIG_STARTUP_VERBOSITY
 Rodzaj informacji wyswietlanych po uruchomieniu emulatora:
   Wartosc     | Powitanie | Wczesna konsola
