@@ -3741,7 +3741,7 @@ bool GFX_Events()
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
-				DEBUG_LOG_MSG("SDL: Window has been restored");
+				// DEBUG_LOG_MSG("SDL: Window has been restored");
 				/* We may need to re-create a texture
 				 * and more on Android. Another case:
 				 * Update surface while using X11.
@@ -3788,7 +3788,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
-				DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
+				// DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
 				if (sdl.desktop.fullscreen) {
 					VGA_KillDrawing();
@@ -3810,18 +3810,18 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_SHOWN:
-				DEBUG_LOG_MSG("SDL: Window has been shown");
+				// DEBUG_LOG_MSG("SDL: Window has been shown");
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
-				DEBUG_LOG_MSG("SDL: Window has been hidden");
+				// DEBUG_LOG_MSG("SDL: Window has been hidden");
 				continue;
 
 #if 0 // ifdefed out only because it's too noisy
 			case SDL_WINDOWEVENT_MOVED:
-				DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
-				              event.window.data1,
-				              event.window.data2);
+				// DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
+				//               event.window.data1,
+				//               event.window.data2);
 				continue;
 #endif
 
@@ -3838,18 +3838,18 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been minimized");
+				// DEBUG_LOG_MSG("SDL: Window has been minimized");
 				ApplyInactiveSettings();
 				break;
 
 			case SDL_WINDOWEVENT_MAXIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been maximized");
+				// DEBUG_LOG_MSG("SDL: Window has been maximized");
 				continue;
 
 			case SDL_WINDOWEVENT_CLOSE:
-				DEBUG_LOG_MSG("SDL: The window manager "
-				              "requests that the window be "
-				              "closed");
+				// DEBUG_LOG_MSG("SDL: The window manager "
+				//               "requests that the window be "
+				//               "closed");
 				GFX_RequestExit(true);
 				break;
 
@@ -3859,8 +3859,8 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
-				DEBUG_LOG_MSG("SDL: Window had a hit test that "
-				              "wasn't SDL_HITTEST_NORMAL");
+				// DEBUG_LOG_MSG("SDL: Window had a hit test that "
+				//               "wasn't SDL_HITTEST_NORMAL");
 				continue;
 
 			default: break;
