@@ -559,13 +559,19 @@ static void update_cga16_color_pcjr()
 			const auto G = normalize_and_apply_gamma(Y - 0.2721f * I - 0.6474f * Q);
 			const auto B = normalize_and_apply_gamma(Y - 1.1069f * I + 1.7046f * Q);
 
-			auto to_8bit_without_gamma = [=](float v) -> uint8_t {
-				const auto without_gamma = clamp(powf(v, 1 / gamma), 0.0f, 1.0f);
-				return static_cast<uint8_t>(255 * without_gamma);
+			auto to_linear_rgb = [=](const float v) -> uint8_t {
+				// Only operate on reasonably positive v-values
+				if (!isnormal(v) || v <= 0.0f)
+					return 0;
+				// switch to linear RGB space and scale to the 8-bit range
+				constexpr int max_8bit = UINT8_MAX;
+				const auto linear = powf(v, 1.0f / gamma) * max_8bit;
+				const auto clamped = clamp(iroundf(linear), 0, max_8bit);
+				return check_cast<uint8_t>(clamped);
 			};
-			const auto r = to_8bit_without_gamma(1.5073f * R - 0.3725f * G - 0.0832f * B);
-			const auto g = to_8bit_without_gamma(-0.0275f * R + 0.9350f * G + 0.0670f * B);
-			const auto b = to_8bit_without_gamma(-0.0272f * R - 0.0401f * G + 1.1677f * B);
+			const auto r = to_linear_rgb(1.5073f * R - 0.3725f * G - 0.0832f * B);
+			const auto g = to_linear_rgb(-0.0275f * R + 0.9350f * G + 0.0670f * B);
+			const auto b = to_linear_rgb(-0.0272f * R - 0.0401f * G + 1.1677f * B);
 
 			const uint8_t index = bits | ((x & 1) == 0 ? 0x30 : 0x80) | ((x & 2) == 0 ? 0x40 : 0);
 			RENDER_SetPal(index, r, g, b);
