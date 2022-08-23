@@ -174,7 +174,7 @@ static inline void real_writed(uint16_t seg, uint16_t off, uint32_t val)
 
 static inline uint16_t RealSeg(RealPt pt)
 {
-	return pt >> 16;
+	return static_cast<uint16_t>(pt >> 16);
 }
 
 static inline uint16_t RealOff(RealPt pt)
