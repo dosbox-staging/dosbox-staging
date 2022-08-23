@@ -3450,21 +3450,20 @@ static void GUI_StartUp(Section *sec)
 	std::string mouse_control_msg;
 	if (control_choice == "onclick") {
 		sdl.mouse.control_choice = CaptureOnClick;
-		mouse_control_msg = "will be captured after clicking";
+		mouse_control_msg = "will be captured after the first left or right button click";
 	} else if (control_choice == "onstart") {
 		sdl.mouse.control_choice = CaptureOnStart;
 		mouse_control_msg = "will be captured immediately on start";
 	} else if (control_choice == "seamless") {
 		sdl.mouse.control_choice = Seamless;
-		mouse_control_msg = "will move seamlessly without being captured";
+		mouse_control_msg = "will move seamlessly: left and right button clicks won't capture the mouse";
 	} else if (control_choice == "nomouse") {
 		sdl.mouse.control_choice = NoMouse;
 		mouse_control_msg = "is disabled";
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
-
-	std::string middle_control_msg;
+	LOG_MSG("SDL: Mouse %s", mouse_control_msg.c_str());
 
 	if (sdl.mouse.control_choice != NoMouse) {
 		const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
@@ -3473,9 +3472,10 @@ static void GUI_StartUp(Section *sec)
 		sdl.mouse.middle_will_release = (mclick_choice != "middlegame");
 
 
-		middle_control_msg = sdl.mouse.middle_will_release
-		                             ? " and middle-click will uncapture the mouse"
-		                             : " and middle-clicks will be sent to the game";
+		const auto middle_control_msg = sdl.mouse.middle_will_release
+		                             ? "will capture/uncapture the mouse (clicks not sent to the game/program)"
+		                             : "will be sent to the game/program (clicks not used to capture/uncapture)";
+		LOG_MSG("SDL: Middle mouse button %s.", mouse_control_msg.c_str(), middle_control_msg);
 
 		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
 		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
@@ -3495,7 +3495,6 @@ static void GUI_StartUp(Section *sec)
 		// Notify mouse emulation routines about the configuration
 		MOUSE_SetConfig(raw_mouse_input);
 	}
-	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
