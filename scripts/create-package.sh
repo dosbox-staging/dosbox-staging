@@ -240,7 +240,7 @@ if [ "$platform" = "macos" ]; then
         usage
         exit 1
     fi
-    macos_dst_dir=${pkg_dir}/dist/dosbox-staging.app/Contents
+    macos_dst_dir="${pkg_dir}/dist/DOSBox Staging.app/Contents"
 fi
 
 if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
