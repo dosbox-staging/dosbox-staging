@@ -21,6 +21,7 @@
 #include <cstring>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <string>
 #include <tuple>
 
@@ -310,70 +311,6 @@ static void InitializeSpeakerState()
 	}
 }
 
-static void configure_filters(const Section_prop *config, const OplMode opl_mode)
-{
-	auto get_filter_params = [&](const char * conf) {
-		static const std::map<SB_TYPES, FilterType> sb_type_to_filter_type_map = {
-				{SBT_NONE, FilterType::None},
-				{SBT_1, FilterType::SB1},
-				{SBT_2, FilterType::SB2},
-				{SBT_PRO1, FilterType::SBPro1},
-				{SBT_PRO2, FilterType::SBPro2},
-				{SBT_16, FilterType::SB16},
-				{SBT_GB, FilterType::None},
-		};
-
-		static const std::map<std::string, FilterType> filter_map = {
-				{"none", FilterType::None},
-				{"sb1", FilterType::SB1},
-				{"sb2", FilterType::SB2},
-				{"sbpro1", FilterType::SBPro1},
-				{"sbpro2", FilterType::SBPro2},
-				{"sb16", FilterType::SB16},
-		};
-		assert(conf);
-		const auto filter_prefs = split(config->Get_string(conf));
-		const auto filter = filter_prefs.empty() ? "auto" : filter_prefs[0];
-
-		FilterType filter_type = FilterType::None;
-		if (filter == "auto") {
-			auto it = sb_type_to_filter_type_map.find(sb.type);
-			if (it != sb_type_to_filter_type_map.end())
-				filter_type = it->second;
-		} else {
-			auto it = filter_map.find(filter);
-			if (it != filter_map.end())
-				filter_type = it->second;
-		}
-
-		FilterState filter_state = FilterState::Off;
-		if (filter_type != FilterType::None) {
-			if (filter_prefs.size() > 1 && filter_prefs[1] == "always_on") {
-				filter_state = FilterState::ForcedOn;
-			} else {
-				filter_state = FilterState::On;
-			}
-		}
-		return std::make_tuple(filter_type, filter_state);
-	};
-
-	using std::tie;
-	tie(sb.sb_filter_type, sb.sb_filter_state) = get_filter_params("sb_filter");
-	tie(sb.opl_filter_type, std::ignore) = get_filter_params("opl_filter");
-
-	// When "opl_filter" is set to "auto", the low-pass filter to use is
-	// determined by "sbtype". For AdLib Gold ("oplmode = opl3gold") we want
-	// to disable the low-pass filter on auto, but as AdLib Gold is not tied
-	// to any particular Sound Blaster model, we need special handling for
-	// this case.
-	if (opl_mode == OplMode::Opl3Gold) {
-		const std::string opl_filter_prefs = config->Get_string("opl_filter");
-		if (opl_filter_prefs == "auto") {
-			sb.opl_filter_type = FilterType::None;
-		}
-	}
-}
-
 static void log_filter_config(const char *output_type, const FilterType filter)
 {
 	static const std::map<FilterType, std::string> filter_name_map = {
@@ -398,87 +335,207 @@ static void log_filter_config(const char *output_type, const FilterType filter)
 	}
 }
 
-static void configure_sb_filter()
+struct FilterConfig {
+	FilterState hpf_state       = FilterState::Off;
+	uint8_t hpf_order           = {};
+	uint16_t hpf_cutoff_freq_hz = {};
+
+	FilterState lpf_state       = FilterState::Off;
+	uint8_t lpf_order           = {};
+	uint16_t lpf_cutoff_freq_hz = {};
+
+	bool zoh_upsampler_enabled = false;
+	uint16_t zoh_rate_hz       = {};
+};
+
+static void set_filter(mixer_channel_t channel, const FilterConfig &config)
 {
-	auto set_filter = [](const uint8_t order, const uint16_t cutoff_freq) {
-		sb.chan->ConfigureLowPassFilter(order, cutoff_freq);
-		sb.chan->SetLowPassFilter(sb.sb_filter_state);
+	if (config.hpf_state == FilterState::On ||
+	    config.hpf_state == FilterState::ForcedOn) {
+		channel->ConfigureHighPassFilter(config.hpf_order,
+		                                 config.hpf_cutoff_freq_hz);
+	}
+	channel->SetHighPassFilter(config.hpf_state);
+
+	if (config.lpf_state == FilterState::On ||
+	    config.lpf_state == FilterState::ForcedOn) {
+		channel->ConfigureLowPassFilter(config.lpf_order,
+		                                config.lpf_cutoff_freq_hz);
+	}
+	channel->SetLowPassFilter(config.lpf_state);
+
+	if (config.zoh_upsampler_enabled) {
+		channel->ConfigureZeroOrderHoldUpsampler(config.zoh_rate_hz);
+		channel->EnableZeroOrderHoldUpsampler();
+	} else {
+		channel->EnableZeroOrderHoldUpsampler(false);
+	}
+}
+
+static std::optional<FilterType> determine_filter_type(const std::string &filter_choice,
+                                                       const SB_TYPES sb_type)
+{
+	if (filter_choice == "auto") {
+		switch (sb_type) {
+		case SBT_NONE: return FilterType::None;   break;
+		case SBT_1:    return FilterType::SB1;    break;
+		case SBT_2:    return FilterType::SB2;    break;
+		case SBT_PRO1: return FilterType::SBPro1; break;
+		case SBT_PRO2: return FilterType::SBPro2; break;
+		case SBT_16:   return FilterType::SB16;   break;
+		case SBT_GB:   return FilterType::None;   break;
+		}
+	} else if (filter_choice == "off") {
+		return FilterType::None;
+
+	} else if (filter_choice == "sb1") {
+		return FilterType::SB1;
+
+	} else if (filter_choice == "sb2") {
+		return FilterType::SB2;
+
+	} else if (filter_choice == "sbpro1") {
+		return FilterType::SBPro1;
+
+	} else if (filter_choice == "sbpro2") {
+		return FilterType::SBPro2;
+
+	} else if (filter_choice == "sb16") {
+		return FilterType::SB16;
+	}
+
+	return {};
+}
+
+static void configure_sb_filter(mixer_channel_t channel,
+                                const std::string &filter_prefs,
+								const bool filter_always_on,
+                                const SB_TYPES sb_type)
+{
+	if (channel->TryParseAndSetCustomFilter(filter_prefs))
+		return;
+
+	const auto filter_prefs_parts = split(filter_prefs);
+
+	const auto filter_choice = filter_prefs_parts.empty()
+	                                 ? "auto"
+	                                 : filter_prefs_parts[0];
+	FilterConfig config = {};
+
+	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
+		config.lpf_state = filter_always_on ? FilterState::ForcedOn
+		                                    : FilterState::On;
+
+		config.lpf_order          = order;
+		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
 	};
 
-	auto disable_filter = [] { sb.chan->SetLowPassFilter(FilterState::Off); };
-
-	auto enable_zoh_upsampler = [] {
-		constexpr auto dac_rate = 45454;
-		sb.chan->ConfigureZeroOrderHoldUpsampler(dac_rate);
-		sb.chan->EnableZeroOrderHoldUpsampler();
+	auto enable_zoh_upsampler = [&] {
+		constexpr auto native_dac_rate_hz = 45454;
+		config.zoh_upsampler_enabled      = true;
+		config.zoh_rate_hz                = native_dac_rate_hz;
 	};
 
-	// The filter parameters have been tweaked by analysing real hardware
-	// recordings. The results are virtually indistinguishable from the real
-	// thing by ear only.
-	switch (sb.sb_filter_type) {
+	const auto filter_type = determine_filter_type(filter_choice, sb_type);
+
+	if (!filter_type) {
+		LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'off'",
+		            CardType(),
+		            filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+		return;
+	}
+
+	switch (filter_type.value()) {
 	case FilterType::None:
-		disable_filter();
 		enable_zoh_upsampler();
 		break;
 
 	case FilterType::SB1:
-		set_filter(2, 3800);
+		enable_lpf(2, 3800);
 		enable_zoh_upsampler();
 		break;
 
 	case FilterType::SB2:
-		set_filter(2, 4800);
+		enable_lpf(2, 4800);
 		enable_zoh_upsampler();
 		break;
 
 	case FilterType::SBPro1:
 	case FilterType::SBPro2:
-		set_filter(2, 3200);
+		enable_lpf(2, 3200);
 		enable_zoh_upsampler();
 		break;
 
 	case FilterType::SB16:
-		// Resampling from the SB channel rate to the mixer rate applies
-		// brickwall filtering at half the SB channel rate, which
-		// perfectly emulates the dynamic brickwall filter of the SB16.
-		disable_filter();
-		sb.chan->EnableZeroOrderHoldUpsampler(false);
+		// With the zero-order-hold upsampler disabled, we're
+		// just relying on Speex to resample to the host rate.
+		// This applies brickwall filtering at half the SB
+		// channel rate, which perfectly emulates the dynamic
+		// brickwall filter of the SB16.
 		break;
 	}
 
-	log_filter_config("PCM", sb.sb_filter_type);
+	set_filter(channel, config);
 }
 
-static void configure_opl_filter()
+static void configure_opl_filter(mixer_channel_t channel,
+                                 const std::string &filter_prefs,
+                                 const SB_TYPES sb_type)
 {
-	auto set_filter = [](mixer_channel_t chan,
-	                     const uint8_t order,
-	                     const uint16_t cutoff_freq) {
-		chan->ConfigureLowPassFilter(order, cutoff_freq);
-		chan->SetLowPassFilter(FilterState::On);
+	if (channel->TryParseAndSetCustomFilter(filter_prefs))
+		return;
+
+	const auto filter_prefs_parts = split(filter_prefs);
+
+	const auto filter_choice = filter_prefs_parts.empty()
+	                                 ? "auto"
+	                                 : filter_prefs_parts[0];
+	FilterConfig config = {};
+
+	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
+		config.lpf_state          = FilterState::On;
+		config.lpf_order          = order;
+		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
 	};
 
-	auto chan = MIXER_FindChannel("OPL");
-	assert(chan);
-	if (!chan)
+	const auto filter_type = determine_filter_type(filter_choice, sb_type);
+
+	if (!filter_type) {
+		if (filter_choice != "off")
+			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'off'",
+						CardType(), filter_choice.c_str());
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
 		return;
+	}
 
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
-	switch (sb.opl_filter_type) {
+	switch (filter_type.value()) {
+	case FilterType::None:
+		break;
+
 	case FilterType::SB1:
-	case FilterType::SB2: set_filter(chan, 1, 12000); break;
+	case FilterType::SB2:
+		enable_lpf(1, 12000);
+		break;
 
 	case FilterType::SBPro1:
-	case FilterType::SBPro2: set_filter(chan, 1, 8000); break;
+	case FilterType::SBPro2:
+		enable_lpf(1, 8000);
+		break;
 
 	case FilterType::SB16:
-	case FilterType::None: chan->SetLowPassFilter(FilterState::Off); break;
+		break;
 	}
 
-	log_filter_config("OPL", sb.opl_filter_type);
+	log_filter_config("OPL", filter_type.value());
+	set_filter(channel, config);
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
@@ -2029,7 +2086,6 @@ public:
 
 		sb.type = find_sbtype();
 		oplmode = find_oplmode();
-		configure_filters(section, oplmode);
 
 		switch (oplmode) {
 		case OplMode::None:
@@ -2037,23 +2093,32 @@ public:
 			                        adlib_gusforward,
 			                        io_width_t::byte);
 			break;
+
 		case OplMode::Cms:
 			WriteHandler[0].Install(0x388,
 			                        adlib_gusforward,
 			                        io_width_t::byte);
 			CMS_Init(section);
 			break;
+
 		case OplMode::Opl2:
 			CMS_Init(section);
 			[[fallthrough]];
+
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold:
 			OPL_Init(section, oplmode);
-			configure_opl_filter();
+
+			auto opl_channel = MIXER_FindChannel("OPL");
+			const std::string opl_filter_prefs = section->Get_string(
+			        "opl_filter");
+			configure_opl_filter(opl_channel, opl_filter_prefs, sb.type);
 			break;
 		}
-		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
+
+		if (sb.type == SBT_NONE || sb.type == SBT_GB)
+			return;
 
 		std::set channel_features = {ChannelFeature::ReverbSend,
 		                             ChannelFeature::ChorusSend,
@@ -2063,7 +2128,15 @@ public:
 			channel_features.insert(ChannelFeature::Stereo);
 
 		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB", channel_features);
-		configure_sb_filter();
+
+		const std::string sb_filter_prefs = section->Get_string("sb_filter");
+
+		const auto sb_filter_always_on = section->Get_bool("sb_filter_always_on");
+
+		configure_sb_filter(sb.chan,
+		                    sb_filter_prefs,
+		                    sb_filter_always_on,
+		                    sb.type);
 
 		sb.dsp.state=DSP_S_NORMAL;
 		sb.dsp.out.lastval=0xaa;
