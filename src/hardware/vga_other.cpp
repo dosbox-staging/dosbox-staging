@@ -23,14 +23,21 @@
 #include <cstdint>
 #include <cstring>
 
+#include "bitops.h"
+#include "checks.h"
 #include "control.h"
 #include "inout.h"
-#include "math_utils.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "pic.h"
 #include "render.h"
 #include "vga.h"
+
+// CHECK_NARROWING();
+
+using namespace bit;
+using namespace bit::literals;
 
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
@@ -1431,33 +1438,29 @@ void VGA_SetupOther()
 		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
 		                  "CGA Comp");
 	}
-	if (machine == MCH_HERC) {
-		constexpr uint16_t base = 0x3b0;
-		for (uint8_t i = 0; i < 4; ++i) {
-			// The registers are repeated as the address is not decoded properly;
-			// The official ports are 3b4, 3b5
-			const uint16_t index_port = base + i * 2u;
+
+	auto register_crtc_port_handlers_at_base = [](const io_port_t base) {
+		for (io_port_t i = 0; i < 4; ++i) {
+			const auto index_port = check_cast<io_port_t>(base + 2 * i);
 			IO_RegisterWriteHandler(index_port, write_crtc_index_other, io_width_t::byte);
 			IO_RegisterReadHandler(index_port, read_crtc_index_other, io_width_t::byte);
 
-			const uint16_t data_port = index_port + 1u;
+			const auto data_port = check_cast<io_port_t>(index_port + 1);
 			IO_RegisterWriteHandler(data_port, write_crtc_data_other, io_width_t::byte);
 			IO_RegisterReadHandler(data_port, read_crtc_data_other, io_width_t::byte);
 		}
-		vga.herc.enable_bits=0;
-		vga.herc.mode_control=0xa; // first mode written will be text mode
+	};
+
+	if (machine == MCH_HERC) {
+		vga.herc.enable_bits = 0;
+		vga.herc.mode_control = 0xa; // first mode written will be text mode
 		vga.crtc.underline_location = 13;
 		IO_RegisterWriteHandler(0x3b8, write_hercules, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3bf, write_hercules, io_width_t::byte);
 		IO_RegisterReadHandler(0x3ba, read_herc_status, io_width_t::byte);
+		register_crtc_port_handlers_at_base(0x3b0);
 	} else if (!IS_EGAVGA_ARCH) {
-		constexpr uint16_t base = 0x3d0;
-		for (uint8_t port_ct = 0; port_ct < 4; ++port_ct) {
-			IO_RegisterWriteHandler(base + port_ct * 2, write_crtc_index_other, io_width_t::byte);
-			IO_RegisterWriteHandler(base + port_ct * 2 + 1, write_crtc_data_other, io_width_t::byte);
-			IO_RegisterReadHandler(base + port_ct * 2, read_crtc_index_other, io_width_t::byte);
-			IO_RegisterReadHandler(base + port_ct * 2 + 1, read_crtc_data_other, io_width_t::byte);
-		}
+		register_crtc_port_handlers_at_base(0x3d0);
 	}
 }
 static void composite_init(Section *sec)
