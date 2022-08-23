@@ -1168,9 +1168,10 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 			write_tandy_reg(val);
 		else {
 			vga.tandy.reg_index = val;
-			if (vga.tandy.reg_index & 0x10)
-				vga.attr.disabled |= 2;
-			else vga.attr.disabled &= ~2;
+			if (is(vga.tandy.reg_index, b4))
+				set(vga.attr.disabled, b1);
+			else
+				clear(vga.attr.disabled, b1);
 		}
 		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
 		break;
