@@ -3475,7 +3475,7 @@ static void GUI_StartUp(Section *sec)
 		const auto middle_control_msg = sdl.mouse.middle_will_release
 		                             ? "will capture/uncapture the mouse (clicks not sent to the game/program)"
 		                             : "will be sent to the game/program (clicks not used to capture/uncapture)";
-		LOG_MSG("SDL: Middle mouse button %s.", middle_control_msg);
+		LOG_MSG("SDL: Middle mouse button %s", middle_control_msg);
 
 		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
 		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
