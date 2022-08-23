@@ -1303,35 +1303,35 @@ static void write_hercules(io_port_t port, io_val_t value, io_width_t)
 	case 0x3b8: {
 		// the protected bits can always be cleared but only be set if the
 		// protection bits are set
-		if (vga.herc.mode_control&0x2) {
+		if (is(vga.herc.mode_control, b1)) {
 			// already set
-			if (!(val&0x2)) {
-				vga.herc.mode_control &= ~0x2;
+			if (cleared(val, b1)) {
+				clear(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_TEXT);
 			}
 		} else {
 			// not set, can only set if protection bit is set
-			if ((val & 0x2) && (vga.herc.enable_bits & 0x1)) {
-				vga.herc.mode_control |= 0x2;
+			if (is(val, b1) && is(vga.herc.enable_bits, b0)) {
+				set(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_GFX);
 			}
 		}
-		if (vga.herc.mode_control&0x80) {
-			if (!(val&0x80)) {
-				vga.herc.mode_control &= ~0x80;
+		if (is(vga.herc.mode_control, b7)) {
+			if (cleared(val, b7)) {
+				clear(vga.herc.mode_control, b7);
 				vga.tandy.draw_base = &vga.mem.linear[0];
 			}
 		} else {
-			if ((val & 0x80) && (vga.herc.enable_bits & 0x2)) {
-				vga.herc.mode_control |= 0x80;
-				vga.tandy.draw_base = &vga.mem.linear[32*1024];
+			if (is(val, b7) && is(vga.herc.enable_bits, b1)) {
+				set(vga.herc.mode_control, b7);
+				vga.tandy.draw_base = &vga.mem.linear[32 * 1024];
 			}
 		}
-		vga.draw.blinking = (val&0x20)!=0;
-		vga.herc.mode_control &= 0x82;
-		vga.herc.mode_control |= val & ~0x82;
+		vga.draw.blinking = is(val, b5);
+		retain(vga.herc.mode_control, b7 | b1);
+		set(vga.herc.mode_control, mask_off(val, b7 | b1));
 		break;
-		}
+	}
 	case 0x3bf:
 		if ( vga.herc.enable_bits ^ val) {
 			vga.herc.enable_bits=val;
