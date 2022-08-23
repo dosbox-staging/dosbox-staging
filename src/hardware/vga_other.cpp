@@ -925,13 +925,13 @@ static void tandy_update_palette() {
 			} else {
 				uint8_t color_set = 0;
 				uint8_t r_mask = 0xf;
-				if (vga.tandy.color_select & 0x10)
-					color_set |= 8; // intensity
-				if (vga.tandy.color_select & 0x20)
-					color_set |= 1; // Cyan Mag. White
-				if (vga.tandy.mode_control & 0x04) { // Cyan Red White
-					color_set |= 1;
-					r_mask &= ~1;
+				if (is(vga.tandy.color_select, b4))
+					set(color_set, b3); // intensity
+				if (is(vga.tandy.color_select, b5))
+					set(color_set, b0); // Cyan Mag. White
+				if (is(vga.tandy.mode_control, b2)) { // Cyan Red White
+					set(color_set, b0);
+					clear(r_mask, b0);
 				}
 				VGA_SetCGA4Table(
 					vga.attr.palette[vga.tandy.color_select&0xf],
@@ -1047,8 +1047,8 @@ static void PCJr_FindMode()
 static void TandyCheckLineMask(void ) {
 	if ( vga.tandy.extended_ram & 1 ) {
 		vga.tandy.line_mask = 0;
-	} else if ( vga.tandy.mode_control & 0x2) {
-		vga.tandy.line_mask |= 1;
+	} else if (is(vga.tandy.mode_control, b1)) {
+		set(vga.tandy.line_mask, b0);
 	}
 	if ( vga.tandy.line_mask ) {
 		vga.tandy.line_shift = 13;
@@ -1068,8 +1068,10 @@ static void write_tandy_reg(uint8_t val)
 			vga.tandy.mode_control=val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
-			if (val&0x8) vga.attr.disabled &= ~1;
-			else vga.attr.disabled |= 1;
+			if (is(val, b3))
+				clear(vga.attr.disabled, b0);
+			else
+				set(vga.attr.disabled, b0);
 		} else {
 			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
 		}
@@ -1109,11 +1111,13 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
-		val &= 0x3f; // only bits 0-6 are used
+		clear(val, b7 | b6); // only bits 0-5 are used
 		if (vga.tandy.mode_control ^ val) {
 			vga.tandy.mode_control = val;
-			if (val&0x8) vga.attr.disabled &= ~1;
-			else vga.attr.disabled |= 1;
+			if (is(val, b3))
+				clear(vga.attr.disabled, b0);
+			else
+				set(vga.attr.disabled, b0);
 			TandyCheckLineMask();
 			VGA_SetBlinking(val & 0x20);
 			TANDY_FindMode();
