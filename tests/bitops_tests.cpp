@@ -279,6 +279,20 @@ TEST(bitops, bits_not_too_wide_for_dword)
 	EXPECT_TRUE(bit::is(reg, b8 | b24 | b31));
 }
 
+// Retain operations
+TEST(bitops, retain)
+{
+	// Retain a positive bit, with surrounding other bits
+	uint8_t reg = (b0 | b1 | b2);
+	bit::retain(reg, b1);
+	EXPECT_EQ(reg, b1);
+
+	// Retain a negative bit, with surrounding other bits
+	reg = (b0 | b1 | b2 | b3 /*| b4*/ | b5 | b6 | b7);
+	bit::retain(reg, b4);
+	EXPECT_EQ(reg, 0);
+}
+
 // Masking operations
 TEST(bitops, masking)
 {
