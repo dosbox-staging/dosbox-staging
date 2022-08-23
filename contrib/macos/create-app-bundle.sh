@@ -10,7 +10,7 @@ set -x
 
 version=$(git describe --abbrev=5)
 #opt=/usr/local/opt
-dst=dist/dosbox-staging.app/Contents/
+dst="dist/DOSBox Staging.app/Contents/"
 
 # Generate icon
 make -C contrib/icons/ dosbox-staging.icns
@@ -43,6 +43,6 @@ sed -i -e "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       "$dst/SharedSupport/README
 ln -s /Applications dist/
 
 hdiutil create \
-    -volname "dosbox-staging" \
+    -volname "DOSBox Staging" \
     -srcfolder dist \
     -ov -format UDZO "dosbox-staging $version.dmg"

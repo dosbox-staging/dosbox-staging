@@ -299,10 +299,10 @@ jobs:
         run: |
           ln -s /Applications dist/
 
-          codesign -s "-" dist/dosbox-staging.app --force --deep -v
+          codesign -s "-" "dist/DOSBox Staging.app" --force --deep -v
 
           hdiutil create \
-              -volname "dosbox-staging" \
+              -volname "DOSBox Staging" \
               -srcfolder dist \
               -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
 
