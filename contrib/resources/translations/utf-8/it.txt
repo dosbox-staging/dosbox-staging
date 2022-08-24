@@ -179,18 +179,41 @@ provare ed impostare in base al gioco.
 .
 :CONFIG_VESA_MODES
 Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
-  compatible   Una selezione su misura che massimizza la compatibilità con i
-               giochi. È consigliato insieme a 4 o 8 MB di memoria video.
+  compatible   Selezione su misura che massimizza la compatibilità con i giochi
+               È consigliato insieme a 4 o 8 MB di memoria video.
+  halfline     Supporta la modalità VESA 2.0 a mezza linea a bassa risoluzione
+               utilizzata da Extreme Assault. Utilizzare solo se necessario,
+               in quanto non è compatibile con S3.
   all          Offre tutte le modalità per una data dimensione della memoria
                video, tuttavia alcuni giochi potrebbero non utilizzarle
                correttamente (sfarfallio) o potrebbe essere necessaria più
                memoria di sistema (mem = ).
+.
+:CONFIG_SPEED_MODS
+Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
+è noto per esserne influenzato. Se trovi un gioco che fallisce quando questa
+impostazione è impostata su 'true', segnala il bug nel repository del progetto,
+in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
 join      : le combina in un'unica grande sezione (comportamento legacy).
 overwrite : usa l'ultima incontrata, come le altre impostazioni di
             configurazione.
+.
+:CONFIG_AUTOMOUNT
+Monta le cartelle 'drives/[c]' come unità all'avvio, dove [c] è una lettera di
+unità in formato minuscolo da 'a' a 'y'. La cartella 'drives' può essere fornita
+in relazione alla directory corrente o tramite le risorse integrate nel
+pacchetto di rilascio.
+Possono essere fornite le impostazioni di montaggio dell'unità utilizzando un
+file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
+  [drive]
+  type    = dir, overlay, floppy, o cdrom
+  label   = etichetta_personalizzata
+  path    = percorso di ricerca eseguibili, cioè: path = %%path%%;c:\tools
+  override_drive = monta invece la cartella su questa unità (predefinito vuoto)
+  verbose = true o false
 .
 :CONFIG_STARTUP_VERBOSITY
 Determina il livello di verbosità prima di visualizzare il programma:
@@ -199,7 +222,7 @@ high        |           sì           |         sì
 low         |           no           |         sì
 quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una cartella,
-               (es. dosbox run.bat), altrimenti sarà impostato su 'high'
+            |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
 :CONFIG_FRAMESKIP
 Determina il numero di fotogrammi saltati da DOSBox prima di disegnarne uno.
@@ -234,9 +257,10 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
   colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
   colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
-È possibile impostare colori personalizzati specificando 16 codici colore
-esadecimali a 6 bit separati da spazi 
-(es. nero è 000000, bianco è 3f3f3f, rosso è 3f0000).
+  dga16:         Versione moderna della tavolozza CGA, con contrasto ridotto.
+È possibile impostare colori personalizzati specificando 16 valori di colore
+separati da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
+#ff0000 per rosso), o triplette RGB decimali (es. (255, 0, 255) per magenta).
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
@@ -329,6 +353,12 @@ ritardi nel suono.
 :CONFIG_NEGOTIATE
 Consenti al driver audio di sistema di negoziare (possibilmente) le migliori
 impostazioni di frequenza e dimensione dei blocchi.
+.
+:CONFIG_COMPRESSOR
+Abilita il compressore di livellamento automatico sul canale master per evitare
+il ritaglio (clipping) dell'uscita audio:
+  off:  Disabilita il compressore.
+  on:   Abilita il compressore (predefinito).
 .
 :CONFIG_CROSSFEED
 Imposta il crossfeed a livello globale su tutti i canali stereo per l'ascolto
