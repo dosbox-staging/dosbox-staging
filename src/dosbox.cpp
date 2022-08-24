@@ -853,29 +853,38 @@ void DOSBOX_Init() {
 	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
 	Pstring->Set_help(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
-	        "  auto:  Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
-	        "         Use the filter of this Sound Blaster model.\n"
-	        "  off:   Don't filter the output.\n");
+	        "             Use the filter of this Sound Blaster model.\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  One or two custom filters in the following format:\n"
+	        "               TYPE ORDER FREQ\n"
+	        "             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),\n"
+	        "             ORDER is the order of the filter from 1 to 16 (1st order\n"
+	        "             results in 6dB/oct slope, 2nd order in 12dB/oct, etc.), and\n"
+	        "             FREQ is the cutoff frequency in Hz. Examples:\n"
+	        "                lpf 2 12000\n"
+	        "                hpf 3 120 lfp 1 6500");
 
 	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, true);
 	Pbool->Set_help("Force the Sound Blaster filter to be always on "
 					"(disallow programs from turning the filter off).");
 
 	Pstring = secprop->Add_string("opl_filter", when_idle, "auto");
-	Pstring->Set_help("Type of filter to emulate for the Sound Blaster OPL output:\n"
-	                  "  auto:  Use the appropriate filter determined by 'sbtype' (default).\n"
-	                  "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
-	                  "         Use the filter of this Sound Blaster model.\n"
-	                  "  off:   Don't filter the output.");
-
-	const char *filter_on_or_off[] = {"on", "off", 0};
+	Pstring->Set_help(
+	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
+	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
+	        "             Use the filter of this Sound Blaster model.\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = secprop->Add_string("cms_filter", when_idle, "on");
-	pstring->Set_help("Filter for the Sound Blaster CMS output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
-	pstring->Set_values(filter_on_or_off);
+	pstring->Set_help(
+	        "Filter for the Sound Blaster CMS output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
@@ -899,10 +908,11 @@ void DOSBOX_Init() {
 	pstring->Set_values(pcspeaker_models);
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
-	pstring->Set_help("Filter for the PC Speaker output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
-	pstring->Set_values(filter_on_or_off);
+	pstring->Set_help(
+	        "Filter for the PC Speaker output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = secprop->Add_string("zero_offset", deprecated, "");
 	pstring->Set_help(
@@ -920,14 +930,18 @@ void DOSBOX_Init() {
 	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
 
 	Pstring = secprop->Add_string("tandy_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the Tandy synth output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
+	Pstring->Set_help(
+	        "Filter for the Tandy synth output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	Pstring = secprop->Add_string("tandy_dac_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the Tandy DAC output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
+	Pstring->Set_help(
+	        "Filter for the Tandy DAC output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output."
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, true);
@@ -941,9 +955,11 @@ void DOSBOX_Init() {
 	pstring->Set_values(lpt_dac_types);
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
-	pstring->Set_help("Filter for the LPT DAC audio device(s):\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
+	pstring->Set_help(
+	        "Filter for the LPT DAC audio device(s):\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// Deprecate the overloaded Disney setting
 	Pbool = secprop->Add_bool("disney", deprecated, false);
@@ -956,14 +972,17 @@ void DOSBOX_Init() {
 	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
 
 	Pstring = secprop->Add_string("ps1audio_filter", when_idle, "on");
-	Pstring->Set_help("Filter for the PS/1 Audio synth output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
+	Pstring->Set_help(
+	        "Filter for the PS/1 Audio synth output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.]n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	Pstring = secprop->Add_string("ps1audio_dac_filter", when_idle, "on");
 	Pstring->Set_help("Filter for the PS/1 Audio DAC output:\n"
-	                  "  on:   Filter the output (default).\n"
-	                  "  off:  Don't filter the output.");
+	                  "  on:        Filter the output (default).\n"
+	                  "  off:       Don't filter the output.\n"
+	                  "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// Joystick emulation
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
