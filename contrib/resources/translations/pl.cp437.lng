@@ -7,13 +7,13 @@ Numer monitora do wyswietlania obrazu; wartosci zaleza od systemu operacyjnego
 i jego ustawien.
 .
 :CONFIG_FULLRESOLUTION
-Rozdzielczosc na pelnym ekranie: 'original', 'desktop', lub rozdzielczosc,
+Rozdzielczosc na pelnym ekranie: 'original', 'desktop' lub rozdzielczosc,
 np. 1024x768.
 .
 :CONFIG_WINDOWRESOLUTION
 Rozmiar okna w trybie okienkowym:
   default:   Wybiera najlepszy na podstawie ustawien systemu.
-  small, medium, lub large (albo s, m, l):
+  small, medium lub large (albo s, m, l):
              Rozmiar wzgledem pulpitu (maly, sredni, duzy).
   <custom>:  Skalowanie okna do danej rozdzielczosci podanej jako XxY.
              Przyklad: 1024x768.
@@ -120,7 +120,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego wlaczenie.
 .
 :CONFIG_LANGUAGE
-Jezyk emulatora: de, en, es, fr, it, pl, lub ru.
+Jezyk emulatora: de, en, es, fr, it, pl lub ru.
 Uwaga: Ustawienie ma pierwszenstwo przed zmienna srodowiskowa 'LANG'. Pliki
 tlumaczen dla poszczeg¢lnych jezyk¢w znajduja sie w dostarczonym katalogu
 'resources/translations'.
@@ -176,7 +176,7 @@ sie w aktualnym katalogu, w przeciwnym razie uzywany jest katalog z zasob¢w
 emulatora. Dodatkowe ustawienia moga byc podane w formie pliku [c].conf,
 znajdujacego sie tam, gdzie montowany katalog, z zawartoscia jak ponizej:
   [drive]
-  type    = dir, overlay, floppy, lub cdrom
+  type    = dir, overlay, floppy lub cdrom
   label   = etykieta_dysku
   path    = ustawienia sciezki wyszukiwania, np. path = %%path%%;c:\tools
   override_drive = nadpisanie litery dysku (domyslnie puste)
@@ -232,12 +232,12 @@ Skaler do powiekszania obrazu o niskiej rozdzielczosci. Dodanie 'forced'
 spowoduje uzycie skalera nawet wtedy, kiedy rezultaty moga byc
 niezadowalajace.
 Niekt¢re skalery moga uzyc obszaru czarnej ramki wok¢l obrazu. Jesli jest to
-niepozadane, uzyj innego skalera, lub wlacz opcje 'fullresolution'.
+niepozadane, uzyj innego skalera lub wlacz opcje 'fullresolution'.
 .
 :CONFIG_GLSHADER
 Albo 'none', albo nazwa shadera GLSL. Dziala tylko z wyjsciem OpenGL. Mozna
 podac sciezke bezwzgledna, nazwe pliku w podkatalogu 'shaders' katalogu z
-konfiguracja, lub nazwe jednego z wbudowanych shader¢w:
+konfiguracja lub nazwe jednego z wbudowanych shader¢w:
   advinterp2x, advinterp3x, advmame2x, advmame3x,
   crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
   scan2x, scan3x, tv2x, tv3x, sharp (domyslny).
@@ -382,7 +382,7 @@ Opcjonalny parametr to glosnosc w procentach, od 1 do 100, np. podanie
 'soundfont.sf2 50' sciszy glosnosc instrument¢w o polowe.
 .
 :CONFIG_FSYNTH_CHORUS
-Efekt 'chorus': auto', 'on', 'off', lub ustawienia uzytkownika.
+Efekt 'chorus': auto', 'on', 'off' lub ustawienia uzytkownika.
 Ustawienia uzytkownika wymagaja podania wszystkich 5 parametr¢w,
 oddzielonych spacjami, zachowujac kolejnosc. Sa to:
 voice-count level speed depth modulation-wave, gdzie:
@@ -393,12 +393,12 @@ voice-count level speed depth modulation-wave, gdzie:
   modulation-wave:  'sine' lub 'triangle'.
   Przyklad: chorus = 3 1.2 0.3 8.0 sine
 Uwaga: Mozna wylaczyc efekt 'chorus' z syntetyzatora FluidSynth i
-w zamian wlaczyc efekt w mikserze, lub pozwolic obydwu dzialac
+w zamian wlaczyc efekt w mikserze lub pozwolic obydwu dzialac
 jednoczesnie. Czy bedzie to brzmialo dobrze, zalezy od plik¢w
 SoundFont i ustawien efektu 'chorus'.
 .
 :CONFIG_FSYNTH_REVERB
-Efekt 'reverb': auto', 'on', 'off', lub ustawienia uzytkownika.
+Efekt 'reverb': auto', 'on', 'off' lub ustawienia uzytkownika.
 Ustawienia uzytkownika wymagaja podania wszystkich 4 parametr¢w,
 oddzielonych spacjami, zachowujac kolejnosc. Sa to:
 room-size damping width level, gdzie:
@@ -408,7 +408,7 @@ room-size damping width level, gdzie:
   level:      wartosc dziesietna od 0.0 do 1.0
   Przyklad: reverb = 0.61 0.23 0.76 0.56
 Uwaga: Mozna wylaczyc efekt 'reverb' z syntetyzatora FluidSynth i
-w zamian wlaczyc efekt w mikserze, lub pozwolic obydwu dzialac
+w zamian wlaczyc efekt w mikserze lub pozwolic obydwu dzialac
 jednoczesnie. Czy bedzie to brzmialo dobrze, zalezy od plik¢w
 SoundFont i ustawien efektu 'reverb'.
 .
@@ -649,7 +649,7 @@ Dla urzadzenia 'mouse' (mysz szeregowa):
     wheel: 3-przyciskowa z rolka
     msm:   3-przyciskowa, 'Mouse Systems Mouse'
     2btn+msm, 3btn+msm, wheel+msm : autoselekcja
-  rate, moze byc normal lub smooth (wieksza czestotliwosc pr¢bkowania, niz
+  rate, moze byc normal lub smooth (wieksza czestotliwosc pr¢bkowania niz
     mozliwa do uzyskania na rzeczywistym sprzecie).
    Wartosci domyslne to type:wheel+msm rate:smooth
 Dla urzadzenia 'direct' (bezposredni dostep do portu COM gospodarza):
@@ -682,7 +682,7 @@ Wlaczenie emulacji pamieci XMS (rozszerzonej).
 :CONFIG_EMS
 Wlaczenie emulacji pamieci EMS (stronicowanej). Domyslne ustawienie ('true')
 oferuje najwieksza kompatybilnosc, ale niekt¢re aplikacje moga dzialac lepiej
-z innymi wartosciami, lub wymagac wylaczenia pamieci EMS zeby w og¢le dzialac.
+z innymi wartosciami lub wymagac wylaczenia pamieci EMS zeby w og¢le dzialac.
 .
 :CONFIG_UMB
 Wlaczenie emulacji pamieci UMB (g¢rnej).
@@ -1078,7 +1078,7 @@ Skladnia:
 
 Gdzie:
   [color=white]DYSK[reset]      litera dysku, pod kt¢ra obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
-  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO, lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
   [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
   [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcja -size [color=white]GEOMETRIA[reset]:
             bajt¢w-na-sektor,sektor¢w-na-glowice,glowice,cylindry
@@ -1298,9 +1298,9 @@ Skladnia:
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  uklad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
   [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wiecej
-              znak¢w graficznych, niz 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (jezyk
+              znak¢w graficznych niz 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (jezyk
               kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
-              z symbolem euro), [color=white]852[reset] (Europa Srodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+              z symbolem euro), [color=white]852[reset] (Europa Srodkowo-Wschodnia) lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1458,7 +1458,7 @@ Skladnia:
 Gdzie:
   [color=white]DYSK[reset]      litera, pod kt¢ra katalog zostanie zamontowany: A, C, D, ...
   [color=cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
-  TYP       typ katalogu do zamontowania: dir, floppy, cdrom, lub overlay
+  TYP       typ katalogu do zamontowania: dir, floppy, cdrom lub overlay
   ROZMIAR   ile wolnego miejsca raportowac programom (kilobajty dla dyskietek,
             megabajty dla pozostalych dysk¢w)
   ETYKIETA  etykieta utworzonego dysku
@@ -1534,7 +1534,7 @@ Nie mozna mieszac sciezek wzglednych i bezwzglednych.
 
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-Katalog nakladki ('overlay') musi byc inny, niz katalog dysku.
+Katalog nakladki ('overlay') musi byc inny niz katalog dysku.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
@@ -1606,7 +1606,7 @@ Skladnia:
   [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZADZENIE[reset] [ustawienia]  (podlacz urzadzenie do portu)
 
 Gdzie:
-  [color=cyan]URZADZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], lub [color=cyan]DISABLED[reset]
+  [color=cyan]URZADZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset] lub [color=cyan]DISABLED[reset]
 
   Dodatkowe opcje dla poszczeg¢lnych urzadzen:
   [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
@@ -1657,7 +1657,7 @@ Skladnia:
   [color=green]command[reset] /c (lub /init) [color=cyan]POLECENIE[reset]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset]  polecenie, program, lub gra do uruchomienia.
+  [color=cyan]POLECENIE[reset]  polecenie, program lub gra do uruchomienia.
 
 Uwagi:
   DOSBox Staging automatycznie uruchamia interpreter wiersza polecen z opcja
@@ -2492,7 +2492,7 @@ Uwagi:
 
 Przyklady:
   [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowac?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b, lub c[reset]
+  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
 .
 :SHELL_CMD_CHOICE_ABORTED
 
@@ -2531,9 +2531,9 @@ Skladnia:
   [color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]
 
 Gdzie:
-  [color=cyan]WERSJA[reset]  moze byc numerem, np. [color=cyan]5[reset], lub liczba z dwoma cyframi po kropce,
-          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset], lub [color=cyan]7.10[reset]. Alternatywnie mozna oddzielic
-          czesc ulamkowa za pomoca spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset], lub [color=cyan]7 10[reset].
+  [color=cyan]WERSJA[reset]  moze byc numerem, np. [color=cyan]5[reset] lub liczba z dwoma cyframi po kropce,
+          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset] lub [color=cyan]7.10[reset]. Alternatywnie mozna oddzielic
+          czesc ulamkowa za pomoca spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset] lub [color=cyan]7 10[reset].
 
 Uwagi:
   Raportowana wersje DOSu mozna ustawic w pliku konfiguracyjnym, w sekcji
