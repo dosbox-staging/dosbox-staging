@@ -16,13 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
-
-#include <string_view>
-using sv = std::string_view;
+#include "dos_keyboard_layout.h"
 
 #include <map>
 #include <memory>
+#include <string_view>
+using sv = std::string_view;
 
 #include "../ints/int10.h"
 #include "bios.h"
@@ -30,13 +29,11 @@ using sv = std::string_view;
 #include "callback.h"
 #include "dos_inc.h"
 #include "drives.h"
-#include "math_utils.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "regs.h"
 #include "setup.h"
 #include "string_utils.h"
-
-#include "dos_keyboard_layout.h"
 
 // The default codepage for DOS
 constexpr uint16_t default_cp_437 = 437;
