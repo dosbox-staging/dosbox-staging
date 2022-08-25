@@ -3,6 +3,10 @@ resources = [
     'freedos-cpi',
     'freedos-keyboard',
     'glshaders',
+    'mapping',
+    'mapping-freedos.org',
+    'mapping-unicode.org',
+    'mapping-wikipedia.org',
     'translations',
     'mapperfiles',
     # insert new resource subdirectory names here

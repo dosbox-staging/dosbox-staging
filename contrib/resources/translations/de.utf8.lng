@@ -1,0 +1,2637 @@
+:CONFIG_FULLSCREEN
+Starte direkt im Vollbildmodus.
+Führe INTRO aus und sieh unter Sondertasten nach, wie du die Hotkeys für die
+Fenstersteuerung findest.
+.
+:CONFIG_DISPLAY
+Nummer der zu verwendenden Anzeige; die Werte hängen vom Betriebssystem und den
+Benutzereinstellungen ab.
+.
+:CONFIG_FULLRESOLUTION
+Welche Auflösung für den Vollbildmodus verwendet werden soll: "Original",
+"Desktop" oder eine feste Größe (z.B. 1024x768).
+.
+:CONFIG_WINDOWRESOLUTION
+Bestimmt die Fenstergröße, die verwendet werden soll:
+  default:   Wähle die beste Option basierend auf deinem
+             System und anderen Einstellungen.
+  original:  Ändere die Größe des Fensters auf die Auflösung des laufenden
+             Programms.
+  resizable: Erlaub die Veränderung der Größe des DOSBox-Fensters
+             Dies ist eine experimentelle Option, funktioniert nur mit
+             output=opengl und glshader=sharp (oder "none")
+  <custom>:  Skaliere den Fensterinhalt auf die angegebenen
+             Abmessungen, im Format BxH. Zum Beispiel: 1024x768.
+             Die Skalierung wird bei output=surface nicht durchgeführt.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Legt die Größe des Darstellungsbereichs innerhalb des Fensters/Bildschirms fest:
+  fit:       Das Ansichtsfenster an das verfügbare Fenster/Bildschirm
+             anpassen (Standard).
+  <custom>:  Beschränke das Ansichtsfenster auf eine benutzerdefinierte Auflösung
+             oder einen Prozentsatz der Desktopgröße. Angegeben in BxH, N%, N.M%.
+             Beispiele: 960x720 oder 50%
+.
+:CONFIG_WINDOW_POSITION
+Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
+  auto:      Lass den Fenstermanager die Position bestimmen.
+  <custom>:  Lege die Fensterposition im Format X,Y fest. Zum Beispiel: 250,100
+             0,0 ist die obere linke Ecke des Bildschirms.
+.
+:CONFIG_WINDOW_DECORATIONS
+Legt fest, ob der Rahmen im Fenster-Modus angezeigt werden soll.
+.
+:CONFIG_TRANSPARENCY
+Stelle die Transparenz des DOSBox Staging-Bildschirms ein.
+Von 0 (keine Transparenz) bis 90 (hohe Transparenz).
+.
+:CONFIG_MAX_RESOLUTION
+Schränkt die Auflösung des Darstellungsbereichs innerhalb des
+Fensters/Bildschirms ein:
+  auto:      Der Darstellungsbereich füllt das Fenster/den Bildschirm
+             aus (Standard).
+  <custom>:  Lege die maximale Auflösung des Darstellungsbereichs im Format
+             WxH fest.
+             Zum Beispiel: 960x720
+.
+:CONFIG_HOST_RATE
+Lege die Aktualisierungsrate des Hosts fest:
+  auto:      Verwende SDI-Raten oder VRR-Raten im Vollbildmodus auf einem
+             Bildschirm mit hoher Bildwiederholrate.
+  sdi:       Verwende die Raten der seriellen Geräteschnittstelle (SDI),
+             ohne weitere Anpassungen.
+  vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
+             (Best-Practice für VRR-Anzeigen).
+  <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
+             größer als 23.000 an.
+.
+:CONFIG_VSYNC
+Vertikale Synchronisations-Einstellung nicht implementiert
+(Einstellung wird ignoriert).
+.
+:CONFIG_VSYNC_SKIP
+Anzahl der Mikrosekunden, die das Rendering verzögert sein darf, bevor der
+nächste Frame übersprungen wird.
+.
+:CONFIG_PRESENTATION_MODE
+Lege die Aktualisierungsrate des Hosts fest:
+  auto:      Verwende SDI-Raten oder VRR-Raten im Vollbildmodus auf einem
+             Bildschirm mit hoher Bildwiederholrate.
+  sdi:       Verwende die Raten der seriellen Geräteschnittstelle (SDI),
+             ohne weitere Anpassungen.
+  vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
+             (Best-Practice für VRR-Anzeigen).
+  <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
+             größer als 23.000 an.
+.
+:CONFIG_OUTPUT
+Welches Videosystem soll für die Ausgabe verwendet werden.
+.
+:CONFIG_TEXTURE_RENDERER
+Wähle einen Renderer-Treiber, wenn du einen Textur-Ausgabemodus verwendest.
+Verwende texture_renderer=auto für eine automatische Auswahl.
+.
+:CONFIG_CAPTURE_MOUSE
+Wähle eine Methode zur Maussteuerung:
+   onclick:        Die Maus wird beim ersten Klick innerhalb des Fensters
+                   umgeschaltet.
+   onstart:        Die Maus wird sofort beim Start umgeschaltet
+                   (ähnlich wie beim echten DOS).
+   seamless:       Die Maus kann frei in das und aus dem DOSBox
+                   Fenster bewegt werden.
+   nomouse:        Die Maus wird deaktiviert und der Mauszeiger versteckt,
+                   ohne jegliche Eingabe an das ausgeführte Programm.
+Wähle, wie Mittelklicks behandelt werden (zweiter Parameter):
+   middlegame:     Mittelklicks werden an das ausgeführte Programm gesendet
+                   (Strg+F10 hebt die Umschaltung der Maus auf).
+   middlerelease:  Mittelklicks verwenden, um die Maus umzuschalten
+                   (nicht mehr an das ausgeführte Programm senden). Allerdings
+                   werden Mittelklicks jedoch im Vollbildmodus an das ausgeführte
+                   Programm gesendet oder wenn "seamless" eingestellt ist.
+                   Mit Strg+F10 wird die Maus auch wieder umgeschaltet.
+Standardwerte (falls nicht vorhanden oder falsch): seamless middlerelease
+.
+:CONFIG_SENSITIVITY
+Maus-Empfindlichkeit. Der optionale zweite Parameter gibt die vertikale
+Empfindlichkeit an (z.B. 100,-50).
+.
+:CONFIG_RAW_MOUSE_INPUT
+Aktiviere diese Einstellung, um die Mausbeschleunigungs- und
+Empfindlichkeitseinstellungen deines Betriebssystems zu umgehen. Dies
+funktioniert im Vollbildmodus oder wenn die Maus im Fenstermodus erfasst wird.
+.
+:CONFIG_WAITONERROR
+Wartet bevor die Konsole geschlossen wird, wenn Dosbox eine Fehlermeldung anzeigt.
+.
+:CONFIG_PRIORITY
+Prioritätsstufen für Dosbox. Der zweite Eintrag hinter dem Komma ist für den
+Fall, dass die Dosbox nicht fokussiert/minimiert ist.
+Pause ist nur für den zweiten Eintrag gültig.
+.
+:CONFIG_MUTE_WHEN_INACTIVE
+Schalte den Ton stumm, wenn das Fenster inaktiv ist.
+.
+:CONFIG_PAUSE_WHEN_INACTIVE
+Emulation anhalten, wenn das Fenster inaktiv ist.
+.
+:CONFIG_MAPPERFILE
+Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
+Resetmapper funktioniert nur mit dem Standardwert.
+.
+:CONFIG_SCREENSAVER
+Verwende "allow" oder "block" um die SDL_VIDEO_ALLOW_SCREENSAVER
+Umgebungsvariable zu überschreiben (die normalerweise den Betriebssystem-
+Bildschirmschoner blockiert während DOSBox läuft.
+.
+:CONFIG_LANGUAGE
+Wähle eine andere Sprachdatei aus.
+.
+:CONFIG_MACHINE
+Der Typ der Maschine, die DOSBox versucht zu emulieren.
+.
+:CONFIG_CAPTURES
+Verzeichnis, in dem Aufzeichnungen wie wave, midi und screenshots gespeichert
+werden.
+.
+:CONFIG_MEMSIZE
+Die Menge an Speicher, die DOSBox emuliert, in Megabyte.
+Dieser Wert wird am besten auf dem Standardwert belassen, um Probleme mit
+einigen Programmen zu vermeiden, obwohl einige wenige Programme einen höheren
+Wert benötigen könnten. Es gibt generell keinen Geschwindigkeitsvorteil,
+wenn du diesen Wert erhöhst.
+.
+:CONFIG_MCB_FAULT_STRATEGY
+Wie durch Software beschädigte Speicherkettenblöcke behandelt werden sollten:
+  deny:    Beenden (und melden), wenn Fehler entdeckt werden (Standard).
+  repair:  Repariere (und melde) Fehler mit Hilfe benachbarter Kettenblöcke.
+  report:  Melde Fehler, aber fahre ansonsten so fort, als ob nichts gewesen
+           wäre.
+  allow:   Erlaube es, dass Fehler nicht gemeldet werden (Hardwareverhalten).
+Die Standardeinstellung (deny) wird empfohlen, es sei denn, ein Spiel schlägt
+mit MCB-Fehlern fehl.
+.
+:CONFIG_VMEMSIZE
+Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den
+Standardwert pro Videoadapter.
+.
+:CONFIG_DOS_RATE
+Passe die Bildrate des emulierten Videomodus in Hz an:
+default:  Der DOS-Videomodus bestimmt die Rate (empfohlen).
+host:     Passe die DOS-Rate an die Host-Rate an (siehe Einstellung "host_rate").
+<value>:  Setzt die Rate auf einen exakten Wert, zwischen 24.000 und
+1000.000 (Hz). Wir empfehlen die "Standard"-Rate; andernfalls kannst du sie für
+jedes Spiel einzeln testen und einstellen.
+.
+:CONFIG_VESA_MODES
+Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
+  compatible   Eine maßgeschneiderte Auswahl, die die Kompatibilität der
+               Programme maximiert. Dies wird zusammen mit 4 oder 8 MB
+               Videospeicher empfohlen.
+  all          Bietet alle Modi für eine bestimmte Videospeichergröße, allerdings
+               können einige Programme sie nicht richtig nutzen (Flackern) oder
+               benötigen mehr Systemspeicher (mem = ), um sie zu nutzen.
+.
+:CONFIG_SPEED_MODS
+Erlaube Änderungen, die die Leistung verbessern. Derzeit sind keine Programme
+bekannt, die davon betroffen sind. Bitte melde dem Projekt einen Bug, wenn du
+ein Programm findest, das nicht funktioniert, wenn diese Option auf "true"
+gesetzt ist, damit wir es hier auflisten können.
+.
+:CONFIG_AUTOEXEC_SECTION
+Wie Autoexec-Abschnitte aus mehreren Konfigurationsdateien behandelt werden.
+join      : Fasst sie in einem großen Abschnitt zusammen (altes Verhalten).
+overwrite : Verwende die zuletzt gefundene, wie bei anderen conf-Einstellungen.
+.
+:CONFIG_AUTOMOUNT
+Bindet Verzeichnisse 'drives/[c]' beim Start als Laufwerke ein, wobei [c] für 
+ein klein geschriebener Laufwerksbuchstabe von a bis y ist. Der Ordner "drives"
+kann relativ zum aktuellen Verzeichnis oder über die integrierten Ressourcen
+angegeben werden. Die Mount-Einstellungen können optional in einer [c].conf-
+Datei in dem Verzeichnis des Laufwerks mit folgendem Inhalt angegeben werden:
+  [laufwerk]
+  type    = dir, overlay, floppy oder cdrom
+  label   = Laufwerksbezeichnung
+  path    = Pfadangabe, z.B.: path = %%path%%;c:\tools
+  override_drive = das Verzeichnis stattdessen auf dieses Laufwerk mounten
+                   (standardmäßig leer)
+  verbose = true oder false
+.
+:CONFIG_STARTUP_VERBOSITY
+Bestimmt die Ausführlichkeit der Anzeigen, bevor das Programm angezeigt wird:
+Verbosität  |Willkommen| Frühe Ausgabe
+high        |   ja     |    ja
+low         |  nein    |    ja
+quiet       |  nein    |   nein
+auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden,
+                    sonst "high".
+.
+:CONFIG_FRAMESKIP
+Wie viele Frames DOSBox überspringt, bevor es einen anzeigt.
+.
+:CONFIG_ASPECT
+Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu
+erzeugen, das dem der ursprünglichen Monitore entspricht, für die die Mehrheit
+der DOS Programme entwickelt wurden. Diese Einstellung betrifft nur Videomodi,
+die nicht-quadratische Pixel verwenden, wie 320x200 oder 640x400; während Modi
+mit quadratischen Pixeln, wie 640x480 und 800x600, unverändert angezeigt werden.
+.
+:CONFIG_MONOCHROME_PALETTE
+Wähle die Standard-Palette für die monochrome Darstellung.
+Funktioniert nur bei der Emulation von hercules oder cga_mono.
+Du kannst mit F11 die verfügbaren Farben durchschalten.
+.
+:CONFIG_CGA_COLORS
+Legt die Interpretation der CGA-RGBI-Farben fest. Betrifft alle Maschinentypen,
+die in der Lage sind CGA-Grafiken oder besser anzeigen können.
+Integrierte Presets:
+  default:       Klassische CGA-Palette, wie sie von VGA-Adaptern emuliert
+                 wird (Standard).
+  tandy [BL]:    Emulation eines idealisierten Tandy-Monitors mit einstellbarem
+                 Braun-Wert (0 - rot, 50 - braun, 100 - dunkelgelb;
+                 Standardwert ist 50).
+  tandy-warm:    Emulation der tatsächlichen Farbausgabe eines unbekannten
+                 Tandy-Monitors.
+  ibm5153 [C]:   Emulation der Farbausgabe eines IBM 5153 Monitors mit
+                 einer Kontraststeuerung, die nur nicht helle Farben abdunkelt
+                 (0 bis 100; Standardeinstellung ist 100).
+  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
+                 Paletten, die von den Amiga-Portierungen der Sierra AGI
+                 Programme verwendet werden (siehe Handbuch für weitere Details).
+  agi-amigaish:  Eine Mischung aus EGA- und Amiga-Farben, die der Sarien
+                 AGI-Interpreter verwendet.
+  scumm-amiga:   Palette, die von den Amiga-Portierungen der EGA-Spiele von
+                 LucasArts verwendet wurde.
+  colodore:      Vom Commodore 64 inspirierte Farben, die auf der Colodore-
+                 Palette basieren.
+  colodore-sat:  Colodore-Palette mit 20% mehr Sättigung.
+  dga16:         Eine moderne Interpretation der klassischen CGA-Palette mit
+                 reduziertem Kontrast.
+Du kannst auch benutzerdefinierte Farben einstellen, indem du 16 durch
+Leerzeichen oder Kommata getrennte Farbwerte angibst, entweder als 3- oder
+6-stellige Hex-Codes (z. B. #f00 oder #ff0000 für Rot) oder als dezimale
+RGB-Tripletts (z. B. (255, 0, 255) für Magenta).
+.
+:CONFIG_SCALER
+Der Scaler wird verwendet, um Modi mit niedriger Auflösung zu vergrößern/zu
+verbessern. Wenn "forced" angehängt wird, dann wird der Scaler benutzt, auch wenn
+das Ergebnis nicht gewollt sein könnte.
+Beachte, dass einige Scaler schwarze Ränder verwenden können, um das Bild
+innerhalb deiner konfigurierten Displayauflösung anzupassen. Wenn dies
+unerwünscht ist, versuche entweder einen anderen Scaler oder aktiviere die
+Ausgabe mit voller Auflösung.
+.
+:CONFIG_GLSHADER
+Entweder "none" oder ein GLSL-Shadername. Funktioniert nur mit
+OpenGL-Ausgabe.  Kann entweder ein absoluter Pfad, eine Datei
+im "glshaders" Unterverzeichnis des DOSBox
+Konfigurationsverzeichnisses, oder einer der eingebauten Shader sein:
+advinterp2x, advinterp3x, advmame2x, advmame3x,
+crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
+scan2x, scan3x, tv2x, tv3x, sharp (Standard).
+.
+:CONFIG_COMPOSITE
+Aktiviere den Composite-Modus beim Start. Die Einstellung "auto" lässt das
+Programm entscheiden.
+Hinweis: Stelle die Einstellungen unten (z.B. Farbton) mit den Composite-Hotkeys
+         ein. Lies dann die neuen Einstellungen von deiner Konsole ab und gib
+         sie hier ein.
+.
+:CONFIG_ERA
+Die Ära der Composite-Technologie. Wenn "auto", verwendet PCjr "new" und
+CGA/Tandy "old".
+.
+:CONFIG_HUE
+Erscheinungsbild der RGB-Palette. Beispiel: Verändere den Wert, bis der
+Himmel blau ist.
+.
+:CONFIG_SATURATION
+Intensität der Farben, von verwaschen bis leuchtend.
+.
+:CONFIG_CONTRAST
+Verhältnis zwischen dunklen und hellen Bereichen.
+.
+:CONFIG_BRIGHTNESS
+Helligkeit des Bildes, von dunkel bis hell.
+.
+:CONFIG_CONVERGENCE
+Konvergenz der Subpixel-Elemente, von unscharf bis scharf (nur CGA und Tandy).
+.
+:CONFIG_CORE
+CPU-Kern, der für die Emulation verwendet wird. "auto" schaltet auf dynamisch,
+wenn verfügbar und angemessen.
+.
+:CONFIG_CPUTYPE
+CPU Typ, der in der Emulation verwendet wird. "auto" ist die schnellste Wahl.
+.
+:CONFIG_CYCLES
+Anzahl der Instruktionen, die DOSBox pro Millisekunde versucht zu emulieren.
+Wenn du diesen Wert zu hoch einstellst, kommt es zu Tonaussetzern und Lags.
+"cycles" kann auf 3 Arten eingestellt werden:
+  "auto"          Versucht zu erkennen, was ein ausgeführtes Programm braucht.
+                  Das funktioniert in der Regel, kann aber bei bestimmten
+                  Programmen scheitern.
+  "fixed #number" Stellt eine feste Anzahl von Instruktionen ein. Das ist die
+                  Einstellung, die du normalerweise benötigst, wenn "auto"
+                  versagt (Beispiel: fixed 4000).
+  "max"           Wird so viele Instruktionen verwenden, wie dein System
+                  verarbeiten kann.
+.
+:CONFIG_CYCLEUP
+Anzahl der Instruktionen um welche der aktuelle Wert mit den Tastenkombinationen
+verringert/erhöht wird.
+.
+:CONFIG_CYCLEDOWN
+Wenn du ihn niedriger als 100 einstellst, wird er prozentual angezeigt.
+.
+:CONFIG_NOSOUND
+Aktiviere die Stummschaltung, der Ton wird aber trotzdem emuliert.
+.
+:CONFIG_RATE
+Mixer-Samplerate. Wenn du die Rate eines Geräts höher einstellst, wird die
+Klangqualität wahrscheinlich schlechter.
+.
+:CONFIG_BLOCKSIZE
+Mixer-Blockgröße. Größere Blöcke können stotternde Audioausgabe verhindern,
+aber der Ton wird auch mehr verzögert.
+.
+:CONFIG_PREBUFFER
+Wie viele Millisekunden Daten zusätzlich zur Blockgröße vorgehalten werden sollen.
+.
+:CONFIG_NEGOTIATE
+Erlaube dem System-Audiotreiber, die optimale Rate und Blockgröße
+so nah wie möglich an den angegebenen Werten auszuhandeln.
+.
+:CONFIG_COMPRESSOR
+Aktiviere den Auto-Leveling Kompressor auf dem Masterkanal,
+um Clipping der Audioausgabe zu verhindern:
+  off:  Deaktiviere den Kompressor.
+  on:   Aktiviere den Kompressor (Standard).
+.
+:CONFIG_CROSSFEED
+Stelle Crossfeed global auf allen Stereokanälen für das Hören über Kopfhörer ein:
+  off:         Kein Crossfeed (Standard).
+  on:          Aktiviere das Crossfeed (Stärke 40).
+  <strength>:  Stelle Crossfeed-Stärke von 0 bis 100 ein, wobei 0 kein Crossfeed
+               (aus) bedeutet und 100 volles Crossfeed (Stereo -> Mono).
+Hinweis: Du kannst Crossfeed für jede Quelle über Mixer-Befehle einstellen.
+.
+:CONFIG_REVERB
+Aktiviere den Hall global, um dem Klang ein Gefühl von Raum zu geben:
+  off:     Kein Nachhall (Standard).
+  on:      Aktiviere den Nachhall (mittlere Voreinstellung).
+  tiny:    Simuliert den Klang eines kleinen integrierten Lautsprechers in einem
+           Raum; speziell für Audiosysteme mit kleinen Lautsprechern entwickelt
+           (PC Speaker, Tandy, PS/1 Audio, und LPT Digital-Analog-Wandler).
+  small:   Verleiht ein subtiles Gefühl von Raum; gut für Spiele, die einen
+           einzigen Synth-Kanal (normalerweise OPL) für Musik und Soundeffekte
+           verwenden.
+  medium:  Mittlere Raumvoreinstellung, die gut mit einer Vielzahl von Spielen
+           funktioniert.
+  large:   Die Voreinstellung "Großer Saal" wird für Spiele empfohlen, die
+           getrennte Kanäle für Musik und digitales Audio verwenden.
+  huge:    Eine stärkere Variante der Voreinstellung "Große Saal"; funktioniert
+           sehr gut in einigen Spielen mit stimmungsvollen Soundtracks.
+Hinweis: Du kannst den Hallpegel für jeden Kanal über Mixer-Befehle anpassen.
+.
+:CONFIG_CHORUS
+Aktiviere den Chorus global, um dem Klang Räumlichkeit zu verleihen:
+  off:     Kein Chorus (Standard).
+  on:      Chorus aktivieren (Voreinstellung 'normal').
+  light:   Ein leichter Chorus-Effekt (besonders geeignet für
+           Synthesizer-Musik, die viel weißes Rauschen enthält).
+  normal:  Normaler Chorus, der mit einer Vielzahl von Programmen gut
+           funktioniert.
+  strong:  Ein offensichtlicher und vordergründiger Chorus-Effekt.
+Hinweis: Du kannst die Chorus-Pegel der einzelnen Quellen über Mixer-
+         Befehle anpassen.
+.
+:CONFIG_MIDIDEVICE
+Gerät, das die MIDI-Daten empfangen wird (von der emulierten MIDI
+Schnittstelle - MPU-401). Wähle eine der folgenden Möglichkeiten:
+"fluidsynth", um den eingebauten MIDI-Synthesizer zu verwenden. Siehe den
+       [fluidsynth] Abschnitt für die detaillierte Konfiguration.
+"mt32", um den eingebauten Roland MT-32 Synthesizer zu verwenden.
+       Siehe den Abschnitt [mt32] für eine detaillierte Konfiguration.
+"auto", um den ersten funktionierenden externen MIDI-Player zu verwenden.
+Dies kann ein Software-Synthesizer oder ein physisches Gerät sein.
+.
+:CONFIG_MIDICONFIG
+Konfigurationsoptionen für das ausgewählte MIDI-Interface.
+Dies ist normalerweise die ID oder der Name des MIDI-Synthesizers, den du
+benutzen willst (finde die id/den Namen mit dem DOS Befehl "mixer /listmidi").
+- Diese Option hat keinen Effekt, wenn du die eingebauten Synthesizer benutzt
+  (mididevice = fluidsynth oder mt32).
+- Wenn du ALSA benutzt, benutze den Linux-Befehl "aconnect -l", um die offenen
+  MIDI Ports aufzulisten und einen auszuwählen (zum Beispiel "midiconfig=14:0"
+  für Sequenzer-Client 14, Port 0).
+- Wenn du einen realen Roland MT-32 mit Revision 0 PCB verwendest,
+  kann es sein, dass die Hardware eine Verzögerung benötigt, um den
+  Puffer nicht überläuft. In diesem Fall musst du "delaysysex" hinzufügen,
+  zum Beispiel: "midiconfig=2 delaysysex".
+Siehe das README/Manual für weitere Details.
+.
+:CONFIG_MPU401
+Typ des zu emulierenden MPU-401.
+.
+:CONFIG_SOUNDFONT
+Pfad zu einer SoundFont-Datei im .sf2-Format. Du kannst einen
+absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2-Datei in
+dem Verzeichnis "soundfonts" in deinem DOSBox-Konfigurations-
+Verzeichnis.
+Hinweis: Die optionale Lautstärkeskalierung in Prozent nach dem Dateinamen
+wird nicht mehr unterstützt. Bitte verwende stattdessen einen Mixer-Befehl,
+um die Lautstärke des FluidSynth-Audiokanals zu ändern, z. B:
+  MIXER FSYNTH 200
+.
+:CONFIG_FSYNTH_CHORUS
+Chorus-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
+Wenn du benutzerdefinierte Werte verwendest:
+  Alle fünf Werte müssen in der richtigen Reihenfolge und durch Leerzeichen
+  getrennt angegeben werden.
+  Sie lauten: voice-count, level, speed, depth und modulation-wave, wobei:
+  - voice-count eine ganze Zahl zwischen 0 und 99 ist
+  - level eine Dezimalzahl zwischen 0.0 und 10.0 ist
+  - speed eine Dezimalzahl in Hz von 0.1 bis 5.0 ist
+  - depth eine Dezimalzahl von 0.0 bis 21.0 ist
+  - modulation-wave ist entweder "sine" oder "triangle"
+  Zum Beispiel: chorus = 3 1.2 0.3 8.0 sine
+.
+:CONFIG_FSYNTH_REVERB
+Reverb-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
+Wenn du benutzerdefinierte Werte verwendest:
+  Alle fünf Werte müssen in der richtigen Reihenfolge und durch Leerzeichen
+  getrennt angegeben werden.
+  Sie lauten: room-size, damping, width und level, wobei:
+  - room-size eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  - damping eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  - width eine Dezimalzahl zwischen 0.0 to 100.0 ist
+  - level eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  Zum Beispiel: reverb = 0.61 0.23 0.76 0.56
+Hinweis: Du kannst den FluidSynth-Hall deaktivieren und stattdessen den
+Mixer-Hall auf dem FluidSynth-Kanal aktivieren, oder
+beide Halleffekte gleichzeitig aktivieren. Ob dies
+gut klingt hängt vom SoundFont und den verwendeten Hall-Einstellungen,
+die verwendet werden, ab.
+.
+:CONFIG_FSYNTH_FILTER
+Filter für das FluidSynth-Ausgangssignal:
+  off:       Die Ausgabe nicht filtern (Standard).
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
+.
+:CONFIG_MODEL
+Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt
+CM-32L wenn beide ROM-Sets vorhanden sind. Für frühe Sierra Programme und Dune 2
+wird die Verwendung von "mt32" empfohlen, während neuere Programme typischerweise
+die zusätzlichen Soundeffekte des CM-32L nutzen (verwende "auto" oder "cm32l")
+.
+:CONFIG_ROMDIR
+Das Verzeichnis, das ein oder beide Paare von MT-32 und/oder CM-32L ROMs enthält.
+Die Dateien müssen in Großbuchstaben benannt werden, wie folgt:
+  - MT-32 ROM Paar: MT32_CONTROL.ROM und MT32_PCM.ROM
+  - CM-32L ROM Paar: CM32L_CONTROL.ROM und CM32L_PCM.ROM
+Das Verzeichnis kann absolut oder relativ sein, oder lass es leer, um
+das "mt32-roms" Verzeichnis in deinem DOSBox Konfigurationsverzeichnis zu
+verwenden, gefolgt von der Überprüfung anderer üblicher Systemverzeichnisse.
+.
+:CONFIG_MT32_FILTER
+Filter für den Roland MT-32/CM-32L Audioausgang:
+  off:       Die Ausgabe nicht filtern (Standard).
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
+.
+:MT32_NO_SUPPORTED_MODELS
+Keine unterstützten Modelle gefunden.
+.
+:MT32_ROM_NOT_LOADED
+Momentan ist kein ROM geladen
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
+j
+.
+:MT32_ACTIVE_ROM_LABEL
+Aktives ROM : 
+.
+:MT32_SOURCE_DIR_LABEL
+Geladen von: 
+.
+:CONFIG_SBTYPE
+Typ des Sound Blasters, der emuliert werden soll. "gb" ist Game Blaster.
+.
+:CONFIG_SBBASE
+Die IO-Adresse des Sound Blasters.
+.
+:CONFIG_IRQ
+Die IRQ-Nummer des Sound Blasters.
+.
+:CONFIG_DMA
+Die DMA-Nummer des Sound Blasters.
+.
+:CONFIG_HDMA
+Die High-DMA-Nummer des Sound Blasters.
+.
+:CONFIG_SBMIXER
+Erlaube dem Sound Blaster Mixer, den DOSBox Mixer zu überschreiben.
+.
+:CONFIG_SBWARMUP
+Stummschalten des DMA-Audio nach dem Einschalten der Karte in Millisekunden.
+Dadurch werden die Knackgeräusche beim Starten vieler SB-basierter Spiele
+reduziert. Reduziere diesen Wert, wenn du feststellst, dass bei der ersten
+Wiedergabe Audio fehlt.
+.
+:CONFIG_OPLRATE
+oplrate ist veraltet. Die OPL Signale werden nun mit der Sampelrate
+        des Mixers erzeugt, um Resampling zu vermeiden.
+.
+:CONFIG_OPLMODE
+Typ der OPL-Emulation. Bei "auto" wird der Modus durch "sbtype" bestimmt.
+Alle OPL-Modi sind AdLib-kompatibel, ausser "cms".
+.
+:CONFIG_OPLEMU
+Auswahl des OPL-Emulators. "compat" bietet eine bessere Qualität,
+"nuked" ist der Standard und am genauesten (aber am CPU-intensivsten).
+.
+:CONFIG_SB_FILTER
+Filter, der für den digitalen Sound Blaster-Ausgang emuliert werden soll:
+  auto:  Verwende den Filter, der durch "sbtype" bestimmt wird (Standard).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Verwende den Filter dieses Sound Blaster-Modells.
+  off:   Filtere die Ausgabe nicht.
+Ein zweiter Parameter "always_on" kann angegeben werden, um zu verhindern,
+dass Programme den Filter ausschalten.
+(Beispiel: sbpro1 always_on)
+.
+:CONFIG_SB_FILTER_ALWAYS_ON
+Erzwinge, dass der Sound Blaster-Filter immer eingeschaltet ist
+(verhindern, dass Programme den Filter ausschalten).
+.
+:CONFIG_OPL_FILTER
+Typ des Filters, der für den Sound Blaster OPL-Ausgang emuliert werden soll:
+  auto:  Verwende den Filter, der durch "sbtype" bestimmt wird (Standard).
+  sb1, sb2, sbpro1, sbpro2, sb16:
+           Verwende den Filter dieses Sound Blaster-Modells.
+  off:   Filtere die Ausgabe nicht.
+.
+:CONFIG_CMS_FILTER
+Filter für den Sound Blaster CMS-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
+.
+:CONFIG_GUS
+Aktiviere die Gravis UltraSound Emulation.
+.
+:CONFIG_GUSBASE
+Die IO-Basisadresse des Gravis UltraSound.
+.
+:CONFIG_GUSIRQ
+Die IRQ-Nummer des Gravis UltraSound.
+.
+:CONFIG_GUSDMA
+Der DMA-Kanal des Gravis UltraSound.
+.
+:CONFIG_ULTRADIR
+Pfad zum UltraSound Verzeichnis. In diesem Verzeichnis
+sollte sich ein MIDI-Verzeichnis befinden, das
+die Patch-Dateien für die GUS-Wiedergabe enthält.
+Patch-Sets, die mit Timidity verwendet werden,
+sollten gut funktionieren.
+.
+:CONFIG_GUS_FILTER
+Filter for the Gravis UltraSound audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:CONFIG_SIDMODEL
+Modell des Chips, der auf der Innovation SSI-2001 Karte emuliert werden soll:
+ - auto:  Wählt den 6581 Chip aus.
+ - 6581:  Der Original-Chip, bekannt für seinen basslastigen und satten Charakter.
+ - 8580:  Eine spätere Revision, die der SID-Spezifikation besser entsprach.
+          Er korrigiert die DC-Vorspannung des 6581 und ist weniger anfällig für
+          Verzerrungen. Der 8580 ist eine Option auf Reproduktionskarten, wie
+          dem DuoSID.
+ - none:  Deaktiviert die Karte.
+.
+:CONFIG_SIDCLOCK
+Die Taktfrequenz des SID-Chips, die auf Nachbaukarten jumperbar ist.
+ - default: verwendet 0,895 MHz, wie auf der originalen SSI-2001 Karte.
+ - c64ntsc: verwendet 1,023 MHz, für NTSC Commodore PCs und das DuoSID.
+ - c64pal: verwendet 0,985 MHz, für PAL Commodore PCs und das DuoSID.
+ - hardsid: verwendet 1.000 MHz, verfügbar auf dem DuoSID.
+.
+:CONFIG_SIDPORT
+Die IO Port Adresse des Innovation SSI-2001.
+.
+:CONFIG_6581FILTER
+Die analoge Filterung des SID bedeutete, dass jeder Chip physikalisch
+einzigartig war.
+Stellt die Filterstärke des 6581 als Prozentwert von 0 bis 100 ein.
+.
+:CONFIG_8580FILTER
+Passt die Filterstärke des 8580 als Prozentwert von 0 bis 100 an.
+.
+:CONFIG_INNOVATION_FILTER
+Filter for the Innovation audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:CONFIG_PCSPEAKER
+Aktiviere die PC-Lautsprecher-Emulation.
+.
+:CONFIG_PCSPEAKER_FILTER
+Filter für den PC-Speaker-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
+.
+:CONFIG_ZERO_OFFSET
+Verhindert, dass der DC-Offset des PC-Lautsprechers andere Quellen beeinträchtigt.
+"auto" aktiviert dies für Nicht-Windows-Systeme und deaktiviert es unter Windows.
+Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchführt, dann setze
+dies auf "false".
+.
+:CONFIG_TANDY
+Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur
+vorhanden, wenn "machine" auf "tandy" eingestellt ist.
+.
+:CONFIG_TANDY_FILTER
+Filter für den Tandy-Synthesizer-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
+.
+:CONFIG_TANDY_DAC_FILTER
+Filter für den Tandy DAC-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
+.
+:CONFIG_LPT_DAC
+Typ des DAC, der an den Parallelport angeschlossen ist:
+  disney:    Disney Sound Source.
+  covox:     Covox Speech Thing.
+  ston1:     Stereo-on-1 DAC, in stereo bis zu 30 kHz.
+  none/off:  Keinen Parallelport-DAC verwenden (Standard).
+.
+:CONFIG_LPT_DAC_FILTER
+Filter für das/die LPT-DAC-Audiogerät(e):
+  on:        Filtere die Ausgabe (Standard).
+  off:       Filtere die Ausgabe nicht.
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
+.
+:CONFIG_DISNEY
+Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und
+Speech Thing kompatibel).
+.
+:CONFIG_PS1AUDIO
+Aktiviere die IBM PS/1 Audio Emulation.
+.
+:CONFIG_PS1AUDIO_FILTER
+Filter für den PS/1 Audio-Synthesizer-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
+.
+:CONFIG_PS1AUDIO_DAC_FILTER
+Filter für den PS/1 Audio-DAC-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
+.
+:CONFIG_JOYSTICKTYPE
+Typ des zu emulierenden Joysticks: auto (Standard),
+none (deaktiviert die Joystick-Emulation),
+2axis (unterstützt zwei Joysticks),
+4axis (unterstützt einen Joystick, erster Joystick verwendet),
+4axis_2 (unterstützt einen Joystick, zweiter Joystick verwendet),
+fcs (Thrustmaster), ch (CH Flightstick).
+auto wählt die Emulation abhängig von dem/den realen Joystick(s).
+(Vergiss nicht, das Mapperfile der DOSBox zurückzusetzen, wenn du es vorher
+gespeichert hast)
+.
+:CONFIG_TIMED
+aktiviere zeitgesteuerte Intervalle für die Achsen. Experimentiere mit dieser
+Option, wenn dein Joystick (weg) driftet.
+.
+:CONFIG_AUTOFIRE
+feuert kontinuierlich, solange du die Taste gedrückt hältst.
+.
+:CONFIG_SWAP34
+vertauscht die 3. und 4. Achse. Kann für bestimmte Joysticks nützlich sein.
+.
+:CONFIG_BUTTONWRAP
+aktiviere Button Wrapping bei der Anzahl der emulierten Buttons.
+.
+:CONFIG_CIRCULARINPUT
+aktiviere die Übersetzung der kreisförmigen Eingabe in eine quadratische Ausgabe.
+Versuche dies zu aktivieren, wenn dein linker Analogstick sich nur in einem
+Kreis bewegen kann.
+.
+:CONFIG_DEADZONE
+der Prozentsatz der Bewegung, der ignoriert werden soll. 100 macht den Stick zu
+einem digitalen Stick.
+.
+:CONFIG_USE_JOY_CALIBRATION_HOTKEYS
+Aktiviert Hotkeys, um die Kalibrierung der X- und Y-Achse des Joysticks in
+Echtzeit zu ermöglichen.
+Verwende dies nur, wenn die Kalibrierung im Spiel fehlschlägt und andere
+Einstellungen bereits ausprobiert wurden.
+ - Mit Strg/CMD+Pfeiltasten stellst du den Skalarwert der Achse ein:
+     - links und rechts verkleinert bzw. vergrößert den Skalar der x-Achse.
+     - runter und hoch verkleinern bzw. vergrößern den Skalar der y-Achse.
+ - Alt+Pfeiltasten passt die Offset-Position der Achse an:
+     - links und rechts verschiebt die x-Achse in die angegebene Richtung.
+     - runter und hoch verschiebt den Y-Achsen-Versatz in die angegebene Richtung.
+ - Setze die X- und Y-Kalibrierung mit Strg+Entf bzw. Strg+Home zurück.
+Jeder Tastendruck meldet X- oder Y-Kalibrierungswerte, die du dann unten
+einstellen kannst. Wenn du Parameter gefunden hast, die funktionieren, beende
+das Programm, setze diese Einstellung zurück auf false und gib die gemeldeten
+Kalibrierungsparameter unten ein.
+.
+:CONFIG_JOY_X_CALIBRATION
+Wende die Parameter für die Kalibrierung der x-Achse über die Hotkeys an.
+Die Voreinstellung ist "auto".
+.
+:CONFIG_JOY_Y_CALIBRATION
+Wende die Parameter für die Kalibrierung der y-Achse über die Hotkeys an.
+Die Voreinstellung ist "auto".
+.
+:CONFIG_SERIAL1
+Typ des Gerätes, das mit dem Com-Port verbunden ist.
+Kann disabled, dummy, modem, nullmodem, directserial sein.
+Zusätzliche Parameter müssen in der gleichen Zeile in der Form von
+parameter:wert angegeben werden. Parameter für alle Typen ist irq (optional).
+für directserial: realport (erforderlich), rxdelay (optional).
+                 (realport:COM1 realport:ttyS0).
+für modem: listenport (optional).
+für nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+               transparent, port, inhsocket (alle optional).
+Beispiel: serial1=modem listenport:5000
+.
+:CONFIG_SERIAL2
+siehe serial1
+.
+:CONFIG_SERIAL3
+siehe serial1
+.
+:CONFIG_SERIAL4
+siehe serial1
+.
+:CONFIG_PHONEBOOKFILE
+Datei, die benutzt wird, um Fake-Telefonnummern auf Adressen zu mappen.
+.
+:CONFIG_XMS
+Aktiviere die XMS-Unterstützung.
+.
+:CONFIG_EMS
+Aktiviere die EMS-Unterstützung. Der Standard (=true) bietet die beste
+Kompatibilität, aber bestimmte Anwendungen laufen besser mit anderen
+Einstellungen oder erfordern die Deaktivierung der EMS-Unterstützung (=false)
+um überhaupt zu funktionieren.
+.
+:CONFIG_UMB
+Aktiviere die UMB-Unterstützung.
+.
+:CONFIG_VER
+Setzt die DOS Version (5.0 als Standard). Anzugeben als major.minor Format.
+Eine einzelne Zahl wird als die Hauptversion behandelt.
+Übliche Einstellungen sind 3.3, 5.0, 6.22, und 7.1.
+.
+:CONFIG_COUNTRY
+Lege den DOS-Ländercode fest, der länderspezifische
+Informationen wie Datum, Uhrzeit und Dezimalformate
+beeinflusst. Wenn er auf 0 gesetzt ist, wird der
+Ländercode verwendet, der dem ausgewählte Tastatur-
+layout entspricht.
+.
+:CONFIG_EXPAND_SHELL_VARIABLE
+Enable expanding environment variables such as %PATH%
+while in the DOS command shell. FreeDOS and MS-DOS 7/8
+COMMAND.COM supports this behavior.
+.
+:CONFIG_KEYBOARDLAYOUT
+Sprachcode des Tastaturlayouts (oder keines).
+.
+:CONFIG_IPX
+Aktiviere IPX über UDP/IP Emulation.
+.
+:CONFIG_NE2000
+Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem software-
+basierten Netzwerk (mit libslirp) mit den folgenden Eigenschaften:
+ - 255.255.255.0 : Subnetzmaske des virtuellen LAN 10.0.2.0.
+ - 10.0.2.2      : IP des Gateways und des DHCP-Dienstes.
+ - 10.0.2.3      : IP des virtuellen DNS-Servers.
+ - 10.0.2.15     : Die erste von DHCP bereitgestellte IP, deine IP!
+Hinweis: Unter DOS wird für die Einrichtung ein NE2000-Paket-Treiber,
+         DHCP-Client und ein TCP/IP-Stack benötigt. Möglicherweise
+         benötigst du eine Port-Weiterleitung vom Host zum DOS-Gast
+         und von deinem Router zu deinem Host, wenn du als Server
+         für Multiplayer-Spiele fungierst.
+.
+:CONFIG_NICBASE
+Die Basisadresse der NE2000-Karte.
+Hinweis: Die Adressen 220 und 240 sind möglicherweise nicht verfügbar, da sie
+         Sound Blaster und Gravis UltraSound standardmäßig zugewiesen sind.
+.
+:CONFIG_NICIRQ
+Der Interrupt, der von der NE2000-Karte verwendet wird.
+Hinweis: Die IRQs 3 und 5 sind möglicherweise nicht verfügbar, da sie
+         "serial2" und dem Gravis UltraSound standardmäßig zugewiesen sind.
+.
+:CONFIG_MACADDR
+Die MAC-Adresse der NE2000-Karte.
+.
+:CONFIG_TCP_PORT_FORWARDS
+Leitet einen oder mehrere TCP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist:
+  port1  port2  port3 ... (z.B., 21 80 443)
+  Dadurch werden FTP, HTTP und HTTPS an den DOS-Gast weitergeleitet.
+Wenn die Ports auf dem Host privilegiert sind, kann ein Mapping verwendet werden
+  Host:Gast  ..., (z.B., 8021:21 8080:80)
+  Dadurch werden die Ports 8021 und 8080 an FTP und HTTP im Gast weitergeleitet
+Ein Bereich von benachbarten Ports kann mit einem Bindestrich abgekürzt werden:
+  Start-Ende ... (z.B., 27910-27960)
+  Dadurch werden die Ports 27910 bis 27960 an den DOS-Gast weitergeleitet.
+Zuordnungen und Bereiche können auch kombiniert werden:
+  HStart-HEnde:GStart-GEnde ..., (z.B, 8040-8080:20-60)
+  Dies leitet die Ports 8040 bis 8080 an die Ports 20 bis 60 des Gastes weiter.
+Anmerkungen:
+  - Wenn die zugewiesenen Bereiche unterschiedlich sind, wird der kürzere Bereich
+    erweitert, damit er passt.
+  - Wenn widersprüchliche Host-Ports angegeben werden, wird nur der erste
+    eingerichtet.
+  - Bei widersprüchlichen Gast-Ports hat die letztere Regel Vorrang.
+.
+:CONFIG_UDP_PORT_FORWARDS
+Leitet einen oder mehrere UDP-Ports vom Host an den DOS-Gast weiter.
+Das Format ist dasselbe wie bei der Weiterleitung von TCP-Ports.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Die Zeilen in diesem Abschnitt werden beim Start ausgeführt.
+Du kannst deine MOUNT-Zeilen hier einfügen.
+
+.
+:CONFIGFILE_INTRO
+# Dies ist die Konfigurationsdatei für dosbox-staging (%s).
+# Zeilen, die mit einem "#" Zeichen beginnen, sind Kommentare.
+
+.
+:CONFIG_SUGGESTED_VALUES
+Mögliche Werte
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Keine solche Sektion oder Eigenschaft.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Es gibt keine Eigenschaft "%s" im Abschnitt "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Korrekte Syntax: config -set "section property".
+
+.
+:CONFIG_DISNEY_FILTER
+Filter for the Disney audio output:
+  on:   Filter the output (default).
+  off:  Don't filter the output.
+.
+:
+ :CONFIG_FULLSCREEN
+Startet DOSBox direkt im Vollbildmodus.
+.
+:PROGRAM_CONFIG_NOCONFIGFILE
+Keine Konfigurationsdatei geladen!
+
+.
+:PROGRAM_CONFIG_PRIMARY_CONF
+Primäre Konfigurationsdatei: 
+%s
+
+.
+:PROGRAM_CONFIG_ADDITIONAL_CONF
+Zusätzliche Konfigurationsdateien:
+
+.
+:PROGRAM_CONFIG_CONFDIR
+DOSBox Staging %s Konfigurationsverzeichnis: 
+%s
+
+
+.
+:PROGRAM_CONFIG_FILE_ERROR
+
+Kann die Datei %s nicht öffnen
+
+.
+:PROGRAM_CONFIG_FILE_WHICH
+Schreibe Konfigurationsdatei %s
+
+.
+:SHELL_CMD_CONFIG_HELP_LONG
+Passt die konfigurierbaren Parameter von DOSBox Staging an.
+-writeconf / -wc ohne Parameter: in die primär geladene Config-Datei schreiben.
+-writeconf / -wc mit Dateiname: schreibt die Datei in das Konfig-Verzeichnis.
+-writelang / -wl mit Dateiname: schreibe die aktuellen Sprachstrings.
+-r [Parameter]
+ DOSBox neu starten, mit den vorherigen oder mit neu angehängten Parametern.
+-wcp [filename]
+ Schreibt die Konfigurationsdatei in das Programmverzeichnis, dosbox.conf oder
+ den angegebenen Dateinamen.
+-wcd
+ Schreibt in die Standardkonfigurationsdatei im Konfigurationsverzeichnis.
+-l listet die Konfigurationsparameter auf.
+-h, -help, -? sections / sectionname / propertyname
+ Zeigt ohne Parameter diesen Hilfebildschirm an. "sections" für eine Liste von
+ Sektionen. Für Infos über Abschnitt/Eigenschaft füge den Namen dahinter ein.
+-axclear löscht den Abschnitt autoexec.
+-axadd [line] fügt eine Zeile zum autoexec-Abschnitt hinzu.
+-axtype gibt den Inhalt der autoexec Sektion aus.
+-securemode schaltet in den sicheren Modus.
+-avistart startet die AVI-Aufnahme.
+-avistop stoppt die AVI-Aufnahme.
+-startmapper startet den Keymapper.
+-get "section property" gibt den Wert der Eigenschaft zurück.
+-set "section property=value" setzt den Wert.
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP
+Zweck der Eigenschaft "%s" (enthalten in Abschnitt "%s"):
+%s
+
+Mögliche Werte: %s
+Standardwert: %s
+Aktueller Wert: %s
+
+.
+:PROGRAM_CONFIG_HLP_LINEHLP
+Zweck des Abschnitts "%s":
+%s
+Aktueller Wert:
+%s
+
+.
+:PROGRAM_CONFIG_HLP_NOCHANGE
+Diese Eigenschaft kann zur Laufzeit nicht verändert werden.
+
+.
+:PROGRAM_CONFIG_HLP_POSINT
+positiver Integerwert
+.
+:PROGRAM_CONFIG_HLP_SECTHLP
+Abschnitt %s enthält die folgenden Eigenschaften:
+
+.
+:PROGRAM_CONFIG_HLP_SECTLIST
+Die DOSBox-Konfiguration enthält die folgenden Abschnitte:
+
+
+.
+:PROGRAM_CONFIG_SECURE_ON
+In den sicheren Modus geschaltet.
+
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Diese Operation ist im sicheren Modus nicht erlaubt.
+
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+Abschnitt "%s" existiert nicht.
+
+.
+:PROGRAM_CONFIG_VALUE_ERROR
+"%s" ist kein gültiger Wert für die Eigenschaft %s.
+
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Korrekte Syntax: config -get "section property".
+
+.
+:PROGRAM_CONFIG_PRINT_STARTUP
+
+DOSBox wurde mit den folgenden Befehlszeilenparametern gestartet:
+%s
+
+.
+:PROGRAM_CONFIG_MISSINGPARAM
+Fehlender Parameter.
+
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CD-ROMs gefunden: %d
+
+.
+:PROGRAM_MOUNT_STATUS_DRIVE
+Laufwerk
+.
+:PROGRAM_MOUNT_STATUS_TYPE
+Typ
+.
+:PROGRAM_MOUNT_STATUS_LABEL
+Label
+.
+:PROGRAM_MOUNT_STATUS_2
+Laufwerk %c ist eingebunden als %s
+
+.
+:PROGRAM_MOUNT_STATUS_1
+Die aktuell eingebundenen Laufwerke sind:
+
+.
+:PROGRAM_MOUNT_ERROR_1
+Das Verzeichnis %s existiert nicht.
+
+.
+:PROGRAM_MOUNT_ERROR_2
+%s ist kein Verzeichnis
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Unzulässiger Typ %s
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Laufwerk %c bereits mit %s eingebunden.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Laufwerk %c ist nicht eingebunden.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCESS
+Laufwerk %c wurde erfolgreich entfernt.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtuelle Laufwerke können nicht ausgeworfen werden.
+
+.
+:PROGRAM_MOUNT_DRIVEID_ERROR
+"%c" ist keine gültige Laufwerksbezeichnung.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mEinbinden von c:\ wird NICHT empfohlen. Bitte ein (Unter-)Verzeichnis einbinden.[0m
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mEinbinden von / wird NICHT empfohlen. Bitte ein (Unter-)Verzeichnis einbinden.[0m
+
+.
+:PROGRAM_MOUNT_NO_OPTION
+Warnung: Ignorieren der nicht unterstützten Option "%s".
+
+.
+:PROGRAM_MOUNT_OVERLAY_NO_BASE
+Ein normales Verzeichnis muss zuerst eingebunden werden,
+bevor ein Overlay darüber gelegt werden kann.
+
+.
+:PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
+Das Overlay ist NICHT kompatibel mit dem angegebenen Laufwerk.
+
+.
+:PROGRAM_MOUNT_OVERLAY_MIXED_BASE
+Das Overlay muss mit der gleichen Adressierung wie das zugrunde liegende
+Laufwerk angegeben werden. Kein Mischen von relativen und absoluten Pfaden.
+.
+:PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
+Das Overlay-Verzeichnis kann nicht dasselbe sein
+wie das darunterliegende Laufwerk.
+
+.
+:PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
+Etwas ist schief gelaufen.
+
+.
+:PROGRAM_MOUNT_OVERLAY_STATUS
+Overlay %s auf Laufwerk %c eingebunden.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Kann Laufwerk Z nicht verschieben. Laufwerk %c ist bereits eingebunden.
+
+.
+:PROGRAM_MEM_CONVEN
+%10d kB freier konventioneller Speicher
+
+.
+:PROGRAM_MEM_EXTEND
+%10d kB freier extended Memory
+
+.
+:PROGRAM_MEM_EXPAND
+%10d kB freier expanded Memory
+
+.
+:PROGRAM_MEM_UPPER
+%10d kB freier oberer Speicher in %d Blöcken (größter UMB %d kB)
+
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kB zugewiesen.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kB freigesetzt.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Benutzter Speicher freigegeben.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Fehler bei der Speicherallokation.
+
+.
+:MSCDEX_SUCCESS
+MSCDEX installiert.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Fehler: Laufwerksbuchstaben von CD-ROM-Laufwerken
+müssen fortlaufend sein.
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Fehler: Noch nicht unterstützt.
+
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Der angegebene Ort ist kein CD-ROM Laufwerk.
+
+.
+:MSCDEX_ERROR_OPEN
+MSCDEX: Fehler: Ungültige Datei oder kann nicht geöffnet werden.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Fehler: Zu viele CD-ROM Laufwerke (max: 5).
+MSCDEX Installation fehlgeschlagen.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Eingebundenes Unterverzeichnis: Begrenzte Unterstützung.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Fehler: Datei ist entweder kein ISO/CUE-Image oder enthält Fehler.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Fehler: Unbekannter Fehler.
+
+.
+:MSCDEX_WARNING_NO_OPTION
+MSCDEX: Warnung: Ignoriere nicht unterstützte Option "%s".
+
+.
+:PROGRAM_RESCAN_SUCCESS
+Laufwerks-Cache geleert.
+
+.
+:PROGRAM_INTRO
+[2J[32;1mWillkommen zu DOSBox Staging[0m, einem x86-Emulator mit Sound und Grafik.
+DOSBox erstellt eine Shell, die wie das altbekannte klassische DOS aussieht.
+
+Für Informationen über das grundsätzliche Einbinden tippe [34;1mintro mount[0m
+Für Informationen über die CD-ROM Unterstützung tippe [34;1mintro cdrom[0m
+Für Informationen über die Sondertasten tippe [34;1mintro special[0m
+Für weitere Informationen, besuche das DOSBox Staging wiki:[34;1m
+https://github.com/dosbox-staging/dosbox-staging/wiki[0m
+
+[31;1mDOSBox stoppt/beendet sich ohne eine Warnung, wenn ein Fehler auftritt![0m
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[2J[32;1mHier sind einige Befehle, die dir den Einstieg erleichtern:[0m
+Bevor du die Dateien, die auf deinem eigenen Dateisystem liegen,
+benutzen kannst, musst du das Verzeichnis, das die Dateien enthält, einbinden.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1m╔═══════════════════════════════════════════════════════════════════════════╗
+║ [32mmount c c:\dosgames\[37m erstellt ein Laufwerk C mit c:\dosgames als Inhalt.  ║
+║                                                                           ║
+║ [32mc:\dosgames\[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37m║
+╚═══════════════════════════════════════════════════════════════════════════╝[0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1m╔═════════════════════════════════════════════════════════════════════════╗
+║ [32mmount c ~/dosgames[37m erstellt ein Laufwerk C mit ~/dosgames als Inhalt.   ║
+║                                                                         ║
+║ [32m~/dosgames[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37m║
+╚═════════════════════════════════════════════════════════════════════════╝[0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_END
+Nach erfolgreichem Einbinden der Festplatte kannst du [34;1mc:[0m eingeben,
+um zu deinem frisch eingebundenen C-Laufwerk zu wechseln.
+Wenn du dort [34;1mdir[0m eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
+in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
+Du kannst Programme/Dateien mit den Erweiterungen [31m.exe .bat[0m und [31m.com[0m ausführen.
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mSondertasten:[0m
+Dies sind die voreingestellten Tastenbelegungen.
+Sie können im [33mkeymapper[0m geändert werden.
+
+[33;1m%s+Enter[0m  Umschalten zwischen Vollbild- und Fenstermodus.
+[33;1m%s+Pause[0m  Pause/Unpause Emulator.
+[33;1m%s+F1[0m   %s Starte den [33mkeymapper[0m.
+[33;1m%s+F4[0m   %s Wechsle das eingebundene Disk Image, aktualisiere Verzeichnis-Cache.
+[33;1m%s+F5[0m   %s Einen Screenshot speichern.
+[33;1m%s+F6[0m   %s Aufnahme der Soundausgabe in einer Wave-Datei starten/stoppen.
+[33;1m%s+F7[0m   %s Aufnahme der Videoausgabe in einer zmbv-Datei starten/stoppen.
+[33;1m%s+F9[0m   %s Emulator herunterfahren.
+[33;1m%s+F10[0m  %s Die Maus erfassen/freigeben.
+[33;1m%s+F11[0m  %s Emulation verlangsamen.
+[33;1m%s+F12[0m  %s Emulation beschleunigen.
+[33;1m%s+F12[0m    Schnellstmögliche Emulation (Turbo Taste/Schnellvorlauf).
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Die Bootdisk-Datei existiert nicht.  Booten fehlgeschlagen.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Kann die Bootdisk-Datei nicht öffnen.  Booten fehlgeschlagen.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Image-Datei ist schreibgeschützt! Dies könnte Probleme verursachen.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Dieser Befehl bootet DOSBox entweder von einem Disketten- oder Festplattenimage.
+Für diesen Befehl kann man eine Reihe von Disketten angeben, die man durch
+Drücken von %s+F4 wechseln kann, -l gibt das eingebundene Laufwerk an,
+von dem gebootet werden soll.  
+Wenn kein Laufwerksbuchstabe angegeben wird, wird standardmäßig vom Laufwerk
+A: gebootet. Die einzigen bootbaren Laufwerksbuchstaben sind A, C und D.
+Um von einer Festplatte (C oder D) zu booten, sollte das Image bereits mit dem
+[34;1mIMGMOUNT[0m Befehl eingebunden sein.
+
+Die Syntax dieses Befehls ist:
+
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter][0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Kann nicht von Laufwerk %c booten
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Image-Datei wird geöffnet: %s
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Kann %s nicht öffnen
+.
+:PROGRAM_BOOT_BOOT
+Booten von Laufwerk %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr Cartridge gefunden, aber Maschine ist nicht PCjr
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Verfügbare PCjr Cartridge Befehle: %s
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Keine PCjr Cartridge Befehle gefunden
+.
+:PROGRAM_LOADROM_SPECIFY_FILE
+Die zu ladende ROM Datei muss angegeben werden.
+
+.
+:PROGRAM_LOADROM_CANT_OPEN
+ROM Datei nicht lesbar.
+
+.
+:PROGRAM_LOADROM_TOO_LARGE
+ROM-Datei zu groß.
+
+.
+:PROGRAM_LOADROM_INCOMPATIBLE
+Video BIOS wird vom Maschinentyp nicht unterstützt.
+
+.
+:PROGRAM_LOADROM_UNRECOGNIZED
+ROM-Datei nicht erkannt.
+
+.
+:PROGRAM_LOADROM_BASIC_LOADED
+BASIC ROM geladen.
+
+.
+:SHELL_CMD_MOUNT_HELP
+Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerk zu.
+
+.
+:SHELL_CMD_MOUNT_HELP_LONG
+Einbinden eines Verzeichnisses des Host-Betriebssystems als Laufwerk.
+
+Verwendung:
+  [32;1mmount[0m [37;1mLAUFWERK[0m [36;1mVERZEICHNIS[0m [-t TYPE] [-freesize SIZE] [-label LABEL]
+  [32;1mmount[0m -u [37;1mLAUFWERK[0m  (Image des LAUFWERKS auswerfen)
+
+Wobei:
+  [37;1mLAUFWERK[0m  der Laufwerksbuchstabe, auf dem das Verzeichnis eingebunden wird
+  [36;1mVERZEICHNIS[0m Host-Verzeichnis, das eingebunden werden soll
+  TYPE      Typ des Verzeichnisses: dir, floppy, cdrom, oder overlay
+  SIZE      freier Platz auf virtuellem Laufwerk, KiB für Floppies, sonst MiB.
+  LABEL     zu verwendendendes Laufwerkslabel
+
+Anmerkungen:
+  - "-t overlay" Schreibvorgänge werden in ein anderes Verzeichnis umgeleitet.
+  - Weitere Optionen sind im Handbuch beschrieben (README Datei, Kapitel 4).
+
+Beispiele:
+  [32;1mmount[0m [37;1mC[0m [36;1m~/dosgames[0m
+  [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/Game CD"[0m -t cdrom
+  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Laufwerksbuchstabe muss angeben werden,
+unter dem das Image eingebunden werden soll.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Die Laufwerksnummer (0 oder 3) muss angeben werden,
+unter der das Image eingebunden werden soll (0,1=fda,fdb;2,3=hda,hdb).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Für [33mCD-ROM[0m Images:   [34;1mIMGMOUNT laufwerksbuchstabe ort-des-images -t iso[0m
+
+Für [33mFestplattenlaufwerk[0m images: Muss die Laufwerksgeometrie für Festplatten angeben:
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+[34;1mIMGMOUNT Laufwerk-Buchstabe Ort-des-Images -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Die Image-Datei konnte nicht geladen werden.
+Überprüfe, ob der Pfad korrekt ist und das Image zugänglich ist.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Konnte die Laufwerksgeometrie nicht aus dem Image entnehmen.
+Verwende den Parameter -size bps,spc,hpc,cyl um die Geometrie anzugeben.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Der Typ "%s" wird nicht unterstützt. Gib "floppy", "hdd", "cdrom" oder "iso" an.
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Das Format "%s" wird nicht unterstützt. Gib "fat" oder "iso" oder "none" an.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Die einzubindende Image-Datei muss angegeben werden.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Image-Datei nicht gefunden.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Um Verzeichnisse einzubinden, benutze den [34;1mMOUNT[0m Befehl, nicht den [34;1mIMGMOUNT[0m Befehl.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Das Laufwerk ist bereits unter diesem Buchstaben eingebunden.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Kann das Laufwerk nicht aus der Datei erstellen.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Laufwerk Nummer %d eingebunden als %s
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Das Image muss auf einem Host- oder lokalen Laufwerk liegen.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Die Verwendung mehrerer Dateien wird nur für Cue/Iso-Images unterstützt.
+
+.
+:PROGRAM_KEYB_INFO
+Zeichentabelle %i wurde geladen
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+Zeichentabelle %i wurde für Layout %s geladen
+
+.
+:PROGRAM_KEYB_FILENOTFOUND
+Tastaturdatei %s nicht gefunden
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+Tastaturdatei %s ungültig
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Kein Layout in %s für Zeichentabelle %i
+
+.
+:PROGRAM_KEYB_INVCPFILE
+Keine oder ungültige Zeichentabellendatei für Layout %s
+
+.
+:SHELL_ILLEGAL_PATH
+Unerlaubter Pfad.
+
+.
+:SHELL_CMD_HELP
+Für eine Liste aller unterstützten Befehle, tippe [33;1mhelp /all[0m.
+Eine kurze Liste der am häufigsten verwendeten Befehle:
+
+.
+:SHELL_CMD_ECHO_ON
+ECHO ist eingeschaltet.
+
+.
+:SHELL_CMD_ECHO_OFF
+ECHO ist aus.
+
+.
+:SHELL_ILLEGAL_SWITCH
+Unerlaubter Schalter: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Erforderlicher Parameter fehlt.
+
+.
+:SHELL_CMD_CHDIR_ERROR
+Wechseln zu %s nicht möglich.
+
+.
+:SHELL_CMD_CHDIR_HINT
+Hinweis: Um zu einem anderen Laufwerkstyp zu wechseln [31m%c:[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_2
+Verzeichnisname ist länger als 8 Zeichen und/oder enthält Leerzeichen.
+Versuche [31mcd %s[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_3
+Du bist noch auf Laufwerk Z:, wechsle zu einem eingebundenen Laufwerk mit [31mC:[0m.
+
+.
+:SHELL_CMD_DATE_HELP
+Zeigt oder ändert das interne Datum.
+
+.
+:SHELL_CMD_DATE_ERROR
+Das angegebene Datum ist nicht korrekt.
+
+.
+:SHELL_CMD_DATE_DAYS
+3SunMonTueWedThuFriSat
+.
+:SHELL_CMD_DATE_NOW
+Aktuelles Datum: 
+.
+:SHELL_CMD_DATE_SETHLP
+Tippe "date MM-TT-JJJJ" um es zu ändern.
+
+.
+:SHELL_CMD_DATE_HELP_LONG
+DATE [/T] [/H] [/S] | MM-TT-JJJJ]
+  MM-TT-JJJJ: neues zu setzendes Datum
+  /S: Host-Zeit und -Datum permanent als DOS-Zeit verwenden
+  /F: Zurückschalten auf DOSBox-interne Zeit (Gegenteil von /S)
+  /T: Nur das Datum anzeigen
+  /H: Mit Host synchronisieren
+
+.
+:SHELL_CMD_TIME_HELP
+Zeigt die interne Zeit an.
+
+.
+:SHELL_CMD_TIME_NOW
+Aktuelle Zeit: 
+.
+:SHELL_CMD_TIME_HELP_LONG
+TIME [/T] [/H]
+  /T: Einfache Zeit anzeigen
+  /H: Mit Host synchronisieren
+
+.
+:SHELL_CMD_MKDIR_ERROR
+Kann nicht erstellt werden: %s.
+
+.
+:SHELL_CMD_RMDIR_ERROR
+Kann nicht entfernt werden: %s.
+
+.
+:SHELL_CMD_DEL_ERROR
+Konnte nicht gelöscht werden: %s.
+
+.
+:SHELL_SYNTAXERROR
+Die Syntax des Befehls ist falsch.
+
+.
+:SHELL_CMD_SET_NOT_SET
+Umgebungsvariable %s nicht definiert.
+
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Nicht genug Umgebungsvariablenplatz vorhanden.
+
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Dateiname fehlt.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Nummer fehlt.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Zahl ungültig.
+
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Kein Label für den GOTO-Befehl angegeben.
+
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Label %s nicht gefunden.
+
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Datei %s nicht gefunden.
+
+.
+:SHELL_CMD_FILE_EXISTS
+Die Datei %s existiert bereits.
+
+.
+:SHELL_CMD_DIR_VOLUME
+ Volume in Laufwerk %c ist %s
+
+.
+:SHELL_CMD_DIR_INTRO
+ Verzeichnis von %s
+
+.
+:SHELL_CMD_DIR_BYTES_USED
+%17d Datei(en) %21s Bytes
+
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%17d Verzeichnis(se) %21s Bytes frei
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Laufwerk %c existiert nicht! Du musst es zuerst [31mmounten[0m.
+Tippe [1;33mintro[0m oder [1;33mintro mount[0m für weitere Informationen.
+
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Unerlaubter Befehl: %s.
+
+.
+:SHELL_CMD_PAUSE
+Drücke eine beliebige Taste um fortzusetzen...
+.
+:SHELL_CMD_PAUSE_HELP
+Wartet auf einen Tastendruck, um fortzufahren.
+
+.
+:SHELL_CMD_COPY_FAILURE
+Kopierfehler : %s.
+
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d Datei(en) kopiert.
+
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Laufwerk kann nicht entfernt werden, da es nicht Verwendet wird.
+
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST ist fehlgeschlagen. Entweder hast du einen Fehler in der Befehlszeile
+gemacht oder das Ziellaufwerk wird bereits verwendet. Es ist nur möglich SUBST
+auf lokalen Laufwerken zu verwenden
+
+.
+:SHELL_STARTUP_BEGIN
+[44;1m╔═════════════════════════════════════════════════════════════════════╗
+║ [32mWillkommen zu DOSBox Staging %-39s[37m║
+║                                                                     ║
+║ Für eine kurze Einführung für neue Benutzer tippe: [33mINTRO[37m            ║
+║ Für unterstützte Shell-Befehle gib [33mHELP[37m ein.                        ║
+║                                                                     ║
+║ Emulierte CPU-Geschwindigkeit anpassen mit [31m%s+F11[37m und [31m%s+F12[37m.%s%s   ║
+║ Aktiviere den Keymapper mit [31m%s+F1[37m.%s                                ║
+║ Weitere Informationen in der [36mREADME[37m Datei im DOSBox Verzeichnis.    ║
+║                                                                     ║
+
+.
+:SHELL_STARTUP_CGA
+║ DOSBox unterstützt den Composite CGA Modus.                         ║
+║ Verwende [31mF12[37m, um Composite-Ausgabe auf ON, OFF oder AUTO zu setzen. ║
+║ [31m(%s+)F11[37m ändert Farbe; [31m%s+%s+F11[37m wählt altes/neues CGA-Modell.%s  ║
+║                                                                     ║
+
+.
+:SHELL_STARTUP_CGA_MONO
+║ Benutze [31mF11[37m, zum Umschalten der Farben des CGA-Modus,               ║
+║ und [31m%s+F11[37m, um die Kontrast-/Helligkeitseinstellungen zu ändern.   ║
+
+.
+:SHELL_STARTUP_HERC
+║ Benutze [31mF11[37m, zum Umschalten von weiß, orange und Grün monochrom.    ║
+║                                                                     ║
+
+.
+:SHELL_STARTUP_DEBUG
+║ Drücke [31m%s+Pause[37m um Debugger zu starten oder starte ihn mit [33mDEBUG[37m.  ║
+║                                                                     ║
+
+.
+:SHELL_STARTUP_END
+║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v3 ║
+╚═════════════════════════════════════════════════════════════════════╝[0m
+
+.
+:SHELL_STARTUP_SUB
+[32;1mdosbox-staging %s[0m
+
+.
+:SHELL_CMD_CHDIR_HELP
+Zeigt/ändert das aktuelle Verzeichnis.
+
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [Laufwerk:][Pfad]
+CHDIR [...]
+CD [Laufwerk:][Pfad]
+CD [..]
+
+  ..   Gibt an, dass du in das übergeordnete Verzeichnis wechseln willst.
+
+Gib CD Laufwerk: ein, um das aktuelle Verzeichnis in diesem Laufwerk anzuzeigen.
+Gib CD ohne Parameter ein, um das aktuelle Laufwerk und Verzeichnis anzuzeigen.
+
+.
+:SHELL_CMD_CLS_HELP
+Löscht den Bildschirm.
+
+.
+:SHELL_CMD_DIR_HELP
+Zeigt eine Liste der Dateien und Unterverzeichnisse an.
+
+.
+:SHELL_CMD_DIR_HELP_LONG
+DIR [Laufwerk:][Pfad][Dateiname] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
+
+  [Laufwerk:][Pfad][Dateiname]
+              Gibt Laufwerk, Verzeichnis und/oder Dateien an,
+              die aufgelistet werden sollen
+  /W          Verwendet ein breites Listenformat
+  /B          Verwendet ein einfaches Format
+  /P          Pausiert nach jeder Seite mit der Anzeige
+  /AD         Zeigt alle Verzeichnisse an
+  /A-D        Zeigt alle Dateien an
+  /O          Zeigt eine Liste nach Dateien in sortierter Reihenfolge
+               - Präfix zum Umkehren der Reihenfolge
+  Sortierung nach  N  Name          S  Größe 
+                   E  Erweiterung   D  Datum
+
+.
+:SHELL_CMD_ECHO_HELP
+Zeigt Meldungen und aktiviert/deaktiviert die Ausgabe von Befehlen.
+
+.
+:SHELL_CMD_EXIT_HELP
+Beendet die Shell.
+
+.
+:SHELL_CMD_HELP_HELP
+Hilfe anzeigen.
+
+.
+:SHELL_CMD_MKDIR_HELP
+Verzeichnis erstellen.
+
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [Laufwerk:][Pfad]
+MD [Laufwerk:][Pfad]
+
+.
+:SHELL_CMD_RMDIR_HELP
+Verzeichnis löschen.
+
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [Laufwerk:][Pfad]
+RD [Laufwerk:][Pfad]
+
+.
+:SHELL_CMD_SET_HELP
+Umgebungsvariablen ändern.
+
+.
+:SHELL_CMD_IF_HELP
+Führt bedingte Verarbeitung in Batch-Programmen durch.
+
+.
+:SHELL_CMD_GOTO_HELP
+Springt zu einer bestimmten Zeile in einem Batch-Programm.
+
+.
+:SHELL_CMD_SHIFT_HELP
+Befehlszeilenparameter eines Batch-Programms nach links verschieben.
+
+.
+:SHELL_CMD_TYPE_HELP
+Zeigt den Inhalt einer Textdatei an.
+
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [Laufwerk:][Pfad][Dateiname]
+
+.
+:SHELL_CMD_REM_HELP
+Kommentare in eine Batchdatei einfügen.
+
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [Kommentar]
+
+.
+:SHELL_CMD_NO_WILD
+Dies ist eine einfache Version des Befehls, keine Wildcards erlaubt!
+
+.
+:SHELL_CMD_RENAME_HELP
+Benennt eine oder mehrere Dateien um.
+
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [Laufwerk:][Pfad]Dateiname1 Dateiname2.
+REN [Laufwerk:][Pfad]Dateiname1 Dateiname2.
+
+Beachte, dass du kein neues Laufwerk oder einen neuen
+Pfad für deine Zieldatei angeben kannst.
+
+.
+:SHELL_CMD_DELETE_HELP
+Löscht eine oder mehrere Dateien.
+
+.
+:SHELL_CMD_COPY_HELP
+Kopiert Dateien.
+
+.
+:SHELL_CMD_CALL_HELP
+Starte eine Batchdatei aus einer anderen Batchdatei heraus.
+
+.
+:SHELL_CMD_SUBST_HELP
+Einem Laufwerk ein internes Verzeichnis zuweisen.
+
+.
+:SHELL_CMD_LOADHIGH_HELP
+Lädt Programme in den oberen Speicher.
+
+.
+:SHELL_CMD_LS_HELP
+Verzeichnisinhalte auflisten.
+
+.
+:SHELL_CMD_LS_HELP_LONG
+ls [/?] [Zeichenfolge]
+
+.
+:SHELL_CMD_LS_PATH_ERR
+ls: kann nicht auf "%s" zugreifen: Datei oder Verzeichnis nicht gefunden
+
+.
+:SHELL_CMD_CHOICE_HELP
+Wartet auf einen Tastendruck und setzt ERRORLEVEL.
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:choices] [/N] [/S] text
+  /C[:]choices - Legt die erlaubten Tasten fest.  Standard ist: jn.
+  /N - Zeigt die Auswahlmöglichkeiten am Ende der Eingabeaufforderung nicht an.
+  /S - Ermöglicht die Eingabe in Groß- und Kleinschreibung.
+  text - Der Text, der als Eingabeaufforderung angezeigt wird.
+
+.
+:SHELL_CMD_ATTRIB_HELP
+Hat keine Funktion. Wird aus Kompatibilitätsgründen bereitgestellt.
+
+.
+:SHELL_CMD_PATH_HELP
+Wird aus Kompatibilitätsgründen zur Verfügung gestellt.
+
+.
+:SHELL_CMD_VER_HELP
+Zeigt oder setzt die gemeldete DOS-Version.
+
+.
+:SHELL_CMD_VER_HELP_LONG
+Verwendung:
+  [32;1mver[0m
+  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+
+Wobei:
+  [36;1mVERSION[0m kann eine ganze Zahl sein, wie z.B. [36;1m5[0m, oder eine zweistellige 
+          Dezimalzahl sein wie z.B.: [36;1m6.22[0m, [36;1m7.01[0m, oder [36;1m7.10[0m. 
+          Die Dezimalstelle kann alternativ durch Leerzeichen getrennt werden,
+          wie z.B.: [36;1m6 22[0m, [36;1m7 01[0m oder [36;1m7 10[0m.
+
+Anmerkungen:
+  Die DOS-Version kann auch in der Konfigurationsdatei unter dem [dos]
+  Abschnitt mit der Einstellung "ver = [36;1mVERSION[0m" gesetzt werden.
+
+Beispiele:
+  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
+  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
+
+.
+:SHELL_CMD_VER_VER
+DOSBox Staging Version %s
+DOS-Version %d.%02d
+
+.
+:SHELL_CMD_VER_INVALID
+Die angegebene DOS-Version ist nicht korrekt.
+
+.
+:PROGRAM_INTRO_CDROM_WINDOWS
+[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
+DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
+
+Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und
+markiert die Dateien als schreibgeschützt. Normalerweise reicht das für die
+meisten Programme aus:
+
+[34;1mmount D C:\beispiel -t cdrom[0m
+
+Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM
+mitteilen:
+
+[34;1mmount D C:\beispiel -t cdrom -label CDLABEL[0m
+
+Zusätzlich kannst du imgmount benutzen, um iso oder cue/bin Images
+einzubinden:
+
+[34;1mimgmount D C:\cd.iso -t cdrom[0m
+[34;1mimgmount D C:\cd.cue -t cdrom[0m
+
+.
+:PROGRAM_INTRO_CDROM_OTHER
+[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
+DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
+
+Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und
+markiert die Dateien als schreibgeschützt. Normalerweise reicht das für die
+meisten Programme aus:
+
+[34;1mmount D ~/beispiel -t cdrom[0m
+
+Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM
+mitteilen:
+
+[34;1mmount D ~/beispiel -t cdrom -label CDLABEL[0m
+
+Zusätzlich kannst du imgmount benutzen, um iso oder cue/bin Images
+einzubinden:
+
+[34;1mimgmount D ~/cd.iso -t cdrom[0m
+[34;1mimgmount D ~/cd.cue -t cdrom[0m
+
+.
+:SHELL_CMD_HELP_HELP_LONG
+HELP [Befehl]
+
+.
+:SHELL_CMD_DELETE_HELP_LONG
+Verwendung:
+  [32;1mdel[0m [36;1mZEICHENFOLGE[0m
+  [32;1merase[0m [36;1mZEICHENFOLGE[0m
+
+Wobei:
+  [36;1mZEICHENFOLGE[0m kann entweder ein exakter Dateiname sein
+  (wie [36;1mfile.txt[0m) oder ein ungenauer Dateiname sein, der einen oder
+  mehrere Platzhalter verwendet, nämlich das Sternchen (*), das für eine 
+  beliebige Folge von einem oder mehreren Zeichen steht, und das Fragezeichen
+  (?), das für ein einzelnes Zeichen steht, wie z.B. [36;1m*.bat[0m und [36;1mc?.txt[0m.
+
+Warnung:
+  Sei vorsichtig, wenn du ein Muster mit Platzhaltern verwendest, insbesondere
+   [36;1m*.*[0m, da alle Dateien die mit dem Muster übereinstimmen, gelöscht werden.
+
+Beispiele:
+  [32;1mdel[0m [36;1mtest.bat[0m
+  [32;1mdel[0m [36;1mc*.*[0m
+  [32;1mdel[0m [36;1ma?b.c*[0m
+
+.
+:PROGRAM_PATH_TOO_LONG
+Der Pfad "%s" überschreitet die maximale Länge 
+von %d unter DOS zugelassenen Zeichen
+
+.
+:PROGRAM_EXECUTABLE_MISSING
+Ausführbare Datei nicht gefunden: %s
+
+.
+:SHELL_CMD_MEM_HELP_LONG
+Zeigt die DOS-Speicherinformationen an.
+
+Verwendung:
+  [32;1mmem[0m
+
+Wobei:
+  Dieser Befehl hat keine Parameter.
+
+Anmerkungen:
+  Dieser Befehl zeigt die DOS Speicherbelegung an, einschließlich des freien
+  konventionellen Speichers, UMB (oberer) Speicher, XMS (extended) Speicher
+  und EMS (expanded) Speicher.
+
+Beispiel:
+  [32;1mmem[0m
+
+.
+:SHELL_CMD_LOADFIX_HELP_LONG
+Lädt ein Programm in einen Speicherbereich und führt es dann aus.
+
+Verwendung:
+  [32;1mloadfix[0m [36;1mPROGRAMM[0m [37;1m[PARAMETER][0m
+  [32;1mloadfix[0m [/d] (or [/f])[0m
+
+Wobei:
+  [36;1mPROGRAMM[0m ist ein Programm, optional mit Parametern.
+
+Anmerkungen:
+  Die häufigsten Anwendungsfälle für diesen Befehl sind DOS-Spiele oder
+  Programme die entweder die Fehlermeldung "[37;1mPacked File Corrupt[0m" 
+  oder "[37;1mNot enough memory"[0m 
+  (z.B. von einigen Programmen aus den 1980er Jahren wie California Games II),
+  wenn sie ausgeführt werden. Wenn du [32;1mloadfix[0m ohne ein Argument
+  ausführst, wird deinem Programm lediglich Speicher zugewiesen. Du kannst den 
+  Speicher mit der Option /d oder /f wieder freigeben, nach Programmende.
+
+Beispiele:
+  [32;1mloadfix[0m [36;1mmeinspiel[0m [37;1mparameter[0m
+  [32;1mloadfix[0m /d
+
+.
+:SHELL_CMD_AUTOTYPE_HELP_LONG
+Geskriptete Tastatureingabe in ein laufendes DOS Programm.
+
+Verwendung:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m [-w [37;1mWAIT[0m] [-p [37;1mPACE[0m] [36;1mBUTTONS[0m
+
+Wobei:
+  [37;1mWAIT[0m    Zeit in Sekunden, bevor die Eingabe beginnt (max. 30).
+  [37;1mPACE[0m    Zeit in Sekunden vor jedem Tastendruck (max. 10).
+  [36;1mBUTTONS[0m ist ein oder mehrere durch Leerzeichen getrennte Zeichen.
+
+Anmerkungen:
+  Die im Befehl angegebenen [36;1mBUTTONS[0m werden automatisch in laufende
+  DOS-Programme eingegeben nachdem sie gestartet wurden. Das Autotyping beginnt 
+  nach [36;1mWAIT[0m Sekunden, und jede Taste wird alle [37;1mPACE[0m Sekunden
+  eingegeben. Das [36;1m,[0m Zeichen fügt eine zusätzliche [37;1mPACE[0m
+  Verzögerung ein. Die Standardwerte für [37;1mWAIT[0m und [37;1mPACE[0m sind
+  2 bzw. 0,5 Sekunden, wenn sie nicht angegeben werden.
+  Eine Liste aller verfügbaren Tastennamen erhältst du mit der Option -list.
+
+Beispiele:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m -w [37;1m1[0m -p [37;1m0.3[0m [36;1mup enter , right enter[0m
+  [32;1mautotype[0m -p [37;1m0.2[0m [36;1mf1 kp_8 , , enter[0m
+  [32;1mautotype[0m -w [37;1m1.3[0m [36;1mesc enter , p l a y e r enter
+[0m
+.
+:SHELL_CMD_RESCAN_HELP_LONG
+Sucht nach Änderungen auf eingebundenen DOS-Laufwerken.
+
+Verwendung:
+  [32;1mrescan[0m [36;1mLAUFWERK[0m
+  [32;1mrescan[0m [/a]
+
+Wobei:
+  [36;1mLAUFWERK[0m ist das Laufwerk, das nach Änderungen durchsucht wird.
+
+Anmerkungen:
+  - Wenn du [32;1mrescan[0m ohne Parameter ausführst, wird das aktuelle Laufwerk
+    nach Änderungen durchsucht.
+  - Änderungen an diesem Laufwerk, die auf dem Host vorgenommen wurden, werden 
+    dann in DOSBox wiedergegeben.
+  - Mit der Option /a kannst du auch nach Änderungen auf allen eingebundenen 
+    Laufwerken suchen.
+
+Beispiele:
+  [32;1mrescan[0m [36;1mc:[0m
+  [32;1mrescan[0m /a
+
+.
+:SHELL_CMD_BOOT_HELP_LONG
+Startet DOSBox Staging von einem DOS-Laufwerk oder einem Disk-Image.
+
+Verwendung:
+  [32;1mboot[0m [37;1mLAUFWERK[0m
+  [32;1mboot[0m [36;1mIMAGEDATEI[0m
+
+Wobei:
+  [37;1mLAUFWERK[0m ist ein Laufwerk, von dem gebootet werden soll, z.B. [37;1mA:[0m, [37;1mC:[0m, or [37;1mD:[0m.
+  [36;1mIMAGEDATEI[0m ist ein oder mehrere Disketten-Images, getrennt durch Leerzeichen.
+
+Anmerkungen:
+  Ein Laufwerksbuchstabe muss zuvor mit dem Befehl [32;1mimgmount[0m eingebunden
+  worden sein. Das Laufwerk oder Disk-Image muss bootfähig sein und 
+  DOS-Systemdateien enthalten. Wenn mehr als ein Disk-Image angegeben wird, 
+  kannst du sie mit einem Hotkey austauschen.
+
+Beispiele:
+  [32;1mboot[0m [37;1mc:[0m
+  [32;1mboot[0m [36;1mdisk1.ima disk2.ima[0m
+
+.
+:SHELL_CMD_LOADROM_HELP_LONG
+Lädt ein ROM-Abbild des Video-BIOS oder IBM BASIC.
+
+Verwendung:
+  [32;1mloadrom [36;1mIMAGEDATEI[0m
+
+Wobei:
+  [36;1mIMAGEDATEI[0m ist ein Video-BIOS oder ein IBM BASIC ROM-Image.
+
+Anmerkungen:
+   Nachdem du ein IBM BASIC ROM-Image mit dem Befehl in das emulierte ROM
+   geladen hast, kannst du das originale IBM BASIC-Interpreterprogramm in 
+   DOSBox Staging ausführen.
+
+Beispiel:
+  [32;1mloadrom[0m [36;1mbios.rom[0m
+
+.
+:SHELL_CMD_KEYB_HELP_LONG
+Konfiguriert eine Tastatur für eine bestimmte Sprache.
+
+Verwendung:
+  [32;1mkeyb[0m [36;1m[SPRACHENCODE][0m
+  [32;1mkeyb[0m [36;1mSPRACHENCODE[0m [37;1mZEICHENTABELLE[0m [ZEICHENTABELLENDATEI]          
+
+Wobei:
+  [36;1mSPRACHENCODE[00m          ist ein Sprachencode oder eine Tastaturlayout-ID.
+  [37;1mZEICHENTABELLE[0m        ist eine Zeichentabelle, wie zum Beispiel [37;1m437[0m und [37;1m850[0m.
+  ZEICHENTABELLENDATEI  Datei mit Informationen für eine Zeichentabelle.
+
+Anmerkungen:
+  Wenn du [32;1mkeyb[0m ohne ein Argument ausführst, wird das aktuell geladene
+  Tastaturlayout und die Zeichentabelle angezeigt. Es wechselt zu [36;1mSPRACHENCODE[0m,
+  falls angegeben, optional mit einer [37;1mZEICHENTABELLE[0m und einer zusätzlichen
+  ZEICHENTABELLENDATEI. Dieser Befehl ist besonders nützlich, wenn du eine 
+  nicht-US-amerikanische Tastatur verwendest.
+  
+Beispiele:
+  [32;1mKEYB[0m
+  [32;1mKEYB[0m [36;1muk[0m
+  [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
+  [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
+.
+:WIKI_ADD_UTILITIES_ARTICLE
+https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+.
+:WIKI_URL
+https://github.com/dosbox-staging/dosbox-staging/wiki
+.
+:SHELL_CMD_COMMAND_HELP_LONG
+Startet die DOSBox Staging Befehlszeilen-Shell.
+
+Verwendung:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c (or /init) [36;1mBEFEHL[0m
+
+Wobei:
+  [36;1mBEFEHL[0m ist ein Befehl oder Programm, das du ausführen möchtest.
+
+Anmerkungen:
+  DOSBox Staging startet automatisch eine DOS-Befehlsshell, indem es diesen
+  Befehl mit der Option /init aufruft, wenn es startet. Du kannst eine neue 
+  Instanz der Befehlsshell laden, indem du [32;1mcommand[0m eingibst. Wenn du 
+  die Option /c zusammen mit [36;1mCOMMAND[0m hinzufügst, führt dies den
+  angegebenen Befehl aus (optional mit Parametern) und beendet danach DOSBox.
+
+Beispiele:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c [36;1mecho[0m [37mHello world![0m
+  [32;1mcommand[0m /init [36;1mdir[0m
+
+.
+:SHELL_CMD_TIME_ERROR
+Die angegebene Zeit ist nicht korrekt.
+
+.
+:SHELL_CMD_TIME_SETHLP
+Gib "time hh:mm:ss" ein, um die Uhrzeit zu ändern.
+
+.
+:SHELL_CMD_PAUSE_HELP_LONG
+Verwendung:
+  [32;1mpause[0m
+
+Wobei:
+  Dieser Befehl hat keine Parameter.
+
+Anmerkungen:
+  Dieser Befehl ist besonders in Batch-Programmen nützlich, um
+  die Ausführung des Batch-Programms mit einem Tastendruck fortzusetzen. 
+  Der Benutzer kann eine beliebige Taste auf der Tastatur drücken 
+  (mit Ausnahme bestimmter Steuerungstasten), um fortzufahren.
+
+Beispiel:
+  [32;1mpause[0m
+
+.
+:SHELL_CMD_CLS_HELP_LONG
+Verwendung:
+  [32;1mcls[0m
+
+Wobei:
+  Dieser Befehl hat keine Parameter.
+
+Anmerkungen:
+  Wenn du [32;1mcls[0m ausführst, werden alle Texte auf dem DOS-Bildschirm gelöscht,
+  außer der Eingabeaufforderung (z.B. [37;1mZ:\>[0m oder [37;1mC:\GAMES>[0m)
+  in der linken oberen Ecke des Bildschirms.
+
+Beispiel:
+  [32;1mcls[0m
+
+.
+:SHELL_CMD_ECHO_HELP_LONG
+Verwendung:
+  [32;1mecho[0m [36;1m[on|off][0m
+  [32;1mecho[0m [36;1m[NACHRICHT][0m
+
+Wobei:
+  [36;1mon|off[0m  Schaltet das Befehlsecho ein/aus.
+  [36;1mMESSAGE[0m Die Nachricht, die angezeigt werden soll.
+
+Anmerkungen:
+  - Wenn du [32;1mecho[0m ohne Parameter ausführst, wird der aktuelle Status angezeigt.
+  - Echo ist besonders nützlich beim Schreiben oder Debuggen von Batch-Dateien.
+
+Beispiele:
+  [32;1mecho[0m [36;1moff[0m
+  [32;1mecho[0m [36;1mHello world![0m
+
+.
+:SHELL_CMD_EXIT_HELP_LONG
+Verwendung:
+  [32;1mexit[0m
+
+Wobei:
+  Dieser Befehl hat keine Parameter.
+
+Anmerkungen:
+  Wenn du eine DOS-Shell aus einem Programm heraus startest, kehrt der Befehl
+  [32;1mexit[0m zum Programm zurück. Wenn kein DOS-Programm läuft, beendet der Befehl
+  DOSBox Staging.
+
+Beispiel:
+  [32;1mexit[0m
+
+.
+:SHELL_CMD_EXIT_TOO_SOON
+Verhindert, dass ein vorzeitiger "exit"-Anruf DOSBox beendet.
+
+.
+:SHELL_CMD_INTRO_HELP
+Zeigt eine bildschirmfüllende Einführung in DOSBox Staging an.
+
+.
+:SHELL_CMD_INTRO_HELP_LONG
+Verwendung:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mSEITE[0m
+
+Wobei:
+  [37;1mSEITE[0m ist der Name der Seite, die angezeigt werden soll,
+  einschließlich [37;1mcdrom[0m, [37;1mmount[0m, and [37;1mspecial[0m.
+
+Anmerkungen:
+  Wenn du [32;1mintro[0m ohne Parameter ausführst, werden nacheinander alle
+  Informationsseiten angezeigt; drücke eine beliebige Taste, um zur nächsten 
+  Seite zu gelangen. Wenn ein Seitenname angegeben wird, wird die angegebene 
+  Seite direkt angezeigt.
+
+Beispiele:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mcdrom[0m
+
+.
+:SHELL_CMD_SET_HELP_LONG
+Verwendung:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mVARIABLE[0m=[36;1m[ZEICHENFOLGE][0m
+
+Wobei:
+  [37;1mVARIABLE[0m       Der Name der Umgebungsvariable.
+  [36;1mZEICHENFOLGE[0m   Eine Reihe von Zeichen, die der Variable zugewiesen werden.
+
+Anmerkungen:
+  - Wenn du der Variable eine leere Zeichenfolge zuweist,
+    wird die Variable entfernt.
+  - Der Befehl ohne einen Parameter zeigt die aktuellen Umgebungsvariablen an.
+
+Beispiele:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mname[0m=[36;1mwert[0m
+
+.
+:SHELL_CMD_IF_HELP_LONG
+Verwendung:
+  [32;1mif[0m [35;1m[not][0m [36;1merrorlevel[0m [37;1mZAHL[0m BEFEHL
+  [32;1mif[0m [35;1m[not][0m [37;1mSTR1==STR2[0m BEFEHL
+  [32;1mif[0m [35;1m[not][0m [36;1mexist[0m [37;1mDATEI[0m BEFEHL
+
+Wobei:
+  [37;1mZAHL[0m        Zahl, die kleiner oder gleich dem gewünschten Wert ist.
+  [37;1mSTR1==STR2[0m  vergleicht zwei Textstrings.
+  [37;1mDATEI[0m       ist ein genauer Dateiname, der auf Existenz überprüft wird.
+  BEFEHL      ist ein Befehl oder Programm, das ausgeführt wird inkl. Parameter.
+Anmerkungen:
+  BEFEHL wird ausgeführt, wenn eine der drei Bedingungen erfüllt ist. Wenn [38;1mnot[0m
+  angegeben ist, wird der Befehl nur bei falscher Bedingung ausgeführt. Die
+  Bedingung [36;1merrorlevel[0m prüft, ob ein Programm korrekt ausgeführt wurde. Wenn
+  [37;1mSTRn[0m leer sein darf, kannst du ihn in Anführungszeichen (") einschließen.
+
+Beispiele:
+  [32;1mif[0m [36;1merrorlevel[0m [37;1m2[0m dir
+  [32;1mif[0m [37;1m"%%myvar%%"=="mystring"[0m echo Hello world!
+  [32;1mif[0m [35;1mnot[0m [36;1mexist[0m [37;1mdatei.txt[0m exit
+
+.
+:SHELL_CMD_GOTO_HELP_LONG
+Verwendung:
+  [32;1mgoto[0m [36;1mLABEL[0m
+
+Wobei:
+  [36;1mLABEL[0m ist eine Zeichenkette, die im Batch-Programm als Sprungmarke
+  verwendet wird.
+
+Anmerkungen:
+  Ein Label steht in einer eigenen Zeile und beginnt mit einem Doppelpunkt (:).
+  Die Bezeichnung muss eindeutig sein und kann an einer beliebigen Stelle im 
+  Batch-Programm stehen.
+
+Beispiel:
+  [32;1mgoto[0m [36;1mmylabel[0m
+
+.
+:SHELL_CMD_SHIFT_HELP_LONG
+Verwendung:
+  [32;1mshift[0m
+
+Wobei:
+  Dieser Befehl hat keine Parameter.
+
+Anmerkungen:
+  Mit diesem Befehl kann ein Batch-Programm mehr als 9 Parameter akzeptieren.
+  Wenn du [32;1mshift[0m ausführst, wird die Batch-Programmvariable
+  %%1 auf %%0, %%2 auf %%1, usw. verschoben.
+
+Beispiel:
+  [32;1mshift[0m
+
+.
+:SHELL_CMD_COPY_HELP_LONG
+Verwendung:
+  [32;1mcopy[0m [37;1mQUELLE[0m [36;1m[ZIEL][0m
+  [32;1mcopy[0m [37;1mQUELLE1+QUELLE2[+...][0m [36;1m[ZIEL][0m
+
+Wobei:
+  [37;1mQUELLE[0m Kann entweder ein exakter Dateiname oder ein ungenauer Dateiname
+         mit Wildcards, d.h. (*) und (?) sein.
+  [36;1mZIEL[0m   Ein exakter Dateiname oder ein Verzeichnis, ohne Wildcards.
+
+Anmerkungen:
+  Der Operator [37;1m+[0m kombiniert mehrere bereitgestellte Quelldateien zu
+  einer einzigen Datei. Das Ziel ist optional: Wird es nicht angegeben, werden 
+  die Dateien in den aktuellen Pfad kopiert.
+
+Beispiele:
+  [32;1mcopy[0m [37;1mquell.bat[0m [36;1mneu.bat[0m
+  [32;1mcopy[0m [37;1mdatei1.txt+datei2.txt[0m [36;1mdatei3.txt[0m
+  [32;1mcopy[0m [37;1m..\c*.*[0m
+
+.
+:SHELL_CMD_CALL_HELP_LONG
+Verwendung:
+  [32;1mcall[0m [37;1mBATCH[0m [36;1m[PARAMETER][0m
+
+Wobei:
+  [37;1mBATCH[0m      ist ein Batch-Programm zum Starten.
+  [36;1mPARAMETER[0m sind optionale Parameter für das Batch-Programm.
+
+Anmerkungen:
+  Nach dem Aufruf eines anderen Batch-Programms wird das ursprüngliche 
+  Batch-Programm nach dem Ende des anderen Batch-Programms fortgesetzt.
+
+Beispiele:
+  [32;1mcall[0m [37;1mmybatch.bat[0m
+  [32;1mcall[0m [37;1mdatei.bat[0m [36;1mHello world![0m
+
+.
+:SHELL_CMD_SUBST_HELP_LONG
+Verwendung:
+  [32;1msubst[0m [37;1mLAUFWERK[0m [36;1mPFAD[0m
+  [32;1msubst[0m [37;1mLAUFWERK[0m /d
+
+Wobei:
+  [37;1mLAUFWERK[0m ist ein Laufwerk, dem du einen Pfad zuweisen möchtest.
+  [36;1mPFAD[0m  ist ein eingebundener DOS-Pfad, den du zuweisen möchtest.
+
+Anmerkungen:
+  Der Pfad muss sich auf einem Laufwerk befinden, das mit dem Befehl [32;1mmount[0m
+  eingebunden wurde. Du kannst ein zugewiesenes Laufwerk mit der Option /d
+  entfernen.
+
+Beispiele:
+  [32;1msubst[0m [37;1md:[0m [36;1mc:\games[0m
+  [32;1msubst[0m [37;1me:[0m [36;1m/d[0m
+
+.
+:SHELL_CMD_LOADHIGH_HELP_LONG
+Verwendung:
+  [32;1mlh[0m [36;1mPROGRAMM[0m [37;1m[PARAMETER][0m
+  [32;1mloadhigh[0m [36;1mPROGRAMM[0m [37;1m[PARAMETER][0m
+
+Wobei:
+  [36;1mPROGRAMM[0m ist ein DOS TSR-Programm, das geladen werden soll, optional
+  mit Parametern.
+
+Anmerkungen:
+  Dieser Befehl zielt darauf ab, konventionellen Speicher zu sparen, indem die
+  angegebenen DOS TSR-Programme nach Möglichkeit in den oberen Speicher geladen
+  werden. Solche Programme können für einige DOS Programme erforderlich sein;
+  XMS und UMB Speicher müssen aktiviert sein (xms=true und umb=true).
+  Nicht alle DOS TSR-Programme können in den oberen Speicher geladen werden.
+
+Beispiel:
+  [32;1mlh[0m [36;1mtsrapp[0m [37;1margs[0m
+
+.
+:SHELL_CMD_PATH_HELP_LONG
+Verwendung:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1m[[laufwerk:]pfad[;...][0m
+
+Wobei:
+  [36;1m[[laufwerk:]pfad[;...][0m ist ein Pfad, der ein Laufwerk und ein
+  Verzeichnis enthält. Es kann mehr als ein Pfad angegeben werden, getrennt
+  durch ein Semikolon (;).
+
+Anmerkungen:
+  Ein Parameter mit nur einem Semikolon (;) löscht alle Suchpfadeinstellungen.
+  Der Pfad kann auch mit dem Befehl [32;1mset[0m gesetzt werden, z.B.
+  [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
+
+Beispiele:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
+
+.
+:PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
+Keine IDE-Controller verfügbar. Das Laufwerk wird keine IDE-Emulation haben.
+
+.
+:SHELL_CMD_SERIAL_HELP_LONG
+Verwalte die seriellen Schnittstellen.
+Verwendungsarten:
+  SERIAL /L | /LIST             Liste der aktuellen seriellen Schnittstellen.
+  SERIAL PORT# TYPE [settings]  Setzt den Port auf den angegebenen TYP.
+
+Wobei:
+  PORT# : 1, 2, 3, or 4
+  TYP   : MODEM, NULLMODEM, DIRECTSERIAL, DUMMY, oder DISABLED
+
+Optionale Einstellungen für jeden TYP:
+  Für MODEM        : IRQ, LISTENPORT, SOCK
+  Für NULLMODEM    : IRQ, SERVER, RXDELAY, TXDELAY, TELNET,
+                     USEDTR, TRANSPARENT, PORT, INHSOCKET, SOCK
+  Für DIRECTSERIAL : IRQ, REALPORT (required), RXDELAY
+  Für DUMMY        : IRQ
+
+Beispiele mit Port 1 oder COM1 unter DOS:
+  SERIAL /list                                : Liste der COM-Schnittstellen
+  SERIAL 1 NULLMODEM PORT:1250                : Warte auf TCP:1250 als Server
+  SERIAL 1 NULLMODEM SERVER:10.0.0.6 PORT:1250: Verbinden mit Port als Client
+  SERIAL 1 MODEM LISTENPORT:5000 SOCK:1       : Warte auf UDP:5000 als Server
+  SERIAL 1 DIRECTSERIAL REALPORT:ttyUSB0      : Phys. Port unter Linux verwenden
+
+.
+:PROGRAM_SERIAL_SHOW_PORT
+COM%d: %s %s
+
+.
+:PROGRAM_SERIAL_BAD_PORT
+Ein numerischer Port-Wert zwischen 1 und %d (einschließlich) muss angegeben werden.
+
+.
+:PROGRAM_SERIAL_INDENTED_LIST
+  %s
+
+.
+:PROGRAM_BOOT_IMAGE_MOUNTED
+Disketten-Image(s) bereits gemountet.
+
+.
+:PROGRAM_MOUNT_STATUS_NAME
+Image-Name
+.
+:PROGRAM_MOUNT_STATUS_SLOT
+Wechsel-Image
+.
+:PROGRAM_IMGMOUNT_STATUS_1
+Die derzeit gemounteten Disketten- und CD-Image-Laufwerke sind:
+
+.
+:PROGRAM_IMGMOUNT_STATUS_NONE
+Kein Laufwerk vorhanden
+
+.
+:PROGRAM_SERIAL_BAD_TYPE
+Der Typ muss einer der folgenden sein:
+
+.
+:SHELL_CMD_FILE_ACCESS_DENIED
+Zugriff verweigert - %s
+
+.
+:SHELL_CMD_DUPLICATE_REDIRECTION
+Doppelte Weiterleitung - %s
+
+.
+:SHELL_CMD_FAILED_PIPE
+
+Eine temporäre Datei für Piping konnte nicht erstellt/geöffnet werden.
+Überprüfe die Variable %%TEMP%%.
+
+.
+:SHELL_CMD_FILE_CREATE_ERROR
+Fehler beim Erstellen der Datei - %s
+
+.
+:SHELL_CMD_FILE_OPEN_ERROR
+Fehler beim Öffnen der Datei - %s
+
+.
+:SHELL_CMD_ATTRIB_HELP_LONG
+Benutzung:
+  [32;1mattrib[0m [37;1m[ATTRIBUTE][0m [36;1mZEICHEN[0m [/S]
+
+Wobei:
+  [37;1mATTRIBUTE[0m  sind anzuwendende Eigenschaften, einschließlich eine oder mehrere
+             der folgenden:
+             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+             Wobei: R = Schreibgeschützt, A = Archiv, S = System, H = Versteckt
+  [36;1mZEICHEN[0m    kann entweder ein exakter Dateiname sein oder ein ungenauer
+             Dateiname mit Platzhaltern, d.h. dem Sternchen (*) und dem
+             Fragezeichen (?), oder ein genauer Name eines Verzeichnisses.
+Anmerkungen:
+  In dem Befehl können mehrere Attribute angegeben werden, die durch
+  Leerzeichen getrennt sind. Wenn nichts angegeben wird, zeigt der Befehl
+  die aktuellen Datei-/Verzeichnisattribute an.
+
+Beispiele:
+  [32;1mattrib[0m [36;1mfile.txt[0m
+  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+
+.
+:SHELL_CMD_ATTRIB_GET_ERROR
+Die Attribute können nicht abgerufen werden: %s
+
+.
+:SHELL_CMD_ATTRIB_SET_ERROR
+Die Attribute können nicht gesetzt werden: %s
+
+.
+:SHELL_CMD_CHOICE_ABORTED
+
+Auswahl abgebrochen.
+
+.
+:HELP_UTIL_CATEGORY_DOSBOX
+DOSBox-Befehle
+.
+:HELP_UTIL_CATEGORY_FILE
+Datei/Verzeichnis-Befehle
+.
+:HELP_UTIL_CATEGORY_BATCH
+Batch-Datei-Befehle
+.
+:HELP_UTIL_CATEGORY_MISC
+Sonstige Befehle
+.
+:HELP_UTIL_CATEGORY_UNKNOWN
+Unbekannter Befehl
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+Auflistung nicht unterstützt
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+Gerät nicht konfiguriert
+.
+:SHELL_CMD_IMGMOUNT_HELP_LONG
+Mounted ein CD-, Disketten- oder ein Disk-Image als Laufwerk.
+
+Benutzung:
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]CD-ROM(S)[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]IMAGE-DATEI[reset] [IMAGE-DATEI2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]BOOT-IMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
+  [color=green]imgmount[reset] -u [color=white]LAUFWERK[reset]  (un-mounted [color=white]LAUFWERK[reset])
+
+Wobei:
+  [color=white]LAUFWERK[reset]    Laufwerk, in den das Image gemountet werden soll: a, c, d, ...
+  [color=cyan]CD-ROMS(S)[reset]  ISO, CUE+BIN, CUE+ISO, CUE+ISO+FLAC/OPUS/OGG/MP3/WAV Dateien
+  [color=cyan]IMAGE-DATEI[reset] FAT16- oder FAT12 Festplatten- oder Disketten-Image
+  [color=cyan]BOOT-IMAGE[reset]  bootfähiges Disk-Image mit der angegebenen -size GEOMETRIE:
+              Bytes pro Sektor, Sektoren pro Kopf, Köpfe, Zylinder
+Bemerkungen:
+  - %s+F4 wechselt & mountet die nächste(n) [color=cyan]CD-ROM(S)[reset] oder [color=cyan]BOOT-IMAGE[reset].
+  - Mit dem Flag -ro wird das Disk-Image schreibgeschützt gemountet.
+  - Der Parameter -ide emuliert eine IDE CD-Laufwerk, nützlich für CD-basierte
+    Programme, die ein echtes DOS über ein Boot-Image benötigen.
+Beispiele:
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/BENUTZERNAME/games/doom.iso[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
+  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
+
+.
+:PROGRAM_KEYB_NOERROR
+Tastaturlayout %s für Zeichentabelle %i geladen
+
+.
+:SHELL_CMD_MIXER_HELP_LONG
+Zeigt die Sound-Mixer-Einstellungen an oder ändert sie.
+
+Benutzung:
+  [color=green]mixer[reset] [color=cyan][QUELLE][reset] [color=white]PARAMETER[reset] [/noshow]
+  [color=green]mixer[reset] [/listmidi]
+
+Wobei:
+  [color=cyan]QUELLE[reset]    ist die Quelle, für die du die Einstellungen ändern willst.
+  [color=white]PARAMETER[reset] ist einer oder mehrere der folgenden Parameter:
+    Lautstärke: [color=white]0[reset] bis [color=white]100[reset], oder dB-Wert mit vorangestelltem [color=white]d[reset] (z.B. [color=white]d-7.5[reset])
+                verwende [color=white]L:R[reset] um L und R separat einzustellen (z.B. [color=white]10:20[reset])
+    Ausgang:    [color=white]stereo[reset], [color=white]reverse[reset] (nur für Stereo-Quellen)
+    Crossfeed:  [color=white]x0[reset] bis [color=white]x100[reset]    Reverb: [color=white]r0[reset] bis [color=white]r100[reset]    Chorus: [color=white]c0[reset] bis [color=white]c100[reset]
+
+Bemerkungen:
+  [color=green]mixer[reset] ohne Parameter zeigt die aktuellen Einstellungen an.
+  Die Einstellungen mehrerer Quellen können mit einem Befehl geändert werden.
+  Ohne angegebene Quelle wir Crossfeed, Reverb oder Chorus global eingestellt.
+  Mit /listmidi kannst du die Liste der verfügbaren MIDI-Geräte anzeigen.
+  Die Option /noshow wendet die Änderungen an, ohne Bildschirmausgabe.
+
+Beispiele:
+  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Quellen      Pegel     Pegel (dB)    Modus    Xfeed  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+aus
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
+.
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Auswahl fehlgeschlagen[reset]: Die Eingabe wurde ohne eine gültige Auswahl beendet.
+
+.

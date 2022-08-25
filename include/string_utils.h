@@ -186,7 +186,23 @@ std::vector<std::string> split(const std::string &seq, const char delim);
 //   split(" ") returns {}
 std::vector<std::string> split(const std::string &seq);
 
+
 // Clear the language if it's set to the POSIX default
 void clear_language_if_default(std::string &language);
+
+
+// UTF-8 support
+
+// Get recommended DOS code page to render the UTF-8 strings to. This
+// might not be the code page set using KEYB command, for example due
+// to emulated hardware limitations, or duplicated code page numbers
+uint16_t UTF8_GetCodePage();
+
+// Convert the UTF-8 string (NFC normalized, otherwise some national
+// characters might remain unrecognized) to a format intended for
+// display inside emulated environment. 
+// Code page '0' means a pure 7-bit ASCII.
+void UTF8_RenderForDos(const std::string &str_in, std::string &str_out,
+                       const uint16_t code_page = 0);
 
 #endif
