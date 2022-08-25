@@ -790,7 +790,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\dos\cdrom.h" />
     <ClInclude Include="..\src\dos\dev_con.h" />
     <ClInclude Include="..\src\dos\dos_mscdex.h" />
-    <ClInclude Include="..\src\dos\dos_resources.h" />
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\dos\program_ls.h" />
     <ClInclude Include="..\src\dos\program_serial.h" />
