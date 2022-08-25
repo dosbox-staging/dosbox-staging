@@ -38,6 +38,9 @@ using sv = std::string_view;
 
 #include "dos_keyboard_layout.h"
 
+// The default codepage for DOS
+constexpr uint16_t default_cp_437 = 437;
+
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path, and finally from builtin
 // resources. This function performs those in order and returns the first hit.
@@ -647,7 +650,7 @@ bool KeyboardLayout::SetMapKey(const Bitu key, const uint16_t layouted_key, cons
 uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 {
 	if (!strcmp(keyboard_file_name, "none"))
-		return 437;
+		return default_cp_437;
 
 	size_t read_buf_size = 0;
 	static uint8_t read_buf[65535];
@@ -661,7 +664,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		if (!load_builtin_keyboard_layouts(keyboard_file_name, tempfile, start_pos)) {
 			LOG(LOG_BIOS, LOG_ERROR)
 			("Keyboard layout file %s not found", keyboard_file_name);
-			return 437;
+			return default_cp_437;
 		}
 		if (tempfile) {
 			fseek(tempfile.get(), start_pos + 2, SEEK_SET);
@@ -675,7 +678,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG(LOG_BIOS, LOG_ERROR)
 			("Invalid keyboard layout file %s", keyboard_file_name);
-			return 437;
+			return default_cp_437;
 		}
 
 		fseek(tempfile.get(), 0, SEEK_SET);
@@ -686,20 +689,19 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		return default_cp_437;
 	}
 
-	uint8_t data_len,submappings;
-	data_len=read_buf[start_pos++];
+	auto data_len = read_buf[start_pos++];
 
 	start_pos+=data_len;		// start_pos==absolute position of KeybCB block
 
 	assert(start_pos < sizeof(read_buf));
-	submappings=read_buf[start_pos];
+	auto submappings = read_buf[start_pos];
 
 	// Make sure the submappings value won't let us read beyond the end of
 	// the buffer
 	if (submappings >= ceil_udivide(sizeof(read_buf) - start_pos - 0x14, 8u)) {
 		LOG(LOG_BIOS, LOG_ERROR)
 		("Keyboard layout file %s is corrupt", keyboard_file_name);
-		return 437;
+		return default_cp_437;
 	}
 
 	// check all submappings and use them if general submapping or same
@@ -712,7 +714,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 
 		if (submap_cp!=0) return submap_cp;
 	}
-	return 437;
+	return default_cp_437;
 }
 
 const char *get_builtin_cp_filename(const int codepage_id)
@@ -1413,7 +1415,7 @@ uint16_t assert_codepage(const uint16_t codepage)
 
 	case Country::Georgia: return assert_codepage(59829);
 
-	default: return assert_codepage(437);
+	default: return assert_codepage(default_cp_437);
 	}
 }
 
@@ -1610,7 +1612,8 @@ class DOS_KeyboardLayout final : public Module_base {
 public:
 	DOS_KeyboardLayout(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		dos.loaded_codepage=437;	// US codepage already initialized
+
+		dos.loaded_codepage = default_cp_437; // US codepage already initialized
 
 		loaded_layout = std::make_unique<KeyboardLayout>();
 
@@ -1641,9 +1644,9 @@ public:
 	}
 
 	~DOS_KeyboardLayout(){
-		if ((dos.loaded_codepage!=437) && (CurMode->type==M_TEXT)) {
+		if ((dos.loaded_codepage != default_cp_437) && (CurMode->type == M_TEXT)) {
 			INT10_ReloadRomFonts();
-			dos.loaded_codepage=437;	// US codepage
+			dos.loaded_codepage = default_cp_437; // US codepage
 		}
 		if (loaded_layout) {
 			loaded_layout.reset();
