@@ -95,7 +95,7 @@ public:
 	                                   const int32_t req_cp);
 
 	// call SetLayoutKey to apply the current language layout
-	bool SetLayoutKey(const Bitu key, const uint8_t flags1,
+	bool SetLayoutKey(const uint8_t key, const uint8_t flags1,
 	                  const uint8_t flags2, const uint8_t flags3);
 
 	KeyboardErrorCode SwitchKeyboardLayout(const char *new_layout,
@@ -132,23 +132,23 @@ private:
 
 	// language code storage used when switching layouts
 	char **language_codes    = nullptr;
-	Bitu language_code_count = 0;
+	uint16_t language_code_count = 0;
 
 	void Reset();
-	void ReadKeyboardFile(int32_t specific_layout);
+	void ReadKeyboardFile(const int32_t specific_layout);
 
 	KeyboardErrorCode ReadKeyboardFile(const char *keyboard_file_name,
 	                                   const int32_t specific_layout,
 	                                   const int32_t requested_codepage);
 
-	bool SetMapKey(const Bitu key, const uint16_t layouted_key,
+	bool SetMapKey(const uint8_t key, const uint16_t layouted_key,
 	               const bool is_command, const bool is_keypair);
 };
 
 KeyboardLayout::~KeyboardLayout()
 {
 	if (language_codes) {
-		for (Bitu i=0; i<language_code_count; i++)
+		for (uint16_t i = 0; i < language_code_count; ++i)
 			delete[] language_codes[i];
 		delete[] language_codes;
 		language_codes = nullptr;
@@ -219,29 +219,29 @@ static uint32_t read_kcl_file(const FILE_unique_ptr &kcl_file, const char *layou
 		char lng_codes[258];
 		fseek(kcl_file.get(), -2, SEEK_CUR);
 		// get all language codes for this layout
-		for (Bitu i=0; i<data_len;) {
+		for (auto i = 0; i < data_len;) {
 			if (fread(rbuf, sizeof(uint8_t), 2, kcl_file.get()) != 2) {
 				break;
 			}
 			uint16_t lcnum = host_readw(&rbuf[0]);
 			i+=2;
-			Bitu lcpos=0;
+			uint16_t lng_pos = 0;
 			for (;i<data_len;) {
 				if (fread(rbuf, sizeof(uint8_t), 1, kcl_file.get()) != 1) {
 					break;
 				}
 				i++;
 				if (((char)rbuf[0])==',') break;
-				lng_codes[lcpos++]=(char)rbuf[0];
+				lng_codes[lng_pos++] = (char)rbuf[0];
 			}
-			lng_codes[lcpos]=0;
+			lng_codes[lng_pos] = 0;
 			if (strcasecmp(lng_codes, layout_id)==0) {
 				// language ID found in file, return file position
 				return check_cast<uint32_t>(cur_pos);
 			}
 			if (first_id_only) break;
 			if (lcnum) {
-				sprintf(&lng_codes[lcpos],"%d",lcnum);
+				sprintf(&lng_codes[lng_pos], "%d", lcnum);
 				if (strcasecmp(lng_codes, layout_id)==0) {
 					// language ID found in file, return file position
 					return check_cast<uint32_t>(cur_pos);
@@ -346,18 +346,18 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 	language_codes=new char*[data_len];
 	language_code_count=0;
 	// get all language codes for this layout
-	for (Bitu i=0; i<data_len;) {
+	for (uint16_t i = 0; i < data_len;) {
 		language_codes[language_code_count]=new char[256];
 		i+=2;
-		Bitu lcpos=0;
+		uint16_t lng_pos = 0;
 		for (;i<data_len;) {
 			assert(start_pos + i < sizeof(read_buf));
 			char lcode=char(read_buf[start_pos+i]);
 			i++;
 			if (lcode==',') break;
-			language_codes[language_code_count][lcpos++]=lcode;
+			language_codes[language_code_count][lng_pos++] = lcode;
 		}
-		language_codes[language_code_count][lcpos]=0;
+		language_codes[language_code_count][lng_pos] = 0;
 		language_code_count++;
 	}
 
@@ -377,7 +377,7 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 
 	assert(read_buf_pos < sizeof(read_buf));
 
-	for (auto i = 0; i < additional_planes; ++i) {
+	for (uint16_t i = 0; i < additional_planes; ++i) {
 		auto &layout = current_layout_planes[i];
 		for (auto p_flags : {
 		             &layout.required_flags,
@@ -446,8 +446,13 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 				// add all available mappings
 				for (uint16_t addmap=0; addmap<scan_length; addmap++) {
 					if (addmap>additional_planes+2) break;
-					Bitu charptr=read_buf_pos+addmap*((read_buf[read_buf_pos-2]&0x80)?2:1);
-					uint16_t kchar=read_buf[charptr];
+					const auto pos =
+					        read_buf_pos +
+					        addmap * ((read_buf[read_buf_pos - 2] & 0x80)
+					                          ? 2
+					                          : 1);
+					const auto charptr = check_cast<uint16_t>(pos);
+					uint16_t kchar = read_buf[charptr];
 
 					if (kchar!=0) {		// key remapped
 						if (read_buf[read_buf_pos-2]&0x80) kchar|=read_buf[charptr+1]<<8;	// scancode/char pair
@@ -491,7 +496,7 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 	return KEYB_LAYOUTNOTFOUND;
 }
 
-bool KeyboardLayout::SetLayoutKey(const Bitu key, const uint8_t flags1,
+bool KeyboardLayout::SetLayoutKey(const uint8_t key, const uint8_t flags1,
                                   const uint8_t flags2, const uint8_t flags3)
 {
 	if (key > MAX_SCAN_CODE)
@@ -585,7 +590,8 @@ bool KeyboardLayout::SetLayoutKey(const Bitu key, const uint8_t flags1,
 	return false;
 }
 
-bool KeyboardLayout::SetMapKey(const Bitu key, const uint16_t layouted_key, const bool is_command, const bool is_keypair)
+bool KeyboardLayout::SetMapKey(const uint8_t key, const uint16_t layouted_key,
+                               const bool is_command, const bool is_keypair)
 {
 	if (is_command) {
 		uint8_t key_command=(uint8_t)(layouted_key&0xff);
@@ -1082,7 +1088,7 @@ KeyboardErrorCode KeyboardLayout::SwitchKeyboardLayout(const char *new_layout,
 
 		bool language_code_found=false;
 		// check if language code is present in loaded foreign layout
-		for (Bitu i=0; i<language_code_count; i++) {
+		for (uint16_t i = 0; i < language_code_count; ++i) {
 			if (!strncasecmp(tbuf,language_codes[i],newlen)) {
 				language_code_found=true;
 				break;
@@ -1164,7 +1170,9 @@ static void SwitchKeyboardLayout(bool pressed) {
 #endif
 
 // called by int9-handler
-bool DOS_LayoutKey(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3) {
+bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
+                   const uint8_t flags2, const uint8_t flags3)
+{
 	if (loaded_layout)
 		return loaded_layout->SetLayoutKey(key, flags1, flags2, flags3);
 	else

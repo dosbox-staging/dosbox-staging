@@ -227,7 +227,7 @@ static Bitu IRQ1_Handler(void) {
 /* handling of the locks key is difficult as sdl only gives
  * states for numlock capslock. 
  */
-	Bitu scancode=reg_al;	/* Read the code */
+	const auto scancode = reg_al; // Read the code
 
 	uint8_t flags1,flags2,flags3,leds;
 	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
