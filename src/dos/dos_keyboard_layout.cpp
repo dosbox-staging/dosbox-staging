@@ -1367,7 +1367,7 @@ static Country lookup_country_from_code(const char *country_code)
 
 uint16_t assert_codepage(const uint16_t codepage)
 {
-	assert(!std::string_view(get_builtin_cp_filename(codepage)).empty());
+	assert(!sv{get_builtin_cp_filename(codepage)}.empty());
 	return codepage;
 }
 
@@ -1375,35 +1375,35 @@ uint16_t assert_codepage(const uint16_t codepage)
 {
 	// grouped in ascending ordered by codepage value
 	switch (country) {
-	case Country::Bosnia:
-	case Country::Croatia:
-	case Country::Macedonia:
-	case Country::Montenegro:
-	case Country::Serbia:
-	case Country::Slovenia:
-	case Country::Yugoslavia: return assert_codepage(113);
-
 	case Country::Poland: return assert_codepage(668);
 
 	case Country::Lithuania: return assert_codepage(774);
-
-	case Country::Ukraine: return assert_codepage(848);
-
-	case Country::Latin_America: return assert_codepage(850);
-
-	case Country::Romania: return assert_codepage(852);
-
-	case Country::Turkey: return assert_codepage(857);
 
 	case Country::Belgium:
 	case Country::Finland:
 	case Country::France:
 	case Country::Germany:
 	case Country::Italy:
+	case Country::Latin_America:
 	case Country::Netherlands:
 	case Country::Spain:
 	case Country::Sweden:
-	case Country::Switzerland: return assert_codepage(858);
+	case Country::Switzerland: return assert_codepage(850);
+
+	case Country::Albania:
+	case Country::Croatia:
+	case Country::Montenegro:
+	case Country::Romania:
+	case Country::Slovenia:
+	case Country::Turkmenistan: return assert_codepage(852);
+
+	case Country::Bosnia:
+	case Country::Bulgaria:
+	case Country::Macedonia:
+	case Country::Serbia:
+	case Country::Yugoslavia: return assert_codepage(855);
+
+	case Country::Turkey: return assert_codepage(857);
 
 	case Country::Brazil:
 	case Country::Portugal: return assert_codepage(860);
@@ -1428,6 +1428,10 @@ uint16_t assert_codepage(const uint16_t codepage)
 	case Country::Estonia: return assert_codepage(1116);
 
 	case Country::Latvia: return assert_codepage(1117);
+
+	case Country::Ukraine: return assert_codepage(1125);
+
+	case Country::Belarus: return assert_codepage(1131);
 
 	case Country::Hungary: return assert_codepage(3845);
 
