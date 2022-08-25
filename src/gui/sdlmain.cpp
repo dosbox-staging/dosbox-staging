@@ -2119,6 +2119,10 @@ void GFX_SetShader([[maybe_unused]] const std::string &source)
 #endif
 }
 
+bool GFX_MouseIsAvailable() {
+	return sdl.mouse.control_choice != NoMouse;
+}
+
 void GFX_ToggleMouseCapture()
 {
 	/*

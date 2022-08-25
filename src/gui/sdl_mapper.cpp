@@ -2896,6 +2896,11 @@ void MAPPER_LosingFocus() {
 
 void MAPPER_RunEvent(uint32_t /*val*/)
 {
+	if (!GFX_MouseIsAvailable()) {
+		LOG_ERR("MAPPER: The mapper requires a mouse, but no mouse is available");
+		LOG_WARNING("MAPPER: Set your conf 'capture_mouse' setting to something other than 'nomouse'");
+		return;
+	}
 	KEYBOARD_ClrBuffer();           // Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
 	MAPPER_DisplayUI();
