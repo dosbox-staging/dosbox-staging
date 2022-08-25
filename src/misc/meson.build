@@ -14,6 +14,7 @@ libmisc_sources = [
     'setup.cpp',
     'string_utils.cpp',
     'support.cpp',
+    'unicode.cpp',
 ]
 
 libmisc = static_library(
