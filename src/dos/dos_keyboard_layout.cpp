@@ -649,7 +649,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 	if (!strcmp(keyboard_file_name, "none"))
 		return 437;
 
-	uint32_t read_buf_size;
+	size_t read_buf_size = 0;
 	static uint8_t read_buf[65535];
 	uint32_t start_pos=5;
 
@@ -665,9 +665,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		}
 		if (tempfile) {
 			fseek(tempfile.get(), start_pos + 2, SEEK_SET);
-			read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t),
-			                              65535, tempfile.get());
-			assert(read_buf_size);
+			read_buf_size = fread(read_buf, sizeof(uint8_t), 65535, tempfile.get());
 		}
 		start_pos=0;
 	} else {
@@ -681,9 +679,11 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		}
 
 		fseek(tempfile.get(), 0, SEEK_SET);
-		read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t), 65535,
-		                              tempfile.get());
-		assert(read_buf_size);
+		read_buf_size = fread(read_buf, sizeof(uint8_t), 65535, tempfile.get());
+	}
+	if (read_buf_size == 0) {
+		LOG_WARNING("CODEPAGE: Could not read data from layout file %s", keyboard_file_name);
+		return default_cp_437;
 	}
 
 	uint8_t data_len,submappings;
