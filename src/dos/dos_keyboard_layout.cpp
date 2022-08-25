@@ -39,6 +39,38 @@ using sv = std::string_view;
 #include "dos_keyboard_layout.h"
 #include "dos_resources.h"
 
+// A common pattern in the keyboard layout file is to try opening the requested
+// file first within DOS, then from the local path, and finally from builtin
+// resources. This function performs those in order and returns the first hit.
+static FILE_unique_ptr open_layout_file(const char *name, const char *resource_dir = nullptr)
+{
+	constexpr auto file_perms = "rb";
+
+	// Try opening from DOS first (this can throw, so we catch/ignore)
+	uint8_t drive = 0;
+	char fullname[DOS_PATHLENGTH] = {};
+	if (DOS_MakeName(name, fullname, &drive)) try {
+		// try to open file on mounted drive first
+		const auto ldp = dynamic_cast<localDrive *>(Drives[drive]);
+		if (ldp) {
+			if (const auto fp = ldp->GetSystemFilePtr(fullname, file_perms); fp) {
+				return FILE_unique_ptr(fp);
+			}
+		}
+	} catch (...) {}
+
+	// Then try from the local filesystem
+	if (const auto fp = fopen(name, file_perms); fp)
+		return FILE_unique_ptr(fp);
+
+	// Finally try from a built-in resources
+	if (resource_dir)
+		if (const auto rp = GetResourcePath(resource_dir, name); !rp.empty())
+			return make_fopen(rp.string().c_str(), file_perms);
+
+	return nullptr;
+}
+
 static FILE_unique_ptr OpenDosboxFile(const char *name)
 {
 	uint8_t drive;
@@ -251,6 +283,36 @@ static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, 
 	}
 
 	return 0;
+}
+
+// Scans the builtin keyboard files for the given layout.
+// If found, populates the kcl_file and starting position.
+static bool load_builtin_keyboard_layouts(const char *layout_id, FILE_unique_ptr &kcl_file, uint32_t &kcl_start_pos)
+{
+	auto find_layout_id = [&](const char *builtin_filename, const bool first_only) {
+		// Could we open the file?
+		constexpr auto resource_dir = "freedos-keyboard";
+		auto fp = open_layout_file(builtin_filename, resource_dir);
+		if (!fp)
+			return false;
+
+		// Could we read it and find the start of the layout?
+		const auto pos = read_kcl_file(builtin_filename, layout_id, first_only);
+		if (pos == 0)
+			return false;
+
+		// Layout was found at the given position
+		kcl_file = std::move(fp);
+		kcl_start_pos = pos;
+		return true;
+	};
+
+	for (const auto first_only : {true, false})
+		for (const auto builtin_filename : {"KEYBOARD.SYS", "KEYBRD2.SYS", "KEYBRD3.SYS", "KEYBRD4.SYS"})
+			if (find_layout_id(builtin_filename, first_only))
+				return true;
+
+	return false;
 }
 
 static uint32_t read_kcl_data(const std::vector<uint8_t> &kcl_data,
