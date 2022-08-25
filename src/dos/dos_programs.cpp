@@ -41,8 +41,6 @@
 #include "program_biostest.h"
 #endif
 
-#include "dos_resources.h"
-
 extern uint32_t floppytype;
 
 extern char autoexec_data[autoexec_maxsize];
@@ -83,14 +81,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	if (add_autoexec)
-		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data,
-		               (uint32_t)strlen(autoexec_data));
-	VFILE_Register("CPI", 0, 0, "/");
-
-	for (size_t i = 0; i < FILE_EGA_CPX.size(); i++)
-		VFILE_Register(FILE_EGA_CPX[i], BLOB_EGA_CPX[i], "/CPI/");
-	for (size_t i = 0; i < FILE_KEYBOARD_SYS.size(); i++)
-		VFILE_Register(FILE_KEYBOARD_SYS[i], BLOB_KEYBOARD_SYS[i], "");
+		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data, (uint32_t)strlen(autoexec_data));
 }
 
 void DOS_SetupPrograms(void)

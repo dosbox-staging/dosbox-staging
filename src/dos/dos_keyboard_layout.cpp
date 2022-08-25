@@ -37,7 +37,6 @@ using sv = std::string_view;
 #include "string_utils.h"
 
 #include "dos_keyboard_layout.h"
-#include "dos_resources.h"
 
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path, and finally from builtin
@@ -70,7 +69,6 @@ static FILE_unique_ptr open_layout_file(const char *name, const char *resource_d
 
 	return nullptr;
 }
-
 
 class KeyboardLayout {
 public:
@@ -288,60 +286,6 @@ static bool load_builtin_keyboard_layouts(const char *layout_id, FILE_unique_ptr
 				return true;
 
 	return false;
-}
-
-static uint32_t read_kcl_data(const std::vector<uint8_t> &kcl_data,
-                              const char *layout_id,
-                              const bool first_id_only)
-{
-	// check ID-bytes
-	if ((kcl_data[0]!=0x4b) || (kcl_data[1]!=0x43) || (kcl_data[2]!=0x46)) {
-		return 0;
-	}
-
-	uint32_t dpos=7+kcl_data[6];
-
-	for (;;) {
-		if (dpos + 5 > kcl_data.size())
-			break;
-		uint32_t cur_pos=dpos;
-		uint16_t len=host_readw(&kcl_data[dpos]);
-		uint8_t data_len=kcl_data[dpos+2];
-		dpos+=5;
-
-		char lng_codes[258];
-		// get all language codes for this layout
-		for (Bitu i=0; i<data_len;) {
-			uint16_t lcnum=host_readw(&kcl_data[dpos-2]);
-			i+=2;
-			Bitu lcpos=0;
-			for (;i<data_len;) {
-				if (dpos + 1 > kcl_data.size())
-					break;
-				char lc=(char)kcl_data[dpos];
-				dpos++;
-				i++;
-				if (lc==',') break;
-				lng_codes[lcpos++]=lc;
-			}
-			lng_codes[lcpos]=0;
-			if (strcasecmp(lng_codes, layout_id)==0) {
-				// language ID found, return position
-				return cur_pos;
-			}
-			if (first_id_only) break;
-			if (lcnum) {
-				sprintf(&lng_codes[lcpos],"%d",lcnum);
-				if (strcasecmp(lng_codes, layout_id)==0) {
-					// language ID found, return position
-					return cur_pos;
-				}
-			}
-			dpos+=2;
-		}
-		dpos=cur_pos+3+len;
-	}
-	return 0;
 }
 
 KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
