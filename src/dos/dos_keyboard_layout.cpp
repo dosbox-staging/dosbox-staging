@@ -864,6 +864,21 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 		("Codepage file %s invalid", cp_filename.c_str());
 		return KEYB_INVALIDCPFILE;
 	}
+
+	// Helper used by both the compressed and uncompressed code paths to read the entire file
+	auto read_entire_cp_file = [&](size_t &bytes_read) {
+		if (fseek(tempfile.get(), 0, SEEK_SET) != 0) {
+			LOG_ERR("CODEPAGE: could not seek to start of compressed file %s: %s: ",
+			        cp_filename.c_str(), strerror(errno));
+			return false;
+		}
+		bytes_read = fread(cpi_buf.data(),
+		                   cpi_unit_size,
+		                   cpi_buf.size(),
+		                   tempfile.get());
+		return (bytes_read > 0);
+	};
+
 	// check if non-compressed cpi file
 	if ((cpi_buf[0] != 0xff) || (cpi_buf[1] != 0x46) || (cpi_buf[2] != 0x4f) || (cpi_buf[3] != 0x4e) ||
 	    (cpi_buf[4] != 0x54)) {
@@ -911,13 +926,14 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 		// The next data comes after the version (used for decompression below)
 		found_at_pos += upx_ver_pos + sizeof(upx_ver);
 
-		// Read the entire compressed CPX-file
-		fseek(tempfile.get(), 0, SEEK_SET);
-		size_of_cpxdata = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
+		// Read the entire compressed CPX file
+		if (!read_entire_cp_file(size_of_cpxdata))
+			return KEYB_INVALIDCPFILE;
+
 	} else {
-		// standard uncompressed cpi-file
-		fseek(tempfile.get(), 0, SEEK_SET);
-		cpi_buf_size = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
+		// read the entire uncompressed CPI file
+		if (!read_entire_cp_file(cpi_buf_size))
+			return KEYB_INVALIDCPFILE;
 	}
 
 	if (upxfound) {
