@@ -71,28 +71,6 @@ static FILE_unique_ptr open_layout_file(const char *name, const char *resource_d
 	return nullptr;
 }
 
-static FILE_unique_ptr OpenDosboxFile(const char *name)
-{
-	uint8_t drive;
-	char fullname[DOS_PATHLENGTH];
-
-	localDrive* ldp=0;
-	// try to build dos name
-	if (DOS_MakeName(name,fullname,&drive)) {
-		try {
-			// try to open file on mounted drive first
-			ldp=dynamic_cast<localDrive*>(Drives[drive]);
-			if (ldp) {
-				FILE *tmpfile=ldp->GetSystemFilePtr(fullname, "rb");
-				if (tmpfile != nullptr)
-					return FILE_unique_ptr(tmpfile);
-			}
-		}
-		catch(...) {}
-	}
-	FILE *tmpfile=fopen(name, "rb");
-	return FILE_unique_ptr(tmpfile);
-}
 
 class KeyboardLayout {
 public:
@@ -211,29 +189,27 @@ void KeyboardLayout::ReadKeyboardFile(const int32_t specific_layout)
 		                 dos.loaded_codepage);
 }
 
-static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, bool first_id_only) {
-	auto tempfile = OpenDosboxFile(kcl_file_name);
-	if (!tempfile)
-		return 0;
-
+static uint32_t read_kcl_file(const FILE_unique_ptr &kcl_file, const char *layout_id, bool first_id_only)
+{
+	assert(kcl_file);
+	assert(layout_id);
 	static uint8_t rbuf[8192];
 
 	// check ID-bytes of file
-	uint32_t dr = (uint32_t)fread(rbuf, sizeof(uint8_t), 7, tempfile.get());
+	auto dr = fread(rbuf, sizeof(uint8_t), 7, kcl_file.get());
 	if ((dr < 7) || (rbuf[0] != 0x4b) || (rbuf[1] != 0x43) || (rbuf[2] != 0x46)) {
 		return 0;
 	}
 
 	const auto seek_pos = 7 + rbuf[6];
-	if (fseek(tempfile.get(), seek_pos, SEEK_SET) != 0) {
-		LOG_WARNING("LAYOUT: could not seek to byte %d in keyboard layout file '%s': %s",
-		            seek_pos, kcl_file_name, strerror(errno));
+	if (fseek(kcl_file.get(), seek_pos, SEEK_SET) != 0) {
+		LOG_WARNING("LAYOUT: could not seek to byte %d in keyboard layout file: %s", seek_pos, strerror(errno));
 		return 0;
 	}
 
 	for (;;) {
-		uint32_t cur_pos = (uint32_t)(ftell(tempfile.get()));
-		dr = (uint32_t)fread(rbuf, sizeof(uint8_t), 5, tempfile.get());
+		const auto cur_pos = ftell(kcl_file.get());
+		dr = fread(rbuf, sizeof(uint8_t), 5, kcl_file.get());
 		if (dr < 5)
 			break;
 		uint16_t len=host_readw(&rbuf[0]);
@@ -243,18 +219,17 @@ static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, 
 		static_assert(UINT8_MAX < sizeof(rbuf), "rbuf too small");
 
 		char lng_codes[258];
-		fseek(tempfile.get(), -2, SEEK_CUR);
+		fseek(kcl_file.get(), -2, SEEK_CUR);
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
-			if (fread(rbuf, sizeof(uint8_t), 2, tempfile.get()) != 2) {
+			if (fread(rbuf, sizeof(uint8_t), 2, kcl_file.get()) != 2) {
 				break;
 			}
 			uint16_t lcnum = host_readw(&rbuf[0]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
-				if (fread(rbuf, sizeof(uint8_t), 1,
-				          tempfile.get()) != 1) {
+				if (fread(rbuf, sizeof(uint8_t), 1, kcl_file.get()) != 1) {
 					break;
 				}
 				i++;
@@ -264,24 +239,24 @@ static uint32_t read_kcl_file(const char* kcl_file_name, const char* layout_id, 
 			lng_codes[lcpos]=0;
 			if (strcasecmp(lng_codes, layout_id)==0) {
 				// language ID found in file, return file position
-				return cur_pos;
+				return check_cast<uint32_t>(cur_pos);
 			}
 			if (first_id_only) break;
 			if (lcnum) {
 				sprintf(&lng_codes[lcpos],"%d",lcnum);
 				if (strcasecmp(lng_codes, layout_id)==0) {
 					// language ID found in file, return file position
-					return cur_pos;
+					return check_cast<uint32_t>(cur_pos);
 				}
 			}
 		}
-		if (fseek(tempfile.get(), cur_pos + 3 + len, SEEK_SET) != 0) {
-			LOG_ERR("LAYOUT: could not seek to byte %d in keyboard layout file '%s': %s",
-			        cur_pos + 3 + len, kcl_file_name, strerror(errno));
+		if (fseek(kcl_file.get(), cur_pos + 3 + len, SEEK_SET) != 0) {
+			LOG_ERR("LAYOUT: could not seek to byte %d in keyboard layout file: %s",
+			        check_cast<int>(cur_pos) + 3 + len,
+			        strerror(errno));
 			return 0;
 		}
 	}
-
 	return 0;
 }
 
@@ -297,7 +272,7 @@ static bool load_builtin_keyboard_layouts(const char *layout_id, FILE_unique_ptr
 			return false;
 
 		// Could we read it and find the start of the layout?
-		const auto pos = read_kcl_file(builtin_filename, layout_id, first_only);
+		const auto pos = read_kcl_file(fp, layout_id, first_only);
 		if (pos == 0)
 			return false;
 
@@ -386,38 +361,10 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 	char nbuf[512];
 	read_buf_size = 0;
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
-	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile == nullptr) {
-		// try keyboard layout libraries next
-		auto try_file = [&](const char *file, const bool first_id_only) {
-			if (!(start_pos = read_kcl_file(file, keyboard_file_name,
-			                                first_id_only)))
-				return false;
-			tempfile = OpenDosboxFile(file);
-			return true;
-		};
-		auto try_builtin = [&](const uint8_t i, const bool first_id_only) {
-			if (!(start_pos = read_kcl_data(BLOB_KEYBOARD_SYS[i],
-			                                keyboard_file_name,
-			                                first_id_only)))
-				return false;
-			assert(read_buf_size == 0);
-			for (Bitu ct = start_pos + 2;
-			     ct < BLOB_KEYBOARD_SYS[i].size(); ct++)
-				read_buf[read_buf_size++] = BLOB_KEYBOARD_SYS[i][ct];
-			return true;
-		};
-		if (!try_file("keyboard.sys", true) &&
-		    !try_file("keybrd2.sys", true) &&
-		    !try_file("keybrd3.sys", true) && !try_file("keybrd4.sys", true) &&
-		    !try_file("keyboard.sys", false) &&
-		    !try_file("keybrd2.sys", false) &&
-		    !try_file("keybrd3.sys", false) &&
-		    !try_file("keybrd4.sys", false) && !try_builtin(0, true) &&
-		    !try_builtin(1, true) && !try_builtin(2, true) &&
-		    !try_builtin(3, true) && !try_builtin(0, false) &&
-		    !try_builtin(1, false) && !try_builtin(2, false) &&
-		    !try_builtin(3, false)) {
+	auto tempfile = open_layout_file(nbuf);
+
+	if (!tempfile) {
+		if (!load_builtin_keyboard_layouts(keyboard_file_name, tempfile, start_pos)) {
 			LOG(LOG_BIOS, LOG_ERROR)
 			("Keyboard layout file %s not found", keyboard_file_name);
 			return KEYB_FILENOTFOUND;
@@ -764,38 +711,10 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 
 	char nbuf[512];
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
-	auto tempfile = OpenDosboxFile(nbuf);
+	auto tempfile = open_layout_file(nbuf);
+
 	if (!tempfile) {
-		// try keyboard layout libraries next
-		auto try_file = [&](const char *file, const bool first_id_only) {
-			if (!(start_pos = read_kcl_file(file, keyboard_file_name,
-			                                first_id_only)))
-				return false;
-			tempfile = OpenDosboxFile(file);
-			return true;
-		};
-		auto try_builtin = [&](const uint8_t i, const bool first_id_only) {
-			if (!(start_pos = read_kcl_data(BLOB_KEYBOARD_SYS[i],
-			                                keyboard_file_name,
-			                                first_id_only)))
-				return false;
-			read_buf_size = 0;
-			for (Bitu ct = start_pos + 2;
-			     ct < BLOB_KEYBOARD_SYS[i].size(); ct++)
-				read_buf[read_buf_size++] = BLOB_KEYBOARD_SYS[i][ct];
-			return true;
-		};
-		if (!try_file("keyboard.sys", true) &&
-		    !try_file("keybrd2.sys", true) &&
-		    !try_file("keybrd3.sys", true) && !try_file("keybrd4.sys", true) &&
-		    !try_file("keyboard.sys", false) &&
-		    !try_file("keybrd2.sys", false) &&
-		    !try_file("keybrd3.sys", false) &&
-		    !try_file("keybrd4.sys", false) && !try_builtin(0, true) &&
-		    !try_builtin(1, true) && !try_builtin(2, true) &&
-		    !try_builtin(3, true) && !try_builtin(0, false) &&
-		    !try_builtin(1, false) && !try_builtin(2, false) &&
-		    !try_builtin(3, false)) {
+		if (!load_builtin_keyboard_layouts(keyboard_file_name, tempfile, start_pos)) {
 			LOG(LOG_BIOS, LOG_ERROR)
 			("Keyboard layout file %s not found", keyboard_file_name);
 			return 437;
@@ -804,6 +723,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 			fseek(tempfile.get(), start_pos + 2, SEEK_SET);
 			read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t),
 			                              65535, tempfile.get());
+			assert(read_buf_size);
 		}
 		start_pos=0;
 	} else {
@@ -819,6 +739,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 		fseek(tempfile.get(), 0, SEEK_SET);
 		read_buf_size = (uint32_t)fread(read_buf, sizeof(uint8_t), 65535,
 		                              tempfile.get());
+		assert(read_buf_size);
 	}
 
 	uint8_t data_len,submappings;
@@ -850,7 +771,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 	return 437;
 }
 
-constexpr int8_t get_cpx_file_id(const int codepage_id)
+const char *get_builtin_cp_filename(const int codepage_id)
 {
 	// reference:
 	// https://gitlab.com/FreeDOS/base/cpidos/-/blob/master/DOC/CPIDOS/CODEPAGE.TXT
@@ -860,136 +781,125 @@ constexpr int8_t get_cpx_file_id(const int codepage_id)
 	case 852:
 	case 853:
 	case 857:
-	case 858: return 0; // EGA.CPX
+	case 858: return "EGA.CPX";
 	case 775:
 	case 859:
 	case 1116:
 	case 1117:
 	case 1118:
-	case 1119: return 1; // EGA2.CPX
+	case 1119: return "EGA2.CPX";
 	case 771:
 	case 772:
 	case 808:
 	case 855:
 	case 866:
-	case 872: return 2; // EGA3.CPX
+	case 872: return "EGA3.CPX";
 	case 848:
 	case 849:
 	case 1125:
 	case 1131:
 	case 3012:
-	case 30010: return 3; // EGA4.CPX
+	case 30010: return "EGA4.CPX";
 	case 113:
 	case 737:
 	case 851:
-	case 869: return 4; // EGA5.CPX
+	case 869: return "EGA5.CPX";
 	case 899:
 	case 30008:
 	case 58210:
 	case 59829:
 	case 60258:
-	case 60853: return 5; // EGA6.CPX
+	case 60853: return "EGA6.CPX";
 	case 30011:
 	case 30013:
 	case 30014:
 	case 30017:
 	case 30018:
-	case 30019: return 6; // EGA7.CPX
+	case 30019: return "EGA7.CPX";
 	case 770:
 	case 773:
 	case 774:
 	case 777:
-	case 778: return 7; // EGA8.CPX
+	case 778: return "EGA8.CPX";
 	case 860:
 	case 861:
 	case 863:
 	case 865:
-	case 867: return 8; // EGA9.CPX
+	case 867: return "EGA9.CPX";
 	case 667:
 	case 668:
 	case 790:
 	case 991:
-	case 3845: return 9; // EGA10.CPX
+	case 3845: return "EGA10.CPX";
 	case 30000:
 	case 30001:
 	case 30004:
 	case 30007:
-	case 30009: return 10; // EGA11.CPX
+	case 30009: return "EGA11.CPX";
 	case 30003:
 	case 30029:
 	case 30030:
-	case 58335: return 11; // EGA12.CPX
+	case 58335: return "EGA12.CPX";
 	case 895:
 	case 30002:
 	case 58152:
 	case 59234:
-	case 62306: return 12; // EGA13.CPX
+	case 62306: return "EGA13.CPX";
 	case 30006:
 	case 30012:
 	case 30015:
 	case 30016:
 	case 30020:
-	case 30021: return 13; // EGA14.CPX
+	case 30021: return "EGA14.CPX";
 	case 30023:
 	case 30024:
 	case 30025:
 	case 30026:
 	case 30027:
-	case 30028: return 14; // EGA15.CPX
+	case 30028: return "EGA15.CPX";
 	case 3021:
 	case 30005:
 	case 30022:
 	case 30031:
-	case 30032: return 15; // EGA16.CPX
+	case 30032: return "EGA16.CPX";
 	case 862:
 	case 864:
 	case 30034:
 	case 30033:
 	case 30039:
-	case 30040: return 16; // EGA17.CPX
+	case 30040: return "EGA17.CPX";
 	case 856:
 	case 3846:
-	case 3848: return 17; // EGA18.CPX
-	default: return -1;   // none
+	case 3848: return "EGA18.CPI";
+	default: return ""; // none
 	}
 }
 
-KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *codepage_file_name, const int32_t codepage_id)
+KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_filename, const int32_t codepage_id)
 {
-	char cp_filename[512];
-	safe_strcpy(cp_filename, codepage_file_name);
-	if (!strcmp(cp_filename,"none")) return KEYB_NOERROR;
+	assert(requested_cp_filename);
+	std::string cp_filename = requested_cp_filename;
 
-	if (codepage_id==dos.loaded_codepage) return KEYB_NOERROR;
+	if (cp_filename.empty() || cp_filename == "none" || codepage_id == dos.loaded_codepage)
+		return KEYB_NOERROR;
 
-	if (!strcmp(cp_filename,"auto")) {
-		// select matching .cpi-file for specified codepage
-		const auto i = get_cpx_file_id(codepage_id);
-		if (i < 0) {
-			LOG_MSG("No matching cpi file for codepage %i", codepage_id);
+	if (cp_filename == "auto") {
+		cp_filename = get_builtin_cp_filename(codepage_id);
+		if (cp_filename.empty()) {
+			LOG_WARNING("CODEPAGE: Could not find a file for codepage ID %d", codepage_id);
 			return KEYB_INVALIDCPFILE;
 		}
-		sprintf(cp_filename, "%s", FILE_EGA_CPX[i]);
 	}
+	// At this point, we expect to have a filename
+	assert(!cp_filename.empty());
 
-	char nbuf[520];
-	sprintf(nbuf, "Z:\\CPI\\%s", cp_filename);
-	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile == nullptr) {
-		size_t strsz=strlen(nbuf);
-		if (strsz) {
-			char plc=(char)toupper(*reinterpret_cast<unsigned char*>(&nbuf[strsz-1]));
-			if (plc=='I') {
-				// try CPX-extension as well
-				nbuf[strsz-1]='X';
-				tempfile=OpenDosboxFile(nbuf);
-			} else if (plc=='X') {
-				// try CPI-extension as well
-				nbuf[strsz-1]='I';
-				tempfile=OpenDosboxFile(nbuf);
-			}
-		}
+	auto tempfile = open_layout_file(cp_filename.c_str(), "freedos-cpi");
+	if (!tempfile) {
+		LOG_WARNING("CODEPAGE: Could not open file %s in DOS or from host resources", cp_filename.c_str());
+		return KEYB_INVALIDCPFILE;
 	}
+	// At this point, we expect to have a file
+	assert(tempfile);
 
 	std::array<uint8_t, UINT16_MAX + 1> cpi_buf;
 	constexpr size_t cpi_unit_size = sizeof(cpi_buf[0]);
@@ -998,77 +908,70 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *codepage_file_nam
 	size_t size_of_cpxdata = 0;
 	bool upxfound = false;
 	size_t found_at_pos = 5;
-	if (tempfile == nullptr) {
-		// check if build-in codepage is available
-		const auto i = get_cpx_file_id(codepage_id);
-		if (i < 0)
+
+	constexpr auto bytes_to_detect_upx = 5;
+
+	const auto dr = fread(cpi_buf.data(), cpi_unit_size, bytes_to_detect_upx, tempfile.get());
+	// check if file is valid
+	if (dr < 5) {
+		LOG(LOG_BIOS, LOG_ERROR)
+		("Codepage file %s invalid", cp_filename.c_str());
+		return KEYB_INVALIDCPFILE;
+	}
+	// check if non-compressed cpi file
+	if ((cpi_buf[0] != 0xff) || (cpi_buf[1] != 0x46) || (cpi_buf[2] != 0x4f) || (cpi_buf[3] != 0x4e) ||
+	    (cpi_buf[4] != 0x54)) {
+		// check if dr-dos custom cpi file
+		if ((cpi_buf[0] == 0x7f) && (cpi_buf[1] != 0x44) && (cpi_buf[2] != 0x52) && (cpi_buf[3] != 0x46) &&
+		    (cpi_buf[4] != 0x5f)) {
+			LOG(LOG_BIOS, LOG_ERROR)
+			("Codepage file %s has unsupported DR-DOS format", cp_filename.c_str());
 			return KEYB_INVALIDCPFILE;
-		cpi_buf_size = BLOB_EGA_CPX[i].size();
-		for (size_t bct = 0; bct < cpi_buf_size; bct++)
-			cpi_buf[bct] = BLOB_EGA_CPX[i][bct];
-		upxfound = true;
-		found_at_pos=0x29;
-		size_of_cpxdata=cpi_buf_size;
+		}
+
+		// Read enough data to scan for UPX's identifier and version
+		const auto scan_size = 100;
+		assert(scan_size <= cpi_buf.size());
+		if (fread(cpi_buf.data(), cpi_unit_size, scan_size, tempfile.get()) != scan_size) {
+			LOG_WARNING("CODEPAGE: File %s is too small, could not read initial %d bytes",
+			            cp_filename.c_str(),
+			            scan_size + ds);
+			return KEYB_INVALIDCPFILE;
+		}
+		// Scan for the UPX identifier
+		const auto upx_id     = sv{"UPX!"};
+		const auto scan_buf   = sv{reinterpret_cast<char *>(cpi_buf.data()), scan_size};
+		const auto upx_id_pos = scan_buf.find(upx_id);
+
+		// did we find the UPX identifier?
+		upxfound = upx_id_pos != scan_buf.npos;
+		if (!upxfound) {
+			LOG_WARNING("CODEPAGE: File %s is invalid, could not find the UPX identifier", cp_filename.c_str());
+			return KEYB_INVALIDCPFILE;
+		}
+		// The IPX version byte comes after the identifier pattern
+		const auto upx_ver_pos = upx_id_pos + upx_id.length();
+		const auto upx_ver     = cpi_buf[upx_ver_pos];
+
+		// Can we handle this version?
+		constexpr uint8_t upx_min_ver = 10;
+		if (upx_ver < upx_min_ver) {
+			LOG_WARNING("CODEPAGE: File %s is packed with UPX version %u, but %u+ is needed",
+			            cp_filename.c_str(),
+			            upx_ver,
+			            upx_min_ver);
+			return KEYB_INVALIDCPFILE;
+		}
+		// The next data comes after the version (used for decompression below)
+		found_at_pos += upx_ver_pos + sizeof(upx_ver);
+
+		// Read the entire compressed CPX-file
+		fseek(tempfile.get(), 0, SEEK_SET);
+		size_of_cpxdata = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
 	} else {
-		constexpr auto bytes_to_detect_upx = 5;
-		const auto dr = fread(cpi_buf.data(), cpi_unit_size, bytes_to_detect_upx, tempfile.get());
-		// check if file is valid
-		if (dr<5) {
-			LOG(LOG_BIOS,LOG_ERROR)("Codepage file %s invalid",cp_filename);
-			return KEYB_INVALIDCPFILE;
-		}
-		// check if non-compressed cpi file
-		if ((cpi_buf[0]!=0xff) || (cpi_buf[1]!=0x46) || (cpi_buf[2]!=0x4f) || 
-			(cpi_buf[3]!=0x4e) || (cpi_buf[4]!=0x54)) {
-			// check if dr-dos custom cpi file
-			if ((cpi_buf[0]==0x7f) && (cpi_buf[1]!=0x44) && (cpi_buf[2]!=0x52) && 
-				(cpi_buf[3]!=0x46) && (cpi_buf[4]!=0x5f)) {
-				LOG(LOG_BIOS,LOG_ERROR)("Codepage file %s has unsupported DR-DOS format",cp_filename);
-				return KEYB_INVALIDCPFILE;
-			}
-
-			// Read enough data to scan for UPX's identifier and version
-			const auto scan_size = 100;
-			assert(scan_size <= cpi_buf.size());
-			if (fread(cpi_buf.data(), cpi_unit_size, scan_size, tempfile.get()) != scan_size) {
-				LOG_WARNING("CODEPAGE: File %s is too small, could not read initial %d bytes",
-				            cp_filename, scan_size + ds);
-				return KEYB_INVALIDCPFILE;
-			}
-			// Scan for the UPX identifier
-			const auto upx_id = sv{"UPX!"};
-			const auto scan_buf = sv{reinterpret_cast<char *>(cpi_buf.data()), scan_size};
-			const auto upx_id_pos = scan_buf.find(upx_id);
-
-			// did we find the UPX identifier?
-			upxfound = upx_id_pos != scan_buf.npos;
-			if (!upxfound) {
-				LOG_WARNING("CODEPAGE: File %s is invalid, could not find the UPX identifier",
-				            cp_filename);
-				return KEYB_INVALIDCPFILE;
-			}
-			// The IPX version byte comes after the identifier pattern
-			const auto upx_ver_pos = upx_id_pos + upx_id.length();
-			const auto upx_ver = cpi_buf[upx_ver_pos];
-
-			// Can we handle this version?
-			constexpr uint8_t upx_min_ver = 10;
-			if (upx_ver < upx_min_ver) {
-				LOG_WARNING("CODEPAGE: File %s is packed with UPX version %u, but %u+ is needed",
-				            cp_filename, upx_ver, upx_min_ver);
-				return KEYB_INVALIDCPFILE;
-			}
-			// The next data comes after the version (used for decompression below)
-			found_at_pos += upx_ver_pos + sizeof(upx_ver);
-
-			// Read the entire compressed CPX-file
-			fseek(tempfile.get(), 0, SEEK_SET);
-			size_of_cpxdata = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
-		} else {
-			// standard uncompressed cpi-file
-			fseek(tempfile.get(), 0, SEEK_SET);
-			cpi_buf_size = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
-		}
+		// standard uncompressed cpi-file
+		fseek(tempfile.get(), 0, SEEK_SET);
+		cpi_buf_size = fread(cpi_buf.data(), cpi_unit_size, cpi_buf.size(), tempfile.get());
 	}
 
 	if (upxfound) {
@@ -1118,10 +1021,11 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *codepage_file_nam
 	// Internally unpacking some UPX code-page files can result in unparseable data
 	if (start_pos >= cpi_buf_size) {
 		LOG_WARNING("KEYBOARD: Could not parse %scode-data from: %s",
-		            (upxfound) ? "UPX-unpacked " : "", cp_filename);
+		            (upxfound) ? "UPX-unpacked " : "",
+		            cp_filename.c_str());
 
 		LOG(LOG_BIOS, LOG_ERROR)
-		("Code-page file %s invalid start_pos=%u", cp_filename, start_pos);
+		("Code-page file %s invalid start_pos=%u", cp_filename.c_str(), start_pos);
 		return KEYB_INVALIDCPFILE;
 	}
 
@@ -1493,9 +1397,9 @@ static Country lookup_country_from_code(const char *country_code)
 	return Country::United_States;
 }
 
-constexpr uint16_t assert_codepage(const uint16_t codepage)
+uint16_t assert_codepage(const uint16_t codepage)
 {
-	assert(get_cpx_file_id(codepage) != -1);
+	assert(!std::string_view(get_builtin_cp_filename(codepage)).empty());
 	return codepage;
 }
 

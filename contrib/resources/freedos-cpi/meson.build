@@ -16,5 +16,5 @@ resource_files = [
     'EGA15.CPX',
     'EGA16.CPX',
     'EGA17.CPX',
-    'EGA18.CPX',
+    'EGA18.CPI',
 ]
