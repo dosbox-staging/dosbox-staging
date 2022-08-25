@@ -240,7 +240,8 @@ void DOS_SetupPrograms(void);
 /* Initialize Keyboard Layout */
 void DOS_KeyboardLayout_Init(Section* sec);
 
-bool DOS_LayoutKey(Bitu key, uint8_t flags1, uint8_t flags2, uint8_t flags3);
+bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
+                   const uint8_t flags2, const uint8_t flags3);
 
 DOS_Version DOS_ParseVersion(const char *word, const char *args);
 
