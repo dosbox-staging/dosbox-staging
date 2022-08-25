@@ -530,7 +530,8 @@ bool KeyboardLayout::SetLayoutKey(const Bitu key, const uint8_t flags1,
 	}
 
 	// calculate current flags
-	uint16_t current_flags=(flags1&0x7f) | (((flags2&3) | (flags3&0xc))<<8);
+	auto current_flags = (flags1 & 0x7f) |
+	                     (((flags2 & 3) | (flags3 & 0xc)) << 8);
 	if (flags1&3) current_flags|=0x4000;	// either shift key active
 	if (flags3&2) current_flags|=0x1000;	// e0 prefixed
 
