@@ -30,6 +30,7 @@
  * version: 1.8
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1270,6 +1271,16 @@ void OPL3_Reset(opl3_chip *chip, uint32_t samplerate)
         slot->trem = (uint8_t*)&chip->zeromod;
         slot->slot_num = slotnum;
     }
+
+    /* (DOSBox Staging addition)
+     * The number of channels is not defined as a self-documenting constant
+     * variable and instead is represented by hardcoded literals (18) throughout
+     * the code. Therefore, we programmatically determine the total number of
+     * channels available and double check it against this magic literal.
+     */
+    const int channels = (int)(sizeof(chip->channel) / sizeof(chip->channel[0]));
+    assert(channels == 18);
+
     for (channum = 0; channum < 18; channum++)
     {
         channel = &chip->channel[channum];
@@ -1280,11 +1291,17 @@ void OPL3_Reset(opl3_chip *chip, uint32_t samplerate)
         chip->slot[local_ch_slot + 3].channel = channel;
         if ((channum % 9) < 3)
         {
-            channel->pair = &chip->channel[channum + 3];
+            /* (DOSBox Staging addition) */
+            const int index = channum + 3;
+            assert(index < channels);
+            channel->pair = &chip->channel[index];
         }
         else if ((channum % 9) < 6)
         {
-            channel->pair = &chip->channel[channum - 3];
+            /* (DOSBox Staging addition) */
+            const int index = channum - 3;
+            assert(index >= 0 && index < channels);
+            channel->pair = &chip->channel[index];
         }
         channel->chip = chip;
         channel->out[0] = &chip->zeromod;
