@@ -201,8 +201,11 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 //
 class Gus {
 public:
-	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);
+	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir,
+	    const std::string &filter_prefs);
+
 	virtual ~Gus();
+
 	bool CheckTimer(size_t t);
 	void PrintStats();
 
@@ -579,7 +582,8 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 	wave_ctrl.inc = ceil_udivide(val, 2u);
 }
 
-Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
+Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
+         const std::string &filter_prefs)
         : port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
@@ -606,6 +610,16 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	                                  ChannelFeature::DigitalAudio});
 
 	assert(audio_channel);
+
+	if (!audio_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (filter_prefs != "off")
+			LOG_WARNING("GUS: Invalid filter setting '%s', using 'off'",
+			            filter_prefs.c_str());
+
+		audio_channel->SetHighPassFilter(FilterState::Off);
+		audio_channel->SetLowPassFilter(FilterState::Off);
+	}
+
 	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
 
 	// Let the mixer command adjust the GUS's internal amplitude level's
@@ -1574,12 +1588,21 @@ static void gus_init(Section *sec)
 
 	// Read the GUS config settings
 	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
-	const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")), MIN_DMA_ADDRESS, MAX_DMA_ADDRESS);
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")), MIN_IRQ_ADDRESS, MAX_IRQ_ADDRESS);
+
+	const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")),
+	                       MIN_DMA_ADDRESS,
+	                       MAX_DMA_ADDRESS);
+
+	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")),
+	                       MIN_IRQ_ADDRESS,
+	                       MAX_IRQ_ADDRESS);
+
 	const std::string ultradir = conf->Get_string("ultradir");
 
+	const std::string filter_prefs = conf->Get_string("gus_filter");
+
 	// Instantiate the GUS with the settings
-	gus = std::make_unique<Gus>(port, dma, irq, ultradir);
+	gus = std::make_unique<Gus>(port, dma, irq, ultradir, filter_prefs);
 	sec->AddDestroyFunction(&gus_destroy, true);
 }
 
@@ -1617,6 +1640,13 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	                   "there should be a MIDI directory that contains\n"
 	                   "the patch files for GUS playback. Patch sets used\n"
 	                   "with Timidity should work fine.");
+
+	str_prop = secprop.Add_string("gus_filter", when_idle, "off");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Filter for the Gravis UltraSound audio output:\n"
+	        "  off:       Don't filter the output (default).\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
 void GUS_AddConfigSection(const config_ptr_t &conf)
