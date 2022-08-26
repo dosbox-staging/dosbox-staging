@@ -33,14 +33,15 @@
 
 class Innovation {
 public:
-	void Open(const std::string &model_choice,
-	          const std::string &clock_choice,
-	          int filter_strength_6581,
-	          int filter_strength_8580,
-	          int port_choice);
+	void Open(const std::string &model_choice, const std::string &clock_choice,
+	          int filter_strength_6581, int filter_strength_8580,
+	          int port_choice, const std::string &channel_filter_choice);
 
 	void Close();
-	~Innovation() { Close(); }
+	~Innovation()
+	{
+		Close();
+	}
 
 private:
 	bool MaybeRenderFrame(float &frame);
