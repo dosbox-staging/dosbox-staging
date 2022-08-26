@@ -68,7 +68,7 @@ float Lfo::tick(int waveform)
 		// Random
 		if (freqWrap)
         {
-			randomValue = ((float)rand() / (float)RAND_MAX - 0.5f) * 2.0f;
+			randomValue = generate_random_fraction();
 		}
 
 		result = randomValue;
@@ -86,7 +86,7 @@ void Lfo::resetPhase(float phase)
 {
 	this->phase = phase * 255.0f;
 
-	randomValue = ((float)rand() / (float)RAND_MAX - 0.5f) * 2.0f;
+	randomValue = generate_random_fraction();
 }
 
 void Lfo::setRate(float rate)

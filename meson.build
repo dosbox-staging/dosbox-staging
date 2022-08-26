@@ -628,6 +628,10 @@ endif
 # Setup include directories
 incdir = include_directories('include', '.')
 
+# A list of DOSBox's internal libraries populated
+# by each of the src/ subdir imports below.
+internal_deps = []
+
 # bundled dependencies, in dependency-order
 #
 subdir('src/libs/ghc')
@@ -639,6 +643,10 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+
+# ZMBV and TalChorus use some support functionality from misc
+subdir('src/misc')
+subdir('src/libs/zmbv')
 subdir('src/libs/tal-chorus')
 
 # A list of DOSBox's bundled 3rd party dependencies,
@@ -657,16 +665,6 @@ third_party_deps = [
     libwhereami_dep,
     libtalchorus_dep,
 ]
-
-# A list of DOSBox's internal libraries populated
-# by each of the src/ subdir imports below.
-internal_deps = []
-
-# ZMBV is unique in that it's not really a stand-alone 3rd
-# party library, because it uses some code from (from misc/),
-# so we need to import libmisc_dep before ZBMV:
-subdir('src/misc')
-subdir('src/libs/zmbv')
 
 # internal libs
 subdir('src/cpu')
