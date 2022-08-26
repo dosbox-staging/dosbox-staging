@@ -257,7 +257,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
 			crossfeed = cf / 100.0f;
 		} else {
-			LOG_WARNING("MIXER: Invalid crossfeed value '%s', using off",
+			LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
 			            crossfeed_pref.c_str());
 		}
 	}
@@ -848,7 +848,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 	const auto dual_filter   = (parts.size() == 6);
 
 	if (!(single_filter || dual_filter)) {
-		LOG_WARNING("%s: Invalid custom filter definition: %s. Must be "
+		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
 		            "specified in \"lfp|hpf <ORDER> <CUTOFF_FREQUENCY>\" format",
 		            name.c_str(),
 		            filter_prefs.c_str());
@@ -861,7 +861,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		int order;
 		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
 		    order > max_filter_order) {
-			LOG_WARNING("%s: Invalid custom filter order: %s. Must be an integer between 1 and %d.",
+			LOG_WARNING("%s: Invalid custom filter order: '%s'. Must be an integer between 1 and %d.",
 			            name.c_str(),
 			            order_pref.c_str(),
 			            max_filter_order);
@@ -871,7 +871,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		int cutoff_freq_hz;
 		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
 		    cutoff_freq_hz <= 0) {
-			LOG_WARNING("%s: Invalid custom filter cutoff frequency: %s. Must be a positive number.",
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. Must be a positive number.",
 			            name.c_str(),
 			            cutoff_freq_pref.c_str());
 			return false;
@@ -880,8 +880,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		const auto max_cutoff_freq_hz = GetSampleRate() / 2 - 1;
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
-			LOG_WARNING("%s: Invalid custom filter cutoff frequency: %s. "
-			            "Must be lower than half the sample rate, clamping to %d Hz.",
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
+			            "Must be lower than half the sample rate; clamping to %d Hz.",
 			            name.c_str(),
 			            cutoff_freq_pref.c_str(),
 			            max_cutoff_freq_hz);
@@ -896,7 +896,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			ConfigureHighPassFilter(order, cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
 		} else {
-			LOG_WARNING("%s: Invalid custom filter type: %s. Must be either 'lpf' or 'hpf'.",
+			LOG_WARNING("%s: Invalid custom filter type: '%s'. Must be either 'hpf' or 'lpf'.",
 			            name.c_str(),
 			            type_pref.c_str());
 			return false;
@@ -924,7 +924,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		const auto filter2_cutoff_freq = parts[i++];
 
 		if (filter1_type == filter2_type) {
-			LOG_WARNING("%s: Invalid custom filter definition: %s. "
+			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
 			            "The two filters must be of different types.",
 			            name.c_str(),
 			            filter_prefs.c_str());

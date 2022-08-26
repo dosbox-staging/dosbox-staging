@@ -64,8 +64,8 @@ void PCSPEAKER_Init(Section *section)
 			pc_speaker->SetFilterState(FilterState::On);
 		} else {
 			if (filter_choice != "off") {
-				LOG_WARNING("PCSPEAKER: Invalid filter setting '%s', using off",
-							filter_choice.data());
+				LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' value: '%s', using 'off'",
+				            filter_choice.data());
 			}
 			pc_speaker->SetFilterState(FilterState::Off);
 		}

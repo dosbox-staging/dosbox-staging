@@ -98,7 +98,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("%s: Invalid filter setting '%s', using off",
+			LOG_WARNING("%s: Invalid 'cms_filter' value: '%s', using 'off'",
 			            CardName(),
 			            filter_choice.c_str());
 
