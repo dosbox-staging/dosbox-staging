@@ -217,7 +217,7 @@ TEST(CreateRandomizer, RangeOfLetters)
 	ASSERT_EQ('A', 65);
 	ASSERT_EQ('z', 122);
 
-	test_randomizer('A', 'z');
+	test_randomizer<int16_t>('A', 'z');
 }
 
 TEST(CreateRandomizer, RangeOfFloats)
