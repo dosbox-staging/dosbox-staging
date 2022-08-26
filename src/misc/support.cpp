@@ -246,17 +246,22 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	return paths;
 }
 
+// Select either an integer or real-based uniform distribution
+template <typename T>
+	using uniform_distributor_t =
+	    typename std::conditional <std::is_integral<T>::value,
+	                    std::uniform_int_distribution<T>,
+	                    std::uniform_real_distribution<T>>::type;
+
 template <typename T>
 std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 {
 	static std::random_device rd;        // one-time call to the host OS
 	static std::mt19937 generator(rd()); // seed the mersenne_twister once
 
-	// Hand back as many generators as needed without further costs
-	// incurred setting up the random number generator.
 	return [=]() {
-		std::uniform_int_distribution<T> distrib(min_value, max_value);
-		return distrib(generator);
+		auto distribute = uniform_distributor_t<T>(min_value, max_value);
+		return distribute(generator);
 	};
 }
 // Explicit template instantiations
@@ -264,6 +269,7 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 template std::function<char()> CreateRandomizer<char>(const char, const char);
 template std::function<uint8_t()> CreateRandomizer<uint8_t>(const uint8_t,
                                                             const uint8_t);
+template std::function<float()> CreateRandomizer<float>(const float, const float);
 
 std_fs::path GetResourcePath(const std_fs::path &name)
 {
