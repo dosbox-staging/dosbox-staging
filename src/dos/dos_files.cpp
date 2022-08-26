@@ -804,11 +804,11 @@ bool DOS_CreateTempFile(char * const name,uint16_t * entry) {
 	const auto old_errorcode = dos.errorcode;
 	dos.errorcode = 0;
 
-	static const auto randomize_letter = CreateRandomizer<char>('A', 'Z');
+	static const auto randomize_letter = CreateRandomizer<int16_t>('A', 'Z');
 	do {
 		uint32_t i;
 		for (i=0;i<8;i++) {
-			tempname[i] = randomize_letter();
+			tempname[i] = check_cast<char>(randomize_letter());
 		}
 		tempname[8]=0;
 	} while (DOS_FileExists(name));

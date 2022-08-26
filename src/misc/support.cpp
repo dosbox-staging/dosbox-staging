@@ -266,9 +266,7 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 }
 // Explicit template instantiations
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-template std::function<char()> CreateRandomizer<char>(const char, const char);
-template std::function<uint8_t()> CreateRandomizer<uint8_t>(const uint8_t,
-                                                            const uint8_t);
+template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t, const int16_t);
 template std::function<float()> CreateRandomizer<float>(const float, const float);
 
 std_fs::path GetResourcePath(const std_fs::path &name)
