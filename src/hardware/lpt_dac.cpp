@@ -165,7 +165,7 @@ void LPT_DAC_Init(Section *section)
 		const auto filter_state = filter_choice == "on" ? FilterState::On
 														: FilterState::Off;
 		if (filter_state == FilterState::Off && filter_choice != "off")
-			LOG_WARNING("LPT_DAC: Invalid lpt_dac_filter setting: '%s', using off",
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
 						filter_choice.data());
 
 		lpt_dac->ConfigureFilters(filter_state);

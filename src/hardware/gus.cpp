@@ -613,7 +613,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
 
 	if (!audio_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off")
-			LOG_WARNING("GUS: Invalid filter setting '%s', using 'off'",
+			LOG_WARNING("GUS: Invalid 'gus_filter' value: '%s', using 'off'",
 			            filter_prefs.c_str());
 
 		audio_channel->SetHighPassFilter(FilterState::Off);

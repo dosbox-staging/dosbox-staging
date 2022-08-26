@@ -142,8 +142,8 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("PS1DAC: Invalid filter setting '%s', using off",
-						filter_choice.c_str());
+			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' value: '%s', using 'off'",
+			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -424,7 +424,7 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("PS1: Invalid filter setting '%s', using off",
+			LOG_WARNING("PS1: Invalid 'ps1audio_filter' setting: '%s', using 'off'",
 			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);

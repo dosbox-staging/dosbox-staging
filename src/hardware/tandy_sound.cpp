@@ -232,7 +232,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("TANDYDAC: Invalid filter setting '%s', using off",
+			LOG_WARNING("TANDYDAC: Invalid 'tandy_dac_filter' value: '%s', using 'off'",
 			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -443,7 +443,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("TANDY: Invalid filter setting '%s', using off",
+			LOG_WARNING("TANDY: Invalid 'tandy_filter' value: '%s', using 'off'",
 			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);

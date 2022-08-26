@@ -439,7 +439,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 	const auto filter_type = determine_filter_type(filter_choice, sb_type);
 
 	if (!filter_type) {
-		LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'off'",
+		LOG_WARNING("%s: Invalid 'sb_filter' value: '%s', using 'off'",
 		            CardType(),
 		            filter_choice.c_str());
 
@@ -505,7 +505,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 
 	if (!filter_type) {
 		if (filter_choice != "off")
-			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'off'",
+			LOG_WARNING("%s: Invalid 'opl_filter' value: '%s', using 'off'",
 						CardType(), filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
