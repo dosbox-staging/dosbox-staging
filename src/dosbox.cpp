@@ -975,7 +975,7 @@ void DOSBOX_Init() {
 	Pstring->Set_help(
 	        "Filter for the PS/1 Audio synth output:\n"
 	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.]n"
+	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	Pstring = secprop->Add_string("ps1audio_dac_filter", when_idle, "on");
