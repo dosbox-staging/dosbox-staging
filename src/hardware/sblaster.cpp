@@ -716,14 +716,16 @@ static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 }
 
 static uint32_t ReadDMA8(uint32_t bytes_to_read, uint32_t i = 0) {
-	const auto read = sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8 + i);
-	return check_cast<uint32_t>(read);
+	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8 + i);
+	assert(bytes_read <= DMA_BUFSIZE * sizeof(sb.dma.buf.b8[0]));
+	return check_cast<uint32_t>(bytes_read);
 }
 
 static uint32_t ReadDMA16(uint32_t bytes_to_read, uint32_t i = 0) {
-	const auto read = sb.dma.chan->Read(bytes_to_read,
-	                      reinterpret_cast<uint8_t *>(sb.dma.buf.b16 + i));
-	return check_cast<uint32_t>(read);
+	const auto unsigned_buf = reinterpret_cast<uint8_t *>(sb.dma.buf.b16 + i);
+	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, unsigned_buf);
+	assert(bytes_read <= DMA_BUFSIZE * sizeof(sb.dma.buf.b16[0]));
+	return check_cast<uint32_t>(bytes_read);
 }
 
 static void PlayDMATransfer(uint32_t bytes_requested)
