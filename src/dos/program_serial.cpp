@@ -67,8 +67,13 @@ void SERIAL::Run()
 	// Select COM port type.
 	if (cmd->GetCount() >= 1 && !HelpRequested()) {
 		// Which COM did they want to change?
+		if (!cmd->FindCommand(1, temp_line)) {
+			// Port number not provided or invalid type
+			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_PORT"), SERIAL_MAX_PORTS);
+			return;
+		}
+		// A port value was provided, can it be converted to an integer?
 		int port = -1;
-		cmd->FindCommand(1, temp_line);
 		try {
 			port = stoi(temp_line);
 		} catch (...) {
