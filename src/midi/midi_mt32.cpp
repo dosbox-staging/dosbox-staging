@@ -177,7 +177,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        mt32_new_model.GetName(),
 	                        mt32_204_model.GetName(),
 	                        0};
-	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	auto *str_prop       = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
 	str_prop->Set_help(
 	        "Model of synthesizer to use.\n"
@@ -186,17 +186,25 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
-	str_prop->Set_help("The directory containing ROMs for one or more models.\n"
-	                   "The directory can be absolute or relative, or leave it blank to\n"
-	                   "use the 'mt32-roms' directory in your DOSBox configuration\n"
-	                   "directory. Other common system locations will be checked as well.\n"
-	                   "ROM files inside this directory may include any of the following:\n"
-	                   "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
-	                   "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
-	                   "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.");
+	str_prop->Set_help(
+	        "The directory containing ROMs for one or more models.\n"
+	        "The directory can be absolute or relative, or leave it blank to\n"
+	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
+	        "directory. Other common system locations will be checked as well.\n"
+	        "ROM files inside this directory may include any of the following:\n"
+	        "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
+	        "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
+	        "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.");
+
+	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Filter for the Roland MT-32/CM-32L audio output:\n"
+	        "  off:       Don't filter the output (default).\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-#if defined(WIN32)
+#	if defined(WIN32)
 
 static std::deque<std::string> get_rom_dirs()
 {
@@ -535,6 +543,20 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
+
+	const auto section = static_cast<Section_prop *>(control->GetSection("mt32"));
+	assert(section);
+
+	const std::string filter_prefs = section->Get_string("mt32_filter");
+	//
+	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (filter_prefs != "off")
+			LOG_WARNING("MT32: Invalid 'mt32_filter' value: '%s', using 'off'",
+			            filter_prefs.c_str());
+
+		mixer_channel->SetHighPassFilter(FilterState::Off);
+		mixer_channel->SetLowPassFilter(FilterState::Off);
+	}
 
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
