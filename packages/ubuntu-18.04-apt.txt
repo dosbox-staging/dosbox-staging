@@ -2,6 +2,7 @@ ccache
 build-essential
 g++-9
 libasound2-dev
+libatomic1
 libopusfile-dev
 libpng-dev
 libsdl2-dev

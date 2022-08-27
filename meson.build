@@ -301,13 +301,25 @@ if cxx.compiles(builtin_expect_code, name: 'test for __builtin_expect support')
     conf_data.set('C_HAS_BUILTIN_EXPECT', 1)
 endif
 
+atomic_code = '''
+#include <atomic>
+#include <cstdint>
+int main() {
+  std::atomic<std::int33_t> x32 = 1;
+  std::atomic<std::int64_t> x64 = 1;
+  return static_cast<int>(x64.load() - x32.load());
+}
+'''
+atomic_dep = dependency('', required: false)
+if not cxx.links(atomic_code, name: 'compiler has built-in atomics')
+    atomic_dep = cxx.find_library('atomic')
+endif
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # system and compiler libraries
 dl_dep = cc.find_library('dl', required: false)
-atomic_dep = cxx.find_library('atomic', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
 threads_dep = dependency('threads')
 
