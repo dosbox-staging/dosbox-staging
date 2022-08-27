@@ -860,14 +860,14 @@ void DOSBOX_Init() {
 	        "  <custom>:  One or two custom filters in the following format:\n"
 	        "               TYPE ORDER FREQ\n"
 	        "             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),\n"
-	        "             ORDER is the order of the filter from 1 to 16 (1st order\n"
-	        "             results in 6dB/oct slope, 2nd order in 12dB/oct, etc.), and\n"
-	        "             FREQ is the cutoff frequency in Hz. Examples:\n"
+	        "             ORDER is the order of the filter from 1 to 16\n"
+	        "             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),\n"
+	        "             and FREQ is the cutoff frequency in Hz. Examples:\n"
 	        "                lpf 2 12000\n"
 	        "                hpf 3 120 lfp 1 6500");
 
 	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, true);
-	Pbool->Set_help("Force the Sound Blaster filter to be always on "
+	Pbool->Set_help("Force the Sound Blaster filter to be always on\n"
 					"(disallow programs from turning the filter off).");
 
 	Pstring = secprop->Add_string("opl_filter", when_idle, "auto");
@@ -951,7 +951,7 @@ void DOSBOX_Init() {
 	                  "  disney:    Disney Sound Source.\n"
 	                  "  covox:     Covox Speech Thing.\n"
 	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
-	                  "  none/off:  Don't use a parallel port DAC (default).\n");
+	                  "  none/off:  Don't use a parallel port DAC (default).");
 	pstring->Set_values(lpt_dac_types);
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
