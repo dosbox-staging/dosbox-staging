@@ -305,9 +305,9 @@ atomic_code = '''
 #include <atomic>
 #include <cstdint>
 int main() {
-  std::atomic<std::int33_t> x32 = 1;
-  std::atomic<std::int64_t> x64 = 1;
-  return static_cast<int>(x64.load() - x32.load());
+  std::atomic<std::int16_t> x16 = 1;
+  std::atomic<std::int32_t> x32 = 1;
+  return static_cast<int>(x32.load() - x16.load());
 }
 '''
 atomic_dep = dependency('', required: false)
