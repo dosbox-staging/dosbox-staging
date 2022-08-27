@@ -115,7 +115,7 @@ void Innovation::Open(const std::string &model_choice,
 
 	// Move the locals into members
 	service = std::move(sid_service);
-	channel = std::move(mixer_channel);
+	channel = mixer_channel;
 
 	// Ready state-values for rendering
 	last_rendered_ms = 0.0;

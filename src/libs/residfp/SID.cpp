@@ -150,10 +150,8 @@ SID::SID() :
     setChipModel(MOS8580);
 }
 
-SID::~SID()
-{
-    // Needed to delete auto_ptr with complete type
-}
+// Needed to delete auto_ptr with complete type
+SID::~SID() = default;
 
 void SID::setFilter6581Curve(double filterCurve)
 {
