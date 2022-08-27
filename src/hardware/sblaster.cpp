@@ -63,6 +63,8 @@ constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 // and resets on startup, resulting a rapid susccession of resets.
 constexpr uint8_t DSP_INITIAL_RESET_LIMIT = 4;
 
+constexpr auto native_dac_rate_hz = 45454;
+
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 
 enum SB_TYPES {
@@ -412,6 +414,12 @@ static void configure_sb_filter(mixer_channel_t channel,
 								const bool filter_always_on,
                                 const SB_TYPES sb_type)
 {
+	// A bit unfortunate, but we need to enable the ZOH upsampler and the the
+	// correct upsample rate first for the filter cutoff frequency validation
+	// to work correctly.
+	channel->ConfigureZeroOrderHoldUpsampler(native_dac_rate_hz);
+	channel->EnableZeroOrderHoldUpsampler();
+
 	if (channel->TryParseAndSetCustomFilter(filter_prefs))
 		return;
 
@@ -431,9 +439,8 @@ static void configure_sb_filter(mixer_channel_t channel,
 	};
 
 	auto enable_zoh_upsampler = [&] {
-		constexpr auto native_dac_rate_hz = 45454;
-		config.zoh_upsampler_enabled      = true;
-		config.zoh_rate_hz                = native_dac_rate_hz;
+		config.zoh_upsampler_enabled = true;
+		config.zoh_rate_hz           = native_dac_rate_hz;
 	};
 
 	const auto filter_type = determine_filter_type(filter_choice, sb_type);
