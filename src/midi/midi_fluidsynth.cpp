@@ -61,37 +61,46 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "  MIXER FSYNTH 200");
 
 	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
-	str_prop->Set_help("Chorus effect: 'auto', 'on', 'off', or custom values.\n"
-	                   "When using custom values:\n"
-	                   "  All five must be provided in-order and space-separated.\n"
-	                   "  They are: voice-count level speed depth modulation-wave, where:\n"
-	                   "  - voice-count is an integer from 0 to 99.\n"
-	                   "  - level is a decimal from 0.0 to 10.0\n"
-	                   "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
-	                   "  - depth is a decimal from 0.0 to 21.0\n"
-	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
-	                   "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
-					   "Note: You can disable the FluidSynth chorus and enable the\n"
-					   "mixer-level chorus on the FluidSynth channel instead, or\n"
-					   "enable both chorus effects at the same time. Whether this\n"
-					   "sounds good depends on the SoundFont and the chorus settings\n"
-					   "being used.");
+	str_prop->Set_help(
+	        "Chorus effect: 'auto', 'on', 'off', or custom values.\n"
+	        "When using custom values:\n"
+	        "  All five must be provided in-order and space-separated.\n"
+	        "  They are: voice-count level speed depth modulation-wave, where:\n"
+	        "  - voice-count is an integer from 0 to 99.\n"
+	        "  - level is a decimal from 0.0 to 10.0\n"
+	        "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
+	        "  - depth is a decimal from 0.0 to 21.0\n"
+	        "  - modulation-wave is either 'sine' or 'triangle'\n"
+	        "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
+	        "Note: You can disable the FluidSynth chorus and enable the\n"
+	        "mixer-level chorus on the FluidSynth channel instead, or\n"
+	        "enable both chorus effects at the same time. Whether this\n"
+	        "sounds good depends on the SoundFont and the chorus settings\n"
+	        "being used.");
 
 	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
-	str_prop->Set_help("Reverb effect: 'auto', 'on', 'off', or custom values.\n"
-	                   "When using custom values:\n"
-	                   "  All four must be provided in-order and space-separated.\n"
-	                   "  They are: room-size damping width level, where:\n"
-	                   "  - room-size is a decimal from 0.0 to 1.0\n"
-	                   "  - damping is a decimal from 0.0 to 1.0\n"
-	                   "  - width is a decimal from 0.0 to 100.0\n"
-	                   "  - level is a decimal from 0.0 to 1.0\n"
-	                   "  For example: reverb = 0.61 0.23 0.76 0.56\n"
-					   "Note: You can disable the FluidSynth reverb and enable the\n"
-					   "mixer-level reverb on the FluidSynth channel instead, or\n"
-					   "enable both reverb effects at the same time. Whether this\n"
-					   "sounds good depends on the SoundFont and the reverb settings\n"
-					   "being used.");
+	str_prop->Set_help(
+	        "Reverb effect: 'auto', 'on', 'off', or custom values.\n"
+	        "When using custom values:\n"
+	        "  All four must be provided in-order and space-separated.\n"
+	        "  They are: room-size damping width level, where:\n"
+	        "  - room-size is a decimal from 0.0 to 1.0\n"
+	        "  - damping is a decimal from 0.0 to 1.0\n"
+	        "  - width is a decimal from 0.0 to 100.0\n"
+	        "  - level is a decimal from 0.0 to 1.0\n"
+	        "  For example: reverb = 0.61 0.23 0.76 0.56\n"
+	        "Note: You can disable the FluidSynth reverb and enable the\n"
+	        "mixer-level reverb on the FluidSynth channel instead, or\n"
+	        "enable both reverb effects at the same time. Whether this\n"
+	        "sounds good depends on the SoundFont and the reverb settings\n"
+	        "being used.");
+
+	str_prop = secprop.Add_string("fsynth_filter", when_idle, "off");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Filter for the FluidSynth audio output:\n"
+	        "  off:       Don't filter the output (default).\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
 // Takes in the user's SoundFont configuration value consisting of the SF2
@@ -229,13 +238,28 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                             ChannelFeature::ChorusSend,
 	                                             ChannelFeature::Synthesizer});
 
+	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
+	assert(section);
+
+	const std::string filter_prefs = section->Get_string("fsynth_filter");
+
+	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (filter_prefs != "off")
+			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
+			            filter_prefs.c_str());
+
+		mixer_channel->SetHighPassFilter(FilterState::Off);
+		mixer_channel->SetLowPassFilter(FilterState::Off);
+	}
+
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
 
 	// Per the FluidSynth API, the sample-rate should be part of the
 	// settings used to instantiate the synth, so we create the mixer
 	// channel first and use its native rate to configure FluidSynth.
-	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate",
+	fluid_settings_setnum(fluid_settings.get(),
+	                      "synth.sample-rate",
 	                      mixer_channel->GetSampleRate());
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
@@ -246,7 +270,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"));
 	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
 	auto scale_by_percent = std::get<int>(sf_spec);
