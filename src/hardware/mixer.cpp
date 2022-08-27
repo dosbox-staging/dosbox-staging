@@ -877,7 +877,9 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			return false;
 		}
 
-		const auto max_cutoff_freq_hz = GetSampleRate() / 2 - 1;
+		const auto max_cutoff_freq_hz = (do_zoh_upsampler
+		                                         ? zoh_upsampler.target_freq
+		                                         : sample_rate) / 2 - 1;
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
