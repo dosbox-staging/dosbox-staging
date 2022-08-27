@@ -204,7 +204,7 @@ static std::string find_sf_file(const std::string &name)
 		return sf_path;
 	for (const auto &dir : get_data_dirs()) {
 		for (const auto &sf : {dir + name, dir + name + ".sf2"}) {
-			// DEBUG_LOG_MSG("MIDI: FluidSynth checking if '%s' exists", sf.c_str());
+			// DEBUG_LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 			if (path_exists(sf))
 				return sf;
 		}
@@ -221,7 +221,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
 	                                    delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_MSG("MIDI: new_fluid_settings failed");
+		LOG_MSG("FSYNTH: new_fluid_settings failed");
 		return false;
 	}
 
@@ -265,7 +265,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_MSG("MIDI: Failed to create the FluidSynth synthesizer");
+		LOG_MSG("FSYNTH: Failed to create the FluidSynth synthesizer.");
 		return false;
 	}
 
@@ -278,16 +278,16 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("MIDI: FluidSynth failed to load '%s', check the path.",
+		LOG_MSG("FSYNTH: FluidSynth failed to load '%s', check the path.",
 		        soundfont.c_str());
 		return false;
 	}
 
 	// Let the user know that the SoundFont was loaded
-	LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
+	LOG_MSG("FSYNTH: Using SoundFont '%s'", soundfont.c_str());
 
 	if (scale_by_percent >= 0)
-		LOG_WARNING("MIDI: SoundFont volume scaling has been deprecated. "
+		LOG_WARNING("FSYNTH: SoundFont volume scaling has been deprecated. "
 		            "Please use the MIXER command to set the volume of the "
 		            "FluidSynth audio channel instead: MIXER FSYNTH %d",
 		            scale_by_percent);
@@ -303,13 +303,20 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
-	auto apply_setting = [=](const char *name, const std::string &str_val, const double &def_val,
-	                         const double &min_val, const double &max_val) {
+	auto apply_setting = [=](const char *name,
+	                         const std::string &str_val,
+	                         const double &def_val,
+	                         const double &min_val,
+	                         const double &max_val) {
 		// convert the string to a double
 		const auto val = atof(str_val.c_str());
 		if (val < min_val || val > max_val) {
-			LOG_WARNING("MIDI: Invalid %s setting (%s), needs to be between %.2f and %.2f: using default (%.2f)",
-			            name, str_val.c_str(), min_val, max_val, def_val);
+			LOG_WARNING("FSYNTH: Invalid %s setting (%s), needs to be between %.2f and %.2f: using default (%.2f)",
+			            name,
+			            str_val.c_str(),
+			            min_val,
+			            max_val,
+			            def_val);
 			return def_val;
 		}
 		return val;
@@ -324,7 +331,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                 find_in_case_insensitive("zdoom", soundfont);
 	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
 		chorus_enabled = false;
-		LOG_INFO("MIDI: Chorus auto-disabled due to known issues with the %s soundfont",
+		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the %s soundfont",
 		         soundfont.c_str());
 	}
 
@@ -338,7 +345,12 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// apply custom chorus settings if provided
 	if (chorus_enabled && chorus.size() > 1) {
 		if (chorus.size() == 5) {
-			apply_setting("chorus voice-count", chorus[0], chorus_voice_count_f, 0, 99);
+			apply_setting("chorus voice-count",
+			              chorus[0],
+			              chorus_voice_count_f,
+			              0,
+			              99);
+
 			apply_setting("chorus level", chorus[1], chorus_level, 0.0, 10.0);
 			apply_setting("chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
 			apply_setting("chorus depth", chorus[3], chorus_depth, 0.0, 21.0);
@@ -346,11 +358,11 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 			if (chorus[4] == "triange")
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 			else if (chorus[4] != "sine") // default is sine
-				LOG_WARNING("MIDI: Invalid chorus modulation wave type ('%s'), needs to be 'sine' or 'triangle'",
+				LOG_WARNING("FSYNTH: Invalid chorus modulation wave type ('%s'), needs to be 'sine' or 'triangle'",
 				            chorus[4].c_str());
 
 		} else {
-			LOG_WARNING("MIDI: Invalid number of custom chorus settings (%d), should be five",
+			LOG_WARNING("FSYNTH: Invalid number of custom chorus settings (%d), should be five",
 			            static_cast<int>(chorus.size()));
 		}
 	}
@@ -370,12 +382,17 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// apply custom reverb settings if provided
 	if (reverb_enabled && reverb.size() > 1) {
 		if (reverb.size() == 4) {
-			apply_setting("reverb room-size", reverb[0], reverb_room_size, 0.0, 1.0);
+			apply_setting("reverb room-size",
+			              reverb[0],
+			              reverb_room_size,
+			              0.0,
+			              1.0);
+
 			apply_setting("reverb damping", reverb[1], reverb_damping, 0.0, 1.0);
 			apply_setting("reverb width", reverb[2], reverb_width, 0.0, 100.0);
 			apply_setting("reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING("MIDI: Invalid number of custom reverb settings (%d), should be four",
+			LOG_WARNING("FSYNTH: Invalid number of custom reverb settings (%d), should be four",
 			            static_cast<int>(reverb.size()));
 		}
 	}
@@ -407,13 +424,21 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 #endif
 
 	if (chorus_enabled)
-		LOG_MSG("MIDI: Chorus enabled with %d voices at level %.2f, %.2f Hz speed, %.2f depth, and %s-wave modulation",
-		        chorus_voice_count, chorus_level, chorus_speed, chorus_depth,
-		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE ? "sine" : "triangle");
+		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, %.2f Hz speed, %.2f depth, and %s-wave modulation",
+		        chorus_voice_count,
+		        chorus_level,
+		        chorus_speed,
+		        chorus_depth,
+		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE
+		                ? "sine"
+		                : "triangle");
 
 	if (reverb_enabled)
-		LOG_MSG("MIDI: Reverb enabled with a %.2f room size, %.2f damping, %.2f width, and level %.2f",
-		        reverb_room_size, reverb_damping, reverb_width, reverb_level);
+		LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, %.2f damping, %.2f width, and level %.2f",
+		        reverb_room_size,
+		        reverb_damping,
+		        reverb_width,
+		        reverb_level);
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
@@ -499,7 +524,7 @@ void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 	default: {
 		uint64_t tmp;
 		memcpy(&tmp, msg, sizeof(tmp));
-		LOG_MSG("MIDI: unknown MIDI command: %0" PRIx64, tmp);
+		LOG_MSG("FSYNTH: unknown MIDI command: %0" PRIx64, tmp);
 		break;
 	}
 	}
