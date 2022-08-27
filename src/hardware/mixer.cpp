@@ -849,7 +849,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 
 	if (!(single_filter || dual_filter)) {
 		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
-		            "specified in \"lfp|hpf <ORDER> <CUTOFF_FREQUENCY>\" format",
+		            "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
 		            name.c_str(),
 		            filter_prefs.c_str());
 		return false;
