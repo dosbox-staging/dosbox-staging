@@ -1,4 +1,4 @@
-resources = [
+resource_files = [
     'KEYBOARD.SYS',
     'KEYBRD2.SYS',
     'KEYBRD3.SYS',

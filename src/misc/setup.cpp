@@ -253,7 +253,11 @@ bool Property::CheckValue(const Value &in, bool warn)
 			return true;
 		}
 	}
-	if (warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn)
+		LOG_WARNING("CONFIG: \"%s\" is an invalid value for: %s. Using the default: %s",
+		        in.ToString().c_str(),
+		        propname.c_str(),
+		        default_value.ToString().c_str());
 	return false;
 }
 
@@ -300,13 +304,12 @@ bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
 		if (va > ma ) va = ma; else va = mi;
 
 		if (warn) {
-			LOG_MSG("%s is outside the allowed range %s-%s for variable: %s.\n"
-			        "It has been set to the closest boundary: %d.",
-			        in.ToString().c_str(),
-			        min_value.ToString().c_str(),
-			        max_value.ToString().c_str(),
-			        propname.c_str(),
-			        va);
+			LOG_WARNING("CONFIG: %s lies outside the range %s-%s for variable: %s. Limiting it to: %d",
+			            in.ToString().c_str(),
+			            min_value.ToString().c_str(),
+			            max_value.ToString().c_str(),
+			            propname.c_str(),
+			            va);
 		}
 
 		value = va; 
@@ -328,13 +331,12 @@ bool Prop_int::CheckValue(const Value &in, bool warn)
 	if (va >= mi && va <= ma) return true;
 
 	if (warn) {
-		LOG_MSG("%s lies outside the range %s-%s for variable: %s.\n"
-		        "It might now be reset to the default value: %s",
-		        in.ToString().c_str(),
-		        min_value.ToString().c_str(),
-		        max_value.ToString().c_str(),
-		        propname.c_str(),
-		        default_value.ToString().c_str());
+		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for variable: %s. Using the default: %s",
+		            in.ToString().c_str(),
+		            min_value.ToString().c_str(),
+		            max_value.ToString().c_str(),
+		            propname.c_str(),
+		            default_value.ToString().c_str());
 	}
 	return false;
 }
@@ -382,7 +384,11 @@ bool Prop_string::CheckValue(const Value &in, bool warn)
 			}
 		}
 	}
-	if (warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn)
+		LOG_WARNING("CONFIG: \"%s\" is an invalid value for: %s. Using the default: %s",
+		        in.ToString().c_str(),
+		        propname.c_str(),
+		        default_value.ToString().c_str());
 	return false;
 }
 
@@ -754,7 +760,7 @@ bool Section_prop::HandleInputline(const std::string &gegevens)
 
 		return p->SetValue(val);
 	}
-	LOG_MSG("CONFIG: Unknown option %s", name.c_str());
+	LOG_WARNING("CONFIG: Unknown option %s", name.c_str());
 	return false;
 }
 
@@ -930,6 +936,42 @@ Section_line *Config::AddSection_line(const char *section_name, SectionFunction 
 	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
 	return blah;
+}
+
+// Move assignment operator
+Config &Config::operator=(Config &&source) noexcept
+{
+	if (this == &source)
+		return *this;
+
+	// Move each member
+	cmdline                      = std::move(source.cmdline);
+	sectionlist                  = std::move(source.sectionlist);
+	_start_function              = std::move(source._start_function);
+	secure_mode                  = std::move(source.secure_mode);
+	startup_params               = std::move(source.startup_params);
+	configfiles                  = std::move(source.configfiles);
+	configFilesCanonical         = std::move(source.configFilesCanonical);
+	overwritten_autoexec_section = std::move(source.overwritten_autoexec_section);
+	overwritten_autoexec_conf    = std::move(source.overwritten_autoexec_conf);
+
+	// Hollow-out the source
+	source.cmdline                      = {};
+	source.overwritten_autoexec_section = {};
+	source.overwritten_autoexec_conf    = {};
+	source._start_function              = {};
+	source.secure_mode                  = {};
+	source.startup_params               = {};
+	source.configfiles                  = {};
+	source.configFilesCanonical         = {};
+
+	return *this;
+}
+
+// Move constructor, leverages move by assignment
+Config::Config(Config &&source) noexcept
+{
+	*this = std::move(source);
 }
 
 void Config::Init() const
@@ -1405,7 +1447,7 @@ uint16_t CommandLine::Get_arglength()
 		total_length += cmd.size() + 1;
 
 	if (total_length > UINT16_MAX) {
-		LOG_MSG("SETUP: Command line length too long, truncating");
+		LOG_WARNING("SETUP: Command line length too long, truncating");
 		total_length = UINT16_MAX;
 	}
 	return static_cast<uint16_t>(total_length);
@@ -1540,8 +1582,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// try to load it from the user directory
 			if (!control->ParseConfigFile("custom", config_path + config_file)) {
-				LOG_MSG("CONFIG: Can't open custom conf file: %s",
-				        config_file.c_str());
+				LOG_WARNING("CONFIG: Can't open custom conf file: %s",
+				            config_file.c_str());
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-resources = [
+resource_files = [
     'de.lng',
     'en.lng',
     'es.lng',

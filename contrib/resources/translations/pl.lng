@@ -7,13 +7,13 @@ Numer monitora do wy˜wietlania obrazu; warto˜ci zale¾¥ od systemu operacyjnego
 i jego ustawieä.
 .
 :CONFIG_FULLRESOLUTION
-Rozdzielczo˜† na peˆnym ekranie: 'original', 'desktop', lub rozdzielczo˜†,
+Rozdzielczo˜† na peˆnym ekranie: 'original', 'desktop' lub rozdzielczo˜†,
 np. 1024x768.
 .
 :CONFIG_WINDOWRESOLUTION
 Rozmiar okna w trybie okienkowym:
   default:   Wybiera najlepszy na podstawie ustawieä systemu.
-  small, medium, lub large (albo s, m, l):
+  small, medium lub large (albo s, m, l):
              Rozmiar wzgl©dem pulpitu (maˆy, ˜redni, du¾y).
   <custom>:  Skalowanie okna do danej rozdzielczo˜ci podanej jako XxY.
              Przykˆad: 1024x768.
@@ -120,7 +120,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego wˆ¥czenie.
 .
 :CONFIG_LANGUAGE
-J©zyk emulatora: de, en, es, fr, it, pl, lub ru.
+J©zyk emulatora: de, en, es, fr, it, pl lub ru.
 Uwaga: Ustawienie ma pierwszeästwo przed zmienn¥ ˜rodowiskow¥ 'LANG'. Pliki
 tˆumaczeä dla poszczeg¢lnych j©zyk¢w znajduj¥ si© w dostarczonym katalogu
 'resources/translations'.
@@ -168,6 +168,19 @@ Dost©pne tryby graficzne VESA 1.2 oraz 2.0:
 Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
   join:       ˆ¥czy w jedn¥ sekcj© [autoexec] (stare zachowanie).
   overwrite:  uzywa tylko ostatniej napotkanej sekcji.
+.
+:CONFIG_AUTOMOUNT
+Podczas startu montuje katalog 'drives/[c]' jako dysk, gdzie [c] jest nazw¥
+dysku podan¥ jako maˆa litera od a do y. Katalog 'drives' powinien znajdowa†
+si© w aktualnym katalogu, w przeciwnym razie u¾ywany jest katalog z zasob¢w
+emulatora. Dodatkowe ustawienia mog¥ by† podane w formie pliku [c].conf,
+znajduj¥cego si© tam, gdzie montowany katalog, z zawarto˜ci¥ jak poni¾ej:
+  [drive]
+  type    = dir, overlay, floppy lub cdrom
+  label   = etykieta_dysku
+  path    = ustawienia ˜cie¾ki wyszukiwania, np. path = %%path%%;c:\tools
+  override_drive = nadpisanie litery dysku (domyslnie puste)
+  verbose = true lub false
 .
 :CONFIG_STARTUP_VERBOSITY
 Rodzaj informacji wy˜wietlanych po uruchomieniu emulatora:
@@ -219,12 +232,12 @@ Skaler do powi©kszania obrazu o niskiej rozdzielczo˜ci. Dodanie 'forced'
 spowoduje u¾ycie skalera nawet wtedy, kiedy rezultaty mog¥ by†
 niezadowalaj¥ce.
 Niekt¢re skalery mog¥ u¾y† obszaru czarnej ramki wok¢ˆ obrazu. Je˜li jest to
-niepo¾¥dane, u¾yj innego skalera, lub wˆ¥cz opcj© 'fullresolution'.
+niepo¾¥dane, u¾yj innego skalera lub wˆ¥cz opcj© 'fullresolution'.
 .
 :CONFIG_GLSHADER
 Albo 'none', albo nazwa shadera GLSL. Dziaˆa tylko z wyj˜ciem OpenGL. Mo¾na
 poda† ˜cie¾k© bezwzgl©dn¥, nazw© pliku w podkatalogu 'shaders' katalogu z
-konfiguracj¥, lub nazw© jednego z wbudowanych shader¢w:
+konfiguracj¥ lub nazw© jednego z wbudowanych shader¢w:
   advinterp2x, advinterp3x, advmame2x, advmame3x,
   crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
   scan2x, scan3x, tv2x, tv3x, sharp (domy˜lny).
@@ -369,7 +382,7 @@ Opcjonalny parametr to gˆo˜no˜† w procentach, od 1 do 100, np. podanie
 'soundfont.sf2 50' ˜ciszy gˆo˜no˜† instrument¢w o poˆow©.
 .
 :CONFIG_FSYNTH_CHORUS
-Efekt 'chorus': auto', 'on', 'off', lub ustawienia u¾ytkownika.
+Efekt 'chorus': auto', 'on', 'off' lub ustawienia u¾ytkownika.
 Ustawienia u¾ytkownika wymagaj¥ podania wszystkich 5 parametr¢w,
 oddzielonych spacjami, zachowuj¥c kolejno˜†. S¥ to:
 voice-count level speed depth modulation-wave, gdzie:
@@ -380,12 +393,12 @@ voice-count level speed depth modulation-wave, gdzie:
   modulation-wave:  'sine' lub 'triangle'.
   Przykˆad: chorus = 3 1.2 0.3 8.0 sine
 Uwaga: Mo¾na wyˆ¥czy† efekt 'chorus' z syntetyzatora FluidSynth i
-w zamian wˆ¥czy† efekt w mikserze, lub pozwoli† obydwu dziaˆa†
+w zamian wˆ¥czy† efekt w mikserze lub pozwoli† obydwu dziaˆa†
 jednocze˜nie. Czy b©dzie to brzmiaˆo dobrze, zale¾y od plik¢w
 SoundFont i ustawieä efektu 'chorus'.
 .
 :CONFIG_FSYNTH_REVERB
-Efekt 'reverb': auto', 'on', 'off', lub ustawienia u¾ytkownika.
+Efekt 'reverb': auto', 'on', 'off' lub ustawienia u¾ytkownika.
 Ustawienia u¾ytkownika wymagaj¥ podania wszystkich 4 parametr¢w,
 oddzielonych spacjami, zachowuj¥c kolejno˜†. S¥ to:
 room-size damping width level, gdzie:
@@ -395,7 +408,7 @@ room-size damping width level, gdzie:
   level:      warto˜† dziesi©tna od 0.0 do 1.0
   Przykˆad: reverb = 0.61 0.23 0.76 0.56
 Uwaga: Mo¾na wyˆ¥czy† efekt 'reverb' z syntetyzatora FluidSynth i
-w zamian wˆ¥czy† efekt w mikserze, lub pozwoli† obydwu dziaˆa†
+w zamian wˆ¥czy† efekt w mikserze lub pozwoli† obydwu dziaˆa†
 jednocze˜nie. Czy b©dzie to brzmiaˆo dobrze, zale¾y od plik¢w
 SoundFont i ustawieä efektu 'reverb'.
 .
@@ -636,7 +649,7 @@ Dla urz¥dzenia 'mouse' (mysz szeregowa):
     wheel: 3-przyciskowa z rolk¥
     msm:   3-przyciskowa, 'Mouse Systems Mouse'
     2btn+msm, 3btn+msm, wheel+msm : autoselekcja
-  rate, mo¾e by† normal lub smooth (wi©ksza cz©stotliwo˜† pr¢bkowania, ni¾
+  rate, mo¾e by† normal lub smooth (wi©ksza cz©stotliwo˜† pr¢bkowania ni¾
     mo¾liwa do uzyskania na rzeczywistym sprz©cie).
    Warto˜ci domy˜lne to type:wheel+msm rate:smooth
 Dla urz¥dzenia 'direct' (bezpo˜redni dost©p do portu COM gospodarza):
@@ -669,7 +682,7 @@ Wˆ¥czenie emulacji pami©ci XMS (rozszerzonej).
 :CONFIG_EMS
 Wˆ¥czenie emulacji pami©ci EMS (stronicowanej). Domy˜lne ustawienie ('true')
 oferuje najwi©ksz¥ kompatybilno˜†, ale niekt¢re aplikacje mog¥ dziaˆa† lepiej
-z innymi warto˜ciami, lub wymaga† wyˆ¥czenia pami©ci EMS ¾eby w og¢le dziaˆa†.
+z innymi warto˜ciami lub wymaga† wyˆ¥czenia pami©ci EMS ¾eby w og¢le dziaˆa†.
 .
 :CONFIG_UMB
 Wˆ¥czenie emulacji pami©ci UMB (g¢rnej).
@@ -1065,7 +1078,7 @@ Skˆadnia:
 
 Gdzie:
   [color=white]DYSK[reset]      litera dysku, pod kt¢r¥ obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
-  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO, lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
   [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
   [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcj¥ -size [color=white]GEOMETRIA[reset]:
             bajt¢w-na-sektor,sektor¢w-na-gˆowic©,gˆowice,cylindry
@@ -1285,9 +1298,9 @@ Skˆadnia:
 Gdzie:
   [color=cyan]KLAWIATURA[reset]  ukˆad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
   [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wi©cej
-              znak¢w graficznych, ni¾ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (j©zyk
+              znak¢w graficznych ni¾ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (j©zyk
               kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
-              z symbolem euro), [color=white]852[reset] (Europa —rodkowo-Wschodnia), lub [color=white]437[reset] (USA).
+              z symbolem euro), [color=white]852[reset] (Europa —rodkowo-Wschodnia) lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
@@ -1445,7 +1458,7 @@ Skˆadnia:
 Gdzie:
   [color=white]DYSK[reset]      litera, pod kt¢r¥ katalog zostanie zamontowany: A, C, D, ...
   [color=cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
-  TYP       typ katalogu do zamontowania: dir, floppy, cdrom, lub overlay
+  TYP       typ katalogu do zamontowania: dir, floppy, cdrom lub overlay
   ROZMIAR   ile wolnego miejsca raportowa† programom (kilobajty dla dyskietek,
             megabajty dla pozostaˆych dysk¢w)
   ETYKIETA  etykieta utworzonego dysku
@@ -1521,7 +1534,7 @@ Nie mo¾na miesza† ˜cie¾ek wzgl©dnych i bezwzgl©dnych.
 
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-Katalog nakˆadki ('overlay') musi by† inny, ni¾ katalog dysku.
+Katalog nakˆadki ('overlay') musi by† inny ni¾ katalog dysku.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
@@ -1593,7 +1606,7 @@ Skˆadnia:
   [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZ¤DZENIE[reset] [ustawienia]  (podˆ¥cz urz¥dzenie do portu)
 
 Gdzie:
-  [color=cyan]URZ¤DZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], lub [color=cyan]DISABLED[reset]
+  [color=cyan]URZ¤DZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset] lub [color=cyan]DISABLED[reset]
 
   Dodatkowe opcje dla poszczeg¢lnych urz¥dzeä:
   [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
@@ -1644,7 +1657,7 @@ Skˆadnia:
   [color=green]command[reset] /c (lub /init) [color=cyan]POLECENIE[reset]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset]  polecenie, program, lub gra do uruchomienia.
+  [color=cyan]POLECENIE[reset]  polecenie, program lub gra do uruchomienia.
 
 Uwagi:
   DOSBox Staging automatycznie uruchamia interpreter wiersza poleceä z opcj¥
@@ -2479,7 +2492,7 @@ Uwagi:
 
 Przykˆady:
   [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowa†?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b, lub c[reset]
+  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
 .
 :SHELL_CMD_CHOICE_ABORTED
 
@@ -2518,9 +2531,9 @@ Skˆadnia:
   [color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]
 
 Gdzie:
-  [color=cyan]WERSJA[reset]  mo¾e by† numerem, np. [color=cyan]5[reset], lub liczb¥ z dwoma cyframi po kropce,
-          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset], lub [color=cyan]7.10[reset]. Alternatywnie mo¾na oddzieli†
-          cz©˜† uˆamkow¥ za pomoc¥ spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset], lub [color=cyan]7 10[reset].
+  [color=cyan]WERSJA[reset]  mo¾e by† numerem, np. [color=cyan]5[reset] lub liczb¥ z dwoma cyframi po kropce,
+          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset] lub [color=cyan]7.10[reset]. Alternatywnie mo¾na oddzieli†
+          cz©˜† uˆamkow¥ za pomoc¥ spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset] lub [color=cyan]7 10[reset].
 
 Uwagi:
   Raportowan¥ wersj© DOSu mo¾na ustawi† w pliku konfiguracyjnym, w sekcji

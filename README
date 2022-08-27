@@ -375,7 +375,7 @@ To be able to use Command Line Parameters:
 (Windows)  open cmd.exe or command.com or edit the shortcut to dosbox.exe
 (Linux)    use any terminal emulator
 (macOS)    start terminal.app and navigate to:
-           /Applications/dosbox-staging.app/Contents/MacOS/dosbox
+           /Applications/DOSBox Staging.app/Contents/MacOS/dosbox
 
 The options are valid for all operating systems unless noted in the option
 description:

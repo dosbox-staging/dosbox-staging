@@ -1,4 +1,4 @@
-resources = [
+resource_files = [
     'EGA.CPX',
     'EGA2.CPX',
     'EGA3.CPX',

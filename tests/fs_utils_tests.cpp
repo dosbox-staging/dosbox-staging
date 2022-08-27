@@ -81,6 +81,27 @@ struct CreateDirTest : public testing::Test {
 	}
 };
 
+TEST(SimplifyPath, Nominal)
+{
+	const std_fs::path original = "tests/files/paths";
+	const auto simplified       = simplify_path(original);
+	EXPECT_EQ(original, simplified);
+}
+
+TEST(SimplifyPath, CanBeSimplifiedEasy)
+{
+	const std_fs::path original = "tests/files/paths/../../";
+	const auto simplified       = simplify_path(original);
+	EXPECT_TRUE(simplified.string().length() < original.string().length());
+}
+
+TEST(SimplifyPath, CanBeSimplifiedComplex)
+{
+	const std_fs::path original = "./tests123/../valid/tests456///1/..//2/../3/../..";
+	const std_fs::path expected = "valid/";
+	EXPECT_EQ(simplify_path(original), expected);
+}
+
 TEST_F(CreateDirTest, CreateDir)
 {
 	ASSERT_FALSE(path_exists(TEST_DIR));

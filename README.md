@@ -150,14 +150,14 @@ Install build dependencies appropriate for your OS:
 
 ``` shell
 # Fedora
-sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
+sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
                  SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel \
                  mt32emu-devel libslirp-devel speexdsp-devel
 ```
 
 ``` shell
 # Debian, Ubuntu
-sudo apt install ccache build-essential libasound2-dev libpng-dev \
+sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
                  libsdl2-dev libsdl2-net-dev libopusfile-dev \
                  libfluidsynth-dev libslirp-dev libspeexdsp-dev
 
@@ -177,7 +177,7 @@ sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile \
 
 ``` shell
 # openSUSE
-sudo zypper install ccache gcc gcc-c++ meson alsa-devel libpng-devel \
+sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel \
                     libSDL2-devel libSDL2_net-devel opusfile-devel \
                     fluidsynth-devel libmt32emu-devel libslirp-devel \
                     speexdsp

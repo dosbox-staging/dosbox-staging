@@ -2119,6 +2119,10 @@ void GFX_SetShader([[maybe_unused]] const std::string &source)
 #endif
 }
 
+bool GFX_MouseIsAvailable() {
+	return sdl.mouse.control_choice != NoMouse;
+}
+
 void GFX_ToggleMouseCapture()
 {
 	/*
@@ -3450,21 +3454,20 @@ static void GUI_StartUp(Section *sec)
 	std::string mouse_control_msg;
 	if (control_choice == "onclick") {
 		sdl.mouse.control_choice = CaptureOnClick;
-		mouse_control_msg = "will be captured after clicking";
+		mouse_control_msg = "will be captured after the first left or right button click";
 	} else if (control_choice == "onstart") {
 		sdl.mouse.control_choice = CaptureOnStart;
 		mouse_control_msg = "will be captured immediately on start";
 	} else if (control_choice == "seamless") {
 		sdl.mouse.control_choice = Seamless;
-		mouse_control_msg = "will move seamlessly without being captured";
+		mouse_control_msg = "will move seamlessly: left and right button clicks won't capture the mouse";
 	} else if (control_choice == "nomouse") {
 		sdl.mouse.control_choice = NoMouse;
 		mouse_control_msg = "is disabled";
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
-
-	std::string middle_control_msg;
+	LOG_MSG("SDL: Mouse %s", mouse_control_msg.c_str());
 
 	if (sdl.mouse.control_choice != NoMouse) {
 		const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
@@ -3473,9 +3476,10 @@ static void GUI_StartUp(Section *sec)
 		sdl.mouse.middle_will_release = (mclick_choice != "middlegame");
 
 
-		middle_control_msg = sdl.mouse.middle_will_release
-		                             ? " and middle-click will uncapture the mouse"
-		                             : " and middle-clicks will be sent to the game";
+		const auto middle_control_msg = sdl.mouse.middle_will_release
+		                             ? "will capture/release the mouse (clicks not sent to the game/program)"
+		                             : "will be sent to the game/program (clicks not used to capture/release)";
+		LOG_MSG("SDL: Middle mouse button %s", middle_control_msg);
 
 		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
 		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
@@ -3495,7 +3499,6 @@ static void GUI_StartUp(Section *sec)
 		// Notify mouse emulation routines about the configuration
 		MOUSE_SetConfig(raw_mouse_input);
 	}
-	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
@@ -3741,7 +3744,7 @@ bool GFX_Events()
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
-				DEBUG_LOG_MSG("SDL: Window has been restored");
+				// DEBUG_LOG_MSG("SDL: Window has been restored");
 				/* We may need to re-create a texture
 				 * and more on Android. Another case:
 				 * Update surface while using X11.
@@ -3788,7 +3791,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
-				DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
+				// DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
 				if (sdl.desktop.fullscreen) {
 					VGA_KillDrawing();
@@ -3810,19 +3813,64 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_SHOWN:
-				DEBUG_LOG_MSG("SDL: Window has been shown");
+				// DEBUG_LOG_MSG("SDL: Window has been shown");
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
-				DEBUG_LOG_MSG("SDL: Window has been hidden");
+				// DEBUG_LOG_MSG("SDL: Window has been hidden");
 				continue;
 
-#if 0 // ifdefed out only because it's too noisy
+#if defined C_OPENGL && defined __APPLE__
 			case SDL_WINDOWEVENT_MOVED:
-				DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
-				              event.window.data1,
-				              event.window.data2);
+				// DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
+				//               event.window.data1,
+				//               event.window.data2);
+				if (sdl.desktop.type == SCREEN_OPENGL) {
+					glViewport(sdl.clip.x,
+					           sdl.clip.y,
+					           sdl.clip.w,
+					           sdl.clip.h);
+				}
 				continue;
+#endif
+
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+			case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
+				// New display might have a different resolution
+				// and DPI scaling set, so recalculate that and
+				// set viewport
+				int win_w = 0;
+				SDL_GetWindowSize(sdl.window, &win_w, nullptr);
+				const auto canvas = get_canvas_size(sdl.desktop.type);
+				assert(win_w > 0 && canvas.w > 0 && canvas.h > 0);
+
+				sdl.desktop.dpi_scale = static_cast<double>(canvas.w) /
+				                        win_w;
+
+				SDL_Rect display_bounds = {};
+				SDL_GetDisplayBounds(event.window.data1,
+				                     &display_bounds);
+				sdl.desktop.full.width  = display_bounds.w;
+				sdl.desktop.full.height = display_bounds.h;
+
+				sdl.display_number = event.window.data1;
+
+				sdl.clip = calc_viewport(canvas.w, canvas.h);
+				if (sdl.desktop.type == SCREEN_TEXTURE) {
+					SDL_RenderSetViewport(sdl.renderer,
+					                      &sdl.clip);
+				}
+#	ifdef C_OPENGL
+				if (sdl.desktop.type == SCREEN_OPENGL) {
+					glViewport(sdl.clip.x,
+					           sdl.clip.y,
+					           sdl.clip.w,
+					           sdl.clip.h);
+				}
+#	endif
+				NewMouseScreenParams();
+				continue;
+			}
 #endif
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
@@ -3838,18 +3886,18 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been minimized");
+				// DEBUG_LOG_MSG("SDL: Window has been minimized");
 				ApplyInactiveSettings();
 				break;
 
 			case SDL_WINDOWEVENT_MAXIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been maximized");
+				// DEBUG_LOG_MSG("SDL: Window has been maximized");
 				continue;
 
 			case SDL_WINDOWEVENT_CLOSE:
-				DEBUG_LOG_MSG("SDL: The window manager "
-				              "requests that the window be "
-				              "closed");
+				// DEBUG_LOG_MSG("SDL: The window manager "
+				//               "requests that the window be "
+				//               "closed");
 				GFX_RequestExit(true);
 				break;
 
@@ -3859,8 +3907,8 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
-				DEBUG_LOG_MSG("SDL: Window had a hit test that "
-				              "wasn't SDL_HITTEST_NORMAL");
+				// DEBUG_LOG_MSG("SDL: Window had a hit test that "
+				//               "wasn't SDL_HITTEST_NORMAL");
 				continue;
 
 			default: break;

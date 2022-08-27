@@ -3,6 +3,7 @@ g++
 build-essential
 ccache
 libasound2-dev
+libatomic1
 libfluidsynth-dev
 libgtest-dev
 libopusfile-dev

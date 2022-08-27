@@ -1,4 +1,4 @@
-resources = [
+resource_files = [
     'advinterp2x.glsl',
     'advinterp3x.glsl',
     'advmame2x.glsl',

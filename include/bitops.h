@@ -192,6 +192,14 @@ constexpr void clear(T &reg, const unsigned int bits)
 	reg = mask_off(reg, bits);
 }
 
+// Retain only the indicated bits, clearing the others
+template <typename T>
+constexpr void retain(T &reg, const unsigned int bits)
+{
+	check_width(reg, bits);
+	reg = reg & static_cast<T>(bits);
+}
+
 // Set the indicated bits to the given bool value
 template <typename T, typename S>
 constexpr T mask_to(const T reg, const unsigned int bits, const S state)
