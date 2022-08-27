@@ -850,7 +850,7 @@ static void set_vsync(const VSYNC_STATE state)
 		assert(sdl.opengl.context);
 		const auto interval = static_cast<int>(state);
 		// -1=adaptive, 0=off, 1=on
-		assert(interval >= -1 || interval <= 1);
+		assert(interval >= -1 && interval <= 1);
 		if (SDL_GL_SetSwapInterval(interval) == 0)
 			return;
 

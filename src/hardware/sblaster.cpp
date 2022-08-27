@@ -448,7 +448,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 		return;
 	}
 
-	switch (filter_type.value()) {
+	switch (*filter_type) {
 	case FilterType::None:
 		enable_zoh_upsampler();
 		break;
@@ -516,7 +516,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
-	switch (filter_type.value()) {
+	switch (*filter_type) {
 	case FilterType::None:
 		break;
 
@@ -534,7 +534,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 		break;
 	}
 
-	log_filter_config("OPL", filter_type.value());
+	log_filter_config("OPL", *filter_type);
 	set_filter(channel, config);
 }
 
@@ -605,7 +605,10 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 			DSP_ChangeMode(MODE_DMA);
 //			sb.mode=MODE_DMA;
 			FlushRemainingDMATransfer();
-			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %d",chan->autoinit,chan->basecnt);
+			LOG(LOG_SB, LOG_NORMAL)
+			("DMA unmasked,starting output, auto %d block %d",
+			 static_cast<int>(chan->autoinit),
+			 chan->basecnt);
 		}
 	}
 	else {

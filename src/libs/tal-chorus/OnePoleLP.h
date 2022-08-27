@@ -33,9 +33,7 @@ class OnePoleLP
   {
   }
 
-  ~OnePoleLP()
-  {
-  }
+  ~OnePoleLP() = default;
 
   void tick(float *sample, float cutoff)
   {

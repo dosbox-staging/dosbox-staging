@@ -305,9 +305,9 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	auto apply_setting = [=](const char *name,
 	                         const std::string &str_val,
-	                         const double &def_val,
-	                         const double &min_val,
-	                         const double &max_val) {
+	                         const double def_val,
+	                         const double min_val,
+	                         const double max_val) {
 		// convert the string to a double
 		const auto val = atof(str_val.c_str());
 		if (val < min_val || val > max_val) {
@@ -404,7 +404,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
 	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
 	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
-	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, chorus_mod_wave);
+	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, static_cast<int>(chorus_mod_wave));
 
 	fluid_synth_reverb_on(fluid_synth.get(), fx_group, reverb_enabled);
 	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(), fx_group, reverb_room_size);
@@ -442,7 +442,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
-	channel = std::move(mixer_channel);
+	channel = mixer_channel;
 	selected_font = soundfont;
 
 	// Start rendering audio
@@ -487,7 +487,7 @@ void MidiHandlerFluidsynth::Close()
 	synth.reset();
 	settings.reset();
 	last_played_frame = 0;
-	selected_font = "";
+	selected_font.clear();
 
 	is_open = false;
 }
