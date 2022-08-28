@@ -623,21 +623,51 @@ bool get_expanded_files(const std::string &path,
 	}
 }
 
+#if C_COREFOUNDATION
+std::string cfstr_to_string(CFStringRef source)
+{
+	if (!source)
+		return {};
+
+	// Try to get the internal char-compatible buffer
+	constexpr auto encoding = kCFStringEncodingUTF8;
+	const auto buf = CFStringGetCStringPtr(source, encoding);
+	if (buf)
+		return buf;
+
+	// If the char-compatible buffer doesn't exist; it's probably wide-encoded
+	const auto source_len = CFStringGetLength(source);
+
+	// How much space is needed to decode to ASCII?
+	const auto target_len = CFStringGetMaximumSizeForEncoding(source_len,
+	                                                          encoding);
+
+	// Prepare our target string, including trailing terminator
+	std::string target(target_len, '\0');
+
+	// Decode from the source into the target
+	const auto extracted = CFStringGetCString(source,
+	                                          target.data(),
+	                                          target.length(),
+	                                          encoding);
+
+	if (!extracted)
+		target.clear();
+
+	return target;
+}
+#endif
+
 [[maybe_unused]] std::string get_language_from_os()
 {
 	// Lamda helper to extract the language from macOS locale
 #if C_COREFOUNDATION
 	auto get_lang_from_macos = []() {
-		std::string lang = {};
-		auto cflocale    = CFLocaleCopyCurrent();
-		auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
-		auto locale_str_ref = static_cast<CFStringRef>(locale);
-		const auto cstr     = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
-		if (cstr) {
-			lang = cstr;
-			clear_language_if_default(lang);
-		}
-		CFRelease(cflocale);
+		const auto lc_array = CFLocaleCopyPreferredLanguages();
+		const auto locale_ref = CFArrayGetValueAtIndex(lc_array, 0);
+		const auto lc_cfstr = reinterpret_cast<CFStringRef>(locale_ref);
+		auto lang = cfstr_to_string(lc_cfstr);
+		clear_language_if_default(lang);
 		return lang;
 	};
 #endif
