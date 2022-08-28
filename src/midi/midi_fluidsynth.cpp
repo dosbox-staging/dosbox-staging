@@ -229,14 +229,14 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
 
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            use_mixer_rate,
-	                                            "FSYNTH",
-	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::Stereo,
-	                                             ChannelFeature::ReverbSend,
-	                                             ChannelFeature::ChorusSend,
-	                                             ChannelFeature::Synthesizer});
+	auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                      use_mixer_rate,
+	                                      "FSYNTH",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::Stereo,
+	                                       ChannelFeature::ReverbSend,
+	                                       ChannelFeature::ChorusSend,
+	                                       ChannelFeature::Synthesizer});
 
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	assert(section);
@@ -442,7 +442,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
-	channel = mixer_channel;
+	channel = std::move(mixer_channel);
 	selected_font = soundfont;
 
 	// Start rendering audio

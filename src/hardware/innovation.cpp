@@ -78,13 +78,13 @@ void Innovation::Open(const std::string &model_choice,
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            use_mixer_rate,
-	                                            "INNOVATION",
-	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::ReverbSend,
-	                                             ChannelFeature::ChorusSend,
-	                                             ChannelFeature::Synthesizer});
+	auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                      use_mixer_rate,
+	                                      "INNOVATION",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::ReverbSend,
+	                                       ChannelFeature::ChorusSend,
+	                                       ChannelFeature::Synthesizer});
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(channel_filter_choice)) {
 		if (channel_filter_choice != "off")
@@ -115,7 +115,7 @@ void Innovation::Open(const std::string &model_choice,
 
 	// Move the locals into members
 	service = std::move(sid_service);
-	channel = mixer_channel;
+	channel = std::move(mixer_channel);
 
 	// Ready state-values for rendering
 	last_rendered_ms = 0.0;
