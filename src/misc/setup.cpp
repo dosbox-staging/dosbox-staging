@@ -1531,7 +1531,15 @@ const std::string &SETUP_GetLanguage()
 #if !(C_DEBUG)
 	// Check if the locale is set
 	if (lang.empty()) {
-		const auto envlang = setlocale(LC_ALL, "");
+#if defined(WIN32) // new code
+        	wchar_t buf[LOCALE_NAME_MAX_LENGTH];
+        	int res = GetUserDefaultLocaleName(buf, LOCALE_NAME_MAX_LENGTH);
+        	char buf2[LOCALE_NAME_MAX_LENGTH];
+        	wcstombs(buf2, buf, LOCALE_NAME_MAX_LENGTH);
+        	const auto envlang = buf2;
+#else
+	        const auto envlang = setlocale(LC_ALL, "");  // original setup.cpp line: 1534
+#endif
 		if (envlang) {
 			lang = envlang;
 			clear_if_default(lang);
