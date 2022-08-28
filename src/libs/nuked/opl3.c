@@ -1278,7 +1278,9 @@ void OPL3_Reset(opl3_chip *chip, uint32_t samplerate)
      * the code. Therefore, we programmatically determine the total number of
      * channels available and double check it against this magic literal.
      */
+#ifndef NDEBUG
     const int channels = (int)(sizeof(chip->channel) / sizeof(chip->channel[0]));
+#endif
     assert(channels == 18);
 
     for (channum = 0; channum < 18; channum++)
