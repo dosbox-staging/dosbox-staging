@@ -1508,42 +1508,20 @@ const std::string &SETUP_GetLanguage()
 		lang = static_cast<const Section_prop *>(section)->Get_string(
 		        "language");
 	}
-	// Clear the language if it's set to the POSIX default
-	auto clear_if_default = [](std::string &l) {
-		lowcase(l);
-		if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
-			l.clear();
-		}
-	};
 	// Check the LANG environment variable
 	if (lang.empty()) {
 		const char *envlang = getenv("LANG");
 		if (envlang) {
 			lang = envlang;
-			clear_if_default(lang);
+			clear_language_if_default(lang);
 		}
 	}
-	// Avoid changing locales already established by the ncurses debugger
-	// frame. Test it by running "debug.com ls.com" in a debugger build,
-	// then Alt+TAB to the debugger window, and finally press F10. You
-	// should be able to use the up and down arrows keys to select an
-	// instruction from the middle pane.
-#if !(C_DEBUG)
-	// Check if the locale is set
-	if (lang.empty()) {
-		const auto envlang = setlocale(LC_ALL, "");
-		if (envlang) {
-			lang = envlang;
-			clear_if_default(lang);
-		}
-	}
-
 	// Query the OS using OS-specific calls
 	if (lang.empty()) {
 		lang = get_language_from_os();
-		clear_if_default(lang);
+		clear_language_if_default(lang);
 	}
-#endif
+
 	// Drop the dialect part of the language
 	// (e.g. "en_GB.UTF8" -> "en")
 	if (lang.size() > 2) {
