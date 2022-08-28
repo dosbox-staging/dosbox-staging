@@ -1354,15 +1354,16 @@ static bool country_number_exists(const int requested_number)
 	return false;
 }
 
-static Country lookup_country_from_code(const char *country_code)
+static bool lookup_country_from_code(const char *country_code, Country &country)
 {
 	if (country_code) {
 		const auto it = country_code_map.find(country_code);
 		if (it != country_code_map.end()) {
-			return it->second;
+			country = it->second;
+			return true;
 		}
 	}
-	return Country::United_States;
+	return false;
 }
 
 uint16_t assert_codepage(const uint16_t codepage)
@@ -1616,13 +1617,27 @@ std::string get_lang_from_host_layout()
 KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 {
 	assert(language_pref);
+
+	// If a specific language wasn't provided, get it from setup
 	std::string language = language_pref;
-	if (language == "auto") {
-		const auto lang_from_conf = SETUP_GetLanguage();
-		language = lang_from_conf.empty() ? get_lang_from_host_layout()
-		                                  : lang_from_conf;
+	if (language == "auto")
+		language = SETUP_GetLanguage();
+
+	// Does the language have a country associate with it?
+	auto country       = Country::United_States;
+	bool found_country = lookup_country_from_code(language.c_str(), country);
+
+	// If we can't find a country for the language, try from the host
+	if (!found_country) {
+		language      = get_lang_from_host_layout();
+		found_country = lookup_country_from_code(language.c_str(), country);
 	}
-	const auto country  = lookup_country_from_code(language.c_str());
+	// Inform the user if we couldn't find a valid country
+	if (!language.empty() && !found_country) {
+		LOG_WARNING("LAYOUT: A country could not be found for the language: %s",
+		            language.c_str());
+	}
+	// Regardless of the above, carry on with setting up the layout
 	const auto codepage = lookup_codepage_from_country(country);
 	const auto result   = DOS_LoadKeyboardLayout(language.c_str(), codepage, "auto");
 
@@ -1695,21 +1710,24 @@ static void set_country_from_pref(const int country_pref)
 	// default to the US
 	auto country_number = static_cast<uint16_t>(Country::United_States);
 
-	// if the user hasn't provided a country, get it from their layout
-	if (!country_pref)
-		country_number = static_cast<uint16_t>(
-		        lookup_country_from_code(DOS_GetLoadedLayout()));
-
-	// If the country they provided is valid, use that
-	else if (country_number_exists(country_pref))
+	// If the country preference is valid, use it
+	if (country_pref > 0 && country_number_exists(country_pref)) {
 		country_number = static_cast<uint16_t>(country_pref);
+	} else {
+		LOG_WARNING("COUNTRY: The 'country' number '%d' is invalid, will infer it from the keyboard layout",
+		            country_pref);
 
-	// But if it's invalid, fallback to the default
-	else
-		LOG_ERR("LANGUAGE: The country number: %d could not be found, using '%u' instead.",
-		        country_pref,
-		        country_number);
+		if (const auto country_code = DOS_GetLoadedLayout(); country_code) {
+			if (Country c; lookup_country_from_code(country_code, c)) {
+				country_number = static_cast<uint16_t>(c);
+			} else {
+				LOG_ERR("LANGUAGE: The layout's country code: '%s' does not have a corresponding country",
+				        country_code);
+			}
+		}
+	}
 
+	// At this point, the country number is expected to be valid
 	assert(country_number_exists(country_number));
 	DOS_SetCountry(country_number);
 }
