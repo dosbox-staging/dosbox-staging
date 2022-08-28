@@ -58,6 +58,12 @@ LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
 	status_reg.busy  = false;
 }
 
+bool LptDac::TryParseAndSetCustomFilter(const std::string filter_choice)
+{
+	assert(channel);
+	return channel->TryParseAndSetCustomFilter(filter_choice);
+}
+
 void LptDac::BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
                           const io_read_f read_status, const io_write_f write_control)
 {
@@ -141,8 +147,8 @@ void LPT_DAC_Init(Section *section)
 	// Get the user's LPT DAC choices
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
-	const std::string_view dac_choice    = prop->Get_string("lpt_dac");
-	const std::string_view filter_choice = prop->Get_string("lpt_dac_filter");
+	const std::string dac_choice    = prop->Get_string("lpt_dac");
+	const std::string filter_choice = prop->Get_string("lpt_dac_filter");
 
 	if (dac_choice == "disney")
 		lpt_dac = std::make_unique<Disney>();
@@ -153,14 +159,18 @@ void LPT_DAC_Init(Section *section)
 	else if (dac_choice == "none" || dac_choice == "off")
 		return;
 
-	const auto filter_state = filter_choice == "on" ? FilterState::On
-	                                                : FilterState::Off;
-	if (filter_state == FilterState::Off && filter_choice != "off")
-		LOG_WARNING("LPT_DAC: Invalid lpt_dac_filter setting: '%s', using off",
-		            filter_choice.data());
-
 	assert(lpt_dac);
-	lpt_dac->ConfigureFilters(filter_state);
+
+	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
+		const auto filter_state = filter_choice == "on" ? FilterState::On
+														: FilterState::Off;
+		if (filter_state == FilterState::Off && filter_choice != "off")
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
+						filter_choice.data());
+
+		lpt_dac->ConfigureFilters(filter_state);
+	}
+
 	lpt_dac->BindToPort(Lpt1Port);
 
 	section->AddDestroyFunction(&LPT_DAC_ShutDown, true);

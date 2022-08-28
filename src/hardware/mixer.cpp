@@ -257,7 +257,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
 			crossfeed = cf / 100.0f;
 		} else {
-			LOG_WARNING("MIXER: Invalid crossfeed value '%s', using off",
+			LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
 			            crossfeed_pref.c_str());
 		}
 	}
@@ -478,11 +478,12 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate)
-		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
-		        name, chan_rate);
+		LOG_MSG("%s: Operating at %u Hz without resampling", name, chan_rate);
 	else
-		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate", name,
-		        chan_rate, chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
+		LOG_MSG("%s: Operating at %u Hz and %s to the output rate",
+		        name,
+		        chan_rate,
+		        chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
 
 	MIXER_LockAudioDevice();
 	mixer.channels[name] = chan; // replace the old, if it exists
@@ -635,8 +636,7 @@ void MixerChannel::ConfigureResampler()
 	do_resampler = (in_rate != out_rate);
 
 	if (!do_resampler) {
-		// DEBUG_LOG_MSG("MIXER: Resampler is off for channel: %s",
-		//              name.c_str());
+		// DEBUG_LOG_MSG("%s: Resampler is off", name.c_str());
 		return;
 	}
 
@@ -649,10 +649,10 @@ void MixerChannel::ConfigureResampler()
 	}
 	speex_resampler_set_rate(resampler.state, in_rate, out_rate);
 
-	// DEBUG_LOG_MSG("MIXER: Resamper is on (in %d Hz to out: %d Hz) for channel: %s",
+	// DEBUG_LOG_MSG("%s: Resamper is on (in %d Hz to out: %d Hz)",
+	//              name.c_str(),
 	//              in_rate,
-	//              out_rate,
-	//              name.c_str());
+	//              out_rate);
 }
 
 void MixerChannel::SetSampleRate(const int rate)
@@ -777,7 +777,7 @@ static void log_filter_settings(const std::string &channel_name,
 
 	constexpr auto db_per_order = 6;
 
-	LOG_MSG("MIXER: %s channel %s filter enabled%s (%d dB/oct at %u Hz)",
+	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %u Hz)",
 	        channel_name.c_str(),
 	        filter_name.data(),
 	        state == FilterState::ForcedOn ? " (forced)" : "",
@@ -791,7 +791,7 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 
 	if (do_highpass_filter)
 		log_filter_settings(name,
-		                    "highpass",
+		                    "Highpass",
 		                    state,
 		                    filters.highpass.order,
 		                    filters.highpass.cutoff_freq);
@@ -803,7 +803,7 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 
 	if (do_lowpass_filter)
 		log_filter_settings(name,
-		                    "lowpass",
+		                    "Lowpass",
 		                    state,
 		                    filters.lowpass.order,
 		                    filters.lowpass.cutoff_freq);
@@ -831,8 +831,119 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 	filters.lowpass.cutoff_freq = cutoff_freq;
 }
 
+// Tries to set custom filter settings for the channel from the passed in
+// filter preferences. Returns true if the custom filters could be successfully
+// set, false otherwise and disabled all filters for the channel.
+bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
+{
+	SetLowPassFilter(FilterState::Off);
+	SetHighPassFilter(FilterState::Off);
+
+	if (!(starts_with("lpf", filter_prefs) || starts_with("hpf", filter_prefs)))
+		return false;
+
+	const auto parts = split(filter_prefs, ' ');
+
+	const auto single_filter = (parts.size() == 3);
+	const auto dual_filter   = (parts.size() == 6);
+
+	if (!(single_filter || dual_filter)) {
+		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
+		            "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
+		            name.c_str(),
+		            filter_prefs.c_str());
+		return false;
+	}
+
+	auto set_filter = [&](const std::string &type_pref,
+	                      const std::string &order_pref,
+	                      const std::string &cutoff_freq_pref) {
+		int order;
+		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
+		    order > max_filter_order) {
+			LOG_WARNING("%s: Invalid custom filter order: '%s'. Must be an integer between 1 and %d.",
+			            name.c_str(),
+			            order_pref.c_str(),
+			            max_filter_order);
+			return false;
+		}
+
+		int cutoff_freq_hz;
+		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
+		    cutoff_freq_hz <= 0) {
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. Must be a positive number.",
+			            name.c_str(),
+			            cutoff_freq_pref.c_str());
+			return false;
+		}
+
+		const auto max_cutoff_freq_hz = (do_zoh_upsampler
+		                                         ? zoh_upsampler.target_freq
+		                                         : sample_rate) / 2 - 1;
+
+		if (cutoff_freq_hz > max_cutoff_freq_hz) {
+			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
+			            "Must be lower than half the sample rate; clamping to %d Hz.",
+			            name.c_str(),
+			            cutoff_freq_pref.c_str(),
+			            max_cutoff_freq_hz);
+
+			cutoff_freq_hz = max_cutoff_freq_hz;
+		}
+
+		if (type_pref == "lpf") {
+			ConfigureLowPassFilter(order, cutoff_freq_hz);
+			SetLowPassFilter(FilterState::On);
+		} else if (type_pref == "hpf") {
+			ConfigureHighPassFilter(order, cutoff_freq_hz);
+			SetHighPassFilter(FilterState::On);
+		} else {
+			LOG_WARNING("%s: Invalid custom filter type: '%s'. Must be either 'hpf' or 'lpf'.",
+			            name.c_str(),
+			            type_pref.c_str());
+			return false;
+		}
+		return true;
+	};
+
+	if (single_filter) {
+		auto i = 0;
+
+		const auto filter_type        = parts[i++];
+		const auto filter_order       = parts[i++];
+		const auto filter_cutoff_freq = parts[i++];
+
+		return set_filter(filter_type, filter_order, filter_cutoff_freq);
+	} else {
+		auto i = 0;
+
+		const auto filter1_type        = parts[i++];
+		const auto filter1_order       = parts[i++];
+		const auto filter1_cutoff_freq = parts[i++];
+
+		const auto filter2_type        = parts[i++];
+		const auto filter2_order       = parts[i++];
+		const auto filter2_cutoff_freq = parts[i++];
+
+		if (filter1_type == filter2_type) {
+			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
+			            "The two filters must be of different types.",
+			            name.c_str(),
+			            filter_prefs.c_str());
+			return false;
+		}
+
+		if (!set_filter(filter1_type, filter1_order, filter1_cutoff_freq))
+			return false;
+
+		return set_filter(filter2_type, filter2_order, filter2_cutoff_freq);
+	}
+}
+
 void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 {
+	// TODO make sure that the ZOH target frequency cannot be set after the
+	// filter have been configured
 	zoh_upsampler.target_freq = target_freq;
 	ConfigureResampler();
 	UpdateZOHUpsamplerState();
@@ -843,7 +954,7 @@ void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 	do_zoh_upsampler = enabled;
 
 	if (!do_zoh_upsampler) {
-		// DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is off for channel: %s",
+		// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is off",
 		//               name.c_str());
 		return;
 	}
@@ -851,9 +962,9 @@ void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 	ConfigureResampler();
 	UpdateZOHUpsamplerState();
 
-	// DEBUG_LOG_MSG("MIXER: Zero-order-hold upsampler is on (target_freq: %d Hz) for channel: %s",
-	//               zoh_upsampler.target_freq,
-	//               name.c_str());
+	// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is on (target_freq: %d Hz)",
+	//               name.c_str(),
+	//               zoh_upsampler.target_freq);
 }
 
 void MixerChannel::UpdateZOHUpsamplerState()
@@ -873,8 +984,7 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	do_crossfeed = (HasFeature(ChannelFeature::Stereo) && strength > 0.0f);
 
 	if (!do_crossfeed) {
-		// DEBUG_LOG_MSG("MIXER: Crossfeed is off for channel: %s",
-		//               name.c_str());
+		// DEBUG_LOG_MSG("%s: Crossfeed is off", name.c_str());
 		crossfeed.strength = 0.0f;
 		return;
 	}
@@ -887,9 +997,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.pan_left = center - p;
 	crossfeed.pan_right = center + p;
 
-	// DEBUG_LOG_MSG("MIXER: Crossfeed is on (strength: %.3f) for channel: %s",
-	//               static_cast<double>(crossfeed.strength),
-	//               name.c_str());
+	// DEBUG_LOG_MSG("%s: Crossfeed is on (strength: %.3f)",
+	//               name.c_str(),
+	//               static_cast<double>(crossfeed.strength));
 }
 
 float MixerChannel::GetCrossfeedStrength()
@@ -910,8 +1020,7 @@ void MixerChannel::SetReverbLevel(const float level)
 	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
 
 	if (!do_reverb_send) {
-		// DEBUG_LOG_MSG("MIXER: Reverb send is off for channel: %s",
-		//               name.c_str());
+		// DEBUG_LOG_MSG("%s: Reverb send is off", name.c_str());
 		reverb.level = level_min;
 		reverb.send_gain = level_min_db;
 		return;
@@ -923,11 +1032,11 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	// DEBUG_LOG_MSG("MIXER: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
+	// DEBUG_LOG_MSG("%s: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
+	//               name.c_str(),
 	//               level,
 	//               level_db,
-	//               reverb.send_gain,
-	//               name.c_str());
+	//               reverb.send_gain);
 }
 
 float MixerChannel::GetReverbLevel()
@@ -948,8 +1057,7 @@ void MixerChannel::SetChorusLevel(const float level)
 	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > level_min);
 
 	if (!do_chorus_send) {
-		// DEBUG_LOG_MSG("MIXER: Chorus send is off for channel: %s",
-		//               name.c_str());
+		// DEBUG_LOG_MSG("%s: Chorus send is off", name.c_str());
 		chorus.level = level_min;
 		chorus.send_gain = level_min_db;
 		return;
@@ -961,11 +1069,11 @@ void MixerChannel::SetChorusLevel(const float level)
 
 	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	//DEBUG_LOG_MSG("MIXER: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f for %s",
+	//DEBUG_LOG_MSG("%s: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
+	//              name.c_str(),
 	//              level,
 	//              level_db,
-	//              chorus.send_gain,
-	//              name.c_str());
+	//              chorus.send_gain);
 }
 
 float MixerChannel::GetChorusLevel()

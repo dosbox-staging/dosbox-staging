@@ -22,6 +22,7 @@
 
 #include <array>
 #include <deque>
+#include <string>
 
 #include "inout.h"
 #include "setup.h"
@@ -34,6 +35,7 @@ public:
 	~PcSpeakerImpulse() final;
 
 	void SetFilterState(const FilterState filter_state) final;
+	bool TryParseAndSetCustomFilter(const std::string &filter_choice) final;
 	void SetCounter(const int cntr, const PitMode pit_mode) final;
 	void SetPITControl(const PitMode pit_mode) final;
 	void SetType(const PpiPortB &port_b) final;
@@ -72,14 +74,16 @@ private:
 	static constexpr uint16_t sinc_filter_width = sinc_filter_quality *
 	                                              sinc_oversampling_factor;
 
-	// Compound types and containers
+	static constexpr float max_possible_pit_ms = 1320000.0f / PIT_TICK_RATE;
+
+	// Compound types and containers	
 	struct PitState {
 		// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with
 		// positive amplitude
-		float max_ms            = 1320000.0f / PIT_TICK_RATE;
-		float new_max_ms        = max_ms;
-		float half_ms           = max_ms / 2.0f;
-		float new_half_ms       = half_ms;
+		float max_ms            = max_possible_pit_ms;
+		float new_max_ms        = max_possible_pit_ms;
+		float half_ms           = max_possible_pit_ms / 2.0f;
+		float new_half_ms       = max_possible_pit_ms / 2.0f;
 		float index             = 0.0f;
 		float last_index        = index;
 		float mode1_pending_max = 0.0f;
@@ -99,7 +103,7 @@ private:
 
 	std::array<float, sinc_filter_width> impulse_lut = {};
 
-	mixer_channel_t channel = {};
+	mixer_channel_t channel = nullptr;
 
 	PpiPortB prev_port_b = {};
 

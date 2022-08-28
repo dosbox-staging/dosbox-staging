@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
@@ -755,13 +756,13 @@ public:
 };
 
 // Specify a 'Drive' config object with allowed key and value types
-static Config specify_drive_config()
+static std::unique_ptr<Config> specify_drive_config()
 {
-	auto conf = Config();
+	auto conf = std::make_unique<Config>();
 
 	// Define the [drive] section
 	constexpr auto changeable_at_runtime = false;
-	auto prop = conf.AddSection_prop("drive", nullptr, changeable_at_runtime);
+	auto prop = conf->AddSection_prop("drive", nullptr, changeable_at_runtime);
 
 	// Define the allowed keys and types
 	constexpr auto on_startup = Property::Changeable::OnlyAtStart;
@@ -789,10 +790,11 @@ static std::tuple<std::string, std::string, std::string> parse_drive_conf(
 
 	// If we couldn't parse it, return the defaults
 	auto conf = specify_drive_config();
-	if (!conf.ParseConfigFile("drive", conf_path.string()))
+	assert(conf);
+	if (!conf->ParseConfigFile("drive", conf_path.string()))
 		return {drive_letter, default_args, default_path};
 
-	const auto settings = static_cast<Section_prop *>(conf.GetSection("drive"));
+	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));
 
 	// Construct the mount arguments
 	const auto override_drive = std::string(settings->Get_string("override_drive"));

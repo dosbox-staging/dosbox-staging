@@ -24,6 +24,7 @@
 #include "dosbox.h"
 
 #include <queue>
+#include <string>
 
 #include "inout.h"
 #include "lpt.h"
@@ -39,6 +40,8 @@ public:
 	// public interfaces
 	virtual void ConfigureFilters(const FilterState state) = 0;
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
+
+	bool TryParseAndSetCustomFilter(const std::string filter_choice);
 
 protected:
 	LptDac()                          = delete;

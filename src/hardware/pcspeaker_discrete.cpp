@@ -376,9 +376,10 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 
 			auto value = 0.0f;
 
+			const auto front_index = entries.front().index;
 			while (index < end) {
 				// Check if there is an upcoming event
-				if (entries.size() && entries.front().index <= index) {
+				if (entries.size() && front_index <= index) {
 					volwant = entries.front().vol;
 					entries.pop();
 					continue;
@@ -455,6 +456,12 @@ void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
 	}
+}
+
+bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string &filter_choice)
+{
+	assert(channel);
+	return channel->TryParseAndSetCustomFilter(filter_choice);
 }
 
 PcSpeakerDiscrete::PcSpeakerDiscrete()

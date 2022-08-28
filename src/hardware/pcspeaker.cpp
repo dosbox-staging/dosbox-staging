@@ -55,18 +55,20 @@ void PCSPEAKER_Init(Section *section)
 	}
 
 	// Get the user's filering choice
-	const auto filter_choice = std::string_view(
-	        prop->Get_string("pcspeaker_filter"));
+	const std::string filter_choice = prop->Get_string("pcspeaker_filter");
 
 	assert(pc_speaker);
-	if (filter_choice == "on") {
-		pc_speaker->SetFilterState(FilterState::On);
-	} else {
-		if (filter_choice != "off") {
-			LOG_WARNING("PCSPEAKER: Invalid filter setting '%s', using off",
-			            filter_choice.data());
+
+	if (!pc_speaker->TryParseAndSetCustomFilter(filter_choice)) {
+		if (filter_choice == "on") {
+			pc_speaker->SetFilterState(FilterState::On);
+		} else {
+			if (filter_choice != "off") {
+				LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' value: '%s', using 'off'",
+				            filter_choice.data());
+			}
+			pc_speaker->SetFilterState(FilterState::Off);
 		}
-		pc_speaker->SetFilterState(FilterState::Off);
 	}
 
 	section->AddDestroyFunction(&PCSPEAKER_ShutDown, true);

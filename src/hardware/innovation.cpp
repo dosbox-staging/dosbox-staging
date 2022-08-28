@@ -29,10 +29,9 @@
 CHECK_NARROWING();
 
 void Innovation::Open(const std::string &model_choice,
-                      const std::string &clock_choice,
-                      const int filter_strength_6581,
-                      const int filter_strength_8580,
-                      const int port_choice)
+                      const std::string &clock_choice, const int filter_strength_6581,
+                      const int filter_strength_8580, const int port_choice,
+                      const std::string &channel_filter_choice)
 {
 	Close();
 
@@ -42,7 +41,7 @@ void Innovation::Open(const std::string &model_choice,
 
 	std::string model_name;
 	int filter_strength = 0;
-	auto sid_service = std::make_unique<reSIDfp::SID>();
+	auto sid_service    = std::make_unique<reSIDfp::SID>();
 
 	// Setup the model and filter
 	if (model_choice == "8580") {
@@ -79,13 +78,22 @@ void Innovation::Open(const std::string &model_choice,
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            use_mixer_rate,
-	                                            "INNOVATION",
-	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::ReverbSend,
-	                                             ChannelFeature::ChorusSend,
-	                                             ChannelFeature::Synthesizer});
+	auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                      use_mixer_rate,
+	                                      "INNOVATION",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::ReverbSend,
+	                                       ChannelFeature::ChorusSend,
+	                                       ChannelFeature::Synthesizer});
+
+	if (!mixer_channel->TryParseAndSetCustomFilter(channel_filter_choice)) {
+		if (channel_filter_choice != "off")
+			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' value: '%s', using 'off'",
+			            channel_filter_choice.c_str());
+
+		mixer_channel->SetHighPassFilter(FilterState::Off);
+		mixer_channel->SetLowPassFilter(FilterState::Off);
+	}
 
 	const auto frame_rate_hz = mixer_channel->GetSampleRate();
 
@@ -93,13 +101,15 @@ void Innovation::Open(const std::string &model_choice,
 	const double passband = 0.9 * frame_rate_hz / 2;
 
 	// Assign the sampling parameters
-	sid_service->setSamplingParameters(chip_clock, reSIDfp::RESAMPLE,
-	                                   frame_rate_hz, passband);
+	sid_service->setSamplingParameters(chip_clock,
+	                                   reSIDfp::RESAMPLE,
+	                                   frame_rate_hz,
+	                                   passband);
 
 	// Setup and assign the port address
 	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
 	const auto write_to = std::bind(&Innovation::WriteToPort, this, _1, _2, _3);
-	base_port = check_cast<io_port_t>(port_choice);
+	base_port           = check_cast<io_port_t>(port_choice);
 	read_handler.Install(base_port, read_from, io_width_t::byte, 0x20);
 	write_handler.Install(base_port, write_to, io_width_t::byte, 0x20);
 
@@ -113,10 +123,14 @@ void Innovation::Open(const std::string &model_choice,
 	constexpr auto us_per_s = 1'000'000.0;
 	if (filter_strength == 0)
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
-		        base_port, model_name.c_str(), chip_clock / us_per_s);
+		        base_port,
+		        model_name.c_str(),
+		        chip_clock / us_per_s);
 	else
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
-		        base_port, model_name.c_str(), chip_clock / us_per_s,
+		        base_port,
+		        model_name.c_str(),
+		        chip_clock / us_per_s,
 		        filter_strength);
 
 	is_open = true;
@@ -227,14 +241,19 @@ static void innovation_init(Section *sec)
 	assert(sec);
 	Section_prop *conf = static_cast<Section_prop *>(sec);
 
-	const auto model_choice = conf->Get_string("sidmodel");
-	const auto clock_choice = conf->Get_string("sidclock");
-	const auto port_choice = conf->Get_hex("sidport");
-	const auto filter_strength_6581 = conf->Get_int("6581filter");
-	const auto filter_strength_8580 = conf->Get_int("8580filter");
+	const auto model_choice          = conf->Get_string("sidmodel");
+	const auto clock_choice          = conf->Get_string("sidclock");
+	const auto port_choice           = conf->Get_hex("sidport");
+	const auto filter_strength_6581  = conf->Get_int("6581filter");
+	const auto filter_strength_8580  = conf->Get_int("8580filter");
+	const auto channel_filter_choice = conf->Get_string("innovation_filter");
 
-	innovation.Open(model_choice, clock_choice, filter_strength_6581,
-	                filter_strength_8580, port_choice);
+	innovation.Open(model_choice,
+	                clock_choice,
+	                filter_strength_6581,
+	                filter_strength_8580,
+	                port_choice,
+	                channel_filter_choice);
 
 	sec->AddDestroyFunction(&innovation_destroy, true);
 }
@@ -284,6 +303,13 @@ static void init_innovation_dosbox_settings(Section_prop &sec_prop)
 	int_prop->SetMinMax(0, 100);
 	int_prop->Set_help(
 	        "Adjusts the 8580's filtering strength as a percent from 0 to 100.");
+
+	str_prop = sec_prop.Add_string("innovation_filter", when_idle, "off");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Filter for the Innovation audio output:\n"
+	        "  off:       Don't filter the output (default).\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
 void INNOVATION_AddConfigSection(const config_ptr_t &conf)

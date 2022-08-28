@@ -850,7 +850,7 @@ static void set_vsync(const VSYNC_STATE state)
 		assert(sdl.opengl.context);
 		const auto interval = static_cast<int>(state);
 		// -1=adaptive, 0=off, 1=on
-		assert(interval >= -1 || interval <= 1);
+		assert(interval >= -1 && interval <= 1);
 		if (SDL_GL_SetSwapInterval(interval) == 0)
 			return;
 
@@ -3403,7 +3403,7 @@ static void GUI_StartUp(Section *sec)
 			sdl.desktop.host_rate_mode = HOST_RATE_MODE::CUSTOM;
 			sdl.desktop.preferred_host_rate = rate;
 		} else {
-			LOG_WARNING("SDL: Invalid host_rate value '%s', using auto",
+			LOG_WARNING("SDL: Invalid 'host_rate' value: '%s', using 'auto'",
 			            host_rate_pref.c_str());
 			sdl.desktop.host_rate_mode = HOST_RATE_MODE::AUTO;
 		}
@@ -3434,7 +3434,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.frame.desired_mode = FRAME_MODE::VFR;
 	else {
 		sdl.frame.desired_mode = FRAME_MODE::UNSET;
-		LOG_WARNING("SDL: Invalid presentation_mode value '%s'",
+		LOG_WARNING("SDL: Invalid 'presentation_mode' value: '%s'",
 		            presentation_mode_pref.c_str());
 	}
 

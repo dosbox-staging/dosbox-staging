@@ -95,9 +95,10 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		constexpr auto cutoff_freq = 6000;
 		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
-	} else {
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (filter_choice != "off")
-			LOG_WARNING("%s: Invalid filter setting '%s', using off",
+			LOG_WARNING("%s: Invalid 'cms_filter' value: '%s', using 'off'",
 			            CardName(),
 			            filter_choice.c_str());
 
@@ -289,6 +290,9 @@ void CMS_Init(Section *configuration)
 	                 section->Get_string("sbtype"),
 	                 section->Get_string("cms_filter"));
 }
-void CMS_ShutDown([[maybe_unused]] Section* sec) {
+
+void CMS_ShutDown()
+{
 	gameblaster.Close();
 }
+

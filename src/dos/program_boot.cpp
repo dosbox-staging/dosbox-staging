@@ -284,12 +284,17 @@ void BOOT::Run(void)
 					        seek_pos, temp_line.c_str(), strerror(errno));
 					return;
 				}
-				if (fread(rombuf, 1, rombytesize_1 - 0x200,
-				          usefile_1) < rombytesize_1 - 0x200) {
+				const auto rom_bytes_expected = rombytesize_1 - 0x200;
+				const auto rom_bytes_read = fread(
+				        rombuf, 1, rom_bytes_expected, usefile_1);
+				if (rom_bytes_read < rom_bytes_expected) {
 					LOG_ERR("BOOT: Failed to read sufficient cartridge data");
 					fclose(usefile_1);
 					return;
 				}
+				// Null-terminate the buffer
+				rombuf[rom_bytes_read] = '\0';
+
 				char cmdlist[1024];
 				cmdlist[0] = 0;
 				Bitu ct = 6;
