@@ -942,6 +942,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 
 void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 {
+	// TODO make sure that the ZOH target frequency cannot be set after the
+	// filter have been configured
 	zoh_upsampler.target_freq = target_freq;
 	ConfigureResampler();
 	UpdateZOHUpsamplerState();
