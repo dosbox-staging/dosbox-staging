@@ -2117,14 +2117,14 @@ public:
 
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
-		case OplMode::Opl3Gold:
+		case OplMode::Opl3Gold: {
 			OPL_Init(section, oplmode);
 
 			auto opl_channel = MIXER_FindChannel("OPL");
 			const std::string opl_filter_prefs = section->Get_string(
 			        "opl_filter");
 			configure_opl_filter(opl_channel, opl_filter_prefs, sb.type);
-			break;
+		} break;
 		}
 
 		if (sb.type == SBT_NONE || sb.type == SBT_GB)
