@@ -791,7 +791,7 @@ static std::tuple<std::string, std::string, std::string> parse_drive_conf(
 	// If we couldn't parse it, return the defaults
 	auto conf = specify_drive_config();
 	assert(conf);
-	if (conf->ParseConfigFile("drive", conf_path.string()))
+	if (!conf->ParseConfigFile("drive", conf_path.string()))
 		return {drive_letter, default_args, default_path};
 
 	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));
