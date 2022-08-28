@@ -646,7 +646,15 @@ bool get_expanded_files(const std::string &path,
 #if defined(WIN32)
 	auto get_lang_from_windows = []() -> std::string {
 		std::string lang = {};
+		wchar_t w_buf[LOCALE_NAME_MAX_LENGTH];
+		if (!GetUserDefaultLocaleName(w_buf, LOCALE_NAME_MAX_LENGTH))
+			return lang;
 
+		// Convert the wide-character string into a normal buffer
+		char buf[LOCALE_NAME_MAX_LENGTH];
+		wcstombs(buf, w_buf, LOCALE_NAME_MAX_LENGTH);
+
+		lang = buf;
 		clear_language_if_default(lang);
 		return lang;
 	};
