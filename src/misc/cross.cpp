@@ -22,6 +22,7 @@
 #include "cross.h"
 
 #include <cerrno>
+#include <clocale>
 #include <string>
 #include <vector>
 
@@ -30,17 +31,23 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef WIN32
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
+#if C_COREFOUNDATION
+#	include <CoreFoundation/CoreFoundation.h>
 #endif
-#include <shlobj.h>
+
+#ifdef WIN32
+#	include <winnls.h>
+
+#	ifndef _WIN32_IE
+#		define _WIN32_IE 0x0400
+#	endif
+#	include <shlobj.h>
 #else
-#include <libgen.h>
+#	include <libgen.h>
 #endif
 
 #if defined HAVE_PWD_H
-#include <pwd.h>
+#	include <pwd.h>
 #endif
 
 #include "fs_utils.h"
@@ -616,24 +623,73 @@ bool get_expanded_files(const std::string &path,
 	}
 }
 
+[[maybe_unused]] std::string get_language_from_os()
+{
+	// Lamda helper to extract the language from macOS locale
 #if C_COREFOUNDATION
-#	include <CoreFoundation/CoreFoundation.h>
-[[maybe_unused]] std::string get_language_from_os()
-{
-	auto cflocale       = CFLocaleCopyCurrent();
-	auto locale         = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
-	auto locale_str_ref = static_cast<CFStringRef>(locale);
-	const auto cstr = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
-	std::string locale_string(cstr ? cstr : "");
-	CFRelease(cflocale);
-	return locale_string;
-}
-#else
-[[maybe_unused]] std::string get_language_from_os()
-{
-	return "";
-}
+	auto get_lang_from_macos = []() {
+		std::string lang = {};
+		auto cflocale    = CFLocaleCopyCurrent();
+		auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
+		auto locale_str_ref = static_cast<CFStringRef>(locale);
+		const auto cstr     = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
+		if (cstr) {
+			lang = cstr;
+			clear_language_if_default(lang);
+		}
+		CFRelease(cflocale);
+		return lang;
+	};
 #endif
+
+// Lamda helper to extract the language from Windows locale
+#if defined(WIN32)
+	auto get_lang_from_windows = []() -> std::string {
+		std::string lang = {};
+
+		clear_language_if_default(lang);
+		return lang;
+	};
+#endif
+
+	// Lamda helper to extract the language from POSIX systems
+	auto get_lang_from_posix = []() {
+		std::string lang   = {};
+		const auto envlang = setlocale(LC_ALL, "");
+		if (envlang) {
+			lang = envlang;
+			clear_language_if_default(lang);
+		}
+		return lang;
+	};
+
+	std::string lang = {};
+
+#if C_COREFOUNDATION
+	lang = get_lang_from_macos();
+	if (!lang.empty()) {
+		DEBUG_LOG_MSG("LANG: Got language '%s' from macOS locale", lang.c_str());
+		return lang;
+	}
+#endif
+
+#if defined(WIN32)
+	lang = get_lang_from_windows();
+	if (!lang.empty()) {
+		DEBUG_LOG_MSG("LANG: Got language '%s' from Windows locale", lang.c_str());
+		return lang;
+	}
+#endif
+
+	lang = get_lang_from_posix();
+	if (!lang.empty()) {
+		DEBUG_LOG_MSG("LANG: Got language '%s' from POSIX locale", lang.c_str());
+		return lang;
+	}
+
+	assert(lang.empty());
+	return lang;
+}
 
 namespace cross {
 
