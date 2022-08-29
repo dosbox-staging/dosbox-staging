@@ -633,13 +633,13 @@ void MixerChannel::Enable(const bool should_enable)
 
 void MixerChannel::ConfigureResampler()
 {
-	const auto in_rate  = do_zoh_upsampler ? zoh_upsampler.target_freq
-	                                       : sample_rate;
+	const auto in_rate  = do_zoh_upsample ? zoh_upsampler.target_freq
+	                                      : sample_rate;
 	const auto out_rate = mixer.sample_rate.load();
 
-	do_resampler = (in_rate != out_rate);
+	do_resample = (in_rate != out_rate);
 
-	if (!do_resampler) {
+	if (!do_resample) {
 		// DEBUG_LOG_MSG("%s: Resampler is off", name.c_str());
 		return;
 	}
@@ -893,7 +893,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			return false;
 		}
 
-		const auto max_cutoff_freq_hz = (do_zoh_upsampler
+		const auto max_cutoff_freq_hz = (do_zoh_upsample
 		                                         ? zoh_upsampler.target_freq
 		                                         : sample_rate) / 2 - 1;
 
@@ -967,9 +967,9 @@ void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 
 void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
 {
-	do_zoh_upsampler = enabled;
+	do_zoh_upsample = enabled;
 
-	if (!do_zoh_upsampler) {
+	if (!do_zoh_upsample) {
 		// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is off",
 		//               name.c_str());
 		return;
@@ -1282,7 +1282,7 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (do_zoh_upsampler) {
+		if (do_zoh_upsample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
 			if (zoh_upsampler.pos > 1.0f) {
 				zoh_upsampler.pos -= 1.0f;
@@ -1382,12 +1382,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	last_samples_were_stereo = stereo;
 
-	auto &convert_out = do_resampler ? mixer.resample_temp : mixer.resample_out;
+	auto &convert_out = do_resample ? mixer.resample_temp : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
 	auto out_frames = check_cast<spx_uint32_t>(convert_out.size()) / 2u;
 
-	if (do_resampler) {
+	if (do_resample) {
 		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) /
 		                 2u;
 
