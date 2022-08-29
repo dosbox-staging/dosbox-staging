@@ -296,14 +296,14 @@ private:
 	struct {
 		SpeexResamplerState *state = nullptr;
 	} speex_resampler = {};
-	bool do_resampler = false;
+	bool do_resample = false;
 
 	struct {
 		uint16_t target_freq = 0;
 		float pos = 0.0f;
 		float step = 0.0f;
 	} zoh_upsampler = {};
-	bool do_zoh_upsampler = false;
+	bool do_zoh_upsample = false;
 
 	struct {
 		struct {
