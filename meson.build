@@ -595,7 +595,7 @@ if host_machine.system() == 'darwin'
     summary('CoreServices support', coreservices_dep.found())
 
     # Apple Silicon has 16k pages
-    pagesize_cmd = run_command('pagesize')
+    pagesize_cmd = run_command('pagesize', check: true)
     if pagesize_cmd.returncode() != 0
         error('''error executing pagesize''')
     else
