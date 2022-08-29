@@ -847,9 +847,9 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 	filters.lowpass.cutoff_freq = cutoff_freq;
 }
 
-// Tries to set custom filter settings for the channel from the passed in
-// filter preferences. Returns true if the custom filters could be successfully
-// set, false otherwise and disabled all filters for the channel.
+// Tries to set custom filter settings from the passed in filter preferences.
+// Returns true if the custom filters could be successfully set, false
+// otherwise and disables all filters for the channel.
 bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 {
 	SetLowPassFilter(FilterState::Off);
