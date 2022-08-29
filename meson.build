@@ -100,7 +100,9 @@ endif
 
 if prefers_static_libs
     extra_flags += ['-static-libstdc++', '-static-libgcc']
-    extra_link_flags += ['-no-pie']
+    if host_machine.system() != 'darwin'
+        extra_link_flags += ['-no-pie']
+    endif
 else
     extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
 endif
@@ -657,7 +659,7 @@ third_party_deps = [
     stdcppfs_dep,
     sdl2_dep,
     threads_dep,
-    libghc_dep,
+    ghc_dep,
     libiir_dep,
     libloguru_dep,
     libsdlcd_dep,

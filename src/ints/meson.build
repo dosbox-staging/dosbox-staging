@@ -27,7 +27,7 @@ libints = static_library(
     include_directories: incdir,
     dependencies: [
         sdl2_dep,
-        libghc_dep,
+        ghc_dep,
         libloguru_dep,
     ],
 )
