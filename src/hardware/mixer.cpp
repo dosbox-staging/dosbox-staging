@@ -644,14 +644,14 @@ void MixerChannel::ConfigureResampler()
 		return;
 	}
 
-	if (!resampler.state) {
+	if (!speex_resampler.state) {
 		constexpr auto num_channels = 2; // always stereo
 		constexpr auto quality      = 5;
 
-		resampler.state = speex_resampler_init(
+		speex_resampler.state = speex_resampler_init(
 		        num_channels, in_rate, out_rate, quality, nullptr);
 	}
-	speex_resampler_set_rate(resampler.state, in_rate, out_rate);
+	speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
 
 	// DEBUG_LOG_MSG("%s: Resamper is on (in %d Hz to out: %d Hz)",
 	//              name.c_str(),
@@ -1388,13 +1388,14 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto out_frames = check_cast<spx_uint32_t>(convert_out.size()) / 2u;
 
 	if (do_resampler) {
-		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) / 2u;
+		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) /
+		                 2u;
 
-		out_frames = estimate_max_out_frames(resampler.state, in_frames);
+		out_frames = estimate_max_out_frames(speex_resampler.state, in_frames);
 
 		mixer.resample_out.resize(out_frames * 2);
 
-		speex_resampler_process_interleaved_float(resampler.state,
+		speex_resampler_process_interleaved_float(speex_resampler.state,
 		                                          mixer.resample_temp.data(),
 		                                          &in_frames,
 		                                          mixer.resample_out.data(),
@@ -1403,14 +1404,14 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		// out_frames now contains the actual number of resampled frames,
 		// ensure the number of output frames is within the logical size.
 		assert(out_frames <= mixer.resample_out.size() / 2);
-		mixer.resample_out.resize(out_frames * 2);  // only shrinks
+		mixer.resample_out.resize(out_frames * 2); // only shrinks
 	}
 
 	MIXER_LockAudioDevice();
 
-	// Optionally filter, apply crossfeed, then mix the results to the master
-	// output
-	auto pos = mixer.resample_out.begin();
+	// Optionally filter, apply crossfeed, then mix the results to the
+	// master output
+	auto pos    = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 
 	while (pos != mixer.resample_out.end()) {
@@ -1419,7 +1420,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
-			frame.left  = filters.highpass.hpf[0].filter(frame.left);
+			frame.left = filters.highpass.hpf[0].filter(frame.left);
 			frame.right = filters.highpass.hpf[1].filter(frame.right);
 		}
 		if (do_lowpass_filter) {
@@ -1432,13 +1433,13 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		if (do_reverb_send) {
 			// Mix samples to the reverb aux buffer, scaled by the
 			// reverb send volume
-			mixer.aux_reverb[mixpos][0] += frame.left  * reverb.send_gain;
+			mixer.aux_reverb[mixpos][0] += frame.left * reverb.send_gain;
 			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
 		}
 		if (do_chorus_send) {
 			// Mix samples to the chorus aux buffer, scaled by the
 			// chorus send volume
-			mixer.aux_chorus[mixpos][0] += frame.left  * chorus.send_gain;
+			mixer.aux_chorus[mixpos][0] += frame.left * chorus.send_gain;
 			mixer.aux_chorus[mixpos][1] += frame.right * chorus.send_gain;
 		}
 
@@ -1627,9 +1628,9 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 
 MixerChannel::~MixerChannel()
 {
-	if (resampler.state) {
-		speex_resampler_destroy(resampler.state);
-		resampler.state = nullptr;
+	if (speex_resampler.state) {
+		speex_resampler_destroy(speex_resampler.state);
+		speex_resampler.state = nullptr;
 	}
 }
 
