@@ -303,7 +303,7 @@ private:
 	bool last_samples_were_silence = true;
 
 
-
+	ResampleMethod resample_method = {};
 
 	struct {
 		SpeexResamplerState *state = nullptr;
@@ -315,7 +315,6 @@ private:
 		float pos = 0.0f;
 		float step = 0.0f;
 	} zoh_upsampler = {};
-	bool do_zoh_upsample = false;
 
 	struct {
 		struct {
