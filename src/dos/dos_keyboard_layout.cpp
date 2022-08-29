@@ -37,6 +37,7 @@ using sv = std::string_view;
 
 // The default codepage for DOS
 constexpr uint16_t default_cp_437 = 437;
+constexpr auto default_country    = Country::United_States;
 
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path, and finally from builtin
@@ -1624,7 +1625,7 @@ KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 		language = SETUP_GetLanguage();
 
 	// Does the language have a country associate with it?
-	auto country       = Country::United_States;
+	auto country       = default_country;
 	bool found_country = lookup_country_from_code(language.c_str(), country);
 
 	// If we can't find a country for the language, try from the host
@@ -1643,7 +1644,7 @@ KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 
 	if (result == KEYB_NOERROR) {
 		LOG_MSG("LAYOUT: Loaded codepage %d for detected language %s", codepage, language.c_str());
-	} else if (country != Country::United_States) {
+	} else if (country != default_country) {
 		LOG_WARNING("LAYOUT: Failed loading codepage %d for detected language %s", codepage, language.c_str());
 	}
 	return result;
@@ -1708,25 +1709,19 @@ void DOS_SetCountry(uint16_t countryNo);
 static void set_country_from_pref(const int country_pref)
 {
 	// default to the US
-	auto country_number = static_cast<uint16_t>(Country::United_States);
+	auto country_number = static_cast<uint16_t>(default_country);
 
 	// If the country preference is valid, use it
 	if (country_pref > 0 && country_number_exists(country_pref)) {
 		country_number = static_cast<uint16_t>(country_pref);
-	} else {
-		LOG_WARNING("COUNTRY: The 'country' number '%d' is invalid, will infer it from the keyboard layout",
-		            country_pref);
-
-		if (const auto country_code = DOS_GetLoadedLayout(); country_code) {
-			if (Country c; lookup_country_from_code(country_code, c)) {
-				country_number = static_cast<uint16_t>(c);
-			} else {
-				LOG_ERR("LANGUAGE: The layout's country code: '%s' does not have a corresponding country",
-				        country_code);
-			}
+	} else if (const auto country_code = DOS_GetLoadedLayout(); country_code) {
+		if (Country c; lookup_country_from_code(country_code, c)) {
+			country_number = static_cast<uint16_t>(c);
+		} else {
+			LOG_ERR("LANGUAGE: The layout's country code: '%s' does not have a corresponding country",
+			        country_code);
 		}
 	}
-
 	// At this point, the country number is expected to be valid
 	assert(country_number_exists(country_number));
 	DOS_SetCountry(country_number);
