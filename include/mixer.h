@@ -136,6 +136,12 @@ using channel_features_t = std::set<ChannelFeature>;
 
 enum class FilterState { Off, On, ForcedOn };
 
+enum class ResampleMethod {
+	LinearInterpolation,
+	ZeroOrderHoldAndResample,
+	Resample
+};
+
 using work_index_t = uint16_t;
 
 // forward declarations
@@ -171,7 +177,7 @@ public:
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	bool TryParseAndSetCustomFilter(const std::string &filter_prefs);
 
-	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
+	void SetResampleMethod(const ResampleMethod method);
 	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
 
 	void SetCrossfeedStrength(const float strength);

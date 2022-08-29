@@ -367,10 +367,10 @@ static void set_filter(mixer_channel_t channel, const FilterConfig &config)
 	channel->SetLowPassFilter(config.lpf_state);
 
 	if (config.zoh_upsampler_enabled) {
+		channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 		channel->ConfigureZeroOrderHoldUpsampler(config.zoh_rate_hz);
-		channel->EnableZeroOrderHoldUpsampler();
 	} else {
-		channel->EnableZeroOrderHoldUpsampler(false);
+		channel->SetResampleMethod(ResampleMethod::Resample);
 	}
 }
 
@@ -418,7 +418,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 	// correct upsample rate first for the filter cutoff frequency validation
 	// to work correctly.
 	channel->ConfigureZeroOrderHoldUpsampler(native_dac_rate_hz);
-	channel->EnableZeroOrderHoldUpsampler();
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	if (channel->TryParseAndSetCustomFilter(filter_prefs))
 		return;
