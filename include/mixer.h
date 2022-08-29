@@ -137,8 +137,21 @@ using channel_features_t = std::set<ChannelFeature>;
 enum class FilterState { Off, On, ForcedOn };
 
 enum class ResampleMethod {
+	// Use simple linear interpolation to resample from the channel sample
+	// rate to the mixer rate. This is the legacy behaviour, and it acts as a
+	// sort of a low-pass filter.
 	LinearInterpolation,
+
+	// Upsample from the channel sample rate to the zero-order-hold target
+	// frequency first (this is basically the "nearest-neighbour" equivalent
+	// in audio), then resample to the mixer rate with Speex. This method
+	// faithfully emulates the metallic, crunchy sound of old DACs.
 	ZeroOrderHoldAndResample,
+
+	// Resample from the channel sample rate to the mixer rate with Speex.
+	// This is mathematically correct, high-quality resampling that cuts all
+	// frequencies below the Nyquist frequency using a brickwall filter
+	// (everything below half the channel's sample rate is cut).
 	Resample
 };
 
