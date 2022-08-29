@@ -247,7 +247,7 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson setup ${{ matrix.runner.build_flags }} -Db_lto=true -Db_lto_threads=4 -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
           meson compile -C build
 
       - name: Upload binary
