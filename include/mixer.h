@@ -295,7 +295,7 @@ private:
 
 	struct {
 		SpeexResamplerState *state = nullptr;
-	} resampler = {};
+	} speex_resampler = {};
 	bool do_resampler = false;
 
 	struct {
