@@ -965,9 +965,10 @@ void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
 	UpdateZOHUpsamplerState();
 }
 
-void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
+
+void MixerChannel::SetResampleMethod(const ResampleMethod method)
 {
-	do_zoh_upsample = enabled;
+	do_zoh_upsample = (method == ResampleMethod::ZeroOrderHoldAndResample);
 
 	if (!do_zoh_upsample) {
 		// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is off",
