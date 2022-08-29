@@ -52,16 +52,6 @@ typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(uint16_t frames)>;
 
-enum BlahModes {
-	MIXER_8MONO,MIXER_8STEREO,
-	MIXER_16MONO,MIXER_16STEREO
-};
-
-enum MixerModes {
-	M_8M,M_8S,
-	M_16M,M_16S
-};
-
 enum class MixerState {
 	Uninitialized,
 	NoSound,
@@ -292,6 +282,9 @@ private:
 
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
+
+
+
 
 	struct {
 		SpeexResamplerState *state = nullptr;
