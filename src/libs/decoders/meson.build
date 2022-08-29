@@ -15,7 +15,7 @@ libdecoders = static_library(
     dependencies: [
         sdl2_dep,
         opus_dep,
-        libghc_dep,
+        ghc_dep,
         libloguru_dep,
     ],
 )

@@ -43,7 +43,7 @@ endforeach
 example = executable(
     'example',
     ['example_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_dep, libghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -52,7 +52,7 @@ test('gtest example', example, should_fail: true)
 fs_utils = executable(
     'fs_utils',
     ['fs_utils_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_dep, libghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -84,7 +84,10 @@ unit_tests = [
 
 extra_link_flags = []
 if get_option('b_pie') == false
-    extra_link_flags += ['-no-pie']
+    no_pie = '-no-pie'
+    if host_machine.system() != 'darwin' and cxx.has_link_argument(no_pie)
+        extra_link_flags += no_pie
+    endif
 endif
 
 foreach ut : unit_tests
@@ -93,8 +96,8 @@ foreach ut : unit_tests
     exe = executable(
         name,
         [name + '_tests.cpp'] + extra_cpp,
+        dependencies: [gmock_dep, ghc_dep, libloguru_dep] + ut.get('deps'),
         link_args: extra_link_flags,
-        dependencies: [gmock_dep, libghc_dep, libloguru_dep] + ut.get('deps'),
         include_directories: incdir,
         cpp_args: cpp_args,
     )
