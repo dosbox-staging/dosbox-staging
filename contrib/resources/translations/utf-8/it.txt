@@ -169,11 +169,11 @@ Memoria video in MiB (1-8) o KiB (da 256 a 8192).
 .
 :CONFIG_DOS_RATE
 Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
-  default:  La frequenza è determinata dalla modalità video DOS (consigliato).
-  host:     Abbina la frequenza DOS alla frequenza host (vedi impostazione
-            'host_rate').
-  <value>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
-            1000.000 (Hz).
+  default:   La frequenza è determinata dalla modalità video DOS (consigliato).
+  host:      Abbina la frequenza DOS alla frequenza host (vedi impostazione
+             'host_rate').
+  <valore>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
+             1000.000 (Hz).
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 provare ed impostare in base al gioco.
 .
@@ -471,6 +471,12 @@ Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
       suono verrà riprodotto dipende dal SoundFont e dalle impostazioni di
       riverbero utilizzate.
 .
+:CONFIG_FSYNTH_FILTER
+Filtro per l'uscita audio di FluidSynth:
+  off:       Non filtra l'uscita audio (predefinito).
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
+.
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
 'auto' sceglie il primo modello con ROM disponibili, nell'ordine indicato.
@@ -487,6 +493,12 @@ All'interno di questa cartella, possono essere inclusi i seguenti file ROM:
   - CM32L_CONTROL.ROM e CM32L_PCM.ROM, per il modello 'cm32l'.
   - ROM MAME MT-32 e CM-32L decompresse, per i modelli suddivisi in base alla
     versione.
+.
+:CONFIG_MT32_FILTER
+Filtro per l'uscita audio Roland MT-32/CM-32L:
+  off:       Non filtra l'uscita audio (predefinito).
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_SBTYPE
 Tipo di Sound Blaster da emulare. 'gb' è il Game Blaster.
@@ -526,24 +538,40 @@ Ora è supportata solo l'emulazione OPL "nuked".
 :CONFIG_SB_FILTER
 Tipo di filtro da emulare per l'uscita audio digitale della scheda
 Sound Blaster:
-  auto:  Utilizza il filtro appropriato determinato da 'sbtype' (predefinito).
+  auto:      Utilizza il filtro appropriato determinato da 'sbtype'
+             (predefinito).
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Utilizza il filtro di questo modello di Sound Blaster.
-  off:   Non filtra l'uscita audio.
-È possibile fornire un secondo parametro 'always_on' per impedire ai programmi
-di disattivare il filtro. (Esempio: sbpro1 always_on)
+             Utilizza il filtro di questo modello di Sound Blaster.
+  off:       Non filtra l'uscita audio.
+  <custom>:  Utilizza uno o due filtri personalizzati nel seguente formato:
+               TIPO ORDINE FREQ
+             Dove TIPO può essere 'hpf' (passa alto) o 'lpf' (passa basso),
+             ORDINE è l'ordine del filtro da 1 a 16
+             (1° ordine = pendenza 6dB/ott, 2° ordine = 12dB/ott, ecc.),
+             e FREQ è la frequenza di taglio in Hz. Esempi:
+                lpf 2 12000
+                hpf 3 120 lfp 1 6500
+.
+:CONFIG_SB_FILTER_ALWAYS_ON
+Forza il filtro della scheda Sound Blaster ad essere sempre attivo
+(impedisce ai programmi di disattivare il filtro).
 .
 :CONFIG_OPL_FILTER
 Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
-  auto:  Utilizza il filtro appropriato determinato da 'sbtype' (predefinito)
+  auto:      Utilizza il filtro appropriato determinato da 'sbtype'
+             (predefinito).
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Utilizza il filtro di questo modello di Sound Blaster.
-  off:   Non filtra l'uscita audio.
+             Utilizza il filtro di questo modello di Sound Blaster.
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_CMS_FILTER
 Filtro per l'uscita audio CMS della scheda Sound Blaster:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_GUS
 Abilita l'emulazione della scheda audio Gravis UltraSound.
@@ -561,6 +589,12 @@ Canale DMA della scheda audio Gravis UltraSound.
 Percorso per la cartella UltraSound. In essa dovrebbe essere presente una
 cartella MIDI con al suo interno i file di patch per la riproduzione GUS.
 I set di patch utilizzati con Timidity dovrebbero funzionare.
+.
+:CONFIG_GUS_FILTER
+Filtro per l'uscita audio della scheda Gravis UltraSound:
+  off:       Non filtra l'uscita audio (predefinito).
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_SIDMODEL
 Modello di chip da emulare nella scheda Innovation SSI-2001:
@@ -590,6 +624,12 @@ Regola la forza di filtraggio del chip 6581 come percentuale da 0 a 100.
 :CONFIG_8580FILTER
 Regola la forza di filtraggio del chip 8580 come percentuale da 0 a 100.
 .
+:CONFIG_INNOVATION_FILTER
+Filtro per l'uscita audio della scheda Innovation:
+  off:       Non filtra l'uscita audio (predefinito).
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
+.
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
   discrete: La forma d'onda viene creata utilizzando passaggi discreti
@@ -603,8 +643,10 @@ Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
 .
 :CONFIG_PCSPEAKER_FILTER
 Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_ZERO_OFFSET
 Il DC offset è ora eliminato globalmente dall'uscita del mixer principale.
@@ -615,13 +657,17 @@ Se 'auto', l'emulazione è presente solo se la macchina è impostata su 'tandy'.
 .
 :CONFIG_TANDY_FILTER
 Filtro per l'uscita audio del sintetizzatore Tandy:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtro per l'uscita audio del DAC Tandy:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_LPT_DAC
 Tipo di DAC collegato alla porta parallela:
@@ -632,29 +678,30 @@ Tipo di DAC collegato alla porta parallela:
 .
 :CONFIG_LPT_DAC_FILTER
 Filtro per i dispositivi audio DAC LPT:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_DISNEY
 Usa 'lpt_dac=disney' per abilitare l'emulazione Disney Sound Source.
-.
-:CONFIG_DISNEY_FILTER
-Filtro per l'uscita audio Disney:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
 .
 :CONFIG_PS1AUDIO
 Abilita l'emulazione audio IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtro per l'uscita audio del sintetizzatore PS/1:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtro per l'uscita audio del DAC PS/1:
-  on:   Filtra l'uscita audio (predefinito).
-  off:  Non filtra l'uscita audio.
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
