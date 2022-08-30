@@ -160,6 +160,9 @@ Cz©stotliwo˜† od˜wie¾ania emulowanego obrazu:
 Dost©pne tryby graficzne VESA 1.2 oraz 2.0:
   compatible  Zestaw tryb¢w dobranych dla jak najlepszej kompatybilno˜ci;
               zalecane, razem z 4 lub 8 megabajt¢w pami©ci graficznej.
+  halfline    Obsˆuguje tryby niskiej rozdzielczo˜ci VESA 2.0 wymagane przez
+              gr© Extreme Assault. U¾ywa† tylko w razie potrzeby, jest to
+              niekompatybilne z chipem S3.
   all         Wszystkie tryby dost©pne dla danej wielko˜ci pami©ci graficznej.
               Niekt¢re gry mog¥ jednak niewˆa˜ciwie je obsˆugiwa† (migotanie),
               albo mog¥ wymaga† do ich obsˆugi wi©cej pami©ci.
@@ -223,9 +226,11 @@ Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
                  komputery Amiga.
   colodore:      Zainspirowane przez komputer Commodore 64 i palet© Colodore.
   colodore-sat:  Paleta Colodore z nasyceniem wi©kszym o 20%.
+  dga16:         Nowoczesne podej˜cie do palety CGA, ze stonowanym kontrastem.
 Mo¾na r¢wnie¾ poda† wˆasny zestaw kolor¢w, jako 16 rozdzielonych spacjami
 szesnastkowych kod¢w, po 6 bit¢w na kolor. Przykˆad: czarny to 000000,
-biaˆy to 3f3f3f, peˆna czerwieä to 3f0000.
+biaˆy to 3f3f3f, peˆna czerwieä to 3f0000. Mo¾na te¾ poda† kolory w postaci
+dziesi©tnej, np. (255, 0, 255) to magenta.
 .
 :CONFIG_SCALER
 Skaler do powi©kszania obrazu o niskiej rozdzielczo˜ci. Dodanie 'forced'
@@ -412,6 +417,11 @@ w zamian wˆ¥czy† efekt w mikserze lub pozwoli† obydwu dziaˆa†
 jednocze˜nie. Czy b©dzie to brzmiaˆo dobrze, zale¾y od plik¢w
 SoundFont i ustawieä efektu 'reverb'.
 .
+:CONFIG_FSYNTH_FILTER
+Filtrowanie d«wi©ku syntetyzera FluidSynth:
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+.
 :CONFIG_MODEL
 Model emulowanego syntetyzatora MIDI:
   auto:  pierwszy model z dost©pnymi ROMami, w kolejno˜ci jak poni¾ej.
@@ -463,24 +473,32 @@ Jedynie emulacja 'nuked' jest aktualnie obsˆugiwana.
 .
 :CONFIG_SB_FILTER
 Filtrowanie d«wi©ku digitalizowanego karty Sound Blaster:
-  auto:  Filtrowania odpowiednie dla modelu podanego w 'sbtype' (domy˜lne).
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domy˜lne).
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Filtrowania odpowiednie dla podanego danego modelu.
-  off:   Filtrowanie wyˆ¥czone.
-Drugi parametr 'always_on' uniemo¾liwia oprogramowaniu wyˆ¥czenie filtrowania.
-(Przykˆad: sbpro1 always_on)
+             Filtrowania odpowiednie dla podanego danego modelu.
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Jeden lub dwa filtry podane w formacie:
+               TYPE ORDER FREQ
+             Gdzie TYPE to 'hpf' (g¢rnoprzepustowy) lub 'lpf'
+             (dolnoprzepustowy), ORDER to siˆa filtra od 1 do 16
+             (1 to 6dB/oct, 2 to  12dB/oct, itd.), a parametr
+             FREQ to cz©stotliwo˜† odci©cia w Hz. Przykˆady:
+                lpf 2 12000
+                hpf 3 120 lfp 1 6500
 .
 :CONFIG_OPL_FILTER
 Filtrowanie d«wi©ku syntetyzowanego OPL karty Sound Blaster:
-  auto:  Filtrowania odpowiednie dla modelu podanego w 'sbtype' (domy˜lne).
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domy˜lne).
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Filtrowania odpowiednie dla podanego danego modelu.
-  off:   Filtrowanie wyˆ¥czone.
+             Filtrowania odpowiednie dla podanego danego modelu.
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_CMS_FILTER
 Filtrowanie d«wi©ku syntetyzowanego CMS karty Sound Blaster:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
 Wˆ¥czenie emulacji karty d«wi©kowej Gravis UltraSound.
@@ -499,6 +517,11 @@ Numer kanaˆu DMA karty d«wi©kowej Gravis UltraSound.
 —cie¾ka do katalogu UltraSound. Powinien on zawiera† podkatalog MIDI
 z definicjami instrument¢w w formacie PAT. Zestawy instrument¢w dla programu
 Timidity powinny dziaˆa† poprawnie.
+.
+:CONFIG_GUS_FILTER
+Filtrowanie d«wi©ku karty Gravis UltraSound:
+  off:       Filtrowanie wyˆ¥czone (domy˜lne).
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
 Model ukˆadu w karcie d«wi©kowej Innovation SSI-2001:
@@ -527,6 +550,11 @@ Adjusts the 6581's filtering strength as a percent from 0 to 100.
 :CONFIG_8580FILTER
 Adjusts the 8580's filtering strength as a percent from 0 to 100.
 .
+:CONFIG_INNOVATION_FILTER
+Filtrowanie d«wi©ku karty Innovation SSI-2001:
+  off:       Filtrowanie wyˆ¥czone (domy˜lne).
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+.
 :CONFIG_PCSPEAKER
 Spos¢b emulacji urz¥dzenia d«wi©kowego PC Speaker:
   discrete: Za pomoc¥ krok¢w discrete steps (domy˜lne). Dziaˆa dobrze z grami
@@ -538,8 +566,9 @@ Spos¢b emulacji urz¥dzenia d«wi©kowego PC Speaker:
 .
 :CONFIG_PCSPEAKER_FILTER
 Filtrowanie d«wi©ku urz¥dzenia PC Speaker:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_ZERO_OFFSET
 'DC offset' jest obecnie eliminowany globalnie.
@@ -552,11 +581,13 @@ Dla 'auto', emulacja dziaˆa tylko przy typie maszyny 'tandy'.
 Filtrowanie d«wi©ku syntetyzowanego urz¥dzenia Tandy:
   on:   Wˆ¥czone (domy˜lne).
   off:  Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtrowanie d«wi©ku digitalizowanego urz¥dzenia PS/1:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_LPT_DAC
 Typ urz¥dzenia d«wi©kowego DAC podˆ¥czonego do portu r¢wnolegˆego (LPT):
@@ -567,8 +598,9 @@ Typ urz¥dzenia d«wi©kowego DAC podˆ¥czonego do portu r¢wnolegˆego (LPT):
 .
 :CONFIG_LPT_DAC_FILTER
 Filtrowanie d«wi©ku urz¥dzenia LPT DAC:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_DISNEY
 ½eby wˆ¥czy† Disney Sound Source u¾yj 'lpt_dac=disney'.
@@ -583,13 +615,15 @@ Wˆ¥czenie emulacji urz¥dzenia d«wi©kowego IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtrowanie d«wi©ku syntetyzowanego urz¥dzenia PS/1:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtrowanie d«wi©ku digitalizowanego urz¥dzenia PS/1:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+  on:        Wˆ¥czone (domy˜lne).
+  off:       Filtrowanie wyˆ¥czone.
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
@@ -1168,7 +1202,7 @@ U¾ywanie wielu plik¢w jest obsˆugiwane tylko dla obraz¢w cue/iso.
 .
 :PROGRAM_INTRO
 [2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z d«wi©kiem i grafik¥.
-DOSBox tworzy dla Ciebie powˆok©, kt¢ra wygl¥da jest stary, poczciwy DOS.
+DOSBox tworzy dla Ciebie powˆok©, kt¢ra wygl¥da jak stary, poczciwy DOS.
 
 Informacje o montowaniu dysk¢w, wpisz:      [color=blue]intro mount[reset]
 Informacje o wsparciu dla CD-ROM, wpisz:    [color=blue]intro cdrom[reset]
