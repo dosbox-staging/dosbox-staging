@@ -225,7 +225,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
 	// DACs
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
-	channel->ConfigureZeroOrderHoldUpsampler(check_cast<uint16_t>(sample_rate));
+	channel->SetZeroOrderHoldUpsamplerTargetFreq(check_cast<uint16_t>(sample_rate));
 
 	// Setup filters
 	if (filter_choice == "on") {

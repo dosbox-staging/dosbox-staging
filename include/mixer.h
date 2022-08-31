@@ -191,7 +191,7 @@ public:
 	bool TryParseAndSetCustomFilter(const std::string &filter_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
-	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
+	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
 
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength();
@@ -252,7 +252,8 @@ private:
 
 	void ConfigureResampler();
 	void ClearResampler();
-	void UpdateZOHUpsamplerState();
+	void InitZohUpsamplerState();
+	void InitLerpUpsamplerState();
 
 	AudioFrame ApplyCrossfeed(const AudioFrame &frame) const;
 
@@ -306,15 +307,22 @@ private:
 	ResampleMethod resample_method = {};
 
 	struct {
-		SpeexResamplerState *state = nullptr;
-	} speex_resampler = {};
-	bool do_resample = false;
+		float pos = 0.0f;
+		float step = 0.0f;
+		AudioFrame last_frame = {};
+	} lerp_upsampler = {};
 
 	struct {
 		uint16_t target_freq = 0;
 		float pos = 0.0f;
 		float step = 0.0f;
 	} zoh_upsampler = {};
+
+	struct {
+		SpeexResamplerState *state = nullptr;
+	} speex_resampler = {};
+
+	bool do_resample = false;
 
 	struct {
 		struct {
