@@ -376,7 +376,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 
 			auto value = 0.0f;
 
-			const auto front_index = entries.front().index;
+			const auto front_index = !entries.empty() ? entries.front().index : 0.0f;
 			while (index < end) {
 				// Check if there is an upcoming event
 				if (entries.size() && front_index <= index) {
