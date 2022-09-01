@@ -850,12 +850,14 @@ void DOSBOX_Init() {
 	Pstring = secprop->Add_string("oplemu", deprecated, "");
 	Pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
-	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
+	Pstring = secprop->Add_string("sb_filter", when_idle, "modern");
 	Pstring->Set_help(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
-	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
 	        "             Use the filter of this Sound Blaster model.\n"
+	        "  modern:    Use linear interpolation upsampling that acts as a low-pass filter;\n"
+	        "             this is the legacy DOSBox behaviour (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  One or two custom filters in the following format:\n"
 	        "               TYPE ORDER FREQ\n"

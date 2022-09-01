@@ -84,6 +84,7 @@ enum class FilterType {
 	SBPro1,
 	SBPro2,
 	SB16,
+	Modern
 };
 
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
@@ -404,6 +405,9 @@ static std::optional<FilterType> determine_filter_type(const std::string &filter
 
 	} else if (filter_choice == "sb16") {
 		return FilterType::SB16;
+
+	} else if (filter_choice == "modern") {
+		return FilterType::Modern;
 	}
 
 	return {};
@@ -483,6 +487,11 @@ static void configure_sb_filter(mixer_channel_t channel,
 		// channel rate, which perfectly emulates the dynamic
 		// brickwall filter of the SB16.
 		break;
+
+	case FilterType::Modern:
+		// Linear interpolation upsampling is the legacy DOSBox behaviour
+		channel->SetResampleMethod(ResampleMethod::LinearInterpolation);
+		break;
 	}
 
 	set_filter(channel, config);
@@ -525,6 +534,8 @@ static void configure_opl_filter(mixer_channel_t channel,
 	// thing by ear only.
 	switch (*filter_type) {
 	case FilterType::None:
+	case FilterType::SB16:
+	case FilterType::Modern:
 		break;
 
 	case FilterType::SB1:
@@ -535,9 +546,6 @@ static void configure_opl_filter(mixer_channel_t channel,
 	case FilterType::SBPro1:
 	case FilterType::SBPro2:
 		enable_lpf(1, 8000);
-		break;
-
-	case FilterType::SB16:
 		break;
 	}
 
