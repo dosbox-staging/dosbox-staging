@@ -621,6 +621,10 @@ void MixerChannel::Enable(const bool should_enable)
 
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
+
+		if (do_resampler) {
+			ClearResampler();
+		}
 	}
 	is_enabled = should_enable;
 
@@ -653,6 +657,18 @@ void MixerChannel::ConfigureResampler()
 	//              name.c_str(),
 	//              in_rate,
 	//              out_rate);
+}
+
+// Clear the resampler and prime its input queue with zeros
+void MixerChannel::ClearResampler()
+{
+	assert(resampler.state);
+	speex_resampler_reset_mem(resampler.state);
+	speex_resampler_skip_zeros(resampler.state);
+
+	// DEBUG_LOG_MSG("%s: Resampler cleared and primed %d-frame input queue",
+	//               name.c_str(),
+	//               speex_resampler_get_input_latency(resampler.state));
 }
 
 void MixerChannel::SetSampleRate(const int rate)

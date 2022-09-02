@@ -242,6 +242,7 @@ private:
 	                    std::vector<float> &out);
 
 	void ConfigureResampler();
+	void ClearResampler();
 	void UpdateZOHUpsamplerState();
 
 	AudioFrame ApplyCrossfeed(const AudioFrame &frame) const;
