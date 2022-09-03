@@ -868,7 +868,7 @@ void DOSBOX_Init() {
 	        "                lpf 2 12000\n"
 	        "                hpf 3 120 lfp 1 6500");
 
-	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, true);
+	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, false);
 	Pbool->Set_help("Force the Sound Blaster filter to be always on\n"
 					"(disallow programs from turning the filter off).");
 
