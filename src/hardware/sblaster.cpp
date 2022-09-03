@@ -415,11 +415,11 @@ static void configure_sb_filter(mixer_channel_t channel,
                                 const std::string &filter_prefs,
                                 const bool filter_always_on, const SB_TYPES sb_type)
 {
-	// A bit unfortunate, but we need to enable the ZOH upsampler and the the
-	// correct upsample rate first for the filter cutoff frequency validation
-	// to work correctly.
-	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
+	// A bit unfortunate, but we need to enable the ZOH upsampler and the
+	// correct upsample rate first for the filter cutoff frequency
+	// validation to work correctly.
 	channel->SetZeroOrderHoldUpsamplerTargetFreq(native_dac_rate_hz);
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	if (channel->TryParseAndSetCustomFilter(filter_prefs))
 		return;
