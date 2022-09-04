@@ -932,7 +932,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawopl", "Rec. OPL");
 
-	LOG_MSG("OPL: Mode: %s", opl_mode_to_string(mode).c_str());
+	LOG_MSG("OPL: Using OPL mode %s", opl_mode_to_string(mode).c_str());
 }
 
 OPL::~OPL()
