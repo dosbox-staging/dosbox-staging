@@ -633,11 +633,9 @@ void MixerChannel::Enable(const bool should_enable)
 
 void MixerChannel::ConfigureResampler()
 {
-	const auto do_zoh_upsample = (resample_method ==
-	                              ResampleMethod::ZeroOrderHoldAndResample);
-
-	const auto in_rate = do_zoh_upsample ? zoh_upsampler.target_freq
-	                                     : sample_rate;
+	const auto in_rate = (resample_method == ResampleMethod::ZeroOrderHoldAndResample)
+	                           ? zoh_upsampler.target_freq
+	                           : sample_rate;
 
 	const auto out_rate = mixer.sample_rate.load();
 
@@ -931,9 +929,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		const auto do_zoh_upsample = (resample_method ==
 		                              ResampleMethod::ZeroOrderHoldAndResample);
 
-		const auto max_cutoff_freq_hz = (do_zoh_upsample
-		                                         ? zoh_upsampler.target_freq
-		                                         : sample_rate) / 2 - 1;
+		const auto max_cutoff_freq_hz = (do_zoh_upsample ? zoh_upsampler.target_freq
+		                                                 : sample_rate) / 2 - 1;
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
@@ -1454,7 +1451,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 				if (s.pos > 1.0f) {
 					s.pos -= 1.0f;
-					// Move to the next input sample
+					// Move to the next input frame
 					in_pos += 2;
 					s.last_frame = curr_frame;
 					curr_frame   = {*in_pos, *(in_pos + 1)};

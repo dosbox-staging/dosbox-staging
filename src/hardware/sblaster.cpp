@@ -322,6 +322,7 @@ static void log_filter_config(const char *output_type, const FilterType filter)
 	        {FilterType::SBPro1, "Sound Blaster Pro 1"},
 	        {FilterType::SBPro2, "Sound Blaster Pro 2"},
 	        {FilterType::SB16, "Sound Blaster 16"},
+	        {FilterType::Modern, "Modern"},
 	};
 
 	if (filter == FilterType::None) {
@@ -491,7 +492,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 		break;
 	}
 
-	log_filter_config("SB", *filter_type);
+	log_filter_config("DAC", *filter_type);
 	set_filter(channel, config);
 }
 
