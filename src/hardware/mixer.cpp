@@ -2192,7 +2192,7 @@ private:
 		                           const std::string &xfeed,
 		                           const std::string &reverb,
 		                           const std::string &chorus) {
-			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f %-8s %5s %7s %7s\n",
+			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s\n",
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
@@ -2204,7 +2204,7 @@ private:
 			         chorus.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Mode     Xfeed  Reverb  Chorus[reset]\n")
+		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]\n")
 		                 .c_str());
 
 		constexpr auto off_value  = "off";
