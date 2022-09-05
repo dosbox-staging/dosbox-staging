@@ -350,8 +350,8 @@ private:
 
 	private:
 		MixerChannel &channel;
-		int64_t woken_at_ms   = 0;
-		int accumulated_noise = 0;
+		int64_t woken_at_ms = 0;
+		bool had_noise      = false;
 	};
 	Sleeper sleeper;
 	const bool do_sleep = false;
