@@ -300,17 +300,17 @@ static std::set<const LASynthModel *> has_models(const MidiHandler_mt32::service
 	return models;
 }
 
-static std::string load_model(const MidiHandler_mt32::service_t &service,
-                              const std::string &selected_model,
-                              const std::deque<std::string> &rom_dirs)
+static std::optional<model_and_dir_t> load_model(
+        const MidiHandler_mt32::service_t &service,
+        const std::string &selected_model, const std::deque<std::string> &rom_dirs)
 {
 	const bool is_auto = (selected_model == "auto");
 	for (const auto &model : all_models)
 		if (is_auto || model->Matches(selected_model))
 			for (const auto &dir : rom_dirs)
 				if (model->Load(service, dir))
-					return dir;
-	return "";
+					return {{model, simplify_path(dir).string()}};
+	return {};
 }
 
 static mt32emu_report_handler_i get_report_handler_interface()
@@ -450,17 +450,11 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	}
 
 	// Text colors and highlight selector
-	constexpr char gray[] = "\033[30;1m";
-	constexpr char green[] = "\033[32;1m";
+	constexpr char gray[]    = "\033[30;1m";
 	constexpr char nocolor[] = "\033[0m";
-	auto get_highlight = [&](bool is_missing, bool is_matching) {
-		return is_missing ? gray : is_matching ? green : nocolor;
-	};
 
-	int num_matches = 0;
-	const std::string selected_model = get_selected_model();
-	auto first_match = [&](const LASynthModel *model) {
-		return model->Matches(selected_model) && !num_matches++;
+	auto get_highlight = [&](bool is_missing) {
+		return is_missing ? gray : nocolor;
 	};
 
 	// Print the header row of all models
@@ -468,17 +462,16 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	caller->WriteOut("%s%s", indent, dirs_padding.c_str());
 	for (const auto &model : models_without_aliases) {
 		const bool is_missing = (available_models.find(model) == available_models.end());
-		const bool is_first_match = !is_missing && first_match(model);
-		const auto color = get_highlight(is_missing, is_first_match);
+		const auto color = get_highlight(is_missing);
 		caller->WriteOut("%s%s%s%s", color, model->GetVersion(),
 		                 nocolor, column_delim);
 	}
 	caller->WriteOut("\n");
 
 	// Iterate over the found directories and models
-	num_matches = 0;
 	for (const auto &dir_and_models : dirs_with_models) {
-		const std::string &dir = dir_and_models.first;
+		const auto simplified_dir = simplify_path(dir_and_models.first);
+		const std::string &dir = simplified_dir.string();
 		const auto &dir_models = dir_and_models.second;
 
 		// Print the directory, and truncate it if it's too long
@@ -499,13 +492,44 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 			assert(textbox.size() > 2);
 			const size_t text_center = (textbox.size() / 2) - 1;
 
-			const bool is_missing = (dir_models.find(model) == dir_models.end());
-			const bool is_first_match = !is_missing && first_match(model);
-			textbox[text_center] = is_missing ? '-' : 'y';
-			const auto color = get_highlight(is_missing, is_first_match);
+			const bool is_missing = (dir_models.find(model) ==
+			                         dir_models.end());
+			textbox[text_center]  = is_missing ? '-' : 'y';
+
+			const auto color = get_highlight(is_missing);
 			caller->WriteOut("%s%s%s", color, textbox.c_str(), nocolor);
 		}
 		caller->WriteOut("\n");
+	}
+
+	caller->WriteOut("%s---\n", indent);
+
+	if (model_and_dir && service) {
+		// Labels
+		constexpr std::string_view rom_label = "Active ROM  : ";
+		constexpr std::string_view dir_label = "Loaded From : ";
+
+		// Print the loaded ROM version
+		mt32emu_rom_info rom_info = {};
+		service->getROMInfo(&rom_info);
+		caller->WriteOut("%s%s%s (%s)\n",
+		                 indent,
+		                 rom_label.data(),
+		                 model_and_dir->first->GetName(),
+		                 rom_info.control_rom_description);
+
+		// Print the loaded ROM's directory
+		const auto dir_max_length = INT10_GetTextColumns() -
+		                            (dir_label.length() +
+		                             std::string_view(indent).length());
+
+		const auto truncated_dir = model_and_dir->second.substr(0, dir_max_length);
+		caller->WriteOut("%s%s%s\n",
+		                 indent,
+		                 dir_label.data(),
+		                 truncated_dir.c_str());
+	} else {
+		caller->WriteOut("%sNo ROM is currently loaded\n", indent);
 	}
 	return MIDI_RC::OK;
 }
@@ -519,8 +543,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	const auto rom_dirs = get_selected_dirs();
 
 	// Load the selected model and print info about it
-	const auto found_in = load_model(mt32_service, selected_model, rom_dirs);
-	if (found_in.empty()) {
+	auto loaded_model_and_dir = load_model(mt32_service, selected_model, rom_dirs);
+	if (!loaded_model_and_dir) {
 		LOG_MSG("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
 		for (const auto &dir : rom_dirs) {
@@ -531,8 +555,11 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	}
 	mt32emu_rom_info rom_info;
 	mt32_service->getROMInfo(&rom_info);
+
+	assert(loaded_model_and_dir.has_value());
 	LOG_MSG("MT32: Initialized %s from %s",
-	        rom_info.control_rom_description, found_in.c_str());
+	        rom_info.control_rom_description,
+	        loaded_model_and_dir->second.c_str());
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
@@ -576,6 +603,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	}
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
+	model_and_dir = std::move(loaded_model_and_dir);
 
 	// Start rendering audio
 	keep_rendering = true;
