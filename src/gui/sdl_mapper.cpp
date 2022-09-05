@@ -2499,8 +2499,10 @@ static void CreateDefaultBinds() {
 		CreateStringBind(buffer);
 		i++;
 	}
+#if !defined(MACOSX)
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_RCTRL);
 	CreateStringBind(buffer);
+#endif
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_LCTRL);
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
