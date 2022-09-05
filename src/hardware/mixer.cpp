@@ -2235,6 +2235,17 @@ private:
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+
+		MSG_Add("SHELL_CMD_MIXER_HEADER_LABELS",
+		        "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MASTER", "[color=cyan]MASTER[reset]");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_OFF", "off");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_STEREO", "Stereo");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
 	}
 
 	void ParseVolume(const std::string &s, AudioFrame &volume)
@@ -2298,16 +2309,15 @@ private:
 			         chorus.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]\n")
-		                 .c_str());
+		WriteOut("%s\n", MSG_Get("SHELL_CMD_MIXER_HEADER_LABELS"));
 
-		constexpr auto off_value  = "off";
+		const auto off_value = MSG_Get("SHELL_CMD_MIXER_CHANNEL_OFF");
 		constexpr auto none_value = "-";
 
 		MIXER_LockAudioDevice();
-		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
+		show_channel(MSG_Get("SHELL_CMD_MIXER_CHANNEL_MASTER"),
 		             mixer.master_volume,
-		             "Stereo",
+		             MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO"),
 		             none_value,
 		             none_value,
 		             none_value);
@@ -2349,7 +2359,7 @@ private:
 
 			auto mode = chan->HasFeature(ChannelFeature::Stereo)
 			                  ? chan->DescribeLineout()
-			                  : "Mono";
+			                  : MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 
 			show_channel(convert_ansi_markup(channel_name),
 			             chan->volume,
