@@ -1321,18 +1321,17 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame &frame) const
 
 MixerChannel::Sleeper::Sleeper(MixerChannel &c) : channel(c) {}
 
-// If the AudioFrame holds samples with magnitudes larger than 1 (either
-// positive or negative), then this function updates the "accumulated_noise"
-// member integer to evaluate to true (or be non-zero).
+// Records if samples had a magnitude great than 1. This is a one-way street;
+// once "had_noise" is tripped, it can only be reset after waking up.
 void MixerChannel::Sleeper::Listen(const AudioFrame &frame)
 {
-	// Samples with magnitudes less than 1 (between the -1 and 1 range,
-	// exclusively) are truncated to zero as we consider them "silent
-	// enough". This cast-and-add approach works because our float sample
-	// values span the signed 16-bit integer range (our 0dBFS point is at
-	// INT16.MAX/MIN).
-	accumulated_noise += abs(static_cast<int16_t>(frame.left)) +
-	                     abs(static_cast<int16_t>(frame.right));
+	if (had_noise)
+		return;
+
+	constexpr auto silent_threshold = 1.0f;
+
+	had_noise = fabsf(frame.left) > silent_threshold ||
+	            fabsf(frame.right) > silent_threshold;
 }
 
 void MixerChannel::Sleeper::MaybeSleep()
@@ -1344,7 +1343,7 @@ void MixerChannel::Sleeper::MaybeSleep()
 		return;
 
 	// Stay awake if it's been noisy, otherwise we can sleep
-	if (accumulated_noise) {
+	if (had_noise) {
 		WakeUp();
 	} else {
 		channel.Enable(false);
@@ -1357,7 +1356,7 @@ bool MixerChannel::Sleeper::WakeUp()
 {
 	// Always reset for another round of awakeness
 	woken_at_ms = GetTicks();
-	accumulated_noise = 0;
+	had_noise   = false;
 
 	const auto was_sleeping = !channel.is_enabled;
 	if (was_sleeping) {
