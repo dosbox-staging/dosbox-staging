@@ -87,6 +87,9 @@ void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 void PCI_Init(Section*);
+#if C_VOODOO
+void VOODOO_Init(Section*);
+#endif
 #endif
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
@@ -739,9 +742,21 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 
-
 #if defined(PCI_FUNCTIONALITY_ENABLED)
-	secprop=control->AddSection_prop("pci", &PCI_Init); // PCI bus
+	secprop=control->AddSection_prop("pci", &PCI_Init, false); // PCI bus
+
+#if C_VOODOO
+	secprop->AddInitFunction(&VOODOO_Init, false);
+
+	const char* voodootypes[] = { "12mb", "4mb", "disabled", 0 };
+	Pstring = secprop->Add_string("voodoo", only_at_start, "12mb");
+	Pstring->Set_values(voodootypes);
+	Pstring->Set_help("RAM amount of emulated Vodooo 3dfx card.");
+
+	Pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
+	Pint->SetMinMax(0,4);
+	Pint->Set_help("Toggle performance optimizations for Vodooo 3dfx emulation (0 = none, 1 = use multi-threading, 2 = disable bilinear filter, 3 = both).");
+#endif
 #endif
 
 	// Configure mouse

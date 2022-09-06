@@ -164,6 +164,13 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	if (phys_page >= last_page_in_first_16mb &&
 	    phys_page < sixteen_pages_beyond_first_16mb) {
 		return memory.lfb.mmiohandler;
+#if C_VOODOO
+	} else {
+		PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu);
+		if (PageHandler* vph = VOODOO_PCI_GetLFBPageHandler(phys_page)) {
+			return vph;
+		}
+#endif
 	}
 	return &illegal_page_handler;
 }
