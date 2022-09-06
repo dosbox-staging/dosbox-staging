@@ -19,7 +19,9 @@
 #ifndef DOSBOX_PCI_H
 #define DOSBOX_PCI_H
 
-//#define PCI_FUNCTIONALITY_ENABLED 0
+#if C_VOODOO
+#define PCI_FUNCTIONALITY_ENABLED 1
+#endif
 
 #if defined PCI_FUNCTIONALITY_ENABLED
 
@@ -28,7 +30,7 @@
 
 
 class PCI_Device {
-private:
+protected:
 	Bits pci_id, pci_subfunction;
 	uint16_t vendor_id, device_id;
 
@@ -80,6 +82,10 @@ public:
 bool PCI_IsInitialized();
 
 RealPt PCI_GetPModeInterface(void);
+
+void PCI_AddDevice(PCI_Device* dev);
+
+Bit8u PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, Bit8u regnum);
 
 #endif
 

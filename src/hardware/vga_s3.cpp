@@ -27,8 +27,15 @@
 #include "../ints/int10.h"
 #include "inout.h"
 #include "mem.h"
+#include "pci_bus.h"
 #include "support.h"
 #include "vga.h"
+
+#if defined(PCI_FUNCTIONALITY_ENABLED)
+
+void PCI_AddSVGAS3_Device();
+
+#endif
 
 void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
@@ -822,4 +829,92 @@ void SVGA_Setup_S3Trio(void)
 
 	const auto num_modes = ModeList_VGA.size();
 	VGA_LogInitialization(description.c_str(), ram_type.c_str(), num_modes);
+
+#if defined(PCI_FUNCTIONALITY_ENABLED)
+	PCI_AddSVGAS3_Device();
+#endif
 }
+
+#if defined(PCI_FUNCTIONALITY_ENABLED)
+
+struct PCI_VGADevice : public PCI_Device {
+	enum { vendor = 0x5333 }; // S3
+	enum { device = 0x8811 }; // trio64
+	//enum { device = 0x8810 }; // trio32
+
+	PCI_VGADevice():PCI_Device(vendor,device) { }
+
+	Bits ParseReadRegister(Bit8u regnum) { return regnum; }
+
+	bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask) { return false; }
+
+	Bits ParseWriteRegister(Bit8u regnum,Bit8u value) {
+		if ((regnum>=0x18) && (regnum<0x28)) return -1;	// base addresses are read-only
+		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
+		switch (regnum) {
+			case 0x10:
+				return (PCI_GetCFGData(PCIId(), PCISubfunction(), 0x10)&0x0f);
+			case 0x11:
+				return 0x00;
+			case 0x12:
+				//return (value&0xc0);	// -> 4mb addressable
+				return (value&0x00);	// -> 16mb addressable
+			case 0x13:
+				return value;
+			case 0x14:
+				return (PCI_GetCFGData(PCIId(), PCISubfunction(), 0x10)&0x0f);
+			case 0x15:
+				return 0x00;
+			case 0x16:
+				return value;	// -> 64kb addressable
+			case 0x17:
+				return value;
+			default:
+				break;
+		}
+		return value;
+	}
+
+	bool InitializeRegisters(Bit8u registers[256]) {
+		// init (S3 graphics card)
+		//registers[0x08] = 0x44;	// revision ID (s3 trio64v+)
+		registers[0x08] = 0x00;	// revision ID
+		registers[0x09] = 0x00;	// interface
+		registers[0x0a] = 0x00;	// subclass type (vga compatible)
+		//registers[0x0a] = 0x01;	// subclass type (xga device)
+		registers[0x0b] = 0x03;	// class type (display controller)
+		registers[0x0c] = 0x00;	// cache line size
+		registers[0x0d] = 0x00;	// latency timer
+		registers[0x0e] = 0x00;	// header type (other)
+
+		// reset
+		registers[0x04] = 0x23;	// command register (vga palette snoop, ports enabled, memory space enabled)
+		registers[0x05] = 0x00;
+		registers[0x06] = 0x80;	// status register (medium timing, fast back-to-back)
+		registers[0x07] = 0x02;
+
+		//registers[0x3c] = 0x0b;	// irq line
+		//registers[0x3d] = 0x01;	// irq pin
+
+		//Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
+		Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0);	// memory space, within first 4GB
+		registers[0x10] = (Bit8u)(gfx_address_space&0xff);		// base addres 0
+		registers[0x11] = (Bit8u)((gfx_address_space>>8)&0xff);
+		registers[0x12] = (Bit8u)((gfx_address_space>>16)&0xff);
+		registers[0x13] = (Bit8u)((gfx_address_space>>24)&0xff);
+
+		Bit32u gfx_address_space_mmio=(((Bit32u)S3_LFB_BASE+0x1000000)&0xfffffff0);	// memory space, within first 4GB
+		registers[0x14] = (Bit8u)(gfx_address_space_mmio&0xff);		// base addres 0
+		registers[0x15] = (Bit8u)((gfx_address_space_mmio>>8)&0xff);
+		registers[0x16] = (Bit8u)((gfx_address_space_mmio>>16)&0xff);
+		registers[0x17] = (Bit8u)((gfx_address_space_mmio>>24)&0xff);
+
+		return true;
+	}
+};
+
+void PCI_AddSVGAS3_Device() {
+	PCI_AddDevice(new PCI_VGADevice());
+}
+
+#endif

@@ -463,4 +463,17 @@ void PCI_Init(Section* sec)
 	sec->AddDestroyFunction(&PCI_ShutDown);
 }
 
+void PCI_AddDevice(PCI_Device* dev) {
+	if (pci_interface!=NULL) {
+		pci_interface->RegisterPCIDevice(dev);
+	} else {
+		if (num_rqueued_devices<max_rqueued_devices)
+			rqueued_devices[num_rqueued_devices++]=dev;
+	}
+}
+
+Bit8u PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, Bit8u regnum) {
+	return pci_cfg_data[pci_id][pci_subfunction][regnum];
+}
+
 #endif
