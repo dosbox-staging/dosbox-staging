@@ -303,8 +303,8 @@ private:
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
 
-
 	ResampleMethod resample_method = {};
+	bool do_resample               = false;
 
 	struct {
 		float pos = 0.0f;
@@ -321,8 +321,6 @@ private:
 	struct {
 		SpeexResamplerState *state = nullptr;
 	} speex_resampler = {};
-
-	bool do_resample = false;
 
 	struct {
 		struct {
