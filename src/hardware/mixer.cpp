@@ -926,8 +926,9 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			return false;
 		}
 
-		const auto do_zoh_upsample = (resample_method ==
-		                              ResampleMethod::ZeroOrderHoldAndResample);
+		const auto do_zoh_upsample = do_resample &&
+		                             resample_method ==
+		                                     ResampleMethod::ZeroOrderHoldAndResample;
 
 		const auto max_cutoff_freq_hz = (do_zoh_upsample ? zoh_upsampler.target_freq
 		                                                 : sample_rate) / 2 - 1;
@@ -1315,7 +1316,8 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (resample_method == ResampleMethod::ZeroOrderHoldAndResample) {
+		if (do_resample &&
+		    resample_method == ResampleMethod::ZeroOrderHoldAndResample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
 			if (zoh_upsampler.pos > 1.0f) {
 				zoh_upsampler.pos -= 1.0f;
