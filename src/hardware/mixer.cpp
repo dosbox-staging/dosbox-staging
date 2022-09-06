@@ -1430,11 +1430,11 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 			auto &out = mixer.resample_out;
 			out.resize(0);
 
-			AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
-
 			out_frames = 0;
 
 			while (in_pos != mixer.resample_temp.end()) {
+				AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
+
 				const auto out_left = lerp(s.last_frame.left,
 				                           curr_frame.left,
 				                           s.pos);
@@ -1451,10 +1451,10 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 				if (s.pos > 1.0f) {
 					s.pos -= 1.0f;
+					s.last_frame = curr_frame;
+
 					// Move to the next input frame
 					in_pos += 2;
-					s.last_frame = curr_frame;
-					curr_frame   = {*in_pos, *(in_pos + 1)};
 				}
 			}
 		} break;
