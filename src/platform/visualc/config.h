@@ -64,6 +64,9 @@
 /* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
 
+/* Define to 1 if you want 3dfx voodoo support. */
+#define C_VOODOO 1
+
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)
 #define GCC_LIKELY(x) (x)

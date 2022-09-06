@@ -140,6 +140,13 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
 				(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
 		return memory.lfb.mmiohandler;
+#ifdef C_VOODOO
+	} else {
+		PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu);
+		if (PageHandler* vph = VOODOO_PCI_GetLFBPageHandler(phys_page)) {
+			return vph;
+		}
+#endif
 	}
 	return &illegal_page_handler;
 }
