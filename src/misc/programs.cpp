@@ -854,7 +854,7 @@ void PROGRAMS_Init(Section* sec) {
 	
 	// help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
-	        "Config tool:\n"
+	        "Adjusts DOSBox Staging's configurable parameters.\n"
 	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
 	        "-writeconf or -wc with filename: write file to config directory.\n"
 	        "Use -writelang or -wl filename to write the current language strings.\n"

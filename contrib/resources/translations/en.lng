@@ -700,7 +700,7 @@ Writing config file %s
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Config tool:
+Adjusts DOSBox Staging's configurable parameters.
 -writeconf or -wc without parameter: write to primary loaded config file.
 -writeconf or -wc with filename: write file to config directory.
 Use -writelang or -wl filename to write the current language strings.
