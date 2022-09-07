@@ -52,7 +52,13 @@ private:
 	static constexpr char device_name[] = "PCSPEAKER";
 	static constexpr char model_name[]  = "impulse";
 
-	static constexpr int16_t positive_amplitude = 20000;
+	// Amplitude constants
+
+	// The impulse PWM scalar was manually adjusted to roughly match voltage
+	// levels recorded from a hardware PC Speaker 
+	// Ref:https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
+	static constexpr float pwm_scalar = 0.5f;
+	static constexpr int16_t positive_amplitude = static_cast<int16_t>(MAX_AUDIO * pwm_scalar);
 	static constexpr int16_t negative_amplitude = -positive_amplitude;
 	static constexpr int16_t neutral_amplitude  = 0;
 
