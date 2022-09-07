@@ -605,10 +605,14 @@ void MidiHandlerFluidsynth::Render()
 	}
 }
 
-std::string format_sf2_line(size_t width, const std::string &name, const std::string &path)
+std::string format_sf2_line(size_t width, const std_fs::path &sf2_path)
 {
 	assert(width > 0);
 	std::vector<char> line_buf(width);
+
+	const auto &name = sf2_path.filename().string();
+	const auto &path = simplify_path(sf2_path).string();
+
 	snprintf(line_buf.data(), width, "%-16s - %s", name.c_str(), path.c_str());
 	std::string line = line_buf.data();
 
@@ -650,36 +654,29 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 	}
 
 	// Go through all soundfont directories and list all .sf2 files.
-	char dir_entry_name[CROSS_LEN];
 	for (const auto &dir_path : get_data_dirs()) {
-		dir_information *dir = open_directory(dir_path.c_str());
-		bool is_directory = false;
-		if (!dir)
-			continue;
-		if (!read_directory_first(dir, dir_entry_name, is_directory))
-			continue;
-		do {
-			if (is_directory)
+		std::error_code ec = {};
+		for (const auto &entry : std_fs::directory_iterator(dir_path, ec)) {
+			if (ec)
+				break; // problem iterating, so skip the directory
+
+			// Is it a file?
+			if (!std_fs::is_regular_file(entry))
 				continue;
 
-			const size_t name_len = safe_strlen(dir_entry_name);
-			if (name_len < 4)
-				continue;
-			const char *ext = dir_entry_name + name_len - 4;
-			const bool is_sf2 = (strcasecmp(ext, ".sf2") == 0);
-			if (!is_sf2)
+			// Is it an .sf2 file?
+			auto ext = entry.path().extension().string();
+			lowcase(ext);
+			if (ext != ".sf2")
 				continue;
 
-			const std::string font_path = dir_path + dir_entry_name;
-
-			const auto line = format_sf2_line(term_width - 2,
-			                                  dir_entry_name, font_path);
-			const bool highlight = is_open &&
-			                       (selected_font == font_path);
+			const auto &sf2_path = entry.path();
+			const auto line = format_sf2_line(term_width - 2, sf2_path);
+			const bool highlight = is_open && (selected_font ==
+			                                   sf2_path.string());
 
 			write_line(highlight, line);
-
-		} while (read_directory_next(dir, dir_entry_name, is_directory));
+		}
 	}
 
 	return MIDI_RC::OK;
