@@ -1421,18 +1421,14 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto &convert_out = do_resample ? mixer.resample_temp : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
-	auto out_frames = check_cast<uint32_t>(convert_out.size()) / 2u;
-
 	if (do_resample) {
 		switch (resample_method) {
 		case ResampleMethod::LinearInterpolation: {
 			auto &s = lerp_upsampler;
 
-			auto in_pos  = mixer.resample_temp.begin();
-			auto &out = mixer.resample_out;
+			auto in_pos = mixer.resample_temp.begin();
+			auto &out   = mixer.resample_out;
 			out.resize(0);
-
-			out_frames = 0;
 
 			while (in_pos != mixer.resample_temp.end()) {
 				AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
@@ -1447,7 +1443,6 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 				out.emplace_back(out_left);
 				out.emplace_back(out_right);
-				++out_frames;
 
 				s.pos += s.step;
 
@@ -1467,8 +1462,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 			                         mixer.resample_temp.size()) /
 			                 2u;
 
-			out_frames = estimate_max_out_frames(speex_resampler.state,
-			                                     in_frames);
+			auto out_frames = estimate_max_out_frames(
+			        speex_resampler.state, in_frames);
 
 			mixer.resample_out.resize(out_frames * 2);
 
@@ -1492,6 +1487,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	// Optionally filter, apply crossfeed, then mix the results to the
 	// master output
+	const auto out_frames = static_cast<int>(mixer.resample_out.size()) / 2;
+
 	auto pos    = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 
