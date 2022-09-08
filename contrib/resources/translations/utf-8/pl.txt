@@ -473,9 +473,11 @@ Jedynie emulacja 'nuked' jest aktualnie obsługiwana.
 .
 :CONFIG_SB_FILTER
 Filtrowanie dźwięku digitalizowanego karty Sound Blaster:
-  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domyślne).
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
              Filtrowania odpowiednie dla podanego danego modelu.
+  modern:    Interpolacja liniowa, działająca jak filtr dolnoprzepustowy.
+             Jest to oryginalne zachowanie DOSBoksa (domyślne).
   off:       Filtrowanie wyłączone.
   <custom>:  Jeden lub dwa filtry podane w formacie:
                TYPE ORDER FREQ
@@ -843,7 +845,7 @@ Zapisywanie pliku konfiguracyjnego:
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Narzędzie konfiguracyjne.
+Zmiana parametrów konfiguracyjnych.
 -writeconf lub -wc : zapisz ustawienia do głównego pliku konfiguracyjnego.
 -writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracją.
 -writelang lub -wl nazwa_pliku : zapisz teksty aktualnego języka.
@@ -1631,6 +1633,21 @@ Uwagi:
 Przykłady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Kanał        Głośność  L:P (dB)      Tryb   Przenik  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_MASTER
+[color=cyan]MASTER[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+wył
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Zarządzanie portami szeregowymi.
