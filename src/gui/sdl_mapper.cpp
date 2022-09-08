@@ -2434,7 +2434,9 @@ static struct {
                    {"lalt", SDL_SCANCODE_LALT},
                    {"ralt", SDL_SCANCODE_RALT},
                    {"lctrl", SDL_SCANCODE_LCTRL},
+#if !defined(MACOSX)
                    {"rctrl", SDL_SCANCODE_RCTRL},
+#endif
                    {"lgui", SDL_SCANCODE_LGUI},
                    {"rgui", SDL_SCANCODE_RGUI},
                    {"comma", SDL_SCANCODE_COMMA},
