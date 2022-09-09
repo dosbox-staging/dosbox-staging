@@ -204,6 +204,20 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
+static void register_mt32_text_messages()
+{
+	MSG_Add("MT32_NO_SUPPORTED_MODELS", "No supported models present.");
+
+	MSG_Add("MT32_ROM_NOT_LOADED", "No ROM is currently loaded");
+
+	MSG_Add("MT32_INVENTORY_TABLE_MISSING_LETTER", "-");
+	MSG_Add("MT32_INVENTORY_TABLE_AVAILABLE_LETTER", "y");
+
+	// Translators can line up the colons or use different punctuation
+	MSG_Add("MT32_ACTIVE_ROM_LABEL", "Active ROM  : ");
+	MSG_Add("MT32_SOURCE_DIR_LABEL", "Loaded From : ");
+}
+
 #	if defined(WIN32)
 
 static std::deque<std::string> get_rom_dirs()
@@ -445,7 +459,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	const auto available_models = populate_available_models(GetService(),
 	                                                        dirs_with_models);
 	if (available_models.empty()) {
-		caller->WriteOut("  No supported models present.\n");
+		caller->WriteOut("%s%s\n", indent, MSG_Get("MT32_NO_SUPPORTED_MODELS"));
 		return MIDI_RC::OK;
 	}
 
@@ -467,6 +481,12 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 		                 nocolor, column_delim);
 	}
 	caller->WriteOut("\n");
+
+	// Get the single-character inventory presence indicators
+	const std::string_view missing_indicator = MSG_Get(
+	        "MT32_INVENTORY_TABLE_MISSING_LETTER");
+	const std::string_view available_indicator = MSG_Get(
+	        "MT32_INVENTORY_TABLE_AVAILABLE_LETTER");
 
 	// Iterate over the found directories and models
 	for (const auto &dir_and_models : dirs_with_models) {
@@ -494,7 +514,14 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 
 			const bool is_missing = (dir_models.find(model) ==
 			                         dir_models.end());
-			textbox[text_center]  = is_missing ? '-' : 'y';
+
+			const auto indicator = is_missing ? missing_indicator
+			                                  : available_indicator;
+
+			const auto max_indicator_width = std::min(
+			        indicator.length(), textbox.length() - text_center);
+
+			textbox.replace(text_center, max_indicator_width, indicator);
 
 			const auto color = get_highlight(is_missing);
 			caller->WriteOut("%s%s%s", color, textbox.c_str(), nocolor);
@@ -505,20 +532,18 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	caller->WriteOut("%s---\n", indent);
 
 	if (model_and_dir && service) {
-		// Labels
-		constexpr std::string_view rom_label = "Active ROM  : ";
-		constexpr std::string_view dir_label = "Loaded From : ";
-
 		// Print the loaded ROM version
 		mt32emu_rom_info rom_info = {};
 		service->getROMInfo(&rom_info);
 		caller->WriteOut("%s%s%s (%s)\n",
 		                 indent,
-		                 rom_label.data(),
+		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
 		                 model_and_dir->first->GetName(),
 		                 rom_info.control_rom_description);
 
 		// Print the loaded ROM's directory
+		const std::string_view dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
+
 		const auto dir_max_length = INT10_GetTextColumns() -
 		                            (dir_label.length() +
 		                             std::string_view(indent).length());
@@ -529,7 +554,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 		                 dir_label.data(),
 		                 truncated_dir.c_str());
 	} else {
-		caller->WriteOut("%sNo ROM is currently loaded\n", indent);
+		caller->WriteOut("%s%s\n", indent, MSG_Get("MT32_ROM_NOT_LOADED"));
 	}
 	return MIDI_RC::OK;
 }
@@ -756,8 +781,11 @@ void MT32_AddConfigSection(const config_ptr_t &conf)
 {
 	assert(conf);
 	Section_prop *sec_prop = conf->AddSection_prop("mt32", &mt32_init);
+
 	assert(sec_prop);
 	init_mt32_dosbox_settings(*sec_prop);
+
+	register_mt32_text_messages();
 }
 
 #endif // C_MT32EMU
