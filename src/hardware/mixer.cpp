@@ -2236,6 +2236,9 @@ private:
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 
+		MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
+		        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
+
 		MSG_Add("SHELL_CMD_MIXER_HEADER_LABELS",
 		        "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]");
 
@@ -2291,13 +2294,16 @@ private:
 
 	void ShowMixerStatus()
 	{
-		auto show_channel = [this](const std::string &name,
-		                           const AudioFrame &volume,
-		                           const std::string &mode,
-		                           const std::string &xfeed,
-		                           const std::string &reverb,
-		                           const std::string &chorus) {
-			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s\n",
+		std::string column_layout = MSG_Get("SHELL_CMD_MIXER_HEADER_LAYOUT");
+		column_layout.append({'\n'});
+
+		auto show_channel = [&](const std::string &name,
+		                        const AudioFrame &volume,
+		                        const std::string &mode,
+		                        const std::string &xfeed,
+		                        const std::string &reverb,
+		                        const std::string &chorus) {
+			WriteOut(column_layout.c_str(),
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
