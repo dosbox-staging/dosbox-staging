@@ -279,22 +279,6 @@ Set crossfeed globally on all stereo channels for headphone listening:
                and 100 full crossfeed (effectively turning stereo content into mono).
 Note: You can set per-channel crossfeed via mixer commands.
 .
-:CONFIG_REVERB
-Enable reverb globally to add a sense of space to the sound:
-  off:     No reverb (default).
-  on:      Enable reverb (medium preset).
-  tiny:    Simulates the sound of a small integrated speaker in a room;
-           specifically designed for small-speaker audio systems
-           (PC Speaker, Tandy, PS/1 Audio, and Disney).
-  small:   Adds a subtle sense of space; good for games that use a single
-           synth channel (typically OPL) for both music and sound effects.
-  medium:  Medium room preset that works well with a wide variety of games.
-  large:   Large hall preset recommended for games that use separate
-  			channels for music and digital audio.
-  huge:    A stronger variant of the large hall preset; works really well
-           in some games with more atmospheric soundtracks.
-Note: You can fine-tune per-channel reverb levels via mixer commands.
-.
 :CONFIG_MIDIDEVICE
 GerÑt, das die MIDI-Daten empfangen wird (von der emulierten MIDI
 Schnittstelle - MPU-401). WÑhle eine der folgenden Mîglichkeiten:
@@ -329,18 +313,6 @@ des "soundfonts" Verzeichnises innerhalb deines DOSBox Konfigurations-Verzeichni
 Ein optionaler Prozentsatz skaliert die LautstÑrke des SoundFonts.
 Zum Beispiel: "soundfont.sf2 50" wird die LautstÑrke um 50 Prozent abschwÑchen.
 Der Skalierungsprozentsatz kann von 1 bis 500 reichen.
-.
-:CONFIG_CHORUS
-Choruseffekt: "auto", "on", "off" oder benutzerdefinierte Werte.
-Wenn du benutzerdefinierte Werte verwendest:
-  Alle fÅnf Werte mÅssen in der richtigen Reihenfolge und durch Leerzeichen getrennt angegeben werden.
-  Sie lauten: voice-count, level, speed, depth und modulation-wave, wobei:
-  - voice-count eine ganze Zahl zwischen 0 und 99 ist
-  - level eine Dezimalzahl zwischen 0.0 und 10.0 ist
-  - speed eine Dezimalzahl in Hz von 0.1 bis 5.0 ist
-  - depth eine Dezimalzahl von 0.0 bis 21.0 ist
-  - modulation-wave ist entweder "sine" oder "triangle"
-  Zum Beispiel: chorus = 3 1.2 0.3 8.0 sine
 .
 :CONFIG_MODEL
 Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt CM-32L

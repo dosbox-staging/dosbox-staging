@@ -260,29 +260,6 @@ Un porcentaje opcional escalar  el volumen del SoundFont.
 Por ejemplo: 'soundfont.sf2 50' lo atenuar  en un 50%.
 El porcentaje de escalado puede ir de 1 a 500.
 .
-:CONFIG_CHORUS
-Efecto coro: 'auto', 'on', 'off', o valores personalizados.
-Cuando se usan valores personalizados:
-  Los cinco deben ser proporcionados en orden y separados por espacios.
-  Ellos son: conteo-de-voz nivel velocidad profundidad onda-modulada, donde:
-  - conteo-de-voz es un entero desde 0 a 99.
-  - nivel es un decimal desde 0.0 a 10.0
-  - velocidad es un decimal, medido en Hz, desde 0.1 a 5.0
-  - profundidad es un decimal desde 0.0 a 21.0
-  - onda-modulada es 'sine' o 'triangle'
-  Por ejemplo: chorus = 3 1.2 0.3 8.0 sine
-.
-:CONFIG_REVERB
-Efecto de reverberaci¢n: 'auto', 'on', 'off', o valores personalizados.
-Cuando se usan valores personalizados:
-  Los cuatro deben ser proporcionados en orden y separados por espacios.
-  Ellos son: tama¤o-de-habitaci¢n amortiguaci¢n ancho nivel, donde:
-  - tama¤o-de-habitaci¢n es un decimal desde 0.0 a 1.0
-  - amortiguaci¢n es un decimal desde 0.0 a 1.0
-  - ancho es un decimal desde 0.0 a 100.0
-  - nivel es un decimal desde 0.0 a 1.0
-  Por ejemplo: reverb = 0.61 0.23 0.76 0.56
-.
 :CONFIG_MODEL
 Modelo de sintetizador a utilizar.
 'auto' elige el primer modelo con ROMs disponibles, en orden como se indica.

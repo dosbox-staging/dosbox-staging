@@ -167,6 +167,11 @@ Dostępne tryby graficzne VESA 1.2 oraz 2.0:
               Niektóre gry mogą jednak niewłaściwie je obsługiwać (migotanie),
               albo mogą wymagać do ich obsługi więcej pamięci.
 .
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
+.
 :CONFIG_AUTOEXEC_SECTION
 Sposób traktowania sekcji [autoexec] z kilku plików konfiguracyjnych:
   join:       łączy w jedną sekcję [autoexec] (stare zachowanie).
@@ -437,6 +442,29 @@ Obrazy ROMów mogą zawierać:
   - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
   - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
 .
+:CONFIG_MT32_FILTER
+Filter for the Roland MT-32/CM-32L audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:MT32_NO_SUPPORTED_MODELS
+No supported models present.
+.
+:MT32_ROM_NOT_LOADED
+No ROM is currently loaded
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
+y
+.
+:MT32_ACTIVE_ROM_LABEL
+Active ROM  : 
+.
+:MT32_SOURCE_DIR_LABEL
+Loaded From : 
+.
 :CONFIG_SBTYPE
 Model karty dźwiękowej Sound Blaster, 'gb' oznacza Game Blaster.
 .
@@ -487,6 +515,10 @@ Filtrowanie dźwięku digitalizowanego karty Sound Blaster:
              FREQ to częstotliwość odcięcia w Hz. Przykłady:
                 lpf 2 12000
                 hpf 3 120 lfp 1 6500
+.
+:CONFIG_SB_FILTER_ALWAYS_ON
+Force the Sound Blaster filter to be always on
+(disallow programs from turning the filter off).
 .
 :CONFIG_OPL_FILTER
 Filtrowanie dźwięku syntetyzowanego OPL karty Sound Blaster:
@@ -607,11 +639,6 @@ Filtrowanie dźwięku urządzenia LPT DAC:
 :CONFIG_DISNEY
 Żeby włączyć Disney Sound Source użyj 'lpt_dac=disney'.
 .
-:CONFIG_DISNEY_FILTER
-Filtrowanie dźwięku urządzenia Disney Sound Source:
-  on:   Włączone (domyślne).
-  off:  Filtrowanie wyłączone.
-.
 :CONFIG_PS1AUDIO
 Włączenie emulacji urządzenia dźwiękowego IBM PS/1.
 .
@@ -671,6 +698,12 @@ zaimplementowana w grze, a zmiana innych ustawień nie pomaga.
 Za każdym razem, kiedy zmienisz ustawienia, zostaną one wypisane w konsoli
 tekstowej. Po znalezieniu satysfakcjonujących ustawień zakończ grę, zmień
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
+.
+:CONFIG_JOY_X_CALIBRATION
+Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+.
+:CONFIG_JOY_Y_CALIBRATION
+Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
 .
 :CONFIG_SERIAL1
 Wybór urządzenia podłączonego do portu COM.
@@ -814,6 +847,11 @@ Brak parametru '%s' w sekcji '%s'.
 :PROGRAM_CONFIG_SET_SYNTAX
 Składnia: config -set "[sekcja] parametr=wartość".
 
+.
+:CONFIG_DISNEY_FILTER
+Filtrowanie dźwięku urządzenia Disney Sound Source:
+  on:   Włączone (domyślne).
+  off:  Filtrowanie wyłączone.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie został załadowany żaden plik konfiguracyjny!
@@ -2617,4 +2655,18 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+listing not supported
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+device not configured
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Choice failed[reset]: the input stream ended without a valid choice.
+
 .

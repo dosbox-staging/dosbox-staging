@@ -500,6 +500,24 @@ Filtro per l'uscita audio Roland MT-32/CM-32L:
   <custom>:  Definizione di filtri personalizzati; 
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
+:MT32_NO_SUPPORTED_MODELS
+No supported models present.
+.
+:MT32_ROM_NOT_LOADED
+No ROM is currently loaded
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
+y
+.
+:MT32_ACTIVE_ROM_LABEL
+Active ROM  : 
+.
+:MT32_SOURCE_DIR_LABEL
+Loaded From : 
+.
 :CONFIG_SBTYPE
 Tipo di Sound Blaster da emulare. 'gb' è il Game Blaster.
 .
@@ -2776,4 +2794,28 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+listing not supported
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+device not configured
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_MASTER
+[color=cyan]MASTER[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+off
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
 .

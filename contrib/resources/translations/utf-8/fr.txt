@@ -155,14 +155,34 @@ We recommend the 'default' rate; otherwise test and set on a per-game basis.
 Controls the selection of VESA 1.2 and 2.0 modes offered:
   compatible   A tailored selection that maximizes game compatibility.
                This is recommended along with 4 or 8 MB of video memory.
+  halfline     Supports the low-resolution halfline VESA 2.0 mode used by
+               Extreme Assault. Use only if needed, as it's not S3 compatible.
   all          Offers all modes for a given video memory size, however
                some games may not use them properly (flickering) or may need
                more system memory (mem = ) to use them.
+.
+:CONFIG_SPEED_MODS
+Permit changes known to improve performance. Currently no games are known
+to be affected by this. Please file a bug with the project if you find a
+game that fails when this is set to true so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
 How autoexec sections are handled from multiple config files.
 join      : combines them into one big section (legacy behavior).
 overwrite : use the last one encountered, like other conf settings.
+.
+:CONFIG_AUTOMOUNT
+Mounts 'drives/[c]' directories as drives on startup, where [c] is
+a lower-case drive letter from a to y.  The 'drives' folder can be
+provided relative to the current directory or via built-in resources.
+Mount settings can be optionally provided using a [c].conf file along-
+-side the drive's directory, with content as follows:
+  [drive]
+  type    = dir, overlay, floppy, or cdrom
+  label   = custom_label
+  path    = path-specification, ie: path = %%path%%;c:\tools
+  override_drive = mount the directory to this drive instead (default empty)
+  verbose = true or false
 .
 :CONFIG_STARTUP_VERBOSITY
 Contrôle la verbosité avant l'affichage du programme :
@@ -187,6 +207,28 @@ et 800x600, seront affichés tel quel.
 Sélectionne la palette par défaut pour l'affichage monochrome.
 Fonctionne seulement lors de l'émulation hercules ou cga_mono.
 Vous pouvez aussi faire défiler les couleurs disponibles avec F11.
+.
+:CONFIG_CGA_COLORS
+Sets the interpretation of CGA RGBI colors. Affects all machine types capable of
+displaying CGA or better graphics. Built-in presets:
+  default:       The canonical CGA palette, as emulated by VGA adapters (default).
+  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level
+                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).
+  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.
+  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with
+                 a unique Contrast control that dims non-bright colors only
+                 (0 to 100; defaults to 100).
+  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
+                 Palettes used by the Amiga ports of Sierra AGI games
+                 (see the manual for further details).
+  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.
+  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
+  colodore:      Commodore 64 inspired colors based on the Colodore palette.
+  colodore-sat:  Colodore palette with 20% more saturation.
+  dga16:         A modern take on the canonical CGA palette with dialed back contrast.
+You can also set custom colors by specifying 16 space or comma separated color values,
+either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
+RGB triplets (e.g. (255, 0, 255) for magenta).
 .
 :CONFIG_SCALER
 Scaler utilisé pour agrandir/améliorer les modes basse résolution.
@@ -269,6 +311,12 @@ Nombre de millisecondes de données à garder en amont du paramètre blocksize.
 :CONFIG_NEGOTIATE
 Let the system audio driver negotiate (possibly) better rate and blocksize settings.
 .
+:CONFIG_COMPRESSOR
+Enable the auto-leveling compressor on the master channel to prevent clipping
+of the audio output:
+  off:  Disable compressor.
+  on:   Enable compressor (default).
+.
 :CONFIG_CROSSFEED
 Set crossfeed globally on all stereo channels for headphone listening:
   off:         No crossfeed (default).
@@ -288,10 +336,20 @@ Enable reverb globally to add a sense of space to the sound:
            synth channel (typically OPL) for both music and sound effects.
   medium:  Medium room preset that works well with a wide variety of games.
   large:   Large hall preset recommended for games that use separate
-  			channels for music and digital audio.
+           channels for music and digital audio.
   huge:    A stronger variant of the large hall preset; works really well
            in some games with more atmospheric soundtracks.
 Note: You can fine-tune per-channel reverb levels via mixer commands.
+.
+:CONFIG_CHORUS
+Enable chorus globally to add a sense of stereo movement to the sound:
+  off:     No chorus (default).
+  on:      Enable chorus (normal preset).
+  light:   A light chorus effect (especially suited for
+           synth music that features lots of white noise.)
+  normal:  Normal chorus that works well with a wide variety of games.
+  strong:  An obvious and upfront chorus effect.
+Note: You can fine-tune per-channel chorus levels via mixer commands.
 .
 :CONFIG_MIDIDEVICE
 Préiphérique qui recevra les données MIDI (depuis l'interface
@@ -330,7 +388,7 @@ Un pourcentage optionnel réglera le volume du SoundFont.
 Par exemple: 'soundfont.sf2 50' le diminuera de 50 pourcents.
 L'échelle de pourcentage peut aller de 1 à 500.
 .
-:CONFIG_CHORUS
+:CONFIG_FSYNTH_CHORUS
 Chorus effect: 'auto', 'on', 'off', or custom values.
 When using custom values:
   All five must be provided in-order and space-separated.
@@ -341,6 +399,32 @@ When using custom values:
   - depth is a decimal from 0.0 to 21.0
   - modulation-wave is either 'sine' or 'triangle'
   For example: chorus = 3 1.2 0.3 8.0 sine
+Note: You can disable the FluidSynth chorus and enable the
+mixer-level chorus on the FluidSynth channel instead, or
+enable both chorus effects at the same time. Whether this
+sounds good depends on the SoundFont and the chorus settings
+being used.
+.
+:CONFIG_FSYNTH_REVERB
+Reverb effect: 'auto', 'on', 'off', or custom values.
+When using custom values:
+  All four must be provided in-order and space-separated.
+  They are: room-size damping width level, where:
+  - room-size is a decimal from 0.0 to 1.0
+  - damping is a decimal from 0.0 to 1.0
+  - width is a decimal from 0.0 to 100.0
+  - level is a decimal from 0.0 to 1.0
+  For example: reverb = 0.61 0.23 0.76 0.56
+Note: You can disable the FluidSynth reverb and enable the
+mixer-level reverb on the FluidSynth channel instead, or
+enable both reverb effects at the same time. Whether this
+sounds good depends on the SoundFont and the reverb settings
+being used.
+.
+:CONFIG_FSYNTH_FILTER
+Filter for the FluidSynth audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_MODEL
 Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
@@ -356,6 +440,29 @@ nommés comme ceci :
 Le répertoire peut être absolu ou relatif, ou laisser vide pour
 utiliser le répertoire 'mt32-roms' dans le répertoire de configuration
 de DOSBox, ou un autre répertoire habituel du système.
+.
+:CONFIG_MT32_FILTER
+Filter for the Roland MT-32/CM-32L audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:MT32_NO_SUPPORTED_MODELS
+No supported models present.
+.
+:MT32_ROM_NOT_LOADED
+No ROM is currently loaded
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
+y
+.
+:MT32_ACTIVE_ROM_LABEL
+Active ROM  : 
+.
+:MT32_SOURCE_DIR_LABEL
+Loaded From : 
 .
 :CONFIG_SBTYPE
 Type de Sound Blaster à émuler. 'gb' pour Game Blaster.
@@ -394,24 +501,38 @@ Fournisseur de l'émulation OPL. 'compat' fournit une meilleure qualité,
 .
 :CONFIG_SB_FILTER
 Type of filter to emulate for the Sound Blaster digital sound output:
-  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  auto:      Use the appropriate filter determined by 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Use the filter of this Sound Blaster model.
-  off:   Don't filter the output.
-A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
-(Example: sbpro1 always_on)
+             Use the filter of this Sound Blaster model.
+  modern:    Use linear interpolation upsampling that acts as a low-pass filter;
+             this is the legacy DOSBox behaviour (default).
+  off:       Don't filter the output.
+  <custom>:  One or two custom filters in the following format:
+               TYPE ORDER FREQ
+             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),
+             ORDER is the order of the filter from 1 to 16
+             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),
+             and FREQ is the cutoff frequency in Hz. Examples:
+                lpf 2 12000
+                hpf 3 120 lfp 1 6500
+.
+:CONFIG_SB_FILTER_ALWAYS_ON
+Force the Sound Blaster filter to be always on
+(disallow programs from turning the filter off).
 .
 :CONFIG_OPL_FILTER
 Type of filter to emulate for the Sound Blaster OPL output:
-  auto:  Use the appropriate filter determined by 'sbtype' (default).
+  auto:      Use the appropriate filter determined by 'sbtype' (default).
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Use the filter of this Sound Blaster model.
-  off:   Don't filter the output.
+             Use the filter of this Sound Blaster model.
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_CMS_FILTER
 Filter for the Sound Blaster CMS output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_GUS
 Activer l'émulation Gravis UltraSound.
@@ -430,6 +551,11 @@ Chemin vers le répertoire UltraSound. Dans ce répertoire,
 il devrait y avoir un répertoire MIDI qui contient
 les fichiers de patch pour la lecture GUS. Le jeu de patch
 utilisé avec Timidity devrait bien fonctionner correctement.
+.
+:CONFIG_GUS_FILTER
+Filter for the Gravis UltraSound audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_SIDMODEL
 Model of chip to emulate in the Innovation SSI-2001 card:
@@ -457,13 +583,19 @@ Adjusts the 6581's filtering strength as a percent from 0 to 100.
 :CONFIG_8580FILTER
 Adjusts the 8580's filtering strength as a percent from 0 to 100.
 .
+:CONFIG_INNOVATION_FILTER
+Filter for the Innovation audio output:
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
 :CONFIG_PCSPEAKER
 Activer l'émulation du haut-parleur PC.
 .
 :CONFIG_PCSPEAKER_FILTER
 Filter for the PC Speaker output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_ZERO_OFFSET
 Neutralise et empêche DC-offset du haut-parleur PC d'endommager d'autres sources.
@@ -475,34 +607,45 @@ Activer l'émulation du Tandy Sound System. Pour 'auto', l'émulation est prése
 .
 :CONFIG_TANDY_FILTER
 Filter for the Tandy synth output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filter for the Tandy DAC output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:CONFIG_LPT_DAC
+Type of DAC plugged into the parallel port:
+  disney:    Disney Sound Source.
+  covox:     Covox Speech Thing.
+  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.
+  none/off:  Don't use a parallel port DAC (default).
+.
+:CONFIG_LPT_DAC_FILTER
+Filter for the LPT DAC audio device(s):
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_DISNEY
 Activer l'émulation Disney Sound Source. (compatible Covox Voice Master et Speech Thing).
-.
-:CONFIG_DISNEY_FILTER
-Filter for the Disney audio output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
 .
 :CONFIG_PS1AUDIO
 Enable IBM PS/1 Audio emulation.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filter for the PS/1 Audio synth output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filter for the PS/1 Audio DAC output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_JOYSTICKTYPE
 Type de manette à émuler : auto (défaut),
@@ -533,6 +676,25 @@ Essayez d'activer ceci si votre stick analogique gauche peut seulement bouger da
 .
 :CONFIG_DEADZONE
 Pourcentage de mouvement à ignorer. 100 transforme le stick en un stick digital.
+.
+:CONFIG_USE_JOY_CALIBRATION_HOTKEYS
+Activates hotkeys to allow realtime calibration of the joystick's x and y axis.
+Only consider this if in-game calibration fails and other settings have been tried.
+ - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
+     - left and right diminish or magnify the x-axis scalar, respectively.
+     - down and up diminish or magnify the y-axis scalar, respectively.
+ - Alt+Arrow-keys adjusts the axis' offset position:
+     - left and right shift x-axis offset in the given direction.
+     - down and up shift the y-axis offset in the given direction.
+ - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.
+Each tap will report X or Y calibration values you can set below. When you find parameters that work,
+quit the game, switch this setting back to false, and populate the reported calibration parameters.
+.
+:CONFIG_JOY_X_CALIBRATION
+Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+.
+:CONFIG_JOY_Y_CALIBRATION
+Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
 .
 :CONFIG_SERIAL1
 Définir le type de périphérique connecté au port série.
@@ -659,6 +821,12 @@ Il n'y a aucune propriété "%s" dans la section "%s".
 :PROGRAM_CONFIG_SET_SYNTAX
 Syntaxe correcte : config -set "section propriété".
 
+.
+:CONFIG_PCRATE
+Taux d'échantillonnage de la génération de son du haut-parleur PC.
+.
+:CONFIG_TANDYRATE
+Taux d'échantillonnage de la génération 3-Voix Tandy.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Aucun fichier de configuration chargé !
@@ -988,6 +1156,24 @@ d'entrer dans un répertoire (reconnaissable par les [33;1m[][0m dans le listi
 Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
 
 .
+:PROGRAM_INTRO_CDROM
+[2J[32;1mComment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[0m
+DOSBox supporte l'émulation CD-ROM à plusieurs niveaux.
+
+Ceci fonctionne sur tous les répertoires ordinaires, installe MSCDEX et marque les fichiers
+en lecteur seule. Généralement c'est suffisant pour la plupart des jeux :
+
+[34;1mmount D C:\exemple -t cdrom[0m
+
+Si cela ne marche pas, vous pouvez préciser à DOSBox le nom de volume du CD-ROM :
+
+[34;1mmount D C:\exemple -t cdrom -label CDLABEL[0m
+
+Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fichiers CUE :
+
+[34;1mimgmount D C:\cd.iso -t cdrom[0m
+
+.
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1mTouches spéciales :[0m
 Voici les combinaisons des touches par défaut.
@@ -1079,6 +1265,10 @@ Fichier ROM non reconnu.
 .
 :PROGRAM_LOADROM_BASIC_LOADED
 ROM BASIC chargé.
+
+.
+:SHELL_CMD_IMGMOUNT_HELP
+monte la ou les image(s) de disques compacts ou de disquette(s) sur une lettre de lecteur spécifiée.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -1210,6 +1400,16 @@ La page de code %i a été chargée
 La page de code %i a été chargée pour la disposition %s
 
 .
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [ID disposition clavier[ numéro page de code[ fichier page de code]]]
+
+Quelques exemples :
+  [32;1mKEYB[0m: Affiche la page de code actuellement chargée.
+  [32;1mKEYB[0m sp: Charge la disposition espagnole (SP), utilise une page de code appropriée.
+  [32;1mKEYB[0m sp 850: Charge la disposition espagnole (SP), utilise la page de code 850.
+  [32;1mKEYB[0m sp 850 mycp.cpi: Idem que ci-dessus, mais utilise le fichier mycp.cpi.
+
+.
 :PROGRAM_KEYB_NOERROR
 La disposition clavier %s est chargée pour la page de code %i
 
@@ -1291,6 +1491,9 @@ Date actuelle :
 :SHELL_CMD_DATE_SETHLP
 Tapez 'date MM-JJ-AAAA' pour changer
 
+.
+:SHELL_CMD_DATE_FORMAT
+M/J/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [/S] | MM-JJ-AAAA]
@@ -1669,6 +1872,12 @@ The path "%s" exceeds the DOS maximum length of %d characters
 Executable file not found: %s
 
 .
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+listing not supported
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+device not configured
+.
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .
@@ -1905,7 +2114,7 @@ Where:
     Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])
                use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
     Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
-    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]
+    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]
 
 Notes:
   Running [color=green]mixer[reset] without an argument shows the current mixer settings.
@@ -1916,7 +2125,25 @@ Notes:
 
 Examples:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_MASTER
+[color=cyan]MASTER[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+off
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Manages the serial ports.
@@ -2315,9 +2542,14 @@ Unable to get attributes: %s
 Unable to set attributes: %s
 
 .
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Choice failed[reset]: the input stream ended without a valid choice.
+
+.
 :SHELL_CMD_CHOICE_ABORTED
 
-Choice aborted.
+[color=yellow]Choice aborted.[reset]
 
 .
 :SHELL_CMD_PATH_HELP_LONG
