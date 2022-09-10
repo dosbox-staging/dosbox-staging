@@ -167,6 +167,11 @@ Dost©pne tryby graficzne VESA 1.2 oraz 2.0:
               Niekt¢re gry mog¥ jednak niewˆa˜ciwie je obsˆugiwa† (migotanie),
               albo mog¥ wymaga† do ich obsˆugi wi©cej pami©ci.
 .
+:CONFIG_SPEED_MODS
+Zezwala na zachowania emulatora, kt¢re polepszaj¥ wydajno˜†. Na chwil© obecn¥
+nie s¥ znane ¾adne gry, kt¢re nie dziaˆaj¥ z tym ustawieniem. Je˜li na tak¥
+natrafisz, zgˆo˜ bˆ¥d zespoˆowi projektowemu.
+.
 :CONFIG_AUTOEXEC_SECTION
 Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
   join:       ˆ¥czy w jedn¥ sekcj© [autoexec] (stare zachowanie).
@@ -335,7 +340,7 @@ Wˆ¥czenie (globalnie) efektu 'reverb', dodaje d«wi©kowi wra¾enia przestrzeni:
   off:     Bez efektu (domy˜lne).
   on:      Efekt wˆ¥czony, ustawienie 'medium'.
   tiny:    Odpowiada zintegrowanemu gˆo˜nikowi w niewielkim pokoju, ustawienie
-           dla urz¥dzeä typu PC Speaker, Tandy, PS/1, czy Disney.
+           dla urz¥dzeä typu PC Speaker, Tandy, PS/1, czy LPT DAC.
   small:   Subtelne wra¾enie przestrzeni, odpowiednie do gier u¾ywaj¥cych
            pojedynczego kanaˆu d«wi©ku syntetyzowanego (zazwyczaj OPL) zar¢wno
            do muzyki, jak i efekt¢w d«wi©kowych.
@@ -437,20 +442,43 @@ Obrazy ROM¢w mog¥ zawiera†:
   - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
   - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
 .
+:CONFIG_MT32_FILTER
+Filtrowanie d«wi©ku syntetyzera Roland MT-32/CM-32L:
+  off:       Filtrowanie wyˆ¥czone (domy˜lne).
+  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+.
+:MT32_NO_SUPPORTED_MODELS
+½aden obsˆugiwany model nie jest obecny.
+.
+:MT32_ROM_NOT_LOADED
+ROM nie zostaˆ zaˆadowany
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
++
+.
+:MT32_ACTIVE_ROM_LABEL
+Aktywny ROM  : 
+.
+:MT32_SOURCE_DIR_LABEL
+Zaˆadowano z : 
+.
 :CONFIG_SBTYPE
-Model karty d«wi©kowej Sound Blaster, 'gb' oznacza Game Blaster.
+Model karty muzycznej Sound Blaster, 'gb' oznacza Game Blaster.
 .
 :CONFIG_SBBASE
-Adres bazowy (I/O) karty d«wi©kowej Sound Blaster.
+Adres bazowy (I/O) karty muzycznej Sound Blaster.
 .
 :CONFIG_IRQ
-Numer przerwania (IRQ) karty d«wi©kowej Sound Blaster.
+Numer przerwania (IRQ) karty muzycznej Sound Blaster.
 .
 :CONFIG_DMA
-Numer kanaˆu DMA karty d«wi©kowej Sound Blaster.
+Numer kanaˆu DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_HDMA
-Numer kanaˆu High DMA karty d«wi©kowej Sound Blaster.
+Numer kanaˆu High DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_SBMIXER
 Zezwolenie mikserowi karty Sound Blaster na zmian© ustawieä miksera DOSBoksa.
@@ -466,7 +494,7 @@ cz©stotliwo˜† miksowania, dzi©ki czemu nie jest potrzebny resampling.
 .
 :CONFIG_OPLMODE
 Typ emulowanego ukˆadu OPL. 'auto' wybiera typ w zale¾no˜ci od 'sbtype'.
-Wszystkie z wyj¥tkiem 'cms' s¥ kompatybilne z kartami d«wi©kowymi AdLib.
+Wszystkie z wyj¥tkiem 'cms' s¥ kompatybilne z kartami muzycznymi AdLib.
 .
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obsˆugiwana.
@@ -488,6 +516,10 @@ Filtrowanie d«wi©ku digitalizowanego karty Sound Blaster:
                 lpf 2 12000
                 hpf 3 120 lfp 1 6500
 .
+:CONFIG_SB_FILTER_ALWAYS_ON
+Wymu˜ wˆ¥czone filtrowanie d«wi©ku karty Sound Blaster
+(uniemo¾liwia oprogramowaniu wyˆ¥czenie filtrowania).
+.
 :CONFIG_OPL_FILTER
 Filtrowanie d«wi©ku syntetyzowanego OPL karty Sound Blaster:
   auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domy˜lne).
@@ -503,17 +535,17 @@ Filtrowanie d«wi©ku syntetyzowanego CMS karty Sound Blaster:
   <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
-Wˆ¥czenie emulacji karty d«wi©kowej Gravis UltraSound.
+Wˆ¥czenie emulacji karty muzycznej Gravis UltraSound.
 Enable Gravis UltraSound emulation.
 .
 :CONFIG_GUSBASE
-Adres bazowy (I/O) karty d«wi©kowej Gravis UltraSound.
+Adres bazowy (I/O) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSIRQ
-Numer przerwania (IRQ) karty d«wi©kowej Gravis UltraSound.
+Numer przerwania (IRQ) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-Numer kanaˆu DMA karty d«wi©kowej Gravis UltraSound.
+Numer kanaˆu DMA karty muzycznej Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
 —cie¾ka do katalogu UltraSound. Powinien on zawiera† podkatalog MIDI
@@ -526,7 +558,7 @@ Filtrowanie d«wi©ku karty Gravis UltraSound:
   <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
-Model ukˆadu w karcie d«wi©kowej Innovation SSI-2001:
+Model ukˆadu w karcie muzycznej Innovation SSI-2001:
   auto:  Wybiera model 6581.
   6581:  Oryginalny ('stary SID'), znany z basowego, bogatego charakteru.
   8580:  P¢«niejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacj¥.
@@ -543,14 +575,14 @@ byˆa wybierana jumperem.
   hardsid:  1.000 MHz, opcja dost©pna na karcie DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Adres bazowy (I/O) karty muzycznej Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Filtry ukˆadu SID byˆy analogowe, ka¾dy egzemplarz brzmiaˆ nieco inaczej.
+Siˆa dziaˆania filtr¢w ukˆadu 6581, od 0 do 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Siˆa dziaˆania filtr¢w ukˆadu 8500, od 0 do 100.
 .
 :CONFIG_INNOVATION_FILTER
 Filtrowanie d«wi©ku karty Innovation SSI-2001:
@@ -606,11 +638,6 @@ Filtrowanie d«wi©ku urz¥dzenia LPT DAC:
 .
 :CONFIG_DISNEY
 ½eby wˆ¥czy† Disney Sound Source u¾yj 'lpt_dac=disney'.
-.
-:CONFIG_DISNEY_FILTER
-Filtrowanie d«wi©ku urz¥dzenia Disney Sound Source:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
 .
 :CONFIG_PS1AUDIO
 Wˆ¥czenie emulacji urz¥dzenia d«wi©kowego IBM PS/1.
@@ -671,6 +698,12 @@ zaimplementowana w grze, a zmiana innych ustawieä nie pomaga.
 Za ka¾dym razem, kiedy zmienisz ustawienia, zostan¥ one wypisane w konsoli
 tekstowej. Po znalezieniu satysfakcjonuj¥cych ustawieä zakoäcz gr©, zmieä
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
+.
+:CONFIG_JOY_X_CALIBRATION
+U¾yj kalibracji osi X ustawianej skr¢tami klawiszowymi. Domy˜lnie 'auto'.
+.
+:CONFIG_JOY_Y_CALIBRATION
+U¾yj kalibracji osi Y ustawianej skr¢tami klawiszowymi. Domy˜lnie 'auto'.
 .
 :CONFIG_SERIAL1
 Wyb¢r urz¥dzenia podˆ¥czonego do portu COM.
@@ -757,12 +790,12 @@ do DOSu, oraz z routera do gospodarza.
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000.
 Uwaga: Adresy 220 oraz 240 og¥ by† niedost©pne, gdy¾ s¥ domy˜lnie przypisane
-do kart d«wi©kowych Sound Blaster oraz Gravis UltraSound.
+do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000.
 Uwaga: Przerwania 3 oraz 5 mog¥ by† niedost©pne, gdy¾ s¥ domy˜lnie przypisane
-do portu COM2 i karty d«wi©kowej Gravis UltraSound.
+do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
 Adres MAC karty sieciowej NE2000.
@@ -814,6 +847,11 @@ Brak parametru '%s' w sekcji '%s'.
 :PROGRAM_CONFIG_SET_SYNTAX
 Skˆadnia: config -set "[sekcja] parametr=warto˜†".
 
+.
+:CONFIG_DISNEY_FILTER
+Filtrowanie d«wi©ku urz¥dzenia Disney Sound Source:
+  on:   Wˆ¥czone (domy˜lne).
+  off:  Filtrowanie wyˆ¥czone.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie zostaˆ zaˆadowany ¾aden plik konfiguracyjny!
@@ -938,6 +976,12 @@ Brakuj¥cy parametr.
 :PROGRAM_EXECUTABLE_MISSING
 Nie znaleziono pliku wykonywalnego: '%s'.
 
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+enumeracja nieobsˆugiwana
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+urz¥dzenie nie zostaˆo skonfigurowane
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1634,8 +1678,11 @@ Przykˆady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
+.
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanaˆ        Gˆo˜no˜†  L:P (dB)      Tryb   Przenik  Reverb  Chorus[reset]
+[color=white]Kanaˆ        Gˆo˜no˜†  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_MASTER
 [color=cyan]MASTER[reset]
@@ -2544,6 +2591,11 @@ Uwagi:
 Przykˆady:
   [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowa†?[reset]
   [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
+.
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Niepowodzenie[reset]: strumieä wej˜ciowy zakoäczony bez prawidˆowego wyboru.
+
 .
 :SHELL_CMD_CHOICE_ABORTED
 
