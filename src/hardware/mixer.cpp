@@ -2725,7 +2725,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  on:      Enable reverb (medium preset).\n"
 	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
 	        "           specifically designed for small-speaker audio systems\n"
-	        "           (PC Speaker, Tandy, PS/1 Audio, and Disney).\n"
+	        "           (PC Speaker, Tandy, PS/1 Audio, and LPT DAC devices).\n"
 	        "  small:   Adds a subtle sense of space; good for games that use a single\n"
 	        "           synth channel (typically OPL) for both music and sound effects.\n"
 	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
