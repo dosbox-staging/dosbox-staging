@@ -168,9 +168,9 @@ Dostępne tryby graficzne VESA 1.2 oraz 2.0:
               albo mogą wymagać do ich obsługi więcej pamięci.
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
+Zezwala na zachowania emulatora, które polepszają wydajność. Na chwilę obecną
+nie są znane żadne gry, które nie działają z tym ustawieniem. Jeśli na taką
+natrafisz, zgłoś błąd zespołowi projektowemu.
 .
 :CONFIG_AUTOEXEC_SECTION
 Sposób traktowania sekcji [autoexec] z kilku plików konfiguracyjnych:
@@ -340,7 +340,7 @@ Włączenie (globalnie) efektu 'reverb', dodaje dźwiękowi wrażenia przestrzen
   off:     Bez efektu (domyślne).
   on:      Efekt włączony, ustawienie 'medium'.
   tiny:    Odpowiada zintegrowanemu głośnikowi w niewielkim pokoju, ustawienie
-           dla urządzeń typu PC Speaker, Tandy, PS/1, czy Disney.
+           dla urządzeń typu PC Speaker, Tandy, PS/1, czy LPT DAC.
   small:   Subtelne wrażenie przestrzeni, odpowiednie do gier używających
            pojedynczego kanału dźwięku syntetyzowanego (zazwyczaj OPL) zarówno
            do muzyki, jak i efektów dźwiękowych.
@@ -443,42 +443,42 @@ Obrazy ROMów mogą zawierać:
   - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
 .
 :CONFIG_MT32_FILTER
-Filter for the Roland MT-32/CM-32L audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
+  off:       Filtrowanie wyłączone (domyślne).
+  <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :MT32_NO_SUPPORTED_MODELS
-No supported models present.
+Żaden obsługiwany model nie jest obecny.
 .
 :MT32_ROM_NOT_LOADED
-No ROM is currently loaded
+ROM nie został załadowany
 .
 :MT32_INVENTORY_TABLE_MISSING_LETTER
 -
 .
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-y
++
 .
 :MT32_ACTIVE_ROM_LABEL
-Active ROM  : 
+Aktywny ROM  : 
 .
 :MT32_SOURCE_DIR_LABEL
-Loaded From : 
+Załadowano z : 
 .
 :CONFIG_SBTYPE
-Model karty dźwiękowej Sound Blaster, 'gb' oznacza Game Blaster.
+Model karty muzycznej Sound Blaster, 'gb' oznacza Game Blaster.
 .
 :CONFIG_SBBASE
-Adres bazowy (I/O) karty dźwiękowej Sound Blaster.
+Adres bazowy (I/O) karty muzycznej Sound Blaster.
 .
 :CONFIG_IRQ
-Numer przerwania (IRQ) karty dźwiękowej Sound Blaster.
+Numer przerwania (IRQ) karty muzycznej Sound Blaster.
 .
 :CONFIG_DMA
-Numer kanału DMA karty dźwiękowej Sound Blaster.
+Numer kanału DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_HDMA
-Numer kanału High DMA karty dźwiękowej Sound Blaster.
+Numer kanału High DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_SBMIXER
 Zezwolenie mikserowi karty Sound Blaster na zmianę ustawień miksera DOSBoksa.
@@ -494,7 +494,7 @@ częstotliwość miksowania, dzięki czemu nie jest potrzebny resampling.
 .
 :CONFIG_OPLMODE
 Typ emulowanego układu OPL. 'auto' wybiera typ w zależności od 'sbtype'.
-Wszystkie z wyjątkiem 'cms' są kompatybilne z kartami dźwiękowymi AdLib.
+Wszystkie z wyjątkiem 'cms' są kompatybilne z kartami muzycznymi AdLib.
 .
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obsługiwana.
@@ -517,8 +517,8 @@ Filtrowanie dźwięku digitalizowanego karty Sound Blaster:
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Force the Sound Blaster filter to be always on
-(disallow programs from turning the filter off).
+Wymuś włączone filtrowanie dźwięku karty Sound Blaster
+(uniemożliwia oprogramowaniu wyłączenie filtrowania).
 .
 :CONFIG_OPL_FILTER
 Filtrowanie dźwięku syntetyzowanego OPL karty Sound Blaster:
@@ -535,17 +535,17 @@ Filtrowanie dźwięku syntetyzowanego CMS karty Sound Blaster:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
-Włączenie emulacji karty dźwiękowej Gravis UltraSound.
+Włączenie emulacji karty muzycznej Gravis UltraSound.
 Enable Gravis UltraSound emulation.
 .
 :CONFIG_GUSBASE
-Adres bazowy (I/O) karty dźwiękowej Gravis UltraSound.
+Adres bazowy (I/O) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSIRQ
-Numer przerwania (IRQ) karty dźwiękowej Gravis UltraSound.
+Numer przerwania (IRQ) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-Numer kanału DMA karty dźwiękowej Gravis UltraSound.
+Numer kanału DMA karty muzycznej Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
 Ścieżka do katalogu UltraSound. Powinien on zawierać podkatalog MIDI
@@ -558,7 +558,7 @@ Filtrowanie dźwięku karty Gravis UltraSound:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
-Model układu w karcie dźwiękowej Innovation SSI-2001:
+Model układu w karcie muzycznej Innovation SSI-2001:
   auto:  Wybiera model 6581.
   6581:  Oryginalny ('stary SID'), znany z basowego, bogatego charakteru.
   8580:  Późniejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacją.
@@ -575,14 +575,14 @@ była wybierana jumperem.
   hardsid:  1.000 MHz, opcja dostępna na karcie DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Adres bazowy (I/O) karty muzycznej Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Filtry układu SID były analogowe, każdy egzemplarz brzmiał nieco inaczej.
+Siła działania filtrów układu 6581, od 0 do 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Siła działania filtrów układu 8500, od 0 do 100.
 .
 :CONFIG_INNOVATION_FILTER
 Filtrowanie dźwięku karty Innovation SSI-2001:
@@ -700,10 +700,10 @@ tekstowej. Po znalezieniu satysfakcjonujących ustawień zakończ grę, zmień
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
 .
 :CONFIG_JOY_X_CALIBRATION
-Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+Użyj kalibracji osi X ustawianej skrótami klawiszowymi. Domyślnie 'auto'.
 .
 :CONFIG_JOY_Y_CALIBRATION
-Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
+Użyj kalibracji osi Y ustawianej skrótami klawiszowymi. Domyślnie 'auto'.
 .
 :CONFIG_SERIAL1
 Wybór urządzenia podłączonego do portu COM.
@@ -790,12 +790,12 @@ do DOSu, oraz z routera do gospodarza.
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000.
 Uwaga: Adresy 220 oraz 240 ogą być niedostępne, gdyż są domyślnie przypisane
-do kart dźwiękowych Sound Blaster oraz Gravis UltraSound.
+do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000.
 Uwaga: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
-do portu COM2 i karty dźwiękowej Gravis UltraSound.
+do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
 Adres MAC karty sieciowej NE2000.
@@ -976,6 +976,12 @@ Brakujący parametr.
 :PROGRAM_EXECUTABLE_MISSING
 Nie znaleziono pliku wykonywalnego: '%s'.
 
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+enumeracja nieobsługiwana
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+urządzenie nie zostało skonfigurowane
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1672,8 +1678,11 @@ Przykłady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
+.
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanał        Głośność  L:P (dB)      Tryb   Przenik  Reverb  Chorus[reset]
+[color=white]Kanał        Głośność  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_MASTER
 [color=cyan]MASTER[reset]
@@ -2583,6 +2592,11 @@ Przykłady:
   [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuować?[reset]
   [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
 .
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Niepowodzenie[reset]: strumień wejściowy zakończony bez prawidłowego wyboru.
+
+.
 :SHELL_CMD_CHOICE_ABORTED
 
 [color=yellow]Oczekiwanie na wybór przerwane.[reset]
@@ -2655,18 +2669,4 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
-.
-:MIDI_DEVICE_LIST_NOT_SUPPORTED
-listing not supported
-.
-:MIDI_DEVICE_NOT_CONFIGURED
-device not configured
-.
-:SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
-.
-:SHELL_CMD_CHOICE_EOF
-
-[color=red]Choice failed[reset]: the input stream ended without a valid choice.
-
 .
