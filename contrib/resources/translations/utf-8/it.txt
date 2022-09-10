@@ -378,7 +378,7 @@ spazializzazione del suono:
   on:      Abilita riverbero (preset medio).
   tiny:    Simula il suono di un piccolo altoparlante integrato in una stanza;
            specificamente progettato per sistemi audio di piccole dimensioni
-           (PC Speaker, Tandy, PS/1 Audio, e Disney).
+           (PC Speaker, Tandy, PS/1 Audio, e dispositivi DAC LPT).
   small:   Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
            che usano un singolo canale del sintetizzatore (tipicamente OPL)
            sia per la musica che per gli effetti sonori.
