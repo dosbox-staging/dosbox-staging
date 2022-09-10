@@ -34,21 +34,21 @@ tconv_l CP437 "utf-8/en.txt" en
 # keyb de
 # keyb de 437
 # keyb de 858
-tconv_l CP858 "utf-8/de.txt" de
+tconv_l CP850 "utf-8/de.txt" de
 
 # keyb es
 # keyb es 437
 # keyb es 858
-tconv_l CP858 "utf-8/es.txt" es
+tconv_l CP850 "utf-8/es.txt" es
 
 # keyb fr
 # keyb fr 437
 # keyb fr 858
-tconv_l CP858 "utf-8/fr.txt" fr
+tconv_l CP850 "utf-8/fr.txt" fr
 
 # keyb it
 # keyb it 858
-tconv_l CP858 "utf-8/it.txt" it
+tconv_l CP850 "utf-8/it.txt" it
 
 # keyb pl
 # keyb pl 852
