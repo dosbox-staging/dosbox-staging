@@ -1,0 +1,43 @@
+Copyright (c) 1989-2004 JP Software, Inc.
+-----------------------------------------
+
+4DOS (including software, documents, or other related items) is being
+provided by JP Software under the following license. By obtaining,
+using and/or copying this work, you (the licensee) agree that you have read,
+understood, and will comply with the following terms and conditions:
+
+Permission to use, copy, modify, and distribute this software and its
+documentation, with or without modification, for any purpose and without fee
+or royalty is hereby granted, provided that you include the following on ALL
+copies of the software and documentation or portions thereof, including
+modifications, that you make:
+
+  1. The full text of this notice in a location viewable to users of the
+  redistributed or derivative work.
+
+  2. Notice of any changes or modifications to the files, including the date
+  changes were made.
+
+  3. You may charge a distribution fee for the physical act of transferring a
+  copy, and you may at your option offer warranty protection in exchange for a
+  fee.
+
+  4. You may not copy, sublicense, distribute or transfer 4DOS except as
+  expressly provided under this License Agreement, without prior written
+  permission from JP Sofrware. Any attempt otherwise to copy, sublicense,
+  distribute or transfer 4DOS is void and your rights to use the program
+  under this License agreement shall be automatically terminated.
+
+THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS," AND JP SOFTWARE MAKES
+NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO, WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT
+THE USE OF THE SOFTWARE OR DOCUMENTATION WILL NOT INFRINGE ANY THIRD PARTY
+PATENTS, COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS.
+
+JP SOFTWARE WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
+CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENTATION.
+
+The name of JP Software may NOT be used in advertising or publicity
+pertaining to the software without specific, written prior permission.
+Title to copyright in this software and any associated documentation will
+at all times remain with JP Software.

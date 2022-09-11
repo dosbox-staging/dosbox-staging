@@ -1,0 +1,1557 @@
+			     Free 4DOS
+
+	       Introduction and Installation Guide
+
+
+     Copyright © 1988-2004, JP Software Inc., Worton, MD, USA
+     Revised 2008-11-7, Klaus Meinhard and Luchezar Georgiev.
+
+
+You can use 4DOS with all versions of MS-DOS and PC DOS from 2.0
+through 7.1 and above, including Windows 95 and 98 ("MS-DOS 7" is
+is the DOS portion of Microsoft Windows 95/98).  You can also use
+it with all versions of DR DOS / Novell DOS / OpenDOS from 3.4
+through 7.0 and above, with FreeDOS, ROM-DOS, PTS-DOS or most other
+DOS variants, and in DOS sessions started under Windows 95/98/ME
+and under Windows 3.x and OS/2.
+
+Once you have 4DOS installed, you can learn to use it at your own
+pace.  4DOS has more than 110 commands and hundreds of enhanced
+features, but you don't have to learn them all, or learn them all
+at once.  Relax, enjoy the program's power, and browse the manual
+occasionally.  Press the F1 key whenever you need help.  These
+programs will soon become an essential part of your computer, and
+you'll wonder how you ever got along without them.
+
+How to Use This Manual
+
+     This manual is only one part of the documentation that you
+     will need for 4DOS.  It introduces the product and helps you
+     install it correctly on your computer.  It also gives you
+     specific information about using the program in your
+     particular environment (for example, using 4DOS under Windows
+     98).
+
+     The second and third parts of the documentation are the online
+     help and the reference manual.  They contain complete
+     information about the commands and features of 4DOS.
+
+     You should start with this introductory manual whether you are
+     new to the program or you are upgrading from a previous
+     version.  Once you have successfully installed the program,
+     move on to the online help or reference manual for detailed
+     information on commands, features, and configuration.
+
+     The first three chapters of this manual introduce 4DOS and
+     help you install the program and its built-in help system.
+     Chapters 4 and 5 contains additional details about each
+     operating environment.  You are encouraged to review the
+     material in the later chapters to see what applies to you
+     (particularly if you are using 4DOS under Windows 95/98/ME).
+     However, in many cases you will not need the information in
+     Chapters 4 and 5 unless you are working at a more technical
+     level, or run into some unexpected difficulty.
+
+     4DOS also includes complete online help for all commands.	The
+     4DOS help system can be configured to link to help on standard
+     DOS commands as well, if the corresponding help files and
+     programs are available on your system.  The online help
+     provides much of the same information that is available in
+     this manual and the reference manual, but in an electronic
+     form which you can access quickly.  The online help also
+     includes details about compatibility with other products, and
+     additional technical information.	See Chapter 3 for more
+     information about the online help.
+
+     Check README.TXT for last-minute notes on the current release,
+     or if you are installing a downloaded update to 4DOS.
+
+     This version of 4DOS is free and unsupported by JP Software.
+
+     At the Usenet group comp.os.msdos.4dos, the maintainer and
+     experienced users will try to help with any questions.
+
+     Updates for the free 4DOS can be found at http://4dos.tk/
+     (Luchezar Georgiev's 4DOS Revived! site).
+
+
+
+Chapter 1 / Introducing 4DOS
+
+4DOS is a command interpreter or "shell."  That means that it
+displays a prompt, waits for you to type something, and then reacts
+to your commands (the C:\> prompt is used in this manual, but you
+can customize the prompt to use any format you prefer).  4DOS
+replaces the default command interpreter that are supplied with
+your operating system (COMMAND.COM for DOS and Windows 95/98.)
+
+4DOS was designed so that you don't have to change your computing
+habits or unlearn anything to use them.  If you know how to display
+a directory, copy a file, or start an application program from a
+command prompt, you already know how to use JP Software's command
+interpreters.  If you're not used to using the command line, you'll
+quickly come to value its power and flexibility, and appreciate
+4DOS's comprehensive online help and the way it makes the command
+prompt straightforward and easy to use.
+
+4DOS understands all of the commands you already know and adds to
+them.  Its purpose is to make the command line friendlier, easier
+to use, and much more powerful and versatile without requiring you
+to use or learn a new program, a new set of commands, or a new
+style of work.
+
+In this section, a few of the features built into 4DOS are
+introduced.  There is no room to list them all or to explain all
+of the options available in each; that's for the online help and
+Reference Manual.  This section will just give you a taste of what
+you can expect from your computer once you have your new command
+interpreter installed.
+
+As you read this section, remember that you don't have to use any
+of these features except the ones that appeal to you.  Learn the
+parts that will make your computer easier for you to use, and add
+to your repertoire as you need them.
+
+Built-In Commands
+
+     The command line is the heart of 4DOS.  It is here that you
+     type commands for the program to execute, and here that the
+     program displays the output of each command.
+
+     4DOS supports every command you already know, add to the
+     features of each command, and add dozens of new commands.
+
+     For example, the traditional DIR command has about a dozen
+     options.  The DIR command in 4DOS has the same options plus
+     about 20 more.  With the enhanced DIR command, you can:
+
+	Display a list of files in 1, 2, 4, or 5 columns with the
+	  commands:
+
+	  c:\> dir
+	  c:\> dir /2
+	  c:\> dir /4
+	  c:\> dir /w
+
+	Use colors to indicate different kinds of files, display
+	  file descriptions (text to remind you of the contents of
+	  a file) along with file names, and sort files according
+	  to several different criteria.
+
+	Use wildcards to display all file names that start with
+	  the letter "A", end with the letter "A", or have an "A"
+	  anywhere in the name:
+
+	  c:\> dir a*
+	  c:\> dir *a
+	  c:\> dir a
+
+     That's just an example of some of the enhancements added to
+     one command.  4DOS has added enhancements to virtually every
+     command you've used before and include dozens of new commands
+     as well.  You don't have to learn to use them all, but you
+     will find many commands and enhancements that will make your
+     computer more powerful and easier to use.	For example:
+
+	COLOR lets you set the default colors to use on your
+	  display:
+
+	    c:\> color bright white on blue
+
+       Additional features let you customize the colors you use for
+	  parts of the display, for input and output, and for
+	  specific kinds of files.
+
+	LIST displays the contents of files in text or
+	  hexadecimal mode, lets you search a file, and can print
+	  either an entire file or a single page:
+
+	    c:\> list readme.txt
+
+	The FFIND command searches for files based on their names
+	  and their contents.  For example, to find all files on
+	  drive C: with the string "now" somewhere within their
+	  names:
+
+	    c:\> ffind /s now
+
+       To find all .TXT files in the current directory which
+	  contain the string "then" somewhere in the file:
+
+	    c:\> ffind /t"then" *.txt
+
+	SELECT lets you pick the files you want to work with from
+	  a "point and shoot" display.  This command, for example,
+	  lets you select files from the current directory to copy
+	  to the floppy in drive A:
+
+	    c:\> select copy (*.*) a:
+
+	EXCEPT - and a related feature, "exclude" ranges - let
+	  you work with all of the files in a directory except
+	  those that you want to exclude.  This command copies all
+	  files from the current directory to drive A: except
+	  backup (.BAK and .BK!) files:
+
+	    c:\> except (*.bak;*.bk!) copy . a:
+
+The Command Line
+
+     4DOS is much more than just a collection of commands.  They
+     include a number of features that make the command line easier
+     to use:
+
+	Interactive help appears whenever you ask for it, and any
+	  time you use a command incorrectly.  Type:
+
+	    c:\> help
+
+	  when you need help - or just press F1.  If you have typed
+	  part of a command, F1 displays help on the first word on
+	  the command line.  Ctrl-F1 displays help for the word at
+	  the cursor.
+
+	The command line works like a single-line word processor.
+	  You can edit any part of the line at any time before you
+	  press Enter to execute it or Esc to erase it.  You can
+	  move the cursor left and right by a character or a word,
+	  jump to the beginning or end of the line, or delete,
+	  insert, or type over characters anywhere on the line.
+
+	4DOS keeps track of each command you execute.  You can
+	  display past commands, execute them again, or make
+	  changes before you execute them.  The past commands can
+	  appear on the command line if you press  or in a pop-up
+	  window if you press PgUp.
+
+	If you don't know or want to type a complete file name as
+	  part of a command, you don't have to.  Just type part of
+	  the name and then press Tab:	a matching file or
+	  directory name will appear on the command line.  Press
+	  the Tab key again to see the next matching file.  To
+	  choose from all matching files in a pop-up window, press
+	  F7 or Ctrl-Tab.
+
+	The ability to complete filenames easily can be invaluable
+	  on a drive with long filenames - all you have to do is
+	  type part of a file or directory name and press Tab.	The
+	  command interpreter fills in the rest, including any
+	  quotation marks required for long filenames.
+
+	4DOS remembers each directory you have visited.  There
+	  are many ways to return to previous directories; the
+	  easiest is to press Ctrl-PgUp to view past directories in
+	  a pop-up window.  Select the directory you want, press
+	  Enter, and you will immediately change to that directory,
+	  even if it is on a different drive.
+
+	Our programs also use an extended directory search
+	  "database" that will help you move, almost instantly, to
+	  any directory on any hard drive on your system when you
+	  type just part of the directory name.
+
+	Our programs include features that let you select files
+	  by size, date, and time.  For example, this command makes
+	  it simple to copy all files in the current directory that
+	  have been updated in the last week to a backup disk:
+
+	    c:\> copy /[d-7] . a:\
+
+	Or to delete all .BAK files that are greater than 1 MB in
+	  size:
+
+	    c:\> del /[s1M] *.bak
+
+	With a simple change you can make the command delete the
+	  same files, but from the entire drive rather than just
+	  the current directory (use a command like this with
+	  caution!):
+
+	    c:\> del /[s1M] /s *.bak
+
+	4DOS lets you associate file extensions with
+	  applications.  For example, it's easy to start your word
+	  processor and load a letter when you type the name of a
+	  .LTR file:
+
+	    c:\> set .LTR=c:\wp\wordproc.exe
+
+	After you have defined the association, you can start your
+	  word processor and have it load your letter to Mom,
+	  MOM.LTR, with this command (assuming the file is in the
+	  current directory):
+
+	    c:\letters> mom
+
+	You can also run multiple commands at one time.  If you
+	  know the next 3 commands you need to run, you can type
+	  them all at once and then sit back while they are
+	  executed.  For example, to copy all of your .TXT files to
+	  drive A: and then display the directory of drive A:
+
+	    c:\> copy *.txt a: ^ dir a:
+
+Configuration
+
+     Only you know how you use your computer, or how you would like
+     it to work, so 4DOS has been made as flexible as possible.
+     You can configure almost every part of it to suit your needs
+     or your whims.  To start the configuration utility, type:
+
+       c:\> option
+
+     For example, you can decide what colors to use for what
+     purposes, how file names are displayed in command output, and
+     command line editing details like the size and location of
+     pop-up windows, or the shape of the cursor.
+
+     If conventional memory is tight on your DOS computer, you can
+     configure 4DOS to squeeze out every possible byte, using
+     extended (XMS) memory, expanded (EMS) memory, upper memory
+     blocks (UMBs), or conventional memory.  4DOS uses as little as
+     256 bytes of conventional memory, leaving as much room free as
+     possible for memory-hungry DOS application programs, memory-
+     resident utilities, and games.
+
+Aliases and Batch Files
+
+     Two of the most popular and powerful features, aliases and
+     batch files, were left for last.
+
+   Aliases
+
+     Aliases are short sequences of commands that are stored in
+     memory for very fast execution.  They can assign complex tasks
+     to simple names or single keystrokes, define new commands, and
+     set defaults for internal commands and for almost any
+     application on your computer.  They are the primary method
+     offered for customizing your command line to suit your needs.
+
+     Here are a few examples of how you could define simple aliases
+     to make the command line easier to use.  The first two provide
+     shorthand names for the DIR command - D displays a directory,
+     and D2 displays a 2-column directory, sorted vertically, with
+     a pause at the end of each page:
+
+       c:\> alias d dir
+       c:\> alias d2 dir /2pv
+
+     Once these definitions have been entered, all you have to do
+     is type D or D2 at the prompt to execute the corresponding
+     alias.
+
+     You can also define aliases as shorthand ways to execute
+     applications, usually without having to add the application's
+     directory to your PATH.  For example, this alias allows you to
+     just type EDIT to run your editor, even if its directory is
+     not on the PATH:
+
+       c:\> alias edit e:\edfiles\editor.exe
+
+     You can put a whole group of commands into an alias so that
+     you can invoke them without typing each one.  This alias
+     changes directories, runs the FINPROC program, and changes
+     back to the original directory (the back-quotes [`] are used
+     to enclose an alias when it contains more than one command).
+     This alias should be entered on a single line:
+
+       c:\> alias monthly `pushd c:\monthly ^ finproc & popd`
+
+     This short description explains only the basics of what
+     aliases can do.  Like most 4DOS features, aliases can be as
+     simple or as complex as you like.	You can save your aliases
+     in a file and reload them each time the command interpreter
+     starts (otherwise, you'd have to redefine them each time);
+     assign aliases to keystrokes so they can be invoked quickly;
+     write aliases which use other aliases; and use aliases within
+     batch files.  For complete information on aliases, see the
+     online help, the reference manual, and the ALIAS command in
+     Chapter 7 of the reference manual.
+
+   Batch Files
+
+     A batch file or batch program is a text file that contains a
+     list of commands to execute.  4DOS reads and interprets each
+     line as if it had been typed at the keyboard.  If you're an
+     experienced batch file programmer, or if you want an easy
+     introduction to batch file programming, you won't find
+     anything more powerful than its built-in batch language.
+
+     The batch language includes simple commands to display menus,
+     boxes, lines, and colored text to dress up your batch file
+     displays; a full range of user input commands; over 140 built-
+     in variables that let your batch files test system
+     configuration, device status, and free memory and disk space;
+     and more than 150 built-in functions that let your batch files
+     read from files, find the date, perform calculations, and
+     manipulate strings.
+
+     4DOS batch files can include subroutines, loops, IF/THEN/ELSE
+     logic, and even exception handling.  And you can run them in
+     single-step mode to debug them easily, learn exactly what each
+     line does, or view changes to environment variables and other
+     information as the batch file executes.
+
+     Here are a couple of examples of simple batch files.  The
+     first example displays several pieces of information about
+     your system status, using built-in variables provided with
+     4DOS:
+
+       cls
+       echo System status as of %_date at %_time:
+       echo CPU:  %_cpu
+       echo Screen size:  %_rows x %_columns
+       echo Boot drive:  %_boot
+       echo OS version:  %_dosver
+       echo Command processor version:	%_4ver
+       echo Country code:  %_country
+
+     The next example clears the screen, displays a short menu,
+     accepts some input from the user, and displays the result.
+     The TEXT command displays a block of text on the screen, the
+     SCREEN command positions the cursor, and the INKEY command
+     accepts a single keystroke from the user:
+
+       cls
+       screen 5 0
+       text
+       Choose an option:
+	       1 - Word processing	3 - Load the network
+	       2 - Spreadsheet
+       endtext
+       screen +1 0
+       inkey Enter your selection: %%sel
+       screen +2 0
+       echo You entered: %sel
+
+
+Chapter 2 / Installation
+
+4DOS normally comes with an installer that makes product
+installation simple and straightforward.  It is recommended that
+you follow the directions for installation below.
+
+If you prefer to set up 4DOS yourself, you can extract the
+installation files and perform all installation steps manually.
+Manual file extraction and installation is covered in detail in
+Chapters 4 - 5.
+
+Preparing for Installation
+
+     It is strongly recommended that you install your new version
+     of 4DOS in a new directory or folder, not in the same
+     directory as a previous version, or a directory used by other
+     software.
+
+     When installing 4DOS under Windows 95/98/ME, it is also
+     strongly recommend that you use a short name for the 4DOS
+     directory (i.e. a name where each element of the path uses no
+     more than eight characters for the name and three characters
+     for the extension, with no white space or other special
+     characters).  If you install 4DOS in a directory with a long
+     name, you will have to determine the equivalent short name and
+     use it throughout the installation process.
+
+Performing the Installation
+
+     4DOS is distributed using several methods.  This section
+     explains how to start the installer in each case.	In all
+     cases, see Chapters 4 - 7 if you want a manual installation.
+
+     To start the installation software you can use a command
+     prompt, the Run option on the Windows Start menu, or from
+     Windows Explorer.
+
+	If you downloaded 4DOS as a .ZIP file, use an unarchiver
+	  such as PKUNZIP or InfoZip's UNZIP to extract the files
+	  in to the directory you want to install it, and then
+	  execute 4DOS.  It will "install itself".
+
+	If you downloaded 4DOS as a self-extracting (SFX) .EXE file
+	  instead of the ZIP file, it will extract its files once
+	  you run it.  Then, start 4DOS so it can "install itself".
+
+   Installing an Upgrade
+
+     Use the installation instructions below to install an upgrade.
+     The installation procedure is essentially the same as when you
+     are installing a new copy of the program.
+
+     If you are upgrading from a previous version, you may have a
+     4DOS.INI and / or 4START or 4EXIT file in the previous
+     version's directory.  To use these files with the new version,
+     you must copy them to the new directory, and update the .INI
+     file in some cases.  You can allow the installation software
+     to perform these steps automatically, or you can perform them
+     yourself later (see Chapters 4 - 7 for details).
+
+   Desktop, Registry, and System File Changes
+
+     During installation, some changes can be made to the Windows
+     desktop and registry.  These changes:
+
+	Create a JP Software program group on the Start Menu, and
+	  include shortcuts in that group to start the command
+	  processor and its online help.
+
+	Add a shortcut to the Windows desktop to start the command
+	processor.
+
+	Designate the .BTM files (enhanced batch files) used by
+	  JP Software products as batch files.	They will then be
+	  recognized as such by Windows Explorer.
+
+	Provide an additional "open" option in the context (right
+	  mouse button) menu of all batch files, to run the file
+	  with 4DOS.
+
+	Create a new entry in the context menu of drives and
+	  directories to launch 4DOS in that drive / directory.
+
+     The 4DOS installer may also modify CONFIG.SYS to make 4DOS the
+     primary shell.  See chapter 5 for details on performing or
+     reversing this step manually if necessary.
+
+Extracting or Repairing Product Files
+
+     If you need to recover or reinstall individual 4DOS files you
+     can do so manually, or using the installer.  The methods
+     described here can also be used to extract the files you need
+     to perform a manual installation.
+
+     You can use an unarchiver like PKUNZIP or InfoZip's UNZIP to
+     unzip any individual files from a downloaded .ZIP file.
+
+Uninstalling the Program
+
+     You can't expect that you have trouble using 4DOS, but many
+     users like to know how to uninstall a product.  Or you may
+     need to remove the program from one system to move it to
+     another system.
+
+     If you installed 4DOS using the installation program, go to
+     the Windows Control Panel, select Add/Remove Programs, and
+     choose one of the following items that you want to uninstall:
+
+       "JP Software 4DOS Registry Extensions (remove only)"
+       "JP Software 4DOS shortcuts (remove only)"
+
+     Note that the first one will remove the registry changes which
+     designate JP Software's .BTM files as batch files.  These
+     registry changes affect all JP Software products.	If you are
+     using multiple products and only uninstalling one of them, you
+     may not want to remove these registry changes.
+
+     The uninstallation will attempt to reverse all of the changes
+     made during installation to your registry.  However, in some
+     instances, not all of the steps can be completed.	In this
+     case, you will need to perform some of them manually.
+
+     You will also need to uninstall the program manually if you
+     did not run the installer to install it.
+
+     See Chapter 5 for manual uninstall instructions.
+
+
+Chapter 3 / The Help System
+
+4DOS includes complete online help.  This chapter provides a basic
+description of how to use the help system, and lists important help
+topics.
+
+Using the Help System
+
+     If 4DOS is running, you can start the help system by typing
+     HELP (or HELP plus a command name) at the prompt, or by
+     pressing the F1 key at any time when the command processor is
+     accepting keyboard input at the prompt.  The help system is
+     fully cross-referenced, so you can move easily among related
+     topics.
+
+     If you type part or all of a command on the command line and
+     then press F1, the help system will provide "context-
+     sensitive" help by using the first word on the line as a help
+     topic.  If the first word is not a valid help topic, you will
+     see the Table of Contents.  For example, if you press F1 after
+     entering each of the command lines shown below you will get
+     the display indicated:
+
+       c:\>		  Table of Contents
+       c:\> copy . a:	  Help on COPY
+       c:\> c:\util\map   Table of Contents
+
+     If you need help for a command or variable that is not at the
+     beginning of the line, position the cursor under (or
+     immediately to the right) of the word, and press Ctrl-F1.
+
+     If you type the name of any internal command at the prompt,
+     followed by a slash and a question mark [/?] like this
+
+       c:\> copy /?
+
+     you will see help for the command in a quick-reference style.
+
+     Once you've started the help system, you can use a standard
+     set of keystrokes or mouse actions to navigate through the
+     help text.
+
+     The help system can also be started "manually" (i.e., without
+     4DOS running), and contains information which may be helpful
+     if you encounter difficulties setting up the program or
+     configuring it for your system.  See Chapters 4 - 5 for
+     details on starting the help system manually.
+
+
+Chapter 4 / 4DOS Startup
+
+This chapter explains startup options for 4DOS under various
+operating systems.  For additional details on manual installation
+and configuration of 4DOS see chapter 5.
+
+Once you have 4DOS installed on your computer, the program is ready
+to run.  However, you can configure 4DOS in various ways to suit
+your needs and preferences.  Most of the configuration or behavior
+is controlled by aliases you create (explained in the online help
+and in Chapter 4 of the Reference Manual) and by the .INI file
+(explained briefly below, and in detail in the online help and in
+Chapter 5 of the Reference Manual).
+
+A few configuration options can also be set on the startup command
+line, which is explained here.	In order to understand the startup
+command line you will also need to understand primary and secondary
+shells, so that topic is covered first.
+
+If you do not need to alter the startup behavior of 4DOS, you can
+skip the remainder of this chapter.  If you are using it under any
+flavor of Windows, it is recommended that you read this chapter,
+since each time you create a desktop object to run the command
+interpreter you will have to create a startup command line for that
+object.
+
+Primary and Secondary Shells
+
+     4DOS can be run as either a primary or secondary shell.
+
+     Under DOS and Windows 95/98, a primary shell is started from
+     the CONFIG.SYS file with a SHELL= command.  Secondary shells
+     are started when a program "shells" to the DOS prompt or runs
+     a "transient" (temporary) shell to execute a specific command,
+     or when you explicitly start a new shell from a desktop object
+     under Windows 95/98.
+
+     Whenever you start a primary or secondary shell, you can
+     control the way that 4DOS starts by adjusting the startup
+     command line.
+
+Command Line Options
+
+     A few of the command-line switches or options that 4DOS
+     recognizes are required in certain circumstances; most others
+     are needed only if you want finer control over the way the
+     program starts.
+
+     The command line that starts 4DOS will typically include the
+     program name with drive and path, repeat the name of the
+     directory where the program is stored, and finally include any
+     switches for the program, for example:
+
+	  e:\4dos\4dos.com e:\4dos /p
+
+     This command line may appear on its own (for example, in a
+     Windows desktop object), or in an operating system directive
+     (e.g. the SHELL command in the DOS or Windows 95/98 CONFIG.SYS
+     file).  Specific details on where you should enter the command
+     line for each product are included in Chapters 5 and 6.
+
+     Although the startup command line is usually very simple, you
+     can add a number of options if you need to customize the way
+     the command interpreter starts.  The complete syntax for the
+     4DOS startup command line is:
+
+       d:\path\program [d:\path] [@d:\path\inifile] [//iniline] [/D
+       /E:nnnn /F /L /LA /LD /LF /LH /P[:filename] /Y] [[/C | /K]
+       command]
+
+     Do not include the square brackets shown in the command line.
+     They are there to indicate that the items within the brackets
+     are optional.
+
+     If you include any of the options below, you should use them
+     in the order that they are described.  If you do not do so,
+     you may find that they do not operate properly.
+
+     The following items can be included on the command line:
+
+	    d:\path\program:  The path and name of the executable
+	    program file (4DOS.COM).  It is required to start 4DOS.
+
+	    d:\path: This is the second d:\path in the command
+	    line above.  It sets the drive and directory where the
+	    program is stored, called the COMSPEC path.  4DOS uses
+	    this path to find its files and to set the COMSPEC
+	    environment variable (see your online help or Reference
+	    Manual for more information on COMSPEC).
+
+	    Under 4DOS, this option is generally required for the
+	    primary shell, but not for secondary shells.  In some
+	    cases, the primary 4DOS shell can find its directory
+	    automatically and this option is not needed, but it is
+	    recommended that you use it on all primary shells to
+	    ensure that the directory is found.
+
+	    If you are running Windows 95/98 and you do not load
+	    4DOS as the primary shell in CONFIG.SYS, or if you are
+	    running Windows ME, you must use this option in each
+	    desktop object or shortcut command line to allow 4DOS
+	    to find its files.
+
+	    @d:\path\inifile:  This option sets the path and name
+	    of the .INI file.  You don't need this option if you
+	    aren't using an .INI file at all, or if the file has
+	    the default name (4DOS.INI), and it is either in the
+	    same directory as the executable program or in the root
+	    directory of the boot drive.  This option is most
+	    useful if you want to start the program with a specific
+	    and unique .INI file.
+
+	  * //iniline:	This option tells 4DOS to treat the text
+	    appearing between the // and the next space or tab as
+	    an .INI directive.	The directive should be in the same
+	    format as a line in the .INI file, but may not contain
+	    spaces, tabs, or comments.	Directives on the command
+	    line override any corresponding directive in the .INI
+	    file.  This option may be repeated.  It is a convenient
+	    way to place a few simple directives on the startup
+	    line without having to modify or create a new .INI
+	    file.
+
+	  * /D:  This option disables execution of AUTOEXEC.BAT (or
+	    the file named in the AutoExecPath directive in
+	    4DOS.INI).	It is intended for internal use by DOS and
+	    Windows 95/98.  When you press the F8 or Ctrl key
+	    during the boot process, MS-DOS prompts whether to run
+	    AUTOEXEC.BAT.  If you answer "No", the /D switch is
+	    used to relay your choice to 4DOS.
+
+	  * /E:nnnn:  This option sets the size of the environment
+	    in bytes.  If you don't use this option, 4DOS will
+	    allocate 512 bytes for the environment.  You can use
+	    any value from 160 to 32767 as the environment size.
+	    For example, to set an environment of 1,000 bytes, you
+	    would enter the option as /E:1000.
+
+	    You can also set the environment size with the
+	    Environment directive in the 4DOS.INI file (see your
+	    online help or Reference Manual).  It is recommended
+	    that you use the directive instead of the /E switch, so
+	    that all configuration information is kept in one place
+	    in the 4DOS.INI file.
+
+	  * /F:  This option tells 4DOS to automatically provide a
+	    Fail response to all critical errors, without prompting
+	    or waiting for a user response.  It is rarely used
+	    except on systems that must run unattended.  Use of
+	    this option is not recommended on a normal system,
+	    because you will not have a chance to react to a
+	    critical error and correct the problem that caused it.
+	    For more information on critical errors, see the online
+	    help or the Reference Manual.  /F only affects critical
+	    errors detected by 4DOS, and will not affect critical
+	    error handling for many application programs which
+	    perform this function themselves.  It is equivalent to
+	    the directive CritFail=Yes in 4DOS.INI.
+
+	  * /L, /LA, /LD, /LF, and /LH:  These options force 4DOS
+	    use local alias, directory history, function, and / or
+	    command history lists.  They can be used to override
+	    any LocalAlias=No, LocalFunctions=No, LocalHistory=No,
+	    or LocalDirHistory=No settings in the .INI file.  This
+	    allows you to use global lists as the default, but
+	    start a specific shell or session with local aliases,
+	    functions, or histories.  See your online help or
+	    Reference Manual for details on local and global
+	    aliases and histories.  /LA forces local aliases, /LD
+	    forces local directory history, /LF forces local
+	    functions, /LH forces local command history, and /L
+	    forces all four.
+
+	  * /P[:filename]:  This option tells 4DOS to load
+	    permanently and to run AUTOEXEC.BAT.  If you specify a
+	    filename after the /P, that file will be run instead of
+	    AUTOEXEC.BAT.  You should specify the full name of the
+	    file, including drive and directory.  A filename after
+	    /P will override the AutoExecPath option in 4DOS.INI.
+
+	    When 4DOS is loaded from the SHELL= command in
+	    CONFIG.SYS it will normally detect that it is the
+	    primary shell and set /P automatically.  Under rare
+	    circumstances, you may want to load 4DOS permanently
+	    and have it run AUTOEXEC.BAT even though it is not
+	    loading it from CONFIG.SYS; in such cases you must set
+	    /P yourself.  4DOS will not run AUTOEXEC.BAT without
+	    either an automatic or an explicit /P.  Do not use this
+	    option in secondary shells, or you will be unable to
+	    return to the primary shell.
+
+	  * [/C | /K] command:	This option tells 4DOS to run a
+	    specific command after starting.  The command will be
+	    run after 4START and AUTOEXEC.BAT in a 4DOS primary
+	    shell.  The command will be run before the prompt is
+	    displayed.	The command can be any valid alias,
+	    internal or external command, or batch file.  All other
+	    startup options must be placed before the command,
+	    because the command interpreter will treat characters
+	    after the command as part of the command and not as
+	    additional startup options.
+
+	    When the command is preceded by a /C, 4DOS will execute
+	    the command and then exit and return to the parent
+	    program or the desktop without displaying a prompt.
+	    This is sometimes called a "transient" command
+	    interpreter session.
+
+	    In 4DOS when it is started as a secondary shell (for
+	    example from the Windows desktop), the /K switch has no
+	    effect; using it is the same as placing the command
+	    (without a /C or /K) at the end of the startup command
+	    line.  It is included only for compatibility with
+	    COMMAND.COM and CMD.EXE.
+
+	    When you start 4DOS from the SHELL= line in MS-DOS /
+	    PC-DOS 6.x and use /K, the command will be executed
+	    instead of AUTOEXEC.BAT (for compatibility with MS-DOS
+	    / PC-DOS 6.x COMMAND.COM).	This behavior occurs only
+	    in MS-DOS / PC-DOS 6.x, not in other DOS versions or in
+	    Windows 95/98.
+
+     For example, this command line will start 4DOS, execute any
+     4START file you have created, execute the file START.BTM, and
+     then display the prompt:
+
+       c:\4dos\4dos.exe c:\4dos\start.btm
+
+Creating or Modifying Startup Files
+
+     4DOS uses two files to control the way it starts:	a file of
+     configuration information called the .INI file (named
+     4DOS.INI), and a startup batch file called 4START (4START may
+     have the extension .BTM or .BAT).
+
+     The .INI file is optional but highly recommended.	It should
+     be placed in the same directory as the other files for 4DOS.
+     You can edit the .INI file manually with an ASCII editor, or
+     you can use the OPTION command to aid you in selecting
+     configuration options.
+
+     The 4START file is also optional.	It is executed each time
+     4DOS starts, and gives you a convenient way to load aliases
+     and environment variables, and otherwise initialize the
+     command processor.  4START is normally placed in the same
+     directory as the other product files, but this may vary if you
+     use the same 4START file for more than one product.
+
+     For complete details on startup files, on the OPTION command,
+     and on the 4EXIT file (executed when the command processor
+     exits), see the online help or the Reference Manual.
+
+     If you are upgrading from a previous version of 4DOS, you may
+     have an .INI file and / or a 4START (or 4EXIT) file in the
+     previous version's directory.  To use these files with your
+     new version, you must copy them to the new directory, and then
+     update any paths in either file that point to the old program
+     directory.
+
+Exit Codes
+
+     If you start 4DOS from another program (e.g. to run a batch
+     file or internal command), it will return a numeric code to
+     the other program when it is finished.  This code is usually
+     used to indicate whether the operation performed was
+     successful or not, with 0 often indicating success and a non-
+     zero value indicating a failure or other numeric result.
+
+     In 4DOS, the exit code is normally the numeric exit code from
+     the last external command.  Internal commands do not set the
+     exit code.
+
+     If you enter an unknown command the exit code will be 2, which
+     is the internal 4DOS "Unknown command" error number.
+
+     In 4DOS, you can use the EXIT n command to explicitly set the
+     exit code.  If you do, this will override the rules described
+     above, and set the return code to the value in your EXIT
+     command.
+
+     The normal rules described above may not return a code that
+     indicates the success or failure of the specific operation
+     that concerns you.  Therefore, if you need to rely on the exit
+     code from 4DOS, it is recommended that you use a batch file or
+     alias to create the exit code you want, and then set the code
+     explicitly with EXIT n.
+
+
+Chapter 5 / 4DOS Configuration and Notes
+
+This chapter covers manual installation and configuration of 4DOS.
+For information on startup options for 4DOS under various operating
+systems see chapter 4.
+
+4DOS works well with virtually all PC hardware; with a wide range
+of operating systems and environments, including MS DOS, PC-DOS,
+Novell DOS / OpenDOS / DR-DOS, FreeDOS, ROM-DOS, PTS-DOS and most
+other DOS variants, Windows 3.x, Windows 95 / 98 / ME, and OS/2;
+and with all DOS-based, Windows-based, and OS/2-based networks.
+Each environment makes different demands on 4DOS and the user.
+
+4DOS was not designed for and is not recommended for use under
+Windows NT, 2000, XP, 2003, Vista, 2008 and 7.  If you are running
+such an operating system, use JP Software's more advanced command
+processor, Take Command (an evaluation version of Take Command is
+available for download at http://jpsoft.com).
+
+This chapter provides the basic information you need to run 4DOS in
+any of the standard PC environments.
+
+4DOS Installation Notes
+
+     When installing 4DOS under Windows 95/98/ME, it is strongly
+     recommended that you use a short name for the 4DOS directory
+     (i.e. a name where each element of the path uses no more than
+     eight characters for the name and three characters for the
+     extension, with no white space or other special characters).
+     If you install 4DOS in a directory with a long name, you will
+     have to determine the equivalent short name and use it
+     throughout the installation process.
+
+     If you're running DOS 5 or earlier, it is recommended that you
+     make a bootable system diskette before you install 4DOS (or
+     any other software, for that matter).  This allows you to
+     recover in case of a power failure, error, or other
+     interruption during the installation process.  See your DOS
+     documentation for details about creating a bootable floppy
+     disk.
+
+     In DOS 6 and above and in Windows 95/98/ME, a bootable disk
+     usually is not necessary because the F5 and F8 keys can be
+     used to skip steps in the boot process and recover from errors
+     in configuration files.
+
+Manual Installation of 4DOS
+
+     This section is for advanced users, and assumes you are
+     generally familiar with CONFIG.SYS, AUTOEXEC.BAT, and other
+     concepts such as ASCII editors and batch files.  In most
+     cases, manual installation is not necessary because you can
+     use the installer.
+
+     In order to install 4DOS manually, you must extract or copy
+     the necessary files, create or modify any configuration files
+     you need, and then create the necessary commands to start the
+     program on your system.
+
+   Extracting or Copying the Program Files
+
+     When you extract or copy the 4DOS files, be sure to place them
+     in their own directory, rather than using the same directory
+     as a previous version of the program, a directory used by
+     other JP Software products, or a directory used by other
+     software.
+
+     It is strongly recommend that you place all of the 4DOS files
+     in the same directory.  See 4DOS Files and Directories later
+     in this chapter for some important considerations if you
+     choose not to follow this recommendation.
+
+   Updating CONFIG.SYS and AUTOEXEC.BAT
+
+     (Please Note:  If you installed 4DOS to a directory with a
+     long name under Windows 95/98, you must determine the
+     equivalent short name for use when updating CONFIG.SYS and
+     AUTOEXEC.BAT.  Paths in these files cannot be entered in long
+     name format.)
+
+     When you're ready to finish installing 4DOS, you need to add
+     one line to your CONFIG.SYS file:
+
+       SHELL=d:\path\4DOS.COM d:\path /P
+
+     "d:\path" means the drive and directory where 4DOS.COM is
+     stored.  The second "d:\path" on the SHELL= line should be the
+     same as the first, and is used to set the COMSPEC environment
+     variable properly.  Be sure to delete or REM out any old
+     SHELL= line when you add the new line for 4DOS.
+
+     You can add any command line options to the end of the line.
+     See Chapter 4 for information on command line options.
+
+     If you are running 4DOS under DOS 4.01 or earlier, see the
+     Compatibility section in the online help for notes on the
+     length of the SHELL= line.
+
+     Next, if you are running under DOS (without Windows 95/98/ME),
+     add the following line to your AUTOEXEC.BAT file:
+
+       d:\path\KSTACK.COM
+
+     where "d:\path" is the drive and directory where your 4DOS
+     files are stored.	KSTACK.COM is a memory-resident program
+     used to support the KEYSTACK command.  It requires about 1.5K
+     of memory, and can be left out if you do not use KEYSTACK.
+
+     Do not add the KSTACK line to AUTOEXEC.BAT if you are using
+     Windows 95/98/ME.	Under these operating systems, KSTACK
+     should be loaded separately for each 4DOS session.  Details on
+     this are discussed later in this chapter.
+
+     If you have a line in AUTOEXEC.BAT which sets the COMSPEC
+     environment variable to point to COMMAND.COM, remove it or REM
+     it out.  If you set up the CONFIG.SYS file properly, 4DOS will
+     set this variable automatically; setting it in AUTOEXEC.BAT is
+     likely to cause trouble later on (for example, if you install
+     an update to 4DOS in a different directory, but forget to
+     change the COMSPEC setting).
+
+     When you've finished modifying CONFIG.SYS and AUTOEXEC.BAT,
+     you can reboot your system to start 4DOS.
+
+   Creating or Copying 4DOS.INI
+
+     It is recommended that you create a 4DOS.INI file with at
+     least two lines in it:
+
+       [4DOS]
+       InstallPath = d:\path
+
+     where "d:\path" is the drive and directory where your 4DOS
+     files are stored (under Windows 95/98/ME, this must be the
+     short name of the directory; long names cannot be used).  This
+     will help 4DOS locate its auxiliary files, such as the help
+     files and OPTION.EXE.  The installer always places these lines
+     in 4DOS.INI.  If you need to create the file manually, you can
+     do so with any ASCII file editor.	The InstallPath setting
+     should be on the first two lines in the file.
+
+     If you are upgrading from a previous version of 4DOS, you
+     should copy any 4DOS.INI file you have in the old directory to
+     the new one.  Then add or modify the InstallPath directive at
+     the beginning of 4DOS.INI, and update any paths in the file
+     that point to the old program directory (e.g. 4StartPath).
+
+  4DOS Files and Directories
+
+     It is strongly recommend that you place all 4DOS files in the
+     same directory.  If you do not do so, you will have to
+     explicitly set the locations of 4DOS files to avoid problems.
+
+     You may feel that you should place 4DOS.COM in the root
+     directory because it is a system-related file.  This practice
+     is not recommended; 4DOS will run just fine from its own
+     directory, and keeping it there makes configuration much
+     simpler.
+
+     If you do wish to move files to different directories, the
+     following information will help you set up the programs
+     correctly:
+
+       4DOS.COM is the 4DOS program file.  It must be in the
+       directory specified by the SHELL= line in your DOS or
+       Windows 95/98 CONFIG.SYS file, or the directory specified on
+       the command line in every desktop object used to start 4DOS.
+
+       4HELP.EXE is the 4DOS help program.  For online help to
+       work, this file must be in the 4DOS installation directory
+       shown in the InstallPath directive in 4DOS.INI, or in a
+       directory included in your PATH.
+
+       4DOS.HLP contains the text for the 4DOS help program.  It
+       must be in the same directory as 4HELP.EXE, or in a
+       directory included in your PATH.
+
+       KSTACK.COM is the used by the KEYSTACK command.	If you wish
+       to use the KEYSTACK command, this file should be loaded in
+       your AUTOEXEC.BAT file (under DOS) or separately for each
+       4DOS session (under Windows 95/98/ME; details are discussed
+       later in this chapter).	This file does not have to be in
+       the 4DOS directory.  If KSTACK.COM has not been loaded, you
+       will see an error message when you attempt to use the
+       KEYSTACK command.
+
+       OPTION.EXE is a utility used by the OPTION command to
+       configure 4DOS.	For the OPTION command to work, this file
+       must be in the 4DOS installation directory shown in the
+       InstallPath directive in 4DOS.INI, or in a directory
+       included in your PATH.
+
+  Creating 4DOS Shortcuts and Registry Extensions
+
+     When 4DOS is installed using its installer it can create Start
+     menu entries and registry extensions.  The installer can also
+     create a desktop shortcut for 4DOS.
+
+     If you need to create a Start menu entries or desktop
+     shortcuts manually - for example, if the JP Software group on
+     the Start menu is inadvertently damaged or deleted - you can
+     use the Windows Explorer's facilities:
+
+	To create additional shortcuts elsewhere on the Start
+	  menu, or modify the Programs entries, click the right
+	  mouse button in an open area of the Task Bar, and select
+	  Properties on the popup menu.  Select the Start Menu
+	  Programs tab and modify or adjust the menus as required.
+
+	To create one or more shortcuts on the desktop to run
+	  4DOS, click the right mouse button in any open area of
+	  the desktop.	On the popup menu, click New, then
+	  Shortcut.  Fill in the drive and path as d:\path\4DOS.COM
+	  (use the appropriate drive and path for your system).
+
+     You can also put command-line switches, a command, or the name
+     of a batch file at the end of the command line for any
+     shortcut.	This allows you to run specific commands or set
+     configuration options when you start 4DOS from that shortcut.
+     For details on the command line options available, see Chapter
+     4 and the Starting 4DOS section of the online help.
+
+     For more information on creating and configuring shortcuts or
+     modifying the Start Menu, see your Windows documentation.
+
+     If you want to make these changes as a group, or reinstall
+     shortcuts and registry extensions without reinstalling 4DOS,
+     look at the two registry extension (.INF) files in the 4DOS
+     archive.  These files create shortcuts and registry changes
+     similar to those made by the installation software.  The
+     comments within each file explain how to install and uninstall
+     it.
+
+The 4DOS Help System
+
+     The 4DOS help program is called 4HELP.EXE; the help text is
+     stored in the file 4DOS.HLP.  The 4DOS help system provides
+     complete help for 4DOS commands and features; on most systems
+     it can also launch the DOS help program to display help on
+     external DOS commands like FORMAT or SORT.
+
+     The section entitled "The 4DOS Help System" within the help
+     system itself explains navigation keystrokes and mouse usage
+     in more detail, as well as instructions on linking the help
+     system to DOS help or other help programs.
+
+     If you do not have 4DOS running, you can start the help system
+     by moving into the directory that contains your 4DOS files
+     (assuming that you are using C:\4DOS in this example) and
+     typing this command:
+
+       c:\4dos> 4help
+
+     You can use this command if you are unable to install 4DOS
+     completely for some reason; information in the help system
+     will likely help you solve the problem.
+
+4DOS and Your Computer
+
+     4DOS will work on any IBM PC-compatible hardware, regardless
+     of the CPU type, amount of memory (assuming the minimum 256K
+     or so required to run 4DOS is available), disk configuration,
+     or video hardware.  The notes below briefly cover memory,
+     video, and disk issues.
+
+   Memory
+
+     4DOS knows how to use XMS memory, EMS memory, and Upper Memory
+     Blocks (UMBs) in order to minimize the amount of space it
+     takes in the 640K of DOS memory available to your application
+     programs.	You can control 4DOS's memory usage with directives
+     in the 4DOS.INI file.  For more details about configuring
+     4DOS's memory usage see Initialization Directives under .INI
+     File Directives in the 4DOS.INI section of the online help.
+     You can also set most memory usage options easily from the
+     Startup page of the OPTION command's dialogs.
+
+     By default, 4DOS uses normal DOS memory ("low memory") for its
+     small resident portion of about 4K.  4DOS can reduce its low
+     memory usage by moving most of this information to Upper
+     Memory Blocks (UMBs), when requested with UMBLoad and other
+     UMB-related directives in the 4DOS.INI file.
+
+     Low memory is also used to hold the larger (about 250K)
+     transient portion of 4DOS while your system is at the prompt,
+     or executing an internal 4DOS command or batch file.  When an
+     external application is running 4DOS moves its transient
+     portion to EMS or XMS memory (or the hard disk), so the memory
+     is available to the application.  For additional details see
+     the online help or the Reference Manual, and in particular the
+     documentation on the Swapping directive in 4DOS.INI.
+
+   Video
+
+     4DOS can normally adjust itself to your video hardware
+     automatically, regardless of your video adapter and the number
+     of rows and columns on your screen.
+
+     Most video problems turn out to be unrelated to 4DOS, and are
+     often due to the underlying operating environment (for
+     example, attempting to display blinking text in a window when
+     the underlying environment does not support this feature).
+
+     If you experience scrolling or color problems, you should also
+     check whether you have an ANSI driver installed, and if so
+     verify that it is configured correctly and can support your
+     video hardware.
+
+   Disk Drives
+
+     4DOS supports all types of disks including floppy disks, hard
+     disks, high-capacity removable disks, compressed drives,
+     network drives, and RAM disks.  4DOS never directly modifies
+     the FAT, root directory, subdirectories, or other system areas
+     of the disk, and it doesn't write any data directly to your
+     disk.  It always calls on DOS to perform these actions, just
+     like most application programs do.  As a result, 4DOS is
+     compatible with all disk sizes, formats, and structures that
+     your DOS or Windows version supports.
+
+     If you receive unexpected results related to a disk drive or
+     disk file (for example, an apparent error in the amount of
+     free space on a drive, or an "access denied" message when
+     attempting to use a file you thought was available), chances
+     are that 4DOS is merely reporting information provided by the
+     operating system, and is not the source of the problem.
+
+4DOS and DOS
+
+     4DOS is compatible with MS-DOS or PC-DOS 2.0 and above, DR DOS
+     / Novell DOS / OpenDOS 3.4 and above, FreeDOS, ROM-DOS,
+     PTS-DOS and most other DOS variants, Windows 95 / 98 / ME (and
+     their built-in version of DOS, MS-DOS 7 or 8), and OS/2 DOS
+     sessions.	There is additional important information on
+     Windows 95/98/ME later in this chapter.
+
+     Detailed information on 4DOS and DOS is covered in the
+     Compatibility section of the online help.	If you use any of
+     the DOS versions or features listed below, you may want to
+     check that topic for additional information.  This is only a
+     partial list of the DOS-related items discussed in the online
+     help.  Inclusion of an item here does not mean it is
+     incompatible with 4DOS, but only that more information on it
+     is available in the help system.  The help system includes
+     information you may need if you use:
+
+       * Any version of DR DOS, Novell DOS, or OpenDOS.
+
+       * Utilities which allow multiple configurations in your DOS
+	  CONFIG.SYS file, including the MS-DOS or Windows 95/98
+	  multiple configuration feature.
+
+       * The MS-DOS APPEND utility.
+
+       * The FORMAT /S and SYS commands (used to create a bootable
+	  floppy disk) under MS-DOS or PC-DOS version 4.0 or above.
+
+       * The DBLSPACE and DRVSPACE disk compression utilities.
+
+       * The MS-DOS 6.x and Windows 95/98 HELP command.
+
+       * The FASTOPEN utility.
+
+       * The MS-DOS 6.x and Windows 95/98/ME MOVE command.
+
+       * The MS-DOS / PC-DOS 6.x SMARTDRV disk cache.
+
+4DOS and OS/2
+
+     Note that 4OS2 is the preferred command shell for OS/2. It was
+     designed for this system, has several OS/2-specific commands
+     that 4DOS lacks, and does not suffer from its DOS-imposed
+     limitations.
+
+   OS/2 Virtual DOS Machines (VDMs)
+
+     Under OS/2, you can have multiple desktop objects which start
+     DOS sessions, also called Virtual DOS Machines (VDMs).  These
+     may include objects in the Command Prompts window, objects
+     for "migrated applications," objects for DOS and Windows
+     applications, and objects for batch files.
+
+     Assuming you set up your VDM objects as described in the
+     following section, 4DOS will be loaded as the shell each time
+     a DOS session starts.  4DOS will process 4DOS.INI, execute
+     your 4START file if you have one, and execute AUTOEXEC.BAT.
+     You can start any number of DOS sessions and (within the
+     limits of system resources) have as many running
+     simultaneously as you like.
+
+     This is fundamentally different from what happens when you
+     boot your computer under DOS or Windows 95/98.  In those
+     environments there is only one 4DOS primary shell,
+     AUTOEXEC.BAT is only executed once each time you boot, and so
+     on.
+
+     OS/2 gives you much more flexibility, but that flexibility
+     requires planning to get the most out of 4DOS.  For example,
+     you can have all your DOS sessions use the same AUTOEXEC.BAT
+     file, or you can have different versions of AUTOEXEC.BAT for
+     different sessions.  The same is true of the other startup
+     and exit files (4DOS.INI, 4START, and 4EXIT).
+
+     Each VDM object contains its own information about how to
+     start DOS and 4DOS for that session.  In essence, each object
+     has its own CONFIG.SYS file built into it.  The information
+     attached to an object which indicates how to start DOS is
+     called its DOS Properties or DOS Settings.
+
+     You can modify these settings using the OS/2 Settings or
+     Properties notebook for each object.  Use the Program page of
+     the notebook to modify the object's program name, startup
+     directory, and command line parameters.  The Session page
+     lets you set the session type.  Other pages let you adjust
+     other configuration data for the object.
+
+     In a new object, each DOS setting starts out with a default
+     value taken from your CONFIG.SYS file.  For settings which
+     have no corresponding command in CONFIG.SYS, OS/2 uses a
+     built-in default value.  The DOS_SHELL setting, which
+     specifies the command interpreter to use for a DOS session,
+     defaults to the value on the SHELL= line in CONFIG.SYS.
+
+   Creating OS/2 Desktop Objects for 4DOS
+
+     This section assumes you are running OS/2 Warp 4, with the
+     default desktop shell and a standard OS/2 desktop.  If you
+     are using an earlier version of OS/2 or a different shell, or
+     have altered your OS/2 desktop configuration substantially,
+     you will need to take those changes into account as you read
+     the instructions below.
+
+     The 4DOS installation program normally creates a desktop
+     folder which contains an object to start 4DOS from your OS/2
+     desktop.  If you want to create additional objects in other
+     folders, or directly on the desktop, click mouse button 2 on
+     the installed 4DOS object, select Copy on the popup menu, and
+     copy the object to another location.  You can then alter the
+     properties of the new object if you wish.
+
+     If you need to create a new object for 4DOS, switch to the
+     folder where you want the object to appear and either copy an
+     existing object (use the Copy or Create Another selection on
+     the object's popup menu) or drag a Program Template in from
+     the Templates folder.  The new object's Properties notebook
+     should open automatically.  Use the Program page of the
+     notebook to modify the program name, parameters, and startup
+     directory.
+
+     To create a VDM object that gives you a standard 4DOS prompt,
+     place an asterisk [*] in the Program Name field.  This tells
+     OS/2 to load the command interpreter and go to a prompt
+     instead of running a specific application.  Then go to the
+     Session page and set the session type to DOS Full Screen or
+     DOS Window.
+
+     While you are on the Settings page, click on the DOS
+     Properties or DOS Settings button.  4DOS will run properly
+     with default DOS properties, but you may want to check that
+     the DOS_SHELL setting is correct, because this determines
+     which command interpreter OS/2 will load when the object is
+     used to start a session.  The DOS_SHELL setting should be set
+     as described for the SHELL= line in CONFIG.SYS, for example:
+
+       c:\4dos\4dos.com c:\4dos /p
+
+     If you've set up CONFIG.SYS for 4DOS as described earlier,
+     any new VDM objects you create will automatically use the
+     correct DOS_SHELL setting for 4DOS.  However, VDM objects
+     which existed before you modified CONFIG.SYS may list
+     COMMAND.COM in the DOS_SHELL setting.
+
+     You can put command-line switches, a command, or the name of
+     a batch file in the Parameters field (on the Program page of
+     the notebook) for any object.  This allows you to run
+     specific commands or set configuration options when you start
+     4DOS from that object.  However, no additional settings are
+     required; the only required item is the asterisk to tell OS/2
+     to load the default command processor.  For details on the
+     command line options available for 4DOS objects see Chapter
+     4, and the Starting 4DOS section of the online help.
+
+     If you precede a command name in the Parameters field with
+     /C, 4DOS will exit and return to the OS/2 desktop when the
+     command is finished.  This is a "temporary" VDM used to
+     execute a single command or batch file.  Temporary VDMs are
+     also created automatically by OS/2 if you set up an object
+     with the Program Name set to the name of a DOS application.
+
+4DOS and Microsoft Windows 95/98/ME
+
+     This section provides basic information on using 4DOS under
+     Windows 95, Windows 98, and Windows ME.  For additional
+     details see the Compatibility section in the online help.
+
+     4DOS works well as both the primary shell, loaded before
+     Windows 95/98, and when loaded from the Windows 95/98 desktop.
+     Under Windows ME 4DOS can only be loaded from the desktop, not
+     as a primary shell before Windows starts.
+
+     If you are using 4DOS under Windows 95 or Windows 98, it is
+     strongly recommended that you install it as the primary shell
+     in CONFIG.SYS (this is the way 4DOS is normally installed).
+     If you do not install 4DOS as the primary shell, individual
+     4DOS sessions will not be able to share global alias and
+     history lists.  Each 4DOS session will have to process the
+     .INI file before it starts, and if you have two or more 4DOS
+     sessions running simultaneously from the Windows desktop, they
+     will use more system resources than they would if 4DOS were
+     installed as the primary shell.
+
+     If you have a typical Windows configuration, and install 4DOS
+     as the primary shell, generally you must have an AUTOEXEC.BAT
+     file, even if it only consists of a single REM statement.	In
+     most cases, Windows 95/98 will not load the primary shell if
+     it cannot find an AUTOEXEC.BAT file in the root directory of
+     your boot drive.
+
+   Installing 4DOS Under Windows 95/98/ME
+
+     The 4DOS installation program will install and configure 4DOS
+     correctly for Windows 95, 98, and ME.  If you are installing
+     4DOS manually, follow the instructions under Manual
+     Installation earlier in this chapter.
+
+     If you reinstall Windows 95/98, your SHELL= line will be
+     removed from CONFIG.SYS by the Windows installation process.
+     To correct this, simply boot the new version and use Notepad
+     or another ASCII editor to put the SHELL= line back in
+     CONFIG.SYS as described in the manual installation
+     instructions earlier in this chapter, then restart Windows.
+
+     If you load Windows 95/98 in "safe mode" your startup files
+     (CONFIG.SYS and AUTOEXEC.BAT) are ignored, and 4DOS will not
+     be loaded as the primary shell.  If you start Windows in "safe
+     mode" use caution if you load 4DOS after the GUI starts.  DOS
+     applications sometimes do not work properly in "safe mode."
+
+   Installing the KSTACK Program in Windows 95/98/ME
+
+     If you want to load KSTACK.COM (required for the KEYSTACK
+     command) it should be loaded separately for each 4DOS session
+     in Windows 95/98/ME.  To do so, include the KSTACK command as
+     the last item on the startup command line when you set up the
+     corresponding shortcut(s).  For example, the command line for
+     your shortcut might read:
+
+       c:\4dos\4dos.com c:\4dos\kstack.com
+
+     This will load KSTACK when 4DOS starts, then display a prompt.
+
+     If you install KSTACK in AUTOEXEC.BAT, it may not work
+     properly when multiple 4DOS windows are open, as stacked
+     keystrokes may "bleed through" from one window to another.
+
+     You can also address this issue by loading KSTACK in 4START,
+     with an IF command to make sure it is not loaded from
+     AUTOEXEC.BAT in the primary shell.  To do so, use a line like
+     this in 4START:
+
+       if %_shell ne 0 c:\4dos\kstack.com
+
+Using 4DOS on a Network
+
+     This section will give you some tips on using 4DOS on a
+     network, and on the proper locations for 4DOS files on a
+     network.  For additional details, and any additional
+     information about compatibility with your particular network,
+     see the Compatibility section in the online help.
+
+     In general, you'll find that you can load and run your network
+     software normally under 4DOS.  Network drives will be
+     accessible as normal drives once the network is loaded, and
+     files on the network will be accessible just as if they were
+     on a local hard disk.
+
+     Some networks support file and directory names beginning with
+     a double backslash [\\], also called "UNC" names, or with a
+     server name followed by a colon, to identify files by their
+     location on the network.  4DOS detects such names and passes
+     them through to the network unaltered, allowing the network
+     software to process them.
+
+     Some networks support server disk partitions that exceed the
+     standard FAT16 2 GB partition size limit, but don't provide
+     DOS applications with access to information about the drive
+     size.  On these drives, 4DOS may not be able to return proper
+     free space or total space figures because the drive size
+     information returned by DOS is not accurate.  If you have such
+     a drive, you may need to use a network or server utility to
+     obtain accurate partition size and free space information.
+
+     If you need to boot a diskless workstation from a network
+     drive, see the Novell Netware topic under Software in the
+     Compatibility section of the online help.	The techniques
+     described there will allow you to set your system up under
+     Netware to avoid accesses to the boot drive once 4DOS is
+     running, and can generally be used for other networks as well.
+
+   4DOS and Novell Netware
+
+     4DOS includes a special 4DOS.INI directive for Netware called
+     NetwareNames. You must set NetwareNames = Yes on systems which
+     load Netware, in order to avoid problems with destroyed
+     environment variables during LOGIN.  See Compatibility in the
+     online help for more information.
+
+     4DOS can also be set up to run on Novell Netware diskless
+     workstations that boot from the server.  To do so, you must
+     make several changes to 4DOS.INI and your other startup files;
+     see the Compatibility section of the online help for complete
+     details.
+
+Uninstalling 4DOS Manually
+
+     The steps required to remove 4DOS from your system manually
+     depend on the operating system you are using:
+
+       * If you are running 4DOS under Windows 95/98/ME, and you
+	  installed the 4DOS shortcuts or registry extensions from
+	  an .INF file, remove them as described in the file.
+
+       * Next, delete any remaining Windows desktop objects or
+	  Start menu entries that refer directly to 4DOS.
+
+       * If you are not running Windows ME (which has a dummy
+	  CONFIG.SYS file), find the location of COMMAND.COM on
+	  your disk (for example, in the root directory, or the DOS
+	  directory).  Then use your editor to edit the CONFIG.SYS
+	  file in the root directory of the boot drive.  If you are
+	  running DOS 5 or below, before modifying CONFIG.SYS be
+	  sure you have a bootable floppy disk.
+
+	 Look for the line which begins with SHELL=, and either
+	  delete it, or insert the characters "REM " at the
+	  beginning of the line.  Next, add a new line like this:
+
+	    SHELL=d:\path\COMMAND.COM d:\path /P
+
+	  where "d:\path" is the drive and directory for
+	  COMMAND.COM (this same directory name is repeated after
+	  the full name of COMMAND.COM and before the /P).  If you
+	  were previously running COMMAND.COM with a /E:nnnn switch
+	  to set the size of your environment, add it to this line
+	  as well.
+
+       * After CONFIG.SYS has been modified, edit your
+	  AUTOEXEC.BAT file to remove any changes made to
+	  accommodate 4DOS.  Look for a command beginning SET
+	  COMSPEC= and another which loads the 4DOS file
+	  KSTACK.COM.  The SET COMSPEC command will not be present
+	  on most systems.  If it's there, remove it, or change it
+	  to:
+
+	    SET COMSPEC=d:\path\COMMAND.COM
+
+	  where "d:\path" is replaced by the correct drive and
+	  directory for COMMAND.COM.  Then add "REM " in front of
+	  the KSTACK.COM command to convert it to a comment, or
+	  delete the line entirely.
+
+     Now reboot your system, and you should be back up and running
+     under COMMAND.COM.  You can check the 4DOS directory for any
+     files you placed there that you want to save.  Then delete the
+     4DOS files and remove the 4DOS directory.
