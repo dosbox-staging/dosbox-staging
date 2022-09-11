@@ -1,0 +1,769 @@
+			*****************************************
+			*** DOS/32A DOS Extender -- ChangeLog ***
+			*****************************************
+
+
+[2006-04-20]
+DOS/32 Advanced DOS Extender, version 9.1.2
+===========================================
+
+DOS Extender (DOS32A.EXE):
+--------------------------
++ Bugfix: Int 21h function 3Fh refused to return when reading from STDIN
+  (reported by Gianni Gallucci)
+
++ Bugfix: in irq_fail fn, hardware exception #9 doesn't have exception code
+  (reported by Charles Hyde)
+
++ applied mode.asm patch (also by Charles Hyde from Infineon) with minor
+  formatting changes; I'm rather ambivalent about implementing the others
+  into the mainstream builds (in particular the PAE one), will make those
+  available from the development (beta) page...
+
+
+
+
+
+[2005-12-12]
+DOS/32 Advanced DOS Extender, version 9.1.1
+===========================================
+
+DOS Extender (DOS32A.EXE):
+--------------------------
++ improved memory allocation under Clean system: INT 15h, AX=0E801h is used
+  if AX=0E820h fails (based on patch provided by Arthur Kalliokoski)
+
+
+
+
+
+[2005-11-08]
+DOS/32 Advanced DOS Extender, version 9.1.0
+===========================================
+
+DOS Extender (DOS32A.EXE):
+--------------------------
++ added support for SSE/SSE2/SSE3 capable processors
+
++ added preliminary support for PE file format (recognized but not yet implemented)
+
++ with verbose mode turned on the DOS Extender will pause prompting to press a key;
+  this gives a chance to read loader info before the app kicks in
+
++ internal debugger has been dropped, CLIENT/debug.asm has been heavily rewritten
+
++ INT 1 and INT 3 op-codes are now treated by DOS/32A as no-ops, this works around
+  some lame anti-debugging protections (Null-pointer protection works as expected)
+
++ "VCPI/DPMI Detection Order" option has been removed, DOS/32A unconditionally
+  favours VCPI over DPMI, if and when possible
+
++ "Internal Exception Control" option has been removed, DOS/32A is always in control
+  of the exception handling
+
++ "Trap and Report Emulated IRQs" option has been removed, this simplifies IRQ
+  handling
+
++ "Extended Memory Blocks Checking" option has been removed, DOS/32A unconditionally
+  checks EMB integrity
+
++ DPMITST environment option is no longer supported; it is still recognized but is
+  now a no-op
+
++ whenever possible, DOS/32A will favour INT 15h/XMS systems over VCPI/DPMI,
+  (thanks wd)
+
++ INT 31h DPMI last function entry is cached so that subsequent calls with the same
+  function number do no search the lookup table
+
++ INT 31h DPMI functions 0E00h & 0E01h no longer virtualize FPU EM & MP flags
+
++ additional PIC constraint: slave PIC may not be mapped onto INT 8
+
++ slightly reduced run-time complexity of the IRQ handling code
+
++ exception handlers are now invoked with the correct stack frame (as mandated
+  by DPMI v0.9 spec)
+
++ all the exception vectors are now hooked under external DPMI (symmetric with
+ built-in DPMI and using the same exception handlers)
+
+
+SUNSYS Setup Utility (SS.EXE):
+------------------------------
++ the following options in the Kernel menu have been deprecated:
+
+	"VCPI/DPMI Detection Order"
+	"Internal Exception Control"
+	"Trap and Report Emulated IRQs"
+	"Extended Memory Blocks Checking"
+
+  it is still possible to toggle the state of these options, but the changes have
+  no effect on the DOS Extender
+
+
+SUNSYS Debugger (SD.EXE):
+-------------------------
++ R.I.P.
+
+
+
+
+
+[2005-05-19]
+DOS/32 Advanced DOS Extender, version 7.35
+==========================================
+
+DOS Extender (DOS32A.EXE):
+--------------------------
++ mouse callback code cleanup
++ allocation of up to 2Gig under Clean system (Int 15h, AX=E820h)
++ with verbose mode active and not under external DPMI the entry point
+  of application will trap to internal debugger
+
+
+
+
+
+[2005-01-12]
+DOS/32 Advanced DOS Extender version 7.33
+=========================================
+
+DOS Extender (DOS32A.EXE):
+--------------------------
++ Bugfix: exec loader could crash the DOS Extender during startup in rare situations
++ Bugfix: DPMI function 0301h can not transfer data on stack to real mode procedure
++ Int 21h functions 4402h, 4403h, 4404h, 4405h, (DOS IOCTL) have been extended
++ Int 21h functions 3Fh & 40h (DOS IO) have been rewritten
++ mouse callback can now handle non-standard stack frames
+
+
+SUNSYS Bind Utility (SB.EXE):
+-----------------------------
++ Bugfix: minor binding problems with unbound LE/LX execs
++ removed check for DOS32A environment string
+
+
+SUNSYS Compress Utility (SC.EXE):
+---------------------------------
++ removed check for DOS32A environment string
+
+
+SUNSYS Setup Utility (SS.EXE):
+------------------------------
++ removed Lock and Version checks
+
+
+
+
+
+*******************************************************************************
+Release 8
+DOS/32 Advanced DOS Extender version 7.1
+========================================
+
+News:
+-----
++ This release of DOS/32A is distributed under a new license. See "license.txt"
+  for more information.
+
++ The complete source code of the DOS Extender and its tools is included with
+  this release.
+
+DOS Extender:
+-------------
++ Fixed bug in DPMI function 0503h when in certain cases the contents of the
+  memory block being reallocated was not copied to the new location.
+
++ Minor fix: DOS/32A environment configuration option /NOWARN can now accept
+  several warnings separated by a comma (eg /NOWARN:9003,9004).
+
+Other:
+------
++ Minor updates to the documentation manuals, mainly to reflect the new
+  licensing issues.
+
+
+
+
+
+*******************************************************************************
+Service Pack 1 (Revision [C])
+DOS/32 Advanced DOS Extender version 7.0
+========================================
+
+News:
+-----
++ SVER Utility program. This utility can be used to find out the version
+  of DOS/32A, STUB/32A or STUB/32C and to display the OEM Information
+  appended to the LC-style executables by Original Equipment Vendors.
+
+DOS Extender:
+-------------
++ Fixed problem in DOS/32A DPMI kernel causing the DOS Extender not being
+  able to properly callback the IRQs of the second PIC to the protected mode
+  handlers.
+
+SUNSYS Setup Utility:
+---------------------
++ Fixed minor problem when in Kernel Config window setting VCPI PhysTables
+  to 0 and switching to Hex mode caused the number to flash red incorrectly
+  indicating an errorneously enered value.
+
+
+
+
+
+*******************************************************************************
+Release 7
+DOS/32 Advanced DOS Extender version 7.0
+========================================
+
+News
+----
++ A new high performance D32A C/C++ Run-Time Library is now included with
+  DOS/32 Advanced DOS Extender. The Library is located in .\L32 directory
+  and its C/C++ header in .\H32 directory.
+
++ The documentation manuals supplied with DOS/32 Advanced DOS Extender are
+  now in the HTML format. The plain-text based manuals have been dropped. To
+  view the new HTML based manuals use an internet browser (Netscape Navigator
+  is highly recommended although Explorer will also do fine), select "File ->
+  Open File" from the browser's menu and open "manual.htm" file located in the
+  .\DOCS directory.
+
+DOS Extender
+------------
++ Year 2000 compliance has been added for DOS/32 Advanced DOS Extender and
+  all of the utilities accompanying it.
+
++ When running under _external_ DPMI host, DOS/32A will remove its own DPMI
+  Kernel from memory, thus freeing up up to 10KB of conventional DOS memory.
+
++ Added exception handling under _external_ DPMI, DOS/32A will trap exceptions
+  #0, #6, #13 and #14 (ie the most common) and report the complete machine
+  state; DOS/32A will now also report where the exception came from by
+  specifying "KERNEL" for ADPMI Kernel, "CLIENT" for DOS/32A Client, "APP/32"
+  for the currently running application and "APP/??" if exception's origin is
+  unknown.
+
++ Added support for "Performance Counters" which monitor the number of mode
+  switches for INTs, IRQs, and Callbacks; a new Extended DPMI API function
+  (AX=0A00h, then AL=09h) provides access to these.
+
++ Added support for protected mode TSRs installed with INT 21h, AH=31h
+  function; contents of DX register passed to this function are ignored
+  when called from protected mode.
+
++ Added new warning (9006): "incompatible version of DOS/32A already running"
+  issued when the parent and the child applications are running under
+  different versions of DOS/32A (when spawn() programs).
+
++ Added new environment option "/NOWARN:xxxx" to disable particular warnings,
+  ie /NOWARN:9003.
+
++ Added new environment option "/NOC" to disable explictly the copyright
+  banner. The warnings are still displayed on the screen.
+
++ Increased the maximum of loadable Objects from 32 to 64 per application.
+
++ Improved CTRL-C and CTRL-Break handling in the DOS Extender's Client code,
+  which solves problems with these key combinations not properly detected when
+  running under some external DPMI hosts (in particular Windows).
+
++ Improved Interrupt switching algorithm in DOS/32A DPMI Kernel, also improved
+  algorithm enabling A20 gate when running in Clean system.
+
++ Improved error checking in Extended DOS functions 0FF95h and 0FF97h: they
+  will now fail calls that allocate 0 bytes or >1MB.
+
++ Improved support for VCPI system software; fixed bug in VCPI initialization
+  code which caused the DOS Extender's kernel to fail to free all the
+  allocated PageTables on exit in some situations. You are now also allowed to
+  set VCPI PhysTables value to zero to save some conventional memory if not
+  using physical memory mapping DPMI functions 0800h and 0801h.
+
++ Minor fix: DPMI function 0001h (Free Selector) will now fail any calls that
+  try to free the current CS (Kernel) or SS (App. stack) selectors.
+
++ Minor fix: Extended DOS function 4Ch (Terminate) will release ZERO selector
+  before exiting to DOS.
+
++ Minor improvements in the LC-style file format loader: uncompressed Objects
+  are loaded slightly faster.
+
++ Fixed bug in Extended DOS function AH=40h (Write to file) when DOS/32A would
+  crash when running under external DPMI and writing to disk with no free
+  space left.
+
++ Fixed bug in DOS/32 Advanced environment configuration reading functions,
+  when the DOS Extender would sometimes at startup take off into "hyperspace"
+  reading the whole environment, instead of just one line (DOS32A=...).
+
++ Removed check for invalid limits in DPMI function 0008h; DOS/32A will now
+  unconditionally perform auto-correction of selector's limit if it is out
+  of range.
+
++ Removed support for bottom-up allocation scheme when running under Clean
+  (INT 15h) system software. Instead improved support for top-down allocation
+  scheme which yields better performance and more extended memory.
+
++ Reduced the default number of Page Tables reserved for physical memory
+  mapping from 4 down to 2 (eq 8MB).
+
++ Reduced the default size of DOS Transfer Buffer from 16KB down to 8KB, does
+  not affect disk I/O performance but brings the memory requirements down.
+
+SUNSYS Bind Utility:
+--------------------
++ Fixed all known problems.
+
++ Added support for OEM title information for LC-style execs.
+
++ Otherwise no major changes visible to the user.
+
+SUNSYS Compress Utility:
+------------------------
++ Fixed all known problems.
+
++ Improved (rewritten) "Advanced Preprocessing" algorithm.
+
++ Added support for OEM title information for LC-style execs.
+
++ Otherwise no major changes visible to the user.
+
+SUNSYS Setup Utility:
+---------------------
++ Removed "Selector Invalid Limit Check" option.
+
++ Otherwise no major changes visible to the user.
+
+SUNSYS Debugger:
+----------------
++ No major changes.
+
+
+
+
+
+*******************************************************************************
+Release 6
+DOS/32 Advanced DOS Extender version 6.00
+=========================================
+
+News
+----
++ New SUNSYS Compress Utility program which allows compression of LE- and
+  LX-style Linear Executables into the new LC-style Linear Compressed file
+  format (see "sc.txt" help file located in .\DOCS directory).
+
++ Configurable stub file STUB/32C which can be configured by SUNSYS Setup
+  Utility program, located in .\BINW directory and named "stub32c.exe".
+
+DOS Extender
+------------
++ Removed fatal error (0008): "configuration header corrupted", which was never
+  used unless the DOS Extender was linked incorrectly.
+
++ Upon a crash (exception) in protected mode application the DOS Extender will
+  report the unrelocated crash address for _any_ Object, not the only one that
+  had entry point in it as it did before.
+
++ DOS/32 Advanced now supports allocation of more than 64MB of memory without
+  using Virtual Memory. The maximum amount of memory the DOS Extender can
+  allocate is limited to 2GB when running under XMS and to 256MB under VCPI.
+
++ Fixed problem with Verbose Mode when the DOS Extender would report the
+  incorrect size of DPMI memory when allocated >64MB. The DPMI memory size is
+  now reported in KB when below 64MB, and in MB when above.
+
++ Added support for LC-style Linear Compressed protected mode executables. By
+  using SUNSYS Compress Utility the users can compress LE and LX applications
+  into the new LC file format.
+
++ Added new run-time error (4007): "not enough DOS Transfer Buffer space to
+  load LC-exec" which is reported when loading Linear Compressed executables
+  and the size of DOS Transfer Buffer is set below 8KB.
+
++ The Loader will skip allocation of selectors for subsequently loaded 32bit
+  Objects, and will make the application happy with only one 32bit CODE and
+  one 32bit DATA selectors respective. This will prevent wasting of selectors
+  in applications which contain more than two 32bit Objects.
+
++ DPMI functions 0602h and 0603h are supported and will return with CF clear
+  without actually doing anything good.
+
+SUNSYS Bind Utility:
+--------------------
++ Added new commands and options "/BC", "/RC", "/BN", "/UN", "/Q", "/S" and
+  "/H" (or "/?"). Refer to "sb.txt" help file for more information.
+
+SUNSYS Compress Utility:
+------------------------
++ This one is new for this release. See "sc.txt" for help.
+
+SUNSYS Setup Utility:
+---------------------
++ Added support for configurable stubs, STUB/32C files.
+
++ Added (actually documented) options "/INFO", "/LOCK", "/UNLOCK", "/QUIET",
+  "/SILENT" and "/H" (or "/?"). See "ss.txt" help file.
+
+SUNSYS Debugger:
+----------------
++ Minor changes, fixed mouse problem with some mouse drivers when the cursor
+  would disappear when moving it below the bottom of the screen.
+
+
+
+
+
+*******************************************************************************
+Release 5
+DOS/32 Advanced DOS Extender version 5.00
+=========================================
+
+DOS Extender
+------------
++ Resolved problem with WATCOM Linker v11.0(a) when the DOS Extender was not
+  able to correctly recognize and load the LX-style executables.
+
++ The DOS Extender now supports, and will correctly load Objects with the size
+  of zero. However, as such Objects will in most cases indicate an error in
+  the protected mode application (wlink dead code elimination should kill'em),
+  the DOS Extender will issue a new warning (9005) to inform the user about
+  this situation.
+
++ The default size of the DOS Transfer Buffer is now 16KB instead of 64KB.
+  This not only reduced the DOS memory requirements, but also improved the
+  DOS Extender's disk I/O throughoutput.
+
++ When showing information about Selectors in the exception report listing
+  the DOS Extender will no longer list the DPL of a Selector as it always
+  was equal to 0. Instead, DOS/32 Advanced will show a better explanation
+  of Selector's attributes (CODE/DATA and 16/32 bit).
+
++ DPMI function 0008h, Set Segment Limit, will now report invalid limits as a
+  new run-time error (6006), which will result in application termination. You
+  can always turn off this feature, by using the SUNSYS Setup Utility.
+
++ Fatal error (3005) will now report message "error in app exec" which means
+  that the application was corrupted or an error occurred at link time.
+
++ With VERBOSE mode turned on the DOS Extender will now list the PSP_Sel,
+  Env_Sel and Env_Seg to provide additional information about PSP Selector,
+  Environment Selector and Environment real mode Segment allocated by the
+  DOS Extender for application. In addition, the DOS Extender will report
+  Process_ID and Module Name in the exception listing which can be useful
+  when spawning applications.
+
++ Added new feature: "Start Full-Screen under Windows". DOS/32 Advanced will
+  switch the application to the full-screen mode when running under Windows in
+  a DOS-box window. Can be turned off (the default is off).
+
++ Another new option in the DOS Extender: "Ignore DOS/4G API Extension Calls".
+  Documented in the "ss.txt" help file. Certain programs which otherwise use
+  DOS/4G API extensions can now be run under DOS/32 Advanced.
+
++ The DOS Extender will now automatically deinstall the possibly installed
+  mouse ISR by issuing INT 33h with AX=000Ch and ES:EDI=0 on exit to DOS.
+
++ New extended DOS functions 0FF94h..0FF97h are now supported for allocation
+  of DOS memory. These functions work in exactly the same way as functions
+  0FF90h..0FF93h. Look into "Programmer's Reference" ("prog_ref.doc" file)
+  documentation for more information about those.
+
++ The spawning techniques of DOS/32 Advanced have been greatly improved. The
+  required size of the "DOS Transfer Buffer" is now 1KB instead of 4KB when
+  using extended DOS function AH=4Bh to spawn. Read more about this in the
+  "Technical Reference" ("rech_ref.doc" file) documentation.
+
++ Memory management ADPMI functions have been rewritten and now offer improved
+  performance and security. Allocated Extended Memory Blocks are now aligned
+  on Paragraph (16-byte) boundary and protection against EMB overwriting is
+  now 99% safe.
+
++ Once again, DOS/32 Advanced DOS Extender requires no extended memory to load
+  and execute a protected mode program. The relocations are now loaded into
+  DOS memory first, only when not enough DOS memory, will they be loaded into
+  extended memory (a very rare situation).
+
++ Fixed minor problem in DPMI functions 0800h/0801h when the last mapped page
+  was not marked as last.
+
++ Fixed bug in extended DOS function AH=40h, Write to File, when truncation
+  of files (using ECX = 0) did not work as expected.
+
++ Corrected DPMI function 050Ah, Get Base and Size of Memory Block. The base
+  reported now points to the actual address of memory block instead of block
+  header.
+
++ Fixed problem with IRQ 7 which was not processed by DOS/32 Advanced built-in
+  DPMI correctly.
+
++ Fixed a small problem when the DOS Extender could not load and execute the
+  "raw" LE/LX programs, ie applications not bound to any stub.
+
++ The ADPMI function 0EEFFh now returns EAX with "D32A" ID-string instead of
+  "PMDW". This function has been pretty much standardized and can be used
+  for effective detection of the currently running DOS Extender.
+
++ The Free Package version now supports DPMI functions 0800h and 0801h for
+  mapping of linear memory.
+
++ Support for Win95 Long File Names has been included into this version of
+  DOS/32 Advanced. Look for information on these functions (INT 21h, AX=71xxh)
+  in the "Programmer's Reference" documentation ("prog_ref.doc" file).
+
+SUNSYS Setup Utility:
+---------------------
++ Two new options have been added: "Ignore DOS/4G API Extension Calls" in the
+  "Configure DOS/32A DPMI Kernel" menu, and "Start Full-Screen under Windows"
+  in the "Configure DOS/32A DOS Extender" menu.
+
++ Several options have been renamed, and placed in a more proper (logical)
+  order. You really should not have problems with recognizing them though.
+
+SUNSYS Bind Utility:
+--------------------
++ Unbinding of LE/LX executables is now supported in the Free Package version.
+
+SUNSYS Debugger:
+----------------
++ Fully functional, except for the "System Interrupt History" which is
+  supported in the Pro version only. Otherwise no major changes.
+
+
+
+
+
+*******************************************************************************
+Release 4
+DOS/32 Advanced DOS Extender version 4.30
+=========================================
+
+Install Program:
+----------------
++ The Install program will now automatically copy file "dos32a.lnk" into
+  WATCOM's BINW or BIN directory (depending on which version of WATCOM C/C++
+  you have) if you select auto-system-update (which is strongly recommended).
+
++ You can now install DOS/32 Advanced in any directory, not just "DRV:\DIR" as
+  it was before. You can install it for example in "C:\WATCOM\DOS32A" or
+  anything like that.
+
++ File "dos4gw.exe" which was located in .\PCTEST directory has been removed
+  to reduce the size of Compressed Data File.
+
+DOS Extender:
+-------------
++ Bug fixed in DPMI function 0500h when the reported information was written
+  to DS instead of ES selector (I know, I know...).
+
++ The DOS Extender will now correctly recognize and execute all types of
+  DOS/4G(W) Professional bound applications.
+
++ Mode switching routines have been optimized for Pentium MMX/II and AMD K6
+  processors (or any CPU with multiple execution units supporting RISC86).
+  This does not really improve mode switching speed though.
+
++ Bug fixed: the DOS Extender can now display decimal numbers greater than
+  0x7FFF within strings containing "%d" option.
+
++ DOS/32 Advanced now supports the "Verbose Mode". This one can be useful when
+  you need to know exactly what is going on while the DOS Extender is loading
+  your application, amount of allocated memory and so on.
+
++ New environment option: /VERBOSE[:ON|OFF]. Refer to the "User's Reference"
+  ("user_ref.doc" file) documentation for more information.
+
++ New "undocumented" DOS API function AX=Magic. This function is mentioned
+  somewhere in this package, but you will have to discover it yourself!
+
+SUNSYS Setup Utility:
+---------------------
++ The Setup Utility now supports new option: "Verbose Mode".
+
+SUNSYS Bind Utility:
+--------------------
++ The Bind Utility will now correctly recognize and process all types of
+  DOS/4G(W) Professional bound applications.
+
++ Two new commands: "-BS", bind STUB/32A to a file, and "-RS" replace existing
+  stub with STUB/32A, now supported.
+
+SUNSYS Debugger:
+----------------
++ The Debugger will now correctly recognize and load all types of
+  DOS/4G(W) Professional bound applications.
+
++ The Debugger shipped with the Free Package version of the DOS Extender now
+  supports all commands except "Here" (F4-key) and "Run" (F9-key).
+
+
+
+
+
+*******************************************************************************
+Release 3
+DOS/32 Advanced DOS Extender version 4.00
+=========================================
+
+News:
+-----
++ Installation program that installs DOS/32 Advanced DOS Extender on your
+  computer.
+
++ New stub file, 538 bytes in size!
+
+DOS Extender:
+-------------
++ DOS/32 Advanced DOS Extender does not check for 8086 anymore. This should not
+  be a problem since PC/XTs are quite dead nowdays.
+
++ DOS API function AH=0Ah is no longer supported and has been removed. It is
+  not used in WATCOM libraries and nobody uses it anyway.
+
++ Support for Slow Object Loading Scheme has been dropped. The DOS Extender
+  now requires some Extended memory in order to load application fixups, even
+  if the application itself is loaded in DOS memory.
+
++ Error code (4004) has been changed: not enough extended memory to load
+  application fixups.
+
++ Page Offset Shifts other than 0 are now supported by the loader for LX-style
+  executables.
+
++ Fixed bug in startup code causing no errors being reported when protected
+  mode was not entered successfully.
+
++ Fixed bug in exteded VBE API AX=4F00h when the CX register was not passed
+  down to the real mode.
+
++ VBE API is now truly extended: function AX=4F00h now translates the pointers
+  returned in the VBE structure to protected mode values.
+
++ New extended VBE functions have been added: AX=4F09h and AX=4F0Ah.
+
++ Bug fixed: options /QUIET and /PRINT:OFF defined in the environment now
+  disable the copyright string (Pro version only) as well as warnings.
+
++ Bug fixed: on exit under "Clean" system the DOS Extender will not disable
+  the A20 gate. This will solve problems when spawning programs with no
+  memory manager installed, but this will also produce a problem with A20 line
+  enabled after you run DOS/32 Advanced under "Clean" system. I guess we will
+  have to live with that, since there ain't many programs that rely on memory
+  wraparound under 1MB today, and you probably use a memory manager anyway.
+
++ Fixed a little bug in DPMI API function AX=0300h when parameters pushed on
+  stack that were to be copied to the real mode stack were not being copied
+  properly.
+
++ Bug fixed: extended DOS function AH=34h, get InDOS flag, will now work as
+  expected (no GPEs or crashes no more).
+
++ Bug fixed: the loader was not able to correctly load the last object of the
+  protected mode application, especially when the application was linked with
+  debug info which was placed directly after the last object's data. An
+  incorrect amount of bytes was read causing the _BSS segment being trashed
+  while it should contain zeroes only (by default, WATCOM startup code will
+  clear only the first 4K of _BSS segment if it thinks it runs under DOS/4GW).
+
++ Extended DOS API function AH=4Ch (terminate program), now will not restore
+  real mode environment segment in PSP at offset 002Ch to be compatible with
+  external DPMIs since they might need the protected mode selector at that
+  offset to perform their cleanup on the way to DOS,.. or some place else.
+
++ Extended DOS API now supports new functions: AX=0FF8Ah, AX=0FF90h, AX=0FF91h,
+  ... and so on (see "prog_ref.doc" file).
+
+SUNSYS Setup Utility:
+---------------------
++ Option Use Fast Loading Object Scheme is no longer supported.
+
+SUNSYS Bind Utility:
+--------------------
++ No major changes.
+
+SUNSYS Debugger:
+----------------
++ No major changes.
+
+
+
+
+
+*******************************************************************************
+Release 2
+DOS/32 Advanced DOS Extender version 3.00
+=========================================
+
+DOS Extender:
+-------------
++ When a file name is specified at the command line, the DOS Extender will now
+  apply an ".exe" extension to it, if it could not open the original file. This
+  will solve some compatibility problems when replacing DOS/4GW DOS Extenders
+  with DOS/32 Advanced.
+
++ The loader now supports Fast Object Loading Scheme. This feature allows the
+  DOS Extender to load protected mode applications much faster (as fast as
+  DOS/4GW does). Though it requires some extended memory to be allocated. Note
+  that if no extended memory was allocated by the DOS Extender at startup,
+  this feature will not be used, and the DOS Extender will automatically use
+  the old, slow Object Loading Scheme, rather than reporting an error.
+
++ The loader now supports Paragraph (16 byte) alignment along with Page
+  alignment (4096 byte) for objects that are loaded into extended memory.
+  If a program has a large number of objects, this feature will greatly
+  increase the amount of free extended memory available after the application
+  was loaded.
+
++ Invented new DOS function in the DOS Extender: AX=0FF89h - DOS/32 Advanced
+  Get Configuration Info (see "prog_ref.doc" file).
+
++ Invented new DPMI API function (AX=0A00h): AL=06h - Get DOS/32 Advanced
+  Kernel Selectors (see "prog_ref.doc" file).
+
++ When spawning DOS/32 Advanced from another (incompatible) DOS Extender
+  under VCPI, DOS/32 Advanced startup code will no longer cause the system
+  to crash.
+
++ DPMI function 0500h will no longer return error 8013h when no extended
+  memory was allocated at startup. Instead it will simply fill all the
+  fields in the structure with zeroes.
+
++ DPMI function 0500h will no longer return the incorrect size of the largest
+  available extended memory block as it did before in rare cases.
+
+SUNSYS Setup Utility:
+---------------------
++ Option Console Output has been replaced with two new options: Show Warnings
+  and Show Copyright Banner at Startup.
+
++ New option in DOS Extender Configuration window: Use Fast Loading Object
+  Scheme.
+
++ New option in DOS Extender Configuration window: Object Alignment when
+  Loaded High.
+
++ New option in DOS Extender Configuration window: Show Copyright Banner at
+  Startup. This function replaces the old Console Output option, and allows
+  the user to separately disable warnings (with Show Warnings option) and
+  the copyright banner.
+
+SUNSYS Debugger:
+----------------
++ The Debugger now supports WATCOM-style assembly text screen along with
+  Borland's Turbo Debugger-style. Use key '1' to switch between TD and WD
+  text screens.
+
+
+
+
+
+*******************************************************************************
+Release 1
+DOS/32 Advanced DOS Extender version 2.25
+=========================================
+
++ The first publicly available version of DOS/32 Advanced DOS Extender.
