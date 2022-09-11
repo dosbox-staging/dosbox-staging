@@ -420,7 +420,10 @@ void DOS_Shell::InputCommand(char * line) {
 	if (l_completion.size()) l_completion.clear();
 
 	/* DOS %variable% substitution */
-	ProcessCmdLineEnvVarStitution(line);
+	const auto dos = static_cast<Section_prop *>(control->GetSection("dos"));
+	assert(dos);
+	if (dos->Get_bool("expand_shell_variable"))
+		ProcessCmdLineEnvVarStitution(line);
 }
 
 /* Note: Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
