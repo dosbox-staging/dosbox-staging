@@ -1,0 +1,111 @@
+
+
+
+       RM.COM     (ReMove files)                            [v0.1: 6/5/94]
+       ======     ==============
+
+
+
+       This is a Unix-like rm-command for deleting files. Big improvements
+       over MS-DOS' DEL, is that it's able to recurse directories (be
+       careful!), and that it will accept several filenames in one call.
+
+       This program is FreeWare: It might be distributed and used freely.
+       There exists no warranty, and the author shall not be liable for
+       any loss or damage due to using this program.
+
+       Written in C using Borland's great compiler by
+
+           Sverre H. Huseby
+           Bjoelsengt. 17
+           N-0468 Oslo
+           Norway
+
+           Phone: +47 22 23 05 39
+
+           Internet: sverrehu@ifi.uio.no
+
+       If you like the program, please do me two small favours:
+         1. Tell me! (E-mail, postcard or letter)
+         2. Let your friends have a copy! (with all files intact, please..)
+
+
+
+       Usage
+       -----
+
+       RM accepts several options starting with a '-' or a '/'. Options
+       are case sensitive. The command line syntax is:
+
+           GD [options] filespec [...]
+
+       Options can be zero or more of the following:
+
+           -?  Display short help.
+
+           -a  Display absolute filenames (full path).
+
+           -f  Force removal of read-only and hidden files. No questions
+               are asked. The default is to prompt before removing any of
+               these.
+
+               Also: ignore nonexistent files (don't inform the user).
+               Suitable for batch-programs.
+
+           -i  Interactive mode. Prompt whether to remove each file, and
+               before recursing into directories (if the -r or -R option
+               is given). Reply with Y (yes) or N (no).
+
+           -r or -R
+               Remove contents of directories recursively. Use this option
+               with care! Unless -i is given, no questions are asked
+               before the massacre begins. To make sure you don't remove
+               the wrong files, make a dry run first (-x).
+
+               If "all files" are specified (using *.* or the name of a
+               directory only), empty directories are removed in addition
+               to any files.
+
+           -v  Run verbosly, that is: print the name of each file before
+               removing it.
+
+           -x  Dry run; don't actually remove any files. This option may be
+               combined with -v, to to see what files will be deleted
+               in a `real' run.
+
+       Options may be combined, as in RM -ri \*.BAK
+
+
+
+       How RM differs from Unix' rm
+       ----------------------------
+
+       The main difference from the Unix-version, is the way wildcards are
+       handeled. In Unix, the shell expands all wildcards _before_ the
+       program starts. That way the program won't know what wildcards
+       were originally given. In DOS, programs are responsible for
+       expanding the wildcards themselves. There is one advantage with
+       this: we may apply the same wildcards in all subdirectories. Here's
+       an example:
+
+           rm -rv \*.bak
+
+       The Unix-version (flip the slash...) would remove *.bak-files in
+       the root-directory, and _all_ files in the subdirs. Creepy!
+
+       Our version keeps the wildcards, and removes all *.bak-files in all
+       directories (including the root, of course).
+
+
+
+       Finally
+       -------
+
+       If you decide to use this program, thanks! I would be happy hearing
+       from you if you find any bugs or spelllig errors, have any
+       suggestions, or just to know that one more person uses my program.
+
+
+
+                                                   Sverre.
+

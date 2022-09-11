@@ -1,0 +1,79 @@
+
+
+       ALIAS.COM                                                 [15/12/89]
+       =========
+
+
+       Resident program that enables assigning short aliases to long
+       commands. This is a program I wrote a long time ago. I have since
+       long wanted to rewrite it from scratch, removing all the annoying
+       limitations, but it seems that I never get the time. Therefore I
+       just translated it to English, so that you DOSED-users can have at
+       least _some_ kind of aliases.
+
+       The program will occupy about 2 kb of memory, of wich 1 kb is for
+       the aliases.
+
+       NOTE: You must load DOSED _before_ ALIAS, else ALIAS won't work.
+             DOSED will never pass the line further, of natural causes.
+
+       Note that I won't extend this program, so it won't help to send
+       suggestions. I have plenty ideas for a new version, and I hope to
+       be able to make it sometime.
+
+       Type ALIAS ? for a short explanation. Here's a list of some of the
+       limitations:
+
+       * Aliases won't work in batch-files, only when a line is read using
+         INT 21h, func 0Ah - as COMMAND.COM does when fetching commands
+         from the user (you!).
+
+       * Only the first word of a line will be expanded. This means that
+         you can't alias a filter command like MORE. (TYPE foo | MORE).
+
+       * Circular aliases will hang the system!
+
+       * Only letters (A-Z) allowed in aliasnames.
+
+       * No uninstall.
+
+       * No user-specified buffer-size.
+
+       * No initfile with list of aliases.
+
+       * And most important: No positional parameters. ALIAS will just
+         replace the first word with whatever the alias is.
+
+
+       I have a file called ALIAS.BAT that is run from AUTOEXEC.BAT using:
+
+           CALL \BAT\ALIAS.BAT
+
+       Here's some example lines from that ALIAS.BAT of mine:
+
+           lh alias cc  bcc -mt -lt -f- -O2 -G -Z -vi
+           alias dur    dir
+           alias la     xd -h -wnesdta
+           alias ll     xd
+           alias ls     xd -wF -s- -t- -f-
+           alias m      c:\borlandc\bin\make
+           alias qfa    format a: /q /u /v:""
+           alias tidy   rm -rv \*.bak \*.~*
+           alias sync   smartdrv /c
+
+       Note that the first ALIAS has LH in front of it, to load it high.
+       Only the first call makes a resident program, so only the first
+       needs LH.
+
+       XD is my directory lister, RM is my Unix-like rm (see OTHERPRG.TXT).
+
+       And as you can see, ALIAS is nice for spelling errors :-)
+
+
+       Finally: _I_ live a happy life with this program, in spite of it's
+       many limitations, maybe you can too... :-)
+
+
+
+                                                    Sverre.
+

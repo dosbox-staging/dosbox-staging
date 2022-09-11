@@ -1,0 +1,181 @@
+
+
+
+       GD.COM     (Goto Directory)                          [v1.0: 17/4/90]
+       ======     ================
+
+
+
+       This command makes it possible to quickly move to another directory.
+       It keeps a hidden file containing the directory structure in the
+       root directory of each drive it has been used on.
+
+       This program is FreeWare: It might be distributed and used freely.
+       There exists no warranty, and the author shall not be liable for any
+       loss or damage due to using this program.
+
+       Written in C using Borland's great compiler by
+
+           Sverre H. Huseby
+           Bjoelsengt. 17
+           N-0468 Oslo
+           Norway
+
+           Phone: +47 22 23 05 39
+
+           Internet: sverrehu@ifi.uio.no
+
+       If you like the program, please do me two small favours:
+         1. Send me a note (E-mail, postcard or letter) and tell me about
+            it. That's worth more than a few bucks!
+         2. Let your friends have a copy! (with all files intact, please..)
+
+
+
+       Usage
+       -----
+
+       GD accepts several options starting with a '-' or a '/'. Options
+       are case sensitive. The command line syntax is:
+
+           GD [options] dirname
+
+       Options can be zero or more of the following:
+
+           -?  Display short help.
+
+           -a  Enable auto-rebuild (see -r) when the current directory
+               isn't found in the structure-file. This is on by default.
+
+           -h  Include directories with hidden/system attributes when
+               scanning the directory structure. This is off by default.
+
+           -l  Display filenames using lowercase letters. This is off by
+               default.
+
+           -r  Rebuild the directorystructure file. Use this when GD
+               complains about unknown directories, or to update the file
+               when directories have been added or removed.
+
+       Options may be followed by a - to disable the default behaviour.
+
+
+
+       How GD searches for a directory
+       -------------------------------
+
+       GD works like a normal CD in the following cases:
+
+           * If a backslash (\) is part of the name specified.
+           * If .. is given.
+           * If there is a directory with the name given in the current
+             directory.
+
+       Else GD uses a hidden file (\DIRINFO.GD) containing the disk's tree-
+       structure to locate the given directory somewhere in the tree.
+       Suppose your C:-disk has the following tree-structure:
+
+
+                                   \ (root)
+                              .....   :    .....
+                           ...        :         ...
+                        ...           :            ...
+                    BIN            BORLANDC            HOME
+                                     ::                 :
+                                    :  :                :
+                                   :    :               :
+                                BIN      INCLUDE      SVERRE
+                                                        :
+                                                        :
+                                                        :
+                                                       BIN
+
+
+       (Note that there are three BIN-directories at different levels.)
+       When searching for a directory, GD will start in the current, and
+       look for a match scanning down each level from left to right. When
+       the bottom is reached, the search continues from the top, until the
+       current directory. If, during the search, a match is found, the
+       search ends, and GD makes that directory the current.
+
+       To save some typing, a match is defined to be a directory who's name
+       _starts_ with the name given. Let's look at a couple examples:
+
+           C:\>gd bor
+           --> C:\BORLANDC
+           C:\BORLANDC>
+
+       Here the current directory is the root. Searching from the top
+       gives a match in BORLANDC.
+
+           C:\BORLANDC>gd bin
+           --> C:\BORLANDC\BIN
+           C:\BORLANDC\BIN>
+
+       Starting in the directory \BORLANDC, searching right and down gives
+       \BORLANDC\BIN as the first match.
+
+           C:\BORLANDC\BIN>gd bin
+           --> C:\HOME\SVERRE\BIN
+           C:\HOME\SVERRE\BIN>
+
+       Now the `next' BIN-directory found was (not surprisingly) the one
+       to the right and down in the tree.
+
+           C:\HOME\SVERRE\BIN>gd bin
+           --> C:\BIN
+           C:\BIN>
+
+       This time searching to the right and down didn't give any match, so
+       GD started from the top, and found \BIN.
+
+
+
+       Updating the directory structure
+       --------------------------------
+
+       GD uses a hidden file (DIRINFO.GD) in the root-directory of each
+       drive to quickly scan the directory structure. This file needs to
+       be updated whenever directories are added or removed.
+
+       If the current directory is not known (not in the file), GD will
+       (by default) rebuild the file on it's own. However if the directory
+       structure is changed without GD's knowing, you might have to direct
+       GD to rebuild using the option -r. This is the case if GD is unable
+       to find an existing directory, or if it tries to move to a location
+       that no longer exists.
+
+       Note: Since GD will try to update the file if it sees an unknown
+       current directory, lots of rescanning will be the result if you
+       visit hidden directories without including them in the scan, or
+       disabling the auto-rebuild. (Puh! What a long sentence!)
+
+
+
+       The environment variable GDCMD
+       ------------------------------
+
+       Before the commandline options are interpreted, GD looks for an
+       environment variable named GDCMD. This might contain frequently used
+       options. If you for instance would always like hidden directories to
+       be included in a rebuild, enter the following line in your
+       AUTOEXEC.BAT:
+
+           SET GDCMD=-h
+
+       Any sequence of legal options may be given, and they can all be
+       overridden on the command line.
+
+
+
+       Finally
+       -------
+
+       If you decide to use this program, thanks! I would be happy hearing
+       from you if you find any bugs or spelllig errors, have any
+       suggestions, or just to know that one more person uses my program.
+
+
+
+                                                   Sverre.
+

@@ -1,0 +1,320 @@
+
+
+
+       DOSED.COM     (DOS EDitor)                         [v1.0: 15/3/1989]
+       =========     ============
+
+
+
+       Resident program (about 3400 bytes) that gives extended operations
+       on the DOS commandline. The three new functions are:
+
+           * Editing
+           * History, recall previous commands
+           * Filename completion (with displaying of matching files)
+
+
+       This program is FreeWare: It might be distributed and used freely.
+       There exists no warranty, and the author shall not be liable for any
+       loss or damage due to using this program.
+
+       Written in assembly using Borland's great compiler by
+
+           Sverre H. Huseby
+           Hoffsvn. 50 leil 105
+           N-0377 Oslo
+           Norway
+
+           Phone: +47 22 50 83 56
+
+           Internet: sverrehu@ifi.uio.no
+
+       If you decide to use the program, please do me two small favours:
+         1. Tell me! (E-mail, postcard or letter)
+         2. Let your friends have a copy! (with all files intact, please..)
+
+
+
+       Starting DOSED
+       --------------
+
+       (Make sure you don't have any other commandline editing programs
+       (DOSKEY, for instance) installed. None of these cooperate...)
+
+       DOSED can be started with or without parameters. If no parameters
+       are given, the program is activated with default values, which are
+       the `opposite' of the options below.
+
+       The following options are recognised:
+
+           -b     Beep when filename is incomplete. This causes DOSED to
+                  sound the internal speaker when it is not able to fully
+                  complete a filename, or when there is no match at all.
+
+           -d     Disable appending '\' to directory names. No character at
+                  all is appended.
+
+           -e     Use Emacs-like control keys. Be aware that since ^P has
+                  a special meaning in Emacs, it is no longer possible to
+                  use this key for printer echo!
+
+           -i     Make 'Insert on' default.
+
+           -l     Use lowercase letters in completed filenames. It is
+                  actually MS-DOS that causes uppercase letters when file-
+                  names are completed. Giving the -l option forces DOSED to
+                  convert the characters returned from MS-DOS to lowercase.
+
+           -m     Minimum number of character on stored lines. Lines
+                  shorter than the given limit, will not be stored in the
+                  history buffer. Default: -m3
+
+           -off   Temporarily disable the program. Enable with DOSED. Note
+                  that the program is not removed from memory using this
+                  option. To remove it, use -u.
+
+           -q     Quiet. Supress settings messages. This option is for use
+                  in AUTOEXEC.BAT.
+
+           -r-    Turn off automatic removal of trailing backslashes. (See
+                  special section below!)
+
+           -s-    Don't skip .BAK-files when completing filenames.
+
+           -u     Uninstall if possible. No later TSR must have hooked the
+                  vector for INT 21h.
+
+       To disable a selected option, append (or remove) a `-' after the
+       option character. If you have for instance selected the beep but got
+       tired of it, type
+
+           DOSED -b-
+
+       to turn it off again. My favourite options at the moment are:
+
+           DOSED -q -e -i -b -l -m1
+
+       This makes DOSED a bit like GNU bash (and other shells) for Unix.
+
+
+
+       Editing
+       -------
+
+       With DOSED it is possible to edit the current commandline using the
+       cursor keys, or a subset of WordStar or Emacs control keys. The
+       `special keys' are always available. The control keys are either
+       WordStar or Emacs, depending on command line options.
+       Here's a list of the keys and their meanings:
+
+           Special keys| WordStar | Emacs | Meaning
+           ------------+----------+-------+-------------------------------
+           Left arrow  |    ^S    |  ^B   | Move character left
+           Right arrow |    ^D    |  ^F   | Move character right
+           Ctrl-left   |    ^A    |       | Move word left
+           Ctrl-right  |    ^F    |       | Move word right
+           Home        |          |  ^A   | Move to beginning of line
+           End         |          |  ^E   | Move to end of line
+           Ins         |    ^V    |       | Toggle insert mode
+           Del         |    ^G    |  ^D   | Delete character under cursor
+           BackSpace   |    ^H    |  ^H   | Delete character left of cursor
+           Esc         |    ^Y    |  ^U   | Clear line
+           Ctrl-End    |    ^Q    |  ^K   | Clear to end of line
+
+       Note that ^Q is a short for the `real' WordStar ^QY.
+
+       When insertmode is default (on or off, specified by the -i -switch),
+       the cursor is a normal underline. When toggled to not default, the
+       cursor is turned into a block.
+
+
+
+       History
+       -------
+
+       Previous commands can be recalled using the following keys:
+
+           Special keys| WordStar | Emacs | Meaning
+           ------------+----------+-------+-------------------------------
+           Up arrow/F3 |    ^E    |  ^P   | Recall previous command
+           Down arrow  |    ^X    |  ^N   | Recall `next' command in the
+                       |          |       | circular buffer.
+           F1          |          |       | Recall previous command and
+                       |          |       | move to beginning of the line.
+
+       The historybuffer is a circular buffer of 512 bytes, in which all
+       commands longer than 2 characters are stored. The 2 character limit
+       can be overridden using a program option (see below).
+
+
+
+       Filename completion
+       -------------------
+
+       The following keys are available for filename completion:
+
+           Special keys| WordStar | Emacs | Meaning
+           ------------+----------+-------+-------------------------------
+           Tab         |    ^I    |  ^I   | Complete filename
+           Shift-Tab   |    ^Z    |  ^Z   | Display matching filenames
+           Tab Tab     |          |       |          --- " ---
+
+       When pressing Tab or Ctrl-I, DOSED will try to complete the filename
+       immediately to the left of the cursor. As an example, assume you
+       want to look at a file called README.TXT. (The underline character
+       symbolises the cursor, and should not be typed in.) You write
+
+           TYPE R_
+
+       an press Tab just after the R. If no more files starts with an R,
+       DOSED completes the filename and gives you the line
+
+           TYPE README.TXT _
+
+       A blank is added after the filename, to let you enter more
+       parameters.
+
+       Now assume there was a file called RESTORE.COM in the same directory.
+       DOSED wouldn't know whether you wanted README.TXT or RESTORE.COM
+       since both starts with an R, so it completes as much as possible:
+
+           TYPE RE_
+
+       No blank is added, since the filename isn't complete. To get
+       README.TXT, you should type an A, and press Tab again.
+
+           TYPE REA_
+
+       This time DOSED knows the only file starting with REA is README.TXT,
+       and fully completes the filename.
+
+           TYPE README.TXT _
+
+       If the file you want happens to be a directory, DOSED appends a
+       backslash (\) assuming you will enter a more accurate path. As an
+       example, assume our file README.TXT is in a directory called \TOOLS,
+       and that no other directories starts with a T. You write
+
+           TYPE \T_
+
+       and press Tab. DOSED completes to
+
+           TYPE \TOOLS\_
+
+       Now you type an R, and press Tab again:
+
+           TYPE \TOOLS\R_
+
+       and DOSED faithfully completes the line to
+
+           TYPE \TOOLS\README.TXT _
+
+       (assuming no other file in \TOOLS starts with an R.) The backslash
+       appending might be turned off using a program option. (Please see
+       the "Trailing backslash removal"-section below!).
+
+       Note that DOSED assumes that you are never interested in .BAK-files,
+       so it will not complete those files.
+
+       When DOSED is unable to fully complete the filename, it might be
+       interresting to know what matching names are available. Pressing
+       Shift-Tab, ^Z or a second Tab will give a list of matching names.
+       This might also be used as a very simple DIR-command. Note that if
+       no name is partly specified, all names match. That is: If the
+       character before the cursor is a blank, or the cursor is at the
+       start of the line when Shift-Tab is pressed, a list of all files in
+       the current directory is given.
+
+
+
+       Trailing backslash removal
+       --------------------------
+
+       Most DOS-commands won't handle directorynames with a trailing back-
+       slash. As an example,
+
+           DIR \DOS\
+
+       will complain about an "Unknown directory". This is a real nuisance
+       with filename completion, since it (as default) adds a backslash to
+       any directory.
+
+       DOSED removes all backslashes at the end of words before passing the
+       command line to DOS. This _might_ give you some trouble if you use
+       programs that need this backslash (some archivers do). When you are
+       aware of it, you can solve the problem in one of these ways:
+
+           * Turn off the backslash removal using the -r- option.
+           * Add a second backlash. DOSED will only remove one.
+           * Start the entire commandline with a space character. In this
+             case DOSED will leave it unchanged.
+
+       Note that you won't see that the backslash is removed, it's done
+       internally. To see the actual line, try something like
+
+           ECHO DIR \DOS\
+
+
+
+       Attention
+       ---------
+
+       Be aware of the following:
+
+           * DOSED won't cooperate with other, similar programs, like
+             DOSKEY (Microsoft MS-DOS v6.xx). You'll have to choose _one_.
+
+           * Control-characters are no longer displayed as ^X, but rather
+             as the matching character in IBM's ASCII-table.
+
+           * The normal commandline editing using the functionkeys are no
+             longer supported.
+
+           * DOSED will only work when the keyboard is read using INT 21h,
+             function 0Ah. This is the methode used by COMMAND.COM.
+             Other shell-programs probably use their own inputroutines,
+             causing DOSED to be inactive.
+
+           * If DOSED can't recognise the current screen mode as text mode,
+             it simply passes control to the good (?) old editing routine.
+
+           * DOSED might cause problems when used with other programs that
+             reprogram INT 21h, function 0Ah. Try starting them in a
+             different order, and see if that works better.
+             As a rule of thumb: DOSED should be started first, since it
+             won't give control to any earlier programs!
+
+           * The environment-block is freed to save memory. This can make
+             it hard for memory mapping programs to find the name of DOSED.
+
+           * As noted above, printer echo is disabled when Emacs-mode is
+             used, since ^P has a special meaning in Emacs.
+
+           * When using DOSED in Windows 3.1 DOS-boxes, you should add
+             DOSED to the localtsrs-line in the [NonWindowsApp] section
+             of your SYSTEM.INI-file.
+
+           * If you haven't already done so, please read the "Trailing
+             backslash removal"-section above.
+
+           * For some reason, redefinition of keys using ANSI.SYS won't
+             work with DOSED.
+
+
+
+       Finally
+       -------
+
+       Thanks for reading this far. Unfortunately the size of this file
+       increases as I add more features to the program. I hate long docs!
+
+       If you decide to use this program, thanks! I would be happy hearing
+       from you if you find any bugs, have any suggestions, or just to know
+       that one more person uses my program.
+
+       And... please ignore my poor English. Hope you understand anyway!
+
+
+
+                                                   Sverre.
+

@@ -1,0 +1,116 @@
+
+
+
+       MOUSEBUF.COM     (Mouse Buffer)                       [v0.1: 7/1/94]
+       ============     ==============
+
+
+
+       Resident program (about 3200 bytes) that gives you mouse based copy
+       and paste in DOS' textmode.
+
+       This program is FreeWare: It might be distributed and used freely.
+       There exists no warranty, and the author shall not be liable for any
+       loss or damage due to using this program.
+
+       Written in assembly using Borland's great compiler by
+
+           Sverre H. Huseby
+           Hoffsvn. 50 leil 105
+           N-0377 Oslo
+           Norway
+
+           Phone: +47 22 50 83 56
+
+           Internet: sverrehu@ifi.uio.no
+
+       If you like the program, please do me a small favour: Send me a note
+       (letter or E-mail) and tell me about it. That's worth more than
+       a few bucks!
+
+
+
+       Usage
+       -----
+
+       To be short, hold down the left mouse button and move the mouse to
+       mark an area. Release the button to copy the marked area to an
+       internal buffer. Press the right mouse button to insert the contents
+       of the internal buffer into the keyboard buffer, thus pasting it
+       into the current application at the cursor position.
+
+       To avoid conflicts with other programs, you must (unfortunately ?)
+       hold down the `hotkey' combination Ctrl and Left Shift while copying
+       and pasting. This is not required when at the normal DOS command
+       line, or in any other environment that use INT 21h, function 0Ah
+       to read a line from the keyboard.
+
+
+
+       Starting MOUSEBUF
+       -----------------
+
+       The general syntax for starting MOUSEBUF, is as follows:
+
+           MOUSEBUF [options]
+
+       Options can be zero or more of the following:
+
+           -?     Display short help. Any following arguments are ignored.
+
+           -b     Set buffer size to the following number of bytes. The
+                  default is -b 1000. Note that it's not possible to change
+                  the size once the program is resident.
+
+           -k     Hotkey always needed, that is: Require Ctrl and
+                  Left Shift also on DOS' command line. Can later be turned
+                  off using -k-.
+
+           -off   Temporarily disable the program. Can be used for instance
+                  if uninstall is impossible.
+
+           -on    Reenable program after -off is used.
+
+           -q     Quiet mode, suppress status messages.
+
+           -u     Uninstall program if possible. Any resident program
+                  installed after MOUSEBUF must adhere to the AMIS-
+                  standard.
+
+
+
+       Attention
+       ---------
+
+       Be aware of the following:
+
+           * A Microsoft compatible mouse driver is required.
+
+           * If you hear a beep when you release the left button to end
+             marking a copy region, it means that too many characters are
+             marked (the buffer size is exceeded). MOUSEBUF will store as
+             many characters as will fit.
+
+             Other beeps indicate that the mouse driver for some reason
+             suddenly needs more bytes to save the mouse state than it
+             did when MOUSEBUF was started.
+
+           * If MOUSEBUF can't recognize the current screen mode as text
+             mode, it won't let you do any copying or pasting.
+
+           * Trailing whitespace characters are stripped from all fully
+             marked lines.
+
+
+
+       Finally
+       -------
+
+       If you decide to use this program, thanks! I would be happy hearing
+       from you if you find any bugs, have any suggestions, or just to know
+       that one more person uses my program.
+
+
+
+                                                   Sverre.
+
