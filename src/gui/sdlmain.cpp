@@ -1438,6 +1438,20 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 }
 
 #if C_OPENGL
+
+// A safe wrapper around that returns the default result on failure
+static const char *safe_gl_get_string(const GLenum requested_name,
+                                      const char *default_result = "")
+{
+	// the result points to a static string but can be null
+	const auto result = glGetString(requested_name);
+
+	// the default, howeever, needs to be valid
+	assert(default_result);
+
+	return result ? reinterpret_cast<const char *>(result) : default_result;
+}
+
 /* Create a GLSL shader object, load the shader source, and compile the shader. */
 static GLuint BuildShader(GLenum type, const std::string_view source_sv)
 {
@@ -1836,8 +1850,8 @@ dosurface:
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		const auto gl_vendor = std::string_view(
-		        reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+		const std::string_view gl_vendor = safe_gl_get_string(GL_VENDOR,
+		                                                      "unknown vendor");
 #	if WIN32
 		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
 #	else
@@ -3263,9 +3277,8 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 			                              glMapBufferARB &&
 			                              glUnmapBufferARB;
 
-			const auto gl_version_string = reinterpret_cast<const char *>(
-			        glGetString(GL_VERSION));
-			assert(gl_version_string);
+			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
+			                                                  "0.0.0");
 			const int gl_version_major = gl_version_string[0] - '0';
 
 			sdl.opengl.pixel_buffer_object =
@@ -3286,10 +3299,15 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 				npot_support_msg = "disabled to maximize compatibility with custom shader";
 			}
 
-			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
+			LOG_INFO("OPENGL: Vendor: %s",
+			         safe_gl_get_string(GL_VENDOR, "unknown"));
+
 			LOG_INFO("OPENGL: Version: %s", gl_version_string);
+
 			LOG_INFO("OPENGL: GLSL version: %s",
-			         glGetString(GL_SHADING_LANGUAGE_VERSION));
+			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
+			                            "unknown"));
+
 			LOG_INFO("OPENGL: Pixel buffer object: %s",
 			         sdl.opengl.pixel_buffer_object ? "available"
 			                                        : "missing");
