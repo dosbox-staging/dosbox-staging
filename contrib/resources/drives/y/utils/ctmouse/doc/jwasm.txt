@@ -1,0 +1,84 @@
+
+Notes on conversion of CTMOUSE 2.1beta4 from TASM to JWASM / MASM:
+
+- TASM evendata pads with 0, JWASM even pads with 0fch
+  I do not know how to change this, I just used "db 0".
+
+- sbb ch,ch xchg dx,si xchg cl,bh xchg si,di sbb al,al
+  xchg dh,bl xchg cx,si xchg cx,bx xchg dl,al xchg dl,ah
+  xchg dx,si xchg ah,al (but not ALL "xchg" instructions)
+  all swap the arguments when compiled with JWASM as
+  compared to compiled with TASM - I used "db ..." here.
+
+- cmp ax, valuebelow128 uses "cmp ax,word" in TASM but
+  I cannot make JWASM do that - it uses "cmp ax,byte"
+
+- adc ax,0 has the same problem as cmp ax,4 ...
+
+- JWASM does not support testflag / setflag / maskflag
+  which compile into test / or / and in an "intelligent"
+  way. For example "testflag [bx],400h" would create a
+  "test [bx+1],4" in a TASM made binary...
+
+Differences between TASM and MASM:
+
+- MASM needs double "::" after labels to make them globally
+  visible, TASM has keyword "locals" to make all labels global
+  ... however I had to use "::" at ONLY 28 places and having
+  the global-hints explicit makes the code more readable ...
+
+- MASM uses "even" where TASM uses "evendata"
+
+- MASM uses "STRUCNAME ends" where TASM uses "ends"
+
+- the size info in "MYLABEL label byte" can be optional in TASM
+
+- JWASM / TASM do not understand "warn" and various "%settings"
+
+- macro options can be of type "rest" and "vararg" only in TASM
+
+- TASM allows push and pop with multiple arguments... Dunno about
+  MASM but JWASM does not support this. I think NASM does...?
+
+Other JWASM specifics I had to work around:
+
+- JWASM seems to have pretty bad support for "record" bitfields,
+  I had to remove most references to them to avoid broken code
+  (later JWASM versions are a bit better with this)
+
+- JWASM uses only 8 instead of 16 bytes for "foo db 8 dup (?,?)"
+  before version 1.8 - this bug is fixed in later JWASM versions
+
+- JWASM does not allow structures to be named OPTION ;-) It also
+  can do less magic with macros compared to TASM... You can find
+  all sorts of related simplifications I had to use in jw-tasm.*
+
+- in TASM you can say "offset X" instead of "offset PAIR.X"
+  in cases where this is not ambiguous (PAIR is a struct).
+  You cannot say [si].foo either, only [si+offset WHAT.foo].
+  You can also say "ends" instead of "STRUCTNAME ends" in
+  TASM and "LABNAME label byte" does not need the "byte" in
+  TASM if it can be inferred. Instead of ".model use16 tiny"
+  I had to use the JWASM -mt command line option.
+
+- to make a COM file with JWASM, several changes were needed:
+  Instead of .startup I had to say: org 100h assume ds:DGROUP
+  and start:: (and at the end: end start). Using tlink /x /t
+  does not work, I have to use tlink /x and call exe2bin after
+  that (Watcom exe2bin) for ctmouse. However, tlink /x /t did
+  work for the utilities! Maybe related to the map info? The
+  ctmouse binary had 14e4 bytes _text, 2 _data, 5b9h const in
+  the version before I run exe2bin and com2exe. While exe to
+  com via exe sounds odd, it has use - gives smaller headers.
+
+- you cannot say ERRIF in JWASM and I could not get the "hll"
+  (if_ loop_ etc) macros by Arkady nor the CODE_ or out_ ones
+  to work in a syntax suitable for JWASM...
+
+- instead of PS2WHEELCODE[1] I had to say byte ptr [PS2WHEELCODE+1]
+
+Change stats: 15 files edited, 2 files removed (file.mac, hll.mac),
+787 lines removed, 1538 lines added (this often means "replaced a
+line by a comment and added a new line"). Sum of lines of makefiles,
+include files and source files: 9317. Unified diff: 4981 lines.
+

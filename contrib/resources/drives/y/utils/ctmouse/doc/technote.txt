@@ -1,0 +1,362 @@
+Mouse driver services
+---------------------
+
+Functions implemented in CTMOUSE:
+
+INT 33/0000 - MS MOUSE - Reset driver and read status
+INT 33/0001 - MS MOUSE v1.0+ - Show mouse cursor
+INT 33/0002 - MS MOUSE v1.0+ - Hide mouse cursor
+INT 33/0003 - WheelAPI v1.0+ - Get cursor position, buttons status and wheel counter
+INT 33/0004 - MS MOUSE v1.0+ - Position mouse cursor
+INT 33/0005 - WheelAPI v1.0+ - Get button press or wheel movement data
+INT 33/0006 - WheelAPI v1.0+ - Get button release or wheel movement data
+INT 33/0007 - MS MOUSE v1.0+ - Set horizontal cursor range
+INT 33/0008 - MS MOUSE v1.0+ - Set vertical cursor range
+INT 33/0009 - MS MOUSE v3.0+ - Define graphics cursor
+INT 33/000A - MS MOUSE v3.0+ - Define text cursor
+INT 33/000B - MS MOUSE v1.0+ - Get motion counters
+INT 33/000C - MS MOUSE v1.0+ - Define User Interrupt Routine
+INT 33/000F - MS MOUSE v1.0+ - Set mickeys/pixels ratios
+INT 33/0010 - MS MOUSE v1.0+ - Define screen region for updating
+INT 33/0011 - WheelAPI v1.0+ - Check wheel support and get capabilities flags
+INT 33/0014 - MS MOUSE v3.0+ - Exchange User Interrupt Routines
+INT 33/0015 - MS MOUSE v6.0+ - Get driver storage requirements
+INT 33/0016 - MS MOUSE v6.0+ - Save driver state
+INT 33/0017 - MS MOUSE v6.0+ - Restore driver state
+INT 33/001A - MS MOUSE v6.0+ - Set mouse sensitivity
+INT 33/001B - MS MOUSE v6.0+ - Get mouse sensitivity
+INT 33/001E - MS MOUSE v6.0+ - Get display page
+INT 33/001F - MS MOUSE v6.0+ - Disable mouse driver
+INT 33/0020 - MS MOUSE v6.0+ - Enable mouse driver
+INT 33/0021 - MS MOUSE v6.0+ - Software reset
+INT 33/0023 - MS MOUSE v6.0+ - Get language for messages
+INT 33/0024 - MS MOUSE v6.26+ - Get software version, mouse type and IRQ
+INT 33/0026 - MS MOUSE v6.26+ - Get maximum virtual screen coordinates
+INT 33/0027 - MS MOUSE v7.01+ - Get screen/cursor masks and mickey counters
+INT 33/0028 - MS MOUSE v7.0+ - Set video mode
+INT 33/002A - MS MOUSE v7.02+ - Get cursor hot spot
+INT 33/0031 - MS MOUSE v7.05+ - Get current virtual cursor coordinates
+INT 33/0032 - MS MOUSE v7.05+ - Get supported advanced functions flag
+INT 33/004D - MS MOUSE - Get pointer to copyright string
+INT 33/006D - MS MOUSE - Get pointer to version
+
+Video functions implemented in CTMOUSE:
+
+INT 10/F0 - EGA Register Interface Library - Read one register
+INT 10/F1 - EGA Register Interface Library - Write one register
+INT 10/F2 - EGA Register Interface Library - Read register range
+INT 10/F3 - EGA Register Interface Library - Write register range
+INT 10/F4 - EGA Register Interface Library - Read register set
+INT 10/F5 - EGA Register Interface Library - Write register set
+INT 10/F6 - EGA Register Interface Library - Revert registers to default
+INT 10/F7 - EGA Register Interface Library - Define registers default
+INT 10/FA - EGA Register Interface Library - Interrogate driver
+
+The following functions are not implemented but they don't return
+anything and can be counted as implemented:
+
+INT 33/000D - MS MOUSE v1.0+ - Light pen emulation ON
+INT 33/000E - MS MOUSE v1.0+ - Light pen emulation OFF
+INT 33/0013 - MS MOUSE v5.0+ - Define double-speed threshold
+INT 33/001C - MS MOUSE v6.0+ - Set interrupt rate
+INT 33/001D - MS MOUSE v6.0+ - Set display page
+INT 33/0022 - MS MOUSE v6.0+ - Set language for messages
+
+The following functions are not implemented:
+
+INT 10/04 - VIDEO - Get light pen position (except VGA)
+INT 33/0012 - MS MOUSE - Set large graphics cursor block
+INT 33/0018 - MS MOUSE v6.0+ - Set alternate User Interrupt Routine
+INT 33/0019 - MS MOUSE v6.0+ - Get alternate User Interrupt Routine
+INT 33/0025 - MS MOUSE v6.26+ - Get general driver information
+INT 33/0029 - MS MOUSE v7.0+ - Enumerate video modes
+INT 33/002B - MS MOUSE v7.0+ - Load acceleration profiles
+INT 33/002C - MS MOUSE v7.0+ - Get acceleration profiles
+INT 33/002D - MS MOUSE v7.0+ - Select acceleration profile
+INT 33/002E - MS MOUSE v8.10+ - Set acceleration profile names
+INT 33/002F - MS MOUSE v7.02+ - Mouse hardware reset
+INT 33/0030 - MS MOUSE v7.04+ - Get/Set BallPoint information
+INT 33/0033 - MS MOUSE v7.05+ - Get switch settings and acceleration profile data
+INT 33/0034 - MS MOUSE v8.0+ - Get initialization file
+INT 33/0035 - MS MOUSE v8.10+ - LCD screen large pointer support
+
+
+Details of driver operation
+---------------------------
+
+CTMOUSE displays the cursor only in standard video modes of CGA, EGA and
+  VGA; Hercules Graphics/InColor Card or SVGA/VESA extended video modes
+  are not supported but an application can display the cursor by itself in
+  a user interrupt routine (may be installed by INT 33/000C function) or
+  when idle. Remember to remove calls to INT 33/0001 (Show cursor) and
+  define cursor movement limits (INT 33/0007 and INT 33/0008).
+
+Some applications call INT 33/0001 (Show cursor), INT 33/0009 (Define
+  graphics cursor) and INT 33/000A (Define text cursor) in loops. To
+  prevent cursor flickering INT 33/0001 function redraws cursor only if it
+  was hidden before and INT 33/0004 (Position cursor), INT 33/0009 and
+  INT 33/000A functions redraw cursor only if its position or pattern
+  has changed.
+
+Unlike many other mouse drivers, CTMOUSE doesn't require call INT 33/0002
+  (Hide cursor) or INT 33/0010 (Define region for updating) before writing
+  to the screen in text mode because screen under cursor isn't restored if
+  cursor is overwritten. However CTMOUSE can't correct all cases of cursor
+  overwriting: when a character is written at the cursor position without
+  an attribute, (through INT 10/0E (Teletype output) or INT 21), then it
+  gets the cursor's attribute. Also, if cursor is overwritten by character
+  with attribute which is equal to cursor's character/attribute then
+  CTMOUSE restores the old character/attribute.
+
+Unlike Microsoft's specification, CTMOUSE always displays cursor on the
+  active video page and doesn't require call INT 33/001D (Set display
+  page) at all; this function is, anyway, a dummy.
+
+Below is a table of virtual screen size, cursor movement granularity and
+  minimum/maximum size of region on the screen, occupied by cursor (actual
+  for INT 33/0010) for each video mode:
+				 min	 max
+	mode	 screen  cell	shape	shape
+	 *0	640x200  16x8	16x8	16x8
+	 *1	640x200  16x8	16x8	16x8
+	 *2	640x200   8x8	 8x8	 8x8
+	 *3	640x200   8x8	 8x8	 8x8
+	  4	640x200   2x1	16x16	24x16
+	  5	640x200   2x1	16x16	24x16
+	  6	640x200   1x1	16x16	24x16
+	 *7	640x200   8x8	 8x8	 8x8
+	 0Dh	640x200   2x1	32x16	48x16
+	 0Eh	640x200   1x1	16x16	24x16
+	 0Fh	640x350   1x1	16x16	24x16
+	 10h	640x350   1x1	16x16	24x16
+	 11h	640x480   1x1	16x16	24x16
+	 12h	640x480   1x1	16x16	24x16
+	 13h	640x200   2x1	32x16	32x16
+	other	640x200   1x1	  -	  -
+
+  * for text modes, the virtual screen size is given for standard screen
+  sizes 40x25 and 80x25; for other screen sizes the corresponding virtual
+  screen size is changed accordingly.
+
+In standard text modes, CTMOUSE supports any screen size beside 40x25 and
+  80x25. It sets virtual screen size as [screen width in characters]*8 by
+  [screen height in characters]*8 (except video modes 0-1, where width is
+  multiplied by 16) each time when the video mode or the screen size is
+  changed or INT 33/0000 (Reset driver), INT 33/0020 (Enable driver) or
+  INT 33/0021 (Software reset) are called.
+
+CTMOUSE intercepts only INT 10/0 (Set video mode), INT 10/111x (Load and
+  activate font) and INT 10/4F02 (Set VESA/SVGA video mode) functions. If
+  screen size in text mode changed by other functions like INT 10/1Ch (VGA
+  state save/restore) or by direct hardware programming, then INT 33/0000
+  (Reset driver), INT 33/0020 (Enable driver) or INT 33/0021 (Software
+  reset) must be called to renew virtual screen size. If INT 33/0020 only
+  is called then INT 33/0007 (Set horizontal range) and INT 33/0008 (Set
+  vertical range) also should be called with min=0 and max=[8*screen
+  width-1,8*screen height-1] to enable the complete screen for cursor
+  movement.
+
+INT 33/0007 (Set horizontal range) and INT 33/0008 (Set vertical range)
+  functions setup cursor movement area but cursor will be seen on the
+  screen only in standard video modes and when cursor shape intersects
+  with virtual screen coordinates.
+
+All driver's coordinates (ranges, cursor positions, regions) interpreted
+  as signed values, also as cursor hot spot or mickey counts.
+
+
+Notes for mouse driver services
+-------------------------------
+
+For bitmapped graphics modes 4-6 and 0Dh-12h a peculiarity of INT 33/0010
+  (Define region for updating) function should be noted: horizontal cursor
+  position is always aligned by modulo 8 or 16 and cursor occupies 24 or
+  48 positions, unlike mode 13h, where start position is unchanged and
+  cursor occupies 32 positions; i.e. for left limit L and right limit R in
+  modes 4-6, 0Eh-12h cursor will be hidden between (L-L%8)-16 and
+  [R/8+1]*8-1 positions, in mode 0Dh cursor will be hidden between
+  (L-L%16)-32 and [R/16+1]*16-1 positions and in mode 13h cursor will be
+  hidden between L-32 and R positions.
+
+To set update region via INT 33/0010 in terms of character positions you
+  must compute arguments as CX=left*W, DX=top*8, SI=(right+1)*W-1 and
+  DI=(bottom+1)*W-1, where W=16 for modes 0-1, 4-5, 0Dh and 13h and W=8
+  for all other modes.
+
+Size of buffer, required to save driver state by INT 33/0016, in CTMOUSE
+  is less than 180 bytes; exact buffer size is returned by INT 33/0015
+  (Get driver storage requirements).
+
+INT 33/0016 (Save driver state) and INT 33/0017 (Restore driver state)
+  functions save and restore user defined variables (mickeys per 8 pixels,
+  user interrupt routine call mask and address), cursor definition (cursor
+  type, text and graphics shape, visibility, position, ranges and update
+  region) and mouse access state (mickeys mouse moved, buttons press and
+  release status since last access). These functions don't affect driver
+  state (disabled flag, resolution level), mouse definition (mouse type,
+  buttons count, IO address and interrupt), video mode definition (maximum
+  virtual screen coordinates, EGA RIL register values) and dummy variables
+  (lightpen emulation status and double speed threshold).
+
+When the video mode after INT 10/0 or INT 10/4F02 or screen size after
+  INT 10/111x is changed, CTMOUSE hides cursor so that it can be shown by
+  next INT 33/0001, recalculates screen sizes, sets cursor ranges to
+  virtual screen sizes and centers cursor.
+
+INT 33/0000 (Reset driver) and INT 33/0021 (Software reset) functions hide
+  cursor (so that it can be shown by next INT 33/0001), recalculate screen
+  sizes, set cursor ranges to screen sizes, center cursor and clear mickey
+  counts, user interrupt routine call mask, button press/release and wheel
+  data. In addition, horizontal mickeys per 8 pixels ratio is set to 8,
+  vertical mickeys per 8 pixels ratio is set to 16, software text mode
+  cursor is set with reverse video shape (screen mask 77FFh, cursor mask
+  7700h) and graphics mode cursor shape is set to arrow with zero hot spot.
+
+INT 33/001F (Disable driver) function hides cursor so that it can be shown
+  by next INT 33/0001, disables mouse, restores IRQ interrupt (for serial
+  mouse) and returns in ES:BX the old INT 33 interrupt handler address. If
+  INT 33 or INT 10 interrupt was intercepted by another program then on
+  exit AX will contain -1, else if INT 10 interrupt handler was not
+  restored yet then it will be restored.
+
+INT 33/0020 (Enable driver) function installs IRQ handler (if serial mouse
+  is active) and INT 10 handler (if it is not yet installed), enables
+  mouse interrupts, recalculates screen sizes, sets cursor ranges to
+  screen sizes and centers cursor.
+
+CTMOUSE supports INT 33/0022 and 0023 (Set/get language for messages)
+  functions, but only for English.
+
+When you have to deal with RIL, keep in mind that RIL is unprotected from
+  wrong user input - RIL functions should be called only in standard video
+  modes and on EGA or later video adapters, and RIL doesn't check if group
+  index, register number or count of registers are valid.
+
+
+Asynchronous execution and User Interrupt Routine (UIR)
+------------------------------------------------------
+
+UIR installed via INT 33/000C (Define UIR) or INT 33/0014 (Exchange UIRs)
+  must use far RET (not IRET) for return and it is not required to keep
+  any register value except SS:SP.
+
+Mouse interrupt handler (IH) redraws cursor on the screen only when the
+  called UIR returns to IH. If new mouse events occur before UIR returns
+  to IH, then IH will not redraw cursor and call UIR again (i.e. UIR is
+  not required to be re-enterable). However, mouse events themselves
+  will be parsed and reflected in driver state, so driver state (cursor
+  position, buttons state) may be changed before UIR returns. Therefore,
+  UIR should be aware of a possible difference between initial arguments
+  and values returned by driver functions.
+
+Driver functions will not hide or redraw cursor if they are called while
+  cursor hidding or drawing routines in the driver are already working.
+  This means that cursor will not be redrawn by requests from UIR or any
+  other general purpose hardware interrupt handler, if they are executed
+  while cursor redrawing was in progress (this will look like cursor on
+  the screen freezes). But hidding or drawing routines will be called
+  again when they finish their first request if new request comes in
+  from interrupt handlers while they are working.
+
+When bit 0 ("call if mouse moves") is set in the UIR call mask then UIR
+  will be called when any mickey count is changed. Note: cursor position
+  usually changes less often than mickey counts because mickeys per 8
+  pixels ratios can reduce mickeys change to zero and cursor position
+  change can be hidden by granulation (in text modes cursor positions are
+  always factor of 8 or 16; in some graphics modes X cursor positions are
+  always factor of two).
+
+
+Used BIOS variables
+-------------------
+
+0:449h	bits 0-6 used to determine the current video mode (when driver
+	enabled by INT 33/0020 or video mode changed)
+0:44Ah	screen width in text columns (used to compute offset in video
+	memory in text video modes)
+0:44Eh	offset in video segment of active video memory page
+0:462h	current video page (returned by INT 33/001E)
+0:463h	used to compute CRTC base and Feature Control video ports addresses
+	(when driver enabled by INT 33/0020 or video mode changed)
+0:46Ch	timer used in mouse detection routine to make timing
+0:487h	bits 5-6 used to determine RAM size on video adapter (when driver
+	enabled by INT 33/0020 or video mode changed)
+0:488h	bits 0-3 used to get video configuration switches (when driver
+	enabled by INT 33/0020 or video mode changed)
+0:4A8h	used to get default video registers values for RIL (when driver
+	enabled by INT 33/0020 or video mode changed)
+
+
+Used interrupts
+---------------
+
+INT 10/01	setup text-mode hardware cursor shape, when hardware
+		cursor selected
+INT 10/1A00	get DCC to check VGA presence
+INT 15/C200	enable/disable PS/2 pointing device
+INT 15/C203	set resolution of PS/2 pointing device [when PS/2 checking]
+INT 15/C205	initialize PS/2 pointing device [when PS/2 checking]
+INT 15/C207	set handler for PS/2 pointing device
+INT 21/09	output all strings to standard output
+INT 21/25	install interrupt handlers for INT 33, INT 10 and IRQ
+		handler, also restore those interrupts
+INT 21/26	create new PSP for driver image in the UMB [when trying	to
+		install driver high]
+INT 21/31	remain TSR when driver not copied to other UMB segment
+INT 21/35	save old INT 33, INT 10 and IRQ handlers addresses
+INT 21/48	allocate UMB memory [when trying to install driver high]
+INT 21/49	free memory used by environment and by unloaded TSR
+INT 21/4C	terminate program with nonzero errorlevel if some error
+		found or with zero errorlevel when no errors
+INT 21/58	modify memory allocation strategy [when trying to install
+		driver high]
+INT 2F/4310	get XMS driver entry [when trying to install driver high]
+INT 33/001F	disable previous mouse driver, if one is present
+INT 33/0020	enable previous mouse driver after unloading CuteMouse
+INT 33/004D	check if installed driver is CuteMouse
+
+
+Techniques used
+---------------
+
+1. Two writes to adjacent I/O ports are combined into one write "out dx,ax"
+   (used for most video registers, divisor latch of COM port, etc).
+
+2. For interrupt handler's address comparision only segment of address is
+   used, because usually different programs reside in different segments
+   and no one program is pointed to by zero segment.
+
+3. CuteMouse uses a lot of self-modifying code and many variables are
+   placed in the code instructions; most of code modification is grouped
+   in the setupdriver and softreset_21 procedures.
+
+4. To use free part of PSP and thus minimize memory footprint, CuteMouse
+   source includes corresponding "ORG" statement before uninitialized
+   variables, for which only offsets are computed and no data is generated.
+   Note: in TASM 3.1, a structure instance with "DUP(?)" generates data
+   (fixed in TASM 4.1), so buttpress and buttrelease arrays are defined
+   without "DUP" as series of BUTTLASTSTATE structure insertions instead.
+
+5. CuteMouse is written using TASM and makes use some of TASM features:
+   for example, multiple "push" and "pop" in one line ("push ax bx") and
+   shifts with an immediate value >1 ("shl ax,2"), which are converted
+   into several opcodes valid for 8086/8088 CPUs (i.e. for shifts, TASM
+   simply duplicates them - "shl ax,1/shl ax,1"), because there is no
+   ".186" or higher statement.
+
+6. Often instructions with shorter opcode but slightly different behavior
+   than assumed instruction are used to minimize code; each such use is
+   marked by "OPTIMIZE" comment. In addition, instructions for which
+   functions are performed by previous code remain in the source as
+   comments; this is done for greater readability and to ease code
+   carrying.
+
+7. To ease code pipelining in CPU, instructions which manipulate common
+   registers or other resources are interspersed with other kinds of
+   instructions whenever possible. For example:
+
+	mov ax,cx		mov ax,cx
+	add ax,bx		neg dx
+	neg dx			add ax,bx
+
+   here second variant is preferred.

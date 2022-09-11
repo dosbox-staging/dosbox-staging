@@ -1,0 +1,248 @@
+History
+-------
+
+2.1beta4 by Eric Auer 7/2008
+
+- intermediate release, prints PS/2 debugging output during
+  mouse init and when mouse is activated / stopped later
+- Dell Inspiron 1501 touchpad has no int 15.c204 ident in
+  BIOS, so we use PS/2 even without ident (as ctmouse 1.9)
+- option /O changed from disable to enable wheel detection
+  (only few DOS apps use wheels, and wheel is less compatible)
+- option /M (disable old MouseSystems / Genius) is now the
+  default, so there is a new option /Y to enable MouseSystems.
+- lots of changes in the source code to let it compile with
+  the MASM-ized JWASM of Japheth.de (based on OpenWatcom WASM)
+  instead of the commercial TASM. Disabled many macros.
+- this version comes with TASM and JWASMD binaries so you can
+  compare them: ctmouse binaries are byte identical with the
+  exception of protocol.com where I had to fix a bug :-p.
+
+
+2.1beta3 by Eric Auer 6/2007
+
+- new mousetst binary with sources written in NASM Assembly
+  language. Supports wheel testing, so removed wheeltst.
+  The old BC3.1 mousetst was very un-portable to another C.
+  Updated makefile mousetst section. New mousetst is 1kB :-).
+- directory structure changed to something more elaborate, with
+  bin/, doc/ctmouse/ and source/ctmouse/ with subdirectories.
+  This also allows easy installation in FreeDOS, just unzip.
+- dropped packed / unpacked distinction, but feel free to aPack
+  binaries yourself (upx somehow refuses to compress ctmouse?).
+  
+
+2.1beta2 by Eric Auer
+
+- new /O option to suppress wheel detection: Might improve PnP for
+  serial mice, but main use is for PS/2. USB BIOS support usually
+  does not support the "enable wheel protocol" handshake, and if
+  you hotplug a mouse (NOT recommended for PS/2), it will boot in
+  non-wheel mode. The TSR cannot detect and fix that mode change.
+- made E_needvga message translateable. The message tells that this
+  CuteMouse version does not support non-VGA plain EGA hardware.
+- improved the English help message :-)
+- TODO: also update the other message files for other languages!
+- TODO: Find sources of com2exe and include them...
+- TODO: compile and include translated binaries
+- other TODO / BUGS as in 2.1beta
+
+2.1beta	by Eric Auer <eric*coli.uni-sb.de>
+
+- removed RIL interface: non-RIL apps caused graphics corruption
+- reading VGA registers: no RIL needed but VGA hardware needed
+- backup/restore VGA registers in copysprite
+- replaced hardware PS/2 by BIOS PS/2 handling again for better
+  compatibility, based on public domain source fragment by Konstantin Koll
+- removed PS/2 IRQ handler by BIOS callback handler. Wheel data
+  protocol processing again based on code from Konstantion.
+- removed "XMS UMB" allocate / free: only DOS UMB worked anyway
+- do not disablePS2 right before enablePS2 (IRQ/settings)
+- store only CRTC port (3d4/3b4), not full videoregs structure
+- explicitly set "blit mode" for EGA/VGA (not for CGA/MCGA)
+- introduce a handfull nop to mark interesting places in the code
+- enabledriver_20 explicitly sets int10 handler to CS:...
+- show error message if pre-VGA, old version only tuned videoregs if EGA
+
+- TODO?: command line options for resolution / rate, VESA cursor,
+- TODO?: disabledrv_1F/enable/reset could / should set resolution / rate
+- TODO??: support USB wheel mice - BIOS PS2 interface wheel handshake
+  fails if mouse is not at PS2. Mouse on USB works, wheel does not.
+  8042 handshake had the same problem, 8042 is virtual / BIOS if USB.
+- BUG?: mode 10h cursor has rectangular hole around it, ONLY in dosemu
+
+
+2.0	by Nagy Daniel <nagyd@users.sourceforge.net>
+
+- Hardware PS/2 handling reintroduced (tests and comments by Hubert Sack
+  <Hsack2002@aol.com> and Bernd Krueger-Knauber <bkk@infratec-plus.de>).
+- Added new wheel API.
+- Added wheel tester utility.
+
+	by Jason Burgon <jason@jayman.demon.co.uk>
+
+- Implemented INT 33/0028; the DX argument is ignored.
+- Reimplemented functions INT 33/001A and 001B to mimic MS Mouse behavior.
+- Changed semantics of the /R command line option: its arguments multiplied
+  by 10 and passed to 001A function.
+
+	by Arkady V.Belousov <ark@mos.ru>
+
+- Cleaned and optimized source code and fixed many bugs.
+
+
+1.9.1	by Arkady V.Belousov <ark@mos.ru>
+
+	by Maurizio Spagni <flurmy@freemail.it>
+
+- Fixed bug in INT 33/0017; under Turbo Pascal IDE this bug caused crash
+  in some cases.
+
+	by Nagy Daniel <nagyd@users.sourceforge.net>
+
+- INT 33/0005 and 0006 functions now return zero values in case of wrong
+  button number in BX; this makes game Patrician happy.
+
+
+1.9	by Arkady V.Belousov <ark@mos.ru> (documentation proofreading by
+	Frank Markopoulos <fm666@t-online.de>, Wœrm <w0rm101@yahoo.com>,
+	Wolf Bergenheim <dog@users.sf.net>, Jim Lemon and Graeme England)
+
+- Heavy source cleaning and optimization.
+- INT 33/001A and 001B functions are temporarily disabled because their
+  descriptions in RBIL 61 don't correspond with MS Mouse behavior and this
+  causes cursor slowdown in some applications (for example, SimCity 2000).
+- For the /Sn/P option combination INT 33/0024 now returns the proper IRQ#.
+- INT 33/001F function now retains DTR and RTS UART lines active.
+- Removed flush of mouse data stream when detecting mouse type
+  (this also prevents infinite loops in some cases under Windows).
+- Small mouse movements are now also doubled in auto resolution mode.
+- Cursor drawing routines now recall themselves if interrupt handlers try
+  to call them while drawing routines work; this should avoid differences
+  between seen and real cursor status in some rare cases.
+- LCR and MCR now preserved in UARTs for which no mouse is detected.
+- Added additional check for PS/2 device presence (this prevents big
+  delay at startup in some cases under Windows).
+- Added support for 286 and 386 CPUs.
+- Added external assembler library.
+- Added Dutch, French, Latvian, Polish, Slovak and Spanish message files.
+- Added /N command line option to force load of CuteMouse as a new TSR.
+- COMTEST utility improved (and may be used to integrate IRQ auto
+  detection into CuteMouse).
+
+	by Donald G.Davis <dgdavis@nyx.net)
+
+- Added closing of all local file handles before exit (this prevents leakage
+  from system handles pool when CTMOUSE is called with redirected output and
+  stays TSR).
+
+	by Jason Burgon <jason@jayman.demon.co.uk>
+
+- INT 33/0024 and 006D now report driver version 7.05 instead of 6.26.
+- Implemented function INT 33/0031.
+- CTMOUSE now handles INT 10/4F02 and some INT 10/11 video functions and
+  correctly recalculates screen size when, for example, the screen is
+  switched to 43/50 lines text mode.
+
+
+1.8	by Arkady V.Belousov <ark@mos.ru> (some ideas by Alain Mouette
+	<alainm@pobox.com>, documentation proofreading by Mike Millen
+	<mikemillen@ukgateway.net> and Frank Markopoulos <fm666@t-online.de>)
+
+- Bugfixes, heavy optimizations, some features.
+- PS/2 pointing devices were not found on some machines.
+- Serial mouse reset reinforced (previously mouse froze in some cases).
+- Serial and PS/2 modules combined into one executable.
+- For Mouse Systems protocol, CTMOUSE now installs at first existing
+  COM port, not at COM1 which may be absent.
+- Added support for serial Microsoft wheel protocol, wheel interpreted
+  as third button.
+- Auto resolution behavior corrected and is now default resolution.
+- INT 33/001F now doesn't restore interrupts (and CTMOUSE doesn't unload
+  resident part) if INT 33 or INT 10 are intercepted by another program.
+- Cursor drawing much enhanced and bugfixed: finished INT 33/0010
+  support and video page change detection for graphics drawing; single
+  video registers handled in RIL more accurately; cursor is drawn only
+  when cursor shape is inside screen ranges.
+- Some ill-behaved applications (like Norton Commander or Klondike
+  by Eduardo Martins) call INT 33/0001, 0009 and 000A in loops; to
+  prevent cursor flickering, the cursor is now redrawn only if its
+  position or pattern is changed.
+- Added workarounds for Pentium and PS/2 BIOS, Logitech MouseWare
+  Windows driver, Turbo Pascal IDE and Nicemouse utility peculiarities.
+- Messages for English extracted into separate message file.
+- Added Brazilian, Portugese, German, Italian and Hungarian message files.
+- Ordered errorlevels returned for each event.
+- Added /B command line option to cancel run if mouse services are
+  already present.
+
+
+1.73	by Arkady V.Belousov <ark@mos.ru> (many ideas by Alain Mouette
+	<alainm@pobox.com>)
+
+- Serial mouse detection routine is now CPU speed independent and also
+  accepts PnP mice.
+- Changed command line interface.
+- Added mouse autosearch through all COM ports.
+- Added support for Microsoft and PS/2 mice with 3 buttons.
+- Added /W command line option to prevent loading TSR into UMB.
+- Part of driver's PSP used for placing some driver data.
+- Memory handling routines heavily optimized and debugged.
+- Bugfixed and extended protocol analyzer possibilities.
+
+
+1.72	by Arkady V.Belousov <ark@mos.ru>
+
+- Bugfixes, optimizations, some features.
+- Commented out video retrace waiting.
+- Returned handling of PS/2 pointing device through BIOS
+  (thanks to Martin Eckel <martin.eckel@topmail.de>).
+- Reimplemented function INT 33/0010.
+- Added autodetection for nonstandard screen sizes.
+- Implemented functions INT 33/0023, 0027, 002A and 0032.
+
+
+1.71	by Arkady V.Belousov <ark@mos.ru>
+
+- Many bugfixes, huge optimizations, some features.
+- Direct hardware handling for PS/2 pointing device events.
+
+
+1.6
+
+- Positioning bugfix for videomode 13h.
+- Added protocol analyzer (debugging purposes only).
+
+1.5	by Arkady V.Belousov <ark@mos.ru>
+
+- Many bugfixes, huge optimizations.
+- Fixed memory allocation bugs.
+
+1.4
+
+- Added automatic loadhigh capability.
+- Horizontal and vertical speed can be different (good for some games...).
+- Implemented functions INT 33/001A and 001B.
+- Fixed some small bugs and a BIG bug.
+
+1.3
+
+- Fixed some small bugs and added CTMOUSEP.COM for PS/2 pointing devices.
+
+1.2a
+
+- Fixed a bug in the Driver Disable function (1Fh).
+
+1.2
+
+- Added command line option to force IRQ number of COM port.
+
+1.1
+
+- Added command line options to force a specific mode.
+- Rewritten Mouse Systems initalization routine, now more Genius mice
+  with 3 buttons will work.
+
+1.0
+
+- First public release.

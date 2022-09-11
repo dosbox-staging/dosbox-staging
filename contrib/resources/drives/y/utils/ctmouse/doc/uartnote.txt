@@ -1,0 +1,65 @@
+
+cutemouse rs232 uart I/O access overview ctmouse 2.1beta4 6/2008:
+
+irqhandler
+	outb 20,20
+	inb 3fd 	; LSR: get status
+	inb 3f8		; RBR: fetch data, flush receive buffer
+	; now check if LSR showed break / frame overrun
+	; call mouse protocol parser
+
+enableuart
+	outb 3fb,80	; LCR: DLAB on
+	outw 3f8,96	; divisor
+	outw 3fb,0f02h	; LCR, MCR 7,8N1 DTR RTS OUTX
+	inb 3f8		; RBR flush receive buffer
+	outw 3f9,1	; IER, FCR: enable DR IRQ, disable FIFO
+	inb 21
+	outb 21, previous and not bit for our IRQ (enable IRQ)
+
+disableuart
+	inb 21
+	outb 21, previous or bit for our IRQ (disable IRQ)
+	; now keep DTR RTS on and disable driver, avoid PnP ID
+	outw 3fb,300	; LCR, MCR: DLAB off DTR RTS on OUTx off
+	outb 3f9,0	; IER: IRQ off
+
+searchcom
+	comloop
+		checkcom
+			call detectmouse for each addr
+	; LCRSET is 3 here (LCR 0 - noparity 0 3)
+	; default in enableuart is DLAB off, 7, 8N1 (00000010b)
+	; ... and MCR 00001111b DTR/RTS/OUTx all on
+
+checkuart
+	inw 3fc		; MSR, LSR: modem control, line status
+	inb 3fd		; LSR: backup
+	cli
+	inb 3fb		; LCR: line ctrl reg
+	outb 3fb,10111111b	; LCR: DLAB on, 8S2
+	inb 3fb
+	outb 3fb,00000010b	; LCR: no DLAB, 7N1
+	inb 3fb
+	sti
+	; now see if LCR bits actually changed as intended
+	inb 3f9		; IER: IRQ enable reg (zap pending IRQ?)
+	outb 3fb,...	; restore LCR
+
+detectmouse
+	checkuart	; takes addr si
+	inw 3fb		; LCR, MCR: backup
+	outw 3fb,0	; LCR, MCR: no DLAB, DTR/RTS/OUT2 off
+	outw 3f9,0	; IER, FCR: IRQ off, FIFO off
+	outw 3fb,80	; LCR: DLAB
+	outw 3f8,96	; divisor 1200 baud
+	outb 3fb,LCRSET	; usually 8N1 or 7N1, both with DLAB off
+	inb 3f8		; RBR: flush receive buffer
+	; now wait 1 tick
+	outb 3fc,00000011b	; MCR: DTR/RTS on, OUT2 off
+	; wait again, give mouse time to send pnp data
+	inb 3fd		; LSR
+	inb 3f8		; RBR: receive a byte
+	; ... possibly more inb to receive some more bytes
+	outw 3fb,...	; restore LCR, MCR
+

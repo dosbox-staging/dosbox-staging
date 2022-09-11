@@ -1,0 +1,60 @@
+
+Note: for regular work only ctmouse.exe (or the other appropriate ctm-*.exe)
+      is required. For legal purposes file COPYING also may be preserved.
+      All other files are documentation, utilities and sources and may be
+      safely removed.
+
+Contents
+--------
+
+BIN\
+ctmouse.exe  - CuteMouse driver executable with English	messages
+ctmdebug.exe - CuteMouse driver which shows PS/2 debug messages
+ctm-*.exe    - CuteMouse driver executables in other languages
+comtest.com  - utility to detect COM ports, executable
+mousetst.com - mouse test example executable
+protocol.com - protocol analyzer executable
+
+doc\ctmouse\
+ctmouse.txt  - main documentation for CuteMouse
+history.txt  - detailed version history
+extend.txt   - list of possible extensions for CuteMouse
+technote.txt - technical notes for advanced users
+wheelapi.txt - wheel API documentation and list of wheel using DOS apps
+protocol.txt - description of some low level mouse protocols
+int10.lst    - excerpt from RBIL 61 for INT 10/04 and INT 10/Fx functions
+int33.lst    - excerpt from RBIL 61 for INT 33 mouse functions
+files.lst    - this file
+jwasm.txt    - information about the port from TASM to MASM / JWASM
+uartnote.txt - short overview of UART I/O port access in ctmouse 2.1
+
+source\ctmouse\
+makefile     - MAKE's script file for rebuilding CTMOUSE.EXE
+alllang.bat  - batch file to compile all language versions of CuteMouse
+asmlib.cfg   - configuration file for makefile and batch files
+ctmouse.asm  - CuteMouse source code
+ctm-en.msg   - CuteMouse source file with messages in English
+ctm-*.msg    - messages in other languages
+ctmouse.msg  - copy of the message file which is used as default
+com2exe.exe  - .COM to .EXE file converter executable
+copying      - GNU license file
+ctmouse.map  - information about code / data segment sizes (optional)
+
+source\ctmouse\tasmmasm\
+jw-tasm.dif  - udiff between TASM and MASM/JWASM version of 2.1beta4
+jw-tasm.txt  - only the 800 old / 1550 new code lines from jw-tasm.dif
+*.com        - utility binaries made with TASM, for comparison
+ctmouse.exe  - CuteMouse ctmdebug binary made with TASM, for comparison
+
+source\ctmouse\ASMLIB\
+*.def	     - assembler source library files
+*.mac	     - assembler source library files
+lgpl         - GNU license file
+
+source\ctmouse\UTILITY\
+makefile     - MAKE's script file for rebuilding utilities
+comtest.asm  - utility to detect COM ports, source
+mousetst.asm - mouse test example source (now NASM, wheel supported)
+display.asm  - text output helpers include file for mousetst.asm
+protocol.asm - protocol analyzer source
+

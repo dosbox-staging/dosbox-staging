@@ -1,0 +1,71 @@
+Extension list
+--------------
+
+Below are listed possible extensions and additional features for CuteMouse
+in different categories. Not all of them will be implemented, but they may
+give hints for other ideas. Please, express your opinion about this list -
+this may help in CuteMouse's further development and enhancement.
+
+
+Mice support:
+-------------
+
+- Support for Bus, InPort and other mouse types. Currently there is not
+  enough information and no available hardware/mice for testing.
+- Mouse reset and/or switching between serial mouse modes on the fly if
+  the received mouse data flow has errors.
+  [proposed by Alain Mouette]
+- API to access wheel rotation information.
+- API to send mouse-like information to driver. Useful for emulating a
+  mouse for nonstandard hardware.
+  [proposed by Matthias Paul]
+
+
+Video support:
+--------------
+
+- Support of all possible text modes, including VESA. Currently only
+  standard modes 0-3 and 7 are supported, although with any screen size.
+- Direct video adapter register reading in the EGA RIL API for VGA and
+  newer adapters.
+- Scaling cursor movement according to current screen resolution (mouse
+  movement should move the cursor the same distance on the screen rather
+  than the same distance in pixels regardless of the current resolution).
+  [proposed by Jason Burgon]
+
+
+Hardware handling:
+------------------
+
+- IRQ8-15 support. Currently only IRQ1-7 are supported.
+- Auto detect IRQ assigned to a COM port. Currently IRQ is determined by
+  COM port number only.
+
+
+Command line:
+-------------
+
+- Hyphen as the switch char in the command line. Currently only the slash
+  is accepted for this.
+- Option to specify UART base address.
+- Option to reorder all mouse buttons.
+- Option to specify movement orientation (with 90 or 180 degrees step).
+- Option to reverse wheel orientation.
+  [proposed by Matthias Paul]
+
+
+Miscellaneous:
+--------------
+
+- Remove code for all unused handlers from resident part.
+- Completely reuse the PSP area in resident memory block.
+- Use DPMS and HMA to further reduce conventional memory footprint.
+  [proposed by Matthias Paul]
+- COUNTRY settings may determine displayed messages coding.
+
+
+Utilities:
+----------
+
+- Utility to install a handler for secondary mouse. This would be
+  especially useful for notebooks with both built-in and external mice.

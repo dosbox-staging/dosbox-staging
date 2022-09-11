@@ -1,0 +1,109 @@
+
+Wheel support in DOS real-mode mouse drivers
+
+List of DOS applications which use the wheel API:
+
+Thanks to Rugxulo and others for collecting this list :-)
+
+- GVFM                          (graphical file manager)
+- Mpxplay                       (.MP3, .OGG, etc. audio player)
+- Arachne/GPL                   (graphical web browser / email suite)
+- Star Commander                (file manager)
+- PDCurses 3.x                  (console library)
+- Necromancer's DOS Navigator   (file manager)
+- Fred                          (text editor using graphics mode)
+- Blocek                        (graphical Unicode text editor, image viewer)
+- Hammer of Thyrion             (DOS port of Hexen II game)
+- 4DOS                          (COMMAND.COM shell replacement)
+- Deskwork                      (graphical user interface, StarTrek style)
+
+---------------------------------------------------------------------
+
+API version 1.0
+
+Summary:
+
+This document describes an extension to the commonly used INT 33h Mouse
+API to add wheel (Z axis) support. This draft introduces extra functions
+and additions to the standard INT 33 API. These new and changed functions
+are mentioned in the technote.txt as the WheelAPI.
+
+---------------------------------------------------------------------
+New functions:
+
+INT 33/0011 - Check wheel support and get capabilities flags
+	AX = 0011h
+Return:	AX = 574Dh ('WM' in assembly) if Wheel API is supported by driver
+	BX = Capabilities flag (all bits reserved)
+	CX = Capabilities flag
+		Bit(s)	Description
+		------	-----------
+		 0	1=Pointing device supports wheel
+		 1-15	Reserved
+Note:	this function should be examined before accessing wheel features
+
+---------------------------------------------------------------------
+Changes in the original INT 33h functions:
+
+INT 33/0000 - Reset driver and read status
+Note:	this call clears the wheel movement counter
+
+INT 33/0003 - Get cursor position, buttons status and wheel counter
+	AX = 0003h
+Return:	BL = buttons status
+	BH = 8-bit signed counter of wheel movement since last call
+	CX = column
+	DX = row
+Notes:	returned wheel counter contains all wheel movements accumulated since
+	  the last call to INT 33/AX=0003h, INT 33/AX=0005h/BX=-1 or
+	  INT 33/AX=0006h/BX=-1
+	positive value of wheel counter means downward wheel movement
+	this call clears the wheel movement counter
+
+INT 33/0005 - Get button press or wheel movement data
+	AX = 0005h
+	BX = button number or -1 for wheel
+Return:	AL = state of buttons
+	AH = 8-bit signed counter of wheel movement
+	---button info---
+	BX = number of times specified button has been pressed since last call
+	CX = column where specified button was last pressed
+	DX = row where specified button was last pressed
+	---wheel info---
+	BX = 16-bit signed counter of wheel movement since last call
+	CX = column where wheel was last moved
+	DX = row where wheel was last moved
+Notes:	returned wheel counters contain all wheel movements accumulated since
+	  the last call to INT 33/AX=0003h, INT 33/AX=0005h/BX=-1 or
+	  INT 33/AX=0006h/BX=-1
+	positive value of wheel counter means downward wheel movement
+	this call clears the wheel movement counter for BX=-1
+
+INT 33/0006 - Get button release or wheel movement data
+	AX = 0006h
+	BX = button number or -1 for wheel
+Return:	AL = state of buttons
+	AH = 8-bit signed counter of wheel movement
+	---button info---
+	BX = number of times specified button has been released since last call
+	CX = column where specified button was last released
+	DX = row where specified button was last released
+	---wheel info---
+	BX = 16-bit signed counter of wheel movement since last call
+	CX = column where wheel was last moved
+	DX = row where wheel was last moved
+Notes:	returned wheel counters contain all wheel movements accumulated since
+	  the last call to INT 33/AX=0003h, INT 33/AX=0005h/BX=-1 or
+	  INT 33/AX=0006h/BX=-1
+	positive value of wheel counter means downward wheel movement
+	this call clears the wheel movement counter for BX=-1
+
+INT 33/000C - Define User Interrupt Routine
+INT 33/0014 - Exchange User Interrupt Routines
+Notes:	on entry, bit 7 of CX (call mask) indicates that the user routine
+	  will be called on a wheel movement
+	the user routine will be called with BH holding the 8-bit signed
+	  counter of wheel movement since the last call to the routine
+
+INT 33/0021 - Software reset
+Note:	this call clears the wheel movement counter

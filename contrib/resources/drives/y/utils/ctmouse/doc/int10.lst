@@ -1,0 +1,148 @@
+--------V-1004-------------------------------
+INT 10 - VIDEO - READ LIGHT PEN POSITION (except VGA)
+	AH = 04h
+Return: AH = light pen trigger flag
+	    00h not down/triggered
+	    01h down/triggered
+		DH,DL = row,column of character light pen is on
+		CH = pixel row (graphics modes 04h-06h)
+		CX = pixel row (graphics modes with >200 rows)
+		BX = pixel column
+Desc:	determine the current position and status of the light pen (if
+	  present)
+Notes:	on a CGA, returned column numbers are always multiples of 2 (320-
+	  column modes) or 4 (640-column modes)
+	returned row numbers are only accurate to two lines
+--------V-10F0-------------------------------
+INT 10 - EGA Register Interface Library - READ ONE REGISTER
+	AH = F0h
+	BL = register number
+	BH = 00h
+	DX = group index (see #00223)
+Return: BL = data
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others; it is used for software virtualization
+	  of write-only registers on an EGA video adapter, so that multiple
+	  programs may peacefully coexist without clobbering each other's
+	  display settings
+SeeAlso: AH=F1h"EGA",AH=F2h"EGA",AH=FAh"EGA",INT 2F/AX=BC00h
+
+(Table 00223)
+Values for group index:
+ Pointer/data chips
+ 00h	CRT Controller (25 reg) 3B4h mono modes, 3D4h color modes
+ 08h	Sequencer (5 registers) 3C4h
+ 10h	Graphics Controller (9 registers) 3CEh
+ 18h	Attribute Controller (20 registers) 3C0h
+ Single registers
+ 20h	Miscellaneous Output register 3C2h
+ 28h	Feature Control register (3BAh mono modes, 3DAh color modes)
+ 30h	Graphics 1 Position register 3CCh
+ 38h	Graphics 2 Position register 3CAh
+--------V-10F1-------------------------------
+INT 10 - EGA Register Interface Library - WRITE ONE REGISTER
+	AH = F1h
+	DX = group index (see #00223)
+	    if single register:
+		BL = value to write
+	    otherwise
+		BL = register number
+		BH = value to write
+Return: BL = data
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AX=7F05h,AH=F0h"EGA",AH=F3h"EGA",AH=FAh"EGA"
+--------V-10F2-------------------------------
+INT 10 - EGA Register Interface Library - READ REGISTER RANGE
+	AH = F2h
+	CH = starting register number
+	CL = number of registers (>1)
+	DX = group index (00h,08h,10h,18h) (see #00223)
+	ES:BX -> buffer, CL bytes
+Return: nothing
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AH=F0h"EGA",AH=F3h"EGA",AH=FAh"EGA"
+--------V-10F3-------------------------------
+INT 10 - EGA Register Interface Library - WRITE REGISTER RANGE
+	AH = F3h
+	CH = starting register
+	CL = number of registers (>1)
+	DX = group index (00h,08h,10h,18h) (see #00223)
+	ES:BX -> buffer, CL bytes
+Return: nothing
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AX=7F05h,AH=F1h"EGA",AH=F2h"EGA",AH=F4h"EGA"
+--------V-10F4-------------------------------
+INT 10 - EGA Register Interface Library - READ REGISTER SET
+	AH = F4h
+	CX = number of registers to read (>1)
+	ES:BX -> table of register records (see #00224)
+Return: register values in table filled in
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AH=F0h"EGA",AH=F2h"EGA",AH=F5h"EGA"
+
+Format of EGA RIL entries in table of register records:
+Offset	Size	Description	(Table 00224)
+ 00h	WORD	group index
+		Pointer/data chips
+		   00h CRTC (3B4h mono modes, 3D4h color modes)
+		   08h Sequencer 3C4h
+		   10h Graphics Controller 3CEh
+		   18h Attribute Controller 3C0h
+		Single registers
+		   20h Miscellaneous Output register 3C2h
+		   28h Feature Control register (3BAh mono modes, 3DAh color)
+		   30h Graphics 1 Position register 3CCh
+		   38h Graphics 2 Position register 3CAh
+ 02h	BYTE	register number (0 for single registers)
+ 03h	BYTE	register value
+--------V-10F5-------------------------------
+INT 10 - EGA Register Interface Library - WRITE REGISTER SET
+	AH = F5h
+	CX = number of registers to write (>1)
+	ES:BX -> table of records (see #00224)
+Return: nothing
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AX=7F05h,AH=F1h"EGA",AH=F3h"EGA",AH=F4h"EGA"
+--------V-10F6-------------------------------
+INT 10 - EGA Register Interface Library - REVERT TO DEFAULT REGISTERS
+	AH = F6h
+Return: nothing
+Note:	provided by the Microsoft Mouse driver, OS/2 compatibility box, and
+	  others
+SeeAlso: AH=F5h"EGA",AH=F7h"EGA"
+--------V-10F7-------------------------------
+INT 10 - EGA Register Interface Library - DEFINE DEFAULT REGISTER TABLE
+	AH = F7h
+	DX = port number
+	   Pointer/data chips
+	      00h CRTC (3B4h mono modes, 3D4h color modes)
+	      08h Sequencer 3C4h
+	      10h Graphics Controller 3CEh
+	      18h Attribute Controller 3C0h
+	   Single registers
+	      20h Miscellaneous Output register 3C2h
+	      28h Feature Control register (3BAh mono modes, 3DAh color modes)
+	      30h Graphics 1 Position register 3CCh
+	      38h Graphics 2 Position register 3CAh
+	ES:BX -> table of one-byte entries, one byte to be written to each
+		 register
+Return: nothing
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AH=F0h"EGA",AH=F6h"EGA"
+--------V-10FA--BX0000-----------------------
+INT 10 - EGA Register Interface Library - INTERROGATE DRIVER
+	AH = FAh
+	BX = 0000h
+Return: BX = 0000h if RIL driver not present
+	ES:BX -> EGA Register Interface version number, if present:
+	    byte 0 = major release number
+	    byte 1 = minor release number
+Note:	the RIL is provided by EGA.SYS, the Microsoft Mouse driver, the OS/2
+	  compatibility box, and others
+SeeAlso: AH=F0h"EGA",AH=F6h"EGA",INT 2F/AX=BC00h
