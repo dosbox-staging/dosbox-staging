@@ -1140,6 +1140,11 @@ void DOSBOX_Init() {
 	               "If set to 0, the country code corresponding to the\n"
 	               "selected keyboard layout will be used.");
 
+	Pbool = secprop->Add_bool("expand_shell_variable", when_idle, false);
+	Pbool->Set_help("Enable expanding environment variables such as %PATH%\n"
+	                "while in the DOS command shell. FreeDOS and MS-DOS 7/8\n"
+	                "COMMAND.COM supports this behavior.");
+
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
