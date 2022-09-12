@@ -1,0 +1,46 @@
+INFORMATION ON LICENSING
+
+
+USE ON MORE THAN ONE COMPUTER
+
+To use PKWARE products in a commercial, educational or governmental
+agency on more than one computer, it is necessary to purchase a SITE
+LICENSE. The Site License allows the organization to use the 
+software package on up to the number of computers licensed. Site 
+License fees are based on the total number of computers/users that 
+will use the software package. Please use the "Multiple Use" Site 
+License section in the ORDER.TXT file. NOTE THAT THE SITE LICENSE 
+INCLUDES ONE COPY OF THE SOFTWARE AND DOCUMENTATION. The Site License 
+allows you to copy the software for the number of machines licensed.
+Distributing, repackaging, or reselling of the software to third 
+parties is not allowed. All licenses are prepaid.
+
+
+DISTRIBUTION LICENSE
+
+A Distribution License is required by an organization, company or 
+government agency to use PKWARE programs to facilitate the 
+distribution of software to outside parties. To use PKWARE programs
+within your organization, company, educational or government agency,
+please see the Site License information.
+
+Should a self-extracting file, created with a PKWARE product, be 
+used, a Distribution License is required since PKWARE code is
+distributed in the form of the PKSFX program combined with file(s)
+being distributed.
+
+If you wish to distribute all or any part of a Command Line version 
+of PKZIP, a Distribution License is required. A Distribution License
+for the Graphic User Interface versions of PKZIP only allows for the
+distribution of self-extracting files.
+
+If you wish to receive a quotation for the Distribution Licensed
+version of PKZIP for Windows, DOS, Command Line for Windows 9x/NT, 
+OS/2, or UNIX, please call PKWARE at 414-354-8699, or see our Web 
+page at http://www.pkware.com/catalog/distlicense.html for further 
+pricing information.
+
+The Distribution License is non-exclusive and non-transferable. All
+licenses are prepaid.
+
+2/99

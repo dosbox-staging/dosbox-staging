@@ -1,0 +1,4361 @@
+ +---------------------------------------------+                |
+ |                                             ++               |
+ |            PKZIP 2.50 for DOS               ||               |
+ |                                             ||               |
+ |              *USER'S MANUAL*                ||               |
+ |                                             ||               |
+ +---------------------------------------------+|               |
+  +---------------------------------------------+               |
+                                                                |
+                                                                |
+                                                                |
+                                                                |
+                                                                |
+                                                                |
+                                                                |
+                                                         PKZIP  |
+                                                       PKUNZIP  |
+                                                         PKSFX  |
+                                                      PKZIPFIX  |
+                                                       PKUNZJR  |
+                                                               +|
+                                   PKWARE, Inc.                ||
+                                   9025 N. Deerwood Drive      ||
+                                   Brown Deer, WI 53223  USA   ||
+                                                               ||
+                                          Phone (414) 354-8699 ||
+                                          Fax   (414) 354-8559 ||
+                                          BBS   (414) 354-8670 ||
+                    --------------------------------------------+
+
+
+Copyright 1989-1999 PKWARE Inc. All Rights Reserved.
+
+U.S. Patent No. 5,051,745
+
+No part of this publication may be reproduced, transmitted,
+transcribed, stored in a retrieval system, or translated into any 
+other language or computer language in whole or in part, in any form
+or by any means, whether it be electronic, mechanical, magnetic,
+optical, manual or otherwise, without prior written consent of 
+PKWARE, Inc.
+
+PKWARE, Inc. disclaims all warranties as to this software, whether
+expressed or implied, including without limitation any implied 
+warranties of merchantability, fitness for a particular purpose,
+functionality, data integrity or protection.
+
+PKWARE, the PKWARE logo, PKZIP, PKUNZIP, and PKSFX are registered
+trademarks of PKWARE, Inc.
+
+StupenDOS is a trademark of Eclipse Technologies, Inc.
+
+MS-DOS is a trademark of Microsoft Corporation.
+
+Netware and Novell are registered trademarks of Novell, Inc.
+
+Trademarks of other companies mentioned in this documentation appear
+for identification purposes only and are the property of their 
+respective companies.
+
+PLEASE NOTE: This is a condensed version of the manual provided with
+the Registered version of PKZIP. Some sections have been condensed 
+or omitted in this version. 
+
+Introduction
+
+PKZIP 2.50 for DOS is an easy to use yet powerful .ZIP archive
+manager designed and engineered by the originators of the .ZIP file
+format. PKZIP's command line interface allows you to quickly and 
+easily accomplish both simple and complex archiving tasks including
+compressing and uncompressing files, creating self-extracting .ZIP 
+files, and spanning .ZIP files across diskettes. 
+
+Conventions
+
+This manual follows several conventions for clarity and to help you
+find information quickly. 
+
+**  Anything that we want to be sure you don't miss will be prefaced 
+    with asterisks.
+
+Command Syntax
+
+Standard command specification syntax is used throughout the Command
+Reference section. This is used to differentiate between command 
+option parameters which are optional or mandatory, and to indicate
+when certain options may be combined:
+
+< > Angle Brackets are used to indicate a command option parameter 
+which must be present. The option parameter will follow immediately 
+after the option with no space.
+
+[ ] Square Brackets indicate a command option parameter which is not
+mandatory.
+
+, | If there are several possible options which may be used in the
+position indicated by the angle or square brackets, they will be 
+separated by either a Comma or a Vertical Bar (i.e. Pipe). If options
+are separated by a comma, then more than one of the options may be 
+used simultaneously. If they are separated by a vertical bar, the 
+options are exclusive of one another and only one may be used at a 
+time.
+
+Following are some abstract examples of how these syntax rules are 
+applied.
+
+Syntax               Valid Entries
+---------------------------------------------------
+-z<a,b,c>           -za, -zab, -zac, -zbc, -zabc
+
+-z<a|b|c>           -za, -zb, -zc
+
+-z[a,b]             -za, -zb, -zab, -z
+
+-z<a|b,c>           -za, -zb, -zac, -zbc 
+                    (-zab or -zabc would be invalid)
+
+Product Support
+
+We hope that your use of PKZIP and PKUNZIP will be enjoyable and
+trouble-free. It is our intention to provide the best possible 
+product and documentation. We understand that problems may arise, 
+and in most cases you will be able to resolve problems you may have
+by referring to the documentation. Answers to questions you might
+have will usually be found within this document.
+
+You may reach our Product Support staff in several convenient ways.
+
+Internet/Usenet
+
+World Wide Web - http://www.pkware.com
+Electronic Mail - support@pkware.com
+
+Additionally, PKWARE products are frequently discussed in the Usenet
+newsgroup "comp.compression". Internet newsgroups are not supported 
+directly by PKWARE.
+
+CompuServe
+
+PKWARE Support Technicians maintain a discussion forum on CompuServe.
+To get to the forum, simply type "GO PKWARE" from any CompuServe 
+prompt.
+
+PKWARE CompuServe ID# 75300,730
+
+PKWARE BBS
+
+PKWARE also maintains its own BBS. The PKWARE BBS is normally 
+available 24 hours a day. The BBS supports all baud rates from 1200
+up to 14.4K. Set your communications software for 8 bits, 1 stop bit,
+no parity.
+
+The PKWARE BBS offers the latest in PKWARE shareware as well as many
+other files for downloading. The PKWARE BBS has multiple phone lines
+for your convenience.
+
+PKWARE BBS - (414)354-8670
+
+Voice and Fax
+
+You may reach a PKWARE Support Technician by sending a Fax containing
+your question.
+
+PKWARE FAX - (414)354-8559
+
+If your question is urgent, or you do not have access to any of the 
+above methods of communication, a Support Technician may be reached
+by phone. PKWARE Technical support is normally available Monday
+through Friday, 9 a.m. to 5 p.m. Central Time (-7 hours GMT).
+
+PKWARE Voice Support - (414)354-8699
+
+Information to Give
+
+When contacting PKWARE Technical Support in any of the above methods,
+please be prepared to provide as much information about the problem 
+as possible. Include the version numbers for: PKZIP, DOS, and any 
+Memory and Device Drivers you are using. Include the command(s) you
+have tried to use, and what the results were and note why you feel 
+you have a problem.
+
+When faxing a problem, a print out of any error messages is often
+helpful in determining a solution.
+
+Please see the Troubleshooting section for additional information.
+
+PKWARE Inc.
+9025 N. Deerwood Dr.
+Brown Deer, WI  53223
+(414)354-8699
+(414)354-8559 FAX
+(414)354-8670 BBS
+
+Installation
+
+PKZIP works best when it is located in your path. You may put PKZIP 
+in your path by either copying it into an already existing 
+subdirectory that is in your path, or by copying it into its own 
+subdirectory and subsequently placing that subdirectory into your 
+search path.
+
+Throughout this manual many examples will show the command prompt.
+This will look like "C:\>" or "C:\PKWARE>" or something similar. This
+represents the command prompt displayed by your computer and is not
+to be typed in. If you do not see a prompt that looks like this when
+you are using DOS, try typing the command "PROMPT $P$G". This will 
+set your prompt to resemble those used here. You may also want to 
+add the "PROMPT $P$G" command to your AUTOEXEC.BAT file.
+
+Path
+
+There are two meanings for path as used under MS-DOS. It may refer 
+to the location of a file, or it may refer to the places DOS will 
+search for a command.
+
+In the first instance, a path would be the directory or 
+subdirectories that a file is located in. If a file called 
+"HOURS.PYS" is in a subdirectory called "JUNE" under a directory 
+called "PAYROLL" on the D: hard disk, it's full path would be 
+"D:\PAYROLL\JUNE\HOURS.PYS".
+
+In the second instance, the path is a list of places stored in an 
+environment variable called "path". If you type "path" at the DOS 
+prompt and press enter you will see the path that is currently set 
+on your computer. It will usually look something like this:
+
+C:\;C:\DOS;C:\UTIL;D:\WINDOWS
+
+It will likely look different on your machine. The path is set by a 
+statement in the AUTOEXEC.BAT file. For more information, on setting 
+a path environment variable, please see your operating system manual.
+
+To install PKZIP 2.50 for DOS do the following:
+
+   Run the PKZIP Shareware self-extracting setup program by typing 
+   the following and pressing ENTER:
+   
+     a:pk250dos.exe -d c:\pkware
+   
+   In this example, the PKZIP for DOS file set will be installed from
+   the a: drive into the c:\pkware directory.
+
+You must next modify your AUTOEXEC.BAT file. You may edit this file 
+with any editor that can load and save plain ASCII files (For 
+example, "Edit" in MS-DOS, Windows Notepad/Write/WordPad, or any word
+processor with ASCII TEXT editing ability.
+
+To edit your autoexec.bat file (in Edit) from a DOS prompt type:
+
+C:\>edit autoexec.bat
+
+Look for a line in the file that says something similar to:
+
+PATH=C:\;C:\DOS;(etc...)
+
+Go to the end of this line and add a semicolon if one is not already
+there, and the drive and path to PKZIP that you just created. For 
+example "...;C:\PKWARE"
+
+The line will now look similar to this:
+
+PATH=C:\;C:\DOS;C:\PKWARE
+
+You will most likely have additional items between the C:\DOS; and 
+C:\PKWARE.
+
+Next add a line that looks like this:
+
+set pkware.ini=c:\pkware
+
+The directory specified must be equal to the directory where 
+PKWARE.INI is located. If you have followed this installation 
+procedure exactly, the above line will work fine. This line should
+be near the top of the AUTOEXEC.BAT file.
+
+Save the file and exit. You will have to re-boot your computer to 
+make the change take effect.
+
+After you reboot type "path" at the command line and press [ENTER].
+Your machine will show the path. Make certain that the subdirectory
+you placed the PKWARE files in is shown in the path.
+
+You may now verify that PKZIP is installed by typing "PKZIP" at the 
+DOS command prompt. After you press [ENTER] you should see a banner
+screen from PKZIP. Try PKUNZIP as well. You should be able to type 
+PKUNZIP or PKZIP in any directory and drive, not just in the PKWARE
+subdirectory.
+
+If you receive the message "Bad command or file name" or "Unknown 
+command", PKZIP is not properly installed. Check the location of the
+files you extracted from the distribution file. Also check the lines
+that were added to the AUTOEXEC.BAT file. Make certain you have 
+rebooted since the changes were made to the AUTOEXEC.BAT file.
+
+Tutorial
+
+A comprehensive tutorial is provided with the Registered version of 
+PKZIP. This tutorial has been omitted from this version of the 
+manual.
+
+Command Reference
+
+Items contained in square brackets([ ]) are optional parameters to 
+an option and need not be included. Where there are two (or more) 
+items separated by a comma, you may use any ONE of those options
+following the main option character. If there are parameters in angle
+brackets(<>) you must include that option, or choose one of those in
+the series. When choosing options from a bracketed series, you may 
+use more than one of these options if they are separated by a comma.
+If the options are separated by a vertical bar (|)you may only choose
+one option. See the Command Syntax section for examples.
+
+PKZIP Command Option Guide
+
+________________________________________________________________
+-a+  Turn off archive attribute of added files.
+
+By using this option you may create a complete backup of your disk,
+while clearing the archive attributes to make the way for 
+incremental archiving.
+
+Incremental archiving makes use of the archive attribute to take only
+the files which have been modified since the last backup. In order 
+for this process to work smoothly you must first have a complete 
+backup and a clearing of the archive attribute for all files.
+
+   C:>pkzip f:backup.zip -a+ -rp
+
+________________________________________________________________
+-b<drive:path>  Create temporary .ZIP file on alternate drive
+
+Every time a .ZIP file is updated, PKZIP creates a temporary work
+file. When the modifications to the .ZIP file are successfully
+completed, the original .ZIP file is replaced with the temporary work
+file. This means you must have at least as much additional disk space
+available as was used by the original .ZIP file.
+
+For Example: If you have an existing .ZIP file of 500K, and you are 
+adding another file to it that takes 10K compressed, you need 
+additional workspace of at least 510K during the update process.
+
+This command option will allow you to create the temporary .ZIP file
+on a drive different from the one on which the original .ZIP file 
+resides. This allows you to update large .ZIP files when space is
+limited, such as a large .ZIP file on a floppy disk. Also, by setting
+this temporary drive to point to a RAM drive, you can speed up the 
+operation of PKZIP.
+
+Immediately following the -b option place the drive and/or path you 
+wish to use for the temporary work file.
+
+   A:>pkzip test.zip -bc: order.doc
+
+   C:>pkzip wp.zip -bz:\public wp51\*.*
+
+**  It is necessary to specify a path in addition to the drive letter
+    only if you are in a situation where disk space or access is 
+    being limited by subdirectory, such as on a local area network.
+
+________________________________________________________________
+-c        Create/Edit file comments for all files
+-ac[-|+]  Create/Edit file comments for all files during update
+-C        Add comments for new files only
+
+Each individual file contained within a .ZIP file may have a comment
+attached to it. Comments are useful for identifying files, especially
+if you need to go back months later to look at a file, or if you are
+sending the file to someone else. Each comment may be up to 59 
+characters long, including spaces and punctuation.
+
+The -c (lower case) option is used when you want to add or edit file
+comments for all files within an existing .ZIP file.
+
+The -ac[-|+] option may be used during the .ZIP file creation 
+process, or during an update/freshen process. You may optionally 
+specify a - (i.e. minus) after the -ac option to replace any existing
+comment(s). Specify a + (i.e. plus) after the -ac option to edit any
+existing comment(s).
+
+   pkzip test.zip -ac license.doc
+
+When each file is added to the .ZIP file you will be prompted for a 
+comment. Type a comment of up to 59 characters, and press [ENTER]. 
+
+The -C (upper case) option is used when you want to add a file 
+comment to new files that are being added to an existing .ZIP file. 
+Files which are not being added, or files which already existed in 
+the .ZIP file will not be prompted for comments.
+
+   pkzip test.zip -C *.doc
+
+In this situation, you would be adding additional files to the file
+called test.zip. Since the file license.doc was added to it in the 
+previous example, you would not be prompted for a comment for this
+file.
+
+________________________________________________________________
+-d Delete files
+
+This command will allow you to remove individual files from within a
+.ZIP file. This command is only applicable to already existing .ZIP 
+files.
+
+   pkzip test.zip -d license.doc
+
+In the above example the file license.doc would be removed from the 
+.ZIP file test.zip (assuming that it was in the .ZIP file in the 
+first place).
+
+**  The deletion of files from within a .ZIP file causes a situation
+    where a temporary .ZIP file will exist during the deletion 
+    process. In order to delete a file from a .ZIP file there must be
+    as much disk space free as will be occupied by the modified .ZIP
+    file.
+
+Multiple files may be deleted at one time. You may do this either by
+placing multiple file names on the command line, or by specifying a
+list file containing the names of files you want deleted. (See Using
+List Files)
+
+   pkzip july.zip -d file1.wk file2.wk1
+
+   pkzip tue_back.zip -d @old.lst
+
+________________________________________________________________
+-e[xx|x|n|f|s|0] Specify compression method
+
+-exx        eXtreme maXimum compression
+-ex         maXimum compression (most compression, most time)
+-en         Normal compression (default)
+-ef         Fast compression
+-es         Super fast compression (least compression, least time)
+-e0         Zero (i.e. 0) compression (storing)
+
+PKZIP 2 provides five different methods of compression, allowing you
+to choose the compression that best suits your need. You can choose
+speed, high compression or a balance. The default method will provide
+good compression at a reasonable speed.
+
+The switches for this option are intended to be mnemonic in nature:
+
+-exx    eXtreme maXimum
+-ex     maXimum
+-en     Normal
+-ef     Fast
+-es     Speed/Super fast
+-e0     zero (i.e. 0) compression
+
+The only two that may be difficult to remember are the order of Fast
+and Super Fast, you might want to think "Extra Speed".
+
+If you need to complete the compression in the minimum amount of time
+possible, then choose the fast compression method. To force PKZIP to
+use its fastest compression method, use the option -es (Super Fast).
+
+To achieve the smallest files possible, specify the extreme maximum 
+compression method using the option -exx.
+
+   pkzip -exx test.zip d:\wp51\*.wp
+
+Using no compression with the zero option is useful when archiving
+files which will either not compress or compress very little. This
+would generally be true when archiving .ZIP files. By specifying no
+compression PKZIP will store the files directly rather than first
+attempting to compress them.
+
+The compression method to use by default can be specified in the
+configuration file. If you have specified the super fast, fast or
+maximum compression method in your configuration you may override 
+this and use the normal method by using the option -en.
+
+________________________________________________________________
+-f  Freshen files in a .ZIP file
+
+When this command is specified, PKZIP will compare the contents of
+the .ZIP file specified on the command line against the files 
+specified for compression. If a file ALREADY EXISTS in the .ZIP file,
+PKZIP will check to see if the file exists in the source area (i.e. 
+the files specified on the command line). If the file does exist, it
+then checks to see if the file in the source area is more recent than
+the copy contained in the .ZIP file. If it is more recent, it will 
+replace the compressed file with the one found in the source area.
+
+Using this parameter will normally speed up the ZIP process 
+considerably, as PKZIP will be able to skip over files that it has 
+already compressed.
+
+   pkzip -f baka.zip c:\ranma\*.*
+
+This example checks the contents of the .ZIP file "baka.zip" against
+the files specified by "c:\ranma\*.*". Any file that matches will be
+updated if the file in the source area is newer than the copy within
+the .ZIP file.
+
+See Also: -u, -i
+
+________________________________________________________________
+-h display command summary (Help)
+
+This option will display a brief summary of the command switches 
+available.
+
+________________________________________________________________
+-i   Add files that have the archive attribute 
+     (then turn attribute off)
+
+-i-  Add files that have the archive attribute
+     (do not turn attribute off)
+
+This option is very handy when backing up files. If this option is
+specified, only files with the archive attribute will be compressed,
+and the archive attribute will be set to off when the ZIP operation 
+is complete for these files.
+
+You may alternatively ZIP all files with the archive attribute set, 
+but not modify the archive attribute.
+
+A detailed explanation of the use of this option is given in the 
+PKZIP Backup Guide at the end of this manual.
+
+Archive Attribute
+
+Every file on an MS-DOS partition has several properties associated
+with it. One of these properties is called the Archive Attribute. 
+When a file has just been created, this attribute is set to be ON. 
+Also, if a file is altered, the attribute is set. After a file has
+been backed-up by a program which uses this attribute, the attribute
+is switched off. By making use of the archive attribute you may make
+certain that you get all files that are new or changed. You save time
+by not backing up files you have previously archived. This process is
+called an Incremental Backup.
+
+See Also: PKZIP Backup Guide, -f , -u, -a+
+
+________________________________________________________________
+-j<h,r,s,a> Specify masking of file attributes
+-J<h,r,s,a> Specify retention of file attributes 
+          (used to override config file)
+
+When PKZIP archives a read-only file (or is forced to archive a 
+hidden, system, or archive file through use of the -w option) the 
+default is to retain these attributes with the file in the archive.
+You may choose to strip these attributes off the file during the .ZIP
+process by specifying the -j (lower case) with the letter(s) 
+corresponding to the attribute you wish to mask.
+
+File Attributes
+
+Every file on an MS-DOS partition has several properties associated 
+with it. These attributes are: archive(a), hidden(h), read-only(r),
+and system(s). The archive attribute is explained under the -i 
+option. The Hidden attribute prevents MS-DOS from displaying the file
+in a directory listing. Files that have this attribute are normally
+ignored by PKZIP. The read-only attribute prevents a file from being
+changed or deleted. When a file has this attribute you cannot delete
+the file or change it's contents. The system attribute signifies a 
+file that is a system file. System files are used by MS-DOS and are
+treated as Hidden files. Please see your DOS manual for additional
+information.
+
+You may set masking of particular attributes to be the default by 
+using either the PKWARE.INI file or the PKZIP configuration program.
+
+If any of these options are set in the configuration they may be 
+overridden temporarily by use of the -J (upper case) option.
+
+   pkzip markie.zip -Jhs c:\util\*.*
+
+**  Please note there is no space between the -j/J option and the 
+    h,r, s, or a.
+
+________________________________________________________________
+-k  Retain original .ZIP file date
+-k- Set .ZIP file date to the current date 
+    (override configuration file)
+
+Normally, when PKZIP updates an existing .ZIP file by either adding 
+to it or deleting from it, the .ZIP file date is changed to the 
+current date. If the - k option is specified on the command line the
+.ZIP file date will not be altered.
+
+This option may be made the default, see PKZIP Configuration.
+
+If PKZIP is configured to keep the original date in the configuration
+file, this may be overridden temporarily by use of the -k- option.
+
+**  The -o and -k, as well as the ZIPDATE= options in the pkware.ini
+    file, will be ignored when used with the -& option.
+
+See Also: -o
+
+________________________________________________________________
+-l Display license screen
+
+If this command is specified, PKZIP will display the software license
+agreement.
+
+________________________________________________________________
+-m[u|f]  Move files
+
+Normally, when PKZIP archives a file, it is making a copy of that
+file. The original file is not modified in any way. By choosing the
+-m option, you may actually MOVE the file (and directories) into the
+.ZIP file.
+
+After the ZIP operation is complete, PKZIP will delete all the files
+it just placed into the .ZIP file. Additionally PKZIP (by default)
+deletes the source directories and subdirectories. You may disable
+this feature with the -m-. 
+
+This option may be combined with the Update (-u) and Freshen (-f) 
+options. When this is done PKZIP will perform the Update or Freshen
+as it would normally, and then delete all the files that were placed
+into the archive.
+
+See Also: -f, -u
+
+________________________________________________________________
+-o   Set .ZIP file date to latest file in .ZIP file
+-o-  Set .ZIP file date to current date 
+     (used to override configuration file)
+
+Normal default operation for PKZIP is to set the date of a .ZIP file
+it is modifying or creating to the current date. By specifying the -o
+option you can tell PKZIP to set the date of the .ZIP file equal to
+that of the latest file within the .ZIP file.
+
+This option may be made the default, see PKZIP Configuration.
+
+If this option is set, you may override it by using the -o- option.
+This will force PKZIP to set the .ZIP file date to the current date.
+Note that the -o- option must be completely separate from any other
+options, such as the -f in the example:
+
+   pkzip oldfiles.zip -o- -f c:\wp51\text\*.wp
+
+**  The -o and -k, as well as the ZIPDATE= options in the pkware.ini
+    file, will be ignored when used with the -& option.
+
+See Also: -k
+
+________________________________________________________________
+-P  Preserve specified path names
+-P- Turn off path storage 
+    (used to override configuration file)
+
+This option and the related -rp option control the storage of path
+names with files inside of a .ZIP file. The -p (lower case) option is
+used only in combination with the -r option as -rp (see -r for more 
+information).
+
+The -P (upper case) option can be used alone or as a -rP option. The
+-P option causes PKZIP to store path names found on the command line
+as part of a filename specified for compression. This command will 
+only have an effect if a file or files specified either on the
+command line or in a list file have path names.
+
+   pkzip pathtest.zip -P c:\dos\attrib.exe
+
+In the above command the file "attrib.exe" would be compressed into 
+the .ZIP file "pathtest". Because the -P option was specified, and 
+because the path "\dos" was specified as part of the file name, the
+file will be stored as "dos\attrib.exe". This means that the path 
+name will be available for reconstruction during extraction. Stored
+path names can be seen when the .ZIP file is viewed.
+
+   pkzip path2.zip -P d:\coreldrw\*.cdr
+
+In this example all files with the "cdr" extension will be placed
+into the .ZIP file "path2", and will have the path "coreldrw\" 
+stored with them.
+
+This option may be made the default, see PKZIP Configuration.
+
+If path storage is turned on in the configuration file, you may turn
+it off for a particular command by using the -P- option.
+
+   pkzip mydoc.zip -P- c:\wp51\docs\zoofund.wp
+
+See Also: -r, -v
+
+________________________________________________________________
+-q      Enable ANSI comments
+-q-     Disable ANSI comments 
+        (used to override configuration file)
+
+PKZIP retains ANSI control codes in comment text that is added to a 
+.ZIP file. During display of the comment text, PKZIP will normally 
+disable ANSI codes. If you want to have the ANSI control codes used
+by PKZIP when displaying comment text, you must specify this option.
+
+   pkzip spacemp.zip -q se.diz
+
+This option may be made the default, see PKZIP Configuration.
+
+If the ANSI option is turned on in the configuration file you may 
+temporarily override it by using the -q- option. Note that the -q and
+-q- options must be separated from any other options specified.
+
+________________________________________________________________
+-r   Recurse subdirectories
+
+-rp  Recurse subdirectories
+     (preserve the path structure below)
+
+-rP  Recurse subdirectories
+     (preserve path structure specified and below)
+
+-r-  Turn off recursion 
+     (used to override configuration file)
+
+When this option is specified, PKZIP will search the source directory
+for subdirectories. If any subdirectories are found, PKZIP searches
+them for files. If a further level of subdirectories is found in a
+subdirectory, PKZIP will search these as well.
+
+PKZIP will enter as many subdirectory levels as exist.
+
+   pkzip mail.zip -r c:\mymail\*.*
+
+Using the above command, all files contained within the "mymail"
+subdirectory, as well as all files within any subdirectories, would 
+be archived. Only the file names would be retained, and not the names
+of the subdirectories.
+
+   pkzip mail2.zip -rp c:\mymail\*.*
+
+The second example would preserve the same files as the first, but 
+also keep the names of any subdirectories found below the "mymail" 
+subdirectory. Note that the "mymail" subdirectory itself would not 
+be retained since the -P is not being used.
+
+   pkzip pay_june.zip -rP d:\payroll\*.*
+
+The third example will compress all of the files in the payroll 
+directory, as well as all of the files in any subdirectories. The 
+-rp would cause the subdirectories to be recursed and stored. The -P 
+will cause "\payroll" to be stored as well. Without the -P, the 
+"\payroll" portion of the path would not be stored. This option may
+be made the default, see PKZIP Configuration.
+
+**  Please note that paths are not stored when the -r option is 
+    specified without the p or P option. In order for paths to be 
+    stored, the -r option must be accompanied by the -p or -P option.
+
+________________________________________________________________
+-s[password] Encrypt files
+
+By specifying this option you may encrypt data as it is compressed by
+PKZIP. This feature of PKZIP causes the information contained within
+a .ZIP file to be scrambled. A file which has been scrambled will be
+unreadable until extracted with the same encryption key.
+
+If a password is not specified the user will be prompted for one.
+
+**  This feature should be used with caution. For a complete 
+    explanation of the use of this option please see the Using Data 
+    Encryption section.
+
+________________________________________________________________
+-t<date>  Select files NEWER than or EQUAL to date
+-T<date>  Select files OLDER than date
+
+This option will allow you to select files according to their date. 
+The date specifier is a eight-digit number conforming to the 
+following formats:
+
+"American" style:     mmddyyyy
+04011993     April 1st, 1993
+10311989     October 31st, 1989
+
+"European" style:     ddmmyyyy
+01041993     1 April, 1993
+31101989     31 October, 1989
+
+"Japanese" style:     yyyymmdd
+19930401     1993 April 01
+19891031     1989 October 31
+
+PKZIP adapts itself to the date format for which your machine is 
+configured automatically.
+
+All users within the United States use the first date format.
+
+If you are outside the United States and are unsure of the 
+configuration of your computer, enter the DATE command at the DOS 
+prompt. This will show you the date format being used on your 
+computer.
+
+The -t and -T options may be combined to specify a date range.
+
+These examples all use the "American" date format (mmddyyyy). To
+compress all files created after or on November 4, 1992:
+
+   pkzip test.zip -t11041992
+
+To compress all files created before January 10, 1991:
+
+   pkzip test.zip -T01101991
+
+To compress all files created between October 1, 1992 and October 31,
+1992:
+
+   pkzip test.zip -t10011992 -T10311992
+
+If -t is used with no date, files with dates equal to the current date are
+specified:
+
+   pkzip today.zip -t
+
+________________________________________________________________
+-u  Update files
+
+This option only affects PKZIP operations involving an already 
+existing .ZIP file. When -u is used in conjunction with a PKZIP 
+command, the files specified for archiving will be compared against 
+the files already present in the .ZIP file. If the file to be added 
+into the .ZIP file is already present and is not NEWER, PKZIP will 
+not bother to re-compress the file.
+
+By using this option, you may save yourself time when archiving files
+that are backed up repeatedly. This option differs from the behavior
+of the -f option in that files which are not already present in the
+.ZIP file will be added.
+
+   PKZIP p:\backup\sdsource.zip -u d:\c700\work\sd*.*
+
+In this example a .ZIP file called "sdsource.zip" is created in a 
+"backup" directory on the P: drive. All files in the source directory
+matching the file specification will be added or updated.
+
+See Also: -f
+
+________________________________________________________________
+-v[b][r,c|d|e|n|o|p|s][m]      View [brief] file information
+-vt[m]                         View Technical file information
+
+This option will display technical information concerning the files
+contained within a .ZIP file. There are several options available
+with the View option. Each of the -v options may have an `m' added to
+it, causing the screen to pause every 25 lines.
+
+In it's simplest form the -v by itself gives a display similar to 
+this:
+
+   pkzip am70 -v
+
+   PKZIP (R)  FAST!  Create/Update Utility  Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKZIP/h for help
+   PKZIP Reg. U.S. Pat. and Tm. Off.  Patent No. 5,051,745
+
+   -80486 CPU detected.
+   -XMS version 3.00 detected.
+   -Novell Netware version 3.11 detected.
+
+   Searching ZIP: AM70.ZIP - PKWARE Support BBS (414)354-8670
+
+   Length  Method    Size  Ratio    Date     Time    CRC-32  Attr  Name
+   ------  ------    ----- -----  --------   -----  -------- ----  ------------
+    76812  DeflatX   23139  70%  01-30-1992  12:03  971fea04 --w-  AM.DOC
+   191872  DeflatX   80773  58%  01-31-1992  15:02  25cf904a --w-  AM.EXE
+    11664  DeflatX    6935  41%  01-30-1992  11:57  183b5606 --w-  AM.HLP
+   149567  DeflatX   63211  58%  01-31-1992  15:02  bf2fffee --w-  AM.OVR
+     2262  DeflatX    1021  55%  03-16-1991  10:39  50b63fc5 --w-  NEW-WARE.BBS
+     5327  DeflatX    2068  62%  10-14-1991  11:25  924efc72 --w-  PATHINFO.TXT
+      130  DeflatX     118  10%  11-14-1990  10:05  fd1b1183 --w-  PROGMENU.AM
+     3664  DeflatX    1644  56%  04-04-1991  10:32  c8d5c9cf --w-  PROGMENU.DOC
+     1688  DeflatX     740  57%  11-10-1990  11:27  8ef23b8a --w-  READ!.POP
+     1416  DeflatX     595  58%  01-30-1992  12:03  32b1497e --w-  VENDOR.DOC
+     2167  DeflatX     949  57%  01-30-1992  12:07  2e13f4d4 --w-  WARNING.!!!
+     2200  DeflatX    1049  53%  01-30-1992  12:01  20c953ee --w-  WHAT'S.NEW
+   ------           ------  ---                                  ------------
+   448769           182242  60%                                       12
+
+This is the standard, unsorted view of the .ZIP file contents. The columns
+displayed from left to right consist of:
+
+Length     Original (non-compressed) size of the file
+Method     Type of compression routine used on this file
+Size       Current (compressed) size of the file
+Ratio      Percent reduction in file size
+Date       Date of the file
+           (as it would appear in a directory listing)
+Time       Time of the file
+CRC-32     The value of the file as calculated by the CRC-32 routine
+Attribute  The stored attributes of the file, 
+           (system, hidden, writable, read-only, *=encrypted)
+Name       Name of the file
+
+The -vb (brief) option will display an identical listing, minus the 
+CRC-32 and Attribute columns.
+
+The -vt option shows additional technical information about a file.
+When this option is active, a report similar to the following will
+be displayed:
+
+   C:\>pkzip am70 -vt am.doc
+
+   PKZIP (R)  FAST!  Create/Update Utility  Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKZIP/h for help
+   PKZIP Reg. U.S. Pat. and Tm. Off.  Patent No. 5,051,745
+
+   -80486 CPU detected.
+   -XMS version 3.00 detected.
+   -Novell Netware version 3.11 detected.
+
+   Searching ZIP: AM70.ZIP - PKWARE Support BBS (414)354-8670
+
+             Filename: AM.DOC
+            File type: text
+           Attributes: --w-
+        Date and Time: Jan 30,1992  12:03:54
+   Compression Method: DeflatX
+      Compressed Size: 23139
+    Uncompressed Size: 76812
+     32 bit CRC value: 971fea04
+    Created by: PKZIP: 2.0 under MS-DOS
+    Needed to extract: PKUNZIP: 2.0
+
+The "File type" is a judgment made by PKZIP during compression based
+upon the contents of the file. It will be either "BINARY" or "TEXT".
+
+The "Created By" lists both the version level of PKZIP  and the 
+operating system used when the .ZIP file was created. Below that is 
+listed the minimum version of PKUNZIP that would be required to
+extract the file.
+
+Sort Order
+
+By adding one of the following letters to the -v, -vb, or -vt command
+you can specify the sort order of the display.
+
+d     File Date
+e     File Extension
+n     File Name
+o     Natural Order 
+      (Sort order can be permanently specified in the configuration
+      file, the "o" option will override this.)
+p     Percentage of compression, smallest to largest
+s     File Size, smallest to largest
+
+Any of the above sort orders may be reversed with an "r".
+
+r     Reverse display order
+
+If you wish to also view the individual file comments with the 
+listing specify "c" on the command line.
+
+   pkzip hildie.zip -vbcnr
+
+This example would display a brief list of the file contents,
+including individual file contents, and sorted in reverse name order.
+
+View With MORE
+
+   pkzip totoro.zip -vtrm
+
+This example makes use of the "more" feature available with the view
+command. This causes the display to pause after every 25 lines of 
+information. Adding an `m' to any -v command will cause it to pause
+every screen.
+
+________________________________________________________________
+-w<h,s>    Take hidden, system files
+-W<h,s>    Skip hidden, system files 
+           (used to override configuration file)
+
+Normally PKZIP will skip any Hidden or System files that fall within
+the files specified for compression. (See the -j option and your DOS
+manual for an explanation of what Hidden and System files are).
+
+If you wish to force PKZIP to take Hidden or System files you may do
+so by specifying the -w option, combined with the appropriate
+attribute. These attributes will normally be stored as part of the
+.ZIP file information unless specified with the -J option.
+
+   pkzip all.zip -whs a:\*.*
+
+This example would zip all files in the root of the A: floppy drive,
+including any hidden or system files.
+
+   pkzip att_test -whs -Jhs c:\*.*
+
+This would take all files as above, and would also discard the file
+attributes. This option may be made the default. See PKZIP 
+Configuration.
+
+See Also: -j
+
+________________________________________________________________
+-x<filename>        Exclude files
+-x@listfile.lst     Exclude a list of files
+
+Using -x allows you to specify files that you do NOT want used as 
+part of a PKZIP operation. Either a specific filename or a file 
+pattern may be specified. You may use -x multiple times on the same 
+command line, and you may exclude a list of files. The list file is 
+structured and treated identically to all other List Files.
+
+   pkzip testfile.zip *.txt -xpizza.txt
+
+This example would compress all the files with a "txt" extension that
+are in the current directory, but would NOT compress the file 
+"pizza.txt"
+
+   pkzip test2.zip *.* -x*.txt
+
+Here we take all of the files EXCEPT the files with a "txt" 
+extension.
+
+   pkzip test3.zip *.* -xcommand.com -xautoexec.* -xconfig.*
+
+In this last example all files are specified for extraction, one
+specific file is being excluded, and any files which match two file 
+patterns are excluded.
+
+See Also: Using List Files, -@
+
+________________________________________________________________
+-z Create or modify a .ZIP file comment
+
+Each .ZIP file may have a comment embedded into it. This comment 
+will be displayed when the file is extracted, viewed or modified. 
+A comment may be added to an existing file, or added when a .ZIP file
+is first created. PKZIP will prompt you for the .ZIP file comment, 
+and allow you to enter up to 127 characters. It is possible to embed
+larger comments (up to 4096 characters) by using the following 
+procedure:
+
+1) Create the .ZIP file.
+
+2) Create the comment file (comment.txt).
+
+   This can be done with any editor that is able to output a standard
+   DOS text file. It must be plain ASCII or ANSI text (if it is ANSI
+   text you must also use the -q option). Although the filename 
+   comment.txt is used here, any filename may be used.
+
+3) Issue the command:
+
+   pkzip zipfile.zip -z < comment.txt
+
+   This makes use of the MS-DOS redirection ability, redirecting the 
+   contents of the file COMMENT.TXT as the input for the comment of 
+   ZIPFILE.ZIP.
+
+   To add a comment to multiple .ZIP files (within the current
+   directory) Issue the command:
+
+   for %f in (*.ZIP) do pkzip %f -z < comment.txt
+
+Note that the text of a comment is not compressed. If you have a 
+large message you wish to attach to the .ZIP file it is better to
+have a short summary and put any longer message in the .ZIP file
+itself. Technically, a .ZIP file comment may be as large as 64k, 
+but PKUNZIP will not display a .ZIP file comment this large.
+
+________________________________________________________________
+-!    Encrypt authenticity verifiable data into the .ZIP file
+
+Using this command option instructs PKZIP to embed Authenticity 
+Verification (AV) information within the .ZIP file it is creating.
+
+This option may only be used if you have received and installed the
+AV information for your fully Registered copy of PKZIP from PKWARE
+Inc.
+
+Note that AV codes for PKZIP 2.0 and above are different than those 
+used for version 1.10.
+
+Please see the section on Authenticity Verification for complete
+information.
+
+________________________________________________________________
+@[filename]  Specify LIST file
+
+This option specifies a plain ASCII text file to be used as the list
+of files to be archived. PKZIP will read in this file listing and 
+generate the complete list of files that must be processed. A list
+file may contain wild card specifications (?,*) as well as exact
+file names:
+
+files.bbs
+*.txt
+*.*
+text\news.asc
+d:\text\*.ans
+c:/dos/edit.com
+
+All of the above would be valid entries in a list file. Notice that 
+both forward and backward slashes may be used and mixed.
+
+The size of a list file that may be processed is limited. The total 
+size of the list file depends upon two factors.
+
+The first is path storage. If paths are specified in the list file 
+and are NOT stored with the -P option, the list file size is limited
+to approximately 7000 bytes.
+
+If paths are specified and are stored, the list file size is limited
+to 9700 bytes.
+
+If a list file has drive letters specified as part of the file names
+within the file, the maximum list file size is reduced. When paths 
+are not stored the maximum size is 5100 bytes, when they are stored
+6600 bytes.
+
+Note that this table corresponds to the total size of all list files 
+being used in a single command.
+
++-------------------------------------------------------------------+
+| List File Size Limits      |  No Path Storage | Path Storage (-P) |
+|----------------------------+------------------+-------------------|
+| Drive Letters in List File |    5100 bytes*   |       6600        |
+|----------------------------+------------------+-------------------|
+| No Drive Letter            |       7000       |       9700        |
++-------------------------------------------------------------------+
+* These numbers are approximate and may vary depending on your
+  configuration.
+
+If the list file is too big, you will receive an "Insufficient 
+Memory" error. If you have a list file which is too big, you may 
+split it into two or more smaller list files and perform multiple 
+PKZIP operations.
+
+See Also: Using List Files, -@
+
+________________________________________________________________
+-& Create multi-volume archive
+
+When this option is specified PKZIP will create a .ZIP file which is
+larger than a single floppy disk. This option may only be specified
+when creating a .ZIP file on removable media (i.e. a floppy disk or
+high capacity cartridge drive).
+
+If PKZIP encounters an unformatted floppy disk it will format it 
+before it continues. This means that you will not need to anticipate
+the exact number of floppies that will be needed ahead of time. For
+complete information on the use of this and related options, please
+see the PKZIP Backup Guide at the end of this manual.
+
+PKZIP for DOS cannot span self-extracting .ZIP files. You may, 
+however optionally create a batch file (e.g. install.bat) that is 
+configured to extract a standard spanned .ZIP archive. For example, 
+the batch file might contain a line similar to the following:
+   
+   pkunzip -d a:program.zip c:\test
+
+Such a batch file would create the c:\test directory on the 
+destination computer and then unzip the file called program.zip into
+that directory. PKUNZIP prompts the user to enter the diskettes in 
+the proper extraction order.
+
+**  DOS 3.0 or greater is required to span .ZIP files. DOS 3.2 or 
+    greater is required for full diskette format support.
+
+________________________________________________________________
+-$[d]   Store Volume label as part of .ZIP archive
+
+When this option is specified PKZIP will store the Volume Label of 
+the specified device as part of the information within the .ZIP file
+it is creating or modifying. The letter of the drive containing the
+desired label should be specified in place of the [d] on the option 
+statement. Do not include a colon.
+
+   pkzip doug.zip -rp -$b b:*.*
+
+In this example a .ZIP file called "doug" is created in the current
+directory. It consists of the complete contents of the B: drive 
+including it's subdirectories and Volume Label.
+
+Volume Label
+
+Every drive that can be accessed on your computer is referred to as
+a VOLUME. This includes not only your hard disk but also floppy 
+disks, and may include other storage devices such as CD ROM drives 
+or large capacity removable drives such as those manufactured by 
+SyQuest or Iomega. Each of these drives may have a VOLUME LABEL. This
+is a text string which identifies it. This is particularly useful on
+removable media, such as floppy disks. Each floppy may have a label
+which is meaningful to you, or to a piece of software. For further
+information on VOLUME LABELS please refer to your DOS manual.
+
+________________________________________________________________
+-@filename.txt    Generate LIST file
+
+**  Please note that this option is different from using a list file.
+    When PKZIP is reading a list file there is no dash in front of 
+    the @.
+
+This option causes PKZIP to generate a LIST file out the specified 
+file name instead of performing a ZIP operation. The output file will
+be a plain ASCII file with one file name per line, and will be
+identical to the listing of the files PKZIP would have placed into a
+.ZIP file had the -@ option not been used.
+
+If the -rp is specified the list file will include paths in addition
+to the file names. If the pattern/filespec is on a different drive,
+the drive letter will be included as well.
+
+   pkzip dummy.zip -@test.txt *.*
+
+This would generate a list file called "test.txt". Note that the 
+dummy .ZIP file name is needed. The name of the .ZIP file specified 
+does not matter as it is not actually used.
+
+   pkzip dummy.zip -@test2.txt -rp d:\*.*
+
+This would create a list file of the ENTIRE contents of the D drive.
+If the current directory is not D:\ when this command is issued the
+drive will be included with each filename in the list file.
+
+This option can also be useful in conjunction with an existing .ZIP
+file. For example, to generate a list of all files which have been
+modified since they were placed in the .ZIP file "akiko.zip":
+
+   pkzip akiko.zip -f -@modified.txt *.*
+
+See Also: Using List Files
+
+________________________________________________________________
+-=     Open file in compatibility mode
+
+This option will cause PKZIP to open files in "compatibility" mode, 
+as opposed to "sharing" mode.
+
+Using this option will cause PKZIP to ignore most file locking, 
+including share.
+
+In some networking situations this will allow you to read a file 
+which would otherwise not be accessible due to file locking.
+
+The PKZIP temporary file
+
+During compression, PKZIP uses a temporary file. As each file is 
+added to the .ZIP file it is first compressed into this temporary 
+file and then appended to the .ZIP file.
+
+By default this temporary file is created in the current directory.
+
+You may have this temporary file created in a different directory by
+setting the environment variable PKTMP. Set this equal to the drive
+you wish to use as your temporary file location.
+
+For optimal performance on your local hard drive, the PKTMP could be 
+set equal to a RAM drive if a large enough one is available. The 
+temporary file location must have enough free space to hold the 
+largest file in it's compressed state.
+
+For optimal performance when creating a .ZIP file on a Novell Netware
+volume, set the PKTMP equal to any drive on the same server. This
+will achieve the best performance, and is superior to using the local
+hard drive or the RAM drive.
+
+   C:\>set pktmp=z:\
+
+PKUNZIP Command Option Guide
+
+________________________________________________________________
+-c      Extract files to the console
+-cm     Extract files to the console with more 
+        (pause between screens)
+
+This command will extract files from a .ZIP file and display them on
+the monitor. The extracted files will scroll continuously on the
+screen. The software can be instructed to pause after each screen of
+output by using the -cm option.
+
+   pkunzip pk250dos.exe -cm readme.txt
+
+This example lists the text file readme.txt screen from the 
+self-extracting .ZIP file "pk250dos.exe". The display will pause and 
+wait for a key press between each screen of text.
+
+________________________________________________________________
+-d   Restore directory structure
+
+This command option uses the path names that have been stored in the
+.ZIP file by PKZIP. If the stored paths do not exist at the 
+extraction destination, they will be created.
+
+For example: If the following directory tree exists on drive C:
+
+   C:\---ABC---DIR1
+       |     +-DIR2---DIR3
+       |            +-DIR4
+       +-XYZ
+       +-PDQ
+
+If you executed:
+
+   pkzip -rp a:stuff c:\abc\*.*
+
+A .ZIP file called STUFF would be created containing all the files 
+in the directory "abc", as well as any subdirectories below that
+directory.
+
+If you then executed:
+
+   pkunzip -d a:stuff c:\xyz\newabc
+
+The directory structure of drive C: would now look like this:
+
+   C:\---ABC---DIR1
+       |     +-DIR2---DIR3
+       |            +-DIR4
+       +-XYZ---NEWABC---DIR1
+       +-PDQ          +-DIR2---DIR3
+                             +-DIR4
+
+All of the files and subdirectories which were originally in the 
+"abc" directory are now located in the "newabc" directory (shown in
+the box). Note that the "newabc" directory was created by PKUNZIP 
+because it was specified on the command line.
+
+________________________________________________________________
+-e[r][c,d,e,n,p,s]  Extract files in a sorted order
+
+This option is used to specify a particular order in which to extract
+files from a .ZIP file. These options are used along with the -e. 
+Each option will cause extraction sorted in ascending order of the 
+particular criteria.
+
+Sort Options
+
+r     Reverse sort order
+c     CRC Value
+d     Date
+e     File Extension
+n     File Name
+p     Percentage (ratio) of compression
+s     File Size
+
+The most useful of these options will normally be extraction in order
+of Date, Name, or Extension. Extraction in value of CRC order is in 
+effect a random extraction.
+
+In this example the files contained within the .ZIP file ZUCKER would
+be extracted in the order of their names.
+
+   pkunzip -en zucker.zip
+
+To reverse the order of extraction combine with the [r].
+
+   pkunzip -ern zucker.zip
+
+________________________________________________________________
+-f    Freshen files in extract directory
+
+This function is the inverse of the freshen function in PKZIP. When
+this option is used, the PKUNZIP command will be executed normally 
+except that files will be extracted only if:
+
+-> The files already exist in the target directory or directories
+
+   AND
+
+-> The files in the .ZIP file are newer than the files in the
+   extract directory.
+
+________________________________________________________________
+-h Display command summary (Help)
+
+This option will display a brief summary of the command switches
+available.
+
+________________________________________________________________
+-j<h,r,s,a>     Specifies masking of file attributes (default)
+-J<h,r,s,a>     Specifies extraction of file attributes
+
+During normal use, PKUNZIP does not extract hidden, system, read-only,
+or archive files. If there are files stored within a .ZIP file
+that have any of these attributes, you must specify the -J (upper 
+case) option to keep the attributes.
+
+   pkunzip stuff.zip -Jhsra
+
+In this example all the attributes would be preserved.
+
+See Also: -w, -j
+
+________________________________________________________________
+-l    Display license information
+
+This command will display the software license agreement.
+
+________________________________________________________________
+-n    Extract only newer files
+
+This option is the complement of the -u option in PKZIP. When this 
+option is used files will only be extracted if:
+
+-> They do not exist already in the target directory
+
+   OR
+
+-> They are newer than the file already in the target directory
+
+This means that files which already exist and are more recent than
+those in the .ZIP file will not be overwritten.
+
+________________________________________________________________
+-o     Overwrite previously existing files
+-o-    Never overwrite files
+
+This option will cause PKUNZIP to overwrite any files that already 
+exist in the target directory, without prompting. When this option is
+not specified PKUNZIP will pause if it attempts to extract a file 
+that already exists. It will prompt you:
+
+   PKUNZIP: Warning! File XXXXXX already exists. Overwrite (y/n/a/r)?
+   
+If you forget to specify the -o when you give the PKUNZIP command, 
+you may respond to the above question with "a" (All). PKUNZIP will
+continue as though a -o had been specified originally.
+
+The -o- option will cause PKUNZIP to skip any file which already 
+exists, regardless of file sizes or dates.
+
+________________________________________________________________
+-p[a/b] [c] [#] Extract files to the printer
+
+This option is used to extract files from a .ZIP file and send them 
+to a printer (serial or parallel) for printing. The command 
+parameters are defined and several examples are given here to make 
+this complex command clear.
+
+-pa     Extract to the printer device in ASCII mode
+
+-pb     Extract to the printer device in BINARY mode
+
+ASCII mode is commonly used to print text. It will form feed after \
+each file when multiple files are being extracted.
+
+Binary mode does not send any extra characters, extracting purely the
+contents of the file to the specified device. This is commonly used
+to send fonts or graphics to a laser printer. It will not form feed
+between files. 
+
+The a and b options cannot be mixed in the same command line.
+
+In combination with the -pa or -pb option you may specify the port 
+to which PKUNZIP should extract. If only a number between 1 and 9 is
+specified, the extraction will go to that number of printer port 
+(LPT1 through LPT9). If a "c" is specified PKUNZIP will extract to 
+the COM port. The "c" option may also be combined with a number from 
+1 to 9, specifying COM1 through COM9.
+
+This example will extract the specified files to the parallel port 
+LPT1.
+
+   pkunzip sesame.zip *.doc -p
+
+This example is extracting files in binary mode to a printer on the
+second serial port.
+
+   pkunzip graphix.zip *.eps -pbc2
+
+Here the files are extracted to a printer on the second parallel port
+in ASCII mode.
+
+   pkunzip docs.zip -pa2
+   
+You may specify a value from 1 to 9 for your port designation.   
+   
+________________________________________________________________
+-q    Enable ANSI comments
+-q-   Ignore ANSI control codes (default)
+
+By default, ANSI control codes embedded in comments are not displayed
+by PKUNZIP. When the -q option is used these ANSI sequences will be
+output and interpreted by the ANSI device driver if one is present.
+
+This option can be forced on by default in the configuration file. 
+The configuration option to add is:
+
+   ANSI=enabled
+
+The enabling of ANSI control codes in the configuration file may be
+overridden at the command line by using -q-.
+
+ANSI control codes provide the feature of adding color to text on a
+system which has ANSI.SYS loaded in the CONFIG.SYS.
+
+**  However, ANSI control codes also perform many other features, 
+    some of which can be potentially hazardous if you do not know the
+    source and contents of the comment. It is for this reason that 
+    PKZIP and PKUNZIP filter out ANSI control codes unless you 
+    explicitly tell them not to.
+
+PKWARE has created an addition to the ANSI.SYS driver called PKSFANSI
+(PK Safe ANSI). By using this in conjunction with your normal 
+ANSI.SYS you can be sure of receiving only the ANSI characters that 
+you want. PKSFANSI is provided by PKWARE free of charge. It is 
+included on the PKZIP distribution disk.
+
+See Also: -q
+
+________________________________________________________________
+-s[password]       Decrypt files
+
+This option is used to unscramble (decrypt) the files in a .ZIP file.
+PKZIP has a -s option which is used to encrypt the files. If a 
+password is not specified the user will be prompted for it. When 
+extracting a .ZIP file that has been encrypted, the files will not be
+extracted unless the correct key (password) is included on the 
+command line or entered at the prompt.
+
+   pkunzip payroll.zip -o -sSecret *.dbf
+
+**  Notice there is no space between the -s and the encryption key.
+
+In the previous example, all files with a "dbf" extension will be
+extracted and the key "Secret" applied to them. This will only work 
+if the files have been compressed with the key of "Secret" applied to
+them.
+
+**  This option is case sensitive. This means that "Secret", "secret"
+    and "SECRET" would be considered different passwords.
+
+See Also: Using Data Encryption, -s
+
+________________________________________________________________
+-t   Test .ZIP file integrity
+
+This option is used to test files within a .ZIP file in order to 
+verify that they are valid and have not been corrupted. PKUNZIP will 
+perform all the actions that would normally be taken during a .ZIP 
+file extraction, except that files will not be written to disk.
+
+The data will be extracted and checked against the CRC to ensure it's
+validity. After each file is checked it's name will be displayed with
+an "OK".
+
+   C:\PKSTUFF>pkunzip zc102 -t
+
+   Searching ZIP: ZC102.ZIP - PKWARE Support BBS (414)354-8670
+   Testing: ZC.DOC        OK
+   Testing: ZC.EXE        OK
+   Testing: ORDER.FRM     OK
+   Testing: VER-HIST.TXT  OK
+
+In this example a command is issued which performs a test on the .ZIP
+file "zc102". As each file is tested its name is displayed. Note that
+the .ZIP file comment is displayed.
+
+If you test a file that is not a .ZIP file, or specify particular 
+files within the .ZIP file that do not exist, you will receive the
+message:
+
+   PKUNZIP: (E11) No file(s) found.
+
+Testing a .ZIP file with errors would produce a display something 
+like this:
+
+   Searching ZIP: PROBLEM.ZIP
+   Testing: WORLD.M~      PKUNZIP: (W15) Warning! file fails CRC check
+   Testing: CORELDRW.BPT  OK
+
+   PROBLEM.ZIP has errors!
+
+Normally, a CRC failure as above indicates that a file has been 
+damaged either in storage or transmission. For instructions on 
+attempting to repair a .ZIP file that has been corrupted, see 
+PKZIPFIX in the Troubleshooting section.
+
+See Also: Troubleshooting, F.A.Q.
+
+________________________________________________________________
+-v[b][r,c|d|e|n|p|s][m]         View [brief] file information
+-vt[m]                          View Technical file information
+
+The -v option for PKUNZIP is the same as the -v option for PKZIP,
+with one exception. In PKUNZIP the `c' option for sorting refers to 
+the CRC value. For PKUNZIP this option refers to the Comment of a 
+file.
+
+For complete information, please see the -v option in the PKZIP
+Command Reference.
+
+________________________________________________________________
+-x<filespec>    Exclude files from extraction
+-x@list.txt     Exclude list of files from extraction
+
+By specifying a -x as part of the PKUNZIP command, you may prevent a
+file or group of files from being extracted. Using -x with a list 
+file will allow you to exclude a list of files from extraction.
+
+   pkunzip fd201.zip -x*.doc
+
+In this example all files are extracted from the .ZIP file 
+"fd201.zip" except for those with a ".doc" extension.
+
+-x may be used more than once on the command line, and may be used in
+combination with specific filespecs and list files.
+
+________________________________________________________________
+-$   Restore volume label
+
+This command is used to restore any volume label that has been stored
+in the .ZIP file. It is important to remember that the PKZIP command
+used to store a volume label does not store a drive letter along with
+the label. Upon extraction, the volume label will be assigned to the
+target drive.
+
+   C:\>pkunzip davebk.zip -$ a:
+
+This example will extract the contents of "davebk.zip" to the A: 
+drive. If a volume label was stored as part of the .ZIP file, the
+volume label for the floppy in drive A: will be reset to the one 
+contained in davebk.zip.
+
+________________________________________________________________
+-@filename.txt     Generate LIST file
+
+Please note that this option is different from using a list file. 
+When a list file is to be read by PKZIP there is no dash in front of
+the @.
+
+Using this option will cause a list file to be generated using the 
+specified file name instead of a normal PKUNZIP operation being 
+performed. The output file will be a plain ASCII file with one file 
+name per line, and will be identical to the listing of files PKUNZIP
+would have extracted had the -@ option not been used.
+
+   pkunzip underdem.zip -@showme.txt
+
+This would create a list file called "showme.txt" containing a list 
+of all the files present within the .ZIP file. File specs may be used
+in conjunction with this type of command, in the same manner as a 
+normal extraction command. Also the -e option may be used for 
+sorting. The following example creates an alphabetized list file of
+only the ".doc" files within it:
+
+   pkunzip manuals.zip -en *.doc -@docs.txt
+
+The extension of ".txt" on a list file is not mandatory, but 
+recommended editing ease.
+
+See Also: Using List Files, @, -@
+
+PKUNZIP as an Environment Variable
+
+PKUNZIP includes the ability to use an environment variable as a 
+continuation of the command line. An option, or number of options may
+be specified by an environment variable. PKUNZIP will treat the 
+variables as if they were passed on the command line. For example:
+
+   set PKUNZIP=-)
+
+This example would disable DPMI usage. Be aware that since the 
+PKUNZIP environment variable is a continuation of the command line,
+it will supersede any preceding option on the command line.
+
+See Also: Disable DPMI Support
+
+Creating Self-Extracting Files
+
+The PKZIP utilities offer a self-extraction capability. This means 
+that you can make a .ZIP file into an .EXE file. This file will in 
+effect be able to extract itself. A PKSFX (PK-Self Extracting) file
+consists of a .ZIP file which has been transformed into a 
+self-extracting file by the utility ZIP2EXE. There is no utility or 
+file called "SFX" or "PKSFX", but the self-extracting file will show
+PKSFX on the banner in the same manner as PKUNZIP:
+
+   PKSFX (R)  FAST!  Self Extract Utility  Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKSFX/h for help
+   PKSFX Reg. U.S. Pat. and Tm. Off.
+
+In order to create a self-extracting file, you must first create a 
+.ZIP file. Once this .ZIP file is created, use the ZIP2EXE utility to
+convert this .ZIP file into an .EXE file.
+
+   D:\>zip2exe test.zip
+
+   ZIP2EXE (tm)     Self-Extract Creator     Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. ZIP2EXE/h for help
+
+   TEST.ZIP => TEST.EXE
+
+   D:\>
+
+As you can see, an .EXE file by the same name as the .ZIP file is 
+created. The original .ZIP file is not deleted.
+
+The Junior Self-Extractor
+
+**  Turning a .ZIP file into an .EXE file increases the size because
+    of the included extraction program. The added size is 
+    approximately 13.5K bytes. If space is at a premium, and you are
+    willing to sacrifice functionality for size, try PKSFX Junior.
+
+The PKSFX Junior is somewhat smaller, and offers very few command
+line options due to this reduced size. The options which are 
+available with the PKSFX Junior are indicated on the PKSFX command
+summary.
+
+To create a PKSFX Junior file, add the command line option -j when
+performing the ZIP2EXE step.
+
+   D:\>zip2exe -j test.zip
+
+**  PKSFX Junior adds approximately 3K bytes to the .ZIP file.
+
+PKSFX Junior can handle a maximum of 512 files. Although PKSFX Junior
+has this limit to the number of files it can handle, there is no 
+limit to the file size.
+
+The PKUNZIP Junior (PKUNZJR.COM) program is an extremely small 
+stand-alone extraction program. It is used in the same manner as
+PKUNZIP but it has only the functionality of the PKSFX Junior 
+self-extractor.
+
+    PKUNZIP(R)  FAST!  Mini Extract Utility  Version 2
+    Copr. 1989-1999 PKWARE Inc. All Rights Reserved.
+    PKUNZIP Reg. U.S. Pat. and Tm. Off.
+
+Usage:  pkunzjr [-o] filename[.zip] [output_path]
+
+**  When using PKUNZJR or PKSFX Junior, remember to end your output
+    path with a : or a \. Because PKUNZJR and PKSFX Junior were
+    designed to be as small as possible, please note that they
+    perform minimal error checking.
+
+PKUNZIP Junior has one option, -o. This option is the same as that
+for PKUNZIP (Senior).
+
+PKUNZIP Junior accepts the .ZIP file name on the command line, and
+may optionally accept an output path. PKUNZIP Junior cannot extract
+specific files, but must extract the entire .ZIP file.
+
+PKUNZIP Junior cannot extract a file containing more that 512 files,
+and does not support multiple volume (spanned) .ZIP files.
+
+**  PKUNZJR and PKSFX Junior do NOT presently provide support for
+    Long File Names (i.e. LFN). 
+    
+PKSFX Command Summary
+
+Command line syntax and options are the same as PKUNZIP. The options
+listed below are offered by a self-extracting file.
+
+Syntax:        pksfx [option] [d:\path] [file]* [file]*
+
+PKSFX indicates the name of the self-extracting file you are 
+executing. No options are necessary if you wish to simply extract all
+files to the current directory. If you wish to extract the contents 
+to another directory, indicate the drive and/or path the files should
+extract to. To extract only particular files, indicate the name(s) 
+at the end of the command line.
+
+Options:
+
+@listfile.txt            Specify list of files for extraction*
+-c[m]                    Extract to console*
+-d                       Re-create directories stored in .ZIP file*
+-l                       Display software license agreement*
+-n                       Extract only newer files*
+-o                       Overwrite existing files
+-p[a|b][c][#]            Extract to printer*
+-s<password>             Decrypt with password*
+-t                       Test file integrity*
+
+*Indicates options not available in the PKSFX Junior and PKUNZIP 
+Junior programs.
+
+Options should be placed after the self-extracting files name. If 
+multiple options are used they must be separated by a space and each
+must have its own option indicator (either - or /).
+
+All options behave in the same manner as they do with PKUNZIP, with
+one exception. The -s option cannot accept keyboard entry. A password
+entered with a self-extracting file must be able to be entered from 
+the command line.
+
+Modifying a Self-Extracting File
+
+A self-extracting file can be operated upon by PKZIP and PKUNZIP in a
+manner identical to normal .ZIP files. You will need to specify the 
+full file name including the EXE extension.
+
+   C:\>pkzip test.exe -f d:\*.*
+
+There is no difference between operating on a self-extracting file 
+and a normal .ZIP file.
+
+A Note About Self-Extracting Files
+
+When you create a self-extracting file, you are adding a copy of the
+extraction code to that file. Since this code duplicates the 
+functionality of the PKUNZIP program, it makes sense to use the 
+self-extractor only when PKUNZIP will not be present on the machine
+to extract the file.
+
+If you create many self-extracting files for your own use, you will
+be using more space unnecessarily. Therefore it is recommended that
+you only use the self-extracting capability when you are sending a 
+file to someone that you know does not have a compatible PKUNZIP.
+
+Stripping the PKSFX Code
+
+You may have occasion to want to keep the contents of a 
+self-extracting file, but wish to turn it back to a normal .ZIP file.
+
+ZIP2EXE offers an option to reverse the process. This is done with
+the command line switch -e:
+
+   F:\>zip2exe -e test.exe
+
+ZIP2EXE will recognize normal and PKSFX Junior files automatically.
+
+Sending a Self-Extractor
+
+If you are sending a PKSFX file to someone who is not familiar with 
+data compression and/or PKWARE products, we recommend you tell them 
+to do the following:
+
+With PKSFX Junior:
+
+1) Create a temporary directory on the hard drive to hold the files
+   contained in the self-extracting file.
+
+   C:\>md temp
+
+2) Change to the directory that was just created.
+
+   C:\>cd temp
+   C:\temp>
+
+3) Place the diskette containing the self-extracting file into the A:
+   or B: drive. 
+   
+4) Type the name of the self-extractor, including the path to the 
+   floppy drive.
+
+   C:\temp>a:test
+
+With normal PKSFX:
+
+1) Place the diskette containing the self-extracting file into the A:
+   or B: drive and change to that drive.
+
+   C:\>a:
+
+2) Type in the following;
+
+   A:\>test -d c:\temp
+
+You may also wish to create a batch file or text file on the floppy
+disk containing the above steps. The contents of the self-extractor
+will be placed into this temporary directory. They can then examine 
+or move the files at their leisure. The -d option ensures that any 
+subdirectory information included will be re-created, and causes 
+PKSFX to create the temporary directory for the user.
+
+A site license is required by a corporation, company, educational
+institution, or governmental agency for use of PKWARE software on the
+total number of computers that will use the software.
+
+Use of PKWARE programs for personal use is covered by your purchase 
+of a single license for PKZIP. A Distribution License is required by
+a corporation, company, educational institution or governmental 
+agency to use PKWARE programs to facilitate the distribution of 
+software to outside parties.
+
+Please note that if a self-extracting file is used, a Distribution
+License is required, because PKWARE code is distributed in the form
+of the PKSFX program combined with the file(s) being distributed.
+
+Please contact PKWARE for more information if you intend to 
+distribute self-extracting files.
+
+Confirm before extract
+
+If a PKSFX file has a .ZIP file comment attached, this comment is 
+displayed before the file is extracted. By embedding a Control-S
+character (Hex 13, ASCII 19), you instruct PKSFX to pause. The 
+display will look like this:
+
+   Searching EXE: XXXXX.EXE -
+   .
+   .
+   .
+   (ZIP file comment text)
+   .
+   .
+   .
+   Do you want to extract these files now (y/n)?
+
+Press 'Y' to extract the files, 'N' o abort. Note that the Control-S
+character is not displayed. This control character may be located 
+anywhere within the comment.
+
+If the user aborts by pressing 'N', an exit code of  12 will be 
+returned by PKSFX. PKSFX Junior will return an exit code of 8.
+
+See: PKZIP -z for more information on .ZIP file comments, Appendix D
+for more information on exit codes.
+
+Memory Requirements
+
+The memory requirements for PKSFX are similar to those of PKUNZIP.
+
+PKSFX Junior, and PKUNZIP Junior require a minimum of 50K RAM free,
+and a maximum of 64K RAM free.
+
+Using List Files
+
+PKZIP, PKUNZIP and PKSFX offer a powerful feature; list files. List
+files are simply listings of files. They are used to simplify command
+lines, and make repetitive tasks less troublesome.
+
+List files can allow you to perform some complex tasks which 
+otherwise would not be possible. List files can not only be read, but
+can also be created by PKZIP and PKUNZIP. Also, list files can be 
+created and used by other programs, such as StupenDOS", PKZOOM" and 
+PKZMENU".
+
+PKZIP and PKUNZIP use List Files in two ways: files to be included 
+and files to be excluded. If a List File is being created, the 
+contents will reflect a listing of those files which would have been
+added, deleted, extracted or listed during a normal PKZIP/PKUNZIP 
+operation.
+
+List File text may contain:
+
+-> Comments
+-> File Names
+-> Wild Cards
+-> Exact Path Names and Files
+-> Drive Letters
+
+List File text consists of plain ASCII. These files may be created
+using any text editor which can produce plain ASCII files, sometimes
+referred to as "DOS Text".
+
+All of the following lines would be valid in a List File:
+
+   clowns.bmp
+   *.exe
+   project.*
+   MSLR????.QWK
+   ;This is a comment
+   emp\census.txt  ;This is also a valid comment
+   D:\data\february.wk1
+   D:\games\majong\*.*
+   D:\QWK\*.REP
+
+A line in a list file is treated in an identical manner to files 
+specified on the command line. Note that only files and comments are
+valid in a list file. Both forward and backward slashes may be used 
+in a list file.
+
+Reading List Files
+
+A list file can be used in two different ways with PKZIP and PKUNZIP:
+
+-> Files to be acted upon in a ZIP operation.
+-> Files to be excluded from a ZIP operation.
+
+List files are usually specified with an @ (ASCII 64, normally above
+the 2 on your keyboard). The list file character can be changed by
+modifying the configuration file. Please note that the list file
+generation option (-@)) will also change to the selected list file
+character. Avoid using a character already used for another option.
+
+The simplest example of using a List File is when a .ZIP file is 
+going to be created containing the files specified. If a List File 
+called "test.txt" was created containing the following lines:
+
+   *.COM
+   300Z.TXT
+
+And then used in a PKZIP command:
+
+   C:\>pkzip sample.zip @test.txt
+
+All .COM files in the current directory would be added to the .ZIP
+file "SAMPLE.ZIP", as well as the file "300Z.TXT" if it existed.
+
+The contents of a List File that is specified are included. The 
+contents of a List File specified after a -x are excluded. Multiple
+List Files to be included and excluded may be specified on the 
+command line in addition to file names being listed alone on the 
+command line.
+
+Following are several example usages of List Files, each with a
+short description of what action would be caused.
+
+   C:\>pkzip first.zip @abc.txt -x@xyz.txt
+
+All files specified in "abc.txt" would be added to the .ZIP file 
+"first.zip". Any files that match the file specification in "xyz.txt"
+would not be added.
+
+   C:\>pkzip second.zip -d @abc.txt -x*.txt
+
+All files listed in "abc.txt" would be deleted from the .ZIP file 
+"first.zip". Any files matching the "*.txt" specification would not
+be deleted.
+
+   C:\>pkzip -vc third.zip @xyz.txt
+
+A file listing with comments will be shown for all files in
+"third.zip" which are listed in "xyz.txt"
+
+   C:\>pkzip -rp backup.zip *.* -x@noback.txt
+
+A .ZIP file containing the entire drive would be created, excluding
+any files which match those in "noback.txt"
+
+**  Don't forget to use the @ in front of a list file name. If you do
+    not use the @, the list file itself will be added to the .ZIP
+    file.
+
+Generating List Files
+
+The Generation of list files can have many uses. Some suggested ways
+to use this feature are:
+
+-> Dividing Files to be Zipped into logical groups
+-> Easy exclusion of files already Zipped from a PKZIP operation
+-> Complex Batch File operations
+
+Keep in mind that a plain ASCII list file can be fed through other 
+programs, like 'sort', and can be used by some other applications 
+such as StupenDOS or PKZMENU.
+
+The list file generated by PKZIP or PKUNZIP when the -@ option is
+used contains the names of all the files which would have been acted
+upon in a normal ZIP operation.
+
+In a simple PKZIP command, the list file will contain a listing of
+all the files which would have been archived by PKZIP. If the list
+file is generated with a freshen or update command, the list file 
+will contain those files which would have been added/updated in the
+.ZIP file.
+
+To generate a list file of your entire C: hard drive:
+
+   C:\>pkzip dummy -rp -@cdrive.txt
+
+Note that the "dummy" .ZIP file name is necessary to have a valid
+PKZIP command.
+
+The list file generated by PKUNZIP will contain those files which 
+would have been extracted.
+
+Using List files to debug
+
+You may find the generation of list files helpful when you are 
+testing batch files. Let's say you have created a batch file which
+should compress several files as a backup procedure. Perhaps these 
+files are very large and it takes several minutes to compress each
+one. This means that if you were to test the batch file simply by
+running it, it could take quite a while to find a problem and fix it.
+
+By generating a list file of what would have been compressed, you can
+check very quickly to make certain that the proper files are being 
+selected.
+
+List file size
+
+The size of a list file that may be processed is limited. The total
+size of the list file depends upon two factors.
+
+The first is path storage. If paths are specified in the list file 
+and are NOT stored with the -P option, the list file size is limited
+to 7000 bytes.
+
+If paths are specified and ARE stored, the list file size is limited
+to 9700 bytes.
+
+If a list file has drive letters specified as part of the file names
+within the file, the maximum list file size is reduced. When paths
+are not stored the maximum List File size is 5100 bytes. When they 
+are stored the maximum List File size is 6600 bytes.
+
++-------------------------------------------------------------------+
+| List File Size Limits      |  No Path Storage | Path Storage (-P) |
+|----------------------------+------------------+-------------------|
+| Drive Letters in List File |    5100 bytes*   |       6600        |
+|----------------------------+------------------+-------------------|
+| No Drive Letter            |       7000       |       9700        |
++-------------------------------------------------------------------+
+* These numbers are approximate and may vary depending on your
+  configuration.
+
+If the list file is too large, you will receive an "Insufficient
+Memory" error. If you have a list file which is too big, you may
+split it into two or more smaller list files and perform multiple 
+PKZIP operations.
+
+Be Creative
+
+The list file functions give you a whole new level of power with
+PKZIP. When defining a problem and searching for a solution, don't
+forget to consider the power of these features.
+
+Using the list file features can give you access to new abilities
+PKZIP would not have inherently. Here are some example situations:
+
+Removing Old Files
+
+Suppose a .ZIP file 'work' contains 45 files. The contents of 'work'
+are extracted to a work directory and several of the files are 
+deleted. How do you delete these files that are no longer necessary
+from the 'work' archive? Doing it manually would be very tedious.
+
+First create a list of the contents of the directory. By redirecting
+these file names to a list file you can capture an image of what 
+needs to be kept in the .ZIP file.
+
+   C:\work>pkzip dummy.zip *.* -@keep.txt
+
+The list file 'keep.txt' now contains the files we want preserved in
+the .ZIP file, files not in this list will be deleted:
+
+   C:\work>pkzip work.zip -d *.* -x@keep.txtC:\work>del keep.txt
+
+The WORK.ZIP file now contains only those files which are also in the
+work directory.
+
+Sorting .ZIP Files
+
+Files will be added to a .ZIP file in the order that they are listed
+in the list file. This can be useful if you want the contents of a 
+.ZIP file to be in a particular order. After generating a list file,
+bring it into an editor and modify it to meet your need. To create a
+.ZIP file that is sorted in alphabetical order, you would use the
+following series of commands:
+
+   C:\work>pkzip test.zip *.* -@test.txt
+   C:\work>sort < test.txt > sort.txt
+   C:\work>pkzip test.zip @sort.txt
+   C:\work>del test.txt sort.txt
+
+The SORT command used above is a standard DOS program. See your DOS
+manual for further information on this useful feature.
+
+Using Data Encryption
+
+The PKZIP utilities offer the ability to protect stored data through
+encryption. You should use PKZIP's encryption ability in place of any
+other encryption on files you intend to compress.
+
+This encryption ability has been made integral to the function of 
+PKZIP and PKUNZIP to prevent the encryption from interfering with 
+PKZIP's ability to compress. If you feel the need to encrypt your
+data to protect it, and are intending to compress the data as well,
+you should then use the encryption of PKZIP. Using the encryption 
+capability of a spreadsheet or database program will prevent PKZIP
+from compressing the data efficiently.
+
+Encryption is enabled in PKZIP by use of the -s option. The 
+encryption key, sometimes referred to as a "password", follows
+directly after the -s
+
+   C:\>pkzip test.zip -ssecret d:\payroll\*.dbf
+
+Above, all the "dbf" files from the payroll directory have been
+compressed into a .ZIP file called "test.zip". During the compression
+they are also being encrypted based upon the key of "secret".
+
+The encryption scheme used by PKZIP is complex and robust. The
+encryption key is used to generate a number of binary encryption keys
+which are in turn used to determine how the compressed data is 
+altered. Neither the original key or the derived keys are stored with
+the .ZIP file, nor are they retained anywhere else for that matter. 
+This means you must remember the encryption key.
+
++----------------------------------------------------------------+
+| IF YOU LOSE THE ORIGINAL ENCRYPTION KEY YOU MAY NEVER BE ABLE  |
+| TO EXTRACT THE FILE(S).                                        |
++----------------------------------------------------------------+
+
+It is also not possible to derive the original keys by examining the
+compressed data, or by analysis of original data versus encrypted 
+data. This means that if you loose the key, there is no way to find
+it. PKWARE Inc. has no special means or technology for deriving the
+key or extracting the data without the key.
+
+Also note that a minute change in the key completely alters the
+encryption scheme. This means that the key must be exact. Any change
+in spelling, capitalization or punctuation causes a key to be 
+completely different. Be certain that you know what the encryption 
+key is and will not lose, forget, or mistype it.
+
++------------------------------------------------+
+| DO NOT TRUST YOUR MEMORY ALONE. WRITE IT DOWN. |
++------------------------------------------------+
+
+Capitalization is also important. "Secret", "secret" and "SECRET" are
+all completely different encryption keys. You should realize that a 
+person who knows you could attempt to extract a file you have 
+encrypted by using words they think you will use or can remember 
+easily. This would be items such as:
+
+-> Your Spouse's name
+-> Your Social Security Number
+-> Your Address
+-> Your Dog's name
+
+Long Keys
+
+It is possible to have extremely long keys, or keys with spaces in 
+them. The length of the encryption key is limited only by the length
+of a DOS command line. To use a key with spaces in it, you must 
+enclose the password in quotation marks:
+
+   C:\>pkzip test.zip -s"mary had a little lamb" *.dbf
+
+Passwords of this sort may be easy to remember, while proving to be 
+very secure. Remember to use phrases that are not obvious to someone
+who knows you.
+
+Complex Keys
+
+If PKZIP or PKUNZIP is specified with only the -s and no encryption 
+key following, the user is prompted for an encryption key.
+
+   C:\>zip test -s *.com
+
+   PKZIP (R)  FAST!  Create/Update Utility  Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKZIP/h for help
+   PKZIP Reg. U.S. Pat. and Tm. Off.  Patent No. 5,051,745
+
+   Password ? ******
+
+   -80486 CPU detected.
+   -XMS version 2.00 detected.
+   -Novell Netware version 3.11 detected.
+   -Using Super Fast Compression.
+
+   Creating ZIP: TEST.ZIP
+   Adding: COMMAND.COM  Deflating (36%), done.
+   Adding: 4DOS.COM     Deflating (34%), done.
+
+Asterisks are displayed in place of each character as you enter the
+encryption key. This feature offers added security in the event 
+someone is watching as you type in the password.
+
+This method of entry may be easier or more comfortable to use. This 
+also allows you to enter characters for the encryption key which 
+cannot normally be entered from the keyboard. 
+
+In order to enter one of these characters, hold down the [ALT] key
+and type the ASCII value of the character you wish to enter on the
+number pad. When you release the [ALT] key the character equal to the
+value typed will be entered into the Password field.
+
+The [TAB] key and other keys which could not normally be used since
+they would interfere with the PKZIP command line can be used when the
+password is entered in this manner.
+
+Passwords entered in this manner are limited to a maximum length of 
+64 characters.
+
+Multiple Keys
+
+Passwords can be used not only when creating a new .ZIP file but also
+when files are being added to an already existing .ZIP file. Let's
+assume you have a .ZIP file called "keyfun.zip" and it contains two 
+files:
+
+   june91.wk1
+   june91.wp
+
+We'll also say that neither of these files are encrypted. Now let's
+add another file to this .ZIP file, and encrypt it while doing so:
+
+   C:\>pkzip keyfun.zip -sPiZzA sensitiv.txt
+
+This will add the file "sensitiv.txt" with a encryption key of 
+"PiZzA".
+
+Now add another file to the same .ZIP file with a different key:
+
+   C:\>pkzip keyfun.zip -sDukeNUKE diary.txt
+
+At this point you have four files in "keyfun.zip". Two are not
+encrypted at all, and two are, but with different keys. A view of the
+file would appear like this:
+
+   C:\>pkunzip -v keyfun
+   PKUNZIP (R)   FAST!   Extract Utility   Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKUNZIP/h for help
+   PKUNZIP Reg. U.S. Pat. and Tm. Off.
+
+   -80486 CPU detected.
+   -EMS version 4.00 detected.
+   -XMS version 3.00 detected.
+
+   Searching ZIP: KEYFUN.ZIP
+
+   Length  Method     Size Ratio    Date     Time    CRC-32  Attr  Name
+    -----  -------   -----  ---   --------   -----  -------- ----  ------------
+    11664  Deflate    6937  41%  01-30-1992  11:57  183b5606 --w-  JUNE91.WK1
+    76812  Deflate   23404  70%  01-30-1992  12:03  971fea04 --w-  JUNE91.WP
+     5327  Deflate    2082  61%  10-14-1991  11:25  924efc72 --w-* SENSITIV.TXT
+     3664  Deflate    1654  55%  04-04-1991  10:32  c8d5c9cf --w-* DIARY.TXT
+    -----            -----  ---                                  ------------
+    97467            34077  66%                                        4
+
+Notice the * next to the Attribute column above. This indicates that
+a file is encrypted.
+
+Now, if you try to extract the file with no decryption key present
+you will only be able to extract the two files that are not 
+encrypted:
+
+   PKUNZIP (R)   FAST!   Extract Utility   Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKUNZIP/h for help
+   PKUNZIP Reg. U.S. Pat. and Tm. Off.
+
+   -80486 CPU detected.
+   -EMS version 4.00 detected.
+   -XMS version 3.00 detected.
+
+   Searching ZIP: KEYFUN.ZIP
+    Inflating: JUNE91.WK1
+    Inflating: JUNE91.WP
+   PKUNZIP: (W12) Warning! Skipping encrypted file: SENSITIV.TXT
+   PKUNZIP: (W12) Warning! Skipping encrypted file: DIARY.TXT
+
+Extracting the file with a decryption key will extract any file that
+the key is valid for, but an error will be reported on any files
+with a different key.
+
+   C:\>pkunzip keyfun -sPiZzA -o
+
+   PKUNZIP (R)   FAST!   Extract Utility   Version 2
+   Copr. 1989-1999 PKWARE Inc. All Rights Reserved. PKUNZIP/h for help
+   PKUNZIP Reg. U.S. Pat. and Tm. Off.
+
+   -80486 CPU detected.
+   -EMS version 4.00 detected.
+   -XMS version 3.00 detected.
+
+   Searching ZIP: KEYFUN.ZIP
+    Inflating: JUNE91.WK1
+    Inflating: JUNE91.WP
+    Inflating: SENSITIV.TXT
+   PKUNZIP: (W14) Warning! Incorrect password for file: DIARY.TXT
+
+How secure is PKZIP encryption?
+
+There are many factors to consider when using PKZIP encryption. There
+are also several levels and implications to consider.
+
+The first level of security is physical. Who has access to the .ZIP 
+file? You need to be aware of who might be able to get to sensitive
+data located on your machine, on your floppies, or on your personal 
+network drive.
+
+The potential hazards of using data encryption cannot be stressed 
+strongly enough. Make certain that you will be able to recall what
+was used for the encryption key. Also be certain that all people who
+need to be able to access this data have agreed upon how the 
+encryption will be performed.
+
+All forms of encryption, including the one used by PKZIP, are open to
+"brute force" attacks. This form of attack is simply the trying of
+many passwords until you find one that works.
+
+In order to help you protect your data from this sort of attack we 
+present figures on how long a brute force attack, using a computer, 
+would take. The scenario we present here assumes that your encrypted
+.ZIP file is being assaulted by a program which is designed
+specifically to do this.
+
+An encryption key may contain any valid ASCII character, not just A-Z
+in upper and lower case and punctuation marks. However, most people
+will just use the latter. The following table is indexed by the 
+complexity of the password. Across the top is the range of characters
+used. The simplest assumes that only lower case letters from a to z 
+were used. The next column assumes that all printable characters were
+used (a to z in upper and lower case, punctuation, brackets, etc.). 
+The last column assumes a password containing the complete range of 
+ASCII characters.
+
+The vertical index is the length of the password used. This impacts 
+the strength of the password greatly. Think of it as a combination
+lock. A combination lock with only two numbers would be much easier
+to break than one with three or four numbers.
+
+We recommend that if you need a truly secure encrypted file, use an 
+encryption key of at least six characters.
+
+The last assumption made is about the speed of the attacking program.
+For the purposes of this table, we assume that 10,000 possible keys 
+are being attempted per second.
+
+                      Password "Hacking" Time
+  +-------------------------------------------------------------+
+  |  Key   | 26 characters | 96 characters |   256 characters   |
+  | Length |    (a-z)      | (a-z,A-Z,etc) |    (All ASCII)     |
+  |--------+---------------+---------------+--------------------|
+  |    3   | 2 seconds     | 1 minute      |  27 minutes        |
+  |--------+---------------+---------------+--------------------|
+  |    4   | 1 minute      | 2.35 hours    |  4 days            |
+  |--------+---------------+---------------+--------------------|
+  |    5   | 19 minutes    | 9 days        |  3 years           |
+  |--------+---------------+---------------+--------------------|
+  |    6   | 8.6 hours     | 2 years       |  891 years         |
+  |--------+---------------+---------------+--------------------|
+  |    7   | 9 days        | 238 years     |  2283 centuries    |
+  |--------+---------------+---------------+--------------------|
+  |    8   | 241 days      | 228 centuries |  584,546 cent.     |
+  |--------+---------------+---------------+--------------------|
+  |    9   | 17 years      | 21,945 cent.  |  149,643,989 cent. |
+  |--------+---------------+---------------+--------------------|
+  |   10   | 447 years     | 2,106,744     |  38,308,861,211    |
+  |        |               |  centuries    |   centuries        |
+  +-------------------------------------------------------------+
+
+Choose the complexity that you feel meets your needs, but keep in
+mind all that has been mentioned about losing and forgetting 
+passwords.
+
+These figures represent the state of technology today. PKWARE Inc. 
+cannot predict future technologies which may allow faster attempts at
+decryption of a .ZIP file.
+
+Note that these figures do not include the time needed to actually
+try all valid passwords. This would increase the time by several
+hundred percent, dependent upon the length of the file.
+
+PKZIP CONFIGURATION
+
+Configuring PKZIP with the PKWARE.INI file
+
+PKZIP can have several of its features configured semi-permanently. 
+These configuration changes are made through a configuration file
+called PKWARE.INI.
+
+This configuration file may be located in one of three places:
+
+  1) The current directory
+  2) A directory specified with the environment variable PKWARE.INI
+  3) The directory in which PKZIP.EXE is located
+
+PKZIP will search for the configuration in each location in the order
+listed above. This means that you may have a default configuration 
+file that is easily overridden by using a configuration file in 
+either of the first two locations.
+
+**  Any option that is set in the configuration file may be 
+    overridden from the command line.
+
+The configuration file may be edited manually with a text editor.
+
+The PKZIP/PKUNZIP Configuration Program 
+
+**  The PKZIP/PKUNZIP configuration program (i.e. PKCFG.EXE) was not 
+    available at the time of this release and was therefore not 
+    included with this file set. Once this program is complete, it 
+    will be made available to qualified PKZIP users. Contact PKWARE
+    for more information. 
+
+The PKCFG program will look for an existing configuration file in the
+same locations and order that PKZIP would. If the PKCFG program finds
+an existing configuration file it will load it. The existing 
+configuration values will be shown in place of the defaults.
+
+A list of options will be displayed on the screen. A highlighted
+cursor indicates the option you can modify. Use the  [UP Arrow] and
+[DOWN Arrow] keys to move up and down through the list.
+
+Options may be toggled with either the the [LEFT Arrow] and [RIGHT 
+Arrow] keys or by pressing the [ENTER] key. Some options have complex
+possibilities. When one of these is modified, a small dialog box with
+options to be changed will be displayed.
+
+To reset all displayed options to the default values press [F5]. In
+order to save the options you have selected to the configuration 
+file, press [F1]. Press [F10] to exit the program. If you exit 
+without saving changes, you will be prompted.
+
+PKWARE.INI
+
+The format of the PKWARE.INI file is similar to the following:
+
+       [PKZIP]
+       pkzip options ...
+       [PKUNZIP]
+       pkunzip options ...
+
+** You may convert an older configuration file (i.e. PKZIP.CFG) with
+   the pkcfg.exe configuration utility or by running the cnvcfg.bat
+   file.
+
+The options available in a configuration file are shown in the 
+following tables. The "Default Value" column shows the default value
+of each option.
+
+The default is the value that would be assumed if the option were not
+specified in the configuration file.
+
+**  PKCFG.EXE is included with the Registered version of PKZIP, and 
+    is not included with the Shareware version.
+
+                   PKZIP Configuration File Options
++------------------------------------------------------------------+
+|    OPTION           |     ALTERNATE VALUE     |  DEFAULT VALUE   |
+|---------------------+-------------------------+------------------|
+| ANSI                | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| ZIPDATE             | latest, keep            | current          |
+|---------------------+-------------------------+------------------|
+| INCLUDE             | hidden, system,         | (NONE)           |
+|                     | hidden/system           |                  |
+|---------------------+-------------------------+------------------|
+| EXCLUDE             | hidden, system,         | (NONE)           |
+|                     | hidden/system           |                  |
+|---------------------+-------------------------+------------------|
+| MASK                | readonly, hidden,       | (NONE)           |
+|                     | system, archive         |                  |
+|---------------------+-------------------------+------------------|
+| PASS                | readonly, hidden,       | (NONE)           |
+|                     | system, archive         |                  |
+|---------------------+-------------------------+------------------|
+| VIEW                | natural, extension,     | (NONE)           |
+|                     | size, date, name,       |                  |
+|                     | percentage, comments,   |                  |
+|                     | reverse, brief, long    |                  |
+|---------------------+-------------------------+------------------|
+| COMPRESS            | extreme, maximum, fast, | normal           |
+|                     | speed, store            |                  |
+|---------------------+-------------------------+------------------|
+| PATHS               | all, recurse            | (NONE)           |
+|---------------------+-------------------------+------------------|
+| RECURSE             | on                      | off              |
+|---------------------+-------------------------+------------------|
+| LISTCHAR            | (ANY)                   | @                |
+|---------------------+-------------------------+------------------|
+| OPTIONCHAR          | (ANY)                   | -                |
+|---------------------+-------------------------+------------------|
+| EMS                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| XMS                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| NET                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| 386                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| DPMI                | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| BACKUP              | wipe, unconditional,    | (NONE)           |
+|                     | format, low, high,      |                  |
+|                     | verify, span, full      |                  |
+|---------------------+-------------------------+------------------|
+| EXPMEMSPOOL         | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| USELFN              | disabled                | enabled          |
++------------------------------------------------------------------+
+
+                  PKUNZIP CONFIGURATION FILE OPTIONS
++------------------------------------------------------------------+
+|       OPTION        |     ALTERNATE VALUE     |  DEFAULT VALUE   |
+|---------------------+-------------------------+------------------|
+| DIRECTORIES         | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| ANSI                | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| MASK                | readonly, hidden,       | (NONE)           |
+|                     | system, archive         |                  |
+|---------------------+-------------------------+------------------|
+| VIEW                | natural, crc, extension,| (NONE)           |
+|                     | size, date, name,       |                  |
+|                     | percentage, reverse,    |                  |
+|                     | more, brief, long,      |                  |
+|---------------------+-------------------------+------------------|
+| EMS                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| XMS                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| 386                 | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| DPMI                | disabled                | enabled          |
+|---------------------+-------------------------+------------------|
+| LISTCHAR            | (ANY)                   | @                |
+|---------------------+-------------------------+------------------|
+| OPTIONCHAR          | (ANY)                   | -                |
+|---------------------+-------------------------+------------------|
+| NEWER               | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| FRESHEN             | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| LABEL               | enabled                 | disabled         |
+|---------------------+-------------------------+------------------|
+| SORT                | natural, crc, extension,| (NONE)           |
+|                     | size, date, name,       |                  |
+|                     | percentage, reverse     |                  |
+|---------------------+-------------------------+------------------|
+| PRINT               | asc, bin, com#          | (NONE)           |
+|---------------------+-------------------------+------------------|
+| PASS                | readonly, hidden,       | (NONE)           |
+|                     | system, archive         |                  |
+|---------------------+-------------------------+------------------|
+| OVERWRITE           | always                  | never            |
++------------------------------------------------------------------+
+
+A configuration file consists of ASCII text. This file may be created
+with any text editor that can create a plain ASCII or `DOS Text' 
+file.
+
+Examples
+
+Following are example configuration files with explanations of what 
+they would accomplish.
+
+   ;Example PKWARE.INI #1
+   ;Config files may contain comments if they are prefaced by a
+   ;semi-colon
+   PATHS=recurse
+   VIEW=brief/reverse/size
+   COMPRESS=speed
+
+The first example configuration file does the following:
+
+-> Turns on the storage of paths that are found during recursion. 
+   This would make all commands using the -r option behave as though
+   the -rp option was used.
+
+-> Any view (-v) command used without options will be shown in brief
+   format, sorted in reverse order of the file size.
+
+-> All commands that do not specify the compression type will use the
+   fastest (-es) method of compression.
+
+   ;Example PKWARE.INI #2
+   INCLUDE=hidden/system
+   RECURSE=on
+   PATHS=all
+   VIEW=extension
+   EMS=off
+   COMPRESS=extreme
+
+The second example configuration file does the following:
+
+-> Causes PKZIP to archive hidden and system files by default. 
+   Hidden and system files are normally skipped by PKZIP and not 
+   visible in directory listings.
+
+-> Any command will behave as though the -r option has been used
+
+-> All paths will be stored, both those specified on the command line
+   and those found through recursion(-r).
+
+-> Any view (-v) command used without options will be shown sorted in
+   order of file extension. Note that the view would be normal, the 
+   default value. If the view command were specified with -vb using 
+   the configuration file, the view would be brief, but the sort 
+   order specified in the configuration file would still be in effect
+   unless overridden with a command line option.
+
+-> EMS usage is disabled.
+
+-> All commands that do not specify the compression type would use 
+   the highest compression possible (-exx).
+   
+Application for Authenticity Verification
+
+In order to receive a serial number to use with the PUTAV program, 
+please fill out and return this form to PKWARE. When the enclosed
+information is verified, you will receive your serial number from
+PKWARE.
+
+Please note that this does not constitute a license from PKWARE to
+distribute the executable programs PKZIP, PKUNZIP or self-extracting
+PKSFX files for commercial purposes. See LICENSE.DOC or contact 
+PKWARE Inc. for more information about distribution licenses for the
+software.
+
+Please Read the entire section on AV before filling this out.
+
+1) My full registration for PKZIP/PKUNZIP/PKSFX 
+   is enclosed (circle one)  YES  NO
+
+    If yes, skip to step 3.
+
+2) I have previously fully registered PKZIP/PKUNZIP/PKSFX in the  
+   past. The name under which the software is registered is:
+
+Name:________________________________________________________________
+
+Company:_____________________________________________________________
+
+Title:____________________________________ Date:_____________________
+
+Address:_____________________________________________________________
+
+City:__________________________________________ State:_______________
+
+Zip Code:  ________________________
+
+Telephone #:(______)_________________ Fax #:(_____)__________________
+
+Approximate date of registration/purchase:___________________________
+
+3) Please list the name that you want displayed by PKUNZIP when an
+   authentic file created by you is verified (51 characters max).
+
+Since the purpose of the Authenticity Verification feature is to help
+provide detection of tampered, hacked or virus infected files, we ask
+that you provide only your company's name or individual's name for 
+the AV string.
+
+The "AVEXTRA.TXT" feature was designed to additionally display 
+telephone numbers, addresses, BBS numbers, BBS nodes or parameter, 
+CompuServe addresses and similar information.
+
+|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|
+
+|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|
+
+|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|___|
+
+F.A.Q. (Frequently Asked Questions)
+
+This section lists some common questions about PKZIP and related 
+subjects. We hope you will find this information helpful.
+
+Why do I get the message "Bad Command or Filename"?
+===================================================
+
+If you see this message, DOS is telling you it can't find the program
+you are referring to. This can happen because you are either not
+spelling the name of the program properly, or you didn't put a space
+between the program name and its options, or the program is not in
+your path.
+
+Please see the Installation section and your DOS manual for more 
+information.
+
+Why is this program so complicated?
+===================================
+
+PKZIP initially was used to compress files that would be sent by 
+modem. The people using PKZIP were mostly hobbyists with a fair 
+amount of computer experience. PKZIP was designed to be powerful and
+fast.
+
+Someone who is familiar with the workings of PKZIP can be very 
+efficient with the command line. The command line interface is vital
+for automated or batch use of PKZIP.
+
+Although PKZIP may seem very complex at first, it is easy to master
+if you take one step at a time. Start simply by following the
+Tutorial, then experiment and build on that knowledge as you need
+more features.
+
+Users who prefer using Graphical User Interfaces may wish to 
+consider the "PKZMENU" product from PKWARE. This easy to use 
+menu-driven program offers PKZIP compatibility. It features drop-down
+menus and a simple point and click interface.
+
+Why didn't the files I zipped get any smaller?
+==============================================
+
+On occasion, you may find that the files you add to a .ZIP file do
+not compress. These files will be "stored". This will happen when a 
+file is either already compressed or encrypted.
+
+In both cases the redundancy of the file will be gone, making 
+compression difficult if not impossible. If the file is encrypted you
+should first save it without encryption, and then use the encryption
+feature of PKZIP.
+
+You will often find that files distributed with commercial
+applications are already compressed. A common example would be the
+graphic data files that come with games like Leisure Suit Larry or 
+Ultima.
+
+I zipped up a bunch of files but now I have LESS disk space!?
+=============================================================
+
+When PKZIP compresses files, it makes a copy of the original file. 
+The original file(s) are still present. If you wish to recover space
+that was taken up by the original file(s), you must either delete 
+them yourself, or instruct PKZIP to delete the file(s) with the -m 
+option.
+
+What's the difference between -u and -f?
+========================================
+
+The update and freshen options are very similar. This may be 
+confusing at first, but the difference between them is fairly easy
+to understand.
+
+The freshen option will tell PKZIP to archive any files which match
+those already in the .ZIP file. These files will only be 
+re-compressed if they are newer than the files already in the .ZIP 
+file. Each file is evaluated individually.
+
+The update option will archive all files, with one distinction. If 
+the -u is not used, all files specified will be compressed and added
+to the .ZIP file, even if they already exist in the .ZIP file. By
+using the -u option, you instruct PKZIP to compare what is already 
+in the .ZIP file against what it was asked to compress. If a file is
+already present in the .ZIP file and is also in the source directory,
+PKZIP will compress a file only if it is newer than the copy of the 
+file within the .ZIP file. If a file in the source directory is not
+already present in the target .ZIP file, PKZIP will add it to the 
+.ZIP file.
+
+Is PKZIP compression "lossy" or "lossless"?
+===========================================
+
+PKZIP uses a "lossless" compression scheme. This means that 100% of 
+the original data is preserved and re-created. There is absolutely no
+difference between the data that you put in and the data which you
+get back out.
+
+There are other compression methods that are known as "lossy". The 
+idea behind these compression methods is that if you throw away some
+of the data, it becomes less complex and therefore can be compressed
+more. This type of compression is only useful for data that need not
+be precise. This applies to some applications that use pictures and 
+sound.
+
+How do I zip up subdirectories?
+===============================
+
+In order to ZIP up subdirectories you must both recurse 
+subdirectories and preserve path names. This is done with the -r and
+-p options in combination. The options may be placed together as -rp.
+
+When a .ZIP file is created with paths stored, these paths will be
+visible in a view of the file (-v).
+
+To re-create these subdirectories, or to place files into their 
+original subdirectories, the -d option must be used with PKUNZIP.
+
+Please see the tutorial for more information.
+
+I zipped up some subdirectories, but I can't get them to come back?
+===================================================================
+
+Did you remember to use the -p option in addition to the -r option?
+You may have stored files that are in subdirectories but not 
+preserved the path names as part of the .ZIP file. To check if there
+are paths in the .ZIP file, do a view of the file:
+
+   pkunzip file.zip -v
+
+If you do not see paths as part of the file names within the .ZIP 
+file, then paths were not stored and cannot be recovered. If you do
+see paths all you need to do is use the -d (directory creation) 
+option when you extract the files.
+
+How do I unzip a single file that is in a subdirectory in the .ZIP file?
+========================================================================
+
+Extracting a particular file from a .ZIP file is simple. You type 
+PKUNZIP with the name of the .ZIP file and the name of the particular
+file you want. With a .ZIP file that contains paths the procedure is 
+basically the same.
+
+Let's assume a "test" .ZIP file with these files in it:
+
+   file1.txt
+   apple\file2.txt
+   apple\banana\file3.txt
+
+To extract only "file2.txt" from this .ZIP file you must specify the 
+complete name. This would include the path.
+
+   pkunzip test.zip apple\file2.txt
+
+Note there is no leading slash. This is how PKUNZIP differentiates 
+between the files you are extracting with paths, and the target 
+directory. "file2.txt" would be extracted to the current directory. 
+If you wanted to extract it with its subdirectory simply include the
+-d option on the command line.
+
+How do I unzip a directory without also extracting its subdirectories?
+======================================================================
+
+Using the above "test" .ZIP file we could extract the entire contents
+of the apple subdirectory easily:
+
+   pkunzip test.zip apple\*.* -d
+
+If we did it as shown above we would not only extract all the files
+in the "apple" subdirectory, but also the "banana" subdirectory below
+it and any files it contains.
+
+To extract only the "apple" subdirectories contents, and nothing 
+else, we must exclude those directories we do not wish to extract:
+
+   pkunzip test.zip apple\*.* -d -xapple\banana\*.*
+
+If the "apple" subdirectory had multiple subdirectories off it you
+would need to exclude each one individually on the command line.
+
+What is AV?
+===========
+
+AV is short for "Authenticity Verification". AV is a process whereby
+a copy of PKZIP has unique codes and information contained in it 
+identifying the owner of the copy of PKZIP. This information is then
+encoded into a .ZIP file when it is created.
+
+When the file is extracted by PKUNZIP, this information is checked. 
+If the .ZIP file has been modified by a copy of PKZIP other than the
+one which initially created it, PKUNZIP will report that the file has
+been tampered with.
+
+The advantage of this feature is to offer a layer of protection
+between the creator of an archive and the recipient. The recipient 
+knows that the file received is the file that was sent, as well as
+being able to identify the creator if it is not known.
+
+Where is my AV number?
+======================
+
+As a licensed user of PKZIP you are entitled to one AV number. In
+order to receive an AV number, you must apply for it.
+
+If you have a need to create AV encoded .ZIP files, fill out the form
+contained in the file "authveri.txt" found in your PKZIP archive. 
+Mail or fax this form to PKWARE. Please allow up to four weeks for 
+processing time, plus mail delays. The codes needed to install your
+AV number will be returned to you via US Mail. AV codes will not be 
+returned by FAX, telephone, or any means other than US Mail.
+
+Please note that although the initial AV code is included with your
+purchase of a PKZIP license, changes or re-issues of an AV code may 
+be at an additional cost.
+
+**  You must apply for your AV number. The serial number on the disk
+    PKWARE sent to you has no relation to the AV number. The AV 
+    number is based solely on the information you provide for your AV
+    identification string on the AV application form.
+
+I forgot my password, what do I do?
+===================================
+
+   1. Read the chapter "Using Data Encryption"
+   2. Try to remember the password.
+   3. Try passwords that are "close" to what you think it was.
+   4. Try mixed upper and lower case versions of your password.
+
+**  There really is nothing that can be done if you lose or forget 
+    your password. Don't forget or lose your passwords!  PKWARE has
+    no special means for "getting around" the encryption and may not
+    be able to assist in the recovery of an encrypted file.
+
++----------------------------------------------------------------+
+| YOU SHOULD KEEP A WRITTEN COPY OF YOUR PASSWORD(S) IN A SECURE |
+| PLACE. DO NOT TRUST YOUR MEMORY ALONE.                         |
++----------------------------------------------------------------+
+   
+What does "Don't Know How to Handle" mean?
+==========================================
+
+There are many different methods of compression. In the history of 
+PKZIP alone there have been seven different methods to date. The .ZIP
+file format was designed so that additional methods of compression
+can be added as they are developed. In this way the .ZIP file format
+will never need to be abandoned. If you attempt to extract a .ZIP 
+file that was created with version 2.0 or higher with a lower version
+of PKUNZIP you will receive the message "Don't Know How to Handle" 
+for every file compressed with a more advanced algorithm. If you 
+attempt to extract a .ZIP file created with a version of PKZIP that
+includes a method PKZIP 2.0 does not use, you will receive a warning
+that will tell you what version of PKUNZIP you need.
+
+What is a CRC and why did it fail?
+==================================
+
+CRC is short for Cyclic Redundancy Check. A CRC is a value computed
+to represent the data content of a file. The CRC is computed by PKZIP
+when it archives the file, and computed a second time when the file 
+is extracted. If the second CRC does not match the first CRC, then a
+change has occurred in the data. The cause of a CRC failure can vary.
+Here are some possible causes for CRC failures.
+
+I. Failure on the machine that created the .ZIP file.
+
+    A. Failure immediately after creation.
+
+        1. On a 386/486 or higher there may be an obsolete or poorly 
+           written TSR or device driver interfering with PK(UN)ZIP. Use 
+           the -3 option with both PKZIP and PKUNZIP to see if this is 
+           the problem. Consult the Troubleshooting section for more  
+           information.
+
+        2. "Clean boot" your machine. Either re-name your autoexec.bat
+           and config.sys files so that they are not loaded, or insert a
+           DOS boot floppy and reset your machine. Attempt extraction and
+           compression of the file again.
+
+        3. The floppy/hard disk controller may be failing. See if there
+           is any difference in behavior if you compress to/from the hard
+           disk or floppy drive.
+
+        4. Failing diskette media.
+
+        5. A bad memory chip.
+
+        6. Your computer is suffering from the "cache flaw". This is 
+           caused by problems with the external CPU cache on your 
+           computer's motherboard. See the Troubleshooting section,
+           -( option.
+
+    B. Failure after a period of time.
+
+        1. Any the above causes.
+
+        2. The file has been damaged during the time it was stored on the
+           hard disk. The can be caused by cross-linking or "lost" 
+           clusters. Some faulty disk-defragmenters and deletion recovery
+           programs may cause this.
+
+        3. Deleting and then undeleting a .ZIP file. "Undelete" programs
+           are by no means flawless. An undeleted or recovered file is
+           very likely to fail, as most disk recovery programs are
+           imperfect at best.
+
+II. Failure on a network server.
+
+    A. Some network server software does not run properly on 386/486
+       machines. If PKZIP is used on the server CPU running this faulty
+       network software, it will be interfered with by the network 
+       software.
+
+III.Failure after transfer of a file by modem.
+
+    A. Any of the problems cited in section I may be the cause of a 
+       failure.
+
+    B. There was an error in the transfer of the file. Use an "error-
+       correcting" protocol such as ZMODEM to avoid these types of 
+       problems.
+
+    C. The file was transferred with "Kermit". If you use Kermit you
+       must set it to Binary mode. PKZIP files are binary.
+
+    D. One of the computers or modems involved in the transfer has a
+       problem.
+
+IV. Failure after transfer by disk.
+
+    A. Any of the problems cited in section I may be the cause of a
+       failure.
+
+    B. Faulty disk controller/floppy drive.
+
+    C. Faulty floppy disk.
+
+        1. The drive alignment between the two computers may be off 
+           enough to cause a data error. Normally you will get a "disk
+           failure" message from DOS.
+
+        2. The disk was damaged by a magnetic or heat source.
+
+        3. The disk media is worn out or defective.
+
+What do "Bad Table" and "Inconsistent Local Header" mean?
+=========================================================
+
+If you receive either or both of the above messages, the .ZIP file is
+damaged or has been tampered with. These messages may also be 
+accompanied by a CRC failure.
+
+All of the physical causes listed for CRC failures apply as possible
+causes of these errors.
+
+How can I make PKZIP run faster?
+================================
+
+PKZIP defaults to a compression method that is average in both 
+compression amount and speed. If you want to get the most speed out 
+of PKZIP there are several things you can do:
+
+ 1. Specify a faster compression method with the -ef or -es option.
+
+ 2. Use a large RAM disk as your temporary files drive.
+    PKTMP=(RAM disk drive letter)
+
+ 3. If you are creating the .ZIP file on a network drive, set your
+    PKTMP equal to a drive on the same server.
+
+ 4. Make as much conventional memory available as possible.
+
+How many files can be in a .ZIP file?
+=====================================
+
+A .ZIP file may contain a maximum of 16,383 file entries under 
+MS-DOS. Due to memory limitations this limit cannot actually be 
+realized. Under the current memory scheme of DOS the largest number
+of files which may be in a .ZIP file is approximately 9000 files.
+
+The maximum number of files you can handle with a .ZIP file operation
+can be calculated by the following formulas:
+
+With No EMS or UMB's available:
+
+(Free Conventional RAM - 375k) / 64 bytes = Maximum # of Files
+
+With EMS available:
+
+(Free Conventional RAM - 85k) / 64 bytes = Maximum # of Files
+
+The "Super Fast" algorithm uses 32k less RAM than the other methods 
+in PKZIP 2. You will be able to compress an additional 500 files when
+using the "Super Fast" method.
+
+Note that the value of 64 bytes per file is approximate and may vary.
+
+When a .ZIP file is being updated, you must not only take into 
+account the files being added, but allow 70 bytes per file in the 
+original .ZIP file.
+
+Can I send a .ZIP file to a different type of computer?
+=======================================================
+
+As of the publication of this manual, PKWARE currently supports PKZIP
+on MS-DOS and OS/2 platforms, PKWARE intends to support additional
+platforms and will announce these as they become available.
+
+Because PKWARE has dedicated the .ZIP file format to the public 
+domain, it is possible for other people to write programs which can
+read .ZIP files.
+
++-------------------------------------------------------------------+
+| NOTE THAT THE PKZIP, PKUNZIP, PKSFX PROGRAMS AND THEIR ASSOCIATED |
+| SOURCE CODE AND SUPPORT PROGRAMS ARE THE EXCLUSIVE PROPERTY OF    |
+| PKWARE INC. AND ARE NOT PUBLIC DOMAIN SOFTWARE PROGRAMS.          |
++-------------------------------------------------------------------+
+
+We are currently aware of PKUNZIP compatible programs for a number of
+different platforms. A .ZIP file can be transferred to any platform 
+for which you can find a compatible extraction program.
+
+Extraction and Compression programs not developed by PKWARE may not
+be completely compatible with the .ZIP file standard.
+
+Contact PKWARE for a list of platforms for which PKZIP and PKZIP
+compatible software is available.
+
+What is the difference between -b and pktmp?
+============================================
+
+PKZIP creates two different types of temporary files, and allows you
+to specify the location for these two types separately. The two
+situations where PKZIP creates temp files are:
+
+-> When a file is being added to a .ZIP file.
+-> When a .ZIP file is being modified.
+
+It is advantageous to have the temporary files for the first 
+instance written on the fastest drive on your system, unless you are
+creating a .ZIP file on a Novell Network.
+
+The location for the temporary .ZIP file created when a .ZIP file is
+modified is normally the same as the location of the original file. 
+In some cases you may not have enough room on that drive. When this
+occurs use the -b option to relocate the temp file.
+
+How Does PKZIP Work?
+
+This section has been omitted from this manual.
+
+Troubleshooting
+
+This section offers some hints to aid you in locating and solving 
+problems. Part of this section includes PKZIP and PKUNZIP command 
+line and configuration file options that apply only to locating 
+problems.
+
++-------------------------------------------------------------------+
+| Problem        |     Solution/Reason                 |  See Also  |
+|----------------+-------------------------------------+------------|
+|"Error in .ZIP  |If you are just creating a .ZIP file |Tutorial    |
+| use PKZIPFIX"  |for the first time and receive this  |            |
+| during         |error, your command line is wrong.   |            |
+| compression    |                                     |            |
+|----------------+-------------------------------------+------ -----|
+|"Warning:Bad    |PKZIP or PKUNZIP is not in your path,|Tutorial    |
+| Command or     |or you have mistyped the command.    |            |
+| File Name"     |                                     |            |
+|----------------+-------------------------------------+------------|
+|CRC Failure     |Get a new copy of the file.          |F.A.Q.      |
+|----------------+-------------------------------------+------------|
+|File does not   |File is already compressed or is     |F.A.Q.      |
+|compress        |encrypted                            |            |
+|----------------+-------------------------------------+------------|
+|Files are still |PKZIP copies files by default, to    |PKZIP -m    |
+|there after     |move(delete) them, use the -m option.|            |
+|being Zipped    |                                     |            |
+|----------------+-------------------------------------+------------|
+|Disk Full error |Either the .ZIP file you are creating|PKZIP Backup|
+|                |is too large to fit on the disk, or  |Guide       |
+|                |you do not have enough room to update|            |
+|                |an existing .ZIP file. Create a      |PKZIP -b    |
+|                |multi-volume .ZIP file or use an     |            |
+|                |alternate temporary drive.           |            |
+|----------------+-------------------------------------+------------|
+|Can't find PKSFX|There is no program called PKSFX.    |PKSFX/      |
+|                |PKSFX  refers to a "Self-extracting  |ZIP2EXE     |
+|                |.ZIP file." That is a .ZIP file that |            |
+|                |has been made into an executable file|            |
+|                |with the program ZIP2EXE.EXE         |            |
+|----------------+-------------------------------------+------------|
+|I have lots of  |Although PKZIP uses XMS/EMS memory,  |"Using List |
+|memory, but I'm |there are limitations that will      | files"     |
+|getting an      |occur due to your base (conventional)|            |
+|"Out of memory" |memory being limited. Try to clear up|            |
+|error?           |as much memory as possible. If you  |            |
+|                |are attempting to compress more than |            |
+|                |8,000 files at once you will usually |            |
+|                |receive this error.                  |            |
+|----------------+-------------------------------------+------------|
+|Can't re-create |Make certain you are using the -d    |F.A.Q.      |
+|subdirectories  |option. If you are, and you still    |            |
+|or return files |have this problem, subdirectories may|            |
+|to their        |not have been stored in the .ZIP     |            |             
+|original dirs   |file.                                |            |              
++-------------------------------------------------------------------+
+
+**  PKZIP requires 206K of memory if no EMS or XMS is available and
+    108K if enough EMS/XMS is available.
+
+________________________________________________________________
+-3   Disable 32-bit instruction usage
+
+This option is available for users with 80386/80486 type computers. 
+It is used to turn OFF the added 32-bit instructions and register
+usage. When 32-bit instructions are available, PKZIP will utilize 
+them to allow the program to function even faster. However, if you
+are running a different program that may conflict with the use of
+32-bit instructions, you can disable them by using this command.
+
+32-bit instructions will be disabled only for the current PKZIP
+operation. They will then be enabled immediately after the command
+operation is completed.
+
+You can also disable 32-bit instructions all the time by using the 
+PKNO386 environment variable. To set the environment variable, type
+PKNO386=ON. If the string PKNO386 is present in the environment, 
+then PKZIP (and PKUNZIP) will not use 32-bit instructions or
+registers.
+
+To enable 32-bit instructions after they have been disabled, type:
+
+   SET PKNO386=[ENTER].
+
+If you have persistent problems with another piece of software
+interfering with PKZIP, and you cannot upgrade or discard that 
+software, you may turn off 32-bit instructions in the configuration 
+file. The PKWARE.INI option line is:
+
+   386=DISABLE
+
+Note that the configuration file is read only by PKZIP. PKUNZIP can
+only be set permanently by use of the environment variable.
+
+You may override the configuration file or environment variable on
+PKZIP by using a -3+ option. This will cause PKZIP to use 32-bit 
+instructions regardless of the environment variable being set, or an
+entry in the configuration file.
+
+________________________________________________________________
+-^   Echo the command line
+
+This option is used to display the PKZIP command that you entered on
+the console. It is useful when you are debugging an application or
+batch file which calls PKZIP. The file specifications that you 
+entered will be echoed on the console along with the command output.
+
+In this example, technical information about all of the *.doc files
+included in the DOCS.ZIP file will be displayed. The information will
+be sorted by date, and the command line will be redisplayed on the 
+screen above the output.
+
+   E:\>pkzip docs.zip -vd -^ *.doc
+
+________________________________________________________________
+-+   Disable EMS usage
+--   Disable XMS/UMB usage
+
+To use EMS/XMS/UMB features PKZIP and PKUNZIP require:
+
+-> XMS version 2.0 or greater
+-> EMS LIM 4.0 or greater
+
+An XMS driver is required in order to have UMB and HMA support 
+available.
+
+PKZIP/PKUNZIP will use up to 256K of EMS memory. If you are in a 
+situation where you need to preserve EMS memory for other use, such
+as when running a multi-node BBS system, you may wish to disable this
+feature.
+
+A conflict with your XMS/EMS driver can be eliminated by disabling 
+EMS usage. Problems relating to EMS usage would manifest themselves 
+as:
+
+-> Unexplainable machine lock-up.
+-> Receiving "Warning:Bad Table" and "File fails CRC check" for every
+   file in a .ZIP file being extracted.
+
+EMS or XMS usage can be turned off in the configuration file with the
+PKWARE.INI option:
+
+   EMS=DISABLE
+   XMS=DISABLE
+
+If EMS has been disabled in the configuration file, you may force 
+usage back on with the -++ option.
+
+If XMS has been disabled in the configuration file, you may force
+usage back on with the --+ option.
+
+________________________________________________________________
+-~   Disable Network detection
+
+When this option is specified, Network specific operations are 
+disabled. If you feel you are experiencing problems due to a conflict
+with the Network specific operations use this option.
+
+If the problem is persistent enough that you wish to disable Network
+operations all the time, you may do so with a configuration file
+command:
+
+   NET=DISABLE
+
+If Network support has been disabled in the configuration file, you
+may force usage back on with the -~+ option.
+
+________________________________________________________________
+-)   Disable DPMI Support
+
+PKZIP and PKUNZIP require 32-BIT DPMI 0.90 or greater. DPMI support
+uses an extra 6.5K of conventional or UMB memory. If you are 
+extremely tight on memory you may wish to disable DPMI support. If a
+failure occurs in the DPMI Support it can be disabled with this
+option.
+
+   DPMI=DISABLE
+
+If DPMI has been disabled in the configuration file, you may force 
+usage back on with the -)+ option.
+
+________________________________________________________________
+-(   Use "Slow" MemCopy
+
+Some computers suffer from a flaw that causes them to have errors 
+when performing simple MemCopy functions. This problem is generally
+caused the the manufacturer's use of inferior grades or speeds of 
+RAM chips for the external CPU memory cache on the motherboard.
+
+This behavior will most commonly be seen on on relatively fast 
+machines (486/25 and higher).
+
+This feature is only available on 486 (or higher) CPU's.
+
+This problem will most frequently exhibit itself in the form of
+unexplainable CRC failures.
+
+Use of this switch causes PKZIP to manipulate memory in a way that
+is less susceptible to this problem. Note that the added overhead in
+this process may slow down PKZIP by 20% to 40%.
+
+   SLOWMEMCOPY=ON
+
+If normal MemCopy has been disabled in the configuration file, you 
+may force usage back on with the -(+ option.
+
+PKUNZIP has been designed to be mostly immune to this problem.
+
+Please note that the external CPU cache has no relation to printer
+or disk caches.
+
+PKNOFASTCHAR= Environment Variable
+
+This tells PKZIP/PKUNZIP to use the slow DOS 1.x/2.x character output
+function calls rather than the 'DOS Fast Character Output' function.
+This option is designed for compatibility with TSR's or BBS doors
+etc. that do not intercept the DOS Fast Character Output function.
+
+PKWARE Customer Support Form
+
+Please photocopy and complete this form as completely as possible
+before contacting our customer support. By providing this information
+you help us to provide assistance in an efficient and exact manner.
+
+It is recommended that you first fax this form, then call PKWARE 
+customer support. Indicate on this form that you will be calling.
+
+If sending your problem by fax only, please specify how you would 
+like to be contacted.
+
+Please Print or Type, use "fine" fax mode if possible.
+
+PKWARE Inc.
+9025 N. Deerwood Dr.
+Brown Deer, WI  53223
+(414)354-8699
+(414)354-8559 FAX
+(414)354-8670 BBS
+
+Problem Description
+
+Be sure to include the following. Use as many additional sheets as
+necessary
+
+-> What you are trying to do
+-> What do you expect to happen
+-> What did happen and why it is a problem
+-> Copies of CONFIG.SYS, AUTOEXEC.BAT and any error messages
+
+Error Messages
+
+The following error messages may appear when using PKZIP. When the 
+word "WARNING" appears in the message, program execution will 
+continue. Otherwise the program will abort to DOS.
+
+Each warning message is prefaced with an error code. This error code
+consists of the letter 'E' or 'W' and a number. The letter 
+corresponds to whether the error indicates a "Warning" or "Error" 
+condition. The number corresponds to the DOS error level that would
+be returned.
+
+Errors are listed in order of return code or warning level.
+
+A brief explanation of each message follows.
+
+PKZIP Error Messages
+====================
+
+
+PKZIP: (E01) Can't create: XXXXX.
+
+The named file could not be created. Either the target directory is 
+full or the file already exists and is read-only or locked by another
+application. On a Network you may receive this message if you do not 
+have file creation rights in the directory.
+
+
+PKZIP: (E[2,3]) XXXXX.ZIP - error in ZIP, use PKZIPFIX.
+
+The named .ZIP file has a corrupted file index. Use PKZIPFIX to 
+attempt reconstruction of the .ZIP file. In some cases the damage to 
+the .ZIP file may be very extensive. If the file is too badly damaged
+PKZIPFIX will not be able to recover the file.
+
+NOTE: Many novice users receive this message because of improper
+command line syntax. If you specify a command line with only one file
+name following PKZIP and it is NOT a .ZIP file you will receive this
+message. PKZIP assumes that the file is a .ZIP file because you 
+specified it as the first file name on the command line, and it 
+attempts to place all files from the current directory into that 
+file. Upon examination of the file it will not find any .ZIP file
+information (due to its not being a .ZIP file) and will then report
+this message. Please see the tutorial for further information.
+
+
+PKZIP: (E[4-11]) Insufficient memory.
+
+Insufficient memory is available to process the .ZIP file. Try making
+more memory available to PKZIP. If this does not rectify the problem
+then the .ZIP file might be corrupted and PKZIPFIX should be used to
+fix the .ZIP file. If you are creating a new .ZIP file and receive
+this message, it is due to an attempt to ZIP a large number of files.
+Reduce the scope of your command and try again. If you are using a 
+LIST file in your PKZIP command you may be receiving this error 
+because the LIST file is too large. See "List Files" for more 
+information.
+
+
+PKZIP:  (E12) No file(s) found.
+
+No matching files were found to list using the View option. This 
+means the filespec you specified on the command line has no match
+within the .ZIP file.
+
+
+PKZIP: (E12) No files specified for deletion!
+
+The -d (Delete) option was specified but no filenames were given to
+delete. This option does NOT default to *.* if no filenames are 
+given. 
+
+
+PKZIP: (E12) Nothing to do!
+
+No matching files, or files with the specified attributes, or files
+after the specified date etc., were found to compress. Often you will
+receive this message because the command line you entered is not 
+correct. Check the exact name of the file you are specifying as well
+as the path, if any.
+
+
+PKZIP: (E13) Can't find:  XXXXX.ZIP.
+
+The named .ZIP file could not be found. Either it does not exist or
+is not in the specified directory.
+
+
+PKZIP: (E14) Insufficient disk space for ZIP comment.
+
+There is insufficient disk space to hold the comment as entered. You
+will need to move the .ZIP file somewhere with more free space, or 
+clear up more storage space in its current location. Note that a 
+temporary copy of the .ZIP file is not created. The .ZIP file
+comment is appended directly to the existing .ZIP file.
+
+
+PKZIP: (E14) Insufficient disk space for updated file:  XXXXX.ZIP.
+
+The -b option was used, and there is not enough space on the original
+drive containing the .ZIP file to receive the updated .ZIP file. (The
+update operation has added additional or larger files to the .ZIP 
+file, causing it to grow larger than the original). Try to free up 
+some space on the drive containing the .ZIP file, and retry the
+operation. Also, make sure that the drive specified with the -b 
+option is different than the drive containing the .ZIP file.
+
+
+PKZIP: (E14) Disk full, file:  XXXXX.
+
+A disk full error occurred while writing to the specified file. Try 
+freeing up some disk space on the target drive. Also, see the -b 
+option and the PKTMP environment variable.
+
+
+PKZIP: (E15) Can't open XXXXX.ZIP for write access!
+
+The named .ZIP file is read-only or locked by another application and
+can not be modified. This may also occur on a Network drive if you
+do not have adequate access to that file to allow you to modify it. 
+
+
+PKZIP: (E17) Too many files!
+
+An attempt was made to compress more than 16,383 files at one time. 
+This message could be received if you update a .ZIP file which has a
+corrupted central end directory.
+
+
+PKZIP: (E[19-23] and E29) Insufficient Memory
+
+See above.
+
+
+PKZIP: (E24) Fatal EMS error: XXXXXXXX
+PKZIP: (E25) Fatal XMS error: XXXXXXXX
+
+An error has occurred in the interaction between PKZIP and your EMS or
+XMS handler. You may have a faulty EMS/XMS driver.
+
+To be able to use PKZIP in spite of this problem, disable EMS/XMS
+usage with either the - + or - - option or the configuration file
+options EMS=DISABLE and XMS=DISABLE.
+
+Please contact PKWARE Technical Support with a description of the
+situation in which the error occurred, the brand and version of your
+EMS driver, and the HEX code printed at the end of this error 
+message.
+
+
+PKZIP: (E26) Warning!  DOS 3.0 or later needed to span disks
+PKZIP: (E26) DOS 3.2 or later needed to format disks
+
+DOS versions below 3.0 do not support the features needed by PKZIP
+in order to span a .ZIP file across multiple disks. DOS versions 
+below 3.2 do not fully support PKZIP's diskette formatting 
+functionality. You will need to upgrade to a newer version of DOS in 
+order to make use of these features.
+
+
+PKZIP: (E27) Warning!  Non-removable or unsupported device
+
+.ZIP files can only be spanned to a device which supports multiple
+storage units (i.e. multiple floppy disks can be inserted in series
+into a floppy drive). The device must also be a standard writable
+DOS device. .ZIP files may not be spanned onto a device such as a 
+Hard drive which cannot be removed.
+
+
+PKZIP: (E28) Destination for .ZIP file is same as temporary file
+
+
+PKZIP: (E28) Source and destination is the same
+
+PKZIP Warning Messages
+======================
+
+
+PKZIP: (W01) Warning!  Can't open XXXXX.INI
+
+When PKZIP runs it looks for a configuration file. The three places
+that PKZIP will look for it's configuration file are: The current 
+directory, the directory where PKZIP.EXE is located, and the 
+directory pointed to by the environment variable PKWARE.INI.
+
+If the PKWARE.INI environment variable is set, and PKZIP cannot 
+locate a configuration file in any of the three places it looks,
+you will receive this error message.
+
+
+PKZIP: (W02) Warning!  Can't open XXXXX
+
+This error usually occurs on Networks where you either do not have 
+read access to a file or another process/user has the file open in an
+exclusive mode.
+
+If the file is held open by another process you may be able to 
+overcome this problem by using the -= switch.
+
+PKZIP will exit with an error level of 18 when this warning is 
+received.
+
+
+PKZIP: (W03) Warning!  Can't delete XXXXX.
+
+The -m (Move) option was specified to delete files after the .ZIP 
+file was constructed. However, the named file could not be deleted, 
+and is probably read-only. You may also receive this message if the 
+file is on a network drive and you do not have access to delete the
+file, or it is locked by another application.
+
+
+PKZIP: (W07) Warning! Bad System Track
+
+
+PKZIP: (W08) Warning! Can't write FAT
+
+
+PKZIP: (W09) Warning! Can't write root directory
+
+
+PKZIP: (W10) Warning! Can't write boot sector
+ 
+PKUNZIP Error Messages
+======================
+
+
+PKUNZIP: (E[4-8]) Warning!  Insufficient memory.
+
+Insufficient memory is available to process the .ZIP file. Try making
+more memory available to PKUNZIP. If this does not rectify the 
+problem, then the .ZIP file might be corrupted, and PKZIPFIX should
+be used to fix the .ZIP file. The more files present in a .ZIP file,
+the more memory it will take to process the file.
+
+In some cases the .ZIP file may be too complex. Too many files are 
+contained within the .ZIP file for PKZIP to handle. This may occur if
+the .ZIP file is created under an operating system other than DOS.
+
+
+PKUNZIP: (E09) Can't open: XXXXX.ZIP.
+
+The named .ZIP or list file(s) could not be found. It does not exist,
+was spelled incorrectly, or is not in the specified directory.
+
+
+PKUNZIP: (E09) Can't find: XXXXX
+
+PKUNZIP was unable to locate the specified .ZIP or @list file. The
+filespec specified was in error or a disk error has occurred.
+
+
+PKUNZIP: (E11) No file(s) found.
+
+No files were found to extract, test, update or list. The filespec 
+specified on the command line does not match any files present in the
+.ZIP file, or all files found could not be extracted due to an 
+incorrect password or incompatible compression type.
+
+
+PKUNZIP: (E50) Disk full, file:  XXXXX.
+
+There is not enough free room on the destination drive/directory for
+the file being extracted. The program will abort and exit to DOS.
+
+PKUNZIP Warning Messages
+========================
+
+
+PKUNZIP: (W[01,02]) Warning! File has bad table
+
+The Imploded file being tested or extracted has an error in its
+encoding. The file is probably corrupt or not a .ZIP file. Files that
+have been damaged in this way cannot be recovered.
+
+
+PKUNZIP: (W03) Warning! File has bad table
+
+The Reduced file being tested or extracted has an error in its
+encoding. The file is probably corrupt or not a .ZIP file. Files that
+have been damaged in this way cannot be recovered.
+
+
+PKUNZIP: (W04) Warning!  XXXXX.ZIP - error in ZIP, use PKZIPFIX.
+
+The named .ZIP file has a corrupted file index. Use PKZIPFIX to 
+reconstruct the .ZIP file. You may also receive this message if you
+attempt to extract a file which is not a .ZIP file.
+
+If the file is less than 22 bytes in length it cannot be a .ZIP file
+and the "use PKZIPFIX" message will not be shown.
+
+
+PKUNZIP: (W[05-07]) Warning! Insufficient memory
+
+Insufficient memory is available to process the .ZIP file. Try making
+more memory available to PKUNZIP. If this does not rectify the
+problem, then the .ZIP file might be corrupted, and PKZIPFIX should
+be used to fix the .ZIP file. The more files present in a .ZIP file,
+the more memory it will take to process the file.
+
+In some cases the .ZIP file may be too complex. Too many files are 
+contained within the .ZIP file for PKZIP to handle. This may  occur
+if the .ZIP file was created under an operating system other than
+DOS.
+
+
+PKUNZIP: (W08) Warning!  Can't open XXXXX.ZIP
+PKUNZIP: (W09) Warning!  Can't open printer device
+
+The named file or printer device could not be opened. Either a disk
+error occurred, or the file is locked by another application. You may
+receive this error on a network drive if you do not have read access
+to that file.
+
+The printer device may not exist, or may be off-line.
+
+
+PKUNZIP: (W10) Warning!  Can't create: XXXXX.
+PKUNZIP: (W10) Warning!  Invalid file name: XXXXX.
+
+The named file could not be created. The output directory is invalid
+because it does not exist, is spelled incorrectly, or is full. You 
+may also receive this message on a Network drive if you do not have
+file creation rights there or the directory is full.
+
+In the case of an invalid file name error, the name stored in the 
+.ZIP file is invalid. This may indicate a damaged .ZIP file, or one 
+that has been tampered with.
+
+
+PKUNZIP: (W11) Warning!  I don't know how to handle:  XXXXX.
+
+The file XXXXX is compressed or encoded in a way that this version of 
+PKUNZIP is unable to handle. Either a different version of PKUNZIP is 
+required to properly extract this file, or the .ZIP file is possibly
+corrupted.
+
+
+PKUNZIP: (W12) Skipping encrypted file.
+
+Only the files that are password protected will be skipped (not 
+extracted) because they are encrypted and the correct password was 
+not entered.
+
+
+PKUNZIP: (W13) Warning!  Inconsistent local header for file:  XXXXX.
+
+The local header for file XXXXX is different than the central header
+information. Use PKZIPFIX to reconstruct the .ZIP file.
+
+
+PKUNZIP: (W14) Incorrect password for file.
+
+The .ZIP file is password protected, and cannot be opened unless the
+correct password is entered. The password entered is not the correct
+password. See "Passwords" in the Advanced Features section for 
+further information.
+
+
+PKUNZIP: (W15) Warning!  File fails CRC check.
+
+The CRC-32 check for the file being extracted or tested did not match
+the stored value for the file. The file is probably corrupted. See 
+the "Troubleshooting" section for more details.
+
+
+PKUNZIP: (W16) Warning! File fails Authenticity Verification check
+
+The .ZIP file is AV encoded but the AV could not be verified. Failure
+of AV indicates a file which has been tampered with or damaged. If 
+the file has failed the AV check the contents are suspect.
+
+
+PKUNZIP: (W17) Warning! File fails Authenticity Verification check
+
+The .ZIP file is AV encoded and has been tampered with or damaged.
+File should be discarded and a new copy obtained.
+
+
+PKUNZIP: (W18) Warning!  File XXXXX already exists. Overwrite (y/n/a/r)?
+
+The file XXXXX already exists on the disk. Pressing N will leave the
+original file on the disk, and not extract the file from the .ZIP
+file. Pressing Y will extract the file from the .ZIP file, and 
+overwrite the file on the disk. If you want to overwrite this file,
+and ALL FOLLOWING FILES, press A for ALL. If you wish to extract this
+file, but not overwrite an existing file, you may press R for RENAME.
+PKUNZIP will prompt you for a new name for the file. 
+
+See Also: -o and -n options.
+
+
+PKUNZIP: (W19) Warning!  Invalid Shrunk file
+
+The Shrunk file being tested or extracted has an error in its 
+encoding. The file is probably corrupt or not a .ZIP file. Files that
+have been damaged in this way cannot be recovered.
+
+
+PKUNZIP: (W20) Warning! Insufficient memory
+
+Insufficient memory is available to process the .ZIP file. Try making
+more memory available to PKUNZIP. If this does not rectify the
+problem, then the .ZIP file might be corrupted, and PKZIPFIX should 
+be used to fix the .ZIP file. The more files present in a .ZIP file,
+the more memory it will take to process the file.
+
+
+PKUNZIP: (W21) Warning!  File has bad table.
+
+The Deflated file being tested or extracted has an error in its 
+encoding. The file is probably corrupt or not a .ZIP file. Files that
+have been damaged in this way cannot be recovered.
+
+
+PKUNZIP: (W23) Warning!  File has bad table.
+
+The Deflated file being tested or extracted has an error in its
+encoding (bad block type). The file is probably corrupt or not a .ZIP
+file. Files that have been damaged in this way cannot be recovered.
+
+
+PKUNZIP: (W24) Warning!
+You need PKUNZIP version: X.X or later to extract XXXXX
+
+The file XXXXX is compressed or encoded in a way that this version of
+PKUNZIP is unable to handle. A more recent version of PKUNZIP is 
+required to properly extract this file. The version number is listed
+as X.X. Contact PKWARE for upgrade information.
+
+
+PKUNZIP: (W25) Warning! .ZIP file comment too big
+
+The file comment attached to this .ZIP file is too large. The .ZIP
+file can still be handled normally but will not be displayed.
+
+
+PKUNZIP: (W26) XXXXX.ZIP has errors.
+
+The named .ZIP file had one or more errors detected in it. This 
+message is displayed after PKUNZIP is finished acting upon a file.
+You may receive this message if you attempt to extract a file that is
+not a .ZIP file.
+
+ZIP2EXE Warning/Error Messages
+==============================
+
+
+ZIP2EXE: (E01) Error in .ZIP file
+ZIP2EXE: (E02) Error in .ZIP file, use PKZIPFIX
+
+The .ZIP file you are attempting to process is corrupt. You may
+attempt recovery of the file by using PKZIPFIX. PKZIPFIX will work on
+either standard .ZIP files or self-extracting .EXE files.
+
+
+ZIP2EXE: (E03-04) Insufficient memory to process file
+
+The .ZIP file you are attempting to process is too complex. This may
+indicate a .ZIP file which contains too many files. In some cases you
+may receive this error because the file being processed is corrupt.
+
+
+ZIP2EXE: (E07) Can't open Source file
+
+The source .ZIP or .EXE file specified on the command line cannot be 
+opened due to a disk error or insufficient network access.
+
+
+ZIP2EXE: (E08) Error in .ZIP file
+
+The .ZIP file you are attempting to process is corrupt. You may 
+attempt recovery of the file by using PKZIPFIX. PKZIPFIX will work 
+on either standard .ZIP files or self-extracting .EXE files.
+
+
+ZIP2EXE: (E09) Can't create output file
+ZIP2EXE: (E11) Disk full writing target file during ZIP to EXE process
+
+During the process of converting a file there must be enough disk 
+space available to contain both the original file and the file which
+will be created. If there is not enough room to process the file on
+the current drive you may direct the output to another drive by 
+specifying it on the command line.
+
+
+ZIP2EXE: (E12) Compression method not supported
+
+The .ZIP file being converted contains a file compressed with a 
+method not supported by the version of PKSFX being attached by 
+ZIP2EXE.
+
+You can only perform the ZIP2EXE process on .ZIP files created using
+the compression method(s) supported by the self-extracting module you
+are attaching.
+
+
+ZIP2EXE: (W01) Warning! The file already exists, overwrite (y/n)?
+
+The file already exists on the disk. Pressing N will not overwrite
+the original file. Pressing Y will overwrite the file on the file.
+
+PKSFX  Warning/Error Messages
+=============================
+
+
+PKSFX: (W01) File fails CRC checkPKSFX: (W01) Unknown compression method
+
+A warning may indicate any of several problems. See the corresponding
+PKUNZIP error message for explanation.
+
+
+PKSFX: (E02) Can't find .EXE file
+PKSFX: (E02,E03) Error in .EXE file
+
+The self-extractor was unable to locate itself. When the 
+self-extractor runs it must determine what the name of its executable
+file is. Anything which can prevent this from happening will generate
+this error. This error may indicate an incorrect installation of DOS
+on the target machine.
+
+
+PKSFX: (E[4-8]) Insufficient memory
+
+Insufficient memory is available to process the .ZIP file. Try making
+more memory available to the Self-extractor. If this does not rectify
+the problem, then the self-extracting file might be corrupted, and
+PKZIPFIX should be used to fix the .EXE file. The more files present
+in a self-extracting .ZIP file, the more memory it will take to 
+process the file.
+
+
+PKSFX: (E09) Unable to locate listfile
+
+The @list file specified on the command line could not be found.
+
+
+PKSFX: (E13) Error in .EXE file
+
+The self-extracting file is corrupt. This may occur due to a disk 
+error, a transmission error, or a software problem.
+
+
+PKSFX: (E50) Disk full
+
+The self-extractor has run out of space while extracting the files 
+it contains. You may either free up more disk space or direct the
+self-extractor to place the files on a different drive.
+
+
+PKSFX: Warnings numbers are the same as PKUNZIP [9-18,20,21,23,24]
+
+PKSFX/PKUNZIP Junior Error Messages
+===================================
+
+
+PKSFXJR: Warning error
+
+A warning may indicate any of several problems. See the corresponding
+PKUNZIP error message for explanation.
+
+
+PKSFXJR: Can't find .EXE file
+
+The self-extractor was unable to locate itself. When the 
+self-extractor runs it must determine what the name of its executable
+file is. Anything which can prevent this from happening will 
+generate this error.
+
+This error usually indicates an incorrect installation of DOS on the 
+target machine.
+
+
+PKSFXJR: Error in .EXE file
+
+The self-extracting file is corrupt. This may occur due to a disk 
+error, a transmission error, or a software problem.
+
+
+PKSFXJR: File has a bad table
+
+The compressed data is corrupt. This can indicate a damaged 
+self-extracting file or data that was originally corrupt when the 
+self-extracting file was created.
+
+
+PKSFXJR: Can't create file
+
+The self-extractor was unable to create a file it intended to 
+extract. This may occur because you either do not have sufficient
+rights to a directory, or because all the directory entries are full.
+
+
+PKSFXJR: Disk full
+
+The self-extractor has run out of space while extracting the files it
+contains. You may either free up more disk space or direct the 
+self-extractor to place the files on a different drive.
+
+
+PKSFXJR: Too many files
+
+A junior self-extractor may only contain 512 or fewer files. This 
+error indicates either that more than 512 files are within the 
+self-extractor or that the file is corrupt.
+
+**  No numbers are printed by PKSFXJR. It will print only a message,
+    no number is printed. The errorlevel will be returned to DOS
+    however.
+
+Error Levels
+============
+
+In order to enhance the power of using PKZIP and PKUNZIP from within
+another program or within a batch file, they return error levels. 
+These error levels are listed below.
+
+**  Please note that if testing error levels in a batch file, DOS
+    tests the error level not for equality, but for greater than or
+    equal to.
+
+PKZIP:
+0        No Error
+1        Bad file name or file specification
+2,3      Error in .ZIP file
+4-11     Insufficient Memory
+12       No files were found to add to the .ZIP, or no files were
+         specified for deletion
+13       File not found. The specified .ZIP file or list file was not
+         found
+14       Insufficient disk space for .ZIP comment 
+          or
+         Insufficient disk space for update file
+          or
+         Disk Full, file XXXXX
+15       .ZIP file is read-only and can not be modified
+16       Bad or illegal parameters specified. (help screen displayed)
+17       Too many files
+18       Could not open file
+19-23,29 Insufficient Memory
+26       DOS 3.2 or later needed to span disks
+28       Destination for .ZIP is same as temporary file
+          or
+         Source and destination is the same
+255      User pressed control-c or control-break
+
+PKUNZIP:
+0        No error.
+1        Warning error (such as failed CRC check).
+2,3      Error in .ZIP file.
+4-8      Insufficient Memory.
+9        File not found. No .ZIP files found.
+10       Bad or illegal parameters specified. (help screen displayed)
+11       No files found to extract/view etc.
+50       Disk Full.
+51       Unexpected EOF in .ZIP file.
+255      User pressed control-c or control-break
+
+ZIP2EXE:
+0        No error
+1        Error in .ZIP file
+2        Error in .ZIP file, use PKZIPFIX
+3-4      Insufficient memory to process file
+6        Bad or illegal parameters specified. (help screen displayed)
+7        Can't open Source file
+8        Error in .ZIP file
+9        Disk full writing target file during EXE to ZIP process
+11       Disk full writing target file during ZIP to EXE process
+12       .ZIP file being converted contains a file compressed with a
+         method not supported by the version of PKSFX being attached
+         by ZIP2EXE
+13       User answered "No" in response to an "overwrite(y/n)?" prompt
+
+PKSFX:
+1        Warning error such as:
+         File fails CRC check, Unknown compression method.
+2,3      Can't find .EXE file
+4-8      Insufficient memory
+9        Unable to locate listfile
+10       Bad or illegal parameters specified. (help screen displayed)
+12       User aborted at comment pausing, "Extract now (y/n)?" prompt
+2,3,13   Error in .EXE file
+50       Disk full
+
+PKSFX/PKUNZIP Junior:
+1        Warning error such as:
+         File fails CRC check, Unknown compression method.
+2        Can't find .EXE file
+3        Error in .EXE file
+4        File has a bad table
+5        Can't create file
+6        Disk full
+7        Too many files
+8        User aborted at comment pausing "Extract now (y/n)?" prompt
+
+PK SAFE ANSI - PKSFANSI.COM
+
+PKSFANSI (PK Safe ANSI) is a Terminate and Stay Resident program that
+disables ANSI Keyboard Key Reassignments, thereby preventing "ANSI 
+bombs" embedded in any text file (such as README files) or output by
+any program.
+
+Normally, ANSI sequences that redefine the keyboard could be hidden 
+inside ANY text file or program, and could be executed completely 
+unnoticed until it is too late. PKSFANSI intercepts calls to the 
+ANSI.SYS or other ANSI device drivers, and filters out any keyboard
+reassignments, while allowing other ANSI sequences through unaltered.
+
+If a keyboard key reassignment is attempted, PKSFANSI will intercept
+the sequence and discard it. PKSFANSI also will BEEP to alert you
+that a reassignment was attempted.
+
+PKSFANSI requires less than 1k bytes resident RAM, and should work 
+with any ANSI driver, such as the standard ANSI.SYS driver, NANSI,
+ZANSI, DVANSI, etc. Note that if you use a memory resident ANSI 
+driver, such as the DESQview DVANSI.COM driver, PKSFANSI should be 
+loaded after the ANSI driver is loaded.
+
+Usage
+
+Add PK Safe ANSI to your AUTOEXEC.BAT command file. Early in your 
+AUTOEXEC.BAT file add the line:
+
+   C:\PKWARE\PKSFANSI.COM 
+   
+This will cause the PK Safe ANSI TSR to be loaded into memory, 
+allowing you to safely use ANSI codes. Once this is installed you may
+wish to turn on ANSI in your PKZIP configuration file. There should
+be this line present in your PKWARE.INI file:
+
+   ANSI=ENABLED
+
+To turn on ANSI for a particular PKZIP operation, or for a PKUNZIP
+operation, use the command option -q.
+
+   pkunzip -v test.zip -q
+
+Monochrome Option
+
+PK Safe ANSI has one option. This option will cause PK Safe ANSI to
+discard color codes. This is useful if you are using a lap top 
+computer with a monochrome display.
+
+   PKSFANSI -c
+
+Please note that this only affects programs which use ANSI for their
+display control.
+
+NOTE: PK Safe Ansi is only included with the Registered version of 
+PKZIP for DOS.
+
+PKZIP BACKUP GUIDE
+
+PKZIP can now create .ZIP files that exceed the size of a floppy 
+disk. You may use PKZIP to backup your entire hard disk and unlike 
+most backup programs, PKZIP can use disks formatted by DOS, or it can
+format the disk for you. PKZIP can optionally erase all files on the 
+destination disk(s), or leave those files intact. PKZIP can 
+optionally quick format the destination disk(s), or do a normal 
+(unconditional) format. A quick format erases the information on the
+disk without formatting each track, greatly reducing the time
+required to format a disk.
+
+Option  Description
+
+-&      Span disks if necessary.
+        
+        You must specify this option if you wish to create a .ZIP file
+        on multiple disks. If this option is not specified and you
+        exceed the capacity of a floppy disk, a DISK FULL error 
+        message will result.
+
+-&f     Format the destination disk.
+
+        PKZIP will format the destination disk(s) if you specify this
+        option. If the disk has been formatted previously, a quick
+        format will be performed, otherwise a full format will be 
+        performed.
+
+-&fl    The destination disk is to be formatted to low density.
+
+        If you plan to use low density disks in a high density disk
+        drive, this option is required. For example, if you have a 
+        1.44 meg floppy disk drive, and plan to zip to 720K disks and
+        your disks are not formatted, you must specify this option. 
+        If your disk drive is a 360K or 720K drive, this option is not
+        required. If any information was previously contained on the
+        disk, it will be erased.
+
+-&u     Unconditionally (always) format the disk.
+
+        Always format the disk before being used. A full format will
+        be used, a quick format will never be performed. If any 
+        information was previously contained on the disk, it will be 
+        erased.
+
+-&ul    Unconditionally (always) format a low density disk in a high
+        density disk drive.
+ 
+        Always format the disk before being used. A full format will
+        be used, a quick format will never be performed. If any 
+        information was previously contained on the disk, it will be
+        erased.
+
+-&w     Wipe the disk. (Erase all files and subdirectories)
+
+        This is similar to -&f, except the files are deleted, rather 
+        than formatting the disk. This is for usage with non floppy 
+        removable devices, such as Bernoulli boxes.
+
+-&s[d:] Include subdirectories in zipping process 
+        (similar to -rp \*.*).
+
+-&v     Turn on DOS verify when spanning. This may also be set by
+        using BACKUP=verify in the pkzip.cfg file.
+
+        This option tells PKZIP that you wish to backup the entire 
+        disk drive. The current disk drive will be used if no disk 
+        drive is specified. You do not need to specify the -rp option
+        (recurse and store path names). If you also specify files on 
+        another disk drive, these files will be compressed, as well
+        as all files on the default drive. (Please see following
+        examples.)
+
+All options are case insensitive, but this may change in future 
+versions. We suggest you USE LOWER CASE LETTERS FOR FUTURE 
+COMPATIBILITY. The -&l option must be specified with -&u or -&f.
+
+**  If you create a .ZIP file with the same name as exists on a disk
+    set, you do not need to use the WIPE or FORMAT options. PKZIP
+    will create a new .ZIP file with the same name; this method is 
+    faster.
+
+**  All the PKZIP Configuration File options can be overridden on the
+    command line by specifying the option and a '-'. For example, 
+    -&f- will override "BACKUP=FORMAT" in the Configuration File and
+    turn off formatting.
+
+**  When using PKUNZIP.EXE to restore a from a spanned backup set, it
+    is most efficient to start by inserting the last diskette.
+
+**  If you would like to use PKZIP.EXE for full and incremental
+    backups, use the -a+ for the full backup. This will turn off the
+    archive attribute after the files have been compressed. Then to
+    perform a incremental backup, use the -i option. This will 
+    compress only files that have changed since they were last backed
+    up.
+
+Examples
+
+Command Line                         Description
+
+pkzip a:zipfile -&                   Zip the current directory to 
+                                     drive A:, and span disks if 
+                                     necessary. The files currently
+                                     on drive A: will not be 
+                                     affected.
+
+C:\>pkzip a:zipfile -&s              Zip all files on drive C: to the
+                                     A: drive.
+
+C:\>pkzip b:zipfile -&s d:\sd\*.*    Zip all files on drive C:(the 
+                                     current drive), and all files in
+                                     the D:\SD directory to the B:
+                                     drive.
+
+C:\>pkzip a:zipfile -&s d:\*.BAT     Zip all the files on drive C: 
+                                     and all .BAT files on drive D:
+                                     to the A: drive.
+
+
+pkzip a:zipfile -&f -rp              Zip the current directory and
+                                     its subdirectories to drive A:,
+                                     and format each disk. A quick 
+                                     format will be performed if 
+                                     possible, which is much faster
+                                     than a unconditional format.
+
+pkzip a:zipfile -&u -rp              Same as above, except the disk
+                                     will be unconditionally 
+                                     formatted.
+
+pkzip a:zipfile -&fl                 Zip the current directory to
+                                     drive A:, and format each disk
+                                     to low density. This option 
+                                     only applies to users using a 
+                                     360K floppy disk in a 1.2 meg 
+                                     drive, or users using a 720K 
+                                     floppy disk in a 1.44 meg drive.
+                                     A quick format will be performed
+                                     if possible, which is much 
+                                     faster than a unconditional
+                                     format.
+
+pkzip a:zipfile -&ul                 Same as above, except the disk
+                                     will be unconditionally 
+                                     formatted (do not quick format).
+
+pkzip a:zipfile -&w -rp              Zip the current directory and
+                                     its subdirectories to drive A:,
+                                     and wipe each disk. All files
+                                     and subdirectories will be 
+                                     erased from the A: drive. The 
+                                     disk will not be formatted or
+                                     quick formatted.
+
+pkzip a:zipfile -&fs                 Zip the current disk drive
+                                     (including subdirectories) to 
+                                     drive A:, and format each disk.
+                                     If the destination disk has 
+                                     previously been formatted, a 
+                                     quick format will be performed. 
+                                     Otherwise, an unconditional
+                                     format will be performed.
+
+Backup options for the PKWARE.INI configuration file
+
+The keyword BACKUP=  may be followed by the following keywords:
+
+SPAN           The -& option is enabled. If this keyword is not
+               specified, the following options will only be enabled
+               when -& is specified on the command line. (Same as -&)
+
+UNCONDITIONAL  Format the disk unconditionally (Same as -&u)
+
+LOW            Using low density disks  (Same as -&l)
+
+FORMAT         Format the disks  (Same as -&f)
+
+WIPE           Wipe the disks  (Same as -&w)
+
+FULL           Do a full backup  (Same as -&s)
+
+VERIFY         Turn on DOS verify when spanning (Same as -&v)
+
+Examples                             Same as
+BACKUP=SPAN FORMAT                   -&f
+BACKUP=SPAN FORMAT UNCONDITIONAL     -&u
+BACKUP=LOW VERIFY SPAN               -&lv
+BACKUP=FORMAT WIPE                   Illegal -- WIPE and FORMAT 
+                                                are exclusive
+BACKUP=FULL                          -&s
+BACKUP=FULL  WIPE                    -&sw
