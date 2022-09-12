@@ -1,0 +1,46 @@
+Please read the generic README file first. Note in particular:
+
+  copy gzip.exe to gunzip.exe and zcat.exe, or use "gzip -d" to decompress.
+  gzip386.exe runs much faster but only on 386 and above; it is compiled with
+  djgpp 1.10 available in directory omnigate.clarkson.edu:/pub/msdos/djgpp.
+
+Read also gzip.doc, and in particular the description of the -N option
+which is very useful for MSDOS to restore the original file names that
+have been truncated. You can set it by default by adding
+    set GZIP=-N
+in your autoexec.bat file.
+
+gzip386.exe includes the djgpp DOS extender (go32.exe) taken from
+djdev110.zip. If you already have djgpp 1.10 or later, you can remove
+go32.exe to get a smaller executable using:
+    exe2aout gzip386.exe
+    aout2exe gzip386
+    del gzip386
+
+If you get the error message "DMPI: Not enough memory", you are using a
+memory manager which allocates physical memory immediately instead of
+allocating on demand when pages are used for the firt time. This problem
+occurs only when using DMPI. (Try under plain DOS without loading any memory
+manager in config.sys.) This problem will be fixed in future versions of
+djgpp using the COFF object format instead of a.out. (In the a.out format,
+the data segment is loaded at virtual address 0x400000 and the memory manager
+thinks that gzip requires more than 4 megs of memory.)
+
+With gzip386.exe, you may have to set the TZ environment variable to
+get correct timestamps in the compressed files. For example in France
+I must set:
+   set TZ=MET-1
+The 16 bit version always uses local time.
+
+For other problems related to DJGPP, read the documentation provided
+in djdev110.zip. If a problem occurs with gzip386.exe, check first
+if it occurs also with gzip.exe before reporting it.
+
+The two programs gzip.exe and gzip386.exe give different compression ratios
+because the 16 bit version (gzip.exe) is compiled with -DSMALL_MEM to
+reduce memory usage. When compiled without this flag, all versions of
+gzip give exactly the same compression ratio. The 386 version runs faster
+under plain DOS without any memory manager than when using DMPI.
+
+Please send comments and bug reports to Jean-loup Gailly <jloup@chorus.fr>
+or to bug-gnu-utils@prep.ai.mit.edu.
