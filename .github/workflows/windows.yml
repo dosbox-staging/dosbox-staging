@@ -227,16 +227,18 @@ jobs:
   # https://dosbox-staging.github.io/downloads/devel/
   #
   publish_additional_artifacts:
-    name: Publish additional artifacts
+    name: Publish additional Windows artifacts
     needs: build_windows_vs_release
     runs-on: windows-2022
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/checkout@v3
         with:
           submodules: false
 
       - name: Generate changelog
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set +x
@@ -245,7 +247,9 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v2
+      - name: Upload
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v2
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API

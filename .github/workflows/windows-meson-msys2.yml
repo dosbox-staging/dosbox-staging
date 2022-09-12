@@ -12,6 +12,7 @@ env:
   CCACHE_COMPRESS: "true"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
+  INNO_VERSION: 6.2.0-5
 
 jobs:
   build_msys2:
@@ -282,11 +283,71 @@ jobs:
               Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
           }
 
+      - name: Wait for MSVC builds to complete
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Publish additional Windows artifacts
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Get Inno Setup installer
+        shell: bash
+        run: |
+          curl -L -o innosetup.7z https://github.com/portapps/innosetup-portable/releases/download/${{ env.INNO_VERSION }}/innosetup-portable-win32-${{ env.INNO_VERSION }}.7z
+          7z x -y -oout innosetup.7z
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
+            version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
+            packageinfo="release $version_tag"
+          elif [ -n "${{ github.ref }}" ] && [ -n "${{ github.sha }}" ]; then
+            git_branch=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
+            git_commit=`echo ${{ github.sha }} | awk '{print substr($0,1,9);exit}'`
+            packageinfo="a development branch named $git_branch with commit $git_commit"
+          else
+            packageinfo="a development branch"
+          fi
+          echo "version_number=`git describe --tags`" >> $GITHUB_ENV
+          sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >setup_preamble.txt
+          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
+
+      - name: Download MSVC artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: windows.yml
+          name: ${{ env.artifact_name }}
+          path: ${{ github.workspace }}/msvc
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          cd out\app
+          mkdir program
+          copy ${{ github.workspace }}\contrib\windows_installer\* .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging.ico .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
+          copy ${{ github.workspace }}\setup_preamble.txt .
+          xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
+          replace /a ${{ github.workspace }}\msvc\*.dll program
+          if (Test-Path -Path dosbox*.exe -PathType Leaf) {del dosbox*.exe}
+          copy ${{ github.workspace }}\msvc\dosbox*.exe
+          ren dosbox.exe dosbox_msvc.exe
+          ren dosbox_with_debugger.exe dosbox_msvc_with_debugger.exe
+          move program\dosbox.exe .
+          move program\dosbox_with_debugger.exe .
+          ISCC.exe dosbox-staging-setup.iss
+
       - name: Upload package
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.PKG_RELEASE }}
           path: ${{ env.PKG_RELEASE }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: dosbox-staging-${{ env.version_number }}-setup.exe
+          path: ${{ github.workspace }}\out\app\dosbox-staging-${{ env.version_number }}-setup.exe
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
