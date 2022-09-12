@@ -1,0 +1,42 @@
+Changes in version 1.20:
+
+The option '--loose-trailing', has been added.
+
+The test used by lzip to discriminate trailing data from a corrupt
+header in multimember or concatenated files has been improved to a
+Hamming distance (HD) of 3, and the 3 bit flips must happen in different
+magic bytes for the test to fail. As a consequence some kinds of files
+no longer can be appended to a lzip file as trailing data unless the
+'--loose-trailing' option is used when decompressing.
+Lziprecover can be used to remove conflicting trailing data from a file.
+
+The contents of a corrupt or truncated header found in a multimember
+file are now shown, after the error message, in the same format as
+trailing data.
+
+Option '-S, --volume-size' now keeps input files unchanged.
+
+When creating multimember files or splitting the output in volumes, the
+dictionary size is now adjusted for each member individually.
+
+The 'bits/byte' ratio has been replaced with the inverse compression
+ratio in the output.
+
+The progress of decompression is now shown at verbosity level 2 (-vv) or
+higher.
+
+Progress of (de)compression is only shown if stderr is a terminal.
+
+A final diagnostic is now shown at verbosity level 1 (-v) or higher if
+any file fails the test when testing multiple files.
+
+A second '.lz' extension is no longer added to the argument of '-o' if
+it already ends in '.lz' or '.tlz'.
+
+In case of (de)compressed size mismatch, the stored size is now also
+shown in hexadecimal to ease visual comparison.
+
+The dictionary size is now shown at verbosity level 4 (-vvvv) when
+decompressing or testing.
+
+The new chapter "Meaning of lzip's output" has been added to the manual.

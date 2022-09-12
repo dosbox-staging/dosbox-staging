@@ -1,0 +1,132 @@
+
+
+
+LZIP(1)                   User Commands                   LZIP(1)
+
+
+NAME
+       lzip - reduces the size of files
+
+SYNOPSIS
+       lzip [options] [files]
+
+DESCRIPTION
+       Lzip - LZMA lossless data compressor.
+
+OPTIONS
+       -h, --help
+              display this help and exit
+
+       -V, --version
+              output version information and exit
+
+       -a, --trailing-error
+              exit with error status if trailing data
+
+       -b, --member-size=<bytes>
+              set member size limit in bytes
+
+       -c, --stdout
+              write to standard output, keep input files
+
+       -d, --decompress
+              decompress
+
+       -f, --force
+              overwrite existing output files
+
+       -F, --recompress
+              force re-compression of compressed files
+
+       -k, --keep
+              keep (don't delete) input files
+
+       -l, --list
+              print (un)compressed file sizes
+
+       -m, --match-length=<bytes>
+              set match length limit in bytes [36]
+
+       -o, --output=<file>
+              if reading standard input, write to <file>
+
+       -q, --quiet
+              suppress all messages
+
+       -s, --dictionary-size=<bytes>
+              set dictionary size limit in bytes [8 MiB]
+
+       -S, --volume-size=<bytes>
+              set volume size limit in bytes, implies -k
+
+
+
+lzip 1.20                 February 2018                         1
+
+
+
+
+
+LZIP(1)                   User Commands                   LZIP(1)
+
+
+       -t, --test
+              test compressed file integrity
+
+       -v, --verbose
+              be verbose (a 2nd -v gives more)
+
+       -0 .. -9
+              set compression level [default 6]
+
+       --fast alias for -0
+
+       --best alias for -9
+
+       --loose-trailing
+              allow trailing data seeming corrupt header
+
+       If no file names are given, or if a file is '-', lzip com-
+       presses or decompresses from standard  input  to  standard
+       output.  Numbers may be followed by a multiplier: k = kB =
+       10^3 = 1000, Ki = KiB = 2^10 = 1024, M = 10^6, Mi =  2^20,
+       G = 10^9, Gi = 2^30, etc...  Dictionary sizes 12 to 29 are
+       interpreted as powers of two, meaning 2^12 to 2^29  bytes.
+
+       The  bidimensional parameter space of LZMA can't be mapped
+       to a linear scale optimal for all files. If your files are
+       large,  very  repetitive,  etc,  you  may  need to use the
+       --dictionary-size and --match-length options  directly  to
+       achieve optimal performance.
+
+       Exit  status:  0  for  a  normal exit, 1 for environmental
+       problems (file not found, invalid flags, I/O errors, etc),
+       2  to  indicate  a corrupt or invalid input file, 3 for an
+       internal consistency error (eg, bug) which caused lzip  to
+       panic.
+
+REPORTING BUGS
+       Report bugs to lzip-bug@nongnu.org
+       Lzip home page: http://www.nongnu.org/lzip/lzip.html
+
+COPYRIGHT
+       Copyright (C) 2018 Antonio Diaz Diaz.  License GPLv2+: GNU
+       GPL version 2 or later <http://gnu.org/licenses/gpl.html>
+       This is free software: you are free to change  and  redis-
+       tribute it.  There is NO WARRANTY, to the extent permitted
+       by law.
+
+SEE ALSO
+       The full documentation for lzip is maintained as a Texinfo
+       manual.   If  the  info  and  lzip  programs  are properly
+       installed at your site, the command
+
+              info lzip
+
+       should give you access to the complete manual.
+
+
+
+lzip 1.20                 February 2018                         2
+
+
