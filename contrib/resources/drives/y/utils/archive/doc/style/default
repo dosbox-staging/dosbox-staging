@@ -1,0 +1,20 @@
+[.]
+00=.color
+01=.control
+02=.quote
+03=.number
+04=.$
+05=.operator
+
+[.color]
+00=A 07
+[.control]
+00=O 40
+[.quote]
+00=Q XB
+[.number]
+00=D XB
+[.$]
+00=C XB $\
+[.operator]
+00=C XF .:!|/<[{()}]>,-*+?%&=^~";"

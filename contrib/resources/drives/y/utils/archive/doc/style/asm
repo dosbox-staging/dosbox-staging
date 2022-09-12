@@ -1,0 +1,53 @@
+[.]
+00=[default]
+01=.regs
+02=.cs
+03=.acc
+04=.base
+05=.seg
+06=.call
+07=.jmp
+08=.dir
+09=.x86
+10=.32
+11=.if
+12=.ifdef
+13=.include
+14=.comment
+
+[.if]
+00=W X2 if else elseif endif while break endw
+[.ifdef]
+00=B X2 ifdef ifndef
+[.comment]
+00=B X8 ";"
+[.include]
+00=B X2 include
+[.cs]
+00=W X5 cs ds es ss
+[.base]
+00=W X6 rbp rsi rdi rbx ebp esi edi ebx bp si di bx bh bl
+[.acc]
+00=W X4 rax eax ax ah al
+[.regs]
+00=W X2 rcx rdx rsp ecx edx esp cx dx sp cl dl ch dh
+[.jmp]
+00=W X9 jmp ja jb jc jz jna jnb jnc jnz jna jnz je jne jae jbe jl jg jle jge js jns
+[.call]
+00=W X6 call invoke int ret iret
+[.dir]
+00=W XF public local extrn label proto proc near far endp ends size struc
+01=segment seg offset ptr byte word dword db dw dd equ textequ
+02=pascal c stdcall end externdef model compact large macro endm
+[.seg]
+00=W XF code data stack _text _data flat
+[.x86]
+00=W X3
+01=mov movzx movsx xchg cwb cbw lodsb stosb lodsw stosw movsb movsw
+02=push pop popa pusha lea les lds
+03=and or xor not neg add adc sub sbb shl shr dec inc
+04=cmp test cld std clc stc mul div imul idiv
+05=rep repe repne repz repnz in out aam org
+[.32]
+00=W XB
+01=lodsd stosd movsd

@@ -1,0 +1,17 @@
+[.]
+00=[default]
+01=.c.words
+02=.#
+03=.//
+04=./**/
+
+[.#]
+00=B X2 #
+[.//]
+00=B X8 //
+[./**/]
+00=N X8 /* */
+[.c.words]
+00=W XF const operator char int long void typedef struct
+01=if else for do while break continue goto return
+02=switch case default public extern
