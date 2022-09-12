@@ -1,0 +1,38 @@
+; Necromancer's Dos Navigator menu file... ³
+;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+;Detailed help on the !.! expansion macros is available in the online help
+;under the topic USER MENU -> FILENAME MACROS
+>1 Compile Necromancer's Dos Navigator
+ >2 DPMI32
+  call compile d32
+ >2 WIN32
+  call compile w32
+ >2 OS/2
+  call compile os2
+>1
+>1 Compile Resources for Navigator
+ >2 DPMI32
+  call resource d32
+ >2 WIN32
+  call resource w32
+ >2 OS/2
+  call resource os2
+>1
+>1 Create Navigator's Distributive
+ >2 DPMI32
+  call distrib d32
+ >2 WIN32
+  call distrib w32
+ >2 OS/2
+  call distrib os2
+>1
+>1 Create Installation of Navigator
+ >2 DPMI32
+  call install d32
+ >2 WIN32
+  call install w32
+ >2 OS/2
+  call install os2
+ >2
+ >2 Additions
+  call install add

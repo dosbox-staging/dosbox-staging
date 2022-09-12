@@ -1,0 +1,12 @@
+; Necromancer's Dos Navigator: open file at cursor PATH configuration ³
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+;
+; Format: extension list in [] brackets, then paths for search.
+; "*" at first position: search recursively in all subdirectories
+; "+" at first position: search in all subdirectories but only one level down
+;
+; Example:
+;
+; [pas,inc]
+; *c:\bp\inc\;c:\my\src
+; i:\bp\inc\

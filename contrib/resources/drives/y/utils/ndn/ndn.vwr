@@ -1,0 +1,8 @@
+; Necromancer's Dos Navigator Viewer configuration file �
+;컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴켸
+;Detailed help on the !.! expansion macros is available in the online help
+;under the topic USER MENU -> FILENAME MACROS
+;
+;Examples: pas      : bp !.!
+;          C,cpp    : bc !.!
+;*: notepad !.!

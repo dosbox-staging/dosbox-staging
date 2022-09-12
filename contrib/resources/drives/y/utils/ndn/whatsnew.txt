@@ -1,0 +1,95 @@
+2022-01-23 (v3.00.0007)
+  new: linux add column "B" and "Z" in linux version
+  new: experimental version for KolibriOS (russian x32 OS)
+  fix: VP version (not W32) show free memory size >2GB
+  new: linux add column "W" - show file type like MC
+  new: add Host-info into InfoPanel (Ctrl-L)
+  fix: linux x64 fix OS Environment dialog
+  new: InfoPanel (Ctrl-L) - items can be hidden
+  new: panel QuickView optionally show folder statistics
+  fix: file properties (Ctrl-; hotkey) also show approximate results ("~" char)
+  fix: no overflow with calculating folder size on disk (VP versions)
+  new: show current disk informations (FAT & NTFS drive type)
+  fix: fixed bug in LFN.lChDir() in VP-Dos version
+  new: Windows version: autorun as Administrator option (in menu Options->Configuration->System Setup... - default Off)
+  fix: Linux64 version: runs now also on real console - not crashes
+  fix: correct show UTF8 names inside ZIP archives
+  new: analog clock in menu->Utilities
+  new: Space hotkey centers X & Y window when dragging if active (Ctrl-F4)
+  new: Ctrl-Space hotkey center X window when dragging if active (Ctrl-F4)
+  new: Alt-Z hotkey toggles maximize/restore window when dragging if active (Ctrl-F4)
+  new: Auto-spaces option in editor after one of char ,.:;!?
+  new: Alt-Home in editor jumps to 1st non-blank character in current line
+  new: "Save directory selection" in FM setup & "Clear folder selection list" in History submenu
+  new: Sort method by digital number
+  new: option in editor menu->Misc "Insert string using font"
+  new: faster CRC calculation by CRC32 SSE4_2 opcode
+  new: [Shift]-Tab toggles calendar show horizontal/vertical
+  fix: statusline commands now works with calendars
+  fix: RCP support +/- operators in constants like: "3-1+2", "kbEsc-3" or "kbTab+kbRWin"
+  fix: ContextMenu works in all Win versions (now activated Alt-[Shift]-A or WinMenu-A)
+  fix: sometimes crash when open MiscellaneousSetups
+  new: editor, delete all lines in a block that (not)-contains string
+  fix: editor, delete empty lines in a block now works
+  new: [Ctrl-Space] key in DirectoryTree enables parital view
+  new: [Alt-Space], [Alt-Gray-'-'] or [Alt-Gray-'+'] opens/closes all sub directory tree (level 1)
+  new: screen grabbing by mouse (see: Options->Configuration->Miscellaneous setups->System Setup Ext)
+  new: added CtrlAlt-[Left/Right], CtrlAlt-[Up/Dn] hotkeys to panel quick search
+  new: on-screen keyboard activated by click 1st char of status line or press WinMenu-K hotkey
+  fix: added new cpuid instruction flags
+  new: quick view file description (start in main menu->Manager or after press Ctrl-D
+  new: sort directories only by name option added
+  new: three alternative buttons (Dark/Yuck/Zeez), to select palette, in Colors->Vga Palette
+  new: gomoku Japanese game
+  new: WinMenu-F option to QuickSearch in FilePanel (Dos & Win)
+  fix: now AltQ hotkey works in dialogs
+  fix: better dialog detection data change/modification
+  new: possible DEFINE/UNDEF/PUSH/POP directives in resource files to test other target
+  fix: increased view subtitle size
+  new: Ctrl-Shift-M minimizes/iconizes current window
+  new: Ctrl-Shift-<1-9> selects window number 1-9
+  fix: Esc sometimes closes minimized window
+  fix: in dos version show correct command line timer (dx:cx registers was swapped)
+  new: XMS/EMS (Dos) memory statistics data
+  fix: Alt-Shift-/ changed cmdline to invalid state (FPC version)
+  new: optionally create simple event log file (Options->Configuration->Miscellaneous setups->System Setup Ext)
+  fix: the same file descriptions will not be copied
+  fix: 2048 game not blinking
+  fix: help window is zoomed to desktop size
+  fix: show cpu registers & true free memory size on exceptions in Dos/K32 version
+  new: minesweeper game
+  fix: now Ctrl-[Up/Dn] works in help window
+  fix: find file in panel now search in whole file when advanced search is off
+  new: simple html viewer
+  fix: quick search is activated by pressing and releasing only single Alt/Ctrl
+  fix: now releasing Ctrl, Caps/Num/Scroll-Lock key works also in Kolibri (K32 version)
+  fix: executing files in KolibriOS via /sys/@open
+  new: new option in menu "=": visit NDN website in K32 version
+  fix: Full screen shoot option visible in menu only in Windows
+  fix: sort indicator in left upper corner of panel was incorrect for some modes
+  new: Option "Restart the kernel" menu File->Shutdown system... in K32 ver.
+  new: auto switch font after Ctrl-Space hotkey in help window (K32)
+  new: Copy/paste to/from system clipboard works in K32
+  new: When APM not found, in dos, NDN try to shut down by ACPI (if not run as DPMI32/VCPI client)
+  fix: now now show all files with mask specified, was small bug in FindFirst()/FindNext() (K32)
+  new: command line option /NOEXC disables/skips installing exception handler to debug NDN (Dos32/K32)
+  new: show disk size & volume label name on K32
+  fix: SysFileMove() function works in K32
+  fix: the ".." is not showing in root directory (K32)
+  fix: Capitalization does not matter in directory history (!Linux)
+  fix: in ScreenSaversSetup, after pressing test button, double click listbox not worked
+  new: squares game
+  fix: list of disks updated after Alt-F1/F2 (K32)
+  fix: EVM_MOUSE_FILTER added to SetEventMask(), NDN window not reacts on mouse events when is inactive.
+  fix: optional only basic archivers will be detected (see menu Options->Archives->ArchivesOptions...)
+  fix: Contents of the TIB pointers (fs:[4] and fs:[8]) were changed in VP versions (Dos32/K32)
+  new: Save button in CPU Information dialog to write report to file
+  fix: now drives are visible in TFileDialog (K32)
+  fix: first line of current file was not show in TFileDialog (Linux/K32)
+  fix: show #0 character in ASCII Table
+  fix: corrected free memory detection in Linux32
+  fix: build compressor now works in Linux32 and optionally support readonly files
+  fix: show allocated file size on disk & sort by this size also in Linux version
+  new: column "R" in disk shows how much space is used by the file in the current folder as a percentage
+  new: OS/2 version released
+  new: test version for HaikuOS

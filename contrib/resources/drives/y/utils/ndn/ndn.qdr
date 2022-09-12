@@ -1,0 +1,29 @@
+; Necromancer's Dos Navigator: External Quick Directories ³
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+;
+; Format: One directory on one line, environment variables are allowed.
+;         No duplicate directories will be displayed.
+;
+; "?" at first position: Only add the directory if it exists.
+; "-" on a single line: Add a menu line to the displayed list.
+; "*" as a separator between a path and a description string
+
+; Temporary directories
+?%TMP%
+?%TEMP%
+
+; Windows NT+
+?%SystemRoot%
+?%ProgramFiles%
+?%CommonProgramFiles%
+?%ALLUSERSPROFILE%
+?%HomeDrive%%HomePath%
+?%APPDATA%
+?%UserProfile%
+; Language specific
+?%UserProfile%\Eigene Dateien\
+?%UserProfile%\My Documents\
+
+; Windows 9x
+?%WinDir%
+?%WinBootDir%

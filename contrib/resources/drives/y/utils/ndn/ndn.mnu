@@ -1,0 +1,49 @@
+; Necromancer's Dos Navigator menu file... ³
+;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+;Detailed help on the !.! expansion macros is available in the online help
+;under the topic USER MENU -> FILENAME MACROS
+>1 Additional menu [NDN Style]
+{menufile="ndn.mn2_"}
+{ncmenufile="nc.mnu_"}
+>1
+>1 Unpack ~~!.!~~
+ < Enter the file name
+ <=~!.!~
+ cup386 /1 ~!.!~ %3
+>1 Turbo Debugger
+ td !.!
+>1
+>1 EXE Tools
+  >2 Convert EXE to COM
+   C:\TOOLS\EXETLS\EXETOOLS.COM !.! /1 !.COM
+  >2 Cut EXE header
+   C:\TOOLS\EXETLS\EXETOOLS.COM !.! /2
+  >2 Convert COM to EXE
+   C:\TOOLS\EXETLS\EXETOOLS.COM !.! /3 !.EXE
+  >2 Encrypt EXE or COM file
+   C:\TOOLS\EXETLS\EXETOOLS.COM !.! /E
+  >2 Add Header Comment from CommentFile
+   C:\TOOLS\EXETLS\EXETOOLS.COM !.! /C !.!
+  >2 Optimize EXE header
+   =>!.!
+>1
+>1 Run Microsoft Word
+ winword.exe
+>1
+>1 Misc. Windows commands
+  >2 Create useful start menu shortcuts
+    >3 ... in German
+     @echo off
+     echo creating special start menu directories...
+     if not .%OS%.==.Windows_NT. exit
+     set TDIR=%USERPROFILE%\Startmen
+     md "%TDIR%\Drucker.{2227A280-3AEA-1069-A2DE-08002B30309D}"
+     md "%TDIR%\Netzwerk- und DFš Verbindungen.{7007ACC7-3202-11D1-AAD2-00805FC1270E}"
+     md "%TDIR%\Netzwerkumgebung.{208D2C60-3AEA-1069-A2D7-08002B30309D}"
+     md "%TDIR%\Papierkorb.{645FF040-5081-101B-9F08-00AA002F954E}"
+     md "%TDIR%\Systemsteuerung.{21EC2020-3AEA-1069-A2DD-08002B30309D}"
+     md "%TDIR%\Temporary Internet Files.{7BD29E00-76C1-11CF-9DD0-00A0C9034933}"
+  >2 Add to and play in WINAMP
+  set TMPM3U=%TEMP%\winamp.m3u
+  type %1 > %TMPM3U%
+  D:\Programme\Winamp\winamp.exe /play %TMPM3U%

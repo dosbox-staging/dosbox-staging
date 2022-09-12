@@ -1,0 +1,344 @@
+; Necromancer's Dos Navigator Extension configuration file ³
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+; Syntax: {} Enter, () Shift-Enter, [] Alt-Enter/Alt-Home
+;         asm,pas or asm;pas possible as filter
+;         therefore comments only work at the first position of a string
+;         you can comment the whole block by commenting the filter
+;         ~!.!~/~!.ext Insert SFN (LFN default)
+;
+;        the keywords EDITOR or VIEWER (case insensitive) inside {}, []
+;        or () open the file in the internal viewer/editor, like [F3].
+;        Examples: asm{editor}   or   *{Viewer}
+;
+;Detailed help on the !.! expansion macros is available in the online help
+;under the topic USER MENU -> FILENAME MACROS
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Assembler ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+asm{    @echo off
+        echo ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+        echo ³ Assembling and linking COM file... Û
+        echo ÀÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÛ
+        tasm !
+        tlink /t /x !.obj
+   }
+asm(    @echo off
+        echo ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+        echo ³ Assembling and linking EXE file... Û
+        echo ÀÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÛ
+        tasm !
+        tlink /x !.obj
+   )
+asm[
+   >1 ~A~ssemble OMF obj file (TASM)
+        tasm ! /m2
+   >1 Assemble & link ~C~OM/binary file (TASM)
+        tasm !
+        tlink /t/x !.obj
+   >1 Assemble & link E~X~E file (TASM)
+        tasm !
+        tlink /x !.obj
+   >1 Assemble & link ~C~OM file (TASM 32-BIT)
+        tasm !
+        tlink /t/x/3 !.obj
+   >1 Assemble & link E~X~E file (TASM 32-BIT)
+        tasm !
+        tlink /x/3 !.obj
+   >1
+   >1 Assemble OMF obj file (DJASM)
+        @ECHO OFF
+        set P=F:\DJGPP\BIN\
+        set PATH=%P%;%PATH%
+        djasm !.! !.obj
+   >1 Assemble & link COM/binary file (DJASM)
+        @ECHO OFF
+        set P=F:\DJGPP\BIN\
+        set PATH=%P%;%PATH%
+        djasm !.! !.bin
+   >1 Assemble & link EXE file (DJASM)
+        @ECHO OFF
+        set P=F:\DJGPP\BIN\
+        set PATH=%P%;%PATH%
+        djasm !.! !.exe
+   >1 Assemble C header file (DJASM)
+        @ECHO OFF
+        set P=F:\DJGPP\BIN\
+        set PATH=%P%;%PATH%
+        djasm !.! !.h
+   >1
+   >1 Assemble OMF obj file (WASM)
+        @ECHO OFF
+        set P=F:\WC\BINW
+        set PATH=%P%;%PATH%
+        wasm !.!
+   >1
+   >1 Assemble OMF obj file (JWASM)
+        @ECHO OFF
+        set P=F:\JWASM
+        set PATH=%P%;%PATH%
+        jwasm -omf !.!
+   >1 Assemble COFF obj file (JWASM)
+        @ECHO OFF
+        set P=F:\JWASM
+        set PATH=%P%;%PATH%
+        jwasm -coff !.!
+   >1 Assemble ELF obj file (JWASM)
+        @ECHO OFF
+        set P=F:\JWASM
+        set PATH=%P%;%PATH%
+        jwasm -elf !.!
+   >1 Assemble COM/binary file (JWASM)
+        @ECHO OFF
+        set P=F:\JWASM
+        set PATH=%P%;%PATH%
+        jwasm -bin !.!
+   ]
+obj{    @echo off
+        echo ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+        echo ³ Linking file as COM file... Û
+        echo ÀÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÛ
+        tlink /t/x !.obj
+   }
+obj[
+    >1 Link ~C~OM file
+        tlink /t/x !.obj
+    >1 Link E~X~E file
+        tlink /x !.obj
+    >1
+    >1 ~D~isassemble .obj (OBJCONV)
+        objconv !.! -fmasm
+    >1 D~i~sassemble .obj (WDis)
+        wdis -l=!.asm !.!
+    >1
+    >1 ~D~ump !.! to !.TXT (OBJCONV)
+        objconv !.! -d > !.TXT
+    >1 Dump !.! (TDUMP)
+        @ECHO OFF
+        set TDPATH=F:\BCC
+        set PATH=%TDPATH%\BIN
+        tdump -oc !.! > !.txt
+    >1 Dump !.! (WDUMP)
+        @ECHO OFF
+        set WDPATH=F:\OpenWatc
+        set PATH=%WDPATH%\BINW
+        wdump !.! > !w.txt
+]
+lib[
+    >1 ~E~xtract .obj from !.!
+        <= objconv !.! -fomf -lx:
+    >1 E~x~tract all .obj from !.!
+        objconv -fomf -lx !.!
+    >1
+    >1 ~D~ump !.! to !.TXT (OBJCONV)
+        objconv -d !.! > !.TXT
+    >1 Dump !.! (TDUMP)
+        @ECHO OFF
+        set TDPATH=F:\BCC
+        set PATH=%TDPATH%\BIN
+        tdump -oc !.! > !.txt
+    >1 Dump !.! (WDUMP)
+        @ECHO OFF
+        set WDPATH=F:\OpenWatc
+        set PATH=%WDPATH%\BINW
+        wdump !.! > !w.txt
+]^
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Programming  Languages ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+bas{    D:\langs\pb\pb.exe ~!.!~}
+c  {
+        @ECHO OFF
+        SET P=E:\BCC
+        SET PATH=%PATH%;%P%\BIN
+        bcc32 -g10 -j1 -I"%P%\include" -L"%P%\lib" !.!
+        IF NOT ERRORLEVEL 1 !.exe
+   }
+cpp{    d:\langs\bc\bin\bc.exe ~!.!~}
+prj{    d:\langs\bc\bin\bc.exe ~!.!~}
+tp (    d:\langs\bp\bin\bp.exe /c~!.!~)
+tp {    d:\langs\bp\bin\bp.exe /c~!.!~}
+pas{    bpc ~!.!~}
+pas[
+    >1 ~B~orland Pascal (Real Mode)
+        SET BPPATH=F:\BP
+        SET PATH=%BPPATH%\BIN
+        bpc -M -CD /U%BPPATH%\UNITS /R%BPPATH%\UNITS ~!.!~
+    >1 ~B~orland Pascal (Protected Mode)
+        SET BPPATH=F:\BP
+        SET PATH=%BPPATH%\BIN
+        bpc -M -CP /U%BPPATH%\UNITS /R%BPPATH%\UNITS ~!.!~
+    >1 ~B~orland Pascal (Windows)
+        SET BPPATH=F:\BP
+        SET PATH=%BPPATH%\BIN
+        bpc -M -CW /U%BPPATH%\UNITS /R%BPPATH%\UNITS ~!.!~
+    >1 ~V~irtual Pascal (D32)
+        SET VPPATH=F:\VP
+        SET PATH=%VPPATH%\BIN.W32
+        del !.exe > nul
+        vpc -M -CW:D32:DPMI32 -E. -$$SMARTLINK+ -U%VPPATH%\UNITS.D32 -L%VPPATH%\LIB.D32 !.!
+        if exist !.exe pe2le !.exe !.exe /S:%VPPATH%\BIN.D32\STUBS\DOS32A /D:(Description)
+        if exist !.exe !.exe
+    >1 ~V~irtual Pascal (W32)
+        SET VPPATH=F:\VP
+        SET PATH=%VPPATH%\BIN.W32
+        del !.exe > nul
+        vpc -B -CW:W32:WIN32 -E. -$$SMARTLINK+ -U%VPPATH%\UNITS.W32 -L%VPPATH%\LIB.W32 !.!
+        if exist !.exe !.exe
+    >1 ~V~irtual Pascal (LNX)
+        SET VPPATH=F:\VP
+        SET PATH=%VPPATH%\BIN.W32
+        vpc -B -CL:LNX:LINUX -E. -$$SMARTLINK+ -U%VPPATH%\UNITS.LNX -L%VPPATH%\LIB.LNX !.!
+        pe2elf -v !.exe
+   ]
+c,cpp [
+    >1 ~B~orland C++ 32Bit (EXE)
+        SET CPATH=F:\BCC
+        SET PATH=%CPATH%\BIN
+        bcc32 -I"%CPATH%\INCLUDE" -L"%CPATH%\LIB" !.!
+    >1 ~B~orland C++ 32Bit (DLL)
+        SET CPATH=F:\BCC
+        SET PATH=%CPATH%\BIN
+        bcc32 -tWD -I"%CPATH%\INCLUDE" -L"%CPATH%\LIB" !.!
+    >1 ~D~JGPP Gnu C/C++ 32bit
+        SET DJGPP=F:\DJGPP\DJGPP.ENV
+        gcc !.! -o !.exe
+    >1 ~W~atcom C/C++ 32bit (PMODE/W)
+        SET CPATH=F:\WC
+        SET PATH=%CPATH%\BINW
+        wcl386 -CC -l=pmodew -i=%CPATH%\H !.!
+    >1 W~a~tcom C/C++ 32bit (WDOSX)
+        SET CPATH=F:\WC
+        SET PATH=%CPATH%\BINW
+        wcl386 -CC -l=wdosx -i=%CPATH%\H !.!
+    >1 ~O~pen Watcom C/C++ 32bit
+        SET CPATH=F:\OPENWATC
+        SET PATH=%CPATH%\BINW
+        wcl386 -CC -l=pmodew -i=%CPATH%\H !.!
+    >1 ~T~urbo C/C++ 16bit
+        SET CPATH=F:\TC
+        SET PATH=%CPATH%\BIN
+        tcc -I%CPATH%\INCLUDE -L%CPATH%\LIB !.!
+    >1 ~I~ntel C CodeBuilder
+        SET CPATH=F:\CB
+        SET PATH=%CPATH%\BIN
+        icc -I%CPATH%\INC !.!
+]
+jar{    @C:\Programme\Java\jre1.5.0\bin\java.exe -jar !.!}
+java{   @echo.
+        @echo þ Compiling þ
+        @D:\PROGRA~1\JAVASD~1.4\BIN\javac.exe !.!
+        @echo þ Running þ
+        @D:\PROGRA~1\JAVASD~1.4\BIN\java.exe !
+}
+class{  @echo.
+        @echo þ Running þ
+        @D:\PROGRA~1\JAVASD~1.4\BIN\java.exe !
+}
+cs{
+        @ECHO OFF
+        SET P=C:\WINNT\Microsoft.NET\Framework\v2.0.50727\
+        SET PATH=%PATH%;%P%
+        %P%\csc.exe /t:exe /debug- /o+ /w:4 /unsafe- /checked+ !.!
+        if not errorlevel 1 !.exe
+  }
+tcl{ C:\tools\TCL\bin\tclsh.exe !:!\!.! }
+*make*[
+    >1 Execute make (DJGPP)
+        @ECHO OFF
+        SET P=F:\DJGPP
+        SET PATH=%P%/BIN;%PATH%
+        SET DJGPP=%P%/djgpp.env
+        MAKE.EXE -f !.!
+]
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Executables ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+exe[
+   >1 ~D~ump !.! to !.TXT (OBJCONV)
+      objconv -d !.! > !.TXT
+   >1 Dump !.! (TDUMP)
+        @ECHO OFF
+        set TDPATH=F:\BCC
+        set PATH=%TDPATH%\BIN
+        tdump -oc !.! > !.txt
+   >1 Dump !.! (WDUMP)
+        @ECHO OFF
+        set WDPATH=F:\OpenWatc
+        set PATH=%WDPATH%\BINW
+        wdump !.! > !w.txt
+]
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Archivers ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+lst(    arj a -jm ! !!!.!
+        del !.!)
+lst{    pkzip -ex ! @!.!
+        del !.!}
+ice{    lha x !.! *.* }
+ice(    have !.!)
+arj{    arj x !.! }
+arj(    arj x !.! e:)
+zip{    pkunzip -d !.!}
+zip(    pkunzip !.! e:)
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ FoxPro ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+mpr{    foxprol !.!}
+spr{    foxprol !.!}
+pjx{    foxprol !.!}
+prg{    foxprol !.!}
+fxp{    foxprol !.!}
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ SQL ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+sql{ C:\Oracle\Oracle10g\BIN\sqlplus.exe sql_85/sql_85 @!:!\!.! }
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ TeX ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+tex,dtx( C:\Programme\Tex\texmf\miktex\bin\pdflatex.exe -silent !.!
+     !.pdf )
+
+tex,dtx{ C:\Programme\Tex\texmf\miktex\bin\latex.exe -silent !.!
+     !.dvi }
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Misc ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+stm{    ..\StMod ! F}
+;bak{    del *.bak}
+sc {    paradox !.!}
+pcx{    pcxview !.! }
+;$$${    del !.!}
+pkt{    pktview !.!}
+sch{    cap !.! }
+pcb{    cad !.! }
+UUE{    E:\SYS\UTIL\UUDECODE !.!}
+
+ss{
+   @echo off
+   ren ~!.!~ ~!.EXE
+   ~!.EXE
+   ren ~!.EXE ~!.SS
+    }
+
+ans{    AnSi
+        cls
+        TYPE !.!
+   }
+
+; ~¯à®¯¨á âì ¡ãª¢ã ‚ è¥£® CD-ROM ¤à ©¢ 
+cda{
+    dss Z:!.!
+   }
+
+; ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ All files ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+; This menu starts up by Alt-Enter for all files
+*  [   >1 Convert ~!.!~ ~t~o UUE
+       < Enter number of lines
+       <=200
+       E:\SYS\UTIL\UUENCODE -s%3 !.!
+       >1 Convert ~!.!~ ~f~rom UUE
+       E:\SYS\UTIL\UUDECODE !.!
+   ]
+
+*.* (
+  @echo off
+  IF "%OS%" == "Windows_NT" GOTO w32
+  start "!:!\!.!"
+  goto end
+
+  :w32
+  start "" "!:!\!.!"
+
+  :end
+)

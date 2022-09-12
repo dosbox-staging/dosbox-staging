@@ -1,0 +1,19 @@
+; Necromancer's Dos Navigator Quick run configuration file │
+; ─────────────────────────────────────────────────────────┘
+
+;Ctrl-Shift-F1
+>[1
+ cmd
+;Ctrl-Shift-F2
+>2
+ echo Type Exit to return Dos Navigator....
+ COMMAND.COM
+
+;Ctrl-Shift-F10
+>10
+echo dss
+
+;   > - Запуск Foreground полноэкранную OS/2 сессию;
+;   < - Запуск Background полноэкранную OS/2 сессию;
+;   ] - Запуск Foreground Windowed OS/2 сессию;
+;   [ - Запуск Background Windowed OS/2 сессию;
