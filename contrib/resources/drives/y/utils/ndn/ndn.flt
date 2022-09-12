@@ -1,6 +1,0 @@
-; Necromancer's Dos Navigator Filters File
-; 컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴켸
-; Name=Filters
-ExecFilter=*.bat;*.com;*.exe;*.cmd;*.sh
-MyPictures=*.jpg;*.png;*.gif;*.tga
-MyArchives=*.rar;*.zip;*.7z
