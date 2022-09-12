@@ -1,0 +1,186 @@
+
+   The RAR Convertor
+   ~~~~~~~~~~~~~~~~~
+   Archive Conversion Utility version 1.02
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   User manual
+   ~~~~~~~~~~~
+
+   The RCVT Archive Conversion utility provides conversion of different
+   archive types to one, master type.
+
+   RCVT extracts files from the source archive and packs them into the
+   new archive, removing the original archive provided the output archive
+   was successfully created.
+
+   The configuration file RCVT.CFG contains archive types and options.
+   Archive types are defined with archiver program calls to pack, extract
+   and test the corresponding archives.
+
+   The utility has been specially developed to convert archives of different
+   types to RAR archives in order to obtain a higher compression ratio for
+   your data.  However it is possible to re-configure RCVT to another master
+   archive type. This is achieved by placing the definition of the master
+   archive type before others in the configuration file.
+
+
+      1. The configuration file RCVT.CFG
+
+   The RCVT configuration file RCVT.CFG is a plain text file containing
+   options and archive type definitions.  RCVT.CFG must be in the same
+   directory as RCVT.EXE.
+
+   Strings starting with the semi-colon character ';' are comments and are
+   ignored by RCVT.EXE.
+
+
+      1.1. Options
+
+   OnError  NextArchive | Abort
+
+   The value of this option defines how RCVT is to proceed when an error
+   in the current archive is reported by the archiver. Set this option to
+   'Abort' if you want RCVT to stop processing archives when an error
+   occurs.
+
+
+   RepackRatio <Percent>
+
+   Specifies the lowest acceptable compression ratio after repacking.
+
+
+   Add <filename>
+
+   Specifies the name of the file which must be added to every repacked
+   archive.  Full pathname should be provided.  Multiple "Add" strings are
+   allowed.
+
+
+   Del <filename>
+
+   Specifes file(s) that should not be placed into the repacked archive.
+   Wildcards may be used.  Root directory of the archive is assumed
+   if no full path given.  Multiple "Del" strings are allowed.
+
+
+   Scan <filename-to-run>
+
+   You can set up a program call to process files extracted from the source
+   archive before repacking them into new archive. For instance, an
+   antivirus program to scan files for computer viruses may be defined.
+   Should the program return non-zero exit code (ERRORLEVEL) the source
+   archive will not be repacked and a corresponding message will be
+   placed into the log file RCVT.LOG.  Multiple "Scan" strings are allowed.
+
+
+   Filelist <filename>
+
+   Specifies the file where source archives are listed.  The name of the
+   source archive, after successful conversion, is replaced with the new
+   name as well as the actual file size if possible.  If a full path is
+   not given, the filelist is expected to be in the same directory as the
+   archive. Multiple "Filelist" strings are allowed.
+
+
+      1.2. Archive definitions
+
+   Each archive definition consists of 4 strings.
+
+   The first string declares archive type - the archive file extension and
+   optional archive signature - a mask containing up to the first 32 generic
+   bytes of the archive file as hexadecimal numbers, for instance:
+
+    ; Converting from old (prior to version 1.50) RAR format
+    .RAR 52457E5E
+
+   The archive signature is optional, so the archive files could be
+   distinguished only by the extension, for instance:
+
+    ; Converting from zip format
+    .ZIP
+
+   The remaining strings define program calls for the archive type to pack,
+   extract and test the archive:
+
+    PACK <command-line>  to pack files to the archive (create the archive)
+    EXTR <command-line>  to extract files from the archive
+    TEST <command-line>  to test files in the archive
+
+   Following example is a complete definition of the RAR archive type:
+
+    ; Master archive definition: converting to RAR format
+
+    .RAR
+    PACK RAR a -s -std -c- -r -z$CMT$
+    EXTR RAR x -std -c- -y -av-
+    TEST RAR t -std -c-
+
+   (See the RAR user's manual for the full description of command line
+   options.)
+
+   When processing .RAR, .ARJ and .ZIP archives, the comment from the
+   source archive is placed into a temporary file which will then be
+   repacked to the new archive.  To denote the archive comment file, in
+   the archiver command line, the name '$CMT$' is used.  RCVT replaces
+   it with actual comment file name when repacking to the new archive
+   type.
+
+   NOTE: The PACK and EXTR archiver command lines should be defined to
+   recurse subdirectories.
+
+   The TEST command line is optional. It is used to verify the freshly
+   created archive (checking that files can be extracted without errors).
+   In case the program returns a non-zero exit code (ERRORLEVEL) the
+   repacked archive is discarded and the source archive is not removed,
+   a corresponding messages are placed into the log file RCVT.LOG.
+
+   If no TEST command line is defined the repacked archives are assumed
+   to have been successfully created without checking them, however it
+   is highly recommended to use the TEST command if possible.
+
+   NOTE: Archiver programs described in command lines of RCVT.CFG must be
+   in the current path to be called from RCVT.
+
+
+      2. Usage
+
+
+      To run RCVT use following syntax:
+
+        RCVT [-switch[-]] <archive>
+
+      You need only supply the archive name (wildcards allowed).
+      Optional switches:
+
+            -r[-]: convert archives in subdirectories
+            -n[+]: convert nested archives
+            -k[+]: keep archive time
+
+      Examples:
+
+        Convert all archives on the current disk:
+        RCVT -r *.*
+
+        Convert the archive book.lzh:
+        RCVT book.lzh
+
+   Extraction is performed to a temporary directory created in the
+   current path.  Files are scanned, if the SCAN option is set.
+   Files indicated with the DEL option are not included to the
+   converted archive. Files indicated with the ADD option are added
+   to the converted archive.
+
+   After new archive has been successfully created (and tested by the
+   TEST command line) the source archive file is removed. If the file
+   contains Nested archives (archives within archives), these are also
+   repacked unless the switch '-n-' has been given on the command line.
+
+   Archive comments are restored in the repacked archive if the master
+   archiver has the option to add archive comment "$CMT$".  Volume
+   labels and other specific information are ignored and not repacked.
+
+   If the archiver reports an error and the option 'OnError Abort' is
+   set in the configuration file, RCVT stops processing archives. All
+   errors are reported in the file RCVT.LOG, which is located in the
+   same directory as RCVT.EXE.
+

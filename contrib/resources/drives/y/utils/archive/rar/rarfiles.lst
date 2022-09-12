@@ -1,0 +1,61 @@
+; File order list for solid archiving
+;
+; Here you may modify the file list which tells RAR the order in which
+; to add files to a solid archive.
+;
+; This file may contain file names, wildcards and a special entry - $default.
+; The default entry defines the position in the order list for files not
+; matched with other entries in this file. Lines beginning with the semicolon
+; symbol ';' are considered as comments and not processed.
+;
+; Place this file in the same directory as RAR.EXE.
+;
+; Tips to provide improved compression and speed of operation:
+;
+; - files containing similar information should be grouped together in the
+;   archive if possible;
+; - frequently accessed files should be placed at the beginning.
+;
+file_id.diz
+descript.ion
+read.*
+readme.*
+*.doc
+*.txt
+*.lst
+*.log
+*.ini
+*.bat
+*.cmd
+*.h
+*.c
+*.cpp
+*.asm
+*.bas
+*.bak
+*.ini
+*.rtf
+*.hlp
+*.inf
+*.exe
+*.dll
+*.ovr
+*.ovl
+*.obj
+*.lib
+*.com
+*.sys
+*.drv
+*.bin
+*.bmp
+*.wav
+*.stm
+$default
+*.gif
+*.jpg
+*.tif
+*.arj
+*.ha
+*.lzh
+*.rar
+*.zip

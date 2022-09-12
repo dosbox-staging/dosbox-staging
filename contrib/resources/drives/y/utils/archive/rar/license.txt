@@ -1,0 +1,100 @@
+
+
+      The RAR Archiver
+      ~~~~~~~~~~~~~~~~
+      License for use and distribution
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+      The RAR archiver is shareware. This means:
+
+   1. All copyrights to RAR are exclusively owned by the author
+      - Eugene Roshal.
+
+   2. Anyone may use this software during a test period of 40
+      days. Following this test period of 40 days or less, if
+      you wish to continue to use RAR, you MUST register.
+
+   3. There are 5 basic types of licenses issued for RAR, these are:
+ 
+      a.  A single computer USAGE license.  The user purchases ONE license
+          to USE the RAR archiver on ONE computer.
+ 
+      b.  A Multiple USAGE license.  The user purchases a number of USAGE 
+          licenses for use, by the purchaser, the purchaser's employees or 
+          acredited agents, on the same number of computers. 
+ 
+      c.  A SITE USAGE license.  The user purchases a single USAGE license, 
+          authorising the USE of RAR, by the purchaser, the purchaser's 
+          employees or acredited agents, on an unlimited number of computers 
+          at the same physical SITE location.  This SITE location would 
+          normally be defined as a single building, but could be considered 
+          to be a number of buildings within the same, general, geographical 
+          location, such as an industrial estate or small town. 
+ 
+      d.  A CORPORATE, NATIONAL or INTERNATIONAL USAGE license.  The user 
+          purchases a single USAGE license, authorising the USE of RAR, by 
+          the purchaser, the purchaser's employees or acredited agents, on 
+          an unlimited number of computers, regardless of location, but 
+          owned or under the control of the purchaser. 
+           
+      e.  A CORPORATE, RESALE license.  The user purchases a license for 
+          a limited and specified number of copies for the purpose of 
+          reselling individual licenses to a third party with RAR being
+          included as a part of another application or system.  This license 
+          does NOT allow the direct reselling of RAR as a stand-alone 
+          product. 
+
+      Once registered, the user is granted a non-exclusive license to use 
+      RAR on as many computers as defined by the licensing terms above 
+      according to the number of licenses purchased, for any legal purpose.  
+      The registered RAR software may not be rented or leased, but may be 
+      permanently transferred, in it's entirety, if the person receiving it 
+      agrees to the terms of this license.  If the software is an update, 
+      the transfer must include the update and all previous versions. 
+
+   4. The RAR unregistered shareware version, may be freely distributed,
+      provided the distribution package is not modified. No person or 
+      company may charge a fee for the distribution of RAR without 
+      written permission from the copyright holder. 
+
+   5. To register you must complete the registration form and send
+      it, with registration fee, to one of the authorized
+      registration sites, see RAR_SITE.TXT.
+
+   6. RAR ARCHIVER IS DISTRIBUTED "AS IS".  NO WARRANTY OF ANY
+      KIND IS EXPRESSED OR IMPLIED.  YOU USE AT YOUR OWN RISK.
+      THE AUTHOR WILL NOT BE LIABLE FOR DATA LOSS, DAMAGES, LOSS
+      OF PROFITS OR ANY OTHER KIND OF LOSS WHILE USING OR MISUSING
+      THIS SOFTWARE.
+
+   7. There are NO additional license fees, apart from the cost of 
+      registration, associated with the creation and distribution of RAR 
+      archives, volumes, self-extracting archives or self-extracting 
+      volumes.  Legally registered owners may use their copies of RAR to 
+      produce archives and self-extracting archives and to distribute 
+      those archives free of any additional RAR royalties. 
+
+   8. You may not use, copy, emulate, clone, rent, lease, sell, modify,
+      decompile, disassemble, otherwise reverse engineer, or transfer the
+      licensed program, or any subset of the licensed program, except as 
+      provided for in this agreement.  Any such unauthorized use shall 
+      result in immediate and automatic termination of this license and
+      may result in criminal and/or civil prosecution.
+
+      Neither RAR binary code, WinRAR binary code, UnRAR source or UnRAR 
+      binary code may be used or reverse engineered to re-create the RAR
+      compression algorithm, which is proprietary, without written 
+      permission of the author.
+
+      All rights not expressly granted here are reserved by Eugene Roshal.
+
+   9. Installing and using RAR signifies acceptance of these terms
+      and conditions of the license.
+
+  10. If you do not agree with the terms of this license you must remove
+      RAR files from your storage devices and cease to use the product.
+
+      Thank you for using the original RAR.
+
+                                            Eugene Roshal

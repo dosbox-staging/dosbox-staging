@@ -1,0 +1,34 @@
+
+ €€€€€€ª   €€€€€ª  €€€€€€ª
+ €€…ÕÕ€€ª €€…ÕÕ€€ª €€…ÕÕ€€ª     RAR - What's new in the latest version
+ €€€€€€…º €€€€€€€∫ €€€€€€…º     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ €€…ÕÕ€€ª €€…ÕÕ€€∫ €€…ÕÕ€€ª
+ €€∫  €€∫ €€∫  €€∫ €€∫  €€∫
+ »Õº  »Õº »Õº  »Õº »Õº  »Õº
+
+   Version 2.50
+
+   1. CRC of packed data is now stored for file parts split between
+      volumes. It allows localization of a damaged volume, if volumes
+      set contains one large compressed file.
+
+   2. New command line switches:
+
+      a) -sv - create independent solid volumes.
+
+         When this option is on, RAR tries to create solid volumes
+         which are independent one each another, so if one
+         volume is lost, files in following volumes may  still be
+         accessible.Note than sometimes this option cannot help, for
+         example, if volumes contain one large file. This option
+         slightly decreases solid volumes compression ratio, but
+         seriously increases reliability due to data loss because of
+         poor media quality.
+
+      b) -ac (clear "Archive" attribute) now can be used not only
+         when archiving, but also when extracting files to clear
+         "Archive" attribute on extracted files;
+
+      c) -ap<path> - set path inside archive. It allows to add files
+         to a specified archive folder when archiving or to remove
+         the specified part of path from file names when extracting.
