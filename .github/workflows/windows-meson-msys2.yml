@@ -295,6 +295,23 @@ jobs:
         run: |
           curl -L -o innosetup.7z https://github.com/portapps/innosetup-portable/releases/download/${{ env.INNO_VERSION }}/innosetup-portable-win32-${{ env.INNO_VERSION }}.7z
           7z x -y -oout innosetup.7z
+          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
+          echo "artifact_path=`pwd`/msvc" >> $GITHUB_ENV
+
+      - name: Download MSVC artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: windows.yml
+          name: ${{ env.artifact_name }}
+          path: ${{ env.artifact_path }}
+          if_no_artifact_found: warn
+
+      - name: Prepare Windows installer
+        shell: bash
+        run: |
+          curl -L -o innosetup.7z https://github.com/portapps/innosetup-portable/releases/download/${{ env.INNO_VERSION }}/innosetup-portable-win32-${{ env.INNO_VERSION }}.7z
+          7z x -y -oout innosetup.7z
           if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
             version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
             packageinfo="release $version_tag"
@@ -308,15 +325,15 @@ jobs:
           echo "version_number=`git describe --tags`" >> $GITHUB_ENV
           sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >setup_preamble.txt
           sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
-          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
-
-      - name: Download MSVC artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: windows.yml
-          name: ${{ env.artifact_name }}
-          path: ${{ github.workspace }}/msvc
+          [ -e out/app/dosbox*.exe ] && rm out/app/dosbox*.exe
+          ls ${{ env.artifact_path }}
+          if [ -f ${{ env.artifact_path }}/dosbox.exe ]; then
+            cp ${{ env.artifact_path }}/dosbox*.exe out/app
+            mv out/app/dosbox.exe out/app/dosbox_msvc.exe
+            mv out/app/dosbox_with_debugger.exe out/app/dosbox_msvc_with_debugger.exe
+          else
+            sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"dosbox_msvc\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
+          fi
 
       - name: Build Windows installer
         shell: pwsh
@@ -328,11 +345,7 @@ jobs:
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
           copy ${{ github.workspace }}\setup_preamble.txt .
           xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
-          replace /a ${{ github.workspace }}\msvc\*.dll program
-          if (Test-Path -Path dosbox*.exe -PathType Leaf) {del dosbox*.exe}
-          copy ${{ github.workspace }}\msvc\dosbox*.exe
-          ren dosbox.exe dosbox_msvc.exe
-          ren dosbox_with_debugger.exe dosbox_msvc_with_debugger.exe
+          replace /a ..\..\msvc\*.dll program
           move program\dosbox.exe .
           move program\dosbox_with_debugger.exe .
           ISCC.exe dosbox-staging-setup.iss
