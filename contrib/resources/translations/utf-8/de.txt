@@ -1,19 +1,22 @@
 :CONFIG_FULLSCREEN
 Starte direkt im Vollbildmodus.
-Führe INTRO aus und sieh unter Sondertasten nach, wie du die Hotkeys für die Fenstersteuerung findest.
+Führe INTRO aus und sieh unter Sondertasten nach, wie du die Hotkeys für die
+Fenstersteuerung findest.
 .
 :CONFIG_DISPLAY
-Nummer der zu verwendenden Anzeige; die Werte hängen vom Betriebssystem und den Benutzereinstellungen ab.
+Nummer der zu verwendenden Anzeige; die Werte hängen vom Betriebssystem und den
+Benutzereinstellungen ab.
 .
 :CONFIG_FULLRESOLUTION
-Welche Auflösung für den Vollbildmodus verwendet werden soll: "Original", "Desktop"
-oder eine feste Größe (z.B. 1024x768).
+Welche Auflösung für den Vollbildmodus verwendet werden soll: "Original",
+"Desktop" oder eine feste Größe (z.B. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
 Bestimmt die Fenstergröße, die verwendet werden soll:
   default:   Wähle die beste Option basierend auf deinem
              System und anderen Einstellungen.
-  original:  Ändere die Größe des Fensters auf die Auflösung des laufenden Programms.
+  original:  Ändere die Größe des Fensters auf die Auflösung des laufenden
+             Programms.
   resizable: Erlaub die Veränderung der Größe des DOSBox-Fensters
              Dies ist eine experimentelle Option, funktioniert nur mit
              output=opengl und glshader=sharp (oder "none")
@@ -22,10 +25,12 @@ Bestimmt die Fenstergröße, die verwendet werden soll:
              Die Skalierung wird bei output=surface nicht durchgeführt.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Set the viewport size (drawable area) within the window/screen:
-  fit:       Fit the viewport to the available window/screen (default).
-  <custom>:  Limit the viewport within to a custom resolution or percentage of
-             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+Legt die Größe des Darstellungsbereichs innerhalb des Fensters/Bildschirms fest:
+  fit:       Das Ansichtsfenster an das verfügbare Fenster/Bildschirm
+             anpassen (Standard).
+  <custom>:  Beschränke das Ansichtsfenster auf eine benutzerdefinierte Auflösung
+             oder einen Prozentsatz der Desktopgröße. Angegeben in BxH, N%, N.M%.
+             Beispiele: 960x720 oder 50%
 .
 :CONFIG_WINDOW_POSITION
 Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
@@ -37,34 +42,47 @@ Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
 Legt fest, ob der Rahmen im Fenster-Modus angezeigt werden soll.
 .
 :CONFIG_TRANSPARENCY
-Set the transparency of the DOSBox Staging screen.
-From 0 (no transparency) to 90 (high transparency).
+Stelle die Transparenz des DOSBox Staging-Bildschirms ein.
+Von 0 (keine Transparenz) bis 90 (hohe Transparenz).
 .
 :CONFIG_MAX_RESOLUTION
-Schränkt optional die Auflösung des Darstellungsbereichs innerhalb des Fensters/Bildschirms ein:
-  auto:      Der Darstellungsbereich füllt das Fenster/den Bildschirm aus (Standard).
-  <custom>:  Lege die maximale Auflösung des Darstellungsbereichs im Format WxH fest.
+Schränkt die Auflösung des Darstellungsbereichs innerhalb des
+Fensters/Bildschirms ein:
+  auto:      Der Darstellungsbereich füllt das Fenster/den Bildschirm
+             aus (Standard).
+  <custom>:  Lege die maximale Auflösung des Darstellungsbereichs im Format
+             WxH fest.
              Zum Beispiel: 960x720
 .
 :CONFIG_HOST_RATE
-Set the host's refresh rate:
-  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
-  sdi:       Use serial device interface (SDI) rates, without further adjustment.
-  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
-  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+Lege die Aktualisierungsrate des Hosts fest:
+  auto:      Verwende SDI-Raten oder VRR-Raten im Vollbildmodus auf einem
+             Bildschirm mit hoher Bildwiederholrate.
+  sdi:       Verwende die Raten der seriellen Geräteschnittstelle (SDI),
+             ohne weitere Anpassungen.
+  vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
+             (Best-Practice für VRR-Anzeigen).
+  <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
+             größer als 23.000 an.
 .
 :CONFIG_VSYNC
-Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert).
+Vertikale Synchronisations-Einstellung nicht implementiert
+(Einstellung wird ignoriert).
 .
 :CONFIG_VSYNC_SKIP
-Anzahl der Mikrosekunden, die das Rendering verzögert sein darf, bevor der nächste Frame übersprungen wird.
+Anzahl der Mikrosekunden, die das Rendering verzögert sein darf, bevor der
+nächste Frame übersprungen wird.
 .
 :CONFIG_PRESENTATION_MODE
-Optionally select the frame presentation mode:
-  auto:  Intelligently time and drop frames to prevent
-         emulation stalls, based on host and DOS frame rates.
-  cfr:   Always present DOS frames at a constant frame rate.
-  vfr:   Always present changed DOS frames at a variable frame rate.
+Lege die Aktualisierungsrate des Hosts fest:
+  auto:      Verwende SDI-Raten oder VRR-Raten im Vollbildmodus auf einem
+             Bildschirm mit hoher Bildwiederholrate.
+  sdi:       Verwende die Raten der seriellen Geräteschnittstelle (SDI),
+             ohne weitere Anpassungen.
+  vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
+             (Best-Practice für VRR-Anzeigen).
+  <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
+             größer als 23.000 an.
 .
 :CONFIG_OUTPUT
 Welches Videosystem soll für die Ausgabe verwendet werden.
@@ -75,52 +93,55 @@ Verwende texture_renderer=auto für eine automatische Auswahl.
 .
 :CONFIG_CAPTURE_MOUSE
 Wähle eine Methode zur Maussteuerung:
-   onclick:        Die Maus wird beim ersten Klick innerhalb des Fensters umgeschaltet.
+   onclick:        Die Maus wird beim ersten Klick innerhalb des Fensters
+                   umgeschaltet.
    onstart:        Die Maus wird sofort beim Start umgeschaltet
                    (ähnlich wie beim echten DOS).
    seamless:       Die Maus kann frei in das und aus dem DOSBox
                    Fenster bewegt werden.
-   nomouse:        Die Maus wird deaktiviert und der Mauszeiger versteckt, ohne jegliche
-                   Eingabe an das ausgeführte Programm.
+   nomouse:        Die Maus wird deaktiviert und der Mauszeiger versteckt,
+                   ohne jegliche Eingabe an das ausgeführte Programm.
 Wähle, wie Mittelklicks behandelt werden (zweiter Parameter):
    middlegame:     Mittelklicks werden an das ausgeführte Programm gesendet
                    (Strg+F10 hebt die Umschaltung der Maus auf).
    middlerelease:  Mittelklicks verwenden, um die Maus umzuschalten
-                   (nicht mehr an das ausgeführte Programm senden). Allerdings werden Mittelklicks
-                   jedoch im Vollbildmodus an das ausgeführte Programm gesendet oder wenn
-                   "seamless" eingestellt ist.
+                   (nicht mehr an das ausgeführte Programm senden). Allerdings
+                   werden Mittelklicks jedoch im Vollbildmodus an das ausgeführte
+                   Programm gesendet oder wenn "seamless" eingestellt ist.
                    Mit Strg+F10 wird die Maus auch wieder umgeschaltet.
 Standardwerte (falls nicht vorhanden oder falsch): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Maus-Empfindlichkeit. Der optionale zweite Parameter gibt die vertikale Empfindlichkeit an (z.B. 100,-50).
+Maus-Empfindlichkeit. Der optionale zweite Parameter gibt die vertikale
+Empfindlichkeit an (z.B. 100,-50).
 .
 :CONFIG_RAW_MOUSE_INPUT
 Aktiviere diese Einstellung, um die Mausbeschleunigungs- und
-Empfindlichkeitseinstellungen deines Betriebssystems zu umgehen. Dies funktioniert im
-Vollbildmodus oder wenn die Maus im Fenstermodus erfasst wird.
+Empfindlichkeitseinstellungen deines Betriebssystems zu umgehen. Dies
+funktioniert im Vollbildmodus oder wenn die Maus im Fenstermodus erfasst wird.
 .
 :CONFIG_WAITONERROR
 Wartet bevor die Konsole geschlossen wird, wenn Dosbox eine Fehlermeldung anzeigt.
 .
 :CONFIG_PRIORITY
-Prioritätsstufen für Dosbox. Der zweite Eintrag hinter dem Komma ist für den Fall, dass die Dosbox nicht fokussiert/minimiert ist.
+Prioritätsstufen für Dosbox. Der zweite Eintrag hinter dem Komma ist für den
+Fall, dass die Dosbox nicht fokussiert/minimiert ist.
 Pause ist nur für den zweiten Eintrag gültig.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Mute the sound when the window is inactive.
+Schalte den Ton stumm, wenn das Fenster inaktiv ist.
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Pause emulation when the window is inactive.
+Emulation anhalten, wenn das Fenster inaktiv ist.
 .
 :CONFIG_MAPPERFILE
 Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
 Resetmapper funktioniert nur mit dem Standardwert.
 .
 :CONFIG_SCREENSAVER
-Verwende "allow" oder "block" um die SDL_VIDEO_ALLOW_SCREENSAVER Umgebungsvariable zu überschreiben
-(die normalerweise den Betriebssystem-Bildschirmschoner blockiert
-während DOSBox läuft.
+Verwende "allow" oder "block" um die SDL_VIDEO_ALLOW_SCREENSAVER
+Umgebungsvariable zu überschreiben (die normalerweise den Betriebssystem-
+Bildschirmschoner blockiert während DOSBox läuft.
 .
 :CONFIG_LANGUAGE
 Wähle eine andere Sprachdatei aus.
@@ -129,44 +150,52 @@ Wähle eine andere Sprachdatei aus.
 Der Typ der Maschine, die DOSBox versucht zu emulieren.
 .
 :CONFIG_CAPTURES
-Verzeichnis, in dem Aufzeichnungen wie wave, midi und screenshots gespeichert werden.
+Verzeichnis, in dem Aufzeichnungen wie wave, midi und screenshots gespeichert
+werden.
 .
 :CONFIG_MEMSIZE
-Die Menge an Speicher, die DOSBox hat, in Megabyte.
-Dieser Wert wird am besten auf dem Standardwert belassen, um Probleme mit einigen Programmen zu vermeiden,
-obwohl einige wenige Programme einen höheren Wert benötigen könnten.
-Es gibt generell keinen Geschwindigkeitsvorteil, wenn du diesen Wert erhöhst.
+Die Menge an Speicher, die DOSBox emuliert, in Megabyte.
+Dieser Wert wird am besten auf dem Standardwert belassen, um Probleme mit
+einigen Programmen zu vermeiden, obwohl einige wenige Programme einen höheren
+Wert benötigen könnten. Es gibt generell keinen Geschwindigkeitsvorteil,
+wenn du diesen Wert erhöhst.
 .
 :CONFIG_MCB_FAULT_STRATEGY
-How software-corrupted memory chain blocks should be handled:
-  deny:    Quit (and report) when faults are detected (default).
-  repair:  Repair (and report) faults using adjacent chain blocks.
-  report:  Report faults but otherwise proceed as-is.
-  allow:   Allow faults to go unreported (hardware behavior).
-The default (deny) is recommended unless a game is failing with MCB corruption errors.
+Wie durch Software beschädigte Speicherkettenblöcke behandelt werden sollten:
+  deny:    Beenden (und melden), wenn Fehler entdeckt werden (Standard).
+  repair:  Repariere (und melde) Fehler mit Hilfe benachbarter Kettenblöcke.
+  report:  Melde Fehler, aber fahre ansonsten so fort, als ob nichts gewesen
+           wäre.
+  allow:   Erlaube es, dass Fehler nicht gemeldet werden (Hardwareverhalten).
+Die Standardeinstellung (deny) wird empfohlen, es sei denn, ein Spiel schlägt
+mit MCB-Fehlern fehl.
 .
 :CONFIG_VMEMSIZE
-Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den Standardwert pro Videoadapter.
+Videospeicher in MiB (1-8) oder KiB (256 bis 8192). "auto" verwendet den
+Standardwert pro Videoadapter.
 .
 :CONFIG_DOS_RATE
-Customize the emulated video mode's frame rate, in Hz:
-default:  The DOS video mode determines the rate (recommended).
-host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
-We recommend the 'default' rate; otherwise test and set on a per-game basis.
+Passe die Bildrate des emulierten Videomodus in Hz an:
+default:  Der DOS-Videomodus bestimmt die Rate (empfohlen).
+host:     Passe die DOS-Rate an die Host-Rate an (siehe Einstellung "host_rate").
+<value>:  Setzt die Rate auf einen exakten Wert, zwischen 24.000 und
+1000.000 (Hz). Wir empfehlen die "Standard"-Rate; andernfalls kannst du sie für
+jedes Spiel einzeln testen und einstellen.
 .
 :CONFIG_VESA_MODES
 Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
-  compatible   Eine maßgeschneiderte Auswahl, die die Kompatibilität der Programme maximiert.
-               Dies wird zusammen mit 4 oder 8 MB Videospeicher empfohlen.
+  compatible   Eine maßgeschneiderte Auswahl, die die Kompatibilität der
+               Programme maximiert. Dies wird zusammen mit 4 oder 8 MB
+               Videospeicher empfohlen.
   all          Bietet alle Modi für eine bestimmte Videospeichergröße, allerdings
-               können einige Programme sie nicht richtig nutzen (Flackern) oder benötigen
-               mehr Systemspeicher (mem = ), um sie zu nutzen.
+               können einige Programme sie nicht richtig nutzen (Flackern) oder
+               benötigen mehr Systemspeicher (mem = ), um sie zu nutzen.
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
+Erlaube Änderungen, die die Leistung verbessern. Derzeit sind keine Programme
+bekannt, die davon betroffen sind. Bitte melde dem Projekt einen Bug, wenn du
+ein Programm findest, das nicht funktioniert, wenn diese Option auf "true"
+gesetzt ist, damit wir es hier auflisten können.
 .
 :CONFIG_AUTOEXEC_SECTION
 Wie Autoexec-Abschnitte aus mehreren Konfigurationsdateien behandelt werden.
@@ -174,17 +203,18 @@ join      : Fasst sie in einem großen Abschnitt zusammen (altes Verhalten).
 overwrite : Verwende die zuletzt gefundene, wie bei anderen conf-Einstellungen.
 .
 :CONFIG_AUTOMOUNT
-Mounts 'drives/[c]' directories as drives on startup, where [c] is
-a lower-case drive letter from a to y.  The 'drives' folder can be
-provided relative to the current directory or via built-in resources.
-Mount settings can be optionally provided using a [c].conf file along-
--side the drive's directory, with content as follows:
-  [drive]
-  type    = dir, overlay, floppy, or cdrom
-  label   = custom_label
-  path    = path-specification, ie: path = %%path%%;c:\tools
-  override_drive = mount the directory to this drive instead (default empty)
-  verbose = true or false
+Bindet Verzeichnisse 'drives/[c]' beim Start als Laufwerke ein, wobei [c] für 
+ein klein geschriebener Laufwerksbuchstabe von a bis y ist. Der Ordner "drives"
+kann relativ zum aktuellen Verzeichnis oder über die integrierten Ressourcen
+angegeben werden. Die Mount-Einstellungen können optional in einer [c].conf-
+Datei in dem Verzeichnis des Laufwerks mit folgendem Inhalt angegeben werden:
+  [laufwerk]
+  type    = dir, overlay, floppy oder cdrom
+  label   = Laufwerksbezeichnung
+  path    = Pfadangabe, z.B.: path = %%path%%;c:\tools
+  override_drive = das Verzeichnis stattdessen auf dieses Laufwerk mounten
+                   (standardmäßig leer)
+  verbose = true oder false
 .
 :CONFIG_STARTUP_VERBOSITY
 Bestimmt die Ausführlichkeit der Anzeigen, bevor das Programm angezeigt wird:
@@ -192,17 +222,18 @@ Verbosität  |Willkommen| Frühe Ausgabe
 high        |   ja     |    ja
 low         |  nein    |    ja
 quiet       |  nein    |   nein
-auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden, sonst "high".
+auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden,
+                    sonst "high".
 .
 :CONFIG_FRAMESKIP
 Wie viele Frames DOSBox überspringt, bevor es einen anzeigt.
 .
 :CONFIG_ASPECT
-Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu erzeugen, das dem der ursprünglichen Monitore
-entspricht, für die die Mehrheit der DOS Programme entwickelt wurden. Diese Einstellung
-betrifft nur Videomodi, die nicht-quadratische Pixel verwenden, wie
-320x200 oder 640x400; während Modi mit quadratischen Pixeln, wie 640x480
-und 800x600, unverändert angezeigt werden.
+Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu
+erzeugen, das dem der ursprünglichen Monitore entspricht, für die die Mehrheit
+der DOS Programme entwickelt wurden. Diese Einstellung betrifft nur Videomodi,
+die nicht-quadratische Pixel verwenden, wie 320x200 oder 640x400; während Modi
+mit quadratischen Pixeln, wie 640x480 und 800x600, unverändert angezeigt werden.
 .
 :CONFIG_MONOCHROME_PALETTE
 Wähle die Standard-Palette für die monochrome Darstellung.
@@ -210,30 +241,39 @@ Funktioniert nur bei der Emulation von hercules oder cga_mono.
 Du kannst mit F11 die verfügbaren Farben durchschalten.
 .
 :CONFIG_CGA_COLORS
-Sets the interpretation of CGA RGBI colors. Affects all machine types capable of
-displaying CGA or better graphics. Built-in presets:
-  default:       The canonical CGA palette, as emulated by VGA adapters (default).
-  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level
-                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).
-  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.
-  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with
-                 a unique Contrast control that dims non-bright colors only
-                 (0 to 100; defaults to 100).
+Legt die Interpretation der CGA-RGBI-Farben fest. Betrifft alle Maschinentypen,
+die in der Lage sind CGA-Grafiken oder besser anzeigen können.
+Integrierte Presets:
+  default:       Klassische CGA-Palette, wie sie von VGA-Adaptern emuliert
+                 wird (Standard).
+  tandy [BL]:    Emulation eines idealisierten Tandy-Monitors mit einstellbarem
+                 Braun-Wert (0 - rot, 50 - braun, 100 - dunkelgelb;
+                 Standardwert ist 50).
+  tandy-warm:    Emulation der tatsächlichen Farbausgabe eines unbekannten
+                 Tandy-Monitors.
+  ibm5153 [C]:   Emulation der Farbausgabe eines IBM 5153 Monitors mit
+                 einer Kontraststeuerung, die nur nicht helle Farben abdunkelt
+                 (0 bis 100; Standardeinstellung ist 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Palettes used by the Amiga ports of Sierra AGI games
-                 (see the manual for further details).
-  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.
-  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
-  colodore:      Commodore 64 inspired colors based on the Colodore palette.
-  colodore-sat:  Colodore palette with 20% more saturation.
-  dga16:         A modern take on the canonical CGA palette with dialed back contrast.
-You can also set custom colors by specifying 16 space or comma separated color values,
-either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
-RGB triplets (e.g. (255, 0, 255) for magenta).
+                 Paletten, die von den Amiga-Portierungen der Sierra AGI
+                 Programme verwendet werden (siehe Handbuch für weitere Details).
+  agi-amigaish:  Eine Mischung aus EGA- und Amiga-Farben, die der Sarien
+                 AGI-Interpreter verwendet.
+  scumm-amiga:   Palette, die von den Amiga-Portierungen der EGA-Spiele von
+                 LucasArts verwendet wurde.
+  colodore:      Vom Commodore 64 inspirierte Farben, die auf der Colodore-
+                 Palette basieren.
+  colodore-sat:  Colodore-Palette mit 20% mehr Sättigung.
+  dga16:         Eine moderne Interpretation der klassischen CGA-Palette mit
+                 reduziertem Kontrast.
+Du kannst auch benutzerdefinierte Farben einstellen, indem du 16 durch
+Leerzeichen oder Kommata getrennte Farbwerte angibst, entweder als 3- oder
+6-stellige Hex-Codes (z. B. #f00 oder #ff0000 für Rot) oder als dezimale
+RGB-Tripletts (z. B. (255, 0, 255) für Magenta).
 .
 :CONFIG_SCALER
-Der Scaler wird verwendet, um Modi mit niedriger Auflösung zu vergrößern/zu verbessern.
-Wenn "forced" angehängt wird, dann wird der Scaler benutzt, auch wenn
+Der Scaler wird verwendet, um Modi mit niedriger Auflösung zu vergrößern/zu
+verbessern. Wenn "forced" angehängt wird, dann wird der Scaler benutzt, auch wenn
 das Ergebnis nicht gewollt sein könnte.
 Beachte, dass einige Scaler schwarze Ränder verwenden können, um das Bild
 innerhalb deiner konfigurierten Displayauflösung anzupassen. Wenn dies
@@ -250,15 +290,19 @@ crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
 scan2x, scan3x, tv2x, tv3x, sharp (Standard).
 .
 :CONFIG_COMPOSITE
-Aktiviere den Composite-Modus beim Start. Die Einstellung "auto" lässt das Programm entscheiden.
-Hinweis: Stelle die Einstellungen unten (z.B. Farbton) mit den Composite-Hotkeys ein.
-      Lies dann die neuen Einstellungen von deiner Konsole ab und gib sie hier ein.
+Aktiviere den Composite-Modus beim Start. Die Einstellung "auto" lässt das
+Programm entscheiden.
+Hinweis: Stelle die Einstellungen unten (z.B. Farbton) mit den Composite-Hotkeys
+         ein. Lies dann die neuen Einstellungen von deiner Konsole ab und gib
+         sie hier ein.
 .
 :CONFIG_ERA
-Die Ära der Composite-Technologie. Wenn "auto", verwendet PCjr "new" und CGA/Tandy "old".
+Die Ära der Composite-Technologie. Wenn "auto", verwendet PCjr "new" und
+CGA/Tandy "old".
 .
 :CONFIG_HUE
-Erscheinungsbild der RGB-Palette. Beispiel: Verändere den Wert, bis der Himmel blau ist.
+Erscheinungsbild der RGB-Palette. Beispiel: Verändere den Wert, bis der
+Himmel blau ist.
 .
 :CONFIG_SATURATION
 Intensität der Farben, von verwaschen bis leuchtend.
@@ -273,8 +317,8 @@ Helligkeit des Bildes, von dunkel bis hell.
 Konvergenz der Subpixel-Elemente, von unscharf bis scharf (nur CGA und Tandy).
 .
 :CONFIG_CORE
-CPU-Kern, der für die Emulation verwendet wird. "auto" schaltet auf dynamisch, wenn verfügbar und
-angemessen.
+CPU-Kern, der für die Emulation verwendet wird. "auto" schaltet auf dynamisch,
+wenn verfügbar und angemessen.
 .
 :CONFIG_CPUTYPE
 CPU Typ, der in der Emulation verwendet wird. "auto" ist die schnellste Wahl.
@@ -284,13 +328,17 @@ Anzahl der Instruktionen, die DOSBox pro Millisekunde versucht zu emulieren.
 Wenn du diesen Wert zu hoch einstellst, kommt es zu Tonaussetzern und Lags.
 "cycles" kann auf 3 Arten eingestellt werden:
   "auto"          Versucht zu erkennen, was ein ausgeführtes Programm braucht.
-                  Das funktioniert in der Regel, kann aber bei bestimmten Programmen scheitern.
-  "fixed #number" Stellt eine feste Anzahl von Instruktionen ein. Das ist die Einstellung, die du normalerweise
-                  benötigst, wenn "auto" versagt (Beispiel: fixed 4000).
-  "max"           Wird so viele Instruktionen verwenden, wie dein System verarbeiten kann.
+                  Das funktioniert in der Regel, kann aber bei bestimmten
+                  Programmen scheitern.
+  "fixed #number" Stellt eine feste Anzahl von Instruktionen ein. Das ist die
+                  Einstellung, die du normalerweise benötigst, wenn "auto"
+                  versagt (Beispiel: fixed 4000).
+  "max"           Wird so viele Instruktionen verwenden, wie dein System
+                  verarbeiten kann.
 .
 :CONFIG_CYCLEUP
-Anzahl der Instruktionen um welche der aktuelle Wert mit den Tastenkombinationen Verringert/Erhöht wird.
+Anzahl der Instruktionen um welche der aktuelle Wert mit den Tastenkombinationen
+verringert/erhöht wird.
 .
 :CONFIG_CYCLEDOWN
 Wenn du ihn niedriger als 100 einstellst, wird er prozentual angezeigt.
@@ -299,57 +347,63 @@ Wenn du ihn niedriger als 100 einstellst, wird er prozentual angezeigt.
 Aktiviere die Stummschaltung, der Ton wird aber trotzdem emuliert.
 .
 :CONFIG_RATE
-Mixer-Samplerate. Wenn du die Rate eines Geräts höher einstellst, wird die Klangqualität wahrscheinlich schlechter.
+Mixer-Samplerate. Wenn du die Rate eines Geräts höher einstellst, wird die
+Klangqualität wahrscheinlich schlechter.
 .
 :CONFIG_BLOCKSIZE
-Mixer-Blockgröße. Größere Blöcke können stotternde Audioausgabe verhindern, aber der Ton wird auch mehr verzögert.
+Mixer-Blockgröße. Größere Blöcke können stotternde Audioausgabe verhindern,
+aber der Ton wird auch mehr verzögert.
 .
 :CONFIG_PREBUFFER
-Wie viele Millisekunden an Daten zusätzlich zur Blockgröße vorgehalten werden sollen.
+Wie viele Millisekunden Daten zusätzlich zur Blockgröße vorgehalten werden sollen.
 .
 :CONFIG_NEGOTIATE
 Erlaube dem System-Audiotreiber, die optimale Rate und Blockgröße
 so nah wie möglich an den angegebenen Werten auszuhandeln.
 .
 :CONFIG_COMPRESSOR
-Enable the auto-leveling compressor on the master channel to prevent clipping
-of the audio output:
-  off:  Disable compressor.
-  on:   Enable compressor (default).
+Aktiviere den Auto-Leveling Kompressor auf dem Masterkanal,
+um Clipping der Audioausgabe zu verhindern:
+  off:  Deaktiviere den Kompressor.
+  on:   Aktiviere den Kompressor (Standard).
 .
 :CONFIG_CROSSFEED
-Set crossfeed globally on all stereo channels for headphone listening:
-  off:         No crossfeed (default).
-  on:          Enable crossfeed (at strength 40).
-  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
-               and 100 full crossfeed (effectively turning stereo content into mono).
-Note: You can set per-channel crossfeed via mixer commands.
+Stelle Crossfeed global auf allen Stereokanälen für das Hören über Kopfhörer ein:
+  off:         Kein Crossfeed (Standard).
+  on:          Aktiviere das Crossfeed (Stärke 40).
+  <strength>:  Stelle Crossfeed-Stärke von 0 bis 100 ein, wobei 0 kein Crossfeed
+               (aus) bedeutet und 100 volles Crossfeed (Stereo -> Mono).
+Hinweis: Du kannst Crossfeed für jede Quelle über Mixer-Befehle einstellen.
 .
 :CONFIG_REVERB
-Enable reverb globally to add a sense of space to the sound:
-  off:     No reverb (default).
-  on:      Enable reverb (medium preset).
-  tiny:    Simulates the sound of a small integrated speaker in a room;
-           specifically designed for small-speaker audio systems
-           (PC Speaker, Tandy, PS/1 Audio, and LPT DAC devices).
-  small:   Adds a subtle sense of space; good for games that use a single
-           synth channel (typically OPL) for both music and sound effects.
-  medium:  Medium room preset that works well with a wide variety of games.
-  large:   Large hall preset recommended for games that use separate
-           channels for music and digital audio.
-  huge:    A stronger variant of the large hall preset; works really well
-           in some games with more atmospheric soundtracks.
-Note: You can fine-tune per-channel reverb levels via mixer commands.
+Aktiviere den Hall global, um dem Klang ein Gefühl von Raum zu geben:
+  off:     Kein Nachhall (Standard).
+  on:      Aktiviere den Nachhall (mittlere Voreinstellung).
+  tiny:    Simuliert den Klang eines kleinen integrierten Lautsprechers in einem
+           Raum; speziell für Audiosysteme mit kleinen Lautsprechern entwickelt
+           (PC Speaker, Tandy, PS/1 Audio, und LPT Digital-Analog-Wandler).
+  small:   Verleiht ein subtiles Gefühl von Raum; gut für Spiele, die einen
+           einzigen Synth-Kanal (normalerweise OPL) für Musik und Soundeffekte
+           verwenden.
+  medium:  Mittlere Raumvoreinstellung, die gut mit einer Vielzahl von Spielen
+           funktioniert.
+  large:   Die Voreinstellung "Großer Saal" wird für Spiele empfohlen, die
+           getrennte Kanäle für Musik und digitales Audio verwenden.
+  huge:    Eine stärkere Variante der Voreinstellung "Große Saal"; funktioniert
+           sehr gut in einigen Spielen mit stimmungsvollen Soundtracks.
+Hinweis: Du kannst den Hallpegel für jeden Kanal über Mixer-Befehle anpassen.
 .
 :CONFIG_CHORUS
-Enable chorus globally to add a sense of stereo movement to the sound:
-  off:     No chorus (default).
-  on:      Enable chorus (normal preset).
-  light:   A light chorus effect (especially suited for
-           synth music that features lots of white noise.)
-  normal:  Normal chorus that works well with a wide variety of games.
-  strong:  An obvious and upfront chorus effect.
-Note: You can fine-tune per-channel chorus levels via mixer commands.
+Aktiviere den Chorus global, um dem Klang Räumlichkeit zu verleihen:
+  off:     Kein Chorus (Standard).
+  on:      Chorus aktivieren (Voreinstellung 'normal').
+  light:   Ein leichter Chorus-Effekt (besonders geeignet für
+           Synthesizer-Musik, die viel weißes Rauschen enthält).
+  normal:  Normaler Chorus, der mit einer Vielzahl von Programmen gut
+           funktioniert.
+  strong:  Ein offensichtlicher und vordergründiger Chorus-Effekt.
+Hinweis: Du kannst die Chorus-Pegel der einzelnen Quellen über Mixer-
+         Befehle anpassen.
 .
 :CONFIG_MIDIDEVICE
 Gerät, das die MIDI-Daten empfangen wird (von der emulierten MIDI
@@ -358,7 +412,8 @@ Schnittstelle - MPU-401). Wähle eine der folgenden Möglichkeiten:
        [fluidsynth] Abschnitt für die detaillierte Konfiguration.
 "mt32", um den eingebauten Roland MT-32 Synthesizer zu verwenden.
        Siehe den Abschnitt [mt32] für eine detaillierte Konfiguration.
-"auto", um den ersten funktionierenden externen MIDI-Player zu verwenden. Dies kann ein Software-Synthesizer oder ein physisches Gerät sein.
+"auto", um den ersten funktionierenden externen MIDI-Player zu verwenden.
+Dies kann ein Software-Synthesizer oder ein physisches Gerät sein.
 .
 :CONFIG_MIDICONFIG
 Konfigurationsoptionen für das ausgewählte MIDI-Interface.
@@ -380,16 +435,17 @@ Typ des zu emulierenden MPU-401.
 .
 :CONFIG_SOUNDFONT
 Pfad zu einer SoundFont Datei im .sf2 Format. Du kannst einen
-absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2 Datei innerhalb
-des "soundfonts" Verzeichnises innerhalb deines DOSBox Konfigurations-Verzeichnisses.
-Ein optionaler Prozentsatz skaliert die Lautstärke des SoundFonts.
+absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2 Datei
+innerhalb des "soundfonts" Verzeichnises innerhalb deines DOSBox Konfigurations-
+Verzeichnisses. Ein optionaler Prozentsatz skaliert die Lautstärke des SoundFonts.
 Zum Beispiel: "soundfont.sf2 50" wird die Lautstärke um 50 Prozent abschwächen.
 Der Skalierungsprozentsatz kann von 1 bis 500 reichen.
 .
 :CONFIG_FSYNTH_CHORUS
-Choruseffekt: "auto", "on", "off" oder benutzerdefinierte Werte.
+Chorus-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
 Wenn du benutzerdefinierte Werte verwendest:
-  Alle fünf Werte müssen in der richtigen Reihenfolge und durch Leerzeichen getrennt angegeben werden.
+  Alle fünf Werte müssen in der richtigen Reihenfolge und durch Leerzeichen
+  getrennt angegeben werden.
   Sie lauten: voice-count, level, speed, depth und modulation-wave, wobei:
   - voice-count eine ganze Zahl zwischen 0 und 99 ist
   - level eine Dezimalzahl zwischen 0.0 und 10.0 ist
@@ -399,29 +455,30 @@ Wenn du benutzerdefinierte Werte verwendest:
   Zum Beispiel: chorus = 3 1.2 0.3 8.0 sine
 .
 :CONFIG_FSYNTH_REVERB
-Reverb effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All four must be provided in-order and space-separated.
-  They are: room-size damping width level, where:
-  - room-size is a decimal from 0.0 to 1.0
-  - damping is a decimal from 0.0 to 1.0
-  - width is a decimal from 0.0 to 100.0
-  - level is a decimal from 0.0 to 1.0
-  For example: reverb = 0.61 0.23 0.76 0.56
-Note: You can disable the FluidSynth reverb and enable the
-mixer-level reverb on the FluidSynth channel instead, or
-enable both reverb effects at the same time. Whether this
-sounds good depends on the SoundFont and the reverb settings
-being used.
+Reverb-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
+Wenn du benutzerdefinierte Werte verwendest:
+  Alle fünf Werte müssen in der richtigen Reihenfolge und durch Leerzeichen
+  getrennt angegeben werden.
+  Sie lauten: room-size, damping, width und level, wobei:
+  - room-size eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  - damping eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  - width eine Dezimalzahl zwischen 0.0 to 100.0 ist
+  - level eine Dezimalzahl zwischen 0.0 to 1.0 ist
+  Zum Beispiel: reverb = 0.61 0.23 0.76 0.56
+Hinweis: Du kannst den FluidSynth-Hall deaktivieren und stattdessen den
+Mixer-Hall auf dem FluidSynth-Kanal aktivieren, oder
+beide Halleffekte gleichzeitig aktivieren. Ob dies
+gut klingt hängt vom SoundFont und den verwendeten Hall-Einstellungen,
+die verwendet werden, ab.
 .
 :CONFIG_FSYNTH_FILTER
-Filter for the FluidSynth audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filter für das FluidSynth-Ausgangssignal:
+  off:       Die Ausgabe nicht filtern (Standard).
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
 .
 :CONFIG_MODEL
-Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt CM-32L
-wenn beide ROM-Sets vorhanden sind. Für frühe Sierra Programme und Dune 2
+Modell des zu verwendenden Synthesizers. Die Voreinstellung (auto) bevorzugt
+CM-32L wenn beide ROM-Sets vorhanden sind. Für frühe Sierra Programme und Dune 2
 wird die Verwendung von "mt32" empfohlen, während neuere Programme typischerweise
 die zusätzlichen Soundeffekte des CM-32L nutzen (verwende "auto" oder "cm32l")
 .
@@ -431,31 +488,31 @@ Die Dateien müssen in Großbuchstaben benannt werden, wie folgt:
   - MT-32 ROM Paar: MT32_CONTROL.ROM und MT32_PCM.ROM
   - CM-32L ROM Paar: CM32L_CONTROL.ROM und CM32L_PCM.ROM
 Das Verzeichnis kann absolut oder relativ sein, oder lass es leer, um
-das "mt32-roms" Verzeichnis in deinem DOSBox Konfigurationsverzeichnis zu verwenden,
-gefolgt von der Überprüfung anderer üblicher Systemverzeichnisse.
+das "mt32-roms" Verzeichnis in deinem DOSBox Konfigurationsverzeichnis zu
+verwenden, gefolgt von der Überprüfung anderer üblicher Systemverzeichnisse.
 .
 :CONFIG_MT32_FILTER
-Filter for the Roland MT-32/CM-32L audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filter für den Roland MT-32/CM-32L Audioausgang:
+  off:       Die Ausgabe nicht filtern (Standard).
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
 .
 :MT32_NO_SUPPORTED_MODELS
-No supported models present.
+Keine unterstützten Modelle gefunden.
 .
 :MT32_ROM_NOT_LOADED
-No ROM is currently loaded
+Momentan ist kein ROM geladen
 .
 :MT32_INVENTORY_TABLE_MISSING_LETTER
 -
 .
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-y
+j
 .
 :MT32_ACTIVE_ROM_LABEL
-Active ROM  : 
+Aktives ROM : 
 .
 :MT32_SOURCE_DIR_LABEL
-Loaded From : 
+Geladen von: 
 .
 :CONFIG_SBTYPE
 Typ des Sound Blasters, der emuliert werden soll. "gb" ist Game Blaster.
@@ -473,12 +530,13 @@ Die DMA-Nummer des Sound Blasters.
 Die High-DMA-Nummer des Sound Blasters.
 .
 :CONFIG_SBMIXER
-Erlaube dem Sound Blaster Mixer, den DOSBox Mixer zu modifizieren.
+Erlaube dem Sound Blaster Mixer, den DOSBox Mixer zu überschreiben.
 .
 :CONFIG_SBWARMUP
 Stummschalten des DMA-Audio nach dem Einschalten der Karte in Millisekunden.
-Dadurch werden die Knackgeräusche beim Starten vieler SB-basierter Spiele reduziert.
-Reduziere diesen Wert, wenn du feststellst, dass bei der ersten Wiedergabe Audio fehlt.
+Dadurch werden die Knackgeräusche beim Starten vieler SB-basierter Spiele
+reduziert. Reduziere diesen Wert, wenn du feststellst, dass bei der ersten
+Wiedergabe Audio fehlt.
 .
 :CONFIG_OPLRATE
 oplrate ist veraltet. Die OPL Signale werden nun mit der Sampelrate
@@ -493,29 +551,30 @@ Auswahl des OPL-Emulators. "compat" bietet eine bessere Qualität,
 "nuked" ist der Standard und am genauesten (aber am CPU-intensivsten).
 .
 :CONFIG_SB_FILTER
-Type of filter to emulate for the Sound Blaster digital sound output:
-  auto:  Use the appropriate filter determined by 'sbtype' (default).
+Filter, der für den digitalen Sound Blaster-Ausgang emuliert werden soll:
+  auto:  Verwende den Filter, der durch "sbtype" bestimmt wird (Standard).
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Use the filter of this Sound Blaster model.
-  off:   Don't filter the output.
-A second 'always_on' parameter can be provided to disallow programs from turning the filter off.
-(Example: sbpro1 always_on)
+           Verwende den Filter dieses Sound Blaster-Modells.
+  off:   Filtere die Ausgabe nicht.
+Ein zweiter Parameter "always_on" kann angegeben werden, um zu verhindern,
+dass Programme den Filter ausschalten.
+(Beispiel: sbpro1 always_on)
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Force the Sound Blaster filter to be always on
-(disallow programs from turning the filter off).
+Erzwinge, dass der Sound Blaster-Filter immer eingeschaltet ist
+(verhindern, dass Programme den Filter ausschalten).
 .
 :CONFIG_OPL_FILTER
-Type of filter to emulate for the Sound Blaster OPL output:
-  auto:  Use the appropriate filter determined by 'sbtype' (default).
+Typ des Filters, der für den Sound Blaster OPL-Ausgang emuliert werden soll:
+  auto:  Verwende den Filter, der durch "sbtype" bestimmt wird (Standard).
   sb1, sb2, sbpro1, sbpro2, sb16:
-           Use the filter of this Sound Blaster model.
-  off:   Don't filter the output.
+           Verwende den Filter dieses Sound Blaster-Modells.
+  off:   Filtere die Ausgabe nicht.
 .
 :CONFIG_CMS_FILTER
-Filter for the Sound Blaster CMS output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den Sound Blaster CMS-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
 .
 :CONFIG_GUS
 Aktiviere die Gravis UltraSound Emulation.
@@ -546,8 +605,9 @@ Modell des Chips, der auf der Innovation SSI-2001 Karte emuliert werden soll:
  - auto:  Wählt den 6581 Chip aus.
  - 6581:  Der Original-Chip, bekannt für seinen basslastigen und satten Charakter.
  - 8580:  Eine spätere Revision, die der SID-Spezifikation besser entsprach.
-          Er korrigiert die DC-Vorspannung des 6581 und ist weniger anfällig für Verzerrungen.
-          Der 8580 ist eine Option auf Reproduktionskarten, wie dem DuoSID.
+          Er korrigiert die DC-Vorspannung des 6581 und ist weniger anfällig für
+          Verzerrungen. Der 8580 ist eine Option auf Reproduktionskarten, wie
+          dem DuoSID.
  - none:  Deaktiviert die Karte.
 .
 :CONFIG_SIDCLOCK
@@ -561,7 +621,8 @@ Die Taktfrequenz des SID-Chips, die auf Nachbaukarten jumperbar ist.
 Die IO Port Adresse des Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-Die analoge Filterung des SID bedeutete, dass jeder Chip physikalisch einzigartig war.
+Die analoge Filterung des SID bedeutete, dass jeder Chip physikalisch
+einzigartig war.
 Stellt die Filterstärke des 6581 als Prozentwert von 0 bis 100 ein.
 .
 :CONFIG_8580FILTER
@@ -576,56 +637,59 @@ Filter for the Innovation audio output:
 Aktiviere die PC-Lautsprecher-Emulation.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filter for the PC Speaker output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den PC-Speaker-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
 .
 :CONFIG_ZERO_OFFSET
 Verhindert, dass der DC-Offset des PC-Lautsprechers andere Quellen beeinträchtigt.
 "auto" aktiviert dies für Nicht-Windows-Systeme und deaktiviert es unter Windows.
-Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchführt, dann setze dies auf "false".
+Wenn dein Betriebssystem seine eigene DC-Offset-Korrektur durchführt, dann setze
+dies auf "false".
 .
 :CONFIG_TANDY
-Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur vorhanden, wenn "machine" auf "tandy" eingestellt ist.
+Aktiviere die Tandy Sound System Emulation. Bei "auto" ist die Emulation nur
+vorhanden, wenn "machine" auf "tandy" eingestellt ist.
 .
 :CONFIG_TANDY_FILTER
-Filter for the Tandy synth output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den Tandy-Synthesizer-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
 .
 :CONFIG_TANDY_DAC_FILTER
-Filter for the Tandy DAC output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den Tandy DAC-Ausgang:
+  on:   Filtert die Ausgabe (Standard).
+  off:  Die Ausgabe nicht filtern.
 .
 :CONFIG_LPT_DAC
-Type of DAC plugged into the parallel port:
+Typ des DAC, der an den Parallelport angeschlossen ist:
   disney:    Disney Sound Source.
   covox:     Covox Speech Thing.
-  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.
-  none/off:  Don't use a parallel port DAC (default).
+  ston1:     Stereo-on-1 DAC, in stereo bis zu 30 kHz.
+  none/off:  Keinen Parallelport-DAC verwenden (Standard).
 .
 :CONFIG_LPT_DAC_FILTER
-Filter for the LPT DAC audio device(s):
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filter für das/die LPT-DAC-Audiogerät(e):
+  on:        Filtere die Ausgabe (Standard).
+  off:       Filtere die Ausgabe nicht.
+  <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
 .
 :CONFIG_DISNEY
-Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und Speech Thing kompatibel).
+Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und
+Speech Thing kompatibel).
 .
 :CONFIG_PS1AUDIO
 Aktiviere die IBM PS/1 Audio Emulation.
 .
 :CONFIG_PS1AUDIO_FILTER
-Filter for the PS/1 Audio synth output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den PS/1 Audio-Synthesizer-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
-Filter for the PS/1 Audio DAC output:
-  on:   Filter the output (default).
-  off:  Don't filter the output.
+Filter für den PS/1 Audio-DAC-Ausgang:
+  on:   Filtere die Ausgabe (Standard).
+  off:  Filtere die Ausgabe nicht.
 .
 :CONFIG_JOYSTICKTYPE
 Typ des zu emulierenden Joysticks: auto (Standard),
@@ -635,10 +699,12 @@ none (deaktiviert die Joystick-Emulation),
 4axis_2 (unterstützt einen Joystick, zweiter Joystick verwendet),
 fcs (Thrustmaster), ch (CH Flightstick).
 auto wählt die Emulation abhängig von dem/den realen Joystick(s).
-(Vergiss nicht, das Mapperfile der DOSBox zurückzusetzen, wenn du es vorher gespeichert hast)
+(Vergiss nicht, das Mapperfile der DOSBox zurückzusetzen, wenn du es vorher
+gespeichert hast)
 .
 :CONFIG_TIMED
-aktiviere zeitgesteuerte Intervalle für die Achsen. Experimentiere mit dieser Option, wenn dein Joystick (weg) driftet.
+aktiviere zeitgesteuerte Intervalle für die Achsen. Experimentiere mit dieser
+Option, wenn dein Joystick (weg) driftet.
 .
 :CONFIG_AUTOFIRE
 feuert kontinuierlich, solange du die Taste gedrückt hältst.
@@ -651,29 +717,37 @@ aktiviere Button Wrapping bei der Anzahl der emulierten Buttons.
 .
 :CONFIG_CIRCULARINPUT
 aktiviere die Übersetzung der kreisförmigen Eingabe in eine quadratische Ausgabe.
-Versuche dies zu aktivieren, wenn dein linker Analogstick sich nur in einem Kreis bewegen kann.
+Versuche dies zu aktivieren, wenn dein linker Analogstick sich nur in einem
+Kreis bewegen kann.
 .
 :CONFIG_DEADZONE
-der Prozentsatz der Bewegung, der ignoriert werden soll. 100 macht den Stick zu einem digitalen Stick.
+der Prozentsatz der Bewegung, der ignoriert werden soll. 100 macht den Stick zu
+einem digitalen Stick.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Activates hotkeys to allow realtime calibration of the joystick's x and y axis.
-Only consider this if in-game calibration fails and other settings have been tried.
- - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
-     - left and right diminish or magnify the x-axis scalar, respectively.
-     - down and up diminish or magnify the y-axis scalar, respectively.
- - Alt+Arrow-keys adjusts the axis' offset position:
-     - left and right shift x-axis offset in the given direction.
-     - down and up shift the y-axis offset in the given direction.
- - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.
-Each tap will report X or Y calibration values you can set below. When you find parameters that work,
-quit the game, switch this setting back to false, and populate the reported calibration parameters.
+Aktiviert Hotkeys, um die Kalibrierung der X- und Y-Achse des Joysticks in
+Echtzeit zu ermöglichen.
+Verwende dies nur, wenn die Kalibrierung im Spiel fehlschlägt und andere
+Einstellungen bereits ausprobiert wurden.
+ - Mit Strg/CMD+Pfeiltasten stellst du den Skalarwert der Achse ein:
+     - links und rechts verkleinert bzw. vergrößert den Skalar der x-Achse.
+     - runter und hoch verkleinern bzw. vergrößern den Skalar der y-Achse.
+ - Alt+Pfeiltasten passt die Offset-Position der Achse an:
+     - links und rechts verschiebt die x-Achse in die angegebene Richtung.
+     - runter und hoch verschiebt den Y-Achsen-Versatz in die angegebene Richtung.
+ - Setze die X- und Y-Kalibrierung mit Strg+Entf bzw. Strg+Home zurück.
+Jeder Tastendruck meldet X- oder Y-Kalibrierungswerte, die du dann unten
+einstellen kannst. Wenn du Parameter gefunden hast, die funktionieren, beende
+das Programm, setze diese Einstellung zurück auf false und gib die gemeldeten
+Kalibrierungsparameter unten ein.
 .
 :CONFIG_JOY_X_CALIBRATION
-Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+Wende die Parameter für die Kalibrierung der x-Achse über die Hotkeys an.
+Die Voreinstellung ist "auto".
 .
 :CONFIG_JOY_Y_CALIBRATION
-Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
+Wende die Parameter für die Kalibrierung der y-Achse über die Hotkeys an.
+Die Voreinstellung ist "auto".
 .
 :CONFIG_SERIAL1
 Typ des Gerätes, das mit dem Com-Port verbunden ist.
@@ -704,7 +778,8 @@ Aktiviere die XMS-Unterstützung.
 .
 :CONFIG_EMS
 Aktiviere die EMS-Unterstützung. Der Standard (=true) bietet die beste
-Kompatibilität, aber bestimmte Anwendungen laufen besser mit anderen Einstellungen oder erfordern die Deaktivierung der EMS-Unterstützung (=false)
+Kompatibilität, aber bestimmte Anwendungen laufen besser mit anderen
+Einstellungen oder erfordern die Deaktivierung der EMS-Unterstützung (=false)
 um überhaupt zu funktionieren.
 .
 :CONFIG_UMB
@@ -716,10 +791,11 @@ Eine einzelne Zahl wird als die Hauptversion behandelt.
 Übliche Einstellungen sind 3.3, 5.0, 6.22, und 7.1.
 .
 :CONFIG_COUNTRY
-Set DOS country code which will affect country-specific
-information such as date, time, and decimal formats.
-If set to 0, the country code corresponding to the
-selected keyboard layout will be used.
+Lege den DOS-Ländercode fest, der länderspezifische
+Informationen wie Datum, Uhrzeit und Dezimalformate
+beeinflusst. Wenn er auf 0 gesetzt ist, wird der
+Ländercode verwendet, der dem ausgewählte Tastatur-
+layout entspricht.
 .
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts (oder keines).
@@ -728,8 +804,8 @@ Sprachcode des Tastaturlayouts (oder keines).
 Aktiviere IPX über UDP/IP Emulation.
 .
 :CONFIG_NE2000
-Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem softwarebasierten
-Netzwerk (mit libslirp) mit den folgenden Eigenschaften:
+Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem software-
+basierten Netzwerk (mit libslirp) mit den folgenden Eigenschaften:
  - 255.255.255.0 : Subnetzmaske des virtuellen LAN 10.0.2.0.
  - 10.0.2.2      : IP des Gateways und des DHCP-Dienstes.
  - 10.0.2.3      : IP des virtuellen DNS-Servers.
@@ -768,8 +844,10 @@ Zuordnungen und Bereiche können auch kombiniert werden:
   HStart-HEnde:GStart-GEnde ..., (z.B, 8040-8080:20-60)
   Dies leitet die Ports 8040 bis 8080 an die Ports 20 bis 60 des Gastes weiter.
 Anmerkungen:
-  - Wenn die zugewiesenen Bereiche unterschiedlich sind, wird der kürzere Bereich erweitert, damit er passt.
-  - Wenn widersprüchliche Host-Ports angegeben werden, wird nur der erste eingerichtet.
+  - Wenn die zugewiesenen Bereiche unterschiedlich sind, wird der kürzere Bereich
+    erweitert, damit er passt.
+  - Wenn widersprüchliche Host-Ports angegeben werden, wird nur der erste
+    eingerichtet.
   - Bei widersprüchlichen Gast-Ports hat die letztere Regel Vorrang.
 .
 :CONFIG_UDP_PORT_FORWARDS
@@ -839,7 +917,7 @@ Schreibe Konfigurationsdatei %s
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Config Tool:
+Passt die konfigurierbaren Parameter von DOSBox Staging an.
 -writeconf / -wc ohne Parameter: in die primär geladene Config-Datei schreiben.
 -writeconf / -wc mit Dateiname: schreibt die Datei in das Konfig-Verzeichnis.
 -writelang / -wl mit Dateiname: schreibe die aktuellen Sprachstrings.
@@ -1240,7 +1318,7 @@ BASIC ROM geladen.
 
 .
 :SHELL_CMD_MOUNT_HELP
-Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerksbuchstaben zu.
+Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerk zu.
 
 .
 :SHELL_CMD_MOUNT_HELP_LONG
@@ -1385,7 +1463,7 @@ Erforderlicher Parameter fehlt.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Unable to change to: %s.
+Wechseln zu %s nicht möglich.
 
 .
 :SHELL_CMD_CHDIR_HINT
@@ -1579,7 +1657,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m     Deutsche Übersetzung 0.78.1 v1 ║
+║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v1 ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 .
@@ -1731,7 +1809,7 @@ Verzeichnisinhalte auflisten.
 
 .
 :SHELL_CMD_LS_HELP_LONG
-ls [/?] [PATTERN]
+ls [/?] [Zeichenfolge]
 
 .
 :SHELL_CMD_LS_PATH_ERR
@@ -1889,7 +1967,7 @@ Beispiel:
 
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
-Lädt ein Programm in einen bestimmten Speicherbereich und führt es dann aus.
+Lädt ein Programm in einen Speicherbereich und führt es dann aus.
 
 Verwendung:
   [32;1mloadfix[0m [36;1mPROGRAMM[0m [37;1m[PARAMETER][0m
@@ -1913,7 +1991,7 @@ Beispiele:
 
 .
 :SHELL_CMD_AUTOTYPE_HELP_LONG
-Führt eine geskriptete Tastatureingabe in ein laufendes DOS Programm durch.
+Geskriptete Tastatureingabe in ein laufendes DOS Programm.
 
 Verwendung:
   [32;1mautotype[0m -list
@@ -2374,156 +2452,159 @@ Ein numerischer Port-Wert zwischen 1 und %d (einschließlich) muss angegeben wer
 
 .
 :PROGRAM_BOOT_IMAGE_MOUNTED
-Floppy image(s) already mounted.
+Disketten-Image(s) bereits gemountet.
 
 .
 :PROGRAM_MOUNT_STATUS_NAME
-Image name
+Image-Name
 .
 :PROGRAM_MOUNT_STATUS_SLOT
-Swap slot
+Wechsel-Image
 .
 :PROGRAM_IMGMOUNT_STATUS_1
-The currently mounted disk and CD image drives are:
+Die derzeit gemounteten Disketten- und CD-Image-Laufwerke sind:
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-No drive available
+Kein Laufwerk vorhanden
 
 .
 :PROGRAM_SERIAL_BAD_TYPE
-Type must be one of the following:
+Der Typ muss einer der folgenden sein:
 
 .
 :SHELL_CMD_FILE_ACCESS_DENIED
-Access denied - %s
+Zugriff verweigert - %s
 
 .
 :SHELL_CMD_DUPLICATE_REDIRECTION
-Duplicate redirection - %s
+Doppelte Weiterleitung - %s
 
 .
 :SHELL_CMD_FAILED_PIPE
 
-Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+Eine temporäre Datei für Piping konnte nicht erstellt/geöffnet werden.
+Überprüfe die Variable %%TEMP%%.
 
 .
 :SHELL_CMD_FILE_CREATE_ERROR
-File creation error - %s
+Fehler beim Erstellen der Datei - %s
 
 .
 :SHELL_CMD_FILE_OPEN_ERROR
-File open error - %s
+Fehler beim Öffnen der Datei - %s
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
-Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
+Benutzung:
+  [32;1mattrib[0m [37;1m[ATTRIBUTE][0m [36;1mZEICHEN[0m [/S]
 
-Where:
-  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
+Wobei:
+  [37;1mATTRIBUTE[0m  sind anzuwendende Eigenschaften, einschließlich eine oder mehrere
+             der folgenden:
              [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
-             Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
-             wildcards, which are the asterisk (*) and the question mark (?),
-             or an exact name of a directory.
-Notes:
-  Multiple attributes can be specified in the command, separated by spaces.
-  If not specified, the command shows the current file/directory attributes.
+             Wobei: R = Schreibgeschützt, A = Archiv, S = System, H = Versteckt
+  [36;1mZEICHEN[0m    kann entweder ein exakter Dateiname sein oder ein ungenauer
+             Dateiname mit Platzhaltern, d.h. dem Sternchen (*) und dem
+             Fragezeichen (?), oder ein genauer Name eines Verzeichnisses.
+Anmerkungen:
+  In dem Befehl können mehrere Attribute angegeben werden, die durch
+  Leerzeichen getrennt sind. Wenn nichts angegeben wird, zeigt der Befehl
+  die aktuellen Datei-/Verzeichnisattribute an.
 
-Examples:
+Beispiele:
   [32;1mattrib[0m [36;1mfile.txt[0m
   [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
-Unable to get attributes: %s
+Die Attribute können nicht abgerufen werden: %s
 
 .
 :SHELL_CMD_ATTRIB_SET_ERROR
-Unable to set attributes: %s
+Die Attribute können nicht gesetzt werden: %s
 
 .
 :SHELL_CMD_CHOICE_ABORTED
 
-Choice aborted.
+Auswahl abgebrochen.
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
-DOSBox Commands
+DOSBox-Befehle
 .
 :HELP_UTIL_CATEGORY_FILE
-File/Directory Commands
+Datei/Verzeichnis-Befehle
 .
 :HELP_UTIL_CATEGORY_BATCH
-Batch File Commands
+Batch-Datei-Befehle
 .
 :HELP_UTIL_CATEGORY_MISC
-Miscellaneous Commands
+Sonstige Befehle
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
-Unknown Command
+Unbekannter Befehl
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
-listing not supported
+Auflistung nicht unterstützt
 .
 :MIDI_DEVICE_NOT_CONFIGURED
-device not configured
+Gerät nicht konfiguriert
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Mount a CD-ROM, floppy, or disk image to a drive letter.
+Mounted ein CD-, Disketten- oder ein Disk-Image als Laufwerk.
 
-Usage:
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro
-  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)
+Benutzung:
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]CD-ROM(S)[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]IMAGE-DATEI[reset] [IMAGE-DATEI2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]BOOT-IMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
+  [color=green]imgmount[reset] -u [color=white]LAUFWERK[reset]  (un-mounted [color=white]LAUFWERK[reset])
 
-Where:
-  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...
-  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format
-  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:
-            bytes-per-sector,sectors-per-head,heads,cylinders
-Notes:
-  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.
-  - The -ro flag mounts the disk image in read-only (write-protected) mode.
-  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
-    for CD-based games that need a real DOS environment via bootable HDD image.
-Examples:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+Wobei:
+  [color=white]LAUFWERK[reset]    Laufwerk, in den das Image gemountet werden soll: a, c, d, ...
+  [color=cyan]CD-ROMS(S)[reset]  ISO, CUE+BIN, CUE+ISO, CUE+ISO+FLAC/OPUS/OGG/MP3/WAV Dateien
+  [color=cyan]IMAGE-DATEI[reset] FAT16- oder FAT12 Festplatten- oder Disketten-Image
+  [color=cyan]BOOT-IMAGE[reset]  bootfähiges Disk-Image mit der angegebenen -size GEOMETRIE:
+              Bytes pro Sektor, Sektoren pro Kopf, Köpfe, Zylinder
+Bemerkungen:
+  - %s+F4 wechselt & mountet die nächste(n) [color=cyan]CD-ROM(S)[reset] oder [color=cyan]BOOT-IMAGE[reset].
+  - Mit dem Flag -ro wird das Disk-Image schreibgeschützt gemountet.
+  - Der Parameter -ide emuliert eine IDE CD-Laufwerk, nützlich für CD-basierte
+    Programme, die ein echtes DOS über ein Boot-Image benötigen.
+Beispiele:
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/BENUTZERNAME/games/doom.iso[reset] -t cdrom
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
-  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
+  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
 :PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+Tastaturlayout %s für Zeichentabelle %i geladen
 
 .
 :SHELL_CMD_MIXER_HELP_LONG
-Displays or changes the sound mixer settings.
+Zeigt die Sound-Mixer-Einstellungen an oder ändert sie.
 
-Usage:
-  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]
+Benutzung:
+  [color=green]mixer[reset] [color=cyan][QUELLE][reset] [color=white]PARAMETER[reset] [/noshow]
   [color=green]mixer[reset] [/listmidi]
 
-Where:
-  [color=cyan]CHANNEL[reset]  is the sound channel to change the settings of.
-  [color=white]COMMANDS[reset] is one or more of the following commands:
-    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])
-               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
-    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
-    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]
+Wobei:
+  [color=cyan]QUELLE[reset]    ist die Quelle, für die du die Einstellungen ändern willst.
+  [color=white]PARAMETER[reset] ist einer oder mehrere der folgenden Parameter:
+    Lautstärke: [color=white]0[reset] bis [color=white]100[reset], oder dB-Wert mit vorangestelltem [color=white]d[reset] (z.B. [color=white]d-7.5[reset])
+                verwende [color=white]L:R[reset] um L und R separat einzustellen (z.B. [color=white]10:20[reset])
+    Ausgang:    [color=white]stereo[reset], [color=white]reverse[reset] (nur für Stereo-Quellen)
+    Crossfeed:  [color=white]x0[reset] bis [color=white]x100[reset]    Reverb: [color=white]r0[reset] bis [color=white]r100[reset]    Chorus: [color=white]c0[reset] bis [color=white]c100[reset]
 
-Notes:
-  Running [color=green]mixer[reset] without an argument shows the current mixer settings.
-  You may change the settings of more than one channel in a single command.
-  If channel is unspecified, you can set crossfeed, reverb or chorus globally.
-  You can view the list of available MIDI devices with /listmidi.
-  The /noshow option applies the changes without showing the mixer settings.
+Bemerkungen:
+  [color=green]mixer[reset] ohne Parameter zeigt die aktuellen Einstellungen an.
+  Die Einstellungen mehrerer Quellen können mit einem Befehl geändert werden.
+  Ohne angegebene Quelle wir Crossfeed, Reverb oder Chorus global eingestellt.
+  Mit /listmidi kannst du die Liste der verfügbaren MIDI-Geräte anzeigen.
+  Die Option /noshow wendet die Änderungen an, ohne Bildschirmausgabe.
 
-Examples:
+Beispiele:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
@@ -2531,13 +2612,13 @@ Examples:
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+[color=white]Quellen      Pegel     Pegel (dB)    Modus    Xfeed  Reverb  Chorus[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_MASTER
-[color=cyan]MASTER[reset]
+[color=cyan]SUMME[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
-off
+aus
 .
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
@@ -2547,6 +2628,6 @@ Mono
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Choice failed[reset]: the input stream ended without a valid choice.
+[color=red]Auswahl fehlgeschlagen[reset]: Die Eingabe wurde ohne eine gültige Auswahl beendet.
 
 .
