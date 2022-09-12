@@ -843,6 +843,10 @@ Imposta il codice paese DOS che influenzer… informazioni come data, ora e
 formati decimali. Se impostato a 0, verr… utilizzato il codice paese
 corrispondente al layout di tastiera selezionato.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
+dei comandi DOS. COMMAND.COM in FreeDOS e MS-DOS 7/8 supporta questa funzione.
+.
 :CONFIG_KEYBOARDLAYOUT
 Codice linguaggio del layout della tastiera (o 'none').
 .
