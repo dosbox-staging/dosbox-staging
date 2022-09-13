@@ -313,17 +313,20 @@ jobs:
           else
             packageinfo="a development branch"
           fi
-          echo "version_number=`git describe --tags`" >> $GITHUB_ENV
-          sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
           mkdir out
+          echo "version_number=`git describe --tags`" >> $GITHUB_ENV
+          sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
+          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          echo @echo off >out/dosbox_with_console.bat
+          echo \"%~dp0\\dosbox.exe\" %* >>out/dosbox_with_console.bat
+          echo if errorlevel 1 pause >>out/dosbox_with_console.bat
           if [ -d msvc ]; then
             cp msvc/dosbox*.exe out
             mv out/dosbox.exe out/dosbox_msvc.exe
             mv out/dosbox_with_debugger.exe out/dosbox_msvc_with_debugger.exe
           else
             echo Note: MSVC build will not be included in the Windows installer.
-            sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"dosbox_msvc\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
+            sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"{#DOSBoxAppExeMSVC\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
           fi
 
       - name: Build Windows installer
@@ -334,7 +337,6 @@ jobs:
           copy ${{ github.workspace }}\contrib\windows_installer\* .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.ico .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
-          copy ${{ github.workspace }}\setup_preamble.txt .
           xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
           replace /a ..\msvc\*.dll program
           move program\dosbox.exe .
