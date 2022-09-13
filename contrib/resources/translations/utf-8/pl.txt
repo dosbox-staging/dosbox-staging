@@ -767,6 +767,11 @@ Zostanie użyty do określenia formatu daty, czasu, liczb dziesiętnych, itp.
 Wartość 0 spowoduje ustawienie kraju odpowiadającemu wybranemu układowi
 klawiatury.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Enable expanding environment variables such as %PATH%
+while in the DOS command shell. FreeDOS and MS-DOS 7/8
+COMMAND.COM supports this behavior.
+.
 :CONFIG_KEYBOARDLAYOUT
 Kod języka klawiatury (lub puste) - np. 'pl' (polski układ programisty),
 'pl214' (polski układ maszynistki).

@@ -797,6 +797,11 @@ beeinflusst. Wenn er auf 0 gesetzt ist, wird der
 Ländercode verwendet, der dem ausgewählte Tastatur-
 layout entspricht.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Enable expanding environment variables such as %PATH%
+while in the DOS command shell. FreeDOS and MS-DOS 7/8
+COMMAND.COM supports this behavior.
+.
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts (oder keines).
 .

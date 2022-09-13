@@ -741,6 +741,11 @@ information such as date, time, and decimal formats.
 If set to 0, the country code corresponding to the
 selected keyboard layout will be used.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Enable expanding environment variables such as %PATH%
+while in the DOS command shell. FreeDOS and MS-DOS 7/8
+COMMAND.COM supports this behavior.
+.
 :CONFIG_KEYBOARDLAYOUT
 Языковой код раскладки клавиатуры (или 'none').
 .
