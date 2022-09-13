@@ -797,6 +797,11 @@ beeinflusst. Wenn er auf 0 gesetzt ist, wird der
 Lndercode verwendet, der dem ausgewhlte Tastatur-
 layout entspricht.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Enable expanding environment variables such as %PATH%
+while in the DOS command shell. FreeDOS and MS-DOS 7/8
+COMMAND.COM supports this behavior.
+.
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts (oder keines).
 .
@@ -1199,20 +1204,20 @@ benutzen kannst, musst du das Verzeichnis, das die Dateien enthlt, einbinden.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c c:\dosgames\[37m wird ein Laufwerk C mit c:\dosgames als Inhalt erstellen.บ
-บ                                                                               บ
-บ [32mc:\dosgames\[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis.    [37m บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosgames\[37m erstellt ein Laufwerk C mit c:\dosgames als Inhalt.  บ
+บ                                                                           บ
+บ [32mc:\dosgames\[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37mบ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m wird ein Laufwerk C mit ~/dosgames als Inhalt erstellen.บ
-บ                                                                            บ
-บ [32m~/dosgames[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis.  [37m  บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosgames[37m erstellt ein Laufwerk C mit ~/dosgames als Inhalt.   บ
+บ                                                                         บ
+บ [32m~/dosgames[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37mบ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 
 .
@@ -1588,7 +1593,7 @@ Die Datei %s existiert bereits.
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
-Laufwerk %c existiert nicht! Du musst es zuerst [31mmount[0m]en.
+Laufwerk %c existiert nicht! Du musst es zuerst [31mmounten[0m.
 Tippe [1;33mintro[0m oder [1;33mintro mount[0m fr weitere Informationen.
 
 .
@@ -1657,7 +1662,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-บ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v1 บ
+บ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v2 บ
 ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .

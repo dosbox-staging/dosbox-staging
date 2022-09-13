@@ -1204,20 +1204,20 @@ benutzen kannst, musst du das Verzeichnis, das die Dateien enthält, einbinden.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m╔═══════════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosgames\[37m wird ein Laufwerk C mit c:\dosgames als Inhalt erstellen.║
-║                                                                               ║
-║ [32mc:\dosgames\[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis.    [37m ║
-╚═══════════════════════════════════════════════════════════════════════════════╝[0m
+[44;1m╔═══════════════════════════════════════════════════════════════════════════╗
+║ [32mmount c c:\dosgames\[37m erstellt ein Laufwerk C mit c:\dosgames als Inhalt.  ║
+║                                                                           ║
+║ [32mc:\dosgames\[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37m║
+╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1m╔════════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/dosgames[37m wird ein Laufwerk C mit ~/dosgames als Inhalt erstellen.║
-║                                                                            ║
-║ [32m~/dosgames[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis.  [37m  ║
-╚════════════════════════════════════════════════════════════════════════════╝[0m
+[44;1m╔═════════════════════════════════════════════════════════════════════════╗
+║ [32mmount c ~/dosgames[37m erstellt ein Laufwerk C mit ~/dosgames als Inhalt.   ║
+║                                                                         ║
+║ [32m~/dosgames[37m ist ein Beispiel. Ersetze es durch dein eigenes Verzeichnis. [37m║
+╚═════════════════════════════════════════════════════════════════════════╝[0m
 
 
 .
@@ -1593,7 +1593,7 @@ Die Datei %s existiert bereits.
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
-Laufwerk %c existiert nicht! Du musst es zuerst [31mmount[0m]en.
+Laufwerk %c existiert nicht! Du musst es zuerst [31mmounten[0m.
 Tippe [1;33mintro[0m oder [1;33mintro mount[0m für weitere Informationen.
 
 .
@@ -1662,7 +1662,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v1 ║
+║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v2 ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 .
