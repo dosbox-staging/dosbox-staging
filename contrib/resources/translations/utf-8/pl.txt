@@ -768,9 +768,8 @@ Wartość 0 spowoduje ustawienie kraju odpowiadającemu wybranemu układowi
 klawiatury.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Enable expanding environment variables such as %PATH%
-while in the DOS command shell. FreeDOS and MS-DOS 7/8
-COMMAND.COM supports this behavior.
+Rozwijanie zmiennych środowiskowych, np. %PATH%, w wierszu poleceń.
+Obsługiwane przez COMMAND.COM z systemów MS-DOS 7/8 oraz FreeDOS.
 .
 :CONFIG_KEYBOARDLAYOUT
 Kod języka klawiatury (lub puste) - np. 'pl' (polski układ programisty),
