@@ -767,6 +767,10 @@ Zostanie u¾yty do okre˜lenia formatu daty, czasu, liczb dziesi©tnych, itp.
 Warto˜† 0 spowoduje ustawienie kraju odpowiadaj¥cemu wybranemu ukˆadowi
 klawiatury.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Rozwijanie zmiennych ˜rodowiskowych, np. %PATH%, w wierszu poleceä.
+Obsˆugiwane przez COMMAND.COM z system¢w MS-DOS 7/8 oraz FreeDOS.
+.
 :CONFIG_KEYBOARDLAYOUT
 Kod j©zyka klawiatury (lub puste) - np. 'pl' (polski ukˆad programisty),
 'pl214' (polski ukˆad maszynistki).
