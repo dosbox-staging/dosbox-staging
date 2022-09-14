@@ -138,7 +138,7 @@ del sistema operativo mentre l'emulatore ä in esecuzione).
 :CONFIG_LANGUAGE
 Seleziona una lingua da usare: de, en, es, fr, it, pl e ru.
 Note: Questa impostazione, se utilizzata, sovrascriverÖ la variabile 
-      d'ambiente 'LANG'. La cartella 'resources/translations', inclusa nel
+      d'ambiente 'LANG'. La directory 'resources/translations', inclusa nel
       pacchetto insieme all'eseguibile, contiene questi file.
       Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
@@ -146,7 +146,7 @@ Note: Questa impostazione, se utilizzata, sovrascriverÖ la variabile
 Tipo di macchina che DOSBox sta cercando di emulare.
 .
 :CONFIG_CAPTURES
-Cartella in cui vengono salvati file come suoni WAVE, musica MIDI e screenshot.
+Directory in cui vengono salvati file come suoni WAVE, musica MIDI e screenshot
 .
 :CONFIG_MEMSIZE
 QuantitÖ di memoria a disposizione di DOSBox, in megabyte.
@@ -202,7 +202,7 @@ overwrite : usa l'ultima incontrata, come le altre impostazioni di
             configurazione.
 .
 :CONFIG_AUTOMOUNT
-Monta le cartelle 'drives/[c]' come unitÖ all'avvio, dove [c] ä una lettera di
+Monta le directory 'drives/[c]' come unitÖ all'avvio, dove [c] ä una lettera di
 unitÖ in formato minuscolo da 'a' a 'y'. La cartella 'drives' puï essere fornita
 in relazione alla directory corrente o tramite le risorse integrate nel
 pacchetto di rilascio.
@@ -212,7 +212,7 @@ file [c].conf accanto alla directory dell'unitÖ, con il seguente contenuto:
   type    = dir, overlay, floppy, o cdrom
   label   = etichetta_personalizzata
   path    = percorso di ricerca eseguibili, cioä: path = %%path%%;c:\tools
-  override_drive = monta invece la cartella su questa unitÖ (predefinito vuoto)
+  override_drive = monta invece la directory su questa unitÖ (predef. vuoto)
   verbose = true o false
 .
 :CONFIG_STARTUP_VERBOSITY
@@ -221,7 +221,7 @@ VerbositÖ   | Schermata di benvenuto | Registro di DOSBox
 high        |           sç           |         sç
 low         |           no           |         sç
 quiet       |           no           |         no
-auto        | 'low' se viene fornito un'eseguibile, un batch o una cartella,
+auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
             |  (es. dosbox run.bat), altrimenti sarÖ impostato su 'high'
 .
 :CONFIG_FRAMESKIP
@@ -272,8 +272,8 @@ desiderato, prova uno scaler diverso o attiva l'uscita a piena risoluzione.
 .
 :CONFIG_GLSHADER
 Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con
-l'uscita OpenGL. Puï essere un percorso assoluto, un file nella sottocartella
-'glshaders' della cartella di configurazione di DOSBox, o uno degli shader
+l'uscita OpenGL. Puï essere un percorso assoluto, un file nella sottodirectory
+'glshaders' della directory di configurazione di DOSBox, o uno degli shader
 inclusi:
 advinterp2x, advinterp3x, advmame2x, advmame3x,
 crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
@@ -432,8 +432,8 @@ Tipo di MPU-401 da emulare.
 .
 :CONFIG_SOUNDFONT
 Percorso del file SoundFont in formato .sf2. Puoi utilizzare un percorso
-assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
-'soundfonts' situata nella cartella di configurazione di DOSBox.
+assoluto o relativo, o il nome di un file .sf2 all'interno della directory
+'soundfonts' situata nella directory di configurazione di DOSBox.
 Nota: La percentuale di ridimensionamento del volume dopo il nome del file ä
       stata deprecata. Si prega invece di utilizzare il comando del mixer per
       modificare il volume del canale audio FluidSynth, ad es.:
@@ -484,11 +484,11 @@ Modello di sintetizzatore da utilizzare.
 'mt32_old' e 'mt32_new' si riferiscono rispettivamente ai modelli 1.07 e 2.04.
 .
 :CONFIG_ROMDIR
-Cartella contenente le ROM di uno o pió modelli.
-Il percorso della cartella puï essere assoluto o relativo, o lasciato vuoto
-per usare la cartella 'mt32-roms' nella cartella di configurazione di DOSBox.
+Directory contenente le ROM di uno o pió modelli.
+Il percorso puï essere assoluto o relativo, o lasciato vuoto per utilizzare
+'mt32-roms' nella directory di configurazione di DOSBox.
 Verranno verificate anche altre posizioni di sistema comuni.
-All'interno di questa cartella, possono essere inclusi i seguenti file ROM:
+All'interno di questa directory, possono essere inclusi i seguenti file ROM:
   - MT32_CONTROL.ROM e MT32_PCM.ROM, per il modello 'mt32'.
   - CM32L_CONTROL.ROM e CM32L_PCM.ROM, per il modello 'cm32l'.
   - ROM MAME MT-32 e CM-32L decompresse, per i modelli suddivisi in base alla
@@ -606,8 +606,8 @@ Numero IRQ della scheda audio Gravis UltraSound.
 Canale DMA della scheda audio Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-Percorso per la cartella UltraSound. In essa dovrebbe essere presente una
-cartella MIDI con al suo interno i file di patch per la riproduzione GUS.
+Percorso per la directory UltraSound. In essa dovrebbe essere presente una
+directory MIDI con al suo interno i file di patch per la riproduzione GUS.
 I set di patch utilizzati con Timidity dovrebbero funzionare.
 .
 :CONFIG_GUS_FILTER
@@ -943,7 +943,7 @@ File di configurazione aggiuntivi:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-Cartella di configurazione di DOSBox Staging %s: 
+Directory di configurazione di DOSBox Staging %s: 
 %s
 
 
@@ -960,15 +960,15 @@ Scrittura del file di configurazione in %s
 :SHELL_CMD_CONFIG_HELP_LONG
 Regola i parametri configurabili di DOSBox Staging.
 -writeconf o -wc senza parametro: scrive nel file di config. primario caricato.
--writeconf o -wc [nomefile]: scrive il file nella cartella di configurazione.
+-writeconf o -wc [nomefile]: scrive il file nella directory di configurazione.
 Usa -writelang o -wl [nomefile] per scrivere le stringhe della lingua corrente.
 -r [parametri]
  Riavvia DOSBox, utilizzando i parametri precedenti o quelli aggiunti.
 -wcp [nomefile]
- Scrive il file di config. nella cartella del programma, col nome dosbox.conf
+ Scrive il file di config. nella directory del programma, col nome dosbox.conf
  o con il nome del file specificato.
 -wcd
- Scrive nel file di config. predefinito nella cartella di configurazione.
+ Scrive nel file di config. predefinito nella directory di configurazione.
 -l elenca i parametri di configurazione.
 -h, -help, -? sections / nomeSezione / nomeProprietÖ
  Senza parametri, visualizza questa guida. Aggiungi "sections" per elencare le
@@ -1195,7 +1195,7 @@ Installazione di MSCDEX non riuscita.
 
 .
 :MSCDEX_LIMITED_SUPPORT
-MSCDEX: Sottocartella montata: supporto limitato.
+MSCDEX: Sottodirectory montata: supporto limitato.
 
 .
 :MSCDEX_INVALID_FILEFORMAT
@@ -1316,7 +1316,7 @@ File immagine non trovato.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Per montare le cartelle, usa il comando [color=blue]MOUNT[reset], non il comando [color=blue]IMGMOUNT[reset].
+Per montare le directory, usa il comando [color=blue]MOUNT[reset], non il comando [color=blue]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1355,7 +1355,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 :PROGRAM_INTRO_MOUNT_START
 [2J[color=green]Ecco alcuni comandi utili per iniziare:[reset]
 Prima di poter utilizzare i file che si trovano sul tuo filesystem,
-devi montare la cartella contenente i file.
+Devi montare la directory contenente i file.
 
 
 .
@@ -1363,7 +1363,7 @@ devi montare la cartella contenente i file.
 [bgcolor=blue]…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
 ∫ [color=light-green]mount c c:\giochi\ [color=light-white]crea un'unitÖ C con il contenuto di c:\giochi.        ∫
 ∫                                                                          ∫
-∫ [color=light-green]c:\giochi\ [color=light-white]ä un esempio. Sostituiscilo con la tua cartella dei giochi.[color=light-white]   ∫
+∫ [color=light-green]c:\giochi\ [color=light-white]ä un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ∫
 »ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[reset]
 
 .
@@ -1371,7 +1371,7 @@ devi montare la cartella contenente i file.
 [bgcolor=blue]…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
 ∫ [color=light-green]mount c ~/giochi[color=light-white] crea un'unitÖ C con il contenuto di ~/giochi.         ∫
 ∫                                                                        ∫
-∫ [color=light-green]~/giochi[color=light-white] ä un esempio. Sostituiscilo con la tua cartella dei giochi.[color=light-white]   ∫
+∫ [color=light-green]~/giochi[color=light-white] ä un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ∫
 »ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[reset]
 
 .
@@ -1379,7 +1379,7 @@ devi montare la cartella contenente i file.
 Dopo aver montato con successo il disco, puoi digitare [color=blue]c:[reset] per spostarti
 nella tua nuova unitÖ C.
 Una volta qui, digita [color=blue]dir[reset] per visualizzarne il contenuto.
-[color=blue]cd[reset] ti permette di spostarti all'interno di una cartella (riconoscibile da [color=yellow][][reset]).
+[color=blue]cd[reset] ti permette di spostarti all'interno di una directory (riconoscibile da [color=yellow][][reset]).
 Puoi eseguire programmi/file con estensione [color=light-red].exe[reset], [color=light-red].bat[reset] e [color=light-red].com[reset].
 
 .
@@ -1387,7 +1387,7 @@ Puoi eseguire programmi/file con estensione [color=light-red].exe[reset], [color
 [2J[color=green]Come montare un'unitÖ CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
-Il livello [color=light-yellow]base[reset] funziona su tutte le cartelle normali, installa MSCDEX e
+Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
 contrassegna i file in sola lettura. Di solito questo ä sufficiente per la
 maggior parte dei giochi:
 [color=blue]mount D C:\esempio -t cdrom[reset]
@@ -1396,7 +1396,7 @@ Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unitÖ CD-ROM:
-[color=blue]mount d [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=light-yellow]0[reset]
+[color=blue]mount d [reset][color=light-red]D:\ [reset][color=blue]-t cdrom -usecd [color=light-yellow]0[reset]
 Sostituisci [color=light-red]D:\ [reset]con la posizione del tuo CD-ROM.
 Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
@@ -1410,17 +1410,17 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 [2J[color=green]Come montare un'unitÖ CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
-Il livello [color=light-yellow]base[reset] funziona su tutte le cartelle normali, installa MSCDEX e
+Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
 contrassegna i file in sola lettura. Di solito questo ä sufficiente per la
 maggior parte dei giochi:
-[color=blue]mount D ~/example -t cdrom[reset]
+[color=blue]mount D ~/esempio -t cdrom[reset]
 Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
-[color=blue]mount D ~/example -t cdrom -label ETICHETTACD[reset]
+[color=blue]mount D ~/esempio -t cdrom -label ETICHETTACD[reset]
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unitÖ CD-ROM:
-[color=blue]mount d [color=light-red]~/example[color=blue] -t cdrom -usecd [color=light-yellow]0[reset]
-Sostituisci [color=light-red]~/example[reset] con la posizione del tuo CD-ROM.
+[color=blue]mount d [reset][color=light-red]~/esempio[reset][color=blue] -t cdrom -usecd [color=light-yellow]0[reset]
+Sostituisci [color=light-red]~/esempio[reset] con la posizione del tuo CD-ROM.
 Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
 
@@ -1629,24 +1629,24 @@ Mappa cartelle fisiche o unitÖ su una lettera di unitÖ virtuale.
 
 .
 :SHELL_CMD_MOUNT_HELP_LONG
-Monta una cartella del sistema operativo host su una lettera di unitÖ.
+Monta una directory del sistema operativo host su una lettera di unitÖ.
 
 Utilizzo:
-  [color=green]mount[reset] [color=white]UNIT∑[reset] [color=cyan]CARTELLA[reset] [-t TIPO] [-usecd #] [-freesize DIM] [-label ETICHETTA]
+  [color=green]mount[reset] [color=white]UNIT∑[reset] [color=cyan]DIRECTORY[reset] [-t TIPO] [-usecd #] [-freesize DIM] [-label ETICHETTA]
   [color=green]mount[reset] -listcd / -cd (elenca le unitÖ CD-ROM rilevate e i relativi numeri)
-  [color=green]mount[reset] -u [color=white]UNIT∑[reset]  (smonta la cartella dell'UNIT∑)
+  [color=green]mount[reset] -u [color=white]UNIT∑[reset]  (smonta la directory dell'UNIT∑)
 
 Dove:
-  [color=white]UNIT∑[reset]     ä la lettera dell'unitÖ in cui verrÖ montata la cartella: es. C
-  [color=cyan]CARTELLA[reset]  ä la cartella sul sistema operativo host da montare.
-  TIPO      ä il tipo di cartella da montare: dir, floppy, cdrom o overlay.
+  [color=white]UNIT∑[reset]     ä la lettera dell'unitÖ in cui verrÖ montata la directory: A, C, ..
+  [color=cyan]DIRECTORY[reset] ä la directory sul sistema operativo host da montare.
+  TIPO      ä il tipo di directory da montare: dir, floppy, cdrom o overlay.
   DIM       ä lo spazio libero per l'unitÖ virtuale (KiB per floppy,
             altrimenti MiB).
   ETICHETTA ä il nome dell'etichetta dell'unitÖ da utilizzare.
 
 Note:
   - '-t overlay' reindirizza le scritture per l'unitÖ montata in un'altra
-    cartella.
+    directory.
   - Ulteriori opzioni sono descritte nel manuale (file README, capitolo 4).
 
 Esempi:
@@ -1660,11 +1660,11 @@ CDROM trovati: %d
 
 .
 :PROGRAM_MOUNT_ERROR_1
-La cartella %s non esiste.
+La directory %s non esiste.
 
 .
 :PROGRAM_MOUNT_ERROR_2
-%s non ä una cartella
+%s non ä una directory
 
 .
 :PROGRAM_MOUNT_ILL_TYPE
@@ -1692,11 +1692,11 @@ Le unitÖ virtuali non possono essere smontate.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=red]Montare C:\ ‘ sconsigliato. Si raccomanda di montare una sottocartella.[reset]
+[color=red]Montare C:\ ‘ sconsigliato. Si raccomanda di montare una sottodirectory.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[color=red]Montare / ‘ sconsigliato. Si raccomanda di montare una sottocartella.[reset]
+[color=red]Montare / ‘ sconsigliato. Si raccomanda di montare una sottodirectory.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -1718,7 +1718,7 @@ percorso, relativo o assoluto, dell'unitÖ sottostante.
 Non mescolare percorsi relativi e assoluti.
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-La cartella di sovrapposizione non puï essere la stessa dell'unitÖ sottostante.
+La directory di sovrapposizione non puï essere la stessa dell'unitÖ sottostante
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
@@ -1906,7 +1906,7 @@ Suggerimento: Per spostarsi su un'altra unitÖ, digita [color=light-red]%c:[reset
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-il nome della cartella ä pió lungo di 8 caratteri e/o contiene spazi.
+il nome della directory ä pió lungo di 8 caratteri e/o contiene spazi.
 Prova [color=light-red]cd %s[reset]
 
 .
@@ -2138,7 +2138,7 @@ destinazione ä giÖ in uso. ‘ possibile utilizzare SUBST solo su unitÖ locali.
 ∫                                                                      ∫
 ∫ Per regolare la velocitÖ della CPU emulata, usa [color=light-red]%s+F11[color=light-white] e [color=light-red]%s+F12[color=light-white].%s%s ∫
 ∫ Per attivare il keymapper, usa [color=light-red]%s+F1[color=light-white].%s                              ∫
-∫ Ulteriori informazioni nel file [color=light-cyan]README[color=light-white] nella cartella di DOSBox.     ∫
+∫ Ulteriori informazioni nel file [color=light-cyan]README[color=light-white] nella directory di DOSBox.    ∫
 ∫                                                                      ∫
 
 .
@@ -2181,19 +2181,19 @@ Visualizza o cambia la directory corrente.
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Utilizzo:
-  [color=green]cd[reset] [color=cyan]CARTELLA[reset]
-  [color=green]chdir[reset] [color=cyan]CARTELLA[reset]
+  [color=green]cd[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]chdir[reset] [color=cyan]DIRECTORY[reset]
 
 Dove:
-  [color=cyan]CARTELLA[reset] ä il nome della cartella in cui spostarsi.
+  [color=cyan]DIRECTORY[reset] ä il nome della directory in cui spostarsi.
 
 Note:
   L'esecuzione di [color=green]cd[reset] senza un argomento visualizza la directory corrente.
-  Con [color=cyan]CARTELLA[reset] il comando cambia solo la directory, non l'unitÖ corrente.
+  Con [color=cyan]DIRECTORY[reset] il comando cambia solo la directory, non l'unitÖ corrente.
 
 Esempi:
   [color=green]cd[reset]
-  [color=green]cd[reset] [color=cyan]laMiaCartella[reset]
+  [color=green]cd[reset] [color=cyan]laMiaDirectory[reset]
 
 .
 :SHELL_CMD_CLS_HELP
@@ -2217,7 +2217,7 @@ Esempi:
 
 .
 :SHELL_CMD_DIR_HELP
-Visualizza un elenco di file e sottocartelle in una directory.
+Visualizza un elenco di file e sottodirectory in una directory.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
@@ -2227,17 +2227,17 @@ Utilizzo:
 Dove:
   [color=cyan]MODELLO[reset] ä un nome file specifico o con caratteri jolly, cioä asterisco(*)
           e punto di domanda (?). ‘ possibile specificare il percorso di
-          una cartella per elencarne il contenuto.
+          una directory per elencarne il contenuto.
   [color=white]ORDINAM[reset] ä il tipo di ordinamento scelto, cioä: [color=white]n[reset] (per nome, alfabetico),
           [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
           [color=white]d[reset] (per data/ora dal pió vecchio), con prefisso [color=white]-[reset] per invertire ordine
-  /w  elenca 5 file/cartelle in una riga;  /b   elenca solo i nomi.
+  /w  elenca 5 file/directory in una riga; /b   elenca solo i nomi.
   /o  ordina la lista (vedi sopra);        /p   mostra una schermata per volta.
-  /ad elenca tutte le cartelle;            /a-d elenca tutti i file.
+  /ad elenca tutte le directory;           /a-d elenca tutti i file.
 
 Note:
   L'esecuzione di [color=green]dir[reset] senza un argomento elenca tutti i file e le
-  sottocartelle nella directory corrente. [color=green]dir[reset] [color=cyan]*.*[reset] effettua la stessa operazione
+  sottodirectory nella directory corrente. [color=green]dir[reset] [color=cyan]*.*[reset] effettua la stessa operazione
 
 Esempi:
   [color=green]dir[reset]
@@ -2245,7 +2245,7 @@ Esempi:
   [color=green]dir[reset] [color=cyan]c:\giochi\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Visualizza messaggi e attiva/disattiva la ripetizione dei comandi.
+Visualizza messaggi oppure attiva/disattiva la ripetizione dei comandi.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
@@ -2341,43 +2341,43 @@ Esempi:
 
 .
 :SHELL_CMD_MKDIR_HELP
-Crea una cartella.
+Crea una directory.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Utilizzo:
-  [color=green]md[reset] [color=cyan]CARTELLA[reset]
-  [color=green]mkdir[reset] [color=cyan]CARTELLA[reset]
+  [color=green]md[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]mkdir[reset] [color=cyan]DIRECTORY[reset]
 
 Dove:
-  [color=cyan]CARTELLA[reset] ä il nome della cartella da creare.
+  [color=cyan]DIRECTORY[reset] ä il nome della directory da creare.
 
 Note:
-  - Alla cartella deve essere assegnato un nome specifico e non utilizzato.
-  - ‘ possibile specificare il percorso in cui verrÖ creata la cartella.
+  - Alla directory deve essere assegnato un nome specifico e non utilizzato.
+  - ‘ possibile specificare il percorso in cui verrÖ creata la directory.
 
 Esempi:
-  [color=green]md[reset] [color=cyan]nuovaCartella[reset]
-  [color=green]md[reset] [color=cyan]c:\giochi\cartella[reset]
+  [color=green]md[reset] [color=cyan]nuovaDir[reset]
+  [color=green]md[reset] [color=cyan]c:\giochi\dir[reset]
 
 .
 :SHELL_CMD_RMDIR_HELP
-Rimuove una cartella.
+Rimuove una directory.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Utilizzo:
-  [color=green]rd[reset] [color=cyan]CARTELLA[reset]
-  [color=green]rmdir[reset] [color=cyan]CARTELLA[reset]
+  [color=green]rd[reset] [color=cyan]DIRECTORY[reset]
+  [color=green]rmdir[reset] [color=cyan]DIRECTORY[reset]
 
 Dove:
-  [color=cyan]CARTELLA[reset] ä il nome della cartella da rimuovere.
+  [color=cyan]DIRECTORY[reset] ä il nome della directory da rimuovere.
 
 Note:
-  La cartella deve essere vuota, senza file o sottocartelle.
+  La directory deve essere vuota, senza file o sottodirectory.
 
 Esempi:
-  [color=green]rd[reset] [color=cyan]cartellaVuota[reset]
+  [color=green]rd[reset] [color=cyan]DirectoryVuota[reset]
 
 .
 :SHELL_CMD_SET_HELP
@@ -2549,10 +2549,10 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset] puï essere un nome di uno file specifico (come [color=cyan]file.txt[reset]) oppure
-           un nome file contenente uno o pió caratteri jolly, cioä:
-           asterisco (*), che rappresenta una qualsiasi sequenza di uno o pió
-           caratteri, o punto di domanda (?) che rappresenta un singolo
-           carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
+          un nome file contenente uno o pió caratteri jolly, cioä:
+          asterisco (*), che rappresenta una qualsiasi sequenza di uno o pió
+          caratteri, o punto di domanda (?) che rappresenta un singolo
+          carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
 
 Avvertimento:
   Fai attenzione quando usi un nome file con caratteri jolly, in particolare
@@ -2576,8 +2576,8 @@ Utilizzo:
 Dove:
   [color=white]SORGENTE[reset]     ä un nome file specifico o con caratteri jolly, cioä
                asterisco(*) o punto di domanda (?).
-  [color=cyan]DESTINAZIONE[reset] ä un nome file specifico che non contiene caratteri
-               jolly o una cartella.
+  [color=cyan]DESTINAZIONE[reset] ä un nome file specifico o una directory che non contiene
+               caratteri jolly.
 
 Note:
   L'operatore [color=white]+[reset] combina pió file sorgente forniti in un unico file.
@@ -2621,8 +2621,8 @@ Utilizzo:
   [color=green]subst[reset] [color=white]UNIT∑[reset] /d
 
 Dove:
-  [color=white]UNIT∑[reset]     ä un'unitÖ a cui si desidera assegnare un percorso.
-  [color=cyan]PERCORSO[reset]  ä un percorso DOS montato che si desidera assegnare.
+  [color=white]UNIT∑[reset]    ä un'unitÖ a cui si desidera assegnare un percorso.
+  [color=cyan]PERCORSO[reset] ä un percorso DOS montato che si desidera assegnare.
 
 Note:
   Il percorso deve trovarsi su un'unitÖ montata con il comando [color=green]mount[reset].
@@ -2657,7 +2657,7 @@ Esempi:
 
 .
 :SHELL_CMD_LS_HELP
-Visualizza il contenuto della cartella nel formato elenco ampio.
+Visualizza il contenuto della directory nel formato elenco ampio.
 
 .
 :SHELL_CMD_LS_HELP_LONG
@@ -2671,7 +2671,7 @@ Dove:
   [color=cyan]PERCORSO[reset] ä un percorso di un'unitÖ DOS montata da cui elencare il contenuto.
 
 Note:
-  Il comando elencherÖ le cartelle in [color=blue]blu[reset], programmi eseguibili DOS
+  Il comando elencherÖ le directory in [color=blue]blu[reset], programmi eseguibili DOS
   (*.com, *.exe, *.bat) in [color=green]verde[reset], e altri file nel colore normale.
 
 Esempi:
@@ -2680,7 +2680,7 @@ Esempi:
 
 .
 :SHELL_CMD_LS_PATH_ERR
-ls: impossibile accedere a '%s': Percorso o file non trovato.
+ls: impossibile accedere a '%s': Il file o la directory non esiste.
 
 .
 :SHELL_CMD_ATTRIB_HELP
@@ -2692,16 +2692,16 @@ Utilizzo:
   [color=green]attrib[reset] [color=white][ATTRIBUTI][reset] [color=cyan]MODELLO[reset]
 
 Dove:
-  [color=white]ATTRIBUTI[reset]  sono gli attributi da applicare, tra cui uno o pió dei seguenti:
-             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
-             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
-  [color=cyan]MODELLO[reset]    puï essere un nome file esatto o un nome file con caratteri jolly,
-             cioä asterisco (*) e punto di domanda (?), oppure il nome di
-             una cartella.
+  [color=white]ATTRIBUTI[reset] sono gli attributi da applicare, tra cui uno o pió dei seguenti:
+            [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
+            Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
+  [color=cyan]MODELLO[reset]   puï essere un nome file esatto o un nome file con caratteri jolly,
+            cioä asterisco (*) e punto di domanda (?), oppure il nome di
+            una directory.
 
 Note:
   In questo comando ä possibile specificare pió attributi, separati da spazi.
-  Se non specificato, il comando mostra gli attributi di file/cartelle correnti
+  Se non specificati, esso mostra gli attributi di file/directory correnti.
 
 Esempi:
   [color=green]attrib[reset] [color=cyan]file.txt[reset]
@@ -2764,7 +2764,7 @@ Utilizzo:
   [color=green]path[reset] [color=cyan][unitÖ:]percorso[;...][reset]
 
 Dove:
-  [color=cyan][unitÖ:]percorso[;...][reset] ä un percorso contenente un'unitÖ e una cartella.
+  [color=cyan][unitÖ:]percorso[;...][reset] ä un percorso contenente un'unitÖ e una directory.
   ‘ possibile specificare pió di un percorso, separati da un punto e virgola(;)
 
 Note:
@@ -2814,7 +2814,7 @@ La versione DOS specificata non ä corretta.
 Comandi DOSBox
 .
 :HELP_UTIL_CATEGORY_FILE
-Comandi File/Cartelle
+Comandi File/Directory
 .
 :HELP_UTIL_CATEGORY_BATCH
 Comandi File Batch
