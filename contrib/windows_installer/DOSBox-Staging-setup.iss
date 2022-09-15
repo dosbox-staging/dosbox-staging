@@ -125,6 +125,7 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open wit
 
 [UninstallDelete]
 Type: files; Name: "{app}\stderr.txt"
+Type: files; Name: "{app}\stdout.txt"
 
 [Code]
 procedure CurPageChanged(CurPageID: Integer);
