@@ -434,13 +434,13 @@ Siehe das README/Manual für weitere Details.
 Typ des zu emulierenden MPU-401.
 .
 :CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format. You can use an
-absolute or relative path, or the name of an .sf2 inside
-the 'soundfonts' directory within your DOSBox configuration
-directory.
-Note: The optional volume scaling percentage after the filename
-has been deprecated. Please use a mixer command instead to
-change the FluidSynth audio channel's volume, e.g.:
+Pfad zu einer SoundFont-Datei im .sf2-Format. Du kannst einen
+absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2-Datei in
+dem Verzeichnis "soundfonts" in deinem DOSBox-Konfigurations-
+Verzeichnis.
+Hinweis: Die optionale Lautstärkeskalierung in Prozent nach dem Dateinamen
+wird nicht mehr unterstützt. Bitte verwende stattdessen einen Mixer-Befehl,
+um die Lautstärke des FluidSynth-Audiokanals zu ändern, z. B:
   MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
@@ -1664,7 +1664,7 @@ auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v2 ║
+║ [33mhttps://dosbox-staging.github.io[37m                     de.txt 0.79 v3 ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 .
