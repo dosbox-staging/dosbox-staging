@@ -47,13 +47,11 @@ void Disney::ConfigureFilters(const FilterState state)
 {
 	assert(channel);
 
-	// Run the ZoH up-sampler at the higher mixer rate
-	const auto mixer_rate_hz = check_cast<uint16_t>(channel->GetSampleRate());
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(mixer_rate_hz);
-	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
-
 	// Pull audio frames from the Disney DAC at 7 kHz
 	channel->SetSampleRate(dss_7khz_rate);
+	channel->SetZeroOrderHoldUpsamplerTargetFreq(dss_7khz_rate);
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
+
 	ms_per_frame = millis_in_second / dss_7khz_rate;
 
 	if (state == FilterState::On) {
