@@ -65,6 +65,8 @@ void INTRO::DisplayMount(void) {
 void INTRO::Run(void) {
 	// Usage
 	if (HelpRequested()) {
+		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP"));
+		WriteOut("\n");
 		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP_LONG"));
 		return;
 	}
