@@ -222,10 +222,9 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	const auto mixer_rate_hz = channel->GetSampleRate();
 	sample_rate = mixer_rate_hz;
 
-	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
-	// DACs
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(check_cast<uint16_t>(sample_rate));
-	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
+	// TODO: replace linear with ZoH resampler
+	channel->SetResampleMethod(ResampleMethod::LinearInterpolation);
+
 
 	// Setup filters
 	if (filter_choice == "on") {

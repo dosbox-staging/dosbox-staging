@@ -49,10 +49,12 @@ void Disney::ConfigureFilters(const FilterState state)
 
 	// Pull audio frames from the Disney DAC at 7 kHz
 	channel->SetSampleRate(dss_7khz_rate);
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(dss_7khz_rate);
-	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
-
 	ms_per_frame = millis_in_second / dss_7khz_rate;
+
+
+	// TODO: replace linear with ZoH resampler
+	channel->SetResampleMethod(ResampleMethod::LinearInterpolation);
+
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth
