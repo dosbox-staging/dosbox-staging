@@ -314,9 +314,9 @@ jobs:
             packageinfo="a development branch"
           fi
           mkdir out
-          echo "version_number=`git describe --tags`" >> $GITHUB_ENV
+          echo "version_number=`git describe --tags --abbrev=4`" >> $GITHUB_ENV
           sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags --abbrev=4`|" contrib/windows_installer/DOSBox-Staging-setup.iss
           echo @echo off >out/dosbox_with_console.bat
           echo \"%~dp0\\dosbox.exe\" %* >>out/dosbox_with_console.bat
           echo if errorlevel 1 pause >>out/dosbox_with_console.bat
