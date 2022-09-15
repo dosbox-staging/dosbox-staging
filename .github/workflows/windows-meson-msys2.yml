@@ -270,6 +270,8 @@ jobs:
             "$PKG_RELEASE"
           mv "${PKG_RELEASE}/dosbox.exe" "${PKG_RELEASE}/dosbox_with_debugger.exe"
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
+          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
+          echo "artifact_path=${{ github.workspace }}\msvc" >> $GITHUB_ENV
 
       - name: Windows Defender AV Scan
         shell: powershell
@@ -282,11 +284,76 @@ jobs:
               Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
           }
 
+      - name: Wait for MSVC builds to complete
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Publish additional Windows artifacts
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Download MSVC artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: windows.yml
+          name: ${{ env.artifact_name }}
+          path: ${{ env.artifact_path }}
+          if_no_artifact_found: warn
+
+      - name: Prepare Windows installer
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
+            version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
+            packageinfo="release $version_tag"
+          elif [ -n "${{ github.ref }}" ] && [ -n "${{ github.sha }}" ]; then
+            git_branch=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
+            git_commit=`echo ${{ github.sha }} | awk '{print substr($0,1,9);exit}'`
+            packageinfo="a development branch named $git_branch with commit $git_commit"
+          else
+            packageinfo="a development branch"
+          fi
+          mkdir out
+          echo "version_number=`git describe --tags`" >> $GITHUB_ENV
+          sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
+          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags`|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          echo @echo off >out/dosbox_with_console.bat
+          echo \"%~dp0\\dosbox.exe\" %* >>out/dosbox_with_console.bat
+          echo if errorlevel 1 pause >>out/dosbox_with_console.bat
+          if [ -d msvc ]; then
+            cp msvc/dosbox*.exe out
+            mv out/dosbox.exe out/dosbox_msvc.exe
+            mv out/dosbox_with_debugger.exe out/dosbox_msvc_with_debugger.exe
+          else
+            echo Note: MSVC build will not be included in the Windows installer.
+            sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"{#DOSBoxAppExeMSVC\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
+          fi
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          cd out
+          mkdir program
+          copy ${{ github.workspace }}\contrib\windows_installer\* .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging.ico .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
+          xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
+          replace /a ..\msvc\*.dll program
+          move program\dosbox.exe .
+          move program\dosbox_with_debugger.exe .
+          C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
+
       - name: Upload package
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.PKG_RELEASE }}
           path: ${{ env.PKG_RELEASE }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: dosbox-staging-${{ env.version_number }}-setup.exe
+          path: ${{ github.workspace }}\out\dosbox-staging-${{ env.version_number }}-setup.exe
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
