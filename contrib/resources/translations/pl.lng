@@ -384,6 +384,14 @@ Wi©cej informacji (po angielsku) znajdziesz w pliku README/Manual.
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401.
 .
+:CONFIG_SOUNDFONT
+—cie¾ka do pliku SoundFont w formacie SF2. Mo¾e by† wzgl©dna lub bezwzgl©dna,
+mo¾na te¾ poda† nazw© pliku z podkatalogu 'soundfonts' katalogu z
+konfiguracj¥.
+Uwaga: opcjonalny parametr reguluj¥cy gˆo˜no˜† jest przestarzaˆy; gˆo˜no˜†
+nale¾y zmienia† odpowiednim poleceniem, np.:
+  MIXER FSYNTH 200
+.
 :CONFIG_FSYNTH_CHORUS
 Efekt 'chorus': auto', 'on', 'off' lub ustawienia u¾ytkownika.
 Ustawienia u¾ytkownika wymagaj¥ podania wszystkich 5 parametr¢w,
