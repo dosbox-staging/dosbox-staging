@@ -432,7 +432,7 @@ Tipo di MPU-401 da emulare.
 .
 :CONFIG_SOUNDFONT
 Percorso del file SoundFont in formato .sf2. Puoi utilizzare un percorso
-assoluto o relativo, o il nome di un file .sf2 all'interno della directory
+assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
 'soundfonts' situata nella directory di configurazione di DOSBox.
 Nota: La percentuale di ridimensionamento del volume dopo il nome del file è
       stata deprecata. Si prega invece di utilizzare il comando del mixer per
@@ -486,7 +486,7 @@ Modello di sintetizzatore da utilizzare.
 :CONFIG_ROMDIR
 Directory contenente le ROM di uno o più modelli.
 Il percorso può essere assoluto o relativo, o lasciato vuoto per utilizzare
-'mt32-roms' nella directory di configurazione di DOSBox.
+la cartella 'mt32-roms' nella directory di configurazione di DOSBox.
 Verranno verificate anche altre posizioni di sistema comuni.
 All'interno di questa directory, possono essere inclusi i seguenti file ROM:
   - MT32_CONTROL.ROM e MT32_PCM.ROM, per il modello 'mt32'.
@@ -1100,7 +1100,7 @@ Utilizzo:
   [color=green]boot[reset] [color=cyan]IMMAGINE[reset]
 
 Dove:
-  [color=white]UNITÀ[reset]    è un'unità da cui vuoi effettuare l'avvio, deve essere [color=white]A[reset], [color=white]C[reset], o [color=white]D[reset].
+  [color=white]UNITÀ[reset]    è l'unità da cui vuoi effettuare l'avvio, deve essere [color=white]A[reset], [color=white]C[reset], o [color=white]D[reset].
   [color=cyan]IMMAGINE[reset] è una o più immagini floppy, separate da spazi.
 
 Note:
@@ -1243,7 +1243,7 @@ Utilizzo:
   [color=green]imgmount[reset] -u [color=white]UNITÀ[reset]  (smonta l'immagine dell'[color=white]UNITÀ[reset])
 
 Dove:
-  [color=white]UNITÀ[reset]     è la lettera dell'unità in cui verrà montata l'immagine: a, c, d ..
+  [color=white]UNITÀ[reset]     è la lettera dell'unità in cui verrà montata l'immagine: A, C, D ..
   [color=cyan]CDROM-SET[reset] è un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV.
   [color=cyan]IMMAGINE[reset]  è un'immagine disco rigido o floppy in formato FAT16 o FAT12.
   [color=cyan]AVVIABILE[reset] è un'immagine disco avviabile con -size GEOMETRIA specificata:
@@ -1809,7 +1809,7 @@ Utilizzo:
   [color=green]serial[reset] [color=white]PORTA#[reset] [color=cyan]DISPOSITIVO[reset] [impostazioni]  Collega il dispositivo alla porta
 					    specificata.
 Dove:
-  [color=cyan]DISPOSITIVO[reset]   Può essere: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], o [color=cyan]DISABLED[reset]
+  [color=cyan]DISPOSITIVO[reset] può essere: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], o [color=cyan]DISABLED[reset]
 
   Impostazioni facoltative per ogni [color=cyan]TIPO[reset]:
   Per [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
@@ -2233,8 +2233,8 @@ Dove:
   /ad elenca tutte le directory;           /a-d elenca tutti i file.
 
 Note:
-  L'esecuzione di [color=green]dir[reset] senza un argomento elenca tutti i file e le
-  sottodirectory nella directory corrente. [color=green]dir[reset] [color=cyan]*.*[reset] effettua la stessa operazione
+  L'esecuzione di [color=green]dir[reset] senza un argomento elenca tutti i file e le sotto-
+  directory nella directory corrente. [color=green]dir[reset] [color=cyan]*.*[reset] effettua la stessa operazione.
 
 Esempi:
   [color=green]dir[reset]
@@ -2328,8 +2328,8 @@ Dove:
 
 Note:
   L'esecuzione di [color=green]intro[reset] senza un argomento, permette di visualizzare una pagina
-  di informazioni alla volta; premere un tasto qualsiasi per passare alla pagina
-  successiva. Se viene fornito il nome della pagina, verrà visualizzata
+  di informazioni alla volta; premere un tasto qualsiasi per passare alla
+  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata
   direttamente quella specificata.
 
 Esempi:
@@ -2640,14 +2640,14 @@ Utilizzo:
   [color=green]loadhigh[reset] [color=cyan]PROGRAMMA[reset] [color=white][PARAMETRI][reset]
 
 Dove:
-  [color=cyan]PROGRAMMA[reset] è un programma DOS TSR da caricare, facoltativamente con parametri.
+  [color=cyan]PROGRAMMA[reset] è un programma TSR DOS da caricare, facoltativamente con parametri.
 
 Note:
   Se possibile, questo comando intende salvare la memoria convenzionale
   caricando i programmi TSR DOS specificati nella memoria superiore. Tali
   programmi potrebbero essere necessari per alcuni giochi DOS; Le memorie XMS
   e UMB devono essere abilitate (xms=true e umb=true). Non tutti i programmi
-  DOS TSR possono essere caricati nella memoria superiore con questo comando.
+  TSR DOS possono essere caricati nella memoria superiore con questo comando.
 
 Esempi:
   [color=green]lh[reset] [color=cyan]apptsr[reset] [color=white]argomenti[reset]
