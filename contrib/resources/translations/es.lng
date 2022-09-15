@@ -376,15 +376,6 @@ Consulte el README/Manual para m s detalles.
 :CONFIG_MPU401
 Tipo de MPU-401 a emular.
 .
-:CONFIG_SOUNDFONT
-Ruta a un archivo SoundFont en formato .sf2. Puedes utilizar una
-ruta absoluta o relativa, o el nombre de un .sf2 dentro de
-el directorio 'soundfonts' dentro del directorio de
-configuraci¢n de DOSBox.
-Un porcentaje opcional escalar  el volumen del SoundFont.
-Por ejemplo: 'soundfont.sf2 50' lo atenuar  en un 50%.
-El porcentaje de escalado puede ir de 1 a 500.
-.
 :CONFIG_FSYNTH_REVERB
 Efecto de reverberaci¢n: 'auto', 'on', 'off', o valores personalizados.
 Cuando se usan valores personalizados:

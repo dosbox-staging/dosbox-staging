@@ -433,14 +433,6 @@ Siehe das README/Manual fÅr weitere Details.
 :CONFIG_MPU401
 Typ des zu emulierenden MPU-401.
 .
-:CONFIG_SOUNDFONT
-Pfad zu einer SoundFont Datei im .sf2 Format. Du kannst einen
-absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2 Datei
-innerhalb des "soundfonts" Verzeichnises innerhalb deines DOSBox Konfigurations-
-Verzeichnisses. Ein optionaler Prozentsatz skaliert die LautstÑrke des SoundFonts.
-Zum Beispiel: "soundfont.sf2 50" wird die LautstÑrke um 50 Prozent abschwÑchen.
-Der Skalierungsprozentsatz kann von 1 bis 500 reichen.
-.
 :CONFIG_FSYNTH_CHORUS
 Chorus-Effekt: "auto", "on", "off" oder benutzerdefinierte Werte.
 Wenn du benutzerdefinierte Werte verwendest:

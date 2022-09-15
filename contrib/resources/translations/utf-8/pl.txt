@@ -385,11 +385,14 @@ Więcej informacji (po angielsku) znajdziesz w pliku README/Manual.
 Typ emulowanego interfejsu MPU-401.
 .
 :CONFIG_SOUNDFONT
-Ścieżka do pliku SoundFont w formacie SF2. Ścieżka może być względna lub
-bezwzględna, można też podać nazwę pliku z podkatalogu 'soundfonts' katalogu
-z konfiguracją.
-Opcjonalny parametr to głośność w procentach, od 1 do 100, np. podanie
-'soundfont.sf2 50' ściszy głośność instrumentów o połowę.
+Path to a SoundFont file in .sf2 format. You can use an
+absolute or relative path, or the name of an .sf2 inside
+the 'soundfonts' directory within your DOSBox configuration
+directory.
+Note: The optional volume scaling percentage after the filename
+has been deprecated. Please use a mixer command instead to
+change the FluidSynth audio channel's volume, e.g.:
+  MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
 Efekt 'chorus': auto', 'on', 'off' lub ustawienia użytkownika.

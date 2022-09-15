@@ -379,15 +379,6 @@ Reportez vous au README/Manuel pour plus d'informations.
 :CONFIG_MPU401
 Type de MPU-401 … ‚muler.
 .
-:CONFIG_SOUNDFONT
-Chemin pour un fichier SoundFont au format .sf2. Vous pouvez utiliser
-un chemin relatif ou absolu, ou le nom d'un fichier .sf2 dans
-le r‚pertoire 'soundfonts' … l'int‚rieur de votre r‚pertoire de configuration
-de DOSBox.
-Un pourcentage optionnel r‚glera le volume du SoundFont.
-Par exemple: 'soundfont.sf2 50' le diminuera de 50 pourcents.
-L'‚chelle de pourcentage peut aller de 1 … 500.
-.
 :CONFIG_FSYNTH_CHORUS
 Chorus effect: 'auto', 'on', 'off', or custom values.
 When using custom values:

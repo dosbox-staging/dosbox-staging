@@ -384,13 +384,6 @@ Wiecej informacji (po angielsku) znajdziesz w pliku README/Manual.
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401.
 .
-:CONFIG_SOUNDFONT
-Sciezka do pliku SoundFont w formacie SF2. Sciezka moze byc wzgledna lub
-bezwzgledna, mozna tez podac nazwe pliku z podkatalogu 'soundfonts' katalogu
-z konfiguracja.
-Opcjonalny parametr to glosnosc w procentach, od 1 do 100, np. podanie
-'soundfont.sf2 50' sciszy glosnosc instrument¢w o polowe.
-.
 :CONFIG_FSYNTH_CHORUS
 Efekt 'chorus': auto', 'on', 'off' lub ustawienia uzytkownika.
 Ustawienia uzytkownika wymagaja podania wszystkich 5 parametr¢w,

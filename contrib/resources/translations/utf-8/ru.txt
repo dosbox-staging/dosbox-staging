@@ -387,12 +387,14 @@ auto        | 'low', если передан исполняемый файл и�
 Тип MPU-401 для эмуляции.
 .
 :CONFIG_SOUNDFONT
-Путь к файлу SoundFont в формате .sf2. Можно использовать
-абсолютный или относительный путь, или имя .sf2 внутри
-субдиректории 'soundfonts' в директории конфигурации DOSBox.
-Необязательный процент будет изменять громкость SoundFont.
-Например: 'FluidR3_GM.sf2 50' ослабит её на 50 процентов.
-Изменение в процентах может быть в пределах от 1 до 500.
+Path to a SoundFont file in .sf2 format. You can use an
+absolute or relative path, or the name of an .sf2 inside
+the 'soundfonts' directory within your DOSBox configuration
+directory.
+Note: The optional volume scaling percentage after the filename
+has been deprecated. Please use a mixer command instead to
+change the FluidSynth audio channel's volume, e.g.:
+  MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
 Эффект хора: 'auto', 'on', 'off', или собственные значения.
