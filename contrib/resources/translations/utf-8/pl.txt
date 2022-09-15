@@ -1689,9 +1689,6 @@ Przykłady:
 :SHELL_CMD_MIXER_HEADER_LABELS
 [color=white]Kanał        Głośność  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
 .
-:SHELL_CMD_MIXER_CHANNEL_MASTER
-[color=cyan]MASTER[reset]
-.
 :SHELL_CMD_MIXER_CHANNEL_OFF
 wył
 .

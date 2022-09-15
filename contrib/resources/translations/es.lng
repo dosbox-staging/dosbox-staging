@@ -2580,9 +2580,6 @@ No drive available
 :SHELL_CMD_MIXER_HEADER_LABELS
 [color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
 .
-:SHELL_CMD_MIXER_CHANNEL_MASTER
-[color=cyan]MASTER[reset]
-.
 :SHELL_CMD_MIXER_CHANNEL_OFF
 off
 .

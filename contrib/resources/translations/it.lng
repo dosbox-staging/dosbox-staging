@@ -1792,9 +1792,6 @@ Esempi:
 :SHELL_CMD_MIXER_HEADER_LABELS
 [color=white]Canale       Volume    Volume (dB)   Modalit…   Xfeed  Riverbero  Coro[reset]
 .
-:SHELL_CMD_MIXER_CHANNEL_MASTER
-[color=cyan]MASTER[reset]
-.
 :SHELL_CMD_MIXER_CHANNEL_OFF
 spento
 .

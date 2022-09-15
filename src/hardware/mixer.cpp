@@ -2242,8 +2242,6 @@ private:
 		MSG_Add("SHELL_CMD_MIXER_HEADER_LABELS",
 		        "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]");
 
-		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MASTER", "[color=cyan]MASTER[reset]");
-
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_OFF", "off");
 
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_STEREO", "Stereo");
@@ -2321,7 +2319,10 @@ private:
 		constexpr auto none_value = "-";
 
 		MIXER_LockAudioDevice();
-		show_channel(MSG_Get("SHELL_CMD_MIXER_CHANNEL_MASTER"),
+
+		constexpr auto master_channel_string = "[color=cyan]MASTER[reset]";
+
+		show_channel(convert_ansi_markup(master_channel_string),
 		             mixer.master_volume,
 		             MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO"),
 		             none_value,
