@@ -337,6 +337,7 @@ jobs:
           copy ${{ github.workspace }}\contrib\windows_installer\* .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.ico .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging-side.bmp .
           xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
           replace /a ..\msvc\*.dll program
           move program\dosbox.exe .
