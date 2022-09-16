@@ -34,6 +34,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline dialog
 UninstallDisplayIcon={app}\{#DOSBoxAppExeName}
 WizardSmallImageFile={#DOSBoxAppInternal}.bmp
+WizardImageFile={#DOSBoxAppInternal}-side.bmp
 
 [Messages]
 InfoBeforeLabel=Please read the general information about {#DOSBoxAppName} below.
