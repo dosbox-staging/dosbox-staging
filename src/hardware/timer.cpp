@@ -370,17 +370,9 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 		bcd_to_decimal(channel.write_latch);
 
 	if (channel.write_mode != AccessMode::Latch) {
-		if (channel.write_latch == 0) {
-			channel.count = get_max_count(channel);
-		}
-		// square wave, count by 2
-		else if (channel.write_latch == 1 &&
-		         (channel.mode == PitMode::SquareWave ||
-		          channel.mode == PitMode::SquareWaveAlias))
-			// buzz (Paratrooper)
-			channel.count = get_max_count(channel) + 1;
-		else
-			channel.count = channel.write_latch;
+
+		channel.count = channel.write_latch ? channel.write_latch
+		                                    : get_max_count(channel);
 
 		if ((!channel.mode_changed) &&
 		    (channel.mode == PitMode::RateGenerator ||

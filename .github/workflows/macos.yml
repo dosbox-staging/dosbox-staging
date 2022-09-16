@@ -159,7 +159,7 @@ jobs:
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: x86_64
-            build_flags: --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
+            build_flags: -Db_lto=true -Db_lto_threads=4 --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
             brew_path: /usr/local/homebrew
             minimum_deployment: '10.15'
             needs_deps: false

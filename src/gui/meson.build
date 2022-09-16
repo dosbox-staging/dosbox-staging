@@ -13,7 +13,7 @@ libgui = static_library(
     dependencies: [
         sdl2_dep,
         opengl_dep,
-        libghc_dep,
+        ghc_dep,
         libiir_dep,
         libloguru_dep,
         tracy_dep,

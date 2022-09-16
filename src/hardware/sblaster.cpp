@@ -84,6 +84,7 @@ enum class FilterType {
 	SBPro1,
 	SBPro2,
 	SB16,
+	Modern
 };
 
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
@@ -321,6 +322,7 @@ static void log_filter_config(const char *output_type, const FilterType filter)
 	        {FilterType::SBPro1, "Sound Blaster Pro 1"},
 	        {FilterType::SBPro2, "Sound Blaster Pro 2"},
 	        {FilterType::SB16, "Sound Blaster 16"},
+	        {FilterType::Modern, "Modern"},
 	};
 
 	if (filter == FilterType::None) {
@@ -346,8 +348,8 @@ struct FilterConfig {
 	uint8_t lpf_order           = {};
 	uint16_t lpf_cutoff_freq_hz = {};
 
-	bool zoh_upsampler_enabled = false;
-	uint16_t zoh_rate_hz       = {};
+	ResampleMethod resample_method = {};
+	uint16_t zoh_rate_hz           = {};
 };
 
 static void set_filter(mixer_channel_t channel, const FilterConfig &config)
@@ -366,12 +368,10 @@ static void set_filter(mixer_channel_t channel, const FilterConfig &config)
 	}
 	channel->SetLowPassFilter(config.lpf_state);
 
-	if (config.zoh_upsampler_enabled) {
-		channel->ConfigureZeroOrderHoldUpsampler(config.zoh_rate_hz);
-		channel->EnableZeroOrderHoldUpsampler();
-	} else {
-		channel->EnableZeroOrderHoldUpsampler(false);
-	}
+	if (config.resample_method == ResampleMethod::ZeroOrderHoldAndResample)
+		channel->SetZeroOrderHoldUpsamplerTargetFreq(config.zoh_rate_hz);
+
+	channel->SetResampleMethod(config.resample_method);
 }
 
 static std::optional<FilterType> determine_filter_type(const std::string &filter_choice,
@@ -404,6 +404,9 @@ static std::optional<FilterType> determine_filter_type(const std::string &filter
 
 	} else if (filter_choice == "sb16") {
 		return FilterType::SB16;
+
+	} else if (filter_choice == "modern") {
+		return FilterType::Modern;
 	}
 
 	return {};
@@ -411,14 +414,13 @@ static std::optional<FilterType> determine_filter_type(const std::string &filter
 
 static void configure_sb_filter(mixer_channel_t channel,
                                 const std::string &filter_prefs,
-								const bool filter_always_on,
-                                const SB_TYPES sb_type)
+                                const bool filter_always_on, const SB_TYPES sb_type)
 {
-	// A bit unfortunate, but we need to enable the ZOH upsampler and the the
-	// correct upsample rate first for the filter cutoff frequency validation
-	// to work correctly.
-	channel->ConfigureZeroOrderHoldUpsampler(native_dac_rate_hz);
-	channel->EnableZeroOrderHoldUpsampler();
+	// A bit unfortunate, but we need to enable the ZOH upsampler and the
+	// correct upsample rate first for the filter cutoff frequency
+	// validation to work correctly.
+	channel->SetZeroOrderHoldUpsamplerTargetFreq(native_dac_rate_hz);
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	if (channel->TryParseAndSetCustomFilter(filter_prefs))
 		return;
@@ -428,6 +430,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 	const auto filter_choice = filter_prefs_parts.empty()
 	                                 ? "auto"
 	                                 : filter_prefs_parts[0];
+
 	FilterConfig config = {};
 
 	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
@@ -439,8 +442,8 @@ static void configure_sb_filter(mixer_channel_t channel,
 	};
 
 	auto enable_zoh_upsampler = [&] {
-		config.zoh_upsampler_enabled = true;
-		config.zoh_rate_hz           = native_dac_rate_hz;
+		config.resample_method = ResampleMethod::ZeroOrderHoldAndResample;
+		config.zoh_rate_hz     = native_dac_rate_hz;
 	};
 
 	const auto filter_type = determine_filter_type(filter_choice, sb_type);
@@ -456,9 +459,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 	}
 
 	switch (*filter_type) {
-	case FilterType::None:
-		enable_zoh_upsampler();
-		break;
+	case FilterType::None: enable_zoh_upsampler(); break;
 
 	case FilterType::SB1:
 		enable_lpf(2, 3800);
@@ -482,9 +483,16 @@ static void configure_sb_filter(mixer_channel_t channel,
 		// This applies brickwall filtering at half the SB
 		// channel rate, which perfectly emulates the dynamic
 		// brickwall filter of the SB16.
+		config.resample_method = ResampleMethod::Resample;
+		break;
+
+	case FilterType::Modern:
+		// Linear interpolation upsampling is the legacy DOSBox behaviour
+		config.resample_method = ResampleMethod::LinearInterpolation;
 		break;
 	}
 
+	log_filter_config("DAC", *filter_type);
 	set_filter(channel, config);
 }
 
@@ -500,7 +508,9 @@ static void configure_opl_filter(mixer_channel_t channel,
 	const auto filter_choice = filter_prefs_parts.empty()
 	                                 ? "auto"
 	                                 : filter_prefs_parts[0];
-	FilterConfig config = {};
+
+	FilterConfig config    = {};
+	config.resample_method = ResampleMethod::Resample;
 
 	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
 		config.lpf_state          = FilterState::On;
@@ -513,7 +523,8 @@ static void configure_opl_filter(mixer_channel_t channel,
 	if (!filter_type) {
 		if (filter_choice != "off")
 			LOG_WARNING("%s: Invalid 'opl_filter' value: '%s', using 'off'",
-						CardType(), filter_choice.c_str());
+			            CardType(),
+			            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -525,20 +536,14 @@ static void configure_opl_filter(mixer_channel_t channel,
 	// thing by ear only.
 	switch (*filter_type) {
 	case FilterType::None:
-		break;
+	case FilterType::SB16:
+	case FilterType::Modern: break;
 
 	case FilterType::SB1:
-	case FilterType::SB2:
-		enable_lpf(1, 12000);
-		break;
+	case FilterType::SB2: enable_lpf(1, 12000); break;
 
 	case FilterType::SBPro1:
-	case FilterType::SBPro2:
-		enable_lpf(1, 8000);
-		break;
-
-	case FilterType::SB16:
-		break;
+	case FilterType::SBPro2: enable_lpf(1, 8000); break;
 	}
 
 	log_filter_config("OPL", *filter_type);

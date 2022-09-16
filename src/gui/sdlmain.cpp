@@ -657,30 +657,37 @@ static SDL_Point refine_window_size(const SDL_Point &size,
                                     const SCALING_MODE scaling_mode,
                                     const bool should_stretch_pixels);
 
+static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
+
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(int in_x, int in_y, const SCALING_MODE scaling_mode,
-                                   const PPScale &pp_scale, int out_x, int out_y)
+static void log_display_properties(int source_w, int source_h,
+                                   const SCALING_MODE scaling_mode,
+                                   const SCREEN_TYPES screen_type,
+                                   const PPScale &pp_scale)
 {
-	// Sanity check expectations
-	assert(in_x > 0 && in_y > 0);
-	assert(out_x > 0 && out_y > 0);
+	auto get_target_dims = [&]() -> std::pair<int, int> {
+		if (scaling_mode == SCALING_MODE::PERFECT) {
+			// The pixel perfect object holds the effective source
+			// resolution and scaled target resolution, so use those:
+			source_w = pp_scale.effective_source_w;
+			source_h = pp_scale.effective_source_h;
+			return {pp_scale.output_w, pp_scale.output_h};
+		}
+		const auto canvas   = get_canvas_size(screen_type);
+		const auto viewport = calc_viewport_fit(canvas.w, canvas.h);
+		return {viewport.w, viewport.h};
+	};
 
-	if (scaling_mode == SCALING_MODE::PERFECT) {
-		// The pixel perfect object holds the effective source
-		// resolution and scaled output resolution, so use those:
-		in_x = pp_scale.effective_source_w;
-		in_y = pp_scale.effective_source_h;
-		out_x = pp_scale.output_w;
-		out_y = pp_scale.output_h;
-	} else {
-		const auto viewport = calc_viewport_fit(out_x, out_y);
-		out_x = viewport.w;
-		out_y = viewport.h;
-	}
-	const auto scale_x = static_cast<double>(out_x) / in_x;
-	const auto scale_y = static_cast<double>(out_y) / in_y;
+	const auto [target_w, target_h] = get_target_dims();
+
+	// Check expectations
+	assert(source_w > 0 && source_h > 0);
+	assert(target_w > 0 && target_h > 0);
+
+	const auto scale_x = static_cast<double>(target_w) / source_w;
+	const auto scale_y = static_cast<double>(target_h) / source_h;
 	const auto out_par = scale_y / scale_x;
 
 	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type,
@@ -704,9 +711,19 @@ static void log_display_properties(int in_x, int in_y, const SCALING_MODE scalin
 	                                        : "";
 	LOG_MSG("DISPLAY: %s %dx%d%s (%Xh) at %s%2.5g Hz %s, scaled"
 	        " by %.1fx%.1f to %dx%d with %#.2g pixel-aspect",
-	        type_name, in_x, in_y, type_colours, CurMode->mode,
-	        double_scanned_str, refresh_rate, frame_mode, scale_x, scale_y,
-	        out_x, out_y, out_par);
+	        type_name,
+	        source_w,
+	        source_h,
+	        type_colours,
+	        CurMode->mode,
+	        double_scanned_str,
+	        refresh_rate,
+	        frame_mode,
+	        scale_x,
+	        scale_y,
+	        target_w,
+	        target_h,
+	        out_par);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -1125,8 +1142,6 @@ static void NewMouseScreenParams()
 #endif
 }
 
-static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
-
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -1274,9 +1289,8 @@ finish:
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
 		                       sdl.scaling_mode,
-		                       sdl.pp_scale,
-		                       width,
-		                       height);
+		                       sdl.desktop.type,
+		                       sdl.pp_scale);
 	}
 
 	// Force redraw after changing the window
@@ -1424,6 +1438,20 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 }
 
 #if C_OPENGL
+
+// A safe wrapper around that returns the default result on failure
+static const char *safe_gl_get_string(const GLenum requested_name,
+                                      const char *default_result = "")
+{
+	// the result points to a static string but can be null
+	const auto result = glGetString(requested_name);
+
+	// the default, howeever, needs to be valid
+	assert(default_result);
+
+	return result ? reinterpret_cast<const char *>(result) : default_result;
+}
+
 /* Create a GLSL shader object, load the shader source, and compile the shader. */
 static GLuint BuildShader(GLenum type, const std::string_view source_sv)
 {
@@ -1822,8 +1850,8 @@ dosurface:
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		const auto gl_vendor = std::string_view(
-		        reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+		const std::string_view gl_vendor = safe_gl_get_string(GL_VENDOR,
+		                                                      "unknown vendor");
 #	if WIN32
 		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
 #	else
@@ -2265,14 +2293,12 @@ void GFX_SwitchFullScreen()
 	GFX_ResetScreen();
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
+
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
 	                       sdl.scaling_mode,
-	                       sdl.pp_scale,
-	                       sdl.desktop.fullscreen ? sdl.desktop.full.width
-	                                              : sdl.desktop.window.width,
-	                       sdl.desktop.fullscreen ? sdl.desktop.full.height
-	                                              : sdl.desktop.window.height);
+	                       sdl.desktop.type,
+	                       sdl.pp_scale);
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -3251,9 +3277,8 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 			                              glMapBufferARB &&
 			                              glUnmapBufferARB;
 
-			const auto gl_version_string = reinterpret_cast<const char *>(
-			        glGetString(GL_VERSION));
-			assert(gl_version_string);
+			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
+			                                                  "0.0.0");
 			const int gl_version_major = gl_version_string[0] - '0';
 
 			sdl.opengl.pixel_buffer_object =
@@ -3274,10 +3299,15 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 				npot_support_msg = "disabled to maximize compatibility with custom shader";
 			}
 
-			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
+			LOG_INFO("OPENGL: Vendor: %s",
+			         safe_gl_get_string(GL_VENDOR, "unknown"));
+
 			LOG_INFO("OPENGL: Version: %s", gl_version_string);
+
 			LOG_INFO("OPENGL: GLSL version: %s",
-			         glGetString(GL_SHADING_LANGUAGE_VERSION));
+			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
+			                            "unknown"));
+
 			LOG_INFO("OPENGL: Pixel buffer object: %s",
 			         sdl.opengl.pixel_buffer_object ? "available"
 			                                        : "missing");
@@ -3820,7 +3850,7 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been hidden");
 				continue;
 
-#if defined C_OPENGL && defined __APPLE__
+#if C_OPENGL && defined(MACOSX)
 			case SDL_WINDOWEVENT_MOVED:
 				// DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
 				//               event.window.data1,
@@ -3860,7 +3890,7 @@ bool GFX_Events()
 					SDL_RenderSetViewport(sdl.renderer,
 					                      &sdl.clip);
 				}
-#	ifdef C_OPENGL
+#	if C_OPENGL
 				if (sdl.desktop.type == SCREEN_OPENGL) {
 					glViewport(sdl.clip.x,
 					           sdl.clip.y,

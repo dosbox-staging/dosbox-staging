@@ -216,3 +216,10 @@ bool ends_with(const std::string &str, const std::string &suffix) noexcept
 	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
 }
 
+void clear_language_if_default(std::string &l)
+{
+	lowcase(l);
+	if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
+		l.clear();
+	}
+}

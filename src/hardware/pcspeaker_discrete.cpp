@@ -376,19 +376,17 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 
 			auto value = 0.0f;
 
-			const auto front_index = entries.front().index;
 			while (index < end) {
 				// Check if there is an upcoming event
-				if (entries.size() && front_index <= index) {
+				const auto has_entries = !entries.empty();
+				const auto first_index = has_entries ? entries.front().index : 0.0f;
+
+				if (has_entries && first_index <= index) {
 					volwant = entries.front().vol;
 					entries.pop();
 					continue;
 				}
-				float vol_end;
-				if (entries.size() && entries.front().index < end) {
-					vol_end = entries.front().index;
-				} else
-					vol_end = end;
+				const auto vol_end = (has_entries && first_index < end) ? first_index : end;
 				const auto vol_len = vol_end - index;
 				// Check if we have to slide the volume
 				const auto vol_diff = volwant - volcur;

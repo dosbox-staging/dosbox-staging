@@ -52,16 +52,6 @@ typedef void (*MIXER_MixHandler)(uint8_t *sampdate, uint32_t len);
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(uint16_t frames)>;
 
-enum BlahModes {
-	MIXER_8MONO,MIXER_8STEREO,
-	MIXER_16MONO,MIXER_16STEREO
-};
-
-enum MixerModes {
-	M_8M,M_8S,
-	M_16M,M_16S
-};
-
 enum class MixerState {
 	Uninitialized,
 	NoSound,
@@ -146,6 +136,25 @@ using channel_features_t = std::set<ChannelFeature>;
 
 enum class FilterState { Off, On, ForcedOn };
 
+enum class ResampleMethod {
+	// Use simple linear interpolation to resample from the channel sample
+	// rate to the mixer rate. This is the legacy behaviour, and it acts as a
+	// sort of a low-pass filter.
+	LinearInterpolation,
+
+	// Upsample from the channel sample rate to the zero-order-hold target
+	// frequency first (this is basically the "nearest-neighbour" equivalent
+	// in audio), then resample to the mixer rate with Speex. This method
+	// faithfully emulates the metallic, crunchy sound of old DACs.
+	ZeroOrderHoldAndResample,
+
+	// Resample from the channel sample rate to the mixer rate with Speex.
+	// This is mathematically correct, high-quality resampling that cuts all
+	// frequencies below the Nyquist frequency using a brickwall filter
+	// (everything below half the channel's sample rate is cut).
+	Resample
+};
+
 using work_index_t = uint16_t;
 
 // forward declarations
@@ -181,8 +190,8 @@ public:
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	bool TryParseAndSetCustomFilter(const std::string &filter_prefs);
 
-	void EnableZeroOrderHoldUpsampler(const bool enabled = true);
-	void ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq);
+	void SetResampleMethod(const ResampleMethod method);
+	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
 
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength();
@@ -242,7 +251,9 @@ private:
 	                    std::vector<float> &out);
 
 	void ConfigureResampler();
-	void UpdateZOHUpsamplerState();
+	void ClearResampler();
+	void InitZohUpsamplerState();
+	void InitLerpUpsamplerState();
 
 	AudioFrame ApplyCrossfeed(const AudioFrame &frame) const;
 
@@ -292,17 +303,24 @@ private:
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
 
+	ResampleMethod resample_method = {};
+	bool do_resample               = false;
+
 	struct {
-		SpeexResamplerState *state = nullptr;
-	} resampler = {};
-	bool do_resampler = false;
+		float pos = 0.0f;
+		float step = 0.0f;
+		AudioFrame last_frame = {};
+	} lerp_upsampler = {};
 
 	struct {
 		uint16_t target_freq = 0;
 		float pos = 0.0f;
 		float step = 0.0f;
 	} zoh_upsampler = {};
-	bool do_zoh_upsampler = false;
+
+	struct {
+		SpeexResamplerState *state = nullptr;
+	} speex_resampler = {};
 
 	struct {
 		struct {
@@ -349,8 +367,8 @@ private:
 
 	private:
 		MixerChannel &channel;
-		int64_t woken_at_ms   = 0;
-		int accumulated_noise = 0;
+		int64_t woken_at_ms = 0;
+		bool had_noise      = false;
 	};
 	Sleeper sleeper;
 	const bool do_sleep = false;

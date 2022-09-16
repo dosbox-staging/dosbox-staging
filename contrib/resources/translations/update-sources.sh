@@ -95,10 +95,10 @@ update en 437
 # any missing messages into them in english, so translators can easily
 # find and update those new messages.
 #
-update de 858
-update es 858
-update fr 858
-update it 858
+update de 850
+update es 850
+update fr 850
+update it 850
 update pl 437 .cp437
 update pl 852
 update ru 866

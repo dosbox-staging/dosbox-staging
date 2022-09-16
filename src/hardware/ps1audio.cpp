@@ -500,7 +500,7 @@ void Ps1Synth::AudioCallback(const uint16_t requested_frames)
 	auto frames_remaining = requested_frames;
 
 	// First, send any frames we've queued since the last callback
-	while (requested_frames && fifo.size()) {
+	while (frames_remaining && fifo.size()) {
 		channel->AddSamples_mfloat(1, &fifo.front());
 		fifo.pop();
 		--frames_remaining;

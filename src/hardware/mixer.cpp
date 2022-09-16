@@ -467,8 +467,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
-	chan->SetVolumeScale(1.0);
-	chan->SetVolume(1, 1);
+	chan->SetVolumeScale(1.0f);
+	chan->SetVolume(1.0f, 1.0f);
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
@@ -621,6 +621,10 @@ void MixerChannel::Enable(const bool should_enable)
 
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
+
+		if (do_resample) {
+			ClearResampler();
+		}
 	}
 	is_enabled = should_enable;
 
@@ -629,30 +633,73 @@ void MixerChannel::Enable(const bool should_enable)
 
 void MixerChannel::ConfigureResampler()
 {
-	const auto in_rate  = do_zoh_upsampler ? zoh_upsampler.target_freq
-	                                       : sample_rate;
+	const auto in_rate = (resample_method == ResampleMethod::ZeroOrderHoldAndResample)
+	                           ? zoh_upsampler.target_freq
+	                           : sample_rate;
+
 	const auto out_rate = mixer.sample_rate.load();
 
-	do_resampler = (in_rate != out_rate);
+	do_resample = (in_rate != out_rate);
 
-	if (!do_resampler) {
+	if (!do_resample) {
 		// DEBUG_LOG_MSG("%s: Resampler is off", name.c_str());
 		return;
 	}
 
-	if (!resampler.state) {
-		constexpr auto num_channels = 2; // always stereo
-		constexpr auto quality      = 5;
+	switch (resample_method) {
+	case ResampleMethod::LinearInterpolation:
+		InitLerpUpsamplerState();
+		// DEBUG_LOG_MSG("%s: Linear interpolation resampler is on",
+		//               name.c_str());
+		break;
 
-		resampler.state = speex_resampler_init(
-		        num_channels, in_rate, out_rate, quality, nullptr);
+	case ResampleMethod::ZeroOrderHoldAndResample:
+		InitZohUpsamplerState();
+		// DEBUG_LOG_MSG("%s: Zero-order-hold + Speex resampler is on, upsampler target freq : % d Hz ",
+		//               name.c_str(),
+		//               zoh_upsampler.target_freq);
+		[[fallthrough]];
+
+	case ResampleMethod::Resample:
+		if (!speex_resampler.state) {
+			constexpr auto num_channels = 2; // always stereo
+			constexpr auto quality      = 5;
+
+			speex_resampler.state = speex_resampler_init(
+			        num_channels, in_rate, out_rate, quality, nullptr);
+		}
+		speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
+
+		// DEBUG_LOG_MSG("%s: Speex resampler is on (in %d Hz to out: %d Hz)",
+		//               name.c_str(),
+		//               in_rate,
+		//               out_rate);
+		break;
 	}
-	speex_resampler_set_rate(resampler.state, in_rate, out_rate);
+}
 
-	// DEBUG_LOG_MSG("%s: Resamper is on (in %d Hz to out: %d Hz)",
-	//              name.c_str(),
-	//              in_rate,
-	//              out_rate);
+// Clear the resampler and prime its input queue with zeros
+void MixerChannel::ClearResampler()
+{
+	switch (resample_method) {
+	case ResampleMethod::LinearInterpolation:
+		InitLerpUpsamplerState();
+		break;
+
+	case ResampleMethod::ZeroOrderHoldAndResample:
+		InitZohUpsamplerState();
+		[[fallthrough]];
+
+	case ResampleMethod::Resample:
+		assert(speex_resampler.state);
+		speex_resampler_reset_mem(speex_resampler.state);
+		speex_resampler_skip_zeros(speex_resampler.state);
+
+		// DEBUG_LOG_MSG("%s: Resampler cleared and primed %d-frame input queue",
+		//               name.c_str(),
+		//               speex_resampler_get_input_latency(speex_resampler.state));
+		break;
+	}
 }
 
 void MixerChannel::SetSampleRate(const int rate)
@@ -665,12 +712,14 @@ void MixerChannel::SetSampleRate(const int rate)
 		assert(mixer.sample_rate > 0);
 		sample_rate = mixer.sample_rate;
 	}
+
+	// DEBUG_LOG_MSG("%s: Sample rate set to %d Hz)", name.c_str(), rate);
+
 	freq_add = (sample_rate << FREQ_SHIFT) / mixer.sample_rate;
 	envelope.Update(sample_rate, peak_amplitude,
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 
 	ConfigureResampler();
-	UpdateZOHUpsamplerState();
 }
 
 int MixerChannel::GetSampleRate() const
@@ -831,9 +880,9 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 	filters.lowpass.cutoff_freq = cutoff_freq;
 }
 
-// Tries to set custom filter settings for the channel from the passed in
-// filter preferences. Returns true if the custom filters could be successfully
-// set, false otherwise and disabled all filters for the channel.
+// Tries to set custom filter settings from the passed in filter preferences.
+// Returns true if the custom filters could be successfully set, false
+// otherwise and disables all filters for the channel.
 bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 {
 	SetLowPassFilter(FilterState::Off);
@@ -877,9 +926,12 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			return false;
 		}
 
-		const auto max_cutoff_freq_hz = (do_zoh_upsampler
-		                                         ? zoh_upsampler.target_freq
-		                                         : sample_rate) / 2 - 1;
+		const auto do_zoh_upsample = do_resample &&
+		                             resample_method ==
+		                                     ResampleMethod::ZeroOrderHoldAndResample;
+
+		const auto max_cutoff_freq_hz = (do_zoh_upsample ? zoh_upsampler.target_freq
+		                                                 : sample_rate) / 2 - 1;
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
@@ -940,40 +992,37 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 	}
 }
 
-void MixerChannel::ConfigureZeroOrderHoldUpsampler(const uint16_t target_freq)
+void MixerChannel::SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq)
 {
 	// TODO make sure that the ZOH target frequency cannot be set after the
 	// filter have been configured
 	zoh_upsampler.target_freq = target_freq;
-	ConfigureResampler();
-	UpdateZOHUpsamplerState();
-}
-
-void MixerChannel::EnableZeroOrderHoldUpsampler(const bool enabled)
-{
-	do_zoh_upsampler = enabled;
-
-	if (!do_zoh_upsampler) {
-		// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is off",
-		//               name.c_str());
-		return;
-	}
 
 	ConfigureResampler();
-	UpdateZOHUpsamplerState();
-
-	// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is on (target_freq: %d Hz)",
-	//               name.c_str(),
-	//               zoh_upsampler.target_freq);
 }
 
-void MixerChannel::UpdateZOHUpsamplerState()
+void MixerChannel::InitZohUpsamplerState()
 {
-	// we only allow upsampling
 	zoh_upsampler.step = std::min(static_cast<float>(sample_rate) /
 	                                      zoh_upsampler.target_freq,
 	                              1.0f);
-	zoh_upsampler.pos = 0.0f;
+	zoh_upsampler.pos  = 0.0f;
+}
+
+void MixerChannel::InitLerpUpsamplerState()
+{
+	lerp_upsampler.step       = std::min(static_cast<float>(sample_rate) /
+                                               mixer.sample_rate.load(),
+                                       1.0f);
+	lerp_upsampler.pos        = 0.0f;
+	lerp_upsampler.last_frame = {0.0f, 0.0f};
+}
+
+void MixerChannel::SetResampleMethod(const ResampleMethod method)
+{
+	resample_method = method;
+
+	ConfigureResampler();
 }
 
 void MixerChannel::SetCrossfeedStrength(const float strength)
@@ -1217,7 +1266,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 	return frame;
 }
 
-// Convert sample data to floats and remove clicks.
+// Converts sample stream to floats, performs output channel mappings, removes
+// clicks, and optionally performs zero-order-hold-upsampling.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
                                   std::vector<float> &out)
@@ -1240,10 +1290,10 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 
 		if (std::is_same<Type, float>::value) {
 			if (stereo) {
-				next_frame.left = static_cast<float>(data[pos * 2 + 0]);
+				next_frame.left  = static_cast<float>(data[pos * 2 + 0]);
 				next_frame.right = static_cast<float>(data[pos * 2 + 1]);
 			} else {
-				next_frame.left = static_cast<float>(data[pos]);
+				next_frame.left  = static_cast<float>(data[pos]);
 			}
 		} else {
 			next_frame = ConvertNextFrame<Type, stereo, signeddata, nativeorder>(
@@ -1266,14 +1316,16 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (do_zoh_upsampler) {
+		if (do_resample &&
+		    resample_method == ResampleMethod::ZeroOrderHoldAndResample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
 			if (zoh_upsampler.pos > 1.0f) {
 				zoh_upsampler.pos -= 1.0f;
 				++pos;
 			}
-		} else
+		} else {
 			++pos;
+		}
 	}
 }
 
@@ -1305,18 +1357,17 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame &frame) const
 
 MixerChannel::Sleeper::Sleeper(MixerChannel &c) : channel(c) {}
 
-// If the AudioFrame holds samples with magnitudes larger than 1 (either
-// positive or negative), then this function updates the "accumulated_noise"
-// member integer to evaluate to true (or be non-zero).
+// Records if samples had a magnitude great than 1. This is a one-way street;
+// once "had_noise" is tripped, it can only be reset after waking up.
 void MixerChannel::Sleeper::Listen(const AudioFrame &frame)
 {
-	// Samples with magnitudes less than 1 (between the -1 and 1 range,
-	// exclusively) are truncated to zero as we consider them "silent
-	// enough". This cast-and-add approach works because our float sample
-	// values span the signed 16-bit integer range (our 0dBFS point is at
-	// INT16.MAX/MIN).
-	accumulated_noise += abs(static_cast<int16_t>(frame.left)) +
-	                     abs(static_cast<int16_t>(frame.right));
+	if (had_noise)
+		return;
+
+	constexpr auto silent_threshold = 1.0f;
+
+	had_noise = fabsf(frame.left) > silent_threshold ||
+	            fabsf(frame.right) > silent_threshold;
 }
 
 void MixerChannel::Sleeper::MaybeSleep()
@@ -1328,7 +1379,7 @@ void MixerChannel::Sleeper::MaybeSleep()
 		return;
 
 	// Stay awake if it's been noisy, otherwise we can sleep
-	if (accumulated_noise) {
+	if (had_noise) {
 		WakeUp();
 	} else {
 		channel.Enable(false);
@@ -1341,7 +1392,7 @@ bool MixerChannel::Sleeper::WakeUp()
 {
 	// Always reset for another round of awakeness
 	woken_at_ms = GetTicks();
-	accumulated_noise = 0;
+	had_noise   = false;
 
 	const auto was_sleeping = !channel.is_enabled;
 	if (was_sleeping) {
@@ -1367,35 +1418,78 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 
 	last_samples_were_stereo = stereo;
 
-	auto &convert_out = do_resampler ? mixer.resample_temp : mixer.resample_out;
+	auto &convert_out = do_resample ? mixer.resample_temp : mixer.resample_out;
 	ConvertSamples<Type, stereo, signeddata, nativeorder>(data, frames, convert_out);
 
-	auto out_frames = check_cast<spx_uint32_t>(convert_out.size()) / 2u;
+	if (do_resample) {
+		switch (resample_method) {
+		case ResampleMethod::LinearInterpolation: {
+			auto &s = lerp_upsampler;
 
-	if (do_resampler) {
-		auto in_frames = check_cast<spx_uint32_t>(mixer.resample_temp.size()) / 2u;
+			auto in_pos = mixer.resample_temp.begin();
+			auto &out   = mixer.resample_out;
+			out.resize(0);
 
-		out_frames = estimate_max_out_frames(resampler.state, in_frames);
+			while (in_pos != mixer.resample_temp.end()) {
+				AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
 
-		mixer.resample_out.resize(out_frames * 2);
+				const auto out_left = lerp(s.last_frame.left,
+				                           curr_frame.left,
+				                           s.pos);
 
-		speex_resampler_process_interleaved_float(resampler.state,
-		                                          mixer.resample_temp.data(),
-		                                          &in_frames,
-		                                          mixer.resample_out.data(),
-		                                          &out_frames);
+				const auto out_right = lerp(s.last_frame.right,
+				                            curr_frame.right,
+				                            s.pos);
 
-		// out_frames now contains the actual number of resampled frames,
-		// ensure the number of output frames is within the logical size.
-		assert(out_frames <= mixer.resample_out.size() / 2);
-		mixer.resample_out.resize(out_frames * 2);  // only shrinks
+				out.emplace_back(out_left);
+				out.emplace_back(out_right);
+
+				s.pos += s.step;
+
+				if (s.pos > 1.0f) {
+					s.pos -= 1.0f;
+					s.last_frame = curr_frame;
+
+					// Move to the next input frame
+					in_pos += 2;
+				}
+			}
+		} break;
+
+		case ResampleMethod::ZeroOrderHoldAndResample: [[fallthrough]];
+		case ResampleMethod::Resample: {
+			auto in_frames = check_cast<uint32_t>(
+			                         mixer.resample_temp.size()) /
+			                 2u;
+
+			auto out_frames = estimate_max_out_frames(
+			        speex_resampler.state, in_frames);
+
+			mixer.resample_out.resize(out_frames * 2);
+
+			speex_resampler_process_interleaved_float(
+			        speex_resampler.state,
+			        mixer.resample_temp.data(),
+			        &in_frames,
+			        mixer.resample_out.data(),
+			        &out_frames);
+
+			// out_frames now contains the actual number of
+			// resampled frames, ensure the number of output frames
+			// is within the logical size.
+			assert(out_frames <= mixer.resample_out.size() / 2);
+			mixer.resample_out.resize(out_frames * 2); // only shrinks
+		} break;
+		}
 	}
 
 	MIXER_LockAudioDevice();
 
-	// Optionally filter, apply crossfeed, then mix the results to the master
-	// output
-	auto pos = mixer.resample_out.begin();
+	// Optionally filter, apply crossfeed, then mix the results to the
+	// master output
+	const auto out_frames = static_cast<int>(mixer.resample_out.size()) / 2;
+
+	auto pos    = mixer.resample_out.begin();
 	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
 
 	while (pos != mixer.resample_out.end()) {
@@ -1404,7 +1498,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
-			frame.left  = filters.highpass.hpf[0].filter(frame.left);
+			frame.left = filters.highpass.hpf[0].filter(frame.left);
 			frame.right = filters.highpass.hpf[1].filter(frame.right);
 		}
 		if (do_lowpass_filter) {
@@ -1417,13 +1511,13 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		if (do_reverb_send) {
 			// Mix samples to the reverb aux buffer, scaled by the
 			// reverb send volume
-			mixer.aux_reverb[mixpos][0] += frame.left  * reverb.send_gain;
+			mixer.aux_reverb[mixpos][0] += frame.left * reverb.send_gain;
 			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
 		}
 		if (do_chorus_send) {
 			// Mix samples to the chorus aux buffer, scaled by the
 			// chorus send volume
-			mixer.aux_chorus[mixpos][0] += frame.left  * chorus.send_gain;
+			mixer.aux_chorus[mixpos][0] += frame.left * chorus.send_gain;
 			mixer.aux_chorus[mixpos][1] += frame.right * chorus.send_gain;
 		}
 
@@ -1612,9 +1706,9 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 
 MixerChannel::~MixerChannel()
 {
-	if (resampler.state) {
-		speex_resampler_destroy(resampler.state);
-		resampler.state = nullptr;
+	if (speex_resampler.state) {
+		speex_resampler_destroy(speex_resampler.state);
+		speex_resampler.state = nullptr;
 	}
 }
 
@@ -2141,6 +2235,18 @@ private:
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+
+		MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
+		        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
+
+		MSG_Add("SHELL_CMD_MIXER_HEADER_LABELS",
+		        "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_OFF", "off");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_STEREO", "Stereo");
+
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
 	}
 
 	void ParseVolume(const std::string &s, AudioFrame &volume)
@@ -2186,37 +2292,39 @@ private:
 
 	void ShowMixerStatus()
 	{
-		auto show_channel = [this](const std::string &name,
-		                           const AudioFrame &volume,
-		                           const int rate,
-		                           const std::string &mode,
-		                           const std::string &xfeed,
-		                           const std::string &reverb,
-		                           const std::string &chorus) {
-			WriteOut("%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f %8d  %-8s %5s %7s %7s\n",
+		std::string column_layout = MSG_Get("SHELL_CMD_MIXER_HEADER_LAYOUT");
+		column_layout.append({'\n'});
+
+		auto show_channel = [&](const std::string &name,
+		                        const AudioFrame &volume,
+		                        const std::string &mode,
+		                        const std::string &xfeed,
+		                        const std::string &reverb,
+		                        const std::string &chorus) {
+			WriteOut(column_layout.c_str(),
 			         name.c_str(),
 			         volume.left * 100.0f,
 			         volume.right * 100.0f,
 			         gain_to_decibel(volume.left),
 			         gain_to_decibel(volume.right),
-			         rate,
 			         mode.c_str(),
 			         xfeed.c_str(),
 			         reverb.c_str(),
 			         chorus.c_str());
 		};
 
-		WriteOut(convert_ansi_markup("[color=white]Channel      Volume    Volume(dB)   Rate(Hz)  Mode     Xfeed  Reverb  Chorus[reset]\n")
-		                 .c_str());
+		WriteOut("%s\n", MSG_Get("SHELL_CMD_MIXER_HEADER_LABELS"));
 
-		constexpr auto off_value  = "off";
+		const auto off_value = MSG_Get("SHELL_CMD_MIXER_CHANNEL_OFF");
 		constexpr auto none_value = "-";
 
 		MIXER_LockAudioDevice();
-		show_channel(convert_ansi_markup("[color=cyan]MASTER[reset]"),
+
+		constexpr auto master_channel_string = "[color=cyan]MASTER[reset]";
+
+		show_channel(convert_ansi_markup(master_channel_string),
 		             mixer.master_volume,
-		             mixer.sample_rate,
-		             "Stereo",
+		             MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO"),
 		             none_value,
 		             none_value,
 		             none_value);
@@ -2236,8 +2344,8 @@ private:
 			std::string reverb = none_value;
 			if (chan->HasFeature(ChannelFeature::ReverbSend)) {
 				if (chan->GetReverbLevel() > 0.0f) {
-					reverb = std::to_string(static_cast<uint8_t>(
-					        round(chan->GetReverbLevel() * 100.0f)));
+					reverb = std::to_string(static_cast<uint8_t>(round(
+					        chan->GetReverbLevel() * 100.0f)));
 				} else {
 					reverb = off_value;
 				}
@@ -2246,8 +2354,8 @@ private:
 			std::string chorus = none_value;
 			if (chan->HasFeature(ChannelFeature::ChorusSend)) {
 				if (chan->GetChorusLevel() > 0.0f) {
-					chorus = std::to_string(static_cast<uint8_t>(
-					        round(chan->GetChorusLevel() * 100.0f)));
+					chorus = std::to_string(static_cast<uint8_t>(round(
+					        chan->GetChorusLevel() * 100.0f)));
 				} else {
 					chorus = off_value;
 				}
@@ -2258,16 +2366,16 @@ private:
 
 			auto mode = chan->HasFeature(ChannelFeature::Stereo)
 			                  ? chan->DescribeLineout()
-			                  : "Mono";
+			                  : MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 
 			show_channel(convert_ansi_markup(channel_name),
 			             chan->volume,
-			             chan->GetSampleRate(),
 			             mode,
 			             xfeed,
 			             reverb,
 			             chorus);
 		}
+
 		MIXER_UnlockAudioDevice();
 	}
 };
@@ -2618,7 +2726,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  on:      Enable reverb (medium preset).\n"
 	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
 	        "           specifically designed for small-speaker audio systems\n"
-	        "           (PC Speaker, Tandy, PS/1 Audio, and Disney).\n"
+	        "           (PC Speaker, Tandy, PS/1 Audio, and LPT DAC devices).\n"
 	        "  small:   Adds a subtle sense of space; good for games that use a single\n"
 	        "           synth channel (typically OPL) for both music and sound effects.\n"
 	        "  medium:  Medium room preset that works well with a wide variety of games.\n"

@@ -160,9 +160,17 @@ Czestotliwosc odswiezania emulowanego obrazu:
 Dostepne tryby graficzne VESA 1.2 oraz 2.0:
   compatible  Zestaw tryb¢w dobranych dla jak najlepszej kompatybilnosci;
               zalecane, razem z 4 lub 8 megabajt¢w pamieci graficznej.
+  halfline    Obsluguje tryby niskiej rozdzielczosci VESA 2.0 wymagane przez
+              gre Extreme Assault. Uzywac tylko w razie potrzeby, jest to
+              niekompatybilne z chipem S3.
   all         Wszystkie tryby dostepne dla danej wielkosci pamieci graficznej.
               Niekt¢re gry moga jednak niewlasciwie je obslugiwac (migotanie),
               albo moga wymagac do ich obslugi wiecej pamieci.
+.
+:CONFIG_SPEED_MODS
+Zezwala na zachowania emulatora, kt¢re polepszaja wydajnosc. Na chwile obecna
+nie sa znane zadne gry, kt¢re nie dzialaja z tym ustawieniem. Jesli na taka
+natrafisz, zglos blad zespolowi projektowemu.
 .
 :CONFIG_AUTOEXEC_SECTION
 Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
@@ -223,9 +231,11 @@ Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
                  komputery Amiga.
   colodore:      Zainspirowane przez komputer Commodore 64 i palete Colodore.
   colodore-sat:  Paleta Colodore z nasyceniem wiekszym o 20%.
+  dga16:         Nowoczesne podejscie do palety CGA, ze stonowanym kontrastem.
 Mozna r¢wniez podac wlasny zestaw kolor¢w, jako 16 rozdzielonych spacjami
 szesnastkowych kod¢w, po 6 bit¢w na kolor. Przyklad: czarny to 000000,
-bialy to 3f3f3f, pelna czerwien to 3f0000.
+bialy to 3f3f3f, pelna czerwien to 3f0000. Mozna tez podac kolory w postaci
+dziesietnej, np. (255, 0, 255) to magenta.
 .
 :CONFIG_SCALER
 Skaler do powiekszania obrazu o niskiej rozdzielczosci. Dodanie 'forced'
@@ -330,7 +340,7 @@ Wlaczenie (globalnie) efektu 'reverb', dodaje dzwiekowi wrazenia przestrzeni:
   off:     Bez efektu (domyslne).
   on:      Efekt wlaczony, ustawienie 'medium'.
   tiny:    Odpowiada zintegrowanemu glosnikowi w niewielkim pokoju, ustawienie
-           dla urzadzen typu PC Speaker, Tandy, PS/1, czy Disney.
+           dla urzadzen typu PC Speaker, Tandy, PS/1, czy LPT DAC.
   small:   Subtelne wrazenie przestrzeni, odpowiednie do gier uzywajacych
            pojedynczego kanalu dzwieku syntetyzowanego (zazwyczaj OPL) zar¢wno
            do muzyki, jak i efekt¢w dzwiekowych.
@@ -375,11 +385,12 @@ Wiecej informacji (po angielsku) znajdziesz w pliku README/Manual.
 Typ emulowanego interfejsu MPU-401.
 .
 :CONFIG_SOUNDFONT
-Sciezka do pliku SoundFont w formacie SF2. Sciezka moze byc wzgledna lub
-bezwzgledna, mozna tez podac nazwe pliku z podkatalogu 'soundfonts' katalogu
-z konfiguracja.
-Opcjonalny parametr to glosnosc w procentach, od 1 do 100, np. podanie
-'soundfont.sf2 50' sciszy glosnosc instrument¢w o polowe.
+Sciezka do pliku SoundFont w formacie SF2. Moze byc wzgledna lub bezwzgledna,
+mozna tez podac nazwe pliku z podkatalogu 'soundfonts' katalogu z
+konfiguracja.
+Uwaga: opcjonalny parametr regulujacy glosnosc jest przestarzaly; glosnosc
+nalezy zmieniac odpowiednim poleceniem, np.:
+  MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
 Efekt 'chorus': auto', 'on', 'off' lub ustawienia uzytkownika.
@@ -412,6 +423,11 @@ w zamian wlaczyc efekt w mikserze lub pozwolic obydwu dzialac
 jednoczesnie. Czy bedzie to brzmialo dobrze, zalezy od plik¢w
 SoundFont i ustawien efektu 'reverb'.
 .
+:CONFIG_FSYNTH_FILTER
+Filtrowanie dzwieku syntetyzera FluidSynth:
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
+.
 :CONFIG_MODEL
 Model emulowanego syntetyzatora MIDI:
   auto:  pierwszy model z dostepnymi ROMami, w kolejnosci jak ponizej.
@@ -427,20 +443,43 @@ Obrazy ROM¢w moga zawierac:
   - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
   - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
 .
+:CONFIG_MT32_FILTER
+Filtrowanie dzwieku syntetyzera Roland MT-32/CM-32L:
+  off:       Filtrowanie wylaczone (domyslne).
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
+.
+:MT32_NO_SUPPORTED_MODELS
+Zaden obslugiwany model nie jest obecny.
+.
+:MT32_ROM_NOT_LOADED
+ROM nie zostal zaladowany
+.
+:MT32_INVENTORY_TABLE_MISSING_LETTER
+-
+.
+:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
++
+.
+:MT32_ACTIVE_ROM_LABEL
+Aktywny ROM  : 
+.
+:MT32_SOURCE_DIR_LABEL
+Zaladowano z : 
+.
 :CONFIG_SBTYPE
-Model karty dzwiekowej Sound Blaster, 'gb' oznacza Game Blaster.
+Model karty muzycznej Sound Blaster, 'gb' oznacza Game Blaster.
 .
 :CONFIG_SBBASE
-Adres bazowy (I/O) karty dzwiekowej Sound Blaster.
+Adres bazowy (I/O) karty muzycznej Sound Blaster.
 .
 :CONFIG_IRQ
-Numer przerwania (IRQ) karty dzwiekowej Sound Blaster.
+Numer przerwania (IRQ) karty muzycznej Sound Blaster.
 .
 :CONFIG_DMA
-Numer kanalu DMA karty dzwiekowej Sound Blaster.
+Numer kanalu DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_HDMA
-Numer kanalu High DMA karty dzwiekowej Sound Blaster.
+Numer kanalu High DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_SBMIXER
 Zezwolenie mikserowi karty Sound Blaster na zmiane ustawien miksera DOSBoksa.
@@ -456,52 +495,71 @@ czestotliwosc miksowania, dzieki czemu nie jest potrzebny resampling.
 .
 :CONFIG_OPLMODE
 Typ emulowanego ukladu OPL. 'auto' wybiera typ w zaleznosci od 'sbtype'.
-Wszystkie z wyjatkiem 'cms' sa kompatybilne z kartami dzwiekowymi AdLib.
+Wszystkie z wyjatkiem 'cms' sa kompatybilne z kartami muzycznymi AdLib.
 .
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obslugiwana.
 .
 :CONFIG_SB_FILTER
 Filtrowanie dzwieku digitalizowanego karty Sound Blaster:
-  auto:  Filtrowania odpowiednie dla modelu podanego w 'sbtype' (domyslne).
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Filtrowania odpowiednie dla podanego danego modelu.
-  off:   Filtrowanie wylaczone.
-Drugi parametr 'always_on' uniemozliwia oprogramowaniu wylaczenie filtrowania.
-(Przyklad: sbpro1 always_on)
+             Filtrowania odpowiednie dla podanego danego modelu.
+  modern:    Interpolacja liniowa, dzialajaca jak filtr dolnoprzepustowy.
+             Jest to oryginalne zachowanie DOSBoksa (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Jeden lub dwa filtry podane w formacie:
+               TYPE ORDER FREQ
+             Gdzie TYPE to 'hpf' (g¢rnoprzepustowy) lub 'lpf'
+             (dolnoprzepustowy), ORDER to sila filtra od 1 do 16
+             (1 to 6dB/oct, 2 to  12dB/oct, itd.), a parametr
+             FREQ to czestotliwosc odciecia w Hz. Przyklady:
+                lpf 2 12000
+                hpf 3 120 lfp 1 6500
+.
+:CONFIG_SB_FILTER_ALWAYS_ON
+Wymus wlaczone filtrowanie dzwieku karty Sound Blaster
+(uniemozliwia oprogramowaniu wylaczenie filtrowania).
 .
 :CONFIG_OPL_FILTER
 Filtrowanie dzwieku syntetyzowanego OPL karty Sound Blaster:
-  auto:  Filtrowania odpowiednie dla modelu podanego w 'sbtype' (domyslne).
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domyslne).
   sb1, sb2, sbpro1, sbpro2, sb16:
-         Filtrowania odpowiednie dla podanego danego modelu.
-  off:   Filtrowanie wylaczone.
+             Filtrowania odpowiednie dla podanego danego modelu.
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_CMS_FILTER
 Filtrowanie dzwieku syntetyzowanego CMS karty Sound Blaster:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
-Wlaczenie emulacji karty dzwiekowej Gravis UltraSound.
+Wlaczenie emulacji karty muzycznej Gravis UltraSound.
 Enable Gravis UltraSound emulation.
 .
 :CONFIG_GUSBASE
-Adres bazowy (I/O) karty dzwiekowej Gravis UltraSound.
+Adres bazowy (I/O) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSIRQ
-Numer przerwania (IRQ) karty dzwiekowej Gravis UltraSound.
+Numer przerwania (IRQ) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-Numer kanalu DMA karty dzwiekowej Gravis UltraSound.
+Numer kanalu DMA karty muzycznej Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
 Sciezka do katalogu UltraSound. Powinien on zawierac podkatalog MIDI
 z definicjami instrument¢w w formacie PAT. Zestawy instrument¢w dla programu
 Timidity powinny dzialac poprawnie.
 .
+:CONFIG_GUS_FILTER
+Filtrowanie dzwieku karty Gravis UltraSound:
+  off:       Filtrowanie wylaczone (domyslne).
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
+.
 :CONFIG_SIDMODEL
-Model ukladu w karcie dzwiekowej Innovation SSI-2001:
+Model ukladu w karcie muzycznej Innovation SSI-2001:
   auto:  Wybiera model 6581.
   6581:  Oryginalny ('stary SID'), znany z basowego, bogatego charakteru.
   8580:  P¢zniejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacja.
@@ -518,14 +576,19 @@ byla wybierana jumperem.
   hardsid:  1.000 MHz, opcja dostepna na karcie DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Adres bazowy (I/O) karty muzycznej Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Filtry ukladu SID byly analogowe, kazdy egzemplarz brzmial nieco inaczej.
+Sila dzialania filtr¢w ukladu 6581, od 0 do 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Sila dzialania filtr¢w ukladu 8500, od 0 do 100.
+.
+:CONFIG_INNOVATION_FILTER
+Filtrowanie dzwieku karty Innovation SSI-2001:
+  off:       Filtrowanie wylaczone (domyslne).
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PCSPEAKER
 Spos¢b emulacji urzadzenia dzwiekowego PC Speaker:
@@ -538,8 +601,9 @@ Spos¢b emulacji urzadzenia dzwiekowego PC Speaker:
 .
 :CONFIG_PCSPEAKER_FILTER
 Filtrowanie dzwieku urzadzenia PC Speaker:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_ZERO_OFFSET
 'DC offset' jest obecnie eliminowany globalnie.
@@ -552,11 +616,13 @@ Dla 'auto', emulacja dziala tylko przy typie maszyny 'tandy'.
 Filtrowanie dzwieku syntetyzowanego urzadzenia Tandy:
   on:   Wlaczone (domyslne).
   off:  Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtrowanie dzwieku digitalizowanego urzadzenia PS/1:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_LPT_DAC
 Typ urzadzenia dzwiekowego DAC podlaczonego do portu r¢wnoleglego (LPT):
@@ -567,29 +633,27 @@ Typ urzadzenia dzwiekowego DAC podlaczonego do portu r¢wnoleglego (LPT):
 .
 :CONFIG_LPT_DAC_FILTER
 Filtrowanie dzwieku urzadzenia LPT DAC:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_DISNEY
 Zeby wlaczyc Disney Sound Source uzyj 'lpt_dac=disney'.
-.
-:CONFIG_DISNEY_FILTER
-Filtrowanie dzwieku urzadzenia Disney Sound Source:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
 .
 :CONFIG_PS1AUDIO
 Wlaczenie emulacji urzadzenia dzwiekowego IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtrowanie dzwieku syntetyzowanego urzadzenia PS/1:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtrowanie dzwieku digitalizowanego urzadzenia PS/1:
-  on:   Wlaczone (domyslne).
-  off:  Filtrowanie wylaczone.
+  on:        Wlaczone (domyslne).
+  off:       Filtrowanie wylaczone.
+  <custom>:  Ustawienia uzytkownika, patrz 'sb_filter'.
 .
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
@@ -635,6 +699,12 @@ zaimplementowana w grze, a zmiana innych ustawien nie pomaga.
 Za kazdym razem, kiedy zmienisz ustawienia, zostana one wypisane w konsoli
 tekstowej. Po znalezieniu satysfakcjonujacych ustawien zakoncz gre, zmien
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
+.
+:CONFIG_JOY_X_CALIBRATION
+Uzyj kalibracji osi X ustawianej skr¢tami klawiszowymi. Domyslnie 'auto'.
+.
+:CONFIG_JOY_Y_CALIBRATION
+Uzyj kalibracji osi Y ustawianej skr¢tami klawiszowymi. Domyslnie 'auto'.
 .
 :CONFIG_SERIAL1
 Wyb¢r urzadzenia podlaczonego do portu COM.
@@ -698,6 +768,10 @@ Zostanie uzyty do okreslenia formatu daty, czasu, liczb dziesietnych, itp.
 Wartosc 0 spowoduje ustawienie kraju odpowiadajacemu wybranemu ukladowi
 klawiatury.
 .
+:CONFIG_EXPAND_SHELL_VARIABLE
+Rozwijanie zmiennych srodowiskowych, np. %PATH%, w wierszu polecen.
+Obslugiwane przez COMMAND.COM z system¢w MS-DOS 7/8 oraz FreeDOS.
+.
 :CONFIG_KEYBOARDLAYOUT
 Kod jezyka klawiatury (lub puste) - np. 'pl' (polski uklad programisty),
 'pl214' (polski uklad maszynistki).
@@ -721,12 +795,12 @@ do DOSu, oraz z routera do gospodarza.
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000.
 Uwaga: Adresy 220 oraz 240 oga byc niedostepne, gdyz sa domyslnie przypisane
-do kart dzwiekowych Sound Blaster oraz Gravis UltraSound.
+do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000.
 Uwaga: Przerwania 3 oraz 5 moga byc niedostepne, gdyz sa domyslnie przypisane
-do portu COM2 i karty dzwiekowej Gravis UltraSound.
+do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
 Adres MAC karty sieciowej NE2000.
@@ -779,6 +853,11 @@ Brak parametru '%s' w sekcji '%s'.
 Skladnia: config -set "[sekcja] parametr=wartosc".
 
 .
+:CONFIG_DISNEY_FILTER
+Filtrowanie dzwieku urzadzenia Disney Sound Source:
+  on:   Wlaczone (domyslne).
+  off:  Filtrowanie wylaczone.
+.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie zostal zaladowany zaden plik konfiguracyjny!
 
@@ -809,7 +888,7 @@ Zapisywanie pliku konfiguracyjnego:
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Narzedzie konfiguracyjne.
+Zmiana parametr¢w konfiguracyjnych.
 -writeconf lub -wc : zapisz ustawienia do gl¢wnego pliku konfiguracyjnego.
 -writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracja.
 -writelang lub -wl nazwa_pliku : zapisz teksty aktualnego jezyka.
@@ -902,6 +981,12 @@ Sciezka '%s' przekracza dozwolona dlugosc %d znak¢w.
 :PROGRAM_EXECUTABLE_MISSING
 Nie znaleziono pliku wykonywalnego: '%s'.
 
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+enumeracja nieobslugiwana
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+urzadzenie nie zostalo skonfigurowane
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1168,7 +1253,7 @@ Uzywanie wielu plik¢w jest obslugiwane tylko dla obraz¢w cue/iso.
 .
 :PROGRAM_INTRO
 [2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dzwiekiem i grafika.
-DOSBox tworzy dla Ciebie powloke, kt¢ra wyglada jest stary, poczciwy DOS.
+DOSBox tworzy dla Ciebie powloke, kt¢ra wyglada jak stary, poczciwy DOS.
 
 Informacje o montowaniu dysk¢w, wpisz:      [color=blue]intro mount[reset]
 Informacje o wsparciu dla CD-ROM, wpisz:    [color=blue]intro cdrom[reset]
@@ -1597,6 +1682,21 @@ Uwagi:
 Przyklady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Kanal        Glosnosc  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+wyl
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
 .
 :SHELL_CMD_SERIAL_HELP_LONG
 Zarzadzanie portami szeregowymi.
@@ -2493,6 +2593,11 @@ Uwagi:
 Przyklady:
   [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowac?[reset]
   [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
+.
+:SHELL_CMD_CHOICE_EOF
+
+[color=red]Niepowodzenie[reset]: strumien wejsciowy zakonczony bez prawidlowego wyboru.
+
 .
 :SHELL_CMD_CHOICE_ABORTED
 

@@ -219,12 +219,13 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::DigitalAudio});
 
-	sample_rate = channel->GetSampleRate();
+	const auto mixer_rate_hz = channel->GetSampleRate();
+	sample_rate = mixer_rate_hz;
 
 	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
 	// DACs
-	channel->ConfigureZeroOrderHoldUpsampler(check_cast<uint16_t>(sample_rate));
-	channel->EnableZeroOrderHoldUpsampler();
+	channel->SetZeroOrderHoldUpsamplerTargetFreq(check_cast<uint16_t>(sample_rate));
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Setup filters
 	if (filter_choice == "on") {

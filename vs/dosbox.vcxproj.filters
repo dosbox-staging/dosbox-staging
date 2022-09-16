@@ -969,9 +969,6 @@
     <ClInclude Include="..\src\dos\dos_mscdex.h">
       <Filter>src\dos</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\dos\dos_resources.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\fpu\fpu_instructions.h">
       <Filter>src\fpu</Filter>
     </ClInclude>

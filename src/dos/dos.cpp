@@ -34,8 +34,6 @@
 #include "string_utils.h"
 #include "support.h"
 
-#include "dos_resources.h"
-
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
 #endif
@@ -202,34 +200,6 @@ static void DOS_AddDays(Bitu days)
 			dos.date.year++;
 		}
 	}
-}
-
-const std::array<const char *, 18> FILE_EGA_CPX = {
-	"EGA.CPX", "EGA2.CPX", "EGA3.CPX", "EGA4.CPX", "EGA5.CPX",
-	"EGA6.CPX", "EGA7.CPX", "EGA8.CPX", "EGA9.CPX", "EGA10.CPX",
-	"EGA11.CPX", "EGA12.CPX", "EGA13.CPX", "EGA14.CPX",
-	"EGA15.CPX", "EGA16.CPX", "EGA17.CPX", "EGA18.CPX",
-};
-
-const std::array<const char *, 4> FILE_KEYBOARD_SYS = {
-	"KEYBOARD.SYS", "KEYBRD2.SYS", "KEYBRD3.SYS", "KEYBRD4.SYS",
-};
-
-std::vector<std::vector<uint8_t>> BLOB_EGA_CPX;
-std::vector<std::vector<uint8_t>> BLOB_KEYBOARD_SYS;
-
-static void DOS_LoadResources() {
-	const auto mandatory = ResourceImportance::Mandatory;
-
-	BLOB_EGA_CPX.resize(FILE_EGA_CPX.size());
-	for (size_t i = 0; i < FILE_EGA_CPX.size(); i++)
-		BLOB_EGA_CPX[i] = LoadResource("freedos-cpi", FILE_EGA_CPX[i],
-			                           mandatory);
-
-	BLOB_KEYBOARD_SYS.resize(FILE_KEYBOARD_SYS.size());
-	for (size_t i = 0; i < FILE_KEYBOARD_SYS.size(); i++)
-		BLOB_KEYBOARD_SYS[i] = LoadResource("freedos-keyboard", FILE_KEYBOARD_SYS[i],
-			                                mandatory);
 }
 
 static uint16_t DOS_GetAmount(void) {
@@ -1549,7 +1519,6 @@ public:
 		//	pop ax
 		//	iret
 
-		DOS_LoadResources();
 		DOS_SetupFiles();								/* Setup system File tables */
 		DOS_SetupDevices();							/* Setup dos devices */
 		DOS_SetupTables();

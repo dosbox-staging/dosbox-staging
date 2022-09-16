@@ -363,30 +363,45 @@ getdefault:
 
 void MIDI_ListAll(Program *caller)
 {
+	constexpr auto msg_indent = "  ";
+
 	for (auto *handler = handler_list; handler; handler = handler->next) {
 		const std::string name = handler->GetName();
 		if (name == "none")
 			continue;
 
-		caller->WriteOut(
-		        convert_ansi_markup("[color=white]%s:[reset]\n").c_str(),
-		        name.c_str());
+		std::string name_format = msg_indent;
+		name_format.append(convert_ansi_markup("[color=white]%s:[reset]\n"));
+		caller->WriteOut(name_format.c_str(), name.c_str());
 
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED)
-			caller->WriteOut("  device not configured\n");
+			caller->WriteOut("%s%s\n",
+			                 msg_indent,
+			                 MSG_Get("MIDI_DEVICE_NOT_CONFIGURED"));
 		if (err == MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED)
-			caller->WriteOut("  listing not supported\n");
+			caller->WriteOut("%s%s\n",
+			                 msg_indent,
+			                 MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
 
 		caller->WriteOut("\n"); // additional newline to separate devices
 	}
 }
 
-static MIDI* test;
-void MIDI_Destroy(Section* /*sec*/){
+static void register_midi_text_messages()
+{
+	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "listing not supported");
+	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "device not configured");
+}
+
+static MIDI *test;
+void MIDI_Destroy(Section * /*sec*/)
+{
 	delete test;
 }
 void MIDI_Init(Section * sec) {
 	test = new MIDI(sec);
 	sec->AddDestroyFunction(&MIDI_Destroy,true);
+
+	register_midi_text_messages();
 }

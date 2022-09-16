@@ -227,7 +227,7 @@ jobs:
   # https://dosbox-staging.github.io/downloads/devel/
   #
   publish_additional_artifacts:
-    name: Publish additional artifacts
+    name: Publish additional Windows artifacts
     needs: build_windows_vs_release
     runs-on: windows-2022
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

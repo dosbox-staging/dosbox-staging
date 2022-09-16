@@ -850,12 +850,14 @@ void DOSBOX_Init() {
 	Pstring = secprop->Add_string("oplemu", deprecated, "");
 	Pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
-	Pstring = secprop->Add_string("sb_filter", when_idle, "auto");
+	Pstring = secprop->Add_string("sb_filter", when_idle, "modern");
 	Pstring->Set_help(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
-	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
 	        "             Use the filter of this Sound Blaster model.\n"
+	        "  modern:    Use linear interpolation upsampling that acts as a low-pass filter;\n"
+	        "             this is the legacy DOSBox behaviour (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  One or two custom filters in the following format:\n"
 	        "               TYPE ORDER FREQ\n"
@@ -866,7 +868,7 @@ void DOSBOX_Init() {
 	        "                lpf 2 12000\n"
 	        "                hpf 3 120 lfp 1 6500");
 
-	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, true);
+	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, false);
 	Pbool->Set_help("Force the Sound Blaster filter to be always on\n"
 					"(disallow programs from turning the filter off).");
 
@@ -1137,6 +1139,11 @@ void DOSBOX_Init() {
 	               "information such as date, time, and decimal formats.\n"
 	               "If set to 0, the country code corresponding to the\n"
 	               "selected keyboard layout will be used.");
+
+	Pbool = secprop->Add_bool("expand_shell_variable", when_idle, false);
+	Pbool->Set_help("Enable expanding environment variables such as %PATH%\n"
+	                "while in the DOS command shell. FreeDOS and MS-DOS 7/8\n"
+	                "COMMAND.COM supports this behavior.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");

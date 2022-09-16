@@ -48,50 +48,50 @@ void KEYB::Run(void) {
 		}
 	};
 
-	if (cmd->FindCommand(1, temp_line)) {
-		if (HelpRequested()) {
-			WriteOut(MSG_Get("SHELL_CMD_KEYB_HELP_LONG"));
-		} else {
-			/* first parameter is layout ID */
-			KeyboardErrorCode rcode = {};
-			std::string cp_string   = {};
-			int32_t tried_cp        = -1;
-
-			// If the use provided only the language, infer the
-			// codepage
-			if (cmd->GetCount() == 1) {
-				rcode = DOS_LoadKeyboardLayoutFromLanguage(temp_line.c_str());
-				log_keyboard_code(rcode, temp_line, tried_cp);
-				return;
-			}
-			// Otherwise load the user's specified codepage
-			if (cmd->FindCommand(2, cp_string)) {
-				/* second parameter is codepage number */
-				tried_cp=atoi(cp_string.c_str());
-				char cp_file_name[256];
-				if (cmd->FindCommand(3,cp_string)) {
-					/* third parameter is codepage file */
-					safe_strcpy(cp_file_name, cp_string.c_str());
-				} else {
-					/* no codepage file specified, use automatic selection */
-					safe_strcpy(cp_file_name, "auto");
-				}
-
-				rcode = DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);
-			} else {
-				rcode = DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
-			}
-			log_keyboard_code(rcode, temp_line, tried_cp);
-		}
-	} else {
-		/* no parameter in the command line, just output codepage info and possibly loaded layout ID */
-		const char* layout_name = DOS_GetLoadedLayout();
-		if (layout_name==NULL) {
+	// No arguments: print codepage info and possibly loaded layout ID
+	if (!cmd->FindCommand(1, temp_line)) {
+		const char *layout_name = DOS_GetLoadedLayout();
+		if (!layout_name) {
 			WriteOut(MSG_Get("PROGRAM_KEYB_INFO"),dos.loaded_codepage);
 		} else {
 			WriteOut(MSG_Get("PROGRAM_KEYB_INFO_LAYOUT"),dos.loaded_codepage,layout_name);
 		}
+		return;
 	}
+
+	// One argument: asked for help
+	if (HelpRequested()) {
+		WriteOut(MSG_Get("SHELL_CMD_KEYB_HELP_LONG"));
+		return;
+	}
+
+	// One argument: The language/country. We'll infer the codepage
+	int32_t tried_cp        = -1; // default to auto
+	KeyboardErrorCode rcode = KEYB_LAYOUTNOTFOUND;
+	if (cmd->GetCount() == 1) {
+		rcode = DOS_LoadKeyboardLayoutFromLanguage(temp_line.c_str());
+	}
+
+	// Two or more arguments: language/country and a specific codepage
+	else if (std::string cp_string; cmd->FindCommand(2, cp_string)) {
+		// second parameter is codepage number
+		tried_cp = atoi(cp_string.c_str());
+
+		// Possibly a third parameter, the codepage file
+		std::string cp_filename = "auto";
+		(void)cmd->FindCommand(3, cp_filename); // fallback to auto
+
+		rcode = DOS_LoadKeyboardLayout(temp_line.c_str(),
+		                               tried_cp,
+		                               cp_filename.c_str());
+	}
+
+	// Switch if loading the layout succeeded
+	if (rcode == KEYB_NOERROR) {
+		rcode = DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
+	}
+
+	log_keyboard_code(rcode, temp_line, tried_cp);
 }
 
 void KEYB::AddMessages() {
