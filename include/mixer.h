@@ -305,6 +305,7 @@ private:
 
 	ResampleMethod resample_method = {};
 	bool do_resample               = false;
+	bool do_zoh_upsample           = false;
 
 	struct {
 		float pos = 0.0f;
