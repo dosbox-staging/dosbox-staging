@@ -622,7 +622,7 @@ void MixerChannel::Enable(const bool should_enable)
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
 
-		if (do_resample) {
+		if (do_resample || do_zoh_upsample) {
 			ClearResampler();
 		}
 	}
@@ -633,34 +633,41 @@ void MixerChannel::Enable(const bool should_enable)
 
 void MixerChannel::ConfigureResampler()
 {
-	const auto in_rate = (resample_method == ResampleMethod::ZeroOrderHoldAndResample)
-	                           ? zoh_upsampler.target_freq
-	                           : sample_rate;
+	const auto channel_rate = sample_rate;
+	const auto mixer_rate   = mixer.sample_rate.load();
 
-	const auto out_rate = mixer.sample_rate.load();
-
-	do_resample = (in_rate != out_rate);
-
-	if (!do_resample) {
-		// DEBUG_LOG_MSG("%s: Resampler is off", name.c_str());
-		return;
-	}
+	do_resample = false;
+	do_zoh_upsample = false;
 
 	switch (resample_method) {
 	case ResampleMethod::LinearInterpolation:
-		InitLerpUpsamplerState();
-		// DEBUG_LOG_MSG("%s: Linear interpolation resampler is on",
-		//               name.c_str());
+		do_resample = (channel_rate != mixer_rate);
+		if (do_resample) {
+			InitLerpUpsamplerState();
+			// DEBUG_LOG_MSG("%s: Linear interpolation resampler is on",
+			//               name.c_str());
+		}
 		break;
 
 	case ResampleMethod::ZeroOrderHoldAndResample:
-		InitZohUpsamplerState();
-		// DEBUG_LOG_MSG("%s: Zero-order-hold + Speex resampler is on, upsampler target freq : % d Hz ",
-		//               name.c_str(),
-		//               zoh_upsampler.target_freq);
+		do_zoh_upsample = (channel_rate != zoh_upsampler.target_freq);
+		if (do_zoh_upsample) {
+			InitZohUpsamplerState();
+			// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is on, target rate: %d Hz ",
+			//               name.c_str(),
+			//               zoh_upsampler.target_freq);
+		}
 		[[fallthrough]];
 
 	case ResampleMethod::Resample:
+		const auto in_rate = do_zoh_upsample ? zoh_upsampler.target_freq
+		                                     : channel_rate;
+		const auto out_rate = mixer_rate;
+
+		do_resample = (in_rate != out_rate);
+		if (!do_resample)
+			return;
+
 		if (!speex_resampler.state) {
 			constexpr auto num_channels = 2; // always stereo
 			constexpr auto quality      = 5;
@@ -670,7 +677,7 @@ void MixerChannel::ConfigureResampler()
 		}
 		speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
 
-		// DEBUG_LOG_MSG("%s: Speex resampler is on (in %d Hz to out: %d Hz)",
+		// DEBUG_LOG_MSG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz)",
 		//               name.c_str(),
 		//               in_rate,
 		//               out_rate);
@@ -683,21 +690,28 @@ void MixerChannel::ClearResampler()
 {
 	switch (resample_method) {
 	case ResampleMethod::LinearInterpolation:
-		InitLerpUpsamplerState();
+		if (do_resample) {
+			InitLerpUpsamplerState();
+		}
 		break;
 
 	case ResampleMethod::ZeroOrderHoldAndResample:
-		InitZohUpsamplerState();
+		if (do_zoh_upsample) {
+			InitZohUpsamplerState();
+		}
 		[[fallthrough]];
 
 	case ResampleMethod::Resample:
-		assert(speex_resampler.state);
-		speex_resampler_reset_mem(speex_resampler.state);
-		speex_resampler_skip_zeros(speex_resampler.state);
+		if (do_resample) {
+			assert(speex_resampler.state);
+			speex_resampler_reset_mem(speex_resampler.state);
+			speex_resampler_skip_zeros(speex_resampler.state);
 
-		// DEBUG_LOG_MSG("%s: Resampler cleared and primed %d-frame input queue",
-		//               name.c_str(),
-		//               speex_resampler_get_input_latency(speex_resampler.state));
+			// DEBUG_LOG_MSG("%s: Speex resampler cleared and primed %d-frame input queue",
+			//               name.c_str(),
+			//               speex_resampler_get_input_latency(
+			//                       speex_resampler.state));
+		}
 		break;
 	}
 }
@@ -713,7 +727,7 @@ void MixerChannel::SetSampleRate(const int rate)
 		sample_rate = mixer.sample_rate;
 	}
 
-	// DEBUG_LOG_MSG("%s: Sample rate set to %d Hz)", name.c_str(), rate);
+	// DEBUG_LOG_MSG("%s: Sample rate set to %d Hz", name.c_str(), sample_rate);
 
 	freq_add = (sample_rate << FREQ_SHIFT) / mixer.sample_rate;
 	envelope.Update(sample_rate, peak_amplitude,
@@ -925,10 +939,6 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			            cutoff_freq_pref.c_str());
 			return false;
 		}
-
-		const auto do_zoh_upsample = do_resample &&
-		                             resample_method ==
-		                                     ResampleMethod::ZeroOrderHoldAndResample;
 
 		const auto max_cutoff_freq_hz = (do_zoh_upsample ? zoh_upsampler.target_freq
 		                                                 : sample_rate) / 2 - 1;
@@ -1316,8 +1326,7 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
 
-		if (do_resample &&
-		    resample_method == ResampleMethod::ZeroOrderHoldAndResample) {
+		if (do_zoh_upsample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
 			if (zoh_upsampler.pos > 1.0f) {
 				zoh_upsampler.pos -= 1.0f;
@@ -1456,7 +1465,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 			}
 		} break;
 
-		case ResampleMethod::ZeroOrderHoldAndResample: [[fallthrough]];
+		case ResampleMethod::ZeroOrderHoldAndResample:
+			[[fallthrough]];
+			// Zero-order-hold upsampling is performed in
+			// ConvertSamples for efficiency reasons to reduce the
+			// number of temporary buffers
+
 		case ResampleMethod::Resample: {
 			auto in_frames = check_cast<uint32_t>(
 			                         mixer.resample_temp.size()) /
