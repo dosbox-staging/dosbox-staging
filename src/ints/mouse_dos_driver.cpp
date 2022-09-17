@@ -645,7 +645,12 @@ static void set_interrupt_rate(const uint16_t rate_id)
 
 static void reset_hardware()
 {
+    // Resetting the wheel API status in reset() might seem to be a more
+    // logical approach, but this is clearly not what CuteMouse does;
+    // if this is done in reset(), the DN2 is unable to use mouse wheel
+    state.cute_mouse = false;
     counter_w = 0;
+
     set_interrupt_rate(4);
     PIC_SetIRQMask(12, false); // lower IRQ line
     MOUSE_NotifyRateDOS(60); // same rate Microsoft Mouse 8.20 sets
@@ -741,8 +746,7 @@ static void reset()
     set_mickey_pixel_rate(8, 16);
     set_double_speed_threshold(0); // set default value
 
-    state.enabled    = true;
-    state.cute_mouse = false;
+    state.enabled = true;
 
     pos_x = static_cast<float>((state.maxpos_x + 1) / 2);
     pos_y = static_cast<float>((state.maxpos_y + 1) / 2);
