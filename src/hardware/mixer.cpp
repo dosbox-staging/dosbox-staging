@@ -631,6 +631,31 @@ void MixerChannel::Enable(const bool should_enable)
 	MIXER_UnlockAudioDevice();
 }
 
+// Depending on the resampling method and the channel, mixer and ZoH upsampler
+// rates, the following scenarios are possible:
+//
+// LinearInterpolation
+// -------------------
+//   - Linear interpolation resampling only if channel_rate != mixer_rate
+//
+// ZeroOrderHoldAndResample
+// ------------------------
+//   - neither ZoH upsampling nor Speex resampling if:
+//     channel_rate >= zoh_target_rate AND channel_rate == mixer_rate
+//
+//   - ZoH upsampling only if:
+//     channel_rate < zoh_target_freq AND zoh_target_rate == mixer_rate
+//
+//   - Speex resampling only if:
+//     channel_rate >= zoh_target_freq AND channel_rate != mixer_rate
+//
+//   - both ZoH upsampling and Speex resampling if:
+//     channel_rate < zoh_target_rate AND zoh_target_rate != mixer_rate
+//
+// Resample
+// --------
+//   - Speex resampling only if channel_rate != mixer_rate
+//
 void MixerChannel::ConfigureResampler()
 {
 	const auto channel_rate = sample_rate;
@@ -650,7 +675,7 @@ void MixerChannel::ConfigureResampler()
 		break;
 
 	case ResampleMethod::ZeroOrderHoldAndResample:
-		do_zoh_upsample = (channel_rate != zoh_upsampler.target_freq);
+		do_zoh_upsample = (channel_rate < zoh_upsampler.target_freq);
 		if (do_zoh_upsample) {
 			InitZohUpsamplerState();
 			// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is on, target rate: %d Hz ",
