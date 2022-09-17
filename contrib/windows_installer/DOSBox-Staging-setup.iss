@@ -81,10 +81,11 @@ Source: "{#DOSBoxAppExeDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppE
 Source: "{#DOSBoxAppExeMSVCName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: defaultmsvc
 Source: "{#DOSBoxAppExeMSVCDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion; Tasks: defaultmsvc
 Source: "{#DOSBoxAppExeConsoleName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeConsoleName}"; Flags: ignoreversion
+Source: "{#DOSBoxAppInternal}.ico"; DestDir: "{app}"; DestName: "{#DOSBoxAppInternal}.ico"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Parameters: "-noconsole"
-Name: "{group}\{#DOSBoxAppName} with console"; Filename: "{app}\{#DOSBoxAppExeConsoleName}"
+Name: "{group}\{#DOSBoxAppName} with console"; Filename: "{app}\{#DOSBoxAppExeConsoleName}"; IconFilename: "{app}\{#DOSBoxAppInternal}.ico"
 Name: "{group}\{#DOSBoxAppName} with debugger"; Filename: "{app}\{#DOSBoxAppExeDebuggerName}"
 Name: "{group}\Visit {#DOSBoxAppName} website"; Filename: "{#DOSBoxAppURL}"
 Name: "{autodesktop}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Parameters: "-noconsole"; Tasks: desktopicon
