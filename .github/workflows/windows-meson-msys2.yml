@@ -231,7 +231,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
-          git fetch --prune --unshallow
+          git fetch --prune --unshallow || true
           git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -376,7 +376,7 @@ jobs:
         shell: bash
         run: |
           set +x
-          git fetch --unshallow
+          git fetch --unshallow || true
           git fetch --all --tags --force
           VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
