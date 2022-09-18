@@ -1,15 +1,73 @@
-The DOSBox Staging Team:
+DOSBox Staging 0.79 was brought to you by:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Patryk Obara
-kcgen
-nemo93
+**0.79 Special Thanks**
 
-The project is continuation of DOSBox project, authored by:
+ - John Novak: for all the audio enhancements, shader improvements, and code reviews
+ - FeralChild64: for the mouse overhaul, code page and layout improvements, and code reviews
+ - Wengier: for the shell improvements, mount and CLI additions, and Windows installer
+ - shermp: for the messaging ANSI markup system and code reviews
+ - Kirk Klobe: for the debugger fixes, Tracy integration, and paging and memory system refinements
+ - GranMinigun: for the hiDPI additions, video chain fixes, and Russian translations
+ - nemo93, for testing 400+ games on the Raspberry Pi
+ - Kappa971, for the Italian translation and leading the translation effort
+ - Burrito78, for the German translation
 
-Sjoerd v.d. Berg <harekiet>
-Peter Veenstra <qbix79>
-Ulf Wohlers <finsterr>
-Tommy Frössman <fanskapet>
-Dean Beeler <canadacow>
-Sebastian Strohhäcker <c2woody>
-Ralf Grillenberger <h-a-l-9000>
+**0.79 Maintainers**
+
+ - kcgen
+ - John Novak
+ - FeralChild64
+
+**0.79 Authors**
+
+ - kcgen
+ - John Novak
+ - FeralChild64
+ - Wengier
+ - shermp
+ - Kirk Klobe
+ - GranMinigun
+ - Patryk Obara
+ - ripsaw8080 (DOSBox author)
+ - NicknineTheEagle
+ - David Reid (dr_lib author, 3rd party dependency)
+ - Leandro Nini (libresidfp author, 3rd party dependency)
+ - Dean Beeler
+ - ripa (DOSBox patch author)
+ - Keenan Weaver
+ - Dennis Lühring
+ - IPeluchito
+ - Otto Liljalaakso
+ - Peter Ferrie
+ - arrowgent
+ - gulrak
+ - hunterk
+
+**0.79 Translators**
+
+ - Burrito78 (German)
+ - FeralChild64 (Polish)
+ - GranMinigun (Russian)
+ - Kappa971 (Italian)
+
+**0.79 Sponsors**
+
+ - Antti Peltola: 3,000 USD during the 0.79 development cycle
+ - Wengier
+
+**0.79 Backers**
+
+ - Burrito78
+ - Hugo Locurcio
+
+
+The project is a continuation of the DOSBox project, authored by:
+
+ - Sjoerd v.d. Berg <harekiet>
+ - Peter Veenstra <qbix79>
+ - Ulf Wohlers <finsterr>
+ - Tommy Frössman <fanskapet>
+ - Dean Beeler <canadacow>
+ - Sebastian Strohhäcker <c2woody>
+ - Ralf Grillenberger <h-a-l-9000>
