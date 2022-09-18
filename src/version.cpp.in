@@ -25,7 +25,7 @@
 
 const char *DOSBOX_GetDetailedVersion() noexcept
 {
-	static std::string version = "@VCS_TAG@";
+	static std::string version = "v0.79.0";
 
 	// Return the full tag and hash, if it's not a tag
 	if (version[0] != 'v')
