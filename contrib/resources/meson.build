@@ -3,6 +3,7 @@ resource_dirs = [
     'freedos-cpi',
     'freedos-keyboard',
     'glshaders',
+    'translated-0.79-conf-files',
     'translations',
     # insert new resource subdirectory names here
 ]
