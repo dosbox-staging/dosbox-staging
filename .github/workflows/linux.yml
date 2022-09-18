@@ -164,6 +164,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: false
+          fetch-depth: 0
 
       - run:  sudo apt-get update
 
@@ -208,6 +209,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
@@ -285,6 +287,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
+          git fetch --all --tags --force
           VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
