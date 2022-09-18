@@ -20,12 +20,32 @@
 
 #include "dosbox.h"
 
+#include <cassert>
+#include <string>
+
 const char *DOSBOX_GetDetailedVersion() noexcept
 {
-	static constexpr char version[] = "@VCS_TAG@";
-	// Git tag names start with a letter v (by convention).
-	if constexpr (version[0] == 'v')
-		return version + 1;
-	else
-		return version;
+	static std::string version = "@VCS_TAG@";
+
+	// Return the full tag and hash, if it's not a tag
+	if (version[0] != 'v')
+		return version.c_str();
+
+	// If it's a tagged alpha, return the version and hash
+	const bool is_alpha = version.find("alpha") != std::string::npos;
+
+	if (is_alpha)
+		return version.c_str() + 1;
+
+	// If it's a tagged release, return just the tag without the hash
+	assert(!is_alpha);
+	const auto dash_pos = version.find_first_of("-");
+	const auto has_dash = dash_pos != std::string::npos;
+	if (has_dash && dash_pos > 1) {
+		static const auto tag_no_hash = version.substr(1, dash_pos - 1);
+		return tag_no_hash.c_str();
+	}
+
+	// If it's none of the above, just return it
+	return version.data();
 }
