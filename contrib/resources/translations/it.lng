@@ -1903,7 +1903,7 @@ Suggerimento: Per spostarsi su un'altra unitÖ, digita [color=light-red]%c:[reset
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-il nome della directory ä pió lungo di 8 caratteri e/o contiene spazi.
+Il nome della directory ä pió lungo di 8 caratteri e/o contiene spazi.
 Prova [color=light-red]cd %s[reset]
 
 .
@@ -2223,7 +2223,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset] ä un nome file specifico o con caratteri jolly, cioä asterisco(*)
-          e punto di domanda (?). ‘ possibile specificare il percorso di
+          o punto di domanda (?). ‘ possibile specificare il percorso di
           una directory per elencarne il contenuto.
   [color=white]ORDINAM[reset] ä il tipo di ordinamento scelto, cioä: [color=white]n[reset] (per nome, alfabetico),
           [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
@@ -2518,11 +2518,11 @@ Rinomina uno o pió file.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Utilizzo:
-  [color=green]ren[reset] [color=white]SORGENTE[reset] [color=cyan]DESTINAZIONE[reset]
-  [color=green]rename[reset] [color=white]SORGENTE[reset] [color=cyan]DESTINAZIONE[reset]
+  [color=green]ren[reset] [color=white]ORIGINE[reset] [color=cyan]DESTINAZIONE[reset]
+  [color=green]rename[reset] [color=white]ORIGINE[reset] [color=cyan]DESTINAZIONE[reset]
 
 Dove:
-  [color=white]SORGENTE[reset]     ä il nome del file da rinominare.
+  [color=white]ORIGINE[reset]      ä il nome del file da rinominare.
   [color=cyan]DESTINAZIONE[reset] ä il nuovo nome del file.
 
 Note:
@@ -2567,22 +2567,22 @@ Copia uno o pió file in un'altra posizione.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Utilizzo:
-  [color=green]copy[reset] [color=white]SORGENTE[reset] [color=cyan][DESTINAZIONE][reset]
-  [color=green]copy[reset] [color=white]SORGENTE1+SORGENTE2[+...][reset] [color=cyan][DESTINAZIONE][reset]
+  [color=green]copy[reset] [color=white]ORIGINE[reset] [color=cyan][DESTINAZIONE][reset]
+  [color=green]copy[reset] [color=white]ORIGINE1+ORIGINE2[+...][reset] [color=cyan][DESTINAZIONE][reset]
 
 Dove:
-  [color=white]SORGENTE[reset]     ä un nome file specifico o con caratteri jolly, cioä
+  [color=white]ORIGINE[reset]      ä un nome file specifico o con caratteri jolly, cioä
                asterisco(*) o punto di domanda (?).
   [color=cyan]DESTINAZIONE[reset] ä un nome file specifico o una directory che non contiene
                caratteri jolly.
 
 Note:
-  L'operatore [color=white]+[reset] combina pió file sorgente forniti in un unico file.
+  L'operatore [color=white]+[reset] combina pió file di origine forniti in un unico file.
   La destinazione ä facoltativa: se omessa, i file verranno copiati nel
   percorso corrente.
 
 Esempi:
-  [color=green]copy[reset] [color=white]sorgente.bat[reset] [color=cyan]nuovo.bat[reset]
+  [color=green]copy[reset] [color=white]origine.bat[reset] [color=cyan]nuovo.bat[reset]
   [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
   [color=green]copy[reset] [color=white]..\c*.*[reset]
 
@@ -2664,7 +2664,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset]  ä un nome file specifico o con caratteri jolly, cioä asterisco (*)
-           e punto di domanda (?).
+           o punto di domanda (?).
   [color=cyan]PERCORSO[reset] ä un percorso di un'unitÖ DOS montata da cui elencare il contenuto.
 
 Note:
@@ -2693,7 +2693,7 @@ Dove:
             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
   [color=cyan]MODELLO[reset]   puï essere un nome file esatto o un nome file con caratteri jolly,
-            cioä asterisco (*) e punto di domanda (?), oppure il nome di
+            cioä asterisco (*) o punto di domanda (?), oppure il nome di
             una directory.
 
 Note:
