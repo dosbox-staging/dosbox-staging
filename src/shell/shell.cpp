@@ -273,11 +273,13 @@ bool get_pipe_status(const char *out_file,
 		                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
 		                              0x12, &dummy, &dummy2);
 		if (pipe_file && (failed_pipe || !status) &&
-		    (Drives[0] || Drives[2]) && !strchr(pipe_tempfile, '\\')) {
+		    (Drives[0] || Drives[2] || Drives[24]) &&
+		    !strchr(pipe_tempfile, '\\')) {
 			// Insert a drive prefix into the pipe filename path.
 			// Note that the safe_strcpy truncates excess to prevent
 			// writing beyond pipe_tempfile's fixed size.
-			const std::string drive_prefix = Drives[2] ? "c:\\" : "a:\\";
+			const std::string drive_prefix =
+			        Drives[2] ? "c:\\" : (Drives[0] ? "a:\\" : "y:\\");
 			const std::string pipe_full_path = drive_prefix + pipe_tempfile;
 			safe_strcpy(pipe_tempfile, pipe_full_path.c_str());
 
