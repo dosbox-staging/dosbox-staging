@@ -1,461 +1,461 @@
 :CONFIG_FULLSCREEN
-Uruchom na peˆnym ekranie.
-Skr¢ty klawiszowe do zarz¥dzania oknem mo¾na wy˜wietli† poleceniem 'intro'.
+Uruchom na peÅ‚nym ekranie.
+SkrÃ³ty klawiszowe do zarzÄ…dzania oknem moÅ¼na wyÅ›wietliÄ‡ poleceniem 'intro'.
 .
 :CONFIG_DISPLAY
-Numer monitora do wy˜wietlania obrazu; warto˜ci zale¾¥ od systemu operacyjnego
-i jego ustawieä.
+Numer monitora do wyÅ›wietlania obrazu; wartoÅ›ci zaleÅ¼Ä… od systemu operacyjnego
+i jego ustawieÅ„.
 .
 :CONFIG_FULLRESOLUTION
-Rozdzielczo˜† na peˆnym ekranie: 'original', 'desktop' lub rozdzielczo˜†,
+RozdzielczoÅ›Ä‡ na peÅ‚nym ekranie: 'original', 'desktop' lub rozdzielczoÅ›Ä‡,
 np. 1024x768.
 .
 :CONFIG_WINDOWRESOLUTION
 Rozmiar okna w trybie okienkowym:
-  default:   Wybiera najlepszy na podstawie ustawieä systemu.
+  default:   Wybiera najlepszy na podstawie ustawieÅ„ systemu.
   small, medium lub large (albo s, m, l):
-             Rozmiar wzgl©dem pulpitu (maˆy, ˜redni, du¾y).
-  <custom>:  Skalowanie okna do danej rozdzielczo˜ci podanej jako XxY.
-             Przykˆad: 1024x768.
-             Obraz nie jest skalowany je˜li 'output=surface'.
+             Rozmiar wzglÄ™dem pulpitu (maÅ‚y, Å›redni, duÅ¼y).
+  <custom>:  Skalowanie okna do danej rozdzielczoÅ›ci podanej jako XxY.
+             PrzykÅ‚ad: 1024x768.
+             Obraz nie jest skalowany jeÅ›li 'output=surface'.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Rozmiar obszaru wy˜wietlania w oknie lub na peˆnym ekranie:
-  fit:       Dopasowanie do rozmiaru okna/ekranu (domy˜lne).
-  <custom>:  Ograniczenie obszaru wy˜wietlania do podanej rozdzielczo˜ci lub
+Rozmiar obszaru wyÅ›wietlania w oknie lub na peÅ‚nym ekranie:
+  fit:       Dopasowanie do rozmiaru okna/ekranu (domyÅ›lne).
+  <custom>:  Ograniczenie obszaru wyÅ›wietlania do podanej rozdzielczoÅ›ci lub
              procentu rozmiaru pulpitu. W formacie XxY, N%, N.M%.
-             Przykˆady: 960x720 lub 50%
+             PrzykÅ‚ady: 960x720 lub 50%
 .
 :CONFIG_WINDOW_POSITION
-Pocz¥tkowe wsp¢ˆrz©dne okna w trybie okienkowym:
-  auto:      Pozwala zdecydowa† systemowi gospodarza.
-  <custom>:  Pozycja w formacie X,Y. Przykˆad: '250,100'.
-             '0,0' oznacza lewy g¢rny r¢g ekranu.
+PoczÄ…tkowe wspÃ³Å‚rzÄ™dne okna w trybie okienkowym:
+  auto:      Pozwala zdecydowaÄ‡ systemowi gospodarza.
+  <custom>:  Pozycja w formacie X,Y. PrzykÅ‚ad: '250,100'.
+             '0,0' oznacza lewy gÃ³rny rÃ³g ekranu.
 .
 :CONFIG_WINDOW_DECORATIONS
-Czy wy˜wietla† dekoracje okna w trybie okienkowym.
+Czy wyÅ›wietlaÄ‡ dekoracje okna w trybie okienkowym.
 .
 :CONFIG_TRANSPARENCY
-Przezroczysto˜† obrazu. Od 0 (brak) do 90 (znaczna przezroczysto˜†).
+PrzezroczystoÅ›Ä‡ obrazu. Od 0 (brak) do 90 (znaczna przezroczystoÅ›Ä‡).
 .
 :CONFIG_MAX_RESOLUTION
 Nazwa parametru zmieniona na 'viewport_resolution'.
 .
 :CONFIG_HOST_RATE
-Cz©stotliwo˜† od˜wie¾ania obrazu w systemie gospodarza:
-  auto:      U¾ywa 'sdi'; 'vrr' tylko na peˆnym ekranie, na monitorze
-             o wysokiej cz©stotliwo˜ci od˜wie¾ania.
-  sdi:       U¾ywa cz©stotliwo˜ci SDI (Serial Device Interface), bez
-             ¾adnego korygowania warto˜ci.
-  vrr:       Odejmuje 3 Hz od raportowanej warto˜ci (dobra praktyka dla
-             monitor¢w VRR).
-  <custom>:  U¾ywa podanej warto˜ci, caˆkowitej lub dziesi©tnej, musi by†
-             wi©ksza od 23.000.
+CzÄ™stotliwoÅ›Ä‡ odÅ›wieÅ¼ania obrazu w systemie gospodarza:
+  auto:      UÅ¼ywa 'sdi'; 'vrr' tylko na peÅ‚nym ekranie, na monitorze
+             o wysokiej czÄ™stotliwoÅ›ci odÅ›wieÅ¼ania.
+  sdi:       UÅ¼ywa czÄ™stotliwoÅ›ci SDI (Serial Device Interface), bez
+             Å¼adnego korygowania wartoÅ›ci.
+  vrr:       Odejmuje 3 Hz od raportowanej wartoÅ›ci (dobra praktyka dla
+             monitorÃ³w VRR).
+  <custom>:  UÅ¼ywa podanej wartoÅ›ci, caÅ‚kowitej lub dziesiÄ™tnej, musi byÄ‡
+             wiÄ™ksza od 23.000.
 .
 :CONFIG_VSYNC
-Synchronizacja z od˜wie¾aniem obrazu na monitorze, je˜li obsˆugiwana. Mo¾e
-zmniejszy† migotanie i szarpanie obrazu, ale mo¾e te¾ negatywnie wpˆyn¥†
-na wydajno˜†.
+Synchronizacja z odÅ›wieÅ¼aniem obrazu na monitorze, jeÅ›li obsÅ‚ugiwana. MoÅ¼e
+zmniejszyÄ‡ migotanie i szarpanie obrazu, ale moÅ¼e teÅ¼ negatywnie wpÅ‚ynÄ…Ä‡
+na wydajnoÅ›Ä‡.
 .
 :CONFIG_VSYNC_SKIP
-Czas (w mikrosekundach) blokowania renderowania przed pomini©ciem kolejnej
-ramki. 0 wyˆ¥cza mechanizm i zawsze renderuje ramk©.
+Czas (w mikrosekundach) blokowania renderowania przed pominiÄ™ciem kolejnej
+ramki. 0 wyÅ‚Ä…cza mechanizm i zawsze renderuje ramkÄ™.
 .
 :CONFIG_PRESENTATION_MODE
 Tryb prezentacji:
-  auto:  Automatyczne opuszczanie ramek, ¾eby zapobiec przyci©ciom emulacji.
-  cfr:   Wy˜wietlanie ramek ze staˆ¥ cz©stotliwo˜ci¥.
-  vfr:   Wy˜wietlanie zmienionych ramek obrazu, ze zmienn¥ cz©stotliwo˜ci¥.
+  auto:  Automatyczne opuszczanie ramek, Å¼eby zapobiec przyciÄ™ciom emulacji.
+  cfr:   WyÅ›wietlanie ramek ze staÅ‚Ä… czÄ™stotliwoÅ›ciÄ….
+  vfr:   WyÅ›wietlanie zmienionych ramek obrazu, ze zmiennÄ… czÄ™stotliwoÅ›ciÄ….
 .
 :CONFIG_OUTPUT
-Wyb¢r wyj˜cia obrazu.
+WybÃ³r wyjÅ›cia obrazu.
 .
 :CONFIG_TEXTURE_RENDERER
-Wyb¢r renderera dla 'output = texture'. Warto˜† 'auto' wybiera automatycznie.
+WybÃ³r renderera dla 'output = texture'. WartoÅ›Ä‡ 'auto' wybiera automatycznie.
 .
 :CONFIG_CAPTURE_MOUSE
-Spos¢b przejmowania kursora myszy:
-   onclick:        Po klikni©ciu w obr©bie okna emulatora.
+SposÃ³b przejmowania kursora myszy:
+   onclick:        Po klikniÄ™ciu w obrÄ™bie okna emulatora.
    onstart:        Natychmiast po starcie.
    seamless:       Pozwala na swobodne opuszczenie okna, przejmuje po
-                   klikni©ciu ˜rodkowym przyciskiem myszy.
-   nomouse:        Ukrywa kursor i nie przekazuje ruch¢w myszy do programu
-                   (mysz jest wci¥¾ emulowana).
-Dziaˆanie ˜rodkowego przycisku myszy (druga warto˜†):
-   middlegame:     —rodkowy przycisk jest przekazywany do DOSu.
-   middlerelease:  Zwolnienie przej©tego kursora, przej©cie kursora w trybie
+                   klikniÄ™ciu Å›rodkowym przyciskiem myszy.
+   nomouse:        Ukrywa kursor i nie przekazuje ruchÃ³w myszy do programu
+                   (mysz jest wciÄ…Å¼ emulowana).
+DziaÅ‚anie Å›rodkowego przycisku myszy (druga wartoÅ›Ä‡):
+   middlegame:     Åšrodkowy przycisk jest przekazywany do DOSu.
+   middlerelease:  Zwolnienie przejÄ™tego kursora, przejÄ™cie kursora w trybie
                    'seamless'.
-Domy˜lne (gdy nie podane lub nieprawidˆowe): seamless middlerelease
+DomyÅ›lne (gdy nie podane lub nieprawidÅ‚owe): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Czuˆo˜† myszy. Opcjonalna druga warto˜† okre˜la oddzielnie czuˆo˜† pionow¥.
-Przykˆad: 100,-50.
+CzuÅ‚oÅ›Ä‡ myszy. Opcjonalna druga wartoÅ›Ä‡ okreÅ›la oddzielnie czuÅ‚oÅ›Ä‡ pionowÄ….
+PrzykÅ‚ad: 100,-50.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Omini©cie ustawieä systemu operacyjnego gospodarza dotycz¥cych czuˆo˜ci oraz
-przyspieszenia myszy. Dziaˆa albo na peˆnym ekranie, albo kiedy kursor myszy
-jest przej©ty w trybie okienkowym.
+OminiÄ™cie ustawieÅ„ systemu operacyjnego gospodarza dotyczÄ…cych czuÅ‚oÅ›ci oraz
+przyspieszenia myszy. DziaÅ‚a albo na peÅ‚nym ekranie, albo kiedy kursor myszy
+jest przejÄ™ty w trybie okienkowym.
 .
 :CONFIG_WAITONERROR
-Czekanie przed zamkni©ciem konsoli je˜li DOSBox koäczy prac© z bˆ©dem.
+Czekanie przed zamkniÄ™ciem konsoli jeÅ›li DOSBox koÅ„czy pracÄ™ z bÅ‚Ä™dem.
 .
 :CONFIG_PRIORITY
 Priorytet zadania, kiedy emulator jest aktywny/nieaktywny, odpowiednio.
-   auto:  Pozwala zadecydowa† systemowi operacyjnemu gospodarza.
-Domy˜lne: 'auto auto'
+   auto:  Pozwala zadecydowaÄ‡ systemowi operacyjnemu gospodarza.
+DomyÅ›lne: 'auto auto'
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Wyciszanie d«wi©ku, kiedy okno emulatora traci fokus.
+Wyciszanie dÅºwiÄ™ku, kiedy okno emulatora traci fokus.
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
 Pauza emulacji, kiedy okno emulatora traci fokus.
 .
 :CONFIG_MAPPERFILE
-Plik u¾ywany do wczytania/zapisania mapowania klawiszy/zdarzeä.
-Pre-konfigurowane pliki s¥ dost©pne w katalogu 'resources/mapperfiles'. Mo¾na
-je zaˆadowa† podaj¥c nazw©, np.: 'mapperfile = xbox/xenon2.map'
-Uwaga: opcja wiersza poleceä '-resetmapper' tylko usuwa domy˜lny plik.
+Plik uÅ¼ywany do wczytania/zapisania mapowania klawiszy/zdarzeÅ„.
+Pre-konfigurowane pliki sÄ… dostÄ™pne w katalogu 'resources/mapperfiles'. MoÅ¼na
+je zaÅ‚adowaÄ‡ podajÄ…c nazwÄ™, np.: 'mapperfile = xbox/xenon2.map'
+Uwaga: opcja wiersza poleceÅ„ '-resetmapper' tylko usuwa domyÅ›lny plik.
 .
 :CONFIG_SCREENSAVER
-Ustawienie wygaszacza ekranu, ma pierwszeästwo przed zmienn¥ ˜rodowiskow¥
+Ustawienie wygaszacza ekranu, ma pierwszeÅ„stwo przed zmiennÄ… Å›rodowiskowÄ…
 SDL_VIDEO_ALLOW_SCREENSAVER:
-  allow:  Zezwala na wˆ¥cznie wygaszacza ekranu podczas dziaˆania emulatora.
-  block:  Nie zezwala systemowi gospodarza na jego wˆ¥czenie.
+  allow:  Zezwala na wÅ‚Ä…cznie wygaszacza ekranu podczas dziaÅ‚ania emulatora.
+  block:  Nie zezwala systemowi gospodarza na jego wÅ‚Ä…czenie.
 .
 :CONFIG_LANGUAGE
-J©zyk emulatora: de, en, es, fr, it, nl, pl lub ru.
-Uwaga: Ustawienie ma pierwszeästwo przed zmienn¥ ˜rodowiskow¥ 'LANG'. Pliki
-tˆumaczeä dla poszczeg¢lnych j©zyk¢w znajduj¥ si© w dostarczonym katalogu
+JÄ™zyk emulatora: de, en, es, fr, it, nl, pl lub ru.
+Uwaga: Ustawienie ma pierwszeÅ„stwo przed zmiennÄ… Å›rodowiskowÄ… 'LANG'. Pliki
+tÅ‚umaczeÅ„ dla poszczegÃ³lnych jÄ™zykÃ³w znajdujÄ… siÄ™ w dostarczonym katalogu
 'resources/translations'.
 .
 :CONFIG_MACHINE
-Typ komputera, kt¢ry DOSBox pr¢buje emulowa†.
+Typ komputera, ktÃ³ry DOSBox prÃ³buje emulowaÄ‡.
 .
 :CONFIG_CAPTURES
-Katalog do zapisywania przechwyconego d«wi©ku, muzyki w formacie MIDI, zrzut¢w
+Katalog do zapisywania przechwyconego dÅºwiÄ™ku, muzyki w formacie MIDI, zrzutÃ³w
 ekranu, itd.
 .
 :CONFIG_MEMSIZE
-Rozmiar pami©ci emulowanej maszyny w megabajtach.
-Najlepiej nie zmienia† warto˜ci bez potrzeby, gdy¾ mo¾e to powodowa† problemy
-w niekt¢rych grach (chociia¾ niekt¢re mog¥ wymaga† wi©kszego rozmiaru).
-Zwi©kszenie rozmiaru zazwyczaj nie poprawia wydajno˜ci.
+Rozmiar pamiÄ™ci emulowanej maszyny w megabajtach.
+Najlepiej nie zmieniaÄ‡ wartoÅ›ci bez potrzeby, gdyÅ¼ moÅ¼e to powodowaÄ‡ problemy
+w niektÃ³rych grach (chociiaÅ¼ niektÃ³re mogÄ… wymagaÄ‡ wiÄ™kszego rozmiaru).
+ZwiÄ™kszenie rozmiaru zazwyczaj nie poprawia wydajnoÅ›ci.
 .
 :CONFIG_MCB_FAULT_STRATEGY
-Obsˆuga uszkodzonych blok¢w MCB (Memory Control Blocks):
-  deny:    Wy˜wietlenie bˆ©du i zakoäczenie emulacji (domyslne).
-  repair:  Naprawa (i zaraportowanie) uzywaj¥c s¥siednich blok¢w.
+ObsÅ‚uga uszkodzonych blokÃ³w MCB (Memory Control Blocks):
+  deny:    WyÅ›wietlenie bÅ‚Ä™du i zakoÅ„czenie emulacji (domyslne).
+  repair:  Naprawa (i zaraportowanie) uzywajÄ…c sÄ…siednich blokÃ³w.
   report:  Tylko naprawa.
-  allow:   Zignorowanie problemu, jak w rzeczywistym sprz©cie.
+  allow:   Zignorowanie problemu, jak w rzeczywistym sprzÄ™cie.
 The default (deny) is recommended unless a game is failing with MCB corruption errors.
 .
 :CONFIG_VMEMSIZE
-Rozmiar pami©ci graficznej w megabajtach (1-8) lub kilobajtach (256-8192).
-Warto˜† 'auto' wybiera domy˜ln¥ dla danej karty graficznej.
+Rozmiar pamiÄ™ci graficznej w megabajtach (1-8) lub kilobajtach (256-8192).
+WartoÅ›Ä‡ 'auto' wybiera domyÅ›lnÄ… dla danej karty graficznej.
 .
 :CONFIG_DOS_RATE
-Cz©stotliwo˜† od˜wie¾ania emulowanego obrazu:
-  default:  Okre˜lone przez tryb graficzny (zalecane).
+CzÄ™stotliwoÅ›Ä‡ odÅ›wieÅ¼ania emulowanego obrazu:
+  default:  OkreÅ›lone przez tryb graficzny (zalecane).
   host:     Taka, jak w systemie gospodarza (patrz parametr 'host_rate').
-  <value>:  Dokˆadna warto˜†, pomi©dzy 24.000 oraz 1000.000 (Hz).
+  <value>:  DokÅ‚adna wartoÅ›Ä‡, pomiÄ™dzy 24.000 oraz 1000.000 (Hz).
 .
 :CONFIG_VESA_MODES
-Dost©pne tryby graficzne VESA 1.2 oraz 2.0:
-  compatible  Zestaw tryb¢w dobranych dla jak najlepszej kompatybilno˜ci;
-              zalecane, razem z 4 lub 8 megabajt¢w pami©ci graficznej.
-  halfline    Obsˆuguje tryby niskiej rozdzielczo˜ci VESA 2.0 wymagane przez
-              gr© Extreme Assault. U¾ywa† tylko w razie potrzeby, jest to
+DostÄ™pne tryby graficzne VESA 1.2 oraz 2.0:
+  compatible  Zestaw trybÃ³w dobranych dla jak najlepszej kompatybilnoÅ›ci;
+              zalecane, razem z 4 lub 8 megabajtÃ³w pamiÄ™ci graficznej.
+  halfline    ObsÅ‚uguje tryby niskiej rozdzielczoÅ›ci VESA 2.0 wymagane przez
+              grÄ™ Extreme Assault. UÅ¼ywaÄ‡ tylko w razie potrzeby, jest to
               niekompatybilne z chipem S3.
-  all         Wszystkie tryby dost©pne dla danej wielko˜ci pami©ci graficznej.
-              Niekt¢re gry mog¥ jednak niewˆa˜ciwie je obsˆugiwa† (migotanie),
-              albo mog¥ wymaga† do ich obsˆugi wi©cej pami©ci.
+  all         Wszystkie tryby dostÄ™pne dla danej wielkoÅ›ci pamiÄ™ci graficznej.
+              NiektÃ³re gry mogÄ… jednak niewÅ‚aÅ›ciwie je obsÅ‚ugiwaÄ‡ (migotanie),
+              albo mogÄ… wymagaÄ‡ do ich obsÅ‚ugi wiÄ™cej pamiÄ™ci.
 .
 :CONFIG_SPEED_MODS
-Zezwala na zachowania emulatora, kt¢re polepszaj¥ wydajno˜†. Na chwil© obecn¥
-nie s¥ znane ¾adne gry, kt¢re nie dziaˆaj¥ z tym ustawieniem. Je˜li na tak¥
-natrafisz, zgˆo˜ bˆ¥d zespoˆowi projektowemu.
+Zezwala na zachowania emulatora, ktÃ³re polepszajÄ… wydajnoÅ›Ä‡. Na chwilÄ™ obecnÄ…
+nie sÄ… znane Å¼adne gry, ktÃ³re nie dziaÅ‚ajÄ… z tym ustawieniem. JeÅ›li na takÄ…
+natrafisz, zgÅ‚oÅ› bÅ‚Ä…d zespoÅ‚owi projektowemu.
 .
 :CONFIG_AUTOEXEC_SECTION
-Spos¢b traktowania sekcji [autoexec] z kilku plik¢w konfiguracyjnych:
-  join:       ˆ¥czy w jedn¥ sekcj© [autoexec] (stare zachowanie).
+SposÃ³b traktowania sekcji [autoexec] z kilku plikÃ³w konfiguracyjnych:
+  join:       Å‚Ä…czy w jednÄ… sekcjÄ™ [autoexec] (stare zachowanie).
   overwrite:  uzywa tylko ostatniej napotkanej sekcji.
 .
 :CONFIG_AUTOMOUNT
-Podczas startu montuje katalog 'drives/[c]' jako dysk, gdzie [c] jest nazw¥
-dysku podan¥ jako maˆa litera od a do y. Katalog 'drives' powinien znajdowa†
-si© w aktualnym katalogu, w przeciwnym razie u¾ywany jest katalog z zasob¢w
-emulatora. Dodatkowe ustawienia mog¥ by† podane w formie pliku [c].conf,
-znajduj¥cego si© tam, gdzie montowany katalog, z zawarto˜ci¥ jak poni¾ej:
+Podczas startu montuje katalog 'drives/[c]' jako dysk, gdzie [c] jest nazwÄ…
+dysku podanÄ… jako maÅ‚a litera od a do y. Katalog 'drives' powinien znajdowaÄ‡
+siÄ™ w aktualnym katalogu, w przeciwnym razie uÅ¼ywany jest katalog z zasobÃ³w
+emulatora. Dodatkowe ustawienia mogÄ… byÄ‡ podane w formie pliku [c].conf,
+znajdujÄ…cego siÄ™ tam, gdzie montowany katalog, z zawartoÅ›ciÄ… jak poniÅ¼ej:
   [drive]
   type    = dir, overlay, floppy lub cdrom
   label   = etykieta_dysku
-  path    = ustawienia ˜cie¾ki wyszukiwania, np. path = %%path%%;c:\tools
+  path    = ustawienia Å›cieÅ¼ki wyszukiwania, np. path = %%path%%;c:\tools
   override_drive = nadpisanie litery dysku (domyslnie puste)
   verbose = true lub false
 .
 :CONFIG_STARTUP_VERBOSITY
-Rodzaj informacji wy˜wietlanych po uruchomieniu emulatora:
-  Warto˜†     | Powitanie | Wczesna konsola
+Rodzaj informacji wyÅ›wietlanych po uruchomieniu emulatora:
+  WartoÅ›Ä‡     | Powitanie | Wczesna konsola
   high        |    tak    |    tak
   low         |    nie    |    tak
   quiet       |    nie    |    nie
-  auto        | 'low' je˜li podano katalog lub plik wykonywalny,
+  auto        | 'low' jeÅ›li podano katalog lub plik wykonywalny,
               | 'high' w przeciwnym wypadku
 .
 :CONFIG_FRAMESKIP
-Ile ramek obrazu opu˜ci† przed narysowaniem kolejnej.
+Ile ramek obrazu opuÅ›ciÄ‡ przed narysowaniem kolejnej.
 .
 :CONFIG_ASPECT
-Skaluje obraz tak, ¾eby uzyska† proporcje 4:3, stosowan¥ w oryginalnych
-monitorach, dla kt¢rej napisano znacz¥c¥ wi©kszo˜† gier DOSowych.
-Dotyczy tylko tryb¢w graficznych z prostok¥tnymi pikselami (np. 320x200,
-640x400); nie ma wpˆywu na tryby graficzne z kwadratowymi pikselami
+Skaluje obraz tak, Å¼eby uzyskaÄ‡ proporcje 4:3, stosowanÄ… w oryginalnych
+monitorach, dla ktÃ³rej napisano znaczÄ…cÄ… wiÄ™kszoÅ›Ä‡ gier DOSowych.
+Dotyczy tylko trybÃ³w graficznych z prostokÄ…tnymi pikselami (np. 320x200,
+640x400); nie ma wpÅ‚ywu na tryby graficzne z kwadratowymi pikselami
 (np. 640x480, 800x600).
 .
 :CONFIG_MONOCHROME_PALETTE
-Domy˜lna barwa obrazu monochromatycznego. Dziaˆa tylko z systemami 'hercules'
-oraz 'cga_mono'. Mo¾esz zmienia† barw© klawiszem F11.
+DomyÅ›lna barwa obrazu monochromatycznego. DziaÅ‚a tylko z systemami 'hercules'
+oraz 'cga_mono'. MoÅ¼esz zmieniaÄ‡ barwÄ™ klawiszem F11.
 .
 :CONFIG_CGA_COLORS
 Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
-  default:       Paleta CGA emulowanej przez kart© VGA (domy˜lne).
-  tandy [BL]:    Wyidealizowany monitor Tandy, z regulowanym poziomem br¥zu
-                 (0 - czerwony, 50 - br¥zowy (domy˜lne) , 100 - ciemno¾¢ˆty).
+  default:       Paleta CGA emulowanej przez kartÄ™ VGA (domyÅ›lne).
+  tandy [BL]:    Wyidealizowany monitor Tandy, z regulowanym poziomem brÄ…zu
+                 (0 - czerwony, 50 - brÄ…zowy (domyÅ›lne) , 100 - ciemnoÅ¼Ã³Å‚ty).
   tandy-warm:    Rzeczywiste barwy monitora Tandy.
-  ibm5153 [C]:   Rzeczywiste barwy monitora IBM 5153, z regulacj¥ kontrastu,
-                 kt¢ra przyciemnia jedynie kolory inne do jasnych
-                 (od 0 do 100; domy˜lnie 100).
+  ibm5153 [C]:   Rzeczywiste barwy monitora IBM 5153, z regulacjÄ… kontrastu,
+                 ktÃ³ra przyciemnia jedynie kolory inne do jasnych
+                 (od 0 do 100; domyÅ›lnie 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Palety barw u¾ywane przez porty gier Sierra AGI na komputery
-                 Amiga; wi©cej informacji (po angielsku) w instrukcji.
-  agi-amigaish:  Mix barw EGA i kolor¢w komputera Amiga, u¾ywany przez
+                 Palety barw uÅ¼ywane przez porty gier Sierra AGI na komputery
+                 Amiga; wiÄ™cej informacji (po angielsku) w instrukcji.
+  agi-amigaish:  Mix barw EGA i kolorÃ³w komputera Amiga, uÅ¼ywany przez
                  interpreter Sarien AGI.
-  scumm-amiga:   Paleta u¾ywana przez porty gier LucasArts EGA na
+  scumm-amiga:   Paleta uÅ¼ywana przez porty gier LucasArts EGA na
                  komputery Amiga.
-  colodore:      Zainspirowane przez komputer Commodore 64 i palet© Colodore.
-  colodore-sat:  Paleta Colodore z nasyceniem wi©kszym o 20%.
-  dga16:         Nowoczesne podej˜cie do palety CGA, ze stonowanym kontrastem.
-Mo¾na r¢wnie¾ poda† wˆasny zestaw kolor¢w, jako 16 rozdzielonych spacjami
-szesnastkowych kod¢w, po 6 bit¢w na kolor. Przykˆad: czarny to 000000,
-biaˆy to 3f3f3f, peˆna czerwieä to 3f0000. Mo¾na te¾ poda† kolory w postaci
-dziesi©tnej, np. (255, 0, 255) to magenta.
+  colodore:      Zainspirowane przez komputer Commodore 64 i paletÄ™ Colodore.
+  colodore-sat:  Paleta Colodore z nasyceniem wiÄ™kszym o 20%.
+  dga16:         Nowoczesne podejÅ›cie do palety CGA, ze stonowanym kontrastem.
+MoÅ¼na rÃ³wnieÅ¼ podaÄ‡ wÅ‚asny zestaw kolorÃ³w, jako 16 rozdzielonych spacjami
+szesnastkowych kodÃ³w, po 6 bitÃ³w na kolor. PrzykÅ‚ad: czarny to 000000,
+biaÅ‚y to 3f3f3f, peÅ‚na czerwieÅ„ to 3f0000. MoÅ¼na teÅ¼ podaÄ‡ kolory w postaci
+dziesiÄ™tnej, np. (255, 0, 255) to magenta.
 .
 :CONFIG_SCALER
-Skaler do powi©kszania obrazu o niskiej rozdzielczo˜ci. Dodanie 'forced'
-spowoduje u¾ycie skalera nawet wtedy, kiedy rezultaty mog¥ by†
-niezadowalaj¥ce.
-Niekt¢re skalery mog¥ u¾y† obszaru czarnej ramki wok¢ˆ obrazu. Je˜li jest to
-niepo¾¥dane, u¾yj innego skalera lub wˆ¥cz opcj© 'fullresolution'.
+Skaler do powiÄ™kszania obrazu o niskiej rozdzielczoÅ›ci. Dodanie 'forced'
+spowoduje uÅ¼ycie skalera nawet wtedy, kiedy rezultaty mogÄ… byÄ‡
+niezadowalajÄ…ce.
+NiektÃ³re skalery mogÄ… uÅ¼yÄ‡ obszaru czarnej ramki wokÃ³Å‚ obrazu. JeÅ›li jest to
+niepoÅ¼Ä…dane, uÅ¼yj innego skalera lub wÅ‚Ä…cz opcjÄ™ 'fullresolution'.
 .
 :CONFIG_GLSHADER
-Albo 'none', albo nazwa shadera GLSL. Dziaˆa tylko z wyj˜ciem OpenGL. Mo¾na
-poda† ˜cie¾k© bezwzgl©dn¥, nazw© pliku w podkatalogu 'shaders' katalogu z
-konfiguracj¥ lub nazw© jednego z wbudowanych shader¢w:
+Albo 'none', albo nazwa shadera GLSL. DziaÅ‚a tylko z wyjÅ›ciem OpenGL. MoÅ¼na
+podaÄ‡ Å›cieÅ¼kÄ™ bezwzglÄ™dnÄ…, nazwÄ™ pliku w podkatalogu 'shaders' katalogu z
+konfiguracjÄ… lub nazwÄ™ jednego z wbudowanych shaderÃ³w:
   advinterp2x, advinterp3x, advmame2x, advmame3x,
   crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-  scan2x, scan3x, tv2x, tv3x, sharp (domy˜lny).
+  scan2x, scan3x, tv2x, tv3x, sharp (domyÅ›lny).
 .
 :CONFIG_COMPOSITE
-Wˆ¥czenie trybu sygnaˆu 'composite'. Porada: dopasuj ustawienia poni¾ej przy
-pomocy skr¢t¢w klawiszowych, nast©pnie odczytaj ustawienia z konsoli tekstowej
+WÅ‚Ä…czenie trybu sygnaÅ‚u 'composite'. Porada: dopasuj ustawienia poniÅ¼ej przy
+pomocy skrÃ³tÃ³w klawiszowych, nastÄ™pnie odczytaj ustawienia z konsoli tekstowej
 i wpisz je do pliku konfiguracyjnego.
 .
 :CONFIG_ERA
-Epoka sygnaˆu 'composite'. Warto˜† 'auto' wybiera 'new' dla PCjr, a 'old' dla
+Epoka sygnaÅ‚u 'composite'. WartoÅ›Ä‡ 'auto' wybiera 'new' dla PCjr, a 'old' dla
 CGA oraz Tandy.
 .
 :CONFIG_HUE
-Odcieä. Pozwala na wyregulowanie obrazu tak, ¾eby np. niebo byˆo niebieskie.
+OdcieÅ„. Pozwala na wyregulowanie obrazu tak, Å¼eby np. niebo byÅ‚o niebieskie.
 .
 :CONFIG_SATURATION
-Nasycenie kolor¢w, od wyblakˆych po ¾ywe.
+Nasycenie kolorÃ³w, od wyblakÅ‚ych po Å¼ywe.
 .
 :CONFIG_CONTRAST
-Kontrast pomi©dzy jasnym a ciemnym obszarem obrazu.
+Kontrast pomiÄ™dzy jasnym a ciemnym obszarem obrazu.
 .
 :CONFIG_BRIGHTNESS
-Jasno˜† obrazu, od ciemnej do jasnej.
+JasnoÅ›Ä‡ obrazu, od ciemnej do jasnej.
 .
 :CONFIG_CONVERGENCE
-Zbie¾no˜† subpikseli, od obrazu rozmytego po ostry (tylko dla maszyn 'cga'
+ZbieÅ¼noÅ›Ä‡ subpikseli, od obrazu rozmytego po ostry (tylko dla maszyn 'cga'
 oraz 'tandy').
 .
 :CONFIG_CORE
-Rodzaj emulatora procesora. Warto˜† 'auto' przeˆ¥cza na 'dynamic' (dynamiczn¥
-rekompilacj©) je˜li tylko jest dost©pna i mo¾liwa do u¾ycia.
+Rodzaj emulatora procesora. WartoÅ›Ä‡ 'auto' przeÅ‚Ä…cza na 'dynamic' (dynamicznÄ…
+rekompilacjÄ™) jeÅ›li tylko jest dostÄ™pna i moÅ¼liwa do uÅ¼ycia.
 .
 :CONFIG_CPUTYPE
-Typ emulowanego procesora. Warto˜† 'auto' wybiera ten model, kt¢ry da si©
-emulowa† najszybciej.
+Typ emulowanego procesora. WartoÅ›Ä‡ 'auto' wybiera ten model, ktÃ³ry da siÄ™
+emulowaÄ‡ najszybciej.
 .
 :CONFIG_CYCLES
-Ilo˜† instrukcji, kt¢r¥ DOSBox b©dzie pr¢bowaˆ emulowa† ka¾dej milisekundy.
-Zbyt du¾a warto˜† powoduje rwanie d«wi©ku i op¢«nienia (lagi).
-  auto           Pr¢buje odgadn¥†, czego gra potrzebuje. Zazwyczaj dziaˆa.
-  fixed #number  Staˆa liczba. Zazwyczaj jest potrzebne, kiedy ustawienie
-                 'auto' zawiedzie. Przykˆad: 'fixed 4000'.
-  max            Emuluje tyle instrukcji, na ile pozwala wydajno˜† komputera.
+IloÅ›Ä‡ instrukcji, ktÃ³rÄ… DOSBox bÄ™dzie prÃ³bowaÅ‚ emulowaÄ‡ kaÅ¼dej milisekundy.
+Zbyt duÅ¼a wartoÅ›Ä‡ powoduje rwanie dÅºwiÄ™ku i opÃ³Åºnienia (lagi).
+  auto           PrÃ³buje odgadnÄ…Ä‡, czego gra potrzebuje. Zazwyczaj dziaÅ‚a.
+  fixed #number  StaÅ‚a liczba. Zazwyczaj jest potrzebne, kiedy ustawienie
+                 'auto' zawiedzie. PrzykÅ‚ad: 'fixed 4000'.
+  max            Emuluje tyle instrukcji, na ile pozwala wydajnoÅ›Ä‡ komputera.
 .
 :CONFIG_CYCLEUP
-Ilo˜† cykli na milisekund©, kt¢ra zostanie dodana po naci˜ni©ciu skr¢tu
+IloÅ›Ä‡ cykli na milisekundÄ™, ktÃ³ra zostanie dodana po naciÅ›niÄ™ciu skrÃ³tu
 klawiszowego.
-Ustawienie mniejsze ni¾ 100 jest traktowane jak warto˜† procentowa.
-Skr¢ty klawiszowe mo¾na wy˜wietli† poleceniem 'intro'.
+Ustawienie mniejsze niÅ¼ 100 jest traktowane jak wartoÅ›Ä‡ procentowa.
+SkrÃ³ty klawiszowe moÅ¼na wyÅ›wietliÄ‡ poleceniem 'intro'.
 .
 :CONFIG_CYCLEDOWN
-Ilo˜† cykli na milisekund©, kt¢ra zostanie odj©ta po naci˜ni©ciu skr¢tu
+IloÅ›Ä‡ cykli na milisekundÄ™, ktÃ³ra zostanie odjÄ™ta po naciÅ›niÄ™ciu skrÃ³tu
 klawiszowego.
 .
 :CONFIG_NOSOUND
-Wˆ¥czenie trybu cichego; d«wi©k jest emulowany, ale caˆkowicie wyciszony.
+WÅ‚Ä…czenie trybu cichego; dÅºwiÄ™k jest emulowany, ale caÅ‚kowicie wyciszony.
 .
 :CONFIG_RATE
-Cz©stotliwo˜† pr¢bkowania miksera d«wi©ku.
+CzÄ™stotliwoÅ›Ä‡ prÃ³bkowania miksera dÅºwiÄ™ku.
 .
 :CONFIG_BLOCKSIZE
-Rozmiar bloku miksera. Wieksze warto˜ci mog¥ pom¢c na problem przycinania
-d«wi©ku, ale zwi©kszaj¥ op¢«nienie (lag).
+Rozmiar bloku miksera. Wieksze wartoÅ›ci mogÄ… pomÃ³c na problem przycinania
+dÅºwiÄ™ku, ale zwiÄ™kszajÄ… opÃ³Åºnienie (lag).
 .
 :CONFIG_PREBUFFER
-Ile milisekund d«wi©ku wyrenderowa† ponad 'blocksize'. Wi©ksze warto˜ci mog¥
-pom¢c na problem przycinania d«wi©ku, ale zwi©kszaj¥ op¢«nienie (lag).
+Ile milisekund dÅºwiÄ™ku wyrenderowaÄ‡ ponad 'blocksize'. WiÄ™ksze wartoÅ›ci mogÄ…
+pomÃ³c na problem przycinania dÅºwiÄ™ku, ale zwiÄ™kszajÄ… opÃ³Åºnienie (lag).
 .
 :CONFIG_NEGOTIATE
-Negocjacja potencjalnie lepszych ustawieä cz©stotliwo˜ci i rozmiaru bloku
-ze sterownikiem d«wi©ku.
+Negocjacja potencjalnie lepszych ustawieÅ„ czÄ™stotliwoÅ›ci i rozmiaru bloku
+ze sterownikiem dÅºwiÄ™ku.
 .
 :CONFIG_COMPRESSOR
-Wˆ¥czenie automatycznego kompresora dynamiki, kt¢ry zapobiega przesterowaniu
-d«wi©ku:
-  off:  Wyˆ¥czenie kompresora.
-  on:   Wˆ¥czenie kompresora (domy˜lne).
+WÅ‚Ä…czenie automatycznego kompresora dynamiki, ktÃ³ry zapobiega przesterowaniu
+dÅºwiÄ™ku:
+  off:  WyÅ‚Ä…czenie kompresora.
+  on:   WÅ‚Ä…czenie kompresora (domyÅ›lne).
 .
 :CONFIG_CROSSFEED
-Wˆ¥czenie (globalnie) efektu przenikania kanaˆ¢w stereo, odpowiednie
-dla u¾ywaj¥cych sˆuchawek:
-  off:         Bez efektu (domy˜lne).
-  on:          Wˆ¥czenie przenikania na poziomie 40.
-  <strength>:  Ustawienie siˆy efektu od 0 (wyˆ¥czone) do 100 (d«wi©k mono).
-Poleceniem DOSu 'mixer' mo¾na zmieni† ustawienie dla poszczeg¢lnych kanaˆ¢w.
+WÅ‚Ä…czenie (globalnie) efektu przenikania kanaÅ‚Ã³w stereo, odpowiednie
+dla uÅ¼ywajÄ…cych sÅ‚uchawek:
+  off:         Bez efektu (domyÅ›lne).
+  on:          WÅ‚Ä…czenie przenikania na poziomie 40.
+  <strength>:  Ustawienie siÅ‚y efektu od 0 (wyÅ‚Ä…czone) do 100 (dÅºwiÄ™k mono).
+Poleceniem DOSu 'mixer' moÅ¼na zmieniÄ‡ ustawienie dla poszczegÃ³lnych kanaÅ‚Ã³w.
 .
 :CONFIG_REVERB
-Wˆ¥czenie (globalnie) efektu 'reverb', dodaje d«wi©kowi wra¾enia przestrzeni:
-  off:     Bez efektu (domy˜lne).
-  on:      Efekt wˆ¥czony, ustawienie 'medium'.
-  tiny:    Odpowiada zintegrowanemu gˆo˜nikowi w niewielkim pokoju, ustawienie
-           dla urz¥dzeä typu PC Speaker, Tandy, PS/1, czy LPT DAC.
-  small:   Subtelne wra¾enie przestrzeni, odpowiednie do gier u¾ywaj¥cych
-           pojedynczego kanaˆu d«wi©ku syntetyzowanego (zazwyczaj OPL) zar¢wno
-           do muzyki, jak i efekt¢w d«wi©kowych.
-  medium:  Wra¾enie ˜redniego pokoju, odpowiednie dla wielu r¢¾nych gier.
-  large:   Wra¾enie du¾ej hali, zalecane do gier u¾ywaj¥cych oddzielnych
-           kanaˆ¢w dla muzyki i efekt¢w d«wi©kowych.
-  huge:    Mocniejszy wariant du¾ej hali, odpowiedni do gier z atmosferyczn¥
-           ˜cie¾k¥ d«wi©kow¥.
-Poleceniem DOSu 'mixer' mo¾na zmieni† ustawienie dla poszczeg¢lnych kanaˆ¢w.
+WÅ‚Ä…czenie (globalnie) efektu 'reverb', dodaje dÅºwiÄ™kowi wraÅ¼enia przestrzeni:
+  off:     Bez efektu (domyÅ›lne).
+  on:      Efekt wÅ‚Ä…czony, ustawienie 'medium'.
+  tiny:    Odpowiada zintegrowanemu gÅ‚oÅ›nikowi w niewielkim pokoju, ustawienie
+           dla urzÄ…dzeÅ„ typu PC Speaker, Tandy, PS/1, czy LPT DAC.
+  small:   Subtelne wraÅ¼enie przestrzeni, odpowiednie do gier uÅ¼ywajÄ…cych
+           pojedynczego kanaÅ‚u dÅºwiÄ™ku syntetyzowanego (zazwyczaj OPL) zarÃ³wno
+           do muzyki, jak i efektÃ³w dÅºwiÄ™kowych.
+  medium:  WraÅ¼enie Å›redniego pokoju, odpowiednie dla wielu rÃ³Å¼nych gier.
+  large:   WraÅ¼enie duÅ¼ej hali, zalecane do gier uÅ¼ywajÄ…cych oddzielnych
+           kanaÅ‚Ã³w dla muzyki i efektÃ³w dÅºwiÄ™kowych.
+  huge:    Mocniejszy wariant duÅ¼ej hali, odpowiedni do gier z atmosferycznÄ…
+           Å›cieÅ¼kÄ… dÅºwiÄ™kowÄ….
+Poleceniem DOSu 'mixer' moÅ¼na zmieniÄ‡ ustawienie dla poszczegÃ³lnych kanaÅ‚Ã³w.
 .
 :CONFIG_CHORUS
-Wˆ¥czenie (globalnie) efektu 'chorus', daj¥cego bardziej poruszaj¥cy d«wi©k:
-  off:     Bez efektu (domy˜lne).
-  on:      Efekt wˆ¥czony, ustawienie 'normal'.
-  light:   Niewielki efekt, odpowiedni dla muzyki syntetyzowanej z du¾¥
-           ilo˜ci¥ biaˆego szumu.
-  normal:  Normalny efekt, odpowiedni dla wielu r¢¾nych gier.
+WÅ‚Ä…czenie (globalnie) efektu 'chorus', dajÄ…cego bardziej poruszajÄ…cy dÅºwiÄ™k:
+  off:     Bez efektu (domyÅ›lne).
+  on:      Efekt wÅ‚Ä…czony, ustawienie 'normal'.
+  light:   Niewielki efekt, odpowiedni dla muzyki syntetyzowanej z duÅ¼Ä…
+           iloÅ›ciÄ… biaÅ‚ego szumu.
+  normal:  Normalny efekt, odpowiedni dla wielu rÃ³Å¼nych gier.
   strong:  Silny efekt.
-Poleceniem DOSu 'mixer' mo¾na zmieni† ustawienie dla poszczeg¢lnych kanaˆ¢w.
+Poleceniem DOSu 'mixer' moÅ¼na zmieniÄ‡ ustawienie dla poszczegÃ³lnych kanaÅ‚Ã³w.
 .
 :CONFIG_MIDIDEVICE
-Urz¥dzenie, kt¢re otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
+UrzÄ…dzenie, ktÃ³re otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
   fluidsynth:  Wbudowany syntetyzer, patrz sekcja [fluidsynth].
   mt32:        Emulacja syntetyzatora Roland MT-32, ptrz sekcja [mt32].
-  auto:        Pierwszy dziaˆaj¥cy zewn©trzny syntetyzator; mo¾e to by†
-               synteza programowa lub fizyczne urz¥dzenie.
+  auto:        Pierwszy dziaÅ‚ajÄ…cy zewnÄ™trzny syntetyzator; moÅ¼e to byÄ‡
+               synteza programowa lub fizyczne urzÄ…dzenie.
 .
 :CONFIG_MIDICONFIG
 Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
-syntetyzatora - mo¾na je sprawdzi† poleceniem DOSu 'mixer /listmidi'.
-- Opcja nie ma znaczenia, je˜li u¾yty zostaˆ wbudowany syntetyzator MIDI
+syntetyzatora - moÅ¼na je sprawdziÄ‡ poleceniem DOSu 'mixer /listmidi'.
+- Opcja nie ma znaczenia, jeÅ›li uÅ¼yty zostaÅ‚ wbudowany syntetyzator MIDI
   (mididevice = fluidsynth lub mt32).
-- Dla systemu Linux i podsystemu d«wi©kowego ALSA, wy˜wietl list© port¢w MIDI
+- Dla systemu Linux i podsystemu dÅºwiÄ™kowego ALSA, wyÅ›wietl listÄ™ portÃ³w MIDI
   poleceniem 'aconnect -l' i wpisz wybrany, np. 'midiconfig=14:0' dla klienta
   numer 14 i portu 0.
-- Fizyczny Roland MT-32 w pˆyt¥ gˆ¢wn¥ w wersji 0 mo¾e potrzebowa† op¢«nienia,
-  inaczej przepeˆni si© jego wewn©trzny bufor. W takim wypadku dodaj parametr
+- Fizyczny Roland MT-32 w pÅ‚ytÄ… gÅ‚Ã³wnÄ… w wersji 0 moÅ¼e potrzebowaÄ‡ opÃ³Åºnienia,
+  inaczej przepeÅ‚ni siÄ™ jego wewnÄ™trzny bufor. W takim wypadku dodaj parametr
   'delaysysex', np.: 'midiconfig=2 delaysysex'.
-Wi©cej informacji (po angielsku) znajdziesz w pliku README/Manual.
+WiÄ™cej informacji (po angielsku) znajdziesz w pliku README/Manual.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401.
 .
 :CONFIG_SOUNDFONT
-—cie¾ka do pliku SoundFont w formacie SF2. Mo¾e by† wzgl©dna lub bezwzgl©dna,
-mo¾na te¾ poda† nazw© pliku z podkatalogu 'soundfonts' katalogu z
-konfiguracj¥.
-Uwaga: opcjonalny parametr reguluj¥cy gˆo˜no˜† jest przestarzaˆy; gˆo˜no˜†
-nale¾y zmienia† odpowiednim poleceniem, np.:
+ÅšcieÅ¼ka do pliku SoundFont w formacie SF2. MoÅ¼e byÄ‡ wzglÄ™dna lub bezwzglÄ™dna,
+moÅ¼na teÅ¼ podaÄ‡ nazwÄ™ pliku z podkatalogu 'soundfonts' katalogu z
+konfiguracjÄ….
+Uwaga: opcjonalny parametr regulujÄ…cy gÅ‚oÅ›noÅ›Ä‡ jest przestarzaÅ‚y; gÅ‚oÅ›noÅ›Ä‡
+naleÅ¼y zmieniaÄ‡ odpowiednim poleceniem, np.:
   MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
-Efekt 'chorus': auto', 'on', 'off' lub ustawienia u¾ytkownika.
-Ustawienia u¾ytkownika wymagaj¥ podania wszystkich 5 parametr¢w,
-oddzielonych spacjami, zachowuj¥c kolejno˜†. S¥ to:
+Efekt 'chorus': auto', 'on', 'off' lub ustawienia uÅ¼ytkownika.
+Ustawienia uÅ¼ytkownika wymagajÄ… podania wszystkich 5 parametrÃ³w,
+oddzielonych spacjami, zachowujÄ…c kolejnoÅ›Ä‡. SÄ… to:
 voice-count level speed depth modulation-wave, gdzie:
-  voice-count:      warto˜† caˆkowita od 0 do 99.
-  level:            warto˜† dziesi©tna, od 0.0 do 10.0.
-  speed:            warto˜† dziesi©tna, od 0.1 do 5.0, warto˜† w Hz.
-  depth:            warto˜† dziesi©tna, od 0.0 do 21.0.
+  voice-count:      wartoÅ›Ä‡ caÅ‚kowita od 0 do 99.
+  level:            wartoÅ›Ä‡ dziesiÄ™tna, od 0.0 do 10.0.
+  speed:            wartoÅ›Ä‡ dziesiÄ™tna, od 0.1 do 5.0, wartoÅ›Ä‡ w Hz.
+  depth:            wartoÅ›Ä‡ dziesiÄ™tna, od 0.0 do 21.0.
   modulation-wave:  'sine' lub 'triangle'.
-  Przykˆad: chorus = 3 1.2 0.3 8.0 sine
-Uwaga: Mo¾na wyˆ¥czy† efekt 'chorus' z syntetyzatora FluidSynth i
-w zamian wˆ¥czy† efekt w mikserze lub pozwoli† obydwu dziaˆa†
-jednocze˜nie. Czy b©dzie to brzmiaˆo dobrze, zale¾y od plik¢w
-SoundFont i ustawieä efektu 'chorus'.
+  PrzykÅ‚ad: chorus = 3 1.2 0.3 8.0 sine
+Uwaga: MoÅ¼na wyÅ‚Ä…czyÄ‡ efekt 'chorus' z syntetyzatora FluidSynth i
+w zamian wÅ‚Ä…czyÄ‡ efekt w mikserze lub pozwoliÄ‡ obydwu dziaÅ‚aÄ‡
+jednoczeÅ›nie. Czy bÄ™dzie to brzmiaÅ‚o dobrze, zaleÅ¼y od plikÃ³w
+SoundFont i ustawieÅ„ efektu 'chorus'.
 .
 :CONFIG_FSYNTH_REVERB
-Efekt 'reverb': auto', 'on', 'off' lub ustawienia u¾ytkownika.
-Ustawienia u¾ytkownika wymagaj¥ podania wszystkich 4 parametr¢w,
-oddzielonych spacjami, zachowuj¥c kolejno˜†. S¥ to:
+Efekt 'reverb': auto', 'on', 'off' lub ustawienia uÅ¼ytkownika.
+Ustawienia uÅ¼ytkownika wymagajÄ… podania wszystkich 4 parametrÃ³w,
+oddzielonych spacjami, zachowujÄ…c kolejnoÅ›Ä‡. SÄ… to:
 room-size damping width level, gdzie:
-  room-size:  warto˜† dziesi©tna od 0.0 do 1.0
-  damping:    warto˜† dziesi©tna od 0.0 do 1.0
-  width:      warto˜† dziesi©tna od 0.0 do 100.0
-  level:      warto˜† dziesi©tna od 0.0 do 1.0
-  Przykˆad: reverb = 0.61 0.23 0.76 0.56
-Uwaga: Mo¾na wyˆ¥czy† efekt 'reverb' z syntetyzatora FluidSynth i
-w zamian wˆ¥czy† efekt w mikserze lub pozwoli† obydwu dziaˆa†
-jednocze˜nie. Czy b©dzie to brzmiaˆo dobrze, zale¾y od plik¢w
-SoundFont i ustawieä efektu 'reverb'.
+  room-size:  wartoÅ›Ä‡ dziesiÄ™tna od 0.0 do 1.0
+  damping:    wartoÅ›Ä‡ dziesiÄ™tna od 0.0 do 1.0
+  width:      wartoÅ›Ä‡ dziesiÄ™tna od 0.0 do 100.0
+  level:      wartoÅ›Ä‡ dziesiÄ™tna od 0.0 do 1.0
+  PrzykÅ‚ad: reverb = 0.61 0.23 0.76 0.56
+Uwaga: MoÅ¼na wyÅ‚Ä…czyÄ‡ efekt 'reverb' z syntetyzatora FluidSynth i
+w zamian wÅ‚Ä…czyÄ‡ efekt w mikserze lub pozwoliÄ‡ obydwu dziaÅ‚aÄ‡
+jednoczeÅ›nie. Czy bÄ™dzie to brzmiaÅ‚o dobrze, zaleÅ¼y od plikÃ³w
+SoundFont i ustawieÅ„ efektu 'reverb'.
 .
 :CONFIG_FSYNTH_FILTER
-Filtrowanie d«wi©ku syntetyzera FluidSynth:
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku syntetyzera FluidSynth:
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_MODEL
 Model emulowanego syntetyzatora MIDI:
-  auto:  pierwszy model z dost©pnymi ROMami, w kolejno˜ci jak poni¾ej.
+  auto:  pierwszy model z dostÄ™pnymi ROMami, w kolejnoÅ›ci jak poniÅ¼ej.
   cm32l, mt32:         pierwszy model danego typu.
   mt32_old, mt32_new:  wersje (odpowiednio) 1.07 oraz 2.04.
 .
 :CONFIG_ROMDIR
-Katalog zawieraj¥cy ROMy syntetyzatora MT32. —cie¾ka mo¾e by† wzgl©dna lub
-bezwzgl©dna. Pusta warto˜† spowoduje sprawdzenie podkatalogu 'mt32-roms' z
-katalogu z konfiguracj¥ i innych typowych lokacji w danym systemie.
-Obrazy ROM¢w mog¥ zawiera†:
+Katalog zawierajÄ…cy ROMy syntetyzatora MT32. ÅšcieÅ¼ka moÅ¼e byÄ‡ wzglÄ™dna lub
+bezwzglÄ™dna. Pusta wartoÅ›Ä‡ spowoduje sprawdzenie podkatalogu 'mt32-roms' z
+katalogu z konfiguracjÄ… i innych typowych lokacji w danym systemie.
+Obrazy ROMÃ³w mogÄ… zawieraÄ‡:
   - MT32_CONTROL.ROM oraz MT32_PCM.ROM, dla modelu 'mt32'.
   - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
   - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
 .
 :CONFIG_MT32_FILTER
-Filtrowanie d«wi©ku syntetyzera Roland MT-32/CM-32L:
-  off:       Filtrowanie wyˆ¥czone (domy˜lne).
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku syntetyzera Roland MT-32/CM-32L:
+  off:       Filtrowanie wyÅ‚Ä…czone (domyÅ›lne).
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :MT32_NO_SUPPORTED_MODELS
-½aden obsˆugiwany model nie jest obecny.
+Å»aden obsÅ‚ugiwany model nie jest obecny.
 .
 :MT32_ROM_NOT_LOADED
-ROM nie zostaˆ zaˆadowany
+ROM nie zostaÅ‚ zaÅ‚adowany
 .
 :MT32_INVENTORY_TABLE_MISSING_LETTER
 -
@@ -467,7 +467,7 @@ ROM nie zostaˆ zaˆadowany
 Aktywny ROM  : 
 .
 :MT32_SOURCE_DIR_LABEL
-Zaˆadowano z : 
+ZaÅ‚adowano z : 
 .
 :CONFIG_SBTYPE
 Model karty muzycznej Sound Blaster, 'gb' oznacza Game Blaster.
@@ -479,67 +479,67 @@ Adres bazowy (I/O) karty muzycznej Sound Blaster.
 Numer przerwania (IRQ) karty muzycznej Sound Blaster.
 .
 :CONFIG_DMA
-Numer kanaˆu DMA karty muzycznej Sound Blaster.
+Numer kanaÅ‚u DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_HDMA
-Numer kanaˆu High DMA karty muzycznej Sound Blaster.
+Numer kanaÅ‚u High DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_SBMIXER
-Zezwolenie mikserowi karty Sound Blaster na zmian© ustawieä miksera DOSBoksa.
+Zezwolenie mikserowi karty Sound Blaster na zmianÄ™ ustawieÅ„ miksera DOSBoksa.
 .
 :CONFIG_SBWARMUP
-Czas wyciszenia pocz¥tkowych transfer¢w DMA, w milisekundach.
-Wycisza trzaski sˆyszalne podczas uruchamiania wielu gier. Zmniejsz warto˜†,
-je˜li zauwa¾ysz uci©ty pocz¥tek d«wi©ku.
+Czas wyciszenia poczÄ…tkowych transferÃ³w DMA, w milisekundach.
+Wycisza trzaski sÅ‚yszalne podczas uruchamiania wielu gier. Zmniejsz wartoÅ›Ä‡,
+jeÅ›li zauwaÅ¼ysz uciÄ™ty poczÄ…tek dÅºwiÄ™ku.
 .
 :CONFIG_OPLRATE
-Cz©stotliwo˜† d«wi©ku syntetyzowanego OPL jest obecnie taka sama, jak
-cz©stotliwo˜† miksowania, dzi©ki czemu nie jest potrzebny resampling.
+CzÄ™stotliwoÅ›Ä‡ dÅºwiÄ™ku syntetyzowanego OPL jest obecnie taka sama, jak
+czÄ™stotliwoÅ›Ä‡ miksowania, dziÄ™ki czemu nie jest potrzebny resampling.
 .
 :CONFIG_OPLMODE
-Typ emulowanego ukˆadu OPL. 'auto' wybiera typ w zale¾no˜ci od 'sbtype'.
-Wszystkie z wyj¥tkiem 'cms' s¥ kompatybilne z kartami muzycznymi AdLib.
+Typ emulowanego ukÅ‚adu OPL. 'auto' wybiera typ w zaleÅ¼noÅ›ci od 'sbtype'.
+Wszystkie z wyjÄ…tkiem 'cms' sÄ… kompatybilne z kartami muzycznymi AdLib.
 .
 :CONFIG_OPLEMU
-Jedynie emulacja 'nuked' jest aktualnie obsˆugiwana.
+Jedynie emulacja 'nuked' jest aktualnie obsÅ‚ugiwana.
 .
 :CONFIG_SB_FILTER
-Filtrowanie d«wi©ku digitalizowanego karty Sound Blaster:
+Filtrowanie dÅºwiÄ™ku digitalizowanego karty Sound Blaster:
   auto:      Filtrowania jak dla modelu podanego w 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
              Filtrowania odpowiednie dla podanego danego modelu.
-  modern:    Interpolacja liniowa, dziaˆaj¥ca jak filtr dolnoprzepustowy.
-             Jest to oryginalne zachowanie DOSBoksa (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
+  modern:    Interpolacja liniowa, dziaÅ‚ajÄ…ca jak filtr dolnoprzepustowy.
+             Jest to oryginalne zachowanie DOSBoksa (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
   <custom>:  Jeden lub dwa filtry podane w formacie:
                TYPE ORDER FREQ
-             Gdzie TYPE to 'hpf' (g¢rnoprzepustowy) lub 'lpf'
-             (dolnoprzepustowy), ORDER to siˆa filtra od 1 do 16
+             Gdzie TYPE to 'hpf' (gÃ³rnoprzepustowy) lub 'lpf'
+             (dolnoprzepustowy), ORDER to siÅ‚a filtra od 1 do 16
              (1 to 6dB/oct, 2 to  12dB/oct, itd.), a parametr
-             FREQ to cz©stotliwo˜† odci©cia w Hz. Przykˆady:
+             FREQ to czÄ™stotliwoÅ›Ä‡ odciÄ™cia w Hz. PrzykÅ‚ady:
                 lpf 2 12000
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Wymu˜ wˆ¥czone filtrowanie d«wi©ku karty Sound Blaster
-(uniemo¾liwia oprogramowaniu wyˆ¥czenie filtrowania).
+WymuÅ› wÅ‚Ä…czone filtrowanie dÅºwiÄ™ku karty Sound Blaster
+(uniemoÅ¼liwia oprogramowaniu wyÅ‚Ä…czenie filtrowania).
 .
 :CONFIG_OPL_FILTER
-Filtrowanie d«wi©ku syntetyzowanego OPL karty Sound Blaster:
-  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domy˜lne).
+Filtrowanie dÅºwiÄ™ku syntetyzowanego OPL karty Sound Blaster:
+  auto:      Filtrowania jak dla modelu podanego w 'sbtype' (domyÅ›lne).
   sb1, sb2, sbpro1, sbpro2, sb16:
              Filtrowania odpowiednie dla podanego danego modelu.
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_CMS_FILTER
-Filtrowanie d«wi©ku syntetyzowanego CMS karty Sound Blaster:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku syntetyzowanego CMS karty Sound Blaster:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
-Wˆ¥czenie emulacji karty muzycznej Gravis UltraSound.
+WÅ‚Ä…czenie emulacji karty muzycznej Gravis UltraSound.
 Enable Gravis UltraSound emulation.
 .
 :CONFIG_GUSBASE
@@ -549,193 +549,193 @@ Adres bazowy (I/O) karty muzycznej Gravis UltraSound.
 Numer przerwania (IRQ) karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-Numer kanaˆu DMA karty muzycznej Gravis UltraSound.
+Numer kanaÅ‚u DMA karty muzycznej Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-—cie¾ka do katalogu UltraSound. Powinien on zawiera† podkatalog MIDI
-z definicjami instrument¢w w formacie PAT. Zestawy instrument¢w dla programu
-Timidity powinny dziaˆa† poprawnie.
+ÅšcieÅ¼ka do katalogu UltraSound. Powinien on zawieraÄ‡ podkatalog MIDI
+z definicjami instrumentÃ³w w formacie PAT. Zestawy instrumentÃ³w dla programu
+Timidity powinny dziaÅ‚aÄ‡ poprawnie.
 .
 :CONFIG_GUS_FILTER
-Filtrowanie d«wi©ku karty Gravis UltraSound:
-  off:       Filtrowanie wyˆ¥czone (domy˜lne).
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku karty Gravis UltraSound:
+  off:       Filtrowanie wyÅ‚Ä…czone (domyÅ›lne).
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
-Model ukˆadu w karcie muzycznej Innovation SSI-2001:
+Model ukÅ‚adu w karcie muzycznej Innovation SSI-2001:
   auto:  Wybiera model 6581.
   6581:  Oryginalny ('stary SID'), znany z basowego, bogatego charakteru.
-  8580:  P¢«niejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacj¥.
+  8580:  PÃ³Åºniejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacjÄ….
           Naprawia problem 'DC bias' i jest mniej podatny na dystorsje.
-          Byˆ opcj¥ w reprodukcjach oryginalnej karty, np. DuoSID.
+          ByÅ‚ opcjÄ… w reprodukcjach oryginalnej karty, np. DuoSID.
   none:  Disables the card.
 .
 :CONFIG_SIDCLOCK
-Cz©stotliwo˜† zegara taktuj¥cego ukˆad SID, w reprodukcjach karty (np. DuoSID)
-byˆa wybierana jumperem.
+CzÄ™stotliwoÅ›Ä‡ zegara taktujÄ…cego ukÅ‚ad SID, w reprodukcjach karty (np. DuoSID)
+byÅ‚a wybierana jumperem.
   default:  0.895 MHz, jak w oryginalnej karcie SSI-2001.
   c64ntsc:  1.023 MHz, jak w komputerach NTSC firmy Commodore.
   c64pal:   0.985 MHz, jak w komputerach PAL firmy Commodore.
-  hardsid:  1.000 MHz, opcja dost©pna na karcie DuoSID.
+  hardsid:  1.000 MHz, opcja dostÄ™pna na karcie DuoSID.
 .
 :CONFIG_SIDPORT
 Adres bazowy (I/O) karty muzycznej Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-Filtry ukˆadu SID byˆy analogowe, ka¾dy egzemplarz brzmiaˆ nieco inaczej.
-Siˆa dziaˆania filtr¢w ukˆadu 6581, od 0 do 100.
+Filtry ukÅ‚adu SID byÅ‚y analogowe, kaÅ¼dy egzemplarz brzmiaÅ‚ nieco inaczej.
+SiÅ‚a dziaÅ‚ania filtrÃ³w ukÅ‚adu 6581, od 0 do 100.
 .
 :CONFIG_8580FILTER
-Siˆa dziaˆania filtr¢w ukˆadu 8500, od 0 do 100.
+SiÅ‚a dziaÅ‚ania filtrÃ³w ukÅ‚adu 8500, od 0 do 100.
 .
 :CONFIG_INNOVATION_FILTER
-Filtrowanie d«wi©ku karty Innovation SSI-2001:
-  off:       Filtrowanie wyˆ¥czone (domy˜lne).
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku karty Innovation SSI-2001:
+  off:       Filtrowanie wyÅ‚Ä…czone (domyÅ›lne).
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PCSPEAKER
-Spos¢b emulacji urz¥dzenia d«wi©kowego PC Speaker:
-  discrete: Za pomoc¥ krok¢w discrete steps (domy˜lne). Dziaˆa dobrze z grami
-            generuj¥cymi efekty typu RealSound.
-  impulse:  Za pomoc¥ funkcji interpoluj¥cej. Zalecany do gier generuj¥cych
-            fal© prostok¥tna, np. serii Commander Keen.
-            Dokˆadniejsze, ale zu¾ywa wi©cej mocy procesora.
-  none/off: Wyˆ¥cz emulacj©.
+SposÃ³b emulacji urzÄ…dzenia dÅºwiÄ™kowego PC Speaker:
+  discrete: Za pomocÄ… krokÃ³w discrete steps (domyÅ›lne). DziaÅ‚a dobrze z grami
+            generujÄ…cymi efekty typu RealSound.
+  impulse:  Za pomocÄ… funkcji interpolujÄ…cej. Zalecany do gier generujÄ…cych
+            falÄ™ prostokÄ…tna, np. serii Commander Keen.
+            DokÅ‚adniejsze, ale zuÅ¼ywa wiÄ™cej mocy procesora.
+  none/off: WyÅ‚Ä…cz emulacjÄ™.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filtrowanie d«wi©ku urz¥dzenia PC Speaker:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku urzÄ…dzenia PC Speaker:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_ZERO_OFFSET
 'DC offset' jest obecnie eliminowany globalnie.
 .
 :CONFIG_TANDY
-Wˆ¥czenie emulacji urz¥dzenia d«wi©kowego Tandy Sound System.
-Dla 'auto', emulacja dziaˆa tylko przy typie maszyny 'tandy'.
+WÅ‚Ä…czenie emulacji urzÄ…dzenia dÅºwiÄ™kowego Tandy Sound System.
+Dla 'auto', emulacja dziaÅ‚a tylko przy typie maszyny 'tandy'.
 .
 :CONFIG_TANDY_FILTER
-Filtrowanie d«wi©ku syntetyzowanego urz¥dzenia Tandy:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku syntetyzowanego urzÄ…dzenia Tandy:
+  on:   WÅ‚Ä…czone (domyÅ›lne).
+  off:  Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_TANDY_DAC_FILTER
-Filtrowanie d«wi©ku digitalizowanego urz¥dzenia PS/1:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku digitalizowanego urzÄ…dzenia PS/1:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_LPT_DAC
-Typ urz¥dzenia d«wi©kowego DAC podˆ¥czonego do portu r¢wnolegˆego (LPT):
+Typ urzÄ…dzenia dÅºwiÄ™kowego DAC podÅ‚Ä…czonego do portu rÃ³wnolegÅ‚ego (LPT):
   disney:    Disney Sound Source.
   covox:     Covox Speech Thing.
   ston1:     Stereo-on-1 DAC, w trybie stereo do 30 kHz.
-  none/off:  Brak urz¥dzenia LPT DAC (domy˜lne).
+  none/off:  Brak urzÄ…dzenia LPT DAC (domyÅ›lne).
 .
 :CONFIG_LPT_DAC_FILTER
-Filtrowanie d«wi©ku urz¥dzenia LPT DAC:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku urzÄ…dzenia LPT DAC:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_DISNEY
-½eby wˆ¥czy† Disney Sound Source u¾yj 'lpt_dac=disney'.
+Å»eby wÅ‚Ä…czyÄ‡ Disney Sound Source uÅ¼yj 'lpt_dac=disney'.
 .
 :CONFIG_PS1AUDIO
-Wˆ¥czenie emulacji urz¥dzenia d«wi©kowego IBM PS/1.
+WÅ‚Ä…czenie emulacji urzÄ…dzenia dÅºwiÄ™kowego IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
-Filtrowanie d«wi©ku syntetyzowanego urz¥dzenia PS/1:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku syntetyzowanego urzÄ…dzenia PS/1:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
-Filtrowanie d«wi©ku digitalizowanego urz¥dzenia PS/1:
-  on:        Wˆ¥czone (domy˜lne).
-  off:       Filtrowanie wyˆ¥czone.
-  <custom>:  Ustawienia u¾ytkownika, patrz 'sb_filter'.
+Filtrowanie dÅºwiÄ™ku digitalizowanego urzÄ…dzenia PS/1:
+  on:        WÅ‚Ä…czone (domyÅ›lne).
+  off:       Filtrowanie wyÅ‚Ä…czone.
+  <custom>:  Ustawienia uÅ¼ytkownika, patrz 'sb_filter'.
 .
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
-  auto     : Wykryj i u¾yj automatycznie (domy˜lne).
-  2axis    : Obsˆuga do dw¢ch joystick¢w.
+  auto     : Wykryj i uÅ¼yj automatycznie (domyÅ›lne).
+  2axis    : ObsÅ‚uga do dwÃ³ch joystickÃ³w.
   4axis    : Tylko pierwszy joystick.
   4axis_2  : Tylko drugi joystick.
   fcs      : Joystick typu Thrustmaster.
   ch       : Joystick typu CH Flightstick.
-  hidden   : Ukrywa joystick przed DOSem, ale umo¾liwia mapowanie.
-  disabled : Caˆkowicie wyˆ¥czone joysticki.
-(Pami©taj o zresetowaniu mapowania je˜li zapisaˆe˜ je wcze˜niej do pliku)
+  hidden   : Ukrywa joystick przed DOSem, ale umoÅ¼liwia mapowanie.
+  disabled : CaÅ‚kowicie wyÅ‚Ä…czone joysticki.
+(PamiÄ™taj o zresetowaniu mapowania jeÅ›li zapisaÅ‚eÅ› je wczeÅ›niej do pliku)
 .
 :CONFIG_TIMED
-Interwaˆy czasowe. Poeksperymentuj z t¥ opcj¥, je˜li joystick wykazuje drift.
+InterwaÅ‚y czasowe. Poeksperymentuj z tÄ… opcjÄ…, jeÅ›li joystick wykazuje drift.
 .
 :CONFIG_AUTOFIRE
-Ogieä ci¥gˆy (przerywany) dop¢ki wci˜ni©ty jest przycisk joysticka.
+OgieÅ„ ciÄ…gÅ‚y (przerywany) dopÃ³ki wciÅ›niÄ™ty jest przycisk joysticka.
 .
 :CONFIG_SWAP34
-Zamiana osi 3 i 4. Mo¾e by† u¾yteczne przy niekt¢rych joystickach.
+Zamiana osi 3 i 4. MoÅ¼e byÄ‡ uÅ¼yteczne przy niektÃ³rych joystickach.
 .
 :CONFIG_BUTTONWRAP
-"Zawijanie" numeracji nadmiarowych przycisk¢w; n-ty dziaˆa jak drugi 1-szy,
+"Zawijanie" numeracji nadmiarowych przyciskÃ³w; n-ty dziaÅ‚a jak drugi 1-szy,
 n+2 jako dodatkowy 2, itd.
 .
 :CONFIG_CIRCULARINPUT
-Tˆumaczenie ruchu okr©¾nego na ruch prosty. Wˆ¥cz, je˜li analogowa gaˆka
-mo¾e porusza† si© jedynie po okr©gu.
+TÅ‚umaczenie ruchu okrÄ™Å¼nego na ruch prosty. WÅ‚Ä…cz, jeÅ›li analogowa gaÅ‚ka
+moÅ¼e poruszaÄ‡ siÄ™ jedynie po okrÄ™gu.
 .
 :CONFIG_DEADZONE
-Procent obszaru ruchu do ignorowania. 100 przeksztaˆca joystick w cyfrowy.
+Procent obszaru ruchu do ignorowania. 100 przeksztaÅ‚ca joystick w cyfrowy.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Wˆ¥cza skr¢ty klawiszowe do kalibracji osi x i y joysticka w czasie
-rzeczywistym. U¾ywaj tylko, je˜li zawiedzie kalibracja joysticka
-zaimplementowana w grze, a zmiana innych ustawieä nie pomaga.
-- Ctrl/Cmd + klawisze kursora - zmieniaj¥ skalowanie:
-  - lewo/prawo - o˜ x
-  - g¢ra/d¢ˆ - o˜ y
-- Alt + klawisze kursora - zmieniaj¥ offset (przesuni©cie)
-- Ctrl+Delete, Ctrl+Home - resetowanie ustawieä kalibracji
-Za ka¾dym razem, kiedy zmienisz ustawienia, zostan¥ one wypisane w konsoli
-tekstowej. Po znalezieniu satysfakcjonuj¥cych ustawieä zakoäcz gr©, zmieä
+WÅ‚Ä…cza skrÃ³ty klawiszowe do kalibracji osi x i y joysticka w czasie
+rzeczywistym. UÅ¼ywaj tylko, jeÅ›li zawiedzie kalibracja joysticka
+zaimplementowana w grze, a zmiana innych ustawieÅ„ nie pomaga.
+- Ctrl/Cmd + klawisze kursora - zmieniajÄ… skalowanie:
+  - lewo/prawo - oÅ› x
+  - gÃ³ra/dÃ³Å‚ - oÅ› y
+- Alt + klawisze kursora - zmieniajÄ… offset (przesuniÄ™cie)
+- Ctrl+Delete, Ctrl+Home - resetowanie ustawieÅ„ kalibracji
+Za kaÅ¼dym razem, kiedy zmienisz ustawienia, zostanÄ… one wypisane w konsoli
+tekstowej. Po znalezieniu satysfakcjonujÄ…cych ustawieÅ„ zakoÅ„cz grÄ™, zmieÅ„
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
 .
 :CONFIG_JOY_X_CALIBRATION
-U¾yj kalibracji osi X ustawianej skr¢tami klawiszowymi. Domy˜lnie 'auto'.
+UÅ¼yj kalibracji osi X ustawianej skrÃ³tami klawiszowymi. DomyÅ›lnie 'auto'.
 .
 :CONFIG_JOY_Y_CALIBRATION
-U¾yj kalibracji osi Y ustawianej skr¢tami klawiszowymi. Domy˜lnie 'auto'.
+UÅ¼yj kalibracji osi Y ustawianej skrÃ³tami klawiszowymi. DomyÅ›lnie 'auto'.
 .
 :CONFIG_SERIAL1
-Wyb¢r urz¥dzenia podˆ¥czonego do portu COM.
+WybÃ³r urzÄ…dzenia podÅ‚Ä…czonego do portu COM.
 Jedno z: disabled, dummy, mouse, modem, nullmodem, direct.
-Mo¾na poda† dodatkowe parametry w formie parametr:warto˜†, musz¥ by†
-wszystkie w tej samej linii. Wsp¢lnym parametrem dla wszystkich jest
+MoÅ¼na podaÄ‡ dodatkowe parametry w formie parametr:wartoÅ›Ä‡, muszÄ… byÄ‡
+wszystkie w tej samej linii. WspÃ³lnym parametrem dla wszystkich jest
 (opcjonalny) irq:numer.
-Dla urz¥dzenia 'mouse' (mysz szeregowa):
+Dla urzÄ…dzenia 'mouse' (mysz szeregowa):
   type, jedno z:
     2btn:  2-przyciskowa, tzw. 'mysz Microsoft'
     3btn:  3-przyciskowa, tzw. 'mysz Logitech'
-    wheel: 3-przyciskowa z rolk¥
+    wheel: 3-przyciskowa z rolkÄ…
     msm:   3-przyciskowa, 'Mouse Systems Mouse'
     2btn+msm, 3btn+msm, wheel+msm : autoselekcja
-  rate, mo¾e by† normal lub smooth (wi©ksza cz©stotliwo˜† pr¢bkowania ni¾
-    mo¾liwa do uzyskania na rzeczywistym sprz©cie).
-   Warto˜ci domy˜lne to type:wheel+msm rate:smooth
-Dla urz¥dzenia 'direct' (bezpo˜redni dost©p do portu COM gospodarza):
+  rate, moÅ¼e byÄ‡ normal lub smooth (wiÄ™ksza czÄ™stotliwoÅ›Ä‡ prÃ³bkowania niÅ¼
+    moÅ¼liwa do uzyskania na rzeczywistym sprzÄ™cie).
+   WartoÅ›ci domyÅ›lne to type:wheel+msm rate:smooth
+Dla urzÄ…dzenia 'direct' (bezpoÅ›redni dostÄ™p do portu COM gospodarza):
   realport (wymagany), rxdelay (opcjonalny).
-  Przykˆad: realport:COM1 realport:ttyS0.
-Dla urz¥dzenia 'modem':
+  PrzykÅ‚ad: realport:COM1 realport:ttyS0.
+Dla urzÄ…dzenia 'modem':
   listenport, sock, baudrate (wszystkie opcjonalne).
-Dla urz¥dzenia 'nullmodem':
+Dla urzÄ…dzenia 'nullmodem':
   server, rxdelay, txdelay, telnet, usedtr, transparent, port, inhsocket, sock
   (wszystkie opcjonalne).
-SOCK okre˜la protok¢ˆ uzywany przez obydwie strony poˆ¥czenia, 0 dla TCP,
+SOCK okreÅ›la protokÃ³Å‚ uzywany przez obydwie strony poÅ‚Ä…czenia, 0 dla TCP,
 1 dla ENet reliable UDP.
-Przykˆad: serial1=modem listenport:5000 sock:1
+PrzykÅ‚ad: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
 patrz serial1
@@ -747,102 +747,102 @@ patrz serial1
 patrz serial1
 .
 :CONFIG_PHONEBOOKFILE
-Plik z informacj¥ o mapowaniu wirtualnych numer¢w telefonicznych na adresy.
+Plik z informacjÄ… o mapowaniu wirtualnych numerÃ³w telefonicznych na adresy.
 .
 :CONFIG_XMS
-Wˆ¥czenie emulacji pami©ci XMS (rozszerzonej).
+WÅ‚Ä…czenie emulacji pamiÄ™ci XMS (rozszerzonej).
 .
 :CONFIG_EMS
-Wˆ¥czenie emulacji pami©ci EMS (stronicowanej). Domy˜lne ustawienie ('true')
-oferuje najwi©ksz¥ kompatybilno˜†, ale niekt¢re aplikacje mog¥ dziaˆa† lepiej
-z innymi warto˜ciami lub wymaga† wyˆ¥czenia pami©ci EMS ¾eby w og¢le dziaˆa†.
+WÅ‚Ä…czenie emulacji pamiÄ™ci EMS (stronicowanej). DomyÅ›lne ustawienie ('true')
+oferuje najwiÄ™kszÄ… kompatybilnoÅ›Ä‡, ale niektÃ³re aplikacje mogÄ… dziaÅ‚aÄ‡ lepiej
+z innymi wartoÅ›ciami lub wymagaÄ‡ wyÅ‚Ä…czenia pamiÄ™ci EMS Å¼eby w ogÃ³le dziaÅ‚aÄ‡.
 .
 :CONFIG_UMB
-Wˆ¥czenie emulacji pami©ci UMB (g¢rnej).
+WÅ‚Ä…czenie emulacji pamiÄ™ci UMB (gÃ³rnej).
 .
 :CONFIG_VER
-Wersja systemu DOS raportowana oprogramowanie (domy˜lnie 5.0). Format to
-'major.minor', pojedyncza liczba b©dzie traktowana jako gˆ¢wny numer wersji.
-Typowe warto˜ci to: 3.3, 5.0, 6.22, oraz 7.1.
+Wersja systemu DOS raportowana oprogramowanie (domyÅ›lnie 5.0). Format to
+'major.minor', pojedyncza liczba bÄ™dzie traktowana jako gÅ‚Ã³wny numer wersji.
+Typowe wartoÅ›ci to: 3.3, 5.0, 6.22, oraz 7.1.
 .
 :CONFIG_COUNTRY
-Kod kraju DOS (to¾samy z telefonicznym kodem kraju), np. '48' dla Polski.
-Zostanie u¾yty do okre˜lenia formatu daty, czasu, liczb dziesi©tnych, itp.
-Warto˜† 0 spowoduje ustawienie kraju odpowiadaj¥cemu wybranemu ukˆadowi
+Kod kraju DOS (toÅ¼samy z telefonicznym kodem kraju), np. '48' dla Polski.
+Zostanie uÅ¼yty do okreÅ›lenia formatu daty, czasu, liczb dziesiÄ™tnych, itp.
+WartoÅ›Ä‡ 0 spowoduje ustawienie kraju odpowiadajÄ…cemu wybranemu ukÅ‚adowi
 klawiatury.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Rozwijanie zmiennych ˜rodowiskowych, np. %PATH%, w wierszu poleceä.
-Obsˆugiwane przez COMMAND.COM z system¢w MS-DOS 7/8 oraz FreeDOS.
+Rozwijanie zmiennych Å›rodowiskowych, np. %PATH%, w wierszu poleceÅ„.
+ObsÅ‚ugiwane przez COMMAND.COM z systemÃ³w MS-DOS 7/8 oraz FreeDOS.
 .
 :CONFIG_KEYBOARDLAYOUT
-Kod j©zyka klawiatury (lub puste) - np. 'pl' (polski ukˆad programisty),
-'pl214' (polski ukˆad maszynistki).
+Kod jÄ™zyka klawiatury (lub puste) - np. 'pl' (polski ukÅ‚ad programisty),
+'pl214' (polski ukÅ‚ad maszynistki).
 .
 :CONFIG_IPX
-Wˆ¥czenie emulacji protokoˆu IPX po UDP/IP.
+WÅ‚Ä…czenie emulacji protokoÅ‚u IPX po UDP/IP.
 .
 :CONFIG_NE2000
-Wˆ¥czenie emulacji karty sieciowej Novell NE2000 podˆ¥czonej do wirtualnej
-sieci 'libslirp' z parametrami jak poni¾ej:
+WÅ‚Ä…czenie emulacji karty sieciowej Novell NE2000 podÅ‚Ä…czonej do wirtualnej
+sieci 'libslirp' z parametrami jak poniÅ¼ej:
   10.0.2.0       : Adres witrualnej sieci LAN.
   255.255.255.0  : Maska podsieci.
-  10.0.2.2       : Adres IP bramy i serwera usˆugi DHCP.
+  10.0.2.2       : Adres IP bramy i serwera usÅ‚ugi DHCP.
   10.0.2.3       : Adres IP wirtualnego serwera DNS,
   10.0.2.15      : Pierwszy adres IP przydzielany przez DHCP. Twoje IP!
-Uwaga: Wewn¥trz DOSa u¾ywanie w/w sieci wymaga sterownika pakietowego karty
-NE2000, klienta DHCP i stosu TCP/IP. Je˜li chcesz uruchomi† serwer gry
-wieloosobowej, niezb©dne mo¾e by† przekierowanie port¢w z systemu gospodarza
+Uwaga: WewnÄ…trz DOSa uÅ¼ywanie w/w sieci wymaga sterownika pakietowego karty
+NE2000, klienta DHCP i stosu TCP/IP. JeÅ›li chcesz uruchomiÄ‡ serwer gry
+wieloosobowej, niezbÄ™dne moÅ¼e byÄ‡ przekierowanie portÃ³w z systemu gospodarza
 do DOSu, oraz z routera do gospodarza.
 .
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000.
-Uwaga: Adresy 220 oraz 240 og¥ by† niedost©pne, gdy¾ s¥ domy˜lnie przypisane
+Uwaga: Adresy 220 oraz 240 ogÄ… byÄ‡ niedostÄ™pne, gdyÅ¼ sÄ… domyÅ›lnie przypisane
 do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000.
-Uwaga: Przerwania 3 oraz 5 mog¥ by† niedost©pne, gdy¾ s¥ domy˜lnie przypisane
+Uwaga: Przerwania 3 oraz 5 mogÄ… byÄ‡ niedostÄ™pne, gdyÅ¼ sÄ… domyÅ›lnie przypisane
 do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
 Adres MAC karty sieciowej NE2000.
 .
 :CONFIG_TCP_PORT_FORWARDS
-Przekierowuje jeden lub wi©cej port¢w UDP z systemu gospodarza do DOSu.
+Przekierowuje jeden lub wiÄ™cej portÃ³w UDP z systemu gospodarza do DOSu.
 Format:
   port1  port2  port3 ... (np., 21 80 443)
-  Ten przykˆad przekieruje porty FTP, HTTP, and HTTPS do DOSu.
-Je˜li porty s¥ uprzywilejowane w systemie gospodarza, mo¾na u¾y† mapowania:
+  Ten przykÅ‚ad przekieruje porty FTP, HTTP, and HTTPS do DOSu.
+JeÅ›li porty sÄ… uprzywilejowane w systemie gospodarza, moÅ¼na uÅ¼yÄ‡ mapowania:
   host:guest  ..., (e.g., 8021:21 8080:80)
-  Ten przykˆad przekieruje porty 8021 and 8080 do FTP i HTTP w DOSie.
-Zakres port¢w mo¾na poda† kr¢cej, przy pomocy my˜lnika:
+  Ten przykÅ‚ad przekieruje porty 8021 and 8080 do FTP i HTTP w DOSie.
+Zakres portÃ³w moÅ¼na podaÄ‡ krÃ³cej, przy pomocy myÅ›lnika:
   start-koniec ... (np., 27910-27960)
-  Ten przykˆad przekieruje porty od 27910 do 27960 do DOSa.
-Mapowania i zakresy mo¾na ˆ¥czy†, np.:
+  Ten przykÅ‚ad przekieruje porty od 27910 do 27960 do DOSa.
+Mapowania i zakresy moÅ¼na Å‚Ä…czyÄ‡, np.:
   hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
-  Ten przykˆad przekieruje porty od 8040 do 8080 jako 20 do 60 w DOSie.
+  Ten przykÅ‚ad przekieruje porty od 8040 do 8080 jako 20 do 60 w DOSie.
 Uwagi:
-  Je˜li dˆugo˜† zakres¢w b©dzie si© r¢¾ni†, zostanie u¾yta kr¢tsza.
-  W razie konfliktu port¢w gospodarza, tylko pierwszy zostanie ustawiony.
-  W razie konfliktu port¢w go˜cia, tylko ostatni zostanie ustawiony.
+  JeÅ›li dÅ‚ugoÅ›Ä‡ zakresÃ³w bÄ™dzie siÄ™ rÃ³Å¼niÄ‡, zostanie uÅ¼yta krÃ³tsza.
+  W razie konfliktu portÃ³w gospodarza, tylko pierwszy zostanie ustawiony.
+  W razie konfliktu portÃ³w goÅ›cia, tylko ostatni zostanie ustawiony.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Przekierowuje jeden lub wi©cej port¢w UDP z systemu gospodarza do DOSu.
-Format jest taki sam jak dla port¢w TCP.
+Przekierowuje jeden lub wiÄ™cej portÃ³w UDP z systemu gospodarza do DOSu.
+Format jest taki sam jak dla portÃ³w TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Linie z tej sekcji zostan¥ wykonane podczas startu.
-To dobre miejsce na umieszczenie poleceä MOUNT.
+Linie z tej sekcji zostanÄ… wykonane podczas startu.
+To dobre miejsce na umieszczenie poleceÅ„ MOUNT.
 
 .
 :CONFIGFILE_INTRO
 # DOSBox Staging %s - plik konfiguracyjny.
-# Linie zaczynaj¥ce si© od # s¥ komentarzami.
+# Linie zaczynajÄ…ce siÄ™ od # sÄ… komentarzami.
 
 .
 :CONFIG_SUGGESTED_VALUES
-Mo¾liwe warto˜ci
+MoÅ¼liwe wartoÅ›ci
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Brak sekcji lub parametru: '%s'
@@ -853,20 +853,20 @@ Brak parametru '%s' w sekcji '%s'.
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Skˆadnia: config -set "[sekcja] parametr=warto˜†".
+SkÅ‚adnia: config -set "[sekcja] parametr=wartoÅ›Ä‡".
 
 .
 :CONFIG_DISNEY_FILTER
-Filtrowanie d«wi©ku urz¥dzenia Disney Sound Source:
-  on:   Wˆ¥czone (domy˜lne).
-  off:  Filtrowanie wyˆ¥czone.
+Filtrowanie dÅºwiÄ™ku urzÄ…dzenia Disney Sound Source:
+  on:   WÅ‚Ä…czone (domyÅ›lne).
+  off:  Filtrowanie wyÅ‚Ä…czone.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
-Nie zostaˆ zaˆadowany ¾aden plik konfiguracyjny!
+Nie zostaÅ‚ zaÅ‚adowany Å¼aden plik konfiguracyjny!
 
 .
 :PROGRAM_CONFIG_PRIMARY_CONF
-Gˆ¢wny plik konfiguracyjny:
+GÅ‚Ã³wny plik konfiguracyjny:
 %s
 
 .
@@ -875,14 +875,14 @@ Dodatkowe pliki konfiguracyjne:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-Katalog z konfiguracj¥ DOSBox Staging %s:
+Katalog z konfiguracjÄ… DOSBox Staging %s:
 %s
 
 
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Nie mo¾na otworzy† pliku '%s'
+Nie moÅ¼na otworzyÄ‡ pliku '%s'
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
@@ -891,64 +891,64 @@ Zapisywanie pliku konfiguracyjnego:
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Zmiana parametr¢w konfiguracyjnych.
--writeconf lub -wc : zapisz ustawienia do gˆ¢wnego pliku konfiguracyjnego.
--writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracj¥.
--writelang lub -wl nazwa_pliku : zapisz teksty aktualnego j©zyka.
+Zmiana parametrÃ³w konfiguracyjnych.
+-writeconf lub -wc : zapisz ustawienia do gÅ‚Ã³wnego pliku konfiguracyjnego.
+-writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracjÄ….
+-writelang lub -wl nazwa_pliku : zapisz teksty aktualnego jÄ™zyka.
 -r [argumenty] : restart z poprzednimi lub z podanymi argumentami.
 -wcp [nazwa_pliku] : zapisz plik konfiguracyjny (dosbox.conf lub o podanej
   nazwie) do katalogu programu.
--wcd : zapisz do domy˜lnego pliku konfiguracyjnego w katalogu z konfiguracj¥.
--l : wy˜wietl parametry konfiguracji.
+-wcd : zapisz do domyÅ›lnego pliku konfiguracyjnego w katalogu z konfiguracjÄ….
+-l : wyÅ›wietl parametry konfiguracji.
 -h, -help, -? sections / nazwa_sekcji_lub_parametru
-  Bez parametru, wy˜wietl t© pomoc. Parametr "sections" - wy˜wietl list©
-  istniej¥cych sekcji. Aby wy˜wietli† pomoc na temat sekcji/parametru,
-  podaj jego nazw©.
--axclear                        : skasuj sekcj© [autoexec].
--axadd [linia]                  : dodaj lini© do sekcji [autoexec].
--axtype                         : wy˜wietl zawarto˜† sekcji [autoexec].
--securemode                     : przeˆ¥cz w tryb bezpieczny.
+  Bez parametru, wyÅ›wietl tÄ™ pomoc. Parametr "sections" - wyÅ›wietl listÄ™
+  istniejÄ…cych sekcji. Aby wyÅ›wietliÄ‡ pomoc na temat sekcji/parametru,
+  podaj jego nazwÄ™.
+-axclear                        : skasuj sekcjÄ™ [autoexec].
+-axadd [linia]                  : dodaj liniÄ™ do sekcji [autoexec].
+-axtype                         : wyÅ›wietl zawartoÅ›Ä‡ sekcji [autoexec].
+-securemode                     : przeÅ‚Ä…cz w tryb bezpieczny.
 -avistart                       : rozpocznij nagrywanie do pliku AVI.
--avistop                        : zakoäcz nagrywanie do pliku AVI.
--startmapper                    : uruchom narz©dzie mapuj¥ce.
--get "sekcja parametr"          : wy˜wietl warto˜† parametru.
--set "sekcja parametr=warto˜†"  : ustaw warto˜† parametru.
+-avistop                        : zakoÅ„cz nagrywanie do pliku AVI.
+-startmapper                    : uruchom narzÄ™dzie mapujÄ…ce.
+-get "sekcja parametr"          : wyÅ›wietl wartoÅ›Ä‡ parametru.
+-set "sekcja parametr=wartoÅ›Ä‡"  : ustaw wartoÅ›Ä‡ parametru.
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
 Informacja o parametrze '%s' (zawartym w sekcji '%s'):
 %s
 
-Mo¾liwe warto˜ci: %s
-Domy˜lna warto˜†: %s
-Aktualna warto˜†: %s
+MoÅ¼liwe wartoÅ›ci: %s
+DomyÅ›lna wartoÅ›Ä‡: %s
+Aktualna wartoÅ›Ä‡: %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
 Informacja o sekcji '%s':
 %s
-Aktualna warto˜†:
+Aktualna wartoÅ›Ä‡:
 %s
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-Ten parametr nie mo¾e by† zmieniony po uruchomieniu.
+Ten parametr nie moÅ¼e byÄ‡ zmieniony po uruchomieniu.
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
-dodatnia liczba caˆkowita
+dodatnia liczba caÅ‚kowita
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-Sekcja '%s' zawiera nast©puj¥ce parametry:
+Sekcja '%s' zawiera nastÄ™pujÄ…ce parametry:
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-Konfiguracja skˆada si© z nast©puj¥cych sekcji:
+Konfiguracja skÅ‚ada siÄ™ z nastÄ™pujÄ…cych sekcji:
 
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Przeˆ¥czono w tryb bezpieczny.
+PrzeÅ‚Ä…czono w tryb bezpieczny.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
@@ -960,25 +960,25 @@ Sekcja '%s' nie istnieje.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-'%s' nie jest poprawn¥ warto˜ci¥ parametru '%s'.
+'%s' nie jest poprawnÄ… wartoÅ›ciÄ… parametru '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Skˆadnia: config -get "sekcja parametr".
+SkÅ‚adnia: config -get "sekcja parametr".
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
 
-DOSBox zostaˆ uruchomiony z nast©puj¥cymi parametrami wiersza poleceä:
+DOSBox zostaÅ‚ uruchomiony z nastÄ™pujÄ…cymi parametrami wiersza poleceÅ„:
 %s
 
 .
 :PROGRAM_CONFIG_MISSINGPARAM
-Brakuj¥cy parametr.
+BrakujÄ…cy parametr.
 
 .
 :PROGRAM_PATH_TOO_LONG
-—cie¾ka '%s' przekracza dozwolon¥ dˆugo˜† %d znak¢w.
+ÅšcieÅ¼ka '%s' przekracza dozwolonÄ… dÅ‚ugoÅ›Ä‡ %d znakÃ³w.
 
 .
 :PROGRAM_EXECUTABLE_MISSING
@@ -986,10 +986,10 @@ Nie znaleziono pliku wykonywalnego: '%s'.
 
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
-enumeracja nieobsˆugiwana
+enumeracja nieobsÅ‚ugiwana
 .
 :MIDI_DEVICE_NOT_CONFIGURED
-urz¥dzenie nie zostaˆo skonfigurowane
+urzÄ…dzenie nie zostaÅ‚o skonfigurowane
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -998,24 +998,24 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :SHELL_CMD_AUTOTYPE_HELP_LONG
-Symulowanie naci˜ni©† klawiszy dla uruchomionego programu.
+Symulowanie naciÅ›niÄ™Ä‡ klawiszy dla uruchomionego programu.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]autotype[reset] -list
   [color=green]autotype[reset] [-w [color=white]CZAS[reset]] [-p [color=white]TEMPO[reset]] [color=cyan]KLAWISZE[reset]
 
 Gdzie:
-  [color=white]CZAS[reset]      pocz¥tkowe oczekiwanie, w sekundach (maksymalnie 30).
-  [color=white]TEMPO[reset]     oczekiwanie przed ka¾dym klawiszem, w sekundach (maksymalnie 10).
-  [color=cyan]KLAWISZE[reset]  jeden lub wi©cej klawiszy oddzielonych spacjami.
+  [color=white]CZAS[reset]      poczÄ…tkowe oczekiwanie, w sekundach (maksymalnie 30).
+  [color=white]TEMPO[reset]     oczekiwanie przed kaÅ¼dym klawiszem, w sekundach (maksymalnie 10).
+  [color=cyan]KLAWISZE[reset]  jeden lub wiÄ™cej klawiszy oddzielonych spacjami.
 
 Uwagi:
-  Symulowane naci˜ni©cia klawiszy [color=cyan]KLAWISZE[reset] rozpoczn¥ si© po [color=white]CZAS[reset] sekund,
-  co [color=white]TEMPO[reset] sekund ka¾de. Dodatkowe [color=white]TEMPO[reset] sekund op¢«nienia mo¾e zosta† dodane
-  przy u¾yciu przecinka ('[color=cyan],[reset]'). Domy˜lne warto˜ci [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
-  sekundy odpowiednio. List© klawiszy mo¾na wy˜wietli† u¾ywaj¥c opcji -list.
+  Symulowane naciÅ›niÄ™cia klawiszy [color=cyan]KLAWISZE[reset] rozpocznÄ… siÄ™ po [color=white]CZAS[reset] sekund,
+  co [color=white]TEMPO[reset] sekund kaÅ¼de. Dodatkowe [color=white]TEMPO[reset] sekund opÃ³Åºnienia moÅ¼e zostaÄ‡ dodane
+  przy uÅ¼yciu przecinka ('[color=cyan],[reset]'). DomyÅ›lne wartoÅ›ci [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
+  sekundy odpowiednio. ListÄ™ klawiszy moÅ¼na wyÅ›wietliÄ‡ uÅ¼ywajÄ…c opcji -list.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]autotype[reset] -list
   [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
@@ -1024,7 +1024,7 @@ Przykˆady:
 :SHELL_CMD_BOOT_HELP_LONG
 Startowanie systemu z obrazu dyskietki lub zamontowanego dysku.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]boot[reset] [color=white]DYSK[reset]:
   [color=green]boot[reset] -l [color=white]DYSK[reset]
   [color=green]boot[reset] [color=cyan]OBRAZ[reset] [[color=cyan]OBRAZ[reset] ...]
@@ -1034,86 +1034,86 @@ Gdzie:
   [color=cyan]OBRAZ[reset]  obraz dyskietki.
 
 Uwagi:
-  [color=white]DYSK[reset] musi zosta† wcze˜niej zamontowany poleceniem [color=green]imgmount[reset].
-  Dysk lub obrazy musz¥ by† bootowalne. Je˜li podano wi©cej obraz¢w, mo¾na
-  si© pomi©dzy nimi przeˆ¥cza† skr¢tem klawiszowym.
+  [color=white]DYSK[reset] musi zostaÄ‡ wczeÅ›niej zamontowany poleceniem [color=green]imgmount[reset].
+  Dysk lub obrazy muszÄ… byÄ‡ bootowalne. JeÅ›li podano wiÄ™cej obrazÃ³w, moÅ¼na
+  siÄ™ pomiÄ™dzy nimi przeÅ‚Ä…czaÄ‡ skrÃ³tem klawiszowym.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]boot[reset] [color=white]c:[reset]
   [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
 .
 :PROGRAM_BOOT_NOT_EXIST
-Bˆ¥d: Obraz dysku lub dyskietki nie istnieje.
+BÅ‚Ä…d: Obraz dysku lub dyskietki nie istnieje.
 
 .
 :PROGRAM_BOOT_NOT_OPEN
-Bˆ¥d: Nie mo¾na otworzy† obrazu dysku lub dyskietki.
+BÅ‚Ä…d: Nie moÅ¼na otworzyÄ‡ obrazu dysku lub dyskietki.
 
 .
 :PROGRAM_BOOT_WRITE_PROTECTED
-Obraz dysku jest tylko do odczytu! To mo¾e powodowa† problemy.
+Obraz dysku jest tylko do odczytu! To moÅ¼e powodowaÄ‡ problemy.
 
 .
 :PROGRAM_BOOT_PRINT_ERROR
 To polecenie startuje system operacyjny z obrazu dyskietki lub dysku twardego.
 
-Mo¾na poda† kilka obraz¢w dyskietek, przeˆ¥czanych za pomoc¥ %s+F4. Opcj¥ -l
-mo¾na poda† dysk, z kt¢rego ma zosta† wystartowany system, domy˜lny to A.
-Jedyne dozwolone litery dysk¢w to A, C, oraz D. Aby wystartowa† system z
-obrazu dysku twardego (C lub D) musi on by† wczesniej zamontowany poleceniem
+MoÅ¼na podaÄ‡ kilka obrazÃ³w dyskietek, przeÅ‚Ä…czanych za pomocÄ… %s+F4. OpcjÄ… -l
+moÅ¼na podaÄ‡ dysk, z ktÃ³rego ma zostaÄ‡ wystartowany system, domyÅ›lny to A.
+Jedyne dozwolone litery dyskÃ³w to A, C, oraz D. Aby wystartowaÄ‡ system z
+obrazu dysku twardego (C lub D) musi on byÄ‡ wczesniej zamontowany poleceniem
 [color=green]imgmount[reset].
 
-Polecenie [color=green]boot[reset] /? wy˜wietla peˆen tekst pomocy.
+Polecenie [color=green]boot[reset] /? wyÅ›wietla peÅ‚en tekst pomocy.
 .
 :PROGRAM_BOOT_UNABLE
-Nie mo¾na wystartowa† systemu z dysku %c
+Nie moÅ¼na wystartowaÄ‡ systemu z dysku %c
 .
 :PROGRAM_BOOT_IMAGE_OPEN
 Otwieranie pliku obrazu: '%s'
 
 .
 :PROGRAM_BOOT_IMAGE_MOUNTED
-Obraz dyskietki ju¾ zamontowany.
+Obraz dyskietki juÅ¼ zamontowany.
 
 .
 :PROGRAM_BOOT_IMAGE_NOT_OPEN
-Nie mo¾na otworzy† '%s'.
+Nie moÅ¼na otworzyÄ‡ '%s'.
 .
 :PROGRAM_BOOT_BOOT
 Startowanie systemu z dysku %c...
 
 .
 :PROGRAM_BOOT_CART_WO_PCJR
-Znaleziono kartrid¾ PCjr, ale maszyna nie jest typu PCjr.
+Znaleziono kartridÅ¼ PCjr, ale maszyna nie jest typu PCjr.
 .
 :PROGRAM_BOOT_CART_LIST_CMDS
-Dost©pne komendy kartrid¾y PCjr: %s
+DostÄ™pne komendy kartridÅ¼y PCjr: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
-Komend kartrid¾a PCjr nie znaleziono.
+Komend kartridÅ¼a PCjr nie znaleziono.
 .
 :MSCDEX_SUCCESS
 MSCDEX zainstalowany.
 
 .
 :MSCDEX_ERROR_MULTIPLE_CDROMS
-MSCDEX: Bˆ¥d: Litery dysk¢w nap©d¢w CD-ROM musz¥ nast©powa† po sobie.
+MSCDEX: BÅ‚Ä…d: Litery dyskÃ³w napÄ™dÃ³w CD-ROM muszÄ… nastÄ™powaÄ‡ po sobie.
 
 .
 :MSCDEX_ERROR_NOT_SUPPORTED
-MSCDEX: Bˆ¥d: Jeszcze nie obsˆugiwane.
+MSCDEX: BÅ‚Ä…d: Jeszcze nie obsÅ‚ugiwane.
 
 .
 :MSCDEX_ERROR_PATH
-MSCDEX: Bˆ¥d: Podana ˜cie¾ka nie prowadzi do nap©du CD-ROM.
+MSCDEX: BÅ‚Ä…d: Podana Å›cieÅ¼ka nie prowadzi do napÄ™du CD-ROM.
 
 .
 :MSCDEX_ERROR_OPEN
-MSCDEX: Bˆ¥d: Nieprawidˆowy plik lub brak dost©pu.
+MSCDEX: BÅ‚Ä…d: NieprawidÅ‚owy plik lub brak dostÄ™pu.
 
 .
 :MSCDEX_TOO_MANY_DRIVES
-MSCDEX: Bˆ¥d: Za du¾o nap©d¢w CD-ROM (maksymalnie: 5). Instalacja MSCDEX nieudana.
+MSCDEX: BÅ‚Ä…d: Za duÅ¼o napÄ™dÃ³w CD-ROM (maksymalnie: 5). Instalacja MSCDEX nieudana.
 
 .
 :MSCDEX_LIMITED_SUPPORT
@@ -1121,15 +1121,15 @@ MSCDEX: Zamontowano podkatalog: ograniczone wsparcie.
 
 .
 :MSCDEX_INVALID_FILEFORMAT
-MSCDEX: Bˆ¥d: Plik nie jest obrazem ISO/CUE lub zawiera bˆ©dy.
+MSCDEX: BÅ‚Ä…d: Plik nie jest obrazem ISO/CUE lub zawiera bÅ‚Ä™dy.
 
 .
 :MSCDEX_UNKNOWN_ERROR
-MSCDEX: Bˆ¥d: Nieznany problem.
+MSCDEX: BÅ‚Ä…d: Nieznany problem.
 
 .
 :MSCDEX_WARNING_NO_OPTION
-MSCDEX: Ostrze¾enie: Zignorowano niewspieran¥ opcj© '%s'.
+MSCDEX: OstrzeÅ¼enie: Zignorowano niewspieranÄ… opcjÄ™ '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_DRIVE
@@ -1152,74 +1152,74 @@ Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
-Lista zamontowanych dysk¢w:
+Lista zamontowanych dyskÃ³w:
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Montowanie obrazu dyskietki, pˆyty CD lub dysku pod wybran¥ liter©.
+Montowanie obrazu dyskietki, pÅ‚yty CD lub dysku pod wybranÄ… literÄ™.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]CD-LISTA[reset] [-fs iso] [-ide] -t cdrom|iso
   [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]PLIKOBRAZ[reset] [[color=cyan]PLIKOBRAZ[reset] [..]] [-fs fat] -t hdd|floppy -ro
   [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]BOOTOBRAZ[reset] [-fs fat|none] -t hdd -size [color=white]GEOMETRIA[reset] -ro
   [color=green]imgmount[reset] -u [color=white]DYSK[reset]  (odmontowuje obraz)
 
 Gdzie:
-  [color=white]DYSK[reset]      litera dysku, pod kt¢r¥ obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
+  [color=white]DYSK[reset]      litera dysku, pod ktÃ³rÄ… obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
   [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
   [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
-  [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcj¥ -size [color=white]GEOMETRIA[reset]:
-            bajt¢w-na-sektor,sektor¢w-na-gˆowic©,gˆowice,cylindry
+  [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcjÄ… -size [color=white]GEOMETRIA[reset]:
+            bajtÃ³w-na-sektor,sektorÃ³w-na-gÅ‚owicÄ™,gÅ‚owice,cylindry
 Uwagi:
-  - %s+F4 przechodzi do nast©pnego dysku z listy [color=cyan]CD-LISTA[reset] lub [color=cyan]BOOTOBRAZ[reset].
+  - %s+F4 przechodzi do nastÄ™pnego dysku z listy [color=cyan]CD-LISTA[reset] lub [color=cyan]BOOTOBRAZ[reset].
   - Flaga -ro montuje dysk tylko do odczytu (read-only).
-  - Flaga -ide wˆ¥cza emulacj© kontrolera IDE z zamontowanym obrazem CD.
+  - Flaga -ide wÅ‚Ä…cza emulacjÄ™ kontrolera IDE z zamontowanym obrazem CD.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
   [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 .
 :PROGRAM_IMGMOUNT_STATUS_1
-Aktualnie zamontowane obrazy dyskietek, pˆyt CD i dysk¢w twardych:
+Aktualnie zamontowane obrazy dyskietek, pÅ‚yt CD i dyskÃ³w twardych:
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
-Podaj liter© dysku, pod kt¢r¥ zamontowany b©dzie obraz.
+Podaj literÄ™ dysku, pod ktÃ³rÄ… zamontowany bÄ™dzie obraz.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Podaj numer dysku (0 - 3), gdzie zamontowany b©dzie obraz (0=fda, 1=fdb, 2=hda, 3=hdb).
+Podaj numer dysku (0 - 3), gdzie zamontowany bÄ™dzie obraz (0=fda, 1=fdb, 2=hda, 3=hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Podaj geometri© dysku.
+Podaj geometriÄ™ dysku.
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-½aden obraz nie zostaˆ zamontowany.
+Å»aden obraz nie zostaÅ‚ zamontowany.
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-½aden kontroler IDE nie jest dost©pny. Dysk nie b©dzie dost©pny przez kontroler IDE.
+Å»aden kontroler IDE nie jest dostÄ™pny. Dysk nie bÄ™dzie dostÄ™pny przez kontroler IDE.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
-Nie mo¾na zaˆadowa† obrazu dysku.
-Sprawd« czy ˜cie¾ka jest poprawna i czy obraz jest mo¾liwy do odczytania.
+Nie moÅ¼na zaÅ‚adowaÄ‡ obrazu dysku.
+SprawdÅº czy Å›cieÅ¼ka jest poprawna i czy obraz jest moÅ¼liwy do odczytania.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_GEOMETRY
-Nie udaˆo si© okre˜li† geometrii dysku.
-U¾yj parametru '-size bajt¢w-na-sektor,sektor¢w-na-gˆowic©,gˆowice,cylindry'
+Nie udaÅ‚o siÄ™ okreÅ›liÄ‡ geometrii dysku.
+UÅ¼yj parametru '-size bajtÃ³w-na-sektor,sektorÃ³w-na-gÅ‚owicÄ™,gÅ‚owice,cylindry'
 
 .
 :PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
-Typ '%s' nie jest obsˆugiwany. Podaj 'floppy', 'hdd', 'cdrom' lub 'iso'.
+Typ '%s' nie jest obsÅ‚ugiwany. Podaj 'floppy', 'hdd', 'cdrom' lub 'iso'.
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Format '%s' nie jest obsˆugiwany. Podaj 'fat', 'iso' lub "none".
+Format '%s' nie jest obsÅ‚ugiwany. Podaj 'fat', 'iso' lub "none".
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_FILE
@@ -1231,15 +1231,15 @@ Nie znaleziono pliku obrazu.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Aby zamontowa† katalog u¾yj polecenia '[color=green]mount[reset], a nie [color=green]imgmount[reset].
+Aby zamontowaÄ‡ katalog uÅ¼yj polecenia '[color=green]mount[reset], a nie [color=green]imgmount[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
-Ju¾ zamontowano dysk pod t¥ liter¥.
+JuÅ¼ zamontowano dysk pod tÄ… literÄ….
 
 .
 :PROGRAM_IMGMOUNT_CANT_CREATE
-Nie mo¾na utworzy† dysku z tego pliku.
+Nie moÅ¼na utworzyÄ‡ dysku z tego pliku.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
@@ -1247,200 +1247,200 @@ Dysk %d jest zamontowany jako '%s'.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-Obraz musi znajdowa† si© na dysku widocznym dla systemu gospodarza.
+Obraz musi znajdowaÄ‡ siÄ™ na dysku widocznym dla systemu gospodarza.
 
 .
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-U¾ywanie wielu plik¢w jest obsˆugiwane tylko dla obraz¢w cue/iso.
+UÅ¼ywanie wielu plikÃ³w jest obsÅ‚ugiwane tylko dla obrazÃ³w cue/iso.
 
 .
 :PROGRAM_INTRO
-[2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z d«wi©kiem i grafik¥.
-DOSBox tworzy dla Ciebie powˆok©, kt¢ra wygl¥da jak stary, poczciwy DOS.
+[2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dÅºwiÄ™kiem i grafikÄ….
+DOSBox tworzy dla Ciebie powÅ‚okÄ™, ktÃ³ra wyglÄ…da jak stary, poczciwy DOS.
 
-Informacje o montowaniu dysk¢w, wpisz:      [color=blue]intro mount[reset]
+Informacje o montowaniu dyskÃ³w, wpisz:      [color=blue]intro mount[reset]
 Informacje o wsparciu dla CD-ROM, wpisz:    [color=blue]intro cdrom[reset]
-Informacje o skr¢tach klawiszowych, wpisz:  [color=blue]intro special[reset]
+Informacje o skrÃ³tach klawiszowych, wpisz:  [color=blue]intro special[reset]
 
-Wi©cej informacji o DOSBox Staging znajdziesz (po angielsku) na wiki:
+WiÄ™cej informacji o DOSBox Staging znajdziesz (po angielsku) na wiki:
 [color=blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[color=red]DOSBox zatrzyma/wyˆ¥czy si© bez ostrze¾enia je˜li wyst¥pi powa¾ny bˆ¥d![reset]
+[color=red]DOSBox zatrzyma/wyÅ‚Ä…czy siÄ™ bez ostrzeÅ¼enia jeÅ›li wystÄ…pi powaÅ¼ny bÅ‚Ä…d![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[color=green]Kilka poleceä na pocz¥tek[reset]
-Zanim uzyskasz dost©p do plik¢w na Twoim dysku,
-musisz zamontowa† zawieraj¥cy je katalog.
+[2J[color=green]Kilka poleceÅ„ na poczÄ…tek[reset]
+Zanim uzyskasz dostÄ™p do plikÃ³w na Twoim dysku,
+musisz zamontowaÄ‡ zawierajÄ…cy je katalog.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c c:\dosgames\[37m stworzy dysk C z zawarto˜ci¥ z katalogu c:\dosgames. º
-º                                                                           º
-º [32mc:\dosgames\[37m to tylko przykˆad. Zast¥p go swoim wˆasnym katalogiem.[37m       º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+[44;1mâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [32mmount c c:\dosgames\[37m stworzy dysk C z zawartoÅ›ciÄ… z katalogu c:\dosgames. â•‘
+â•‘                                                                           â•‘
+â•‘ [32mc:\dosgames\[37m to tylko przykÅ‚ad. ZastÄ…p go swoim wÅ‚asnym katalogiem.[37m       â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[0m
 
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c ~/dosgames[37m stworzy dysk C z zawarto˜ci¥ z katalogu ~/dosgames. º
-º                                                                        º
-º [32m~/dosgames[37m to tylko przykˆad. Zast¥p go swoim wˆasnym katalogiem.[37m      º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+[44;1mâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [32mmount c ~/dosgames[37m stworzy dysk C z zawartoÅ›ciÄ… z katalogu ~/dosgames. â•‘
+â•‘                                                                        â•‘
+â•‘ [32m~/dosgames[37m to tylko przykÅ‚ad. ZastÄ…p go swoim wÅ‚asnym katalogiem.[37m      â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[0m
 
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Po pomy˜lnym zamontowaniu katalogu, wpisz [color=blue]c:[reset] aby przej˜† na Tw¢j ˜wie¾o
-utworzony dysk. Wpisz [color=blue]dir[reset], ¾eby obejrze† jego zawarto˜†. Polecenie [color=blue]cd[reset]
-pozwoli Ci przej˜† do wybranego katalogu (rozpoznasz je po oznaczeniu
-[color=yellow]<DIR>[reset] w wy˜wietlonej zawarto˜ci).
-Mo¾esz uruchamia† programy o rozszerzeniach [31m.exe[reset], [31m.bat[reset] oraz [31m.com[reset], wpisuj¥c
-ich nazwy w wierszu poleceä.
+Po pomyÅ›lnym zamontowaniu katalogu, wpisz [color=blue]c:[reset] aby przejÅ›Ä‡ na TwÃ³j Å›wieÅ¼o
+utworzony dysk. Wpisz [color=blue]dir[reset], Å¼eby obejrzeÄ‡ jego zawartoÅ›Ä‡. Polecenie [color=blue]cd[reset]
+pozwoli Ci przejÅ›Ä‡ do wybranego katalogu (rozpoznasz je po oznaczeniu
+[color=yellow]<DIR>[reset] w wyÅ›wietlonej zawartoÅ›ci).
+MoÅ¼esz uruchamiaÄ‡ programy o rozszerzeniach [31m.exe[reset], [31m.bat[reset] oraz [31m.com[reset], wpisujÄ…c
+ich nazwy w wierszu poleceÅ„.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[color=green]U¾ywanie rzeczywistych/wirtualnych dysk¢w CD-ROM[reset]
-DOSBox emuluje nap©dy CD-ROM na dw¢ch poziomach.
+[2J[color=green]UÅ¼ywanie rzeczywistych/wirtualnych dyskÃ³w CD-ROM[reset]
+DOSBox emuluje napÄ™dy CD-ROM na dwÃ³ch poziomach.
 
-Poziom [33mpodstawowy[0m u¾ywa zwykˆych katalog¢w; instaluje sterownik MSCDEX
-i oznacza ich zawarto˜† jako tylko do odczytu. To wystarcza do wi©kszo˜ci gier:
+Poziom [33mpodstawowy[0m uÅ¼ywa zwykÅ‚ych katalogÃ³w; instaluje sterownik MSCDEX
+i oznacza ich zawartoÅ›Ä‡ jako tylko do odczytu. To wystarcza do wiÄ™kszoÅ›ci gier:
 [34;1mmount D C:\katalog -t cdrom[0m
-Je˜li to nie dziaˆa, podaj dodatkowo etykiet© symulowanego dysku CD-ROM:
+JeÅ›li to nie dziaÅ‚a, podaj dodatkowo etykietÄ™ symulowanego dysku CD-ROM:
 [34;1mmount D C:\katalog -t cdrom -label ETYKIETA[0m
 
-Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsˆuga.
-Dziaˆa tylko z rzeczywistymi nap©dami CD-ROM:
+Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsÅ‚uga.
+DziaÅ‚a tylko z rzeczywistymi napÄ™dami CD-ROM:
 [34;1mmount d [0;31mX:\[34;1m -t cdrom -usecd [33m0[0m
-Zast¥p [0;31mX:\[0m przez lokacj© Twojego nap©du CD-ROM.
-Zast¥p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego nap©du CD-ROM, wy˜wietlanego przez polecenie:
+ZastÄ…p [0;31mX:\[0m przez lokacjÄ™ Twojego napÄ™du CD-ROM.
+ZastÄ…p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego napÄ™du CD-ROM, wyÅ›wietlanego przez polecenie:
 [34;1mmount -listcd[0m
 
-Dodatkowo, poleceniem [color=blue]imgmount[reset] mo¾esz u¾y† montowa† obrazy w formatach ISO oraz CUE/BIN:
+Dodatkowo, poleceniem [color=blue]imgmount[reset] moÅ¼esz uÅ¼yÄ‡ montowaÄ‡ obrazy w formatach ISO oraz CUE/BIN:
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
 [34;1mimgmount D C:\cd.cue -t cdrom[0m
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[color=green]U¾ywanie rzeczywistych/wirtualnych dysk¢w CD-ROM[reset]
-DOSBox emuluje nap©dy CD-ROM na dw¢ch poziomach.
+[2J[color=green]UÅ¼ywanie rzeczywistych/wirtualnych dyskÃ³w CD-ROM[reset]
+DOSBox emuluje napÄ™dy CD-ROM na dwÃ³ch poziomach.
 
-Poziom [33mpodstawowy[0m u¾ywa zwykˆych katalog¢w; instaluje sterownik MSCDEX
-i oznacza ich zawarto˜† jako tylko do odczytu. To wystarcza do wi©kszo˜ci gier:
+Poziom [33mpodstawowy[0m uÅ¼ywa zwykÅ‚ych katalogÃ³w; instaluje sterownik MSCDEX
+i oznacza ich zawartoÅ›Ä‡ jako tylko do odczytu. To wystarcza do wiÄ™kszoÅ›ci gier:
 [34;1mmount D ~/katalog -t cdrom[0m
-Je˜li to nie dziaˆa, podaj dodatkowo etykiet© symulowanego dysku CD-ROM:
+JeÅ›li to nie dziaÅ‚a, podaj dodatkowo etykietÄ™ symulowanego dysku CD-ROM:
 [34;1mmount D ~/katalog -t cdrom -label ETYKIETA[0m
 
-Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsˆuga.
-Dziaˆa tylko z rzeczywistymi nap©dami CD-ROM:
-[34;1mmount d [0;31m/dev/przykˆad[34;1m -t cdrom -usecd [33m0[0m
+Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsÅ‚uga.
+DziaÅ‚a tylko z rzeczywistymi napÄ™dami CD-ROM:
+[34;1mmount d [0;31m/dev/przykÅ‚ad[34;1m -t cdrom -usecd [33m0[0m
 
-Zast¥p [0;31m~/dev//dev/przykˆad[0m przez lokacj© Twojego nap©du CD-ROM.
-Zast¥p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego nap©du CD-ROM, wy˜wietlanego przez polecenie:
+ZastÄ…p [0;31m~/dev//dev/przykÅ‚ad[0m przez lokacjÄ™ Twojego napÄ™du CD-ROM.
+ZastÄ…p [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego napÄ™du CD-ROM, wyÅ›wietlanego przez polecenie:
 [34;1mmount -listcd[0m
 
-Dodatkowo, poleceniem [color=blue]imgmount[reset] mo¾esz montowa† obrazy pˆyt w formatach ISO
+Dodatkowo, poleceniem [color=blue]imgmount[reset] moÅ¼esz montowaÄ‡ obrazy pÅ‚yt w formatach ISO
 oraz CUE/BIN:
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[color=green]Skr¢ty klawiszowe[reset]
-To s¥ domy˜lne skr¢ty klawiszowe. Mo¾na je zmieni† za pomoc¥ [33mmapera klawiatury[0m.
+[2J[color=green]SkrÃ³ty klawiszowe[reset]
+To sÄ… domyÅ›lne skrÃ³ty klawiszowe. MoÅ¼na je zmieniÄ‡ za pomocÄ… [33mmapera klawiatury[0m.
 
-[33;1m%s+Enter[0m  Przeˆ¥cz pomi©dzy peˆnym ekranem a trybem okienkowym.
-[33;1m%s+Pause[0m  Pauza lub wznowienie dziaˆania emulatora..
+[33;1m%s+Enter[0m  PrzeÅ‚Ä…cz pomiÄ™dzy peÅ‚nym ekranem a trybem okienkowym.
+[33;1m%s+Pause[0m  Pauza lub wznowienie dziaÅ‚ania emulatora..
 [33;1m%s+F1[0m   %s Uruchom [33mmapera klawiatury[0m.
-[33;1m%s+F4[0m   %s Podmieä zamontowany obraz na kolejny, sprawd« zmiany
+[33;1m%s+F4[0m   %s PodmieÅ„ zamontowany obraz na kolejny, sprawdÅº zmiany
            na zamontowanych dyskach.
 [33;1m%s+F5[0m   %s Zapisz zrzut ekranu.
-[33;1m%s+F6[0m   %s Start/Stop nagrywania d«wi©ku do pliku WAV.
+[33;1m%s+F6[0m   %s Start/Stop nagrywania dÅºwiÄ™ku do pliku WAV.
 [33;1m%s+F7[0m   %s Start/Stop nagrywania wideo do pliku AVI, z kodekiem ZMBV.
-[33;1m%s+F8[0m   %s Wyˆ¥cz/Wˆ¥cz d«wi©k.
-[33;1m%s+F9[0m   %s Zakoäcz prac© emulatora.
+[33;1m%s+F8[0m   %s WyÅ‚Ä…cz/WÅ‚Ä…cz dÅºwiÄ™k.
+[33;1m%s+F9[0m   %s ZakoÅ„cz pracÄ™ emulatora.
 [33;1m%s+F10[0m  %s Przejmij/Zwolnij kursor myszy.
-[33;1m%s+F11[0m  %s Zwolnij emulacj©.
-[33;1m%s+F12[0m  %s Przyspiesz emulacj©.
-[33;1m%s+F12[0m    Odblokuj maksymaln¥ pr©dko˜† (tryb turbo).
+[33;1m%s+F11[0m  %s Zwolnij emulacjÄ™.
+[33;1m%s+F12[0m  %s Przyspiesz emulacjÄ™.
+[33;1m%s+F12[0m    Odblokuj maksymalnÄ… prÄ™dkoÅ›Ä‡ (tryb turbo).
 
 .
 :PROGRAM_KEYB_INFO
-Strona kodowa %i zostaˆa zaˆadowana.
+Strona kodowa %i zostaÅ‚a zaÅ‚adowana.
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Strona kodowa %i dla ukˆadu klawiatury '%s' zostaˆa zaˆadowana.
+Strona kodowa %i dla ukÅ‚adu klawiatury '%s' zostaÅ‚a zaÅ‚adowana.
 
 .
 :SHELL_CMD_KEYB_HELP_LONG
-Konfiguracja klawiatury i czcionki dla danego j©zyka.
+Konfiguracja klawiatury i czcionki dla danego jÄ™zyka.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]keyb[reset] [color=cyan][KLAWIATURA][reset]
   [color=green]keyb[reset] [color=cyan]KLAWIATURA[reset] [color=white]KODOWANIE[reset] [PLIK]
 
 Gdzie:
-  [color=cyan]KLAWIATURA[reset]  ukˆad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wi©cej
-              znak¢w graficznych ni¾ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (j©zyk
+  [color=cyan]KLAWIATURA[reset]  ukÅ‚ad klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
+  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje wiÄ™cej
+              znakÃ³w graficznych niÅ¼ 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (jÄ™zyk
               kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
-              z symbolem euro), [color=white]852[reset] (Europa —rodkowo-Wschodnia) lub [color=white]437[reset] (USA).
+              z symbolem euro), [color=white]852[reset] (Europa Åšrodkowo-Wschodnia) lub [color=white]437[reset] (USA).
   PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
 
 Uwagi:
-  Uruchomienie bez argument¢w pokazuje aktualny ukˆad klawiatury i stron©
-  kodow¥. [color=cyan]KLAWIATURA[reset] mo¾e by† tak¾e zmieniona w pliku konfiguracyjnym
+  Uruchomienie bez argumentÃ³w pokazuje aktualny ukÅ‚ad klawiatury i stronÄ™
+  kodowÄ…. [color=cyan]KLAWIATURA[reset] moÅ¼e byÄ‡ takÅ¼e zmieniona w pliku konfiguracyjnym
   w sekcji [dos], parametrem 'keyboardlayout = [color=cyan]KLAWIATURA[reset]'.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]KEYB[reset] [color=cyan]us[reset]
   [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
   [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
 .
 :PROGRAM_KEYB_NOERROR
-Ukˆad klawiatury '%s' dla strony kodowej %i zostaˆ zaˆadowany.
+UkÅ‚ad klawiatury '%s' dla strony kodowej %i zostaÅ‚ zaÅ‚adowany.
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
-Nie znaleziono pliku ukˆadu klawiatury '%s'.
+Nie znaleziono pliku ukÅ‚adu klawiatury '%s'.
 
 
 .
 :PROGRAM_KEYB_INVALIDFILE
-Plik ukˆadu klawiatury '%s' jest nieprawidˆowy.
+Plik ukÅ‚adu klawiatury '%s' jest nieprawidÅ‚owy.
 
 .
 :PROGRAM_KEYB_LAYOUTNOTFOUND
-Brak ukˆadu klawiatury w '%s' dla strony kodowej %i.
+Brak ukÅ‚adu klawiatury w '%s' dla strony kodowej %i.
 
 .
 :PROGRAM_KEYB_INVCPFILE
-Brak lub nieprawidˆowy plik strony kodowej dla ukˆadu klawiatury '%s'.
+Brak lub nieprawidÅ‚owy plik strony kodowej dla ukÅ‚adu klawiatury '%s'.
 
 
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
-adowanie programu w okre˜lone miejsce pami©ci i uruchomienie go.
+Åadowanie programu w okreÅ›lone miejsce pamiÄ™ci i uruchomienie go.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]loadfix[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
   [color=green]loadfix[reset] [/d] (lub [/f])
 
 Gdzie:
-  [color=cyan]PROGRAM[reset]  program lub gra do zaˆadowania, opcjonalnie z argumentami.
+  [color=cyan]PROGRAM[reset]  program lub gra do zaÅ‚adowania, opcjonalnie z argumentami.
 
 Uwagi:
-  Typowy przykˆad u¾ycia to uruchomienie gry lub programu, kt¢ry normalnie
-  zgˆasza bˆ¥d '[color=white]Packed File Corrupt[reset]' lub '[color=white]Not enough memory[reset]', jak
-  niekt¢re gry z lat 1980-tych (California Games II, itd.).
-  Uruchomienie bez argument¢w tylko alokuje pami©† na gr©; pami©† mo¾na p¢«niej
-  zwolni† przeˆ¥cznikiem /d lub /f.
+  Typowy przykÅ‚ad uÅ¼ycia to uruchomienie gry lub programu, ktÃ³ry normalnie
+  zgÅ‚asza bÅ‚Ä…d '[color=white]Packed File Corrupt[reset]' lub '[color=white]Not enough memory[reset]', jak
+  niektÃ³re gry z lat 1980-tych (California Games II, itd.).
+  Uruchomienie bez argumentÃ³w tylko alokuje pamiÄ™Ä‡ na grÄ™; pamiÄ™Ä‡ moÅ¼na pÃ³Åºniej
+  zwolniÄ‡ przeÅ‚Ä…cznikiem /d lub /f.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
   [color=green]loadfix[reset] /d
 .
@@ -1453,115 +1453,115 @@ Przykˆady:
 
 .
 :PROGRAM_LOADFIX_DEALLOCALL
-U¾ywana pami©† zostaˆa zwolniona.
+UÅ¼ywana pamiÄ™Ä‡ zostaÅ‚a zwolniona.
 
 .
 :PROGRAM_LOADFIX_ERROR
-Bˆ¥d alokacji pami©ci.
+BÅ‚Ä…d alokacji pamiÄ™ci.
 
 .
 :SHELL_CMD_LOADROM_HELP_LONG
-adowanie obrazu ROM j©zyka IBM BASIC lub BIOSu karty graficznej.
+Åadowanie obrazu ROM jÄ™zyka IBM BASIC lub BIOSu karty graficznej.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]loadrom [color=cyan]OBRAZ[reset]
 
 Gdzie:
-  [color=cyan]OBRAZ[reset]  obraz ROMu do zaˆadowania.
+  [color=cyan]OBRAZ[reset]  obraz ROMu do zaÅ‚adowania.
 
 Uwagi:
-   Po zaˆadowaniu obrazu ROMu j©zyka IBM BASIC, mo¾na uruchomi† interpreter.
+   Po zaÅ‚adowaniu obrazu ROMu jÄ™zyka IBM BASIC, moÅ¼na uruchomiÄ‡ interpreter.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
-Podaj obraz ROMu do zaˆadowania.
+Podaj obraz ROMu do zaÅ‚adowania.
 
 .
 :PROGRAM_LOADROM_CANT_OPEN
-Nie mo¾na odczyta† obrazu ROMu.
+Nie moÅ¼na odczytaÄ‡ obrazu ROMu.
 
 .
 :PROGRAM_LOADROM_TOO_LARGE
-Obraz ROMu zbyt du¾y.
+Obraz ROMu zbyt duÅ¼y.
 
 .
 :PROGRAM_LOADROM_INCOMPATIBLE
-BIOS karty graficznej nie jest obsˆugiwany na maszynie tego typu.
+BIOS karty graficznej nie jest obsÅ‚ugiwany na maszynie tego typu.
 
 .
 :PROGRAM_LOADROM_UNRECOGNIZED
-Nie mo¾na rozpozna† ROMu.
+Nie moÅ¼na rozpoznaÄ‡ ROMu.
 
 .
 :PROGRAM_LOADROM_BASIC_LOADED
-Zaˆadowano BASIC ROM.
+ZaÅ‚adowano BASIC ROM.
 
 .
 :SHELL_CMD_MEM_HELP_LONG
-Wy˜wietlenie informacji o u¾yciu pami©ci.
+WyÅ›wietlenie informacji o uÅ¼yciu pamiÄ™ci.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]mem[reset]
 
 Gdzie:
-  To polecenie nie obsˆuguje ¾adnych argument¢w.
+  To polecenie nie obsÅ‚uguje Å¼adnych argumentÃ³w.
 
 Uwagi:
-  Polecenie pokazuje u¾ycie pami©ci przez DOS, wˆ¥czaj¥c woln¥ pami©†
-  konwencjonaln¥, UMB (g¢rn¥), XMS (rozszerzon¥) i EMS (stronicowan¥).
+  Polecenie pokazuje uÅ¼ycie pamiÄ™ci przez DOS, wÅ‚Ä…czajÄ…c wolnÄ… pamiÄ™Ä‡
+  konwencjonalnÄ…, UMB (gÃ³rnÄ…), XMS (rozszerzonÄ…) i EMS (stronicowanÄ…).
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]mem[reset]
 .
 :PROGRAM_MEM_CONVEN
-%10d kB wolnej pami©ci konwencjonalnej
+%10d kB wolnej pamiÄ™ci konwencjonalnej
 
 .
 :PROGRAM_MEM_EXTEND
-%10d kB wolnej pami©ci XMS (rozszerzonej)
+%10d kB wolnej pamiÄ™ci XMS (rozszerzonej)
 
 .
 :PROGRAM_MEM_EXPAND
-%10d kB wolnej pami©ci EMS (stronicowanej)
+%10d kB wolnej pamiÄ™ci EMS (stronicowanej)
 
 .
 :PROGRAM_MEM_UPPER
-%10d kB wolnej pami©ci UMB (g¢rnej) w %d blokach (najwi©kszy %d kB)
+%10d kB wolnej pamiÄ™ci UMB (gÃ³rnej) w %d blokach (najwiÄ™kszy %d kB)
 
 .
 :SHELL_CMD_MOUNT_HELP
-Montowanie fizycznych katalog¢w lub dysk¢w.
+Montowanie fizycznych katalogÃ³w lub dyskÃ³w.
 
 .
 :SHELL_CMD_MOUNT_HELP_LONG
-Montuje katalog z systemu gospodarza pod liter© dysku.
+Montuje katalog z systemu gospodarza pod literÄ™ dysku.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]mount[reset] [color=white]DYSK[reset] [color=cyan]KATALOG[reset] [-t TYP] [-usecd #] [-freesize ROZMIAR] [-label ETYKIETA]
-  [color=green]mount[reset] -listcd / -cd  (wy˜wietla wykryte nap©dy CD-ROM i ich numery)
+  [color=green]mount[reset] -listcd / -cd  (wyÅ›wietla wykryte napÄ™dy CD-ROM i ich numery)
   [color=green]mount[reset] -u [color=white]DYSK[reset]        (odmontowuje dysk)
 
 Gdzie:
-  [color=white]DYSK[reset]      litera, pod kt¢r¥ katalog zostanie zamontowany: A, C, D, ...
+  [color=white]DYSK[reset]      litera, pod ktÃ³rÄ… katalog zostanie zamontowany: A, C, D, ...
   [color=cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
   TYP       typ katalogu do zamontowania: dir, floppy, cdrom lub overlay
-  ROZMIAR   ile wolnego miejsca raportowa† programom (kilobajty dla dyskietek,
-            megabajty dla pozostaˆych dysk¢w)
+  ROZMIAR   ile wolnego miejsca raportowaÄ‡ programom (kilobajty dla dyskietek,
+            megabajty dla pozostaÅ‚ych dyskÃ³w)
   ETYKIETA  etykieta utworzonego dysku
 
 Uwagi:
   Parametr '-t overlay' przekierowuje operacje zapisu do innego katalogu.
-  Dodatkowe opcje s¥ opisane (po angielsku) w podr©czniku (README, chapter 4).
+  Dodatkowe opcje sÄ… opisane (po angielsku) w podrÄ™czniku (README, chapter 4).
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
   [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
-Znalezione nap©dy CD-ROM: %d
+Znalezione napÄ™dy CD-ROM: %d
 
 .
 :PROGRAM_MOUNT_ERROR_1
@@ -1573,11 +1573,11 @@ Katalog '%s' nie istnieje.
 
 .
 :PROGRAM_MOUNT_ILL_TYPE
-Nieprawidˆowy typ '%s'.
+NieprawidÅ‚owy typ '%s'.
 
 .
 :PROGRAM_MOUNT_ALREADY_MOUNTED
-Dysk %c jest ju¾ zamontowany jako '%s'.
+Dysk %c jest juÅ¼ zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
@@ -1585,74 +1585,74 @@ Dysk %c nie jest zamontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_SUCCESS
-Dysk %c zostaˆ pomy˜lnie odmontowany.
+Dysk %c zostaÅ‚ pomyÅ›lnie odmontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
-Dyski wirtualne nie mog¥ zosta† odmontowane.
+Dyski wirtualne nie mogÄ… zostaÄ‡ odmontowane.
 
 .
 :PROGRAM_MOUNT_DRIVEID_ERROR
-'%c' nie jest prawidˆowym identyfikatorem dysku.
+'%c' nie jest prawidÅ‚owym identyfikatorem dysku.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=red]Montowanie dysku C:\ nie jest zalecane. Prosz© nast©pnym razem zamontowa† (pod)katalog.[reset]
+[color=red]Montowanie dysku C:\ nie jest zalecane. ProszÄ™ nastÄ™pnym razem zamontowaÄ‡ (pod)katalog.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[color=red]Montowanie katalogu / nie jest zalecane. Prosz© nast©pnym razem zamontowa† (pod)katalog.[reset]
+[color=red]Montowanie katalogu / nie jest zalecane. ProszÄ™ nastÄ™pnym razem zamontowaÄ‡ (pod)katalog.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
-Zignorowano nieobsˆugiwan¥ opcj© '%s".
+Zignorowano nieobsÅ‚ugiwanÄ… opcjÄ™ '%s".
 
 .
 :PROGRAM_MOUNT_OVERLAY_NO_BASE
-Katalog musi zosta† zamontowany, zanim b©dzie mo¾e doda† nakˆadk© ('overlay').
+Katalog musi zostaÄ‡ zamontowany, zanim bÄ™dzie moÅ¼e dodaÄ‡ nakÅ‚adkÄ™ ('overlay').
 
 .
 :PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
-Nakˆadka ('overlay') nie jest kompatybilna z podanym dyskiem.
+NakÅ‚adka ('overlay') nie jest kompatybilna z podanym dyskiem.
 
 .
 :PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-Nakˆadka ('overlay') musi mie† tak¥ sam¥ lokacj©, jak zamontowany dysk.
-Nie mo¾na miesza† ˜cie¾ek wzgl©dnych i bezwzgl©dnych.
+NakÅ‚adka ('overlay') musi mieÄ‡ takÄ… samÄ… lokacjÄ™, jak zamontowany dysk.
+Nie moÅ¼na mieszaÄ‡ Å›cieÅ¼ek wzglÄ™dnych i bezwzglÄ™dnych.
 
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-Katalog nakˆadki ('overlay') musi by† inny ni¾ katalog dysku.
+Katalog nakÅ‚adki ('overlay') musi byÄ‡ inny niÅ¼ katalog dysku.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
-Bˆ¥d montowania nakˆadki ('overlay').
+BÅ‚Ä…d montowania nakÅ‚adki ('overlay').
 
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
-Nakˆadka ('overlay') '%s' zamontowana na dysku %c.
+NakÅ‚adka ('overlay') '%s' zamontowana na dysku %c.
 
 .
 :PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Nie mo¾na przenie˜† dysku Z. Dysk %c jest ju¾ zamontowany.
+Nie moÅ¼na przenieÅ›Ä‡ dysku Z. Dysk %c jest juÅ¼ zamontowany.
 
 .
 :SHELL_CMD_RESCAN_HELP_LONG
 Sprawdzenie zmian na zamontowanych dyskach.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]rescan[reset] [color=cyan]DYSK[reset]
   [color=green]rescan[reset] [/a]
 
 Gdzie:
-  [color=cyan]DYSK[reset]  dysk do sprawdzenia pod k¥tem zmian.
+  [color=cyan]DYSK[reset]  dysk do sprawdzenia pod kÄ…tem zmian.
 
 Uwagi:
-  Zmiany dokonane w systemie gospodarza zostan¥ uwzgl©dnione wewn¥trz DOSu.
+  Zmiany dokonane w systemie gospodarza zostanÄ… uwzglÄ™dnione wewnÄ…trz DOSu.
   Uruchomienie bez argumentu sprawdzi aktualny dysk.
-  Przeˆ¥cznik /a powoduje sprawdzenie wszystkich dysk¢w.
+  PrzeÅ‚Ä…cznik /a powoduje sprawdzenie wszystkich dyskÃ³w.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]rescan[reset] [color=cyan]c:[reset]
   [color=green]rescan[reset] /a
 .
@@ -1661,28 +1661,28 @@ Sprawdzono zmiany na dysku.
 
 .
 :SHELL_CMD_MIXER_HELP_LONG
-Zarz¥dzanie ustawieniami miksera d«wi©ku.
+ZarzÄ…dzanie ustawieniami miksera dÅºwiÄ™ku.
 
-Skˆadnia:
-  [color=green]mixer[reset] [color=cyan][KANA][reset] [color=white]POLECENIE[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]  (wy˜wietla dost©pne urz¥dzenia MIDI)
+SkÅ‚adnia:
+  [color=green]mixer[reset] [color=cyan][KANAÅ][reset] [color=white]POLECENIE[reset] [/noshow]
+  [color=green]mixer[reset] [/listmidi]  (wyÅ›wietla dostÄ™pne urzÄ…dzenia MIDI)
 
 Gdzie:
-  [color=cyan]KANA[reset]      to nazwa kanaˆu, kt¢rego dotyczy† b©d¥ zmiany.
-  [color=white]POLECENIE[reset]  jest jednym z poni¾szych:
-    Gˆo˜no˜†:     od [color=white]0[reset] do [color=white]100[reset] lub w decybelach poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset])
+  [color=cyan]KANAÅ[reset]      to nazwa kanaÅ‚u, ktÃ³rego dotyczyÄ‡ bÄ™dÄ… zmiany.
+  [color=white]POLECENIE[reset]  jest jednym z poniÅ¼szych:
+    GÅ‚oÅ›noÅ›Ä‡:     od [color=white]0[reset] do [color=white]100[reset] lub w decybelach poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset])
                   [color=white]L:P[reset] osobne ustawienia Lewej/Prawej strony (np. [color=white]10:20[reset])
-    Wyj˜cie:      [color=white]stereo[reset], [color=white]reverse[reset] (zamienione kanaˆy stereo)
+    WyjÅ›cie:      [color=white]stereo[reset], [color=white]reverse[reset] (zamienione kanaÅ‚y stereo)
     Przenikanie:  od [color=white]x0[reset] do [color=white]x100[reset]
     Efekt 'reverb' / 'chorus':  od [color=white]r0[reset] do [color=white]r100[reset] / od [color=white]c0[reset] do [color=white]c100[reset]
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietli aktualne ustawienia.
-  Jednym poleceniem mo¾na zmieni† ustawienia kilku kanaˆ¢w; ustawienia
-  przenikania lub efektu 'reverb' mo¾na zmieni† globalnie pomijaj¥c kanaˆ.
-  Przeˆ¥cznik /noshow pozwala zmieni† ustawienia bez ich wy˜wietlenia.
+  Uruchomienie bez argumentÃ³w wyÅ›wietli aktualne ustawienia.
+  Jednym poleceniem moÅ¼na zmieniÄ‡ ustawienia kilku kanaÅ‚Ã³w; ustawienia
+  przenikania lub efektu 'reverb' moÅ¼na zmieniÄ‡ globalnie pomijajÄ…c kanaÅ‚.
+  PrzeÅ‚Ä…cznik /noshow pozwala zmieniÄ‡ ustawienia bez ich wyÅ›wietlenia.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
@@ -1690,10 +1690,10 @@ Przykˆady:
 %-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanaˆ        Gˆo˜no˜†  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
+[color=white]KanaÅ‚        GÅ‚oÅ›noÅ›Ä‡  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
-wyˆ
+wyÅ‚
 .
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
@@ -1702,16 +1702,16 @@ Stereo
 Mono
 .
 :SHELL_CMD_SERIAL_HELP_LONG
-Zarz¥dzanie portami szeregowymi.
+ZarzÄ…dzanie portami szeregowymi.
 
-Skˆadnia:
-  [color=green]serial[reset] [color=white][PORT#][reset]  (wy˜wietla ustawienia port¢w lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
-  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZ¤DZENIE[reset] [ustawienia]  (podˆ¥cz urz¥dzenie do portu)
+SkÅ‚adnia:
+  [color=green]serial[reset] [color=white][PORT#][reset]  (wyÅ›wietla ustawienia portÃ³w lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
+  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZÄ„DZENIE[reset] [ustawienia]  (podÅ‚Ä…cz urzÄ…dzenie do portu)
 
 Gdzie:
-  [color=cyan]URZ¤DZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset] lub [color=cyan]DISABLED[reset]
+  [color=cyan]URZÄ„DZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset] lub [color=cyan]DISABLED[reset]
 
-  Dodatkowe opcje dla poszczeg¢lnych urz¥dzeä:
+  Dodatkowe opcje dla poszczegÃ³lnych urzÄ…dzeÅ„:
   [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
   [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                PORT, INHSOCKET, SOCK
@@ -1720,11 +1720,11 @@ Gdzie:
   [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
   [color=cyan]DUMMY[reset]      : IRQ
 
-Przykˆady:
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                  : Sˆuchaj na TCP:1250 - serwer
-  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250  : Podˆ¥cz do TCP:1250 - klient
-  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1         : Sˆuchaj na UDP:5000 - serwer
-  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0              : U¾yj fizycznego portu (Linux)
+PrzykÅ‚ady:
+  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                  : SÅ‚uchaj na TCP:1250 - serwer
+  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250  : PodÅ‚Ä…cz do TCP:1250 - klient
+  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1         : SÅ‚uchaj na UDP:5000 - serwer
+  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0              : UÅ¼yj fizycznego portu (Linux)
   [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                       : Mysz typu Mouse Systems
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -1732,11 +1732,11 @@ COM%d: %s %s
 
 .
 :PROGRAM_SERIAL_BAD_PORT
-Podaj numer portu pomi©dzy 1 a %d (wˆ¥cznie).
+Podaj numer portu pomiÄ™dzy 1 a %d (wÅ‚Ä…cznie).
 
 .
 :PROGRAM_SERIAL_BAD_TYPE
-Typ musi by† jednym z:
+Typ musi byÄ‡ jednym z:
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST
@@ -1744,18 +1744,18 @@ Typ musi by† jednym z:
 
 .
 :SHELL_ILLEGAL_PATH
-Nieprawidˆowa ˜cie¾ka.
+NieprawidÅ‚owa Å›cieÅ¼ka.
 
 .
 :SHELL_CMD_HELP
-Aby zobaczy† list© wszystkich obsˆugiwanych komend, wpisz [33;1mhelp /all[0m.
-Kr¢tka lista najcz©˜ciej u¾ywanych komend:
+Aby zobaczyÄ‡ listÄ™ wszystkich obsÅ‚ugiwanych komend, wpisz [33;1mhelp /all[0m.
+KrÃ³tka lista najczÄ™Å›ciej uÅ¼ywanych komend:
 
 .
 :SHELL_CMD_COMMAND_HELP_LONG
-Uruchomienie interpretera wiersza poleceä.
+Uruchomienie interpretera wiersza poleceÅ„.
 
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]command[reset]
   [color=green]command[reset] /c (lub /init) [color=cyan]POLECENIE[reset]
 
@@ -1763,26 +1763,26 @@ Gdzie:
   [color=cyan]POLECENIE[reset]  polecenie, program lub gra do uruchomienia.
 
 Uwagi:
-  DOSBox Staging automatycznie uruchamia interpreter wiersza poleceä z opcj¥
-  /init podczas startu, pokazuj¥c baner powitalny.
-  Poleceniem [color=green]command[reset] mo¾na uruchomi† now¥ instancj©.
-  Opcja /c wykonuje podane [color=cyan]POLECENIE[reset], po czym koäczy prac© wiersza poleceä.
+  DOSBox Staging automatycznie uruchamia interpreter wiersza poleceÅ„ z opcjÄ…
+  /init podczas startu, pokazujÄ…c baner powitalny.
+  Poleceniem [color=green]command[reset] moÅ¼na uruchomiÄ‡ nowÄ… instancjÄ™.
+  Opcja /c wykonuje podane [color=cyan]POLECENIE[reset], po czym koÅ„czy pracÄ™ wiersza poleceÅ„.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]command[reset]
   [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
   [color=green]command[reset] /init [color=cyan]dir[reset]
 .
 :SHELL_CMD_ECHO_ON
-ECHO jest wˆ¥czone.
+ECHO jest wÅ‚Ä…czone.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO jest wyˆ¥czone.
+ECHO jest wyÅ‚Ä…czone.
 
 .
 :SHELL_ILLEGAL_SWITCH
-Nieprawidˆowy przeˆ¥cznik '%s'.
+NieprawidÅ‚owy przeÅ‚Ä…cznik '%s'.
 
 .
 :SHELL_MISSING_PARAMETER
@@ -1790,42 +1790,42 @@ Brak wymaganego parametru.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Nie mo¾na przej˜† do '%s'.
+Nie moÅ¼na przejÅ›Ä‡ do '%s'.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Aby przej˜† do innego dysku wpisz np. [31m%c:[0m
+Aby przejÅ›Ä‡ do innego dysku wpisz np. [31m%c:[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-Nazwa katalogu jest dˆu¾sza ni¾ 8 znak¢w i/lub zawiera spacje.
-Spr¢buj [31mcd %s[0m
+Nazwa katalogu jest dÅ‚uÅ¼sza niÅ¼ 8 znakÃ³w i/lub zawiera spacje.
+SprÃ³buj [31mcd %s[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Wci¥¾ jeste˜ na dysku Z:, wpisz [31mC:[0m aby przej˜† na zamontowany dysk.
+WciÄ…Å¼ jesteÅ› na dysku Z:, wpisz [31mC:[0m aby przejÅ›Ä‡ na zamontowany dysk.
 
 .
 :SHELL_CMD_DATE_HELP
-Wy˜wietlenie lub zmiana daty systemowej.
+WyÅ›wietlenie lub zmiana daty systemowej.
 
 .
 :SHELL_CMD_DATE_ERROR
-Podana data jest nieprawidˆowa.
+Podana data jest nieprawidÅ‚owa.
 
 .
 :SHELL_CMD_DATE_DAYS
-3NiePonWtr—rdCzwPi¥Sob
+3NiePonWtrÅšrdCzwPiÄ…Sob
 .
 :SHELL_CMD_DATE_NOW
 Aktualna data: 
 .
 :SHELL_CMD_DATE_SETHLP
-Wpisz 'date %s' aby zmieni† dat©.
+Wpisz 'date %s' aby zmieniÄ‡ datÄ™.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]date[reset] [/t]
   [color=green]date[reset] /h
   [color=green]date[reset] [color=cyan]DATA[reset]
@@ -1834,32 +1834,32 @@ Gdzie:
   [color=cyan]DATA[reset]  data do ustawienia, w formacie [color=cyan]%s[reset].
 
 Uwagi:
-  Uruchomienie bez argument¢w pokazuje aktualn¥ dat©, w kr¢tkim formacie
-  je˜li podano przeˆ¥cznik /t.
-  Przeˆ¥cznik /h synchronizuje dat© z systemem gospodarza.
+  Uruchomienie bez argumentÃ³w pokazuje aktualnÄ… datÄ™, w krÃ³tkim formacie
+  jeÅ›li podano przeÅ‚Ä…cznik /t.
+  PrzeÅ‚Ä…cznik /h synchronizuje datÄ™ z systemem gospodarza.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]date[reset]
   [color=green]date[reset] /h
   [color=green]date[reset] [color=cyan]%s[reset]
 .
 :SHELL_CMD_TIME_HELP
-Wy˜wietlenie lub zmiana godziny systemowej.
+WyÅ›wietlenie lub zmiana godziny systemowej.
 
 .
 :SHELL_CMD_TIME_ERROR
-Podana godzina jest nieprawidˆowa.
+Podana godzina jest nieprawidÅ‚owa.
 
 .
 :SHELL_CMD_TIME_NOW
 Aktualny czas: 
 .
 :SHELL_CMD_TIME_SETHLP
-Wpisz 'time %s' aby zmieni† godzin©.
+Wpisz 'time %s' aby zmieniÄ‡ godzinÄ™.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]time[reset] [/t]
   [color=green]time[reset] /h
   [color=green]time[reset] [color=cyan]GODZINA[reset]
@@ -1868,37 +1868,37 @@ Gdzie:
   [color=cyan]GODZINA[reset]  nowy czas do ustawienia, w formacie [color=cyan]%s[reset].
 
 Uwagi:
-  Uruchomienie bez argument¢w pokazuje aktualn¥ godzin©, w kr¢tkim formacie
-  je˜li podano przeˆ¥cznik /t.
-  Przeˆ¥cznik /h synchronizuje godzin© z systemem gospodarza.
+  Uruchomienie bez argumentÃ³w pokazuje aktualnÄ… godzinÄ™, w krÃ³tkim formacie
+  jeÅ›li podano przeÅ‚Ä…cznik /t.
+  PrzeÅ‚Ä…cznik /h synchronizuje godzinÄ™ z systemem gospodarza.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]time[reset]
   [color=green]time[reset] /h
   [color=green]time[reset] [color=cyan]%s[reset]
 .
 :SHELL_CMD_MKDIR_ERROR
-Nie mo¾na utworzy† katalogu '%s'.
+Nie moÅ¼na utworzyÄ‡ katalogu '%s'.
 
 .
 :SHELL_CMD_RMDIR_ERROR
-Nie mo¾na usun¥† katalogu '%s'.
+Nie moÅ¼na usunÄ…Ä‡ katalogu '%s'.
 
 .
 :SHELL_CMD_DEL_ERROR
-Nie mo¾na usun¥† '%s'.
+Nie moÅ¼na usunÄ…Ä‡ '%s'.
 
 .
 :SHELL_SYNTAXERROR
-Nieprawidˆowa skˆadnia.
+NieprawidÅ‚owa skÅ‚adnia.
 
 .
 :SHELL_CMD_SET_NOT_SET
-Zmienna ˜rodowiskowa %s nie jest zdefiniowana.
+Zmienna Å›rodowiskowa %s nie jest zdefiniowana.
 
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
-Niewystarczaj¥ca ilo˜† miejsca w ˜rodowisku.
+NiewystarczajÄ…ca iloÅ›Ä‡ miejsca w Å›rodowisku.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
@@ -1910,7 +1910,7 @@ IF ERRORLEVEL: Brakuje numeru.
 
 .
 :SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
-IF ERRORLEVEL: Nieprawidˆowy numer.
+IF ERRORLEVEL: NieprawidÅ‚owy numer.
 
 .
 :SHELL_CMD_GOTO_MISSING_LABEL
@@ -1922,25 +1922,25 @@ GOTO: Nie odnaleziono etykiety %s.
 
 .
 :SHELL_CMD_FILE_ACCESS_DENIED
-Brak dost©pu - '%s'.
+Brak dostÄ™pu - '%s'.
 
 .
 :SHELL_CMD_DUPLICATE_REDIRECTION
-Podw¢jne przekierowanie - '%s'.
+PodwÃ³jne przekierowanie - '%s'.
 
 .
 :SHELL_CMD_FAILED_PIPE
 
-Nie mo¾na utworzy† lub otworzy† pliku tymczasowego dla strumienia.
-Sprawd« zmienn¥ ˜rodowiskow¥ %%TEMP%%.
+Nie moÅ¼na utworzyÄ‡ lub otworzyÄ‡ pliku tymczasowego dla strumienia.
+SprawdÅº zmiennÄ… Å›rodowiskowÄ… %%TEMP%%.
 
 .
 :SHELL_CMD_FILE_CREATE_ERROR
-Nie mo¾na utworzy† pliku '%s'.
+Nie moÅ¼na utworzyÄ‡ pliku '%s'.
 
 .
 :SHELL_CMD_FILE_OPEN_ERROR
-Nie mo¾na otworzy† pliku '%s'.
+Nie moÅ¼na otworzyÄ‡ pliku '%s'.
 
 .
 :SHELL_CMD_FILE_NOT_FOUND
@@ -1948,11 +1948,11 @@ Nie odnaleziono pliku '%s'.
 
 .
 :SHELL_CMD_FILE_EXISTS
-Plik '%s' ju¾ istnieje.
+Plik '%s' juÅ¼ istnieje.
 
 .
 :SHELL_CMD_DIR_VOLUME
- Wolumin w nap©dzie %c to '%s'
+ Wolumin w napÄ™dzie %c to '%s'
 
 .
 :SHELL_CMD_DIR_INTRO
@@ -1960,101 +1960,101 @@ Plik '%s' ju¾ istnieje.
 
 .
 :SHELL_CMD_DIR_BYTES_USED
-%17d plik(¢w)    %21s bajt¢w
+%17d plik(Ã³w)    %21s bajtÃ³w
 
 .
 :SHELL_CMD_DIR_BYTES_FREE
-%17d katalog(¢w) %21s bajt¢w wolnych
+%17d katalog(Ã³w) %21s bajtÃ³w wolnych
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Dysk %c nie istnieje!
-Musisz go najpierw [31mzamontowa†[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyska† wi©cej informacji.
+Musisz go najpierw [31mzamontowaÄ‡[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyskaÄ‡ wiÄ™cej informacji.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Bˆ©dne polecenie lub nazwa pliku: '%s'.
+BÅ‚Ä™dne polecenie lub nazwa pliku: '%s'.
 
 .
 :SHELL_CMD_PAUSE
-Naci˜nij dowolny klawisz, aby kontynuowa†...
+NaciÅ›nij dowolny klawisz, aby kontynuowaÄ‡...
 .
 :SHELL_CMD_PAUSE_HELP
-Oczekiwanie na naci˜ni©cie klawisza aby kontynuowa†.
+Oczekiwanie na naciÅ›niÄ™cie klawisza aby kontynuowaÄ‡.
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]pause[reset]
 
 Gdzie:
-  To polecenie nie obsˆuguje ¾adnych argument¢w.
+  To polecenie nie obsÅ‚uguje Å¼adnych argumentÃ³w.
 
 Uwagi:
-  To polecenie jest zazwyczaj stosowane w plikach BAT (wsadowych). U¾ytkownik
-  mo¾e wcisn¥† dowolny klawisz (z wyj¥tkiem kilku klawiszy steruj¥cych),
-  aby kontynuowa†.
+  To polecenie jest zazwyczaj stosowane w plikach BAT (wsadowych). UÅ¼ytkownik
+  moÅ¼e wcisnÄ…Ä‡ dowolny klawisz (z wyjÄ…tkiem kilku klawiszy sterujÄ…cych),
+  aby kontynuowaÄ‡.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]pause[reset]
 .
 :SHELL_CMD_COPY_FAILURE
-Nie mo¾na skopiowa† '%s'.
+Nie moÅ¼na skopiowaÄ‡ '%s'.
 
 .
 :SHELL_CMD_COPY_SUCCESS
-   skopiowano %d plik(¢w)
+   skopiowano %d plik(Ã³w)
 
 .
 :SHELL_CMD_SUBST_NO_REMOVE
-Nie mo¾na usun¥†, nie ma takiego dysku.
+Nie moÅ¼na usunÄ…Ä‡, nie ma takiego dysku.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-Wykonanie polecenia SUBST nie powiodˆo si©. Mo¾e to by† spowodowane bˆ©dem w
-skˆadni lub tym, ¾e docelowy dysk jest u¾ywany.
-Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
+Wykonanie polecenia SUBST nie powiodÅ‚o siÄ™. MoÅ¼e to byÄ‡ spowodowane bÅ‚Ä™dem w
+skÅ‚adni lub tym, Å¼e docelowy dysk jest uÅ¼ywany.
+Polecenia SUBST moÅ¼na uÅ¼yÄ‡ jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_BEGIN
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mWitaj w DOSBox Staging %-43s[37m º
-º                                                                    º
-º Kr¢tki wst©p dla nowych u¾ytkownik¢w, wpisz: [33mINTRO[37m                 º
-º Aby zobaczy† list© wspieranych komend, wpisz: [33mHELP[37m                 º
-º                                                                    º
-º Aby dostosowa† pr©dko˜† emulatora, u¾yj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       º
-º Aby zmieni† skr¢ty klawiszowe [31m%s+F1[37m.%s                             º
-º Wi©cej (po angielsku) w pliku [36mREADME[37m w katalogu DOSBoksa.          º
-º                                                                    º
+[44;1mâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [32mWitaj w DOSBox Staging %-43s[37m â•‘
+â•‘                                                                    â•‘
+â•‘ KrÃ³tki wstÄ™p dla nowych uÅ¼ytkownikÃ³w, wpisz: [33mINTRO[37m                 â•‘
+â•‘ Aby zobaczyÄ‡ listÄ™ wspieranych komend, wpisz: [33mHELP[37m                 â•‘
+â•‘                                                                    â•‘
+â•‘ Aby dostosowaÄ‡ prÄ™dkoÅ›Ä‡ emulatora, uÅ¼yj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       â•‘
+â•‘ Aby zmieniÄ‡ skrÃ³ty klawiszowe [31m%s+F1[37m.%s                             â•‘
+â•‘ WiÄ™cej (po angielsku) w pliku [36mREADME[37m w katalogu DOSBoksa.          â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_CGA
-º DOSBox wspiera tryb Composite CGA.                                 º
-º Wci˜nij [31mF12[37m aby wˆ¥czy† lub wyˆ¥czy† tryb composite.               º
-º [31m(%s+)F11[37m zmienia barw©; [31m%s+%s+F11[37m zmienia model CGA.%s           º
-º                                                                    º
+â•‘ DOSBox wspiera tryb Composite CGA.                                 â•‘
+â•‘ WciÅ›nij [31mF12[37m aby wÅ‚Ä…czyÄ‡ lub wyÅ‚Ä…czyÄ‡ tryb composite.               â•‘
+â•‘ [31m(%s+)F11[37m zmienia barwÄ™; [31m%s+%s+F11[37m zmienia model CGA.%s           â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_CGA_MONO
-º Wci˜nij [31mF11[37m kolor mono: jasny biaˆy, biaˆy, pomaraäczowy, zielony. º
+â•‘ WciÅ›nij [31mF11[37m kolor mono: jasny biaÅ‚y, biaÅ‚y, pomaraÅ„czowy, zielony. â•‘
 
-º i [31m%s+F11[37m aby zmieni† kontrast/jasno˜†.                            º
+â•‘ i [31m%s+F11[37m aby zmieniÄ‡ kontrast/jasnoÅ›Ä‡.                            â•‘
 
 .
 :SHELL_STARTUP_HERC
-º Wci˜nij [31mF11[37m aby zmieni† kolor ekaranu mono: jasny biaˆy, biaˆy,    º
-º pomaraäczowy, zielony.                                             º
-º                                                                    º
+â•‘ WciÅ›nij [31mF11[37m aby zmieniÄ‡ kolor ekaranu mono: jasny biaÅ‚y, biaÅ‚y,    â•‘
+â•‘ pomaraÅ„czowy, zielony.                                             â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_DEBUG
-º Wci˜nij [31m%sPauza[37m aby wˆ¥czy† debuggera albo wˆ¥cz plik exe komend¥ [33mDEBUG[37m. º
-º                                                                    º
+â•‘ WciÅ›nij [31m%sPauza[37m aby wÅ‚Ä…czyÄ‡ debuggera albo wÅ‚Ä…cz plik exe komendÄ… [33mDEBUG[37m. â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_END
-º [33mhttps://dosbox-staging.github.io[37m                                   º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+â•‘ [33mhttps://dosbox-staging.github.io[37m                                   â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[0m
 
 
 .
@@ -2063,156 +2063,156 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 
 .
 :SHELL_CMD_CHDIR_HELP
-Wy˜wietlenie lub zmiana aktualnego katalogu.
+WyÅ›wietlenie lub zmiana aktualnego katalogu.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]cd[reset] [color=cyan]KATALOG[reset]
   [color=green]chdir[reset] [color=cyan]KATALOG[reset]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]  nazwa katalogu, do kt¢rego nale¾y przej˜†.
+  [color=cyan]KATALOG[reset]  nazwa katalogu, do ktÃ³rego naleÅ¼y przejÅ›Ä‡.
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla aktualny katalog.
+  Uruchomienie bez argumentÃ³w wyÅ›wietla aktualny katalog.
   Polecenie zmienia jedynie katalog, nie aktualny dysk.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]cd[reset]
   [color=green]cd[reset] [color=cyan]mydir[reset]
 .
 :SHELL_CMD_CLS_HELP
-Czyszczenie zawarto˜ci ekranu.
+Czyszczenie zawartoÅ›ci ekranu.
 
 .
 :SHELL_CMD_CLS_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]cls[reset]
 
 Gdzie:
-  To polecenie nie obsˆuguje ¾adnych argument¢w.
+  To polecenie nie obsÅ‚uguje Å¼adnych argumentÃ³w.
 
 Uwagi:
-  Polecenie [color=green]cls[reset] kasuje caˆy tekst na ekranie, z wyj¥tkiem znaku zach©ty
-  (np. [color=white]Z:\>[reset] lub [color=white]C:\GAMES>[reset]) w lewym g¢rnym rogu ekranu.
+  Polecenie [color=green]cls[reset] kasuje caÅ‚y tekst na ekranie, z wyjÄ…tkiem znaku zachÄ™ty
+  (np. [color=white]Z:\>[reset] lub [color=white]C:\GAMES>[reset]) w lewym gÃ³rnym rogu ekranu.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]cls[reset]
 .
 :SHELL_CMD_DIR_HELP
-Wy˜wietlenie listy plik¢w i podkatalog¢w.
+WyÅ›wietlenie listy plikÃ³w i podkatalogÃ³w.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
-Skˆadnia:
-  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]PORZ¤DEK[reset]]
+SkÅ‚adnia:
+  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]PORZÄ„DEK[reset]]
 
 Gdzie:
-  [color=cyan]WZORZEC[reset]       dokˆadna nazwa lub nazwa z symbolami wieloznaczno˜ci (maskami),
-                kt¢rymi s¥ asterisk ('*') i znak zapytania ('?'). Mo¾na poda†
-                ˜cie¾k©, aby wy˜wietli† zawarto˜† podanego katalogu.
-  [color=white]PORZ¤DEK[reset]      porz¥dek sortowania [color=white]n[reset] (po nazwie, alfabetycznie),
+  [color=cyan]WZORZEC[reset]       dokÅ‚adna nazwa lub nazwa z symbolami wieloznacznoÅ›ci (maskami),
+                ktÃ³rymi sÄ… asterisk ('*') i znak zapytania ('?'). MoÅ¼na podaÄ‡
+                Å›cieÅ¼kÄ™, aby wyÅ›wietliÄ‡ zawartoÅ›Ä‡ podanego katalogu.
+  [color=white]PORZÄ„DEK[reset]      porzÄ…dek sortowania [color=white]n[reset] (po nazwie, alfabetycznie),
                 [color=white]s[reset] (od najmniejszego), [color=white]e[reset] (po rozszerzeniu, alfabetycznie),
-                [color=white]d[reset] (od najstarszego), opcjonalny prefiks [color=white]-[reset] odwraca porz¥dek.
-  /w            wy˜wietl 5 plik¢w/katalog¢w w jednym wierszu.
-  /b            wy˜wietl tylko nazwy.
-  /p            pauza po ka¾dorazowym zapeˆnieniu ekranu.
-  /ad lub /a-d  wy˜wietl tylko katalogi lub pliki (odpowiednio).
+                [color=white]d[reset] (od najstarszego), opcjonalny prefiks [color=white]-[reset] odwraca porzÄ…dek.
+  /w            wyÅ›wietl 5 plikÃ³w/katalogÃ³w w jednym wierszu.
+  /b            wyÅ›wietl tylko nazwy.
+  /p            pauza po kaÅ¼dorazowym zapeÅ‚nieniu ekranu.
+  /ad lub /a-d  wyÅ›wietl tylko katalogi lub pliki (odpowiednio).
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla wszystkie pliki i podkatalogi w
+  Uruchomienie bez argumentÃ³w wyÅ›wietla wszystkie pliki i podkatalogi w
   aktualnym katalogu, tak samo jak [color=green]dir[reset] [color=cyan]*.*[reset].
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]dir[reset] [color=cyan]games.*[reset] /p
   [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Wy˜wietlenie wiadomo˜ci lub wˆ¥czenie/wyˆ¥czenie trybu powtarzania.
+WyÅ›wietlenie wiadomoÅ›ci lub wÅ‚Ä…czenie/wyÅ‚Ä…czenie trybu powtarzania.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]echo[reset] [color=cyan][on|off][reset]
-  [color=green]echo[reset] [color=cyan][WIADOMO—][reset]
+  [color=green]echo[reset] [color=cyan][WIADOMOÅšÄ†][reset]
 
 Gdzie:
-  [color=cyan]on|off[reset]     Wˆ¥cz/Wyˆ¥cz wy˜wietlanie wykonywanych poleceä (tryb powtarzania).
-  [color=cyan]WIADOMO—[reset]  Wiadomo˜† do wy˜wietlenia.
+  [color=cyan]on|off[reset]     WÅ‚Ä…cz/WyÅ‚Ä…cz wyÅ›wietlanie wykonywanych poleceÅ„ (tryb powtarzania).
+  [color=cyan]WIADOMOÅšÄ†[reset]  WiadomoÅ›Ä‡ do wyÅ›wietlenia.
 
 Uwagi:
-  Uruchomienie bez argument¢w pokazuje, czy tryb powtarzania jest wˆ¥czony.
-  Polecenie jest przydatne do debugowania plik¢w wsadowych.
+  Uruchomienie bez argumentÃ³w pokazuje, czy tryb powtarzania jest wÅ‚Ä…czony.
+  Polecenie jest przydatne do debugowania plikÃ³w wsadowych.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Witaj, ˜wiecie![reset]
+  [color=green]echo[reset] [color=cyan]Witaj, Å›wiecie![reset]
 .
 :SHELL_CMD_EXIT_HELP
-Zakoäczenie wiersza poleceä.
+ZakoÅ„czenie wiersza poleceÅ„.
 
 .
 :SHELL_CMD_EXIT_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]exit[reset]
 
 Gdzie:
-  To polecenie nie obsˆuguje ¾adnych argument¢w.
+  To polecenie nie obsÅ‚uguje Å¼adnych argumentÃ³w.
 
 Uwagi:
-  Je˜li wiersz poleceä zostaˆ wywoˆany przez program, polecenie [color=green]exit[reset] powr¢ci
+  JeÅ›li wiersz poleceÅ„ zostaÅ‚ wywoÅ‚any przez program, polecenie [color=green]exit[reset] powrÃ³ci
   do tego programu.
-  Je˜li ¾aden program nie jest uruchomiony, polecenie zakoäczy dziaˆanie
+  JeÅ›li Å¼aden program nie jest uruchomiony, polecenie zakoÅ„czy dziaÅ‚anie
   emulatora DOSBox.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]exit[reset]
 .
 :SHELL_CMD_EXIT_TOO_SOON
-Pr¢ba zbyt wczesnego wykonania polecenia 'exit'.
+PrÃ³ba zbyt wczesnego wykonania polecenia 'exit'.
 
 .
 :SHELL_CMD_HELP_HELP
-Wy˜wietlenie pomocy dotycz¥cej poszczeg¢lnych poleceä.
+WyÅ›wietlenie pomocy dotyczÄ…cej poszczegÃ³lnych poleceÅ„.
 
 .
 :SHELL_CMD_HELP_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]help[reset]
   [color=green]help[reset] /a[ll]
   [color=green]help[reset] [color=cyan]POLECENIE[reset]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset]  nazwa wewn©trznego polecenie DOS, np. [color=cyan]dir[reset].
+  [color=cyan]POLECENIE[reset]  nazwa wewnÄ™trznego polecenie DOS, np. [color=cyan]dir[reset].
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla list© poleceä DOS (z parametrem /a
-  lub /all - peˆn¥ list©).
-  Zamiast [color=green]help[reset] [color=cyan]POLECENIE[reset], mo¾esz uzyska† pomoc wpisuj¥c [color=cyan]POLECENIE[reset] /?.
+  Uruchomienie bez argumentÃ³w wyÅ›wietla listÄ™ poleceÅ„ DOS (z parametrem /a
+  lub /all - peÅ‚nÄ… listÄ™).
+  Zamiast [color=green]help[reset] [color=cyan]POLECENIE[reset], moÅ¼esz uzyskaÄ‡ pomoc wpisujÄ…c [color=cyan]POLECENIE[reset] /?.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
 .
 :SHELL_CMD_INTRO_HELP
-Kr¢tki, peˆnoekranowy samouczek.
+KrÃ³tki, peÅ‚noekranowy samouczek.
 
 .
 :SHELL_CMD_INTRO_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]STRONA[reset]
 
 Gdzie:
-  [color=white]STRONA[reset]  nazwa strony do wy˜wietlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
+  [color=white]STRONA[reset]  nazwa strony do wyÅ›wietlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla jedn¥ stron© na raz; naci˜nij dowolny
-  klawisz, ¾eby przej˜† do kolejnej.
-  Podanie nazwy strony wy˜wietla tylko ¾¥dan¥ stron©.
+  Uruchomienie bez argumentÃ³w wyÅ›wietla jednÄ… stronÄ™ na raz; naciÅ›nij dowolny
+  klawisz, Å¼eby przejÅ›Ä‡ do kolejnej.
+  Podanie nazwy strony wyÅ›wietla tylko Å¼Ä…danÄ… stronÄ™.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]cdrom[reset]
 .
@@ -2221,7 +2221,7 @@ Tworzenie nowego katalogu.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]md[reset] [color=cyan]KATALOG[reset]
   [color=green]mkdir[reset] [color=cyan]KATALOG[reset]
 
@@ -2229,49 +2229,49 @@ Gdzie:
   [color=cyan]KATALOG[reset]  nazwa katalogu do utworzenia.
 
 Uwagi:
-  Nale¾y poda† dokˆadn¥ nazw©, katalog nie mo¾e ju¾ istnie†.
-  Mo¾na poda† ˜cie¾k©, gdzie katalog ma zosta† utworzony.
+  NaleÅ¼y podaÄ‡ dokÅ‚adnÄ… nazwÄ™, katalog nie moÅ¼e juÅ¼ istnieÄ‡.
+  MoÅ¼na podaÄ‡ Å›cieÅ¼kÄ™, gdzie katalog ma zostaÄ‡ utworzony.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]md[reset] [color=cyan]newdir[reset]
   [color=green]md[reset] [color=cyan]c:\games\dir[reset]
 .
 :SHELL_CMD_RMDIR_HELP
-Usuni©cie katalogu.
+UsuniÄ™cie katalogu.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]rd[reset] [color=cyan]KATALOG[reset]
   [color=green]rmdir[reset] [color=cyan]KATALOG[reset]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]  nazwa katalogu do usuni©cia.
+  [color=cyan]KATALOG[reset]  nazwa katalogu do usuniÄ™cia.
 
 Uwagi:
-  Katalog musi by† pusty, nie zawiera† plik¢w ani podkatalog¢w.
+  Katalog musi byÄ‡ pusty, nie zawieraÄ‡ plikÃ³w ani podkatalogÃ³w.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]rd[reset] [color=cyan]emptydir[reset]
 .
 :SHELL_CMD_SET_HELP
-Wy˜wietlenie lub zmiana zawarto˜ci zmiennych ˜rodowiskowych.
+WyÅ›wietlenie lub zmiana zawartoÅ›ci zmiennych Å›rodowiskowych.
 
 .
 :SHELL_CMD_SET_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]set[reset]
-  [color=green]set[reset] [color=white]ZMIENNA[reset]=[color=cyan][ZAWARTO—][reset]
+  [color=green]set[reset] [color=white]ZMIENNA[reset]=[color=cyan][ZAWARTOÅšÄ†][reset]
 
 Gdzie:
-  [color=white]ZMIENNA[reset]    nazwa zmiennej ˜rodowiskowej.
-  [color=cyan]ZAWARTO—[reset]  tekst (ˆaäcuch znak¢w) do przypisania do zmiennej.
+  [color=white]ZMIENNA[reset]    nazwa zmiennej Å›rodowiskowej.
+  [color=cyan]ZAWARTOÅšÄ†[reset]  tekst (Å‚aÅ„cuch znakÃ³w) do przypisania do zmiennej.
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla wszystkie zmienne ˜rodowiskowe.
-  Przypisanie pustej zawarto˜ci usuwa zmienn¥ ˜rodowiskow¥.
+  Uruchomienie bez argumentÃ³w wyÅ›wietla wszystkie zmienne Å›rodowiskowe.
+  Przypisanie pustej zawartoÅ›ci usuwa zmiennÄ… Å›rodowiskowÄ….
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]set[reset]
   [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]
 .
@@ -2280,26 +2280,26 @@ Warunkowe wykonanie polecenia w pliku wsadowym.
 
 .
 :SHELL_CMD_IF_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMER[reset] POLECENIE
   [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] POLECENIE
   [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] POLECENIE
 
 Gdzie:
-  [color=white]NUMER[reset]       por¢wnanie dodatniej liczby caˆkowitej ze zwracan¥ warto˜ci¥.
-  [color=white]STR1==STR2[reset]  por¢wnanie dw¢ch ˆaäcuch¢w, wielko˜† liter ma znaczenie.
+  [color=white]NUMER[reset]       porÃ³wnanie dodatniej liczby caÅ‚kowitej ze zwracanÄ… wartoÅ›ciÄ….
+  [color=white]STR1==STR2[reset]  porÃ³wnanie dwÃ³ch Å‚aÅ„cuchÃ³w, wielkoÅ›Ä‡ liter ma znaczenie.
   [color=white]FILE[reset]        sprawdzenie, czy plik istnieje.
   POLECENIE   polecenie DOS'a lub program do uruchomienia wraz z argumentami.
 
 Uwagi:
-  POLECENIE zostaje wykonane, je˜li podany warunek zostanie speˆniony.
-  Podanie [color=magenta]not[reset] wykonuje polecenie je˜li warunek NIE B¨DZIE speˆniony.
-  Warunek [color=cyan]errorlevel[reset] pozwala sprawdzi†, czy program wykonaˆ si© poprawnie.
-  Je˜li [color=white]STR1[reset] lub [color=white]STR2[reset] mo¾e by† pusty, wpisz go w cudzysˆowie (").
+  POLECENIE zostaje wykonane, jeÅ›li podany warunek zostanie speÅ‚niony.
+  Podanie [color=magenta]not[reset] wykonuje polecenie jeÅ›li warunek NIE BÄ˜DZIE speÅ‚niony.
+  Warunek [color=cyan]errorlevel[reset] pozwala sprawdziÄ‡, czy program wykonaÅ‚ siÄ™ poprawnie.
+  JeÅ›li [color=white]STR1[reset] lub [color=white]STR2[reset] moÅ¼e byÄ‡ pusty, wpisz go w cudzysÅ‚owie (").
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Witaj, ˜wiecie!
+  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Witaj, Å›wiecie!
   [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
 .
 :SHELL_CMD_GOTO_HELP
@@ -2307,53 +2307,53 @@ Skok do etykiety w pliku wsadowym.
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]goto[reset] [color=cyan]ETYKIETA[reset]
 
 Gdzie:
-  [color=cyan]ETYKIETA[reset]  ˆaäcuch tekstowy u¾yty w pliku wsadowym jako etykieta.
+  [color=cyan]ETYKIETA[reset]  Å‚aÅ„cuch tekstowy uÅ¼yty w pliku wsadowym jako etykieta.
 
 Uwagi:
-  Etykieta musi by† jednolinijkowa i zaczyna† si© dwukropkiem (:).
-  Etykieta musi by† unikalna w danym pliku wsadowym.
+  Etykieta musi byÄ‡ jednolinijkowa i zaczynaÄ‡ siÄ™ dwukropkiem (:).
+  Etykieta musi byÄ‡ unikalna w danym pliku wsadowym.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]goto[reset] [color=cyan]koniec[reset]
 .
 :SHELL_CMD_SHIFT_HELP
-Przesuni©cie argument¢w wiersza poleceä w pliku wsadowym.
+PrzesuniÄ™cie argumentÃ³w wiersza poleceÅ„ w pliku wsadowym.
 
 .
 :SHELL_CMD_SHIFT_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]shift[reset]
 
 Gdzie:
-  To polecenie nie obsˆuguje ¾adnych argument¢w.
+  To polecenie nie obsÅ‚uguje Å¼adnych argumentÃ³w.
 
 Uwagi:
-  Pozwala plikom wsadowym na akceptowanie wi©cej ni¾ 9 argument¢w.
+  Pozwala plikom wsadowym na akceptowanie wiÄ™cej niÅ¼ 9 argumentÃ³w.
   Wykonanie [color=green]shift[reset] przesuwa zmienne z argumentami %%1 na %%0, %%2 na %%1, itd.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]shift[reset]
 .
 :SHELL_CMD_TYPE_HELP
-Wy˜wietlenie zawarto˜ci pliku tekstowego.
+WyÅ›wietlenie zawartoÅ›ci pliku tekstowego.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]type[reset] [color=cyan]PLIK[reset]
 
 Gdzie:
-  [color=cyan]PLIK[reset]  nazwa pliku tekstowego do wy˜wietlenia.
+  [color=cyan]PLIK[reset]  nazwa pliku tekstowego do wyÅ›wietlenia.
 
 Uwagi:
-  Nale¾y poda† dokˆadn¥ nazw© pliku, opcjonalnie ze ˜cie¾k¥.
-  Polecenie sˆu¾y tylko do podgl¥du plik¢w tekstowych, nie plik¢w binarnych.
+  NaleÅ¼y podaÄ‡ dokÅ‚adnÄ… nazwÄ™ pliku, opcjonalnie ze Å›cieÅ¼kÄ….
+  Polecenie sÅ‚uÅ¼y tylko do podglÄ…du plikÃ³w tekstowych, nie plikÃ³w binarnych.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]type[reset] [color=cyan]text.txt[reset]
   [color=green]type[reset] [color=cyan]c:\dos\readme.txt[reset]
 .
@@ -2362,86 +2362,86 @@ Komentarz w pliku wsadowym.
 
 .
 :SHELL_CMD_REM_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]rem[reset] [color=cyan]KOMENTARZ[reset]
 
 Gdzie:
   [color=cyan]KOMENTARZ[reset]  jest dowolnym komentarzem.
 
 Uwagi:
-  Komentarze sprawiaj¥, ¾e pliki wsadowe s¥ ˆatwiejsze do zrozumienia.
-  Mo¾na u¾y† do tymczasowego wyˆ¥czenia wykonania jakiego˜ polecenia.
+  Komentarze sprawiajÄ…, Å¼e pliki wsadowe sÄ… Å‚atwiejsze do zrozumienia.
+  MoÅ¼na uÅ¼yÄ‡ do tymczasowego wyÅ‚Ä…czenia wykonania jakiegoÅ› polecenia.
 
-Przykˆady:
-  [color=green]rem[reset] [color=cyan]To jest m¢j testowy plik wsadowy.[reset]
+PrzykÅ‚ady:
+  [color=green]rem[reset] [color=cyan]To jest mÃ³j testowy plik wsadowy.[reset]
 .
 :SHELL_CMD_NO_WILD
-To jest prosta wersja polecenia, symbole wieloznaczne (maski) nie s¥ dozwolone!
+To jest prosta wersja polecenia, symbole wieloznaczne (maski) nie sÄ… dozwolone!
 
 .
 :SHELL_CMD_RENAME_HELP
-Zmiana nazwy jednego lub wi©kszej ilo˜ci plik¢w.
+Zmiana nazwy jednego lub wiÄ™kszej iloÅ›ci plikÃ³w.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]ren[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
   [color=green]rename[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
 
 Gdzie:
-  [color=white]STARA[reset]  nazwa pliku, kt¢rego nazw© nale¾y zmieni†.
+  [color=white]STARA[reset]  nazwa pliku, ktÃ³rego nazwÄ™ naleÅ¼y zmieniÄ‡.
   [color=cyan]NOWA[reset]   docelowa nazwa pliku.
 
 Uwagi:
-  Nale¾y poda† dokˆadn¥ nazw© pliku, opcjonalnie ze ˜cie¾k¥.
-  Docelowa nazwa pliku musi by† dokˆadna i musi by† podana bez ˜cie¾ki.
+  NaleÅ¼y podaÄ‡ dokÅ‚adnÄ… nazwÄ™ pliku, opcjonalnie ze Å›cieÅ¼kÄ….
+  Docelowa nazwa pliku musi byÄ‡ dokÅ‚adna i musi byÄ‡ podana bez Å›cieÅ¼ki.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]
   [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
 .
 :SHELL_CMD_DELETE_HELP
-Usuni©cie jednego lub wi©kszej ilo˜ci plik¢w.
+UsuniÄ™cie jednego lub wiÄ™kszej iloÅ›ci plikÃ³w.
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]del[reset] [color=cyan]WZORZEC[reset]
   [color=green]erase[reset] [color=cyan]WZORZEC[reset]
 
 Gdzie:
-  [color=cyan]WZORZEC[reset]  dokˆadna nazwa lub nazwa z symbolami wieloznaczno˜ci (maskami),
-           kt¢rymi s¥ asterisk ('*' - reprezentuje dowoln¥ liczb© znak¢w)
+  [color=cyan]WZORZEC[reset]  dokÅ‚adna nazwa lub nazwa z symbolami wieloznacznoÅ›ci (maskami),
+           ktÃ³rymi sÄ… asterisk ('*' - reprezentuje dowolnÄ… liczbÄ™ znakÃ³w)
            oraz znak zapytania ('?' - reprezentuje jeden znak)
 
-[color=red]Ostrze¾enie:[reset] 
-  B¥d« bardzo ostro¾ny u¾ywaj¥c symboli wieloznaczno˜ci, zwˆaszcza [color=cyan]*.*[reset],
-  poniewa¾ usuni©te zostan¥ wszystkie pliki pasuj¥ce do wzorca!
+[color=red]OstrzeÅ¼enie:[reset] 
+  BÄ…dÅº bardzo ostroÅ¼ny uÅ¼ywajÄ…c symboli wieloznacznoÅ›ci, zwÅ‚aszcza [color=cyan]*.*[reset],
+  poniewaÅ¼ usuniÄ™te zostanÄ… wszystkie pliki pasujÄ…ce do wzorca!
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]del[reset] [color=cyan]test.bat[reset]
   [color=green]del[reset] [color=cyan]c*.*[reset]
   [color=green]del[reset] [color=cyan]a?b.c*[reset]
 .
 :SHELL_CMD_COPY_HELP
-Kopiowanie jednego lub wi©kszej ilo˜ci plik¢w.
+Kopiowanie jednego lub wiÄ™kszej iloÅ›ci plikÃ³w.
 
 .
 :SHELL_CMD_COPY_HELP_LONG
-Skˆadnia:
-  [color=green]copy[reset] [color=white]RàDO[reset] [color=cyan][PRZEZNACZENIE][reset]
-  [color=green]copy[reset] [color=white]RàDO1+RàDO2[+...][reset] [color=cyan][PRZEZNACZENIE][reset]
+SkÅ‚adnia:
+  [color=green]copy[reset] [color=white]Å¹RÃ“DÅO[reset] [color=cyan][PRZEZNACZENIE][reset]
+  [color=green]copy[reset] [color=white]Å¹RÃ“DÅO1+Å¹RÃ“DÅO2[+...][reset] [color=cyan][PRZEZNACZENIE][reset]
 
 Gdzie:
-  [color=white]RàDO[reset]         dokˆadna nazwa lub nazwa z symbolami wieloznaczno˜ci
-                 (maskami), kt¢rymi s¥ asterisk ('*') i znak zapytania ('?').
-  [color=cyan]PRZEZNACZENIE[reset]  dokˆadna nazwa pliku lub katalogu.
+  [color=white]Å¹RÃ“DÅO[reset]         dokÅ‚adna nazwa lub nazwa z symbolami wieloznacznoÅ›ci
+                 (maskami), ktÃ³rymi sÄ… asterisk ('*') i znak zapytania ('?').
+  [color=cyan]PRZEZNACZENIE[reset]  dokÅ‚adna nazwa pliku lub katalogu.
 
 Uwagi:
-  Operator [color=white]+[reset] pozwala zˆ¥czy† ze sob¥ kilka plik¢w.
-  Je˜li przeznaczenie nie zostanie podane, zostanie u¾yty aktualny katalog.
+  Operator [color=white]+[reset] pozwala zÅ‚Ä…czyÄ‡ ze sobÄ… kilka plikÃ³w.
+  JeÅ›li przeznaczenie nie zostanie podane, zostanie uÅ¼yty aktualny katalog.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]
   [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
   [color=green]copy[reset] [color=white]..\c*.*[reset]
@@ -2451,7 +2451,7 @@ Uruchomienie pliku wsadowego z innego pliku wsadowego.
 
 .
 :SHELL_CMD_CALL_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]call[reset] [color=white]SKRYPT[reset] [color=cyan][ARGUMENTY][reset]
 
 Gdzie:
@@ -2459,40 +2459,40 @@ Gdzie:
   [color=cyan]ARGUMENTY[reset]  opcjonalne argumenty do przekazania.
 
 Uwagi:
-  Po zakoäczeniu uruchomionego pliku wsadowego, dalsza cz©˜† obecnego pliku
-  wsadowego b©dzie wykonana.
+  Po zakoÅ„czeniu uruchomionego pliku wsadowego, dalsza czÄ™Å›Ä‡ obecnego pliku
+  wsadowego bÄ™dzie wykonana.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]call[reset] [color=white]mybatch.bat[reset]
-  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Witaj, ˜wiecie![reset]
+  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Witaj, Å›wiecie![reset]
 .
 :SHELL_CMD_SUBST_HELP
-Przypisanie ˜cie¾ki do litery dysku.
+Przypisanie Å›cieÅ¼ki do litery dysku.
 
 .
 :SHELL_CMD_SUBST_HELP_LONG
-Skˆadnia:
-  [color=green]subst[reset] [color=white]DYSK[reset] [color=cyan]—CIE½KA[reset]
+SkÅ‚adnia:
+  [color=green]subst[reset] [color=white]DYSK[reset] [color=cyan]ÅšCIEÅ»KA[reset]
   [color=green]subst[reset] [color=white]DYSK[reset] /d
 
 Gdzie:
-  [color=white]DYSK[reset]     litera dysku, do kt¢rego ma zosta† przypisana ˜cie¾ka.
-  [color=cyan]—CIE½KA[reset]  ˜cie¾ka na zamontowanym dysku.
+  [color=white]DYSK[reset]     litera dysku, do ktÃ³rego ma zostaÄ‡ przypisana Å›cieÅ¼ka.
+  [color=cyan]ÅšCIEÅ»KA[reset]  Å›cieÅ¼ka na zamontowanym dysku.
 
 Uwagi:
-  —cie¾ka musi znajdowa† si© na dysku zamontowanym poleceniem [color=green]mount[reset].
-  Przeˆ¥cznik /d usuwa przypisanie.
+  ÅšcieÅ¼ka musi znajdowaÄ‡ siÄ™ na dysku zamontowanym poleceniem [color=green]mount[reset].
+  PrzeÅ‚Ä…cznik /d usuwa przypisanie.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\games[reset]
   [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
 .
 :SHELL_CMD_LOADHIGH_HELP
-adowanie programu do pami©ci UMB (g¢rnej).
+Åadowanie programu do pamiÄ™ci UMB (gÃ³rnej).
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
   [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
 
@@ -2500,154 +2500,154 @@ Gdzie:
   [color=cyan]PROGRAM[reset]  program rezydentny, opcjonalnie z argumentami.
 
 Uwagi:
-  Pozwala zaoszcz©dzi† pami©† konwencjonaln¥, ˆaduj¥c program rezydentny (TSR)
-  do pami©ci g¢rnej, je˜li jest to mo¾liwe. Takie programy mog¥ by† wymagane
-  przez niekt¢re gry.
-  Pami©† XMS oraz UMB musi by† wˆ¥czona w pliku konfiguracyjnym ('xms=true'
+  Pozwala zaoszczÄ™dziÄ‡ pamiÄ™Ä‡ konwencjonalnÄ…, Å‚adujÄ…c program rezydentny (TSR)
+  do pamiÄ™ci gÃ³rnej, jeÅ›li jest to moÅ¼liwe. Takie programy mogÄ… byÄ‡ wymagane
+  przez niektÃ³re gry.
+  PamiÄ™Ä‡ XMS oraz UMB musi byÄ‡ wÅ‚Ä…czona w pliku konfiguracyjnym ('xms=true'
   oraz 'umb=true').
-  Nie wszystkie programy rezydentne da si© zaˆadowa† do pami©ci g¢rnej (UMB)
+  Nie wszystkie programy rezydentne da siÄ™ zaÅ‚adowaÄ‡ do pamiÄ™ci gÃ³rnej (UMB)
   tym poleceniem.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
 .
 :SHELL_CMD_LS_HELP
-Wy˜wietlenie zawarto˜ci katalogu w formie szerokiej listy.
+WyÅ›wietlenie zawartoÅ›ci katalogu w formie szerokiej listy.
 
 .
 :SHELL_CMD_LS_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]ls[reset] [color=cyan]WZORZEC[reset]
-  [color=green]ls[reset] [color=cyan]—CIE½KA[reset]
+  [color=green]ls[reset] [color=cyan]ÅšCIEÅ»KA[reset]
 
 Gdzie:
-  [color=cyan]WZORZEC[reset]  dokˆadna nazwa lub nazwa z symbolami wieloznaczno˜ci (maskami),
-           kt¢rymi s¥ asterisk ('*') i znak zapytania ('?').
-  [color=cyan]—CIE½KA[reset]  dokˆadna ˜cie¾ka na zamontowanym dysku.
+  [color=cyan]WZORZEC[reset]  dokÅ‚adna nazwa lub nazwa z symbolami wieloznacznoÅ›ci (maskami),
+           ktÃ³rymi sÄ… asterisk ('*') i znak zapytania ('?').
+  [color=cyan]ÅšCIEÅ»KA[reset]  dokÅ‚adna Å›cieÅ¼ka na zamontowanym dysku.
 
 Uwagi:
-  Polecenie wy˜wietla katalogi kolorem [color=blue]niebieskim[reset], pliki wykonywalne
-  (*.com, *.exe, *.bat) kolorem [color=green]zielonym[reset], a pozostaˆe aktualnym kolorem.
+  Polecenie wyÅ›wietla katalogi kolorem [color=blue]niebieskim[reset], pliki wykonywalne
+  (*.com, *.exe, *.bat) kolorem [color=green]zielonym[reset], a pozostaÅ‚e aktualnym kolorem.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]ls[reset] [color=cyan]file.txt[reset]
   [color=green]ls[reset] [color=cyan]c*.ba?[reset]
 .
 :SHELL_CMD_LS_PATH_ERR
-Brak dost©pu do '%s'.
+Brak dostÄ™pu do '%s'.
 
 .
 :SHELL_CMD_ATTRIB_HELP
-Wy˜wietlenie lub zmiana atrybut¢w pliku.
+WyÅ›wietlenie lub zmiana atrybutÃ³w pliku.
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]attrib[reset] [color=white][ATRYBUTY][reset] [color=cyan]WZORZEC[reset]
 
 Gdzie:
-  [color=white][ATRYBUTY][reset] atrybuty do nadania, jeden lub wi©cej z:
+  [color=white][ATRYBUTY][reset] atrybuty do nadania, jeden lub wiÄ™cej z:
                [color=white]+R[reset], [color=white]-R[reset] - tylko do odczytu ('read-only')
                [color=white]+A[reset], [color=white]-A[reset] - zarchiwizowany
                [color=white]+S[reset], [color=white]-S[reset] - systemowy
                [color=white]+H[reset], [color=white]-H[reset] - ukryty
-  [color=cyan]WZORZEC[reset]   dokˆadna nazwa pliku lub nazwa z symbolami wieloznaczno˜ci
-            (maskami), kt¢rymi s¥ asterisk ('*') i znak zapytania ('?').
+  [color=cyan]WZORZEC[reset]   dokÅ‚adna nazwa pliku lub nazwa z symbolami wieloznacznoÅ›ci
+            (maskami), ktÃ³rymi sÄ… asterisk ('*') i znak zapytania ('?').
 
 Uwagi:
-  Uruchomienie bez argument¢w wy˜wietla atrybuty pliku/katalogu.
-  Mo¾na poda† wi©cej atrybut¢w, oddzielonych spacjami.
+  Uruchomienie bez argumentÃ³w wyÅ›wietla atrybuty pliku/katalogu.
+  MoÅ¼na podaÄ‡ wiÄ™cej atrybutÃ³w, oddzielonych spacjami.
 
-Przykˆady:
+PrzykÅ‚ady:
     [color=green]attrib[reset] [color=cyan]file.txt[reset]
     [color=green]attrib[reset] [color=white]+R -A[reset] [color=cyan]*.txt[reset]
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
-Nie mo¾na odczyta† atrybut¢w: '%s'.
+Nie moÅ¼na odczytaÄ‡ atrybutÃ³w: '%s'.
 
 .
 :SHELL_CMD_ATTRIB_SET_ERROR
-Nie mo¾na ustawi† atrybut¢w: '%s'.
+Nie moÅ¼na ustawiÄ‡ atrybutÃ³w: '%s'.
 
 .
 :SHELL_CMD_CHOICE_HELP
-Oczekiwanie na naci˜ni©cie klawisza, ustawienie warto˜ci ERRORLEVEL.
+Oczekiwanie na naciÅ›niÄ™cie klawisza, ustawienie wartoÅ›ci ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]choice[reset] [color=cyan][TEKST][reset]
-  [color=green]choice[reset] /c[:][color=white]WYBàR[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEKST][reset]
+  [color=green]choice[reset] /c[:][color=white]WYBÃ“R[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEKST][reset]
 
 Gdzie:
-  [color=cyan]TEKST[reset]       tekst do wy˜wietlenia jako zach©ta, mo¾e by† pusty.
-  /c[:][color=white]WYBàR[reset]  dozwolone klawisze, domy˜lne to [color=white]yn[reset].
-  /n          nie wy˜wietlaj dozwolonych klawiszy.
-  /s          wˆ¥cza sprawdzanie wielko˜ci liter.
-  /t[:][color=white]c[reset],[color=magenta]nn[reset]   domy˜lny wyb¢r po upˆywie [color=magenta]nn[reset] sekund to [color=white]c[reset].
+  [color=cyan]TEKST[reset]       tekst do wyÅ›wietlenia jako zachÄ™ta, moÅ¼e byÄ‡ pusty.
+  /c[:][color=white]WYBÃ“R[reset]  dozwolone klawisze, domyÅ›lne to [color=white]yn[reset].
+  /n          nie wyÅ›wietlaj dozwolonych klawiszy.
+  /s          wÅ‚Ä…cza sprawdzanie wielkoÅ›ci liter.
+  /t[:][color=white]c[reset],[color=magenta]nn[reset]   domyÅ›lny wybÃ³r po upÅ‚ywie [color=magenta]nn[reset] sekund to [color=white]c[reset].
 
 Uwagi:
-  Ustawia warto˜† ERRORLEVEL w zale¾no˜ci od naci˜ni©tego klawisza podanego
-  w opcji /c, pocz¥wszy od 1. Numer naci˜ni©tego klawisza mo¾na sprawdzi† przy
+  Ustawia wartoÅ›Ä‡ ERRORLEVEL w zaleÅ¼noÅ›ci od naciÅ›niÄ™tego klawisza podanego
+  w opcji /c, poczÄ…wszy od 1. Numer naciÅ›niÄ™tego klawisza moÅ¼na sprawdziÄ‡ przy
   pomocy polecenia [color=green]if[reset].
-  Przeˆ¥cznik /n powoduje wy˜wietlenie tylko tekstu, bez mo¾liwych wybor¢w,
-  jak domy˜lnego [color=white][Y,N]?[reset]).
+  PrzeÅ‚Ä…cznik /n powoduje wyÅ›wietlenie tylko tekstu, bez moÅ¼liwych wyborÃ³w,
+  jak domyÅ›lnego [color=white][Y,N]?[reset]).
 
-Przykˆady:
-  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuowa†?[reset]
+PrzykÅ‚ady:
+  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]KontynuowaÄ‡?[reset]
   [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Niepowodzenie[reset]: strumieä wej˜ciowy zakoäczony bez prawidˆowego wyboru.
+[color=red]Niepowodzenie[reset]: strumieÅ„ wejÅ›ciowy zakoÅ„czony bez prawidÅ‚owego wyboru.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
 
-[color=yellow]Oczekiwanie na wyb¢r przerwane.[reset]
+[color=yellow]Oczekiwanie na wybÃ³r przerwane.[reset]
 
 .
 :SHELL_CMD_PATH_HELP
-Wy˜wietlenie lub zmiana ˜cie¾ki wyszukiwania plik¢w.
+WyÅ›wietlenie lub zmiana Å›cieÅ¼ki wyszukiwania plikÃ³w.
 
 .
 :SHELL_CMD_PATH_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]path[reset]
-  [color=green]path[reset] [color=cyan][[dysk:]˜cie¾ka[;...][reset]
+  [color=green]path[reset] [color=cyan][[dysk:]Å›cieÅ¼ka[;...][reset]
 
 Gdzie:
-  [color=cyan][[dysk:]˜cie¾ka[;...][reset]  ˜cie¾ki zawieraj¥ce dysk oraz katalog.
+  [color=cyan][[dysk:]Å›cieÅ¼ka[;...][reset]  Å›cieÅ¼ki zawierajÄ…ce dysk oraz katalog.
 
 Uwagi:
-  Mo¾na poda† wi©cej ni¾ jedn¥ ˜cie¾k©, musz¥ by† oddzielone ˜rednikiem (;).
-  Podanie jedynie ˜rednika czy˜ci caˆ¥ ˜cie¾k© wyszukiwania.
-  —cie¾k© wyszukiwania mo¾na te¾ ustawi† poleceniem [color=green]set[reset]
+  MoÅ¼na podaÄ‡ wiÄ™cej niÅ¼ jednÄ… Å›cieÅ¼kÄ™, muszÄ… byÄ‡ oddzielone Å›rednikiem (;).
+  Podanie jedynie Å›rednika czyÅ›ci caÅ‚Ä… Å›cieÅ¼kÄ™ wyszukiwania.
+  ÅšcieÅ¼kÄ™ wyszukiwania moÅ¼na teÅ¼ ustawiÄ‡ poleceniem [color=green]set[reset]
   (np. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\;C:\DOS;C:\WINDOWS[reset]).
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]path[reset]
   [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
 .
 :SHELL_CMD_VER_HELP
-Wy˜wietlenie lub zmiana raportowanej wersji systemu DOS.
+WyÅ›wietlenie lub zmiana raportowanej wersji systemu DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-Skˆadnia:
+SkÅ‚adnia:
   [color=green]ver[reset]
   [color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]
 
 Gdzie:
-  [color=cyan]WERSJA[reset]  mo¾e by† numerem, np. [color=cyan]5[reset] lub liczb¥ z dwoma cyframi po kropce,
-          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset] lub [color=cyan]7.10[reset]. Alternatywnie mo¾na oddzieli†
-          cz©˜† uˆamkow¥ za pomoc¥ spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset] lub [color=cyan]7 10[reset].
+  [color=cyan]WERSJA[reset]  moÅ¼e byÄ‡ numerem, np. [color=cyan]5[reset] lub liczbÄ… z dwoma cyframi po kropce,
+          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset] lub [color=cyan]7.10[reset]. Alternatywnie moÅ¼na oddzieliÄ‡
+          czÄ™Å›Ä‡ uÅ‚amkowÄ… za pomocÄ… spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset] lub [color=cyan]7 10[reset].
 
 Uwagi:
-  Raportowan¥ wersj© DOSu mo¾na ustawi† w pliku konfiguracyjnym, w sekcji
-  [dos], wpisuj¥c 'ver = [color=cyan]WERSJA[reset]'.
+  RaportowanÄ… wersjÄ™ DOSu moÅ¼na ustawiÄ‡ w pliku konfiguracyjnym, w sekcji
+  [dos], wpisujÄ…c 'ver = [color=cyan]WERSJA[reset]'.
 
-Przykˆady:
+PrzykÅ‚ady:
   [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
   [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
 .
@@ -2657,23 +2657,23 @@ DOS, wersja %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
-Podana wersja DOSa jest nieprawidˆowa.
+Podana wersja DOSa jest nieprawidÅ‚owa.
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
 Polecenia emulatora DOSBox
 .
 :HELP_UTIL_CATEGORY_FILE
-Polecenia plik¢w/katalog¢w
+Polecenia plikÃ³w/katalogÃ³w
 .
 :HELP_UTIL_CATEGORY_BATCH
-Polecenia plik¢w wsadowych (BAT)
+Polecenia plikÃ³w wsadowych (BAT)
 .
 :HELP_UTIL_CATEGORY_MISC
 Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
-Pozostaˆe, bez kategorii
+PozostaÅ‚e, bez kategorii
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
 katalog lokalny
@@ -2688,7 +2688,7 @@ obraz FAT
 obraz ISO
 .
 :MOUNT_TYPE_VIRTUAL
-wewn©trzny dysk wirtualny
+wewnÄ™trzny dysk wirtualny
 .
 :MOUNT_TYPE_UNKNOWN
 nieznany typ

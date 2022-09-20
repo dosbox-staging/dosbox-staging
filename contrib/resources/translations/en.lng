@@ -1284,19 +1284,19 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m�������������������������������������������������������������������������ͻ
-� [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.�
-�                                                                         �
-� [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m �
-�������������������������������������������������������������������������ͼ[0m
+[44;1mΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.Γòæ
+Γòæ                                                                         Γòæ
+Γòæ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1m����������������������������������������������������������������������ͻ
-� [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.�
-�                                                                      �
-� [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  �
-����������������������������������������������������������������������ͼ[0m
+[44;1mΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.Γòæ
+Γòæ                                                                      Γòæ
+Γòæ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -2027,43 +2027,43 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1m��������������������������������������������������������������������ͻ
-� [32mWelcome to DOSBox Staging %-40s[37m �
-�                                                                    �
-� For a short introduction for new users type: [33mINTRO[37m                 �
-� For supported shell commands type: [33mHELP[37m                            �
-�                                                                    �
-� To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       �
-� To activate the keymapper [31m%s+F1[37m.%s                                 �
-� For more information read the [36mREADME[37m file in the DOSBox directory. �
-�                                                                    �
+[44;1mΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [32mWelcome to DOSBox Staging %-40s[37m Γòæ
+Γòæ                                                                    Γòæ
+Γòæ For a short introduction for new users type: [33mINTRO[37m                 Γòæ
+Γòæ For supported shell commands type: [33mHELP[37m                            Γòæ
+Γòæ                                                                    Γòæ
+Γòæ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       Γòæ
+Γòæ To activate the keymapper [31m%s+F1[37m.%s                                 Γòæ
+Γòæ For more information read the [36mREADME[37m file in the DOSBox directory. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_CGA
-� DOSBox supports Composite CGA mode.                                �
-� Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        �
-� [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   �
-�                                                                    �
+Γòæ DOSBox supports Composite CGA mode.                                Γòæ
+Γòæ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        Γòæ
+Γòæ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_CGA_MONO
-� Use [31mF11[37m to cycle through green, amber, white and paper-white mode, �
-� and [31m%s+F11[37m to change contrast/brightness settings.                �
+Γòæ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, Γòæ
+Γòæ and [31m%s+F11[37m to change contrast/brightness settings.                Γòæ
 
 .
 :SHELL_STARTUP_HERC
-� Use [31mF11[37m to cycle through white, amber, and green monochrome color. �
-�                                                                    �
+Γòæ Use [31mF11[37m to cycle through white, amber, and green monochrome color. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_DEBUG
-� Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. �
-�                                                                    �
+Γòæ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_END
-� [33mhttps://dosbox-staging.github.io[37m                                   �
-��������������������������������������������������������������������ͼ[0m
+Γòæ [33mhttps://dosbox-staging.github.io[37m                                   Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[0m
 
 
 .

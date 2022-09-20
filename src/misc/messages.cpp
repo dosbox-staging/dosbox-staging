@@ -124,19 +124,18 @@ void MSG_Add(const char *name, const char *markup_msg)
 }
 
 // Replace existing or add if it doesn't exist
-static void msg_replace(const char *name, const char *markup_msg, const bool is_utf8)
+static void msg_replace(const char *name, const char *markup_msg)
 {
 	auto it = messages.find(name);
 	if (it == messages.end())
-		msg_add(name, markup_msg, is_utf8);
+		msg_add(name, markup_msg, true);
 	else
-		it->second.Set(markup_msg, is_utf8);
+		it->second.Set(markup_msg, true);
 }
 
-static bool load_message_file(const std_fs::path &filename_plain,
-                              const std_fs::path &filename_utf8)
+static bool load_message_file(const std_fs::path &filename)
 {
-	if (filename_plain.empty() && filename_utf8.empty())
+	if (filename.empty())
 		return false;
 
 	auto check_file = [](const std_fs::path &filename) {
@@ -146,33 +145,16 @@ static bool load_message_file(const std_fs::path &filename_plain,
 		        std_fs::file_type::not_found);
 	};
 
-	bool is_utf8 = false;
-
-	std::string filename_str;
-	if (check_file(filename_utf8)) {
-		filename_str = filename_utf8.string();
-		is_utf8      = true;
-	} else if (check_file(filename_plain))
-		filename_str = filename_plain.string();
-	else {
-		std::string out_str = "";
-		if (filename_utf8.empty())
-			out_str = filename_plain.string();
-		else if (filename_plain.empty())
-			out_str = filename_utf8.string();
-		else
-			out_str = filename_plain.string() + " / " +
-			          filename_utf8.string();
-
+	if (!check_file(filename)) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
-		        out_str.c_str());
+		        filename.c_str());
 		return false;
 	}
 
-	FILE *mfile = fopen(filename_str.c_str(), "rt");
+	FILE *mfile = fopen(filename.c_str(), "rt");
 	if (!mfile) {
 		LOG_MSG("LANG: Failed opening language file: %s, skipping",
-		        filename_str.c_str());
+		        filename.c_str());
 		return false;
 	}
 
@@ -206,7 +188,7 @@ static bool load_message_file(const std_fs::path &filename_plain,
 			// This second if should not be needed, but better be safe.
 			if (ll && message[ll - 1] == '\n')
 				message[ll - 1] = 0;
-			msg_replace(name, message, is_utf8);
+			msg_replace(name, message);
 		} else {
 			/* Normal message to be added */
 			safe_strcat(message, linein);
@@ -214,7 +196,7 @@ static bool load_message_file(const std_fs::path &filename_plain,
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename_str.c_str());
+	LOG_MSG("LANG: Loaded language file: %s", filename.c_str());
 	return true;
 }
 
@@ -266,17 +248,11 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 	}
 
 	bool result = false;
-	if (ends_with(lang, ".utf8.lng"))
-		result = load_message_file("", GetResourcePath("translations", lang));
-	else if (ends_with(lang, ".lng"))
-		result = load_message_file(GetResourcePath("translations", lang), "");
-	else {
+	if (ends_with(lang, ".lng"))
+		result = load_message_file(GetResourcePath("translations", lang));
+	else
 		// If a short-hand name was provided then add the file extension
-		result = load_message_file(GetResourcePath("translations",
-		                                           lang + ".lng"),
-		                           GetResourcePath("translations",
-		                                           lang + ".utf8.lng"));
-	}
+		result = load_message_file(GetResourcePath("translations", lang + ".lng"));
 
 	if (result)
 		return;

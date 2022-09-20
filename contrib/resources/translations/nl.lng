@@ -27,7 +27,7 @@ Stel de viewport-grootte (tekengebied) in het venster/scherm in:
              Voorbeelden: 960x720 of 50%
 .
 :CONFIG_WINDOW_POSITION
-Stel de initi‰le vensterpositie in bij gebruik in de venstermodus:
+Stel de initiÃ«le vensterpositie in bij gebruik in de venstermodus:
   auto:      Laat de windowmanager de positie bepalen.
   <op-maat>: Stel de vensterpositie in X, Y-formaat in. Bijvoorbeeld: 250,100
              0,0 is de linkerbovenhoek van het scherm.
@@ -46,7 +46,7 @@ Deze instelling is hernoemd naar viewport_resolution.
 Stel de verversingssnelheid van de host in:
   auto:      Gebruik SDI-snelheden of VRR-snelheden bij volledig scherm op een
              scherm met hoge verversing.
-  sdi:       Gebruik seri‰le apparaatinterface (SDI)-snelheden, zonder verdere
+  sdi:       Gebruik seriÃ«le apparaatinterface (SDI)-snelheden, zonder verdere
              aanpassingen.
   vrr:       Trek 3 Hz af van de gerapporteerde frequentie (best-practice voor
              VRR-displays).
@@ -56,7 +56,7 @@ Stel de verversingssnelheid van de host in:
 :CONFIG_VSYNC
 Synchroniseer met de vernieuwingsfrequentie van het scherm, indien ondersteund.
 Dit kan flikkeren en scheuren verminderen, maar kan ook de prestaties
-be‹nvloeden.
+beÃ¯nvloeden.
 .
 :CONFIG_VSYNC_SKIP
 Aantal microseconden dat de weergave kan worden geblokkeerd voordat het
@@ -160,7 +160,7 @@ Videogeheugen in MiB (1-8) of KiB (256 tot 8192). 'auto' gebruikt de
 standaardwaarde per videoadapter.
 .
 :CONFIG_DOS_RATE
-Pas de framesnelheid van de ge‰muleerde videomodus aan, in Hz:
+Pas de framesnelheid van de geÃ«muleerde videomodus aan, in Hz:
 default:  De DOS-videomodus bepaalt de snelheid (aanbevolen).
 host:     Stem de DOS-snelheid af op de hostsnelheid (zie instelling
           'host_rate').
@@ -187,7 +187,7 @@ op "true", zodanig dat we ze hier kunnen vermelden.
 .
 :CONFIG_AUTOEXEC_SECTION
 Hoe autoexec-secties worden afgehandeld vanuit meerdere configuratiebestanden.
-join      : combineert ze tot ‚‚n grote sectie (legacy-gedrag).
+join      : combineert ze tot Ã©Ã©n grote sectie (legacy-gedrag).
 overwrite : gebruik de laatst gevonden, net als andere conf-instellingen.
 .
 :CONFIG_AUTOMOUNT
@@ -229,11 +229,11 @@ Werkt alleen bij het emuleren van hercules of cga_mono.
 U kunt ook door beschikbare kleuren bladeren met F11.
 .
 :CONFIG_CGA_COLORS
-Stelt de interpretatie van CGA RGBI-kleuren in. Be‹nvloedt alle machinetypes
+Stelt de interpretatie van CGA RGBI-kleuren in. BeÃ¯nvloedt alle machinetypes
 die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
-  default:       Klassiek CGA-palet, zoals ge‰muleerd door VGA-adapters
+  default:       Klassiek CGA-palet, zoals geÃ«muleerd door VGA-adapters
                  (standaard).
-  tandy [BL]:    Emulatie van een ge‹dealiseerde Tandy-monitor met instelbaar
+  tandy [BL]:    Emulatie van een geÃ¯dealiseerde Tandy-monitor met instelbaar
                  bruinniveau (0 - rood, 50 - bruin, 100 - donkergeel; standaard
                  ingesteld op 50).
   tandy-warm:    Emulatie van de werkelijke kleuruitvoer van een onbekende
@@ -247,7 +247,7 @@ die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
   agi-amigaish:  Mix van EGA en Amiga kleuren gebruikt door de Sarien
                  AGI-interpreter.
   scumm-amiga:   Palet gebruikt door de Amiga-poorten van LucasArts EGA-games.
-  colodore:      Commodore 64 ge‹nspireerde kleuren.
+  colodore:      Commodore 64 geÃ¯nspireerde kleuren.
   colodore-sat:  Colorore palet met 20% meer verzadiging.
   dga16:         Een moderne interpretatie van het klassieke CGA-palet met
                  teruggedraaid contrast.
@@ -323,7 +323,7 @@ Voer INTRO uit en zie Speciale toetsen voor een lijst met sneltoetsen.
 Als u deze lager instelt dan 100, is dit een percentage.
 .
 :CONFIG_NOSOUND
-Schakel de stille modus in, het geluid wordt echter nog steeds ge‰muleerd.
+Schakel de stille modus in, het geluid wordt echter nog steeds geÃ«muleerd.
 .
 :CONFIG_RATE
 Samplesnelheid van de mixer.
@@ -361,7 +361,7 @@ Opmerking: U kunt crossfeed per kanaal instellen via mixercommando's.
 Schakel reverb globaal in om een gevoel van ruimte toe te voegen:
   off:     Geen reverb (standaard).
   on:      Activeer reverb (gemiddelde voorinstelling).
-  tiny:    Simuleert het geluid van een kleine ge‹ntegreerde luidspreker in een
+  tiny:    Simuleert het geluid van een kleine geÃ¯ntegreerde luidspreker in een
            kamer; speciaal ontworpen voor audiosystemen met kleine luidsprekers
            (PC Speaker, Tandy, PS/1 Audio, en LPT DAC apparaten).
   small:   Voegt een subtiel gevoel van ruimte toe; goed voor spelen die een
@@ -389,7 +389,7 @@ te voegen:
 Opmerking: u kunt de chorusniveaus per kanaal afstemmen via mixercommando's.
 .
 :CONFIG_MIDIDEVICE
-Apparaat dat de MIDI-gegevens ontvangt (van de ge‰muleerde MIDI-interface - 
+Apparaat dat de MIDI-gegevens ontvangt (van de geÃ«muleerde MIDI-interface - 
 MPU-401). Kies een van de volgende:
 'fluidsynth', om de ingebouwde MIDI-synthesizer te gebruiken. Zie de sectie
        [fluidsynth] voor gedetailleerde configuratie.
@@ -518,7 +518,7 @@ Het hoge DMA-nummer van de Sound Blaster.
 Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen.
 .
 :CONFIG_SBWARMUP
-Stil initi‰le DMA-audio nadat de kaart is ingeschakeld, in milliseconden.
+Stil initiÃ«le DMA-audio nadat de kaart is ingeschakeld, in milliseconden.
 Dit vermindert plofgeluiden bij het starten van veel op SB gebaseerde spelen.
 Verminder dit als u merkt dat er bij de eerste weergave geen geluid is.
 .
@@ -637,7 +637,7 @@ Filter voor de pc-luidsprekeruitgang:
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_ZERO_OFFSET
-DC-offset wordt nu globaal ge‰limineerd uit de mastermixeruitgang.
+DC-offset wordt nu globaal geÃ«limineerd uit de mastermixeruitgang.
 .
 :CONFIG_TANDY
 Schakel Tandy Sound System-emulatie in. Voor 'auto' is emulatie alleen
@@ -710,7 +710,7 @@ Vuurt continue, zolang de knop ingedrukt wordt.
 Verwissel de 3e en de 4e as. Kan handig zijn voor bepaalde joysticks.
 .
 :CONFIG_BUTTONWRAP
-Schakel knopomloop in bij het aantal ge‰muleerde knoppen.
+Schakel knopomloop in bij het aantal geÃ«muleerde knoppen.
 .
 :CONFIG_CIRCULARINPUT
 Maak vertaling van circulaire input naar vierkante output mogelijk. Probeer dit
@@ -750,9 +750,9 @@ Aanvullende parameters moeten op dezelfde regel staan in de vorm van
 parameter:waarde. Parameter voor alle typen is irq (optioneel).
 voor muis:
    "type", kan een van de volgende zijn:
-      2btn:  2 knoppen, Microsoft seri‰le muis
-      3btn:  3 knoppen, Logitech seri‰le muis
-      wheel: 3 knoppen + wiel seri‰le muis
+      2btn:  2 knoppen, Microsoft seriÃ«le muis
+      3btn:  3 knoppen, Logitech seriÃ«le muis
+      wheel: 3 knoppen + wiel seriÃ«le muis
       msm:   3 knoppen, Mouse Systems Mouse
       2btn+msm, 3btn+msm, wheel+msm : autoselectie
    "rate", kan "normal" of "smooth" zijn (vaker updates dan op echte pc)
@@ -785,7 +785,7 @@ XMS-ondersteuning inschakelen.
 Schakel EMS-ondersteuning in. De standaard (=true) biedt de beste
 compatibiliteit, maar bepaalde applicaties werken mogelijk beter met andere
 keuzes, of vereisen dat EMS-ondersteuning is uitgeschakeld (=false) om
-berhaupt te werken.
+Ã¼berhaupt te werken.
 .
 :CONFIG_UMB
 Schakel UMB-ondersteuning in.
@@ -1081,7 +1081,7 @@ Where:
 Opmerkingen:
   Er moet eerder een DOS-stationsletter zijn aangekoppeld met de opdracht
   [color=green]imgmount[reset]. Het DOS-station of de schijfimage moet opstartbaar zijn en
-  DOS-systeembestanden bevatten. Als er meer dan ‚‚n schijfkopie is opgegeven,
+  DOS-systeembestanden bevatten. Als er meer dan Ã©Ã©n schijfkopie is opgegeven,
   kunt u deze verwisselen met een sneltoets.
 
 Voorbeelden:
@@ -1143,7 +1143,7 @@ Beschikbare opdrachten voor PCjr-cartridges: %s
 Geen PCjr-cartridge opdrachten gevonden
 .
 :MSCDEX_SUCCESS
-MSCDEX ge‹nstalleerd.
+MSCDEX geÃ¯nstalleerd.
 
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
@@ -1349,19 +1349,19 @@ map met de bestanden aankoppelen.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[bgcolor=blue][color=white]ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [color=green]mount c c:\dosgames\ [color=white]koppelt een C-schijf met c:\dosgames als inhoud.   º
-º                                                                         º
-º [color=green]c:\dosgames\ [color=white]is een voorbeeld. Vervang met uw eigen spellenmap.         º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[reset]
+[bgcolor=blue][color=white]â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [color=green]mount c c:\dosgames\ [color=white]koppelt een C-schijf met c:\dosgames als inhoud.   â•‘
+â•‘                                                                         â•‘
+â•‘ [color=green]c:\dosgames\ [color=white]is een voorbeeld. Vervang met uw eigen spellenmap.         â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[bgcolor=blue][color=white]ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [color=green]mount c ~/dosgames[color=white] koppelt een C-schijf met ~/dosgames als inhoud.   º
-º                                                                      º
-º [color=green]~/dosgames[color=white] is een voorbeeld. Vervang met uw eigen spellenmap.        º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[reset]
+[bgcolor=blue][color=white]â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [color=green]mount c ~/dosgames[color=white] koppelt een C-schijf met ~/dosgames als inhoud.   â•‘
+â•‘                                                                      â•‘
+â•‘ [color=green]~/dosgames[color=white] is een voorbeeld. Vervang met uw eigen spellenmap.        â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -1756,7 +1756,7 @@ Waar:
 
 Opmerkingen:
   Het uitvoeren van [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
-  De instellingen van meer dan ‚‚n kanaal kan in ‚‚n opdracht wijzigen. Als het
+  De instellingen van meer dan Ã©Ã©n kanaal kan in Ã©Ã©n opdracht wijzigen. Als het
   kanaal niet is aangegeven, kan crossfeed, reverb of chorus globaal worden
   ingesteld. Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
   De optie /noshow past de wijzigingen toe zonder weergave.
@@ -1781,7 +1781,7 @@ Stereo
 Mono
 .
 :SHELL_CMD_SERIAL_HELP_LONG
-Beheert de seri‰le poorten.
+Beheert de seriÃ«le poorten.
 
 Gebruik:
   [color=green]serial[reset] [color=white][POORT#][reset]              Toon alle of aangegeven ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], of [color=white]4[reset]) poorten.
@@ -2100,43 +2100,43 @@ SUBST mislukt. U hebt een fout gemaakt in uw opdrachtregel of de doelschijf is
 al in gebruik. Het is alleen mogelijk om SUBST te gebruiken op lokale schijven
 .
 :SHELL_STARTUP_BEGIN
-[bgcolor=blue][color=white]ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [color=green]Welkom bij DOSBox Staging %-40s[color=white] º
-º                                                                    º
-º Voor een korte introductie voor nieuwe gebruikers typ: [color=yellow]INTRO[color=white]       º
-º Typ voor ondersteunde shell-opdrachten: [color=yellow]HELP[color=white]                       º
-º                                                                    º
-º Ge‰muleerde CPU-snelheid aanpassen met [color=red]%s+F11[color=white] en [color=red]%s+F12[color=white].%s%s       º
-º Om de toetsenmapper te activeren, druk op [color=red]%s+F1[color=white].%s                 º
-º Voor meer informatie lees het [color=cyan]README[color=white] bestand in de DOSBox map.     º
-º                                                                    º
+[bgcolor=blue][color=white]â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘ [color=green]Welkom bij DOSBox Staging %-40s[color=white] â•‘
+â•‘                                                                    â•‘
+â•‘ Voor een korte introductie voor nieuwe gebruikers typ: [color=yellow]INTRO[color=white]       â•‘
+â•‘ Typ voor ondersteunde shell-opdrachten: [color=yellow]HELP[color=white]                       â•‘
+â•‘                                                                    â•‘
+â•‘ GeÃ«muleerde CPU-snelheid aanpassen met [color=red]%s+F11[color=white] en [color=red]%s+F12[color=white].%s%s       â•‘
+â•‘ Om de toetsenmapper te activeren, druk op [color=red]%s+F1[color=white].%s                 â•‘
+â•‘ Voor meer informatie lees het [color=cyan]README[color=white] bestand in de DOSBox map.     â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_CGA
-º DOSBox ondersteunt composiet CGA-modus.                            º
-º Kies composietuitgang AAN, UIT or AUTO (standaard) met [color=red]F12[color=white]         º
-º [color=red]F10[color=white] kiest de CGA instelling en [color=red](%s+)F11[color=white] wijzigt deze.             º
-º                                                                    º
+â•‘ DOSBox ondersteunt composiet CGA-modus.                            â•‘
+â•‘ Kies composietuitgang AAN, UIT or AUTO (standaard) met [color=red]F12[color=white]         â•‘
+â•‘ [color=red]F10[color=white] kiest de CGA instelling en [color=red](%s+)F11[color=white] wijzigt deze.             â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_CGA_MONO
-º Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     º
-º en [color=red]%s+F11[color=white] om de instellingen voor contrast/helderheid te wijzigen.º
+â•‘ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     â•‘
+â•‘ en [color=red]%s+F11[color=white] om de instellingen voor contrast/helderheid te wijzigen.â•‘
 
 .
 :SHELL_STARTUP_HERC
-º Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     º
-º                                                                    º
+â•‘ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_DEBUG
-º Druk op [color=red]%s+Pause[color=white] voor de debugger of start de exe met [color=yellow]DEBUG[color=white].      º
-º                                                                    º
+â•‘ Druk op [color=red]%s+Pause[color=white] voor de debugger of start de exe met [color=yellow]DEBUG[color=white].      â•‘
+â•‘                                                                    â•‘
 
 .
 :SHELL_STARTUP_END
-º [color=yellow]https://dosbox-staging.github.io[color=white]                                   º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[reset]
+â•‘ [color=yellow]https://dosbox-staging.github.io[color=white]                                   â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•[reset]
 
 
 .
@@ -2256,7 +2256,7 @@ Voorbeelden:
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
-Voorkomen dat een vroegtijdig 'exit' wordt be‰indigd.
+Voorkomen dat een vroegtijdig 'exit' wordt beÃ«indigd.
 
 .
 :SHELL_CMD_HELP_HELP
@@ -2468,7 +2468,7 @@ Waar:
 Opmerkingen:
   Door opmerkingen aan een batchprogramma toe te voegen, kan het gemakkelijker
   te begrijpen zijn. Je kunt met dit commando ook tijdelijk een aantal
-  commando's uitcommentari‰ren.
+  commando's uitcommentariÃ«ren.
 
 Voorbeelden:
   [color=green]rem[reset] [color=cyan]Dit is mijn testbatchprogramma.[reset]
@@ -2540,7 +2540,7 @@ Waar:
   [color=cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
 
 Opmerkingen:
-  De operator [color=white]+[reset] combineert meerdere bronbestanden tot ‚‚n enkel bestand.
+  De operator [color=white]+[reset] combineert meerdere bronbestanden tot Ã©Ã©n enkel bestand.
   Bestemming is optioneel: indien weggelaten, worden bestanden naar het huidige
   pad gekopieerd.
 
@@ -2565,7 +2565,7 @@ Waar:
 Opmerkingen:
   Na het oproepen van een ander batchprogramma, zal het oorspronkelijke
   batchprogramma weer worden uitgevoerd nadat het andere batchprogramma
-  is be‰indigd.
+  is beÃ«indigd.
 
 Voorbeelden:
   [color=green]call[reset] [color=white]mijnbatch.bat[reset]
@@ -2710,7 +2710,7 @@ Voorbeelden:
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Keuze mislukt[reset]: invoerstroom be‰indigd zonder geldige keuze.
+[color=red]Keuze mislukt[reset]: invoerstroom beÃ«indigd zonder geldige keuze.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
