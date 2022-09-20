@@ -19,6 +19,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <map>
 #include <set>
@@ -65,13 +66,13 @@ using code_page_mapping_reverse_t = std::map<uint8_t, Grapheme>;
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
 using config_aliases_t    = std::vector<std::pair<uint16_t, uint16_t>>;
 
-typedef struct ConfigMappingEntry {
+struct ConfigMappingEntry {
     bool valid                          = false;
     code_page_mapping_reverse_t mapping = {};
     uint16_t extends_code_page          = 0;
     std::string extends_dir             = "";
     std::string extends_file            = "";
-} ConfigMappingEntry;
+};
 
 using config_mappings_t = std::map<uint16_t, ConfigMappingEntry>;
 
@@ -80,12 +81,12 @@ static const std::string file_name_ascii  = "ASCII.TXT";
 static const std::string dir_name_mapping = "mapping";
 
 // Thresholds to tell how the code point is encoded
-constexpr uint8_t threshold_non_ascii = 0x80; // 1000 0000
-constexpr uint8_t threshold_encoded   = 0xc0; // 1100 0000
-constexpr uint8_t threshold_bytes_3   = 0xe0; // 1110 0000
-constexpr uint8_t threshold_bytes_4   = 0xf0; // 1111 0000
-constexpr uint8_t threshold_bytes_5   = 0xf8; // 1111 1000
-constexpr uint8_t threshold_bytes_6   = 0xfc; // 1111 1100
+constexpr uint8_t threshold_non_ascii = 0b1'000'0000;
+constexpr uint8_t threshold_encoded   = 0b1'100'0000;
+constexpr uint8_t threshold_bytes_3   = 0b1'110'0000;
+constexpr uint8_t threshold_bytes_4   = 0b1'111'0000;
+constexpr uint8_t threshold_bytes_5   = 0b1'111'1000;
+constexpr uint8_t threshold_bytes_6   = 0b1'111'1100;
 
 // Use the character below if there is absolutely no sane way to handle UTF-8 glyph
 constexpr uint8_t unknown_character = 0x3f; // '?'
@@ -199,7 +200,7 @@ void Grapheme::StripMarks()
 
 bool Grapheme::operator<(const Grapheme &other) const
 {
-    // TODO: after migrating to C++20 use a templated lambda here
+    // TODO: after migrating to C++20 try to use a templated lambda here
 
     if (code_point < other.code_point)
         return true;
@@ -216,15 +217,22 @@ bool Grapheme::operator<(const Grapheme &other) const
     else if (mark_2nd > other.mark_2nd)
         return false;
 
-    if (empty < other.empty)
+    if (!empty && other.empty)
         return true;
-    else if (empty > other.empty)
+    else if (empty && !other.empty)
         return false;
 
-    if (valid < other.valid)
+    if (!valid && other.valid)
         return true;
-    else if (valid > other.valid)
+    else if (valid && !other.valid)
         return false;
+
+    // '*this == other' condition is, unfortunately, not recognized by older compilers
+    assert(code_point == other.code_point &&
+           mark_1st   == other.mark_1st &&
+           mark_2nd   == other.mark_2nd &&
+           empty      == other.empty &&
+           valid      == other.valid);
 
     return false;
 }
@@ -249,13 +257,15 @@ static char uint8_to_char(const uint8_t in_uint8)
         return static_cast<char>(in_uint8 - INT8_MIN + INT8_MIN);
 }
 
-static void utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_out)
+static bool utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_out)
 {
     // Convert UTF-8 string to a sequence of decoded integers
 
     // For UTF-8 encoding explanation see here:
     // - https://www.codeproject.com/Articles/38242/Reading-UTF-8-with-C-streams
     // - https://en.wikipedia.org/wiki/UTF-8#Encoding
+
+    bool status = true;
 
     str_out.clear();
     for (size_t i = 0; i < str_in.size(); ++i) {
@@ -272,6 +282,8 @@ static void utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_o
                     break;
                 ++i;
             }
+
+            status = false; // advancing without decoding
         };
 
         // Retrieve code point
@@ -298,14 +310,16 @@ static void utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_o
             if (byte_2 >= threshold_non_ascii && byte_2 < threshold_encoded) {
                 ++i;
                 code_point = code_point + byte_2 - threshold_non_ascii;
-            }
+            } else
+                status = false; // code point encoding too short
             // Decode 3rd byte
             code_point = code_point << 6;
             if (byte_2 >= threshold_non_ascii && byte_2 < threshold_encoded &&
                 byte_3 >= threshold_non_ascii && byte_3 < threshold_encoded) {
                 ++i;
                 code_point = code_point + byte_3 - threshold_non_ascii;
-            }
+            } else
+                status = false; // code point encoding too short
         } else if (GCC_UNLIKELY(byte_1 >= threshold_encoded)) {
             // 2-byte code point - decode 1st byte
             code_point = static_cast<uint8_t>(byte_1 - threshold_encoded);
@@ -314,13 +328,18 @@ static void utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_o
             if (byte_2 >= threshold_non_ascii && byte_2 < threshold_encoded) {
                 ++i;
                 code_point = code_point + byte_2 - threshold_non_ascii;
-            }
+            } else
+                status = false; // code point encoding too short
         } else if (byte_1 < threshold_non_ascii)
             // 1-byte code point, ASCII compatible
             code_point = byte_1;
+        else
+            status = false; // not UTF8 encoding
 
         str_out.push_back(static_cast<uint16_t>(code_point));
     }
+
+    return status;
 }
 
 static void warn_code_point(const uint16_t code_point)
@@ -341,9 +360,11 @@ static void warn_code_page(const uint16_t code_page)
     LOG_WARNING("UTF8: Requested unknown code page %d", code_page);
 }
 
-static void wide_to_code_page(const std::vector<uint16_t> &str_in,
-                              std::string &str_out, const uint16_t code_page)
+static std::string wide_to_code_page(const std::vector<uint16_t> &str_in,
+                                     const uint16_t code_page)
 {
+    std::string str_out = {};
+
     code_page_mapping_t *mapping         = nullptr;
     code_page_mapping_t *mapping_aliases = nullptr;
 
@@ -431,6 +452,9 @@ static void wide_to_code_page(const std::vector<uint16_t> &str_in,
 
         push_unknown(grapheme.GetCodePoint());
     }
+
+    str_out.shrink_to_fit();
+    return str_out;
 }
 
 // ***************************************************************************
@@ -442,11 +466,10 @@ static bool prepare_code_page(const uint16_t code_page);
 template <typename T1, typename T2>
 bool add_if_not_mapped(std::map<T1, T2> &mapping, T1 first, T2 second)
 {
-    if (mapping.count(first))
-        return false;
+    [[maybe_unused]] const auto &[item, was_added] = 
+        mapping.try_emplace(first, second);
 
-    mapping[first] = second;
-    return true;
+    return was_added;
 }
 
 static std::ifstream open_mapping_file(const std_fs::path &path_root,
@@ -512,17 +535,10 @@ static bool get_tokens(const std::string &line, std::vector<std::string> &tokens
    return !tokens.empty();
 }
 
-static bool is_hex_digit(const char digit)
-{
-    return (digit >= '0' && digit <= '9') ||
-           (digit >= 'a' && digit <= 'f') ||
-           (digit >= 'A' && digit <= 'F');
-}
-
 static bool get_hex_8bit(const std::string &token, uint8_t &out)
 {
     if (token.size() != 4 || token[0] != '0' || token[1] != 'x' ||
-        !is_hex_digit(token[2]) || !is_hex_digit(token[3]))
+        !isxdigit(token[2]) || !isxdigit(token[3]))
         return false;
 
     out = static_cast<uint8_t>(strtoul(token.c_str() + 2, nullptr, 16));
@@ -532,8 +548,8 @@ static bool get_hex_8bit(const std::string &token, uint8_t &out)
 static bool get_hex_16bit(const std::string &token, uint16_t &out)
 {
     if (token.size() != 6 || token[0] != '0' || token[1] != 'x' ||
-        !is_hex_digit(token[2]) || !is_hex_digit(token[3]) ||
-        !is_hex_digit(token[4]) || !is_hex_digit(token[5]))
+        !isxdigit(token[2]) || !isxdigit(token[3]) ||
+        !isxdigit(token[4]) || !isxdigit(token[5]))
         return false;
 
     out = static_cast<uint16_t>(strtoul(token.c_str() + 2, nullptr, 16));
@@ -1079,19 +1095,18 @@ uint16_t UTF8_GetCodePage()
         return cp_default;
 }
 
-void UTF8_RenderForDos(const std::string &str_in, std::string &str_out,
-                       const uint16_t code_page)
+std::string UTF8_RenderForDos(const std::string &str_in,
+                              const uint16_t code_page)
 {
     load_config_if_needed();
     const uint16_t cp = deduplicate_code_page(code_page);
     prepare_code_page(cp);
 
     std::vector<uint16_t> str_wide;
-    utf8_to_wide(str_in, str_wide);
+    if (!utf8_to_wide(str_in, str_wide))
+        LOG_WARNING("UTF8: Problem rendering string");
 
-    str_out.clear();
-    wide_to_code_page(str_wide, str_out, cp);
-    str_out.shrink_to_fit();
+    return wide_to_code_page(str_wide, cp);
 }
 
 

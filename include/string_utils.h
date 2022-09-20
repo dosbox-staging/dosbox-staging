@@ -202,7 +202,7 @@ uint16_t UTF8_GetCodePage();
 // characters might remain unrecognized) to a format intended for
 // display inside emulated environment. 
 // Code page '0' means a pure 7-bit ASCII.
-void UTF8_RenderForDos(const std::string &str_in, std::string &str_out,
-                       const uint16_t code_page = 0);
+std::string UTF8_RenderForDos(const std::string &str_in,
+                              const uint16_t code_page = 0);
 
 #endif

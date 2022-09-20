@@ -898,7 +898,7 @@ CODEPAGE 867 # Czech and Slovak, Kamenicky encoding
 0xad 0x00a7        #SECTION SIGN
 EXTENDS CODEPAGE 437
 
-CODEPAGE 869 # Greek, with EUR899
+CODEPAGE 869 # Greek, with EUR
 0x87 0x20ac        #EURO SIGN - FreeDOS specific
 EXTENDS FILE mapping-unicode.org CP_869.TXT
 
@@ -908,7 +908,7 @@ EXTENDS CODEPAGE 855
 
 CODEPAGE 899 # Armenian, ArmSCII-8A encoding
 0xff 0x055b        #ARMENIAN EMPHASIS MARK - FreeDOS specific
-EXTENDS FILE mapping-wikipedia.org CP_ARMSCII-8A.TXT
+EXTENDS FILE mapping-wikipedia.org CP_899.TXT
 
 CODEPAGE 874 # Thai, with EUR
 EXTENDS FILE mapping-unicode.org CP_874.TXT
@@ -1039,7 +1039,7 @@ CODEPAGE 3012 # Latvian and Russian, Cyrillic, RusLat encoding
 EXTENDS CODEPAGE 866
 
 CODEPAGE 3021 # Bulgarian, Cyrillic, MIK encoding
-EXTENDS FILE mapping-wikipedia.org CP_MIK.TXT
+EXTENDS FILE mapping-wikipedia.org CP_3021.TXT
 
 CODEPAGE 3845 # Hungarian, CWI-2 encoding
 # reference: https://en.wikipedia.org/wiki/CWI-2
@@ -1064,7 +1064,7 @@ CODEPAGE 3846 # Turkish
 EXTENDS CODEPAGE 437
 
 CODEPAGE 3848 # Brazilian, ABICOMP encoding
-EXTENDS FILE mapping-wikipedia.org CP_ABICOMP.TXT
+EXTENDS FILE mapping-wikipedia.org CP_3848.TXT
 
 CODEPAGE 30000 # Saami
 EXTENDS FILE mapping-freedos.org CP_30000.TXT
