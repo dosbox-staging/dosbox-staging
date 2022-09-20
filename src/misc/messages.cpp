@@ -71,7 +71,7 @@ public:
 
 		const uint16_t cp = UTF8_GetCodePage();
 		if (markup_cp_msg[cp].empty()) {
-			UTF8_RenderForDos(markup_msg, markup_cp_msg[cp], cp);
+			markup_cp_msg[cp] = UTF8_RenderForDos(markup_msg, cp);
 			assert(markup_cp_msg[cp].length());
 		}
 		return markup_cp_msg[cp].c_str();
@@ -89,7 +89,7 @@ public:
 
 		const uint16_t cp = UTF8_GetCodePage();
 		if (rendered_cp_msg[cp].empty()) {
-			UTF8_RenderForDos(rendered_msg, rendered_cp_msg[cp], cp);
+			rendered_cp_msg[cp] = UTF8_RenderForDos(rendered_msg, cp);
 			assert(rendered_cp_msg[cp].length());
 		}
 		return rendered_cp_msg[cp].c_str();
@@ -147,14 +147,14 @@ static bool load_message_file(const std_fs::path &filename)
 
 	if (!check_file(filename)) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
-		        filename.c_str());
+		        filename.string().c_str());
 		return false;
 	}
 
-	FILE *mfile = fopen(filename.c_str(), "rt");
+	FILE *mfile = fopen(filename.string().c_str(), "rt");
 	if (!mfile) {
 		LOG_MSG("LANG: Failed opening language file: %s, skipping",
-		        filename.c_str());
+		        filename.string().c_str());
 		return false;
 	}
 
@@ -196,7 +196,7 @@ static bool load_message_file(const std_fs::path &filename)
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename.c_str());
+	LOG_MSG("LANG: Loaded language file: %s", filename.string().c_str());
 	return true;
 }
 
