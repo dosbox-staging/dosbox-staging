@@ -57,7 +57,7 @@
 
 static std::string GetConfigName()
 {
-	return "dosbox-staging.conf";
+	return CANONICAL_PROJECT_NAME ".conf";
 }
 
 #ifndef WIN32

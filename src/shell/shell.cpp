@@ -1092,7 +1092,7 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        "\n");
 
-	MSG_Add("SHELL_STARTUP_SUB","[color=green]dosbox-staging %s\033[0m\n");
+	MSG_Add("SHELL_STARTUP_SUB","[color=green]" CANONICAL_PROJECT_NAME " %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays or changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
 	        "Usage:\n"
