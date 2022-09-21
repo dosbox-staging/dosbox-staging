@@ -225,24 +225,73 @@ const std_fs::path &GetExecutablePath()
 static const std::deque<std_fs::path> &GetResourceParentPaths()
 {
 	static std::deque<std_fs::path> paths = {};
-	if (paths.size())
+	if (!paths.empty())
 		return paths;
 
-	// Prioritize portable configuration: allow the entire resource tree or
-	// just a single resource to be included in the current working directory.
-	paths.emplace_back(std_fs::path("."));
-	paths.emplace_back(std_fs::path("resources"));
+	auto add_if_exists = [&](const std_fs::path &p) {
+		if (std_fs::is_directory(p))
+			paths.emplace_back(p);
+	};
+
+	// First prioritize is local
+	// These resources are provided directly off the working path
+	add_if_exists(std_fs::path("."));
+	constexpr auto resource_dir_name = "resources";
+	add_if_exists(std_fs::path(resource_dir_name));
+
+	// Second priority are resources packaged with the executable
 #if defined(MACOSX)
-	paths.emplace_back(GetExecutablePath() / "../Resources");
-	paths.emplace_back(GetExecutablePath() / "../../Resources");
+	constexpr auto macos_resource_dir_name = "Resources";
+	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
+	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
 #else
-	paths.emplace_back(GetExecutablePath() / "resources");
-	paths.emplace_back(GetExecutablePath() / "../resources");
+	add_if_exists(GetExecutablePath() / resource_dir_name);
+	add_if_exists(GetExecutablePath() / ".." / resource_dir_name);
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
-	paths.emplace_back(std_fs::path("/usr/local/share/dosbox-staging"));
-	paths.emplace_back(std_fs::path("/usr/share/dosbox-staging"));
-	paths.emplace_back(std_fs::path(CROSS_GetPlatformConfigDir()));
+
+	// Third priority is the user's XDG data specification
+	//
+	// $XDG_DATA_HOME defines the base directory relative to which
+	// user-specific data files should be stored. If $XDG_DATA_HOME is either
+	// not set or empty, a default equal to $HOME/.local/share should be used.
+	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	//
+	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
+	if (!xdg_data_home_env)
+		xdg_data_home_env = "~/.local/share";
+
+	const std_fs::path xdg_data_home = CROSS_ResolveHome(xdg_data_home_env);
+	add_if_exists(xdg_data_home / CANONICAL_PROJECT_NAME);
+
+	// Fourth priority is the system's XDG data specification
+	//
+	//  $XDG_DATA_DIRS defines the preference-ordered set of base
+	//  directories to search for data files in addition to the
+	//  $XDG_DATA_HOME base directory. The directories in $XDG_DATA_DIRS
+	//  should be seperated with a colon ':'.
+	//
+	// If $XDG_DATA_DIRS is either not set or empty, a value equal to
+	// /usr/local/share/:/usr/share/ should be used.
+	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	//
+	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
+
+	// If XDG_DATA_DIRS is undefined, use the default:
+	if (!xdg_data_dirs_env)
+		xdg_data_dirs_env = "/usr/local/share:/usr/share";
+
+	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
+		trim(xdg_data_dir);
+		if (!xdg_data_dir.empty()) {
+			const std_fs::path resolved_dir = CROSS_ResolveHome(
+			        xdg_data_dir);
+			add_if_exists(resolved_dir / CANONICAL_PROJECT_NAME);
+		}
+	}
+	// Last priority is the user's configuration directory
+	add_if_exists(std_fs::path(CROSS_GetPlatformConfigDir()));
+
 	return paths;
 }
 
