@@ -1,4 +1,4 @@
-resource_dirs = [
+resources = [
     'drives',
     'freedos-cpi',
     'freedos-keyboard',
@@ -8,9 +8,12 @@ resource_dirs = [
     # insert new resource subdirectory names here
 ]
 
-# This will install all the above resource_dirs into the
+# This will install all the above resources into the
 # platform-specific resources/ directory in the build area,
 # which is then bundled into the release package.
+
+# When "meson install" is used, the same tree is installed
+# under the provided data_dir (or prefix / share) area.
 
 # To add a new resources subdirectory, create a new directory
 # under ./contrib/resources/<here>.
@@ -23,7 +26,7 @@ resource_dirs = [
 #    resource_dirs = [ 'dir1', 'dir2', ... ]
 #  - See the translations directory for a working example.
 #  - Finally, add the name of the directory to the above
-#    resource_dirs list at the top of this file.
+#    'resources' list at the top of this file.
 
 # ---- no further changes are needed to add new resources ----
 
@@ -40,64 +43,64 @@ relative_resources = (
     target_machine.system() == 'darwin' ? '../../../Resources' : '../../resources'
 )
 
-target_resources = meson.current_build_dir() / relative_resources
+# Top-level resources directory for the build and installation area
+target_build_dir = meson.current_build_dir() / relative_resources
+target_install_dir = get_option('datadir') / meson.project_name()
 
-foreach source_dir : resource_dirs
+foreach resource : resources
 
-    # Create the resources/source_dir in the build area
-    target_dir = target_resources / source_dir
-    configure_file(output: source_dir, command: ['mkdir', '-p', target_dir])
+    # Create the resources/resource in the build area
+    configure_file(
+        output: resource,
+        command: ['mkdir', '-p', target_build_dir / resource],
+    )
 
     # These two variables get re-populated inside each subdir(..)
     resource_files = []
     resource_dirs = []
+    subdir(resource)
 
-    subdir(source_dir)
-
-    # Install each of the source_dir's resource files
-    foreach resource : resource_files
-        source_file = source_dir / resource
-        target_file = target_dir / resource
+    # Install each of the resource's files
+    foreach filename : resource_files
+        source_file = resource / filename
         configure_file(
-            output: resource,
-            command: ['install', '-m', '644', files(source_file), target_file],
+            output: filename,
+            command: [
+                'install',
+                '-m', '644',
+                files(source_file),
+                target_build_dir / resource / filename,
+            ],
+        )
+        install_data(
+            source_file,
+            install_dir: target_install_dir / resource,
         )
     endforeach
 
-    # Get this source_dir's full path
+    # Get this resource's full path
     source_dir_cmd = run_command(
         'dirname',
-        files(source_dir / 'meson.build'),
+        files(resource / 'meson.build'),
         check: true,
     )
-    source_dir_path = source_dir_cmd.stdout().strip()
+    resource_absolute_dir = source_dir_cmd.stdout().strip()
 
-    # Install each of the source_dir's resource dirs
-    foreach resource : resource_dirs
+    # Install each of the resource's dirs
+    foreach dirname : resource_dirs
         configure_file(
-            output: resource,
-            command: ['cp', '-f', '-R', '-P', source_dir_path / resource, target_dir],
+            output: dirname,
+            command: [
+                'cp',
+                '-f',
+                '-R',
+                '-P', resource_absolute_dir / dirname,
+                target_build_dir / resource,
+            ],
+        )
+        install_subdir(
+            resource / dirname,
+            install_dir: target_install_dir / resource,
         )
     endforeach
-
-    # Setup the the source_dir's resource files and dirs into the system (if requested)
-    if get_option('prefix') in ['/usr', '/usr/local']
-        system_resources = (
-            get_option('prefix') / 'share/dosbox-staging' / source_dir
-        )
-        foreach resource : resource_files
-            install_data(
-                target_dir / resource,
-                install_dir: system_resources,
-            )
-        endforeach
-
-        foreach resource : resource_dirs
-            install_subdir(
-                target_dir / resource,
-                install_dir: system_resources,
-            )
-        endforeach
-    endif
-
 endforeach
