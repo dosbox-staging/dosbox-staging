@@ -4490,7 +4490,7 @@ void OverrideWMClass()
 {
 #if !defined(WIN32)
 	constexpr int overwrite = 0; // don't overwrite
-	setenv("SDL_VIDEO_X11_WMCLASS", "dosbox-staging", overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", CANONICAL_PROJECT_NAME, overwrite);
 #endif
 }
 
@@ -4510,7 +4510,7 @@ int sdl_main(int argc, char *argv[])
 	if (control->cmdline->FindExist("--version") ||
 	    control->cmdline->FindExist("-version") ||
 	    control->cmdline->FindExist("-v")) {
-		printf(version_msg, DOSBOX_GetDetailedVersion());
+		printf(version_msg, CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 		return 0;
 	}
 
@@ -4532,7 +4532,7 @@ int sdl_main(int argc, char *argv[])
 
 	loguru::init(argc, argv);
 
-	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
+	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
 	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,

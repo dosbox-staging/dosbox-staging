@@ -1229,7 +1229,7 @@ void DOSBOX_Init() {
 		"You can put your MOUNT lines here.\n"
 	);
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for dosbox-staging (%s).\n"
+	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
 

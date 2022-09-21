@@ -412,7 +412,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 		}
 #ifdef PNG_TEXT_SUPPORTED
 		constexpr char keyword[] = "Software";
-		constexpr char value[] = "dosbox-staging " VERSION;
+		constexpr char value[] = CANONICAL_PROJECT_NAME " " VERSION;
 		constexpr int num_text = 1;
 		static_assert(sizeof(keyword) < 80, "libpng limit");
 		png_text texts[num_text] = {};

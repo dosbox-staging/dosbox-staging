@@ -193,7 +193,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	inet_pton(AF_INET6, "fec0::3", &config.vnameserver6);
 
 	/* DHCPv4, BOOTP, TFTP */
-	config.vhostname = "dosbox-staging";
+	config.vhostname = CANONICAL_PROJECT_NAME;
 	config.vdnssearch = NULL;
 	config.vdomainname = NULL;
 	config.tftp_server_name = NULL;

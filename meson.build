@@ -146,6 +146,7 @@ endforeach
 #
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
+conf_data.set('project_name', meson.project_name())
 
 os_family_name = {
   'linux'     : 'LINUX',

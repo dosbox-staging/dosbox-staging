@@ -22,7 +22,7 @@
 #define DOSBOX_GUI_MSGS_H
 
 constexpr char version_msg[] =
-        R"(dosbox (dosbox-staging), version %s
+        R"(%s, version %s
 
 Copyright (C) 2020-2022  The DOSBox Staging Team
 License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
