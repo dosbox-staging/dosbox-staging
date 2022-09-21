@@ -31,7 +31,6 @@ void KEYB::Run(void) {
 			break;
 		case KEYB_FILENOTFOUND:
 			WriteOut(MSG_Get("PROGRAM_KEYB_FILENOTFOUND"), layout.c_str());
-			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
 			break;
 		case KEYB_INVALIDFILE: WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"), layout.c_str()); break;
 		case KEYB_LAYOUTNOTFOUND:
@@ -39,7 +38,6 @@ void KEYB::Run(void) {
 			break;
 		case KEYB_INVALIDCPFILE:
 			WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"), layout.c_str());
-			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
 			break;
 		default:
 			LOG(LOG_DOSMISC, LOG_ERROR)
@@ -123,8 +121,8 @@ void KEYB::AddMessages() {
 	        "  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]\n"
 	        "  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
 	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i\n");
-	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n\n");
+	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n");
 	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid\n");
 	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
-	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
+	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n");
 }
