@@ -32,8 +32,8 @@ project(
 # These are always present regardless of host, compiler, dependencies, or options.
 #
 data_dir = get_option('datadir')
-licenses_dir = data_dir / 'licenses' / 'dosbox-staging'
-doc_dir = data_dir / 'doc' / 'dosbox-staging'
+licenses_dir = data_dir / 'licenses' / meson.project_name()
+doc_dir = data_dir / 'doc' / meson.project_name()
 
 install_man('docs/dosbox.1')
 install_data('COPYING', install_dir: licenses_dir)
@@ -42,7 +42,6 @@ install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 subdir('contrib/linux')
 subdir('contrib/icons')
 subdir('contrib/resources')
-
 
 # Gather compiler settings
 # ~~~~~~~~~~~~~~~~~~~~~~~~

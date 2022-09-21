@@ -1,18 +1,35 @@
-Starting with version 0.79, DOSBox Staging needs access to 
-bundled resource files.
+Starting with version 0.79, DOSBox Staging needs access to bundled 
+resource files.
 
 Meson will construct the deliverable "resources/" directory 
 along-side the compiled executable. This layout can be shipped 
-as-is. The executable will check the following paths for the 
-resources, in the following priority order:
+as-is.
+
+Additionally, if "meson install" is performed, the tree of 
+resources will be constructed as follows:
+
+ - /${prefix}/share/dosbox-staging/resource-subdirs/..
+   if meson is setup with --prefix, but without --datadir
+
+ - /usr/local/${datadir}/dosbox-staging/resource-subdirs/..
+   if meson is setup with --datadir, but without --prefix
+
+ - /${prefix}/{$datadir}/dosbox-staging/resource-subdirs/..
+   if meson is setup with --prefix and a **non-absolute** --datadir
+
+ - /${datadir}/dosbox-staging/resource-subdirs/..
+   if meson is setup with --prfix and an **absolute** --datadir
+
+At runtime, the executable will check the following paths
+for the resources, in the following priority order:
 
 1. Beside the executable:
     ./dosbox (executable)
     ./resources/subdirs/...
     (on macOS: ../Resources/subdirs/...)
 
-   This first instance should also be the prefered packaging
-   layout for wrapped formats like FlatPak, Snap, etc.
+   This first instance should also be the prefered packaging layout 
+   for wrapped formats like FlatPak, Snap, AppImage, etc.
 
 2. Up one directory from the executable (which allows unit tests 
    to access resources):
@@ -20,42 +37,44 @@ resources, in the following priority order:
     ./../resources/subdirs/...
     (on macOS: ../../Resources/subdirs/...)
 
-3. In the absolute path:
-    '/usr/local/share/dosbox-staging/subdirs/...'
+3. In XDG_DATA_HOME followed by the XDG_DATA_DIRS paths, where:
+    '${XDG_DATA}/dosbox-staging/subdirs/...'
 
-4. In the absolute path:
-   '/usr/share/dosbox-staging/subdirs/...'
-
-5. If your OS has a different prefered "application content" 
-   holding area, please open a ticket.
-
-6. In the user's configuration path:
+4. In the user's configuration path:
    'home/<user>/.config/dosbox/subdirs/...'
    (or the Windows configuration path)
 
-FAQ:
+FAQ
+~~~
 Q: Why can't these be embedded inside the executable?
 
-A1: Source files aren't filesystems, as such storing binaries as 
-    massive hex strings is a form of obfuscation that makes it 
-    harder to understand what they contain. With files, anyone 
-    can diff or create an md5 checksum. With files, anyone can 
-    notify the project when a file has become outdated.
+A1: Encoding binary data into the project's source tree as massive 
+    hex strings is a form of obfuscation that makes it harder to 
+    understand what they contain.
+
+    With raw files, anyone can use those files as intended by 3rd 
+    party software, diff or compare them, notify the project when 
+    they become outdated, and more importantly can maintain them 
+    without needing to setup a development environment.
 
 A2: Turning binary files into source involves placing tens of 
-    thousands of lines of hex address strings into your code 
-    base.
+    thousands of lines of hex values into the code base.
 
     These get parsed and become a persistent carrying "load" for 
-    editors and development IDEs.  They also become a source of
-    false-positive hits when grepping text files.
+    source editors and development IDEs. They generate 
+    false-positives when grepping the source for number patterns, 
+    so much so that they often flood the screen and need extra 
+    effort to filter them out.
+
 
 Q: How are the resources/ deployed into the build area by Meson?
+
 A: Read ./contrib/resources/meson.build This meson file copies
-   the deployable resource files into the build area.
+   the resource files into the build area.
+
 
 Q: How are the resources/ deployed into the build area by Visual
    Studio?
-A: Search the vcxproj files for "contrib\resources". These
-   snippets perform the copying.
 
+A: Search the vcxproj files for "contrib\resources". These
+   snippets perform the recursive copying.
