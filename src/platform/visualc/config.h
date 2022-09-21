@@ -1,3 +1,6 @@
+/* Project name, lower-case and without spaces */
+#define CANONICAL_PROJECT_NAME "dosbox-staging"
+
 // Emulator Semantic Version (MAJOR.MINOR.PATCH), incremented as follows:
 //  - MAJOR version when you make incompatible API changes
 //  - MINOR version when you add functionality in a backwards compatible manner
