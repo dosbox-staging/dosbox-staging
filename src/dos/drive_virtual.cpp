@@ -29,6 +29,7 @@
 #include "shell.h"
 #include "cross.h"
 #include "string_utils.h"
+#include "program_mount_common.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);
 constexpr auto default_time = DOS_PackTime(12, 34, 56);
@@ -350,7 +351,8 @@ uint16_t Virtual_File::GetInformation() {
 
 Virtual_Drive::Virtual_Drive() : search_file(nullptr)
 {
-	safe_strcpy(info, "Internal Virtual Drive");
+	AddMountTypeMessages();
+	safe_strcpy(info, MSG_Get("MOUNT_TYPE_VIRTUAL"));
 	if (!parent_dir)
 		parent_dir = new VFILE_Block;
 }

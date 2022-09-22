@@ -970,6 +970,21 @@ listing not supported
 :MIDI_DEVICE_NOT_CONFIGURED
 device not configured
 .
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CDRom
+.
+:MOUNT_TYPE_FAT
+fatDrive
+.
+:MOUNT_TYPE_ISO
+isoDrive
+.
+:MOUNT_TYPE_VIRTUAL
+Internal Virtual Drive
+.
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .

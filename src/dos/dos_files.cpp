@@ -688,8 +688,13 @@ bool DOS_SetFileAttr(char const *const name, uint16_t attr)
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (strncmp(Drives[drive]->GetInfo(), "CDRom ", 6) == 0 ||
-	    strncmp(Drives[drive]->GetInfo(), "isoDrive ", 9) == 0) {
+	std::string disk_info  = Drives[drive] ? Drives[drive]->GetInfo() : "";
+	std::string type_cdrom = MSG_Get("MOUNT_TYPE_CDROM");
+	std::string type_iso   = MSG_Get("MOUNT_TYPE_ISO");
+	if ((disk_info.substr(0, type_cdrom.size()) == type_cdrom &&
+	     disk_info[type_cdrom.size()] == ' ') ||
+	    (disk_info.substr(0, type_iso.size()) == type_iso &&
+	     disk_info[type_iso.size()] == ' ')) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
