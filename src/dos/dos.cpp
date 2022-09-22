@@ -1404,10 +1404,11 @@ static uint16_t DOS_SectorAccess(const bool read)
 
 static Bitu DOS_25Handler(void)
 {
+	std::string type_fat = MSG_Get("MOUNT_TYPE_FAT");
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+	} else if (std::string(Drives[reg_al]->GetInfo()).substr(0, type_fat.size()) == type_fat) {
 		reg_ax = DOS_SectorAccess(true);
 		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
@@ -1426,10 +1427,11 @@ static Bitu DOS_25Handler(void)
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC,LOG_NORMAL)("int 26 called: hope for the best!");
+	std::string type_fat = MSG_Get("MOUNT_TYPE_FAT");
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+	} else if (std::string(Drives[reg_al]->GetInfo()).substr(0, type_fat.size()) == type_fat) {
 		reg_ax = DOS_SectorAccess(false);
 		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
