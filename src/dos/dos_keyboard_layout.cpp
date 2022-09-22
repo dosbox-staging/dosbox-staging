@@ -1347,6 +1347,10 @@ static const std::map<std::string, Country> country_code_map{
         // clang-format on
 };
 
+static const std::map<std::string, const char *> language_to_layout_exception_map{
+        {"nl", "us"},
+};
+
 static bool country_number_exists(const int requested_number)
 {
 	for ([[maybe_unused]] const auto &[code, number] : country_code_map)
@@ -1365,6 +1369,16 @@ static bool lookup_country_from_code(const char *country_code, Country &country)
 		}
 	}
 	return false;
+}
+
+static const char *lookup_language_to_layout_exception(const char *language_code)
+{
+	if (language_code) {
+		const auto it = language_to_layout_exception_map.find(language_code);
+		if (it != language_to_layout_exception_map.end())
+			return it->second;
+	}
+	return language_code;
 }
 
 uint16_t assert_codepage(const uint16_t codepage)
@@ -1640,7 +1654,8 @@ KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 	}
 	// Regardless of the above, carry on with setting up the layout
 	const auto codepage = lookup_codepage_from_country(country);
-	const auto result   = DOS_LoadKeyboardLayout(language.c_str(), codepage, "auto");
+	const auto layout = lookup_language_to_layout_exception(language.c_str());
+	const auto result = DOS_LoadKeyboardLayout(layout, codepage, "auto");
 
 	if (result == KEYB_NOERROR) {
 		LOG_MSG("LAYOUT: Loaded codepage %d for detected language %s", codepage, language.c_str());
