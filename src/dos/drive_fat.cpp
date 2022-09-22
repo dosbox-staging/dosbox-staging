@@ -923,7 +923,8 @@ fatDrive::fatDrive(const char *sysFilename,
 	memset(fatSectBuffer,0,1024);
 	curFatSect = 0xffffffff;
 
-	safe_strcpy(info, "fatDrive ");
+	safe_strcpy(info, MSG_Get("MOUNT_TYPE_FAT"));
+	safe_strcat(info, " ");
 	safe_strcat(info, sysFilename);
 }
 

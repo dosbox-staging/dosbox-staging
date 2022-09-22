@@ -588,7 +588,7 @@ localDrive::localDrive(const char * startdir,
 	             _mediaid}
 {
 	safe_strcpy(basedir, startdir);
-	sprintf(info,"local directory %s",startdir);
+	sprintf(info, "%s %s", MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY"), startdir);
 	dirCache.SetBaseDir(basedir);
 }
 
@@ -865,7 +865,8 @@ cdromDrive::cdromDrive(const char _driveLetter,
 {
 	// Init mscdex
 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
-	safe_strcpy(info, "CDRom ");
+	safe_strcpy(info, MSG_Get("MOUNT_TYPE_CDROM"));
+	safe_strcat(info, " ");
 	safe_strcat(info, startdir);
 	// Get Volume Label
 	char name[32];

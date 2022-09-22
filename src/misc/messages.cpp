@@ -211,7 +211,7 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 		return;
 
 	// If we got here, then the language was not found
-	LOG_WARNING("LANG: The '%s' language resource file: '%s' could be loaded, using English messages",
+	LOG_WARNING("LANG: The '%s' language resource file: '%s' could not be loaded, using English messages",
 	            lang.c_str(),
 	            lng_file.c_str());
 }
