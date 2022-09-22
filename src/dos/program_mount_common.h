@@ -36,5 +36,6 @@ constexpr int minimum_column_length = 11;
 
 const char *UnmountHelper(char umount);
 void AddCommonMountMessages();
+void AddMountTypeMessages();
 
 #endif // DOSBOX_PROGRAM_MOUNT_COMMON_H
