@@ -315,7 +315,7 @@ public:
 		while (handler) {
 			if (dev == handler->GetName()) {
 				if (!handler->Open(conf)) {
-					LOG_MSG("MIDI: Can't open device: %s with config: '%s'",
+					LOG_WARNING("MIDI: Can't open device: %s with config: '%s'",
 					        dev.c_str(), conf);
 					goto getdefault;
 				}
