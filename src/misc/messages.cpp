@@ -71,7 +71,8 @@ public:
 
 		const uint16_t cp = UTF8_GetCodePage();
 		if (markup_cp_msg[cp].empty()) {
-			markup_cp_msg[cp] = UTF8_RenderForDos(markup_msg, cp);
+			if (!UTF8_RenderForDos(markup_msg, markup_cp_msg[cp], cp))
+			LOG_WARNING("LANG: Problem rendering markup string");
 			assert(markup_cp_msg[cp].length());
 		}
 		return markup_cp_msg[cp].c_str();
@@ -89,7 +90,8 @@ public:
 
 		const uint16_t cp = UTF8_GetCodePage();
 		if (rendered_cp_msg[cp].empty()) {
-			rendered_cp_msg[cp] = UTF8_RenderForDos(rendered_msg, cp);
+			if (!UTF8_RenderForDos(rendered_msg, rendered_cp_msg[cp], cp))
+				LOG_WARNING("LANG: Problem rendering string");
 			assert(rendered_cp_msg[cp].length());
 		}
 		return rendered_cp_msg[cp].c_str();
@@ -209,7 +211,7 @@ const char *MSG_Get(char const *requested_name)
 	return "Message not Found!\n";
 }
 
-bool MSG_Exists(const char *requested_name) 
+bool MSG_Exists(const char *requested_name)
 {
 	return contains(messages, requested_name);
 }
