@@ -200,9 +200,12 @@ uint16_t UTF8_GetCodePage();
 
 // Convert the UTF-8 string (NFC normalized, otherwise some national
 // characters might remain unrecognized) to a format intended for
-// display inside emulated environment. 
+// display inside emulated environment.
 // Code page '0' means a pure 7-bit ASCII.
-std::string UTF8_RenderForDos(const std::string &str_in,
-                              const uint16_t code_page = 0);
+// Return value 'false' means there were problems with string
+// decoding/rendering, but the overall output should be still sane
+bool UTF8_RenderForDos(const std::string &str_in,
+                       std::string &str_out,
+                       const uint16_t code_page = 0);
 
 #endif

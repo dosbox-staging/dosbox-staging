@@ -360,10 +360,12 @@ static void warn_code_page(const uint16_t code_page)
     LOG_WARNING("UTF8: Requested unknown code page %d", code_page);
 }
 
-static std::string wide_to_code_page(const std::vector<uint16_t> &str_in,
-                                     const uint16_t code_page)
+static bool wide_to_code_page(const std::vector<uint16_t> &str_in,
+                              std::string &str_out,
+                              const uint16_t code_page)
 {
-    std::string str_out = {};
+    bool status = true;
+    str_out.clear();
 
     code_page_mapping_t *mapping         = nullptr;
     code_page_mapping_t *mapping_aliases = nullptr;
@@ -422,9 +424,10 @@ static std::string wide_to_code_page(const std::vector<uint16_t> &str_in,
     };
 
     // Handle unknown code points
-    auto push_unknown = [&str_out](const uint16_t code_point) {
+    auto push_unknown = [&str_out, &status](const uint16_t code_point) {
         str_out.push_back(static_cast<char>(unknown_character));
         warn_code_point(code_point);
+        status = false;
     };
 
     for (size_t i = 0; i < str_in.size(); ++i) {
@@ -454,7 +457,7 @@ static std::string wide_to_code_page(const std::vector<uint16_t> &str_in,
     }
 
     str_out.shrink_to_fit();
-    return str_out;
+    return status;
 }
 
 // ***************************************************************************
@@ -466,7 +469,7 @@ static bool prepare_code_page(const uint16_t code_page);
 template <typename T1, typename T2>
 bool add_if_not_mapped(std::map<T1, T2> &mapping, T1 first, T2 second)
 {
-    [[maybe_unused]] const auto &[item, was_added] = 
+    [[maybe_unused]] const auto &[item, was_added] =
         mapping.try_emplace(first, second);
 
     return was_added;
@@ -1095,18 +1098,19 @@ uint16_t UTF8_GetCodePage()
         return cp_default;
 }
 
-std::string UTF8_RenderForDos(const std::string &str_in,
-                              const uint16_t code_page)
+bool UTF8_RenderForDos(const std::string &str_in,
+                       std::string &str_out,
+                       const uint16_t code_page)
 {
     load_config_if_needed();
     const uint16_t cp = deduplicate_code_page(code_page);
     prepare_code_page(cp);
 
     std::vector<uint16_t> str_wide;
-    if (!utf8_to_wide(str_in, str_wide))
-        LOG_WARNING("UTF8: Problem rendering string");
+    const bool status1 = utf8_to_wide(str_in, str_wide);
+    const bool status2 = wide_to_code_page(str_wide, str_out, cp);
 
-    return wide_to_code_page(str_wide, cp);
+    return status1 && status2;
 }
 
 
