@@ -446,6 +446,7 @@ if get_option('use_fluidsynth')
     fluid_dep = dependency(
         'fluidsynth',
         version: '>= 2.2.3',
+        modules: ['FluidSynth::libfluidsynth'],
         allow_fallback: ('fluidsynth' not in system_libs_list),
         static: ('fluidsynth' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_fluidsynth'),
