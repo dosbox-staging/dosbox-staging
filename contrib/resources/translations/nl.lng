@@ -126,6 +126,7 @@ te overschrijven (die gewoonlijk de OS-screensaver blokkeert terwijl de
 emulator actief is).
 .
 :CONFIG_LANGUAGE
+Selecteer een te gebruiken taal: de, en, es, fr, it, nl, pl, and ru
 Opmerkingen: Deze instelling overschrijft de 'LANG'-omgeving, indien ingesteld.
              De map 'resources/translations' gebundeld met het uitvoerbare
              bestand bevat deze bestanden. Bewaar het naast het uitvoerbare
@@ -1084,15 +1085,15 @@ Imagebestand is alleen-lezen! Kan problemen opleveren.
 :PROGRAM_BOOT_PRINT_ERROR
 Dit commando start DOSBox Staging op vanaf een diskette of een harde schijf.
 
-Voor dit commando kan men een opeenvolging van verwisselbare diskettes
-specificeren door op %s+F4 te drukken, en -l specificeert de gemounte drive
-om vanaf op te starten. Als er geen stationsletter is opgegeven, wordt dit
-standaard ingesteld op opstarten vanaf de A-schijf.
-De enige opstartbare stationsletters zijn A, C en D. Voor het opstarten vanaf
-een harde schijf (C of D), zou de image al moeten zijn aangekoppeld met het
-[34;1mIMGMOUNT [0m-commando.
+Met dit commando kan men een opeenvolging van diskettes specificeren,
+verwisselbaar door op %s+F4 te drukken, en -l specificeert de gekoppelde
+schijf om vanaf op te starten. Als er geen schijfletter is opgegeven, wordt
+dit standaard ingesteld op opstarten vanaf de A-schijf.
+De enige opstartbare schijfletters zijn A, C en D. Voor het opstarten vanaf
+een harde schijf (C of D), zal de image al moeten zijn aangekoppeld met het
+[color=blue]IMGMOUNT[reset]-commando.
 
-Typ [34;1mBOOT /?[0m voor de syntaxis van deze opdracht.[0m
+Typ [color=blue]BOOT /?[reset] voor de syntaxis van deze opdracht.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1225,11 +1226,11 @@ Geef stationsnummer (0 of 3) op voor koppeling (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Voor [33mCD-ROM[0m images:   [34;1mIMGMOUNT schijfletter locatie-van-image -t iso[0m
+Voor [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT schijfletter locatie-van-image -t iso[reset]
 
-Voor [33mhardeschijf[0m images: Moet geometrie specificeren voor harde schijven:
+Voor [color=light-yellow]hardeschijf[reset] images: Moet geometrie specificeren voor harde schijven:
 bytes_per_sector, sectoren_per_cylinder, koppen_per_cylinder, cylinder_aantal.
-[34;1mIMGMOUNT schijfletter locatie-van-image -size bps,spc,hpc,cyl[0m
+[color=blue]IMGMOUNT schijfletter locatie-van-image -size bps,spc,hpc,cyl[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -1267,7 +1268,7 @@ Imagebestand niet gevonden.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Gebruik de [34;1mMOUNT[0m-opdracht, niet de [34;1mIMGMOUNT[0m-opdracht om mappen te koppelen.
+Gebruik de [color=blue]MOUNT[reset]-opdracht, niet de [color=blue]IMGMOUNT[reset]-opdracht om mappen te koppelen.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1291,111 +1292,111 @@ Meerdere bestanden wordt alleen ondersteund voor cue/iso-images.
 
 .
 :PROGRAM_INTRO
-[2J[32;1mWelkom bij DOSBox Staging[0m, een x86 emulator met geluid en graphics.
+[2J[color=green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
 DOSBox maakt een shell voor je die eruitziet als een oude gewone DOS.
 
-Voor informatie over basis koppelen typ [34;1mintro mount[0m
-Voor informatie over CD-ROM ondersteuning typ [34;1mintro cdrom[0m
-Voor informatie over speciale toetsen typ [34;1mintro special[0m
-Voor meer informatie, bezoek de DOSBox Staging wiki:[34;1m
-https://github.com/dosbox-staging/dosbox-staging/wiki[0m
+Voor informatie over basis koppelen typ [color=blue]intro mount[reset]
+Voor informatie over CD-ROM ondersteuning typ [color=blue]1mintro cdrom[reset]
+Voor informatie over speciale toetsen typ [color=blue]intro special[reset]
+Voor meer informatie, bezoek de DOSBox Staging wiki:
+[color=blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[31;1mDOSBox zal stoppen/afsluiten zonder waarschuwing als er een fout is opgetreden![0m
+[color=red]DOSBox zal stoppen/afsluiten zonder waarschuwing als er een fout is opgetreden![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[32;1mHier zijn enkele commando's om u op weg te helpen:[0m
+[2J[color=green]Hier zijn enkele commando's om u op weg te helpen:[reset]
 Voordat u de bestanden op uw eigen bestandssysteem kunt gebruiken, moet u de
 map met de bestanden aankoppelen.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c c:\dosgames\[37m koppelt een C-schijf met c:\dosgames als inhoud.   บ
+[bgcolor=blue][color=white]ษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [color=green]mount c c:\dosgames\ [color=white]koppelt een C-schijf met c:\dosgames als inhoud.   บ
 บ                                                                         บ
-บ [32mc:\dosgames\[37m is een voorbeeld. Vervang met uw eigen spellenmap.        [37m บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+บ [color=green]c:\dosgames\ [color=white]is een voorbeeld. Vervang met uw eigen spellenmap.         บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m koppelt een C-schijf met ~/dosgames als inhoud.   บ
+[bgcolor=blue][color=white]ษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [color=green]mount c ~/dosgames[color=white] koppelt een C-schijf met ~/dosgames als inhoud.   บ
 บ                                                                      บ
-บ [32m~/dosgames[37m is een voorbeeld. Vervang met uw eigen spellenmap.      [37m  บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+บ [color=green]~/dosgames[color=white] is een voorbeeld. Vervang met uw eigen spellenmap.        บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Na een successvolle koppeling, kan je [34;1mc:[0m typen om naar de nieuw gekoppelde
-C-drive te gaan. Typ daar [34;1mdir[0m om de inhoud te tonen. [34;1mcd[0m staat toe om een map
-in te gaan (herkenbaar door de [33;1m[][0m in de map lijst).
-Programmas/bestanden met extensie [31m.exe .bat[0m and [31m.com[0m. kunnen worden uitgevoerd.
+Na een successvolle koppeling, kunt u [color=blue]c:[reset] typen om naar de nieuw gekoppelde
+C-drive te gaan. Typ daar [color=blue]dir[reset] om de inhoud te tonen. [color=blue]cd[reset] staat toe om een map
+in te gaan (herkenbaar door de [color=yellow][][reset] in de map lijst).
+Programmas/bestanden met extensie [color=light-red].exe .bat[reset] and [color=light-red].com[reset]. kunnen worden uitgevoerd.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[0m
+[2J[color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
-Het [33mbasis[0m niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
+Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
 bestanden markeren als alleen-lezen. Dit is normaal voldoende:
-[34;1mmount D C:\example -t cdrom[0m
+[color=blue]mount D C:\example -t cdrom[reset]
 Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[color=blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-Het [33mvolgende[0m niveau voegt ondersteuning op laag niveau toe.
+Het [color=light-yellow]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
 Het werkt daarom enkel op echte cd-rom-stations:
-[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
-Vervang [0;31mD:\[0m met de lokatie van uw cd-rom-station.
-Vervang de [33;1m0[0m in [34;1m-usecd [33m0[0m met het nummer aangegeven voor uw CD-ROM als u typt:
-[34;1mmount -listcd[0m
+[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
+Vervang [color=light-red]D:\ [reset]met de lokatie van uw cd-rom-station.
+Vervang de [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
+[color=blue]mount -listcd[reset]
 
 Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-[34;1mimgmount D C:\cd.cue -t cdrom[0m
+[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[0m
+[2J[color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
-Het [33mbasis[0m niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
+Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
 bestanden markeren als alleen-lezen. Dit is normaal voldoende:
-[34;1mmount D ~/example -t cdrom[0m
+[color=blue]mount D ~/example -t cdrom[reset]
 Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:
-[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
+[color=blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-Het [33mvolgende[0m niveau voegt ondersteuning op laag niveau toe.
+Het [color=light-yellow]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
 Het werkt daarom enkel op echte cd-rom-stations:
-[34;1mmount d [0;31m~/example[34;1m -t cdrom -usecd [33m0[0m
+[color=blue]mount d[reset] [color=light-red]~/example[color=blue] -t cdrom -usecd [color=yellow]0[reset]
 
-Vervang [0;31mD:\[0m met de lokatie van uw cd-rom-station.
-Vervang de [33;1m0[0m in [34;1m-usecd [33m0[0m met het nummer aangegeven voor uw CD-ROM als u typt:
-[34;1mmount -listcd[0m
+Vervang [color=light-red]~/example [reset]met de lokatie van uw cd-rom-station.
+Vervang de [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
+[color=blue]mount -listcd[reset]
 
 Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
-[34;1mimgmount D ~/cd.iso -t cdrom[0m
-[34;1mimgmount D ~/cd.cue -t cdrom[0m
+[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[32;1mSpeciale toetsen:[0m
+[2J[color=green]Speciale toetsen:[reset]
 Dit zijn de standaard sneltoetsen.
-Ze kunnen worden gewijzigd in de [33mtoetsenmapper[0m.
+Ze kunnen worden gewijzigd in de [color=light-yellow]toetsenmapper[reset].
 
-[33;1m%s+Enter[0m  Schakel tussen volledig scherm en venstermodus.
-[33;1m%s+Pause[0m  Emulator pauzeren/opheffen.
-[33;1m%s+F1[0m   %s Start de [33mtoetsenmapper[0m.
-[33;1m%s+F4[0m   %s Verwissel gemonteerde schijfkopie, scan op wijzigingen.
-[33;1m%s+F5[0m   %s Sla een schermafbeelding op.
-[33;1m%s+F6[0m   %s Start/Stop het opnemen van geluidsuitvoer naar een wave-bestand.
-[33;1m%s+F7[0m   %s Start/stop het opnemen van video-uitvoer naar een zmbv-bestand.
-[33;1m%s+F8[0m   %s Het geluid dempen/dempen opheffen.
-[33;1m%s+F9[0m   %s Sluit emulator af.
-[33;1m%s+F10[0m  %s Vastleggen/loslaten van de muis.
-[33;1m%s+F11[0m  %s Vertraag emulatie.
-[33;1m%s+F12[0m  %s Versnel emulatie.
-[33;1m%s+F12[0m    Ontgrendel de snelheid (turboknop/snel vooruit).
+[color=yellow]%s+Enter[reset]  Schakel tussen volledig scherm en venstermodus.
+[color=yellow]%s+Pause[reset]  Emulator pauzeren/opheffen.
+[color=yellow]%s+F1[reset]   %s Start de [color=light-yellow]toetsenmapper[reset].
+[color=yellow]%s+F4[reset]   %s Verwissel gemonteerde schijfkopie, scan op wijzigingen.
+[color=yellow]%s+F5[reset]   %s Sla een schermafbeelding op.
+[color=yellow]%s+F6[reset]   %s Start/Stop het opnemen van geluidsuitvoer naar een wave-bestand.
+[color=yellow]%s+F7[reset]   %s Start/stop het opnemen van video-uitvoer naar een zmbv-bestand.
+[color=yellow]%s+F8[reset]   %s Het geluid dempen/dempen opheffen.
+[color=yellow]%s+F9[reset]   %s Sluit emulator af.
+[color=yellow]%s+F10[reset]  %s Vastleggen/loslaten van de muis.
+[color=yellow]%s+F11[reset]  %s Vertraag emulatie.
+[color=yellow]%s+F12[reset]  %s Versnel emulatie.
+[color=yellow]%s+F12[reset]    Ontgrendel de snelheid (turboknop/snel vooruit).
 
 .
 :PROGRAM_KEYB_INFO
@@ -1635,11 +1636,11 @@ Virtuele schijven kunnen niet worden losgekoppeld.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mKoppelen van c:\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[0m
+[color=red]Koppelen van c:\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[31;1mKoppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[0m
+[color=red]Koppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -1790,7 +1791,7 @@ Illegaal pad.
 
 .
 :SHELL_CMD_HELP
-Voor een lijst met alle ondersteunde commando's, typ [33;1mhelp /all[0m .
+Voor een lijst met alle ondersteunde commando's, typ [color=yellow]help /all[reset].
 Een korte lijst van de meest gebruikte commando's:
 
 .
@@ -1837,16 +1838,16 @@ Kan niet wijzigen naar: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: Om naar een andere schijf te gaan typ [31m%c:[0m
+Hint: Om naar een andere schijf te gaan typ [color=light-red]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Mapnaam is langer dan 8 tekens en/of bevat spaties.
-Probeer [31mcd %s[0m
+Probeer [color=light-red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [31mC: [0m.
+U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [color=light-red]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -2014,7 +2015,7 @@ Bestand %s bestaat al.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Schijf %c bestaat niet!
-U moet het eerst koppelen met [31mmount[0m. Typ [1;33mintro[0m of [1;33mintro mount[0m voor meer info.
+U moet het eerst koppelen met [color=light-red]mount[reset]. Typ [color=yellow]intro[reset] of [color=yellow]intro mount[reset] voor meer info.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2062,48 +2063,48 @@ SUBST mislukt. U hebt een fout gemaakt in uw opdrachtregel of de doelschijf is
 al in gebruik. Het is alleen mogelijk om SUBST te gebruiken op lokale schijven
 .
 :SHELL_STARTUP_BEGIN
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mWelkom bij DOSBox Staging %-40s[37m บ
+[bgcolor=blue][color=white]ษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [color=green]Welkom bij DOSBox Staging %-40s[color=white] บ
 บ                                                                    บ
-บ Voor een korte introductie voor nieuwe gebruikers type: [33mINTRO[37m      บ
-บ Typ voor ondersteunde shell-opdrachten: [33mHELP[37m                       บ
+บ Voor een korte introductie voor nieuwe gebruikers typ: [color=yellow]INTRO[color=white]       บ
+บ Typ voor ondersteunde shell-opdrachten: [color=yellow]HELP[color=white]                       บ
 บ                                                                    บ
-บ Gemuleerde CPU-snelheid aanpassen met [31m%s+F11[37m an [31m%s+F12[37m.%s%s       บ
-บ Om de toetsenmapper te activeren [31m%s+F1[37m.%s                          บ
-บ Voor meer informatie lees het [36mREADME[37m bestand in de DOSBox map.     บ
+บ Gemuleerde CPU-snelheid aanpassen met [color=red]%s+F11[color=white] en [color=red]%s+F12[color=white].%s%s       บ
+บ Om de toetsenmapper te activeren, druk op [color=red]%s+F1[color=white].%s                 บ
+บ Voor meer informatie lees het [color=cyan]README[color=white] bestand in de DOSBox map.     บ
 บ                                                                    บ
 
 .
 :SHELL_STARTUP_CGA
 บ DOSBox ondersteunt composiet CGA-modus.                            บ
-บ Kies composietuitgang AAN, UIT or AUTO (standaard) met [31mF12[37m         บ
-บ [31mF10[37m kiest de CGA instelling en [31m(%s+)F11[37m wijzigt deze.             บ
+บ Kies composietuitgang AAN, UIT or AUTO (standaard) met [color=red]F12[color=white]         บ
+บ [color=red]F10[color=white] kiest de CGA instelling en [color=red](%s+)F11[color=white] wijzigt deze.             บ
 บ                                                                    บ
 
 .
 :SHELL_STARTUP_CGA_MONO
-บ Kies met [31mF11[37m tussen groen, oranje, witte en papierwitte modus,     บ
-บ en [31m%s+F11[37m om de instellingen voor contrast/helderheid te wijzigen.บ
+บ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     บ
+บ en [color=red]%s+F11[color=white] om de instellingen voor contrast/helderheid te wijzigen.บ
 
 .
 :SHELL_STARTUP_HERC
-บ Kies met [31mF11[37m tussen groen, oranje, witte en papierwitte modus,     บ
+บ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     บ
 บ                                                                    บ
 
 .
 :SHELL_STARTUP_DEBUG
-บ Druk op [31m%s+Pause[37m voor de debugger of start de exe met [33mDEBUG[37m.      บ
+บ Druk op [color=red]%s+Pause[color=white] voor de debugger of start de exe met [color=yellow]DEBUG[color=white].      บ
 บ                                                                    บ
 
 .
 :SHELL_STARTUP_END
-บ [33mhttps://dosbox-staging.github.io[37m                                   บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+บ [color=yellow]https://dosbox-staging.github.io[color=white]                                   บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[0m
+[color=green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP

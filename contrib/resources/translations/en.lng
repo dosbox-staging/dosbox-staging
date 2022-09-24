@@ -112,7 +112,7 @@ environment variable (which usually blocks the OS screensaver
 while the emulator is running).
 .
 :CONFIG_LANGUAGE
-Select a language to use: de, en, es, fr, it, pl, and ru
+Select a language to use: de, en, es, fr, it, nl, pl, and ru
 Notes: This setting will override the 'LANG' environment, if set.
        The 'resources/translations' directory bundled with the executable holds
        these files. Please keep it along-side the executable to support this feature.
