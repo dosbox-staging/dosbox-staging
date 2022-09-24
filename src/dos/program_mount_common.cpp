@@ -88,8 +88,9 @@ void AddCommonMountMessages() {
 
 void AddMountTypeMessages() {
 	MSG_Add("MOUNT_TYPE_LOCAL_DIRECTORY", "local directory");
-	MSG_Add("MOUNT_TYPE_CDROM", "CDRom");
-	MSG_Add("MOUNT_TYPE_FAT", "fatDrive");
-	MSG_Add("MOUNT_TYPE_ISO", "isoDrive");
-	MSG_Add("MOUNT_TYPE_VIRTUAL", "Internal Virtual Drive");	
+	MSG_Add("MOUNT_TYPE_CDROM", "CD-ROM drive");
+	MSG_Add("MOUNT_TYPE_FAT", "FAT drive");
+	MSG_Add("MOUNT_TYPE_ISO", "ISO drive");
+	MSG_Add("MOUNT_TYPE_VIRTUAL", "internal virtual drive");
+	MSG_Add("MOUNT_TYPE_UNKOWN", "unknown drive");
 }

@@ -279,6 +279,15 @@ private:
 	bool		updatelabel;
 };
 
+enum class DosDriveType : uint16_t {
+	Unknown = 0,
+	Local   = 1,
+	Cdrom   = 2,
+	Fat     = 3,
+	Iso     = 4,
+	Virtual = 5,
+};
+
 class DOS_Drive {
 public:
 	DOS_Drive();
@@ -305,10 +314,34 @@ public:
 	virtual bool isRemovable(void)=0;
 	virtual Bits UnMount(void)=0;
 
-	const char * GetInfo() const { return info; }
+	DosDriveType GetType() const
+	{
+		return type;
+	}
+	const char *GetInfo() const
+	{
+		return info;
+	}
+	std::string GetInfoString() const
+	{
+		switch (type) {
+		case DosDriveType::Local:
+			return MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY") +
+			       std::string(" ") + info;
+		case DosDriveType::Cdrom:
+			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") + info;
+		case DosDriveType::Fat:
+			return MSG_Get("MOUNT_TYPE_FAT") + std::string(" ") + info;
+		case DosDriveType::Iso:
+			return MSG_Get("MOUNT_TYPE_ISO") + std::string(" ") + info;
+		case DosDriveType::Virtual: return MSG_Get("MOUNT_TYPE_VIRTUAL");
+		default: return MSG_Get("MOUNT_TYPE_UNKOWN");
+		}
+	}
 
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
+	DosDriveType type = DosDriveType::Unknown;
 
 	// Can be overridden for example in iso images
 	virtual const char *GetLabel() { return dirCache.GetLabel(); }
