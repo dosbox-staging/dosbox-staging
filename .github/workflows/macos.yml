@@ -20,7 +20,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: meson
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
             brew_path: /usr/local/homebrew
             max_warnings: 0
 
@@ -37,7 +37,7 @@ jobs:
             host: macos-12
             arch: x86_64
             needs_deps: true
-            build_flags: -Dbuildtype=debug -Ddefault_library=shared
+            build_flags: -Dbuildtype=debug
             brew_path: /usr/local/homebrew
             run_tests: true
             max_warnings: -1
@@ -46,7 +46,7 @@ jobs:
             host: macos-latest
             arch: x86_64
             needs_deps: true
-            build_flags: -Denable_debugger=normal -Ddefault_library=shared
+            build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
             max_warnings: 0
 
@@ -55,7 +55,7 @@ jobs:
             arch: arm64
             needs_deps: false
             packages: meson
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddefault_library=shared
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
             brew_path: /opt/homebrew
             max_warnings: 0
 
@@ -247,7 +247,7 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
           meson compile -C build
 
       - name: Upload binary
