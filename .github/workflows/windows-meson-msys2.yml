@@ -240,10 +240,10 @@ jobs:
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
 
       - name: Setup release build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
+        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
+        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |
