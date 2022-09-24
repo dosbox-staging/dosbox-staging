@@ -289,6 +289,11 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 			add_if_exists(resolved_dir / CANONICAL_PROJECT_NAME);
 		}
 	}
+
+	// Fifth priority is a best-effort fallback for --prefix installations
+	// into paths not pointed to by the system's XDG_DATA_ variables
+	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
+
 	// Last priority is the user's configuration directory
 	add_if_exists(std_fs::path(CROSS_GetPlatformConfigDir()));
 
