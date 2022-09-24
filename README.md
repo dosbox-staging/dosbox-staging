@@ -144,6 +144,24 @@ Feature differences between release binaries (or unpatched sources):
 
 Read [BUILD.md] for the comprehensive compilation guide.
 
+DOSBox Staging has the following library dependencies:
+
+| Package (libname)                                                | Min Version | Provides feature                               | Presence  | Meson-wrap | VCPKG | repo availability |
+|------------------------------------------------------------------|-------------|------------------------------------------------|-----------|------------|-------|-------------------|
+| [FluidSynth](https://www.fluidsynth.org/) (fluidsynth)           | 2.2.3       | General MIDI playback                          | Optional  | yes        | yes   | common            |
+| [Google Test+Mock](https://github.com/google/googletest) (gmock) | 1.8.0       | Framework for unit testing (development)       | Optional  | yes        | yes   | common            |
+| [IIR](https://github.com/berndporr/iir1) (iir1)                  | 1.9.3       | Audio filtering                                | Mandatory | yes        | yes   | rare              |
+| [Munt](https://github.com/munt/munt) (libmt32emu)                | 2.5.3       | Roland MT-32 and CM-32L playback               | Optional  | yes        | yes   | rare              |
+| [libpng](http://www.libpng.org/pub/png/libpng.html) (libpng)     | n/a         | PNG-encoding of screen captures                | Optional  | yes        | yes   | very common       |
+| [Opus File](https://opus-codec.org/) (opusfile)                  | n/a         | CDDA playback for Opus-encoded track files     | Mandatory | yes        | yes   | common            |
+| [SDL 2.0](https://github.com/libsdl-org/SDL) (sdl2)              | 2.0.5       | OS-agnostic API for video, audio, and eventing | Mandatory | yes        | yes   | common            |
+| [SDL_net 2.0](https://github.com/libsdl-org/SDL_net) (sdl2-net)  | 2.0.0       | Network API for emulated serial and IPX        | Optional  | yes        | yes   | common            |
+| [slirp](https://gitlab.freedesktop.org/slirp) (libslirp)         | 4.6.1       | Unprivileged virtual TCP/IP stack for Ethernet | Optional  | yes        | yes   | less-common       |
+| [SpeexDSP](https://github.com/xiph/speexdsp) (speexdsp)          | n/a         | Audio resampling                               | Mandatory | yes        | yes   | common            |
+| [Tracy Profiler](https://github.com/wolfpld/tracy) (tracy)       | n/a         | Event profile (development)                    | Optional  | yes        | yes   | rare              |
+| [Zlib](https://z-lib.org/) (zlib)                                | 1.2.11      | ZMBV video capture                             | Optional  | yes        | yes   | very common       |
+
+
 ### Linux, macOS
 
 Install build dependencies appropriate for your OS:
