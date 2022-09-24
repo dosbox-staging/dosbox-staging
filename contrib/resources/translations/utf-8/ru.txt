@@ -116,7 +116,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER (которая обычно блокирует по
 при работе эмулятора).
 .
 :CONFIG_LANGUAGE
-Выберите используемый язык: de, en, es, fr, it, pl и ru.
+Выберите используемый язык: de, en, es, fr, it, nl, pl и ru.
 Примечания: Эта настройка переопределяет переменную 'LANG', если задано.
             Каталог 'resources/translations' в комплекте с исполняемым файлом
             содержит файлы переводов. Просьба держать его рядом с исполняемым
@@ -385,16 +385,6 @@ auto        | 'low', если передан исполняемый файл и�
 .
 :CONFIG_MPU401
 Тип MPU-401 для эмуляции.
-.
-:CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format. You can use an
-absolute or relative path, or the name of an .sf2 inside
-the 'soundfonts' directory within your DOSBox configuration
-directory.
-Note: The optional volume scaling percentage after the filename
-has been deprecated. Please use a mixer command instead to
-change the FluidSynth audio channel's volume, e.g.:
-  MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
 Эффект хора: 'auto', 'on', 'off', или собственные значения.
