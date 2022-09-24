@@ -266,9 +266,7 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
 		driveInfos[drive].currentDisk = currentDisk;
 		if (drive < MAX_DISK_IMAGES && imageDiskList[drive] != nullptr) {
-			std::string disk_info = newDisk->GetInfo();
-			std::string type_fat = MSG_Get("MOUNT_TYPE_FAT");
-			if (disk_info.substr(0, type_fat.size()) == type_fat) {
+			if (newDisk->GetType() == DosDriveType::Fat) {
 				imageDiskList[drive] = reinterpret_cast<fatDrive *>(newDisk)->loadedDisk;
 			} else {
 				imageDiskList[drive].reset(reinterpret_cast<imageDisk *>(newDisk));
