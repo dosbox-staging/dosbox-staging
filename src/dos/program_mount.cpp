@@ -113,8 +113,8 @@ void MOUNT::ListMounts()
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
 			print_row(std::string{drive_letter(d)},
-						Drives[d]->GetInfo(),
-						To_Label(Drives[d]->GetLabel()));
+			          Drives[d]->GetInfoString().c_str(),
+			          To_Label(Drives[d]->GetLabel()));
 		}
 	}
 }
@@ -246,8 +246,8 @@ void MOUNT::Run(void) {
 			}
 		} else if (Drives[drive_index(drive)]) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),
-						drive,
-						Drives[drive_index(drive)]->GetInfo());
+			         drive,
+			         Drives[drive_index(drive)]->GetInfoString().c_str());
 			return;
 		}
 
@@ -383,11 +383,13 @@ void MOUNT::Run(void) {
 	mem_writeb(Real2Phys(dos.tables.mediaid) + (drive_index(drive)) * 9,
 				newdrive->GetMediaByte());
 	if (type != "overlay")
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive,
-					newdrive->GetInfo());
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         drive,
+		         newdrive->GetInfoString().c_str());
 	else
 		WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
-					temp_line.c_str(), drive);
+		         temp_line.c_str(),
+		         drive);
 	/* check if volume label is given and don't allow it to updated in the future */
 	if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
 	/* For hard drives set the label to DRIVELETTER_Drive.

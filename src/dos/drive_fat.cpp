@@ -923,9 +923,8 @@ fatDrive::fatDrive(const char *sysFilename,
 	memset(fatSectBuffer,0,1024);
 	curFatSect = 0xffffffff;
 
-	safe_strcpy(info, MSG_Get("MOUNT_TYPE_FAT"));
-	safe_strcat(info, " ");
-	safe_strcat(info, sysFilename);
+	type = DosDriveType::Fat;
+	safe_strcpy(info, sysFilename);
 }
 
 bool fatDrive::AllocationInfo(uint16_t *_bytes_sector, uint8_t *_sectors_cluster, uint16_t *_total_clusters, uint16_t *_free_clusters) {

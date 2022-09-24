@@ -974,16 +974,19 @@ device not configured
 local directory
 .
 :MOUNT_TYPE_CDROM
-CDRom
+CD-ROM drive
 .
 :MOUNT_TYPE_FAT
-fatDrive
+FAT drive
 .
 :MOUNT_TYPE_ISO
-isoDrive
+ISO drive
 .
 :MOUNT_TYPE_VIRTUAL
-Internal Virtual Drive
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
