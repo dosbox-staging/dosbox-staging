@@ -45,6 +45,7 @@ class Section;
 typedef Bitu (LoopHandler)(void);
 
 const char *DOSBOX_GetDetailedVersion() noexcept;
+double DOSBOX_GetUptime();
 
 void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);

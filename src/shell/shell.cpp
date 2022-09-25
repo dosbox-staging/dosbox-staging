@@ -479,14 +479,8 @@ void DOS_Shell::RunInternal()
 	}
 }
 
-extern int64_t ticks_at_program_launch; // from shell_cmd
 void DOS_Shell::Run()
 {
-	// Initialize the tick-count only when the first shell has launched.
-	// This ensures that slow-performing configurable tasks (like loading MIDI SF2 files) have already
-	// been performed and won't affect this time.
-	ticks_at_program_launch = GetTicks();
-
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
