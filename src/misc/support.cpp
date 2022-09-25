@@ -250,11 +250,16 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
 
-	// Third priority is the user's XDG data specification
+	// Third priority is a potentially customized --datadir specified at
+	// compile time.
+	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
+
+	// Fourth priority is the user's XDG data specification
 	//
 	// $XDG_DATA_HOME defines the base directory relative to which
-	// user-specific data files should be stored. If $XDG_DATA_HOME is either
-	// not set or empty, a default equal to $HOME/.local/share should be used.
+	// user-specific data files should be stored. If $XDG_DATA_HOME is
+	// either not set or empty, a default equal to $HOME/.local/share should
+	// be used.
 	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 	//
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
@@ -264,7 +269,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	const std_fs::path xdg_data_home = CROSS_ResolveHome(xdg_data_home_env);
 	add_if_exists(xdg_data_home / CANONICAL_PROJECT_NAME);
 
-	// Fourth priority is the system's XDG data specification
+	// Fifth priority is the system's XDG data specification
 	//
 	//  $XDG_DATA_DIRS defines the preference-ordered set of base
 	//  directories to search for data files in addition to the
@@ -290,8 +295,12 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 		}
 	}
 
-	// Fifth priority is a best-effort fallback for --prefix installations
-	// into paths not pointed to by the system's XDG_DATA_ variables
+	// Sixth priority is a best-effort fallback for --prefix installations
+	// into paths not pointed to by the system's XDG_DATA_ variables. Note
+	// that This lookup is deliberately relative to the executable to permit
+	// portability of the install tree (do not replace this with --prefix,
+	// which would destroy this portable aspect).
+	//
 	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory

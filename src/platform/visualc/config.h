@@ -106,6 +106,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+// On *nix systems, this variable holds a (potentially) custom path
+// configured during compile-time by setting Meson's "--datadir"
+// On Windows, this path is not customizeable, so it's left blank here.
+//
+#define CUSTOM_DATADIR ""
+
 /* Loguru-related defines
  */
 
