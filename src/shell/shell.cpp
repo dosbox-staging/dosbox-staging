@@ -574,13 +574,25 @@ private:
 public:
 	AUTOEXEC(Section *configuration) : Module_base(configuration)
 	{
-		const auto cmdline = control->cmdline; // short-lived copy
+		// Get the [dosbox] conf section
+		const auto ds = static_cast<Section_prop *>(
+		        control->GetSection("dosbox"));
+		assert(ds);
+
+		// Auto-mount drives (except for DOSBox's Z:) prior to [autoexec]
+		if (ds->Get_bool("automount")) {
+			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
+			for (const auto letter : drives) {
+				AutomountDrive({letter});
+			}
+		}
 
 		// Initialize configurable states that control autoexec-related
 		// behavior
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
+		const auto cmdline = control->cmdline; // short-lived copy
 		const bool secure = cmdline->FindExist("-securemode", true);
 
 		// Are autoexec sections permitted?
@@ -589,10 +601,6 @@ public:
 		                                                     true);
 
 		// Should autoexec sections be joined or overwritten?
-		const auto ds = static_cast<Section_prop *>(
-		        control->GetSection("dosbox"));
-		assert(ds);
-
 		const std::string_view section_pref = ds->Get_string("autoexec_section");
 		const bool should_join_autoexecs = (section_pref == "join");
 
@@ -713,7 +721,6 @@ public:
 			}
 			found_dir_or_command = true;
 		}
-
 		if (autoexec_is_allowed) {
 			if (should_join_autoexecs) {
 				ProcessConfigFileAutoexec(*static_cast<const Section_line *>(configuration),
@@ -724,13 +731,6 @@ public:
 				ProcessConfigFileAutoexec(
 				        control->GetOverwrittenAutoexecSection(),
 				        control->GetOverwrittenAutoexecConf());
-			}
-		}
-		// Try automounting drives (except for Z:, which is DOSBox's).
-		if (ds->Get_bool("automount")) {
-			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
-			for (const auto letter : drives) {
-				AutomountDrive({letter});
 			}
 		}
 		if (secure && !found_dir_or_command) {
