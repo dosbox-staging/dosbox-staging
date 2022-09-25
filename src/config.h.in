@@ -221,6 +221,11 @@
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
 #mesondefine _USE_MATH_DEFINES
 
+// Holds the "--datadir" specified during project setup. This can
+// be used as a fallback if the user hasn't populated their
+// XDG_DATA_HOME or XDG_DATA_DIRS to include the --datadir.
+#mesondefine CUSTOM_DATADIR
+
 /* Loguru-related defines
  */
 
