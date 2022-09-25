@@ -418,23 +418,30 @@ void DOS_Shell::CMD_ECHO(char * args){
 	} else WriteOut("%s\r\n",args);
 }
 
-int64_t ticks_at_program_launch = 0;
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
 
 	const bool wants_force_exit = control->cmdline->FindExist("-exit");
-	const bool is_normal_launch = control->GetStartupVerbosity() != Verbosity::InstantLaunch;
-	const auto seconds_since_launch = GetTicksSince(ticks_at_program_launch) / 1000.0;
+	const bool is_normal_launch = control->GetStartupVerbosity() !=
+	                              Verbosity::InstantLaunch;
 
-	if (wants_force_exit || is_normal_launch || seconds_since_launch > 1.5) {
+	// Check if this is an early-exit situation, in which case we avoid
+	// exiting because the user might have a configuration problem and we
+	// should let them see any errors in their console.
+	constexpr auto early_exit_seconds = 1.5;
+	const auto exiting_after_seconds  = DOSBOX_GetUptime();
+
+	const auto not_early_exit = exiting_after_seconds > early_exit_seconds;
+
+	if (wants_force_exit || is_normal_launch || not_early_exit) {
 		exit_cmd_called = true;
 		return;
 	}
 
 	WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
 	LOG_WARNING("SHELL: Exit blocked because program quit after only %.1f seconds",
-	            seconds_since_launch);
+	            exiting_after_seconds);
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {
