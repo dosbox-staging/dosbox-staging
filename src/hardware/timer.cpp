@@ -271,10 +271,9 @@ static void counter_latch(PIT_Block &channel)
 
 	auto elapsed_ms = PIC_FullIndex() - channel.start;
 	auto save_read_latch = [&](double latch_time) {
-		// Latch is a 16-bit counter, so ensure it doesn't overflow
-		const auto bound_latch = clamp(static_cast<int>(latch_time), 0,
-		                               static_cast<int>(UINT16_MAX));
-		channel.read_latch = static_cast<uint16_t>(bound_latch);
+		// Latch is a 16-bit counter, wrap it to ensure it doesn't overflow
+		const auto wrapped = iround(latch_time) % UINT16_MAX;
+		channel.read_latch = check_cast<uint16_t>(wrapped);
 	};
 
 	if (GCC_UNLIKELY(channel.mode_changed)) {
