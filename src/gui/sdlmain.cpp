@@ -512,7 +512,7 @@ void GFX_RequestExit(const bool pressed)
 	}
 	/* NOTE: This is one of the few places where we use SDL key codes
 	with SDL 2.0, rather than scan codes. Is that the correct behavior? */
-	while (paused) {
+	while (paused && !shutdown_requested) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
 		case SDL_QUIT: GFX_RequestExit(true); break;
@@ -525,7 +525,8 @@ void GFX_RequestExit(const bool pressed)
 			break;
 		case SDL_KEYDOWN: // Must use Pause/Break Key to resume.
 		case SDL_KEYUP:
-			if(event.key.keysym.sym == SDLK_PAUSE) {
+			if (event.key.keysym.sym == SDLK_PAUSE ||
+			    event.key.keysym.sym == SDLK_ESCAPE) {
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
