@@ -1,5 +1,5 @@
 /* Version number of package */
-#define VERSION "0.79.0"
+#define VERSION "0.79.1"
 
 /* This macro is going to be overriden via CI */
 #define DOSBOX_DETAILED_VERSION "git"

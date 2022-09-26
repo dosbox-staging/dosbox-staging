@@ -2,7 +2,7 @@ project(
     'dosbox-staging',
     'c',
     'cpp',
-    version: '0.80.0',
+    version: '0.79.1',
     license: 'GPL-3.0-or-later',
     meson_version: '>= 0.56.0',
     default_options: [
