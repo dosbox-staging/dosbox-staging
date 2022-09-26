@@ -93,39 +93,34 @@ different platform, profiling Linux from Windows or vice versa, for example.
 
 Please refer to the Tracy documentation for further information.
 
-## Repository maintainer / packager builds
+## Repository and package maintainers
 
-Packagers interested in using shared libraries can use
-`-Ddefault_library=shared` and `-Dsystem_libraries=lib1,lib2,etc` to
-ensure specific dependencies are provided by the system instead of
-via the Meson wraps. For example:
+By default, the Meson build system will lookup shared (or dynamic)
+libraries using PATH-provided pkg-config or cmake.  If they're not
+avaiable or usable, Meson's wrap system will will build local static
+libraries to meet this need.
 
-``` shell
-meson setup -Dsystem_libraries=fluidsynth,speexdsp build/package
-meson compile -C build/package
-```
-
-For the full list libraries available to use with `-Dsystem_libraries`,
-see the `meson_options.txt` file. 
-
-Alternately, wraps can be fully disabled using `-Dwrap_mode=nofallback`,
-however this will require the operating system can satify all of
-DOSBox Staging's library dependencies.
+If your environment requires all dependencies be provided by the system,
+then you can disable the wrap system using Meson's setup flag:
+`-Dwrap_mode=nofallback`.  However, this will require the operating
+system satify all of DOSBox Staging's library dependencies.
 
 Detailed documentation: [Meson: Core options][meson-core]
 
 [meson-core]: https://mesonbuild.com/Builtin-options.html#core-options
 
-### Disabling unwanted dependencies
+### Disabling dependencies
 
-The majority of dependencies are optional and can be disabled during build.
-
-For example, to compile without OpenGL dependency try:
+The majority of dependencies are optional and can be disabled. For example,
+to compile without OpenGL:
 
 ``` shell
 meson setup -Duse_opengl=false build
 meson compile -C build
 ```
+
+We highly recommend package maintainers only offer DOSBox Staging if all
+its features (and dependencies) can be provided.
 
 ### List Meson's setup options
 
