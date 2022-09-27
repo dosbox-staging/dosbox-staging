@@ -743,20 +743,27 @@ void MixerChannel::ClearResampler()
 
 void MixerChannel::SetSampleRate(const int rate)
 {
-	if (rate) {
-		sample_rate = rate;
-	} else {
-		// If the channel rate is zero, then avoid resampling by running
-		// the channel at the same rate as the mixer
-		assert(mixer.sample_rate > 0);
-		sample_rate = mixer.sample_rate;
-	}
+	// If the requested rate is zero, then avoid resampling by running the
+	// channel at the mixer's rate
+	const auto target_rate = rate ? rate : mixer.sample_rate.load();
+	assert(target_rate > 0);
 
-	// DEBUG_LOG_MSG("%s: Sample rate set to %d Hz", name.c_str(), sample_rate);
+	// Nothing to do: the channel is already running at the requested rate
+	if (target_rate == sample_rate)
+		return;
+
+	// DEBUG_LOG_MSG("%s: Changing rate from %d to %d Hz",
+	//              name.c_str(),
+	//              sample_rate,
+	//              target_rate);
+	sample_rate = target_rate;
 
 	freq_add = (sample_rate << FREQ_SHIFT) / mixer.sample_rate;
-	envelope.Update(sample_rate, peak_amplitude,
-	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
+
+	envelope.Update(sample_rate,
+	                peak_amplitude,
+	                ENVELOPE_MAX_EXPANSION_OVER_MS,
+	                ENVELOPE_EXPIRES_AFTER_S);
 
 	ConfigureResampler();
 }
@@ -1479,6 +1486,18 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 				out.emplace_back(out_right);
 
 				s.pos += s.step;
+
+				//DEBUG_LOG_MSG("%s: AddSamples last %.1f:%.1f curr %.1f:%.1f"
+				//              " -> out %.1f:%.1f, pos=%.2f, step=%.2f",
+				//              name.c_str(),
+				//              s.last_frame.left,
+				//              s.last_frame.right,
+				//              curr_frame.left,
+				//              curr_frame.right,
+				//              out_left,
+				//              out_right,
+				//              s.pos,
+				//              s.step);
 
 				if (s.pos > 1.0f) {
 					s.pos -= 1.0f;
