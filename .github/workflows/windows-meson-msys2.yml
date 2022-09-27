@@ -308,6 +308,9 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
             version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
             packageinfo="release $version_tag"
+          elif [[ "${{ github.ref }}" == "refs/heads/release/"* ]]; then
+            version_tag=`git describe --tags | cut -f1 -d"-"`
+            packageinfo="release $version_tag"
           elif [ -n "${{ github.ref }}" ] && [ -n "${{ github.sha }}" ]; then
             git_branch=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
             git_commit=`echo ${{ github.sha }} | awk '{print substr($0,1,9);exit}'`
