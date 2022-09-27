@@ -383,14 +383,16 @@ void DOS_Shell::ParseLine(char *line)
 	char pipe_tempfile[270]; // Piping requires the use of a temporary file
 	uint16_t fattr;
 	if (pipe_file.length()) {
-		std::string temp_line;
-		if (!GetEnvStr("TEMP", temp_line) && !GetEnvStr("TMP", temp_line)) {
-			safe_sprintf(pipe_tempfile, "pipe%d.tmp",
+		std::string env_temp_path = {};
+		if (!GetEnvStr("TEMP", env_temp_path) &&
+		    !GetEnvStr("TMP", env_temp_path)) {
+			safe_sprintf(pipe_tempfile,
+			             "pipe%d.tmp",
 			             get_tick_random_number());
 		} else {
-			std::string::size_type idx = temp_line.find('=');
-			std::string temp = temp_line.substr(idx + 1,
-			                                    std::string::npos);
+			const auto idx   = env_temp_path.find('=');
+			std::string temp = env_temp_path.substr(idx + 1,
+			                                        std::string::npos);
 			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
 				safe_sprintf(pipe_tempfile, "%s\\pipe%d.tmp",
