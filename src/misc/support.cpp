@@ -332,10 +332,16 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t, const int16_t);
 template std::function<float()> CreateRandomizer<float>(const float, const float);
 
+// return the first existing resource
 std_fs::path GetResourcePath(const std_fs::path &name)
 {
-	// return the first existing resource
 	std::error_code ec;
+
+	// handle an absolute path
+	if (std_fs::exists(name, ec))
+		return name;
+
+	// try the resource paths
 	for (const auto &parent : GetResourceParentPaths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
@@ -382,8 +388,50 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 	return paths_and_files;
 }
 
-std::vector<uint8_t> LoadResource(const std_fs::path &name,
-                                  const ResourceImportance importance)
+// Get resource lines from a text file
+std::vector<std::string> GetResourceLines(const std_fs::path &name,
+                                          const ResourceImportance importance)
+{
+	const auto resource_path = GetResourcePath(name);
+
+	std::ifstream input_file(resource_path, std::ios::binary);
+
+	if (!input_file.is_open()) {
+		if (importance == ResourceImportance::Optional) {
+			return {};
+		}
+		assert(importance == ResourceImportance::Mandatory);
+		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
+		        name.string().c_str());
+		for (const auto &path : GetResourceParentPaths()) {
+			LOG_WARNING("RESOURCE:  - '%s'",
+			            (path / name).string().c_str());
+		}
+		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
+	}
+
+	std::vector<std::string> lines = {};
+
+	std::string line = {};
+	while (getline(input_file, line)) {
+		lines.emplace_back(std::move(line));
+		line.clear(); // reset after moving
+	}
+	input_file.close();
+	return lines;
+}
+
+// Get resource lines from a text file
+std::vector<std::string> GetResourceLines(const std_fs::path &subdir,
+                                          const std_fs::path &name,
+                                          const ResourceImportance importance)
+{
+	return GetResourceLines(subdir / name, importance);
+}
+
+// Load a resource blob (from a binary file)
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
+                                      const ResourceImportance importance)
 {
 	const auto resource_path = GetResourcePath(name);
 	std::ifstream file(resource_path, std::ios::binary);
@@ -400,18 +448,20 @@ std::vector<uint8_t> LoadResource(const std_fs::path &name,
 		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 	}
 
-	const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
+	// non-const to allow movement out of the function
+	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
 	// DEBUG_LOG_MSG("RESOURCE: Loaded resource '%s' [%d bytes]",
 	//               resource_path.string().c_str(),
 	//               check_cast<int>(buffer.size()));
 	return buffer;
 }
 
-std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
-                                  const std_fs::path &name,
-                                  const ResourceImportance importance)
+// Load a resource blob (from a binary file)
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &subdir,
+                                      const std_fs::path &name,
+                                      const ResourceImportance importance)
 {
-	return LoadResource(subdir / name, importance);
+	return LoadResourceBlob(subdir / name, importance);
 }
 
 bool path_exists(const std_fs::path &path)
