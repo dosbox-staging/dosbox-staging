@@ -224,11 +224,18 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
         const std_fs::path &res_name, const std::string_view files_ext);
 
 enum class ResourceImportance { Mandatory, Optional };
-std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
-                                  const std_fs::path &name,
-                                  const ResourceImportance importance);
-std::vector<uint8_t> LoadResource(const std_fs::path &name,
-                                  const ResourceImportance importance);
+
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &subdir,
+                                      const std_fs::path &name,
+                                      const ResourceImportance importance);
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
+                                      const ResourceImportance importance);
+
+std::vector<std::string> GetResourceLines(const std_fs::path &subdir,
+                                          const std_fs::path &name,
+                                          const ResourceImportance importance);
+std::vector<std::string> GetResourceLines(const std_fs::path &name,
+                                          const ResourceImportance importance);
 
 bool path_exists(const std_fs::path &path);
 
