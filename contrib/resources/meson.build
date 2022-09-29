@@ -4,6 +4,7 @@ resources = [
     'freedos-keyboard',
     'glshaders',
     'translations',
+    'mapperfiles',
     # insert new resource subdirectory names here
 ]
 
