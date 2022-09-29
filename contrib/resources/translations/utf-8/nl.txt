@@ -116,9 +116,10 @@ Demp het geluid wanneer het venster inactief is.
 Pauzeer emulatie wanneer het venster inactief is.
 .
 :CONFIG_MAPPERFILE
-Bestand dat wordt gebruikt om de toets-/gebeurtenistoewijzingen te
-laden/op te slaan.
-Resetmapper werkt alleen met de standaardwaarde.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Gebruik 'allow' of 'block' om de omgevingsvariabele SDL_VIDEO_ALLOW_SCREENSAVER
