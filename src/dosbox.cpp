@@ -446,7 +446,7 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
-	        "Select a language to use: de, en, es, fr, it, pl, and ru\n"
+	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru\n"
 	        "Notes: This setting will override the 'LANG' environment, if set.\n"
 	        "       The 'resources/translations' directory bundled with the executable holds\n"
 	        "       these files. Please keep it along-side the executable to support this feature.");
