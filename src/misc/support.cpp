@@ -415,7 +415,7 @@ std::vector<std::string> GetResourceLines(const std_fs::path &name,
 	std::string line = {};
 	while (getline(input_file, line)) {
 		lines.emplace_back(std::move(line));
-		line.clear(); // reset after moving
+		line = {}; // reset after moving
 	}
 	input_file.close();
 	return lines;
