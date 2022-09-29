@@ -335,7 +335,7 @@ public:
 		case DosDriveType::Iso:
 			return MSG_Get("MOUNT_TYPE_ISO") + std::string(" ") + info;
 		case DosDriveType::Virtual: return MSG_Get("MOUNT_TYPE_VIRTUAL");
-		default: return MSG_Get("MOUNT_TYPE_UNKOWN");
+		default: return MSG_Get("MOUNT_TYPE_UNKNOWN");
 		}
 	}
 
