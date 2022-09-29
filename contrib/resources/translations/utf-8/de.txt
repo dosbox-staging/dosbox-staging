@@ -135,8 +135,10 @@ Schalte den Ton stumm, wenn das Fenster inaktiv ist.
 Emulation anhalten, wenn das Fenster inaktiv ist.
 .
 :CONFIG_MAPPERFILE
-Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
-Resetmapper funktioniert nur mit dem Standardwert.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Verwende "allow" oder "block" um die SDL_VIDEO_ALLOW_SCREENSAVER

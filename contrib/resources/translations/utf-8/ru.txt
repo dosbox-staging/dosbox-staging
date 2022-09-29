@@ -107,8 +107,10 @@
 Приостановить эмуляцию когда окно неактивно.
 .
 :CONFIG_MAPPERFILE
-Файл, используемый для загрузки/сохранения сопоставлений из ключей/событий.
-Сброс сопоставления работает только со значением по умолчанию.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Используйте 'allow' или 'block' для переопределения переменной окружения

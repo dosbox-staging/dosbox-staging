@@ -105,8 +105,10 @@ Mute the sound when the window is inactive.
 Pause emulation when the window is inactive.
 .
 :CONFIG_MAPPERFILE
-Archivo usado para cargar/guardar las asignaciones de teclas/eventos.
-Resetmapper sólo funciona con el valor por defecto.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Use 'allow' (permitir) o 'block' (bloquear) para anular la variable de entorno
