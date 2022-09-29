@@ -5,6 +5,7 @@ resources = [
     'glshaders',
     'translated-0.79-conf-files',
     'translations',
+    'mapperfiles',
     # insert new resource subdirectory names here
 ]
 
