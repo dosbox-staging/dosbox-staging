@@ -92,5 +92,5 @@ void AddMountTypeMessages() {
 	MSG_Add("MOUNT_TYPE_FAT", "FAT drive");
 	MSG_Add("MOUNT_TYPE_ISO", "ISO drive");
 	MSG_Add("MOUNT_TYPE_VIRTUAL", "internal virtual drive");
-	MSG_Add("MOUNT_TYPE_UNKOWN", "unknown drive");
+	MSG_Add("MOUNT_TYPE_UNKNOWN", "unknown drive");
 }
