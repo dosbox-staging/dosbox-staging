@@ -71,8 +71,6 @@
 #include "vga.h"
 #include "video.h"
 
-#define MAPPERFILE "mapper-sdl2-" VERSION ".map"
-
 #if C_OPENGL
 //Define to report opengl errors
 //#define DB_OPENGL_ERROR
@@ -4295,8 +4293,11 @@ void Config_Add_SDL() {
 	pbool->Set_help("Pause emulation when the window is inactive.");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
-	pstring->Set_help("File used to load/save the key/event mappings from.\n"
-	                  "Resetmapper only works with the default value.");
+	pstring->Set_help(
+	        "File used to load/save the key/event mappings.\n"
+	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
+	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
+	        "Note: the -resetmapper commandline flag only deletes the default mapperfile.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
