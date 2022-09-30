@@ -205,7 +205,7 @@ uint32_t DOS_CheckExtDevice(const char *name, bool already_flag)
 		no = real_readw(seg, off + 4);
 		next_seg = real_readw(seg, off + 2);
 		next_off = real_readw(seg, off);
-		if (next_seg == 0xffff && next_off == 0xffff) {
+		if ((next_seg == 0xffff && next_off == 0xffff) || (no == 0 && next_seg == 0 && next_off == 0)) {
 			break;
 		}
 		if (no & 0x8000) {
