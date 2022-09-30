@@ -116,10 +116,10 @@ Demp het geluid wanneer het venster inactief is.
 Pauzeer emulatie wanneer het venster inactief is.
 .
 :CONFIG_MAPPERFILE
-File used to load/save the key/event mappings.
-Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
-They can be loaded by name, for example: mapperfile = xbox/xenon2.map
-Note: the -resetmapper commandline flag only deletes the default mapperfile.
+Bestand om toets-/gebeurtenistoewijzingen te laden/op te slaan.
+Voorgeconfigureerde toewijzingen staan in de 'resources/mapperfiles' map.
+Ze kunnen op naam worden geladen, bijvoorbeeld: mapperfile = xbox/xenon2.map
+Opmerking: de -resetmapper optie verwijdert alleen het standaard mapperbestand.
 .
 :CONFIG_SCREENSAVER
 Gebruik 'allow' of 'block' om de omgevingsvariabele SDL_VIDEO_ALLOW_SCREENSAVER
@@ -1016,6 +1016,24 @@ lijst wordt niet ondersteund
 .
 :MIDI_DEVICE_NOT_CONFIGURED
 apparaat niet geconfigureerd
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+lokale map
+.
+:MOUNT_TYPE_CDROM
+CD-ROM station
+.
+:MOUNT_TYPE_FAT
+FAT schijf
+.
+:MOUNT_TYPE_ISO
+ISO schijf
+.
+:MOUNT_TYPE_VIRTUAL
+interne virtuele schijf
+.
+:MOUNT_TYPE_UNKNOWN
+onbekende schijf
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
