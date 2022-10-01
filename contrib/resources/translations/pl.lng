@@ -111,7 +111,10 @@ Wyciszanie d«wi©ku, kiedy okno emulatora traci fokus.
 Pauza emulacji, kiedy okno emulatora traci fokus.
 .
 :CONFIG_MAPPERFILE
-Plik z mapowaniem klawiszy, skr¢tami klawiszowymi, itd.
+Plik u¾ywany do wczytania/zapisania mapowania klawiszy/zdarzeä.
+Pre-konfigurowane pliki s¥ dost©pne w katalogu 'resources/mapperfiles'. Mo¾na
+je zaˆadowa† podaj¥c nazw©, np.: 'mapperfile = xbox/xenon2.map'
+Uwaga: opcja wiersza poleceä '-resetmapper' tylko usuwa domy˜lny plik.
 .
 :CONFIG_SCREENSAVER
 Ustawienie wygaszacza ekranu, ma pierwszeästwo przed zmienn¥ ˜rodowiskow¥
@@ -1149,7 +1152,7 @@ Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
-Zamontowane dyski:
+Lista zamontowanych dysk¢w:
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -2671,4 +2674,22 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostaˆe, bez kategorii
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+katalog lokalny
+.
+:MOUNT_TYPE_CDROM
+CD-ROM
+.
+:MOUNT_TYPE_FAT
+obraz FAT
+.
+:MOUNT_TYPE_ISO
+obraz ISO
+.
+:MOUNT_TYPE_VIRTUAL
+wewn©trzny dysk wirtualny
+.
+:MOUNT_TYPE_UNKNOWN
+nieznany typ
 .

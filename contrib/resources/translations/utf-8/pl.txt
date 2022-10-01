@@ -111,10 +111,10 @@ Wyciszanie dźwięku, kiedy okno emulatora traci fokus.
 Pauza emulacji, kiedy okno emulatora traci fokus.
 .
 :CONFIG_MAPPERFILE
-File used to load/save the key/event mappings.
-Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
-They can be loaded by name, for example: mapperfile = xbox/xenon2.map
-Note: the -resetmapper commandline flag only deletes the default mapperfile.
+Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń.
+Pre-konfigurowane pliki są dostępne w katalogu 'resources/mapperfiles'. Można
+je załadować podając nazwę, np.: 'mapperfile = xbox/xenon2.map'
+Uwaga: opcja wiersza poleceń '-resetmapper' tylko usuwa domyślny plik.
 .
 :CONFIG_SCREENSAVER
 Ustawienie wygaszacza ekranu, ma pierwszeństwo przed zmienną środowiskową
@@ -1152,7 +1152,7 @@ Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
-Zamontowane dyski:
+Lista zamontowanych dysków:
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -2676,20 +2676,20 @@ Inne polecenia
 Pozostałe, bez kategorii
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
+katalog lokalny
 .
 :MOUNT_TYPE_CDROM
-CD-ROM drive
+CD-ROM
 .
 :MOUNT_TYPE_FAT
-FAT drive
+obraz FAT
 .
 :MOUNT_TYPE_ISO
-ISO drive
+obraz ISO
 .
 :MOUNT_TYPE_VIRTUAL
-internal virtual drive
+wewnętrzny dysk wirtualny
 .
 :MOUNT_TYPE_UNKNOWN
-unknown drive
+nieznany typ
 .

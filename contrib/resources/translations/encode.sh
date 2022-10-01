@@ -62,7 +62,7 @@ tconv_l CP850 "utf-8/nl.txt" nl
 tconv_l CP852 "utf-8/pl.txt" pl
 
 # keyb pl 437
-tconv_t CP437 "utf-8/pl.txt" pl.cp437
+tconv_t cp437 "utf-8/pl.txt" pl
 
 # keyb ru
 # keyb ru 866

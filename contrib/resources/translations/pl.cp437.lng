@@ -111,7 +111,10 @@ Wyciszanie dzwieku, kiedy okno emulatora traci fokus.
 Pauza emulacji, kiedy okno emulatora traci fokus.
 .
 :CONFIG_MAPPERFILE
-Plik z mapowaniem klawiszy, skr¢tami klawiszowymi, itd.
+Plik uzywany do wczytania/zapisania mapowania klawiszy/zdarzen.
+Pre-konfigurowane pliki sa dostepne w katalogu 'resources/mapperfiles'. Mozna
+je zaladowac podajac nazwe, np.: 'mapperfile = xbox/xenon2.map'
+Uwaga: opcja wiersza polecen '-resetmapper' tylko usuwa domyslny plik.
 .
 :CONFIG_SCREENSAVER
 Ustawienie wygaszacza ekranu, ma pierwszenstwo przed zmienna srodowiskowa
@@ -120,7 +123,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego wlaczenie.
 .
 :CONFIG_LANGUAGE
-Jezyk emulatora: de, en, es, fr, it, pl lub ru.
+Jezyk emulatora: de, en, es, fr, it, nl, pl lub ru.
 Uwaga: Ustawienie ma pierwszenstwo przed zmienna srodowiskowa 'LANG'. Pliki
 tlumaczen dla poszczeg¢lnych jezyk¢w znajduja sie w dostarczonym katalogu
 'resources/translations'.
@@ -1149,7 +1152,7 @@ Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
-Zamontowane dyski:
+Lista zamontowanych dysk¢w:
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -2671,4 +2674,22 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostale, bez kategorii
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+katalog lokalny
+.
+:MOUNT_TYPE_CDROM
+CD-ROM
+.
+:MOUNT_TYPE_FAT
+obraz FAT
+.
+:MOUNT_TYPE_ISO
+obraz ISO
+.
+:MOUNT_TYPE_VIRTUAL
+wewnetrzny dysk wirtualny
+.
+:MOUNT_TYPE_UNKNOWN
+nieznany typ
 .
