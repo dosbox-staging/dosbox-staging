@@ -514,6 +514,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	// Stop playback before wiping out the CD Player
 	if (refCount == 0 && player.cd) {
 		StopAudio();
+		player.channel.reset();
 #ifdef DEBUG
 		LOG_MSG("CDROM: Released CD Player resources");
 #endif
@@ -521,7 +522,6 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	if (player.cd == this) {
 		player.cd = nullptr;
 	}
-	player.channel.reset();
 }
 
 bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const int cd_number)

@@ -2,13 +2,12 @@ project(
     'dosbox-staging',
     'c',
     'cpp',
-    version: '0.79.0',
+    version: '0.80.0-alpha',
     license: 'GPL-3.0-or-later',
     meson_version: '>= 0.56.0',
     default_options: [
         'cpp_std=c++17',
         'buildtype=release',
-        'default_library=static',
         'b_ndebug=if-release',
         'b_staticpic=false',
         'b_pie=false',
@@ -32,8 +31,8 @@ project(
 # These are always present regardless of host, compiler, dependencies, or options.
 #
 data_dir = get_option('datadir')
-licenses_dir = data_dir / 'licenses' / 'dosbox-staging'
-doc_dir = data_dir / 'doc' / 'dosbox-staging'
+licenses_dir = data_dir / 'licenses' / meson.project_name()
+doc_dir = data_dir / 'doc' / meson.project_name()
 
 install_man('docs/dosbox.1')
 install_data('COPYING', install_dir: licenses_dir)
@@ -42,7 +41,6 @@ install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 subdir('contrib/linux')
 subdir('contrib/icons')
 subdir('contrib/resources')
-
 
 # Gather compiler settings
 # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +144,8 @@ endforeach
 #
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
+conf_data.set('project_name', meson.project_name())
+conf_data.set_quoted('CUSTOM_DATADIR', get_option('prefix') / get_option('datadir'))
 
 os_family_name = {
   'linux'     : 'LINUX',
@@ -321,6 +321,9 @@ endif
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # system and compiler libraries
+
+default_wrap_options = ['default_library=static', 'warning_level=0']
+
 dl_dep = cc.find_library('dl', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
 threads_dep = dependency('threads')
@@ -340,11 +343,7 @@ endif
 libiir_dep = dependency(
     'iir',
     version: '>= 1.9.3',
-    default_options: [
-        'default_library=static',
-        'tests=' + wants_tests.to_string(),
-        'warning_level=0',
-    ],
+    default_options: default_wrap_options + ['tests=' + wants_tests.to_string()],
     allow_fallback: ('iir' not in system_libs_list),
     static: ('iir' in static_libs_list or prefers_static_libs),
 )
@@ -364,39 +363,40 @@ zlib_dep = dependency(
     'zlib',
     version: '>= 1.2.11',
     allow_fallback: ('zlib' not in system_libs_list),
+    default_options: default_wrap_options,
     static: ('zlib' in static_libs_list or prefers_static_libs),
 )
 
 # SpeexDSP
 # ~~~~~~~~
-# If the user asked to use SpeexDSP from the system then
-# we need to ensure its floating-point API is reliable
-#
-use_speexdsp_from_system = 'speexdsp' in system_libs_list
-if use_speexdsp_from_system
-    check_cpp = files('contrib/check-speexdsp/test_speexdsp_float_api.cpp')
-    check_if_msg = 'SpeexDSP system library has reliable floating-point API'
-    check_result = cxx.run(
-        check_cpp,
-        dependencies: dependency('speexdsp'),
-        name: check_if_msg,
+# Default to the system library
+speexdsp_dep = dependency(
+    'speexdsp',
+    allow_fallback: false,
+    static: ('speexdsp' in static_libs_list or prefers_static_libs),
+)
+
+# The system has SpeexDSP, so test its floating-point handling
+if speexdsp_dep.found()
+    system_speexdsp_test = cxx.run(
+        files('contrib/check-speexdsp/test_speexdsp_float_api.cpp'),
+        dependencies: speexdsp_dep,
+        name: 'SpeexDSP system library has reliable floating-point API',
     )
-    use_speexdsp_from_system = (
-        check_result.compiled()
-        and check_result.returncode() == 0
+    is_system_speexdsp_reliable = (
+        system_speexdsp_test.compiled()
+        and system_speexdsp_test.returncode() == 0
     )
+    if is_system_speexdsp_reliable
+        speexdsp_summary_msg = 'system library'
+    endif
 endif
-if use_speexdsp_from_system
-    speexdsp_dep = dependency(
-        'speexdsp',
-        allow_fallback: false,
-        static: ('speexdsp' in static_libs_list or prefers_static_libs),
-    )
-    speexdsp_summary_msg = 'system library'
-else
+
+# The system doesn't have SpeexDSP or it's unreiable, so use the wrap
+if not speexdsp_dep.found() or not is_system_speexdsp_reliable
     speexdsp_dep = subproject(
         'speexdsp',
-        default_options: ['default_library=static', 'warning_level=0'],
+        default_options: default_wrap_options,
     ).get_variable('speexdsp_dep')
     speexdsp_summary_msg = 'built-in'
 endif
@@ -442,15 +442,16 @@ summary('OpenGL support', opengl_summary_msg)
 # FluidSynth (depends on glib)
 fluid_dep = optional_dep
 if get_option('use_fluidsynth')
-    lib_type = ('fluidsynth' in static_libs_list or prefers_static_libs).to_string()
     fluid_dep = dependency(
         'fluidsynth',
         version: '>= 2.2.3',
+        modules: ['FluidSynth::libfluidsynth'],
         allow_fallback: ('fluidsynth' not in system_libs_list),
         static: ('fluidsynth' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_fluidsynth'),
         default_options: [
-            'try-static-deps=' + lib_type,
+            'default_library=static',
+            'try-static-deps=true',
             'enable-floats=true',
             'openmp=disabled',
             'enable-threads=false',
@@ -467,7 +468,7 @@ if get_option('use_slirp')
     libslirp_dep = dependency(
         'slirp',
         version: '>= 4.6.1',
-        default_options: ['warning_level=0'],
+        default_options: default_wrap_options,
         allow_fallback: ('slirp' not in system_libs_list),
         static: ('slirp' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_slirp'),
@@ -481,7 +482,7 @@ if get_option('use_mt32emu')
     mt32emu_dep = dependency(
         'mt32emu',
         version: '>= 2.5.3',
-        default_options: ['warning_level=0'],
+        default_options: default_wrap_options,
         allow_fallback: ('mt32emu' not in system_libs_list),
         static: ('mt32emu' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_mt32emu'),
@@ -505,7 +506,7 @@ tracy_dep = optional_dep
 if get_option('tracy')
     tracy_dep = dependency(
         'tracy',
-        default_options: ['warning_level=0'],
+        default_options: default_wrap_options,
         static: ('tracy' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('tracy'),
     )

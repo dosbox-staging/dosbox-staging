@@ -103,8 +103,10 @@ Mute the sound when the window is inactive.
 Pause emulation when the window is inactive.
 .
 :CONFIG_MAPPERFILE
-File used to load/save the key/event mappings from.
-Resetmapper only works with the default value.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER
@@ -112,7 +114,7 @@ environment variable (which usually blocks the OS screensaver
 while the emulator is running).
 .
 :CONFIG_LANGUAGE
-Select a language to use: de, en, es, fr, it, pl, and ru
+Select a language to use: de, en, es, fr, it, nl, pl, and ru
 Notes: This setting will override the 'LANG' environment, if set.
        The 'resources/translations' directory bundled with the executable holds
        these files. Please keep it along-side the executable to support this feature.
@@ -969,6 +971,24 @@ listing not supported
 .
 :MIDI_DEVICE_NOT_CONFIGURED
 device not configured
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CD-ROM drive
+.
+:MOUNT_TYPE_FAT
+FAT drive
+.
+:MOUNT_TYPE_ISO
+ISO drive
+.
+:MOUNT_TYPE_VIRTUAL
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities

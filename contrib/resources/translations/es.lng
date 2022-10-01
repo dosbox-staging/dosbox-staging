@@ -114,7 +114,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER (que normalmente bloquea el protector de pantalla de
 mientras se ejecuta el emulador).
 .
 :CONFIG_LANGUAGE
-Seleccione idioma a usar: de, en, es, fr, it, pl, y ru
+Seleccione idioma a usar: de, en, es, fr, it, nl, pl, y ru
 Notes: Este ajuste anular  el entorno 'LANG', si se ha establecido.
        El directorio 'translations' incluido con el ejecutable contiene esos archivos
        de datos. Por favor mant‚ngalo junto al ejecutable para admitir esta funci¢n.

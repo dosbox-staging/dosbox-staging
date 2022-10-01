@@ -71,10 +71,12 @@ void IMGMOUNT::ListImgMounts(void)
 
 	bool found_drives = false;
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
-		std::string disk_info = Drives[d] ? Drives[d]->GetInfo() : "";
-		if (disk_info.substr(0, 9) == "fatDrive " ||
-		    disk_info.substr(0, 9) == "isoDrive ") {
-			print_row(std::string{drive_letter(d)}, disk_info.substr(9),
+		if (!Drives[d])
+			continue;
+		if (Drives[d]->GetType() == DosDriveType::Fat ||
+		    Drives[d]->GetType() == DosDriveType::Iso) {
+			print_row(std::string{drive_letter(d)},
+			          Drives[d]->GetInfo(),
 			          To_Label(Drives[d]->GetLabel()),
 			          DriveManager::GetDrivePosition(d));
 			found_drives = true;
@@ -253,18 +255,22 @@ void IMGMOUNT::Run(void) {
                 char tmp[CROSS_LEN];
                 safe_strcpy(tmp, temp_line.c_str());
 
-                uint8_t dummy;
-                if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
-                    WriteOut(MSG_Get("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
-                    return;
-                }
+		uint8_t dummy;
+		if (!DOS_MakeName(tmp, fullname, &dummy)) {
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
+			return;
+		}
+		if (Drives[dummy]->GetType() != DosDriveType::Local) {
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
+			return;
+		}
 
-                localDrive *ldp = dynamic_cast<localDrive*>(Drives[dummy]);
-                if (ldp==NULL) {
-                    WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
-                    return;
-                }
-                ldp->GetSystemFilename(tmp, fullname);
+		localDrive *ldp = dynamic_cast<localDrive *>(Drives[dummy]);
+		if (ldp == NULL) {
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
+			return;
+		}
+		ldp->GetSystemFilename(tmp, fullname);
                 temp_line = tmp;
 
                 if (stat(temp_line.c_str(), &test)) {

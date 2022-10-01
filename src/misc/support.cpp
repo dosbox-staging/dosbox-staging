@@ -225,24 +225,87 @@ const std_fs::path &GetExecutablePath()
 static const std::deque<std_fs::path> &GetResourceParentPaths()
 {
 	static std::deque<std_fs::path> paths = {};
-	if (paths.size())
+	if (!paths.empty())
 		return paths;
 
-	// Prioritize portable configuration: allow the entire resource tree or
-	// just a single resource to be included in the current working directory.
-	paths.emplace_back(std_fs::path("."));
-	paths.emplace_back(std_fs::path("resources"));
+	auto add_if_exists = [&](const std_fs::path &p) {
+		if (std_fs::is_directory(p))
+			paths.emplace_back(p);
+	};
+
+	// First prioritize is local
+	// These resources are provided directly off the working path
+	add_if_exists(std_fs::path("."));
+	constexpr auto resource_dir_name = "resources";
+	add_if_exists(std_fs::path(resource_dir_name));
+
+	// Second priority are resources packaged with the executable
 #if defined(MACOSX)
-	paths.emplace_back(GetExecutablePath() / "../Resources");
-	paths.emplace_back(GetExecutablePath() / "../../Resources");
+	constexpr auto macos_resource_dir_name = "Resources";
+	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
+	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
 #else
-	paths.emplace_back(GetExecutablePath() / "resources");
-	paths.emplace_back(GetExecutablePath() / "../resources");
+	add_if_exists(GetExecutablePath() / resource_dir_name);
+	add_if_exists(GetExecutablePath() / ".." / resource_dir_name);
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
-	paths.emplace_back(std_fs::path("/usr/local/share/dosbox-staging"));
-	paths.emplace_back(std_fs::path("/usr/share/dosbox-staging"));
-	paths.emplace_back(std_fs::path(CROSS_GetPlatformConfigDir()));
+
+	// Third priority is a potentially customized --datadir specified at
+	// compile time.
+	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
+
+	// Fourth priority is the user's XDG data specification
+	//
+	// $XDG_DATA_HOME defines the base directory relative to which
+	// user-specific data files should be stored. If $XDG_DATA_HOME is
+	// either not set or empty, a default equal to $HOME/.local/share should
+	// be used.
+	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	//
+	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
+	if (!xdg_data_home_env)
+		xdg_data_home_env = "~/.local/share";
+
+	const std_fs::path xdg_data_home = CROSS_ResolveHome(xdg_data_home_env);
+	add_if_exists(xdg_data_home / CANONICAL_PROJECT_NAME);
+
+	// Fifth priority is the system's XDG data specification
+	//
+	//  $XDG_DATA_DIRS defines the preference-ordered set of base
+	//  directories to search for data files in addition to the
+	//  $XDG_DATA_HOME base directory. The directories in $XDG_DATA_DIRS
+	//  should be seperated with a colon ':'.
+	//
+	// If $XDG_DATA_DIRS is either not set or empty, a value equal to
+	// /usr/local/share/:/usr/share/ should be used.
+	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	//
+	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
+
+	// If XDG_DATA_DIRS is undefined, use the default:
+	if (!xdg_data_dirs_env)
+		xdg_data_dirs_env = "/usr/local/share:/usr/share";
+
+	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
+		trim(xdg_data_dir);
+		if (!xdg_data_dir.empty()) {
+			const std_fs::path resolved_dir = CROSS_ResolveHome(
+			        xdg_data_dir);
+			add_if_exists(resolved_dir / CANONICAL_PROJECT_NAME);
+		}
+	}
+
+	// Sixth priority is a best-effort fallback for --prefix installations
+	// into paths not pointed to by the system's XDG_DATA_ variables. Note
+	// that This lookup is deliberately relative to the executable to permit
+	// portability of the install tree (do not replace this with --prefix,
+	// which would destroy this portable aspect).
+	//
+	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
+
+	// Last priority is the user's configuration directory
+	add_if_exists(std_fs::path(CROSS_GetPlatformConfigDir()));
+
 	return paths;
 }
 
@@ -269,10 +332,16 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t, const int16_t);
 template std::function<float()> CreateRandomizer<float>(const float, const float);
 
+// return the first existing resource
 std_fs::path GetResourcePath(const std_fs::path &name)
 {
-	// return the first existing resource
 	std::error_code ec;
+
+	// handle an absolute path
+	if (std_fs::exists(name, ec))
+		return name;
+
+	// try the resource paths
 	for (const auto &parent : GetResourceParentPaths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
@@ -319,8 +388,50 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 	return paths_and_files;
 }
 
-std::vector<uint8_t> LoadResource(const std_fs::path &name,
-                                  const ResourceImportance importance)
+// Get resource lines from a text file
+std::vector<std::string> GetResourceLines(const std_fs::path &name,
+                                          const ResourceImportance importance)
+{
+	const auto resource_path = GetResourcePath(name);
+
+	std::ifstream input_file(resource_path, std::ios::binary);
+
+	if (!input_file.is_open()) {
+		if (importance == ResourceImportance::Optional) {
+			return {};
+		}
+		assert(importance == ResourceImportance::Mandatory);
+		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
+		        name.string().c_str());
+		for (const auto &path : GetResourceParentPaths()) {
+			LOG_WARNING("RESOURCE:  - '%s'",
+			            (path / name).string().c_str());
+		}
+		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
+	}
+
+	std::vector<std::string> lines = {};
+
+	std::string line = {};
+	while (getline(input_file, line)) {
+		lines.emplace_back(std::move(line));
+		line = {}; // reset after moving
+	}
+	input_file.close();
+	return lines;
+}
+
+// Get resource lines from a text file
+std::vector<std::string> GetResourceLines(const std_fs::path &subdir,
+                                          const std_fs::path &name,
+                                          const ResourceImportance importance)
+{
+	return GetResourceLines(subdir / name, importance);
+}
+
+// Load a resource blob (from a binary file)
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
+                                      const ResourceImportance importance)
 {
 	const auto resource_path = GetResourcePath(name);
 	std::ifstream file(resource_path, std::ios::binary);
@@ -337,18 +448,20 @@ std::vector<uint8_t> LoadResource(const std_fs::path &name,
 		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 	}
 
-	const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
+	// non-const to allow movement out of the function
+	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
 	// DEBUG_LOG_MSG("RESOURCE: Loaded resource '%s' [%d bytes]",
 	//               resource_path.string().c_str(),
 	//               check_cast<int>(buffer.size()));
 	return buffer;
 }
 
-std::vector<uint8_t> LoadResource(const std_fs::path &subdir,
-                                  const std_fs::path &name,
-                                  const ResourceImportance importance)
+// Load a resource blob (from a binary file)
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path &subdir,
+                                      const std_fs::path &name,
+                                      const ResourceImportance importance)
 {
-	return LoadResource(subdir / name, importance);
+	return LoadResourceBlob(subdir / name, importance);
 }
 
 bool path_exists(const std_fs::path &path)

@@ -99,6 +99,7 @@ update de 850
 update es 850
 update fr 850
 update it 850
+update nl 850
 update pl 437 .cp437
 update pl 852
 update ru 866

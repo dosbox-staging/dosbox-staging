@@ -105,8 +105,10 @@ Mute the sound when the window is inactive.
 Pause emulation when the window is inactive.
 .
 :CONFIG_MAPPERFILE
-Archivo usado para cargar/guardar las asignaciones de teclas/eventos.
-Resetmapper sólo funciona con el valor por defecto.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Use 'allow' (permitir) o 'block' (bloquear) para anular la variable de entorno
@@ -114,7 +116,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER (que normalmente bloquea el protector de pantalla de
 mientras se ejecuta el emulador).
 .
 :CONFIG_LANGUAGE
-Seleccione idioma a usar: de, en, es, fr, it, pl, y ru
+Seleccione idioma a usar: de, en, es, fr, it, nl, pl, y ru
 Notes: Este ajuste anulará el entorno 'LANG', si se ha establecido.
        El directorio 'translations' incluido con el ejecutable contiene esos archivos
        de datos. Por favor manténgalo junto al ejecutable para admitir esta función.
@@ -2680,4 +2682,22 @@ Miscellaneous Commands
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Unknown Command
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CD-ROM drive
+.
+:MOUNT_TYPE_FAT
+FAT drive
+.
+:MOUNT_TYPE_ISO
+ISO drive
+.
+:MOUNT_TYPE_VIRTUAL
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
 .

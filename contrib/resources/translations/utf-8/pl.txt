@@ -111,7 +111,10 @@ Wyciszanie dźwięku, kiedy okno emulatora traci fokus.
 Pauza emulacji, kiedy okno emulatora traci fokus.
 .
 :CONFIG_MAPPERFILE
-Plik z mapowaniem klawiszy, skrótami klawiszowymi, itd.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Ustawienie wygaszacza ekranu, ma pierwszeństwo przed zmienną środowiskową
@@ -120,7 +123,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego włączenie.
 .
 :CONFIG_LANGUAGE
-Język emulatora: de, en, es, fr, it, pl lub ru.
+Język emulatora: de, en, es, fr, it, nl, pl lub ru.
 Uwaga: Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'. Pliki
 tłumaczeń dla poszczególnych języków znajdują się w dostarczonym katalogu
 'resources/translations'.
@@ -2671,4 +2674,22 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CD-ROM drive
+.
+:MOUNT_TYPE_FAT
+FAT drive
+.
+:MOUNT_TYPE_ISO
+ISO drive
+.
+:MOUNT_TYPE_VIRTUAL
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
 .

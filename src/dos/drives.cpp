@@ -266,7 +266,7 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
 		driveInfos[drive].currentDisk = currentDisk;
 		if (drive < MAX_DISK_IMAGES && imageDiskList[drive] != nullptr) {
-			if (strncmp(newDisk->GetInfo(), "fatDrive", 8) == 0) {
+			if (newDisk->GetType() == DosDriveType::Fat) {
 				imageDiskList[drive] = reinterpret_cast<fatDrive *>(newDisk)->loadedDisk;
 			} else {
 				imageDiskList[drive].reset(reinterpret_cast<imageDisk *>(newDisk));

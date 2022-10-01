@@ -120,7 +120,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego wˆ¥czenie.
 .
 :CONFIG_LANGUAGE
-J©zyk emulatora: de, en, es, fr, it, pl lub ru.
+J©zyk emulatora: de, en, es, fr, it, nl, pl lub ru.
 Uwaga: Ustawienie ma pierwszeästwo przed zmienn¥ ˜rodowiskow¥ 'LANG'. Pliki
 tˆumaczeä dla poszczeg¢lnych j©zyk¢w znajduj¥ si© w dostarczonym katalogu
 'resources/translations'.

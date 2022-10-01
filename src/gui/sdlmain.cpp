@@ -71,8 +71,6 @@
 #include "vga.h"
 #include "video.h"
 
-#define MAPPERFILE "mapper-sdl2-" VERSION ".map"
-
 #if C_OPENGL
 //Define to report opengl errors
 //#define DB_OPENGL_ERROR
@@ -512,7 +510,7 @@ void GFX_RequestExit(const bool pressed)
 	}
 	/* NOTE: This is one of the few places where we use SDL key codes
 	with SDL 2.0, rather than scan codes. Is that the correct behavior? */
-	while (paused) {
+	while (paused && !shutdown_requested) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
 		case SDL_QUIT: GFX_RequestExit(true); break;
@@ -525,7 +523,8 @@ void GFX_RequestExit(const bool pressed)
 			break;
 		case SDL_KEYDOWN: // Must use Pause/Break Key to resume.
 		case SDL_KEYUP:
-			if(event.key.keysym.sym == SDLK_PAUSE) {
+			if (event.key.keysym.sym == SDLK_PAUSE ||
+			    event.key.keysym.sym == SDLK_ESCAPE) {
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
@@ -4294,8 +4293,11 @@ void Config_Add_SDL() {
 	pbool->Set_help("Pause emulation when the window is inactive.");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
-	pstring->Set_help("File used to load/save the key/event mappings from.\n"
-	                  "Resetmapper only works with the default value.");
+	pstring->Set_help(
+	        "File used to load/save the key/event mappings.\n"
+	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
+	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
+	        "Note: the -resetmapper commandline flag only deletes the default mapperfile.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
@@ -4490,7 +4492,7 @@ void OverrideWMClass()
 {
 #if !defined(WIN32)
 	constexpr int overwrite = 0; // don't overwrite
-	setenv("SDL_VIDEO_X11_WMCLASS", "dosbox-staging", overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", CANONICAL_PROJECT_NAME, overwrite);
 #endif
 }
 
@@ -4510,7 +4512,7 @@ int sdl_main(int argc, char *argv[])
 	if (control->cmdline->FindExist("--version") ||
 	    control->cmdline->FindExist("-version") ||
 	    control->cmdline->FindExist("-v")) {
-		printf(version_msg, DOSBOX_GetDetailedVersion());
+		printf(version_msg, CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 		return 0;
 	}
 
@@ -4532,7 +4534,7 @@ int sdl_main(int argc, char *argv[])
 
 	loguru::init(argc, argv);
 
-	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
+	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
 	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,

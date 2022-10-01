@@ -270,7 +270,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"));
+	const char *sf_file = section->Get_string("soundfont");
+	const auto sf_spec = parse_sf_pref(sf_file);
 	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
 	auto scale_by_percent = std::get<int>(sf_spec);
 
@@ -278,8 +279,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        soundfont.c_str());
+		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
+		        sf_file);
 		return false;
 	}
 

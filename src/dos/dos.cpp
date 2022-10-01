@@ -33,6 +33,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "program_mount_common.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -1407,7 +1408,7 @@ static Bitu DOS_25Handler(void)
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
 		reg_ax = DOS_SectorAccess(true);
 		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
@@ -1425,11 +1426,11 @@ static Bitu DOS_25Handler(void)
     return CBRET_NONE;
 }
 static Bitu DOS_26Handler(void) {
-	LOG(LOG_DOSMISC,LOG_NORMAL)("int 26 called: hope for the best!");
+	LOG(LOG_DOSMISC, LOG_NORMAL)("int 26 called: hope for the best!");
 	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	} else if (strncmp(Drives[reg_al]->GetInfo(), "fatDrive", 8) == 0) {
+	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
 		reg_ax = DOS_SectorAccess(false);
 		SETFLAGBIT(CF, reg_ax != 0);
 	} else {
@@ -1519,6 +1520,7 @@ public:
 		//	pop ax
 		//	iret
 
+		AddMountTypeMessages();
 		DOS_SetupFiles();								/* Setup system File tables */
 		DOS_SetupDevices();							/* Setup dos devices */
 		DOS_SetupTables();

@@ -85,3 +85,12 @@ void AddCommonMountMessages() {
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 }
+
+void AddMountTypeMessages() {
+	MSG_Add("MOUNT_TYPE_LOCAL_DIRECTORY", "local directory");
+	MSG_Add("MOUNT_TYPE_CDROM", "CD-ROM drive");
+	MSG_Add("MOUNT_TYPE_FAT", "FAT drive");
+	MSG_Add("MOUNT_TYPE_ISO", "ISO drive");
+	MSG_Add("MOUNT_TYPE_VIRTUAL", "internal virtual drive");
+	MSG_Add("MOUNT_TYPE_UNKNOWN", "unknown drive");
+}

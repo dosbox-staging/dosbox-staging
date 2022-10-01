@@ -77,6 +77,9 @@ install_doc()
     if [[ "$git_branch" == "refs/tags/"* ]] && [[ "$git_branch" != *"-"* ]]; then
         version_tag=`echo $git_branch | awk '{print substr($0,11);exit}'`
         package_information="release $version_tag"
+    elif [[ "$git_branch" == "release/"* ]]; then
+        version_tag=`git describe --tags | cut -f1 -d"-"`
+        package_information="release $version_tag"
     elif [ -n "$git_branch" ] && [ -n "$git_commit" ]; then
         package_information="a development branch named $git_branch with commit $git_commit"
     else

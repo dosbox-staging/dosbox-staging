@@ -50,6 +50,13 @@ tconv_l CP850 "utf-8/fr.txt" fr
 # keyb it 858
 tconv_l CP850 "utf-8/it.txt" it
 
+# keyb us 437
+# keyb us 850
+# keyb us 858
+# keyb nl 850
+# keyb nl 858
+tconv_l CP850 "utf-8/nl.txt" nl
+
 # keyb pl
 # keyb pl 852
 tconv_l CP852 "utf-8/pl.txt" pl

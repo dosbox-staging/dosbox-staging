@@ -107,8 +107,10 @@
 Приостановить эмуляцию когда окно неактивно.
 .
 :CONFIG_MAPPERFILE
-Файл, используемый для загрузки/сохранения сопоставлений из ключей/событий.
-Сброс сопоставления работает только со значением по умолчанию.
+File used to load/save the key/event mappings.
+Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
+They can be loaded by name, for example: mapperfile = xbox/xenon2.map
+Note: the -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Используйте 'allow' или 'block' для переопределения переменной окружения
@@ -116,7 +118,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER (которая обычно блокирует по
 при работе эмулятора).
 .
 :CONFIG_LANGUAGE
-Выберите используемый язык: de, en, es, fr, it, pl и ru.
+Выберите используемый язык: de, en, es, fr, it, nl, pl и ru.
 Примечания: Эта настройка переопределяет переменную 'LANG', если задано.
             Каталог 'resources/translations' в комплекте с исполняемым файлом
             содержит файлы переводов. Просьба держать его рядом с исполняемым
@@ -2510,6 +2512,24 @@ listing not supported
 :MIDI_DEVICE_NOT_CONFIGURED
 device not configured
 .
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CD-ROM drive
+.
+:MOUNT_TYPE_FAT
+FAT drive
+.
+:MOUNT_TYPE_ISO
+ISO drive
+.
+:MOUNT_TYPE_VIRTUAL
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
+.
 :PROGRAM_BOOT_IMAGE_MOUNTED
 Floppy image(s) already mounted.
 
@@ -2620,4 +2640,22 @@ Miscellaneous Commands
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Unknown Command
+.
+:MOUNT_TYPE_LOCAL_DIRECTORY
+local directory
+.
+:MOUNT_TYPE_CDROM
+CD-ROM drive
+.
+:MOUNT_TYPE_FAT
+FAT drive
+.
+:MOUNT_TYPE_ISO
+ISO drive
+.
+:MOUNT_TYPE_VIRTUAL
+internal virtual drive
+.
+:MOUNT_TYPE_UNKNOWN
+unknown drive
 .

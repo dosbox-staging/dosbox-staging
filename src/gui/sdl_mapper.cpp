@@ -2597,21 +2597,42 @@ static void MAPPER_SaveBinds() {
 	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
 }
 
-static bool MAPPER_CreateBindsFromFile() {
-	const char* filename = mapper.filename.c_str();
-	FILE * loadfile = fopen(filename,"rt");
-	if (!loadfile)
+static bool load_binds_from_file(const std::string_view mapperfile_path,
+                                 const std::string_view mapperfile_name)
+{
+	// If the filename is empty the user wants defaults
+	if (mapperfile_name == "")
 		return false;
-	ClearAllBinds();
-	uint32_t bind_tally = 0;
-	char linein[512];
-	while (fgets(linein,512,loadfile)) {
-		CreateStringBind(linein);
-		++bind_tally;
-	}
-	fclose(loadfile);
-	LOG_MSG("MAPPER: Loaded %d key bindings from %s", bind_tally, filename);
-	return true;
+
+	auto try_loading = [](const std_fs::path &mapper_path) -> bool {
+		constexpr auto optional = ResourceImportance::Optional;
+		auto lines = GetResourceLines(mapper_path, optional);
+		if (lines.empty())
+			return false;
+
+		ClearAllBinds();
+		for (auto &line : lines)
+			CreateStringBind(line.data());
+
+		LOG_MSG("MAPPER: Loaded %d key bindings from %s",
+		        static_cast<int>(lines.size()),
+		        mapper_path.string().c_str());
+
+		mapper.filename = mapper_path.string();
+		return true;
+	};
+	const auto mapperfiles = std_fs::path("mapperfiles");
+
+	const auto was_loaded = try_loading(mapperfile_path) ||
+	                        try_loading(mapperfiles / mapperfile_name);
+
+	// Only report load failures for customized mapperfiles because by
+	// default, the mapperfile is not provided
+	if (!was_loaded && mapperfile_name != MAPPERFILE)
+		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly and from resources",
+		            mapperfile_name.data());
+
+	return was_loaded;
 }
 
 void MAPPER_CheckEvent(SDL_Event *event)
@@ -3034,6 +3055,7 @@ void MAPPER_BindKeys(Section *sec)
 
 	// Get the mapper file set by the user
 	const auto section = static_cast<const Section_prop *>(sec);
+	const auto mapperfile_value = section->Get_string("mapperfile");
 	const auto property = section->Get_path("mapperfile");
 	assert(property && !property->realpath.empty());
 	mapper.filename = property->realpath;
@@ -3048,7 +3070,7 @@ void MAPPER_BindKeys(Section *sec)
 		CreateBindGroups();
 
 	// Create binds from file or fallback to internals
-	if (!MAPPER_CreateBindsFromFile())
+	if (!load_binds_from_file(mapper.filename, mapperfile_value))
 		CreateDefaultBinds();
 
 	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it)

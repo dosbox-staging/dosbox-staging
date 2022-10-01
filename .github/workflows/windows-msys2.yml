@@ -1,4 +1,4 @@
-name: MSYS2 builds
+name: Windows MSYS2 builds
 
 on: [push, pull_request]
 
@@ -240,10 +240,10 @@ jobs:
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
 
       - name: Setup release build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
+        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
+        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |
@@ -295,7 +295,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: windows.yml
+          workflow: windows-msvc.yml
           name: ${{ env.artifact_name }}
           path: ${{ env.artifact_path }}
           if_no_artifact_found: warn
@@ -305,6 +305,9 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
             version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
+            packageinfo="release $version_tag"
+          elif [[ "${{ github.ref }}" == "refs/heads/release/"* ]]; then
+            version_tag=`git describe --tags | cut -f1 -d"-"`
             packageinfo="release $version_tag"
           elif [ -n "${{ github.ref }}" ] && [ -n "${{ github.sha }}" ]; then
             git_branch=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
@@ -337,6 +340,7 @@ jobs:
           copy ${{ github.workspace }}\contrib\windows_installer\* .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.ico .
           copy ${{ github.workspace }}\contrib\icons\dosbox-staging.bmp .
+          copy ${{ github.workspace }}\contrib\icons\dosbox-staging-side.bmp .
           xcopy /s ${{ github.workspace }}\${{ env.PKG_RELEASE }}\* program
           replace /a ..\msvc\*.dll program
           move program\dosbox.exe .

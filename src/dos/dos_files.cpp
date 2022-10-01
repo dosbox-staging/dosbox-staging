@@ -688,8 +688,8 @@ bool DOS_SetFileAttr(char const *const name, uint16_t attr)
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (strncmp(Drives[drive]->GetInfo(), "CDRom ", 6) == 0 ||
-	    strncmp(Drives[drive]->GetInfo(), "isoDrive ", 9) == 0) {
+	if (Drives[drive]->GetType() == DosDriveType::Cdrom ||
+	    Drives[drive]->GetType() == DosDriveType::Iso) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}

@@ -66,7 +66,6 @@ jobs:
           -Dbuildtype=debug \
           -Dunit_tests=disabled \
           -Dsystem_libraries=speexdsp \
-          -Ddefault_library=shared \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
           -Duse_mt32emu=false \

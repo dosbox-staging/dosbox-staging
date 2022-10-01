@@ -24,7 +24,16 @@
 /* Version and branding tweaks
  */
 
-// Emulator version
+// Name of project, lower-case without spaces
+#define CANONICAL_PROJECT_NAME "@project_name@"
+
+// Emulator Semantic Version (MAJOR.MINOR.PATCH), incremented as follows:
+//  - MAJOR version when you make incompatible API changes
+//  - MINOR version when you add functionality in a backwards compatible manner
+//  - PATCH version when you make backwards compatible bug fixes
+// Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+// Ref: https://semver.org/
+
 #define VERSION "@version@"
 
 /* Operating System
@@ -211,6 +220,11 @@
 // Enables mathematical constants (such as M_PI) in Windows math.h header
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
 #mesondefine _USE_MATH_DEFINES
+
+// Holds the "--datadir" specified during project setup. This can
+// be used as a fallback if the user hasn't populated their
+// XDG_DATA_HOME or XDG_DATA_DIRS to include the --datadir.
+#mesondefine CUSTOM_DATADIR
 
 /* Loguru-related defines
  */

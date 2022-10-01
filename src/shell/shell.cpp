@@ -273,11 +273,13 @@ bool get_pipe_status(const char *out_file,
 		                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
 		                              0x12, &dummy, &dummy2);
 		if (pipe_file && (failed_pipe || !status) &&
-		    (Drives[0] || Drives[2]) && !strchr(pipe_tempfile, '\\')) {
+		    (Drives[0] || Drives[2] || Drives[24]) &&
+		    !strchr(pipe_tempfile, '\\')) {
 			// Insert a drive prefix into the pipe filename path.
 			// Note that the safe_strcpy truncates excess to prevent
 			// writing beyond pipe_tempfile's fixed size.
-			const std::string drive_prefix = Drives[2] ? "c:\\" : "a:\\";
+			const std::string drive_prefix =
+			        Drives[2] ? "c:\\" : (Drives[0] ? "a:\\" : "y:\\");
 			const std::string pipe_full_path = drive_prefix + pipe_tempfile;
 			safe_strcpy(pipe_tempfile, pipe_full_path.c_str());
 
@@ -381,14 +383,16 @@ void DOS_Shell::ParseLine(char *line)
 	char pipe_tempfile[270]; // Piping requires the use of a temporary file
 	uint16_t fattr;
 	if (pipe_file.length()) {
-		std::string temp_line;
-		if (!GetEnvStr("TEMP", temp_line) && !GetEnvStr("TMP", temp_line)) {
-			safe_sprintf(pipe_tempfile, "pipe%d.tmp",
+		std::string env_temp_path = {};
+		if (!GetEnvStr("TEMP", env_temp_path) &&
+		    !GetEnvStr("TMP", env_temp_path)) {
+			safe_sprintf(pipe_tempfile,
+			             "pipe%d.tmp",
 			             get_tick_random_number());
 		} else {
-			std::string::size_type idx = temp_line.find('=');
-			std::string temp = temp_line.substr(idx + 1,
-			                                    std::string::npos);
+			const auto idx   = env_temp_path.find('=');
+			std::string temp = env_temp_path.substr(idx + 1,
+			                                        std::string::npos);
 			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
 				safe_sprintf(pipe_tempfile, "%s\\pipe%d.tmp",
@@ -477,14 +481,8 @@ void DOS_Shell::RunInternal()
 	}
 }
 
-extern int64_t ticks_at_program_launch; // from shell_cmd
 void DOS_Shell::Run()
 {
-	// Initialize the tick-count only when the first shell has launched.
-	// This ensures that slow-performing configurable tasks (like loading MIDI SF2 files) have already
-	// been performed and won't affect this time.
-	ticks_at_program_launch = GetTicks();
-
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
@@ -578,13 +576,25 @@ private:
 public:
 	AUTOEXEC(Section *configuration) : Module_base(configuration)
 	{
-		const auto cmdline = control->cmdline; // short-lived copy
+		// Get the [dosbox] conf section
+		const auto ds = static_cast<Section_prop *>(
+		        control->GetSection("dosbox"));
+		assert(ds);
+
+		// Auto-mount drives (except for DOSBox's Z:) prior to [autoexec]
+		if (ds->Get_bool("automount")) {
+			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
+			for (const auto letter : drives) {
+				AutomountDrive({letter});
+			}
+		}
 
 		// Initialize configurable states that control autoexec-related
 		// behavior
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
+		const auto cmdline = control->cmdline; // short-lived copy
 		const bool secure = cmdline->FindExist("-securemode", true);
 
 		// Are autoexec sections permitted?
@@ -593,10 +603,6 @@ public:
 		                                                     true);
 
 		// Should autoexec sections be joined or overwritten?
-		const auto ds = static_cast<Section_prop *>(
-		        control->GetSection("dosbox"));
-		assert(ds);
-
 		const std::string_view section_pref = ds->Get_string("autoexec_section");
 		const bool should_join_autoexecs = (section_pref == "join");
 
@@ -717,7 +723,6 @@ public:
 			}
 			found_dir_or_command = true;
 		}
-
 		if (autoexec_is_allowed) {
 			if (should_join_autoexecs) {
 				ProcessConfigFileAutoexec(*static_cast<const Section_line *>(configuration),
@@ -728,13 +733,6 @@ public:
 				ProcessConfigFileAutoexec(
 				        control->GetOverwrittenAutoexecSection(),
 				        control->GetOverwrittenAutoexecConf());
-			}
-		}
-		// Try automounting drives (except for Z:, which is DOSBox's).
-		if (ds->Get_bool("automount")) {
-			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
-			for (const auto letter : drives) {
-				AutomountDrive({letter});
 			}
 		}
 		if (secure && !found_dir_or_command) {
@@ -1090,7 +1088,7 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        "\n");
 
-	MSG_Add("SHELL_STARTUP_SUB","[color=green]dosbox-staging %s\033[0m\n");
+	MSG_Add("SHELL_STARTUP_SUB","[color=green]" CANONICAL_PROJECT_NAME " %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays or changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
 	        "Usage:\n"

@@ -128,7 +128,11 @@ Mette in pausa l'emulazione quando la finestra Š inattiva.
 .
 :CONFIG_MAPPERFILE
 File utilizzato per caricare/salvare le corrispondenze tasto/evento.
-Resetmapper funziona solo con i valori predefiniti.
+Sono inclusi dei file di mappatura preconfigurati nella directory
+'resources/mapperfiles'. Possono essere caricati per nome, ad esempio: 
+mapperfile = xbox/xenon2.map
+Nota: il flag della riga di comando -resetmapper elimina solo il file di
+      mappatura predefinito.
 .
 :CONFIG_SCREENSAVER
 Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
@@ -136,7 +140,7 @@ d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca gli screensaver
 del sistema operativo mentre l'emulatore Š in esecuzione).
 .
 :CONFIG_LANGUAGE
-Seleziona una lingua da usare: de, en, es, fr, it, pl e ru.
+Seleziona una lingua da usare: de, en, es, fr, it, nl, pl e ru.
 Note: Questa impostazione, se utilizzata, sovrascriver… la variabile 
       d'ambiente 'LANG'. La directory 'resources/translations', inclusa nel
       pacchetto insieme all'eseguibile, contiene questi file.
@@ -391,8 +395,7 @@ Nota: Ô possibile regolare con precisione i livelli di riverbero per ogni
       canale tramite i comandi del mixer.
 .
 :CONFIG_CHORUS
-Abilita l'effetto coro (Chorus) a livello globale per aggiungere un senso di
-movimento stereo al suono:
+Abilita l'effetto coro a livello globale per un suono pi— avvolgente:
   off:     Nessun effetto coro (predefinito).
   on:      Abilita effetto coro (preset normale).
   light:   Effetto coro leggero (particolarmente adatto per la musica
@@ -440,7 +443,7 @@ Nota: La percentuale di ridimensionamento del volume dopo il nome del file Š
         MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
-Effetto coro (Chorus): 'auto', 'on', 'off', o valori personalizzati.
+Effetto coro: 'auto', 'on', 'off', o valori personalizzati.
 Quando si utilizzano valori personalizzati:
   Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
   Essi sono: conteggio-voci livello velocit… profondit… modulazione-onda, dove:
@@ -742,7 +745,7 @@ Abilita gli intervalli temporizzati per gli assi.
 Sperimenta con questa opzione, se il tuo joystick soffre di drifting.
 .
 :CONFIG_AUTOFIRE
-Continua a fare fuoco finch‚ tieni il bottone premuto.
+Continua a fare fuoco finch‚ tieni il tasto premuto.
 .
 :CONFIG_SWAP34
 Scambia il 3ø e il 4ø asse. Pu• essere utile per alcuni joystick.
@@ -856,7 +859,7 @@ Abilita ipx attraverso l'emulazione UDP/IP.
 :CONFIG_NE2000
 Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata
 su software (usando libslirp) con le seguenti propriet…:
- - 255.255.255.0 : Subnet mask della LAN virtuale 10.0.2.0.
+ - 255.255.255.0 : Maschera di sottorete della LAN virtuale 10.0.2.0.
  - 10.0.2.2      : IP del gateway e del servizio DHCP.
  - 10.0.2.3      : IP del server DNS virtuale.
  - 10.0.2.15     : Primo IP fornito dal DHCP, il tuo IP!
@@ -1060,6 +1063,24 @@ elenco non supportato
 :MIDI_DEVICE_NOT_CONFIGURED
 dispositivo non configurato
 .
+:MOUNT_TYPE_LOCAL_DIRECTORY
+directory locale
+.
+:MOUNT_TYPE_CDROM
+Unit… CD-ROM
+.
+:MOUNT_TYPE_FAT
+Unit… FAT
+.
+:MOUNT_TYPE_ISO
+Unit… ISO
+.
+:MOUNT_TYPE_VIRTUAL
+unit… virtuale interna
+.
+:MOUNT_TYPE_UNKNOWN
+unit… sconosciuta
+.
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .
@@ -1071,20 +1092,20 @@ Esegue l'immissione da tastiera tramite script in un gioco DOS.
 
 Utilizzo:
   [color=green]autotype[reset] -list
-  [color=green]autotype[reset] [-w [color=white]ATTESA[reset]] [-p [color=white]ANDATURA[reset]] [color=cyan]PULSANTI[reset]
+  [color=green]autotype[reset] [-w [color=white]ATTESA[reset]] [-p [color=white]ANDATURA[reset]] [color=cyan]TASTI[reset]
 
 Dove:
   [color=white]ATTESA[reset]   Š il numero di secondi da attendere prima della digitazione (max 30)
   [color=white]ANDATURA[reset] Š il numero di secondi prima di ogni pressione di un tasto (max 10).
-  [color=cyan]PULSANTI[reset] Š uno o pi— pulsanti separati da spazi.
+  [color=cyan]TASTI[reset]    Š uno o pi— tasti separati da spazi.
 
 Note:
-  I [color=cyan]PULSANTI[reset] forniti in questo comando verranno digitati automaticamente nei
+  I [color=cyan]TASTI[reset] forniti in questo comando verranno digitati automaticamente nei
   giochi DOS dopo il loro avvio. La digitazione automatica inizia dopo i
   secondi di [color=cyan]ATTESA[reset], e ogni pulsante viene inserito in base all'[color=white]ANDATURA[reset] in
   secondi. Il carattere [color=cyan],[reset] inserisce un ritardo di [color=white]ANDATURA[reset] extra. I valori
   predefiniti di [color=white]ATTESA[reset] e [color=white]ANDATURA[reset] sono rispettivamente 2 e 0.5 secondi, se non
-  specificati. Ô possibile ottenere un elenco di tutti i nomi dei pulsanti
+  specificati. Ô possibile ottenere un elenco di tutti i nomi dei tasti
   disponibili utilizzando l'opzione -list.
 
 Esempi:
@@ -1493,7 +1514,6 @@ Layout tastiera %s caricato per la tabella codici %i
 :PROGRAM_KEYB_FILENOTFOUND
 File di tastiera %s non trovato.
 
-
 .
 :PROGRAM_KEYB_INVALIDFILE
 File di tastiera %s non valido.
@@ -1505,7 +1525,6 @@ Impossibile trovare il layout %s per la tabella codici %i.
 .
 :PROGRAM_KEYB_INVCPFILE
 File tabella codici mancante o non valido per il layout %s.
-
 
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
@@ -1903,7 +1922,7 @@ Suggerimento: Per spostarsi su un'altra unit…, digita [color=light-red]%c:[reset
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-il nome della directory Š pi— lungo di 8 caratteri e/o contiene spazi.
+Il nome della directory Š pi— lungo di 8 caratteri e/o contiene spazi.
 Prova [color=light-red]cd %s[reset]
 
 .
@@ -2223,7 +2242,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset] Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
-          e punto di domanda (?). Ô possibile specificare il percorso di
+          o punto di domanda (?). Ô possibile specificare il percorso di
           una directory per elencarne il contenuto.
   [color=white]ORDINAM[reset] Š il tipo di ordinamento scelto, cioŠ: [color=white]n[reset] (per nome, alfabetico),
           [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
@@ -2518,11 +2537,11 @@ Rinomina uno o pi— file.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Utilizzo:
-  [color=green]ren[reset] [color=white]SORGENTE[reset] [color=cyan]DESTINAZIONE[reset]
-  [color=green]rename[reset] [color=white]SORGENTE[reset] [color=cyan]DESTINAZIONE[reset]
+  [color=green]ren[reset] [color=white]ORIGINE[reset] [color=cyan]DESTINAZIONE[reset]
+  [color=green]rename[reset] [color=white]ORIGINE[reset] [color=cyan]DESTINAZIONE[reset]
 
 Dove:
-  [color=white]SORGENTE[reset]     Š il nome del file da rinominare.
+  [color=white]ORIGINE[reset]      Š il nome del file da rinominare.
   [color=cyan]DESTINAZIONE[reset] Š il nuovo nome del file.
 
 Note:
@@ -2567,22 +2586,22 @@ Copia uno o pi— file in un'altra posizione.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Utilizzo:
-  [color=green]copy[reset] [color=white]SORGENTE[reset] [color=cyan][DESTINAZIONE][reset]
-  [color=green]copy[reset] [color=white]SORGENTE1+SORGENTE2[+...][reset] [color=cyan][DESTINAZIONE][reset]
+  [color=green]copy[reset] [color=white]ORIGINE[reset] [color=cyan][DESTINAZIONE][reset]
+  [color=green]copy[reset] [color=white]ORIGINE1+ORIGINE2[+...][reset] [color=cyan][DESTINAZIONE][reset]
 
 Dove:
-  [color=white]SORGENTE[reset]     Š un nome file specifico o con caratteri jolly, cioŠ
+  [color=white]ORIGINE[reset]      Š un nome file specifico o con caratteri jolly, cioŠ
                asterisco(*) o punto di domanda (?).
   [color=cyan]DESTINAZIONE[reset] Š un nome file specifico o una directory che non contiene
                caratteri jolly.
 
 Note:
-  L'operatore [color=white]+[reset] combina pi— file sorgente forniti in un unico file.
+  L'operatore [color=white]+[reset] combina pi— file di origine forniti in un unico file.
   La destinazione Š facoltativa: se omessa, i file verranno copiati nel
   percorso corrente.
 
 Esempi:
-  [color=green]copy[reset] [color=white]sorgente.bat[reset] [color=cyan]nuovo.bat[reset]
+  [color=green]copy[reset] [color=white]origine.bat[reset] [color=cyan]nuovo.bat[reset]
   [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
   [color=green]copy[reset] [color=white]..\c*.*[reset]
 
@@ -2664,7 +2683,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset]  Š un nome file specifico o con caratteri jolly, cioŠ asterisco (*)
-           e punto di domanda (?).
+           o punto di domanda (?).
   [color=cyan]PERCORSO[reset] Š un percorso di un'unit… DOS montata da cui elencare il contenuto.
 
 Note:
@@ -2693,7 +2712,7 @@ Dove:
             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
   [color=cyan]MODELLO[reset]   pu• essere un nome file esatto o un nome file con caratteri jolly,
-            cioŠ asterisco (*) e punto di domanda (?), oppure il nome di
+            cioŠ asterisco (*) o punto di domanda (?), oppure il nome di
             una directory.
 
 Note:

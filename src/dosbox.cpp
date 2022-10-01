@@ -408,9 +408,18 @@ static void DOSBOX_RealInit(Section * sec) {
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 }
 
-void DOSBOX_Init() {
-	Section_prop * secprop;
-	Prop_int* Pint;
+// Returns decimal seconds of elapsed uptime.
+// The first call starts the uptime counter (and returns 0.0 seconds of uptime).
+double DOSBOX_GetUptime()
+{
+	static auto start_ms = GetTicks();
+	return GetTicksSince(start_ms) / millis_in_second;
+}
+
+void DOSBOX_Init()
+{
+	Section_prop *secprop;
+	Prop_int *Pint;
 	Prop_int *pint = nullptr;
 	Prop_hex* Phex;
 	Prop_string* Pstring; // use pstring when touching properties
@@ -437,7 +446,7 @@ void DOSBOX_Init() {
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
-	        "Select a language to use: de, en, es, fr, it, pl, and ru\n"
+	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru\n"
 	        "Notes: This setting will override the 'LANG' environment, if set.\n"
 	        "       The 'resources/translations' directory bundled with the executable holds\n"
 	        "       these files. Please keep it along-side the executable to support this feature.");
@@ -1229,9 +1238,14 @@ void DOSBOX_Init() {
 		"You can put your MOUNT lines here.\n"
 	);
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for dosbox-staging (%s).\n"
+	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
+
+	// Initialize the uptime counter when launching the first shell. This
+	// ensures that slow-performing configurable tasks (like loading MIDI
+	// SF2 files) have already been performed and won't affect this time.
+	(void)DOSBOX_GetUptime();
 
 	control->SetStartUp(&SHELL_Init);
 }

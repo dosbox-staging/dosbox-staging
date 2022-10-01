@@ -874,23 +874,24 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			samples = bytes_read / dma16_to_sample_divisor + sb.dma.remain_size;
 			frames = check_cast<uint16_t>(samples / channels);
 
+			// Only add whole frames when in stereo DMA mode
 			if (frames) {
-				// Only add whole frames when in stereo DMA mode, or
+				const auto dma16_buf = &sb.dma.buf.b16[sb.dma.remain_size];
 #if defined(WORDS_BIGENDIAN)
 				if (sb.dma.sign) {
 					sb.chan->AddSamples_s16_nonnative(frames,
-					            maybe_silence(samples, sb.dma.buf.b16));
+					            maybe_silence(samples, dma16_buf));
 				} else {
 					sb.chan->AddSamples_s16u_nonnative(frames,
-					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(dma16_buf)));
 				}
 #else
 				if (sb.dma.sign) {
 					sb.chan->AddSamples_s16(frames,
-					            maybe_silence(samples, sb.dma.buf.b16));
+					            maybe_silence(samples, dma16_buf));
 				} else {
 					sb.chan->AddSamples_s16u(frames,
-					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(dma16_buf)));
 				}
 #endif
 			}

@@ -1,5 +1,14 @@
-/* Version number of package */
-#define VERSION "0.79.0"
+/* Project name, lower-case and without spaces */
+#define CANONICAL_PROJECT_NAME "dosbox-staging"
+
+// Emulator Semantic Version (MAJOR.MINOR.PATCH), incremented as follows:
+//  - MAJOR version when you make incompatible API changes
+//  - MINOR version when you add functionality in a backwards compatible manner
+//  - PATCH version when you make backwards compatible bug fixes
+// Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+// Ref: https://semver.org/
+
+#define VERSION "0.80.0-alpha"
 
 /* This macro is going to be overriden via CI */
 #define DOSBOX_DETAILED_VERSION "git"
@@ -96,6 +105,12 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+// On *nix systems, this variable holds a (potentially) custom path
+// configured during compile-time by setting Meson's "--datadir"
+// On Windows, this path is not customizeable, so it's left blank here.
+//
+#define CUSTOM_DATADIR ""
 
 /* Loguru-related defines
  */
