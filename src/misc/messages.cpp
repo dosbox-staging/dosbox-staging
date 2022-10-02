@@ -50,10 +50,23 @@ private:
 	std::string markup_msg = {};
 	std::string rendered_msg = {};
 
-	std::map<uint16_t, std::string> markup_cp_msg   = {};
-	std::map<uint16_t, std::string> rendered_cp_msg = {};
+	std::map<uint16_t, std::string> markup_msg_by_codepage   = {};
+	std::map<uint16_t, std::string> rendered_msg_by_codepage = {};
 
 	bool is_utf8_msg = false;
+
+	const char *CachedRenderString(const std::string &msg,
+	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
+	{
+		const uint16_t cp = UTF8_GetCodePage();
+		if (output_msg_by_codepage[cp].empty()) {
+			if (!UTF8_RenderForDos(msg, output_msg_by_codepage[cp], cp))
+				LOG_WARNING("LANG: Problem rendering string");
+			assert(output_msg_by_codepage[cp].length());
+		}
+
+		return output_msg_by_codepage[cp].c_str();
+	}
 
 public:
 	Message() = delete;
@@ -69,13 +82,7 @@ public:
 		if (!is_utf8_msg)
 			return markup_msg.c_str();
 
-		const uint16_t cp = UTF8_GetCodePage();
-		if (markup_cp_msg[cp].empty()) {
-			if (!UTF8_RenderForDos(markup_msg, markup_cp_msg[cp], cp))
-			LOG_WARNING("LANG: Problem rendering markup string");
-			assert(markup_cp_msg[cp].length());
-		}
-		return markup_cp_msg[cp].c_str();
+		return CachedRenderString(markup_msg, markup_msg_by_codepage);
 	}
 
 	const char *GetRendered()
@@ -88,13 +95,7 @@ public:
 		if (!is_utf8_msg)
 			return rendered_msg.c_str();
 
-		const uint16_t cp = UTF8_GetCodePage();
-		if (rendered_cp_msg[cp].empty()) {
-			if (!UTF8_RenderForDos(rendered_msg, rendered_cp_msg[cp], cp))
-				LOG_WARNING("LANG: Problem rendering string");
-			assert(rendered_cp_msg[cp].length());
-		}
-		return rendered_cp_msg[cp].c_str();
+		return CachedRenderString(rendered_msg, rendered_msg_by_codepage);
 	}
 
 	void Set(const char *markup, const bool is_utf8)
@@ -104,8 +105,8 @@ public:
 		is_utf8_msg = is_utf8;
 
 		rendered_msg.clear();
-		markup_cp_msg.clear();
-		rendered_cp_msg.clear();
+		markup_msg_by_codepage.clear();
+		rendered_msg_by_codepage.clear();
 	}
 };
 
@@ -122,17 +123,19 @@ static void msg_add(const char *name, const char *markup_msg, const bool is_utf8
 // Add the message if it doesn't exist yet
 void MSG_Add(const char *name, const char *markup_msg)
 {
-	msg_add(name, markup_msg, false);
+	constexpr auto is_utf8 = false;
+	msg_add(name, markup_msg, is_utf8);
 }
 
 // Replace existing or add if it doesn't exist
 static void msg_replace(const char *name, const char *markup_msg)
 {
+	constexpr auto is_utf8 = true;
 	auto it = messages.find(name);
 	if (it == messages.end())
-		msg_add(name, markup_msg, true);
+		msg_add(name, markup_msg, is_utf8);
 	else
-		it->second.Set(markup_msg, true);
+		it->second.Set(markup_msg, is_utf8);
 }
 
 static bool load_message_file(const std_fs::path &filename)
@@ -241,6 +244,10 @@ bool MSG_Write(const char * location) {
 
 void MSG_Init([[maybe_unused]] Section_prop *section)
 {
+	// TODO: After migration to C++20 try to switch to constexpr
+	static const std_fs::path subdir   = "translations";
+	static const std::string extension = ".lng";
+
 	const auto lang = SETUP_GetLanguage();
 
 	// If the language is english, then use the internal message
@@ -251,10 +258,10 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 
 	bool result = false;
 	if (ends_with(lang, ".lng"))
-		result = load_message_file(GetResourcePath("translations", lang));
+		result = load_message_file(GetResourcePath(subdir, lang));
 	else
 		// If a short-hand name was provided then add the file extension
-		result = load_message_file(GetResourcePath("translations", lang + ".lng"));
+		result = load_message_file(GetResourcePath(subdir, lang + extension));
 
 	if (result)
 		return;
