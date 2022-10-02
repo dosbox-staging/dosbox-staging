@@ -83,8 +83,6 @@ public:
 	KeyboardLayout &operator=(const KeyboardLayout &) = delete; // prevent
 	                                                            // assignment
 
-	~KeyboardLayout();
-
 	// read in a codepage from a .cpi-file
 	KeyboardErrorCode ReadCodePageFile(const char *codepage_file_name,
 	                                   const int32_t codepage_id);
@@ -131,10 +129,11 @@ private:
 
 	bool use_foreign_layout = false;
 
-	// language code storage used when switching layouts
-	char **language_codes    = nullptr;
-	uint16_t language_code_count = 0;
+	// the list of language codes supported by this layout. Used when
+	// switching layouts.
+	std::list<std::string> language_codes = {};
 
+	bool HasLanguageCode(const char *requested_code);
 	void ResetLanguageCodes();
 
 	void Reset();
@@ -162,7 +161,7 @@ void KeyboardLayout::Reset()
 	diacritics_entries=0;		// no diacritics loaded
 	diacritics_character=0;
 	user_keys=0;				// all userkeys off
-	ResetLanguageCodes();
+	language_codes.clear();
 }
 
 KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
@@ -281,32 +280,6 @@ static bool load_builtin_keyboard_layouts(const char *layout_id, FILE_unique_ptr
 	return false;
 }
 
-void KeyboardLayout::ResetLanguageCodes()
-{
-	// Check expected states:
-	//  - If we have a count of zero, the language_codes container might
-	//    still be allocated.
-	//  - If we have a positive count, then the language_codes container
-	//    must exist.
-	assert(language_code_count == 0 ||
-	       (language_code_count > 0 && language_codes != nullptr));
-
-	// Cleanup each loaded code
-	for (uint16_t i = 0; i < language_code_count; ++i)
-		delete[] language_codes[i];
-	language_code_count = 0;
-
-	// Delete the container-of-codes, which is allocated prior to loading
-	// indivual codes.
-	delete[] language_codes;
-	language_codes = nullptr;
-}
-
-KeyboardLayout::~KeyboardLayout()
-{
-	ResetLanguageCodes();
-}
-
 KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
                                                    const int32_t specific_layout,
                                                    const int32_t requested_codepage)
@@ -362,23 +335,21 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 	assert(data_len < UINT8_MAX);
 	static_assert(UINT8_MAX < sizeof(read_buf), "read_buf too small");
 
-	ResetLanguageCodes();
-	language_codes=new char*[data_len];
-	language_code_count=0;
+	language_codes.clear();
 	// get all language codes for this layout
 	for (uint16_t i = 0; i < data_len;) {
-		language_codes[language_code_count]=new char[256];
 		i+=2;
-		uint16_t lng_pos = 0;
+		std::string language_code = {};
 		for (;i<data_len;) {
 			assert(start_pos + i < sizeof(read_buf));
 			char lcode=char(read_buf[start_pos+i]);
 			i++;
 			if (lcode==',') break;
-			language_codes[language_code_count][lng_pos++] = lcode;
+			language_code.push_back(lcode);
 		}
-		language_codes[language_code_count][lng_pos] = 0;
-		language_code_count++;
+		if (!language_code.empty()) {
+			language_codes.emplace_back(std::move(language_code));
+		}
 	}
 
 	start_pos+=data_len;		// start_pos==absolute position of KeybCB block
@@ -1096,31 +1067,29 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 	return KEYB_INVALIDCPFILE;
 }
 
+bool KeyboardLayout::HasLanguageCode(const char *requested_code)
+{
+	for (const auto &language_code : language_codes)
+		if (string_iequals(language_code, requested_code))
+			return true;
+	return false;
+}
+
 KeyboardErrorCode KeyboardLayout::SwitchKeyboardLayout(const char *new_layout,
                                                        KeyboardLayout *&created_layout,
                                                        int32_t &tried_cp)
 {
-	if (strncasecmp(new_layout, "US", 2)) {
+	assert(new_layout);
+
+	if (!string_iequals(new_layout, "US")) {
 		// switch to a foreign layout
-		char tbuf[256];
-		safe_strcpy(tbuf, new_layout);
-		size_t newlen=strlen(tbuf);
 
-		bool language_code_found=false;
-		// check if language code is present in loaded foreign layout
-		for (uint16_t i = 0; i < language_code_count; ++i) {
-			if (!strncasecmp(tbuf,language_codes[i],newlen)) {
-				language_code_found=true;
-				break;
-			}
-		}
-
-		if (language_code_found) {
+		if (HasLanguageCode(new_layout)) {
 			if (!use_foreign_layout) {
 				// switch to foreign layout
 				use_foreign_layout  = true;
 				diacritics_character=0;
-				LOG(LOG_BIOS,LOG_NORMAL)("Switched to layout %s",tbuf);
+				LOG(LOG_BIOS, LOG_NORMAL)("Switched to layout %s", new_layout);
 			}
 		} else {
 			KeyboardLayout *temp_layout = new KeyboardLayout();
@@ -1172,8 +1141,9 @@ const char *KeyboardLayout::GetLayoutName()
 
 const char *KeyboardLayout::GetMainLanguageCode()
 {
-	if (language_codes) {
-		return language_codes[0];
+	if (!language_codes.empty()) {
+		assert(!language_codes.front().empty());
+		return language_codes.front().c_str();
 	}
 	return nullptr;
 }
