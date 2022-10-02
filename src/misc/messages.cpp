@@ -50,14 +50,12 @@ private:
 	std::string markup_msg = {};
 	std::string rendered_msg = {};
 
-	std::map<uint16_t, std::string> markup_msg_by_codepage   = {};
 	std::map<uint16_t, std::string> rendered_msg_by_codepage = {};
-
-	bool is_utf8_msg = false;
 
 	const char *CachedRenderString(const std::string &msg,
 	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
 	{
+		assert(msg.length());
 		const uint16_t cp = UTF8_GetCodePage();
 		if (output_msg_by_codepage[cp].empty()) {
 			if (!UTF8_RenderForDos(msg, output_msg_by_codepage[cp], cp))
@@ -70,19 +68,15 @@ private:
 
 public:
 	Message() = delete;
-	Message(const char *markup, const bool is_utf8)
+	Message(const char *markup)
 	{
-		Set(markup, is_utf8);
+		Set(markup);
 	}
 
-	const char *GetMarkup()
+	const char *GetRaw()
 	{
 		assert(markup_msg.length());
-
-		if (!is_utf8_msg)
-			return markup_msg.c_str();
-
-		return CachedRenderString(markup_msg, markup_msg_by_codepage);
+		return markup_msg.c_str();
 	}
 
 	const char *GetRendered()
@@ -90,22 +84,26 @@ public:
 		assert(markup_msg.length());
 		if (rendered_msg.empty())
 			rendered_msg = convert_ansi_markup(markup_msg.c_str());
+
 		assert(rendered_msg.length());
+		const uint16_t cp = UTF8_GetCodePage();
+		if (rendered_msg_by_codepage[cp].empty()) {
+			if (!UTF8_RenderForDos(rendered_msg,
+			                       rendered_msg_by_codepage[cp],
+			                       cp))
+				LOG_WARNING("LANG: Problem rendering string");
+			assert(rendered_msg_by_codepage[cp].length());
+		}
 
-		if (!is_utf8_msg)
-			return rendered_msg.c_str();
-
-		return CachedRenderString(rendered_msg, rendered_msg_by_codepage);
+		return rendered_msg_by_codepage[cp].c_str();
 	}
 
-	void Set(const char *markup, const bool is_utf8)
+	void Set(const char *markup)
 	{
 		assert(markup);
-		markup_msg  = markup;
-		is_utf8_msg = is_utf8;
+		markup_msg = markup;
 
 		rendered_msg.clear();
-		markup_msg_by_codepage.clear();
 		rendered_msg_by_codepage.clear();
 	}
 };
@@ -113,29 +111,22 @@ public:
 static std::unordered_map<std::string, Message> messages;
 static std::deque<std::string> messages_order;
 
-static void msg_add(const char *name, const char *markup_msg, const bool is_utf8)
-{
-	const auto &pair = messages.try_emplace(name, markup_msg, is_utf8);
-	if (pair.second) // if the insertion was successful
-		messages_order.emplace_back(name);
-}
-
 // Add the message if it doesn't exist yet
 void MSG_Add(const char *name, const char *markup_msg)
 {
-	constexpr auto is_utf8 = false;
-	msg_add(name, markup_msg, is_utf8);
+	const auto &pair = messages.try_emplace(name, markup_msg);
+	if (pair.second) // if the insertion was successful
+		messages_order.emplace_back(name);
 }
 
 // Replace existing or add if it doesn't exist
 static void msg_replace(const char *name, const char *markup_msg)
 {
-	constexpr auto is_utf8 = true;
 	auto it = messages.find(name);
 	if (it == messages.end())
-		msg_add(name, markup_msg, is_utf8);
+		MSG_Add(name, markup_msg);
 	else
-		it->second.Set(markup_msg, is_utf8);
+		it->second.Set(markup_msg);
 }
 
 static bool load_message_file(const std_fs::path &filename)
@@ -226,7 +217,7 @@ bool MSG_Write(const char * location) {
 		return false;
 
 	for (const auto &name : messages_order)
-		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetMarkup());
+		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetRaw());
 
 	fclose(out);
 	return true;
