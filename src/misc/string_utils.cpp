@@ -179,6 +179,16 @@ std::vector<std::string> split(const std::string &seq)
 	return words;
 }
 
+bool char_iequals(const char a, const char b)
+{
+	return tolower(a) == tolower(b);
+}
+
+bool string_iequals(const std::string &a, const std::string &b)
+{
+	return std::equal(a.begin(), a.end(), b.begin(), b.end(), char_iequals);
+}
+
 char *strip_word(char *&line)
 {
 	char *scan = line;
