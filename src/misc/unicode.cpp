@@ -56,11 +56,11 @@ private:
     uint16_t mark_1st = 0;
     uint16_t mark_2nd = 0;
 
-    bool empty = true;
-    bool valid = true;
+    bool is_empty = true;
+    bool is_valid = true;
 };
 
-using code_page_mapping_t = std::map<Grapheme, uint8_t>; // UTF-8 -> code page
+using code_page_mapping_t         = std::map<Grapheme, uint8_t>; // UTF-8 -> code page
 using code_page_mapping_reverse_t = std::map<uint8_t, Grapheme>;
 
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
@@ -105,11 +105,11 @@ static config_duplicates_t config_duplicates = {};
 static code_page_mapping_t mapping_ascii = {};
 
 // Concrete UTF-8 -> codepage mappings
-static std::map<uint16_t, code_page_mapping_t> mappings = {};
+static std::map<uint16_t, code_page_mapping_t> mappings_by_codepage = {};
 // Additional UTF-8 -> codepage mappings, to avoid unknown characters
-static std::map<uint16_t, code_page_mapping_t> mappings_aliases = {};
+static std::map<uint16_t, code_page_mapping_t> aliases_by_codepage = {};
 // Reverse mappings, codepage -> UTF-8
-static std::map<uint16_t, code_page_mapping_reverse_t> mappings_reverse = {};
+static std::map<uint16_t, code_page_mapping_reverse_t> reverse_by_codepage = {};
 
 // ***************************************************************************
 // Grapheme type implementation
@@ -134,7 +134,7 @@ static bool is_combining_mark(const uint32_t code_point)
 
 Grapheme::Grapheme(const uint16_t code_point) :
     code_point(code_point),
-    empty(false)
+    is_empty(false)
 {
     // It is not valid to have a combining mark
     // as a main code point of the grapheme
@@ -145,12 +145,12 @@ Grapheme::Grapheme(const uint16_t code_point) :
 
 bool Grapheme::IsEmpty() const
 {
-    return empty;
+    return is_empty;
 }
 
 bool Grapheme::IsValid() const
 {
-    return valid;
+    return is_valid;
 }
 
 bool Grapheme::HasMark() const
@@ -165,8 +165,8 @@ uint16_t Grapheme::GetCodePoint() const
 
 void Grapheme::Invalidate()
 {
-    empty = false;
-    valid = false;
+    is_empty = false;
+    is_valid = false;
 
     code_point = unknown_character;
     mark_1st   = 0;
@@ -175,10 +175,10 @@ void Grapheme::Invalidate()
 
 void Grapheme::AddMark(const uint16_t code_point)
 {
-    if (!valid)
+    if (!is_valid)
         return; // can't add combining mark to invalid grapheme
 
-    if (!is_combining_mark(code_point) || empty) {
+    if (!is_combining_mark(code_point) || is_empty) {
         Invalidate(); // not a combining mark or empty grapheme
         return;
     }
@@ -217,22 +217,22 @@ bool Grapheme::operator<(const Grapheme &other) const
     else if (mark_2nd > other.mark_2nd)
         return false;
 
-    if (!empty && other.empty)
+    if (!is_empty && other.is_empty)
         return true;
-    else if (empty && !other.empty)
+    else if (is_empty && !other.is_empty)
         return false;
 
-    if (!valid && other.valid)
+    if (!is_valid && other.is_valid)
         return true;
-    else if (valid && !other.valid)
+    else if (is_valid && !other.is_valid)
         return false;
 
     // '*this == other' condition is, unfortunately, not recognized by older compilers
     assert(code_point == other.code_point &&
            mark_1st   == other.mark_1st &&
            mark_2nd   == other.mark_2nd &&
-           empty      == other.empty &&
-           valid      == other.valid);
+           is_empty   == other.is_empty &&
+           is_valid   == other.is_valid);
 
     return false;
 }
@@ -367,20 +367,20 @@ static bool wide_to_code_page(const std::vector<uint16_t> &str_in,
     bool status = true;
     str_out.clear();
 
-    code_page_mapping_t *mapping         = nullptr;
-    code_page_mapping_t *mapping_aliases = nullptr;
+    code_page_mapping_t *mapping = nullptr;
+    code_page_mapping_t *aliases = nullptr;
 
     // Try to find UTF8 -> code page mapping
     if (code_page != 0) {
-        const auto it = mappings.find(code_page);
-        if (it != mappings.end())
+        const auto it = mappings_by_codepage.find(code_page);
+        if (it != mappings_by_codepage.end())
             mapping = &it->second;
         else
             warn_code_page(code_page);
 
-        const auto it_alias = mappings_aliases.find(code_page);
-        if (it_alias != mappings_aliases.end())
-            mapping_aliases = &it_alias->second;
+        const auto it_alias = aliases_by_codepage.find(code_page);
+        if (it_alias != aliases_by_codepage.end())
+            aliases = &it_alias->second;
     }
 
     // Handle code points which are 7-bit ASCII characters
@@ -440,7 +440,7 @@ static bool wide_to_code_page(const std::vector<uint16_t> &str_in,
         auto push = [&](const Grapheme &grapheme) {
             return push_7bit(grapheme) ||
                    push_code_page(mapping, grapheme) ||
-                   push_code_page(mapping_aliases, grapheme) ||
+                   push_code_page(aliases, grapheme) ||
                    push_fallback(grapheme);
         };
 
@@ -759,9 +759,9 @@ static void import_config_main(const std_fs::path &path_root)
 
     uint16_t curent_code_page = 0;
 
-    config_mappings_t new_config_mappings;
+    config_mappings_t   new_config_mappings;
     config_duplicates_t new_config_duplicates;
-    config_aliases_t new_config_aliases;
+    config_aliases_t    new_config_aliases;
 
     while (get_line(in_file, line_str, line_num)) {
         std::vector<std::string> tokens;
@@ -974,9 +974,9 @@ static bool construct_mapping(const uint16_t code_page)
     already_tried.insert(code_page);
 
     assert(config_mappings.count(code_page));
-    assert(!mappings.count(code_page));
-    assert(!mappings_reverse.count(code_page));
-    assert(!mappings.count(code_page));
+    assert(!mappings_by_codepage.count(code_page));
+    assert(!reverse_by_codepage.count(code_page));
+    assert(!mappings_by_codepage.count(code_page));
 
     // First apply mapping found in main config file
 
@@ -1011,7 +1011,7 @@ static bool construct_mapping(const uint16_t code_page)
             return false;
         }
 
-        for (const auto &entry : mappings[dependency])
+        for (const auto &entry : mappings_by_codepage[dependency])
             add_to_mappings(entry.second, entry.first);
     }
 
@@ -1028,38 +1028,38 @@ static bool construct_mapping(const uint16_t code_page)
              add_to_mappings(entry.first, entry.second);
     }
 
-    mappings[code_page]         = new_mapping;
-    mappings_reverse[code_page] = new_mapping_reverse;
+    mappings_by_codepage[code_page] = new_mapping;
+    reverse_by_codepage[code_page] = new_mapping_reverse;
     return true;
 }
 
-static void construct_mapping_aliases(const uint16_t code_page)
+static void construct_aliases(const uint16_t code_page)
 {
-    assert(!mappings_aliases.count(code_page));
-    assert(mappings.count(code_page));
+    assert(!aliases_by_codepage.count(code_page));
+    assert(mappings_by_codepage.count(code_page));
 
-    const auto &mapping   = mappings[code_page];
-    auto &mapping_aliases = mappings_aliases[code_page];
+    const auto &mapping = mappings_by_codepage[code_page];
+    auto &aliases       = aliases_by_codepage[code_page];
 
     for (const auto &alias : config_aliases)
         if (!mapping.count(alias.first) && mapping.count(alias.second) &&
-            !mapping_aliases.count(alias.first))
-            mapping_aliases[alias.first] = mapping.find(alias.second)->second;
+            !aliases.count(alias.first))
+            aliases[alias.first] = mapping.find(alias.second)->second;
 }
 
 static bool prepare_code_page(const uint16_t code_page)
 {
-    if (mappings.count(code_page))
+    if (mappings_by_codepage.count(code_page))
         return true; // code page already prepared
 
     if (!config_mappings.count(code_page) || !construct_mapping(code_page)) {
         // Unsupported code page or error
-        mappings.erase(code_page);
-        mappings_reverse.erase(code_page);
+        mappings_by_codepage.erase(code_page);
+        reverse_by_codepage.erase(code_page);
         return false;
     }
 
-    construct_mapping_aliases(code_page);
+    construct_aliases(code_page);
     return true;
 }
 
@@ -1147,11 +1147,11 @@ void UTF8_FromScreenCode(const uint8_t character_in, std::vector<uint16_t> &str_
         const uint16_t cp = deduplicate_code_page(code_page);
         prepare_code_page(cp);
 
-        if (!mappings_reverse.count(cp) ||
-            !mappings_reverse[cp].count(character_in))
+        if (!reverse_by_codepage.count(cp) ||
+            !reverse_by_codepage[cp].count(character_in))
             str_out.push_back(' ');
         else
-            (mappings_reverse[cp])[character_in].PushInto(str_out);
+            (reverse_by_codepage[cp])[character_in].PushInto(str_out);
 
     } else {
 
