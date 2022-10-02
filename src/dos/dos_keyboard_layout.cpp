@@ -135,6 +135,8 @@ private:
 	char **language_codes    = nullptr;
 	uint16_t language_code_count = 0;
 
+	void ResetLanguageCodes();
+
 	void Reset();
 	void ReadKeyboardFile(const int32_t specific_layout);
 
@@ -145,16 +147,6 @@ private:
 	bool SetMapKey(const uint8_t key, const uint16_t layouted_key,
 	               const bool is_command, const bool is_keypair);
 };
-
-KeyboardLayout::~KeyboardLayout()
-{
-	if (language_codes) {
-		for (uint16_t i = 0; i < language_code_count; ++i)
-			delete[] language_codes[i];
-		delete[] language_codes;
-		language_codes = nullptr;
-	}
-}
 
 void KeyboardLayout::Reset()
 {
@@ -170,7 +162,7 @@ void KeyboardLayout::Reset()
 	diacritics_entries=0;		// no diacritics loaded
 	diacritics_character=0;
 	user_keys=0;				// all userkeys off
-	language_code_count=0;
+	ResetLanguageCodes();
 }
 
 KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
@@ -289,6 +281,32 @@ static bool load_builtin_keyboard_layouts(const char *layout_id, FILE_unique_ptr
 	return false;
 }
 
+void KeyboardLayout::ResetLanguageCodes()
+{
+	// Check expected states:
+	//  - If we have a count of zero, the language_codes container might
+	//    still be allocated.
+	//  - If we have a positive count, then the language_codes container
+	//    must exist.
+	assert(language_code_count == 0 ||
+	       (language_code_count > 0 && language_codes != nullptr));
+
+	// Cleanup each loaded code
+	for (uint16_t i = 0; i < language_code_count; ++i)
+		delete[] language_codes[i];
+	language_code_count = 0;
+
+	// Delete the container-of-codes, which is allocated prior to loading
+	// indivual codes.
+	delete[] language_codes;
+	language_codes = nullptr;
+}
+
+KeyboardLayout::~KeyboardLayout()
+{
+	ResetLanguageCodes();
+}
+
 KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_name,
                                                    const int32_t specific_layout,
                                                    const int32_t requested_codepage)
@@ -344,6 +362,7 @@ KeyboardErrorCode KeyboardLayout::ReadKeyboardFile(const char *keyboard_file_nam
 	assert(data_len < UINT8_MAX);
 	static_assert(UINT8_MAX < sizeof(read_buf), "read_buf too small");
 
+	ResetLanguageCodes();
 	language_codes=new char*[data_len];
 	language_code_count=0;
 	// get all language codes for this layout
