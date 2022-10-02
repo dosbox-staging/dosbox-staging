@@ -1413,7 +1413,6 @@ Keyboard layout %s loaded for codepage %i
 :PROGRAM_KEYB_FILENOTFOUND
 Keyboard file %s not found
 
-
 .
 :PROGRAM_KEYB_INVALIDFILE
 Keyboard file %s invalid
@@ -1425,7 +1424,6 @@ No layout in %s for codepage %i
 .
 :PROGRAM_KEYB_INVCPFILE
 None or invalid codepage file for layout %s
-
 
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
