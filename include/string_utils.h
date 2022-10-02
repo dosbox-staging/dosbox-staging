@@ -154,6 +154,10 @@ inline bool is_empty(const char *str) noexcept
 	return str[0] == '\0';
 }
 
+// case-insensitive comparisons
+bool char_iequals(const char a, const char b);
+bool string_iequals(const std::string &a, const std::string &b);
+
 char *strip_word(char *&cmd);
 
 std::string replace(const std::string &str, char old_char, char new_char) noexcept;
