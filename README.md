@@ -172,6 +172,14 @@ sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel 
 ```
 
 ``` shell
+# Void Linux
+sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
+                     fluidsynth-devel libiir1-devel libmt32emu-devel \
+                     libpng-devel libslirp-devel opusfile-devel \
+                     speexdsp-devel libatomic-devel
+```
+
+``` shell
 # macOS
 xcode-select --install
 brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp speexdsp
