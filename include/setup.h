@@ -153,6 +153,7 @@ public:
 	void Set_help(const std::string &str);
 
 	const char* GetHelp() const;
+	const char* GetHelpUtf8() const;
 
 	virtual bool SetValue(const std::string &str) = 0;
 	const Value &GetValue() const

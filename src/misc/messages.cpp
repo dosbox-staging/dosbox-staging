@@ -45,6 +45,8 @@
 
 CHECK_NARROWING();
 
+static const char *msg_not_found = "Message not Found!\n";
+
 class Message {
 private:
 	std::string markup_msg = {};
@@ -199,10 +201,17 @@ static bool load_message_file(const std_fs::path &filename)
 const char *MSG_Get(char const *requested_name)
 {
 	const auto it = messages.find(requested_name);
-	if (it != messages.end()) {
+	if (it != messages.end())
 		return it->second.GetRendered();
-	}
-	return "Message not Found!\n";
+	return msg_not_found;
+}
+
+const char* MSG_GetRaw(char const *requested_name)
+{
+	const auto it = messages.find(requested_name);
+	if (it != messages.end())
+		return it->second.GetRaw();
+	return msg_not_found;
 }
 
 bool MSG_Exists(const char *requested_name)
