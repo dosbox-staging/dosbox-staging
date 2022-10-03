@@ -134,7 +134,7 @@ Feature differences between release binaries (or unpatched sources):
 
 ## Get the source
 
-  - Clone the repository (one-time step):
+- Clone the repository (one-time step):
 
     ``` shell
     git clone https://github.com/dosbox-staging/dosbox-staging.git
@@ -160,7 +160,6 @@ DOSBox Staging has the following library dependencies:
 | [SpeexDSP](https://github.com/xiph/speexdsp) (speexdsp)          | n/a         | Audio resampling                               | Mandatory | yes        | yes   | common            |
 | [Tracy Profiler](https://github.com/wolfpld/tracy) (tracy)       | n/a         | Event profile (development)                    | Optional  | yes        | yes   | rare              |
 | [Zlib](https://z-lib.org/) (zlib)                                | 1.2.11      | ZMBV video capture                             | Optional  | yes        | yes   | very common       |
-
 
 ### Linux, macOS
 
@@ -209,20 +208,20 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
 
 ### Build and stay up-to-date with the latest sources
 
-  - Checkout the main branch:
+- Checkout the main branch:
 
     ``` shell
     # commit or stash any personal code changes
     git checkout main -f
     ```
 
-  - Pull the latest updates. This is necessary every time you want a new build:
+- Pull the latest updates. This is necessary every time you want a new build:
 
     ``` shell
     git pull
     ```
 
-  - Setup the build. This is a one-time step either after cloning the repo or
+- Setup the build. This is a one-time step either after cloning the repo or
     cleaning your working directories:
 
     ``` shell
@@ -232,8 +231,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
     The above enables all of DOSBox Staging's functional features. If you're
     interested in seeing all of Meson's setup options, run: `meson configure`.
 
-
-  - Compile the sources. This is necessary every time you want a new build:
+- Compile the sources. This is necessary every time you want a new build:
 
     ``` shell
     meson compile -C build
@@ -254,14 +252,14 @@ is bootstrapped, open PowerShell and run:
 PS:\> .\vcpkg integrate install
 ```
 
-This step will ensure that MSVC can use vcpkg to build, find and links all 
+This step will ensure that MSVC can use vcpkg to build, find and links all
 dependencies.
 
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
-Note, the first time you build a configuration, dependencies will be built 
-automatically and stored in the `vcpkg_installed` directory. This can take 
+Note, the first time you build a configuration, dependencies will be built
+automatically and stored in the `vcpkg_installed` directory. This can take
 a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
@@ -279,7 +277,7 @@ in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
 
 ## Imported branches, community patches, old forks
 
-Commits landing in SVN upstream are imported to this repo in a timely manner,
+Upstream commits are imported to this repo in a timely manner,
 see branch [`svn/trunk`].
 
 - [`svn/*`] - branches from SVN
