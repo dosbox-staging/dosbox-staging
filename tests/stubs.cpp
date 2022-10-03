@@ -34,6 +34,10 @@ const char *MSG_Get(char const *)
 {
 	return nullptr;
 }
+const char *MSG_GetRaw(char const *)
+{
+    return nullptr;
+}
 
 #if C_DEBUG
 void LOG::operator()([[maybe_unused]] char const *buf, ...)
