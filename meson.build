@@ -307,15 +307,16 @@ atomic_code = '''
 #include <atomic>
 #include <cstdint>
 int main() {
-  std::atomic<std::int16_t> x16 = 1;
   std::atomic<std::int32_t> x32 = 1;
-  return static_cast<int>(x32.load() - x16.load());
+  std::atomic<std::int64_t> x64 = 1;
+  return static_cast<int>(x64.load() - x32.load());
 }
 '''
-atomic_dep = dependency('', required: false)
-if not cxx.links(atomic_code, name: 'compiler has built-in atomics')
-    atomic_dep = cxx.find_library('atomic')
-endif
+is_builtin_atomic = cxx.links(
+    atomic_code,
+    name: 'compiler has built-in atomics',
+)
+atomic_dep = dependency('atomic', required: not is_builtin_atomic)
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
