@@ -19,89 +19,60 @@ support today's systems.
 [![Coverity status][coverity-badge]][4]
 [![LGTM grade][lgtm-badge]][3]
 
-## Summary of differences compared to upstream
+## Summary of features
 
 ### For developers
 
-|                                | DOSBox Staging                | DOSBox
-|-                               |-                              |-
-| **Version control**            | Git                           | [SVN]
-| **Language**                   | C++17                         | C++03<sup>[1]</sup>
-| **SDL**                        | >= 2.0.5                      | 1.2<sup>＊</sup>
-| **Logging**                    | Loguru for C++<sup>[6]</sup>  | Yes, in-house class
-| **Buildsystem**                | Meson or Visual Studio 2019   | Autotools or Visual Studio 2003
-| **CI**                         | Yes                           | No
-| **Static analysis**            | Yes<sup>[2],[3],[4],[5]</sup> | No
-| **Dynamic analysis**           | Yes                           | No
-| **clang-format**               | Yes                           | No
-| **[Development builds]**       | Yes                           | No
-| **Unit tests**                 | Yes<sup>[6]</sup>             | No
-| **Automated regression tests** | WIP                           | No
+| **Feature**                    | **Status**
+|-                               |-
+| **Version control**            | Git
+| **Language**                   | C++17
+| **SDL**                        | >= 2.0.5
+| **Logging**                    | Loguru for C++<sup>[5]</sup>  
+| **Buildsystem**                | Meson or Visual Studio 2019
+| **CI**                         | Yes
+| **Static analysis**            | Yes<sup>[1],[2],[3],[4]</sup>
+| **Dynamic analysis**           | Yes
+| **clang-format**               | Yes
+| **[Development builds]**       | Yes
+| **Unit tests**                 | Yes<sup>[6]</sup>
+| **Automated regression tests** | WIP
 
-[SVN]:https://sourceforge.net/projects/dosbox/
-[1]:https://sourceforge.net/p/dosbox/patches/283/
-[2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[3]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
-[4]:https://scan.coverity.com/projects/dosbox-staging
-[5]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[1]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[2]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
+[3]:https://scan.coverity.com/projects/dosbox-staging
+[4]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[5]: https://github.com/emilk/loguru
 [6]:tests/README.md
-[7]: https://github.com/emilk/loguru
 [Development builds]:https://dosbox-staging.github.io/downloads/devel/
 
-### Feature differences
+### For users
 
-DOSBox Staging supports features not included in DOSBox SVN.
-Below is a detailed comparison of feature differences between
-DOSBox Staging and DOSBox SVN.
-
-Codecs supported for CD-DA emulation:
-
-|                | DOSBox Staging<sup>†</sup> | DOSBox SVN<sup>‡</sup>
-|-               |-                           |-
-| **Opus**       | Yes (libopus)              | No
-| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[6],＊</sup>
-| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[6],＊,§</sup>
-| **FLAC**       | Yes (built-in)             | No<sup>§</sup>
-| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
-| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
-
-<sup>＊- SDL 1.2 was last updated 2013-08-17 and SDL\_sound 2008-04-20</sup>\
-<sup>† - 8/16/24 bit-depth, 22.05/44.1/48 kHz, and mono or stereo</sup>\
-<sup>‡ - 44.1 kHz stereo only</sup>\
-<sup>§ - Broken or unsupported in either SDL\_sound or DOSBox</sup>
-
-[6]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
-[7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
-
-Feature differences between release binaries (or unpatched sources):
-
-| *Feature*                   | *DOSBox Staging*                                     | *DOSBox SVN*
-|-                            |-                                                     |-
-| **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`         | N/A
-| **Resizable window**        | Yes: for all `output=opengl` modes                   | N/A
-| **Relative window size**    | Yes: `windowresolution=small`, `medium`, or `large`  | `windowresolution=X%`
-| **Window placement**        | Yes: `windowposition = 0,0`, and more<sup>[16]</sup> | Manual placement
-| **[OPL] emulators**         | compat, fast, mame, nuked<sup>[8]</sup>              | compat, fast, mame
-| **[CGA]/mono support**      | Yes: `machine=cga_mono`)<sup>[9]</sup>               | Only CGA with colour
-| **CGA composite modes**     | Yes: `machine=pcjr/tandy/cga` with hotkeys)          | N/A
-| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`          | N/A
-| **Modem phonebook file**    | Yes: `phonebookfile=<name>`                          | N/A
-| **Autotype command**        | Yes<sup>[10]</sup>                                   | N/A
-| **Startup verbosity**       | Yes<sup>[11]</sup>                                   | N/A
-| **[GUS] enhancements**      | Yes<sup>[12]</sup>                                   | N/A
-| **Raw mouse input**         | Yes: `raw_mouse_input=true`                          | N/A
-| **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x                   | Only external synths
-| **[MT-32] emulator**        | Yes<sup>＊</sup>: libmt32emu 2.4.2                   | N/A
-| **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>                    | 2 MiB of RAM
-| **Portable & layered conf** | By default<sup>[15]</sup>                            | With`-userconf` and `-conf`
-| **Translations handling**   | Bundled, see section 14 in README                    | With path to .lng file
-| **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup> | N/A
-| **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file           | N/A
-| **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`         | N/A
-| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>                  | Yes: bootable HDD image
-
-
-<sup>＊- Requires original ROM files</sup>
+| **Feature**                 | **Status**
+|-                            |-
+| **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
+| **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`
+| **Resizable window**        | Yes, for all `output=opengl` modes
+| **Relative window size**    | `windowresolution=small`, `medium`, or `large`  
+| **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
+| **[OPL] emulator**          |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
+| **[CGA]/mono support**      | `machine=cga_mono`<sup>[9]</sup>
+| **CGA composite modes**     | `machine=pcjr/tandy/cga` with hotkeys)
+| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`
+| **Modem phonebook file**    | `phonebookfile=<name>`
+| **Autotype command**        | Yes<sup>[10]</sup>
+| **Startup verbosity**       | Yes<sup>[11]</sup>
+| **[GUS] enhancements**      | Yes<sup>[12]</sup>
+| **Raw mouse input**         | Yes: `raw_mouse_input=true`
+| **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x
+| **[MT-32] emulator**        | Yes: libmt32emu 2.4.2 (Requires ROM files)
+| **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>
+| **Portable & layered conf** | By default<sup>[15]</sup>
+| **Translations handling**   | Bundled, see section 14 in README
+| **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>
+| **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file
+| **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`
+| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
