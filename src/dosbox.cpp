@@ -619,9 +619,14 @@ void DOSBOX_Init()
 	        "  colodore:      Commodore 64 inspired colors based on the Colodore palette.\n"
 	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
 	        "  dga16:         A modern take on the canonical CGA palette with dialed back contrast.\n"
-			"You can also set custom colors by specifying 16 space or comma separated color values,\n"
-			"either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal\n"
-			"RGB triplets (e.g. (255, 0, 255) for magenta).");
+	        "You can also set custom colors by specifying 16 space or comma separated color values,\n"
+	        "either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal\n"
+	        "RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colors are ordered as follows:\n"
+	        "black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey, light-blue,\n"
+	        "light-green, light-cyan, light-red, light-magenta, yellow, and white.\n"
+	        "Their default values, shown here in 6-digit hex code format, are:\n"
+	        "#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555 #5555ff\n"
+	        "#55ff55 #55ffff #ff5555 #ff55ff #ffff55 and #ffffff, respectively.");
 
 	pmulti = secprop->AddMultiVal("scaler", always, " ");
 	pmulti->SetValue("none");
