@@ -1,5 +1,5 @@
 #
-# Fully supported code pages (91 code pages):
+# Fully supported code pages (92 code pages):
 #
 # 113   - Yugoslavian, Latin
 # 437   - United States
@@ -70,6 +70,7 @@
 # 30017 - Russian Northwestern (Cyrillic Nenets, Latin Karelian, Latin Veps), with EUR
 # 30018 - Russian Cyrillic and Latin Tatar, with EUR
 # 30019 - Russian Cyrillic and Latin Chechen, with EUR (*)
+# 30020 - Low Saxon and Frisian, with EUR
 # 30021 - Oceania, with EUR
 # 30022 - Canadian First Nations, with EUR
 # 30023 - Southern Africa, with EUR
@@ -102,12 +103,10 @@
 # - 30019      : CYRILLIC LIGATURE UO (both SMALL and CAPITAL)
 #
 #
-# Code pages mostly supported (4 code pages), but with unidentified characters still left (TODO):
+# Code pages mostly supported (3 code pages), but with unidentified characters still left (TODO):
 #
 # 864   - Arabic
 #       - 5 characters (FreeDOS specific extension) still unidentified
-# 30020 - Low Saxon and Frisian, with EUR
-#       - 4 characters possibly wrongly identified (not sure)
 # 59829 - Georgian
 #       - 1 character still unidentified
 # 60258 - Russian Cyrillic and Latin Azeri
@@ -1627,16 +1626,14 @@ CODEPAGE 30020 # Low Saxon and Frisian, with EUR
 0x87 0x0101        #LATIN SMALL LETTER A WITH MACRON
 0x9e 0x0133        #LATIN SMALL LIGATURE IJ
 0x9f 0x0132        #LATIN CAPITAL LIGATURE IJ
-# TODO: not sure if 0xa4 and 0xa5 are correctly identified
-0xa4 0x006f 0x0317 #LATIN SMALL LETTER O, COMBINING ACUTE ACCENT BELOW
-0xa5 0x004f 0x0317 #LATIN CAPITAL LETTER O, COMBINING ACUTE ACCENT BELOW
+0xa4 0x01eb        #LATIN SMALL LETTER O WITH OGONEK
+0xa5 0x01ea        #LATIN CAPITAL LETTER O WITH OGONEK
 0xab 0x0153        #LATIN SMALL LIGATURE OE
 0xac 0x0152        #LATIN CAPITAL LIGATURE OE
 0xbd 0x0177        #LATIN SMALL LETTER Y WITH CIRCUMFLEX
 0xbe 0x0176        #LATIN CAPITAL LETTER Y WITH CIRCUMFLEX
-# TODO: not sure if 0xc6 and 0xc7 are correctly identified
-0xc6 0x0065 0x0317 #LATIN SMALL LETTER E, COMBINING ACUTE ACCENT BELOW
-0xc7 0x0045 0x0317 #LATIN CAPITAL LETTER E, COMBINING ACUTE ACCENT BELOW
+0xc6 0x0119        #LATIN SMALL LETTER E WITH OGONEK
+0xc7 0x0118        #LATIN CAPITAL LETTER E WITH OGONEK
 0xd0 0x0113        #LATIN SMALL LETTER E WITH MACRON
 0xd1 0x0112        #LATIN CAPITAL LETTER E WITH MACRON
 0xd5 0x20ac        #EURO SIGN
