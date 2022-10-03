@@ -377,24 +377,30 @@ speexdsp_dep = dependency(
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
 )
 
-# The system has SpeexDSP, so test its floating-point handling
-if speexdsp_dep.found()
+# The library needs to be available and testable to be trusted
+can_trust_system_speexdsp = (
+    speexdsp_dep.found()
+    and meson.can_run_host_binaries()
+)
+
+# Test the library. Trust is dropped if the test fails.
+if can_trust_system_speexdsp
     system_speexdsp_test = cxx.run(
         files('contrib/check-speexdsp/test_speexdsp_float_api.cpp'),
         dependencies: speexdsp_dep,
         name: 'SpeexDSP system library has reliable floating-point API',
     )
-    is_system_speexdsp_reliable = (
+    can_trust_system_speexdsp = (
         system_speexdsp_test.compiled()
         and system_speexdsp_test.returncode() == 0
     )
-    if is_system_speexdsp_reliable
+    if can_trust_system_speexdsp
         speexdsp_summary_msg = 'system library'
     endif
 endif
 
-# The system doesn't have SpeexDSP or it's unreiable, so use the wrap
-if not speexdsp_dep.found() or not is_system_speexdsp_reliable
+# Use the wrap if the system doesn't have SpeexDSP, we couldn't test it, or testing failed
+if not can_trust_system_speexdsp
     speexdsp_dep = subproject(
         'speexdsp',
         default_options: default_wrap_options,
