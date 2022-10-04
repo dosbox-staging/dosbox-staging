@@ -136,14 +136,7 @@ static bool load_message_file(const std_fs::path &filename)
 	if (filename.empty())
 		return false;
 
-	auto check_file = [](const std_fs::path &filename) {
-		if (filename.empty())
-			return false;
-		return (std_fs::status(filename).type() !=
-		        std_fs::file_type::not_found);
-	};
-
-	if (!check_file(filename)) {
+	if (!path_exists(filename) || !is_readable(filename)) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
 		        filename.string().c_str());
 		return false;
