@@ -944,7 +944,8 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			return false;
 		}
-		if (std_fs::remove(overlayname)) {
+		std::error_code ec = {};
+		if (std_fs::remove(overlayname, ec)) {
 			// Overlay file removed, mark basefile as deleted if it
 			// exists:
 			if (localDrive::FileExists(name))
