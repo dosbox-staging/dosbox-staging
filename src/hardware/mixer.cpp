@@ -2746,19 +2746,20 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(blocksizes);
-	int_prop->Set_help(
-	        "Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.");
+	int_prop->Set_help("Mixer block size; larger values might help with sound stuttering but sound will\n"
+	                   "also be more lagged.");
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
 	int_prop->SetMinMax(0, max_prebuffer_ms);
 	int_prop->Set_help(
-	        "How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.");
+	        "How many milliseconds of sound to render on top of the blocksize; larger values\n"
+	        "might help with sound stuttering but sound will also be more lagged.");
 
 	bool_prop = sec_prop.Add_bool("negotiate",
 	                              only_at_start,
 	                              default_allow_negotiate);
-	bool_prop->Set_help(
-	        "Let the system audio driver negotiate (possibly) better rate and blocksize settings.");
+	bool_prop->Set_help("Let the system audio driver negotiate (possibly) better rate and blocksize\n"
+	                    "settings.");
 
 	const auto default_on = true;
 	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
@@ -2772,8 +2773,9 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "Set crossfeed globally on all stereo channels for headphone listening:\n"
 	        "  off:         No crossfeed (default).\n"
 	        "  on:          Enable crossfeed (at strength 40).\n"
-	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
-	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
+	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed\n"
+	        "               (off) and 100 full crossfeed (effectively turning stereo content\n"
+	        "               into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
 
 	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
