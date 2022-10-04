@@ -1203,13 +1203,15 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 
 	bool result = false;
 
-	// check if overlaynameold exista and if so rename it to overlaynamenew
-	if (std_fs::exists(overlaynameold)) {
-		std_fs::rename(overlaynameold, overlaynamenew);
-		result = true; // indicate that the rename succeeded
+	// check if overlaynameold exists and if so rename it to overlaynamenew
+	std::error_code ec = {};
+	if (std_fs::exists(overlaynameold, ec)) {
+		std_fs::rename(overlaynameold, overlaynamenew, ec);
+
+		result = !ec; // success if no error-code
 
 		// Overlay file renamed: mark the old base file as deleted.
-		if (localDrive::FileExists(oldname)) {
+		if (result == true && localDrive::FileExists(oldname)) {
 			add_deleted_file(oldname, true);
 		}
 	} else {
