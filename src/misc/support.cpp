@@ -360,19 +360,30 @@ std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &nam
 static std::vector<std_fs::path> GetFilesInPath(const std_fs::path &dir,
                                                 const std::string_view files_ext)
 {
-	std::vector<std_fs::path> files;
+	using namespace std_fs;
+	std::vector<std_fs::path> files = {};
 
 	// Check if the directory exists
-	if (!std_fs::is_directory(dir))
+	std::error_code ec = {};
+	if (!std_fs::is_directory(dir, ec))
 		return files;
 
 	// Ensure the extension is valid
 	assert(files_ext.length() && files_ext[0] == '.');
 
-	for (const auto &entry : std_fs::recursive_directory_iterator(dir))
-		if (entry.is_regular_file() && entry.path().extension() == files_ext)
-			files.emplace_back(entry.path().lexically_relative(dir));
+	// Keep recursing past permission issues and follow symlinks
+	constexpr auto idir_opts = directory_options::skip_permission_denied |
+	                           directory_options::follow_directory_symlink;
+	for (const auto &entry : recursive_directory_iterator(dir, idir_opts, ec)) {
+		if (ec)
+			break; // problem iterating, so skip the directory
 
+		if (!entry.is_regular_file(ec))
+			continue; // problem with entry, move onto the next one
+
+		if (entry.path().extension() == files_ext)
+			files.emplace_back(entry.path().lexically_relative(dir));
+	}
 	std::sort(files.begin(), files.end());
 	return files;
 }
