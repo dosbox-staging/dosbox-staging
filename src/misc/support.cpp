@@ -485,8 +485,12 @@ bool path_exists(const std_fs::path &path)
 bool is_writable(const std_fs::path &p)
 {
 	using namespace std_fs;
-	std::error_code ec; // avoid exceptions
-	const auto perms = status(p, ec).permissions();
+	std::error_code ec  = {}; // avoid exceptions
+	const auto p_status = status(p, ec);
+	if (ec)
+		return false;
+
+	const auto perms = p_status.permissions();
 	return ((perms & perms::owner_write) != perms::none ||
 	        (perms & perms::group_write) != perms::none ||
 	        (perms & perms::others_write) != perms::none);
@@ -495,8 +499,12 @@ bool is_writable(const std_fs::path &p)
 bool is_readable(const std_fs::path &p)
 {
 	using namespace std_fs;
-	std::error_code ec; // avoid exceptions
-	const auto perms = status(p, ec).permissions();
+	std::error_code ec  = {}; // avoid exceptions
+	const auto p_status = status(p, ec);
+	if (ec)
+		return false;
+
+	const auto perms = p_status.permissions();
 	return ((perms & perms::owner_read) != perms::none ||
 	        (perms & perms::group_read) != perms::none ||
 	        (perms & perms::others_read) != perms::none);
