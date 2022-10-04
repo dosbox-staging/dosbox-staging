@@ -607,13 +607,28 @@ bool get_expanded_files(const std::string &path,
 		return false;
 
 	dir = native_dir.empty() ? "." : native_dir;
-	for (const auto &entry : std_fs::directory_iterator(dir)) {
-		const auto result = entry.path().filename();
-		const auto long_compare = true;
-		if ((!files_only || !entry.is_directory()) &&
-		    WildFileCmp(result.string().c_str(),
-		                p.filename().string().c_str(), long_compare))
-			files.push_back((dir / result).string());
+
+	// Keep recursing past permission issues and follow symlinks
+	constexpr auto idir_opts = std_fs::directory_options::skip_permission_denied |
+	                           std_fs::directory_options::follow_directory_symlink;
+
+	std::error_code ec = {};
+	for (const auto &entry : std_fs::directory_iterator(dir, idir_opts, ec)) {
+		if (ec)
+			break; // problem iterating, so skip the directory
+
+		// caller wants only files but this entry isn't, so skip it
+		if (files_only && !entry.is_regular_file(ec))
+			continue;
+
+		const auto filename = entry.path().filename();
+
+		constexpr auto long_compare = true;
+		if (WildFileCmp(filename.string().c_str(),
+		                p.filename().string().c_str(),
+		                long_compare)) {
+			files.push_back((dir / filename).string());
+		}
 	}
 
 	if (files.size()) {
