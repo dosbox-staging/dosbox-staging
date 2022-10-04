@@ -174,4 +174,19 @@ constexpr uint8_t le_to_host(const uint8_t x)
 	return host_to_le(x);
 }
 
+// Helper functions to read the low and high bytes from a native 16-bit value
+// regardless of machine byte-order or bit-signficance-order.
+constexpr uint8_t read_low_byte(const uint16_t val)
+{
+	constexpr uint16_t low_byte = UINT8_MAX;
+	return static_cast<uint8_t>(val & low_byte);
+}
+
+constexpr uint8_t read_high_byte(const uint16_t val)
+{
+	constexpr uint16_t high_byte = UINT16_MAX - UINT8_MAX;
+	return static_cast<uint8_t>((val & high_byte) / 256);
+}
+// Add more functions on an as-needed basis, i.e, read_low_word(uint32_t)
+
 #endif
