@@ -695,8 +695,10 @@ std::deque<std::string> RENDER_InventoryShaders()
 
 	const std::string dir_prefix  = "Path '";
 	const std::string file_prefix = "        ";
+
+	std::error_code ec = {};
 	for (auto &[dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
-		const auto dir_exists      = std_fs::is_directory(dir);
+		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
 		const auto dir_postfix     = dir_exists
