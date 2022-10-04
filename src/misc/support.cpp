@@ -229,7 +229,8 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 		return paths;
 
 	auto add_if_exists = [&](const std_fs::path &p) {
-		if (std_fs::is_directory(p))
+		std::error_code ec = {};
+		if (std_fs::is_directory(p, ec))
 			paths.emplace_back(p);
 	};
 
