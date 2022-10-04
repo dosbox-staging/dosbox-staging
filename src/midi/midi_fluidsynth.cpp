@@ -661,9 +661,8 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 			if (ec)
 				break; // problem iterating, so skip the directory
 
-			// Is it a file?
-			if (!std_fs::is_regular_file(entry))
-				continue;
+			if (!entry.is_regular_file(ec))
+				continue; // problem with entry, move onto the next one
 
 			// Is it an .sf2 file?
 			auto ext = entry.path().extension().string();
