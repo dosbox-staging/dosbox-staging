@@ -22,7 +22,10 @@
 bit_view
 ~~~~~~~~
 
-The bit_view class is a wrapper around a data value, typically a union member:
+The bit_view class is a wrapper around an 8-bit unsigned integer union member
+that offers named access to one or more spans of bits.
+
+For example:
 
 union Register {
         uint8_t data = 0;
@@ -31,13 +34,13 @@ union Register {
         bit_view<7, 1> last_bit;      // value is 0 or 1
 };
 
-It provides a view into a subset of its bits allowing them to be
-read, written, assigned, flipped, cleared, and tested, without the need to for
-the usual twiddling operations.
+It provides a view into a subset of its bits allowing them to be read,
+written, assigned, flipped, cleared, and tested, without the need for
+bit-twidling operations (such as shifting, masking, anding, or or'ing).
 
-Constructing a bit_view is similar to C bitfields, however unlike C bitfields,
-bit_views are free from undefined behavior and have been proven using GCC's
-and Clang's undefined behavior sanitizers.
+Constructing a bit_view is similar to C bitfields, however unlike C
+bitfields, bit_views are free from undefined behavior and have been proven
+using GCC's and Clang's undefined behavior sanitizers.
 
 This gives us the benefits of bitfields without their specification downsides:
 - they're succinct and clear to use
@@ -47,30 +50,49 @@ This gives us the benefits of bitfields without their specification downsides:
 Example usage
 ~~~~~~~~~~~~~
 
-Assume we have a 16-bit audio control register that holds the card's:
-- left volume at bit 1 using 6 bits
-- right volume at bit 7, also 6 bits
-- speaker on/off state at bit 13 with just one bit
+Assume we have a 8-bit audio control register that holds the card's:
+- speaker-on state (off/on) starting at bit 0, using one bit
+- stereo-output state (off/on) starting at bit 1, using one bit
+- left channel pan starting at bit 2, using 3 bits
+- right channel pan starting at bit 5, using 3 bits
 
-The bit_view makes the register's logical elements self-documenting:
+bit_view's can make this register's elements self-documenting:
 
 union AudioReg {
-        uint16_t data = 0;
-        bit_view<1, 6> left_volume;
-        bit_view<7, 6> right_volume;
-        bit_view<13, 1> speaker_on;
+  uint8_t data = 0;
+  bit_view<0, 1> speaker_on;
+  bit_view<1, 1> stereo_output;
+  bit_view<2, 3> left_pan;
+  bit_view<5, 3> right_pan;
 };
 
 AudioReg reg = {data};
 
 if (reg.speaker_on)
-        enable_speaker();
+  enable_speaker();
 else
-        disable_speaker();
+  disable_speaker();
 
-const auto left_percent = reg.left_volume / 63.0;
-const auto right_percent = reg.right_volume / 63.0;
-set_volume(left_percent, right_percent);
+if (reg.stereo_output)
+  stereo_pan(reg.left_pan, reg.right_pan)
+
+8-bit limitation
+~~~~~~~~~~~~~~~~
+
+bit_views are endian-safe as they're limited wrapping 8-bit registers,
+which are not affected by the byte-ordering of larger multi-byte type.
+(compile-type assertions guarantee this as well).
+
+To use bit_views with larger types or registers, the type should be
+accessible in it's explicit 8-bit parts (for example, a uint32_t can be
+represented as an array of four uin8_t), each element of which can be
+assigned to a bit_view-based union.
+
+This is deliberate because the byte-ordering of the bit-view's data cannot
+be assumed. For example, the byte ordering of a 16-bit register populated
+within a DOS emulator will be little-endian, even when running on a
+big-endian host, where as native data types on big-endian hardware will be
+big-endian.
 */
 
 #ifndef BIT_VIEW_H_
@@ -98,8 +120,8 @@ private:
 	static_assert(view_width > 0,
 	              "the bit_view's width needs to span at least one bit");
 
-	static_assert(view_index + view_width <= std::numeric_limits<data_type>::digits,
-	              "the bit_view's extents need to fit in the data type");
+	static_assert(view_index + view_width <= std::numeric_limits<uint8_t>::digits,
+	              "the bit_view's extents need to fit within an uint8_t data type");
 
 	// ensure the right-hand-side is an integer and fits in the data type
 	template <typename rhs_type>

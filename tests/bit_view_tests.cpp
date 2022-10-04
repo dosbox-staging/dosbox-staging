@@ -19,6 +19,7 @@
  */
 
 #include "bit_view.h"
+#include "byteorder.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -288,26 +289,21 @@ TEST(bit_view, equality)
 	EXPECT_FALSE(r1.last_3 != r2.last_3);
 }
 
-TEST(bit_view, size_safety)
+TEST(bit_view, compile_time_size_check)
 {
-	// unions are sized to the largest member, so in this case,
-	// it's the second view which is requires to be 16-bit to accomodate the
-	// view's bit position and width.
+	// the last three bit_views all are out of range, and will fail to
+	// compile (this is exepcted).  Because these are compile-time
+	// checks, we leave the commented out but still available for
+	// manual checking.
+
 	union RegisterSmallData {
 		uint8_t data = 0;
 		bit_view<0, 8> first_8;
-		bit_view<8, 8> last_8;
+
+		// bit_view<1, 8> bits_out_of_range;
+		// bit_view<8, 1> offset_out_range;
+		// bit_view<8, 8> both_out_of_range;
 	};
-
-	RegisterSmallData r8 = {0b0000'1111};
-	EXPECT_TRUE(r8.first_8 == 0b000'1111);
-
-	// write into bits 8 through 15 are legal & safe
-	r8.last_8 = 0b1111'0000;
-	EXPECT_TRUE(r8.last_8 == 0b1111'0000);
-
-	// make sure adjacent bits are not affected
-	EXPECT_TRUE(r8.first_8 == 0b000'1111);
 }
 
 TEST(bit_view, illegal_view)
@@ -492,6 +488,41 @@ TEST(bit_view, bare_constructor)
 	const bit_view<4, 4> four_bits(0b1111);
 	EXPECT_EQ(four_bits, 0b1111);
 	EXPECT_EQ(four_bits.get_data(), 0b1111'0000);
+}
+
+TEST(bit_view, multibyte)
+{
+	// Construct a bit sequence that will deliberately break if not handled
+	// properly on big-endian systems
+	constexpr uint16_t reg16_val = 0b1010'0000'0000'0101;
+
+	// A bit_view union to access the two low bits (0 and 3) by name
+	union LowReg {
+		uint8_t data = 0;
+		bit_view<0, 1> a;
+		bit_view<2, 1> b;
+	};
+
+	// A bit_view union to access the two high bits (13 and 15) by name
+	union HighReg {
+		uint8_t data = 0;
+		bit_view<5, 1> c;
+		bit_view<7, 1> d;
+	};
+
+	// Get each from the 16-bit register
+	LowReg low8   = {read_low_byte(reg16_val)};
+	HighReg high8 = {read_high_byte(reg16_val)};
+
+	// Did we get the full byte frome each?
+	EXPECT_EQ(low8.data, 0b0000'0101);
+	EXPECT_EQ(high8.data, 0b1010'0000);
+
+	// Can we get the bits by name?
+	EXPECT_EQ(low8.a, 1);
+	EXPECT_EQ(low8.b, 1);
+	EXPECT_EQ(high8.c, 1);
+	EXPECT_EQ(high8.d, 1);
 }
 
 } // namespace
