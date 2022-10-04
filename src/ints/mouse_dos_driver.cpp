@@ -24,6 +24,7 @@
 
 #include "bios.h"
 #include "bitops.h"
+#include "byteorder.h"
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
@@ -292,28 +293,27 @@ static void draw_cursor_text()
     // use current page (CV program)
     uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 
-    if (state.cursor_type == MouseCursor::Software) {
-        union {
-            uint16_t data;
-            bit_view<0, 8> first;
-            bit_view<8, 8> second;
-        } result;
-        ReadCharAttr(state.background.pos_x,
-                     state.background.pos_y,
-                     page,
-                     &result.data);
-        state.background.data[0] = static_cast<uint8_t>(result.first);
-        state.background.data[1] = static_cast<uint8_t>(result.second);
-        state.background.enabled = true;
-        // Write Cursor
-        result.data = (result.data & state.text_and_mask) ^ state.text_xor_mask;
-        WriteChar(state.background.pos_x,
-                  state.background.pos_y,
-                  page,
-                  static_cast<uint8_t>(result.first),
-                  static_cast<uint8_t>(result.second),
-                  true);
-    } else {
+	if (state.cursor_type == MouseCursor::Software) {
+		uint16_t result = 0;
+		ReadCharAttr(state.background.pos_x,
+		             state.background.pos_y,
+		             page,
+		             &result); // result is in native/host-endian format
+		state.background.data[0] = read_low_byte(result);
+		state.background.data[1] = read_high_byte(result);
+		state.background.enabled = true;
+
+		// Write Cursor
+		result &= state.text_and_mask;
+		result ^= state.text_xor_mask;
+
+		WriteChar(state.background.pos_x,
+		          state.background.pos_y,
+		          page,
+		          read_low_byte(result),
+		          read_high_byte(result),
+		          true);
+	} else {
         uint16_t address = static_cast<uint16_t>(page *
             real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
         address = static_cast<uint16_t>(address +
