@@ -4159,10 +4159,14 @@ void Config_Add_SDL() {
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
 	        "Set the host's refresh rate:\n"
-	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.\n"
-	        "  sdi:       Use serial device interface (SDI) rates, without further adjustment.\n"
-	        "  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).\n"
-	        "  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.");
+	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh\n"
+	        "             display.\n"
+	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
+	        "             adjustment.\n"
+	        "  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR\n"
+	        "             displays).\n"
+	        "  <custom>:  Specify a custom rate as a whole or decimal value greater than\n"
+	        "             23.000.");
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
@@ -4170,8 +4174,8 @@ void Config_Add_SDL() {
 	        "reduce flickering and tearing, but may also impact performance.");
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
-	               "the next frame. 0 disables this and will always render.");
+	pint->Set_help("Number of microseconds to allow rendering to block before skipping the next\n"
+	               "frame. 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
 
 	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
@@ -4239,17 +4243,20 @@ void Config_Add_SDL() {
 	        "Choose a mouse control method:\n"
 	        "   onclick:        Capture the mouse when clicking any button in the window.\n"
 	        "   onstart:        Capture the mouse immediately on start.\n"
-	        "   seamless:       Let the mouse move seamlessly; captures only with middle-click or hotkey.\n"
+	        "   seamless:       Let the mouse move seamlessly; captures only with\n"
+	        "                   middle-click or hotkey.\n"
 	        "   nomouse:        Hide the mouse and don't send input to the game.\n"
 	        "Choose how middle-clicks are handled (second parameter):\n"
 	        "   middlegame:     Middle-clicks are sent to the game.\n"
-	        "   middlerelease:  Middle-click will release the captured mouse, and also capture when seamless.\n"
+	        "   middlerelease:  Middle-click will release the captured mouse, and also\n"
+	        "                   capture when seamless.\n"
 	        "Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
 	Pmulti = sdl_sec->AddMultiVal("sensitivity", always, ",");
-	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
+	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity\n"
+	                 "(e.g. 100,-50).");
 	Pmulti->SetValue("100");
 	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
 	Pint->SetMinMax(-1000,1000);
@@ -4263,7 +4270,7 @@ void Config_Add_SDL() {
 	        "fullscreen or when the mouse is captured in window mode.");
 
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
+	Pbool->Set_help("Keep the console open if an error has occurred.");
 
 	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
