@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <fstream>
 
 #include "cross.h"
 #include "dos_inc.h"
@@ -215,61 +214,75 @@ void z_drive_getpath(std::string &path, const std::string &dirname)
 	}
 }
 
-template <typename TP>
-time_t to_time_t(TP tp)
+void get_datetime(const int result, time_t mtime, uint16_t &time, uint16_t &date)
 {
-	using namespace std::chrono;
-	auto sctp = time_point_cast<system_clock::duration>(
-	        tp - TP::clock::now() + system_clock::now());
-	return system_clock::to_time_t(sctp);
+	const struct tm *ltime;
+	if (result == 0 && (ltime = localtime(&mtime)) != 0) {
+		time = DOS_PackTime(*ltime);
+		date = DOS_PackDate(*ltime);
+	}
 }
 
 void z_drive_register(const std::string &path, const std::string &dir)
 {
+	char exePath[CROSS_LEN];
 	std::vector<std::string> names;
 	const std_fs::path pathdir = path;
 	if (path.length()) {
 		for (const auto &entry : std_fs::directory_iterator(pathdir)) {
-			const auto name = entry.path().filename();
+			const auto result = entry.path().filename();
 			if (!entry.is_directory())
-				names.emplace_back(name.string().c_str());
-			else if (name.string() != "." && name.string() != "..")
-				names.push_back((name.string() + "/").c_str());
+				names.emplace_back(result.string().c_str());
+			else if (result.string() != "." && result.string() != "..")
+				names.push_back((result.string() + "/").c_str());
 		}
 	}
-	std_fs::path fullname;
+	int result;
+	long f_size;
+	uint8_t *f_data;
+	struct stat temp_stat;
 	for (std::string name : names) {
 		if (!name.length())
 			continue;
-		fullname = pathdir / name;
-		if (!std_fs::exists(fullname)) {
-			fullname = GetExecutablePath() / fullname;
-			if (!std_fs::exists(fullname))
-				continue;
-		}
-		fztime = fzdate = 0;
-		const auto filetime = to_time_t(std_fs::last_write_time(fullname));
-		if (const struct tm *ltime = localtime(&filetime); ltime != 0) {
-			fztime = DOS_PackTime(*ltime);
-			fzdate = DOS_PackDate(*ltime);
-		}
 		if (name.back() == '/' && dir == "/") {
-			name.pop_back();
-			VFILE_Register(name.c_str(), nullptr, 0, dir.c_str());
+			result = stat((pathdir / name).string().c_str(), &temp_stat);
+			if (result)
+				result = stat((GetExecutablePath().string() +
+				               (pathdir / name).string())
+				                      .c_str(),
+				              &temp_stat);
+			get_datetime(result, temp_stat.st_mtime, fztime, fzdate);
+			VFILE_Register(name.substr(0, name.length() - 1).c_str(),
+			               0, 0, dir.c_str());
 			fztime = fzdate = 0;
-			z_drive_register((pathdir / name).string(), dir + name + "/");
+			z_drive_register(
+			        (pathdir / name.substr(0, name.length() - 1)).string(),
+			        dir + name);
 			continue;
 		}
-		std::ifstream file(fullname, std::ios::in | std::ios::binary);
-		if (file.is_open()) {
-			const auto size = (uint32_t)std_fs::file_size(fullname);
-			std::string content(size, '\0');
-			file.read(content.data(), size);
-			file.close();
-			VFILE_Register(name.c_str(),
-			               (uint8_t *)content.c_str(), size,
-			               dir == "/" ? "" : dir.c_str());
+		FILE *f = fopen((pathdir / name).string().c_str(), "rb");
+		if (!f) {
+			strcpy(exePath, GetExecutablePath().string().c_str());
+			strcat(exePath, (pathdir / name).string().c_str());
+			f = fopen(exePath, "rb");
 		}
+		f_size = 0;
+		f_data = nullptr;
+		if (f) {
+			result = fstat(fileno(f), &temp_stat);
+			get_datetime(result, temp_stat.st_mtime, fztime, fzdate);
+			fseek(f, 0, SEEK_END);
+			f_size = ftell(f);
+			f_data = (uint8_t *)malloc(f_size);
+			if (f_data) {
+				fseek(f, 0, SEEK_SET);
+				fread(f_data, sizeof(char), f_size, f);
+				fclose(f);
+			}
+		}
+		if (f_data)
+			VFILE_Register(name.c_str(), f_data, f_size,
+			               dir == "/" ? "" : dir.c_str());
 		fztime = fzdate = 0;
 	}
 }
