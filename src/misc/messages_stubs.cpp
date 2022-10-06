@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2021  The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,22 +18,30 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
+// Empty functions to suppress output in unit tests as well as a to eliminate
+// dependency-sprawl
 
-#include "control.h"
-#include "logging.h"
+void MSG_Add(const char *, const char *) {}
 
-// During testing we never want to log to stdout/stderr, as it could
-// negatively affect test harness.
-void GFX_ShowMsg(const char *, ...) {}
-void DEBUG_ShowMsg(const char *, ...) {}
-
-void DEBUG_HeavyWriteLogInstruction() {}
-
-#if C_DEBUG
-void LOG::operator()([[maybe_unused]] char const *buf, ...)
+const char *MSG_Get(char const *)
 {
-	(void)d_type;     // Deliberately unused.
-	(void)d_severity; // Deliberately unused.
+	return "";
 }
-#endif
+
+const char *MSG_GetRaw(char const *)
+{
+	return "";
+}
+
+bool MSG_Exists(const char *)
+{
+	return true;
+}
+
+bool MSG_Write(const char *)
+{
+	return true;
+}
+
+class Section_prop;
+void MSG_Init(Section_prop *) {}

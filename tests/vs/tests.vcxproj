@@ -340,6 +340,7 @@ $(TargetPath)</Command>
     <ClCompile Include="..\..\src\misc\cross.cpp" />
     <ClCompile Include="..\..\src\misc\fs_utils.cpp" />
     <ClCompile Include="..\..\src\misc\fs_utils_win32.cpp" />
+    <ClCompile Include="..\..\src\misc\messages_stubs.cpp" />
     <ClCompile Include="..\..\src\misc\rwqueue.cpp" />
     <ClCompile Include="..\..\src\misc\setup.cpp" />
     <ClCompile Include="..\..\src\misc\string_utils.cpp" />
