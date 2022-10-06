@@ -24,6 +24,7 @@
 #include "config.h"
 
 #include <cinttypes>
+#include <ctime>
 #include <string>
 
 #include "std_filesystem.h"
@@ -76,5 +77,8 @@ std_fs::path simplify_path(const std_fs::path &path) noexcept;
 constexpr uint32_t OK_IF_EXISTS = 0x1;
 
 int create_dir(const char *path, uint32_t mode, uint32_t flags = 0x0) noexcept;
+
+// Convert a filesystem time to a raw time_t value
+std::time_t to_time_t(const std_fs::file_time_type &fs_time);
 
 #endif
