@@ -47,8 +47,8 @@ extern char autoexec_data[autoexec_maxsize];
 std::unique_ptr<Program> CONFIG_ProgramCreate();
 std::unique_ptr<Program> MIXER_ProgramCreate();
 std::unique_ptr<Program> SHELL_ProgramCreate();
-void z_drive_getpath(std::string &path, const std::string &dirname);
-void z_drive_register(const std::string &path, const std::string &dir);
+void VFILE_GetPathZDrive(std::string &path, const std::string &dirname);
+void VFILE_RegisterZDrive(const std_fs::path &z_drive_path);
 
 void Add_VFiles(const bool add_autoexec)
 {
@@ -56,8 +56,8 @@ void Add_VFiles(const bool add_autoexec)
 	std::string path = ".";
 	path += CROSS_FILESPLIT;
 	path += dirname;
-	z_drive_getpath(path, dirname);
-	z_drive_register(path, "/");
+	VFILE_GetPathZDrive(path, dirname);
+	VFILE_RegisterZDrive(path);
 
 	PROGRAMS_MakeFile("ATTRIB.COM", ProgramCreate<ATTRIB>);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramCreate<AUTOTYPE>);
