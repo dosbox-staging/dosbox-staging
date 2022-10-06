@@ -449,8 +449,8 @@ void DOSBOX_Init()
 	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru\n"
 	        "Notes: This setting will override the 'LANG' environment, if set.\n"
 	        "       The 'resources/translations' directory bundled with the executable holds\n"
-	        "       these files. Please keep it along-side the executable to support this feature.");
-
+	        "       these files. Please keep it along-side the executable to support this\n"
+	        "       feature.");
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
 	pstring->Set_help("The type of machine DOSBox tries to emulate.");
@@ -485,7 +485,8 @@ void DOSBOX_Init()
 	        "  repair:  Repair (and report) faults using adjacent chain blocks.\n"
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
-	        "The default (deny) is recommended unless a game is failing with MCB corruption errors.");
+	        "The default (deny) is recommended unless a game is failing with MCB corruption\n"
+	        "errors.");
 	pstring->Set_values(mcb_fault_strategies);
 
 	const char *vmemsize_choices[] = {
@@ -504,8 +505,8 @@ void DOSBOX_Init()
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
-	pstring->Set_help(
-	        "Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.");
+	pstring->Set_help("Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per\n"
+	                  "video adapter.");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
@@ -602,26 +603,38 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("cga_colors", only_at_start, "default");
 	pstring->Set_help(
-	        "Sets the interpretation of CGA RGBI colors. Affects all machine types capable of\n"
-	        "displaying CGA or better graphics. Built-in presets:\n"
-	        "  default:       The canonical CGA palette, as emulated by VGA adapters (default).\n"
-	        "  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level\n"
-	        "                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).\n"
-	        "  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.\n"
-	        "  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with\n"
-	        "                 a unique Contrast control that dims non-bright colors only\n"
-	        "                 (0 to 100; defaults to 100).\n"
+	        "Sets the interpretation of CGA RGBI colors. Affects all machine types capable\n"
+	        "of displaying CGA or better graphics. Built-in presets:\n"
+	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
+	        "                 (default).\n"
+	        "  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable\n"
+	        "                 Brown Level (0 - red, 50 - brown, 100 - dark yellow;\n"
+	        "                 defaults to 50).\n"
+	        "  tandy-warm:    Emulation of the actual color output of an unknown Tandy\n"
+	        "                 monitor.\n"
+	        "  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor\n"
+	        "                 with a unique Contrast control that dims non-bright colors\n"
+	        "                 only (0 to 100; defaults to 100).\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
 	        "                 Palettes used by the Amiga ports of Sierra AGI games\n"
 	        "                 (see the manual for further details).\n"
-	        "  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.\n"
+	        "  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien\n"
+	        "                 AGI-interpreter.\n"
 	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
 	        "  colodore:      Commodore 64 inspired colors based on the Colodore palette.\n"
 	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
-	        "  dga16:         A modern take on the canonical CGA palette with dialed back contrast.\n"
-			"You can also set custom colors by specifying 16 space or comma separated color values,\n"
-			"either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal\n"
-			"RGB triplets (e.g. (255, 0, 255) for magenta).");
+	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
+	        "                 contrast.\n"
+	        "You can also set custom colors by specifying 16 space or comma separated color\n"
+	        "values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red),\n"
+	        "or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colors are\n"
+	        "ordered as follows:\n"
+	        "black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
+	        "light-blue, light-green, light-cyan, light-red, light-magenta, yellow,\n"
+	        "and white.\n"
+	        "Their default values, shown here in 6-digit hex code format, are:\n"
+	        "#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555\n"
+	        "#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 and #ffffff, respectively.");
 
 	pmulti = secprop->AddMultiVal("scaler", always, " ");
 	pmulti->SetValue("none");
@@ -865,8 +878,8 @@ void DOSBOX_Init()
 	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
 	        "             Use the filter of this Sound Blaster model.\n"
-	        "  modern:    Use linear interpolation upsampling that acts as a low-pass filter;\n"
-	        "             this is the legacy DOSBox behaviour (default).\n"
+	        "  modern:    Use linear interpolation upsampling that acts as a low-pass\n"
+	        "             filter; this is the legacy DOSBox behaviour (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  One or two custom filters in the following format:\n"
 	        "               TYPE ORDER FREQ\n"
@@ -937,7 +950,7 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("tandy", when_idle, "auto");
 	Pstring->Set_values(tandys);
 	Pstring->Set_help(
-	        "Enable Tandy Sound System emulation."
+	        "Enable Tandy Sound System emulation.\n"
 	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
 
 	Pstring = secprop->Add_string("tandy_filter", when_idle, "on");
@@ -951,7 +964,7 @@ void DOSBOX_Init()
 	Pstring->Set_help(
 	        "Filter for the Tandy DAC output:\n"
 	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output."
+	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
@@ -1013,12 +1026,14 @@ void DOSBOX_Init()
 	        "4axis_2  : Support the second joystick only.\n"
 	        "fcs      : Support a Thrustmaster-type joystick.\n"
 	        "ch       : Support a CH Flightstick-type joystick.\n"
-	        "hidden   : Prevent DOS from seeing the joystick(s), but enable them for mapping.\n"
+	        "hidden   : Prevent DOS from seeing the joystick(s), but enable them for\n"
+	        "           mapping.\n"
 	        "disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
 	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed", when_idle, true);
-	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");
+	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your\n"
+	                "joystick drifts (away).");
 
 	Pbool = secprop->Add_bool("autofire", when_idle, false);
 	Pbool->Set_help("continuously fires as long as you keep the button pressed.");
@@ -1040,7 +1055,8 @@ void DOSBOX_Init()
 	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	Pbool->Set_help(
 	        "Activates hotkeys to allow realtime calibration of the joystick's x and y axis.\n"
-	        "Only consider this if in-game calibration fails and other settings have been tried.\n"
+	        "Only consider this if in-game calibration fails and other settings have been\n"
+	        "tried.\n"
 	        " - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:\n"
 	        "     - left and right diminish or magnify the x-axis scalar, respectively.\n"
 	        "     - down and up diminish or magnify the y-axis scalar, respectively.\n"
@@ -1048,8 +1064,9 @@ void DOSBOX_Init()
 	        "     - left and right shift x-axis offset in the given direction.\n"
 	        "     - down and up shift the y-axis offset in the given direction.\n"
 	        " - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.\n"
-	        "Each tap will report X or Y calibration values you can set below. When you find parameters that work,\n"
-	        "quit the game, switch this setting back to false, and populate the reported calibration parameters.");
+	        "Each tap will report X or Y calibration values you can set below. When you find\n"
+	        "parameters that work, quit the game, switch this setting back to false, and\n"
+	        "populate the reported calibration parameters.");
 
 	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
 	pstring->Set_help(

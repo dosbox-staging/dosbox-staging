@@ -1503,11 +1503,21 @@ bool MOUSEDOS_HasCallback(const uint8_t mask)
 uintptr_t MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 {
     mouse_shared.dos_cb_running = true;
-    const bool is_wheel = mask & static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+    const bool mouse_moved = mask & static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+    const bool wheel_moved = mask & static_cast<uint8_t>(MouseEventId::WheelHasMoved);
 
-    reg_ax = mask;
+    // Extension for Windows mouse driver by javispedro:
+    // - https://git.javispedro.com/cgit/vbados.git/about/
+    // which allows seamless mouse integration. It is also included in DOSBox-X and Dosemu2:
+    // - https://github.com/joncampbell123/dosbox-x/pull/3424
+    // - https://github.com/dosemu2/dosemu2/issues/1552#issuecomment-1100777880
+    // - https://github.com/dosemu2/dosemu2/commit/cd9d2dbc8e3d58dc7cbc92f172c0d447881526be
+    // - https://github.com/joncampbell123/dosbox-x/commit/aec29ce28eb4b520f21ead5b2debf370183b9f28
+    reg_ah = (!mouse_is_captured && mouse_moved) ? 1 : 0;
+
+    reg_al = mask;
     reg_bl = buttons_12S.data;
-    reg_bh = is_wheel ? get_reset_wheel_8bit() : 0;
+    reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
     reg_cx = get_pos_x();
     reg_dx = get_pos_y();
     reg_si = signed_to_reg16(state.mickey_x);

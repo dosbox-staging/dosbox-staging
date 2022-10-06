@@ -1284,19 +1284,19 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.บ
-บ                                                                         บ
-บ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
+โ•‘ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.โ•‘
+โ•‘                                                                         โ•‘
+โ•‘ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m โ•‘
+โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.บ
-บ                                                                      บ
-บ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
+โ•‘ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.โ•‘
+โ•‘                                                                      โ•‘
+โ•‘ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  โ•‘
+โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -1413,7 +1413,6 @@ Keyboard layout %s loaded for codepage %i
 :PROGRAM_KEYB_FILENOTFOUND
 Keyboard file %s not found
 
-
 .
 :PROGRAM_KEYB_INVALIDFILE
 Keyboard file %s invalid
@@ -1425,7 +1424,6 @@ No layout in %s for codepage %i
 .
 :PROGRAM_KEYB_INVCPFILE
 None or invalid codepage file for layout %s
-
 
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
@@ -2027,43 +2025,43 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mWelcome to DOSBox Staging %-40s[37m บ
-บ                                                                    บ
-บ For a short introduction for new users type: [33mINTRO[37m                 บ
-บ For supported shell commands type: [33mHELP[37m                            บ
-บ                                                                    บ
-บ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       บ
-บ To activate the keymapper [31m%s+F1[37m.%s                                 บ
-บ For more information read the [36mREADME[37m file in the DOSBox directory. บ
-บ                                                                    บ
+[44;1mโ•”โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•—
+โ•‘ [32mWelcome to DOSBox Staging %-40s[37m โ•‘
+โ•‘                                                                    โ•‘
+โ•‘ For a short introduction for new users type: [33mINTRO[37m                 โ•‘
+โ•‘ For supported shell commands type: [33mHELP[37m                            โ•‘
+โ•‘                                                                    โ•‘
+โ•‘ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       โ•‘
+โ•‘ To activate the keymapper [31m%s+F1[37m.%s                                 โ•‘
+โ•‘ For more information read the [36mREADME[37m file in the DOSBox directory. โ•‘
+โ•‘                                                                    โ•‘
 
 .
 :SHELL_STARTUP_CGA
-บ DOSBox supports Composite CGA mode.                                บ
-บ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        บ
-บ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   บ
-บ                                                                    บ
+โ•‘ DOSBox supports Composite CGA mode.                                โ•‘
+โ•‘ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        โ•‘
+โ•‘ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   โ•‘
+โ•‘                                                                    โ•‘
 
 .
 :SHELL_STARTUP_CGA_MONO
-บ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, บ
-บ and [31m%s+F11[37m to change contrast/brightness settings.                บ
+โ•‘ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, โ•‘
+โ•‘ and [31m%s+F11[37m to change contrast/brightness settings.                โ•‘
 
 .
 :SHELL_STARTUP_HERC
-บ Use [31mF11[37m to cycle through white, amber, and green monochrome color. บ
-บ                                                                    บ
+โ•‘ Use [31mF11[37m to cycle through white, amber, and green monochrome color. โ•‘
+โ•‘                                                                    โ•‘
 
 .
 :SHELL_STARTUP_DEBUG
-บ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. บ
-บ                                                                    บ
+โ•‘ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. โ•‘
+โ•‘                                                                    โ•‘
 
 .
 :SHELL_STARTUP_END
-บ [33mhttps://dosbox-staging.github.io[37m                                   บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+โ•‘ [33mhttps://dosbox-staging.github.io[37m                                   โ•‘
+โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•[0m
 
 
 .

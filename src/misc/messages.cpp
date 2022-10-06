@@ -21,36 +21,61 @@
 
 #include "dosbox.h"
 
+#include <clocale>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <clocale>
+#include <map>
 
 #include "std_filesystem.h"
 #include <string>
 #include <unordered_map>
 
+#include "ansi_code_markup.h"
+#include "checks.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
-#include "string_utils.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
-#include "ansi_code_markup.h"
 
 #define LINE_IN_MAXLEN 2048
+
+CHECK_NARROWING();
+
+static const char *msg_not_found = "Message not Found!\n";
 
 class Message {
 private:
 	std::string markup_msg = {};
 	std::string rendered_msg = {};
 
+	std::map<uint16_t, std::string> rendered_msg_by_codepage = {};
+
+	const char *CachedRenderString(const std::string &msg,
+	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
+	{
+		assert(msg.length());
+		const uint16_t cp = UTF8_GetCodePage();
+		if (output_msg_by_codepage[cp].empty()) {
+			if (!UTF8_RenderForDos(msg, output_msg_by_codepage[cp], cp))
+				LOG_WARNING("LANG: Problem rendering string");
+			assert(output_msg_by_codepage[cp].length());
+		}
+
+		return output_msg_by_codepage[cp].c_str();
+	}
+
 public:
 	Message() = delete;
-	Message(const char *markup) { Set(markup); }
+	Message(const char *markup)
+	{
+		Set(markup);
+	}
 
-	const char *GetMarkup()
+	const char *GetRaw()
 	{
 		assert(markup_msg.length());
 		return markup_msg.c_str();
@@ -61,15 +86,27 @@ public:
 		assert(markup_msg.length());
 		if (rendered_msg.empty())
 			rendered_msg = convert_ansi_markup(markup_msg.c_str());
+
 		assert(rendered_msg.length());
-		return rendered_msg.c_str();
+		const uint16_t cp = UTF8_GetCodePage();
+		if (rendered_msg_by_codepage[cp].empty()) {
+			if (!UTF8_RenderForDos(rendered_msg,
+			                       rendered_msg_by_codepage[cp],
+			                       cp))
+				LOG_WARNING("LANG: Problem rendering string");
+			assert(rendered_msg_by_codepage[cp].length());
+		}
+
+		return rendered_msg_by_codepage[cp].c_str();
 	}
 
 	void Set(const char *markup)
 	{
 		assert(markup);
 		markup_msg = markup;
+
 		rendered_msg.clear();
+		rendered_msg_by_codepage.clear();
 	}
 };
 
@@ -85,7 +122,7 @@ void MSG_Add(const char *name, const char *markup_msg)
 }
 
 // Replace existing or add if it doesn't exist
-void MSG_Replace(const char *name, const char *markup_msg)
+static void msg_replace(const char *name, const char *markup_msg)
 {
 	auto it = messages.find(name);
 	if (it == messages.end())
@@ -94,24 +131,28 @@ void MSG_Replace(const char *name, const char *markup_msg)
 		it->second.Set(markup_msg);
 }
 
-static bool LoadMessageFile(const std_fs::path &filename)
+static bool load_message_file(const std_fs::path &filename)
 {
 	if (filename.empty())
 		return false;
 
-	const auto filename_str = filename.string();
+	auto check_file = [](const std_fs::path &filename) {
+		if (filename.empty())
+			return false;
+		return (std_fs::status(filename).type() !=
+		        std_fs::file_type::not_found);
+	};
 
-	// Was the file not found?
-	if (std_fs::status(filename).type() == std_fs::file_type::not_found) {
+	if (!check_file(filename)) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
-		        filename_str.c_str());
+		        filename.string().c_str());
 		return false;
 	}
 
-	FILE *mfile = fopen(filename_str.c_str(), "rt");
+	FILE *mfile = fopen(filename.string().c_str(), "rt");
 	if (!mfile) {
 		LOG_MSG("LANG: Failed opening language file: %s, skipping",
-		        filename_str.c_str());
+		        filename.string().c_str());
 		return false;
 	}
 
@@ -145,7 +186,7 @@ static bool LoadMessageFile(const std_fs::path &filename)
 			// This second if should not be needed, but better be safe.
 			if (ll && message[ll - 1] == '\n')
 				message[ll - 1] = 0;
-			MSG_Replace(name, message);
+			msg_replace(name, message);
 		} else {
 			/* Normal message to be added */
 			safe_strcat(message, linein);
@@ -153,20 +194,27 @@ static bool LoadMessageFile(const std_fs::path &filename)
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename_str.c_str());
+	LOG_MSG("LANG: Loaded language file: %s", filename.string().c_str());
 	return true;
 }
 
 const char *MSG_Get(char const *requested_name)
 {
 	const auto it = messages.find(requested_name);
-	if (it != messages.end()) {
+	if (it != messages.end())
 		return it->second.GetRendered();
-	}
-	return "Message not Found!\n";
+	return msg_not_found;
 }
 
-bool MSG_Exists(const char *requested_name) 
+const char* MSG_GetRaw(char const *requested_name)
+{
+	const auto it = messages.find(requested_name);
+	if (it != messages.end())
+		return it->second.GetRaw();
+	return msg_not_found;
+}
+
+bool MSG_Exists(const char *requested_name)
 {
 	return contains(messages, requested_name);
 }
@@ -178,7 +226,7 @@ bool MSG_Write(const char * location) {
 		return false;
 
 	for (const auto &name : messages_order)
-		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetMarkup());
+		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetRaw());
 
 	fclose(out);
 	return true;
@@ -192,10 +240,14 @@ bool MSG_Write(const char * location) {
 
 // 2. It also supports the more convenient syntax without needing to provide a
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
-//    platform's config path/translations/<lang>.lng.
+//    platform's config path/translations/<lang>[.utf8].lng.
 
 void MSG_Init([[maybe_unused]] Section_prop *section)
 {
+	// TODO: After migration to C++20 try to switch to constexpr
+	static const std_fs::path subdir   = "translations";
+	static const std::string extension = ".lng";
+
 	const auto lang = SETUP_GetLanguage();
 
 	// If the language is english, then use the internal message
@@ -204,14 +256,17 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 		return;
 	}
 
-	// If a short-hand name was provided then add the file extension
-	const auto lng_file = lang + (ends_with(lang, ".lng") ? "" : ".lng");
+	bool result = false;
+	if (ends_with(lang, ".lng"))
+		result = load_message_file(GetResourcePath(subdir, lang));
+	else
+		// If a short-hand name was provided then add the file extension
+		result = load_message_file(GetResourcePath(subdir, lang + extension));
 
-	if (LoadMessageFile(GetResourcePath("translations", lng_file)))
+	if (result)
 		return;
 
 	// If we got here, then the language was not found
-	LOG_WARNING("LANG: The '%s' language resource file: '%s' could not be loaded, using English messages",
-	            lang.c_str(),
-	            lng_file.c_str());
+	LOG_WARNING("LANG: The '%s' language resource file could not be loaded, using internal English messages",
+	            lang.c_str());
 }
