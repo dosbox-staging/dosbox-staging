@@ -1,4 +1,5 @@
-libmisc_sources = [
+# Sources without messages.cpp or messages_stubs.cpp
+libmisc_nomsg_sources = [
     'ansi_code_markup.cpp',
     'cross.cpp',
     'ethernet.cpp',
@@ -16,6 +17,12 @@ libmisc_sources = [
     'unicode.cpp',
 ]
 
+# Full sources
+libmisc_sources = libmisc_nomsg_sources + ['messages.cpp']
+
+# Stubbed-out messages version for unit testing.
+libmisc_stubs_sources = libmisc_nomsg_sources + ['messages_stubs.cpp']
+
 libmisc_dependencies = [
     corefoundation_dep,
     ghc_dep,
@@ -29,14 +36,14 @@ libmisc_dependencies = [
 
 libmisc = static_library(
     'misc',
-    libmisc_sources + 'messages.cpp',
+    libmisc_sources,
     include_directories: incdir,
     dependencies: libmisc_dependencies,
 )
 
 libmisc_stubs = static_library(
     'misc_stubs',
-    libmisc_sources + 'messages_stubs.cpp',
+    libmisc_stubs_sources,
     include_directories: incdir,
     dependencies: libmisc_dependencies,
 )
