@@ -4,6 +4,7 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
+ *  Altered to silence compiler warnings by Roman Standzikowski.
  */
 
 #include "manymouse.h"
@@ -38,7 +39,7 @@
 static ManyMouseEvent input_events[MAX_EVENTS];
 static volatile int input_events_read = 0;
 static volatile int input_events_write = 0;
-static int available_mice = 0;
+static unsigned int available_mice = 0;
 static int did_api_lookup = 0;
 static HWND raw_hwnd = NULL;
 static const char *class_name = "ManyMouseRawInputCatcher";
@@ -216,7 +217,7 @@ static void queue_event(const ManyMouseEvent *event)
 
 static void queue_from_rawinput(const RAWINPUT *raw)
 {
-    int i;
+    unsigned int i;
     const RAWINPUTHEADER *header = &raw->header;
     const RAWMOUSE *mouse = &raw->data.mouse;
     ManyMouseEvent event;
@@ -312,7 +313,7 @@ static void queue_from_rawinput(const RAWINPUT *raw)
 } /* queue_from_rawinput */
 
 
-static void wminput_handler(WPARAM wParam, LPARAM lParam)
+static void wminput_handler(LPARAM lParam)
 {
     UINT dwSize = 0;
     LPBYTE lpb;
@@ -337,7 +338,7 @@ static void wminput_handler(WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK RawWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     if (Msg == WM_INPUT)
-        wminput_handler(wParam, lParam);
+        wminput_handler(lParam);
 
     else if (Msg == WM_DESTROY)
         return 0;
@@ -485,11 +486,12 @@ static void init_mouse(const RAWINPUTDEVICELIST *dev)
     char *buf = NULL;
     char *ptr = NULL;
     UINT ct = 0;
+    UINT error_threshold = 1 << 31;
 
     if (dev->dwType != RIM_TYPEMOUSE)
         return;  /* keyboard or some other fruity thing. */
 
-    if (pGetRawInputDeviceInfoA(dev->hDevice, RIDI_DEVICENAME, NULL, &ct) < 0)
+    if (pGetRawInputDeviceInfoA(dev->hDevice, RIDI_DEVICENAME, NULL, &ct) >= error_threshold)
         return;
 
     /* ct == is chars, not bytes, but we used the ASCII version. */
@@ -497,7 +499,7 @@ static void init_mouse(const RAWINPUTDEVICELIST *dev)
     if (buf == NULL)
         return;
 
-    if (pGetRawInputDeviceInfoA(dev->hDevice, RIDI_DEVICENAME, buf, &ct) < 0)
+    if (pGetRawInputDeviceInfoA(dev->hDevice, RIDI_DEVICENAME, buf, &ct) >= error_threshold)
         return;
 
     buf[ct] = '\0';  /* make sure it's null-terminated. */
@@ -540,7 +542,7 @@ static void init_mouse(const RAWINPUTDEVICELIST *dev)
     /* avoiding memcmp here so we don't get a C runtime dependency... */
     if (ct >= sizeof (rdp_ident) - 1)
     {
-        int i;
+        unsigned int i;
         for (i = 0; i < sizeof (rdp_ident) - 1; i++)
         {
             if (buf[i] != rdp_ident[i])
