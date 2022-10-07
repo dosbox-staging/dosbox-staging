@@ -111,7 +111,7 @@ e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
 schermo intero o quando il mouse viene catturato in modalità finestra.
 .
 :CONFIG_WAITONERROR
-Attendi prima di chiudere la console in caso di errore di DOSBox.
+Mantiene la console aperta se si verifica un errore.
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
@@ -265,6 +265,14 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
 È possibile impostare colori personalizzati specificando 16 valori di colore
 separati da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
 #ff0000 per rosso), o triplette RGB decimali (es. (255, 0, 255) per magenta).
+I 16 colori sono ordinati come segue:
+nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro, grigio-scuro,
+azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro, magenta-chiaro, giallo,
+e bianco.
+I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre
+sono rispettivamente:
+#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555
+#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
@@ -1102,7 +1110,7 @@ Dove:
 Note:
   I [color=cyan]TASTI[reset] forniti in questo comando verranno digitati automaticamente nei
   giochi DOS dopo il loro avvio. La digitazione automatica inizia dopo i
-  secondi di [color=cyan]ATTESA[reset], e ogni pulsante viene inserito in base all'[color=white]ANDATURA[reset] in
+  secondi di [color=cyan]ATTESA[reset], e ogni tasto viene inserito in base all'[color=white]ANDATURA[reset] in
   secondi. Il carattere [color=cyan],[reset] inserisce un ritardo di [color=white]ANDATURA[reset] extra. I valori
   predefiniti di [color=white]ATTESA[reset] e [color=white]ANDATURA[reset] sono rispettivamente 2 e 0.5 secondi, se non
   specificati. È possibile ottenere un elenco di tutti i nomi dei tasti
@@ -1893,7 +1901,7 @@ Note:
 
 Esempi:
   [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
+  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Ciao mondo![reset]
   [color=green]command[reset] /init [color=cyan]dir[reset]
 
 .
@@ -2281,7 +2289,7 @@ Note:
 
 Esempi:
   [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Hello world![reset]
+  [color=green]echo[reset] [color=cyan]Ciao mondo![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -2443,7 +2451,7 @@ Note:
 
 Esempi:
   [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%variabile%%"=="stringa"[reset] echo Hello world!
+  [color=green]if[reset] [color=white]"%%variabile%%"=="stringa"[reset] echo Ciao mondo!
   [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
 
 .
@@ -2624,7 +2632,7 @@ Note:
 
 Esempi:
   [color=green]call[reset] [color=white]batch.bat[reset]
-  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Hello world![reset]
+  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Ciao mondo![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
