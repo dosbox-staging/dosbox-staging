@@ -3552,6 +3552,7 @@ static void GUI_StartUp(Section *sec)
 	} else if (control_choice == "nomouse") {
 		sdl.mouse.control_choice = NoMouse;
 		mouse_control_msg = "is disabled";
+		MOUSE_SetNoMouse();
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
@@ -3575,8 +3576,8 @@ static void GUI_StartUp(Section *sec)
 
 		// Apply the user's mouse sensitivity settings
 		PropMultiVal *p3 = section->GetMultiVal("sensitivity");
-		sdl.mouse.xsensitivity = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
-		sdl.mouse.ysensitivity = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
+		const auto sensitivity_x = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
+		const auto sensitivity_y = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
 
 		// Apply raw mouse input setting
 		const auto raw_mouse_input = section->Get_bool("raw_mouse_input");
@@ -3585,7 +3586,7 @@ static void GUI_StartUp(Section *sec)
 		                        SDL_HINT_OVERRIDE);
 
 		// Notify mouse emulation routines about the configuration
-		MOUSE_SetConfig(raw_mouse_input);
+		MOUSE_SetConfig(raw_mouse_input, sensitivity_x, sensitivity_y);
 	}
 
 	/* Get some Event handlers */
@@ -3616,8 +3617,8 @@ static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 {
 	if (mouse_seamless_driver || mouse_is_captured ||
 	    sdl.mouse.control_choice == Seamless)
-		MOUSE_EventMoved(static_cast<float>(motion->xrel) * sdl.mouse.xsensitivity,
-		                 static_cast<float>(motion->yrel) * sdl.mouse.ysensitivity,
+		MOUSE_EventMoved(static_cast<float>(motion->xrel),
+		                 static_cast<float>(motion->yrel),
 		                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
 		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)));
 }
@@ -3630,35 +3631,25 @@ static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button)
 {
-    auto notify_pressed = [](uint8_t button) {
+    auto notify_button = [](const uint8_t button, const bool pressed) {
 		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventPressed(0); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventPressed(1); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventPressed(2); break;
-		case SDL_BUTTON_X1:     MOUSE_EventPressed(3); break;
-		case SDL_BUTTON_X2:     MOUSE_EventPressed(4); break;
-		}
-	};
-
-    auto notify_released = [](uint8_t button) {
-		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventReleased(0); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventReleased(1); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventReleased(2); break;
-		case SDL_BUTTON_X1:     MOUSE_EventReleased(3); break;
-		case SDL_BUTTON_X2:     MOUSE_EventReleased(4); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventButton(0, pressed); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(1, pressed); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(2, pressed); break;
+		case SDL_BUTTON_X1:     MOUSE_EventButton(3, pressed); break;
+		case SDL_BUTTON_X2:     MOUSE_EventButton(4, pressed); break;
 		}
 	};
 	
 	if (button->state == SDL_RELEASED) {
-		notify_released(button->button);
+		notify_button(button->button, false);
 		return;
 	}
 	
 	assert(button->state == SDL_PRESSED);
 	
 	if (sdl.desktop.fullscreen || mouse_seamless_driver) {
-		notify_pressed(button->button);
+		notify_button(button->button, true);
 		return;
 	}
 
@@ -3672,7 +3663,7 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button)
 		return; // Don't pass click to mouse handler
 	}
 
-	notify_pressed(button->button);
+	notify_button(button->button, true);
 }
 
 void GFX_LosingFocus()

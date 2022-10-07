@@ -193,6 +193,33 @@
     <ClCompile Include="..\src\hardware\mixer.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse_common.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse_config.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse_interfaces.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse_manymouse.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouse_queue.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouseif_dos_driver.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouseif_ps2_bios.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\mouse\mouseif_virtual_machines.cpp">
+      <Filter>src\hardware\mouse</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\mpu401.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -337,21 +364,6 @@
     <ClCompile Include="..\src\ints\int10_vptable.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ints\mouse.cpp">
-      <Filter>src\ints</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ints\mouse_dos_driver.cpp">
-      <Filter>src\ints</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ints\mouse_ps2_bios.cpp">
-      <Filter>src\ints</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ints\mouse_serial.cpp">
-      <Filter>src\ints</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ints\mouse_vmware.cpp">
-      <Filter>src\ints</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ints\xms.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
@@ -378,6 +390,24 @@
     </ClCompile>
     <ClCompile Include="..\src\libs\decoders\wav.c">
       <Filter>src\libs\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\manymouse\linux_evdev.c">
+      <Filter>src\libs\manymouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\manymouse\macosx_hidmanager.c">
+      <Filter>src\libs\manymouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\manymouse\macosx_hidutilities.c">
+      <Filter>src\libs\manymouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\manymouse\manymouse.c">
+      <Filter>src\libs\manymouse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\manymouse\windows_wminput.c">
+      <Filter>src\libs\manymouse</Filter>
+    </ClCompile>
+      <ClCompile Include="..\src\libs\manymouse\x11_xinput2.c">
+      <Filter>src\libs\manymouse</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\nuked\opl3.c">
       <Filter>src\libs\nuked</Filter>
@@ -563,6 +593,9 @@
       <Filter>src\dos</Filter>
     </ClCompile>
     <ClCompile Include="..\src\dos\program_mount_common.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\program_mousectl.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
     <ClCompile Include="..\src\dos\program_rescan.cpp">
@@ -999,6 +1032,21 @@
     <ClInclude Include="..\src\hardware\mame\sn76496.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\hardware\mouse\mouse_common.h">
+      <Filter>src\hardware\mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\mouse\mouse_config.h">
+      <Filter>src\hardware\mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\mouse\mouse_interfaces.h">
+      <Filter>src\hardware\mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\mouse\mouse_manymouse.h">
+      <Filter>src\hardware\mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\mouse\mouse_queue.h">
+      <Filter>src\hardware\mouse</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\directserial.h">
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
@@ -1058,6 +1106,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libs\decoders\xxhash.h">
       <Filter>src\libs\decoders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\manymouse\manymouse.h">
+      <Filter>src\libs\manymouse</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\nuked\opl3.h">
       <Filter>src\libs\nuked</Filter>

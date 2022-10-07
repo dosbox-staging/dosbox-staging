@@ -18,7 +18,8 @@
  */
 
 #include "mouse.h"
-#include "mouse_core.h"
+#include "mouse_config.h"
+#include "mouse_interfaces.h"
 
 #include <algorithm>
 
@@ -29,9 +30,10 @@
 #include "checks.h"
 #include "cpu.h"
 #include "dos_inc.h"
-#include "int10.h"
 #include "pic.h"
 #include "regs.h"
+
+#include "../../ints/int10.h"
 
 using namespace bit::literals;
 
@@ -42,7 +44,7 @@ CHECK_NARROWING();
 
 // Reference:
 // - Ralf Brown's Interrupt List
-// - WHEELAPI.TXT from CuteMouse package
+// - WHEELAPI.TXT, INT10.LST, and INT33.LST from CuteMouse driver
 // - https://www.stanislavs.org/helppc/int_33.html
 // - http://www2.ift.ulaval.ca/~marchand/ift17583/dosints.pdf
 
@@ -54,18 +56,36 @@ static constexpr uint8_t num_buttons = 3;
 
 enum class MouseCursor : uint8_t { Software = 0, Hardware = 1, Text = 2 };
 
+// This enum has to be compatible with mask in DOS driver function 0x0c
+enum class MouseEventId : uint8_t {
+    NotDosEvent    = 0,
+    MouseHasMoved  = 1 << 0,
+    PressedLeft    = 1 << 1,
+    ReleasedLeft   = 1 << 2,
+    PressedRight   = 1 << 3,
+    ReleasedRight  = 1 << 4,
+    PressedMiddle  = 1 << 5,
+    ReleasedMiddle = 1 << 6,
+    WheelHasMoved  = 1 << 0,
+};
+
 // These values represent 'hardware' state, not driver state
 
 static MouseButtons12S buttons = 0;
 static float pos_x = 0.0f;
 static float pos_y = 0.0f;
-static int8_t counter_w = 0;
-static uint8_t rate_hz = 0; // TODO: add proper reaction for 0 (disable driver)
+static int8_t counter_w = 0;     // wheel counter
+static bool is_mapped   = false; // true = physical mouse is mapped to this interface
+static bool raw_input   = true;  // true = no host mouse acceleration pre-applied
+
+static bool     rate_is_set = false; // true = rate was set by DOS application
+static uint16_t rate_hz     = 0;
+static uint16_t min_rate_hz = 0;
+
+// Data from mouse events which were already received,
+// but not necessary visible to the application
 
 static struct {
-    // Data from mouse events which were already received,
-    // but not necessary visible to the application
-
     // Mouse movement
     float x_rel    = 0.0f;
     float y_rel    = 0.0f;
@@ -82,21 +102,25 @@ static struct {
     }
 } pending;
 
+// Multiply by 6.0f to compensate for 'MOUSE_GetBallisticsCoeff', which uses
+// 6 as intersection point (just like 2:1 scaling model from PS/2 specification)
+static MouseSpeedCalculator speed_mickeys(mouse_predefined.acceleration_dos * 6.0f);
+
 static struct { // DOS driver state
 
     // Structure containing (only!) data which should be
     // saved/restored during task switching
 
     // DANGER, WILL ROBINSON!
-    ///
+    //
     // This whole structure can be read or written from the guest side
     // via virtual DOS driver, functions 0x15 / 0x16 / 0x17.
     // Do not put here any array indices, pointers, or anything that
     // can crash the emulator if filled-in incorrectly, or that can
     // be used by malicious code to escape from emulation!
 
-    bool enabled    = false; // TODO: make use of this
-    bool cute_mouse = false;
+    bool enabled   = false; // TODO: make use of this
+    bool wheel_api = false; // CuteMouse compatible wheel extension
 
     uint16_t times_pressed[num_buttons]   = {0};
     uint16_t times_released[num_buttons]  = {0};
@@ -107,13 +131,16 @@ static struct { // DOS driver state
     uint16_t last_wheel_moved_x           = 0;
     uint16_t last_wheel_moved_y           = 0;
 
-    float mickey_x = 0.0f;
-    float mickey_y = 0.0f;
+    int16_t mickey_counter_x = 0;
+    int16_t mickey_counter_y = 0;
+
+    float mickey_delta_x = 0.0f;
+    float mickey_delta_y = 0.0f;
 
     float mickeys_per_pixel_x = 0.0f;
     float mickeys_per_pixel_y = 0.0f;
-    float pixels_per_mickey_x = 0.0f;
-    float pixels_per_mickey_y = 0.0f;
+
+    uint16_t double_speed_threshold = 0; // in mickeys/s
 
     uint16_t granularity_x = 0; // mask
     uint16_t granularity_y = 0;
@@ -122,14 +149,17 @@ static struct { // DOS driver state
     int16_t update_region_y[2] = {0};
 
     uint16_t language = 0; // language for driver messages, unused
-    uint8_t mode      = 0;
+    uint8_t  mode     = 0;
 
     // sensitivity
-    uint16_t senv_x_val = 0;
-    uint16_t senv_y_val = 0;
-    uint16_t double_speed_threshold = 0; // in mickeys/s  TODO: should affect movement
-    float senv_x = 0.0f;
-    float senv_y = 0.0f;
+    uint8_t sensitivity_x = 0;
+    uint8_t sensitivity_y = 0;
+    // TODO: find out what it is for (acceleration?), for now
+    // just set it to default value on startup
+    uint8_t unknown_01 = 50;
+
+    float sensitivity_coeff_x = 0;
+    float sensitivity_coeff_y = 0;
 
     // mouse position allowed range
     int16_t minpos_x = 0;
@@ -196,11 +226,6 @@ static uint16_t signed_to_reg16(const int16_t x)
         return static_cast<uint16_t>(0x10000 + x);
 }
 
-static uint16_t signed_to_reg16(const float x)
-{
-    return signed_to_reg16(static_cast<int16_t>(x));
-}
-
 static int16_t reg_to_signed16(const uint16_t x)
 {
     if (bit::is(x, b15))
@@ -208,15 +233,6 @@ static int16_t reg_to_signed16(const uint16_t x)
         return static_cast<int16_t>(x - 0x10000);
     else
         return static_cast<int16_t>(x);
-}
-
-int8_t clamp_to_int8(const int32_t val)
-{
-    const auto tmp = std::clamp(val,
-                                static_cast<int32_t>(INT8_MIN),
-                                static_cast<int32_t>(INT8_MAX));
-
-    return static_cast<int8_t>(tmp);
 }
 
 static uint16_t get_pos_x()
@@ -561,7 +577,7 @@ static void update_driver_active()
 
 static uint8_t get_reset_wheel_8bit()
 {
-    if (!state.cute_mouse) // wheel requires CuteMouse extensions
+    if (!state.wheel_api)
         return 0;
 
     const auto tmp = counter_w;
@@ -573,7 +589,7 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-    if (!state.cute_mouse) // wheel requires CuteMouse extensions
+    if (!state.wheel_api)
         return 0;
 
     const int16_t tmp = counter_w;
@@ -588,13 +604,10 @@ static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
     // the values should be non-negative (highest bit not set)
 
     if ((ratio_x > 0) && (ratio_y > 0)) {
-        constexpr auto x_mickey = 8.0f;
-        constexpr auto y_mickey = 8.0f;
-
-        state.mickeys_per_pixel_x = static_cast<float>(ratio_x) / x_mickey;
-        state.mickeys_per_pixel_y = static_cast<float>(ratio_y) / y_mickey;
-        state.pixels_per_mickey_x = x_mickey / static_cast<float>(ratio_x);
-        state.pixels_per_mickey_y = y_mickey / static_cast<float>(ratio_y);
+        // ratio = number of mickeys per 8 pixels
+        constexpr auto pixels = 8.0f;
+        state.mickeys_per_pixel_x = static_cast<float>(ratio_x) / pixels;
+        state.mickeys_per_pixel_y = static_cast<float>(ratio_y) / pixels;
     }
 }
 
@@ -606,40 +619,78 @@ static void set_double_speed_threshold(const uint16_t threshold)
         state.double_speed_threshold = 64; // default value
 }
 
-static void set_sensitivity(const uint16_t px, const uint16_t py,
-                            const uint16_t double_speed_threshold)
+static void set_sensitivity(const uint16_t sensitivity_x,
+                            const uint16_t sensitivity_y,
+                            const uint16_t unknown)
 {
-    uint16_t tmp_x = std::min(static_cast<uint16_t>(100), px);
-    uint16_t tmp_y = std::min(static_cast<uint16_t>(100), py);
+    const auto tmp_x = std::min(static_cast<uint16_t>(100), sensitivity_x);
+    const auto tmp_y = std::min(static_cast<uint16_t>(100), sensitivity_y);
+    const auto tmp_u = std::min(static_cast<uint16_t>(100), unknown);
 
-    // save values
-    state.senv_x_val = tmp_x;
-    state.senv_y_val = tmp_y;
-    state.double_speed_threshold = std::min(static_cast<uint16_t>(100),
-                                            double_speed_threshold);
-    if ((tmp_x != 0) && (tmp_y != 0)) {
-        --tmp_x; // Inspired by CuteMouse
-        --tmp_y; // Although their cursor update routine is far more
-                 // complex then ours
-        state.senv_x = (static_cast<float>(tmp_x) * tmp_x) / 3600.0f + 1.0f / 3.0f;
-        state.senv_y = (static_cast<float>(tmp_y) * tmp_y) / 3600.0f + 1.0f / 3.0f;
-    }
+    state.sensitivity_x = static_cast<uint8_t>(tmp_x);
+    state.sensitivity_y = static_cast<uint8_t>(tmp_y);
+    state.unknown_01    = static_cast<uint8_t>(tmp_u);
+
+    // It is unclear how the original mouse driver handles sensitivity,
+    // but one can observe that setting value 0 stops the mouse movement
+    // completely, 50 is the default, and 100 seems to more or less
+    // dobule it. Linear sensitivity should be good enough.
+
+    state.sensitivity_coeff_x = state.sensitivity_x / 50.0f;
+    state.sensitivity_coeff_y = state.sensitivity_y / 50.0f;
+}
+
+static void notify_interface_rate()
+{
+    // Real mouse drivers set the PS/2 mouse sampling rate
+    // to the following rates:
+    // - A4 Pointing Device 8.04A   100 Hz
+    // - CuteMouse 2.1b4            100 Hz
+    // - Genius Dynamic Mouse 9.20   60 Hz
+    // - Microsoft Mouse 8.20        60 Hz
+    // - Mouse Systems 8.00         100 Hz
+    // and the most common serial mice were 1200 bauds, which gives
+    // approx. 40 Hz sampling rate limit due to COM port bandwidth.
+
+    // Original DOSBox uses 200 Hz for callbacks, but the internal
+    // states (buttons, mickey counters) are updated in realtime.
+    // This is too much (at least Ultima Underworld I and II do not
+    // like this).
+
+    // Set default value to 200 Hz (which is the maximum setting for
+    // PS/2 mice - and hopefully this is safe (if it's not, user can
+    // always adjust it in configuration file or with MOUSECTL.COM).
+
+    constexpr uint16_t rate_default_hz = 200; 
+
+    if (rate_is_set)
+        // Rate was set by guest application - use this value. The minimum
+        // will be enforced by MouseInterface nevertheless
+        MouseInterface::GetDOS()->NotifyInterfaceRate(rate_hz);
+    else if (min_rate_hz)
+        // If user set the minimum mouse rate - follow it
+        MouseInterface::GetDOS()->NotifyInterfaceRate(min_rate_hz);
+    else
+        // No user setting in effect - use default value
+        MouseInterface::GetDOS()->NotifyInterfaceRate(rate_default_hz);
 }
 
 static void set_interrupt_rate(const uint16_t rate_id)
 {
+    uint16_t val_hz;
+
     switch (rate_id) {
-    case 0: rate_hz  = 0;   break; // no events, TODO: this should be simulated
-    case 1: rate_hz  = 30;  break;
-    case 2: rate_hz  = 50;  break;
-    case 3: rate_hz  = 100; break;
-    default: rate_hz = 200; break; // above 4 is not suported, set max
+    case 0: val_hz  = 0;   break; // no events, TODO: this should be simulated
+    case 1: val_hz  = 30;  break;
+    case 2: val_hz  = 50;  break;
+    case 3: val_hz  = 100; break;
+    default: val_hz = 200; break; // above 4 is not suported, set max
     }
 
-    // Update event queue settings
-    if (rate_hz) {
-        // Update event queue settings
-        MOUSE_NotifyRateDOS(rate_hz);
+    if (val_hz) {
+        rate_is_set = true;
+        rate_hz     = val_hz;
+        notify_interface_rate();
     }
 }
 
@@ -648,12 +699,25 @@ static void reset_hardware()
     // Resetting the wheel API status in reset() might seem to be a more
     // logical approach, but this is clearly not what CuteMouse does;
     // if this is done in reset(), the DN2 is unable to use mouse wheel
-    state.cute_mouse = false;
+    state.wheel_api = false;
     counter_w = 0;
 
-    set_interrupt_rate(4);
     PIC_SetIRQMask(12, false); // lower IRQ line
-    MOUSE_NotifyRateDOS(60); // same rate Microsoft Mouse 8.20 sets
+
+    // Reset mouse refresh rate
+    rate_is_set = false;
+    notify_interface_rate();
+}
+
+void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
+{
+    min_rate_hz = value_hz;
+
+    // If rate was set by a DOS application, don't change it
+    if (rate_is_set)
+        return;
+
+    notify_interface_rate();
 }
 
 void MOUSEDOS_BeforeNewVideoMode()
@@ -751,8 +815,10 @@ static void reset()
     pos_x = static_cast<float>((state.maxpos_x + 1) / 2);
     pos_y = static_cast<float>((state.maxpos_y + 1) / 2);
 
-    state.mickey_x = 0;
-    state.mickey_y = 0;
+    state.mickey_counter_x = 0;
+    state.mickey_counter_y = 0;
+    state.mickey_delta_x   = 0.0f;
+    state.mickey_delta_y   = 0.0f;
 
     state.last_wheel_moved_x = 0;
     state.last_wheel_moved_y = 0;
@@ -782,65 +848,57 @@ static void limit_coordinates()
         pos = std::clamp(pos, min, max);
     };
 
-    // TODO: If the pointer go out of limited coordinates,
-    //       trigger showing mouse_suggest_show
-
     limit(pos_x, state.minpos_x, state.maxpos_x);
     limit(pos_y, state.minpos_y, state.maxpos_y);
 }
 
-static void update_mickeys_on_move(float &dx, float &dy, const float x_rel,
-                                   const float y_rel)
+static void update_mickeys_on_move(const float x_rel, const float y_rel)
 {
-    auto calculate_d = [](const float rel,
-                          const float pixel_per_mickey,
-                          const float senv) {
-        float d = rel * pixel_per_mickey;
-        if ((fabs(rel) > 1.0f) || (senv < 1.0f))
-            d *= senv;
-        return d;
+    auto update = [](int16_t &counter, float &delta, const float rel) {
+        delta += rel;
+
+        // Check if movement is significant enough
+        const auto d = static_cast<int16_t>(std::lround(delta));
+        if (d == 0)
+            return;
+
+        // Consume part of delta to increase/decrease the counter
+        delta -= d;
+        int32_t counter_big = counter + d;
+
+        // Handle counter wrap around int16_t limits
+        if (counter_big > INT16_MAX)
+            counter_big -= UINT16_MAX + 1;
+        else if (counter_big < INT16_MIN)
+            counter_big += UINT16_MAX + 1;
+
+        counter = static_cast<int16_t>(counter_big);
     };
 
-    auto update_mickey =
-            [](float &mickey, const float d, const float mickeys_per_pixel) {
-                mickey += d * mickeys_per_pixel;
-                if (mickey >= 32768.0f)
-                    mickey -= 65536.0f;
-                else if (mickey <= -32769.0f)
-                    mickey += 65536.0f;
-            };
+    const float x_mov = x_rel * state.mickeys_per_pixel_x;
+    const float y_mov = y_rel * state.mickeys_per_pixel_y;
 
-    // Calculate cursor displacement
-    dx = calculate_d(x_rel, state.pixels_per_mickey_x, state.senv_x);
-    dy = calculate_d(y_rel, state.pixels_per_mickey_y, state.senv_y);
-
-    // Update mickey counters
-    update_mickey(state.mickey_x, dx, state.mickeys_per_pixel_x);
-    update_mickey(state.mickey_y, dy, state.mickeys_per_pixel_y);
+    // Update mickey counters and mickey speed measurement
+    update(state.mickey_counter_x, state.mickey_delta_x, x_mov);
+    update(state.mickey_counter_y, state.mickey_delta_y, y_mov);
+    speed_mickeys.Update(std::sqrt(x_mov * x_mov + y_mov * y_mov));
 }
 
 static void move_cursor_captured(const float x_rel, const float y_rel)
 {
     // Update mickey counters
-    float dx = 0.0f;
-    float dy = 0.0f;
-    update_mickeys_on_move(dx, dy, x_rel, y_rel);
+    update_mickeys_on_move(x_rel, y_rel);
 
     // Apply mouse movement according to our acceleration model
-    pos_x += dx;
-    pos_y += dy;
+    pos_x += x_rel;
+    pos_y += y_rel;
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
                                  const uint16_t x_abs, const uint16_t y_abs)
 {
-    // In automatic seamless mode do not update mickeys without
-    // captured mouse, as this makes games like DOOM behaving strangely
-    if (!mouse_video.autoseamless) {
-        float dx = 0.0f;
-        float dy = 0.0f;
-        update_mickeys_on_move(dx, dy, x_rel, y_rel);
-    }
+    // Update mickey counters
+    update_mickeys_on_move(x_rel, y_rel);
 
     auto calculate = [](const uint16_t absolute,
                         const uint16_t res,
@@ -879,25 +937,42 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
     }
 }
 
-uint8_t MOUSEDOS_UpdateMoved()
+static bool is_captured()
+{
+    // If DOS driver uses a mapped physical mouse, always consider it captured,
+    // as we have no absolute mouse position from the host OS
+
+    return mouse_is_captured || is_mapped;
+}
+
+static uint8_t move_cursor()
 {
     const auto old_pos_x = get_pos_x();
     const auto old_pos_y = get_pos_y();
 
-    const auto old_mickey_x = static_cast<int16_t>(state.mickey_x);
-    const auto old_mickey_y = static_cast<int16_t>(state.mickey_y);
+    const auto old_mickey_x = static_cast<int16_t>(state.mickey_counter_x);
+    const auto old_mickey_y = static_cast<int16_t>(state.mickey_counter_y);
 
-    const auto x_mov = MOUSE_ClampRelativeMovement(pending.x_rel * sensitivity_dos);
-    const auto y_mov = MOUSE_ClampRelativeMovement(pending.y_rel * sensitivity_dos);
+    if (is_captured()) {
+
+        // For raw mouse input use our built-in pointer acceleration model
+        const float acceleration_coeff = raw_input ?
+            MOUSE_GetBallisticsCoeff(speed_mickeys.Get() / state.double_speed_threshold) * 2.0f:
+            2.0f;
+
+        const float tmp_x = pending.x_rel * acceleration_coeff * state.sensitivity_coeff_x;
+        const float tmp_y = pending.y_rel * acceleration_coeff * state.sensitivity_coeff_y;
+
+        move_cursor_captured(MOUSE_ClampRelativeMovement(tmp_x),
+                             MOUSE_ClampRelativeMovement(tmp_y));
+
+    } else
+        move_cursor_seamless(pending.x_rel, pending.y_rel,
+                             pending.x_abs, pending.y_abs);
 
     // Pending relative movement is now consummed
     pending.x_rel = 0.0f;
     pending.y_rel = 0.0f;
-
-    if (mouse_is_captured)
-        move_cursor_captured(x_mov, y_mov);
-    else
-        move_cursor_seamless(x_mov, y_mov, pending.x_abs, pending.y_abs);
 
     // Make sure cursor stays in the range defined by application
     limit_coordinates();
@@ -906,23 +981,21 @@ uint8_t MOUSEDOS_UpdateMoved()
     // which won't change guest side mouse state)
     const bool abs_changed = (old_pos_x != get_pos_x()) ||
                              (old_pos_y != get_pos_y());
-    const bool rel_changed = (old_mickey_x !=
-                              static_cast<int16_t>(state.mickey_x)) ||
-                             (old_mickey_y !=
-                              static_cast<int16_t>(state.mickey_y));
-
-    // NOTE: It might be tempting to optimize the flow here, by skipping
-    // the whole event-queue-callback flow if there is no callback
-    // registered, no graphic cursor to draw, etc. Don't do this - there
-    // is at least one game (Master of Orion II), which does INT 0x33
-    // calls with 0x0F parameter (changing the callback settings)
-    // constantly (don't ask me, why) - doing too much optimization
-    // can cause the game to skip mouse events.
+    const bool rel_changed = (old_mickey_x != state.mickey_counter_x) ||
+                             (old_mickey_y != state.mickey_counter_y);
 
     if (abs_changed || rel_changed)
         return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
     else
         return 0;
+}
+
+uint8_t MOUSEDOS_UpdateMoved()
+{
+    if (mouse_config.mouse_dos_immediate)
+        return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+    else
+        return move_cursor();
 }
 
 uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
@@ -946,24 +1019,23 @@ uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
     if (new_buttons_12S.left && !buttons.left) {
         mark_pressed(0);
         mask |= static_cast<uint8_t>(MouseEventId::PressedLeft);
-    }
-    else if (!new_buttons_12S.left && buttons.left) {
+    } else if (!new_buttons_12S.left && buttons.left) {
         mark_released(0);
         mask |= static_cast<uint8_t>(MouseEventId::ReleasedLeft);
     }
+
     if (new_buttons_12S.right && !buttons.right) {
         mark_pressed(1);
         mask |= static_cast<uint8_t>(MouseEventId::PressedRight);
-    }
-    else if (!new_buttons_12S.right && buttons.right) {
+    } else if (!new_buttons_12S.right && buttons.right) {
         mark_released(1);
         mask |= static_cast<uint8_t>(MouseEventId::ReleasedRight);
     }
+
     if (new_buttons_12S.middle && !buttons.middle) {
         mark_pressed(2);
         mask |= static_cast<uint8_t>(MouseEventId::PressedMiddle);
-    }
-    else if (!new_buttons_12S.middle && buttons.middle) {
+    } else if (!new_buttons_12S.middle && buttons.middle) {
         mark_released(2);
         mask |= static_cast<uint8_t>(MouseEventId::ReleasedMiddle);
     }
@@ -972,9 +1044,9 @@ uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
     return mask;
 }
 
-uint8_t MOUSEDOS_UpdateWheel()
+static uint8_t move_wheel()
 {
-    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
+    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + pending.w_rel));
 
     // Pending wheel scroll is now consummed
     pending.w_rel = 0;
@@ -988,6 +1060,14 @@ uint8_t MOUSEDOS_UpdateWheel()
         return 0;
 }
 
+uint8_t MOUSEDOS_UpdateWheel()
+{
+    if (mouse_config.mouse_dos_immediate)
+        return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+    else
+        return move_wheel();
+}
+
 bool MOUSEDOS_NotifyMoved(const float x_rel,
                           const float y_rel,
                           const uint16_t x_abs,
@@ -995,7 +1075,7 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
 {
     // Check if an event is needed
     bool event_needed = false;
-    if (mouse_is_captured) {
+    if (is_captured()) {
         // Uses relative mouse movements - processing is too complicated
         // to easily predict whether the event can be safely omitted
         event_needed = true;
@@ -1022,26 +1102,34 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
     // calls with 0x0f parameter (changing the callback settings)
     // constantly (don't ask me, why) - doing too much optimization
     // can cause the game to skip mouse events.
-    //
-    // Also, do not update mouse state here - Ultima Underworld I and II
-    // do not like mouse states updated in real time, it ends up with
-    // mouse movements being ignored by the game randomly.
 
-    return event_needed;
+    if (!event_needed)
+        return 0;
+
+    if (mouse_config.mouse_dos_immediate)
+        return (move_cursor() != 0);
+    else
+        return true;
 }
 
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
 {
-    if (!state.cute_mouse)
-        return false;
+    if (!state.wheel_api)
+        return 0;
 
     // Although in some places it is possible for the guest code to get
     // wheel counter in 16-bit format, scrolling hundreds of lines in one
     // go would be insane - thus, limit the wheel counter to 8 bits and
     // reuse the code written for other mouse modules
-    pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
+    pending.w_rel = MOUSE_ClampToInt8(pending.w_rel + w_rel);
 
-    return (pending.w_rel != 0);
+    if (pending.w_rel == 0)
+        return 0;
+
+    if (mouse_config.mouse_dos_immediate)
+        return (move_wheel() != 0);
+    else
+        return true;
 }
 
 static Bitu int33_handler()
@@ -1068,7 +1156,7 @@ static Bitu int33_handler()
             restore_cursor_background_text();
         ++state.hidden;
         break;
-    case 0x03: // MS MOUSE v1.0+ / CuteMouse - get position and button status
+    case 0x03: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button status
         reg_bl = buttons.data;
         reg_bh = get_reset_wheel_8bit(); // CuteMouse clears wheel counter too
         reg_cx = get_pos_x();
@@ -1087,10 +1175,10 @@ static Bitu int33_handler()
         MOUSEDOS_DrawCursor();
         break;
     }
-    case 0x05: // MS MOUSE v1.0+ / CuteMouse - get button press / wheel data
+    case 0x05: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel data
     {
         const uint16_t idx = reg_bx; // button index
-        if (idx == 0xffff && state.cute_mouse) {
+        if (idx == 0xffff && state.wheel_api) {
             // 'magic' index for checking wheel instead of button
             reg_bx = get_reset_wheel_16bit();
             reg_cx = state.last_wheel_moved_x;
@@ -1110,11 +1198,11 @@ static Bitu int33_handler()
         }
         break;
     }
-    case 0x06: // MS MOUSE v1.0+ / CuteMouse - get button release data /
+    case 0x06: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get button release data /
                // mouse wheel data
     {
         const uint16_t idx = reg_bx; // button index
-        if (idx == 0xffff && state.cute_mouse) {
+        if (idx == 0xffff && state.wheel_api) {
             // 'magic' index for checking wheel instead of button
             reg_bx = get_reset_wheel_16bit();
             reg_cx = state.last_wheel_moved_x;
@@ -1209,13 +1297,13 @@ static Bitu int33_handler()
         reg_bx = state.text_xor_mask;
         [[fallthrough]];
     case 0x0b: // MS MOUSE v1.0+ - read motion data
-        reg_cx         = signed_to_reg16(state.mickey_x);
-        reg_dx         = signed_to_reg16(state.mickey_y);
-        state.mickey_x = 0;
-        state.mickey_y = 0;
+        reg_cx = signed_to_reg16(state.mickey_counter_x);
+        reg_dx = signed_to_reg16(state.mickey_counter_y);
+        state.mickey_counter_x = 0;
+        state.mickey_counter_y = 0;
         break;
     case 0x0c: // MS MOUSE v1.0+ - define user callback parameters
-        state.user_callback_mask    = reg_cx & 0xff;
+        state.user_callback_mask    = reg_cx;
         state.user_callback_segment = SegValue(es);
         state.user_callback_offset  = reg_dx;
         update_driver_active();
@@ -1237,17 +1325,17 @@ static Bitu int33_handler()
         state.update_region_y[1] = reg_to_signed16(reg_di);
         MOUSEDOS_DrawCursor();
         break;
-    case 0x11: // CuteMouse - get mouse capabilities
-        reg_ax    = 0x574d; // Identifier for detection purposes
-        reg_bx    = 0;      // Reserved capabilities flags
-        reg_cx    = 1;      // Wheel is supported
-        counter_w = 0;
-        state.cute_mouse = true;   // This call enables CuteMouse extensions
+    case 0x11: // WheelAPI v1.0+ - get mouse capabilities
+        reg_ax          = 0x574d; // Identifier for detection purposes
+        reg_bx          = 0;      // Reserved capabilities flags
+        reg_cx          = 1;      // Wheel is supported
+        state.wheel_api = true;   // This call enables WheelAPI extensions
+        counter_w       = 0;
         // Previous implementation provided Genius Mouse 9.06 function
         // to get number of buttons
         // (https://sourceforge.net/p/dosbox/patches/32/), it was
         // returning 0xffff in reg_ax and number of buttons in reg_bx; I
-        // suppose the CuteMouse extensions are more useful
+        // suppose the WheelAPI extensions are more useful
         break;
     case 0x12: // MS MOUSE - set large graphics cursor block
         LOG(LOG_MOUSE, LOG_ERROR)("Large graphics cursor block not implemented");
@@ -1281,21 +1369,29 @@ static Bitu int33_handler()
     case 0x17: // MS MOUSE v6.0+ - load driver state
         LOG(LOG_MOUSE, LOG_WARN)("Loading driver state...");
         MEM_BlockRead(SegPhys(es) + reg_dx, &state, sizeof(state));
+        pending.Reset();
         update_driver_active();
-        // TODO: we should probably fake an event for mouse movement,
-        // redraw cursor, etc.
+        set_sensitivity(state.sensitivity_x,
+                        state.sensitivity_y,
+                        state.unknown_01);
+        // TODO: we should probably also fake an event for mouse
+        // movement, redraw cursor, etc.
         break;
     case 0x18: // MS MOUSE v6.0+ - set alternate mouse user handler
     case 0x19: // MS MOUSE v6.0+ - set alternate mouse user handler
         LOG(LOG_MOUSE, LOG_ERROR)("Alternate mouse user handler not implemented");
         break;
     case 0x1a: // MS MOUSE v6.0+ - set mouse sensitivity
+        // NOTE: Ralf Brown Interrupt List (and some other sources) claim,
+        // that this should duplicate functions 0x0f and 0x13 - this is
+        // not true at least for Mouse Systems driver v8.00 and
+        // IBM/Microsoft driver v8.20
         set_sensitivity(reg_bx, reg_cx, reg_dx);
         break;
     case 0x1b: //  MS MOUSE v6.0+ - get mouse sensitivity
-        reg_bx = state.senv_x_val;
-        reg_cx = state.senv_y_val;
-        reg_dx = state.double_speed_threshold;
+        reg_bx = state.sensitivity_x;
+        reg_cx = state.sensitivity_y;
+        reg_dx = state.unknown_01;
         break;
     case 0x1c: // MS MOUSE v6.0+ - set interrupt rate
         set_interrupt_rate(reg_bx);
@@ -1431,7 +1527,7 @@ static Bitu int33_handler()
     return CBRET_NONE;
 }
 
-static uintptr_t mouse_bd_handler()
+static Bitu mouse_bd_handler()
 {
     // the stack contains offsets to register values
     uint16_t raxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x0a));
@@ -1489,7 +1585,7 @@ static uintptr_t mouse_bd_handler()
     return CBRET_NONE;
 }
 
-static uintptr_t user_callback_handler()
+static Bitu user_callback_handler()
 {
     mouse_shared.dos_cb_running = false;
     return CBRET_NONE;
@@ -1500,7 +1596,8 @@ bool MOUSEDOS_HasCallback(const uint8_t mask)
     return state.user_callback_mask & mask;
 }
 
-uintptr_t MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
+Bitu MOUSEDOS_DoCallback(const uint8_t mask,
+                         const MouseButtons12S buttons_12S)
 {
     mouse_shared.dos_cb_running = true;
     const bool mouse_moved = mask & static_cast<uint8_t>(MouseEventId::MouseHasMoved);
@@ -1513,15 +1610,15 @@ uintptr_t MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_
     // - https://github.com/dosemu2/dosemu2/issues/1552#issuecomment-1100777880
     // - https://github.com/dosemu2/dosemu2/commit/cd9d2dbc8e3d58dc7cbc92f172c0d447881526be
     // - https://github.com/joncampbell123/dosbox-x/commit/aec29ce28eb4b520f21ead5b2debf370183b9f28
-    reg_ah = (!mouse_is_captured && mouse_moved) ? 1 : 0;
+    reg_ah = (!is_captured() && mouse_moved) ? 1 : 0;
 
     reg_al = mask;
     reg_bl = buttons_12S.data;
     reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
     reg_cx = get_pos_x();
     reg_dx = get_pos_y();
-    reg_si = signed_to_reg16(state.mickey_x);
-    reg_di = signed_to_reg16(state.mickey_y);
+    reg_si = signed_to_reg16(state.mickey_counter_x);
+    reg_di = signed_to_reg16(state.mickey_counter_y);
 
     CPU_Push16(RealSeg(user_callback));
     CPU_Push16(RealOff(user_callback));
@@ -1529,6 +1626,16 @@ uintptr_t MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_
     CPU_Push16(state.user_callback_offset);
 
     return CBRET_NONE;
+}
+
+void MOUSEDOS_NotifyMapped(const bool enabled)
+{
+    is_mapped = enabled;
+}
+
+void MOUSEDOS_NotifyRawInput(const bool enabled)
+{
+    raw_input = enabled;
 }
 
 void MOUSEDOS_Init()
@@ -1566,7 +1673,7 @@ void MOUSEDOS_Init()
     state.hidden  = 1;         // hide cursor on startup
     state.mode    = UINT8_MAX; // non-existing mode
 
+    set_sensitivity(50, 50, 50);
     reset_hardware();
     reset();
-    set_sensitivity(50, 50, 50);
 }

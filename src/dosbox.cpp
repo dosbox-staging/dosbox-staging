@@ -42,6 +42,7 @@
 #include "mapper.h"
 #include "midi.h"
 #include "mixer.h"
+#include "mouse.h"
 #include "ne2000.h"
 #include "pci_bus.h"
 #include "pic.h"
@@ -88,7 +89,6 @@ void PCI_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
-void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
@@ -733,6 +733,8 @@ void DOSBOX_Init()
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
 #endif
 
+	// Configure mouse
+	MOUSE_AddConfigSection(control);
 
 	// Configure mixer
 	MIXER_AddConfigSection(control);
@@ -1094,14 +1096,7 @@ void DOSBOX_Init()
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. Parameter for all types is irq (optional).\n"
 	        "for mouse:\n"
-	        "   type, can be one of:\n"
-	        "      2btn:  2 buttons, Microsoft serial mouse\n"
-	        "      3btn:  3 buttons, Logitech serial mouse\n"
-	        "      wheel: 3 buttons + wheel serial mouse\n"
-	        "      msm:   3 buttons, Mouse Systems Mouse\n"
-	        "      2btn+msm, 3btn+msm, wheel+msm : autoselection\n"
-	        "   rate, can be normal or smooth (more frequent updates than on real PC)\n"
-	        "   Default is type:wheel+msm rate:smooth\n"
+	        "   model, overrides setting from [mouse] section\n"
 	        "for direct: realport (required), rxdelay (optional).\n"
 	        "   (realport:COM1 realport:ttyS0).\n"
 	        "for modem: listenport, sock, baudrate (all optional).\n"

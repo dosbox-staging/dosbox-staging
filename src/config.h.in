@@ -124,6 +124,9 @@
 // Define to 1 to enable MT-32 emulator
 #mesondefine C_MT32EMU
 
+// Define to 1 to enable mouse mapping support
+#mesondefine C_MANYMOUSE
+
 // Compiler supports Core Audio headers
 #mesondefine C_COREAUDIO
 
