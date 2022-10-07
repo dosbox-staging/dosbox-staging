@@ -4,6 +4,7 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
+ *  Altered to silence compiler warnings by Roman Standzikowski.
  */
 
 #include "manymouse.h"
@@ -341,7 +342,7 @@ static int find_mouse_by_devid(const int devid)
     int i;
     const MouseStruct *mouse = mice;
 
-    for (i = 0; i < available_mice; i++, mouse++)
+    for (i = 0; i < (int) available_mice; i++, mouse++)
     {
         if (mouse->device_id == devid)
             return (mouse->connected) ? i : -1;

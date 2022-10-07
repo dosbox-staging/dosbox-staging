@@ -4,6 +4,7 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
+ *  Altered to silence compiler warnings by Roman Standzikowski.
  */
 
 #include "manymouse.h"
@@ -145,7 +146,7 @@ static int poll_mouse(MouseStruct *mouse, ManyMouseEvent *outevent)
 } /* poll_mouse */
 
 
-static int init_mouse(const char *fname, int fd)
+static int init_mouse(__attribute__((unused)) const char *fname, int fd)
 {
     MouseStruct *mouse = &mice[available_mice];
     int has_absolutes = 0;
@@ -261,7 +262,7 @@ static int linux_evdev_init(void)
     while ((dent = readdir(dirp)) != NULL)
     {
         char fname[128];
-        snprintf(fname, sizeof (fname), "/dev/input/%s", dent->d_name);
+        snprintf(fname, sizeof (fname), "/dev/input/%.100s", dent->d_name);
         if (open_if_mouse(fname))
             available_mice++;
     } /* while */
