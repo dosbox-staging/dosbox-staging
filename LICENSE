@@ -34,6 +34,7 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - gui_tk: GPL-3.0-or-later
    - iir1: MIT
    - loguru: Public Domain
+   - ManyMouse: Zlib
    - PDcurses: Public Domain
    - whereami: MIT or WTFPL
    - YM7128B_emu: BSD 2-Clause

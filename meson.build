@@ -528,6 +528,14 @@ endif
 coreaudio_dep = optional_dep
 coremidi_dep = optional_dep
 corefoundation_dep = optional_dep
+iokit_dep = optional_dep
+iokit_code = '''
+#include <IOKit/hid/IOHIDLib.h>
+int main() {
+  dispatch_block_t test_var;
+  return 0;
+}
+'''
 if host_machine.system() == 'darwin'
 
     # ObjectiveC parsing, if possible
@@ -568,6 +576,31 @@ if host_machine.system() == 'darwin'
         warning('''Core MIDI disabled because Apple Framework missing''')
     endif
     summary('CoreMIDI support', coremidi_dep.found())
+
+    # IOKit
+    iokit_dep = dependency(
+        'appleframeworks',
+        modules: ['IOKit'],
+        required: false,
+    )
+    if iokit_dep.found()
+        if cxx.check_header('IOKit/IOKitLib.h')
+            is_iokit_compilable = cxx.links(
+                iokit_code,
+                name: 'compiler is capable of compiling IOKit',
+            )
+            if is_iokit_compilable
+                conf_data.set('C_IOKIT', 1)
+            else
+                warning('''IOKit disabled because compiler cannot handle it''')
+            endif
+        else
+            warning('''IOKit disabled because header is unusable''')
+        endif
+    else
+        warning('''IOKit disabled because Apple Framework missing''')
+    endif
+    summary('IOKit support', iokit_dep.found())
 
     # Locale discovery
     corefoundation_dep = dependency(
@@ -615,6 +648,16 @@ if host_machine.system() == 'darwin'
     endif
 endif
 
+# Determine if system is capable of using ManyMouse library
+conf_data.set10('C_MANYMOUSE', true)
+if host_machine.system() == 'darwin'
+  if not conf_data.has('C_IOKIT')
+    # On OSX the ManyMouse library requires IOKit
+    conf_data.set10('C_MANYMOUSE', false)
+  endif
+endif
+summary('ManyMouse support', conf_data.get('C_MANYMOUSE') == true)
+
 # Linux-only dependencies
 alsa_dep = optional_dep
 using_linux = (host_machine.system() == 'linux')
@@ -654,6 +697,9 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+if conf_data.get('C_MANYMOUSE') == true
+  subdir('src/libs/manymouse')
+endif
 
 # ZMBV and TalChorus use some support functionality from misc
 subdir('src/misc')
@@ -676,6 +722,10 @@ third_party_deps = [
     libwhereami_dep,
     libtalchorus_dep,
 ]
+
+if conf_data.get('C_MANYMOUSE') == true
+  third_party_deps += manymouse_dep
+endif
 
 # internal libs
 subdir('src/cpu')

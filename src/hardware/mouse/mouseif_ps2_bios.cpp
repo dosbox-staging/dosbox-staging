@@ -18,7 +18,8 @@
  */
 
 #include "mouse.h"
-#include "mouse_core.h"
+#include "mouse_config.h"
+#include "mouse_interfaces.h"
 
 #include <algorithm>
 #include <cmath>
@@ -28,9 +29,10 @@
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
-#include "int10.h"
 #include "pic.h"
 #include "regs.h"
+
+#include "../../ints/int10.h"
 
 using namespace bit::literals;
 
@@ -44,28 +46,17 @@ CHECK_NARROWING();
 // - https://isdaman.com/alsos/hardware/mouse/ps2interface.htm
 // - https://wiki.osdev.org/Mouse_Input
 
-enum MouseType : uint8_t {   // mouse type visible via PS/2 interface
-    None         = 0xff, // dummy, just to trigger a log during startup
-    Standard     = 0x00, // standard 2 or 3 button mouse
-    IntelliMouse = 0x03, // Microsoft IntelliMouse (3 buttons, wheel)
-#ifdef ENABLE_EXPLORER_MOUSE
-    Explorer = 0x04, // Microsoft IntelliMouse Explorer (5 buttons, wheel)
-#endif // ENABLE_EXPLORER_MOUSE
-};
-
 static MouseButtonsAll buttons;     // currently visible button state
 static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
 static MouseButtons12S buttons_12S; // buttons with 3/4/5 quished together
 
 static float delta_x = 0.0f; // accumulated mouse movement since last reported
 static float delta_y = 0.0f;
-static int8_t wheel_counter = 0; // NOTE: only fetch using 'GetResetWheel*'!
+static int8_t counter_w = 0; // mouse wheel counter
 
-static MouseType type = MouseType::None; // NOTE: only change using 'set_type'!
+static MouseModelPS2 protocol   = MouseModelPS2::Standard;
 static uint8_t unlock_idx_im = 0; // sequence index for unlocking extended protocol
-#ifdef ENABLE_EXPLORER_MOUSE
 static uint8_t unlock_idx_xp = 0;
-#endif // ENABLE_EXPLORER_MOUSE
 
 static uint8_t packet[4] = {0}; // packet to be transferred via BIOS interface
 
@@ -88,45 +79,39 @@ void MOUSEPS2_UpdateButtonSquish()
     // - for PS/2 modes other than IntelliMouse Explorer there is
     //   no standard way to report buttons 4 and 5
 
-#ifdef ENABLE_EXPLORER_MOUSE
-    const bool squish = mouse_shared.active_vmm || (type != MouseType::Explorer);
+    const bool squish = mouse_shared.active_vmm || (protocol != MouseModelPS2::Explorer);
     buttons.data      = squish ? buttons_12S.data : buttons_all.data;
-#else
-    buttons.data = buttons_12S.data;
-#endif
 }
 
 static void terminate_unlick_sequence()
 {
     unlock_idx_im = 0;
-#ifdef ENABLE_EXPLORER_MOUSE
     unlock_idx_xp = 0;
-#endif // ENABLE_EXPLORER_MOUSE
 }
 
-static void set_type(const MouseType new_type)
+static void set_protocol(const MouseModelPS2 new_protocol)
 {
     terminate_unlick_sequence();
 
-    if (type != new_type) {
-        type                  = new_type;
-        const char *type_name = nullptr;
-        switch (type) {
-        case MouseType::Standard:
-            type_name = "Standard, 3 buttons";
+    static bool first_time = true;
+    if (first_time || protocol != new_protocol) {
+        first_time = false;
+        protocol   = new_protocol;
+        const char *protocol_name = nullptr;
+        switch (protocol) {
+        case MouseModelPS2::Standard:
+            protocol_name = "Standard, 3 buttons";
             break;
-        case MouseType::IntelliMouse:
-            type_name = "IntelliMouse, wheel, 3 buttons";
+        case MouseModelPS2::IntelliMouse:
+            protocol_name = "IntelliMouse, wheel, 3 buttons";
             break;
-#ifdef ENABLE_EXPLORER_MOUSE
-        case MouseType::Explorer:
-            type_name = "IntelliMouse Explorer, wheel, 5 buttons";
+        case MouseModelPS2::Explorer:
+            protocol_name = "IntelliMouse Explorer, wheel, 5 buttons";
             break;
-#endif // ENABLE_EXPLORER_MOUSE
         default: break;
         }
 
-        LOG_MSG("MOUSE (PS/2): %s", type_name);
+        LOG_MSG("MOUSE (PS/2): %s", protocol_name);
 
         packet[0] = 0;
         packet[1] = 0;
@@ -137,23 +122,21 @@ static void set_type(const MouseType new_type)
     }
 }
 
-#ifdef ENABLE_EXPLORER_MOUSE
 static uint8_t get_reset_wheel_4bit()
 {
-    const int8_t tmp = std::clamp(wheel_counter,
+    const int8_t tmp = std::clamp(counter_w,
                                   static_cast<int8_t>(-0x08),
                                   static_cast<int8_t>(0x07));
-    wheel_counter = 0; // reading always clears the counter
+    counter_w = 0; // reading always clears the counter
 
     // 0x0f for -1, 0x0e for -2, etc.
     return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x10 + tmp);
 }
-#endif // ENABLE_EXPLORER_MOUSE
 
 static uint8_t get_reset_wheel_8bit()
 {
-    const auto tmp = wheel_counter;
-    wheel_counter  = 0; // reading always clears thecounter
+    const auto tmp = counter_w;
+    counter_w  = 0; // reading always clears thecounter
 
     // 0xff for -1, 0xfe for -2, etc.
     return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x100 + tmp);
@@ -181,9 +164,9 @@ static int16_t get_scaled_movement(const int16_t d)
 
 static void reset_counters()
 {
-    delta_x       = 0.0f;
-    delta_y       = 0.0f;
-    wheel_counter = 0;
+    delta_x   = 0.0f;
+    delta_y   = 0.0f;
+    counter_w = 0;
 }
 
 void MOUSEPS2_UpdatePacket()
@@ -213,8 +196,7 @@ void MOUSEPS2_UpdatePacket()
     dx = get_scaled_movement(dx);
     dy = get_scaled_movement(static_cast<int16_t>(-dy));
 
-#ifdef ENABLE_EXPLORER_MOUSE
-    if (type == MouseType::Explorer) {
+    if (protocol == MouseModelPS2::Explorer) {
         // There is no overflow for 5-button mouse protocol, see
         // HT82M30A datasheet
         dx = std::clamp(dx,
@@ -223,9 +205,7 @@ void MOUSEPS2_UpdatePacket()
         dy = std::clamp(dy,
                         static_cast<int16_t>(-UINT8_MAX),
                         static_cast<int16_t>(UINT8_MAX));
-    } else
-#endif // ENABLE_EXPLORER_MOUSE
-    {
+    } else {
         if ((dx > 0xff) || (dx < -0xff))
             mdat.overflow_x = 1;
         if ((dy > 0xff) || (dy < -0xff))
@@ -248,17 +228,15 @@ void MOUSEPS2_UpdatePacket()
     packet[1] = static_cast<uint8_t>(dx);
     packet[2] = static_cast<uint8_t>(dy);
 
-    if (type == MouseType::IntelliMouse)
+    if (protocol == MouseModelPS2::IntelliMouse)
         packet[3] = get_reset_wheel_8bit();
-#ifdef ENABLE_EXPLORER_MOUSE
-    else if (type == MouseType::Explorer) {
+    else if (protocol == MouseModelPS2::Explorer) {
         packet[3] = get_reset_wheel_4bit();
         if (buttons.extra_1)
             bit::set(packet[3], b4);
         if (buttons.extra_2)
             bit::set(packet[3], b5);
     }
-#endif // ENABLE_EXPLORER_MOUSE
     else
         packet[3] = 0;
 }
@@ -290,29 +268,29 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
     } else
         rate_hz = new_rate_hz;
 
-    // Update event queue settings
-    MOUSE_NotifyRatePS2(rate_hz);
+    // Update event queue settings and interface information
+    MouseInterface::GetPS2()->NotifyInterfaceRate(rate_hz);
 
     // Handle extended mouse protocol unlock sequences
     auto unlock = [](const std::vector<uint8_t> &sequence,
                      uint8_t &idx,
-                     const MouseType potential_type) {
+                     const MouseModelPS2 potential_protocol) {
         if (sequence[idx] != rate_hz)
             idx = 0;
         else if (sequence.size() == ++idx) {
-            set_type(potential_type);
+            set_protocol(potential_protocol);
         }
     };
 
     static const std::vector<uint8_t> seq_im = {200, 100, 80};
-#ifdef ENABLE_EXPLORER_MOUSE
     static const std::vector<uint8_t> seq_xp = {200, 200, 80};
-#endif // ENABLE_EXPLORER_MOUSE
 
-    unlock(seq_im, unlock_idx_im, MouseType::IntelliMouse);
-#ifdef ENABLE_EXPLORER_MOUSE
-    unlock(seq_xp, unlock_idx_xp, MouseType::Explorer);
-#endif // ENABLE_EXPLORER_MOUSE
+    if (mouse_config.model_ps2 == MouseModelPS2::IntelliMouse)
+        unlock(seq_im, unlock_idx_im, MouseModelPS2::IntelliMouse);
+    else if (mouse_config.model_ps2 == MouseModelPS2::Explorer) {
+        unlock(seq_im, unlock_idx_im, MouseModelPS2::IntelliMouse);
+        unlock(seq_xp, unlock_idx_xp, MouseModelPS2::Explorer);
+    }
 }
 
 static void cmd_set_defaults()
@@ -320,15 +298,13 @@ static void cmd_set_defaults()
     cmd_set_resolution(4);
     cmd_set_sample_rate(100);
 
-#ifdef ENABLE_EXPLORER_MOUSE
     MOUSEPS2_UpdateButtonSquish();
-#endif // ENABLE_EXPLORER_MOUSE
 }
 
 static void cmd_reset()
 {
     cmd_set_defaults();
-    set_type(MouseType::Standard);
+    set_protocol(MouseModelPS2::Standard);
     reset_counters();
 }
 
@@ -347,8 +323,8 @@ bool MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
     return (std::fabs(delta_x) >= 0.5f) || (std::fabs(delta_y) >= 0.5f);
 }
 
-bool MOUSEPS2_NotifyPressedReleased(const MouseButtons12S new_buttons_12S,
-                                    const MouseButtonsAll new_buttons_all)
+bool MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
+                           const MouseButtonsAll new_buttons_all)
 {
     const auto buttons_old = buttons;
 
@@ -361,18 +337,14 @@ bool MOUSEPS2_NotifyPressedReleased(const MouseButtons12S new_buttons_12S,
 
 bool MOUSEPS2_NotifyWheel(const int16_t w_rel)
 {
-#ifdef ENABLE_EXPLORER_MOUSE
-    if (type != MouseType::IntelliMouse && type != MouseType::Explorer)
+    if (protocol != MouseModelPS2::IntelliMouse &&
+        protocol != MouseModelPS2::Explorer)
         return false;
-#else
-    if (type != MouseType::IntelliMouse)
-        return false;
-#endif
 
-    wheel_counter = static_cast<int8_t>(std::clamp(static_cast<int32_t>(w_rel + wheel_counter),
-                                                   static_cast<int32_t>(INT8_MIN),
-                                                   static_cast<int32_t>(INT8_MAX)));
-    return true;
+    auto old_counter_w = counter_w;
+    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + w_rel));
+
+    return (old_counter_w != counter_w);
 }
 
 // ***************************************************************************
@@ -506,9 +478,9 @@ uint8_t MOUSEBIOS_GetStatus()
     return ret.data;
 }
 
-uint8_t MOUSEBIOS_GetType()
+uint8_t MOUSEBIOS_GetProtocol()
 {
-    return static_cast<uint8_t>(type);
+    return static_cast<uint8_t>(protocol);
 }
 
 static Bitu callback_ret()

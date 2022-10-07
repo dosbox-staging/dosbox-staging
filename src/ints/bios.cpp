@@ -1000,8 +1000,8 @@ static Bitu INT15_Handler(void) {
 			CALLBACK_SCF(false);
 			reg_ah = 0;
 			break;
-		case 0x04: // get type
-			reg_bh = MOUSEBIOS_GetType();
+		case 0x04: // get mouse type/protocol
+			reg_bh = MOUSEBIOS_GetProtocol();
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;

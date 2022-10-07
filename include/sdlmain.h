@@ -233,8 +233,6 @@ struct SDL_Block {
 		int period_us_late = 0;
 	} frame = {};
 	struct {
-		float xsensitivity = 0.3f;
-		float ysensitivity = 0.3f;
 		MouseControlType control_choice = Seamless;
 		bool middle_will_release = true;
 		bool has_focus = false;

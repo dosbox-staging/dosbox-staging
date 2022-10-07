@@ -17,10 +17,10 @@
  */
 
 #include "mouse.h"
-#include "mouse_core.h"
+#include "mouse_config.h"
+#include "mouse_interfaces.h"
 
 #include <algorithm>
-#include <chrono>
 
 #include "checks.h"
 #include "inout.h"
@@ -70,21 +70,20 @@ static constexpr uint32_t ABS_UPDATED = 4;            // tells that new pointer
                                                       // position is available
 static constexpr uint32_t ABS_NOT_UPDATED = 0;
 
-static bool updated = false;  // true = mouse state update waits to be picked up
-static VMwareButtons buttons; // state of mouse buttons, in VMware format
-static uint16_t scaled_x = 0x7fff; // absolute position scaled from 0 to 0xffff
-static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
-static int8_t wheel_counter = 0;      // wheel movement counter
+static bool raw_input = true;       // true = no host mouse acceleration pre-applied
+static bool is_mapped = false;      // true = physical mouse is mapped to this interface
+static bool updated   = false;      // true = mouse state update waits to be picked up
+static VMwareButtons buttons;       // state of mouse buttons, in VMware format
+static uint16_t scaled_x  = 0x7fff; // absolute position scaled from 0 to 0xffff
+static uint16_t scaled_y  = 0x7fff; // 0x7fff is a center position
+static int8_t   counter_w = 0;      // wheel movement counter
 
 static float pos_x = 0.0f;
 static float pos_y = 0.0f;
 
-// Speed measurement
-static auto time_start      = std::chrono::steady_clock::now();
-static auto pic_ticks_start = PIC_Ticks;
-static float distance       = 0.0f; // distance since last measurement
-
-static float speed = 0.0f;
+// Multiply scale by 0.02f to put acceleration_vmm in a reasonable
+// range, similar to sensitivity_dos or sensitivity_vmm)
+static MouseSpeedCalculator speed_xy(0.02f * mouse_predefined.acceleration_vmm);
 
 // ***************************************************************************
 // VMware interface implementation
@@ -106,8 +105,8 @@ static void MOUSEVMM_Activate()
         MOUSEPS2_UpdateButtonSquish();
         MOUSE_NotifyStateChanged();
     }
-    buttons.data  = 0;
-    wheel_counter = 0;
+    buttons.data = 0;
+    counter_w    = 0;
 }
 
 void MOUSEVMM_Deactivate()
@@ -118,8 +117,18 @@ void MOUSEVMM_Deactivate()
         MOUSEPS2_UpdateButtonSquish();
         MOUSE_NotifyStateChanged();
     }
-    buttons.data  = 0;
-    wheel_counter = 0;
+    buttons.data = 0;
+    counter_w    = 0;
+}
+
+void MOUSEVMM_NotifyMapped(const bool enabled)
+{
+    is_mapped = enabled;
+}
+
+void MOUSEVMM_NotifyRawInput(const bool enabled)
+{
+    raw_input = enabled;
 }
 
 static void cmd_get_version()
@@ -133,9 +142,9 @@ static void cmd_abs_pointer_data()
     reg_eax = buttons.data;
     reg_ebx = scaled_x;
     reg_ecx = scaled_y;
-    reg_edx = static_cast<uint32_t>((wheel_counter >= 0) ? wheel_counter : 0x100 + wheel_counter);
+    reg_edx = static_cast<uint32_t>((counter_w >= 0) ? counter_w : 0x100 + counter_w);
 
-    wheel_counter = 0;
+    counter_w = 0;
 }
 
 static void cmd_abs_pointer_status()
@@ -176,62 +185,16 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
     return reg_eax;
 }
 
-static void speed_update(const float x_rel, const float y_rel)
-{
-    constexpr auto n = static_cast<float>(std::chrono::steady_clock::period::num);
-    constexpr auto d = static_cast<float>(std::chrono::steady_clock::period::den);
-    constexpr auto period_ms = 1000.0f * n / d;
-    // For the measurement duration require no more than 400 milliseconds
-    // and at least 10 times the clock granularity
-    constexpr uint32_t max_diff_ms = 400;
-    constexpr uint32_t min_diff_ms = std::max(static_cast<uint32_t>(1),
-                                              static_cast<uint32_t>(period_ms * 10));
-
-    // Require at least 40 ticks of PIC emulator to pass
-    constexpr uint32_t min_diff_ticks = 40;
-
-    const auto time_now   = std::chrono::steady_clock::now();
-    const auto diff_time  = time_now - time_start;
-    const auto diff_ticks = PIC_Ticks - pic_ticks_start;
-
-    const auto diff_ms =
-            std::chrono::duration_cast<std::chrono::milliseconds>(diff_time).count();
-
-    if (diff_ms > std::max(max_diff_ms, static_cast<uint32_t>(10 * period_ms))) {
-        // Do not wait any more for movement, consider speed to be 0
-        speed = 0.0f;
-    } else if (diff_ms >= 0) {
-        // Update distance travelled by the cursor
-        distance += std::sqrt(x_rel * x_rel + y_rel * y_rel);
-
-        // Make sure enough time passed for accurate speed calculation
-        if (diff_ms < min_diff_ms || diff_ticks < min_diff_ticks)
-            return;
-
-        // Update cursor speed (multiply it by 20.0f to put acceleration_vmm in
-        // a reasonable range, similar to sensitivity_dos or sensitivity_vmm)
-        speed = 20.0f * acceleration_vmm * distance / static_cast<float>(diff_ms);
-    }
-
-    // Start new measurement
-    distance        = 0.0f;
-    time_start      = time_now;
-    pic_ticks_start = PIC_Ticks;
-}
-
 bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
                           const uint16_t x_abs, const uint16_t y_abs)
 {
     if (!mouse_shared.active_vmm)
         return false;
 
-    const auto x_mov = x_rel * sensitivity_vmm;
-    const auto y_mov = y_rel * sensitivity_vmm;
+    speed_xy.Update(std::sqrt(x_rel * x_rel + y_rel * y_rel));
 
-    speed_update(x_mov, y_mov);
-
-    const auto old_x = scaled_x;
-    const auto old_y = scaled_y;
+    const auto old_scaled_x = scaled_x;
+    const auto old_scaled_y = scaled_y;
 
     auto calculate = [](float &position,
                         const float relative,
@@ -240,16 +203,19 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
                         const uint16_t clip) {
         assert(resolution > 1u);
 
-        if (mouse_is_captured) {
+        if (mouse_is_captured || is_mapped) {
             // Mouse is captured, there is no need for pointer
             // integration with host OS - we can use relative
-            // movement with configured sensitivity and built-in
-            // pointer acceleration model
+            // movement with configured sensitivity and (for
+            // raw mouse input) our built-in pointer acceleration
+            // model
 
-            const auto coeff = MOUSE_GetBallisticsCoeff(speed);
-            const auto delta = relative * coeff;
-
-            position += MOUSE_ClampRelativeMovement(delta);
+            if (raw_input) {
+                const auto coeff = MOUSE_GetBallisticsCoeff(speed_xy.Get());
+                position += MOUSE_ClampRelativeMovement(relative * coeff);
+            }
+            else
+                position += MOUSE_ClampRelativeMovement(relative);
         } else
             // Cursor position controlled by the host OS
             position = static_cast<float>(std::max(absolute - clip, 0));
@@ -265,24 +231,24 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
         return static_cast<uint16_t>(tmp);
     };
 
-    scaled_x = calculate(pos_x, x_mov, x_abs, mouse_video.res_x, mouse_video.clip_x);
-    scaled_y = calculate(pos_y, y_mov, y_abs, mouse_video.res_y, mouse_video.clip_y);
+    scaled_x = calculate(pos_x, x_rel, x_abs, mouse_video.res_x, mouse_video.clip_x);
+    scaled_y = calculate(pos_y, y_rel, y_abs, mouse_video.res_y, mouse_video.clip_y);
 
     // Filter out unneeded events (like sub-pixel mouse movements,
     // which won't change guest side mouse state)
-    if (old_x != scaled_x || old_y != scaled_y) {
-        updated = true;
-        return true;
-    }
+    if (GCC_UNLIKELY(old_scaled_x == scaled_x && old_scaled_y == scaled_y))
+        return false;
 
-    return false;
+    updated = true;
+    return true;
 }
 
-bool MOUSEVMM_NotifyPressedReleased(const MouseButtons12S buttons_12S)
+bool MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 {
     if (!mouse_shared.active_vmm)
         return false;
 
+    const auto old_buttons = buttons;
     buttons.data = 0;
 
     // Direct assignment of .data is not possible, as bit layout is different
@@ -290,8 +256,10 @@ bool MOUSEVMM_NotifyPressedReleased(const MouseButtons12S buttons_12S)
     buttons.right  = static_cast<bool>(buttons_12S.right);
     buttons.middle = static_cast<bool>(buttons_12S.middle);
 
-    updated = true;
+    if (GCC_UNLIKELY(old_buttons.data == buttons.data))
+        return false;
 
+    updated = true;
     return true;
 }
 
@@ -300,21 +268,21 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel)
     if (!mouse_shared.active_vmm)
         return false;
 
-    const auto tmp = std::clamp(static_cast<int32_t>(w_rel + wheel_counter),
-                                static_cast<int32_t>(INT8_MIN),
-                                static_cast<int32_t>(INT8_MAX));
-    wheel_counter = static_cast<int8_t>(tmp);
-    updated       = true;
+    const auto old_counter_w = counter_w;
+    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + w_rel));
 
+    if (GCC_UNLIKELY(old_counter_w == counter_w))
+        return false;
+
+    updated = true;
     return true;
 }
 
 void MOUSEVMM_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs)
 {
     // Report a fake mouse movement
-
     if (MOUSEVMM_NotifyMoved(0.0f, 0.0f, x_abs, y_abs) && mouse_shared.active_vmm)
-        MOUSE_NotifyMovedFake();
+        MOUSE_NotifyFakePS2();
 }
 
 void MOUSEVMM_Init()
