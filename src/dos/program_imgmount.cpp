@@ -531,8 +531,6 @@ void IMGMOUNT::AddMessages() {
 #endif
 	);
     
-    MSG_Add("PROGRAM_IMGMOUNT_STATUS_1",
-	        "The currently mounted disk and CD image drives are:\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",

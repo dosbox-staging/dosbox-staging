@@ -1218,10 +1218,6 @@ Examples:
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-The currently mounted disk and CD image drives are:
-
-.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 Must specify drive letter to mount image at.
 

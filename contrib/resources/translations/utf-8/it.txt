@@ -1289,10 +1289,6 @@ Esempi:
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]discoAvviabile.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-Le unità disco e immagini CD attualmente montate sono:
-
-.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 È necessario specificare la lettera dell'unità su cui montare l'immagine.
 

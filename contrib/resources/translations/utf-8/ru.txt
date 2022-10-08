@@ -2540,10 +2540,6 @@ Image name
 :PROGRAM_MOUNT_STATUS_SLOT
 Swap slot
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-The currently mounted disk and CD image drives are:
-
-.
 :PROGRAM_IMGMOUNT_STATUS_NONE
 No drive available
 
