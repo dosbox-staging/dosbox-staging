@@ -43,17 +43,22 @@ This setting has been renamed to viewport_resolution.
 .
 :CONFIG_HOST_RATE
 Set the host's refresh rate:
-  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
-  sdi:       Use serial device interface (SDI) rates, without further adjustment.
-  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
-  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh
+             display.
+  sdi:       Use serial device interface (SDI) rates, without further
+             adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR
+             displays).
+  <custom>:  Specify a custom rate as a whole or decimal value greater than
+             23.000.
 .
 :CONFIG_VSYNC
 Synchronize with display refresh rate if supported. This can
 reduce flickering and tearing, but may also impact performance.
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
+Number of microseconds to allow rendering to block before skipping the next
+frame. 0 disables this and will always render.
 .
 :CONFIG_PRESENTATION_MODE
 Optionally select the frame presentation mode:
@@ -73,15 +78,18 @@ Use texture_renderer=auto for an automatic choice.
 Choose a mouse control method:
    onclick:        Capture the mouse when clicking any button in the window.
    onstart:        Capture the mouse immediately on start.
-   seamless:       Let the mouse move seamlessly; captures only with middle-click or hotkey.
+   seamless:       Let the mouse move seamlessly; captures only with
+                   middle-click or hotkey.
    nomouse:        Hide the mouse and don't send input to the game.
 Choose how middle-clicks are handled (second parameter):
    middlegame:     Middle-clicks are sent to the game.
-   middlerelease:  Middle-click will release the captured mouse, and also capture when seamless.
+   middlerelease:  Middle-click will release the captured mouse, and also
+                   capture when seamless.
 Defaults (if not present or incorrect): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).
+Mouse sensitivity. The optional second parameter specifies vertical sensitivity
+(e.g. 100,-50).
 .
 :CONFIG_RAW_MOUSE_INPUT
 Enable this setting to bypass your operating system's mouse
@@ -89,7 +97,7 @@ acceleration and sensitivity settings. This works in
 fullscreen or when the mouse is captured in window mode.
 .
 :CONFIG_WAITONERROR
-Wait before closing the console if dosbox has an error.
+Keep the console open if an error has occurred.
 .
 :CONFIG_PRIORITY
 Priority levels to apply when active and inactive, respectively. 
@@ -117,7 +125,8 @@ while the emulator is running).
 Select a language to use: de, en, es, fr, it, nl, pl, and ru
 Notes: This setting will override the 'LANG' environment, if set.
        The 'resources/translations' directory bundled with the executable holds
-       these files. Please keep it along-side the executable to support this feature.
+       these files. Please keep it along-side the executable to support this
+       feature.
 .
 :CONFIG_MACHINE
 The type of machine DOSBox tries to emulate.
@@ -137,10 +146,12 @@ How software-corrupted memory chain blocks should be handled:
   repair:  Repair (and report) faults using adjacent chain blocks.
   report:  Report faults but otherwise proceed as-is.
   allow:   Allow faults to go unreported (hardware behavior).
-The default (deny) is recommended unless a game is failing with MCB corruption errors.
+The default (deny) is recommended unless a game is failing with MCB corruption
+errors.
 .
 :CONFIG_VMEMSIZE
-Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per
+video adapter.
 .
 :CONFIG_DOS_RATE
 Customize the emulated video mode's frame rate, in Hz:
@@ -207,26 +218,38 @@ Works only when emulating hercules or cga_mono.
 You can also cycle through available colours using F11.
 .
 :CONFIG_CGA_COLORS
-Sets the interpretation of CGA RGBI colors. Affects all machine types capable of
-displaying CGA or better graphics. Built-in presets:
-  default:       The canonical CGA palette, as emulated by VGA adapters (default).
-  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level
-                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).
-  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.
-  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with
-                 a unique Contrast control that dims non-bright colors only
-                 (0 to 100; defaults to 100).
+Sets the interpretation of CGA RGBI colors. Affects all machine types capable
+of displaying CGA or better graphics. Built-in presets:
+  default:       The canonical CGA palette, as emulated by VGA adapters
+                 (default).
+  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable
+                 Brown Level (0 - red, 50 - brown, 100 - dark yellow;
+                 defaults to 50).
+  tandy-warm:    Emulation of the actual color output of an unknown Tandy
+                 monitor.
+  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor
+                 with a unique Contrast control that dims non-bright colors
+                 only (0 to 100; defaults to 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
                  Palettes used by the Amiga ports of Sierra AGI games
                  (see the manual for further details).
-  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.
+  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien
+                 AGI-interpreter.
   scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
   colodore:      Commodore 64 inspired colors based on the Colodore palette.
   colodore-sat:  Colodore palette with 20% more saturation.
-  dga16:         A modern take on the canonical CGA palette with dialed back contrast.
-You can also set custom colors by specifying 16 space or comma separated color values,
-either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
-RGB triplets (e.g. (255, 0, 255) for magenta).
+  dga16:         A modern take on the canonical CGA palette with dialed back
+                 contrast.
+You can also set custom colors by specifying 16 space or comma separated color
+values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red),
+or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colors are
+ordered as follows:
+black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
+light-blue, light-green, light-cyan, light-red, light-magenta, yellow,
+and white.
+Their default values, shown here in 6-digit hex code format, are:
+#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555
+#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 and #ffffff, respectively.
 .
 :CONFIG_SCALER
 Scaler used to enlarge/enhance low resolution modes.
@@ -301,13 +324,16 @@ Enable silent mode, sound is still emulated though.
 Mixer sample rate.
 .
 :CONFIG_BLOCKSIZE
-Mixer block size; larger values might help with sound stuttering but sound will also be more lagged.
+Mixer block size; larger values might help with sound stuttering but sound will
+also be more lagged.
 .
 :CONFIG_PREBUFFER
-How many milliseconds of sound to render on top of the blocksize; larger values might help with sound stuttering but sound will also be more lagged.
+How many milliseconds of sound to render on top of the blocksize; larger values
+might help with sound stuttering but sound will also be more lagged.
 .
 :CONFIG_NEGOTIATE
-Let the system audio driver negotiate (possibly) better rate and blocksize settings.
+Let the system audio driver negotiate (possibly) better rate and blocksize
+settings.
 .
 :CONFIG_COMPRESSOR
 Enable the auto-leveling compressor on the master channel to prevent clipping
@@ -319,8 +345,9 @@ of the audio output:
 Set crossfeed globally on all stereo channels for headphone listening:
   off:         No crossfeed (default).
   on:          Enable crossfeed (at strength 40).
-  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
-               and 100 full crossfeed (effectively turning stereo content into mono).
+  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed
+               (off) and 100 full crossfeed (effectively turning stereo content
+               into mono).
 Note: You can set per-channel crossfeed via mixer commands.
 .
 :CONFIG_REVERB
@@ -502,8 +529,8 @@ Type of filter to emulate for the Sound Blaster digital sound output:
   auto:      Use the appropriate filter determined by 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
              Use the filter of this Sound Blaster model.
-  modern:    Use linear interpolation upsampling that acts as a low-pass filter;
-             this is the legacy DOSBox behaviour (default).
+  modern:    Use linear interpolation upsampling that acts as a low-pass
+             filter; this is the legacy DOSBox behaviour (default).
   off:       Don't filter the output.
   <custom>:  One or two custom filters in the following format:
                TYPE ORDER FREQ
@@ -605,7 +632,8 @@ Filter for the PC Speaker output:
 DC-offset is now eliminated globally from the master mixer output.
 .
 :CONFIG_TANDY
-Enable Tandy Sound System emulation.For 'auto', emulation is present only if machine is set to 'tandy'.
+Enable Tandy Sound System emulation.
+For 'auto', emulation is present only if machine is set to 'tandy'.
 .
 :CONFIG_TANDY_FILTER
 Filter for the Tandy synth output:
@@ -616,7 +644,8 @@ Filter for the Tandy synth output:
 :CONFIG_TANDY_DAC_FILTER
 Filter for the Tandy DAC output:
   on:        Filter the output (default).
-  off:       Don't filter the output.  <custom>:  Custom filter definition; see 'sb_filter' for details.
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_LPT_DAC
 Type of DAC plugged into the parallel port:
@@ -657,12 +686,14 @@ auto     : Detect and use any joystick(s), if possible.,
 4axis_2  : Support the second joystick only.
 fcs      : Support a Thrustmaster-type joystick.
 ch       : Support a CH Flightstick-type joystick.
-hidden   : Prevent DOS from seeing the joystick(s), but enable them for mapping.
+hidden   : Prevent DOS from seeing the joystick(s), but enable them for
+           mapping.
 disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.
 (Remember to reset DOSBox's mapperfile if you saved it earlier)
 .
 :CONFIG_TIMED
-enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).
+enable timed intervals for axis. Experiment with this option, if your
+joystick drifts (away).
 .
 :CONFIG_AUTOFIRE
 continuously fires as long as you keep the button pressed.
@@ -682,7 +713,8 @@ the percentage of motion to ignore. 100 turns the stick into a digital one.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Activates hotkeys to allow realtime calibration of the joystick's x and y axis.
-Only consider this if in-game calibration fails and other settings have been tried.
+Only consider this if in-game calibration fails and other settings have been
+tried.
  - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
      - left and right diminish or magnify the x-axis scalar, respectively.
      - down and up diminish or magnify the y-axis scalar, respectively.
@@ -690,8 +722,9 @@ Only consider this if in-game calibration fails and other settings have been tri
      - left and right shift x-axis offset in the given direction.
      - down and up shift the y-axis offset in the given direction.
  - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.
-Each tap will report X or Y calibration values you can set below. When you find parameters that work,
-quit the game, switch this setting back to false, and populate the reported calibration parameters.
+Each tap will report X or Y calibration values you can set below. When you find
+parameters that work, quit the game, switch this setting back to false, and
+populate the reported calibration parameters.
 .
 :CONFIG_JOY_X_CALIBRATION
 Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
@@ -1063,9 +1096,9 @@ by pressing %s+F4, and -l specifies the mounted drive to boot from.  If
 no drive letter is specified, this defaults to booting from the A drive.
 The only bootable drive letters are A, C, and D.  For booting from a hard
 drive (C or D), the image should have already been mounted using the
-[34;1mIMGMOUNT[0m command.
+[color=blue]IMGMOUNT[reset] command.
 
-Type [34;1mBOOT /?[0m for the syntax of this command.[0m
+Type [color=blue]BOOT /?[reset] for the syntax of this command.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1198,11 +1231,11 @@ Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t iso[0m
+For [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT drive-letter location-of-image -t iso[reset]
 
-For [33mhardrive[0m images: Must specify drive geometry for hard drives:
+For [color=light-yellow]hardrive[reset] images: Must specify drive geometry for hard drives:
 bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+[color=blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -1240,7 +1273,7 @@ Image file not found.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [34;1mMOUNT[0m command, not the [34;1mIMGMOUNT[0m command.
+To mount directories, use the [color=blue]MOUNT[reset] command, not the [color=blue]IMGMOUNT[reset] command.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1264,111 +1297,111 @@ Using multiple files is only supported for cue/iso images.
 
 .
 :PROGRAM_INTRO
-[2J[32;1mWelcome to DOSBox Staging[0m, an x86 emulator with sound and graphics.
+[erases=entire][color=green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.
 DOSBox creates a shell for you which looks like old plain DOS.
 
-For information about basic mount type [34;1mintro mount[0m
-For information about CD-ROM support type [34;1mintro cdrom[0m
-For information about special keys type [34;1mintro special[0m
-For more information, visit DOSBox Staging wiki:[34;1m
-https://github.com/dosbox-staging/dosbox-staging/wiki[0m
+For information about basic mount type [color=blue]intro mount[reset]
+For information about CD-ROM support type [color=blue]intro cdrom[reset]
+For information about special keys type [color=blue]intro special[reset]
+For more information, visit DOSBox Staging wiki:[color=blue]
+https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[31;1mDOSBox will stop/exit without a warning if an error occurred![0m
+[color=red]DOSBox will stop/exit without a warning if an error occurred![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[32;1mHere are some commands to get you started:[0m
+[erases=entire][color=green]Here are some commands to get you started:[reset]
 Before you can use the files located on your own filesystem,
 You have to mount the directory containing the files.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m╔═════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.║
-║                                                                         ║
-║ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m ║
-╚═════════════════════════════════════════════════════════════════════════╝[0m
+[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [color=green]mount c c:\dosgames\ [color=white]will create a C drive with c:\dosgames as contents.Γòæ
+Γòæ                                                                         Γòæ
+Γòæ [color=green]c:\dosgames\ [color=white]is an example. Replace it with your own games directory.   Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1m╔══════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.║
-║                                                                      ║
-║ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  ║
-╚══════════════════════════════════════════════════════════════════════╝[0m
+[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [color=green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.Γòæ
+Γòæ                                                                      Γòæ
+Γòæ [color=green]~/dosgames[color=white] is an example. Replace it with your own games directory.  Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
-After successfully mounting the disk you can type [34;1mc:[0m to go to your freshly
-mounted C-drive. Typing [34;1mdir[0m there will show its contents. [34;1mcd[0m will allow you to
-enter a directory (recognised by the [33;1m[][0m in a directory listing).
-You can run programs/files with extensions [31m.exe .bat[0m and [31m.com[0m.
+After successfully mounting the disk you can type [color=blue]c:[reset] to go to your freshly
+mounted C-drive. Typing [color=blue]dir[reset] there will show its contents. [color=blue]cd[reset] will allow you to
+enter a directory (recognised by the [color=yellow][][reset] in a directory listing).
+You can run programs/files with extensions [color=light-red].exe .bat[reset] and [color=light-red].com[reset].
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+[erases=entire][color=green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+The [color=light-yellow]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[34;1mmount D C:\example -t cdrom[0m
+[color=blue]mount D C:\example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[color=blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-The [33mnext[0m level adds some low-level support.
+The [color=light-yellow]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
-Replace [0;31mD:\[0m with the location of your CD-ROM.
-Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
-[34;1mmount -listcd[0m
+[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
+Replace [color=light-red]D:\ [reset]with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
+[color=blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-[34;1mimgmount D C:\cd.cue -t cdrom[0m
+[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+[erases=entire][color=green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+The [color=light-yellow]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[34;1mmount D ~/example -t cdrom[0m
+[color=blue]mount D ~/example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
+[color=blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-The [33mnext[0m level adds some low-level support.
+The [color=light-yellow]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[34;1mmount d [0;31m~/example[34;1m -t cdrom -usecd [33m0[0m
+[color=blue]mount d[reset] [color=light-red]~/example[color=blue] -t cdrom -usecd [color=yellow]0[reset]
 
-Replace [0;31m~/example[0m with the location of your CD-ROM.
-Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
-[34;1mmount -listcd[0m
+Replace [color=light-red]~/example[reset] with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
+[color=blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[34;1mimgmount D ~/cd.iso -t cdrom[0m
-[34;1mimgmount D ~/cd.cue -t cdrom[0m
+[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[32;1mSpecial keys:[0m
+[erases=entire][color=green]Special keys:[reset]
 These are the default keybindings.
-They can be changed in the [33mkeymapper[0m.
+They can be changed in the [color=light-yellow]keymapper[reset].
 
-[33;1m%s+Enter[0m  Switch between fullscreen and window mode.
-[33;1m%s+Pause[0m  Pause/Unpause emulator.
-[33;1m%s+F1[0m   %s Start the [33mkeymapper[0m.
-[33;1m%s+F4[0m   %s Swap mounted disk image, scan for changes on all drives.
-[33;1m%s+F5[0m   %s Save a screenshot.
-[33;1m%s+F6[0m   %s Start/Stop recording sound output to a wave file.
-[33;1m%s+F7[0m   %s Start/Stop recording video output to a zmbv file.
-[33;1m%s+F8[0m   %s Mute/Unmute the audio.
-[33;1m%s+F9[0m   %s Shutdown emulator.
-[33;1m%s+F10[0m  %s Capture/Release the mouse.
-[33;1m%s+F11[0m  %s Slow down emulation.
-[33;1m%s+F12[0m  %s Speed up emulation.
-[33;1m%s+F12[0m    Unlock speed (turbo button/fast forward).
+[color=yellow]%s+Enter[reset]  Switch between fullscreen and window mode.
+[color=yellow]%s+Pause[reset]  Pause/Unpause emulator.
+[color=yellow]%s+F1[reset]   %s Start the [color=light-yellow]keymapper[reset].
+[color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.
+[color=yellow]%s+F5[reset]   %s Save a screenshot.
+[color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.
+[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.
+[color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.
+[color=yellow]%s+F9[reset]   %s Shutdown emulator.
+[color=yellow]%s+F10[reset]  %s Capture/Release the mouse.
+[color=yellow]%s+F11[reset]  %s Slow down emulation.
+[color=yellow]%s+F12[reset]  %s Speed up emulation.
+[color=yellow]%s+F12[reset]    Unlock speed (turbo button/fast forward).
 
 .
 :PROGRAM_KEYB_INFO
@@ -1604,11 +1637,11 @@ Virtual Drives can not be unMOUNTed.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
+[color=red]Mounting c:\ is NOT recommended. Please mount a (sub)directory next time.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.[0m
+[color=red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -1755,7 +1788,7 @@ Illegal Path.
 
 .
 :SHELL_CMD_HELP
-If you want a list of all supported commands type [33;1mhelp /all[0m .
+If you want a list of all supported commands type [color=yellow]help /all[reset] .
 A short list of the most often used commands:
 
 .
@@ -1802,16 +1835,16 @@ Unable to change to: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: To change to different drive type [31m%c:[0m
+Hint: To change to different drive type [color=light-red]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 directoryname is longer than 8 characters and/or contains spaces.
-Try [31mcd %s[0m
+Try [color=light-red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-You are still on drive Z:, change to a mounted drive with [31mC:[0m.
+You are still on drive Z:, change to a mounted drive with [color=light-red]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1978,7 +2011,7 @@ File %s already exists.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Drive %c does not exist!
-You must [31mmount[0m it first. Type [1;33mintro[0m or [1;33mintro mount[0m for more information.
+You must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset]or [color=yellow]intro mount[reset] for more information.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2025,48 +2058,48 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1m╔════════════════════════════════════════════════════════════════════╗
-║ [32mWelcome to DOSBox Staging %-40s[37m ║
-║                                                                    ║
-║ For a short introduction for new users type: [33mINTRO[37m                 ║
-║ For supported shell commands type: [33mHELP[37m                            ║
-║                                                                    ║
-║ To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s%s       ║
-║ To activate the keymapper [31m%s+F1[37m.%s                                 ║
-║ For more information read the [36mREADME[37m file in the DOSBox directory. ║
-║                                                                    ║
+[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ [color=green]Welcome to DOSBox Staging %-40s[color=white] Γòæ
+Γòæ                                                                    Γòæ
+Γòæ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 Γòæ
+Γòæ For supported shell commands type: [color=yellow]HELP[color=white]                            Γòæ
+Γòæ                                                                    Γòæ
+Γòæ To adjust the emulated CPU speed, use [color=red]%s+F11[color=white] and [color=red]%s+F12[color=white].%s%s       Γòæ
+Γòæ To activate the keymapper [color=red]%s+F1[color=white].%s                                 Γòæ
+Γòæ For more information read the [color=cyan]README[color=white] file in the DOSBox directory. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_CGA
-║ DOSBox supports Composite CGA mode.                                ║
-║ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        ║
-║ [31mF10[37m selects the CGA settings to change and [31m(%s+)F11[37m changes it.   ║
-║                                                                    ║
+Γòæ DOSBox supports Composite CGA mode.                                Γòæ
+Γòæ Use [color=red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        Γòæ
+Γòæ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, ║
-║ and [31m%s+F11[37m to change contrast/brightness settings.                ║
+Γòæ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, Γòæ
+Γòæ and [color=red]%s+F11[reset] to change contrast/brightness settings.                Γòæ
 
 .
 :SHELL_STARTUP_HERC
-║ Use [31mF11[37m to cycle through white, amber, and green monochrome color. ║
-║                                                                    ║
+Γòæ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_DEBUG
-║ Press [31m%s+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. ║
-║                                                                    ║
+Γòæ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. Γòæ
+Γòæ                                                                    Γòæ
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                                   ║
-╚════════════════════════════════════════════════════════════════════╝[0m
+Γòæ [color=yellow]https://dosbox-staging.github.io[color=white]                                   Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[0m
+[color=green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -2568,13 +2601,13 @@ Displays or changes file attributes.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
+  [color=green]attrib[reset] [color=cyan][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]
 
 Where:
-  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
-             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+  [color=cyan]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
+             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
              Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+  [color=cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
              wildcards, which are the asterisk (*) and the question mark (?),
              or an exact name of a directory.
 Notes:
@@ -2582,8 +2615,8 @@ Notes:
   If not specified, the command shows the current file/directory attributes.
 
 Examples:
-  [32;1mattrib[0m [36;1mfile.txt[0m
-  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+  [color=green]attrib[reset] [color=cyan]file.txt[reset]
+  [color=green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=cyan]*.txt[reset]
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
