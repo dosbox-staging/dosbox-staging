@@ -527,8 +527,8 @@ void BOOT::AddMessages() {
 	        "no drive letter is specified, this defaults to booting from the A drive.\n"
 	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 	        "drive (C or D), the image should have already been mounted using the\n"
-	        "\033[34;1mIMGMOUNT\033[0m command.\n\n"
-	        "Type \033[34;1mBOOT /?\033[0m for the syntax of this command.\033[0m\n");
+	        "[color=blue]IMGMOUNT[reset] command.\n\n"
+	        "Type [color=blue]BOOT /?[reset] for the syntax of this command.\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_MOUNTED","Floppy image(s) already mounted.\n");
