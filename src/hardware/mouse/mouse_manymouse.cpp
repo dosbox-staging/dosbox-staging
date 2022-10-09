@@ -105,7 +105,7 @@ void ManyMouseGlue::InitIfNeeded()
 
 void ManyMouseGlue::ShutdownIfSafe()
 {
-    if (mapping_in_effect || config_api_counter)
+    if (is_mapping_in_effect || config_api_counter)
         return;
 
     ShutdownForced();
@@ -260,7 +260,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
         break;
     }
 
-    if (mapping_in_effect && !mouse_config.no_mouse)
+    if (is_mapping_in_effect && !mouse_config.no_mouse)
         PIC_AddEvent(manymouse_tick, tick_interval);
     return success;
 }
@@ -318,16 +318,21 @@ void ManyMouseGlue::UnMap(const MouseInterfaceId interface_id)
 void ManyMouseGlue::MapFinalize()
 {
     PIC_RemoveEvents(manymouse_tick);
-    mapping_in_effect = false;
+    is_mapping_in_effect = false;
     for (const auto &entry : mouse_info.physical) {
         if (entry.IsMapped())
             continue;
 
-        mapping_in_effect = true;
+        is_mapping_in_effect = true;
         if (!mouse_config.no_mouse)
             PIC_AddEvent(manymouse_tick, tick_interval);
         break;
     }
+}
+
+bool ManyMouseGlue::IsMappingInEffect() const
+{
+    return is_mapping_in_effect;
 }
 
 void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event,
@@ -420,7 +425,7 @@ void ManyMouseGlue::Tick()
         rel_y[idx] = 0;
     }
 
-    if (mapping_in_effect)
+    if (is_mapping_in_effect)
         PIC_AddEvent(manymouse_tick, tick_interval);
 }
 
@@ -461,6 +466,11 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &)
 
 void ManyMouseGlue::Map(const uint8_t, const MouseInterfaceId)
 {
+}
+
+bool ManyMouseGlue::IsMappingInEffect() const
+{
+    return false;
 }
 
 #endif // C_MANYMOUSE

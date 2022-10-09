@@ -49,7 +49,7 @@ private:
     void UpdateDelayCounters();
     uint8_t ClampStartDelay(float value_ms) const;
 
-    struct { // intial value of delay counters, in milliseconds
+    struct { // initial value of delay counters, in milliseconds
         uint8_t dos_ms = 5;
         uint8_t ps2_ms = 5;
     } start_delay = {};

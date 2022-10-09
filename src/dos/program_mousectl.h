@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ private:
     bool ParseInterfaces(std::vector<std::string> &params,
                          std::vector<MouseInterfaceId> &list_ids);
     bool CheckInterfaces(const std::vector<MouseInterfaceId> &list_ids);
+    void FinalizeMapping();
 
     const char *GetInterfaceStr(const MouseInterfaceId interface_id) const;
     const char *GetMapStatusStr(const MouseMapStatus map_status) const;
@@ -57,11 +58,11 @@ private:
                   const bool enable);
     bool CmdReset(const std::vector<MouseInterfaceId> &list_ids);
     bool CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids,
-                        const uint8_t value);
+                        const int8_t value);
     bool CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids,
-                         const uint8_t value);
+                         const int8_t value);
     bool CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids,
-                         const uint8_t value);
+                         const int8_t value);
     bool CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids);
     bool CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids);
     bool CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids);

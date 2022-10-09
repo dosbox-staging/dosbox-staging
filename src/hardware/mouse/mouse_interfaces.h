@@ -154,8 +154,8 @@ public:
     MouseInterfaceId GetInterfaceId() const;
     MouseMapStatus GetMapStatus() const;
     uint8_t GetMappedDeviceIdx() const;
-    uint8_t GetSensitivityX() const;
-    uint8_t GetSensitivityY() const;
+    int8_t GetSensitivityX() const;
+    int8_t GetSensitivityY() const;
     uint16_t GetMinRate() const;
     uint16_t GetRate() const;
 
@@ -164,9 +164,9 @@ public:
 
     void ConfigOnOff(const bool enable);
     void ConfigReset();
-    void ConfigSetSensitivity(const uint8_t value_x, const uint8_t value_y);
-    void ConfigSetSensitivityX(const uint8_t value);
-    void ConfigSetSensitivityY(const uint8_t value);
+    void ConfigSetSensitivity(const int8_t value_x, const int8_t value_y);
+    void ConfigSetSensitivityX(const int8_t value);
+    void ConfigSetSensitivityY(const int8_t value);
     void ConfigResetSensitivity();
     void ConfigResetSensitivityX();
     void ConfigResetSensitivityY();
@@ -209,8 +209,8 @@ protected:
     float sensitivity_coeff_x = 1.0f; // cached combined sensitivity coefficients
     float sensitivity_coeff_y = 1.0f; // to reduce amount of multiplications
 
-    uint8_t sensitivity_user_x = 0;
-    uint8_t sensitivity_user_y = 0;
+    int8_t sensitivity_user_x = 0;
+    int8_t sensitivity_user_y = 0;
 
     uint16_t rate_hz = 0;
     uint16_t min_rate_hz = 0;

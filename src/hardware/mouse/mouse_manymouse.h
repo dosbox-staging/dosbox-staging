@@ -65,6 +65,8 @@ public:
     void Map(const uint8_t physical_idx,
              const MouseInterfaceId interface_id);
 
+    bool IsMappingInEffect() const;
+
 private:
 
     friend class MouseInterfaceInfoEntry;
@@ -93,7 +95,7 @@ private:
 
     bool initialized            = false;
     bool malfunction            = false; // once set to false, will stay false forever
-    bool mapping_in_effect      = false;
+    bool is_mapping_in_effect   = false;
     bool rescan_blocked_config  = false; // true = rescan blocked due to config API usage
     uint32_t config_api_counter = 0;
 

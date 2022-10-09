@@ -81,6 +81,8 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_UpdateMouseState();
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
+void GFX_SetMouseRawInput(const bool raw_input);
+void GFX_MouseCaptureAfterMapping();
 bool GFX_MouseIsAvailable();
 
 #if defined (REDUCE_JOYSTICK_POLLING)
