@@ -1075,13 +1075,13 @@ dispositivo non configurato
 directory locale
 .
 :MOUNT_TYPE_CDROM
-Unità CD-ROM
+unità CD-ROM
 .
 :MOUNT_TYPE_FAT
-Unità FAT
+unità FAT
 .
 :MOUNT_TYPE_ISO
-Unità ISO
+unità ISO
 .
 :MOUNT_TYPE_VIRTUAL
 unità virtuale interna
@@ -1369,7 +1369,7 @@ L'uso di file multipli è supportato solo per le immagini cue/iso.
 
 .
 :PROGRAM_INTRO
-[2J[color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
+[erases=entire][color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
 DOSBox crea una shell simile al vecchio DOS.
 
 Per informazioni sul montaggio delle unità, digita [color=blue]intro mount[reset]
@@ -1382,25 +1382,25 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[color=green]Ecco alcuni comandi utili per iniziare:[reset]
+[erases=entire][color=green]Ecco alcuni comandi utili per iniziare:[reset]
 Prima di poter utilizzare i file che si trovano sul tuo filesystem,
 Devi montare la directory contenente i file.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[bgcolor=blue]╔══════════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]mount c c:\giochi\ [color=light-white]crea un'unità C con il contenuto di c:\giochi.        ║
+[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c c:\giochi\ [color=white]crea un'unità C con il contenuto di c:\giochi.        ║
 ║                                                                          ║
-║ [color=light-green]c:\giochi\ [color=light-white]è un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ║
+║ [color=green]c:\giochi\ [color=white]è un esempio. Sostituiscilo con la tua directory dei giochi.  ║
 ╚══════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[bgcolor=blue]╔════════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]mount c ~/giochi[color=light-white] crea un'unità C con il contenuto di ~/giochi.         ║
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c ~/giochi[color=white] crea un'unità C con il contenuto di ~/giochi.         ║
 ║                                                                        ║
-║ [color=light-green]~/giochi[color=light-white] è un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ║
+║ [color=green]~/giochi[color=white] è un esempio. Sostituiscilo con la tua directory dei giochi.  ║
 ╚════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
@@ -1413,7 +1413,7 @@ Puoi eseguire programmi/file con estensione [color=light-red].exe[reset], [color
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
+[erases=entire][color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
 Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
@@ -1425,9 +1425,9 @@ Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unità CD-ROM:
-[color=blue]mount d [reset][color=light-red]D:\ [reset][color=blue]-t cdrom -usecd [color=light-yellow]0[reset]
+[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
 Sostituisci [color=light-red]D:\ [reset]con la posizione del tuo CD-ROM.
-Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
+Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
@@ -1436,7 +1436,7 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
+[erases=entire][color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
 Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
@@ -1448,9 +1448,9 @@ Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unità CD-ROM:
-[color=blue]mount d [reset][color=light-red]~/esempio[reset][color=blue] -t cdrom -usecd [color=light-yellow]0[reset]
+[color=blue]mount d[reset] [color=light-red]~/esempio[color=blue] -t cdrom -usecd [color=yellow]0[reset]
 Sostituisci [color=light-red]~/esempio[reset] con la posizione del tuo CD-ROM.
-Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
+Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
@@ -1459,7 +1459,7 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[color=green]Tasti speciali:[reset]
+[erases=entire][color=green]Tasti speciali:[reset]
 Queste sono le combinazioni di tasti predefinite.
 Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
@@ -2106,7 +2106,7 @@ Il file %s esiste già.
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Unità %c inesistente!
 È necessario montare l'unità con il comando [color=light-red]mount[reset]. 
-Per maggiori informazioni, digita [color=light-yellow]intro[reset] o [color=light-yellow]intro mount[reset].
+Per maggiori informazioni, digita [color=yellow]intro[reset] o [color=yellow]intro mount[reset].
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2154,43 +2154,43 @@ SUBST fallito. È stato commesso un errore nella riga di comando o l'unità di
 destinazione è già in uso. È possibile utilizzare SUBST solo su unità locali.
 .
 :SHELL_STARTUP_BEGIN
-[bgcolor=blue]╔══════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]Benvenuto in DOSBox Staging %-40s[color=light-white] ║
+[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗
+║ [color=green]Benvenuto in DOSBox Staging %-40s[color=white] ║
 ║                                                                      ║
-║ Per una breve introduzione per i nuovi utenti, digita: [color=light-yellow]INTRO[color=light-white]         ║
-║ Per la lista dei comandi della shell supportati, digita: [color=light-yellow]HELP[color=light-white]        ║
+║ Per una breve introduzione per i nuovi utenti, digita: [color=yellow]INTRO[color=white]         ║
+║ Per la lista dei comandi della shell supportati, digita: [color=yellow]HELP[color=white]        ║
 ║                                                                      ║
-║ Per regolare la velocità della CPU emulata, usa [color=light-red]%s+F11[color=light-white] e [color=light-red]%s+F12[color=light-white].%s%s ║
-║ Per attivare il keymapper, usa [color=light-red]%s+F1[color=light-white].%s                              ║
-║ Ulteriori informazioni nel file [color=light-cyan]README[color=light-white] nella directory di DOSBox.    ║
+║ Per regolare la velocità della CPU emulata, usa [color=red]%s+F11[color=white] e [color=red]%s+F12[color=white].%s%s ║
+║ Per attivare il keymapper, usa [color=red]%s+F1[color=white].%s                              ║
+║ Ulteriori informazioni nel file [color=cyan]README[color=white] nella directory di DOSBox.    ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox supporta la modalità CGA Composita.                           ║
-║ Usa [color=light-red]F12[color=light-white] per impostare l'uscita composita su ON, OFF o AUTO           ║
+║ Usa [color=red]F12[color=white] per impostare l'uscita composita su ON, OFF o AUTO           ║
 ║ (predefinito).                                                       ║
-║ Usa [color=light-red]F10[color=light-white] per selezionare le impostazioni CGA da modificare e [color=light-red]%s+F11[color=light-white]  ║
+║ Usa [color=red]F10[color=white] per selezionare le impostazioni CGA da modificare e [color=red]%s+F11[color=white]  ║
 ║ per effettuare le modifiche.                                         ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Usa [color=light-red]F11[color=light-white] per scorrere le modalità verde, ambra, bianco e bianco-carta,║
-║ e [color=light-red]%s+F11[color=light-white] per modificare le impostazioni di contrasto/luminosità.    ║
+║ Usa [color=red]F11[color=white] per scorrere le modalità verde, ambra, bianco e bianco-carta,║
+║ e [color=red]%s+F11[color=white] per modificare le impostazioni di contrasto/luminosità.    ║
 
 .
 :SHELL_STARTUP_HERC
-║ Usa [color=light-red]F11[color=light-white] per scorrere i colori monocromatici bianco, ambra e verde.   ║
+║ Usa [color=red]F11[color=white] per scorrere i colori monocromatici bianco, ambra e verde.   ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Premi [color=light-red]%s+Pause[color=light-white] per avviare il debugger o avvia l'exe con [color=light-yellow]DEBUG[color=light-white].      ║
+║ Premi [color=red]%s+Pause[color=white] per avviare il debugger o avvia l'exe con [color=yellow]DEBUG[color=white].      ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_END
-║ [color=light-yellow]https://dosbox-staging.github.io[color=light-white]                                     ║
+║ [color=yellow]https://dosbox-staging.github.io[color=white]                                     ║
 ╚══════════════════════════════════════════════════════════════════════╝[reset]
 
 
