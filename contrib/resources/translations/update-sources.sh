@@ -40,9 +40,7 @@ check_package() {
 
 update() {
 	local -r lang="$1"
-	local -r codepage="$2"
-	local -r postfix="${3:-}"
-	local -r lng_path="$LNG_DIR/${lang}${postfix}.lng"
+	local -r lng_path="$LNG_DIR/${lang}.lng"
 	local -r txt_path="$OUTPUT_DIR/$lang.txt"
 
 	# If the languge is english, then we zero-out the en.lng file
@@ -70,10 +68,8 @@ update() {
 	echo "Messages that can be deleted from $txt_path"
 	comm -1 -3 <(grep ^: "$EN_LANG_PATH" | sort -u) <(grep ^: "$lng_path" | sort -u)
 
-	# Convert the lng to text, which is what translators use
-	iconv -f CP"$codepage" \
-		-t UTF-8 "$lng_path" \
-		> "$txt_path"
+	# NFC-normalize the translation file, this is required
+	uconv -f UTF-8 -t UTF-8 -x '::nfc;' "$lng_path" > "$txt_path"
 
 	# Finally, restore the non-English .lng files.
 	#
@@ -87,22 +83,21 @@ update() {
 check_package
 
 # Because English is the source language from which others are
-# translated, we first dump the latest english translations.
+# translated, we first dump the latest English translations.
 #
-update en 437
+update en
 
 # After this, we update the other language files which will inject
-# any missing messages into them in english, so translators can easily
+# any missing messages into them in English, so translators can easily
 # find and update those new messages.
 #
-update de 850
-update es 850
-update fr 850
-update it 850
-update nl 850
-update pl 437 .cp437
-update pl 852
-update ru 866
+update de
+update es
+update fr
+update it
+update nl
+update pl
+update ru
 
 set +x
 
