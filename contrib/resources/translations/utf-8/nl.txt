@@ -3,7 +3,7 @@ DOSBox rechtstreeks op volledig scherm starten.
 Voer INTRO uit en zie Speciale toetsen voor sneltoetsen voor vensterbediening.
 .
 :CONFIG_DISPLAY
-Beeldschermnummer om te gebruiken; afhankelijk van OS en installingen.
+Te gebruiken beeldschermnummer; waarde is afhankelijk van OS en instellingen.
 .
 :CONFIG_FULLRESOLUTION
 Welke resolutie te gebruiken voor volledig scherm: 'original', 'desktop'
@@ -17,7 +17,7 @@ Stelt de venster grootte in om te gebruiken:
               Grootte van het venster ten opzichte van het bureaublad.
   <op-maat>:  Schaal het venster naar de opgegeven afmetingen in
               BxH-formaat. Bijvoorbeeld: 1024x768.
-              Er wordt niet geschaald voor output=surface.
+              Niet van toepassing voor output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Stel de viewport-grootte (tekengebied) in het venster/scherm in:
@@ -1146,24 +1146,6 @@ Geen PCjr-cartridge opdrachten gevonden
 MSCDEX geïnstalleerd.
 
 .
-:MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
-.
-:MOUNT_TYPE_CDROM
-CD-ROM drive
-.
-:MOUNT_TYPE_FAT
-FAT drive
-.
-:MOUNT_TYPE_ISO
-ISO drive
-.
-:MOUNT_TYPE_VIRTUAL
-internal virtual drive
-.
-:MOUNT_TYPE_UNKNOWN
-unknown drive
-.
 :MSCDEX_ERROR_MULTIPLE_CDROMS
 MSCDEX: Fout: Schijfletters van meerdere cd-rom-stations moeten doorlopend zijn.
 
@@ -1329,7 +1311,7 @@ Meerdere bestanden wordt alleen ondersteund voor cue/iso-images.
 
 .
 :PROGRAM_INTRO
-[2J[color=green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
+[erases=entire][color=green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
 DOSBox maakt een shell voor je die eruitziet als een oude gewone DOS.
 
 Voor informatie over basis koppelen typ [color=blue]intro mount[reset]
@@ -1342,7 +1324,7 @@ Voor meer informatie, bezoek de DOSBox Staging wiki:
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[color=green]Hier zijn enkele commando's om u op weg te helpen:[reset]
+[erases=entire][color=green]Hier zijn enkele commando's om u op weg te helpen:[reset]
 Voordat u de bestanden op uw eigen bestandssysteem kunt gebruiken, moet u de
 map met de bestanden aankoppelen.
 
@@ -1372,7 +1354,7 @@ Programmas/bestanden met extensie [color=light-red].exe .bat[reset] and [color=l
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
+[erases=entire][color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
 Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
@@ -1394,7 +1376,7 @@ Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
+[erases=entire][color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
 Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
@@ -1417,7 +1399,7 @@ Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[color=green]Speciale toetsen:[reset]
+[erases=entire][color=green]Speciale toetsen:[reset]
 Dit zijn de standaard sneltoetsen.
 Ze kunnen worden gewijzigd in de [color=light-yellow]toetsenmapper[reset].
 
