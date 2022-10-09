@@ -24,6 +24,7 @@
 #include "control.h"
 #include "setup.h"
 #include "support.h"
+#include "video.h"
 
 CHECK_NARROWING();
 
@@ -132,19 +133,32 @@ static void config_read(Section *section)
     if (!conf)
         return;
 
-    // Config - settings changeable during runtime
+    // Settings changeable during runtime
 
-    mouse_config.mouse_dos_immediate = conf->Get_bool("mouse_dos_immediate");
-    if (mouse_shared.ready_config_mouse)
+    mouse_config.dos_immediate = conf->Get_bool("dos_mouse_immediate");
+    mouse_config.raw_input     = conf->Get_bool("mouse_raw_input");
+    GFX_SetMouseRawInput(mouse_config.raw_input);
+
+    // Settings below should be read only once
+
+    if (mouse_shared.ready_config_mouse) {
+        MOUSE_NotifyStateChanged();
         return;
+    }
 
-    // Config - DOS driver
+    // Default mouse sensitivity
 
-    mouse_config.mouse_dos_enable = conf->Get_bool("mouse_dos");
+    PropMultiVal *prop_multi = conf->GetMultiVal("mouse_sensitivity");
+    mouse_config.sensitivity_x = static_cast<int8_t>(prop_multi->GetSection()->Get_int("xsens"));
+    mouse_config.sensitivity_y = static_cast<int8_t>(prop_multi->GetSection()->Get_int("ysens"));
 
-    // Config - PS/2 AUX port
+    // DOS driver configuration
 
-    std::string prop_str = conf->Get_string("model_ps2");
+    mouse_config.dos_driver = conf->Get_bool("dos_mouse_driver");
+
+    // PS/2 AUX port mouse configuration
+
+    std::string prop_str = conf->Get_string("ps2_mouse_model");
     if (prop_str == list_models_ps2[0])
         mouse_config.model_ps2 = MouseModelPS2::Standard;
     if (prop_str == list_models_ps2[1])
@@ -154,7 +168,7 @@ static void config_read(Section *section)
         mouse_config.model_ps2 = MouseModelPS2::Explorer;
 #endif
 
-    // Config - serial (COM port) mice
+    // Serial (COM port) mice configuration
 
     auto set_model_com = [](const std::string &model_str,
                             MouseModelCOM& model_var,
@@ -176,7 +190,7 @@ static void config_read(Section *section)
             model_auto = false;
     };
 
-    prop_str = conf->Get_string("model_com");
+    prop_str = conf->Get_string("com_mouse_model");
     set_model_com(prop_str,
                   mouse_config.model_com,
                   mouse_config.model_com_auto_msm);
@@ -191,19 +205,39 @@ static void config_init(Section_prop &secprop)
     constexpr auto always        = Property::Changeable::Always;
     constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-    Prop_bool   *prop_bool = nullptr;
-    Prop_string *prop_str  = nullptr;
+    Prop_bool    *prop_bool  = nullptr;
+    Prop_int     *prop_int   = nullptr;
+    Prop_string  *prop_str   = nullptr;
+    PropMultiVal *prop_multi = nullptr;
 
-    // Mouse enable/disable settings
+    // General configuration
 
-    prop_bool = secprop.Add_bool("mouse_dos", only_at_start, true);
+    prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
+    prop_multi->Set_help("Default mouse sensitivity. Works exponentially, add 10 to double the effect.\n"
+                         "Negative values reverse mouse direction, 0 disables the movement completely.\n"
+                         "The optional second parameter specifies vertical sensitivity (e.g. 30,40).\n"
+                         "Setting can be adjusted in runtime (also per mouse interface) using internal\n"
+                         "MOUSECTL.COM tool, available on drive Z:.");
+    prop_multi->SetValue("50");
+    prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 50);
+    prop_int->SetMinMax(-99, 99);
+    prop_int = prop_multi->GetSection()->Add_int("ysens", only_at_start, 50);
+    prop_int->SetMinMax(-99, 99);
+
+    prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
+    prop_bool->Set_help("Enable to bypass your operating system's mouse acceleration and sensitivity\n"
+                        "settings. Works in fullscreen or when the mouse is captured in window mode.");
+
+    // DOS driver configuration
+
+    prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
     assert(prop_bool);
     prop_bool->Set_help("Enable built-in DOS mouse driver.\n"
                         "Notes:\n"
                         "   Disable if you intend to use original MOUSE.COM driver in emulated DOS.\n"
                         "   When guest OS is booted, built-in driver gets disabled automatically.");
 
-    prop_bool = secprop.Add_bool("mouse_dos_immediate", always, false);
+    prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
     assert(prop_bool);
     prop_bool->Set_help("Updates mouse movement counters immediately, without waiting for interrupt.\n"
                         "May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as\n"
@@ -215,21 +249,21 @@ static void config_init(Section_prop &secprop)
                         "Please file a bug with the project if you find another game that fails when\n"
                         "this is enabled, we will update this list.");
 
-    // Mouse models
+    // Physical mice configuration
 
-    prop_str = secprop.Add_string("model_ps2", only_at_start, "intellimouse");
+    prop_str = secprop.Add_string("ps2_mouse_model", only_at_start, "intellimouse");
     assert(prop_str);
     prop_str->Set_values(list_models_ps2);
     prop_str->Set_help("PS/2 AUX port mouse model:\n"
     // TODO - Add option "none"
-                       "   standard:       3 buttons (standard PS/2 mouse).\n"
-                       "   intellimouse:   3 buttons + wheel (Microsoft IntelliMouse).\n"
+                       "   standard:       3 buttons, standard PS/2 mouse.\n"
+                       "   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.\n"
 #ifdef ENABLE_EXPLORER_MOUSE
-                       "   explorer:       5 buttons + wheel (Microsoft IntelliMouse Explorer).\n"
+                       "   explorer:       5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
 #endif
                        "Default: intellimouse");
 
-    prop_str = secprop.Add_string("model_com", only_at_start, "wheel+msm");
+    prop_str = secprop.Add_string("com_mouse_model", only_at_start, "wheel+msm");
     assert(prop_str);
     prop_str->Set_values(list_models_com);
     prop_str->Set_help("COM (serial) port default mouse model:\n"

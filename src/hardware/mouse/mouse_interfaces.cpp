@@ -93,12 +93,12 @@ const std::string &MouseInterfaceInfoEntry::GetMappedDeviceName() const
     return MappedPhysical().GetName();
 }
 
-uint8_t MouseInterfaceInfoEntry::GetSensitivityX() const
+int8_t MouseInterfaceInfoEntry::GetSensitivityX() const
 {
     return Interface().GetSensitivityX();
 }
 
-uint8_t MouseInterfaceInfoEntry::GetSensitivityY() const
+int8_t MouseInterfaceInfoEntry::GetSensitivityY() const
 {
     return Interface().GetSensitivityY();
 }
@@ -306,7 +306,7 @@ MouseInterface *MouseInterface::GetPS2()
 
 MouseInterface *MouseInterface::GetSerial(const uint8_t port_id)
 {
-    if (port_id < num_mouse_interfaces_com) {
+    if (port_id < SERIAL_MAX_PORTS) {
         const auto idx = static_cast<uint8_t>(MouseInterfaceId::COM1) + port_id;
         return MouseInterface::Get(static_cast<MouseInterfaceId>(idx));
     }
@@ -381,12 +381,12 @@ uint8_t MouseInterface::GetMappedDeviceIdx() const
     return mapped_idx;
 }
 
-uint8_t MouseInterface::GetSensitivityX() const
+int8_t MouseInterface::GetSensitivityX() const
 {
     return sensitivity_user_x;
 }
 
-uint8_t MouseInterface::GetSensitivityY() const
+int8_t MouseInterface::GetSensitivityY() const
 {
     return sensitivity_user_y;
 }
@@ -474,8 +474,8 @@ void MouseInterface::ConfigReset()
     ConfigResetMinRate();
 }
 
-void MouseInterface::ConfigSetSensitivity(const uint8_t value_x,
-                                          const uint8_t value_y)
+void MouseInterface::ConfigSetSensitivity(const int8_t value_x,
+                                          const int8_t value_y)
 {
     if (!IsEmulated())
         return;
@@ -485,7 +485,7 @@ void MouseInterface::ConfigSetSensitivity(const uint8_t value_x,
     UpdateSensitivity();
 }
 
-void MouseInterface::ConfigSetSensitivityX(const uint8_t value)
+void MouseInterface::ConfigSetSensitivityX(const int8_t value)
 {
     if (!IsEmulated())
         return;
@@ -494,7 +494,7 @@ void MouseInterface::ConfigSetSensitivityX(const uint8_t value)
     UpdateSensitivity();
 }
 
-void MouseInterface::ConfigSetSensitivityY(const uint8_t value)
+void MouseInterface::ConfigSetSensitivityY(const int8_t value)
 {
     if (!IsEmulated())
         return;
@@ -505,18 +505,18 @@ void MouseInterface::ConfigSetSensitivityY(const uint8_t value)
 
 void MouseInterface::ConfigResetSensitivity()
 {
-    ConfigSetSensitivity(mouse_predefined.sensitivity_user_default,
-                         mouse_predefined.sensitivity_user_default);
+    ConfigSetSensitivity(mouse_config.sensitivity_x,
+                         mouse_config.sensitivity_y);
 }
 
 void MouseInterface::ConfigResetSensitivityX()
 {
-    ConfigSetSensitivityX(mouse_predefined.sensitivity_user_default);
+    ConfigSetSensitivityX(mouse_config.sensitivity_x);
 }
 
 void MouseInterface::ConfigResetSensitivityY()
 {
-    ConfigSetSensitivityY(mouse_predefined.sensitivity_user_default);
+    ConfigSetSensitivityY(mouse_config.sensitivity_y);
 }
 
 void MouseInterface::ConfigSetMinRate(const uint16_t value_hz)
@@ -552,7 +552,7 @@ void MouseInterface::UpdateRawMapped()
 
 void MouseInterface::UpdateSensitivity()
 {
-    auto calculate = [this](const uint8_t user_val)
+    auto calculate = [this](const int8_t user_val)
     {
         // Mouse sensitivity formula is exponential - as it is probably
         // reasonable to expect user wanting to increase sensitivity
@@ -560,15 +560,26 @@ void MouseInterface::UpdateSensitivity()
         // 5.0 and 5.4 times sensitivity increase is rather hard to
         // notice in a real life
 
-        // Increase user_val by 20 steps = double the sensitivity
-        constexpr float double_steps = 20.0f;
+        // Increase user_val by 10 steps = double the sensitivity
+        constexpr float double_steps = 10.0f;
 
-        return sensitivity_predefined *
-               std::pow(2.0f, static_cast<float>(user_val - 50) / double_steps);
+        float power   = 0.0f;
+        float scaling = 0.0f;
+
+        if (user_val > 0) {
+            power   = static_cast<float>(user_val - 50);
+            scaling = sensitivity_predefined;
+        } else if (user_val < 0) {
+            power   = static_cast<float>(-user_val - 50);
+            scaling = -sensitivity_predefined;
+        } else // user_cal == 0
+            return 0.0f;
+
+        return scaling * std::pow(2.0f, power / double_steps);
     };
 
-    sensitivity_coeff_x = calculate(sensitivity_user_x) * mouse_config.sensitivity_gui_x;
-    sensitivity_coeff_y = calculate(sensitivity_user_y) * mouse_config.sensitivity_gui_y;
+    sensitivity_coeff_x = calculate(sensitivity_user_x);
+    sensitivity_coeff_y = calculate(sensitivity_user_y);
 }
 
 void MouseInterface::UpdateMinRate()
@@ -661,7 +672,7 @@ InterfaceDos::InterfaceDos() :
 
 void InterfaceDos::Init()
 {
-    if (mouse_config.mouse_dos_enable)
+    if (mouse_config.dos_driver)
         MOUSEDOS_Init();
     else
         emulated = false;

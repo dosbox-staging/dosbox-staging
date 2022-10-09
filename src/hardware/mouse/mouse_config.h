@@ -33,21 +33,21 @@ struct MousePredefined {
     // values so that on full screen, with RAW mouse input, the mouse feel
     // is similar to Windows 3.11 for Workgroups with PS/2 mouse driver
     // and default settings
-    const float sensitivity_dos = 1.0f;
-    const float sensitivity_ps2 = 1.0f;
-    const float sensitivity_vmm = 3.0f;
-    const float sensitivity_com = 1.0f;
+    const float sensitivity_dos = 0.6f;
+    const float sensitivity_ps2 = 0.6f;
+    const float sensitivity_vmm = 1.8f;
+    const float sensitivity_com = 0.6f;
     // Constants to move 'intersection point' for the acceleration curve
     // Requires raw mouse input, otherwise there is no effect
     // Larger values = higher mouse acceleration
     const float acceleration_dos = 1.0f;
     const float acceleration_vmm = 1.0f;
 
-    const uint8_t sensitivity_user_default = 50;
-    const uint8_t sensitivity_user_max     = 99;
+    const int8_t sensitivity_user_max = 99;
 };
 
 extern MousePredefined mouse_predefined;
+
 
 // ***************************************************************************
 // Configuration file content
@@ -78,16 +78,17 @@ struct MouseConfig {
 
     // From [sdl] section
 
-    float sensitivity_gui_x = 0.0f;
-    float sensitivity_gui_y = 0.0f;
-    bool  no_mouse  = false; // true = NoMouse selected in GUI
-    bool  raw_input = false; // true = relative input is raw data, without
-                             // host OS mouse acceleration applied
+    bool no_mouse = false; // true = NoMouse selected in GUI
+    bool seamless = false; // true = seamless mouse integration
 
     // From [mouse] section
 
-    bool mouse_dos_enable = false;
-    bool mouse_dos_immediate = false;
+    int8_t sensitivity_x = 50;    // default sensitivity values
+    int8_t sensitivity_y = 50;
+    bool   raw_input     = false; // true = relative input is raw data
+
+    bool dos_driver    = false;   // whether DOS virtual mouse driver should be enabled
+    bool dos_immediate = false;
 
     MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
 
@@ -101,5 +102,6 @@ struct MouseConfig {
 };
 
 extern MouseConfig mouse_config;
+
 
 #endif // DOSBOX_MOUSE_CONFIG_H

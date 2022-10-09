@@ -992,7 +992,7 @@ static uint8_t move_cursor()
 
 uint8_t MOUSEDOS_UpdateMoved()
 {
-    if (mouse_config.mouse_dos_immediate)
+    if (mouse_config.dos_immediate)
         return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
     else
         return move_cursor();
@@ -1062,7 +1062,7 @@ static uint8_t move_wheel()
 
 uint8_t MOUSEDOS_UpdateWheel()
 {
-    if (mouse_config.mouse_dos_immediate)
+    if (mouse_config.dos_immediate)
         return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
     else
         return move_wheel();
@@ -1106,7 +1106,7 @@ bool MOUSEDOS_NotifyMoved(const float x_rel,
     if (!event_needed)
         return 0;
 
-    if (mouse_config.mouse_dos_immediate)
+    if (mouse_config.dos_immediate)
         return (move_cursor() != 0);
     else
         return true;
@@ -1126,7 +1126,7 @@ bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
     if (pending.w_rel == 0)
         return 0;
 
-    if (mouse_config.mouse_dos_immediate)
+    if (mouse_config.dos_immediate)
         return (move_wheel() != 0);
     else
         return true;

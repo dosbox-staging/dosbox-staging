@@ -2173,6 +2173,14 @@ bool GFX_MouseIsAvailable() {
 	return sdl.mouse.control_choice != NoMouse;
 }
 
+void GFX_SetMouseRawInput(const bool raw_input)
+{
+    if (!SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+                                 raw_input ? "0" : "1",
+                                 SDL_HINT_OVERRIDE))
+    	LOG_WARNING("DISPLAY: Mouse raw input set failed");
+}
+
 void GFX_ToggleMouseCapture()
 {
 	/*
@@ -2203,6 +2211,18 @@ static void toggle_mouse_capture_from_user(bool pressed)
 	mouse_capture_requested = !mouse_capture_requested;
 	GFX_ToggleMouseCapture();
 }
+
+void GFX_MouseCaptureAfterMapping()
+{
+	if (sdl.desktop.fullscreen ||
+		!sdl.mouse.has_focus ||
+		mouse_is_captured)
+		return;
+
+	mouse_capture_requested = true;
+	GFX_ToggleMouseCapture();
+}
+
 
 static void FocusInput()
 {
@@ -2258,7 +2278,7 @@ void GFX_UpdateMouseState()
 	// it's auto-captured (but not manually requested) and
 	// in seamless-mode
 	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
-	           (mouse_seamless_driver || (!mouse_capture_requested && sdl.mouse.control_choice == Seamless))) {
+	           (mouse_seamless_driver || (!mouse_capture_requested && mouse_seamless_user))) {
 		GFX_ToggleMouseCapture();
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -3552,10 +3572,11 @@ static void GUI_StartUp(Section *sec)
 	} else if (control_choice == "nomouse") {
 		sdl.mouse.control_choice = NoMouse;
 		mouse_control_msg = "is disabled";
-		MOUSE_SetNoMouse();
+		MOUSE_SetConfigNoMouse();
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
+
 	LOG_MSG("SDL: Mouse %s", mouse_control_msg.c_str());
 
 	if (sdl.mouse.control_choice != NoMouse) {
@@ -3574,19 +3595,8 @@ static void GUI_StartUp(Section *sec)
 		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
 			              PRIMARY_MOD, "capmouse", "Cap Mouse");
 
-		// Apply the user's mouse sensitivity settings
-		PropMultiVal *p3 = section->GetMultiVal("sensitivity");
-		const auto sensitivity_x = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
-		const auto sensitivity_y = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
-
-		// Apply raw mouse input setting
-		const auto raw_mouse_input = section->Get_bool("raw_mouse_input");
-		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-		                        raw_mouse_input ? "0" : "1",
-		                        SDL_HINT_OVERRIDE);
-
 		// Notify mouse emulation routines about the configuration
-		MOUSE_SetConfig(raw_mouse_input, sensitivity_x, sensitivity_y);
+		MOUSE_SetConfigSeamless(sdl.mouse.control_choice == Seamless);
 	}
 
 	/* Get some Event handlers */
@@ -3615,12 +3625,10 @@ static void GUI_StartUp(Section *sec)
 
 static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 {
-	if (mouse_seamless_driver || mouse_is_captured ||
-	    sdl.mouse.control_choice == Seamless)
-		MOUSE_EventMoved(static_cast<float>(motion->xrel),
-		                 static_cast<float>(motion->yrel),
-		                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
-		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)));
+	MOUSE_EventMoved(static_cast<float>(motion->xrel),
+	                 static_cast<float>(motion->yrel),
+	                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
+	                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)));
 }
 
 static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
@@ -3631,6 +3639,9 @@ static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button)
 {
+	constexpr auto state_released = false;
+	constexpr auto state_pressed  = true;
+
     auto notify_button = [](const uint8_t button, const bool pressed) {
 		switch (button) {
 		case SDL_BUTTON_LEFT:   MOUSE_EventButton(0, pressed); break;
@@ -3640,16 +3651,16 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button)
 		case SDL_BUTTON_X2:     MOUSE_EventButton(4, pressed); break;
 		}
 	};
-	
+
 	if (button->state == SDL_RELEASED) {
-		notify_button(button->button, false);
+		notify_button(button->button, state_released);
 		return;
 	}
-	
+
 	assert(button->state == SDL_PRESSED);
-	
+
 	if (sdl.desktop.fullscreen || mouse_seamless_driver) {
-		notify_button(button->button, true);
+		notify_button(button->button, state_pressed);
 		return;
 	}
 
@@ -4302,20 +4313,10 @@ void Config_Add_SDL() {
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
-	Pmulti = sdl_sec->AddMultiVal("sensitivity", always, ",");
-	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity\n"
-	                 "(e.g. 100,-50).");
-	Pmulti->SetValue("100");
-	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
-	Pint->SetMinMax(-1000,1000);
-	Pint = Pmulti->GetSection()->Add_int("ysens", always,100);
-	Pint->SetMinMax(-1000,1000);
-
-	pbool = sdl_sec->Add_bool("raw_mouse_input", on_start, false);
-	pbool->Set_help(
-	        "Enable this setting to bypass your operating system's mouse\n"
-	        "acceleration and sensitivity settings. This works in\n"
-	        "fullscreen or when the mouse is captured in window mode.");
+	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
+	Pmulti->Set_help("Moved [mouse] section; see documentation as values have different meaning now.");
+	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
+	pbool->Set_help("Moved to [mouse] section.");
 
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Keep the console open if an error has occurred.");

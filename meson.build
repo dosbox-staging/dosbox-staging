@@ -652,7 +652,7 @@ endif
 conf_data.set10('C_MANYMOUSE', true)
 if host_machine.system() == 'darwin'
   if not conf_data.has('C_IOKIT')
-    # On OSX the ManyMouse library requires IOKit
+    # On macOS the ManyMouse library requires IOKit
     conf_data.set10('C_MANYMOUSE', false)
   endif
 endif

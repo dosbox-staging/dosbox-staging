@@ -38,6 +38,7 @@ CHECK_NARROWING();
 
 
 bool mouse_seamless_driver = false;
+bool mouse_seamless_user   = false;
 
 static Bitu int74_ret_callback = 0;
 
@@ -143,13 +144,29 @@ void MOUSE_NotifyResetDOS()
 
 void MOUSE_NotifyStateChanged()
 {
-    const auto old_seamless_driver  = mouse_seamless_driver;
+    const auto old_seamless_driver = mouse_seamless_driver;
+    const auto old_seamless_user   = mouse_seamless_user;
 
-    // Prepare suggestions to the GUI
-    mouse_seamless_driver = mouse_shared.active_vmm && !mouse_video.fullscreen;
+    const auto is_mapping_in_effect = manymouse.IsMappingInEffect();
 
-    // If state has really changed, update the GUI
-    if (mouse_seamless_driver != old_seamless_driver)
+    static bool already_warned = false;
+    if (!already_warned && is_mapping_in_effect &&
+        (mouse_shared.active_vmm || mouse_config.seamless)) {
+        LOG_WARNING("MOUSE: Mapping disables seamless pointer integration");
+        already_warned = true;
+    }
+
+    // Prepare suggestions to the GFX subsystem
+    mouse_seamless_driver = mouse_shared.active_vmm &&
+                            !mouse_video.fullscreen &&
+                            !is_mapping_in_effect;
+    mouse_seamless_user   = mouse_config.seamless &&
+                            !mouse_video.fullscreen &&
+                            !is_mapping_in_effect;
+
+    // If state has really changed, update GFX subsystem
+    if (mouse_seamless_driver != old_seamless_driver ||
+        mouse_seamless_user   != old_seamless_user)
         GFX_UpdateMouseState();
 }
 
@@ -183,6 +200,12 @@ void MOUSE_EventMoved(const float x_rel,
                       const uint16_t x_abs,
                       const uint16_t y_abs)
 {
+    // Drop unneeded events
+    if (!mouse_is_captured &&
+        !mouse_seamless_user &&
+        !mouse_seamless_driver)
+        return;
+
     // From the GUI we are getting mouse movement data in two
     // distinct formats:
     //
@@ -297,6 +320,12 @@ MouseConfigAPI::MouseConfigAPI()
 MouseConfigAPI::~MouseConfigAPI()
 {
     manymouse.StopConfigAPI();
+    MOUSE_NotifyStateChanged();
+}
+
+bool MouseConfigAPI::IsNoMouseMode()
+{
+    return mouse_config.no_mouse;
 }
 
 const std::vector<MouseInterfaceInfoEntry> &MouseConfigAPI::GetInfoInterfaces() const
@@ -354,6 +383,9 @@ bool MouseConfigAPI::PatternToRegex(const std::string &pattern,
 
 bool MouseConfigAPI::ProbeForMapping(uint8_t &device_id)
 {
+    if (mouse_config.no_mouse)
+        return false;
+
     manymouse.RescanIfSafe();
     return manymouse.ProbeForMapping(device_id);
 }
@@ -361,6 +393,9 @@ bool MouseConfigAPI::ProbeForMapping(uint8_t &device_id)
 bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
                          const uint8_t device_idx)
 {
+    if (mouse_config.no_mouse)
+        return false;
+
     auto mouse_interface = MouseInterface::Get(interface_id);
     if (!mouse_interface)
         return false;
@@ -371,6 +406,9 @@ bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
 bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
                          const std::regex &regex)
 {
+    if (mouse_config.no_mouse)
+        return false;
+
     manymouse.RescanIfSafe();
     const auto idx = manymouse.GetIdx(regex);
     if (idx >= mouse_info.physical.size())
@@ -414,11 +452,13 @@ bool MouseConfigAPI::Reset(const MouseConfigAPI::ListIDs &list_ids)
 }
 
 bool MouseConfigAPI::SetSensitivity(const MouseConfigAPI::ListIDs &list_ids,
-                                    const uint8_t sensitivity_x,
-                                    const uint8_t sensitivity_y)
+                                    const int8_t sensitivity_x,
+                                    const int8_t sensitivity_y)
 {
-    if (!sensitivity_x || sensitivity_x > mouse_predefined.sensitivity_user_max ||
-        !sensitivity_y || sensitivity_y > mouse_predefined.sensitivity_user_max)
+    if (sensitivity_x >  mouse_predefined.sensitivity_user_max ||
+        sensitivity_x < -mouse_predefined.sensitivity_user_max ||
+        sensitivity_y >  mouse_predefined.sensitivity_user_max ||
+        sensitivity_y < -mouse_predefined.sensitivity_user_max)
         return false;
 
     std::vector<MouseInterface *> list;
@@ -431,9 +471,10 @@ bool MouseConfigAPI::SetSensitivity(const MouseConfigAPI::ListIDs &list_ids,
 }
 
 bool MouseConfigAPI::SetSensitivityX(const MouseConfigAPI::ListIDs &list_ids,
-                                     const uint8_t sensitivity_x)
+                                     const int8_t sensitivity_x)
 {
-    if (!sensitivity_x || sensitivity_x > mouse_predefined.sensitivity_user_max)
+    if (sensitivity_x >  mouse_predefined.sensitivity_user_max ||
+        sensitivity_x < -mouse_predefined.sensitivity_user_max)
         return false;
 
     std::vector<MouseInterface *> list;
@@ -446,9 +487,10 @@ bool MouseConfigAPI::SetSensitivityX(const MouseConfigAPI::ListIDs &list_ids,
 }
 
 bool MouseConfigAPI::SetSensitivityY(const MouseConfigAPI::ListIDs &list_ids,
-                                     const uint8_t sensitivity_y)
+                                     const int8_t sensitivity_y)
 {
-    if (!sensitivity_y || sensitivity_y > mouse_predefined.sensitivity_user_max)
+    if (sensitivity_y >  mouse_predefined.sensitivity_user_max ||
+        sensitivity_y < -mouse_predefined.sensitivity_user_max)
         return false;
 
     std::vector<MouseInterface *> list;
@@ -549,14 +591,11 @@ bool MouseConfigAPI::ResetMinRate(const MouseConfigAPI::ListIDs &list_ids)
 // Initialization
 // ***************************************************************************
 
-void MOUSE_SetConfig(const bool  raw_input,
-                     const float sensitivity_x,
-                     const float sensitivity_y)
+void MOUSE_SetConfigSeamless(const bool seamless)
 {
     // Called during SDL initialization
-    mouse_config.raw_input     = raw_input;
-    mouse_config.sensitivity_gui_x = sensitivity_x;
-    mouse_config.sensitivity_gui_y = sensitivity_y;
+    mouse_config.seamless = seamless;
+    MOUSE_NotifyStateChanged();
 
     // Just in case it is also called later
     for (auto &interface : mouse_interfaces)
@@ -567,12 +606,16 @@ void MOUSE_SetConfig(const bool  raw_input,
     MOUSE_Startup();
 }
 
-void MOUSE_SetNoMouse()
+void MOUSE_SetConfigNoMouse()
 {
     // NOTE: if it is decided to not allow enabling/disabling
     // this during runtime, add button click releases for all
     // the mouse buttons
     mouse_config.no_mouse = true;
+
+    // Start mouse emulation if ready
+    mouse_shared.ready_config_sdl = true;
+    MOUSE_Startup();
 }
 
 void MOUSE_Startup()

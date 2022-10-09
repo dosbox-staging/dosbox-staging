@@ -50,7 +50,6 @@ enum class MouseInterfaceId : uint8_t {
     None  = UINT8_MAX
 };
 
-constexpr uint8_t num_mouse_interfaces_com = 4;
 constexpr uint8_t num_mouse_interfaces = static_cast<uint8_t>(MouseInterfaceId::Last) + 1;
 
 
@@ -80,10 +79,9 @@ void MOUSE_EventWheel(const int16_t w_rel,
 
 void MOUSE_NotifyBooting();
 
-void MOUSE_SetConfig(const bool raw_input,
-                     const float sensitivity_x,
-                     const float sensitivity_y);
-void MOUSE_SetNoMouse();
+void MOUSE_SetConfigSeamless(const bool seamless);
+void MOUSE_SetConfigNoMouse();
+
 void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
                            const uint16_t res_x, const uint16_t res_y,
                            const bool fullscreen, const uint16_t x_abs,
@@ -95,6 +93,8 @@ void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
 
 // If driver with seamless pointer support is running
 extern bool mouse_seamless_driver;
+// If user selected seamless mode is in effect
+extern bool mouse_seamless_user;
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
@@ -137,8 +137,8 @@ public:
     MouseInterfaceId GetInterfaceId() const;
     MouseMapStatus GetMapStatus() const;
     const std::string &GetMappedDeviceName() const;
-    uint8_t GetSensitivityX() const; // 1-99
-    uint8_t GetSensitivityY() const; // 1-99
+    int8_t GetSensitivityX() const; // -99 to +99
+    int8_t GetSensitivityY() const; // -99 to +99
     uint16_t GetMinRate() const; // 10-500, 0 for none
     uint16_t GetRate() const; // current rate, 10-500, 0 for N/A
 
@@ -173,7 +173,7 @@ public:
 
     // Always destroy the object once it is not needed anymore
     // (configuration tool finishes it's job) and we are returning
-    // to normal code excution!
+    // to normal code execution!
 
     MouseConfigAPI();
     ~MouseConfigAPI();
@@ -185,9 +185,11 @@ public:
     const std::vector<MouseInterfaceInfoEntry> &GetInfoInterfaces() const;
     const std::vector<MousePhysicalInfoEntry>  &GetInfoPhysical();
 
+    static bool IsNoMouseMode();
     static bool CheckInterfaces(const ListIDs &list_ids);
     static bool PatternToRegex(const std::string &pattern, std::regex &regex);
-    bool ProbeForMapping(uint8_t &device_id); // for MOUSECTL.COM only!
+
+    bool ProbeForMapping(uint8_t &device_id); // For interactive mapping in MOUSECTL.COM only!
 
     bool Map(const MouseInterfaceId interface_id, const uint8_t device_idx);
     bool Map(const MouseInterfaceId interface_id, const std::regex &regex);
@@ -196,14 +198,14 @@ public:
     bool OnOff(const ListIDs &list_ids, const bool enable);
     bool Reset(const ListIDs &list_ids);
 
-    // Valid sensitivity values are 1-99
+    // Valid sensitivity values are from -99 to +99
     bool SetSensitivity(const ListIDs &list_ids,
-                        const uint8_t sensitivity_x,
-                        const uint8_t sensitivity_y);
+                        const int8_t sensitivity_x,
+                        const int8_t sensitivity_y);
     bool SetSensitivityX(const ListIDs &list_ids,
-                         const uint8_t sensitivity_x);
+                         const int8_t sensitivity_x);
     bool SetSensitivityY(const ListIDs &list_ids,
-                         const uint8_t sensitivity_y);
+                         const int8_t sensitivity_y);
 
     bool ResetSensitivity(const ListIDs &list_ids);
     bool ResetSensitivityX(const ListIDs &list_ids);
