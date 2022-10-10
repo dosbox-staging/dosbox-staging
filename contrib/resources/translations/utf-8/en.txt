@@ -1317,19 +1317,19 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
-Γòæ [color=green]mount c c:\dosgames\ [color=white]will create a C drive with c:\dosgames as contents.Γòæ
-Γòæ                                                                         Γòæ
-Γòæ [color=green]c:\dosgames\ [color=white]is an example. Replace it with your own games directory.   Γòæ
-ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
+[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c c:\dosgames\ [color=white]will create a C drive with c:\dosgames as contents.║
+║                                                                         ║
+║ [color=green]c:\dosgames\ [color=white]is an example. Replace it with your own games directory.   ║
+╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
-Γòæ [color=green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.Γòæ
-Γòæ                                                                      Γòæ
-Γòæ [color=green]~/dosgames[color=white] is an example. Replace it with your own games directory.  Γòæ
-ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
+[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║
+║                                                                      ║
+║ [color=green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║
+╚══════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -2058,43 +2058,43 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[bgcolor=blue][color=white]ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
-Γòæ [color=green]Welcome to DOSBox Staging %-40s[color=white] Γòæ
-Γòæ                                                                    Γòæ
-Γòæ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 Γòæ
-Γòæ For supported shell commands type: [color=yellow]HELP[color=white]                            Γòæ
-Γòæ                                                                    Γòæ
-Γòæ To adjust the emulated CPU speed, use [color=red]%s+F11[color=white] and [color=red]%s+F12[color=white].%s%s       Γòæ
-Γòæ To activate the keymapper [color=red]%s+F1[color=white].%s                                 Γòæ
-Γòæ For more information read the [color=cyan]README[color=white] file in the DOSBox directory. Γòæ
-Γòæ                                                                    Γòæ
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
+║ [color=green]Welcome to DOSBox Staging %-40s[color=white] ║
+║                                                                    ║
+║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║
+║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║
+║                                                                    ║
+║ To adjust the emulated CPU speed, use [color=red]%s+F11[color=white] and [color=red]%s+F12[color=white].%s%s       ║
+║ To activate the keymapper [color=red]%s+F1[color=white].%s                                 ║
+║ For more information read the [color=cyan]README[color=white] file in the DOSBox directory. ║
+║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
-Γòæ DOSBox supports Composite CGA mode.                                Γòæ
-Γòæ Use [color=red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        Γòæ
-Γòæ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   Γòæ
-Γòæ                                                                    Γòæ
+║ DOSBox supports Composite CGA mode.                                ║
+║ Use [color=red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║
+║ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   ║
+║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-Γòæ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, Γòæ
-Γòæ and [color=red]%s+F11[reset] to change contrast/brightness settings.                Γòæ
+║ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, ║
+║ and [color=red]%s+F11[reset] to change contrast/brightness settings.                ║
 
 .
 :SHELL_STARTUP_HERC
-Γòæ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. Γòæ
-Γòæ                                                                    Γòæ
+║ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. ║
+║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-Γòæ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. Γòæ
-Γòæ                                                                    Γòæ
+║ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║
+║                                                                    ║
 
 .
 :SHELL_STARTUP_END
-Γòæ [color=yellow]https://dosbox-staging.github.io[color=white]                                   Γòæ
-ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[reset]
+║ [color=yellow]https://dosbox-staging.github.io[color=white]                                   ║
+╚════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
