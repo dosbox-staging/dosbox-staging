@@ -34,6 +34,7 @@ libdos_sources = files(
     'program_loadrom.cpp',
     'program_ls.cpp',
     'program_mem.cpp',
+    'program_more.cpp',
     'program_mount.cpp',
     'program_mount_common.cpp',
     'program_mousectl.cpp',
