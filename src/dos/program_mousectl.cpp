@@ -22,6 +22,7 @@
 
 #include "ansi_code_markup.h"
 #include "checks.h"
+#include "string_utils.h"
 #include "video.h"
 
 #include <set>
@@ -119,33 +120,23 @@ bool MOUSECTL::ParseAndRun()
 
 bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 {
-    while (params.size()) {
-        auto compare = [&params](const char *string)
-        {
-            return (0 == strcasecmp(params[0].c_str(), string));
-        };
-
-        // Check if first parameter is one of supported mouse interfaces
-        if (compare("DOS"))
-            list_ids.push_back(MouseInterfaceId::DOS);
-        else if (compare("PS/2"))
-            list_ids.push_back(MouseInterfaceId::PS2);
-        else if (compare("PS2"))
-            list_ids.push_back(MouseInterfaceId::PS2);
-        else if (compare("COM1"))
-            list_ids.push_back(MouseInterfaceId::COM1);
-        else if (compare("COM2"))
-            list_ids.push_back(MouseInterfaceId::COM2);
-        else if (compare("COM3"))
-            list_ids.push_back(MouseInterfaceId::COM3);
-        else if (compare("COM4"))
-            list_ids.push_back(MouseInterfaceId::COM4);
-        else
-            break; // It isn't - end of interface list
-
-        // First parameter is consummed, remove it
-        params.erase(params.begin());
-    }
+	auto add_if_is_interface = [&](const std::string &param) {
+		for (const auto id : {
+		         MouseInterfaceId::DOS,
+		         MouseInterfaceId::PS2,
+		         MouseInterfaceId::COM1,
+		         MouseInterfaceId::COM2,
+		         MouseInterfaceId::COM3,
+		         MouseInterfaceId::COM4,
+		 }) {
+		    const auto is_interface = string_iequals(param, GetInterfaceStr(id));
+		    if (is_interface)
+			    list_ids.push_back(id);
+		    return is_interface;
+	    }
+    };
+    while (!params.empty() && add_if_is_interface(params.front()))
+	params.erase(params.begin()); // pop
 
     // Check that all interfaces are unique
     std::set<MouseInterfaceId> tmp(list_ids.begin(), list_ids.end());
