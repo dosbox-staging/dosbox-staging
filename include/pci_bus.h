@@ -74,6 +74,7 @@ public:
 	virtual bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)=0;
 	virtual Bits ParseWriteRegister(uint8_t regnum,uint8_t value)=0;
 	virtual bool InitializeRegisters(uint8_t registers[256])=0;
+	virtual ~PCI_Device() = 0;
 
 };
 

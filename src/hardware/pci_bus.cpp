@@ -44,7 +44,7 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 // 10- 8 - subfunction number	(0x00000700)
 //  7- 2 - config register #	(0x000000fc)
 
-static void write_pci_addr(io_port_t port, io_val_t val, io_width_t)
+static void write_pci_addr([[maybe_unused]] io_port_t port, io_val_t val, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Write PCI address :=%x", val);
 	pci_caddress = val;
@@ -105,19 +105,19 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 		// WORD and DWORD are never used
 		case io_width_t::word:
 			write_pci_register(dev, regnum + 0, (uint8_t)(val & 0xff));
-			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 8) & 0xff));
+			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 7 >> 1) & 0xff));
 			break;
 		case io_width_t::dword:
 			write_pci_register(dev, regnum + 0, (uint8_t)(val & 0xff));
-			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 8) & 0xff));
-			write_pci_register(dev, regnum + 2, (uint8_t)((val >> 16) & 0xff));
-			write_pci_register(dev, regnum + 3, (uint8_t)((val >> 24) & 0xff));
+			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 7 >> 1) & 0xff));
+			write_pci_register(dev, regnum + 2, (uint8_t)((val >> 7 >> 7 >> 2) & 0xff));
+			write_pci_register(dev, regnum + 3, (uint8_t)((val >> 7 >> 7 >> 7 >> 3) & 0xff));
 			break;
 		}
 	}
 }
 
-static uint32_t read_pci_addr(io_port_t port, io_width_t)
+static uint32_t read_pci_addr([[maybe_unused]] io_port_t port, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
@@ -168,15 +168,15 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
 		uint8_t fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
 		uint8_t regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
-		if (devnum>=pci_devices_installed) return 0xffffffff;
+		if (devnum>=pci_devices_installed) return 0xff;
 		LOG(LOG_PCI,LOG_NORMAL)("  Read from device %x register %x (function %x); addr %x",
 			devnum,regnum,fctnum,pci_caddress);
 
 		PCI_Device *selected_device = pci_devices[devnum];
 		if (selected_device == nullptr)
-			return 0xffffffff;
+			return 0xff;
 		if (fctnum > selected_device->NumSubdevices())
-			return 0xffffffff;
+			return 0xff;
 
 		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
 
@@ -190,7 +190,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 			case io_width_t::word: {
 				uint16_t val16 = read_pci_register(dev, regnum);
 				val16 |= (read_pci_register(dev, regnum + 1) << 8);
-				return val16;
+				return (uint8_t)val16;
 			}
 			case io_width_t::dword: {
 				uint32_t val32 = read_pci_register(dev, regnum);
@@ -203,7 +203,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 			}
 		}
 	}
-	return 0xffffffff;
+	return 0xff;
 }
 
 static Bitu PCI_PM_Handler() {
@@ -261,6 +261,7 @@ PCI_Device* PCI_Device::GetSubdevice(Bits subfct) {
 	return NULL;
 }
 
+PCI_Device::~PCI_Device() {}
 
 // queued devices (PCI device registering requested before the PCI framework was initialized)
 static const Bitu max_rqueued_devices=16;
@@ -444,7 +445,7 @@ void PCI_AddSST_Device(Bitu type) {
 			ctype = type;
 			break;
 		default:
-			LOG_MSG("PCI:SST: Invalid board type %x specified",type);
+			LOG_MSG("PCI:SST: Invalid board type %x specified", (unsigned int)type);
 			break;
 	}
 	PCI_Device* voodoo_dev=new PCI_SSTDevice(ctype);
@@ -458,7 +459,7 @@ void PCI_AddSST_Device(Bitu type) {
 
 void PCI_RemoveSST_Device(void) {
 	if (pci_interface!=NULL) {
-		Bit16u vendor=PCI_SSTDevice::VendorID();
+		uint16_t vendor=PCI_SSTDevice::VendorID();
 		pci_interface->RemoveDevice(vendor,1);
 		pci_interface->RemoveDevice(vendor,2);
 	}
@@ -476,8 +477,7 @@ bool PCI_IsInitialized() {
 	return false;
 }
 
-
-void PCI_ShutDown(Section* sec){
+void PCI_ShutDown(Section *){
 	delete pci_interface;
 	pci_interface=NULL;
 }

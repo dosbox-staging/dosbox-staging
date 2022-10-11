@@ -21,6 +21,10 @@
 #define GL_SILENCE_DEPRECATION
 #endif
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 #include <map>
@@ -113,7 +117,6 @@ void VOGL_Reset(void) {
 	draw_to_front_buffer = false;
 	read_from_front_buffer = false;
 }
-
 
 void VOGL_InitVersion(void) {
 	opengl_version = -1;

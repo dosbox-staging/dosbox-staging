@@ -62,10 +62,15 @@ static UINT32 ogl_texture_index = 1;
 /* texture cache buffer */
 UINT32 texrgb[256*256];
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wint-to-void-pointer-cast"
+#endif
 
 /* texture address map */
 std::map <const UINT32, ogl_texmap> textures[2];
 
+bool GFX_IsFullScreenSetting();
+SDL_Window* GFX_GetSDLWindow(void);
 SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES screenType);
 
 static void ogl_get_depth(voodoo_state* VV, INT32 ITERZ, INT64 ITERW, INT32 *depthval, INT32 *out_wfloat)
@@ -918,9 +923,9 @@ void ogl_shaders(const poly_extra_data *extra) {
 	/* shaders extensions not loaded */
 	if (!glCreateShaderObjectARB) return;
 
-	UINT32 FBZMODE      = extra->r_fbzMode;
-	UINT32 FOGMODE      = extra->r_fogMode;
-	UINT32 texcount     = extra->texcount;
+	//UINT32 FBZMODE      = extra->r_fbzMode;
+	UINT32 FOGMODE      = (UINT32)extra->r_fogMode;
+	UINT32 texcount     = (UINT32)extra->texcount;
 
 	/* build a new shader program */
 	if (!extra->info->shader_ready) {
@@ -1106,8 +1111,8 @@ void voodoo_ogl_draw_triangle(poly_extra_data *extra) {
 	td[0].enable = false;
 	td[1].enable = false;
 
-	UINT32 ALPHAMODE = extra->r_alphaMode;
-	UINT32 FBZMODE   = extra->r_fbzMode;
+	UINT32 ALPHAMODE = (UINT32)extra->r_alphaMode;
+	UINT32 FBZMODE   = (UINT32)extra->r_fbzMode;
 
 
 	ogl_get_vertex_data(v->fbi.ax, v->fbi.ay, (void*)extra, &vd[0]);
@@ -1438,7 +1443,7 @@ void voodoo_ogl_draw_pixel_pipeline(int x, int y, int r, int g, int b) {
 }
 
 
-void voodoo_ogl_clip_window(voodoo_state *v) {
+void voodoo_ogl_clip_window(voodoo_state *) {
 /*	VOGL_ClearBeginMode();
 
 	int sx = (v->reg[clipLeftRight].u >> 16) & 0x3ff;
@@ -1481,7 +1486,7 @@ void voodoo_ogl_fastfill(void) {
 
 	bool scissors_needed = true;
 	if ((sx == 0) && (sy == 0)) {
-		if ((ex == v->fbi.width) && (ey == v->fbi.height)) scissors_needed = false;
+		if ((ex == (int)v->fbi.width) && (ey == (int)v->fbi.height)) scissors_needed = false;
 	}
 
 	sx = (sx* new_width) / v->fbi.width;
@@ -1495,7 +1500,7 @@ void voodoo_ogl_fastfill(void) {
 	}
 
 
-	Bit32u clear_mask=0;
+	uint32_t clear_mask=0;
 	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u)) {
 		clear_mask|=GL_COLOR_BUFFER_BIT;
 
@@ -1642,8 +1647,6 @@ void voodoo_ogl_reset_videomode(void) {
 
 	GFX_TearDown();
 
-	bool full_sdl_restart = true;	// make dependent on surface=opengl
-
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -1673,12 +1676,20 @@ void voodoo_ogl_reset_videomode(void) {
 
 	if (GFX_LazyFullscreenRequested()) GFX_SwitchFullscreenNoReset();
 
+	int w = -1, h = -1;
+	SDL_GetWindowSize(GFX_GetSDLWindow(), &w, &h);
+	if (w > -1 && h > -1 && ((int)new_width != w || (int)new_height != h)) {
+		new_height = h;
+		new_width = w;
+	}
 	SDL_Window *window = GFX_SetSDLWindowMode(new_width, new_height, SCREEN_OPENGL);
 	if (window != NULL)
         ogl_surface = SDL_GetWindowSurface(window);
 	if (ogl_surface == NULL)
 		E_Exit("VOODOO: opengl init error");
 
+	if (GFX_IsFullScreenSetting() && !GFX_IsFullscreen())
+		GFX_SwitchFullScreen();
 	GFX_SwitchLazyFullscreen(true);
 
 	//GFX_UpdateSDLCaptureState();
@@ -1825,6 +1836,8 @@ void voodoo_ogl_leave(bool leavemode) {
 		LOG_MSG("VOODOO: OpenGL: quit");
 
 		GFX_SwitchLazyFullscreen(false);
+		if (GFX_IsFullScreenSetting() && !GFX_IsFullscreen())
+			GFX_SwitchFullScreen();
 		if (ogl_surface != NULL) {
 			SDL_FreeSurface(ogl_surface);
 			ogl_surface = NULL;

@@ -1091,7 +1091,7 @@ INLINE UINT32 compute_raster_hash(const raster_info *info)
 #define DECLARE_DITHER_POINTERS 												\
 	const UINT8 *dither_lookup = NULL;											\
 	const UINT8 *dither4 = NULL;												\
-	const UINT8 *dither = NULL													\
+	[[maybe_unused]] const UINT8 *dither = NULL													\
 
 #define COMPUTE_DITHER_POINTERS(FBZMODE, YY)									\
 do																				\
