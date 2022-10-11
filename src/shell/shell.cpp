@@ -1031,7 +1031,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_INTRO"," Directory of %s\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%17d file(s) %21s bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%17d dir(s)  %21s bytes free\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset]or [color=yellow]intro mount[reset] for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE", "Press a key to continue...");
 	MSG_Add("SHELL_CMD_PAUSE_HELP", "Waits for a keystroke to continue.\n");
@@ -1472,10 +1472,10 @@ void SHELL_Init() {
 			"Displays or changes file attributes.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
 	        "Usage:\n"
-	        "  [color=green]attrib[reset] [color=cyan][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]\n"
+	        "  [color=green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:\n"
+	        "  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:\n"
 	        "             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]\n"
 	        "             Where: R = Read-only, A = Archive, S = System, H = Hidden\n"
 	        "  [color=cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with\n"
