@@ -182,7 +182,7 @@ all:        Biedt alle modi voor een bepaalde grootte van het videogeheugen,
 :CONFIG_SPEED_MODS
 Wijzigingen toestaan waarvan bekend is dat ze de prestaties verbeteren.
 Momenteel zijn er geen spelen bekend die hier last van hebben. Dien een bug in
-bij het project als je een spel vindt dat niet werkt wanneer dit is ingesteld
+bij het project als u een spel vindt dat niet werkt wanneer dit is ingesteld
 op "true", zodanig dat we ze hier kunnen vermelden.
 .
 :CONFIG_AUTOEXEC_SECTION
@@ -254,7 +254,13 @@ die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
 U kunt ook aangepaste kleuren instellen door 16 spaties of komma's gescheiden
 kleurwaarden op te geven, ofwel als 3- of 6-cijferige hexadecimale codes
 (bijv. #f00 of #ff0000 voor volledig rood), of decimale RGB-drietallen (bijv.
-(255, 0, 255) voor magenta).
+(255, 0, 255) voor magenta). De 16 kleuren zijn als volgt geordend: zwart,
+blauw, groen, cyaan, rood, magenta, bruin, lichtgrijs, donkergrijs,
+lichtblauw, lichtgroen, lichtcyaan, lichtrood, lichtmagenta, geel, en wit.
+Hun standaardwaarden, hier weergegeven in zescijferige hexadecimale code-
+indeling, zijn: #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500
+#aaaaaa #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 en #ffffff,
+respectievelijk.
 .
 :CONFIG_SCALER
 Scaler gebruikt om modi met lage resolutie te vergroten/verbeteren.
@@ -277,7 +283,7 @@ Schakel de composietmodus in bij het starten. 'auto' laat het programma
 beslissen.
 Opmerking: verfijn de onderstaande instellingen (dwz: tint) met behulp van de
            samengestelde sneltoetsen.
-           Lees dan de nieuwe instellingen van je console en voer ze hier in.
+           Lees dan de nieuwe instellingen van u console en voer ze hier in.
 .
 :CONFIG_ERA
 Tijdperk van composiettechnologie.
@@ -311,7 +317,7 @@ Als u deze waarde te hoog instelt, leidt dit tot geluidsuitval en vertragingen.
 Cycli kunnen op 3 manieren worden ingesteld:
   'auto'          Probeert te raden wat een spel nodig heeft.
                   Het werkt meestal, maar kan voor bepaalde spelen mislukken.
-  'fixed #nummer' Zal een vast aantal cycli instellen. Dit is wat je meestal
+  'fixed #nummer' Zal een vast aantal cycli instellen. Dit is wat u meestal
                   nodig hebt als 'auto' faalt (voorbeeld: fixed 4000).
   'max'           Zal zoveel cycli toewijzen als uw computer aankan.
 .
@@ -373,8 +379,7 @@ Schakel reverb globaal in om een gevoel van ruimte toe te voegen:
            afzonderlijke kanalen gebruiken voor muziek en digitale audio.
   huge:    Een sterkere variant van de grote zaal preset; werkt heel goed in
            sommige games met meer sfeervolle soundtracks.
-Opmerking: u kunt de reverbniveaus per kanaal nauwkeurig afstemmen via
-           mixercommando's.
+Opmerking: u kunt de reverbniveaus per kanaal afstemmen via mixercommando's.
 .
 :CONFIG_CHORUS
 Schakel chorus globaal in om een gevoel van stereobeweging aan het geluid toe
@@ -404,10 +409,10 @@ Dit is meestal de id of naam van de MIDI-synthesizer die u wilt gebruiken
 (zoek de id/naam op met het DOS-commando 'mixer /listmidi').
 - Deze optie heeft geen effect bij gebruik van de ingebouwde synthesizers
   (mididevice = fluidsynth of mt32).
-- Als je ALSA gebruikt, gebruik dan het Linux-commando 'aconnect -l' om de
+- Als u ALSA gebruikt, gebruik dan het Linux-commando 'aconnect -l' om de
   open MIDI-poorten weer te geven en selecteer er een (bijvoorbeeld
   'midiconfig=14:0' voor sequencerclient 14, poort 0).
-- Als je een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan de
+- Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan de
   hardware een vertraging nodig hebben om te voorkomen dat de buffer overloopt.
   Voeg in dat geval 'delaysysex' toe, bijvoorbeeld: 'midiconfig=2 delaysysex'.
 Zie de README/handleiding voor meer details.
@@ -647,13 +652,13 @@ aanwezig als de machine is ingesteld op 'tandy'.
 Filter voor de Tandy synth-uitgang:
   on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
-  <custom>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filter voor de Tandy DAC-uitgang:
   on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
-  <custom>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  <op-maat>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_LPT_DAC
 Type DAC aangesloten op de parallelle poort:
@@ -666,7 +671,7 @@ Type DAC aangesloten op de parallelle poort:
 Filter voor de LPT DAC-audioapparaat(en):
   on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
-  <custom>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_DISNEY
 Gebruik 'lpt_dac=disney' om de Disney Sound Source in te schakelen.
@@ -678,22 +683,22 @@ Schakel IBM PS/1 Audio-emulatie in.
 Filter voor de PS/1 Audio synth-uitgang:
   on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
-  <custom>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filter voor de PS/1 Audio DAC-uitgang:
   on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
-  <custom>:  Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_JOYSTICKTYPE
 Type joystick om te emuleren: auto (standaard),
 auto     : Detecteer en gebruik eventuele joystick(s), indien mogelijk.,
-2axis    : Ondersteuning voor maximaal twee joysticks.
-4axis    : Ondersteun alleen de eerste joystick.
-4axis_2  : Ondersteun alleen de tweede joystick.
-fcs      : Ondersteunt een joystick van het Thrustmaster-type.
-ch       : Ondersteunt een joystick van het CH Flightstick-type.
+2axis    : Ondersteuning voor maximaal twee joysticks, elk met 2 assen.
+4axis    : Ondersteun alleen de eerste joystick, als 4-assig type.
+4axis_2  : Ondersteun alleen de tweede joystick, als 4-assig type.
+fcs      : Joystick emuleren als een originele Thrustmaster FCS.
+ch       : Joystick emuleren als een originele CH Flightstick.
 hidden   : Voorkom dat DOS de joystick(s) ziet, maar sta mapping toe.
 disabled : Joysticks volledig uitschakelen.
 (Vergeet niet om het mapperbestand van DOSBox te resetten als u het eerder
@@ -701,7 +706,7 @@ hebt opgeslagen)
 .
 :CONFIG_TIMED
 Schakel getimede intervallen in voor de as. Experimenteer met deze optie als
-je joystick (weg) afdrijft.
+de joystick afdrijft.
 .
 :CONFIG_AUTOFIRE
 Vuurt continue, zolang de knop ingedrukt wordt.
@@ -717,8 +722,7 @@ Maak vertaling van circulaire input naar vierkante output mogelijk. Probeer dit
 in te schakelen als je linker analoge stick alleen in een cirkel kan bewegen.
 .
 :CONFIG_DEADZONE
-Het percentage beweging dat moet worden genegeerd.
-100 verandert de stick in een digitale.
+Percentage beweging om te negeren. 100 verandert de stick in een digitale.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Activeert sneltoetsen om realtime kalibratie van de x- en y-as van de joystick
@@ -732,7 +736,7 @@ andere instellingen zijn geprobeerd.
    - omlaag en omhoog verschuift de offset van de y-as in de gegeven richting.
  - Reset de X- en Y-kalibratie met respectievelijk Ctrl+Delete en Ctrl+Home.
 Elke toetsdruk geeft de X- of Y-kalibratiewaarden weer die u hieronder kunt
-instellen. Als je parameters vindt die werken, stop dan het spel, zet deze
+instellen. Als u parameters vindt die werken, stop dan het spel, zet deze
 instelling terug op false en vul de gerapporteerde kalibratieparameters in.
 .
 :CONFIG_JOY_X_CALIBRATION
@@ -818,11 +822,10 @@ netwerk (met libslirp) met de volgende eigenschappen:
  - 10.0.2.2      : IP of the gateway en DHCP-service.
  - 10.0.2.3      : IP van de virtuele DNS-server.
  - 10.0.2.15     : Eerste IP geleverd door DHCP, uw IP!
-Opmerking: Binnen DOS vereist het instellen hiervan een
-           NE2000-pakketstuurprogramma, een DHCP-client en een TCP/IP-stack.
-           Mogelijk hebt u port-forwarding nodig van de host naar de DOS-gast
-           en van uw router naar uw host wanneer u fungeert als server voor
-           multiplayer-spelen.
+Opmerking: Instellen binnen DOS vereist een NE2000-pakketstuurprogramma, een
+           DHCP-client en een TCP/IP-stack. Mogelijk hebt u port-forwarding
+           nodig van de host naar de DOS-gast en van uw router naar uw host
+           wanneer u fungeert als server voor multiplayer-spelen.
 .
 :CONFIG_NICBASE
 Het IO-basisadres van de NE2000-kaart.
@@ -929,7 +932,7 @@ Gebruik -writelang of -wl bestandsnaam om de huidige taalstrings te schrijven.
 -l geeft configuratieparameters weer.
 -h, -help, -? secties / sectienaam / eigenschapnaam
  Dit helpscherm. Voeg "secties" toe voor een lijst met secties. Voor info over
- een specifieke sectie of eigenschap voeg je de naam erachter toe.
+ een specifieke sectie of eigenschap voegt u de naam erachter toe.
 -axclear wist de autoexec-sectie.
 -axadd [regel] voegt een regel toe aan de autoexec-sectie.
 -axtype drukt de inhoud van de autoexec-sectie af.
@@ -1312,7 +1315,7 @@ Meerdere bestanden wordt alleen ondersteund voor cue/iso-images.
 .
 :PROGRAM_INTRO
 [erases=entire][color=green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
-DOSBox maakt een shell voor je die eruitziet als een oude gewone DOS.
+DOSBox maakt een shell voor u die eruitziet als een oude gewone DOS.
 
 Voor informatie over basis koppelen typ [color=blue]intro mount[reset]
 Voor informatie over CD-ROM ondersteuning typ [color=blue]1mintro cdrom[reset]
@@ -1460,7 +1463,6 @@ Toetsenbordindeling %s geladen voor codetabel %i
 :PROGRAM_KEYB_FILENOTFOUND
 Toetsenbordbestand %s niet gevonden
 
-
 .
 :PROGRAM_KEYB_INVALIDFILE
 Toetsenbordbestand %s ongeldig
@@ -1473,10 +1475,9 @@ Geen lay-out in %s voor codetabel %i
 :PROGRAM_KEYB_INVCPFILE
 Geen of ongeldig codetabelbestand voor lay-out %s
 
-
 .
 :SHELL_CMD_LOADFIX_HELP_LONG
-Laadt een programma in een specifieke geheugengebied.
+Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
   [color=green]loadfix[reset] [color=cyan]SPEL[reset] [color=white][PARAMETERS][reset]
@@ -2257,7 +2258,7 @@ Waar:
 Opmerkingen:
   - [color=green]help[reset] zonder argument toont een DOS commando lijst.
   - Een volledige lijst van interne commando's is beschikbaar via /a of /all
-  - ipv [color=green]help[reset] [color=cyan]COMMANDO[reset], kan je ook [color=cyan]COMMANDO[reset] /? gebruiken.
+  - ipv [color=green]help[reset] [color=cyan]COMMANDO[reset], kunt u ook [color=cyan]COMMANDO[reset] /? gebruiken.
 
 Voorbeelden:
   [color=green]help[reset] [color=cyan]dir[reset]
@@ -2449,7 +2450,7 @@ Waar:
 
 Opmerkingen:
   Door opmerkingen aan een batchprogramma toe te voegen, kan het gemakkelijker
-  te begrijpen zijn. Je kunt met dit commando ook tijdelijk een aantal
+  te begrijpen zijn. U kunt met dit commando ook tijdelijk een aantal
   commando's uitcommentariëren.
 
 Voorbeelden:
@@ -2636,10 +2637,10 @@ Toont of wijzigt bestandskenmerken.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Gebruik:
-  [color=green]attrib[reset] [color=cyan][ATTRIBUTEN][reset] [color=cyan]PATROON[reset] [/S]
+  [color=green]attrib[reset] [color=white][ATTRIBUTEN][reset] [color=cyan]PATROON[reset] [/S]
 
 Waar:
-  [color=cyan][ATTRIBUTEN][reset] zijn attributen om toe te passen, waaronder een of meer van de
+  [color=white][ATTRIBUTEN][reset] zijn attributen om toe te passen, waaronder een of meer van de
                volgende: [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
                Waar: R = Alleen-lezen, A = Archief, S = Systeem, H = Verborgen
   [color=cyan]PATROON[reset]      kan een exacte bestandsnaam zijn of een onnauwkeurige
