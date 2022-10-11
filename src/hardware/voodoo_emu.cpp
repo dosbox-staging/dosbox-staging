@@ -73,6 +73,7 @@ iterated W    = 18.32 [48 bits]
 
 #include <stdlib.h>
 #include <math.h>
+#include <cstring>
 
 #include "dosbox.h"
 #include "cross.h"
@@ -778,6 +779,7 @@ void recompute_video_memory(voodoo_state *v)
 	{
 	case 3:	/* reserved */
 		LOG(LOG_VOODOO,LOG_WARN)("VOODOO.ERROR:Unexpected memory configuration in recompute_video_memory!\n");
+		[[fallthrough]];
 
 	case 0:	/* 2 color buffers, 1 aux buffer */
 		v->fbi.rgboffs[2] = (UINT32)(~0);
@@ -1132,7 +1134,7 @@ void poly_render_triangle(void *dest, poly_draw_scanline_func callback, const po
 	INT32 curscan, scaninc=1;
 
 	INT32 v1yclip, v3yclip;
-	INT32 v1y, v3y, v1x;
+	INT32 v1y, v3y;
 
 	/* first sort by Y */
 	if (v2->y < v1->y)
@@ -1155,7 +1157,7 @@ void poly_render_triangle(void *dest, poly_draw_scanline_func callback, const po
 	}
 
 	/* compute some integral X/Y vertex values */
-	v1x = round_coordinate(v1->x);
+	//v1x = round_coordinate(v1->x);
 	v1y = round_coordinate(v1->y);
 	v3y = round_coordinate(v3->y);
 
@@ -1326,36 +1328,42 @@ void register_w(UINT32 offset, UINT32 data) {
 		/* Vertex data is 12.4 formatted fixed point */
 		case fvertexAx:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexAx:
 			if (chips & 1) v->fbi.ax = (INT16)(data&0xffff);
 			break;
 
 		case fvertexAy:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexAy:
 			if (chips & 1) v->fbi.ay = (INT16)(data&0xffff);
 			break;
 
 		case fvertexBx:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexBx:
 			if (chips & 1) v->fbi.bx = (INT16)(data&0xffff);
 			break;
 
 		case fvertexBy:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexBy:
 			if (chips & 1) v->fbi.by = (INT16)(data&0xffff);
 			break;
 
 		case fvertexCx:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexCx:
 			if (chips & 1) v->fbi.cx = (INT16)(data&0xffff);
 			break;
 
 		case fvertexCy:
 			data = float_to_int32(data, 4);
+			[[fallthrough]];
 		case vertexCy:
 			if (chips & 1) v->fbi.cy = (INT16)(data&0xffff);
 			break;
@@ -1363,72 +1371,84 @@ void register_w(UINT32 offset, UINT32 data) {
 		/* RGB data is 12.12 formatted fixed point */
 		case fstartR:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case startR:
 			if (chips & 1) v->fbi.startr = (INT32)(data << 8) >> 8;
 			break;
 
 		case fstartG:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case startG:
 			if (chips & 1) v->fbi.startg = (INT32)(data << 8) >> 8;
 			break;
 
 		case fstartB:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case startB:
 			if (chips & 1) v->fbi.startb = (INT32)(data << 8) >> 8;
 			break;
 
 		case fstartA:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case startA:
 			if (chips & 1) v->fbi.starta = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdRdX:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dRdX:
 			if (chips & 1) v->fbi.drdx = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdGdX:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dGdX:
 			if (chips & 1) v->fbi.dgdx = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdBdX:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dBdX:
 			if (chips & 1) v->fbi.dbdx = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdAdX:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dAdX:
 			if (chips & 1) v->fbi.dadx = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdRdY:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dRdY:
 			if (chips & 1) v->fbi.drdy = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdGdY:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dGdY:
 			if (chips & 1) v->fbi.dgdy = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdBdY:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dBdY:
 			if (chips & 1) v->fbi.dbdy = (INT32)(data << 8) >> 8;
 			break;
 
 		case fdAdY:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dAdY:
 			if (chips & 1) v->fbi.dady = (INT32)(data << 8) >> 8;
 			break;
@@ -1436,18 +1456,21 @@ void register_w(UINT32 offset, UINT32 data) {
 		/* Z data is 20.12 formatted fixed point */
 		case fstartZ:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case startZ:
 			if (chips & 1) v->fbi.startz = (INT32)data;
 			break;
 
 		case fdZdX:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dZdX:
 			if (chips & 1) v->fbi.dzdx = (INT32)data;
 			break;
 
 		case fdZdY:
 			data = float_to_int32(data, 12);
+			[[fallthrough]];
 		case dZdY:
 			if (chips & 1) v->fbi.dzdy = (INT32)data;
 			break;
@@ -2244,6 +2267,8 @@ void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 		/* compute dithering */
 		COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
 
+		INT32 blendr = 0, blendg = 0, blendb = 0, blenda = 0;
+
 		/* loop over up to two pixels */
 		for (pix = 0; mask; pix++)
 		{
@@ -2296,8 +2321,6 @@ void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp rblend alpha %8x",FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u));
 				}
 
-
-				INT32 blendr, blendg, blendb, blenda;
 				rgb_union c_local;
 
 				/* compute c_local */
@@ -2726,8 +2749,8 @@ UINT32 register_r(UINT32 offset)
 			/* start with a blank slate */
 			result = 0;
 
-			result |= ((Bit32u)(Voodoo_GetVRetracePosition() * 0x1fff)) & 0x1fff;
-			result |= (((Bit32u)(Voodoo_GetHRetracePosition() * 0x7ff)) & 0x7ff) << 16;
+			result |= ((uint32_t)(Voodoo_GetVRetracePosition() * 0x1fff)) & 0x1fff;
+			result |= (((uint32_t)(Voodoo_GetHRetracePosition() * 0x7ff)) & 0x7ff) << 16;
 
 			break;
 
@@ -2756,6 +2779,7 @@ UINT32 register_r(UINT32 offset)
 		case fbiAfuncFail:
 		case fbiPixelsOut:
 			update_statistics(v, true);
+			[[fallthrough]];
 		case fbiTrianglesOut:
 			result = v->reg[regnum].u & 0xffffff;
 			break;
@@ -3122,7 +3146,7 @@ void fastfill(voodoo_state *v)
 	/* fill in a block of extents */
 	extents[0].startx = sx;
 	extents[0].stopx = ex;
-	for (extnum = 1; extnum < ARRAY_LENGTH(extents); extnum++)
+	for (extnum = 1; extnum < (int)ARRAY_LENGTH(extents); extnum++)
 		extents[extnum] = extents[0];
 
 	poly_extra_data *extra = new poly_extra_data;
@@ -3134,7 +3158,7 @@ void fastfill(voodoo_state *v)
 		/* iterate over blocks of extents */
 		for (y = sy; y < ey; y += ARRAY_LENGTH(extents))
 		{
-			int count = MIN(ey - y, ARRAY_LENGTH(extents));
+			int count = MIN(ey - y, (int)ARRAY_LENGTH(extents));
 
 			extra->state = v;
 			memcpy(extra->dither, dithermatrix, sizeof(extra->dither));
@@ -3563,7 +3587,7 @@ static raster_info *add_rasterizer(voodoo_state *v, const raster_info *cinfo)
 
 	if (LOG_RASTERIZERS)
 		LOG_MSG("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
-				info->callback,
+				(void *)info->callback,
 				info->eff_color_path, info->eff_alpha_mode, info->eff_fog_mode, info->eff_fbz_mode,
 				info->eff_tex_mode_0, info->eff_tex_mode_1, hash);
 
@@ -3726,7 +3750,9 @@ void voodoo_activate(void) {
 void voodoo_update_dimensions(void) {
 	v->ogl_dimchange = false;
 
+#if C_OPENGL
 	if (v->ogl) {
 		voodoo_ogl_update_dimensions();
 	}
+#endif
 }

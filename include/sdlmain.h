@@ -48,14 +48,6 @@ static void update_frame_surface(const uint16_t *changedLines);
 constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
 static inline bool present_frame_noop() { return true; }
 
-enum SCREEN_TYPES	{
-	SCREEN_SURFACE,
-	SCREEN_TEXTURE,
-#if C_OPENGL
-	SCREEN_OPENGL
-#endif
-};
-
 enum class FRAME_MODE {
 	UNSET,
 	CFR,        // constant frame rate, as defined by the emulated system

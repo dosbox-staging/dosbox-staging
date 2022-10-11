@@ -23,7 +23,6 @@
 #include <string>
 
 #include "types.h"
-#include <SDL.h>
 
 #define REDUCE_JOYSTICK_POLLING
 
@@ -105,8 +104,10 @@ void SetTransparency();
 void OpenGL_On();
 void OpenGL_Off();
 bool OpenGL_using();
+
+struct SDL_Window;
 SDL_Window* GFX_GetSDLWindow();
-SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
+SDL_Window* SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
                                  bool fullscreen,

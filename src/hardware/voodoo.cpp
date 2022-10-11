@@ -37,7 +37,7 @@
 class VOODOO;
 static VOODOO* voodoo_dev;
 
-static Bit32u voodoo_current_lfb=(VOODOO_INITIAL_LFB&0xffff0000);
+static uint32_t voodoo_current_lfb=(VOODOO_INITIAL_LFB&0xffff0000);
 
 
 class VOODOO:public Module_base{
@@ -157,7 +157,7 @@ void VOODOO_PCI_Enable(bool enable) {
 }
 
 
-void VOODOO_PCI_SetLFB(Bit32u lfbaddr) {
+void VOODOO_PCI_SetLFB(uint32_t lfbaddr) {
 	voodoo_current_lfb=(lfbaddr&0xffff0000);
 }
 

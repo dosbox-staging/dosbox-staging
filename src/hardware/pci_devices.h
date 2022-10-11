@@ -22,29 +22,29 @@
 
 void VOODOO_PCI_InitEnable(Bitu val);
 void VOODOO_PCI_Enable(bool enable);
-void VOODOO_PCI_SetLFB(Bit32u lfbaddr);
+void VOODOO_PCI_SetLFB(uint32_t lfbaddr);
 
 class PCI_VGADevice:public PCI_Device {
 private:
-	static const Bit16u vendor=0x5333;		// S3
-	static const Bit16u device=0x8811;		// trio64
-//	static const Bit16u device=0x8810;		// trio32
+	static const uint16_t vendor=0x5333;		// S3
+	static const uint16_t device=0x8811;		// trio64
+//	static const uint16_t device=0x8810;		// trio32
 public:
 	PCI_VGADevice():PCI_Device(vendor,device) {
 	}
 
-	static Bit16u VendorID(void) { return vendor; }
-	static Bit16u DeviceID(void) { return device; }
+	static uint16_t VendorID(void) { return vendor; }
+	static uint16_t DeviceID(void) { return device; }
 
-	Bits ParseReadRegister(Bit8u regnum) {
+	Bits ParseReadRegister(uint8_t regnum) {
 		return regnum;
 	}
 
-	bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask) {
+	bool OverrideReadRegister(uint8_t, uint8_t*, uint8_t*) {
 		return false;
 	}
 
-	Bits ParseWriteRegister(Bit8u regnum,Bit8u value) {
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) {
 		if ((regnum>=0x18) && (regnum<0x28)) return -1;	// base addresses are read-only
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
 		switch (regnum) {
@@ -71,7 +71,7 @@ public:
 		return value;
 	}
 
-	bool InitializeRegisters(Bit8u registers[256]) {
+	bool InitializeRegisters(uint8_t registers[256]) {
 		// init (S3 graphics card)
 //		registers[0x08] = 0x44;	// revision ID (s3 trio64v+)
 		registers[0x08] = 0x00;	// revision ID
@@ -92,18 +92,18 @@ public:
 //		registers[0x3c] = 0x0b;	// irq line
 //		registers[0x3d] = 0x01;	// irq pin
 
-//		Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
-		Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0);	// memory space, within first 4GB
-		registers[0x10] = (Bit8u)(gfx_address_space&0xff);		// base addres 0
-		registers[0x11] = (Bit8u)((gfx_address_space>>8)&0xff);
-		registers[0x12] = (Bit8u)((gfx_address_space>>16)&0xff);
-		registers[0x13] = (Bit8u)((gfx_address_space>>24)&0xff);
+//		uint32_t gfx_address_space=(((uint32_t)S3_LFB_BASE)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
+		uint32_t gfx_address_space=(((uint32_t)S3_LFB_BASE)&0xfffffff0);	// memory space, within first 4GB
+		registers[0x10] = (uint8_t)(gfx_address_space&0xff);		// base addres 0
+		registers[0x11] = (uint8_t)((gfx_address_space>>8)&0xff);
+		registers[0x12] = (uint8_t)((gfx_address_space>>16)&0xff);
+		registers[0x13] = (uint8_t)((gfx_address_space>>24)&0xff);
 
-		Bit32u gfx_address_space_mmio=(((Bit32u)S3_LFB_BASE+0x1000000)&0xfffffff0);	// memory space, within first 4GB
-		registers[0x14] = (Bit8u)(gfx_address_space_mmio&0xff);		// base addres 0
-		registers[0x15] = (Bit8u)((gfx_address_space_mmio>>8)&0xff);
-		registers[0x16] = (Bit8u)((gfx_address_space_mmio>>16)&0xff);
-		registers[0x17] = (Bit8u)((gfx_address_space_mmio>>24)&0xff);
+		uint32_t gfx_address_space_mmio=(((uint32_t)S3_LFB_BASE+0x1000000)&0xfffffff0);	// memory space, within first 4GB
+		registers[0x14] = (uint8_t)(gfx_address_space_mmio&0xff);		// base addres 0
+		registers[0x15] = (uint8_t)((gfx_address_space_mmio>>8)&0xff);
+		registers[0x16] = (uint8_t)((gfx_address_space_mmio>>16)&0xff);
+		registers[0x17] = (uint8_t)((gfx_address_space_mmio>>24)&0xff);
 
 		return true;
 	}
@@ -112,18 +112,18 @@ public:
 
 class PCI_SSTDevice:public PCI_Device {
 private:
-	static const Bit16u vendor=0x121a;	// 3dfx
-	Bit16u oscillator_ctr;
-	Bit16u pci_ctr;
+	static const uint16_t vendor=0x121a;	// 3dfx
+	uint16_t oscillator_ctr;
+	uint16_t pci_ctr;
 public:
 	PCI_SSTDevice(Bitu type):PCI_Device(vendor,(type==2)?0x0002:0x0001) {
 		oscillator_ctr=0;
 		pci_ctr=0;
 	}
 
-	static Bit16u VendorID(void) { return vendor; }
+	static uint16_t VendorID(void) { return vendor; }
 
-	Bits ParseReadRegister(Bit8u regnum) {
+	Bits ParseReadRegister(uint8_t regnum) {
 //		LOG_MSG("SST ParseReadRegister %x",regnum);
 		switch (regnum) {
 			case 0x4c:
@@ -144,7 +144,7 @@ public:
 		return regnum;
 	}
 
-	bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask) {
+	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask) {
 		switch (regnum) {
 			case 0x54:
 				if (DeviceID() >= 2) {
@@ -182,7 +182,7 @@ public:
 		return false;
 	}
 
-	Bits ParseWriteRegister(Bit8u regnum,Bit8u value) {
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) {
 //		LOG_MSG("SST ParseWriteRegister %x:=%x",regnum,value);
 		if ((regnum>=0x14) && (regnum<0x28)) return -1;	// base addresses are read-only
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
@@ -215,7 +215,7 @@ public:
 		return value;
 	}
 
-	bool InitializeRegisters(Bit8u registers[256]) {
+	bool InitializeRegisters(uint8_t registers[256]) {
 		// init (3dfx voodoo)
 		registers[0x08] = 0x02;	// revision
 		registers[0x09] = 0x00;	// interface
@@ -234,11 +234,11 @@ public:
 		registers[0x3c] = 0xff;	// no irq
 
 		// memBaseAddr: size is 16MB
-		Bit32u address_space=(((Bit32u)VOODOO_INITIAL_LFB)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
-		registers[0x10] = (Bit8u)(address_space&0xff);		// base addres 0
-		registers[0x11] = (Bit8u)((address_space>>8)&0xff);
-		registers[0x12] = (Bit8u)((address_space>>16)&0xff);
-		registers[0x13] = (Bit8u)((address_space>>24)&0xff);
+		uint32_t address_space=(((uint32_t)VOODOO_INITIAL_LFB)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
+		registers[0x10] = (uint8_t)(address_space&0xff);		// base addres 0
+		registers[0x11] = (uint8_t)((address_space>>8)&0xff);
+		registers[0x12] = (uint8_t)((address_space>>16)&0xff);
+		registers[0x13] = (uint8_t)((address_space>>24)&0xff);
 
 		if (DeviceID() >= 2) {
 			registers[0x40] = 0x00;
