@@ -681,11 +681,11 @@ Filter for the PS/1 Audio DAC output:
 :CONFIG_JOYSTICKTYPE
 Type of joystick to emulate: auto (default),
 auto     : Detect and use any joystick(s), if possible.,
-2axis    : Support up to two joysticks.
-4axis    : Support the first joystick only.
-4axis_2  : Support the second joystick only.
-fcs      : Support a Thrustmaster-type joystick.
-ch       : Support a CH Flightstick-type joystick.
+2axis    : Support up to two joysticks, each with 2 axis
+4axis    : Support the first joystick only, as a 4-axis type.
+4axis_2  : Support the second joystick only, as a 4-axis type.
+fcs      : Emulate joystick as an original Thrustmaster FCS.
+ch       : Emulate joystick as an original CH Flightstick.
 hidden   : Prevent DOS from seeing the joystick(s), but enable them for
            mapping.
 disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.
@@ -2011,7 +2011,7 @@ File %s already exists.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Drive %c does not exist!
-You must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset]or [color=yellow]intro mount[reset] for more information.
+You must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2601,10 +2601,10 @@ Displays or changes file attributes.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [color=green]attrib[reset] [color=cyan][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]
+  [color=green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]
 
 Where:
-  [color=cyan]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
+  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
              [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
              Where: R = Read-only, A = Archive, S = System, H = Hidden
   [color=cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
