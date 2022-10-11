@@ -41,9 +41,8 @@ public:
 private:
 
     bool ParseAndRun();
-    bool ParseInterfaces(std::vector<std::string> &params,
-                         std::vector<MouseInterfaceId> &list_ids);
-    bool CheckInterfaces(const std::vector<MouseInterfaceId> &list_ids);
+    bool ParseInterfaces(std::vector<std::string> &params);
+    bool CheckInterfaces();
     void FinalizeMapping();
 
     const char *GetInterfaceStr(const MouseInterfaceId interface_id) const;
@@ -52,25 +51,22 @@ private:
     bool CmdShow(const bool show_all);
     bool CmdMap(const MouseInterfaceId interface_id,
                 const std::string &pattern);
-    bool CmdMap(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdUnMap(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdOnOff(const std::vector<MouseInterfaceId> &list_ids,
-                  const bool enable);
-    bool CmdReset(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids,
-                        const int8_t value);
-    bool CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids,
-                         const int8_t value);
-    bool CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids,
-                         const int8_t value);
-    bool CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids);
-    bool CmdMinRate(const std::vector<MouseInterfaceId> &list_ids,
-                    const std::string &param);
-    bool CmdMinRate(const std::vector<MouseInterfaceId> &list_ids);
+    bool CmdMap();
+    bool CmdUnMap();
+    bool CmdOnOff(const bool enable);
+    bool CmdReset();
+    bool CmdSensitivity(const int8_t value);
+    bool CmdSensitivityX(const int8_t value);
+    bool CmdSensitivityY(const int8_t value);
+    bool CmdSensitivity();
+    bool CmdSensitivityX();
+    bool CmdSensitivityY();
+    bool CmdMinRate(const std::string &param);
+    bool CmdMinRate();
 
     void AddMessages();
+
+    std::vector<MouseInterfaceId> list_ids = {};
 };
 
 #endif

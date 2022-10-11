@@ -47,8 +47,8 @@ bool MOUSECTL::ParseAndRun()
     cmd->FillVector(params);
 
     // Extract the list of interfaces from the vector
-    std::vector<MouseInterfaceId> list_ids;
-    if (!ParseInterfaces(params, list_ids) || !CheckInterfaces(list_ids))
+    list_ids.clear();
+    if (!ParseInterfaces(params) || !CheckInterfaces())
         return false;
 
     auto param_equal = [&params](const size_t idx, const char *string)
@@ -73,32 +73,32 @@ bool MOUSECTL::ParseAndRun()
     // CmdMap - interactive
     if (list_ids.size() >= 1 && params.size() == 1)
         if (param_equal(0, "-map"))
-            return CmdMap(list_ids);
+            return CmdMap();
 
     // CmdUnmap / CmdOnOff / CmdReset / CmdSensitivity / CmdMinRate
     if (params.size() == 1) {
         if (param_equal(0, "-unmap"))
-            return CmdUnMap(list_ids);
+	        return CmdUnMap();
         if (param_equal(0, "-on"))
-            return CmdOnOff(list_ids, true);
+            return CmdOnOff(true);
         if (param_equal(0, "-off"))
-            return CmdOnOff(list_ids, false);
+            return CmdOnOff(false);
         if (param_equal(0, "-reset"))
-            return CmdReset(list_ids);
+            return CmdReset();
         if (param_equal(0, "-s"))
-            return CmdSensitivity(list_ids);
+            return CmdSensitivity();
         if (param_equal(0, "-sx"))
-            return CmdSensitivityX(list_ids);
+            return CmdSensitivityX();
         if (param_equal(0, "-sy"))
-            return CmdSensitivityY(list_ids);
+            return CmdSensitivityY();
         if (param_equal(0, "-r"))
-            return CmdMinRate(list_ids);
+            return CmdMinRate();
     }
 
     // CmdSensitivity / CmdMinRate with a non-default value
     if (params.size() == 2) {
         if (param_equal(0, "-r"))
-            return CmdMinRate(list_ids, params[1]);
+            return CmdMinRate(params[1]);
 
         const auto value = std::atoi(params[1].c_str());
         if (value < -99 || value > 99) {
@@ -106,19 +106,18 @@ bool MOUSECTL::ParseAndRun()
             return false;
         }
         if (param_equal(0, "-s"))
-            return CmdSensitivity(list_ids, static_cast<int8_t>(value));
+            return CmdSensitivity(static_cast<int8_t>(value));
         if (param_equal(0, "-sx"))
-            return CmdSensitivityX(list_ids, static_cast<int8_t>(value));
+            return CmdSensitivityX(static_cast<int8_t>(value));
         if (param_equal(0, "-sy"))
-            return CmdSensitivityY(list_ids, static_cast<int8_t>(value));
+            return CmdSensitivityY(static_cast<int8_t>(value));
     }
 
     WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX"));
     return false;
 }
 
-bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params,
-                               std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 {
     while (params.size()) {
         auto compare = [&params](const char *string)
@@ -158,7 +157,7 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params,
     return true;
 }
 
-bool MOUSECTL::CheckInterfaces(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CheckInterfaces()
 {
     if (!MouseConfigAPI::CheckInterfaces(list_ids))
     {
@@ -308,11 +307,10 @@ void MOUSECTL::FinalizeMapping()
     WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAP_HINT"));
     WriteOut("\n\n");
 
-    GFX_MouseCaptureAfterMapping();    
+    GFX_MouseCaptureAfterMapping();
 }
 
-bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id,
-                      const std::string &pattern)
+bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)
 {
     std::regex regex;
     if (!MouseConfigAPI::PatternToRegex(pattern, regex)) {
@@ -321,8 +319,8 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id,
     }
 
     if (MouseConfigAPI::IsNoMouseMode()) {
-        WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
-        return false;
+	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
+	return false;
     }
 
     MouseConfigAPI mouse_config_api;
@@ -335,13 +333,13 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id,
     return true;
 }
 
-bool MOUSECTL::CmdMap(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdMap()
 {
     assert(list_ids.size() >= 1);
 
     if (MouseConfigAPI::IsNoMouseMode()) {
-        WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
-        return false;
+	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
+	return false;
     }
 
     MouseConfigAPI mouse_config_api;
@@ -384,75 +382,70 @@ bool MOUSECTL::CmdMap(const std::vector<MouseInterfaceId> &list_ids)
     return true;
 }
 
-bool MOUSECTL::CmdUnMap(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdUnMap()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.UnMap(list_ids);
     return true;
 }
 
-bool MOUSECTL::CmdOnOff(const std::vector<MouseInterfaceId> &list_ids,
-                        const bool enable)
+bool MOUSECTL::CmdOnOff(const bool enable)
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.OnOff(list_ids, enable);
     return true;
 }
 
-bool MOUSECTL::CmdReset(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdReset()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.Reset(list_ids);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids,
-                              const int8_t value)
+bool MOUSECTL::CmdSensitivity(const int8_t value)
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.SetSensitivity(list_ids, value, value);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids,
-                               const int8_t value)
+bool MOUSECTL::CmdSensitivityX(const int8_t value)
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.SetSensitivityX(list_ids, value);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids,
-                               const int8_t value)
+bool MOUSECTL::CmdSensitivityY(const int8_t value)
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.SetSensitivityY(list_ids, value);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivity(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdSensitivity()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.ResetSensitivity(list_ids);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivityX(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdSensitivityX()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.ResetSensitivityX(list_ids);
     return true;
 }
 
-bool MOUSECTL::CmdSensitivityY(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdSensitivityY()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.ResetSensitivityY(list_ids);
     return true;
 }
 
-bool MOUSECTL::CmdMinRate(const std::vector<MouseInterfaceId> &list_ids,
-                          const std::string &param)
+bool MOUSECTL::CmdMinRate(const std::string &param)
 {
     const auto &valid_list = MouseConfigAPI::GetValidMinRateList();
     const auto &valid_str  = MouseConfigAPI::GetValidMinRateStr();
@@ -476,7 +469,7 @@ bool MOUSECTL::CmdMinRate(const std::vector<MouseInterfaceId> &list_ids,
     return true;
 }
 
-bool MOUSECTL::CmdMinRate(const std::vector<MouseInterfaceId> &list_ids)
+bool MOUSECTL::CmdMinRate()
 {
     MouseConfigAPI mouse_config_api;
     mouse_config_api.ResetMinRate(list_ids);
