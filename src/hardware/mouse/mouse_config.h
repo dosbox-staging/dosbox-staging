@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,11 @@ struct MousePredefined {
     const float acceleration_dos = 1.0f;
     const float acceleration_vmm = 1.0f;
 
+    // Maximum allowe user sensitivity value
     const int8_t sensitivity_user_max = 99;
+    // How many user steps causes sensitivity to double
+    // (sensitivity works exponentially)
+    const float sensitivity_double_steps = 10.0f;
 };
 
 extern MousePredefined mouse_predefined;

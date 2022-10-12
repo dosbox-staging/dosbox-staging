@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
 
@@ -342,7 +343,7 @@ bool MOUSEPS2_NotifyWheel(const int16_t w_rel)
         return false;
 
     auto old_counter_w = counter_w;
-    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + w_rel));
+    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
 
     return (old_counter_w != counter_w);
 }

@@ -2278,7 +2278,8 @@ void GFX_UpdateMouseState()
 	// it's auto-captured (but not manually requested) and
 	// in seamless-mode
 	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
-	           (mouse_seamless_driver || (!mouse_capture_requested && mouse_seamless_user))) {
+	           (MOUSE_IsUsingSeamlessDriver() ||
+	            (!mouse_capture_requested && MOUSE_IsUsingSeamlessSetting()))) {
 		GFX_ToggleMouseCapture();
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -2291,7 +2292,7 @@ void GFX_UpdateMouseState()
 		if (sdl.mouse.control_choice == CaptureOnStart) {
 			SDL_RaiseWindow(sdl.window);
 			toggle_mouse_capture_from_user(true);
-		} else if (mouse_seamless_driver ||
+		} else if (MOUSE_IsUsingSeamlessDriver() ||
 		           (sdl.mouse.control_choice & (Seamless | NoMouse))) {
 			SDL_ShowCursor(SDL_DISABLE);
 		}
@@ -3659,7 +3660,7 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button)
 
 	assert(button->state == SDL_PRESSED);
 
-	if (sdl.desktop.fullscreen || mouse_seamless_driver) {
+	if (sdl.desktop.fullscreen || MOUSE_IsUsingSeamlessDriver()) {
 		notify_button(button->button, state_pressed);
 		return;
 	}

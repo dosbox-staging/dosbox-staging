@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ bool MOUSECTL::ParseAndRun()
     {
         if (idx >= params.size())
             return false;
-        return (0 == strcasecmp(params[idx].c_str(), string));
+        return iequals(params[idx].c_str(), string);
     };
 
     // CmdShow
@@ -120,8 +120,8 @@ bool MOUSECTL::ParseAndRun()
 
 bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 {
-	auto add_if_is_interface = [&](const std::string &param) {
-		for (const auto id : {
+	auto add_if_is_interface = [&](const std::string &param) {	
+        for (const auto id : {
 		         MouseInterfaceId::DOS,
 		         MouseInterfaceId::PS2,
 		         MouseInterfaceId::COM1,
@@ -129,11 +129,16 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 		         MouseInterfaceId::COM3,
 		         MouseInterfaceId::COM4,
 		 }) {
-		    const auto is_interface = string_iequals(param, GetInterfaceStr(id));
-		    if (is_interface)
+		    if (iequals(param, GetInterfaceStr(id))) {
 			    list_ids.push_back(id);
-		    return is_interface;
+                return true;
+            }
 	    }
+        if (iequals(param, "PS2")) { // syntax sugar, easier to type than 'PS/2'
+            list_ids.push_back(MouseInterfaceId::PS2);
+            return true;
+        }
+        return false;
     };
     while (!params.empty() && add_if_is_interface(params.front()))
 	params.erase(params.begin()); // pop
@@ -150,16 +155,15 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 
 bool MOUSECTL::CheckInterfaces()
 {
-    if (!MouseConfigAPI::CheckInterfaces(list_ids))
-    {
-        if (list_ids.empty())
-            WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_INTERFACES"));
-        else
-            WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MISSING_INTERFACES"));
-        return false;
-    }
+    if (MouseControlAPI::CheckInterfaces(list_ids))
+        return true;
 
-    return true;
+    if (list_ids.empty())
+        WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_INTERFACES"));
+    else
+        WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MISSING_INTERFACES"));
+
+    return false;
 }
 
 const char *MOUSECTL::GetInterfaceStr(const MouseInterfaceId interface_id) const
@@ -197,7 +201,7 @@ const char *MOUSECTL::GetMapStatusStr(const MouseMapStatus map_status) const
 
 bool MOUSECTL::CmdShow(const bool show_all)
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     const auto info_interfaces = mouse_config_api.GetInfoInterfaces();
 
     bool show_mapped   = false;
@@ -213,8 +217,9 @@ bool MOUSECTL::CmdShow(const bool show_all)
             continue;
         const auto interface_id = entry.GetInterfaceId();
         const auto rate_hz = entry.GetRate();
+        const bool rate_enforced = entry.GetMinRate();
 
-        if (entry.GetMinRate())
+        if (rate_enforced)
             hint_rate_min = true;
 
         if (interface_id == MouseInterfaceId::COM1 ||
@@ -227,7 +232,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
                  GetInterfaceStr(interface_id),
                  entry.GetSensitivityX(),
                  entry.GetSensitivityY(),
-                 hint_rate_min ? "*" : "",
+                 rate_enforced ? "*" : "",
                  rate_hz ? std::to_string(rate_hz).c_str() : "-",
                  convert_ansi_markup(GetMapStatusStr(entry.GetMapStatus())).c_str());
         WriteOut("\n");
@@ -304,17 +309,17 @@ void MOUSECTL::FinalizeMapping()
 bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)
 {
     std::regex regex;
-    if (!MouseConfigAPI::PatternToRegex(pattern, regex)) {
+    if (!MouseControlAPI::PatternToRegex(pattern, regex)) {
         WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_PATTERN"));
         return false;
     }
 
-    if (MouseConfigAPI::IsNoMouseMode()) {
+    if (MouseControlAPI::IsNoMouseMode()) {
 	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
 	return false;
     }
 
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     if (!mouse_config_api.Map(interface_id, regex)) {
         WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_MATCH"));
         return false;
@@ -328,12 +333,12 @@ bool MOUSECTL::CmdMap()
 {
     assert(list_ids.size() >= 1);
 
-    if (MouseConfigAPI::IsNoMouseMode()) {
+    if (MouseControlAPI::IsNoMouseMode()) {
 	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
 	return false;
     }
 
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     const auto info_physical = mouse_config_api.GetInfoPhysical();
 
     if (info_physical.empty()) {
@@ -375,71 +380,71 @@ bool MOUSECTL::CmdMap()
 
 bool MOUSECTL::CmdUnMap()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.UnMap(list_ids);
     return true;
 }
 
 bool MOUSECTL::CmdOnOff(const bool enable)
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.OnOff(list_ids, enable);
     return true;
 }
 
 bool MOUSECTL::CmdReset()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.Reset(list_ids);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivity(const int8_t value)
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.SetSensitivity(list_ids, value, value);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivityX(const int8_t value)
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.SetSensitivityX(list_ids, value);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivityY(const int8_t value)
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.SetSensitivityY(list_ids, value);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivity()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.ResetSensitivity(list_ids);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivityX()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.ResetSensitivityX(list_ids);
     return true;
 }
 
 bool MOUSECTL::CmdSensitivityY()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.ResetSensitivityY(list_ids);
     return true;
 }
 
 bool MOUSECTL::CmdMinRate(const std::string &param)
 {
-    const auto &valid_list = MouseConfigAPI::GetValidMinRateList();
-    const auto &valid_str  = MouseConfigAPI::GetValidMinRateStr();
+    const auto &valid_list = MouseControlAPI::GetValidMinRateList();
+    const auto &valid_str  = MouseControlAPI::GetValidMinRateStr();
 
     const auto tmp = std::atoi(param.c_str());
     if (tmp < 0 || tmp > UINT16_MAX) {
@@ -455,14 +460,14 @@ bool MOUSECTL::CmdMinRate(const std::string &param)
         return false;
     }
 
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.SetMinRate(list_ids, value_hz);
     return true;
 }
 
 bool MOUSECTL::CmdMinRate()
 {
-    MouseConfigAPI mouse_config_api;
+    MouseControlAPI mouse_config_api;
     mouse_config_api.ResetMinRate(list_ids);
     return true;
 }

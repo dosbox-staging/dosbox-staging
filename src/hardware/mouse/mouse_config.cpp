@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,9 +22,12 @@
 
 #include "checks.h"
 #include "control.h"
+#include "math_utils.h"
 #include "setup.h"
 #include "support.h"
 #include "video.h"
+
+#include <cmath>
 
 CHECK_NARROWING();
 
@@ -40,7 +43,7 @@ CHECK_NARROWING();
 MouseConfig     mouse_config;
 MousePredefined mouse_predefined;
 
-static std::vector<std::string> list_models_ps2 = {
+static const std::vector<std::string> list_models_ps2 = {
     "standard",
     "intellimouse",
 #ifdef ENABLE_EXPLORER_MOUSE
@@ -48,7 +51,7 @@ static std::vector<std::string> list_models_ps2 = {
 #endif
 };
 
-static std::vector<std::string> list_models_com = {
+static const std::vector<std::string> list_models_com = {
     "2button",
     "3button",
     "wheel",
@@ -58,7 +61,7 @@ static std::vector<std::string> list_models_com = {
     "wheel+msm",
 };
 
-static std::vector<uint16_t> list_rates = {
+static const std::vector<uint16_t> list_rates = {
 // Commented out values are probably not interesting
 // for the end user as "boosted" sampling rate
 //  10",  // PS/2 mouse
@@ -148,9 +151,63 @@ static void config_read(Section *section)
 
     // Default mouse sensitivity
 
+    auto sensitivity_from_str = [](const std::string &str) {
+        const int32_t base_value = 50;
+        int32_t ret_val = base_value; // default
+        bool invalid_input = false;
+
+        if (str.find('.') != std::string::npos) {
+            // Parameter supplied in a form of floating point
+            float tmp_float = 1.0f;
+            try {
+                tmp_float = std::stof(str);
+            } catch (...) {
+                invalid_input = true;
+                tmp_float = 1.0f;
+            }
+            // We need 'tmp_float' to be positive for further calculations
+            if (tmp_float < 0.0f) {
+                tmp_float = -tmp_float;
+                ret_val = -1;
+            } else if (tmp_float > 0.0f)
+                ret_val = 1;
+            else
+                ret_val = 0;
+            // Now calculate user steps as a logarithm
+            if (ret_val != 0) {
+                tmp_float = std::log(tmp_float) / std::log(2.0f); // log tmp_float at base 2.0f
+                tmp_float *= mouse_predefined.sensitivity_double_steps;
+                tmp_float += static_cast<float>(base_value);
+                const auto tmp_rounded = std::lround(std::max(tmp_float, 1.0f));
+                ret_val = clamp_to_int8(ret_val * tmp_rounded);
+            }
+        } else if (!str.empty()) {
+            // Parameter supplied in a form of integer
+            try {
+                ret_val = std::stoi(str);
+            } catch (...) {
+                invalid_input = true;
+                ret_val = base_value;
+            }
+        }
+
+        if (invalid_input)
+            LOG_ERR("MOUSE: Invalid sensitivity value");
+
+        const auto min = clamp_to_int8(-mouse_predefined.sensitivity_user_max);
+        const auto max = clamp_to_int8(mouse_predefined.sensitivity_user_max);
+        return std::clamp(clamp_to_int8(ret_val), min, max);
+    };
+
     PropMultiVal *prop_multi = conf->GetMultiVal("mouse_sensitivity");
-    mouse_config.sensitivity_x = static_cast<int8_t>(prop_multi->GetSection()->Get_int("xsens"));
-    mouse_config.sensitivity_y = static_cast<int8_t>(prop_multi->GetSection()->Get_int("ysens"));
+    const std::string xsens = prop_multi->GetSection()->Get_string("xsens");
+    const std::string ysens = prop_multi->GetSection()->Get_string("ysens");
+
+    mouse_config.sensitivity_x = sensitivity_from_str(xsens);
+    if (ysens.empty())
+        mouse_config.sensitivity_y = mouse_config.sensitivity_x;
+    else
+        mouse_config.sensitivity_y = sensitivity_from_str(ysens);
 
     // DOS driver configuration
 
@@ -206,23 +263,23 @@ static void config_init(Section_prop &secprop)
     constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
     Prop_bool    *prop_bool  = nullptr;
-    Prop_int     *prop_int   = nullptr;
+    // XXX Prop_int     *prop_int   = nullptr;
     Prop_string  *prop_str   = nullptr;
     PropMultiVal *prop_multi = nullptr;
 
     // General configuration
 
     prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
-    prop_multi->Set_help("Default mouse sensitivity. Works exponentially, add 10 to double the effect.\n"
+    prop_multi->Set_help("Default mouse sensitivity.\n"
+                         "Integer values work exponentially, add 10 to double the effect.\n"
+                         "Alternatively, put 1.0 for base sensitivity, 1.5 do double sensitivity, etc.\n"
                          "Negative values reverse mouse direction, 0 disables the movement completely.\n"
-                         "The optional second parameter specifies vertical sensitivity (e.g. 30,40).\n"
+                         "The optional second parameter specifies vertical sensitivity (e.g. 1.5,3.0).\n"
                          "Setting can be adjusted in runtime (also per mouse interface) using internal\n"
                          "MOUSECTL.COM tool, available on drive Z:.");
-    prop_multi->SetValue("50");
-    prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 50);
-    prop_int->SetMinMax(-99, 99);
-    prop_int = prop_multi->GetSection()->Add_int("ysens", only_at_start, 50);
-    prop_int->SetMinMax(-99, 99);
+    prop_multi->SetValue("1.0");
+    prop_str = prop_multi->GetSection()->Add_string("xsens", only_at_start, "1.0");
+    prop_str = prop_multi->GetSection()->Add_string("ysens", only_at_start, "1.0");
 
     prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
     prop_bool->Set_help("Enable to bypass your operating system's mouse acceleration and sensitivity\n"

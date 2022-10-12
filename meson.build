@@ -529,13 +529,6 @@ coreaudio_dep = optional_dep
 coremidi_dep = optional_dep
 corefoundation_dep = optional_dep
 iokit_dep = optional_dep
-iokit_code = '''
-#include <IOKit/hid/IOHIDLib.h>
-int main() {
-  dispatch_block_t test_var;
-  return 0;
-}
-'''
 if host_machine.system() == 'darwin'
 
     # ObjectiveC parsing, if possible
@@ -585,6 +578,13 @@ if host_machine.system() == 'darwin'
     )
     if iokit_dep.found()
         if cxx.check_header('IOKit/IOKitLib.h')
+            iokit_code = '''
+                #include <IOKit/hid/IOHIDLib.h>
+                int main() {
+                    dispatch_block_t test_var;
+                    return 0;
+                }
+            '''
             is_iokit_compilable = cxx.links(
                 iokit_code,
                 name: 'compiler is capable of compiling IOKit',

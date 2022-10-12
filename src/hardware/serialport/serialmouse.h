@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -80,14 +80,14 @@ private:
     bool send_ack       = true;
     uint8_t packet[6]   = {};
     uint8_t packet_len  = 0;
-    uint8_t xmit_idx = UINT8_MAX; // index of byte to send, if >= packet_len
-                                  // it means transmission ended
-    bool xmit_2part     = false; // true = packet has a second part, which could
-                                 // not be evaluated yet
-    bool another_move   = false; // true = while transmitting a packet we
-                                 // received mouse move event
-    bool another_button = false; // true = while transmitting a packet we
-                                 // received mouse button event
+    uint8_t xmit_idx    = UINT8_MAX; // index of byte to send, if >= packet_len
+                                     // it means transmission ended
+    bool need_xmit_part2    = false; // true = packet has a second part, which could
+                                     // not be evaluated yet
+    bool got_another_move   = false; // true = while transmitting a packet we
+                                     // received mouse move event
+    bool got_another_button = false; // true = while transmitting a packet we
+                                     // received mouse button event
     uint8_t buttons   = 0;    // bit 0 = left, bit 1 = right, bit 2 = middle
     float   delta_x   = 0.0f; // accumulated movements not yet reported
     float   delta_y   = 0.0f;

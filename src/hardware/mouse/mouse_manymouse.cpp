@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "callback.h"
 #include "checks.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "string_utils.h"
 
@@ -163,12 +164,16 @@ void ManyMouseGlue::Rescan()
         std::string name;
         UTF8_RenderForDos(name_utf8, name);
 
+        const char character_nbsp  = 0x7f; // non-breaking space
+        const char character_space = 0x20;
+
         for (auto pos = name.size(); pos > 0; pos--) {
             // Replace non-breaking space with a regular space
-            if (name[pos - 1] == 0x7f)
-                name[pos - 1] = 0x20;
+            if (name[pos - 1] == character_nbsp)
+                name[pos - 1] = character_space;
             // Remove non-ASCII and control characters
-            if (name[pos - 1] < 0x20 || name[pos - 1] > 0x7e)
+            if (name[pos - 1] < character_space ||
+                name[pos - 1] >= character_nbsp)
                 name.erase(pos - 1, 1);
         }
 
@@ -248,7 +253,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 
         // Do not accept already mapped devices
         bool already_mapped = false;
-        for (auto &interface : mouse_interfaces)
+        for (const auto &interface : mouse_interfaces)
             if (interface->IsMapped(device_id))
                 already_mapped = true;
         if (already_mapped)
@@ -282,7 +287,7 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
             return static_cast<uint8_t>(i);
     }
 
-    return max_mice;
+    return max_mice; // return value which will be considered out of range
 }
 
 void ManyMouseGlue::Map(const uint8_t physical_idx,
@@ -356,8 +361,10 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event,
 
     case MANYMOUSE_EVENT_RELMOTION:
         // LOG_INFO("MANYMOUSE #%u RELMOTION axis %d, %d", event.device, event.item, event.value);
-        if (no_interface || critical_only || (event.item != 0 && event.item != 1))
-            break;
+        if (no_interface || critical_only)
+            break; // movements not relevant at this moment
+        if (event.item != 0 && event.item != 1)
+            break; // only movements related to x and y axis are relevant
 
         if (rel_x.size() <= device_idx) {
             rel_x.resize(static_cast<size_t>(device_idx + 1), 0);
@@ -365,9 +372,9 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event,
         }
 
         if (event.item)
-            rel_y[event.device] += event.value;
+            rel_y[event.device] += event.value; // event.item 1
         else
-            rel_x[event.device] += event.value;
+            rel_x[event.device] += event.value; // event.item 0
         break;
 
     case MANYMOUSE_EVENT_BUTTON:
@@ -386,7 +393,7 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event,
         // LOG_INFO("MANYMOUSE #%u WHEEL #%u %d", event.device, event.item, event.value);
         if (no_interface || critical_only || (event.item != 0))
             break; // only the 1st wheel is supported
-        MOUSE_EventWheel(MOUSE_ClampToInt16(-event.value), interface_id);
+        MOUSE_EventWheel(clamp_to_int16(-event.value), interface_id);
         break;
 
     case MANYMOUSE_EVENT_DISCONNECT:

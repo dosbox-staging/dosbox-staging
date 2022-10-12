@@ -127,6 +127,33 @@ constexpr T1 left_shift_signed(T1 value, T2 amount)
 	return static_cast<T1>(shifted);
 }
 
+template <typename T>
+int8_t clamp_to_int8(const T val)
+{
+	const auto tmp = std::clamp(val,
+	                            static_cast<T>(INT8_MIN),
+	                            static_cast<T>(INT8_MAX));
+	return static_cast<int8_t>(tmp);
+}
+
+template <typename T>
+int16_t clamp_to_int16(const T val)
+{
+	const auto tmp = std::clamp(val,
+	                            static_cast<T>(INT16_MIN),
+	                            static_cast<T>(INT16_MAX));
+	return static_cast<int16_t>(tmp);
+}
+
+template <typename T>
+int32_t clamp_to_int32(const T val)
+{
+	const auto tmp = std::clamp(val,
+	                            static_cast<T>(INT32_MIN),
+	                            static_cast<T>(INT32_MAX));
+	return static_cast<int32_t>(tmp);
+}
+
 inline float decibel_to_gain(const float decibel)
 {
 	return powf(10.0f, decibel / 20.0f);
