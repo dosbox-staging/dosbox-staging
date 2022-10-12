@@ -155,8 +155,8 @@ inline bool is_empty(const char *str) noexcept
 }
 
 // case-insensitive comparisons
-bool char_iequals(const char a, const char b);
-bool string_iequals(const std::string &a, const std::string &b);
+bool ciequals(const char a, const char b);
+bool iequals(const std::string &a, const std::string &b);
 
 char *strip_word(char *&cmd);
 

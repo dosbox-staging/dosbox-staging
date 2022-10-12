@@ -1071,7 +1071,7 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 bool KeyboardLayout::HasLanguageCode(const char *requested_code)
 {
 	for (const auto &language_code : language_codes)
-		if (string_iequals(language_code, requested_code))
+		if (iequals(language_code, requested_code))
 			return true;
 	return false;
 }
@@ -1082,7 +1082,7 @@ KeyboardErrorCode KeyboardLayout::SwitchKeyboardLayout(const char *new_layout,
 {
 	assert(new_layout);
 
-	if (!string_iequals(new_layout, "US")) {
+	if (!iequals(new_layout, "US")) {
 		// switch to a foreign layout
 
 		if (HasLanguageCode(new_layout)) {
