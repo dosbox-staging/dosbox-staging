@@ -2123,6 +2123,46 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 static void MIXER_Stop([[maybe_unused]] Section *sec)
 {}
 
+// Parse the volume in string form, either in stereo or mono format,
+// and possibly in decibel format, which is prefixed with a 'd'.
+static std::optional<AudioFrame> parse_volume(const std::string &s)
+{
+	auto to_volume = [](const std::string &s) -> std::optional<float> {
+		// try parsing the volume from a percent value
+		constexpr auto min_percent = 0.0f;
+		constexpr auto max_percent = 9999.0f;
+		if (const auto p = parse_value(s, min_percent, max_percent); p)
+			return percentage_to_gain(*p);
+
+		// try parsing the volume from a decibel value
+		constexpr auto min_db = -40.00f;
+		constexpr auto max_db = 39.999f;
+		constexpr auto decibel_prefix = 'd';
+		if (const auto d = parse_prefixed_value(decibel_prefix, s, min_db, max_db); d)
+			return decibel_to_gain(*d);
+
+		return {};
+	};
+	// single volume value
+	auto parts = split(s, ':');
+	if (parts.size() == 1) {
+		if (const auto v = to_volume(parts[0]); v) {
+			AudioFrame volume = {*v, *v};
+			return volume;
+		}
+	}
+	// stereo volume value
+	else if (parts.size() == 2) {
+		const auto l = to_volume(parts[0]);
+		const auto r = to_volume(parts[1]);
+		if (l && r) {
+			AudioFrame volume = {*l, *r};
+			return volume;
+		}
+	}
+	return {};
+}
+
 class MIXER final : public Program {
 public:
 	MIXER()
@@ -2201,7 +2241,9 @@ public:
 			} else if (is_master) {
 				// Only setting the volume is allowed for the
 				// master channel
-				ParseVolume(arg, mixer.master_volume);
+				if (const auto v = parse_volume(arg); v) {
+					mixer.master_volume = *v;
+				}
 
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
@@ -2223,10 +2265,9 @@ public:
 				if (channel->ChangeLineoutMap(arg))
 					continue;
 
-				AudioFrame volume = {};
-				ParseVolume(arg, volume);
-
-				channel->SetVolume(volume.left, volume.right);
+				if (const auto v = parse_volume(arg); v) {
+					channel->SetVolume(v->left, v->right);
+				}
 			}
 		}
 		MIXER_UnlockAudioDevice();
@@ -2279,47 +2320,6 @@ private:
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_REVERSE", "Reverse");
 
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
-	}
-
-	void ParseVolume(const std::string &s, AudioFrame &volume)
-	{
-		auto vol_parts = split(s, ':');
-		if (vol_parts.empty())
-			return;
-
-		const auto is_decibel = toupper(vol_parts[0][0]) == 'D';
-		if (is_decibel)
-			vol_parts[0].erase(0, 1);
-
-		auto parse_vol_pref = [is_decibel](const std::string &vol_pref,
-		                                   float &vol_out) {
-			const auto vol = to_finite<float>(vol_pref);
-			if (std::isfinite(vol)) {
-				if (is_decibel)
-					vol_out = static_cast<float>(
-					        decibel_to_gain(vol));
-				else
-					vol_out = vol / 100.0f;
-
-				const auto min_vol = static_cast<float>(
-				        decibel_to_gain(-99.99));
-
-				constexpr auto max_vol = 99.99f;
-
-				if (vol_out < min_vol)
-					vol_out = 0;
-				else
-					vol_out = std::min(vol_out, max_vol);
-			} else {
-				vol_out = 0;
-			}
-		};
-
-		parse_vol_pref(vol_parts[0], volume.left);
-		if (vol_parts.size() > 1)
-			parse_vol_pref(vol_parts[1], volume.right);
-		else
-			volume.right = volume.left;
 	}
 
 	void ShowMixerStatus()
