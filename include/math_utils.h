@@ -137,6 +137,20 @@ inline double gain_to_decibel(const double gain)
 	return 20.0 * log(gain) / log(10.0);
 }
 
+// A wrapper to convert a scalar gain to a percentage.
+// This avoids having a bunch of magic *100.0 throughout the code.
+constexpr float gain_to_percentage(const float gain)
+{
+	return gain * 100.0f;
+}
+
+// A wrapper to convert a percentage into a scalar gain.
+// This avoids having a bunch of magic /100.0 throughout the code.
+constexpr float percentage_to_gain(const float percentage)
+{
+	return percentage / 100.0f;
+}
+
 template <typename T>
 constexpr T lerp(const T a, const T b, const T t)
 {
@@ -171,5 +185,5 @@ template float remap<float>(const float in_min, const float in_max,
 template double remap<double>(const double in_min, const double in_max,
                               const double out_min, const double out_max,
                               const double v);
-
+							
 #endif
