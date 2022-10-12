@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <cstring>
 #include <map>
+#include <optional>
 #include <set>
 #include <sys/types.h>
 
@@ -252,14 +253,11 @@ static void set_global_crossfeed(mixer_channel_t channel)
 		crossfeed = default_crossfeed_strength;
 	} else if (crossfeed_pref == "off") {
 		crossfeed = 0.0f;
+	} else if (const auto p = parse_percentage(crossfeed_pref); p) {
+		crossfeed = percentage_to_gain(*p);
 	} else {
-		const auto cf = to_finite<float>(crossfeed_pref);
-		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
-			crossfeed = cf / 100.0f;
-		} else {
-			LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
-			            crossfeed_pref.c_str());
-		}
+		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
+		            crossfeed_pref.c_str());
 	}
 	channel->SetCrossfeedStrength(crossfeed);
 }
@@ -2171,20 +2169,6 @@ public:
 					continue;
 				}
 			}
-
-			auto parse_prefixed_percentage = [](const char prefix,
-			                                    const std::string &s,
-			                                    float &value_out) {
-				if (s.size() > 1 && s[0] == prefix) {
-					float p = 0.0f;
-					if (sscanf(s.c_str() + 1, "%f", &p)) {
-						value_out = clamp(p / 100.0f, 0.0f, 1.0f);
-						return true;
-					}
-				}
-				return false;
-			};
-
 			const auto global_command = !is_master && !channel;
 
 			constexpr auto crossfeed_command = 'X';
@@ -2193,29 +2177,22 @@ public:
 
 			if (global_command) {
 				// Global commands apply to all non-master channels
-				float value = 0.0f;
-				if (parse_prefixed_percentage(crossfeed_command,
-				                              arg,
-				                              value)) {
+				if (auto p = parse_prefixed_percentage(crossfeed_command, arg); p) {
 					for (auto &it : mixer.channels) {
-						it.second->SetCrossfeedStrength(value);
+						it.second->SetCrossfeedStrength(percentage_to_gain(*p));
 					}
 					continue;
-				} else if (parse_prefixed_percentage(reverb_command,
-				                                     arg,
-				                                     value)) {
+				} else if (p = parse_prefixed_percentage(reverb_command, arg); p) {
 					if (mixer.do_reverb) {
 						for (auto &it : mixer.channels) {
-							it.second->SetReverbLevel(value);
+							it.second->SetReverbLevel(percentage_to_gain(*p));
 						}
 					}
 					continue;
-				} else if (parse_prefixed_percentage(chorus_command,
-				                                     arg,
-				                                     value)) {
+				} else if (p = parse_prefixed_percentage(chorus_command, arg); p) {
 					if (mixer.do_chorus) {
 						for (auto &it : mixer.channels) {
-							it.second->SetChorusLevel(value);
+							it.second->SetChorusLevel(percentage_to_gain(*p));
 						}
 					}
 					continue;
@@ -2228,24 +2205,17 @@ public:
 
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
-				float value = 0.0f;
-				if (parse_prefixed_percentage(crossfeed_command,
-				                              arg,
-				                              value)) {
-					channel->SetCrossfeedStrength(value);
+				if (auto p = parse_prefixed_percentage(crossfeed_command, arg); p) {
+					channel->SetCrossfeedStrength(percentage_to_gain(*p));
 					continue;
-				} else if (parse_prefixed_percentage(reverb_command,
-				                                     arg,
-				                                     value)) {
+				} else if (p = parse_prefixed_percentage(reverb_command, arg); p) {
 					if (mixer.do_reverb) {
-						channel->SetReverbLevel(value);
+						channel->SetReverbLevel(percentage_to_gain(*p));
 					}
 					continue;
-				} else if (parse_prefixed_percentage(chorus_command,
-				                                     arg,
-				                                     value)) {
+				} else if (p = parse_prefixed_percentage(chorus_command, arg); p) {
 					if (mixer.do_chorus) {
-						channel->SetChorusLevel(value);
+						channel->SetChorusLevel(percentage_to_gain(*p));
 					}
 					continue;
 				}
