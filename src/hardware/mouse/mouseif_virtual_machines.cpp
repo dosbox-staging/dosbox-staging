@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 #include "checks.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
 
@@ -83,7 +84,9 @@ static float pos_y = 0.0f;
 
 // Multiply scale by 0.02f to put acceleration_vmm in a reasonable
 // range, similar to sensitivity_dos or sensitivity_vmm)
-static MouseSpeedCalculator speed_xy(0.02f * mouse_predefined.acceleration_vmm);
+constexpr float acceleration_multiplier = 0.02f;
+static MouseSpeedCalculator speed_xy(acceleration_multiplier *
+                                     mouse_predefined.acceleration_vmm);
 
 // ***************************************************************************
 // VMware interface implementation
@@ -269,7 +272,7 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel)
         return false;
 
     const auto old_counter_w = counter_w;
-    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + w_rel));
+    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
 
     if (GCC_UNLIKELY(old_counter_w == counter_w))
         return false;

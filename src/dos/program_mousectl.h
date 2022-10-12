@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,6 +48,9 @@ private:
     const char *GetInterfaceStr(const MouseInterfaceId interface_id) const;
     const char *GetMapStatusStr(const MouseMapStatus map_status) const;
 
+    // Methods below exectute specific commands requested by the user,
+    // they return 'true' if DOS error code should indicate success,
+    // and 'false' if we should report a failure
     bool CmdShow(const bool show_all);
     bool CmdMap(const MouseInterfaceId interface_id,
                 const std::string &pattern);

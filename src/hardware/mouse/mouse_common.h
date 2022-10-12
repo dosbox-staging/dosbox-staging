@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
 #define DOSBOX_MOUSE_COMMON_H
 
 #include "mouse.h"
-
-#include <chrono>
 
 #include "bit_view.h"
 
@@ -79,9 +77,6 @@ uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz);
 float MOUSE_ClampRelativeMovement(const float rel);
 uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz);
 
-int8_t MOUSE_ClampToInt8(const int32_t val);
-int16_t MOUSE_ClampToInt16(const int32_t val);
-
 // ***************************************************************************
 // Mouse speed calculation
 // ***************************************************************************
@@ -100,8 +95,7 @@ private:
     MouseSpeedCalculator(const MouseSpeedCalculator &) = delete;
     MouseSpeedCalculator &operator=(const MouseSpeedCalculator &) = delete;
 
-    std::chrono::time_point<std::chrono::steady_clock> clock_time_start = std::chrono::steady_clock::now();
-    uint32_t pic_ticks_start = 0;
+    uint32_t ticks_start = 0;
 
     const float scaling;
 

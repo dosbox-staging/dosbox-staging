@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include "serialmouse.h"
 
 #include "checks.h"
+#include "math_utils.h"
 
 #include "../mouse/mouse_interfaces.h"
 
@@ -209,11 +210,11 @@ void CSerialMouse::SetModel(const MouseModelCOM new_model)
 
 void CSerialMouse::AbortPacket()
 {
-    packet_len     = 0;
-    xmit_idx       = 0xff;
-    xmit_2part     = false;
-    another_move   = false;
-    another_button = false;
+    packet_len         = 0;
+    xmit_idx           = 0xff;
+    need_xmit_part2    = false;
+    got_another_move   = false;
+    got_another_button = false;
 }
 
 void CSerialMouse::ClearCounters()
@@ -244,8 +245,8 @@ void CSerialMouse::NotifyMoved(const float x_rel, const float y_rel)
     if (dx == 0 && dy == 0)
         return; // movement not significant enough
 
-    counter_x = MOUSE_ClampToInt8(counter_x + dx);
-    counter_y = MOUSE_ClampToInt8(counter_y + dy);
+    counter_x = clamp_to_int8(counter_x + dx);
+    counter_y = clamp_to_int8(counter_y + dy);
 
     delta_x -= dx;
     delta_y -= dy;
@@ -257,7 +258,7 @@ void CSerialMouse::NotifyMoved(const float x_rel, const float y_rel)
     if (xmit_idx >= packet_len)
         StartPacketData();
     else
-        another_move = true;
+        got_another_move = true;
 }
 
 void CSerialMouse::NotifyButton(const uint8_t new_buttons, const uint8_t idx)
@@ -270,7 +271,7 @@ void CSerialMouse::NotifyButton(const uint8_t new_buttons, const uint8_t idx)
     if (xmit_idx >= packet_len)
         StartPacketData(idx > 1);
     else
-        another_button = true;
+        got_another_button = true;
 }
 
 void CSerialMouse::NotifyWheel(const int16_t w_rel)
@@ -278,12 +279,12 @@ void CSerialMouse::NotifyWheel(const int16_t w_rel)
     if (!has_wheel)
         return;
 
-    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + w_rel));
+    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
 
     if (xmit_idx >= packet_len)
         StartPacketData(true);
     else
-        another_button = true;
+        got_another_button = true;
 }
 
 void CSerialMouse::StartPacketId() // send the mouse identifier
@@ -358,7 +359,7 @@ void CSerialMouse::StartPacketData(const bool extended)
         } else {
             packet_len = 3;
         }
-        xmit_2part = false;
+        need_xmit_part2 = false;
 
     } else if (model == MouseModelCOM::MouseSystems) {
         //          -- -- -- -- -- -- -- --
@@ -374,8 +375,8 @@ void CSerialMouse::StartPacketData(const bool extended)
         packet[1]  = ClampCounter(counter_x);
         packet[2]  = ClampCounter(-counter_y);
         packet_len = 3;
-        xmit_2part = true; // next part contains mouse movement since
-                           // the start of the 1st part
+        need_xmit_part2 = true; // next part contains mouse movement since
+                                // the start of the 1st part
 
     } else
         assert(false); // unimplemented
@@ -383,9 +384,9 @@ void CSerialMouse::StartPacketData(const bool extended)
     ClearCounters();
 
     // send packet
-    xmit_idx       = 0;
-    another_button = false;
-    another_move   = false;
+    xmit_idx           = 0;
+    got_another_button = false;
+    got_another_move   = false;
     SetEventRX();
 }
 
@@ -402,15 +403,15 @@ void CSerialMouse::StartPacketPart2()
         packet[1] = ClampCounter(-counter_y);
 
         packet_len = 2;
-        xmit_2part = false;
+        need_xmit_part2 = false;
     } else
         assert(false); // unimplemented
 
     ClearCounters();
 
     // send packet
-    xmit_idx     = 0;
-    another_move = false;
+    xmit_idx         = 0;
+    got_another_move = false;
     SetEventRX();
 }
 
@@ -452,10 +453,10 @@ void CSerialMouse::handleUpperEvent(const uint16_t event_type)
                 StartPacketId();
             } else if (xmit_idx < packet_len) {
                 CSerial::receiveByte(packet[xmit_idx++]);
-                if (xmit_idx >= packet_len && xmit_2part)
+                if (xmit_idx >= packet_len && need_xmit_part2)
                     StartPacketPart2();
                 else if (xmit_idx >= packet_len &&
-                         (another_move || another_button))
+                         (got_another_move || got_another_button))
                     StartPacketData();
                 else
                     SetEventRX();

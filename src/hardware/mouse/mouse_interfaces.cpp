@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -560,9 +560,6 @@ void MouseInterface::UpdateSensitivity()
         // 5.0 and 5.4 times sensitivity increase is rather hard to
         // notice in a real life
 
-        // Increase user_val by 10 steps = double the sensitivity
-        constexpr float double_steps = 10.0f;
-
         float power   = 0.0f;
         float scaling = 0.0f;
 
@@ -575,7 +572,8 @@ void MouseInterface::UpdateSensitivity()
         } else // user_cal == 0
             return 0.0f;
 
-        return scaling * std::pow(2.0f, power / double_steps);
+        power /= mouse_predefined.sensitivity_double_steps;
+        return scaling * std::pow(2.0f, power);
     };
 
     sensitivity_coeff_x = calculate(sensitivity_user_x);

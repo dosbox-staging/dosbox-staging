@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,7 +42,9 @@ float MOUSE_GetBallisticsCoeff(const float speed)
     // This routine provides a function for mouse ballistics
     // (cursor acceleration), to be reused by various mouse interfaces.
     // Since this is a DOS emulator, the acceleration model is
-    // based on a historic PS/2 mouse specification.
+    // based on a historic PS/2 mouse scaling specification, desribed
+    // for exampel here:
+    // - https://wiki.osdev.org/Mouse_Input
 
     // Input: mouse speed
     // Output: acceleration coefficient (1.0f for speed >= 6.0f)
@@ -93,28 +95,10 @@ float MOUSE_ClampRelativeMovement(const float rel)
 
 uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz)
 {
-    constexpr auto rate_min = static_cast<uint16_t>(10);
-    constexpr auto rate_max = static_cast<uint16_t>(500);
+    constexpr uint16_t rate_min = 10;
+    constexpr uint16_t rate_max = 500;
 
     return std::clamp(rate_hz, rate_min, rate_max);
-}
-
-int8_t MOUSE_ClampToInt8(const int32_t val)
-{
-    const auto tmp = std::clamp(val,
-                                static_cast<int32_t>(INT8_MIN),
-                                static_cast<int32_t>(INT8_MAX));
-
-    return static_cast<int8_t>(tmp);
-}
-
-int16_t MOUSE_ClampToInt16(const int32_t val)
-{
-    const auto tmp = std::clamp(val,
-                                static_cast<int32_t>(INT16_MIN),
-                                static_cast<int32_t>(INT16_MAX));
-
-    return static_cast<int16_t>(tmp);
 }
 
 // ***************************************************************************
@@ -122,10 +106,9 @@ int16_t MOUSE_ClampToInt16(const int32_t val)
 // ***************************************************************************
 
 MouseSpeedCalculator::MouseSpeedCalculator(const float scaling) :
+    ticks_start(PIC_Ticks),
     scaling(scaling * 1000.0f) // to convert from units/ms to units/s
 {
-    clock_time_start = std::chrono::steady_clock::now();
-    pic_ticks_start  = PIC_Ticks;
 }
 
 float MouseSpeedCalculator::Get() const
@@ -135,44 +118,40 @@ float MouseSpeedCalculator::Get() const
 
 void MouseSpeedCalculator::Update(const float delta)
 {
-    constexpr auto n = static_cast<float>(std::chrono::steady_clock::period::num);
-    constexpr auto d = static_cast<float>(std::chrono::steady_clock::period::den);
-    constexpr auto period_ms = 1000.0f * n / d;
-    // For the measurement duration require no more than 400 milliseconds
-    // and at least 10 times the clock granularity
-    constexpr uint32_t max_diff_ms = 400;
-    constexpr uint32_t min_diff_ms = std::max(static_cast<uint32_t>(1),
-                                              static_cast<uint32_t>(period_ms * 10));
-    // Require at least 40 ticks of PIC emulator to pass
-    constexpr uint32_t min_diff_ticks = 40;
+    // For the measurement require at least certain amount
+    // of PIC ticks; if too much time passes without meaningful
+    // movement, consider mouse speed to be 0
+    constexpr uint32_t min_ticks = 40;
+    constexpr uint32_t max_ticks = 400;
 
-    // Get current time, calculate difference
-    const auto time_now   = std::chrono::steady_clock::now();
-    const auto diff_time  = time_now - clock_time_start;
-    const auto diff_ticks = PIC_Ticks - pic_ticks_start;
-    const auto diff_ms    =
-            std::chrono::duration_cast<std::chrono::milliseconds>(diff_time).count();
+    // Calculate time from the beginning of measurement
+    const auto diff_ticks = PIC_Ticks - ticks_start;
 
     // Try to calculate cursor speed
-    if (diff_ms > std::max(max_diff_ms, static_cast<uint32_t>(10 * period_ms))) {
-        // Do not wait any more for movement, consider speed to be 0
-        speed = 0.0f;
-    } else if (diff_ms >= 0) {
-        // Update distance travelled by the cursor
-        distance += delta;
+    if (PIC_Ticks >= ticks_start) {
+        if (diff_ticks > max_ticks)
+            // Do not wait any more for the movement, consider speed to be 0
+            speed = 0.0f;
+        else {
+            // Update distance travelled by the cursor
+            distance += delta;
 
-        // Make sure enough time passed for accurate speed calculation
-        if (diff_ms < min_diff_ms || (diff_ticks < min_diff_ticks && diff_ticks > 0))
-            return;
+            // Make sure enough time passed for accurate speed calculation
+            if (diff_ticks < min_ticks)
+                return;
 
-        // Update cursor speed
-        speed = scaling * distance / static_cast<float>(diff_ms);
+            // Calculate cursor speed
+            speed = scaling * distance / static_cast<float>(diff_ticks);
+        }
     }
 
+    // Note: if PIC_Ticks < ticks_start, we have a counter overflow - this
+    // can only happen if emulator is run for many weeks at a time. In such
+    // case we just assume previous speed is still valid, for simplicity.
+
     // Start new measurement
-    distance         = 0.0f;
-    clock_time_start = time_now;
-    pic_ticks_start  = PIC_Ticks;
+    distance    = 0.0f;
+    ticks_start = PIC_Ticks;
 }
 
 // ***************************************************************************

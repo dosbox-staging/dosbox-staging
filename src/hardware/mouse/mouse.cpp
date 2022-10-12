@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,8 +37,8 @@
 CHECK_NARROWING();
 
 
-bool mouse_seamless_driver = false;
-bool mouse_seamless_user   = false;
+bool seamless_driver  = false;
+bool seamless_setting = false;
 
 static Bitu int74_ret_callback = 0;
 
@@ -114,6 +114,21 @@ Bitu int74_ret_handler()
     return CBRET_NONE;
 }
 
+
+// ***************************************************************************
+// Information for the GFX subsystem
+// ***************************************************************************
+
+bool MOUSE_IsUsingSeamlessDriver()
+{
+    return seamless_driver;
+}
+
+bool MOUSE_IsUsingSeamlessSetting()
+{
+    return seamless_setting;
+}
+
 // ***************************************************************************
 // External notifications
 // ***************************************************************************
@@ -144,8 +159,8 @@ void MOUSE_NotifyResetDOS()
 
 void MOUSE_NotifyStateChanged()
 {
-    const auto old_seamless_driver = mouse_seamless_driver;
-    const auto old_seamless_user   = mouse_seamless_user;
+    const auto old_seamless_driver  = seamless_driver;
+    const auto old_seamless_setting = seamless_setting;
 
     const auto is_mapping_in_effect = manymouse.IsMappingInEffect();
 
@@ -157,16 +172,16 @@ void MOUSE_NotifyStateChanged()
     }
 
     // Prepare suggestions to the GFX subsystem
-    mouse_seamless_driver = mouse_shared.active_vmm &&
-                            !mouse_video.fullscreen &&
-                            !is_mapping_in_effect;
-    mouse_seamless_user   = mouse_config.seamless &&
-                            !mouse_video.fullscreen &&
-                            !is_mapping_in_effect;
+    seamless_driver   = mouse_shared.active_vmm &&
+                        !mouse_video.fullscreen &&
+                        !is_mapping_in_effect;
+    seamless_setting  = mouse_config.seamless &&
+                        !mouse_video.fullscreen &&
+                        !is_mapping_in_effect;
 
     // If state has really changed, update GFX subsystem
-    if (mouse_seamless_driver != old_seamless_driver ||
-        mouse_seamless_user   != old_seamless_user)
+    if (seamless_driver  != old_seamless_driver ||
+        seamless_setting != old_seamless_setting)
         GFX_UpdateMouseState();
 }
 
@@ -179,7 +194,7 @@ void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id)
 
 void MOUSE_NotifyFakePS2()
 {
-    auto interface = MouseInterface::GetPS2();
+    const auto interface = MouseInterface::GetPS2();
 
     if (interface && interface->IsUsingEvents()) {
         MouseEvent ev;
@@ -201,9 +216,7 @@ void MOUSE_EventMoved(const float x_rel,
                       const uint16_t y_abs)
 {
     // Drop unneeded events
-    if (!mouse_is_captured &&
-        !mouse_seamless_user &&
-        !mouse_seamless_driver)
+    if (!mouse_is_captured && !seamless_driver && !seamless_setting)
         return;
 
     // From the GUI we are getting mouse movement data in two
@@ -289,11 +302,9 @@ void MOUSE_EventWheel(const int16_t w_rel,
 // MOUSECTL.COM / GUI configurator interface
 // ***************************************************************************
 
-void get_relevant_interfaces(std::vector<MouseInterface *> &list_out,
-                             const std::vector<MouseInterfaceId> &list_ids)
+static std::vector<MouseInterface *> get_relevant_interfaces(const std::vector<MouseInterfaceId> &list_ids)
 {
-    list_out.clear();
-    auto list_tmp = list_out;
+    std::vector<MouseInterface *> list_tmp = {};
 
     if (list_ids.empty())
         // If command does not specify interfaces,
@@ -307,42 +318,44 @@ void get_relevant_interfaces(std::vector<MouseInterface *> &list_out,
         }
 
     // Filter out not emulated ones
+    std::vector<MouseInterface *> list_out = {};
     for (const auto &interface : list_tmp)
         if (interface->IsEmulated())
             list_out.push_back(interface);
+
+    return list_out;
 }
 
-MouseConfigAPI::MouseConfigAPI()
+MouseControlAPI::MouseControlAPI()
 {
     manymouse.StartConfigAPI();
 }
 
-MouseConfigAPI::~MouseConfigAPI()
+MouseControlAPI::~MouseControlAPI()
 {
     manymouse.StopConfigAPI();
     MOUSE_NotifyStateChanged();
 }
 
-bool MouseConfigAPI::IsNoMouseMode()
+bool MouseControlAPI::IsNoMouseMode()
 {
     return mouse_config.no_mouse;
 }
 
-const std::vector<MouseInterfaceInfoEntry> &MouseConfigAPI::GetInfoInterfaces() const
+const std::vector<MouseInterfaceInfoEntry> &MouseControlAPI::GetInfoInterfaces() const
 {
     return mouse_info.interfaces;
 }
 
-const std::vector<MousePhysicalInfoEntry> &MouseConfigAPI::GetInfoPhysical()
+const std::vector<MousePhysicalInfoEntry> &MouseControlAPI::GetInfoPhysical()
 {
     manymouse.RescanIfSafe();
     return mouse_info.physical;
 }
 
-bool MouseConfigAPI::CheckInterfaces(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::CheckInterfaces(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
+    const auto list = get_relevant_interfaces(list_ids);
 
     if (list_ids.empty() && list.empty())
         return false; // no emulated mouse interfaces
@@ -354,8 +367,8 @@ bool MouseConfigAPI::CheckInterfaces(const MouseConfigAPI::ListIDs &list_ids)
     return true;
 }
 
-bool MouseConfigAPI::PatternToRegex(const std::string &pattern,
-                                    std::regex &regex)
+bool MouseControlAPI::PatternToRegex(const std::string &pattern,
+                                     std::regex &regex)
 {
     // Convert DOS wildcard pattern to a regular expression
     std::stringstream pattern_regex;
@@ -381,7 +394,7 @@ bool MouseConfigAPI::PatternToRegex(const std::string &pattern,
     return true;
 }
 
-bool MouseConfigAPI::ProbeForMapping(uint8_t &device_id)
+bool MouseControlAPI::ProbeForMapping(uint8_t &device_id)
 {
     if (mouse_config.no_mouse)
         return false;
@@ -390,7 +403,7 @@ bool MouseConfigAPI::ProbeForMapping(uint8_t &device_id)
     return manymouse.ProbeForMapping(device_id);
 }
 
-bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
+bool MouseControlAPI::Map(const MouseInterfaceId interface_id,
                          const uint8_t device_idx)
 {
     if (mouse_config.no_mouse)
@@ -403,8 +416,8 @@ bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
     return mouse_interface->ConfigMap(device_idx);
 }
 
-bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
-                         const std::regex &regex)
+bool MouseControlAPI::Map(const MouseInterfaceId interface_id,
+                          const std::regex &regex)
 {
     if (mouse_config.no_mouse)
         return false;
@@ -417,43 +430,37 @@ bool MouseConfigAPI::Map(const MouseInterfaceId interface_id,
     return Map(interface_id, idx);
 }
 
-bool MouseConfigAPI::UnMap(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::UnMap(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigUnMap();
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::OnOff(const MouseConfigAPI::ListIDs &list_ids,
-                           const bool enable)
+bool MouseControlAPI::OnOff(const MouseControlAPI::ListIDs &list_ids,
+                            const bool enable)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigOnOff(enable);
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::Reset(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::Reset(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigReset();
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::SetSensitivity(const MouseConfigAPI::ListIDs &list_ids,
-                                    const int8_t sensitivity_x,
-                                    const int8_t sensitivity_y)
+bool MouseControlAPI::SetSensitivity(const MouseControlAPI::ListIDs &list_ids,
+                                     const int8_t sensitivity_x,
+                                     const int8_t sensitivity_y)
 {
     if (sensitivity_x >  mouse_predefined.sensitivity_user_max ||
         sensitivity_x < -mouse_predefined.sensitivity_user_max ||
@@ -461,86 +468,74 @@ bool MouseConfigAPI::SetSensitivity(const MouseConfigAPI::ListIDs &list_ids,
         sensitivity_y < -mouse_predefined.sensitivity_user_max)
         return false;
 
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigSetSensitivity(sensitivity_x, sensitivity_y);
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::SetSensitivityX(const MouseConfigAPI::ListIDs &list_ids,
-                                     const int8_t sensitivity_x)
+bool MouseControlAPI::SetSensitivityX(const MouseControlAPI::ListIDs &list_ids,
+                                      const int8_t sensitivity_x)
 {
     if (sensitivity_x >  mouse_predefined.sensitivity_user_max ||
         sensitivity_x < -mouse_predefined.sensitivity_user_max)
         return false;
 
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigSetSensitivityX(sensitivity_x);
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::SetSensitivityY(const MouseConfigAPI::ListIDs &list_ids,
-                                     const int8_t sensitivity_y)
+bool MouseControlAPI::SetSensitivityY(const MouseControlAPI::ListIDs &list_ids,
+                                      const int8_t sensitivity_y)
 {
     if (sensitivity_y >  mouse_predefined.sensitivity_user_max ||
         sensitivity_y < -mouse_predefined.sensitivity_user_max)
         return false;
 
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigSetSensitivityY(sensitivity_y);
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::ResetSensitivity(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::ResetSensitivity(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigResetSensitivity();
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::ResetSensitivityX(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::ResetSensitivityX(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigResetSensitivityX();
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::ResetSensitivityY(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::ResetSensitivityY(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigResetSensitivityY();
 
     return !list.empty();
 }
 
-const std::vector<uint16_t> &MouseConfigAPI::GetValidMinRateList()
+const std::vector<uint16_t> &MouseControlAPI::GetValidMinRateList()
 {
     return MouseConfig::GetValidMinRateList();
 }
 
-const std::string &MouseConfigAPI::GetValidMinRateStr()
+const std::string &MouseControlAPI::GetValidMinRateStr()
 {
     static std::string out_str = "";
 
@@ -560,27 +555,23 @@ const std::string &MouseConfigAPI::GetValidMinRateStr()
     return out_str;
 }
 
-bool MouseConfigAPI::SetMinRate(const MouseConfigAPI::ListIDs &list_ids,
-                                const uint16_t value_hz)
+bool MouseControlAPI::SetMinRate(const MouseControlAPI::ListIDs &list_ids,
+                                 const uint16_t value_hz)
 {
     const auto &valid_list = GetValidMinRateList();
     if (std::find(valid_list.begin(), valid_list.end(), value_hz) == valid_list.end())
         return false; // invalid value
 
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigSetMinRate(value_hz);
 
     return !list.empty();
 }
 
-bool MouseConfigAPI::ResetMinRate(const MouseConfigAPI::ListIDs &list_ids)
+bool MouseControlAPI::ResetMinRate(const MouseControlAPI::ListIDs &list_ids)
 {
-    std::vector<MouseInterface *> list;
-    get_relevant_interfaces(list, list_ids);
-
+    auto list = get_relevant_interfaces(list_ids);
     for (auto &interface : list)
         interface->ConfigResetMinRate();
 

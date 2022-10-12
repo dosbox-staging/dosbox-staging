@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@
 #include "checks.h"
 #include "cpu.h"
 #include "dos_inc.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
 
@@ -104,7 +105,9 @@ static struct {
 
 // Multiply by 6.0f to compensate for 'MOUSE_GetBallisticsCoeff', which uses
 // 6 as intersection point (just like 2:1 scaling model from PS/2 specification)
-static MouseSpeedCalculator speed_mickeys(mouse_predefined.acceleration_dos * 6.0f);
+constexpr float acceleration_multiplier = 6.0f;
+static MouseSpeedCalculator speed_mickeys(acceleration_multiplier *
+                                          mouse_predefined.acceleration_dos);
 
 static struct { // DOS driver state
 
@@ -1046,7 +1049,7 @@ uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
 
 static uint8_t move_wheel()
 {
-    counter_w = MOUSE_ClampToInt8(static_cast<int32_t>(counter_w + pending.w_rel));
+    counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
 
     // Pending wheel scroll is now consummed
     pending.w_rel = 0;
@@ -1121,7 +1124,7 @@ bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
     // wheel counter in 16-bit format, scrolling hundreds of lines in one
     // go would be insane - thus, limit the wheel counter to 8 bits and
     // reuse the code written for other mouse modules
-    pending.w_rel = MOUSE_ClampToInt8(pending.w_rel + w_rel);
+    pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
 
     if (pending.w_rel == 0)
         return 0;

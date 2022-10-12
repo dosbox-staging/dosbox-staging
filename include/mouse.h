@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -88,13 +88,11 @@ void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
                            const uint16_t y_abs);
 
 // ***************************************************************************
-// Variables shared with external modules
+// Information for the GFX subsystem
 // ***************************************************************************
 
-// If driver with seamless pointer support is running
-extern bool mouse_seamless_driver;
-// If user selected seamless mode is in effect
-extern bool mouse_seamless_user;
+bool MOUSE_IsUsingSeamlessDriver();  // if driver with seamless pointer support is running
+bool MOUSE_IsUsingSeamlessSetting(); // if user selected seamless mode is in effect
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
@@ -168,15 +166,15 @@ private:
     const MousePhysical &Physical() const;
 };
 
-class MouseConfigAPI final {
+class MouseControlAPI final {
 public:
 
     // Always destroy the object once it is not needed anymore
     // (configuration tool finishes it's job) and we are returning
     // to normal code execution!
 
-    MouseConfigAPI();
-    ~MouseConfigAPI();
+    MouseControlAPI();
+    ~MouseControlAPI();
 
     // Empty list = performs operation on all emulated interfaces
     typedef std::vector<MouseInterfaceId> ListIDs;
@@ -213,13 +211,13 @@ public:
 
     static const std::vector<uint16_t> &GetValidMinRateList();
     static const std::string &GetValidMinRateStr();
-    bool SetMinRate(const MouseConfigAPI::ListIDs &list_ids,
+    bool SetMinRate(const MouseControlAPI::ListIDs &list_ids,
                     const uint16_t value_hz);
-    bool ResetMinRate(const MouseConfigAPI::ListIDs &list_ids);
+    bool ResetMinRate(const MouseControlAPI::ListIDs &list_ids);
 
 private:
-    MouseConfigAPI(const MouseConfigAPI &) = delete;
-    MouseConfigAPI &operator=(const MouseConfigAPI &) = delete;
+    MouseControlAPI(const MouseControlAPI &) = delete;
+    MouseControlAPI &operator=(const MouseControlAPI &) = delete;
 };
 
 #endif // DOSBOX_MOUSE_H
