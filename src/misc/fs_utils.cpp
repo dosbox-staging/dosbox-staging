@@ -22,11 +22,31 @@
 
 #include <cassert>
 #include <chrono>
+#include <fstream>
 
 #include "checks.h"
 #include "std_filesystem.h"
 
 CHECK_NARROWING();
+
+// return the lines from the given text file or an empty optional
+std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file)
+{
+	std::ifstream input_file(text_file, std::ios::binary);
+	if (!input_file.is_open())
+		return {};
+
+	std::vector<std::string> lines = {};
+
+	std::string line = {};
+	while (getline(input_file, line)) {
+		lines.emplace_back(std::move(line));
+		line = {}; // reset after moving
+	}
+
+	input_file.close();
+	return lines;
+}
 
 std_fs::path simplify_path(const std_fs::path &original_path) noexcept
 {

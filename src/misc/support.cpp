@@ -404,33 +404,22 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 std::vector<std::string> GetResourceLines(const std_fs::path &name,
                                           const ResourceImportance importance)
 {
-	const auto resource_path = GetResourcePath(name);
+	auto lines = get_lines(name);
+	if (lines)
+		return std::move(*lines);
 
-	std::ifstream input_file(resource_path, std::ios::binary);
+	// the resource didn't exist but it's optional
+	if (importance == ResourceImportance::Optional)
+		return {};
 
-	if (!input_file.is_open()) {
-		if (importance == ResourceImportance::Optional) {
-			return {};
-		}
-		assert(importance == ResourceImportance::Mandatory);
-		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
-		        name.string().c_str());
-		for (const auto &path : GetResourceParentPaths()) {
-			LOG_WARNING("RESOURCE:  - '%s'",
-			            (path / name).string().c_str());
-		}
-		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
+	// the resource didn't exist and it was mandatory, so verbosely quit
+	assert(importance == ResourceImportance::Mandatory);
+	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
+	        name.string().c_str());
+	for (const auto &path : GetResourceParentPaths()) {
+		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
-
-	std::vector<std::string> lines = {};
-
-	std::string line = {};
-	while (getline(input_file, line)) {
-		lines.emplace_back(std::move(line));
-		line = {}; // reset after moving
-	}
-	input_file.close();
-	return lines;
+	E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 }
 
 // Get resource lines from a text file

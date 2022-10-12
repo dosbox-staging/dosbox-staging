@@ -25,9 +25,14 @@
 
 #include <cinttypes>
 #include <ctime>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "std_filesystem.h"
+
+// return the lines from the given text file or an empty optional
+std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file);
 
 /* Check if the given path corresponds to an existing file or directory.
  */
