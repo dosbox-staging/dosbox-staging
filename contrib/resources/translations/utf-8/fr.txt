@@ -2604,3 +2604,6 @@ internal virtual drive
 :MOUNT_TYPE_UNKNOWN
 unknown drive
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.

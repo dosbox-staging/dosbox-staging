@@ -2766,3 +2766,6 @@ Diverse opdrachten
 :HELP_UTIL_CATEGORY_UNKNOWN
 Onbekende opdracht
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.

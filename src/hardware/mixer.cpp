@@ -228,7 +228,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
           do_sleep(HasFeature(ChannelFeature::Sleep))
 {}
 
-bool MixerChannel::HasFeature(const ChannelFeature feature)
+bool MixerChannel::HasFeature(const ChannelFeature feature) const
 {
 	return features.find(feature) != features.end();
 }
@@ -1734,10 +1734,12 @@ void MixerChannel::FillUp()
 
 std::string MixerChannel::DescribeLineout() const
 {
+	if (!HasFeature(ChannelFeature::Stereo))
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 	if (output_map == STEREO)
-		return "Stereo";
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO");
 	if (output_map == REVERSE)
-		return "Reverse";
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_REVERSE");
 
 	// Output_map is programmtically set (not directly assigned from user
 	// data), so we can assert.
@@ -2304,6 +2306,8 @@ private:
 
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_STEREO", "Stereo");
 
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_REVERSE", "Reverse");
+
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
 	}
 
@@ -2422,9 +2426,7 @@ private:
 			auto channel_name = std::string("[color=cyan]") + name +
 			                    std::string("[reset]");
 
-			auto mode = chan->HasFeature(ChannelFeature::Stereo)
-			                  ? chan->DescribeLineout()
-			                  : MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
+			auto mode = chan->DescribeLineout();
 
 			show_channel(convert_ansi_markup(channel_name),
 			             chan->volume,

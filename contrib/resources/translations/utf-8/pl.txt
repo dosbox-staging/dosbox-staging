@@ -2703,4 +2703,6 @@ Inne polecenia
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
 .
-
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.

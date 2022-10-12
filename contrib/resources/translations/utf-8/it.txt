@@ -2845,3 +2845,6 @@ Comandi Vari
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.
