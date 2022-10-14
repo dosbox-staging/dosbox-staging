@@ -262,7 +262,6 @@ static void config_init(Section_prop &secprop)
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
 	Prop_bool *prop_bool = nullptr;
-	// XXX Prop_int     *prop_int   = nullptr;
 	Prop_string *prop_str    = nullptr;
 	PropMultiVal *prop_multi = nullptr;
 
@@ -278,8 +277,8 @@ static void config_init(Section_prop &secprop)
 	        "Setting can be adjusted in runtime (also per mouse interface) using internal\n"
 	        "MOUSECTL.COM tool, available on drive Z:.");
 	prop_multi->SetValue("1.0");
-	prop_str = prop_multi->GetSection()->Add_string("xsens", only_at_start, "1.0");
-	prop_str = prop_multi->GetSection()->Add_string("ysens", only_at_start, "1.0");
+	prop_multi->GetSection()->Add_string("xsens", only_at_start, "1.0");
+	prop_multi->GetSection()->Add_string("ysens", only_at_start, "1.0");
 
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(

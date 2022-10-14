@@ -56,7 +56,7 @@ bool MOUSECTL::ParseAndRun()
     {
         if (idx >= params.size())
             return false;
-        return iequals(params[idx].c_str(), string);
+        return iequals(params[idx], string);
     };
 
     // CmdShow
