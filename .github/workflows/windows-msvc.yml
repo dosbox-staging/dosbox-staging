@@ -245,7 +245,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API

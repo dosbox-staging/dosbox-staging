@@ -251,13 +251,13 @@ jobs:
           meson compile -C build
 
       - name: Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dosbox-${{ matrix.runner.arch }}
           path: build/dosbox
 
       - name: Upload resources
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Resources
           path: Resources
@@ -315,7 +315,7 @@ jobs:
           clamscan --heuristic-scan-precedence=yes --recursive --infected dist || true
 
       - name: Upload disk image
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
@@ -344,7 +344,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API

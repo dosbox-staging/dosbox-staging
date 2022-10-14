@@ -348,13 +348,13 @@ jobs:
           C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
 
       - name: Upload package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PKG_RELEASE }}
           path: ${{ env.PKG_RELEASE }}
 
       - name: Upload installer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dosbox-staging-${{ env.version_number }}-setup.exe
           path: ${{ github.workspace }}\out\dosbox-staging-${{ env.version_number }}-setup.exe
@@ -382,7 +382,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
