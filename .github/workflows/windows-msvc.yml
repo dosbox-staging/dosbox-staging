@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
-          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
+          echo "nuget_bin=$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)" >> $GITHUB_OUTPUT
 
       - name: 'Setup NuGet Credentials'
         shell: pwsh
@@ -119,7 +119,7 @@ jobs:
         shell: pwsh
         run: |
           ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
-          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
+          echo "nuget_bin=$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)" >> $GITHUB_OUTPUT
 
       - name: 'Setup NuGet Credentials'
         shell: pwsh
@@ -158,7 +158,7 @@ jobs:
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "::set-output name=dosbox_vers::${VERSION}"
+          echo "dosbox_vers=${VERSION}" >> $GITHUB_OUTPUT
 
       - name:  Enable the debugger in config.h
         if: ${{ matrix.conf.debugger }}
@@ -178,7 +178,7 @@ jobs:
         id:    set_pkg_dir
         shell: bash
         run: |
-          echo "::set-output name=pkg_dir::dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}"
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_OUTPUT
 
       - name: Package standard build
         if: ${{ !matrix.conf.debugger }}
