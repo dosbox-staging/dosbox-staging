@@ -374,6 +374,7 @@ zlib_dep = dependency(
 speexdsp_dep = dependency(
     'speexdsp',
     allow_fallback: false,
+    required: false,
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
 )
 
