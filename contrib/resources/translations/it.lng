@@ -737,11 +737,11 @@ Filtro per l'uscita audio del DAC PS/1:
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
 auto     : Rileva e usa qualsiasi joystick, se possibile.
-2axis    : Supporta fino a due joystick.
-4axis    : Supporta solo il primo joystick.
-4axis_2  : Supporta solo il secondo joystick.
-fcs      : Supporta un joystick di tipo Thrustmaster.
-ch       : Supporta un joystick di tipo CH Flightstick.
+2axis    : Supporta fino a due joystick, ciascuno con 2 assi.
+4axis    : Supporta solo il primo joystick, come tipo a 4 assi.
+4axis_2  : Supporta solo il secondo joystick, come tipo a 4 assi.
+fcs      : Emula il joystick Thrustmaster FCS.
+ch       : Emula il joystick CH Flightstick.
 hidden   : Impedisce a DOS di vedere i joystick, ma sono abilitali per la
            mappatura.
 disabled : Disabilita completamente i joystick: non saranno interrogati,
@@ -1821,6 +1821,9 @@ spento
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Inverso
+.
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
@@ -1962,10 +1965,10 @@ Dove:
   [color=cyan]DATA[reset] è la nuova data da impostare, nel formato [color=cyan]%s[reset].
 
 Note:
-  L'esecuzione di [color=green]date[reset] senza un argomento, mostra la data corrente e permette
-  l'immissione di una nuova. Aggiungendo l'opzione /t, sarà mostrata solo la
-  data corrente. È possibile forzare la sincronizzazione della data con il
-  sistema host tramite l'opzione /h.
+  L'esecuzione di [color=green]date[reset] senza un argomento mostra la data corrente, in formato
+  breve se viene fornita l'opzione /t. È possibile forzare la sincronizzazione
+  della data con il sistema host tramite l'opzione /h, o specificare
+  manualmente una nuova data.
 
 Esempi:
   [color=green]date[reset]
@@ -1998,10 +2001,10 @@ Dove:
   [color=cyan]ORA[reset] è il nuovo orario da impostare, nel formato [color=cyan]%s[reset].
 
 Note:
-  L'esecuzione di [color=green]time[reset] senza un argomento, mostra l'orario corrente e permette
-  l'immissione di uno nuovo. Aggiungendo l'opzione /t, sarà mostrato solo
-  l'orario corrente. È possibile forzare la sincronizzazione dell'orario con il
-  sistema host tramite l'opzione /h.
+  L'esecuzione di [color=green]time[reset] senza un argomento mostra l'orario corrente, in formato
+  breve se viene fornita l'opzione /t. È possibile forzare la sincronizzazione
+  dell'orario con il sistema host tramite l'opzione /h, o specificare
+  manualmente un nuovo orario.
 
 Esempi:
   [color=green]time[reset]
@@ -2245,8 +2248,8 @@ Utilizzo:
   [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
 
 Dove:
-  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco(*)
-          o punto di domanda (?). È possibile specificare il percorso di
+  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)
+          e punto di domanda (?). È possibile specificare il percorso di
           una directory per elencarne il contenuto.
   [color=white]ORDINAM[reset] è il tipo di ordinamento scelto, cioè: [color=white]n[reset] (per nome, alfabetico),
           [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
@@ -2265,7 +2268,7 @@ Esempi:
   [color=green]dir[reset] [color=cyan]c:\giochi\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Visualizza messaggi oppure attiva/disattiva la ripetizione dei comandi.
+Visualizza i messaggi o attiva/disattiva la ripetizione dei comandi.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
@@ -2568,11 +2571,10 @@ Utilizzo:
   [color=green]erase[reset] [color=cyan]MODELLO[reset]
 
 Dove:
-  [color=cyan]MODELLO[reset] può essere un nome di uno file specifico (come [color=cyan]file.txt[reset]) oppure
-          un nome file contenente uno o più caratteri jolly, cioè:
-          asterisco (*), che rappresenta una qualsiasi sequenza di uno o più
-          caratteri, o punto di domanda (?) che rappresenta un singolo
-          carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
+  [color=cyan]MODELLO[reset] può essere un nome file specifico (come [color=cyan]file.txt[reset]) o con caratteri
+          jolly, cioè: asterisco (*), che rappresenta una qualsiasi sequenza di
+          uno o più caratteri, e punto di domanda (?) che rappresenta un
+          singolo carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
 
 Avvertimento:
   Fai attenzione quando usi un nome file con caratteri jolly, in particolare
@@ -2595,7 +2597,7 @@ Utilizzo:
 
 Dove:
   [color=white]ORIGINE[reset]      è un nome file specifico o con caratteri jolly, cioè
-               asterisco(*) o punto di domanda (?).
+               asterisco (*) e punto di domanda (?).
   [color=cyan]DESTINAZIONE[reset] è un nome file specifico o una directory che non contiene
                caratteri jolly.
 
@@ -2687,7 +2689,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset]  è un nome file specifico o con caratteri jolly, cioè asterisco (*)
-           o punto di domanda (?).
+           e punto di domanda (?).
   [color=cyan]PERCORSO[reset] è un percorso di un'unità DOS montata da cui elencare il contenuto.
 
 Note:
@@ -2715,13 +2717,13 @@ Dove:
   [color=white]ATTRIBUTI[reset] sono gli attributi da applicare, tra cui uno o più dei seguenti:
             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
-  [color=cyan]MODELLO[reset]   può essere un nome file esatto o un nome file con caratteri jolly,
-            cioè asterisco (*) o punto di domanda (?), oppure il nome di
-            una directory.
+  [color=cyan]MODELLO[reset]   può essere un nome file specifico o con caratteri jolly, cioè
+            asterisco (*) e punto di domanda (?), oppure il nome di una
+            directory.
 
 Note:
   In questo comando è possibile specificare più attributi, separati da spazi.
-  Se non specificati, esso mostra gli attributi di file/directory correnti.
+  Se non specificati, sono mostrati gli attributi correnti di file/directory.
 
 Esempi:
   [color=green]attrib[reset] [color=cyan]file.txt[reset]
