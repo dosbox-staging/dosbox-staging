@@ -285,7 +285,7 @@ jobs:
           }
 
       - name: Wait for MSVC builds to complete
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           checkName: Publish additional Windows artifacts
