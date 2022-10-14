@@ -120,7 +120,7 @@ static int poll_mouse(MouseStruct *mouse, ManyMouseEvent *outevent)
                 outevent->item = event.code - BTN_MOUSE;
 
             /* just in case some device uses this block of events instead... */
-            else if ((event.code >= BTN_MISC) && (event.code <= BTN_LEFT))
+            else if ((event.code >= BTN_MISC) && (event.code < BTN_LEFT))
                 outevent->item = (event.code - BTN_MISC);
 
             else if (event.code == BTN_TOUCH) /* tablet... */
