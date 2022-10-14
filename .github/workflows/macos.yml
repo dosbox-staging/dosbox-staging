@@ -24,20 +24,12 @@ jobs:
             brew_path: /usr/local/homebrew
             max_warnings: 0
 
-          - name: GCC 11
+          - name: GCC 11 +tests
             host: macos-latest
             arch: x86_64
             needs_deps: true
             packages: gcc@11
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
-            brew_path: /usr/local/homebrew
-            max_warnings: 0
-
-          - name: Clang, +tests (macOS 12)
-            host: macos-12
-            arch: x86_64
-            needs_deps: true
-            build_flags: -Dbuildtype=debug
+            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-11.ini
             brew_path: /usr/local/homebrew
             run_tests: true
             max_warnings: -1
@@ -50,13 +42,14 @@ jobs:
             brew_path: /usr/local/homebrew
             max_warnings: 0
 
-          - name: Clang
+          - name: Clang +tests
             host: [self-hosted, macOS, arm64, debug-builds]
             arch: arm64
             needs_deps: false
             packages: meson
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
+            run_tests: true
             max_warnings: 0
 
     steps:
