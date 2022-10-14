@@ -112,7 +112,7 @@ jobs:
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
           echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -121,7 +121,7 @@ jobs:
             ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
@@ -210,7 +210,7 @@ jobs:
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -219,7 +219,7 @@ jobs:
             ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
