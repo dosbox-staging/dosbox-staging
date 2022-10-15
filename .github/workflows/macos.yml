@@ -87,7 +87,7 @@ jobs:
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
-          key:  brew-cache-${{ matrix.conf.arch }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  brew-cache-${{ matrix.conf.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: brew-cache-${{ matrix.conf.arch }}-
 
       - name: Install C++ compiler and libraries
@@ -101,7 +101,7 @@ jobs:
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
-          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: |
             ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-
             ccache-macos-debug-
@@ -110,7 +110,7 @@ jobs:
         uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
 
       - name: Setup and build
         run: |
@@ -190,7 +190,7 @@ jobs:
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
-          key:  brew-cache-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}
+          key:  brew-cache-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: brew-cache-${{ matrix.runner.arch }}-
 
       - name: Install C++ compiler and libraries
@@ -208,14 +208,14 @@ jobs:
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
-          key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: ccache-macos-release-${{ matrix.runner.arch }}-
 
       - name:  Cache subprojects
         uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
 
       - name: Log environment
         run:  arch -arch=${{ matrix.runner.arch }} ./scripts/log-env.sh
