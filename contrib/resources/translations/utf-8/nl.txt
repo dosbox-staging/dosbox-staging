@@ -719,7 +719,7 @@ Schakel knopomloop in bij het aantal geëmuleerde knoppen.
 .
 :CONFIG_CIRCULARINPUT
 Maak vertaling van circulaire input naar vierkante output mogelijk. Probeer dit
-in te schakelen als je linker analoge stick alleen in een cirkel kan bewegen.
+in te schakelen als u linker analoge stick alleen in een cirkel kan bewegen.
 .
 :CONFIG_DEADZONE
 Percentage beweging om te negeren. 100 verandert de stick in een digitale.
@@ -2767,5 +2767,5 @@ Diverse opdrachten
 Onbekende opdracht
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
-Reverse
+Omgekeerd
 .
