@@ -86,10 +86,10 @@ jobs:
           mkdir -p "$DISCARD_DIR"
           mv -f "$BREW_DIR"/* "$DISCARD_DIR"
           mkdir -p "$CCACHE_DIR"
-          echo "::set-output name=brew_dir::$BREW_DIR"
-          echo "::set-output name=ccache_dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date +%F)"
-          echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }} ${{ matrix.conf.arch }}' | shasum | cut -b-8)"
+          echo "brew_dir=$BREW_DIR"     >> $GITHUB_OUTPUT
+          echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
+          echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
+          echo "name_hash=$(echo '${{ matrix.conf.name }} ${{ matrix.conf.arch }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
       - uses:  actions/cache@v3.0.11
         if:    matrix.conf.needs_deps
@@ -198,9 +198,9 @@ jobs:
           mkdir -p "$DISCARD_DIR"
           mv -f "$BREW_DIR"/* "$DISCARD_DIR"
           mkdir -p "$CCACHE_DIR"
-          echo "::set-output name=brew_dir::$BREW_DIR"
-          echo "::set-output name=ccache_dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date +%F)"
+          echo "brew_dir=$BREW_DIR"     >> $GITHUB_OUTPUT
+          echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
+          echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
 
       - uses:  actions/cache@v3.0.11
         if:    matrix.runner.needs_deps
