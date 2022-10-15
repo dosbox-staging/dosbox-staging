@@ -664,7 +664,7 @@ static SDL_Rect calc_viewport_pp(int win_width, int win_height);
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(int source_w, int source_h,
-                                   const std::optional<SDL_Rect> target_size_override,
+                                   const std::optional<SDL_Rect> &target_size_override,
                                    const SCALING_MODE scaling_mode,
                                    const SCREEN_TYPES screen_type,
                                    const PPScale &pp_scale)
