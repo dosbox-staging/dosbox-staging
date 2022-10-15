@@ -22,49 +22,39 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC (MinGW) x86
+          - name: GCC (MinGW) x86 +tests
             toolchain: ""
             arch: i686
             sys: MINGW32
             cc: gcc
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC (MinGW) x86_64
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
-            cc: gcc
-            max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC (UCRT) x86_64
+            run_tests: true
+            build_flags: -Dbuildtype=debug
+
+          - name: GCC (UCRT) x86_64 +debugger
             toolchain: ucrt-
             arch: x86_64
             sys: UCRT64
             cc: gcc
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: Clang x86_64
+            build_flags: -Denable_debugger=normal
+
+          - name: Clang x86_64 +debugger
+            toolchain: clang-
+            arch: x86_64
+            sys: CLANG64
+            cc: clang
+            max_warnings: 1
+            build_flags: -Denable_debugger=normal
+
+          - name: Clang x86_64 +tests
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
             cc: clang
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC +tests
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
             run_tests: true
-            cc: gcc
-            max_warnings: 0
             build_flags: -Dbuildtype=debug
-          - name: GCC +debugger
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
-            cc: gcc
-            max_warnings: 0
-            build_flags: -Denable_debugger=normal
 
     defaults:
       run:
