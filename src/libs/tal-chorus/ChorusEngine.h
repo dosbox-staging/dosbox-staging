@@ -24,6 +24,8 @@
 #if !defined(__ChorusEngine_h)
 #define __ChorusEngine_h
 
+#include <memory>
+
 #include "Chorus.h"
 #include "Params.h"
 #include "DCBlock.h"
@@ -32,10 +34,10 @@
 class ChorusEngine
 {
 public:
-    Chorus *chorus1L = {};
-    Chorus *chorus1R = {};
-    Chorus *chorus2L = {};
-    Chorus *chorus2R = {};
+    std::unique_ptr<Chorus> chorus1L = {};
+    std::unique_ptr<Chorus> chorus1R = {};
+    std::unique_ptr<Chorus> chorus2L = {};
+    std::unique_ptr<Chorus> chorus2R = {};
 
     DCBlock dcBlock1L = {};
     DCBlock dcBlock1R = {};
@@ -55,14 +57,6 @@ public:
         setUpChorus(sampleRate);
     }
 
-    ~ChorusEngine()
-    {
-        delete chorus1L;
-        delete chorus1R;
-        delete chorus2L;
-        delete chorus2R;
-    }
-
     void setSampleRate(float sampleRate)
     {
         setUpChorus(sampleRate);
@@ -77,10 +71,10 @@ public:
 
     void setUpChorus(float sampleRate)
     {
-        chorus1L= new Chorus(sampleRate, 1.0f, 0.5f, 7.0f);
-        chorus1R= new Chorus(sampleRate, 0.0f, 0.5f, 7.0f);
-        chorus2L= new Chorus(sampleRate, 0.0f, 0.83f, 7.0f);
-        chorus2R= new Chorus(sampleRate, 1.0f, 0.83f, 7.0f);
+        chorus1L= std::make_unique<Chorus>(sampleRate, 1.0f, 0.5f, 7.0f);
+        chorus1R= std::make_unique<Chorus>(sampleRate, 0.0f, 0.5f, 7.0f);
+        chorus2L= std::make_unique<Chorus>(sampleRate, 0.0f, 0.83f, 7.0f);
+        chorus2R= std::make_unique<Chorus>(sampleRate, 1.0f, 0.83f, 7.0f);
     }
 
     inline void process(float *sampleL, float *sampleR)

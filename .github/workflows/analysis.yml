@@ -65,11 +65,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date -I)"
-          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+          echo "dir=$CCACHE_DIR"                       >> $GITHUB_OUTPUT
+          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
+          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -78,7 +78,7 @@ jobs:
             ccache-static-clang-${{ steps.prep-ccache.outputs.yesterday }}
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
@@ -107,7 +107,7 @@ jobs:
           mv build/meson-logs/scanbuild report
 
       - name: Upload report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: clang-analysis-report
           path: report
@@ -172,11 +172,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date -I)"
-          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+          echo "dir=$CCACHE_DIR"                       >> $GITHUB_OUTPUT
+          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
+          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -184,7 +184,7 @@ jobs:
           restore-keys: ccache-sanitizers-${{ steps.prep-ccache.outputs.yesterday }}
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
@@ -200,7 +200,7 @@ jobs:
         run:  ./.github/scripts/run-sanitizers.sh build sanitizer-logs
 
       - name: Upload logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.conf.logs }}
           path: sanitizer-logs

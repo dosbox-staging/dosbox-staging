@@ -127,14 +127,28 @@ constexpr T1 left_shift_signed(T1 value, T2 amount)
 	return static_cast<T1>(shifted);
 }
 
-inline double decibel_to_gain(const double decibel)
+inline float decibel_to_gain(const float decibel)
 {
-	return pow(10.0, decibel / 20.0);
+	return powf(10.0f, decibel / 20.0f);
 }
 
-inline double gain_to_decibel(const double gain)
+inline float gain_to_decibel(const float gain)
 {
-	return 20.0 * log(gain) / log(10.0);
+	return 20.0f * logf(gain) / logf(10.0f);
+}
+
+// A wrapper to convert a scalar gain to a percentage.
+// This avoids having a bunch of magic *100.0 throughout the code.
+constexpr float gain_to_percentage(const float gain)
+{
+	return gain * 100.0f;
+}
+
+// A wrapper to convert a percentage into a scalar gain.
+// This avoids having a bunch of magic /100.0 throughout the code.
+constexpr float percentage_to_gain(const float percentage)
+{
+	return percentage / 100.0f;
 }
 
 template <typename T>
@@ -171,5 +185,5 @@ template float remap<float>(const float in_min, const float in_max,
 template double remap<double>(const double in_min, const double in_max,
                               const double out_min, const double out_max,
                               const double v);
-
+							
 #endif

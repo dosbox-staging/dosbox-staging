@@ -18,7 +18,7 @@ jobs:
           submodules: false
 
       - id: commit-check
-        run: 'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+        run: echo "has-commits=$(./scripts/has-commits-since.sh '24 hours ago')" >> $GITHUB_OUTPUT
 
     outputs:
       has-commits: ${{ steps.commit-check.outputs.has-commits }}
@@ -35,7 +35,7 @@ jobs:
           - name: Windows
             os: windows-latest
           - name: macOS
-            os: macos-latest
+            os: macos-12
           - name: Linux
             os: ubuntu-20.04
         conf:
@@ -62,15 +62,14 @@ jobs:
       - name:  Check repo for commits
         id:    repo-meta
         shell: bash
-        run:   'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
-
+        run:   echo "has-commits=$(./scripts/has-commits-since.sh '24 hours ago')" >> $GITHUB_OUTPUT
       - name:  Get Date
         id:    get-date
         if:    matrix.system.name == 'Windows'
         shell: bash
-        run:   echo ::set-output name=date::$(date +%Y-%W)
+        run:   echo "date=$(date +%Y-%W)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-msys2
         if:    matrix.system.name == 'Windows'
         with:
@@ -102,7 +101,7 @@ jobs:
       - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
         run: |
-          brew install $(cat packages/macos-latest-brew.txt)
+          brew install $(cat packages/macos-12-brew.txt)
 
       # Workaround frequent HTTPS-based connectivity issues
       # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407

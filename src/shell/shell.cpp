@@ -935,7 +935,7 @@ static char const * const init_line="/INIT AUTOEXEC.BAT";
 void SHELL_Init() {
 	/* Add messages */
 	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path.\n");
-	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type \033[33;1mhelp /all\033[0m .\nA short list of the most often used commands:\n");
+	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type [color=yellow]help /all[reset] .\nA short list of the most often used commands:\n");
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
 	        "Starts the DOSBox Staging command shell.\n"
 	        "Usage:\n"
@@ -961,9 +961,9 @@ void SHELL_Init() {
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type \033[31m%c:\033[0m\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type [color=light-red]%c:[reset]\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry [color=light-red]cd %s[reset]\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with [color=light-red]C:[reset].\n");
 	MSG_Add("SHELL_CMD_DATE_HELP", "Displays or changes the internal date.\n");
 	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
 	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
@@ -1031,7 +1031,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_INTRO"," Directory of %s\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%17d file(s) %21s bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%17d dir(s)  %21s bytes free\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m or \033[1;33mintro mount\033[0m for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE", "Press a key to continue...");
 	MSG_Add("SHELL_CMD_PAUSE_HELP", "Waits for a keystroke to continue.\n");
@@ -1055,36 +1055,36 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives");
 
 	MSG_Add("SHELL_STARTUP_BEGIN",
-	        "\033[44;1m╔════════════════════════════════════════════════════════════════════╗\n"
-	        "║ \033[32mWelcome to DOSBox Staging %-40s\033[37m ║\n"
+	        "[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
+	        "║ [color=green]Welcome to DOSBox Staging %-40s[color=white] ║\n"
 	        "║                                                                    ║\n"
-	        "║ For a short introduction for new users type: \033[33mINTRO\033[37m                 ║\n"
-	        "║ For supported shell commands type: \033[33mHELP\033[37m                            ║\n"
+	        "║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║\n"
+	        "║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║\n"
 	        "║                                                                    ║\n"
-	        "║ To adjust the emulated CPU speed, use \033[31m%s+F11\033[37m and \033[31m%s+F12\033[37m.%s%s       ║\n"
-	        "║ To activate the keymapper \033[31m%s+F1\033[37m.%s                                 ║\n"
-	        "║ For more information read the \033[36mREADME\033[37m file in the DOSBox directory. ║\n"
+	        "║ To adjust the emulated CPU speed, use [color=red]%s+F11[color=white] and [color=red]%s+F12[color=white].%s%s       ║\n"
+	        "║ To activate the keymapper [color=red]%s+F1[color=white].%s                                 ║\n"
+	        "║ For more information read the [color=cyan]README[color=white] file in the DOSBox directory. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_CGA",
 	        "║ DOSBox supports Composite CGA mode.                                ║\n"
-	        "║ Use \033[31mF12\033[37m to set composite output ON, OFF, or AUTO (default).        ║\n"
-	        "║ \033[31mF10\033[37m selects the CGA settings to change and \033[31m(%s+)F11\033[37m changes it.   ║\n"
+	        "║ Use [color=red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║\n"
+	        "║ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
-	        "║ Use \033[31mF11\033[37m to cycle through green, amber, white and paper-white mode, ║\n"
-	        "║ and \033[31m%s+F11\033[37m to change contrast/brightness settings.                ║\n");
+	        "║ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, ║\n"
+	        "║ and [color=red]%s+F11[reset] to change contrast/brightness settings.                ║\n");
 	MSG_Add("SHELL_STARTUP_HERC",
-	        "║ Use \033[31mF11\033[37m to cycle through white, amber, and green monochrome color. ║\n"
+	        "║ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_DEBUG",
-	        "║ Press \033[31m%s+Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m. ║\n"
+	        "║ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_END",
-	        "║ \033[33mhttps://dosbox-staging.github.io\033[37m                                   ║\n"
-	        "╚════════════════════════════════════════════════════════════════════╝\033[0m\n"
+	        "║ [color=yellow]https://dosbox-staging.github.io[color=white]                                   ║\n"
+	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
 	        "\n");
 
-	MSG_Add("SHELL_STARTUP_SUB","[color=green]" CANONICAL_PROJECT_NAME " %s\033[0m\n");
+	MSG_Add("SHELL_STARTUP_SUB","[color=green]" CANONICAL_PROJECT_NAME " %s[reset]\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays or changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
 	        "Usage:\n"
@@ -1472,13 +1472,13 @@ void SHELL_Init() {
 			"Displays or changes file attributes.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
 	        "Usage:\n"
-	        "  \033[32;1mattrib\033[0m \033[37;1m[ATTRIBUTES]\033[0m \033[36;1mPATTERN\033[0m [/S]\n"
+	        "  [color=green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[37;1mATTRIBUTES\033[0m are attributes to apply, including one or more of the following:\n"
-	        "             \033[37;1m+R\033[0m, \033[37;1m-R\033[0m, \033[37;1m+A\033[0m, \033[37;1m-A\033[0m, \033[37;1m+S\033[0m, \033[37;1m-S\033[0m, \033[37;1m+H\033[0m, \033[37;1m-H\033[0m\n"
+	        "  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:\n"
+	        "             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]\n"
 	        "             Where: R = Read-only, A = Archive, S = System, H = Hidden\n"
-	        "  \033[36;1mPATTERN\033[0m    can be either an exact filename or an inexact filename with\n"
+	        "  [color=cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with\n"
 	        "             wildcards, which are the asterisk (*) and the question mark (?),\n"
 	        "             or an exact name of a directory."
 	        "\n"
@@ -1487,8 +1487,8 @@ void SHELL_Init() {
 	        "  If not specified, the command shows the current file/directory attributes.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mattrib\033[0m \033[36;1mfile.txt\033[0m\n"
-	        "  \033[32;1mattrib\033[0m \033[37;1m+R\033[0m \033[37;1m-A\033[0m \033[36;1m*.txt\033[0m\n");
+	        "  [color=green]attrib[reset] [color=cyan]file.txt[reset]\n"
+	        "  [color=green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=cyan]*.txt[reset]\n");
 	MSG_Add("SHELL_CMD_ATTRIB_GET_ERROR", "Unable to get attributes: %s\n");
 	MSG_Add("SHELL_CMD_ATTRIB_SET_ERROR", "Unable to set attributes: %s\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP",

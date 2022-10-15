@@ -167,7 +167,7 @@ public:
 	             const std::set<ChannelFeature> &features);
 	~MixerChannel();
 
-	bool HasFeature(ChannelFeature feature);
+	bool HasFeature(ChannelFeature feature) const;
 	int GetSampleRate() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);

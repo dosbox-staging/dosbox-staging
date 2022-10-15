@@ -151,13 +151,13 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
                                    const uint8_t data)
 {
 	auto calc_volume_gain = [](const int value) {
-		constexpr auto min_gain_db = -128.0;
-		constexpr auto max_gain_db = 6.0;
-		constexpr auto step_db     = 2.0;
+		constexpr auto min_gain_db = -128.0f;
+		constexpr auto max_gain_db = 6.0f;
+		constexpr auto step_db     = 2.0f;
 
-		auto val     = value - volume_0db_value;
+		auto val     = static_cast<float>(value - volume_0db_value);
 		auto gain_db = clamp(val * step_db, min_gain_db, max_gain_db);
-		return static_cast<float>(decibel_to_gain(gain_db));
+		return decibel_to_gain(gain_db);
 	};
 
 	auto calc_filter_gain_db = [](const int value) {

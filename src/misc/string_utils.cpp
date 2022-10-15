@@ -21,8 +21,9 @@
 #include "string_utils.h"
 
 #include <algorithm>
-#include <vector>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 bool is_hex_digits(const std::string_view s) noexcept
 {
@@ -179,6 +180,16 @@ std::vector<std::string> split(const std::string &seq)
 	return words;
 }
 
+bool ciequals(const char a, const char b)
+{
+	return tolower(a) == tolower(b);
+}
+
+bool iequals(const std::string &a, const std::string &b)
+{
+	return std::equal(a.begin(), a.end(), b.begin(), b.end(), ciequals);
+}
+
 char *strip_word(char *&line)
 {
 	char *scan = line;
@@ -222,4 +233,43 @@ void clear_language_if_default(std::string &l)
 	if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
 		l.clear();
 	}
+}
+
+std::optional<float> parse_value(const std::string &s, const float min_value,
+                                 const float max_value)
+{
+	// parse_value can check if a string holds a number (or not), so we expect
+	// exceptions and return an empty result to indicate conversion status.
+	try {
+		return std::clamp(std::stof(s), min_value, max_value);
+		// Note: stof can throw invalid_argument and out_of_range
+	} catch (const std::invalid_argument &) {
+		// do nothing, we expect these
+	} catch (const std::out_of_range &) {
+		// do nothing, we expect these
+	}
+	return {}; // empty
+}
+
+std::optional<float> parse_percentage(const std::string &s)
+{
+	constexpr auto min_percentage = 0.0f;
+	constexpr auto max_percentage = 100.0f;
+	return parse_value(s, min_percentage, max_percentage);
+}
+
+std::optional<float> parse_prefixed_value(const char prefix, const std::string &s,
+                                          const float min_value, const float max_value)
+{
+	if (s.size() <= 1 || !ciequals(s[0], prefix))
+		return {};
+
+	return parse_value(s.substr(1), min_value, max_value);
+}
+
+std::optional<float> parse_prefixed_percentage(const char prefix, const std::string &s)
+{
+	constexpr auto min_percentage = 0.0f;
+	constexpr auto max_percentage = 100.0f;
+	return parse_prefixed_value(prefix, s, min_percentage, max_percentage);
 }

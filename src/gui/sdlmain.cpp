@@ -1283,14 +1283,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
 
-	if (sdl.draw.has_changed) {
+	if (sdl.draw.has_changed)
 		setup_presentation_mode(sdl.frame.mode);
-		log_display_properties(sdl.draw.width,
-		                       sdl.draw.height,
-		                       sdl.scaling_mode,
-		                       sdl.desktop.type,
-		                       sdl.pp_scale);
-	}
 
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
@@ -2124,6 +2118,13 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
+
+	if (sdl.draw.has_changed)
+		log_display_properties(sdl.draw.width,
+		                       sdl.draw.height,
+		                       sdl.scaling_mode,
+		                       sdl.desktop.type,
+		                       sdl.pp_scale);
 
 	if (retFlags)
 		GFX_Start();

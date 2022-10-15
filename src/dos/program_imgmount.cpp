@@ -531,18 +531,16 @@ void IMGMOUNT::AddMessages() {
 #endif
 	);
     
-    MSG_Add("PROGRAM_IMGMOUNT_STATUS_1",
-	        "The currently mounted disk and CD image drives are:\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
 	        "Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
-		"For \033[33mCD-ROM\033[0m images:   \033[34;1mIMGMOUNT drive-letter location-of-image -t iso\033[0m\n"
+		"For [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT drive-letter location-of-image -t iso[reset]\n"
 		"\n"
-		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
+		"For [color=light-yellow]hardrive[reset] images: Must specify drive geometry for hard drives:\n"
 		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
-		"\033[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl\033[0m\n");
+		"[color=blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]\n");
 	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE",
 		"No drive available\n");
 	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",
@@ -556,7 +554,7 @@ void IMGMOUNT::AddMessages() {
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND","Image file not found.\n");
-	MSG_Add("PROGRAM_IMGMOUNT_MOUNT","To mount directories, use the \033[34;1mMOUNT\033[0m command, not the \033[34;1mIMGMOUNT\033[0m command.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MOUNT","To mount directories, use the [color=blue]MOUNT[reset] command, not the [color=blue]IMGMOUNT[reset] command.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED","Drive already mounted at that letter.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");

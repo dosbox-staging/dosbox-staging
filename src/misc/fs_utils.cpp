@@ -21,11 +21,32 @@
 #include "fs_utils.h"
 
 #include <cassert>
+#include <chrono>
+#include <fstream>
 
 #include "checks.h"
 #include "std_filesystem.h"
 
 CHECK_NARROWING();
+
+// return the lines from the given text file or an empty optional
+std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file)
+{
+	std::ifstream input_file(text_file, std::ios::binary);
+	if (!input_file.is_open())
+		return {};
+
+	std::vector<std::string> lines = {};
+
+	std::string line = {};
+	while (getline(input_file, line)) {
+		lines.emplace_back(std::move(line));
+		line = {}; // reset after moving
+	}
+
+	input_file.close();
+	return lines;
+}
 
 std_fs::path simplify_path(const std_fs::path &original_path) noexcept
 {
@@ -56,4 +77,31 @@ std_fs::path simplify_path(const std_fs::path &original_path) noexcept
 	keep_simplest(std_fs::proximate(original_path, ec));
 
 	return simplest_path;
+}
+
+// Convert a filesystem time to a raw time_t value
+
+// the offset between the filesystem time datum and the system datum is fixed,
+// so we compute that difference once and then re-use it for the runtime's
+// lifetime. This reuse is important because querying the hosts's clock is much
+// slower than subtracting a single integer value.
+std::time_t to_time_t(const std_fs::file_time_type &fs_time)
+{
+	using namespace std::chrono;
+	constexpr auto fs_datum = std_fs::file_time_type{};
+
+	// Subtracting file_time_type's default() and now() values gives us a
+	// unitless scalar. which is then added-to by the system time - which
+	// transforms the value into a system-time type.
+	static auto fs_to_sys_delta = fs_datum -
+	                              std_fs::file_time_type::clock::now() +
+	                              system_clock::now();
+
+	// Again, we subtract file_time_type's default() from the actual time
+	// giving us another unitless scalar, and then add the previous system
+	// time delta to transform it to a system-time type.
+	const auto sys_time = time_point_cast<system_clock::duration>(
+	        fs_time - fs_datum + fs_to_sys_delta);
+
+	return system_clock::to_time_t(sys_time);
 }

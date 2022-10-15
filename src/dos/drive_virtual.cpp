@@ -22,10 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <fstream>
 
 #include "cross.h"
 #include "dos_inc.h"
+#include "fs_utils.h"
 #include "shell.h"
 #include "string_utils.h"
 #include "support.h"
@@ -194,7 +194,7 @@ void VFILE_Remove(const char *name, const char *dir = "")
 	}
 }
 
-void z_drive_getpath(std::string &path, const std::string &dirname)
+void VFILE_GetPathZDrive(std::string &path, const std::string &dirname)
 {
 	struct stat cstat;
 	int result = stat(path.c_str(), &cstat);
@@ -215,62 +215,66 @@ void z_drive_getpath(std::string &path, const std::string &dirname)
 	}
 }
 
-template <typename TP>
-time_t to_time_t(TP tp)
+void VFILE_RegisterZDrive(const std_fs::path &z_drive_path)
 {
-	using namespace std::chrono;
-	auto sctp = time_point_cast<system_clock::duration>(
-	        tp - TP::clock::now() + system_clock::now());
-	return system_clock::to_time_t(sctp);
-}
+	// How many levels deep should we register Z: entries? It seems the Z:
+	// virtual drive can handle one level.
+	constexpr auto max_depth = 1;
 
-void z_drive_register(const std::string &path, const std::string &dir)
-{
-	std::vector<std::string> names;
-	const std_fs::path pathdir = path;
-	if (path.length()) {
-		for (const auto &entry : std_fs::directory_iterator(pathdir)) {
-			const auto name = entry.path().filename();
-			if (!entry.is_directory())
-				names.emplace_back(name.string().c_str());
-			else if (name.string() != "." && name.string() != "..")
-				names.push_back((name.string() + "/").c_str());
-		}
-	}
-	std_fs::path fullname;
-	for (std::string name : names) {
-		if (!name.length())
+	// Keep recursing past permission issues and follow symlinks
+	constexpr auto idir_opts = std_fs::directory_options::skip_permission_denied |
+	                           std_fs::directory_options::follow_directory_symlink;
+
+	// DOSBox's virtual-file system uses the forward slash as magic
+	// indicator when deciding if entries are files or directories.
+	constexpr auto dir_indicator = "/";
+
+	// Check if the provided path is invalid
+	if (z_drive_path.empty() || !std_fs::is_directory(z_drive_path))
+		return;
+
+	std::error_code ec = {};
+	using idir = std_fs::recursive_directory_iterator;
+	for (auto it = idir(z_drive_path, idir_opts, ec); it != idir(); ++it) {
+		if (ec)
+			break; // stop itterating if it had a problem
+
+		// Get state of the entry
+		const auto is_dir  = it->is_directory(ec);
+		const auto is_file = it->is_regular_file(ec);
+
+		// Only proceed if either depth is acceptable.
+		const auto dir_depth_ok  = is_dir && it.depth() < max_depth;
+		const auto file_depth_ok = is_file && it.depth() <= max_depth;
+		if (!dir_depth_ok && !file_depth_ok)
 			continue;
-		fullname = pathdir / name;
-		if (!std_fs::exists(fullname)) {
-			fullname = GetExecutablePath() / fullname;
-			if (!std_fs::exists(fullname))
-				continue;
+
+		// Get the entry's name without parent directories.
+		const auto relative = it->path().lexically_relative(z_drive_path);
+		const auto name = relative.filename().string();
+
+		// Get the entry's parent(s) without the name. DOSBox's vfile
+		// system expects directories in the root need a "/" parent,
+		// where as files in the root need an empty parent.
+		auto parent = relative.parent_path().string();
+		if (!parent.empty()) {
+			parent.insert(0, dir_indicator);
+			parent.append(dir_indicator);
+		} else if (is_dir) {
+			parent = dir_indicator;
 		}
-		fztime = fzdate = 0;
-		const auto filetime = to_time_t(std_fs::last_write_time(fullname));
-		if (const struct tm *ltime = localtime(&filetime); ltime != 0) {
-			fztime = DOS_PackTime(*ltime);
-			fzdate = DOS_PackDate(*ltime);
-		}
-		if (name.back() == '/' && dir == "/") {
-			name.pop_back();
-			VFILE_Register(name.c_str(), nullptr, 0, dir.c_str());
-			fztime = fzdate = 0;
-			z_drive_register((pathdir / name).string(), dir + name + "/");
-			continue;
-		}
-		std::ifstream file(fullname, std::ios::in | std::ios::binary);
-		if (file.is_open()) {
-			const auto size = (uint32_t)std_fs::file_size(fullname);
-			std::string content(size, '\0');
-			file.read(content.data(), size);
-			file.close();
-			VFILE_Register(name.c_str(),
-			               (uint8_t *)content.c_str(), size,
-			               dir == "/" ? "" : dir.c_str());
-		}
-		fztime = fzdate = 0;
+		// Load the file's data, if it's a file.
+		const auto blob = is_file ? LoadResourceBlob(it->path(), ResourceImportance::Optional)
+		                          : std::vector<uint8_t>();
+
+		// Set global time values for the entry about to be registered
+		const auto rawtime  = to_time_t(it->last_write_time(ec));
+		const auto timeinfo = localtime(&rawtime);
+		fztime = timeinfo ? DOS_PackTime(*timeinfo) : 0;
+		fzdate = timeinfo ? DOS_PackDate(*timeinfo) : 0;
+
+		// Register the entry's name, data, and parent
+		VFILE_Register(name.c_str(), blob, parent.c_str());
 	}
 }
 

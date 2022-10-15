@@ -307,15 +307,16 @@ atomic_code = '''
 #include <atomic>
 #include <cstdint>
 int main() {
-  std::atomic<std::int16_t> x16 = 1;
   std::atomic<std::int32_t> x32 = 1;
-  return static_cast<int>(x32.load() - x16.load());
+  std::atomic<std::int64_t> x64 = 1;
+  return static_cast<int>(x64.load() - x32.load());
 }
 '''
-atomic_dep = dependency('', required: false)
-if not cxx.links(atomic_code, name: 'compiler has built-in atomics')
-    atomic_dep = cxx.find_library('atomic')
-endif
+is_builtin_atomic = cxx.links(
+    atomic_code,
+    name: 'compiler has built-in atomics',
+)
+atomic_dep = dependency('atomic', required: not is_builtin_atomic)
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -373,27 +374,34 @@ zlib_dep = dependency(
 speexdsp_dep = dependency(
     'speexdsp',
     allow_fallback: false,
+    required: false,
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
 )
 
-# The system has SpeexDSP, so test its floating-point handling
-if speexdsp_dep.found()
+# The library needs to be available and testable to be trusted
+can_trust_system_speexdsp = (
+    speexdsp_dep.found()
+    and meson.can_run_host_binaries()
+)
+
+# Test the library. Trust is dropped if the test fails.
+if can_trust_system_speexdsp
     system_speexdsp_test = cxx.run(
         files('contrib/check-speexdsp/test_speexdsp_float_api.cpp'),
         dependencies: speexdsp_dep,
         name: 'SpeexDSP system library has reliable floating-point API',
     )
-    is_system_speexdsp_reliable = (
+    can_trust_system_speexdsp = (
         system_speexdsp_test.compiled()
         and system_speexdsp_test.returncode() == 0
     )
-    if is_system_speexdsp_reliable
+    if can_trust_system_speexdsp
         speexdsp_summary_msg = 'system library'
     endif
 endif
 
-# The system doesn't have SpeexDSP or it's unreiable, so use the wrap
-if not speexdsp_dep.found() or not is_system_speexdsp_reliable
+# Use the wrap if the system doesn't have SpeexDSP, we couldn't test it, or testing failed
+if not can_trust_system_speexdsp
     speexdsp_dep = subproject(
         'speexdsp',
         default_options: default_wrap_options,

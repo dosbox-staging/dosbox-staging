@@ -97,7 +97,7 @@ przyspieszenia myszy. Działa albo na pełnym ekranie, albo kiedy kursor myszy
 jest przejęty w trybie okienkowym.
 .
 :CONFIG_WAITONERROR
-Czekanie przed zamknięciem konsoli jeśli DOSBox kończy pracę z błędem.
+Czekanie przed zamknięciem konsoli po wystąpieniu błędu.
 .
 :CONFIG_PRIORITY
 Priorytet zadania, kiedy emulator jest aktywny/nieaktywny, odpowiednio.
@@ -147,7 +147,8 @@ Obsługa uszkodzonych bloków MCB (Memory Control Blocks):
   repair:  Naprawa (i zaraportowanie) uzywając sąsiednich bloków.
   report:  Tylko naprawa.
   allow:   Zignorowanie problemu, jak w rzeczywistym sprzęcie.
-The default (deny) is recommended unless a game is failing with MCB corruption errors.
+Ustawienie domyślne (deny) jest zalecane, chyba że gra zgłasza problemy z
+uszkodzonym MCB.
 .
 :CONFIG_VMEMSIZE
 Rozmiar pamięci graficznej w megabajtach (1-8) lub kilobajtach (256-8192).
@@ -236,9 +237,15 @@ Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
   colodore-sat:  Paleta Colodore z nasyceniem większym o 20%.
   dga16:         Nowoczesne podejście do palety CGA, ze stonowanym kontrastem.
 Można również podać własny zestaw kolorów, jako 16 rozdzielonych spacjami
-szesnastkowych kodów, po 6 bitów na kolor. Przykład: czarny to 000000,
-biały to 3f3f3f, pełna czerwień to 3f0000. Można też podać kolory w postaci
-dziesiętnej, np. (255, 0, 255) to magenta.
+lub przecinkami wartości, jako 3- lub 6-cyfrowe liczby szesnastkowe (np. #f00
+lub #ff0000 to czerwony) lub dziesiętne triplety RGB, (np. (255, 0, 255) to
+magenta). Paleta 16 kolorów jest ułożona następująco:
+czarny, niebieski, zielony, cyjan, czerwony, magenta, brązowy, jasno-szary,
+ciemno-szary, jasno-niebieski, jasno-zielony, jasny cyjan, jasno-czerwony,
+jasny magenta, żółty, biały.
+Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
+#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+#555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff $ffff55 #ffffff
 .
 :CONFIG_SCALER
 Skaler do powiększania obrazu o niskiej rozdzielczości. Dodanie 'forced'
@@ -991,6 +998,24 @@ enumeracja nieobsługiwana
 :MIDI_DEVICE_NOT_CONFIGURED
 urządzenie nie zostało skonfigurowane
 .
+:MOUNT_TYPE_LOCAL_DIRECTORY
+katalog lokalny
+.
+:MOUNT_TYPE_CDROM
+CD-ROM
+.
+:MOUNT_TYPE_FAT
+obraz FAT
+.
+:MOUNT_TYPE_ISO
+obraz ISO
+.
+:MOUNT_TYPE_VIRTUAL
+wewnętrzny dysk wirtualny
+.
+:MOUNT_TYPE_UNKNOWN
+nieznany typ
+.
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .
@@ -1058,12 +1083,12 @@ Obraz dysku jest tylko do odczytu! To może powodować problemy.
 To polecenie startuje system operacyjny z obrazu dyskietki lub dysku twardego.
 
 Można podać kilka obrazów dyskietek, przełączanych za pomocą %s+F4. Opcją -l
-można podać dysk, z którego ma zostać wystartowany system, domyślny to A.
+można podać dysk, z którego ma zostać uruchomiony system, domyślny to A.
 Jedyne dozwolone litery dysków to A, C, oraz D. Aby wystartować system z
-obrazu dysku twardego (C lub D) musi on być wczesniej zamontowany poleceniem
-[color=green]imgmount[reset].
+obrazu dysku twardego (C lub D) musi on być wcześniej zamontowany poleceniem
+[color=blue]imgmount[reset].
 
-Polecenie [color=green]boot[reset] /? wyświetla pełen tekst pomocy.
+Polecenie [color=blue]boot /?[reset] wyświetla pełen tekst pomocy.
 .
 :PROGRAM_BOOT_UNABLE
 Nie można wystartować systemu z dysku %c
@@ -1152,7 +1177,9 @@ Dysk %c jest zamontowany jako '%s'.
 
 .
 :PROGRAM_MOUNT_STATUS_1
+
 Lista zamontowanych dysków:
+
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -1180,10 +1207,6 @@ Przykłady:
   [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-Aktualnie zamontowane obrazy dyskietek, płyt CD i dysków twardych:
-
-.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 Podaj literę dysku, pod którą zamontowany będzie obraz.
 
@@ -1193,8 +1216,11 @@ Podaj numer dysku (0 - 3), gdzie zamontowany będzie obraz (0=fda, 1=fdb, 2=hda,
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Podaj geometrię dysku.
+Dla obrazów [color=light-yellow]CD-ROM[reset]:           [color=blue]IMGMOUNT dysk plikobraz -t iso[reset]
 
+Dla obrazów [color=light-yellow]dysków twardych[reset]:  Geometria w formacie
+bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
+[color=blue]IMGMOUNT dysk plikobraz -size bps,spc,hpc,cyl[reset]
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
 Żaden obraz nie został zamontowany.
@@ -1231,7 +1257,7 @@ Nie znaleziono pliku obrazu.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Aby zamontować katalog użyj polecenia '[color=green]mount[reset], a nie [color=green]imgmount[reset].
+Aby zamontować katalog użyj polecenia '[color=blue]mount[reset], a nie [color=blue]imgmount[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1255,7 +1281,7 @@ Używanie wielu plików jest obsługiwane tylko dla obrazów cue/iso.
 
 .
 :PROGRAM_INTRO
-[2J[color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dźwiękiem i grafiką.
+[erases=entire][color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dźwiękiem i grafiką.
 DOSBox tworzy dla Ciebie powłokę, która wygląda jak stary, poczciwy DOS.
 
 Informacje o montowaniu dysków, wpisz:      [color=blue]intro mount[reset]
@@ -1269,27 +1295,27 @@ Więcej informacji o DOSBox Staging znajdziesz (po angielsku) na wiki:
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[color=green]Kilka poleceń na początek[reset]
+[erases=entire][color=green]Kilka poleceń na początek[reset]
 Zanim uzyskasz dostęp do plików na Twoim dysku,
 musisz zamontować zawierający je katalog.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m╔═══════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosgames\[37m stworzy dysk C z zawartością z katalogu c:\dosgames. ║
+[bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c c:\dosgames\[color=white] stworzy dysk C z zawartością z katalogu c:\dosgames. ║
 ║                                                                           ║
-║ [32mc:\dosgames\[37m to tylko przykład. Zastąp go swoim własnym katalogiem.[37m       ║
-╚═══════════════════════════════════════════════════════════════════════════╝[0m
+║ [color=green]c:\dosgames\[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.       ║
+╚═══════════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1m╔════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/dosgames[37m stworzy dysk C z zawartością z katalogu ~/dosgames. ║
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c ~/dosgames[color=white] stworzy dysk C z zawartością z katalogu ~/dosgames. ║
 ║                                                                        ║
-║ [32m~/dosgames[37m to tylko przykład. Zastąp go swoim własnym katalogiem.[37m      ║
-╚════════════════════════════════════════════════════════════════════════╝[0m
+║ [color=green]~/dosgames[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.      ║
+╚════════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
@@ -1298,74 +1324,75 @@ Po pomyślnym zamontowaniu katalogu, wpisz [color=blue]c:[reset] aby przejść n
 utworzony dysk. Wpisz [color=blue]dir[reset], żeby obejrzeć jego zawartość. Polecenie [color=blue]cd[reset]
 pozwoli Ci przejść do wybranego katalogu (rozpoznasz je po oznaczeniu
 [color=yellow]<DIR>[reset] w wyświetlonej zawartości).
-Możesz uruchamiać programy o rozszerzeniach [31m.exe[reset], [31m.bat[reset] oraz [31m.com[reset], wpisując
+Możesz uruchamiać programy o rozszerzeniach [color=light-red].exe[reset], [color=light-red].bat[reset] oraz [color=light-red].com[reset], wpisując
 ich nazwy w wierszu poleceń.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
+[erases=entire][color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
 DOSBox emuluje napędy CD-ROM na dwóch poziomach.
 
-Poziom [33mpodstawowy[0m używa zwykłych katalogów; instaluje sterownik MSCDEX
+Poziom [color=light-yellow]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
 i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
-[34;1mmount D C:\katalog -t cdrom[0m
-Jeśli to nie działa, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
-[34;1mmount D C:\katalog -t cdrom -label ETYKIETA[0m
+[color=blue]mount D C:\katalog -t cdrom[reset]
+Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
+[color=blue]mount D C:\katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsługa.
+Poziom [color=light-yellow]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
 Działa tylko z rzeczywistymi napędami CD-ROM:
-[34;1mmount d [0;31mX:\[34;1m -t cdrom -usecd [33m0[0m
-Zastąp [0;31mX:\[0m przez lokację Twojego napędu CD-ROM.
-Zastąp [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[34;1mmount -listcd[0m
+[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
+Zastąp [color=light-red]D:\[reset] przez lokację Twojego napędu CD-ROM.
+Zastąp [color=yellow]0[reset] w parametrze [color=blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
+[color=blue]mount -listcd[reset]
 
-Dodatkowo, poleceniem [color=blue]imgmount[reset] możesz użyć montować obrazy w formatach ISO oraz CUE/BIN:
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-[34;1mimgmount D C:\cd.cue -t cdrom[0m
+Dodatkowo, poleceniem [color=blue]imgmount[reset] możesz użyć montować obrazy w formatach ISO
+oraz CUE/BIN:
+[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
+[erases=entire][color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
 DOSBox emuluje napędy CD-ROM na dwóch poziomach.
 
-Poziom [33mpodstawowy[0m używa zwykłych katalogów; instaluje sterownik MSCDEX
+Poziom [color=light-yellow]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
 i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
-[34;1mmount D ~/katalog -t cdrom[0m
-Jeśli to nie działa, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
-[34;1mmount D ~/katalog -t cdrom -label ETYKIETA[0m
+[color=blue]mount D ~/katalog -t cdrom[reset]
+Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
+[color=blue]mount D ~/katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [33mrozszerzony[0m to bardziej niskopoziomowa obsługa.
+Poziom [color=light-yellow]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
 Działa tylko z rzeczywistymi napędami CD-ROM:
-[34;1mmount d [0;31m/dev/przykład[34;1m -t cdrom -usecd [33m0[0m
+[color=blue]mount d[reset] [color=light-red]~/przykład[color=blue] -t cdrom -usecd [color=yellow]0[reset]
 
-Zastąp [0;31m~/dev//dev/przykład[0m przez lokację Twojego napędu CD-ROM.
-Zastąp [33;1m0[0m w parametrze [34;1m-usecd [33m0[0m przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[34;1mmount -listcd[0m
+Zastąp [color=light-red]~/przykład[reset] przez lokację Twojego napędu CD-ROM.
+Zastąp [color=yellow]0[reset] w parametrze [color=blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
+[color=blue]mount -listcd[reset]
 
 Dodatkowo, poleceniem [color=blue]imgmount[reset] możesz montować obrazy płyt w formatach ISO
 oraz CUE/BIN:
-[34;1mimgmount D ~/cd.iso -t cdrom[0m
-[34;1mimgmount D ~/cd.cue -t cdrom[0m
+[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[color=green]Skróty klawiszowe[reset]
-To są domyślne skróty klawiszowe. Można je zmienić za pomocą [33mmapera klawiatury[0m.
+[erases=entire][color=green]Skróty klawiszowe[reset]
+To są domyślne skróty klawiszowe. Można je zmienić za pomocą [color=light-yellow]mapera klawiatury[reset].
 
-[33;1m%s+Enter[0m  Przełącz pomiędzy pełnym ekranem a trybem okienkowym.
-[33;1m%s+Pause[0m  Pauza lub wznowienie działania emulatora..
-[33;1m%s+F1[0m   %s Uruchom [33mmapera klawiatury[0m.
-[33;1m%s+F4[0m   %s Podmień zamontowany obraz na kolejny, sprawdź zmiany
+[color=yellow]%s+Enter[reset]  Przełącz pomiędzy pełnym ekranem a trybem okienkowym.
+[color=yellow]%s+Pause[reset]  Pauza lub wznowienie działania emulatora..
+[color=yellow]%s+F1[reset]   %s Uruchom [color=light-yellow]mapera klawiatury[reset].
+[color=yellow]%s+F4[reset]   %s Podmień zamontowany obraz na kolejny, sprawdź zmiany
            na zamontowanych dyskach.
-[33;1m%s+F5[0m   %s Zapisz zrzut ekranu.
-[33;1m%s+F6[0m   %s Start/Stop nagrywania dźwięku do pliku WAV.
-[33;1m%s+F7[0m   %s Start/Stop nagrywania wideo do pliku AVI, z kodekiem ZMBV.
-[33;1m%s+F8[0m   %s Wyłącz/Włącz dźwięk.
-[33;1m%s+F9[0m   %s Zakończ pracę emulatora.
-[33;1m%s+F10[0m  %s Przejmij/Zwolnij kursor myszy.
-[33;1m%s+F11[0m  %s Zwolnij emulację.
-[33;1m%s+F12[0m  %s Przyspiesz emulację.
-[33;1m%s+F12[0m    Odblokuj maksymalną prędkość (tryb turbo).
+[color=yellow]%s+F5[reset]   %s Zapisz zrzut ekranu.
+[color=yellow]%s+F6[reset]   %s Start/Stop nagrywania dźwięku do pliku WAV.
+[color=yellow]%s+F7[reset]   %s Start/Stop nagrywania wideo do pliku AVI, z kodekiem ZMBV.
+[color=yellow]%s+F8[reset]   %s Wyłącz/Włącz dźwięk.
+[color=yellow]%s+F9[reset]   %s Zakończ pracę emulatora.
+[color=yellow]%s+F10[reset]  %s Przejmij/Zwolnij kursor myszy.
+[color=yellow]%s+F11[reset]  %s Zwolnij emulację.
+[color=yellow]%s+F12[reset]  %s Przyspiesz emulację.
+[color=yellow]%s+F12[reset]    Odblokuj maksymalną prędkość (tryb turbo).
 
 .
 :PROGRAM_KEYB_INFO
@@ -1748,7 +1775,7 @@ Nieprawidłowa ścieżka.
 
 .
 :SHELL_CMD_HELP
-Aby zobaczyć listę wszystkich obsługiwanych komend, wpisz [33;1mhelp /all[0m.
+Aby zobaczyć listę wszystkich obsługiwanych komend, wpisz [color=yellow]help /all[reset].
 Krótka lista najczęściej używanych komend:
 
 .
@@ -1794,16 +1821,16 @@ Nie można przejść do '%s'.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Aby przejść do innego dysku wpisz np. [31m%c:[0m
+Aby przejść do innego dysku wpisz np. [color=light-red]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Nazwa katalogu jest dłuższa niż 8 znaków i/lub zawiera spacje.
-Spróbuj [31mcd %s[0m
+Spróbuj [color=light-red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Wciąż jesteś na dysku Z:, wpisz [31mC:[0m aby przejść na zamontowany dysk.
+Wciąż jesteś na dysku Z:, wpisz [color=light-red]C:[reset] aby przejść na zamontowany dysk.
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1969,7 +1996,7 @@ Plik '%s' już istnieje.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Dysk %c nie istnieje!
-Musisz go najpierw [31mzamontować[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyskać więcej informacji.
+Musisz go najpierw [color=light-red]zamontować[reset]. Wpisz [color=yellow]intro[reset] lub [color=yellow]intro mount[reset] aby uzyskać więcej informacji.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2016,50 +2043,51 @@ składni lub tym, że docelowy dysk jest używany.
 Polecenia SUBST można użyć jedynie na lokalnych dyskach
 .
 :SHELL_STARTUP_BEGIN
-[44;1m╔════════════════════════════════════════════════════════════════════╗
-║ [32mWitaj w DOSBox Staging %-43s[37m ║
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
+║ [color=green]Witaj w DOSBox Staging %-43s[color=white] ║
 ║                                                                    ║
-║ Krótki wstęp dla nowych użytkowników, wpisz: [33mINTRO[37m                 ║
-║ Aby zobaczyć listę wspieranych komend, wpisz: [33mHELP[37m                 ║
+║ Krótki wstęp dla nowych użytkowników, wpisz: [color=light-yellow]INTRO[color=white]                 ║
+║ Aby zobaczyć listę wspieranych komend, wpisz: [color=light-yellow]HELP[color=white]                 ║
 ║                                                                    ║
-║ Aby dostosować prędkość emulatora, użyj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       ║
-║ Aby zmienić skróty klawiszowe [31m%s+F1[37m.%s                             ║
-║ Więcej (po angielsku) w pliku [36mREADME[37m w katalogu DOSBoksa.          ║
+║ Aby dostosować prędkość emulatora, użyj [color=red]%s+F11[color=white] i [color=red]%s+F12[color=white].%s%s       ║
+║ Aby zmienić skróty klawiszowe, wciśnij [color=red]%s+F1[color=white].%s                    ║
+║ Więcej (po angielsku) w pliku [color=cyan]README[color=white] w katalogu emulatora.         ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb Composite CGA.                                 ║
-║ Wciśnij [31mF12[37m aby włączyć lub wyłączyć tryb composite.               ║
-║ [31m(%s+)F11[37m zmienia barwę; [31m%s+%s+F11[37m zmienia model CGA.%s           ║
+║ Wciśnij [color=red]F12[color=white], aby włączyć lub wyłączyć tryb composite.              ║
+║ [color=red]%s+F11[color=white] zmienia barwę; [color=red]%s+%s+F11[color=white] zmienia model CGA.%s             ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Wciśnij [31mF11[37m kolor mono: jasny biały, biały, pomarańczowy, zielony. ║
-
-║ i [31m%s+F11[37m aby zmienić kontrast/jasność.                            ║
+║ Wciśnij [color=red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
+║ pomarańczowy, zielony. [color=red]%s+F11[color=white] zmienia kontrast/jasność.           ║
+║                                                                    ║
 
 .
 :SHELL_STARTUP_HERC
-║ Wciśnij [31mF11[37m aby zmienić kolor ekaranu mono: jasny biały, biały,    ║
+║ Wciśnij [color=red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
 ║ pomarańczowy, zielony.                                             ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Wciśnij [31m%sPauza[37m aby włączyć debuggera albo włącz plik exe komendą [33mDEBUG[37m. ║
+║ Aby włączyć debuger, wciśnij [color=red]%s+Pause[color=white] lub uruchom DOSBoksa z       ║
+║ parametrem [color=light-yellow]DEBUG[color=white].                                                  ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                                   ║
-╚════════════════════════════════════════════════════════════════════╝[0m
+║ [color=light-yellow]https://dosbox-staging.github.io[color=white]                                   ║
+╚════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[0m
+[color=green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -2675,21 +2703,6 @@ Inne polecenia
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
 .
-:MOUNT_TYPE_LOCAL_DIRECTORY
-katalog lokalny
-.
-:MOUNT_TYPE_CDROM
-CD-ROM
-.
-:MOUNT_TYPE_FAT
-obraz FAT
-.
-:MOUNT_TYPE_ISO
-obraz ISO
-.
-:MOUNT_TYPE_VIRTUAL
-wewnętrzny dysk wirtualny
-.
-:MOUNT_TYPE_UNKNOWN
-nieznany typ
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
 .

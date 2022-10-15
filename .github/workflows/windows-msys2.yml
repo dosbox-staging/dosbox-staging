@@ -22,49 +22,39 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC (MinGW) x86
+          - name: GCC (MinGW) x86 +tests
             toolchain: ""
             arch: i686
             sys: MINGW32
             cc: gcc
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC (MinGW) x86_64
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
-            cc: gcc
-            max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC (UCRT) x86_64
+            run_tests: true
+            build_flags: -Dbuildtype=debug
+
+          - name: GCC (UCRT) x86_64 +debugger
             toolchain: ucrt-
             arch: x86_64
             sys: UCRT64
             cc: gcc
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: Clang x86_64
+            build_flags: -Denable_debugger=normal
+
+          - name: Clang x86_64 +debugger
+            toolchain: clang-
+            arch: x86_64
+            sys: CLANG64
+            cc: clang
+            max_warnings: 1
+            build_flags: -Denable_debugger=normal
+
+          - name: Clang x86_64 +tests
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
             cc: clang
             max_warnings: 0
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-          - name: GCC +tests
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
             run_tests: true
-            cc: gcc
-            max_warnings: 0
             build_flags: -Dbuildtype=debug
-          - name: GCC +debugger
-            toolchain: ""
-            arch: x86_64
-            sys: MINGW64
-            cc: gcc
-            max_warnings: 0
-            build_flags: -Denable_debugger=normal
 
     defaults:
       run:
@@ -107,12 +97,12 @@ jobs:
         id:    prep-ccache
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$(cygpath -w $CCACHE_DIR)"
-          echo "::set-output name=today::$(date -I)"
-          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
-          echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
+          echo "dir=$(cygpath -w $CCACHE_DIR)"                                   >> $GITHUB_OUTPUT
+          echo "today=$(date -I)"                                                >> $GITHUB_OUTPUT
+          echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
+          echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -121,7 +111,7 @@ jobs:
             ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
@@ -206,11 +196,11 @@ jobs:
         id:    prep-ccache
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$(cygpath -w $CCACHE_DIR)"
-          echo "::set-output name=today::$(date -I)"
-          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+          echo "dir=$(cygpath -w $CCACHE_DIR)"         >> $GITHUB_OUTPUT
+          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
+          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v2
+      - uses:  actions/cache@v3.0.11
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -219,7 +209,7 @@ jobs:
             ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-3
 
       - name:  Cache subprojects
-        uses:  actions/cache@v2
+        uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
@@ -285,7 +275,7 @@ jobs:
           }
 
       - name: Wait for MSVC builds to complete
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           checkName: Publish additional Windows artifacts
@@ -348,13 +338,13 @@ jobs:
           C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
 
       - name: Upload package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PKG_RELEASE }}
           path: ${{ env.PKG_RELEASE }}
 
       - name: Upload installer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dosbox-staging-${{ env.version_number }}-setup.exe
           path: ${{ github.workspace }}\out\dosbox-staging-${{ env.version_number }}-setup.exe
@@ -382,7 +372,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API

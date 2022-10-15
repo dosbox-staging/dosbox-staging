@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <cstring>
 #include <map>
+#include <optional>
 #include <set>
 #include <sys/types.h>
 
@@ -228,7 +229,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char *_name,
           do_sleep(HasFeature(ChannelFeature::Sleep))
 {}
 
-bool MixerChannel::HasFeature(const ChannelFeature feature)
+bool MixerChannel::HasFeature(const ChannelFeature feature) const
 {
 	return features.find(feature) != features.end();
 }
@@ -252,14 +253,11 @@ static void set_global_crossfeed(mixer_channel_t channel)
 		crossfeed = default_crossfeed_strength;
 	} else if (crossfeed_pref == "off") {
 		crossfeed = 0.0f;
+	} else if (const auto p = parse_percentage(crossfeed_pref); p) {
+		crossfeed = percentage_to_gain(*p);
 	} else {
-		const auto cf = to_finite<float>(crossfeed_pref);
-		if (std::isfinite(cf) && cf >= 0.0 && cf <= 100.0) {
-			crossfeed = cf / 100.0f;
-		} else {
-			LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
-			            crossfeed_pref.c_str());
-		}
+		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
+		            crossfeed_pref.c_str());
 	}
 	channel->SetCrossfeedStrength(crossfeed);
 }
@@ -1734,10 +1732,12 @@ void MixerChannel::FillUp()
 
 std::string MixerChannel::DescribeLineout() const
 {
+	if (!HasFeature(ChannelFeature::Stereo))
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 	if (output_map == STEREO)
-		return "Stereo";
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO");
 	if (output_map == REVERSE)
-		return "Reverse";
+		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_REVERSE");
 
 	// Output_map is programmtically set (not directly assigned from user
 	// data), so we can assert.
@@ -2123,6 +2123,55 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 static void MIXER_Stop([[maybe_unused]] Section *sec)
 {}
 
+using channels_set_t = std::set<mixer_channel_t>;
+static channels_set_t set_of_channels()
+{
+	channels_set_t channels = {};
+	for (const auto &it : mixer.channels)
+		channels.emplace(it.second);
+	return channels;
+}
+
+// Parse the volume in string form, either in stereo or mono format,
+// and possibly in decibel format, which is prefixed with a 'd'.
+static std::optional<AudioFrame> parse_volume(const std::string &s)
+{
+	auto to_volume = [](const std::string &s) -> std::optional<float> {
+		// try parsing the volume from a percent value
+		constexpr auto min_percent = 0.0f;
+		constexpr auto max_percent = 9999.0f;
+		if (const auto p = parse_value(s, min_percent, max_percent); p)
+			return percentage_to_gain(*p);
+
+		// try parsing the volume from a decibel value
+		constexpr auto min_db = -40.00f;
+		constexpr auto max_db = 39.999f;
+		constexpr auto decibel_prefix = 'd';
+		if (const auto d = parse_prefixed_value(decibel_prefix, s, min_db, max_db); d)
+			return decibel_to_gain(*d);
+
+		return {};
+	};
+	// single volume value
+	auto parts = split(s, ':');
+	if (parts.size() == 1) {
+		if (const auto v = to_volume(parts[0]); v) {
+			AudioFrame volume = {*v, *v};
+			return volume;
+		}
+	}
+	// stereo volume value
+	else if (parts.size() == 2) {
+		const auto l = to_volume(parts[0]);
+		const auto r = to_volume(parts[1]);
+		if (l && r) {
+			AudioFrame volume = {*l, *r};
+			return volume;
+		}
+	}
+	return {};
+}
+
 class MIXER final : public Program {
 public:
 	MIXER()
@@ -2149,8 +2198,36 @@ public:
 		std::vector<std::string> args = {};
 		cmd->FillVector(args);
 
+		auto set_reverb_level = [&](const float level,
+		                            const channels_set_t &selected_channels) {
+			const auto should_zero_other_channels = !mixer.do_reverb;
+
+			// Do we need to start the reverb engine?
+			if (!mixer.do_reverb)
+				configure_reverb("on");
+			for ([[maybe_unused]] const auto &[_, channel] : mixer.channels)
+				if (selected_channels.find(channel) != selected_channels.end())
+					channel->SetReverbLevel(level);
+				else if (should_zero_other_channels)
+					channel->SetReverbLevel(0);
+		};
+
+		auto set_chorus_level = [&](const float level,
+		                            const channels_set_t &selected_channels) {
+			const auto should_zero_other_channels = !mixer.do_chorus;
+
+			// Do we need to start the chorus engine?
+			if (!mixer.do_chorus)
+				configure_chorus("on");
+			for ([[maybe_unused]] const auto &[_, channel] : mixer.channels)
+				if (selected_channels.find(channel) != selected_channels.end())
+					channel->SetChorusLevel(level);
+				else if (should_zero_other_channels)
+					channel->SetChorusLevel(0);
+		};
+
+		auto is_master = false;
 		mixer_channel_t channel = {};
-		auto is_master          = false;
 
 		MIXER_LockAudioDevice();
 		for (auto &arg : args) {
@@ -2169,20 +2246,6 @@ public:
 					continue;
 				}
 			}
-
-			auto parse_prefixed_percentage = [](const char prefix,
-			                                    const std::string &s,
-			                                    float &value_out) {
-				if (s.size() > 1 && s[0] == prefix) {
-					float p = 0.0f;
-					if (sscanf(s.c_str() + 1, "%f", &p)) {
-						value_out = clamp(p / 100.0f, 0.0f, 1.0f);
-						return true;
-					}
-				}
-				return false;
-			};
-
 			const auto global_command = !is_master && !channel;
 
 			constexpr auto crossfeed_command = 'X';
@@ -2191,70 +2254,51 @@ public:
 
 			if (global_command) {
 				// Global commands apply to all non-master channels
-				float value = 0.0f;
-				if (parse_prefixed_percentage(crossfeed_command,
-				                              arg,
-				                              value)) {
+				if (auto p = parse_prefixed_percentage(crossfeed_command, arg); p) {
 					for (auto &it : mixer.channels) {
-						it.second->SetCrossfeedStrength(value);
+						const auto strength = percentage_to_gain(*p);
+						it.second->SetCrossfeedStrength(strength);
 					}
 					continue;
-				} else if (parse_prefixed_percentage(reverb_command,
-				                                     arg,
-				                                     value)) {
-					if (mixer.do_reverb) {
-						for (auto &it : mixer.channels) {
-							it.second->SetReverbLevel(value);
-						}
-					}
+				} else if (p = parse_prefixed_percentage(reverb_command, arg); p) {
+					const auto level = percentage_to_gain(*p);
+					set_reverb_level(level, set_of_channels());
 					continue;
-				} else if (parse_prefixed_percentage(chorus_command,
-				                                     arg,
-				                                     value)) {
-					if (mixer.do_chorus) {
-						for (auto &it : mixer.channels) {
-							it.second->SetChorusLevel(value);
-						}
-					}
+				} else if (p = parse_prefixed_percentage(chorus_command, arg); p) {
+					const auto level = percentage_to_gain(*p);
+					set_chorus_level(level, set_of_channels());
 					continue;
 				}
 
 			} else if (is_master) {
 				// Only setting the volume is allowed for the
 				// master channel
-				ParseVolume(arg, mixer.master_volume);
+				if (const auto v = parse_volume(arg); v) {
+					mixer.master_volume = *v;
+				}
 
 			} else if (channel) {
 				// Adjust settings of a regular non-master channel
-				float value = 0.0f;
-				if (parse_prefixed_percentage(crossfeed_command,
-				                              arg,
-				                              value)) {
-					channel->SetCrossfeedStrength(value);
+				if (auto p = parse_prefixed_percentage(crossfeed_command, arg); p) {
+					const auto strength = percentage_to_gain(*p);
+					channel->SetCrossfeedStrength(strength);
 					continue;
-				} else if (parse_prefixed_percentage(reverb_command,
-				                                     arg,
-				                                     value)) {
-					if (mixer.do_reverb) {
-						channel->SetReverbLevel(value);
-					}
+				} else if (p = parse_prefixed_percentage(reverb_command, arg); p) {
+					const auto level = percentage_to_gain(*p);
+					set_reverb_level(level, {channel});
 					continue;
-				} else if (parse_prefixed_percentage(chorus_command,
-				                                     arg,
-				                                     value)) {
-					if (mixer.do_chorus) {
-						channel->SetChorusLevel(value);
-					}
+				} else if (p = parse_prefixed_percentage(chorus_command, arg); p) {
+					const auto level = percentage_to_gain(*p);
+					set_chorus_level(level, {channel});
 					continue;
 				}
 
 				if (channel->ChangeLineoutMap(arg))
 					continue;
 
-				AudioFrame volume = {};
-				ParseVolume(arg, volume);
-
-				channel->SetVolume(volume.left, volume.right);
+				if (const auto v = parse_volume(arg); v) {
+					channel->SetVolume(v->left, v->right);
+				}
 			}
 		}
 		MIXER_UnlockAudioDevice();
@@ -2304,48 +2348,9 @@ private:
 
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_STEREO", "Stereo");
 
+		MSG_Add("SHELL_CMD_MIXER_CHANNEL_REVERSE", "Reverse");
+
 		MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
-	}
-
-	void ParseVolume(const std::string &s, AudioFrame &volume)
-	{
-		auto vol_parts = split(s, ':');
-		if (vol_parts.empty())
-			return;
-
-		const auto is_decibel = toupper(vol_parts[0][0]) == 'D';
-		if (is_decibel)
-			vol_parts[0].erase(0, 1);
-
-		auto parse_vol_pref = [is_decibel](const std::string &vol_pref,
-		                                   float &vol_out) {
-			const auto vol = to_finite<float>(vol_pref);
-			if (std::isfinite(vol)) {
-				if (is_decibel)
-					vol_out = static_cast<float>(
-					        decibel_to_gain(vol));
-				else
-					vol_out = vol / 100.0f;
-
-				const auto min_vol = static_cast<float>(
-				        decibel_to_gain(-99.99));
-
-				constexpr auto max_vol = 99.99f;
-
-				if (vol_out < min_vol)
-					vol_out = 0;
-				else
-					vol_out = std::min(vol_out, max_vol);
-			} else {
-				vol_out = 0;
-			}
-		};
-
-		parse_vol_pref(vol_parts[0], volume.left);
-		if (vol_parts.size() > 1)
-			parse_vol_pref(vol_parts[1], volume.right);
-		else
-			volume.right = volume.left;
 	}
 
 	void ShowMixerStatus()
@@ -2361,10 +2366,10 @@ private:
 		                        const std::string &chorus) {
 			WriteOut(column_layout.c_str(),
 			         name.c_str(),
-			         volume.left * 100.0f,
-			         volume.right * 100.0f,
-			         gain_to_decibel(volume.left),
-			         gain_to_decibel(volume.right),
+			         static_cast<double>(volume.left * 100.0f),
+			         static_cast<double>(volume.right * 100.0f),
+			         static_cast<double>(gain_to_decibel(volume.left)),
+			         static_cast<double>(gain_to_decibel(volume.right)),
 			         mode.c_str(),
 			         xfeed.c_str(),
 			         reverb.c_str(),
@@ -2422,9 +2427,7 @@ private:
 			auto channel_name = std::string("[color=cyan]") + name +
 			                    std::string("[reset]");
 
-			auto mode = chan->HasFeature(ChannelFeature::Stereo)
-			                  ? chan->DescribeLineout()
-			                  : MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
+			auto mode = chan->DescribeLineout();
 
 			show_channel(convert_ansi_markup(channel_name),
 			             chan->volume,

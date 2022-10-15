@@ -19,89 +19,60 @@ support today's systems.
 [![Coverity status][coverity-badge]][4]
 [![LGTM grade][lgtm-badge]][3]
 
-## Summary of differences compared to upstream
+## Summary of features
 
 ### For developers
 
-|                                | DOSBox Staging                | DOSBox
-|-                               |-                              |-
-| **Version control**            | Git                           | [SVN]
-| **Language**                   | C++17                         | C++03<sup>[1]</sup>
-| **SDL**                        | >= 2.0.5                      | 1.2<sup>＊</sup>
-| **Logging**                    | Loguru for C++<sup>[6]</sup>  | Yes, in-house class
-| **Buildsystem**                | Meson or Visual Studio 2019   | Autotools or Visual Studio 2003
-| **CI**                         | Yes                           | No
-| **Static analysis**            | Yes<sup>[2],[3],[4],[5]</sup> | No
-| **Dynamic analysis**           | Yes                           | No
-| **clang-format**               | Yes                           | No
-| **[Development builds]**       | Yes                           | No
-| **Unit tests**                 | Yes<sup>[6]</sup>             | No
-| **Automated regression tests** | WIP                           | No
+| **Feature**                    | **Status**
+|-                               |-
+| **Version control**            | Git
+| **Language**                   | C++17
+| **SDL**                        | >= 2.0.5
+| **Logging**                    | Loguru for C++<sup>[5]</sup>  
+| **Buildsystem**                | Meson or Visual Studio 2019
+| **CI**                         | Yes
+| **Static analysis**            | Yes<sup>[1],[2],[3],[4]</sup>
+| **Dynamic analysis**           | Yes
+| **clang-format**               | Yes
+| **[Development builds]**       | Yes
+| **Unit tests**                 | Yes<sup>[6]</sup>
+| **Automated regression tests** | WIP
 
-[SVN]:https://sourceforge.net/projects/dosbox/
-[1]:https://sourceforge.net/p/dosbox/patches/283/
-[2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[3]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
-[4]:https://scan.coverity.com/projects/dosbox-staging
-[5]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[1]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[2]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
+[3]:https://scan.coverity.com/projects/dosbox-staging
+[4]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[5]: https://github.com/emilk/loguru
 [6]:tests/README.md
-[7]: https://github.com/emilk/loguru
 [Development builds]:https://dosbox-staging.github.io/downloads/devel/
 
-### Feature differences
+### For users
 
-DOSBox Staging supports features not included in DOSBox SVN.
-Below is a detailed comparison of feature differences between
-DOSBox Staging and DOSBox SVN.
-
-Codecs supported for CD-DA emulation:
-
-|                | DOSBox Staging<sup>†</sup> | DOSBox SVN<sup>‡</sup>
-|-               |-                           |-
-| **Opus**       | Yes (libopus)              | No
-| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[6],＊</sup>
-| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[6],＊,§</sup>
-| **FLAC**       | Yes (built-in)             | No<sup>§</sup>
-| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
-| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
-
-<sup>＊- SDL 1.2 was last updated 2013-08-17 and SDL\_sound 2008-04-20</sup>\
-<sup>† - 8/16/24 bit-depth, 22.05/44.1/48 kHz, and mono or stereo</sup>\
-<sup>‡ - 44.1 kHz stereo only</sup>\
-<sup>§ - Broken or unsupported in either SDL\_sound or DOSBox</sup>
-
-[6]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
-[7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
-
-Feature differences between release binaries (or unpatched sources):
-
-| *Feature*                   | *DOSBox Staging*                                     | *DOSBox SVN*
-|-                            |-                                                     |-
-| **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`         | N/A
-| **Resizable window**        | Yes: for all `output=opengl` modes                   | N/A
-| **Relative window size**    | Yes: `windowresolution=small`, `medium`, or `large`  | `windowresolution=X%`
-| **Window placement**        | Yes: `windowposition = 0,0`, and more<sup>[16]</sup> | Manual placement
-| **[OPL] emulators**         | compat, fast, mame, nuked<sup>[8]</sup>              | compat, fast, mame
-| **[CGA]/mono support**      | Yes: `machine=cga_mono`)<sup>[9]</sup>               | Only CGA with colour
-| **CGA composite modes**     | Yes: `machine=pcjr/tandy/cga` with hotkeys)          | N/A
-| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`          | N/A
-| **Modem phonebook file**    | Yes: `phonebookfile=<name>`                          | N/A
-| **Autotype command**        | Yes<sup>[10]</sup>                                   | N/A
-| **Startup verbosity**       | Yes<sup>[11]</sup>                                   | N/A
-| **[GUS] enhancements**      | Yes<sup>[12]</sup>                                   | N/A
-| **Raw mouse input**         | Yes: `raw_mouse_input=true`                          | N/A
-| **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x                   | Only external synths
-| **[MT-32] emulator**        | Yes<sup>＊</sup>: libmt32emu 2.4.2                   | N/A
-| **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>                    | 2 MiB of RAM
-| **Portable & layered conf** | By default<sup>[15]</sup>                            | With`-userconf` and `-conf`
-| **Translations handling**   | Bundled, see section 14 in README                    | With path to .lng file
-| **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup> | N/A
-| **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file           | N/A
-| **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`         | N/A
-| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>                  | Yes: bootable HDD image
-
-
-<sup>＊- Requires original ROM files</sup>
+| **Feature**                 | **Status**
+|-                            |-
+| **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
+| **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`
+| **Resizable window**        | Yes, for all `output=opengl` modes
+| **Relative window size**    | `windowresolution=small`, `medium`, or `large`  
+| **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
+| **[OPL] emulator**          |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
+| **[CGA]/mono support**      | `machine=cga_mono`<sup>[9]</sup>
+| **CGA composite modes**     | `machine=pcjr/tandy/cga` with hotkeys)
+| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`
+| **Modem phonebook file**    | `phonebookfile=<name>`
+| **Autotype command**        | Yes<sup>[10]</sup>
+| **Startup verbosity**       | Yes<sup>[11]</sup>
+| **[GUS] enhancements**      | Yes<sup>[12]</sup>
+| **Raw mouse input**         | Yes: `raw_mouse_input=true`
+| **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x
+| **[MT-32] emulator**        | Yes: libmt32emu 2.4.2 (Requires ROM files)
+| **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>
+| **Portable & layered conf** | By default<sup>[15]</sup>
+| **Translations handling**   | Bundled, see section 14 in README
+| **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>
+| **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file
+| **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`
+| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -134,7 +105,7 @@ Feature differences between release binaries (or unpatched sources):
 
 ## Get the source
 
-  - Clone the repository (one-time step):
+- Clone the repository (one-time step):
 
     ``` shell
     git clone https://github.com/dosbox-staging/dosbox-staging.git
@@ -160,7 +131,6 @@ DOSBox Staging has the following library dependencies:
 | [SpeexDSP](https://github.com/xiph/speexdsp) (speexdsp)          | n/a         | Audio resampling                               | Mandatory | yes        | yes   | common            |
 | [Tracy Profiler](https://github.com/wolfpld/tracy) (tracy)       | n/a         | Event profile (development)                    | Optional  | yes        | yes   | rare              |
 | [Zlib](https://z-lib.org/) (zlib)                                | 1.2.11      | ZMBV video capture                             | Optional  | yes        | yes   | very common       |
-
 
 ### Linux, macOS
 
@@ -202,6 +172,14 @@ sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel 
 ```
 
 ``` shell
+# Void Linux
+sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
+                     fluidsynth-devel libiir1-devel libmt32emu-devel \
+                     libpng-devel libslirp-devel opusfile-devel \
+                     speexdsp-devel libatomic-devel
+```
+
+``` shell
 # macOS
 xcode-select --install
 brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp speexdsp
@@ -209,20 +187,20 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
 
 ### Build and stay up-to-date with the latest sources
 
-  - Checkout the main branch:
+- Checkout the main branch:
 
     ``` shell
     # commit or stash any personal code changes
     git checkout main -f
     ```
 
-  - Pull the latest updates. This is necessary every time you want a new build:
+- Pull the latest updates. This is necessary every time you want a new build:
 
     ``` shell
     git pull
     ```
 
-  - Setup the build. This is a one-time step either after cloning the repo or
+- Setup the build. This is a one-time step either after cloning the repo or
     cleaning your working directories:
 
     ``` shell
@@ -232,8 +210,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp spe
     The above enables all of DOSBox Staging's functional features. If you're
     interested in seeing all of Meson's setup options, run: `meson configure`.
 
-
-  - Compile the sources. This is necessary every time you want a new build:
+- Compile the sources. This is necessary every time you want a new build:
 
     ``` shell
     meson compile -C build
@@ -254,14 +231,14 @@ is bootstrapped, open PowerShell and run:
 PS:\> .\vcpkg integrate install
 ```
 
-This step will ensure that MSVC can use vcpkg to build, find and links all 
+This step will ensure that MSVC can use vcpkg to build, find and links all
 dependencies.
 
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
-Note, the first time you build a configuration, dependencies will be built 
-automatically and stored in the `vcpkg_installed` directory. This can take 
+Note, the first time you build a configuration, dependencies will be built
+automatically and stored in the `vcpkg_installed` directory. This can take
 a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
@@ -279,7 +256,7 @@ in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
 
 ## Imported branches, community patches, old forks
 
-Commits landing in SVN upstream are imported to this repo in a timely manner,
+Upstream commits are imported to this repo in a timely manner,
 see branch [`svn/trunk`].
 
 - [`svn/*`] - branches from SVN

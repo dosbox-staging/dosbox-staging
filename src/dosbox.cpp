@@ -59,7 +59,6 @@ MachineType machine;
 SVGACards svgaCard;
 
 /* The whole load of startups for all the subfunctions */
-void MSG_Init(Section_prop *);
 void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
@@ -340,7 +339,6 @@ static void DOSBOX_RealInit(Section * sec) {
 	ticksLast=GetTicks();
 	ticksLocked = false;
 	DOSBOX_SetLoop(&Normal_Loop);
-	MSG_Init(section);
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2,
 	                  "speedlock", "Speedlock");
@@ -1021,11 +1019,11 @@ void DOSBOX_Init()
 	Pstring->Set_help(
 	        "Type of joystick to emulate: auto (default),\n"
 	        "auto     : Detect and use any joystick(s), if possible.,\n"
-	        "2axis    : Support up to two joysticks.\n"
-	        "4axis    : Support the first joystick only.\n"
-	        "4axis_2  : Support the second joystick only.\n"
-	        "fcs      : Support a Thrustmaster-type joystick.\n"
-	        "ch       : Support a CH Flightstick-type joystick.\n"
+	        "2axis    : Support up to two joysticks, each with 2 axis\n"
+	        "4axis    : Support the first joystick only, as a 4-axis type.\n"
+	        "4axis_2  : Support the second joystick only, as a 4-axis type.\n"
+	        "fcs      : Emulate joystick as an original Thrustmaster FCS.\n"
+	        "ch       : Emulate joystick as an original CH Flightstick.\n"
 	        "hidden   : Prevent DOS from seeing the joystick(s), but enable them for\n"
 	        "           mapping.\n"
 	        "disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"

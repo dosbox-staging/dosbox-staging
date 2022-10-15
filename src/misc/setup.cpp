@@ -1544,6 +1544,7 @@ const std::string &SETUP_GetLanguage()
 
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
+void MSG_Init(Section_prop *);
 void SETUP_ParseConfigFiles(const std::string &config_path)
 {
 	std::string config_file;
@@ -1572,6 +1573,13 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 			}
 		}
 	}
+
+	// Once we've parsed all the potential conf files, we've down our best
+	// to discover the user's desired language. At this point, we can now
+	// initialize the messaging system which honors the language and loads
+	// those messages.
+	if (const auto sec = control->GetSection("dosbox"); sec)
+		MSG_Init(static_cast<Section_prop *>(sec));
 
 	// Create a new primary if permitted and no other conf was loaded
 	if (wants_primary_conf && !control->configfiles.size()) {

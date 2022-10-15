@@ -111,7 +111,7 @@ e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
 schermo intero o quando il mouse viene catturato in modalità finestra.
 .
 :CONFIG_WAITONERROR
-Attendi prima di chiudere la console in caso di errore di DOSBox.
+Mantiene la console aperta se si verifica un errore.
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
@@ -265,6 +265,14 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
 È possibile impostare colori personalizzati specificando 16 valori di colore
 separati da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
 #ff0000 per rosso), o triplette RGB decimali (es. (255, 0, 255) per magenta).
+I 16 colori sono ordinati come segue:
+nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro, grigio-scuro,
+azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro, magenta-chiaro, giallo,
+e bianco.
+I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre
+sono rispettivamente:
+#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555
+#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
@@ -729,11 +737,11 @@ Filtro per l'uscita audio del DAC PS/1:
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
 auto     : Rileva e usa qualsiasi joystick, se possibile.
-2axis    : Supporta fino a due joystick.
-4axis    : Supporta solo il primo joystick.
-4axis_2  : Supporta solo il secondo joystick.
-fcs      : Supporta un joystick di tipo Thrustmaster.
-ch       : Supporta un joystick di tipo CH Flightstick.
+2axis    : Supporta fino a due joystick, ciascuno con 2 assi.
+4axis    : Supporta solo il primo joystick, come tipo a 4 assi.
+4axis_2  : Supporta solo il secondo joystick, come tipo a 4 assi.
+fcs      : Emula il joystick Thrustmaster FCS.
+ch       : Emula il joystick CH Flightstick.
 hidden   : Impedisce a DOS di vedere i joystick, ma sono abilitali per la
            mappatura.
 disabled : Disabilita completamente i joystick: non saranno interrogati,
@@ -1067,13 +1075,13 @@ dispositivo non configurato
 directory locale
 .
 :MOUNT_TYPE_CDROM
-Unità CD-ROM
+unità CD-ROM
 .
 :MOUNT_TYPE_FAT
-Unità FAT
+unità FAT
 .
 :MOUNT_TYPE_ISO
-Unità ISO
+unità ISO
 .
 :MOUNT_TYPE_VIRTUAL
 unità virtuale interna
@@ -1102,7 +1110,7 @@ Dove:
 Note:
   I [color=cyan]TASTI[reset] forniti in questo comando verranno digitati automaticamente nei
   giochi DOS dopo il loro avvio. La digitazione automatica inizia dopo i
-  secondi di [color=cyan]ATTESA[reset], e ogni pulsante viene inserito in base all'[color=white]ANDATURA[reset] in
+  secondi di [color=cyan]ATTESA[reset], e ogni tasto viene inserito in base all'[color=white]ANDATURA[reset] in
   secondi. Il carattere [color=cyan],[reset] inserisce un ritardo di [color=white]ANDATURA[reset] extra. I valori
   predefiniti di [color=white]ATTESA[reset] e [color=white]ANDATURA[reset] sono rispettivamente 2 e 0.5 secondi, se non
   specificati. È possibile ottenere un elenco di tutti i nomi dei tasti
@@ -1281,10 +1289,6 @@ Esempi:
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]discoAvviabile.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
-:PROGRAM_IMGMOUNT_STATUS_1
-Le unità disco e immagini CD attualmente montate sono:
-
-.
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 È necessario specificare la lettera dell'unità su cui montare l'immagine.
 
@@ -1361,7 +1365,7 @@ L'uso di file multipli è supportato solo per le immagini cue/iso.
 
 .
 :PROGRAM_INTRO
-[2J[color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
+[erases=entire][color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
 DOSBox crea una shell simile al vecchio DOS.
 
 Per informazioni sul montaggio delle unità, digita [color=blue]intro mount[reset]
@@ -1374,25 +1378,25 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[color=green]Ecco alcuni comandi utili per iniziare:[reset]
+[erases=entire][color=green]Ecco alcuni comandi utili per iniziare:[reset]
 Prima di poter utilizzare i file che si trovano sul tuo filesystem,
 Devi montare la directory contenente i file.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[bgcolor=blue]╔══════════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]mount c c:\giochi\ [color=light-white]crea un'unità C con il contenuto di c:\giochi.        ║
+[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c c:\giochi\ [color=white]crea un'unità C con il contenuto di c:\giochi.        ║
 ║                                                                          ║
-║ [color=light-green]c:\giochi\ [color=light-white]è un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ║
+║ [color=green]c:\giochi\ [color=white]è un esempio. Sostituiscilo con la tua directory dei giochi.  ║
 ╚══════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[bgcolor=blue]╔════════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]mount c ~/giochi[color=light-white] crea un'unità C con il contenuto di ~/giochi.         ║
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c ~/giochi[color=white] crea un'unità C con il contenuto di ~/giochi.         ║
 ║                                                                        ║
-║ [color=light-green]~/giochi[color=light-white] è un esempio. Sostituiscilo con la tua directory dei giochi.[color=light-white]  ║
+║ [color=green]~/giochi[color=white] è un esempio. Sostituiscilo con la tua directory dei giochi.  ║
 ╚════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
@@ -1405,7 +1409,7 @@ Puoi eseguire programmi/file con estensione [color=light-red].exe[reset], [color
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
+[erases=entire][color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
 Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
@@ -1417,9 +1421,9 @@ Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unità CD-ROM:
-[color=blue]mount d [reset][color=light-red]D:\ [reset][color=blue]-t cdrom -usecd [color=light-yellow]0[reset]
+[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
 Sostituisci [color=light-red]D:\ [reset]con la posizione del tuo CD-ROM.
-Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
+Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
@@ -1428,7 +1432,7 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
+[erases=entire][color=green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
 Il livello [color=light-yellow]base[reset] funziona su tutte le directory normali, installa MSCDEX e
@@ -1440,9 +1444,9 @@ Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 
 Il livello [color=light-yellow]successivo[reset] aggiunge un supporto di basso livello.
 Pertanto funziona solo su unità CD-ROM:
-[color=blue]mount d [reset][color=light-red]~/esempio[reset][color=blue] -t cdrom -usecd [color=light-yellow]0[reset]
+[color=blue]mount d[reset] [color=light-red]~/esempio[color=blue] -t cdrom -usecd [color=yellow]0[reset]
 Sostituisci [color=light-red]~/esempio[reset] con la posizione del tuo CD-ROM.
-Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=light-yellow]0[reset] con il numero riportato per il tuo CD-ROM
+Sostituisci lo [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] con il numero riportato per il tuo CD-ROM
 se digiti: [color=blue]mount -listcd[reset]
 
 Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
@@ -1451,7 +1455,7 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[color=green]Tasti speciali:[reset]
+[erases=entire][color=green]Tasti speciali:[reset]
 Queste sono le combinazioni di tasti predefinite.
 Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
@@ -1817,6 +1821,9 @@ spento
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Inverso
+.
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
@@ -1893,7 +1900,7 @@ Note:
 
 Esempi:
   [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
+  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Ciao mondo![reset]
   [color=green]command[reset] /init [color=cyan]dir[reset]
 
 .
@@ -1958,10 +1965,10 @@ Dove:
   [color=cyan]DATA[reset] è la nuova data da impostare, nel formato [color=cyan]%s[reset].
 
 Note:
-  L'esecuzione di [color=green]date[reset] senza un argomento, mostra la data corrente e permette
-  l'immissione di una nuova. Aggiungendo l'opzione /t, sarà mostrata solo la
-  data corrente. È possibile forzare la sincronizzazione della data con il
-  sistema host tramite l'opzione /h.
+  L'esecuzione di [color=green]date[reset] senza un argomento mostra la data corrente, in formato
+  breve se viene fornita l'opzione /t. È possibile forzare la sincronizzazione
+  della data con il sistema host tramite l'opzione /h, o specificare
+  manualmente una nuova data.
 
 Esempi:
   [color=green]date[reset]
@@ -1994,10 +2001,10 @@ Dove:
   [color=cyan]ORA[reset] è il nuovo orario da impostare, nel formato [color=cyan]%s[reset].
 
 Note:
-  L'esecuzione di [color=green]time[reset] senza un argomento, mostra l'orario corrente e permette
-  l'immissione di uno nuovo. Aggiungendo l'opzione /t, sarà mostrato solo
-  l'orario corrente. È possibile forzare la sincronizzazione dell'orario con il
-  sistema host tramite l'opzione /h.
+  L'esecuzione di [color=green]time[reset] senza un argomento mostra l'orario corrente, in formato
+  breve se viene fornita l'opzione /t. È possibile forzare la sincronizzazione
+  dell'orario con il sistema host tramite l'opzione /h, o specificare
+  manualmente un nuovo orario.
 
 Esempi:
   [color=green]time[reset]
@@ -2098,7 +2105,7 @@ Il file %s esiste già.
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Unità %c inesistente!
 È necessario montare l'unità con il comando [color=light-red]mount[reset]. 
-Per maggiori informazioni, digita [color=light-yellow]intro[reset] o [color=light-yellow]intro mount[reset].
+Per maggiori informazioni, digita [color=yellow]intro[reset] o [color=yellow]intro mount[reset].
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2146,43 +2153,43 @@ SUBST fallito. È stato commesso un errore nella riga di comando o l'unità di
 destinazione è già in uso. È possibile utilizzare SUBST solo su unità locali.
 .
 :SHELL_STARTUP_BEGIN
-[bgcolor=blue]╔══════════════════════════════════════════════════════════════════════╗
-║ [color=light-green]Benvenuto in DOSBox Staging %-40s[color=light-white] ║
+[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗
+║ [color=green]Benvenuto in DOSBox Staging %-40s[color=white] ║
 ║                                                                      ║
-║ Per una breve introduzione per i nuovi utenti, digita: [color=light-yellow]INTRO[color=light-white]         ║
-║ Per la lista dei comandi della shell supportati, digita: [color=light-yellow]HELP[color=light-white]        ║
+║ Per una breve introduzione per i nuovi utenti, digita: [color=yellow]INTRO[color=white]         ║
+║ Per la lista dei comandi della shell supportati, digita: [color=yellow]HELP[color=white]        ║
 ║                                                                      ║
-║ Per regolare la velocità della CPU emulata, usa [color=light-red]%s+F11[color=light-white] e [color=light-red]%s+F12[color=light-white].%s%s ║
-║ Per attivare il keymapper, usa [color=light-red]%s+F1[color=light-white].%s                              ║
-║ Ulteriori informazioni nel file [color=light-cyan]README[color=light-white] nella directory di DOSBox.    ║
+║ Per regolare la velocità della CPU emulata, usa [color=red]%s+F11[color=white] e [color=red]%s+F12[color=white].%s%s ║
+║ Per attivare il keymapper, usa [color=red]%s+F1[color=white].%s                              ║
+║ Ulteriori informazioni nel file [color=cyan]README[color=white] nella directory di DOSBox.    ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox supporta la modalità CGA Composita.                           ║
-║ Usa [color=light-red]F12[color=light-white] per impostare l'uscita composita su ON, OFF o AUTO           ║
+║ Usa [color=red]F12[color=white] per impostare l'uscita composita su ON, OFF o AUTO           ║
 ║ (predefinito).                                                       ║
-║ Usa [color=light-red]F10[color=light-white] per selezionare le impostazioni CGA da modificare e [color=light-red]%s+F11[color=light-white]  ║
+║ Usa [color=red]F10[color=white] per selezionare le impostazioni CGA da modificare e [color=red]%s+F11[color=white]  ║
 ║ per effettuare le modifiche.                                         ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Usa [color=light-red]F11[color=light-white] per scorrere le modalità verde, ambra, bianco e bianco-carta,║
-║ e [color=light-red]%s+F11[color=light-white] per modificare le impostazioni di contrasto/luminosità.    ║
+║ Usa [color=red]F11[color=white] per scorrere le modalità verde, ambra, bianco e bianco-carta,║
+║ e [color=red]%s+F11[color=white] per modificare le impostazioni di contrasto/luminosità.    ║
 
 .
 :SHELL_STARTUP_HERC
-║ Usa [color=light-red]F11[color=light-white] per scorrere i colori monocromatici bianco, ambra e verde.   ║
+║ Usa [color=red]F11[color=white] per scorrere i colori monocromatici bianco, ambra e verde.   ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Premi [color=light-red]%s+Pause[color=light-white] per avviare il debugger o avvia l'exe con [color=light-yellow]DEBUG[color=light-white].      ║
+║ Premi [color=red]%s+Pause[color=white] per avviare il debugger o avvia l'exe con [color=yellow]DEBUG[color=white].      ║
 ║                                                                      ║
 
 .
 :SHELL_STARTUP_END
-║ [color=light-yellow]https://dosbox-staging.github.io[color=light-white]                                     ║
+║ [color=yellow]https://dosbox-staging.github.io[color=white]                                     ║
 ╚══════════════════════════════════════════════════════════════════════╝[reset]
 
 
@@ -2241,8 +2248,8 @@ Utilizzo:
   [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
 
 Dove:
-  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco(*)
-          o punto di domanda (?). È possibile specificare il percorso di
+  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)
+          e punto di domanda (?). È possibile specificare il percorso di
           una directory per elencarne il contenuto.
   [color=white]ORDINAM[reset] è il tipo di ordinamento scelto, cioè: [color=white]n[reset] (per nome, alfabetico),
           [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
@@ -2261,7 +2268,7 @@ Esempi:
   [color=green]dir[reset] [color=cyan]c:\giochi\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Visualizza messaggi oppure attiva/disattiva la ripetizione dei comandi.
+Visualizza i messaggi o attiva/disattiva la ripetizione dei comandi.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
@@ -2281,7 +2288,7 @@ Note:
 
 Esempi:
   [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Hello world![reset]
+  [color=green]echo[reset] [color=cyan]Ciao mondo![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -2443,7 +2450,7 @@ Note:
 
 Esempi:
   [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%variabile%%"=="stringa"[reset] echo Hello world!
+  [color=green]if[reset] [color=white]"%%variabile%%"=="stringa"[reset] echo Ciao mondo!
   [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
 
 .
@@ -2564,11 +2571,10 @@ Utilizzo:
   [color=green]erase[reset] [color=cyan]MODELLO[reset]
 
 Dove:
-  [color=cyan]MODELLO[reset] può essere un nome di uno file specifico (come [color=cyan]file.txt[reset]) oppure
-          un nome file contenente uno o più caratteri jolly, cioè:
-          asterisco (*), che rappresenta una qualsiasi sequenza di uno o più
-          caratteri, o punto di domanda (?) che rappresenta un singolo
-          carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
+  [color=cyan]MODELLO[reset] può essere un nome file specifico (come [color=cyan]file.txt[reset]) o con caratteri
+          jolly, cioè: asterisco (*), che rappresenta una qualsiasi sequenza di
+          uno o più caratteri, e punto di domanda (?) che rappresenta un
+          singolo carattere, ad esempio [color=cyan]*.bat[reset] e [color=cyan]c?.txt[reset].
 
 Avvertimento:
   Fai attenzione quando usi un nome file con caratteri jolly, in particolare
@@ -2591,7 +2597,7 @@ Utilizzo:
 
 Dove:
   [color=white]ORIGINE[reset]      è un nome file specifico o con caratteri jolly, cioè
-               asterisco(*) o punto di domanda (?).
+               asterisco (*) e punto di domanda (?).
   [color=cyan]DESTINAZIONE[reset] è un nome file specifico o una directory che non contiene
                caratteri jolly.
 
@@ -2624,7 +2630,7 @@ Note:
 
 Esempi:
   [color=green]call[reset] [color=white]batch.bat[reset]
-  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Hello world![reset]
+  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Ciao mondo![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
@@ -2683,7 +2689,7 @@ Utilizzo:
 
 Dove:
   [color=cyan]MODELLO[reset]  è un nome file specifico o con caratteri jolly, cioè asterisco (*)
-           o punto di domanda (?).
+           e punto di domanda (?).
   [color=cyan]PERCORSO[reset] è un percorso di un'unità DOS montata da cui elencare il contenuto.
 
 Note:
@@ -2711,13 +2717,13 @@ Dove:
   [color=white]ATTRIBUTI[reset] sono gli attributi da applicare, tra cui uno o più dei seguenti:
             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
             Dove: R = Sola lettura, A = Archivio, S = Sistema, H = Nascosto
-  [color=cyan]MODELLO[reset]   può essere un nome file esatto o un nome file con caratteri jolly,
-            cioè asterisco (*) o punto di domanda (?), oppure il nome di
-            una directory.
+  [color=cyan]MODELLO[reset]   può essere un nome file specifico o con caratteri jolly, cioè
+            asterisco (*) e punto di domanda (?), oppure il nome di una
+            directory.
 
 Note:
   In questo comando è possibile specificare più attributi, separati da spazi.
-  Se non specificati, esso mostra gli attributi di file/directory correnti.
+  Se non specificati, sono mostrati gli attributi correnti di file/directory.
 
 Esempi:
   [color=green]attrib[reset] [color=cyan]file.txt[reset]
