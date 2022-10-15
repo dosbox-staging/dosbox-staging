@@ -9,7 +9,6 @@ concurrency:
 env:
   VCPKG_ROOT: C:\vcpkg
   VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
-  GH_NUGET_REGISTRY: https://nuget.pkg.github.com/dosbox-staging/index.json
 
 jobs:
   build_windows_vs:
@@ -31,23 +30,23 @@ jobs:
         with:
           submodules: false
 
-      - name:  Prepare VCPKG
-        id: prep-vcpkg
-        shell: pwsh
+      - name:  Setup vcpkg and NuGet
+        shell: bash
         run: |
-          ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
-          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
-
-      - name: 'Setup NuGet Credentials'
-        shell: pwsh
-        run: >-
-          ${{ steps.prep-vcpkg.outputs.nuget_bin }}
-          sources add
-          -source "${{ env.GH_NUGET_REGISTRY }}"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "dosbox-staging"
-          -password "${{ secrets.GITHUB_TOKEN }}"
+          set -euo pipefail
+          cd "${{ env.VCPKG_ROOT }}"
+          ./bootstrap-vcpkg.sh -disableMetrics
+          nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
+          owner="${GITHUB_REPOSITORY%/*}"
+          source_url="https://nuget.pkg.github.com/$owner/index.json"
+          "$nuget" sources add \
+            -source "$source_url" \
+            -storepasswordincleartext \
+            -name "GitHub" \
+            -username "$owner" \
+            -password "${{ secrets.GITHUB_TOKEN }}"
+          "$nuget" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -source "$source_url"
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -114,23 +113,23 @@ jobs:
         with:
           submodules: false
 
-      - name:  Prepare VCPKG
-        id: prep-vcpkg
-        shell: pwsh
+      - name:  Setup vcpkg and NuGet
+        shell: bash
         run: |
-          ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
-          echo "::set-output name=nuget_bin::$(${{ env.VCPKG_ROOT }}\vcpkg.exe fetch nuget)"
-
-      - name: 'Setup NuGet Credentials'
-        shell: pwsh
-        run: >-
-          ${{ steps.prep-vcpkg.outputs.nuget_bin }}
-          sources add
-          -source "${{ env.GH_NUGET_REGISTRY }}"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "dosbox-staging"
-          -password "${{ secrets.GITHUB_TOKEN }}"
+          set -euo pipefail
+          cd "${{ env.VCPKG_ROOT }}"
+          ./bootstrap-vcpkg.sh -disableMetrics
+          nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
+          owner="${GITHUB_REPOSITORY%/*}"
+          source_url="https://nuget.pkg.github.com/$owner/index.json"
+          "$nuget" sources add \
+            -source "$source_url" \
+            -storepasswordincleartext \
+            -name "GitHub" \
+            -username "$owner" \
+            -password "${{ secrets.GITHUB_TOKEN }}"
+          "$nuget" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -source "$source_url"
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
