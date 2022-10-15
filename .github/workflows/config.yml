@@ -35,7 +35,7 @@ jobs:
           - name: Windows
             os: windows-latest
           - name: macOS
-            os: macos-latest
+            os: macos-12
           - name: Linux
             os: ubuntu-20.04
         conf:
@@ -102,7 +102,7 @@ jobs:
       - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
         run: |
-          brew install $(cat packages/macos-latest-brew.txt)
+          brew install $(cat packages/macos-12-brew.txt)
 
       # Workaround frequent HTTPS-based connectivity issues
       # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
