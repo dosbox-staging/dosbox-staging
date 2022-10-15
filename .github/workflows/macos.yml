@@ -19,33 +19,6 @@ jobs:
             host: macos-12
             arch: x86_64
             needs_deps: true
-            packages: meson
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
-            brew_path: /usr/local/homebrew
-            max_warnings: 0
-
-          - name: GCC 11
-            host: macos-latest
-            arch: x86_64
-            needs_deps: true
-            packages: gcc@11
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-11.ini
-            brew_path: /usr/local/homebrew
-            max_warnings: 0
-
-          - name: Clang, +tests (macOS 12)
-            host: macos-12
-            arch: x86_64
-            needs_deps: true
-            build_flags: -Dbuildtype=debug
-            brew_path: /usr/local/homebrew
-            run_tests: true
-            max_warnings: -1
-
-          - name: Clang, +debugger
-            host: macos-latest
-            arch: x86_64
-            needs_deps: true
             build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
             max_warnings: 0
@@ -55,8 +28,18 @@ jobs:
             arch: arm64
             needs_deps: false
             packages: meson
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled
+            build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
+            run_tests: true
+            max_warnings: 0
+
+          - name: GCC 12
+            host: macos-11
+            arch: x86_64
+            needs_deps: true
+            packages: gcc@12
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-12.ini
+            brew_path: /usr/local/homebrew
             max_warnings: 0
 
     steps:
@@ -95,7 +78,7 @@ jobs:
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
-          key:  brew-cache-${{ matrix.conf.arch }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  brew-cache-${{ matrix.conf.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: brew-cache-${{ matrix.conf.arch }}-
 
       - name: Install C++ compiler and libraries
@@ -103,13 +86,13 @@ jobs:
         run: |
           arch -arch=${{ matrix.conf.arch }} brew install \
             ${{ matrix.conf.packages }} \
-            $(cat packages/macos-latest-brew.txt)
+            $(cat packages/macos-12-brew.txt)
 
       - uses:  actions/cache@v3.0.11
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
-          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: |
             ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-
             ccache-macos-debug-
@@ -118,7 +101,7 @@ jobs:
         uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
 
       - name: Setup and build
         run: |
@@ -149,14 +132,6 @@ jobs:
     strategy:
       matrix:
         runner:
-          # GitHub macOS 11.x CI runner doesn't have working 10.x SDK
-          #- host: macos-latest
-          #  arch: x86_64
-          #  build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
-          #  minimum_deployment: '10.15'
-          #  needs_deps: true
-          #  needs_libintl_workaround: true
-
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: x86_64
             build_flags: -Db_lto=true -Db_lto_threads=4 --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
@@ -206,7 +181,7 @@ jobs:
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
-          key:  brew-cache-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}
+          key:  brew-cache-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: brew-cache-${{ matrix.runner.arch }}-
 
       - name: Install C++ compiler and libraries
@@ -224,14 +199,14 @@ jobs:
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
-          key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-1
+          key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: ccache-macos-release-${{ matrix.runner.arch }}-
 
       - name:  Cache subprojects
         uses:  actions/cache@v3.0.11
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
 
       - name: Log environment
         run:  arch -arch=${{ matrix.runner.arch }} ./scripts/log-env.sh
@@ -265,7 +240,7 @@ jobs:
   publish_universal_build:
     name: Publish universal build
     needs: build_macos_release
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -329,7 +304,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_macos_release
-    runs-on: macos-latest
+    runs-on: macos-12
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
