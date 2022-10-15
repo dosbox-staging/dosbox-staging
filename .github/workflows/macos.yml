@@ -25,7 +25,7 @@ jobs:
             max_warnings: 0
 
           - name: GCC 12
-            host: macos-12
+            host: macos-11
             arch: x86_64
             needs_deps: true
             packages: gcc@12
