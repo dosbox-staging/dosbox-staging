@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <type_traits>
 
@@ -145,7 +146,14 @@ constexpr uint16_t DOS_PackDate(const uint16_t year,
                                 const uint16_t mon,
                                 const uint16_t day) noexcept
 {
-	const auto y_bits = 0b1111111000000000 & ((year - 1980) << 9);
+	const int delta_year = year - 1980;
+
+	constexpr int delta_year_min = 0;
+	constexpr int delta_year_max = INT8_MAX;
+	const auto years_after_1980  = static_cast<uint16_t>(
+                std::clamp(delta_year, delta_year_min, delta_year_max));
+
+	const auto y_bits = 0b1111111000000000 & (years_after_1980 << 9);
 	const auto m_bits = 0b0000000111100000 & (mon << 5);
 	const auto d_bits = 0b0000000000011111 & day;
 	const auto packed = y_bits | m_bits | d_bits;
