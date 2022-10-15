@@ -658,20 +658,34 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
+static SDL_Rect calc_viewport_pp(int win_width, int win_height);
+
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(int source_w, int source_h,
+                                   const std::optional<SDL_Rect> target_size_override,
                                    const SCALING_MODE scaling_mode,
                                    const SCREEN_TYPES screen_type,
                                    const PPScale &pp_scale)
 {
+	// The pixel perfect object holds its effective source dimensions
+	if (scaling_mode == SCALING_MODE::PERFECT) {
+		source_w = pp_scale.effective_source_w;
+		source_h = pp_scale.effective_source_h;
+	}
+	// Get the target dimentions, with consideration for possible override
+	// values and pixel-perfect handling
 	auto get_target_dims = [&]() -> std::pair<int, int> {
+		if (target_size_override) {
+			auto calc_vp  = (scaling_mode == SCALING_MODE::PERFECT)
+			                      ? calc_viewport_pp
+			                      : calc_viewport_fit;
+			const auto vp = calc_vp(target_size_override->w,
+			                        target_size_override->h);
+			return {vp.w, vp.h};
+		}
 		if (scaling_mode == SCALING_MODE::PERFECT) {
-			// The pixel perfect object holds the effective source
-			// resolution and scaled target resolution, so use those:
-			source_w = pp_scale.effective_source_w;
-			source_h = pp_scale.effective_source_h;
 			return {pp_scale.output_w, pp_scale.output_h};
 		}
 		const auto canvas   = get_canvas_size(screen_type);
@@ -1746,9 +1760,16 @@ dosurface:
 			goto dosurface;
 		}
 
-		assert(sdl.texture.input_surface == nullptr); // ensure we don't leak
-		sdl.texture.input_surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, texture_format);
-		if (!sdl.texture.input_surface) {
+		// release the existing surface if needed
+		auto &texture_input_surface = sdl.texture.input_surface;
+		if (texture_input_surface) {
+			SDL_FreeSurface(texture_input_surface);
+			texture_input_surface = nullptr;
+		}
+		assert(texture_input_surface == nullptr); // ensure we don't leak
+		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
+		        0, width, height, 32, texture_format);
+		if (!texture_input_surface) {
 			LOG_WARNING("SDL: Error while preparing texture input");
 			goto dosurface;
 		}
@@ -2122,6 +2143,7 @@ dosurface:
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
+		                       {},
 		                       sdl.scaling_mode,
 		                       sdl.desktop.type,
 		                       sdl.pp_scale);
@@ -2282,7 +2304,12 @@ void sticky_keys(bool restore){
 void GFX_SwitchFullScreen()
 {
 	sdl.desktop.switching_fullscreen = true;
-#if defined (WIN32)
+
+	if (!sdl.desktop.fullscreen)
+		sdl.desktop.canvas_size_before_fullscreen_switch = get_canvas_size(
+		        sdl.desktop.type);
+
+#if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
 	// (ie: opposite of whatever sdl.desktop.fullscreen holds).
 	// Sticky-keys should be set to the opposite of fullscreen,
@@ -2294,11 +2321,18 @@ void GFX_SwitchFullScreen()
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
 
+	const std::optional<SDL_Rect> canvas_size =
+	        !sdl.desktop.fullscreen
+	                ? sdl.desktop.canvas_size_before_fullscreen_switch
+	                : std::optional<SDL_Rect>();
+
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
+	                       canvas_size,
 	                       sdl.scaling_mode,
 	                       sdl.desktop.type,
 	                       sdl.pp_scale);
+
 	sdl.desktop.switching_fullscreen = false;
 }
 

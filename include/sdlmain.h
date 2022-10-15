@@ -151,6 +151,11 @@ struct SDL_Block {
 		uint8_t bpp = 0;
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
+
+		// Records the canvas size (actual window-size in pixels) prior
+		// to switching to fullscreen
+		SDL_Rect canvas_size_before_fullscreen_switch = {};
+
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
 		// rendering size due to rotating screen, emulation state, or
