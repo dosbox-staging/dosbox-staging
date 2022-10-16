@@ -32,21 +32,25 @@ struct MousePredefined {
 	// values so that on full screen, with RAW mouse input, the mouse feel
 	// is similar to Windows 3.11 for Workgroups with PS/2 mouse driver
 	// and default settings
-	const float sensitivity_dos = 0.6f;
-	const float sensitivity_ps2 = 0.6f;
-	const float sensitivity_vmm = 1.8f;
-	const float sensitivity_com = 0.6f;
+	const float sensitivity_dos = 1.0f;
+	const float sensitivity_ps2 = 1.0f;
+	const float sensitivity_vmm = 3.0f;
+	const float sensitivity_com = 1.0f;
 	// Constants to move 'intersection point' for the acceleration curve
 	// Requires raw mouse input, otherwise there is no effect
 	// Larger values = higher mouse acceleration
 	const float acceleration_dos = 1.0f;
 	const float acceleration_vmm = 1.0f;
 
-	// Maximum allowe user sensitivity value
-	const int8_t sensitivity_user_max = 99;
+	// Maximum allowed user sensitivity value
+	const int16_t sensitivity_user_max = 999;
 	// How many user steps causes sensitivity to double
 	// (sensitivity works exponentially)
 	const float sensitivity_double_steps = 10.0f;
+
+	// IRQ used by PS/2 mouse - do not change unless you really know
+	// what you are doing!
+	const uint8_t IRQ_PS2 = 12;
 };
 
 extern MousePredefined mouse_predefined;
@@ -84,12 +88,11 @@ struct MouseConfig {
 
 	// From [mouse] section
 
-	int8_t sensitivity_x = 50; // default sensitivity values
-	int8_t sensitivity_y = 50;
-	bool raw_input       = false; // true = relative input is raw data
+	int16_t sensitivity_x = 50; // default sensitivity values
+	int16_t sensitivity_y = 50;
+	bool raw_input        = false; // true = relative input is raw data
 
-	bool dos_driver = false; // whether DOS virtual mouse driver should be
-	                         // enabled
+	bool dos_driver    = false; // whether DOS virtual mouse driver should be enabled
 	bool dos_immediate = false;
 
 	MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
@@ -100,8 +103,9 @@ struct MouseConfig {
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t> &GetValidMinRateList();
-	static bool ParseSerialModel(const std::string &model_str,
-	                             MouseModelCOM &model, bool &auto_msm);
+	static bool ParseCOMModel(const std::string &model_str,
+	                          MouseModelCOM &model, bool &auto_msm);
+	static bool ParsePS2Model(const std::string &model_str, MouseModelPS2 &model);
 };
 
 extern MouseConfig mouse_config;

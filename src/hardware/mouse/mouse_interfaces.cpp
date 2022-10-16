@@ -27,6 +27,8 @@
 
 CHECK_NARROWING();
 
+static MouseQueue &mouse_queue = MouseQueue::GetInstance();
+
 std::vector<MouseInterface *> mouse_interfaces = {};
 
 // ***************************************************************************
@@ -34,18 +36,18 @@ std::vector<MouseInterface *> mouse_interfaces = {};
 // ***************************************************************************
 
 MouseInterfaceInfoEntry::MouseInterfaceInfoEntry(const MouseInterfaceId interface_id)
-        : idx(static_cast<uint8_t>(interface_id))
+        : interface_idx(static_cast<uint8_t>(interface_id))
 {}
 
 const MouseInterface &MouseInterfaceInfoEntry::Interface() const
 {
-	return *mouse_interfaces[idx];
+	return *mouse_interfaces[interface_idx];
 }
 
 const MousePhysical &MouseInterfaceInfoEntry::MappedPhysical() const
 {
-	const auto idx = Interface().GetMappedDeviceIdx();
-	return ManyMouseGlue::GetInstance().physical_devices[idx];
+	const auto mapped_idx = Interface().GetMappedDeviceIdx();
+	return ManyMouseGlue::GetInstance().physical_devices[mapped_idx];
 }
 
 bool MouseInterfaceInfoEntry::IsEmulated() const
@@ -90,12 +92,12 @@ const std::string &MouseInterfaceInfoEntry::GetMappedDeviceName() const
 	return MappedPhysical().GetName();
 }
 
-int8_t MouseInterfaceInfoEntry::GetSensitivityX() const
+int16_t MouseInterfaceInfoEntry::GetSensitivityX() const
 {
 	return Interface().GetSensitivityX();
 }
 
-int8_t MouseInterfaceInfoEntry::GetSensitivityY() const
+int16_t MouseInterfaceInfoEntry::GetSensitivityY() const
 {
 	return Interface().GetSensitivityY();
 }
@@ -142,6 +144,9 @@ const std::string &MousePhysicalInfoEntry::GetDeviceName() const
 
 class InterfaceDos final : public MouseInterface {
 public:
+	InterfaceDos();
+	~InterfaceDos() = default;
+
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
 	                 const uint16_t x_abs, const uint16_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
@@ -153,8 +158,6 @@ public:
 private:
 	friend class MouseInterface;
 
-	InterfaceDos();
-	~InterfaceDos()                               = default;
 	InterfaceDos(const InterfaceDos &)            = delete;
 	InterfaceDos &operator=(const InterfaceDos &) = delete;
 
@@ -167,6 +170,9 @@ private:
 
 class InterfacePS2 final : public MouseInterface {
 public:
+	InterfacePS2();
+	~InterfacePS2() = default;
+
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
 	                 const uint16_t x_abs, const uint16_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
@@ -176,8 +182,6 @@ public:
 private:
 	friend class MouseInterface;
 
-	InterfacePS2();
-	~InterfacePS2()                                    = default;
 	InterfacePS2(const InterfacePS2 &other)            = delete;
 	InterfacePS2 &operator=(const InterfacePS2 &other) = delete;
 
@@ -193,6 +197,9 @@ private:
 
 class InterfaceCOM final : public MouseInterface {
 public:
+	InterfaceCOM(const uint8_t port_id);
+	~InterfaceCOM() = default;
+
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
 	                 const uint16_t x_abs, const uint16_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
@@ -207,9 +214,7 @@ public:
 private:
 	friend class MouseInterface;
 
-	InterfaceCOM(const uint8_t port_id);
 	InterfaceCOM()                                = delete;
-	~InterfaceCOM()                               = default;
 	InterfaceCOM(const InterfaceCOM &)            = delete;
 	InterfaceCOM &operator=(const InterfaceCOM &) = delete;
 
@@ -220,29 +225,40 @@ private:
 // Base mouse interface
 // ***************************************************************************
 
+static InterfaceDos interface_dos;
+static InterfacePS2 interface_ps2;
+static InterfaceCOM interface_com1(0);
+static InterfaceCOM interface_com2(1);
+static InterfaceCOM interface_com3(2);
+static InterfaceCOM interface_com4(3);
+
 void MouseInterface::InitAllInstances()
 {
 	if (!mouse_interfaces.empty())
 		return; // already initialized
 
-	const auto i_first = static_cast<uint8_t>(MouseInterfaceId::First);
-	const auto i_last  = static_cast<uint8_t>(MouseInterfaceId::Last);
-	const auto i_com1  = static_cast<uint8_t>(MouseInterfaceId::COM1);
+	const auto first = static_cast<uint8_t>(MouseInterfaceId::First);
+	const auto last  = static_cast<uint8_t>(MouseInterfaceId::Last);
 
-	for (uint8_t i = i_first; i <= i_last; i++)
+	for (uint8_t i = first; i <= last; i++)
 		switch (static_cast<MouseInterfaceId>(i)) {
 		case MouseInterfaceId::DOS:
-			mouse_interfaces.emplace_back(new InterfaceDos());
+			mouse_interfaces.push_back(&interface_dos);
 			break;
 		case MouseInterfaceId::PS2:
-			mouse_interfaces.emplace_back(new InterfacePS2());
+			mouse_interfaces.push_back(&interface_ps2);
 			break;
 		case MouseInterfaceId::COM1:
+			mouse_interfaces.push_back(&interface_com1);
+			break;
 		case MouseInterfaceId::COM2:
+			mouse_interfaces.push_back(&interface_com2);
+			break;
 		case MouseInterfaceId::COM3:
+			mouse_interfaces.push_back(&interface_com3);
+			break;
 		case MouseInterfaceId::COM4:
-			mouse_interfaces.emplace_back(new InterfaceCOM(
-			        static_cast<uint8_t>(i - i_com1)));
+			mouse_interfaces.push_back(&interface_com4);
 			break;
 		default: assert(false); break;
 		}
@@ -290,11 +306,15 @@ MouseInterface::MouseInterface(const MouseInterfaceId interface_id,
         : interface_id(interface_id),
           sensitivity_predefined(sensitivity_predefined)
 {
-	ConfigResetSensitivity();
 	mouse_info.interfaces.emplace_back(MouseInterfaceInfoEntry(interface_id));
 }
 
-void MouseInterface::Init() {}
+void MouseInterface::Init()
+{
+	// At this point configuration should already be loaded,
+	// so the default sensitivity is known
+	ConfigResetSensitivity();
+}
 
 uint8_t MouseInterface::GetInterfaceIdx() const
 {
@@ -347,12 +367,12 @@ uint8_t MouseInterface::GetMappedDeviceIdx() const
 	return mapped_idx;
 }
 
-int8_t MouseInterface::GetSensitivityX() const
+int16_t MouseInterface::GetSensitivityX() const
 {
 	return sensitivity_user_x;
 }
 
-int8_t MouseInterface::GetSensitivityY() const
+int16_t MouseInterface::GetSensitivityY() const
 {
 	return sensitivity_user_y;
 }
@@ -362,9 +382,9 @@ uint16_t MouseInterface::GetRate() const
 	return rate_hz;
 }
 
-void MouseInterface::NotifyInterfaceRate(const uint16_t value_hz)
+void MouseInterface::NotifyInterfaceRate(const uint16_t new_rate_hz)
 {
-	interface_rate_hz = value_hz;
+	interface_rate_hz = new_rate_hz;
 	UpdateRate();
 }
 
@@ -437,30 +457,21 @@ void MouseInterface::ConfigReset()
 	ConfigResetMinRate();
 }
 
-void MouseInterface::ConfigSetSensitivity(const int8_t value_x, const int8_t value_y)
+void MouseInterface::ConfigSetSensitivity(const int16_t value_x, const int16_t value_y)
 {
-	if (!IsEmulated())
-		return;
-
 	sensitivity_user_x = value_x;
 	sensitivity_user_y = value_y;
 	UpdateSensitivity();
 }
 
-void MouseInterface::ConfigSetSensitivityX(const int8_t value)
+void MouseInterface::ConfigSetSensitivityX(const int16_t value)
 {
-	if (!IsEmulated())
-		return;
-
 	sensitivity_user_x = value;
 	UpdateSensitivity();
 }
 
-void MouseInterface::ConfigSetSensitivityY(const int8_t value)
+void MouseInterface::ConfigSetSensitivityY(const int16_t value)
 {
-	if (!IsEmulated())
-		return;
-
 	sensitivity_user_y = value;
 	UpdateSensitivity();
 }
@@ -511,27 +522,12 @@ void MouseInterface::UpdateRawMapped() {}
 
 void MouseInterface::UpdateSensitivity()
 {
-	auto calculate = [this](const int8_t user_val) {
-		// Mouse sensitivity formula is exponential - as it is probably
-		// reasonable to expect user wanting to increase sensitivity
-		// 1.5 times, but not 1.9 times - while the difference between
-		// 5.0 and 5.4 times sensitivity increase is rather hard to
-		// notice in a real life
-
-		float power   = 0.0f;
-		float scaling = 0.0f;
-
-		if (user_val > 0) {
-			power   = static_cast<float>(user_val - 50);
-			scaling = sensitivity_predefined;
-		} else if (user_val < 0) {
-			power   = static_cast<float>(-user_val - 50);
-			scaling = -sensitivity_predefined;
-		} else // user_cal == 0
+	auto calculate = [this](const int16_t setting) {
+		if (setting == 0)
 			return 0.0f;
-
-		power /= mouse_predefined.sensitivity_double_steps;
-		return scaling * std::pow(2.0f, power);
+		const float user_value = static_cast<float>(setting);
+		const float scaling    = sensitivity_predefined / 100.0f;
+		return user_value * scaling;
 	};
 
 	sensitivity_coeff_x = calculate(sensitivity_user_x);
@@ -621,26 +617,26 @@ MouseButtons12S MouseInterface::GetButtonsSquished() const
 
 InterfaceDos::InterfaceDos()
         : MouseInterface(MouseInterfaceId::DOS, mouse_predefined.sensitivity_dos)
-{
-	UpdateSensitivity();
-}
+{}
 
 void InterfaceDos::Init()
 {
-	if (mouse_config.dos_driver)
+	MouseInterface::Init();
+	if (mouse_config.dos_driver) {
+		emulated = true;
 		MOUSEDOS_Init();
-	else
-		emulated = false;
+	}
 	MOUSEDOS_NotifyMinRate(min_rate_hz);
 }
 
 void InterfaceDos::NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
                                const uint16_t x_abs, const uint16_t y_abs)
 {
-	ev.dos_moved   = MOUSEDOS_NotifyMoved(x_rel * sensitivity_coeff_x,
-                                            y_rel * sensitivity_coeff_y,
-                                            x_abs,
-                                            y_abs);
+	ev.dos_moved = MOUSEDOS_NotifyMoved(x_rel * sensitivity_coeff_x,
+	                                    y_rel * sensitivity_coeff_y,
+	                                    x_abs,
+	                                    y_abs);
+
 	ev.request_dos = ev.dos_moved;
 }
 
@@ -686,17 +682,17 @@ void InterfaceDos::UpdateMinRate()
 void InterfaceDos::UpdateRate()
 {
 	MouseInterface::UpdateRate();
-	MouseQueue::GetInstance().SetRateDOS(rate_hz);
+	mouse_queue.SetRateDOS(rate_hz);
 }
 
 InterfacePS2::InterfacePS2()
         : MouseInterface(MouseInterfaceId::PS2, mouse_predefined.sensitivity_ps2)
-{
-	UpdateSensitivity();
-}
+{}
 
 void InterfacePS2::Init()
 {
+	MouseInterface::Init();
+	emulated = true;
 	MOUSEPS2_Init();
 	MOUSEVMM_Init();
 }
@@ -754,18 +750,14 @@ void InterfacePS2::UpdateSensitivity()
 void InterfacePS2::UpdateRate()
 {
 	MouseInterface::UpdateRate();
-	MouseQueue::GetInstance().SetRatePS2(rate_hz);
+	mouse_queue.SetRatePS2(rate_hz);
 }
 
 InterfaceCOM::InterfaceCOM(const uint8_t port_id)
         : MouseInterface(static_cast<MouseInterfaceId>(
                                  static_cast<uint8_t>(MouseInterfaceId::COM1) + port_id),
                          mouse_predefined.sensitivity_com)
-{
-	UpdateSensitivity();
-	// Wait for CSerialMouse to register itself
-	emulated = false;
-}
+{}
 
 void InterfaceCOM::NotifyMoved(MouseEvent &, const float x_rel,
                                const float y_rel, const uint16_t, const uint16_t)

@@ -24,6 +24,7 @@
 #include "control.h"
 #include "math_utils.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "video.h"
 
@@ -41,22 +42,42 @@ CHECK_NARROWING();
 MouseConfig mouse_config;
 MousePredefined mouse_predefined;
 
-static const std::vector<std::string> list_models_ps2 = {
-        "standard",
-        "intellimouse",
+static struct {
+	const std::string param_standard     = "standard";
+	const std::string param_intellimouse = "intellimouse";
 #ifdef ENABLE_EXPLORER_MOUSE
-        "explorer",
+	const std::string param_explorer = "explorer";
 #endif
+} models_ps2;
+
+static struct {
+	const std::string param_2button     = "2button";
+	const std::string param_3button     = "3button";
+	const std::string param_wheel       = "wheel";
+	const std::string param_msm         = "msm";
+	const std::string param_2button_msm = "2button+msm";
+	const std::string param_3button_msm = "3button+msm";
+	const std::string param_wheel_msm   = "wheel+msm";
+} models_com;
+
+static const char *list_models_ps2[] = {
+	models_ps2.param_standard.c_str(),
+	models_ps2.param_intellimouse.c_str(),
+#ifdef ENABLE_EXPLORER_MOUSE
+	models_ps2.param_explorer.c_str(),
+#endif
+	nullptr
 };
 
-static const std::vector<std::string> list_models_com = {
-        "2button",
-        "3button",
-        "wheel",
-        "msm",
-        "2button+msm",
-        "3button+msm",
-        "wheel+msm",
+static const char *list_models_com[] = {
+	models_com.param_2button.c_str(),
+	models_com.param_3button.c_str(),
+	models_com.param_wheel.c_str(),
+	models_com.param_msm.c_str(),
+	models_com.param_2button_msm.c_str(),
+	models_com.param_3button_msm.c_str(),
+	models_com.param_wheel_msm.c_str(),
+	nullptr
 };
 
 static const std::vector<uint16_t> list_rates = {
@@ -66,7 +87,7 @@ static const std::vector<uint16_t> list_rates = {
         //  20",  // PS/2 mouse
         //  30",  // bus/InPort mouse
         40,  // PS/2 mouse, approx. limit for 1200 baud serial mouse
-             //  50,  // bus/InPort mouse
+        //  50,   // bus/InPort mouse
         60,  // PS/2 mouse, used by Microsoft Mouse Driver 8.20
         80,  // PS/2 mouse, approx. limit for 2400 baud serial mouse
         100, // PS/2 mouse, bus/InPort mouse, used by CuteMouse 2.1b4
@@ -84,40 +105,55 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-bool MouseConfig::ParseSerialModel(const std::string &model_str,
-                                   MouseModelCOM &model, bool &auto_msm)
+bool MouseConfig::ParseCOMModel(const std::string &model_str,
+                                MouseModelCOM &model, bool &auto_msm)
 {
-	if (model_str == list_models_com[0]) {
+	if (model_str == models_com.param_2button) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
 		return true;
-	} else if (model_str == list_models_com[1]) {
+	} else if (model_str == models_com.param_3button) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
 		return true;
-	} else if (model_str == list_models_com[2]) {
+	} else if (model_str == models_com.param_wheel) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
 		return true;
-	} else if (model_str == list_models_com[3]) {
+	} else if (model_str == models_com.param_msm) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
 		return true;
-	} else if (model_str == list_models_com[4]) {
+	} else if (model_str == models_com.param_2button_msm) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
 		return true;
-	} else if (model_str == list_models_com[5]) {
+	} else if (model_str == models_com.param_3button_msm) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
 		return true;
-	} else if (model_str == list_models_com[6]) {
+	} else if (model_str == models_com.param_wheel_msm) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
 		return true;
 	}
 
 	return false;
+}
+
+bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &model)
+{
+	if (model_str == models_ps2.param_standard)
+		model = MouseModelPS2::Standard;
+	else if (model_str == models_ps2.param_intellimouse)
+		model = MouseModelPS2::IntelliMouse;
+#ifdef ENABLE_EXPLORER_MOUSE
+	else if (model_str == models_ps2.param_explorer)
+		model = MouseModelPS2::Explorer;
+#endif
+	else
+		return false;
+	return true;
 }
 
 const std::vector<uint16_t> &MouseConfig::GetValidMinRateList()
@@ -148,64 +184,11 @@ static void config_read(Section *section)
 
 	// Default mouse sensitivity
 
-	auto sensitivity_from_str = [](const std::string &str) {
-		const int32_t base_value = 50;
-		int32_t ret_val          = base_value; // default
-		bool invalid_input       = false;
-
-		if (str.find('.') != std::string::npos) {
-			// Parameter supplied in a form of floating point
-			float tmp_float = 1.0f;
-			try {
-				tmp_float = std::stof(str);
-			} catch (...) {
-				invalid_input = true;
-				tmp_float     = 1.0f;
-			}
-			// We need 'tmp_float' to be positive for further calculations
-			if (tmp_float < 0.0f) {
-				tmp_float = -tmp_float;
-				ret_val   = -1;
-			} else if (tmp_float > 0.0f)
-				ret_val = 1;
-			else
-				ret_val = 0;
-			// Now calculate user steps as a logarithm
-			if (ret_val != 0) {
-				tmp_float = std::log(tmp_float) / std::log(2.0f);
-				tmp_float *= mouse_predefined.sensitivity_double_steps;
-				tmp_float += static_cast<float>(base_value);
-				const auto tmp_rounded = std::lround(
-				        std::max(tmp_float, 1.0f));
-				ret_val = clamp_to_int8(ret_val * tmp_rounded);
-			}
-		} else if (!str.empty()) {
-			// Parameter supplied in a form of integer
-			try {
-				ret_val = std::stoi(str);
-			} catch (...) {
-				invalid_input = true;
-				ret_val       = base_value;
-			}
-		}
-
-		if (invalid_input)
-			LOG_ERR("MOUSE: Invalid sensitivity value");
-
-		const auto min = clamp_to_int8(-mouse_predefined.sensitivity_user_max);
-		const auto max = clamp_to_int8(mouse_predefined.sensitivity_user_max);
-		return std::clamp(clamp_to_int8(ret_val), min, max);
-	};
-
 	PropMultiVal *prop_multi = conf->GetMultiVal("mouse_sensitivity");
-	const std::string xsens = prop_multi->GetSection()->Get_string("xsens");
-	const std::string ysens = prop_multi->GetSection()->Get_string("ysens");
-
-	mouse_config.sensitivity_x = sensitivity_from_str(xsens);
-	if (ysens.empty())
-		mouse_config.sensitivity_y = mouse_config.sensitivity_x;
-	else
-		mouse_config.sensitivity_y = sensitivity_from_str(ysens);
+	mouse_config.sensitivity_x = static_cast<int16_t>(
+	        prop_multi->GetSection()->Get_int("xsens"));
+	mouse_config.sensitivity_y = static_cast<int16_t>(
+	        prop_multi->GetSection()->Get_int("ysens"));
 
 	// DOS driver configuration
 
@@ -214,42 +197,14 @@ static void config_read(Section *section)
 	// PS/2 AUX port mouse configuration
 
 	std::string prop_str = conf->Get_string("ps2_mouse_model");
-	if (prop_str == list_models_ps2[0])
-		mouse_config.model_ps2 = MouseModelPS2::Standard;
-	if (prop_str == list_models_ps2[1])
-		mouse_config.model_ps2 = MouseModelPS2::IntelliMouse;
-#ifdef ENABLE_EXPLORER_MOUSE
-	if (prop_str == list_models_ps2[2])
-		mouse_config.model_ps2 = MouseModelPS2::Explorer;
-#endif
+	MouseConfig::ParsePS2Model(prop_str, mouse_config.model_ps2);
 
-	// Serial (COM port) mice configuration
-
-	auto set_model_com = [](const std::string &model_str,
-	                        MouseModelCOM &model_var,
-	                        bool &model_auto) {
-		if (model_str == list_models_com[0] ||
-		    model_str == list_models_com[4])
-			model_var = MouseModelCOM::Microsoft;
-		if (model_str == list_models_com[1] ||
-		    model_str == list_models_com[5])
-			model_var = MouseModelCOM::Logitech;
-		if (model_str == list_models_com[2] ||
-		    model_str == list_models_com[6])
-			model_var = MouseModelCOM::Wheel;
-		if (model_str == list_models_com[3])
-			model_var = MouseModelCOM::MouseSystems;
-
-		if (model_str == list_models_com[4] ||
-		    model_str == list_models_com[5] ||
-		    model_str == list_models_com[6])
-			model_auto = true;
-		else
-			model_auto = false;
-	};
+	// COM port mouse configuration
 
 	prop_str = conf->Get_string("com_mouse_model");
-	set_model_com(prop_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
+	MouseConfig::ParseCOMModel(prop_str,
+	                           mouse_config.model_com,
+	                           mouse_config.model_com_auto_msm);
 
 	// Start mouse emulation if ready
 	mouse_shared.ready_config_mouse = true;
@@ -261,7 +216,8 @@ static void config_init(Section_prop &secprop)
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	Prop_bool *prop_bool = nullptr;
+	Prop_bool *prop_bool     = nullptr;
+	Prop_int *prop_int       = nullptr;
 	Prop_string *prop_str    = nullptr;
 	PropMultiVal *prop_multi = nullptr;
 
@@ -269,16 +225,19 @@ static void config_init(Section_prop &secprop)
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
-	        "Default mouse sensitivity.\n"
-	        "Integer values work exponentially, add 10 to double the effect.\n"
-	        "Alternatively, put 1.0 for base sensitivity, 1.5 do double sensitivity, etc.\n"
+	        "Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.\n"
 	        "Negative values reverse mouse direction, 0 disables the movement completely.\n"
-	        "The optional second parameter specifies vertical sensitivity (e.g. 1.5,3.0).\n"
+	        "The optional second parameter specifies vertical sensitivity (e.g. 100,200).\n"
 	        "Setting can be adjusted in runtime (also per mouse interface) using internal\n"
 	        "MOUSECTL.COM tool, available on drive Z:.");
-	prop_multi->SetValue("1.0");
-	prop_multi->GetSection()->Add_string("xsens", only_at_start, "1.0");
-	prop_multi->GetSection()->Add_string("ysens", only_at_start, "1.0");
+	prop_multi->SetValue("100");
+
+	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
+	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
+	                    mouse_predefined.sensitivity_user_max);
+	prop_int = prop_multi->GetSection()->Add_int("ysens", only_at_start, 100);
+	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
+	                    mouse_predefined.sensitivity_user_max);
 
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(

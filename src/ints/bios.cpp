@@ -951,12 +951,12 @@ static Bitu INT15_Handler(void) {
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
 		case 0x00:                      // enable/disable
-			if (reg_bh == 0) {      // disable
-				MOUSEBIOS_SetState(false);
+			if (reg_bh == 0) { // disable
+				MOUSEBIOS_Disable();
 				reg_ah = 0;
 				CALLBACK_SCF(false);
 			} else if (reg_bh == 0x01) { // enable
-				if (!MOUSEBIOS_SetState(true)) {
+				if (!MOUSEBIOS_Enable()) {
 					reg_ah = 5;
 					CALLBACK_SCF(true);
 					break;
@@ -978,7 +978,7 @@ static Bitu INT15_Handler(void) {
 				reg_ah = 2;
 				break;
 			}
-			MOUSEBIOS_SetState(false);
+			MOUSEBIOS_Disable();
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;

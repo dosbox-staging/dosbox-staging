@@ -34,8 +34,8 @@ public:
 	void StartTimerIfNeeded();
 
 private:
-	MouseQueue()                              = default;
-	~MouseQueue()                             = delete;
+	MouseQueue() = default;
+	~MouseQueue();
 	MouseQueue(const MouseQueue &)            = delete;
 	MouseQueue &operator=(const MouseQueue &) = delete;
 

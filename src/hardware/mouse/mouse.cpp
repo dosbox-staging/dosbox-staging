@@ -24,6 +24,7 @@
 #include "mouse_queue.h"
 
 #include <algorithm>
+#include <cctype>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -41,7 +42,7 @@ bool seamless_setting = false;
 
 static Bitu int74_ret_callback = 0;
 
-static MouseQueue &queue        = MouseQueue::GetInstance();
+static MouseQueue &mouse_queue  = MouseQueue::GetInstance();
 static ManyMouseGlue &manymouse = ManyMouseGlue::GetInstance();
 
 // ***************************************************************************
@@ -59,7 +60,7 @@ static Bitu int74_exit()
 static Bitu int74_handler()
 {
 	MouseEvent ev;
-	queue.FetchEvent(ev);
+	mouse_queue.FetchEvent(ev);
 
 	// Handle DOS events
 	if (ev.request_dos) {
@@ -112,7 +113,7 @@ static Bitu int74_handler()
 
 Bitu int74_ret_handler()
 {
-	queue.StartTimerIfNeeded();
+	mouse_queue.StartTimerIfNeeded();
 	return CBRET_NONE;
 }
 
@@ -155,7 +156,7 @@ void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
 
 void MOUSE_NotifyResetDOS()
 {
-	queue.ClearEventsDOS();
+	mouse_queue.ClearEventsDOS();
 }
 
 void MOUSE_NotifyStateChanged()
@@ -198,7 +199,7 @@ void MOUSE_NotifyFakePS2()
 	if (interface && interface->IsUsingEvents()) {
 		MouseEvent ev;
 		ev.request_ps2 = true;
-		queue.AddEvent(ev);
+		mouse_queue.AddEvent(ev);
 	}
 }
 
@@ -237,7 +238,7 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
 			interface->NotifyMoved(ev, x_rel, y_rel, x_abs, y_abs);
-	queue.AddEvent(ev);
+	mouse_queue.AddEvent(ev);
 }
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
@@ -247,7 +248,7 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	if (interface && interface->IsUsingEvents()) {
 		MouseEvent ev;
 		interface->NotifyMoved(ev, x_rel, y_rel, 0, 0);
-		queue.AddEvent(ev);
+		mouse_queue.AddEvent(ev);
 	}
 }
 
@@ -257,7 +258,7 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed)
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
 			interface->NotifyButton(ev, idx, pressed);
-	queue.AddEvent(ev);
+	mouse_queue.AddEvent(ev);
 }
 
 void MOUSE_EventButton(const uint8_t idx, const bool pressed,
@@ -267,7 +268,7 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed,
 	if (interface && interface->IsUsingEvents()) {
 		MouseEvent ev;
 		interface->NotifyButton(ev, idx, pressed);
-		queue.AddEvent(ev);
+		mouse_queue.AddEvent(ev);
 	}
 }
 
@@ -277,7 +278,7 @@ void MOUSE_EventWheel(const int16_t w_rel)
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
 			interface->NotifyWheel(ev, w_rel);
-	queue.AddEvent(ev);
+	mouse_queue.AddEvent(ev);
 }
 
 void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
@@ -286,7 +287,7 @@ void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
 	if (interface && interface->IsUsingEvents()) {
 		MouseEvent ev;
 		interface->NotifyWheel(ev, w_rel);
-		queue.AddEvent(ev);
+		mouse_queue.AddEvent(ev);
 	}
 }
 
@@ -373,9 +374,7 @@ bool MouseControlAPI::PatternToRegex(const std::string &pattern, std::regex &reg
 			pattern_regex << ".";
 		else if (character == '*')
 			pattern_regex << ".*";
-		else if ((character >= '0' && character <= '9') ||
-		         (character >= 'a' && character <= 'z') ||
-		         (character >= 'A' && character <= 'Z'))
+		else if (std::isalnum(character))
 			pattern_regex << character;
 		else
 			pattern_regex << "\\x" << static_cast<int>(character);
@@ -448,8 +447,8 @@ bool MouseControlAPI::Reset(const MouseControlAPI::ListIDs &list_ids)
 }
 
 bool MouseControlAPI::SetSensitivity(const MouseControlAPI::ListIDs &list_ids,
-                                     const int8_t sensitivity_x,
-                                     const int8_t sensitivity_y)
+                                     const int16_t sensitivity_x,
+                                     const int16_t sensitivity_y)
 {
 	if (sensitivity_x > mouse_predefined.sensitivity_user_max ||
 	    sensitivity_x < -mouse_predefined.sensitivity_user_max ||
@@ -465,7 +464,7 @@ bool MouseControlAPI::SetSensitivity(const MouseControlAPI::ListIDs &list_ids,
 }
 
 bool MouseControlAPI::SetSensitivityX(const MouseControlAPI::ListIDs &list_ids,
-                                      const int8_t sensitivity_x)
+                                      const int16_t sensitivity_x)
 {
 	if (sensitivity_x > mouse_predefined.sensitivity_user_max ||
 	    sensitivity_x < -mouse_predefined.sensitivity_user_max)
@@ -479,7 +478,7 @@ bool MouseControlAPI::SetSensitivityX(const MouseControlAPI::ListIDs &list_ids,
 }
 
 bool MouseControlAPI::SetSensitivityY(const MouseControlAPI::ListIDs &list_ids,
-                                      const int8_t sensitivity_y)
+                                      const int16_t sensitivity_y)
 {
 	if (sensitivity_y > mouse_predefined.sensitivity_user_max ||
 	    sensitivity_y < -mouse_predefined.sensitivity_user_max)
@@ -544,12 +543,27 @@ const std::string &MouseControlAPI::GetValidMinRateStr()
 	return out_str;
 }
 
+std::string MouseControlAPI::GetInterfaceNameStr(const MouseInterfaceId interface_id)
+{
+	switch (interface_id) {
+	case MouseInterfaceId::DOS: return "DOS";
+	case MouseInterfaceId::PS2: return "PS/2";
+	case MouseInterfaceId::COM1: return "COM1";
+	case MouseInterfaceId::COM2: return "COM2";
+	case MouseInterfaceId::COM3: return "COM3";
+	case MouseInterfaceId::COM4: return "COM4";
+	case MouseInterfaceId::None: return "";
+	default:
+		assert(false); // missing implementation
+		return nullptr;
+	}
+}
+
 bool MouseControlAPI::SetMinRate(const MouseControlAPI::ListIDs &list_ids,
                                  const uint16_t value_hz)
 {
 	const auto &valid_list = GetValidMinRateList();
-	if (std::find(valid_list.begin(), valid_list.end(), value_hz) ==
-	    valid_list.end())
+	if (!contains(valid_list, value_hz))
 		return false; // invalid value
 
 	auto list = get_relevant_interfaces(list_ids);

@@ -67,8 +67,8 @@ private:
 	friend class MouseInterfaceInfoEntry;
 	friend class MousePhysicalInfoEntry;
 
-	ManyMouseGlue()                                 = default;
-	~ManyMouseGlue()                                = delete;
+	ManyMouseGlue() = default;
+	~ManyMouseGlue();
 	ManyMouseGlue(const ManyMouseGlue &)            = delete;
 	ManyMouseGlue &operator=(const ManyMouseGlue &) = delete;
 
@@ -95,7 +95,7 @@ private:
 	                                    // config API usage
 	uint32_t config_api_counter = 0;
 
-	int num_mice = 0;
+	uint8_t num_mice = 0;
 
 	std::string driver_name = "";
 
@@ -103,7 +103,7 @@ private:
 	std::vector<int> rel_y = {};
 
 	static constexpr uint8_t max_buttons  = 3;
-	static constexpr uint8_t max_mice     = UINT8_MAX;
+	static constexpr uint8_t max_mice     = UINT8_MAX - 1;
 	static constexpr double tick_interval = 5.0;
 
 #endif // C_MANYMOUSE

@@ -26,6 +26,8 @@
 #include "pic.h"
 #include "string_utils.h"
 
+#include <algorithm>
+
 CHECK_NARROWING();
 
 void manymouse_tick(uint32_t)
@@ -59,43 +61,57 @@ const std::string &MousePhysical::GetName() const
 
 ManyMouseGlue &ManyMouseGlue::GetInstance()
 {
-	static ManyMouseGlue *instance = nullptr;
-	if (!instance)
-		instance = new ManyMouseGlue();
-	return *instance;
+	static ManyMouseGlue manymouse_glue;
+	return manymouse_glue;
 }
 
 #if C_MANYMOUSE
+
+ManyMouseGlue::~ManyMouseGlue()
+{
+	PIC_RemoveEvents(manymouse_tick);
+	ManyMouse_Quit();
+}
 
 void ManyMouseGlue::InitIfNeeded()
 {
 	if (initialized || malfunction)
 		return;
 
-	num_mice = ManyMouse_Init();
-	if (num_mice < 0) {
+	// Initialize ManyMouse library, fetch number of mice
+
+	const auto result = ManyMouse_Init();
+
+	if (result < 0) {
+		malfunction = true;
+		num_mice    = 0;
+
 		LOG_ERR("MOUSE: ManyMouse initialization failed");
 		ManyMouse_Quit();
-		malfunction = true;
 		return;
-	}
-	initialized = true;
+	} else if (result > max_mice) {
+		num_mice = max_mice;
 
-	if (num_mice >= max_mice) {
-		num_mice           = max_mice - 1;
-		static bool logged = false;
-		if (!logged) {
-			logged = true;
+		static bool already_warned = false;
+		if (!already_warned) {
+			already_warned = true;
 			LOG_ERR("MOUSE: Up to %d simultaneously connected mice supported",
 			        max_mice);
 		}
-	}
+	} else
+		num_mice = static_cast<uint8_t>(result);
+
+	initialized = true;
+
+	// Get and log ManyMouse driver name
 
 	const auto new_driver_name = std::string(ManyMouse_DriverName());
 	if (new_driver_name != driver_name) {
 		driver_name = new_driver_name;
 		LOG_INFO("MOUSE: ManyMouse driver '%s'", driver_name.c_str());
 	}
+
+	// Scan for the physical mice
 
 	Rescan();
 }
@@ -160,21 +176,22 @@ void ManyMouseGlue::Rescan()
 		std::string name;
 		UTF8_RenderForDos(name_utf8, name);
 
-		const char character_nbsp  = 0x7f; // non-breaking space
+		// Replace non-breaking space with a regular space
+		const char character_nbsp  = 0x7f;
 		const char character_space = 0x20;
+		std::replace(name.begin(), name.end(), character_nbsp, character_space);
 
+		// Remove non-ASCII and control characters
 		for (auto pos = name.size(); pos > 0; pos--) {
-			// Replace non-breaking space with a regular space
-			if (name[pos - 1] == character_nbsp)
-				name[pos - 1] = character_space;
-			// Remove non-ASCII and control characters
 			if (name[pos - 1] < character_space ||
 			    name[pos - 1] >= character_nbsp)
 				name.erase(pos - 1, 1);
 		}
 
-		// Try to rework into something useful names in the forms
-		// 'FooBar Corp FooBar Corp Incredible Mouse'
+		// Try to rework into something useful name if we receive
+		// something with double manufacturer name, for example change:
+		// 'FooBar Corp FooBar Corp Incredible Mouse' into
+		// 'FooBar Corp Incredible Mouse'
 		size_t pos = name.size() / 2 + 1;
 		while (--pos > 2) {
 			if (name[pos - 1] != ' ')
@@ -187,13 +204,15 @@ void ManyMouseGlue::Rescan()
 		}
 
 		// ManyMouse should limit device names to 64 characters,
-		// but make sure name is indeed limited in length, and
-		// strip trailing spaces
-		name.resize(std::min(static_cast<size_t>(64), name.size()));
-		while (!name.empty() && name.back() == ' ')
-			name.pop_back();
+		// but make sure name is indeed limited in length
+		constexpr size_t max_size = 64;
+		if (name.size() > max_size)
+			name.resize(max_size);
 
-		physical_devices.emplace_back(MousePhysical(name));
+		// Strip trailing spaces, newlines, etc.
+		trim(name);
+
+		physical_devices.emplace_back(name);
 		mouse_info.physical.emplace_back(MousePhysicalInfoEntry(
 		        static_cast<uint8_t>(physical_devices.size() - 1)));
 	}
@@ -211,8 +230,10 @@ void ManyMouseGlue::RescanIfSafe()
 bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 {
 	// Wait a little to speedup screen update
+	constexpr uint32_t ticks_threshold = 50; // time to wait idle in PIC ticks
 	const auto pic_ticks_start = PIC_Ticks;
-	while (PIC_Ticks >= pic_ticks_start && PIC_Ticks - pic_ticks_start < 50)
+	while (PIC_Ticks >= pic_ticks_start &&
+	       PIC_Ticks - pic_ticks_start < ticks_threshold)
 		CALLBACK_Idle();
 
 	// Make sure the module is initialized,
@@ -228,7 +249,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 		HandleEvent(event, true); // handle critical events
 
 	bool success = false;
-	while (true) {
+	while (!shutdown_requested) {
 		// Poll mouse events, handle critical ones
 		if (!ManyMouse_PollEvent(&event)) {
 			CALLBACK_Idle();
@@ -267,6 +288,8 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 
 uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 {
+	assert(max_mice < UINT8_MAX);
+
 	// Try to match the mouse name which is not mapped yet
 
 	for (size_t i = 0; i < physical_devices.size(); i++) {
@@ -282,7 +305,7 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 			return static_cast<uint8_t>(i);
 	}
 
-	return max_mice; // return value which will be considered out of range
+	return max_mice + 1; // return value which will be considered out of range
 }
 
 void ManyMouseGlue::Map(const uint8_t physical_idx, const MouseInterfaceId interface_id)
@@ -420,6 +443,7 @@ void ManyMouseGlue::Tick()
 		HandleEvent(event);
 
 	// Report accumulated mouse movements
+	assert(rel_x.size() < UINT8_MAX);
 	for (uint8_t idx = 0; idx < rel_x.size(); idx++) {
 		if (rel_x[idx] == 0 && rel_y[idx] == 0)
 			continue;
@@ -439,6 +463,8 @@ void ManyMouseGlue::Tick()
 #else
 
 // ManyMouse is not available
+
+ManyMouseGlue::~ManyMouseGlue() {}
 
 void ManyMouseGlue::RescanIfSafe()
 {

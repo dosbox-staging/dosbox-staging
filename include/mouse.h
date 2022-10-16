@@ -98,7 +98,8 @@ bool MOUSE_IsUsingSeamlessSetting(); // if user selected seamless mode is in eff
 // BIOS mouse interface for PS/2 mouse
 // ***************************************************************************
 
-bool MOUSEBIOS_SetState(const bool use);
+bool MOUSEBIOS_Enable();
+bool MOUSEBIOS_Disable();
 void MOUSEBIOS_SetCallback(const uint16_t pseg, const uint16_t pofs);
 void MOUSEBIOS_Reset();
 bool MOUSEBIOS_SetPacketSize(const uint8_t packet_size);
@@ -134,16 +135,16 @@ public:
 	MouseInterfaceId GetInterfaceId() const;
 	MouseMapStatus GetMapStatus() const;
 	const std::string &GetMappedDeviceName() const;
-	int8_t GetSensitivityX() const; // -99 to +99
-	int8_t GetSensitivityY() const; // -99 to +99
-	uint16_t GetMinRate() const;    // 10-500, 0 for none
-	uint16_t GetRate() const;       // current rate, 10-500, 0 for N/A
+	int16_t GetSensitivityX() const; // -999 to +999
+	int16_t GetSensitivityY() const; // -999 to +999
+	uint16_t GetMinRate() const;     // 10-500, 0 for none
+	uint16_t GetRate() const;        // current rate, 10-500, 0 for N/A
 
 private:
 	friend class MouseInterface;
 	MouseInterfaceInfoEntry(const MouseInterfaceId interface_id);
 
-	const uint8_t idx;
+	const uint8_t interface_idx;
 	const MouseInterface &Interface() const;
 	const MousePhysical &MappedPhysical() const;
 };
@@ -192,11 +193,12 @@ public:
 	bool OnOff(const ListIDs &list_ids, const bool enable);
 	bool Reset(const ListIDs &list_ids);
 
-	// Valid sensitivity values are from -99 to +99
-	bool SetSensitivity(const ListIDs &list_ids, const int8_t sensitivity_x,
-	                    const int8_t sensitivity_y);
-	bool SetSensitivityX(const ListIDs &list_ids, const int8_t sensitivity_x);
-	bool SetSensitivityY(const ListIDs &list_ids, const int8_t sensitivity_y);
+	// Valid sensitivity values are from -999 to +999
+	bool SetSensitivity(const ListIDs &list_ids,
+	                    const int16_t sensitivity_x,
+	                    const int16_t sensitivity_y);
+	bool SetSensitivityX(const ListIDs &list_ids, const int16_t sensitivity_x);
+	bool SetSensitivityY(const ListIDs &list_ids, const int16_t sensitivity_y);
 
 	bool ResetSensitivity(const ListIDs &list_ids);
 	bool ResetSensitivityX(const ListIDs &list_ids);
@@ -204,6 +206,8 @@ public:
 
 	static const std::vector<uint16_t> &GetValidMinRateList();
 	static const std::string &GetValidMinRateStr();
+	static std::string GetInterfaceNameStr(const MouseInterfaceId interface_id);
+
 	bool SetMinRate(const MouseControlAPI::ListIDs &list_ids,
 	                const uint16_t value_hz);
 	bool ResetMinRate(const MouseControlAPI::ListIDs &list_ids);

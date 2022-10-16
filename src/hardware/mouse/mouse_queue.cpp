@@ -66,10 +66,13 @@ void mouse_queue_tick(uint32_t)
 
 MouseQueue &MouseQueue::GetInstance()
 {
-	static MouseQueue *instance = nullptr;
-	if (!instance)
-		instance = new MouseQueue();
-	return *instance;
+	static MouseQueue mouse_queue;
+	return mouse_queue;
+}
+
+MouseQueue::~MouseQueue()
+{
+	PIC_RemoveEvents(mouse_queue_tick);
 }
 
 void MouseQueue::SetRateDOS(const uint16_t rate_hz)
@@ -142,7 +145,7 @@ void MouseQueue::AddEvent(MouseEvent &ev)
 	} else if (!timer_in_progress) {
 		DEBUG_QUEUE("ActivateIRQ, in %s", __FUNCTION__);
 		// If no timer in progress, handle the event now
-		PIC_ActivateIRQ(12);
+		PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
 	}
 }
 
@@ -259,9 +262,8 @@ void MouseQueue::UpdateDelayCounters()
 	if (!pic_ticks_start)
 		elapsed = 1;
 
-	auto calc_new_delay = [](const uint8_t delay, const uint8_t elapsed) {
-		return static_cast<uint8_t>((delay > elapsed) ? (delay - elapsed)
-		                                              : 0);
+	auto calc_new_delay = [](const uint8_t base_delay, const uint8_t elapsed) {
+		return static_cast<uint8_t>((base_delay > elapsed) ? (base_delay - elapsed) : 0);
 	};
 
 	delay.dos_ms = calc_new_delay(delay.dos_ms, elapsed);
@@ -281,7 +283,7 @@ void MouseQueue::Tick()
 	// interrupt; otherwise start the timer again
 	if (HasReadyEventDos() || HasReadyEventPS2()) {
 		DEBUG_QUEUE("ActivateIRQ, in %s", __FUNCTION__);
-		PIC_ActivateIRQ(12);
+		PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
 	} else
 		StartTimerIfNeeded();
 }
