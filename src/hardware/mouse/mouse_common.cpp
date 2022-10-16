@@ -83,8 +83,8 @@ float MOUSE_GetBallisticsCoeff(const float speed)
 uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz)
 {
 	assert(rate_hz);
-	const auto tmp = std::lround(1000.0f / MOUSE_ClampRateHz(rate_hz));
-	return static_cast<uint8_t>(tmp);
+	const auto period_in_ms = std::lround(1000.0f / MOUSE_ClampRateHz(rate_hz));
+	return static_cast<uint8_t>(period_in_ms);
 }
 
 float MOUSE_ClampRelativeMovement(const float rel)

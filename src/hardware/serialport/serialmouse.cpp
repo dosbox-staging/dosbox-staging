@@ -62,7 +62,7 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 
 	std::string model_string;
 	if (cmd->FindStringBegin("model:", model_string, false) &&
-	    !MouseConfig::ParseSerialModel(model_string, param_model, param_auto_msm)) {
+	    !MouseConfig::ParseCOMModel(model_string, param_model, param_auto_msm)) {
 		LOG_ERR("MOUSE (COM%d): Invalid model '%s'",
 		        port_num,
 		        model_string.c_str());
@@ -139,9 +139,7 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 	}
 
 	// Estimate current sampling rate, as precisely as possible
-	auto estimate = [](const uint16_t bauds,
-	                   const uint8_t byte_len,
-	                   const MouseModelCOM model) {
+	auto estimate = [this](const uint16_t bauds) {
 		// In addition to byte_len, the mouse has to send
 		// 3 more bits per each byte: start, parity, stop
 
@@ -149,19 +147,19 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 		    model == MouseModelCOM::Logitech || model == MouseModelCOM::Wheel)
 			// Microsoft-style protocol
 			// single movement needs exactly 3 bytes to be reported
-			return bauds / (static_cast<float>(byte_len + 3) * 3.0f);
+			return bauds / (static_cast<float>(port_byte_len + 3) * 3.0f);
 		else if (model == MouseModelCOM::MouseSystems)
 			// Mouse Systems protocol
 			// single movement needs per average 2.5 bytes to be
 			// reported
-			return bauds / (static_cast<float>(byte_len + 3) * 2.5f);
+			return bauds / (static_cast<float>(port_byte_len + 3) * 2.5f);
 
 		assert(false); // unimplemented
 		return static_cast<float>(rate_1200_baud);
 	};
 
 	// Calculate coefficient to match requested rate
-	rate_coeff = estimate(1200, port_byte_len, model) / rate_hz;
+	rate_coeff = estimate(1200) / rate_hz;
 }
 
 void CSerialMouse::SetModel(const MouseModelCOM new_model)

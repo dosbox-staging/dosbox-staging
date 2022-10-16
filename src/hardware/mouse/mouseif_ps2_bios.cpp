@@ -47,6 +47,14 @@ CHECK_NARROWING();
 // - https://isdaman.com/alsos/hardware/mouse/ps2interface.htm
 // - https://wiki.osdev.org/Mouse_Input
 
+static const std::vector<uint8_t> list_rates_hz = {
+        10, 20, 40, 60, 80, 100, 200 // PS/2 mouse sampling rates
+};
+
+static const std::vector<uint8_t> list_resolutions = {
+        1, 2, 4, 8 // PS/2 mouse resolution values
+};
+
 static MouseButtonsAll buttons;     // currently visible button state
 static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
 static MouseButtons12S buttons_12S; // buttons with 3/4/5 quished together
@@ -85,7 +93,7 @@ void MOUSEPS2_UpdateButtonSquish()
 	buttons.data = squish ? buttons_12S.data : buttons_all.data;
 }
 
-static void terminate_unlick_sequence()
+static void terminate_unlock_sequence()
 {
 	unlock_idx_im = 0;
 	unlock_idx_xp = 0;
@@ -93,7 +101,7 @@ static void terminate_unlick_sequence()
 
 static void set_protocol(const MouseModelPS2 new_protocol)
 {
-	terminate_unlick_sequence();
+	terminate_unlock_sequence();
 
 	static bool first_time = true;
 	if (first_time || protocol != new_protocol) {
@@ -153,13 +161,13 @@ static int16_t get_scaled_movement(const int16_t d)
 	case -5: return -9;
 	case -4: return -6;
 	case -3: return -3;
-	case -2: return -1;
+	case -2: [[fallthrough]];
 	case -1: return -1;
-	case 1: return 1;
-	case 2: return 1;
-	case 3: return 3;
-	case 4: return 6;
-	case 5: return 9;
+	case 1:  [[fallthrough]];
+	case 2:  return 1;
+	case 3:  return 3;
+	case 4:  return 6;
+	case 5:  return 9;
 	default: return static_cast<int16_t>(2 * d);
 	}
 }
@@ -208,21 +216,21 @@ void MOUSEPS2_UpdatePacket()
 		                static_cast<int16_t>(-UINT8_MAX),
 		                static_cast<int16_t>(UINT8_MAX));
 	} else {
-		if ((dx > 0xff) || (dx < -0xff))
+		if ((dx > UINT8_MAX) || (dx < -UINT8_MAX))
 			mdat.overflow_x = 1;
-		if ((dy > 0xff) || (dy < -0xff))
+		if ((dy > UINT8_MAX) || (dy < -UINT8_MAX))
 			mdat.overflow_y = 1;
 	}
 
-	dx %= 0x100;
+	dx = static_cast<int16_t>(dx % (UINT8_MAX + 1));
 	if (dx < 0) {
-		dx          = static_cast<int16_t>(dx + 0x100);
+		dx          = static_cast<int16_t>(dx + UINT8_MAX + 1);
 		mdat.sign_x = 1;
 	}
 
-	dy %= 0x100;
+	dy = static_cast<int16_t>(dy % (UINT8_MAX + 1));
 	if (dy < 0) {
-		dy          = static_cast<int16_t>(dy + 0x100);
+		dy          = static_cast<int16_t>(dy + UINT8_MAX + 1);
 		mdat.sign_y = 1;
 	}
 
@@ -244,7 +252,7 @@ void MOUSEPS2_UpdatePacket()
 
 static void cmd_set_resolution(const uint8_t new_counts_mm)
 {
-	terminate_unlick_sequence();
+	terminate_unlock_sequence();
 
 	if (new_counts_mm != 1 && new_counts_mm != 2 && new_counts_mm != 4 &&
 	    new_counts_mm != 8)
@@ -260,11 +268,9 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 {
 	reset_counters();
 
-	if (new_rate_hz != 10 && new_rate_hz != 20 && new_rate_hz != 40 &&
-	    new_rate_hz != 60 && new_rate_hz != 80 && new_rate_hz != 100 &&
-	    new_rate_hz != 200) {
+	if (!std::binary_search(list_rates_hz.begin(), list_rates_hz.end(), new_rate_hz)) {
 		// Invalid parameter, set default
-		terminate_unlick_sequence();
+		terminate_unlock_sequence();
 		rate_hz = 100;
 	} else
 		rate_hz = new_rate_hz;
@@ -273,9 +279,9 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 	MouseInterface::GetPS2()->NotifyInterfaceRate(rate_hz);
 
 	// Handle extended mouse protocol unlock sequences
-	auto unlock = [](const std::vector<uint8_t> &sequence,
-	                 uint8_t &idx,
-	                 const MouseModelPS2 potential_protocol) {
+	auto process_unlock = [](const std::vector<uint8_t> &sequence,
+	                         uint8_t &idx,
+	                         const MouseModelPS2 potential_protocol) {
 		if (sequence[idx] != rate_hz)
 			idx = 0;
 		else if (sequence.size() == ++idx) {
@@ -283,14 +289,18 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 		}
 	};
 
-	static const std::vector<uint8_t> seq_im = {200, 100, 80};
-	static const std::vector<uint8_t> seq_xp = {200, 200, 80};
+	static const std::vector<uint8_t> unlock_sequence_im = {200, 100, 80};
+	static const std::vector<uint8_t> unlock_sequence_xp = {200, 200, 80};
 
 	if (mouse_config.model_ps2 == MouseModelPS2::IntelliMouse)
-		unlock(seq_im, unlock_idx_im, MouseModelPS2::IntelliMouse);
+		process_unlock(unlock_sequence_im,
+		               unlock_idx_im,
+		               MouseModelPS2::IntelliMouse);
 	else if (mouse_config.model_ps2 == MouseModelPS2::Explorer) {
-		unlock(seq_im, unlock_idx_im, MouseModelPS2::IntelliMouse);
-		unlock(seq_xp, unlock_idx_xp, MouseModelPS2::Explorer);
+		process_unlock(unlock_sequence_im,
+		               unlock_idx_im,
+		               MouseModelPS2::IntelliMouse);
+		process_unlock(unlock_sequence_xp, unlock_idx_xp, MouseModelPS2::Explorer);
 	}
 }
 
@@ -311,7 +321,7 @@ static void cmd_reset()
 
 static void cmd_set_scaling_21(const bool enable)
 {
-	terminate_unlick_sequence();
+	terminate_unlock_sequence();
 
 	scaling_21 = enable;
 }
@@ -321,7 +331,12 @@ bool MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
 	delta_x = MOUSE_ClampRelativeMovement(delta_x + x_rel);
 	delta_y = MOUSE_ClampRelativeMovement(delta_y + y_rel);
 
-	return (std::fabs(delta_x) >= 0.5f) || (std::fabs(delta_y) >= 0.5f);
+	// Threshold the accumulated movement needs to cross
+	// to be considered significant enough for new event
+	constexpr float threshold = 0.5f;
+
+	return (std::fabs(delta_x) >= threshold) ||
+	       (std::fabs(delta_y) >= threshold);
 }
 
 bool MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
@@ -370,8 +385,8 @@ static RealPt ps2_callback   = 0;
 void MOUSEBIOS_Reset()
 {
 	cmd_reset();
-	PIC_SetIRQMask(12, false); // lower IRQ line
-	MOUSEVMM_Deactivate();     // VBADOS seems to expect this
+	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
+	MOUSEVMM_Deactivate(); // VBADOS seems to expect this
 }
 
 void MOUSEBIOS_SetCallback(const uint16_t pseg, const uint16_t pofs)
@@ -399,30 +414,19 @@ bool MOUSEBIOS_SetPacketSize(const uint8_t packet_size)
 
 bool MOUSEBIOS_SetSampleRate(const uint8_t rate_id)
 {
-	switch (rate_id) {
-	case 0: cmd_set_sample_rate(10); break;
-	case 1: cmd_set_sample_rate(20); break;
-	case 2: cmd_set_sample_rate(40); break;
-	case 3: cmd_set_sample_rate(60); break;
-	case 4: cmd_set_sample_rate(80); break;
-	case 5: cmd_set_sample_rate(100); break;
-	case 6: cmd_set_sample_rate(200); break;
-	default: return false;
-	}
+	if (rate_id >= list_rates_hz.size())
+		return false;
 
+	cmd_set_sample_rate(list_rates_hz[rate_id]);
 	return true;
 }
 
 bool MOUSEBIOS_SetResolution(const uint8_t res_id)
 {
-	switch (res_id) {
-	case 0: cmd_set_resolution(1); break;
-	case 1: cmd_set_resolution(2); break;
-	case 2: cmd_set_resolution(4); break;
-	case 3: cmd_set_resolution(8); break;
-	default: return false;
-	}
+	if (res_id >= list_resolutions.size())
+		return false;
 
+	cmd_set_sample_rate(list_resolutions[res_id]);
 	return true;
 }
 
@@ -431,17 +435,18 @@ void MOUSEBIOS_SetScaling21(const bool enable)
 	cmd_set_scaling_21(enable);
 }
 
-bool MOUSEBIOS_SetState(const bool use)
+bool MOUSEBIOS_Enable()
 {
-	if (use && !callback_init) {
-		mouse_shared.active_bios = false;
-		MOUSE_NotifyStateChanged();
-		return false;
-	} else {
-		mouse_shared.active_bios = use;
-		MOUSE_NotifyStateChanged();
-		return true;
-	}
+	mouse_shared.active_bios = callback_init;
+	MOUSE_NotifyStateChanged();
+	return callback_init;
+}
+
+bool MOUSEBIOS_Disable()
+{
+	mouse_shared.active_bios = false;
+	MOUSE_NotifyStateChanged();
+	return true;
 }
 
 uint8_t MOUSEBIOS_GetResolution()
@@ -504,7 +509,7 @@ Bitu MOUSEBIOS_DoCallback()
 		CPU_Push16(packet[2]);
 		CPU_Push16(packet[3]);
 	}
-	CPU_Push16((uint16_t)0);
+	CPU_Push16(0u);
 
 	CPU_Push16(RealSeg(ps2_callback));
 	CPU_Push16(RealOff(ps2_callback));
@@ -517,7 +522,7 @@ Bitu MOUSEBIOS_DoCallback()
 void MOUSEPS2_Init()
 {
 	// Callback for ps2 user callback handling
-	auto call_ps2 = CALLBACK_Allocate();
+	const auto call_ps2 = CALLBACK_Allocate();
 	CALLBACK_Setup(call_ps2, &callback_ret, CB_RETF, "ps2 bios callback");
 	ps2_callback = CALLBACK_RealPointer(call_ps2);
 

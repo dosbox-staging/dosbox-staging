@@ -117,6 +117,10 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel);
 
 class MouseInterface {
 public:
+	MouseInterface()                                  = delete;
+	MouseInterface(const MouseInterface &)            = delete;
+	MouseInterface &operator=(const MouseInterface &) = delete;
+
 	static void InitAllInstances();
 	static MouseInterface *Get(const MouseInterfaceId interface_id);
 	static MouseInterface *GetDOS();
@@ -129,7 +133,7 @@ public:
 	                          const bool pressed)                 = 0;
 	virtual void NotifyWheel(MouseEvent &ev, const int16_t w_rel) = 0;
 
-	void NotifyInterfaceRate(const uint16_t rate_hz);
+	void NotifyInterfaceRate(const uint16_t new_rate_hz);
 	virtual void NotifyBooting();
 	void NotifyDisconnect();
 
@@ -142,8 +146,8 @@ public:
 	MouseInterfaceId GetInterfaceId() const;
 	MouseMapStatus GetMapStatus() const;
 	uint8_t GetMappedDeviceIdx() const;
-	int8_t GetSensitivityX() const;
-	int8_t GetSensitivityY() const;
+	int16_t GetSensitivityX() const;
+	int16_t GetSensitivityY() const;
 	uint16_t GetMinRate() const;
 	uint16_t GetRate() const;
 
@@ -152,9 +156,9 @@ public:
 
 	void ConfigOnOff(const bool enable);
 	void ConfigReset();
-	void ConfigSetSensitivity(const int8_t value_x, const int8_t value_y);
-	void ConfigSetSensitivityX(const int8_t value);
-	void ConfigSetSensitivityY(const int8_t value);
+	void ConfigSetSensitivity(const int16_t value_x, const int16_t value_y);
+	void ConfigSetSensitivityX(const int16_t value);
+	void ConfigSetSensitivityY(const int16_t value);
 	void ConfigResetSensitivity();
 	void ConfigResetSensitivityX();
 	void ConfigResetSensitivityY();
@@ -191,30 +195,25 @@ protected:
 	MouseButtonsAll GetButtonsJoined() const;
 	MouseButtons12S GetButtonsSquished() const;
 
-	bool emulated = true;
+	bool emulated = false;
 
-	float sensitivity_coeff_x = 1.0f; // cached combined sensitivity
-	                                  // coefficients
+	float sensitivity_coeff_x = 1.0f; // cached combined sensitivity coefficients
 	float sensitivity_coeff_y = 1.0f; // to reduce amount of multiplications
 
-	int8_t sensitivity_user_x = 0;
-	int8_t sensitivity_user_y = 0;
+	int16_t sensitivity_user_x = 0;
+	int16_t sensitivity_user_y = 0;
 
 	uint16_t rate_hz           = 0;
 	uint16_t min_rate_hz       = 0;
 	uint16_t interface_rate_hz = 0;
 
 private:
-	MouseInterface()                                  = delete;
-	MouseInterface(const MouseInterface &)            = delete;
-	MouseInterface &operator=(const MouseInterface &) = delete;
-
 	const MouseInterfaceId interface_id = MouseInterfaceId::None;
 
 	MouseMapStatus map_status = MouseMapStatus::HostPointer;
 	uint8_t mapped_idx = idx_host_pointer; // index of mapped physical mouse
 
-	MouseButtons12 buttons_12 = 0; // host side buttons 1 (left), 2 (right)
+	MouseButtons12 buttons_12   = 0; // host side buttons 1 (left), 2 (right)
 	MouseButtons345 buttons_345 = 0; // host side buttons 3 (middle), 4, and 5
 
 	MouseButtons12 old_buttons_12   = 0; // pre-update values

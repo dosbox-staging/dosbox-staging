@@ -214,29 +214,17 @@ static RealPt user_callback;
 
 static uint8_t signed_to_reg8(const int8_t x)
 {
-	if (x >= 0)
-		return static_cast<uint8_t>(x);
-	else
-		// -1 for 0xff, -2 for 0xfe, etc.
-		return static_cast<uint8_t>(0x100 + x);
+	return static_cast<uint8_t>(x);
 }
 
 static uint16_t signed_to_reg16(const int16_t x)
 {
-	if (x >= 0)
-		return static_cast<uint16_t>(x);
-	else
-		// -1 for 0xffff, -2 for 0xfffe, etc.
-		return static_cast<uint16_t>(0x10000 + x);
+	return static_cast<uint16_t>(x);
 }
 
 static int16_t reg_to_signed16(const uint16_t x)
 {
-	if (bit::is(x, b15))
-		// 0xffff for -1, 0xfffe for -2, etc.
-		return static_cast<int16_t>(x - 0x10000);
-	else
-		return static_cast<int16_t>(x);
+	return static_cast<int16_t>(x);
 }
 
 static uint16_t get_pos_x()
@@ -311,7 +299,7 @@ static void draw_cursor_text()
 		state.background.pos_x = state.background.pos_x / 2;
 
 	// use current page (CV program)
-	uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 
 	if (state.cursor_type == MouseCursor::Software) {
 		uint16_t result = 0;
@@ -342,7 +330,7 @@ static void draw_cursor_text()
 		                   state.background.pos_x) *
 		                          2);
 		address /= 2;
-		uint16_t cr = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
+		const uint16_t cr = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
 		IO_Write(cr, 0xe);
 		IO_Write(static_cast<io_port_t>(cr + 1),
 		         static_cast<uint8_t>((address >> 8) & 0xff));
@@ -710,7 +698,7 @@ static void reset_hardware()
 	state.wheel_api = false;
 	counter_w       = 0;
 
-	PIC_SetIRQMask(12, false); // lower IRQ line
+	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
 
 	// Reset mouse refresh rate
 	rate_is_set = false;
@@ -745,7 +733,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool setmode)
 {
 	state.inhibit_draw = false;
 	// Get the correct resolution from the current video mode
-	uint8_t mode = mem_readb(BIOS_VIDEO_MODE);
+	const uint8_t mode = mem_readb(BIOS_VIDEO_MODE);
 	if (setmode && mode == state.mode)
 		LOG(LOG_MOUSE, LOG_NORMAL)
 		("New video mode is the same as the old");
@@ -921,8 +909,8 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
 	};
 
 	// Apply mouse movement to mimic host OS
-	float x = calculate(x_abs, mouse_video.res_x, mouse_video.clip_x);
-	float y = calculate(y_abs, mouse_video.res_y, mouse_video.clip_y);
+	const float x = calculate(x_abs, mouse_video.res_x, mouse_video.clip_x);
+	const float y = calculate(y_abs, mouse_video.res_y, mouse_video.clip_y);
 
 	// TODO: this is probably overcomplicated, especially
 	// the usage of relative movement - to be investigated
@@ -1568,10 +1556,10 @@ static Bitu int33_handler()
 static Bitu mouse_bd_handler()
 {
 	// the stack contains offsets to register values
-	uint16_t raxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x0a));
-	uint16_t rbxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x08));
-	uint16_t rcxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x06));
-	uint16_t rdxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x04));
+	const uint16_t raxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x0a));
+	const uint16_t rbxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x08));
+	const uint16_t rcxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x06));
+	const uint16_t rdxpt = real_readw(SegValue(ss), static_cast<uint16_t>(reg_sp + 0x04));
 
 	// read out the actual values, registers ARE overwritten
 	const uint16_t rax = real_readw(SegValue(ds), raxpt);
@@ -1684,11 +1672,11 @@ void MOUSEDOS_NotifyRawInput(const bool enabled)
 void MOUSEDOS_Init()
 {
 	// Callback for mouse interrupt 0x33
-	auto call_int33 = CALLBACK_Allocate();
+	const auto call_int33 = CALLBACK_Allocate();
 	// RealPt int33_location = RealMake(CB_SEG + 1,(call_int33 * CB_SIZE) -
 	// 0x10);
-	RealPt int33_location = RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1),
-	                                 0x10);
+	const RealPt int33_location =
+	        RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1), 0x10);
 	CALLBACK_Setup(call_int33,
 	               &int33_handler,
 	               CB_MOUSE,
@@ -1697,7 +1685,7 @@ void MOUSEDOS_Init()
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0, 0x33 << 2, int33_location);
 
-	auto call_mouse_bd = CALLBACK_Allocate();
+	const auto call_mouse_bd = CALLBACK_Allocate();
 	CALLBACK_Setup(call_mouse_bd,
 	               &mouse_bd_handler,
 	               CB_RETF8,
@@ -1713,7 +1701,7 @@ void MOUSEDOS_Init()
 	//    iret
 
 	// Callback for mouse user routine return
-	auto call_user = CALLBACK_Allocate();
+	const auto call_user = CALLBACK_Allocate();
 	CALLBACK_Setup(call_user, &user_callback_handler, CB_RETF_CLI, "mouse user ret");
 	user_callback = CALLBACK_RealPointer(call_user);
 
