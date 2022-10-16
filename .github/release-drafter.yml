@@ -1,0 +1,64 @@
+name-template: "v$NEXT_MAJOR_VERSION"
+
+tag-template: "v$NEXT_MAJOR_VERSION"
+
+prerelease: true
+
+categories:
+  - title: "New Features"
+    labels:
+      - "enhancement"
+
+  - title: "Bug and Regression Fixes"
+    labels:
+      - "bug"
+      - "regression"
+
+  - title: "Documentation and Translations"
+    labels:
+      - "documentation"
+      - "translation"
+
+  - title: "Project Maintenance"
+    labels:
+      - "buildsystem"
+      - "CI"
+      - "cleanup"
+      - "packaging"
+      - "plumbing"
+      - "refactor"
+      - "upstream_sync"
+
+change-template: "- #$NUMBER: $TITLE"
+
+template: |
+
+  ## How to Upgrade
+
+  Download and launch the latest version:
+
+  - [Linux](/downloads/linux/) (or [Steam on Linux](/downloads/linux#steam))
+  - [Windows](/downloads/windows/)
+  - [macOS](/downloads/macos/)
+
+  At the `C:\>` prompt, run: `config -wc` to upgrade your config file with 
+  the currently-supported settings.
+
+  ## Changes
+  $CHANGES
+
+  ## Release Contributors
+
+  $CONTRIBUTORS
+
+  ## Thank You
+
+  Thanks to our financial contributors who allow us to purchase 
+  hardware, licenses, and other non-trivial expenses to keep the team 
+  and project going.
+
+  To support our work, donate to our [GitHub Sponsors](https://github.com/sponsors/dosbox-staging) or
+  [Open Collective](https://opencollective.com/dosbox-staging).
+
+  We are grateful for all community contributions as well as the 
+  original DOSBox project, upon which DOSBox Staging is based.
