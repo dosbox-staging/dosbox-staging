@@ -2305,9 +2305,10 @@ void GFX_SwitchFullScreen()
 {
 	sdl.desktop.switching_fullscreen = true;
 
+	// Record the window's current canvas size if we're departing window-mode
+	auto &window_canvas_size = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen)
-		sdl.desktop.canvas_size_before_fullscreen_switch = get_canvas_size(
-		        sdl.desktop.type);
+		window_canvas_size = get_canvas_size(sdl.desktop.type);
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
@@ -2321,10 +2322,11 @@ void GFX_SwitchFullScreen()
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
 
-	const std::optional<SDL_Rect> canvas_size =
-	        !sdl.desktop.fullscreen
-	                ? sdl.desktop.canvas_size_before_fullscreen_switch
-	                : std::optional<SDL_Rect>();
+	// After switching modes, get the current canvas size, which might be
+	// the windowed size or full screen size.
+	auto canvas_size = sdl.desktop.fullscreen
+	                         ? get_canvas_size(sdl.desktop.type)
+	                         : window_canvas_size;
 
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
@@ -3003,6 +3005,25 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	sdl.desktop.window.initial_y_pos = y;
 }
 
+// Writes to the window-size member should be done via this function
+static void save_window_size(const int w, const int h)
+{
+	assert(w > 0 && h > 0);
+
+	// The desktop.window size stores the user-configured window size.
+	// During runtime, the actual SDL window size might differ from this
+	// depending on the aspect ratio, window DPI, or manual resizing.
+	sdl.desktop.window.width  = w;
+	sdl.desktop.window.height = h;
+
+	// Initialize the window's canvas size if it hasn't yet been set.
+	auto &window_canvas_size = sdl.desktop.window.canvas_size;
+	if (window_canvas_size.w <= 0 || window_canvas_size.h <= 0) {
+		window_canvas_size.w = w;
+		window_canvas_size.h = h;
+	}
+}
+
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
@@ -3032,8 +3053,12 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 {
 	// TODO: Deprecate SURFACE output and remove this.
 	// For now, let the DOS-side determine the window's resolution.
-	if (sdl.desktop.want_type == SCREEN_SURFACE)
+	if (sdl.desktop.want_type == SCREEN_SURFACE) {
+		// ensure our window sizes are populated
+		save_window_size(FALLBACK_WINDOW_DIMENSIONS.x,
+		                 FALLBACK_WINDOW_DIMENSIONS.y);
 		return;
+	}
 
 	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
@@ -3075,8 +3100,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 		                                  should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
-	sdl.desktop.window.width = refined_size.x;
-	sdl.desktop.window.height = refined_size.y;
+	save_window_size(refined_size.x, refined_size.y);
 
 	auto describe_scaling_mode = [scaling_mode]() -> const char * {
 		switch (scaling_mode) {
@@ -3699,10 +3723,8 @@ static void HandleVideoResize(int width, int height)
 		sdl.clip          = calc_viewport(canvas.w, canvas.h);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 
-		if (!sdl.desktop.fullscreen) {
-			sdl.desktop.window.width  = width;
-			sdl.desktop.window.height = height;
-		}
+		if (!sdl.desktop.fullscreen)
+			save_window_size(width, height);
 
 		// Ensure mouse emulation knows the current parameters
 		NewMouseScreenParams();
