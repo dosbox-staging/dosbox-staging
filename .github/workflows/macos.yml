@@ -114,7 +114,10 @@ jobs:
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  meson test -C build --print-errorlogs
+        run: |
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+          eval "$(${{ matrix.conf.brew_path }}/bin/brew shellenv)"
+          meson test --num-processes 128 -t 0 -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
