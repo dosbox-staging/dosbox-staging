@@ -135,6 +135,7 @@ struct SDL_Block {
 			bool display_res = false;
 		} full = {};
 		struct {
+			// user-configured window size
 			int width = 0;
 			int height = 0;
 			bool resizable = false;
@@ -142,6 +143,8 @@ struct SDL_Block {
 			bool adjusted_initial_size = false;
 			int initial_x_pos = -1;
 			int initial_y_pos = -1;
+			// instantaneous canvas size of the window
+			SDL_Rect canvas_size = {};
 		} window = {};
 		struct {
 			int width = 0;
@@ -151,10 +154,6 @@ struct SDL_Block {
 		uint8_t bpp = 0;
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
-
-		// Records the canvas size (actual window-size in pixels) prior
-		// to switching to fullscreen
-		SDL_Rect canvas_size_before_fullscreen_switch = {};
 
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
