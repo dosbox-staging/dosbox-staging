@@ -130,28 +130,25 @@ constexpr T1 left_shift_signed(T1 value, T2 amount)
 template <typename T>
 int8_t clamp_to_int8(const T val)
 {
-	const auto tmp = std::clamp(val,
-	                            static_cast<T>(INT8_MIN),
-	                            static_cast<T>(INT8_MAX));
-	return static_cast<int8_t>(tmp);
+	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT8_MIN : 0);
+	constexpr auto max_val = static_cast<T>(INT8_MAX);
+	return static_cast<int8_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
 int16_t clamp_to_int16(const T val)
 {
-	const auto tmp = std::clamp(val,
-	                            static_cast<T>(INT16_MIN),
-	                            static_cast<T>(INT16_MAX));
-	return static_cast<int16_t>(tmp);
+	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT16_MIN : 0);
+	constexpr auto max_val = static_cast<T>(INT16_MAX);
+	return static_cast<int16_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
 int32_t clamp_to_int32(const T val)
 {
-	const auto tmp = std::clamp(val,
-	                            static_cast<T>(INT32_MIN),
-	                            static_cast<T>(INT32_MAX));
-	return static_cast<int32_t>(tmp);
+	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT32_MIN : 0);
+	constexpr auto max_val = static_cast<T>(INT32_MAX);
+	return static_cast<int32_t>(std::clamp(val, min_val, max_val));
 }
 
 inline float decibel_to_gain(const float decibel)
