@@ -13,6 +13,8 @@
 
 #ifdef __linux__
 
+#include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -271,7 +273,10 @@ static int linux_evdev_init(void)
 
     closedir(dirp);
 
-    return available_mice;
+    /* Ensure we're not going to roll over when casting to signed */
+    assert(available_mice <= INT_MAX);
+
+    return (int)available_mice;
 } /* linux_evdev_init */
 
 
