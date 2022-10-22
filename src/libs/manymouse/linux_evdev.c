@@ -7,6 +7,7 @@
  *  Altered to:
  *   - silence compiler warnings, by Roman Standzikowski.
  *   - silence compiler warnings, by kcgen.
+ *   - fix a time-of-check time-of-use issue, by kcgen.
  */
 
 #include "manymouse.h"
@@ -220,33 +221,48 @@ static int init_mouse(__attribute__((unused)) const char *fname, int fd)
 } /* init_mouse */
 
 
-/* Return a file descriptor if this is really a mouse, -1 otherwise. */
+/* Return 1 if this is really a mouse, 0 otherwise. */
 static int open_if_mouse(const char *fname)
 {
-    struct stat statbuf;
-    int fd;
-    int devmajor, devminor;
+    assert(fname);
 
-    if (stat(fname, &statbuf) == -1)
+    /* Can we open the file device? */
+    const int fd = open(fname, O_RDONLY | O_NONBLOCK);
+    if (fd == -1)
         return 0;
 
-    if (S_ISCHR(statbuf.st_mode) == 0)
-        return 0;  /* not a character device... */
+    struct stat statbuf;
+    memset(&statbuf, 0, sizeof(statbuf));
+
+    /* Can we stat info about the device? */
+    if (fstat(fd, &statbuf) == -1) {
+        close(fd);
+        return 0;
+    }
+
+    /* Is it a character device? */
+    if (S_ISCHR(statbuf.st_mode) == 0) {
+        close(fd);
+        return 0;
+    }
 
     /* evdev node ids are major 13, minor 64-96. Is this safe to check? */
-    devmajor = (statbuf.st_rdev & 0xFF00) >> 8;
-    devminor = (statbuf.st_rdev & 0x00FF);
-    if ( (devmajor != 13) || (devminor < 64) || (devminor > 96) )
+    const int devmajor = (statbuf.st_rdev & 0xFF00) >> 8;
+    const int devminor = (statbuf.st_rdev & 0x00FF);
+    if ( (devmajor != 13) || (devminor < 64) || (devminor > 96) ) {
+        close(fd);
         return 0;  /* not an evdev. */
+    }
 
-    if ((fd = open(fname, O_RDONLY | O_NONBLOCK)) == -1)
+    /* Were we able to initialize the evdev mouse handle? */
+    const char * unused_filename = NULL;
+    if (init_mouse(unused_filename, fd) != 1) {
+        close(fd);
         return 0;
+    }
 
-    if (init_mouse(fname, fd))
-        return 1;
-
-    close(fd);
-    return 0;
+    assert(fd >= 0);
+    return 1;
 } /* open_if_mouse */
 
 
