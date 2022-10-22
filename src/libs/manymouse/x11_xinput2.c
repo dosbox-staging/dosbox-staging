@@ -4,7 +4,9 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
- *  Altered to silence compiler warnings by Roman Standzikowski.
+ *  Altered to:
+ *   - silence compiler warnings, by Roman Standzikowski.
+ *   - fix uninitialized event member access, by kcgen.
  */
 
 #include "manymouse.h"
@@ -397,7 +399,14 @@ static inline int map_xi2_button(const int button)
 
 static void pump_events(void)
 {
-    ManyMouseEvent event;
+    ManyMouseEvent event = {
+        .type = 0,
+        .device = 0,
+        .item = 0,
+        .value = 0,
+        .minval = 0,
+        .maxval = 0
+    };
     const int opcode = xi2_opcode;
     const XIRawEvent *rawev = NULL;
     const XIHierarchyEvent *hierev = NULL;
