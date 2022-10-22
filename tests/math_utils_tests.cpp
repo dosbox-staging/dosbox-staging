@@ -160,4 +160,167 @@ TEST(iroundf, invalid)
 	EXPECT_DEBUG_DEATH({ iroundf(-80000000000.0f); }, "");
 }
 
+TEST(clamp_to_int8, signed_negatives)
+{
+	EXPECT_EQ(clamp_to_int8(INT16_MIN), INT8_MIN);
+	EXPECT_EQ(clamp_to_int8(INT8_MIN - 0), INT8_MIN);
+	EXPECT_EQ(clamp_to_int8(INT8_MIN + 1), INT8_MIN + 1);
+}
+
+TEST(clamp_to_int16, signed_negatives)
+{
+	EXPECT_EQ(clamp_to_int16(INT32_MIN), INT16_MIN);
+	EXPECT_EQ(clamp_to_int16(INT16_MIN - 0), INT16_MIN);
+	EXPECT_EQ(clamp_to_int16(INT16_MIN + 1), INT16_MIN + 1);
+}
+
+TEST(clamp_to_int32, signed_negatives)
+{
+	EXPECT_EQ(clamp_to_int32(INT64_MIN), INT32_MIN);
+	EXPECT_EQ(clamp_to_int32(INT32_MIN - 0), INT32_MIN);
+	EXPECT_EQ(clamp_to_int32(INT32_MIN + 1), INT32_MIN + 1);
+}
+
+TEST(clamp_to_int8, signed_positives)
+{
+	EXPECT_EQ(clamp_to_int8(INT16_MAX), INT8_MAX);
+	EXPECT_EQ(clamp_to_int8(INT8_MAX - 0), INT8_MAX);
+	EXPECT_EQ(clamp_to_int8(INT16_MAX - 1), INT8_MAX);
+}
+
+TEST(clamp_to_int16, signed_positives)
+{
+	EXPECT_EQ(clamp_to_int16(INT32_MAX), INT16_MAX);
+	EXPECT_EQ(clamp_to_int16(INT16_MAX - 0), INT16_MAX);
+	EXPECT_EQ(clamp_to_int16(INT32_MAX - 1), INT16_MAX);
+}
+
+TEST(clamp_to_int32, signed_positives)
+{
+	EXPECT_EQ(clamp_to_int32(INT64_MAX), INT32_MAX);
+	EXPECT_EQ(clamp_to_int32(INT32_MAX - 0), INT32_MAX);
+	EXPECT_EQ(clamp_to_int32(INT64_MAX - 1), INT32_MAX);
+}
+
+TEST(clamp_to_int8, signed_literals)
+{
+	EXPECT_EQ(clamp_to_int8(-1'000), INT8_MIN);
+	EXPECT_EQ(clamp_to_int8(-100), -100);
+	EXPECT_EQ(clamp_to_int8(-1), -1);
+	EXPECT_EQ(clamp_to_int8(0), 0);
+	EXPECT_EQ(clamp_to_int8(1), 1);
+	EXPECT_EQ(clamp_to_int8(100), 100);
+	EXPECT_EQ(clamp_to_int8(1'000), INT8_MAX);
+}
+
+TEST(clamp_to_int16, signed_literals)
+{
+	EXPECT_EQ(clamp_to_int16(-100'000), INT16_MIN);
+	EXPECT_EQ(clamp_to_int16(-10'000), -10000);
+	EXPECT_EQ(clamp_to_int16(-1'000), -1000);
+	EXPECT_EQ(clamp_to_int16(-10), -10);
+	EXPECT_EQ(clamp_to_int16(0), 0);
+	EXPECT_EQ(clamp_to_int16(10), 10);
+	EXPECT_EQ(clamp_to_int16(1'000), 1000);
+	EXPECT_EQ(clamp_to_int16(10'000), 10000);
+	EXPECT_EQ(clamp_to_int16(100'000), INT16_MAX);
+}
+
+TEST(clamp_to_int32, signed_literals)
+{
+	EXPECT_EQ(clamp_to_int32(-10'000'000'000), INT32_MIN);
+	EXPECT_EQ(clamp_to_int32(-1'000'000'000), -1'000'000'000);
+	EXPECT_EQ(clamp_to_int32(-1'000'000), -1'000'000);
+	EXPECT_EQ(clamp_to_int32(-100), -100);
+	EXPECT_EQ(clamp_to_int32(0), 0);
+	EXPECT_EQ(clamp_to_int32(100), 100);
+	EXPECT_EQ(clamp_to_int32(1'000'000), 1'000'000);
+	EXPECT_EQ(clamp_to_int32(1'000'000'000), 1'000'000'000);
+	EXPECT_EQ(clamp_to_int32(10'000'000'000), INT32_MAX);
+}
+
+#ifndef UINT8_MIN
+constexpr uint8_t UINT8_MIN = {0};
+#endif
+
+#ifndef UINT16_MIN
+constexpr uint16_t UINT16_MIN = {0};
+#endif
+
+#ifndef UINT32_MIN
+constexpr uint32_t UINT32_MIN = {0};
+#endif
+
+#ifndef UINT64_MIN
+constexpr uint64_t UINT64_MIN = {0};
+#endif
+
+TEST(clamp_to_int8, unsigned_minimums)
+{
+	EXPECT_EQ(clamp_to_int8(UINT16_MIN), 0);
+	EXPECT_EQ(clamp_to_int8(UINT8_MIN - 0u), 0);
+	EXPECT_EQ(clamp_to_int8(UINT8_MIN + 1u), 1);
+}
+
+TEST(clamp_to_int16, unsigned_minimums)
+{
+	EXPECT_EQ(clamp_to_int16(UINT32_MIN), 0);
+	EXPECT_EQ(clamp_to_int16(UINT16_MIN - 0u), 0);
+	EXPECT_EQ(clamp_to_int16(UINT16_MIN + 1u), 1);
+}
+
+TEST(clamp_to_int32, unsigned_minimums)
+{
+	EXPECT_EQ(clamp_to_int32(UINT64_MIN), 0);
+	EXPECT_EQ(clamp_to_int32(UINT32_MIN - 0u), 0);
+	EXPECT_EQ(clamp_to_int32(UINT32_MIN + 1u), 1);
+}
+
+TEST(clamp_to_int8, unsigned_maximums)
+{
+	EXPECT_EQ(clamp_to_int8(UINT16_MAX), INT8_MAX);
+	EXPECT_EQ(clamp_to_int8(UINT8_MAX - 0u), INT8_MAX);
+	EXPECT_EQ(clamp_to_int8(INT16_MAX - 1u), INT8_MAX);
+}
+
+TEST(clamp_to_int16, unsigned_maximums)
+{
+	EXPECT_EQ(clamp_to_int16(UINT32_MAX), INT16_MAX);
+	EXPECT_EQ(clamp_to_int16(UINT16_MAX - 0u), INT16_MAX);
+	EXPECT_EQ(clamp_to_int16(UINT32_MAX - 1u), INT16_MAX);
+}
+
+TEST(clamp_to_int32, unsigned_maximums)
+{
+	EXPECT_EQ(clamp_to_int32(UINT64_MAX), INT32_MAX);
+	EXPECT_EQ(clamp_to_int32(UINT32_MAX - 0u), INT32_MAX);
+	EXPECT_EQ(clamp_to_int32(UINT64_MAX - 1u), INT32_MAX);
+}
+
+TEST(clamp_to_int8, unsigned_literals)
+{
+	EXPECT_EQ(clamp_to_int8(0u), 0);
+	EXPECT_EQ(clamp_to_int8(1u), 1);
+	EXPECT_EQ(clamp_to_int8(100u), 100);
+	EXPECT_EQ(clamp_to_int8(1'000u), INT8_MAX);
+}
+
+TEST(clamp_to_int16, unsigned_literals)
+{
+	EXPECT_EQ(clamp_to_int16(0u), 0);
+	EXPECT_EQ(clamp_to_int16(10u), 10);
+	EXPECT_EQ(clamp_to_int16(1'000u), 1000);
+	EXPECT_EQ(clamp_to_int16(10'000u), 10'000);
+	EXPECT_EQ(clamp_to_int16(100'000u), INT16_MAX);
+}
+
+TEST(clamp_to_int32, unsigned_literals)
+{
+	EXPECT_EQ(clamp_to_int32(0u), 0);
+	EXPECT_EQ(clamp_to_int32(100u), 100);
+	EXPECT_EQ(clamp_to_int32(1'000'000u), 1'000'000);
+	EXPECT_EQ(clamp_to_int32(1'000'000'000u), 1'000'000'000);
+	EXPECT_EQ(clamp_to_int32(10'000'000'000u), INT32_MAX);
+}
+
 } // namespace
