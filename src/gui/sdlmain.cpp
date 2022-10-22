@@ -4315,7 +4315,7 @@ void Config_Add_SDL() {
 	Pmulti->Set_help(mouse_control_help);
 
 	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	Pmulti->Set_help("Moved [mouse] section; see documentation as values have different meaning now.");
+	Pmulti->Set_help("Moved to [mouse] section.");
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
 	pbool->Set_help("Moved to [mouse] section.");
 
