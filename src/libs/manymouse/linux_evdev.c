@@ -4,7 +4,9 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
- *  Altered to silence compiler warnings by Roman Standzikowski.
+ *  Altered to:
+ *   - silence compiler warnings, by Roman Standzikowski.
+ *   - silence compiler warnings, by kcgen.
  */
 
 #include "manymouse.h"
@@ -48,7 +50,7 @@ static int poll_mouse(MouseStruct *mouse, ManyMouseEvent *outevent)
     while (unhandled)  /* read until failure or valid event. */
     {
         struct input_event event;
-        int br = read(mouse->fd, &event, sizeof (event));
+        const ssize_t br = read(mouse->fd, &event, sizeof (event));
         if (br == -1)
         {
             if (errno == EAGAIN)
