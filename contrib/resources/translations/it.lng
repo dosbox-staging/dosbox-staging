@@ -102,13 +102,10 @@ Scegli come vengono gestiti i clic centrali (secondo parametro):
 Predefiniti (se non presenti o incorretti): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Sensibilità del mouse. Il secondo parametro, facoltativo, specifica la
-sensibilità verticale (es. 100,-50).
+Spostato nella sezione [mouse].
 .
 :CONFIG_RAW_MOUSE_INPUT
-Abilita questa impostazione per bypassare le impostazioni di sensibilità
-e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
-schermo intero o quando il mouse viene catturato in modalità finestra.
+Spostato nella sezione [mouse].
 .
 :CONFIG_WAITONERROR
 Mantiene la console aperta se si verifica un errore.
@@ -346,6 +343,61 @@ controllo della velocità.
 Un valore più basso di 100 indica una percentuale.
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida.
+.
+:CONFIG_MOUSE_SENSITIVITY
+Sensibilità del mouse predefinita. 100 è il valore base, 150 equivale al 150%
+di sensibilità, ecc.
+Valori negativi invertono la direzione del mouse, 0 lo disabilita.
+Il secondo parametro specifica la sensibilità verticale (ad es. 100,200).
+Questa impostazione può essere regolata durante l'esecuzione del programma
+(per ogni interfaccia del mouse) utilizzando lo strumento interno MOUSECTL.COM,
+disponibile sull'unità Z:.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Abilita questa impostazione per bypassare le impostazioni di sensibilità
+e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
+schermo intero o quando il mouse viene catturato in modalità finestra.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Abilita il driver del mouse DOS integrato.
+Note:
+   Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
+   Quando un sistema operativo guest viene avviato, il driver integrato viene
+   disabilitato automaticamente.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
+l'interrupt. Può migliorare la giocabilità, specialmente nei giochi dal ritmo
+veloce (arcade, FPS, ecc.) poichè per alcuni incrementa efficacemente la
+frequenza di polling a 1000 Hz, senza aumentare il sovraccarico dell'interrupt.
+Potrebbe causare problemi di compatibilità. 
+Elenco di giochi incompatibili noti:
+   - Ultima Underworld: The Stygian Abyss
+   - Ultima Underworld II: Labyrinth of Worlds
+Segnala un bug nel repository del progetto se trovi un altro gioco che ha
+problemi con questa impostazione abilitata, aggiorneremo questo elenco.
+.
+:CONFIG_PS2_MOUSE_MODEL
+Modello mouse porta PS/2 AUX:
+   standard:       3 pulsanti, mouse PS/2 standard.
+   intellimouse:   3 pulsanti + rotellina, Microsoft IntelliMouse.
+Predefinito: intellimouse
+.
+:CONFIG_COM_MOUSE_MODEL
+Modello mouse predefinito porta COM (seriale):
+   2button:        2 pulsanti, mouse Microsoft.
+   3button:        3 pulsanti, mouse Logitech, per lo più compatibile con mouse
+                   Microsoft.
+   wheel:          3 pulsanti + rotellina, per lo più compatibile con mouse
+                   Microsoft.
+   msm:            3 pulsanti, mouse Mouse Systems, NON COMPATIBILE con mouse
+                   Microsoft.
+   2button+msm:    Scelta automatica tra 2button e msm.
+   3button+msm:    Scelta automatica tra 3button e msm.
+   wheel+msm:      Scelta automatica tra wheel e msm.
+Predefinito: wheel+msm
+Note:
+   Vai alla sezione [serial] per abilitare/disabilitare i mouse su porta COM.
 .
 :CONFIG_NOSOUND
 Attiva la modalità silenziosa, ma il suono viene comunque emulato.
@@ -803,14 +855,7 @@ Può essere: disabled, dummy, mouse, modem, nullmodem, direct.
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
 per mouse:
-   type (tipo), può essere uno dei seguenti:
-      2btn:  2 pulsanti, mouse seriale Microsoft
-      3btn:  3 pulsanti, mouse seriale Logitech
-      wheel: mouse seriale 3 pulsanti + rotellina
-      msm:   3 pulsanti, mouse Mouse Systems
-      2btn+msm, 3btn+msm, wheel+msm : selezione automatica
-   rate (tasso), può essere normal o smooth (aggiornamenti più frequenti)
-   Predefinito type:wheel+msm rate:smooth
+   modello, sovrascrive l'impostazione dalla sezione [mouse].
 per direct: realport (richiesto), rxdelay (facoltativo).
    (realport:COM1 realport:ttyS0).
 per modem: listenport, sock, baudrate (tutti facoltativi).
@@ -1756,6 +1801,109 @@ Sovrapposizione %s nell'unità %c montata.
 Impossibile spostare l'unità Z. L'unità %c è già montata.
 
 .
+:SHELL_CMD_MOUSECTL_HELP_LONG
+Gestisce i mouse fisici e logici.
+
+Utilizzo:
+  [color=green]mousectl[reset] [-all]
+  [color=green]mousectl[reset] [color=white]INTERFACCIA[reset] -map [color=cyan]NOME[reset]
+  [color=green]mousectl[reset] [color=white]INTERFACCIA[reset] [[color=white]INTERFACCIA[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -s | -sx | -sy [sensibilità]
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -s sensibilità_x sensibilità_y
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -r [freq_min]
+
+Dove:
+  [color=white]INTERFACCIA[reset] è uno dei seguenti: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
+  -map -unmap mappa/disattiva mouse fisico, accetta caratteri jolly DOS in [color=cyan]NOME[reset]
+  -s -sx -sy  imposta la sensibilità per l'asse x / asse y, da -999 a +999.
+  -r          imposta la frequenza di polling minima del mouse.
+  -on -off    abilita o disabilita il mouse sull'interfaccia specificata.
+  -reset      ripristina tutte le impostazioni dal file di configurazione.
+
+Note:
+  - se sensibilità o frequenza sono omessi, verrà usato il valore predefinito.
+
+Esempi:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map Chiede all'utente di selezionare i mouse da utilizzare
+.
+:SHELL_CMD_MOUSECTL_SYNTAX
+Sintassi del comando errata.
+.
+:SHELL_CMD_MOUSECTL_SYNTAX_PATTERN
+Sintassi errata, sono ammessi solo caratteri ASCII.
+.
+:SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY
+Sintassi errata, la sensibilità deve essere compresa tra -999 e +999.
+.
+:SHELL_CMD_MOUSECTL_SYNTAX_DUPLICATED
+Sintassi errata, interfacce del mouse duplicate.
+.
+:SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE
+Sintassi errata, la frequenza di polling deve essere una dei seguenti:
+%s
+.
+:SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE
+Mappatura non disponibile in modalità NoMouse.
+.
+:SHELL_CMD_MOUSECTL_NO_INTERFACES
+Nessuna interfaccia del mouse disponibile.
+.
+:SHELL_CMD_MOUSECTL_MISSING_INTERFACES
+Interfaccia mouse non disponibile.
+.
+:SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE
+Nessun mouse fisico rilevato.
+.
+:SHELL_CMD_MOUSECTL_NO_MATCH
+Nessun mouse corrispondente trovato.
+.
+:SHELL_CMD_MOUSECTL_TABLE_HEADER1
+[color=white]Interfaccia    Sensibilità    Frequenza (Hz)    Stato[reset]
+.
+:SHELL_CMD_MOUSECTL_TABLE_LAYOUT1
+[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s        %s
+.
+:SHELL_CMD_MOUSECTL_TABLE_HEADER2
+[color=white]Interfaccia    Nome Mouse[reset]
+.
+:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2
+[color=cyan]%-4s[reset]           %s
+.
+:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+non mappato    %s
+.
+:SHELL_CMD_MOUSECTL_TABLE_STATUS_HOST
+utilizza il puntatore di sistema
+.
+:SHELL_CMD_MOUSECTL_TABLE_STATUS_MAPPED
+mouse fisico mappato
+.
+:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=red]mouse mappato disconnesso[reset]
+.
+:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISABLED
+disabilitato
+.
+:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_COM
+Le frequenze di polling per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
+.
+:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_MIN
+Le frequenze di polling con valore minimo impostato sono contrassegnate con '*'
+.
+:SHELL_CMD_MOUSECTL_MAP_ADVICE
+Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
+sull'interfaccia. Facendo clic su qualsiasi altro pulsante, si annulla la 
+mappatura e si assegna il puntatore di sistema a tutte le interfacce del mouse.
+.
+:SHELL_CMD_MOUSECTL_MAP_CANCEL
+(mappatura annullata)
+.
+:SHELL_CMD_MOUSECTL_MAP_HINT
+Mouse catturato. Il metodo di controllo del mouse 'seamless' è sempre
+disabilitato mentre la mappatura è attiva e i mouse mappati ricevono eventi di
+input non elaborati.
+.
 :SHELL_CMD_RESCAN_HELP_LONG
 Scansiona le modifiche sulle unità DOS montate.
 
@@ -1791,7 +1939,7 @@ Utilizzo:
   [color=green]mixer[reset] [/listmidi]
 
 Dove:
-  [color=cyan]CANALE[reset] è il canale audio di cui modificare le impostazioni.
+  [color=cyan]CANALE[reset]  è il canale audio di cui modificare le impostazioni.
   [color=white]COMANDI[reset] è uno o più dei seguenti comandi:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
