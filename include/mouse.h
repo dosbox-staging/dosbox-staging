@@ -50,8 +50,7 @@ enum class MouseInterfaceId : uint8_t {
 	None  = UINT8_MAX
 };
 
-constexpr uint8_t num_mouse_interfaces = static_cast<uint8_t>(MouseInterfaceId::Last) +
-                                         1;
+constexpr uint8_t num_mouse_interfaces = static_cast<uint8_t>(MouseInterfaceId::Last) + 1;
 
 enum class MouseMapStatus : uint8_t {
 	HostPointer,
@@ -65,7 +64,7 @@ enum class MouseMapStatus : uint8_t {
 // ***************************************************************************
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
-                      const uint16_t x_abs, const uint16_t y_abs);
+                      const int32_t x_abs, const int32_t y_abs);
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
                       const MouseInterfaceId device_id);
 
@@ -76,23 +75,37 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed,
 void MOUSE_EventWheel(const int16_t w_rel);
 void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId device_id);
 
+// Notify that guest OS is being booted, so that certain
+// parts of the emulation (like DOS driver) should be disabled
 void MOUSE_NotifyBooting();
 
-void MOUSE_SetConfigSeamless(const bool seamless);
-void MOUSE_SetConfigNoMouse();
+// Notify that GFX subsystem (currently SDL) is started
+// and can accept requests from mouse emulation module
+void MOUSE_NotifyReadyGFX();
 
-void MOUSE_NewScreenParams(const uint16_t clip_x, const uint16_t clip_y,
-                           const uint16_t res_x, const uint16_t res_y,
-                           const bool fullscreen, const uint16_t x_abs,
-                           const uint16_t y_abs);
+// Notify that window has lost or gained focus, this tells the mouse
+// emulation code if it should process mouse events or ignore them
+void MOUSE_NotifyHasFocus(const bool has_focus);
 
-// ***************************************************************************
-// Information for the GFX subsystem
-// ***************************************************************************
+// A GUI has to use this function to tell when it takes over or releases
+// the mouse; this will change various settings like raw input (we don't
+// want it for the GUI) or cursor visibility (we want the host cursor
+// visible while a GUI is running)
+void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
-bool MOUSE_IsUsingSeamlessDriver(); // if driver with seamless pointer support
-                                    // is running
-bool MOUSE_IsUsingSeamlessSetting(); // if user selected seamless mode is in effect
+// To be called when screen mode changes, emulator window gets resized, etc.
+// clip_x / clip_y - size of the black bars around screen area
+// res_x / res_y   - size of drawing area (in hot OS pixels)
+// x_abs / y_abs   - new absolute mouse cursor position
+// is_fullscreen   - whether the new mode is fullscreen or windowed
+void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
+                           const uint32_t res_x, const uint32_t res_y,
+                           const int32_t x_abs, const int32_t y_abs,
+                           const bool is_fullscreen);
+
+// Notification that user pressed/released the hotkey combination
+// to capture/release the mouse
+void MOUSE_ToggleUserCapture(const bool pressed);
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse

@@ -62,19 +62,17 @@ union VMwareButtons {
 	bit_view<3, 1> middle;
 };
 
-static constexpr io_port_t VMWARE_PORT = 0x5658u; // communication port
-// static constexpr io_port_t VMWARE_PORTHB = 0x5659u;  // communication port,
-// high bandwidth
-static constexpr uint32_t VMWARE_MAGIC = 0x564D5868u; // magic number for all
-                                                      // VMware calls
-static constexpr uint32_t ABS_UPDATED = 4;            // tells that new pointer
-                                                      // position is available
+static constexpr io_port_t VMWARE_PORT = 0x5658u;      // communication port
+// static constexpr io_port_t VMWARE_PORTHB = 0x5659u; // communication port, high bandwidth
+static constexpr uint32_t VMWARE_MAGIC = 0x564D5868u;  // magic number for all VMware calls
+static constexpr uint32_t ABS_UPDATED  = 4; // tells about new pointer position
 static constexpr uint32_t ABS_NOT_UPDATED = 0;
 
-static bool raw_input = true; // true = no host mouse acceleration pre-applied
-static bool is_mapped = false; // true = physical mouse is mapped to this interface
-static bool updated = false;  // true = mouse state update waits to be picked up
-static VMwareButtons buttons; // state of mouse buttons, in VMware format
+static bool use_relative = true; // true = ignore absolute mouse position, use relative
+static bool is_input_raw = true; // true = no host mouse acceleration pre-applied
+
+static bool updated = false;       // true = mouse state update waits to be picked up
+static VMwareButtons buttons;      // state of mouse buttons, in VMware format
 static uint16_t scaled_x = 0x7fff; // absolute position scaled from 0 to 0xffff
 static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
 static int8_t counter_w  = 0;      // wheel movement counter
@@ -96,16 +94,17 @@ static void MOUSEVMM_Activate()
 	if (!mouse_shared.active_vmm) {
 		mouse_shared.active_vmm = true;
 		LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
-		if (mouse_is_captured) {
-			// If mouse is captured, prepare sane start settings
-			// (center of the screen, will trigger mouse move event)
-			pos_x    = mouse_video.res_x / 2.0f;
-			pos_y    = mouse_video.res_y / 2.0f;
+		MOUSEPS2_UpdateButtonSquish();
+		MOUSE_UpdateGFX();
+		if (use_relative) {
+			// If no seamless integration, prepare sane
+			// cursor star position
+			pos_x    = static_cast<float>(mouse_shared.resolution_x) / 2.0f;
+			pos_y    = static_cast<float>(mouse_shared.resolution_y) / 2.0f;
 			scaled_x = 0;
 			scaled_y = 0;
+			MOUSE_NotifyFakePS2();
 		}
-		MOUSEPS2_UpdateButtonSquish();
-		MOUSE_NotifyStateChanged();
 	}
 	buttons.data = 0;
 	counter_w    = 0;
@@ -117,20 +116,17 @@ void MOUSEVMM_Deactivate()
 		mouse_shared.active_vmm = false;
 		LOG_MSG("MOUSE (PS/2): VMware protocol disabled");
 		MOUSEPS2_UpdateButtonSquish();
-		MOUSE_NotifyStateChanged();
+		MOUSE_UpdateGFX();
 	}
 	buttons.data = 0;
 	counter_w    = 0;
 }
 
-void MOUSEVMM_NotifyMapped(const bool enabled)
+void MOUSEVMM_NotifyInputType(const bool new_use_relative,
+                              const bool new_is_input_raw)
 {
-	is_mapped = enabled;
-}
-
-void MOUSEVMM_NotifyRawInput(const bool enabled)
-{
-	raw_input = enabled;
+	use_relative = new_use_relative;
+	is_input_raw = new_is_input_raw;
 }
 
 static void cmd_get_version()
@@ -189,7 +185,7 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 }
 
 bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint16_t x_abs, const uint16_t y_abs)
+                          const uint32_t x_abs, const uint32_t y_abs)
 {
 	if (!mouse_shared.active_vmm)
 		return false;
@@ -201,42 +197,38 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 
 	auto calculate = [](float &position,
 	                    const float relative,
-	                    const uint16_t absolute,
-	                    const uint16_t resolution,
-	                    const uint16_t clip) {
+	                    const uint32_t absolute,
+	                    const uint32_t resolution) {
 		assert(resolution > 1u);
 
-		if (mouse_is_captured || is_mapped) {
-			// Mouse is captured, there is no need for pointer
-			// integration with host OS - we can use relative
-			// movement with configured sensitivity and (for
-			// raw mouse input) our built-in pointer acceleration
-			// model
+		if (use_relative) {
+			// Mouse is captured or mapped, there is no need for
+			// pointer integration with host OS - we can use
+			// relative movement with configured sensitivity and
+			// (for raw mouse input) our built-in pointer
+			// acceleration model
 
-			if (raw_input) {
-				const auto coeff = MOUSE_GetBallisticsCoeff(
-				        speed_xy.Get());
-				position += MOUSE_ClampRelativeMovement(
-				        relative * coeff);
+			if (is_input_raw) {
+				const auto coeff = MOUSE_GetBallisticsCoeff(speed_xy.Get());
+				position += MOUSE_ClampRelativeMovement(relative * coeff);
 			} else
 				position += MOUSE_ClampRelativeMovement(relative);
 		} else
 			// Cursor position controlled by the host OS
-			position = static_cast<float>(std::max(absolute - clip, 0));
+			position = static_cast<float>(absolute);
 
 		position = std::clamp(position, 0.0f, static_cast<float>(resolution));
 
 		const auto scale = static_cast<float>(UINT16_MAX) /
 		                   static_cast<float>(resolution - 1);
 		const auto tmp = std::min(static_cast<uint32_t>(UINT16_MAX),
-		                          static_cast<uint32_t>(
-		                                  std::lround(position * scale)));
+		                          static_cast<uint32_t>(std::lround(position * scale)));
 
 		return static_cast<uint16_t>(tmp);
 	};
 
-	scaled_x = calculate(pos_x, x_rel, x_abs, mouse_video.res_x, mouse_video.clip_x);
-	scaled_y = calculate(pos_y, y_rel, y_abs, mouse_video.res_y, mouse_video.clip_y);
+	scaled_x = calculate(pos_x, x_rel, x_abs, mouse_shared.resolution_x);
+	scaled_y = calculate(pos_y, y_rel, y_abs, mouse_shared.resolution_y);
 
 	// Filter out unneeded events (like sub-pixel mouse movements,
 	// which won't change guest side mouse state)
@@ -282,7 +274,7 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel)
 	return true;
 }
 
-void MOUSEVMM_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs)
+void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs)
 {
 	// Report a fake mouse movement
 	if (MOUSEVMM_NotifyMoved(0.0f, 0.0f, x_abs, y_abs) && mouse_shared.active_vmm)

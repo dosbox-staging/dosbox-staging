@@ -23,7 +23,6 @@
 #include "ansi_code_markup.h"
 #include "checks.h"
 #include "string_utils.h"
-#include "video.h"
 
 #include <set>
 
@@ -323,8 +322,6 @@ void MOUSECTL::FinalizeMapping()
 	WriteOut("\n");
 	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAP_HINT"));
 	WriteOut("\n\n");
-
-	GFX_MouseCaptureAfterMapping();
 }
 
 bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)

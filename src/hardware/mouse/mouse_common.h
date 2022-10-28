@@ -30,28 +30,21 @@
 class MouseShared {
 public:
 	bool active_bios = false; // true = BIOS has a registered callback
-	bool active_dos = false; // true = DOS driver has a functioning callback
-	bool active_vmm = false; // true = VMware-compatible driver is active
+	bool active_dos  = false; // true = DOS driver has a functioning callback
+	bool active_vmm  = false; // true = VMware-compatible driver is active
 
 	bool dos_cb_running = false; // true = DOS callback is running
 
 	// Readiness for initialization
-	bool ready_startup_sequence = false;
-	bool ready_config_mouse     = false;
-	bool ready_config_sdl       = false;
+	bool ready_init   = false; // if allowed to init in the main startup sequence
+	bool ready_config = false; // if configuration was read
+	bool ready_gfx    = false; // if GFX subsystem is ready
 
 	bool started = false;
-};
 
-class MouseVideo {
-public:
-	bool fullscreen = true;
-
-	uint16_t res_x = 640; // resolution to which guest image is scaled,
-	uint16_t res_y = 400; // excluding black borders
-
-	uint16_t clip_x = 0; // clipping = size of black border (one side)
-	uint16_t clip_y = 0;
+	// Screen size
+	uint32_t resolution_x = 640; // resolution to which guest image is scaled,
+	uint32_t resolution_y = 400; // excluding black borders
 };
 
 class MouseInfo {
@@ -60,11 +53,8 @@ public:
 	std::vector<MousePhysicalInfoEntry> physical    = {};
 };
 
-extern MouseInfo mouse_info;     // information which can be shared externally
+extern MouseInfo   mouse_info;   // information which can be shared externally
 extern MouseShared mouse_shared; // shared internal information
-extern MouseVideo mouse_video; // video information - resolution, clipping, etc.
-
-extern bool mouse_is_captured;
 
 // ***************************************************************************
 // Common helper calculations

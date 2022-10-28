@@ -27,20 +27,22 @@
 // Main mouse module
 // ***************************************************************************
 
-void MOUSE_Startup();
+void MOUSE_StartupIfReady();
 
 void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id);
 void MOUSE_NotifyFakePS2(); // fake PS/2 event, for VMware protocol support
 void MOUSE_NotifyResetDOS();
-void MOUSE_NotifyStateChanged();
+
+bool MOUSE_IsCaptured();
+void MOUSE_UpdateGFX();
 
 // ***************************************************************************
 // DOS mouse driver
 // ***************************************************************************
 
 void MOUSEDOS_Init();
-void MOUSEDOS_NotifyMapped(const bool enabled);
-void MOUSEDOS_NotifyRawInput(const bool enabled);
+void MOUSEDOS_NotifyInputType(const bool new_use_relative,
+                              const bool new_is_input_raw);
 void MOUSEDOS_NotifyMinRate(const uint16_t value_hz);
 void MOUSEDOS_DrawCursor();
 
@@ -51,7 +53,7 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S);
 // - understands up to 3 buttons
 
 bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint16_t x_abs, const uint16_t y_abs);
+                          const uint32_t x_abs, const uint32_t y_abs);
 bool MOUSEDOS_NotifyWheel(const int16_t w_rel);
 
 uint8_t MOUSEDOS_UpdateMoved();
@@ -88,16 +90,16 @@ Bitu MOUSEBIOS_DoCallback();
 // ***************************************************************************
 
 void MOUSEVMM_Init();
-void MOUSEVMM_NotifyMapped(const bool enabled);
-void MOUSEVMM_NotifyRawInput(const bool enabled);
-void MOUSEVMM_NewScreenParams(const uint16_t x_abs, const uint16_t y_abs);
+void MOUSEVMM_NotifyInputType(const bool new_use_relative,
+                              const bool new_is_input_raw);
+void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs);
 void MOUSEVMM_Deactivate();
 
 // - needs absolute mouse position
 // - understands up to 3 buttons
 
 bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint16_t x_abs, const uint16_t y_abs);
+                          const uint32_t x_abs, const uint32_t y_abs);
 bool MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
 bool MOUSEVMM_NotifyWheel(const int16_t w_rel);
 
@@ -128,7 +130,7 @@ public:
 	static MouseInterface *GetSerial(const uint8_t port_id);
 
 	virtual void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-	                         const uint16_t x_abs, const uint16_t y_abs) = 0;
+	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
 	virtual void NotifyButton(MouseEvent &ev, const uint8_t idx,
 	                          const bool pressed)                 = 0;
 	virtual void NotifyWheel(MouseEvent &ev, const int16_t w_rel) = 0;
@@ -166,6 +168,7 @@ public:
 	void ConfigResetMinRate();
 
 	virtual void UpdateConfig();
+	virtual void UpdateInputType();
 	virtual void RegisterListener(CSerialMouse &listener_object);
 	virtual void UnRegisterListener();
 
@@ -182,7 +185,6 @@ protected:
 	void SetMapStatus(const MouseMapStatus status,
 	                  const uint8_t device_idx = idx_host_pointer);
 
-	virtual void UpdateRawMapped();
 	virtual void UpdateSensitivity();
 	virtual void UpdateMinRate();
 	virtual void UpdateRate();

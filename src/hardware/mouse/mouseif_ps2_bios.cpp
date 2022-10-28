@@ -438,14 +438,14 @@ void MOUSEBIOS_SetScaling21(const bool enable)
 bool MOUSEBIOS_Enable()
 {
 	mouse_shared.active_bios = callback_init;
-	MOUSE_NotifyStateChanged();
+	MOUSE_UpdateGFX();
 	return callback_init;
 }
 
 bool MOUSEBIOS_Disable()
 {
 	mouse_shared.active_bios = false;
-	MOUSE_NotifyStateChanged();
+	MOUSE_UpdateGFX();
 	return true;
 }
 

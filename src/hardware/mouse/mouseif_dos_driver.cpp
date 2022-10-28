@@ -76,8 +76,9 @@ static MouseButtons12S buttons = 0;
 static float pos_x             = 0.0f;
 static float pos_y             = 0.0f;
 static int8_t counter_w        = 0; // wheel counter
-static bool is_mapped = false; // true = physical mouse is mapped to this interface
-static bool raw_input = true; // true = no host mouse acceleration pre-applied
+
+static bool use_relative    = true; // true = ignore absolute mouse position, use relative
+static bool is_input_raw    = true; // true = no host mouse acceleration pre-applied
 
 static bool rate_is_set     = false; // true = rate was set by DOS application
 static uint16_t rate_hz     = 0;
@@ -90,8 +91,8 @@ static struct {
 	// Mouse movement
 	float x_rel    = 0.0f;
 	float y_rel    = 0.0f;
-	uint16_t x_abs = 0;
-	uint16_t y_abs = 0;
+	uint32_t x_abs = 0;
+	uint32_t y_abs = 0;
 
 	// Wheel movement
 	int16_t w_rel = 0;
@@ -569,7 +570,7 @@ void MOUSEDOS_DrawCursor()
 static void update_driver_active()
 {
 	mouse_shared.active_dos = (state.user_callback_mask != 0);
-	MOUSE_NotifyStateChanged();
+	MOUSE_UpdateGFX();
 }
 
 static uint8_t get_reset_wheel_8bit()
@@ -895,22 +896,21 @@ static void move_cursor_captured(const float x_rel, const float y_rel)
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
-                                 const uint16_t x_abs, const uint16_t y_abs)
+                                 const uint32_t x_abs, const uint32_t y_abs)
 {
 	// Update mickey counters
 	update_mickeys_on_move(x_rel, y_rel);
 
-	auto calculate = [](const uint16_t absolute,
-	                    const uint16_t res,
-	                    const uint16_t clip) {
-		assert(res > 1u);
-		return (static_cast<float>(absolute) - clip) /
-		       static_cast<float>(res - 1);
+	auto calculate = [](const uint32_t absolute,
+	                    const uint32_t resolution) {
+		assert(resolution > 1u);
+		return static_cast<float>(absolute) /
+		       static_cast<float>(resolution - 1);
 	};
 
 	// Apply mouse movement to mimic host OS
-	const float x = calculate(x_abs, mouse_video.res_x, mouse_video.clip_x);
-	const float y = calculate(y_abs, mouse_video.res_y, mouse_video.clip_y);
+	const float x = calculate(x_abs, mouse_shared.resolution_x);
+	const float y = calculate(y_abs, mouse_shared.resolution_y);
 
 	// TODO: this is probably overcomplicated, especially
 	// the usage of relative movement - to be investigated
@@ -938,14 +938,6 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
 	}
 }
 
-static bool is_captured()
-{
-	// If DOS driver uses a mapped physical mouse, always consider it
-	// captured, as we have no absolute mouse position from the host OS
-
-	return mouse_is_captured || is_mapped;
-}
-
 static uint8_t move_cursor()
 {
 	const auto old_pos_x = get_pos_x();
@@ -954,14 +946,14 @@ static uint8_t move_cursor()
 	const auto old_mickey_x = static_cast<int16_t>(state.mickey_counter_x);
 	const auto old_mickey_y = static_cast<int16_t>(state.mickey_counter_y);
 
-	if (is_captured()) {
+	if (use_relative) {
 		// For raw mouse input use our built-in pointer acceleration model
 		const float acceleration_coeff =
-		        raw_input ? MOUSE_GetBallisticsCoeff(
+		        is_input_raw ? MOUSE_GetBallisticsCoeff(
 		                            speed_mickeys.Get() /
 		                            state.double_speed_threshold) *
 		                            2.0f
-		                  : 2.0f;
+		                     : 2.0f;
 
 		const float tmp_x = pending.x_rel * acceleration_coeff *
 		                    state.sensitivity_coeff_x;
@@ -1076,16 +1068,15 @@ uint8_t MOUSEDOS_UpdateWheel()
 }
 
 bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint16_t x_abs, const uint16_t y_abs)
+                          const uint32_t x_abs, const uint32_t y_abs)
 {
 	// Check if an event is needed
 	bool event_needed = false;
-	if (is_captured()) {
+	if (use_relative) {
 		// Uses relative mouse movements - processing is too complicated
 		// to easily predict whether the event can be safely omitted
 		event_needed = true;
-		// TODO: it actually can be done - but it will require some
-		// refactoring
+		// TODO: this can be done, but requyires refactoring
 	} else {
 		// Uses absolute mouse position (seamless mode), relative
 		// movements can wait to be reported - they are completely
@@ -1635,13 +1626,10 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 	// which allows seamless mouse integration. It is also included in
 	// DOSBox-X and Dosemu2:
 	// - https://github.com/joncampbell123/dosbox-x/pull/3424
-	// -
-	// https://github.com/dosemu2/dosemu2/issues/1552#issuecomment-1100777880
-	// -
-	// https://github.com/dosemu2/dosemu2/commit/cd9d2dbc8e3d58dc7cbc92f172c0d447881526be
-	// -
-	// https://github.com/joncampbell123/dosbox-x/commit/aec29ce28eb4b520f21ead5b2debf370183b9f28
-	reg_ah = (!is_captured() && mouse_moved) ? 1 : 0;
+	// - https://github.com/dosemu2/dosemu2/issues/1552#issuecomment-1100777880
+	// - https://github.com/dosemu2/dosemu2/commit/cd9d2dbc8e3d58dc7cbc92f172c0d447881526be
+	// - https://github.com/joncampbell123/dosbox-x/commit/aec29ce28eb4b520f21ead5b2debf370183b9f28
+	reg_ah = (!use_relative && mouse_moved) ? 1 : 0;
 
 	reg_al = mask;
 	reg_bl = buttons_12S.data;
@@ -1659,14 +1647,11 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 	return CBRET_NONE;
 }
 
-void MOUSEDOS_NotifyMapped(const bool enabled)
+void MOUSEDOS_NotifyInputType(const bool new_use_relative,
+	                      const bool new_is_input_raw)
 {
-	is_mapped = enabled;
-}
-
-void MOUSEDOS_NotifyRawInput(const bool enabled)
-{
-	raw_input = enabled;
+	use_relative = new_use_relative;
+	is_input_raw = new_is_input_raw;
 }
 
 void MOUSEDOS_Init()

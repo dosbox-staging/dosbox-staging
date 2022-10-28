@@ -229,6 +229,10 @@ void ManyMouseGlue::RescanIfSafe()
 
 bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 {
+	// Do not even try if NoMouse is configured
+	if (mouse_config.capture == MouseCapture::NoMouse)
+		return false;
+
 	// Wait a little to speedup screen update
 	constexpr uint32_t ticks_threshold = 50; // time to wait idle in PIC ticks
 	const auto pic_ticks_start = PIC_Ticks;
@@ -281,7 +285,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 		break;
 	}
 
-	if (is_mapping_in_effect && !mouse_config.no_mouse)
+	if (is_mapping_in_effect)
 		PIC_AddEvent(manymouse_tick, tick_interval);
 	return success;
 }
@@ -346,7 +350,7 @@ void ManyMouseGlue::MapFinalize()
 			continue;
 
 		is_mapping_in_effect = true;
-		if (!mouse_config.no_mouse)
+		if (mouse_config.capture != MouseCapture::NoMouse)
 			PIC_AddEvent(manymouse_tick, tick_interval);
 		break;
 	}
@@ -361,7 +365,7 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 {
 	if (GCC_UNLIKELY(event.device >= mouse_info.physical.size()))
 		return; // device ID out of supported range
-	if (GCC_UNLIKELY(mouse_config.no_mouse &&
+	if (GCC_UNLIKELY(mouse_config.capture == MouseCapture::NoMouse &&
 	                 event.type != MANYMOUSE_EVENT_DISCONNECT))
 		return; // mouse control disabled in GUI
 
@@ -435,7 +439,7 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 
 void ManyMouseGlue::Tick()
 {
-	assert(!mouse_config.no_mouse);
+	assert(mouse_config.capture != MouseCapture::NoMouse);
 
 	// Handle all the events from the queue
 	ManyMouseEvent event;

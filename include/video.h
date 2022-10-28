@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -78,12 +79,12 @@ void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
-void GFX_UpdateMouseState();
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
-void GFX_SetMouseRawInput(const bool raw_input);
-void GFX_MouseCaptureAfterMapping();
-bool GFX_MouseIsAvailable();
+
+void GFX_SetMouseCapture(const bool requested_capture);
+void GFX_SetMouseVisibility(const bool requested_visible);
+void GFX_SetMouseRawInput(const bool requested_raw_input);
 
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);
