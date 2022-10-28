@@ -59,6 +59,8 @@ extern MousePredefined mouse_predefined;
 // Configuration file content
 // ***************************************************************************
 
+enum class MouseCapture : uint8_t { Seamless, OnClick, OnStart, NoMouse };
+
 enum class MouseModelPS2 : uint8_t {
 	// Values must match PS/2 protocol IDs
 	Standard     = 0x00,
@@ -74,19 +76,9 @@ enum class MouseModelCOM : uint8_t {
 	MouseSystems
 };
 
-enum class MouseModelBus : uint8_t {
-	NoMouse,
-	Bus,
-	InPort,
-};
-
 struct MouseConfig {
-	// From [sdl] section
-
-	bool no_mouse = false; // true = NoMouse selected in GUI
-	bool seamless = false; // true = seamless mouse integration
-
-	// From [mouse] section
+	MouseCapture capture = MouseCapture::OnStart;
+	bool middle_release  = true;
 
 	int16_t sensitivity_x = 50; // default sensitivity values
 	int16_t sensitivity_y = 50;
@@ -103,6 +95,8 @@ struct MouseConfig {
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t> &GetValidMinRateList();
+	static bool ParseCaptureType(const std::string &capture_str,
+	                             MouseCapture &capture);
 	static bool ParseCOMModel(const std::string &model_str,
 	                          MouseModelCOM &model, bool &auto_msm);
 	static bool ParsePS2Model(const std::string &model_str, MouseModelPS2 &model);

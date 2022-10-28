@@ -148,12 +148,13 @@ public:
 	~InterfaceDos() = default;
 
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-	                 const uint16_t x_abs, const uint16_t y_abs) override;
+	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
 	                  const bool pressed) override;
 	void NotifyWheel(MouseEvent &ev, const int16_t w_rel) override;
-
 	void NotifyBooting() override;
+
+	void UpdateInputType() override;
 
 private:
 	friend class MouseInterface;
@@ -163,7 +164,6 @@ private:
 
 	void Init() override;
 
-	void UpdateRawMapped() override;
 	void UpdateMinRate() override;
 	void UpdateRate() override;
 };
@@ -174,10 +174,12 @@ public:
 	~InterfacePS2() = default;
 
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-	                 const uint16_t x_abs, const uint16_t y_abs) override;
+	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
 	                  const bool pressed) override;
 	void NotifyWheel(MouseEvent &ev, const int16_t w_rel) override;
+
+	void UpdateInputType() override;
 
 private:
 	friend class MouseInterface;
@@ -187,7 +189,6 @@ private:
 
 	void Init() override;
 
-	void UpdateRawMapped() override;
 	void UpdateSensitivity() override;
 	void UpdateRate() override;
 
@@ -201,7 +202,7 @@ public:
 	~InterfaceCOM() = default;
 
 	void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-	                 const uint16_t x_abs, const uint16_t y_abs) override;
+	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(MouseEvent &ev, const uint8_t idx,
 	                  const bool pressed) override;
 	void NotifyWheel(MouseEvent &ev, const int16_t w_rel) override;
@@ -263,8 +264,10 @@ void MouseInterface::InitAllInstances()
 		default: assert(false); break;
 		}
 
-	for (auto interface : mouse_interfaces)
+	for (auto interface : mouse_interfaces) {
 		interface->Init();
+		interface->UpdateConfig();
+	}
 }
 
 MouseInterface *MouseInterface::Get(const MouseInterfaceId interface_id)
@@ -415,7 +418,7 @@ void MouseInterface::SetMapStatus(const MouseMapStatus status, const uint8_t dev
 	if (map_status != new_map_status || mapped_idx != new_mapped_idx)
 		ResetButtons();
 	if (map_status != new_map_status)
-		UpdateRawMapped();
+		UpdateInputType();
 	if (mapped_idx != new_mapped_idx)
 		ManyMouseGlue::GetInstance().Map(new_mapped_idx, interface_id);
 
@@ -514,11 +517,11 @@ void MouseInterface::UnRegisterListener()
 
 void MouseInterface::UpdateConfig()
 {
-	UpdateRawMapped();
+	UpdateInputType();
 	UpdateSensitivity();
 }
 
-void MouseInterface::UpdateRawMapped() {}
+void MouseInterface::UpdateInputType() {}
 
 void MouseInterface::UpdateSensitivity()
 {
@@ -630,7 +633,7 @@ void InterfaceDos::Init()
 }
 
 void InterfaceDos::NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-                               const uint16_t x_abs, const uint16_t y_abs)
+                               const uint32_t x_abs, const uint32_t y_abs)
 {
 	ev.dos_moved = MOUSEDOS_NotifyMoved(x_rel * sensitivity_coeff_x,
 	                                    y_rel * sensitivity_coeff_y,
@@ -668,10 +671,12 @@ void InterfaceDos::NotifyBooting()
 	ManyMouseGlue::GetInstance().ShutdownIfSafe();
 }
 
-void InterfaceDos::UpdateRawMapped()
+void InterfaceDos::UpdateInputType()
 {
-	MOUSEDOS_NotifyMapped(IsMapped());
-	MOUSEDOS_NotifyRawInput(mouse_config.raw_input || IsMapped());
+	const bool use_relative = IsMapped() || MOUSE_IsCaptured();
+	const bool is_input_raw = IsMapped() || mouse_config.raw_input;
+
+	MOUSEDOS_NotifyInputType(use_relative, is_input_raw);
 }
 
 void InterfaceDos::UpdateMinRate()
@@ -698,7 +703,7 @@ void InterfacePS2::Init()
 }
 
 void InterfacePS2::NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
-                               const uint16_t x_abs, const uint16_t y_abs)
+                               const uint32_t x_abs, const uint32_t y_abs)
 {
 	const bool request_ps2 = MOUSEPS2_NotifyMoved(x_rel * sensitivity_coeff_x,
 	                                              y_rel * sensitivity_coeff_y);
@@ -731,10 +736,12 @@ void InterfacePS2::NotifyWheel(MouseEvent &ev, const int16_t w_rel)
 	ev.request_ps2 = request_ps2 || request_vmm;
 }
 
-void InterfacePS2::UpdateRawMapped()
+void InterfacePS2::UpdateInputType()
 {
-	MOUSEVMM_NotifyMapped(IsMapped());
-	MOUSEVMM_NotifyRawInput(mouse_config.raw_input || IsMapped());
+	const bool use_relative = IsMapped() || MOUSE_IsCaptured();
+	const bool is_input_raw = IsMapped() || mouse_config.raw_input;
+
+	MOUSEVMM_NotifyInputType(use_relative, is_input_raw);
 }
 
 void InterfacePS2::UpdateSensitivity()
@@ -759,8 +766,8 @@ InterfaceCOM::InterfaceCOM(const uint8_t port_id)
                          mouse_predefined.sensitivity_com)
 {}
 
-void InterfaceCOM::NotifyMoved(MouseEvent &, const float x_rel,
-                               const float y_rel, const uint16_t, const uint16_t)
+void InterfaceCOM::NotifyMoved(MouseEvent &, const float x_rel, const float y_rel,
+                               const uint32_t, const uint32_t)
 {
 	assert(listener);
 

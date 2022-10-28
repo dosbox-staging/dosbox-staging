@@ -26,7 +26,6 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
-#include "video.h"
 
 #include <cmath>
 
@@ -39,44 +38,53 @@ CHECK_NARROWING();
 
 // #define ENABLE_EXPLORER_MOUSE
 
-MouseConfig mouse_config;
+MouseConfig     mouse_config;
 MousePredefined mouse_predefined;
 
-static struct {
-	const std::string param_standard     = "standard";
-	const std::string param_intellimouse = "intellimouse";
-#ifdef ENABLE_EXPLORER_MOUSE
-	const std::string param_explorer = "explorer";
-#endif
-} models_ps2;
+constexpr auto capture_type_seamless_str  = "seamless";
+constexpr auto capture_type_onclick_str   = "onclick";
+constexpr auto capture_type_onstart_str   = "onstart";
+constexpr auto capture_type_nomouse_str   = "nomouse";
 
-static struct {
-	const std::string param_2button     = "2button";
-	const std::string param_3button     = "3button";
-	const std::string param_wheel       = "wheel";
-	const std::string param_msm         = "msm";
-	const std::string param_2button_msm = "2button+msm";
-	const std::string param_3button_msm = "3button+msm";
-	const std::string param_wheel_msm   = "wheel+msm";
-} models_com;
+constexpr auto model_ps2_standard_str     = "standard";
+constexpr auto model_ps2_intellimouse_str = "intellimouse";
+#ifdef ENABLE_EXPLORER_MOUSE
+constexpr auto model_ps2_explorer_str     = "explorer";	
+#endif
+
+constexpr auto model_com_2button_str      = "2button";
+constexpr auto model_com_3button_str      = "3button";
+constexpr auto model_com_wheel_str        = "wheel";
+constexpr auto model_com_msm_str          = "msm";
+constexpr auto model_com_2button_msm_str  = "2button+msm";
+constexpr auto model_com_3button_msm_str  = "3button+msm";
+constexpr auto model_com_wheel_msm_str    = "wheel+msm";
+
+static const char *list_capture_types[] = {
+	capture_type_seamless_str,
+	capture_type_onclick_str,
+	capture_type_onstart_str,
+	capture_type_nomouse_str,
+	nullptr
+};
 
 static const char *list_models_ps2[] = {
-	models_ps2.param_standard.c_str(),
-	models_ps2.param_intellimouse.c_str(),
+	model_ps2_standard_str,
+	model_ps2_intellimouse_str,
 #ifdef ENABLE_EXPLORER_MOUSE
-	models_ps2.param_explorer.c_str(),
+	model_ps2_explorer_str,
 #endif
 	nullptr
 };
 
 static const char *list_models_com[] = {
-	models_com.param_2button.c_str(),
-	models_com.param_3button.c_str(),
-	models_com.param_wheel.c_str(),
-	models_com.param_msm.c_str(),
-	models_com.param_2button_msm.c_str(),
-	models_com.param_3button_msm.c_str(),
-	models_com.param_wheel_msm.c_str(),
+	model_com_2button_str,
+	model_com_3button_str,
+	model_com_wheel_str,
+	model_com_msm_str,
+	model_com_2button_msm_str,
+	model_com_3button_msm_str,
+	model_com_wheel_msm_str,
 	nullptr
 };
 
@@ -105,34 +113,49 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
+bool MouseConfig::ParseCaptureType(const std::string &capture_str, MouseCapture &capture)
+{
+	if (capture_str == capture_type_seamless_str)
+		capture = MouseCapture::Seamless;
+	else if (capture_str == capture_type_onclick_str)
+		capture = MouseCapture::OnClick;
+	else if (capture_str == capture_type_onstart_str)
+		capture = MouseCapture::OnStart;
+	else if (capture_str == capture_type_nomouse_str)
+		capture = MouseCapture::NoMouse;
+	else
+		return false;
+	return true;
+}
+
 bool MouseConfig::ParseCOMModel(const std::string &model_str,
                                 MouseModelCOM &model, bool &auto_msm)
 {
-	if (model_str == models_com.param_2button) {
+	if (model_str == model_com_2button_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
 		return true;
-	} else if (model_str == models_com.param_3button) {
+	} else if (model_str == model_com_3button_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
 		return true;
-	} else if (model_str == models_com.param_wheel) {
+	} else if (model_str == model_com_wheel_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
 		return true;
-	} else if (model_str == models_com.param_msm) {
+	} else if (model_str == model_com_msm_str) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
 		return true;
-	} else if (model_str == models_com.param_2button_msm) {
+	} else if (model_str == model_com_2button_msm_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
 		return true;
-	} else if (model_str == models_com.param_3button_msm) {
+	} else if (model_str == model_com_3button_msm_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
 		return true;
-	} else if (model_str == models_com.param_wheel_msm) {
+	} else if (model_str == model_com_wheel_msm_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
 		return true;
@@ -143,12 +166,12 @@ bool MouseConfig::ParseCOMModel(const std::string &model_str,
 
 bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &model)
 {
-	if (model_str == models_ps2.param_standard)
+	if (model_str == model_ps2_standard_str)
 		model = MouseModelPS2::Standard;
-	else if (model_str == models_ps2.param_intellimouse)
+	else if (model_str == model_ps2_intellimouse_str)
 		model = MouseModelPS2::IntelliMouse;
 #ifdef ENABLE_EXPLORER_MOUSE
-	else if (model_str == models_ps2.param_explorer)
+	else if (model_str == model_ps2_explorer_str)
 		model = MouseModelPS2::Explorer;
 #endif
 	else
@@ -171,14 +194,25 @@ static void config_read(Section *section)
 
 	// Settings changeable during runtime
 
-	mouse_config.dos_immediate = conf->Get_bool("dos_mouse_immediate");
-	mouse_config.raw_input     = conf->Get_bool("mouse_raw_input");
-	GFX_SetMouseRawInput(mouse_config.raw_input);
+	std::string prop_str = conf->Get_string("mouse_capture");
+	MouseConfig::ParseCaptureType(prop_str, mouse_config.capture);
+
+	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
+	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
+	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
 
 	// Settings below should be read only once
 
-	if (mouse_shared.ready_config_mouse) {
-		MOUSE_NotifyStateChanged();
+	if (mouse_shared.ready_config) {
+
+		if (mouse_config.capture == MouseCapture::NoMouse) {
+			// If NoMouse got configured in runtime,
+			// immediately clear all the mapping
+			MouseControlAPI mouse_config_api;
+			mouse_config_api.UnMap(MouseControlAPI::ListIDs());
+		}
+
+		MOUSE_UpdateGFX();
 		return;
 	}
 
@@ -196,7 +230,7 @@ static void config_read(Section *section)
 
 	// PS/2 AUX port mouse configuration
 
-	std::string prop_str = conf->Get_string("ps2_mouse_model");
+	prop_str = conf->Get_string("ps2_mouse_model");
 	MouseConfig::ParsePS2Model(prop_str, mouse_config.model_ps2);
 
 	// COM port mouse configuration
@@ -206,9 +240,9 @@ static void config_read(Section *section)
 	                           mouse_config.model_com,
 	                           mouse_config.model_com_auto_msm);
 
-	// Start mouse emulation if ready
-	mouse_shared.ready_config_mouse = true;
-	MOUSE_Startup();
+	// Start mouse emulation if everything is ready
+	mouse_shared.ready_config = true;
+	MOUSE_StartupIfReady();
 }
 
 static void config_init(Section_prop &secprop)
@@ -216,12 +250,28 @@ static void config_init(Section_prop &secprop)
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	Prop_bool *prop_bool     = nullptr;
-	Prop_int *prop_int       = nullptr;
-	Prop_string *prop_str    = nullptr;
+	Prop_bool    *prop_bool  = nullptr;
+	Prop_int     *prop_int   = nullptr;
+	Prop_string  *prop_str   = nullptr;
 	PropMultiVal *prop_multi = nullptr;
 
 	// General configuration
+
+	prop_str = secprop.Add_string("mouse_capture", always,
+	                              capture_type_onstart_str);
+	assert(prop_str);
+	prop_str->Set_values(list_capture_types);
+	prop_str->Set_help(
+	        "Choose a mouse control method:\n"
+	        "  onclick:   Capture the mouse when clicking any button in the window.\n"
+	        "  onstart:   Capture the mouse immediately on start.\n"
+	        "  seamless:  Let the mouse move seamlessly; captures only with middle-click or\n"
+	        "             hotkey.\n"
+	        "  nomouse:   Hide the mouse and don't send input to the game.");
+
+	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
+	prop_bool->Set_help("If true, middle-click will release the captured mouse, and also\n"
+	                    "capture when seamless.");
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
@@ -269,7 +319,8 @@ static void config_init(Section_prop &secprop)
 
 	// Physical mice configuration
 
-	prop_str = secprop.Add_string("ps2_mouse_model", only_at_start, "intellimouse");
+	prop_str = secprop.Add_string("ps2_mouse_model", only_at_start,
+	                              model_ps2_intellimouse_str);
 	assert(prop_str);
 	prop_str->Set_values(list_models_ps2);
 	prop_str->Set_help(
@@ -282,7 +333,8 @@ static void config_init(Section_prop &secprop)
 #endif
 	        "Default: intellimouse");
 
-	prop_str = secprop.Add_string("com_mouse_model", only_at_start, "wheel+msm");
+	prop_str = secprop.Add_string("com_mouse_model", only_at_start,
+	                              model_com_wheel_msm_str);
 	assert(prop_str);
 	prop_str->Set_values(list_models_com);
 	prop_str->Set_help(
