@@ -1529,7 +1529,7 @@ Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
   [color=green]loadfix[reset] [color=cyan]SPEL[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadfix[reset] [/d] (or [/f])[reset]
+  [color=green]loadfix[reset] [/d] (of [/f])[reset]
 
 Waar:
   [color=cyan]SPEL[reset] is een spel of programma om te laden, optioneel met parameters.
@@ -1543,7 +1543,7 @@ Opmerkingen:
   kan worden uitgevoerd; het geheugen vrijmaken kan met de optie /d of /f.
 
 Voorbeelden:
-  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
+  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]argumenten[reset]
   [color=green]loadfix[reset] /d
 
 .
@@ -1637,6 +1637,58 @@ Voorbeelden:
 :PROGRAM_MEM_UPPER
 %10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)
 
+.
+:SHELL_CMD_MORE_HELP
+Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
+
+.
+:SHELL_CMD_MORE_HELP_LONG
+Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
+
+Gebruik:
+  [color=cyan]COMMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]BESTAND[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATROON[reset] [[color=cyan]PATROON[reset] ...]
+
+Waar:
+  [color=cyan]COMMANDO[reset] is de opdracht om de uitvoer van weer te geven.
+  [color=cyan]BESTAND[reset]  exacte naam van het bestand om weer te geven, eventueel met een pad.
+  [color=cyan]PATROON[reset]  is ofwel een pad naar een enkel bestand of een pad met
+           jokertekens, dit zijn de asterisk (*) en het vraagteken (?).
+  [color=white]n[reset]        is de tabgrootte, 1-9, standaard is 8.
+
+Opmerkingen:
+  Deze opdracht is alleen voor het bekijken van tekstbestanden, niet voor
+  binaire bestanden.
+
+Voorbeelden:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]            ; geeft de gesorteerde map één scherm tegelijk weer
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  ; toont de inhoud van het bestand met tabgrootte 4
+
+.
+:SHELL_CMD_MORE_NO_FILE
+Geen invoerbestand gevonden.
+.
+:SHELL_CMD_MORE_END
+[reset][color=light-yellow]--- einde van invoer ---[reset]
+.
+:SHELL_CMD_MORE_NEW_FILE
+[reset][color=light-yellow]--- bestand %s ---[reset]
+.
+:SHELL_CMD_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- apparaat %s ---[reset]
+.
+:SHELL_CMD_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- druk op SPATIEBALK voor meer ---[reset]
+.
+:SHELL_CMD_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+.
+:SHELL_CMD_MORE_OPEN_ERROR
+[reset][color=red]--- kon %s niet openen ---[reset]
+.
+:SHELL_CMD_MORE_TERMINATE
+[reset][color=light-yellow](beëindigd)[reset]
 .
 :SHELL_CMD_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter
