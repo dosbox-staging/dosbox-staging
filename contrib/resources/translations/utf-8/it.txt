@@ -1692,6 +1692,57 @@ Esempi:
 %10d kB di memoria superiore libera in %d blocchi (UMB più grande %d kB)
 
 .
+:SHELL_CMD_MORE_HELP
+Visualizza l'output una schermata alla volta.
+
+.
+:SHELL_CMD_MORE_HELP_LONG
+Visualizza l'output una schermata alla volta.
+
+Utilizzo:
+  [color=cyan]COMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]MODELLO[reset] [[color=cyan]MODELLO[reset] ...]
+
+Dove:
+  [color=cyan]COMANDO[reset] è il comando di cui visualizzare l'output.
+  [color=cyan]FILE[reset]    è il nome del file da visualizzare, facoltativamente con un percorso.
+  [color=cyan]MODELLO[reset] è un percorso a un singolo file o con caratteri jolly,
+          cioè asterisco (*) e punto di domanda (?).
+  [color=white]n[reset]       è la misura della tabulazione, 1-9, il valore predefinito è 8.
+
+Note:
+  Questo comando serve solo per visualizzare file di testo, non file binari.
+
+Esempi:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]    ; visualizza la directory ordinata una schermata alla volta
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUALE.TXT[reset]    ; mostra il contenuto del file con misura tab. 4
+
+.
+:SHELL_CMD_MORE_NO_FILE
+Nessun file di input trovato.
+.
+:SHELL_CMD_MORE_END
+[reset][color=light-yellow]--- fine dell'input ---[reset]
+.
+:SHELL_CMD_MORE_NEW_FILE
+[reset][color=light-yellow]--- file %s ---[reset]
+.
+:SHELL_CMD_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- dispositivo %s ---[reset]
+.
+:SHELL_CMD_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- premere SPAZIO per continuare ---[reset]
+.
+:SHELL_CMD_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- premere SPAZIO per continuare, N per il prossimo file ---[reset]
+.
+:SHELL_CMD_MORE_OPEN_ERROR
+[reset][color=red]--- impossibile aprire %s ---[reset]
+.
+:SHELL_CMD_MORE_TERMINATE
+[reset][color=light-yellow](terminato)[reset]
+.
 :SHELL_CMD_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.
 
@@ -1825,7 +1876,7 @@ Note:
   - se sensibilità o frequenza sono omessi, verrà usato il valore predefinito.
 
 Esempi:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map Chiede all'utente di selezionare i mouse da utilizzare
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
 .
 :SHELL_CMD_MOUSECTL_SYNTAX
 Sintassi del comando errata.
