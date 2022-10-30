@@ -830,12 +830,6 @@ Il n'y a aucune propriété "%s" dans la section "%s".
 Syntaxe correcte : config -set "section propriété".
 
 .
-:CONFIG_PCRATE
-Taux d'échantillonnage de la génération de son du haut-parleur PC.
-.
-:CONFIG_TANDYRATE
-Taux d'échantillonnage de la génération 3-Voix Tandy.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Aucun fichier de configuration chargé !
 
@@ -1164,24 +1158,6 @@ d'entrer dans un répertoire (reconnaissable par les [33;1m[][0m dans le listi
 Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
 
 .
-:PROGRAM_INTRO_CDROM
-[2J[32;1mComment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[0m
-DOSBox supporte l'émulation CD-ROM à plusieurs niveaux.
-
-Ceci fonctionne sur tous les répertoires ordinaires, installe MSCDEX et marque les fichiers
-en lecteur seule. Généralement c'est suffisant pour la plupart des jeux :
-
-[34;1mmount D C:\exemple -t cdrom[0m
-
-Si cela ne marche pas, vous pouvez préciser à DOSBox le nom de volume du CD-ROM :
-
-[34;1mmount D C:\exemple -t cdrom -label CDLABEL[0m
-
-Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fichiers CUE :
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-
-.
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1mTouches spéciales :[0m
 Voici les combinaisons des touches par défaut.
@@ -1273,10 +1249,6 @@ Fichier ROM non reconnu.
 .
 :PROGRAM_LOADROM_BASIC_LOADED
 ROM BASIC chargé.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP
-monte la ou les image(s) de disques compacts ou de disquette(s) sur une lettre de lecteur spécifiée.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
@@ -1408,16 +1380,6 @@ La page de code %i a été chargée
 La page de code %i a été chargée pour la disposition %s
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [ID disposition clavier[ numéro page de code[ fichier page de code]]]
-
-Quelques exemples :
-  [32;1mKEYB[0m: Affiche la page de code actuellement chargée.
-  [32;1mKEYB[0m sp: Charge la disposition espagnole (SP), utilise une page de code appropriée.
-  [32;1mKEYB[0m sp 850: Charge la disposition espagnole (SP), utilise la page de code 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Idem que ci-dessus, mais utilise le fichier mycp.cpi.
-
-.
 :PROGRAM_KEYB_NOERROR
 La disposition clavier %s est chargée pour la page de code %i
 
@@ -1499,9 +1461,6 @@ Date actuelle :
 :SHELL_CMD_DATE_SETHLP
 Tapez 'date MM-JJ-AAAA' pour changer
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/J/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [/S] | MM-JJ-AAAA]
