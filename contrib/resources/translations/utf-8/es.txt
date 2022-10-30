@@ -821,12 +821,6 @@ No existe la propiedad "%s" en la sección "%s".
 Sintaxis correcta: config -set "propiedad de la sección".
 
 .
-:CONFIG_PCRATE
-Frecuencia de muestreo del generador de sonido PC-Speaker.
-.
-:CONFIG_TANDYRATE
-Frecuencia de muestreo de la generación Tandy 3-Voice.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 No se ha cargado ningún archivo de configuración!
 
@@ -1443,10 +1437,6 @@ Archivo ROM no reconocido.
 ROM BASIC cargada.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-monta imagen(es) de disco compacto o de disquete a una letra de unidad determinada.
-
-.
 :SHELL_CMD_IMGMOUNT_HELP_LONG
 Monta un CD-ROM, disquete, o imagen de disco a una letra de unidad.
 
@@ -1658,34 +1648,9 @@ COM%d: %s %s
 Debes especificar un valor de puerto numérico entre 1 y %d, incluido.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-El modo debe ser uno de los siguientes:
-
-.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-Este programa es un marcador de posición
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s es sólo un marcador de posición.
-
-Instale un tercero y de prioridad a su PATH.
-
-Por ejemplo:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utilidades
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Visite lo siguiente para más ayuda:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1774,9 +1739,6 @@ Fecha actual:
 :SHELL_CMD_DATE_SETHLP
 Escriba 'date MM-DD-AAAA' para cambiar la fecha.
 
-.
-:SHELL_CMD_DATE_FORMAT
-M/D/A
 .
 :SHELL_CMD_DATE_HELP_LONG
 Uso:

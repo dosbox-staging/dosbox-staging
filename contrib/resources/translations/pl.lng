@@ -863,11 +863,6 @@ Brak parametru '%s' w sekcji '%s'.
 Składnia: config -set "[sekcja] parametr=wartość".
 
 .
-:CONFIG_DISNEY_FILTER
-Filtrowanie dźwięku urządzenia Disney Sound Source:
-  on:   Włączone (domyślne).
-  off:  Filtrowanie wyłączone.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie został załadowany żaden plik konfiguracyjny!
 
@@ -2703,4 +2698,3 @@ Inne polecenia
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
 .
-
