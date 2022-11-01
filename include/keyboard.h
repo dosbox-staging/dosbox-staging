@@ -131,11 +131,86 @@ enum KBD_KEYS {
 	KBD_kpplus,
 	KBD_kpenter,
 	KBD_kpperiod,
+	
+	/* Windows 95 keys */
+	KBD_lwindows,
+	KBD_rwindows,
+	KBD_rwinmenu,
+
+
+	/* other bindings */
+	KBD_kpequals,
+
+
+	/* F13-F24 */
+	KBD_f13,
+	KBD_f14,
+	KBD_f15,
+	KBD_f16,
+
+	KBD_f17,
+	KBD_f18,
+	KBD_f19,
+	KBD_f20,
+
+	KBD_f21,
+	KBD_f22,
+	KBD_f23,
+	KBD_f24,
+
+	/* Japanese [see http://www.stanford.edu/class/cs140/projects/pintos/specs/kbd/scancodes-7.html] */
+	KBD_jp_hankaku,
+	/* Hankaku/zenkaku (half-width/full-width) */
+	KBD_jp_muhenkan,
+	/* Muhenkan (No conversion from kana to kanji) */
+	KBD_jp_henkan,
+	/* Henkan/zenkouho (Conversion from kana to kanji, shifted: previous candidate, alt: all candidates) */
+	KBD_jp_hiragana,
+	/* Hiragana/Katakana (Hiragana, shifted: Katakana, alt: romaji) */
+	KBD_yen,
+	KBD_underscore,
+	/* JP layout */
+	KBD_ax,
+	KBD_conv,
+	KBD_nconv,
+	/* for AX */
+
+	/* Korean */
+	KBD_kor_hancha,
+	/* Hancha */
+	KBD_kor_hanyong,
+	/* Han/yong */
+
+	/* for Japanese A01 (106) key [http://www.mediafire.com/download/t968ydz6ky92myl/dosbox74.zip] */
+	/* see reference image [https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/KB_Japanese.svg/1280px-KB_Japanese.svg.png] */
+	KBD_jp_yen,
+	KBD_jp_backslash,
+	KBD_colon,
+	KBD_caret,
+	KBD_atsign,
+	KBD_jp_ro,
+	KBD_help,
+	KBD_kpcomma,
+
+	KBD_stop,
+	KBD_copy,
+	KBD_vf1,
+	KBD_vf2,
+	KBD_vf3,
+	KBD_vf4,
+	KBD_vf5,
+	KBD_kana,
+
+	KBD_nfer,
+	KBD_xfer,
+
 
 	KBD_LAST
 };
 
 void KEYBOARD_ClrBuffer(void);
-void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed);
+void KEYBOARD_AddKey(KBD_KEYS keytype,
+bool pressed);
+size_t KEYBOARD_BufferSpaceAvail();  // emendelson from dbDOS
 
 #endif
