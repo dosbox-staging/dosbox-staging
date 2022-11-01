@@ -342,7 +342,7 @@ void ManyMouseGlue::MapFinalize()
 	PIC_RemoveEvents(manymouse_tick);
 	is_mapping_in_effect = false;
 	for (const auto &entry : mouse_info.physical) {
-		if (entry.IsMapped())
+		if (!entry.IsMapped())
 			continue;
 
 		is_mapping_in_effect = true;
