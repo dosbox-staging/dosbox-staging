@@ -315,26 +315,39 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(int32_t cycles, int /*frameskip*/, bool paused)
+void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
 {
-	char title[200] = {0};
+	char title_buf[200] = {0};
 
 #if !defined(NDEBUG)
-	const char* build_type = " (debug build)";
+	#define APP_NAME_STR "DOSBox Staging (debug build)"
 #else
-	const char* build_type = "";
+	#define APP_NAME_STR "DOSBox Staging"
 #endif
 
-	static int32_t internal_cycles = 0;
-	if (cycles != -1)
-		internal_cycles = cycles;
+	auto &num_cycles      = sdl.title_bar.num_cycles;
+	auto &cycles_ms_str   = sdl.title_bar.cycles_ms_str;
+	auto &hint_mouse_str  = sdl.title_bar.hint_mouse_str;
+	auto &hint_paused_str = sdl.title_bar.hint_paused_str;
 
-	const char *msg = CPU_CycleAutoAdjust
-	                          ? "%8s - max %d%% - DOSBox Staging%s%s"
-	                          : "%8s - %d cycles/ms - DOSBox Staging%s%s";
-	safe_sprintf(title, msg, RunningProgram, internal_cycles, build_type,
-	             paused ? " (PAUSED)" : "");
-	SDL_SetWindowTitle(sdl.window, title);
+	if (new_num_cycles != -1)
+		num_cycles = new_num_cycles;
+
+	if (cycles_ms_str.empty()) {
+		cycles_ms_str   = MSG_GetRaw("TITLEBAR_CYCLES_MS");
+		hint_paused_str = std::string(" ") + MSG_GetRaw("TITLEBAR_HINT_PAUSED");
+	}
+
+	if (CPU_CycleAutoAdjust)
+		safe_sprintf(title_buf, "%8s - max %d%% - " APP_NAME_STR "%s",
+		             RunningProgram, num_cycles,
+		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
+	else
+		safe_sprintf(title_buf, "%8s - %d %s - " APP_NAME_STR "%s",
+		             RunningProgram, num_cycles, cycles_ms_str.c_str(),
+		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
+
+	SDL_SetWindowTitle(sdl.window, title_buf);
 }
 
 static double get_host_refresh_rate()
@@ -2165,6 +2178,57 @@ void GFX_SetShader([[maybe_unused]] const std::string &source)
 		sdl.opengl.program_object = 0;
 	}
 #endif
+}
+
+void GFX_SetMouseHint(const MouseHint hint_id)
+{
+	static const std::string prexix = " - ";
+
+	auto create_hint_str = [](const char *requested_name) {
+		char hint_buffer[200] = {0};
+
+		safe_sprintf(hint_buffer,
+		             MSG_GetRaw(requested_name),
+		             PRIMARY_MOD_NAME);
+		return prexix + hint_buffer;
+	};
+
+	auto &hint_str = sdl.title_bar.hint_mouse_str;
+	switch (hint_id) {
+	case MouseHint::None:
+		hint_str.clear();
+		break;
+	case MouseHint::NoMouse:
+		hint_str = prexix + MSG_GetRaw("TITLEBAR_HINT_NOMOUSE");
+		break;
+	case MouseHint::CapturedHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY");
+		break;
+	case MouseHint::CapturedHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE");
+		break;
+	case MouseHint::ReleasedHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY");
+		break;
+	case MouseHint::ReleasedHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE");
+		break;
+	case MouseHint::ReleasedHotkeyAnyButton:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON");
+		break;
+	case MouseHint::SeamlessHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY");
+		break;
+	case MouseHint::SeamlessHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE");
+		break;
+	default:
+		assert(false);
+		hint_str.clear();
+		break;
+	}
+
+	GFX_SetTitle(-1, -1, false);
 }
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
@@ -4003,8 +4067,29 @@ static std::vector<std::string> Get_SDL_TextureRenderers()
 	return drivers;
 }
 
-void Config_Add_SDL() {
-	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
+static void messages_add_sdl()
+{
+	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
+	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
+	MSG_Add("TITLEBAR_HINT_NOMOUSE", "no-mouse mode");
+	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY",
+	        "mouse captured, %s+F10 to release");
+	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE",
+	        "mouse captured, %s+F10 or middle-click to release");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY",
+	        "to capture the mouse press %s+F10");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE",
+	        "to capture the mouse press %s+F10 or middle-click");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON",
+	        "to capture the mouse press %s+F10 or click any button");
+	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY",
+	        "seamless mouse, %s+F10 to capture");
+	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE",
+	        "seamless mouse, %s+F10 or middle-click to capture");
+}
+
+void config_add_sdl() {
+	Section_prop *sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool *Pbool; // use pbool for new properties
 	Prop_bool *pbool;
@@ -4416,7 +4501,8 @@ int sdl_main(int argc, char *argv[])
 		CROSS_DetermineConfigPaths();
 
 		/* Init the configuration system and add default values */
-		Config_Add_SDL();
+		messages_add_sdl();
+		config_add_sdl();
 		DOSBOX_Init();
 
 		if (control->cmdline->FindExist("--editconf") ||

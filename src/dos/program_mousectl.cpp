@@ -550,7 +550,7 @@ void MOUSECTL::AddMessages()
 	        "Wrong syntax, sampling rate has to be one of:\n%s");
 
 	MSG_Add("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE",
-	        "Mapping not available in NoMouse mode.");
+	        "Mapping not available in no-mouse mode.");
 	MSG_Add("SHELL_CMD_MOUSECTL_NO_INTERFACES", "No mouse interfaces available.");
 	MSG_Add("SHELL_CMD_MOUSECTL_MISSING_INTERFACES",
 	        "Mouse interface not available.");
