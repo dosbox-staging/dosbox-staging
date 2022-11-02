@@ -70,6 +70,8 @@ static struct {
 	bool should_release_on_middle = false; // if middle button press should release the mouse
 	bool should_toggle_on_hotkey  = false; // if hotkey should toggle mouse capture
 
+	MouseHint hint_id = MouseHint::None; // hint to be displayed on title bar
+
 } state;
 
 static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y_abs)
@@ -182,6 +184,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// Store internally old settings, to avoid unnecessary GFX calls
 	const auto old_is_captured  = state.is_captured;
 	const auto old_is_input_raw = state.is_input_raw;
+	const auto old_hint_id      = state.hint_id;
 
 	// Raw input depends on the user configuration
 	state.is_input_raw = mouse_config.raw_input;
@@ -261,11 +264,33 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	                                 state.is_captured &&
 	                                 mouse_config.middle_release;
 
+	// Select hint to be displayed on a title bar
+	if (state.is_fullscreen || state.gui_has_taken_over || !state.has_focus)
+		state.hint_id = MouseHint::None;
+	else if (is_config_no_mouse)
+		state.hint_id = MouseHint::NoMouse;
+	else if (state.is_captured && state.should_release_on_middle)
+		state.hint_id = MouseHint::CapturedHotkeyMiddle;
+	else if (state.is_captured)
+		state.hint_id = MouseHint::CapturedHotkey;
+	else if (state.should_capture_on_click)
+		state.hint_id = MouseHint::ReleasedHotkeyAnyButton;
+	else if (state.should_capture_on_middle)
+		state.hint_id = state.is_seamless
+	                    ? MouseHint::SeamlessHotkeyMiddle
+	                    : MouseHint::ReleasedHotkeyMiddle;
+	else
+		state.hint_id = state.is_seamless
+	                    ? MouseHint::SeamlessHotkey
+	                    : MouseHint::ReleasedHotkey;
+
 	// Apply calculated settings if changed or if this is the first run
 	if (first_time || old_is_captured != state.is_captured)
 		GFX_SetMouseCapture(state.is_captured);
 	if (first_time || old_is_input_raw != state.is_input_raw)
 		GFX_SetMouseRawInput(state.is_input_raw);
+	if (first_time || old_hint_id != state.hint_id)
+		GFX_SetMouseHint(state.hint_id);
 
 	for (auto &interface : mouse_interfaces)
 		interface->UpdateInputType();
