@@ -1042,7 +1042,7 @@ Superposición %s en la unidad %c montada.
 No se puede mover la unidad Z. La unidad %c ya está montada.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Muestra la información de memoria DOS.
 
 Uso:
@@ -1075,7 +1075,7 @@ Ejemplos:
 %10d kB de memoria superior libre en %d bloques (UMB más grande %d kB)
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Carga un programa en la región de memoria específica y luego lo ejecuta.
 
 Uso:
@@ -1113,7 +1113,7 @@ Memoria usada liberada.
 Error de asignación de memoria.
 
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Realiza entrada de teclado con scripts en un juego DOS en ejecución.
 
 Uso:
@@ -1201,7 +1201,7 @@ MSCDEX: Error: Error desconocido.
 MSCDEX: Advertencia: Ignorando opción no soportada '%s'.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Escanea por cambios en unidades DOS montadas.
 
 Uso:
@@ -1327,7 +1327,7 @@ Se pueden cambiar en el [33mmapeador de teclas[0m.
 [33;1m%s+F12[0m    Desbloquea velocidad (botón turbo/avance rápido).
 
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Arranca DOSBox Staging desde una unidad DOS o una imagen de disco.
 
 Uso:
@@ -1396,7 +1396,7 @@ Comandos disponibles del cartucho PCjr: %s
 :PROGRAM_BOOT_CART_NO_CMDS
 No se han encontrado comandos del cartucho PCjr
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Carga una imagen ROM de la BIOS de vídeo o del IBM BASIC.
 
 Uso:
@@ -1437,7 +1437,7 @@ Archivo ROM no reconocido.
 ROM BASIC cargada.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Monta un CD-ROM, disquete, o imagen de disco a una letra de unidad.
 
 Uso:
@@ -1463,11 +1463,11 @@ Ejemplos:
   [32;1mimgmount[0m [37;1mC[0m [36;1marranque.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 asigna carpetas físicas o unidades a una letra de unidad virtual.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Monta un directorio del SO anfitrión a una letra de unidad.
 
 Uso:
@@ -1565,7 +1565,7 @@ Página de código %i ha sido cargada
 Página de código %i ha sido cargada para distribución %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configura un teclado para un idioma específico.
 
 Uso:
@@ -1614,7 +1614,7 @@ Archivo de página de código no válido o no existe para la distribución %s
 
 
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Administra los puertos serie.
 
 Modos de uso:
@@ -2088,11 +2088,11 @@ Ejemplos:
   [32;1mhelp[0m /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Muestra una introducción en pantalla completa a DOSBox Staging.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Uso:
   [32;1mintro[0m
   [32;1mintro[0m [37;1mPÁGINA[0m

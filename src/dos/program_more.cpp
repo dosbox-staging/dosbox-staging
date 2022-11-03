@@ -42,7 +42,7 @@ void MORE::Run()
 {
 	// Handle command line
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MORE_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_MORE_HELP_LONG"));
 		return;
 	}
 	if (!ParseCommandLine() || shutdown_requested)
@@ -71,7 +71,7 @@ void MORE::Run()
 		if (max_lines - line_counter < free_rows_threshold)
 			PromptUser();
 
-		WriteOut(MSG_Get("SHELL_CMD_MORE_END"));
+		WriteOut(MSG_Get("PROGRAM_MORE_END"));
 		WriteOut("\n");
 	}
 
@@ -169,7 +169,7 @@ bool MORE::FindInputFiles(const std::vector<std::string> &params)
 	dos.dta(save_dta);
 
 	if (!shutdown_requested && input_files.empty()) {
-		WriteOut(MSG_Get("SHELL_CMD_MORE_NO_FILE"));
+		WriteOut(MSG_Get("PROGRAM_MORE_NO_FILE"));
 		WriteOut("\n");
 		return false;
 	}
@@ -228,8 +228,8 @@ void MORE::DisplayInputFiles()
 			LOG_WARNING("DOS: MORE.COM - could not open '%s'",
 			            input_file.name.c_str());
 			const auto short_name = GetShortName(input_file.name,
-			                                     "SHELL_CMD_MORE_OPEN_ERROR");
-			WriteOut(MSG_Get("SHELL_CMD_MORE_OPEN_ERROR"), short_name.c_str());
+			                                     "PROGRAM_MORE_OPEN_ERROR");
+			WriteOut(MSG_Get("PROGRAM_MORE_OPEN_ERROR"), short_name.c_str());
 			WriteOut("\n");
 			++line_counter;
 			continue;
@@ -237,12 +237,12 @@ void MORE::DisplayInputFiles()
 
 		if (input_file.is_device) {
 			const auto short_name = GetShortName(input_file.name,
-			                                     "SHELL_CMD_MORE_NEW_DEVICE");
-			WriteOut(MSG_Get("SHELL_CMD_MORE_NEW_DEVICE"), short_name.c_str());
+			                                     "PROGRAM_MORE_NEW_DEVICE");
+			WriteOut(MSG_Get("PROGRAM_MORE_NEW_DEVICE"), short_name.c_str());
 		} else {
 			const auto short_name = GetShortName(input_file.name,
-			                                     "SHELL_CMD_MORE_NEW_FILE");
-			WriteOut(MSG_Get("SHELL_CMD_MORE_NEW_FILE"), short_name.c_str());
+			                                     "PROGRAM_MORE_NEW_FILE");
+			WriteOut(MSG_Get("PROGRAM_MORE_NEW_FILE"), short_name.c_str());
 		}
 		WriteOut("\n");
 		++line_counter;
@@ -362,9 +362,9 @@ MORE::Decision MORE::PromptUser()
 		WriteOut("\n");
 
 	if (multiple_files)
-		WriteOut(MSG_Get("SHELL_CMD_MORE_PROMPT_MULTI"));
+		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
 	else
-		WriteOut(MSG_Get("SHELL_CMD_MORE_PROMPT_SINGLE"));
+		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
 
 	auto decision = Decision::Terminate;
 	while (!shutdown_requested) {
@@ -396,7 +396,7 @@ MORE::Decision MORE::PromptUser()
 
 	if (decision == Decision::Terminate || decision == Decision::NextFile) {
 		WriteOut(" ");
-		WriteOut(MSG_Get("SHELL_CMD_MORE_TERMINATE"));
+		WriteOut(MSG_Get("PROGRAM_MORE_TERMINATE"));
 		WriteOut("\n");
 		++line_counter;
 	} else {
@@ -469,9 +469,7 @@ uint8_t MORE::GetCurrentRow()
 
 void MORE::AddMessages()
 {
-	MSG_Add("SHELL_CMD_MORE_HELP",
-	        "Display command output or text file one screen at a time.\n");
-	MSG_Add("SHELL_CMD_MORE_HELP_LONG",
+	MSG_Add("PROGRAM_MORE_HELP_LONG",
 	        "Display command output or text file one screen at a time.\n"
 	        "\n"
 	        "Usage:\n"
@@ -493,12 +491,12 @@ void MORE::AddMessages()
 	        "  [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time\n"
 	        "  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\\MANUAL.TXT[reset]   ; shows the file's content with tab size 4\n");
 
-	MSG_Add("SHELL_CMD_MORE_NO_FILE",       "No input file found.");
-	MSG_Add("SHELL_CMD_MORE_END",           "[reset][color=light-yellow]--- end of input ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_NEW_FILE",      "[reset][color=light-yellow]--- file %s ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_NEW_DEVICE",    "[reset][color=light-yellow]--- device %s ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_PROMPT_SINGLE", "[reset][color=light-yellow]--- press SPACE for more ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_PROMPT_MULTI",  "[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_OPEN_ERROR",    "[reset][color=red]--- could not open %s ---[reset]");
-	MSG_Add("SHELL_CMD_MORE_TERMINATE",     "[reset][color=light-yellow](terminated)[reset]");
+	MSG_Add("PROGRAM_MORE_NO_FILE",       "No input file found.");
+	MSG_Add("PROGRAM_MORE_END",           "[reset][color=light-yellow]--- end of input ---[reset]");
+	MSG_Add("PROGRAM_MORE_NEW_FILE",      "[reset][color=light-yellow]--- file %s ---[reset]");
+	MSG_Add("PROGRAM_MORE_NEW_DEVICE",    "[reset][color=light-yellow]--- device %s ---[reset]");
+	MSG_Add("PROGRAM_MORE_PROMPT_SINGLE", "[reset][color=light-yellow]--- press SPACE for more ---[reset]");
+	MSG_Add("PROGRAM_MORE_PROMPT_MULTI",  "[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]");
+	MSG_Add("PROGRAM_MORE_OPEN_ERROR",    "[reset][color=red]--- could not open %s ---[reset]");
+	MSG_Add("PROGRAM_MORE_TERMINATE",     "[reset][color=light-yellow](terminated)[reset]");
 }

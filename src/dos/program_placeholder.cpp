@@ -26,19 +26,19 @@ void PLACEHOLDER::Run()
 {
 	const auto command = cmd->GetFileName();
 
-	LOG_WARNING("%s: %s", command, MSG_Get("SHELL_CMD_PLACEHOLDER_HELP"));
+	LOG_WARNING("%s: %s", command, MSG_Get("PROGRAM_PLACEHOLDER_HELP"));
 	LOG_WARNING("%s: %s", command, MSG_Get("VISIT_FOR_MORE_HELP"));
 	LOG_WARNING("%s: %s/%s", command, MSG_Get("WIKI_URL"), "Add-Utilities");
 
-	WriteOut(MSG_Get("SHELL_CMD_PLACEHOLDER_HELP_LONG"), command);
+	WriteOut(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command);
 	WriteOut_NoParsing(MSG_Get("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE"));
 
 	result_errorcode = dos.return_code;
 }
 
 void PLACEHOLDER::AddMessages() {
-	MSG_Add("SHELL_CMD_PLACEHOLDER_HELP", "This program is a placeholder");
-	MSG_Add("SHELL_CMD_PLACEHOLDER_HELP_LONG",
+	MSG_Add("PROGRAM_PLACEHOLDER_HELP", "This program is a placeholder");
+	MSG_Add("PROGRAM_PLACEHOLDER_HELP_LONG",
 	        "%s is only a placeholder.\n"
 	        "\nInstall a 3rd-party and give its PATH precedence.\n"
 	        "\nFor example:");

@@ -29,7 +29,7 @@ void RESCAN::Run(void)
 	uint8_t drive = DOS_GetDefaultDrive();
 
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_RESCAN_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_RESCAN_HELP_LONG"));
 		return;
 	}
 
@@ -59,7 +59,7 @@ void RESCAN::Run(void)
 }
 
 void RESCAN::AddMessages() {
-	MSG_Add("SHELL_CMD_RESCAN_HELP_LONG",
+	MSG_Add("PROGRAM_RESCAN_HELP_LONG",
 	        "Scans for changes on mounted DOS drives.\n"
 	        "\n"
 	        "Usage:\n"

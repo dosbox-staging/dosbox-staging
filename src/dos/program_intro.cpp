@@ -66,9 +66,9 @@ void INTRO::DisplayMount(void) {
 void INTRO::Run(void) {
 	// Usage
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP"));
+		WriteOut(MSG_Get("PROGRAM_INTRO_HELP"));
 		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_INTRO_HELP_LONG"));
 		return;
 	}
     /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
@@ -106,6 +106,24 @@ void INTRO::Run(void) {
 }
 
 void INTRO::AddMessages() {
+	MSG_Add("PROGRAM_INTRO_HELP",
+	        "Displays a full-screen introduction to DOSBox Staging.\n");
+	MSG_Add("PROGRAM_INTRO_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]PAGE[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running [color=green]intro[reset] without an argument displays one information page at a time;\n"
+	        "  press any key to move to the next page. If a page name is provided, then the\n"
+	        "  specified page will be displayed directly.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]cdrom[reset]\n");
     MSG_Add("PROGRAM_INTRO",
 	        "[erases=entire][color=green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.\n"
 	        "DOSBox creates a shell for you which looks like old plain DOS.\n"

@@ -34,7 +34,7 @@ void LOADROM::Run(void) {
         return;
     }
     if (HelpRequested()) {
-	    WriteOut(MSG_Get("SHELL_CMD_LOADROM_HELP_LONG"));
+	    WriteOut(MSG_Get("PROGRAM_LOADROM_HELP_LONG"));
 	    return;
     }
     uint8_t drive;
@@ -101,7 +101,7 @@ void LOADROM::Run(void) {
 }
 
 void LOADROM::AddMessages() {
-    MSG_Add("SHELL_CMD_LOADROM_HELP_LONG",
+    MSG_Add("PROGRAM_LOADROM_HELP_LONG",
 	        "Loads a ROM image of the video BIOS or IBM BASIC.\n"
 	        "\n"
 	        "Usage:\n"

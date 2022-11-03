@@ -1192,24 +1192,6 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=green]help[reset] [color=cyan]dir[reset]\n"
 	        "  [color=green]help[reset] /all\n");
-	MSG_Add("SHELL_CMD_INTRO_HELP",
-	        "Displays a full-screen introduction to DOSBox Staging.\n");
-	MSG_Add("SHELL_CMD_INTRO_HELP_LONG",
-	        "Usage:\n"
-	        "  [color=green]intro[reset]\n"
-	        "  [color=green]intro[reset] [color=white]PAGE[reset]\n"
-	        "\n"
-	        "Where:\n"
-	        "  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].\n"
-	        "\n"
-	        "Notes:\n"
-	        "  Running [color=green]intro[reset] without an argument displays one information page at a time;\n"
-	        "  press any key to move to the next page. If a page name is provided, then the\n"
-	        "  specified page will be displayed directly.\n"
-	        "\n"
-	        "Examples:\n"
-	        "  [color=green]intro[reset]\n"
-	        "  [color=green]intro[reset] [color=white]cdrom[reset]\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
 	        "Usage:\n"

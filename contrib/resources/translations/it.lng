@@ -1140,7 +1140,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Esegue l'immissione da tastiera tramite script in un gioco DOS.
 
 Utilizzo:
@@ -1166,7 +1166,7 @@ Esempi:
   [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Avvia DOSBox Staging da un'unità DOS o da un'immagine disco.
 
 Utilizzo:
@@ -1307,7 +1307,7 @@ Unità %c montata come %s
 Le unità attualmente montate sono:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 
 Utilizzo:
@@ -1529,7 +1529,7 @@ Tabella codici %i caricata.
 Tabella codici %i caricata per il layout %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configura la tastiera in base alla lingua specificata.
 
 Utilizzo:
@@ -1576,7 +1576,7 @@ Impossibile trovare il layout %s per la tabella codici %i.
 File tabella codici mancante o non valido per il layout %s.
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Carica un programma nella regione di memoria specifica e lo esegue.
 
 Utilizzo:
@@ -1616,7 +1616,7 @@ Memoria in uso liberata.
 Errore allocazione di memoria.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Carica un'immagine ROM del BIOS video o IBM BASIC.
 
 Utilizzo:
@@ -1658,7 +1658,7 @@ File ROM non riconosciuto.
 ROM BASIC caricata.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Visualizza le informazioni sulla memoria DOS.
 
 Utilizzo:
@@ -1692,11 +1692,7 @@ Esempi:
 %10d kB di memoria superiore libera in %d blocchi (UMB più grande %d kB)
 
 .
-:SHELL_CMD_MORE_HELP
-Visualizza l'output una schermata alla volta.
-
-.
-:SHELL_CMD_MORE_HELP_LONG
+:PROGRAM_MORE_HELP_LONG
 Visualizza l'output una schermata alla volta.
 
 Utilizzo:
@@ -1719,35 +1715,35 @@ Esempi:
   [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUALE.TXT[reset]    ; mostra il contenuto del file con misura tab. 4
 
 .
-:SHELL_CMD_MORE_NO_FILE
+:PROGRAM_MORE_NO_FILE
 Nessun file di input trovato.
 .
-:SHELL_CMD_MORE_END
+:PROGRAM_MORE_END
 [reset][color=light-yellow]--- fine dell'input ---[reset]
 .
-:SHELL_CMD_MORE_NEW_FILE
+:PROGRAM_MORE_NEW_FILE
 [reset][color=light-yellow]--- file %s ---[reset]
 .
-:SHELL_CMD_MORE_NEW_DEVICE
+:PROGRAM_MORE_NEW_DEVICE
 [reset][color=light-yellow]--- dispositivo %s ---[reset]
 .
-:SHELL_CMD_MORE_PROMPT_SINGLE
+:PROGRAM_MORE_PROMPT_SINGLE
 [reset][color=light-yellow]--- premere SPAZIO per continuare ---[reset]
 .
-:SHELL_CMD_MORE_PROMPT_MULTI
+:PROGRAM_MORE_PROMPT_MULTI
 [reset][color=light-yellow]--- premere SPAZIO per continuare, N per il prossimo file ---[reset]
 .
-:SHELL_CMD_MORE_OPEN_ERROR
+:PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- impossibile aprire %s ---[reset]
 .
-:SHELL_CMD_MORE_TERMINATE
+:PROGRAM_MORE_TERMINATE
 [reset][color=light-yellow](terminato)[reset]
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Monta una directory del sistema operativo host su una lettera di unità.
 
 Utilizzo:
@@ -1852,7 +1848,7 @@ Sovrapposizione %s nell'unità %c montata.
 Impossibile spostare l'unità Z. L'unità %c è già montata.
 
 .
-:SHELL_CMD_MOUSECTL_HELP_LONG
+:PROGRAM_MOUSECTL_HELP_LONG
 Gestisce i mouse fisici e logici.
 
 Utilizzo:
@@ -1878,84 +1874,84 @@ Note:
 Esempi:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
 .
-:SHELL_CMD_MOUSECTL_SYNTAX
+:PROGRAM_MOUSECTL_SYNTAX
 Sintassi del comando errata.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_PATTERN
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Sintassi errata, sono ammessi solo caratteri ASCII.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Sintassi errata, la sensibilità deve essere compresa tra -999 e +999.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_DUPLICATED
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Sintassi errata, interfacce del mouse duplicate.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Sintassi errata, la frequenza di polling deve essere una dei seguenti:
 %s
 .
-:SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mappatura non disponibile in modalità NoMouse.
 .
-:SHELL_CMD_MOUSECTL_NO_INTERFACES
+:PROGRAM_MOUSECTL_NO_INTERFACES
 Nessuna interfaccia del mouse disponibile.
 .
-:SHELL_CMD_MOUSECTL_MISSING_INTERFACES
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
 Interfaccia mouse non disponibile.
 .
-:SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Nessun mouse fisico rilevato.
 .
-:SHELL_CMD_MOUSECTL_NO_MATCH
+:PROGRAM_MOUSECTL_NO_MATCH
 Nessun mouse corrispondente trovato.
 .
-:SHELL_CMD_MOUSECTL_TABLE_HEADER1
+:PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interfaccia    Sensibilità    Frequenza (Hz)    Stato[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT1
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
 [color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s        %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_HEADER2
+:PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interfaccia    Nome Mouse[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
 [color=cyan]%-4s[reset]           %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 non mappato    %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_HOST
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
 utilizza il puntatore di sistema
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_MAPPED
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
 mouse fisico mappato
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISCONNECTED
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
 [color=red]mouse mappato disconnesso[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISABLED
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 disabilitato
 .
-:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_COM
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
 Le frequenze di polling per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
 .
-:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_MIN
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Le frequenze di polling con valore minimo impostato sono contrassegnate con '*'
 .
-:SHELL_CMD_MOUSECTL_MAP_ADVICE
+:PROGRAM_MOUSECTL_MAP_ADVICE
 Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
 sull'interfaccia. Facendo clic su qualsiasi altro pulsante, si annulla la 
 mappatura e si assegna il puntatore di sistema a tutte le interfacce del mouse.
 .
-:SHELL_CMD_MOUSECTL_MAP_CANCEL
+:PROGRAM_MOUSECTL_MAP_CANCEL
 (mappatura annullata)
 .
-:SHELL_CMD_MOUSECTL_MAP_HINT
+:PROGRAM_MOUSECTL_MAP_HINT
 Mouse catturato. Il metodo di controllo del mouse 'seamless' è sempre
 disabilitato mentre la mappatura è attiva e i mouse mappati ricevono eventi di
 input non elaborati.
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Scansiona le modifiche sulle unità DOS montate.
 
 Utilizzo:
@@ -2026,7 +2022,7 @@ Inverso
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
@@ -2539,11 +2535,11 @@ Esempi:
   [color=green]help[reset] /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Visualizza un'introduzione a schermo intero di DOSBox Staging.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Utilizzo:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]PAGINA[reset]

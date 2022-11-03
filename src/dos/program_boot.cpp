@@ -166,7 +166,7 @@ void BOOT::Run(void)
 	}
 
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_BOOT_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_BOOT_HELP_LONG"));
 		return;
 	}
 	if (cmd->GetCount() == 1) {
@@ -502,7 +502,7 @@ void BOOT::Run(void)
 }
 
 void BOOT::AddMessages() {
-	MSG_Add("SHELL_CMD_BOOT_HELP_LONG",
+	MSG_Add("PROGRAM_BOOT_HELP_LONG",
 	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
 	        "\n"
 	        "Usage:\n"

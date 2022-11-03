@@ -96,7 +96,7 @@ void IMGMOUNT::Run(void) {
     }
     // Usage
     if (HelpRequested()) {
-        WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
+        WriteOut(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
         return;
     }
 
@@ -492,7 +492,7 @@ void IMGMOUNT::Run(void) {
 
 void IMGMOUNT::AddMessages() {
     AddCommonMountMessages();
-	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
+	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG",
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"

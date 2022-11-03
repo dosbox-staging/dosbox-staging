@@ -1017,7 +1017,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Symulowanie naciśnięć klawiszy dla uruchomionego programu.
 
 Składnia:
@@ -1041,7 +1041,7 @@ Przykłady:
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Startowanie systemu z obrazu dyskietki lub zamontowanego dysku.
 
 Składnia:
@@ -1177,7 +1177,7 @@ Lista zamontowanych dysków:
 
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Montowanie obrazu dyskietki, płyty CD lub dysku pod wybraną literę.
 
 Składnia:
@@ -1398,7 +1398,7 @@ Strona kodowa %i została załadowana.
 Strona kodowa %i dla układu klawiatury '%s' została załadowana.
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Konfiguracja klawiatury i czcionki dla danego języka.
 
 Składnia:
@@ -1445,7 +1445,7 @@ Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury '%s'.
 
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Ładowanie programu w określone miejsce pamięci i uruchomienie go.
 
 Składnia:
@@ -1482,7 +1482,7 @@ Używana pamięć została zwolniona.
 Błąd alokacji pamięci.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Ładowanie obrazu ROM języka IBM BASIC lub BIOSu karty graficznej.
 
 Składnia:
@@ -1521,7 +1521,7 @@ Nie można rozpoznać ROMu.
 Załadowano BASIC ROM.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Wyświetlenie informacji o użyciu pamięci.
 
 Składnia:
@@ -1553,11 +1553,11 @@ Przykłady:
 %10d kB wolnej pamięci UMB (górnej) w %d blokach (największy %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Montowanie fizycznych katalogów lub dysków.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Montuje katalog z systemu gospodarza pod literę dysku.
 
 Składnia:
@@ -1659,7 +1659,7 @@ Nakładka ('overlay') '%s' zamontowana na dysku %c.
 Nie można przenieść dysku Z. Dysk %c jest już zamontowany.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Sprawdzenie zmian na zamontowanych dyskach.
 
 Składnia:
@@ -1723,7 +1723,7 @@ Stereo
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Zarządzanie portami szeregowymi.
 
 Składnia:
@@ -2218,11 +2218,11 @@ Przykłady:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Krótki, pełnoekranowy samouczek.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Składnia:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]STRONA[reset]
