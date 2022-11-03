@@ -121,7 +121,7 @@ void AUTOTYPE::Run()
 
 	// Usage
 	if (!cmd->GetCount() || HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_AUTOTYPE_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_AUTOTYPE_HELP_LONG"));
 		return;
 	}
 
@@ -160,7 +160,7 @@ void AUTOTYPE::Run()
 }
 
 void AUTOTYPE::AddMessages() {
-	MSG_Add("SHELL_CMD_AUTOTYPE_HELP_LONG",
+	MSG_Add("PROGRAM_AUTOTYPE_HELP_LONG",
 	        "Performs scripted keyboard entry into a running DOS game.\n"
 	        "\n"
 	        "Usage:\n"

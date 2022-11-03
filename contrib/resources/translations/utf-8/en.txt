@@ -1029,7 +1029,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Performs scripted keyboard entry into a running DOS game.
 
 Usage:
@@ -1055,7 +1055,7 @@ Examples:
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
 [reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Boots DOSBox Staging from a DOS drive or disk image.
 
 Usage:
@@ -1191,7 +1191,7 @@ Drive %c is mounted as %s
 The currently mounted drives are:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
@@ -1408,7 +1408,7 @@ Codepage %i has been loaded
 Codepage %i has been loaded for layout %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -1455,7 +1455,7 @@ No layout in %s for codepage %i
 None or invalid codepage file for layout %s
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Loads a program in the specific memory region and then runs it.
 
 Usage:
@@ -1493,7 +1493,7 @@ Used memory freed.
 Memory allocation error.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Loads a ROM image of the video BIOS or IBM BASIC.
 
 Usage:
@@ -1534,7 +1534,7 @@ ROM file not recognized.
 BASIC ROM loaded.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Displays the DOS memory information.
 
 Usage:
@@ -1567,11 +1567,11 @@ Examples:
 %10d kB free upper memory in %d blocks (largest UMB %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 maps physical folders or drives to a virtual drive letter.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Mount a directory from the host OS to a drive letter.
 
 Usage:
@@ -1671,7 +1671,7 @@ Overlay %s on drive %c mounted.
 Can't move drive Z. Drive %c is mounted already.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Scans for changes on mounted DOS drives.
 
 Usage:
@@ -1739,7 +1739,7 @@ Reverse
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Manages the serial ports.
 
 Usage:
@@ -2238,11 +2238,11 @@ Examples:
   [color=green]help[reset] /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Displays a full-screen introduction to DOSBox Staging.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Usage:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]PAGE[reset]

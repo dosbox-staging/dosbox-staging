@@ -24,16 +24,31 @@ const std::map<const std::string, HELP_Detail> &HELP_GetHelpList()
 
 std::string HELP_GetShortHelp(const std::string &cmd_name)
 {
-	const std::string short_key = "SHELL_CMD_" + cmd_name + "_HELP";
-	if (MSG_Exists(short_key.c_str())) {
-		return MSG_Get(short_key.c_str());
+	// Try to find short help first
+	const std::string short_key_command = "SHELL_CMD_" + cmd_name + "_HELP";
+	if (MSG_Exists(short_key_command.c_str())) {
+		return MSG_Get(short_key_command.c_str());
 	}
-	const std::string long_key = "SHELL_CMD_" + cmd_name + "_HELP_LONG";
-	if (MSG_Exists(long_key.c_str())) {
+	const std::string short_key_program = "PROGRAM_" + cmd_name + "_HELP";
+	if (MSG_Exists(short_key_program.c_str())) {
+		return MSG_Get(short_key_program.c_str());
+	}
+
+	// If it does not exist, extract first line of long help
+	auto extract = [](const std::string &long_key) {
 		const std::string str(MSG_Get(long_key.c_str()));
 		const auto pos = str.find('\n');
 		return str.substr(0, pos != std::string::npos ? pos + 1 : pos);
+	};
+	const std::string long_key_command = "SHELL_CMD_" + cmd_name + "_HELP_LONG";
+	if (MSG_Exists(long_key_command.c_str())) {
+		return extract(long_key_command);
 	}
+	const std::string long_key_program = "PROGRAM_" + cmd_name + "_HELP_LONG";
+	if (MSG_Exists(long_key_program.c_str())) {
+		return extract(long_key_program);
+	}
+
 	return "No help available\n";
 }
 

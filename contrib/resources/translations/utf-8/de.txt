@@ -1069,7 +1069,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Geskriptete Tastatureingabe in ein laufendes DOS Programm.
 
 Verwendung:
@@ -1095,7 +1095,7 @@ Beispiele:
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Startet DOSBox Staging von einem DOS-Laufwerk oder einem Disk-Image.
 
 Verwendung:
@@ -1234,7 +1234,7 @@ Laufwerk %c ist eingebunden als %s
 Die aktuell eingebundenen Laufwerke sind:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Mounted ein CD-, Disketten- oder ein Disk-Image als Laufwerk.
 
 Verwendung:
@@ -1460,7 +1460,7 @@ Zeichentabelle %i wurde geladen
 Zeichentabelle %i wurde für Layout %s geladen
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Konfiguriert eine Tastatur für eine bestimmte Sprache.
 
 Verwendung:
@@ -1509,7 +1509,7 @@ Keine oder ungültige Zeichentabellendatei für Layout %s
 
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Lädt ein Programm in einen Speicherbereich und führt es dann aus.
 
 Verwendung:
@@ -1549,7 +1549,7 @@ Benutzter Speicher freigegeben.
 Fehler bei der Speicherallokation.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Lädt ein ROM-Abbild des Video-BIOS oder IBM BASIC.
 
 Verwendung:
@@ -1591,7 +1591,7 @@ ROM-Datei nicht erkannt.
 BASIC ROM geladen.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Zeigt die DOS-Speicherinformationen an.
 
 Verwendung:
@@ -1625,11 +1625,11 @@ Beispiel:
 %10d kB freier oberer Speicher in %d Blöcken (größter UMB %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerk zu.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Einbinden eines Verzeichnisses des Host-Betriebssystems als Laufwerk.
 
 Verwendung:
@@ -1732,7 +1732,7 @@ Overlay %s auf Laufwerk %c eingebunden.
 Kann Laufwerk Z nicht verschieben. Laufwerk %c ist bereits eingebunden.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Sucht nach Änderungen auf eingebundenen DOS-Laufwerken.
 
 Verwendung:
@@ -1800,7 +1800,7 @@ Stereo
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Verwaltet die seriellen Schnittstellen.
 
 Verwendung:
@@ -2308,11 +2308,11 @@ Beispiele:
   [color=green]help[reset] /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Zeigt eine bildschirmfüllende Einführung in DOSBox Staging an.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Verwendung:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]SEITE[reset]

@@ -137,7 +137,7 @@ void MOUNT::Run(void) {
 	// a side effect of not being able to parse the correct 
 	// command line options.
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
 		return;
 	}
 
@@ -405,16 +405,16 @@ void MOUNT::Run(void) {
 	if (type == "floppy") incrementFDD();
 	return;
 showusage:
-	WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+	WriteOut(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
 	return;
 }
 
 void MOUNT::AddMessages() {
 	AddCommonMountMessages();
-	MSG_Add("SHELL_CMD_MOUNT_HELP",
+	MSG_Add("PROGRAM_MOUNT_HELP",
 	        "maps physical folders or drives to a virtual drive letter.\n");
 
-	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
+	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
 	        "Mount a directory from the host OS to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"

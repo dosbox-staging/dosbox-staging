@@ -1271,7 +1271,7 @@ PCjr картридж найден, но машина не PCjr.
 Базовое ПЗУ загружено.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
 Использование:
@@ -1298,11 +1298,11 @@ PCjr картридж найден, но машина не PCjr.
   [32;1mimgmount[0m [37;1mC[0m [36;1mзагрузочный_образ.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Сопоставить физическую директорию с буквой виртуального диска DOS.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Монтировать директорию из операционной системы на букву виртуального диска DOS.
 
 Использование:
@@ -1862,7 +1862,7 @@ choice [/c:клавиши] [/n] [/s] текст
 Нет доступных IDE контроллеров. Диск не будет иметь эмуляции IDE.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Displays the DOS memory information.
 
 Usage:
@@ -1879,7 +1879,7 @@ Examples:
   [32;1mmem[0m
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Loads a program in the specific memory region and then runs it.
 
 Usage:
@@ -1901,7 +1901,7 @@ Examples:
   [32;1mloadfix[0m /d
 
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Performs scripted keyboard entry into a running DOS game.
 
 Usage:
@@ -1949,7 +1949,7 @@ Examples:
   [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
   [32;1mmixer[0m /listmidi
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Scans for changes on mounted DOS drives.
 
 Usage:
@@ -2009,7 +2009,7 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Boots DOSBox Staging from a DOS drive or disk image.
 
 Usage:
@@ -2030,7 +2030,7 @@ Examples:
   [32;1mboot[0m [36;1mdisk1.ima disk2.ima[0m
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Loads a ROM image of the video BIOS or IBM BASIC.
 
 Usage:
@@ -2047,7 +2047,7 @@ Examples:
   [32;1mloadrom[0m [36;1mbios.rom[0m
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -2074,7 +2074,7 @@ Examples:
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Manage the serial ports.
 
 Usage modes:
@@ -2235,11 +2235,11 @@ Examples:
   [32;1mhelp[0m /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Displays a full-screen introduction to DOSBox Staging.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Usage:
   [32;1mintro[0m
   [32;1mintro[0m [37;1mPAGE[0m

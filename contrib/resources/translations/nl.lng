@@ -1096,7 +1096,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Voert gescripte toetsenbordinvoer uit in een draaiend DOS-spel.
 
 Gebruik:
@@ -1122,7 +1122,7 @@ Voorbeelden:
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
 [reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Start DOSBox Staging op vanaf een DOS-schijf of schijfimage.
 
 Usage:
@@ -1260,7 +1260,7 @@ Schijf %c is gekoppeld als %s
 De momenteel gekoppelde schijven zijn:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Koppel een cd-rom, diskette of schijfkopie aan een stationsletter.
 
 Gebruik:
@@ -1477,7 +1477,7 @@ Codetabel %i is geladen
 Codetabel %i is geladen voor lay-out %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configureert een toetsenbord voor een specifieke taal.
 
 Gebruik:
@@ -1524,7 +1524,7 @@ Geen lay-out in %s voor codetabel %i
 Geen of ongeldig codetabelbestand voor lay-out %s
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
@@ -1563,7 +1563,7 @@ Gebruikt geheugen vrijgemaakt.
 Geheugentoewijzingsfout.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Laadt een video-BIOS of IBM BASIC ROM-image.
 
 Gebruik:
@@ -1604,7 +1604,7 @@ ROM-bestand niet herkend.
 BASIC-ROM geladen.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Geeft de DOS-geheugeninformatie weer.
 
 Gebruik:
@@ -1638,11 +1638,7 @@ Voorbeelden:
 %10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)
 
 .
-:SHELL_CMD_MORE_HELP
-Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
-
-.
-:SHELL_CMD_MORE_HELP_LONG
+:PROGRAM_MORE_HELP_LONG
 Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
 
 Gebruik:
@@ -1666,35 +1662,35 @@ Voorbeelden:
   [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  ; toont de inhoud van het bestand met tabgrootte 4
 
 .
-:SHELL_CMD_MORE_NO_FILE
+:PROGRAM_MORE_NO_FILE
 Geen invoerbestand gevonden.
 .
-:SHELL_CMD_MORE_END
+:PROGRAM_MORE_END
 [reset][color=light-yellow]--- einde van invoer ---[reset]
 .
-:SHELL_CMD_MORE_NEW_FILE
+:PROGRAM_MORE_NEW_FILE
 [reset][color=light-yellow]--- bestand %s ---[reset]
 .
-:SHELL_CMD_MORE_NEW_DEVICE
+:PROGRAM_MORE_NEW_DEVICE
 [reset][color=light-yellow]--- apparaat %s ---[reset]
 .
-:SHELL_CMD_MORE_PROMPT_SINGLE
+:PROGRAM_MORE_PROMPT_SINGLE
 [reset][color=light-yellow]--- druk op SPATIEBALK voor meer ---[reset]
 .
-:SHELL_CMD_MORE_PROMPT_MULTI
+:PROGRAM_MORE_PROMPT_MULTI
 [reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
 .
-:SHELL_CMD_MORE_OPEN_ERROR
+:PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- kon %s niet openen ---[reset]
 .
-:SHELL_CMD_MORE_TERMINATE
+:PROGRAM_MORE_TERMINATE
 [reset][color=light-yellow](beëindigd)[reset]
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Koppel een map van het host-besturingssysteem aan een stationsletter.
 
 Gebruik:
@@ -1796,7 +1792,7 @@ Overlay %s op schijf %c gekoppeld.
 Kan station Z niet verplaatsen. Station %c is al aangekoppeld.
 
 .
-:SHELL_CMD_MOUSECTL_HELP_LONG
+:PROGRAM_MOUSECTL_HELP_LONG
 Beheert fysieke en logische muizen.
 
 Gebruik:
@@ -1822,83 +1818,83 @@ Opmerkingen:
 Voorbeelden:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
 .
-:SHELL_CMD_MOUSECTL_SYNTAX
+:PROGRAM_MOUSECTL_SYNTAX
 Verkeerde opdrachtsyntaxis.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_PATTERN
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Verkeerde syntaxis, alleen ASCII-tekens toegestaan in patroon.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Verkeerde syntaxis, gevoeligheid moet tussen -999 en +999 liggen.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_DUPLICATED
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Verkeerde syntaxis, gedupliceerde muisinterfaces.
 .
-:SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Verkeerde syntaxis, bemonsteringsfrequentie moet een van zijn:
 %s
 .
-:SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapping niet beschikbaar in NoMouse-modus.
 .
-:SHELL_CMD_MOUSECTL_NO_INTERFACES
+:PROGRAM_MOUSECTL_NO_INTERFACES
 Geen muisinterfaces beschikbaar.
 .
-:SHELL_CMD_MOUSECTL_MISSING_INTERFACES
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
 Muisinterface niet beschikbaar.
 .
-:SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Geen fysieke muizen gedetecteerd.
 .
-:SHELL_CMD_MOUSECTL_NO_MATCH
+:PROGRAM_MOUSECTL_NO_MATCH
 Geen beschikbare muis die overeenkomt met het patroon gevonden.
 .
-:SHELL_CMD_MOUSECTL_TABLE_HEADER1
+:PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interface      Gevoeligheid     Rate (Hz)     Status[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT1
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
 [color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_HEADER2
+:PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interface     Muis Naam[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
 [color=cyan]%-4s[reset]          %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 niet gekoppeld    %s
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_HOST
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
 gebruikt systeemaanwijzer
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_MAPPED
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
 gekoppelde fysieke muis
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISCONNECTED
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
 [color=red]gekoppelde muis losgekoppeld[reset]
 .
-:SHELL_CMD_MOUSECTL_TABLE_STATUS_DISABLED
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 uitgeschakeld
 .
-:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_COM
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
 Bemonsteringsfrequenties voor muizen op [color=cyan]COM[reset]-interfaces zijn enkel schattingen.
 .
-:SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_MIN
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Bemonsteringsfrequenties gemarkeerd met '*' zijn minimumwaardes.
 .
-:SHELL_CMD_MOUSECTL_MAP_ADVICE
+:PROGRAM_MOUSECTL_MAP_ADVICE
 Klik op de [color=white]linkermuisknop[reset] om de fysieke muis toe te wijzen aan de interface.
 Als u op een andere knop klikt, wordt de toewijzing geannuleerd en wordt
 de systeemaanwijzer toegewezen aan alle muisinterfaces.
 .
-:SHELL_CMD_MOUSECTL_MAP_CANCEL
+:PROGRAM_MOUSECTL_MAP_CANCEL
 (toewijzing geannuleerd)
 .
-:SHELL_CMD_MOUSECTL_MAP_HINT
+:PROGRAM_MOUSECTL_MAP_HINT
 Muis gevangen. Naadloze muisintegratie is uitgeschakeld terwijl mapping actief
 is en toegewezen muizen ontvangen altijd onbewerkte invoergebeurtenissen.
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Scant op wijzigingen op gekoppelde DOS-schijven.
 
 Gebruik:
@@ -1968,7 +1964,7 @@ Omgekeerd
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Beheert de seriële poorten.
 
 Gebruik:
@@ -2470,11 +2466,11 @@ Voorbeelden:
   [color=green]help[reset] /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Geeft een inleiding op het volledige scherm van DOSBox Staging weer.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Gebruik:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]PAGINA[reset]

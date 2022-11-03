@@ -164,11 +164,11 @@ void SERIAL::Run()
 	}
 
 	// Show help.
-	WriteOut(MSG_Get("SHELL_CMD_SERIAL_HELP_LONG"), SERIAL_MAX_PORTS);
+	WriteOut(MSG_Get("PROGRAM_SERIAL_HELP_LONG"), SERIAL_MAX_PORTS);
 }
 
 void SERIAL::AddMessages() {
-	MSG_Add("SHELL_CMD_SERIAL_HELP_LONG",
+	MSG_Add("PROGRAM_SERIAL_HELP_LONG",
 	        "Manages the serial ports.\n"
 	        "\n"
 	        "Usage:\n"

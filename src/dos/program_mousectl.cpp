@@ -31,7 +31,7 @@ CHECK_NARROWING();
 void MOUSECTL::Run()
 {
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_HELP_LONG"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_HELP_LONG"));
 		return;
 	}
 
@@ -110,7 +110,7 @@ bool MOUSECTL::ParseAndRun()
 			return CmdSensitivity(params[1], params[2]);
 	}
 
-	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX"));
+	WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX"));
 	return false;
 }
 
@@ -120,14 +120,14 @@ bool MOUSECTL::ParseSensitivity(const std::string &param, int16_t &value)
 
 	int tmp = 0;
 	if (!ParseIntParam(param, tmp)) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY"));
 		return false;
 	}
 
 	// Maximum allowed user sensitivity value
 	constexpr int16_t sensitivity_user_max = 999;
 	if (tmp < -sensitivity_user_max || tmp > sensitivity_user_max) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY"));
 		return false;
 	}
 
@@ -176,7 +176,7 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 	// Check that all interfaces are unique
 	const std::set<MouseInterfaceId> tmp(list_ids.begin(), list_ids.end());
 	if (list_ids.size() != tmp.size()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_DUPLICATED"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_DUPLICATED"));
 		return false;
 	}
 
@@ -189,9 +189,9 @@ bool MOUSECTL::CheckInterfaces()
 		return true;
 
 	if (list_ids.empty())
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_INTERFACES"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_NO_INTERFACES"));
 	else
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MISSING_INTERFACES"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MISSING_INTERFACES"));
 
 	return false;
 }
@@ -200,13 +200,13 @@ const char *MOUSECTL::GetMapStatusStr(const MouseMapStatus map_status)
 {
 	switch (map_status) {
 	case MouseMapStatus::HostPointer:
-		return MSG_Get("SHELL_CMD_MOUSECTL_TABLE_STATUS_HOST");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_HOST");
 	case MouseMapStatus::Mapped:
-		return MSG_Get("SHELL_CMD_MOUSECTL_TABLE_STATUS_MAPPED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED");
 	case MouseMapStatus::Disconnected:
-		return MSG_Get("SHELL_CMD_MOUSECTL_TABLE_STATUS_DISCONNECTED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED");
 	case MouseMapStatus::Disabled:
-		return MSG_Get("SHELL_CMD_MOUSECTL_TABLE_STATUS_DISABLED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED");
 	default:
 		assert(false); // missing implementation
 		return nullptr;
@@ -224,7 +224,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 
 	// Display emulated interface list
 	WriteOut("\n");
-	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_HEADER1"));
+	WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HEADER1"));
 	WriteOut("\n");
 	for (const auto &entry : info_interfaces) {
 		if (!entry.IsEmulated())
@@ -242,7 +242,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 		    interface_id == MouseInterfaceId::COM4)
 			hint_rate_com = true;
 
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_LAYOUT1"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT1"),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str(),
 		         entry.GetSensitivityX(),
 		         entry.GetSensitivityY(),
@@ -260,11 +260,11 @@ bool MOUSECTL::CmdShow(const bool show_all)
 	const bool hint = hint_rate_com || hint_rate_min;
 	if (hint) {
 		if (hint_rate_com) {
-			WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_COM"));
+			WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM"));
 			WriteOut("\n");
 		}
 		if (hint_rate_min) {
-			WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_MIN"));
+			WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN"));
 			WriteOut("\n");
 		}
 		WriteOut("\n");
@@ -275,14 +275,14 @@ bool MOUSECTL::CmdShow(const bool show_all)
 
 	const auto info_physical = mouse_config_api.GetInfoPhysical();
 	if (info_physical.empty()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE"));
 		WriteOut("\n\n");
 		return true;
 	}
 
 	if (hint)
 		WriteOut("\n");
-	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_HEADER2"));
+	WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HEADER2"));
 	WriteOut("\n");
 
 	// Display physical mice mapped to some interface
@@ -290,7 +290,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 	for (const auto &entry : info_interfaces) {
 		if (!entry.IsMapped() || entry.IsMappedDeviceDisconnected())
 			continue;
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_LAYOUT2"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT2"),
 		         MouseControlAPI::GetInterfaceNameStr(entry.GetInterfaceId())
 		                 .c_str(),
 		         entry.GetMappedDeviceName().c_str());
@@ -308,7 +308,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 	for (const auto &entry : info_physical) {
 		if (entry.IsMapped() || entry.IsDeviceDisconnected())
 			continue;
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_TABLE_LAYOUT2_UNMAPPED"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED"),
 		         entry.GetDeviceName().c_str());
 		WriteOut("\n");
 	}
@@ -320,7 +320,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 void MOUSECTL::FinalizeMapping()
 {
 	WriteOut("\n");
-	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAP_HINT"));
+	WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_HINT"));
 	WriteOut("\n\n");
 }
 
@@ -328,18 +328,18 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pa
 {
 	std::regex regex;
 	if (!MouseControlAPI::PatternToRegex(pattern, regex)) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_PATTERN"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_PATTERN"));
 		return false;
 	}
 
 	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
 		return false;
 	}
 
 	MouseControlAPI mouse_config_api;
 	if (!mouse_config_api.Map(interface_id, regex)) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_MATCH"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_NO_MATCH"));
 		return false;
 	}
 
@@ -352,7 +352,7 @@ bool MOUSECTL::CmdMap()
 	assert(!list_ids.empty());
 
 	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
 		return false;
 	}
 
@@ -360,7 +360,7 @@ bool MOUSECTL::CmdMap()
 	const auto info_physical = mouse_config_api.GetInfoPhysical();
 
 	if (info_physical.empty()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE"));
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE"));
 		WriteOut("\n\n");
 		return false;
 	}
@@ -370,7 +370,7 @@ bool MOUSECTL::CmdMap()
 	mouse_config_api.UnMap(empty);
 
 	WriteOut("\n");
-	WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAP_ADVICE"));
+	WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_ADVICE"));
 	WriteOut("\n\n");
 
 	for (const auto &interface_id : list_ids) {
@@ -381,7 +381,7 @@ bool MOUSECTL::CmdMap()
 		if (!mouse_config_api.ProbeForMapping(device_id)) {
 			mouse_config_api.UnMap(empty);
 			WriteOut("\b");
-			WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_MAP_CANCEL"));
+			WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_CANCEL"));
 			WriteOut("\n\n");
 			return false;
 		}
@@ -479,14 +479,14 @@ bool MOUSECTL::CmdMinRate(const std::string &param)
 
 	int tmp = 0;
 	if (!ParseIntParam(param, tmp)) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE"),
 		         valid_str.c_str());
 		return false;
 	}
 
 	if (tmp < 0 || tmp > UINT16_MAX) {
 		// Parameter way out of range
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE"),
 		         valid_str.c_str());
 		return false;
 	}
@@ -494,7 +494,7 @@ bool MOUSECTL::CmdMinRate(const std::string &param)
 	const auto value_hz = static_cast<uint16_t>(tmp);
 	if (!contains(valid_list, value_hz)) {
 		// Parameter not in the list of allowed values
-		WriteOut(MSG_Get("SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE"),
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE"),
 		         valid_str.c_str());
 		return false;
 	}
@@ -513,7 +513,7 @@ bool MOUSECTL::CmdMinRate()
 
 void MOUSECTL::AddMessages()
 {
-	MSG_Add("SHELL_CMD_MOUSECTL_HELP_LONG",
+	MSG_Add("PROGRAM_MOUSECTL_HELP_LONG",
 	        "Manages physical and logical mice.\n"
 	        "\n"
 	        "Usage:\n"
@@ -539,53 +539,53 @@ void MOUSECTL::AddMessages()
 	        "Examples:\n"
 	        "  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_SYNTAX", "Wrong command syntax.");
-	MSG_Add("SHELL_CMD_MOUSECTL_SYNTAX_PATTERN",
+	MSG_Add("PROGRAM_MOUSECTL_SYNTAX", "Wrong command syntax.");
+	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_PATTERN",
 	        "Wrong syntax, only ASCII characters allowed in pattern.");
-	MSG_Add("SHELL_CMD_MOUSECTL_SYNTAX_SENSITIVITY",
+	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY",
 	        "Wrong syntax, sensitivity needs to be in -999 to +999 range.");
-	MSG_Add("SHELL_CMD_MOUSECTL_SYNTAX_DUPLICATED",
+	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_DUPLICATED",
 	        "Wrong syntax, duplicated mouse interfaces.");
-	MSG_Add("SHELL_CMD_MOUSECTL_SYNTAX_MIN_RATE",
+	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE",
 	        "Wrong syntax, sampling rate has to be one of:\n%s");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_MAPPING_NO_MOUSE",
+	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
 	        "Mapping not available in no-mouse mode.");
-	MSG_Add("SHELL_CMD_MOUSECTL_NO_INTERFACES", "No mouse interfaces available.");
-	MSG_Add("SHELL_CMD_MOUSECTL_MISSING_INTERFACES",
+	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES", "No mouse interfaces available.");
+	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
 	        "Mouse interface not available.");
-	MSG_Add("SHELL_CMD_MOUSECTL_NO_PHYSICAL_MICE", "No physical mice detected.");
-	MSG_Add("SHELL_CMD_MOUSECTL_NO_MATCH",
+	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE", "No physical mice detected.");
+	MSG_Add("PROGRAM_MOUSECTL_NO_MATCH",
 	        "No available mouse matching the pattern found.");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_HEADER1",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER1",
 	        "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_LAYOUT1",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT1",
 	        "[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_HEADER2",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER2",
 	        "[color=white]Interface     Mouse Name[reset]");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_LAYOUT2",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2",
 	        "[color=cyan]%-4s[reset]          %s");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_LAYOUT2_UNMAPPED", "not mapped    %s");
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED", "not mapped    %s");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_STATUS_HOST", "uses system pointer");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_STATUS_MAPPED", "mapped physical mouse");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_STATUS_DISCONNECTED",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_HOST", "uses system pointer");
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED", "mapped physical mouse");
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED",
 	        "[color=red]mapped mouse disconnected[reset]");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_STATUS_DISABLED", "disabled");
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED", "disabled");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_COM",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM",
 	        "Sampling rates for mice on [color=cyan]COM[reset] interfaces are estimations only.");
-	MSG_Add("SHELL_CMD_MOUSECTL_TABLE_HINT_RATE_MIN",
+	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN",
 	        "Sampling rates with minimum value set are marked with '*'.");
 
-	MSG_Add("SHELL_CMD_MOUSECTL_MAP_ADVICE",
+	MSG_Add("PROGRAM_MOUSECTL_MAP_ADVICE",
 	        "Click [color=white]left[reset] mouse button to map the physical mouse to the interface. Clicking\n"
 	        "any other button cancels the mapping and assigns system pointer to all the\n"
 	        "mouse interfaces.");
-	MSG_Add("SHELL_CMD_MOUSECTL_MAP_CANCEL", "(mapping cancelled)");
-	MSG_Add("SHELL_CMD_MOUSECTL_MAP_HINT",
+	MSG_Add("PROGRAM_MOUSECTL_MAP_CANCEL", "(mapping cancelled)");
+	MSG_Add("PROGRAM_MOUSECTL_MAP_HINT",
 	        "Mouse captured. Seamless mouse integration is always disabled while mapping is\n"
 	        "in effect and mapped mice always receive raw input events.");
 }
