@@ -33,8 +33,9 @@ void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id);
 void MOUSE_NotifyFakePS2(); // fake PS/2 event, for VMware protocol support
 void MOUSE_NotifyResetDOS();
 
-bool MOUSE_IsCaptured();
 void MOUSE_UpdateGFX();
+bool MOUSE_IsCaptured();
+bool MOUSE_IsProbeForMappingAllowed();
 
 // ***************************************************************************
 // DOS mouse driver
@@ -140,7 +141,7 @@ public:
 	void NotifyDisconnect();
 
 	bool IsMapped() const;
-	bool IsMapped(const uint8_t device_idx) const;
+	bool IsMapped(const uint8_t physical_device_idx) const;
 	bool IsEmulated() const;
 	bool IsUsingEvents() const;
 	bool IsUsingHostPointer() const;
@@ -153,7 +154,7 @@ public:
 	uint16_t GetMinRate() const;
 	uint16_t GetRate() const;
 
-	bool ConfigMap(const uint8_t device_idx);
+	bool ConfigMap(const uint8_t physical_device_idx);
 	void ConfigUnMap();
 
 	void ConfigOnOff(const bool enable);
@@ -183,7 +184,7 @@ protected:
 	uint8_t GetInterfaceIdx() const;
 
 	void SetMapStatus(const MouseMapStatus status,
-	                  const uint8_t device_idx = idx_host_pointer);
+	                  const uint8_t physical_device_idx = idx_host_pointer);
 
 	virtual void UpdateSensitivity();
 	virtual void UpdateMinRate();
@@ -212,8 +213,8 @@ protected:
 private:
 	const MouseInterfaceId interface_id = MouseInterfaceId::None;
 
-	MouseMapStatus map_status = MouseMapStatus::HostPointer;
-	uint8_t mapped_idx = idx_host_pointer; // index of mapped physical mouse
+	MouseMapStatus map_status   = MouseMapStatus::HostPointer;
+	uint8_t mapped_physical_idx = idx_host_pointer; // index of mapped physical mouse
 
 	MouseButtons12 buttons_12   = 0; // host side buttons 1 (left), 2 (right)
 	MouseButtons345 buttons_345 = 0; // host side buttons 3 (middle), 4, and 5

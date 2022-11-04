@@ -227,7 +227,7 @@ void ManyMouseGlue::RescanIfSafe()
 	InitIfNeeded();
 }
 
-bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
+bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 {
 	// Do not even try if NoMouse is configured
 	if (mouse_config.capture == MouseCapture::NoMouse)
@@ -266,7 +266,10 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 		// Wait for mouse button press
 		if (event.type != MANYMOUSE_EVENT_BUTTON || !event.value)
 			continue;
-		device_id = static_cast<uint8_t>(event.device);
+		// Drop button events if we have no focus, etc.
+		if (!MOUSE_IsProbeForMappingAllowed())
+			continue;
+		physical_device_idx = static_cast<uint8_t>(event.device);
 
 		if (event.item >= 1)
 			break; // user cancelled the interactive mouse mapping
@@ -274,13 +277,13 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 		// Do not accept already mapped devices
 		bool already_mapped = false;
 		for (const auto &interface : mouse_interfaces)
-			if (interface->IsMapped(device_id))
+			if (interface->IsMapped(physical_device_idx))
 				already_mapped = true;
 		if (already_mapped)
 			continue;
 
 		// Mouse probed successfully
-		device_id = static_cast<uint8_t>(event.device);
+		physical_device_idx = static_cast<uint8_t>(event.device);
 		success   = true;
 		break;
 	}
@@ -312,16 +315,17 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 	return max_mice + 1; // return value which will be considered out of range
 }
 
-void ManyMouseGlue::Map(const uint8_t physical_idx, const MouseInterfaceId interface_id)
+void ManyMouseGlue::Map(const uint8_t physical_device_idx,
+                        const MouseInterfaceId interface_id)
 {
 	assert(interface_id != MouseInterfaceId::None);
 
-	if (physical_idx >= physical_devices.size()) {
+	if (physical_device_idx >= physical_devices.size()) {
 		UnMap(interface_id);
 		return;
 	}
 
-	auto &physical_device = physical_devices[physical_idx];
+	auto &physical_device = physical_devices[physical_device_idx];
 	if (interface_id == physical_device.GetMappedInterfaceId())
 		return; // nothing to update
 	physical_device.mapped_id = interface_id;

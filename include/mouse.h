@@ -142,7 +142,7 @@ class MouseInterfaceInfoEntry final {
 public:
 	bool IsEmulated() const;
 	bool IsMapped() const;
-	bool IsMapped(const uint8_t device_idx) const;
+	bool IsMapped(const uint8_t physical_device_idx) const;
 	bool IsMappedDeviceDisconnected() const;
 
 	MouseInterfaceId GetInterfaceId() const;
@@ -196,11 +196,14 @@ public:
 	static bool CheckInterfaces(const ListIDs &list_ids);
 	static bool PatternToRegex(const std::string &pattern, std::regex &regex);
 
-	bool ProbeForMapping(uint8_t &device_id); // For interactive mapping in
-	                                          // MOUSECTL.COM only!
+	// This one is ONLY for interactive mapping in MOUSECTL.COM!
+	bool MapInteractively(const MouseInterfaceId interface_id,
+	                      uint8_t &physical_device_idx);
 
-	bool Map(const MouseInterfaceId interface_id, const uint8_t device_idx);
-	bool Map(const MouseInterfaceId interface_id, const std::regex &regex);
+	bool Map(const MouseInterfaceId interface_id,
+	         const uint8_t physical_device_idx);
+	bool Map(const MouseInterfaceId interface_id,
+	         const std::regex &regex);
 	bool UnMap(const ListIDs &list_ids);
 
 	bool OnOff(const ListIDs &list_ids, const bool enable);
@@ -228,6 +231,8 @@ public:
 private:
 	MouseControlAPI(const MouseControlAPI &)            = delete;
 	MouseControlAPI &operator=(const MouseControlAPI &) = delete;
+
+	bool was_interactive_mapping_started = false;
 };
 
 #endif // DOSBOX_MOUSE_H
