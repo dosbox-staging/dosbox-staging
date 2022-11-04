@@ -56,10 +56,11 @@ public:
 	void StartConfigAPI();
 	void StopConfigAPI();
 
-	bool ProbeForMapping(uint8_t &device_id);
+	bool ProbeForMapping(uint8_t &physical_device_idx);
 	uint8_t GetIdx(const std::regex &regex);
 
-	void Map(const uint8_t physical_idx, const MouseInterfaceId interface_id);
+	void Map(const uint8_t physical_device_idx,
+	         const MouseInterfaceId interface_id);
 
 	bool IsMappingInEffect() const;
 

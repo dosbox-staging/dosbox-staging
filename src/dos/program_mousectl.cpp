@@ -377,8 +377,8 @@ bool MOUSECTL::CmdMap()
 		WriteOut(convert_ansi_markup("[color=cyan]%-4s[reset]   ?").c_str(),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str());
 
-		uint8_t device_id = 0;
-		if (!mouse_config_api.ProbeForMapping(device_id)) {
+		uint8_t device_idx = 0;
+		if (!mouse_config_api.MapInteractively(interface_id, device_idx)) {
 			mouse_config_api.UnMap(empty);
 			WriteOut("\b");
 			WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_CANCEL"));
@@ -387,9 +387,8 @@ bool MOUSECTL::CmdMap()
 		}
 
 		WriteOut("\b");
-		WriteOut(info_physical[device_id].GetDeviceName().c_str());
+		WriteOut(info_physical[device_idx].GetDeviceName().c_str());
 		WriteOut("\n");
-		mouse_config_api.Map(interface_id, device_id);
 	}
 
 	FinalizeMapping();
@@ -534,7 +533,7 @@ void MOUSECTL::AddMessages()
 	        "  -reset         restores all mouse settings from the configuration file\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - if sensitivity or rate is omitted, it is reset to default value\n"
+	        "  If sensitivity or rate is omitted, it is reset to default value.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
@@ -586,6 +585,6 @@ void MOUSECTL::AddMessages()
 	        "mouse interfaces.");
 	MSG_Add("PROGRAM_MOUSECTL_MAP_CANCEL", "(mapping cancelled)");
 	MSG_Add("PROGRAM_MOUSECTL_MAP_HINT",
-	        "Mouse captured. Seamless mouse integration is always disabled while mapping is\n"
-	        "in effect and mapped mice always receive raw input events.");
+	        "Seamless mouse integration is always disabled while mapping is in effect\n"
+	        "and mapped mice always receive raw input events.");
 }

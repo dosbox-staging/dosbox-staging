@@ -51,13 +51,14 @@ static struct {
 	uint32_t clip_x    = 0;     // clipping = size of black border (one side)
 	uint32_t clip_y    = 0;
 
-	uint32_t cursor_x_abs  = 0;    // absolute position from start of drawing area
+	uint32_t cursor_x_abs  = 0;     // absolute position from start of drawing area
 	uint32_t cursor_y_abs  = 0;
-	bool cursor_is_outside = true; // if mouse cursor is outside of drawing area
+	bool cursor_is_outside = false; // if mouse cursor is outside of drawing area
 
-	bool has_focus             = false; // if our window has focus
-	bool gui_has_taken_over    = false; // if a GUI requested to take over the mouse
-	bool capture_was_requested = false; // if user requested mouse to be captured
+	bool has_focus              = false; // if our window has focus
+	bool gui_has_taken_over     = false; // if a GUI requested to take over the mouse
+	bool is_mapping_in_progress = false; // if interactive mapping is running
+	bool capture_was_requested  = false; // if user requested mouse to be captured
 
 	bool is_captured  = false; // if GFX was requested to capture mouse
 	bool is_visible   = false; // if GFX was requested to make cursor visible
@@ -171,7 +172,8 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Due to ManyMouse API limitation, we are unable to support seamless
 	// integration if mapping is in effect
-	const bool is_mapping = manymouse.IsMappingInEffect();
+	const bool is_mapping = state.is_mapping_in_progress ||
+	                        manymouse.IsMappingInEffect();
 	if (state.is_seamless && is_mapping) {
 		state.is_seamless = false;
 		static bool already_warned = false;
@@ -264,6 +266,12 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	                                 state.is_captured &&
 	                                 mouse_config.middle_release;
 
+	// Note: it would make sense to block capture/release on any mouse click
+	// while 'state.is_mapping_in_progress' - unfortunately this would lead
+	// to a race condition between events from SDL and ManyMouse at the end
+	// of mapping process, leading to ununiform (random) user experience.
+	// TODO: if SDL gets expanded to include ManyMouse, change the behavior!
+
 	// Select hint to be displayed on a title bar
 	if (state.is_fullscreen || state.gui_has_taken_over || !state.has_focus)
 		state.hint_id = MouseHint::None;
@@ -316,6 +324,14 @@ void MOUSE_UpdateGFX()
 bool MOUSE_IsCaptured()
 {
 	return state.is_captured;
+}
+
+bool MOUSE_IsProbeForMappingAllowed()
+{
+	// Conditions to be met to accept mouse clicks for interactive mapping:
+	// - we have a focus
+	// - no GUI has taken over the mouse
+	return state.has_focus && !state.gui_has_taken_over;
 }
 
 // ***************************************************************************
@@ -660,6 +676,8 @@ MouseControlAPI::MouseControlAPI()
 MouseControlAPI::~MouseControlAPI()
 {
 	manymouse.StopConfigAPI();
+	if (was_interactive_mapping_started)
+		state.is_mapping_in_progress = false;
 	MOUSE_UpdateGFX();
 }
 
@@ -717,16 +735,36 @@ bool MouseControlAPI::PatternToRegex(const std::string &pattern, std::regex &reg
 	return true;
 }
 
-bool MouseControlAPI::ProbeForMapping(uint8_t &device_id)
+bool MouseControlAPI::MapInteractively(const MouseInterfaceId interface_id,
+                                       uint8_t &physical_device_idx)
 {
 	if (IsNoMouseMode())
 		return false;
 
+	if (!was_interactive_mapping_started) {
+		// Interactive mapping was started
+		assert(!state.is_mapping_in_progress);
+		// Capture the mouse, otherwise it might be confusing
+		// for the user when it gets captured after he clicks
+		// simply to select the mouse
+		state.capture_was_requested     = true;
+		// Tell the other code that mapping is in progress,
+		// so that it can disable seamless mouse integration,
+		// and possibly apply other changes to mouse behavior
+		state.is_mapping_in_progress    = true;
+		was_interactive_mapping_started = true;
+		MOUSE_UpdateGFX();
+	}
+
 	manymouse.RescanIfSafe();
-	return manymouse.ProbeForMapping(device_id);
+	if (!manymouse.ProbeForMapping(physical_device_idx))
+		return false;
+
+	return Map(interface_id, physical_device_idx);
 }
 
-bool MouseControlAPI::Map(const MouseInterfaceId interface_id, const uint8_t device_idx)
+bool MouseControlAPI::Map(const MouseInterfaceId interface_id,\
+                          const uint8_t physical_device_idx)
 {
 	if (IsNoMouseMode())
 		return false;
@@ -735,7 +773,7 @@ bool MouseControlAPI::Map(const MouseInterfaceId interface_id, const uint8_t dev
 	if (!mouse_interface)
 		return false;
 
-	return mouse_interface->ConfigMap(device_idx);
+	return mouse_interface->ConfigMap(physical_device_idx);
 }
 
 bool MouseControlAPI::Map(const MouseInterfaceId interface_id, const std::regex &regex)
