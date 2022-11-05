@@ -14,4 +14,4 @@ libslirp-dev
 libspeexdsp-dev
 python3-setuptools
 meson
-ninja
+ninja-build
