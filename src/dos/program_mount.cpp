@@ -412,7 +412,7 @@ showusage:
 void MOUNT::AddMessages() {
 	AddCommonMountMessages();
 	MSG_Add("PROGRAM_MOUNT_HELP",
-	        "maps physical folders or drives to a virtual drive letter.\n");
+	        "Maps physical folders or drives to a virtual drive letter.\n");
 
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
 	        "Mount a directory from the host OS to a drive letter.\n"
