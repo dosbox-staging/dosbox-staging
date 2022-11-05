@@ -22,6 +22,7 @@
 
 #include "callback.h"
 #include "checks.h"
+#include "dos_inc.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "string_utils.h"
@@ -254,6 +255,9 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 
 	bool success = false;
 	while (!shutdown_requested) {
+		if (IsCancelRequested())
+			break; // user cancelled using a keyboard
+
 		// Poll mouse events, handle critical ones
 		if (!ManyMouse_PollEvent(&event)) {
 			CALLBACK_Idle();
@@ -269,7 +273,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 		device_id = static_cast<uint8_t>(event.device);
 
 		if (event.item >= 1)
-			break; // user cancelled the interactive mouse mapping
+			break; // user cancelled using a mouse button
 
 		// Do not accept already mapped devices
 		bool already_mapped = false;
@@ -288,6 +292,24 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &device_id)
 	if (is_mapping_in_effect)
 		PIC_AddEvent(manymouse_tick, tick_interval);
 	return success;
+}
+
+bool ManyMouseGlue::IsCancelRequested()
+{
+	constexpr uint8_t code_ctrl_c = 0x03;
+	constexpr uint8_t code_esc    = 0x1b;
+
+	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
+		// A key is waiting, read it
+		uint16_t count = 1;
+		uint8_t code   = 0;
+		DOS_ReadFile(STDIN, &code, &count);
+		// Check if requested to cancel
+		if (code == code_ctrl_c || code == code_esc || code == 'q' || code == 'Q')
+			return true;
+	}
+
+	return false;
 }
 
 uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
