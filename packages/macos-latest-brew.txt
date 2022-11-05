@@ -6,6 +6,7 @@ git
 libpng
 libslirp
 meson
+ninja
 opusfile
 patchutils
 pcre 
