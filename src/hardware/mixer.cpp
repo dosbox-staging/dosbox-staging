@@ -1957,7 +1957,7 @@ static void MIXER_Mix_NoSound()
 static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
                                    Uint8 *stream, int len)
 {
-	ZoneScoped
+	ZoneScoped;
 	memset(stream, 0, len);
 
 	auto frames_requested = len / mixer_frame_size;

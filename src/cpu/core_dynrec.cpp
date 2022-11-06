@@ -209,7 +209,7 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 */
 
 Bits CPU_Core_Dynrec_Run(void) {
-	ZoneScoped
+	ZoneScoped;
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;
