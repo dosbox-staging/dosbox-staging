@@ -1,4 +1,4 @@
-#  include <Tracy.hpp>
+#  include <tracy/Tracy.hpp>
 #endif
 
 // close the header

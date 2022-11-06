@@ -249,7 +249,7 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 #include "core_dyn_x86/decoder.h"
 
 Bits CPU_Core_Dyn_X86_Run(void) {
-	ZoneScoped
+	ZoneScoped;
 	// helper class to auto-save DH_FPU state on function exit
 	class auto_dh_fpu {
 	public:

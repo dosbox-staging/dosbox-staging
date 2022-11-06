@@ -77,7 +77,7 @@
 #	define LockableName(x, y, z)                     ;
 
 #	define TracyPlot(x, y)
-#	define TracyPlotConfig(x, y)
+#	define TracyPlotConfig(x, y, z, w, a)
 
 #	define TracyMessage(x, y)
 #	define TracyMessageL(x)
@@ -123,7 +123,8 @@
 #	define TracyMessageCS(x, y, z, w)
 #	define TracyMessageLCS(x, y, z)
 
-#	define TracyParameterRegister(x)
+#	define TracySourceCallbackRegister(x, y)
+#	define TracyParameterRegister(x, y)
 #	define TracyParameterSetup(x, y, z, w)
 #	define TracyIsConnected false
 
@@ -131,7 +132,7 @@
 #	define TracyFiberLeave
 
 #else
-#	include <Tracy.hpp>
+#	include <tracy/Tracy.hpp>
 #endif
 
 // close the header

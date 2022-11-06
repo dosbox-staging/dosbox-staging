@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-source=$(ls ../../subprojects/tracy-*/Tracy.hpp)
+source=$(ls ../../subprojects/tracy-*/public/tracy/Tracy.hpp)
 
 if [[ ! -f "$source" ]]; then
   echo "Tracy's source header could not be found."
@@ -32,8 +32,30 @@ echo "Writing updated header: $target"
 # Top
 cat header_top.txt > "$target"
 
+SED=""
+assign_gnu_sed () {
+	# Is sed GNU? (BSD seds don't support --version)
+	if sed --version &>/dev/null; then
+		SED="sed"
+	# No, but do we have gsed?
+	elif command -v gsed &> /dev/null; then
+		SED="gsed"
+	# No, so help the user install it and then quit.
+	else
+		echo "'sed' is not GNU and 'gsed' is not available."
+		if [[ "${OSTYPE:-}" == "darwin"* ]]; then
+			echo "Install GNU sed with: brew install gnu-sed"
+		else
+			echo "Install GNU sed with your $OSTYPE package manager."
+		fi
+		exit 1
+	fi
+}
+
+assign_gnu_sed
+
 # Body
-sed -n "/^#ifndef TRACY_ENABLE/,\${p;/^#else/q}" "$source" >> "$target"
+"$SED" -n "/^#ifndef TRACY_ENABLE/,\${p;/^#else/q}" "$source" >> "$target"
 
 # Bottom
 cat header_bottom.txt >> "$target"

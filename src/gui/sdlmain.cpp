@@ -2426,7 +2426,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		break;
 	}
 	sdl.updating = false;
-	FrameMark
+	FrameMark;
 }
 
 // Texture update and presentation
