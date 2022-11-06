@@ -73,7 +73,6 @@ private:
 	ManyMouseGlue(const ManyMouseGlue &)            = delete;
 	ManyMouseGlue &operator=(const ManyMouseGlue &) = delete;
 
-	bool IsCancelRequested();
 	void Tick();
 	friend void manymouse_tick(uint32_t);
 

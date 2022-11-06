@@ -254,15 +254,10 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 		HandleEvent(event, true); // handle critical events
 
 	bool success = false;
-	while (!shutdown_requested) {
-		if (IsCancelRequested())
-			break; // user cancelled using a keyboard
-
+	while (!DOS_IsCancelRequest()) {
 		// Poll mouse events, handle critical ones
-		if (!ManyMouse_PollEvent(&event)) {
-			CALLBACK_Idle();
+		if (!ManyMouse_PollEvent(&event))
 			continue;
-		}
 		if (event.device >= max_mice)
 			continue;
 		HandleEvent(event, true);
@@ -295,24 +290,6 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 	if (is_mapping_in_effect)
 		PIC_AddEvent(manymouse_tick, tick_interval);
 	return success;
-}
-
-bool ManyMouseGlue::IsCancelRequested()
-{
-	constexpr uint8_t code_ctrl_c = 0x03;
-	constexpr uint8_t code_esc    = 0x1b;
-
-	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
-		// A key is waiting, read it
-		uint16_t count = 1;
-		uint8_t code   = 0;
-		DOS_ReadFile(STDIN, &code, &count);
-		// Check if requested to cancel
-		if (code == code_ctrl_c || code == code_esc || code == 'q' || code == 'Q')
-			return true;
-	}
-
-	return false;
 }
 
 uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
