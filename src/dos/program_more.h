@@ -38,19 +38,13 @@ public:
 	void Run();
 
 private:
-	enum class Decision {
-		More,
-		Terminate,
-		NextFile,
-	};
-
 	bool ParseCommandLine();
 	bool FindInputFiles(const std::vector<std::string> &params);
 
 	void DisplayInputFiles();
 	void DisplayInputStream();
-	Decision DisplaySingleStream();
-	Decision PromptUser();
+	UserDecision DisplaySingleStream();
+	UserDecision PromptUser();
 
 	std::string GetShortName(const std::string &file_name, const char *msg_id);
 	static uint8_t GetCurrentColumn();

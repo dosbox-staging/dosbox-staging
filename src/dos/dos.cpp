@@ -1440,6 +1440,74 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
+constexpr uint8_t code_ctrl_c = 0x03;
+constexpr uint8_t code_return = 0x0d;
+constexpr uint8_t code_esc    = 0x1b;
+
+bool DOS_IsCancelRequest()
+{
+	if (shutdown_requested)
+		return true;
+
+	CALLBACK_Idle();
+	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
+		// A key is waiting, read it
+		uint16_t count = 1;
+		uint8_t code   = 0;
+		DOS_ReadFile(STDIN, &code, &count);
+
+		// Check if user requested to cancel
+		if (shutdown_requested || count == 0 ||
+			code == 'q' || code == 'Q' ||
+		    code == code_ctrl_c || code == code_esc)
+			return true;
+	}
+
+	// Return control if no key pressed
+	return shutdown_requested;
+}
+
+UserDecision DOS_WaitForCancelContinue()
+{
+	auto decision = UserDecision::Next;
+	while (decision == UserDecision::Next)
+		decision = DOS_WaitForCancelContinueNext();
+
+	return decision;
+}
+
+UserDecision DOS_WaitForCancelContinueNext()
+{
+	auto decision = UserDecision::Cancel;
+	while (!shutdown_requested) {
+		CALLBACK_Idle();
+
+		// Try to read the key
+		uint16_t count = 1;
+		uint8_t code   = 0;
+		DOS_ReadFile(STDIN, &code, &count);
+
+		if (shutdown_requested || count == 0 ||
+		    code == 'q' || code == 'Q' ||
+		    code == code_ctrl_c || code == code_esc) {
+			decision = UserDecision::Cancel;
+			break;
+		}
+
+		if (code == code_return || code == ' ') {
+			decision = UserDecision::Continue;
+			break;
+		}
+
+		if (code == 'n' || code == 'N') {
+			decision = UserDecision::Next;
+			break;
+		}
+	}
+
+	return decision;
+}
+
 DOS_Version DOS_ParseVersion(const char *word, const char *args)
 {
 	DOS_Version new_version = {5, 0, 0}; // Default to 5.0

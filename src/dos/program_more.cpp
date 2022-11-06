@@ -36,7 +36,6 @@ CHECK_NARROWING();
 constexpr char code_ctrl_c = 0x03; // end of text
 constexpr char code_lf     = 0x0a; // line feed
 constexpr char code_cr     = 0x0d; // carriage return
-constexpr char code_esc    = 0x1b; // escape
 
 void MORE::Run()
 {
@@ -220,7 +219,7 @@ void MORE::DisplayInputFiles()
 
 	bool first = true;
 	for (const auto &input_file : input_files) {
-		if (!first && Decision::Terminate == PromptUser())
+		if (!first && UserDecision::Cancel == PromptUser())
 			break;
 		first = false;
 
@@ -252,7 +251,7 @@ void MORE::DisplayInputFiles()
 
 		const auto decision = DisplaySingleStream();
 		DOS_CloseFile(input_handle);
-		if (decision == Decision::Terminate) {
+		if (decision == UserDecision::Cancel) {
 			break;
 		}
 	}
@@ -278,7 +277,7 @@ void MORE::DisplayInputStream()
 	DisplaySingleStream();
 }
 
-MORE::Decision MORE::DisplaySingleStream()
+UserDecision MORE::DisplaySingleStream()
 {
 	auto previous_column = GetCurrentColumn();
 
@@ -286,17 +285,17 @@ MORE::Decision MORE::DisplaySingleStream()
 	skip_next_cr   = false;
 	skip_next_lf   = false;
 
-	auto decision = Decision::NextFile;
+	auto decision = UserDecision::Next;
 	while (true) {
 		if (shutdown_requested) {
-			decision = Decision::Terminate;
+			decision = UserDecision::Cancel;
 			break;
 		}
 
 		// Read character
 		char code = 0;
 		if (!GetCharacter(code)) {
-			decision = Decision::NextFile; // end of file
+			decision = UserDecision::Next; // end of current file
 			break;
 		}
 
@@ -340,7 +339,8 @@ MORE::Decision MORE::DisplaySingleStream()
 
 		// New line occured just enough times for a pause
 		decision = PromptUser();
-		if (decision == Decision::Terminate || decision == Decision::NextFile) {
+		if (decision == UserDecision::Cancel ||
+		    decision == UserDecision::Next) {
 			break;
 		}
 	}
@@ -353,7 +353,7 @@ MORE::Decision MORE::DisplaySingleStream()
 	return decision;
 }
 
-MORE::Decision MORE::PromptUser()
+UserDecision MORE::PromptUser()
 {
 	line_counter = 0;
 	const bool multiple_files = input_files.size() > 1;
@@ -366,35 +366,14 @@ MORE::Decision MORE::PromptUser()
 	else
 		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
 
-	auto decision = Decision::Terminate;
-	while (!shutdown_requested) {
-		CALLBACK_Idle();
+	auto decision = UserDecision::Cancel;
 
-		uint16_t count = 1;
-		char choice    = 0;
-		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &count);
+	if (multiple_files)
+		decision = DOS_WaitForCancelContinueNext();
+	else
+		decision = DOS_WaitForCancelContinue();
 
-		if (count == 0 || choice == code_ctrl_c || choice == code_esc ||
-		    choice == 'q' || choice == 'Q') {
-			decision = Decision::Terminate;
-			break;
-		}
-
-		if (choice == code_cr || choice == ' ') {
-			decision = Decision::More;
-			break;
-		}
-
-		if (!multiple_files)
-			continue;
-
-		if (choice == 'n' || choice == 'N') {
-			decision = Decision::NextFile;
-			break;
-		}
-	}
-
-	if (decision == Decision::Terminate || decision == Decision::NextFile) {
+	if (decision == UserDecision::Cancel || decision == UserDecision::Next) {
 		WriteOut(" ");
 		WriteOut(MSG_Get("PROGRAM_MORE_TERMINATE"));
 		WriteOut("\n");
