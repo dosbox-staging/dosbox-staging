@@ -23,9 +23,6 @@
 // implementation of the provided driver API notes.
 //
 
-
-
-
 #include "reelmagic.h"
 
 #include <cerrno>

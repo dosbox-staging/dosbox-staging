@@ -22,11 +22,9 @@
 
 #include "reelmagic.h"
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <strings.h>
-
+#include <cstdio>
+#include <cstdarg>
+#include <cstring>
 #include <exception>
 #include <string>
 
