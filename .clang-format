@@ -29,6 +29,14 @@ Language: Cpp
 # in clang-format 10.x: switch to "c++14"
 Standard: c++17
 
+# Align qualifiers with the type instead of the variable name
+# int* var; // 'var' is a pointer-to-int
+# int& var; // 'var' is a reference-to-int
+# const int& var; // 'var' is a constant-reference-to-int
+PointerAlignment: Left
+ReferenceAlignment: Left
+QualifierAlignment: Left
+
 # The extra indent or outdent of class access modifiers, e.g. public:
 #
 AccessModifierOffset: -8
