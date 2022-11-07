@@ -592,6 +592,9 @@
     <ClCompile Include="..\src\dos\program_more.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_more_output.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_mount.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

@@ -23,7 +23,7 @@
 
 #include "programs.h"
 
-#include <vector>
+#include "program_more_output.h"
 
 class MORE final : public Program {
 public:
@@ -38,39 +38,11 @@ public:
 	void Run();
 
 private:
-	bool ParseCommandLine();
-	bool FindInputFiles(const std::vector<std::string> &params);
-
-	void DisplayInputFiles();
-	void DisplayInputStream();
-	UserDecision DisplaySingleStream();
-	UserDecision PromptUser();
-
-	std::string GetShortName(const std::string &file_name, const char *msg_id);
-	static uint8_t GetCurrentColumn();
-	static uint8_t GetCurrentRow();
-	bool GetCharacter(char &code);
+	bool ParseCommandLine(MoreOutputFiles &output);
+	bool FindInputFiles(MoreOutputFiles &output,
+	                    const std::vector<std::string> &params);
 
 	void AddMessages();
-
-	struct InputFile {
-		std::string name = ""; // file name with path
-		bool is_device   = false;
-	};
-
-	std::vector<InputFile> input_files = {};
-
-	uint16_t max_lines    = 0;
-	uint16_t max_columns  = 0;
-	uint16_t line_counter = 0;
-
-	uint8_t tab_size       = 8;
-	uint8_t tabs_remaining = 0;
-	bool skip_next_cr      = false;
-	bool skip_next_lf      = false;
-
-	uint16_t input_handle = 0;  // DOS handle of the input stream
-	bool ctrl_c_enable = false; // if CTRL+C in the input stream should quit
 };
 
 #endif

@@ -22,6 +22,7 @@
 #include "program_intro.h"
 
 #include "mapper.h"
+#include "program_more_output.h"
 
 void INTRO::WriteOutProgramIntroSpecial()
 {
@@ -67,9 +68,11 @@ void INTRO::DisplayMount(void) {
 void INTRO::Run(void) {
 	// Usage
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_INTRO_HELP"));
-		WriteOut("\n");
-		WriteOut(MSG_Get("PROGRAM_INTRO_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_INTRO_HELP"));
+		output.AddString("\n");
+		output.AddString(MSG_Get("PROGRAM_INTRO_HELP_LONG"));
+		output.Display();
 		return;
 	}
     /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */

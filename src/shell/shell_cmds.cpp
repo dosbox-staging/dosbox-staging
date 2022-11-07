@@ -34,6 +34,8 @@
 #include <string>
 #include <vector>
 
+#include "../dos/program_more_output.h"
+#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "bios.h"
 #include "callback.h"
@@ -45,7 +47,6 @@
 #include "string_utils.h"
 #include "support.h"
 #include "timer.h"
-#include "../ints/int10.h"
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
@@ -187,17 +188,19 @@ void DOS_Shell::DoCommand(char * line) {
 }
 
 bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
-	if (!args || !ScanCMDBool(args, "?")) {
+	if (!args || !ScanCMDBool(args, "?"))
 		return false;
-	}
+
+	MoreOutputStrings output(*this);
 	std::string short_key("SHELL_CMD_" + command + "_HELP");
-	WriteOut("%s\n", MSG_Get(short_key.c_str()));
+	output.AddString("%s\n", MSG_Get(short_key.c_str()));
 	std::string long_key("SHELL_CMD_" + command + "_HELP_LONG");
-	if (MSG_Exists(long_key.c_str())) {
-		WriteOut("%s", MSG_Get(long_key.c_str()));
-	} else {
-		WriteOut("%s\n", command.c_str());
-	}
+	if (MSG_Exists(long_key.c_str()))
+		output.AddString("%s", MSG_Get(long_key.c_str()));
+	else
+		output.AddString("%s\n", command.c_str());
+	output.Display();
+
 	return true;
 }
 
@@ -260,21 +263,12 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	dos.dta(save_dta);
 }
 
-void DOS_Shell::PrintHelpForCommands(HELP_Filter req_filter)
+void DOS_Shell::PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_filter)
 {
-	BIOS_NROWS; // macro creates 'nrows' queried from BIOS
-	nrows--;
-	int rows_printed = 0;
-	auto page_break_if_required = [&]() {
-		if (++rows_printed == nrows) {
-			CMD_PAUSE(empty_string);
-			rows_printed = 0;
-		}
-	};
-	auto add_blank_line = [&]() {
-		WriteOut("\n");
-		page_break_if_required();
-	};
+	static const auto format_header_str  = convert_ansi_markup("[color=blue]%s[reset]\n");
+	static const auto format_command_str = convert_ansi_markup("  [color=green]%-8s[reset] %s");
+	static const auto format_header      = format_header_str.c_str();
+	static const auto format_command     = format_command_str.c_str();
 
 	for (const auto &cat : {HELP_Category::Dosbox, HELP_Category::File, HELP_Category::Batch, HELP_Category::Misc}) {
 		bool category_started = false;
@@ -287,26 +281,16 @@ void DOS_Shell::PrintHelpForCommands(HELP_Filter req_filter)
 			if (!category_started) {
 				// Only add a newline to the first category heading when
 				// displaying "common" help
-				if (cat == HELP_Category::Dosbox) {
-					if (req_filter == HELP_Filter::Common) {
-						add_blank_line();
-					}
-				} else {
-					add_blank_line();
+				if (cat != HELP_Category::Dosbox || req_filter == HELP_Filter::Common) {
+					output.AddString("\n");
 				}
-				auto header_pattern = convert_ansi_markup("[color=blue]%s[reset]\n");
-				WriteOut(header_pattern.c_str(), HELP_CategoryHeading(cat));
+				output.AddString(format_header, HELP_CategoryHeading(cat));
 				category_started = true;
-				page_break_if_required();
 			}
 			std::string name(s.first);
 			lowcase(name);
-			auto pattern = convert_ansi_markup("  [color=green]%-8s[reset] %s");
-			WriteOut(pattern.c_str(),
-					name.c_str(),
-					HELP_GetShortHelp(s.second.name).c_str());
-
-			page_break_if_required();
+			output.AddString(format_command, name.c_str(),
+			                 HELP_GetShortHelp(s.second.name).c_str());
 		}
 	}
 }
@@ -342,11 +326,15 @@ void DOS_Shell::CMD_HELP(char * args){
 		(this->*(shell_cmd.handler))(help_arg);
 	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
 		// Print help for all the commands
-		PrintHelpForCommands(HELP_Filter::All);
+		MoreOutputStrings output(*this);
+		PrintHelpForCommands(output, HELP_Filter::All);
+		output.Display();
 	} else {
 		// Print help for just the common commands
-		WriteOut(MSG_Get("SHELL_CMD_HELP"));
-		PrintHelpForCommands(HELP_Filter::Common);
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_HELP"));
+		PrintHelpForCommands(output, HELP_Filter::Common);
+		output.Display();
 	}
 }
 
@@ -1755,10 +1743,13 @@ void DOS_Shell::CMD_DATE(char *args)
 		return;
 	}
 	if (ScanCMDBool(args, "?")) {
-		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP"));
-		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_DATE_HELP_LONG"), format,
-		         format_date(2012, 10, 11));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_DATE_HELP"));
+		output.AddString("\n");
+		output.AddString(MSG_Get("SHELL_CMD_DATE_HELP_LONG"),
+		                 format,
+		                 format_date(2012, 10, 11));
+		output.Display();
 		return;
 	}
 	if (ScanCMDBool(args, "H")) {
@@ -1839,9 +1830,11 @@ void DOS_Shell::CMD_TIME(char * args) {
 	sprintf(format, "hh%cmm%css", time_separator, time_separator);
 	sprintf(example, "13%c14%c15", time_separator, time_separator);
 	if (ScanCMDBool(args, "?")) {
-		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP"));
-		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_TIME_HELP_LONG"), format, example);
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP"));
+		output.AddString("\n");
+		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP_LONG"), format, example);
+		output.Display();
 		return;
 	}
 	if (ScanCMDBool(args, "H")) {

@@ -22,6 +22,7 @@
 
 #include "ansi_code_markup.h"
 #include "checks.h"
+#include "program_more_output.h"
 #include "string_utils.h"
 
 #include <set>
@@ -31,7 +32,9 @@ CHECK_NARROWING();
 void MOUSECTL::Run()
 {
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_MOUSECTL_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_MOUSECTL_HELP_LONG"));
+		output.Display();
 		return;
 	}
 

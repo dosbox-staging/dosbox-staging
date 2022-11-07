@@ -20,6 +20,7 @@
 
 #include "program_rescan.h"
 
+#include "program_more_output.h"
 #include "string_utils.h"
 
 void RESCAN::Run(void)
@@ -29,7 +30,9 @@ void RESCAN::Run(void)
 	uint8_t drive = DOS_GetDefaultDrive();
 
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_RESCAN_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_RESCAN_HELP_LONG"));
+		output.Display();
 		return;
 	}
 
