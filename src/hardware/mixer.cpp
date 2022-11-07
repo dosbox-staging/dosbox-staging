@@ -568,6 +568,11 @@ void MixerChannel::SetVolumeScale(const float left, const float right)
 	}
 }
 
+const AudioFrame& MixerChannel::GetVolumeScale() const
+{
+	return volume_scale;
+}
+
 static void MIXER_UpdateAllChannelVolumes()
 {
 	MIXER_LockAudioDevice();
