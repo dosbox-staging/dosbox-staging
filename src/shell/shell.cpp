@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../dos/program_more_output.h"
 #include "callback.h"
 #include "control.h"
 #include "fs_utils.h"
@@ -486,7 +487,9 @@ void DOS_Shell::Run()
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
-		WriteOut(MSG_Get("SHELL_CMD_COMMAND_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_COMMAND_HELP_LONG"));
+		output.Display();
 		return;
 	}
 	if (cmd->FindStringRemainBegin("/C",line)) {

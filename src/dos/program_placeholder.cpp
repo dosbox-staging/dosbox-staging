@@ -22,6 +22,8 @@
 
 extern unsigned int result_errorcode;
 
+#include "program_more_output.h"
+
 void PLACEHOLDER::Run()
 {
 	const auto command = cmd->GetFileName();
@@ -30,7 +32,10 @@ void PLACEHOLDER::Run()
 	LOG_WARNING("%s: %s", command, MSG_Get("VISIT_FOR_MORE_HELP"));
 	LOG_WARNING("%s: %s/%s", command, MSG_Get("WIKI_URL"), "Add-Utilities");
 
-	WriteOut(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command);
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command);
+	output.Display();
+
 	WriteOut_NoParsing(MSG_Get("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE"));
 
 	result_errorcode = dos.return_code;

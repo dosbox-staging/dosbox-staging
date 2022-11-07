@@ -62,6 +62,7 @@ public:
 };
 
 class AutoexecEditor;
+class MoreOutputStrings;
 
 struct SHELL_Cmd {
 	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
@@ -72,7 +73,7 @@ struct SHELL_Cmd {
 
 class DOS_Shell : public Program {
 private:
-	void PrintHelpForCommands(HELP_Filter req_filter);
+	void PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
 	bool WriteHelp(const std::string &command, char* args);
 

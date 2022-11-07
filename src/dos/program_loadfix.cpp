@@ -21,13 +21,16 @@
 #include "program_loadfix.h"
 
 #include "dosbox.h"
+#include "program_more_output.h"
 #include "shell.h"
 #include "string_utils.h"
 
 void LOADFIX::Run(void)
 {
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_LOADFIX_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_LOADFIX_HELP_LONG"));
+		output.Display();
 		return;
 	}
 	uint16_t commandNr = 1;

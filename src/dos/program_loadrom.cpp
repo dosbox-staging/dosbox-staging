@@ -24,8 +24,9 @@
 
 #include <stdio.h>
 
-#include "drives.h"
 #include "callback.h"
+#include "drives.h"
+#include "program_more_output.h"
 #include "regs.h"
 
 void LOADROM::Run(void) {
@@ -34,8 +35,10 @@ void LOADROM::Run(void) {
         return;
     }
     if (HelpRequested()) {
-	    WriteOut(MSG_Get("PROGRAM_LOADROM_HELP_LONG"));
-	    return;
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_LOADROM_HELP_LONG"));
+	output.Display();
+	return;
     }
     uint8_t drive;
     char fullname[DOS_PATHLENGTH];

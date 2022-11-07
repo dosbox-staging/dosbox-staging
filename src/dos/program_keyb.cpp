@@ -21,6 +21,7 @@
 #include "program_keyb.h"
 
 #include "dos_keyboard_layout.h"
+#include "program_more_output.h"
 #include "string_utils.h"
 
 void KEYB::Run(void) {
@@ -59,7 +60,9 @@ void KEYB::Run(void) {
 
 	// One argument: asked for help
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_KEYB_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_KEYB_HELP_LONG"));
+		output.Display();
 		return;
 	}
 

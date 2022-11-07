@@ -31,6 +31,7 @@
 #include "drives.h"
 #include "mapper.h"
 #include "mouse.h"
+#include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
 
@@ -166,7 +167,9 @@ void BOOT::Run(void)
 	}
 
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("PROGRAM_BOOT_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_BOOT_HELP_LONG"));
+		output.Display();
 		return;
 	}
 	if (cmd->GetCount() == 1) {
