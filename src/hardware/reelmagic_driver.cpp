@@ -48,14 +48,14 @@
 
 
 //note: Reported ReelMagic driver version 2.21 seems to be the most common...
-static const Bit8u  REELMAGIC_DRIVER_VERSION_MAJOR  = 2;
-static const Bit8u  REELMAGIC_DRIVER_VERSION_MINOR  = 21;
-static const Bit16u REELMAGIC_BASE_IO_PORT          = 0x9800; //note: the real deal usually sits at 260h... practically unused for now; XXX should this be configurable!?
-static const Bit8u  REELMAGIC_IRQ                   = 11;     //practically unused for now; XXX should this be configurable!?
+static const uint8_t  REELMAGIC_DRIVER_VERSION_MAJOR  = 2;
+static const uint8_t  REELMAGIC_DRIVER_VERSION_MINOR  = 21;
+static const uint16_t REELMAGIC_BASE_IO_PORT          = 0x9800; //note: the real deal usually sits at 260h... practically unused for now; XXX should this be configurable!?
+static const uint8_t  REELMAGIC_IRQ                   = 11;     //practically unused for now; XXX should this be configurable!?
 static const char   REELMAGIC_FMPDRV_EXE_LOCATION[] = "Z:\\"; //the trailing \ is super important!
 
 static Bitu   _dosboxCallbackNumber      = 0;
-static Bit8u  _installedInterruptNumber  = 0; //0 means not currently installed
+static uint8_t  _installedInterruptNumber  = 0; //0 means not currently installed
 static bool   _unloadAllowed             = true;
 
 
@@ -63,7 +63,7 @@ static bool   _unloadAllowed             = true;
 #if C_HEAVY_DEBUG
   static bool _a204debug = true;
   static bool _a206debug = true;
-  static inline bool IsDebugLogMessageFiltered(const Bit8u command, const Bit16u subfunc) {
+  static inline bool IsDebugLogMessageFiltered(const uint8_t command, const uint16_t subfunc) {
     if (command != 0x0A) return false;
     if ((subfunc == 0x204) && (!_a204debug)) return true;
     if ((subfunc == 0x206) && (!_a206debug)) return true;
@@ -84,16 +84,16 @@ static bool   _unloadAllowed             = true;
 //
 namespace {
 struct UserCallbackCall {
-  Bit16u command;
-  Bit16u handle;
-  Bit16u param1;
-  Bit16u param2;
+  uint16_t command;
+  uint16_t handle;
+  uint16_t param1;
+  uint16_t param2;
   bool invokeNext; //set to true if the next queued callback shall be auto-invoked when this one returns
   //typedef (void* postcbcb_t) (void*);
   //postcbcb_t postCallbackCallback; //set to non-null to invoke function after callback returns
   //void *     postCallbackCallbackUserPtr;
   UserCallbackCall() : command(0), handle(0), param1(0), param2(0), invokeNext(false) {}
-  UserCallbackCall(const Bit16u command_, const Bit16u handle_ = 0, const Bit16u param1_ = 0, const Bit16u param2_ = 0, const bool invokeNext_ = false) :
+  UserCallbackCall(const uint16_t command_, const uint16_t handle_ = 0, const uint16_t param1_ = 0, const uint16_t param2_ = 0, const bool invokeNext_ = false) :
     command(command_), handle(handle_), param1(param1_), param2(param2_), invokeNext(invokeNext_) {}
 };
 struct UserCallbackPreservedState {
@@ -131,9 +131,9 @@ namespace {
     //this class gives the same "look and feel" to reelmagic programs...
     //as far as I can tell, "FMPDRV.EXE" also opens requested files into the current PSP...
     const std::string _fileName;
-    const Bit16u _pspEntry;
-    static Bit16u OpenDosFileEntry(const std::string& filename) {
-      Bit16u rv;
+    const uint16_t _pspEntry;
+    static uint16_t OpenDosFileEntry(const std::string& filename) {
+      uint16_t rv;
       std::string dosfilepath = &filename[4]; //skip over the "DOS:" prefixed by the constructor
       const size_t last_slash = dosfilepath.find_last_of('/');
       if (last_slash != std::string::npos) dosfilepath = dosfilepath.substr(0, last_slash);
@@ -141,7 +141,7 @@ namespace {
         throw RMException("DOS File: Open for read failed: %s", filename.c_str());
       return rv;
     }
-    static std::string strcpyFromDos(const Bit16u seg, const Bit16u ptr, const bool firstByteIsLen) {
+    static std::string strcpyFromDos(const uint16_t seg, const uint16_t ptr, const bool firstByteIsLen) {
       PhysPt dosptr = PhysMake(seg, ptr);
       std::string rv; rv.resize(firstByteIsLen ? ((size_t)mem_readb(dosptr++)) : 256);
       for (char *ptr = &rv[0]; ptr <= &rv[rv.size()-1]; ++ptr) {
@@ -155,19 +155,19 @@ namespace {
     }
   protected:
     const char *GetFileName() const {return _fileName.c_str();}
-    Bit32u GetFileSize() const {
-      Bit32u currentPos = 0;
+    uint32_t GetFileSize() const {
+      uint32_t currentPos = 0;
       if (!DOS_SeekFile(_pspEntry, &currentPos, DOS_SEEK_CUR)) throw RMException("DOS File: Seek failed: Get current position");
-      Bit32u result = 0;
+      uint32_t result = 0;
       if (!DOS_SeekFile(_pspEntry, &result, DOS_SEEK_END)) throw RMException("DOS File: Seek failed: Get current position");
       if (!DOS_SeekFile(_pspEntry, &currentPos, DOS_SEEK_SET)) throw RMException("DOS File: Seek failed: Reset current position");
       return result;
     }
-    Bit32u Read(Bit8u *data, Bit32u amount) {
-      Bit32u bytesRead = 0;
-      Bit16u transactionAmount;
+    uint32_t Read(uint8_t *data, uint32_t amount) {
+      uint32_t bytesRead = 0;
+      uint16_t transactionAmount;
       while (amount > 0) {
-        transactionAmount = (amount > 0xFFFF) ? 0xFFFF : (Bit16u)amount;
+        transactionAmount = (amount > 0xFFFF) ? 0xFFFF : (uint16_t)amount;
         if (!DOS_ReadFile(_pspEntry, data, &transactionAmount)) throw RMException("DOS File: Read failed");
         if (transactionAmount == 0) break;
         data += transactionAmount;
@@ -176,14 +176,14 @@ namespace {
       }
       return bytesRead;
     }
-    void Seek(Bit32u pos, Bit32u type) {
+    void Seek(uint32_t pos, uint32_t type) {
       if (!DOS_SeekFile(_pspEntry, &pos, type)) throw RMException("DOS File: Seek failed.");
     }
   public:
     ReelMagic_MediaPlayerDOSFile(const char * const dosFilepath) :
       _fileName(std::string("DOS:")+dosFilepath),
       _pspEntry(OpenDosFileEntry(dosFilepath)) {}
-    ReelMagic_MediaPlayerDOSFile(const Bit16u filenameStrSeg, const Bit16u filenameStrPtr, const bool firstByteIsLen = false) :
+    ReelMagic_MediaPlayerDOSFile(const uint16_t filenameStrSeg, const uint16_t filenameStrPtr, const bool firstByteIsLen = false) :
       _fileName(std::string("DOS:") + strcpyFromDos(filenameStrSeg, filenameStrPtr, firstByteIsLen)),
       _pspEntry(OpenDosFileEntry(_fileName)) {}
     virtual ~ReelMagic_MediaPlayerDOSFile() { DOS_CloseFile(_pspEntry); }
@@ -193,24 +193,24 @@ namespace {
     //this class is really only useful for debugging shit...
     FILE * const _fp;
     const std::string _fileName;
-    const Bit32u _fileSize;
-    static Bit32u GetFileSize(FILE * const fp) {
+    const uint32_t _fileSize;
+    static uint32_t GetFileSize(FILE * const fp) {
       if (fseek(fp, 0, SEEK_END) == -1) throw RMException("Host File: fseek() failed: %s", strerror(errno));
       const long tell_result = ftell(fp);
       if (tell_result == -1) throw RMException("Host File: ftell() failed: %s", strerror(errno));
       if (fseek(fp, 0, SEEK_SET) == -1) throw RMException("Host File: fseek() failed: %s", strerror(errno));
-      return (Bit32u)tell_result;
+      return (uint32_t)tell_result;
     }
   protected:
     const char *GetFileName() const {return _fileName.c_str();}
-    Bit32u GetFileSize() const { return _fileSize; }
-    Bit32u Read(Bit8u *data, Bit32u amount) {
+    uint32_t GetFileSize() const { return _fileSize; }
+    uint32_t Read(uint8_t *data, uint32_t amount) {
       const size_t fread_result = fread(data, 1, amount, _fp);
       if ((fread_result == 0) && ferror(_fp))
         throw RMException("Host File: fread() failed: %s", strerror(errno));
-      return (Bit32u)fread_result;
+      return (uint32_t)fread_result;
     }
-    void Seek(Bit32u pos, Bit32u type) {
+    void Seek(uint32_t pos, uint32_t type) {
       if (fseek(_fp, (long)pos, (type == DOS_SEEK_SET) ? SEEK_SET : SEEK_CUR) == -1)
         throw RMException("Host File: fseek() failed: %s", strerror(errno));
     }
@@ -234,9 +234,9 @@ namespace {
 //
 // the implementation of "FMPDRV.EXE" begins here...
 //
-static Bit8u findFreeInt(void) {
+static uint8_t findFreeInt(void) {
   //"FMPDRV.EXE" installs itself into a free IVT slot starting at 0x80...
-  for (Bit8u intNum = 0x80; intNum; ++intNum) {
+  for (uint8_t intNum = 0x80; intNum; ++intNum) {
     if (RealGetVec(intNum) == 0) return intNum;
   }
   return 0x00; //failed
@@ -264,20 +264,20 @@ static bool FMPDRV_EXE_InstallINTHandler(void) {
   }
 
   //This is the contents of the "FMPDRV.EXE" INT handler which will be put in the ROM region:
-  const Bit8u isr_impl[] = { //Note: this is derrived from "case CB_IRET:" in "../cpu/callback.cpp"
+  const uint8_t isr_impl[] = { //Note: this is derrived from "case CB_IRET:" in "../cpu/callback.cpp"
     0xEB, 0x1A,  // JMP over the check strings like a champ...
     9, //9 bytes for "FMPDriver" check string
     'F', 'M', 'P', 'D', 'r', 'i', 'v', 'e', 'r', '\0',
     13, //13 bytes for "ReelMagic(TM)" check string
     'R','e','e','l','M','a','g','i','c','(','T','M',')','\0',
     0xFE, 0x38,  //GRP 4 + Extra Callback Instruction
-    (Bit8u)(_dosboxCallbackNumber), (Bit8u)(_dosboxCallbackNumber >> 8),
+    (uint8_t)(_dosboxCallbackNumber), (uint8_t)(_dosboxCallbackNumber >> 8),
     0xCF,        //IRET
 
     //extra "unreachable" callback instruction used to signal end of FMPDRV.EXE registered callback 
     //when invoking the "user callback" from this driver
     0xFE, 0x38,  //GRP 4 + Extra Callback Instruction
-    (Bit8u)(_dosboxCallbackNumber), (Bit8u)(_dosboxCallbackNumber >> 8)
+    (uint8_t)(_dosboxCallbackNumber), (uint8_t)(_dosboxCallbackNumber >> 8)
   };
   //Note: checking against double CB_SIZE. This is because we allocate two callbacks to make this fit
   //      within the "callback ROM" region. See comment in ReelMagic_Init() function below
@@ -311,22 +311,22 @@ static void FMPDRV_EXE_UninstallINTHandler(void) {
 //
 // functions to serialize the player state into the required API format
 //
-static Bit16u GetFileStateValue(const ReelMagic_MediaPlayer& player) {
-  Bit16u value = 0;
+static uint16_t GetFileStateValue(const ReelMagic_MediaPlayer& player) {
+  uint16_t value = 0;
   if (player.HasVideo()) value |= 2;
   if (player.HasAudio()) value |= 1;
   return value;
 }
 
-static Bit16u GetPlayStateValue(const ReelMagic_MediaPlayer& player) {
+static uint16_t GetPlayStateValue(const ReelMagic_MediaPlayer& player) {
   //XXX status code 1 = paused
   //XXX status code 2 = stopped (e.g. never started with function 3)
-  Bit16u value = player.IsPlaying() ? 0x4 : 0x1;
+  uint16_t value = player.IsPlaying() ? 0x4 : 0x1;
   if ((_userCallbackType == 0x2000) && player.IsPlaying()) value |= 0x10; //XXX hack for RTZ!!!
   return value;
 }
 
-static Bit16u GetPlayerSurfaceZOrderValue(const ReelMagic_PlayerConfiguration& cfg) {
+static uint16_t GetPlayerSurfaceZOrderValue(const ReelMagic_PlayerConfiguration& cfg) {
   if (!cfg.VideoOutputVisible) return 1;
   if (cfg.UnderVga) return 4;
   return 2;
@@ -430,10 +430,10 @@ static void CleanupFromUserCallback(void) {
 }
 
 
-static Bit32u FMPDRV_EXE_driver_call(const Bit8u command, const Bit8u media_handle, const Bit16u subfunc, const Bit16u param1, const Bit16u param2) {
+static uint32_t FMPDRV_EXE_driver_call(const uint8_t command, const uint8_t media_handle, const uint16_t subfunc, const uint16_t param1, const uint16_t param2) {
   ReelMagic_MediaPlayer *player;
   ReelMagic_PlayerConfiguration *cfg;
-  Bit32u rv;
+  uint32_t rv;
   switch(command) {
   //
   // Open Media Handle (File)
@@ -666,18 +666,18 @@ static Bitu FMPDRV_EXE_INTHandler(void) {
   }
 
   //define what the registers mean up front...
-  const Bit8u command                       = reg_bh;
+  const uint8_t command                       = reg_bh;
   ReelMagic_MediaPlayer_Handle media_handle = reg_bl;
-  const Bit16u subfunc                      = reg_cx;
-  const Bit16u param1                       = reg_ax; //filename_ptr for command 0x1 & hardcoded to 1 for command 9
-  const Bit16u param2                       = reg_dx; //filename_seg for command 0x1
+  const uint16_t subfunc                      = reg_cx;
+  const uint16_t param1                       = reg_ax; //filename_ptr for command 0x1 & hardcoded to 1 for command 9
+  const uint16_t param2                       = reg_dx; //filename_seg for command 0x1
   try {
    //clear all regs by default on return...
    reg_ax = 0; reg_bx = 0; reg_cx = 0; reg_dx = 0;
 
-   const Bit32u driver_call_rv = FMPDRV_EXE_driver_call(command, media_handle, subfunc, param1, param2);
-   reg_ax = (Bit16u)(driver_call_rv & 0xFFFF); //low
-   reg_dx = (Bit16u)(driver_call_rv >> 16);    //high
+   const uint32_t driver_call_rv = FMPDRV_EXE_driver_call(command, media_handle, subfunc, param1, param2);
+   reg_ax = (uint16_t)(driver_call_rv & 0xFFFF); //low
+   reg_dx = (uint16_t)(driver_call_rv >> 16);    //high
    APILOG_DCFILT(command, subfunc, "driver_call(%02Xh,%02Xh,%Xh,%Xh,%Xh)=%Xh", (unsigned)command, (unsigned)media_handle, (unsigned)subfunc, (unsigned)param1, (unsigned)param2, (unsigned)driver_call_rv);
   }
   catch (std::exception& ex) {
@@ -736,12 +736,12 @@ struct FMPDRV_EXE : Program {
   This thing pretty much sits in the DOS multiplexer (INT 2Fh) and responds
   only to AH = 98h things...
 */
-static Bit16u GetMixerVolume(const char * const channelName, const bool right) {
+static uint16_t GetMixerVolume(const char * const channelName, const bool right) {
   MixerChannel * const chan = MIXER_FindChannel(channelName);
   if (chan == NULL) return 0;
-  return (Bit16u)(chan->volmain[right ? 1 : 0] * 100.0f);
+  return (uint16_t)(chan->volmain[right ? 1 : 0] * 100.0f);
 }
-static void SetMixerVolume(const char * const channelName, const Bit16u val, const bool right) {
+static void SetMixerVolume(const char * const channelName, const uint16_t val, const bool right) {
   MixerChannel * const chan = MIXER_FindChannel(channelName);
   if (chan == NULL) return;
   chan->volmain[right ? 1 : 0] = ((float)val) / 100.0f;
