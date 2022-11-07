@@ -229,6 +229,15 @@
     <ClCompile Include="..\src\hardware\pci_bus.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\reelmagic_driver.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\reelmagic_player.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\reelmagic_videomixer.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\pcspeaker.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -868,6 +877,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\programs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\reelmagic.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\regs.h">
