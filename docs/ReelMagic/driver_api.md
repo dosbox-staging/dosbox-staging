@@ -362,8 +362,8 @@ The return value does not appear to be checked. Returning zero and ignoring for 
 
 #### Subfunction 0210h - Set Magic Key
 
-Setting this has an impact on if the card can play "magical" MPEG assets. See `NOTES_MPEG.md` for more
-information on this.
+Setting this has an impact on if the card can play "magical" MPEG assets. See
+the MPEG decoder notes for more information on this.
 
 * Defaults to: `param1=4041h` `param2=4004h`
 * Return to Zork sets this to: `param1=4041h` `param2=4004h`

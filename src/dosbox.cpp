@@ -843,11 +843,17 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("initialmagickey",Property::Changeable::OnlyAtStart,"40044041");
 	Pstring->Set_help("Provides and alternate value for the initial global \"magic key\" value in hex. Defaults to 40044041.");
 	Pint = secprop->Add_int("magicfhack",Property::Changeable::OnlyAtStart,0);
-	Pint->Set_help("MPEG debugging only! Consult the reelmagic_player.cpp source code and NOTES_MPEG.md");
+	Pint->Set_help("MPEG debugging only! Consult the reelmagic_player.cpp source code and MPEG decoder notes (in docs/RealMagic)");
 	Pbool = secprop->Add_bool("a204debug",Property::Changeable::OnlyAtStart,true);
-	Pbool->Set_help("Turns on/off FMPDRV.EXE function Ah subfunction 204h debug logging. Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code and RMDOS_API.md");
+	Pbool->Set_help(
+	    "Turns on/off FMPDRV.EXE function Ah subfunction 204h debug logging.\n"
+	    "Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code\n"
+	    "and driver API notes (in docs/RealMagic)");
 	Pbool = secprop->Add_bool("a206debug",Property::Changeable::OnlyAtStart,true);
-	Pbool->Set_help("Turns on/off FMPDRV.EXE function Ah subfunction 206h debug logging. Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code and RMDOS_API.md");
+	Pbool->Set_help(
+	    "Turns on/off FMPDRV.EXE function Ah subfunction 206h debug logging.\n"
+	    "Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code\n"
+	    "and driver API notes (in docs/RealMagic)");
 
 
 	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);

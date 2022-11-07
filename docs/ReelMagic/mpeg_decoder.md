@@ -250,9 +250,9 @@ The following "magic key" values have been observed:
   * 0xC39D7088 -- Seen only so far in The Horde.
 
 
-The "magic key" is provisioned into the card usually at each game's
-load time. It is provided by the game to `FMPDRV.EXE` using a
-function 9/0208h call `driver_call(9, X, 0208h, ...)`. See `RMDOS_API.md`
+The "magic key" is provisioned into the card usually at each game's load time.
+It is provided by the game to `FMPDRV.EXE` using a function 9/0208h call
+`driver_call(9, X, 0208h, ...)`. See the driver API notes
 for more information on this.
 
 
