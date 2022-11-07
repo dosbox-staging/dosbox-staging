@@ -21,10 +21,6 @@
 //
 
 #include "reelmagic.h"
-#include "setup.h"
-#include "dos_system.h"
-#include "mixer.h"
-
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -33,6 +29,11 @@
 
 #include <exception>
 #include <string>
+
+#include "dos_system.h"
+#include "logging.h"
+#include "mixer.h"
+#include "setup.h"
 
 //bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION
@@ -648,21 +649,22 @@ void ReelMagic_DeleteAllPlayers() {
 //
 // audio stuff begins here...
 //
-static MixerChannel *_rmaudio = NULL;
+mixer_channel_t _rmaudio = nullptr;
 static AudioSampleFIFO * volatile _activePlayerAudioFifo = NULL;
 
 static void ActivatePlayerAudioFifo(AudioSampleFIFO& fifo) {
   if (!fifo.GetSampleRate()) return;
   _activePlayerAudioFifo = &fifo;
-  _rmaudio->SetFreq(_activePlayerAudioFifo->GetSampleRate());
+  assert(_rmaudio);
+  _rmaudio->SetSampleRate(_activePlayerAudioFifo->GetSampleRate());
 }
 
 static void DeactivatePlayerAudioFifo(AudioSampleFIFO& fifo) {
   if (_activePlayerAudioFifo == &fifo) _activePlayerAudioFifo = NULL;
 }
 
-static int16_t _lastAudioSample[2];
-static void RMMixerChannelCallback(Bitu samplesNeeded) {
+static AudioFrame _lastAudioSample = {};
+static void RMMixerChannelCallback(uint16_t samplesNeeded) {
   //samplesNeeded is sample count, including both channels...
   if (_activePlayerAudioFifo == NULL) {
     _rmaudio->AddSilence();
@@ -672,7 +674,7 @@ static void RMMixerChannelCallback(Bitu samplesNeeded) {
   while (samplesNeeded) {
     available = _activePlayerAudioFifo->SamplesAvailableForConsumption();
     if (available == 0) {
-      _rmaudio->AddSamples_s16(1, _lastAudioSample);
+      _rmaudio->AddSamples_sfloat(1, &_lastAudioSample[0]);
       --samplesNeeded;
       continue;
 //      _rmaudio->AddSilence();
@@ -680,15 +682,15 @@ static void RMMixerChannelCallback(Bitu samplesNeeded) {
     }
     if (samplesNeeded > available) {
       _rmaudio->AddSamples_s16(available, _activePlayerAudioFifo->GetConsumableInterleavedSamples());
-      _lastAudioSample[0] = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[available - 2];
-      _lastAudioSample[1] = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[available - 1];
+      _lastAudioSample.left = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[available - 2];
+      _lastAudioSample.right = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[available - 1];
       _activePlayerAudioFifo->Consume(available);
       samplesNeeded -= available;
     }
     else {
       _rmaudio->AddSamples_s16(samplesNeeded, _activePlayerAudioFifo->GetConsumableInterleavedSamples());
-      _lastAudioSample[0] = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[samplesNeeded - 2];
-      _lastAudioSample[1] = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[samplesNeeded - 1];
+      _lastAudioSample.left = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[samplesNeeded - 2];
+      _lastAudioSample.right = _activePlayerAudioFifo->GetConsumableInterleavedSamples()[samplesNeeded - 1];
       _activePlayerAudioFifo->Consume(samplesNeeded);
       samplesNeeded = 0;
     }
@@ -698,7 +700,13 @@ static void RMMixerChannelCallback(Bitu samplesNeeded) {
 void ReelMagic_InitPlayer(Section* sec) {
   Section_prop * section=static_cast<Section_prop *>(sec);
 
-  _rmaudio = MIXER_AddChannel(&RMMixerChannelCallback, 44100, "REELMAGC");
+  _rmaudio = MIXER_AddChannel(&RMMixerChannelCallback, 44100, "REELMAGC",
+	                                 {//ChannelFeature::Sleep,
+	                                  ChannelFeature::Stereo,
+	                                  //ChannelFeature::ReverbSend,
+	                                  //ChannelFeature::ChorusSend,
+	                                  ChannelFeature::DigitalAudio});
+	assert(_rmaudio);
   _rmaudio->Enable(true); 
 
   _audioLevel = (double)section->Get_int("audiolevel");
