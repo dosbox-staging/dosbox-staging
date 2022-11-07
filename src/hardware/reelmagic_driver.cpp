@@ -27,25 +27,23 @@
 
 
 #include "reelmagic.h"
-#include "dos_system.h"
-#include "dos_inc.h"
-#include "regs.h"
-#include "programs.h"
-#include "callback.h"
-#include "mixer.h"
-#include "setup.h"
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-
+#include <cerrno>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <exception>
-#include <string>
 #include <stack>
+#include <string>
 
-
-
+#include "callback.h"
+#include "dos_inc.h"
+#include "dos_system.h"
+#include "math_utils.h"
+#include "mixer.h"
+#include "programs.h"
+#include "regs.h"
+#include "setup.h"
 
 //note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t  REELMAGIC_DRIVER_VERSION_MAJOR  = 2;
@@ -254,9 +252,11 @@ static uint8_t findFreeInt(void) {
         return int_num; //we have found the FMPDriver at INT int_num
     }
 */
-static Bitu FMPDRV_EXE_INTHandler(void);
-static bool FMPDRV_EXE_InstallINTHandler(void) {
-  if (_installedInterruptNumber != 0) return true; //already installed
+static Bitu FMPDRV_INTHandler(void);
+static bool FMPDRV_InstallINTHandler()
+{
+  if (_installedInterruptNumber != 0)
+    return true; // already installed
   _installedInterruptNumber = findFreeInt();
   if (_installedInterruptNumber == 0) {
     LOG(LOG_REELMAGIC, LOG_ERROR)("Unable to install INT handler due to no free IVT slots!");
@@ -283,7 +283,10 @@ static bool FMPDRV_EXE_InstallINTHandler(void) {
   //      within the "callback ROM" region. See comment in ReelMagic_Init() function below
   if (sizeof(isr_impl) > (CB_SIZE * 2)) E_Exit("CB_SIZE too small to fit ReelMagic driver IVT code. This means that DOSBox was not compiled correctly!");
 
-  CALLBACK_Setup(_dosboxCallbackNumber, &FMPDRV_EXE_INTHandler, CB_IRET, "ReelMagic"); //must happen BEFORE we copy to ROM region!
+  CALLBACK_Setup(_dosboxCallbackNumber,
+	         &FMPDRV_INTHandler,
+	         CB_IRET,
+	         "ReelMagic"); // must happen BEFORE we copy to ROM region!
   for (Bitu i = 0; i < sizeof(isr_impl); ++i) // XXX is there an existing function for this?
     phys_writeb(CALLBACK_PhysPointer(_dosboxCallbackNumber) + i, isr_impl[i]);
 
@@ -296,17 +299,18 @@ static bool FMPDRV_EXE_InstallINTHandler(void) {
   return true; //success
 }
 
-static void FMPDRV_EXE_UninstallINTHandler(void) {
-  if (_installedInterruptNumber == 0) return; //already uninstalled...
-  if (!_unloadAllowed) return;
+static void FMPDRV_UninstallINTHandler()
+{
+  if (_installedInterruptNumber == 0)
+    return; // already uninstalled...
+  if (!_unloadAllowed)
+    return;
   LOG(LOG_REELMAGIC, LOG_NORMAL)("Uninstalling FMPDRV.EXE from INT %02hhXh", _installedInterruptNumber);
   ReelMagic_SetVideoMixerEnabled(false);
   RealSetVec(_installedInterruptNumber, 0);
   _installedInterruptNumber = 0;
   _userCallbackFarPtr = 0;
 }
-
-
 
 //
 // functions to serialize the player state into the required API format
@@ -429,9 +433,11 @@ static void CleanupFromUserCallback(void) {
   }
 }
 
-
-static uint32_t FMPDRV_EXE_driver_call(const uint8_t command, const uint8_t media_handle, const uint16_t subfunc, const uint16_t param1, const uint16_t param2) {
-  ReelMagic_MediaPlayer *player;
+static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_handle,
+                                   const uint16_t subfunc,
+                                   const uint16_t param1, const uint16_t param2)
+{
+  ReelMagic_MediaPlayer* player;
   ReelMagic_PlayerConfiguration *cfg;
   uint32_t rv;
   switch(command) {
@@ -632,7 +638,7 @@ static uint32_t FMPDRV_EXE_driver_call(const uint8_t command, const uint8_t medi
   //
   case 0x0d:
     LOG(LOG_REELMAGIC, LOG_NORMAL)("Request to unload FMPDRV.EXE via INT handler.");
-    FMPDRV_EXE_UninstallINTHandler();
+    FMPDRV_UninstallINTHandler();
     return 0;
 
   //
@@ -657,7 +663,8 @@ static uint32_t FMPDRV_EXE_driver_call(const uint8_t command, const uint8_t medi
   throw RMException("Unknown API command %02hhXh caught", command);
 }
 
-static Bitu FMPDRV_EXE_INTHandler(void) {
+static Bitu FMPDRV_INTHandler()
+{
   if (RealMake(SegValue(cs), reg_ip) == _userCallbackReturnDetectIp) {
     //if we get here, this is not a driver call, but rather we are cleaning up
     //and restoring state from us invoking the user callback...
@@ -675,10 +682,19 @@ static Bitu FMPDRV_EXE_INTHandler(void) {
    //clear all regs by default on return...
    reg_ax = 0; reg_bx = 0; reg_cx = 0; reg_dx = 0;
 
-   const uint32_t driver_call_rv = FMPDRV_EXE_driver_call(command, media_handle, subfunc, param1, param2);
-   reg_ax = (uint16_t)(driver_call_rv & 0xFFFF); //low
-   reg_dx = (uint16_t)(driver_call_rv >> 16);    //high
-   APILOG_DCFILT(command, subfunc, "driver_call(%02Xh,%02Xh,%Xh,%Xh,%Xh)=%Xh", (unsigned)command, (unsigned)media_handle, (unsigned)subfunc, (unsigned)param1, (unsigned)param2, (unsigned)driver_call_rv);
+   const uint32_t driver_call_rv =
+	   FMPDRV_driver_call(command, media_handle, subfunc, param1, param2);
+   reg_ax = (uint16_t)(driver_call_rv & 0xFFFF); // low
+   reg_dx = (uint16_t)(driver_call_rv >> 16);    // high
+   APILOG_DCFILT(command,
+		 subfunc,
+		 "driver_call(%02Xh,%02Xh,%Xh,%Xh,%Xh)=%Xh",
+		 (unsigned)command,
+		 (unsigned)media_handle,
+		 (unsigned)subfunc,
+		 (unsigned)param1,
+		 (unsigned)param2,
+		 (unsigned)driver_call_rv);
   }
   catch (std::exception& ex) {
     LOG(LOG_REELMAGIC, LOG_WARN)("Zeroing out INT return registers due to exception in driver_call(%02Xh,%02Xh,%Xh,%Xh,%Xh)", (unsigned)command, (unsigned)media_handle, (unsigned)subfunc, (unsigned)param1, (unsigned)param2);
@@ -687,41 +703,77 @@ static Bitu FMPDRV_EXE_INTHandler(void) {
   return CBRET_NONE;
 }
 
-struct FMPDRV_EXE : Program {
-  static void ProgramStart(Program * * make) { (*make) = new FMPDRV_EXE; }
-  static void WriteProgram() { PROGRAMS_MakeFile("FMPDRV.EXE", &FMPDRV_EXE::ProgramStart); }
-  void Run() {
-    WriteOut("Full Motion Player Driver %hhu.%hhu -- DOSBox\r\n", REELMAGIC_DRIVER_VERSION_MAJOR, REELMAGIC_DRIVER_VERSION_MINOR);
+class FMPDRV final : public Program {
+  public:
+  FMPDRV()
+  {
+    AddMessages();
+    help_detail = {HELP_Filter::Common,
+		   HELP_Category::Dosbox,
+		   HELP_CmdType::Program,
+		   "FMPDRV"};
+  }
+  void Run()
+  {
+    WriteOut(MSG_Get("PROGRAM_FMPDRV_TITLE"),
+	     REELMAGIC_DRIVER_VERSION_MAJOR,
+	     REELMAGIC_DRIVER_VERSION_MINOR);
     std::string ignore;
     if (cmd->FindStringBegin("/u", ignore)) {
       //unload driver
       if (_installedInterruptNumber == 0) {
-        WriteOut("Driver is not installed\r\n");
-        return;
+	WriteOut(MSG_Get("PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED"));
+	return;
       }
       if (!_unloadAllowed) {
-        WriteOut("Unload not allowed.\r\n");
-        return;
+	WriteOut(MSG_Get("PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED"));
+	return;
       }
-      FMPDRV_EXE_UninstallINTHandler();
-      WriteOut("Successfully removed driver.\r\n");
-    }
-    else {
-      //load driver
+      FMPDRV_UninstallINTHandler();
+      WriteOut(MSG_Get("PROGRAM_FMPDRV_UNLOADED"));
+    } else {
+      // load driver
       if (_installedInterruptNumber != 0) {
-        WriteOut("Driver is already installed at INT %02hhXh\r\n", _installedInterruptNumber);
-        return;
+	WriteOut(MSG_Get("PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED"),
+		 _installedInterruptNumber);
+	return;
       }
-      if (!FMPDRV_EXE_InstallINTHandler()) {
-        WriteOut("Failed to install ReelMagic driver: No free INTs!\r\n");
-        return;
+      if (!FMPDRV_InstallINTHandler()) {
+	WriteOut(MSG_Get("PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT"));
+	return;
       }
-      WriteOut("Successfully installed at INT %02hhXh\r\n", _installedInterruptNumber);
+      WriteOut(MSG_Get("PROGRAM_FMPDRV_LOADED"), _installedInterruptNumber);
     }
+  }
+
+  private:
+  void AddMessages()
+  {
+    MSG_Add("PROGRAM_FMPDRV_TITLE", "Full Motion Player Driver %hhu.%hhu\n");
+
+    MSG_Add("PROGRAM_FMPDRV_LOADED",
+	    "Successfully loaded driver at interrupt %02hhXh.\n");
+
+    MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED",
+	    "Failed loading: already loaded at interrupt %02hhXh.\n");
+
+    MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT",
+	    "Failed loading: No free interrupts!\n");
+
+    MSG_Add("PROGRAM_FMPDRV_UNLOADED", "Successfully unloaded driver.\n");
+
+    MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED",
+	    "Failed unloading: driver was not loaded.\n");
+
+    MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED",
+	    "Failed unloading: the driver was configured to stay resident.\n");
   }
 };
 
-
+std::unique_ptr<Program> FMPDRV_ProgramCreate()
+{
+  return ProgramCreate<FMPDRV>();
+}
 
 //
 // the implementation of "RMDEV.SYS" begins here...
@@ -918,7 +970,6 @@ void ReelMagic_Init(Section* sec) {
     //wasteful... need to explore a better way of doing this...
     E_Exit("Failed to allocate adjacent \"burner\" callback");
   }
-  FMPDRV_EXE::WriteProgram();
   DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
   LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" and \"Z:\\FMPDRV.EXE\" successfully installed");
 
@@ -927,7 +978,7 @@ void ReelMagic_Init(Section* sec) {
 
   if (section->Get_bool("alwaysresident")) {
     _unloadAllowed = false;
-    FMPDRV_EXE_InstallINTHandler();
+    FMPDRV_InstallINTHandler();
   }
   #if C_HEAVY_DEBUG
     _a204debug = section->Get_bool("a204debug");
