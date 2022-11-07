@@ -21,15 +21,16 @@
 //
 
 #include "reelmagic.h"
+
+#include <cstdio>
+#include <cstdarg>
+#include <cstring>
+#include <exception>
+#include <string>
+
 #include "setup.h"
 #include "render.h"
 #include "../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <exception>
-#include <string>
 
 namespace {
   struct RMException : ::std::exception { //XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this is a good idea...
