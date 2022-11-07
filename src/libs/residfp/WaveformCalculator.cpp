@@ -64,7 +64,7 @@ typedef float (*distance_t)(float, int);
 // Distance functions
 static float exponentialDistance(float distance, int i)
 {
-    return powf(distance, -i);
+    return powf(distance, static_cast<float>(-i));
 }
 
 static float linearDistance(float distance, int i)
