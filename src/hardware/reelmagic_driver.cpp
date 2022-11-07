@@ -19,8 +19,8 @@
 //
 // This file contains the reelmagic driver and device emulation code...
 //
-// This is where all the interaction with the "DOS world" occurs and is
-// the implementation of the provided "RMDOS_API.md" documentation...
+// This is where all the interaction with the "DOS world" occurs and is the
+// implementation of the provided driver API notes.
 //
 
 

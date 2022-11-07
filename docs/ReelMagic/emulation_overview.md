@@ -51,20 +51,19 @@ under the `Changes to DOSBox` section below for more information on this.
 ## ReelMagic Driver API
 
 All that has been discovered about how the ReelMagic driver works and interacts
-with things is currently documented in the `RMDOS_API.md` file.
+with things is currently documented in the driver API notes.
 
 ## ReelMagic Proprietary MPEG Format
 
 Most ReelMagic MPEG file assets have been encoded in a non-standard way which
-prevents them from playing in a standard MPEG media player such as VLC. In
-order to get things properly working in DOSBox, I had to make a few changes
-to the MPEG decoder. More information on this can be found in the
-`NOTES_MPEG.md` file.
+prevents them from playing in a standard MPEG media player such as VLC. In order
+to get things properly working in DOSBox, I had to make a few changes to the
+MPEG decoder. More information on this can be found in the MPEG decoder notes.
 
 ## Known Game Bugs
 
 Game bugs that are known to exist in both this emulator AND that also happen
-wich a real hardware setup are documented in the `KNOWN_GAME_BUGS.md` file.
+wich a real hardware setup are documented in the list of known game bugs.
 This helps with not spending too much time chasing phantom issues.
 
 
