@@ -789,16 +789,26 @@ std::unique_ptr<Program> FMPDRV_ProgramCreate()
   only to AH = 98h things...
 */
 static uint16_t GetMixerVolume(const char * const channelName, const bool right) {
-  MixerChannel * const chan = MIXER_FindChannel(channelName);
+  const auto chan = MIXER_FindChannel(channelName);
   if (chan == NULL) return 0;
-  return (uint16_t)(chan->volmain[right ? 1 : 0] * 100.0f);
+
+  const auto vol_gain       = chan->GetVolumeScale();
+  const auto vol_percentage = gain_to_percentage(vol_gain[right ? 1 : 0]);
+  return check_cast<uint16_t>(iroundf(vol_percentage));
 }
-static void SetMixerVolume(const char * const channelName, const uint16_t val, const bool right) {
-  MixerChannel * const chan = MIXER_FindChannel(channelName);
-  if (chan == NULL) return;
-  chan->volmain[right ? 1 : 0] = ((float)val) / 100.0f;
-  chan->UpdateVolume();
+
+static void SetMixerVolume(const char* const channelName,
+                           const uint16_t percentage, const bool right)
+{
+  auto chan = MIXER_FindChannel(channelName);
+  if (chan == NULL)
+    return;
+
+  AudioFrame vol_gain = chan->GetVolumeScale();
+  vol_gain[right ? 1 : 0] = percentage_to_gain(percentage);
+  chan->SetVolumeScale(vol_gain.left, vol_gain.right);
 }
+
 static bool RMDEV_SYS_int2fHandler() {
   if ((reg_ax & 0xFF00) != 0x9800) return false;
   APILOG(LOG_REELMAGIC, LOG_NORMAL)("RMDEV.SYS ax = 0x%04X bx = 0x%04X cx = 0x%04X dx = 0x%04X", (unsigned)reg_ax, (unsigned)reg_bx, (unsigned)reg_cx, (unsigned)reg_dx);
@@ -854,10 +864,10 @@ static bool RMDEV_SYS_int2fHandler() {
       reg_ax = GetMixerVolume("REELMAGC", true);
       return true;
     case 0x0014: //query SYNT left volume
-      reg_ax = GetMixerVolume("FM", false);
+      reg_ax = GetMixerVolume("OPL", false);
       return true;
     case 0x0015: //query SYNT right volume
-      reg_ax = GetMixerVolume("FM", true);
+      reg_ax = GetMixerVolume("OPL", true);
       return true;
     case 0x0016: //query PCM left volume
       reg_ax = GetMixerVolume("SB", false);
@@ -888,10 +898,10 @@ static bool RMDEV_SYS_int2fHandler() {
       SetMixerVolume("REELMAGC", reg_dx, true);
       return true;
     case 0x0014: //set SYNT left volume
-      SetMixerVolume("FM", reg_dx, false);
+      SetMixerVolume("OPL", reg_dx, false);
       return true;
     case 0x0015: //set SYNT right volume
-      SetMixerVolume("FM", reg_dx, true);
+      SetMixerVolume("OPL", reg_dx, true);
       return true;
     case 0x0016: //set PCM left volume
       SetMixerVolume("SB", reg_dx, false);
