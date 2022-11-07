@@ -174,6 +174,7 @@ public:
 	void SetVolume(const float left, const float right);
 	void SetVolumeScale(const float f);
 	void SetVolumeScale(const float left, const float right);
+	const AudioFrame& GetVolumeScale() const;
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
