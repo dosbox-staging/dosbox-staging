@@ -70,8 +70,8 @@ namespace {
       bool    produced;
       Bitu    samplesConsumed;
       struct {
-        Bit16s left;
-        Bit16s right;
+        int16_t left;
+        int16_t right;
       } samples[PLM_AUDIO_SAMPLES_PER_FRAME];
       inline Frame() : produced(false) {}
     };
@@ -90,8 +90,8 @@ namespace {
       }
     }
 
-    inline Bit16u ConvertSample(const double samp) {
-      return (Bit16u)(samp * 32767.0 * _audioLevel);
+    inline uint16_t ConvertSample(const double samp) {
+      return (uint16_t)(samp * 32767.0 * _audioLevel);
     }
 
     static Bitu ComputeFifoMax(const Bitu fifoMax) {
@@ -126,7 +126,7 @@ namespace {
       if (!f.produced) return 0;
       return ARRAY_COUNT(f.samples) - f.samplesConsumed;
     }
-    inline const Bit16s *GetConsumableInterleavedSamples() {
+    inline const int16_t *GetConsumableInterleavedSamples() {
       const Frame& f = _fifo[_consumePtr];
       return &f.samples[f.samplesConsumed].left;
     }
@@ -191,7 +191,7 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
   plm_t                              *_plm;
   plm_frame_t                        *_nextFrame;
   double                              _framerate;
-  Bit8u                               _magicalRSizeOverride;
+  uint8_t                               _magicalRSizeOverride;
 
   AudioSampleFIFO                     _audioFifo;
 
@@ -203,7 +203,7 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
       }
       size_t bytes_available = self->capacity - self->length;
       if (bytes_available > 4096) bytes_available = 4096;
-      const Bit32u bytes_read = ((ReelMagic_MediaPlayerImplementation*)user)->
+      const uint32_t bytes_read = ((ReelMagic_MediaPlayerImplementation*)user)->
         _file->Read(self->bytes + self->length, bytes_available);
       self->length += bytes_read;
 
@@ -533,7 +533,7 @@ public:
     _playing = false;
     if(ReelMagic_GetVideoMixerMPEGProvider() == this) ReelMagic_SetVideoMixerMPEGProvider(NULL);
   }
-  void SeekToByteOffset(const Bit32u offset) {
+  void SeekToByteOffset(const uint32_t offset) {
     plm_rewind(_plm);
     plm_buffer_seek(_plm->demux->buffer, (size_t)offset);
     _audioFifo.Clear();
@@ -575,7 +575,7 @@ ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFil
   //to ensure maximum compatibility, we must also emulate this behavior
 
   const Bitu freeHandles = ComputeFreePlayerHandleCount();
-  Bit8u handleIndex;
+  uint8_t handleIndex;
 
   try {
     if (freeHandles < 1) throw RMException("Out of handles!");
@@ -628,10 +628,10 @@ ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const ReelMagic_MediaPlayer
 }
 
 void ReelMagic_DeleteAllPlayers() {
-  for (Bit8u i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
+  for (uint8_t i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
     if (_rmhandles[i] == NULL) continue;
     delete _rmhandles[i];
-    for (Bit8u j = i+1; j < REELMAGIC_MAX_HANDLES; ++j) {
+    for (uint8_t j = i+1; j < REELMAGIC_MAX_HANDLES; ++j) {
       if (_rmhandles[j] == _rmhandles[i]) {
         _rmhandles[j] = NULL;
         LOG(LOG_REELMAGIC, LOG_NORMAL)("Freeing handle #%u", (unsigned)(j+1));
@@ -661,7 +661,7 @@ static void DeactivatePlayerAudioFifo(AudioSampleFIFO& fifo) {
   if (_activePlayerAudioFifo == &fifo) _activePlayerAudioFifo = NULL;
 }
 
-static Bit16s _lastAudioSample[2];
+static int16_t _lastAudioSample[2];
 static void RMMixerChannelCallback(Bitu samplesNeeded) {
   //samplesNeeded is sample count, including both channels...
   if (_activePlayerAudioFifo == NULL) {

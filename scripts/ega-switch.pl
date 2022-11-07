@@ -11,7 +11,7 @@ for ($i = 0; $i < 256; $i++) {
 	do  {
 		if ($i & $b) {
 			print THEFILE "\t{\n";
-			print THEFILE "\t\tBit8u color=0;\n";
+			print THEFILE "\t\tuint8_t color=0;\n";
 			print THEFILE "\t\tif (pixels.b[0] & $b) color|=1;\n";
 			print THEFILE "\t\tif (pixels.b[1] & $b) color|=2;\n";
 			print THEFILE "\t\tif (pixels.b[2] & $b) color|=4;\n";

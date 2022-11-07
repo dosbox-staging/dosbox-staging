@@ -52,10 +52,10 @@ namespace {
 //already complicated logic somewhat readable
 namespace {
 struct RenderOutputPixel {
-  Bit8u blue;
-  Bit8u green;
-  Bit8u red;
-  Bit8u alpha;
+  uint8_t blue;
+  uint8_t green;
+  uint8_t red;
+  uint8_t alpha;
 };
 
 struct VGA16bppPixel {
@@ -65,10 +65,10 @@ struct VGA16bppPixel {
 };
 
 struct VGA32bppPixel {
-  Bit8u blue;
-  Bit8u green;
-  Bit8u red;
-  Bit8u alpha;
+  uint8_t blue;
+  uint8_t green;
+  uint8_t red;
+  uint8_t alpha;
   template <typename T> inline void CopyRGBTo(T& out) const {out.red=red; out.green=green; out.blue=blue;}
 };
 struct VGAUnder32bppPixel : VGA32bppPixel { inline bool IsTransparent() const { return true; } };
@@ -76,19 +76,19 @@ struct VGAOver32bppPixel  : VGA32bppPixel { inline bool IsTransparent() const { 
 
 struct VGAPalettePixel {
   static VGA32bppPixel _vgaPalette[256];
-  Bit8u index;
+  uint8_t index;
   template <typename T> inline void CopyRGBTo(T& out) const { _vgaPalette[index].CopyRGBTo(out); }
 };
 struct VGAUnderPalettePixel : VGAPalettePixel { inline bool IsTransparent() const { return true; } };
 struct VGAOverPalettePixel  : VGAPalettePixel {
-  static Bit8u _alphaChannelIndex;
+  static uint8_t _alphaChannelIndex;
   inline bool IsTransparent() const { return index == _alphaChannelIndex; }
 };
 
 struct PlayerPicturePixel {
-  Bit8u red;
-  Bit8u green;
-  Bit8u blue;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
   template <typename T> inline void CopyRGBTo(T& out) const {out.red=red; out.green=green; out.blue=blue;}
   inline bool IsTransparent() const {return false;}
 };
@@ -106,7 +106,7 @@ static bool                     _vgaDup5Enabled           = false;
 
 //state captured from VGA
 VGA32bppPixel                   VGAPalettePixel::_vgaPalette[256];
-Bit8u                           VGAOverPalettePixel::_alphaChannelIndex = 0;
+uint8_t                           VGAOverPalettePixel::_alphaChannelIndex = 0;
 static Bitu                     _vgaWidth                 = 0;
 static Bitu                     _vgaHeight                = 0;
 static Bitu                     _vgaBitsPerPixel          = 0; // != 0 on this variable means we have collected the first call
@@ -486,7 +486,7 @@ static void SetupVideoMixer(const bool updateRenderMode) {
 //
 // The RENDER_*() interceptors begin here...
 //
-void ReelMagic_RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
+void ReelMagic_RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue) {
   VGA32bppPixel& p = VGAPalettePixel::_vgaPalette[entry];
   p.red    = red;
   p.green  = green;

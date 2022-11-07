@@ -34,7 +34,7 @@ struct ReelMagic_VideoMixerMPEGProvider {
   virtual const ReelMagic_PlayerAttributes& GetAttrs() const = 0;
 };
 
-void ReelMagic_RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
+void ReelMagic_RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue);
 void ReelMagic_RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
 bool ReelMagic_RENDER_StartUpdate(void);
 //void ReelMagic_RENDER_EndUpdate(bool abort);
@@ -56,18 +56,18 @@ void ReelMagic_InitVideoMixer(Section* /*sec*/);
 //
 
 #define REELMAGIC_MAX_HANDLES (16)
-typedef Bit8u ReelMagic_MediaPlayer_Handle;
+typedef uint8_t ReelMagic_MediaPlayer_Handle;
 struct ReelMagic_PlayerConfiguration {
   bool     VideoOutputVisible;
   bool     UnderVga;
-  Bit8u    VgaAlphaIndex;
-  Bit32u   MagicDecodeKey;
-  Bit32u   UserData;
+  uint8_t    VgaAlphaIndex;
+  uint32_t   MagicDecodeKey;
+  uint32_t   UserData;
   struct {
-    Bit16u X, Y;
+    uint16_t X, Y;
   }        DisplayPosition;
   struct {
-    Bit16u Width, Height;
+    uint16_t Width, Height;
   }        DisplaySize;
 };
 struct ReelMagic_PlayerAttributes {
@@ -78,15 +78,15 @@ struct ReelMagic_PlayerAttributes {
     ReelMagic_MediaPlayer_Handle Audio;
   } Handles;
   struct {
-    Bit16u Width, Height;
+    uint16_t Width, Height;
   } PictureSize;
 };
 struct ReelMagic_MediaPlayerFile {
   virtual ~ReelMagic_MediaPlayerFile() {}
   virtual const char *GetFileName() const = 0;
-  virtual Bit32u GetFileSize() const = 0;
-  virtual Bit32u Read(Bit8u *data, Bit32u amount) = 0;
-  virtual void Seek(Bit32u pos, Bit32u type) = 0; // type can be either DOS_SEEK_SET || DOS_SEEK_CUR...
+  virtual uint32_t GetFileSize() const = 0;
+  virtual uint32_t Read(uint8_t *data, uint32_t amount) = 0;
+  virtual void Seek(uint32_t pos, uint32_t type) = 0; // type can be either DOS_SEEK_SET || DOS_SEEK_CUR...
 };
 struct ReelMagic_MediaPlayer {
   virtual ~ReelMagic_MediaPlayer() {}
@@ -107,7 +107,7 @@ struct ReelMagic_MediaPlayer {
   virtual void Play(const PlayMode playMode = MPPM_PAUSEONCOMPLETE) = 0;
   virtual void Pause() = 0;
   virtual void Stop() = 0;
-  virtual void SeekToByteOffset(const Bit32u offset) = 0;
+  virtual void SeekToByteOffset(const uint32_t offset) = 0;
   virtual void NotifyConfigChange() = 0;
 };
 
