@@ -1266,6 +1266,9 @@
     <ClInclude Include="..\src\libs\fontstash\fontstash.h">
       <Filter>src\libs\fontstash</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\stb_truetype\stb_truetype.h">
+      <Filter>src\libs\stb_truetype</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\zmbv\Resource.h" />
     <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
   </ItemGroup>
@@ -1348,6 +1351,9 @@
     </Filter>
     <Filter Include="src\libs\ppscale">
       <UniqueIdentifier>{63f12ee0-e983-404f-bbd2-5b6cd633a0af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\stb_truetype">
+      <UniqueIdentifier>{53a02719-2224-438f-a9f1-829e984a5791}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\misc">
       <UniqueIdentifier>{cf5cb904-4d22-4482-8dfa-ab37306b91c8}</UniqueIdentifier>
