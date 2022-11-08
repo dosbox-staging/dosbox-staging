@@ -261,12 +261,17 @@ Funziona solo quando si emula hercules o cga_mono.
 Imposta l'interpretazione dei colori CGA RGBI. Influisce su tutti i tipi di
 macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
-  tandy [BL]:    Emulazione di un monitor Tandy con livello marrone regolabile
-                 (0 - rosso, 50 - marrone, 100 - giallo scuro; predefinito 50).
-  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy.
+  tandy [BL]:    Emulazione di un monitor Tandy con livello del marrone
+                 regolabile. Il livello del marrone può essere fornito come
+                 secondo parametro opzionale (0 - rosso, 50 - marrone,
+                 100 - giallo scuro; predefinito 50), Es. tandy 100
+  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy
+                 sconosciuto.
   ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor
                  IBM 5153 con un esclusivo controllo del contrasto che attenua
-                 solo i colori non luminosi (da 0 a 100; predefinito 100).
+                 solo i colori non luminosi. Il contrasto può essere fornito
+                 come secondo parametro opzionale (da 0 a 100; predefinito 100)
+                 Es. ibm5153 60
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
                  Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra
                  (fare riferimento al manuale per ulteriori dettagli).
@@ -362,7 +367,7 @@ scelta rapida.
 .
 :CONFIG_MOUSE_CAPTURE
 Scegli un metodo di controllo del mouse:
-   onclick:       Cattura il mouse quando fai clic su qualsiasi pulsante
+   onclick:       Cattura il mouse quando fai clic con qualsiasi pulsante
                   all'interno della finestra.
    onstart:       Cattura il mouse immediatamente all'avvio.
    seamless:      Modalità mouse senza soluzione di continuità; È possibile
