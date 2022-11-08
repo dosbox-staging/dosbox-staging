@@ -93,7 +93,7 @@ static BOOL (WINAPI *pSetupDiGetDeviceInstanceIdA)(HDEVINFO, PSP_DEVINFO_DATA, P
 static BOOL (WINAPI *pSetupDiGetDeviceRegistryPropertyA)(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
 static BOOL (WINAPI *pSetupDiDestroyDeviceInfoList)(HDEVINFO);
 
-static int symlookup(HMODULE dll, void **addr, const char *sym)
+static int symlookup(HMODULE dll, FARPROC *addr, const char *sym)
 {
     *addr = GetProcAddress(dll, sym);
     if (*addr == NULL)
@@ -112,7 +112,7 @@ static int find_api_symbols(void)
     if (did_api_lookup)
         return 1;
 
-    #define LOOKUP(x) { if (!symlookup(dll, (void **) &p##x, #x)) return 0; }
+    #define LOOKUP(x) { if (!symlookup(dll, (FARPROC *) &p##x, #x)) return 0; }
     dll = LoadLibrary(TEXT("user32.dll"));
     if (dll == NULL)
         return 0;
