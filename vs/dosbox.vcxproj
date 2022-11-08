@@ -835,6 +835,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
+    <ClInclude Include="..\src\libs\fontstash\fontstash.h" />
     <ClInclude Include="..\src\libs\manymouse\manymouse.h" />
     <ClInclude Include="..\src\libs\mverb\MVerb.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />

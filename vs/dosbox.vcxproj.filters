@@ -1263,6 +1263,9 @@
     <ClInclude Include="..\src\libs\mverb\MVerb.h">
       <Filter>src\libs\mverb</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\fontstash\fontstash.h">
+      <Filter>src\libs\fontstash</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\zmbv\Resource.h" />
     <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
   </ItemGroup>
@@ -1330,6 +1333,9 @@
     </Filter>
     <Filter Include="src\libs\decoders">
       <UniqueIdentifier>{d49f3a50-e4ed-4da7-a530-eeefef580e9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\fontstash">
+      <UniqueIdentifier>{5f937800-dd4d-4ab6-8874-a12f1286102a}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\gui_tk">
       <UniqueIdentifier>{c1d4aca1-2ddd-4dc2-ba93-8b2279ef4d30}</UniqueIdentifier>
