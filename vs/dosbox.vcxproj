@@ -861,6 +861,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\residfp\Voice.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformCalculator.h" />
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h" />
+    <ClInclude Include="..\src\libs\stb_truetype\stb_truetype.h" />
     <ClInclude Include="..\src\libs\tal-chorus\Chorus.h" />
     <ClInclude Include="..\src\libs\tal-chorus\ChorusEngine.h" />
     <ClInclude Include="..\src\libs\tal-chorus\DCBlock.h" />
