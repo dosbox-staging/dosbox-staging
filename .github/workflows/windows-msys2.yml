@@ -36,7 +36,7 @@ jobs:
             arch: x86_64
             sys: UCRT64
             cc: gcc
-            max_warnings: 1
+            max_warnings: 0
             build_flags: -Denable_debugger=normal
 
           - name: Clang x86_64 +debugger
@@ -44,7 +44,7 @@ jobs:
             arch: x86_64
             sys: CLANG64
             cc: clang
-            max_warnings: 2
+            max_warnings: 1
             build_flags: -Denable_debugger=normal
 
           - name: Clang x86_64 +tests
