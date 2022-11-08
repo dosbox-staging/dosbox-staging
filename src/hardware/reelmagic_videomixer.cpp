@@ -22,15 +22,16 @@
 
 #include "reelmagic.h"
 
-#include <cstdio>
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <exception>
 #include <string>
 
-#include "setup.h"
-#include "render.h"
 #include "../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "render.h"
+#include "rgb16.h"
+#include "setup.h"
 
 namespace {
   struct RMException : ::std::exception { //XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this is a good idea...
@@ -60,9 +61,17 @@ struct RenderOutputPixel {
 };
 
 struct VGA16bppPixel {
-  /* ??? */
-  template <typename T> inline void CopyRGBTo(T& out) { }
-  inline bool IsTransparent() const { return false; }
+  Rgb16 pixel = {};
+  template <typename T>
+  constexpr void CopyRGBTo(T& out) const
+  {
+      pixel.ToRgb888(out.red, out.green, out.blue);
+  }
+
+  constexpr void FromRgb888(const uint8_t r8, const uint8_t g8, const uint8_t b8)
+  {
+      pixel.FromRgb888(r8, g8, b8);
+  }
 };
 
 struct VGA32bppPixel {
@@ -76,10 +85,35 @@ struct VGAUnder32bppPixel : VGA32bppPixel { inline bool IsTransparent() const { 
 struct VGAOver32bppPixel  : VGA32bppPixel { inline bool IsTransparent() const { return (red|green|blue) == 0; } };
 
 struct VGAPalettePixel {
-  static VGA32bppPixel _vgaPalette[256];
+  static VGA32bppPixel _vgaPalette32bpp[256];
+  static VGA16bppPixel _vgaPalette16bpp[256];
   uint8_t index;
-  template <typename T> inline void CopyRGBTo(T& out) const { _vgaPalette[index].CopyRGBTo(out); }
+  template <typename T>
+  inline void CopyRGBTo(T& out) const
+  {
+      _vgaPalette32bpp[index].CopyRGBTo(out);
+  }
 };
+
+struct VGAUnder16bppPixel : VGA16bppPixel {
+  constexpr bool IsTransparent() const
+  {
+      return true;
+  }
+};
+
+struct VGAOver16bppPixel : VGA16bppPixel {
+  // Like 8-bit VGA, use the first color in the palette as the transparent
+  // color. This lets the RTZ intro show the house animation and properly shows
+  // the crow's body on the sign-post (where as using a zero-black as
+  // transparent doesn't show the house animation and only shows parts of the
+  // crow's wings).
+  constexpr bool IsTransparent() const
+  {
+      return pixel == VGAPalettePixel::_vgaPalette16bpp[0].pixel;
+  }
+};
+
 struct VGAUnderPalettePixel : VGAPalettePixel { inline bool IsTransparent() const { return true; } };
 struct VGAOverPalettePixel  : VGAPalettePixel {
   static uint8_t _alphaChannelIndex;
@@ -106,8 +140,9 @@ static bool                     _mpegDictatesOutputSize   = false; //false if VG
 static bool                     _vgaDup5Enabled           = false;
 
 //state captured from VGA
-VGA32bppPixel                   VGAPalettePixel::_vgaPalette[256];
-uint8_t                           VGAOverPalettePixel::_alphaChannelIndex = 0;
+VGA32bppPixel                   VGAPalettePixel::_vgaPalette32bpp[256] = {};
+VGA16bppPixel                   VGAPalettePixel::_vgaPalette16bpp[256] = {};
+uint8_t                         VGAOverPalettePixel::_alphaChannelIndex = 0;
 static Bitu                     _vgaWidth                 = 0;
 static Bitu                     _vgaHeight                = 0;
 static Bitu                     _vgaBitsPerPixel          = 0; // != 0 on this variable means we have collected the first call
@@ -203,24 +238,49 @@ static void RMR_DrawLine_MixerError(const void *src) {
 }
 
 //its not real enterprise C++ until yer mixing macros and templates...
-#define CREATE_RMR_VGA_TYPED_FUNCTIONS(DRAWLINE_FUNC_NAME)                                                           \
-  static void DRAWLINE_FUNC_NAME##_VGAO8(const void *src)  {DRAWLINE_FUNC_NAME((const VGAOverPalettePixel *)src);}   \
-  static void DRAWLINE_FUNC_NAME##_VGAO32(const void *src) {DRAWLINE_FUNC_NAME((const VGAOver32bppPixel*)src);}      \
-  static void DRAWLINE_FUNC_NAME##_VGAU8(const void *src)  {DRAWLINE_FUNC_NAME((const VGAUnderPalettePixel *)src);}  \
-  static void DRAWLINE_FUNC_NAME##_VGAU32(const void *src) {DRAWLINE_FUNC_NAME((const VGAUnder32bppPixel*)src);}     \
+#define CREATE_RMR_VGA_TYPED_FUNCTIONS(DRAWLINE_FUNC_NAME) \
+	static void DRAWLINE_FUNC_NAME##_VGAO8(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAOverPalettePixel*)src); \
+	} \
+	static void DRAWLINE_FUNC_NAME##_VGAO16(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAOver16bppPixel*)src); \
+	} \
+	static void DRAWLINE_FUNC_NAME##_VGAO32(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAOver32bppPixel*)src); \
+	} \
+	static void DRAWLINE_FUNC_NAME##_VGAU8(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAUnderPalettePixel*)src); \
+	} \
+	static void DRAWLINE_FUNC_NAME##_VGAU16(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAUnder16bppPixel*)src); \
+	} \
+	static void DRAWLINE_FUNC_NAME##_VGAU32(const void* src) \
+	{ \
+		DRAWLINE_FUNC_NAME((const VGAUnder32bppPixel*)src); \
+	}
 
-#define ASSIGN_RMR_DRAWLINE_FUNCTION(DRAWLINE_FUNC_NAME, VGA_BPP, VGA_OVER) { \
-  if (VGA_OVER) switch(VGA_BPP) {                                             \
-  case 8:  ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8;  break;   \
-  case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break;   \
-  default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError;     break;   \
-  }                                                                           \
-  else switch(VGA_BPP) {                                                      \
-  case 8:  ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8;  break;   \
-  case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break;   \
-  default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError;     break;   \
-  }                                                                           \
-}
+#define ASSIGN_RMR_DRAWLINE_FUNCTION(DRAWLINE_FUNC_NAME, VGA_BPP, VGA_OVER) \
+	{ \
+		if (VGA_OVER) \
+			switch (VGA_BPP) { \
+			case 8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8; break; \
+			case 16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
+			case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
+			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
+			} \
+		else \
+			switch (VGA_BPP) { \
+			case 8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8; break; \
+			case 16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
+			case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
+			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
+			} \
+	}
 
 template <typename T> static inline void RMR_DrawLine_VGAOnly(const T *src) {
   const Bitu lineWidth          = _vgaWidth;
@@ -480,19 +540,18 @@ static void SetupVideoMixer(const bool updateRenderMode) {
   LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer Mode %s (vga=%ux%u mpeg=%ux%u render=%ux%u)", modeStr, (unsigned)_vgaWidth, (unsigned)_vgaHeight, (unsigned)_mpegPictureWidth, (unsigned)_mpegPictureHeight, (unsigned)_renderWidth, (unsigned)_renderHeight);
 }
 
-
-
-
-
 //
 // The RENDER_*() interceptors begin here...
 //
 void ReelMagic_RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blue) {
-  VGA32bppPixel& p = VGAPalettePixel::_vgaPalette[entry];
+  VGA32bppPixel& p = VGAPalettePixel::_vgaPalette32bpp[entry];
   p.red    = red;
   p.green  = green;
   p.blue   = blue;
   p.alpha  = 0;
+
+  VGAPalettePixel::_vgaPalette16bpp[entry].FromRgb888(red, green, blue);
+
   RENDER_SetPal(entry, red, green, blue);
 }
 
