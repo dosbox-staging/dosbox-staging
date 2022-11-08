@@ -1290,9 +1290,6 @@
     <ClInclude Include="..\src\libs\decoders\xxhash.h">
       <Filter>src\libs\decoders</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\manymouse\manymouse.h">
-      <Filter>src\libs\manymouse</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\nuked\opl3.h">
       <Filter>src\libs\nuked</Filter>
     </ClInclude>

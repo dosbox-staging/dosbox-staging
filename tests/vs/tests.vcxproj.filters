@@ -27,6 +27,7 @@
     <ClCompile Include="..\string_utils_tests.cpp" />
     <ClCompile Include="..\stubs.cpp" />
     <ClCompile Include="..\support_tests.cpp" />
+    <ClCompile Include="..\..\src\misc\messages_stubs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\meson.build" />
