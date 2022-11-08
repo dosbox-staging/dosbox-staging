@@ -1,3 +1,33 @@
+:TITLEBAR_CYCLES_MS
+cicli/ms
+.
+:TITLEBAR_HINT_PAUSED
+(IN PAUSA)
+.
+:TITLEBAR_HINT_NOMOUSE
+modalità senza mouse
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+mouse catturato, %s+F10 per rilasciarlo
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+mouse catturato, %s+F10 o clic centrale per rilasciarlo
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+per catturare il mouse premere %s+F10
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+per catturare il mouse premere %s+F10 o clic centrale
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+per catturare il mouse premere %s+F10 o fare clic su qualsiasi pulsante
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+mouse senza soluzione di continuità, %s+F10 per catturarlo
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+mouse senza soluzione di continuità, %s+F10 o clic centrale per catturarlo
+.
 :CONFIG_FULLSCREEN
 Avvia direttamente a schermo intero.
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
@@ -85,21 +115,7 @@ Scegli un driver di rendering da utilizzare nella modalità di uscita texture.
 Usa texture_renderer=auto per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
-Scegli un metodo di controllo del mouse:
-   onclick:       Cattura il mouse alla pressione di qualsiasi tasto
-                  all'interno della finestra.
-   onstart:       Cattura il mouse immediatamente all'avvio.
-   seamless:      Permette al mouse di muoversi liberamente; È possibile
-                  catturarlo con un clic centrale o con l'apposito tasto di
-                  scelta rapida.
-   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
-                  input al gioco.
-Scegli come vengono gestiti i clic centrali (secondo parametro):
-   middlegame:    I clic centrali vengono inviati al gioco.
-   middlerelease: Il clic centrale rilascia il mouse precedentemente catturato.
-                  Nel caso in cui si utilizzi il metodo di controllo seamless,
-                  esso si occuperà anche di catturarlo.
-Predefiniti (se non presenti o incorretti): seamless middlerelease
+Spostato nella sezione [mouse].
 .
 :CONFIG_SENSITIVITY
 Spostato nella sezione [mouse].
@@ -344,6 +360,22 @@ Un valore più basso di 100 indica una percentuale.
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida.
 .
+:CONFIG_MOUSE_CAPTURE
+Scegli un metodo di controllo del mouse:
+   onclick:       Cattura il mouse quando fai clic su qualsiasi pulsante
+                  all'interno della finestra.
+   onstart:       Cattura il mouse immediatamente all'avvio.
+   seamless:      Modalità mouse senza soluzione di continuità; È possibile
+                  catturarlo con un clic centrale o con l'apposito tasto di
+                  scelta rapida.
+   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
+                  input al gioco.
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+Se vero, il clic centrale rilascerà il mouse precedentemente catturato.
+Nel caso in cui si utilizzi il metodo di controllo 'seamless', esso si
+occuperà anche di catturarlo.
+.
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse predefinita. 100 è il valore base, 150 equivale al 150%
 di sensibilità, ecc.
@@ -386,12 +418,12 @@ Predefinito: intellimouse
 :CONFIG_COM_MOUSE_MODEL
 Modello mouse predefinito porta COM (seriale):
    2button:        2 pulsanti, mouse Microsoft.
-   3button:        3 pulsanti, mouse Logitech, per lo più compatibile con mouse
-                   Microsoft.
-   wheel:          3 pulsanti + rotellina, per lo più compatibile con mouse
-                   Microsoft.
-   msm:            3 pulsanti, mouse Mouse Systems, NON COMPATIBILE con mouse
-                   Microsoft.
+   3button:        3 pulsanti, mouse Logitech,
+                   per lo più compatibile con mouse Microsoft.
+   wheel:          3 pulsanti + rotellina,
+                   per lo più compatibile con mouse Microsoft.
+   msm:            3 pulsanti, mouse Mouse Systems,
+                   NON COMPATIBILE con mouse Microsoft.
    2button+msm:    Scelta automatica tra 2button e msm.
    3button+msm:    Scelta automatica tra 3button e msm.
    wheel+msm:      Scelta automatica tra wheel e msm.
@@ -855,7 +887,7 @@ Può essere: disabled, dummy, mouse, modem, nullmodem, direct.
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
 per mouse:
-   modello, sovrascrive l'impostazione dalla sezione [mouse].
+   model, sovrascrive l'impostazione dalla sezione [mouse].
 per direct: realport (richiesto), rxdelay (facoltativo).
    (realport:COM1 realport:ttyS0).
 per modem: listenport, sock, baudrate (tutti facoltativi).
@@ -1409,6 +1441,29 @@ L'immagine deve trovarsi su un'unità host o locale.
 L'uso di file multipli è supportato solo per le immagini cue/iso.
 
 .
+:PROGRAM_INTRO_HELP
+Visualizza un'introduzione a schermo intero in DOSBox Staging.
+
+.
+:PROGRAM_INTRO_HELP_LONG
+Utilizzo:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]PAGINA[reset]
+
+Dove:
+  [color=white]PAGINA[reset] è il nome della pagina da visualizzare, incluso [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]
+
+Note:
+  L'esecuzione di [color=green]intro[reset] senza un argomento, permette di visualizzare una pagina
+  di informazioni alla volta; premere un tasto qualsiasi per passare alla
+  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata
+  direttamente quella specificata.
+
+Esempi:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
+
+.
 :PROGRAM_INTRO
 [erases=entire][color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
 DOSBox crea una shell simile al vecchio DOS.
@@ -1504,9 +1559,9 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 Queste sono le combinazioni di tasti predefinite.
 Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
-[color=yellow]%s+Enter[reset]  Passa dalla modalità a schermo intero a quella a finestra
+[color=yellow]%s+Invio[reset]  Passa dalla modalità a schermo intero a quella a finestra
            e viceversa.
-[color=yellow]%s+Pause[reset]  Mette in Pausa/Riavvia l'emulatore.
+[color=yellow]%s+Pausa[reset]  Mette in Pausa/Riavvia l'emulatore.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
@@ -1719,7 +1774,7 @@ Esempi:
 Nessun file di input trovato.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- fine dell'input ---[reset]
+[reset][color=light-yellow]--- fine ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
 [reset][color=light-yellow]--- file %s ---[reset]
@@ -1869,7 +1924,7 @@ Dove:
   -reset      ripristina tutte le impostazioni dal file di configurazione.
 
 Note:
-  - se sensibilità o frequenza sono omessi, verrà usato il valore predefinito.
+  Se sensibilità o frequenza sono omessi, verrà usato il valore predefinito.
 
 Esempi:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
@@ -1891,7 +1946,7 @@ Sintassi errata, la frequenza di polling deve essere una dei seguenti:
 %s
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
-Mappatura non disponibile in modalità NoMouse.
+Mappatura non disponibile in modalità senza mouse.
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Nessuna interfaccia del mouse disponibile.
@@ -1947,9 +2002,9 @@ mappatura e si assegna il puntatore di sistema a tutte le interfacce del mouse.
 (mappatura annullata)
 .
 :PROGRAM_MOUSECTL_MAP_HINT
-Mouse catturato. Il metodo di controllo del mouse 'seamless' è sempre
-disabilitato mentre la mappatura è attiva e i mouse mappati ricevono eventi di
-input non elaborati.
+L'integrazione del mouse senza soluzione di continuità è sempre disabilitata
+mentre la mappatura è attiva e i mouse mappati ricevono eventi di input
+non elaborati.
 .
 :PROGRAM_RESCAN_HELP_LONG
 Scansiona le modifiche sulle unità DOS montate.
@@ -2533,29 +2588,6 @@ Note:
 Esempi:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
-
-.
-:PROGRAM_INTRO_HELP
-Visualizza un'introduzione a schermo intero di DOSBox Staging.
-
-.
-:PROGRAM_INTRO_HELP_LONG
-Utilizzo:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]PAGINA[reset]
-
-Dove:
-  [color=white]PAGINA[reset] è il nome della pagina da visualizzare, incluso [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]
-
-Note:
-  L'esecuzione di [color=green]intro[reset] senza un argomento, permette di visualizzare una pagina
-  di informazioni alla volta; premere un tasto qualsiasi per passare alla
-  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata
-  direttamente quella specificata.
-
-Esempi:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_MKDIR_HELP
