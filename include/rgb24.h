@@ -23,35 +23,39 @@
 
 #include <cstdint>
 
-typedef struct rgb24 {
+#include "rgb16.h"
+
+class rgb24 {
 public:
-	uint8_t red = 0;
+	uint8_t red   = 0;
 	uint8_t green = 0;
-	uint8_t blue = 0;
+	uint8_t blue  = 0;
 
 	constexpr rgb24() = default;
-	constexpr rgb24(const rgb24 &val) { *this = val; }
 	constexpr rgb24(const uint8_t r, const uint8_t g, const uint8_t b)
 	        : red(r),
 	          green(g),
 	          blue(b)
 	{}
 
-	constexpr rgb24 &operator=(const rgb24 &) = default;
+	constexpr rgb24(const uint16_t val)
+	        : red(Rgb16::Red5To8(val)),
+	          green(Rgb16::Green6To8(val)),
+	          blue(Rgb16::Blue5To8(val))
+	{}
 
 	constexpr operator int() const
 	{
 		return (blue << 16) | (green << 8) | (red << 0);
 	}
 
-	constexpr static rgb24 byteswap(const rgb24 &in)
+	constexpr static rgb24 byteswap(const rgb24& in)
 	{
 		return rgb24(in.blue, in.green, in.red);
 	}
+};
 
-} rgb24;
-
-constexpr rgb24 host_to_le(const rgb24 &in) noexcept
+constexpr rgb24 host_to_le(const rgb24& in) noexcept
 {
 	return rgb24::byteswap(in);
 }

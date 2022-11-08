@@ -888,6 +888,12 @@
     <ClInclude Include="..\include\render.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\rgb16.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rgb24.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\rwqueue.h">
       <Filter>include</Filter>
     </ClInclude>
