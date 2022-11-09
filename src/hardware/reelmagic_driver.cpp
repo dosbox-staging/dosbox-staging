@@ -210,6 +210,9 @@ namespace {
         throw RMException("Host File: fseek() failed: %s", strerror(errno));
     }
   public:
+    ReelMagic_MediaPlayerHostFile(ReelMagic_MediaPlayerHostFile&) = delete;
+    ReelMagic_MediaPlayerHostFile& operator=(const ReelMagic_MediaPlayerHostFile&) = delete;
+
     ReelMagic_MediaPlayerHostFile(const char * const hostFilepath) :
       _fp(fopen(hostFilepath, "rb")), //not using fopen_wrap() as this class is really intended for debug...
       _fileName(std::string("HOST:") + hostFilepath),
