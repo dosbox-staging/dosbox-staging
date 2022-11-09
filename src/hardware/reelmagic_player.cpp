@@ -653,7 +653,7 @@ static void ActivatePlayerAudioFifo(AudioSampleFIFO& fifo) {
   if (!fifo.GetSampleRate()) return;
   _activePlayerAudioFifo = &fifo;
   assert(_rmaudio);
-  _rmaudio->SetSampleRate(_activePlayerAudioFifo->GetSampleRate());
+  _rmaudio->SetSampleRate(static_cast<int>(_activePlayerAudioFifo->GetSampleRate()));
 }
 
 static void DeactivatePlayerAudioFifo(AudioSampleFIFO& fifo) {
@@ -667,9 +667,9 @@ static void RMMixerChannelCallback(uint16_t samplesNeeded) {
     _rmaudio->AddSilence();
     return;
   }
-  Bitu available;
+  uint16_t available = 0;
   while (samplesNeeded) {
-    available = _activePlayerAudioFifo->SamplesAvailableForConsumption();
+    available = static_cast<uint16_t>(_activePlayerAudioFifo->SamplesAvailableForConsumption());
     if (available == 0) {
       _rmaudio->AddSamples_sfloat(1, &_lastAudioSample[0]);
       --samplesNeeded;
