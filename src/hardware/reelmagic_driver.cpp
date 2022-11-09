@@ -45,6 +45,7 @@
 //note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t  REELMAGIC_DRIVER_VERSION_MAJOR  = 2;
 static const uint8_t  REELMAGIC_DRIVER_VERSION_MINOR  = 21;
+[[maybe_unused]]
 static const uint16_t REELMAGIC_BASE_IO_PORT          = 0x9800; //note: the real deal usually sits at 260h... practically unused for now; XXX should this be configurable!?
 static const uint8_t  REELMAGIC_IRQ                   = 11;     //practically unused for now; XXX should this be configurable!?
 static const char   REELMAGIC_FMPDRV_EXE_LOCATION[] = "Z:\\"; //the trailing \ is super important!
@@ -503,7 +504,7 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
   // Unknown 5
   //
   case 0x05:
-    player = &ReelMagic_HandleToMediaPlayer(media_handle); // will throw on bad handle
+    // player = &ReelMagic_HandleToMediaPlayer(media_handle); // currently unused - will throw on bad handle
     LOG(LOG_REELMAGIC, LOG_WARN)("Ignoring unknown function 5. handle=%u subfunc=%04Xh", (unsigned)media_handle, (unsigned)subfunc);
     return 0;
 
@@ -528,7 +529,7 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
   // Unknown 7
   //
   case 0x07:
-    player = &ReelMagic_HandleToMediaPlayer(media_handle); // will throw on bad handle
+    // player = &ReelMagic_HandleToMediaPlayer(media_handle); // currently unused - will throw on bad handle
     LOG(LOG_REELMAGIC, LOG_WARN)("Ignoring unknown function 7. handle=%u subfunc=%04Xh", (unsigned)media_handle, (unsigned)subfunc);
     return 0;
 
@@ -661,7 +662,7 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
     return 0;
   }
   E_Exit("Unknown command %02hhXh caught in ReelMagic driver", command);
-  throw RMException("Unknown API command %02hhXh caught", command);
+  // throw RMException("Unknown API command %02hhXh caught", command); (unreachable)
 }
 
 static Bitu FMPDRV_INTHandler()
