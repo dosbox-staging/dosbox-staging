@@ -313,8 +313,8 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
   }
 
   void CollectVideoStats() {
-    _attrs.PictureSize.Width = plm_get_width(_plm);
-    _attrs.PictureSize.Height = plm_get_height(_plm);
+    _attrs.PictureSize.Width = static_cast<uint16_t>(plm_get_width(_plm));
+    _attrs.PictureSize.Height = static_cast<uint16_t>(plm_get_height(_plm));
     if (_attrs.PictureSize.Width && _attrs.PictureSize.Height) {
       if (_plm->video_decoder->seqh_picture_rate >= 0x9) {
         LOG(LOG_REELMAGIC, LOG_NORMAL)("Detected a magical picture_rate code of 0x%X.", (unsigned)_plm->video_decoder->seqh_picture_rate);
