@@ -168,6 +168,7 @@ public:
 	~MixerChannel();
 
 	bool HasFeature(ChannelFeature feature) const;
+	const std::string& GetName() const;
 	int GetSampleRate() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
 	void RegisterLevelCallBack(apply_level_callback_f cb);
@@ -383,6 +384,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
                                  const std::set<ChannelFeature> &features);
 
 mixer_channel_t MIXER_FindChannel(const char *name);
+void MIXER_RemoveChannel(const std::string& name);
+void MIXER_RemoveChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);

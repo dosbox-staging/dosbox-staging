@@ -459,6 +459,28 @@ static void configure_compressor(const bool compressor_enabled)
 	LOG_MSG("MIXER: Master compressor enabled");
 }
 
+// Remove a channel by name from the mixer's map of channels.
+// Any shared pointers referencing the same object will will have their reference count dropped-by-one.
+void MIXER_RemoveChannel(const std::string& name)
+{
+	MIXER_LockAudioDevice();
+	auto channel_it = mixer.channels.find(name);
+	if (channel_it != mixer.channels.end())
+		mixer.channels.erase(channel_it);
+	MIXER_UnlockAudioDevice();
+}
+// Remove a channel using the shared pointer variable. This allows us to both
+// remove it from the map and also reset the (primary) shared pointer itself.
+void MIXER_RemoveChannel(mixer_channel_t& channel)
+{
+	if (!channel)
+		return;
+
+	channel->Enable(false);
+	MIXER_RemoveChannel(channel->GetName());
+	channel.reset();
+}
+
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
                                  const char *name,
                                  const std::set<ChannelFeature> &features)
@@ -769,6 +791,11 @@ void MixerChannel::SetSampleRate(const int rate)
 	                ENVELOPE_EXPIRES_AFTER_S);
 
 	ConfigureResampler();
+}
+
+const std::string& MixerChannel::GetName() const
+{
+	return name;
 }
 
 int MixerChannel::GetSampleRate() const
