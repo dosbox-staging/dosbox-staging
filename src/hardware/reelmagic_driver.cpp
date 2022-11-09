@@ -106,7 +106,7 @@ static Bitu   _userCallbackType            = 0; //or rather calling convention
 
 
 namespace {struct RMException : ::std::exception { //XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this is a good idea...
-  std::string _msg;
+  std::string _msg = {};
   RMException(const char *fmt = "General ReelMagic Exception", ...) {
     va_list vl;
     va_start(vl, fmt); _msg.resize(vsnprintf(&_msg[0], 0, fmt, vl) + 1);   va_end(vl);

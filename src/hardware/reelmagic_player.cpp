@@ -51,7 +51,7 @@ static int _magicalFcodeOverride = 0; // 0 = no override
 //
 namespace {
   struct RMException : ::std::exception { //XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this is a good idea...
-    std::string _msg;
+    std::string _msg = {};
     RMException(const char *fmt = "General ReelMagic Exception", ...) {
       va_list vl;
       va_start(vl, fmt); _msg.resize(vsnprintf(&_msg[0], 0, fmt, vl) + 1);   va_end(vl);
@@ -65,12 +65,12 @@ namespace {
   #define ARRAY_COUNT(T) (sizeof(T) / sizeof(T[0]))
   class AudioSampleFIFO {
     struct Frame {
-      bool    produced;
-      Bitu    samplesConsumed;
+      bool    produced = false;
+      Bitu    samplesConsumed = 0;
       struct {
-        int16_t left;
-        int16_t right;
-      } samples[PLM_AUDIO_SAMPLES_PER_FRAME];
+        int16_t left = 0;
+        int16_t right = 0;
+      } samples[PLM_AUDIO_SAMPLES_PER_FRAME] = {};
       inline Frame() : produced(false) {}
     };
     Frame _fifo[100]; //up to 100 is roughly 512k of RAM
@@ -171,27 +171,27 @@ static void DeactivatePlayerAudioFifo(AudioSampleFIFO& fifo);
 //
 namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer, public ReelMagic_VideoMixerMPEGProvider {
   // creation parameters...
-  ReelMagic_MediaPlayerFile * const   _file;
-  ReelMagic_PlayerConfiguration       _config;
-  ReelMagic_PlayerAttributes          _attrs;
+  ReelMagic_MediaPlayerFile * const  _file = {};
+  ReelMagic_PlayerConfiguration      _config = {};
+  ReelMagic_PlayerAttributes         _attrs = {};
 
   // running / adjustable variables...
-  bool                                _stopOnComplete;
-  bool                                _playing;
+  bool                               _stopOnComplete = {};
+  bool                               _playing = {};
 
   // output state...
-  float                               _vgaFps;
-  float                              _vgaFramesPerMpegFrame;
-  float                              _waitVgaFramesUntilNextMpegFrame;
-  bool                                _drawNextFrame;
+  float                              _vgaFps = {};
+  float                              _vgaFramesPerMpegFrame = {};
+  float                              _waitVgaFramesUntilNextMpegFrame = {};
+  bool                               _drawNextFrame = {};
 
   //stuff about the MPEG decoder...
-  plm_t                              *_plm;
-  plm_frame_t                        *_nextFrame;
-  float                              _framerate;
-  uint8_t                               _magicalRSizeOverride;
+  plm_t                              *_plm = {};
+  plm_frame_t                        *_nextFrame = {};
+  float                              _framerate = {};
+  uint8_t                            _magicalRSizeOverride = {};
 
-  AudioSampleFIFO                     _audioFifo;
+  AudioSampleFIFO                    _audioFifo = {};
 
   static void plmBufferLoadCallback(plm_buffer_t *self, void *user) {
     //note: based on plm_buffer_load_file_callback()
