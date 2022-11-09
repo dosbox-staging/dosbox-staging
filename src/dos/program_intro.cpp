@@ -32,7 +32,8 @@ void INTRO::WriteOutProgramIntroSpecial()
 	         PRIMARY_MOD_PAD,
 	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for swap disk image
 	         PRIMARY_MOD_PAD,
-	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for screenshot
+	         MMOD2_NAME, // Alt,      to screenshot the rendered output
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, to screenshot the image source
 	         PRIMARY_MOD_PAD,
 	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for sound recording
 	         PRIMARY_MOD_PAD,
@@ -212,7 +213,8 @@ void INTRO::AddMessages() {
 	        "[color=yellow]%s+Pause[reset]  Pause/Unpause emulator.\n"
 	        "[color=yellow]%s+F1[reset]   %s Start the [color=light-yellow]keymapper[reset].\n"
 	        "[color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.\n"
-	        "[color=yellow]%s+F5[reset]   %s Save a screenshot.\n"
+	        "[color=yellow]%s+F5[reset]     Screenshot the video's rendered output.\n"
+	        "[color=yellow]%s+F5[reset]   %s Screenshot the video's source image.\n"
 	        "[color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.\n"
 	        "[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.\n"
 	        "[color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.\n"
