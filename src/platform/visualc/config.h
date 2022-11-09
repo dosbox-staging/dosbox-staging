@@ -16,7 +16,10 @@
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
 
-/* Define to 1 to enable screenshots, requires libpng */
+/* Define to 1 to enable rendered screenshots, requires SDL_image */
+#define C_SDL_IMAGE 1
+
+/* Define to 1 to enable surface screenshots, requires libpng */
 #define C_SSHOT 1
 
 /* Define to 1 to use opengl display output support */

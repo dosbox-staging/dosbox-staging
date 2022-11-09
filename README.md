@@ -126,6 +126,7 @@ DOSBox Staging has the following library dependencies:
 | [libpng](http://www.libpng.org/pub/png/libpng.html) (libpng)     | n/a         | PNG-encoding of screen captures                | Optional  | yes        | yes   | very common       |
 | [Opus File](https://opus-codec.org/) (opusfile)                  | n/a         | CDDA playback for Opus-encoded track files     | Mandatory | yes        | yes   | common            |
 | [SDL 2.0](https://github.com/libsdl-org/SDL) (sdl2)              | 2.0.5       | OS-agnostic API for video, audio, and eventing | Mandatory | yes        | yes   | common            |
+| [SDL_image 2.0](https://github.com/libsdl-org/SDL_image) (sdl2-image)  | 2.0.x | Screenshot of rendered output to file          | Optional  | yes        | yes   | common            |
 | [SDL_net 2.0](https://github.com/libsdl-org/SDL_net) (sdl2-net)  | 2.0.0       | Network API for emulated serial and IPX        | Optional  | yes        | yes   | common            |
 | [slirp](https://gitlab.freedesktop.org/slirp) (libslirp)         | 4.6.1       | Unprivileged virtual TCP/IP stack for Ethernet | Optional  | yes        | yes   | less-common       |
 | [SpeexDSP](https://github.com/xiph/speexdsp) (speexdsp)          | n/a         | Audio resampling                               | Mandatory | yes        | yes   | common            |
@@ -139,14 +140,14 @@ Install build dependencies appropriate for your OS:
 ``` shell
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
-                 SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel \
-                 mt32emu-devel libslirp-devel speexdsp-devel
+                 SDL2-devel SDL2_image-devel SDL2_net-devel opusfile-devel \
+                 fluidsynth-devel mt32emu-devel libslirp-devel speexdsp-devel
 ```
 
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
-                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
+                 libsdl2-dev libsdl2-image-dev libsdl2-net-dev libopusfile-dev \
                  libfluidsynth-dev libslirp-dev libspeexdsp-dev
 
 # Install Meson on Debian-10 "Buster" or Ubuntu-20.04 and older
@@ -159,21 +160,21 @@ sudo apt install meson
 
 ``` shell
 # Arch, Manjaro
-sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile \
-               fluidsynth libslirp speexdsp
+sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_image sdl2_net \
+               opusfile fluidsynth libslirp speexdsp
 ```
 
 ``` shell
 # openSUSE
 sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel \
-                    libSDL2-devel libSDL2_net-devel opusfile-devel \
-                    fluidsynth-devel libmt32emu-devel libslirp-devel \
+                    libSDL2-devel libSDL2_image-devel libSDL2_net-devel \
+                    opusfile-devel fluidsynth-devel libmt32emu-devel libslirp-devel \
                     speexdsp
 ```
 
 ``` shell
 # Void Linux
-sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
+sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
                      fluidsynth-devel libiir1-devel libmt32emu-devel \
                      libpng-devel libslirp-devel opusfile-devel \
                      speexdsp-devel libatomic-devel
@@ -182,7 +183,7 @@ sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
 ``` shell
 # macOS
 xcode-select --install
-brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp speexdsp
+brew install ccache meson libpng sdl2 sdl2_image sdl2_net opusfile fluid-synth libslirp speexdsp
 ```
 
 ### Build and stay up-to-date with the latest sources

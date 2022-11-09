@@ -115,6 +115,7 @@ jobs:
             #  - use a minimal build because python fetching wraps segfaults under Docker
             meson setup \
                   -Duse_fluidsynth=false \
+                  -Duse_sdl2_image=false \
                   -Duse_sdl2_net=false \
                   -Duse_opengl=false \
                   -Duse_mt32emu=false \
