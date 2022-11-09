@@ -42,14 +42,16 @@ bool ReelMagic_RENDER_StartUpdate(void);
 typedef void (*ReelMagic_ScalerLineHandler_t)(const void *src);
 extern ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine;
 
+bool ReelMagic_IsVideoMixerEnabled();
 void ReelMagic_ResetVideoMixer();
 void ReelMagic_SetVideoMixerEnabled(const bool enabled);
 ReelMagic_VideoMixerMPEGProvider *ReelMagic_GetVideoMixerMPEGProvider();
 void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider * const provider);
 void ReelMagic_InitVideoMixer(Section* /*sec*/);
 
-
-
+// audio mixer related
+constexpr auto reelmagic_channel_name = "REELMAGIC";
+void ReelMagic_EnableAudioChannel(const bool should_enable);
 
 //
 // player stuff

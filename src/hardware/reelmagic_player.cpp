@@ -695,17 +695,25 @@ static void RMMixerChannelCallback(uint16_t samplesNeeded) {
   }
 }
 
-void ReelMagic_InitPlayer(Section* sec) {
-  Section_prop * section=static_cast<Section_prop *>(sec);
+void ReelMagic_EnableAudioChannel(const bool should_enable)
+{
+  if (should_enable == false) {
+    MIXER_RemoveChannel(_rmaudio);
+    assert(!_rmaudio);
+    return;
+  }
 
-  _rmaudio = MIXER_AddChannel(&RMMixerChannelCallback, 44100, "REELMAGC",
-	                                 {//ChannelFeature::Sleep,
-	                                  ChannelFeature::Stereo,
-	                                  //ChannelFeature::ReverbSend,
-	                                  //ChannelFeature::ChorusSend,
-	                                  ChannelFeature::DigitalAudio});
-	assert(_rmaudio);
-  _rmaudio->Enable(true); 
+  _rmaudio = MIXER_AddChannel(&RMMixerChannelCallback,
+	                      use_mixer_rate,
+	                      reelmagic_channel_name,
+	                      {// ChannelFeature::Sleep,
+	                       ChannelFeature::Stereo,
+	                       // ChannelFeature::ReverbSend,
+	                       // ChannelFeature::ChorusSend,
+	                       ChannelFeature::DigitalAudio});
+  assert(_rmaudio);
+  _rmaudio->Enable(true);
+}
 
   _audioLevel = (double)section->Get_int("audiolevel");
   _audioLevel /= 100.0;
