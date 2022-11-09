@@ -1608,8 +1608,8 @@ int plm_buffer_read(plm_buffer_t *self, int count) {
 		int remaining = 8 - (self->bit_index & 7); // Remaining bits in byte
 		int read = remaining < count ? remaining : count; // Bits in self run
 		int shift = remaining - read;
-		int mask = (0xff >> (8 - read));
-
+		const int mask_shift = read < 8 ? (8 - read) : 0;
+		const int mask = 0xff >> mask_shift;
 		value = (value << read) | ((current_byte & (mask << shift)) >> shift);
 
 		self->bit_index += read;
@@ -3179,7 +3179,8 @@ int plm_video_decode_motion_vector(plm_video_t *self, int r_size, int motion) {
 	if (motion > (fscale << 4) - 1) {
 		motion -= fscale << 5;
 	}
-	else if (motion < ((-fscale) << 4)) {
+	// avoid left-shifting negative values
+	else if (motion < ((-fscale) * (1 << 4))) {
 		motion += fscale << 5;
 	}
 
@@ -3367,7 +3368,7 @@ void plm_video_decode_block(plm_video_t *self, int block) {
 		n++;
 
 		// Dequantize, oddify, clip
-		level <<= 1;
+		level *= (1 << 1); // avoid left-shifting negative values
 		if (!self->macroblock_intra) {
 			level += (level < 0 ? -1 : 1);
 		}
