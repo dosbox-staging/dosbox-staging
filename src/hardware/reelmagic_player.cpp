@@ -199,10 +199,10 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
       if (self->discard_read_bytes) {
         plm_buffer_discard_read_bytes(self);
       }
-      size_t bytes_available = self->capacity - self->length;
+      auto bytes_available = self->capacity - self->length;
       if (bytes_available > 4096) bytes_available = 4096;
       const uint32_t bytes_read = ((ReelMagic_MediaPlayerImplementation*)user)->
-        _file->Read(self->bytes + self->length, bytes_available);
+        _file->Read(self->bytes + self->length, static_cast<uint16_t>(bytes_available));
       self->length += bytes_read;
 
       if (bytes_read == 0) {
@@ -319,7 +319,9 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
         LOG(LOG_REELMAGIC, LOG_NORMAL)("Detected a magical picture_rate code of 0x%X.", (unsigned)_plm->video_decoder->seqh_picture_rate);
         const unsigned magical_f_code = _magicalFcodeOverride ? _magicalFcodeOverride: FindMagicalFCode();
         if (magical_f_code) {
-          _magicalRSizeOverride = magical_f_code - 1;
+          const auto reduced_f_code = magical_f_code - 1;
+          assert(reduced_f_code <= UINT8_MAX);
+          _magicalRSizeOverride = static_cast<uint8_t>(reduced_f_code);
           plm_video_set_decode_picture_header_callback(_plm->video_decoder, &plmDecodeMagicalPictureHeaderCallback, this);
           LOG(LOG_REELMAGIC, LOG_NORMAL)("Applying static %u:%u f_code override", magical_f_code, magical_f_code);
         }
@@ -596,7 +598,7 @@ ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFil
     throw RMException("Out of handles!");
   }
 
-  Bitu additionalHandleIndex = handleIndex;
+  auto additionalHandleIndex = handleIndex;
   while (--handlesNeeded) {
     while (_rmhandles[++additionalHandleIndex] != NULL);
     _rmhandles[handleIndex]->DeclareAuxHandle(additionalHandleIndex+1);
