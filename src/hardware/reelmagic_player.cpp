@@ -353,6 +353,9 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
   }
 
 public:
+  ReelMagic_MediaPlayerImplementation(const ReelMagic_MediaPlayerImplementation&) = delete;
+  ReelMagic_MediaPlayerImplementation& operator=(const ReelMagic_MediaPlayerImplementation&) = delete;
+
   ReelMagic_MediaPlayerImplementation(ReelMagic_MediaPlayerFile * const file, const ReelMagic_MediaPlayer_Handle handle) :
     _file(file),
     _stopOnComplete(false),
