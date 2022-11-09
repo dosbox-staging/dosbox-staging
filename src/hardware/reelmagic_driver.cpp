@@ -697,7 +697,7 @@ static Bitu FMPDRV_INTHandler()
 		 (unsigned)param2,
 		 (unsigned)driver_call_rv);
   }
-  catch (std::exception& ex) {
+  catch ([[maybe_unused]] std::exception& ex) {
     LOG(LOG_REELMAGIC, LOG_WARN)("Zeroing out INT return registers due to exception in driver_call(%02Xh,%02Xh,%Xh,%Xh,%Xh)", (unsigned)command, (unsigned)media_handle, (unsigned)subfunc, (unsigned)param1, (unsigned)param2);
     reg_ax = 0; reg_bx = 0; reg_cx = 0; reg_dx = 0;
   }
