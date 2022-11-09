@@ -825,7 +825,7 @@ static bool RMDEV_SYS_int2fHandler() {
       reg_ax = (REELMAGIC_DRIVER_VERSION_MAJOR << 8) | REELMAGIC_DRIVER_VERSION_MINOR;
       return true;
     case 0x0002: //query port i/o base address -- stock "FMPDRV.EXE" only
-      reg_ax = REELMAGIC_BASE_IO_PORT;
+      assert(reg_ax == REELMAGIC_BASE_IO_PORT); // reg_ax already is assigned 0x9800
       LOG(LOG_REELMAGIC, LOG_WARN)("RMDEV.SYS Telling whoever an invalid base port I/O address of %04Xh... This is unlikely to end well...", (unsigned)reg_ax);
       return true;
     case 0x0003: //UNKNOWN!!! REAL DEAL COMES BACK WITH 5...
