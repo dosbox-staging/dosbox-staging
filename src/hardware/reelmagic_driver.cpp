@@ -96,7 +96,7 @@ struct UserCallbackPreservedState {
   struct CPU_Regs regs;
   UserCallbackPreservedState() : segs(Segs), regs(cpu_regs) {}
 };
-};
+}
 static std::stack<UserCallbackCall>           _userCallbackStack;
 static std::stack<UserCallbackPreservedState> _preservedUserCallbackStates;
 static RealPt _userCallbackReturnIp        = 0; //place to point the return address to after the user callback returns back to us
@@ -115,7 +115,7 @@ namespace {struct RMException : ::std::exception { //XXX currently duplicating t
   }
   virtual ~RMException() throw() {}
   virtual const char* what() const throw() {return _msg.c_str();}
-};};
+};}
 
 
 //
@@ -139,10 +139,10 @@ namespace {
     static std::string strcpyFromDos(const uint16_t seg, const uint16_t ptr, const bool firstByteIsLen) {
       PhysPt dosptr = PhysMake(seg, ptr);
       std::string rv; rv.resize(firstByteIsLen ? ((size_t)mem_readb(dosptr++)) : 256);
-      for (char *ptr = &rv[0]; ptr <= &rv[rv.size()-1]; ++ptr) {
-        (*ptr) = mem_readb(dosptr++);
-        if ((*ptr) == '\0') {
-          rv.resize(ptr - &rv[0]);
+      for (char *rv_ptr = &rv[0]; rv_ptr <= &rv[rv.size()-1]; ++rv_ptr) {
+        (*rv_ptr) = mem_readb(dosptr++);
+        if ((*rv_ptr) == '\0') {
+          rv.resize(rv_ptr - &rv[0]);
           break;
         }
       }
@@ -218,7 +218,7 @@ namespace {
     }
     virtual ~ReelMagic_MediaPlayerHostFile() { fclose(_fp); }
   };
-};
+}
 
 
 
@@ -284,7 +284,7 @@ static bool FMPDRV_InstallINTHandler()
 	         &FMPDRV_INTHandler,
 	         CB_IRET,
 	         "ReelMagic"); // must happen BEFORE we copy to ROM region!
-  for (Bitu i = 0; i < sizeof(isr_impl); ++i) // XXX is there an existing function for this?
+  for (PhysPt i = 0; i < static_cast<PhysPt>(sizeof(isr_impl)); ++i) // XXX is there an existing function for this?
     phys_writeb(CALLBACK_PhysPointer(_dosboxCallbackNumber) + i, isr_impl[i]);
 
   _userCallbackReturnDetectIp = CALLBACK_RealPointer(_dosboxCallbackNumber) + sizeof(isr_impl);
@@ -378,7 +378,7 @@ static void EnqueueTopUserCallbackOnCPUResume() {
 static void InvokePlayerStateChangeCallbackOnCPUResumeIfRegistered(const bool isPausing, ReelMagic_MediaPlayer& player) {
   if (_userCallbackFarPtr == 0) return; //no callback registered...
 
-  const unsigned cbstackStartSize = _userCallbackStack.size();
+  const auto cbstackStartSize = _userCallbackStack.size();
   const ReelMagic_PlayerAttributes& attrs = player.GetAttrs();
 
   if ((_userCallbackType == 0x2000) && (!isPausing)) {
@@ -511,7 +511,7 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
     player = &ReelMagic_HandleToMediaPlayer(media_handle); // will throw on bad handle
     switch (subfunc) {
     case 0x201: //not sure exactly what this means, but Crime Patrol is always setting this value
-      player->SeekToByteOffset((param2 << 16) | param1);
+      player->SeekToByteOffset(static_cast<uint32_t>((param2 << 16) | param1));
       LOG(LOG_REELMAGIC, LOG_NORMAL)("Seeking player handle #%u to file offset %04X%04Xh", (unsigned)media_handle, (unsigned)param2, (unsigned)param1);
       return 0;
     default:
@@ -543,17 +543,18 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
     switch (subfunc) {
     case 0x0208: //user data
       rv = cfg->UserData;
-      cfg->UserData = (param2 << 16) | param1;
+      cfg->UserData = static_cast<uint32_t>((param2 << 16) | param1);
       LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u User Data to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, (unsigned)cfg->UserData);
       break;
     case 0x0210: //magical decode key
       rv = cfg->MagicDecodeKey;
-      cfg->MagicDecodeKey = (param2 << 16) | param1;
+      cfg->MagicDecodeKey = static_cast<uint32_t>((param2 << 16) | param1);
       LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u Magical Decode Key to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, (unsigned)cfg->MagicDecodeKey);
       break;
     case 0x040D: //VGA alpha palette index
       rv = cfg->VgaAlphaIndex;
-      cfg->VgaAlphaIndex = param1;
+      assert(param1 <= UINT8_MAX);
+      cfg->VgaAlphaIndex = static_cast<uint8_t>(param1);
       LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u VGA Alpha Palette Index to %02Xh", (media_handle ? "Player" : "Global"), (unsigned)media_handle, (unsigned)cfg->VgaAlphaIndex);
       break;
     case 0x040E:
@@ -598,13 +599,13 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
       case 0x204: //get play state
         return GetPlayStateValue(*player);
       case 0x206: //get bytes decoded
-        return player->GetBytesDecoded();
+        return static_cast<uint32_t>(player->GetBytesDecoded());
       case 0x208: //user data
         //return cfg->UserData;
         return 0; //XXX WARNING: Not yet returning this as I fear the consequences will be dire unless DMA streaming is properly implemented!
       case 0x403:
         //XXX WARNING: FMPTEST.EXE thinks the display width is 720 instead of 640!
-        return (player->GetAttrs().PictureSize.Height << 16) | player->GetAttrs().PictureSize.Width;
+        return static_cast<uint32_t>((player->GetAttrs().PictureSize.Height << 16) | player->GetAttrs().PictureSize.Width);
       }
     }
     switch (subfunc) {
