@@ -39,7 +39,7 @@
 
 //global config
 static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;
-static double _audioLevel = 1.5;
+static float _audioLevel = 1.5f;
 static Bitu _audioFifoSize = 30;
 static Bitu _audioFifoDispose = 2;
 constexpr auto default_magic_key = 0x40044041;
@@ -181,14 +181,14 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
 
   // output state...
   float                               _vgaFps;
-  double                              _vgaFramesPerMpegFrame;
-  double                              _waitVgaFramesUntilNextMpegFrame;
+  float                              _vgaFramesPerMpegFrame;
+  float                              _waitVgaFramesUntilNextMpegFrame;
   bool                                _drawNextFrame;
 
   //stuff about the MPEG decoder...
   plm_t                              *_plm;
   plm_frame_t                        *_nextFrame;
-  double                              _framerate;
+  float                              _framerate;
   uint8_t                               _magicalRSizeOverride;
 
   AudioSampleFIFO                     _audioFifo;
@@ -333,7 +333,7 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
         _plm->video_decoder->framerate = 30.000;
       }
     }
-    _framerate = plm_get_framerate(_plm);
+    _framerate = static_cast<float>(plm_get_framerate(_plm));
   }
 
   void SetupVESOnlyDecode() {
@@ -469,7 +469,7 @@ public:
       return;
     }
 
-    for (_waitVgaFramesUntilNextMpegFrame -= 1.00; _waitVgaFramesUntilNextMpegFrame < 0.00; _waitVgaFramesUntilNextMpegFrame += _vgaFramesPerMpegFrame) {
+    for (_waitVgaFramesUntilNextMpegFrame -= 1.f; _waitVgaFramesUntilNextMpegFrame < 0.f; _waitVgaFramesUntilNextMpegFrame += _vgaFramesPerMpegFrame) {
       advanceNextFrame();
       _drawNextFrame = true;
     }
