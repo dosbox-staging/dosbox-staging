@@ -79,6 +79,7 @@ static inline PhysPt CALLBACK_GetBase(void) {
 }
 
 Bitu CALLBACK_Allocate();
+void CALLBACK_DeAllocate(const Bitu in);
 
 void CALLBACK_Idle(void);
 
@@ -90,7 +91,6 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char*
 Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr);
 
 const char* CALLBACK_GetDescription(Bitu callback);
-bool CALLBACK_Free(Bitu callback);
 
 void CALLBACK_SCF(bool val);
 void CALLBACK_SZF(bool val);
