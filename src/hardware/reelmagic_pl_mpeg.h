@@ -1944,7 +1944,7 @@ plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int 
 
 	double duration = plm_demux_get_duration(self, type);
 	long file_size = plm_buffer_get_size(self->buffer);
-	long byterate = file_size / duration;
+	auto byterate = std::lround(static_cast<double>(file_size) / duration);
 
 	double cur_time = self->last_decoded_pts;
 	double scan_span = 1;
@@ -1966,7 +1966,7 @@ plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int 
 		long cur_pos = plm_buffer_tell(self->buffer);
 
 		// Estimate byte offset and jump to it.
-		long offset = (seek_time - cur_time - scan_span) * byterate;
+		long offset = std::lround((seek_time - cur_time - scan_span) * static_cast<double>(byterate));
 		long seek_pos = cur_pos + offset;
 		if (seek_pos < 0) {
 			seek_pos = 0;
@@ -1994,7 +1994,7 @@ plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int 
 			// iteration can be a bit more precise.
 			if (packet->pts > seek_time || packet->pts < seek_time - scan_span) {
 				found_packet_with_pts = TRUE;
-				byterate = (seek_pos - cur_pos) / (packet->pts - cur_time);
+				byterate = std::lround(static_cast<double>(seek_pos - cur_pos) / (packet->pts - cur_time));
 				cur_time = packet->pts;
 				break;
 			}
@@ -2056,7 +2056,7 @@ plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int 
 		// If we didn't find any packet with a PTS, it probably means we reached
 		// the end of the file. Estimate byterate and cur_time accordingly.
 		else if (!found_packet_with_pts) {
-			byterate = (seek_pos - cur_pos) / (duration - cur_time);
+			byterate = std::lround(static_cast<double>(seek_pos - cur_pos) / (duration - cur_time));
 			cur_time = duration;
 		}
 	}
@@ -2116,9 +2116,9 @@ void plm_demux_set_stop_on_program_end(plm_demux_t *self, int stop_on_program_en
 }
 
 double plm_demux_decode_time(plm_demux_t *self) {
-	int64_t clock = plm_buffer_read(self->buffer, 3) << 30;
+	int64_t clock = static_cast<int64_t>(plm_buffer_read(self->buffer, 3)) << 30;
 	plm_buffer_skip(self->buffer, 1);
-	clock |= plm_buffer_read(self->buffer, 15) << 15;
+	clock |= static_cast<int64_t>(plm_buffer_read(self->buffer, 15)) << 15;
 	plm_buffer_skip(self->buffer, 1);
 	clock |= plm_buffer_read(self->buffer, 15);
 	plm_buffer_skip(self->buffer, 1);
@@ -3868,7 +3868,7 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self) {
 
 	if (
 		self->next_frame_data_size == 0 ||
-		!plm_buffer_has(self->buffer, static_cast<size_t>(self->next_frame_data_size << 3))
+		!plm_buffer_has(self->buffer, static_cast<size_t>(self->next_frame_data_size) << 3)
 	) {
 		return NULL;
 	}
