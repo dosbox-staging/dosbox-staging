@@ -35,7 +35,7 @@
 
 //bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION
-#include "./reelmagic_pl_mpeg.h"
+#include "mpeg_decoder.h"
 
 //global config
 static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;

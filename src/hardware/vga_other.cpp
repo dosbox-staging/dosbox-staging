@@ -31,9 +31,9 @@
 #include "math_utils.h"
 #include "mem.h"
 #include "pic.h"
+#include "reelmagic/vga_passthrough.h"
 #include "render.h"
 #include "vga.h"
-#include "vga_reelmagic_override.h"
 
 // CHECK_NARROWING();
 
