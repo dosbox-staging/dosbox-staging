@@ -547,12 +547,12 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
     case 0x0208: //user data
       rv = cfg->UserData;
       cfg->UserData = static_cast<uint32_t>((param2 << 16) | param1);
-      LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u User Data to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, (unsigned)cfg->UserData);
+      LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u User Data to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, cfg->UserData);
       break;
     case 0x0210: //magical decode key
       rv = cfg->MagicDecodeKey;
       cfg->MagicDecodeKey = static_cast<uint32_t>((param2 << 16) | param1);
-      LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u Magical Decode Key to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, (unsigned)cfg->MagicDecodeKey);
+      LOG(LOG_REELMAGIC, LOG_NORMAL)("Setting %s #%u Magical Decode Key to %08X", (media_handle ? "Player" : "Global"), (unsigned)media_handle, cfg->MagicDecodeKey);
       break;
     case 0x040D: //VGA alpha palette index
       rv = cfg->VgaAlphaIndex;

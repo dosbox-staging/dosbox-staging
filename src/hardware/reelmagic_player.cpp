@@ -295,7 +295,7 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
           break;
 
         default:
-          LOG(LOG_REELMAGIC, LOG_WARN)("Unknown magic key 0x%08X. Defaulting to 0x40044041", (unsigned)_config.MagicDecodeKey);
+          LOG(LOG_REELMAGIC, LOG_WARN)("Unknown magic key 0x%08X. Defaulting to 0x40044041", _config.MagicDecodeKey);
           //fall-through
         case 0x40044041: //most ReelMagic games seem to use this "key"
           //tsn=3 and tsn=8 seem to contain truthful 
@@ -410,7 +410,7 @@ public:
       LOG(LOG_REELMAGIC, LOG_ERROR)("Created Media Player #%u MPEG Type Detect Failed %s", (unsigned)_attrs.Handles.Master, _file->GetFileName());
     }
     else {
-      LOG(LOG_REELMAGIC, LOG_NORMAL)("Created Media Player #%u %s %ux%u @ %0.2ffps %s", (unsigned)_attrs.Handles.Master, detetectedFileTypeVesOnly ? "MPEG-ES" : "MPEG-PS", (unsigned)_attrs.PictureSize.Width, (unsigned)_attrs.PictureSize.Height, _framerate, _file->GetFileName());
+      LOG(LOG_REELMAGIC, LOG_NORMAL)("Created Media Player #%u %s %ux%u @ %0.2ffps %s", (unsigned)_attrs.Handles.Master, detetectedFileTypeVesOnly ? "MPEG-ES" : "MPEG-PS", (unsigned)_attrs.PictureSize.Width, (unsigned)_attrs.PictureSize.Height, (double)_framerate, _file->GetFileName());
       if (_audioFifo.GetSampleRate())
         LOG(LOG_REELMAGIC, LOG_NORMAL)("Media Player #%u Audio Decoder Enabled @ %uHz", (unsigned)_attrs.Handles.Master, (unsigned)_audioFifo.GetSampleRate());
     }
@@ -549,7 +549,7 @@ public:
     if (ReelMagic_GetVideoMixerMPEGProvider() == this)
       ReelMagic_SetVideoMixerMPEGProvider(this);
   }
-};};
+};}
 
 
 
