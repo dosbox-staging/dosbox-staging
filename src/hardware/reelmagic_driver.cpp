@@ -295,7 +295,7 @@ static bool FMPDRV_InstallINTHandler()
   _userCallbackReturnIp = _userCallbackReturnDetectIp - 4;
   
   RealSetVec(_installedInterruptNumber, CALLBACK_RealPointer(_dosboxCallbackNumber));
-  LOG(LOG_REELMAGIC, LOG_NORMAL)("Successfully installed FMPDRV.EXE at INT %02hhXh", _installedInterruptNumber);
+  LOG(LOG_REELMAGIC, LOG_NORMAL)("Successfully installed FMPDRV.EXE at INT %xh", _installedInterruptNumber);
   ReelMagic_SetVideoMixerEnabled(true);
   return true; //success
 }
@@ -306,7 +306,7 @@ static void FMPDRV_UninstallINTHandler()
     return; // already uninstalled...
   if (!_unloadAllowed)
     return;
-  LOG(LOG_REELMAGIC, LOG_NORMAL)("Uninstalling FMPDRV.EXE from INT %02hhXh", _installedInterruptNumber);
+  LOG(LOG_REELMAGIC, LOG_NORMAL)("Uninstalling FMPDRV.EXE from INT %xh", _installedInterruptNumber);
   ReelMagic_SetVideoMixerEnabled(false);
   RealSetVec(_installedInterruptNumber, 0);
   _installedInterruptNumber = 0;
@@ -661,8 +661,8 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
     LOG(LOG_REELMAGIC, LOG_WARN)("FMPDRV.EXE Unsure 10h");
     return 0;
   }
-  E_Exit("Unknown command %02hhXh caught in ReelMagic driver", command);
-  // throw RMException("Unknown API command %02hhXh caught", command); (unreachable)
+  E_Exit("Unknown command %xh caught in ReelMagic driver", command);
+  // throw RMException("Unknown API command %xh caught", command); (unreachable)
 }
 
 static Bitu FMPDRV_INTHandler()
@@ -754,10 +754,10 @@ class FMPDRV final : public Program {
     MSG_Add("PROGRAM_FMPDRV_TITLE", "Full Motion Player Driver %hhu.%hhu\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOADED",
-	    "Successfully loaded driver at interrupt %02hhXh.\n");
+	    "Successfully loaded driver at interrupt %xh.\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED",
-	    "Failed loading: already loaded at interrupt %02hhXh.\n");
+	    "Failed loading: already loaded at interrupt %xh.\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT",
 	    "Failed loading: No free interrupts!\n");
