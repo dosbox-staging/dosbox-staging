@@ -42,10 +42,9 @@ static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;
 static double _audioLevel = 1.5;
 static Bitu _audioFifoSize = 30;
 static Bitu _audioFifoDispose = 2;
-static Bitu _initialMagicKey = 0x40044041;
-static int _magicalFcodeOverride = 0; //0 = no override
-
-
+constexpr auto default_magic_key = 0x40044041;
+static Bitu _initialMagicKey     = default_magic_key;
+static int _magicalFcodeOverride = 0; // 0 = no override
 
 //
 // Internal class utilities...
@@ -715,20 +714,71 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
   _rmaudio->Enable(true);
 }
 
-  _audioLevel = (double)section->Get_int("audiolevel");
-  _audioLevel /= 100.0;
-  _audioFifoSize = section->Get_int("audiofifosize");
-  _audioFifoDispose = section->Get_int("audiofifodispose");
+static void set_magic_key(const std::string_view key_choice)
+{
+  if (key_choice == "auto" || key_choice == "default") {
+    _initialMagicKey = default_magic_key;
+    return;
+  }
 
-  //read in the initial global magic key from configuration
   unsigned long scanval;
-  if (sscanf(section->Get_string("initialmagickey"), "%lX", &scanval) != 1) scanval = 0x40044041;
-  _initialMagicKey = scanval;
+  if (sscanf(key_choice.data(), "%lX", &scanval) == 1) {
+    _initialMagicKey = scanval;
+    LOG_MSG("REELMAGIC: Using custom key: %x", key_choice.data(), scanval);
+    return;
+  }
 
-  //XXX Remove this as it is ONLY for debugging MPEG assets!!!
-  _magicalFcodeOverride = section->Get_int("magicfhack");
-  if ((_magicalFcodeOverride < 0) || (_magicalFcodeOverride > 7))
-    E_Exit("Bad magicfhack value");
+  LOG_WARNING("REELMAGIC: Failed parsing key '%s', using built-in routines",
+	      key_choice.data());
+  _initialMagicKey = default_magic_key;
+}
+
+static void set_fps(const int fps_code_choice)
+{
+  // Default
+  constexpr auto default_fps_code = 0;
+
+  if (fps_code_choice == default_fps_code) {
+    _magicalFcodeOverride = default_fps_code;
+    return;
+  }
+
+  auto fps_from_code = [=]() {
+	  switch (fps_code_choice) {
+	  case 1: return "23.976";
+	  case 2: return "24";
+	  case 3: return "25";
+	  case 4: return "29.97";
+	  case 5: return "30";
+	  case 6: return "50";
+	  case 7: return "59.94";
+	  };
+	  return "unknown"; // should never hit this
+  };
+
+  // Override with a valid code
+  if (fps_code_choice >= 1 && fps_code_choice <= 7) {
+    LOG_MSG("REELMAGIC: Overriding the frame rate to %s FPS (code %d)",
+	    fps_from_code(),
+	    fps_code_choice);
+    _magicalFcodeOverride = fps_code_choice;
+    return;
+  }
+
+  LOG_WARNING("REELMAGIC: Frame rate code '%d' is not between 0 and 7, using built-in routines",
+	      fps_code_choice);
+  _magicalFcodeOverride = default_fps_code;
+}
+
+void ReelMagic_InitPlayer(Section* sec)
+{
+  assert(sec);
+  const auto section = static_cast<Section_prop*>(sec);
+  set_magic_key(section->Get_string("reelmagic_key"));
+
+  set_fps(section->Get_int("reelmagic_fcode"));
+
+  ReelMagic_EnableAudioChannel(true);
 
   ReelMagic_ResetPlayers();
 }

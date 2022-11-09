@@ -827,35 +827,6 @@ void DOSBOX_Init()
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
 
-	secprop=control->AddSection_prop("reelmagic",&ReelMagic_Init,false);//ReelMagic Emulator -- where is the right place to put this? probably after mixer...
-	Pbool = secprop->Add_bool("enabled",Property::Changeable::OnlyAtStart,true);
-	Pbool->Set_help("Enable the ReelMagic emulator.");
-	Pbool = secprop->Add_bool("alwaysresident",Property::Changeable::OnlyAtStart,false);
-	Pbool->Set_help("Force the FMPDRV.EXE to always be resident and not unloadable.");
-	Pbool = secprop->Add_bool("vgadup5hack",Property::Changeable::OnlyAtStart,false);
-	Pbool->Set_help("Enable the VGA DUP5 Hack. Duplicate's every VGA 5th line.");
-	Pint = secprop->Add_int("audiolevel", Property::Changeable::OnlyAtStart,150);
-	Pint->Set_help("Sets the MPEG audio sample level in percents. Defaults to 150%");
-	Pint = secprop->Add_int("audiofifosize", Property::Changeable::OnlyAtStart,30);
-	Pint->Set_help("Sets the MPEG audio frame FIFO size. Defaults to 30 MPEG audio frames.");
-	Pint = secprop->Add_int("audiofifodispose", Property::Changeable::OnlyAtStart,2);
-	Pint->Set_help("Sets the count of MPEG audio frames to dispose of when the MPEG is going faster than audio-side of things and the FIFO hits max. Defaults to 2.");
-	Pstring = secprop->Add_string("initialmagickey",Property::Changeable::OnlyAtStart,"40044041");
-	Pstring->Set_help("Provides and alternate value for the initial global \"magic key\" value in hex. Defaults to 40044041.");
-	Pint = secprop->Add_int("magicfhack",Property::Changeable::OnlyAtStart,0);
-	Pint->Set_help("MPEG debugging only! Consult the reelmagic_player.cpp source code and MPEG decoder notes (in docs/RealMagic)");
-	Pbool = secprop->Add_bool("a204debug",Property::Changeable::OnlyAtStart,true);
-	Pbool->Set_help(
-	    "Turns on/off FMPDRV.EXE function Ah subfunction 204h debug logging.\n"
-	    "Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code\n"
-	    "and driver API notes (in docs/RealMagic)");
-	Pbool = secprop->Add_bool("a206debug",Property::Changeable::OnlyAtStart,true);
-	Pbool->Set_help(
-	    "Turns on/off FMPDRV.EXE function Ah subfunction 206h debug logging.\n"
-	    "Only works in heavy debugging mode. Consult the reelmagic_driver.cpp source code\n"
-	    "and driver API notes (in docs/RealMagic)");
-
-
 	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
 
 	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
@@ -1040,6 +1011,30 @@ void DOSBOX_Init()
 	                  "  off:       Don't filter the output.\n"
 	                  "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
+	// ReelMagic Emulator
+	secprop = control->AddSection_prop("reelmagic", &ReelMagic_Init, true);
+	pstring = secprop->Add_string("reelmagic", when_idle, "off");
+	pstring->Set_help(
+	        "ReelMagic (aka REALmagic) MPEG playback support.\n"
+	        "  off:      Disable support (default).\n"
+	        "  cardonly: Initialize the card without loading the FMPDRV.EXE driver.\n"
+	        "  on:       Initialize the card and load the FMPDRV.EXE on start-up.");
+
+	pstring = secprop->Add_string("reelmagic_key", when_idle, "auto");
+	pstring->Set_help(
+	        "Set the 32-bit magic key used to decode the game's videos.\n"
+	        "  auto:     Use the built-in routines to determine the key (default).\n"
+	        "  default:  Use the most commonly found key, which is 0x40044041.\n"
+	        "  thehorde: Use The Horde's key, which is 0xC39D7088.\n"
+	        "  <custom>: Set a custom key in hex format (e.g., 0x12345678).");
+
+	pint = secprop->Add_int("reelmagic_fcode", when_idle, 0);
+	pint->Set_help(
+	        "Override the frame rate code used during video playback.\n"
+	        "  0:        No override: attempt automatic rate discovery (default).\n"
+	        "  1 to 7:   Override the frame rate to one the following (use 1 through 7):\n"
+	        "            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
+
 	// Joystick emulation
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 
@@ -1077,11 +1072,12 @@ void DOSBOX_Init()
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
 
 	Pbool = secprop->Add_bool("circularinput", when_idle, false);
-	Pbool->Set_help("enable translation of circular input to square output.\n"
-	                "Try enabling this if your left analog stick can only move in a circle.");
+	Pbool->Set_help(
+	        "enable translation of circular input to square output.\n"
+	        "Try enabling this if your left analog stick can only move in a circle.");
 
 	Pint = secprop->Add_int("deadzone", when_idle, 10);
-	Pint->SetMinMax(0,100);
+	Pint->SetMinMax(0, 100);
 	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
 	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
@@ -1109,13 +1105,8 @@ void DOSBOX_Init()
 	        "Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.");
 
 	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
-	const char *serials[] = {"dummy",
-	                         "disabled",
-	                         "mouse",
-	                         "modem",
-	                         "nullmodem",
-	                         "direct",
-	                         0};
+	const char* serials[] = {
+	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", 0};
 
 	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
 	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
@@ -1162,20 +1153,22 @@ void DOSBOX_Init()
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
 	pstring->Set_help("File used to map fake phone numbers to addresses.");
 
-	/* All the DOS Related stuff, which will eventually start up in the shell */
-	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
-	secprop->AddInitFunction(&XMS_Init,true);//done
+	/* All the DOS Related stuff, which will eventually
+	 * start up in the shell */
+	secprop = control->AddSection_prop("dos", &DOS_Init, false); // done
+	secprop->AddInitFunction(&XMS_Init, true);                   // done
 	Pbool = secprop->Add_bool("xms", when_idle, true);
 	Pbool->Set_help("Enable XMS support.");
 
-	secprop->AddInitFunction(&EMS_Init,true);//done
-	const char* ems_settings[] = { "true", "emsboard", "emm386", "false", 0};
+	secprop->AddInitFunction(&EMS_Init, true); // done
+	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", 0};
 	Pstring = secprop->Add_string("ems", when_idle, "true");
 	Pstring->Set_values(ems_settings);
-	Pstring->Set_help("Enable EMS support. The default (=true) provides the best\n"
-		"compatibility but certain applications may run better with\n"
-		"other choices, or require EMS support to be disabled (=false)\n"
-		"to work at all.");
+	Pstring->Set_help(
+	        "Enable EMS support. The default (=true) provides the best\n"
+	        "compatibility but certain applications may run better with\n"
+	        "other choices, or require EMS support to be disabled (=false)\n"
+	        "to work at all.");
 
 	Pbool = secprop->Add_bool("umb", when_idle, true);
 	Pbool->Set_help("Enable UMB support.");
@@ -1196,8 +1189,8 @@ void DOSBOX_Init()
 	                "while in the DOS command shell. FreeDOS and MS-DOS 7/8\n"
 	                "COMMAND.COM supports this behavior.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
-	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");
+	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, true);
+	Pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
 
 	// Mscdex
@@ -1205,8 +1198,8 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
-	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
-	Pbool = secprop->Add_bool("ipx", when_idle,  false);
+	secprop = control->AddSection_prop("ipx", &IPX_Init, true);
+	Pbool   = secprop->Add_bool("ipx", when_idle, false);
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 

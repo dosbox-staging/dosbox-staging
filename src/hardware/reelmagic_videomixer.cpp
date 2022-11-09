@@ -624,8 +624,7 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider * cons
   SetupVideoMixer(_mpegDictatesOutputSize);
 }
 
-void ReelMagic_InitVideoMixer(Section* sec) {
-  Section_prop * section=static_cast<Section_prop *>(sec);
-  //
-  _vgaDup5Enabled = section->Get_bool("vgadup5hack");
+void ReelMagic_InitVideoMixer([[maybe_unused]] Section* sec)
+{
+  // empty
 }
