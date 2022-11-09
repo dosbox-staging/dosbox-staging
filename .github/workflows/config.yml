@@ -40,6 +40,7 @@ jobs:
             os: ubuntu-20.04
         conf:
           - configure_flags:  -Duse_slirp=false
+          - configure_flags:  -Duse_sdl2_image=false
           - configure_flags:  -Duse_sdl2_net=false
           - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
           - configure_flags:  -Duse_fluidsynth=false

@@ -166,6 +166,7 @@ conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
+conf_data.set10('C_SDL_IMAGE', get_option('use_sdl2_image'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
@@ -422,6 +423,17 @@ if get_option('use_sdl2_net')
         version: '>= 2.0.0',
         static: ('sdl2_net' in static_libs_list),
         not_found_message: msg.format('use_sdl2_net'),
+    )
+endif
+
+# SDL Image
+sdl2_image_dep = optional_dep
+if get_option('use_sdl2_image')
+    sdl2_image_dep = dependency(
+        'SDL2_image',
+        version: '>= 2.0.0',
+        static: ('sdl2_image' in static_libs_list),
+        not_found_message: msg.format('use_sdl2_image'),
     )
 endif
 
@@ -713,6 +725,7 @@ third_party_deps = [
     atomic_dep,
     stdcppfs_dep,
     sdl2_dep,
+    sdl2_image_dep,
     threads_dep,
     ghc_dep,
     libiir_dep,

@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <stdio.h>
+#include <string>
 
 class Section;
 
@@ -45,7 +46,9 @@ bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
 extern uint8_t adlib_commandreg;
-FILE * OpenCaptureFile(const char * type,const char * ext);
+
+std::string GetScreenshotFilename(const char *type, const char *ext);
+FILE *OpenCaptureFile(const char *type, const char *ext);
 
 void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data);
 
