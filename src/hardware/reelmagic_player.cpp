@@ -88,8 +88,8 @@ namespace {
       }
     }
 
-    inline uint16_t ConvertSample(const double samp) {
-      return (uint16_t)(samp * 32767.0 * _audioLevel);
+    inline int16_t ConvertSample(const float samp) {
+      return static_cast<int16_t>(samp * 32767.0f * _audioLevel);
     }
 
     static Bitu ComputeFifoMax(const Bitu fifoMax) {
