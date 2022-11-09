@@ -434,7 +434,7 @@ static void SetupVideoMixer(const bool updateRenderMode) {
   if (!_videoMixerEnabled) {
     //video mixer is disabled... VGA mode dictates RENDER mode just like "normal dosbox"
     ReelMagic_RENDER_DrawLine = &RMR_DrawLine_Passthrough;
-    RENDER_SetSize(_vgaWidth, _vgaHeight, _vgaBitsPerPixel, static_cast<double>(_vgaFramesPerSecond), _vgaRatio, _vgaDoubleWidth, _vgaDoubleHeight);
+    RENDER_SetSize(_vgaWidth, _vgaHeight, _vgaBitsPerPixel, _vgaFramesPerSecond, _vgaRatio, _vgaDoubleWidth, _vgaDoubleHeight);
     LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer is Disabled. Passed through VGA RENDER_SetSize()");
     return;
   }
@@ -488,7 +488,7 @@ static void SetupVideoMixer(const bool updateRenderMode) {
       ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaBitsPerPixel, true);
     }
     _activeMpegProvider = mpeg;
-    LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer Mode VGA Only (vga=%ux%u mpeg=off render=%ux%u)", (unsigned)_vgaWidth, (unsigned)_vgaHeight, (unsigned)_renderWidth, (unsigned)_renderHeight);
+    LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer Mode VGA Only (vga=%ux%u mpeg=off render=%ux%u)", _vgaWidth, _vgaHeight, _renderWidth, _renderHeight);
     return;
   }
 
@@ -537,7 +537,7 @@ static void SetupVideoMixer(const bool updateRenderMode) {
   //log the mode we are now in
   if (ReelMagic_RENDER_DrawLine == &RMR_DrawLine_MixerError) modeStr = "Error";
   else _activeMpegProvider = mpeg;
-  LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer Mode %s (vga=%ux%u mpeg=%ux%u render=%ux%u)", modeStr, (unsigned)_vgaWidth, (unsigned)_vgaHeight, (unsigned)_mpegPictureWidth, (unsigned)_mpegPictureHeight, (unsigned)_renderWidth, (unsigned)_renderHeight);
+  LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer Mode %s (vga=%ux%u mpeg=%ux%u render=%ux%u)", modeStr, _vgaWidth, _vgaHeight, _mpegPictureWidth, _mpegPictureHeight, _renderWidth, _renderHeight);
 }
 
 //
