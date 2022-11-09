@@ -42,8 +42,8 @@ static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;
 static float _audioLevel = 1.5f;
 static Bitu _audioFifoSize = 30;
 static Bitu _audioFifoDispose = 2;
-constexpr auto default_magic_key = 0x40044041;
-static Bitu _initialMagicKey     = default_magic_key;
+constexpr  unsigned int default_magic_key = 0x40044041;
+static  unsigned int _initialMagicKey     = default_magic_key;
 static int _magicalFcodeOverride = 0; // 0 = no override
 
 //
@@ -721,10 +721,10 @@ static void set_magic_key(const std::string_view key_choice)
     return;
   }
 
-  unsigned long scanval;
-  if (sscanf(key_choice.data(), "%lX", &scanval) == 1) {
+  unsigned int scanval;
+  if (sscanf(key_choice.data(), "%x", &scanval) == 1) {
     _initialMagicKey = scanval;
-    LOG_MSG("REELMAGIC: Using custom key: %x", key_choice.data(), scanval);
+    LOG_MSG("REELMAGIC: Using custom key: %x", scanval);
     return;
   }
 
