@@ -279,3 +279,47 @@ Just hit `make` in that directory to build everything. Pre-built Windows
 exe files are also included in the DOSBox ReelMagic release.
 
 
+# Appendix: Standard Frame Rate Code (ISO/IEC 13818-2 : 2000 (E)
+
+Ref: "https://www.itu.int/rec/dologin_pub.asp?lang=s&id=T-REC-H.262-200002-S!!PDF-E&type=items", pp 39.
+
+frame_rate_code (f_code): This is a four-bit integer used to define
+frame_rate_value as shown in Table 6-4. frame_rate may be derived from
+frame_rate_value, frame_rate_extension_n and frame_rate_extension_d as follows:
+frame_rate = frame_rate_value * (frame_rate_extension_n + 1) ÷
+(frame_rate_extension_d + 1).
+
+When an entry for the frame rate exists directly in Table 6-4,
+frame_rate_extension_n and frame_rate_extension_d shall be zero.
+(frame_rate_extension_n + 1) and (frame_rate_extension_d + 1) shall not have a
+common divisor greater than one.
+
+Table 6-4 – frame_rate_value
+
+| f_code (bits) | frames per second (FPS)   |
+| --------------| ------------------------- |
+| 0b0000        | Forbidden                 |
+| 0b0001        | 24 000 ÷ 1001 (23.976...) |
+| 0b0010        | 24                        |
+| 0b0011        | 25                        |
+| 0b0100        | 30 000 ÷ 1001 (29.97...)  |
+| 0b0101        | 30                        |
+| 0b0110        | 50                        |
+| 0b0111        | 60 000 ÷ 1001 (59.94...)  |
+| 0b1000        | 60                        |
+| 0b1001        | Reserved                  |
+| ...           | ...                       |
+| 0b1111        | Reserved                  |
+
+
+If progressive_sequence is '1' the period between two successive frames at the
+output of the decoding process is the reciprocal of the frame_rate. See Figure
+7-18.
+
+If progressive_sequence is '0' the period between two successive fields at the
+output of the decoding process is half of the reciprocal of the frame_rate. See
+Figure 7-20.
+
+The frame_rate signalled in the enhancement layer of temporal scalability is the
+combined frame rate after the temporal re-multiplex operation if
+picture_mux_enable in the sequence_scalable_extension() is set to '1'.

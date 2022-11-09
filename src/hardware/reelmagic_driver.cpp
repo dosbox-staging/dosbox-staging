@@ -955,27 +955,62 @@ static bool RMDEV_SYS_int2fHandler() {
 // static void write_rm(Bitu port, Bitu val, Bitu /*iolen*/) {
 //   LOG(LOG_REELMAGIC, LOG_WARN)("Caught port I/O write @ addr %04X", (unsigned)port);
 // }
-void ReelMagic_Init(Section* sec) {
-  Section_prop * section=static_cast<Section_prop *>(sec);
-  if (!section->Get_bool("enabled")) return;
-  //Video Mixer Initialization...
-  // nothing to do ...
+static void reelmagic_destroy([[maybe_unused]] Section* sec)
+{
+  // unload the software driver
+  _unloadAllowed = true;
+  FMPDRV_UninstallINTHandler();
 
-  //Player Initialization...
+  // un-register the interrupt handlers
+  DOS_DelMultiplexHandler(&RMDEV_SYS_int2fHandler);
+
+  // stop mixing VGA and MPEG signals; use pass-through mode
+  ReelMagic_SetVideoMixerEnabled(false);
+
+  // un-register the audio channel
+  ReelMagic_EnableAudioChannel(false);
+
+  // un-register the callbacks. The presence of a non-zero callback number indicates the card is currently active
+  if (_dosboxCallbackNumber != 0) {
+    CALLBACK_DeAllocate(_dosboxCallbackNumber + 1);
+    CALLBACK_DeAllocate(_dosboxCallbackNumber);
+      _dosboxCallbackNumber = 0;
+    LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card");
+  }
+}
+
+void ReelMagic_Init(Section* sec)
+{
+  assert(sec);
+  const auto section = static_cast<Section_prop*>(sec);
+
+  // Does the user want ReelMagic emulation?
+  const auto reelmagic_choice = std::string_view(section->Get_string("reelmagic"));
+  const auto wants_reelmagic = (reelmagic_choice == "on" || reelmagic_choice == "cardonly");
+
+  if (!wants_reelmagic) {
+    if (reelmagic_choice != "off") {
+      LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
+		  reelmagic_choice.data());
+    }
+    return;
+  }
+
+  // Player Initialization...
   ReelMagic_InitPlayer(sec);
 
   //Video Mixer Initialization...
   ReelMagic_InitVideoMixer(sec);
   
   //Driver/Hardware Initialization...
-  _dosboxCallbackNumber = CALLBACK_Allocate(); //dosbox will exit with error if this fails so no need to check result...
-  if (CALLBACK_Allocate() != _dosboxCallbackNumber + 1) {
-    //this is so damn hacky! basically the code that the IVT points to for
-    //this driver needs more than 32-bytes of code to fit the check strings
-    //
-    //therefore, we are allocating two adjacent callbacks... seems kinda
-    //wasteful... need to explore a better way of doing this...
-    E_Exit("Failed to allocate adjacent \"burner\" callback");
+  if (_dosboxCallbackNumber == 0) {
+    _dosboxCallbackNumber = CALLBACK_Allocate();
+    [[maybe_unused]] const auto second_callback = CALLBACK_Allocate();
+    assert(second_callback == _dosboxCallbackNumber + 1);
+    // this is so damn hacky! basically the code that the IVT points to for
+    // this driver needs more than 32-bytes of code to fit the check strings
+    // therefore, we are allocating two adjacent callbacks... seems kinda
+    // wasteful... need to explore a better way of doing this...
   }
   DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
   LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" and \"Z:\\FMPDRV.EXE\" successfully installed");
@@ -983,12 +1018,17 @@ void ReelMagic_Init(Section* sec) {
   //_readHandler.Install(REELMAGIC_BASE_IO_PORT,   &read_rm, IO_MB,  0x3);
   //_writeHandler.Install(REELMAGIC_BASE_IO_PORT,  &write_rm, IO_MB, 0x3);
 
-  if (section->Get_bool("alwaysresident")) {
+  // User wants the hardware and the driver
+  if (reelmagic_choice == "on") {
     _unloadAllowed = false;
     FMPDRV_InstallINTHandler();
   }
-  #if C_HEAVY_DEBUG
-    _a204debug = section->Get_bool("a204debug");
-    _a206debug = section->Get_bool("a206debug");
-  #endif
+
+#if C_HEAVY_DEBUG
+  _a204debug = true;
+  _a206debug = true;
+#endif
+
+  LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card");
+  sec->AddDestroyFunction(&reelmagic_destroy, true);
 }
