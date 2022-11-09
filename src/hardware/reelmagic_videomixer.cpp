@@ -196,7 +196,7 @@ static inline void MixPixel(RenderOutputPixel& out, const VGAPixelT& vga) {
   out.alpha = 0;
 }
 
-static void ClearMpegPictureBuffer(const PlayerPicturePixel& p) {
+static void ClearMpegPictureBuffer(const PlayerPicturePixel p) {
   for (Bitu i = 0; i < (sizeof(_mpegPictureBuffer) / sizeof(_mpegPictureBuffer[0])); ++i)
     _mpegPictureBuffer[i] = p;
 }
