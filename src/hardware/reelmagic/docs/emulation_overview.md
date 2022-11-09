@@ -82,7 +82,7 @@ The parameters are:
 * `alwaysresident`  -- This forces `FMPDRV.EXE` to always be loaded.  By default this is `false`
 * `vgadup5hack`     -- Duplicate every 5th VGA line to help give output a 4:3 ratio. By default this is `false`
 * `initialmagickey` -- Provides and alternate value for the initial global "magic key" value in hex. Defaults to 40044041.
-* `magicfhack`      -- Use for MPEG video debugging purposes only. See `reelmagic_player.cpp` for what exactly this does to the MPEG decoder.
+* `magicfhack`      -- Use for MPEG video debugging purposes only. See `player.cpp` for what exactly this does to the MPEG decoder.
 * `a204debug`       -- Controls FMPDRV.EXE function Ah subfunction 204h debug logging. Only applicable in "heavy debugging" build.
 * `a206debug`       -- Controls FMPDRV.EXE function Ah subfunction 206h debug logging. Only applicable in "heavy debugging" build.
 
@@ -102,9 +102,8 @@ The following existing DOSBox source code files have been modified for ReelMagic
 * `include/logging.h`                     -- Added `REELMAGIC` logging type + quick fix for variable length logging args
 * `src/debug/debug_gui.cpp`               -- Added `REELMAGIC` logging type.
 * `src/dosbox.cpp`                        -- ReelMagic init hook-in and config section.
-* `src/hardware/Makefile.am`              -- Declared new ReelMagic *.cpp source code files
 
-The following files have been modified to include the ReelMagic override header to redirect all VGA output from DOSBox RENDER to ReelMagic:
+The following files have been modified to include the ReelMagic VGA passthrough header to redirect all VGA output from DOSBox RENDER to ReelMagic:
 
 * `src/hardware/vga_dac.cpp`              
 * `src/hardware/vga_draw.cpp`             
@@ -115,12 +114,12 @@ The following files have been modified to include the ReelMagic override header 
 
 The following new DOSBox source code files have been added for ReelMagic emulation functionality:
 
-* `include/reelmagic.h`                   -- Header file for all ReelMagic stuff
-* `include/vga_reelmagic_override.h`      -- Header file used to redirect all VGA output from DOSBox RENDER to ReelMagic
-* `src/hardware/reelmagic_driver.cpp`     -- Implements the Driver + Hardware Emulation
-* `src/hardware/reelmagic_pl_mpeg.cpp`    -- Modified version of PHOBOSLAB's `PL_MPEG` library found here: `https://github.com/phoboslab/pl_mpeg`
-* `src/hardware/reelmagic_player.cpp`     -- Implements MPEG Media Decoder/Player Functionality
-* `src/hardware/reelmagic_videomixer.cpp` -- Intercepts the VGA output and mixes in the decoded MPEG video.
+* `include/reelmagic.h`                      -- Header file for all ReelMagic stuff
+* `src/hardware/reelmagic/vga_passthrough.h` -- Header file used to redirect all VGA output from DOSBox RENDER to ReelMagic
+* `src/hardware/reelmagic/driver.cpp`        -- Implements the Driver + Hardware Emulation
+* `src/hardware/reelmagic/mpeg_decoder.cpp`  -- Modified version of PHOBOSLAB's `PL_MPEG` library found here: `https://github.com/phoboslab/pl_mpeg`
+* `src/hardware/reelmagic/player.cpp`        -- Implements MPEG Media Decoder/Player Functionality
+* `src/hardware/reelmagic/video_mixer.cpp`   -- Intercepts the VGA output and mixes in the decoded MPEG video.
 
 
 # ReelMagic Emulator Architecture
@@ -153,8 +152,9 @@ ReelMagic emulation software components are wired up as such:
                                                                                     |---------------|
 ```
 
+# Building DOSBox Staging
 
-
+See the README.md and BUILD.md notes.
 
 
 # Building DOSBox
@@ -171,6 +171,7 @@ sudo apt install build-essential autoconf automake-1.15 autotools-dev m4
 ./configure
 make
 ```
+
 
 ## Enabling DOSBox Debugger
 ```

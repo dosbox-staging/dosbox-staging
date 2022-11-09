@@ -18,7 +18,7 @@ list_markdown_files () {
 	git ls-files -- \
 	  '*.md' \
 	  ':!:src/libs/*.md' \
-	  ':!:docs/ReelMagic/*.md' \
+	  ':!:src/hardware/reelmagic/docs/*.md' \
 	  ':!:contrib/resources/*.md'
 }
 

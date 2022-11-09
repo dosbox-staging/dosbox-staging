@@ -21,15 +21,15 @@
 #include <cstring>
 #include <cmath>
 
+#include "../gui/render_scalers.h"
 #include "../ints/int10.h"
 #include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"
+#include "reelmagic/vga_passthrough.h"
 #include "render.h"
-#include "../gui/render_scalers.h"
 #include "vga.h"
 #include "video.h"
-#include "vga_reelmagic_override.h"
 
 //#undef C_DEBUG
 //#define C_DEBUG 1

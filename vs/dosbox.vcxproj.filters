@@ -229,13 +229,13 @@
     <ClCompile Include="..\src\hardware\pci_bus.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\reelmagic_driver.cpp">
+    <ClCompile Include="..\src\hardware\reelmagic\driver.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\reelmagic_player.cpp">
+    <ClCompile Include="..\src\hardware\reelmagic\player.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\reelmagic_videomixer.cpp">
+    <ClCompile Include="..\src\hardware\reelmagic\video_mixer.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\pcspeaker.cpp">

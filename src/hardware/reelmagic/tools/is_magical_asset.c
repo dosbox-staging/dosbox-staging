@@ -19,7 +19,7 @@
 #include <stdio.h>
 
 #define PL_MPEG_IMPLEMENTATION
-#include "./original_pl_mpeg.h"
+#include "../mpeg_decoder.h"
 
 
 int

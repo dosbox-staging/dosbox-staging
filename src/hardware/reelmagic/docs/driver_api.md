@@ -18,7 +18,7 @@ When loaded, this DOS device driver file responds to some INT 2F / DOS Multiplex
 purpose is to tell applications where they can find the driver as well as some other things about
 the hardware. It also handles the audio mixer interfaces.
 
-Note: The ReelMagic DOSBox code `reelmagic_driver.cpp` emulates this file's functionality and
+Note: The ReelMagic DOSBox code `driver.cpp` emulates this file's functionality and
 therefore is not required for using the DOSBox ReelMagic emulator. Like many emulated functionalities
 within DOSBox, there is no actual "RMDEV.SYS" file. Its functionality is permanently resident when
 ReelMagic support is enabled.
@@ -195,7 +195,7 @@ This file must always be named "FMPDRV.EXE" but can exist in any path. The path 
 provided by an INT 2F function AX=9803h call to RMDEV.SYS as documented above.
 
 
-Note: The ReelMagic DOSBox code `reelmagic_driver.cpp` emulates this file's functionality. Since an actual
+Note: The ReelMagic DOSBox code `driver.cpp` emulates this file's functionality. Since an actual
 "FMPDRV.EXE" file must exist somewhere for things to work smoothly, a functional "Z:\FMPDRV.EXE" file is
 provided when ReelMagic support is enabled.
 
