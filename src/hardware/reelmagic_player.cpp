@@ -213,10 +213,11 @@ namespace { class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPl
       self->has_ended = TRUE;
     }
   }
-  static void plmBufferSeekCallback(plm_buffer_t *self, void *user, size_t absPos) {
+  static void plmBufferSeekCallback([[maybe_unused]] plm_buffer_t *self, void *user, size_t absPos) {
+    assert(absPos <= UINT32_MAX);
     try {
       ((ReelMagic_MediaPlayerImplementation*)user)->
-        _file->Seek(absPos, DOS_SEEK_SET);
+        _file->Seek(static_cast<uint32_t>(absPos), DOS_SEEK_SET);
     }
     catch (...) {
       //XXX what to do on failure !?
