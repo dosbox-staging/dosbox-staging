@@ -855,10 +855,10 @@ static bool RMDEV_SYS_int2fHandler() {
       reg_ax = 100; //can't touch this
       return true;
     case 0x0012: //query MPEG left volume
-      reg_ax = GetMixerVolume("REELMAGC", false);
+      reg_ax = GetMixerVolume(reelmagic_channel_name, false);
       return true;
     case 0x0013: //query MPEG right volume
-      reg_ax = GetMixerVolume("REELMAGC", true);
+      reg_ax = GetMixerVolume(reelmagic_channel_name, true);
       return true;
     case 0x0014: //query SYNT left volume
       reg_ax = GetMixerVolume("OPL", false);
@@ -889,10 +889,10 @@ static bool RMDEV_SYS_int2fHandler() {
       LOG(LOG_REELMAGIC, LOG_ERROR)("RMDEV.SYS: Can't update MAIN Right Volume");
       return true;
     case 0x0012: //set MPEG left volume
-      SetMixerVolume("REELMAGC", reg_dx, false);
+      SetMixerVolume(reelmagic_channel_name, reg_dx, false);
       return true;
     case 0x0013: //set MPEG right volume
-      SetMixerVolume("REELMAGC", reg_dx, true);
+      SetMixerVolume(reelmagic_channel_name, reg_dx, true);
       return true;
     case 0x0014: //set SYNT left volume
       SetMixerVolume("OPL", reg_dx, false);

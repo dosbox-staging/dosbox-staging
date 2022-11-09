@@ -582,6 +582,10 @@ void ReelMagic_ResetVideoMixer() {
   ClearMpegPictureBuffer();
 }
 
+bool ReelMagic_IsVideoMixerEnabled() {
+  return _videoMixerEnabled;
+}
+
 void ReelMagic_SetVideoMixerEnabled(const bool enabled) {
   if (!enabled) ReelMagic_ResetVideoMixer(); //defensive
   if (enabled == _videoMixerEnabled) return;
