@@ -45,7 +45,7 @@ namespace {
     virtual ~RMException() throw() {}
     virtual const char* what() const throw() {return _msg.c_str();}
   };
-};
+}
 
 
 
@@ -143,10 +143,10 @@ static bool                     _vgaDup5Enabled           = false;
 VGA32bppPixel                   VGAPalettePixel::_vgaPalette32bpp[256] = {};
 VGA16bppPixel                   VGAPalettePixel::_vgaPalette16bpp[256] = {};
 uint8_t                         VGAOverPalettePixel::_alphaChannelIndex = 0;
-static Bitu                     _vgaWidth                 = 0;
-static Bitu                     _vgaHeight                = 0;
-static Bitu                     _vgaBitsPerPixel          = 0; // != 0 on this variable means we have collected the first call
-static float                    _vgaFramesPerSecond       = 0.0f;
+static uint32_t                 _vgaWidth                 = 0;
+static uint32_t                 _vgaHeight                = 0;
+static uint32_t                 _vgaBitsPerPixel          = 0; // != 0 on this variable means we have collected the first call
+static double                    _vgaFramesPerSecond      = 0.0;
 static double                   _vgaRatio                 = 0.0;
 static bool                     _vgaDoubleWidth           = false;
 static bool                     _vgaDoubleHeight          = false;
@@ -154,8 +154,8 @@ static bool                     _vgaDoubleHeight          = false;
 //state captured from current/active MPEG player
 static PlayerPicturePixel       _mpegPictureBuffer[SCALER_MAXWIDTH*SCALER_MAXHEIGHT];
 static PlayerPicturePixel      *_mpegPictureBufferPtr     = _mpegPictureBuffer;
-static Bitu                     _mpegPictureWidth         = 0;
-static Bitu                     _mpegPictureHeight        = 0;
+static uint32_t                 _mpegPictureWidth         = 0;
+static uint32_t                 _mpegPictureHeight        = 0;
 
 static const Bitu               VIDEOMIXER_BITSPERPIXEL = 32;  //video mixer is exclusively 32bpp on the RENDER... VGA color palette mapping is re-done here...
 
@@ -166,8 +166,8 @@ static ReelMagic_VideoMixerMPEGProvider                  *_requestedMpegProvider
 static ReelMagic_VideoMixerMPEGProvider                  *_activeMpegProvider = NULL;
 static RenderOutputPixel                                  _finalMixedRenderLineBuffer[SCALER_MAXWIDTH];
 static Bitu                                               _currentRenderLineNumber = 0;
-static Bitu                                               _renderWidth             = 0;
-static Bitu                                               _renderHeight            = 0;
+static uint32_t                                           _renderWidth             = 0;
+static uint32_t                                           _renderHeight            = 0;
 
 
 //
@@ -228,7 +228,7 @@ static void RMR_DrawLine_Passthrough(const void *src) {
   RENDER_DrawLine(src);
 }
 
-static void RMR_DrawLine_MixerError(const void *src) {
+static void RMR_DrawLine_MixerError([[maybe_unused]] const void *src) {
   if (++_currentRenderLineNumber >= _renderHeight) return;
   for (Bitu i = 0; i < (sizeof(_finalMixedRenderLineBuffer) / sizeof(_finalMixedRenderLineBuffer[0])); ++i) {
     RenderOutputPixel& p = _finalMixedRenderLineBuffer[i];
@@ -434,7 +434,7 @@ static void SetupVideoMixer(const bool updateRenderMode) {
   if (!_videoMixerEnabled) {
     //video mixer is disabled... VGA mode dictates RENDER mode just like "normal dosbox"
     ReelMagic_RENDER_DrawLine = &RMR_DrawLine_Passthrough;
-    RENDER_SetSize(_vgaWidth, _vgaHeight, _vgaBitsPerPixel, _vgaFramesPerSecond, _vgaRatio, _vgaDoubleWidth, _vgaDoubleHeight);
+    RENDER_SetSize(_vgaWidth, _vgaHeight, _vgaBitsPerPixel, static_cast<double>(_vgaFramesPerSecond), _vgaRatio, _vgaDoubleWidth, _vgaDoubleHeight);
     LOG(LOG_REELMAGIC, LOG_NORMAL)("Video Mixer is Disabled. Passed through VGA RENDER_SetSize()");
     return;
   }
@@ -555,7 +555,7 @@ void ReelMagic_RENDER_SetPal(uint8_t entry,uint8_t red,uint8_t green,uint8_t blu
   RENDER_SetPal(entry, red, green, blue);
 }
 
-void ReelMagic_RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
+void ReelMagic_RENDER_SetSize(uint32_t width,uint32_t height,uint32_t bpp,double fps,double ratio,bool dblw,bool dblh) {
   _vgaWidth             = width;
   _vgaHeight            = height;
   _vgaBitsPerPixel      = bpp;
@@ -570,7 +570,7 @@ void ReelMagic_RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double r
 bool ReelMagic_RENDER_StartUpdate(void) {
   if (_activeMpegProvider) {
     VGAOverPalettePixel::_alphaChannelIndex = _activeMpegProvider->GetConfig().VgaAlphaIndex;
-    _activeMpegProvider->OnVerticalRefresh(_mpegPictureBuffer, _vgaFramesPerSecond);
+    _activeMpegProvider->OnVerticalRefresh(_mpegPictureBuffer, static_cast<float>(_vgaFramesPerSecond));
   }
   _currentRenderLineNumber = 0;
   _mpegPictureBufferPtr = _mpegPictureBuffer;
