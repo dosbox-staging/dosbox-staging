@@ -162,6 +162,8 @@ See below for detailed the API documentation.
 #ifndef PL_MPEG_H
 #define PL_MPEG_H
 
+#include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -1854,7 +1856,7 @@ double plm_demux_get_start_time(plm_demux_t *self, int type) {
 		return self->start_time;
 	}
 
-	int previous_pos = plm_buffer_tell(self->buffer);
+	const auto previous_pos = plm_buffer_tell(self->buffer);
 	int previous_start_code = self->start_code;
 	
 	// Find first video PTS
@@ -2658,7 +2660,7 @@ static inline uint8_t plm_clamp(int n) {
 	else if (n < 0) {
 		n = 0;
 	}
-	return n;
+	return static_cast<uint8_t>(n);
 }
 
 int plm_video_decode_sequence_header(plm_video_t *self);
@@ -3409,7 +3411,7 @@ void plm_video_decode_block(plm_video_t *self, int block) {
 	if (self->macroblock_intra) {
 		// Overwrite (no prediction)
 		if (n == 1) {
-			int clamped = plm_clamp((s[0] + 128) >> 8);
+			const auto clamped = plm_clamp((s[0] + 128) >> 8);
 			PLM_BLOCK_SET(d, di, dw, si, 8, 8, clamped);
 			s[0] = 0;
 		}
@@ -3834,8 +3836,10 @@ double plm_audio_get_time(plm_audio_t *self) {
 }
 
 void plm_audio_set_time(plm_audio_t *self, double time) {
-	self->samples_decoded = time * 
-		(double)PLM_AUDIO_SAMPLE_RATE[self->samplerate_index];
+	const auto samples_decoded = std::lround(time * PLM_AUDIO_SAMPLE_RATE[self->samplerate_index]);
+	assert(samples_decoded >= INT_MIN);
+	assert(samples_decoded <= INT_MAX);
+	self->samples_decoded = static_cast<int>(samples_decoded);
 	self->time = time;
 }
 
@@ -3861,7 +3865,7 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self) {
 
 	if (
 		self->next_frame_data_size == 0 ||
-		!plm_buffer_has(self->buffer, self->next_frame_data_size << 3)
+		!plm_buffer_has(self->buffer, static_cast<size_t>(self->next_frame_data_size << 3))
 	) {
 		return NULL;
 	}
@@ -4009,7 +4013,7 @@ void plm_audio_decode_frame(plm_audio_t *self) {
 	for (int sb = 0; sb < sblimit; sb++) {
 		for (int ch = 0; ch < channels; ch++) {
 			if (self->allocation[ch][sb]) {
-				self->scale_factor_info[ch][sb] = plm_buffer_read(self->buffer, 2);
+				self->scale_factor_info[ch][sb] = static_cast<uint8_t>(plm_buffer_read(self->buffer, 2));
 			}
 		}
 		if (self->mode == PLM_AUDIO_MODE_MONO) {
