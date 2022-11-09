@@ -2731,7 +2731,9 @@ double plm_video_get_time(plm_video_t *self) {
 }
 
 void plm_video_set_time(plm_video_t *self, double time) {
-	self->frames_decoded = self->framerate * time;
+	const auto frames_decoded = std::lround(self->framerate * time);
+	assert(frames_decoded <= INT_MAX);
+	self->frames_decoded = static_cast<int>(frames_decoded);
 	self->time = time;
 }
 
