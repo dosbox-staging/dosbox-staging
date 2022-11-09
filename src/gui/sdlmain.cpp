@@ -46,6 +46,9 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
+#if C_SDL_IMAGE
+#	include <SDL_image.h>
+#endif
 
 #include "../ints/int10.h"
 #include "control.h"
@@ -54,6 +57,7 @@
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "hardware.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -199,8 +203,6 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 SDL_Block sdl;
 
 // Masks to be passed when creating SDL_Surface.
-// Remove ifndef if they'll be needed for MacOS X builds.
-#ifndef MACOSX
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 constexpr uint32_t RMASK = 0xff000000;
 constexpr uint32_t GMASK = 0x00ff0000;
@@ -212,7 +214,6 @@ constexpr uint32_t GMASK = 0x0000ff00;
 constexpr uint32_t BMASK = 0x00ff0000;
 constexpr uint32_t AMASK = 0xff000000;
 #endif
-#endif // !MACOSX
 
 // Size and ratio constants
 // ------------------------
@@ -3386,7 +3387,132 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-//extern void UI_Run(bool);
+static std::optional<SDL_Surface *> get_rendered_surface()
+{
+	// Variables common to all screen-modes
+	const auto renderer = SDL_GetRenderer(sdl.window);
+	const auto canvas   = get_canvas_size(sdl.desktop.type);
+
+#if C_OPENGL
+	// Get the OpenGL-renderer surface
+	// -------------------------------
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		// Setup our OpenGL image properties
+		constexpr int gl_channels       = 3; // RBG (no alpha)
+		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
+		const size_t bytes_per_row      = gl_channels * canvas.w;
+
+		// Allocate a 24-bit surface to be populated
+		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		                                          canvas.w,
+		                                          canvas.h,
+		                                          gl_bits_per_pixel,
+		                                          RMASK,
+		                                          GMASK,
+		                                          BMASK,
+		                                          AMASK);
+		if (!surface) {
+			LOG_WARNING("SDL: Failed creating a surface for OpenGL because %s",
+			            SDL_GetError());
+			return {};
+		}
+		// Per OpenGL's documentation:
+		// The glReadPixels function starts at the lower left corner: (x
+		// + i, y + j) and iterates for 0 <= i < width and 0 <= j <
+		// height. It describes the pxiels as being "the i'th pixel in
+		// the j'th row". Pixels are returned in row-order from the
+		// lowest to the highest row, left to right in each row.
+		std::vector<uint8_t> pixels(bytes_per_row * canvas.h);
+		glReadPixels(0, 0, canvas.w, canvas.h, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+		// To match SDL's surface ordering, we invert the rows (outer)
+		// and lines (inner):
+		auto surface_pixels = static_cast<char *>(surface->pixels);
+		for (int j = 0; j < canvas.h; ++j) {
+			auto target_row = surface_pixels + surface->pitch * j;
+			const auto source_row = pixels.data() +
+			                        bytes_per_row * (canvas.h - j - 1);
+			memcpy(target_row, source_row, bytes_per_row);
+		}
+		return surface;
+	}
+#endif
+
+	// Get the SDL texture-renderer surface
+	// ------------------------------------
+	else if (sdl.desktop.type == SCREEN_TEXTURE) {
+		// Get the renderer's pixel format
+		SDL_RendererInfo rinfo;
+		if (SDL_GetRendererInfo(renderer, &rinfo) != 0) {
+			LOG_MSG("SDL: Failed to get a rendering info because %s",
+			        SDL_GetError());
+			return {};
+		}
+		const auto pixel_format = rinfo.texture_formats[0];
+
+		// Create a 32-bit surface with color format matching the renderer
+		const auto surface = SDL_CreateRGBSurfaceWithFormat(
+		        SDL_SWSURFACE, canvas.w, canvas.h, 32, pixel_format);
+		if (!surface || !renderer) {
+			LOG_WARNING("SDL: Failed creating a surface because %s",
+			            SDL_GetError());
+			return {};
+		}
+		// Copy the pixels from the renderer into our new surface
+		if (SDL_RenderReadPixels(renderer,
+		                         nullptr,
+		                         surface->format->format,
+		                         surface->pixels,
+		                         surface->pitch) != 0) {
+			LOG_WARNING("SDL: Failed rendering to the surface because %s",
+			            SDL_GetError());
+			SDL_FreeSurface(surface);
+			return {};
+		}
+		return surface;
+	}
+
+	// We're already in surface-mode, how convenient ;)
+	// -----------------------------------------------
+	else if (sdl.desktop.type == SCREEN_SURFACE) {
+		assert(sdl.surface);
+		// Simply return a copy
+		return SDL_ConvertSurfaceFormat(sdl.surface,
+		                                sdl.surface->format->format,
+		                                0);
+	}
+
+	LOG_WARNING("SDL: unhandled screen-type (bug)");
+	return {};
+}
+
+static void screenshot_rendered_surface(bool pressed)
+{
+	if (!pressed)
+		return;
+
+	const auto surface = get_rendered_surface();
+	if (!surface)
+		return;
+
+#if C_SDL_IMAGE
+	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".png");
+	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
+#else
+	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".bmp");
+	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
+#endif
+	SDL_FreeSurface(*surface);
+
+	if (is_saved)
+		LOG_MSG("SDL: Captured rendered output to %s", filename.c_str());
+	else
+		LOG_MSG("SDL: Failed capturing rendered output to %s because %s",
+		        filename.c_str(),
+		        SDL_GetError());
+}
+
+// extern void UI_Run(bool);
 void Restart(bool pressed);
 
 static void ApplyActiveSettings()
@@ -3542,12 +3668,18 @@ static void GUI_StartUp(Section *sec)
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
 	                  "shutdown", "Shutdown");
-	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
-	                  "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2,
-	                  "restart", "Restart");
-	MAPPER_AddHandler(MOUSE_ToggleUserCapture, SDL_SCANCODE_F10, PRIMARY_MOD,
-	                  "capmouse", "Cap Mouse");
+	MAPPER_AddHandler(screenshot_rendered_surface,
+	                  SDL_SCANCODE_F5,
+	                  MMOD2,
+	                  "rendshot",
+	                  "Rend Screenshot");
+	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
+	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
+	                  SDL_SCANCODE_F10,
+	                  PRIMARY_MOD,
+	                  "capmouse",
+	                  "Cap Mouse");
 
 #if C_DEBUG
 /* Pause binds with activate-debugger */
