@@ -196,7 +196,7 @@ public:
 		if (!(note_on || percussion_on))
 			return true;
 
-		handle = OpenCaptureFile("Raw Opl", ".dro");
+		handle = CAPTURE_OpenFile("Raw Opl", ".dro");
 		if (!handle)
 			return false;
 
@@ -793,7 +793,7 @@ static void SaveRad()
 	char b[16 * 1024];
 	int w = 0;
 
-	FILE *handle = OpenCaptureFile("RAD Capture", ".rad");
+	FILE *handle = CAPTURE_OpenFile("RAD Capture", ".rad");
 	if (!handle)
 		return;
 

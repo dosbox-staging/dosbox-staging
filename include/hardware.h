@@ -48,7 +48,7 @@ bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 extern uint8_t adlib_commandreg;
 
 std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext);
-FILE *OpenCaptureFile(const char *type, const char *ext);
+FILE *CAPTURE_OpenFile(const char *type, const char *ext);
 
 void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data);
 
