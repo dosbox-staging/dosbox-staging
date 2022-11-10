@@ -440,6 +440,9 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 		KEYBOARD_AddBuffer(0xe0);
 		KEYBOARD_AddBuffer(55|(pressed?0:0x80));
 		return;
+	case KBD_intl1:
+		ret = 89;
+		break;
 	default:
 		E_Exit("Unsupported key press");
 		break;
