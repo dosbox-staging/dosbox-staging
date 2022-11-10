@@ -3440,7 +3440,7 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 
 	// Get the SDL texture-renderer surface
 	// ------------------------------------
-	else if (sdl.desktop.type == SCREEN_TEXTURE) {
+	if (sdl.desktop.type == SCREEN_TEXTURE) {
 		// Get the renderer's pixel format
 		SDL_RendererInfo rinfo;
 		if (SDL_GetRendererInfo(renderer, &rinfo) != 0) {
