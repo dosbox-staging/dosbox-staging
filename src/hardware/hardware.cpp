@@ -143,7 +143,7 @@ std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext)
 	return file_name;
 }
 
-FILE *OpenCaptureFile(const char *type, const char *ext)
+FILE *CAPTURE_OpenFile(const char *type, const char *ext)
 {
 	const auto file_name = CAPTURE_GetScreenshotFilename(type, ext);
 	FILE *handle         = fopen(file_name.c_str(), "wb");
@@ -375,7 +375,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 
 		CaptureState &= ~CAPTURE_IMAGE;
 		/* Open the actual file */
-		FILE *fp = OpenCaptureFile("Screenshot", ".png");
+		FILE *fp = CAPTURE_OpenFile("Screenshot", ".png");
 		if (!fp)
 			goto skip_shot;
 		/* First try to allocate the png structures */
@@ -550,7 +550,7 @@ skip_shot:
 		default: goto skip_video;
 		}
 		if (!capture.video.handle) {
-			capture.video.handle = OpenCaptureFile("Video",".avi");
+			capture.video.handle = CAPTURE_OpenFile("Video",".avi");
 			if (!capture.video.handle)
 				goto skip_video;
 			capture.video.codec = new VideoCodec();
@@ -683,7 +683,7 @@ void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data) {
 #endif
 	if (CaptureState & CAPTURE_WAVE) {
 		if (!capture.wave.handle) {
-			capture.wave.handle=OpenCaptureFile("Wave Output",".wav");
+			capture.wave.handle=CAPTURE_OpenFile("Wave Output",".wav");
 			if (!capture.wave.handle) {
 				CaptureState &= ~CAPTURE_WAVE;
 				return;
@@ -767,7 +767,7 @@ static void RawMidiAddNumber(uint32_t val) {
 
 void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t * data) {
 	if (!capture.midi.handle) {
-		capture.midi.handle=OpenCaptureFile("Raw Midi",".mid");
+		capture.midi.handle=CAPTURE_OpenFile("Raw Midi",".mid");
 		if (!capture.midi.handle) {
 			return;
 		}
