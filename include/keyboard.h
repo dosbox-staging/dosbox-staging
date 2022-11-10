@@ -132,6 +132,8 @@ enum KBD_KEYS {
 	KBD_kpenter,
 	KBD_kpperiod,
 
+	KBD_intl1,
+
 	KBD_LAST
 };
 
