@@ -363,6 +363,8 @@ public:
 	{
 		if (key == SDL_SCANCODE_RETURN)
 			return "Enter"; // instead of "Return"
+		else if (key == SDL_SCANCODE_INTERNATIONAL1)
+			return "International 1"; // instead of empty string
 		else
 			return SDL_GetScancodeName(key);
 	}
