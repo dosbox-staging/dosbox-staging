@@ -2174,18 +2174,9 @@ static void CreateLayout() {
 	AddKeyButtonEvent(PX(XO+3),PY(YO+3),BW,BH*2,"ENT","kp_enter",KBD_kpenter);
 	AddKeyButtonEvent(PX(XO),PY(YO+4),BW*2,BH,"0","kp_0",KBD_kp0);
 	AddKeyButtonEvent(PX(XO+2),PY(YO+4),BW,BH,".","kp_period",KBD_kpperiod);
-#undef XO
-#undef YO
 
-#define XO 0
-#define YO 11
-#define MX      1
-#define MY      1
-#define CX      (BW / 2)
-#define BU(_X_) (BW * (_X_) + MX * ((_X_)-1))
-#define BV(_Y_) (BH * (_Y_) + MY * ((_Y_)-1))
-
-    AddKeyButtonEvent(PX(XO + 4) + CX, PY(YO + 0), BU(1), BV(1), "\\", "intl1", KBD_intl1);
+	/* International Keys */
+	AddKeyButtonEvent(PX(XO + 5), PY(YO), BW * 2, BH, "Intl1", "intl1", KBD_intl1);
 #undef XO
 #undef YO
 
