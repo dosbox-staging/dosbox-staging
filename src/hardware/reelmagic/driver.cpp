@@ -33,9 +33,11 @@
 #include <stack>
 #include <string>
 
+#include "../../dos/program_more_output.h"
 #include "callback.h"
 #include "dos_inc.h"
 #include "dos_system.h"
+#include "mapper.h"
 #include "math_utils.h"
 #include "mixer.h"
 #include "programs.h"
@@ -50,10 +52,9 @@ static const uint16_t REELMAGIC_BASE_IO_PORT          = 0x9800; //note: the real
 static const uint8_t  REELMAGIC_IRQ                   = 11;     //practically unused for now; XXX should this be configurable!?
 static const char   REELMAGIC_FMPDRV_EXE_LOCATION[] = "Z:\\"; //the trailing \ is super important!
 
-static Bitu   _dosboxCallbackNumber      = 0;
-static uint8_t  _installedInterruptNumber  = 0; //0 means not currently installed
-static bool   _unloadAllowed             = true;
-
+static callback_number_t _dosboxCallbackNumber = 0;
+static uint8_t _installedInterruptNumber = 0; // 0 means not currently installed
+static bool _unloadAllowed               = true;
 
 //enable full API logging only when heavy debugging is on...
 #if C_HEAVY_DEBUG
@@ -753,12 +754,18 @@ class FMPDRV final : public Program {
   }
   void Run()
   {
+    if (HelpRequested()) {
+      MoreOutputStrings output(*this);
+      output.AddString(MSG_Get("PROGRAM_FMPDRV_HELP_LONG"));
+      output.Display();
+      return;
+    }
     WriteOut(MSG_Get("PROGRAM_FMPDRV_TITLE"),
 	     REELMAGIC_DRIVER_VERSION_MAJOR,
 	     REELMAGIC_DRIVER_VERSION_MINOR);
-    std::string ignore;
-    if (cmd->FindStringBegin("/u", ignore)) {
-      //unload driver
+
+    if (cmd->FindExist("/u")) {
+      // unload driver
       if (_installedInterruptNumber == 0) {
 	WriteOut(MSG_Get("PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED"));
 	return;
@@ -787,24 +794,39 @@ class FMPDRV final : public Program {
   private:
   void AddMessages()
   {
-    MSG_Add("PROGRAM_FMPDRV_TITLE", "Full Motion Player Driver %hhu.%hhu\n");
+    MSG_Add("PROGRAM_FMPDRV_HELP",
+	    "Loads or unloads the built-in ReelMagic Full Motion Player Driver.\n");
+    MSG_Add("PROGRAM_FMPDRV_HELP_LONG",
+	    "Loads or unloads the built-in ReelMagic Full Motion Player Driver.\n"
+	    "\n"
+	    "Usage:\n"
+	    "  [color=cyan]FMPDRV[reset]    -- loads the driver.\n"
+	    "  [color=cyan]FMPDRV[reset] [color=white]/u[reset] -- unloads the driver.\n"
+	    "\n"
+	    "Notes:\n"
+	    "   The 'reelmagic = on' configuration setting will force-load this driver\n"
+	    "   on start-up and prevent its removal.\n");
+
+    MSG_Add("PROGRAM_FMPDRV_TITLE",
+	    "ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOADED",
-	    "Successfully loaded driver at interrupt %xh.\n");
+	    "[reset][color=light-yellow]Loaded at interrupt %xh[reset]\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED",
-	    "Failed loading: already loaded at interrupt %xh.\n");
+	    "[reset][color=light-yellow]Already loaded at interrupt %xh[reset]\n");
 
     MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT",
-	    "Failed loading: No free interrupts!\n");
+	    "[reset][color=red]Not loaded: No free interrupts![reset]\n");
 
-    MSG_Add("PROGRAM_FMPDRV_UNLOADED", "Successfully unloaded driver.\n");
+    MSG_Add("PROGRAM_FMPDRV_UNLOADED",
+	    "[reset][color=light-yellow]Driver unloaded[reset]\n");
 
     MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED",
-	    "Failed unloading: driver was not loaded.\n");
+	    "[reset][color=light-yellow]Driver was not loaded[reset]\n");
 
     MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED",
-	    "Failed unloading: the driver was configured to stay resident.\n");
+	    "[reset][color=light-yellow]Driver not unloaded: configured to stay resident[reset]\n");
   }
 };
 
@@ -994,6 +1016,22 @@ static bool RMDEV_SYS_int2fHandler() {
 // }
 static void reelmagic_destroy([[maybe_unused]] Section* sec)
 {
+  // Assess the state prior to destruction
+  bool card_is_shutdown   = _dosboxCallbackNumber == 0;
+  bool driver_is_shutdown = _installedInterruptNumber == 0;
+
+  // Already shutdown, no work to do.
+  if (card_is_shutdown && driver_is_shutdown)
+    return;
+
+  if (!card_is_shutdown && !driver_is_shutdown)
+    LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card and driver");
+  else {
+    // Ensure the only valid alternate state is a running card but not driver
+    assert(!card_is_shutdown && driver_is_shutdown);
+    LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card");
+  }
+
   // unload the software driver
   _unloadAllowed = true;
   FMPDRV_UninstallINTHandler();
@@ -1011,9 +1049,13 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
   if (_dosboxCallbackNumber != 0) {
     CALLBACK_DeAllocate(_dosboxCallbackNumber + 1);
     CALLBACK_DeAllocate(_dosboxCallbackNumber);
-      _dosboxCallbackNumber = 0;
-    LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card");
+    _dosboxCallbackNumber = 0;
   }
+
+  // Re-assess the driver's state after destruction
+  driver_is_shutdown = _installedInterruptNumber == 0;
+  if (!driver_is_shutdown)
+    LOG_WARNING("REELMAGIC: Failed unloading ReelMagic MPEG playback driver");
 }
 
 void ReelMagic_Init(Section* sec)
@@ -1050,7 +1092,7 @@ void ReelMagic_Init(Section* sec)
     // wasteful... need to explore a better way of doing this...
   }
   DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
-  LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" and \"Z:\\FMPDRV.EXE\" successfully installed");
+  LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" successfully installed");
 
   //_readHandler.Install(REELMAGIC_BASE_IO_PORT,   &read_rm, IO_MB,  0x3);
   //_writeHandler.Install(REELMAGIC_BASE_IO_PORT,  &write_rm, IO_MB, 0x3);
@@ -1061,11 +1103,24 @@ void ReelMagic_Init(Section* sec)
     FMPDRV_InstallINTHandler();
   }
 
+  // Assess the state and inform the user
+  const bool card_initialized   = _dosboxCallbackNumber != 0;
+  const bool driver_initialized = _installedInterruptNumber != 0;
+
+  if (card_initialized && driver_initialized)
+    LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card and driver");
+  else if (card_initialized)
+    LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card");
+  else {
+    // Should be impossible to initialize the driver without the card
+    assert(driver_initialized == false);
+    LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
+  }
+
 #if C_HEAVY_DEBUG
   _a204debug = true;
   _a206debug = true;
 #endif
 
-  LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card");
   sec->AddDestroyFunction(&reelmagic_destroy, true);
 }
