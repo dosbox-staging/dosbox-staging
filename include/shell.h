@@ -30,12 +30,13 @@
 #include "programs.h"
 #endif
 
+#include "callback.h"
 #include "help_util.h"
 
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20
 #define CMD_OLDSIZE 4096
-extern Bitu call_shellstop;
+extern callback_number_t call_shellstop;
 class DOS_Shell;
 
 /* first_shell is used to add and delete stuff from the shell env 

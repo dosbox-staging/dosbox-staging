@@ -1136,7 +1136,7 @@ public:
 		/* Setup all the interrupt handlers the bios controls */
 
 		/* INT 8 Clock IRQ Handler */
-		Bitu call_irq0=CALLBACK_Allocate();	
+		auto call_irq0 = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,Real2Phys(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
 		RealSetVec(0x08,BIOS_DEFAULT_IRQ0_LOCATION);
 		// pseudocode for CB_IRQ0:
@@ -1227,12 +1227,12 @@ public:
 		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
 
 		/* Irq 2 */
-		Bitu call_irq2=CALLBACK_Allocate();	
+		auto call_irq2 = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
 		/* Default IRQ handler */
-		Bitu call_irq_default=CALLBACK_Allocate();
+		auto call_irq_default = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq_default,&Default_IRQ_Handler,CB_IRET,"irq default");
 		RealSetVec(0x0b,CALLBACK_RealPointer(call_irq_default)); // IRQ 3
 		RealSetVec(0x0c,CALLBACK_RealPointer(call_irq_default)); // IRQ 4

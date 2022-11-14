@@ -37,7 +37,7 @@
 
 CHECK_NARROWING();
 
-static Bitu int74_ret_callback = 0;
+static callback_number_t int74_ret_callback = 0;
 
 static MouseQueue &mouse_queue  = MouseQueue::GetInstance();
 static ManyMouseGlue &manymouse = ManyMouseGlue::GetInstance();

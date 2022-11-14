@@ -45,7 +45,7 @@ diskGeo DiskGeometryList[] = {
 	{0, 0, 0, 0, 0}
 };
 
-Bitu call_int13;
+callback_number_t call_int13 = 0;
 Bitu diskparm0, diskparm1;
 static uint8_t last_status;
 static uint8_t last_drive;

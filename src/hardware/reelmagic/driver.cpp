@@ -264,25 +264,61 @@ static bool FMPDRV_InstallINTHandler()
     return false; //hard to beleive this could actually happen... but need to account for...
   }
 
-  //This is the contents of the "FMPDRV.EXE" INT handler which will be put in the ROM region:
-  const uint8_t isr_impl[] = { //Note: this is derrived from "case CB_IRET:" in "../cpu/callback.cpp"
-    0xEB, 0x1A,  // JMP over the check strings like a champ...
-    9, //9 bytes for "FMPDriver" check string
-    'F', 'M', 'P', 'D', 'r', 'i', 'v', 'e', 'r', '\0',
-    13, //13 bytes for "ReelMagic(TM)" check string
-    'R','e','e','l','M','a','g','i','c','(','T','M',')','\0',
-    0xFE, 0x38,  //GRP 4 + Extra Callback Instruction
-    (uint8_t)(_dosboxCallbackNumber), (uint8_t)(_dosboxCallbackNumber >> 8),
-    0xCF,        //IRET
+  // The upper 8-bits of the callback are used below, however the maximum
+  // callback number is only 128 so we simply confirm that the upper 8-bits are
+  // zero and hardcode zero below.
+  assert((static_cast<uint16_t>(_dosboxCallbackNumber) >> 8) == 0);
 
-    //extra "unreachable" callback instruction used to signal end of FMPDRV.EXE registered callback 
-    //when invoking the "user callback" from this driver
-    0xFE, 0x38,  //GRP 4 + Extra Callback Instruction
-    (uint8_t)(_dosboxCallbackNumber), (uint8_t)(_dosboxCallbackNumber >> 8)
-  };
-  //Note: checking against double CB_SIZE. This is because we allocate two callbacks to make this fit
-  //      within the "callback ROM" region. See comment in ReelMagic_Init() function below
-  if (sizeof(isr_impl) > (CB_SIZE * 2)) E_Exit("CB_SIZE too small to fit ReelMagic driver IVT code. This means that DOSBox was not compiled correctly!");
+  // This is the contents of the "FMPDRV.EXE" INT handler which will be put in
+  // the ROM region (Note: this is derrived from "case CB_IRET:" in
+  // "src/cpu/callback.cpp"):
+  const uint8_t isr_impl[] = {0xEB,
+	                      0x1A, // JMP over the check strings like a champ...
+	                      9,    // 9 bytes for "FMPDriver" check string
+	                      'F',
+	                      'M',
+	                      'P',
+	                      'D',
+	                      'r',
+	                      'i',
+	                      'v',
+	                      'e',
+	                      'r',
+	                      '\0',
+	                      13, // 13 bytes for "ReelMagic(TM)" check string
+	                      'R',
+	                      'e',
+	                      'e',
+	                      'l',
+	                      'M',
+	                      'a',
+	                      'g',
+	                      'i',
+	                      'c',
+	                      '(',
+	                      'T',
+	                      'M',
+	                      ')',
+	                      '\0',
+	                      0xFE,
+	                      0x38, // GRP 4 + Extra Callback Instruction
+	                      _dosboxCallbackNumber,
+	                      0,
+	                      0xCF, // IRET
+
+	                      // Extra "unreachable" callback instruction used
+	                      // to signal end of FMPDRV.EXE registered callback
+	                      // when invoking the "user callback" from this
+	                      // driver.
+	                      0xFE,
+	                      0x38, // GRP 4 + Extra Callback Instruction
+	                      _dosboxCallbackNumber,
+	                      0};
+  // Note: checking against double CB_SIZE. This is because we allocate two
+  // callbacks to make this fit within the "callback ROM" region. See comment in
+  // ReelMagic_Init() function below
+  if (sizeof(isr_impl) > (CB_SIZE * 2))
+    E_Exit("CB_SIZE too small to fit ReelMagic driver IVT code. This means that DOSBox was not compiled correctly!");
 
   CALLBACK_Setup(_dosboxCallbackNumber,
 	         &FMPDRV_INTHandler,
