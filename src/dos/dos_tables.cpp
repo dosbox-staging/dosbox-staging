@@ -37,7 +37,7 @@ GCC_ATTRIBUTE (packed);
 RealPt DOS_TableUpCase;
 RealPt DOS_TableLowCase;
 
-static Bitu call_casemap;
+static callback_number_t call_casemap = 0;
 
 static uint16_t dos_memseg=DOS_PRIVATE_SEGMENT;
 

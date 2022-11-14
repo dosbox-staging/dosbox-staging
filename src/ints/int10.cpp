@@ -27,7 +27,7 @@
 #include "setup.h"
 
 Int10Data int10;
-static Bitu call_10;
+static callback_number_t call_10 = 0;
 static bool warned_ff=false;
 
 static Bitu INT10_Handler(void) {

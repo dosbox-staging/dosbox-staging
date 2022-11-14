@@ -37,10 +37,10 @@
 #define VESA_UNIMPLEMENTED    0xFF
 
 static struct {
-	Bitu rmWindow;
-	Bitu pmStart;
-	Bitu pmWindow;
-	Bitu pmPalette;
+	callback_number_t rmWindow  = 0;
+	callback_number_t pmStart   = 0;
+	callback_number_t pmWindow  = 0;
+	callback_number_t pmPalette = 0;
 } callback;
 
 static char string_oem[]="S3 Incorporated. Trio64";

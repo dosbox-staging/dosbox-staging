@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
+#include <limits>
 #include <stdlib.h>
-#include <string>
 #include <string.h>
+#include <string>
 
 #include "dosbox.h"
 #include "callback.h"
@@ -34,33 +34,40 @@
 CallBack_Handler CallBack_Handlers[CB_MAX];
 std::string CallBack_Description[CB_MAX];
 
-static Bitu call_stop,call_idle,call_default;
-Bitu call_priv_io;
+static callback_number_t call_stop    = 0;
+static callback_number_t call_idle    = 0;
+static callback_number_t call_default = 0;
 
-static Bitu illegal_handler(void) {
-	E_Exit("Illegal CallBack Called");
-	return 1;
+callback_number_t call_priv_io = 0;
+
+static Bitu illegal_handler()
+{
+	E_Exit("CALLBACK: Illegal CallBack called");
 }
 
-Bitu CALLBACK_Allocate(void) {
-	for (Bitu i=1;(i<CB_MAX);i++) {
-		if (CallBack_Handlers[i]==&illegal_handler) {
-			CallBack_Handlers[i]=0;
+callback_number_t CALLBACK_Allocate()
+{
+	// Ensure our returned type can handle the maximum callback
+	static_assert(CB_MAX < std::numeric_limits<callback_number_t>::max());
+
+	for (callback_number_t i = 1; i < CB_MAX; ++i) {
+		if (CallBack_Handlers[i] == &illegal_handler) {
+			CallBack_Handlers[i] = 0;
 			return i;
 		}
 	}
-	E_Exit("CALLBACK:Can't allocate handler.");
+	E_Exit("CALLBACK: Can't allocate handler.");
 	return 0;
 }
 
-void CALLBACK_DeAllocate(Bitu in) {
-	CallBack_Handlers[in]=&illegal_handler;
+void CALLBACK_DeAllocate(callback_number_t cb_num)
+{
+	CallBack_Handlers[cb_num] = &illegal_handler;
 }
-
 
 void CALLBACK_Idle(void) {
 /* this makes the cpu execute instructions to handle irq's and then come back */
-	Bitu oldIF=GETFLAG(IF);
+	const auto oldIF = GETFLAG(IF);
 	SETFLAGBIT(IF,true);
 	uint16_t oldcs=SegValue(cs);
 	uint32_t oldeip=reg_eip;
@@ -129,28 +136,32 @@ void CALLBACK_SIF(bool val) {
 	real_writew(SegValue(ss),reg_sp+4,tempf);
 }
 
-void CALLBACK_SetDescription(Bitu nr, const char* descr) {
+void CALLBACK_SetDescription(callback_number_t cb_num, const char* descr)
+{
 	if (descr) {
-		CallBack_Description[nr] = descr;
+		CallBack_Description[cb_num] = descr;
 	} else
-		CallBack_Description[nr].clear();
+		CallBack_Description[cb_num].clear();
 }
 
-const char* CALLBACK_GetDescription(Bitu nr) {
-	if (nr>=CB_MAX) return 0;
-	return CallBack_Description[nr].c_str();
+const char* CALLBACK_GetDescription(callback_number_t cb_num)
+{
+	if (cb_num >= CB_MAX)
+		return 0;
+	return CallBack_Description[cb_num].c_str();
 }
 
-Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_cb=true) {
-	if (callback>=CB_MAX)
+callback_number_t CALLBACK_SetupExtra(callback_number_t cb_num, Bitu type, PhysPt physAddress, bool use_cb = true)
+{
+	if (cb_num >= CB_MAX)
 		return 0;
 	switch (type) {
 	case CB_RETN:
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0xC3);		//A RETN Instruction
 		return (use_cb?5:1);
@@ -158,8 +169,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0xCB);		//A RETF Instruction
 		return (use_cb?5:1);
@@ -167,8 +178,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0xCA);		//A RETF 8 Instruction
 		phys_writew(physAddress+0x01,(uint16_t)0x0008);
@@ -178,8 +189,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCB);		//A RETF Instruction
 		return (use_cb?6:2);
@@ -188,8 +199,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCB);		//A RETF Instruction
 		return (use_cb?6:2);
@@ -197,8 +208,9 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02,
+			            cb_num); // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0xCF);		//An IRET Instruction
 		return (use_cb?5:1);
@@ -206,8 +218,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0x66);		//An IRETD Instruction
 		phys_writeb(physAddress+0x01,(uint8_t)0xCF);
@@ -217,8 +229,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
 		return (use_cb?6:2);
@@ -226,8 +238,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
 		phys_writeb(physAddress+0x01,(uint8_t)0xb0);		// mov al, 0x20
@@ -242,8 +254,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0x1e);		// push ds
 		phys_writeb(physAddress+0x02,(uint8_t)0x50);		// push ax
@@ -267,7 +279,7 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			phys_writew(physAddress+0x08,(uint16_t)0x0473);	// jc skip
 			phys_writeb(physAddress+0x0a,(uint8_t)0xFE);		//GRP 4
 			phys_writeb(physAddress+0x0b,(uint8_t)0x38);		//Extra Callback instruction
-			phys_writew(physAddress+0x0c,(uint16_t)callback);			//The immediate word
+			phys_writew(physAddress + 0x0c, cb_num);                // The immediate word
 			// jump here to (skip):
 			physAddress+=6;
 		}
@@ -289,8 +301,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
 		phys_writew(physAddress+0x01,(uint16_t)0x61b0);	// mov al, 0x61
@@ -308,14 +320,14 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writew(physAddress+0x03,(uint16_t)0x6066);	// pushad
 		phys_writeb(physAddress+0x05,(uint8_t)0xFE);		//GRP 4
 		phys_writeb(physAddress+0x06,(uint8_t)0x38);		//Extra Callback instruction
-		phys_writew(physAddress+0x07,(uint16_t)callback);			//The immediate word
-		phys_writeb(physAddress+0x09,(uint8_t)0x50);		// push ax
-		phys_writew(physAddress+0x0a,(uint16_t)0x20b0);	// mov al, 0x20
-		phys_writew(physAddress+0x0c,(uint16_t)0xa0e6);	// out 0xa0, al
-		phys_writew(physAddress+0x0e,(uint16_t)0x20e6);	// out 0x20, al
-		phys_writeb(physAddress+0x10,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x11,(uint8_t)0xfc);		// cld
-		phys_writeb(physAddress+0x12,(uint8_t)0xCB);		//A RETF Instruction
+		phys_writew(physAddress + 0x07, cb_num);                // The immediate word
+		phys_writeb(physAddress + 0x09, (uint8_t)0x50);         // push ax
+		phys_writew(physAddress + 0x0a, (uint16_t)0x20b0);      // mov al, 0x20
+		phys_writew(physAddress + 0x0c, (uint16_t)0xa0e6);      // out 0xa0, al
+		phys_writew(physAddress + 0x0e, (uint16_t)0x20e6);      // out 0x20, al
+		phys_writeb(physAddress + 0x10, (uint8_t)0x58);         // pop ax
+		phys_writeb(physAddress + 0x11, (uint8_t)0xfc);         // cld
+		phys_writeb(physAddress + 0x12, (uint8_t)0xCB);         // A RETF Instruction
 		return 0x13;
 	case CB_IRQ12_RET:	// ps2 mouse int74 return
 		phys_writeb(physAddress+0x00,(uint8_t)0xfa);		// cli
@@ -325,8 +337,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x07,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x08,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x09,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x09, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writew(physAddress+0x07,(uint16_t)0x6166);	// popad
 		phys_writeb(physAddress+0x09,(uint8_t)0x07);		// pop es
@@ -341,8 +353,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			phys_writew(physAddress+0x05,(uint16_t)0x0b74);	// je skip
 			phys_writeb(physAddress+0x07,(uint8_t)0xFE);		//GRP 4
 			phys_writeb(physAddress+0x08,(uint8_t)0x38);		//Extra Callback instruction
-			phys_writew(physAddress+0x09,(uint16_t)callback);			//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x09, cb_num);                // The immediate word
+			physAddress += 4;
 		} else {
 			phys_writew(physAddress+0x05,(uint16_t)0x0774);	// je skip
 		}
@@ -365,8 +377,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0xCF);		//An IRET Instruction
 		return (use_cb?0x0e:0x0a);
@@ -375,19 +387,20 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
-		for (Bitu i=0;i<=0x0b;i++) phys_writeb(physAddress+0x02+i,0x90);
-		phys_writew(physAddress+0x0e,(uint16_t)0xedeb);	//jmp callback
-		return (use_cb?0x10:0x0c);
-	case CB_INT29:	// fast console output
+		for (uint8_t i = 0; i <= 0x0b; ++i)
+			phys_writeb(physAddress + 0x02 + i, 0x90);
+		phys_writew(physAddress + 0x0e, (uint16_t)0xedeb); // jmp callback
+		return (use_cb ? 0x10 : 0x0c);
+	case CB_INT29: // fast console output
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0x50);	// push ax
 		phys_writeb(physAddress+0x01,(uint8_t)0x53);	// push bx
@@ -408,8 +421,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x05,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x06,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x07,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x07, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x05,(uint8_t)0xCB);		//A RETF Instruction
 		return (use_cb?0x0a:0x06);
@@ -417,8 +430,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);		//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
 		phys_writeb(physAddress+0x01,(uint8_t)0xb8);		// mov ax, 0x91fb
@@ -460,8 +473,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
 		phys_writeb(physAddress+0x02,(uint8_t)0xCB);		//A RETF Instruction
@@ -477,8 +490,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x03,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
 		phys_writew(physAddress+0x02,(uint16_t)0x0ECD);		// int 0e
@@ -505,8 +518,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
 			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(uint16_t)callback);	//The immediate word
-			physAddress+=4;
+			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
+			physAddress += 4;
 		}
 		phys_writew(physAddress+0x00,(uint16_t)0xC3F6);	// test bl,
 		phys_writeb(physAddress+0x02,(uint8_t)0x80);		// 0x80
@@ -532,27 +545,36 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 	return 0;
 }
 
-bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr) {
-	if (callback>=CB_MAX) return false;
-	CALLBACK_SetupExtra(callback,type,CALLBACK_PhysPointer(callback)+0,(handler!=NULL));
-	CallBack_Handlers[callback]=handler;
-	CALLBACK_SetDescription(callback,descr);
+bool CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu type, const char* descr)
+{
+	if (cb_num >= CB_MAX)
+		return false;
+	const bool should_use_callback = (handler != nullptr);
+	CALLBACK_SetupExtra(cb_num, type, CALLBACK_PhysPointer(cb_num) + 0, should_use_callback);
+	CallBack_Handlers[cb_num] = handler;
+	CALLBACK_SetDescription(cb_num, descr);
 	return true;
 }
 
-Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr) {
-	if (callback>=CB_MAX) return 0;
-	Bitu csize=CALLBACK_SetupExtra(callback,type,addr,(handler!=NULL));
-	if (csize>0) {
-		CallBack_Handlers[callback]=handler;
-		CALLBACK_SetDescription(callback,descr);
+callback_number_t CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu type, PhysPt addr, const char* descr)
+{
+	if (cb_num >= CB_MAX)
+		return 0;
+
+	const bool should_use_callback = (handler != nullptr);
+
+	const auto csize = CALLBACK_SetupExtra(cb_num, type, addr, should_use_callback);
+	if (csize > 0) {
+		CallBack_Handlers[cb_num] = handler;
+		CALLBACK_SetDescription(cb_num, descr);
 	}
 	return csize;
 }
 
-void CALLBACK_RemoveSetup(Bitu callback) {
-	for (Bitu i = 0;i < CB_SIZE;i++) {
-		phys_writeb(CALLBACK_PhysPointer(callback)+i ,(uint8_t) 0x00);
+void CALLBACK_RemoveSetup(callback_number_t cb_num)
+{
+	for (callback_number_t i = 0; i < CB_SIZE; ++i) {
+		phys_writeb(CALLBACK_PhysPointer(cb_num) + i, (uint8_t)0x00);
 	}
 }
 
@@ -564,19 +586,20 @@ void CALLBACK_HandlerObject::Uninstall(){
 			if(RealGetVec(vectorhandler.interrupt) == Get_RealPointer()) {
 				RealSetVec(vectorhandler.interrupt,vectorhandler.old_vector);
 			} else
-				LOG(LOG_MISC,LOG_WARN)("Interrupt vector changed on %X %s",vectorhandler.interrupt,CALLBACK_GetDescription(m_callback));
+				LOG(LOG_MISC, LOG_WARN)
+			("Interrupt vector changed on %X %s", vectorhandler.interrupt, CALLBACK_GetDescription(m_cb_number));
 		}
-		CALLBACK_RemoveSetup(m_callback);
+		CALLBACK_RemoveSetup(m_cb_number);
 	} else if(m_type == CALLBACK_HandlerObject::SETUPAT){
 		E_Exit("Callback:SETUP at not handled yet.");
 	} else if(m_type == CALLBACK_HandlerObject::NONE){
 		//Do nothing. Merely DeAllocate the callback
 	} else E_Exit("what kind of callback is this!");
-	
-	if(!CallBack_Description[m_callback].empty())
-		CallBack_Description[m_callback].clear();
 
-	CALLBACK_DeAllocate(m_callback);
+	if (!CallBack_Description[m_cb_number].empty())
+		CallBack_Description[m_cb_number].clear();
+
+	CALLBACK_DeAllocate(m_cb_number);
 	installed=false;
 }
 
@@ -588,27 +611,30 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const ch
 	if(!installed) {
 		installed=true;
 		m_type=SETUP;
-		m_callback=CALLBACK_Allocate();
-		CALLBACK_Setup(m_callback,handler,type,description);
-	} else E_Exit("Callback handler object already installed");
+		m_cb_number = CALLBACK_Allocate();
+		CALLBACK_Setup(m_cb_number, handler, type, description);
+	} else
+		E_Exit("Callback handler object already installed");
 }
 void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description){
 	if(!installed) {
 		installed=true;
 		m_type=SETUP;
-		m_callback=CALLBACK_Allocate();
-		CALLBACK_Setup(m_callback,handler,type,addr,description);
-	} else E_Exit("Callback handler object already installed");
+		m_cb_number = CALLBACK_Allocate();
+		CALLBACK_Setup(m_cb_number, handler, type, addr, description);
+	} else
+		E_Exit("Callback handler object already installed");
 }
 
 void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* description) {
 	if(!installed) {
 		installed=true;
 		m_type=NONE;
-		m_callback=CALLBACK_Allocate();
-		CALLBACK_SetDescription(m_callback,description);
-		CallBack_Handlers[m_callback]=handler;
-	} else E_Exit("Callback handler object already installed");
+		m_cb_number = CALLBACK_Allocate();
+		CALLBACK_SetDescription(m_cb_number, description);
+		CallBack_Handlers[m_cb_number] = handler;
+	} else
+		E_Exit("Callback handler object already installed");
 }
 
 void CALLBACK_HandlerObject::Set_RealVec(uint8_t vec){
@@ -620,8 +646,7 @@ void CALLBACK_HandlerObject::Set_RealVec(uint8_t vec){
 }
 
 void CALLBACK_Init(Section* /*sec*/) {
-	Bitu i;
-	for (i=0;i<CB_MAX;i++) {
+	for (callback_number_t i = 0; i < CB_MAX; ++i) {
 		CallBack_Handlers[i]=&illegal_handler;
 	}
 
@@ -637,10 +662,11 @@ void CALLBACK_Init(Section* /*sec*/) {
 	call_idle=CALLBACK_Allocate();
 	CallBack_Handlers[call_idle]=stop_handler;
 	CALLBACK_SetDescription(call_idle,"idle");
-	for (i=0;i<=11;i++) phys_writeb(CALLBACK_PhysPointer(call_idle)+i,0x90);
-	phys_writeb(CALLBACK_PhysPointer(call_idle)+12,0xFE);
-	phys_writeb(CALLBACK_PhysPointer(call_idle)+13,0x38);
-	phys_writew(CALLBACK_PhysPointer(call_idle)+14,(uint16_t)call_idle);
+	for (uint8_t i = 0; i <= 11; ++i)
+		phys_writeb(CALLBACK_PhysPointer(call_idle) + i, 0x90);
+	phys_writeb(CALLBACK_PhysPointer(call_idle) + 12, 0xFE);
+	phys_writeb(CALLBACK_PhysPointer(call_idle) + 13, 0x38);
+	phys_writew(CALLBACK_PhysPointer(call_idle) + 14, (uint16_t)call_idle);
 
 	/* Default handlers for unhandled interrupts that have to be non-null */
 	call_default=CALLBACK_Allocate();
@@ -655,14 +681,13 @@ void CALLBACK_Init(Section* /*sec*/) {
 	}
 	/* Setup block of 0xCD 0xxx instructions */
 	PhysPt rint_base=CALLBACK_GetBase()+CB_MAX*CB_SIZE;
-	for (i=0;i<=0xff;i++) {
+	for (uint16_t i = 0; i <= 0xff; ++i) {
 		phys_writeb(rint_base,0xCD);
 		phys_writeb(rint_base+1,(uint8_t)i);
 		phys_writeb(rint_base+2,0xFE);
 		phys_writeb(rint_base+3,0x38);
 		phys_writew(rint_base+4,(uint16_t)call_stop);
-		rint_base+=6;
-
+		rint_base += 6;
 	}
 	// setup a few interrupt handlers that point to bios IRETs by default
 	real_writed(0,0x66*4,CALLBACK_RealPointer(call_default));	//war2d

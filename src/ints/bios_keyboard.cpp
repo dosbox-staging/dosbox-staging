@@ -27,7 +27,9 @@
 #include "inout.h"
 #include "dos_inc.h"
 
-static Bitu call_int16,call_irq1,call_irq6;
+static callback_number_t call_int16 = 0;
+static callback_number_t call_irq1  = 0;
+static callback_number_t call_irq6  = 0;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0

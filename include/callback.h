@@ -22,7 +22,7 @@
 
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
-#endif 
+#endif
 
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
@@ -56,6 +56,7 @@ enum {
 	CB_VESA_PM
 };
 
+using callback_number_t = uint8_t;
 #define CB_MAX		128
 #define CB_SIZE		32
 #define CB_SEG		0xF000
@@ -67,19 +68,21 @@ enum {
 
 extern uint8_t lastint;
 
-static inline RealPt CALLBACK_RealPointer(Bitu callback) {
-	return RealMake(CB_SEG,(uint16_t)(CB_SOFFSET+callback*CB_SIZE));
+static inline RealPt CALLBACK_RealPointer(callback_number_t cb_number)
+{
+	return RealMake(CB_SEG, (uint16_t)(CB_SOFFSET + cb_number * CB_SIZE));
 }
-static inline PhysPt CALLBACK_PhysPointer(Bitu callback) {
-	return PhysMake(CB_SEG,(uint16_t)(CB_SOFFSET+callback*CB_SIZE));
+static inline PhysPt CALLBACK_PhysPointer(callback_number_t cb_number)
+{
+	return PhysMake(CB_SEG, (uint16_t)(CB_SOFFSET + cb_number * CB_SIZE));
 }
 
 static inline PhysPt CALLBACK_GetBase(void) {
 	return (CB_SEG << 4) + CB_SOFFSET;
 }
 
-Bitu CALLBACK_Allocate();
-void CALLBACK_DeAllocate(const Bitu in);
+callback_number_t CALLBACK_Allocate();
+void CALLBACK_DeAllocate(const callback_number_t in);
 
 void CALLBACK_Idle(void);
 
@@ -87,35 +90,32 @@ void CALLBACK_Idle(void);
 void CALLBACK_RunRealInt(uint8_t intnum);
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off);
 
-bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr);
-Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr);
+bool CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu type, const char* descr);
+callback_number_t CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu type, PhysPt addr,
+                                 const char* descr);
 
-const char* CALLBACK_GetDescription(Bitu callback);
+const char* CALLBACK_GetDescription(callback_number_t cb_number);
 
 void CALLBACK_SCF(bool val);
 void CALLBACK_SZF(bool val);
 void CALLBACK_SIF(bool val);
 
-extern Bitu call_priv_io;
+extern callback_number_t call_priv_io;
 
 class CALLBACK_HandlerObject {
 private:
-	bool installed;
-	Bitu m_callback;
-	enum { NONE, SETUP, SETUPAT } m_type;
+	bool installed = false;
+	enum { NONE, SETUP, SETUPAT } m_type = NONE;
 	struct {
-		RealPt old_vector;
-		uint8_t interrupt;
-		bool installed;
-	} vectorhandler;
+		RealPt old_vector = 0;
+		bool installed = false;
+		uint8_t interrupt = 0;
+	} vectorhandler = {};
+
+	callback_number_t m_cb_number = 0;
 
 public:
-	CALLBACK_HandlerObject()
-	        : installed(false),
-	          m_callback(0),
-	          m_type(NONE),
-	          vectorhandler{0, 0, false}
-	{}
+	CALLBACK_HandlerObject() : installed(false), m_type(NONE), vectorhandler{0, 0, false}, m_cb_number(0) {}
 
 	virtual ~CALLBACK_HandlerObject();
 
@@ -128,10 +128,10 @@ public:
 	//Only allocate a callback number
 	void Allocate(CallBack_Handler handler,const char* description=0);
 	uint16_t Get_callback() {
-		return (uint16_t)m_callback;
+		return m_cb_number;
 	}
 	RealPt Get_RealPointer() {
-		return CALLBACK_RealPointer(m_callback);
+		return CALLBACK_RealPointer(m_cb_number);
 	}
 	void Set_RealVec(uint8_t vec);
 };
