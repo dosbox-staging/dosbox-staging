@@ -40,8 +40,8 @@
 //global config
 static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;
 static float _audioLevel = 1.5f;
-static Bitu _audioFifoSize = 30;
-static Bitu _audioFifoDispose = 2;
+static Bitu _audioFifoSize = 20;
+static Bitu _audioFifoDispose = 5;
 constexpr  unsigned int default_magic_key = 0x40044041;
 static  unsigned int _initialMagicKey     = default_magic_key;
 static int _magicalFcodeOverride = 0; // 0 = no override
