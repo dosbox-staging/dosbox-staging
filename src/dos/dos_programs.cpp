@@ -47,10 +47,12 @@ extern uint32_t floppytype;
 
 extern char autoexec_data[autoexec_maxsize];
 std::unique_ptr<Program> CONFIG_ProgramCreate();
-std::unique_ptr<Program> FMPDRV_ProgramCreate();
 std::unique_ptr<Program> MIXER_ProgramCreate();
 std::unique_ptr<Program> SHELL_ProgramCreate();
-void VFILE_GetPathZDrive(std::string &path, const std::string &dirname);
+
+void REELMAGIC_MaybeCreateFmpdrvExecutable();
+
+void VFILE_GetPathZDrive(std::string& path, const std::string& dirname);
 void VFILE_RegisterZDrive(const std_fs::path &z_drive_path);
 
 void Add_VFiles(const bool add_autoexec)
@@ -69,7 +71,7 @@ void Add_VFiles(const bool add_autoexec)
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);
 	PROGRAMS_MakeFile("CHOICE.COM", ProgramCreate<CHOICE>);
-	PROGRAMS_MakeFile("FMPDRV.EXE", FMPDRV_ProgramCreate);
+	REELMAGIC_MaybeCreateFmpdrvExecutable();
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
 	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
