@@ -747,7 +747,7 @@ static void set_magic_key(const std::string_view key_choice)
   _initialMagicKey = default_magic_key;
 }
 
-static void set_fps(const int fps_code_choice)
+static void set_fcode(const int fps_code_choice)
 {
   // Default
   constexpr auto default_fps_code = 0;
@@ -790,7 +790,7 @@ void ReelMagic_InitPlayer(Section* sec)
   const auto section = static_cast<Section_prop*>(sec);
   set_magic_key(section->Get_string("reelmagic_key"));
 
-  set_fps(section->Get_int("reelmagic_fcode"));
+  set_fcode(section->Get_int("reelmagic_fcode"));
 
   ReelMagic_EnableAudioChannel(true);
 
