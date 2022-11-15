@@ -830,9 +830,19 @@ class FMPDRV final : public Program {
   }
 };
 
-std::unique_ptr<Program> FMPDRV_ProgramCreate()
+void REELMAGIC_MaybeCreateFmpdrvExecutable()
 {
-  return ProgramCreate<FMPDRV>();
+  static bool needs_driver_file = true;
+
+  const bool card_initialized = _dosboxCallbackNumber != 0;
+
+  if (card_initialized && needs_driver_file) {
+    PROGRAMS_MakeFile("FMPDRV.EXE", ProgramCreate<FMPDRV>);
+
+    // Once we've created the driver file, there's no going back: we don't have
+    // a PROGRAMS_DestroyFile(..) to remove files from the virtual Z:
+    needs_driver_file = false;
+  }
 }
 
 //
@@ -1096,6 +1106,8 @@ void ReelMagic_Init(Section* sec)
 
   //_readHandler.Install(REELMAGIC_BASE_IO_PORT,   &read_rm, IO_MB,  0x3);
   //_writeHandler.Install(REELMAGIC_BASE_IO_PORT,  &write_rm, IO_MB, 0x3);
+
+  REELMAGIC_MaybeCreateFmpdrvExecutable();
 
   // User wants the hardware and the driver
   if (reelmagic_choice == "on") {
