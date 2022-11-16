@@ -1547,8 +1547,13 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 	if (self->mode == PLM_BUFFER_MODE_FILE) {
 		if (self->seek_callback)
 			(*self->seek_callback)(self, self->load_callback_user_data, pos);
-		else
-			fseek(self->fh, pos, SEEK_SET);
+		else {
+			assert (self->fh);
+			if (fseek(self->fh, pos, SEEK_SET) != 0) {
+				// Don't trust the file's state if seeking failed
+				return;
+			}
+		}
 		self->bit_index = 0;
 		self->length = 0;
 		self->file_pos = pos;
