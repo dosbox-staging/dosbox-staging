@@ -1773,7 +1773,6 @@ plm_demux_t *plm_demux_create(plm_buffer_t *buffer, int destroy_when_done) {
 	self->duration = PLM_PACKET_INVALID_TS;
 	self->start_code = -1;
 
-	plm_demux_has_headers(self);
 	return self;
 }
 
