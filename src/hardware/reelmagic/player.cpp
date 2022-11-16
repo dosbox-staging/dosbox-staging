@@ -448,17 +448,21 @@ public:
 
 		bool detetectedFileTypeVesOnly = false;
 
+		assert(_file); 		
 		auto plmBuf = plm_buffer_create_with_virtual_file(&plmBufferLoadCallback,
 		                                                  &plmBufferSeekCallback,
 		                                                  this,
 		                                                  _file->GetFileSize());
-		_plm = plm_create_with_buffer(plmBuf, TRUE); // TRUE = destroy buffer when done
+		assert(plmBuf);
+
+		// TRUE means that the buffer is destroyed on failure or when closing _plm
+		_plm = plm_create_with_buffer(plmBuf, TRUE);
+
 		if (_plm == NULL) {
 			LOG(LOG_REELMAGIC, LOG_ERROR)
 			("Player with handle #%u failed creating buffer using file %s",
 			 (unsigned)_attrs.Handles.Master,
 			 _file->GetFileName());
-			plm_buffer_destroy(plmBuf);
 			plmBuf = NULL;
 			return;
 		}
