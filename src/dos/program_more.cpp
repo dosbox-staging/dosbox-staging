@@ -185,4 +185,5 @@ void MORE::AddMessages()
 	MSG_Add("PROGRAM_MORE_PROMPT_MULTI",  "[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]");
 	MSG_Add("PROGRAM_MORE_OPEN_ERROR",    "[reset][color=red]--- could not open %s ---[reset]");
 	MSG_Add("PROGRAM_MORE_TERMINATE",     "[reset][color=light-yellow](terminated)[reset]");
+	MSG_Add("PROGRAM_MORE_NEXT_FILE",     "[reset][color=light-yellow](next file)[reset]");
 }
