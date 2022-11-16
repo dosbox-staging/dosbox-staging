@@ -872,26 +872,63 @@ plm_t *plm_create_with_filename(const char *filename) {
 	if (!buffer) {
 		return NULL;
 	}
+
 	return plm_create_with_buffer(buffer, TRUE);
+	// TRUE means we are responsibility for buffer-clean-up:
+	//  - plm_create_with_buffer() is responsible for buffer clean-up if it fails to create a plm_t object;
+	//  - otherwise, plm_destroy() is responsible.
 }
 
 plm_t *plm_create_with_file(FILE *fh, int close_when_done) {
+	// If close_when_done is TRUE, then plm_buffer_create_with_file() is responsible for
+	// closing the file handle on failure if it can't give us a buffer.
 	plm_buffer_t *buffer = plm_buffer_create_with_file(fh, close_when_done);
+	if (!buffer) {
+		return NULL;
+	}
+
 	return plm_create_with_buffer(buffer, TRUE);
+	// TRUE means we are responsibility for buffer-clean-up downstream.
+	//  - plm_create_with_buffer() is responsible for buffer clean-up if it fails to create a plm_t object;
+	//  - otherwise, plm_destroy() is responsible.
 }
 
 plm_t *plm_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_memory(bytes, length, free_when_done);
+	if (!buffer) {
+		return NULL;
+	}
+
 	return plm_create_with_buffer(buffer, TRUE);
+	// TRUE means we are responsibility for buffer-clean-up:
+	//  - plm_create_with_buffer() is responsible for buffer clean-up if it fails to create a plm_t object;
+	//  - otherwise, plm_destroy() is responsible.
 }
 
 plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
+	assert(buffer);
+
 	plm_t *self = (plm_t *)malloc(sizeof(plm_t));
-	if (self == NULL)
+	if (!self) {
+		// if destroy_when_done is TRUE, then we are responsible for cleaning up
+		// the buffer if we fail to create a plm_t object.
+		if (buffer && destroy_when_done) {
+			plm_buffer_destroy(buffer);
+		}
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_t));
+
 	self->demux = plm_demux_create(buffer, destroy_when_done);
+	// if destroy_when_done was TRUE, are responsibility for buffer-clean-up:
+	//  - plm_demux_create() is responsible for buffer clean-up if it fails to create a plm_t object;
+	//  - otherwise, plm_destroy() is responsible.
+	if (!self->demux) {
+		plm_destroy(self);
+		return NULL;
+	}
+
 	self->video_enabled = TRUE;
 	self->audio_enabled = TRUE;
 
@@ -928,14 +965,19 @@ int plm_init_decoders(plm_t *self) {
 }
 
 void plm_destroy(plm_t *self) {
+	if (!self) {
+		return;
+	}
+
 	if (self->video_decoder) {
 		plm_video_destroy(self->video_decoder);
 	}
 	if (self->audio_decoder) {
 		plm_audio_destroy(self->audio_decoder);
 	}
-
-	plm_demux_destroy(self->demux);
+	if (self->demux) {
+		plm_demux_destroy(self->demux);
+	}
 	free(self);
 }
 
@@ -1391,9 +1433,20 @@ plm_buffer_t *plm_buffer_create_with_filename(const char *filename) {
 }
 
 plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
-	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
-	if (self == NULL)
+	if (!fh) {
 		return NULL;
+	}
+
+	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
+	if (!self) {
+		// if we can't create a buffer for the FILE object, then it
+		// won't be able to close the FILE, for which it might normally
+		// be responsible, therefore we close it here too.
+		if (close_when_done) {
+			fclose(fh);
+		}
+		return NULL;
+	}
 
 	self->fh = fh;
 	self->close_when_done = close_when_done;
@@ -1420,8 +1473,9 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 
 plm_buffer_t *plm_buffer_create_with_virtual_file(plm_buffer_load_callback load_fp, plm_buffer_seek_callback seek_fp, void *user, size_t file_size) {
 	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
-	if (self == NULL)
+	if (!self) {
 		return NULL;
+	}
 
 	self->mode = PLM_BUFFER_MODE_FILE;
 	self->discard_read_bytes = TRUE;
@@ -1433,8 +1487,9 @@ plm_buffer_t *plm_buffer_create_with_virtual_file(plm_buffer_load_callback load_
 
 plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *self = (plm_buffer_t *)malloc(sizeof(plm_buffer_t));
-	if (self == NULL)
+	if (!self) {
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_buffer_t));
 	self->capacity = length;
@@ -1449,8 +1504,9 @@ plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int f
 
 plm_buffer_t *plm_buffer_create_with_capacity(size_t capacity) {
 	plm_buffer_t *self = (plm_buffer_t *)malloc(sizeof(plm_buffer_t));
-	if (self == NULL)
+	if (!self) {
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_buffer_t));
 	self->capacity = capacity;
@@ -1463,8 +1519,9 @@ plm_buffer_t *plm_buffer_create_with_capacity(size_t capacity) {
 
 plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 	plm_buffer_t *self = plm_buffer_create_with_capacity(initial_capacity);
-	if (self == NULL)
+	if (!self) {
 		return NULL;
+	}
 
 	self->mode = PLM_BUFFER_MODE_APPEND;
 	self->discard_read_bytes = FALSE;
@@ -1472,6 +1529,10 @@ plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 }
 
 void plm_buffer_destroy(plm_buffer_t *self) {
+	if (!self) {
+		return;
+	}
+
 	if (self->fh && self->close_when_done) {
 		fclose(self->fh);
 	}
@@ -1776,8 +1837,14 @@ plm_packet_t *plm_demux_get_packet(plm_demux_t *self);
 
 plm_demux_t *plm_demux_create(plm_buffer_t *buffer, int destroy_when_done) {
 	plm_demux_t *self = (plm_demux_t *)malloc(sizeof(plm_demux_t));
-	if (self == NULL)
+	if (!self) {
+		// if destroy_when_done is TRUE, then we are responsible for cleaning up
+		// the buffer if we fail to create a plm_demux_t object.
+		if (buffer && destroy_when_done) {
+			plm_buffer_destroy(buffer);
+		}
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_demux_t));
 
@@ -1792,7 +1859,11 @@ plm_demux_t *plm_demux_create(plm_buffer_t *buffer, int destroy_when_done) {
 }
 
 void plm_demux_destroy(plm_demux_t *self) {
-	if (self->destroy_buffer_when_done) {
+	if (!self) {
+		return;
+	}
+	
+	if (self->buffer && self->destroy_buffer_when_done) {
 		plm_buffer_destroy(self->buffer);
 	}
 	free(self);
@@ -2716,8 +2787,14 @@ void plm_video_idct(int *block);
 
 plm_video_t * plm_video_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 	plm_video_t *self = (plm_video_t *)malloc(sizeof(plm_video_t));
-	if (self == NULL)
+	if (!self) {
+		// if destroy_when_done is TRUE, then we are responsible for cleaning up
+		// the buffer if we fail to create a plm_video_t object.
+		if (buffer && destroy_when_done) {
+			plm_buffer_destroy(buffer);
+		}
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_video_t));
 	
@@ -2733,7 +2810,11 @@ plm_video_t * plm_video_create_with_buffer(plm_buffer_t *buffer, int destroy_whe
 }
 
 void plm_video_destroy(plm_video_t *self) {
-	if (self->destroy_buffer_when_done) {
+	if (!self) {
+		return;
+	}
+
+	if (self->buffer && self->destroy_buffer_when_done) {
 		plm_buffer_destroy(self->buffer);
 	}
 
@@ -3839,8 +3920,14 @@ void plm_audio_idct36(int s[32][3], int ss, float *d, int dp);
 
 plm_audio_t *plm_audio_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 	plm_audio_t *self = (plm_audio_t *)malloc(sizeof(plm_audio_t));
-	if (self == NULL)
+	if (!self) {
+		// if destroy_when_done is TRUE, then we are responsible for cleaning up
+		// the buffer if we fail to create a plm_audio_t object.
+		if (buffer && destroy_when_done) {
+			plm_buffer_destroy(buffer);
+		}
 		return NULL;
+	}
 
 	memset(self, 0, sizeof(plm_audio_t));
 
@@ -3859,7 +3946,11 @@ plm_audio_t *plm_audio_create_with_buffer(plm_buffer_t *buffer, int destroy_when
 }
 
 void plm_audio_destroy(plm_audio_t *self) {
-	if (self->destroy_buffer_when_done) {
+	if (!self) {
+		return;
+	}
+
+	if (self->buffer && self->destroy_buffer_when_done) {
 		plm_buffer_destroy(self->buffer);
 	}
 	free(self);
