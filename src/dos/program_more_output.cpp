@@ -36,6 +36,8 @@ CHECK_NARROWING();
 constexpr char code_ctrl_c = 0x03; // end of text
 constexpr char code_lf     = 0x0a; // line feed
 constexpr char code_cr     = 0x0d; // carriage return
+constexpr char code_esc    = 0x1b;
+constexpr char code_del    = 0x7f;
 
 // ***************************************************************************
 // Base class, only for internal usage
@@ -73,20 +75,27 @@ void MoreOutputBase::PrepareInternals()
 {
 	line_counter = 0;
 
+	is_output_redirected = false;
 	has_multiple_files   = false;
 	should_end_on_ctrl_c = false;
 	should_print_ctrl_c  = false;
 	was_prompt_recently  = false;
 
-	tabs_remaining  = 0;
+	tabs_remaining = 0;
 
-	skip_next_cr    = false;
-	skip_next_lf    = false;
+	skip_next_cr = false;
+	skip_next_lf = false;
 }
 
 UserDecision MoreOutputBase::DisplaySingleStream()
 {
-	auto previous_column = GetCurrentColumn();
+	bool is_ansi_esc = false;
+	bool is_ansi_sci = false;
+
+	// if last printed character was a carriage return
+	bool last_was_cr = false;
+
+	auto previous_column = GetCursorColumn();
 	auto decision        = UserDecision::Next;
 
 	tabs_remaining = 0;
@@ -109,10 +118,26 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			break;
 		}
 
+		// Detect ANSI sequence start/end
+		bool is_ansi = is_ansi_esc;
+		if (!is_ansi_esc && code == code_esc) {
+			// ESC character starts the escape sequence
+			is_ansi     = true;
+			is_ansi_esc = true;
+		} else if (is_ansi_esc && !is_ansi_sci && code == '[') {
+			// Bracket after escape starts the control sequence
+			is_ansi_sci = true;
+		} else if (is_ansi_esc && !is_ansi_sci) {
+			is_ansi_esc = false;
+		} else if (code >= '@' && code != code_del) {
+			is_ansi_esc = false;
+			is_ansi_sci = false;
+		}
+
 		// A trick to make it more resistant to ANSI cursor movements
-		const auto current_row = GetCurrentRow();
-		if (line_counter > current_row) {
-			line_counter = current_row;
+		const auto previous_row = GetCursorRow();
+		if (line_counter > previous_row) {
+			line_counter = previous_row;
 		}
 
 		// Handle new line characters
@@ -133,9 +158,30 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			code = '\n';
 		}
 		WriteOut("%c", code);
+		last_was_cr = (code == '\n') && !is_ansi;
+
+		// Detect redirected command output
+		const auto current_row    = GetCursorRow();
+		const auto current_column = GetCursorColumn();
+		if (last_was_cr) {
+			// New line should move the cursor to the first column
+			// and to the next row (unless we are already on the last
+			// line) - if not, the output must have been redirected
+			if (current_row == previous_row && current_row < max_lines) {
+				is_output_redirected = true;
+			} else if (current_column) {
+				is_output_redirected = true;
+			}
+		}
+		if (!is_ansi && (current_column == previous_column) &&
+		    code != code_del && (code >= ' ' || code < 0)) {
+			// Alphanumeric character outside of ANSI sequence
+			// always changes the current column - if not, the
+			// output must have been redirected
+			is_output_redirected = true;
+		}
 
 		// Detect 'new line' due to character passing the last column
-		const auto current_column = GetCurrentColumn();
 		bool line_overflow = false;
 		if (!current_column && previous_column && code != code_cr &&
 		    code != code_lf) {
@@ -152,7 +198,7 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 		previous_column = current_column;
 
 		// Update new line counter, decide if pause needed
-		if (new_line && current_row) {
+		if (new_line && previous_row) {
 			++line_counter;
 		}
 		if (code != '\n') {
@@ -177,7 +223,8 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 		}
 	}
 
-	if (GetCurrentColumn()) {
+	if ((!is_output_redirected && GetCursorColumn()) ||
+	    (is_output_redirected && !last_was_cr)) {
 		++line_counter;
 		WriteOut("\n");
 	}
@@ -187,16 +234,37 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 UserDecision MoreOutputBase::PromptUser()
 {
+	was_prompt_recently = true;
 	line_counter = 0;
 
-	if (GetCurrentColumn()) {
+	if (is_output_redirected) {
+		// Don't ask user for anything if command
+		// output is redirected, always continue
+		return UserDecision::Continue;
+	}
+
+	if (GetCursorColumn()) {
 		WriteOut("\n");
 	}
 
+	const auto column_start = GetCursorColumn();
 	if (has_multiple_files) {
 		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
 	} else {
 		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
+	}
+	const auto column_end = GetCursorColumn();
+
+	if (column_start == column_end) {
+		// Usually redirected output should be detected
+		// till this point, but in a VERY special case
+		// (only carriage return and ANSI sequences in
+		// the input till now, cursor in one of the two
+		// last rows, no file/device as a MORE command
+		// argument) it will only be detected here
+		WriteOut("\n");
+		is_output_redirected = true;
+		return UserDecision::Continue;
 	}
 
 	auto decision = UserDecision::Cancel;
@@ -207,21 +275,25 @@ UserDecision MoreOutputBase::PromptUser()
 		decision = DOS_WaitForCancelContinue();
 	}
 
-	if (decision == UserDecision::Cancel || decision == UserDecision::Next) {
+	if (decision == UserDecision::Cancel) {
 		WriteOut(" ");
 		WriteOut(MSG_Get("PROGRAM_MORE_TERMINATE"));
+		WriteOut("\n");
+		++line_counter;
+	} else if (decision == UserDecision::Next) {
+		WriteOut(" ");
+		WriteOut(MSG_Get("PROGRAM_MORE_NEXT_FILE"));
 		WriteOut("\n");
 		++line_counter;
 	} else {
 		// We are going to continue - erase the prompt
 		WriteOut("\033[M"); // clear line
-		auto counter = GetCurrentColumn();
+		auto counter = GetCursorColumn();
 		while (counter--) {
 			WriteOut("\033[D"); // cursor one position back
 		}
 	}
 
-	was_prompt_recently = true;
 	return decision;
 }
 
@@ -268,13 +340,13 @@ bool MoreOutputBase::GetCharacter(char &code, bool &is_last)
 	return true;
 }
 
-uint8_t MoreOutputBase::GetCurrentColumn()
+uint8_t MoreOutputBase::GetCursorColumn()
 {
 	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 	return CURSOR_POS_COL(page);
 }
 
-uint8_t MoreOutputBase::GetCurrentRow()
+uint8_t MoreOutputBase::GetCursorRow()
 {
 	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 	return CURSOR_POS_ROW(page);
@@ -315,7 +387,6 @@ void MoreOutputFiles::Display()
 	}
 
 	input_files.clear();
-	WriteOut("\n");
 }
 
 std::string MoreOutputFiles::GetShortPath(const std::string &file_path,
@@ -375,8 +446,6 @@ void MoreOutputFiles::DisplayInputStream()
 		return;
 	}
 
-	WriteOut("\n");
-
 	// Since this CAN be STDIN input (there is no way to check),
 	// CTRL+C shall quit
 	should_end_on_ctrl_c = true;
@@ -385,15 +454,29 @@ void MoreOutputFiles::DisplayInputStream()
 
 void MoreOutputFiles::DisplayInputFiles()
 {
+	UserDecision decision = UserDecision::Continue;
 	WriteOut("\n");
 
 	bool first = true;
 	for (const auto &input_file : input_files) {
 		if (!first && !was_prompt_recently &&
-			UserDecision::Cancel == PromptUser()) {
+		    UserDecision::Cancel == (decision = PromptUser())) {
 			break;
 		}
 		first = false;
+
+		// Print new line and detect command output
+		// redirection; has to be called after printing
+		// something not ending with a newline
+		auto new_line_and_detect_redirect = [&]() {
+			if (!GetCursorColumn()) {
+				is_output_redirected = true;
+			}
+			WriteOut("\n");
+			if (GetCursorColumn()) {
+				is_output_redirected = true;
+			}
+		};
 
 		if (!DOS_OpenFile(input_file.path.c_str(), 0, &input_handle)) {
 			LOG_WARNING("DOS: MORE - could not open '%s'",
@@ -402,7 +485,7 @@ void MoreOutputFiles::DisplayInputFiles()
 			                                     "PROGRAM_MORE_OPEN_ERROR");
 			WriteOut(MSG_Get("PROGRAM_MORE_OPEN_ERROR"),
 			         short_path.c_str());
-			WriteOut("\n");
+			new_line_and_detect_redirect();
 			++line_counter;
 			continue;
 		}
@@ -418,7 +501,8 @@ void MoreOutputFiles::DisplayInputFiles()
 			WriteOut(MSG_Get("PROGRAM_MORE_NEW_FILE"),
 			         short_path.c_str());
 		}
-		WriteOut("\n");
+
+		new_line_and_detect_redirect();
 		++line_counter;
 
 		// If input from a device, CTRL+C shall quit
@@ -436,10 +520,13 @@ void MoreOutputFiles::DisplayInputFiles()
 	const int free_rows_threshold = 2;
 	if (!was_prompt_recently &&
 		GetMaxLines() - line_counter < free_rows_threshold) {
-		PromptUser();
+		decision = PromptUser();
 	}
 
-	WriteOut(MSG_Get("PROGRAM_MORE_END"));
+	if (decision != UserDecision::Cancel) {
+		WriteOut(MSG_Get("PROGRAM_MORE_END"));
+		WriteOut("\n");
+	}
 	WriteOut("\n");
 }
 

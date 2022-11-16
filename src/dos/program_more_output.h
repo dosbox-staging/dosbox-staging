@@ -39,6 +39,9 @@ public:
 	virtual void Display() = 0;
 
 protected:
+	// Get cursor position from BIOS
+	static uint8_t GetCursorColumn();
+	static uint8_t GetCursorRow();
 
 	uint16_t GetMaxLines() const;
 	uint16_t GetMaxColumns() const;
@@ -51,6 +54,7 @@ protected:
 
 	uint16_t line_counter = 0; // how many lines printed out since last user prompt
 
+	bool is_output_redirected = false;
 	bool was_prompt_recently  = false; // if next user prompt can be skipped
 	bool has_multiple_files   = false; // if more than 1 file has to be displayed
 	bool should_end_on_ctrl_c = false; // reaction on CTRL+C in the input
@@ -72,8 +76,6 @@ protected:
 private:
 	Program &program;
 
-	static uint8_t GetCurrentColumn();
-	static uint8_t GetCurrentRow();
 	bool GetCharacter(char &code, bool &is_last);
 
 	uint16_t max_lines   = 0; // max number of lines to display between user prompts
