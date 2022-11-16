@@ -1024,7 +1024,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Set the 32-bit magic key used to decode the game's videos.\n"
 	        "  auto:     Use the built-in routines to determine the key (default).\n"
-	        "  default:  Use the most commonly found key, which is 0x40044041.\n"
+	        "  common:   Use the most commonly found key, which is 0x40044041.\n"
 	        "  thehorde: Use The Horde's key, which is 0xC39D7088.\n"
 	        "  <custom>: Set a custom key in hex format (e.g., 0x12345678).");
 
