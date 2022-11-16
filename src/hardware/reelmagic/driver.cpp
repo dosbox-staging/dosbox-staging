@@ -169,8 +169,8 @@ namespace {
 class ReelMagic_MediaPlayerDOSFile : public ReelMagic_MediaPlayerFile {
 	// this class gives the same "look and feel" to reelmagic programs...
 	// as far as I can tell, "FMPDRV.EXE" also opens requested files into the current PSP...
-	const std::string _fileName;
-	const uint16_t _pspEntry;
+	const std::string _fileName = {};
+	const uint16_t _pspEntry    = 0;
 
 	static uint16_t OpenDosFileEntry(const std::string& filename)
 	{
@@ -261,12 +261,13 @@ public:
 
 class ReelMagic_MediaPlayerHostFile : public ReelMagic_MediaPlayerFile {
 	// this class is really only useful for debugging shit...
-	FILE* const _fp;
-	const std::string _fileName;
-	const uint32_t _fileSize;
+	FILE* _fp             = nullptr;
+	std::string _fileName = {};
+	uint32_t _fileSize    = 0;
 
 	static uint32_t GetFileSize(FILE* const fp)
 	{
+		assert(fp); // we always expect a non-void pointer
 		if (fseek(fp, 0, SEEK_END) == -1)
 			throw RMException("Host File: fseek() failed: %s", strerror(errno));
 		const long tell_result = ftell(fp);
@@ -307,15 +308,20 @@ public:
 	ReelMagic_MediaPlayerHostFile& operator=(const ReelMagic_MediaPlayerHostFile&) = delete;
 
 	ReelMagic_MediaPlayerHostFile(const char* const hostFilepath)
-	        : _fp(fopen(hostFilepath, "rb")), // not using fopen_wrap() as this class is really
-	                                          // intended for debug...
-	          _fileName(std::string("HOST:") + hostFilepath),
-	          _fileSize(GetFileSize(_fp))
 	{
+		assert(hostFilepath);
+		_fileName = std::string("HOST:") + hostFilepath;
+
+		// not using fopen_wrap() as this class is really intended for
+		// debug...
+		_fp = fopen(hostFilepath, "rb");
 		if (_fp == NULL)
 			throw RMException("Host File: fopen(\"%s\")failed: %s",
 			                  hostFilepath,
 			                  strerror(errno));
+
+		// Only get the size if we've got a valid file pointer
+		_fileSize = GetFileSize(_fp);
 	}
 	virtual ~ReelMagic_MediaPlayerHostFile()
 	{
