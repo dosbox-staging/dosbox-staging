@@ -136,15 +136,18 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 		// Detect 'new line' due to character passing the last column
 		const auto current_column = GetCurrentColumn();
+		bool line_overflow = false;
 		if (!current_column && previous_column && code != code_cr &&
 		    code != code_lf) {
 			// The cursor just moved to new line due to too small
-			// screen width. If this is followed by new line, ignore
-			// it, so that it is possible to i. e. nicely display up
-			// to 80-character lines on a standard 80 column screen
-			skip_next_cr = true;
-			skip_next_lf = true;
-			new_line     = true;
+			// screen width (line overflow). If this is followed by
+			// a new line, ignore it, so that it is possible to i. e.
+			// nicely display up to 80-character lines on a standard
+			// 80 column screen
+			skip_next_cr  = true;
+			skip_next_lf  = true;
+			new_line      = true;
+			line_overflow = true;
 		}
 		previous_column = current_column;
 
@@ -155,9 +158,10 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 		if (code != '\n') {
 			was_prompt_recently = false;
 		}
-		if (is_last) {
+		if (is_last && !line_overflow) {
 			// Skip further processing (including possible user prompt)
-			// if we know no data is left
+			// if we know no data is left and no line overflow produced
+			// an 'artificial new line'
 			decision = UserDecision::Next;
 			break;
 		}
@@ -509,7 +513,6 @@ void MoreOutputStrings::Display()
 	DisplaySingleStream();
 
 	input_strings.clear();
-	WriteOut("\n");
 }
 
 bool MoreOutputStrings::GetCharacterRaw(char &code, bool &is_last)
