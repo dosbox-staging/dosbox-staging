@@ -894,7 +894,6 @@ plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 	self->demux = plm_demux_create(buffer, destroy_when_done);
 	self->video_enabled = TRUE;
 	self->audio_enabled = TRUE;
-	plm_init_decoders(self);
 
 	return self;
 }
