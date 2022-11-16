@@ -1027,8 +1027,10 @@ class FMPDRV final : public Program {
 public:
 	FMPDRV()
 	{
-		AddMessages();
-		help_detail = {HELP_Filter::Common, HELP_Category::Dosbox, HELP_CmdType::Program, "FMPDRV"};
+		help_detail = {HELP_Filter::All,
+		               HELP_Category::Dosbox,
+		               HELP_CmdType::Program,
+		               "FMPDRV"};
 	}
 	void Run()
 	{
@@ -1069,9 +1071,13 @@ public:
 		}
 	}
 
-private:
-	void AddMessages()
+	static void AddMessages()
 	{
+		// Only do this once
+		static bool messages_were_added = false;
+		if (messages_were_added)
+			return;
+
 		MSG_Add("PROGRAM_FMPDRV_HELP_LONG",
 		        "Load or unload the built-in ReelMagic Full Motion Player driver.\n"
 		        "\n"
@@ -1102,21 +1108,28 @@ private:
 
 		MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED",
 		        "[reset][color=light-yellow]Driver not unloaded: configured to stay resident[reset]\n");
+
+		messages_were_added = true;
 	}
 };
 
 void REELMAGIC_MaybeCreateFmpdrvExecutable()
 {
-	static bool needs_driver_file = true;
+	// Always register the driver's text messages, even if the card is
+	// disabled. We cannot rely on the driver to register them because we
+	// only create the driver if the user enables ReelMagic support.
+	FMPDRV::AddMessages();
 
-	const bool card_initialized = _dosboxCallbackNumber != 0;
+	static bool was_driver_created = false;
+	const bool is_card_initialized = _dosboxCallbackNumber != 0;
 
-	if (card_initialized && needs_driver_file) {
+	if (is_card_initialized && !was_driver_created) {
 		PROGRAMS_MakeFile("FMPDRV.EXE", ProgramCreate<FMPDRV>);
 
-		// Once we've created the driver file, there's no going back: we don't have
-		// a PROGRAMS_DestroyFile(..) to remove files from the virtual Z:
-		needs_driver_file = false;
+		// Once we've created the driver, there's no going back: we
+		// don't have a PROGRAMS_DestroyFile(..) to remove files from
+		// the virtual Z:
+		was_driver_created = true;
 	}
 }
 
