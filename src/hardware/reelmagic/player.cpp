@@ -42,9 +42,12 @@ static ReelMagic_PlayerConfiguration _globalDefaultPlayerConfiguration;
 static float _audioLevel                 = 1.5f;
 static Bitu _audioFifoSize               = 20;
 static Bitu _audioFifoDispose            = 5;
-constexpr unsigned int default_magic_key = 0x40044041;
-static unsigned int _initialMagicKey     = default_magic_key;
-static int _magicalFcodeOverride         = 0; // 0 = no override
+
+constexpr unsigned int common_magic_key   = 0x40044041;
+constexpr unsigned int thehorde_magic_key = 0xC39D7088;
+
+static unsigned int _initialMagicKey = common_magic_key;
+static unsigned int _magicalFcodeOverride = 0; // 0 = no override
 
 //
 // Internal class utilities...
@@ -346,17 +349,19 @@ class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer,
 				plm_buffer_skip(_plm->video_decoder->buffer, 1);  // skip full_px
 				result = plm_buffer_read(_plm->video_decoder->buffer, 3);
 				switch (_config.MagicDecodeKey) {
-				case 0xC39D7088: // The Horde uses this "key"
+				case thehorde_magic_key:
 					if (temporal_seqnum != 4)
 						result = 0;
 					break;
 
 				default:
 					LOG(LOG_REELMAGIC, LOG_WARN)
-					("Unknown magic key 0x%08X. Defaulting to 0x40044041",
-					 _config.MagicDecodeKey);
+					("Unknown magic key: 0x%08X. Defaulting to the common key: 0x%08X",
+					 _config.MagicDecodeKey, common_magic_key);
 					// fall-through
-				case 0x40044041: // most ReelMagic games seem to use this "key"
+
+				// most ReelMagic games seem to use this "key"
+				case common_magic_key:
 					// tsn=3 and tsn=8 seem to contain truthful
 					if ((temporal_seqnum != 3) && (temporal_seqnum != 8))
 						result = 0;
@@ -890,20 +895,23 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 
 static void set_magic_key(const std::string_view key_choice)
 {
-	if (key_choice == "auto" || key_choice == "default") {
-		_initialMagicKey = default_magic_key;
-		return;
+	if (key_choice == "auto") {
+		_initialMagicKey = common_magic_key;
+		// default: don't report anything
+	} else if (key_choice == "common") {
+		_initialMagicKey = common_magic_key;
+		LOG_MSG("REELMAGIC: Using the common key: 0x%x", common_magic_key);
+	} else if (key_choice == "thehorde") {
+		_initialMagicKey = thehorde_magic_key;
+		LOG_MSG("REELMAGIC: Using The Horde's key: 0x%x", thehorde_magic_key);
+	} else if (unsigned int k; sscanf(key_choice.data(), "%x", &k) == 1) {
+		_initialMagicKey = k;
+		LOG_MSG("REELMAGIC: Using custom key: 0x%x", k);
+	} else {
+		LOG_WARNING("REELMAGIC: Failed parsing key choice '%s', using built-in routines",
+		            key_choice.data());
+		_initialMagicKey = common_magic_key;
 	}
-
-	unsigned int scanval;
-	if (sscanf(key_choice.data(), "%x", &scanval) == 1) {
-		_initialMagicKey = scanval;
-		LOG_MSG("REELMAGIC: Using custom key: %x", scanval);
-		return;
-	}
-
-	LOG_WARNING("REELMAGIC: Failed parsing key '%s', using built-in routines", key_choice.data());
-	_initialMagicKey = default_magic_key;
 }
 
 static void set_fcode(const int fps_code_choice)
