@@ -69,9 +69,9 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 
 	// Taking the upper 8 bits if the callback number is always zero because
 	// the maximum callback number is only 128. So we just confirm that here.
-	assert((static_cast<uint8_t>(static_cast<uint16_t>(call_program) >> 8) &
-	        0xff) == 0);
-	comdata.at(callback_pos + 1) = 0;
+	static_assert(sizeof(callback_number_t) < sizeof(uint16_t));
+	constexpr uint8_t upper_8_bits_of_callback = 0;
+	comdata.at(callback_pos + 1) = upper_8_bits_of_callback;
 
 	// Save the current program's vector index in its COM data
 	const auto index = internal_progs.size();

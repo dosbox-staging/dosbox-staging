@@ -362,10 +362,11 @@ static bool FMPDRV_InstallINTHandler()
 		              // for...
 	}
 
-	// The upper 8-bits of the callback are used below, however the maximum
-	// callback number is only 128 so we simply confirm that the upper 8-bits are
-	// zero and hardcode zero below.
-	assert((static_cast<uint16_t>(_dosboxCallbackNumber) >> 8) == 0);
+
+	// Taking the upper 8 bits if the callback number is always zero because
+	// the maximum callback number is only 128. So we just confirm that here.
+	static_assert(sizeof(_dosboxCallbackNumber) < sizeof(uint16_t));
+	constexpr uint8_t upper_8_bits_of_callback = 0;
 
 	// This is the contents of the "FMPDRV.EXE" INT handler which will be put in
 	// the ROM region (Note: this is derrived from "case CB_IRET:" in
@@ -401,7 +402,7 @@ static bool FMPDRV_InstallINTHandler()
 	                            0xFE,
 	                            0x38, // GRP 4 + Extra Callback Instruction
 	                            _dosboxCallbackNumber,
-	                            0,
+	                            upper_8_bits_of_callback,
 	                            0xCF, // IRET
 
 	                            // Extra "unreachable" callback instruction used
@@ -411,7 +412,7 @@ static bool FMPDRV_InstallINTHandler()
 	                            0xFE,
 	                            0x38, // GRP 4 + Extra Callback Instruction
 	                            _dosboxCallbackNumber,
-	                            0};
+	                            upper_8_bits_of_callback};
 	// Note: checking against double CB_SIZE. This is because we allocate two
 	// callbacks to make this fit within the "callback ROM" region. See comment in
 	// ReelMagic_Init() function below
