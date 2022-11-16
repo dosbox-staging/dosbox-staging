@@ -12,6 +12,7 @@ libmanymouse = static_library(
   manymouse_sources,
   dependencies: [
     iokit_dep,
+    xi_dep,
   ],
 )
 

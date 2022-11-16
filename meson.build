@@ -691,6 +691,13 @@ if host_machine.system() in ['windows', 'cygwin']
     summary('Windows Multimedia support', winmm_dep.found())
 endif
 
+# X11 Input Extension dependency for ManyMouse library
+xi_dep = optional_dep
+using_x11 = os_family_name in ['LINUX', 'BSD']
+if using_x11 and (conf_data.get('C_MANYMOUSE') == true)
+    xi_dep = dependency('xi')
+endif
+
 # Setup include directories
 incdir = include_directories('include', '.')
 
