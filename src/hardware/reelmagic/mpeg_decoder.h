@@ -1400,9 +1400,19 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 	self->mode = PLM_BUFFER_MODE_FILE;
 	self->discard_read_bytes = TRUE;
 	
-	fseek(self->fh, 0, SEEK_END);
+	assert(self->fh);
+	if (fseek(self->fh, 0, SEEK_END) != 0) {
+		// buffer_destroy takes care of closing the file
+		plm_buffer_destroy(self);
+		return NULL;
+	}
 	self->total_size = ftell(self->fh);
-	fseek(self->fh, 0, SEEK_SET);
+
+	if (fseek(self->fh, 0, SEEK_SET) != 0) {
+		// buffer_destroy takes care of closing the file
+		plm_buffer_destroy(self);
+		return NULL;
+	}
 
 	plm_buffer_set_load_callback(self, plm_buffer_load_file_callback, NULL);
 	return self;
