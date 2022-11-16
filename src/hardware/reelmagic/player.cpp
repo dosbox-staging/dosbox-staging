@@ -723,15 +723,18 @@ ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFil
 	// to ensure maximum compatibility, we must also emulate this behavior
 
 	const Bitu freeHandles = ComputeFreePlayerHandleCount();
-	uint8_t handleIndex;
+
+	uint8_t handleIndex = 0; // the last valid handle encountered
 
 	try {
 		if (freeHandles < 1)
 			throw RMException("Out of handles!");
-		for (handleIndex = 0; handleIndex < REELMAGIC_MAX_HANDLES; ++handleIndex) {
-			if (_rmhandles[handleIndex] == NULL) {
-				_rmhandles[handleIndex] = new ReelMagic_MediaPlayerImplementation(
-				        playerFile, handleIndex + 1);
+
+		for (uint8_t i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
+			handleIndex = i;
+			if (_rmhandles[i] == NULL) {
+				_rmhandles[i] = new ReelMagic_MediaPlayerImplementation(
+				        playerFile, i + 1);
 				break;
 			}
 		}
@@ -740,6 +743,7 @@ ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFil
 		throw;
 	}
 
+	assert(handleIndex < REELMAGIC_MAX_HANDLES);
 	Bitu handlesNeeded = _rmhandles[handleIndex]->GetHandlesNeeded();
 	if (freeHandles < handlesNeeded) {
 		delete _rmhandles[handleIndex];
