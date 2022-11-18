@@ -755,12 +755,10 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 		return;
 	}
 
-	// check to make sure that our MPEG picture buffer is big enough for the provider's MPEG
-	// picture size
-	const Bitu mpegPictureSize = provider->GetAttrs().PictureSize.Width *
-	                             provider->GetAttrs().PictureSize.Height;
-	const Bitu maxMpegPictureSize = sizeof(_mpegPictureBuffer) / sizeof(_mpegPictureBuffer[0]);
-	if (mpegPictureSize > maxMpegPictureSize) {
+	// Can our MPEG picture buffer accomodate the provider's picture size?
+	const auto dimensions = provider->GetAttrs().PictureSize;
+	if (dimensions.Width > SCALER_MAXWIDTH ||
+	    dimensions.Height > SCALER_MAXHEIGHT) {
 		LOG(LOG_REELMAGIC, LOG_ERROR)
 		("Video Mixing Buffers Too Small for MPEG Video Size. Reject Player Push");
 		return;
