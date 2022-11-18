@@ -1,4 +1,4 @@
-# This file uses configuration options available in clang-format 12.0.
+# This file uses configuration options available in clang-format 15.0.
 #
 # More detailed description of all options:
 # https://releases.llvm.org/12.0.0/tools/clang/docs/ClangFormatStyleOptions.html
@@ -160,6 +160,36 @@ AlwaysBreakTemplateDeclarations: Yes
 #             "eeee";
 #
 # AlwaysBreakBeforeMultilineStrings: true
+
+# Insert braces after control statements (``if``, ``else``, ``for``, ``do``,
+#  and ``while``) in C++ unless the control statements are inside macro
+#  definitions or the braces would enclose preprocessor directives.
+#
+#   == WARNING ==
+#   Setting this option to `true` could lead to incorrect code formatting due
+#   to clang-format's lack of complete semantic information. As such, extra
+#   care should be taken to review code changes made by this option.
+#
+#    false:                                    true:
+#
+#    if (isa<FunctionDecl>(D))        vs.      if (isa<FunctionDecl>(D)) {
+#      handleFunctionDecl(D);                    handleFunctionDecl(D);
+#    else if (isa<VarDecl>(D))                 } else if (isa<VarDecl>(D)) {
+#      handleVarDecl(D);                         handleVarDecl(D);
+#    else                                      } else {
+#      return;                                   return;
+#                                              }
+#
+#    while (i--)                      vs.      while (i--) {
+#      for (auto *A : D.attrs())                 for (auto *A : D.attrs()) {
+#        handleAttr(A);                            handleAttr(A);
+#                                                }
+#                                              }
+#    do                               vs.      do {
+#      --i;                                      --i;
+#    while (i);
+#
+InsertBraces: true
 
 # Attach braces to surrounding context except break before braces on function
 # definitions (also known as K&R indentation style). This is C-derived style,
