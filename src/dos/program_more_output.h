@@ -52,7 +52,21 @@ protected:
 
 	virtual bool GetCharacterRaw(char &code, bool &is_last) = 0;
 
-	uint16_t line_counter = 0; // how many lines printed out since last user prompt
+	enum class State {
+		Normal,
+		AnsiEsc,     // ANSI escape code started
+		AnsiEscEnd,  // last character of ANSI escape code
+		AnsiSci,     // ANSI control sequence started
+		AnsiSciEnd,  // last character of ANSI control sequence
+		NewLineCR,   // not ANSI, character code is Carriage Return
+		NewLineLF,   // not ANSI, character code is Line Feed
+		LineOverflow // line too long, cursor skipped to the next one
+	};
+
+	State state = State::Normal;
+
+	// how many lines printed out since last user prompt
+	uint16_t line_counter = 0;
 
 	bool is_output_redirected = false;
 	bool was_prompt_recently  = false; // if next user prompt can be skipped
@@ -76,17 +90,14 @@ protected:
 private:
 	Program &program;
 
-	bool GetCharacter(char &code, bool &is_last);
+	bool GetCharacter(char& code, bool& is_last_character);
 
-	uint16_t max_lines   = 0; // max number of lines to display between user prompts
+	uint16_t max_lines   = 0; // max lines to display between user prompts
 	uint16_t max_columns = 0;
 
 	uint8_t tab_size       = 8; // how many spaces to print for a TAB
 	uint8_t tabs_remaining = 0; // how many spaces still to be printed for the current TAB
 	bool    is_tab_last    = false;
-
-	bool skip_next_cr = false;
-	bool skip_next_lf = false;
 };
 
 // ***************************************************************************
@@ -106,7 +117,7 @@ private:
 
 	std::string GetShortPath(const std::string &file_path, const char *msg_id);
 
-	bool GetCharacterRaw(char &code, bool &is_last) override;
+	bool GetCharacterRaw(char& code, bool& is_last_character) override;
 
 	struct InputFile {
 		std::string path = "";
@@ -129,7 +140,7 @@ public:
 	void Display() override;
 
 private:
-	bool GetCharacterRaw(char &code, bool &is_last) override;
+	bool GetCharacterRaw(char& code, bool& is_last_character) override;
 
 	std::string input_strings = {};
 	size_t input_position     = 0;
