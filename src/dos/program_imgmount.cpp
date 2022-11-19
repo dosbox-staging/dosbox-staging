@@ -24,18 +24,19 @@
 
 #include <vector>
 
+#include "../ints/int10.h"
 #include "bios_disk.h"
+#include "cdrom.h"
 #include "control.h"
 #include "cross.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "ide.h"
 #include "mapper.h"
+#include "program_more_output.h"
 #include "program_mount_common.h"
 #include "shell.h"
-#include "cdrom.h"
 #include "string_utils.h"
-#include "../ints/int10.h"
 
 void IMGMOUNT::ListImgMounts(void)
 {
@@ -96,8 +97,10 @@ void IMGMOUNT::Run(void) {
     }
     // Usage
     if (HelpRequested()) {
-        WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
-        return;
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
+	output.Display();
+	return;
     }
 
     /* In secure mode don't allow people to change imgmount points.
@@ -492,44 +495,45 @@ void IMGMOUNT::Run(void) {
 
 void IMGMOUNT::AddMessages() {
     AddCommonMountMessages();
-	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
-	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
-	        "\n"
-	        "Usage:\n"
-	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
-	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro\n"
-	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro\n"
-	        "  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
-	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...\n"
-	        "  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
-	        "  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format\n"
-	        "  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:\n"
-	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
-	        "Notes:\n"
-	        "  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.\n"
-	        "  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"
-	        "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
-	        "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
-	        "Examples:\n"
+    MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG",
+	    "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
+	    "\n"
+	    "Usage:\n"
+	    "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
+	    "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro\n"
+	    "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro\n"
+	    "  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
+	    "\n"
+	    "Where:\n"
+	    "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...\n"
+	    "  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+	    "  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format\n"
+	    "  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:\n"
+	    "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
+	    "Notes:\n"
+	    "  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.\n"
+	    "  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"
+	    "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
+	    "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
+	    "\n"
+	    "Examples:\n"
 #if defined(WIN32)
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\\games\\doom.iso[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
-	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\\games\\doom.iso[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	    "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
 #elif defined(MACOSX)
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
-	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	    "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
 #else
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
-	        "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
-	        "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom\n"
+	    "  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
+	    "  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
 #endif
-	);
+    );
     
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");

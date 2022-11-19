@@ -1,3 +1,33 @@
+:TITLEBAR_CYCLES_MS
+cicli/ms
+.
+:TITLEBAR_HINT_PAUSED
+(IN PAUSA)
+.
+:TITLEBAR_HINT_NOMOUSE
+modalità senza mouse
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+mouse catturato, %s+F10 per rilasciarlo
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+mouse catturato, %s+F10 o clic centrale per rilasciarlo
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+per catturare il mouse premere %s+F10
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+per catturare il mouse premere %s+F10 o clic centrale
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+per catturare il mouse premere %s+F10 o fare clic su qualsiasi pulsante
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+mouse senza soluzione di continuità, %s+F10 per catturarlo
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+mouse senza soluzione di continuità, %s+F10 o clic centrale per catturarlo
+.
 :CONFIG_FULLSCREEN
 Avvia direttamente a schermo intero.
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
@@ -85,30 +115,13 @@ Scegli un driver di rendering da utilizzare nella modalità di uscita texture.
 Usa texture_renderer=auto per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
-Scegli un metodo di controllo del mouse:
-   onclick:       Cattura il mouse alla pressione di qualsiasi tasto
-                  all'interno della finestra.
-   onstart:       Cattura il mouse immediatamente all'avvio.
-   seamless:      Permette al mouse di muoversi liberamente; È possibile
-                  catturarlo con un clic centrale o con l'apposito tasto di
-                  scelta rapida.
-   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
-                  input al gioco.
-Scegli come vengono gestiti i clic centrali (secondo parametro):
-   middlegame:    I clic centrali vengono inviati al gioco.
-   middlerelease: Il clic centrale rilascia il mouse precedentemente catturato.
-                  Nel caso in cui si utilizzi il metodo di controllo seamless,
-                  esso si occuperà anche di catturarlo.
-Predefiniti (se non presenti o incorretti): seamless middlerelease
+Spostato nella sezione [mouse].
 .
 :CONFIG_SENSITIVITY
-Sensibilità del mouse. Il secondo parametro, facoltativo, specifica la
-sensibilità verticale (es. 100,-50).
+Spostato nella sezione [mouse].
 .
 :CONFIG_RAW_MOUSE_INPUT
-Abilita questa impostazione per bypassare le impostazioni di sensibilità
-e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
-schermo intero o quando il mouse viene catturato in modalità finestra.
+Spostato nella sezione [mouse].
 .
 :CONFIG_WAITONERROR
 Mantiene la console aperta se si verifica un errore.
@@ -248,12 +261,17 @@ Funziona solo quando si emula hercules o cga_mono.
 Imposta l'interpretazione dei colori CGA RGBI. Influisce su tutti i tipi di
 macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
-  tandy [BL]:    Emulazione di un monitor Tandy con livello marrone regolabile
-                 (0 - rosso, 50 - marrone, 100 - giallo scuro; predefinito 50).
-  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy.
+  tandy [BL]:    Emulazione di un monitor Tandy con livello del marrone
+                 regolabile. Il livello del marrone può essere fornito come
+                 secondo parametro opzionale (0 - rosso, 50 - marrone,
+                 100 - giallo scuro; predefinito 50), Es. tandy 100
+  tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy
+                 sconosciuto.
   ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor
                  IBM 5153 con un esclusivo controllo del contrasto che attenua
-                 solo i colori non luminosi (da 0 a 100; predefinito 100).
+                 solo i colori non luminosi. Il contrasto può essere fornito
+                 come secondo parametro opzionale (da 0 a 100; predefinito 100)
+                 Es. ibm5153 60
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
                  Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra
                  (fare riferimento al manuale per ulteriori dettagli).
@@ -346,6 +364,77 @@ controllo della velocità.
 Un valore più basso di 100 indica una percentuale.
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida.
+.
+:CONFIG_MOUSE_CAPTURE
+Scegli un metodo di controllo del mouse:
+   onclick:       Cattura il mouse quando fai clic con qualsiasi pulsante
+                  all'interno della finestra.
+   onstart:       Cattura il mouse immediatamente all'avvio.
+   seamless:      Modalità mouse senza soluzione di continuità; È possibile
+                  catturarlo con un clic centrale o con l'apposito tasto di
+                  scelta rapida.
+   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
+                  input al gioco.
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+Se vero, il clic centrale rilascerà il mouse precedentemente catturato.
+Nel caso in cui si utilizzi il metodo di controllo 'seamless', esso si
+occuperà anche di catturarlo.
+.
+:CONFIG_MOUSE_SENSITIVITY
+Sensibilità del mouse predefinita. 100 è il valore base, 150 equivale al 150%
+di sensibilità, ecc.
+Valori negativi invertono la direzione del mouse, 0 lo disabilita.
+Il secondo parametro specifica la sensibilità verticale (ad es. 100,200).
+Questa impostazione può essere regolata durante l'esecuzione del programma
+(per ogni interfaccia del mouse) utilizzando lo strumento interno MOUSECTL.COM,
+disponibile sull'unità Z:.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Abilita questa impostazione per bypassare le impostazioni di sensibilità
+e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
+schermo intero o quando il mouse viene catturato in modalità finestra.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Abilita il driver del mouse DOS integrato.
+Note:
+   Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
+   Quando un sistema operativo guest viene avviato, il driver integrato viene
+   disabilitato automaticamente.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
+l'interrupt. Può migliorare la giocabilità, specialmente nei giochi dal ritmo
+veloce (arcade, FPS, ecc.) poichè per alcuni incrementa efficacemente la
+frequenza di polling a 1000 Hz, senza aumentare il sovraccarico dell'interrupt.
+Potrebbe causare problemi di compatibilità. 
+Elenco di giochi incompatibili noti:
+   - Ultima Underworld: The Stygian Abyss
+   - Ultima Underworld II: Labyrinth of Worlds
+Segnala un bug nel repository del progetto se trovi un altro gioco che ha
+problemi con questa impostazione abilitata, aggiorneremo questo elenco.
+.
+:CONFIG_PS2_MOUSE_MODEL
+Modello mouse porta PS/2 AUX:
+   standard:       3 pulsanti, mouse PS/2 standard.
+   intellimouse:   3 pulsanti + rotellina, Microsoft IntelliMouse.
+Predefinito: intellimouse
+.
+:CONFIG_COM_MOUSE_MODEL
+Modello mouse predefinito porta COM (seriale):
+   2button:        2 pulsanti, mouse Microsoft.
+   3button:        3 pulsanti, mouse Logitech,
+                   per lo più compatibile con mouse Microsoft.
+   wheel:          3 pulsanti + rotellina,
+                   per lo più compatibile con mouse Microsoft.
+   msm:            3 pulsanti, mouse Mouse Systems,
+                   NON COMPATIBILE con mouse Microsoft.
+   2button+msm:    Scelta automatica tra 2button e msm.
+   3button+msm:    Scelta automatica tra 3button e msm.
+   wheel+msm:      Scelta automatica tra wheel e msm.
+Predefinito: wheel+msm
+Note:
+   Vai alla sezione [serial] per abilitare/disabilitare i mouse su porta COM.
 .
 :CONFIG_NOSOUND
 Attiva la modalità silenziosa, ma il suono viene comunque emulato.
@@ -803,14 +892,7 @@ Può essere: disabled, dummy, mouse, modem, nullmodem, direct.
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
 per mouse:
-   type (tipo), può essere uno dei seguenti:
-      2btn:  2 pulsanti, mouse seriale Microsoft
-      3btn:  3 pulsanti, mouse seriale Logitech
-      wheel: mouse seriale 3 pulsanti + rotellina
-      msm:   3 pulsanti, mouse Mouse Systems
-      2btn+msm, 3btn+msm, wheel+msm : selezione automatica
-   rate (tasso), può essere normal o smooth (aggiornamenti più frequenti)
-   Predefinito type:wheel+msm rate:smooth
+   model, sovrascrive l'impostazione dalla sezione [mouse].
 per direct: realport (richiesto), rxdelay (facoltativo).
    (realport:COM1 realport:ttyS0).
 per modem: listenport, sock, baudrate (tutti facoltativi).
@@ -1095,7 +1177,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Esegue l'immissione da tastiera tramite script in un gioco DOS.
 
 Utilizzo:
@@ -1121,7 +1203,7 @@ Esempi:
   [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Avvia DOSBox Staging da un'unità DOS o da un'immagine disco.
 
 Utilizzo:
@@ -1262,7 +1344,7 @@ Unità %c montata come %s
 Le unità attualmente montate sono:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 
 Utilizzo:
@@ -1364,6 +1446,29 @@ L'immagine deve trovarsi su un'unità host o locale.
 L'uso di file multipli è supportato solo per le immagini cue/iso.
 
 .
+:PROGRAM_INTRO_HELP
+Visualizza un'introduzione a schermo intero in DOSBox Staging.
+
+.
+:PROGRAM_INTRO_HELP_LONG
+Utilizzo:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]PAGINA[reset]
+
+Dove:
+  [color=white]PAGINA[reset] è il nome della pagina da visualizzare, incluso [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]
+
+Note:
+  L'esecuzione di [color=green]intro[reset] senza un argomento, permette di visualizzare una pagina
+  di informazioni alla volta; premere un tasto qualsiasi per passare alla
+  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata
+  direttamente quella specificata.
+
+Esempi:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
+
+.
 :PROGRAM_INTRO
 [erases=entire][color=green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.
 DOSBox crea una shell simile al vecchio DOS.
@@ -1459,9 +1564,9 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 Queste sono le combinazioni di tasti predefinite.
 Possono essere modificate nel [color=light-yellow]keymapper[reset].
 
-[color=yellow]%s+Enter[reset]  Passa dalla modalità a schermo intero a quella a finestra
+[color=yellow]%s+Invio[reset]  Passa dalla modalità a schermo intero a quella a finestra
            e viceversa.
-[color=yellow]%s+Pause[reset]  Mette in Pausa/Riavvia l'emulatore.
+[color=yellow]%s+Pausa[reset]  Mette in Pausa/Riavvia l'emulatore.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
@@ -1484,7 +1589,7 @@ Tabella codici %i caricata.
 Tabella codici %i caricata per il layout %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configura la tastiera in base alla lingua specificata.
 
 Utilizzo:
@@ -1531,7 +1636,7 @@ Impossibile trovare il layout %s per la tabella codici %i.
 File tabella codici mancante o non valido per il layout %s.
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Carica un programma nella regione di memoria specifica e lo esegue.
 
 Utilizzo:
@@ -1571,7 +1676,7 @@ Memoria in uso liberata.
 Errore allocazione di memoria.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Carica un'immagine ROM del BIOS video o IBM BASIC.
 
 Utilizzo:
@@ -1613,7 +1718,7 @@ File ROM non riconosciuto.
 ROM BASIC caricata.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Visualizza le informazioni sulla memoria DOS.
 
 Utilizzo:
@@ -1647,11 +1752,58 @@ Esempi:
 %10d kB di memoria superiore libera in %d blocchi (UMB più grande %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MORE_HELP_LONG
+Visualizza l'output una schermata alla volta.
+
+Utilizzo:
+  [color=cyan]COMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]MODELLO[reset] [[color=cyan]MODELLO[reset] ...]
+
+Dove:
+  [color=cyan]COMANDO[reset] è il comando di cui visualizzare l'output.
+  [color=cyan]FILE[reset]    è il nome del file da visualizzare, facoltativamente con un percorso.
+  [color=cyan]MODELLO[reset] è un percorso a un singolo file o con caratteri jolly,
+          cioè asterisco (*) e punto di domanda (?).
+  [color=white]n[reset]       è la misura della tabulazione, 1-9, il valore predefinito è 8.
+
+Note:
+  Questo comando serve solo per visualizzare file di testo, non file binari.
+
+Esempi:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]    ; visualizza la directory ordinata una schermata alla volta
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUALE.TXT[reset]    ; mostra il contenuto del file con misura tab. 4
+
+.
+:PROGRAM_MORE_NO_FILE
+Nessun file di input trovato.
+.
+:PROGRAM_MORE_END
+[reset][color=light-yellow]--- fine ---[reset]
+.
+:PROGRAM_MORE_NEW_FILE
+[reset][color=light-yellow]--- file %s ---[reset]
+.
+:PROGRAM_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- dispositivo %s ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- premere SPAZIO per continuare ---[reset]
+.
+:PROGRAM_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- premere SPAZIO per continuare, N per il prossimo file ---[reset]
+.
+:PROGRAM_MORE_OPEN_ERROR
+[reset][color=red]--- impossibile aprire %s ---[reset]
+.
+:PROGRAM_MORE_TERMINATE
+[reset][color=light-yellow](terminato)[reset]
+.
+:PROGRAM_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Monta una directory del sistema operativo host su una lettera di unità.
 
 Utilizzo:
@@ -1756,7 +1908,110 @@ Sovrapposizione %s nell'unità %c montata.
 Impossibile spostare l'unità Z. L'unità %c è già montata.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_MOUSECTL_HELP_LONG
+Gestisce i mouse fisici e logici.
+
+Utilizzo:
+  [color=green]mousectl[reset] [-all]
+  [color=green]mousectl[reset] [color=white]INTERFACCIA[reset] -map [color=cyan]NOME[reset]
+  [color=green]mousectl[reset] [color=white]INTERFACCIA[reset] [[color=white]INTERFACCIA[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -s | -sx | -sy [sensibilità]
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -s sensibilità_x sensibilità_y
+  [color=green]mousectl[reset] [[color=white]INTERFACCIA[reset] ...] -r [freq_min]
+
+Dove:
+  [color=white]INTERFACCIA[reset] è uno dei seguenti: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
+  -map -unmap mappa/disattiva mouse fisico, accetta caratteri jolly DOS in [color=cyan]NOME[reset]
+  -s -sx -sy  imposta la sensibilità per l'asse x / asse y, da -999 a +999.
+  -r          imposta la frequenza di polling minima del mouse.
+  -on -off    abilita o disabilita il mouse sull'interfaccia specificata.
+  -reset      ripristina tutte le impostazioni dal file di configurazione.
+
+Note:
+  Se sensibilità o frequenza sono omessi, verrà usato il valore predefinito.
+
+Esempi:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
+.
+:PROGRAM_MOUSECTL_SYNTAX
+Sintassi del comando errata.
+.
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
+Sintassi errata, sono ammessi solo caratteri ASCII.
+.
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
+Sintassi errata, la sensibilità deve essere compresa tra -999 e +999.
+.
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
+Sintassi errata, interfacce del mouse duplicate.
+.
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
+Sintassi errata, la frequenza di polling deve essere una dei seguenti:
+%s
+.
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
+Mappatura non disponibile in modalità senza mouse.
+.
+:PROGRAM_MOUSECTL_NO_INTERFACES
+Nessuna interfaccia del mouse disponibile.
+.
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
+Interfaccia mouse non disponibile.
+.
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
+Nessun mouse fisico rilevato.
+.
+:PROGRAM_MOUSECTL_NO_MATCH
+Nessun mouse corrispondente trovato.
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER1
+[color=white]Interfaccia    Sensibilità    Frequenza (Hz)    Stato[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
+[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s        %s
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER2
+[color=white]Interfaccia    Nome Mouse[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
+[color=cyan]%-4s[reset]           %s
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+non mappato    %s
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
+utilizza il puntatore di sistema
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
+mouse fisico mappato
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=red]mouse mappato disconnesso[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
+disabilitato
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
+Le frequenze di polling per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
+Le frequenze di polling con valore minimo impostato sono contrassegnate con '*'
+.
+:PROGRAM_MOUSECTL_MAP_ADVICE
+Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
+sull'interfaccia. Facendo clic su qualsiasi altro pulsante, si annulla la 
+mappatura e si assegna il puntatore di sistema a tutte le interfacce del mouse.
+.
+:PROGRAM_MOUSECTL_MAP_CANCEL
+(mappatura annullata)
+.
+:PROGRAM_MOUSECTL_MAP_HINT
+L'integrazione del mouse senza soluzione di continuità è sempre disabilitata
+mentre la mappatura è attiva e i mouse mappati ricevono eventi di input
+non elaborati.
+.
+:PROGRAM_RESCAN_HELP_LONG
 Scansiona le modifiche sulle unità DOS montate.
 
 Utilizzo:
@@ -1791,7 +2046,7 @@ Utilizzo:
   [color=green]mixer[reset] [/listmidi]
 
 Dove:
-  [color=cyan]CANALE[reset] è il canale audio di cui modificare le impostazioni.
+  [color=cyan]CANALE[reset]  è il canale audio di cui modificare le impostazioni.
   [color=white]COMANDI[reset] è uno o più dei seguenti comandi:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
@@ -1827,7 +2082,7 @@ Inverso
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
@@ -2338,29 +2593,6 @@ Note:
 Esempi:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
-
-.
-:SHELL_CMD_INTRO_HELP
-Visualizza un'introduzione a schermo intero di DOSBox Staging.
-
-.
-:SHELL_CMD_INTRO_HELP_LONG
-Utilizzo:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]PAGINA[reset]
-
-Dove:
-  [color=white]PAGINA[reset] è il nome della pagina da visualizzare, incluso [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]
-
-Note:
-  L'esecuzione di [color=green]intro[reset] senza un argomento, permette di visualizzare una pagina
-  di informazioni alla volta; premere un tasto qualsiasi per passare alla
-  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata
-  direttamente quella specificata.
-
-Esempi:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_MKDIR_HELP

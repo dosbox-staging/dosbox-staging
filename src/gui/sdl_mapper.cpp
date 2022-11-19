@@ -42,6 +42,7 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "math_utils.h"
+#include "mouse.h"
 #include "pic.h"
 #include "rgb24.h"
 #include "setup.h"
@@ -58,10 +59,6 @@
 constexpr rgb24 marginal_color(255, 103, 0); // Amber for marginal conditions
 constexpr rgb24 on_color(0, 1, 0);           // Green for on/ready/in-use
 constexpr rgb24 off_color(0, 0, 0);          // Black for off/stopped/not-in-use
-
-/* Mouse related */
-void GFX_ToggleMouseCapture();
-extern bool mouse_is_captured; //true if mouse is confined to window
 
 enum {
 	CLR_BLACK=0,
@@ -366,6 +363,8 @@ public:
 	{
 		if (key == SDL_SCANCODE_RETURN)
 			return "Enter"; // instead of "Return"
+		else if (key == SDL_SCANCODE_INTERNATIONAL1)
+			return "International 1"; // instead of empty string
 		else
 			return SDL_GetScancodeName(key);
 	}
@@ -2177,8 +2176,12 @@ static void CreateLayout() {
 	AddKeyButtonEvent(PX(XO+3),PY(YO+3),BW,BH*2,"ENT","kp_enter",KBD_kpenter);
 	AddKeyButtonEvent(PX(XO),PY(YO+4),BW*2,BH,"0","kp_0",KBD_kp0);
 	AddKeyButtonEvent(PX(XO+2),PY(YO+4),BW,BH,".","kp_period",KBD_kpperiod);
+
+	/* International Keys */
+	AddKeyButtonEvent(PX(XO + 5), PY(YO), BW * 2, BH, "Intl1", "intl1", KBD_intl1);
 #undef XO
 #undef YO
+
 #define XO 10
 #define YO 8
 	/* Joystick Buttons/Texts */
@@ -2478,6 +2481,8 @@ static struct {
                    /* Is that the extra backslash key ("less than" key) */
                    /* on some keyboards with the 102-keys layout??      */
                    {"lessthan", SDL_SCANCODE_NONUSBACKSLASH},
+				   				   
+                   {"intl1", SDL_SCANCODE_INTERNATIONAL1},
 
                    {0, SDL_SCANCODE_UNKNOWN}};
 
@@ -2921,11 +2926,6 @@ void MAPPER_LosingFocus() {
 
 void MAPPER_RunEvent(uint32_t /*val*/)
 {
-	if (!GFX_MouseIsAvailable()) {
-		LOG_ERR("MAPPER: The mapper requires a mouse, but no mouse is available");
-		LOG_WARNING("MAPPER: Set your conf 'capture_mouse' setting to something other than 'nomouse'");
-		return;
-	}
 	KEYBOARD_ClrBuffer();           // Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
 	MAPPER_DisplayUI();
@@ -2940,20 +2940,14 @@ void MAPPER_Run(bool pressed) {
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,uint32_t flags);
 
 void MAPPER_DisplayUI() {
+	MOUSE_NotifyTakeOver(true);
+
 	// The mapper is about to take-over SDL's surface and rendering
 	// functions, so disengage the main ones. When the mapper closes, SDL
 	// main will recreate its rendering pipeline.
 	GFX_DisengageRendering();
 
-	int cursor = SDL_ShowCursor(SDL_QUERY);
-	SDL_ShowCursor(SDL_ENABLE);
-	bool mousetoggle = false;
-	if (mouse_is_captured) {
-		mousetoggle = true;
-		GFX_ToggleMouseCapture();
-	}
-
-	/* Be sure that there is no update in progress */
+	// Be sure that there is no update in progress
 	GFX_EndUpdate( 0 );
 	mapper.window = GFX_SetSDLSurfaceWindow(640, 480);
 	if (mapper.window == nullptr)
@@ -3000,10 +2994,8 @@ void MAPPER_DisplayUI() {
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_DISABLE);
 #endif
-	if (mousetoggle)
-		GFX_ToggleMouseCapture();
-	SDL_ShowCursor(cursor);
 	GFX_ResetScreen();
+	MOUSE_NotifyTakeOver(false);
 }
 
 static void MAPPER_Destroy(Section *sec) {

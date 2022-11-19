@@ -114,7 +114,10 @@ jobs:
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  meson test -C build --print-errorlogs
+        run: |
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+          eval "$(${{ matrix.conf.brew_path }}/bin/brew shellenv)"
+          meson test --num-processes 128 -t 0 -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
@@ -188,7 +191,7 @@ jobs:
         if:   matrix.runner.needs_deps
         run: >-
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
-          ccache libpng meson opusfile sdl2 sdl2_net speexdsp
+          ccache libpng meson opusfile sdl2 sdl2_image sdl2_net speexdsp
 
       # Workaround frequent HTTPS-based connectivity issues
       # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
@@ -222,7 +225,7 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_image,sdl2_net build
           meson compile -C build
 
       - name: Upload binary

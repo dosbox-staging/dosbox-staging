@@ -46,6 +46,9 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
+#if C_SDL_IMAGE
+#	include <SDL_image.h>
+#endif
 
 #include "../ints/int10.h"
 #include "control.h"
@@ -54,6 +57,7 @@
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "hardware.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -198,12 +202,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 
 SDL_Block sdl;
 
-bool mouse_is_captured = false;       // the actual state of the mouse
-bool mouse_capture_requested = false; // if the user manually requested the capture
-
 // Masks to be passed when creating SDL_Surface.
-// Remove ifndef if they'll be needed for MacOS X builds.
-#ifndef MACOSX
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 constexpr uint32_t RMASK = 0xff000000;
 constexpr uint32_t GMASK = 0x00ff0000;
@@ -215,7 +214,6 @@ constexpr uint32_t GMASK = 0x0000ff00;
 constexpr uint32_t BMASK = 0x00ff0000;
 constexpr uint32_t AMASK = 0xff000000;
 #endif
-#endif // !MACOSX
 
 // Size and ratio constants
 // ------------------------
@@ -318,26 +316,39 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(int32_t cycles, int /*frameskip*/, bool paused)
+void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
 {
-	char title[200] = {0};
+	char title_buf[200] = {0};
 
 #if !defined(NDEBUG)
-	const char* build_type = " (debug build)";
+	#define APP_NAME_STR "DOSBox Staging (debug build)"
 #else
-	const char* build_type = "";
+	#define APP_NAME_STR "DOSBox Staging"
 #endif
 
-	static int32_t internal_cycles = 0;
-	if (cycles != -1)
-		internal_cycles = cycles;
+	auto &num_cycles      = sdl.title_bar.num_cycles;
+	auto &cycles_ms_str   = sdl.title_bar.cycles_ms_str;
+	auto &hint_mouse_str  = sdl.title_bar.hint_mouse_str;
+	auto &hint_paused_str = sdl.title_bar.hint_paused_str;
 
-	const char *msg = CPU_CycleAutoAdjust
-	                          ? "%8s - max %d%% - DOSBox Staging%s%s"
-	                          : "%8s - %d cycles/ms - DOSBox Staging%s%s";
-	safe_sprintf(title, msg, RunningProgram, internal_cycles, build_type,
-	             paused ? " (PAUSED)" : "");
-	SDL_SetWindowTitle(sdl.window, title);
+	if (new_num_cycles != -1)
+		num_cycles = new_num_cycles;
+
+	if (cycles_ms_str.empty()) {
+		cycles_ms_str   = MSG_GetRaw("TITLEBAR_CYCLES_MS");
+		hint_paused_str = std::string(" ") + MSG_GetRaw("TITLEBAR_HINT_PAUSED");
+	}
+
+	if (CPU_CycleAutoAdjust)
+		safe_sprintf(title_buf, "%8s - max %d%% - " APP_NAME_STR "%s",
+		             RunningProgram, num_cycles,
+		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
+	else
+		safe_sprintf(title_buf, "%8s - %d %s - " APP_NAME_STR "%s",
+		             RunningProgram, num_cycles, cycles_ms_str.c_str(),
+		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
+
+	SDL_SetWindowTitle(sdl.window, title_buf);
 }
 
 static double get_host_refresh_rate()
@@ -658,20 +669,34 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
+static SDL_Rect calc_viewport_pp(int win_width, int win_height);
+
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(int source_w, int source_h,
+                                   const std::optional<SDL_Rect> &target_size_override,
                                    const SCALING_MODE scaling_mode,
                                    const SCREEN_TYPES screen_type,
                                    const PPScale &pp_scale)
 {
+	// The pixel perfect object holds its effective source dimensions
+	if (scaling_mode == SCALING_MODE::PERFECT) {
+		source_w = pp_scale.effective_source_w;
+		source_h = pp_scale.effective_source_h;
+	}
+	// Get the target dimentions, with consideration for possible override
+	// values and pixel-perfect handling
 	auto get_target_dims = [&]() -> std::pair<int, int> {
+		if (target_size_override) {
+			auto calc_vp  = (scaling_mode == SCALING_MODE::PERFECT)
+			                      ? calc_viewport_pp
+			                      : calc_viewport_fit;
+			const auto vp = calc_vp(target_size_override->w,
+			                        target_size_override->h);
+			return {vp.w, vp.h};
+		}
 		if (scaling_mode == SCALING_MODE::PERFECT) {
-			// The pixel perfect object holds the effective source
-			// resolution and scaled target resolution, so use those:
-			source_w = pp_scale.effective_source_w;
-			source_h = pp_scale.effective_source_h;
 			return {pp_scale.output_w, pp_scale.output_h};
 		}
 		const auto canvas   = get_canvas_size(screen_type);
@@ -1117,10 +1142,9 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 
 static void NewMouseScreenParams()
 {
-	int abs_x, abs_y;
+	int abs_x = 0;
+	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
-	abs_x = std::clamp(abs_x, 0, static_cast<int>(UINT16_MAX));
-	abs_y = std::clamp(abs_y, 0, static_cast<int>(UINT16_MAX));
 
 #ifdef __APPLE__
 	// macOS moves mouse cursor on "client points" grid, not physical pixels;
@@ -1129,15 +1153,17 @@ static void NewMouseScreenParams()
 	                      sdl.clip.y / sdl.desktop.dpi_scale,
 	                      sdl.clip.w / sdl.desktop.dpi_scale,
 	                      sdl.clip.h / sdl.desktop.dpi_scale,
-	                      sdl.desktop.fullscreen,
-	                      check_cast<uint16_t>(abs_x),
-	                      check_cast<uint16_t>(abs_y));
+	                      check_cast<int32_t>(abs_x),
+	                      check_cast<int32_t>(abs_y),
+	                      sdl.desktop.fullscreen);
 #else
-	MOUSE_NewScreenParams(sdl.clip.x, sdl.clip.y,
-	                      sdl.clip.w, sdl.clip.h,
-	                      sdl.desktop.fullscreen,
-	                      check_cast<uint16_t>(abs_x),
-	                      check_cast<uint16_t>(abs_y));
+	MOUSE_NewScreenParams(check_cast<uint32_t>(sdl.clip.x),
+	                      check_cast<uint32_t>(sdl.clip.y),
+	                      check_cast<uint32_t>(sdl.clip.w),
+	                      check_cast<uint32_t>(sdl.clip.h),
+	                      check_cast<int32_t>(abs_x),
+	                      check_cast<int32_t>(abs_y),
+	                      sdl.desktop.fullscreen);
 #endif
 }
 
@@ -1746,9 +1772,16 @@ dosurface:
 			goto dosurface;
 		}
 
-		assert(sdl.texture.input_surface == nullptr); // ensure we don't leak
-		sdl.texture.input_surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, texture_format);
-		if (!sdl.texture.input_surface) {
+		// release the existing surface if needed
+		auto &texture_input_surface = sdl.texture.input_surface;
+		if (texture_input_surface) {
+			SDL_FreeSurface(texture_input_surface);
+			texture_input_surface = nullptr;
+		}
+		assert(texture_input_surface == nullptr); // ensure we don't leak
+		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
+		        0, width, height, 32, texture_format);
+		if (!texture_input_surface) {
 			LOG_WARNING("SDL: Error while preparing texture input");
 			goto dosurface;
 		}
@@ -2122,6 +2155,7 @@ dosurface:
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
+		                       {},
 		                       sdl.scaling_mode,
 		                       sdl.desktop.type,
 		                       sdl.pp_scale);
@@ -2147,39 +2181,83 @@ void GFX_SetShader([[maybe_unused]] const std::string &source)
 #endif
 }
 
-bool GFX_MouseIsAvailable() {
-	return sdl.mouse.control_choice != NoMouse;
-}
-
-void GFX_ToggleMouseCapture()
+void GFX_SetMouseHint(const MouseHint hint_id)
 {
-	/*
-	 * Only process mouse events when we have focus.
-	 * This protects against out-of-order event issues such
-	 * as acting on clicks before the window is drawn.
-	 */
-	if (!sdl.mouse.has_focus)
-		return;
+	static const std::string prexix = " - ";
 
-	assertm(sdl.mouse.control_choice != NoMouse,
-	        "SDL: Mouse capture is invalid when NoMouse is configured [Logic Bug]");
+	auto create_hint_str = [](const char *requested_name) {
+		char hint_buffer[200] = {0};
 
-	mouse_is_captured = !mouse_is_captured; // flip state
-	if (SDL_SetRelativeMouseMode(mouse_is_captured ? SDL_TRUE : SDL_FALSE) != 0) {
-		SDL_ShowCursor(SDL_ENABLE);
-		E_Exit("SDL: failed to %s relative-mode [SDL Bug]",
-		       mouse_is_captured ? "put the mouse in"
-		                         : "take the mouse out of");
+		safe_sprintf(hint_buffer,
+		             MSG_GetRaw(requested_name),
+		             PRIMARY_MOD_NAME);
+		return prexix + hint_buffer;
+	};
+
+	auto &hint_str = sdl.title_bar.hint_mouse_str;
+	switch (hint_id) {
+	case MouseHint::None:
+		hint_str.clear();
+		break;
+	case MouseHint::NoMouse:
+		hint_str = prexix + MSG_GetRaw("TITLEBAR_HINT_NOMOUSE");
+		break;
+	case MouseHint::CapturedHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY");
+		break;
+	case MouseHint::CapturedHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE");
+		break;
+	case MouseHint::ReleasedHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY");
+		break;
+	case MouseHint::ReleasedHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE");
+		break;
+	case MouseHint::ReleasedHotkeyAnyButton:
+		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON");
+		break;
+	case MouseHint::SeamlessHotkey:
+		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY");
+		break;
+	case MouseHint::SeamlessHotkeyMiddle:
+		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE");
+		break;
+	default:
+		assert(false);
+		hint_str.clear();
+		break;
 	}
-	LOG_MSG("SDL: %s the mouse", mouse_is_captured ? "captured" : "released");
+
+	GFX_SetTitle(-1, -1, false);
 }
 
-static void toggle_mouse_capture_from_user(bool pressed)
+void GFX_SetMouseRawInput(const bool requested_raw_input)
 {
-	if (!pressed || sdl.desktop.fullscreen)
-		return;
-	mouse_capture_requested = !mouse_capture_requested;
-	GFX_ToggleMouseCapture();
+	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+	                            requested_raw_input ? "0" : "1",
+	                            SDL_HINT_OVERRIDE) != SDL_TRUE)
+		LOG_WARNING("SDL: Mouse raw input %s failed",
+		            requested_raw_input ? "enable" : "disable");
+}
+
+void GFX_SetMouseCapture(const bool requested_capture)
+{
+	const auto param = requested_capture ? SDL_TRUE : SDL_FALSE;
+	if (SDL_SetRelativeMouseMode(param) != 0) {
+		SDL_ShowCursor(SDL_ENABLE);
+		E_Exit("SDL: Failed to %s relative-mode [SDL Bug]",
+		       requested_capture ? "put the mouse in" :
+		                           "take the mouse out of");
+	}
+}
+
+void GFX_SetMouseVisibility(const bool requested_visible)
+{
+	const auto param = requested_visible ? SDL_ENABLE : SDL_DISABLE;
+	if (SDL_ShowCursor(param) < 0)
+		E_Exit("SDL: Failed to make mouse cursor %s [SDL Bug]",
+		       requested_visible ? "visible" : "invisible");
 }
 
 static void FocusInput()
@@ -2202,59 +2280,6 @@ static void FocusInput()
 	// If not, raise-and-focus to prevent stranding the window
 	SDL_RaiseWindow(sdl.window);
 	SDL_SetWindowInputFocus(sdl.window);
-}
-
-/*
- *  Assesses the following:
- *   - current window size (full or not),
- *   - mouse capture state (yes or no),
- *   - whether VMware type mouse driver is running,
- *   - desired capture type (start, click, seamless), and
- *   - if we're starting up for the first time,
- *  to determine if the mouse-capture state should be toggled.
- *  Note that this also acts a filter: we don't want to repeatedly
- *  re-apply the same mouse capture state over and over again, so most
- *  of the time this function will (or should) decide to do nothing.
- */
-void GFX_UpdateMouseState()
-{
-	// Don't change anything if we do not have focus
-	if (!sdl.mouse.has_focus)
-		return;
-
-	// Used below
-	static bool has_run_once = false;
-
-	// We've switched to or started in fullscreen, so capture the mouse
-	// This is valid for all modes except for nomouse
-	if (sdl.desktop.fullscreen && !mouse_is_captured &&
-	    sdl.mouse.control_choice != NoMouse) {
-		GFX_ToggleMouseCapture();
-
-	// If we've switched-back from fullscreen, then release the
-	// mouse if it is controlled by a VMware type driver or
-	// it's auto-captured (but not manually requested) and
-	// in seamless-mode
-	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
-	           (mouse_seamless_driver || (!mouse_capture_requested && sdl.mouse.control_choice == Seamless))) {
-		GFX_ToggleMouseCapture();
-		SDL_ShowCursor(SDL_DISABLE);
-
-	// If none of the above are true /and/ we're starting
-	// up the first time, then:
-	// - Capture the mouse if configured onstart is set
-	// - Hide the mouse if seamless or nomouse are set
-	// - Also hide if it is handled by a VMware type driver
-	} else if (!has_run_once) {
-		if (sdl.mouse.control_choice == CaptureOnStart) {
-			SDL_RaiseWindow(sdl.window);
-			toggle_mouse_capture_from_user(true);
-		} else if (mouse_seamless_driver ||
-		           (sdl.mouse.control_choice & (Seamless | NoMouse))) {
-			SDL_ShowCursor(SDL_DISABLE);
-		}
-	}
-	has_run_once = true;
 }
 
 #if defined (WIN32)
@@ -2282,7 +2307,13 @@ void sticky_keys(bool restore){
 void GFX_SwitchFullScreen()
 {
 	sdl.desktop.switching_fullscreen = true;
-#if defined (WIN32)
+
+	// Record the window's current canvas size if we're departing window-mode
+	auto &window_canvas_size = sdl.desktop.window.canvas_size;
+	if (!sdl.desktop.fullscreen)
+		window_canvas_size = get_canvas_size(sdl.desktop.type);
+
+#if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
 	// (ie: opposite of whatever sdl.desktop.fullscreen holds).
 	// Sticky-keys should be set to the opposite of fullscreen,
@@ -2294,11 +2325,19 @@ void GFX_SwitchFullScreen()
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
 
+	// After switching modes, get the current canvas size, which might be
+	// the windowed size or full screen size.
+	auto canvas_size = sdl.desktop.fullscreen
+	                         ? get_canvas_size(sdl.desktop.type)
+	                         : window_canvas_size;
+
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
+	                       canvas_size,
 	                       sdl.scaling_mode,
 	                       sdl.desktop.type,
 	                       sdl.pp_scale);
+
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -2387,7 +2426,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		break;
 	}
 	sdl.updating = false;
-	FrameMark
+	FrameMark;
 }
 
 // Texture update and presentation
@@ -2580,8 +2619,9 @@ static void GUI_ShutDown(Section *)
 		(sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.desktop.fullscreen)
 		GFX_SwitchFullScreen();
-	if (mouse_is_captured)
-		GFX_ToggleMouseCapture();
+
+	GFX_SetMouseCapture(false);
+	GFX_SetMouseVisibility(true);
 
 	CleanupSDLResources();
 	if (sdl.renderer) {
@@ -2969,6 +3009,25 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	sdl.desktop.window.initial_y_pos = y;
 }
 
+// Writes to the window-size member should be done via this function
+static void save_window_size(const int w, const int h)
+{
+	assert(w > 0 && h > 0);
+
+	// The desktop.window size stores the user-configured window size.
+	// During runtime, the actual SDL window size might differ from this
+	// depending on the aspect ratio, window DPI, or manual resizing.
+	sdl.desktop.window.width  = w;
+	sdl.desktop.window.height = h;
+
+	// Initialize the window's canvas size if it hasn't yet been set.
+	auto &window_canvas_size = sdl.desktop.window.canvas_size;
+	if (window_canvas_size.w <= 0 || window_canvas_size.h <= 0) {
+		window_canvas_size.w = w;
+		window_canvas_size.h = h;
+	}
+}
+
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
@@ -2998,8 +3057,12 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 {
 	// TODO: Deprecate SURFACE output and remove this.
 	// For now, let the DOS-side determine the window's resolution.
-	if (sdl.desktop.want_type == SCREEN_SURFACE)
+	if (sdl.desktop.want_type == SCREEN_SURFACE) {
+		// ensure our window sizes are populated
+		save_window_size(FALLBACK_WINDOW_DIMENSIONS.x,
+		                 FALLBACK_WINDOW_DIMENSIONS.y);
 		return;
+	}
 
 	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
@@ -3041,8 +3104,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 		                                  should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
-	sdl.desktop.window.width = refined_size.x;
-	sdl.desktop.window.height = refined_size.y;
+	save_window_size(refined_size.x, refined_size.y);
 
 	auto describe_scaling_mode = [scaling_mode]() -> const char * {
 		switch (scaling_mode) {
@@ -3325,7 +3387,132 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-//extern void UI_Run(bool);
+static std::optional<SDL_Surface *> get_rendered_surface()
+{
+	// Variables common to all screen-modes
+	const auto renderer = SDL_GetRenderer(sdl.window);
+	const auto canvas   = get_canvas_size(sdl.desktop.type);
+
+#if C_OPENGL
+	// Get the OpenGL-renderer surface
+	// -------------------------------
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		// Setup our OpenGL image properties
+		constexpr int gl_channels       = 3; // RBG (no alpha)
+		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
+		const size_t bytes_per_row      = gl_channels * canvas.w;
+
+		// Allocate a 24-bit surface to be populated
+		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		                                          canvas.w,
+		                                          canvas.h,
+		                                          gl_bits_per_pixel,
+		                                          RMASK,
+		                                          GMASK,
+		                                          BMASK,
+		                                          AMASK);
+		if (!surface) {
+			LOG_WARNING("SDL: Failed creating a surface for OpenGL because %s",
+			            SDL_GetError());
+			return {};
+		}
+		// Per OpenGL's documentation:
+		// The glReadPixels function starts at the lower left corner: (x
+		// + i, y + j) and iterates for 0 <= i < width and 0 <= j <
+		// height. It describes the pxiels as being "the i'th pixel in
+		// the j'th row". Pixels are returned in row-order from the
+		// lowest to the highest row, left to right in each row.
+		std::vector<uint8_t> pixels(bytes_per_row * canvas.h);
+		glReadPixels(0, 0, canvas.w, canvas.h, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+		// To match SDL's surface ordering, we invert the rows (outer)
+		// and lines (inner):
+		auto surface_pixels = static_cast<char *>(surface->pixels);
+		for (int j = 0; j < canvas.h; ++j) {
+			auto target_row = surface_pixels + surface->pitch * j;
+			const auto source_row = pixels.data() +
+			                        bytes_per_row * (canvas.h - j - 1);
+			memcpy(target_row, source_row, bytes_per_row);
+		}
+		return surface;
+	}
+#endif
+
+	// Get the SDL texture-renderer surface
+	// ------------------------------------
+	if (sdl.desktop.type == SCREEN_TEXTURE) {
+		// Get the renderer's pixel format
+		SDL_RendererInfo rinfo;
+		if (SDL_GetRendererInfo(renderer, &rinfo) != 0) {
+			LOG_MSG("SDL: Failed to get a rendering info because %s",
+			        SDL_GetError());
+			return {};
+		}
+		const auto pixel_format = rinfo.texture_formats[0];
+
+		// Create a 32-bit surface with color format matching the renderer
+		const auto surface = SDL_CreateRGBSurfaceWithFormat(
+		        SDL_SWSURFACE, canvas.w, canvas.h, 32, pixel_format);
+		if (!surface || !renderer) {
+			LOG_WARNING("SDL: Failed creating a surface because %s",
+			            SDL_GetError());
+			return {};
+		}
+		// Copy the pixels from the renderer into our new surface
+		if (SDL_RenderReadPixels(renderer,
+		                         nullptr,
+		                         surface->format->format,
+		                         surface->pixels,
+		                         surface->pitch) != 0) {
+			LOG_WARNING("SDL: Failed rendering to the surface because %s",
+			            SDL_GetError());
+			SDL_FreeSurface(surface);
+			return {};
+		}
+		return surface;
+	}
+
+	// We're already in surface-mode, how convenient ;)
+	// -----------------------------------------------
+	else if (sdl.desktop.type == SCREEN_SURFACE) {
+		assert(sdl.surface);
+		// Simply return a copy
+		return SDL_ConvertSurfaceFormat(sdl.surface,
+		                                sdl.surface->format->format,
+		                                0);
+	}
+
+	LOG_WARNING("SDL: unhandled screen-type (bug)");
+	return {};
+}
+
+static void screenshot_rendered_surface(bool pressed)
+{
+	if (!pressed)
+		return;
+
+	const auto surface = get_rendered_surface();
+	if (!surface)
+		return;
+
+#if C_SDL_IMAGE
+	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".png");
+	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
+#else
+	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".bmp");
+	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
+#endif
+	SDL_FreeSurface(*surface);
+
+	if (is_saved)
+		LOG_MSG("SDL: Captured rendered output to %s", filename.c_str());
+	else
+		LOG_MSG("SDL: Failed capturing rendered output to %s because %s",
+		        filename.c_str(),
+		        SDL_GetError());
+}
+
+// extern void UI_Run(bool);
 void Restart(bool pressed);
 
 static void ApplyActiveSettings()
@@ -3478,65 +3665,22 @@ static void GUI_StartUp(Section *sec)
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
-	// Apply the user's mouse settings
-	Section_prop* s = section->GetMultiVal("capture_mouse")->GetSection();
-	const std::string control_choice = s->Get_string("capture_mouse_first_value");
-	std::string mouse_control_msg;
-	if (control_choice == "onclick") {
-		sdl.mouse.control_choice = CaptureOnClick;
-		mouse_control_msg = "will be captured after the first left or right button click";
-	} else if (control_choice == "onstart") {
-		sdl.mouse.control_choice = CaptureOnStart;
-		mouse_control_msg = "will be captured immediately on start";
-	} else if (control_choice == "seamless") {
-		sdl.mouse.control_choice = Seamless;
-		mouse_control_msg = "will move seamlessly: left and right button clicks won't capture the mouse";
-	} else if (control_choice == "nomouse") {
-		sdl.mouse.control_choice = NoMouse;
-		mouse_control_msg = "is disabled";
-	} else {
-		assert(sdl.mouse.control_choice == CaptureOnClick);
-	}
-	LOG_MSG("SDL: Mouse %s", mouse_control_msg.c_str());
-
-	if (sdl.mouse.control_choice != NoMouse) {
-		const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
-
-		// release the mouse is the default; this logic handles an empty 2nd value
-		sdl.mouse.middle_will_release = (mclick_choice != "middlegame");
-
-
-		const auto middle_control_msg = sdl.mouse.middle_will_release
-		                             ? "will capture/release the mouse (clicks not sent to the game/program)"
-		                             : "will be sent to the game/program (clicks not used to capture/release)";
-		LOG_MSG("SDL: Middle mouse button %s", middle_control_msg);
-
-		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
-		MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
-			              PRIMARY_MOD, "capmouse", "Cap Mouse");
-
-		// Apply the user's mouse sensitivity settings
-		PropMultiVal *p3 = section->GetMultiVal("sensitivity");
-		sdl.mouse.xsensitivity = static_cast<float>(p3->GetSection()->Get_int("xsens")) / 100.0f;
-		sdl.mouse.ysensitivity = static_cast<float>(p3->GetSection()->Get_int("ysens")) / 100.0f;
-
-		// Apply raw mouse input setting
-		const auto raw_mouse_input = section->Get_bool("raw_mouse_input");
-		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-		                        raw_mouse_input ? "0" : "1",
-		                        SDL_HINT_OVERRIDE);
-
-		// Notify mouse emulation routines about the configuration
-		MOUSE_SetConfig(raw_mouse_input);
-	}
-
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
 	                  "shutdown", "Shutdown");
-	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
-	                  "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart",
-	                  "Restart");
+	MAPPER_AddHandler(screenshot_rendered_surface,
+	                  SDL_SCANCODE_F5,
+	                  MMOD2,
+	                  "rendshot",
+	                  "Rend Screenshot");
+	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
+	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
+	                  SDL_SCANCODE_F10,
+	                  PRIMARY_MOD,
+	                  "capmouse",
+	                  "Cap Mouse");
+
 #if C_DEBUG
 /* Pause binds with activate-debugger */
 #else
@@ -3551,17 +3695,17 @@ static void GUI_StartUp(Section *sec)
 	// be toggled by the user /after/ starting DOSBox.
 	startup_state_numlock = keystate & KMOD_NUM;
 	startup_state_capslock = keystate & KMOD_CAPS;
-}
 
+	// Notify MOUSE subsystem that it can start now
+	MOUSE_NotifyReadyGFX();
+}
 
 static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 {
-	if (mouse_seamless_driver || mouse_is_captured ||
-	    sdl.mouse.control_choice == Seamless)
-		MOUSE_EventMoved(static_cast<float>(motion->xrel) * sdl.mouse.xsensitivity,
-		                 static_cast<float>(motion->yrel) * sdl.mouse.ysensitivity,
-		                 std::clamp(motion->x, 0, static_cast<int>(UINT16_MAX)),
-		                 std::clamp(motion->y, 0, static_cast<int>(UINT16_MAX)));
+	MOUSE_EventMoved(static_cast<float>(motion->xrel),
+	                 static_cast<float>(motion->yrel),
+	                 check_cast<int32_t>(motion->x),
+	                 check_cast<int32_t>(motion->y));
 }
 
 static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
@@ -3572,49 +3716,17 @@ static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button)
 {
-    auto notify_pressed = [](uint8_t button) {
+	auto notify_button = [](const uint8_t button, const bool pressed) {
 		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventPressed(0); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventPressed(1); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventPressed(2); break;
-		case SDL_BUTTON_X1:     MOUSE_EventPressed(3); break;
-		case SDL_BUTTON_X2:     MOUSE_EventPressed(4); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventButton(0, pressed); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(1, pressed); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(2, pressed); break;
+		case SDL_BUTTON_X1:     MOUSE_EventButton(3, pressed); break;
+		case SDL_BUTTON_X2:     MOUSE_EventButton(4, pressed); break;
 		}
 	};
 
-    auto notify_released = [](uint8_t button) {
-		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventReleased(0); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventReleased(1); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventReleased(2); break;
-		case SDL_BUTTON_X1:     MOUSE_EventReleased(3); break;
-		case SDL_BUTTON_X2:     MOUSE_EventReleased(4); break;
-		}
-	};
-	
-	if (button->state == SDL_RELEASED) {
-		notify_released(button->button);
-		return;
-	}
-	
-	assert(button->state == SDL_PRESSED);
-	
-	if (sdl.desktop.fullscreen || mouse_seamless_driver) {
-		notify_pressed(button->button);
-		return;
-	}
-
-	if (!mouse_is_captured && (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick))) {
-		toggle_mouse_capture_from_user(true);
-		return; // Don't pass click to mouse handler
-	}
-
-	if (button->button == SDL_BUTTON_MIDDLE && sdl.mouse.control_choice != NoMouse) {
-		toggle_mouse_capture_from_user(true);
-		return; // Don't pass click to mouse handler
-	}
-
-	notify_pressed(button->button);
+	notify_button(button->button, button->state == SDL_PRESSED);
 }
 
 void GFX_LosingFocus()
@@ -3665,10 +3777,8 @@ static void HandleVideoResize(int width, int height)
 		sdl.clip          = calc_viewport(canvas.w, canvas.h);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 
-		if (!sdl.desktop.fullscreen) {
-			sdl.desktop.window.width  = width;
-			sdl.desktop.window.height = height;
-		}
+		if (!sdl.desktop.fullscreen)
+			save_window_size(width, height);
 
 		// Ensure mouse emulation knows the current parameters
 		NewMouseScreenParams();
@@ -3813,9 +3923,7 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
-				sdl.mouse.has_focus = true;
-				GFX_UpdateMouseState();
-
+				MOUSE_NotifyHasFocus(true);
 				ApplyActiveSettings();
 				FocusInput();
 				continue;
@@ -3831,7 +3939,7 @@ bool GFX_Events()
 				ApplyInactiveSettings();
 				GFX_LosingFocus();
 				CPU_Enable_SkipAutoAdjust();
-				sdl.mouse.has_focus = false;
+				MOUSE_NotifyHasFocus(false);
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
@@ -4004,10 +4112,7 @@ bool GFX_Events()
 		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
 		case SDL_MOUSEWHEEL: HandleMouseWheel(&event.wheel); break;
 		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			if (sdl.mouse.control_choice != NoMouse)
-				HandleMouseButton(&event.button);
-			break;
+		case SDL_MOUSEBUTTONUP: HandleMouseButton(&event.button); break;
 
 		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
@@ -4094,8 +4199,29 @@ static std::vector<std::string> Get_SDL_TextureRenderers()
 	return drivers;
 }
 
-void Config_Add_SDL() {
-	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
+static void messages_add_sdl()
+{
+	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
+	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
+	MSG_Add("TITLEBAR_HINT_NOMOUSE", "no-mouse mode");
+	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY",
+	        "mouse captured, %s+F10 to release");
+	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE",
+	        "mouse captured, %s+F10 or middle-click to release");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY",
+	        "to capture the mouse press %s+F10");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE",
+	        "to capture the mouse press %s+F10 or middle-click");
+	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON",
+	        "to capture the mouse press %s+F10 or click any button");
+	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY",
+	        "seamless mouse, %s+F10 to capture");
+	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE",
+	        "seamless mouse, %s+F10 or middle-click to capture");
+}
+
+void config_add_sdl() {
+	Section_prop *sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool *Pbool; // use pbool for new properties
 	Prop_bool *pbool;
@@ -4214,61 +4340,12 @@ void Config_Add_SDL() {
 	                  "Use texture_renderer=auto for an automatic choice.");
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
-	// Define mouse control settings
-	Pmulti = sdl_sec->AddMultiVal("capture_mouse", always, " ");
-	const char *mouse_controls[] = {
-	        "seamless", // default
-	        "onclick",  "onstart", "nomouse", 0,
-	};
-	const char *middle_controls[] = {
-	        "middlerelease", // default
-	        "middlegame",
-	        "", // allow empty second value for 'nomouse'
-	        0,
-	};
-	// Generate and set the mouse control defaults from above arrays
-	std::string mouse_control_defaults(mouse_controls[0]);
-	mouse_control_defaults += " ";
-	mouse_control_defaults += middle_controls[0];
-	Pmulti->SetValue(mouse_control_defaults);
-
-	// Add the mouse and middle control as sub-sections
-	psection = Pmulti->GetSection();
-	psection->Add_string("capture_mouse_first_value", always, mouse_controls[0])
-	        ->Set_values(mouse_controls);
-	psection->Add_string("capture_mouse_second_value", always, middle_controls[0])
-	        ->Set_values(middle_controls);
-
-	// Construct and set the help block using defaults set above
-	std::string mouse_control_help(
-	        "Choose a mouse control method:\n"
-	        "   onclick:        Capture the mouse when clicking any button in the window.\n"
-	        "   onstart:        Capture the mouse immediately on start.\n"
-	        "   seamless:       Let the mouse move seamlessly; captures only with\n"
-	        "                   middle-click or hotkey.\n"
-	        "   nomouse:        Hide the mouse and don't send input to the game.\n"
-	        "Choose how middle-clicks are handled (second parameter):\n"
-	        "   middlegame:     Middle-clicks are sent to the game.\n"
-	        "   middlerelease:  Middle-click will release the captured mouse, and also\n"
-	        "                   capture when seamless.\n"
-	        "Defaults (if not present or incorrect): ");
-	mouse_control_help += mouse_control_defaults;
-	Pmulti->Set_help(mouse_control_help);
-
-	Pmulti = sdl_sec->AddMultiVal("sensitivity", always, ",");
-	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity\n"
-	                 "(e.g. 100,-50).");
-	Pmulti->SetValue("100");
-	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
-	Pint->SetMinMax(-1000,1000);
-	Pint = Pmulti->GetSection()->Add_int("ysens", always,100);
-	Pint->SetMinMax(-1000,1000);
-
-	pbool = sdl_sec->Add_bool("raw_mouse_input", on_start, false);
-	pbool->Set_help(
-	        "Enable this setting to bypass your operating system's mouse\n"
-	        "acceleration and sensitivity settings. This works in\n"
-	        "fullscreen or when the mouse is captured in window mode.");
+	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
+	Pmulti->Set_help("Moved to [mouse] section.");
+	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
+	Pmulti->Set_help("Moved to [mouse] section.");
+	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
+	pbool->Set_help("Moved to [mouse] section.");
 
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Keep the console open if an error has occurred.");
@@ -4556,7 +4633,8 @@ int sdl_main(int argc, char *argv[])
 		CROSS_DetermineConfigPaths();
 
 		/* Init the configuration system and add default values */
-		Config_Add_SDL();
+		messages_add_sdl();
+		config_add_sdl();
 		DOSBOX_Init();
 
 		if (control->cmdline->FindExist("--editconf") ||

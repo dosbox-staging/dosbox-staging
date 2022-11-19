@@ -9,8 +9,10 @@ libgtest-dev
 libopusfile-dev
 libpng-dev
 libsdl2-dev
+libsdl2-image-dev
 libsdl2-net-dev
 libslirp-dev
 libspeexdsp-dev
 python3-setuptools
 meson
+ninja-build

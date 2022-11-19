@@ -328,6 +328,58 @@ Voer INTRO uit en zie Speciale toetsen voor een lijst met sneltoetsen.
 :CONFIG_CYCLEDOWN
 Als u deze lager instelt dan 100, is dit een percentage.
 .
+:CONFIG_MOUSE_SENSITIVITY
+Standaard muisgevoeligheid. 100 is een basiswaarde, 150 is 150% gevoeligheid.
+Negatieve waarden keren de richting van de muis om, 0 schakelt de beweging
+volledig uit. De optionele tweede parameter specificeert de verticale
+gevoeligheid (bijv. 100.200). Instelling kan tijdens runtime worden aangepast
+(ook per muisinterface) met behulp van de interne MOUSECTL.COM-tool,
+beschikbaar op drive Z:.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Schakel dit in om de instellingen voor muisversnelling en gevoeligheid van uw
+besturingssysteem te omzeilen. Werkt in volledig scherm of wanneer de muis
+wordt vastgelegd in venstermodus.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Schakel het ingebouwde DOS-muisstuurprogramma in.
+Opmerkingen:
+   - Schakel deze optie uit als u van plan bent het originele MOUSE.COM
+     stuurprogramma te gebruiken in geëmuleerde DOS.
+   - Wanneer het gast-besturingssysteem wordt opgestart, wordt het
+     ingebouwde stuurprogramma automatisch uitgeschakeld.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Werkt muisbewegingstellers onmiddellijk bij, zonder te wachten op onderbreking.
+Kan de gameplay verbeteren, vooral in snelle games (arcade, FPS, enz.) - zoals
+voor sommige games verhoogt het effectief de bemonsteringssnelheid van de muis
+tot 1000 Hz, zonder de interrupt-overhead te verhogen.
+Kan compatibiliteitsproblemen veroorzaken. Lijst met bekende incompatibele games:
+Kan compatibiliteitsproblemen veroorzaken. Bekende incompatibele spelen lijst:
+   - Ultima Underworld: The Stygian Abyss
+   - Ultima Underworld II: Labyrinth of Worlds
+Dien een bug in bij het project als je een ander spel vindt dat niet werkt
+wanneer dit is ingeschakeld, we zullen deze lijst bijwerken.
+.
+:CONFIG_PS2_MOUSE_MODEL
+PS/2 AUX-poort muismodel:
+   standard:       3 knoppen, standaard PS/2-muis.
+   intellimouse:   3 knoppen + wiel, Microsoft IntelliMouse.
+Standaard: intellimouse
+.
+:CONFIG_COM_MOUSE_MODEL
+COM (seriële) poort standaard muismodel:
+   2button:        2 knoppen, Microsoft muis.
+   3button:        3 knoppen, Logitech-muis, grotendeels MS-muis compatibel.
+   wheel:          3 knoppen + wiel, meestal compatibel met Microsoft-muis.
+   msm:            3 knoppen, Mouse Systems-muis, NIET COMPATIBEL met MS-muis.
+   2button+msm:    Automatische keuze tussen 2button en msm.
+   3button+msm:    Automatische keuze tussen 3button en msm.
+   wheel+msm:      Automatische keuze tussen wiel en msm.
+Standaard: wiel+msm
+Opmerkingen:
+    Ga naar de sectie [serial] om COM-poortmuizen in of uit te schakelen.
+.
 :CONFIG_NOSOUND
 Schakel de stille modus in, het geluid wordt echter nog steeds geëmuleerd.
 .
@@ -1044,7 +1096,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Voert gescripte toetsenbordinvoer uit in een draaiend DOS-spel.
 
 Gebruik:
@@ -1070,7 +1122,7 @@ Voorbeelden:
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
 [reset]
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Start DOSBox Staging op vanaf een DOS-schijf of schijfimage.
 
 Usage:
@@ -1208,7 +1260,7 @@ Schijf %c is gekoppeld als %s
 De momenteel gekoppelde schijven zijn:
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Koppel een cd-rom, diskette of schijfkopie aan een stationsletter.
 
 Gebruik:
@@ -1425,7 +1477,7 @@ Codetabel %i is geladen
 Codetabel %i is geladen voor lay-out %s
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configureert een toetsenbord voor een specifieke taal.
 
 Gebruik:
@@ -1472,12 +1524,12 @@ Geen lay-out in %s voor codetabel %i
 Geen of ongeldig codetabelbestand voor lay-out %s
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
   [color=green]loadfix[reset] [color=cyan]SPEL[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadfix[reset] [/d] (or [/f])[reset]
+  [color=green]loadfix[reset] [/d] (of [/f])[reset]
 
 Waar:
   [color=cyan]SPEL[reset] is een spel of programma om te laden, optioneel met parameters.
@@ -1491,7 +1543,7 @@ Opmerkingen:
   kan worden uitgevoerd; het geheugen vrijmaken kan met de optie /d of /f.
 
 Voorbeelden:
-  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
+  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]argumenten[reset]
   [color=green]loadfix[reset] /d
 
 .
@@ -1511,7 +1563,7 @@ Gebruikt geheugen vrijgemaakt.
 Geheugentoewijzingsfout.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Laadt een video-BIOS of IBM BASIC ROM-image.
 
 Gebruik:
@@ -1552,7 +1604,7 @@ ROM-bestand niet herkend.
 BASIC-ROM geladen.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Geeft de DOS-geheugeninformatie weer.
 
 Gebruik:
@@ -1586,11 +1638,59 @@ Voorbeelden:
 %10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MORE_HELP_LONG
+Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
+
+Gebruik:
+  [color=cyan]COMMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]BESTAND[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATROON[reset] [[color=cyan]PATROON[reset] ...]
+
+Waar:
+  [color=cyan]COMMANDO[reset] is de opdracht om de uitvoer van weer te geven.
+  [color=cyan]BESTAND[reset]  exacte naam van het bestand om weer te geven, eventueel met een pad.
+  [color=cyan]PATROON[reset]  is ofwel een pad naar een enkel bestand of een pad met
+           jokertekens, dit zijn de asterisk (*) en het vraagteken (?).
+  [color=white]n[reset]        is de tabgrootte, 1-9, standaard is 8.
+
+Opmerkingen:
+  Deze opdracht is alleen voor het bekijken van tekstbestanden, niet voor
+  binaire bestanden.
+
+Voorbeelden:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]            ; geeft de gesorteerde map één scherm tegelijk weer
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  ; toont de inhoud van het bestand met tabgrootte 4
+
+.
+:PROGRAM_MORE_NO_FILE
+Geen invoerbestand gevonden.
+.
+:PROGRAM_MORE_END
+[reset][color=light-yellow]--- einde van invoer ---[reset]
+.
+:PROGRAM_MORE_NEW_FILE
+[reset][color=light-yellow]--- bestand %s ---[reset]
+.
+:PROGRAM_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- apparaat %s ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- druk op SPATIEBALK voor meer ---[reset]
+.
+:PROGRAM_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+.
+:PROGRAM_MORE_OPEN_ERROR
+[reset][color=red]--- kon %s niet openen ---[reset]
+.
+:PROGRAM_MORE_TERMINATE
+[reset][color=light-yellow](beëindigd)[reset]
+.
+:PROGRAM_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Koppel een map van het host-besturingssysteem aan een stationsletter.
 
 Gebruik:
@@ -1692,7 +1792,109 @@ Overlay %s op schijf %c gekoppeld.
 Kan station Z niet verplaatsen. Station %c is al aangekoppeld.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_MOUSECTL_HELP_LONG
+Beheert fysieke en logische muizen.
+
+Gebruik:
+  [color=green]mousectl[reset] [-all]
+  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAAM[reset]
+  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [gevoeligheid]
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s x_gevoeligheid y_gevoeligheid
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_snelheid]
+
+Waar:
+  [color=white]INTERFACE[reset]      een van [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap    koppel/ontkoppel fysieke muis, eert DOS-jokertekens in [color=cyan]NAAM[reset]
+  -s -sx -sy     stelt gevoeligheid in / x-as / y-as, van -999 tot +999
+  -r             stelt minimum muis frequentie in
+  -on -off       schakelt de muis in of uit op de gegeven interface
+  -reset         herstelt alle muisinstellingen uit het configuratiebestand
+
+Opmerkingen:
+  - standaardwaarde wordt gebruikt, als gevoeligheid of snelheid is weggelaten
+
+Voorbeelden:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
+.
+:PROGRAM_MOUSECTL_SYNTAX
+Verkeerde opdrachtsyntaxis.
+.
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
+Verkeerde syntaxis, alleen ASCII-tekens toegestaan in patroon.
+.
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
+Verkeerde syntaxis, gevoeligheid moet tussen -999 en +999 liggen.
+.
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
+Verkeerde syntaxis, gedupliceerde muisinterfaces.
+.
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
+Verkeerde syntaxis, bemonsteringsfrequentie moet een van zijn:
+%s
+.
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
+Mapping niet beschikbaar in NoMouse-modus.
+.
+:PROGRAM_MOUSECTL_NO_INTERFACES
+Geen muisinterfaces beschikbaar.
+.
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
+Muisinterface niet beschikbaar.
+.
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
+Geen fysieke muizen gedetecteerd.
+.
+:PROGRAM_MOUSECTL_NO_MATCH
+Geen beschikbare muis die overeenkomt met het patroon gevonden.
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER1
+[color=white]Interface      Gevoeligheid     Rate (Hz)     Status[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
+[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER2
+[color=white]Interface     Muis Naam[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
+[color=cyan]%-4s[reset]          %s
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+niet gekoppeld    %s
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
+gebruikt systeemaanwijzer
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
+gekoppelde fysieke muis
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=red]gekoppelde muis losgekoppeld[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
+uitgeschakeld
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
+Bemonsteringsfrequenties voor muizen op [color=cyan]COM[reset]-interfaces zijn enkel schattingen.
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
+Bemonsteringsfrequenties gemarkeerd met '*' zijn minimumwaardes.
+.
+:PROGRAM_MOUSECTL_MAP_ADVICE
+Klik op de [color=white]linkermuisknop[reset] om de fysieke muis toe te wijzen aan de interface.
+Als u op een andere knop klikt, wordt de toewijzing geannuleerd en wordt
+de systeemaanwijzer toegewezen aan alle muisinterfaces.
+.
+:PROGRAM_MOUSECTL_MAP_CANCEL
+(toewijzing geannuleerd)
+.
+:PROGRAM_MOUSECTL_MAP_HINT
+Muis gevangen. Naadloze muisintegratie is uitgeschakeld terwijl mapping actief
+is en toegewezen muizen ontvangen altijd onbewerkte invoergebeurtenissen.
+.
+:PROGRAM_RESCAN_HELP_LONG
 Scant op wijzigingen op gekoppelde DOS-schijven.
 
 Gebruik:
@@ -1756,10 +1958,13 @@ uit
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Omgekeerd
+.
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Beheert de seriële poorten.
 
 Gebruik:
@@ -2261,11 +2466,11 @@ Voorbeelden:
   [color=green]help[reset] /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Geeft een inleiding op het volledige scherm van DOSBox Staging weer.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Gebruik:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]PAGINA[reset]
@@ -2765,7 +2970,4 @@ Diverse opdrachten
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Onbekende opdracht
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Omgekeerd
 .

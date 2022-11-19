@@ -408,6 +408,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_f11:ret=87;break;
 	case KBD_f12:ret=88;break;
 
+	// International keys
+
+	case KBD_intl1:ret=89;break;
+
 	//The Extended keys
 
 	case KBD_kpenter:extend=true;ret=28;break;
@@ -424,11 +428,9 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
-	case KBD_leftgui: ret = 89; break;
-	case KBD_rightgui:
-		extend = true;
-		ret = 89;
-		break;
+	case KBD_leftgui:extend=true;ret=90;break;
+	case KBD_rightgui:extend=true;ret=89;break;
+	
 	case KBD_pause:
 		KEYBOARD_AddBuffer(0xe1);
 		KEYBOARD_AddBuffer(29|(pressed?0:0x80));

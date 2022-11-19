@@ -48,13 +48,6 @@ static void update_frame_surface(const uint16_t *changedLines);
 constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
 static inline bool present_frame_noop() { return true; }
 
-enum MouseControlType {
-	CaptureOnClick = 1 << 0,
-	CaptureOnStart = 1 << 1,
-	Seamless       = 1 << 2,
-	NoMouse        = 1 << 3
-};
-
 enum SCREEN_TYPES	{
 	SCREEN_SURFACE,
 	SCREEN_TEXTURE,
@@ -135,6 +128,7 @@ struct SDL_Block {
 			bool display_res = false;
 		} full = {};
 		struct {
+			// user-configured window size
 			int width = 0;
 			int height = 0;
 			bool resizable = false;
@@ -142,6 +136,8 @@ struct SDL_Block {
 			bool adjusted_initial_size = false;
 			int initial_x_pos = -1;
 			int initial_y_pos = -1;
+			// instantaneous canvas size of the window
+			SDL_Rect canvas_size = {};
 		} window = {};
 		struct {
 			int width = 0;
@@ -151,6 +147,7 @@ struct SDL_Block {
 		uint8_t bpp = 0;
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
+
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
 		// rendering size due to rotating screen, emulation state, or
@@ -167,6 +164,12 @@ struct SDL_Block {
 		SCREEN_TYPES type = SCREEN_SURFACE;
 		SCREEN_TYPES want_type = SCREEN_SURFACE;
 	} desktop = {};
+	struct {
+		int num_cycles = 0;
+		std::string hint_mouse_str  = {};
+		std::string hint_paused_str = {};
+		std::string cycles_ms_str   = {};
+	} title_bar = {};
 	struct {
 		VsyncPreference when_windowed = {};
 		VsyncPreference when_fullscreen = {};
@@ -228,13 +231,6 @@ struct SDL_Block {
 		int period_us_early = 0;
 		int period_us_late = 0;
 	} frame = {};
-	struct {
-		float xsensitivity = 0.3f;
-		float ysensitivity = 0.3f;
-		MouseControlType control_choice = Seamless;
-		bool middle_will_release = true;
-		bool has_focus = false;
-	} mouse          = {};
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024] = {};
 	bool use_exact_window_resolution = false;

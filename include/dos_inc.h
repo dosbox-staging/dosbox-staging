@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <type_traits>
 
@@ -145,7 +146,14 @@ constexpr uint16_t DOS_PackDate(const uint16_t year,
                                 const uint16_t mon,
                                 const uint16_t day) noexcept
 {
-	const auto y_bits = 0b1111111000000000 & ((year - 1980) << 9);
+	const int delta_year = year - 1980;
+
+	constexpr int delta_year_min = 0;
+	constexpr int delta_year_max = INT8_MAX;
+	const auto years_after_1980  = static_cast<uint16_t>(
+                std::clamp(delta_year, delta_year_min, delta_year_max));
+
+	const auto y_bits = 0b1111111000000000 & (years_after_1980 << 9);
 	const auto m_bits = 0b0000000111100000 & (mon << 5);
 	const auto d_bits = 0b0000000000011111 & day;
 	const auto packed = y_bits | m_bits | d_bits;
@@ -171,7 +179,8 @@ bool DOS_CreateTempFile(char * const name,uint16_t * entry);
 bool DOS_FileExists(char const * const name);
 
 /* Helper Functions */
-bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive);
+bool DOS_MakeName(char const *const name, char *const fullname, uint8_t *drive);
+
 /* Drive Handing Routines */
 uint8_t DOS_GetDefaultDrive(void);
 void DOS_SetDefaultDrive(uint8_t drive);
@@ -281,6 +290,12 @@ static inline uint16_t long2para(uint32_t size) {
 #define DOSERR_NOT_SAME_DEVICE 17
 #define DOSERR_NO_MORE_FILES 18
 #define DOSERR_FILE_ALREADY_EXISTS 80
+
+/* Wait/check user input */
+enum class UserDecision { Cancel, Continue, Next };
+bool DOS_IsCancelRequest();
+UserDecision DOS_WaitForCancelContinue();
+UserDecision DOS_WaitForCancelContinueNext();
 
 /* Macros SSET_* and SGET_* are used to safely access fields in memory-mapped
  * DOS structures represented via classes inheriting from MemStruct class.

@@ -22,6 +22,7 @@
 #include "program_intro.h"
 
 #include "mapper.h"
+#include "program_more_output.h"
 
 void INTRO::WriteOutProgramIntroSpecial()
 {
@@ -32,7 +33,8 @@ void INTRO::WriteOutProgramIntroSpecial()
 	         PRIMARY_MOD_PAD,
 	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for swap disk image
 	         PRIMARY_MOD_PAD,
-	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for screenshot
+	         MMOD2_NAME, // Alt,      to screenshot the rendered output
+	         PRIMARY_MOD_NAME, // Ctrl/Cmd, to screenshot the image source
 	         PRIMARY_MOD_PAD,
 	         PRIMARY_MOD_NAME, // Ctrl/Cmd, for sound recording
 	         PRIMARY_MOD_PAD,
@@ -66,9 +68,11 @@ void INTRO::DisplayMount(void) {
 void INTRO::Run(void) {
 	// Usage
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP"));
-		WriteOut("\n");
-		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_INTRO_HELP"));
+		output.AddString("\n");
+		output.AddString(MSG_Get("PROGRAM_INTRO_HELP_LONG"));
+		output.Display();
 		return;
 	}
     /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
@@ -106,6 +110,24 @@ void INTRO::Run(void) {
 }
 
 void INTRO::AddMessages() {
+	MSG_Add("PROGRAM_INTRO_HELP",
+	        "Displays a full-screen introduction to DOSBox Staging.\n");
+	MSG_Add("PROGRAM_INTRO_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]PAGE[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running [color=green]intro[reset] without an argument displays one information page at a time;\n"
+	        "  press any key to move to the next page. If a page name is provided, then the\n"
+	        "  specified page will be displayed directly.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]intro[reset]\n"
+	        "  [color=green]intro[reset] [color=white]cdrom[reset]\n");
     MSG_Add("PROGRAM_INTRO",
 	        "[erases=entire][color=green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.\n"
 	        "DOSBox creates a shell for you which looks like old plain DOS.\n"
@@ -194,7 +216,8 @@ void INTRO::AddMessages() {
 	        "[color=yellow]%s+Pause[reset]  Pause/Unpause emulator.\n"
 	        "[color=yellow]%s+F1[reset]   %s Start the [color=light-yellow]keymapper[reset].\n"
 	        "[color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.\n"
-	        "[color=yellow]%s+F5[reset]   %s Save a screenshot.\n"
+	        "[color=yellow]%s+F5[reset]     Screenshot the video's rendered output.\n"
+	        "[color=yellow]%s+F5[reset]   %s Screenshot the video's source image.\n"
 	        "[color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.\n"
 	        "[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.\n"
 	        "[color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.\n"

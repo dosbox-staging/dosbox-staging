@@ -273,6 +273,7 @@ void LOG_StartUp(void) {
 
 	loggrp[LOG_IO].front="IO";
 	loggrp[LOG_PCI].front="PCI";
+	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);

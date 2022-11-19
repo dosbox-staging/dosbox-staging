@@ -62,7 +62,7 @@ typedef PhysPt EAPoint;
 	}
 
 Bits CPU_Core_Full_Run(void) {
-	ZoneScoped
+	ZoneScoped;
 	FullData inst{};
 	while (CPU_Cycles-->0) {
 #if C_DEBUG

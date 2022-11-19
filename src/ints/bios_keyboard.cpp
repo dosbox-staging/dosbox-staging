@@ -27,7 +27,9 @@
 #include "inout.h"
 #include "dos_inc.h"
 
-static Bitu call_int16,call_irq1,call_irq6;
+static callback_number_t call_int16 = 0;
+static callback_number_t call_irq1  = 0;
+static callback_number_t call_irq6  = 0;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
@@ -125,7 +127,8 @@ static struct {
       {   none,   none,   none,   none },
       { 0x565c, 0x567c,   none,   none }, /* (102-key) */
       { 0x8500, 0x8700, 0x8900, 0x8b00 }, /* F11 */
-      { 0x8600, 0x8800, 0x8a00, 0x8c00 }  /* F12 */
+      { 0x8600, 0x8800, 0x8a00, 0x8c00 }, /* F12 */
+      { 0x352f, 0x353f,   none,   none }  /* international 1 */
       };
 
 bool BIOS_AddKeyToBuffer(uint16_t code) {

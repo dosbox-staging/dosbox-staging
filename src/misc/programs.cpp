@@ -29,17 +29,18 @@
 #include <cstring>
 #include <vector>
 
+#include "../dos/program_more_output.h"
 #include "callback.h"
-#include "regs.h"
-#include "support.h"
-#include "cross.h"
 #include "control.h"
-#include "shell.h"
+#include "cross.h"
 #include "hardware.h"
 #include "mapper.h"
+#include "regs.h"
+#include "shell.h"
 #include "string_utils.h"
+#include "support.h"
 
-Bitu call_program;
+callback_number_t call_program = 0;
 
 /* This registers a file on the virtual drive and creates the correct structure for it*/
 
@@ -65,7 +66,12 @@ void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 {
 	comdata_t comdata(exe_block.begin(), exe_block.end());
 	comdata.at(callback_pos) = static_cast<uint8_t>(call_program & 0xff);
-	comdata.at(callback_pos + 1) = static_cast<uint8_t>((call_program >> 8) & 0xff);
+
+	// Taking the upper 8 bits if the callback number is always zero because
+	// the maximum callback number is only 128. So we just confirm that here.
+	static_assert(sizeof(callback_number_t) < sizeof(uint16_t));
+	constexpr uint8_t upper_8_bits_of_callback = 0;
+	comdata.at(callback_pos + 1) = upper_8_bits_of_callback;
 
 	// Save the current program's vector index in its COM data
 	const auto index = internal_progs.size();
@@ -414,7 +420,13 @@ void CONFIG::Run(void) {
 		P_WRITELANG, P_WRITELANG2,
 		P_SECURE
 	} presult = P_NOMATCH;
-	
+
+	auto display_help = [this]() {
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
+		output.Display();
+	};
+
 	bool first = true;
 	std::vector<std::string> pvars;
 	// Loop through the passed parameters
@@ -499,15 +511,11 @@ void CONFIG::Run(void) {
 				break;
 			[[fallthrough]];
 
-		case P_NOMATCH:
-			WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
-			return;
+		case P_NOMATCH: display_help(); return;
 
 		case P_HELP: case P_HELP2: case P_HELP3: {
 			switch(pvars.size()) {
-			case 0:
-				WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
-				return;
+			case 0: display_help(); return;
 			case 1: {
 				if (!strcasecmp("sections",pvars[0].c_str())) {
 					// list the sections
@@ -541,9 +549,7 @@ void CONFIG::Run(void) {
 				}
 				break;
 			}
-			default:
-				WriteOut(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
-				return;
+			default: display_help(); return;
 			}	
 			// if we have one value in pvars, it's a section
 			// two values are section + property

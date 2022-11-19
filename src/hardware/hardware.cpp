@@ -92,30 +92,33 @@ static struct {
 
 } capture = {};
 
-FILE * OpenCaptureFile(const char * type,const char * ext) {
-	if(capturedir.empty()) {
+std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext)
+{
+	if (capturedir.empty()) {
 		LOG_MSG("Please specify a capture directory");
 		return 0;
 	}
 
+	char file_start[16];
+	dir_information *dir;
 	/* Find a filename to open */
-	dir_information *dir = open_directory(capturedir.c_str());
+	dir = open_directory(capturedir.c_str());
 	if (!dir) {
 		// Try creating it first
 		if (create_dir(capturedir.c_str(), 0700, OK_IF_EXISTS) != 0) {
-			LOG_MSG("ERROR: Can't create dir '%s': %s",
-			        capturedir.c_str(), safe_strerror(errno).c_str());
+			LOG_WARNING("Can't create dir '%s' for capturing: %s",
+			            capturedir.c_str(),
+			            safe_strerror(errno).c_str());
+			return 0;
 		}
-
 		dir = open_directory(capturedir.c_str());
 		if (!dir) {
-			LOG_MSG("ERROR: Can't open dir '%s' for capturing %s",
-			        capturedir.c_str(), type);
+			LOG_MSG("Can't open dir %s for capturing %s",
+			        capturedir.c_str(),
+			        type);
 			return 0;
 		}
 	}
-
-	char file_start[16];
 	safe_strcpy(file_start, RunningProgram);
 	lowcase(file_start);
 	strcat(file_start,"_");
@@ -137,12 +140,17 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	char file_name[CROSS_LEN];
 	sprintf(file_name, "%s%c%s%03d%s",
 	        capturedir.c_str(), CROSS_FILESPLIT, file_start, last, ext);
-	/* Open the actual file */
-	FILE * handle=fopen(file_name,"wb");
+	return file_name;
+}
+
+FILE *CAPTURE_OpenFile(const char *type, const char *ext)
+{
+	const auto file_name = CAPTURE_GetScreenshotFilename(type, ext);
+	FILE *handle         = fopen(file_name.c_str(), "wb");
 	if (handle) {
-		LOG_MSG("Capturing %s to %s",type,file_name);
+		LOG_MSG("Capturing %s to %s", type, file_name.c_str());
 	} else {
-		LOG_MSG("Failed to open %s for capturing %s",file_name,type);
+		LOG_MSG("Failed to open %s for capturing %s", file_name.c_str(), type);
 	}
 	return handle;
 }
@@ -367,7 +375,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 
 		CaptureState &= ~CAPTURE_IMAGE;
 		/* Open the actual file */
-		FILE *fp = OpenCaptureFile("Screenshot", ".png");
+		FILE *fp = CAPTURE_OpenFile("Screenshot", ".png");
 		if (!fp)
 			goto skip_shot;
 		/* First try to allocate the png structures */
@@ -542,7 +550,7 @@ skip_shot:
 		default: goto skip_video;
 		}
 		if (!capture.video.handle) {
-			capture.video.handle = OpenCaptureFile("Video",".avi");
+			capture.video.handle = CAPTURE_OpenFile("Video",".avi");
 			if (!capture.video.handle)
 				goto skip_video;
 			capture.video.codec = new VideoCodec();
@@ -675,7 +683,7 @@ void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data) {
 #endif
 	if (CaptureState & CAPTURE_WAVE) {
 		if (!capture.wave.handle) {
-			capture.wave.handle=OpenCaptureFile("Wave Output",".wav");
+			capture.wave.handle=CAPTURE_OpenFile("Wave Output",".wav");
 			if (!capture.wave.handle) {
 				CaptureState &= ~CAPTURE_WAVE;
 				return;
@@ -759,7 +767,7 @@ static void RawMidiAddNumber(uint32_t val) {
 
 void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t * data) {
 	if (!capture.midi.handle) {
-		capture.midi.handle=OpenCaptureFile("Raw Midi",".mid");
+		capture.midi.handle=CAPTURE_OpenFile("Raw Midi",".mid");
 		if (!capture.midi.handle) {
 			return;
 		}

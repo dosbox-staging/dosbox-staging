@@ -1,3 +1,33 @@
+:TITLEBAR_CYCLES_MS
+cykli/ms
+.
+:TITLEBAR_HINT_PAUSED
+(PAUZA)
+.
+:TITLEBAR_HINT_NOMOUSE
+tryb bez użycia myszy
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+mysz przejęta, %s+F10 aby zwolnić
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+mysz przejęta, %s+F10 lub środkowy przycisk aby zwolnić
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+aby przejąć mysz wciśnij %s+F10
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+aby przejąć mysz wciśnij %s+F10 lub środkowy przycisk
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+aby przejąć mysz wciśnij %s+F10 lub dowolny przycisk
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+płynna integracja myszy, wciśnij %s+F10 aby przejąć
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+płynna integracja myszy, wciśnij %s+F10 lub środkowy przycisk aby przejąć
+.
 :CONFIG_FULLSCREEN
 Uruchom na pełnym ekranie.
 Skróty klawiszowe do zarządzania oknem można wyświetlić poleceniem 'intro'.
@@ -74,27 +104,13 @@ Wybór wyjścia obrazu.
 Wybór renderera dla 'output = texture'. Wartość 'auto' wybiera automatycznie.
 .
 :CONFIG_CAPTURE_MOUSE
-Sposób przejmowania kursora myszy:
-   onclick:        Po kliknięciu w obrębie okna emulatora.
-   onstart:        Natychmiast po starcie.
-   seamless:       Pozwala na swobodne opuszczenie okna, przejmuje po
-                   kliknięciu środkowym przyciskiem myszy.
-   nomouse:        Ukrywa kursor i nie przekazuje ruchów myszy do programu
-                   (mysz jest wciąż emulowana).
-Działanie środkowego przycisku myszy (druga wartość):
-   middlegame:     Środkowy przycisk jest przekazywany do DOSu.
-   middlerelease:  Zwolnienie przejętego kursora, przejęcie kursora w trybie
-                   'seamless'.
-Domyślne (gdy nie podane lub nieprawidłowe): seamless middlerelease
+Przeniesione do sekcji [mouse].
 .
 :CONFIG_SENSITIVITY
-Czułość myszy. Opcjonalna druga wartość określa oddzielnie czułość pionową.
-Przykład: 100,-50.
+Przeniesione do sekcji [mouse].
 .
 :CONFIG_RAW_MOUSE_INPUT
-Ominięcie ustawień systemu operacyjnego gospodarza dotyczących czułości oraz
-przyspieszenia myszy. Działa albo na pełnym ekranie, albo kiedy kursor myszy
-jest przejęty w trybie okienkowym.
+Przeniesione do sekcji [mouse].
 .
 :CONFIG_WAITONERROR
 Czekanie przed zamknięciem konsoli po wystąpieniu błędu.
@@ -312,6 +328,72 @@ Skróty klawiszowe można wyświetlić poleceniem 'intro'.
 :CONFIG_CYCLEDOWN
 Ilość cykli na milisekundę, która zostanie odjęta po naciśnięciu skrótu
 klawiszowego.
+.
+:CONFIG_MOUSE_CAPTURE
+Sposób przejmowania kursora myszy:
+  onclick:   Po kliknięciu w obrębie okna emulatora.
+  onstart:   Natychmiast po starcie.
+  seamless:  Kursor myszy płynnie zintegrowany z kursorem systemu gospodarza.
+             Przejmuje kursor po kliknięciu środkowym przyciskiem myszy.
+  nomouse:   Tryb bez użycia myszy; nie przekazuje ruchów myszy do programu.
+             Mysz pozostaje widoczna dla uruchomionych gier/programów.
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+Czy środkowy przycisk myszy ma zwalniać przejęty kursor. Również włącza
+przejmowanie kursora środkowym przyciskiem w trybie 'seamless'.
+.
+:CONFIG_MOUSE_SENSITIVITY
+Domyślna czułość myszy. 100 to wartość bazowa, 150 to 150% czułości, itd.
+Wartości ujemne odwracają kierunki ruchu, 0 wyłącza ruch kursora całkowicie.
+Opcjonalna druga wartość określa oddzielnie czułość pionową.
+Ustawienie może być zmienione w trakcie pracy (również dla każdego interfejsu
+myszy osobno) przy pomocy narzędzia MOUSECTL.COM, dostępnego na dysku Z:.
+Przykład: 100,-50.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Ominięcie ustawień systemu operacyjnego gospodarza dotyczących czułości oraz
+przyspieszenia myszy. Działa albo na pełnym ekranie, albo kiedy kursor myszy
+jest przejęty w trybie okienkowym.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Włączenie wbudowanego sterownika myszy dla aplikacji DOS.
+Uwagi:
+   Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
+   Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany sterownik
+   jest automatycznie wyłączany.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Natychmiastowa aktualizacja liczników ruchu, bez oczekiwania na przerwanie.
+Może zwiększyć płynność ruchów myszy, zwłaszcza w grach zręcznościowych
+(arcade, FPS, itd.), aż do porównywalnej z częstotliwością próbkowania
+1000 Hz, bez zwiększania narzutu na obsługę przerwań.
+Może spowodować problemy w niektórych grach. Znane niekompatybilne tytuły:
+   - Ultima Underworld: The Stygian Abyss
+   - Ultima Underworld II: Labyrinth of Worlds
+Jeśli znajdziesz inną niekompatybilną grę, zgłoś (po angielsku) raport o
+błędzie, a zaktualizujemy tę listę.
+.
+:CONFIG_PS2_MOUSE_MODEL
+Model myszy podłączonej do portu PS/2 AUX:
+   standard:       3 przyciski, standardowa mysz PS/2.
+   intellimouse:   3 przyciski + rolka, mysz Microsoft IntelliMouse.
+Domyślnie: intellimouse
+.
+:CONFIG_COM_MOUSE_MODEL
+Domyślny model myszy podłączonej do portu COM (serial):
+   2button:        2 przyciski, mysz Microsoft.
+   3button:        3 przyciski, mysz Logitech,
+                   dość kompatybilna z myszą Microsoft.
+   wheel:          3 przyciski + rolka,
+                   dość kompatybilna z myszą Microsoft.
+   msm:            3 przyciski, mysz Mouse Systems,
+                   ta mysz jest NIEKOMPATYBILNA z myszą Microsoft.
+   2button+msm:    Automatyczna selekcja pomiędzy '2button' oraz 'msm'.
+   3button+msm:    Automatyczna selekcja pomiędzy '3button' oraz 'msm'.
+   wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
+Domyślnie: wheel+msm
+Uwaga:
+   Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
 :CONFIG_NOSOUND
 Włączenie trybu cichego; dźwięk jest emulowany, ale całkowicie wyciszony.
@@ -668,11 +750,11 @@ Filtrowanie dźwięku digitalizowanego urządzenia PS/1:
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
   auto     : Wykryj i użyj automatycznie (domyślne).
-  2axis    : Obsługa do dwóch joysticków.
-  4axis    : Tylko pierwszy joystick.
-  4axis_2  : Tylko drugi joystick.
-  fcs      : Joystick typu Thrustmaster.
-  ch       : Joystick typu CH Flightstick.
+  2axis    : Obsługa do dwóch joysticków, każdy z nich 2-osiowy.
+  4axis    : Tylko pierwszy joystick, 4-osiowy.
+  4axis_2  : Tylko drugi joystick, 4-osiowy.
+  fcs      : Emulacja joysticka typu Thrustmaster.
+  ch       : Emulacja joysticka typu CH Flightstick.
   hidden   : Ukrywa joystick przed DOSem, ale umożliwia mapowanie.
   disabled : Całkowicie wyłączone joysticki.
 (Pamiętaj o zresetowaniu mapowania jeśli zapisałeś je wcześniej do pliku)
@@ -723,15 +805,7 @@ Można podać dodatkowe parametry w formie parametr:wartość, muszą być
 wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
 (opcjonalny) irq:numer.
 Dla urządzenia 'mouse' (mysz szeregowa):
-  type, jedno z:
-    2btn:  2-przyciskowa, tzw. 'mysz Microsoft'
-    3btn:  3-przyciskowa, tzw. 'mysz Logitech'
-    wheel: 3-przyciskowa z rolką
-    msm:   3-przyciskowa, 'Mouse Systems Mouse'
-    2btn+msm, 3btn+msm, wheel+msm : autoselekcja
-  rate, może być normal lub smooth (większa częstotliwość próbkowania niż
-    możliwa do uzyskania na rzeczywistym sprzęcie).
-   Wartości domyślne to type:wheel+msm rate:smooth
+  model, nadpisuje ustawienie z sekcji [mouse].
 Dla urządzenia 'direct' (bezpośredni dostęp do portu COM gospodarza):
   realport (wymagany), rxdelay (opcjonalny).
   Przykład: realport:COM1 realport:ttyS0.
@@ -863,11 +937,6 @@ Brak parametru '%s' w sekcji '%s'.
 Składnia: config -set "[sekcja] parametr=wartość".
 
 .
-:CONFIG_DISNEY_FILTER
-Filtrowanie dźwięku urządzenia Disney Sound Source:
-  on:   Włączone (domyślne).
-  off:  Filtrowanie wyłączone.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie został załadowany żaden plik konfiguracyjny!
 
@@ -898,7 +967,7 @@ Zapisywanie pliku konfiguracyjnego:
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Zmiana parametrów konfiguracyjnych.
+Zmienia parametry konfiguracyjne.
 -writeconf lub -wc : zapisz ustawienia do głównego pliku konfiguracyjnego.
 -writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracją.
 -writelang lub -wl nazwa_pliku : zapisz teksty aktualnego języka.
@@ -920,7 +989,6 @@ Zmiana parametrów konfiguracyjnych.
 -startmapper                    : uruchom narzędzie mapujące.
 -get "sekcja parametr"          : wyświetl wartość parametru.
 -set "sekcja parametr=wartość"  : ustaw wartość parametru.
-
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
 Informacja o parametrze '%s' (zawartym w sekcji '%s'):
@@ -939,7 +1007,7 @@ Aktualna wartość:
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-Ten parametr nie może być zmieniony po uruchomieniu.
+Ten parametr nie może być zmieniony w trakcie pracy.
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
@@ -1022,8 +1090,8 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
-Symulowanie naciśnięć klawiszy dla uruchomionego programu.
+:PROGRAM_AUTOTYPE_HELP_LONG
+Symuluje naciśnięcia klawiszy dla uruchomionego programu.
 
 Składnia:
   [color=green]autotype[reset] -list
@@ -1045,9 +1113,10 @@ Przykłady:
   [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
   [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
   [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
+
 .
-:SHELL_CMD_BOOT_HELP_LONG
-Startowanie systemu z obrazu dyskietki lub zamontowanego dysku.
+:PROGRAM_BOOT_HELP_LONG
+Bootuje system z obrazu dyskietki lub zamontowanego dysku.
 
 Składnia:
   [color=green]boot[reset] [color=white]DYSK[reset]:
@@ -1080,7 +1149,7 @@ Obraz dysku jest tylko do odczytu! To może powodować problemy.
 
 .
 :PROGRAM_BOOT_PRINT_ERROR
-To polecenie startuje system operacyjny z obrazu dyskietki lub dysku twardego.
+To polecenie bootuje system operacyjny z obrazu dyskietki lub dysku twardego.
 
 Można podać kilka obrazów dyskietek, przełączanych za pomocą %s+F4. Opcją -l
 można podać dysk, z którego ma zostać uruchomiony system, domyślny to A.
@@ -1182,8 +1251,8 @@ Lista zamontowanych dysków:
 
 
 .
-:SHELL_CMD_IMGMOUNT_HELP_LONG
-Montowanie obrazu dyskietki, płyty CD lub dysku pod wybraną literę.
+:PROGRAM_IMGMOUNT_HELP_LONG
+Montuje obraz dyskietki, płyty CD lub dysku pod wybraną literę.
 
 Składnia:
   [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]CD-LISTA[reset] [-fs iso] [-ide] -t cdrom|iso
@@ -1403,8 +1472,8 @@ Strona kodowa %i została załadowana.
 Strona kodowa %i dla układu klawiatury '%s' została załadowana.
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
-Konfiguracja klawiatury i czcionki dla danego języka.
+:PROGRAM_KEYB_HELP_LONG
+Konfiguruje klawiaturę i czcionkę ekranową dla danego języka.
 
 Składnia:
   [color=green]keyb[reset] [color=cyan][KLAWIATURA][reset]
@@ -1450,8 +1519,8 @@ Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury '%s'.
 
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
-Ładowanie programu w określone miejsce pamięci i uruchomienie go.
+:PROGRAM_LOADFIX_HELP_LONG
+Ładuje program w określone miejsce pamięci i uruchamia go.
 
 Składnia:
   [color=green]loadfix[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
@@ -1487,8 +1556,8 @@ Używana pamięć została zwolniona.
 Błąd alokacji pamięci.
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
-Ładowanie obrazu ROM języka IBM BASIC lub BIOSu karty graficznej.
+:PROGRAM_LOADROM_HELP_LONG
+Ładuje obraz ROM języka IBM BASIC lub BIOSu karty graficznej.
 
 Składnia:
   [color=green]loadrom [color=cyan]OBRAZ[reset]
@@ -1526,8 +1595,8 @@ Nie można rozpoznać ROMu.
 Załadowano BASIC ROM.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
-Wyświetlenie informacji o użyciu pamięci.
+:PROGRAM_MEM_HELP_LONG
+Wyświetla informację o użyciu pamięci.
 
 Składnia:
   [color=green]mem[reset]
@@ -1558,11 +1627,58 @@ Przykłady:
 %10d kB wolnej pamięci UMB (górnej) w %d blokach (największy %d kB)
 
 .
-:SHELL_CMD_MOUNT_HELP
-Montowanie fizycznych katalogów lub dysków.
+:PROGRAM_MORE_HELP_LONG
+Wyświetla plik tekstowy lub rezultat polecenia jeden ekran na raz.
+
+Składnia:
+  [color=cyan]POLECENIE[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]PLIK[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]WZORZEC[reset] [[color=cyan]WZORZEC[reset] ...]
+
+Gdzie:
+  [color=cyan]POLECENIE[reset] plecenie, którego rezultat ma być wyświetlony.
+  [color=cyan]PLIK[reset]      dokładna nazwa pliku do wyświetlenia, opcjonalnie ze ścieżką.
+  [color=cyan]WZORZEC[reset]   ścieżka do pojedynczego pliku, lub ścieżka z symbolami
+            wieloznaczności (maskami), którymi są asterisk ('*') i znak
+            zapytania ('?').
+  [color=white]n[reset]       rozmiar tabulatora, 1-9, domyślnie 8.
+
+Uwagi:
+  Używać tylko do plików tekstowych, nie należy używać do plików binarnych.
+
+Przykłady:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]               ; posortowany katalog, po jednym ekranie
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\CZYTAJTO.TXT[reset]   ; wyświetla plik, tabulator to 4 znaki
+.
+:PROGRAM_MORE_NO_FILE
+Nie znaleziono żadnego pliku.
+.
+:PROGRAM_MORE_END
+[reset][color=light-yellow]--- koniec ---[reset]
+.
+:PROGRAM_MORE_NEW_FILE
+[reset][color=light-yellow]--- plik %s ---[reset]
+.
+:PROGRAM_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- urządzenie %s ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- wciśnij SPACJĘ aby wyświetlić więcej ---[reset]
+.
+:PROGRAM_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- wciśnij SPACJĘ aby wyświetlić więcej, N kolejny plik ---[reset]
+.
+:PROGRAM_MORE_OPEN_ERROR
+[reset][color=red]--- nie można otworzyć %s ---[reset]
+.
+:PROGRAM_MORE_TERMINATE
+[reset][color=light-yellow](przerwano)[reset]
+.
+:PROGRAM_MOUNT_HELP
+Montuje fizyczny katalog lub dysk.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Montuje katalog z systemu gospodarza pod literę dysku.
 
 Składnia:
@@ -1664,8 +1780,111 @@ Nakładka ('overlay') '%s' zamontowana na dysku %c.
 Nie można przenieść dysku Z. Dysk %c jest już zamontowany.
 
 .
-:SHELL_CMD_RESCAN_HELP_LONG
-Sprawdzenie zmian na zamontowanych dyskach.
+:PROGRAM_MOUSECTL_HELP_LONG
+Zarządza myszami fizycznymi i logicznymi.
+
+Składnia:
+  [color=green]mousectl[reset] [-all]
+  [color=green]mousectl[reset] [color=white]INTERFEJS[reset] -map [color=cyan]NAZWA[reset]
+  [color=green]mousectl[reset] [color=white]INTERFEJS[reset] [[color=white]INTERFEJS[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s | -sx | -sy [czułość]
+  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s czułość_x czułość_y
+  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -r [min_częstotliwość]
+
+Gdzie:
+  [color=white]INTERFEJS[reset]      jeden z: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap    mapowanie/odmapowanie myszy, w [color=cyan]NAME[reset] można używać '*' lub '?'
+  -s -sx -sy     czułość myszy / dla osi x / dla osi y, od -999 do +999
+  -r             wymuszona minimalna częstotliwość próbkowania
+  -on -off       włączenie/wyłączenie myszy na danym interfejsie
+  -reset         przywrócenie domyślnych ustawień
+
+Uwagi:
+  Pominięcie czułości lub częstotliwości przywraca wartość domyślną.
+
+Przykłady:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
+.
+:PROGRAM_MOUSECTL_SYNTAX
+Nieprawidłowa składnia.
+.
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
+Nieprawidłowa składnia, w nazwie dozwolone są tylko znaki ASCII.
+.
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
+Nieprawidłowa składnia, czułość musi być w zakresie od -999 do +999.
+.
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
+Nieprawidłowa składnia, zduplikowany interfejs.
+.
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
+Nieprawidłowa składnia, częstotliwość próbkowania musi być jedną z:
+%s[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+.[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
+Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
+.
+:PROGRAM_MOUSECTL_NO_INTERFACES
+Żaden interfejs myszy nie jest dostępny.[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+.
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
+Interfejs myszy nie jest dostępny.
+.
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
+Nie wykryto żadnej fizycznej myszy.
+.
+:PROGRAM_MOUSECTL_NO_MATCH
+Nie znaleziono żadnej fizycznej myszy o pasującej nazwie.
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER1
+[color=white]Interfejs        Czułość      Próbkowanie (Hz)   Status[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
+[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s          %s
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER2
+[color=white]Interfejs       Nazwa myszy[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
+[color=cyan]%-4s[reset]            %s
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+bez mapowania   %s
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
+używa wskaźnika systemowego
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
+mysz fizyczna
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=red]mysz odłączona[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
+wyłączona
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
+Częstotliwości próbkowania myszy na interfejsach [color=cyan]COM[reset] to wyłącznie estymacje.
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
+Częstotliwości próbkowania w wymuszoną minimalną wartością są oznaczone '*'.
+.
+:PROGRAM_MOUSECTL_MAP_ADVICE
+Wciśnij [color=white]lewy[reset] przycisk myszy aby zmapować ją do interfejsu.
+Wciśnięcie innego przycisku przerywa mapowanie i przypisuje wskaźnik systemowy
+do wszystkich interfejsów myszy.
+.
+:PROGRAM_MOUSECTL_MAP_CANCEL
+(mapowanie anulowane)
+.
+:PROGRAM_MOUSECTL_MAP_HINT
+Jeśli jakakolwiek fizyczna mysz jest zmapowana, płynna integracja kursora
+myszy jest zawsze wyłączona. Zmapowane myszy zawsze działają w trybie 'raw',
+nie przejmują ustawień czułości i przyspieszenia z systemu gospodarza.
+.
+:PROGRAM_RESCAN_HELP_LONG
+Sprawdza zmiany na zamontowanych dyskach.
 
 Składnia:
   [color=green]rescan[reset] [color=cyan]DYSK[reset]
@@ -1688,7 +1907,7 @@ Sprawdzono zmiany na dysku.
 
 .
 :SHELL_CMD_MIXER_HELP_LONG
-Zarządzanie ustawieniami miksera dźwięku.
+Zarządza ustawieniami miksera dźwięku.
 
 Składnia:
   [color=green]mixer[reset] [color=cyan][KANAŁ][reset] [color=white]POLECENIE[reset] [/noshow]
@@ -1725,11 +1944,14 @@ wył
 :SHELL_CMD_MIXER_CHANNEL_STEREO
 Stereo
 .
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
-:SHELL_CMD_SERIAL_HELP_LONG
-Zarządzanie portami szeregowymi.
+:PROGRAM_SERIAL_HELP_LONG
+Zarządza portami szeregowymi.
 
 Składnia:
   [color=green]serial[reset] [color=white][PORT#][reset]  (wyświetla ustawienia portów lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
@@ -1780,7 +2002,7 @@ Krótka lista najczęściej używanych komend:
 
 .
 :SHELL_CMD_COMMAND_HELP_LONG
-Uruchomienie interpretera wiersza poleceń.
+Uruchamia interpreter wiersza poleceń.
 
 Składnia:
   [color=green]command[reset]
@@ -1834,7 +2056,7 @@ Wciąż jesteś na dysku Z:, wpisz [color=light-red]C:[reset] aby przejść na z
 
 .
 :SHELL_CMD_DATE_HELP
-Wyświetlenie lub zmiana daty systemowej.
+Wyświetla lub zmiana datę systemową.
 
 .
 :SHELL_CMD_DATE_ERROR
@@ -1871,7 +2093,7 @@ Przykłady:
   [color=green]date[reset] [color=cyan]%s[reset]
 .
 :SHELL_CMD_TIME_HELP
-Wyświetlenie lub zmiana godziny systemowej.
+Wyświetla lub zmienia godzinę systemową.
 
 .
 :SHELL_CMD_TIME_ERROR
@@ -2007,7 +2229,7 @@ Błędne polecenie lub nazwa pliku: '%s'.
 Naciśnij dowolny klawisz, aby kontynuować...
 .
 :SHELL_CMD_PAUSE_HELP
-Oczekiwanie na naciśnięcie klawisza aby kontynuować.
+Oczekuje na naciśnięcie klawisza aby kontynuować.
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
@@ -2091,7 +2313,7 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 
 .
 :SHELL_CMD_CHDIR_HELP
-Wyświetlenie lub zmiana aktualnego katalogu.
+Wyświetla lub zmiana aktualny katalog.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
@@ -2111,7 +2333,7 @@ Przykłady:
   [color=green]cd[reset] [color=cyan]mydir[reset]
 .
 :SHELL_CMD_CLS_HELP
-Czyszczenie zawartości ekranu.
+Czyści zawartość ekranu.
 
 .
 :SHELL_CMD_CLS_HELP_LONG
@@ -2129,7 +2351,7 @@ Przykłady:
   [color=green]cls[reset]
 .
 :SHELL_CMD_DIR_HELP
-Wyświetlenie listy plików i podkatalogów.
+Wyświetla listę plików i podkatalogów.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
@@ -2157,7 +2379,7 @@ Przykłady:
   [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Wyświetlenie wiadomości lub włączenie/wyłączenie trybu powtarzania.
+Wyświetla wiadomości lub włącza/wyłącza tryb powtarzania.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
@@ -2178,7 +2400,7 @@ Przykłady:
   [color=green]echo[reset] [color=cyan]Witaj, świecie![reset]
 .
 :SHELL_CMD_EXIT_HELP
-Zakończenie wiersza poleceń.
+Kończy pracę wiersza poleceń.
 
 .
 :SHELL_CMD_EXIT_HELP_LONG
@@ -2202,7 +2424,7 @@ Próba zbyt wczesnego wykonania polecenia 'exit'.
 
 .
 :SHELL_CMD_HELP_HELP
-Wyświetlenie pomocy dotyczącej poszczególnych poleceń.
+Wyświetla pomoc dotyczącą poszczególnych poleceń.
 
 .
 :SHELL_CMD_HELP_HELP_LONG
@@ -2223,11 +2445,11 @@ Przykłady:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Krótki, pełnoekranowy samouczek.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Składnia:
   [color=green]intro[reset]
   [color=green]intro[reset] [color=white]STRONA[reset]
@@ -2245,7 +2467,7 @@ Przykłady:
   [color=green]intro[reset] [color=white]cdrom[reset]
 .
 :SHELL_CMD_MKDIR_HELP
-Tworzenie nowego katalogu.
+Tworzy nowy katalog.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
@@ -2265,7 +2487,7 @@ Przykłady:
   [color=green]md[reset] [color=cyan]c:\games\dir[reset]
 .
 :SHELL_CMD_RMDIR_HELP
-Usunięcie katalogu.
+Usuwa katalog.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
@@ -2283,7 +2505,7 @@ Przykłady:
   [color=green]rd[reset] [color=cyan]emptydir[reset]
 .
 :SHELL_CMD_SET_HELP
-Wyświetlenie lub zmiana zawartości zmiennych środowiskowych.
+Wyświetla lub zmienia zawartość zmiennych środowiskowych.
 
 .
 :SHELL_CMD_SET_HELP_LONG
@@ -2349,7 +2571,7 @@ Przykłady:
   [color=green]goto[reset] [color=cyan]koniec[reset]
 .
 :SHELL_CMD_SHIFT_HELP
-Przesunięcie argumentów wiersza poleceń w pliku wsadowym.
+Przesuwa argumenty wiersza poleceń w pliku wsadowym.
 
 .
 :SHELL_CMD_SHIFT_HELP_LONG
@@ -2367,7 +2589,7 @@ Przykłady:
   [color=green]shift[reset]
 .
 :SHELL_CMD_TYPE_HELP
-Wyświetlenie zawartości pliku tekstowego.
+Wyświetla zawartości pliku tekstowego.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
@@ -2408,7 +2630,7 @@ To jest prosta wersja polecenia, symbole wieloznaczne (maski) nie są dozwolone!
 
 .
 :SHELL_CMD_RENAME_HELP
-Zmiana nazwy jednego lub większej ilości plików.
+Zmienia nazwę jednego lub większej ilości plików.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
@@ -2429,7 +2651,7 @@ Przykłady:
   [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
 .
 :SHELL_CMD_DELETE_HELP
-Usunięcie jednego lub większej ilości plików.
+Usuwa jeden lub więcej plików.
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
@@ -2452,7 +2674,7 @@ Przykłady:
   [color=green]del[reset] [color=cyan]a?b.c*[reset]
 .
 :SHELL_CMD_COPY_HELP
-Kopiowanie jednego lub większej ilości plików.
+Kopiuje jeden lub więcej plików.
 
 .
 :SHELL_CMD_COPY_HELP_LONG
@@ -2475,7 +2697,7 @@ Przykłady:
   [color=green]copy[reset] [color=white]..\c*.*[reset]
 .
 :SHELL_CMD_CALL_HELP
-Uruchomienie pliku wsadowego z innego pliku wsadowego.
+Uruchamia pliku wsadowy z innego pliku wsadowego.
 
 .
 :SHELL_CMD_CALL_HELP_LONG
@@ -2495,7 +2717,7 @@ Przykłady:
   [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Witaj, świecie![reset]
 .
 :SHELL_CMD_SUBST_HELP
-Przypisanie ścieżki do litery dysku.
+Przypisuje ścieżkę do litery dysku.
 
 .
 :SHELL_CMD_SUBST_HELP_LONG
@@ -2516,7 +2738,7 @@ Przykłady:
   [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
 .
 :SHELL_CMD_LOADHIGH_HELP
-Ładowanie programu do pamięci UMB (górnej).
+Ładuje program do pamięci UMB (górnej).
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
@@ -2540,7 +2762,7 @@ Przykłady:
   [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
 .
 :SHELL_CMD_LS_HELP
-Wyświetlenie zawartości katalogu w formie szerokiej listy.
+Wyświetla zawartość katalogu w formie szerokiej listy.
 
 .
 :SHELL_CMD_LS_HELP_LONG
@@ -2566,7 +2788,7 @@ Brak dostępu do '%s'.
 
 .
 :SHELL_CMD_ATTRIB_HELP
-Wyświetlenie lub zmiana atrybutów pliku.
+Wyświetla lub zmienia atrybuty pliku.
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
@@ -2599,7 +2821,7 @@ Nie można ustawić atrybutów: '%s'.
 
 .
 :SHELL_CMD_CHOICE_HELP
-Oczekiwanie na naciśnięcie klawisza, ustawienie wartości ERRORLEVEL.
+Oczekuje na naciśnięcie klawisza, ustawia ERRORLEVEL odpowiednio.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
@@ -2636,7 +2858,7 @@ Przykłady:
 
 .
 :SHELL_CMD_PATH_HELP
-Wyświetlenie lub zmiana ścieżki wyszukiwania plików.
+Wyświetla lub zmiana ścieżkę wyszukiwania plików.
 
 .
 :SHELL_CMD_PATH_HELP_LONG
@@ -2658,7 +2880,7 @@ Przykłady:
   [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
 .
 :SHELL_CMD_VER_HELP
-Wyświetlenie lub zmiana raportowanej wersji systemu DOS.
+Wyświetla lub zmienia raportowaną wersję systemu DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
@@ -2703,4 +2925,6 @@ Inne polecenia
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
 .
-
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.

@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004 Dag Lem <resid@nimrod.no>
  *
@@ -83,7 +83,7 @@ const unsigned int SHIFT_REGISTER_FADE_8580R5  =  314300;
  * This is what happens when the lfsr is clocked:
  *
  * cycle 0: bit 19 of the accumulator goes from low to high, the noise register acts normally,
- *          the output may overwrite a bit;
+ *          the output may pulldown a bit;
  *
  * cycle 1: first phase of the shift, the bits are interconnected and the output of each bit
  *          is latched into the following. The output may overwrite the latched value.
@@ -93,6 +93,21 @@ const unsigned int SHIFT_REGISTER_FADE_8580R5  =  314300;
  *
  * When the test or reset lines are active the first phase is executed at every cyle
  * until the signal is released triggering the second phase.
+ *
+ *      |       |    bit n     |   bit n+1
+ *      | bit19 | latch output | latch output
+ * -----+-------+--------------+--------------
+ * phi1 |   0   |   A <-> A    |   B <-> B
+ * phi2 |   0   |   A <-> A    |   B <-> B
+ * -----+-------+--------------+--------------
+ * phi1 |   1   |   A <-> A    |   B <-> B      <- bit19 raises
+ * phi2 |   1   |   A <-> A    |   B <-> B
+ * -----+-------+--------------+--------------
+ * phi1 |   1   |   X     A  --|-> A     B      <- shift phase 1
+ * phi2 |   1   |   X     A  --|-> A     B
+ * -----+-------+--------------+--------------
+ * phi1 |   1   |   X --> X    |   A --> A      <- shift phase 2
+ * phi2 |   1   |   X <-> X    |   A <-> A
  */
 void WaveformGenerator::clock_shift_register(unsigned int bit0)
 {

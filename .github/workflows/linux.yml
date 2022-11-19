@@ -73,6 +73,7 @@ jobs:
               -Duse_mt32emu=false
               -Duse_opengl=false
               -Duse_png=false
+              -Duse_sdl2_image=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
             min_dependencies: true
@@ -146,7 +147,7 @@ jobs:
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  meson test -C build --print-errorlogs
+        run:  meson test --num-processes 128 -t 0 -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true

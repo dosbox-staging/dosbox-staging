@@ -28,9 +28,10 @@
 #include <string>
 #include <sstream>
 
+#include "dosbox.h"
 #include "mapper.h"
 #include "math_utils.h"
-#include "dosbox.h"
+#include "program_more_output.h"
 #include "programs.h"
 
 // Prints the key-names for the mapper's currently-bound events.
@@ -121,7 +122,9 @@ void AUTOTYPE::Run()
 
 	// Usage
 	if (!cmd->GetCount() || HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_AUTOTYPE_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_AUTOTYPE_HELP_LONG"));
+		output.Display();
 		return;
 	}
 
@@ -160,7 +163,7 @@ void AUTOTYPE::Run()
 }
 
 void AUTOTYPE::AddMessages() {
-	MSG_Add("SHELL_CMD_AUTOTYPE_HELP_LONG",
+	MSG_Add("PROGRAM_AUTOTYPE_HELP_LONG",
 	        "Performs scripted keyboard entry into a running DOS game.\n"
 	        "\n"
 	        "Usage:\n"

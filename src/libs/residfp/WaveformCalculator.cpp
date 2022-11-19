@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2016 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,18 +46,36 @@ WaveformCalculator* WaveformCalculator::getInstance()
 const CombinedWaveformConfig config[2][4] =
 {
     { /* kevtris chip G (6581 R2) */
-        {0.90251f, 0.f,        0.f,       1.9147f,    1.6747f,  0.62376f }, // error  1689 (280)
-        {0.93088f, 2.4843f,    0.f,       1.0353f,    1.1484f,  0.f      }, // error  6128 (130)
-        {0.90988f, 2.26303f,   1.13126f,  1.0035f,    1.13801f, 0.f      }, // error 14243 (632)
-        {0.91f,    1.192f,     0.f,       1.0169f,    1.2f,     0.637f   }, // error    64   (2)
+        {0.90522f,  0.f,      0.f,       1.97506f,   1.66937f, 0.63482f }, // error  1687 (278)
+        {0.93088f,  2.4843f,  0.f,       1.0353f,    1.1484f,  0.f      }, // error  6128 (130)
+        {0.912142f, 2.32076f, 1.106015f, 0.053906f,  0.25143f, 0.f      }, // error 10567 (567)
+        {0.901f,    1.0845f,  0.f,       1.056f,     1.1848f,  0.599f   }, // error    36 (12)
     },
     { /* kevtris chip V (8580 R5) */
-        {0.9632f,   0.f,       0.975f,    1.7467f,    2.36132f, 0.975395f}, // error  1380 (169)
-        {0.92886f,  1.67696f,  0.f,       1.1014f,    1.4352f,  0.f      }, // error  8007 (218)
-        {0.94043f,  1.7937f,   0.981f,    1.1213f,    1.4259f,  0.f      }, // error 11957 (362)
-        {0.96211f,  0.98695f,  1.00387f,  1.46499f,   1.98375f, 0.77777f }, // error  2369  (89)
+        {0.94344f,  0.f,      0.976f,    1.6347f,    2.51537f, 0.73115f }, // error  1300 (184)
+        {0.93303f,  1.7025f,  0.f,       1.0868f,    1.43527f, 0.f      }, // error  7981 (204)
+        {0.95831f,  1.95269f, 0.992986f, 0.0077384f, 0.18408f, 0.f      }, // error  9596 (324)
+        {0.94699f,  1.09668f, 0.99586f,  0.94167f,   2.0139f,  0.5633f  }, // error  2118 (54)
     },
 };
+
+typedef float (*distance_t)(float, int);
+
+// Distance functions
+static float exponentialDistance(float distance, int i)
+{
+    return powf(distance, static_cast<float>(-i));
+}
+
+static float linearDistance(float distance, int i)
+{
+    return 1.f / (1.f + i * distance);
+}
+
+static float quadraticDistance(float distance, int i)
+{
+    return 1.f / (1.f + (i*i) * distance);
+}
 
 /**
  * Generate bitstate based on emulation of combined waves.
@@ -66,7 +84,7 @@ const CombinedWaveformConfig config[2][4] =
  * @param waveform the waveform to emulate, 1 .. 7
  * @param accumulator the high bits of the accumulator value
  */
-short calculateCombinedWaveform(const CombinedWaveformConfig& config, int waveform, int accumulator)
+short calculateCombinedWaveform(const CombinedWaveformConfig& config, int waveform, int accumulator, bool is8580)
 {
     float o[12];
 
@@ -76,8 +94,8 @@ short calculateCombinedWaveform(const CombinedWaveformConfig& config, int wavefo
         o[i] = (accumulator & (1 << i)) != 0 ? 1.f : 0.f;
     }
 
-    // convert to Triangle
-    if ((waveform & 3) == 1)
+    // If Saw is not selected the bits are XORed
+    if ((waveform & 2) == 0)
     {
         const bool top = (accumulator & 0x800) != 0;
 
@@ -89,7 +107,7 @@ short calculateCombinedWaveform(const CombinedWaveformConfig& config, int wavefo
         o[0] = 0.f;
     }
 
-    // or to Saw+Triangle
+    // If both Saw and Triangle are selected the bits are interconnected
     else if ((waveform & 3) == 3)
     {
         // bottom bit is grounded via T waveform selector
@@ -116,47 +134,49 @@ short calculateCombinedWaveform(const CombinedWaveformConfig& config, int wavefo
     }
 
     // ST, P* waveforms
-    if (waveform == 3 || waveform > 4)
+
+    const distance_t distFunc =
+        (waveform & 1) == 1 ? exponentialDistance : is8580 ? quadraticDistance : linearDistance;
+
+    float distancetable[12 * 2 + 1];
+    distancetable[12] = 1.f;
+    for (int i = 12; i > 0; i--)
     {
-        float distancetable[12 * 2 + 1];
-        distancetable[12] = 1.f;
-        for (int i = 12; i > 0; i--)
-        {
-            distancetable[12-i] = 1.0f / powf(config.distance1, static_cast<float>(i)); // all floats
-            distancetable[12+i] = 1.0f / powf(config.distance2, static_cast<float>(i)); // all floats
-        }
-
-        float tmp[12];
-
-        for (int i = 0; i < 12; i++)
-        {
-            float avg = 0.f;
-            float n = 0.f;
-
-            for (int j = 0; j < 12; j++)
-            {
-                const float weight = distancetable[i - j + 12];
-                avg += o[j] * weight;
-                n += weight;
-            }
-
-            // pulse control bit
-            if (waveform > 4)
-            {
-                const float weight = distancetable[i - 12 + 12];
-                avg += config.pulsestrength * weight;
-                n += weight;
-            }
-
-            tmp[i] = (o[i] + avg / n) * 0.5f;
-        }
-
-        for (int i = 0; i < 12; i++)
-        {
-            o[i] = tmp[i];
-        }
+        distancetable[12-i] = distFunc(config.distance1, i);
+        distancetable[12+i] = distFunc(config.distance2, i);
     }
 
+    float tmp[12];
+
+    for (int i = 0; i < 12; i++)
+    {
+        float avg = 0.f;
+        float n = 0.f;
+
+        for (int j = 0; j < 12; j++)
+        {
+            const float weight = distancetable[i - j + 12];
+            avg += o[j] * weight;
+            n += weight;
+        }
+
+        // pulse control bit
+        if (waveform > 4)
+        {
+            const float weight = distancetable[i - 12 + 12];
+            avg += config.pulsestrength * weight;
+            n += weight;
+        }
+
+        tmp[i] = (o[i] + avg / n) * 0.5f;
+    }
+
+    for (int i = 0; i < 12; i++)
+    {
+        o[i] = tmp[i];
+    }
+
+    // Get the predicted value
     short value = 0;
 
     for (unsigned int i = 0; i < 12; i++)
@@ -172,7 +192,9 @@ short calculateCombinedWaveform(const CombinedWaveformConfig& config, int wavefo
 
 matrix_t* WaveformCalculator::buildTable(ChipModel model)
 {
-    const CombinedWaveformConfig* cfgArray = config[model == MOS6581 ? 0 : 1];
+    const bool is8580 = model != MOS6581;
+
+    const CombinedWaveformConfig* cfgArray = config[is8580 ? 1 : 0];
 
     cw_cache_t::iterator lb = CACHE.lower_bound(cfgArray);
 
@@ -188,11 +210,11 @@ matrix_t* WaveformCalculator::buildTable(ChipModel model)
         wftable[0][idx] = 0xfff;
         wftable[1][idx] = static_cast<short>((idx & 0x800) == 0 ? idx << 1 : (idx ^ 0xfff) << 1);
         wftable[2][idx] = static_cast<short>(idx);
-        wftable[3][idx] = calculateCombinedWaveform(cfgArray[0], 3, idx);
+        wftable[3][idx] = calculateCombinedWaveform(cfgArray[0], 3, idx, is8580);
         wftable[4][idx] = 0xfff;
-        wftable[5][idx] = calculateCombinedWaveform(cfgArray[1], 5, idx);
-        wftable[6][idx] = calculateCombinedWaveform(cfgArray[2], 6, idx);
-        wftable[7][idx] = calculateCombinedWaveform(cfgArray[3], 7, idx);
+        wftable[5][idx] = calculateCombinedWaveform(cfgArray[1], 5, idx, is8580);
+        wftable[6][idx] = calculateCombinedWaveform(cfgArray[2], 6, idx, is8580);
+        wftable[7][idx] = calculateCombinedWaveform(cfgArray[3], 7, idx, is8580);
     }
 #ifdef HAVE_CXX11
     return &(CACHE.emplace_hint(lb, cw_cache_t::value_type(cfgArray, wftable))->second);

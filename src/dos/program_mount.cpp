@@ -23,14 +23,15 @@
 
 #include "dosbox.h"
 
+#include "../ints/int10.h"
 #include "bios_disk.h"
+#include "cdrom.h"
 #include "control.h"
 #include "drives.h"
 #include "fs_utils.h"
+#include "program_more_output.h"
 #include "shell.h"
-#include "cdrom.h"
 #include "string_utils.h"
-#include "../ints/int10.h"
 
 void MOUNT::Move_Z(char new_z)
 {
@@ -137,7 +138,9 @@ void MOUNT::Run(void) {
 	// a side effect of not being able to parse the correct 
 	// command line options.
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
+		output.Display();
 		return;
 	}
 
@@ -405,16 +408,18 @@ void MOUNT::Run(void) {
 	if (type == "floppy") incrementFDD();
 	return;
 showusage:
-	WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
+	output.Display();
 	return;
 }
 
 void MOUNT::AddMessages() {
 	AddCommonMountMessages();
-	MSG_Add("SHELL_CMD_MOUNT_HELP",
-	        "maps physical folders or drives to a virtual drive letter.\n");
+	MSG_Add("PROGRAM_MOUNT_HELP",
+	        "Maps physical folders or drives to a virtual drive letter.\n");
 
-	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
+	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
 	        "Mount a directory from the host OS to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"

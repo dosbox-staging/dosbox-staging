@@ -21,9 +21,10 @@
 #include <cassert>
 
 #include "inout.h"
+#include "mem.h"
+#include "reelmagic/vga_passthrough.h"
 #include "render.h"
 #include "vga.h"
-#include "mem.h"
 
 /*
 3C6h (R/W):  PEL Mask

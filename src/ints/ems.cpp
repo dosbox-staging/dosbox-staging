@@ -1375,7 +1375,7 @@ private:
 	CALLBACK_HandlerObject call_vdma;
 	CALLBACK_HandlerObject call_vcpi;
 	CALLBACK_HandlerObject call_v86mon;
-	Bitu call_int67 = 0;
+	callback_number_t call_int67 = 0;
 
 public:
 	EMS(Section *configuration)

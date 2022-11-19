@@ -20,6 +20,7 @@
 
 #include "program_rescan.h"
 
+#include "program_more_output.h"
 #include "string_utils.h"
 
 void RESCAN::Run(void)
@@ -29,7 +30,9 @@ void RESCAN::Run(void)
 	uint8_t drive = DOS_GetDefaultDrive();
 
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_RESCAN_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_RESCAN_HELP_LONG"));
+		output.Display();
 		return;
 	}
 
@@ -59,7 +62,7 @@ void RESCAN::Run(void)
 }
 
 void RESCAN::AddMessages() {
-	MSG_Add("SHELL_CMD_RESCAN_HELP_LONG",
+	MSG_Add("PROGRAM_RESCAN_HELP_LONG",
 	        "Scans for changes on mounted DOS drives.\n"
 	        "\n"
 	        "Usage:\n"

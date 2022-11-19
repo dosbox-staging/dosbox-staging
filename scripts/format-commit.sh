@@ -55,7 +55,7 @@ main () {
 handle_dependencies () {
 	assign_gnu_sed
 	assert_min_version git 1007010 "Use git version 1.7.10 or newer."
-	assert_min_version clang-format 12000000 "Use clang-format version 12.0.0 or newer."
+	assert_min_version clang-format 15000000 "Use clang-format version 15.0.0 or newer."
 }
 
 SED=""

@@ -28,6 +28,8 @@
 #include "../hardware/serialport/nullmodem.h"
 #include "../hardware/serialport/serialmouse.h"
 
+#include "program_more_output.h"
+
 // Map the serial port type enums to printable names
 static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
         {SERIAL_PORT_TYPE::DISABLED,   "disabled"},
@@ -164,11 +166,13 @@ void SERIAL::Run()
 	}
 
 	// Show help.
-	WriteOut(MSG_Get("SHELL_CMD_SERIAL_HELP_LONG"), SERIAL_MAX_PORTS);
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_SERIAL_HELP_LONG"));
+	output.Display();
 }
 
 void SERIAL::AddMessages() {
-	MSG_Add("SHELL_CMD_SERIAL_HELP_LONG",
+	MSG_Add("PROGRAM_SERIAL_HELP_LONG",
 	        "Manages the serial ports.\n"
 	        "\n"
 	        "Usage:\n"

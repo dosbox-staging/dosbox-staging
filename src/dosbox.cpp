@@ -42,10 +42,12 @@
 #include "mapper.h"
 #include "midi.h"
 #include "mixer.h"
+#include "mouse.h"
 #include "ne2000.h"
 #include "pci_bus.h"
 #include "pic.h"
 #include "programs.h"
+#include "reelmagic.h"
 #include "render.h"
 #include "setup.h"
 #include "shell.h"
@@ -88,7 +90,6 @@ void PCI_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
-void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
@@ -167,7 +168,7 @@ static Bitu Normal_Loop() {
 }
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
-	ZoneScoped
+	ZoneScoped;
 	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
 		ticksRemain=5;
 		/* Reset any auto cycle guessing for this frame */
@@ -606,13 +607,15 @@ void DOSBOX_Init()
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
 	        "                 (default).\n"
 	        "  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable\n"
-	        "                 Brown Level (0 - red, 50 - brown, 100 - dark yellow;\n"
-	        "                 defaults to 50).\n"
+	        "                 brown level. The brown level can be provided as an optional\n"
+	        "                 second parameter (0 - red, 50 - brown, 100 - dark yellow;\n"
+	        "                 defaults to 50). E.g. tandy 100\n"
 	        "  tandy-warm:    Emulation of the actual color output of an unknown Tandy\n"
 	        "                 monitor.\n"
 	        "  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor\n"
-	        "                 with a unique Contrast control that dims non-bright colors\n"
-	        "                 only (0 to 100; defaults to 100).\n"
+	        "                 with a unique contrast control that dims non-bright colors\n"
+	        "                 only. The contrast can be optionally provided as a second\n"
+	        "                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
 	        "                 Palettes used by the Amiga ports of Sierra AGI games\n"
 	        "                 (see the manual for further details).\n"
@@ -733,6 +736,8 @@ void DOSBOX_Init()
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
 #endif
 
+	// Configure mouse
+	MOUSE_AddConfigSection(control);
 
 	// Configure mixer
 	MIXER_AddConfigSection(control);
@@ -1006,6 +1011,30 @@ void DOSBOX_Init()
 	                  "  off:       Don't filter the output.\n"
 	                  "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
+	// ReelMagic Emulator
+	secprop = control->AddSection_prop("reelmagic", &ReelMagic_Init, true);
+	pstring = secprop->Add_string("reelmagic", when_idle, "off");
+	pstring->Set_help(
+	        "ReelMagic (aka REALmagic) MPEG playback support.\n"
+	        "  off:      Disable support (default).\n"
+	        "  cardonly: Initialize the card without loading the FMPDRV.EXE driver.\n"
+	        "  on:       Initialize the card and load the FMPDRV.EXE on start-up.");
+
+	pstring = secprop->Add_string("reelmagic_key", when_idle, "auto");
+	pstring->Set_help(
+	        "Set the 32-bit magic key used to decode the game's videos.\n"
+	        "  auto:     Use the built-in routines to determine the key (default).\n"
+	        "  common:   Use the most commonly found key, which is 0x40044041.\n"
+	        "  thehorde: Use The Horde's key, which is 0xC39D7088.\n"
+	        "  <custom>: Set a custom key in hex format (e.g., 0x12345678).");
+
+	pint = secprop->Add_int("reelmagic_fcode", when_idle, 0);
+	pint->Set_help(
+	        "Override the frame rate code used during video playback.\n"
+	        "  0:        No override: attempt automatic rate discovery (default).\n"
+	        "  1 to 7:   Override the frame rate to one the following (use 1 through 7):\n"
+	        "            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
+
 	// Joystick emulation
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 
@@ -1043,11 +1072,12 @@ void DOSBOX_Init()
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
 
 	Pbool = secprop->Add_bool("circularinput", when_idle, false);
-	Pbool->Set_help("enable translation of circular input to square output.\n"
-	                "Try enabling this if your left analog stick can only move in a circle.");
+	Pbool->Set_help(
+	        "enable translation of circular input to square output.\n"
+	        "Try enabling this if your left analog stick can only move in a circle.");
 
 	Pint = secprop->Add_int("deadzone", when_idle, 10);
-	Pint->SetMinMax(0,100);
+	Pint->SetMinMax(0, 100);
 	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
 	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
@@ -1075,13 +1105,8 @@ void DOSBOX_Init()
 	        "Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.");
 
 	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
-	const char *serials[] = {"dummy",
-	                         "disabled",
-	                         "mouse",
-	                         "modem",
-	                         "nullmodem",
-	                         "direct",
-	                         0};
+	const char* serials[] = {
+	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", 0};
 
 	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
 	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
@@ -1094,14 +1119,7 @@ void DOSBOX_Init()
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. Parameter for all types is irq (optional).\n"
 	        "for mouse:\n"
-	        "   type, can be one of:\n"
-	        "      2btn:  2 buttons, Microsoft serial mouse\n"
-	        "      3btn:  3 buttons, Logitech serial mouse\n"
-	        "      wheel: 3 buttons + wheel serial mouse\n"
-	        "      msm:   3 buttons, Mouse Systems Mouse\n"
-	        "      2btn+msm, 3btn+msm, wheel+msm : autoselection\n"
-	        "   rate, can be normal or smooth (more frequent updates than on real PC)\n"
-	        "   Default is type:wheel+msm rate:smooth\n"
+	        "   model, overrides setting from [mouse] section\n"
 	        "for direct: realport (required), rxdelay (optional).\n"
 	        "   (realport:COM1 realport:ttyS0).\n"
 	        "for modem: listenport, sock, baudrate (all optional).\n"
@@ -1135,20 +1153,22 @@ void DOSBOX_Init()
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
 	pstring->Set_help("File used to map fake phone numbers to addresses.");
 
-	/* All the DOS Related stuff, which will eventually start up in the shell */
-	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
-	secprop->AddInitFunction(&XMS_Init,true);//done
+	/* All the DOS Related stuff, which will eventually
+	 * start up in the shell */
+	secprop = control->AddSection_prop("dos", &DOS_Init, false); // done
+	secprop->AddInitFunction(&XMS_Init, true);                   // done
 	Pbool = secprop->Add_bool("xms", when_idle, true);
 	Pbool->Set_help("Enable XMS support.");
 
-	secprop->AddInitFunction(&EMS_Init,true);//done
-	const char* ems_settings[] = { "true", "emsboard", "emm386", "false", 0};
+	secprop->AddInitFunction(&EMS_Init, true); // done
+	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", 0};
 	Pstring = secprop->Add_string("ems", when_idle, "true");
 	Pstring->Set_values(ems_settings);
-	Pstring->Set_help("Enable EMS support. The default (=true) provides the best\n"
-		"compatibility but certain applications may run better with\n"
-		"other choices, or require EMS support to be disabled (=false)\n"
-		"to work at all.");
+	Pstring->Set_help(
+	        "Enable EMS support. The default (=true) provides the best\n"
+	        "compatibility but certain applications may run better with\n"
+	        "other choices, or require EMS support to be disabled (=false)\n"
+	        "to work at all.");
 
 	Pbool = secprop->Add_bool("umb", when_idle, true);
 	Pbool->Set_help("Enable UMB support.");
@@ -1169,8 +1189,8 @@ void DOSBOX_Init()
 	                "while in the DOS command shell. FreeDOS and MS-DOS 7/8\n"
 	                "COMMAND.COM supports this behavior.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
-	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");
+	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, true);
+	Pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
 
 	// Mscdex
@@ -1178,8 +1198,8 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
-	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
-	Pbool = secprop->Add_bool("ipx", when_idle,  false);
+	secprop = control->AddSection_prop("ipx", &IPX_Init, true);
+	Pbool   = secprop->Add_bool("ipx", when_idle, false);
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 

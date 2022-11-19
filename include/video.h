@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2022  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -78,10 +79,25 @@ void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
-void GFX_UpdateMouseState();
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
-bool GFX_MouseIsAvailable();
+
+enum class MouseHint {
+    None,                    // no hint to display
+    NoMouse,                 // no mouse mode
+    CapturedHotkey,          // mouse captured, use hotkey to release
+    CapturedHotkeyMiddle,    // mouse captured, use hotkey or middle-click to release
+    ReleasedHotkey,          // mouse released, use hotkey to capture
+    ReleasedHotkeyMiddle,    // mouse released, use hotkey or middle-click to capture
+    ReleasedHotkeyAnyButton, // mouse released, use hotkey or any click to capture
+    SeamlessHotkey,          // seamless mouse, use hotkey to capture
+    SeamlessHotkeyMiddle,    // seamless mouse, use hotkey or middle-click to capture
+};
+
+void GFX_SetMouseHint(const MouseHint requested_hint_id);
+void GFX_SetMouseCapture(const bool requested_capture);
+void GFX_SetMouseVisibility(const bool requested_visible);
+void GFX_SetMouseRawInput(const bool requested_raw_input);
 
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);

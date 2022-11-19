@@ -134,7 +134,7 @@ static inline uint32_t Fetchd() {
 #define EALookupTable (core.ea_table)
 
 Bits CPU_Core_Simple_Run(void) {
-	ZoneScoped
+	ZoneScoped;
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;

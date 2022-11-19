@@ -30,12 +30,13 @@
 #include "programs.h"
 #endif
 
+#include "callback.h"
 #include "help_util.h"
 
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20
 #define CMD_OLDSIZE 4096
-extern Bitu call_shellstop;
+extern callback_number_t call_shellstop;
 class DOS_Shell;
 
 /* first_shell is used to add and delete stuff from the shell env 
@@ -62,6 +63,7 @@ public:
 };
 
 class AutoexecEditor;
+class MoreOutputStrings;
 
 struct SHELL_Cmd {
 	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
@@ -72,7 +74,7 @@ struct SHELL_Cmd {
 
 class DOS_Shell : public Program {
 private:
-	void PrintHelpForCommands(HELP_Filter req_filter);
+	void PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
 	bool WriteHelp(const std::string &command, char* args);
 

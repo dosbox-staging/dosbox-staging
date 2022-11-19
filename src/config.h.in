@@ -109,7 +109,10 @@
 // Define to 1 to enable Novell NE 2000 NIC emulation
 #mesondefine C_NE2000
 
-// Define to 1 to enable screenshots in .png format
+// Define to 1 to enable rendered screenshots in .png format (using SDL2_image)
+#mesondefine C_SDL_IMAGE
+
+// Define to 1 to enable surface screenshots in .png format
 #mesondefine C_SSHOT
 
 // Define to 1 to enable the Tracy profiling server
@@ -123,6 +126,9 @@
 
 // Define to 1 to enable MT-32 emulator
 #mesondefine C_MT32EMU
+
+// Define to 1 to enable mouse mapping support
+#mesondefine C_MANYMOUSE
 
 // Compiler supports Core Audio headers
 #mesondefine C_COREAUDIO

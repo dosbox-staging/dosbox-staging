@@ -68,3 +68,12 @@ Resources
 .clangd
 .cache
 compile_commands.json
+
+tools/find_magical_f_code
+tools/find_magical_f_code.exe
+tools/is_magical_asset
+tools/is_magical_asset.exe
+tools/superanalyze_mpeg_ps
+tools/superanalyze_mpeg_ps.exe
+tools/unlock_the_magic_mpeg_ps
+tools/unlock_the_magic_mpeg_ps.exe

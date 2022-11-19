@@ -21,11 +21,14 @@
 #include "program_mem.h"
 
 #include "callback.h"
+#include "program_more_output.h"
 #include "regs.h"
 
 void MEM::Run(void) {
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MEM_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_MEM_HELP_LONG"));
+		output.Display();
 		return;
 	}
     /* Show conventional Memory */
@@ -87,7 +90,7 @@ void MEM::Run(void) {
 }
 
 void MEM::AddMessages() {
-    MSG_Add("SHELL_CMD_MEM_HELP_LONG",
+    MSG_Add("PROGRAM_MEM_HELP_LONG",
 	        "Displays the DOS memory information.\n"
 	        "\n"
 	        "Usage:\n"

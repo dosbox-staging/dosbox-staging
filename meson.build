@@ -166,6 +166,7 @@ conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
+conf_data.set10('C_SDL_IMAGE', get_option('use_sdl2_image'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
@@ -425,6 +426,17 @@ if get_option('use_sdl2_net')
     )
 endif
 
+# SDL Image
+sdl2_image_dep = optional_dep
+if get_option('use_sdl2_image')
+    sdl2_image_dep = dependency(
+        'SDL2_image',
+        version: '>= 2.0.0',
+        static: ('sdl2_image' in static_libs_list),
+        not_found_message: msg.format('use_sdl2_image'),
+    )
+endif
+
 # OpenGL
 opengl_dep = optional_dep
 opengl_summary_msg = 'Disabled'
@@ -528,6 +540,7 @@ endif
 coreaudio_dep = optional_dep
 coremidi_dep = optional_dep
 corefoundation_dep = optional_dep
+iokit_dep = optional_dep
 if host_machine.system() == 'darwin'
 
     # ObjectiveC parsing, if possible
@@ -568,6 +581,38 @@ if host_machine.system() == 'darwin'
         warning('''Core MIDI disabled because Apple Framework missing''')
     endif
     summary('CoreMIDI support', coremidi_dep.found())
+
+    # IOKit
+    iokit_dep = dependency(
+        'appleframeworks',
+        modules: ['IOKit'],
+        required: false,
+    )
+    if iokit_dep.found()
+        if cxx.check_header('IOKit/IOKitLib.h')
+            iokit_code = '''
+                #include <IOKit/hid/IOHIDLib.h>
+                int main() {
+                    dispatch_block_t test_var;
+                    return 0;
+                }
+            '''
+            is_iokit_compilable = cxx.links(
+                iokit_code,
+                name: 'compiler is capable of compiling IOKit',
+            )
+            if is_iokit_compilable
+                conf_data.set('C_IOKIT', 1)
+            else
+                warning('''IOKit disabled because compiler cannot handle it''')
+            endif
+        else
+            warning('''IOKit disabled because header is unusable''')
+        endif
+    else
+        warning('''IOKit disabled because Apple Framework missing''')
+    endif
+    summary('IOKit support', iokit_dep.found())
 
     # Locale discovery
     corefoundation_dep = dependency(
@@ -615,6 +660,16 @@ if host_machine.system() == 'darwin'
     endif
 endif
 
+# Determine if system is capable of using ManyMouse library
+conf_data.set10('C_MANYMOUSE', true)
+if host_machine.system() == 'darwin'
+  if not conf_data.has('C_IOKIT')
+    # On macOS the ManyMouse library requires IOKit
+    conf_data.set10('C_MANYMOUSE', false)
+  endif
+endif
+summary('ManyMouse support', conf_data.get('C_MANYMOUSE') == true)
+
 # Linux-only dependencies
 alsa_dep = optional_dep
 using_linux = (host_machine.system() == 'linux')
@@ -636,6 +691,13 @@ if host_machine.system() in ['windows', 'cygwin']
     summary('Windows Multimedia support', winmm_dep.found())
 endif
 
+# X11 Input Extension dependency for ManyMouse library
+xi_dep = optional_dep
+using_x11 = os_family_name in ['LINUX', 'BSD']
+if using_x11 and (conf_data.get('C_MANYMOUSE') == true)
+    xi_dep = dependency('xi')
+endif
+
 # Setup include directories
 incdir = include_directories('include', '.')
 
@@ -654,6 +716,9 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+if conf_data.get('C_MANYMOUSE') == true
+  subdir('src/libs/manymouse')
+endif
 
 # ZMBV and TalChorus use some support functionality from misc
 subdir('src/misc')
@@ -667,6 +732,7 @@ third_party_deps = [
     atomic_dep,
     stdcppfs_dep,
     sdl2_dep,
+    sdl2_image_dep,
     threads_dep,
     ghc_dep,
     libiir_dep,
@@ -676,6 +742,10 @@ third_party_deps = [
     libwhereami_dep,
     libtalchorus_dep,
 ]
+
+if conf_data.get('C_MANYMOUSE') == true
+  third_party_deps += manymouse_dep
+endif
 
 # internal libs
 subdir('src/cpu')

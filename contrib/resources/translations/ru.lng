@@ -853,12 +853,6 @@ MAC-адрес карты NE2000.
 Правильный синтаксис: config -set "название_свойства".
 
 .
-:CONFIG_PCRATE
-Частота дискретизации генерации звука для PC-Speaker.
-.
-:CONFIG_TANDYRATE
-Частота дискретизации для Tandy 3-Voice поколения.
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Конфигурационный файл не загружен!
 
@@ -1184,24 +1178,6 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 Вы можете запускать программы/файлы с расширением [31m.exe .bat[0m и [31m.com[0m.
 
 .
-:PROGRAM_INTRO_CDROM
-[2J[32;1mМонтирование виртуального привода CD-ROM в DOSBox Staging:[0m
-DOSBox Staging обеспечивает эмуляцию CD-ROM на нескольких уровнях.
-
-Это работает во всех директориях, устанавливается MSCDEX и помечает файлы
-только для чтения. Обычно этого достаточно для большинства игр:
-
-[34;1mmount D C:\example -t cdrom[0m
-
-Если это не сработает, Вам, возможно, придётся сообщить DOSBox Staging метку CD-ROM:
-
-[34;1mmount D C:\example -t cdrom -label метка[0m
-
-Кроме того, Вы можете использовать imgmount для монтирования iso или cue/bin образов:
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-
-.
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1m"Горячие" клавиши:[0m
 "Горячие" клавиши по умолчанию.
@@ -1295,11 +1271,7 @@ PCjr картридж найден, но машина не PCjr.
 Базовое ПЗУ загружено.
 
 .
-:SHELL_CMD_IMGMOUNT_HELP
-Монтировать образы компакт-дисков или дискет на указанную букву диска.
-
-.
-:SHELL_CMD_IMGMOUNT_HELP_LONG
+:PROGRAM_IMGMOUNT_HELP_LONG
 Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
 Использование:
@@ -1326,11 +1298,11 @@ PCjr картридж найден, но машина не PCjr.
   [32;1mimgmount[0m [37;1mC[0m [36;1mзагрузочный_образ.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
-:SHELL_CMD_MOUNT_HELP
+:PROGRAM_MOUNT_HELP
 Сопоставить физическую директорию с буквой виртуального диска DOS.
 
 .
-:SHELL_CMD_MOUNT_HELP_LONG
+:PROGRAM_MOUNT_HELP_LONG
 Монтировать директорию из операционной системы на букву виртуального диска DOS.
 
 Использование:
@@ -1429,15 +1401,6 @@ PCjr картридж найден, но машина не PCjr.
 Для раскладки клавиатуры %s загружена кодовая страница %i.
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mkeyb[0m [ID_раскладки_клавиатуры[ №_кодовой_страницы[ файл_кодовой_страницы]]]
-
-Примеры:
-  [32;1mkeyb[0m: Отобразить текущую кодовую страницу.
-  [32;1mkeyb[0m ru: Загрузить русскую раскладку (ru), с подходящей кодовой страницей.
-  [32;1mkeyb[0m ru 808: Загрузить русскую раскладку (ru), с кодовой страницей 808.
-  [32;1mkeyb[0m ru 808 russian.txt: То же самое, но использовать файл russian.txt.
-.
 :PROGRAM_KEYB_NOERROR
 Раскладка клавиатуры %s загружена для кодовой страницы %i.
 
@@ -1519,9 +1482,6 @@ PCjr картридж найден, но машина не PCjr.
 :SHELL_CMD_DATE_SETHLP
 Для изменения даты, введите 'date MM-DD-YYYY'.
 
-.
-:SHELL_CMD_DATE_FORMAT
-D.M.Y
 .
 :SHELL_CMD_DATE_HELP_LONG
 date [[/t] [/h] [/s] | MM-DD-YYYY]
@@ -1902,7 +1862,7 @@ choice [/c:клавиши] [/n] [/s] текст
 Нет доступных IDE контроллеров. Диск не будет иметь эмуляции IDE.
 
 .
-:SHELL_CMD_MEM_HELP_LONG
+:PROGRAM_MEM_HELP_LONG
 Displays the DOS memory information.
 
 Usage:
@@ -1919,7 +1879,7 @@ Examples:
   [32;1mmem[0m
 
 .
-:SHELL_CMD_LOADFIX_HELP_LONG
+:PROGRAM_LOADFIX_HELP_LONG
 Loads a program in the specific memory region and then runs it.
 
 Usage:
@@ -1941,7 +1901,7 @@ Examples:
   [32;1mloadfix[0m /d
 
 .
-:SHELL_CMD_AUTOTYPE_HELP_LONG
+:PROGRAM_AUTOTYPE_HELP_LONG
 Performs scripted keyboard entry into a running DOS game.
 
 Usage:
@@ -1989,7 +1949,7 @@ Examples:
   [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
   [32;1mmixer[0m /listmidi
 .
-:SHELL_CMD_RESCAN_HELP_LONG
+:PROGRAM_RESCAN_HELP_LONG
 Scans for changes on mounted DOS drives.
 
 Usage:
@@ -2049,7 +2009,7 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
-:SHELL_CMD_BOOT_HELP_LONG
+:PROGRAM_BOOT_HELP_LONG
 Boots DOSBox Staging from a DOS drive or disk image.
 
 Usage:
@@ -2070,7 +2030,7 @@ Examples:
   [32;1mboot[0m [36;1mdisk1.ima disk2.ima[0m
 
 .
-:SHELL_CMD_LOADROM_HELP_LONG
+:PROGRAM_LOADROM_HELP_LONG
 Loads a ROM image of the video BIOS or IBM BASIC.
 
 Usage:
@@ -2087,7 +2047,7 @@ Examples:
   [32;1mloadrom[0m [36;1mbios.rom[0m
 
 .
-:SHELL_CMD_KEYB_HELP_LONG
+:PROGRAM_KEYB_HELP_LONG
 Configures a keyboard for a specific language.
 
 Usage:
@@ -2114,7 +2074,7 @@ Examples:
   [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
-:SHELL_CMD_SERIAL_HELP_LONG
+:PROGRAM_SERIAL_HELP_LONG
 Manage the serial ports.
 
 Usage modes:
@@ -2148,34 +2108,9 @@ COM%d: %s %s
 Must specify a numeric port value between 1 and %d, inclusive.
 
 .
-:PROGRAM_SERIAL_BAD_MODE
-Mode must be one of the following:
-
-.
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
 
-.
-:SHELL_CMD_PLACEHOLDER_HELP
-This program is a placeholder
-.
-:PROGRAM_PLACEHOLDER_LONG_HELP
-%s is only a placeholder.
-
-Install a 3rd-party and give its PATH precedence.
-
-For example:
-.
-:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
-
-   [autoexec]
-   mount u ~/dos/utils
-   set PATH=u:\;%PATH%
-
-
-.
-:VISIT_FOR_MORE_HELP
-Visit the following for more help:
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -2300,11 +2235,11 @@ Examples:
   [32;1mhelp[0m /all
 
 .
-:SHELL_CMD_INTRO_HELP
+:PROGRAM_INTRO_HELP
 Displays a full-screen introduction to DOSBox Staging.
 
 .
-:SHELL_CMD_INTRO_HELP_LONG
+:PROGRAM_INTRO_HELP_LONG
 Usage:
   [32;1mintro[0m
   [32;1mintro[0m [37;1mPAGE[0m
@@ -2636,22 +2571,4 @@ Miscellaneous Commands
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Unknown Command
-.
-:MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
-.
-:MOUNT_TYPE_CDROM
-CD-ROM drive
-.
-:MOUNT_TYPE_FAT
-FAT drive
-.
-:MOUNT_TYPE_ISO
-ISO drive
-.
-:MOUNT_TYPE_VIRTUAL
-internal virtual drive
-.
-:MOUNT_TYPE_UNKNOWN
-unknown drive
 .

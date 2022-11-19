@@ -951,12 +951,12 @@ static Bitu INT15_Handler(void) {
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
 		case 0x00:                      // enable/disable
-			if (reg_bh == 0) {      // disable
-				MOUSEBIOS_SetState(false);
+			if (reg_bh == 0) { // disable
+				MOUSEBIOS_Disable();
 				reg_ah = 0;
 				CALLBACK_SCF(false);
 			} else if (reg_bh == 0x01) { // enable
-				if (!MOUSEBIOS_SetState(true)) {
+				if (!MOUSEBIOS_Enable()) {
 					reg_ah = 5;
 					CALLBACK_SCF(true);
 					break;
@@ -978,7 +978,7 @@ static Bitu INT15_Handler(void) {
 				reg_ah = 2;
 				break;
 			}
-			MOUSEBIOS_SetState(false);
+			MOUSEBIOS_Disable();
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
@@ -1000,8 +1000,8 @@ static Bitu INT15_Handler(void) {
 			CALLBACK_SCF(false);
 			reg_ah = 0;
 			break;
-		case 0x04: // get type
-			reg_bh = MOUSEBIOS_GetType();
+		case 0x04: // get mouse type/protocol
+			reg_bh = MOUSEBIOS_GetProtocol();
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
@@ -1136,7 +1136,7 @@ public:
 		/* Setup all the interrupt handlers the bios controls */
 
 		/* INT 8 Clock IRQ Handler */
-		Bitu call_irq0=CALLBACK_Allocate();	
+		auto call_irq0 = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,Real2Phys(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
 		RealSetVec(0x08,BIOS_DEFAULT_IRQ0_LOCATION);
 		// pseudocode for CB_IRQ0:
@@ -1227,12 +1227,12 @@ public:
 		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
 
 		/* Irq 2 */
-		Bitu call_irq2=CALLBACK_Allocate();	
+		auto call_irq2 = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
 		/* Default IRQ handler */
-		Bitu call_irq_default=CALLBACK_Allocate();
+		auto call_irq_default = CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq_default,&Default_IRQ_Handler,CB_IRET,"irq default");
 		RealSetVec(0x0b,CALLBACK_RealPointer(call_irq_default)); // IRQ 3
 		RealSetVec(0x0c,CALLBACK_RealPointer(call_irq_default)); // IRQ 4

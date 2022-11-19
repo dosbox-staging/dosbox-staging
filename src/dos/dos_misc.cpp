@@ -24,7 +24,8 @@
 #include "mem.h"
 #include "regs.h"
 
-static Bitu call_int2f,call_int2a;
+static callback_number_t call_int2f = 0;
+static callback_number_t call_int2a = 0;
 
 static std::list<MultiplexHandler*> Multiplex;
 typedef std::list<MultiplexHandler*>::iterator Multiplex_it;

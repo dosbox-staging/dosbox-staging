@@ -21,12 +21,13 @@
 #include <cstring>
 #include <cmath>
 
+#include "../gui/render_scalers.h"
 #include "../ints/int10.h"
 #include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"
+#include "reelmagic/vga_passthrough.h"
 #include "render.h"
-#include "../gui/render_scalers.h"
 #include "vga.h"
 #include "video.h"
 
@@ -1536,7 +1537,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_VGA:
 		doublewidth=true;
 		width<<=2;
-		if (IS_VGA_ARCH && (CurMode->type == M_VGA || svgaCard == SVGA_None)) {
+		if (IS_VGA_ARCH && !ReelMagic_IsVideoMixerEnabled() &&
+		    (CurMode->type == M_VGA || svgaCard == SVGA_None)) {
 			bpp = 16;
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
 		} else {
