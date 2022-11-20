@@ -105,12 +105,6 @@ static struct {
 	}
 } pending;
 
-// Multiply by 6.0f to compensate for 'MOUSE_GetBallisticsCoeff', which uses
-// 6 as intersection point (just like 2:1 scaling model from PS/2 specification)
-constexpr float acceleration_multiplier = 6.0f;
-static MouseSpeedCalculator speed_mickeys(
-        acceleration_multiplier *mouse_predefined.acceleration_dos);
-
 static struct { // DOS driver state
 
 	// Structure containing (only!) data which should be
@@ -136,16 +130,16 @@ static struct { // DOS driver state
 	uint16_t last_wheel_moved_x           = 0;
 	uint16_t last_wheel_moved_y           = 0;
 
-	int16_t mickey_counter_x = 0;
-	int16_t mickey_counter_y = 0;
-
-	float mickey_delta_x = 0.0f;
-	float mickey_delta_y = 0.0f;
+	float mickey_counter_x = 0.0f;
+	float mickey_counter_y = 0.0f;
 
 	float mickeys_per_pixel_x = 0.0f;
 	float mickeys_per_pixel_y = 0.0f;
+	float pixels_per_mickey_x = 0.0f;
+	float pixels_per_mickey_y = 0.0f;
 
 	uint16_t double_speed_threshold = 0; // in mickeys/s
+	                                     // TODO: should affect movement
 
 	uint16_t granularity_x = 0; // mask
 	uint16_t granularity_y = 0;
@@ -236,6 +230,11 @@ static uint16_t get_pos_x()
 static uint16_t get_pos_y()
 {
 	return static_cast<uint16_t>(std::lround(pos_y)) & state.granularity_y;
+}
+
+static uint16_t mickey_counter_to_reg16(const float x)
+{
+	return static_cast<uint16_t>(std::lround(x));
 }
 
 // ***************************************************************************
@@ -606,6 +605,8 @@ static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
 		constexpr auto pixels     = 8.0f;
 		state.mickeys_per_pixel_x = static_cast<float>(ratio_x) / pixels;
 		state.mickeys_per_pixel_y = static_cast<float>(ratio_y) / pixels;
+		state.pixels_per_mickey_x = pixels / static_cast<float>(ratio_x);
+		state.pixels_per_mickey_y = pixels / static_cast<float>(ratio_y);
 	}
 }
 
@@ -628,13 +629,21 @@ static void set_sensitivity(const uint16_t sensitivity_x,
 	state.sensitivity_y = static_cast<uint8_t>(tmp_y);
 	state.unknown_01    = static_cast<uint8_t>(tmp_u);
 
-	// It is unclear how the original mouse driver handles sensitivity,
-	// but one can observe that setting value 0 stops the mouse movement
-	// completely, 50 is the default, and 100 seems to more or less
-	// dobule it. Linear sensitivity should be good enough.
+	// Inspired by CuteMouse, although their cursor
+	// update routine is far more complex then ours
+	auto calculate_coeff = [](const uint16_t value) {
+		// Checked with original Microsoft mouse driver,
+		// setting sensitivity to 0 stops cursor movement
+		if (value == 0) {
+			return 0.0f;
+		}
 
-	state.sensitivity_coeff_x = state.sensitivity_x / 50.0f;
-	state.sensitivity_coeff_y = state.sensitivity_y / 50.0f;
+		auto tmp = static_cast<float>(value - 1);
+		return (tmp * tmp) / 3600.0f + 1.0f / 3.0f;
+	};
+
+	state.sensitivity_coeff_x = calculate_coeff(tmp_x);
+	state.sensitivity_coeff_y = calculate_coeff(tmp_y);
 }
 
 static void notify_interface_rate()
@@ -816,10 +825,8 @@ static void reset()
 	pos_x = static_cast<float>((state.maxpos_x + 1) / 2);
 	pos_y = static_cast<float>((state.maxpos_y + 1) / 2);
 
-	state.mickey_counter_x = 0;
-	state.mickey_counter_y = 0;
-	state.mickey_delta_x   = 0.0f;
-	state.mickey_delta_y   = 0.0f;
+	state.mickey_counter_x = 0.0f;
+	state.mickey_counter_y = 0.0f;
 
 	state.last_wheel_moved_x = 0;
 	state.last_wheel_moved_y = 0;
@@ -853,53 +860,63 @@ static void limit_coordinates()
 	limit(pos_y, state.minpos_y, state.maxpos_y);
 }
 
-static void update_mickeys_on_move(const float x_rel, const float y_rel)
+static void update_mickeys_on_move(float& dx, float& dy,
+                                   const float x_rel,
+                                   const float y_rel)
 {
-	auto update = [](int16_t &counter, float &delta, const float rel) {
-		delta += rel;
-
-		// Check if movement is significant enough
-		const auto d = static_cast<int16_t>(std::lround(delta));
-		if (d == 0)
-			return;
-
-		// Consume part of delta to increase/decrease the counter
-		delta -= d;
-		int32_t counter_big = counter + d;
-
-		// Handle counter wrap around int16_t limits
-		if (counter_big > INT16_MAX)
-			counter_big -= UINT16_MAX + 1;
-		else if (counter_big < INT16_MIN)
-			counter_big += UINT16_MAX + 1;
-
-		counter = static_cast<int16_t>(counter_big);
+	auto calculate_d = [](const float rel,
+	                      const float pixel_per_mickey,
+	                      const float sensitivity_coeff) {
+		float d = rel * pixel_per_mickey;
+		// Apply the DOSBox mouse acceleration only in case
+		// of raw input - avoid double acceleration (host OS
+		// and DOSBox), as the results would be unpredictable.
+		if (!is_input_raw ||
+		    (fabs(rel) > 1.0f) ||
+		    (sensitivity_coeff < 1.0f)) {
+			d *= sensitivity_coeff;
+		}
+		// TODO: add an alternative calculation (configurable),
+		// reuse MOUSE_GetBallisticsCoeff for DOS driver
+		return d;
 	};
 
-	const float x_mov = x_rel * state.mickeys_per_pixel_x;
-	const float y_mov = y_rel * state.mickeys_per_pixel_y;
+	auto update_mickey = [](float& mickey, const float d,
+	                        const float mickeys_per_pixel) {
+        mickey += d * mickeys_per_pixel;
+        if (mickey > 32767.5f || mickey < -32768.5f) {
+		    mickey -= std::copysign(65536.0f, mickey);
+		}
+    };
 
-	// Update mickey counters and mickey speed measurement
-	update(state.mickey_counter_x, state.mickey_delta_x, x_mov);
-	update(state.mickey_counter_y, state.mickey_delta_y, y_mov);
-	speed_mickeys.Update(std::sqrt(x_mov * x_mov + y_mov * y_mov));
+	// Calculate cursor displacement
+	dx = calculate_d(x_rel, state.pixels_per_mickey_x, state.sensitivity_coeff_x);
+	dy = calculate_d(y_rel, state.pixels_per_mickey_y, state.sensitivity_coeff_y);
+
+	// Update mickey counters
+	update_mickey(state.mickey_counter_x, dx, state.mickeys_per_pixel_x);
+	update_mickey(state.mickey_counter_y, dy, state.mickeys_per_pixel_y);
 }
 
 static void move_cursor_captured(const float x_rel, const float y_rel)
 {
 	// Update mickey counters
-	update_mickeys_on_move(x_rel, y_rel);
+	float dx = 0.0f;
+	float dy = 0.0f;
+	update_mickeys_on_move(dx, dy, x_rel, y_rel);
 
 	// Apply mouse movement according to our acceleration model
-	pos_x += x_rel;
-	pos_y += y_rel;
+	pos_x += dx;
+	pos_y += dy;
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
                                  const uint32_t x_abs, const uint32_t y_abs)
 {
 	// Update mickey counters
-	update_mickeys_on_move(x_rel, y_rel);
+	float dx = 0.0f;
+	float dy = 0.0f;
+	update_mickeys_on_move(dx, dy, x_rel, y_rel);
 
 	auto calculate = [](const uint32_t absolute,
 	                    const uint32_t resolution) {
@@ -947,21 +964,8 @@ static uint8_t move_cursor()
 	const auto old_mickey_y = static_cast<int16_t>(state.mickey_counter_y);
 
 	if (use_relative) {
-		// For raw mouse input use our built-in pointer acceleration model
-		const float acceleration_coeff =
-		        is_input_raw ? MOUSE_GetBallisticsCoeff(
-		                            speed_mickeys.Get() /
-		                            state.double_speed_threshold) *
-		                            2.0f
-		                     : 2.0f;
-
-		const float tmp_x = pending.x_rel * acceleration_coeff *
-		                    state.sensitivity_coeff_x;
-		const float tmp_y = pending.y_rel * acceleration_coeff *
-		                    state.sensitivity_coeff_y;
-
-		move_cursor_captured(MOUSE_ClampRelativeMovement(tmp_x),
-		                     MOUSE_ClampRelativeMovement(tmp_y));
+		move_cursor_captured(MOUSE_ClampRelativeMovement(pending.x_rel),
+		                     MOUSE_ClampRelativeMovement(pending.y_rel));
 
 	} else
 		move_cursor_seamless(pending.x_rel,
@@ -1297,8 +1301,8 @@ static Bitu int33_handler()
 		reg_bx = state.text_xor_mask;
 		[[fallthrough]];
 	case 0x0b: // MS MOUSE v1.0+ - read motion data
-		reg_cx = signed_to_reg16(state.mickey_counter_x);
-		reg_dx = signed_to_reg16(state.mickey_counter_y);
+		reg_cx = mickey_counter_to_reg16(state.mickey_counter_x);
+		reg_dx = mickey_counter_to_reg16(state.mickey_counter_y);
 		state.mickey_counter_x = 0;
 		state.mickey_counter_y = 0;
 		break;
@@ -1616,10 +1620,8 @@ bool MOUSEDOS_HasCallback(const uint8_t mask)
 Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 {
 	mouse_shared.dos_cb_running = true;
-	const bool mouse_moved      = mask &
-	                         static_cast<uint8_t>(MouseEventId::MouseHasMoved);
-	const bool wheel_moved = mask &
-	                         static_cast<uint8_t>(MouseEventId::WheelHasMoved);
+	const bool mouse_moved = mask & static_cast<uint8_t>(MouseEventId::MouseHasMoved);
+	const bool wheel_moved = mask & static_cast<uint8_t>(MouseEventId::WheelHasMoved);
 
 	// Extension for Windows mouse driver by javispedro:
 	// - https://git.javispedro.com/cgit/vbados.git/about/
@@ -1636,8 +1638,8 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 	reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
 	reg_cx = get_pos_x();
 	reg_dx = get_pos_y();
-	reg_si = signed_to_reg16(state.mickey_counter_x);
-	reg_di = signed_to_reg16(state.mickey_counter_y);
+	reg_si = mickey_counter_to_reg16(state.mickey_counter_x);
+	reg_di = mickey_counter_to_reg16(state.mickey_counter_y);
 
 	CPU_Push16(RealSeg(user_callback));
 	CPU_Push16(RealOff(user_callback));
