@@ -22,6 +22,7 @@
 
 #include "reelmagic.h"
 
+#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -215,8 +216,8 @@ static void RMR_DrawLine_Passthrough(const void* src);
 // default things to off
 ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine = RMR_DrawLine_Passthrough;
 
-static ReelMagic_VideoMixerMPEGProvider* _requestedMpegProvider = NULL;
-static ReelMagic_VideoMixerMPEGProvider* _activeMpegProvider    = NULL;
+static ReelMagic_VideoMixerMPEGProvider* _requestedMpegProvider = nullptr;
+static ReelMagic_VideoMixerMPEGProvider* _activeMpegProvider    = nullptr;
 
 static RenderOutputPixel _finalMixedRenderLineBuffer[SCALER_MAXWIDTH];
 static Bitu _currentRenderLineNumber = 0;
@@ -521,7 +522,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	//  "OnVerticalRefresh()" if:
 	//     . We have not yet received a VGA mode/configuration
 	//     . The video mixer is in an error state
-	_activeMpegProvider = NULL; // no MPEG activation unless all is good...
+	_activeMpegProvider = nullptr; // no MPEG activation unless all is good...
 
 	// need at least one call from VGA before we can do this...
 	if (_vgaBitsPerPixel == 0)
@@ -544,7 +545,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 
 	// cache the current MPEG picture size...
 	ReelMagic_VideoMixerMPEGProvider* const mpeg = _requestedMpegProvider;
-	if (mpeg != NULL) {
+	if (mpeg) {
 		_mpegPictureWidth  = mpeg->GetAttrs().PictureSize.Width;
 		_mpegPictureHeight = mpeg->GetAttrs().PictureSize.Height;
 	}
@@ -720,9 +721,9 @@ bool ReelMagic_RENDER_StartUpdate(void)
 	return RENDER_StartUpdate();
 }
 
-void ReelMagic_ResetVideoMixer()
+void ReelMagic_ClearVideoMixer()
 {
-	_requestedMpegProvider = NULL;
+	_requestedMpegProvider = nullptr;
 	ClearMpegPictureBuffer();
 }
 
@@ -734,7 +735,7 @@ bool ReelMagic_IsVideoMixerEnabled()
 void ReelMagic_SetVideoMixerEnabled(const bool enabled)
 {
 	if (!enabled)
-		ReelMagic_ResetVideoMixer(); // defensive
+		ReelMagic_ClearVideoMixer(); // defensive
 	if (enabled == _videoMixerEnabled)
 		return;
 	_videoMixerEnabled = enabled;
@@ -747,14 +748,15 @@ ReelMagic_VideoMixerMPEGProvider* ReelMagic_GetVideoMixerMPEGProvider()
 	return _requestedMpegProvider;
 }
 
+void ReelMagic_ClearVideoMixerMPEGProvider()
+{
+	_requestedMpegProvider = nullptr;
+	SetupVideoMixer(_mpegDictatesOutputSize);
+}
+
 void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const provider)
 {
-	if (provider == NULL) {
-		_requestedMpegProvider = NULL;
-		SetupVideoMixer(_mpegDictatesOutputSize);
-		return;
-	}
-
+	assert(provider);
 	// Can our MPEG picture buffer accomodate the provider's picture size?
 	const auto dimensions = provider->GetAttrs().PictureSize;
 	if (dimensions.Width > SCALER_MAXWIDTH ||
@@ -765,8 +767,9 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 	}
 
 	// clear the MPEG picture buffer when not replacing an existing provider
-	if (_requestedMpegProvider == NULL)
+	if (!_requestedMpegProvider) {
 		ClearMpegPictureBuffer();
+	}
 
 	// set the new requested provider
 	_requestedMpegProvider = provider;
