@@ -27,6 +27,7 @@
 #include <cstring>
 #include <exception>
 #include <string>
+#include <vector>
 
 #include "dos_system.h"
 #include "logging.h"
@@ -617,13 +618,15 @@ public:
 	{
 		return _attrs;
 	}
-
+	bool HasDemux() const
+	{
+		return _plm && _plm->demux->buffer != _plm->video_decoder->buffer;
+	}
 	bool HasSystem() const
 	{
-		if (_plm == NULL)
-			return false;
-		return _plm->demux->buffer != _plm->video_decoder->buffer;
+		return HasDemux();
 	}
+
 	bool HasVideo() const
 	{
 		if (_plm == NULL)
@@ -640,6 +643,42 @@ public:
 	{
 		return _playing;
 	}
+
+	// Handle registation functions.
+	void RegisterBaseHandle(const reelmagic_handle_t handle)
+	{
+		assert(handle != reelmagic_invalid_handle);
+		_attrs.Handles.Base = handle;
+	}
+
+	reelmagic_handle_t GetBaseHandle() const
+	{
+		assert(_attrs.Handles.Base != reelmagic_invalid_handle);
+		return _attrs.Handles.Base;
+	}
+
+	// The return value indicates if the handle was registered.
+	bool RegisterDemuxHandle(const reelmagic_handle_t handle)
+	{
+		const auto has_demux = HasDemux();
+		_attrs.Handles.Demux = has_demux ? handle : reelmagic_invalid_handle;
+		return has_demux;
+	}
+
+	bool RegisterVideoHandle(const reelmagic_handle_t handle)
+	{
+		const auto has_video = HasVideo();
+		_attrs.Handles.Video = has_video ? handle : reelmagic_invalid_handle;
+		return has_video;
+	}
+
+	bool RegisterAudioHandle(const reelmagic_handle_t handle)
+	{
+		const auto has_audio = HasAudio();
+		_attrs.Handles.Audio = has_audio ? handle : reelmagic_invalid_handle;
+		return has_audio;
+	}
+
 	Bitu GetBytesDecoded() const
 	{
 		if (_plm == NULL)
@@ -702,8 +741,67 @@ public:
 
 //
 // stuff to manage ReelMagic media/decoder/player handles...
-// note: handles are _rmhandles[] index + 1 as "FMPDRV.EXE" uses 0 as invalid handle
 //
+using player_t = std::shared_ptr<ReelMagic_MediaPlayerImplementation>;
+static std::vector<player_t> player_registry = {};
+
+void deregister_player(const player_t& player)
+{
+	for (auto& p : player_registry) {
+		if (p.get() == player.get()) {
+			p = {};
+		}
+	}
+}
+
+// Registers one or more handles for the player's elementary streams.
+// Returns the base handle on success or the invalid handle on failure.
+static reelmagic_handle_t register_player(const player_t& player)
+{
+	auto get_available_handle = []() {
+		// Walk from the first to (potentially) last valid handle
+		auto h = reelmagic_first_handle;
+		while (h <= reelmagic_last_handle) {
+
+			// Should we grow the registry to accomodate this handle?
+			if (player_registry.size() <= h) {
+				player_registry.emplace_back();
+				continue;
+			}
+			// Is this handle available (i.e.: unused) in the registry?
+			if (!player_registry[h]) {
+				return h;
+			}
+			// Otherwise step forward to the next handle
+			++h;
+		}
+		LOG_ERR("REELMAGIC: Ran out of handles while registering player");
+		throw reelmagic_invalid_handle;
+	};
+	try {
+		// At a minimum, we register the player itself
+		auto h = get_available_handle();
+		player->RegisterBaseHandle(h);
+		player_registry[h] = player;
+
+		// The first stream reuses the player's handle
+		if (player->RegisterDemuxHandle(h)) {
+			h = get_available_handle();
+		}
+		if (player->RegisterVideoHandle(h)) {
+			player_registry[h] = player;
+			h = get_available_handle();
+		}
+		if (player->RegisterAudioHandle(h)) {
+			player_registry[h] = player;
+		}
+	} catch (reelmagic_handle_t invalid_handle) {
+		deregister_player(player);
+		return invalid_handle;
+	}
+	return player->GetBaseHandle();
+}
+
 static ReelMagic_MediaPlayerImplementation* _rmhandles[REELMAGIC_MAX_HANDLES] = {NULL};
 
 static Bitu ComputeFreePlayerHandleCount()
