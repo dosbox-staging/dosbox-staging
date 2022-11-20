@@ -218,9 +218,9 @@ namespace {
 class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer,
                                             public ReelMagic_VideoMixerMPEGProvider {
 	// creation parameters...
-	ReelMagic_MediaPlayerFile* const _file = {};
+	const std::unique_ptr<ReelMagic_MediaPlayerFile> _file = {};
 	ReelMagic_PlayerConfiguration _config = _globalDefaultPlayerConfiguration;
-	ReelMagic_PlayerAttributes _attrs      = {};
+	ReelMagic_PlayerAttributes _attrs = {};
 
 	// running / adjustable variables...
 	bool _stopOnComplete = {};
@@ -514,7 +514,6 @@ public:
 			ReelMagic_SetVideoMixerMPEGProvider(NULL);
 		if (_plm != NULL)
 			plm_destroy(_plm);
-		delete _file;
 	}
 
 	//
