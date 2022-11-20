@@ -44,10 +44,11 @@ typedef void (*ReelMagic_ScalerLineHandler_t)(const void* src);
 extern ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine;
 
 bool ReelMagic_IsVideoMixerEnabled();
-void ReelMagic_ResetVideoMixer();
+void ReelMagic_ClearVideoMixer();
 void ReelMagic_SetVideoMixerEnabled(const bool enabled);
 ReelMagic_VideoMixerMPEGProvider* ReelMagic_GetVideoMixerMPEGProvider();
 void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const provider);
+void ReelMagic_ClearVideoMixerMPEGProvider();
 void ReelMagic_InitVideoMixer(Section* /*sec*/);
 
 // audio mixer related
@@ -135,7 +136,7 @@ ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const reelmagic_handle_t ha
 void ReelMagic_DeleteAllPlayers();
 
 void ReelMagic_InitPlayer(Section* /*sec*/);
-void ReelMagic_ResetPlayers();
+void ReelMagic_ClearPlayers();
 ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig();
 
 //

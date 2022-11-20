@@ -289,24 +289,28 @@ class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer,
 	void advanceNextFrame()
 	{
 		_nextFrame = plm_decode_video(_plm);
-		if (_nextFrame == NULL) {
-			// note: will return NULL frame once when looping... give it one more go...
-			if (plm_get_loop(_plm))
+		if (!_nextFrame) {
+			// note: will return nullptr frame once when looping...
+			// give it one more go...
+			if (plm_get_loop(_plm)) {
 				_nextFrame = plm_decode_video(_plm);
-			if (_nextFrame == NULL)
+			}
+			if (!_nextFrame) {
 				_playing = false;
+			}
 		}
 	}
 
 	void decodeBufferedAudio()
 	{
-		if (!_plm->audio_decoder)
+		if (!_plm->audio_decoder) {
 			return;
-		plm_samples_t* samples;
+		}
 		while (plm_buffer_get_remaining(_plm->audio_decoder->buffer) > 0) {
-			samples = plm_audio_decode(_plm->audio_decoder);
-			if (samples == NULL)
+			const auto samples = plm_audio_decode(_plm->audio_decoder);
+			if (!samples) {
 				break;
+			}
 			_audioFifo.Produce(*samples);
 		}
 	}
@@ -425,7 +429,7 @@ class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer,
 		plm_set_audio_enabled(_plm, FALSE);
 		if (_plm->audio_decoder) {
 			plm_audio_destroy(_plm->audio_decoder);
-			_plm->audio_decoder = NULL;
+			_plm->audio_decoder = nullptr;
 		}
 		plm_demux_rewind(_plm->demux);
 		_plm->has_decoders      = TRUE;
@@ -451,12 +455,11 @@ public:
 
 		// TRUE means that the buffer is destroyed on failure or when closing _plm
 		_plm = plm_create_with_buffer(plmBuf, TRUE);
-
-		if (_plm == NULL) {
+		if (!_plm) {
 			LOG(LOG_REELMAGIC, LOG_ERROR)
 			("Player failed creating buffer using file %s",
 			 _file->GetFileName());
-			plmBuf = NULL;
+			plmBuf = nullptr;
 			return;
 		}
 
@@ -474,20 +477,20 @@ public:
 		// disable audio buffer load callback so pl_mpeg dont try to "auto fetch" audio
 		// samples when we ask it for audio data...
 		if (_plm->audio_decoder) {
-			_plm->audio_decoder->buffer->load_callback = NULL;
+			_plm->audio_decoder->buffer->load_callback = nullptr;
 			_audioFifo.SetSampleRate((Bitu)plm_get_samplerate(_plm));
 		}
 
 		CollectVideoStats();
 		advanceNextFrame(); // attempt to decode the first frame of video...
-		if ((_nextFrame == NULL) || (_attrs.PictureSize.Width == 0) ||
+		if (!_nextFrame || (_attrs.PictureSize.Width == 0) ||
 		    (_attrs.PictureSize.Height == 0)) {
 			// something failed... asset is deemed bad at this point...
 			plm_destroy(_plm);
-			_plm = NULL;
+			_plm = nullptr;
 		}
 
-		if (_plm == NULL) {
+		if (!_plm) {
 			LOG(LOG_REELMAGIC, LOG_ERROR)
 			("Failed creating media player: MPEG type-detection failed %s",
 			 _file->GetFileName());
@@ -511,9 +514,10 @@ public:
 		("Destroying Media Player #%u with file %s", GetBaseHandle(), _file->GetFileName());
 		DeactivatePlayerAudioFifo(_audioFifo);
 		if (ReelMagic_GetVideoMixerMPEGProvider() == this)
-			ReelMagic_SetVideoMixerMPEGProvider(NULL);
-		if (_plm != NULL)
+			ReelMagic_ClearVideoMixerMPEGProvider();
+		if (_plm) {
 			plm_destroy(_plm);
+		}
 	}
 
 	//
@@ -530,17 +534,18 @@ public:
 		}
 
 		if (_drawNextFrame) {
-			if (_nextFrame != NULL)
+			if (_nextFrame) {
 				plm_frame_to_rgb(_nextFrame,
 				                 (uint8_t*)outputBuffer,
 				                 _attrs.PictureSize.Width * 3);
+			}
 			decodeBufferedAudio();
 			_drawNextFrame = false;
 		}
 
 		if (!_playing) {
 			if (_stopOnComplete)
-				ReelMagic_SetVideoMixerMPEGProvider(NULL);
+				ReelMagic_ClearVideoMixerMPEGProvider();
 			return;
 		}
 
@@ -623,8 +628,9 @@ public:
 
 	Bitu GetBytesDecoded() const
 	{
-		if (_plm == NULL)
+		if (!_plm) {
 			return 0;
+		}
 		// the "real" ReelMagic setup seems to only return values in multiples of 4k...
 		// therfore, we must emulate the same behavior here...
 		// rounding up the demux position to align....
@@ -638,8 +644,9 @@ public:
 
 	void Play(const PlayMode playMode)
 	{
-		if (_plm == NULL)
+		if (!_plm) {
 			return;
+		}
 		if (_playing)
 			return;
 		_playing = true;
@@ -657,7 +664,7 @@ public:
 	{
 		_playing = false;
 		if (ReelMagic_GetVideoMixerMPEGProvider() == this)
-			ReelMagic_SetVideoMixerMPEGProvider(NULL);
+			ReelMagic_ClearVideoMixerMPEGProvider();
 	}
 	void SeekToByteOffset(const uint32_t offset)
 	{
@@ -786,7 +793,7 @@ void ReelMagic_DeleteAllPlayers()
 // audio stuff begins here...
 //
 mixer_channel_t _rmaudio                                = nullptr;
-static AudioSampleFIFO* volatile _activePlayerAudioFifo = NULL;
+static AudioSampleFIFO* volatile _activePlayerAudioFifo = nullptr;
 
 static void ActivatePlayerAudioFifo(AudioSampleFIFO& fifo)
 {
@@ -800,14 +807,14 @@ static void ActivatePlayerAudioFifo(AudioSampleFIFO& fifo)
 static void DeactivatePlayerAudioFifo(AudioSampleFIFO& fifo)
 {
 	if (_activePlayerAudioFifo == &fifo)
-		_activePlayerAudioFifo = NULL;
+		_activePlayerAudioFifo = nullptr;
 }
 
 static AudioFrame _lastAudioSample = {};
 static void RMMixerChannelCallback(uint16_t samplesNeeded)
 {
 	// samplesNeeded is sample count, including both channels...
-	if (_activePlayerAudioFifo == NULL) {
+	if (!_activePlayerAudioFifo) {
 		_rmaudio->AddSilence();
 		return;
 	}
@@ -932,10 +939,10 @@ void ReelMagic_InitPlayer(Section* sec)
 
 	ReelMagic_EnableAudioChannel(true);
 
-	ReelMagic_ResetPlayers();
+	ReelMagic_ClearPlayers();
 }
 
-void ReelMagic_ResetPlayers()
+void ReelMagic_ClearPlayers()
 {
 	ReelMagic_DeleteAllPlayers();
 
