@@ -219,7 +219,7 @@ class ReelMagic_MediaPlayerImplementation : public ReelMagic_MediaPlayer,
                                             public ReelMagic_VideoMixerMPEGProvider {
 	// creation parameters...
 	ReelMagic_MediaPlayerFile* const _file = {};
-	ReelMagic_PlayerConfiguration _config  = {};
+	ReelMagic_PlayerConfiguration _config = _globalDefaultPlayerConfiguration;
 	ReelMagic_PlayerAttributes _attrs      = {};
 
 	// running / adjustable variables...
@@ -440,17 +440,8 @@ public:
 	ReelMagic_MediaPlayerImplementation& operator=(const ReelMagic_MediaPlayerImplementation&) = delete;
 
 	ReelMagic_MediaPlayerImplementation(ReelMagic_MediaPlayerFile* const player_file)
-	        : _file(player_file),
-	          _stopOnComplete(false),
-	          _playing(false),
-	          _vgaFps(0.0f),
-	          _plm(NULL),
-	          _nextFrame(NULL),
-	          _magicalRSizeOverride(0)
+	        : _file(player_file)
 	{
-		memcpy(&_config, &_globalDefaultPlayerConfiguration, sizeof(_config));
-		memset(&_attrs, 0, sizeof(_attrs));
-
 		assert(_file);
 		auto plmBuf = plm_buffer_create_with_virtual_file(&plmBufferLoadCallback,
 		                                                  &plmBufferSeekCallback,

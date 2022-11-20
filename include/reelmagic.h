@@ -64,17 +64,19 @@ constexpr reelmagic_handle_t reelmagic_first_handle   = 1;
 constexpr reelmagic_handle_t reelmagic_last_handle    = {DOS_FILES - 1};
 
 struct ReelMagic_PlayerConfiguration {
-  bool     VideoOutputVisible;
-  bool     UnderVga;
-  uint8_t    VgaAlphaIndex;
-  uint32_t   MagicDecodeKey;
-  uint32_t   UserData;
+  bool VideoOutputVisible = false;
+  bool UnderVga           = false;
+  uint8_t VgaAlphaIndex   = 0;
+  uint32_t MagicDecodeKey = 0;
+  uint32_t UserData       = 0;
   struct {
-    uint16_t X, Y;
-  }        DisplayPosition;
+	  uint16_t X = 0;
+	  uint16_t Y = 0;
+  } DisplayPosition = {};
   struct {
-    uint16_t Width, Height;
-  }        DisplaySize;
+	  uint16_t Width  = 0;
+	  uint16_t Height = 0;
+  } DisplaySize = {};
 };
 struct ReelMagic_PlayerAttributes {
   struct {
@@ -82,10 +84,11 @@ struct ReelMagic_PlayerAttributes {
     reelmagic_handle_t Demux = reelmagic_invalid_handle;
     reelmagic_handle_t Video = reelmagic_invalid_handle;
     reelmagic_handle_t Audio = reelmagic_invalid_handle;
-  } Handles;
+  } Handles = {};
   struct {
-    uint16_t Width, Height;
-  } PictureSize;
+	  uint16_t Width  = 0;
+	  uint16_t Height = 0;
+  } PictureSize = {};
 };
 struct ReelMagic_MediaPlayerFile {
   virtual ~ReelMagic_MediaPlayerFile() {}
@@ -102,7 +105,8 @@ struct ReelMagic_MediaPlayer {
   virtual bool HasDemux() const = 0;
   virtual bool HasVideo() const = 0;
   virtual bool HasAudio() const = 0;
-  virtual bool IsPlaying() const = 0;
+
+  virtual bool IsPlaying() const       = 0;
   virtual Bitu GetBytesDecoded() const = 0;
 
   enum PlayMode {
