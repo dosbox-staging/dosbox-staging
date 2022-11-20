@@ -22,10 +22,12 @@
 
 #include "reelmagic.h"
 
+#include <array>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -437,9 +439,8 @@ public:
 	ReelMagic_MediaPlayerImplementation(const ReelMagic_MediaPlayerImplementation&) = delete;
 	ReelMagic_MediaPlayerImplementation& operator=(const ReelMagic_MediaPlayerImplementation&) = delete;
 
-	ReelMagic_MediaPlayerImplementation(ReelMagic_MediaPlayerFile* const file,
-	                                    const ReelMagic_MediaPlayer_Handle handle)
-	        : _file(file),
+	ReelMagic_MediaPlayerImplementation(ReelMagic_MediaPlayerFile* const player_file)
+	        : _file(player_file),
 	          _stopOnComplete(false),
 	          _playing(false),
 	          _vgaFps(0.0f),
@@ -450,11 +451,7 @@ public:
 		memcpy(&_config, &_globalDefaultPlayerConfiguration, sizeof(_config));
 		memset(&_attrs, 0, sizeof(_attrs));
 
-		_attrs.Handles.Master = handle;
-
-		bool detetectedFileTypeVesOnly = false;
-
-		assert(_file); 		
+		assert(_file);
 		auto plmBuf = plm_buffer_create_with_virtual_file(&plmBufferLoadCallback,
 		                                                  &plmBufferSeekCallback,
 		                                                  this,
@@ -466,8 +463,7 @@ public:
 
 		if (_plm == NULL) {
 			LOG(LOG_REELMAGIC, LOG_ERROR)
-			("Player with handle #%u failed creating buffer using file %s",
-			 (unsigned)_attrs.Handles.Master,
+			("Player failed creating buffer using file %s",
 			 _file->GetFileName());
 			plmBuf = NULL;
 			return;
@@ -476,14 +472,12 @@ public:
 		assert(_plm);
 		plm_demux_set_stop_on_program_end(_plm->demux, TRUE);
 
+		bool detetectedFileTypeVesOnly = false;
 		if (!plm_has_headers(_plm)) {
-			// failed to detect an MPEG-1 PS (muxed) stream... try MPEG-ES assuming
-			// video-only...
+			// failed to detect an MPEG-1 PS (muxed) stream...
+			// try MPEG-ES: assuming video-only...
 			detetectedFileTypeVesOnly = true;
 			SetupVESOnlyDecode();
-			_attrs.Handles.Video = _attrs.Handles.Master;
-		} else {
-			_attrs.Handles.Demux = _attrs.Handles.Master;
 		}
 
 		// disable audio buffer load callback so pl_mpeg dont try to "auto fetch" audio
@@ -504,13 +498,11 @@ public:
 
 		if (_plm == NULL) {
 			LOG(LOG_REELMAGIC, LOG_ERROR)
-			("Created Media Player #%u MPEG Type Detect Failed %s",
-			 (unsigned)_attrs.Handles.Master,
+			("Failed creating media player: MPEG type-detection failed %s",
 			 _file->GetFileName());
 		} else {
 			LOG(LOG_REELMAGIC, LOG_NORMAL)
-			("Created Media Player #%u %s %ux%u @ %0.2ffps %s",
-			 (unsigned)_attrs.Handles.Master,
+			("Created Media Player %s %ux%u @ %0.2ffps %s",
 			 detetectedFileTypeVesOnly ? "MPEG-ES" : "MPEG-PS",
 			 (unsigned)_attrs.PictureSize.Width,
 			 (unsigned)_attrs.PictureSize.Height,
@@ -518,51 +510,20 @@ public:
 			 _file->GetFileName());
 			if (_audioFifo.GetSampleRate())
 				LOG(LOG_REELMAGIC, LOG_NORMAL)
-			("Media Player #%u Audio Decoder Enabled @ %uHz",
-			 (unsigned)_attrs.Handles.Master,
+			("Media Player Audio Decoder Enabled @ %uHz",
 			 (unsigned)_audioFifo.GetSampleRate());
 		}
 	}
 	virtual ~ReelMagic_MediaPlayerImplementation()
 	{
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
-		("Destroying Media Player #%u %s", (unsigned)_attrs.Handles.Master, _file->GetFileName());
+		("Destroying Media Player #%u with file %s", GetBaseHandle(), _file->GetFileName());
 		DeactivatePlayerAudioFifo(_audioFifo);
 		if (ReelMagic_GetVideoMixerMPEGProvider() == this)
 			ReelMagic_SetVideoMixerMPEGProvider(NULL);
 		if (_plm != NULL)
 			plm_destroy(_plm);
 		delete _file;
-	}
-
-	//
-	// function for accessing this class just in this file...
-	//
-	Bitu GetHandlesNeeded() const
-	{
-		Bitu rv = 0;
-		if (HasSystem())
-			++rv;
-		if (HasVideo())
-			++rv;
-		if (HasAudio())
-			++rv;
-		if (rv == 0)
-			rv = 1;
-		return rv;
-	}
-	void DeclareAuxHandle(const ReelMagic_MediaPlayer_Handle auxHandle)
-	{
-		// this is so damn hacky :-(
-		if (_attrs.Handles.Video == 0) {
-			_attrs.Handles.Video = auxHandle;
-			return;
-		}
-		if (_attrs.Handles.Audio == 0) {
-			_attrs.Handles.Audio = auxHandle;
-			return;
-		}
-		LOG(LOG_REELMAGIC, LOG_WARN)("Declaring too many handles!");
 	}
 
 	//
@@ -622,22 +583,13 @@ public:
 	{
 		return _plm && _plm->demux->buffer != _plm->video_decoder->buffer;
 	}
-	bool HasSystem() const
-	{
-		return HasDemux();
-	}
-
 	bool HasVideo() const
 	{
-		if (_plm == NULL)
-			return false;
-		return plm_get_video_enabled(_plm) != FALSE;
+		return _plm && plm_get_video_enabled(_plm);
 	}
 	bool HasAudio() const
 	{
-		if (_plm == NULL)
-			return false;
-		return plm_get_audio_enabled(_plm) != FALSE;
+		return _plm && plm_get_audio_enabled(_plm);
 	}
 	bool IsPlaying() const
 	{
@@ -802,19 +754,7 @@ static reelmagic_handle_t register_player(const player_t& player)
 	return player->GetBaseHandle();
 }
 
-static ReelMagic_MediaPlayerImplementation* _rmhandles[REELMAGIC_MAX_HANDLES] = {NULL};
-
-static Bitu ComputeFreePlayerHandleCount()
-{
-	Bitu rv = 0;
-	for (Bitu i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
-		if (_rmhandles[i] == NULL)
-			++rv;
-	}
-	return rv;
-}
-
-ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFile* const playerFile)
+reelmagic_handle_t ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFile* const playerFile)
 {
 	// so why all this mickey-mouse for simply allocating a handle?
 	// the real setup allocates one handle per decoder resource
@@ -825,88 +765,31 @@ ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFil
 	//
 	// to ensure maximum compatibility, we must also emulate this behavior
 
-	const Bitu freeHandles = ComputeFreePlayerHandleCount();
-
-	uint8_t handleIndex = 0; // the last valid handle encountered
-
-	try {
-		if (freeHandles < 1)
-			throw RMException("Out of handles!");
-
-		for (uint8_t i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
-			handleIndex = i;
-			if (_rmhandles[i] == NULL) {
-				_rmhandles[i] = new ReelMagic_MediaPlayerImplementation(
-				        playerFile, i + 1);
-				break;
-			}
-		}
-	} catch (...) {
-		delete playerFile;
-		throw;
-	}
-
-	assert(handleIndex < REELMAGIC_MAX_HANDLES);
-	Bitu handlesNeeded = _rmhandles[handleIndex]->GetHandlesNeeded();
-	if (freeHandles < handlesNeeded) {
-		delete _rmhandles[handleIndex];
-		_rmhandles[handleIndex] = NULL;
-		throw RMException("Out of handles!");
-	}
-
-	auto additionalHandleIndex = handleIndex;
-	while (--handlesNeeded) {
-		while (_rmhandles[++additionalHandleIndex] != NULL)
-			;
-		_rmhandles[handleIndex]->DeclareAuxHandle(additionalHandleIndex + 1);
-		_rmhandles[additionalHandleIndex] = _rmhandles[handleIndex];
-		LOG(LOG_REELMAGIC, LOG_NORMAL)
-		("Consuming additional handle #%u for base handle #%u",
-		 (unsigned)(additionalHandleIndex + 1),
-		 (unsigned)(handleIndex + 1));
-	}
-
-	return handleIndex + 1; // all ReelMagic media handles are non-zero
+	auto player = std::make_shared<ReelMagic_MediaPlayerImplementation>(playerFile);
+	return register_player(player);
 }
 
-void ReelMagic_DeletePlayer(const ReelMagic_MediaPlayer_Handle handle)
+void ReelMagic_DeletePlayer(const reelmagic_handle_t handle)
 {
-	ReelMagic_MediaPlayer* player = &ReelMagic_HandleToMediaPlayer(handle);
-	delete player;
-	for (Bitu i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
-		if (_rmhandles[i] == player) {
-			_rmhandles[i] = NULL;
-			LOG(LOG_REELMAGIC, LOG_NORMAL)("Freeing handle #%u", (unsigned)(i + 1));
+	if (handle < player_registry.size()) {
+		if (const auto p = player_registry[handle]; p) {
+			deregister_player(p);
 		}
 	}
 }
 
-ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const ReelMagic_MediaPlayer_Handle handle)
+ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const reelmagic_handle_t handle)
 {
-	if ((handle == 0) || (handle > REELMAGIC_MAX_HANDLES))
-		throw RMException("Invalid handle #%u", (unsigned)handle);
-	ReelMagic_MediaPlayer* const player = _rmhandles[handle - 1];
-	if (player == NULL)
-		throw RMException("No active player at handle #%u", (unsigned)handle);
-	return *player;
+	if (handle >= player_registry.size() || !player_registry.at(handle)) {
+		throw RMException("Invalid handle #%u", handle);
+	}
+
+	return *player_registry[handle];
 }
 
 void ReelMagic_DeleteAllPlayers()
 {
-	for (uint8_t i = 0; i < REELMAGIC_MAX_HANDLES; ++i) {
-		if (_rmhandles[i] == NULL)
-			continue;
-		delete _rmhandles[i];
-		for (uint8_t j = i + 1; j < REELMAGIC_MAX_HANDLES; ++j) {
-			if (_rmhandles[j] == _rmhandles[i]) {
-				_rmhandles[j] = NULL;
-				LOG(LOG_REELMAGIC, LOG_NORMAL)
-				("Freeing handle #%u", (unsigned)(j + 1));
-			}
-		}
-		_rmhandles[i] = NULL;
-		LOG(LOG_REELMAGIC, LOG_NORMAL)("Freeing handle #%u", (unsigned)(i + 1));
-	}
+	player_registry = {};
 }
 
 //
