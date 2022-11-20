@@ -63,8 +63,6 @@ constexpr reelmagic_handle_t reelmagic_invalid_handle = 0;
 constexpr reelmagic_handle_t reelmagic_first_handle   = 1;
 constexpr reelmagic_handle_t reelmagic_last_handle    = {DOS_FILES - 1};
 
-#define REELMAGIC_MAX_HANDLES (16)
-typedef uint8_t ReelMagic_MediaPlayer_Handle;
 struct ReelMagic_PlayerConfiguration {
   bool     VideoOutputVisible;
   bool     UnderVga;
@@ -81,10 +79,9 @@ struct ReelMagic_PlayerConfiguration {
 struct ReelMagic_PlayerAttributes {
   struct {
 	  reelmagic_handle_t Base  = reelmagic_invalid_handle;
-    ReelMagic_MediaPlayer_Handle Master;
-    ReelMagic_MediaPlayer_Handle Demux;
-    ReelMagic_MediaPlayer_Handle Video;
-    ReelMagic_MediaPlayer_Handle Audio;
+    reelmagic_handle_t Demux = reelmagic_invalid_handle;
+    reelmagic_handle_t Video = reelmagic_invalid_handle;
+    reelmagic_handle_t Audio = reelmagic_invalid_handle;
   } Handles;
   struct {
     uint16_t Width, Height;
@@ -102,8 +99,7 @@ struct ReelMagic_MediaPlayer {
   virtual ReelMagic_PlayerConfiguration& Config() = 0;
   virtual const ReelMagic_PlayerAttributes& GetAttrs() const = 0;
 
-  virtual bool HasDemux() const        = 0;
-  virtual bool HasSystem() const = 0;
+  virtual bool HasDemux() const = 0;
   virtual bool HasVideo() const = 0;
   virtual bool HasAudio() const = 0;
   virtual bool IsPlaying() const = 0;
@@ -122,9 +118,9 @@ struct ReelMagic_MediaPlayer {
 };
 
 //note: once a player file object is handed to new/delete player, regardless of success, it will be cleaned up
-ReelMagic_MediaPlayer_Handle ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFile * const playerFile);
-void ReelMagic_DeletePlayer(const ReelMagic_MediaPlayer_Handle handle);
-ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const ReelMagic_MediaPlayer_Handle handle); //throws on invalid handle
+reelmagic_handle_t ReelMagic_NewPlayer(struct ReelMagic_MediaPlayerFile* const playerFile);
+void ReelMagic_DeletePlayer(const reelmagic_handle_t handle);
+ReelMagic_MediaPlayer& ReelMagic_HandleToMediaPlayer(const reelmagic_handle_t handle); // throws on invalid handle
 void ReelMagic_DeleteAllPlayers();
 
 void ReelMagic_InitPlayer(Section* /*sec*/);

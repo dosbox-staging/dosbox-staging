@@ -562,8 +562,12 @@ static void InvokePlayerStateChangeCallbackOnCPUResumeIfRegistered(const bool is
 
 	if ((_userCallbackType == 0x2000) && (!isPausing)) {
 		// hack to make RTZ work for now...
-		_userCallbackStack.push(UserCallbackCall(
-		        5, attrs.Handles.Master, 0, 0, _userCallbackStack.size() != cbstackStartSize));
+		_userCallbackStack.push(UserCallbackCall(5,
+		                                         attrs.Handles.Base,
+		                                         0,
+		                                         0,
+		                                         _userCallbackStack.size() !=
+		                                                 cbstackStartSize));
 	}
 
 	if (isPausing) {
@@ -978,9 +982,9 @@ static Bitu FMPDRV_INTHandler()
 	}
 
 	// define what the registers mean up front...
-	const uint8_t command                     = reg_bh;
-	ReelMagic_MediaPlayer_Handle media_handle = reg_bl;
-	const uint16_t subfunc                    = reg_cx;
+	const uint8_t command           = reg_bh;
+	reelmagic_handle_t media_handle = reg_bl;
+	const uint16_t subfunc          = reg_cx;
 
 	// filename_ptr for command 0x1 & hardcoded to 1 for command 9
 	const uint16_t param1 = reg_ax;
