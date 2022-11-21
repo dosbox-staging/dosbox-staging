@@ -2,7 +2,7 @@
 cicli/ms
 .
 :TITLEBAR_HINT_PAUSED
-(IN PAUSA)
+(PAUSA)
 .
 :TITLEBAR_HINT_NOMOUSE
 modalità senza mouse
@@ -11,13 +11,13 @@ modalità senza mouse
 mouse catturato, %s+F10 per rilasciarlo
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mouse catturato, %s+F10 o clic centrale per rilasciarlo
+mouse catturato, %s+F10 o pulsante centrale del mouse per rilasciarlo
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
 per catturare il mouse premere %s+F10
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
-per catturare il mouse premere %s+F10 o clic centrale
+per catturare il mouse premere %s+F10 o pulsante centrale del mouse
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
 per catturare il mouse premere %s+F10 o fare clic su qualsiasi pulsante
@@ -26,7 +26,7 @@ per catturare il mouse premere %s+F10 o fare clic su qualsiasi pulsante
 mouse senza soluzione di continuità, %s+F10 per catturarlo
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-mouse senza soluzione di continuità, %s+F10 o clic centrale per catturarlo
+mouse senza soluzione di continuità, %s+F10 o pulsante centrale del mouse per catturarlo
 .
 :CONFIG_FULLSCREEN
 Avvia direttamente a schermo intero.
@@ -371,15 +371,14 @@ Scegli un metodo di controllo del mouse:
                   all'interno della finestra.
    onstart:       Cattura il mouse immediatamente all'avvio.
    seamless:      Modalità mouse senza soluzione di continuità; È possibile
-                  catturarlo con un clic centrale o con l'apposito tasto di
-                  scelta rapida.
+                  catturarlo premendo il pulsante centrale del mouse o
+                  l'apposito tasto di scelta rapida.
    nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
                   input al gioco.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-Se vero, il clic centrale rilascerà il mouse precedentemente catturato.
-Nel caso in cui si utilizzi il metodo di controllo 'seamless', esso si
-occuperà anche di catturarlo.
+Se vero, il pulsante centrale rilascerà il mouse. Con il metodo di controllo
+'seamless', esso si occuperà anche di catturarlo.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse predefinita. 100 è il valore base, 150 equivale al 150%
@@ -823,6 +822,28 @@ Filtro per l'uscita audio del DAC PS/1:
   <custom>:  Definizione di filtri personalizzati; 
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
+:CONFIG_REELMAGIC
+Supporto per la riproduzione MPEG di ReelMagic (alias REALmagic).
+  off:      Disabilita il supporto (predefinito).
+  cardonly: Inizializza la scheda senza caricare il driver FMPDRV.EXE.
+  on:       Inizializza la scheda e carica il driver FMPDRV.EXE all'avvio.
+.
+:CONFIG_REELMAGIC_KEY
+Imposta la chiave a 32 bit utilizzata per decodificare i video dei giochi.
+  auto:     Utilizza le routine integrate per determinare la chiave
+            (predefinito).
+  common:   Utilizza la chiave trovata più comunemente, cioè 0x40044041.
+  thehorde: Utilizza la chiave del videogioco The Horde, cioè 0xC39D7088.
+  <custom>: Imposta una chiave personalizzata in formato esadecimale
+            (ad esempio, 0x12345678).
+.
+:CONFIG_REELMAGIC_FCODE
+Modifica la frequenza dei fotogrammi utilizzata durante la riproduzione video.
+  0:        Nessuna modifica: tenta il rilevamento automatico della frequenza
+            (predefinito).
+  1 - 7:    Modifica la frequenza dei fotogrammi con una delle seguenti:
+            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, o 7=59.94 FPS.
+.
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
 auto     : Rileva e usa qualsiasi joystick, se possibile.
@@ -1052,29 +1073,30 @@ Scrittura del file di configurazione in %s
 .
 :SHELL_CMD_CONFIG_HELP_LONG
 Regola i parametri configurabili di DOSBox Staging.
--writeconf o -wc senza parametro: scrive nel file di config. primario caricato.
--writeconf o -wc [nomefile]: scrive il file nella directory di configurazione.
-Usa -writelang o -wl [nomefile] per scrivere le stringhe della lingua corrente.
+
+-writeconf o -wc Scrive nel file di configigurazione primario caricato.
+-writeconf o -wc [nomefile] Scrive il file nella directory di configurazione.
+-writelang o -wl [nomefile] Scrive le stringhe della lingua corrente.
 -r [parametri]
  Riavvia DOSBox, utilizzando i parametri precedenti o quelli aggiunti.
 -wcp [nomefile]
- Scrive il file di config. nella directory del programma, col nome dosbox.conf
- o con il nome del file specificato.
--wcd
- Scrive nel file di config. predefinito nella directory di configurazione.
--l elenca i parametri di configurazione.
+ Scrive il file di configurazione nella directory del programma, con il nome
+ 'dosbox.conf' o quello specificato.
+-wcd Scrive nel file di configurazione predefinito.
+-l Elenca i parametri di configurazione.
 -h, -help, -? sections / nomeSezione / nomeProprietà
  Senza parametri, visualizza questa guida. Aggiungi "sections" per elencare le
- sezioni. Per info su sezione o proprietà, aggiungere il suo nome dopo -help.
--axclear pulisce la sezione autoexec.
--axadd [riga] aggiunge una riga alla sezione autoexec.
--axtype stampa il contenuto della sezione autoexec.
--securemode passa alla modalità sicura.
--avistart avvia la registrazione AVI.
--avistop interrompe la registrazione AVI.
--startmapper avvia il keymapper.
--get "[sezione] proprietà" restituisce il valore della proprietà.
--set "[sezione] proprietà=valore" imposta il valore.
+ sezioni. Per informazioni su una sezione o proprietà specifica, aggiungere il
+ suo nome alla fine del comando (es. config -h sdl).
+-axclear Pulisce la sezione 'autoexec'.
+-axadd [riga] Aggiunge una riga alla sezione 'autoexec'.
+-axtype Stampa il contenuto della sezione 'autoexec'.
+-securemode Passa alla modalità sicura.
+-avistart Avvia la registrazione AVI.
+-avistop Interrompe la registrazione AVI.
+-startmapper Avvia il keymapper.
+-get "[sezione] proprietà" Restituisce il valore della proprietà.
+-set "[sezione] proprietà=valore" Imposta il valore.
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
@@ -1098,7 +1120,7 @@ Questa proprietà non può essere modificata mentre il programma è in esecuzion
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
-Numero intero positivo.
+numero intero positivo.
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
 La sezione %s contiene le seguenti proprietà:
@@ -1280,6 +1302,46 @@ Comandi della cartuccia PCjr disponibili: %s
 :PROGRAM_BOOT_CART_NO_CMDS
 Nessun comando della cartuccia PCjr trovato.
 .
+:PROGRAM_FMPDRV_HELP_LONG
+Carica o disabilita il driver integrato del lettore ReelMagic Full Motion.
+
+Utilizzo:
+  [color=green]fmpdrv[reset]    (carica il driver)
+  [color=green]fmpdrv[reset] /u (disabilita il driver)
+
+Note:
+  L'impostazione di configurazione "reelmagic = on" permette di caricare il
+  driver all'avvio e impedisce che venga disabilitato.
+
+.
+:PROGRAM_FMPDRV_TITLE
+Driver Lettore ReelMagic Full Motion (integrato) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Caricato all'interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Già caricato all'interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Non caricato: Nessun interrupt disponibile![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Driver disabilitato[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Il driver non è stato caricato[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Driver non disabilitato: configurato per rimanere residente[reset]
+
+.
 :MSCDEX_SUCCESS
 MSCDEX installato.
 
@@ -1364,6 +1426,7 @@ Note:
   - Il flag -ro monta l'immagine disco in sola lettura (Protetto da scrittura).
   - Il flag -ide emula un controller IDE con un'unità CD collegata, utile per i
     giochi CD che richiedono un ambiente DOS tramite l'immagine HDD avviabile.
+
 Esempi:
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\giochi\doom.iso[reset] -t cdrom
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
@@ -1788,16 +1851,19 @@ Nessun file di input trovato.
 [reset][color=light-yellow]--- dispositivo %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- premere SPAZIO per continuare ---[reset]
+[reset][color=light-yellow]--- premere SPAZIO per mostrare di più ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- premere SPAZIO per continuare, N per il prossimo file ---[reset]
+[reset][color=light-yellow]--- premere SPAZIO per mostrare di più, N per il prossimo file ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- impossibile aprire %s ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
 [reset][color=light-yellow](terminato)[reset]
+.
+:PROGRAM_MORE_NEXT_FILE
+[reset][color=light-yellow](prossimo file)[reset]
 .
 :PROGRAM_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.
