@@ -1424,8 +1424,9 @@ Dove:
 Note:
   - %s+F4 scambia e monta il [color=cyan]CDROM-SET[reset] o l'immagine [color=cyan]AVVIABILE[reset] successiva.
   - Il flag -ro monta l'immagine disco in sola lettura (Protetto da scrittura).
-  - Il flag -ide emula un controller IDE con un'unità CD collegata, utile per i
-    giochi CD che richiedono un ambiente DOS tramite l'immagine HDD avviabile.
+  - Il flag -ide emula un controller IDE con un'unità CD IDE collegata, utile
+    per i giochi basati su CD che richiedono un vero ambiente DOS tramite
+    un'immagine HDD avviabile.
 
 Esempi:
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\giochi\doom.iso[reset] -t cdrom
