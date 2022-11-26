@@ -273,3 +273,12 @@ std::optional<float> parse_prefixed_percentage(const char prefix, const std::str
 	constexpr auto max_percentage = 100.0f;
 	return parse_prefixed_value(prefix, s, min_percentage, max_percentage);
 }
+
+std::optional<int> to_int(const std::string& value)
+{
+	try {
+		return std::stoi(value);
+	} catch (...) {
+		return {};
+	}
+}

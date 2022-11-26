@@ -39,8 +39,7 @@ public:
 
 private:
 	bool ParseCommandLine(MoreOutputFiles &output);
-	bool FindInputFiles(MoreOutputFiles &output,
-	                    const std::vector<std::string> &params);
+	bool FindInputFiles(MoreOutputFiles& output);
 
 	void AddMessages();
 };

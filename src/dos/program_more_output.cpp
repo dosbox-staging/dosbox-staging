@@ -34,11 +34,14 @@ CHECK_NARROWING();
 
 // ASCII control characters
 constexpr char code_ctrl_c = 0x03; // end of text
+constexpr char code_bs     = 0x08; // backspace
 constexpr char code_lf     = 0x0a; // line feed
+constexpr char code_ff     = 0x0c; // form feed
 constexpr char code_cr     = 0x0d; // carriage return
 constexpr char code_esc    = 0x1b;
 constexpr char code_del    = 0x7f;
 
+// ANSI control sequences
 static const std::string ansi_clear_screen = "\033[2J";
 
 // ***************************************************************************
@@ -57,10 +60,40 @@ MoreOutputBase::MoreOutputBase(Program &program) : program(program)
 	max_lines = static_cast<uint16_t>(max_lines - 1);
 }
 
-void MoreOutputBase::SetTabSize(const uint8_t new_tab_size)
+void MoreOutputBase::SetOptionClear(const bool enabled)
 {
-	assert(new_tab_size > 0);
-	tab_size = new_tab_size;
+	has_option_clear = enabled;
+}
+
+void MoreOutputBase::SetOptionExtendedMode(const bool enabled)
+{
+	has_option_extended_mode = enabled;
+}
+
+void MoreOutputBase::SetOptionExpandFormFeed(const bool enabled)
+{
+	has_option_expand_form_feed = enabled;
+}
+
+void MoreOutputBase::SetOptionSquish(const bool enabled)
+{
+	has_option_squish = enabled;
+}
+
+void MoreOutputBase::SetOptionStartLine(const uint32_t line_num)
+{
+	option_start_line_num = line_num;
+}
+
+void MoreOutputBase::SetOptionTabSize(const uint8_t tab_size)
+{
+	assert(tab_size > 0);
+	option_tab_size = tab_size;
+}
+
+void MoreOutputBase::SetLinesInStream(const uint32_t lines)
+{
+	lines_in_stream = lines;
 }
 
 uint16_t MoreOutputBase::GetMaxLines() const
@@ -75,19 +108,25 @@ uint16_t MoreOutputBase::GetMaxColumns() const
 
 void MoreOutputBase::PrepareInternals()
 {
-	column_counter = 0;
-	line_counter   = 0;
+	column_counter      = 0;
+	screen_line_counter = 0;
+	lines_to_display    = max_lines;
+	lines_to_skip       = 0;
+	lines_in_stream     = 0;
+	start_line_num      = option_start_line_num;
 
 	is_output_redirected = false;
 	has_multiple_files   = false;
 	should_end_on_ctrl_c = false;
 	should_print_ctrl_c  = false;
-	was_prompt_recently  = false;
 
-	tabs_remaining = 0;
+	should_skip_pre_exit_prompt = false;
+
+	tabs_remaining      = 0;
+	new_lines_ramaining = 0;
 }
 
-UserDecision MoreOutputBase::DisplaySingleStream()
+MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 {
 	state = State::Normal;
 
@@ -96,23 +135,33 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 	bool is_state_ansi_end = false;
 	bool is_state_new_line = false;
 
-	auto previous_column = GetCursorColumn();
-	auto decision        = UserDecision::Next;
+	bool skipped_already_notified = false;
+	bool should_squish_new_line   = false;
 
+	auto previous_column = GetCursorColumn();
+	auto decision        = UserDecision::NextFile;
+
+	stream_line_counter = 0;
+	last_fetched_code   = 0;
 	tabs_remaining      = 0;
-	was_prompt_recently = false;
 
 	while (true) {
-		if (shutdown_requested) {
-			decision = UserDecision::Cancel;
+		decision = PromptUserIfNeeded();
+		if (decision == UserDecision::Cancel ||
+		    decision == UserDecision::NextFile) {
 			break;
+		}
+		if (decision == UserDecision::SkipNumLines) {
+			skipped_already_notified = false;
+			start_line_num = stream_line_counter + lines_to_skip;
+			lines_to_skip  = 0;
 		}
 
 		// Read character
 		char code = 0;
 		bool is_last_character = false;
 		if (!GetCharacter(code, is_last_character)) {
-			decision = UserDecision::Next; // end of current file
+			decision = UserDecision::NextFile; // end of current file
 			break;
 		}
 
@@ -146,10 +195,42 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 		is_state_ansi_end = (state == State::AnsiEscEnd) ||
 		                    (state == State::AnsiSciEnd);
-		is_state_ansi = (state == State::AnsiEsc) ||
-		                (state == State::AnsiSci) || is_state_ansi_end;
+		is_state_ansi     = (state == State::AnsiEsc) ||
+		                    (state == State::AnsiSci) ||
+		                    is_state_ansi_end;
 		is_state_new_line = (state == State::NewLineCR) ||
 		                    (state == State::NewLineLF);
+
+		if (!is_state_new_line) {
+			should_skip_pre_exit_prompt = false;
+		}
+
+		// Ignore everything before the starting line
+		if (stream_line_counter < start_line_num) {
+			if (!skipped_already_notified) {
+				WriteOut(MSG_Get("PROGRAM_MORE_SKIPPED"));
+				WriteOut("\n");
+				++screen_line_counter;
+				skipped_already_notified = true;
+			}
+			continue;
+		}
+		if (stream_line_counter == start_line_num &&
+		    start_line_num && is_state_new_line) {
+			continue;
+		}
+
+		// Handle squish mode
+		if (should_squish_new_line && is_state_new_line &&
+		    !new_lines_ramaining) {
+			continue;
+		}
+		if (is_state_new_line && has_option_squish) {
+			should_squish_new_line = (column_counter == 0);
+		}
+		if (!is_state_new_line) {
+			should_squish_new_line = false;
+		}
 
 		// NOTE: Neither MS-DOS 6.22 nor FreeDOS supports ANSI
 		// sequences within their MORE implementation. Our ANSI
@@ -160,8 +241,8 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 		// A trick to make it more resistant to ANSI cursor movements
 		const auto previous_row = GetCursorRow();
-		if (line_counter > previous_row) {
-			line_counter = previous_row;
+		if (screen_line_counter > previous_row) {
+			screen_line_counter = previous_row;
 		}
 
 		// Print character, handle ANSI sequences
@@ -173,8 +254,8 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			++column_counter;
 		} else if (is_state_ansi_end) {
 			if (ansi_code == ansi_clear_screen) {
-				column_counter = 0;
-				line_counter   = 0;
+				column_counter      = 0;
+				screen_line_counter = 0;
 			}
 			// TODO: consider handling also other ANSI control codes
 			ansi_code.clear();
@@ -194,7 +275,12 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			}
 		}
 		if (!is_state_ansi && (current_column == previous_column) &&
-		    (code != code_del) && (code >= ' ' || code < 0)) {
+#if (CHAR_MIN == 0) // 'char' is unsigned
+		    (code >= ' ') &&
+#else // 'char' is signed
+		    (code >= ' ' || code < 0) &&
+#endif
+		    (code != code_del)) {
 			// Alphanumeric character outside of ANSI sequence
 			// always changes the current column - if not, the
 			// output must have been redirected
@@ -217,25 +303,13 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 		// Update new line counter, decide if pause needed
 		if (is_state_new_line) {
 			column_counter = 0;
-			++line_counter;
-		} else {
-			was_prompt_recently = false;
+			++screen_line_counter;
 		}
 		if (is_last_character && state != State::LineOverflow) {
 			// Skip further processing (including possible user
 			// prompt) if we know no data is left and we haven't
 			// switched to the new line due to overflow
-			decision = UserDecision::Next;
-			break;
-		}
-		if (line_counter < max_lines) {
-			continue;
-		}
-
-		// New line occured just enough times for a pause
-		decision = PromptUser();
-		if (decision == UserDecision::Cancel ||
-		    decision == UserDecision::Next) {
+			decision = UserDecision::NextFile;
 			break;
 		}
 	}
@@ -243,21 +317,65 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 	if ((!is_output_redirected && GetCursorColumn()) ||
 	    (is_output_redirected && !is_state_new_line)) {
 		WriteOut("\n");
-		++line_counter;
+		++screen_line_counter;
 	}
 
+	start_line_num = 0; // option_start_line_num only applies to first stream
+	lines_in_stream = 0; // total number of lines has to be set for each stream
 	return decision;
 }
 
-UserDecision MoreOutputBase::PromptUser()
+void MoreOutputBase::ClearScreenIfRequested()
 {
-	was_prompt_recently = true;
-	line_counter = 0;
+	if (has_option_clear) {
+		WriteOut(ansi_clear_screen.c_str());
+		screen_line_counter = 0;
+	}
+}
+
+MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
+{
+	auto line_num = stream_line_counter;
+	if (state != State::NewLineCR &&
+	    state != State::NewLineLF) {
+		++line_num;
+	}
+
+	bool prompt_type_line_num = false;
+
+	auto display_prompt = [this, &line_num](const bool prompt_type_line_num) {
+		if (prompt_type_line_num) {
+			WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_LINE"), line_num);
+		} else if (has_multiple_files) {
+			WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
+		} else {
+			if (lines_in_stream) {
+				const auto tmp = static_cast<float>(line_num) /
+			                     static_cast<float>(lines_in_stream);
+				WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_PERCENT"),
+				         std::min(static_cast<int>(tmp * 100), 100));
+			} else {
+				WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
+			}
+		}
+	};
+
+	auto erase_prompt = [this]() {
+		WriteOut("\033[M"); // clear line
+		auto counter = GetCursorColumn();
+		while (counter--) {
+			WriteOut("\033[D"); // cursor one position back
+		}
+	};
+
+	screen_line_counter = 0;
+	lines_to_display    = max_lines;
+	lines_to_skip       = 0;
 
 	if (is_output_redirected) {
 		// Don't ask user for anything if command
 		// output is redirected, always continue
-		return UserDecision::Continue;
+		return UserDecision::More;
 	}
 
 	if (GetCursorColumn()) {
@@ -265,12 +383,9 @@ UserDecision MoreOutputBase::PromptUser()
 	}
 
 	const auto column_start = GetCursorColumn();
-	if (has_multiple_files) {
-		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
-	} else {
-		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
-	}
+	display_prompt(prompt_type_line_num);
 	const auto column_end = GetCursorColumn();
+	should_skip_pre_exit_prompt = true;
 
 	if (column_start == column_end) {
 		// Usually redirected output should be detected
@@ -281,33 +396,168 @@ UserDecision MoreOutputBase::PromptUser()
 		// argument) it will only be detected here
 		WriteOut("\n");
 		is_output_redirected = true;
-		return UserDecision::Continue;
+		return UserDecision::More;
 	}
 
+	// Get user decision
 	auto decision = UserDecision::Cancel;
+	uint32_t num_lines = 0;
+	while (true) {
+		if (has_multiple_files) {
+			decision = WaitForCancelContinueNext();
+		} else {
+			decision = WaitForCancelContinue();
+		}
 
-	if (has_multiple_files) {
-		decision = DOS_WaitForCancelContinueNext();
-	} else {
-		decision = DOS_WaitForCancelContinue();
+		if (decision == UserDecision::SwitchPrompt) {
+			// User decided to switch the prompt type
+			prompt_type_line_num = !prompt_type_line_num;
+			erase_prompt();
+			display_prompt(prompt_type_line_num);
+			continue;
+		}
+
+		if (decision == UserDecision::MoreNumLines ||
+		    decision == UserDecision::SkipNumLines) {
+			erase_prompt();
+			num_lines = GetNumLinesFromUser(decision);
+			if (!num_lines && decision != UserDecision::Cancel) {
+				erase_prompt();
+				display_prompt(prompt_type_line_num);
+				continue;
+			}
+		}
+
+		if (decision == UserDecision::MoreOneLine) {
+			lines_to_display = 1;
+		} else if (decision == UserDecision::MoreNumLines) {
+			lines_to_display = num_lines;
+		} else if (decision == UserDecision::SkipNumLines) {
+			lines_to_skip = num_lines;
+		}
+
+		// We have a valid decision
+		break;
 	}
+
+	erase_prompt();
 
 	if (decision == UserDecision::Cancel) {
-		WriteOut(" ");
 		WriteOut(MSG_Get("PROGRAM_MORE_TERMINATE"));
 		WriteOut("\n");
-		++line_counter;
-	} else if (decision == UserDecision::Next) {
-		WriteOut(" ");
+		++screen_line_counter;
+	} else if (decision == UserDecision::NextFile) {
 		WriteOut(MSG_Get("PROGRAM_MORE_NEXT_FILE"));
 		WriteOut("\n");
-		++line_counter;
-	} else {
-		// We are going to continue - erase the prompt
-		WriteOut("\033[M"); // clear line
-		auto counter = GetCursorColumn();
-		while (counter--) {
-			WriteOut("\033[D"); // cursor one position back
+		++screen_line_counter;
+	}
+
+	return decision;
+}
+
+MoreOutputBase::UserDecision MoreOutputBase::PromptUserIfNeeded()
+{
+	if (shutdown_requested) {
+		return UserDecision::Cancel;
+	}
+	if (screen_line_counter >= lines_to_display) {
+		return PromptUser();
+	}
+	return UserDecision::More;
+}
+
+uint32_t MoreOutputBase::GetNumLinesFromUser(UserDecision& decision)
+{
+	constexpr size_t max_digits = 5;
+
+	WriteOut(MSG_Get("PROGRAM_MORE_HOW_MANY_LINES"));
+	WriteOut(" ");
+
+	std::string number_str = {};
+	while (!shutdown_requested) {
+		CALLBACK_Idle();
+
+		// Try to read the key
+		uint16_t count = 1;
+		uint8_t code   = 0;
+		DOS_ReadFile(STDIN, &code, &count);
+
+		if (count == 0 || code == code_ctrl_c) {
+			// Terminate the whole displaying
+			decision = UserDecision::Cancel;
+			break;
+		} else if (code == code_esc) {
+			// User has resigned, no number of lines
+			break;
+		} else if (code == code_cr && !number_str.empty()) {
+			// ENTER pressed, we have a valid number
+			return static_cast<uint32_t>(std::stoi(number_str));
+		} else if (code == code_bs && !number_str.empty()) {
+			// BACKSPACE pressed
+			WriteOut("%c %c", code, code);
+			number_str.pop_back();
+		} else if (std::isdigit(code) && number_str.length() < max_digits &&
+		           !(code == '0' && number_str.empty())) {
+			// Add a new digit to the number
+			WriteOut("%c", code);
+			number_str.push_back(static_cast<char>(code));
+		}
+	}
+
+	return 0;
+}
+
+MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinue()
+{
+	auto decision = UserDecision::NextFile;
+	while (decision == UserDecision::NextFile) {
+		decision = WaitForCancelContinueNext();
+	}
+
+	return decision;
+}
+
+MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
+{
+	auto decision = UserDecision::Cancel;
+	while (!shutdown_requested) {
+		CALLBACK_Idle();
+
+		// Try to read the key
+		uint16_t count = 1;
+		uint8_t  tmp   = 0;
+		DOS_ReadFile(STDIN, &tmp, &count);
+		const char code = static_cast<char>(tmp);
+
+		if (shutdown_requested || count == 0 || ciequals(code, 'q') ||
+		    code == code_ctrl_c || code == code_esc) {
+			decision = UserDecision::Cancel;
+			break;
+		} else if (code == ' ') {
+			decision = UserDecision::More;
+			break;
+		} else if (code == code_cr) {
+			if (has_option_expand_form_feed) {
+				decision = UserDecision::More;
+			} else {
+				decision = UserDecision::MoreOneLine;
+			}
+			break;
+		} else if (ciequals(code, 'n') || // FreeDOS hotkey
+		           ciequals(code, 'f')) { // Windows hotkey
+			decision = UserDecision::NextFile;
+			break;
+		} else if (has_option_extended_mode) {
+			if (code == '=') {
+				decision = UserDecision::SwitchPrompt;
+				break;
+			} else if (!has_option_expand_form_feed && ciequals(code, 'p')) {
+				decision = UserDecision::MoreNumLines;
+				break;
+			} else if (!has_option_expand_form_feed && ciequals(code, 's')) {
+				decision = UserDecision::SkipNumLines;
+				break;
+			}
 		}
 	}
 
@@ -316,8 +566,13 @@ UserDecision MoreOutputBase::PromptUser()
 
 bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 {
+	if (stream_line_counter == UINT32_MAX) {
+		LOG_WARNING("DOS: MORE - stream too long");
+		return false;
+	}
+
 	is_last_character = false;
-	if (!tabs_remaining) {
+	if (!tabs_remaining && !new_lines_ramaining) {
 		bool should_skip_cr = (state == State::NewLineLF ||
 		                       state == State::LineOverflow);
 		bool should_skip_lf = (state == State::NewLineCR ||
@@ -335,6 +590,13 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 				return false; // end by CTRL+C
 			}
 
+			// Update counter of lines in the input stream
+			if ((last_fetched_code != code_lf && code == code_cr) ||
+			    (last_fetched_code != code_cr && code == code_lf)) {
+				++stream_line_counter;
+			}
+			last_fetched_code = code;
+
 			// Skip one CR/LF characters for certain states
 			if (code == code_cr && should_skip_cr) {
 				should_skip_cr = false;
@@ -351,19 +613,35 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 		// If TAB found, replace it with spaces,
 		// till we reach appropriate column
 		if (code == '\t') {
-			tabs_remaining    = tab_size;
-			is_tab_last       = is_last_character;
+			// TAB found, replace it with spaces,
+			// till we reach appropriate column
+			tabs_remaining    = option_tab_size;
+			is_replacing_last = is_last_character;
 			is_last_character = false;
+		} else if (code == code_ff &&
+			       (stream_line_counter >= start_line_num) &&
+		           has_option_expand_form_feed) {
+			// FormFeed found and appropriate option is set,
+			// replace it with new lines until page is complete
+			const auto tmp = std::max(0, max_lines - screen_line_counter - 1);
+			new_lines_ramaining = static_cast<uint16_t>(tmp);
+			lines_to_display    = max_lines;
+			is_replacing_last   = is_last_character;
+			is_last_character   = false;
 		}
 	}
 
 	if (tabs_remaining) {
 		code = ' ';
 		--tabs_remaining;
-		if ((column_counter + 1) % tab_size == 0) {
+		if ((column_counter + 1) % option_tab_size == 0) {
 			tabs_remaining = 0;
 		}
-		is_last_character = is_tab_last && !tabs_remaining;
+		is_last_character = is_replacing_last && !tabs_remaining;
+	} else if (new_lines_ramaining) {
+		code = '\n';
+		--new_lines_ramaining;
+		is_last_character = is_replacing_last && new_lines_ramaining;
 	}
 
 	return true;
@@ -478,21 +756,25 @@ void MoreOutputFiles::DisplayInputStream()
 	// Since this CAN be STDIN input (there is no way to check),
 	// CTRL+C shall quit
 	should_end_on_ctrl_c = true;
+	ClearScreenIfRequested();
 	DisplaySingleStream();
 }
 
 void MoreOutputFiles::DisplayInputFiles()
 {
-	UserDecision decision = UserDecision::Continue;
+	UserDecision decision = UserDecision::More;
 	WriteOut("\n");
 
-	bool first = true;
+	bool should_skip_clear_screen = false;
 	for (const auto &input_file : input_files) {
-		if (!first && !was_prompt_recently &&
-		    UserDecision::Cancel == (decision = PromptUser())) {
+		decision = PromptUserIfNeeded();
+		if (decision == UserDecision::Cancel) {
 			break;
 		}
-		first = false;
+		if (!should_skip_clear_screen) {
+			ClearScreenIfRequested();
+		}
+		should_skip_clear_screen = false;
 
 		// Print new line and detect command output
 		// redirection; has to be called after printing
@@ -515,7 +797,12 @@ void MoreOutputFiles::DisplayInputFiles()
 			WriteOut(MSG_Get("PROGRAM_MORE_OPEN_ERROR"),
 			         short_path.c_str());
 			new_line_and_detect_redirect();
-			++line_counter;
+			++screen_line_counter;
+			if (UserDecision::Cancel ==
+			    (decision = PromptUserIfNeeded())) {
+				break;
+			}
+			should_skip_clear_screen = true;
 			continue;
 		}
 
@@ -532,7 +819,10 @@ void MoreOutputFiles::DisplayInputFiles()
 		}
 
 		new_line_and_detect_redirect();
-		++line_counter;
+		++screen_line_counter;
+		if (UserDecision::Cancel == (decision = PromptUserIfNeeded())) {
+			break;
+		}
 
 		// If input from a device, CTRL+C shall quit
 		should_end_on_ctrl_c = input_file.is_device;
@@ -547,8 +837,8 @@ void MoreOutputFiles::DisplayInputFiles()
 	// End message and command prompt is going to appear; ensure the
 	// scrolling won't make top lines disappear before user reads them
 	const int free_rows_threshold = 2;
-	if (!was_prompt_recently &&
-		GetMaxLines() - line_counter < free_rows_threshold) {
+	if (!should_skip_pre_exit_prompt && !is_output_redirected &&
+	    GetMaxLines() - screen_line_counter < free_rows_threshold) {
 		decision = PromptUser();
 	}
 
@@ -625,7 +915,42 @@ void MoreOutputStrings::Display()
 		}
 	}
 
+	// Calculate total number of lines
+	if (!input_strings.empty()) {
+		uint32_t lines = 1;
+
+		bool ignore_next_cr = false;
+		bool ignore_next_lf = false;
+		for (const auto code : input_strings) {
+			if ((code == code_cr && ignore_next_cr) ||
+			    (code == code_lf && ignore_next_lf)) {
+				ignore_next_cr = false;
+				ignore_next_lf = false;
+				continue;
+			}
+
+			if (code == code_cr) {
+				ignore_next_lf = true;
+				++lines;
+			} else if (code == code_lf) {
+				ignore_next_cr = true;
+				++lines;
+			}
+
+			if (lines == UINT32_MAX) {
+				LOG_WARNING("DOS: MORE - suspiciously long string to display");
+				break;
+			}
+		}
+		if (input_strings.back() == code_cr ||
+		    input_strings.back() == code_lf) {
+			--lines;
+		}
+		SetLinesInStream(lines);
+	}
+
 	WriteOut("\n");
+	ClearScreenIfRequested();
 	DisplaySingleStream();
 
 	input_strings.clear();
