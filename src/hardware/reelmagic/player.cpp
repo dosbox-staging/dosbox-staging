@@ -868,7 +868,12 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	                             // ChannelFeature::ChorusSend,
 	                             ChannelFeature::DigitalAudio});
 	assert(_rmaudio);
-	_rmaudio->Enable(true);
+
+	// The decoded MP2 frame contains samples ranging from [-1.0f, +1.0f],
+	// so to hit 0 dB 16-bit signed, we need to multiply up from unity to
+	// the maximum magnitude (32k).
+	constexpr float mpeg1_db0_volume_scalar = {MAX_AUDIO};
+	_rmaudio->Set0dbScalar(mpeg1_db0_volume_scalar);
 }
 
 static void set_magic_key(const std::string_view key_choice)

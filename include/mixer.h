@@ -174,16 +174,19 @@ public:
 	bool HasFeature(ChannelFeature feature) const;
 	const std::string& GetName() const;
 	int GetSampleRate() const;
-	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
-	void RegisterLevelCallBack(apply_level_callback_f cb);
-	void SetVolume(const float left, const float right);
-	void SetVolumeScale(const float f);
-	void SetVolumeScale(const float left, const float right);
-	const AudioFrame& GetVolumeScale() const;
+
+	void SetUserVolume(const float left, const float right);
+	void SetAppVolume(const float f);
+	void SetAppVolume(const float left, const float right);
+	void Set0dbScalar(const float f);
+	void RecalcCombinedVolume();
+
+	const AudioFrame& GetUserVolume() const;
+	const AudioFrame& GetAppVolume() const;
+
 	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
-	void UpdateVolume();
 	void ReactivateEnvelope();
 	void SetSampleRate(const int _freq);
 	void SetPeakAmplitude(const int peak);
@@ -237,7 +240,6 @@ public:
 	bool WakeUp(); // pass-through to the sleeper
 	void FlushSamples();
 
-	AudioFrame volume = {1.0f, 1.0f};
 	std::atomic<int> frames_done = 0; // Timing on how many sample frames
 	                                  // have been done by the mixer
 
@@ -276,12 +278,41 @@ private:
 	AudioFrame next_frame = {};
 
 	int sample_rate = 0u;
-	AudioFrame volume_gain = {1.0f, 1.0f};
-	AudioFrame volume_scale = {1.0f, 1.0f};
+
+	// Volume scalars
+	// ~~~~~~~~~~~~~~
+	// The user sets this via MIXER.COM, which lets them magnify or diminish
+	// the channel's volume relative to other adjustments, such as any
+	// adjustments done by the application at runtime.
+	AudioFrame user_volume_scalar = {1.0f, 1.0f};
+
+	// The application (might) adjust a channel's volume programmatically at
+	// runtime via the Sound Blaster or ReelMagic control interfaces.
+	AudioFrame app_volume_scalar = {1.0f, 1.0f};
+
+	// The 0 dB volume scalar is used to bring a channel to 0 dB in the
+	// signed 16-bit [-32k, +32k] range.
+	//
+	// Two examples:
+	//
+	//  1. The ReelMagic's MP2 samples are decoded to as floats between
+	//     [-1.0f, +1.0f], so for we we set this to 32767.0f.
+	//
+	//  2. The GUS's simultaneous voices can accumulate to ~100%+RMS
+	//     above 0 dB, so for that channel we set this to RMS (sqrt of half).
+	//
+	float db0_volume_scalar = 1.0f;
+
+	// All three of these are multiplied together to form the combined
+	// volume scalar. This means we can apply one float-multiply per sample
+	// and perform all three adjustments at once.
+	//
+	AudioFrame combined_volume_scalar = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
 	// Default to signed 16bit max, however channel's that know their own
 	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
+	//
 	int peak_amplitude = MAX_AUDIO;
 
 	struct StereoLine {
@@ -300,11 +331,6 @@ private:
 	// DOS application-configurable that maps the channels own "left" or
 	// "right" as themselves or vice-versa.
 	StereoLine channel_map = STEREO;
-
-	// The RegisterLevelCallBack() assigns this callback that can be used by
-	// the channel's source to manage the stream's level prior to mixing,
-	// in-place of scaling by volume.
-	apply_level_callback_f apply_level = nullptr;
 
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;

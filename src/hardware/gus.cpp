@@ -248,7 +248,6 @@ private:
 	void Reset(uint8_t state);
 	AudioFrame RenderFrame();
 	void RenderUpToNow();
-	void SetLevelCallback(const AudioFrame &levels);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
@@ -276,7 +275,6 @@ private:
 	Voice *target_voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	mixer_channel_t audio_channel = nullptr;
-	AudioFrame accumulator_scalar = {};
 
 	// Playback related
 	double last_rendered_ms = 0.0;
@@ -611,6 +609,11 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
 
 	assert(audio_channel);
 
+	// GUS is prone to accumulating beyond the 16-bit range so we scale back
+	// by RMS.
+	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
+	audio_channel->Set0dbScalar(rms_squared);
+
 	if (!audio_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off")
 			LOG_WARNING("GUS: Invalid 'gus_filter' value: '%s', using 'off'",
@@ -621,10 +624,6 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
 	}
 
 	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
-
-	// Let the mixer command adjust the GUS's internal amplitude level's
-	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
-	audio_channel->RegisterLevelCallBack(set_level_callback);
 
 	UpdateDmaAddress(dma);
 
@@ -653,16 +652,6 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	}
 }
 
-void Gus::SetLevelCallback(const AudioFrame &levels)
-{
-	// GUS is prone to accumulating beyond the 16-bit range. Until we have
-	// an auto-volume-dampen-on-clip at the mixer-level, this function will
-	// scale the user-provided channel level by RMS.
-	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
-
-	accumulator_scalar = {levels.left * rms_squared, levels.right * rms_squared};
-}
-
 AudioFrame Gus::RenderFrame()
 {
 	AudioFrame accumulator = {};
@@ -681,8 +670,6 @@ AudioFrame Gus::RenderFrame()
 
 			++voice;
 		}
-		accumulator.left *= accumulator_scalar.left;
-		accumulator.right *= accumulator_scalar.right;
 	}
 	CheckVoiceIrq();
 	return accumulator;
