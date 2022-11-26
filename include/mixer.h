@@ -65,7 +65,11 @@ struct AudioFrame {
 	float left  = 0.0f;
 	float right = 0.0f;
 
-	float &operator[](std::size_t i)
+	constexpr AudioFrame() = default;
+	constexpr AudioFrame(const float l, const float r) : left(l), right(r) {}
+	constexpr AudioFrame(const int16_t l, const int16_t r) : left(l), right(r) {}
+
+	constexpr float& operator[](const size_t i) noexcept
 	{
 		assert(i < 2);
 		return i == 0 ? left : right;
