@@ -273,4 +273,8 @@ std::optional<float> parse_prefixed_value(const char prefix, const std::string &
 // parse_prefixed_value clamped between 0 and 100
 std::optional<float> parse_prefixed_percentage(const char prefix, const std::string &s);
 
+// tries to convert string to integer,
+// returns value only if succeeded
+std::optional<int> to_int(const std::string& value);
+
 #endif

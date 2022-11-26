@@ -168,36 +168,38 @@ constexpr uint16_t DOS_PackDate(const struct tm &datetime) noexcept
 }
 
 /* Routines for Drive Class */
-bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb = false);
-bool DOS_OpenFileExtended(char const * name, uint16_t flags, uint16_t createAttr, uint16_t action, uint16_t *entry, uint16_t* status);
-bool DOS_CreateFile(char const * name,uint16_t attribute,uint16_t * entry, bool fcb = false);
-bool DOS_UnlinkFile(char const * const name);
+bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb = false);
+bool DOS_OpenFileExtended(const char* name, uint16_t flags, uint16_t createAttr,
+                          uint16_t action, uint16_t* entry, uint16_t* status);
+bool DOS_CreateFile(const char* name, uint16_t attribute, uint16_t* entry,
+                    bool fcb = false);
+bool DOS_UnlinkFile(const char* const name);
 bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst = false);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(char const * const name,char * const big);
+bool DOS_Canonicalize(const char* const name, char* const big);
 bool DOS_CreateTempFile(char * const name,uint16_t * entry);
-bool DOS_FileExists(char const * const name);
+bool DOS_FileExists(const char* const name);
 
 /* Helper Functions */
-bool DOS_MakeName(char const *const name, char *const fullname, uint8_t *drive);
+bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive);
 
 /* Drive Handing Routines */
 uint8_t DOS_GetDefaultDrive(void);
 void DOS_SetDefaultDrive(uint8_t drive);
 bool DOS_SetDrive(uint8_t drive);
 bool DOS_GetCurrentDir(uint8_t drive,char * const buffer);
-bool DOS_ChangeDir(char const * const dir);
-bool DOS_MakeDir(char const * const dir);
-bool DOS_RemoveDir(char const * const dir);
-bool DOS_Rename(char const * const oldname,char const * const newname);
+bool DOS_ChangeDir(const char* const dir);
+bool DOS_MakeDir(const char* const dir);
+bool DOS_RemoveDir(const char* const dir);
+bool DOS_Rename(const char* const oldname, const char* const newname);
 bool DOS_GetFreeDiskSpace(uint8_t drive,uint16_t * bytes,uint8_t * sectors,uint16_t * clusters,uint16_t * free);
-bool DOS_GetFileAttr(char const * const name,uint16_t * attr);
-bool DOS_SetFileAttr(char const * const name,uint16_t attr);
+bool DOS_GetFileAttr(const char* const name, uint16_t* attr);
+bool DOS_SetFileAttr(const char* const name, uint16_t attr);
 
 /* IOCTL Stuff */
 bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
-uint8_t DOS_FindDevice(char const * name);
+uint8_t DOS_FindDevice(const char* name);
 void DOS_SetupDevices();
 void DOS_ShutDownDevices();
 
@@ -292,10 +294,7 @@ static inline uint16_t long2para(uint32_t size) {
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
 /* Wait/check user input */
-enum class UserDecision { Cancel, Continue, Next };
 bool DOS_IsCancelRequest();
-UserDecision DOS_WaitForCancelContinue();
-UserDecision DOS_WaitForCancelContinueNext();
 
 /* Macros SSET_* and SGET_* are used to safely access fields in memory-mapped
  * DOS structures represented via classes inheriting from MemStruct class.
@@ -687,7 +686,10 @@ class DOS_MCB final : public MemStruct {
 public:
 	DOS_MCB(uint16_t seg) : MemStruct(seg, 0) {}
 
-	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
+	void SetFileName(const char* const _name)
+	{
+		MEM_BlockWrite(pt + offsetof(sMCB, filename), _name, 8);
+	}
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
 
 	void SetType(uint8_t mcb_type) { SSET_BYTE(sMCB, type, mcb_type); }
