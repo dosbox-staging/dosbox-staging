@@ -1158,7 +1158,7 @@ static uint16_t GetMixerVolume(const char* const channelName, const bool right)
 		return 0;
 	}
 
-	const auto vol_gain       = chan->GetVolumeScale();
+	const auto vol_gain       = chan->GetAppVolume();
 	const auto vol_percentage = gain_to_percentage(vol_gain[right ? 1 : 0]);
 	return check_cast<uint16_t>(iroundf(vol_percentage));
 }
@@ -1170,9 +1170,9 @@ static void SetMixerVolume(const char* const channelName, const uint16_t percent
 		return;
 	}
 
-	AudioFrame vol_gain     = chan->GetVolumeScale();
+	AudioFrame vol_gain     = chan->GetAppVolume();
 	vol_gain[right ? 1 : 0] = percentage_to_gain(percentage);
-	chan->SetVolumeScale(vol_gain.left, vol_gain.right);
+	chan->SetAppVolume(vol_gain.left, vol_gain.right);
 }
 
 static bool RMDEV_SYS_int2fHandler()

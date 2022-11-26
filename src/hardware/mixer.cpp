@@ -487,8 +487,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
-	chan->SetVolumeScale(1.0f);
-	chan->SetVolume(1.0f, 1.0f);
+	chan->SetAppVolume(1.0f);
+	chan->SetUserVolume(1.0f, 1.0f);
 	chan->ChangeChannelMap(LEFT, RIGHT);
 	chan->Enable(false);
 
@@ -537,62 +537,71 @@ mixer_channel_t MIXER_FindChannel(const char *name)
 	return chan;
 }
 
-void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
+void MixerChannel::RecalcCombinedVolume()
 {
-	apply_level = cb;
-	apply_level(volume);
+	combined_volume_scalar.left = user_volume_scalar.left *
+	                              app_volume_scalar.left *
+	                              mixer.master_volume.left * db0_volume_scalar;
+
+	combined_volume_scalar.right = user_volume_scalar.right *
+	                               app_volume_scalar.right *
+	                               mixer.master_volume.right * db0_volume_scalar;
 }
 
-void MixerChannel::UpdateVolume()
-{
-	// Don't scale by volume if the level is being managed by the source
-	const float gain_left  = apply_level ? 1.0f : volume.left;
-	const float gain_right = apply_level ? 1.0f : volume.right;
-
-	volume_gain.left  = volume_scale.left  * gain_left  * mixer.master_volume.left;
-	volume_gain.right = volume_scale.right * gain_right * mixer.master_volume.right;
-}
-
-void MixerChannel::SetVolume(const float left, const float right)
+void MixerChannel::SetUserVolume(const float left, const float right)
 {
 	// Allow unconstrained user-defined values
-	volume = {left, right};
-
-	if (apply_level)
-		apply_level(volume);
-
-	UpdateVolume();
+	user_volume_scalar = {left, right};
+	RecalcCombinedVolume();
 }
 
-void MixerChannel::SetVolumeScale(const float f) {
-	SetVolumeScale(f, f);
+void MixerChannel::SetAppVolume(const float v)
+{
+	SetAppVolume(v, v);
 }
 
-void MixerChannel::SetVolumeScale(const float left, const float right)
+void MixerChannel::SetAppVolume(const float left, const float right)
 {
 	// Constrain application-defined volume between 0% and 100%
-	constexpr auto min_volume = 0.0f;
-	constexpr auto max_volume = 1.0f;
+	auto clamp_to_unity = [](const float vol) {
+		constexpr auto min_unity_volume = 0.0f;
+		constexpr auto max_unity_volume = 1.0f;
+		return clamp(vol, min_unity_volume, max_unity_volume);
+	};
+	app_volume_scalar = {clamp_to_unity(left), clamp_to_unity(right)};
+	RecalcCombinedVolume();
 
-	auto new_left  = clamp(left, min_volume, max_volume);
-	auto new_right = clamp(right, min_volume, max_volume);
-
-	if (volume_scale.left != new_left || volume_scale.right != new_right) {
-		volume_scale.left  = new_left;
-		volume_scale.right = new_right;
-		UpdateVolume();
 #ifdef DEBUG
-		LOG_MSG("MIXER %-7s channel: application changed left and right volumes to %3.0f%% and %3.0f%%, respectively",
-		        name,
-		        volume_scale.left * 100.0f,
-		        volume_scale.right * 100.0f);
+	LOG_MSG("MIXER %-7s channel: application requested volume "
+	        "{%3.0f%%, %3.0f%%}, and was set to {%3.0f%%, %3.0f%%}",
+	        name,
+	        static_cast<double>(left),
+	        static_cast < double(right),
+	        static_cast<double>(app_volume_scalar.left * 100.0f),
+	        static_cast<double>(app_volume_scalar.right * 100.0f));
 #endif
-	}
 }
 
-const AudioFrame& MixerChannel::GetVolumeScale() const
+void MixerChannel::Set0dbScalar(const float scalar)
 {
-	return volume_scale;
+	// Realistically we expect some channels might need a fixed boost
+	// to get to 0dB, but others might need a range mapping, like from
+	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
+	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(INT16_MAX));
+
+	db0_volume_scalar = scalar;
+
+	RecalcCombinedVolume();
+}
+
+const AudioFrame& MixerChannel::GetUserVolume() const
+{
+	return user_volume_scalar;
+}
+
+const AudioFrame& MixerChannel::GetAppVolume() const
+{
+	return app_volume_scalar;
 }
 
 static void MIXER_UpdateAllChannelVolumes()
@@ -600,7 +609,7 @@ static void MIXER_UpdateAllChannelVolumes()
 	MIXER_LockAudioDevice();
 
 	for (auto &it : mixer.channels)
-		it.second->UpdateVolume();
+		it.second->RecalcCombinedVolume();
 
 	MIXER_UnlockAudioDevice();
 }
@@ -873,11 +882,11 @@ void MixerChannel::AddSilence()
 				mixpos &= MIXER_BUFMASK;
 
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_frame.left * volume_gain.left;
+				        prev_frame.left * combined_volume_scalar.left;
 
 				mixer.work[mixpos][mapped_output_right] +=
 				        (stereo ? prev_frame.right : prev_frame.left) *
-				        volume_gain.right;
+				        combined_volume_scalar.right;
 
 				prev_frame = next_frame;
 				mixpos++;
@@ -1376,10 +1385,11 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, prev_frame);
 
-		const auto left = prev_frame[mapped_channel_left] * volume_gain.left;
+		const auto left = prev_frame[mapped_channel_left] *
+		                  combined_volume_scalar.left;
 		const auto right = (stereo ? prev_frame[mapped_channel_right]
 		                           : prev_frame[mapped_channel_left]) *
-		                   volume_gain.right;
+		                   combined_volume_scalar.right;
 
 		out_frame = {0.0f, 0.0f};
 		out_frame[mapped_output_left] += left;
@@ -1663,10 +1673,12 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 		const auto sample = prev_frame.left +
 		                    ((diff * diff_mul) >> FREQ_SHIFT);
 
-		const AudioFrame frame_with_gain = {sample * volume_gain.left,
-		                                    sample * volume_gain.right};
-		if (do_sleep)
+		const AudioFrame frame_with_gain = {
+		        sample * combined_volume_scalar.left,
+		        sample * combined_volume_scalar.right};
+		if (do_sleep) {
 			sleeper.Listen(frame_with_gain);
+		}
 
 		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
 		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
@@ -2188,8 +2200,7 @@ static std::optional<AudioFrame> parse_volume(const std::string &s)
 	auto parts = split(s, ':');
 	if (parts.size() == 1) {
 		if (const auto v = to_volume(parts[0]); v) {
-			AudioFrame volume = {*v, *v};
-			return volume;
+			return AudioFrame(*v, *v);
 		}
 	}
 	// stereo volume value
@@ -2197,8 +2208,7 @@ static std::optional<AudioFrame> parse_volume(const std::string &s)
 		const auto l = to_volume(parts[0]);
 		const auto r = to_volume(parts[1]);
 		if (l && r) {
-			AudioFrame volume = {*l, *r};
-			return volume;
+			return AudioFrame(*l, *r);
 		}
 	}
 	return {};
@@ -2329,7 +2339,7 @@ public:
 					continue;
 
 				if (const auto v = parse_volume(arg); v) {
-					channel->SetVolume(v->left, v->right);
+					channel->SetUserVolume(v->left, v->right);
 				}
 			}
 		}
@@ -2462,7 +2472,7 @@ private:
 			auto mode = chan->DescribeLineout();
 
 			show_channel(convert_ansi_markup(channel_name),
-			             chan->volume,
+			             chan->GetUserVolume(),
 			             mode,
 			             xfeed,
 			             reverb,

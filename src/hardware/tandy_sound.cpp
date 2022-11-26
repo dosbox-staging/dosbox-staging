@@ -286,7 +286,7 @@ void TandyDAC::ChangeMode()
 			channel->FillUp(); // using the prior frequency
 			channel->SetSampleRate(freq);
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
-			channel->SetVolume(vol, vol);
+			channel->SetAppVolume(vol, vol);
 			if ((regs.mode & 0x0c) == 0x0c) {
 				dma.is_done = false;
 				dma.channel = GetDMAChannel(io.dma);

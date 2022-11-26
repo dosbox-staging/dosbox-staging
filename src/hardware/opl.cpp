@@ -631,8 +631,9 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 		if (ctrl.mixer) {
 			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
-			channel->SetVolume((float)(ctrl.lvol & 0x1f) / 31.0f,
-			                   (float)(ctrl.rvol & 0x1f) / 31.0f);
+			channel->SetAppVolume(
+			        static_cast<float>(ctrl.lvol & 0x1f) / 31.0f,
+			        static_cast<float>(ctrl.rvol & 0x1f) / 31.0f);
 		}
 		break;
 
@@ -905,7 +906,7 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	// universally "good" setting that would work well in all games in
 	// existence.
 	constexpr auto opl_volume_scale_factor = 1.5f;
-	channel->SetVolumeScale(opl_volume_scale_factor);
+	channel->Set0dbScalar(opl_volume_scale_factor);
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 

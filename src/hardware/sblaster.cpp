@@ -1638,11 +1638,20 @@ static void CTMIXER_UpdateVolumes() {
 	float m0 = calc_vol(sb.mixer.master[0]);
 	float m1 = calc_vol(sb.mixer.master[1]);
 	auto chan = MIXER_FindChannel("SB");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.dac[0]), m1 * calc_vol(sb.mixer.dac[1]));
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.dac[0]),
+		                   m1 * calc_vol(sb.mixer.dac[1]));
+	}
 	chan = MIXER_FindChannel("OPL");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.fm[0]) , m1 * calc_vol(sb.mixer.fm[1]) );
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.fm[0]),
+		                   m1 * calc_vol(sb.mixer.fm[1]));
+	}
 	chan = MIXER_FindChannel("CDAUDIO");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.cda[0]), m1 * calc_vol(sb.mixer.cda[1]));
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.cda[0]),
+		                   m1 * calc_vol(sb.mixer.cda[1]));
+	}
 }
 
 static void CTMIXER_Reset() {
