@@ -277,12 +277,14 @@ static void counter_latch(PIT_Block &channel)
 	};
 
 	if (GCC_UNLIKELY(channel.mode_changed)) {
-		const auto total_ticks = static_cast<uint32_t>(
-		        elapsed_ms / period_of_1k_pit_ticks);
 		// if (channel.mode== PitMode::SquareWave) ticks_since_then /=
 		// 2; //
 		// TODO figure this out on real hardware
-		save_read_latch(channel.read_latch - total_ticks);
+
+		// Ensure the remaining ticks aren't negative
+		const auto elapsed_ticks   = elapsed_ms * PIT_TICK_RATE_KHZ;
+		const auto remaining_ticks = std::max(0.0, channel.read_latch - elapsed_ticks);
+		save_read_latch(remaining_ticks);
 		return;
 	}
 	const auto count = static_cast<double>(channel.count);
