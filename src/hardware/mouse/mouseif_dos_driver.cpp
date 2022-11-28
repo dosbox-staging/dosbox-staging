@@ -67,7 +67,7 @@ enum class MouseEventId : uint8_t {
 	ReleasedRight  = 1 << 4,
 	PressedMiddle  = 1 << 5,
 	ReleasedMiddle = 1 << 6,
-	WheelHasMoved  = 1 << 0,
+	WheelHasMoved  = 1 << 7,
 };
 
 // These values represent 'hardware' state, not driver state
