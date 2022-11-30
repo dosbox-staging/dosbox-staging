@@ -212,8 +212,14 @@ static void write_p61(io_port_t, io_val_t value, io_width_t)
 	// Update the state
 	port_b.data = new_port_b.data;
 
-	if (machine < MCH_EGA && port_b.xt_clear_keyboard)
-		KEYBOARD_ClrBuffer();
+	if (machine < MCH_EGA && port_b.xt_clear_keyboard) {
+		//  On XT only, Bit 7 is a request to clear keyboard. This is
+		//  only a pulse, and is normally kept at 0. We "ack" the
+		//  request by switching the bit back normal (0) state. However,
+		//  we leave the keyboard as is, because clearing it can cause
+		//  duplicate key strokes in AlleyCat.
+		port_b.xt_clear_keyboard.clear();
+	}
 
 	if (!output_changed)
 		return;

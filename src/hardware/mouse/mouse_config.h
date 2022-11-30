@@ -36,17 +36,14 @@ struct MousePredefined {
 	const float sensitivity_ps2 = 1.0f;
 	const float sensitivity_vmm = 3.0f;
 	const float sensitivity_com = 1.0f;
-	// Constants to move 'intersection point' for the acceleration curve
+
+	// Constant to move 'intersection point' for the acceleration curve
 	// Requires raw mouse input, otherwise there is no effect
 	// Larger values = higher mouse acceleration
-	const float acceleration_dos = 1.0f;
 	const float acceleration_vmm = 1.0f;
 
 	// Maximum allowed user sensitivity value
 	const int16_t sensitivity_user_max = 999;
-	// How many user steps causes sensitivity to double
-	// (sensitivity works exponentially)
-	const float sensitivity_double_steps = 10.0f;
 
 	// IRQ used by PS/2 mouse - do not change unless you really know
 	// what you are doing!

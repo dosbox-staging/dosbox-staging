@@ -159,10 +159,9 @@ static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int
  */
 static int32_t RWops_opus_close(void * stream)
 {
-    (void) stream; // deliberately unused, but present for API compliance
-    /* SDL closes this for us */
-    // return SDL_RWclose((SDL_RWops*)stream);
-    return 0;
+    constexpr auto success = 0;
+    const auto sdl_stream = static_cast<SDL_RWops*>(stream);
+    return sdl_stream ? SDL_RWclose(sdl_stream) : success;
 } /* RWops_opus_close */
 
 
@@ -240,6 +239,8 @@ static void opus_close(Sound_Sample * sample)
         op_free(of);
         internal->decoder_private = nullptr;
     }
+    // Close the SDL Sound's RW-ops callback pointer to prevent further operations on the stream
+    internal->rw = nullptr;
     return;
 
 } /* opus_close */

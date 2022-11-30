@@ -36,6 +36,8 @@ CHECK_NARROWING();
 constexpr char code_ctrl_c = 0x03; // end of text
 constexpr char code_lf     = 0x0a; // line feed
 constexpr char code_cr     = 0x0d; // carriage return
+constexpr char code_esc    = 0x1b;
+constexpr char code_del    = 0x7f;
 
 // ***************************************************************************
 // Base class, only for internal usage
@@ -73,26 +75,25 @@ void MoreOutputBase::PrepareInternals()
 {
 	line_counter = 0;
 
+	is_output_redirected = false;
 	has_multiple_files   = false;
 	should_end_on_ctrl_c = false;
 	should_print_ctrl_c  = false;
 	was_prompt_recently  = false;
 
-	tabs_remaining  = 0;
-
-	skip_next_cr    = false;
-	skip_next_lf    = false;
+	tabs_remaining = 0;
 }
 
 UserDecision MoreOutputBase::DisplaySingleStream()
 {
-	auto previous_column = GetCurrentColumn();
+	state                  = State::Normal;
+	bool is_state_ansi     = false;
+	bool is_state_new_line = false;
+
+	auto previous_column = GetCursorColumn();
 	auto decision        = UserDecision::Next;
 
-	tabs_remaining = 0;
-	skip_next_cr   = false;
-	skip_next_lf   = false;
-
+	tabs_remaining      = 0;
 	was_prompt_recently = false;
 
 	while (true) {
@@ -103,61 +104,99 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 		// Read character
 		char code = 0;
-		bool is_last = false;
-		if (!GetCharacter(code, is_last)) {
+		bool is_last_character = false;
+		if (!GetCharacter(code, is_last_character)) {
 			decision = UserDecision::Next; // end of current file
 			break;
 		}
 
+		// Update current state based on character code
+		switch (state) {
+		case State::AnsiEsc:
+			if (code == '[') {
+				state = State::AnsiSci;
+			} else {
+				state = State::AnsiEscEnd;
+			}
+			break;
+		case State::AnsiSci:
+			if (code >= '@' && code != code_del) {
+				state = State::AnsiSciEnd;
+			}
+			break;
+		default:
+			if (code == code_esc) {
+				state = State::AnsiEsc;
+			} else if (code == code_cr) {
+				state = State::NewLineCR;
+				code  = code_lf; // to handle LF/CR line endings
+			} else if (code == code_lf) {
+				state = State::NewLineLF;
+			} else {
+				state = State::Normal;
+			}
+			break;
+		}
+
+		is_state_ansi     = (state == State::AnsiEsc) ||
+		                    (state == State::AnsiEscEnd) ||
+		                    (state == State::AnsiSci) ||
+		                    (state == State::AnsiSciEnd);
+		is_state_new_line = (state == State::NewLineCR) ||
+		                    (state == State::NewLineLF);
+
 		// A trick to make it more resistant to ANSI cursor movements
-		const auto current_row = GetCurrentRow();
-		if (line_counter > current_row) {
-			line_counter = current_row;
+		const auto previous_row = GetCursorRow();
+		if (line_counter > previous_row) {
+			line_counter = previous_row;
 		}
 
-		// Handle new line characters
-		bool new_line = false;
-		if (code == code_cr) {
-			skip_next_lf = true;
-			new_line     = true;
-		} else if (code == code_lf) {
-			skip_next_cr = true;
-			new_line     = true;
-		} else {
-			skip_next_cr = false;
-			skip_next_lf = false;
-		}
-
-		// Duplicate character on the output
-		if (new_line) {
-			code = '\n';
-		}
 		WriteOut("%c", code);
 
+		// Detect redirected command output
+		const auto current_row    = GetCursorRow();
+		const auto current_column = GetCursorColumn();
+		if (is_state_new_line) {
+			// New line should move the cursor to the first column
+			// and to the next row (unless we are already on the last
+			// line) - if not, the output must have been redirected
+			if (current_row == previous_row && current_row < max_lines) {
+				is_output_redirected = true;
+			} else if (current_column) {
+				is_output_redirected = true;
+			}
+		}
+		if (!is_state_ansi && (current_column == previous_column) &&
+		    (code != code_del) && (code >= ' ' || code < 0)) {
+			// Alphanumeric character outside of ANSI sequence
+			// always changes the current column - if not, the
+			// output must have been redirected
+			is_output_redirected = true;
+		}
+
 		// Detect 'new line' due to character passing the last column
-		const auto current_column = GetCurrentColumn();
-		if (!current_column && previous_column && code != code_cr &&
-		    code != code_lf) {
+		if (!current_column && previous_column &&
+		    code != code_cr && code != code_lf) {
 			// The cursor just moved to new line due to too small
-			// screen width. If this is followed by new line, ignore
-			// it, so that it is possible to i. e. nicely display up
-			// to 80-character lines on a standard 80 column screen
-			skip_next_cr = true;
-			skip_next_lf = true;
-			new_line     = true;
+			// screen width (line overflow). If this is followed by
+			// a new line, ignore it, so that it is possible to i. e.
+			// nicely display up to 80-character lines on a
+			// standard 80 column screen
+			state             = State::LineOverflow;
+			is_state_new_line = true;
 		}
 		previous_column = current_column;
 
 		// Update new line counter, decide if pause needed
-		if (new_line && current_row) {
+		if (is_state_new_line) {
 			++line_counter;
-		}
-		if (code != '\n') {
+		} else {
 			was_prompt_recently = false;
 		}
-		if (is_last) {
-			// Skip further processing (including possible user prompt)
-			// if we know no data is left
+		if (is_last_character && state != State::LineOverflow) {
+			// Skip further processing (including possible user
+			// prompt) if we know no data is left and we haven't
+			// switched to the new line due to overflow
 			decision = UserDecision::Next;
 			break;
 		}
@@ -173,9 +212,10 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 		}
 	}
 
-	if (GetCurrentColumn()) {
-		++line_counter;
+	if ((!is_output_redirected && GetCursorColumn()) ||
+	    (is_output_redirected && !is_state_new_line)) {
 		WriteOut("\n");
+		++line_counter;
 	}
 
 	return decision;
@@ -183,16 +223,37 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 UserDecision MoreOutputBase::PromptUser()
 {
+	was_prompt_recently = true;
 	line_counter = 0;
 
-	if (GetCurrentColumn()) {
+	if (is_output_redirected) {
+		// Don't ask user for anything if command
+		// output is redirected, always continue
+		return UserDecision::Continue;
+	}
+
+	if (GetCursorColumn()) {
 		WriteOut("\n");
 	}
 
+	const auto column_start = GetCursorColumn();
 	if (has_multiple_files) {
 		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
 	} else {
 		WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
+	}
+	const auto column_end = GetCursorColumn();
+
+	if (column_start == column_end) {
+		// Usually redirected output should be detected
+		// till this point, but in a VERY special case
+		// (only carriage return and ANSI sequences in
+		// the input till now, cursor in one of the two
+		// last rows, no file/device as a MORE command
+		// argument) it will only be detected here
+		WriteOut("\n");
+		is_output_redirected = true;
+		return UserDecision::Continue;
 	}
 
 	auto decision = UserDecision::Cancel;
@@ -203,30 +264,39 @@ UserDecision MoreOutputBase::PromptUser()
 		decision = DOS_WaitForCancelContinue();
 	}
 
-	if (decision == UserDecision::Cancel || decision == UserDecision::Next) {
+	if (decision == UserDecision::Cancel) {
 		WriteOut(" ");
 		WriteOut(MSG_Get("PROGRAM_MORE_TERMINATE"));
+		WriteOut("\n");
+		++line_counter;
+	} else if (decision == UserDecision::Next) {
+		WriteOut(" ");
+		WriteOut(MSG_Get("PROGRAM_MORE_NEXT_FILE"));
 		WriteOut("\n");
 		++line_counter;
 	} else {
 		// We are going to continue - erase the prompt
 		WriteOut("\033[M"); // clear line
-		auto counter = GetCurrentColumn();
+		auto counter = GetCursorColumn();
 		while (counter--) {
 			WriteOut("\033[D"); // cursor one position back
 		}
 	}
 
-	was_prompt_recently = true;
 	return decision;
 }
 
-bool MoreOutputBase::GetCharacter(char &code, bool &is_last)
+bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 {
-	is_last = false;
+	is_last_character = false;
 	if (!tabs_remaining) {
+		bool should_skip_cr = (state == State::NewLineLF ||
+		                       state == State::LineOverflow);
+		bool should_skip_lf = (state == State::NewLineCR ||
+		                       state == State::LineOverflow);
+
 		while (true) {
-			if (!GetCharacterRaw(code, is_last)) {
+			if (!GetCharacterRaw(code, is_last_character)) {
 				return false; // end of data
 			}
 
@@ -237,40 +307,43 @@ bool MoreOutputBase::GetCharacter(char &code, bool &is_last)
 				return false; // end by CTRL+C
 			}
 
-			// Skip CR/LF characters if requested
-			if (skip_next_cr && code == code_cr) {
-				skip_next_cr = false;
-			} else if (skip_next_lf && code == code_lf) {
-				skip_next_lf = false;
-			} else {
-				break;
+			// Skip one CR/LF characters for certain states
+			if (code == code_cr && should_skip_cr) {
+				should_skip_cr = false;
+				continue;
 			}
+			if (code == code_lf && should_skip_lf) {
+				should_skip_lf = false;
+				continue;
+			}
+
+			break;
 		}
 
 		// If TAB found, replace it with given number of spaces
 		if (code == '\t') {
-			tabs_remaining = tab_size;
-			is_tab_last    = is_last;
-			is_last        = false;
+			tabs_remaining    = tab_size;
+			is_tab_last       = is_last_character;
+			is_last_character = false;
 		}
 	}
 
 	if (tabs_remaining) {
 		code = ' ';
 		--tabs_remaining;
-		is_last = is_tab_last && !tabs_remaining;
+		is_last_character = is_tab_last && !tabs_remaining;
 	}
 
 	return true;
 }
 
-uint8_t MoreOutputBase::GetCurrentColumn()
+uint8_t MoreOutputBase::GetCursorColumn()
 {
 	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 	return CURSOR_POS_COL(page);
 }
 
-uint8_t MoreOutputBase::GetCurrentRow()
+uint8_t MoreOutputBase::GetCursorRow()
 {
 	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 	return CURSOR_POS_ROW(page);
@@ -311,7 +384,6 @@ void MoreOutputFiles::Display()
 	}
 
 	input_files.clear();
-	WriteOut("\n");
 }
 
 std::string MoreOutputFiles::GetShortPath(const std::string &file_path,
@@ -371,8 +443,6 @@ void MoreOutputFiles::DisplayInputStream()
 		return;
 	}
 
-	WriteOut("\n");
-
 	// Since this CAN be STDIN input (there is no way to check),
 	// CTRL+C shall quit
 	should_end_on_ctrl_c = true;
@@ -381,15 +451,29 @@ void MoreOutputFiles::DisplayInputStream()
 
 void MoreOutputFiles::DisplayInputFiles()
 {
+	UserDecision decision = UserDecision::Continue;
 	WriteOut("\n");
 
 	bool first = true;
 	for (const auto &input_file : input_files) {
 		if (!first && !was_prompt_recently &&
-			UserDecision::Cancel == PromptUser()) {
+		    UserDecision::Cancel == (decision = PromptUser())) {
 			break;
 		}
 		first = false;
+
+		// Print new line and detect command output
+		// redirection; has to be called after printing
+		// something not ending with a newline
+		auto new_line_and_detect_redirect = [&]() {
+			if (!GetCursorColumn()) {
+				is_output_redirected = true;
+			}
+			WriteOut("\n");
+			if (GetCursorColumn()) {
+				is_output_redirected = true;
+			}
+		};
 
 		if (!DOS_OpenFile(input_file.path.c_str(), 0, &input_handle)) {
 			LOG_WARNING("DOS: MORE - could not open '%s'",
@@ -398,7 +482,7 @@ void MoreOutputFiles::DisplayInputFiles()
 			                                     "PROGRAM_MORE_OPEN_ERROR");
 			WriteOut(MSG_Get("PROGRAM_MORE_OPEN_ERROR"),
 			         short_path.c_str());
-			WriteOut("\n");
+			new_line_and_detect_redirect();
 			++line_counter;
 			continue;
 		}
@@ -414,7 +498,8 @@ void MoreOutputFiles::DisplayInputFiles()
 			WriteOut(MSG_Get("PROGRAM_MORE_NEW_FILE"),
 			         short_path.c_str());
 		}
-		WriteOut("\n");
+
+		new_line_and_detect_redirect();
 		++line_counter;
 
 		// If input from a device, CTRL+C shall quit
@@ -432,20 +517,23 @@ void MoreOutputFiles::DisplayInputFiles()
 	const int free_rows_threshold = 2;
 	if (!was_prompt_recently &&
 		GetMaxLines() - line_counter < free_rows_threshold) {
-		PromptUser();
+		decision = PromptUser();
 	}
 
-	WriteOut(MSG_Get("PROGRAM_MORE_END"));
+	if (decision != UserDecision::Cancel) {
+		WriteOut(MSG_Get("PROGRAM_MORE_END"));
+		WriteOut("\n");
+	}
 	WriteOut("\n");
 }
 
-bool MoreOutputFiles::GetCharacterRaw(char &code, bool &is_last)
+bool MoreOutputFiles::GetCharacterRaw(char& code, bool& is_last_character)
 {
 	// Skip detecting if it is the last character for file/stream
 	// mode - this is often problematic (like with STDIN input)
 	// and wouldn't bring any user experience improvements due to
 	// our 'end of input' message displayed at the end.
-	is_last = false;
+	is_last_character = false;
 
 	uint16_t count = 1;
 	DOS_ReadFile(input_handle, reinterpret_cast<uint8_t *>(&code), &count);
@@ -493,7 +581,7 @@ void MoreOutputStrings::Display()
 	should_end_on_ctrl_c = false;
 
 	// Change the last CR/LF or LF/CR to a single
-	// end of the line symbol, so that 'is_last'
+	// end of the line symbol, so that 'is_last_character'
 	// can be calculated easilty
 	const auto length = input_strings.size();
 	if (length >= 2) {
@@ -509,21 +597,20 @@ void MoreOutputStrings::Display()
 	DisplaySingleStream();
 
 	input_strings.clear();
-	WriteOut("\n");
 }
 
-bool MoreOutputStrings::GetCharacterRaw(char &code, bool &is_last)
+bool MoreOutputStrings::GetCharacterRaw(char& code, bool& is_last_character)
 {
-	is_last = false;
+	is_last_character = false;
 
 	if (input_position >= input_strings.size()) {
-		is_last = true;
+		is_last_character = true;
 		return false;
 	}
 
 	code = input_strings[input_position++];
 	if (input_position == input_strings.size()) {
-		is_last = true;
+		is_last_character = true;
 	}
 
 	return true;

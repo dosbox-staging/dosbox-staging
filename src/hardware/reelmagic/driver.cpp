@@ -315,10 +315,11 @@ public:
 		// not using fopen_wrap() as this class is really intended for
 		// debug...
 		_fp = fopen(hostFilepath, "rb");
-		if (_fp == NULL)
+		if (!_fp) {
 			throw RMException("Host File: fopen(\"%s\")failed: %s",
 			                  hostFilepath,
 			                  strerror(errno));
+		}
 
 		// Only get the size if we've got a valid file pointer
 		_fileSize = GetFileSize(_fp);
@@ -562,8 +563,12 @@ static void InvokePlayerStateChangeCallbackOnCPUResumeIfRegistered(const bool is
 
 	if ((_userCallbackType == 0x2000) && (!isPausing)) {
 		// hack to make RTZ work for now...
-		_userCallbackStack.push(UserCallbackCall(
-		        5, attrs.Handles.Master, 0, 0, _userCallbackStack.size() != cbstackStartSize));
+		_userCallbackStack.push(UserCallbackCall(5,
+		                                         attrs.Handles.Base,
+		                                         0,
+		                                         0,
+		                                         _userCallbackStack.size() !=
+		                                                 cbstackStartSize));
 	}
 
 	if (isPausing) {
@@ -951,8 +956,8 @@ static uint32_t FMPDRV_driver_call(const uint8_t command, const uint8_t media_ha
 	//
 	case 0x0e:
 		LOG(LOG_REELMAGIC, LOG_NORMAL)("Reset");
-		ReelMagic_ResetPlayers();
-		ReelMagic_ResetVideoMixer();
+		ReelMagic_ClearPlayers();
+		ReelMagic_ClearVideoMixer();
 		_userCallbackFarPtr = 0;
 		_userCallbackType   = 0;
 		return 0;
@@ -978,9 +983,9 @@ static Bitu FMPDRV_INTHandler()
 	}
 
 	// define what the registers mean up front...
-	const uint8_t command                     = reg_bh;
-	ReelMagic_MediaPlayer_Handle media_handle = reg_bl;
-	const uint16_t subfunc                    = reg_cx;
+	const uint8_t command           = reg_bh;
+	reelmagic_handle_t media_handle = reg_bl;
+	const uint16_t subfunc          = reg_cx;
 
 	// filename_ptr for command 0x1 & hardcoded to 1 for command 9
 	const uint16_t param1 = reg_ax;
@@ -1149,10 +1154,11 @@ void REELMAGIC_MaybeCreateFmpdrvExecutable()
 static uint16_t GetMixerVolume(const char* const channelName, const bool right)
 {
 	const auto chan = MIXER_FindChannel(channelName);
-	if (chan == NULL)
+	if (!chan) {
 		return 0;
+	}
 
-	const auto vol_gain       = chan->GetVolumeScale();
+	const auto vol_gain       = chan->GetAppVolume();
 	const auto vol_percentage = gain_to_percentage(vol_gain[right ? 1 : 0]);
 	return check_cast<uint16_t>(iroundf(vol_percentage));
 }
@@ -1160,12 +1166,13 @@ static uint16_t GetMixerVolume(const char* const channelName, const bool right)
 static void SetMixerVolume(const char* const channelName, const uint16_t percentage, const bool right)
 {
 	auto chan = MIXER_FindChannel(channelName);
-	if (chan == NULL)
+	if (!chan) {
 		return;
+	}
 
-	AudioFrame vol_gain     = chan->GetVolumeScale();
+	AudioFrame vol_gain     = chan->GetAppVolume();
 	vol_gain[right ? 1 : 0] = percentage_to_gain(percentage);
-	chan->SetVolumeScale(vol_gain.left, vol_gain.right);
+	chan->SetAppVolume(vol_gain.left, vol_gain.right);
 }
 
 static bool RMDEV_SYS_int2fHandler()

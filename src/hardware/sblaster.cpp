@@ -64,6 +64,7 @@ constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 constexpr uint8_t DSP_INITIAL_RESET_LIMIT = 4;
 
 constexpr auto native_dac_rate_hz = 45454;
+constexpr uint16_t default_playback_rate_hz = 22050;
 
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 
@@ -1019,10 +1020,33 @@ static void FlushRemainingDMATransfer()
 	}
 }
 
-static void DSP_ChangeMode(DSP_MODES mode) {
-	if (sb.mode==mode) return;
-	else sb.chan->FillUp();
-	sb.mode=mode;
+static void set_channel_rate_hz(const uint32_t requested_rate_hz)
+{
+	// Valid output rates range from 5000 to 45 000 Hz, inclusive.
+	// Ref:
+	//   Sound Blaster Series Hardware Programming Guide,
+	//   41h Set digitized sound output sampling rate, DSP Commands 6-15
+	//   https://pdos.csail.mit.edu/6.828/2018/readings/hardware/SoundBlaster.pdf
+	//
+	constexpr int min_rate_hz = 5000;
+	constexpr int max_rate_hz = 45000;
+
+	const auto rate_hz = std::clamp(static_cast<int>(requested_rate_hz),
+	                                min_rate_hz,
+	                                max_rate_hz);
+
+	assert(sb.chan);
+	if (sb.chan->GetSampleRate() != rate_hz) {
+		sb.chan->SetSampleRate(rate_hz);
+	}
+}
+
+static void DSP_ChangeMode(const DSP_MODES mode)
+{
+	if (sb.mode != mode) {
+		sb.chan->FillUp();
+		sb.mode = mode;
+	}
 }
 
 static void DSP_RaiseIRQEvent(uint32_t /*val*/)
@@ -1092,7 +1116,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit
 		sb.dma.mul*=2;
 	sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 	sb.dma.min=(sb.dma.rate*3)/1000;
-	sb.chan->SetSampleRate(freq);
+	set_channel_rate_hz(freq);
 
 	PIC_RemoveEvents(ProcessDMATransfer);
 	//Set to be masked, the dma call can change this again.
@@ -1188,7 +1212,7 @@ static void DSP_Reset() {
 	sb.dma.remain_size=0;
 	if (sb.dma.chan) sb.dma.chan->Clear_Request();
 
-	sb.freq=22050;
+	sb.freq = default_playback_rate_hz;
 	sb.time_constant=45;
 	sb.dac.used=0;
 	sb.dac.last=0;
@@ -1196,7 +1220,7 @@ static void DSP_Reset() {
 	sb.e2.count=0;
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
-	sb.chan->SetSampleRate(22050);
+	set_channel_rate_hz(default_playback_rate_hz);
 	InitializeSpeakerState();
 	PIC_RemoveEvents(ProcessDMATransfer);
 }
@@ -1242,7 +1266,7 @@ static void DSP_ChangeRate(uint32_t freq)
 {
 	if (sb.freq != freq && sb.dma.mode != DSP_DMA_NONE) {
 		sb.chan->FillUp();
-		sb.chan->SetSampleRate(freq / (sb.mixer.stereo ? 2 : 1));
+		set_channel_rate_hz(freq / (sb.mixer.stereo ? 2 : 1));
 		sb.dma.rate=(freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
 	}
@@ -1614,11 +1638,20 @@ static void CTMIXER_UpdateVolumes() {
 	float m0 = calc_vol(sb.mixer.master[0]);
 	float m1 = calc_vol(sb.mixer.master[1]);
 	auto chan = MIXER_FindChannel("SB");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.dac[0]), m1 * calc_vol(sb.mixer.dac[1]));
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.dac[0]),
+		                   m1 * calc_vol(sb.mixer.dac[1]));
+	}
 	chan = MIXER_FindChannel("OPL");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.fm[0]) , m1 * calc_vol(sb.mixer.fm[1]) );
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.fm[0]),
+		                   m1 * calc_vol(sb.mixer.fm[1]));
+	}
 	chan = MIXER_FindChannel("CDAUDIO");
-	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.cda[0]), m1 * calc_vol(sb.mixer.cda[1]));
+	if (chan) {
+		chan->SetAppVolume(m0 * calc_vol(sb.mixer.cda[0]),
+		                   m1 * calc_vol(sb.mixer.cda[1]));
+	}
 }
 
 static void CTMIXER_Reset() {
@@ -1643,12 +1676,12 @@ static void CTMIXER_Reset() {
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
-		sb.chan->SetSampleRate(sb.freq/2);
+		set_channel_rate_hz(sb.freq / 2);
 		sb.dma.mul*=2;
 		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
 	} else if (sb.dma.stereo && !stereo) {
-		sb.chan->SetSampleRate(sb.freq);
+		set_channel_rate_hz(sb.freq);
 		sb.dma.mul/=2;
 		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
@@ -2145,7 +2178,10 @@ public:
 		if (sb.type == SBT_PRO1 || sb.type == SBT_PRO2 || sb.type == SBT_16)
 			channel_features.insert(ChannelFeature::Stereo);
 
-		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB", channel_features);
+		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack,
+		                           default_playback_rate_hz,
+		                           "SB",
+		                           channel_features);
 
 		const std::string sb_filter_prefs = section->Get_string("sb_filter");
 
