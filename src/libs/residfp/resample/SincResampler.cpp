@@ -325,11 +325,7 @@ SincResampler::SincResampler(double clockFrequency, double samplingFrequency, do
     {
         // Allocate memory for FIR tables.
         matrix_t tempTable(firRES, firN);
-#ifdef HAVE_CXX11
         firTable = &(FIR_CACHE.emplace_hint(lb, fir_cache_t::value_type(firKey, tempTable))->second);
-#else
-        firTable = &(FIR_CACHE.insert(lb, fir_cache_t::value_type(firKey, tempTable))->second);
-#endif
 
         // The cutoff frequency is midway through the transition band, in effect the same as nyquist.
         const double wc = M_PI;
