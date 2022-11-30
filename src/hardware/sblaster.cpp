@@ -501,6 +501,7 @@ static void configure_opl_filter(mixer_channel_t channel,
                                  const std::string &filter_prefs,
                                  const SB_TYPES sb_type)
 {
+	assert(channel);
 	if (channel->TryParseAndSetCustomFilter(filter_prefs))
 		return;
 
@@ -2112,8 +2113,8 @@ OplMode find_oplmode()
 class SBLASTER final {
 private:
 	/* Data */
-	IO_ReadHandleObject ReadHandler[0x10];
-	IO_WriteHandleObject WriteHandler[0x10];
+	IO_ReadHandleObject read_handlers[0x10];
+	IO_WriteHandleObject write_handlers[0x10];
 	AutoexecObject autoexecline;
 	OplMode oplmode;
 
@@ -2140,15 +2141,15 @@ public:
 
 		switch (oplmode) {
 		case OplMode::None:
-			WriteHandler[0].Install(0x388,
-			                        adlib_gusforward,
-			                        io_width_t::byte);
+			write_handlers[0].Install(0x388,
+			                          adlib_gusforward,
+			                          io_width_t::byte);
 			break;
 
 		case OplMode::Cms:
-			WriteHandler[0].Install(0x388,
-			                        adlib_gusforward,
-			                        io_width_t::byte);
+			write_handlers[0].Install(0x388,
+			                          adlib_gusforward,
+			                          io_width_t::byte);
 			CMS_Init(section);
 			break;
 
@@ -2160,8 +2161,9 @@ public:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold: {
 			OPL_Init(section, oplmode);
-
 			auto opl_channel = MIXER_FindChannel("OPL");
+			assert(opl_channel);
+
 			const std::string opl_filter_prefs = section->Get_string(
 			        "opl_filter");
 			configure_opl_filter(opl_channel, opl_filter_prefs, sb.type);
@@ -2202,8 +2204,12 @@ public:
 			// Disable mixer ports for lower soundblaster
 			if ((sb.type == SBT_1 || sb.type == SBT_2) && (i == 4 || i == 5))
 				continue;
-			ReadHandler[i].Install(sb.hw.base + i, read_sb, io_width_t::byte);
-			WriteHandler[i].Install(sb.hw.base + i, write_sb, io_width_t::byte);
+			read_handlers[i].Install(sb.hw.base + i,
+			                         read_sb,
+			                         io_width_t::byte);
+			write_handlers[i].Install(sb.hw.base + i,
+			                          write_sb,
+			                          io_width_t::byte);
 		}
 		for (uint16_t i = 0; i < 256; ++i)
 			ASP_regs[i] = 0;
@@ -2235,7 +2241,7 @@ public:
 			             static_cast<int>(sb.type));
 		}
 
-		LOG_MSG("%s: Running on port %xh, irq=%d, dma8=%d, dma16=%d",
+		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
 		        CardType(),
 		        sb.hw.base,
 		        sb.hw.irq,
@@ -2252,35 +2258,49 @@ public:
 
 	~SBLASTER()
 	{
+		// Shutdown any FM Synth devices
 		switch (oplmode) {
-		case OplMode::None:
-			break;
-		case OplMode::Cms:
-			CMS_ShutDown();
-			break;
-		case OplMode::Opl2:
-			CMS_ShutDown();
-			[[fallthrough]];
+		case OplMode::None: break;
+		case OplMode::Cms: CMS_ShutDown(); break;
+		case OplMode::Opl2: CMS_ShutDown(); [[fallthrough]];
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
-		case OplMode::Opl3Gold:
-			OPL_ShutDown();
-			break;
+		case OplMode::Opl3Gold: OPL_ShutDown(); break;
 		}
-		if (sb.type == SBT_NONE || sb.type == SBT_GB)
+		if (sb.type == SBT_NONE || sb.type == SBT_GB) {
 			return;
+		}
+
+		LOG_MSG("%s: Shutting down", CardType());
+
+		// Stop playback
+		if (sb.chan) {
+			sb.chan->Enable(false);
+		}
+		// Stop the game from accessing the IO ports
+		for (auto& rh : read_handlers) {
+			rh.Uninstall();
+		}
+		for (auto& wh : write_handlers) {
+			wh.Uninstall();
+		}
 		DSP_Reset(); // Stop everything
 		sb.dsp.reset_tally = 0;
+
+		// Deregister the mixer channel and remove it
+		assert(sb.chan);
+		MIXER_DeregisterChannel(sb.chan);
+		sb.chan.reset();
 	}
 }; //End of SBLASTER class
 
+static std::unique_ptr<SBLASTER> sblaster = {};
 
-static SBLASTER* test;
 void SBLASTER_ShutDown(Section* /*sec*/) {
-	delete test;
+	sblaster = {};
 }
 
 void SBLASTER_Init(Section* sec) {
-	test = new SBLASTER(sec);
+	sblaster = std::make_unique<SBLASTER>(sec);
 	sec->AddDestroyFunction(&SBLASTER_ShutDown,true);
 }

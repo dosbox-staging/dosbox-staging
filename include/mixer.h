@@ -414,8 +414,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
                                  const std::set<ChannelFeature> &features);
 
 mixer_channel_t MIXER_FindChannel(const char *name);
-void MIXER_RemoveChannel(const std::string& name);
-void MIXER_RemoveChannel(mixer_channel_t& channel);
+void MIXER_DeregisterChannel(const std::string& name);
+void MIXER_DeregisterChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);

@@ -780,8 +780,9 @@ static void RMMixerChannelCallback(uint16_t frames_remaining)
 void ReelMagic_EnableAudioChannel(const bool should_enable)
 {
 	if (should_enable == false) {
-		MIXER_RemoveChannel(mixer_channel);
-		assert(!mixer_channel);
+		// Deregister the mixer channel and remove it
+		MIXER_DeregisterChannel(mixer_channel);
+		mixer_channel.reset();
 		return;
 	}
 

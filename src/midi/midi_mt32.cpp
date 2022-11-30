@@ -652,6 +652,8 @@ void MidiHandler_mt32::Close()
 	if (!is_open)
 		return;
 
+	LOG_MSG("MT32: Shutting down");
+
 	// Stop playback
 	if (channel)
 		channel->Enable(false);
@@ -673,8 +675,12 @@ void MidiHandler_mt32::Close()
 		service->freeContext();
 	}
 
-	// Reset the members
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 	channel.reset();
+
+	// Reset the members
 	service.reset();
 	total_buffers_played = 0;
 	last_played_frame = 0;

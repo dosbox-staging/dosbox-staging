@@ -490,7 +490,9 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 
 PcSpeakerDiscrete::~PcSpeakerDiscrete()
 {
-	assert(channel);
-	channel.reset();
 	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 }

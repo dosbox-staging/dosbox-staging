@@ -260,7 +260,7 @@ void GameBlaster::Close()
 	if (!is_open)
 		return;
 
-	LOG_INFO("%s: Shutting down the card on port %xh", CardName(), base_port);
+	LOG_INFO("%s: Shutting down", CardName());
 
 	// Drop access to the IO ports
 	for (auto &w : write_handlers)
@@ -272,8 +272,12 @@ void GameBlaster::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Remove the mixer channel, SAA-1099 devices, soft-limiter, and resamplers
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 	channel.reset();
+
+	// Remove the SAA-1099 devices and resamplers
 	devices[0].reset();
 	devices[1].reset();
 	resamplers[0].reset();
@@ -283,16 +287,18 @@ void GameBlaster::Close()
 }
 
 GameBlaster gameblaster;
-void CMS_Init(Section *configuration)
+
+void CMS_ShutDown([[maybe_unused]] Section* configuration)
+{
+	gameblaster.Close();
+}
+
+void CMS_Init(Section* configuration)
 {
 	Section_prop *section = static_cast<Section_prop *>(configuration);
 	gameblaster.Open(section->Get_hex("sbbase"),
 	                 section->Get_string("sbtype"),
 	                 section->Get_string("cms_filter"));
-}
 
-void CMS_ShutDown()
-{
-	gameblaster.Close();
+	section->AddDestroyFunction(&CMS_ShutDown, true);
 }
-

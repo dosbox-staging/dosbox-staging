@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <cmath>
+#include <memory>
 #include <queue>
 
 #include "adlib_gold.h"
@@ -85,7 +86,7 @@ public:
 
 	RegisterCache cache = {};
 
-	Capture *capture = nullptr;
+	std::unique_ptr<Capture> capture = {};
 
 	OPL(Section *configuration, const OplMode _oplmode);
 	~OPL();

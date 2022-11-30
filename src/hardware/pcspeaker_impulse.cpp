@@ -517,7 +517,8 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	// multiples of 8000, such as 8 Khz, 16 Khz, or 32 Khz. Anything besides
 	// these will produce unwanted artifacts.
 	static_assert(sample_rate >= 8000, "Sample rate must be at least 8 kHz");
-	static_assert(sample_rate % 1000 == 0, "PC Speaker sample must be a multiple of 1000");
+	static_assert(sample_rate % 1000 == 0,
+	              "Sample rate must be a multiple of 1000");
 
 	InitializeImpulseLUT();
 
@@ -544,6 +545,9 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 
 PcSpeakerImpulse::~PcSpeakerImpulse()
 {
-	channel->Enable(false);
 	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 }

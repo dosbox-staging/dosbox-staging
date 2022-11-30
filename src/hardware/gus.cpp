@@ -631,6 +631,8 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
 	PopulateVolScalars();
 	PopulatePanScalars();
 	PopulateAutoExec(port, ultradir);
+
+	LOG_MSG("GUS: Running on port %xh", port);
 }
 
 void Gus::ActivateVoices(uint8_t requested_voices)
@@ -1540,17 +1542,18 @@ void Gus::WriteToRegister()
 
 Gus::~Gus()
 {
-	DEBUG_LOG_MSG("GUS: Shutting down");
+	LOG_MSG("GUS: Shutting down");
 	StopPlayback();
 
-	// remove the mixer channel
-	audio_channel.reset();
-
-	// remove the IO handlers
+	// Stop the game from accessing the IO ports
 	for (auto &rh : read_handlers)
 		rh.Uninstall();
 	for (auto &wh : write_handlers)
 		wh.Uninstall();
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(audio_channel);
+	MIXER_DeregisterChannel(audio_channel);
 }
 
 static void gus_destroy([[maybe_unused]] Section *sec)
