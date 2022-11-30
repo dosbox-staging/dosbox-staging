@@ -460,25 +460,32 @@ static void configure_compressor(const bool compressor_enabled)
 }
 
 // Remove a channel by name from the mixer's map of channels.
-// Any shared pointers referencing the same object will will have their reference count dropped-by-one.
-void MIXER_RemoveChannel(const std::string& name)
+void MIXER_DeregisterChannel(const std::string& name_to_remove)
 {
 	MIXER_LockAudioDevice();
-	auto channel_it = mixer.channels.find(name);
-	if (channel_it != mixer.channels.end())
-		mixer.channels.erase(channel_it);
+	auto it = mixer.channels.find(name_to_remove);
+	if (it != mixer.channels.end()) {
+		mixer.channels.erase(it);
+	}
 	MIXER_UnlockAudioDevice();
 }
-// Remove a channel using the shared pointer variable. This allows us to both
-// remove it from the map and also reset the (primary) shared pointer itself.
-void MIXER_RemoveChannel(mixer_channel_t& channel)
+// Remove a channel using the shared pointer variable.
+void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 {
-	if (!channel)
+	if (!channel_to_remove) {
 		return;
+	}
 
-	channel->Enable(false);
-	MIXER_RemoveChannel(channel->GetName());
-	channel.reset();
+	MIXER_LockAudioDevice();
+	auto it = mixer.channels.begin();
+	while (it != mixer.channels.end()) {
+		if (it->second.get() == channel_to_remove.get()) {
+			it = mixer.channels.erase(it);
+			break;
+		}
+		++it;
+	}
+	MIXER_UnlockAudioDevice();
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,

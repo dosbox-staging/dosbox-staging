@@ -468,6 +468,8 @@ void MidiHandlerFluidsynth::Close()
 	if (!is_open)
 		return;
 
+	LOG_MSG("FSYNTH: Shutting down");
+
 	// Stop playback
 	if (channel)
 		channel->Enable(false);
@@ -483,8 +485,12 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
-	// Reset the members
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 	channel.reset();
+
+	// Reset the members
 	synth.reset();
 	settings.reset();
 	last_played_frame = 0;

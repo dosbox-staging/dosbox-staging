@@ -18,9 +18,10 @@
 
 #include "opl.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
 #include <sys/types.h>
 
 #include "cpu.h"
@@ -29,10 +30,6 @@
 #include "setup.h"
 #include "support.h"
 
-static OPL *opl = nullptr;
-
-// Raw DRO capture stuff
-
 #ifdef _MSC_VER
 #	pragma pack(1)
 #endif
@@ -40,6 +37,8 @@ static OPL *opl = nullptr;
 #define HW_OPL2     0
 #define HW_DUALOPL2 1
 #define HW_OPL3     2
+
+static std::unique_ptr<OPL> opl = {};
 
 Timer::Timer(int16_t micros)
         : clock_interval(micros * 0.001) // interval in milliseconds
@@ -219,12 +218,14 @@ public:
 
 	Capture(RegisterCache *_cache) : header(), cache(_cache)
 	{
+		LOG_MSG("OPL: Preparing to capture Raw OPL, will start with first note played.");
 		MakeTables();
 	}
 
 	virtual ~Capture()
 	{
 		CloseFile();
+		LOG_MSG("OPL: Stopped Raw OPL capturing.");
 	}
 
 	// prevent copy
@@ -840,14 +841,18 @@ static void OPL_SaveRawEvent(const bool pressed)
 		return;
 	//	SaveRad();return;
 
-	// Check for previously opened wave file
+	if (!opl) {
+		LOG_WARNING("OPL: Can't capture the OPL stream because the OPL device is unavailable");
+		return;
+	}
+
+	// Are we already recording? If so, close the stream
 	if (opl->capture) {
-		delete opl->capture;
-		opl->capture = 0;
-		LOG_MSG("OPL: Stopped Raw OPL capturing.");
-	} else {
-		LOG_MSG("OPL: Preparing to capture Raw OPL, will start with first note played.");
-		opl->capture = new Capture(&opl->cache);
+		opl->capture.reset();
+	}
+	// Otherwise start a new recording
+	else {
+		opl->capture = std::make_unique<Capture>(&opl->cache);
 	}
 }
 
@@ -933,23 +938,41 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawopl", "Rec. OPL");
 
-	LOG_MSG("OPL: Using OPL mode %s", opl_mode_to_string(mode).c_str());
+	LOG_MSG("OPL: Running %s on ports %xh and %xh",
+	        opl_mode_to_string(mode).c_str(),
+	        base,
+	        port_0x388);
 }
 
 OPL::~OPL()
 {
-	delete capture;
-	capture = nullptr;
+	LOG_MSG("OPL: Shutting down %s", opl_mode_to_string(mode).c_str());
+
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
+	// Stop the game from accessing the IO ports
+	for (auto& rh : ReadHandler) {
+		rh.Uninstall();
+	}
+	for (auto& wh : WriteHandler) {
+		wh.Uninstall();
+	}
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 }
 
-void OPL_Init(Section *sec, const OplMode oplmode)
+void OPL_ShutDown([[maybe_unused]] Section* sec)
 {
-	opl = new OPL(sec, oplmode);
+	opl = {};
 }
 
-void OPL_ShutDown()
+void OPL_Init(Section* sec, const OplMode oplmode)
 {
-	delete opl;
-	opl = nullptr;
+	opl = std::make_unique<OPL>(sec, oplmode);
+	sec->AddDestroyFunction(&OPL_ShutDown, true);
 }
-
