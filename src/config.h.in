@@ -192,9 +192,14 @@
 // Defind if function setpriority is available
 #mesondefine HAVE_SETPRIORITY
 
+// Defind if function strnlen is available
+#mesondefine HAVE_STRNLEN
+
 // field d_type in struct dirent is not defined in POSIX
 // Some OSes do not implement it (e.g. Haiku)
 #mesondefine HAVE_STRUCT_DIRENT_D_TYPE
+
+
 
 /* Available headers
  *

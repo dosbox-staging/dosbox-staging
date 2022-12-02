@@ -166,8 +166,22 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value);
 // TODO review all remaining uses of this macro
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
 
+#ifndef HAVE_STRNLEN
+constexpr size_t strnlen(const char* str, const size_t max_len)
+{
+	if (!str) {
+		return 0;
+	}
+	size_t i = 0;
+	while (i < max_len && str[i] != '\0') {
+		++i;
+	}
+	return i;
+}
+#endif
+
 #ifdef HAVE_STRINGS_H
-#include <strings.h>
+#	include <strings.h>
 #endif
 
 // Scans the provided command-line string for the '/'flag and removes it from

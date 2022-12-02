@@ -235,6 +235,11 @@ if cc.has_function('realpath', prefix: '#include <stdlib.h>')
     conf_data.set10('HAVE_REALPATH', true)
 endif
 
+# strnlen was originally a Linux-only function
+if cc.has_function('strnlen', prefix: '#include <string.h>')
+    conf_data.set10('HAVE_STRNLEN', true)
+endif
+
 if cc.has_member('struct dirent', 'd_type', prefix: '#include <dirent.h>')
     conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
