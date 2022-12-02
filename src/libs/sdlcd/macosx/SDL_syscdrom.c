@@ -495,7 +495,7 @@ static int SDL_SYS_CDEject(SDL_CD *cdrom)
 
 	if (err != noErr) {
         Unlock ();
-		SDL_SetError ("PBUnmountVol returned %d", err);
+		SDL_SetError ("PBUnmountVol returned %d", (int)err);
 		return -4;
 	}
     
