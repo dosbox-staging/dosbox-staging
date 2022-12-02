@@ -43,7 +43,7 @@ LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
 	                                   ChannelFeature::ChorusSend,
 	                                   ChannelFeature::DigitalAudio};
 
-	features.merge(extra_features);
+	features.insert(extra_features.begin(), extra_features.end());
 
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
