@@ -82,6 +82,9 @@
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
 #define _USE_MATH_DEFINES
 
+// Modern MSVC provides POSIX-like routines, so prefer that over built-in
+#define HAVE_STRNLEN
+
 // MSVC issues pedantic warnings on POSIX functions; for portability we don't
 // want to deal with these warnings, as the only way to avoid them is using
 // Microsoft-specific names and functions instead of POSIX conformant ones.
