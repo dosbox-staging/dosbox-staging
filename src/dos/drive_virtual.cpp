@@ -47,7 +47,7 @@ void Add_VFiles(const bool add_autoexec);
 extern DOS_Shell *first_shell;
 
 struct VFILE_Block {
-	const char * name = nullptr;
+	char* name = nullptr;
 	uint8_t * data = nullptr;
 	uint32_t size = 0;
 	uint16_t date = 0;
@@ -179,18 +179,32 @@ void VFILE_Remove(const char *name, const char *dir = "")
 		if (onpos == 0)
 			return;
 	}
-	VFILE_Block * chan = first_file;
-	VFILE_Block * * where = &first_file;
-	while (chan) {
-		if (onpos == chan->onpos && strcmp(name, chan->name) == 0) {
-			*where = chan->next;
-			if (chan == first_file)
-				first_file = chan->next;
-			delete chan;
+	auto vfile = first_file;
+	while (vfile) {
+		if (onpos == vfile->onpos && strcmp(name, vfile->name) == 0) {
+			if (vfile == first_file) {
+				first_file = vfile->next;
+			}
+
+			// Release the vfile's filename (allocated w/ strdup)
+			if (vfile->name) {
+				free(vfile->name);
+				vfile->name = nullptr;
+			}
+
+			// Release the vfile's data (allocated with new[])
+			if (vfile->data) {
+				delete[] vfile->data;
+				vfile->data = nullptr;
+			}
+
+			// Finally release the vfile itself (allocated with new)
+			delete vfile;
+			vfile = nullptr;
+
 			return;
 		}
-		where = &chan->next;
-		chan = chan->next;
+		vfile = vfile->next;
 	}
 }
 
