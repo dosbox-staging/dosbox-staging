@@ -419,6 +419,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);
+int MIXER_GetSampleRate();
 bool MIXER_IsManuallyMuted();
 void MIXER_SetState(const MixerState requested);
 
