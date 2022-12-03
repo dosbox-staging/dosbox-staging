@@ -14,7 +14,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.19.61166.216-amd64.deb
+      debfile: pvs-studio-7.21.64848.262-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -61,7 +61,7 @@ jobs:
       - name: Analyze
         run: |
           set -xeu
-          log="pvs-analysis.log"
+          log="pvs-report.log"
           general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           reportdir="pvs-report/pvs-report-${stamp}"
@@ -81,25 +81,18 @@ jobs:
             -v "${GITHUB_SHA:0:8}" \
             -a "${general_criteria}" \
             -d "${disable_warnings}" \
-            -t fullhtml \
+            -t fullhtml,csv \
             -o "${reportdir}" \
             "${log}"
 
-          mv "${reportdir}/fullhtml" "${reportdir}/general"
-
-          plog-converter \
-            -a "${general_criteria}" \
-            -d "${disable_warnings}" \
-            -t csv \
-            -o pvs-report.csv \
-            "${log}"
-
-          cp -l pvs-report.csv "${reportdir}/general/"
-
           pvs-studio-analyzer suppress \
             -a "${general_criteria}" \
-            -o "${reportdir}/general/supressible-list.json" \
+            -o "${reportdir}/supressible-list.json" \
             "${log}"
+
+          ln -sf "${reportdir}/pvs-report.csv" .
+          mv -f "${reportdir}/pvs-report.fullhtml"/* "${reportdir}/"
+          rm -rf "${reportdir}/pvs-report.fullhtml"
 
       - name: Upload report
         uses: actions/upload-artifact@v3
@@ -109,8 +102,8 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 251
+          MAX_BUGS: 268
         run: |
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-pvs-bugs.py pvs-report.csv "${MAX_BUGS}"
+          ./scripts/count-pvs-bugs.py "pvs-report.csv" "${MAX_BUGS}"
