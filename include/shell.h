@@ -158,10 +158,13 @@ private:
 	std::string buf = {};
 
 public:
-	void Install(std::string const &in);
-	void InstallBefore(std::string const &in);
-	const std::string &GetLine() const { return buf; }
+	AutoexecObject() = default;
+	AutoexecObject(const std::string& line);
 	~AutoexecObject();
+
+	void Install(const std::string& in);
+	void InstallBefore(const std::string& in);
+
 private:
 	void CreateAutoexec();
 };
