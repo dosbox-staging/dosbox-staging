@@ -46,6 +46,10 @@
 // AdLib emulation state constant
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 
+// Environment variable names
+const auto ultrasnd_env_name = "ULTRASND";
+const auto ultradir_env_name = "ULTRADIR";
+
 // Buffer and memory constants
 constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
 
@@ -110,7 +114,7 @@ struct VoiceCtrl {
 
 // Collection types involving constant quantities
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
-using autoexec_array_t = std::array<AutoexecObject, 2>;
+using autoexec_array_t    = std::array<std::unique_ptr<AutoexecObject>, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
@@ -201,8 +205,8 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 //
 class Gus {
 public:
-	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir,
-	    const std::string &filter_prefs);
+	Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
+	    const std::string& filter_prefs);
 
 	virtual ~Gus();
 
@@ -238,7 +242,10 @@ private:
 	bool IsDmaPcm16Bit() noexcept;
 	bool IsDmaXfer16Bit() noexcept;
 	uint16_t ReadFromRegister();
-	void PopulateAutoExec(uint16_t port, const std::string &dir);
+
+	void SetupEnvironment(const uint16_t port, const char* ultradir_env_val);
+	void ClearEnvironment();
+
 	void PopulatePanScalars() noexcept;
 	void PopulateVolScalars() noexcept;
 	void PrepareForPlayback() noexcept;
@@ -580,8 +587,8 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 	wave_ctrl.inc = ceil_udivide(val, 2u);
 }
 
-Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
-         const std::string &filter_prefs)
+Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
+         const std::string& filter_prefs)
         : port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
@@ -630,9 +637,9 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir,
 	// Populate the volume, pan, and auto-exec arrays
 	PopulateVolScalars();
 	PopulatePanScalars();
-	PopulateAutoExec(port, ultradir);
+	SetupEnvironment(port, ultradir);
 
-	LOG_MSG("GUS: Running on port %xh", port);
+	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d", port, irq1, dma1);
 }
 
 void Gus::ActivateVoices(uint8_t requested_voices)
@@ -916,7 +923,7 @@ void Gus::DmaCallback(DmaChannel *, DMAEvent event)
 		StartDmaTransfers();
 }
 
-void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
+void Gus::SetupEnvironment(uint16_t port, const char* ultradir_env_val)
 {
 	// Ensure our port and addresses will fit in our format widths
 	// The config selection controls their actual values, so this is a
@@ -925,16 +932,34 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 	assert(dma1 < 10 && dma2 < 10);
 	assert(irq1 <= 12 && irq2 <= 12);
 
+	const std::string at_set = "@SET";
+
 	// ULTRASND variable
-	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,II,II";
-	safe_sprintf(set_ultrasnd, 
-	         "@SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
-	LOG_MSG("GUS: %s", set_ultrasnd);
-	autoexec_lines.at(0).Install(set_ultrasnd);
+	char ultrasnd_env_val[] = "HHH,D,D,II,II";
+	safe_sprintf(ultrasnd_env_val, "%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
+	const auto ultrasnd_line = at_set + " " + ultrasnd_env_name + "=" +
+	                           ultrasnd_env_val;
+	autoexec_lines.at(0) = std::make_unique<AutoexecObject>(ultrasnd_line);
 
 	// ULTRADIR variable
-	std::string dirline = "@SET ULTRADIR=" + ultradir;
-	autoexec_lines.at(1).Install(dirline);
+	const auto ultradir_line = at_set + " " + ultradir_env_name + "=" +
+	                           ultradir_env_val;
+	autoexec_lines.at(1) = std::make_unique<AutoexecObject>(ultradir_line);
+
+	if (first_shell) {
+		first_shell->SetEnv(ultrasnd_env_name, ultrasnd_env_val);
+		first_shell->SetEnv(ultradir_env_name, ultradir_env_val);
+	}
+}
+
+void Gus::ClearEnvironment()
+{
+	autoexec_lines = {};
+
+	if (first_shell) {
+		first_shell->SetEnv(ultrasnd_env_name, "");
+		first_shell->SetEnv(ultradir_env_name, "");
+	}
 }
 
 // Generate logarithmic to linear volume conversion tables
@@ -1545,6 +1570,9 @@ Gus::~Gus()
 	LOG_MSG("GUS: Shutting down");
 	StopPlayback();
 
+	// Prevent discovery of the GUS via the environment
+	ClearEnvironment();
+
 	// Stop the game from accessing the IO ports
 	for (auto &rh : read_handlers)
 		rh.Uninstall();
@@ -1587,7 +1615,7 @@ static void gus_init(Section *sec)
 	                       MIN_IRQ_ADDRESS,
 	                       MAX_IRQ_ADDRESS);
 
-	const std::string ultradir = conf->Get_string("ultradir");
+	const auto ultradir = conf->Get_string("ultradir");
 
 	const std::string filter_prefs = conf->Get_string("gus_filter");
 
