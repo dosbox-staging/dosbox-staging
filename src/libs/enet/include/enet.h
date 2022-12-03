@@ -4941,9 +4941,14 @@ extern "C" {
             return (0);
         }
     #elif __APPLE__ && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200
+
+        #ifdef CLOCK_MONOTONIC
+        #undef CLOCK_MONOTONIC
+        #endif
         #define CLOCK_MONOTONIC 0
 
         int clock_gettime(int X, struct timespec *ts) {
+            ENET_UNUSED(X);
             clock_serv_t cclock;
             mach_timespec_t mts;
 
