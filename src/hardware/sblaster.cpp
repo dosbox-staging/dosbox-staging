@@ -2113,15 +2113,66 @@ OplMode find_oplmode()
 class SBLASTER final {
 private:
 	/* Data */
-	IO_ReadHandleObject read_handlers[0x10];
-	IO_WriteHandleObject write_handlers[0x10];
-	AutoexecObject autoexecline;
-	OplMode oplmode;
+	IO_ReadHandleObject read_handlers[0x10]   = {};
+	IO_WriteHandleObject write_handlers[0x10] = {};
+
+	static constexpr auto blaster_env_name = "BLASTER";
+
+	std::unique_ptr<AutoexecObject> autoexec_line = {};
+
+	OplMode oplmode = OplMode::None;
+
+	void SetupEnvironment()
+	{
+		// Ensure our port and addresses will fit in our format widths.
+		// The config selection controls their actual values, so this is
+		// a maximum-limit.
+		assert(sb.hw.base < 0xfff);
+		assert(sb.hw.irq <= 12);
+		assert(sb.hw.dma8 < 10);
+
+		const std::string at_set = "@SET";
+
+		char blaster_env_val[] = "AHHH II DD HH TT";
+
+		if (sb.type == SBT_16) {
+			assert(sb.hw.dma16 < 10);
+			safe_sprintf(blaster_env_val,
+			             "A%x I%u D%u H%u T%d",
+			             sb.hw.base,
+			             sb.hw.irq,
+			             sb.hw.dma8,
+			             sb.hw.dma16,
+			             static_cast<int>(sb.type));
+		} else {
+			safe_sprintf(blaster_env_val,
+			             "A%x I%u D%u T%d",
+			             sb.hw.base,
+			             sb.hw.irq,
+			             sb.hw.dma8,
+			             static_cast<int>(sb.type));
+		}
+
+		LOG_MSG("%s: %s=%s", CardType(), blaster_env_name, blaster_env_val);
+		autoexec_line = std::make_unique<AutoexecObject>(
+		        at_set + " " + blaster_env_name + "=" + blaster_env_val);
+
+		if (first_shell) {
+			first_shell->SetEnv(blaster_env_name, blaster_env_val);
+		}
+	}
+
+	void ClearEnvironment()
+	{
+		autoexec_line = {};
+
+		if (first_shell) {
+			first_shell->SetEnv(blaster_env_name, "");
+		}
+	}
 
 public:
-	SBLASTER(Section *configuration)
-	        : autoexecline{},
-	          oplmode(OplMode::None)
+	SBLASTER(Section* configuration)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
@@ -2222,23 +2273,13 @@ public:
 
 		ProcessDMATransfer = &PlayDMATransfer;
 
-		// Ensure our port and addresses will fit in our format widths.
-		// The config selection controls their actual values, so this is
-		// a maximum-limit.
-		assert(sb.hw.base < 0xfff);
-		assert(sb.hw.irq <= 12);
-		assert(sb.hw.dma8 < 10);
+		SetupEnvironment();
 
-		char set_blaster[] = "@SET BLASTER=AHHH II DD HH TT";
-		if (sb.type == SBT_16) {
-			assert(sb.hw.dma16 < 10);
-			safe_sprintf(set_blaster, "@SET BLASTER=A%x I%u D%u H%u T%d",
-			             sb.hw.base, sb.hw.irq, sb.hw.dma8, sb.hw.dma16,
-			             static_cast<int>(sb.type));
+		// Soundblaster midi interface
+		if (!MIDI_Available()) {
+			sb.midi = false;
 		} else {
-			safe_sprintf(set_blaster, "@SET BLASTER=A%x I%u D%u T%d",
-			             sb.hw.base, sb.hw.irq, sb.hw.dma8,
-			             static_cast<int>(sb.type));
+			sb.midi = true;
 		}
 
 		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
@@ -2247,17 +2288,13 @@ public:
 		        sb.hw.irq,
 		        sb.hw.dma8,
 		        sb.hw.dma16);
-
-		LOG_MSG("%s: %s", CardType(), set_blaster);
-		autoexecline.Install(set_blaster);
-
-		/* Soundblaster midi interface */
-		if (!MIDI_Available()) sb.midi = false;
-		else sb.midi = true;
 	}
 
 	~SBLASTER()
 	{
+		// Prevent discovery of the Sound Blaster via the environment
+		ClearEnvironment();
+
 		// Shutdown any FM Synth devices
 		switch (oplmode) {
 		case OplMode::None: break;
