@@ -209,6 +209,11 @@ static struct mixer_t mixer = {};
 
 alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
+int MIXER_GetSampleRate()
+{
+	return mixer.sample_rate.load();
+}
+
 static void MIXER_LockAudioDevice()
 {
 	SDL_LockAudioDevice(mixer.sdldevice);
