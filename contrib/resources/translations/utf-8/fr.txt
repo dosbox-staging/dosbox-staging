@@ -1,3 +1,33 @@
+:TITLEBAR_CYCLES_MS
+cycles/ms
+.
+:TITLEBAR_HINT_PAUSED
+(PAUSED)
+.
+:TITLEBAR_HINT_NOMOUSE
+no-mouse mode
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+mouse captured, %s+F10 to release
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+mouse captured, %s+F10 or middle-click to release
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+to capture the mouse press %s+F10
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+to capture the mouse press %s+F10 or middle-click
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+to capture the mouse press %s+F10 or click any button
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+seamless mouse, %s+F10 to capture
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+seamless mouse, %s+F10 or middle-click to capture
+.
 :CONFIG_FULLSCREEN
 Démarrer DOSBox directement en mode plein écran.
 .
@@ -297,6 +327,68 @@ Nombre de cycles à ajouter/soustraire avec la combinaison de touches.
 .
 :CONFIG_CYCLEDOWN
 Le paramétrer à moins de 100 donnera un pourcentage.
+.
+:CONFIG_MOUSE_CAPTURE
+Choose a mouse control method:
+  onclick:   Capture the mouse when clicking any button in the window.
+  onstart:   Capture the mouse immediately on start.
+  seamless:  Let the mouse move seamlessly; captures only with middle-click or
+             hotkey.
+  nomouse:   Hide the mouse and don't send input to the game.
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+If true, middle-click will release the captured mouse, and also
+capture when seamless.
+.
+:CONFIG_MOUSE_SENSITIVITY
+Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.
+Negative values reverse mouse direction, 0 disables the movement completely.
+The optional second parameter specifies vertical sensitivity (e.g. 100,200).
+Setting can be adjusted in runtime (also per mouse interface) using internal
+MOUSECTL.COM tool, available on drive Z:.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Enable to bypass your operating system's mouse acceleration and sensitivity
+settings. Works in fullscreen or when the mouse is captured in window mode.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Enable built-in DOS mouse driver.
+Notes:
+   Disable if you intend to use original MOUSE.COM driver in emulated DOS.
+   When guest OS is booted, built-in driver gets disabled automatically.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Updates mouse movement counters immediately, without waiting for interrupt.
+May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as
+for some games it effectively boosts the mouse sampling rate to 1000 Hz, without
+increasing interrupt overhead.
+Might cause compatibility issues. List of known incompatible games:
+   - Ultima Underworld: The Stygian Abyss
+   - Ultima Underworld II: Labyrinth of Worlds
+Please file a bug with the project if you find another game that fails when
+this is enabled, we will update this list.
+.
+:CONFIG_PS2_MOUSE_MODEL
+PS/2 AUX port mouse model:
+   standard:       3 buttons, standard PS/2 mouse.
+   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.
+Default: intellimouse
+.
+:CONFIG_COM_MOUSE_MODEL
+COM (serial) port default mouse model:
+   2button:        2 buttons, Microsoft mouse.
+   3button:        3 buttons, Logitech mouse,
+                   mostly compatible with Microsoft mouse.
+   wheel:          3 buttons + wheel,
+                   mostly compatible with Microsoft mouse.
+   msm:            3 buttons, Mouse Systems mouse,
+                   NOT COMPATIBLE with Microsoft mouse.
+   2button+msm:    Automatic choice between 2button and msm.
+   3button+msm:    Automatic choice between 3button and msm.
+   wheel+msm:      Automatic choice between wheel and msm.
+Default: wheel+msm
+Notes:
+   Go to [serial] section to enable/disable COM port mice.
 .
 :CONFIG_NOSOUND
 Activer le mode silencieux, le son étant cependant toujours émulé.
@@ -649,6 +741,25 @@ Filter for the PS/1 Audio DAC output:
   on:        Filter the output (default).
   off:       Don't filter the output.
   <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:CONFIG_REELMAGIC
+ReelMagic (aka REALmagic) MPEG playback support.
+  off:      Disable support (default).
+  cardonly: Initialize the card without loading the FMPDRV.EXE driver.
+  on:       Initialize the card and load the FMPDRV.EXE on start-up.
+.
+:CONFIG_REELMAGIC_KEY
+Set the 32-bit magic key used to decode the game's videos.
+  auto:     Use the built-in routines to determine the key (default).
+  common:   Use the most commonly found key, which is 0x40044041.
+  thehorde: Use The Horde's key, which is 0xC39D7088.
+  <custom>: Set a custom key in hex format (e.g., 0x12345678).
+.
+:CONFIG_REELMAGIC_FCODE
+Override the frame rate code used during video playback.
+  0:        No override: attempt automatic rate discovery (default).
+  1 to 7:   Override the frame rate to one the following (use 1 through 7):
+            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
 Type de manette à émuler : auto (défaut),
@@ -2562,6 +2673,198 @@ internal virtual drive
 .
 :MOUNT_TYPE_UNKNOWN
 unknown drive
+.
+:PROGRAM_FMPDRV_HELP_LONG
+Load or unload the built-in ReelMagic Full Motion Player driver.
+
+Usage:
+  [color=green]fmpdrv[reset]    (loads the driver)
+  [color=green]fmpdrv[reset] /u (unloads the driver)
+
+Notes:
+  The "reelmagic = on" configuration setting loads the
+  driver on start-up and prevents it from being unloaded.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Loaded at interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Already loaded at interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Not loaded: No free interrupts![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Driver unloaded[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Driver was not loaded[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Driver not unloaded: configured to stay resident[reset]
+
+.
+:PROGRAM_MORE_HELP_LONG
+Display command output or text file one screen at a time.
+
+Usage:
+  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
+
+Where:
+  [color=cyan]COMMAND[reset] is the command to display the output of.
+  [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
+  [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
+          which are the asterisk (*) and the question mark (?).
+  [color=white]n[reset]       is the tab size, 1-9, default is 8.
+
+Notes:
+  This command is only for viewing text files, not binary files.
+
+Examples:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]   ; shows the file's content with tab size 4
+
+.
+:PROGRAM_MORE_NO_FILE
+No input file found.
+.
+:PROGRAM_MORE_END
+[reset][color=light-yellow]--- end of input ---[reset]
+.
+:PROGRAM_MORE_NEW_FILE
+[reset][color=light-yellow]--- file %s ---[reset]
+.
+:PROGRAM_MORE_NEW_DEVICE
+[reset][color=light-yellow]--- device %s ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SINGLE
+[reset][color=light-yellow]--- press SPACE for more ---[reset]
+.
+:PROGRAM_MORE_PROMPT_MULTI
+[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]
+.
+:PROGRAM_MORE_OPEN_ERROR
+[reset][color=red]--- could not open %s ---[reset]
+.
+:PROGRAM_MORE_TERMINATE
+[reset][color=light-yellow](terminated)[reset]
+.
+:PROGRAM_MORE_NEXT_FILE
+[reset][color=light-yellow](next file)[reset]
+.
+:PROGRAM_MOUSECTL_HELP_LONG
+Manages physical and logical mice.
+
+Usage:
+  [color=green]mousectl[reset] [-all]
+  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAME[reset]
+  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
+  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
+
+Where:
+  [color=white]INTERFACE[reset]      one of [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap    maps/unmaps physical mouse, honors DOS wildcards in [color=cyan]NAME[reset]
+  -s -sx -sy     sets sensitivity / for x axis / for y axis, from -999 to +999
+  -r             sets minimum mouse sampling rate
+  -on -off       enables or disables mouse on the given interface
+  -reset         restores all mouse settings from the configuration file
+
+Notes:
+  If sensitivity or rate is omitted, it is reset to default value.
+
+Examples:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
+.
+:PROGRAM_MOUSECTL_SYNTAX
+Wrong command syntax.
+.
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
+Wrong syntax, only ASCII characters allowed in pattern.
+.
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
+Wrong syntax, sensitivity needs to be in -999 to +999 range.
+.
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
+Wrong syntax, duplicated mouse interfaces.
+.
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
+Wrong syntax, sampling rate has to be one of:
+%s
+.
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
+Mapping not available in no-mouse mode.
+.
+:PROGRAM_MOUSECTL_NO_INTERFACES
+No mouse interfaces available.
+.
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
+Mouse interface not available.
+.
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
+No physical mice detected.
+.
+:PROGRAM_MOUSECTL_NO_MATCH
+No available mouse matching the pattern found.
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER1
+[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
+[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER2
+[color=white]Interface     Mouse Name[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
+[color=cyan]%-4s[reset]          %s
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+not mapped    %s
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
+uses system pointer
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
+mapped physical mouse
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=red]mapped mouse disconnected[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
+disabled
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
+Sampling rates for mice on [color=cyan]COM[reset] interfaces are estimations only.
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
+Sampling rates with minimum value set are marked with '*'.
+.
+:PROGRAM_MOUSECTL_MAP_ADVICE
+Click [color=white]left[reset] mouse button to map the physical mouse to the interface. Clicking
+any other button cancels the mapping and assigns system pointer to all the
+mouse interfaces.
+.
+:PROGRAM_MOUSECTL_MAP_CANCEL
+(mapping cancelled)
+.
+:PROGRAM_MOUSECTL_MAP_HINT
+Seamless mouse integration is always disabled while mapping is in effect
+and mapped mice always receive raw input events.
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
 Reverse
