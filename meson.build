@@ -430,6 +430,7 @@ if get_option('use_sdl2_net')
         not_found_message: msg.format('use_sdl2_net'),
     )
 endif
+summary('SDL_net 2.0 support', sdl2_net_dep.found())
 
 # SDL Image
 sdl2_image_dep = optional_dep
@@ -441,6 +442,7 @@ if get_option('use_sdl2_image')
         not_found_message: msg.format('use_sdl2_image'),
     )
 endif
+summary('SDL_image 2.0 support', sdl2_image_dep.found())
 
 # OpenGL
 opengl_dep = optional_dep
