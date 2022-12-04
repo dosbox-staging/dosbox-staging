@@ -113,13 +113,13 @@ struct VoiceCtrl {
 };
 
 // Collection types involving constant quantities
-using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
+using address_array_t     = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t    = std::array<std::unique_ptr<AutoexecObject>, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
-using ram_array_t = std::array<uint8_t, RAM_SIZE>;
-using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
+using ram_array_t         = std::vector<uint8_t>;
+using read_io_array_t     = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
-using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
+using write_io_array_t    = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
 // Each voice represents a single "mono" stream of audio having its own
@@ -264,18 +264,19 @@ private:
 	void WriteToRegister();
 
 	// Collections
-	std::queue<AudioFrame> fifo = {};
+	std::queue<AudioFrame> fifo     = {};
 	vol_scalars_array_t vol_scalars = {{}};
 	pan_scalars_array_t pan_scalars = {{}};
-	alignas(sizeof(int16_t)) ram_array_t ram = {{0u}};
-	read_io_array_t read_handlers = {};   // std::functions
-	write_io_array_t write_handlers = {}; // std::functions
+	ram_array_t ram                 = {};
+	read_io_array_t read_handlers   = {};
+	write_io_array_t write_handlers = {};
+	voice_array_t voices            = {{nullptr}};
+	autoexec_array_t autoexec_lines = {};
+
 	const address_array_t dma_addresses = {
 	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
 	const address_array_t irq_addresses = {
 	        {MIN_IRQ_ADDRESS, 2, 5, 3, 7, 11, 12, MAX_IRQ_ADDRESS}};
-	voice_array_t voices = {{nullptr}};
-	autoexec_array_t autoexec_lines = {};
 
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
@@ -589,7 +590,8 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
          const std::string& filter_prefs)
-        : port_base(port - 0x200u),
+        : ram(RAM_SIZE),
+          port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
           irq2(irq)
