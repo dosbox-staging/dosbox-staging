@@ -39,6 +39,8 @@ constexpr char code_cr     = 0x0d; // carriage return
 constexpr char code_esc    = 0x1b;
 constexpr char code_del    = 0x7f;
 
+static const std::string ansi_clear_screen = "\033[2J";
+
 // ***************************************************************************
 // Base class, only for internal usage
 // ***************************************************************************
@@ -73,7 +75,8 @@ uint16_t MoreOutputBase::GetMaxColumns() const
 
 void MoreOutputBase::PrepareInternals()
 {
-	line_counter = 0;
+	column_counter = 0;
+	line_counter   = 0;
 
 	is_output_redirected = false;
 	has_multiple_files   = false;
@@ -86,8 +89,11 @@ void MoreOutputBase::PrepareInternals()
 
 UserDecision MoreOutputBase::DisplaySingleStream()
 {
-	state                  = State::Normal;
+	state = State::Normal;
+
+	std::string ansi_code  = {};
 	bool is_state_ansi     = false;
+	bool is_state_ansi_end = false;
 	bool is_state_new_line = false;
 
 	auto previous_column = GetCursorColumn();
@@ -138,12 +144,19 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			break;
 		}
 
-		is_state_ansi     = (state == State::AnsiEsc) ||
-		                    (state == State::AnsiEscEnd) ||
-		                    (state == State::AnsiSci) ||
+		is_state_ansi_end = (state == State::AnsiEscEnd) ||
 		                    (state == State::AnsiSciEnd);
+		is_state_ansi = (state == State::AnsiEsc) ||
+		                (state == State::AnsiSci) || is_state_ansi_end;
 		is_state_new_line = (state == State::NewLineCR) ||
 		                    (state == State::NewLineLF);
+
+		// NOTE: Neither MS-DOS 6.22 nor FreeDOS supports ANSI
+		// sequences within their MORE implementation. Our ANSI
+		// handling also isn't perfect, but the code here
+		// has to be fully synchronized with the scren output.
+		// Therefore, ANSI sequences which move the cursor are
+		// only partially supported.
 
 		// A trick to make it more resistant to ANSI cursor movements
 		const auto previous_row = GetCursorRow();
@@ -151,7 +164,21 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			line_counter = previous_row;
 		}
 
+		// Print character, handle ANSI sequences
+		if (is_state_ansi) {
+			ansi_code.push_back(code);
+		}
 		WriteOut("%c", code);
+		if (state == State::Normal) {
+			++column_counter;
+		} else if (is_state_ansi_end) {
+			if (ansi_code == ansi_clear_screen) {
+				column_counter = 0;
+				line_counter   = 0;
+			}
+			// TODO: consider handling also other ANSI control codes
+			ansi_code.clear();
+		}
 
 		// Detect redirected command output
 		const auto current_row    = GetCursorRow();
@@ -189,6 +216,7 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 
 		// Update new line counter, decide if pause needed
 		if (is_state_new_line) {
+			column_counter = 0;
 			++line_counter;
 		} else {
 			was_prompt_recently = false;
@@ -320,7 +348,8 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 			break;
 		}
 
-		// If TAB found, replace it with given number of spaces
+		// If TAB found, replace it with spaces,
+		// till we reach appropriate column
 		if (code == '\t') {
 			tabs_remaining    = tab_size;
 			is_tab_last       = is_last_character;
@@ -331,6 +360,9 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 	if (tabs_remaining) {
 		code = ' ';
 		--tabs_remaining;
+		if ((column_counter + 1) % tab_size == 0) {
+			tabs_remaining = 0;
+		}
 		is_last_character = is_tab_last && !tabs_remaining;
 	}
 
