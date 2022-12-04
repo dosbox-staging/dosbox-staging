@@ -2397,7 +2397,7 @@ void IDE_Hard_Disk_Attach(int8_t index,
 		return;
 	}
 
-	if (imageDiskList[bios_disk_index] == nullptr) {
+	if (!imageDiskList[bios_disk_index]) {
 		LOG_WARNING("IDE: Asked to attach bios disk that does not exist");
 		return;
 	}
