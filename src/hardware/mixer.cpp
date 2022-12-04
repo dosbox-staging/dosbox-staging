@@ -588,7 +588,7 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 	        "{%3.0f%%, %3.0f%%}, and was set to {%3.0f%%, %3.0f%%}",
 	        name,
 	        static_cast<double>(left),
-	        static_cast < double(right),
+	        static_cast<double>(right),
 	        static_cast<double>(app_volume_scalar.left * 100.0f),
 	        static_cast<double>(app_volume_scalar.right * 100.0f));
 #endif
