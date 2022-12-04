@@ -44,7 +44,8 @@ std::string To_Label(const char* name) {
 	return label;
 }
 
-void Set_Label(char const * const input, char * const output, bool cdrom) {
+void Set_Label(const char* const input, char* const output, bool cdrom)
+{
 	Bitu togo     = 8;
 	Bitu vnamePos = 0;
 	Bitu labelPos = 0;
@@ -265,7 +266,7 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		currentDisk = (currentDisk + 1) % numDisks;
 		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
 		driveInfos[drive].currentDisk = currentDisk;
-		if (drive < MAX_DISK_IMAGES && imageDiskList[drive] != nullptr) {
+		if (drive < MAX_DISK_IMAGES && imageDiskList[drive]) {
 			if (newDisk->GetType() == DosDriveType::Fat) {
 				imageDiskList[drive] = reinterpret_cast<fatDrive *>(newDisk)->loadedDisk;
 			} else {
