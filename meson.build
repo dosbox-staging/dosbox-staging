@@ -81,6 +81,9 @@ if get_option('buildtype') == 'release'
     # testing with debug builds will make use of them.
     #
     extra_flags += [
+        '-fstrict-aliasing',
+        '-Wstrict-aliasing',
+        '-fmerge-all-constants',
         '-fno-math-errno',
         '-fno-signed-zeros',
         '-fno-trapping-math',
@@ -91,6 +94,7 @@ if get_option('buildtype') == 'release'
         '-ffunction-sections',
         '-fdata-sections',
     ]
+    extra_link_flags += ['-Wl,--gc-sections']
 endif
 
 if get_option('asm')
