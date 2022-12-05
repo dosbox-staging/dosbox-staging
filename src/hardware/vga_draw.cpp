@@ -18,8 +18,10 @@
 
 #include "dosbox.h"
 
-#include <cstring>
+#include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <vector>
 
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
@@ -40,7 +42,9 @@
 typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
-alignas(vga_memalign) static uint8_t TempLine[SCALER_MAXWIDTH * 4];
+
+static std::vector<uint8_t> templine_buffer(SCALER_MAXWIDTH * 4);
+static auto TempLine = templine_buffer.data();
 
 static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
@@ -535,10 +539,16 @@ static const uint8_t* VGA_Text_Memwrap(Bitu vidstart) {
 		// wrapping in this line
 		Bitu break_pos = (vga.draw.linear_mask - vidstart) + 1;
 		// need a temporary storage - TempLine/2 is ok for a bit more than 132 columns
-		memcpy(&TempLine[sizeof(TempLine)/2], &vga.tandy.draw_base[vidstart], break_pos);
-		memcpy(&TempLine[sizeof(TempLine)/2 + break_pos],&vga.tandy.draw_base[0], line_end - break_pos);
-		return &TempLine[sizeof(TempLine)/2];
-	} else return &vga.tandy.draw_base[vidstart];
+		memcpy(&TempLine[templine_buffer.size() / 2],
+		       &vga.tandy.draw_base[vidstart],
+		       break_pos);
+		memcpy(&TempLine[templine_buffer.size() / 2 + break_pos],
+		       &vga.tandy.draw_base[0],
+		       line_end - break_pos);
+		return &TempLine[templine_buffer.size() / 2];
+	} else {
+		return &vga.tandy.draw_base[vidstart];
+	}
 }
 
 static bool SkipCursor(Bitu vidstart, Bitu line)
@@ -782,10 +792,12 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			break;
 		}
 		if (vga.draw.bpp==8) {
-			memset(TempLine, bg_color_index, sizeof(TempLine));
+			std::fill(templine_buffer.begin(),
+			          templine_buffer.end(),
+			          bg_color_index);
 		} else if (vga.draw.bpp == 16) {
 			uint16_t value = vga.dac.xlat16[bg_color_index];
-			for (size_t i = 0; i < sizeof(TempLine) / 2; ++i) {
+			for (size_t i = 0; i < templine_buffer.size() / 2; ++i) {
 				write_unaligned_uint16_at(TempLine, i, value);
 			}
 		}
@@ -810,7 +822,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 {
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
-		memset(TempLine, 0, sizeof(TempLine));
+		std::fill(templine_buffer.begin(), templine_buffer.end(), 0);
 		RENDER_DrawLine(TempLine);
 	} else {
 		Bitu address = vga.draw.address;
