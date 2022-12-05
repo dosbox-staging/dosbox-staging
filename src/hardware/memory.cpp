@@ -40,24 +40,27 @@ struct LinkBlock {
 };
 
 static struct MemoryBlock {
-	Bitu pages;
-	PageHandler * phandlers[MAX_PAGE_ENTRIES];
-	MemHandle mhandles[MAX_PAGE_ENTRIES];
-	LinkBlock links;
-	struct	{
-		Bitu		start_page;
-		Bitu		end_page;
-		Bitu		pages;
-		PageHandler *handler;
-		PageHandler *mmiohandler;
-	} lfb;
-	struct {
-		bool enabled;
-		uint8_t controlport;
-	} a20;
-} memory;
+	Bitu pages = 0;
 
-alignas(host_pagesize) uint8_t MemBase[MAX_MEMORY*1024*1024];
+	std::vector<PageHandler*> phandlers = {};
+	std::vector<MemHandle> mhandles     = {};
+	LinkBlock links                     = {};
+	struct {
+		Bitu start_page = 0;
+		Bitu end_page   = 0;
+		Bitu pages      = 0;
+
+		PageHandler* handler     = {};
+		PageHandler* mmiohandler = {};
+	} lfb = {};
+	struct {
+		bool enabled = false;
+
+		uint8_t controlport = 0;
+	} a20 = {};
+} memory = {};
+
+HostPt MemBase = {};
 
 class IllegalPageHandler final : public PageHandler {
 public:
@@ -576,8 +579,12 @@ HostPt GetMemBase(void) { return MemBase; }
 
 class MEMORY final : public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler{};
-	IO_WriteHandleObject WriteHandler{};
+	IO_ReadHandleObject ReadHandler   = {};
+	IO_WriteHandleObject WriteHandler = {};
+
+	// System memory is read from and written to in sizes up to 64-bit types.
+	using mem_chunk_t = uint64_t;
+	std::vector<mem_chunk_t> mem_buffer = {};
 
 public:
 	MEMORY(Section *configuration) : Module_base(configuration)
@@ -598,11 +605,17 @@ public:
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		memset((void*)MemBase, 0, memsize * 1024 * 1024);
-		memory.pages = (memsize * 1024 * 1024) / 4096;
-		LOG_MSG("MEMORY: Base address: %p", static_cast<void *>(MemBase));
+		const auto num_mem_bytes = memsize * 1024 * 1024;
+		mem_buffer.resize(num_mem_bytes / sizeof(mem_chunk_t));
+		MemBase = reinterpret_cast<uint8_t*>(mem_buffer.data());
+
+		memory.pages = num_mem_bytes / dos_pagesize;
+		LOG_MSG("MEMORY: Base address: %p", static_cast<void*>(MemBase));
 		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
 		        static_cast<int>(memory.pages), memsize);
+
+		memory.phandlers.resize(memory.pages);
+		memory.mhandles.resize(memory.pages);
 
 		for (i = 0; i < memory.pages; i++) {
 			memory.phandlers[i] = &ram_page_handler;
