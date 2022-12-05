@@ -34,17 +34,11 @@
 #define LFB_PAGES	512
 #define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
 
-struct LinkBlock {
-	Bitu used;
-	uint32_t pages[MAX_LINKS];
-};
-
 static struct MemoryBlock {
 	Bitu pages = 0;
 
 	std::vector<PageHandler*> phandlers = {};
 	std::vector<MemHandle> mhandles     = {};
-	LinkBlock links                     = {};
 	struct {
 		Bitu start_page = 0;
 		Bitu end_page   = 0;
@@ -635,8 +629,6 @@ public:
 				memory.phandlers[i] = &rom_page_handler;
 			}
 		}
-		/* Reset some links */
-		memory.links.used = 0;
 		// A20 Line - PS/2 system control port A
 		WriteHandler.Install(0x92, write_p92, io_width_t::byte);
 		ReadHandler.Install(0x92, read_p92, io_width_t::byte);
