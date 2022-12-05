@@ -187,10 +187,9 @@ void VFILE_Remove(const char *name, const char *dir = "")
 			}
 
 			// Release the vfile's filename (allocated w/ strdup)
-			if (vfile->name) {
-				free(vfile->name);
-				vfile->name = nullptr;
-			}
+			assert(vfile->name);
+			free(vfile->name);
+			vfile->name = nullptr;
 
 			// Release the vfile's data (allocated with new[])
 			if (vfile->data) {
