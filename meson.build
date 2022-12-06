@@ -54,7 +54,8 @@ summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 
 # extra build flags
 extra_flags = ['-Wno-unknown-pragmas']
-extra_link_flags = []
+# generate linker map file
+extra_link_flags = ['-Wl,-map,dosbox.map']
 
 # If the compiler provides std::filesystem, then we consider it modern enough
 # that we can trust it's extra helpful warnings to let us improve the code quality.
