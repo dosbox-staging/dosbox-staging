@@ -241,22 +241,6 @@ bool Grapheme::operator<(const Grapheme &other) const
 // Conversion routines
 // ***************************************************************************
 
-static uint8_t char_to_uint8(const char in_char)
-{
-    if (in_char >= 0)
-        return static_cast<uint8_t>(in_char);
-    else
-        return static_cast<uint8_t>(UINT8_MAX + in_char + 1);
-}
-
-static char uint8_to_char(const uint8_t in_uint8)
-{
-    if (in_uint8 <= INT8_MAX)
-        return static_cast<char>(in_uint8);
-    else
-        return static_cast<char>(in_uint8 - INT8_MIN + INT8_MIN);
-}
-
 static bool utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_out)
 {
     // Convert UTF-8 string to a sequence of decoded integers
@@ -270,14 +254,14 @@ static bool utf8_to_wide(const std::string &str_in, std::vector<uint16_t> &str_o
     str_out.clear();
     for (size_t i = 0; i < str_in.size(); ++i) {
         const size_t remaining = str_in.size() - i - 1;
-        const uint8_t byte_1   = char_to_uint8(str_in[i]);
-        const uint8_t byte_2   = (remaining >= 1) ? char_to_uint8(str_in[i + 1]) : 0;
-        const uint8_t byte_3   = (remaining >= 2) ? char_to_uint8(str_in[i + 2]) : 0;
+        const uint8_t byte_1   = static_cast<uint8_t>(str_in[i]);
+        const uint8_t byte_2   = (remaining >= 1) ? static_cast<uint8_t>(str_in[i + 1]) : 0;
+        const uint8_t byte_3   = (remaining >= 2) ? static_cast<uint8_t>(str_in[i + 2]) : 0;
 
         auto advance = [&](const size_t bytes) {
             auto counter = std::min(remaining, bytes);
             while (counter--) {
-                const auto byte_next = char_to_uint8(str_in[i + 1]);
+                const auto byte_next = static_cast<uint8_t>(str_in[i + 1]);
                 if (byte_next < threshold_non_ascii || byte_next >= threshold_encoded)
                     break;
                 ++i;
@@ -405,7 +389,7 @@ static bool wide_to_code_page(const std::vector<uint16_t> &str_in,
         if (it == mapping->end())
             return false;
 
-        str_out.push_back(uint8_to_char(it->second));
+        str_out.push_back(static_cast<char>(it->second));
         return true;
     };
 
@@ -419,7 +403,7 @@ static bool wide_to_code_page(const std::vector<uint16_t> &str_in,
         if (it == mapping_ascii.end())
             return false;
 
-        str_out.push_back(uint8_to_char(it->second));
+        str_out.push_back(static_cast<char>(it->second));
         return true;
     };
 
@@ -562,7 +546,7 @@ static bool get_hex_16bit(const std::string &token, uint16_t &out)
 static bool get_ascii(const std::string &token, uint8_t &out)
 {
     if (token.length() == 1) {
-        out = char_to_uint8(token[0]);
+        out = static_cast<uint8_t>(token[0]);
     } else if (GCC_UNLIKELY(token == "SPC")) {
         out = ' ';
     } else if (GCC_UNLIKELY(token == "HSH")) {
