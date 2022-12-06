@@ -35,8 +35,10 @@
 #define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
 
 static struct MemoryBlock {
-	Bitu pages = 0;
-
+	struct page_t {
+		uint8_t bytes[dos_pagesize] = {};
+	};
+	std::vector<page_t> pages           = {};
 	std::vector<PageHandler*> phandlers = {};
 	std::vector<MemHandle> mhandles     = {};
 	struct {
@@ -54,6 +56,7 @@ static struct MemoryBlock {
 	} a20 = {};
 } memory = {};
 
+// Points to the first byte of the first DOS memory page
 HostPt MemBase = {};
 
 class IllegalPageHandler final : public PageHandler {
@@ -93,11 +96,15 @@ public:
 	RAMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
-	HostPt GetHostReadPt(Bitu phys_page) {
-		return MemBase+phys_page*dos_pagesize;
+	// Get the starting byte address for the give page
+	HostPt GetHostReadPt(const size_t phys_page)
+	{
+		assert(phys_page < memory.pages.size());
+		return &(memory.pages[phys_page].bytes[0]);
 	}
-	HostPt GetHostWritePt(Bitu phys_page) {
-		return MemBase+phys_page*dos_pagesize;
+	HostPt GetHostWritePt(const size_t phys_page)
+	{
+		return GetHostReadPt(phys_page); // same
 	}
 };
 
@@ -133,12 +140,13 @@ void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmioha
 }
 
 PageHandler * MEM_GetPageHandler(Bitu phys_page) {
-	if (phys_page<memory.pages) {
+	if (phys_page < memory.pages.size()) {
 		return memory.phandlers[phys_page];
-	} else if ((phys_page>=memory.lfb.start_page) && (phys_page<memory.lfb.end_page)) {
+	} else if ((phys_page >= memory.lfb.start_page) &&
+	           (phys_page < memory.lfb.end_page)) {
 		return memory.lfb.handler;
-	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
-				(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
+	} else if ((phys_page >= memory.lfb.start_page + 0x01000000 / 4096) &&
+	           (phys_page < memory.lfb.start_page + 0x01000000 / 4096 + 16)) {
 		return memory.lfb.mmiohandler;
 	}
 	return &illegal_page_handler;
@@ -206,13 +214,13 @@ void MEM_StrCopy(PhysPt pt,char * data,Bitu size) {
 }
 
 Bitu MEM_TotalPages(void) {
-	return memory.pages;
+	return memory.pages.size();
 }
 
 Bitu MEM_FreeLargest(void) {
 	Bitu size=0;Bitu largest=0;
-	Bitu index=XMS_START;	
-	while (index<memory.pages) {
+	Bitu index=XMS_START;
+	while (index < memory.pages.size()) {
 		if (!memory.mhandles[index]) {
 			size++;
 		} else {
@@ -227,8 +235,8 @@ Bitu MEM_FreeLargest(void) {
 
 Bitu MEM_FreeTotal(void) {
 	Bitu free=0;
-	Bitu index=XMS_START;	
-	while (index<memory.pages) {
+	Bitu index=XMS_START;
+	while (index < memory.pages.size()) {
 		if (!memory.mhandles[index]) free++;
 		index++;
 	}
@@ -252,7 +260,7 @@ inline Bitu BestMatch(Bitu size) {
 	Bitu first=0;
 	Bitu best=0xfffffff;
 	Bitu best_first=0;
-	while (index<memory.pages) {
+	while (index < memory.pages.size()) {
 		/* Check if we are searching for first free page */
 		if (!first) {
 			/* Check if this is a free page */
@@ -367,8 +375,10 @@ bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence) {
 		if (sequence) {
 			index=last+1;
 			Bitu free=0;
-			while ((index<(MemHandle)memory.pages) && !memory.mhandles[index]) {
-				index++;free++;
+			while (static_cast<uint32_t>(index) < memory.pages.size() &&
+			       !memory.mhandles[index]) {
+				index++;
+				free++;
 			}
 			if (free>=need) {
 				/* Enough space allocate more pages */
@@ -430,10 +440,11 @@ static void InitA20() {
 void MEM_A20_Enable(bool enabled) {
 	if (enabled == memory.a20.enabled) return;
 	const uint32_t phys_base=enabled ? (1024/4) : 0;
-	for (int i=0;i<16;i++) PAGING_MapPage((1024/4)+i,phys_base+i);
-	memory.a20.enabled=enabled;
+	for (int i = 0; i < 16; ++i) {
+		PAGING_MapPage((1024 / 4) + i, phys_base + i);
+	}
+	memory.a20.enabled = enabled;
 }
-
 
 /* Memory access functions */
 uint16_t mem_unalignedreadw(PhysPt address) {
@@ -569,63 +580,80 @@ void MEM_PreparePCJRCartRom()
 	}
 }
 
-HostPt GetMemBase(void) { return MemBase; }
+static int determine_num_megabytes(const int num_megabytes_pref)
+{
+	// max of 63 MB solves problems with certain xms handlers
+	constexpr auto min_megabytes  = 1;
+	constexpr auto safe_megabytes = SAFE_MEMORY - 1;
+	constexpr auto max_megabytes  = MAX_MEMORY - 1;
+
+	const auto num_megabytes = std::clamp(num_megabytes_pref, min_megabytes, max_megabytes);
+
+	if (num_megabytes_pref > max_megabytes) {
+		LOG_WARNING("MEMORY: Memory size of %d MB is beyond the maximum of %d MB, limiting",
+		            num_megabytes_pref,
+		            max_megabytes);
+		assert(num_megabytes == max_megabytes);
+	}
+
+	if (num_megabytes > safe_megabytes) {
+		LOG_WARNING("MEMORY: Memory sizes above %d MB aren't recommended", safe_megabytes);
+	}
+	return num_megabytes;
+}
+
+HostPt GetMemBase(void)
+{
+	return MemBase;
+}
 
 class MEMORY final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler   = {};
 	IO_WriteHandleObject WriteHandler = {};
 
-	// System memory is read from and written to in sizes up to 64-bit types.
-	using mem_chunk_t = uint64_t;
-	std::vector<mem_chunk_t> mem_buffer = {};
-
 public:
 	MEMORY(Section *configuration) : Module_base(configuration)
 	{
-		Bitu i;
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-	
-		/* Setup the Physical Page Links */
-		auto memsize = static_cast<uint16_t>(section->Get_int("memsize"));
+		// Get the users memory size preference
+		const auto section = static_cast<Section_prop*>(configuration);
+		const auto num_megabytes_pref = section->Get_int("memsize");
 
-		if (memsize < 1) memsize = 1;
-		/* max 63 to solve problems with certain xms handlers */
-		if (memsize > MAX_MEMORY - 1) {
-			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
-			memsize = MAX_MEMORY - 1;
-		}
-		if (memsize > SAFE_MEMORY - 1) {
-			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
-			LOG_MSG("Stick with the default values unless you are absolutely certain.");
-		}
-		const auto num_mem_bytes = memsize * 1024 * 1024;
-		mem_buffer.resize(num_mem_bytes / sizeof(mem_chunk_t));
-		MemBase = reinterpret_cast<uint8_t*>(mem_buffer.data());
+		// Determine the memory size and pages based on the preference
+		const auto num_megabytes = determine_num_megabytes(num_megabytes_pref);
+		const auto num_pages = (num_megabytes * 1024 * 1024) / dos_pagesize;
 
-		memory.pages = num_mem_bytes / dos_pagesize;
-		LOG_MSG("MEMORY: Base address: %p", static_cast<void*>(MemBase));
-		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
-		        static_cast<int>(memory.pages), memsize);
+		// Size the actual memory pages
+		memory.pages.resize(num_pages);
 
-		memory.phandlers.resize(memory.pages);
-		memory.mhandles.resize(memory.pages);
+		// The MemBase is address of the the first page's first byte
+		MemBase = &(memory.pages[0].bytes[0]);
 
-		for (i = 0; i < memory.pages; i++) {
-			memory.phandlers[i] = &ram_page_handler;
-			memory.mhandles[i] = 0;				//Set to 0 for memory allocation
-		}
-		/* Setup rom at 0xc0000-0xc8000 */
-		for (i=0xc0;i<0xc8;i++) {
+		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB) at address: %p",
+		        static_cast<int>(memory.pages.size()),
+		        num_megabytes,
+		        static_cast<void*>(MemBase));
+
+		// Setup the page handlers, defaulting to the RAM handler
+		memory.phandlers.clear();
+		memory.phandlers.resize(num_pages, &ram_page_handler);
+
+		// Setup the memory handers, defaulting to 0 which means
+		// memory-allocation
+		memory.mhandles.clear();
+		memory.mhandles.resize(num_pages, 0);
+
+		// Setup ROM page handers between 0xc0000-0xc8000
+		for (size_t i = 0xc0; i < 0xc8; ++i) {
 			memory.phandlers[i] = &rom_page_handler;
 		}
-		/* Setup rom at 0xf0000-0x100000 */
-		for (i=0xf0;i<0x100;i++) {
+		// Setup ROM page handlers between 0xf0000-0x100000
+		for (size_t i = 0xf0; i < 0x100; ++i) {
 			memory.phandlers[i] = &rom_page_handler;
 		}
-		if (machine==MCH_PCJR) {
-			/* Setup cartridge rom at 0xe0000-0xf0000 */
-			for (i=0xe0;i<0xf0;i++) {
+		// Setup PCjr Cartridge ROM page handlers between 0xe0000-0xf0000
+		if (machine == MCH_PCJR) {
+			for (size_t i = 0xe0; i < 0xf0; ++i) {
 				memory.phandlers[i] = &rom_page_handler;
 			}
 		}
