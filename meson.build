@@ -111,7 +111,7 @@ if prefers_static_libs
         extra_link_flags += ['-no-pie']
     endif
 else
-    extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
+    extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-lstdc++_s', '-fPIC']
 endif
 
 if get_option('narrowing_warnings')
