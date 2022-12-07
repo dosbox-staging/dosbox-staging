@@ -55,7 +55,11 @@ summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 # extra build flags
 extra_flags = ['-Wno-unknown-pragmas']
 # generate linker map file
-extra_link_flags = ['-Wl,-map,dosbox.map']
+extra_link_flags = [
+    '-Wl,-map,dosbox.map',
+    '-Wl,-Map,dosbox.map',
+    '-Wl,--Map,dosbox.map',
+]
 
 # If the compiler provides std::filesystem, then we consider it modern enough
 # that we can trust it's extra helpful warnings to let us improve the code quality.
@@ -454,7 +458,8 @@ endif
 if (opengl_dep.found()
     and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
-    and get_option('enable_debugger') != 'none')
+    and get_option('enable_debugger') != 'none'
+)
 
     warning('''OpenGL is disabled because it's not compatible with the debugger.
             To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
@@ -671,10 +676,10 @@ endif
 # Determine if system is capable of using ManyMouse library
 conf_data.set10('C_MANYMOUSE', true)
 if host_machine.system() == 'darwin'
-  if not conf_data.has('C_IOKIT')
-    # On macOS the ManyMouse library requires IOKit
-    conf_data.set10('C_MANYMOUSE', false)
-  endif
+    if not conf_data.has('C_IOKIT')
+        # On macOS the ManyMouse library requires IOKit
+        conf_data.set10('C_MANYMOUSE', false)
+    endif
 endif
 summary('ManyMouse support', conf_data.get('C_MANYMOUSE') == true)
 
@@ -725,7 +730,7 @@ subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
 if conf_data.get('C_MANYMOUSE') == true
-  subdir('src/libs/manymouse')
+    subdir('src/libs/manymouse')
 endif
 
 # ZMBV and TalChorus use some support functionality from misc
@@ -752,7 +757,7 @@ third_party_deps = [
 ]
 
 if conf_data.get('C_MANYMOUSE') == true
-  third_party_deps += manymouse_dep
+    third_party_deps += manymouse_dep
 endif
 
 # internal libs
