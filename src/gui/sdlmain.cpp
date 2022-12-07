@@ -3787,6 +3787,10 @@ static void HandleVideoResize(int width, int height)
 		if (!sdl.desktop.fullscreen)
 			save_window_size(width, height);
 
+		// Window resize might have been triggered by the OS setting DPI scale,
+		// so recalculate that.
+		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
+
 		// Ensure mouse emulation knows the current parameters
 		NewMouseScreenParams();
 
