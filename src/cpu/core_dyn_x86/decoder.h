@@ -824,7 +824,11 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetReadBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
+
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 	//mov dst, [tmp+src]
@@ -870,7 +874,10 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	opcode(tmp).setrm(gensrc->index).Emit8(0x8B); // mov tmp, src
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmp,12
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetReadBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 
@@ -927,7 +934,10 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetWriteBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 	//mov [tmp+src], dst
@@ -968,7 +978,10 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	opcode(tmp).setrm(gendst->index).Emit8(0x8B); // mov tmpd, dst
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetWriteBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 

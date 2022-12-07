@@ -79,12 +79,12 @@ public:
 
 /* Some other functions */
 void PAGING_Enable(bool enabled);
-bool PAGING_Enabled(void);
+bool PAGING_Enabled();
 
-Bitu PAGING_GetDirBase(void);
+Bitu PAGING_GetDirBase();
 void PAGING_SetDirBase(Bitu cr3);
-void PAGING_InitTLB(void);
-void PAGING_ClearTLB(void);
+void PAGING_InitTLB();
+void PAGING_ClearTLB();
 
 void PAGING_LinkPage(uint32_t lin_page,uint32_t phys_page);
 void PAGING_LinkPage_ReadOnly(uint32_t lin_page,uint32_t phys_page);
@@ -196,8 +196,19 @@ bool mem_unalignedwrited_checked(PhysPt address,uint32_t val);
 
 #if defined(USE_FULL_TLB)
 
-static inline HostPt get_tlb_read(PhysPt address) {
-	return paging.tlb.read[address>>12];
+inline HostPt* PAGING_GetReadBaseAddress()
+{
+	return &(paging.tlb.read[0]);
+}
+
+inline HostPt* PAGING_GetWriteBaseAddress()
+{
+	return &(paging.tlb.write[0]);
+}
+
+static inline HostPt get_tlb_read(PhysPt address)
+{
+	return paging.tlb.read[address >> 12];
 }
 static inline HostPt get_tlb_write(PhysPt address) {
 	return paging.tlb.write[address>>12];
@@ -239,7 +250,19 @@ static inline HostPt get_tlb_read(PhysPt address) {
 static inline HostPt get_tlb_write(PhysPt address) {
 	return get_tlb_entry(address)->write;
 }
-static inline PageHandler* get_tlb_readhandler(PhysPt address) {
+
+inline HostPt* PAGING_GetReadBaseAddress()
+{
+	return get_tlb_read(0);
+}
+
+inline HostPt* PAGING_GetWriteBaseAddress()
+{
+	return get_tlb_write(0);
+}
+
+static inline PageHandler* get_tlb_readhandler(PhysPt address)
+{
 	return get_tlb_entry(address)->readhandler;
 }
 static inline PageHandler* get_tlb_writehandler(PhysPt address) {
