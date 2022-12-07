@@ -873,31 +873,30 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	case DSP_DMA_16:
 		if (sb.dma.stereo) {
 			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
-			samples = bytes_read / dma16_to_sample_divisor + sb.dma.remain_size;
+			samples = (bytes_read + sb.dma.remain_size) / dma16_to_sample_divisor;
 			frames = check_cast<uint16_t>(samples / channels);
 
 			// Only add whole frames when in stereo DMA mode
 			if (frames) {
-				const auto dma16_buf = &sb.dma.buf.b16[sb.dma.remain_size];
 #if defined(WORDS_BIGENDIAN)
 				if (sb.dma.sign) {
 					sb.chan->AddSamples_s16_nonnative(frames,
-					            maybe_silence(samples, dma16_buf));
+					            maybe_silence(samples, sb.dma.buf.b16));
 				} else {
 					sb.chan->AddSamples_s16u_nonnative(frames,
-					            maybe_silence(samples, reinterpret_cast<uint16_t *>(dma16_buf)));
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 				}
 #else
 				if (sb.dma.sign) {
 					sb.chan->AddSamples_s16(frames,
-					            maybe_silence(samples, dma16_buf));
+					            maybe_silence(samples, sb.dma.buf.b16));
 				} else {
 					sb.chan->AddSamples_s16u(frames,
-					            maybe_silence(samples, reinterpret_cast<uint16_t *>(dma16_buf)));
+					            maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 				}
 #endif
 			}
-			else if (samples & 1) {
+			if (samples & 1) {
 				// Carry over the dangling sample into the next round, or
 				sb.dma.remain_size = 1;
 				sb.dma.buf.b16[0] = sb.dma.buf.b16[samples - 1];
