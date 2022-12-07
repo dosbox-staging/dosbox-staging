@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <vector>
+
 #include "mem.h"
 
 // disable this to reduce the size of the TLB
@@ -163,22 +165,21 @@ struct PagingBlock {
 		HostPt read[TLB_SIZE]  = {};
 		HostPt write[TLB_SIZE] = {};
 
-		PageHandler* readhandler[TLB_SIZE]  = {};
-		PageHandler* writehandler[TLB_SIZE] = {};
+		std::vector<PageHandler*> readhandler  = std::vector<PageHandler*>(TLB_SIZE);
+		std::vector<PageHandler*> writehandler = std::vector<PageHandler*>(TLB_SIZE);
 
-		uint32_t	phys_page[TLB_SIZE] = {};
+		std::vector<uint32_t> phys_page = std::vector<uint32_t>(TLB_SIZE);
 	} tlb = {};
 #else
-	tlb_entry tlbh[TLB_SIZE]         = {};
-	tlb_entry* tlbh_banks[TLB_BANKS] = {};
+	std::vector<tlb_entry> tlbh        = std::vector<tlb_entry>(TLB_SIZE);
+	std::vector<tlb_entry*> tlbh_banks = std::vector<tlb_entry*>(TLB_BANKS);
 #endif
 	struct {
 		uint32_t used = 0;
-
-		uint32_t entries[PAGING_LINKS] = {};
+		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
 	} links = {};
-	uint32_t firstmb[LINK_START] = {};
 
+	std::vector<uint32_t> firstmb = std::vector<uint32_t>(LINK_START);
 	bool enabled = false;
 };
 
