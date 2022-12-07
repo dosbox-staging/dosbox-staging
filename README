@@ -381,8 +381,7 @@ The options are valid for all operating systems unless noted in the option
 description:
 
 dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode]
-       [-noprimaryconf] [-nolocalconf] [-conf congfigfile]
-       [-scaler scaler | -forcescaler scaler] [-lang langfile]
+       [-noprimaryconf] [-nolocalconf] [-conf congfigfile] [-lang langfile]
        [--list-glshaders] [-machine machine-type] [-socket socketnumber]
        [-c command] [-noconsole] [-exit] [NAME]
 
@@ -517,14 +516,6 @@ dosbox -opencaptures program
         Same as -noautoexec, but adds config.com -securemode at the
         bottom of AUTOEXEC.BAT (which in turn disables any changes to how
         the drives are mounted inside DOSBox).
-
-  -scaler scaler
-        Uses the scaler specified by "scaler". See the DOSBox configuration file
-        for the available scalers.
-
-  -forcescaler scaler
-        Similar to the -scaler parameter, but tries to force usage of
-        the specified scaler even if it might not fit.
 
   --version
         Output version information and exit. Useful for frontends.
