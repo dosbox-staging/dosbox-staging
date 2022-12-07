@@ -135,45 +135,51 @@ struct X86_PageEntryBlock{
 
 
 union X86PageEntry {
-	uint32_t load;
+	uint32_t load = 0;
 	X86_PageEntryBlock block;
 };
 
 #if !defined(USE_FULL_TLB)
 typedef struct {
-	HostPt read;
-	HostPt write;
-	PageHandler * readhandler;
-	PageHandler * writehandler;
-	uint32_t phys_page;
-} tlb_entry;
+	HostPt read  = {};
+	HostPt write = {};
+
+	PageHandler* readhandler  = {};
+	PageHandler* writehandler = {};
+
+	uint32_t phys_page = {};
+} tlb_entry = {};
 #endif
 
 struct PagingBlock {
-	uint32_t			cr3;
-	uint32_t			cr2;
+	uint32_t cr3 = 0;
+	uint32_t cr2 = 0;
 	struct {
-		uint32_t page;
-		PhysPt addr;
-	} base;
+		uint32_t page = 0;
+		PhysPt addr   = {};
+	} base = {};
 #if defined(USE_FULL_TLB)
 	struct {
-		HostPt read[TLB_SIZE];
-		HostPt write[TLB_SIZE];
-		PageHandler * readhandler[TLB_SIZE];
-		PageHandler * writehandler[TLB_SIZE];
-		uint32_t	phys_page[TLB_SIZE];
-	} tlb;
+		HostPt read[TLB_SIZE]  = {};
+		HostPt write[TLB_SIZE] = {};
+
+		PageHandler* readhandler[TLB_SIZE]  = {};
+		PageHandler* writehandler[TLB_SIZE] = {};
+
+		uint32_t	phys_page[TLB_SIZE] = {};
+	} tlb = {};
 #else
-	tlb_entry tlbh[TLB_SIZE];
-	tlb_entry *tlbh_banks[TLB_BANKS];
+	tlb_entry tlbh[TLB_SIZE]         = {};
+	tlb_entry* tlbh_banks[TLB_BANKS] = {};
 #endif
 	struct {
-		uint32_t used;
-		uint32_t entries[PAGING_LINKS];
-	} links;
-	uint32_t		firstmb[LINK_START];
-	bool		enabled;
+		uint32_t used = 0;
+
+		uint32_t entries[PAGING_LINKS] = {};
+	} links = {};
+	uint32_t firstmb[LINK_START] = {};
+
+	bool enabled = false;
 };
 
 extern PagingBlock paging; 
