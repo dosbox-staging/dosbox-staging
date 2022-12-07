@@ -2720,20 +2720,17 @@ static SDL_Window *SetDefaultWindowMode()
 
 static bool detect_resizable_window()
 {
-#if C_OPENGL
-	if (sdl.desktop.want_type != SCREEN_OPENGL) {
-		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
+	if (sdl.desktop.want_type == SCREEN_SURFACE) {
+		LOG_WARNING("DISPLAY: Disabled resizable window, not compatible with surface output");
 		return false;
 	}
+#if C_OPENGL
 	if (!is_shader_flexible()) {
 		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
 		return false;
 	}
-
-	return true;
-#else
-	return false;
 #endif // C_OPENGL
+	return true;
 }
 
 static bool wants_stretched_pixels()
@@ -3775,11 +3772,17 @@ static void HandleVideoResize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
-#if C_OPENGL
-	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
+	if (sdl.desktop.window.resizable) {
 		const auto canvas = get_canvas_size(sdl.desktop.type);
 		sdl.clip          = calc_viewport(canvas.w, canvas.h);
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		if (sdl.desktop.type == SCREEN_TEXTURE) {
+			SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+		}
+#if C_OPENGL
+		if (sdl.desktop.type == SCREEN_OPENGL) {
+			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		}
+#endif // C_OPENGL
 
 		if (!sdl.desktop.fullscreen)
 			save_window_size(width, height);
@@ -3789,7 +3792,6 @@ static void HandleVideoResize(int width, int height)
 
 		return;
 	}
-#endif
 
 	/* Even if the new window's dimensions are actually the desired ones
 	 * we may still need to re-obtain a new window surface or do
