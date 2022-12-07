@@ -424,7 +424,6 @@ void DOSBOX_Init()
 	Prop_string* Pstring; // use pstring when touching properties
 	Prop_string *pstring;
 	Prop_bool* Pbool;
-	PropMultiVal *pmulti;
 	PropMultiValRemain* pmulti_remain;
 
 	// Specifies if and when a setting can be changed
@@ -637,32 +636,11 @@ void DOSBOX_Init()
 	        "#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555\n"
 	        "#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 and #ffffff, respectively.");
 
-	pmulti = secprop->AddMultiVal("scaler", always, " ");
-	pmulti->SetValue("none");
-	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
-	                 "If 'forced' is appended, then the scaler will be used even if\n"
-	                 "the result might not be desired.\n"
-	                 "Note that some scalers may use black borders to fit the image\n"
-	                 "within your configured display resolution. If this is\n"
-	                 "undesirable, try either a different scaler or enabling\n"
-	                 "fullresolution output.");
-
-	pstring = pmulti->GetSection()->Add_string("type", always, "none");
-
-	const char *scalers[] = {
-		"none", "normal2x", "normal3x",
-#if RENDER_USE_ADVANCED_SCALERS>2
-		"advmame2x", "advmame3x", "advinterp2x", "advinterp3x", "hq2x", "hq3x", "2xsai", "super2xsai", "supereagle",
-#endif
-#if RENDER_USE_ADVANCED_SCALERS>0
-		"tv2x", "tv3x", "rgb2x", "rgb3x", "scan2x", "scan3x",
-#endif
-		0 };
-	pstring->Set_values(scalers);
-
-	const char *force[] = {"", "forced", 0};
-	pstring = pmulti->GetSection()->Add_string("force", always, "");
-	pstring->Set_values(force);
+	pstring = secprop->Add_string("scaler", deprecated, "none");
+	pstring->Set_help(
+	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
+	        " - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.\n"
+	        " - If you used an advanced scaler, consider one of the 'glshader' options instead.");
 
 #if C_OPENGL
 	pstring = secprop->Add_path("glshader", always, "default");
