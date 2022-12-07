@@ -124,7 +124,8 @@ static struct {
 	PF_Entry entries[PF_QUEUESIZE];
 } pf_queue;
 
-static Bits PageFaultCore(void) {
+static Bits PageFaultCore()
+{
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
 	Bits ret=CPU_Core_Full_Run();
@@ -648,8 +649,8 @@ bool PAGING_MakePhysPage(Bitu & page) {
 static InitPageHandler init_page_handler;
 static InitPageUserROHandler init_page_handler_userro;
 
-
-Bitu PAGING_GetDirBase(void) {
+Bitu PAGING_GetDirBase()
+{
 	return paging.cr3;
 }
 
@@ -667,7 +668,8 @@ bool PAGING_ForcePageInit(Bitu lin_addr) {
 }
 
 #if defined(USE_FULL_TLB)
-void PAGING_InitTLB(void) {
+void PAGING_InitTLB()
+{
 	for (auto i=0;i<TLB_SIZE;i++) {
 		paging.tlb.read[i]=nullptr;
 		paging.tlb.write[i]=nullptr;
@@ -677,7 +679,8 @@ void PAGING_InitTLB(void) {
 	paging.links.used=0;
 }
 
-void PAGING_ClearTLB(void) {
+void PAGING_ClearTLB()
+{
 	uint32_t * entries=&paging.links.entries[0];
 	for (;paging.links.used>0;paging.links.used--) {
 		const auto page=*entries++;
@@ -773,13 +776,15 @@ void PAGING_InitTLBBank(tlb_entry **bank) {
 	InitTLBInt(*bank);
 }
 
-void PAGING_InitTLB(void) {
+void PAGING_InitTLB()
+{
 	InitTLBInt(paging.tlbh);
- 	paging.links.used=0;
+	paging.links.used=0;
 }
 
-void PAGING_ClearTLB(void) {
-	uint32_t * entries=&paging.links.entries[0];
+void PAGING_ClearTLB()
+{
+	uint32_t* entries = &paging.links.entries[0];
 	for (;paging.links.used>0;paging.links.used--) {
 		Bitu page=*entries++;
 		tlb_entry *entry = get_tlb_entry(page<<12);
@@ -814,8 +819,9 @@ void PAGING_MapPage(Bitu lin_page,Bitu phys_page) {
 	}
 }
 
-void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
-	PageHandler * handler=MEM_GetPageHandler(phys_page);
+void PAGING_LinkPage(uint32_t lin_page, uint32_t phys_page)
+{
+	PageHandler* handler = MEM_GetPageHandler(phys_page);
 	Bitu lin_base=lin_page << 12;
 	if (lin_page>=(TLB_SIZE*(TLB_BANKS+1)) || phys_page>=(TLB_SIZE*(TLB_BANKS+1))) 
 		E_Exit("Illegal page");
@@ -837,8 +843,9 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 	entry->writehandler=handler;
 }
 
-void PAGING_LinkPage_ReadOnly(Bitu lin_page,Bitu phys_page) {
-	PageHandler * handler=MEM_GetPageHandler(phys_page);
+void PAGING_LinkPage_ReadOnly(uint32_t lin_page, uint32_t phys_page)
+{
+	PageHandler* handler = MEM_GetPageHandler(phys_page);
 	Bitu lin_base=lin_page << 12;
 	if (lin_page>=(TLB_SIZE*(TLB_BANKS+1)) || phys_page>=(TLB_SIZE*(TLB_BANKS+1))) 
 		E_Exit("Illegal page");
@@ -891,7 +898,8 @@ void PAGING_Enable(bool enabled) {
 	PAGING_ClearTLB();
 }
 
-bool PAGING_Enabled(void) {
+bool PAGING_Enabled()
+{
 	return paging.enabled;
 }
 
