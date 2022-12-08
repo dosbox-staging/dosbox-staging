@@ -39,7 +39,6 @@ constexpr uint16_t GFX_CAN_15 = 1 << 1;
 constexpr uint16_t GFX_CAN_16 = 1 << 2;
 constexpr uint16_t GFX_CAN_32 = 1 << 3;
 
-constexpr uint16_t GFX_RGBONLY = 1 << 8;
 constexpr uint16_t GFX_DBL_H   = 1 << 9;  // double-width  flag
 constexpr uint16_t GFX_DBL_W   = 1 << 10; // double-height flag
 

@@ -336,19 +336,19 @@ static void RENDER_Reset(void)
 	case 8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
 	case 15:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 16:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 24:
 		render.src.start = (render.src.width * 3) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 32:
 		render.src.start = (render.src.width * 4) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8);
 		break;
 	}
 	gfx_flags = GFX_GetBestMode(gfx_flags);
