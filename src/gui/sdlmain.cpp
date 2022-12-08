@@ -562,8 +562,6 @@ void GFX_RequestExit(const bool pressed)
 
 Bitu GFX_GetBestMode(Bitu flags)
 {
-	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
-		flags |= GFX_UNITY_SCALE;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 	check_surface:
