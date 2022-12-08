@@ -46,7 +46,6 @@ constexpr uint16_t GFX_SCALING = 1 << 11;
 
 constexpr uint16_t GFX_HARDWARE = 1 << 12;
 constexpr uint16_t GFX_CAN_RANDOM = 1 << 13; // interface can also do random acces
-constexpr uint16_t GFX_UNITY_SCALE = 1 << 14; // turn off all scaling in render.cpp
 
 // return code of:
 // - true means event loop can keep running.
