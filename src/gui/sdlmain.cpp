@@ -2724,12 +2724,6 @@ static bool detect_resizable_window()
 		LOG_WARNING("DISPLAY: Disabled resizable window, not compatible with surface output");
 		return false;
 	}
-#if C_OPENGL
-	if (!is_shader_flexible()) {
-		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
-		return false;
-	}
-#endif // C_OPENGL
 	return true;
 }
 
@@ -3781,6 +3775,9 @@ static void HandleVideoResize(int width, int height)
 #if C_OPENGL
 		if (sdl.desktop.type == SCREEN_OPENGL) {
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+			glUniform2f(sdl.opengl.ruby.output_size,
+			            (GLfloat)sdl.clip.w,
+			            (GLfloat)sdl.clip.h);
 		}
 #endif // C_OPENGL
 
