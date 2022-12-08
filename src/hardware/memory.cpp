@@ -142,11 +142,17 @@ void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmioha
 PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	if (phys_page < memory.pages.size()) {
 		return memory.phandlers[phys_page];
-	} else if ((phys_page >= memory.lfb.start_page) &&
-	           (phys_page < memory.lfb.end_page)) {
+	}
+	if (phys_page >= memory.lfb.start_page && phys_page < memory.lfb.end_page) {
 		return memory.lfb.handler;
-	} else if ((phys_page >= memory.lfb.start_page + 0x01000000 / 4096) &&
-	           (phys_page < memory.lfb.start_page + 0x01000000 / 4096 + 16)) {
+	}
+
+	constexpr uint32_t pages_in_16mb = {0x01000000u / dos_pagesize};
+	const auto last_page_in_first_16mb = memory.lfb.start_page + pages_in_16mb;
+	const auto sixteen_pages_beyond_first_16mb = last_page_in_first_16mb + 16u;
+
+	if (phys_page >= last_page_in_first_16mb &&
+	    phys_page < sixteen_pages_beyond_first_16mb) {
 		return memory.lfb.mmiohandler;
 	}
 	return &illegal_page_handler;
@@ -438,10 +444,17 @@ static void InitA20() {
 }
 
 void MEM_A20_Enable(bool enabled) {
-	if (enabled == memory.a20.enabled) return;
-	const uint32_t phys_base=enabled ? (1024/4) : 0;
-	for (int i = 0; i < 16; ++i) {
-		PAGING_MapPage((1024 / 4) + i, phys_base + i);
+	// Is A20 already in the requested state?
+	if (memory.a20.enabled == enabled) {
+		return;
+	}
+	constexpr uint32_t first_mb = 1024 * 1024;
+	constexpr uint32_t a20_base_page = first_mb / dos_pagesize;
+
+	const uint32_t phys_base_page = enabled ? a20_base_page : 0;
+
+	for (uint8_t page = 0; page < 16; ++page) {
+		PAGING_MapPage(a20_base_page + page, phys_base_page + page);
 	}
 	memory.a20.enabled = enabled;
 }
@@ -643,20 +656,27 @@ public:
 		memory.mhandles.clear();
 		memory.mhandles.resize(num_pages, 0);
 
+		using page_range_t = std::pair<uint16_t, uint16_t>;
+		auto install_rom_page_handlers = [&](const page_range_t& page_range) {
+			for (auto p = page_range.first; p < page_range.second; ++p) {
+				memory.phandlers.at(p) = &rom_page_handler;
+			}
+		};
+
 		// Setup ROM page handers between 0xc0000-0xc8000
-		for (size_t i = 0xc0; i < 0xc8; ++i) {
-			memory.phandlers[i] = &rom_page_handler;
-		}
+		constexpr page_range_t xt_rom_range = {0xc0, 0xc8};
+		install_rom_page_handlers(xt_rom_range);
+
 		// Setup ROM page handlers between 0xf0000-0x100000
-		for (size_t i = 0xf0; i < 0x100; ++i) {
-			memory.phandlers[i] = &rom_page_handler;
-		}
+		constexpr page_range_t pc_rom_range = {0xf0, 0x100};
+		install_rom_page_handlers(pc_rom_range);
+
 		// Setup PCjr Cartridge ROM page handlers between 0xe0000-0xf0000
 		if (machine == MCH_PCJR) {
-			for (size_t i = 0xe0; i < 0xf0; ++i) {
-				memory.phandlers[i] = &rom_page_handler;
-			}
+			constexpr page_range_t pcjr_rom_range = {0xe0, 0xf0};
+			install_rom_page_handlers(pcjr_rom_range);
 		}
+
 		// A20 Line - PS/2 system control port A
 		WriteHandler.Install(0x92, write_p92, io_width_t::byte);
 		ReadHandler.Install(0x92, read_p92, io_width_t::byte);

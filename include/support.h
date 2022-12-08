@@ -52,12 +52,12 @@
 #endif
 
 #ifdef PAGESIZE
-constexpr size_t host_pagesize = PAGESIZE;
+constexpr uint16_t host_pagesize = { PAGESIZE };
 #else
-constexpr size_t host_pagesize = 4096;
+constexpr uint16_t host_pagesize = 4096;
 #endif
 
-constexpr size_t dos_pagesize = 4096;
+constexpr uint16_t dos_pagesize = 4096;
 
 // Some C functions operate on characters but return integers,
 // such as 'toupper'. This function asserts that a given int
