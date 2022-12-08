@@ -360,14 +360,18 @@ static void RENDER_Reset(void)
 	width *= xscale;
 
 	auto get_height_from_aspect_table = [&]() {
-		if (gfx_flags & GFX_SCALING) {
-			return MakeAspectTable(render.src.height, yscale, yscale);
+		if (gfx_flags & GFX_CAN_RANDOM) {
+			LOG_WARNING("gfx_flags & GFX_CAN_RANDOM");
+			if (gfx_scaleh > 1) {
+				gfx_scaleh *= yscale;
+				LOG_WARNING("gfx_scaleh > 1");
+				return MakeAspectTable(render.src.height,
+				                       gfx_scaleh,
+				                       yscale);
+			}
+			// Otherwise hardware surface when possible
+			gfx_flags &= ~GFX_CAN_RANDOM;
 		}
-		if ((gfx_flags & GFX_CAN_RANDOM) && gfx_scaleh > 1) {
-			gfx_scaleh *= yscale;
-			return MakeAspectTable(render.src.height, gfx_scaleh, yscale);
-		}
-		gfx_flags &= ~GFX_CAN_RANDOM; // Hardware surface when possible
 		return MakeAspectTable(render.src.height, yscale, yscale);
 	};
 	const auto height = get_height_from_aspect_table();
