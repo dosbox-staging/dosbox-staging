@@ -333,31 +333,21 @@ static void RENDER_Reset(void)
 	yscale    = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
 	switch (render.src.bpp) {
-	case 8:
-		render.src.start = (render.src.width * 1) / sizeof(Bitu);
-		if (gfx_flags & GFX_CAN_8)
-			gfx_flags |= GFX_LOVE_8;
-		else
-			gfx_flags |= GFX_LOVE_32;
-		break;
+	case 8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
 	case 15:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags |= GFX_LOVE_15;
 		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 		break;
 	case 16:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags |= GFX_LOVE_16;
 		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 		break;
 	case 24:
 		render.src.start = (render.src.width * 3) / sizeof(Bitu);
-		gfx_flags |= GFX_LOVE_32;
 		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 		break;
 	case 32:
 		render.src.start = (render.src.width * 4) / sizeof(Bitu);
-		gfx_flags |= GFX_LOVE_32;
 		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 		break;
 	}

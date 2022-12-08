@@ -566,8 +566,7 @@ Bitu GFX_GetBestMode(Bitu flags)
 		flags |= GFX_UNITY_SCALE;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
-check_surface:
-		flags &= ~GFX_LOVE_8;		//Disable love for 8bpp modes
+	check_surface:
 		switch (sdl.desktop.bpp) {
 		case 8:
 			if (flags & GFX_CAN_8) flags&=~(GFX_CAN_15|GFX_CAN_16|GFX_CAN_32);
