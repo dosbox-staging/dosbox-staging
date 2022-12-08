@@ -587,8 +587,9 @@ Bitu GFX_GetBestMode(Bitu flags)
 #endif
 	case SCREEN_TEXTURE:
 		// We only accept 32bit output from the scalers here
-		if (!(flags&GFX_CAN_32)) goto check_surface;
-		flags|=GFX_SCALING;
+		if (!(flags & GFX_CAN_32)) {
+			goto check_surface;
+		}
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
 	default:
@@ -1805,8 +1806,7 @@ dosurface:
 			case 16: retFlags = GFX_CAN_16; break;
 			case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
 			case 32: retFlags = GFX_CAN_32; break;
-		}
-		retFlags |= GFX_SCALING;
+		        }
 
 		// Log changes to the rendering driver
 		static std::string render_driver = {};
@@ -2138,7 +2138,7 @@ dosurface:
 
 		OPENGL_ERROR("End of setsize");
 
-		retFlags = GFX_CAN_32 | GFX_SCALING;
+		retFlags = GFX_CAN_32;
 		if (sdl.opengl.pixel_buffer_object) {
 			retFlags |= GFX_HARDWARE;
 			sdl.frame.update = update_frame_gl_pbo;

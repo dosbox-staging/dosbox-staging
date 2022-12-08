@@ -42,7 +42,6 @@ constexpr uint16_t GFX_CAN_32 = 1 << 3;
 constexpr uint16_t GFX_RGBONLY = 1 << 8;
 constexpr uint16_t GFX_DBL_H   = 1 << 9;  // double-width  flag
 constexpr uint16_t GFX_DBL_W   = 1 << 10; // double-height flag
-constexpr uint16_t GFX_SCALING = 1 << 11;
 
 constexpr uint16_t GFX_HARDWARE = 1 << 12;
 constexpr uint16_t GFX_CAN_RANDOM = 1 << 13; // interface can also do random acces
