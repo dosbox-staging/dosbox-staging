@@ -1814,9 +1814,10 @@ dosurface:
 			LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
 			render_driver = rinfo.name;
 		}
-		
-		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
-			retFlags |= GFX_HARDWARE;
+
+		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
+			retFlags |= GFX_CAN_RANDOM;
+		}
 
 		// Copied from the OpenGL path below; used to center texturepp output
 		int window_width  = 0;
@@ -2140,10 +2141,10 @@ dosurface:
 
 		retFlags = GFX_CAN_32;
 		if (sdl.opengl.pixel_buffer_object) {
-			retFlags |= GFX_HARDWARE;
 			sdl.frame.update = update_frame_gl_pbo;
 		} else {
 			sdl.frame.update = update_frame_gl_fb;
+			retFlags |= GFX_CAN_RANDOM;
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;

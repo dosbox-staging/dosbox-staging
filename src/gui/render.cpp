@@ -358,23 +358,7 @@ static void RENDER_Reset(void)
 		}
 	}
 	width *= xscale;
-
-	auto get_height_from_aspect_table = [&]() {
-		if (gfx_flags & GFX_CAN_RANDOM) {
-			LOG_WARNING("gfx_flags & GFX_CAN_RANDOM");
-			if (gfx_scaleh > 1) {
-				gfx_scaleh *= yscale;
-				LOG_WARNING("gfx_scaleh > 1");
-				return MakeAspectTable(render.src.height,
-				                       gfx_scaleh,
-				                       yscale);
-			}
-			// Otherwise hardware surface when possible
-			gfx_flags &= ~GFX_CAN_RANDOM;
-		}
-		return MakeAspectTable(render.src.height, yscale, yscale);
-	};
-	const auto height = get_height_from_aspect_table();
+	const auto height = MakeAspectTable(render.src.height, yscale, yscale);
 
 	// Setup the scaler variables
 	if (dblh)
@@ -408,12 +392,9 @@ static void RENDER_Reset(void)
 		render.scale.outMode = scalerMode32;
 	else
 		E_Exit("Failed to create a rendering output");
-	ScalerLineBlock_t *lineBlock;
-	if (gfx_flags & GFX_HARDWARE) {
-		lineBlock = &simpleBlock->Linear;
-	} else {
-		lineBlock = &simpleBlock->Random;
-	}
+
+	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
+	                                                  : &simpleBlock->Linear;
 	switch (render.src.bpp) {
 	case 8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
