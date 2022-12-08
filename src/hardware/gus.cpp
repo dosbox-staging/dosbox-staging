@@ -205,8 +205,8 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 //
 class Gus {
 public:
-	Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
-	    const std::string& filter_prefs);
+	Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pref,
+	    const char* ultradir, const std::string& filter_prefs);
 
 	virtual ~Gus();
 
@@ -588,14 +588,17 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 	wave_ctrl.inc = ceil_udivide(val, 2u);
 }
 
-Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
-         const std::string& filter_prefs)
+Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pref,
+         const char* ultradir, const std::string& filter_prefs)
         : ram(RAM_SIZE),
-          port_base(port - 0x200u),
-          dma2(dma),
-          irq1(irq),
-          irq2(irq)
+          dma2(dma_pref),
+          irq1(irq_pref),
+          irq2(irq_pref)
 {
+	// port operations are "zero-based" from the datum to the user's port
+	constexpr io_port_t port_datum = 0x200;
+	port_base = port_pref - port_datum;
+
 	// Create the internal voice channels
 	for (uint8_t i = 0; i < MAX_VOICES; ++i) {
 		voices.at(i) = std::make_unique<Voice>(i, voice_irq);
@@ -634,14 +637,14 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const char* ultradir,
 
 	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
 
-	UpdateDmaAddress(dma);
+	UpdateDmaAddress(dma_pref);
 
 	// Populate the volume, pan, and auto-exec arrays
 	PopulateVolScalars();
 	PopulatePanScalars();
-	SetupEnvironment(port, ultradir);
+	SetupEnvironment(port_pref, ultradir);
 
-	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d", port, irq1, dma1);
+	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d", port_pref, irq1, dma1);
 }
 
 void Gus::ActivateVoices(uint8_t requested_voices)
