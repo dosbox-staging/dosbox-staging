@@ -218,9 +218,6 @@ low         |   no    |    yes
 quiet       |   no    |    no
 auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
-:CONFIG_FRAMESKIP
-How many frames DOSBox skips before drawing one.
-.
 :CONFIG_ASPECT
 Scales the vertical resolution to produce a 4:3 display aspect
 ratio, matching that of the original standard-definition monitors

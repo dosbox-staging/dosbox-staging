@@ -31,7 +31,8 @@
 #include "lazyflags.h"
 #include "support.h"
 
-extern void GFX_SetTitle(int32_t cycles ,int frameskip,bool paused);
+extern void GFX_RefreshTitle();
+extern void GFX_SetTitle(const int32_t cycles, const bool paused = false);
 
 #if 1
 #undef LOG
@@ -1579,14 +1580,14 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					CPU_CycleLeft=0;
 					CPU_Cycles=0;
 					CPU_OldCycleMax=CPU_CycleMax;
-					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
-					if(!printed_cycles_auto_info) {
+				        GFX_SetTitle(CPU_CyclePercUsed);
+				        if(!printed_cycles_auto_info) {
 						printed_cycles_auto_info = true;
 						LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
 					}
 				} else {
-					GFX_SetTitle(-1,-1,false);
-				}
+				        GFX_RefreshTitle();
+			        }
 #if (C_DYNAMIC_X86)
 				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
 					CPU_Core_Dyn_X86_Cache_Init(true);
@@ -2115,7 +2116,7 @@ static void CPU_CycleIncrease(bool pressed) {
 		CPU_CyclePercUsed+=5;
 		if (CPU_CyclePercUsed>105) CPU_CyclePercUsed=105;
 		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
-		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
+		GFX_SetTitle(CPU_CyclePercUsed);
 	} else {
 		int32_t old_cycles=CPU_CycleMax;
 		if (CPU_CycleUp < 100) {
@@ -2132,7 +2133,7 @@ static void CPU_CycleIncrease(bool pressed) {
 			LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
 		else
 			LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
-		GFX_SetTitle(CPU_CycleMax,-1,false);
+		GFX_SetTitle(CPU_CycleMax);
 	}
 }
 
@@ -2145,7 +2146,7 @@ static void CPU_CycleDecrease(bool pressed) {
 			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
 		else
 			LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
-		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
+		GFX_SetTitle(CPU_CyclePercUsed);
 	} else {
 		if (CPU_CycleDown < 100) {
 			CPU_CycleMax = (int32_t)(CPU_CycleMax /
@@ -2157,7 +2158,7 @@ static void CPU_CycleDecrease(bool pressed) {
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
 		LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
-		GFX_SetTitle(CPU_CycleMax,-1,false);
+		GFX_SetTitle(CPU_CycleMax);
 	}
 }
 
@@ -2414,8 +2415,11 @@ public:
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
 		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
 		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
-		if (CPU_CycleAutoAdjust) GFX_SetTitle(CPU_CyclePercUsed,-1,false);
-		else GFX_SetTitle(CPU_CycleMax,-1,false);
+		if (CPU_CycleAutoAdjust) {
+			GFX_SetTitle(CPU_CyclePercUsed);
+		} else {
+			GFX_SetTitle(CPU_CycleMax);
+		}
 		return true;
 	}
 };

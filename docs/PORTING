@@ -45,6 +45,3 @@ If speed is a constraint:
               (when paging is requested the normal core is used automatically)
     gain: the simple core should be somewhat faster
     TODO: add possibility to easily remove the normal core, use fullcore fallback
-  - raise the default frameskip value
-    drawback: minor graphics smoothness loss for some games (video playback)
-    gain: reduces graphics load

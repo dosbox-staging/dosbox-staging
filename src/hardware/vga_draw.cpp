@@ -982,11 +982,11 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		break;
 	}
 
-	//Check if we can actually render, else skip the rest (frameskip)
-	++vga.draw.cursor.count; // Do this here, else the cursor speed depends
-	                         // on the frameskip
-	if (!RENDER_StartUpdate())
+	// Check if we can actually render
+	++vga.draw.cursor.count;
+	if (!RENDER_StartUpdate()) {
 		return;
+	}
 
 	vga.draw.address_line = vga.config.hlines_skip;
 	if (IS_EGAVGA_ARCH) {
@@ -1056,7 +1056,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		else vga.draw.linear_mask = 0x3fff; // CGA, Tandy 4 pages
 		vga.draw.cursor.address=vga.config.cursor_start*2;
 		vga.draw.address *= 2;
-		//vga.draw.cursor.count++; //Moved before the frameskip test.
+
 		/* check for blinking and blinking change delay */
 		FontMask[1]=(vga.draw.blinking & (vga.draw.cursor.count >> 4)) ?
 			0 : 0xffffffff;

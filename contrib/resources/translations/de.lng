@@ -215,9 +215,6 @@ quiet       |  nein    |   nein
 auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden,
                     sonst "high"
 .
-:CONFIG_FRAMESKIP
-Wie viele Frames DOSBox überspringt, bevor es einen anzeigt.
-.
 :CONFIG_ASPECT
 Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu
 erzeugen, das dem der ursprünglichen Monitore entspricht, für die die Mehrheit

@@ -224,9 +224,6 @@ low         |        non         |            oui
 quiet       |        non         |            non
 auto        | 'low' si exec ou dir sont utilisés, sinon 'high'
 .
-:CONFIG_FRAMESKIP
-Nombre d'images que DOSBox saute avant d'en afficher une autre.
-.
 :CONFIG_ASPECT
 Met à l'échelle la résolution verticale pour produire un aspect d'affichage 4:3,
 correspondant à celui des moniteurs à définition standard d'origine

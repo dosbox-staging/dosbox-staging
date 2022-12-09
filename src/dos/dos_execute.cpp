@@ -64,7 +64,9 @@ struct EXE_Header {
 #define OVERLAY 3
 
 
-extern void GFX_SetTitle(int32_t cycles,int frameskip,bool paused);
+extern void GFX_RefreshTitle();
+extern void GFX_SetTitle(const int32_t cycles, const bool paused = false);
+
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
@@ -76,7 +78,7 @@ void DOS_UpdatePSPName(void) {
 		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
 	}
 	RunningProgram = name;
-	GFX_SetTitle(-1,-1,false);
+	GFX_RefreshTitle();
 }
 
 void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
@@ -129,9 +131,9 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
 		CPU_CycleMax=CPU_OldCycleMax;
-		GFX_SetTitle(CPU_OldCycleMax,-1,false);
+		GFX_SetTitle(CPU_OldCycleMax);
 	} else {
-		GFX_SetTitle(-1,-1,false);
+		GFX_RefreshTitle();
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {

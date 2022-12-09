@@ -229,9 +229,6 @@ quiet            |   nee   |    nee
 auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
                     anders 'high'
 .
-:CONFIG_FRAMESKIP
-Hoeveel frames DOSBox overslaat voordat hij er een tekent.
-.
 :CONFIG_ASPECT
 Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
 die overeenkomt met die van de originele standaarddefinitiemonitoren waarvoor

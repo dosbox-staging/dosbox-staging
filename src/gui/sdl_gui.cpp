@@ -39,7 +39,7 @@
 
 extern uint8_t int10_font_14[256 * 14];
 extern bool MSG_Write(const char *);
-extern void GFX_SetTitle(int32_t cycles, int frameskip, bool paused);
+extern void GFX_RefreshTitle();
 
 static int cursor, saved_bpp;
 static int old_unicode;
@@ -91,7 +91,7 @@ static void getPixel(Bits x, Bits y, int &r, int &g, int &b, int shift)
 
 static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	GFX_EndUpdate(0);
-	GFX_SetTitle(-1,-1,true);
+	GFX_RefreshTitle();
 	if(!screen) { //Coming from DOSBox. Clean up the keyboard buffer.
 		KEYBOARD_ClrBuffer();//Clear buffer
 	}
@@ -201,7 +201,7 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 	GFX_ResetScreen();
 	SDL_EnableUNICODE(old_unicode);
 	SDL_EnableKeyRepeat(0,0);
-	GFX_SetTitle(-1,-1,false);
+	GFX_RefreshTitle();
 }
 
 /* helper class for command execution */

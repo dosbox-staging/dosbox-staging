@@ -219,9 +219,6 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora:
   auto        | 'low' jeśli podano katalog lub plik wykonywalny,
               | 'high' w przeciwnym wypadku
 .
-:CONFIG_FRAMESKIP
-Ile ramek obrazu opuścić przed narysowaniem kolejnej.
-.
 :CONFIG_ASPECT
 Skaluje obraz tak, żeby uzyskać proporcje 4:3, stosowaną w oryginalnych
 monitorach, dla której napisano znaczącą większość gier DOSowych.

@@ -580,9 +580,9 @@ void DOSBOX_Init()
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
 	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, true);
-	pint = secprop->Add_int("frameskip", always, 0);
-	pint->SetMinMax(0, 10);
-	pint->Set_help("How many frames DOSBox skips before drawing one.");
+
+	pint = secprop->Add_int("frameskip", deprecated, 0);
+	pint->Set_help("Consider capping frame-rates using the '[sdl] host_rate' setting.");
 
 	Pbool = secprop->Add_bool("aspect", always, true);
 	Pbool->Set_help("Scales the vertical resolution to produce a 4:3 display aspect\n"
