@@ -924,7 +924,7 @@ MIXER
      of the volume levels.
 
   /LISTMIDI
-     Lists your PC's MIDI devices. To use one, set the 'midiconfig' attribute 
+     Lists your PC's MIDI devices. To use one, set the 'midiconfig' attribute
      in your configuration file to the device's numerical ID or any part of
      its textual name. For example:
 
@@ -1607,7 +1607,7 @@ CPU Cycles (speed up/slow down)
   DOSBox window will display a line "CPU speed: fixed 10000 cycles" at the top.
   In this mode you can reduce the amount of cycles even more by hitting Ctrl+F11
   (Cmd+F11 on macOS), as low as needed, or raise it with Ctrl+F12 (Cmd+F12 on
-  macOS) but you will be limited by you PC's single-threaded performance. 
+  macOS) but you will be limited by you PC's single-threaded performance.
   You can see how much free time your real CPU's cores have by looking at
   the Task Manager in Windows 2000/XP/Vista/7 and the System Monitor
   in Windows 95/98/ME. Once 100% of the power of your computer's real CPU's one
@@ -1634,27 +1634,86 @@ CPU Core (speed up)
   games that work worse/crash with the dynamic core (so save your game often),
   or do not work at all!
 
-Graphics emulation (speed up)
-  VGA emulation is a demanding part of DOSBox in terms of actual CPU usage.
-  On systems with limited CPU performance, consider binding a hotkey to the
-  "Increase frameskip" action ("Inc Fskip") using the keymapper. Skipping
-  frames generally frees up your CPU, providing faster emulation when using
-  max cycles or affording a greater number of fixed cycles with Ctrl+F12
-  (or Cmd+F12 on macOS).
+Graphics performance (speed up)
 
-  You can repeat this until the game runs fast enough for you.
-  Please note that this is a trade-off: you lose in fluidity of video what
-  you gain in speed.  Once you'll find the perfect combination for the
-  game and your hardware, you can save it in game-specific conf file.
+  1. Ensure your video drivers are up-to-date.  There are currently no
+     known driver-specific regressions with DOSBox Staging.
 
-Sound emulation (speed up)
-  You can also try to disable the sound through the setup utility of the game
-  to reduce load on your CPU further. Setting nosound=true in DOSBox's
-  configuration does NOT disable the emulation of sound devices, just
-  the output of sound will be disabled.
+  2. Ensure your DOSBox Staging configuration file is set to use your PC's most
+     performant rendering backend. If you're using a typical x86-64 or Apple M1
+     PC platform, then the default settings should be OK. However, if you're
+     using an ARM-based SBC like the Raspberry Pi 3 or 4, then we highly
+     recommend using the configuration settings mentioned here:
 
-Also try to close every program but DOSBox to reserve as much resources
-as possible for DOSBox.
+     https://github.com/dosbox-staging/dosbox-staging/wiki/Config-file-examples
+
+     If you're using settings from DOSBox upstream (<= 0.74x or DOSBox SVN)
+     or another DOSBox fork, then we suggest backing those up and starting
+     with a new configuration.  To do so, open a command prompt where your
+     DOSBox Staging executable is located.
+
+     Launch DOSBox Staging with internal defaults:
+          dosbox -noprimaryconf -nolocalconf
+
+     At the Z:\> prompt, write a new configuration file:
+          Z:\> config -wc
+
+     You can open this newly written config with:
+          dosbox -editconf
+
+  3. Test your settings using a graphically-intensive benchmark such as using the
+     shareware version of Quake in Phil's DOS Benchmark Pack (google search for
+     it).
+
+     Before launching it, ensure your web browser is shutdown and your system is
+     otherwise idle. Run the Quake 320x200 low-resolution benchmark five times
+     and record the results (reports FPS might vary by up to ~10%).
+
+     Now open your configuration file (launch "dosbox -editconf") and try
+     adjusting one of the following settings and rerun the benchmark, Be sure to
+     only make one conf change at a time between runs.
+
+     1) Compare OpenGL versus Texture rendering modes:
+        - output = opengl (or openglnb, openglpp), versus
+        - output = texture (or texturenb, texturepp)
+
+     2) Compare your windowing environment's compositing ability:
+        - windowresolution = 640x480, vesus
+        - windowresolution = medium, versus
+        - windowresolution = desktop
+
+     3) Compare your GPU's fullscreen scaling modes:
+        - "fullscreen = true" with "fullresolution = desktop"
+        - "fullscreen = true" with "fullresolution = original"
+
+     4) Check if it makes sense to enable vsync:
+        - "fullscreen = true" with "vsync = true"
+        - "fullscreen = true" with "vsync = false"
+
+     5) Compare the cost of using GLShaders:
+        - Setup the base configuration first:
+            "output = opengl"
+            "fullscreen = false"
+            "windowresolution = 1280x960"
+        - Now compare shader performance:
+            [render] "glshader = none", versus
+            [render] "glshader = crt-easymode-flat"
+
+  Based on the above results, you should have a good understanding of which
+  settings provide the fastest performance versus those settings that are
+  slower.
+
+Audio performance (speed up)
+ - Consider disabling the audio-device filters (they are off by default).
+
+General tips:
+
+  On Linux, check if your distribution supports the "gamemode" package.  Launch
+  with "gamemoderun dosbox", which is good for any game or program needed
+  low-latency CPU scheduling.
+
+  Try to close every program but DOSBox to reserve as many resources as possible
+  for DOSBox.
 
 
 Advanced cycles configuration:
@@ -1670,9 +1729,9 @@ Example:
 
 
 
-====================
-11. Troubleshooting:
-====================
+=====================
+11.  Troubleshooting:
+=====================
 
 General tip:
   Check messages in the DOSBox status window. See Section 12: "DOSBox Status Window".

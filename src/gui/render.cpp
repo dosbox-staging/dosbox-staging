@@ -484,8 +484,6 @@ void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
 	RENDER_Reset();
 }
 
-extern void GFX_SetTitle(int32_t cycles, int frameskip, bool paused);
-
 #if C_OPENGL
 
 // Reads the given shader path into the string

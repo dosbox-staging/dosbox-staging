@@ -316,7 +316,7 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
+void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 {
 	char title_buf[200] = {0};
 
@@ -349,6 +349,12 @@ void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
 		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
 
 	SDL_SetWindowTitle(sdl.window, title_buf);
+}
+
+void GFX_RefreshTitle()
+{
+	constexpr int8_t refresh_cycle_count = -1;
+	GFX_SetTitle(refresh_cycle_count);
 }
 
 static double get_host_refresh_rate()
@@ -512,7 +518,7 @@ void GFX_RequestExit(const bool pressed)
 		return;
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
-	GFX_SetTitle(-1,-1,true);
+	GFX_RefreshTitle();
 	bool paused = true;
 	Delay(500);
 	SDL_Event event;
@@ -545,7 +551,7 @@ void GFX_RequestExit(const bool pressed)
 					//Which is tricky due to possible use of scancodes.
 				}
 				paused = false;
-				GFX_SetTitle(-1,-1,false);
+				GFX_RefreshTitle();
 				break;
 			}
 #if defined (MACOSX)
@@ -1263,7 +1269,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
 
-		GFX_SetTitle(-1, -1, false); // refresh title.
+		GFX_RefreshTitle();
 
 		if (!fullscreen) {
 			goto finish;
@@ -2236,7 +2242,7 @@ void GFX_SetMouseHint(const MouseHint hint_id)
 		break;
 	}
 
-	GFX_SetTitle(-1, -1, false);
+	GFX_RefreshTitle();
 }
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
@@ -4073,7 +4079,7 @@ bool GFX_Events()
 					ApplyInactiveSettings();
 					SDL_Event ev;
 
-					GFX_SetTitle(-1,-1,true);
+					GFX_RefreshTitle();
 					KEYBOARD_ClrBuffer();
 //					Delay(500);
 //					while (SDL_PollEvent(&ev)) {
@@ -4093,7 +4099,7 @@ bool GFX_Events()
 								// We've got focus back, so unpause and break out of the loop
 								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
 									paused = false;
-									GFX_SetTitle(-1,-1,false);
+									GFX_RefreshTitle();
 									ApplyActiveSettings();
 									CPU_Disable_SkipAutoAdjust();
 								}
@@ -4178,7 +4184,8 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
-void GFX_ShowMsg(char const* format,...) {
+void GFX_ShowMsg(const char* format, ...)
+{
 	char buf[512];
 
 	va_list msg;
@@ -4484,7 +4491,8 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-static void launchcaptures(std::string const& edit) {
+static void launchcaptures(const std::string& edit)
+{
 	std::string path,file;
 	Section* t = control->GetSection("dosbox");
 	if(t) file = t->GetPropValue("captures");

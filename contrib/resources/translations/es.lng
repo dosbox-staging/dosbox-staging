@@ -190,9 +190,6 @@ low         |     No     |        Sí
 quiet       |     No     |        No
 auto        | 'low' si exec o dir es pasado, de lo contrario 'high'
 .
-:CONFIG_FRAMESKIP
-Cúantos fotogramas omite DOSBox antes de dibujar uno.
-.
 :CONFIG_ASPECT
 Escala la resolución vertical para producir un aspecto de pantalla 4:3
 que se corresponde con la de los monitores originales de definición estándar
