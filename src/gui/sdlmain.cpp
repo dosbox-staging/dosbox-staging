@@ -1142,6 +1142,13 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 
 static void NewMouseScreenParams()
 {
+	if (sdl.clip.w <= 0 || sdl.clip.h <= 0 ||
+	    sdl.clip.x < 0 || sdl.clip.y < 0) {
+		// Filter out unusual parameters, which can be the result
+		// of window minimized due to ALT+TAB, for example
+		return;
+	}
+
 	int abs_x = 0;
 	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
@@ -1672,23 +1679,21 @@ Bitu GFX_SetSize(int width,
 	switch (sdl.desktop.want_type) {
 dosurface:
 	case SCREEN_SURFACE:
-		sdl.clip.w = width;
-		sdl.clip.h = height;
 		if (sdl.desktop.fullscreen) {
 			if (sdl.desktop.full.fixed) {
+				sdl.clip.w = sdl.desktop.full.width;
+				sdl.clip.h = sdl.desktop.full.height;
 				sdl.clip.x = (sdl.desktop.full.width - width) / 2;
 				sdl.clip.y = (sdl.desktop.full.height - height) / 2;
 				sdl.window = SetWindowMode(SCREEN_SURFACE,
-				                           sdl.desktop.full.width,
-				                           sdl.desktop.full.height,
+				                           sdl.clip.w, sdl.clip.h,
 				                           sdl.desktop.fullscreen,
 				                           FIXED_SIZE);
-				if (sdl.window == NULL)
+				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.desktop.full.width,
-					       sdl.desktop.full.height,
-					       sdl.desktop.bpp,
+					       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 					       SDL_GetError());
+				}
 
 				/* This may be required after an ALT-TAB leading to a window
 				minimize, which further effectively shrinks its size */
@@ -1696,35 +1701,39 @@ dosurface:
 					sdl.update_display_contents = false;
 				}
 			} else {
+				sdl.clip.w = width;
+				sdl.clip.h = height;
 				sdl.clip.x = 0;
 				sdl.clip.y = 0;
 				sdl.window = SetWindowMode(SCREEN_SURFACE,
-				                           width, height,
+				                           sdl.clip.w, sdl.clip.h,
 				                           sdl.desktop.fullscreen,
 				                           FIXED_SIZE);
-				if (sdl.window == NULL)
+				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       width,
-					       height,
-					       sdl.desktop.bpp,
+					       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 					       SDL_GetError());
+				}
 			}
 		} else {
+			sdl.clip.w = width;
+			sdl.clip.h = height;
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
-			sdl.window = SetWindowMode(SCREEN_SURFACE, width, height,
+			sdl.window = SetWindowMode(SCREEN_SURFACE,
+			                           sdl.clip.w, sdl.clip.h,
 			                           sdl.desktop.fullscreen,
 			                           FIXED_SIZE);
-			if (sdl.window == NULL)
+			if (sdl.window == nullptr) {
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
-				       width,
-				       height,
-				       sdl.desktop.bpp,
+				       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 				       SDL_GetError());
+			}
 		}
 		sdl.surface = SDL_GetWindowSurface(sdl.window);
-		if (sdl.surface == NULL)
+		if (sdl.surface == nullptr) {
 			E_Exit("Could not retrieve window surface: %s",SDL_GetError());
+		}
 		switch (sdl.surface->format->BitsPerPixel) {
 			case 8:
 				retFlags = GFX_CAN_8;
