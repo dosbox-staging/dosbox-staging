@@ -420,8 +420,15 @@ void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
 	assert(res_x <= INT32_MAX);
 	assert(res_y <= INT32_MAX);
 
-	state.clip_x = clip_x;
-	state.clip_y = clip_y;
+	if (clip_x * 2 >= res_x || clip_y * 2 >= res_y) {
+		LOG_WARNING("MOUSE: Incorrect screen params: resolution %dx%d, clipping %dx%d",
+		            res_x, res_y, clip_x, clip_y);
+		state.clip_x = 0;
+		state.clip_y = 0;
+	} else {
+		state.clip_x = clip_x;
+		state.clip_y = clip_y;
+	}
 
 	// Protection against strange window sizes,
 	// to prevent division by 0 in some places
