@@ -425,8 +425,18 @@ summary('SpeexDSP provider', speexdsp_summary_msg)
 optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
 
+# File-descriptor manipulation routines, such as FD_ZERO, are used
+# by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
+# routines aren't universally available, such as on Android.
+#
+have_fd_zero = (
+    cc.has_header_symbol('sys/select.h', 'FD_ZERO')
+    or cc.has_header_symbol('winsock2.h', 'FD_ZERO')
+)
+
 # SDL Networking
 sdl2_net_dep = optional_dep
+sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
     sdl2_net_dep = dependency(
         'SDL2_net',
@@ -434,8 +444,39 @@ if get_option('use_sdl2_net')
         static: ('sdl2_net' in static_libs_list),
         not_found_message: msg.format('use_sdl2_net'),
     )
+    sdl2_net_summary_msg = sdl2_net_dep.found()
+
+    if sdl2_net_dep.found() and not have_fd_zero
+        sdl2_net_dep = optional_dep
+        sdl2_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
+    endif
+
 endif
-summary('SDL_net 2.0 support', sdl2_net_dep.found())
+summary('SDL_net 2.0 support', sdl2_net_summary_msg)
+
+# slirp (depends on glib)
+libslirp_dep = optional_dep
+libslirp_summary_msg = 'Disabled'
+if get_option('use_slirp')
+    libslirp_dep = dependency(
+        'slirp',
+        version: '>= 4.6.1',
+        default_options: default_wrap_options,
+        allow_fallback: ('slirp' not in system_libs_list),
+        static: ('slirp' in static_libs_list or prefers_static_libs),
+        not_found_message: msg.format('use_slirp'),
+    )
+
+    libslirp_summary_msg = libslirp_dep.found()
+
+    if libslirp_dep.found() and not have_fd_zero
+        libslirp_summary_msg = 'Disabled due to host missing file-descriptor routines'
+        libslirp_dep = optional_dep
+    endif
+
+endif
+summary('slirp support', libslirp_summary_msg)
+
 
 # SDL Image
 sdl2_image_dep = optional_dep
@@ -494,20 +535,6 @@ if get_option('use_fluidsynth')
     )
 endif
 summary('FluidSynth support', fluid_dep.found())
-
-# slirp (depends on glib)
-libslirp_dep = optional_dep
-if get_option('use_slirp')
-    libslirp_dep = dependency(
-        'slirp',
-        version: '>= 4.6.1',
-        default_options: default_wrap_options,
-        allow_fallback: ('slirp' not in system_libs_list),
-        static: ('slirp' in static_libs_list or prefers_static_libs),
-        not_found_message: msg.format('use_slirp'),
-    )
-endif
-summary('slirp support', libslirp_dep.found())
 
 # mt32emu
 mt32emu_dep = optional_dep
@@ -675,13 +702,22 @@ endif
 
 # Determine if system is capable of using ManyMouse library
 conf_data.set10('C_MANYMOUSE', true)
+manymouse_summary_msg = 'Enabled'
+
 if host_machine.system() == 'darwin'
     if not conf_data.has('C_IOKIT')
-        # On macOS the ManyMouse library requires IOKit
+        manymouse_summary_msg = 'Disabled due to host missing IOKit'
         conf_data.set10('C_MANYMOUSE', false)
     endif
 endif
-summary('ManyMouse support', conf_data.get('C_MANYMOUSE') == true)
+if os_family_name in ['LINUX', 'BSD']
+    if not have_fd_zero
+        manymouse_summary_msg = 'Disabled due to host missing file-descriptor routines'
+        conf_data.set10('C_MANYMOUSE', false)
+    endif
+endif
+summary('ManyMouse support', manymouse_summary_msg)
+
 
 # Linux-only dependencies
 alsa_dep = optional_dep
