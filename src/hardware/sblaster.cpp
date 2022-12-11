@@ -1331,8 +1331,9 @@ static void DSP_DoCommand() {
 	case 0x10:	/* Direct DAC */
 		DSP_ChangeMode(MODE_DAC);
 		if (sb.dac.used<DSP_DACSIZE) {
-			sb.dac.data[sb.dac.used++]=(int8_t(sb.dsp.in.data[0] ^ 0x80)) << 8;
-			sb.dac.data[sb.dac.used++]=(int8_t(sb.dsp.in.data[0] ^ 0x80)) << 8;
+			const auto mono_sample = lut_u8to16[sb.dsp.in.data[0]];
+			sb.dac.data[sb.dac.used++] = mono_sample;
+			sb.dac.data[sb.dac.used++] = mono_sample;
 		}
 		break;
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
