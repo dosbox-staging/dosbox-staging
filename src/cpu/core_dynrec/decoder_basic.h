@@ -270,7 +270,7 @@ static void inline decode_increase_wmapmask(Bitu size) {
 			       activecb->cache.wmapmask.get(),
 			       activecb->cache.masklen);
 			activecb->cache.wmapmask = std::move(tempmem);
-			activecb->cache.masklen  = newmasklen;
+			activecb->cache.masklen  = check_cast<uint16_t>(newmasklen);
 		}
 	}
 	// update mask entries
