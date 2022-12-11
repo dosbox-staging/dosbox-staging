@@ -185,7 +185,7 @@ static inline void decode_increase_wmapmask(Bitu size) {
 	} else {
 		mapidx = decode.page.index - activecb->cache.maskstart;
 		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			auto newmasklen = activecb->cache.masklen * 4;
+			size_t newmasklen = activecb->cache.masklen * 4;
 			if (newmasklen < mapidx + size) {
 				newmasklen = ((mapidx + size) & ~3) * 2;
 			}
@@ -197,6 +197,7 @@ static inline void decode_increase_wmapmask(Bitu size) {
 			activecb->cache.masklen  = newmasklen;
 		}
 	}
+	// update mask entries
 	switch (size) {
 	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
 	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
