@@ -21,8 +21,8 @@
 
 #include <cassert>
 #include <cerrno>
+#include <memory>
 #include <new>
-#include <vector>
 
 #include "mem_unaligned.h"
 #include "paging.h"
@@ -82,8 +82,9 @@ public:
 		CacheBlock* next = {};
 		// writemap masking maskpointer/start/length to allow holes in
 		// the writemap
-		std::vector<uint8_t> wmapmask = {};
+		std::unique_ptr<uint8_t[]> wmapmask = {};
 		uint16_t maskstart = 0;
+		uint16_t masklen   = 0;
 	} cache = {};
 
 	struct {
@@ -412,10 +413,8 @@ public:
 	void DelCacheBlock(CacheBlock* block)
 	{
 		active_blocks--;
-		active_count = 16;
-
+		active_count       = 16;
 		CacheBlock** where = &hash_map[block->hash.index];
-
 		while (*where != block) {
 			where = &((*where)->hash.next);
 			// Will crash if a block isn't found, which should never
@@ -424,23 +423,30 @@ public:
 		*where = block->hash.next;
 
 		// remove the cleared block from the write map
-		if (GCC_UNLIKELY(!block->cache.wmapmask.empty())) {
+		if (GCC_UNLIKELY(block->cache.wmapmask)) {
 			// first part is not influenced by the mask
-			for (auto i = block->page.start; i < block->cache.maskstart; ++i) {
-				if (write_map[i]) {
-					write_map[i]--;
-				}
-			}
-			// last part sticks to the writemap mask
-			for (auto i = block->cache.maskstart; i <= block->page.end;
+			for (Bitu i = block->page.start; i < block->cache.maskstart;
 			     i++) {
 				if (write_map[i]) {
 					write_map[i]--;
 				}
 			}
-			block->cache.wmapmask.clear();
+			Bitu maskct = 0;
+			// last part sticks to the writemap mask
+			for (Bitu i = block->cache.maskstart; i <= block->page.end;
+			     i++, maskct++) {
+				if (write_map[i]) {
+					// only adjust writemap if it isn't masked
+					if ((maskct >= block->cache.masklen) ||
+					    (!block->cache.wmapmask[maskct])) {
+						write_map[i]--;
+					}
+				}
+			}
+			block->cache.wmapmask = {};
+			block->cache.masklen  = 0;
 		} else {
-			for (auto i = block->page.start; i <= block->page.end; i++) {
+			for (Bitu i = block->page.start; i <= block->page.end; i++) {
 				if (write_map[i]) {
 					write_map[i]--;
 				}
@@ -586,7 +592,10 @@ void CacheBlock::Clear()
 		page.handler->DelCacheBlock(this);
 		page.handler=nullptr;
 	}
-	cache.wmapmask.clear();
+	if (cache.wmapmask) {
+		cache.wmapmask = {};
+		cache.masklen  = 0;
+	}
 }
 
 static CacheBlock *cache_openblock()
