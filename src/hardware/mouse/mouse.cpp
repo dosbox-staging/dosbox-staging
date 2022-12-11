@@ -415,19 +415,25 @@ void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
                            const int32_t x_abs, const int32_t y_abs,
                            const bool is_fullscreen)
 {
+	static bool last_params_were_ok = true;
+
 	assert(clip_x <= INT32_MAX);
 	assert(clip_y <= INT32_MAX);
 	assert(res_x <= INT32_MAX);
 	assert(res_y <= INT32_MAX);
 
 	if (clip_x * 2 >= res_x || clip_y * 2 >= res_y) {
-		LOG_WARNING("MOUSE: Incorrect screen params: resolution %dx%d, clipping %dx%d",
-		            res_x, res_y, clip_x, clip_y);
+		if (last_params_were_ok) {
+			LOG_WARNING("MOUSE: Incorrect screen params: resolution %d/%d, clipping %d/%d",
+			            res_x, res_y, clip_x, clip_y);			
+		}
 		state.clip_x = 0;
 		state.clip_y = 0;
+		last_params_were_ok = false;
 	} else {
 		state.clip_x = clip_x;
 		state.clip_y = clip_y;
+		last_params_were_ok = true;
 	}
 
 	// Protection against strange window sizes,
