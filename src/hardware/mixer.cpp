@@ -291,7 +291,7 @@ static void set_global_chorus(const mixer_channel_t channel)
 		channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
 }
 
-constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
+static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 {
 	if (pref == "off")
 		return ReverbPreset::None;
@@ -307,7 +307,7 @@ constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 		return ReverbPreset::Huge;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	assertm(false, "Unhandled revert preset");
+	LOG_ERR("MIXER: Received an unknown reverb preset type: '%s'", pref.data());
 	return ReverbPreset::None;
 }
 
@@ -370,7 +370,7 @@ static void configure_reverb(std::string reverb_pref)
 	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
 }
 
-constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
+static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 {
 	if (pref == "off")
 		return ChorusPreset::None;
@@ -382,7 +382,7 @@ constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 		return ChorusPreset::Strong;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	assertm(false, "Unhandled chorus preset");
+	LOG_ERR("MIXER: Received an unknown chorus preset type: '%s'", pref.data());
 	return ChorusPreset::None;
 }
 
