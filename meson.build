@@ -4,7 +4,7 @@ project(
     'cpp',
     version: '0.80.0-alpha',
     license: 'GPL-3.0-or-later',
-    meson_version: '>= 0.56.0',
+    meson_version: '>= 0.57.0',
     default_options: [
         'cpp_std=c++17',
         'buildtype=release',
@@ -111,7 +111,12 @@ if prefers_static_libs
         extra_link_flags += ['-no-pie']
     endif
 else
-    extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-lstdc++_s', '-fPIC']
+    extra_flags += [
+        '-shared-libstdc++',
+        '-shared-libgcc',
+        '-lstdc++_s',
+        '-fPIC',
+    ]
 endif
 
 if get_option('narrowing_warnings')
@@ -319,19 +324,33 @@ if cxx.compiles(builtin_expect_code, name: 'test for __builtin_expect support')
 endif
 
 atomic_code = '''
-#include <atomic>
-#include <cstdint>
-int main() {
+  #include <atomic>
+  #include <cstdint>
+ int main() {
   std::atomic<std::int32_t> x32 = 1;
   std::atomic<std::int64_t> x64 = 1;
   return static_cast<int>(x64.load() - x32.load());
-}
-'''
-is_builtin_atomic = cxx.links(
+ }
+ '''
+
+atomic_external_dep = dependency('atomic', required: false)
+atomic_internal_dep = declare_dependency(link_args: '-latomic')
+
+if cxx.links(
     atomic_code,
-    name: 'compiler has built-in atomics',
+    dependencies: atomic_external_dep,
+    name: 'compiler supports atomic types using external library',
 )
-atomic_dep = dependency('atomic', required: not is_builtin_atomic)
+    atomic_dep = atomic_external_dep
+elif cxx.links(
+    atomic_code,
+    dependencies: atomic_internal_dep,
+    name: 'compiler supports atomic types using internal library',
+)
+    atomic_dep = atomic_internal_dep
+else
+    atomic_dep = dependency('atomic', true)
+endif
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
