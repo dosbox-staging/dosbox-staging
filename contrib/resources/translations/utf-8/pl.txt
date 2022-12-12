@@ -219,6 +219,9 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora:
   auto        | 'low' jeśli podano katalog lub plik wykonywalny,
               | 'high' w przeciwnym wypadku
 .
+:CONFIG_FRAMESKIP
+Użyj ustawienia 'host_rate' z sekcji [sdl].
+.
 :CONFIG_ASPECT
 Skaluje obraz tak, żeby uzyskać proporcje 4:3, stosowaną w oryginalnych
 monitorach, dla której napisano znaczącą większość gier DOSowych.
@@ -262,11 +265,9 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff $ffff55 #ffffff
 .
 :CONFIG_SCALER
-Skaler do powiększania obrazu o niskiej rozdzielczości. Dodanie 'forced'
-spowoduje użycie skalera nawet wtedy, kiedy rezultaty mogą być
-niezadowalające.
-Niektóre skalery mogą użyć obszaru czarnej ramki wokół obrazu. Jeśli jest to
-niepożądane, użyj innego skalera lub włącz opcję 'fullresolution'.
+Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
+- Zamiast normal2x/3x, użyj ustawienia 'windowresolution'.
+- W innym przypadku spróbuj użyj opcji 'glshader'.
 .
 :CONFIG_GLSHADER
 Albo 'none', albo nazwa shadera GLSL. Działa tylko z wyjściem OpenGL. Można
