@@ -1076,29 +1076,26 @@ void VGA_SetupMemory(Section* sec)
 	// so this is realistically as strict as we should align the memory for
 	// host operations. However, DOS programs might write read and write to
 	// video memory in 16-byte chunks, so for convenience we align on 16-bytes.
-	constexpr uint8_t video_chunk_bytes = 16;
-	struct video_chunk_t {
-		uint8_t data[video_chunk_bytes] = {};
-	};
-	static_assert(sizeof(video_chunk_t) == video_chunk_bytes);
+	constexpr uint8_t vmem_alignment    = 16;
+	using vmem_buffer_t                 = std::unique_ptr<uint8_t[]>;
+	static vmem_buffer_t linear_buffer  = {};
+	static vmem_buffer_t fastmem_buffer = {};
 
-	// Calculate the size of the linear buffer including the scanline reserve
+	// Allocate and verify alignment of the linear buffer, which includes
+	// one additional scanline worth of memory.
 	const auto num_linear_bytes = std::max(vga_mem_bytes_min, vga.vmemsize) +
 	                              vga_mem_scanline_reserve;
-	assert(num_linear_bytes % video_chunk_bytes == 0);
+	std::tie(linear_buffer, vga.mem.linear) =
+	        make_unique_aligned_array<uint8_t>(vmem_alignment, num_linear_bytes);
+	assert(reinterpret_cast<uintptr_t>(vga.mem.linear) % vmem_alignment == 0);
 
-	// Allocate, assign, and confirm alignment of the linear buffer
-	static std::vector<video_chunk_t> linear_buffer = {};
-	linear_buffer.resize(num_linear_bytes / video_chunk_bytes);
-	vga.mem.linear = reinterpret_cast<uint8_t*>(linear_buffer.data());
-	assert(reinterpret_cast<uintptr_t>(vga.mem.linear) % video_chunk_bytes == 0);
-
-	// Allocate, assign, and confirm alignment of the fast-memory buffer
+	// Allocate and verify alignment of the fast-memory buffer, which is
+	// twice the size of the linear array.
 	const auto num_fastmem_bytes = 2 * num_linear_bytes;
-	static std::vector<video_chunk_t> fastmem_buffer = {};
-	fastmem_buffer.resize(num_fastmem_bytes / video_chunk_bytes);
-	vga.fastmem = reinterpret_cast<uint8_t*>(fastmem_buffer.data());
-	assert(reinterpret_cast<uintptr_t>(vga.fastmem) % video_chunk_bytes == 0);
+	std::tie(fastmem_buffer,
+	         vga.fastmem) = make_unique_aligned_array<uint8_t>(vmem_alignment,
+	                                                           num_fastmem_bytes);
+	assert(reinterpret_cast<uintptr_t>(vga.fastmem) % vmem_alignment == 0);
 
 	// In most cases these values stay the same. Assumptions: vmemwrap is power of 2,
 	// vmemwrap <= vmemsize, fastmem implicitly has mem wrap twice as big

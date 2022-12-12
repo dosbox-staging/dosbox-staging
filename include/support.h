@@ -26,11 +26,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <cfloat>
 #include <functional>
 #include <limits>
 #include <map>
@@ -298,5 +298,19 @@ constexpr auto enum_val(enum_t e)
 	static_assert(std::is_enum_v<enum_t>);
 	return static_cast<std::underlying_type_t<enum_t>>(e);
 }
+
+// Create a buffer (held in a unique_ptr) and aligned pointer, similar to
+// "make_unique" but with the desired alignment, array size, and optional
+// initialer value, similar to other managed containers' constructors.
+//
+// For example: auto [buf, ptr] = make_unique_aligned_array<int>(32, 10, -99);
+//
+// The ptr is 32-byte aligned, points to the first of 10 ints, all of which all
+// initialized with the value -99. The buffer will automatically be deallocated
+// when it goes out of scope.
+//
+template <typename T>
+std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
+        const size_t byte_alignment, const size_t req_elems, const T& init_val = {});
 
 #endif

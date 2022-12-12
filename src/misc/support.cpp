@@ -569,3 +569,37 @@ bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t se
 	return true;
 }
 
+template <typename T>
+std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
+        const size_t byte_alignment, const size_t req_elems, const T& initial_value)
+{
+	// Are the inputs valid?
+	assert(byte_alignment > 0);
+	assert(byte_alignment % sizeof(T) == 0); // multiple of the type-size
+	assert(req_elems > 0);
+
+	// Allocate the buffer with enough "space" to accomodate the alignment:
+	const auto space_elems = req_elems + byte_alignment / sizeof(T);
+	auto buffer = std::make_unique<T[]>(space_elems); // moved on return
+
+	// Convert the number of elements into bytes, to be used by align
+	const auto req_bytes = req_elems * sizeof(T);
+	auto space_bytes = space_elems * sizeof(T); // adjusted by align
+
+	// Align the pointer within our buffer
+	auto ptr = reinterpret_cast<void*>(buffer.get());
+	std::align(byte_alignment, req_bytes, ptr, space_bytes);
+
+	// Verify that the adjust space is sufficient and that the ptr is aligned
+	assert(space_bytes >= req_bytes);
+	assert(reinterpret_cast<uintptr_t>(ptr) % byte_alignment == 0);
+
+	// Initialize the elements
+	const auto obj_ptr = reinterpret_cast<T*>(ptr);
+	std::fill_n(obj_ptr, req_elems, initial_value);
+
+	return {std::move(buffer), obj_ptr};
+}
+// Explicit template instantiations
+template std::pair<std::unique_ptr<uint8_t[]>, uint8_t*>
+make_unique_aligned_array<uint8_t>(const size_t, const size_t, const uint8_t&);
