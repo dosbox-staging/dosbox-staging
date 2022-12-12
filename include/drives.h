@@ -390,7 +390,8 @@ private:
 	char discLabel[32];
 };
 
-struct VFILE_Block;
+class VFILE_Block;
+using vfile_block_t = std::shared_ptr<VFILE_Block>;
 
 class Virtual_Drive final : public DOS_Drive {
 public:
@@ -418,7 +419,7 @@ public:
 private:
 	Virtual_Drive(const Virtual_Drive&); // prevent copying
 	Virtual_Drive& operator= (const Virtual_Drive&); // prevent assignment
-	VFILE_Block * search_file;
+	vfile_block_t search_file;
 };
 
 class Overlay_Drive final : public localDrive {
