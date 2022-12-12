@@ -540,8 +540,10 @@ bool Virtual_Drive::FindNext(DOS_DTA &dta)
 		if (pos == search_file->onpos &&
 		    ((attr & DOS_ATTR_DIRECTORY) || !search_file->isdir) &&
 		    WildFileCmp(search_file->name.c_str(), pattern)) {
-			dta.SetResult(search_file->name.c_str(), search_file->size,
-			              search_file->date, search_file->time,
+			dta.SetResult(search_file->name.c_str(),
+			              search_file->size,
+			              search_file->date,
+			              search_file->time,
 			              (int)(search_file->isdir ? DOS_ATTR_DIRECTORY
 			                                       : DOS_ATTR_ARCHIVE));
 			search_file = search_file->next;
@@ -629,7 +631,8 @@ Bits Virtual_Drive::UnMount() {
 	return 1;
 }
 
-char const* Virtual_Drive::GetLabel() {
+const char* Virtual_Drive::GetLabel()
+{
 	return "DOSBOX";
 }
 
