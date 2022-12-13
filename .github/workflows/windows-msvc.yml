@@ -49,7 +49,7 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.2
         with:
             vs-prerelease: true
             msbuild-architecture: ${{ matrix.conf.arch }}
@@ -132,7 +132,7 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.2
         with:
             vs-prerelease: true
             msbuild-architecture: ${{ matrix.conf.arch }}
