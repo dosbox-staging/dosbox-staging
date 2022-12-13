@@ -220,6 +220,9 @@ low         |     No     |        Sí
 quiet       |     No     |        No
 auto        | 'low' si exec o dir es pasado, de lo contrario 'high'
 .
+:CONFIG_FRAMESKIP
+Consider capping frame-rates using the '[sdl] host_rate' setting.
+.
 :CONFIG_ASPECT
 Escala la resolución vertical para producir un aspecto de pantalla 4:3
 que se corresponde con la de los monitores originales de definición estándar
@@ -256,13 +259,9 @@ either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
 RGB triplets (e.g. (255, 0, 255) for magenta).
 .
 :CONFIG_SCALER
-Escalador utilizado para ampliar/mejorar modos de baja resolución.
-Si 'forced' es agregado, el escalador se utilizará incluso si
-el resultado podría no ser el deseado.
-Note que algunos escaladores pueden utilizar bordes negros para ajustar la imagen
-dentro de la resolución de pantalla configurada. Si esto es
-indeseable, pruebe con otro escalador o habilite
-salida fullresolution.
+Software scalers are deprecated in favour of hardware-accelerated options:
+ - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
+ - If you used an advanced scaler, consider one of the 'glshader' options instead.
 .
 :CONFIG_GLSHADER
 Ya sea 'none' o un nombre de shader GLSL. Funciona sólo con

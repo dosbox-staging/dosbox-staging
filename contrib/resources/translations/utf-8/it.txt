@@ -241,6 +241,9 @@ quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
             |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
+:CONFIG_FRAMESKIP
+Consider capping frame-rates using the '[sdl] host_rate' setting.
+.
 :CONFIG_ASPECT
 Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
 di aspetto 4:3, corrispondente a quello dei monitor a definizione standard
@@ -290,12 +293,9 @@ sono rispettivamente:
 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
 .
 :CONFIG_SCALER
-Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
-Se viene aggiunto 'forced', lo scaler sarà usato anche se i risultati
-potrebbero non essere come desiderati.
-Nota che alcuni scaler possono utilizzare bordi neri per adattare l'immagine
-alla risoluzione dello schermo configurata. Se questo non è l'effetto
-desiderato, prova uno scaler diverso o attiva l'uscita a piena risoluzione.
+Software scalers are deprecated in favour of hardware-accelerated options:
+ - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
+ - If you used an advanced scaler, consider one of the 'glshader' options instead.
 .
 :CONFIG_GLSHADER
 Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con

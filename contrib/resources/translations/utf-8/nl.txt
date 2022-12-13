@@ -229,6 +229,9 @@ quiet            |   nee   |    nee
 auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
                     anders 'high'
 .
+:CONFIG_FRAMESKIP
+Consider capping frame-rates using the '[sdl] host_rate' setting.
+.
 :CONFIG_ASPECT
 Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
 die overeenkomt met die van de originele standaarddefinitiemonitoren waarvoor
@@ -277,12 +280,9 @@ indeling, zijn: #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500
 respectievelijk.
 .
 :CONFIG_SCALER
-Scaler gebruikt om modi met lage resolutie te vergroten/verbeteren.
-Als 'forced' wordt toegevoegd, wordt de scaler gebruikt, zelfs als het
-resultaat misschien niet gewenst is.
-Merk op dat sommige scalers zwarte randen gebruiken om de afbeelding binnen
-uw geconfigureerde schermresolutie te laten passen. Als dit ongewenst is,
-probeer dan een andere scaler of gebruik weergave op volledige resolutie.
+Software scalers are deprecated in favour of hardware-accelerated options:
+ - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
+ - If you used an advanced scaler, consider one of the 'glshader' options instead.
 .
 :CONFIG_GLSHADER
 Ofwel 'none' of een GLSL-shadernaam. Werkt alleen met OpenGL-uitvoer.

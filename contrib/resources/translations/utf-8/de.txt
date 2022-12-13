@@ -245,6 +245,9 @@ quiet       |  nein    |   nein
 auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden,
                     sonst "high"
 .
+:CONFIG_FRAMESKIP
+Consider capping frame-rates using the '[sdl] host_rate' setting.
+.
 :CONFIG_ASPECT
 Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu
 erzeugen, das dem der ursprünglichen Monitore entspricht, für die die Mehrheit
@@ -289,13 +292,9 @@ Leerzeichen oder Kommata getrennte Farbwerte angibst, entweder als 3- oder
 RGB-Tripletts (z. B. (255, 0, 255) für Magenta).
 .
 :CONFIG_SCALER
-Der Scaler wird verwendet, um Modi mit niedriger Auflösung zu vergrößern/zu
-verbessern. Wenn "forced" angehängt wird, dann wird der Scaler benutzt, auch wenn
-das Ergebnis nicht gewollt sein könnte.
-Beachte, dass einige Scaler schwarze Ränder verwenden können, um das Bild
-innerhalb deiner konfigurierten Displayauflösung anzupassen. Wenn dies
-unerwünscht ist, versuche entweder einen anderen Scaler oder aktiviere die
-Ausgabe mit voller Auflösung.
+Software scalers are deprecated in favour of hardware-accelerated options:
+ - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
+ - If you used an advanced scaler, consider one of the 'glshader' options instead.
 .
 :CONFIG_GLSHADER
 Entweder "none" oder ein GLSL-Shadername. Funktioniert nur mit
