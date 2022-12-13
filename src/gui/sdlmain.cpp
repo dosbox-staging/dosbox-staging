@@ -4627,6 +4627,18 @@ int sdl_main(int argc, char *argv[])
 
 	int rcode = 0; // assume good until proven otherwise
 	try {
+		std::string working_dir;
+		constexpr bool remove_arg = true;
+		if (control->cmdline->FindString("--working-dir", working_dir, remove_arg) ||
+		    control->cmdline->FindString("-working-dir", working_dir, remove_arg)) {
+			std::error_code ec;
+			std::filesystem::current_path(working_dir, ec);
+			if (ec) {
+				LOG_ERR("Cannot set working directory to %s",
+				        working_dir.c_str());
+			}
+		}
+
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CROSS_DetermineConfigPaths();
