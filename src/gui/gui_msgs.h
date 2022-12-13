@@ -35,7 +35,7 @@ There is NO WARRANTY, to the extent permitted by law.
 constexpr char help_msg[] =
         R"(Usage: dosbox [OPTION]... [FILE]
 
-These are the common options:
+List of common options:
 
   --printconf          Print the location of the default configuration file.
 
@@ -52,32 +52,30 @@ These are the common options:
   -nolocalconf         Don't read settings from "dosbox.conf" if present in
                        the current working directory.
 
-  -conf <configfile>   Start DOSBox with the options specified in <configfile>.
+  -conf <configfile>   Start with the options specified in <configfile>.
                        Multiple configfiles can be specified.
 
   --working-dir <path> Set working directory to <path>. DOSBox will act as if
                        started from this directory.
 
-  -fullscreen          Start DOSBox in fullscreen mode.
+  -fullscreen          Start in fullscreen mode.
 
-  -lang <langfile>     Start DOSBox with the language specified in <langfile>.
+  -lang <langfile>     Start with the language specified in <langfile>.
 
   --list-glshaders     List available GLSL shaders and their directories.
                        Results are useable in the "glshader = " config setting.
 
-  -machine <type>      Setup DOSBox to emulate a specific type of machine.
-                       The machine type has influence on both the videocard
-                       and the emulated soundcards. Valid choices are:
-                       hercules, cga, cga_mono, tandy, pcjr, ega, vgaonly,
-                       svga_s3 (default), svga_et3000, svga_et4000,
-                       svga_paradise, vesa_nolfb, vesa_oldvbe.
+  -machine <type>      Emulate a specific type of machine. The machine type has
+                       influence on both the emulated video and sound cards.
+                       Valid choices are: hercules, cga, cga_mono, tandy,
+                       pcjr, ega, vgaonly, svga_s3 (default), svga_et3000,
+                       svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe.
 
-  -exit                DOSBox will exit after the DOS program specified by
-                       FILE has ended.
+  -exit                Exit after the DOS program specified by FILE has ended.
 
-  -h, --help           Print this help message.
+  -h, --help           Print this help message and exit.
 
-  --version            Print version information and exit.
+  -v, --version        Print version information and exit.
 
 You can find full list of options in the man page: dosbox(1)
 And in the file: /usr/share/doc/dosbox-staging/README
