@@ -35,50 +35,49 @@ There is NO WARRANTY, to the extent permitted by law.
 constexpr char help_msg[] =
         R"(Usage: dosbox [OPTION]... [FILE]
 
-These are common options:
+These are the common options:
 
-  -h, --help          Displays this message.
-
-  --printconf         Prints the location of the default configuration file.
+  --printconf         Print the location of the default configuration file.
 
   --editconf          Open the default configuration file in a text editor.
 
-  -c <command>        Runs the specified DOS command before running FILE.
+  -c <command>        Run the specified DOS command before running FILE.
                       Multiple commands can be specified.
 
   -noautoexec         Don't perform any [autoexec] actions.
 
   -noprimaryconf      Don't read settings from the primary configuration file
-                      located in ~/.config/dosbox/dosbox-staging.conf.
+                      located in your user folder.
 
   -nolocalconf        Don't read settings from "dosbox.conf" if present in
-                      the local current working directory.
+                      the current working directory.
 
-  -conf <configfile>  Start dosbox with the options specified in <configfile>.
-                      Multiple configfiles can be present at the commandline.
+  -conf <configfile>  Start DOSBox with the options specified in <configfile>.
+                      Multiple configfiles can be specified.
 
-  -fullscreen         Start dosbox in fullscreen mode.
+  -fullscreen         Start DOSBox in fullscreen mode.
 
-  -lang <langfile>    Start dosbox with the language specified in
-                      <langfile>.
+  -lang <langfile>    Start DOSBox with the language specified in <langfile>.
 
   --list-glshaders    List available GLSL shaders and their directories.
-                      Results are useable in the "glshader = " conf setting.
+                      Results are useable in the "glshader = " config setting.
 
-  -machine <type>     Setup dosbox to emulate a specific type of machine.
+  -machine <type>     Setup DOSBox to emulate a specific type of machine.
                       The machine type has influence on both the videocard
-                      and the emulated soundcards.  Valid choices are:
+                      and the emulated soundcards. Valid choices are:
                       hercules, cga, cga_mono, tandy, pcjr, ega, vgaonly,
                       svga_s3 (default), svga_et3000, svga_et4000,
                       svga_paradise, vesa_nolfb, vesa_oldvbe.
 
-  -exit               Dosbox will close itself when the DOS program
-                      specified by FILE ends.
+  -exit               DOSBox will exit after the DOS program specified by
+                      FILE has ended.
 
-  --version       Output version information and exit.
+  -h, --help          Print this help message.
+
+  --version           Print version information and exit.
 
 You can find full list of options in the man page: dosbox(1)
-And in file: /usr/share/doc/dosbox-staging/README
+And in the file: /usr/share/doc/dosbox-staging/README
 )";
 
 #endif
