@@ -423,6 +423,8 @@ private:
 	Virtual_Drive(const Virtual_Drive&); // prevent copying
 	Virtual_Drive& operator= (const Virtual_Drive&); // prevent assignment
 	vfile_block_t search_file;
+	bool equal_name(vfile_block_t file_block, const char* name);
+	vfile_block_t find_file_by_name( const char* name);
 };
 
 class Overlay_Drive final : public localDrive {
