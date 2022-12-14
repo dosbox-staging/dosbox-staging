@@ -184,7 +184,8 @@ sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
 ``` shell
 # macOS
 xcode-select --install
-brew install ccache meson libpng sdl2 sdl2_image sdl2_net opusfile fluid-synth libslirp speexdsp
+brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
+     fluid-synth libslirp pkg-config python3 speexdsp
 ```
 
 ### Build and stay up-to-date with the latest sources
