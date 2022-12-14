@@ -14,6 +14,12 @@ up builds. The minimum set of dependencies is:
 All other dependencies are optional and can be disabled while configuring the
 build (in `meson setup` step).
 
+## General notes
+
+You can maintain several Meson build configurations using subdirectories, for
+example, the **debug** and **release** configurations can reside in
+`build/debug` and `build/release`, respectively.
+
 ## OS-specific instructions
 
 Instructions in this article assume you're using Linux or BSD but will work
@@ -67,7 +73,7 @@ is disabled by default. To enable it for Meson builds, set the `tracy` option
 to `true`:
 
 ``` shell
-meson setup -Dtracy=true build/release-tracy build
+meson setup -Dtracy=true build/release-tracy
 meson compile -C build/release-tracy
 ```
 
@@ -182,8 +188,8 @@ automatically.
 Build and run tests:
 
 ``` shell
-meson setup -Dbuildtype=debug build
-meson test -C build
+meson setup -Dbuildtype=debug build/debug
+meson test -C build/debug
 ```
 
 ### Run unit tests (with user-supplied gtest sources)
@@ -195,56 +201,54 @@ Place files described in `subprojects/gtest.wrap` file in
 `subprojects/packagecache/` directory, and then:
 
 ``` shell
-meson setup -Dbuildtype=debug --wrap-mode=nodownload build
-meson test -C build
+meson setup -Dbuildtype=debug --wrap-mode=nodownload build/debug
+meson test -C build/debug
 ```
 
 Re-running a single GTest test over and over can be done with the below
 command; this can be very useful during development.
 
 ``` shell
-meson compile -C build && ./build/tests/<TEST_NAME>
+meson compile -C build/debug && ./build/debug/tests/<TEST_NAME>
 ```
 
 To list the names of all GTest tests:
 
 ``` shell
-meson test -C build --list | grep gtest
+meson test -C build/debug --list | grep gtest
 ```
 
 To run a single GTest test case:
 
 ``` shell
-./build/tests/<TEST_NAME> --gtest_filter=<TEST_CASE_NAME>
+./build/debug/tests/<TEST_NAME> --gtest_filter=<TEST_CASE_NAME>
 ```
 
 Concrete example:
 
 ``` shell
-./build/tests/bitops --gtest_filter=bitops.nominal_byte
+./build/debug/tests/bitops --gtest_filter=bitops.nominal_byte
 ```
 
 ### Build test coverage report
 
-Prerequisites:
+Prerequisite: Install Clang's `lcov` package and/or the GCC-equivalent `gcovr` package.
+
+Build and run the tests:
 
 ``` shell
-# Fedora
-sudo dnf install gcovr lcov
+meson setup -Dbuildtype=debug -Db_coverage=true build/cov
+meson compile -C build/cov
+meson test -C build/cov
 ```
 
-Run tests and generate report:
+Generate and view the coverage report:
 
 ``` shell
-meson setup -Dbuildtype=debug -Db_coverage=true build
-meson test -C build
-meson compile -C build coverage-html
-```
-
-Open the report with your browser:
-
-``` shell
-firefox build/meson-logs/coveragereport/index.html"
+cd build/cov
+ninja coverage-html
+cd meson-logs/coveragereport
+firefox index.html
 ```
 
 ### Static analysis report
@@ -263,8 +267,8 @@ sudo apt install clang-tools
 Build and generate report:
 
 ``` shell
-meson setup -Dbuildtype=debug build
-meson compile -C build scan-build
+meson setup -Dbuildtype=debug build/debug
+meson compile -C build/debug scan-build
 ```
 
 ### Make a sanitizer build
@@ -300,3 +304,4 @@ will leave your normal `build/` files untouched.
 Run the sanitizer binary as you normally would, then exit and look for
 sanitizer mesasge in the log output.  If none exist, then your program
 is running clean.
+
