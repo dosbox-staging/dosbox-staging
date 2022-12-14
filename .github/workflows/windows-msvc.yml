@@ -52,6 +52,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
         with:
             vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -134,6 +135,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
         with:
             vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
