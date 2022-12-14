@@ -26,11 +26,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <cfloat>
 #include <functional>
 #include <limits>
 #include <map>
@@ -52,12 +52,12 @@
 #endif
 
 #ifdef PAGESIZE
-constexpr size_t host_pagesize = PAGESIZE;
+constexpr uint16_t host_pagesize = { PAGESIZE };
 #else
-constexpr size_t host_pagesize = 4096;
+constexpr uint16_t host_pagesize = 4096;
 #endif
 
-constexpr size_t dos_pagesize = 4096;
+constexpr uint16_t dos_pagesize = 4096;
 
 // Some C functions operate on characters but return integers,
 // such as 'toupper'. This function asserts that a given int
@@ -166,8 +166,22 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value);
 // TODO review all remaining uses of this macro
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
 
+#ifndef HAVE_STRNLEN
+constexpr size_t strnlen(const char* str, const size_t max_len)
+{
+	if (!str) {
+		return 0;
+	}
+	size_t i = 0;
+	while (i < max_len && str[i] != '\0') {
+		++i;
+	}
+	return i;
+}
+#endif
+
 #ifdef HAVE_STRINGS_H
-#include <strings.h>
+#	include <strings.h>
 #endif
 
 // Scans the provided command-line string for the '/'flag and removes it from
@@ -284,5 +298,19 @@ constexpr auto enum_val(enum_t e)
 	static_assert(std::is_enum_v<enum_t>);
 	return static_cast<std::underlying_type_t<enum_t>>(e);
 }
+
+// Create a buffer (held in a unique_ptr) and aligned pointer, similar to
+// "make_unique" but with the desired alignment, array size, and optional
+// initialer value, similar to other managed containers' constructors.
+//
+// For example: auto [buf, ptr] = make_unique_aligned_array<int>(32, 10, -99);
+//
+// The ptr is 32-byte aligned, points to the first of 10 ints, all of which all
+// initialized with the value -99. The buffer will automatically be deallocated
+// when it goes out of scope.
+//
+template <typename T>
+std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
+        const size_t byte_alignment, const size_t req_elems, const T& init_val = {});
 
 #endif

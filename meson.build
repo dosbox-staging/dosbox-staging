@@ -4,7 +4,7 @@ project(
     'cpp',
     version: '0.80.0-alpha',
     license: 'GPL-3.0-or-later',
-    meson_version: '>= 0.56.0',
+    meson_version: '>= 0.57.0',
     default_options: [
         'cpp_std=c++17',
         'buildtype=release',
@@ -54,7 +54,12 @@ summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 
 # extra build flags
 extra_flags = ['-Wno-unknown-pragmas']
-extra_link_flags = []
+# generate linker map file
+extra_link_flags = [
+    '-Wl,-map,dosbox.map',
+    '-Wl,-Map,dosbox.map',
+    '-Wl,--Map,dosbox.map',
+]
 
 # If the compiler provides std::filesystem, then we consider it modern enough
 # that we can trust it's extra helpful warnings to let us improve the code quality.
@@ -76,6 +81,9 @@ if get_option('buildtype') == 'release'
     # testing with debug builds will make use of them.
     #
     extra_flags += [
+        '-fstrict-aliasing',
+        '-Wstrict-aliasing',
+        '-fmerge-all-constants',
         '-fno-math-errno',
         '-fno-signed-zeros',
         '-fno-trapping-math',
@@ -86,6 +94,7 @@ if get_option('buildtype') == 'release'
         '-ffunction-sections',
         '-fdata-sections',
     ]
+    extra_link_flags += ['-Wl,--gc-sections']
 endif
 
 if get_option('asm')
@@ -102,7 +111,12 @@ if prefers_static_libs
         extra_link_flags += ['-no-pie']
     endif
 else
-    extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
+    extra_flags += [
+        '-shared-libstdc++',
+        '-shared-libgcc',
+        '-lstdc++_s',
+        '-fPIC',
+    ]
 endif
 
 if get_option('narrowing_warnings')
@@ -235,6 +249,11 @@ if cc.has_function('realpath', prefix: '#include <stdlib.h>')
     conf_data.set10('HAVE_REALPATH', true)
 endif
 
+# strnlen was originally a Linux-only function
+if cc.has_function('strnlen', prefix: '#include <string.h>')
+    conf_data.set10('HAVE_STRNLEN', true)
+endif
+
 if cc.has_member('struct dirent', 'd_type', prefix: '#include <dirent.h>')
     conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
@@ -305,19 +324,33 @@ if cxx.compiles(builtin_expect_code, name: 'test for __builtin_expect support')
 endif
 
 atomic_code = '''
-#include <atomic>
-#include <cstdint>
-int main() {
+  #include <atomic>
+  #include <cstdint>
+ int main() {
   std::atomic<std::int32_t> x32 = 1;
   std::atomic<std::int64_t> x64 = 1;
   return static_cast<int>(x64.load() - x32.load());
-}
-'''
-is_builtin_atomic = cxx.links(
+ }
+ '''
+
+atomic_external_dep = dependency('atomic', required: false)
+atomic_internal_dep = declare_dependency(link_args: '-latomic')
+
+if cxx.links(
     atomic_code,
-    name: 'compiler has built-in atomics',
+    dependencies: atomic_external_dep,
+    name: 'compiler supports atomic types using external library',
 )
-atomic_dep = dependency('atomic', required: not is_builtin_atomic)
+    atomic_dep = atomic_external_dep
+elif cxx.links(
+    atomic_code,
+    dependencies: atomic_internal_dep,
+    name: 'compiler supports atomic types using internal library',
+)
+    atomic_dep = atomic_internal_dep
+else
+    atomic_dep = dependency('atomic', true)
+endif
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,8 +448,18 @@ summary('SpeexDSP provider', speexdsp_summary_msg)
 optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
 
+# File-descriptor manipulation routines, such as FD_ZERO, are used
+# by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
+# routines aren't universally available, such as on Android.
+#
+have_fd_zero = (
+    cc.has_header_symbol('sys/select.h', 'FD_ZERO')
+    or cc.has_header_symbol('winsock2.h', 'FD_ZERO')
+)
+
 # SDL Networking
 sdl2_net_dep = optional_dep
+sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
     sdl2_net_dep = dependency(
         'SDL2_net',
@@ -424,7 +467,39 @@ if get_option('use_sdl2_net')
         static: ('sdl2_net' in static_libs_list),
         not_found_message: msg.format('use_sdl2_net'),
     )
+    sdl2_net_summary_msg = sdl2_net_dep.found()
+
+    if sdl2_net_dep.found() and not have_fd_zero
+        sdl2_net_dep = optional_dep
+        sdl2_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
+    endif
+
 endif
+summary('SDL_net 2.0 support', sdl2_net_summary_msg)
+
+# slirp (depends on glib)
+libslirp_dep = optional_dep
+libslirp_summary_msg = 'Disabled'
+if get_option('use_slirp')
+    libslirp_dep = dependency(
+        'slirp',
+        version: '>= 4.6.1',
+        default_options: default_wrap_options,
+        allow_fallback: ('slirp' not in system_libs_list),
+        static: ('slirp' in static_libs_list or prefers_static_libs),
+        not_found_message: msg.format('use_slirp'),
+    )
+
+    libslirp_summary_msg = libslirp_dep.found()
+
+    if libslirp_dep.found() and not have_fd_zero
+        libslirp_summary_msg = 'Disabled due to host missing file-descriptor routines'
+        libslirp_dep = optional_dep
+    endif
+
+endif
+summary('slirp support', libslirp_summary_msg)
+
 
 # SDL Image
 sdl2_image_dep = optional_dep
@@ -436,6 +511,7 @@ if get_option('use_sdl2_image')
         not_found_message: msg.format('use_sdl2_image'),
     )
 endif
+summary('SDL_image 2.0 support', sdl2_image_dep.found())
 
 # OpenGL
 opengl_dep = optional_dep
@@ -446,7 +522,8 @@ endif
 if (opengl_dep.found()
     and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
-    and get_option('enable_debugger') != 'none')
+    and get_option('enable_debugger') != 'none'
+)
 
     warning('''OpenGL is disabled because it's not compatible with the debugger.
             To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
@@ -481,20 +558,6 @@ if get_option('use_fluidsynth')
     )
 endif
 summary('FluidSynth support', fluid_dep.found())
-
-# slirp (depends on glib)
-libslirp_dep = optional_dep
-if get_option('use_slirp')
-    libslirp_dep = dependency(
-        'slirp',
-        version: '>= 4.6.1',
-        default_options: default_wrap_options,
-        allow_fallback: ('slirp' not in system_libs_list),
-        static: ('slirp' in static_libs_list or prefers_static_libs),
-        not_found_message: msg.format('use_slirp'),
-    )
-endif
-summary('slirp support', libslirp_dep.found())
 
 # mt32emu
 mt32emu_dep = optional_dep
@@ -662,13 +725,22 @@ endif
 
 # Determine if system is capable of using ManyMouse library
 conf_data.set10('C_MANYMOUSE', true)
+manymouse_summary_msg = 'Enabled'
+
 if host_machine.system() == 'darwin'
-  if not conf_data.has('C_IOKIT')
-    # On macOS the ManyMouse library requires IOKit
-    conf_data.set10('C_MANYMOUSE', false)
-  endif
+    if not conf_data.has('C_IOKIT')
+        manymouse_summary_msg = 'Disabled due to host missing IOKit'
+        conf_data.set10('C_MANYMOUSE', false)
+    endif
 endif
-summary('ManyMouse support', conf_data.get('C_MANYMOUSE') == true)
+if os_family_name in ['LINUX', 'BSD']
+    if not have_fd_zero
+        manymouse_summary_msg = 'Disabled due to host missing file-descriptor routines'
+        conf_data.set10('C_MANYMOUSE', false)
+    endif
+endif
+summary('ManyMouse support', manymouse_summary_msg)
+
 
 # Linux-only dependencies
 alsa_dep = optional_dep
@@ -717,7 +789,7 @@ subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
 if conf_data.get('C_MANYMOUSE') == true
-  subdir('src/libs/manymouse')
+    subdir('src/libs/manymouse')
 endif
 
 # ZMBV and TalChorus use some support functionality from misc
@@ -744,7 +816,7 @@ third_party_deps = [
 ]
 
 if conf_data.get('C_MANYMOUSE') == true
-  third_party_deps += manymouse_dep
+    third_party_deps += manymouse_dep
 endif
 
 # internal libs

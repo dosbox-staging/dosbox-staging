@@ -65,6 +65,7 @@ protected:
 
 	State state = State::Normal;
 
+	uint16_t column_counter = 0;
 	// how many lines printed out since last user prompt
 	uint16_t line_counter = 0;
 

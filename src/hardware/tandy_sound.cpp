@@ -129,8 +129,16 @@ class TandyDAC {
 
 public:
 	TandyDAC(const ConfigProfile config_profile, const std::string &filter_choice);
-	bool IsEnabled() const { return is_enabled; }
-	const IOConfig &GetIOConfig() const { return io; }
+	~TandyDAC();
+
+	bool IsEnabled() const
+	{
+		return is_enabled;
+	}
+	const IOConfig& GetIOConfig() const
+	{
+		return io;
+	}
 
 private:
 	void ChangeMode();
@@ -158,6 +166,7 @@ class TandyPSG {
 public:
 	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
 	         const std::string &filter_choice);
+	~TandyPSG();
 
 private:
 	TandyPSG() = delete;
@@ -255,7 +264,28 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	is_enabled = true;
 }
 
-void TandyDAC::DmaCallback([[maybe_unused]] DmaChannel *, DMAEvent event)
+TandyDAC::~TandyDAC()
+{
+	if (!is_enabled) {
+		return;
+	}
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
+	// Stop the game from accessing the IO ports
+	read_handler.Uninstall();
+	for (auto& handler : write_handlers) {
+		handler.Uninstall();
+	}
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+}
+
+void TandyDAC::DmaCallback([[maybe_unused]] DmaChannel*, DMAEvent event)
 {
 	// LOG_MSG("TANDYDAC: DMA event %d", event);
 	if (event != DMA_REACHED_TC)
@@ -470,7 +500,24 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	                       : "but no DAC, because a Sound Blaster is present");
 }
 
-bool TandyPSG::MaybeRenderFrame(float &frame)
+TandyPSG::~TandyPSG()
+{
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
+	// Stop the game from accessing the IO ports
+	for (auto& handler : write_handlers) {
+		handler.Uninstall();
+	}
+
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+}
+
+bool TandyPSG::MaybeRenderFrame(float& frame)
 {
 	assert(dsi);
 	assert(resampler);

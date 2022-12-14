@@ -512,12 +512,14 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	refCount--;
 
 	// Stop playback before wiping out the CD Player
-	if (refCount == 0 && player.cd) {
-		StopAudio();
+	if (refCount == 0) {
+		LOG_MSG("CDROM: Shutting down CD-DA player");
+
+		if (player.cd) {
+			StopAudio();
+		}
+		MIXER_DeregisterChannel(player.channel);
 		player.channel.reset();
-#ifdef DEBUG
-		LOG_MSG("CDROM: Released CD Player resources");
-#endif
 	}
 	if (player.cd == this) {
 		player.cd = nullptr;

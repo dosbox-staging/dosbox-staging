@@ -354,10 +354,17 @@ getdefault:
 		assert((handler != nullptr) && (handler->GetName() == "none"s));
 	}
 
-	~MIDI(){
-		if(midi.available) midi.handler->Close();
+	~MIDI()
+	{
+		if (!midi.available) {
+			assert(!midi.handler);
+			return;
+		}
+
+		assert(midi.handler);
+		midi.handler->Close();
+		midi.handler = {};
 		midi.available = false;
-		midi.handler = 0;
 	}
 };
 

@@ -353,17 +353,20 @@ void Ps1Dac::Update(uint16_t samples)
 
 Ps1Dac::~Ps1Dac()
 {
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
 	// Stop the game from accessing the IO ports
 	for (auto &handler : read_handlers)
 		handler.Uninstall();
 	for (auto &handler : write_handlers)
 		handler.Uninstall();
 
-	// Stop and remove the mixer callback
-	if (channel) {
-		channel->Enable(false);
-		channel.reset();
-	}
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 }
 
 class Ps1Synth {
@@ -517,13 +520,17 @@ void Ps1Synth::AudioCallback(const uint16_t requested_frames)
 
 Ps1Synth::~Ps1Synth()
 {
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
 	// Stop the game from accessing the IO ports
 	write_handler.Uninstall();
 
-	if (channel) {
-		channel->Enable(false);
-		channel.reset();
-	}
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 }
 
 static std::unique_ptr<Ps1Dac> ps1_dac = {};

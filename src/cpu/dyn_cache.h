@@ -19,9 +19,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <cerrno>
 #include <cassert>
-#include <array>
+#include <cerrno>
+#include <memory>
 #include <new>
 
 #include "mem_unaligned.h"
@@ -63,9 +63,11 @@ public:
 	}
 
 	struct {
-		uint16_t start, end; // where in the page is the original code
-		CodePageHandler *handler; // page containing this code
-	} page;
+		uint16_t start = 0;
+		uint16_t end   = 0; // where in the page is the original code
+
+		CodePageHandler* handler = {}; // page containing this code
+	} page = {};
 
 	struct {
 		// TODO field start used to be a normal pointer, but upstream
@@ -74,40 +76,42 @@ public:
 		// if this should be const pointer or not and remove this comment.
 		//
 		// uint8_t *start; // where in the cache are we
-		const uint8_t *start;  // where in the cache are we
+		const uint8_t* start = {}; // where in the cache are we
 
-		Bitu size;
-		CacheBlock *next;
+		Bitu size        = 0;
+		CacheBlock* next = {};
 		// writemap masking maskpointer/start/length to allow holes in
 		// the writemap
-		uint8_t *wmapmask;
-		uint16_t maskstart;
-		uint16_t masklen;
-	} cache;
+		std::unique_ptr<uint8_t[]> wmapmask = {};
+		uint16_t maskstart = 0;
+		uint16_t masklen   = 0;
+	} cache = {};
 
 	struct {
-		Bitu index;
-		CacheBlock *next;
-	} hash;
+		Bitu index = 0;
+
+		CacheBlock* next = {};
+	} hash = {};
 
 	struct {
-		CacheBlock *to; // this block can transfer control to the to-block
-		CacheBlock *next;
-		CacheBlock *from; // the from-block can transfer control
-		                  // to this block
-	} link[2];                // maximum two links (conditional jumps)
+		CacheBlock* to = {}; // this block can transfer control to the
+		                     // to-block
+		CacheBlock* next = {};
+		CacheBlock* from = {}; // the from-block can transfer control
+		                       // to this block
+	} link[2] = {};                // maximum two links (conditional jumps)
 
-	CacheBlock *crossblock;
+	CacheBlock* crossblock = {};
 };
 
 static struct {
 	struct {
-		CacheBlock *first;   // the first cache block in the list
-		CacheBlock *active;  // the current cache block
-		CacheBlock *free;    // pointer to the free list
-		CacheBlock *running; // the last block that was entered for
-		                     // execution
-	} block;
+		CacheBlock* first   = {}; // the first cache block in the list
+		CacheBlock* active  = {}; // the current cache block
+		CacheBlock* free    = {}; // pointer to the free list
+		CacheBlock* running = {}; // the last block that was entered for
+		                          // execution
+	} block = {};
 
 	// TODO field pos used to be a normal pointer, but upstream
 	// changed it to const pointer in r4424 (perhaps by mistake or as WIP
@@ -115,19 +119,20 @@ static struct {
 	// should be const pointer or not and remove this comment.
 	//
   	//uint8_t *pos;              // position in the cache block
-	const uint8_t *pos;          // position in the cache block
-	CodePageHandler *free_pages; // pointer to the free list
-	CodePageHandler *used_pages; // pointer to the list of used pages
-	CodePageHandler *last_page;  // the last used page
-} cache;
+	const uint8_t* pos = {}; // position in the cache block
+
+	CodePageHandler* free_pages = {}; // pointer to the free list
+	CodePageHandler* used_pages = {}; // pointer to the list of used pages
+	CodePageHandler* last_page  = {}; // the last used page
+} cache = {};
 
 // cache memory pointers, to be malloc'd later
-static uint8_t *cache_code_start_ptr = nullptr;
-static uint8_t *cache_code = nullptr;
-static uint8_t *cache_code_link_blocks = nullptr;
+static uint8_t* cache_code_start_ptr   = {};
+static uint8_t* cache_code             = {};
+static uint8_t* cache_code_link_blocks = {};
 
-static std::array<CacheBlock, CACHE_BLOCKS> cache_blocks = {};
-static CacheBlock link_blocks[2]; // default linking (specially marked)
+static std::vector<CacheBlock> cache_blocks(CACHE_BLOCKS);
+static CacheBlock link_blocks[2] = {}; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
@@ -405,11 +410,11 @@ public:
 	}
 
 	// remove a cache block
-	void DelCacheBlock(CacheBlock *block)
+	void DelCacheBlock(CacheBlock* block)
 	{
 		active_blocks--;
-		active_count=16;
-		CacheBlock **where = &hash_map[block->hash.index];
+		active_count       = 16;
+		CacheBlock** where = &hash_map[block->hash.index];
 		while (*where != block) {
 			where = &((*where)->hash.next);
 			// Will crash if a block isn't found, which should never
@@ -418,24 +423,33 @@ public:
 		*where = block->hash.next;
 
 		// remove the cleared block from the write map
-		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
+		if (GCC_UNLIKELY(block->cache.wmapmask)) {
 			// first part is not influenced by the mask
-			for (Bitu i=block->page.start;i<block->cache.maskstart;i++) {
-				if (write_map[i]) write_map[i]--;
-			}
-			Bitu maskct=0;
-			// last part sticks to the writemap mask
-			for (Bitu i=block->cache.maskstart;i<=block->page.end;i++,maskct++) {
+			for (Bitu i = block->page.start; i < block->cache.maskstart;
+			     i++) {
 				if (write_map[i]) {
-					// only adjust writemap if it isn't masked
-					if ((maskct>=block->cache.masklen) || (!block->cache.wmapmask[maskct])) write_map[i]--;
+					write_map[i]--;
 				}
 			}
-			free(block->cache.wmapmask);
-			block->cache.wmapmask=NULL;
+			Bitu maskct = 0;
+			// last part sticks to the writemap mask
+			for (Bitu i = block->cache.maskstart; i <= block->page.end;
+			     i++, maskct++) {
+				if (write_map[i]) {
+					// only adjust writemap if it isn't masked
+					if ((maskct >= block->cache.masklen) ||
+					    (!block->cache.wmapmask[maskct])) {
+						write_map[i]--;
+					}
+				}
+			}
+			block->cache.wmapmask = {};
+			block->cache.masklen  = 0;
 		} else {
-			for (Bitu i=block->page.start;i<=block->page.end;i++) {
-				if (write_map[i]) write_map[i]--;
+			for (Bitu i = block->page.start; i <= block->page.end; i++) {
+				if (write_map[i]) {
+					write_map[i]--;
+				}
 			}
 		}
 	}
@@ -578,9 +592,9 @@ void CacheBlock::Clear()
 		page.handler->DelCacheBlock(this);
 		page.handler=nullptr;
 	}
-	if (cache.wmapmask){
-		free(cache.wmapmask);
-		cache.wmapmask=NULL;
+	if (cache.wmapmask) {
+		cache.wmapmask = {};
+		cache.masklen  = 0;
 	}
 }
 
@@ -818,9 +832,11 @@ static bool cache_initialized = false;
 static void cache_init(bool enable) {
 	if (enable) {
 		// see if cache is already initialized
-		if (cache_initialized) return;
+		if (cache_initialized) {
+			return;
+		}
 		cache_initialized = true;
-		cache.block.free=&cache_blocks[0];
+		cache.block.free = &cache_blocks[0];
 		// initialize the cache blocks
 		for (int i=0;i<CACHE_BLOCKS-1;i++) {
 			cache_blocks[i].link[0].to = (CacheBlock *)1;

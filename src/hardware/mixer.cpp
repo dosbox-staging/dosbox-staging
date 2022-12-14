@@ -209,6 +209,11 @@ static struct mixer_t mixer = {};
 
 alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
+int MIXER_GetSampleRate()
+{
+	return mixer.sample_rate.load();
+}
+
 static void MIXER_LockAudioDevice()
 {
 	SDL_LockAudioDevice(mixer.sdldevice);
@@ -286,7 +291,7 @@ static void set_global_chorus(const mixer_channel_t channel)
 		channel->SetChorusLevel(mixer.chorus.digital_audio_send_level);
 }
 
-constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
+static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 {
 	if (pref == "off")
 		return ReverbPreset::None;
@@ -302,7 +307,7 @@ constexpr ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 		return ReverbPreset::Huge;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	assertm(false, "Unhandled revert preset");
+	LOG_ERR("MIXER: Received an unknown reverb preset type: '%s'", pref.data());
 	return ReverbPreset::None;
 }
 
@@ -365,7 +370,7 @@ static void configure_reverb(std::string reverb_pref)
 	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
 }
 
-constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
+static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 {
 	if (pref == "off")
 		return ChorusPreset::None;
@@ -377,7 +382,7 @@ constexpr ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 		return ChorusPreset::Strong;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	assertm(false, "Unhandled chorus preset");
+	LOG_ERR("MIXER: Received an unknown chorus preset type: '%s'", pref.data());
 	return ChorusPreset::None;
 }
 
@@ -460,25 +465,32 @@ static void configure_compressor(const bool compressor_enabled)
 }
 
 // Remove a channel by name from the mixer's map of channels.
-// Any shared pointers referencing the same object will will have their reference count dropped-by-one.
-void MIXER_RemoveChannel(const std::string& name)
+void MIXER_DeregisterChannel(const std::string& name_to_remove)
 {
 	MIXER_LockAudioDevice();
-	auto channel_it = mixer.channels.find(name);
-	if (channel_it != mixer.channels.end())
-		mixer.channels.erase(channel_it);
+	auto it = mixer.channels.find(name_to_remove);
+	if (it != mixer.channels.end()) {
+		mixer.channels.erase(it);
+	}
 	MIXER_UnlockAudioDevice();
 }
-// Remove a channel using the shared pointer variable. This allows us to both
-// remove it from the map and also reset the (primary) shared pointer itself.
-void MIXER_RemoveChannel(mixer_channel_t& channel)
+// Remove a channel using the shared pointer variable.
+void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 {
-	if (!channel)
+	if (!channel_to_remove) {
 		return;
+	}
 
-	channel->Enable(false);
-	MIXER_RemoveChannel(channel->GetName());
-	channel.reset();
+	MIXER_LockAudioDevice();
+	auto it = mixer.channels.begin();
+	while (it != mixer.channels.end()) {
+		if (it->second.get() == channel_to_remove.get()) {
+			it = mixer.channels.erase(it);
+			break;
+		}
+		++it;
+	}
+	MIXER_UnlockAudioDevice();
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
@@ -576,7 +588,7 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 	        "{%3.0f%%, %3.0f%%}, and was set to {%3.0f%%, %3.0f%%}",
 	        name,
 	        static_cast<double>(left),
-	        static_cast < double(right),
+	        static_cast<double>(right),
 	        static_cast<double>(app_volume_scalar.left * 100.0f),
 	        static_cast<double>(app_volume_scalar.right * 100.0f));
 #endif

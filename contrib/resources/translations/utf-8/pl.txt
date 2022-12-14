@@ -220,7 +220,7 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora:
               | 'high' w przeciwnym wypadku
 .
 :CONFIG_FRAMESKIP
-Ile ramek obrazu opuścić przed narysowaniem kolejnej.
+Użyj ustawienia 'host_rate' z sekcji [sdl].
 .
 :CONFIG_ASPECT
 Skaluje obraz tak, żeby uzyskać proporcje 4:3, stosowaną w oryginalnych
@@ -237,7 +237,8 @@ oraz 'cga_mono'. Możesz zmieniać barwę klawiszem F11.
 Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
   default:       Paleta CGA emulowanej przez kartę VGA (domyślne).
   tandy [BL]:    Wyidealizowany monitor Tandy, z regulowanym poziomem brązu
-                 (0 - czerwony, 50 - brązowy (domyślne) , 100 - ciemnożółty).
+                 (0 - czerwony, 50 - brązowy, 100 - ciemnożółty).
+                 Domyślnie 50.
   tandy-warm:    Rzeczywiste barwy monitora Tandy.
   ibm5153 [C]:   Rzeczywiste barwy monitora IBM 5153, z regulacją kontrastu,
                  która przyciemnia jedynie kolory inne do jasnych
@@ -264,11 +265,9 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff $ffff55 #ffffff
 .
 :CONFIG_SCALER
-Skaler do powiększania obrazu o niskiej rozdzielczości. Dodanie 'forced'
-spowoduje użycie skalera nawet wtedy, kiedy rezultaty mogą być
-niezadowalające.
-Niektóre skalery mogą użyć obszaru czarnej ramki wokół obrazu. Jeśli jest to
-niepożądane, użyj innego skalera lub włącz opcję 'fullresolution'.
+Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
+- Zamiast normal2x/3x, użyj ustawienia 'windowresolution'.
+- W innym przypadku spróbuj użyj opcji 'glshader'.
 .
 :CONFIG_GLSHADER
 Albo 'none', albo nazwa shadera GLSL. Działa tylko z wyjściem OpenGL. Można
@@ -747,6 +746,25 @@ Filtrowanie dźwięku digitalizowanego urządzenia PS/1:
   off:       Filtrowanie wyłączone.
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
+:CONFIG_REELMAGIC
+Włączenie emulacji ReelMagic (REALmagic), karty dekodera MPEG.
+  off:      Wyłączone (domyślne).
+  cardonly: Emulacja włączona, nie ładuje sterownika FMPDRV.EXE przy starcie.
+  on:       Emulacja włączona, ładuje sterownik FMPDRV.EXE przy starcie.
+.
+:CONFIG_REELMAGIC_KEY
+Ustawienie 32-bitowego klucza do dekodowania animacji w grach.
+  auto:     Próbuje wykryć potrzebny klucz automatycznie (domyślne).
+  common:   Najczęściej spotykany klucz, 0x40044041.
+  thehorde: Klucz dla The Horde, 0xC39D7088.
+  <custom>: Klucz użytkownia w formacie szesnastkowym (np. 0x12345678).
+.
+:CONFIG_REELMAGIC_FCODE
+Wymuszenie odpowiedniej ilości ramek na sekundę podczas odtwarzania.
+  0:        Próbuje wykryć automatycznie (domyślne).
+  1 to 7:   Wymusza odpowiednią ilość ramek na sekundę (wartości od 1 do 7):
+            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, lub 7=59.94 ramek/s.
+.
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
   auto     : Wykryj i użyj automatycznie (domyślne).
@@ -1184,7 +1202,47 @@ Znaleziono kartridż PCjr, ale maszyna nie jest typu PCjr.
 Dostępne komendy kartridży PCjr: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
-Komend kartridża PCjr nie znaleziono.
+Nie znaleziono komend kartridża PCjr.
+.
+:PROGRAM_FMPDRV_HELP_LONG
+Ładuje lub usuwa wbudowany sterownik karty ReelMagic Full Motion Player.
+
+Składnia:
+  [color=green]fmpdrv[reset]    (ładuje sterownik)
+  [color=green]fmpdrv[reset] /u (usuwa sterownik z pamięci)
+
+Uwagi:
+  Ustawienie "reelmagic = on" ładuje sterownik podczas startu i uniemożliwia
+  jego usunięcie z pamięci.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player (wbudowany sterownik) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Sterownik załadowany na przerwaniu %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Sterownik został już załadowany na przerwaniu %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Sterownik nie załadowany: brak wolnych przerwań![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Sterownik usunięty[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Sterownik nie został załadowany[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Sterownik nie został usunięty: skonfigurowany jako rezydentny[reset]
+
 .
 :MSCDEX_SUCCESS
 MSCDEX zainstalowany.
@@ -1266,6 +1324,7 @@ Gdzie:
   [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
   [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcją -size [color=white]GEOMETRIA[reset]:
             bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
+
 Uwagi:
   - %s+F4 przechodzi do następnego dysku z listy [color=cyan]CD-LISTA[reset] lub [color=cyan]BOOTOBRAZ[reset].
   - Flaga -ro montuje dysk tylko do odczytu (read-only).
@@ -1348,6 +1407,27 @@ Obraz musi znajdować się na dysku widocznym dla systemu gospodarza.
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
 Używanie wielu plików jest obsługiwane tylko dla obrazów cue/iso.
 
+.
+:PROGRAM_INTRO_HELP
+Krótki, pełnoekranowy samouczek.
+
+.
+:PROGRAM_INTRO_HELP_LONG
+Składnia:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]STRONA[reset]
+
+Gdzie:
+  [color=white]STRONA[reset]  strona do wyświetlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
+
+Uwagi:
+  Uruchomienie bez argumentów wyświetla jedną stronę na raz; naciśnij dowolny
+  klawisz, żeby przejść do kolejnej.
+  Podanie nazwy strony wyświetla tylko żądaną stronę.
+
+Przykłady:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
 .
 :PROGRAM_INTRO
 [erases=entire][color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dźwiękiem i grafiką.
@@ -1453,7 +1533,8 @@ To są domyślne skróty klawiszowe. Można je zmienić za pomocą [color=light-
 [color=yellow]%s+F1[reset]   %s Uruchom [color=light-yellow]mapera klawiatury[reset].
 [color=yellow]%s+F4[reset]   %s Podmień zamontowany obraz na kolejny, sprawdź zmiany
            na zamontowanych dyskach.
-[color=yellow]%s+F5[reset]   %s Zapisz zrzut ekranu.
+[color=yellow]%s+F5[reset]     Zrzut ekranu (wyrenderowany obraz).
+[color=yellow]%s+F5[reset]   %s Zrzut ekranu (bez filtrowania, jak na wyjściu karty graficznej).
 [color=yellow]%s+F6[reset]   %s Start/Stop nagrywania dźwięku do pliku WAV.
 [color=yellow]%s+F7[reset]   %s Start/Stop nagrywania wideo do pliku AVI, z kodekiem ZMBV.
 [color=yellow]%s+F8[reset]   %s Wyłącz/Włącz dźwięk.
@@ -1674,6 +1755,9 @@ Nie znaleziono żadnego pliku.
 :PROGRAM_MORE_TERMINATE
 [reset][color=light-yellow](przerwano)[reset]
 .
+:PROGRAM_MORE_NEXT_FILE
+[reset][color=light-yellow](kolejny plik)[reset]
+.
 :PROGRAM_MOUNT_HELP
 Montuje fizyczny katalog lub dysk.
 
@@ -1821,7 +1905,7 @@ Nieprawidłowa składnia, zduplikowany interfejs.
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Nieprawidłowa składnia, częstotliwość próbkowania musi być jedną z:
 %s[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
-.[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+.
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
 .
@@ -1880,8 +1964,7 @@ do wszystkich interfejsów myszy.
 .
 :PROGRAM_MOUSECTL_MAP_HINT
 Jeśli jakakolwiek fizyczna mysz jest zmapowana, płynna integracja kursora
-myszy jest zawsze wyłączona. Zmapowane myszy zawsze działają w trybie 'raw',
-nie przejmują ustawień czułości i przyspieszenia z systemu gospodarza.
+myszy jest zawsze wyłączona. Zmapowane myszy zawsze działają w trybie 'raw'.
 .
 :PROGRAM_RESCAN_HELP_LONG
 Sprawdza zmiany na zamontowanych dyskach.
@@ -2445,27 +2528,6 @@ Przykłady:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
 .
-:PROGRAM_INTRO_HELP
-Krótki, pełnoekranowy samouczek.
-
-.
-:PROGRAM_INTRO_HELP_LONG
-Składnia:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]STRONA[reset]
-
-Gdzie:
-  [color=white]STRONA[reset]  nazwa strony do wyświetlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
-
-Uwagi:
-  Uruchomienie bez argumentów wyświetla jedną stronę na raz; naciśnij dowolny
-  klawisz, żeby przejść do kolejnej.
-  Podanie nazwy strony wyświetla tylko żądaną stronę.
-
-Przykłady:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
-.
 :SHELL_CMD_MKDIR_HELP
 Tworzy nowy katalog.
 
@@ -2924,7 +2986,4 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Reverse
 .

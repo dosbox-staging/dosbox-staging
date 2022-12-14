@@ -55,6 +55,11 @@ typedef std::list<std::string>::iterator auto_it;
 
 void VFILE_Remove(const char *name, const char *dir = "");
 
+AutoexecObject::AutoexecObject(const std::string& line)
+{
+	Install(line);
+}
+
 void AutoexecObject::Install(const std::string &in) {
 	if (GCC_UNLIKELY(installed))
 		E_Exit("autoexec: already created %s", buf.c_str());

@@ -225,32 +225,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		return false;
 	}
 
-	// Setup the mixer callback
-	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
-	                                      this, std::placeholders::_1);
-
-	auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                      use_mixer_rate,
-	                                      "FSYNTH",
-	                                      {ChannelFeature::Sleep,
-	                                       ChannelFeature::Stereo,
-	                                       ChannelFeature::ReverbSend,
-	                                       ChannelFeature::ChorusSend,
-	                                       ChannelFeature::Synthesizer});
-
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	assert(section);
-
-	const std::string filter_prefs = section->Get_string("fsynth_filter");
-
-	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		if (filter_prefs != "off")
-			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
-			            filter_prefs.c_str());
-
-		mixer_channel->SetHighPassFilter(FilterState::Off);
-		mixer_channel->SetLowPassFilter(FilterState::Off);
-	}
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
@@ -260,7 +236,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// channel first and use its native rate to configure FluidSynth.
 	fluid_settings_setnum(fluid_settings.get(),
 	                      "synth.sample-rate",
-	                      mixer_channel->GetSampleRate());
+	                      MIXER_GetSampleRate());
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
@@ -441,6 +417,34 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		        reverb_width,
 		        reverb_level);
 
+	// Setup the mixer callback
+	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	                                      this,
+	                                      std::placeholders::_1);
+
+	auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                      use_mixer_rate,
+	                                      "FSYNTH",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::Stereo,
+	                                       ChannelFeature::ReverbSend,
+	                                       ChannelFeature::ChorusSend,
+	                                       ChannelFeature::Synthesizer});
+
+	const std::string filter_prefs = section->Get_string("fsynth_filter");
+
+	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (filter_prefs != "off") {
+			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
+			            filter_prefs.c_str());
+		}
+
+		mixer_channel->SetHighPassFilter(FilterState::Off);
+		mixer_channel->SetLowPassFilter(FilterState::Off);
+	}
+
+	// If we haven't failed yet, then we're ready to begin so move the local
+	// objects into the member variables.
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
@@ -468,6 +472,8 @@ void MidiHandlerFluidsynth::Close()
 	if (!is_open)
 		return;
 
+	LOG_MSG("FSYNTH: Shutting down");
+
 	// Stop playback
 	if (channel)
 		channel->Enable(false);
@@ -483,8 +489,12 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
-	// Reset the members
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 	channel.reset();
+
+	// Reset the members
 	synth.reset();
 	settings.reset();
 	last_played_frame = 0;

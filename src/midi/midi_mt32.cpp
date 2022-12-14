@@ -586,8 +586,24 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	        rom_info.control_rom_description,
 	        loaded_model_and_dir->second.c_str());
 
+	mt32_service->setAnalogOutputMode(ANALOG_MODE);
+	mt32_service->selectRendererType(RENDERING_TYPE);
+	mt32_service->setStereoOutputSampleRate(MIXER_GetSampleRate());
+	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
+	mt32_service->setDACInputMode(DAC_MODE);
+	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
+	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
+	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING);
+
+	const auto rc = mt32_service->openSynth();
+	if (rc != MT32EMU_RC_OK) {
+		LOG_MSG("MT32: Error initialising emulation: %i", rc);
+		return false;
+	}
+
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
-	                                      this, std::placeholders::_1);
+	                                      this,
+	                                      std::placeholders::_1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                            use_mixer_rate,
@@ -610,22 +626,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 		mixer_channel->SetLowPassFilter(FilterState::Off);
 	}
 
-	const auto sample_rate = mixer_channel->GetSampleRate();
-
-	mt32_service->setAnalogOutputMode(ANALOG_MODE);
-	mt32_service->selectRendererType(RENDERING_TYPE);
-	mt32_service->setStereoOutputSampleRate(sample_rate);
-	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
-	mt32_service->setDACInputMode(DAC_MODE);
-	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
-	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
-	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING);
-
-	const auto rc = mt32_service->openSynth();
-	if (rc != MT32EMU_RC_OK) {
-		LOG_MSG("MT32: Error initialising emulation: %i", rc);
-		return false;
-	}
+	// If we haven't failed yet, then we're ready to begin so move the local
+	// objects into the member variables.
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
 	model_and_dir = std::move(loaded_model_and_dir);
@@ -638,7 +640,6 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	is_open = true;
-
 	return true;
 }
 
@@ -651,6 +652,8 @@ void MidiHandler_mt32::Close()
 {
 	if (!is_open)
 		return;
+
+	LOG_MSG("MT32: Shutting down");
 
 	// Stop playback
 	if (channel)
@@ -673,8 +676,12 @@ void MidiHandler_mt32::Close()
 		service->freeContext();
 	}
 
-	// Reset the members
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 	channel.reset();
+
+	// Reset the members
 	service.reset();
 	total_buffers_played = 0;
 	last_played_frame = 0;

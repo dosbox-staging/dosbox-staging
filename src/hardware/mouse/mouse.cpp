@@ -83,7 +83,6 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 	                     const uint32_t clipping,
 	                     const uint32_t resolution) -> uint32_t {
 		assert(resolution > 1u);
-		assert(clipping * 2 < resolution);
 
 		if (absolute < 0 || static_cast<uint32_t>(absolute) < clipping) {
 			// cursor is over the top or left black bar
@@ -415,6 +414,10 @@ void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
                            const int32_t x_abs, const int32_t y_abs,
                            const bool is_fullscreen)
 {
+	// clip_x, clip_y = black border (one side), in pixels
+	// res_x, res_y   = used display area, in pixels
+	// res_x + 2 * clip_x, res_y + 2 * clip_y = screen resolution or window size
+
 	assert(clip_x <= INT32_MAX);
 	assert(clip_y <= INT32_MAX);
 	assert(res_x <= INT32_MAX);

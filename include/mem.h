@@ -33,7 +33,7 @@ typedef uint8_t *HostPt;
 typedef uint32_t RealPt;
 typedef int32_t MemHandle;
 
-extern uint8_t MemBase[];
+extern HostPt MemBase;
 HostPt GetMemBase();
 
 bool MEM_A20_Enabled();

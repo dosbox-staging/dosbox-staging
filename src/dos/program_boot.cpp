@@ -35,7 +35,8 @@
 #include "regs.h"
 #include "string_utils.h"
 
-FILE *BOOT::getFSFile_mounted(char const *filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error)
+FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
+                              uint32_t* bsize, uint8_t* error)
 {
 	// if return NULL then put in error the errormessage code if an error
 	// was requested
@@ -86,7 +87,8 @@ FILE *BOOT::getFSFile_mounted(char const *filename, uint32_t *ksize, uint32_t *b
 	}
 }
 
-FILE *BOOT::getFSFile(char const *filename, uint32_t *ksize, uint32_t *bsize, bool tryload)
+FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
+                      bool tryload)
 {
 	uint8_t error = tryload ? 1 : 0;
 	FILE *tmpfile = getFSFile_mounted(filename, ksize, bsize, &error);
@@ -225,8 +227,7 @@ void BOOT::Run(void)
 				continue;
 			}
 
-
-			if (imageDiskList[0] != nullptr || imageDiskList[1] != nullptr) {
+			if (imageDiskList[0] || imageDiskList[1]) {
 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_MOUNTED"));
 				return;
 			}

@@ -414,11 +414,8 @@ union VGA_Latch {
 	uint8_t b[4];
 };
 
-constexpr uint32_t vga_maxmemsize = 8*1024*1024+2048;
-constexpr uint32_t vga_memalign = 16;
-
 struct VGA_Memory {
-	alignas(vga_memalign) uint8_t linear[vga_maxmemsize];
+	uint8_t* linear = {};
 };
 
 struct VGA_Changes {
@@ -463,7 +460,7 @@ struct VGA_Type {
 	uint32_t vmemwrap = 0;
 	 // memory for fast (usually 16-color) rendering, 
 	 // always twice as big as vmemsize
-	alignas(vga_memalign) uint8_t fastmem[vga_maxmemsize*2];
+	uint8_t* fastmem  = {};
 	uint32_t vmemsize = 0;
 #ifdef VGA_KEEP_CHANGES
 	VGA_Changes changes = {};

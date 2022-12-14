@@ -29,7 +29,7 @@
 #include "dos_inc.h"
 #include "dos_system.h"
 
-void Set_Label(char const * const input, char * const output, bool cdrom);
+void Set_Label(const char* const input, char* const output, bool cdrom);
 std::string To_Label(const char* name);
 std::string generate_8x3(const char *lfn, const unsigned int num, const bool start = false);
 bool filename_not_8x3(const char *n);
@@ -65,15 +65,15 @@ class localDrive : public DOS_Drive {
 public:
 	localDrive(const char * startdir,uint16_t _bytes_sector,uint8_t _sectors_cluster,uint16_t _total_clusters,uint16_t _free_clusters,uint8_t _mediaid);
 	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
-	virtual FILE *GetSystemFilePtr(char const * const name, char const * const type);
-	virtual bool GetSystemFilename(char* sysName, char const * const dosName);
-	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t attributes);
-	virtual bool FileUnlink(char * name);
-	virtual bool RemoveDir(char * dir);
-	virtual bool MakeDir(char * dir);
-	virtual bool TestDir(char * dir);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
-	virtual bool FindNext(DOS_DTA & dta);
+	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
+	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
+	virtual bool FileCreate(DOS_File** file, char* name, uint16_t attributes);
+	virtual bool FileUnlink(char* name);
+	virtual bool RemoveDir(char* dir);
+	virtual bool MakeDir(char* dir);
+	virtual bool TestDir(char* dir);
+	virtual bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false);
+	virtual bool FindNext(DOS_DTA& dta);
 	virtual bool GetFileAttr(char * name, uint16_t * attr);
 	virtual bool SetFileAttr(const char * name, const uint16_t attr);
 	virtual bool Rename(char * oldname,char * newname);
@@ -210,7 +210,9 @@ private:
 	uint32_t getClustFirstSect(uint32_t clustNum);
 	bool FindNextInternal(uint32_t dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
 	bool getDirClustNum(char * dir, uint32_t * clustNum, bool parDir);
-	bool getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, const bool dir_ok = false);
+	bool getFileDirEntry(const char* const filename, direntry* useEntry,
+	                     uint32_t* dirClust, uint32_t* subEntry,
+	                     const bool dir_ok = false);
 	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
 	void zeroOutCluster(uint32_t clustNumber);
 	bool getEntryName(char *fullname, char *entname);
@@ -390,7 +392,8 @@ private:
 	char discLabel[32];
 };
 
-struct VFILE_Block;
+class VFILE_Block;
+using vfile_block_t = std::shared_ptr<VFILE_Block>;
 
 class Virtual_Drive final : public DOS_Drive {
 public:
@@ -414,11 +417,12 @@ public:
 	bool isRemote();
 	virtual bool isRemovable();
 	virtual Bits UnMount();
-	virtual char const* GetLabel();
+	virtual const char* GetLabel();
+
 private:
 	Virtual_Drive(const Virtual_Drive&); // prevent copying
 	Virtual_Drive& operator= (const Virtual_Drive&); // prevent assignment
-	VFILE_Block * search_file;
+	vfile_block_t search_file;
 };
 
 class Overlay_Drive final : public localDrive {
@@ -444,7 +448,7 @@ public:
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual void EmptyCache(void);
 
-	FILE *create_file_in_overlay(const char *dos_filename, char const *mode);
+	FILE* create_file_in_overlay(const char* dos_filename, const char* mode);
 
 	virtual Bits UnMount(void);
 	virtual bool TestDir(char * dir);

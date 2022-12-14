@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <vector>
+
 #include "mem.h"
 
 // disable this to reduce the size of the TLB
@@ -79,12 +81,12 @@ public:
 
 /* Some other functions */
 void PAGING_Enable(bool enabled);
-bool PAGING_Enabled(void);
+bool PAGING_Enabled();
 
-Bitu PAGING_GetDirBase(void);
+Bitu PAGING_GetDirBase();
 void PAGING_SetDirBase(Bitu cr3);
-void PAGING_InitTLB(void);
-void PAGING_ClearTLB(void);
+void PAGING_InitTLB();
+void PAGING_ClearTLB();
 
 void PAGING_LinkPage(uint32_t lin_page,uint32_t phys_page);
 void PAGING_LinkPage_ReadOnly(uint32_t lin_page,uint32_t phys_page);
@@ -135,45 +137,50 @@ struct X86_PageEntryBlock{
 
 
 union X86PageEntry {
-	uint32_t load;
+	uint32_t load = 0;
 	X86_PageEntryBlock block;
 };
 
 #if !defined(USE_FULL_TLB)
 typedef struct {
-	HostPt read;
-	HostPt write;
-	PageHandler * readhandler;
-	PageHandler * writehandler;
-	uint32_t phys_page;
-} tlb_entry;
+	HostPt read  = {};
+	HostPt write = {};
+
+	PageHandler* readhandler  = {};
+	PageHandler* writehandler = {};
+
+	uint32_t phys_page = {};
+} tlb_entry = {};
 #endif
 
 struct PagingBlock {
-	uint32_t			cr3;
-	uint32_t			cr2;
+	uint32_t cr3 = 0;
+	uint32_t cr2 = 0;
 	struct {
-		uint32_t page;
-		PhysPt addr;
-	} base;
+		uint32_t page = 0;
+		PhysPt addr   = {};
+	} base = {};
 #if defined(USE_FULL_TLB)
 	struct {
-		HostPt read[TLB_SIZE];
-		HostPt write[TLB_SIZE];
-		PageHandler * readhandler[TLB_SIZE];
-		PageHandler * writehandler[TLB_SIZE];
-		uint32_t	phys_page[TLB_SIZE];
-	} tlb;
+		HostPt read[TLB_SIZE]  = {};
+		HostPt write[TLB_SIZE] = {};
+
+		std::vector<PageHandler*> readhandler  = std::vector<PageHandler*>(TLB_SIZE);
+		std::vector<PageHandler*> writehandler = std::vector<PageHandler*>(TLB_SIZE);
+
+		std::vector<uint32_t> phys_page = std::vector<uint32_t>(TLB_SIZE);
+	} tlb = {};
 #else
-	tlb_entry tlbh[TLB_SIZE];
-	tlb_entry *tlbh_banks[TLB_BANKS];
+	std::vector<tlb_entry> tlbh        = std::vector<tlb_entry>(TLB_SIZE);
+	std::vector<tlb_entry*> tlbh_banks = std::vector<tlb_entry*>(TLB_BANKS);
 #endif
 	struct {
-		uint32_t used;
-		uint32_t entries[PAGING_LINKS];
-	} links;
-	uint32_t		firstmb[LINK_START];
-	bool		enabled;
+		uint32_t used = 0;
+		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
+	} links = {};
+
+	std::vector<uint32_t> firstmb = std::vector<uint32_t>(LINK_START);
+	bool enabled = false;
 };
 
 extern PagingBlock paging; 
@@ -196,8 +203,19 @@ bool mem_unalignedwrited_checked(PhysPt address,uint32_t val);
 
 #if defined(USE_FULL_TLB)
 
-static inline HostPt get_tlb_read(PhysPt address) {
-	return paging.tlb.read[address>>12];
+inline HostPt* PAGING_GetReadBaseAddress()
+{
+	return &(paging.tlb.read[0]);
+}
+
+inline HostPt* PAGING_GetWriteBaseAddress()
+{
+	return &(paging.tlb.write[0]);
+}
+
+static inline HostPt get_tlb_read(PhysPt address)
+{
+	return paging.tlb.read[address >> 12];
 }
 static inline HostPt get_tlb_write(PhysPt address) {
 	return paging.tlb.write[address>>12];
@@ -239,7 +257,19 @@ static inline HostPt get_tlb_read(PhysPt address) {
 static inline HostPt get_tlb_write(PhysPt address) {
 	return get_tlb_entry(address)->write;
 }
-static inline PageHandler* get_tlb_readhandler(PhysPt address) {
+
+inline HostPt* PAGING_GetReadBaseAddress()
+{
+	return get_tlb_read(0);
+}
+
+inline HostPt* PAGING_GetWriteBaseAddress()
+{
+	return get_tlb_write(0);
+}
+
+static inline PageHandler* get_tlb_readhandler(PhysPt address)
+{
 	return get_tlb_entry(address)->readhandler;
 }
 static inline PageHandler* get_tlb_writehandler(PhysPt address) {

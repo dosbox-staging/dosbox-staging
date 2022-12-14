@@ -241,9 +241,6 @@ quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
             |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
-:CONFIG_FRAMESKIP
-Determina il numero di fotogrammi saltati da DOSBox prima di disegnarne uno.
-.
 :CONFIG_ASPECT
 Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
 di aspetto 4:3, corrispondente a quello dei monitor a definizione standard

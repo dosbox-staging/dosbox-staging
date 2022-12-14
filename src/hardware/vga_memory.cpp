@@ -16,18 +16,19 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include "dosbox.h"
+#include <vector>
+
+#include "inout.h"
 #include "mem.h"
 #include "mem_host.h"
-#include "vga.h"
 #include "paging.h"
 #include "pic.h"
-#include "inout.h"
 #include "setup.h"
-
+#include "vga.h"
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1
@@ -1057,24 +1058,44 @@ void VGA_StartUpdateLFB(void) {
 static void VGA_Memory_ShutDown(Section * /*sec*/) {
 #ifdef VGA_KEEP_CHANGES
 	delete[] vga.changes.map;
+	vga.mem.linear = {};
+	vga.fastmem    = {};
 #endif
 }
 
-void VGA_SetupMemory(Section* sec) {
+void VGA_SetupMemory(Section* sec)
+{
 	vga.svga.bank_read = vga.svga.bank_write = 0;
 	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
 
-	// ensure memory is aligned to vga_memalign bytes
-	assert(reinterpret_cast<uintptr_t>(vga.mem.linear) % vga_memalign == 0);
-	assert(reinterpret_cast<uintptr_t>(vga.fastmem) % vga_memalign == 0);
+	// lower limit at 512k plus an 2 KB for one scan-line.
+	constexpr uint32_t vga_mem_bytes_min        = 512 * 1024;
+	constexpr uint32_t vga_mem_scanline_reserve = 2048;
 
-	uint32_t vga_allocsize=vga.vmemsize;
-	// Keep lower limit at 512k
-	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
-	// We reserve extra 2K for one scan line
-	vga_allocsize+=2048;
+	// The video memory is read from and written to in sizes up to uint32_t,
+	// so this is realistically as strict as we should align the memory for
+	// host operations. However, DOS programs might write read and write to
+	// video memory in 16-byte chunks, so for convenience we align on 16-bytes.
+	constexpr uint8_t vmem_alignment    = 16;
+	using vmem_buffer_t                 = std::unique_ptr<uint8_t[]>;
+	static vmem_buffer_t linear_buffer  = {};
+	static vmem_buffer_t fastmem_buffer = {};
 
-	memset(vga.mem.linear,0,vga_allocsize);
+	// Allocate and verify alignment of the linear buffer, which includes
+	// one additional scanline worth of memory.
+	const auto num_linear_bytes = std::max(vga_mem_bytes_min, vga.vmemsize) +
+	                              vga_mem_scanline_reserve;
+	std::tie(linear_buffer, vga.mem.linear) =
+	        make_unique_aligned_array<uint8_t>(vmem_alignment, num_linear_bytes);
+	assert(reinterpret_cast<uintptr_t>(vga.mem.linear) % vmem_alignment == 0);
+
+	// Allocate and verify alignment of the fast-memory buffer, which is
+	// twice the size of the linear array.
+	const auto num_fastmem_bytes = 2 * num_linear_bytes;
+	std::tie(fastmem_buffer,
+	         vga.fastmem) = make_unique_aligned_array<uint8_t>(vmem_alignment,
+	                                                           num_fastmem_bytes);
+	assert(reinterpret_cast<uintptr_t>(vga.fastmem) % vmem_alignment == 0);
 
 	// In most cases these values stay the same. Assumptions: vmemwrap is power of 2,
 	// vmemwrap <= vmemsize, fastmem implicitly has mem wrap twice as big
@@ -1096,5 +1117,5 @@ void VGA_SetupMemory(Section* sec) {
 		/* PCJr does not have dedicated graphics memory but uses
 		   conventional memory below 128k */
 		//TODO map?	
-	} 
+	}
 }

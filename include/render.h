@@ -19,20 +19,10 @@
 #ifndef DOSBOX_RENDER_H
 #define DOSBOX_RENDER_H
 
-// 0: complex scalers off, scaler cache off, some simple scalers off, memory requirements reduced
-// 1: complex scalers off, scaler cache off, all simple scalers on
-// 2: complex scalers off, scaler cache on
-// 3: complex scalers on
-#define RENDER_USE_ADVANCED_SCALERS 3
-
 #include <deque>
 #include <string>
 
 #include "../src/gui/render_scalers.h"
-
-#define RENDER_SKIP_CACHE 16
-// Enable this for scalers to support 0 input for empty lines
-//#define RENDER_NULL_INPUT
 
 struct RenderPal_t {
 	struct {
@@ -66,26 +56,15 @@ struct Render_t {
 	} src = {};
 
 	struct {
-		int count      = 0;
-		int max        = 0;
-		uint32_t index = 0;
-
-		uint8_t hadSkip[RENDER_SKIP_CACHE] = {};
-	} frameskip = {};
-
-	struct {
 		uint32_t size = 0;
 
-		scalerMode_t inMode  = {};
-		scalerMode_t outMode = {};
-		scalerOperation_t op = {};
+		ScalerMode inMode  = {};
+		ScalerMode outMode = {};
 
 		bool clearCache = false;
-		bool forced     = false;
 
-		ScalerLineHandler_t lineHandler       = nullptr;
-		ScalerLineHandler_t linePalHandler    = nullptr;
-		ScalerComplexHandler_t complexHandler = nullptr;
+		ScalerLineHandler_t lineHandler    = nullptr;
+		ScalerLineHandler_t linePalHandler = nullptr;
 
 		uint32_t blocks     = 0;
 		uint32_t lastBlock  = 0;

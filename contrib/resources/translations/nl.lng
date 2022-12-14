@@ -1,3 +1,33 @@
+:TITLEBAR_CYCLES_MS
+cycli/ms
+.
+:TITLEBAR_HINT_PAUSED
+(PAUZE)
+.
+:TITLEBAR_HINT_NOMOUSE
+geen-muis-modus
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+muis gevangen, %s+F10 om los te laten
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+muis gevangen, %s+F10 of middenklik om los te laten
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+druk %s+F10 om de muis te vangen
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+om de muis te vangen, druk op %s+F10 of klik op de middelste muisknop
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+om de muis te vangen, druk op %s+F10 of klik op een muisknop
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+naadloze muis, %s+F10 om te vangen
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+naadloze muis, %s+F10 of middenklik om te langen
+.
 :CONFIG_FULLSCREEN
 DOSBox rechtstreeks op volledig scherm starten.
 Voer INTRO uit en zie Speciale toetsen voor sneltoetsen voor vensterbediening.
@@ -79,26 +109,13 @@ Kies een rendererstuurprogramma wanneer u een textuuruitvoermodus gebruikt.
 Gebruik texture_renderer=auto voor een automatische keuze.
 .
 :CONFIG_CAPTURE_MOUSE
-Kies een muisbesturingsmethode:
-   onclick:        Leg de muis vast wanneer u op een knop in het venster klikt.
-   onstart:        Leg de muis meteen vast bij het starten.
-   seamless:       Laat de muis naadloos bewegen; legt alleen vast met
-                   middelste klik of sneltoets.
-   nomouse:        Verberg de muis en stuur geen invoer naar het spel.
-Kies hoe middelkliks worden afgehandeld (tweede parameter):
-   middlegame:     Middelklikken worden naar het spel gestuurd.
-   middlerelease:  Middelklik laat de vastgelegde muis los en legt ook vast
-                   wanneer deze naadloos is.
-Standaardwaarden (indien niet aanwezig of onjuist): seamless middlerelease
+Verplaatst naar de [mouse] sectie.
 .
 :CONFIG_SENSITIVITY
-Muis gevoeligheid. De optionele tweede parameter specificeert de verticale
-gevoeligheid (bijv. 100,-50).
+Verplaatst naar de [mouse] sectie.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Schakel deze instelling in om de instellingen voor muisversnelling en
-gevoeligheid van uw besturingssysteem te omzeilen. Dit werkt op volledig
-scherm of wanneer de muis wordt vastgelegd in de venstermodus.
+Verplaatst naar de [mouse] sectie.
 .
 :CONFIG_WAITONERROR
 Wacht voordat de console sluit als dosbox een fout heeft.
@@ -212,9 +229,6 @@ quiet            |   nee   |    nee
 auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
                     anders 'high'
 .
-:CONFIG_FRAMESKIP
-Hoeveel frames DOSBox overslaat voordat hij er een tekent.
-.
 :CONFIG_ASPECT
 Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
 die overeenkomt met die van de originele standaarddefinitiemonitoren waarvoor
@@ -327,6 +341,18 @@ Voer INTRO uit en zie Speciale toetsen voor een lijst met sneltoetsen.
 .
 :CONFIG_CYCLEDOWN
 Als u deze lager instelt dan 100, is dit een percentage.
+.
+:CONFIG_MOUSE_CAPTURE
+Kies een muisbesturingsmethode:
+  onclick:   Leg de muis vast wanneer u op een knop in het venster klikt.
+  onstart:   Leg de muis meteen vast bij het starten.
+  seamless:  Laat de muis naadloos bewegen; legt alleen vast met
+             middelste klik of sneltoets.
+  nomouse:   Verberg de muis en stuur geen invoer naar het spel.
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+Indien 'true', middelklik laat de vastgelegde muis los en legt ook vast
+wanneer deze naadloos is.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Standaard muisgevoeligheid. 100 is een basiswaarde, 150 is 150% gevoeligheid.
@@ -743,6 +769,26 @@ Filter voor de PS/1 Audio DAC-uitgang:
   off:       Filter de uitvoer niet.
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
+:CONFIG_REELMAGIC
+ReelMagic (ook bekend als REALmagic) MPEG-afspeelondersteuning.
+  off:      Ondersteuning uitschakelen (standaard).
+  cardonly: Emuleer de kaart zonder het FMPDRV.EXE-stuurprogramma te laden.
+  on:       Emuleer de kaart en laad de FMPDRV.EXE bij het opstarten.
+.
+:CONFIG_REELMAGIC_KEY
+Stel de 32-bits magische sleutel in die wordt gebruikt om de video's van
+het spel te decoderen.
+  auto     : Probeer de sleutel automatisch te bepalen (standaard).
+  common   : Gebruik de meest voorkomende sleutel, namelijk 0x40044041.
+  thehorde : Gebruik de sleutel van 'The Horde', namelijk 0xC39D7088.
+  <op-maat>: stel een aangepaste sleutel in hex-indeling in (bijv. 0x12345678).
+.
+:CONFIG_REELMAGIC_FCODE
+Negeer de framesnelheidscode die wordt gebruikt tijdens het afspelen van video.
+  0: Geen override: poging tot automatische snelheidsdetectie (standaard).
+  1 t/m 7: Gebruik een van de volgende framesnelheden (gebruik 1 t/m 7):
+            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
+.
 :CONFIG_JOYSTICKTYPE
 Type joystick om te emuleren: auto (standaard),
 auto     : Detecteer en gebruik eventuele joystick(s), indien mogelijk.,
@@ -801,18 +847,11 @@ Standaard is 'auto'.
 .
 :CONFIG_SERIAL1
 Stel het type apparaat in dat is aangesloten op de com-poort.
-Opties: disabled, dummy, muis, modem, nullmodem, direct.
+Opties: disabled, dummy, mouse, modem, nullmodem, direct.
 Aanvullende parameters moeten op dezelfde regel staan in de vorm van
 parameter:waarde. Parameter voor alle typen is irq (optioneel).
 voor muis:
-   "type", kan een van de volgende zijn:
-      2btn:  2 knoppen, Microsoft seriële muis
-      3btn:  3 knoppen, Logitech seriële muis
-      wheel: 3 knoppen + wiel seriële muis
-      msm:   3 knoppen, Mouse Systems Mouse
-      2btn+msm, 3btn+msm, wheel+msm : autoselectie
-   "rate", kan "normal" of "smooth" zijn (vaker updates dan op echte pc)
-   Standaard is type:wheel+msm rate:smooth
+   "type", heeft voorrang op instellingen van [mouse]-sectie
 voor direct: realport (vereist), rxdelay (optioneel).
    (realport:COM1 realport:ttyS0).
 voor modem: listenport, sock, baudrate (allemaal optioneel).
@@ -1197,6 +1236,46 @@ Beschikbare opdrachten voor PCjr-cartridges: %s
 :PROGRAM_BOOT_CART_NO_CMDS
 Geen PCjr-cartridge opdrachten gevonden
 .
+:PROGRAM_FMPDRV_HELP_LONG
+Laad of ontlaad de ingebouwde ReelMagic Full Motion Player-driver.
+
+Gebruik:
+  [color=green]fmpdrv[reset]    (laad de driver)
+  [color=green]fmpdrv[reset] /u (ontlaad de driver)
+
+Opmerkingen:
+  De configuratie-instelling "reelmagic = on" laadt de driver bij het
+  opstarten en voorkomt dat deze wordt ontladen.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player-stuurprogramma (ingebouwd) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Reeds geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Niet geladen: Geen vrije interrupten![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Stuurprogramma ontladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Stuurprogramma was niet geladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]
+
+.
 :MSCDEX_SUCCESS
 MSCDEX geïnstalleerd.
 
@@ -1359,6 +1438,28 @@ De image moet op een host- of lokale schijf staan.
 .
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
 Meerdere bestanden wordt alleen ondersteund voor cue/iso-images.
+
+.
+:PROGRAM_INTRO_HELP
+Geeft een inleiding op het volledige scherm van DOSBox Staging weer.
+
+.
+:PROGRAM_INTRO_HELP_LONG
+Gebruik:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]PAGINA[reset]
+
+Waar:
+  [color=white]PAGINA[reset] is de paginanaam om weer te geven, inclusief [color=white]cdrom[reset], [color=white]mount[reset] en [color=white]special[reset].
+
+Opmerkingen:
+  [color=green]intro[reset] zonder argument toont alle informatiepaginas opvolgend; druk op een
+  willekeurige toets om naar de volgende pagina te gaan. Als er een paginanaam
+  is opgegeven, wordt de opgegeven pagina direct weergegeven.
+
+Voorbeelden:
+  [color=green]intro[reset]
+  [color=green]intro[reset] [color=white]cdrom[reset]
 
 .
 :PROGRAM_INTRO
@@ -1685,6 +1786,9 @@ Geen invoerbestand gevonden.
 .
 :PROGRAM_MORE_TERMINATE
 [reset][color=light-yellow](beëindigd)[reset]
+.
+:PROGRAM_MORE_NEXT_FILE
+[reset][color=light-yellow](volgend bestand)[reset]
 .
 :PROGRAM_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter
@@ -2464,28 +2568,6 @@ Opmerkingen:
 Voorbeelden:
   [color=green]help[reset] [color=cyan]dir[reset]
   [color=green]help[reset] /all
-
-.
-:PROGRAM_INTRO_HELP
-Geeft een inleiding op het volledige scherm van DOSBox Staging weer.
-
-.
-:PROGRAM_INTRO_HELP_LONG
-Gebruik:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]PAGINA[reset]
-
-Waar:
-  [color=white]PAGINA[reset] is de paginanaam om weer te geven, inclusief [color=white]cdrom[reset], [color=white]mount[reset] en [color=white]special[reset].
-
-Opmerkingen:
-  [color=green]intro[reset] zonder argument toont alle informatiepaginas opvolgend; druk op een
-  willekeurige toets om naar de volgende pagina te gaan. Als er een paginanaam
-  is opgegeven, wordt de opgegeven pagina direct weergegeven.
-
-Voorbeelden:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_MKDIR_HELP

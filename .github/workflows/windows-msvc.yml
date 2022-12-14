@@ -23,7 +23,7 @@ jobs:
             max_warnings: 20
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 913
+            max_warnings: 910
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -49,10 +49,9 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.2
         with:
             vs-prerelease: true
-            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -132,10 +131,9 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.2
         with:
             vs-prerelease: true
-            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -185,7 +183,7 @@ jobs:
         run: |
           # Construct VC_REDIST_DIR
           readonly VC_REDIST_BASE="C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC"
-          readonly VC_REDIST_VERSION="14.32.31326"
+          readonly VC_REDIST_VERSION="14.34.31931"
           readonly VC_REDIST_CRT_VERSION="Microsoft.VC143.CRT"
           export VC_REDIST_DIR="$VC_REDIST_BASE/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/$VC_REDIST_CRT_VERSION"
           find "$VC_REDIST_BASE" -maxdepth 3 -type d

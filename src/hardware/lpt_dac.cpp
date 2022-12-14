@@ -43,7 +43,7 @@ LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
 	                                   ChannelFeature::ChorusSend,
 	                                   ChannelFeature::DigitalAudio};
 
-	features.merge(extra_features);
+	features.insert(extra_features.begin(), extra_features.end());
 
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
@@ -118,6 +118,8 @@ void LptDac::AudioCallback(const uint16_t requested_frames)
 
 LptDac::~LptDac()
 {
+	LOG_MSG("%s: Shutting down DAC", dac_name.c_str());
+
 	// Update our status to indicate we're no longer ready
 	status_reg.error = true;
 	status_reg.busy  = true;
@@ -127,7 +129,9 @@ LptDac::~LptDac()
 	data_write_handler.Uninstall();
 	control_write_handler.Uninstall();
 
-	channel->Enable(false);
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 
 	render_queue = {};
 }

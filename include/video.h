@@ -34,25 +34,13 @@ typedef enum {
 
 typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 
-#define GFX_CAN_8   0x0001
-#define GFX_CAN_15  0x0002
-#define GFX_CAN_16  0x0004
-#define GFX_CAN_32  0x0008
-
-#define GFX_LOVE_8  0x0010
-#define GFX_LOVE_15 0x0020
-#define GFX_LOVE_16 0x0040
-#define GFX_LOVE_32 0x0080
-
-#define GFX_RGBONLY 0x0100
-#define GFX_DBL_H   0x0200 /* double-width  flag */
-#define GFX_DBL_W   0x0400 /* double-height flag */
-
-#define GFX_SCALING		0x1000
-#define GFX_HARDWARE	0x2000
-
-#define GFX_CAN_RANDOM  0x4000 //If the interface can also do random access surface
-#define GFX_UNITY_SCALE 0x8000 /* turn of all scaling in render.cpp */
+constexpr uint8_t GFX_CAN_8      = 1 << 0;
+constexpr uint8_t GFX_CAN_15     = 1 << 1;
+constexpr uint8_t GFX_CAN_16     = 1 << 2;
+constexpr uint8_t GFX_CAN_32     = 1 << 3;
+constexpr uint8_t GFX_DBL_H      = 1 << 4; // double-width  flag
+constexpr uint8_t GFX_DBL_W      = 1 << 5; // double-height flag
+constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 
 // return code of:
 // - true means event loop can keep running.

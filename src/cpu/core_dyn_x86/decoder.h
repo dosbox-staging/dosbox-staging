@@ -176,35 +176,32 @@ static uint32_t decode_fetchd(void) {
 #define START_WMMEM 64
 
 static inline void decode_increase_wmapmask(Bitu size) {
-	Bitu mapidx;
-	CacheBlock* activecb=decode.active_block; 
+	size_t mapidx        = 0;
+	CacheBlock* activecb = decode.active_block;
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->cache.wmapmask=(uint8_t*)malloc(START_WMMEM);
-		memset(activecb->cache.wmapmask,0,START_WMMEM);
-		activecb->cache.maskstart=decode.page.index;
-		activecb->cache.masklen=START_WMMEM;
-		mapidx=0;
+		activecb->cache.wmapmask = std::make_unique<uint8_t[]>(START_WMMEM);
+		activecb->cache.masklen   = START_WMMEM;
+		activecb->cache.maskstart = decode.page.index;
 	} else {
-		mapidx=decode.page.index-activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx+size>=activecb->cache.masklen)) {
-			Bitu newmasklen=activecb->cache.masklen*4;
-			if (newmasklen<mapidx+size) newmasklen=((mapidx+size)&~3)*2;
-			uint8_t* tempmem=(uint8_t*)malloc(newmasklen);
-			if (tempmem == nullptr) {
-				LOG_MSG("Unable to allocate %" PRIuPTR " bytes for tempmem", newmasklen);
-				return;
+		mapidx = decode.page.index - activecb->cache.maskstart;
+		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
+			size_t newmasklen = activecb->cache.masklen * 4;
+			if (newmasklen < mapidx + size) {
+				newmasklen = ((mapidx + size) & ~3) * 2;
 			}
-			memset(tempmem,0,newmasklen);
-			memcpy(tempmem,activecb->cache.wmapmask,activecb->cache.masklen);
-			free(activecb->cache.wmapmask);
-			activecb->cache.wmapmask=tempmem;
-			activecb->cache.masklen=newmasklen;
+			auto tempmem = std::make_unique<uint8_t[]>(newmasklen);
+			memcpy(tempmem.get(),
+			       activecb->cache.wmapmask.get(),
+			       activecb->cache.masklen);
+			activecb->cache.wmapmask = std::move(tempmem);
+			activecb->cache.masklen  = check_cast<uint16_t>(newmasklen);
 		}
 	}
+	// update mask entries
 	switch (size) {
-		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
-		case 2 : add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-		case 4 : add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
+	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
+	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
+	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
 	}
 }
 
@@ -827,7 +824,11 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetReadBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
+
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 	//mov dst, [tmp+src]
@@ -873,7 +874,10 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	opcode(tmp).setrm(gensrc->index).Emit8(0x8B); // mov tmp, src
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmp,12
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetReadBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 
@@ -930,7 +934,10 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetWriteBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 	//mov [tmp+src], dst
@@ -971,7 +978,10 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	opcode(tmp).setrm(gendst->index).Emit8(0x8B); // mov tmpd, dst
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)PAGING_GetWriteBaseAddress() - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const uint8_t *nomap=gen_create_branch(BR_Z);
 

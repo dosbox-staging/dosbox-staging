@@ -141,7 +141,7 @@ void Innovation::Close()
 	if (!is_open)
 		return;
 
-	DEBUG_LOG_MSG("INNOVATION: Shutting down the SSI-2001 on port %xh", base_port);
+	LOG_MSG("INNOVATION: Shutting down");
 
 	// Stop playback
 	if (channel)
@@ -150,6 +150,11 @@ void Innovation::Close()
 	// Remove the IO handlers before removing the SID device
 	read_handler.Uninstall();
 	write_handler.Uninstall();
+
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+	channel.reset();
 
 	// Reset the members
 	channel.reset();

@@ -316,7 +316,7 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
+void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 {
 	char title_buf[200] = {0};
 
@@ -349,6 +349,12 @@ void GFX_SetTitle(int32_t new_num_cycles, int /*frameskip*/, bool is_paused)
 		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
 
 	SDL_SetWindowTitle(sdl.window, title_buf);
+}
+
+void GFX_RefreshTitle()
+{
+	constexpr int8_t refresh_cycle_count = -1;
+	GFX_SetTitle(refresh_cycle_count);
 }
 
 static double get_host_refresh_rate()
@@ -512,7 +518,7 @@ void GFX_RequestExit(const bool pressed)
 		return;
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
-	GFX_SetTitle(-1,-1,true);
+	GFX_RefreshTitle();
 	bool paused = true;
 	Delay(500);
 	SDL_Event event;
@@ -545,7 +551,7 @@ void GFX_RequestExit(const bool pressed)
 					//Which is tricky due to possible use of scancodes.
 				}
 				paused = false;
-				GFX_SetTitle(-1,-1,false);
+				GFX_RefreshTitle();
 				break;
 			}
 #if defined (MACOSX)
@@ -562,12 +568,9 @@ void GFX_RequestExit(const bool pressed)
 
 Bitu GFX_GetBestMode(Bitu flags)
 {
-	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
-		flags |= GFX_UNITY_SCALE;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
-check_surface:
-		flags &= ~GFX_LOVE_8;		//Disable love for 8bpp modes
+	check_surface:
 		switch (sdl.desktop.bpp) {
 		case 8:
 			if (flags & GFX_CAN_8) flags&=~(GFX_CAN_15|GFX_CAN_16|GFX_CAN_32);
@@ -590,8 +593,9 @@ check_surface:
 #endif
 	case SCREEN_TEXTURE:
 		// We only accept 32bit output from the scalers here
-		if (!(flags&GFX_CAN_32)) goto check_surface;
-		flags|=GFX_SCALING;
+		if (!(flags & GFX_CAN_32)) {
+			goto check_surface;
+		}
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
 	default:
@@ -1142,29 +1146,27 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 
 static void NewMouseScreenParams()
 {
+	if (sdl.clip.w <= 0 || sdl.clip.h <= 0 ||
+	    sdl.clip.x < 0 || sdl.clip.y < 0) {
+		// Filter out unusual parameters, which can be the result
+		// of window minimized due to ALT+TAB, for example
+		return;
+	}
+
 	int abs_x = 0;
 	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-#ifdef __APPLE__
-	// macOS moves mouse cursor on "client points" grid, not physical pixels;
-	// it's unknown how Windows behaves with modern DPI scaling modes
-	MOUSE_NewScreenParams(sdl.clip.x / sdl.desktop.dpi_scale,
-	                      sdl.clip.y / sdl.desktop.dpi_scale,
-	                      sdl.clip.w / sdl.desktop.dpi_scale,
-	                      sdl.clip.h / sdl.desktop.dpi_scale,
-	                      check_cast<int32_t>(abs_x),
-	                      check_cast<int32_t>(abs_y),
-	                      sdl.desktop.fullscreen);
-#else
-	MOUSE_NewScreenParams(check_cast<uint32_t>(sdl.clip.x),
-	                      check_cast<uint32_t>(sdl.clip.y),
-	                      check_cast<uint32_t>(sdl.clip.w),
-	                      check_cast<uint32_t>(sdl.clip.h),
-	                      check_cast<int32_t>(abs_x),
-	                      check_cast<int32_t>(abs_y),
-	                      sdl.desktop.fullscreen);
-#endif
+	// When DPI scaling is enabled, mouse coordinates are reported on
+	// "client points" grid, not physical pixels.
+	MOUSE_NewScreenParams(
+	        check_cast<uint32_t>(lround(sdl.clip.x / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.y / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.w / sdl.desktop.dpi_scale)),
+	        check_cast<uint32_t>(lround(sdl.clip.h / sdl.desktop.dpi_scale)),
+	        check_cast<int32_t>(abs_x),
+	        check_cast<int32_t>(abs_y),
+	        sdl.desktop.fullscreen);
 }
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -1258,7 +1260,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
 
-		GFX_SetTitle(-1, -1, false); // refresh title.
+		GFX_RefreshTitle();
 
 		if (!fullscreen) {
 			goto finish;
@@ -1672,23 +1674,21 @@ Bitu GFX_SetSize(int width,
 	switch (sdl.desktop.want_type) {
 dosurface:
 	case SCREEN_SURFACE:
-		sdl.clip.w = width;
-		sdl.clip.h = height;
 		if (sdl.desktop.fullscreen) {
 			if (sdl.desktop.full.fixed) {
+				sdl.clip.w = sdl.desktop.full.width;
+				sdl.clip.h = sdl.desktop.full.height;
 				sdl.clip.x = (sdl.desktop.full.width - width) / 2;
 				sdl.clip.y = (sdl.desktop.full.height - height) / 2;
 				sdl.window = SetWindowMode(SCREEN_SURFACE,
-				                           sdl.desktop.full.width,
-				                           sdl.desktop.full.height,
+				                           sdl.clip.w, sdl.clip.h,
 				                           sdl.desktop.fullscreen,
 				                           FIXED_SIZE);
-				if (sdl.window == NULL)
+				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.desktop.full.width,
-					       sdl.desktop.full.height,
-					       sdl.desktop.bpp,
+					       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 					       SDL_GetError());
+				}
 
 				/* This may be required after an ALT-TAB leading to a window
 				minimize, which further effectively shrinks its size */
@@ -1696,35 +1696,39 @@ dosurface:
 					sdl.update_display_contents = false;
 				}
 			} else {
+				sdl.clip.w = width;
+				sdl.clip.h = height;
 				sdl.clip.x = 0;
 				sdl.clip.y = 0;
 				sdl.window = SetWindowMode(SCREEN_SURFACE,
-				                           width, height,
+				                           sdl.clip.w, sdl.clip.h,
 				                           sdl.desktop.fullscreen,
 				                           FIXED_SIZE);
-				if (sdl.window == NULL)
+				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       width,
-					       height,
-					       sdl.desktop.bpp,
+					       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 					       SDL_GetError());
+				}
 			}
 		} else {
+			sdl.clip.w = width;
+			sdl.clip.h = height;
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
-			sdl.window = SetWindowMode(SCREEN_SURFACE, width, height,
+			sdl.window = SetWindowMode(SCREEN_SURFACE,
+			                           sdl.clip.w, sdl.clip.h,
 			                           sdl.desktop.fullscreen,
 			                           FIXED_SIZE);
-			if (sdl.window == NULL)
+			if (sdl.window == nullptr) {
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
-				       width,
-				       height,
-				       sdl.desktop.bpp,
+				       sdl.clip.w, sdl.clip.h, sdl.desktop.bpp,
 				       SDL_GetError());
+			}
 		}
 		sdl.surface = SDL_GetWindowSurface(sdl.window);
-		if (sdl.surface == NULL)
+		if (sdl.surface == nullptr) {
 			E_Exit("Could not retrieve window surface: %s",SDL_GetError());
+		}
 		switch (sdl.surface->format->BitsPerPixel) {
 			case 8:
 				retFlags = GFX_CAN_8;
@@ -1799,8 +1803,7 @@ dosurface:
 			case 16: retFlags = GFX_CAN_16; break;
 			case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
 			case 32: retFlags = GFX_CAN_32; break;
-		}
-		retFlags |= GFX_SCALING;
+		        }
 
 		// Log changes to the rendering driver
 		static std::string render_driver = {};
@@ -1808,9 +1811,10 @@ dosurface:
 			LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
 			render_driver = rinfo.name;
 		}
-		
-		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
-			retFlags |= GFX_HARDWARE;
+
+		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
+			retFlags |= GFX_CAN_RANDOM;
+		}
 
 		// Copied from the OpenGL path below; used to center texturepp output
 		int window_width  = 0;
@@ -2132,12 +2136,12 @@ dosurface:
 
 		OPENGL_ERROR("End of setsize");
 
-		retFlags = GFX_CAN_32 | GFX_SCALING;
+		retFlags = GFX_CAN_32;
 		if (sdl.opengl.pixel_buffer_object) {
-			retFlags |= GFX_HARDWARE;
 			sdl.frame.update = update_frame_gl_pbo;
 		} else {
 			sdl.frame.update = update_frame_gl_fb;
+			retFlags |= GFX_CAN_RANDOM;
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
@@ -2229,7 +2233,7 @@ void GFX_SetMouseHint(const MouseHint hint_id)
 		break;
 	}
 
-	GFX_SetTitle(-1, -1, false);
+	GFX_RefreshTitle();
 }
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
@@ -2716,20 +2720,11 @@ static SDL_Window *SetDefaultWindowMode()
 
 static bool detect_resizable_window()
 {
-#if C_OPENGL
-	if (sdl.desktop.want_type != SCREEN_OPENGL) {
-		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
+	if (sdl.desktop.want_type == SCREEN_SURFACE) {
+		LOG_WARNING("DISPLAY: Disabled resizable window, not compatible with surface output");
 		return false;
 	}
-	if (!is_shader_flexible()) {
-		LOG_WARNING("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
-		return false;
-	}
-
 	return true;
-#else
-	return false;
-#endif // C_OPENGL
 }
 
 static bool wants_stretched_pixels()
@@ -3771,21 +3766,33 @@ static void HandleVideoResize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
-#if C_OPENGL
-	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
+	if (sdl.desktop.window.resizable) {
 		const auto canvas = get_canvas_size(sdl.desktop.type);
 		sdl.clip          = calc_viewport(canvas.w, canvas.h);
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		if (sdl.desktop.type == SCREEN_TEXTURE) {
+			SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+		}
+#if C_OPENGL
+		if (sdl.desktop.type == SCREEN_OPENGL) {
+			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+			glUniform2f(sdl.opengl.ruby.output_size,
+			            (GLfloat)sdl.clip.w,
+			            (GLfloat)sdl.clip.h);
+		}
+#endif // C_OPENGL
 
 		if (!sdl.desktop.fullscreen)
 			save_window_size(width, height);
+
+		// Window resize might have been triggered by the OS setting DPI scale,
+		// so recalculate that.
+		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
 
 		// Ensure mouse emulation knows the current parameters
 		NewMouseScreenParams();
 
 		return;
 	}
-#endif
 
 	/* Even if the new window's dimensions are actually the desired ones
 	 * we may still need to re-obtain a new window surface or do
@@ -4066,7 +4073,7 @@ bool GFX_Events()
 					ApplyInactiveSettings();
 					SDL_Event ev;
 
-					GFX_SetTitle(-1,-1,true);
+					GFX_RefreshTitle();
 					KEYBOARD_ClrBuffer();
 //					Delay(500);
 //					while (SDL_PollEvent(&ev)) {
@@ -4086,7 +4093,7 @@ bool GFX_Events()
 								// We've got focus back, so unpause and break out of the loop
 								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
 									paused = false;
-									GFX_SetTitle(-1,-1,false);
+									GFX_RefreshTitle();
 									ApplyActiveSettings();
 									CPU_Disable_SkipAutoAdjust();
 								}
@@ -4171,7 +4178,8 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
-void GFX_ShowMsg(char const* format,...) {
+void GFX_ShowMsg(const char* format, ...)
+{
 	char buf[512];
 
 	va_list msg;
@@ -4477,7 +4485,8 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-static void launchcaptures(std::string const& edit) {
+static void launchcaptures(const std::string& edit)
+{
 	std::string path,file;
 	Section* t = control->GetSection("dosbox");
 	if(t) file = t->GetPropValue("captures");
@@ -4564,15 +4573,6 @@ static void erasemapperfile() {
 	exit(0);
 }
 
-void Disable_OS_Scaling() {
-#if defined (WIN32)
-	FARPROC function_set_dpi = GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
-	if (function_set_dpi) {
-		function_set_dpi();
-	}
-#endif
-}
-
 void OverrideWMClass()
 {
 #if !defined(WIN32)
@@ -4627,7 +4627,18 @@ int sdl_main(int argc, char *argv[])
 
 	int rcode = 0; // assume good until proven otherwise
 	try {
-		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
+		std::string working_dir;
+		constexpr bool remove_arg = true;
+		if (control->cmdline->FindString("--working-dir", working_dir, remove_arg) ||
+		    control->cmdline->FindString("-working-dir", working_dir, remove_arg)) {
+			std::error_code ec;
+			std::filesystem::current_path(working_dir, ec);
+			if (ec) {
+				LOG_ERR("Cannot set working directory to %s",
+				        working_dir.c_str());
+			}
+		}
+
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CROSS_DetermineConfigPaths();
@@ -4687,6 +4698,13 @@ int sdl_main(int argc, char *argv[])
 
 #if defined(WIN32)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
+
+#	if SDL_VERSION_ATLEAST(2, 23, 0)
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
+		LOG_WARNING("SDL: Failed to set DPI awareness flag");
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE)
+		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+#	endif
 #endif
 
 	check_kmsdrm_setting();

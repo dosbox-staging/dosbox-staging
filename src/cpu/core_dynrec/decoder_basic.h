@@ -252,34 +252,32 @@ static uint32_t decode_fetchd(void) {
 // adjust writemap mask to care for map holes due to special
 // codefetch functions
 static void inline decode_increase_wmapmask(Bitu size) {
-	Bitu mapidx;
-	CacheBlock *activecb = decode.active_block;
+	size_t mapidx        = 0;
+	CacheBlock* activecb = decode.active_block;
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		// no mask memory yet allocated, start with a small buffer
-		activecb->cache.wmapmask=(uint8_t*)malloc(START_WMMEM);
-		memset(activecb->cache.wmapmask,0,START_WMMEM);
-		activecb->cache.maskstart=decode.page.index;	// start of buffer is current code position
-		activecb->cache.masklen=START_WMMEM;
-		mapidx=0;
+		activecb->cache.wmapmask  = std::make_unique<uint8_t[]>(START_WMMEM);
+		activecb->cache.masklen   = START_WMMEM;
+		activecb->cache.maskstart = decode.page.index;
 	} else {
-		mapidx=decode.page.index-activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx+size>=activecb->cache.masklen)) {
-			// mask buffer too small, increase
-			Bitu newmasklen=activecb->cache.masklen*4;
-			if (newmasklen<mapidx+size) newmasklen=((mapidx+size)&~3)*2;
-			uint8_t* tempmem=(uint8_t*)malloc(newmasklen);
-			memset(tempmem,0,newmasklen);
-			memcpy(tempmem,activecb->cache.wmapmask,activecb->cache.masklen);
-			free(activecb->cache.wmapmask);
-			activecb->cache.wmapmask=tempmem;
-			activecb->cache.masklen=newmasklen;
+		mapidx = decode.page.index - activecb->cache.maskstart;
+		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
+			size_t newmasklen = activecb->cache.masklen * 4;
+			if (newmasklen < mapidx + size) {
+				newmasklen = ((mapidx + size) & ~3) * 2;
+			}
+			auto tempmem = std::make_unique<uint8_t[]>(newmasklen);
+			memcpy(tempmem.get(),
+			       activecb->cache.wmapmask.get(),
+			       activecb->cache.masklen);
+			activecb->cache.wmapmask = std::move(tempmem);
+			activecb->cache.masklen  = check_cast<uint16_t>(newmasklen);
 		}
 	}
 	// update mask entries
 	switch (size) {
-		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
-		case 2 : add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-		case 4 : add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
+	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
+	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
+	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
 	}
 }
 
