@@ -79,6 +79,20 @@ VFILE_Block::~VFILE_Block()
 	}
 }
 
+template<typename Predicate>
+vfile_block_t find_file_by_predicate(vfile_block_t first_file, Predicate predicate_)
+{
+	auto cur_file = first_file;
+	while (cur_file) {
+		if (predicate_(cur_file)) 
+		{
+			return cur_file;
+		}
+		cur_file = cur_file->next;
+	}
+	return {};
+}
+
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 {
 	if (!name || !*name) {
@@ -95,23 +109,15 @@ char *VFILE_Generate_8x3(const char *name, const unsigned int onpos)
 	if (lfn.length() >= LFN_NAMELENGTH)
 		lfn.erase(LFN_NAMELENGTH);
 	unsigned int num = 1;
-	vfile_block_t cur_file = {};
 	// Get 8.3 names for LFNs by iterating the numbers
 	while (1) {
 		const auto str = generate_8x3(lfn.c_str(), num);
 		safe_strcpy(sfn, str.length() < DOS_NAMELENGTH_ASCII ? str.c_str() : "");
 		if (!*sfn)
 			return sfn;
-		cur_file = first_file;
-		bool found = false;
-		while (cur_file) {
-			// If 8.3 name already exists, try next number
-			if (onpos == cur_file->onpos && iequals(sfn, cur_file->name)) {
-				found = true;
-				break;
-			}
-			cur_file = cur_file->next;
-		}
+
+		// If 8.3 name already exists, try next number
+		auto found = find_file_by_predicate(first_file, [onpos](vfile_block_t cur_file){ return onpos == cur_file->onpos && iequals(sfn, cur_file->name); } );
 		// Return if 8.3 name does not already exist
 		if (!found)
 			return sfn;
@@ -145,12 +151,9 @@ void VFILE_Register(const char *name,
 		if (onpos == 0)
 			return;
 	}
-	auto cur_file = first_file;
-	while (cur_file) {
-		if (onpos == cur_file->onpos && iequals(name, cur_file->name)) {
-			return;
-		}
-		cur_file = cur_file->next;
+	auto found = find_file_by_predicate(first_file, [onpos, name](vfile_block_t cur_file){ return onpos == cur_file->onpos && iequals(name, cur_file->name); } );
+	if (found) {
+		return;
 	}
 	Filename filename;
 	filename.fullname = name;
@@ -386,20 +389,12 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 		return false;
 	}
 /* Scan through the internal list of files */
-	auto cur_file = first_file;
-	while (cur_file) {
-		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
-		                                                  std::string(1, '\\')
-		                                        : "") +
-		                      cur_file->name)
-		                             .c_str()) == 0) {
-			/* We have a match */
-			*file = new Virtual_File(cur_file->data, cur_file->size);
-			(*file)->flags = flags;
-			return true;
-		}
-		cur_file = cur_file->next;
+	auto found = find_file_by_name(name);
+	if (found) {
+		/* We have a match */
+		*file = new Virtual_File(found->data, found->size);
+		(*file)->flags = flags;
+		return true;
 	}
 	return false;
 }
@@ -427,51 +422,34 @@ bool Virtual_Drive::MakeDir(char * /*dir*/) {
 bool Virtual_Drive::TestDir(char * dir) {
 	assert(dir);
 	if (!dir[0]) return true;		//only valid dir is the empty dir
-	auto cur_file = first_file;
-	while (cur_file) {
-		if (cur_file->isdir && iequals(cur_file->name, dir)) {
-			return true;
-		}
-		cur_file = cur_file->next;
+
+	if( find_file_by_predicate(first_file, [dir](vfile_block_t cur_file){ return cur_file->isdir && iequals(cur_file->name, dir); } ) )
+	{
+		return true;
 	}
 	return false;
 }
 
 bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block){
 	assert(name);
-	auto cur_file = first_file;
-	while (cur_file) {
-		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
-		                                                  std::string(1, '\\')
-		                                        : "") +
-		                      cur_file->name)
-		                             .c_str()) == 0) {
-			stat_block->attr = (int)(cur_file->isdir
-			                                 ? DOS_ATTR_DIRECTORY
-			                                 : DOS_ATTR_ARCHIVE);
-			stat_block->size = cur_file->size;
-			stat_block->date = default_date;
-			stat_block->time = default_time;
-			return true;
-		}
-		cur_file = cur_file->next;
+	auto found = find_file_by_name(name);
+	if (found) {
+		stat_block->attr = (int)(found->isdir
+			                                ? DOS_ATTR_DIRECTORY
+			                                : DOS_ATTR_ARCHIVE);
+		stat_block->size = found->size;
+		stat_block->date = default_date;
+		stat_block->time = default_time;
+		return true;
 	}
 	return false;
 }
 
 bool Virtual_Drive::FileExists(const char* name){
 	assert(name);
-	auto cur_file = first_file;
-	while (cur_file) {
-		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
-		                                                  std::string(1, '\\')
-		                                        : "") +
-		                      cur_file->name)
-		                             .c_str()) == 0)
-			return !cur_file->isdir;
-		cur_file = cur_file->next;
+	auto found = find_file_by_name(name);
+	if (found) {
+		return !found->isdir;
 	}
 	return false;
 }
@@ -562,19 +540,11 @@ bool Virtual_Drive::GetFileAttr(char *name, uint16_t *attr)
 		*attr = DOS_ATTR_DIRECTORY;
 		return true;
 	}
-	auto cur_file = first_file;
-	while (cur_file) {
-		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
-		                                                  std::string(1, '\\')
-		                                        : "") +
-		                      cur_file->name)
-		                             .c_str()) == 0) {
-			*attr = (int)(cur_file->isdir ? DOS_ATTR_DIRECTORY // Maybe
-			                              : DOS_ATTR_ARCHIVE); // Read-only?
-			return true;
-		}
-		cur_file = cur_file->next;
+	auto cur_file = find_file_by_name(name);
+	if (cur_file) {
+		*attr = (int)(cur_file->isdir ? DOS_ATTR_DIRECTORY // Maybe
+		                              : DOS_ATTR_ARCHIVE); // Read-only?
+		return true;
 	}
 	return false;
 }
@@ -586,18 +556,10 @@ bool Virtual_Drive::SetFileAttr(const char *name, [[maybe_unused]] uint16_t attr
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return true;
 	}
-	auto cur_file = first_file;
-	while (cur_file) {
-		unsigned int onpos = cur_file->onpos;
-		if (strcasecmp(name, (std::string(onpos ? vfilenames[onpos].shortname +
-		                                                  std::string(1, '\\')
-		                                        : "") +
-		                      cur_file->name)
-		                             .c_str()) == 0) {
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
-		cur_file = cur_file->next;
+	auto found = find_file_by_name(name);
+	if (found) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
 	}
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
@@ -634,6 +596,17 @@ Bits Virtual_Drive::UnMount() {
 const char* Virtual_Drive::GetLabel()
 {
 	return "DOSBOX";
+}
+
+bool Virtual_Drive::equal_name(vfile_block_t cur_file, const char* search_name)
+{
+	unsigned int onpos = cur_file->onpos;
+	return strcasecmp(search_name, (std::string(onpos ? vfilenames[onpos].shortname + std::string(1, '\\') : "") + cur_file->name).c_str()) == 0;
+}
+
+vfile_block_t Virtual_Drive::find_file_by_name(const char * search_name)
+{
+	return find_file_by_predicate(first_file, [this, search_name](vfile_block_t cur_file){ return equal_name(cur_file, search_name);} );
 }
 
 void Virtual_Drive::EmptyCache()
