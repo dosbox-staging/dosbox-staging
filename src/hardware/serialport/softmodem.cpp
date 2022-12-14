@@ -325,6 +325,7 @@ void CSerialModem::AcceptIncomingCall() {
 	if (waitingclientsocket) {
 		clientsocket = std::move(waitingclientsocket);
 		EnterConnectedState();
+		warmup_remain_ticks = MODEM_WARMUP_DELAY_MS;
 	} else {
 		EnterIdleState();
 	}
@@ -380,6 +381,7 @@ void CSerialModem::EnterIdleState(){
 	connected = false;
 	ringing = false;
 	dtrofftimer = -1;
+	warmup_remain_ticks = 0;
 	clientsocket.reset(nullptr);
 	waitingclientsocket.reset(nullptr);
 
@@ -943,7 +945,7 @@ void CSerialModem::Timer2()
 		}
 	} // while loop
 
-	if (clientsocket && txbuffersize) {
+	if (clientsocket && txbuffersize && warmup_remain_ticks == 0) {
 		// down here it saves a lot of network traffic
 		if (!clientsocket->SendArray(tmpbuf,txbuffersize)) {
 			SendRes(ResNOCARRIER);
@@ -959,7 +961,7 @@ void CSerialModem::Timer2()
 			SendRes(ResNOCARRIER);
 			LOG_INFO("SERIAL: No carrier on receive");
 			EnterIdleState();
-		} else if (usesize) {
+		} else if (usesize && warmup_remain_ticks == 0) {
 			// Filter telnet commands
 			if (telnet_mode)
 				TelnetEmulation(tmpbuf, usesize);
@@ -967,6 +969,17 @@ void CSerialModem::Timer2()
 				rqueue->adds(tmpbuf,usesize);
 		}
 	}
+
+	// Tick down warmup timer
+	if (clientsocket && warmup_remain_ticks) {
+		// Drop all incoming and outgoing traffic for a short period after
+		// answering a call. This is to simulate real modem behavior where
+		// the first packet is usually bad (extra data in the buffer from
+		// connecting, noise, random nonsense).
+		// Some games are known to break without this.
+		warmup_remain_ticks--;
+	}
+
 	// Check for incoming calls
 	if (!connected && !waitingclientsocket && serversocket) {
 		waitingclientsocket.reset(serversocket->Accept());
@@ -1001,6 +1014,7 @@ void CSerialModem::Timer2()
 		--ringtimer;
 	}
 
+	// Handle DTR drop
 	if (connected && !getDTR()) {
 		if (dtrofftimer == 0) {
 			switch (dtrmode) {

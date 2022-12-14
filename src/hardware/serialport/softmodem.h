@@ -45,6 +45,7 @@
 #define MODEM_TICKRATE 1000 // Ticks per second
 #define MODEM_TICKTIME (1000 / MODEM_TICKRATE) // Tick interval in milliseconds
 #define MODEM_RINGINTERVAL (3000 / MODEM_TICKTIME)
+#define MODEM_WARMUP_DELAY_MS (250 / MODEM_TICKTIME)
 
 
 enum ResTypes {
@@ -243,6 +244,7 @@ protected:
 	uint32_t flowcontrol = 0;
 	uint32_t dtrmode = 0;
 	int32_t dtrofftimer = 0;
+	int32_t warmup_remain_ticks = 0;
 	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
 	uint16_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
