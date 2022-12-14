@@ -59,11 +59,11 @@ install_doc()
             readme_tmpl="${pkg_dir}/README"
             ;;
         macos)
-            install_file docs/README.template "${macos_dst_dir}/SharedSupport/README"
-            install_file COPYING              "${macos_dst_dir}/SharedSupport/COPYING"
-            install_file README               "${macos_dst_dir}/SharedSupport/manual.txt"
-            install_file docs/README.video    "${macos_dst_dir}/SharedSupport/video.txt"
-            readme_tmpl="${macos_dst_dir}/SharedSupport/README"
+            install_file docs/README.template "${macos_content_dir}/SharedSupport/README"
+            install_file COPYING              "${macos_content_dir}/SharedSupport/COPYING"
+            install_file README               "${macos_content_dir}/SharedSupport/manual.txt"
+            install_file docs/README.video    "${macos_content_dir}/SharedSupport/video.txt"
+            readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
         msys2|msvc)
             install_file COPYING              "${pkg_dir}/COPYING.txt"
@@ -98,7 +98,7 @@ install_resources()
     case "$platform" in
     "macos")
         local src_dir=${build_dir}/../Resources
-        local dest_dir=${macos_dst_dir}/Resources
+        local dest_dir=${macos_content_dir}/Resources
         ;;
     *)
         local src_dir=${build_dir}/resources
@@ -142,13 +142,24 @@ pkg_macos()
     # Generate icon
     make -C contrib/icons/ dosbox-staging.icns
 
-    install -d   "${macos_dst_dir}/MacOS/"
-    install      dosbox-universal/dosbox           "${macos_dst_dir}/MacOS/"
-    install_file contrib/macos/Info.plist.template "${macos_dst_dir}/Info.plist"
-    install_file contrib/macos/PkgInfo             "${macos_dst_dir}/PkgInfo"
-    install_file contrib/icons/dosbox-staging.icns "${macos_dst_dir}/Resources/"
+    install -d   "${macos_content_dir}/MacOS/"
+    install      dosbox-universal/dosbox           "${macos_content_dir}/MacOS/"
+    install_file contrib/macos/Info.plist.template "${macos_content_dir}/Info.plist"
+    install_file contrib/macos/PkgInfo             "${macos_content_dir}/PkgInfo"
+    install_file contrib/icons/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
-    sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_dst_dir}/Info.plist"
+    sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
+
+	# Install "Start DOSBox Staging" command
+	start_command="Start DOSBox Staging.command"
+	install -m 755 "contrib/macos/${start_command}" "${macos_dist_dir}/${start_command}"
+
+	# Hide extension in Finder
+	xattr -x -w com.apple.FinderInfo "00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" "${macos_dist_dir}/${start_command}"
+
+	# Set up visual appearance of the root folder of the DMG image
+	install_file contrib/macos/background/background.tiff "${macos_dist_dir}/.hidden/background.tiff"
+	install_file contrib/macos/DS_Store            "${macos_dist_dir}/.DS_Store"
 }
 
 pkg_msys2()
@@ -248,7 +259,8 @@ if [ "$platform" = "macos" ]; then
         usage
         exit 1
     fi
-    macos_dst_dir="${pkg_dir}/dist/DOSBox Staging.app/Contents"
+    macos_dist_dir="${pkg_dir}/dist"
+    macos_content_dir="${macos_dist_dir}/DOSBox Staging.app/Contents"
 fi
 
 if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
