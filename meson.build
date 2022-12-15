@@ -73,9 +73,9 @@ else
     )
 endif
 
-if get_option('buildtype') == 'release'
-    # For release builds, we're not anticipating needing
-    # to divide by zero and NaNs, and get FPU signals.
+if get_option('buildtype') in ['release', 'minsize']
+    # For release and small build types, we're not anticipating
+    # needing debuggable floating point signals.
     # These safety measures are still enabled in debug builds,
     # so if an issue is reported where these happen help, then
     # testing with debug builds will make use of them.
