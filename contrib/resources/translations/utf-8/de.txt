@@ -1,32 +1,32 @@
 :TITLEBAR_CYCLES_MS
-cycles/ms
+Zyklen/ms
 .
 :TITLEBAR_HINT_PAUSED
-(PAUSED)
+(PAUSIERT)
 .
 :TITLEBAR_HINT_NOMOUSE
-no-mouse mode
+Keine Maus
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-mouse captured, %s+F10 to release
+Maus umgeschaltet, %s+F10 zum Freigeben
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mouse captured, %s+F10 or middle-click to release
+Maus umgeschaltet, %s+F10 oder Mittelklick zum Freigeben
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
-to capture the mouse press %s+F10
+Zum Umschalten der Maus %s+F10
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
-to capture the mouse press %s+F10 or middle-click
+Zum Umschalten der Maus %s+F10 oder Mittelklick
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
-to capture the mouse press %s+F10 or click any button
+Zum Umschalten der Maus %s+F10 oder klicken
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY
-seamless mouse, %s+F10 to capture
+Übergangslose Maus, %s+F10 zum Umschalten
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-seamless mouse, %s+F10 or middle-click to capture
+Übergangslose Maus, %s+F10 oder Mittelklick schaltet um
 .
 :CONFIG_FULLSCREEN
 Starte direkt im Vollbildmodus.
@@ -82,7 +82,7 @@ Lege die Bildwiederholrate des Hosts fest:
   sdi:       Verwende die Raten der seriellen Geräteschnittstelle (SDI),
              ohne weitere Anpassungen.
   vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
-             (Best-Practice für VRR-Anzeigen).
+             (Bester Modus für VRR-Anzeigen).
   <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
              größer als 23.000 an.
 .
@@ -119,7 +119,7 @@ Wähle, wie Mittelklicks behandelt werden (zweiter Parameter):
    middlegame:     Mittelklicks werden an das Programm gesendet.
    middlerelease:  Mit einem Mittelklick kannst du die gefangene Maus freigeben und auch umschalten,
                    wenn "seamless" aktiviert ist.
-Defaults (if not present or incorrect): seamless middlerelease
+Standardwerte (falls nicht vorhanden oder fehlerhaft): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
 Maus-Empfindlichkeit. Der optionale zweite Parameter gibt die vertikale
@@ -131,7 +131,7 @@ Empfindlichkeitseinstellungen deines Betriebssystems zu umgehen. Dies
 funktioniert im Vollbildmodus oder wenn die Maus im Fenstermodus erfasst wird.
 .
 :CONFIG_WAITONERROR
-Wartet bevor die Konsole geschlossen wird, wenn Dosbox eine Fehlermeldung anzeigt.
+Wartet bevor die Konsole geschlossen wird, wenn DOSBox eine Fehlermeldung anzeigt.
 .
 :CONFIG_PRIORITY
 Prioritätsstufen, die im aktiven bzw. inaktiven Zustand gelten sollen. 
@@ -164,11 +164,11 @@ Anmerkungen: Diese Einstellung hat Vorrang vor der Umgebungseinstellung "LANG", 
        Datei, um diese Funktion zu unterstützen.
 .
 :CONFIG_MACHINE
-Der Typ der Maschine, die DOSBox versucht zu emulieren.
+Rechnertyp, den DOSBox versucht zu emulieren.
 .
 :CONFIG_CAPTURES
-Verzeichnis, in dem Aufzeichnungen wie wave, midi und screenshots gespeichert
-werden.
+Verzeichnis, in dem Aufzeichnungen wie Wave-, Midi- und Screenshot-Dateien
+gespeichert werden.
 .
 :CONFIG_MEMSIZE
 Die Menge an Speicher, die DOSBox emuliert, in Megabyte.
@@ -246,7 +246,8 @@ auto        | "low" wenn Dateiname oder Verzeichnis übergeben werden,
                     sonst "high"
 .
 :CONFIG_FRAMESKIP
-Consider capping frame-rates using the '[sdl] host_rate' setting.
+Überlege dir, ob du die Bildrate mit der Einstellung '[sdl] host_rate'
+begrenzen willst.
 .
 :CONFIG_ASPECT
 Skaliert die vertikale Auflösung, um ein Bildseitenverhältnis von 4:3 zu
@@ -292,9 +293,12 @@ Leerzeichen oder Kommata getrennte Farbwerte angibst, entweder als 3- oder
 RGB-Tripletts (z. B. (255, 0, 255) für Magenta).
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+Die Software-Skalierer werden zugunsten von Hardware-beschleunigten Optionen
+nicht mehr unterstützt:
+ - Wenn du die normal2x/3x -Skalierer benutzt hast, stelle stattdessen eine
+   gewünschte "windowresolution" ein.
+ - Wenn du einen "advanced" Skalierer benutzt hast, solltest du stattdessen
+   eine der "glshader"-Optionen in Betracht ziehen.
 .
 :CONFIG_GLSHADER
 Entweder "none" oder ein GLSL-Shadername. Funktioniert nur mit
@@ -361,66 +365,71 @@ Führe "INTRO" aus für eine Liste der verfügbaren Tastenkombinationen.
 Wenn du ihn niedriger als 100 einstellst, wird er prozentual angezeigt.
 .
 :CONFIG_MOUSE_CAPTURE
-Choose a mouse control method:
-  onclick:   Capture the mouse when clicking any button in the window.
-  onstart:   Capture the mouse immediately on start.
-  seamless:  Let the mouse move seamlessly; captures only with middle-click or
-             hotkey.
-  nomouse:   Hide the mouse and don't send input to the game.
+Wähle eine Methode zum Umschalten der Maus:
+  onclick:   Schalte die Maus beim Klick auf eine beliebige Stelle im Fenster um.
+  onstart:   Schalte die Maus sofort beim Start um.
+  seamless:  Die Maus übergangslos bewegen lassen; umschalten nur mit Mittelklick
+             oder Hotkey.
+  nomouse:   Verstecke die Maus und sende keine Eingaben an das Programm.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-If true, middle-click will release the captured mouse, and also
-capture when seamless.
+Wenn diese Option aktiviert ist, wird die Maus durch einen Mittelklick
+freigegeben oder umgeschaltet, wenn sie übergangslos ist.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.
-Negative values reverse mouse direction, 0 disables the movement completely.
-The optional second parameter specifies vertical sensitivity (e.g. 100,200).
-Setting can be adjusted in runtime (also per mouse interface) using internal
-MOUSECTL.COM tool, available on drive Z:.
+Voreingestellte Empfindlichkeit der Maus. 100 ist ein Basiswert, 150 ist 150%
+Empfindlichkeit, usw. Negative Werte kehren die Richtung der Maus um, 0 schaltet
+die Bewegung komplett ab. Der optionale zweite Parameter legt die vertikale
+Empfindlichkeit fest (z. B. 100,200).
+Die Einstellungen können zur Laufzeit (auch pro Maus-Schnittstelle) mit dem
+internen MOUSECTL.COM Tool verändert werden, das auf Laufwerk Z: verfügbar ist.
 .
 :CONFIG_MOUSE_RAW_INPUT
-Enable to bypass your operating system's mouse acceleration and sensitivity
-settings. Works in fullscreen or when the mouse is captured in window mode.
+Aktiviere diese Option, um die Mausbeschleunigung und -empfindlichkeit deines
+Betriebssystems zu umgehen. Funktioniert im Vollbildmodus oder wenn die Maus im
+Fenstermodus umgeschaltet ist.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Enable built-in DOS mouse driver.
-Notes:
-   Disable if you intend to use original MOUSE.COM driver in emulated DOS.
-   When guest OS is booted, built-in driver gets disabled automatically.
+Aktiviere den integrierten DOS-Maustreiber.
+Anmerkungen:
+   Deaktiviere diese Option, wenn du den originalen MOUSE.COM-Treiber im
+   emulierten DOS verwenden willst. Wenn das Gastbetriebssystem gebootet wird,
+   wird der integrierte Treiber automatisch deaktiviert.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Updates mouse movement counters immediately, without waiting for interrupt.
-May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as
-for some games it effectively boosts the mouse sampling rate to 1000 Hz, without
-increasing interrupt overhead.
-Might cause compatibility issues. List of known incompatible games:
+Aktualisiert die Bewegungszähler der Maus sofort, ohne auf eine Unterbrechung zu
+warten. Kann das Gameplay verbessern, vor allem in schnellen Programmen (Arcade,
+FPS, etc.) - denn bei einigen Programmen wird die Abtastrate der Maus auf
+1000 Hz erhöht, ohne den Interrupt-Overhead zu erhöhen.
+Könnte Kompatibilitätsprobleme verursachen. Bekannte inkompatible Spiele:
    - Ultima Underworld: The Stygian Abyss
    - Ultima Underworld II: Labyrinth of Worlds
-Please file a bug with the project if you find another game that fails when
-this is enabled, we will update this list.
+Bitte melde dem Projekt einen Fehler, wenn du ein anderes Programm findest, das
+nicht funktioniert, wenn diese Funktion aktiviert ist, werden wir diese Liste
+aktualisieren.
 .
 :CONFIG_PS2_MOUSE_MODEL
-PS/2 AUX port mouse model:
-   standard:       3 buttons, standard PS/2 mouse.
-   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.
-Default: intellimouse
+Das Maus-Modell am PS/2-AUX-Anschluss:
+   standard:       3 Tasten, Standard-PS/2-Maus.
+   intellimouse:   3 Tasten + Rad, Microsoft IntelliMouse.
+Standard: intellimouse
 .
 :CONFIG_COM_MOUSE_MODEL
-COM (serial) port default mouse model:
-   2button:        2 buttons, Microsoft mouse.
-   3button:        3 buttons, Logitech mouse,
-                   mostly compatible with Microsoft mouse.
-   wheel:          3 buttons + wheel,
-                   mostly compatible with Microsoft mouse.
-   msm:            3 buttons, Mouse Systems mouse,
-                   NOT COMPATIBLE with Microsoft mouse.
-   2button+msm:    Automatic choice between 2button and msm.
-   3button+msm:    Automatic choice between 3button and msm.
-   wheel+msm:      Automatic choice between wheel and msm.
-Default: wheel+msm
-Notes:
-   Go to [serial] section to enable/disable COM port mice.
+Seriell/COM-Port Standard-Mausmodell:
+   2button:        2 Tasten, Microsoft-Maus.
+   3button:        3 Tasten, Logitech Maus,
+                   weitgehend kompatibel mit Microsoft Maus.
+   wheel:          3 Tasten + Rad,
+                   weitgehend kompatibel mit Microsoft Maus.
+   msm:            3 Tasten, Mouse Systems Maus,
+                   NICHT KOMPATIBEL mit Microsoft Maus.
+   2button+msm:    Automatische Wahl zwischen 2button und msm.
+   3button+msm:    Automatische Wahl zwischen 3button und msm.
+   wheel+msm:      Automatische Wahl zwischen Rad und msm.
+Standard: wheel+msm
+Anmerkungen:
+   Gehe zum Abschnitt [serial], um die Mäuse am COM-Port zu
+   aktivieren/deaktivieren.
 .
 :CONFIG_NOSOUND
 Aktiviere die Stummschaltung, der Ton wird aber trotzdem emuliert.
@@ -638,13 +647,13 @@ Alle OPL-Modi sind AdLib-kompatibel, ausser "cms".
 Es wird nur noch die "nuked" OPL-Emulation unterstützt.
 .
 :CONFIG_SB_FILTER
-Type of filter to emulate for the Sound Blaster digital sound output:
-  auto:      Use the appropriate filter determined by 'sbtype'.
+Art des zu emulierenden Filters für den digitalen Sound Blaster-Ausgang:
+  auto:      Verwende den passenden Filter, der durch "sbtype" bestimmt wird.
   sb1, sb2, sbpro1, sbpro2, sb16:
-             Use the filter of this Sound Blaster model.
+             Verwende den Filter dieses Sound Blaster-Modells.
   modern:    Verwende lineares Interpolations-Upsampling, das wie ein Tiefpass-
              filter wirkt; Dies ist das alte DOSBox-Verhalten (Standard).
-  off:       Don't filter the output.
+  off:       Die Ausgabe nicht filtern.
   <custom>:  Ein oder zwei benutzerdefinierte Filter im folgenden Format:
                 TYP ORDNUNG FREQUENZ
              TYP kann 'hpf' (Hochpass) oder 'lpf' (Tiefpass) sein,
@@ -692,8 +701,8 @@ Patch-Sets, die mit Timidity verwendet werden,
 sollten gut funktionieren.
 .
 :CONFIG_GUS_FILTER
-Filter for the Gravis UltraSound audio output:
-  off:       Don't filter the output (default).
+Filter für den Gravis UltraSound Audioausgang:
+  off:       Die Ausgabe nicht filtern (Standard).
   <custom>:  Benutzerdefinierter Filter; siehe 'sb_filter' für Details.
 .
 :CONFIG_SIDMODEL
@@ -795,22 +804,24 @@ Filter für den PS/1 Audio-DAC-Ausgang:
   <custom>:  Benutzerdefinierter Filter; siehe "sb_filter" für Details.
 .
 :CONFIG_REELMAGIC
-ReelMagic (aka REALmagic) MPEG playback support.
-  off:      Disable support (default).
-  cardonly: Initialize the card without loading the FMPDRV.EXE driver.
-  on:       Initialize the card and load the FMPDRV.EXE on start-up.
+ReelMagic (auch bekannt als REALmagic) Unterstützung für die MPEG-Wiedergabe.
+  off:      Unterstützung deaktivieren (Standard).
+  cardonly: Initialisiere die Karte, ohne den Treiber FMPDRV.EXE zu laden.
+  on:       Initialisiere die Karte und lade die FMPDRV.EXE beim Start.
 .
 :CONFIG_REELMAGIC_KEY
-Set the 32-bit magic key used to decode the game's videos.
-  auto:     Use the built-in routines to determine the key (default).
-  common:   Use the most commonly found key, which is 0x40044041.
-  thehorde: Use The Horde's key, which is 0xC39D7088.
-  <custom>: Set a custom key in hex format (e.g., 0x12345678).
+Lege den 32-Bit-Magic-Key fest, der zum Dekodieren der Videos der Programme
+verwendet wird.
+  auto:     Verwende integrierte Routinen zur Schlüsselbestimmenung (Standard).
+  common:   Verwende den am häufigsten vorkommenden Schlüssel, nämlich 0x40044041.
+  thehorde: Verwende den Schlüssel von The Horde, der 0xC39D7088 lautet.
+  <custom>: Lege einen benutzerdefinierten Schlüssel im Hex-Format fest
+            (z. B. 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
-Override the frame rate code used during video playback.
-  0:        No override: attempt automatic rate discovery (default).
-  1 to 7:   Override the frame rate to one the following (use 1 through 7):
+Setze den bei der Videowiedergabe verwendeten Framerate-Code außer Kraft.
+  0:        Kein Überschreiben: Automatische Ratenerkennung (Standard).
+  1 to 7:   Setze die Bildrate auf eine der folgenden Werte (verwende 1 bis 7):
             1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
@@ -1541,22 +1552,24 @@ Außerdem kannst du imgmount verwenden, um ISO- oder CUE/BIN-Images zu mounten:
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[32;1mSondertasten:[0m
+[erases=entire][color=green]Sondertasten:[reset]
 Dies sind die voreingestellten Tastenbelegungen.
-Sie können im [33mkeymapper[0m geändert werden.
+Sie können im [color=light-yellow]keymapper[reset] geändert werden.
 
-[33;1m%s+Enter[0m  Umschalten zwischen Vollbild- und Fenstermodus.
-[33;1m%s+Pause[0m  Pause/Unpause Emulator.
-[33;1m%s+F1[0m   %s Starte den [33mkeymapper[0m.
-[33;1m%s+F4[0m   %s Wechsle das eingebundene Disk Image, aktualisiere Verzeichnis-Cache.
-[33;1m%s+F5[0m   %s Einen Screenshot speichern.
-[33;1m%s+F6[0m   %s Aufnahme der Soundausgabe in einer Wave-Datei starten/stoppen.
-[33;1m%s+F7[0m   %s Aufnahme der Videoausgabe in einer zmbv-Datei starten/stoppen.
-[33;1m%s+F9[0m   %s Emulator herunterfahren.
-[33;1m%s+F10[0m  %s Die Maus erfassen/freigeben.
-[33;1m%s+F11[0m  %s Emulation verlangsamen.
-[33;1m%s+F12[0m  %s Emulation beschleunigen.
-[33;1m%s+F12[0m    Schnellstmögliche Emulation (Turbo Taste/Schnellvorlauf).
+[color=yellow]%s+Enter[reset]  Umschalten zwischen Vollbild- und Fenstermodus.
+[color=yellow]%s+Pause[reset]  Pause/Unpause Emulator.
+[color=yellow]%s+F1[reset]   %s Starte den [color=light-yellow]keymapper[reset].
+[color=yellow]%s+F4[reset]   %s Wechsle das eingebundene Disk Image, aktualisiere Verzeichnis-Cache.
+[color=yellow]%s+F5[reset]     Speichere einen Screenshot des dargestellten Bildes.
+[color=yellow]%s+F5[reset]   %s Speichere einen Screenshot in Originalauflösung.
+[color=yellow]%s+F6[reset]   %s Aufnahme der Soundausgabe in einer Wave-Datei starten/stoppen.
+[color=yellow]%s+F7[reset]   %s Aufnahme der Videoausgabe in einer zmbv-Datei starten/stoppen.
+[color=yellow]%s+F8[reset]   %s Stummschalten/Aufheben der Stummschaltung.
+[color=yellow]%s+F9[reset]   %s Emulator herunterfahren.
+[color=yellow]%s+F10[reset]  %s Die Maus erfassen/freigeben.
+[color=yellow]%s+F11[reset]  %s Emulation verlangsamen.
+[color=yellow]%s+F12[reset]  %s Emulation beschleunigen.
+[color=yellow]%s+F12[reset]    Schnellstmögliche Emulation (Turbo Taste/Schnellvorlauf).
 
 .
 :PROGRAM_KEYB_INFO
@@ -1987,7 +2000,7 @@ ECHO ist eingeschaltet.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO ist aus.
+ECHO ist ausgeschaltet.
 
 .
 :SHELL_ILLEGAL_SWITCH
@@ -2266,7 +2279,7 @@ auf lokalen Laufwerken zu verwenden.
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                      de.txt 0.79.1 ║
+║ [33mhttps://dosbox-staging.github.io[37m                        de.txt 0.80 ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 
@@ -2930,197 +2943,197 @@ Sonstige Befehle
 Unbekannter Befehl
 .
 :PROGRAM_FMPDRV_HELP_LONG
-Load or unload the built-in ReelMagic Full Motion Player driver.
+Lädt oder entfernt den integrierten ReelMagic Full Motion Player-Treiber.
 
-Usage:
-  [color=green]fmpdrv[reset]    (loads the driver)
-  [color=green]fmpdrv[reset] /u (unloads the driver)
+Verwendung:
+  [color=green]fmpdrv[reset]    (lädt den Treiber)
+  [color=green]fmpdrv[reset] /u (entfernt den Treiber)
 
-Notes:
-  The "reelmagic = on" configuration setting loads the
-  driver on start-up and prevents it from being unloaded.
+Anmerkungen:
+  Die Konfigurationseinstellung "reelmagic = on" lädt den
+  Treiber beim Start und verhindert, dass er entfernt wird.
 
 .
 :PROGRAM_FMPDRV_TITLE
-ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu
+ReelMagic Full Motion Player Treiber (integriert) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Loaded at interrupt %xh[reset]
+[reset][color=light-yellow]Geladen bei Interrupt %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Already loaded at interrupt %xh[reset]
+[reset][color=light-yellow]Bereits bei Interrupt %xh geladen[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Not loaded: No free interrupts![reset]
+[reset][color=red]Nicht geladen: Keine freien Interrupts![reset]
 
 .
 :PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Driver unloaded[reset]
+[reset][color=light-yellow]Treiber entfernt[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Driver was not loaded[reset]
+[reset][color=light-yellow]Treiber wurde nicht geladen[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Driver not unloaded: configured to stay resident[reset]
+[reset][color=light-yellow]Treiber nicht entfernt: Er ist so konfiguriert,
+dass er dauerhaft geladen bleibt[reset]
 
 .
 :PROGRAM_MORE_HELP_LONG
-Display command output or text file one screen at a time.
+Zeigt die Befehlsausgabe oder eine Textdatei bildschirmweise an.
 
-Usage:
+Verwendung:
   [color=cyan]COMMAND[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
+  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]DATEI[reset]
+  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]ZEICHEN[reset] [[color=cyan]ZEICHEN[reset] ...]
 
-Where:
-  [color=cyan]COMMAND[reset] is the command to display the output of.
-  [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
-  [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
-          which are the asterisk (*) and the question mark (?).
-  [color=white]n[reset]       is the tab size, 1-9, default is 8.
+Wobei:
+  [color=cyan]COMMAND[reset]  der Befehl, dessen Ausgabe angezeigt werden soll.
+  [color=cyan]DATEI[reset]    eindeutiger Name der anzuzeigenden Datei.
+  [color=cyan]ZEICHEN[reset]  Pfad zu einer Datei, optional mit Wildcards.
+  [color=white]n[reset]        ist die Tabulatorgröße, 1-9, Standard ist 8.
 
-Notes:
-  This command is only for viewing text files, not binary files.
+Anmerkungen:
+  Dieser Befehl dient nur zum Anzeigen von Textdateien, nicht von Binärdateien.
 
-Examples:
-  [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time
-  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]   ; shows the file's content with tab size 4
+Beispiele:
+  [color=cyan]dir /on[reset] | [color=green]more[reset]            zeigt das sortierte Verzeichnis bildschirmweise an
+  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  zeigt den Inhalt der Datei mit Tabulatorgröße 4
 
 .
 :PROGRAM_MORE_NO_FILE
-No input file found.
+Keine Eingabedatei gefunden.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- end of input ---[reset]
+[reset][color=light-yellow]--- Ende der Eingabe ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
-[reset][color=light-yellow]--- file %s ---[reset]
+[reset][color=light-yellow]--- datei %s ---[reset]
 .
 :PROGRAM_MORE_NEW_DEVICE
-[reset][color=light-yellow]--- device %s ---[reset]
+[reset][color=light-yellow]--- gerät %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- press SPACE for more ---[reset]
+[reset][color=light-yellow]--- Drücke die Leertaste für mehr ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]
+[reset][color=light-yellow]--- Leertaste für mehr, N für nächste Datei ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
-[reset][color=red]--- could not open %s ---[reset]
+[reset][color=red]--- %s konnte nicht geöffnet werden ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
-[reset][color=light-yellow](terminated)[reset]
+[reset][color=light-yellow](abgebrochen)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](next file)[reset]
+[reset][color=light-yellow](nächste Datei)[reset]
 .
 :PROGRAM_MOUSECTL_HELP_LONG
-Manages physical and logical mice.
+Verwaltet reale und logische Mäuse.
 
-Usage:
+Verwendung:
   [color=green]mousectl[reset] [-all]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAME[reset]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
+  [color=green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] -map [color=cyan]NAME[reset]
+  [color=green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] [[color=white]SCHNITTSTELLE[reset] ...] -map
+  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -unmap | -on | -off | -reset
+  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s | -sx | -sy [sensitivity]
+  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s sensitivity_x sensitivity_y
+  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -r [min_rate]
 
-Where:
-  [color=white]INTERFACE[reset]      one of [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
-  -map -unmap    maps/unmaps physical mouse, honors DOS wildcards in [color=cyan]NAME[reset]
-  -s -sx -sy     sets sensitivity / for x axis / for y axis, from -999 to +999
-  -r             sets minimum mouse sampling rate
-  -on -off       enables or disables mouse on the given interface
-  -reset         restores all mouse settings from the configuration file
+Wobei:
+  [color=white]SCHNITTSTELLE[reset]  entweder [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap    eine reale Maus zuordnen/entfernen [color=cyan]NAME[reset]
+  -s -sx -sy     Empfindlichkeit für die x-/y-Achse, von -999 bis +999
+  -r             legt die minimale Abtastrate der Maus fest
+  -on -off       angegebene Maus aktivieren/deaktivieren
+  -reset         reset der Einstellungen auf Werte der Konfigurationsdatei
 
-Notes:
-  If sensitivity or rate is omitted, it is reset to default value.
+Anmerkungen:
+  Wird die Empfindlichkeit/Rate nicht angegeben, werden Standardwerte verwendet.
 
-Examples:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
+Beispiele:
+  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map   Auswahl der Mäuse für Spiel mit 2 Spielern
 .
 :PROGRAM_MOUSECTL_SYNTAX
-Wrong command syntax.
+Falsche Befehlssyntax.
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
-Wrong syntax, only ASCII characters allowed in pattern.
+Falsche Syntax, nur ASCII-Zeichen erlaubt.
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
-Wrong syntax, sensitivity needs to be in -999 to +999 range.
+Falsche Syntax, die Empfindlichkeit muss im Bereich von -999 bis +999 liegen.
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
-Wrong syntax, duplicated mouse interfaces.
+Falsche Syntax, doppelte Maus-Schnittstellen.
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
-Wrong syntax, sampling rate has to be one of:
+Wfalsche Syntax, die Abtastrate muss eine der folgenden sein:
 %s
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
-Mapping not available in no-mouse mode.
+Im Modus ohne Maus ist die Zuordnung nicht möglich.
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
-No mouse interfaces available.
+Keine Maus-Schnittstellen verfügbar.
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
-Mouse interface not available.
+Die Maus-Schnittstelle ist nicht verfügbar.
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
-No physical mice detected.
+Es wurden keine realen Mäuse erkannt.
 .
 :PROGRAM_MOUSECTL_NO_MATCH
-No available mouse matching the pattern found.
+Es wurde keine Maus gefunden, die dem Suchkriterium entspricht.
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
-[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]
+[color=white]Schnittstelle  Empfindlichkeit  Rate (Hz)     Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+[color=cyan]%-4s[reset]           X:%+.3d Y:%+.3d  %1s %3s           %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
-[color=white]Interface     Mouse Name[reset]
+[color=white]Schnittstelle Maus-Bezeichnung[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2
 [color=cyan]%-4s[reset]          %s
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
-not mapped    %s
+nicht zugeordnet %s
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_HOST
-uses system pointer
+verwendet Systemzeiger
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
-mapped physical mouse
+zugeordnete reale Maus
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
-[color=red]mapped mouse disconnected[reset]
+[color=red]zugeordnete Maus entfernt[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
-disabled
+deaktiviert
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Sampling rates for mice on [color=cyan]COM[reset] interfaces are estimations only.
+Die Abtastraten für Mäuse an [color=cyan]COM[reset]-Schnittstellen sind nur Schätzungen.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
-Sampling rates with minimum value set are marked with '*'.
+Abtastraten mit eingestelltem Mindestwert sind mit '*' markiert.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
-Click [color=white]left[reset] mouse button to map the physical mouse to the interface. Clicking
-any other button cancels the mapping and assigns system pointer to all the
-mouse interfaces.
+Klicke auf die [color=white]linke[reset] Maustaste, um die reale Maus dem Interface zuzuordnen. Ein Klick auf
+eine andere Taste wird die Zuordnung abgebrochen und der Systemzeiger wird allen
+Maus-Schnittstellen zugeordnet.
 .
 :PROGRAM_MOUSECTL_MAP_CANCEL
-(mapping cancelled)
+(Zuordnung aufgehoben)
 .
 :PROGRAM_MOUSECTL_MAP_HINT
-Seamless mouse integration is always disabled while mapping is in effect
-and mapped mice always receive raw input events.
+Die nahtlose Maus-Steuerung ist immer deaktiviert, wenn die Zuordnung aktiv ist
+und gemappte Mäuse erhalten immer direkte Eingabe-Daten.
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
-Reverse
+Umgekehrt
 .
