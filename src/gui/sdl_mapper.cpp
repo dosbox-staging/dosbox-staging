@@ -1285,19 +1285,7 @@ public:
 	}
 
 private:
-	// find the event for the lshift key and return it
-	CEvent *GetLShiftEvent()
-	{
-		static CEvent *lshift_event = nullptr;
-		for (auto &event : *m_events) {
-			if (std::string("key_lshift") == event->GetName()) {
-				lshift_event = event;
-				break;
-			}
-		}
-		assert(lshift_event);
-		return lshift_event;
-	}
+	// Find a modifier key and return it
 	CEvent *GetModEvent(std::string name)
 	{
 		CEvent *mod_event = nullptr;
@@ -1372,7 +1360,7 @@ private:
 			} else {
 				// is the button an upper case letter?
 				const auto is_cap = button.length() == 1 && isupper(button[0]);
-				const auto maybe_lshift = is_cap ? GetLShiftEvent() : nullptr;
+				const auto maybe_lshift = is_cap ? GetModEvent("lshift") : nullptr;
 				const std::string lbutton = is_cap ? std::string{int_to_char(
 				                                             tolower(button[0]))}
 				                                   : button;
