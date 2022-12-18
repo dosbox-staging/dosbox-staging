@@ -1299,103 +1299,108 @@ private:
 		return mod_event;
 	}
 
+	void DeactivateModifiers()
+	{
+		for (auto ev : m_modifiers) {
+			ev->Active(false);
+		}
+	}
+
 	void Callback()
 	{
-		auto deactivate_modifiers = [&]() {
-			for (auto ev : m_modifiers) {
-				ev->Active(false);
-			}
-		};
-		// quit before our initial wait time
-		if (m_stop_requested)
-			return;
-		std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
-		for (const auto &button : m_sequence) {
+		// Wrap the function in a lambda to make cleanup easier
+		auto process_seq = [&]() {
+			// quit before our initial wait time
 			if (m_stop_requested)
 				return;
-			bool found = false;
-			// comma adds an extra pause, similar to on phones
-			if (button == ",") {
-				found = true;
-				// quit before the pause
+			std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
+			for (const auto &button : m_sequence) {
 				if (m_stop_requested)
 					return;
-				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
-			  // Check for modifier combos	
-			} else if (button.find('+') != std::string::npos) {
-				bool hold_mod = false;
-				std::stringstream s(button);
-				std::string token;
-				while (std::getline(s, token, '+')) {
-					// If this is set, the combo will be held beyond the current button
-					if (token == "[") {
-						hold_mod = true;
-						continue;
+				bool found = false;
+				// comma adds an extra pause, similar to on phones
+				if (button == ",") {
+					found = true;
+					// quit before the pause
+					if (m_stop_requested)
+						return;
+					std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+				// Check for modifier combos	
+				} else if (button.find('+') != std::string::npos) {
+					bool hold_mod = false;
+					std::stringstream s(button);
+					std::string token;
+					while (std::getline(s, token, '+')) {
+						// If this is set, the combo will be held beyond the current button
+						if (token == "[") {
+							hold_mod = true;
+							continue;
+						}
+						auto mod = GetModEvent(token);
+						if (mod) {
+							m_modifiers.emplace_back(mod);
+						}
 					}
-					auto mod = GetModEvent(token);
-					if (mod) {
-						m_modifiers.emplace_back(mod);
+					for (auto ev : m_modifiers) {
+						ev->Active(true);
 					}
-				}
-				for (auto ev : m_modifiers) {
-					ev->Active(true);
-				}
-				if (!hold_mod) {
-					std::this_thread::sleep_for(
-							std::chrono::milliseconds(50));
-					deactivate_modifiers();
-				}
-				continue;
-			  // Check for end of modifier combo (eg completion of alt-code)
-			} else if (button == "]") {
-				while (m_modifiers.size() > 0) {
-					auto mod = m_modifiers.back();
-					mod->Active(false);
-					m_modifiers.pop_back();
-				}
-				std::this_thread::sleep_for(
-							std::chrono::milliseconds(50));
-				continue;
-			  // Otherwise trigger the matching button if we have one
-			} else {
-				// is the button an upper case letter?
-				const auto is_cap = button.length() == 1 && isupper(button[0]);
-				const auto maybe_lshift = is_cap ? GetModEvent("lshift") : nullptr;
-				const std::string lbutton = is_cap ? std::string{int_to_char(
-				                                             tolower(button[0]))}
-				                                   : button;
-				const std::string bind_name = "key_" + lbutton;
-				for (auto &event : *m_events) {
-					if (bind_name == event->GetName()) {
-						found = true;
-						if (maybe_lshift)
-							maybe_lshift->Active(true);
-						event->Active(true);
+					if (!hold_mod) {
 						std::this_thread::sleep_for(
-						        std::chrono::milliseconds(50));
-						event->Active(false);
-						if (maybe_lshift)
-							maybe_lshift->Active(false);
-						break;
+								std::chrono::milliseconds(50));
+						DeactivateModifiers();
+					}
+					continue;
+				// Check for end of modifier combo (eg completion of alt-code)
+				} else if (button == "]") {
+					while (m_modifiers.size() > 0) {
+						auto mod = m_modifiers.back();
+						mod->Active(false);
+						m_modifiers.pop_back();
+					}
+					std::this_thread::sleep_for(
+								std::chrono::milliseconds(50));
+					continue;
+				// Otherwise trigger the matching button if we have one
+				} else {
+					// is the button an upper case letter?
+					const auto is_cap = button.length() == 1 && isupper(button[0]);
+					const auto maybe_lshift = is_cap ? GetModEvent("lshift") : nullptr;
+					const std::string lbutton = is_cap ? std::string{int_to_char(
+																tolower(button[0]))}
+													: button;
+					const std::string bind_name = "key_" + lbutton;
+					for (auto &event : *m_events) {
+						if (bind_name == event->GetName()) {
+							found = true;
+							if (maybe_lshift)
+								maybe_lshift->Active(true);
+							event->Active(true);
+							std::this_thread::sleep_for(
+									std::chrono::milliseconds(50));
+							event->Active(false);
+							if (maybe_lshift)
+								maybe_lshift->Active(false);
+							break;
+						}
 					}
 				}
+				/*
+				*  Terminate the sequence for safety reasons if we can't find
+				* a button. For example, we don't wan't DEAL becoming DEL, or
+				* 'rem' becoming 'rm'
+				*/
+				if (!found) {
+					LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
+							button.c_str());
+					return;
+				}
+				if (m_stop_requested) // quit before the pacing delay
+					return;
+				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
 			}
-			/*
-			 *  Terminate the sequence for safety reasons if we can't find
-			 * a button. For example, we don't wan't DEAL becoming DEL, or
-			 * 'rem' becoming 'rm'
-			 */
-			if (!found) {
-				// Ensure to release any held modifiers
-				deactivate_modifiers();
-				LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
-				        button.c_str());
-				return;
-			}
-			if (m_stop_requested) // quit before the pacing delay
-				return;
-			std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
-		}
+		};
+		process_seq();
+		DeactivateModifiers();
 	}
 
 	std::thread m_instance = {};
