@@ -33,6 +33,7 @@
 #include <list>
 #include <thread>
 #include <vector>
+#include <sstream>
 
 #include <SDL.h>
 #include <SDL_thread.h>
@@ -1262,6 +1263,7 @@ public:
 		m_wait_ms = wait_ms;
 		m_pace_ms = pace_ms;
 		m_stop_requested = false;
+		m_modifiers.clear();
 		m_instance = std::thread(&Typer::Callback, this);
 		set_thread_name(m_instance, "dosbox:autotype");
 	}
@@ -1311,6 +1313,11 @@ private:
 
 	void Callback()
 	{
+		auto deactivate_modifiers = [&]() {
+			for (auto ev : m_modifiers) {
+				ev->Active(false);
+			}
+		};
 		// quit before our initial wait time
 		if (m_stop_requested)
 			return;
@@ -1326,7 +1333,42 @@ private:
 				if (m_stop_requested)
 					return;
 				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
-				// Otherwise trigger the matching button if we have one
+			  // Check for modifier combos	
+			} else if (button.find('+') != std::string::npos) {
+				bool hold_mod = false;
+				std::stringstream s(button);
+				std::string token;
+				while (std::getline(s, token, '+')) {
+					// If this is set, the combo will be held beyond the current button
+					if (token == "[") {
+						hold_mod = true;
+						continue;
+					}
+					auto mod = GetModEvent(token);
+					if (mod) {
+						m_modifiers.emplace_back(mod);
+					}
+				}
+				for (auto ev : m_modifiers) {
+					ev->Active(true);
+				}
+				if (!hold_mod) {
+					std::this_thread::sleep_for(
+							std::chrono::milliseconds(50));
+					deactivate_modifiers();
+				}
+				continue;
+			  // Check for end of modifier combo (eg completion of alt-code)
+			} else if (button == "]") {
+				while (m_modifiers.size() > 0) {
+					auto mod = m_modifiers.back();
+					mod->Active(false);
+					m_modifiers.pop_back();
+				}
+				std::this_thread::sleep_for(
+							std::chrono::milliseconds(50));
+				continue;
+			  // Otherwise trigger the matching button if we have one
 			} else {
 				// is the button an upper case letter?
 				const auto is_cap = button.length() == 1 && isupper(button[0]);
@@ -1356,6 +1398,8 @@ private:
 			 * 'rem' becoming 'rm'
 			 */
 			if (!found) {
+				// Ensure to release any held modifiers
+				deactivate_modifiers();
 				LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
 				        button.c_str());
 				return;
@@ -1369,6 +1413,7 @@ private:
 	std::thread m_instance = {};
 	std::vector<std::string> m_sequence = {};
 	std::vector<CEvent *> *m_events = nullptr;
+	std::vector<CEvent *> m_modifiers = {};
 	uint32_t m_wait_ms = 0;
 	uint32_t m_pace_ms = 0;
 	std::atomic_bool m_stop_requested{false};
