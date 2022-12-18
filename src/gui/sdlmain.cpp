@@ -1094,7 +1094,8 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	auto mode = FRAME_MODE::UNSET;
 
 	// Text modes always get VFR
-	if (CurMode->type & M_TEXT_MODES) {
+	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
+	if (in_text_mode) {
 		mode = FRAME_MODE::VFR;
 		save_rate_to_frame_period(dos_rate);
 	}
@@ -1131,11 +1132,12 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		return;
 	previous_mode = mode;
 
-	// Configure the pacer. We only use it for VFR modes because CFR modes
-	// determine if the frame is presented based on the scheduler's accuracy.
+	// Configure the pacer. We only use it for graphical VFR modes because
+	// CFR modes determine if the frame is presented based on the
+	// scheduler's accuracy.
 	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
 	                         mode == FRAME_MODE::THROTTLED_VFR;
-	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
+	render_pacer.SetTimeout(is_vfr_mode && !in_text_mode ? sdl.vsync.skip_us : 0);
 
 	// Start synced presentation, if applicable
 	if (mode == FRAME_MODE::SYNCED_CFR)
