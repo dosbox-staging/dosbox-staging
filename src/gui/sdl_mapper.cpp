@@ -1296,6 +1296,18 @@ private:
 		assert(lshift_event);
 		return lshift_event;
 	}
+	CEvent *GetModEvent(std::string name)
+	{
+		CEvent *mod_event = nullptr;
+		std::string key_name = std::string("key_") + name;
+		for (auto &event : *m_events) {
+			if (key_name == event->GetName()) {
+				mod_event = event;
+				break;
+			}
+		}
+		return mod_event;
+	}
 
 	void Callback()
 	{
