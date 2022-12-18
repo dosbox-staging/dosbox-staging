@@ -3393,9 +3393,8 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 	// -------------------------------
 	if (sdl.desktop.type == SCREEN_OPENGL) {
 		// Setup our OpenGL image properties
-		constexpr int gl_channels       = 3; // RBG (no alpha)
+		constexpr int gl_channels       = 4;               // RGBA
 		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
-		const size_t bytes_per_row      = gl_channels * canvas.w;
 
 		// Allocate a 24-bit surface to be populated
 		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
@@ -3411,24 +3410,29 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 			            SDL_GetError());
 			return {};
 		}
-		// Per OpenGL's documentation:
-		// The glReadPixels function starts at the lower left corner: (x
-		// + i, y + j) and iterates for 0 <= i < width and 0 <= j <
-		// height. It describes the pxiels as being "the i'th pixel in
-		// the j'th row". Pixels are returned in row-order from the
-		// lowest to the highest row, left to right in each row.
-		std::vector<uint8_t> pixels(bytes_per_row * canvas.h);
-		glReadPixels(0, 0, canvas.w, canvas.h, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
-		// To match SDL's surface ordering, we invert the rows (outer)
-		// and lines (inner):
-		auto surface_pixels = static_cast<char *>(surface->pixels);
-		for (int j = 0; j < canvas.h; ++j) {
-			auto target_row = surface_pixels + surface->pitch * j;
-			const auto source_row = pixels.data() +
-			                        bytes_per_row * (canvas.h - j - 1);
-			memcpy(target_row, source_row, bytes_per_row);
+		// The row ordering between OpenGL and SDL is inverted, so we
+		// start at the last OpenGL row, decrementing as we go, while
+		// writing into the incrementing surface row buffer.
+		constexpr auto gl_col_offset = 0;
+		auto gl_row_offset           = canvas.h;
+		const auto cols_per_read     = canvas.w;
+		constexpr auto rows_per_read = 1;
+
+		auto sdl_row_buffer = static_cast<uint8_t*>(surface->pixels);
+
+		while (gl_row_offset--) {
+			glReadPixels(gl_col_offset,
+			             gl_row_offset,
+			             cols_per_read,
+			             rows_per_read,
+			             GL_RGBA,
+			             GL_UNSIGNED_BYTE,
+			             sdl_row_buffer);
+
+			sdl_row_buffer += surface->pitch;
 		}
+
 		return surface;
 	}
 #endif
