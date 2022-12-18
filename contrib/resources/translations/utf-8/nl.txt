@@ -230,7 +230,7 @@ auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
                     anders 'high'
 .
 :CONFIG_FRAMESKIP
-Consider capping frame-rates using the '[sdl] host_rate' setting.
+Overweeg om framesnelheden te beperken met de instelling '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
 Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
@@ -280,9 +280,9 @@ indeling, zijn: #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500
 respectievelijk.
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
+ - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste 'windowresolution' in.
+ - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
 Ofwel 'none' of een GLSL-shadernaam. Werkt alleen met OpenGL-uitvoer.
