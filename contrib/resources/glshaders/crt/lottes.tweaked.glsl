@@ -16,6 +16,9 @@
 // It is an example what I personally would want as a display option for pixel art games.
 // Please take and use, change, or whatever.
 
+// This file ported from Libretro's GLSL shader crt-lottes.glslp 
+// to DOSBox-compatible format by Tyrells.
+
 /*
 
 // Parameter lines go here:

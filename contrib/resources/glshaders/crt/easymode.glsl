@@ -4,6 +4,9 @@
 	CRT Shader by EasyMode
 	License: GPL
 
+	This file ported from Libretro's GLSL shader crt-easymode.glslp
+	to DOSBox-compatible format by Tyrells.
+
 	A flat CRT shader ideally for 1080p or higher displays.
 
 	Recommended Settings:

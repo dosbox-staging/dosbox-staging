@@ -18,6 +18,11 @@ Notes:  This shader does scaling with a weighted linear filter for adjustable
 	based on pixel brighness is applied along with a monochrome aperture mask.
 	This shader runs at 60fps on the Raspberry Pi 3 hardware at 2mpix/s
 	resolutions (1920x1080 or 1600x1200).
+
+        This file ported from Libretro's GLSL shader zfast-crt.glslp
+        to DOSBox-compatible format by Tyrells.
+
+
 */
 
 //This can't be an option without slowing the shader down

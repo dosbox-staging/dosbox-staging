@@ -9,6 +9,7 @@
 //                      by Timothy Lottes
 //             https://www.shadertoy.com/view/MtSfRK
 //               adapted for RetroArch by hunterk
+//  adapted for DOSBox by Tyrells (from crt-lottes-fast.glslp)
 //
 //
 //==============================================================
@@ -195,46 +196,14 @@ uniform COMPAT_PRECISION float MASK;
 uniform COMPAT_PRECISION float TRINITRON_CURVE;
 #else
 #define CRT_GAMMA 2.4
-#define SCANLINE_THINNESS 0.00
-#define SCAN_BLUR 8.8
-#define MASK_INTENSITY 0.44
+#define SCANLINE_THINNESS 0.5
+#define SCAN_BLUR 2.5
+#define MASK_INTENSITY 0.54
 #define CURVATURE 0.02
-#define CORNER 2.5
-#define MASK 3.0
+#define CORNER 3.0
+#define MASK 1.0
 #define TRINITRON_CURVE 0.0
 #endif
-
-//_____________________________/\_______________________________
-//==============================================================
-//
-//              ADDITIONAL FUNCTIONS AND DEFS
-//
-//--------------------------------------------------------------
-//--------------------------------------------------------------
-
-// Constants ---------------------------------------------------
-
-#define LUM_WEIGHTS vec3(0.299, 0.587, 0.114)
-
-// Params ------------------------------------------------------
-
-//#define SHOW_DRY 0.3			// if defined unprocessed image is shown at u > SHOW_DRY
-#define SHOW_DRY_MODE 1			// 0: unprocessed, 1: shader without final gain
-
-#define FINAL_GAIN_MULT 2.6
-#define FINAL_GAIN_POW 2.8
-#define FINAL_GAIN_MIX 0.6
-
-// Functions ----------------------------------------------------
-
-// Applied in main()
-vec3 finalGain(vec3 col)
-{
-	float lum = dot(col, LUM_WEIGHTS);
-	vec3 lum_mult = vec3(1.0) + pow(lum, FINAL_GAIN_POW) * FINAL_GAIN_MULT;
-	vec3 col_mult = vec3(1.0) + pow(col, vec3(FINAL_GAIN_POW)) * FINAL_GAIN_MULT;
-	return col * mix(lum_mult, col_mult, vec3(FINAL_GAIN_MIX));
-}
 
 //_____________________________/\_______________________________
 //==============================================================
@@ -707,6 +676,7 @@ vec3 CrtsFetch(vec2 uv){
 //--------------------------------------------------------------
  }
 
+
 void main()
 {
 	vec2 warp_factor;
@@ -727,16 +697,6 @@ void main()
 	CrtsTone(1.0,0.0,INPUT_THIN,INPUT_MASK));
 
 	// Shadertoy outputs non-linear color
-
-  #ifdef SHOW_DRY
-	if (vTexCoord.x > SHOW_DRY)
-	 if (SHOW_DRY_MODE == 0)
-		FragColor = vec4(texture2D(rubyTexture, vTexCoord.xy).rgb, 1.0);
-	 else
-	    FragColor = vec4(ToSrgb(FragColor.rgb), 1.0);
-	else
-  #endif
-	 FragColor = vec4(ToSrgb(finalGain(FragColor.rgb)), 1.0);
-
+	FragColor = vec4(ToSrgb(FragColor.rgb), 1.0);
 }
 #endif

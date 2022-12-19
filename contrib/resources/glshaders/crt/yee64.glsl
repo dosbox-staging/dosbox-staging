@@ -2,6 +2,9 @@
 
 // ported from ReShade
 
+// This file ported from Libretro's GLSL shader yee64.glslp
+// to DOSBox-compatible format by Tyrells.
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130

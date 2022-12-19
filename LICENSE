@@ -22,7 +22,7 @@ GPL-2.0-or-later terms, however there are some exceptions:
   LGPL-2.1-or-later terms.
 
 - Timothy Lottes' has dedicated his CRT-styled scan-line GLSL
-  shader, in file contrib/resources/glshaders/crt-fakelottes-flat.glsl,
+  shader, in file contrib/resources/glshaders/crt/fakelottes-flat.glsl,
   to the public domain.
 
 - Libraries in src/libs directory, are licensed as follows:
