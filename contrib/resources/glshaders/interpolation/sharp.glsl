@@ -32,7 +32,9 @@ uniform vec2 rubyTextureSize;
 varying vec2 prescale; // const set by vertex shader
 
 #if defined(VERTEX)
+
 attribute vec4 a_position;
+
 void main()
 {
 	gl_Position = a_position;
@@ -41,6 +43,7 @@ void main()
 }
 
 #elif defined(FRAGMENT)
+
 uniform sampler2D rubyTexture;
 
 void main()
@@ -56,4 +59,5 @@ void main()
 	vec2 mod_texel = min(texel_floored + f, rubyInputSize - halfp);
 	gl_FragColor = texture2D(rubyTexture, mod_texel / rubyTextureSize);
 }
+
 #endif
