@@ -4637,7 +4637,7 @@ int sdl_main(int argc, char *argv[])
 		if (control->cmdline->FindString("--working-dir", working_dir, remove_arg) ||
 		    control->cmdline->FindString("-working-dir", working_dir, remove_arg)) {
 			std::error_code ec;
-			std::filesystem::current_path(working_dir, ec);
+			std_fs::current_path(working_dir, ec);
 			if (ec) {
 				LOG_ERR("Cannot set working directory to %s",
 				        working_dir.c_str());
