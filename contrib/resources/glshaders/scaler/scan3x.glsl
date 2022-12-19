@@ -57,6 +57,6 @@ void main()
 	float m = s.y * 6.0;
 	m -= clamp(m, 2.0, 4.0);
 	m = abs(m / 2.0);
-	gl_FragColor = p - p * m;
+	gl_FragColor = vec4((p - p * m).rgb, 1.0);
 }
 #endif

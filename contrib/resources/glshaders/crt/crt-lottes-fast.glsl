@@ -696,6 +696,6 @@ void main()
 	CrtsTone(1.0,0.0,INPUT_THIN,INPUT_MASK));
 
 	// Shadertoy outputs non-linear color
-	FragColor.rgb=ToSrgb(FragColor.rgb);
+	FragColor = vec4(ToSrgb(FragColor.rgb), 1.0);
 }
 #endif

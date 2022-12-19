@@ -204,9 +204,8 @@ void main()
 	if (uv.y < 0.0 || uv.y > 1.0)
 		col *= 0.0;
 
-
     float comp = smoothstep( 0.1, 0.9, sin(iTime) );
 
-    FragColor = vec4(col,1.0);
+    FragColor = vec4(col, 1.0);
 }
 #endif
