@@ -3,6 +3,9 @@
 /*
 	CRT Shader by EasyMode
 	License: GPL
+
+	This file ported from Libretro's GLSL shader crt-aperture.glslp 
+	to DOSBox-compatible format by Tyrells.
 */
 
 /*

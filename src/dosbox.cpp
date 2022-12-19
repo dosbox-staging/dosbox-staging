@@ -645,10 +645,9 @@ void DOSBOX_Init()
 #if C_OPENGL
 	pstring = secprop->Add_path("glshader", always, "default");
 	pstring->Set_help(
-	        "Either 'none' or a GLSL shader name. Works only with\n"
-	        "OpenGL output. Can be either an absolute path or a file\n"
-	        "in the 'glshaders' subdirectory of the DOSBox configuration\n"
-	        "directory. The '.glsl' extension can be omitted.");
+	        "Options include 'default', 'none', a shader listed using the --list-glshaders\n"
+	        "command-line argument, or an absolute or relative path to a file.\n"
+	        "In all cases, you may omit the shader's '.glsl' file extension.");
 #endif
 
 	// Add the [composite] conf block after [render]

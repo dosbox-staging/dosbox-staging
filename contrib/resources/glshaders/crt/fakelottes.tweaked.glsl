@@ -1,5 +1,8 @@
 #version 120
 
+// This file ported from Libretro's GLSL shader crt-lottes.glslp 
+// to DOSBox-compatible format by Tyrells.
+
 // Simple scanlines with curvature and mask effects lifted from crt-lottes
 // by hunterk
 

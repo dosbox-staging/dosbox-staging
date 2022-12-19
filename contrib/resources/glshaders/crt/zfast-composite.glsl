@@ -11,6 +11,9 @@
     Software Foundation; either version 2 of the License, or (at your option)
     any later version.
 
+    This file ported from Libretro's GLSL shader zfast-composite.glslp
+    to DOSBox-compatible format by Tyrells.
+
 */
 
 /* 

@@ -5,6 +5,9 @@
 
    Copyright (C) 2011-2020 Hyllian - sergiogdb@gmail.com
 
+   Copyright (C) 2020, this file ported from Libretro's GLSL
+   shader crt-hyllian.glslp to DOSBox-compatible format by Tyrells.
+
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights

@@ -4,6 +4,9 @@
 // by Mattias
 // https://www.shadertoy.com/view/lsB3DV
 
+// This file ported from Libretro's GLSL shader crt-mattias.glslp 
+// to DOSBox-compatible format by Tyrells.
+
 /*
 
 #pragma parameter CURVATURE "Curvature" 0.5 0.0 1.0 0.05

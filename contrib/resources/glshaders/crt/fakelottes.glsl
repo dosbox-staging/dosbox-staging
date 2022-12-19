@@ -16,6 +16,10 @@
  *   - 2018, hunterk: modified
  *           Simple scanlines with curvature and mask effects lifted from crt-lottes
  *           https://github.com/Themaister/slang-shaders/blob/master/crt/shaders/fakelottes.slang
+ *
+ *   - 2020, Ported from Libretro's GLSL shader crt-lottes.glslp 
+ *           to DOSBox-compatible format by Tyrells.
+ *
  */
 
 #version 120

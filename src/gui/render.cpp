@@ -642,7 +642,7 @@ void log_warning_if_legacy_shader_name(const std::string &name)
 	        {"advinterp3x", "scaler/advinterp3x"},
 	        {"advmame2x", "scaler/advmame2x"},
 	        {"advmame3x", "scaler/advmame3x"},
-	        {"crt-easymode-flat", "crt/crt-easymode.tweaked"},
+	        {"crt-easymode-flat", "crt/easymode.tweaked"},
 	        {"crt-fakelottes-flat", "crt/fakelottes"},
 	        {"rgb2x", "scaler/rgb2x"},
 	        {"rgb3x", "scaler/rgb3x"},

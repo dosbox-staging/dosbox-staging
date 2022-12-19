@@ -4,6 +4,9 @@
 
 	Copyright (C) 2010-2012 cgwg, Themaister and DOLLS
 
+	Copyright (C) 2020, this file ported from Libretro's GLSL 
+	shader crt-geom.glslp to DOSBox-compatible format by Tyrells.
+
 	This program is free software; you can redistribute it and/or modify it
 	under the terms of the GNU General Public License as published by the Free
 	Software Foundation; either version 2 of the License, or (at your option)

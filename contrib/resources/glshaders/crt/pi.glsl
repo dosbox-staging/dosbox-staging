@@ -27,6 +27,9 @@ BLOOM_FACTOR controls the increase in width for bright scanlines.
 
 MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how much the mask type darkens the screen.
 
+This file ported from Libretro's GLSL shader crt-pi.glslp
+to DOSBox-compatible format by Tyrells.
+
 */
 
 /*
