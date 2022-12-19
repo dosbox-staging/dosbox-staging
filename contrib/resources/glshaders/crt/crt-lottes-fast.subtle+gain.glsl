@@ -731,12 +731,12 @@ void main()
   #ifdef SHOW_DRY
 	if (vTexCoord.x > SHOW_DRY)
 	 if (SHOW_DRY_MODE == 0)
-		FragColor.rgb = texture2D(rubyTexture, vTexCoord.xy).rgb;
+		FragColor = vec4(texture2D(rubyTexture, vTexCoord.xy).rgb, 1.0);
 	 else
-	    FragColor.rgb = ToSrgb(FragColor.rgb);
+	    FragColor = vec4(ToSrgb(FragColor.rgb), 1.0);
 	else
   #endif
-	 FragColor.rgb = ToSrgb(finalGain(FragColor.rgb));
+	 FragColor = vec4(ToSrgb(finalGain(FragColor.rgb)), 1.0);
 
 }
 #endif

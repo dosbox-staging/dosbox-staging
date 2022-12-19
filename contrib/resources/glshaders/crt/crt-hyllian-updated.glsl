@@ -567,8 +567,8 @@ void main()
 
     color.rgb*=mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 
-    color  = GAMMA_OUT(color);
+    color = GAMMA_OUT(color);
 
-    FragColor =  vec4(color);
+    FragColor = vec4(color.rgb, 1.0);
 }
 #endif

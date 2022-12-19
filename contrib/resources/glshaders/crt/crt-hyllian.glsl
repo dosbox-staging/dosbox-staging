@@ -236,8 +236,8 @@ void main()
 
 	color.rgba *= mix(vec4(1.0,1.0,1.0,1.0), dotMaskWeights, PHOSPHOR);
 
-	color  = GAMMA_OUT(color);
+	color = GAMMA_OUT(color);
 
-	FragColor =  vec4(color);
+	FragColor = vec4(color.rgb, 1.0);
 }
 #endif

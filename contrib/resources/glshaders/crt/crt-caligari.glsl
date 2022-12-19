@@ -206,5 +206,6 @@ void main()
 	color *= vec4( COLOR_BOOST );
 
 	FragColor = clamp( GAMMA_OUT(color), 0.0, 1.0 );
+	FragColor.a = 1.0;
 }
 #endif

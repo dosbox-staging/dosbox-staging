@@ -57,6 +57,6 @@ void main()
 	float ss = abs(s.y * 2.0 - 1.0);
 	p -= p * ss * 11.0 / 16.0;
 
-	gl_FragColor = p;
+	gl_FragColor = vec4(p.rgb, 1.0);
 }
 #endif
