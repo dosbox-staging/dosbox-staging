@@ -242,7 +242,8 @@ auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
             |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
 :CONFIG_FRAMESKIP
-Consider capping frame-rates using the '[sdl] host_rate' setting.
+Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
+utilizzando l'impostazione '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
 Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
@@ -293,18 +294,18 @@ sono rispettivamente:
 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+Gli scaler software sono deprecati a favore delle opzioni con accelerazione
+hardware:
+ - Se hai utilizzato in passato gli scaler normal2x/3x, imposta invece
+   l'opzione 'windowresolution'.
+ - Se hai utilizzato in passato uno scaler avanzato, considera invece una
+   delle opzioni "glshader".
 .
 :CONFIG_GLSHADER
 Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con
-l'uscita OpenGL. Può essere un percorso assoluto, un file nella sottodirectory
-'glshaders' della directory di configurazione di DOSBox, o uno degli shader
-inclusi:
-advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-scan2x, scan3x, tv2x, tv3x, sharp (predefinito).
+l'uscita OpenGL. Può essere un percorso assoluto o un file nella sottodirectory
+'glshaders' della directory di configurazione di DOSBox.
+L'estensione '.glsl' può essere omessa.
 .
 :CONFIG_COMPOSITE
 Abilita la modalità composita all'avvio. 'auto' lascia decidere al programma.
@@ -1631,14 +1632,15 @@ Possono essere modificate nel [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
-[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (screenshot).
+[color=yellow]%s+F5[reset]     Scatta un'istantanea dello schermo (immagine renderizzata).
+[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (risoluzione originale).
 [color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
 [color=yellow]%s+F7[reset]   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.
 [color=yellow]%s+F8[reset]   %s Disattiva/Riattiva l'audio.
 [color=yellow]%s+F9[reset]   %s Chiude l'emulatore.
 [color=yellow]%s+F10[reset]  %s Cattura/Rilascia il mouse.
-[color=yellow]%s+F11[reset]  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
-[color=yellow]%s+F12[reset]  %s Accelera l'emulazione (Incrementa i Cicli DOSBox).
+[color=yellow]%s+F11[reset]  %s Rallenta l'emulazione (Decrementa i cicli DOSBox).
+[color=yellow]%s+F12[reset]  %s Accelera l'emulazione (Incrementa i cicli DOSBox).
 [color=yellow]%s+F12[reset]    Sblocca la velocità (pulsante turbo/avanzamento rapido).
 
 .
@@ -1861,7 +1863,7 @@ Nessun file di input trovato.
 [reset][color=light-yellow](terminato)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](prossimo file)[reset]
+[reset][color=light-yellow](file succ.)[reset]
 .
 :PROGRAM_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.
