@@ -209,6 +209,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
@@ -287,6 +288,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
+          git fetch --all --tags --force
           VERSION=$(git describe --abbrev=4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
