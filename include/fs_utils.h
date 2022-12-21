@@ -34,6 +34,9 @@
 // return the lines from the given text file or an empty optional
 std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file);
 
+// Is the candidate a directory or a symlink that points to one?
+bool is_directory(const std::string& candidate);
+
 /* Check if the given path corresponds to an existing file or directory.
  */
 
