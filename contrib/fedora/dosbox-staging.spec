@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.79.0
+Version: 0.80.0
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -31,7 +31,7 @@ BuildRequires: libatomic
 BuildRequires: libpng-devel
 BuildRequires: libslirp >= 4.6.1
 BuildRequires: make
-BuildRequires: meson >= 0.54.2
+BuildRequires: meson >= 0.57.0
 BuildRequires: opusfile-devel
 BuildRequires: SDL2-devel >= 2.0.5
 BuildRequires: SDL2_image-devel
@@ -93,6 +93,14 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Tue 20 Dec 2022 <kcgen@users.noreply.github.com>
+- 0.80.0-1
+- Update to 0.80.0
+- Raie minimum Meson version to 0.57.0
+- Add SDL2-image build dependency
+- Add ReelMagic
+- Add Mouse Enhancements
+
 * Fri 24 Dec 2021 kcgen <kcgen@users.noreply.github.com>
 - 0.78.0-1
 - Update to 0.78.0

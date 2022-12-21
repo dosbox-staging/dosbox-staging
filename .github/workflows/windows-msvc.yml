@@ -153,7 +153,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=4)
+          export VERSION=$(git describe --abbrev=0)
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -240,7 +240,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
-          VERSION=$(git describe --abbrev=4)
+          VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt

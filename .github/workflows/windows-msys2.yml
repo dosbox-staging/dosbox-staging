@@ -223,7 +223,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=5)
+          export VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Inject package name
@@ -262,7 +262,7 @@ jobs:
             "$PKG_RELEASE"
           mv "${PKG_RELEASE}/dosbox.exe" "${PKG_RELEASE}/dosbox_with_debugger.exe"
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
-          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
+          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=0`" >> $GITHUB_ENV
           echo "artifact_path=${{ github.workspace }}\msvc" >> $GITHUB_ENV
 
       - name: Windows Defender AV Scan
@@ -309,9 +309,9 @@ jobs:
             packageinfo="a development branch"
           fi
           mkdir out
-          echo "version_number=`git describe --tags --abbrev=4`" >> $GITHUB_ENV
+          echo "version_number=`git describe --tags --abbrev=0`" >> $GITHUB_ENV
           sed -e "s|%PACKAGE_INFORMATION%|${packageinfo}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags --abbrev=4`|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|`git describe --tags --abbrev=0`|" contrib/windows_installer/DOSBox-Staging-setup.iss
           echo @echo off >out/dosbox_with_console.bat
           echo \"%~dp0\\dosbox.exe\" %* >>out/dosbox_with_console.bat
           echo if errorlevel 1 pause >>out/dosbox_with_console.bat
@@ -370,7 +370,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
-          VERSION=$(git describe --abbrev=4)
+          VERSION=$(git describe --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt

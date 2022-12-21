@@ -58,6 +58,7 @@
     <category>Emulator</category>
   </categories>
   <releases>
+    <release version="0.80.0" date="2022-12-20"/>
     <release version="0.79.1" date="2022-09-30"/>
     <release version="0.79.0" date="2022-09-19"/>
     <release version="0.78.1" date="2022-01-07"/>
