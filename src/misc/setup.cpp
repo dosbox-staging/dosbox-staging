@@ -28,9 +28,10 @@
 #include <string_view>
 
 #include "control.h"
+#include "cross.h"
+#include "fs_utils.h"
 #include "string_utils.h"
 #include "support.h"
-#include "cross.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char **_environ;
@@ -1267,10 +1268,7 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 // Was a directory provided on the command line?
 bool CommandLine::HasDirectory() const
 {
-	for (const auto& arg : cmds)
-		if (open_directory(arg.c_str()))
-			return true;
-	return false;
+	return std::any_of(cmds.begin(), cmds.end(), is_directory);
 }
 
 // Was an executable filename provided on the command line?
