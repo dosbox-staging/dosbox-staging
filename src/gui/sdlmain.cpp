@@ -1453,13 +1453,10 @@ finish:
 	return sdl.window;
 }
 
-// Used for the mapper UI and more: Creates a fullscreen window with desktop res
-// on Android, and a non-fullscreen window with the input dimensions otherwise.
-SDL_Window* GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height,
-                                    bool allow_highdpi = true)
+// Returns the current window; used for mapper UI.
+SDL_Window* GFX_GetWindow()
 {
-	constexpr bool fullscreen = false;
-	return SetWindowMode(SCREEN_SURFACE, width, height, fullscreen, FIXED_SIZE, allow_highdpi);
+	return sdl.window;
 }
 
 // Returns the rectangle in the current window to be used for scaling a
