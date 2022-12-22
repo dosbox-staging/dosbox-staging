@@ -351,15 +351,15 @@ static void render_reset(void)
 	// driver operating in a different thread or process.
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
-	Bitu width         = render.src.width;
+	uint16_t width     = render.src.width;
 	bool double_width  = render.src.double_width;
 	bool double_height = render.src.double_height;
 
-	Bitu gfx_flags, xscale, yscale;
+	uint8_t gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
 	// Don't do software scaler sizes larger than 4k
-	Bitu maxsize_current_input = SCALER_MAXWIDTH / width;
+	uint16_t maxsize_current_input = SCALER_MAXWIDTH / width;
 	if (render.scale.size > maxsize_current_input) {
 		render.scale.size = maxsize_current_input;
 	}
