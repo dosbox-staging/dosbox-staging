@@ -70,7 +70,7 @@ jobs:
         shell: bash
         run:   echo "date=$(date +%Y-%W)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.0
         id:    cache-msys2
         if:    matrix.system.name == 'Windows'
         with:
