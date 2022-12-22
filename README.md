@@ -52,7 +52,7 @@ support today's systems.
 |-                            |-
 | **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
 | **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`
-| **Resizable window**        | Yes, for all `output=opengl` modes
+| **Resizable window**        | Yes, for all hardware-accelerated modes
 | **Relative window size**    | `windowresolution=small`, `medium`, or `large`
 | **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
 | **[OPL] emulator**          |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
@@ -60,10 +60,10 @@ support today's systems.
 | **CGA composite modes**     | `machine=pcjr/tandy/cga` with hotkeys)
 | **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`
 | **Modem phonebook file**    | `phonebookfile=<name>`
-| **Autotype command**        | Yes<sup>[10]</sup>
+| **Raw mouse input**         | Yes: `raw_mouse_input=true`
+| **`Autotype` command**      | Yes<sup>[10]</sup>
 | **Startup verbosity**       | Yes<sup>[11]</sup>
 | **[GUS] enhancements**      | Yes<sup>[12]</sup>
-| **Raw mouse input**         | Yes: `raw_mouse_input=true`
 | **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x
 | **[MT-32] emulator**        | Yes: libmt32emu 2.4.2 (Requires ROM files)
 | **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>
@@ -73,6 +73,12 @@ support today's systems.
 | **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file
 | **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`
 | **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>
+| **Audio filters**           | Yes: See `*_filter` settings in conf file
+| **Audio reverb and chorus** | Yes: See `[mixer]` conf section and `MIXER.COM /help`
+| **Audio stereo crossfeed**  | Yes: See `[mixer]` conf section and `MIXER.COM /help`
+| **`More` command**          | Yes<sup>[19]</sup>
+| **Dual/multi-mouse input**  | Yes: See `[mouse]` section in conf file
+| **ReelMagic support**       | Yes: See `[reelmagic]` section in conf file
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -92,6 +98,7 @@ support today's systems.
 [16]:    https://github.com/dosbox-staging/dosbox-staging/pull/1272
 [17]:    https://github.com/dosbox-staging/dosbox-staging/pull/1398
 [18]:    https://github.com/dosbox-staging/dosbox-staging/pull/1447
+[19]:    https://github.com/dosbox-staging/dosbox-staging/pull/2020
 
 ## Stable release builds
 
