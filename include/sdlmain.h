@@ -20,7 +20,7 @@
 
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
- 
+
 #include <string>
 #include <string_view>
 #include <string.h>
@@ -43,8 +43,7 @@ using present_frame_f = bool();
 constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
 static inline bool present_frame_noop() { return true; }
 
-enum SCREEN_TYPES	{
-	SCREEN_SURFACE,
+enum SCREEN_TYPES {
 	SCREEN_TEXTURE,
 #if C_OPENGL
 	SCREEN_OPENGL
@@ -99,8 +98,7 @@ enum PRIORITY_LEVELS {
 struct SDL_Block {
 	bool initialized = false;
 	bool active = false; // If this isn't set don't draw
-	bool updating = false;
-	bool update_display_contents = true;
+	bool updating        = false;
 	bool resizing_window = false;
 	bool wait_on_error = false;
 
@@ -131,7 +129,6 @@ struct SDL_Block {
 			// user-configured window size
 			int width = 0;
 			int height = 0;
-			bool resizable = false;
 			bool show_decorations = true;
 			bool adjusted_initial_size = false;
 			int initial_x_pos = -1;
@@ -156,12 +153,11 @@ struct SDL_Block {
 		// Lazy window size init triggers updating window size and
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
-		bool lazy_init_window_size = false;
+		bool lazy_init_window_size  = false;
 		HostRateMode host_rate_mode = HostRateMode::Auto;
-		double preferred_host_rate = 0.0;
-		bool want_resizable_window = false;
-		SCREEN_TYPES type = SCREEN_SURFACE;
-		SCREEN_TYPES want_type = SCREEN_SURFACE;
+		double preferred_host_rate  = 0.0;
+		SCREEN_TYPES type           = SCREEN_TEXTURE;
+		SCREEN_TYPES want_type      = SCREEN_TEXTURE;
 	} desktop = {};
 	struct {
 		int num_cycles = 0;
@@ -214,7 +210,6 @@ struct SDL_Block {
 	bool pause_when_inactive = false;
 
 	SDL_Rect clip = {0, 0, 0, 0};
-	SDL_Surface *surface = nullptr;
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
