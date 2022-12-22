@@ -91,24 +91,42 @@ void SERIAL::Run()
 			showPort(port_index);
 			return;
 		}
-		// Which type of device do they want?
-		SERIAL_PORT_TYPE desired_type = SERIAL_PORT_TYPE::INVALID;
-		cmd->FindCommand(2, temp_line);
-		for (const auto &[type, name] : serial_type_names) {
+
+		// Helper to print a nice list of the supported port types
+		auto write_msg_for_invalid_port_type = [this]() {
+			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_TYPE"));
+			for (const auto& [port_type, port_type_str] : serial_type_names) {
+				// Skip the invalid type; show only valid types
+				if (port_type != SERIAL_PORT_TYPE::INVALID) {
+					WriteOut(MSG_Get("PROGRAM_SERIAL_INDENTED_LIST"),
+					         port_type_str.c_str());
+				}
+			}
+		};
+
+		// If we're here, then SERIAL.COM was given more than one
+		// argument and the second argument must be the port type.
+		constexpr auto port_type_arg_pos = 2; // (indexed starting at 1)
+		assert(cmd->GetCount() >= port_type_arg_pos);
+
+		// Which port type do they want?
+		temp_line.clear();
+		if (!cmd->FindCommand(port_type_arg_pos, temp_line)) {
+			// Encountered a problem parsing the port type
+			write_msg_for_invalid_port_type();
+			return;
+		}
+		// They entered something, but do we have a matching type?
+		auto desired_type = SERIAL_PORT_TYPE::INVALID;
+		for (const auto& [type, name] : serial_type_names) {
 			if (temp_line == name) {
 				desired_type = type;
 				break;
 			}
 		}
 		if (desired_type == SERIAL_PORT_TYPE::INVALID) {
-			// No idea what they asked for.
-			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_TYPE"));
-			for (const auto &type_name : serial_type_names) {
-				if (type_name.first == SERIAL_PORT_TYPE::DISABLED)
-					continue; // Don't show the invalid placeholder.
-				WriteOut(MSG_Get("PROGRAM_SERIAL_INDENTED_LIST"),
-				         type_name.second.c_str());
-			}
+			// They entered a port type; but it was invalid
+			write_msg_for_invalid_port_type();
 			return;
 		}
 		// Build command line, if any.
