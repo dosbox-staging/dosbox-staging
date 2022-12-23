@@ -44,7 +44,7 @@ jobs:
           sudo pip3 install --upgrade meson ninja
 
       - name: Prepare the Coverity package cache
-        uses: actions/cache@v3.2.0
+        uses: actions/cache@v3.2.1
         id: cache-coverity
         with:
           path: ${{ env.PACKAGE_DIR }}
