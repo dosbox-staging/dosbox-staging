@@ -1549,8 +1549,9 @@ bool fatDrive::Rename(char * oldname, char * newname) {
 	if(!getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2)) {
 		/* Target doesn't exist, can rename */
 
-		char dirName2[DOS_NAMELENGTH_ASCII];
-		char pathName2[11];
+		char dirName2[DOS_NAMELENGTH_ASCII] = {};
+		char pathName2[11] = {};
+
 		/* Can we even get the name of the file itself? */
 		if(!getEntryName(newname, &dirName2[0])) return false;
 		convToDirFile(&dirName2[0], &pathName2[0]);
