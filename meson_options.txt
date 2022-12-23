@@ -116,28 +116,6 @@ option(
 )
 
 option(
-    'system_libraries',
-    type: 'array',
-    choices: [
-        'fluidsynth',
-        'glib',
-        'iir',
-        'mt32emu',
-        'opusfile',
-        'png',
-        'sdl2',
-        'sdl2_image',
-        'sdl2_net',
-        'slirp',
-        'speexdsp',
-        'tracy',
-        'zlib',
-    ],
-    value: [],
-    description: 'Use system libraries (not wraps) for the selected dependencies.',
-)
-
-option(
     'unit_tests',
     type: 'feature',
     value: 'auto',
