@@ -171,7 +171,7 @@ os_family_name = {
   'openbsd'   : 'BSD',
   'dragonfly' : 'BSD',
 }.get(host_machine.system(), 'UNKNOWN_OS')
-conf_data.set(os_family_name, 1)
+conf_data.set10(os_family_name, true)
 
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
@@ -260,7 +260,7 @@ endif
 
 foreach header : ['pwd.h', 'strings.h', 'netinet/in.h']
     if cc.has_header(header)
-        conf_data.set('HAVE_' + header.underscorify().to_upper(), 1)
+        conf_data.set10('HAVE_' + header.underscorify().to_upper(), true)
     endif
 endforeach
 
@@ -278,15 +278,15 @@ endif
 # Header windows.h defines old min/max macros, that conflict with C++11
 # std::min/std::max.  Defining NOMINMAX prevents these macros from appearing.
 if cxx.get_id() == 'msvc'
-    conf_data.set('NOMINMAX', true)
+    conf_data.set10('NOMINMAX', true)
 endif
 
 if host_machine.system() in ['windows', 'cygwin']
-    conf_data.set('_USE_MATH_DEFINES', true)
+    conf_data.set10('_USE_MATH_DEFINES', true)
 endif
 
 if host_machine.endian() == 'big'
-    conf_data.set('WORDS_BIGENDIAN', 1)
+    conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
 # Non-4K memory page size is supported only for ppc64 at the moment.
@@ -303,7 +303,7 @@ int main() {
 }
 '''
 if cc.compiles(set_prio_code, name: 'test for setpriority support')
-    conf_data.set('HAVE_SETPRIORITY', 1)
+    conf_data.set10('HAVE_SETPRIORITY', true)
 endif
 
 # New compilers can check for this feature using __has_builtin, but this is
@@ -320,7 +320,7 @@ void fun(bool test) {
 }
 '''
 if cxx.compiles(builtin_expect_code, name: 'test for __builtin_expect support')
-    conf_data.set('C_HAS_BUILTIN_EXPECT', 1)
+    conf_data.set10('C_HAS_BUILTIN_EXPECT', true)
 endif
 
 atomic_code = '''
@@ -619,7 +619,7 @@ if host_machine.system() == 'darwin'
     )
     if coreaudio_dep.found()
         if cxx.check_header('AudioToolbox/AUGraph.h')
-            conf_data.set('C_COREAUDIO', 1)
+            conf_data.set10('C_COREAUDIO', true)
         else
             warning('''Core Audio disabled because header is unusable''')
         endif
@@ -636,7 +636,7 @@ if host_machine.system() == 'darwin'
     )
     if coremidi_dep.found()
         if cxx.check_header('CoreMIDI/MIDIServices.h')
-            conf_data.set('C_COREMIDI', 1)
+            conf_data.set10('C_COREMIDI', true)
         else
             warning('''Core Audio disabled because header is unusable''')
         endif
@@ -665,7 +665,7 @@ if host_machine.system() == 'darwin'
                 name: 'compiler is capable of compiling IOKit',
             )
             if is_iokit_compilable
-                conf_data.set('C_IOKIT', 1)
+                conf_data.set10('C_IOKIT', true)
             else
                 warning('''IOKit disabled because compiler cannot handle it''')
             endif
@@ -685,7 +685,7 @@ if host_machine.system() == 'darwin'
     )
     if corefoundation_dep.found()
         if cxx.check_header('CoreFoundation/CoreFoundation.h')
-            conf_data.set('C_COREFOUNDATION', 1)
+            conf_data.set10('C_COREFOUNDATION', true)
         else
             warning('''Core Foundation disabled because header is unusable''')
         endif
@@ -702,7 +702,7 @@ if host_machine.system() == 'darwin'
     )
     if coreservices_dep.found()
         if cxx.check_header('CoreServices/CoreServices.h')
-            conf_data.set('C_CORESERVICES', 1)
+            conf_data.set10('C_CORESERVICES', true)
         else
             warning('''Core Services disabled because header is unusable''')
         endif
@@ -748,7 +748,7 @@ using_linux = (host_machine.system() == 'linux')
 force_alsa = (get_option('use_alsa') == 'true')
 if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
     alsa_dep = dependency('alsa')
-    conf_data.set('C_ALSA', 1)
+    conf_data.set10('C_ALSA', true)
     summary('ALSA support', alsa_dep.found())
 endif
 
@@ -766,7 +766,7 @@ endif
 # X11 Input Extension dependency for ManyMouse library
 xi_dep = optional_dep
 using_x11 = os_family_name in ['LINUX', 'BSD']
-if using_x11 and (conf_data.get('C_MANYMOUSE') == true)
+if using_x11 and (conf_data.get('C_MANYMOUSE') != 0)
     xi_dep = dependency('xi')
 endif
 
@@ -788,7 +788,7 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
-if conf_data.get('C_MANYMOUSE') == true
+if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')
 endif
 
@@ -815,7 +815,7 @@ third_party_deps = [
     libtalchorus_dep,
 ]
 
-if conf_data.get('C_MANYMOUSE') == true
+if conf_data.get('C_MANYMOUSE') != 0
     third_party_deps += manymouse_dep
 endif
 
