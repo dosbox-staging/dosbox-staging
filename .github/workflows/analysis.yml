@@ -89,7 +89,6 @@ jobs:
       - run: |
           meson setup \
           -Dbuildtype=debug \
-          -Dsystem_libraries=speexdsp \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
           -Duse_mt32emu=false \
