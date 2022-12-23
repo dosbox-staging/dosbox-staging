@@ -197,7 +197,6 @@ static SDL_Point restrict_to_viewport_resolution(int width, int height);
 static SDL_Rect calc_viewport(const int width, const int height);
 
 static void CleanupSDLResources();
-static void HandleVideoResize(int width, int height);
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
 static bool present_frame_texture();
@@ -662,15 +661,14 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
+static SDL_Rect get_canvas_size();
 
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(const int width, const int height,
                                    const VideoMode& video_mode,
-                                   const std::optional<SDL_Rect>& viewport_size_override,
-                                   const SCREEN_TYPES screen_type)
+                                   const std::optional<SDL_Rect>& viewport_size_override)
 {
 	// Get the viewport dimensions, with consideration for possible override
 	// values
@@ -680,7 +678,7 @@ static void log_display_properties(const int width, const int height,
 			                              viewport_size_override->h);
 			return {vp.w, vp.h};
 		}
-		const auto canvas   = get_canvas_size(screen_type);
+		const auto canvas   = get_canvas_size();
 		const auto viewport = calc_viewport(canvas.w, canvas.h);
 		return {viewport.w, viewport.h};
 	};
@@ -727,35 +725,6 @@ static void log_display_properties(const int width, const int height,
 	        height,
 	        one_per_render_pixel_aspect);
 #endif
-}
-
-static SDL_Point get_initial_window_position_or_default(int default_val)
-{
-	int x, y;
-	if (sdl.desktop.window.initial_x_pos >= 0 &&
-	    sdl.desktop.window.initial_y_pos >= 0) {
-		x = sdl.desktop.window.initial_x_pos;
-		y = sdl.desktop.window.initial_y_pos;
-	} else {
-		x = y = default_val;
-	}
-	return {x, y};
-}
-
-// A safer way to call SDL_SetWindowSize because it ensures the event-callback
-// is disabled during the resize event. This prevents the event callback from
-// firing before the window is resized in which case an endless loop can occur
-static void safe_set_window_size(const int w, const int h)
-{
-	decltype(sdl.draw.callback) saved_callback = nullptr;
-	// Swap and save the callback with a a no-op
-	std::swap(sdl.draw.callback, saved_callback);
-
-	assert(sdl.window);
-	SDL_SetWindowSize(sdl.window, w, h);
-
-	// Swap the saved callback back in
-	std::swap(sdl.draw.callback, saved_callback);
 }
 
 static VsyncSettings& get_vsync_settings()
@@ -946,14 +915,6 @@ static void update_vsync_state()
 	}
 }
 
-static void remove_window()
-{
-	if (sdl.window) {
-		SDL_DestroyWindow(sdl.window);
-		sdl.window = nullptr;
-	}
-}
-
 // The throttled presenter skips frames that have inter-frame spacing narrower
 // than the allowed frame period (sdl.frame.period_us). When a frame is skipped,
 // the presenter still tries to present it at its next oppourtunity.
@@ -1130,7 +1091,7 @@ static void NewMouseScreenParams()
 	params.x_abs = check_cast<int32_t>(abs_x);
 	params.y_abs = check_cast<int32_t>(abs_y);
 
-	params.is_fullscreen    = sdl.desktop.fullscreen;
+	params.is_fullscreen = (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN);
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -1178,14 +1139,13 @@ static void apply_new_dpi_scale(const double dpi_scale)
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
-                                        const SCREEN_TYPES screen_type,
                                         int width_in_logical_units = 0)
 {
 	if (width_in_logical_units <= 0) {
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
 	}
 
-	const auto canvas = get_canvas_size(screen_type);
+	const auto canvas = get_canvas_size();
 	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
 
 	assert(width_in_logical_units > 0);
@@ -1204,131 +1164,446 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	apply_new_dpi_scale(new_dpi_scale);
 }
 
-static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width,
-                                 const int height, const bool fullscreen)
+static SDL_Window* create_window()
 {
-	if (sdl.window && sdl.resizing_window) {
-		return sdl.window;
-	}
+	uint32_t flags = 0;
 
-	CleanupSDLResources();
-
-	if (!sdl.window || (sdl.desktop.type != screen_type)) {
-		remove_window();
-
-		uint32_t flags = opengl_driver_crash_workaround(screen_type);
-		flags |= SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
 #if C_OPENGL
-		if (screen_type == SCREEN_OPENGL)
-			flags |= SDL_WINDOW_OPENGL;
-#endif
-		if (!sdl.desktop.window.show_decorations) {
-			flags |= SDL_WINDOW_BORDERLESS;
-		}
+	if (sdl.desktop.want_type == SCREEN_OPENGL) {
+		// TODO: Ideally, all of these calls should be checked for failure.
 
-		// Using undefined position will take care of placing and
-		// restoring the window by WM.
-		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-		const auto pos = get_initial_window_position_or_default(default_val);
+		// Request 24-bits sRGB framebuffer, don't care about depth buffer.
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 
-		assert(sdl.window == nullptr); // enusre we don't leak
-		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
-		if (!sdl.window) {
-			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
-			return nullptr;
-		}
+		// Explicitly request OpenGL 2.1+ context.
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+		                    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
-		// Certain functionality (like setting viewport) doesn't work properly
-		// before initial window events are received.
-		SDL_PumpEvents();
-
-		if (screen_type == SCREEN_TEXTURE) {
-			if (sdl.renderer) {
-				SDL_DestroyRenderer(sdl.renderer);
-				sdl.renderer = nullptr;
-			}
-
-			assert(sdl.renderer == nullptr);
-			sdl.renderer = SDL_CreateRenderer(sdl.window, -1, 0);
-			if (!sdl.renderer) {
-				LOG_ERR("SDL: Failed to create renderer: %s",
-				        SDL_GetError());
-				return nullptr;
-			}
-		}
-#if C_OPENGL
-		if (screen_type == SCREEN_OPENGL) {
-			if (sdl.opengl.context) {
-				SDL_GL_DeleteContext(sdl.opengl.context);
-				sdl.opengl.context = nullptr;
-			}
-
-			assert(sdl.opengl.context == nullptr);
-			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-			if (sdl.opengl.context == nullptr) {
-				LOG_ERR("SDL: OPENGL: Can't create OpenGL context: %s",
-				        SDL_GetError());
-				return nullptr;
-			}
-			if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
-				LOG_ERR("SDL: OPENGL: Can't make OpenGL context current: %s",
-				        SDL_GetError());
-				return nullptr;
-			}
-		}
-#endif
-		check_and_handle_dpi_change(sdl.window, screen_type);
-
-		GFX_RefreshTitle();
-
-		if (!fullscreen) {
-			goto finish;
-		}
+		// Flag to request an OpenGL-ready window.
+		flags = SDL_WINDOW_OPENGL;
 	}
-	/* Fullscreen mode switching has its limits, and is also problematic on
-	 * some window managers. For now, the following may work up to some
-	 * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
-	 * although it has its own issues.
-	 */
-	if (fullscreen) {
-		SDL_DisplayMode displayMode;
-		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
-		displayMode.w = width;
-		displayMode.h = height;
+#endif
 
-		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
-			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz", displayMode.w, displayMode.h, displayMode.refresh_rate);
-		}
-		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.full.display_res
-		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
-		                                : SDL_WINDOW_FULLSCREEN);
-	} else {
-		// we're switching down from fullscreen, so let SDL use the
-		// previously-set window size
-		if (sdl.desktop.switching_fullscreen) {
-			SDL_SetWindowFullscreen(sdl.window, 0);
+	flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	flags |= opengl_driver_crash_workaround(sdl.desktop.want_type);
+	if (!sdl.desktop.window.show_decorations) {
+		flags |= SDL_WINDOW_BORDERLESS;
+	}
+	if (sdl.desktop.fullscreen) {
+		flags |= sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP
+		                                      : SDL_WINDOW_FULLSCREEN;
+	}
+
+	SDL_Window* window = SDL_CreateWindow("DOSBox Staging",
+	                                      sdl.desktop.window.initial_x_pos,
+	                                      sdl.desktop.window.initial_y_pos,
+	                                      sdl.desktop.window.width,
+	                                      sdl.desktop.window.height,
+	                                      flags);
+	if (!window) {
+		LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
+		return nullptr;
+	}
+
+	// Set fullscreen display mode.
+	SDL_DisplayMode fullscreen_mode      = {};
+	const SDL_DisplayMode requested_mode = {
+	        0, sdl.desktop.full.width, sdl.desktop.full.height, 0, nullptr};
+	if (!SDL_GetClosestDisplayMode(sdl.display_number,
+	                               &requested_mode,
+	                               &fullscreen_mode)) {
+		LOG_WARNING("SDL: Failed to set fullscreen mode to %dx%d, falling back to desktop mode",
+		            requested_mode.w,
+		            requested_mode.h);
+
+		if (SDL_GetDesktopDisplayMode(sdl.display_number,
+		                              &fullscreen_mode) < 0) {
+			LOG_WARNING("SDL: Failed to retrieve desktop display mode: %s",
+			            SDL_GetError());
 		}
 	}
 
-	// Maybe some requested fullscreen resolution is unsupported?
-finish:
+	if (SDL_SetWindowDisplayMode(window, &fullscreen_mode) < 0) {
+		LOG_ERR("SDL: Failed to set fullscreen display mode: %s",
+		        SDL_GetError());
+	}
 
-	if (sdl.draw.has_changed)
-		setup_presentation_mode(sdl.frame.mode);
+	SDL_SetWindowMinimumSize(window,
+	                         FALLBACK_WINDOW_DIMENSIONS.x,
+	                         FALLBACK_WINDOW_DIMENSIONS.y);
 
-	// Force redraw after changing the window
-	if (sdl.draw.callback)
-		sdl.draw.callback(GFX_CallBackRedraw);
-
-	// Ensure the time to change window modes isn't counted against
-	// our paced timing. This is a rare event that depends on host
-	// latency (and not the rendering pipeline).
-	render_pacer->Reset();
-
-	sdl.desktop.type = screen_type;
-	return sdl.window;
+	return window;
 }
+
+static SDL_Renderer* create_sdl_renderer()
+{
+	uint32_t flags = 0;
+	if (get_vsync_settings().requested != VsyncState::Off) {
+		flags |= SDL_RENDERER_PRESENTVSYNC;
+	}
+
+	SDL_Renderer* renderer = SDL_CreateRenderer(sdl.window, -1, flags);
+	if (!renderer) {
+		LOG_ERR("SDL: Failed to create renderer: %s", SDL_GetError());
+		return nullptr;
+	}
+
+	// Log the rendering driver.
+	SDL_RendererInfo info;
+	if (SDL_GetRendererInfo(renderer, &info) < 0) {
+		LOG_ERR("SDL: Failed to retrieve SDL renderer info: %s",
+		        SDL_GetError());
+		SDL_DestroyRenderer(renderer);
+		return nullptr;
+	}
+	LOG_MSG("SDL: Using driver \"%s\" for texture renderer", info.name);
+
+	// Available texture formats stay the same through the renderer's lifetime.
+	sdl.texture.pixelFormat = SDL_AllocFormat(info.texture_formats[0]);
+	if (sdl.texture.pixelFormat == nullptr) {
+		LOG_ERR("SDL: Failed to allocate pixel format: %s", SDL_GetError());
+		SDL_DestroyRenderer(renderer);
+		return nullptr;
+	}
+
+	switch (SDL_BITSPERPIXEL(info.texture_formats[0])) {
+	case 8: sdl.gfx_flags = GFX_CAN_8; break;
+	case 15: sdl.gfx_flags = GFX_CAN_15; break;
+	case 16: sdl.gfx_flags = GFX_CAN_16; break;
+	case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
+	case 32: sdl.gfx_flags = GFX_CAN_32; break;
+	}
+	if (!(info.flags & SDL_RENDERER_ACCELERATED)) {
+		sdl.gfx_flags |= GFX_CAN_RANDOM;
+	}
+
+	// Set render clear color.
+	if (SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0) {
+		LOG_WARNING("SDL: Failed to set render clear color: %s",
+		            SDL_GetError());
+	}
+
+	// Has to be repeated here due to internal window recreation; also see:
+	// https://github.com/libsdl-org/SDL/issues/1408
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FALLBACK_WINDOW_DIMENSIONS.x,
+	                         FALLBACK_WINDOW_DIMENSIONS.y);
+
+	return renderer;
+}
+
+#if C_OPENGL
+static const char* safe_gl_get_string(const GLenum requested_name,
+                                      const char* default_result);
+static bool LoadGLShaders(const std::string& source);
+
+static bool create_gl_renderer()
+{
+	auto context = SDL_GL_CreateContext(sdl.window);
+	if (!context) {
+		LOG_ERR("SDL: Failed to create OpenGL context: %s", SDL_GetError());
+		return false;
+	}
+
+	switch (get_vsync_settings().requested) {
+	case VsyncState::Adaptive: SDL_GL_SetSwapInterval(-1); break;
+	case VsyncState::Off: SDL_GL_SetSwapInterval(0); break;
+	default:
+	case VsyncState::Unset:
+	case VsyncState::On: SDL_GL_SetSwapInterval(1); break;
+	}
+
+	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
+	glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
+	        "glCompileShader");
+	glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
+	        "glCreateProgram");
+	glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
+	glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
+	        "glDeleteProgram");
+	glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
+	glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
+	        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+	glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress(
+	        "glGetAttribLocation");
+	glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
+	glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress(
+	        "glGetProgramInfoLog");
+	glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
+	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress(
+	        "glGetShaderInfoLog");
+	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress(
+	        "glGetUniformLocation");
+	glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
+	glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
+	        "glShaderSource");
+	glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
+	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
+	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
+	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress(
+	        "glVertexAttribPointer");
+
+	GLint max_texture_size = 0;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+
+	const auto gl_version_string = safe_gl_get_string(GL_VERSION, "0.0.0");
+	const std::string_view gl_vendor = safe_gl_get_string(GL_VENDOR,
+	                                                      "unknown vendor");
+#if WIN32
+	const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
+#else
+	constexpr auto is_vendors_srgb_unreliable = false;
+#endif
+	bool use_srgb_framebuffer = false;
+	if (is_vendors_srgb_unreliable) {
+		LOG_WARNING("OPENGL: Not enabling sRGB framebuffer"
+		            " because %s's driver is unreliable",
+		            gl_vendor.data());
+	} else {
+		const int gl_version_major = gl_version_string[0] - '0';
+		int is_framebuffer_srgb_capable = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+		                        &is_framebuffer_srgb_capable) < 0) {
+			LOG_ERR("OPENGL: Failed retrieving sRGB framebuffer status: %s",
+			        SDL_GetError());
+		}
+
+		use_srgb_framebuffer =
+		        (gl_version_major >= 3 ||
+		         SDL_GL_ExtensionSupported("GL_ARB_framebuffer_sRGB") ||
+		         SDL_GL_ExtensionSupported("GL_EXT_framebuffer_sRGB")) &&
+		        is_framebuffer_srgb_capable;
+	}
+
+	if (!LoadGLShaders(sdl.opengl.shader_source)) {
+		SDL_GL_DeleteContext(context);
+		return false;
+	}
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	sdl.opengl.context = context;
+	sdl.opengl.max_texsize = max_texture_size;
+	sdl.opengl.framebuffer_is_srgb_encoded = use_srgb_framebuffer;
+	sdl.gfx_flags = GFX_CAN_32 | GFX_CAN_RANDOM;
+
+	LOG_INFO("OPENGL: Vendor: %s", gl_vendor.data());
+
+	LOG_INFO("OPENGL: Version: %s", gl_version_string);
+
+	LOG_INFO("OPENGL: GLSL version: %s",
+	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"));
+
+	return true;
+}
+#endif
+
+static bool update_textures()
+{
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		GLsizei texsize_w, texsize_h;
+		if (sdl.opengl.shader_info.settings.use_npot_texture) {
+			texsize_w = sdl.draw.width;
+			texsize_h = sdl.draw.height;
+		} else {
+			LOG_INFO("OPENGL: NPOT textures disabled to maximize compatibility with custom shader"); // yay log spam
+			texsize_w = 2 << int_log2(sdl.draw.width);
+			texsize_h = 2 << int_log2(sdl.draw.height);
+		}
+
+		if (texsize_w > sdl.opengl.max_texsize ||
+		    texsize_h > sdl.opengl.max_texsize) {
+			LOG_WARNING("OPENGL: No support for texture size of %dx%d",
+			            texsize_w,
+			            texsize_h);
+			return false;
+		}
+
+		GLuint texture;
+		glGenTextures(1, &texture);
+		if (!texture) {
+			LOG_ERR("OPENGL: Failed to generate texture");
+			return false;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		const auto wrap_parameter = sdl.opengl.shader_info.settings.use_npot_texture
+		                                  ? GL_CLAMP_TO_EDGE
+		                                  : GL_CLAMP_TO_BORDER;
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
+
+		const GLint filter = sdl.opengl.bilinear ? GL_LINEAR : GL_NEAREST;
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+
+		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
+		// with Mesa drivers on certain integrated Intel GPUs
+		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
+		                                       sdl.opengl.framebuffer_is_srgb_encoded
+		                             ? GL_SRGB8_ALPHA8
+		                             : GL_RGB8;
+
+		glTexImage2D(GL_TEXTURE_2D,
+		             0,
+		             texformat,
+		             texsize_w,
+		             texsize_h,
+		             0,
+		             GL_BGRA_EXT,
+		             GL_UNSIGNED_BYTE,
+		             nullptr);
+
+		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+		    sdl.opengl.framebuffer_is_srgb_encoded) {
+			glEnable(GL_FRAMEBUFFER_SRGB);
+		} else {
+			glDisable(GL_FRAMEBUFFER_SRGB);
+		}
+
+		auto display_memory = malloc(sdl.draw.width * sdl.draw.height *
+		                             MAX_BYTES_PER_PIXEL);
+		if (!display_memory) {
+			LOG_ERR("OPENGL: Failed to allocate display memory buffer");
+			return false;
+		}
+		sdl.opengl.pitch = sdl.draw.width * MAX_BYTES_PER_PIXEL;
+
+		if (sdl.opengl.texture) {
+			glDeleteTextures(1, &sdl.opengl.texture);
+		}
+		sdl.opengl.texture = texture;
+
+		free(sdl.opengl.framebuf);
+		sdl.opengl.framebuf = display_memory;
+
+		return true;
+	}
+#endif
+
+	// Retrieve available texture formats.
+	SDL_RendererInfo info;
+	if (SDL_GetRendererInfo(sdl.renderer, &info) < 0) {
+		LOG_ERR("SDL: Failed to retrieve SDL renderer info: %s",
+		        SDL_GetError());
+		return false;
+	}
+
+#if !SDL_VERSION_ATLEAST(2, 0, 12)
+	// Compatibility with Ubuntu 20.04.
+	switch (sdl.interpolation_mode) {
+	case InterpolationMode::Bilinear:
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		break;
+	case InterpolationMode::NearestNeighbour:
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+		break;
+	}
+#endif
+
+	SDL_Texture* texture = SDL_CreateTexture(sdl.renderer,
+	                                         info.texture_formats[0],
+	                                         SDL_TEXTUREACCESS_STREAMING,
+	                                         sdl.draw.width,
+	                                         sdl.draw.height);
+	if (!texture) {
+		LOG_ERR("SDL: Failed to create SDL texture: %s", SDL_GetError());
+		return false;
+	}
+
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+	switch (sdl.interpolation_mode) {
+	case InterpolationMode::Bilinear:
+		if (SDL_SetTextureScaleMode(texture,
+		                            SDL_ScaleMode::SDL_ScaleModeLinear) < 0) {
+			LOG_WARNING("SDL: Failed to set texture filtering mode: %s",
+			            SDL_GetError());
+		}
+		break;
+	case InterpolationMode::NearestNeighbour:
+		if (SDL_SetTextureScaleMode(texture,
+		                            SDL_ScaleMode::SDL_ScaleModeNearest) < 0) {
+			LOG_WARNING("SDL: Failed to set texture filtering mode: %s",
+			            SDL_GetError());
+		}
+		break;
+	}
+#endif
+
+	auto input_surface = SDL_CreateRGBSurfaceWithFormat(
+	        0, sdl.draw.width, sdl.draw.height, 32, info.texture_formats[0]);
+	if (!input_surface) {
+		SDL_DestroyTexture(texture);
+		LOG_ERR("SDL: Failed to create input surface: %s", SDL_GetError());
+		return false;
+	}
+
+	// Some surfaces must be locked for direct access. As the surface is
+	// never blitted, it is fine to leave it locked through its lifetime.
+	if (SDL_MUSTLOCK(input_surface)) {
+		SDL_LockSurface(input_surface);
+	}
+
+	if (sdl.texture.texture) {
+		SDL_DestroyTexture(sdl.texture.texture);
+	}
+	sdl.texture.texture = texture;
+
+	if (sdl.texture.input_surface) {
+		SDL_FreeSurface(sdl.texture.input_surface);
+	}
+	sdl.texture.input_surface = input_surface;
+
+	return true;
+}
+
+static void update_viewport()
+{
+	const auto canvas   = get_canvas_size();
+	const auto viewport = calc_viewport(canvas.w, canvas.h);
+	sdl.clip            = viewport;
+
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
+		return;
+	}
+#endif
+
+	if (SDL_RenderSetViewport(sdl.renderer, &viewport) < 0) {
+		LOG_WARNING("SDL: Failed to set viewport: %s", SDL_GetError());
+	}
+}
+
+#if C_OPENGL
+static void update_shader_uniforms()
+{
+	GLfloat texture_width  = 0;
+	GLfloat texture_height = 0;
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texture_width);
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texture_height);
+	assert(texture_width > 0 && texture_height > 0);
+
+	GLfloat viewport[4] = {0, 0, 0, 0}; // X, Y, W, H
+	glGetFloatv(GL_VIEWPORT, viewport);
+	assert(viewport[2] > 0 && viewport[3] > 0);
+
+	glUniform2f(sdl.opengl.ruby.texture_size, texture_width, texture_height);
+	glUniform2f(sdl.opengl.ruby.input_size,
+	            static_cast<GLfloat>(sdl.draw.width),
+	            static_cast<GLfloat>(sdl.draw.height));
+	glUniform2f(sdl.opengl.ruby.output_size, viewport[2], viewport[3]);
+}
+#endif
 
 // Returns the current window; used for mapper UI.
 SDL_Window* GFX_GetWindow()
@@ -1339,23 +1614,26 @@ SDL_Window* GFX_GetWindow()
 // Returns the actual output size in pixels, when possible.
 // Needed for DPI-scaled windows, when logical window and actual output sizes
 // might not match.
-static SDL_Rect get_canvas_size([[maybe_unused]] const SCREEN_TYPES screen_type)
+static SDL_Rect get_canvas_size()
 {
 	SDL_Rect canvas = {};
 #if SDL_VERSION_ATLEAST(2, 26, 0)
 	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
 #else
-	switch (screen_type) {
-	case SCREEN_TEXTURE:
-		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) != 0)
-			LOG_ERR("SDL: Failed to retrieve output size: %s",
-			        SDL_GetError());
-		break;
+	switch (sdl.desktop.type) {
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
 		break;
 #endif
+	case SCREEN_TEXTURE:
+		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) < 0) {
+			LOG_ERR("SDL: Failed to retrieve output size: %s",
+			        SDL_GetError());
+			[[fallthrough]];
+		} else {
+			break;
+		}
 	default: SDL_GetWindowSize(sdl.window, &canvas.w, &canvas.h);
 	}
 #endif
@@ -1365,7 +1643,7 @@ static SDL_Rect get_canvas_size([[maybe_unused]] const SCREEN_TYPES screen_type)
 
 SDL_Rect GFX_GetCanvasSize()
 {
-	return get_canvas_size(sdl.desktop.type);
+	return get_canvas_size();
 }
 
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
@@ -1394,34 +1672,6 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
                const auto scale_y = 1;
                return {scale_x, scale_y};
        }
-}
-
-static SDL_Window* SetupWindowScaled(SCREEN_TYPES screen_type)
-{
-	int window_width;
-	int window_height;
-	if (sdl.desktop.fullscreen) {
-		window_width = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
-		window_height = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
-	} else {
-		window_width  = sdl.desktop.window.width;
-		window_height = sdl.desktop.window.height;
-	}
-
-	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-	        sdl.draw.render_pixel_aspect_ratio);
-
-	if (window_width == 0 && window_height == 0) {
-		window_width  = iround(sdl.draw.width * draw_scale_x);
-		window_height = iround(sdl.draw.height * draw_scale_y);
-	}
-
-	sdl.window = SetWindowMode(screen_type,
-	                           window_width,
-	                           window_height,
-	                           sdl.desktop.fullscreen);
-
-	return sdl.window;
 }
 
 #if C_OPENGL
@@ -1497,26 +1747,91 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	return shader;
 }
 
-static bool LoadGLShaders(const std::string& source, GLuint *vertex,
-                          GLuint *fragment)
+static bool LoadGLShaders(const std::string& source)
 {
-	if (source.empty())
+	if (source.empty()) {
+		LOG_ERR("OPENGL: No shader source present");
 		return false;
-
-	assert(vertex);
-	assert(fragment);
-
-	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
-	if (s) {
-		*vertex = s;
-		s = BuildShader(GL_FRAGMENT_SHADER, source);
-		if (s) {
-			*fragment = s;
-			return true;
-		}
-		glDeleteShader(*vertex);
 	}
-	return false;
+
+	GLuint vertex_shader = BuildShader(GL_VERTEX_SHADER, source);
+	if (!vertex_shader) {
+		LOG_ERR("OPENGL: Failed compiling vertex shader");
+		return false;
+	}
+
+	GLuint fragment_shader = BuildShader(GL_FRAGMENT_SHADER, source);
+	if (!fragment_shader) {
+		LOG_ERR("OPENGL: Failed compiling fragment shader");
+		glDeleteShader(vertex_shader);
+		return false;
+	}
+
+	GLuint shader_program = glCreateProgram();
+	if (!shader_program) {
+		LOG_ERR("OPENGL: Failed creating shader program");
+		glDeleteShader(vertex_shader);
+		glDeleteShader(fragment_shader);
+		return false;
+	}
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+	glLinkProgram(shader_program);
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	GLint is_program_linked;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &is_program_linked);
+	if (is_program_linked == GL_FALSE) {
+		GLint log_length;
+		glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length);
+
+		std::vector<GLchar> info_log(static_cast<size_t>(log_length));
+		glGetProgramInfoLog(shader_program, log_length, nullptr, info_log.data());
+
+		LOG_ERR("OPENGL: Failed linking shader program: %s",
+		        info_log.data());
+
+		glDeleteProgram(shader_program);
+		return false;
+	}
+
+	glUseProgram(shader_program);
+
+	// Set vertex data.
+	GLint uniform = glGetAttribLocation(shader_program, "a_position");
+	// upper left
+	sdl.opengl.vertex_data[0] = -1.0f;
+	sdl.opengl.vertex_data[1] = 1.0f;
+	// lower left
+	sdl.opengl.vertex_data[2] = -1.0f;
+	sdl.opengl.vertex_data[3] = -3.0f;
+	// upper right
+	sdl.opengl.vertex_data[4] = 3.0f;
+	sdl.opengl.vertex_data[5] = 1.0f;
+	// Load the vertex positions
+	glVertexAttribPointer(uniform, 2, GL_FLOAT, GL_FALSE, 0, sdl.opengl.vertex_data);
+	glEnableVertexAttribArray(uniform);
+
+	// Retrieve shader uniforms.
+	uniform = glGetUniformLocation(shader_program, "rubyTexture");
+	glUniform1i(uniform, 0);
+
+	sdl.opengl.ruby.texture_size = glGetUniformLocation(shader_program,
+	                                                    "rubyTextureSize");
+	sdl.opengl.ruby.input_size   = glGetUniformLocation(shader_program,
+                                                          "rubyInputSize");
+	sdl.opengl.ruby.output_size  = glGetUniformLocation(shader_program,
+                                                           "rubyOutputSize");
+	sdl.opengl.ruby.frame_count  = glGetUniformLocation(shader_program,
+                                                           "rubyFrameCount");
+
+	if (sdl.opengl.program_object) {
+		glDeleteProgram(sdl.opengl.program_object);
+	}
+	sdl.opengl.program_object = shader_program;
+
+	return true;
 }
 #endif
 
@@ -1556,30 +1871,11 @@ bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 	return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
-static void initialize_sdl_window_size(SDL_Window* sdl_window,
-                                       const SDL_Point requested_min_size,
-                                       const SDL_Point requested_size)
-{
-	assert(sdl_window);
-
-	// Set the (bounded) window size, if not already matching
-	SDL_Point current_size = {};
-	SDL_GetWindowSize(sdl_window, &current_size.x, &current_size.y);
-	SDL_Point bounded_size = {std::max(requested_size.x, requested_min_size.x),
-	                          std::max(requested_size.y, requested_min_size.y)};
-	if (current_size != bounded_size) {
-		safe_set_window_size(bounded_size.x, bounded_size.y);
-		// LOG_MSG("SDL: Initialized the window size to %dx%d",
-		//         bounded_size.x,
-		//         bounded_size.y);
-	}
-}
-
 uint8_t GFX_SetSize(const int width, const int height,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback)
 {
-	uint8_t retFlags = 0;
+	const uint8_t retFlags = sdl.gfx_flags;
 	if (sdl.updating)
 		GFX_EndUpdate(nullptr);
 
@@ -1616,413 +1912,42 @@ uint8_t GFX_SetSize(const int width, const int height,
 	}
 
 	switch (sdl.desktop.want_type) {
-	case SCREEN_TEXTURE: {
-	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
-
-		if (!SetupWindowScaled(SCREEN_TEXTURE)) {
-			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("Creating window failed");
-		}
-
-		/* Use renderer's default format */
-		SDL_RendererInfo rinfo;
-		SDL_GetRendererInfo(sdl.renderer, &rinfo);
-		const auto texture_format = rinfo.texture_formats[0];
-
-		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
-		                                        texture_format,
-		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        width,
-		                                        height);
-
-		if (!sdl.texture.texture) {
-			SDL_DestroyRenderer(sdl.renderer);
-			sdl.renderer = nullptr;
-			E_Exit("SDL: Failed to create texture");
-		}
-
-		// release the existing surface if needed
-		auto &texture_input_surface = sdl.texture.input_surface;
-		if (texture_input_surface) {
-			SDL_FreeSurface(texture_input_surface);
-			texture_input_surface = nullptr;
-		}
-		assert(texture_input_surface == nullptr); // ensure we don't leak
-		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, width, height, 32, texture_format);
-		if (!texture_input_surface) {
-			E_Exit("SDL: Error while preparing texture input");
-		}
-
-		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-		uint32_t pixel_format;
-		assert(sdl.texture.texture);
-		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
-
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
-		switch (SDL_BITSPERPIXEL(pixel_format)) {
-			case 8:  retFlags = GFX_CAN_8;  break;
-			case 15: retFlags = GFX_CAN_15; break;
-			case 16: retFlags = GFX_CAN_16; break;
-			case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
-			case 32: retFlags = GFX_CAN_32; break;
-		        }
-
-		// Log changes to the rendering driver
-		static std::string render_driver = {};
-		if (render_driver != rinfo.name) {
-			LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
-			        rinfo.name,
-			        SDL_BITSPERPIXEL(pixel_format));
-			render_driver = rinfo.name;
-		}
-
-		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
-			retFlags |= GFX_CAN_RANDOM;
-		}
-
-		// Re-apply the minimum bounds prior to clipping the
-		// texture-based window because SDL invalidates the prior bounds
-		// in the above changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
-
-		// One-time intialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-		const auto canvas = get_canvas_size(sdl.desktop.want_type);
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas.w - sdl.clip.w) / 2,
-		//         (canvas.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip) != 0)
-			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
-
-		sdl.frame.update = update_frame_texture;
+	case SCREEN_TEXTURE:
+		sdl.frame.update  = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
-
 		break; // SCREEN_TEXTURE
-	}
 #if C_OPENGL
 	case SCREEN_OPENGL: {
-		free(sdl.opengl.framebuf);
-		sdl.opengl.framebuf = nullptr;
-		if (!(flags & GFX_CAN_32)) {
-			goto fallback_texture;
-		}
-
-		int texsize_w, texsize_h;
-
-		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
-		                              sdl.opengl.shader_info.settings.use_npot_texture;
-#if 0
-		if (use_npot_texture) {
-			LOG_MSG("OPENGL: Using NPOT texture");
-		} else {
-			LOG_MSG("OPENGL: Not using NPOT texture");
-		}
-#endif
-
-		if (use_npot_texture) {
-			texsize_w = width;
-			texsize_h = height;
-		} else {
-			texsize_w = 2 << int_log2(width);
-			texsize_h = 2 << int_log2(height);
-		}
-
-		if (texsize_w > sdl.opengl.max_texsize ||
-		    texsize_h > sdl.opengl.max_texsize) {
-			LOG_WARNING("SDL:OPENGL: No support for texture size of %dx%d, falling back to texture",
-			            texsize_w,
-			            texsize_h);
-			goto fallback_texture;
-		}
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
-		                                                 "unknown vendor");
-#if WIN32
-		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
-#else
-		constexpr auto is_vendors_srgb_unreliable = false;
-#endif
-		if (is_vendors_srgb_unreliable) {
-			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
-			            " because %s's driver is unreliable",
-			            gl_vendor.data());
-		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
-			        SDL_GetError());
-		}
-
-		// Re-apply the minimum bounds prior to clipping the OpenGL
-		// window because SDL invalidates the prior bounds in the above
-		// window changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
-
-		SetupWindowScaled(SCREEN_OPENGL);
-
-		/* We may simply use SDL_BYTESPERPIXEL
-		here rather than SDL_BITSPERPIXEL   */
-		if (!sdl.window ||
-		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
-			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
-			goto fallback_texture;
-		}
-
-		GLuint prog = 0;
-		// reset error
-		glGetError();
-		glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prog);
-		// if there was an error this context doesn't support shaders
-		if (glGetError() == GL_NO_ERROR &&
-		    (sdl.opengl.program_object == 0 ||
-		     prog != sdl.opengl.program_object)) {
-			// check if existing program is valid
-			if (sdl.opengl.program_object) {
-				glUseProgram(sdl.opengl.program_object);
-				if (glGetError() != GL_NO_ERROR) {
-					// program is not usable (probably new
-					// context), purge it
-					glDeleteProgram(sdl.opengl.program_object);
-					sdl.opengl.program_object = 0;
-				}
-			}
-
-			// does program need to be rebuilt?
-			if (sdl.opengl.program_object == 0) {
-				GLuint vertexShader, fragmentShader;
-
-				if (!LoadGLShaders(sdl.opengl.shader_source,
-				                   &vertexShader,
-				                   &fragmentShader)) {
-					LOG_ERR("SDL:OPENGL: Failed to compile shader!");
-					goto fallback_texture;
-				}
-
-				sdl.opengl.program_object = glCreateProgram();
-				if (!sdl.opengl.program_object) {
-					glDeleteShader(vertexShader);
-					glDeleteShader(fragmentShader);
-					LOG_WARNING("SDL:OPENGL: Can't create program object, falling back to texture");
-					goto fallback_texture;
-				}
-				glAttachShader(sdl.opengl.program_object,
-				               vertexShader);
-				glAttachShader(sdl.opengl.program_object,
-				               fragmentShader);
-				// Link the program
-				glLinkProgram(sdl.opengl.program_object);
-				// Even if we *are* successful, we may delete
-				// the shader objects
-				glDeleteShader(vertexShader);
-				glDeleteShader(fragmentShader);
-
-				// Check the link status
-				GLint isProgramLinked;
-				glGetProgramiv(sdl.opengl.program_object,
-				               GL_LINK_STATUS,
-				               &isProgramLinked);
-				if (!isProgramLinked) {
-					GLint info_len = 0;
-					glGetProgramiv(sdl.opengl.program_object,
-					               GL_INFO_LOG_LENGTH,
-					               &info_len);
-
-					if (info_len > 1) {
-						std::vector<GLchar> info_log(info_len);
-						glGetProgramInfoLog(sdl.opengl.program_object,
-						                    info_len,
-						                    nullptr,
-						                    info_log.data());
-						LOG_ERR("SDL:OPENGL: Error link program:\n %s",
-						        info_log.data());
-					}
-					glDeleteProgram(sdl.opengl.program_object);
-					sdl.opengl.program_object = 0;
-					goto fallback_texture;
-				}
-
-				glUseProgram(sdl.opengl.program_object);
-
-				GLint u = glGetAttribLocation(sdl.opengl.program_object,
-				                              "a_position");
-				// upper left
-				sdl.opengl.vertex_data[0] = -1.0f;
-				sdl.opengl.vertex_data[1] = 1.0f;
-				// lower left
-				sdl.opengl.vertex_data[2] = -1.0f;
-				sdl.opengl.vertex_data[3] = -3.0f;
-				// upper right
-				sdl.opengl.vertex_data[4] = 3.0f;
-				sdl.opengl.vertex_data[5] = 1.0f;
-				// Load the vertex positions
-				glVertexAttribPointer(u,
-				                      2,
-				                      GL_FLOAT,
-				                      GL_FALSE,
-				                      0,
-				                      sdl.opengl.vertex_data);
-				glEnableVertexAttribArray(u);
-
-				u = glGetUniformLocation(sdl.opengl.program_object,
-				                         "rubyTexture");
-				glUniform1i(u, 0);
-
-				sdl.opengl.ruby.texture_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyTextureSize");
-				sdl.opengl.ruby.input_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyInputSize");
-				sdl.opengl.ruby.output_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyOutputSize");
-				sdl.opengl.ruby.frame_count = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyFrameCount");
-			}
-		}
-
-		/* Create the texture */
-		const auto framebuffer_bytes = static_cast<size_t>(width) *
-		                               height * MAX_BYTES_PER_PIXEL;
-		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = width * 4;
-
-		// One-time initialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-
-		const auto canvas = get_canvas_size(sdl.desktop.want_type);
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas.w - sdl.clip.w) / 2,
-		//         (canvas.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
-
-		if (sdl.opengl.texture > 0) {
-			glDeleteTextures(1, &sdl.opengl.texture);
-		}
-		glGenTextures(1, &sdl.opengl.texture);
-		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-		// No borders
-		const auto wrap_parameter = use_npot_texture ? GL_CLAMP_TO_EDGE
-		                                             : GL_CLAMP_TO_BORDER;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
-
-		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
-		                              ? GL_NEAREST
-		                              : GL_LINEAR);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-
-		const auto texture_area_bytes = static_cast<size_t>(texsize_w) *
-		                                texsize_h * MAX_BYTES_PER_PIXEL;
-		uint8_t* emptytex = new uint8_t[texture_area_bytes];
-		assert(emptytex);
-
-		memset(emptytex, 0, texture_area_bytes);
-
-		int is_framebuffer_srgb_capable = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &is_framebuffer_srgb_capable)) {
-			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
-			            SDL_GetError());
-		}
-
-		sdl.opengl.framebuffer_is_srgb_encoded =
-		        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		        (is_framebuffer_srgb_capable > 0);
-
-		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		    !sdl.opengl.framebuffer_is_srgb_encoded) {
-			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-		}
-
-		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
-		// with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
-		                                       sdl.opengl.framebuffer_is_srgb_encoded
-		                             ? GL_SRGB8_ALPHA8
-		                             : GL_RGB8;
-
-#if 0
-		if (texformat == GL_SRGB8_ALPHA8) {
-			LOG_MSG("OPENGL: Using sRGB texture");
-		}
-#endif
-
-		glTexImage2D(GL_TEXTURE_2D,
-		             0,
-		             texformat,
-		             texsize_w,
-		             texsize_h,
-		             0,
-		             GL_BGRA_EXT,
-		             GL_UNSIGNED_BYTE,
-		             emptytex);
-		delete[] emptytex;
-
-		if (sdl.opengl.framebuffer_is_srgb_encoded) {
-			glEnable(GL_FRAMEBUFFER_SRGB);
-#if 0
-			LOG_MSG("OPENGL: Using sRGB framebuffer");
-#endif
-		} else {
-			glDisable(GL_FRAMEBUFFER_SRGB);
-		}
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(sdl.window);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_TEXTURE_2D);
-
-		// Set shader variables
-		glUniform2f(sdl.opengl.ruby.texture_size,
-		            (GLfloat)texsize_w,
-		            (GLfloat)texsize_h);
-		glUniform2f(sdl.opengl.ruby.input_size, (GLfloat)width, (GLfloat)height);
-		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip.w,
-		            (GLfloat)sdl.clip.h);
-		// The following uniform is *not* set right now
-		sdl.opengl.actual_frame_count = 0;
-
-		OPENGL_ERROR("End of setsize");
-
-		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
 		sdl.frame.update  = update_frame_gl;
 		sdl.frame.present = present_frame_gl;
 		break; // SCREEN_OPENGL
 	}
 #endif // C_OPENGL
 	}
+
+	// Update fullscreen display mode.
+	if (!sdl.desktop.full.fixed) {
+		SDL_DisplayMode emulated_mode, out_mode;
+		SDL_GetDesktopDisplayMode(sdl.display_number, &emulated_mode);
+		emulated_mode.w = sdl.draw.width;
+		emulated_mode.h = sdl.draw.height;
+		SDL_GetClosestDisplayMode(sdl.display_number, &emulated_mode, &out_mode);
+		SDL_SetWindowDisplayMode(sdl.window, &out_mode);
+	}
+
+	if (!update_textures()) {
+		CleanupSDLResources();
+		E_Exit("Failed to update texture");
+	}
+	update_viewport();
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		update_shader_uniforms();
+	}
+#endif
+
+	setup_presentation_mode(sdl.frame.mode);
+
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
@@ -2031,8 +1956,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
 		                       sdl.video_mode,
-		                       {},
-		                       sdl.desktop.type);
+		                       {});
 	}
 
 	if (retFlags) {
@@ -2199,12 +2123,10 @@ void sticky_keys(bool restore){
 
 void GFX_SwitchFullScreen()
 {
-	sdl.desktop.switching_fullscreen = true;
-
 	// Record the window's current canvas size if we're departing window-mode
 	auto &window_canvas_size = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen)
-		window_canvas_size = get_canvas_size(sdl.desktop.type);
+		window_canvas_size = get_canvas_size();
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
@@ -2213,30 +2135,33 @@ void GFX_SwitchFullScreen()
 	// so we simply apply the bool of the mode we're switching out-of.
 	sticky_keys(sdl.desktop.fullscreen);
 #endif
-	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
-	GFX_ResetScreen();
+	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN) {
+		SDL_SetWindowFullscreen(sdl.window, 0);
+		sdl.desktop.fullscreen = false;
+	} else {
+		SDL_SetWindowFullscreen(sdl.window,
+		                        sdl.desktop.full.display_res
+		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
+		                                : SDL_WINDOW_FULLSCREEN);
+		sdl.desktop.fullscreen = true;
+	}
+
 	FocusInput();
 	setup_presentation_mode(sdl.frame.mode);
 
 	// After switching modes, get the current canvas size, which might be
 	// the windowed size or full screen size.
-	auto canvas_size = sdl.desktop.fullscreen
-	                         ? get_canvas_size(sdl.desktop.type)
-	                         : window_canvas_size;
+	auto canvas_size = sdl.desktop.fullscreen ? get_canvas_size()
+	                                          : window_canvas_size;
 
-	log_display_properties(sdl.draw.width,
-	                       sdl.draw.height,
-	                       sdl.video_mode,
-	                       canvas_size,
-	                       sdl.desktop.type);
-
-	sdl.desktop.switching_fullscreen = false;
+	log_display_properties(sdl.draw.width, sdl.draw.height, sdl.video_mode, canvas_size);
 }
 
 static void SwitchFullScreen(bool pressed)
 {
-	if (pressed)
+	if (pressed) {
 		GFX_SwitchFullScreen();
+	}
 }
 
 // This function returns write'able buffer for user to draw upon. Successful
@@ -2245,7 +2170,7 @@ static void SwitchFullScreen(bool pressed)
 // initialized output-specific bits (sdl.texture or sdl.opengl.framebuf fields).
 //
 // If everything is prepared correctly, this function returns true, assigns
-// 'pixels' output parameter to to a buffer (with format specified via earlier
+// 'pixels' output parameter to a buffer (with format specified via earlier
 // GFX_SetSize call), and assigns 'pitch' to a number of bytes used for a single
 // pixels row in 'pixels' buffer.
 //
@@ -2541,17 +2466,41 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void CleanupSDLResources()
 {
+#if C_OPENGL
+	if (sdl.opengl.framebuf) {
+		free(sdl.opengl.framebuf);
+		sdl.opengl.framebuf = nullptr;
+	}
+	if (sdl.opengl.texture) {
+		glDeleteTextures(1, &sdl.opengl.texture);
+		sdl.opengl.texture = 0;
+	}
+	if (sdl.opengl.program_object) {
+		glDeleteProgram(sdl.opengl.program_object);
+		sdl.opengl.program_object = 0;
+	}
+	if (sdl.opengl.context) {
+		SDL_GL_DeleteContext(sdl.opengl.context);
+		sdl.opengl.context = nullptr;
+	}
+#endif
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
 		sdl.texture.pixelFormat = nullptr;
 	}
-	if (sdl.texture.texture) {
-		SDL_DestroyTexture(sdl.texture.texture);
+	if (sdl.renderer) {
+		// Frees associated textures automatically.
+		SDL_DestroyRenderer(sdl.renderer);
+		sdl.renderer        = nullptr;
 		sdl.texture.texture = nullptr;
 	}
 	if (sdl.texture.input_surface) {
 		SDL_FreeSurface(sdl.texture.input_surface);
 		sdl.texture.input_surface = nullptr;
+	}
+	if (sdl.window) {
+		SDL_DestroyWindow(sdl.window);
+		sdl.window = nullptr;
 	}
 }
 
@@ -2567,18 +2516,6 @@ static void GUI_ShutDown(Section *)
 	GFX_SetMouseVisibility(true);
 
 	CleanupSDLResources();
-	if (sdl.renderer) {
-		SDL_DestroyRenderer(sdl.renderer);
-		sdl.renderer = nullptr;
-	}
-#if C_OPENGL
-	if (sdl.opengl.context) {
-		SDL_GL_DeleteContext(sdl.opengl.context);
-		sdl.opengl.context = nullptr;
-	}
-#endif
-
-	remove_window();
 }
 
 static void SetPriority(PRIORITY_LEVELS level)
@@ -2635,28 +2572,6 @@ static void SetPriority(PRIORITY_LEVELS level)
 	default:
 		break;
 	}
-}
-
-static SDL_Window *SetDefaultWindowMode()
-{
-	if (sdl.window)
-		return sdl.window;
-
-	sdl.draw.width = FALLBACK_WINDOW_DIMENSIONS.x;
-	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
-
-	if (sdl.desktop.fullscreen) {
-		sdl.desktop.lazy_init_window_size = true;
-		return SetWindowMode(sdl.desktop.want_type,
-		                     sdl.desktop.full.width,
-		                     sdl.desktop.full.height,
-		                     sdl.desktop.fullscreen);
-	}
-	sdl.desktop.lazy_init_window_size = false;
-	return SetWindowMode(sdl.desktop.want_type,
-	                     sdl.desktop.window.width,
-	                     sdl.desktop.window.height,
-	                     sdl.desktop.fullscreen);
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
@@ -2852,8 +2767,10 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 
 static void setup_initial_window_position_from_conf(const std::string &window_position_val)
 {
-	sdl.desktop.window.initial_x_pos = -1;
-	sdl.desktop.window.initial_y_pos = -1;
+	sdl.desktop.window.initial_x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+	        sdl.display_number);
+	sdl.desktop.window.initial_y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+	        sdl.display_number);
 
 	if (window_position_val == "auto")
 		return;
@@ -3103,6 +3020,15 @@ InterpolationMode GFX_GetInterpolationMode()
 	return sdl.interpolation_mode;
 }
 
+/**
+ * Responsible for setup/switching renderer (e.g. SDL, OpenGL).
+ *
+ * As specific renderers require appropriate window flags,
+ * the window also gets recreated.
+ *
+ * Make sure to call CleanupSDLResources() before calling this.
+ * (TODO: Or perhaps just do it here unconditionally?)
+ */
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
 	// Apply the user's mouse settings
@@ -3143,12 +3069,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		sdl.desktop.want_type = SCREEN_TEXTURE;
 	}
 
-	const std::string screensaver = section->Get_string("screensaver");
-	if (screensaver == "allow")
-		SDL_EnableScreenSaver();
-	if (screensaver == "block")
-		SDL_DisableScreenSaver();
-
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 	if (sdl.render_driver != "auto") {
@@ -3170,110 +3090,39 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	                             sdl.interpolation_mode,
 	                             wants_aspect_ratio_correction);
 
-#if C_OPENGL
-	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
-		if (!SetDefaultWindowMode()) {
-			LOG_WARNING("Could not create OpenGL window, switching back to texture");
-			sdl.desktop.want_type = SCREEN_TEXTURE;
-		} else {
-			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-			if (sdl.opengl.context == nullptr) {
-				LOG_WARNING("Could not create OpenGL context, switching back to texture");
-				sdl.desktop.want_type = SCREEN_TEXTURE;
-			}
-		}
-		if (sdl.desktop.want_type == SCREEN_OPENGL) {
-			sdl.opengl.program_object = 0;
-			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
-			        "glAttachShader");
-			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
-			        "glCompileShader");
-			glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glCreateProgram");
-			glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress(
-			        "glCreateShader");
-			glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glDeleteProgram");
-			glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress(
-			        "glDeleteShader");
-			glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
-			        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
-			glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)
-			        SDL_GL_GetProcAddress("glGetAttribLocation");
-			glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress(
-			        "glGetProgramiv");
-			glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)
-			        SDL_GL_GetProcAddress("glGetProgramInfoLog");
-			glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress(
-			        "glGetShaderiv");
-			glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)
-			        SDL_GL_GetProcAddress("glGetShaderInfoLog");
-			glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)
-			        SDL_GL_GetProcAddress("glGetUniformLocation");
-			glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glLinkProgram");
-			glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
-			        "glShaderSource");
-			glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress(
-			        "glUniform2f");
-			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress(
-			        "glUniform1i");
-			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glUseProgram");
-			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)
-			        SDL_GL_GetProcAddress("glVertexAttribPointer");
-			if (!(glAttachShader && glCompileShader &&
-			      glCreateProgram && glDeleteProgram && glDeleteShader &&
-			      glEnableVertexAttribArray && glGetAttribLocation &&
-			      glGetProgramiv && glGetProgramInfoLog &&
-			      glGetShaderiv && glGetShaderInfoLog &&
-			      glGetUniformLocation && glLinkProgram &&
-			      glShaderSource && glUniform2f && glUniform1i &&
-			      glUseProgram && glVertexAttribPointer)) {
-				LOG_WARNING("OPENGL: No shaders support present, falling back to texture");
-				sdl.desktop.want_type = SCREEN_TEXTURE;
-			}
-		}
+	sdl.draw.width  = FALLBACK_WINDOW_DIMENSIONS.x;
+	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
 
-		if (sdl.desktop.want_type == SCREEN_OPENGL) {
-			sdl.opengl.framebuf = nullptr;
-			sdl.opengl.texture  = 0;
-			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-
-			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
-			                                                  "0.0.0");
-			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.npot_textures_supported =
-			        gl_version_major >= 2 ||
-			        SDL_GL_ExtensionSupported(
-			                "GL_ARB_texture_non_power_of_two");
-
-			std::string npot_support_msg = sdl.opengl.npot_textures_supported
-			                                     ? "supported"
-			                                     : "not supported";
-
-			LOG_INFO("OPENGL: Vendor: %s",
-			         safe_gl_get_string(GL_VENDOR, "unknown"));
-
-			LOG_INFO("OPENGL: Version: %s", gl_version_string);
-
-			LOG_INFO("OPENGL: GLSL version: %s",
-			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
-			                            "unknown"));
-
-			LOG_INFO("OPENGL: NPOT textures %s",
-			         npot_support_msg.c_str());
-		}
-	} /* OPENGL is requested end */
-#endif    // OPENGL
-
-	if (!SetDefaultWindowMode())
-		E_Exit("Could not initialize video: %s", SDL_GetError());
+	sdl.window = create_window();
+	if (!sdl.window) {
+		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
+	}
 
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
+
+#if C_OPENGL
+	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
+		if (!create_gl_renderer()) {
+			LOG_WARNING("SDL: Could not create OpenGL context, switching back to texture output");
+			SDL_GL_ResetAttributes();
+			sdl.desktop.want_type = SCREEN_TEXTURE;
+		} else {
+			sdl.desktop.type = SCREEN_OPENGL;
+			return;
+		}
+	} /* OPENGL is requested end */
+#endif    // OPENGL
+
+	sdl.renderer = create_sdl_renderer();
+	if (!sdl.renderer) {
+		CleanupSDLResources();
+		E_Exit("SDL: Failed to create SDL renderer");
+		return;
+	}
+
+	sdl.desktop.type = SCREEN_TEXTURE;
 }
 
 // extern void UI_Run(bool);
@@ -3330,8 +3179,7 @@ static void GUI_StartUp(Section *sec)
 	Section_prop *section = static_cast<Section_prop *>(sec);
 
 	sdl.active = false;
-	sdl.updating        = false;
-	sdl.resizing_window = false;
+	sdl.updating = false;
 	sdl.wait_on_error = section->Get_bool("waitonerror");
 
 	sdl.desktop.fullscreen = control->arguments.fullscreen ||
@@ -3425,9 +3273,17 @@ static void GUI_StartUp(Section *sec)
 	}
 
 	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
+	check_and_handle_dpi_change(sdl.window);
 
-	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
+
+	const std::string screensaver = section->Get_string("screensaver");
+	if (screensaver == "allow") {
+		SDL_EnableScreenSaver();
+	}
+	if (screensaver == "block") {
+		SDL_DisableScreenSaver();
+	}
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
@@ -3505,7 +3361,7 @@ void GFX_RegenerateWindow(Section *sec) {
 		first_window = false;
 		return;
 	}
-	remove_window();
+	CleanupSDLResources();
 	set_output(sec, RENDER_IsAspectRatioCorrectionEnabled());
 	GFX_ResetScreen();
 }
@@ -3517,88 +3373,9 @@ void GFX_RegenerateWindow(Section *sec) {
 #define DB_POLLSKIP 1
 #endif
 
-static void HandleVideoResize(int width, int height)
-{
-	/* Maybe a screen rotation has just occurred, so we simply resize.
-	There may be a different cause for a forced resized, though.    */
-	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
-		/* Note: We should not use GFX_ObtainDisplayDimensions
-		(SDL_GetDisplayBounds) on Android after a screen rotation:
-		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
-		sdl.desktop.full.height = height;
-	}
-
-	const auto canvas = get_canvas_size(sdl.desktop.type);
-	sdl.clip          = calc_viewport(canvas.w, canvas.h);
-	if (sdl.desktop.type == SCREEN_TEXTURE) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
-	}
-#if C_OPENGL
-	if (sdl.desktop.type == SCREEN_OPENGL) {
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
-		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip.w,
-		            (GLfloat)sdl.clip.h);
-	}
-#endif // C_OPENGL
-
-	if (!sdl.desktop.fullscreen) {
-		// If the window was resized, it might have been
-		// triggered by the OS setting DPI scale, so recalculate
-		// that based on the incoming logical width.
-		check_and_handle_dpi_change(sdl.window, sdl.desktop.type, width);
-	}
-
-	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
-}
-
-/* TODO: Properly set window parameters and remove this routine.
- *
- * This function is triggered after window is shown to fixup sdl.window
- * properties in predictable manner on all platforms.
- *
- * In specific usecases, certain sdl.window properties might be left unitialized
- * when starting in fullscreen, which might trigger severe problems for end
- * users (e.g. placing window partially off-screen, or using fullscreen
- * resolution for window size).
- */
-static void FinalizeWindowState()
-{
-	assert(sdl.window);
-
-	if (!sdl.desktop.lazy_init_window_size)
-		return;
-
-	// Don't change window position or size when state changed to
-	// fullscreen.
-	if (sdl.desktop.fullscreen)
-		return;
-
-	// Once window is fixed up once, OS or Window Manager will deal with it
-	// on future expose events.
-	sdl.desktop.lazy_init_window_size = false;
-
-	safe_set_window_size(sdl.desktop.window.width, sdl.desktop.window.height);
-
-	// Force window position when dosbox is configured to start in
-	// fullscreen.  Otherwise SDL will reset window position to 0,0 when
-	// switching to a window for the first time. This is happening on every
-	// OS, but only on Windows it's a really big problem (because window
-	// decorations are rendered off-screen).
-	const auto default_val = SDL_WINDOWPOS_CENTERED_DISPLAY(sdl.display_number);
-	const auto pos = get_initial_window_position_or_default(default_val);
-	SDL_SetWindowPosition(sdl.window, pos.x, pos.y);
-
-	// In some cases (not always), leaving fullscreen breaks window content,
-	// screen reset restores rendering to the working state.
-	GFX_ResetScreen();
-}
-
 static void maybe_auto_switch_shader()
 {
-	const auto canvas = get_canvas_size(sdl.desktop.type);
+	const auto canvas = get_canvas_size();
 
 	constexpr auto reinit_render = true;
 	RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
@@ -3760,8 +3537,7 @@ bool GFX_Events()
 				// New display might have a different resolution
 				// and DPI scaling set, so recalculate that and
 				// set viewport
-				check_and_handle_dpi_change(sdl.window,
-				                            sdl.desktop.type);
+				check_and_handle_dpi_change(sdl.window);
 
 				SDL_Rect display_bounds = {};
 				SDL_GetDisplayBounds(event.window.data1,
@@ -3771,22 +3547,8 @@ bool GFX_Events()
 
 				sdl.display_number = event.window.data1;
 
-				const auto canvas = get_canvas_size(sdl.desktop.type);
-				sdl.clip = calc_viewport(canvas.w, canvas.h);
-				if (sdl.desktop.type == SCREEN_TEXTURE) {
-					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.clip);
-				}
-#	if C_OPENGL
-				if (sdl.desktop.type == SCREEN_OPENGL) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
-				}
-
+				update_viewport();
 				maybe_auto_switch_shader();
-#	endif
 				NewMouseScreenParams();
 				continue;
 			}
@@ -3798,9 +3560,11 @@ bool GFX_Events()
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				HandleVideoResize(event.window.data1, event.window.data2);
-				FinalizeWindowState();
+				check_and_handle_dpi_change(sdl.window,
+				                            event.window.data1);
+				update_viewport();
 				maybe_auto_switch_shader();
+				NewMouseScreenParams();
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:

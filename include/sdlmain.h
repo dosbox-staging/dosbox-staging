@@ -96,10 +96,9 @@ enum PRIORITY_LEVELS {
 };
 
 struct SDL_Block {
-	bool initialized = false;
-	bool active = false; // If this isn't set don't draw
-	bool updating        = false;
-	bool resizing_window = false;
+	bool initialized   = false;
+	bool active        = false; // If this isn't set don't draw
+	bool updating      = false;
 	bool wait_on_error = false;
 
 	InterpolationMode interpolation_mode    = InterpolationMode::Bilinear;
@@ -131,8 +130,8 @@ struct SDL_Block {
 			int height = 0;
 			bool show_decorations = true;
 			bool adjusted_initial_size = false;
-			int initial_x_pos = -1;
-			int initial_y_pos = -1;
+			int initial_x_pos = SDL_WINDOWPOS_UNDEFINED;
+			int initial_y_pos = SDL_WINDOWPOS_UNDEFINED;
 			// instantaneous canvas size of the window
 			SDL_Rect canvas_size = {};
 		} window = {};
@@ -145,15 +144,6 @@ struct SDL_Block {
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
 
-		// This flag indicates, that we are in the process of switching
-		// between fullscreen or window (as oppososed to changing
-		// rendering size due to rotating screen, emulation state, or
-		// user resizing the window).
-		bool switching_fullscreen = false;
-		// Lazy window size init triggers updating window size and
-		// position when leaving fullscreen for the first time.
-		// See FinalizeWindowState function for details.
-		bool lazy_init_window_size  = false;
 		HostRateMode host_rate_mode = HostRateMode::Auto;
 		double preferred_host_rate  = 0.0;
 		SCREEN_TYPES type           = SCREEN_TEXTURE;
@@ -180,7 +170,6 @@ struct SDL_Block {
 		GLuint texture;
 		GLint max_texsize;
 		bool bilinear;
-		bool npot_textures_supported = false;
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 
@@ -210,6 +199,7 @@ struct SDL_Block {
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
 	int display_number = 0;
+	uint8_t gfx_flags = 0;
 
 	struct {
 		SDL_Surface *input_surface = nullptr;
