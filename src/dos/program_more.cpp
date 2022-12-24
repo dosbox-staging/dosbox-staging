@@ -197,7 +197,7 @@ void MORE::AddMessages()
 	        "  /p      expands the new page / form feed character.\n"
 	        "  /s      squishes multiple empty lines into one.\n"
 	        "  /t[color=white]n[reset]     specifies the tab size, 1-9, default is 8.\n"
-	        "  +[color=white]nnn[reset]    line number to start the first file from.\n"
+	        "  +[color=white]nnn[reset]    skips first [color=white]nnn[reset] lines of the first file.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command is only for viewing text files, not binary files.\n"
