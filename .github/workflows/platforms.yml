@@ -97,8 +97,7 @@ jobs:
                 dnf -q -y update
                 dnf -q -y install git which curl findutils procps-ng tar zstd screenfetch
                 dnf -q -y install cmake desktop-file-utils gcc gcc-c++ gmock-devel gtest-devel \
-                                  libappstream-glib libatomic meson opusfile-devel SDL2-devel zlib-devel \
-                                  libspeexdsp-devel
+                                  libappstream-glib libatomic meson opusfile-devel SDL2-devel zlib-devel
                 ;;
               alpine*)
                 apk update
