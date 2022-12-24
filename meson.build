@@ -622,6 +622,7 @@ if host_machine.system() == 'darwin'
             conf_data.set10('C_COREAUDIO', true)
         else
             warning('''Core Audio disabled because header is unusable''')
+            coreaudio_dep = disabler()
         endif
     else
         warning('''Core Audio disabled because Apple Framework missing''')
@@ -639,6 +640,7 @@ if host_machine.system() == 'darwin'
             conf_data.set10('C_COREMIDI', true)
         else
             warning('''Core Audio disabled because header is unusable''')
+            coremidi_dep = disabler()
         endif
     else
         warning('''Core MIDI disabled because Apple Framework missing''')
@@ -668,6 +670,7 @@ if host_machine.system() == 'darwin'
                 conf_data.set10('C_IOKIT', true)
             else
                 warning('''IOKit disabled because compiler cannot handle it''')
+                iokit_dep = disabler()
             endif
         else
             warning('''IOKit disabled because header is unusable''')
@@ -688,6 +691,7 @@ if host_machine.system() == 'darwin'
             conf_data.set10('C_COREFOUNDATION', true)
         else
             warning('''Core Foundation disabled because header is unusable''')
+            corefoundation_dep = disabler()
         endif
     else
         warning('''Core Foundation disabled becaue Foundation missing''')
@@ -705,6 +709,7 @@ if host_machine.system() == 'darwin'
             conf_data.set10('C_CORESERVICES', true)
         else
             warning('''Core Services disabled because header is unusable''')
+            coreservices_dep = disabler()
         endif
     else
         warning('''Core Services disabled because Frameworks is missing''')
