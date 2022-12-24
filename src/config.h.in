@@ -130,6 +130,12 @@
 // Define to 1 to enable mouse mapping support
 #mesondefine C_MANYMOUSE
 
+// ManyMouse optionally supports the X Input 2.0 protocol (regardless of OS). It
+// uses the following define to definitively indicate if it should or shouldn't
+// use the X Input 2.0 protocol. If this is left undefined, then ManyMouse makes
+// an assumption about availability based on OS type.
+#mesondefine SUPPORT_XINPUT2
+
 // Compiler supports Core Audio headers
 #mesondefine C_COREAUDIO
 

@@ -68,6 +68,20 @@ option(
     description: 'Enable ALSA MIDI support',
 )
 
+# This option lets packagers control whether ManyMouse uses the optional X Input
+# 2.0 protocol. Because this requires a full X11 library stack, it's useful for
+# distributions that either come with a full X11 environment (and want to make
+# this a hard dependency), or for those without an X11 environment but may still
+# have X11 in their build bots (and don't want this pulled in by accident).
+#
+option(
+    'use_xinput2',
+    type: 'combo',
+    choices: ['auto', 'true', 'false'],
+    value: 'auto',
+    description: 'Let ManyMouse use the X Input 2.0 protocol.'
+)
+
 option(
     'enable_debugger',
     type: 'combo',

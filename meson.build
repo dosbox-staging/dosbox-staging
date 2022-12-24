@@ -715,8 +715,16 @@ endif
 conf_data.set10('C_MANYMOUSE', true)
 manymouse_summary_msg = 'Enabled'
 
-if host_machine.system() == 'darwin'
-  if not conf_data.has('C_IOKIT')
+# ManyMouse optionally supports the X Input 2.0 protocol (regardless of OS)
+xinput2_dep = optional_dep
+xinput2_required = (get_option('use_xinput2') == 'true')
+if xinput2_required or (get_option('use_xinput2') == 'auto')
+  xinput2_dep = dependency('xi', required: xinput2_required)
+endif
+conf_data.set10('SUPPORT_XINPUT2', xinput2_dep.found())
+
+if os_family_name == 'MACOSX'
+  if not iokit_dep.found()
     manymouse_summary_msg = 'Disabled due to host missing IOKit'
     conf_data.set10('C_MANYMOUSE', false)
   endif
@@ -749,13 +757,6 @@ if host_machine.system() in ['windows', 'cygwin']
 
   winmm_dep = cxx.find_library('winmm', required: true)
   summary('Windows Multimedia support', winmm_dep.found())
-endif
-
-# X11 Input Extension dependency for ManyMouse library
-xi_dep = optional_dep
-using_x11 = os_family_name in ['LINUX', 'BSD']
-if using_x11 and (conf_data.get('C_MANYMOUSE') != 0)
-  xi_dep = dependency('xi')
 endif
 
 # Setup include directories
