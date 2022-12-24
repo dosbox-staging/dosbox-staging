@@ -1082,6 +1082,46 @@ enumeracja nieobsługiwana
 :MIDI_DEVICE_NOT_CONFIGURED
 urządzenie nie zostało skonfigurowane
 .
+:PROGRAM_FMPDRV_HELP_LONG
+Ładuje lub usuwa wbudowany sterownik karty ReelMagic Full Motion Player.
+
+Składnia:
+  [color=green]fmpdrv[reset]    (ładuje sterownik)
+  [color=green]fmpdrv[reset] /u (usuwa sterownik z pamięci)
+
+Uwagi:
+  Ustawienie "reelmagic = on" ładuje sterownik podczas startu i uniemożliwia
+  jego usunięcie z pamięci.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player (wbudowany sterownik) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Sterownik załadowany na przerwaniu %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Sterownik został już załadowany na przerwaniu %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Sterownik nie załadowany: brak wolnych przerwań![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Sterownik usunięty[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Sterownik nie został załadowany[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Sterownik nie został usunięty: skonfigurowany jako rezydentny[reset]
+
+.
 :MOUNT_TYPE_LOCAL_DIRECTORY
 katalog lokalny
 .
@@ -1119,10 +1159,11 @@ Gdzie:
   [color=cyan]KLAWISZE[reset]  jeden lub więcej klawiszy oddzielonych spacjami.
 
 Uwagi:
-  Symulowane naciśnięcia klawiszy [color=cyan]KLAWISZE[reset] rozpoczną się po [color=white]CZAS[reset] sekund,
+  Symulowanie naciśnięć klawiszy [color=cyan]KLAWISZE[reset] rozpoczyna się po [color=white]CZAS[reset] sekundach,
   co [color=white]TEMPO[reset] sekund każde. Dodatkowe [color=white]TEMPO[reset] sekund opóźnienia może zostać dodane
   przy użyciu przecinka ('[color=cyan],[reset]'). Domyślne wartości [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
-  sekundy odpowiednio. Listę klawiszy można wyświetlić używając opcji -list.
+  sekundy, odpowiednio. Listę dostępnych klawiszy można wyświetlić używając
+  argumentu -list.
 
 Przykłady:
   [color=green]autotype[reset] -list
@@ -1201,46 +1242,6 @@ Dostępne komendy kartridży PCjr: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Nie znaleziono komend kartridża PCjr.
-.
-:PROGRAM_FMPDRV_HELP_LONG
-Ładuje lub usuwa wbudowany sterownik karty ReelMagic Full Motion Player.
-
-Składnia:
-  [color=green]fmpdrv[reset]    (ładuje sterownik)
-  [color=green]fmpdrv[reset] /u (usuwa sterownik z pamięci)
-
-Uwagi:
-  Ustawienie "reelmagic = on" ładuje sterownik podczas startu i uniemożliwia
-  jego usunięcie z pamięci.
-
-.
-:PROGRAM_FMPDRV_TITLE
-ReelMagic Full Motion Player (wbudowany sterownik) %hhu.%hhu
-
-.
-:PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Sterownik załadowany na przerwaniu %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Sterownik został już załadowany na przerwaniu %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Sterownik nie załadowany: brak wolnych przerwań![reset]
-
-.
-:PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Sterownik usunięty[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Sterownik nie został załadowany[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Sterownik nie został usunięty: skonfigurowany jako rezydentny[reset]
-
 .
 :MSCDEX_SUCCESS
 MSCDEX zainstalowany.
@@ -1710,9 +1711,9 @@ Przykłady:
 Wyświetla plik tekstowy lub rezultat polecenia jeden ekran na raz.
 
 Składnia:
-  [color=cyan]POLECENIE[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]PLIK[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]WZORZEC[reset] [[color=cyan]WZORZEC[reset] ...]
+  [color=cyan]POLECENIE[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]PLIK[reset]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]WZORZEC[reset] [[color=cyan]WZORZEC[reset] ...]
 
 Gdzie:
   [color=cyan]POLECENIE[reset] plecenie, którego rezultat ma być wyświetlony.
@@ -1720,10 +1721,27 @@ Gdzie:
   [color=cyan]WZORZEC[reset]   ścieżka do pojedynczego pliku, lub ścieżka z symbolami
             wieloznaczności (maskami), którymi są asterisk ('*') i znak
             zapytania ('?').
-  [color=white]n[reset]         rozmiar tabulatora, 1-9, domyślnie 8.
+  /c        czyść ekran przed każdym plikiem.
+  /e        tryb rozszerzony, więcej skrótów klawiszowych.
+  /p        interpretuj znak NewPage/FormFeed.
+  /s        łącz wiele pustych linii w jedną.
+  /t[color=white]n[reset]       rozmiar tabulatora, 1-9, domyślnie 8.
+  +[color=white]nnn[reset]      ile linii pominąć na początku pierwszego pliku.
 
 Uwagi:
   Używać tylko do plików tekstowych, nie należy używać do plików binarnych.
+  Obsługiwane są następujące klawisze:
+  [color=yellow]Spacja[reset]         pokaż następny ekran.
+  [color=yellow]Enter[reset]          pokaż następną linię.
+  [color=yellow]N[reset] lub [color=yellow]F[reset]        przejdź do kolejnego pliku.
+  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] przerwij polecenie.
+  Ponadto można użyć [color=yellow]Ctrl+C[reset] do przerwania polecenia czytającego z klawiatury,
+  na przykład jeśli [color=green]more[reset] zostało wywołane bez argumentów.
+  Następujące klawisze są dostępne wyłącznie w trybie rozszerzonym:
+  [color=yellow]P[reset] [color=white]nnn[reset]          wyświetl następne [color=white]nnn[reset] linii.
+  [color=yellow]S[reset] [color=white]nnn[reset]          pomiń kolejne [color=white]nnn[reset] linii.
+  [color=yellow]=[reset]              wyświetl aktualny numer linii.
+  Opcja /p wyłącza niektóre niekompatybilne klawisze.
 
 Przykłady:
   [color=cyan]dir /on[reset] | [color=green]more[reset]               ; posortowany katalog, po jednym ekranie
@@ -1742,10 +1760,16 @@ Nie znaleziono żadnego pliku.
 [reset][color=light-yellow]--- urządzenie %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- wciśnij SPACJĘ aby wyświetlić więcej ---[reset]
+[reset][color=light-yellow]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- wciśnij SPACJĘ aby wyświetlić więcej, N kolejny plik ---[reset]
+[reset][color=light-yellow]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej, N kolejny plik ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- linia %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- nie można otworzyć %s ---[reset]
@@ -1755,6 +1779,12 @@ Nie znaleziono żadnego pliku.
 .
 :PROGRAM_MORE_NEXT_FILE
 [reset][color=light-yellow](kolejny plik)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](pominięta zawartość)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]ile linii?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Montuje fizyczny katalog lub dysk.
@@ -1875,15 +1905,15 @@ Składnia:
   [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -r [min_częstotliwość]
 
 Gdzie:
-  [color=white]INTERFEJS[reset]      jeden z: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
-  -map -unmap    mapowanie/odmapowanie myszy, w [color=cyan]NAME[reset] można używać '*' lub '?'
-  -s -sx -sy     czułość myszy / dla osi x / dla osi y, od -999 do +999
-  -r             wymuszona minimalna częstotliwość próbkowania
-  -on -off       włączenie/wyłączenie myszy na danym interfejsie
-  -reset         przywrócenie domyślnych ustawień
+  [color=white]INTERFEJS[reset]      jeden z: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
+  -map -unmap    mapowanie/odmapowanie myszy, w [color=cyan]NAME[reset] można używać '*' lub '?'.
+  -s -sx -sy     czułość myszy / dla osi x / dla osi y, od -999 do +999.
+  -r             wymuszona minimalna częstotliwość próbkowania.
+  -on -off       włącz/wyłącz myszy na danym interfejsie.
+  -reset         przywróć ustawienia domyślne.
 
 Uwagi:
-  Pominięcie czułości lub częstotliwości przywraca wartość domyślną.
+  Pominięcie wartości czułości lub częstotliwości przywraca wartość domyślną.
 
 Przykłady:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
