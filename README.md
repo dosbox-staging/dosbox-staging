@@ -9,15 +9,15 @@ support today's systems.
 
 ### Build status
 
-[![Linux x86\_64 build status][build-lin1-badge]][build-linux]
-[![Linux other build status][build-lin2-badge]][build-linux-2]
-[![Windows build status][build-win-badge]][build-win]
-[![macOS build status][build-mac-badge]][build-mac]
+[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
+[![Linux other build status][build-lin2-badge]][build-lin2-ci]
+[![Windows (VisualStudio) build status][build-win-msvc-badge]][build-win-msvc-ci]
+[![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
+[![macOS build status][build-mac-badge]][build-mac-ci]
 
 ### Code quality status
 
-[![Coverity status][coverity-badge]][4]
-[![LGTM grade][lgtm-badge]][3]
+[![Coverity status][coverity-badge]][3]
 
 ## Summary of features
 
@@ -31,7 +31,7 @@ support today's systems.
 | **Logging**                    | Loguru for C++<sup>[5]</sup>
 | **Buildsystem**                | Meson or Visual Studio 2019
 | **CI**                         | Yes
-| **Static analysis**            | Yes<sup>[1],[2],[3],[4]</sup>
+| **Static analysis**            | Yes<sup>[1],[3],[4]</sup>
 | **Dynamic analysis**           | Yes
 | **clang-format**               | Yes
 | **[Development builds]**       | Yes
@@ -296,13 +296,20 @@ For some historical context of why this repo exists you can read
 [gpl-badge]:        https://img.shields.io/badge/license-GPL--2.0--or--later-blue
 [discord-badge]:    https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord
 [discord]:          https://discord.gg/WwAg3Xf
-[build-lin1-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20(x86_64)
-[build-linux]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22
-[build-lin2-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20(arm64,%20S390x)
-[build-linux-2]:    https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22
-[build-win-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20(x86,%20x86_64)
-[build-win]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22
-[build-mac-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(arm64,%20x86_64)
-[build-mac]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22
+
+[build-lin1-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?branch=main
+[build-lin1-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
+
+[build-lin2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/platforms.yml?branch=main
+[build-lin2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/platforms.yml?query=branch%3Amain
+
+[build-win-msvc-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msys2.yml?branch=main
+[build-win-msvc-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msvc.yml?query=branch%3Amain
+
+[build-win-msys2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msvc.yml?branch=main
+[build-win-msys2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msys2.yml?query=branch%3Amain
+
+[build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?branch=main
+[build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
+
 [coverity-badge]:   https://img.shields.io/coverity/scan/dosbox-staging
-[lgtm-badge]:       https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging
