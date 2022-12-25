@@ -1169,6 +1169,12 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Language code of the keyboard layout, or 'auto' ('auto' by default).");
 
+	pstring = secprop->Add_path("setver_table_file", only_at_start, "");
+	pstring->Set_help(
+	        "File containing the list of applications and assigned DOS versions, in a\n"
+	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
+	        "(empty by default).");
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);

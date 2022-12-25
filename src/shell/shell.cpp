@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "../dos/program_more_output.h"
+#include "../dos/program_setver.h"
 #include "autoexec.h"
 #include "callback.h"
 #include "control.h"
@@ -568,9 +569,12 @@ static char const * const init_line="/INIT AUTOEXEC.BAT";
 void SHELL_Init() {
 	// Generic messages, to be used by any command or DOS program
 	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
+	MSG_Add("SHELL_ILLEGAL_FILE_NAME", "Illegal file name.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s.\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH_COMBO", "Illegal switch combination.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n");
 	MSG_Add("SHELL_TOO_MANY_PARAMETERS", "Too many parameters.\n");
+	MSG_Add("SHELL_EXPECTED_FILE_NOT_DIR", "Expected a file, not a directory.\n");
 	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n");
 	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n");
 	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n");
@@ -1153,23 +1157,19 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=green]path[reset]\n"
 	        "  [color=green]path[reset] [color=cyan]Z:\\;C:\\DOS[reset]\n");
-	MSG_Add("SHELL_CMD_VER_HELP", "View or set the reported DOS version.\n");
-	MSG_Add("SHELL_CMD_VER_HELP_LONG", "Usage:\n"
+	MSG_Add("SHELL_CMD_VER_HELP", "View the DOS version.\n");
+	MSG_Add("SHELL_CMD_VER_HELP_LONG",
+	        "Usage:\n"
 	        "  [color=green]ver[reset]\n"
-	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]\n"
-	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]VERSION[reset] can be a whole number, such as [color=cyan]5[reset], or include a two-digit decimal\n"
-	        "          value, such as: [color=cyan]6.22[reset], [color=cyan]7.01[reset], or [color=cyan]7.10[reset]. The decimal can alternatively be\n"
-	        "          space-separated, such as: [color=cyan]6 22[reset], [color=cyan]7 01[reset], or [color=cyan]7 10[reset].\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The DOS version can also be set in the configuration file under the [dos]\n"
-	        "  section using the \"ver = [color=cyan]VERSION[reset]\" setting.\n"
+	        "  The DOS version can be set in the configuration file under the [dos] section,\n"
+	        "  using the 'ver = [color=cyan]VERSION[reset]' setting.\n"
+	        "  The DOS version reported to applications can be changed using [color=green]setver[reset] command.\n"
+	        "  Old '[color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]' syntax to change DOS version is deprecated.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]\n"
-	        "  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]\n");
+	        "  [color=green]ver[reset]\n");
 	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
 	                             "DOS version %d.%02d\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
@@ -1266,6 +1266,8 @@ void SHELL_Init() {
 	dos.dta(RealMake(psp_seg,0x80));
 	dos.psp(psp_seg);
 
+	// Load SETVER fake version table from external file
+	SETVER::LoadTableFromFile();
 
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly

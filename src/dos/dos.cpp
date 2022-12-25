@@ -29,12 +29,12 @@
 #include "callback.h"
 #include "drives.h"
 #include "mem.h"
+#include "program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
-#include "program_mount_common.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -659,16 +659,24 @@ static Bitu DOS_21Handler(void) {
 		SegSet16(es,RealSegment(dos.dta()));
 		reg_bx=RealOffset(dos.dta());
 		break;
-	case 0x30:		/* Get DOS Version */
-		if (reg_al==0) reg_bh=0xFF;		/* Fake Microsoft DOS */
-		if (reg_al==1) reg_bh=0x10;		/* DOS is in HMA */
-		reg_al=dos.version.major;
-		reg_ah=dos.version.minor;
-		/* Serialnumber */
-		reg_bl=0x00;
-		reg_cx=0x0000;
-		break;
-	case 0x31:		/* Terminate and stay resident */
+	case 0x30: /* Get DOS Version */
+	{
+		if (reg_al == 0) {
+			reg_bh = 0xff; // 0xff for MS-DOS, 0x00 for PC-DOS
+		}
+		if (reg_al == 1) {
+			reg_bh = 0x10; // DOS is in HMA
+		}
+		DOS_PSP psp(dos.psp());
+		// Prior to MS-DOS 5.0 version number was hardcoded, later DOS
+		// releases used values from PSP, for SETVER functionality
+		reg_al = psp.GetVersionMajor();
+		reg_ah = psp.GetVersionMinor();
+		// Serial number
+		reg_bl = 0x00;
+		reg_cx = 0x0000;
+	} break;
+	case 0x31: /* Terminate and stay resident */
 		// Important: This service does not set the carry flag!
 		DOS_ResizeMemory(dos.psp(),&reg_dx);
 		DOS_Terminate(dos.psp(),true,reg_al);
@@ -700,29 +708,32 @@ static Bitu DOS_21Handler(void) {
 				LOG(LOG_DOSMISC,LOG_ERROR)("Someone playing with cpsw %x",reg_ax);
 				break;
 			case 5:reg_dl=3;break;//TODO should be z						/* Always boot from c: :) */
-			case 6:											/* Get true version number */
-				reg_bl=dos.version.major;
-				reg_bh=dos.version.minor;
-				reg_dl=dos.version.revision;
-				reg_dh=0x10;								/* Dos in HMA */
-				break;
-			default:
-				LOG(LOG_DOSMISC,LOG_ERROR)("Weird 0x33 call %2X",reg_al);
-				reg_al =0xff;
-				break;
-		}
-		break;
-	case 0x34:		/* Get INDos Flag */
-		SegSet16(es,DOS_SDA_SEG);
-		reg_bx=DOS_SDA_OFS + 0x01;
-		break;
-	case 0x35:		/* Get interrupt vector */
-		reg_bx=real_readw(0,((uint16_t)reg_al)*4);
-		SegSet16(es,real_readw(0,((uint16_t)reg_al)*4+2));
-		break;
-	case 0x36:		/* Get Free Disk Space */
-		{
-			uint16_t bytes,clusters,free;
+		        case 6: // Get true version number, not affected by SETVER
+		        {
+			        DOS_PSP psp(dos.psp());
+			        reg_bl = dos.version.major;
+			        reg_bh = dos.version.minor;
+			        reg_dl = dos.version.revision;
+			        reg_dh = 0x10; // DOS in HMA
+		        } break;
+		        default:
+			        LOG(LOG_DOSMISC, LOG_ERROR)
+			        ("Weird 0x33 call %2X", reg_al);
+			        reg_al = 0xff;
+			        break;
+		        }
+		        break;
+	case 0x34: /* Get INDos Flag */
+		        SegSet16(es, DOS_SDA_SEG);
+		        reg_bx = DOS_SDA_OFS + 0x01;
+		        break;
+	case 0x35: /* Get interrupt vector */
+		        reg_bx = real_readw(0, ((uint16_t)reg_al) * 4);
+		        SegSet16(es, real_readw(0, ((uint16_t)reg_al) * 4 + 2));
+		        break;
+	case 0x36: /* Get Free Disk Space */
+	{
+		        uint16_t bytes,clusters,free;
 			uint8_t sectors;
 			if (DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
 				reg_ax=sectors;
@@ -740,8 +751,7 @@ static Bitu DOS_21Handler(void) {
 				}
 				reg_ax=0xffff;	// invalid drive specified
 			}
-		}
-		break;
+	} break;
 	case 0x37:		/* Get/Set Switch char Get/Set Availdev thing */
 //TODO	Give errors for these functions to see if anyone actually uses this shit-
 		switch (reg_al) {

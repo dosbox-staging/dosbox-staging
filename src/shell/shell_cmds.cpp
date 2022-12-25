@@ -2146,8 +2146,15 @@ void DOS_Shell::CMD_VER(char *args)
 	HELP("VER");
 	if (args && strlen(args)) {
 		char *word = strip_word(args);
-		if (strcasecmp(word, "set"))
+		if (strcasecmp(word, "set")) {
+			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 			return;
+		}
+
+		// Despite declared as deprecated, we should probably never
+		// remove it, for compatibility with original DOSBox
+		LOG_WARNING("SHELL: Command 'ver set VERSION' is deprecated");
+
 		word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word, args);
 		if (new_version.major || new_version.minor) {

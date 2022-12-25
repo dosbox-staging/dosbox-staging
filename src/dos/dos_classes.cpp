@@ -161,7 +161,8 @@ void DOS_PSP::MakeNew(uint16_t mem_size)
 	/* psp and psp-parent */
 	SSET_WORD(sPSP, psp_parent, dos.psp());
 	SSET_DWORD(sPSP, prev_psp, uint32_t(0xffffffff));
-	SSET_WORD(sPSP, dos_version, uint16_t(0x0005));
+	SSET_BYTE(sPSP, dos_version_major, dos.version.major);
+	SSET_BYTE(sPSP, dos_version_minor, dos.version.minor);
 	/* terminate 22,break 23,crititcal error 24 address stored */
 	SaveVectors();
 
