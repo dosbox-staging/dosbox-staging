@@ -40,6 +40,7 @@
 #include "program_placeholder.h"
 #include "program_rescan.h"
 #include "program_serial.h"
+#include "program_setver.h"
 #include "program_tree.h"
 
 #if C_DEBUG
@@ -89,6 +90,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
+	PROGRAMS_MakeFile("SETVER.EXE", ProgramCreate<SETVER>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 

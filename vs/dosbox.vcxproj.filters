@@ -631,6 +631,9 @@
     <ClCompile Include="..\src\dos\program_serial.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_setver.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_tree.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

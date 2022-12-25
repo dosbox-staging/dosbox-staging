@@ -22,11 +22,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "cpu.h"
 #include "callback.h"
+#include "cpu.h"
 #include "debug.h"
 #include "dos_inc.h"
 #include "mem.h"
+#include "program_setver.h"
 #include "programs.h"
 #include "regs.h"
 #include "string_utils.h"
@@ -437,6 +438,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		newpsp.SetFCB2(block.exec.fcb2);
 		/* Save the SS:SP on the PSP of new program */
 		newpsp.SetStack(RealMakeSeg(ss,reg_sp));
+		/* If needed, override reported DOS version */
+		SETVER::OverrideVersion(name, newpsp);
 
 		/* Setup bx, contains a 0xff in bl and bh if the drive in the fcb is not valid */
 		DOS_FCB fcb1(RealSegment(block.exec.fcb1),RealOffset(block.exec.fcb1));
