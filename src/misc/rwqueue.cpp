@@ -197,10 +197,7 @@ void RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_reque
 template class RWQueue<int>;
 template class RWQueue<std::vector<int16_t>>;
 
-// FluidSynth
-template class RWQueue<std::vector<float>>;
-
-// MT-32
+// FluidSynth and MT-32
 #include "audio_frame.h"
 template class RWQueue<AudioFrame>;
 
