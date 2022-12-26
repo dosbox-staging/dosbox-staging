@@ -221,7 +221,9 @@ uint16_t MIXER_GetPreBufferMs()
 
 int MIXER_GetSampleRate()
 {
-	return mixer.sample_rate.load();
+	const auto sample_rate_hz = mixer.sample_rate.load();
+	assert(sample_rate_hz > 0);
+	return sample_rate_hz;
 }
 
 static void MIXER_LockAudioDevice()

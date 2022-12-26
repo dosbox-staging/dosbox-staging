@@ -1,9 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
- *  Copyright (C) 2012-2021  sergm <sergm@bigmir.net>
- *  Copyright (C) 2020-2021  Nikos Chantziaras <realnc@gmail.com> (settings)
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,23 +31,20 @@
 
 #include <SDL_endian.h>
 
+#include "../ints/int10.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"
 #include "mixer.h"
+#include "pic.h"
 #include "string_utils.h"
 #include "support.h"
-#include "../ints/int10.h"
 
 // mt32emu Settings
 // ----------------
-
-// Synth granularity in frames. We keep four buffers in-flight at any given
-// time: when playback exhausts the "head" buffer, we ask MT-32 to render the
-// next buffer, asynchronously, which is then placed at the back of the queue.
-static constexpr int FRAMES_PER_BUFFER = 48;
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
@@ -588,9 +583,12 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	        rom_info.control_rom_description,
 	        loaded_model_and_dir->second.c_str());
 
+	const auto frame_rate_hz = MIXER_GetSampleRate();
+	ms_per_frame             = millis_in_second / frame_rate_hz;
+
 	mt32_service->setAnalogOutputMode(ANALOG_MODE);
 	mt32_service->selectRendererType(RENDERING_TYPE);
-	mt32_service->setStereoOutputSampleRate(MIXER_GetSampleRate());
+	mt32_service->setStereoOutputSampleRate(frame_rate_hz);
 	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
 	mt32_service->setDACInputMode(DAC_MODE);
 	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
@@ -608,11 +606,15 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                      std::placeholders::_1);
 
 	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            use_mixer_rate,
+	                                            frame_rate_hz,
 	                                            "MT32",
 	                                            {ChannelFeature::Sleep,
 	                                             ChannelFeature::Stereo,
 	                                             ChannelFeature::Synthesizer});
+
+	// libmt32emu renders float frames between -1.0f and +1.0f, so we ask the
+	// channel to scale all the samples up to it's 0db level.
+	mixer_channel->Set0dbScalar(MAX_AUDIO);
 
 	const auto section = static_cast<Section_prop *>(control->GetSection("mt32"));
 	assert(section);
@@ -628,6 +630,15 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 		mixer_channel->SetLowPassFilter(FilterState::Off);
 	}
 
+	// Double the baseline PCM prebuffer because MIDI is demanding
+	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
+
+	static constexpr auto max_frames_per_ms = 48;
+	frame_fifo.Resize(render_ahead_ms * max_frames_per_ms);
+
+	static constexpr auto max_midi_msg_per_ms = 255;
+	work_fifo.Resize(render_ahead_ms * max_midi_msg_per_ms);
+
 	// If we haven't failed yet, then we're ready to begin so move the local
 	// objects into the member variables.
 	service = std::move(mt32_service);
@@ -639,7 +650,6 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	const auto render = std::bind(&MidiHandler_mt32::Render, this);
 	renderer = std::thread(render);
 	set_thread_name(renderer, "dosbox:mt32");
-	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	is_open = true;
 	return true;
@@ -661,12 +671,11 @@ void MidiHandler_mt32::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the rings
+	// Stop rendering and drain the fifo
 	keep_rendering = false;
-	if (!backstock.Size())
-		backstock.Enqueue(std::move(play_buffer));
-	while (playable.Size())
-		play_buffer = playable.Dequeue();
+	while (frame_fifo.Size()) {
+		[[maybe_unused]] auto frame = frame_fifo.Dequeue();
+	}
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -685,101 +694,125 @@ void MidiHandler_mt32::Close()
 
 	// Reset the members
 	service.reset();
-	total_buffers_played = 0;
-	last_played_frame = 0;
 
-	is_open = false;
+	last_rendered_ms = 0.0;
+	ms_per_frame     = 0.0;
+
+	is_open          = false;
 }
 
-uint32_t MidiHandler_mt32::GetMidiEventTimestamp() const
+uint16_t MidiHandler_mt32::GetNumPendingFrames()
 {
-	const uint32_t played_frames = total_buffers_played * FRAMES_PER_BUFFER;
-	return service->convertOutputToSynthTimestamp(played_frames +
-	                                              last_played_frame);
+	const auto now_ms = PIC_FullIndex();
+
+	// Wake up the channel and update the last rendered time datum.
+	assert(channel);
+	if (channel->WakeUp()) {
+		last_rendered_ms = now_ms;
+		return 0;
+	}
+	if (last_rendered_ms >= now_ms) {
+		return 0;
+	}
+	// Return the number of frames needed to get current again
+	assert(ms_per_frame > 0.0);
+	const auto elapsed_ms = now_ms - last_rendered_ms;
+	const auto frames     = iround(ceil(elapsed_ms / ms_per_frame));
+	last_rendered_ms += (frames * ms_per_frame);
+	return check_cast<uint16_t>(frames);
 }
 
+// The request to play the channel message is placed in the MIDI work FIFO
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
-	assert(channel);
-	channel->WakeUp();
-
-	const auto msg_words = reinterpret_cast<const uint32_t *>(msg);
-	const std::lock_guard<std::mutex> lock(service_mutex);
-	service->playMsgAt(SDL_SwapLE32(*msg_words), GetMidiEventTimestamp());
+	constexpr auto channel_len = 4;
+	std::vector<uint8_t> message(msg, msg + channel_len);
+	MidiWork work{std::move(message), GetNumPendingFrames(), MessageType::Channel};
+	work_fifo.Enqueue(std::move(work));
 }
 
+// The request to play the sysex message is placed in the MIDI work FIFO
 void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 {
-	assert(channel);
-	channel->WakeUp();
-
-	assert(len <= UINT32_MAX);
-	const auto msg_len = static_cast<uint32_t>(len);
-	const std::lock_guard<std::mutex> lock(service_mutex);
-	service->playSysexAt(sysex, msg_len, GetMidiEventTimestamp());
+	std::vector<uint8_t> message(sysex, sysex + len);
+	MidiWork work{std::move(message), GetNumPendingFrames(), MessageType::SysEx};
+	work_fifo.Enqueue(std::move(work));
 }
 
 // The callback operates at the frame-level, steadily adding samples to the
 // mixer until the requested numbers of frames is met.
-void MidiHandler_mt32::MixerCallBack(uint16_t requested_frames)
+void MidiHandler_mt32::MixerCallBack(const uint16_t requested_frames)
 {
-	while (requested_frames) {
-		const auto frames_to_be_played = std::min(GetRemainingFrames(),
-		                                          requested_frames);
-		const auto sample_offset_in_buffer = play_buffer.data() +
-		                                     last_played_frame * 2;
-		channel->AddSamples_sfloat(frames_to_be_played, sample_offset_in_buffer);
-		requested_frames -= frames_to_be_played;
-		last_played_frame += frames_to_be_played;
+	assert(channel);
+
+	constexpr auto warning_percent = 5.0f;
+	if (const auto percent_full = frame_fifo.GetPercentFull(); percent_full < warning_percent) {
+		static auto iteration = 0;
+		if (iteration++ % 100 == 0) {
+			LOG_WARNING("MT32: Audio FIFO is %4.2f%% full",
+			            static_cast<double>(percent_full));
+		}
+	}
+
+	static std::vector<AudioFrame> frames = {};
+	frame_fifo.BulkDequeue(frames, requested_frames);
+	channel->AddSamples_sfloat(requested_frames, &frames[0][0]);
+
+	last_rendered_ms = PIC_FullIndex();
+}
+
+void MidiHandler_mt32::RenderFramesToFifo(const uint16_t num_frames)
+{
+	static std::vector<AudioFrame> frames = {};
+	// Maybe expand the vector
+	if (frames.size() < num_frames) {
+		frames.resize(num_frames);
+	}
+
+	std::unique_lock<std::mutex> lock(service_mutex);
+	service->renderFloat(&frames[0][0], num_frames);
+	lock.unlock();
+
+	frame_fifo.BulkEnqueue(frames, num_frames);
+}
+
+// The next MIDI work task is processed, which includes rendering audio frames
+// prior to applying channel and sysex messages to the service
+void MidiHandler_mt32::ProcessWorkFromFifo()
+{
+	const auto work = work_fifo.Dequeue();
+
+	/* // Comment-in to log inter-cycle rendering
+	if (work.num_pending_audio_frames > 0) {
+		LOG_MSG("MT32: %2u frames prior to %s message, followed by "
+		        "%2lu more messages. Have %4lu frames queued",
+		        work.num_pending_audio_frames,
+		        work.message_type == MessageType::Channel ? "channel" : "sysex",
+		        work_fifo.Size(),
+		        frame_fifo.Size());
+	}*/
+
+	if (work.num_pending_audio_frames > 0) {
+		RenderFramesToFifo(work.num_pending_audio_frames);
+	}
+
+	// Request exclusive access prior to applying messages
+	const std::lock_guard<std::mutex> lock(service_mutex);
+
+	if (work.message_type == MessageType::Channel) {
+		const auto msg_words = reinterpret_cast<const uint32_t*>(work.message.data());
+		service->playMsg(SDL_SwapLE32(*msg_words));
+	} else {
+		assert(work.message_type == MessageType::SysEx);
+		service->playSysex(work.message.data(), static_cast<uint32_t>(work.message.size()));
 	}
 }
 
-// Returns the number of frames left to play in the buffer.
-uint16_t MidiHandler_mt32::GetRemainingFrames()
-{
-	// If the current buffer has some frames left, then return those ...
-	if (last_played_frame < FRAMES_PER_BUFFER)
-		return FRAMES_PER_BUFFER - last_played_frame;
-
-	// Otherwise put the spent buffer in backstock and get the next buffer
-	backstock.Enqueue(std::move(play_buffer));
-	play_buffer = playable.Dequeue();
-	total_buffers_played++;
-	last_played_frame = 0; // reset the frame counter to the beginning
-
-	return FRAMES_PER_BUFFER;
-}
-
-// Keep the playable queue populated with freshly rendered buffers
+// Keep the fifo populated with freshly rendered buffers
 void MidiHandler_mt32::Render()
 {
-	// Allocate our buffers once and reuse for the duration.
-	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
-	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
-
-	// Populate the backstock using copies of the current buffer.
-	while (backstock.Size() < backstock.MaxCapacity() - 1)
-		backstock.Enqueue(playable_buffer);
-
-	backstock.Enqueue(std::move(playable_buffer));
-	assert(backstock.Size() == backstock.MaxCapacity());
-
 	while (keep_rendering.load()) {
-		{
-			const std::lock_guard<std::mutex> lock(service_mutex);
-			service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
-		}
-		// Grab the next buffer from backstock and populate it ...
-		playable_buffer = backstock.Dequeue();
-
-		// Swap buffers & scale
-		std::swap(render_buffer, playable_buffer);
-		for (auto &s : playable_buffer)
-			s *= INT16_MAX;
-
-		// and then move it into the playable queue
-		playable.Enqueue(std::move(playable_buffer));
+		work_fifo.IsEmpty() ? RenderFramesToFifo() : ProcessWorkFromFifo();
 	}
 }
 
