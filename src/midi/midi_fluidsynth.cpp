@@ -1,9 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
- *  Copyright (C) 2020-2020  Nikos Chantziaras <realnc@gmail.com>
- *  Copyright (C) 2002-2011  The DOSBox Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,22 +22,23 @@
 
 #if C_FLUIDSYNTH
 
+#include <bitset>
 #include <cassert>
 #include <deque>
+#include <numeric>
 #include <string>
 #include <tuple>
 
+#include "../ints/int10.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "math_utils.h"
 #include "mixer.h"
+#include "pic.h"
 #include "programs.h"
 #include "string_utils.h"
 #include "support.h"
-#include "../ints/int10.h"
-#include "string_utils.h"
-
-static constexpr int FRAMES_PER_BUFFER = 48; // synth granularity
 
 MidiHandlerFluidsynth instance;
 
@@ -208,6 +207,24 @@ static std::string find_sf_file(const std::string &name)
 	return "";
 }
 
+static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
+{
+	auto append_as_hex = [](const std::string& str, const uint8_t val) {
+		constexpr char hex_chars[] = "0123456789ABCDEF";
+		std::string hex_str;
+		hex_str.reserve(2);
+		hex_str += hex_chars[val >> 4];
+		hex_str += hex_chars[val & 0x0F];
+		return str + (str.empty() ? "" : ", ") + hex_str;
+	};
+	const auto hex_values = std::accumulate(msg.begin(),
+	                                        msg.end(),
+	                                        std::string(),
+	                                        append_as_hex);
+	LOG_WARNING("FSYNTH: unknown MIDI message sequence (hex): %s",
+	            hex_values.c_str());
+}
+
 MidiHandlerFluidsynth::MidiHandlerFluidsynth() : keep_rendering(false) {}
 
 bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
@@ -227,12 +244,13 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
 
-	// Per the FluidSynth API, the sample-rate should be part of the
-	// settings used to instantiate the synth, so we create the mixer
-	// channel first and use its native rate to configure FluidSynth.
-	fluid_settings_setnum(fluid_settings.get(),
-	                      "synth.sample-rate",
-	                      MIXER_GetSampleRate());
+	// Per the FluidSynth API, the sample-rate should be part of the settings
+	// used to instantiate the synth, so we use the mixer's native rate to
+	// configure FluidSynth.
+	const auto frame_rate_hz = MIXER_GetSampleRate();
+	ms_per_frame             = millis_in_second / frame_rate_hz;
+
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", frame_rate_hz);
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
@@ -441,13 +459,17 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	                                      std::placeholders::_1);
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                      use_mixer_rate,
+	                                      frame_rate_hz,
 	                                      "FSYNTH",
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::Stereo,
 	                                       ChannelFeature::ReverbSend,
 	                                       ChannelFeature::ChorusSend,
 	                                       ChannelFeature::Synthesizer});
+
+	// FluidSynth renders float frames between -1.0f and +1.0f, so we ask
+	// the channel to scale all the samples up to it's 0db level.
+	mixer_channel->Set0dbScalar(MAX_AUDIO);
 
 	const std::string filter_prefs = section->Get_string("fsynth_filter");
 
@@ -461,6 +483,15 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 		mixer_channel->SetLowPassFilter(FilterState::Off);
 	}
 
+	// Double the baseline PCM prebuffer because MIDI is demanding
+	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
+
+	static constexpr auto max_frames_per_ms = 48;
+	frame_fifo.Resize(render_ahead_ms * max_frames_per_ms);
+
+	static constexpr auto max_midi_msg_per_ms = 255;
+	work_fifo.Resize(render_ahead_ms * max_midi_msg_per_ms);
+
 	// If we haven't failed yet, then we're ready to begin so move the local
 	// objects into the member variables.
 	settings = std::move(fluid_settings);
@@ -473,7 +504,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
 	renderer = std::thread(render);
 	set_thread_name(renderer, "dosbox:fsynth");
-	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
 	is_open = true;
@@ -496,12 +526,11 @@ void MidiHandlerFluidsynth::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the rings
+	// Stop rendering and drain the fifo
 	keep_rendering = false;
-	if (!backstock.Size())
-		backstock.Enqueue(std::move(play_buffer));
-	while (playable.Size())
-		play_buffer = playable.Dequeue();
+	while (frame_fifo.Size()) {
+		[[maybe_unused]] auto frame = frame_fifo.Dequeue();
+	}
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -515,122 +544,147 @@ void MidiHandlerFluidsynth::Close()
 	// Reset the members
 	synth.reset();
 	settings.reset();
-	last_played_frame = 0;
 	selected_font.clear();
+
+	last_rendered_ms = 0.0;
+	ms_per_frame     = 0.0;
 
 	is_open = false;
 }
 
-void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
+uint16_t MidiHandlerFluidsynth::GetNumPendingFrames()
 {
+	const auto now_ms = PIC_FullIndex();
+
+	// Wake up the channel and update the last rendered time datum.
 	assert(channel);
-	channel->WakeUp();
-
-	const int chanID = msg[0] & 0b1111;
-
-	switch (msg[0] & 0b1111'0000) {
-	case 0b1000'0000:
-		fluid_synth_noteoff(synth.get(), chanID, msg[1]);
-		break;
-	case 0b1001'0000:
-		fluid_synth_noteon(synth.get(), chanID, msg[1], msg[2]);
-		break;
-	case 0b1010'0000:
-		fluid_synth_key_pressure(synth.get(), chanID, msg[1], msg[2]);
-		break;
-	case 0b1011'0000:
-		fluid_synth_cc(synth.get(), chanID, msg[1], msg[2]);
-		break;
-	case 0b1100'0000:
-		fluid_synth_program_change(synth.get(), chanID, msg[1]);
-		break;
-	case 0b1101'0000:
-		fluid_synth_channel_pressure(synth.get(), chanID, msg[1]);
-		break;
-	case 0b1110'0000:
-		fluid_synth_pitch_bend(synth.get(), chanID, msg[1] + (msg[2] << 7));
-		break;
-	default: {
-		uint64_t tmp;
-		memcpy(&tmp, msg, sizeof(tmp));
-		LOG_MSG("FSYNTH: unknown MIDI command: %0" PRIx64, tmp);
-		break;
+	if (channel->WakeUp()) {
+		last_rendered_ms = now_ms;
+		return 0;
 	}
+	if (last_rendered_ms >= now_ms) {
+		return 0;
 	}
+	// Return the number of frames needed to get current again
+	assert(ms_per_frame > 0.0);
+	const auto elapsed_ms = now_ms - last_rendered_ms;
+	const auto frames     = iround(ceil(elapsed_ms / ms_per_frame));
+	last_rendered_ms += (frames * ms_per_frame);
+	return check_cast<uint16_t>(frames);
 }
 
-void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
+// The request to play the channel message is placed in the MIDI work FIFO
+void MidiHandlerFluidsynth::PlayMsg(const uint8_t* msg)
 {
-	assert(channel);
-	channel->WakeUp();
+	constexpr auto channel_message_len = 4;
+	std::vector<uint8_t> message(msg, msg + channel_message_len);
+	MidiWork work{std::move(message), GetNumPendingFrames(), MessageType::Channel};
+	work_fifo.Enqueue(std::move(work));
+}
 
-	const char *data = reinterpret_cast<const char *>(sysex);
-	const auto n = static_cast<int>(len);
+// The request to play the sysex message is placed in the MIDI work FIFO
+void MidiHandlerFluidsynth::PlaySysex(uint8_t* sysex, size_t len)
+{
+	std::vector<uint8_t> message(sysex, sysex + len);
+	MidiWork work{std::move(message), GetNumPendingFrames(), MessageType::SysEx};
+	work_fifo.Enqueue(std::move(work));
+}
+
+// Apply the channel message to the service
+void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
+{
+	// clang-format off
+	// Ref: https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
+	const auto action = static_cast<uint8_t>(msg[0] >> 4);
+	const auto chan_id = static_cast<uint8_t>(msg[0] & 0b1111);
+	switch (action) {
+	case 0b1000: fluid_synth_noteoff(         synth.get(), chan_id, msg[1]);                 break;
+	case 0b1001: fluid_synth_noteon(          synth.get(), chan_id, msg[1], msg[2]);         break;
+	case 0b1010: fluid_synth_key_pressure(    synth.get(), chan_id, msg[1], msg[2]);         break;
+	case 0b1011: fluid_synth_cc(              synth.get(), chan_id, msg[1], msg[2]);         break;
+	case 0b1100: fluid_synth_program_change(  synth.get(), chan_id, msg[1]);                 break;
+	case 0b1101: fluid_synth_channel_pressure(synth.get(), chan_id, msg[1]);                 break;
+	case 0b1110: fluid_synth_pitch_bend(      synth.get(), chan_id, msg[1] + (msg[2] << 7)); break;
+	default: log_unknown_midi_message(msg); break;
+	}
+	// clang-format on
+}
+
+// Apply the sysex message to the service
+void MidiHandlerFluidsynth::ApplySysexMessage(const std::vector<uint8_t>& msg)
+{
+	const char* data = reinterpret_cast<const char*>(msg.data());
+	const auto n     = static_cast<int>(msg.size());
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
-void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
+// The callback operates at the frame-level, steadily adding samples to the
+// mixer until the requested numbers of frames is met.
+void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_frames)
 {
-	while (requested_frames) {
-		const auto frames_to_be_played = std::min(GetRemainingFrames(),
-		                                          requested_frames);
-		const auto sample_offset_in_buffer = play_buffer.data() +
-		                                     last_played_frame * 2;
+	assert(channel);
 
-		assert(frames_to_be_played <= play_buffer.size());
-		channel->AddSamples_sfloat(frames_to_be_played,
-		                           sample_offset_in_buffer);
+	constexpr auto warning_percent = 5.0f;
+	if (const auto percent_full = frame_fifo.GetPercentFull(); percent_full < warning_percent) {
+		static auto iteration = 0;
+		if (iteration++ % 100 == 0) {
+			LOG_WARNING("FSYNTH: Audio FIFO is %4.2f%% full",
+			            static_cast<double>(percent_full));
+		}
+	}
 
-		requested_frames -= frames_to_be_played;
-		last_played_frame += frames_to_be_played;
+	static std::vector<AudioFrame> frames = {};
+	frame_fifo.BulkDequeue(frames, requested_frames);
+	channel->AddSamples_sfloat(requested_frames, &frames[0][0]);
+
+	last_rendered_ms = PIC_FullIndex();
+}
+
+void MidiHandlerFluidsynth::RenderFramesToFifo(const uint16_t num_frames)
+{
+	static std::vector<AudioFrame> frames = {};
+
+	// Maybe expand the vector
+	if (frames.size() < num_frames) {
+		frames.resize(num_frames);
+	}
+
+	fluid_synth_write_float(
+	        synth.get(), num_frames, &frames[0][0], 0, 2, &frames[0][0], 1, 2);
+	frame_fifo.BulkEnqueue(frames, num_frames);
+}
+
+void MidiHandlerFluidsynth::ProcessWorkFromFifo()
+{
+	const auto work = work_fifo.Dequeue();
+
+	/* // Comment-in to log inter-cycle rendering
+	if ( work.num_pending_audio_frames > 0) {
+		LOG_MSG("FSYNTH: %2u frames prior to %s message, followed by "
+		        "%2lu more messages. Have %4lu frames queued",
+		        work.num_pending_audio_frames,
+		        work.message_type == MessageType::Channel ? "channel" : "sysex",
+		        work_fifo.Size(),
+		        frame_fifo.Size());
+	}*/
+
+	if (work.num_pending_audio_frames > 0) {
+		RenderFramesToFifo(work.num_pending_audio_frames);
+	}
+
+	if (work.message_type == MessageType::Channel) {
+		ApplyChannelMessage(work.message);
+	} else {
+		assert(work.message_type == MessageType::SysEx);
+		ApplySysexMessage(work.message);
 	}
 }
 
-// Returns the number of frames left to play in the buffer.
-uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
-{
-	// If the current buffer has some frames left, then return those ...
-	if (last_played_frame < FRAMES_PER_BUFFER)
-		return FRAMES_PER_BUFFER - last_played_frame;
-
-	// Otherwise put the spent buffer in backstock and get the next buffer
-	backstock.Enqueue(std::move(play_buffer));
-	play_buffer = playable.Dequeue();
-	last_played_frame = 0; // reset the frame counter to the beginning
-
-	return FRAMES_PER_BUFFER;
-}
-
-// Populates the playable queue with freshly rendered buffers
+// Keep the fifo populated with freshly rendered buffers
 void MidiHandlerFluidsynth::Render()
 {
-	// Allocate our buffers once and reuse for the duration.
-	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
-	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
-	std::vector<float> playable_buffer(SAMPLES_PER_BUFFER);
-
-	// Populate the backstock using copies of the current buffer.
-	while (backstock.Size() < backstock.MaxCapacity() - 1)
-		backstock.Enqueue(playable_buffer);
-
-	backstock.Enqueue(std::move(playable_buffer));
-	assert(backstock.Size() == backstock.MaxCapacity());
-
 	while (keep_rendering.load()) {
-		fluid_synth_write_float(synth.get(), FRAMES_PER_BUFFER,
-		                        render_buffer.data(), 0, 2,
-		                        render_buffer.data(), 1, 2);
-
-		// Grab the next buffer from backstock and populate it ...
-		playable_buffer = backstock.Dequeue();
-
-		// Swap buffers & scale
-		std::swap(render_buffer, playable_buffer);
-		for (auto &s : playable_buffer)
-			s *= INT16_MAX;
-
-		// and then move it into the playable queue
-		playable.Enqueue(std::move(playable_buffer));
+		work_fifo.IsEmpty() ? RenderFramesToFifo() : ProcessWorkFromFifo();
 	}
 }
 
