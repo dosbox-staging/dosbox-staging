@@ -101,3 +101,7 @@ template class RWQueue<std::vector<int16_t>>;
 
 // MT-32 and FluidSynth
 template class RWQueue<std::vector<float>>;
+
+
+#include "midi.h"
+template class RWQueue<MidiWork>;
