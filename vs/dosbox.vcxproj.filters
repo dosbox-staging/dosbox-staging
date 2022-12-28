@@ -789,6 +789,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\audio_frame.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\bios.h">
       <Filter>include</Filter>
     </ClInclude>
