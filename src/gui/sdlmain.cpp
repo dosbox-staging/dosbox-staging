@@ -741,7 +741,7 @@ static void log_display_properties(int source_w, int source_h,
 	const auto colours = (type_colours == "") ? "" : " " + type_colours;
 
 	LOG_MSG("DISPLAY: %s %dx%d%s (mode %02Xh) at %s%2.5g Hz %s, scaled"
-	        " by %.4gx%.4g to %dx%d with %.4g pixel aspect ratio",
+	        " to %dx%d with %.4g pixel aspect ratio",
 	        type_name.c_str(),
 	        source_w,
 	        source_h,
@@ -750,8 +750,6 @@ static void log_display_properties(int source_w, int source_h,
 	        double_scanned_str,
 	        refresh_rate,
 	        frame_mode,
-	        scale_x,
-	        scale_y,
 	        target_w,
 	        target_h,
 	        out_par);
