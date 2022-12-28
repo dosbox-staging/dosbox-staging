@@ -1405,19 +1405,19 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 			        data, pos);
 		}
 
+		AudioFrame frame_with_gain = {
+		        prev_frame[mapped_channel_left] * combined_volume_scalar.left,
+		        (stereo ? prev_frame[mapped_channel_right]
+		                : prev_frame[mapped_channel_left]) *
+		                combined_volume_scalar.right};
+
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
-		envelope.Process(stereo, prev_frame);
-
-		const auto left = prev_frame[mapped_channel_left] *
-		                  combined_volume_scalar.left;
-		const auto right = (stereo ? prev_frame[mapped_channel_right]
-		                           : prev_frame[mapped_channel_left]) *
-		                   combined_volume_scalar.right;
+		envelope.Process(stereo, frame_with_gain);
 
 		out_frame = {0.0f, 0.0f};
-		out_frame[mapped_output_left] += left;
-		out_frame[mapped_output_right] += right;
+		out_frame[mapped_output_left] += frame_with_gain.left;
+		out_frame[mapped_output_right] += frame_with_gain.right;
 
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
