@@ -74,6 +74,53 @@ void RWQueue<T>::Enqueue(T&& item)
 	has_items.notify_one();
 }
 
+// In both bulk methods, the best case scenario is if the queue can absorb or
+// fill the entire request in one pass.
+
+// The worst-case is if the queue is full (when the user wants to enqueue) or is
+// empty (when the user wants to dequeue). In this case, the calculations at a
+// minimum need to request at least one element to keep blocking until we have
+// room for just one item to avoid spinning with a zero count (which burns CPU).
+
+template <typename T>
+void RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_requested)
+{
+	constexpr size_t min_items = 1;
+	assert(num_requested >= min_items);
+	assert(num_requested <= from_source.size());
+
+	auto source_start  = from_source.begin();
+	auto num_remaining = num_requested;
+
+	while (num_remaining > 0) {
+		std::unique_lock<std::mutex> lock(mutex);
+
+		const auto free_capacity = static_cast<size_t>(capacity -
+		                                               queue.size());
+
+		const auto num_items = std::max(min_items,
+		                                std::min(num_remaining,
+		                                         free_capacity));
+
+		// wait until the queue has enough room for the items
+		has_room.wait(lock, [&] { return capacity - queue.size() >= num_items; });
+
+		const auto source_end = source_start +
+		                        static_cast<difference_t>(num_items);
+		queue.insert(queue.end(),
+		             std::move_iterator(source_start),
+		             std::move_iterator(source_end));
+
+		// notify the next waiting thread that we have an item
+		lock.unlock();
+		has_items.notify_one();
+
+		source_start = source_end;
+		num_remaining -= num_items;
+	}
+	from_source.clear();
+}
+
 template <typename T>
 T RWQueue<T>::Dequeue()
 {
@@ -87,6 +134,44 @@ T RWQueue<T>::Dequeue()
 	lock.unlock();
 	has_room.notify_one();
 	return item;
+}
+
+template <typename T>
+void RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_requested)
+{
+	constexpr size_t min_items = 1;
+	assert(num_requested >= min_items);
+
+	if (into_target.size() != num_requested) {
+		into_target.resize(num_requested);
+	}
+
+	auto target_start  = into_target.begin();
+	auto num_remaining = num_requested;
+
+	while (num_remaining > 0) {
+		std::unique_lock<std::mutex> lock(mutex);
+
+		const auto num_items = std::max(min_items,
+		                                std::min(num_remaining,
+		                                         queue.size()));
+
+		// wait until the queue has enough items
+		has_items.wait(lock, [&] { return queue.size() >= num_items; });
+
+		const auto source_start = queue.begin();
+		const auto source_end   = source_start +
+		                        static_cast<difference_t>(num_items);
+		std::move(source_start, source_end, target_start);
+		queue.erase(source_start, source_end);
+
+		// notify the first waiting thread that the queue now has room
+		lock.unlock();
+		has_room.notify_one();
+
+		target_start += static_cast<difference_t>(num_items);
+		num_remaining -= num_items;
+	}
 }
 
 // Explicit template instantiations

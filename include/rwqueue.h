@@ -23,23 +23,41 @@
 
 #include "dosbox.h"
 
+/*  RW (Read/Write) Queue
+ *  ---------------------
+ *  A fixed-size thread-safe queue that blocks both the
+ *  producer until space is available and the consumer until
+ *  items are available.
+ *
+ *  For some background, this class was authored to replace
+ *  the one that resulted from this discussion:
+ *  https://github.com/cameron314/readerwriterqueue/issues/112
+ *  because the MoodyCamel implementation:
+ *   - Is roughly 5-fold larger (and more latent)
+ *   - Consumes more CPU by spinning (instead of locking)
+ *   - Lacks bulk queue/dequeue methods (request was rejected
+ *     https://github.com/cameron314/readerwriterqueue/issues/130)
+ */
+
 #include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <vector>
 
 template <typename T>
 class RWQueue {
 private:
 	std::deque<T> queue{}; // faster than: vector, queue, and list
-	std::mutex mutex = {};
-	std::condition_variable has_room = {};
+	std::mutex mutex                  = {};
+	std::condition_variable has_room  = {};
 	std::condition_variable has_items = {};
-	const size_t capacity = 0;
+	size_t capacity                   = 0;
+	using difference_t = typename std::vector<T>::difference_type;
 
 public:
-	RWQueue() = delete;
-	RWQueue(const RWQueue<T> &other) = delete;
-	RWQueue<T> &operator=(const RWQueue<T> &other) = delete;
+	RWQueue()                                      = delete;
+	RWQueue(const RWQueue<T>& other)               = delete;
+	RWQueue<T>& operator=(const RWQueue<T>& other) = delete;
 
 	RWQueue(size_t queue_capacity);
 
@@ -47,9 +65,30 @@ public:
 	size_t Size();
 	size_t MaxCapacity() const;
 
-	void Enqueue(const T &item);
-	void Enqueue(T &&item); // item will be empty (moved-out) after call
+	void Enqueue(const T& item);
+
+	// items will be empty (moved-out) after call
+	void Enqueue(T&& item);
+
 	T Dequeue();
+
+	// Bulk operations move multiple items from/to the given vector, which
+	// signficantly reduces the number of mutex lock state changes. It also
+	// uses references-to-vectors, such that they can be reused for the
+	// entire lifetime of the application, avoiding costly repeated memory
+	// reallocation.
+
+	// The number of requested items can exceed the capacity of the queue
+	// (the operation will be done in chunks, provided pressure on the other
+	// side is relieved).
+
+	// Items are std::move'd out of the source vector into the queue. This
+	// function clear()s the vector such that it's in a defined state on
+	// return (and can be reused).
+	void BulkEnqueue(std::vector<T>& from_source, const size_t num_requested);
+
+	// The target vector will be resized to accomodate, if needed.
+	void BulkDequeue(std::vector<T>& into_target, const size_t num_requested);
 };
 
 #endif
