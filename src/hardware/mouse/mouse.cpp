@@ -272,35 +272,49 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// TODO: if SDL gets expanded to include ManyMouse, change the behavior!
 
 	// Select hint to be displayed on a title bar
-	if (state.is_fullscreen || state.gui_has_taken_over || !state.has_focus)
+	if (state.is_fullscreen || state.gui_has_taken_over || !state.has_focus) {
 		state.hint_id = MouseHint::None;
-	else if (is_config_no_mouse)
+	} else if (is_config_no_mouse) {
 		state.hint_id = MouseHint::NoMouse;
-	else if (state.is_captured && state.should_release_on_middle)
+	} else if (state.is_captured && state.should_release_on_middle) {
 		state.hint_id = MouseHint::CapturedHotkeyMiddle;
-	else if (state.is_captured)
+	} else if (state.is_captured) {
 		state.hint_id = MouseHint::CapturedHotkey;
-	else if (state.should_capture_on_click)
+	} else if (state.should_capture_on_click) {
 		state.hint_id = MouseHint::ReleasedHotkeyAnyButton;
-	else if (state.should_capture_on_middle)
+	} else if (state.should_capture_on_middle) {
 		state.hint_id = state.is_seamless
 	                    ? MouseHint::SeamlessHotkeyMiddle
 	                    : MouseHint::ReleasedHotkeyMiddle;
-	else
+	} else {
 		state.hint_id = state.is_seamless
 	                    ? MouseHint::SeamlessHotkey
 	                    : MouseHint::ReleasedHotkey;
+	}
+
+	// Center the mouse cursor if:
+	// - this is not the first run, and
+	// - seamless mode is not in effect, and
+	// - we are going to release the captured mouse
+	if (!first_time && !state.is_seamless &&
+	    !state.is_captured && old_is_captured) {
+		GFX_CenterMouse();
+	}
 
 	// Apply calculated settings if changed or if this is the first run
-	if (first_time || old_is_captured != state.is_captured)
+	if (first_time || old_is_captured != state.is_captured) {
 		GFX_SetMouseCapture(state.is_captured);
-	if (first_time || old_is_input_raw != state.is_input_raw)
+	}
+	if (first_time || old_is_input_raw != state.is_input_raw) {
 		GFX_SetMouseRawInput(state.is_input_raw);
-	if (first_time || old_hint_id != state.hint_id)
+	}
+	if (first_time || old_hint_id != state.hint_id) {
 		GFX_SetMouseHint(state.hint_id);
+	}
 
-	for (auto &interface : mouse_interfaces)
+	for (auto& interface : mouse_interfaces) {
 		interface->UpdateInputType();
+	}
 
 	// And take a note that this is no longer the first run
 	first_time = false;
