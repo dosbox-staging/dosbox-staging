@@ -737,8 +737,8 @@ static void log_display_properties(int source_w, int source_h,
 	const auto double_scanned_str = (refresh_rate <= REFRESH_RATE_DOS_DOUBLED_MAX)
 	                                        ? "double-scanned "
 	                                        : "";
-	LOG_MSG("DISPLAY: %s %dx%d%s (%Xh) at %s%2.5g Hz %s, scaled"
-	        " by %.1fx%.1f to %dx%d with %#.2g pixel-aspect",
+	LOG_MSG("DISPLAY: %s %dx%d%s (%02Xh) at %s%2.5g Hz %s, scaled"
+	        " by %.4gx%.4g to %dx%d with %.4g pixel-aspect",
 	        type_name,
 	        source_w,
 	        source_h,
