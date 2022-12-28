@@ -1,6 +1,8 @@
+# Building on Haiku
+
 Haiku builds can be created with Clang or GCC using the Meson buildsystem.
 
-## Build on Haiku
+## Build instructions
 
 Install dependencies:
 
@@ -40,5 +42,5 @@ texture_renderer = software
 core = normal
 ```
 
-The state of Haiku's GPU Hardware-acceleration is being discussed here:
-https://discuss.haiku-os.org/t/state-of-accelerated-opengl/4163
+The state of Haiku's GPU Hardware-acceleration is being discussed
+[here](https://discuss.haiku-os.org/t/state-of-accelerated-opengl/4163).

@@ -1,8 +1,9 @@
+# Mouse code
 
 Few comments on mouse emulation code organization:
 
 
-###### `mouse.cpp`
+**mouse.cpp**
 
 Entry point for all the notifications and requests from external subsystems -
 see `include/mouse.h` for API definition. Interacts mainly with GFX subsystem
@@ -10,40 +11,40 @@ see `include/mouse.h` for API definition. Interacts mainly with GFX subsystem
 API (`MouseControlAPI` class) for interaction with command-line configuration
 tool and yet-to-be-written GUI.
 
-###### `../dos/program_mousectl.cpp`
+**`../dos/program_mousectl.cpp`**
 
 Implementation of the command line tool, allowing to change settings (like
 sensitivity or emulated sampling rate) during the runtime. The tool can also
 be used to map a single physical mouse to the given emulated interface, thus
 allowing for dual-mice gaming.
 
-###### `mouse_common.cpp`
+**`mouse_common.cpp`**
 
 Various helper methods, like implementation of mouse ballistics acceleration
 model).
 
-###### `mouse_config.cpp`
+**`mouse_config.cpp`**
 
 Handles `[mouse]` section of the DOSBox configuration file.
 
-###### `mouse_interfaces.cpp`
+**`mouse_interfaces.cpp`**
 
 Common object-oriented API, abstracting various emulated mouse interfaces for
 `mouse.cpp` and `mouse_manymouse.cpp`.
 
-###### `mouse_manymouse.cpp`
+**`mouse_manymouse.cpp`**
 
 Object-oriented wrapper around a 3rd party _ManyMouse_ library, used for
 dual-mice gaming. Used as a source of mouse events - but only when a physical
 mouse is mapped to the emulated interface, otherwise all mouse events come
 from SDL-based GFX subsystem.
 
-###### `mouse_queue.cpp`
+**`mouse_queue.cpp`**
 
 A 'queue' - delays and aggregates mouse events from host OS to simulate
 the desired mouse scanning rate.
 
-###### `mouseif_*.cpp`
+**`mouseif_*.cpp`**
 
 Implementations (non-object oriented) of various mouse interfaces:
 
@@ -63,7 +64,7 @@ but requires a PCI device
 - InPort / Bus mouse - I know no description, but Bochs contains an emulation
 code, under GPL2-or-above license
 
-###### `../serialport/serialmouse.cpp`
+**`../serialport/serialmouse.cpp`**
 
 Serial mice emulation - idea is similar to `mouseif_*.cpp` files, but
 implemented in object-oriented way, as a serial port device; multiple

@@ -35,4 +35,4 @@ Make a commit, push it to the relevant branch, then:
     
     $ fedpkg build
 
-Finally, for released Fedora versions, request a package update via https://bodhi.fedoraproject.org/
+Finally, for released Fedora versions, request a package update via <https://bodhi.fedoraproject.org/>

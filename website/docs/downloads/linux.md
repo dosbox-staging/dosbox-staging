@@ -55,17 +55,17 @@ sha256: 3022bdd405dc1106007c3505e6a5d083<wbr>de982d516c9bce499e2c4a02a697a1bd
 Our pre-compiled builds run on most Linux distributions (x86\_64 only for now).
 They depend on the following packages:
 
-#### Fedora
+### Fedora
 
     sudo dnf install SDL2 SDL2_image SDL2_net opusfile
 
-#### Ubuntu, Debian 
+### Ubuntu, Debian 
 
 Ubuntu 18.04 or newer, and Debian 9 or newer is required.
 
     sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
-#### Arch, Manjaro
+### Arch, Manjaro
 
     sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
 
@@ -95,70 +95,70 @@ are designed with developers and testers in mind.
 ## Older builds
 
 - [DOSBox Staging 0.79.1 (tar.xz)][0_79_1]
-<br>
-<small>
-sha256: aebf8619bb44934f18d0e219d50c4e2c<wbr>03b179c37daa67a9b800e7bd3aefc262
-</small>
+  <br>
+  <small>
+  sha256: aebf8619bb44934f18d0e219d50c4e2c<wbr>03b179c37daa67a9b800e7bd3aefc262
+  </small>
 
 - [DOSBox Staging 0.79.0 (tar.xz)][0_79_0]
-<br>
-<small>
-sha256: 804adb294096ab651490b1664570203f<wbr>24e460048d7e6e2e388d210a8380016a
-</small>
+  <br>
+  <small>
+  sha256: 804adb294096ab651490b1664570203f<wbr>24e460048d7e6e2e388d210a8380016a
+  </small>
 
 - [DOSBox Staging 0.78.1 (tar.xz)][0_78_1]
-<br>
-<small>
-sha256: 8bd2a247ca960f6059276db2b0331f85<wbr>3e16bc8a090722b15f567782542b5fba
-</small>
+  <br>
+  <small>
+  sha256: 8bd2a247ca960f6059276db2b0331f85<wbr>3e16bc8a090722b15f567782542b5fba
+  </small>
 
 - [DOSBox Staging 0.78.0 (tar.xz)][0_78_0]
-<br>
-<small>
-sha256: 085e7cbe350546b3f25b0400c872a276<wbr>6f9a49d16a5ca8d17a0a93aad6e37709
-</small>
+  <br>
+  <small>
+  sha256: 085e7cbe350546b3f25b0400c872a276<wbr>6f9a49d16a5ca8d17a0a93aad6e37709
+  </small>
 
 - [DOSBox Staging 0.77.1 (tar.xz)][0_77_1]
-<br>
-<small>
-sha256: e2d475e4b1f80881ccafc4502b3884c0<wbr>96b51aa2fc2cfe89bb6c2b8ebfb7cc76
-</small>
+  <br>
+  <small>
+  sha256: e2d475e4b1f80881ccafc4502b3884c0<wbr>96b51aa2fc2cfe89bb6c2b8ebfb7cc76
+  </small>
 
 - [DOSBox Staging 0.76.0 (tar.xz)][0_77_0]
-<br>
-<small>
-sha256: f8401bcd473d5b664eeb3a90e4dbb4bb<wbr>f0cef5339adba867f361c00b7de9b2fe
-</small>
+  <br>
+  <small>
+  sha256: f8401bcd473d5b664eeb3a90e4dbb4bb<wbr>f0cef5339adba867f361c00b7de9b2fe
+  </small>
 
 - [DOSBox Staging 0.76.0 (tar.xz)][0_76_0]
-<br>
-<small>
-sha256: b14de58ba0f5dd192398cda58fa439b1<wbr>5512f50d1c88b5ded6f300d4a9212852
-</small>
+  <br>
+  <small>
+  sha256: b14de58ba0f5dd192398cda58fa439b1<wbr>5512f50d1c88b5ded6f300d4a9212852
+  </small>
 
 - [DOSBox Staging 0.75.2 (tar.xz)][0_75_2]
-<br>
-<small>
-sha256: 0325a1860aea95e8117aa49b041bfd62<wbr>8ab20531a3abc7b0a67aff4c47049465
-</small>
+  <br>
+  <small>
+  sha256: 0325a1860aea95e8117aa49b041bfd62<wbr>8ab20531a3abc7b0a67aff4c47049465
+  </small>
 
 - [DOSBox Staging 0.75.1 (tar.xz)][0_75_1]
-<br>
-<small>
-sha256: aef22e5ddf93ff826fc2d48a4c8c0b40<wbr>97d3455525b40be5b3fb443935929c70
-</small>
+  <br>
+  <small>
+  sha256: aef22e5ddf93ff826fc2d48a4c8c0b40<wbr>97d3455525b40be5b3fb443935929c70
+  </small>
 
 - [DOSBox Staging 0.75.0 (tar.xz)][0_75_0]
-<br>
-<small>
-sha256: a28d8ba0481722c8343b7532299c7b9b<wbr>b9e491c6832d9d05dd4704939287f776
-</small>
+  <br>
+  <small>
+  sha256: a28d8ba0481722c8343b7532299c7b9b<wbr>b9e491c6832d9d05dd4704939287f776
+  </small>
 
 - [DOSBox Staging 0.75.0-rc1 (tar.xz)][0_75_0_rc1]
-<br>
-<small>
-sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
-</small>
+  <br>
+  <small>
+  sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
+  </small>
 
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz
 [0_79_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-linux-v0.79.1.tar.xz
