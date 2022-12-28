@@ -30,8 +30,9 @@
 #include <memory>
 #include <set>
 
-#include "envelope.h"
 #include "../src/hardware/compressor.h"
+#include "audio_frame.h"
+#include "envelope.h"
 
 // Disable effc++ for Iir until its release.
 // Ref: https://github.com/berndporr/iir1/pull/39
@@ -58,27 +59,6 @@ enum class MixerState {
 	Off,
 	On,
 	Mute,
-};
-
-// A simple stereo audio frame
-struct AudioFrame {
-	float left  = 0.0f;
-	float right = 0.0f;
-
-	constexpr AudioFrame() = default;
-	constexpr AudioFrame(const float l, const float r) : left(l), right(r) {}
-	constexpr AudioFrame(const int16_t l, const int16_t r) : left(l), right(r) {}
-
-	constexpr float& operator[](const size_t i) noexcept
-	{
-		assert(i < 2);
-		return i == 0 ? left : right;
-	}
-	constexpr const float &operator[](const size_t i) const noexcept
-	{
-		assert(i < 2);
-		return i == 0 ? left : right;
-	}
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
