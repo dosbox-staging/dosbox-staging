@@ -986,7 +986,6 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	++vga.draw.cursor.count;
 	if (vga.draw.vga_override || !RENDER_StartUpdate())
 		return;
-	}
 
 	vga.draw.address_line = vga.config.hlines_skip;
 	if (IS_EGAVGA_ARCH) {
