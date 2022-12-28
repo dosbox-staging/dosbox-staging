@@ -82,6 +82,7 @@ enum class MouseHint {
     SeamlessHotkeyMiddle,    // seamless mouse, use hotkey or middle-click to capture
 };
 
+void GFX_CenterMouse();
 void GFX_SetMouseHint(const MouseHint requested_hint_id);
 void GFX_SetMouseCapture(const bool requested_capture);
 void GFX_SetMouseVisibility(const bool requested_visible);
