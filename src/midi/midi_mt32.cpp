@@ -386,6 +386,7 @@ MidiHandler_mt32::MidiHandler_mt32() : keep_rendering(false)
 
 MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
 {
+	const std::lock_guard<std::mutex> lock(service_mutex);
 	service_t mt32_service = std::make_unique<MT32Emu::Service>();
 	// Has libmt32emu already created a context?
 	if (!mt32_service->getContext())
@@ -531,7 +532,11 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	if (model_and_dir && service) {
 		// Print the loaded ROM version
 		mt32emu_rom_info rom_info = {};
-		service->getROMInfo(&rom_info);
+		{
+			// Request exclusive access prior to getting ROM info
+			const std::lock_guard<std::mutex> lock(service_mutex);
+			service->getROMInfo(&rom_info);
+		}
 		caller->WriteOut("%s%s%s (%s)\n",
 		                 indent,
 		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
@@ -683,6 +688,7 @@ void MidiHandler_mt32::Close()
 
 	// Stop the synthesizer
 	if (service) {
+		const std::lock_guard<std::mutex> lock(service_mutex);
 		service->closeSynth();
 		service->freeContext();
 	}
