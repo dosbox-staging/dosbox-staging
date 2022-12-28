@@ -100,7 +100,7 @@ void Envelope::Apply(const bool is_stereo, AudioFrame &frame)
 	if (++frames_done > expire_after_frames || edge >= edge_limit) {
 		process = &Envelope::Skip;
 		(void)channel_name; // [[maybe_unused]] in release builds
-		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %f",
+		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %.4f",
 		              channel_name,
 		              frames_done,
 		              edge);
