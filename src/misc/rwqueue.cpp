@@ -45,7 +45,7 @@ template <typename T>
 bool RWQueue<T>::IsEmpty()
 {
 	std::lock_guard<std::mutex> lock(mutex);
-	return !queue.size();
+	return queue.empty();
 }
 
 template <typename T>
@@ -81,8 +81,9 @@ T RWQueue<T>::Dequeue()
 {
 	// wait until the queue has an item that we can get
 	std::unique_lock<std::mutex> lock(mutex);
-	while (!queue.size())
+	while (queue.empty()) {
 		has_items.wait(lock);
+	}
 
 	// get it, and notify the first waiting thread that the queue has room
 	T item = std::move(queue.front());
