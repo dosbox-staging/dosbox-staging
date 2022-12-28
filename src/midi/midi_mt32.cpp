@@ -610,12 +610,12 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                      this,
 	                                      std::placeholders::_1);
 
-	const auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                            frame_rate_hz,
-	                                            "MT32",
-	                                            {ChannelFeature::Sleep,
-	                                             ChannelFeature::Stereo,
-	                                             ChannelFeature::Synthesizer});
+	auto mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                      frame_rate_hz,
+	                                      "MT32",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::Stereo,
+	                                       ChannelFeature::Synthesizer});
 
 	// libmt32emu renders float frames between -1.0f and +1.0f, so we ask the
 	// channel to scale all the samples up to it's 0db level.
