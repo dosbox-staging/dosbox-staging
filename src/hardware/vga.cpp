@@ -42,8 +42,7 @@ uint32_t ExpandTable[256];
 uint32_t Expand16Table[4][16];
 uint32_t FillTable[16];
 
-std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
-                                                       uint16_t mode)
+std::pair<std::string, std::string> VGA_DescribeType(const VGAModes type, uint16_t mode)
 {
 	// clang-format off
 	switch (type) {
@@ -51,28 +50,28 @@ std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
 	case M_HERC_TEXT:
 	case M_TANDY_TEXT:
 	case M_CGA_TEXT_COMPOSITE: return std::pair("Text", "");
-	case M_HERC_GFX:           return std::pair("Hercules", " monochrome");
+	case M_HERC_GFX:           return std::pair("Hercules", "monochrome");
 	case M_CGA2_COMPOSITE:
-	case M_CGA4_COMPOSITE:     return std::pair("CGA",   " composite");
-	case M_CGA2:               return std::pair("CGA",   " 2 color");
-	case M_CGA4:               return std::pair("CGA",   " 4 color");
-	case M_CGA16:              return std::pair("CGA",   " 16 color");
-	case M_TANDY2:             return std::pair("Tandy", " 2 color");
-	case M_TANDY4:             return std::pair("Tandy", " 4 color");
-	case M_TANDY16:            return std::pair("Tandy", " 16 color");
+	case M_CGA4_COMPOSITE:     return std::pair("CGA",   "composite");
+	case M_CGA2:               return std::pair("CGA",   "2 color");
+	case M_CGA4:               return std::pair("CGA",   "4 color");
+	case M_CGA16:              return std::pair("CGA",   "16 color");
+	case M_TANDY2:             return std::pair("Tandy", "2 color");
+	case M_TANDY4:             return std::pair("Tandy", "4 color");
+	case M_TANDY16:            return std::pair("Tandy", "16 color");
 	case M_EGA: // see comment below
 	    switch (mode) {
-	    case 0x011:            return std::pair("VGA",   " monochrome");
-	    case 0x012:            return std::pair("VGA",   " 16 color");
-	    default:               return std::pair("EGA",   " 16 color");
+	    case 0x011:            return std::pair("VGA",   "monochrome");
+	    case 0x012:            return std::pair("VGA",   "16 color");
+	    default:               return std::pair("EGA",   "16 color");
 	    }
-	case M_VGA:                return std::pair("VGA",   " 8-bit");
-	case M_LIN4:               return std::pair("VESA",  " 16 color");
-	case M_LIN8:               return std::pair("VESA",  " 8-bit");
-	case M_LIN15:              return std::pair("VESA",  " 15-bit");
-	case M_LIN16:              return std::pair("VESA",  " 16-bit");
-	case M_LIN24:              return std::pair("VESA",  " 24-bit");
-	case M_LIN32:              return std::pair("VESA",  " 32-bit");
+	case M_VGA:                return std::pair("VGA",   "8-bit");
+	case M_LIN4:               return std::pair("VESA",  "16 color");
+	case M_LIN8:               return std::pair("VESA",  "8-bit");
+	case M_LIN15:              return std::pair("VESA",  "15-bit");
+	case M_LIN16:              return std::pair("VESA",  "16-bit");
+	case M_LIN24:              return std::pair("VESA",  "24-bit");
+	case M_LIN32:              return std::pair("VESA",  "32-bit");
 	case M_ERROR:
 	default: return std::pair("Unknown", "");
 	}
@@ -83,9 +82,9 @@ std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
 	// type for them), however they were classified as VGA from a standards
 	// perspective, so we report them as such.
 	// References:
-	// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12, 19 March, 1992.
-	// [2] "IBM PC Family- BIOS Video Modes", http://minuszerodegrees.net/video/bios_video_modes.htm
-
+	// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12, 19
+	// March, 1992. [2] "IBM PC Family- BIOS Video Modes",
+	// http://minuszerodegrees.net/video/bios_video_modes.htm
 }
 
 void VGA_LogInitialization(const char *adapter_name,

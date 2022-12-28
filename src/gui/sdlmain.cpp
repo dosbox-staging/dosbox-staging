@@ -735,14 +735,17 @@ static void log_display_properties(int source_w, int source_h,
 	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
 	auto refresh_rate = VGA_GetPreferredRate();
 	const auto double_scanned_str = (refresh_rate <= REFRESH_RATE_DOS_DOUBLED_MAX)
-	                                        ? "double-scanned "
-	                                        : "";
+	                                      ? "double-scanned "
+	                                      : "";
+
+	const auto colours = (type_colours == "") ? "" : " " + type_colours;
+
 	LOG_MSG("DISPLAY: %s %dx%d%s (%02Xh) at %s%2.5g Hz %s, scaled"
 	        " by %.4gx%.4g to %dx%d with %.4g pixel-aspect",
-	        type_name,
+	        type_name.c_str(),
 	        source_w,
 	        source_h,
-	        type_colours,
+	        colours.c_str(),
 	        CurMode->mode,
 	        double_scanned_str,
 	        refresh_rate,
