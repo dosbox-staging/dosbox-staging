@@ -18,7 +18,7 @@ so here are links to the major sections:
   - [4.1. Using clang-format](#using-clang-format)
   - [4.2. Summarize warnings](#summarize-warnings)
 
-# Feature requests and bug reports
+## Feature requests and bug reports
 
 If you find a [feature request][enhancement_label], you're interested in,
 leave a comment, or an emote - it will help us to decide where to focus our
@@ -31,7 +31,7 @@ lost.
 [enhancement_label]: https://github.com/dosbox-staging/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement
 [issues]: https://github.com/dosbox-staging/dosbox-staging/issues
 
-# Find something to work on
+## Find something to work on
 
 There's plenty of tasks to work on all around, here are some ideas:
 
@@ -52,7 +52,7 @@ There's plenty of tasks to work on all around, here are some ideas:
   the issue is not assigned to anyone, then it's for the pickings! Leave a
   comment saying that you're working on it.
 - Find next release project in our
-  [projects list ](https://github.com/dosbox-staging/dosbox-staging/projects)
+  [projects list](https://github.com/dosbox-staging/dosbox-staging/projects)
   and pick one of tasks in "To do" column.
 - Peruse through the list of
   [open bug reports](https://github.com/dosbox-staging/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
@@ -69,9 +69,9 @@ discuss it with us early, e.g. by creating a new bugtracker issue.
 [clanga]:   https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [pvs]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 
-# Contributing code
+## Contributing code
 
-## Coding style
+### Coding style
 
 These rules apply to code in `src/` and `include/` directories.
 They do not apply to code in `src/libs/` directory (libraries in there
@@ -80,7 +80,7 @@ have their own coding conventions).
 Rules outlined below apply to new code landing in the main branch.
 Do not do mass reformatting or renaming of existing code.
 
-### Language
+#### Language
 
 We use C-like C++17. To clarify:
 
@@ -106,7 +106,7 @@ We use C-like C++17. To clarify:
 - Before using some platform-specific API - check if SDL2 provides
   cross-platform interface for it. It probably does.
 
-### Code Formatting
+#### Code Formatting
 
 For new code follow K&R style - see [Linux coding style] for examples and some
 advice on good C coding style.
@@ -117,7 +117,7 @@ custom clang-format ruleset to make it crystal clear, skip to
 
 [Linux coding style]:https://www.kernel.org/doc/html/latest/process/coding-style.html
 
-### Additional Style Rules
+#### Additional Style Rules
 
 1. Sort includes according to: [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes)
 2. NEVER use Hungarian notation.
@@ -136,7 +136,7 @@ custom clang-format ruleset to make it crystal clear, skip to
 8. Use header guards in format: `DOSBOX_HEADERNAME_H` or
    `DOSBOX_MODULENAME_HEADERNAME_H`.
 
-## Submitting Patches / Pull Requests
+### Submitting Patches / Pull Requests
 
 Submissions via GitHub PRs are recommended. If you can't use GitHub for
 whatever reason, then submitting patches (generated with `git-format-patch`)
@@ -145,7 +145,7 @@ via email is also possible - contact maintainer about the details.
 Code submitted as raw source files (not patches), files attached to issue
 comments, forum posts, diffs in non-git format, etc will be promptly ignored.
 
-### Commit messages
+#### Commit messages
 
 Read [How to Write a Git Commit Message]. Then read it again, and follow
 "the seven rules" :)
@@ -156,7 +156,7 @@ that does not follow them.  There are no other exceptions.
 
 [How to Write a Git Commit Message]:https://chris.beams.io/posts/git-commit/
 
-### Commit messages for patches authored by someone else
+#### Commit messages for patches authored by someone else
 
 - If possible, preserve code formatting used by original author
 - Record the correct author name, date when original author wrote the patch
@@ -179,9 +179,9 @@ For an example of commit, that followed all of these rules, see:
 
     $ git log -1 ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
-# Tools
+## Tools
 
-## Using clang-format
+### Using clang-format
 
 It's usually distributed with the Clang compiler, and can be integrated with
 [many programming environments](https://releases.llvm.org/10.0.0/tools/clang/docs/ClangFormat.html).
@@ -201,7 +201,7 @@ Run `./scripts/format-commit.sh --help` to learn about available options.
 
 
 
-### Vim integration
+#### Vim integration
 
 Download `clang-format.py` file somewhere, and make it executable:
 
@@ -217,11 +217,11 @@ Then add following lines to your `.vimrc` file:
 Read documentation inside `clang-format.py` file in case your OS is missing
 python3 support.
 
-### MSVC integration
+#### MSVC integration
 
 [ClangFormat extension on VisualStudio Marketplace](https://marketplace.visualstudio.com/items?itemName=LLVMExtensions.ClangFormat)
 
-## Summarize warnings
+### Summarize warnings
 
 Out gating mechanism tracks the number of warnings per OS/compiler.
 To see a summary of warnings in your build, do a clean build and then

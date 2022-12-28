@@ -1,11 +1,11 @@
 *Warning: this information is partially outdated.*
 
-## AutoFDO Procedures
+# AutoFDO Procedures
 
 Feedback Directed Optimization (FDO) involves recording performance data from
 the Linux kernel and using it to direct the compiler's optimizer.
 
-### Prerequisites for AutoFDO
+## Prerequisites for AutoFDO
 
 - An **Intel processor** that supports the last branch record (LBR) instruction.
 - A Linux **kernel** built with Branch Profiling tracers enabled:
@@ -65,7 +65,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
   <https://github.com/andikleen/pmu-tools.> This is a collection of python
   scripts used to assist in capturing sampling data.
 
-### Record Data for AutoFDO Builds
+## Record Data for AutoFDO Builds
 
 1. Ensure the custom Linux Kernel supporting LBR tracing is running.
 
@@ -88,8 +88,8 @@ the Linux kernel and using it to direct the compiler's optimizer.
    provided in the `autofdo` package:
 
    For GCC, run:
-   - `create_gcov --binary=/path/to/fdo-trained/dosbox
-     --profile=samples-1.prof -gcov=samples-1.afdo -gcov_version=1`
+
+   - `create_gcov --binary=/path/to/fdo-trained/dosbox --profile=samples-1.prof -gcov=samples-1.afdo -gcov_version=1`
 
      ... for each `.prof` file, creating a corresponding `.afdo` file.
 
@@ -100,8 +100,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
 
    For Clang, run:
 
-   - `create_llvm_prof --binary=/path/to/fdo-trained/dosbox
-     --profile=samples-1.prof --out=samples-1.profraw`
+   - `create_llvm_prof --binary=/path/to/fdo-trained/dosbox --profile=samples-1.prof --out=samples-1.profraw`
 
      ... for each `*.prof` file, creating a corresponding `.profraw` file.
 
@@ -110,7 +109,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
 
      `llvm-profdata-<version> merge -sample -output=current.profraw *.profraw`
 
-### Build Using AutoFDO Data
+## Build Using AutoFDO Data
 
 You can now use your merged `.afdo` or `.profraw` file to build with the `-m
 fdo` modifier by  placing your `current.afdo/.profraw` file in the repo's root

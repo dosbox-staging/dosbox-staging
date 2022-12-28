@@ -7,7 +7,7 @@ This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
 support today's systems.
 
-### Build status
+## Build status
 
 [![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
 [![Linux other build status][build-lin2-badge]][build-lin2-ci]
@@ -15,7 +15,7 @@ support today's systems.
 [![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
 [![macOS build status][build-mac-badge]][build-mac-ci]
 
-### Code quality status
+## Code quality status
 
 [![Coverity status][coverity-badge]][3]
 

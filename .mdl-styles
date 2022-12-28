@@ -1,4 +1,34 @@
-exclude_rule 'MD005'
-exclude_rule 'MD013'
-exclude_rule 'MD033'
-exclude_rule 'MD046'
+all
+
+rule 'MD029', :style => :ordered	# ordered lists must use running numbers
+
+exclude_rule 'MD005'    # don't try to enforce consistent list indentation
+                        # (buggy, gets confused with complex nestings)
+
+exclude_rule 'MD007'    # don't try to enforce unordered list indentation
+                        # (buggy, gets confused with complex nestings)
+
+exclude_rule 'MD009'	# allow trailing spaces
+exclude_rule 'MD012'	# allow multiple consecutive blank lines
+exclude_rule 'MD013'	# disable line-length check
+exclude_rule 'MD014' 	# don't try to be clever when parsing code blocks
+
+exclude_rule 'MD022' 	# don't try to enforce headers to be surrounded by
+                        # blank lines (buggy, raises false positives)
+
+exclude_rule 'MD024' 	# don't try to be clever about the content of the headers
+exclude_rule 'MD026' 	# allow trailing punctuation characters in headers
+
+exclude_rule 'MD032'	# don't try to enforce blank lines around lists (buggy,
+                        # raises false positives)
+
+exclude_rule 'MD033'	# allow inline HTML
+
+exclude_rule 'MD034'    # allow bare URls (raises false positives for raw HTML
+                        # links)
+
+exclude_rule 'MD036'	# allow using emphasised text as headers
+exclude_rule 'MD040'	# allow fenced code block without a language specified
+exclude_rule 'MD041'	# do not enforce first line to be a top level header
+exclude_rule 'MD046'	# allow any code block style
+

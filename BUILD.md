@@ -1,14 +1,16 @@
+# Build instructions
+
 ## Minimum build requirements
 
 Install dependencies listed in [README.md](README.md).  Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
 up builds. The minimum set of dependencies is:
 
-  - C/C++ compiler with support for C++17
-  - SDL >= 2.0.5
-  - Opusfile
-  - Meson >= 0.56, or Visual Studio Community Edition 2019 or 2022
-  - OS that is mostly POSIX-compliant or up-to-date Windows system
+- C/C++ compiler with support for C++17
+- SDL >= 2.0.5
+- Opusfile
+- Meson >= 0.56, or Visual Studio Community Edition 2019 or 2022
+- OS that is mostly POSIX-compliant or up-to-date Windows system
 
 
 All other dependencies are optional and can be disabled while configuring the
@@ -178,10 +180,12 @@ Prerequisites:
 # Fedora
 sudo dnf install gmock-devel gtest-devel
 ```
+
 ``` shell
 # Debian, Ubuntu
 sudo apt install libgtest-dev libgmock-dev
 ```
+
 If GTest and GMock are not installed system-wide, Meson will download them
 automatically.
 
@@ -259,6 +263,7 @@ Prerequisites:
 # Fedora
 sudo dnf install clang-analyzer
 ```
+
 ``` shell
 # Debian, Ubuntu
 sudo apt install clang-tools
@@ -278,11 +283,11 @@ Compared to a debug build, sanitizer builds take longer to compile
 and run slower, so are often reserved to exercise new features or
 perform a periodic whole-program checkup.
 
- - **Linux users:**:  We recommend using Clang's latest
+- **Linux users:**:  We recommend using Clang's latest
 stable version. If you're using a Debian or Ubuntu-based distro,
-LLVM has a helpful one-time setup script here: https://apt.llvm.org/
+LLVM has a helpful one-time setup script [here](https://apt.llvm.org/).
 
- - **Windows users:** Start by setting up MSYS2 as described in the
+- **Windows users:** Start by setting up MSYS2 as described in the
 _docs/build-windows.md_document. Ensure you've opened an MSYS2 MinGW
 Clang x64 terminal before proceeding and that `clang --version`
 reports version 13.x (or greater).

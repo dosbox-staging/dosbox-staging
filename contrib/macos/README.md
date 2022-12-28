@@ -8,7 +8,7 @@ size, the position and size of the icons it contains, and a link to the
 background image (among a few other things).
 
 
-### If you only want to change the background image
+## If you only want to change the background image
 
 1. Make edits to `contrib/macos/background/background.svg` in Inkscape
 
@@ -23,7 +23,7 @@ background image (among a few other things).
    build the new DMG image.
 
 
-### To fully customise the appearnce of the Finder window
+## To fully customise the appearance of the Finder window
 
 1. Download the latest DMG image from the GitHub CI workflow.
 
@@ -40,10 +40,11 @@ background image (among a few other things).
    background image from scratch in great detail, and contains some very
    useful tips (there are a few gotchas that are hard to figure out).
 
-[dmg-guide]: https://www.ej-technologies.com/resources/install4j/help/doc/concepts/dmgStyling.html
+   [dmg-guide]: https://www.ej-technologies.com/resources/install4j/help/doc/concepts/dmgStyling.html
 
 5. When you're done, copy the hidden `.DS_Store` from the root of the mounted
    volume and overwrite `contrib/macos/DS_Store` with it.
 
 6. Commit & push the new background image, and let the GitHub CI workflow
    build the new DMG image.
+
