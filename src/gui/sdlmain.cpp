@@ -1440,7 +1440,7 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
 		}
 		SetTransparency();
         SDL_SetWindowResizable(sdl.window, SDL_TRUE);
-        GFX_SetTitle(-1, -1, false); //refresh title.
+        GFX_SetTitle(-1, false); //refresh title.
         SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
         sdl.update_display_contents = ((width == currWidth) && (height == currHeight));
 
