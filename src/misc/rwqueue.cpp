@@ -49,12 +49,11 @@ bool RWQueue<T>::IsEmpty()
 }
 
 template <typename T>
-void RWQueue<T>::Enqueue(const T &item)
+void RWQueue<T>::Enqueue(const T& item)
 {
 	// wait until the queue has room to accept the item
 	std::unique_lock<std::mutex> lock(mutex);
-	while (queue.size() >= capacity)
-		has_room.wait(lock);
+	has_room.wait(lock, [this] { return queue.size() < capacity; });
 
 	// add it, and notify the next waiting thread that we've got an item
 	queue.emplace(queue.end(), item);
@@ -63,12 +62,11 @@ void RWQueue<T>::Enqueue(const T &item)
 }
 
 template <typename T>
-void RWQueue<T>::Enqueue(T &&item)
+void RWQueue<T>::Enqueue(T&& item)
 {
 	// wait until the queue has room to accept the item
 	std::unique_lock<std::mutex> lock(mutex);
-	while (queue.size() >= capacity)
-		has_room.wait(lock);
+	has_room.wait(lock, [this] { return queue.size() < capacity; });
 
 	// add it, and notify the next waiting thread that we've got an item
 	queue.emplace(queue.end(), std::move(item));
@@ -79,11 +77,9 @@ void RWQueue<T>::Enqueue(T &&item)
 template <typename T>
 T RWQueue<T>::Dequeue()
 {
-	// wait until the queue has an item that we can get
+	// wait until the queue has an item
 	std::unique_lock<std::mutex> lock(mutex);
-	while (queue.empty()) {
-		has_items.wait(lock);
-	}
+	has_items.wait(lock, [this] { return !queue.empty(); });
 
 	// get it, and notify the first waiting thread that the queue has room
 	T item = std::move(queue.front());
