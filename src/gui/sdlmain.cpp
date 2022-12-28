@@ -2236,6 +2236,16 @@ void GFX_SetMouseHint(const MouseHint hint_id)
 	GFX_RefreshTitle();
 }
 
+void GFX_CenterMouse()
+{
+	int current_width  = 0;
+	int current_height = 0;
+
+	assert(sdl.window);
+	SDL_GetWindowSize(sdl.window, &current_width, &current_height);
+	SDL_WarpMouseInWindow(sdl.window, current_width / 2, current_height / 2);
+}
+
 void GFX_SetMouseRawInput(const bool requested_raw_input)
 {
 	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
