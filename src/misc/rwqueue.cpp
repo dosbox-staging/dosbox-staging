@@ -65,19 +65,6 @@ bool RWQueue<T>::IsEmpty()
 }
 
 template <typename T>
-void RWQueue<T>::Enqueue(const T& item)
-{
-	// wait until the queue has room to accept the item
-	std::unique_lock<std::mutex> lock(mutex);
-	has_room.wait(lock, [this] { return queue.size() < capacity; });
-
-	// add it, and notify the next waiting thread that we've got an item
-	queue.emplace(queue.end(), item);
-	lock.unlock();
-	has_items.notify_one();
-}
-
-template <typename T>
 void RWQueue<T>::Enqueue(T&& item)
 {
 	// wait until the queue has room to accept the item
