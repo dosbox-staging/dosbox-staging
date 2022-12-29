@@ -79,6 +79,7 @@ void rw_consume_trivial(RWQueue<int> *q, const size_t *max_depth)
 	}
 }
 
+/* Copying is disabled
 void rw_produce_copy_trivial(RWQueue<int> *q, const size_t *max_depth)
 {
 	for (int i = 0; i != iterations; ++i) {
@@ -86,6 +87,7 @@ void rw_produce_copy_trivial(RWQueue<int> *q, const size_t *max_depth)
 		EXPECT_TRUE(q->Size() <= *max_depth);
 	}
 }
+ */
 
 void rw_produce_move_trivial(RWQueue<int> *q, const size_t *max_depth)
 {
@@ -95,6 +97,7 @@ void rw_produce_move_trivial(RWQueue<int> *q, const size_t *max_depth)
 	}
 }
 
+/* Copying is disabled
 TEST(RWQueue, TrivialCopyAsync)
 {
 	const size_t max_depth = 8;
@@ -109,6 +112,7 @@ TEST(RWQueue, TrivialCopyAsync)
 	// Make sure we've consumed all produced items and the queue is empty
 	EXPECT_EQ(q.Size(), 0);
 }
+ */
 
 TEST(RWQueue, TrivialMoveAsync)
 {
@@ -331,8 +335,8 @@ TEST(RWQueue,ContainerSerial)
 
 		container_t v(iteration + 1); 
 		v[iteration] = iteration;
-		q.Enqueue(v);
-		EXPECT_EQ(v.size(), iteration + 1); // check copy
+		q.Enqueue(std::move(v));
+		EXPECT_EQ(v.size(), 0); // check move
 
 		EXPECT_EQ(q.MaxCapacity(), 65);
 		EXPECT_EQ(q.Size(), 1);
@@ -379,6 +383,7 @@ void rw_consume_container(RWQueue<container_t> *q, const size_t *max_depth)
 	}
 }
 
+/* Copying is disabled
 void rw_produce_copy_container(RWQueue<container_t> *q, const size_t *max_depth)
 {
 	for (int i = 0; i != iterations; ++i) {
@@ -389,6 +394,7 @@ void rw_produce_copy_container(RWQueue<container_t> *q, const size_t *max_depth)
 		EXPECT_TRUE(q->Size() <= *max_depth);
 	}
 }
+ */
 
 void rw_produce_move_container(RWQueue<container_t> *q, const size_t *max_depth)
 {
@@ -401,6 +407,7 @@ void rw_produce_move_container(RWQueue<container_t> *q, const size_t *max_depth)
 	}
 }
 
+/* Copying is disabled
 TEST(RWQueue,ContainerCopyAsync)
 {
 	const size_t max_depth = 8;
@@ -415,6 +422,7 @@ TEST(RWQueue,ContainerCopyAsync)
 	// Make sure we've consumed all produced items and the queue is empty
 	EXPECT_EQ(q.Size(), 0);
 }
+ */
 
 TEST(RWQueue,ContainerMoveAsync)
 {

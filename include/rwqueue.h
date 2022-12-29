@@ -67,7 +67,11 @@ public:
 	size_t MaxCapacity() const;
 	float GetPercentFull();
 
-	void Enqueue(const T& item);
+	// Discourage copying into the queue. Instead, use std::move into the
+	// queue to explicitly invalidate the source object to avoid having
+	// two source objects floating around.
+	//
+	// void Enqueue(const T& item);
 
 	// items will be empty (moved-out) after call
 	void Enqueue(T&& item);

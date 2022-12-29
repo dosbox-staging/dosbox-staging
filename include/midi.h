@@ -69,7 +69,7 @@ struct MidiWork {
 	}
 
 	// Prevent copy construction
-	MidiWork(const MidiWork&)            = default;
+	MidiWork(const MidiWork&)            = delete;
 	MidiWork& operator=(const MidiWork&) = delete;
 };
 
