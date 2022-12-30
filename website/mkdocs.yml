@@ -38,6 +38,9 @@ markdown_extensions:
   - md_in_html
   - pymdownx.betterem
   - pymdownx.details
+  - mdx_gh_links:
+      user: dosbox-staging
+      repo: dosbox-staging
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji 
       emoji_generator: !!python/name:materialx.emoji.to_svg
