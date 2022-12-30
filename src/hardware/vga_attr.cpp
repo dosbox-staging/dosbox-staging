@@ -48,20 +48,23 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 	case CGA: {
 		// LOG_MSG("Monitor CGA");
 		size_t i = 0;
-		for (auto color : palette.cga64)
+		for (const auto& color : palette.cga64) {
 			vga.dac.rgb[i++] = color;
+		}
 	} break;
 	case EGA: {
 		// LOG_MSG("Monitor EGA");
 		size_t i = 0;
-		for (auto color : palette.ega)
+		for (const auto& color : palette.ega) {
 			vga.dac.rgb[i++] = color;
+		}
 	} break;
 	case MONO: {
 		// LOG_MSG("Monitor MONO");
 		size_t i = 0;
-		for (auto color : palette.mono_text)
+		for (const auto& color : palette.mono_text) {
 			vga.dac.rgb[i++] = color;
+		}
 	} break;
 	}
 
