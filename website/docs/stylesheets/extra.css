@@ -253,6 +253,18 @@ img.linux-badge {
   max-width: 260px !important;
 }
 
+@media screen and (min-width: 30em){
+  .md-typeset .image-grid {
+    display: flex;
+    gap: 0.7rem;
+    margin: 0;
+    padding: 0;
+  }
+  .md-typeset .image-grid figure {
+    margin: 0;
+  }
+}
+
 /* Footer */
 .md-footer-meta {
   font-size: .76rem;
