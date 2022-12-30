@@ -195,4 +195,20 @@ constexpr T remap(const T in_min, const T in_max, const T out_min,
 	return lerp(out_min, out_max, t);
 }
 
+// Compute the closest power of two to the given value.
+// Credit: Bit Twiddling Hacks, Sean Eron Anderson
+// Ref: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+//
+constexpr uint32_t next_power_of_2(uint32_t v)
+{
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+	return v;
+}
+
 #endif
