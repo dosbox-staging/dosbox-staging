@@ -45,6 +45,7 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.keys
   - pymdownx.smartsymbols
+  - pymdownx.saneheaders
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
