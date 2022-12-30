@@ -287,7 +287,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	if (!xdg_data_dirs_env)
 		xdg_data_dirs_env = "/usr/local/share:/usr/share";
 
-	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
+	for (auto& xdg_data_dir : split(xdg_data_dirs_env, ':')) {
 		trim(xdg_data_dir);
 		if (!xdg_data_dir.empty()) {
 			const std_fs::path resolved_dir = CROSS_ResolveHome(
