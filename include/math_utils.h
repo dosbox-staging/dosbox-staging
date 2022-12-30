@@ -195,19 +195,4 @@ constexpr T remap(const T in_min, const T in_max, const T out_min,
 	return lerp(out_min, out_max, t);
 }
 
-// Explicit instantiations for lerp, invlerp, and remap
-
-template float lerp<float>(const float a, const float b, const float t);
-template double lerp<double>(const double a, const double b, const double t);
-
-template float invlerp<float>(const float a, const float b, const float v);
-template double invlerp<double>(const double a, const double b, const double v);
-
-template float remap<float>(const float in_min, const float in_max,
-                            const float out_min, const float out_max, const float v);
-
-template double remap<double>(const double in_min, const double in_max,
-                              const double out_min, const double out_max,
-                              const double v);
-							
 #endif
