@@ -190,6 +190,8 @@ struct mixer_t {
 	std::atomic<int> sample_rate = 0; // sample rate negotiated with SDL
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
+	uint16_t prebuffer_ms = 25; // user-adjustable in conf
+
 	SDL_AudioDeviceID sdldevice = 0;
 
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
@@ -208,6 +210,14 @@ struct mixer_t {
 static struct mixer_t mixer = {};
 
 alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+
+uint16_t MIXER_GetPreBufferMs()
+{
+	assert(mixer.prebuffer_ms > 0);
+	assert(mixer.prebuffer_ms <= max_prebuffer_ms);
+
+	return mixer.prebuffer_ms;
+}
 
 int MIXER_GetSampleRate()
 {
@@ -2689,10 +2699,10 @@ void MIXER_Init(Section *sec)
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
-	const auto prebuffer_ms = static_cast<uint16_t>(
-	        clamp(requested_prebuffer_ms, 0, max_prebuffer_ms));
+	mixer.prebuffer_ms = check_cast<uint16_t>(
+	        clamp(requested_prebuffer_ms, 1, max_prebuffer_ms));
 
-	const auto prebuffer_frames = (mixer.sample_rate * prebuffer_ms) / 1000;
+	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
 
 	mixer.pos               = 0;
 	mixer.frames_done       = 0;
@@ -2779,7 +2789,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 #else
 	// Non-Windows platforms tolerate slightly lower latency
 	constexpr int default_blocksize = 512;
-	constexpr int default_prebuffer_ms = 20;
+	constexpr int16_t default_prebuffer_ms = 20;
 	constexpr bool default_allow_negotiate = true;
 #endif
 
