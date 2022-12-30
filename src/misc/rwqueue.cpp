@@ -23,8 +23,16 @@
 #include <cassert>
 
 template <typename T>
-RWQueue<T>::RWQueue(size_t queue_capacity) : capacity(queue_capacity)
+RWQueue<T>::RWQueue(size_t queue_capacity)
 {
+	Resize(queue_capacity);
+}
+
+template <typename T>
+void RWQueue<T>::Resize(size_t queue_capacity)
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	capacity = queue_capacity;
 	assert(capacity > 0);
 }
 
@@ -39,6 +47,14 @@ template <typename T>
 size_t RWQueue<T>::MaxCapacity() const
 {
 	return capacity;
+}
+
+template <typename T>
+float RWQueue<T>::GetPercentFull()
+{
+	const auto cur_level = static_cast<float>(Size());
+	const auto max_level = static_cast<float>(capacity);
+	return (100.0f * cur_level) / max_level;
 }
 
 template <typename T>
