@@ -60,10 +60,12 @@ public:
 	RWQueue<T>& operator=(const RWQueue<T>& other) = delete;
 
 	RWQueue(size_t queue_capacity);
+	void Resize(size_t queue_capacity);
 
 	bool IsEmpty();
 	size_t Size();
 	size_t MaxCapacity() const;
+	float GetPercentFull();
 
 	void Enqueue(const T& item);
 
