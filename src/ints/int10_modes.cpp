@@ -175,7 +175,7 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x209, M_LIN15, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 288,  864,                                  0},
         { 0x20A, M_LIN16, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 288,  864,                                  0},
         { 0x20B, M_LIN32, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 144,  864,                                  0},
-        { 0x212, M_LIN24,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
+        { 0x212, M_LIN24,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                     S3_POW2_STRIDE},
         { 0x213, M_LIN32,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                                  0},
         { 0x215,  M_LIN8,  512,  384,  64, 48, 8,  8, 1, 0xA0000, 0x10000, 168,  806, 128,  768, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x216, M_LIN15,  512,  384,  64, 24, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
@@ -1304,7 +1304,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	}
 
 	//  Offset Register
-	Bitu offset;
+	uint32_t offset = 0u;
 	switch (CurMode->type) {
 	case M_LIN8:
 		offset = CurMode->swidth/8;
@@ -1313,19 +1313,19 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_LIN16:
 		offset = 2 * CurMode->swidth/8;
 		break;
-	case M_LIN24:
-		offset = 3 * CurMode->swidth / 8;
-		//  Mode 0x212 has 128 extra bytes per scan line (8 bytes per offset) for compatibility with Windows
-		//  640x480 24-bit S3 Trio drivers
-		if (CurMode->mode == 0x212)
-			offset += 16;
-		break;
+	case M_LIN24: offset = 3 * CurMode->swidth / 8; break;
 	case M_LIN32: offset = 4 * CurMode->swidth / 8; break;
 	default:
 		offset = CurMode->hdispend/2;
 	}
-	IO_Write(crtc_base,0x13);
-	IO_Write(crtc_base + 1,offset & 0xff);
+	//  S3's mode 0x212VBE mode 0x212 is 640x480 24bpp packed mode but with
+	//  a per scanline stride of 2048 bytes per pixel
+	if (CurMode->special & S3_POW2_STRIDE) {
+		offset = next_power_of_2(offset);
+	}
+
+	IO_Write(crtc_base, 0x13);
+	IO_Write(crtc_base + 1, offset & 0xff);
 
 	if (svgaCard == SVGA_S3Trio) {
 		//  Extended System Control 2 Register

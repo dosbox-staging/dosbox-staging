@@ -66,6 +66,7 @@ constexpr auto vesa_2_0_modes_start = 0x120;
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
 constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
+constexpr uint16_t S3_POW2_STRIDE   = 1 << 3;
 
 // Refresh rate constants
 constexpr auto REFRESH_RATE_MIN = 23;

@@ -327,8 +327,18 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	minfo.Reserved_page = 0x1;
 	minfo.XCharSize = mblock.cwidth;
 	minfo.YCharSize = mblock.cheight;
-	if (!int10.vesa_nolfb)
+
+	// This special hack is for the Windows 3.1 S3 driver in "640x480 (1MB)
+	// 16 million colors" mode, which does no scan line or display offset
+	// calls at all
+	if (mblock.special & S3_POW2_STRIDE) {
+		const auto bytes_per_line = le16_to_host(minfo.BytesPerScanLine);
+		minfo.BytesPerScanLine = host_to_le16(next_power_of_2(bytes_per_line));
+	}
+
+	if (!int10.vesa_nolfb) {
 		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
+	}
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
@@ -427,6 +437,13 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 	//         CurMode->theight, CurMode->cwidth, CurMode->cheight,
 	//         CurMode->ptotal,CurMode->pstart,CurMode->plength,
 	//         CurMode->htotal,CurMode->vtotal);
+
+	// This special hack is for the Windows 3.1 S3 driver in "640x480 (1MB)
+	// 16 million colors" mode, which does no scan line or display offset
+	// calls at all
+	if (CurMode->special & S3_POW2_STRIDE) {
+		return VESA_MODE_UNSUPPORTED;
+	}
 
 	switch (CurMode->type) {
 	case M_TEXT:
@@ -528,6 +545,14 @@ uint8_t VESA_SetDisplayStart(uint16_t x,uint16_t y,bool wait) {
 	uint8_t panning_factor = 1;
 	uint8_t bits_per_pixel = 0;
 	bool align_to_nearest_4th_pixel = false;
+
+	// This special hack is for the Windows 3.1 S3 driver in "640x480 (1MB)
+	// 16 million colors" mode, which does no scan line or display offset
+	// calls at all
+	if (CurMode->special & S3_POW2_STRIDE) {
+		return VESA_MODE_UNSUPPORTED;
+	}
+
 	switch (CurMode->type) {
 	case M_TEXT:
 	case M_LIN4: bits_per_pixel = 4; break;
