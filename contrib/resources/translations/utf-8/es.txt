@@ -797,10 +797,10 @@ Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
 .
 :CONFIG_SERIAL1
 establece tipo de dispositivo conectado al puerto com.
-Puede ser: disabled, dummy, modem, nullmodem, directserial.
+Puede ser: disabled, dummy, modem, nullmodem, direct.
 Parámetros adicionales deben estar en la misma línea en la forma de
 parámetro:valor. Parámetro para todos los tipos es irq (opcional).
-para directserial: realport (requerido), rxdelay (opcional).
+para direct: realport (requerido), rxdelay (opcional).
                  (realport:COM1 realport:ttyS0).
 para modem: listenport sock (todo opcional).
 para nullmodem: server, rxdelay, txdelay, telnet, usedtr,
