@@ -887,7 +887,7 @@ Die Voreinstellung ist "auto".
 .
 :CONFIG_SERIAL1
 Typ des Gerätes, das mit dem Com-Port verbunden ist.
-Kann disabled, dummy, modem, nullmodem, directserial sein.
+Kann disabled, dummy, modem, nullmodem, direct sein.
 Zusätzliche Parameter müssen in der gleichen Zeile in der Form von
 parameter:wert angegeben werden. Parameter für alle Typen ist irq (optional).
 für die Maus:

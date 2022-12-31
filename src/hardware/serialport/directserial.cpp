@@ -167,7 +167,7 @@ void CDirectSerial::handleUpperEvent(uint16_t type)
 			switch(rx_state) {
 				case D_RX_IDLE:
 			                LOG_MSG("SERIAL: Port %" PRIu8 " internal "
-			                        "error in directserial.",
+			                        "error in direct mode.",
 			                        GetPortNumber());
 			                break;
 
