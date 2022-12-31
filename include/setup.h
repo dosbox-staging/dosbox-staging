@@ -324,6 +324,10 @@ public:
 	Section() = default;
 	Section(const std::string &name) : sectionname(name) {}
 
+	// Construct and assign by std::move
+	Section(Section&& other)            = default;
+	Section& operator=(Section&& other) = default;
+
 	virtual ~Section() = default; // Children must call executedestroy!
 
 	void AddEarlyInitFunction(SectionFunction func,
@@ -431,7 +435,11 @@ public:
 class Section_line final : public Section {
 public:
 	Section_line() = default;
-	Section_line(std::string const &name) : Section(name), data() {}
+	Section_line(const std::string& name) : Section(name), data() {}
+
+	// Construct and assign by std::move
+	Section_line(Section_line&& other)            = default;
+	Section_line& operator=(Section_line&& other) = default;
 
 	~Section_line() override
 	{
