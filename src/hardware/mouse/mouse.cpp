@@ -60,6 +60,9 @@ static struct {
 	bool is_mapping_in_progress = false; // if interactive mapping is running
 	bool capture_was_requested  = false; // if user requested mouse to be captured
 
+	// if we have a desktop environment, then we can support uncaptured and seamless modes
+	const bool have_desktop_environment = GFX_HaveDesktopEnvironment();
+
 	bool is_captured  = false; // if GFX was requested to capture mouse
 	bool is_visible   = false; // if GFX was requested to make cursor visible
 	bool is_input_raw = false; // if GFX was requested to provide raw movements
@@ -160,12 +163,15 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 		state.capture_was_requested = true;
 
 	// We are running in seamless mode:
+	// - we have a desktop environment, and
 	// - we are not in windowed mode, and
 	// - NoMouse is not configured, and
 	// - seamless driver is running or Seamless capture is configured
 	const bool is_seamless_config = (mouse_config.capture == MouseCapture::Seamless);
 	const bool is_seamless_driver = mouse_shared.active_vmm;
-	state.is_seamless = !state.is_fullscreen &&
+
+	state.is_seamless = state.have_desktop_environment &&
+	                    !state.is_fullscreen &&
 	                    !is_config_no_mouse &&
 	                    (is_seamless_driver || is_seamless_config);
 
@@ -209,10 +215,12 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	} else { // Window has focus, no GUI running
 
 		// Capture mouse cursor if any of:
+		// - we lack a desktop environment,
 		// - we are in fullscreen mode
 		// - user asked to capture the mouse
-		state.is_captured = state.is_fullscreen ||
-	                        state.capture_was_requested;
+		state.is_captured = !state.have_desktop_environment ||
+		                    state.is_fullscreen ||
+		                    state.capture_was_requested;
 
 		// Drop mouse events if NoMouse is configured
 		state.should_drop_events = is_config_no_mouse;
@@ -224,19 +232,23 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	}
 
 	// Use a hotkey to toggle mouse capture if:
-	// - windowed mode, and
+	// - we have a desktop environment, and
+	// - are in windowed mode, and
 	// - capture type is different than NoMouse
-	state.should_toggle_on_hotkey = !state.is_fullscreen &&
+	state.should_toggle_on_hotkey = state.have_desktop_environment &&
+	                                !state.is_fullscreen &&
 	                                !is_config_no_mouse;
 
 	// Use any mouse click to capture the mouse if:
+	// - we have a desktop environment, and
 	// - windowed mode, and
 	// - mouse is not captured, and
 	// - we are not in seamless mode, and
 	// - no GUI has taken over the mouse, and
 	// - no NoMouse mode is in effect, and
 	// - capture on start/click was configured or mapping is in effect
-	state.should_capture_on_click = !state.is_fullscreen &&
+	state.should_capture_on_click = state.have_desktop_environment &&
+	                                !state.is_fullscreen &&
 	                                !state.is_captured &&
 	                                !state.is_seamless &&
 	                                !state.gui_has_taken_over &&
@@ -244,13 +256,15 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	                                (is_config_on_start || is_config_on_click || is_mapping);
 
 	// Use a middle click to capture the mouse if:
+	// - we have a desktop environment, and
 	// - windowed mode, and
 	// - mouse is not captured, and
 	// - no GUI has taken over the mouse, and
 	// - no NoMouse mode is in effect, and
 	// - seamless mode is in effect, and
 	// - middle release was configured
-	state.should_capture_on_middle = !state.is_fullscreen &&
+	state.should_capture_on_middle = state.have_desktop_environment &&
+	                                 !state.is_fullscreen &&
 	                                 !state.is_captured &&
 	                                 !state.gui_has_taken_over &&
 	                                 !is_config_no_mouse &&
@@ -258,10 +272,12 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	                                 mouse_config.middle_release;
 
 	// Use a middle click to release the mouse if:
+	// - we have a desktop environment, and
 	// - windowed mode, and
 	// - mouse is captured, and
 	// - release by middle button was configured
-	state.should_release_on_middle = !state.is_fullscreen &&
+	state.should_release_on_middle = state.have_desktop_environment &&
+	                                 !state.is_fullscreen &&
 	                                 state.is_captured &&
 	                                 mouse_config.middle_release;
 
@@ -272,7 +288,8 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// TODO: if SDL gets expanded to include ManyMouse, change the behavior!
 
 	// Select hint to be displayed on a title bar
-	if (state.is_fullscreen || state.gui_has_taken_over || !state.has_focus) {
+	if (!state.have_desktop_environment || state.is_fullscreen ||
+	    state.gui_has_taken_over || !state.has_focus) {
 		state.hint_id = MouseHint::None;
 	} else if (is_config_no_mouse) {
 		state.hint_id = MouseHint::NoMouse;

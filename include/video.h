@@ -88,7 +88,10 @@ void GFX_SetMouseCapture(const bool requested_capture);
 void GFX_SetMouseVisibility(const bool requested_visible);
 void GFX_SetMouseRawInput(const bool requested_raw_input);
 
-#if defined (REDUCE_JOYSTICK_POLLING)
+// Detects the presence of a desktop environment or window manager
+bool GFX_HaveDesktopEnvironment();
+
+#if defined(REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);
 #endif
 
