@@ -518,11 +518,16 @@ bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 	if (find_ext) {
 		if (long_compare && wild_match(file, nwild))
 			return true;
-		Bitu size = (std::min)((unsigned int)(long_compare
-		                                              ? LFN_NAMELENGTH
-		                                              : (DOS_MFNLENGTH + 1)),
-		                       (unsigned int)(find_ext - nwild));
-		memcpy(wild_name, nwild, size);
+
+		const uint16_t name_len = long_compare ? LFN_NAMELENGTH
+		                                       : (DOS_MFNLENGTH + 1);
+
+		const auto ext_len = check_cast<uint16_t>(find_ext - nwild);
+
+		const auto wild_len = std::min(name_len, ext_len);
+
+		memcpy(wild_name, nwild, wild_len);
+
 		find_ext++;
 		memcpy(wild_ext, find_ext,
 		       strnlen(find_ext,
