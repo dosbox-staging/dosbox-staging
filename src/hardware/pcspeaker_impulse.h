@@ -91,7 +91,7 @@ private:
 		float half_ms           = max_possible_pit_ms / 2.0f;
 		float new_half_ms       = max_possible_pit_ms / 2.0f;
 		float index             = 0.0f;
-		float last_index        = index;
+		float last_index        = 0.0f;
 		float mode1_pending_max = 0.0f;
 
 		// PIT boolean state
