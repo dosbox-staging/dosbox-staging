@@ -357,6 +357,40 @@ void GFX_RefreshTitle()
 	GFX_SetTitle(refresh_cycle_count);
 }
 
+// Detects if we're running within a desktop environment (or window manager).
+bool GFX_HaveDesktopEnvironment()
+{
+// On BSD and Linux, it's possible that the user is running directly on the
+// console without a windowing environment. For example, SDL can directly
+// interface with the host's OpenGL/GLES drivers, the console's frame buffer, or
+// the Raspberry Pi's DISPMANX driver.
+//
+#if defined(BSD) || defined(LINUX)
+	// The presence of any of the following variables set by either the
+	// login manager, display manager, or window manager itself is
+	// sufficient evidence to say the user has a desktop session.
+	//
+	// References:
+	// https://www.freedesktop.org/software/systemd/man/pam_systemd.html#desktop=
+	// https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#recognized-keys
+	// https://askubuntu.com/questions/72549/how-to-determine-which-window-manager-and-desktop-environment-is-running
+	// https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
+	//
+	constexpr auto num_vars = 4;
+
+	constexpr const char* vars[num_vars] = {"XDG_CURRENT_DESKTOP",
+	                                        "XDG_SESSION_DESKTOP",
+	                                        "DESKTOP_SESSION",
+	                                        "GDMSESSION"};
+
+	return std::any_of(vars, vars + num_vars, std::getenv);
+
+#else
+	// Assume we have a desktop environment on all other systems
+	return true;
+#endif
+}
+
 static double get_host_refresh_rate()
 {
 	auto get_sdl_rate = []() {
