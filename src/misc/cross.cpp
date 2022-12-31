@@ -75,24 +75,6 @@ static std::string DetermineConfigPath()
 
 #else
 
-static bool CreateDirectories(const std::string &path)
-{
-	struct stat sb;
-	if (stat(path.c_str(), &sb) == 0) {
-		const bool is_dir = ((sb.st_mode & S_IFMT) == S_IFDIR);
-		return is_dir;
-	}
-
-	std::vector<char> tmp(path.begin(), path.end());
-	std::string dname = dirname(tmp.data());
-
-	// Create parent directories recursively
-	if (!CreateDirectories(dname))
-		return false;
-
-	return (mkdir(path.c_str(), 0700) == 0);
-}
-
 static std::string DetermineConfigPath()
 {
 	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
@@ -111,7 +93,8 @@ static std::string DetermineConfigPath()
 		return old_conf_path;
 	}
 
-	if (!CreateDirectories(conf_path)) {
+	std::error_code ec = {};
+	if (!std_fs::create_directories(conf_path, ec)) {
 		LOG_MSG("ERROR: Directory '%s' cannot be created",
 		        conf_path.c_str());
 		return old_conf_path;
