@@ -376,14 +376,12 @@ bool GFX_HaveDesktopEnvironment()
 	// https://askubuntu.com/questions/72549/how-to-determine-which-window-manager-and-desktop-environment-is-running
 	// https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
 	//
-	constexpr auto num_vars = 4;
+	constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
+	                                "XDG_SESSION_DESKTOP",
+	                                "DESKTOP_SESSION",
+	                                "GDMSESSION"};
 
-	constexpr const char* vars[num_vars] = {"XDG_CURRENT_DESKTOP",
-	                                        "XDG_SESSION_DESKTOP",
-	                                        "DESKTOP_SESSION",
-	                                        "GDMSESSION"};
-
-	return std::any_of(vars, vars + num_vars, std::getenv);
+	return std::any_of(std::begin(vars), std::end(vars), std::getenv);
 
 #else
 	// Assume we have a desktop environment on all other systems
