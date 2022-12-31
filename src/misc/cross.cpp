@@ -123,10 +123,10 @@ static void W32_ConfDir(std::string& in,bool create) {
 	BOOL r = SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,c);
 	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(NULL,result,CSIDL_APPDATA,c);
 	if(!r || result[0] == 0) {
-		char const * windir = getenv("windir");
+		const char* windir = getenv("windir");
 		if(!windir) windir = "c:\\windows";
 		safe_strcpy(result, windir);
-		char const* appdata = "\\Application Data";
+		const char* appdata = "\\Application Data";
 		size_t len = safe_strlen(result);
 		if (len + strlen(appdata) < MAX_PATH)
 			safe_strcat(result, appdata);
@@ -225,7 +225,8 @@ std::string CROSS_ResolveHome(const std::string &str)
 	return temp_line;
 }
 
-bool Cross::IsPathAbsolute(std::string const& in) {
+bool Cross::IsPathAbsolute(const std::string& in)
+{
 	// Absolute paths
 #if defined (WIN32)
 	// drive letter
