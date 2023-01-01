@@ -586,19 +586,20 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 void
 bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 {
-  auto value = check_cast<uint8_t>(data);
-  unsigned int new_value = 0;
-
   BX_DEBUG("page 0 write to port %04x, len=%u", (unsigned)offset, (unsigned)io_len);
 
   // It appears to be a common practice to use outw on page0 regs...
 
   // break up outw into two outb's
   if (io_len == io_width_t::word) {
+    const auto value = check_cast<uint16_t>(data);
     page0_write(offset, (value & 0xff), io_width_t::byte);
     page0_write(offset + 1, ((value >> 8) & 0xff), io_width_t::byte);
     return;
   }
+
+  auto value = check_cast<uint8_t>(data);
+  unsigned int new_value = 0;
 
   switch (offset) {
   case 0x1:  // PSTART
