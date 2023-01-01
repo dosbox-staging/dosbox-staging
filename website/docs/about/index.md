@@ -42,10 +42,7 @@ are available if you wish to dwelve deeper.
  hardware.
 
 A summary of technical and feature differences is
-[here](https://github.com/dosbox-staging/dosbox-staging#summary-of-differences-compared-to-upstream).
-
-We plan to add the features listed in [the
-backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
+[here](https://github.com/dosbox-staging/dosbox-staging#summary-of-features).
 
 
 ## Non-goals
@@ -89,3 +86,19 @@ contributors.
 
 This project is maintained by the [DOSBox Staging
 team](https://github.com/orgs/dosbox-staging/people).
+
+
+## License
+
+<div>
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+    <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg">
+    <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg">
+    <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg">
+  </a>
+</div>
+
+Content on this site is licensed under a
+[Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
+
+DOSBox Staging is licensed under a [GNU GPL version 2 or later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
