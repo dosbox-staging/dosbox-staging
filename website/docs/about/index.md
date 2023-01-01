@@ -91,7 +91,7 @@ team](https://github.com/orgs/dosbox-staging/people).
 ## License
 
 <div>
-  <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" style="text-decoration: none">
     <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg">
     <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg">
     <img alt="Creative Commons License" style="width: 1.7rem; display: inline-block;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg">
