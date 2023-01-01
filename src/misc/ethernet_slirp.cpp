@@ -290,10 +290,10 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 				try {
 					const int port_num = std::stoi(port);
 					ports.push_back(port_num);
-				} catch (std::invalid_argument &e) {
+				} catch ([[maybe_unused]] std::invalid_argument &e) {
 					LOG_WARNING("SLIRP: Invalid %s port: %s", protocol, port.c_str());
 					break;
-				} catch (std::out_of_range &e) {
+				} catch ([[maybe_unused]] std::out_of_range &e) {
 					LOG_WARNING("SLIRP: Invalid %s port: %s", protocol, port.c_str());
 					break;
 				}
