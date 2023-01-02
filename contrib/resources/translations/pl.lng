@@ -329,11 +329,15 @@ klawiszowego.
 :CONFIG_MOUSE_CAPTURE
 Sposób przejmowania kursora myszy:
   onclick:   Po kliknięciu w obrębie okna emulatora.
-  onstart:   Natychmiast po starcie.
+  onstart:   Natychmiast po starcie. Może nie działać poprawnie z niektórymi
+             systemami operacyjnymi.
   seamless:  Kursor myszy płynnie zintegrowany z kursorem systemu gospodarza.
              Przejmuje kursor po kliknięciu środkowym przyciskiem myszy.
+             Może być niekompatybilne z niektórymi grami, Windows 3.1x
+             wymaga specjalnego sterownika myszy do poprawnego działania.
   nomouse:   Tryb bez użycia myszy; nie przekazuje ruchów myszy do programu.
              Mysz pozostaje widoczna dla uruchomionych gier/programów.
+Jeśli chcesz używać ekranu dotykowego, wybierz ustawienie 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Czy środkowy przycisk myszy ma zwalniać przejęty kursor. Również włącza
