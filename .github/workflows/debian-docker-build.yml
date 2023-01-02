@@ -1,0 +1,150 @@
+name: Debian docker image builder
+
+on:
+  push:
+    paths:
+      - 'packages/Dockerfile*'
+      - 'packages/debian-10-docker-apt.txt'
+      - 'packages/debian-11-docker-apt.txt'
+      - '.github/workflows/debian-docker-build.yml'
+    tags:
+  pull_request:
+    paths:
+      - 'packages/Dockerfile*'
+      - 'packages/debian-10-docker-apt.txt'
+      - 'packages/debian-11-docker-apt.txt'
+      - '.github/workflows/debian-docker-build.yml'
+  schedule:
+    - cron: '13 13 * * 0'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_BASE_IMG_NAME: "${{ github.repository_owner }}/debian-cross-base"
+  DOCKER_IMG_NAME: "${{ github.repository_owner }}/debian-cross"
+  DOCKER_REGISTRY: ghcr.io
+
+jobs:
+  build_base_image:
+    name: ${{ matrix.conf.name }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    outputs:
+      db_vers: ${{ steps.db_vers.outputs.DOSBOX_VERS }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        conf:
+          - name: Debian 10 Base
+            vers: 10
+          - name: Debian 11 Base
+            vers: 11
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get dosbox-staging version
+        id: db_vers
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          git fetch --all --tags --force
+          if $(git describe | grep -qs '-'); then
+            echo "DOSBOX_VERS=$(git describe | cut -d '-' -f 1)-dev" >> $GITHUB_OUTPUT
+          else
+            echo "DOSBOX_VERS=$(git describe)" >> $GITHUB_OUTPUT
+          fi
+    
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_BASE_IMG_NAME }}
+          tags: |
+            type=raw,${{ matrix.conf.vers }}-${{ steps.db_vers.outputs.DOSBOX_VERS }}
+      
+      - name: Build and push base Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./packages
+          file: ./packages/Dockerfile.debian-base
+          push: true
+          build-args: |
+            DEB_VERS=${{ matrix.conf.vers }}
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build_arch_images:
+    name: ${{ matrix.conf.name }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    needs: build_base_image
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        conf:
+          - name: Debian 10 cross ARM 64
+            arch: arm64
+            vers: 10
+          - name: Debian 10 cross ARM 32
+            arch: armhf
+            vers: 10
+          - name: Debian 11 cross ARM 64
+            arch: arm64
+            vers: 11
+          - name: Debian 11 cross ARM 32
+            arch: armhf
+            vers: 11
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+    
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMG_NAME }}
+          tags: |
+            type=raw,${{ matrix.conf.vers }}-${{ needs.build_base_image.outputs.db_vers }}-${{ matrix.conf.arch }}
+      
+      - name: Build and push base Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./packages
+          file: ./packages/Dockerfile.debian
+          push: true
+          build-args: |
+            DEB_VERS=${{ matrix.conf.vers }}
+            BASE_IMG=${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_BASE_IMG_NAME }}
+            DOSBOX_VERS=${{ needs.build_base_image.outputs.db_vers }}
+            DPKG_ARCH=${{ matrix.conf.arch }}
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

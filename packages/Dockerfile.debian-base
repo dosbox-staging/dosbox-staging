@@ -1,0 +1,23 @@
+ARG DEB_VERS=10
+FROM debian:${DEB_VERS}-slim
+
+# Enable architectures
+RUN dpkg --add-architecture amd64 && \
+    dpkg --add-architecture arm64 && \
+    dpkg --add-architecture i386 &&  \
+    dpkg --add-architecture armhf
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get -y install --no-install-recommends \
+        ca-certificates \
+        git \
+        ccache \
+        ninja-build \
+        python3-pip \
+        pkg-config \
+        build-essential \
+        qemu-user-static \
+    && rm -rf /var/lib/apt/lists/*
+
+CMD [ "/bin/bash" ]
