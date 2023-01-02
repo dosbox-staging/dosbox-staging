@@ -44,6 +44,9 @@ are available if you wish to dwelve deeper.
 A summary of technical and feature differences is
 [here](https://github.com/dosbox-staging/dosbox-staging#summary-of-features).
 
+We plan to add the features listed in [the
+backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
+
 
 ## Non-goals
 
