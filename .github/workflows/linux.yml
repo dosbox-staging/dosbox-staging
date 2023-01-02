@@ -11,6 +11,17 @@ env:
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
   CLAMDB_DIR:      "/var/lib/clamav"
+  DOCKER_RUN: >-
+    docker run --rm 
+    -v "$PWD:$PWD" 
+    -v "/dev/shm/.ccache/:/dev/shm/.ccache" 
+    -u "$(id --user):$(id --group)" 
+    --workdir "$PWD" 
+    -e HOME 
+    -e CCACHE_DIR 
+    -e CCACHE_MAXSIZE 
+    -e CCACHE_COMPRESS
+    ghcr.io/dosbox-staging/debian-cross
 
 jobs:
   build_ubuntu:
@@ -20,6 +31,42 @@ jobs:
     strategy:
       matrix:
         conf:
+          - name: GCC 8, Debian 10 Cross ARM 64
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 10
+
+          - name: GCC 10, Debian 11 Cross ARM 64
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 11
+
+          - name: GCC 8, Debian 10 Cross ARM 32
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 10
+
+          - name: GCC 10, Debian 11 Cross ARM 32
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 11
+            
           - name: GCC 10, Ubuntu 20.04
             os: ubuntu-20.04
             packages: g++-10
@@ -137,20 +184,40 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run:  meson setup ${{ matrix.conf.build_flags }} build
+      - name: Set binary names
+        id: bins
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          git fetch --all --tags --force
+          if [ -z "${{matrix.conf.cross}}" ]; then
+            echo "MESON_BIN=meson" >> $GITHUB_OUTPUT
+            echo "CCACHE_BIN=ccache" >> $GITHUB_OUTPUT
+          else
+            if $(git describe | grep -qs '-'); then
+              vers="${{matrix.conf.deb_vers}}-$(git describe | cut -d '-' -f 1)-dev-${{matrix.conf.arch}}"
+            else
+              vers="${{matrix.conf.deb_vers}}-$(git describe)-${{matrix.conf.arch}}"
+            fi
+            echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
+            echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Meson setup
+        run:  ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build
 
       - name: Build
         run: |
           set -xo pipefail
-          meson compile -C build |& tee build.log
-          ccache -s
+          ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
+          ${{steps.bins.outputs.CCACHE_BIN}} -s
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  meson test --num-processes 128 -t 0 -C build --print-errorlogs
+        run:  ${{steps.bins.outputs.MESON_BIN}} test --num-processes 128 -t 0 -C build --print-errorlogs
 
       - name: Summarize warnings
-        if:   matrix.conf.run_tests != true
+        if:   matrix.conf.cross == true || matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py -lf build.log
