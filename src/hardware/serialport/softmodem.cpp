@@ -985,7 +985,7 @@ void CSerialModem::Timer2()
 		waitingclientsocket.reset(serversocket->Accept());
 		if (waitingclientsocket) {
 			if (!CSerial::getDTR() && dtrmode != 0) {
-				// accept no calls with DTR off; TODO: AT &Dn
+				// accept no calls with DTR off
 				EnterIdleState();
 			} else {
 				ringing = true;
