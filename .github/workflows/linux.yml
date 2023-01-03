@@ -7,20 +7,30 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_DIR:      "/dev/shm/.ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
+  CCACHE_COMPRESS:      "true"
+  CCACHE_COMPRESSLEVEL: "6"
+  CCACHE_DIR:           "/dev/shm/.ccache"
+  CCACHE_DIRECT:        "true"
+  CCACHE_MAXSIZE:       "128M"
+  CCACHE_SLOPPINESS:    "pch_defines,time_macros"
+  CCACHE_UMASK:         "002"
+
   CLAMDB_DIR:      "/var/lib/clamav"
+
   DOCKER_RUN: >-
-    docker run --rm 
-    -v "$PWD:$PWD" 
-    -v "/dev/shm/.ccache/:/dev/shm/.ccache" 
-    -u "$(id --user):$(id --group)" 
-    --workdir "$PWD" 
-    -e HOME 
-    -e CCACHE_DIR 
-    -e CCACHE_MAXSIZE 
+    docker run --rm
+    -u "$(id --user):$(id --group)"
+    -v "$PWD:$PWD"
+    -v "$CCACHE_DIR:$CCACHE_DIR"
+    -e HOME
     -e CCACHE_COMPRESS
+    -e CCACHE_COMPRESSLEVEL
+    -e CCACHE_DIR
+    -e CCACHE_DIRECT
+    -e CCACHE_MAXSIZE
+    -e CCACHE_SLOPPINESS
+    -e CCACHE_UMASK
+    --workdir "$PWD"
     ghcr.io/dosbox-staging/debian-cross
 
 jobs:
@@ -31,84 +41,96 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC 8, Debian 10 Cross ARM 64
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+          - name: GCC, Ubuntu 18.04
+            os: ubuntu-18.04
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: arm64
-            deb_vers: 10
+            needs_all_deps: true
 
-          - name: GCC 10, Debian 11 Cross ARM 64
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: arm64
-            deb_vers: 11
-
-          - name: GCC 8, Debian 10 Cross ARM 32
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 10
-
-          - name: GCC 10, Debian 11 Cross ARM 32
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 11
-            
           - name: GCC 10, Ubuntu 20.04
             os: ubuntu-20.04
             packages: g++-10
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-10.ini
             max_warnings: 0
+            needs_all_deps: true
 
           - name: Clang 12, Ubuntu 20.04
             os: ubuntu-20.04
             packages: clang-12
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-12.ini
             max_warnings: 0
+            needs_all_deps: true
 
-          - name: GCC, Ubuntu 18.04
-            os: ubuntu-18.04
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
+          - name: GCC, Debian 10, ARMv7
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 2
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 10
+            needs_min_deps: false
+
+          - name: GCC, Debian 10, aarch64
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 10
+            needs_min_deps: false
+
+          - name: GCC, Debian 11, ARMv7
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 11
+            needs_min_deps: false
+
+          - name: GCC, Debian 11, aarch64
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 11
+            needs_min_deps: false
 
           - name: GCC, +tests
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug
             run_tests: true
             max_warnings: -1
+            needs_all_deps: true
 
           - name: GCC, +debugger
             os: ubuntu-20.04
             build_flags: -Denable_debugger=normal
             max_warnings: 0
+            needs_all_deps: true
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddynamic_core=dynrec
             max_warnings: 0
+            needs_all_deps: true
 
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
             build_flags: -Ddynamic_core=dynrec -Dunit_tests=disabled -Denable_debugger=normal
             max_warnings: 0
+            needs_all_deps: true
 
           - name: GCC, -network
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
             max_warnings: 0
+            needs_all_deps: true
 
           - name: GCC, minimum build
             os: ubuntu-20.04
@@ -123,7 +145,7 @@ jobs:
               -Duse_sdl2_image=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
-            min_dependencies: true
+            needs_min_deps: true
             max_warnings: 0
 
     steps:
@@ -132,9 +154,8 @@ jobs:
         with:
           submodules: false
 
-      - run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update
+#      - name: Update host repository
+#        run: |
           # use the following to force full upgrades
           # sudo apt-get -y upgrade
           # sudo apt-get -y --with-new-pkgs upgrade
@@ -143,15 +164,19 @@ jobs:
           # sudo apt-get update
           # sudo apt-get -y upgrade
 
-      - name: Install dependencies (minimum set)
-        if:   matrix.conf.min_dependencies
+      - name: Install minimum dependencies
+        if:   matrix.conf.needs_min_deps
         run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
           sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
           sudo pip3 install --upgrade meson ninja
 
-      - name: Install dependencies
-        if:   matrix.conf.min_dependencies != true
+      - name: Install all dependencies
+        if:   matrix.conf.needs_all_deps
         run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
             $(cat packages/${{ matrix.conf.os }}-apt.txt)
@@ -204,11 +229,14 @@ jobs:
           fi
 
       - name: Meson setup
-        run:  ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build
+        run:  |
+          ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build \
+          || ( cat build/meson-logs/meson-log.txt ; exit 1 )
 
       - name: Build
         run: |
           set -xo pipefail
+          ${{steps.bins.outputs.CCACHE_BIN}} -z
           ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
           ${{steps.bins.outputs.CCACHE_BIN}} -s
 
@@ -217,7 +245,6 @@ jobs:
         run:  ${{steps.bins.outputs.MESON_BIN}} test --num-processes 128 -t 0 -C build --print-errorlogs
 
       - name: Summarize warnings
-        if:   matrix.conf.cross == true || matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py -lf build.log
