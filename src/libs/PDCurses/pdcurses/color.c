@@ -326,7 +326,7 @@ int find_pair(int fg, int bg)
     return -1;
 }
 
-static int _find_oldest()
+static int _find_oldest(void)
 {
     int i, lowind = 0, lowval = 0;
     PDC_PAIR *p = SP->atrtab;

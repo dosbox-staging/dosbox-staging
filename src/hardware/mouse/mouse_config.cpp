@@ -258,16 +258,19 @@ static void config_init(Section_prop &secprop)
 	// General configuration
 
 	prop_str = secprop.Add_string("mouse_capture", always,
-	                              capture_type_onstart_str);
+	                              capture_type_onclick_str);
 	assert(prop_str);
 	prop_str->Set_values(list_capture_types);
 	prop_str->Set_help(
 	        "Choose a mouse control method:\n"
 	        "  onclick:   Capture the mouse when clicking any button in the window.\n"
-	        "  onstart:   Capture the mouse immediately on start.\n"
+	        "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
+	        "             on some host operating systems.\n"
 	        "  seamless:  Let the mouse move seamlessly; captures only with middle-click or\n"
-	        "             hotkey.\n"
-	        "  nomouse:   Hide the mouse and don't send input to the game.");
+	        "             hotkey. Seamless mouse does not work correctly with all the games,\n"
+	        "             Windows 3.1x can be made compatible with a custom mouse driver.\n"
+	        "  nomouse:   Hide the mouse and don't send input to the game.\n"
+	        "For touchscreen control use the seamless method.\n");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
 	prop_bool->Set_help("If true, middle-click will release the captured mouse, and also\n"

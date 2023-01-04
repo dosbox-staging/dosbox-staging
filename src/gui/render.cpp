@@ -24,6 +24,7 @@
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <unordered_map>
@@ -633,6 +634,43 @@ bool RENDER_UseSRGBFramebuffer()
 
 #endif
 
+#if C_OPENGL
+void log_warning_if_legacy_shader_name(const std::string &name)
+{
+	static const std::map<std::string, std::string> legacy_name_mappings = {
+	        {"advinterp2x", "scaler/advinterp2x"},
+	        {"advinterp3x", "scaler/advinterp3x"},
+	        {"advmame2x", "scaler/advmame2x"},
+	        {"advmame3x", "scaler/advmame3x"},
+	        {"crt-easymode-flat", "crt/easymode.tweaked"},
+	        {"crt-fakelottes-flat", "crt/fakelottes"},
+	        {"rgb2x", "scaler/rgb2x"},
+	        {"rgb3x", "scaler/rgb3x"},
+	        {"scan2x", "scaler/scan2x"},
+	        {"scan3x", "scaler/scan3x"},
+	        {"sharp", "interpolation/sharp"},
+	        {"tv2x", "scaler/tv2x"},
+	        {"tv3x", "scaler/tv3x"}};
+
+	std_fs::path shader_path = name;
+	std_fs::path ext  = shader_path.extension();
+
+	if (!(ext == "" || ext == ".glsl")) {
+		return;
+	}
+
+	shader_path.replace_extension("");
+
+	const auto it = legacy_name_mappings.find(shader_path.string());
+	if (it != legacy_name_mappings.end()) {
+		const auto new_name = it->second;
+		LOG_WARNING("RENDER: Built-in shader '%s' has been renamed; please use '%s' instead.",
+					name.c_str(),
+					new_name.c_str());
+	}
+}
+#endif
+
 void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 {
 #if C_OPENGL
@@ -650,10 +688,13 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	auto filename = std::string(sh->GetValue());
 
 	constexpr auto fallback_shader = "none";
-	if (filename.empty())
+	if (filename.empty()) {
 		filename = fallback_shader;
-	else if (filename == "default")
-		filename = "sharp";
+	} else if (filename == "default") {
+		filename = "interpolation/sharp";
+	}
+
+	log_warning_if_legacy_shader_name(filename);
 
 	std::string source = {};
 	if (!RENDER_GetShader(sh->realpath, source) &&

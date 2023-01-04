@@ -280,7 +280,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
-	auto apply_setting = [=](const char *name,
+	// Checks if the passed value is within valid range and returns the default if it's not
+	auto validate_setting = [=](const char *name,
 	                         const std::string &str_val,
 	                         const double def_val,
 	                         const double min_val,
@@ -322,15 +323,25 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// apply custom chorus settings if provided
 	if (chorus_enabled && chorus.size() > 1) {
 		if (chorus.size() == 5) {
-			apply_setting("chorus voice-count",
-			              chorus[0],
-			              chorus_voice_count_f,
-			              0,
-			              99);
-
-			apply_setting("chorus level", chorus[1], chorus_level, 0.0, 10.0);
-			apply_setting("chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
-			apply_setting("chorus depth", chorus[3], chorus_depth, 0.0, 21.0);
+			chorus_voice_count_f = validate_setting("chorus voice-count",
+			                                     chorus[0],
+			                                     chorus_voice_count_f,
+			                                     0,
+			                                     99);
+			chorus_level = validate_setting("chorus level",
+			                             chorus[1],
+			                             chorus_level,
+			                             0.0,
+			                             10.0);
+			chorus_speed = validate_setting("chorus speed",
+			                             chorus[2],
+			                             chorus_speed,
+			                             0.1, 5.0);
+			chorus_depth = validate_setting("chorus depth",
+			                             chorus[3],
+			                             chorus_depth,
+			                             0.0,
+			                             21.0);
 
 			if (chorus[4] == "triange")
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
@@ -359,15 +370,26 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	// apply custom reverb settings if provided
 	if (reverb_enabled && reverb.size() > 1) {
 		if (reverb.size() == 4) {
-			apply_setting("reverb room-size",
-			              reverb[0],
-			              reverb_room_size,
-			              0.0,
-			              1.0);
-
-			apply_setting("reverb damping", reverb[1], reverb_damping, 0.0, 1.0);
-			apply_setting("reverb width", reverb[2], reverb_width, 0.0, 100.0);
-			apply_setting("reverb level", reverb[3], reverb_level, 0.0, 1.0);
+			reverb_room_size = validate_setting("reverb room-size",
+			                                 reverb[0],
+			                                 reverb_room_size,
+			                                 0.0,
+			                                 1.0);
+			reverb_damping = validate_setting("reverb damping",
+			                               reverb[1],
+			                               reverb_damping,
+			                               0.0,
+			                               1.0);
+			reverb_width = validate_setting("reverb width",
+			                             reverb[2],
+			                             reverb_width,
+			                             0.0,
+			                             100.0);
+			reverb_level = validate_setting("reverb level",
+			                             reverb[3],
+			                             reverb_level,
+			                             0.0,
+			                             1.0);
 		} else {
 			LOG_WARNING("FSYNTH: Invalid number of custom reverb settings (%d), should be four",
 			            static_cast<int>(reverb.size()));

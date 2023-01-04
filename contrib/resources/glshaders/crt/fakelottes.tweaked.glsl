@@ -1,24 +1,10 @@
-/*
- * CRT STYLED SCAN-LINE SHADER
- *
- *  SPDX-License-Identifier: CC-PDDC, Public Domain
- *
- * Contributors:
- *   - 2017, Timothy Lottes: authored
- *           This is more along the style of a really good CGA arcade monitor.
- *           With RGB inputs instead of NTSC.
- *           The shadow mask example has the mask rotated 90 degrees for less chromatic aberration.
- *           Left it unoptimized to show the theory behind the algorithm.
- *           It is an example what I personally would want as a display option for pixel art games.
- *           Please take and use, change, or whatever.
- *           https://github.com/libretro/common-shaders/blob/master/crt/shaders/crt-lottes.cg
- *
- *   - 2018, hunterk: modified
- *           Simple scanlines with curvature and mask effects lifted from crt-lottes
- *           https://github.com/Themaister/slang-shaders/blob/master/crt/shaders/fakelottes.slang
- */
-
 #version 120
+
+// This file ported from Libretro's GLSL shader crt-lottes.glslp 
+// to DOSBox-compatible format by Tyrells.
+
+// Simple scanlines with curvature and mask effects lifted from crt-lottes
+// by hunterk
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////  SETTINGS  ////////////////////////////
@@ -26,14 +12,16 @@
 ////////////////////////////////////////////////////////////////////
 
 #define MASK // fancy, expensive phosphor mask effect
-// #define CURVATURE // applies barrel distortion to the screen
+//#define CURVATURE // applies barrel distortion to the screen
 #define SCANLINES // applies horizontal scanline effect
-// #define ROTATE_SCANLINES // for TATE games; also disables the mask effects, which look bad with it
+//#define ROTATE_SCANLINES // for TATE games; also disables the mask effects, which look bad with it
 #define EXTRA_MASKS // disable these if you need extra registers freed up
 
 ////////////////////////////////////////////////////////////////////
 //////////////////////////  END SETTINGS  //////////////////////////
 ////////////////////////////////////////////////////////////////////
+
+/*
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 #pragma parameter shadowMask "shadowMask" 1.0 0.0 4.0 1.0
@@ -47,21 +35,23 @@
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 
+*/
+
 // prevent stupid behavior
 #if defined ROTATE_SCANLINES && !defined SCANLINES
-#define SCANLINES
+	#define SCANLINES
 #endif
 
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
-#define COMPAT_VARYING   out
+#define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE   texture
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING   varying
+#define COMPAT_VARYING varying
 #define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE   texture2D
+#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -85,9 +75,9 @@ uniform COMPAT_PRECISION vec2 rubyTextureSize;
 uniform COMPAT_PRECISION vec2 rubyInputSize;
 
 // compatibility #defines
-#define vTexCoord  v_texCoord.xy
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) // either rubyTextureSize or rubyInputSize
-#define OutSize    vec4(rubyOutputSize, 1.0 / rubyOutputSize)
+#define vTexCoord v_texCoord.xy
+#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either rubyTextureSize or rubyInputSize
+#define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float WHATEVER;
@@ -109,7 +99,7 @@ void main()
 out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
-#define FragColor      gl_FragColor
+#define FragColor gl_FragColor
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -133,11 +123,11 @@ uniform sampler2D rubyTexture;
 COMPAT_VARYING vec2 v_texCoord;
 
 // compatibility #defines
-#define Source    rubyTexture
+#define Source rubyTexture
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) // either rubyTextureSize or rubyInputSize
-#define OutSize    vec4(rubyOutputSize, 1.0 / rubyOutputSize)
+#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either rubyTextureSize or rubyInputSize
+#define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
@@ -152,39 +142,39 @@ uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
 #else
 #define SCANLINE_BASE_BRIGHTNESS 0.95
-#define SCANLINE_SINE_COMP_A     0.0
-#define SCANLINE_SINE_COMP_B     0.40
-#define warpX                    0.031
-#define warpY                    0.041
-#define maskDark                 0.5
-#define maskLight                1.5
-#define shadowMask               1.0
-#define crt_gamma                2.5
-#define monitor_gamma            2.2
+#define SCANLINE_SINE_COMP_A 0.0
+#define SCANLINE_SINE_COMP_B 0.40
+#define warpX 0.031
+#define warpY 0.041
+#define maskDark 0.5
+#define maskLight 1.5
+#define shadowMask 1.0
+#define crt_gamma 2.5
+#define monitor_gamma 2.2
 #endif
 
 /*
-        The following code allows the shader to override any texture filtering
-        configured in DOSBox. if 'output' is set to 'opengl', bilinear filtering
-        will be enabled and OPENGLNB will not be defined, if 'output' is set to
-        'openglnb', nearest neighbour filtering will be enabled and OPENGLNB will
-        be defined.
+	The following code allows the shader to override any texture filtering
+	configured in DOSBox. if 'output' is set to 'opengl', bilinear filtering
+	will be enabled and OPENGLNB will not be defined, if 'output' is set to
+	'openglnb', nearest neighbour filtering will be enabled and OPENGLNB will
+	be defined.
 
-        If you wish to use the default filtering method that is currently enabled
-        in DOSBox, use COMPAT_TEXTURE to lookup a texel from the input texture.
+	If you wish to use the default filtering method that is currently enabled
+	in DOSBox, use COMPAT_TEXTURE to lookup a texel from the input texture.
 
-        If you wish to force nearest-neighbor interpolation use NN_TEXTURE.
+	If you wish to force nearest-neighbor interpolation use NN_TEXTURE.
 
-        If you wish to force bilinear interpolation use BL_TEXTURE.
+	If you wish to force bilinear interpolation use BL_TEXTURE.
 
-        If DOSBox is configured to use the filtering method that is being forced,
-        the default	hardware implementation will be used, otherwise the custom
-        implementations below will be used instead.
+	If DOSBox is configured to use the filtering method that is being forced,
+	the default	hardware implementation will be used, otherwise the custom
+	implementations below will be used instead.
 
-        These custom implementations rely on the `rubyTextureSize` uniform variable.
-        The code could calculate the texture size from the sampler using the
-        textureSize() GLSL function, but this would require a minimum of GLSL
-        version 130, which may prevent the shader from working on older systems.
+	These custom implemenations rely on the `rubyTextureSize` uniform variable.
+	The code could calculate the texture size from the sampler using the
+	textureSize() GLSL function, but this would require a minimum of GLSL
+	version 130, which may prevent the shader from working on older systems.
 */
 
 #if defined(OPENGLNB)
@@ -229,10 +219,10 @@ vec4 scanline(vec2 coord, vec4 frame)
 	vec2 omega = vec2(3.1415 * rubyOutputSize.x, 2.0 * 3.1415 * rubyTextureSize.y);
 	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
 	vec3 res = frame.xyz;
-#ifdef ROTATE_SCANLINES
-	sine_comp = sine_comp.yx;
-	omega = omega.yx;
-#endif
+	#ifdef ROTATE_SCANLINES
+		sine_comp = sine_comp.yx;
+		omega = omega.yx;
+	#endif
 	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
 
 	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
@@ -245,94 +235,83 @@ vec4 scanline(vec2 coord, vec4 frame)
 // Distortion of scanlines, and end of screen alpha.
 vec2 Warp(vec2 pos)
 {
-	pos = pos * 2.0 - 1.0;
-	pos *= vec2(1.0 + (pos.y * pos.y) * warpX, 1.0 + (pos.x * pos.x) * warpY);
+	pos  = pos*2.0-1.0;
+	pos *= vec2(1.0 + (pos.y*pos.y)*warpX, 1.0 + (pos.x*pos.x)*warpY);
 
-	return pos * 0.5 + 0.5;
+	return pos*0.5 + 0.5;
 }
 #endif
 
 #if defined MASK && !defined ROTATE_SCANLINES
-// Shadow mask.
-vec4 Mask(vec2 pos)
-{
-	vec3 mask = vec3(maskDark, maskDark, maskDark);
+	// Shadow mask.
+	vec4 Mask(vec2 pos)
+	{
+		vec3 mask = vec3(maskDark, maskDark, maskDark);
 
-	// Very compressed TV style shadow mask.
-	if (shadowMask == 1.0) {
-		float line = maskLight;
-		float odd = 0.0;
+		// Very compressed TV style shadow mask.
+		if (shadowMask == 1.0)
+		{
+			float line = maskLight;
+			float odd = 0.0;
 
-		if (fract(pos.x * 0.166666666) < 0.5)
-			odd = 1.0;
-		if (fract((pos.y + odd) * 0.5) < 0.5)
-			line = maskDark;
+			if (fract(pos.x*0.166666666) < 0.5) odd = 1.0;
+			if (fract((pos.y + odd) * 0.5) < 0.5) line = maskDark;
 
-		pos.x = fract(pos.x * 0.333333333);
+			pos.x = fract(pos.x*0.333333333);
 
-		if (pos.x < 0.333)
-			mask.r = maskLight;
-		else if (pos.x < 0.666)
-			mask.g = maskLight;
-		else
-			mask.b = maskLight;
-		mask *= line;
+			if      (pos.x < 0.333) mask.r = maskLight;
+			else if (pos.x < 0.666) mask.g = maskLight;
+			else                    mask.b = maskLight;
+			mask*=line;
+		}
+
+		// Aperture-grille.
+		else if (shadowMask == 2.0)
+		{
+			pos.x = fract(pos.x*0.333333333);
+
+			if      (pos.x < 0.333) mask.r = maskLight;
+			else if (pos.x < 0.666) mask.g = maskLight;
+			else                    mask.b = maskLight;
+		}
+	#ifdef EXTRA_MASKS
+		// These can cause moire with curvature and scanlines
+		// so they're an easy target for freeing up registers
+
+		// Stretched VGA style shadow mask (same as prior shaders).
+		else if (shadowMask == 3.0)
+		{
+			pos.x += pos.y*3.0;
+			pos.x  = fract(pos.x*0.166666666);
+
+			if      (pos.x < 0.333) mask.r = maskLight;
+			else if (pos.x < 0.666) mask.g = maskLight;
+			else                    mask.b = maskLight;
+		}
+
+		// VGA style shadow mask.
+		else if (shadowMask == 4.0)
+		{
+			pos.xy  = floor(pos.xy*vec2(1.0, 0.5));
+			pos.x  += pos.y*3.0;
+			pos.x   = fract(pos.x*0.166666666);
+
+			if      (pos.x < 0.333) mask.r = maskLight;
+			else if (pos.x < 0.666) mask.g = maskLight;
+			else                    mask.b = maskLight;
+		}
+	#endif
+
+		else mask = vec3(1.,1.,1.);
+
+		return vec4(mask, 1.0);
 	}
-
-	// Aperture-grille.
-	else if (shadowMask == 2.0) {
-		pos.x = fract(pos.x * 0.333333333);
-
-		if (pos.x < 0.333)
-			mask.r = maskLight;
-		else if (pos.x < 0.666)
-			mask.g = maskLight;
-		else
-			mask.b = maskLight;
-	}
-#ifdef EXTRA_MASKS
-	// These can cause moire with curvature and scanlines
-	// so they're an easy target for freeing up registers
-
-	// Stretched VGA style shadow mask (same as prior shaders).
-	else if (shadowMask == 3.0) {
-		pos.x += pos.y * 3.0;
-		pos.x = fract(pos.x * 0.166666666);
-
-		if (pos.x < 0.333)
-			mask.r = maskLight;
-		else if (pos.x < 0.666)
-			mask.g = maskLight;
-		else
-			mask.b = maskLight;
-	}
-
-	// VGA style shadow mask.
-	else if (shadowMask == 4.0) {
-		pos.xy = floor(pos.xy * vec2(1.0, 0.5));
-		pos.x += pos.y * 3.0;
-		pos.x = fract(pos.x * 0.166666666);
-
-		if (pos.x < 0.333)
-			mask.r = maskLight;
-		else if (pos.x < 0.666)
-			mask.g = maskLight;
-		else
-			mask.b = maskLight;
-	}
-#endif
-
-	else
-		mask = vec3(1., 1., 1.);
-
-	return vec4(mask, 1.0);
-}
 #endif
 
 void main()
 {
 #ifdef CURVATURE
-	vec2 pos = Warp(v_texCoord.xy * (rubyTextureSize.xy / rubyInputSize.xy)) * (rubyInputSize.xy / rubyTextureSize.xy);
+	vec2 pos = Warp(v_texCoord.xy*(rubyTextureSize.xy/rubyInputSize.xy))*(rubyInputSize.xy/rubyTextureSize.xy);
 #else
 	vec2 pos = v_texCoord.xy;
 #endif
@@ -354,10 +333,10 @@ void main()
 #if defined CURVATURE && defined GL_ES
 	// hacky clamp fix for GLES
 	vec2 bordertest = (pos);
-	if (bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+	if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
 		res = res;
 	else
-		res = vec4(0., 0., 0., 0.);
+		res = vec4(0.,0.,0.,0.);
 #endif
 
 #if defined MASK && !defined ROTATE_SCANLINES

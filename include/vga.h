@@ -509,9 +509,9 @@ void VGA_SetupOther(void);
 void VGA_SetupXGA(void);
 void VGA_AddCompositeSettings(Config &conf);
 
-/* Some Support Functions */
-std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type,
-                                                       const uint16_t mode);
+/* Some support functions */
+std::pair<std::string, std::string> VGA_DescribeType(const VGAModes type,
+                                                     const uint16_t mode);
 void VGA_SetClock(Bitu which, uint32_t target);
 
 // Save, get, and limit refresh and clock functions

@@ -1079,10 +1079,10 @@ void SHELL_Init() {
 	        "║ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
-	        "║ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, ║\n"
-	        "║ and [color=red]%s+F11[reset] to change contrast/brightness settings.                ║\n");
+	        "║ Use [color=red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║\n"
+	        "║ and [color=red]%s+F11[color=white] to change contrast/brightness settings.                ║\n");
 	MSG_Add("SHELL_STARTUP_HERC",
-	        "║ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. ║\n"
+	        "║ Use [color=red]F11[color=white] to cycle through white, amber, and green monochrome color. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_DEBUG",
 	        "║ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"

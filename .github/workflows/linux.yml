@@ -120,7 +120,7 @@ jobs:
           echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
           echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -129,7 +129,7 @@ jobs:
             ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
 
       - name:  Cache subprojects
-        uses:  actions/cache@v3.0.11
+        uses:  actions/cache@v3.2.2
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
@@ -188,7 +188,7 @@ jobs:
           echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
           echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -197,7 +197,7 @@ jobs:
             ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}-1
 
       - name:  Cache subprojects
-        uses:  actions/cache@v3.0.11
+        uses:  actions/cache@v3.2.2
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
@@ -209,12 +209,14 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup release build
         run: |
           meson setup \
+            -Duse_xinput2=false \
             -Ddefault_library=static \
             --wrap-mode=forcefallback \
             -Db_lto=true -Db_lto_threads=$(nproc) \
@@ -242,7 +244,7 @@ jobs:
           sudo chmod 777 "${CLAMDB_DIR}"
           echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
           echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         id:    cache-clamdb
         with:
           path: ${{ env.CLAMDB_DIR }}/*.cvd
@@ -287,6 +289,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
+          git fetch --all --tags --force
           VERSION=$(git describe --abbrev=4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)

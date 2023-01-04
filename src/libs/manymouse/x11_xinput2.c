@@ -7,7 +7,11 @@
  *  Altered to:
  *   - silence compiler warnings, by Roman Standzikowski.
  *   - fix uninitialized event member access, by kcgen.
+ *   - include project config.h, by kcgen.
  */
+
+/* Let the project (maybe) define SUPPORT_XINPUT2 via common header */
+#include "config.h"
 
 #include "manymouse.h"
 

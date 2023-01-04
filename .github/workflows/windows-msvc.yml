@@ -49,9 +49,10 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.2
+        uses: microsoft/setup-msbuild@v1.3
         with:
             vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -131,9 +132,10 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.2
+        uses: microsoft/setup-msbuild@v1.3
         with:
             vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -151,6 +153,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=4)
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
@@ -238,6 +241,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
+          git fetch --all --tags --force
           VERSION=$(git describe --abbrev=4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)

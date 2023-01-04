@@ -210,7 +210,16 @@ static uint32_t read_kcl_file(const FILE_unique_ptr &kcl_file, const char *layou
 		static_assert(UINT8_MAX < sizeof(rbuf), "rbuf too small");
 
 		char lng_codes[258];
-		fseek(kcl_file.get(), -2, SEEK_CUR);
+
+		constexpr int8_t lang_codes_offset = -2;
+		if (fseek(kcl_file.get(), lang_codes_offset, SEEK_CUR) != 0) {
+			LOG_ERR("LAYOUT: could not seek to the language codes "
+			        "at byte %d in keyboard layout: %s",
+			        check_cast<int>(cur_pos) + lang_codes_offset,
+			        strerror(errno));
+			return 0;
+		}
+
 		// get all language codes for this layout
 		for (auto i = 0; i < data_len;) {
 			if (fread(rbuf, sizeof(uint8_t), 2, kcl_file.get()) != 2) {

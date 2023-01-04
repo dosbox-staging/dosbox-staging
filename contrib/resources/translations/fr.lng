@@ -698,10 +698,10 @@ Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
 .
 :CONFIG_SERIAL1
 Définir le type de périphérique connecté au port série.
-Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'directserial'.
+Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'direct'.
 Les paramètres additionnels doivent être sur la même ligne sous la forme
 paramètre:valeur. Le paramètre pour tous les types est l'IRQ (optionnel).
-Pour 'directserial' : realport (port réel, requis), rxdelay (optionnel).
+Pour 'direct' : realport (port réel, requis), rxdelay (optionnel).
                      (realport:COM1 realport:ttyS0).
 Pour 'modem' : listenport (port d'écoute, optionnel).
 Pour 'nullmodem' : server, rxdelay, txdelay, telnet, usedtr,

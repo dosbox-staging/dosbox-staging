@@ -1,11 +1,11 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2006-2020  The DOSBox Team
+ *  Copyright (C) 2004-2020  The DOSBox Team
  *
  * Contributors:
- *   - 2006, Sjoerd van der Berg <harekiet@users.sourceforge.net>: authored
- *           https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk@2444
+ *   - 2004, Sjoerd van der Berg <harekiet@users.sourceforge.net>: authored
+ *           https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk@1817
  *
  *   - 2020, jmarsh <jmarsh@vogons.org>: converted to OpenGL fragment shader
  *           https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk@4319
@@ -43,7 +43,7 @@ uniform sampler2D rubyTexture;
 
 void main()
 {
-	vec2 prescale = vec2(3.0);
+	vec2 prescale = vec2(2.0);
 	vec2 texel = v_texCoord;
 	vec2 texel_floored = floor(texel);
 	vec2 s = fract(texel);
@@ -54,9 +54,9 @@ void main()
 
 	vec2 mod_texel = min(texel_floored + f, rubyInputSize - 0.5);
 	vec4 p = texture2D(rubyTexture, mod_texel / rubyTextureSize);
-	float m = s.y * 6.0;
-	m -= clamp(m, 2.0, 4.0);
-	m = abs(m / 2.0);
-	gl_FragColor = p - p * m;
+	float ss = abs(s.y * 2.0 - 1.0);
+	p -= p * ss * 3.0 / 8.0;
+
+	gl_FragColor = vec4(p.rgb, 1.0);
 }
 #endif

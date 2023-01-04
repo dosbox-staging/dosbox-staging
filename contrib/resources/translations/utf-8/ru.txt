@@ -220,7 +220,8 @@ quiet       |     нет     |      нет
 auto        | 'low', если передан исполняемый файл или каталог, иначе 'high'
 .
 :CONFIG_FRAMESKIP
-Consider capping frame-rates using the '[sdl] host_rate' setting.
+Рассмотрите возможность ограничения кадровой частоты с помощью настройки
+'[sdl] host_rate'.
 .
 :CONFIG_ASPECT
 Масштабирует вертикальное разрешение для получения изображения с соотношением
@@ -274,9 +275,12 @@ Consider capping frame-rates using the '[sdl] host_rate' setting.
 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 и #ffffff.
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+Программное масштабирование является устаревшим, рекомендуется использовать
+аппаратно-ускоренные опции:
+ - Если вы использовали методы масштабирования normal2x/3x, вместо этого
+   задайте 'windowresolution'.
+ - Если вы использовали продвинутые методы масштабирования, рассмотрите опцию
+   'glshader'.
 .
 :CONFIG_GLSHADER
 Укажите 'none', или GLSL-шейдер. Работает только

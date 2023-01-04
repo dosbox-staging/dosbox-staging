@@ -9,15 +9,15 @@ support today's systems.
 
 ### Build status
 
-[![Linux x86\_64 build status][build-lin1-badge]][build-linux]
-[![Linux other build status][build-lin2-badge]][build-linux-2]
-[![Windows build status][build-win-badge]][build-win]
-[![macOS build status][build-mac-badge]][build-mac]
+[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
+[![Linux other build status][build-lin2-badge]][build-lin2-ci]
+[![Windows (VisualStudio) build status][build-win-msvc-badge]][build-win-msvc-ci]
+[![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
+[![macOS build status][build-mac-badge]][build-mac-ci]
 
 ### Code quality status
 
-[![Coverity status][coverity-badge]][4]
-[![LGTM grade][lgtm-badge]][3]
+[![Coverity status][coverity-badge]][3]
 
 ## Summary of features
 
@@ -31,7 +31,7 @@ support today's systems.
 | **Logging**                    | Loguru for C++<sup>[5]</sup>
 | **Buildsystem**                | Meson or Visual Studio 2019
 | **CI**                         | Yes
-| **Static analysis**            | Yes<sup>[1],[2],[3],[4]</sup>
+| **Static analysis**            | Yes<sup>[1],[3],[4]</sup>
 | **Dynamic analysis**           | Yes
 | **clang-format**               | Yes
 | **[Development builds]**       | Yes
@@ -52,7 +52,7 @@ support today's systems.
 |-                            |-
 | **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
 | **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`
-| **Resizable window**        | Yes, for all `output=opengl` modes
+| **Resizable window**        | Yes, for all hardware-accelerated modes
 | **Relative window size**    | `windowresolution=small`, `medium`, or `large`
 | **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
 | **[OPL] emulator**          |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
@@ -60,10 +60,10 @@ support today's systems.
 | **CGA composite modes**     | `machine=pcjr/tandy/cga` with hotkeys)
 | **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`
 | **Modem phonebook file**    | `phonebookfile=<name>`
-| **Autotype command**        | Yes<sup>[10]</sup>
+| **Raw mouse input**         | Yes: `raw_mouse_input=true`
+| **`Autotype` command**      | Yes<sup>[10]</sup>
 | **Startup verbosity**       | Yes<sup>[11]</sup>
 | **[GUS] enhancements**      | Yes<sup>[12]</sup>
-| **Raw mouse input**         | Yes: `raw_mouse_input=true`
 | **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x
 | **[MT-32] emulator**        | Yes: libmt32emu 2.4.2 (Requires ROM files)
 | **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>
@@ -73,6 +73,12 @@ support today's systems.
 | **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file
 | **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`
 | **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>
+| **Audio filters**           | Yes: See `*_filter` settings in conf file
+| **Audio reverb and chorus** | Yes: See `[mixer]` conf section and `MIXER.COM /help`
+| **Audio stereo crossfeed**  | Yes: See `[mixer]` conf section and `MIXER.COM /help`
+| **`More` command**          | Yes<sup>[19]</sup>
+| **Dual/multi-mouse input**  | Yes: See `[mouse]` section in conf file
+| **ReelMagic support**       | Yes: See `[reelmagic]` section in conf file
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -92,6 +98,7 @@ support today's systems.
 [16]:    https://github.com/dosbox-staging/dosbox-staging/pull/1272
 [17]:    https://github.com/dosbox-staging/dosbox-staging/pull/1398
 [18]:    https://github.com/dosbox-staging/dosbox-staging/pull/1447
+[19]:    https://github.com/dosbox-staging/dosbox-staging/pull/2020
 
 ## Stable release builds
 
@@ -184,7 +191,8 @@ sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
 ``` shell
 # macOS
 xcode-select --install
-brew install ccache meson libpng sdl2 sdl2_image sdl2_net opusfile fluid-synth libslirp speexdsp
+brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
+     fluid-synth libslirp pkg-config python3 speexdsp
 ```
 
 ### Build and stay up-to-date with the latest sources
@@ -285,16 +293,23 @@ For some historical context of why this repo exists you can read
 [`forks/*`]:   https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=forks%2F
 [git-notes]:   https://git-scm.com/docs/git-notes
 
-[gpl-badge]:        https://img.shields.io/badge/license-GPL--2.0--or--later-blue
-[discord-badge]:    https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord
-[discord]:          https://discord.gg/WwAg3Xf
-[build-lin1-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20(x86_64)
-[build-linux]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22
-[build-lin2-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20(arm64,%20S390x)
-[build-linux-2]:    https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22
-[build-win-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20(x86,%20x86_64)
-[build-win]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22
-[build-mac-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(arm64,%20x86_64)
-[build-mac]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22
-[coverity-badge]:   https://img.shields.io/coverity/scan/dosbox-staging
-[lgtm-badge]:       https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging
+[gpl-badge]:     https://img.shields.io/badge/license-GPL--2.0--or--later-blue
+[discord-badge]: https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord
+[discord]:       https://discord.gg/WwAg3Xf
+
+[build-lin1-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?label=Linux%20%28x86_64%29
+[build-lin1-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
+
+[build-lin2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/platforms.yml?label=Linux%20%28other%29
+[build-lin2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/platforms.yml?query=branch%3Amain
+
+[build-win-msys2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msys2.yml?label=Windows%20%28MSYS2%29
+[build-win-msys2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msys2.yml?query=branch%3Amain
+
+[build-win-msvc-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msvc.yml?label=Windows%20%28Visual%20Studio%29
+[build-win-msvc-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msvc.yml?query=branch%3Amain
+
+[build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
+[build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
+
+[coverity-badge]: https://img.shields.io/coverity/scan/dosbox-staging

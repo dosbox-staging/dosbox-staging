@@ -230,7 +230,7 @@ auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
                     anders 'high'
 .
 :CONFIG_FRAMESKIP
-Consider capping frame-rates using the '[sdl] host_rate' setting.
+Overweeg om framesnelheden te beperken met de instelling '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
 Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
@@ -280,9 +280,9 @@ indeling, zijn: #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500
 respectievelijk.
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
+ - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste 'windowresolution' in.
+ - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
 Ofwel 'none' of een GLSL-shadernaam. Werkt alleen met OpenGL-uitvoer.
@@ -1743,20 +1743,36 @@ Voorbeelden:
 Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
 
 Gebruik:
-  [color=cyan]COMMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]BESTAND[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATROON[reset] [[color=cyan]PATROON[reset] ...]
+  [color=cyan]COMMANDO[reset] | [color=green]more[reset] [/c] [/e] [/p] [reset]/s [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]BESTAND[reset]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATROON[reset] [[color=cyan]PATROON[reset] ...]
 
 Waar:
   [color=cyan]COMMANDO[reset] is de opdracht om de uitvoer van weer te geven.
   [color=cyan]BESTAND[reset]  exacte naam van het bestand om weer te geven, eventueel met een pad.
   [color=cyan]PATROON[reset]  is ofwel een pad naar een enkel bestand of een pad met
            jokertekens, dit zijn de asterisk (*) en het vraagteken (?).
-  [color=white]n[reset]        is de tabgrootte, 1-9, standaard is 8.
+  /c      wist het scherm voor elk bestand.
+  /e      uitgebreide modus, met meer sneltoetsen beschikbaar.
+  /p      breidt het nieuwe pagina-/formulierfeed-teken uit.
+  /s      drukt meerdere lege regels samen tot één.
+  /t[color=white]n[reset]     is de tabgrootte, 1-9, standaard is 8.
+  +[color=white]nnn[reset]   slaat de eerste [kleur=white]nnn[reset] regels van het eerste bestand over.
 
 Opmerkingen:
-  Deze opdracht is alleen voor het bekijken van tekstbestanden, niet voor
-  binaire bestanden.
+  Deze opdracht is alleen voor tekstbestanden, niet voor binaire bestanden.
+  De volgende sneltoetsen zijn beschikbaar:
+  [color=yellow]Spatie[reset]         toon het volgende scherm.
+  [color=yellow]Enter[reset]          toon de volgende lijn.
+  [color=yellow]N[reset] of [color=yellow]F[reset]         ga naar het volgend bestand.
+  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] om de opdracht te beëindigen.
+  [color=yellow]Ctrl+C[reset] kan worden gebruikt om het lezen van gegevens van de toetsenbordinvoer
+  te beëindigen, zoals wanneer [color=green]more[reset] wordt uitgevoerd zonder enige argumenten.
+  De volgende sneltoetsen zijn alleen beschikbaar in de uitgebreide modus:
+  [color=yellow]P[reset] [color=white]nnn[reset]          toon de volgende [color=white]nnn[reset] regels en vraag opnieuw.
+  [color=yellow]S[reset] [color=white]nnn[reset]          sla de volgende [color=white]nnn[reset] regels over.
+  [color=yellow]=[reset]              toon het huidige regelnummer.
+  Optie /p schakelt bepaalde incompatibele sneltoetsen uit.
 
 Voorbeelden:
   [color=cyan]dir /on[reset] | [color=green]more[reset]            ; geeft de gesorteerde map één scherm tegelijk weer
@@ -1776,10 +1792,16 @@ Geen invoerbestand gevonden.
 [reset][color=light-yellow]--- apparaat %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- druk op SPATIEBALK voor meer ---[reset]
+[reset][color=light-yellow]--- druk op SPATIE of ENTER voor meer ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) druk op SPATIE of ENTER voor meer ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
 [reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- regel %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- kon %s niet openen ---[reset]
@@ -1789,6 +1811,12 @@ Geen invoerbestand gevonden.
 .
 :PROGRAM_MORE_NEXT_FILE
 [reset][color=light-yellow](volgend bestand)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](overgeslagen inhoud)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]hoeveel regels?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter

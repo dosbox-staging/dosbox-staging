@@ -8,7 +8,7 @@
 // Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
 // Ref: https://semver.org/
 
-#define VERSION "0.80.0-alpha"
+#define VERSION "0.81.0-alpha"
 
 /* This macro is going to be overriden via CI */
 #define DOSBOX_DETAILED_VERSION "git"

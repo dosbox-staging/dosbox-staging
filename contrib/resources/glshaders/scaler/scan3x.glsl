@@ -54,9 +54,9 @@ void main()
 
 	vec2 mod_texel = min(texel_floored + f, rubyInputSize - 0.5);
 	vec4 p = texture2D(rubyTexture, mod_texel / rubyTextureSize);
-	float ss = abs(s.y * 2.0 - 1.0);
-	p -= p * ss * 11.0 / 16.0;
-
-	gl_FragColor = p;
+	float m = s.y * 6.0;
+	m -= clamp(m, 2.0, 4.0);
+	m = abs(m / 2.0);
+	gl_FragColor = vec4((p - p * m).rgb, 1.0);
 }
 #endif

@@ -2,7 +2,7 @@ project(
     'dosbox-staging',
     'c',
     'cpp',
-    version: '0.80.0-alpha',
+    version: '0.81.0-alpha',
     license: 'GPL-3.0-or-later',
     meson_version: '>= 0.57.0',
     default_options: [
@@ -73,9 +73,9 @@ else
     )
 endif
 
-if get_option('buildtype') == 'release'
-    # For release builds, we're not anticipating needing
-    # to divide by zero and NaNs, and get FPU signals.
+if get_option('buildtype') in ['release', 'minsize']
+    # For release and small build types, we're not anticipating
+    # needing debuggable floating point signals.
     # These safety measures are still enabled in debug builds,
     # so if an issue is reported where these happen help, then
     # testing with debug builds will make use of them.
@@ -159,19 +159,22 @@ endforeach
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 conf_data.set('project_name', meson.project_name())
-conf_data.set_quoted('CUSTOM_DATADIR', get_option('prefix') / get_option('datadir'))
+conf_data.set_quoted(
+    'CUSTOM_DATADIR',
+    get_option('prefix') / get_option('datadir'),
+)
 
 os_family_name = {
-  'linux'     : 'LINUX',
-  'windows'   : 'WIN32',
-  'cygwin'    : 'WIN32',
-  'darwin'    : 'MACOSX',
-  'freebsd'   : 'BSD',
-  'netbsd'    : 'BSD',
-  'openbsd'   : 'BSD',
-  'dragonfly' : 'BSD',
+    'linux': 'LINUX',
+    'windows': 'WIN32',
+    'cygwin': 'WIN32',
+    'darwin': 'MACOSX',
+    'freebsd': 'BSD',
+    'netbsd': 'BSD',
+    'openbsd': 'BSD',
+    'dragonfly': 'BSD',
 }.get(host_machine.system(), 'UNKNOWN_OS')
-conf_data.set(os_family_name, 1)
+conf_data.set10(os_family_name, true)
 
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
@@ -260,7 +263,7 @@ endif
 
 foreach header : ['pwd.h', 'strings.h', 'netinet/in.h']
     if cc.has_header(header)
-        conf_data.set('HAVE_' + header.underscorify().to_upper(), 1)
+        conf_data.set10('HAVE_' + header.underscorify().to_upper(), true)
     endif
 endforeach
 
@@ -278,15 +281,15 @@ endif
 # Header windows.h defines old min/max macros, that conflict with C++11
 # std::min/std::max.  Defining NOMINMAX prevents these macros from appearing.
 if cxx.get_id() == 'msvc'
-    conf_data.set('NOMINMAX', true)
+    conf_data.set10('NOMINMAX', true)
 endif
 
 if host_machine.system() in ['windows', 'cygwin']
-    conf_data.set('_USE_MATH_DEFINES', true)
+    conf_data.set10('_USE_MATH_DEFINES', true)
 endif
 
 if host_machine.endian() == 'big'
-    conf_data.set('WORDS_BIGENDIAN', 1)
+    conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
 # Non-4K memory page size is supported only for ppc64 at the moment.
@@ -303,7 +306,7 @@ int main() {
 }
 '''
 if cc.compiles(set_prio_code, name: 'test for setpriority support')
-    conf_data.set('HAVE_SETPRIORITY', 1)
+    conf_data.set10('HAVE_SETPRIORITY', true)
 endif
 
 # New compilers can check for this feature using __has_builtin, but this is
@@ -320,7 +323,7 @@ void fun(bool test) {
 }
 '''
 if cxx.compiles(builtin_expect_code, name: 'test for __builtin_expect support')
-    conf_data.set('C_HAS_BUILTIN_EXPECT', 1)
+    conf_data.set10('C_HAS_BUILTIN_EXPECT', true)
 endif
 
 atomic_code = '''
@@ -357,6 +360,10 @@ endif
 #
 # system and compiler libraries
 
+# Optional libraries
+optional_dep = dependency('', required: false)
+msg = 'You can disable this dependency with: -D@0@=false'
+
 default_wrap_options = ['default_library=static', 'warning_level=0']
 
 dl_dep = cc.find_library('dl', required: false)
@@ -365,7 +372,6 @@ threads_dep = dependency('threads')
 
 # 3rd party libraries
 static_libs_list = get_option('try_static_libs')
-system_libs_list = get_option('system_libraries')
 
 wants_tests = true
 # tests are disabled for release builds unless requested
@@ -379,7 +385,6 @@ libiir_dep = dependency(
     'iir',
     version: '>= 1.9.3',
     default_options: default_wrap_options + ['tests=' + wants_tests.to_string()],
-    allow_fallback: ('iir' not in system_libs_list),
     static: ('iir' in static_libs_list or prefers_static_libs),
 )
 
@@ -397,7 +402,6 @@ sdl2_dep = dependency(
 zlib_dep = dependency(
     'zlib',
     version: '>= 1.2.11',
-    allow_fallback: ('zlib' not in system_libs_list),
     default_options: default_wrap_options,
     static: ('zlib' in static_libs_list or prefers_static_libs),
 )
@@ -407,8 +411,8 @@ zlib_dep = dependency(
 # Default to the system library
 speexdsp_dep = dependency(
     'speexdsp',
-    allow_fallback: false,
     required: false,
+    fallback: [],
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
 )
 
@@ -443,10 +447,6 @@ if not can_trust_system_speexdsp
     speexdsp_summary_msg = 'built-in'
 endif
 summary('SpeexDSP provider', speexdsp_summary_msg)
-
-# Optional libraries
-optional_dep = dependency('', required: false)
-msg = 'You can disable this dependency with: -D@0@=false'
 
 # File-descriptor manipulation routines, such as FD_ZERO, are used
 # by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
@@ -485,7 +485,6 @@ if get_option('use_slirp')
         'slirp',
         version: '>= 4.6.1',
         default_options: default_wrap_options,
-        allow_fallback: ('slirp' not in system_libs_list),
         static: ('slirp' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_slirp'),
     )
@@ -519,14 +518,17 @@ opengl_summary_msg = 'Disabled'
 if get_option('use_opengl') != 'false'
     opengl_dep = dependency('gl', not_found_message: msg.format('use_opengl'))
 endif
-if (opengl_dep.found()
+if (
+    opengl_dep.found()
     and host_machine.system() == 'linux'
     and get_option('use_opengl') == 'auto'
     and get_option('enable_debugger') != 'none'
 )
 
-    warning('''OpenGL is disabled because it's not compatible with the debugger.
-            To use OpenGL with the debugger, force it with "-Duse_opengl=true"''')
+    warning(
+        '''OpenGL is disabled because it's not compatible with the debugger.
+            To use OpenGL with the debugger, force it with "-Duse_opengl=true"''',
+    )
 
     conf_data.set10('C_OPENGL', false)
     opengl_summary_msg = 'Found, but disabled due to conflict with debugger'
@@ -543,7 +545,6 @@ if get_option('use_fluidsynth')
         'fluidsynth',
         version: '>= 2.2.3',
         modules: ['FluidSynth::libfluidsynth'],
-        allow_fallback: ('fluidsynth' not in system_libs_list),
         static: ('fluidsynth' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_fluidsynth'),
         default_options: [
@@ -566,7 +567,6 @@ if get_option('use_mt32emu')
         'mt32emu',
         version: '>= 2.5.3',
         default_options: default_wrap_options,
-        allow_fallback: ('mt32emu' not in system_libs_list),
         static: ('mt32emu' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_mt32emu'),
     )
@@ -619,9 +619,10 @@ if host_machine.system() == 'darwin'
     )
     if coreaudio_dep.found()
         if cxx.check_header('AudioToolbox/AUGraph.h')
-            conf_data.set('C_COREAUDIO', 1)
+            conf_data.set10('C_COREAUDIO', true)
         else
             warning('''Core Audio disabled because header is unusable''')
+            coreaudio_dep = disabler()
         endif
     else
         warning('''Core Audio disabled because Apple Framework missing''')
@@ -636,9 +637,10 @@ if host_machine.system() == 'darwin'
     )
     if coremidi_dep.found()
         if cxx.check_header('CoreMIDI/MIDIServices.h')
-            conf_data.set('C_COREMIDI', 1)
+            conf_data.set10('C_COREMIDI', true)
         else
             warning('''Core Audio disabled because header is unusable''')
+            coremidi_dep = disabler()
         endif
     else
         warning('''Core MIDI disabled because Apple Framework missing''')
@@ -665,9 +667,10 @@ if host_machine.system() == 'darwin'
                 name: 'compiler is capable of compiling IOKit',
             )
             if is_iokit_compilable
-                conf_data.set('C_IOKIT', 1)
+                conf_data.set10('C_IOKIT', true)
             else
                 warning('''IOKit disabled because compiler cannot handle it''')
+                iokit_dep = disabler()
             endif
         else
             warning('''IOKit disabled because header is unusable''')
@@ -685,9 +688,10 @@ if host_machine.system() == 'darwin'
     )
     if corefoundation_dep.found()
         if cxx.check_header('CoreFoundation/CoreFoundation.h')
-            conf_data.set('C_COREFOUNDATION', 1)
+            conf_data.set10('C_COREFOUNDATION', true)
         else
             warning('''Core Foundation disabled because header is unusable''')
+            corefoundation_dep = disabler()
         endif
     else
         warning('''Core Foundation disabled becaue Foundation missing''')
@@ -702,9 +706,10 @@ if host_machine.system() == 'darwin'
     )
     if coreservices_dep.found()
         if cxx.check_header('CoreServices/CoreServices.h')
-            conf_data.set('C_CORESERVICES', 1)
+            conf_data.set10('C_CORESERVICES', true)
         else
             warning('''Core Services disabled because header is unusable''')
+            coreservices_dep = disabler()
         endif
     else
         warning('''Core Services disabled because Frameworks is missing''')
@@ -727,8 +732,16 @@ endif
 conf_data.set10('C_MANYMOUSE', true)
 manymouse_summary_msg = 'Enabled'
 
-if host_machine.system() == 'darwin'
-    if not conf_data.has('C_IOKIT')
+# ManyMouse optionally supports the X Input 2.0 protocol (regardless of OS)
+xinput2_dep = optional_dep
+xinput2_required = (get_option('use_xinput2') == 'true')
+if xinput2_required or (get_option('use_xinput2') == 'auto')
+    xinput2_dep = dependency('xi', required: xinput2_required)
+endif
+conf_data.set10('SUPPORT_XINPUT2', xinput2_dep.found())
+
+if os_family_name == 'MACOSX'
+    if not iokit_dep.found()
         manymouse_summary_msg = 'Disabled due to host missing IOKit'
         conf_data.set10('C_MANYMOUSE', false)
     endif
@@ -748,7 +761,7 @@ using_linux = (host_machine.system() == 'linux')
 force_alsa = (get_option('use_alsa') == 'true')
 if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
     alsa_dep = dependency('alsa')
-    conf_data.set('C_ALSA', 1)
+    conf_data.set10('C_ALSA', true)
     summary('ALSA support', alsa_dep.found())
 endif
 
@@ -761,13 +774,6 @@ if host_machine.system() in ['windows', 'cygwin']
 
     winmm_dep = cxx.find_library('winmm', required: true)
     summary('Windows Multimedia support', winmm_dep.found())
-endif
-
-# X11 Input Extension dependency for ManyMouse library
-xi_dep = optional_dep
-using_x11 = os_family_name in ['LINUX', 'BSD']
-if using_x11 and (conf_data.get('C_MANYMOUSE') == true)
-    xi_dep = dependency('xi')
 endif
 
 # Setup include directories
@@ -788,7 +794,7 @@ subdir('src/libs/residfp')
 subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
-if conf_data.get('C_MANYMOUSE') == true
+if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')
 endif
 
@@ -815,7 +821,7 @@ third_party_deps = [
     libtalchorus_dep,
 ]
 
-if conf_data.get('C_MANYMOUSE') == true
+if conf_data.get('C_MANYMOUSE') != 0
     third_party_deps += manymouse_dep
 endif
 

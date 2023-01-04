@@ -5,6 +5,7 @@ Windows builds can be created using:
 - The Clang or GCC compilers using the Meson buildsystem running within the
   MSYS2 environment to provide dependencies.
 
+
 ## Build using Visual Studio
 
 1. Install Visual Studio Community 2019: <https://visualstudio.microsoft.com/>.
@@ -19,8 +20,9 @@ you build a binary optimized for gaming.
 
 1. Edit `src\platform\visualc\config.h` and enable `C_DEBUG` and optionally
   `C_HEAVY_DEBUG` by setting them to `1` instead of `0`.
-  
+
 2. Select a **Release** build type in Visual Studio, and run the build.
+
 
 ## Build using MSYS2
 
@@ -81,7 +83,6 @@ you build a binary optimized for gaming.
    # or
    meson compile -C build/release-clang
    ```
-
 
 10. Create a package of the binary and DLLs to a destination directory:
 

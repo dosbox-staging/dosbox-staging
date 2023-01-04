@@ -74,7 +74,7 @@ jobs:
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
           echo "name_hash=$(echo '${{ matrix.conf.name }} ${{ matrix.conf.arch }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -88,7 +88,7 @@ jobs:
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
@@ -98,7 +98,7 @@ jobs:
             ccache-macos-debug-
 
       - name:  Cache subprojects
-        uses:  actions/cache@v3.0.11
+        uses:  actions/cache@v3.2.2
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
@@ -180,7 +180,7 @@ jobs:
           echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -198,7 +198,7 @@ jobs:
       - name:  Fetch the libffi subproject for Glib
         run: ./scripts/fetch-libffi-subproject.sh
 
-      - uses:  actions/cache@v3.0.11
+      - uses:  actions/cache@v3.2.2
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
@@ -206,7 +206,7 @@ jobs:
           restore-keys: ccache-macos-release-${{ matrix.runner.arch }}-
 
       - name:  Cache subprojects
-        uses:  actions/cache@v3.0.11
+        uses:  actions/cache@v3.2.2
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
@@ -254,6 +254,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
@@ -318,6 +319,7 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
+          git fetch --all --tags --force
           VERSION=$(git describe --abbrev=4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)

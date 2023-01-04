@@ -75,24 +75,6 @@ static std::string DetermineConfigPath()
 
 #else
 
-static bool CreateDirectories(const std::string &path)
-{
-	struct stat sb;
-	if (stat(path.c_str(), &sb) == 0) {
-		const bool is_dir = ((sb.st_mode & S_IFMT) == S_IFDIR);
-		return is_dir;
-	}
-
-	std::vector<char> tmp(path.begin(), path.end());
-	std::string dname = dirname(tmp.data());
-
-	// Create parent directories recursively
-	if (!CreateDirectories(dname))
-		return false;
-
-	return (mkdir(path.c_str(), 0700) == 0);
-}
-
 static std::string DetermineConfigPath()
 {
 	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
@@ -111,7 +93,8 @@ static std::string DetermineConfigPath()
 		return old_conf_path;
 	}
 
-	if (!CreateDirectories(conf_path)) {
+	std::error_code ec = {};
+	if (!std_fs::create_directories(conf_path, ec)) {
 		LOG_MSG("ERROR: Directory '%s' cannot be created",
 		        conf_path.c_str());
 		return old_conf_path;
@@ -140,10 +123,10 @@ static void W32_ConfDir(std::string& in,bool create) {
 	BOOL r = SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,c);
 	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(NULL,result,CSIDL_APPDATA,c);
 	if(!r || result[0] == 0) {
-		char const * windir = getenv("windir");
+		const char* windir = getenv("windir");
 		if(!windir) windir = "c:\\windows";
 		safe_strcpy(result, windir);
-		char const* appdata = "\\Application Data";
+		const char* appdata = "\\Application Data";
 		size_t len = safe_strlen(result);
 		if (len + strlen(appdata) < MAX_PATH)
 			safe_strcat(result, appdata);
@@ -242,7 +225,8 @@ std::string CROSS_ResolveHome(const std::string &str)
 	return temp_line;
 }
 
-bool Cross::IsPathAbsolute(std::string const& in) {
+bool Cross::IsPathAbsolute(const std::string& in)
+{
 	// Absolute paths
 #if defined (WIN32)
 	// drive letter
@@ -534,11 +518,16 @@ bool WildFileCmp(const char *file, const char *wild, bool long_compare)
 	if (find_ext) {
 		if (long_compare && wild_match(file, nwild))
 			return true;
-		Bitu size = (std::min)((unsigned int)(long_compare
-		                                              ? LFN_NAMELENGTH
-		                                              : (DOS_MFNLENGTH + 1)),
-		                       (unsigned int)(find_ext - nwild));
-		memcpy(wild_name, nwild, size);
+
+		const uint16_t name_len = long_compare ? LFN_NAMELENGTH
+		                                       : (DOS_MFNLENGTH + 1);
+
+		const auto ext_len = check_cast<uint16_t>(find_ext - nwild);
+
+		const auto wild_len = std::min(name_len, ext_len);
+
+		memcpy(wild_name, nwild, wild_len);
+
 		find_ext++;
 		memcpy(wild_ext, find_ext,
 		       strnlen(find_ext,

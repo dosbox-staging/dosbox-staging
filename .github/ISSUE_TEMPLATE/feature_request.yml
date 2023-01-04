@@ -27,7 +27,7 @@ body:
     attributes:
       label: Different version than latest?
       description: Alpha, Git, or Branch?
-      placeholder: "Ex. 0.79.0-alpha, git verion, branch testing."
+      placeholder: "Ex. 0.81.0-alpha, git verion, branch testing."
     validations:
       required: false
   - type: dropdown

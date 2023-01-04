@@ -290,10 +290,10 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 				try {
 					const int port_num = std::stoi(port);
 					ports.push_back(port_num);
-				} catch (std::invalid_argument &e) {
+				} catch ([[maybe_unused]] std::invalid_argument &e) {
 					LOG_WARNING("SLIRP: Invalid %s port: %s", protocol, port.c_str());
 					break;
-				} catch (std::out_of_range &e) {
+				} catch ([[maybe_unused]] std::out_of_range &e) {
 					LOG_WARNING("SLIRP: Invalid %s port: %s", protocol, port.c_str());
 					break;
 				}
@@ -404,7 +404,7 @@ struct slirp_timer *SlirpEthernetConnection::TimerNew(SlirpTimerCb cb, void *cb_
 
 void SlirpEthernetConnection::TimerFree(struct slirp_timer *timer)
 {
-	std::remove(timers.begin(), timers.end(), timer);
+	timers.erase(std::remove(timers.begin(), timers.end(), timer), timers.end());
 	delete timer;
 }
 
@@ -451,7 +451,7 @@ void SlirpEthernetConnection::PollUnregister(const int fd)
 	// sentinels
 	if (fd < 0 || registered_fds.empty())
 		return;
-	std::remove(registered_fds.begin(), registered_fds.end(), fd);
+	registered_fds.erase(std::remove(registered_fds.begin(), registered_fds.end(), fd), registered_fds.end());
 }
 
 void SlirpEthernetConnection::PollsAddRegistered()

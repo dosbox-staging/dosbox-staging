@@ -357,6 +357,38 @@ void GFX_RefreshTitle()
 	GFX_SetTitle(refresh_cycle_count);
 }
 
+// Detects if we're running within a desktop environment (or window manager).
+bool GFX_HaveDesktopEnvironment()
+{
+// On BSD and Linux, it's possible that the user is running directly on the
+// console without a windowing environment. For example, SDL can directly
+// interface with the host's OpenGL/GLES drivers, the console's frame buffer, or
+// the Raspberry Pi's DISPMANX driver.
+//
+#if defined(BSD) || defined(LINUX)
+	// The presence of any of the following variables set by either the
+	// login manager, display manager, or window manager itself is
+	// sufficient evidence to say the user has a desktop session.
+	//
+	// References:
+	// https://www.freedesktop.org/software/systemd/man/pam_systemd.html#desktop=
+	// https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#recognized-keys
+	// https://askubuntu.com/questions/72549/how-to-determine-which-window-manager-and-desktop-environment-is-running
+	// https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
+	//
+	constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
+	                                "XDG_SESSION_DESKTOP",
+	                                "DESKTOP_SESSION",
+	                                "GDMSESSION"};
+
+	return std::any_of(std::begin(vars), std::end(vars), std::getenv);
+
+#else
+	// Assume we have a desktop environment on all other systems
+	return true;
+#endif
+}
+
 static double get_host_refresh_rate()
 {
 	auto get_sdl_rate = []() {
@@ -735,20 +767,21 @@ static void log_display_properties(int source_w, int source_h,
 	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
 	auto refresh_rate = VGA_GetPreferredRate();
 	const auto double_scanned_str = (refresh_rate <= REFRESH_RATE_DOS_DOUBLED_MAX)
-	                                        ? "double-scanned "
-	                                        : "";
-	LOG_MSG("DISPLAY: %s %dx%d%s (%Xh) at %s%2.5g Hz %s, scaled"
-	        " by %.1fx%.1f to %dx%d with %#.2g pixel-aspect",
-	        type_name,
+	                                      ? "double-scanned "
+	                                      : "";
+
+	const auto colours = (type_colours == "") ? "" : " " + type_colours;
+
+	LOG_MSG("DISPLAY: %s %dx%d%s (mode %02Xh) at %s%2.5g Hz %s, scaled"
+	        " to %dx%d with %.4g pixel aspect ratio",
+	        type_name.c_str(),
 	        source_w,
 	        source_h,
-	        type_colours,
+	        colours.c_str(),
 	        CurMode->mode,
 	        double_scanned_str,
 	        refresh_rate,
 	        frame_mode,
-	        scale_x,
-	        scale_y,
 	        target_w,
 	        target_h,
 	        out_par);
@@ -1093,15 +1126,20 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	// to be set below
 	auto mode = FRAME_MODE::UNSET;
 
+	// Text modes always get VFR
+	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
+	if (in_text_mode) {
+		mode = FRAME_MODE::VFR;
+		save_rate_to_frame_period(dos_rate);
+	}
 	// Manual full CFR
-	if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
+	else if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
 		if (configure_cfr_mode() != FRAME_MODE::CFR && wants_vsync) {
 			LOG_WARNING("SDL: CFR performance warning: the DOS rate of %2.5g"
 			            " Hz exceeds the host's %2.5g Hz vsynced rate",
 			            dos_rate, host_rate);
 		}
 		mode = sdl.frame.desired_mode;
-
 	}
 	// Manual full VFR
 	else if (sdl.frame.desired_mode == FRAME_MODE::VFR) {
@@ -1111,12 +1149,6 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 			            dos_rate, host_rate);
 		}
 		mode = sdl.frame.desired_mode;
-	}
-	// Auto VFR, if in a text mode with a non-VRR display
-	else if (CurMode->type & M_TEXT_MODES &&
-	         !atleast_as_fast(host_rate, REFRESH_RATE_HOST_VRR_MIN)) {
-		mode = FRAME_MODE::VFR;
-		save_rate_to_frame_period(dos_rate);
 	}
 	// Auto CFR
 	else if (wants_vsync) {
@@ -1133,11 +1165,12 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		return;
 	previous_mode = mode;
 
-	// Configure the pacer. We only use it for VFR modes because CFR modes
-	// determine if the frame is presented based on the scheduler's accuracy.
+	// Configure the pacer. We only use it for graphical VFR modes because
+	// CFR modes determine if the frame is presented based on the
+	// scheduler's accuracy.
 	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
 	                         mode == FRAME_MODE::THROTTLED_VFR;
-	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
+	render_pacer.SetTimeout(is_vfr_mode && !in_text_mode ? sdl.vsync.skip_us : 0);
 
 	// Start synced presentation, if applicable
 	if (mode == FRAME_MODE::SYNCED_CFR)
@@ -1570,7 +1603,7 @@ static bool LoadGLShaders(const std::string_view source_sv, GLuint *vertex,
 [[maybe_unused]] static bool is_shader_flexible()
 {
 	constexpr std::array<std::string_view, 3> flexible_shader_names{{
-	        "sharp",
+	        "interpolation/sharp",
 	        "none",
 	        "default",
 	}};
@@ -2234,6 +2267,16 @@ void GFX_SetMouseHint(const MouseHint hint_id)
 	}
 
 	GFX_RefreshTitle();
+}
+
+void GFX_CenterMouse()
+{
+	int current_width  = 0;
+	int current_height = 0;
+
+	assert(sdl.window);
+	SDL_GetWindowSize(sdl.window, &current_width, &current_height);
+	SDL_WarpMouseInWindow(sdl.window, current_width / 2, current_height / 2);
 }
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
@@ -3393,9 +3436,8 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 	// -------------------------------
 	if (sdl.desktop.type == SCREEN_OPENGL) {
 		// Setup our OpenGL image properties
-		constexpr int gl_channels       = 3; // RBG (no alpha)
+		constexpr int gl_channels       = 4;               // RGBA
 		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
-		const size_t bytes_per_row      = gl_channels * canvas.w;
 
 		// Allocate a 24-bit surface to be populated
 		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
@@ -3411,24 +3453,29 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 			            SDL_GetError());
 			return {};
 		}
-		// Per OpenGL's documentation:
-		// The glReadPixels function starts at the lower left corner: (x
-		// + i, y + j) and iterates for 0 <= i < width and 0 <= j <
-		// height. It describes the pxiels as being "the i'th pixel in
-		// the j'th row". Pixels are returned in row-order from the
-		// lowest to the highest row, left to right in each row.
-		std::vector<uint8_t> pixels(bytes_per_row * canvas.h);
-		glReadPixels(0, 0, canvas.w, canvas.h, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
-		// To match SDL's surface ordering, we invert the rows (outer)
-		// and lines (inner):
-		auto surface_pixels = static_cast<char *>(surface->pixels);
-		for (int j = 0; j < canvas.h; ++j) {
-			auto target_row = surface_pixels + surface->pitch * j;
-			const auto source_row = pixels.data() +
-			                        bytes_per_row * (canvas.h - j - 1);
-			memcpy(target_row, source_row, bytes_per_row);
+		// The row ordering between OpenGL and SDL is inverted, so we
+		// start at the last OpenGL row, decrementing as we go, while
+		// writing into the incrementing surface row buffer.
+		constexpr auto gl_col_offset = 0;
+		auto gl_row_offset           = canvas.h;
+		const auto cols_per_read     = canvas.w;
+		constexpr auto rows_per_read = 1;
+
+		auto sdl_row_buffer = static_cast<uint8_t*>(surface->pixels);
+
+		while (gl_row_offset--) {
+			glReadPixels(gl_col_offset,
+			             gl_row_offset,
+			             cols_per_read,
+			             rows_per_read,
+			             GL_RGBA,
+			             GL_UNSIGNED_BYTE,
+			             sdl_row_buffer);
+
+			sdl_row_buffer += surface->pitch;
 		}
+
 		return surface;
 	}
 #endif
@@ -3781,12 +3828,13 @@ static void HandleVideoResize(int width, int height)
 		}
 #endif // C_OPENGL
 
-		if (!sdl.desktop.fullscreen)
+		if (!sdl.desktop.fullscreen) {
 			save_window_size(width, height);
 
-		// Window resize might have been triggered by the OS setting DPI scale,
-		// so recalculate that.
-		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
+			// If the window was resized, it might have been triggered
+			// by the OS setting DPI scale, so recalculate that.
+			sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
+		}
 
 		// Ensure mouse emulation knows the current parameters
 		NewMouseScreenParams();
@@ -4632,7 +4680,7 @@ int sdl_main(int argc, char *argv[])
 		if (control->cmdline->FindString("--working-dir", working_dir, remove_arg) ||
 		    control->cmdline->FindString("-working-dir", working_dir, remove_arg)) {
 			std::error_code ec;
-			std::filesystem::current_path(working_dir, ec);
+			std_fs::current_path(working_dir, ec);
 			if (ec) {
 				LOG_ERR("Cannot set working directory to %s",
 				        working_dir.c_str());

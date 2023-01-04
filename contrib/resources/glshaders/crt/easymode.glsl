@@ -1,35 +1,38 @@
+#version 120
+
 /*
-CRT Shader by EasyMode
-From https://github.com/libretro/common-shaders
+	CRT Shader by EasyMode
+	License: GPL
 
-License: GPL
+	This file ported from Libretro's GLSL shader crt-easymode.glslp
+	to DOSBox-compatible format by Tyrells.
 
-A flat CRT shader ideally for 1080p or higher displays.
+	A flat CRT shader ideally for 1080p or higher displays.
 
-Recommended Settings:
+	Recommended Settings:
 
-Video
- - Aspect Ratio:  4:3
- - Integer Scale: Off
+	Video
+	- Aspect Ratio:  4:3
+	- Integer Scale: Off
 
-Shader
- - Filter: Nearest
- - Scale:  Don't Care
+	Shader
+	- Filter: Nearest
+	- Scale:  Don't Care
 
-Example RGB Mask Parameter Settings:
+	Example RGB Mask Parameter Settings:
 
-Aperture Grille (Default)
- - Dot Width:  1
- - Dot Height: 1
- - Stagger:    0
+	Aperture Grille (Default)
+	- Dot Width:  1
+	- Dot Height: 1
+	- Stagger:    0
 
-Lottes' Shadow Mask
- - Dot Width:  2
- - Dot Height: 1
- - Stagger:    3
+	Lottes' Shadow Mask
+	- Dot Width:  2
+	- Dot Height: 1
+	- Stagger:    3
 */
 
-#version 120
+/*
 
 // Parameter lines go here:
 #pragma parameter SHARPNESS_H "Sharpness Horizontal" 0.5 0.0 1.0 0.05
@@ -50,16 +53,18 @@ Lottes' Shadow Mask
 #pragma parameter BRIGHT_BOOST "Brightness Boost" 1.2 1.0 2.0 0.01
 #pragma parameter DILATION "Dilation" 1.0 0.0 1.0 1.0
 
+*/
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
-#define COMPAT_VARYING   out
+#define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE   texture
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING   varying
+#define COMPAT_VARYING varying
 #define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE   texture2D
+#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -92,7 +97,7 @@ void main()
 out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
-#define FragColor      gl_FragColor
+#define FragColor gl_FragColor
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -115,16 +120,16 @@ uniform sampler2D rubyTexture;
 COMPAT_VARYING vec2 v_texCoord;
 
 #define FIX(c) max(abs(c), 1e-5)
-#define PI     3.141592653589
+#define PI 3.141592653589
 
-#define TEX2D(c)  dilate(COMPAT_TEXTURE(rubyTexture, c))
+#define TEX2D(c) dilate(COMPAT_TEXTURE(rubyTexture, c))
 
 // compatibility #defines
-#define Source    rubyTexture
+#define Source rubyTexture
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) // either rubyTextureSize or rubyInputSize
-#define outsize    vec4(rubyOutputSize, 1.0 / rubyOutputSize)
+#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either rubyTextureSize or rubyInputSize
+#define outsize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
@@ -146,23 +151,23 @@ uniform COMPAT_PRECISION float GAMMA_OUTPUT;
 uniform COMPAT_PRECISION float BRIGHT_BOOST;
 uniform COMPAT_PRECISION float DILATION;
 #else
-#define SHARPNESS_H             0.55 // tweaked
-#define SHARPNESS_V             0.55 // tweaked
-#define MASK_STRENGTH           0.45 // tweaked
-#define MASK_DOT_WIDTH          1.0
-#define MASK_DOT_HEIGHT         1.0
-#define MASK_STAGGER            0.0
-#define MASK_SIZE               1.0
-#define SCANLINE_STRENGTH       1.0
+#define SHARPNESS_H 0.5
+#define SHARPNESS_V 1.0
+#define MASK_STRENGTH 0.3
+#define MASK_DOT_WIDTH 1.0
+#define MASK_DOT_HEIGHT 1.0
+#define MASK_STAGGER 0.0
+#define MASK_SIZE 1.0
+#define SCANLINE_STRENGTH 1.0
 #define SCANLINE_BEAM_WIDTH_MIN 1.5
 #define SCANLINE_BEAM_WIDTH_MAX 1.5
-#define SCANLINE_BRIGHT_MIN     0.35
-#define SCANLINE_BRIGHT_MAX     0.65
-#define SCANLINE_CUTOFF         400.0
-#define GAMMA_INPUT             2.0
-#define GAMMA_OUTPUT            1.8
-#define BRIGHT_BOOST            1.225 // tweaked
-#define DILATION                1.0
+#define SCANLINE_BRIGHT_MIN 0.35
+#define SCANLINE_BRIGHT_MAX 0.65
+#define SCANLINE_CUTOFF 400.0
+#define GAMMA_INPUT 2.0
+#define GAMMA_OUTPUT 1.8
+#define BRIGHT_BOOST 1.2
+#define DILATION 1.0
 #endif
 
 // Set to 0 to use linear filter and gain speed
@@ -263,5 +268,4 @@ void main()
 
 	FragColor = vec4(col * BRIGHT_BOOST, 1.0);
 }
-
 #endif

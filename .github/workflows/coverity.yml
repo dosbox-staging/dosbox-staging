@@ -16,10 +16,10 @@ env:
   PACKAGE: "/dev/shm/coverity-package/coverity.tar.zst"
   PACKAGE_DIR: "/dev/shm/coverity-package"
   # Latest package: https://scan.coverity.com/download
-  PACKAGE_VERSION: "2021.12.1"
+  PACKAGE_VERSION: "2022.6.0"
   # One-time download, then lives in GitHub cache
-  TARBALL_URL: "https://kcgen.duckdns.org/coverity.tar.zst"
-  TARBALL_SHA256: "db872225984b588e178e42faecf597382d20e185c949512c93c485debd42d8d9"
+  TARBALL_URL: "https://kcgen.duckdns.org/coverity-2022.tar.zst"
+  TARBALL_SHA256: "8e95399eb7306c7cb8cc5e59807d6d479cf8ae65b683f3904e9537db6864288f"
 
 jobs:
   coverity_scan:
@@ -44,7 +44,7 @@ jobs:
           sudo pip3 install --upgrade meson ninja
 
       - name: Prepare the Coverity package cache
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         id: cache-coverity
         with:
           path: ${{ env.PACKAGE_DIR }}
@@ -56,8 +56,8 @@ jobs:
       - name: Install the Coverity package
         run: |
           set -xeuo pipefail
-          tee >(tar -I zstd -C "${BASE_DIR}" -x) < "${PACKAGE}" \
-          | sha256sum -c <(echo "${TARBALL_SHA256} -" )
+          echo "$TARBALL_SHA256 $PACKAGE" | sha256sum --check --status
+          zstd --long=31 -dc "${PACKAGE}" | tar -C "${BASE_DIR}" -x
 
       - name: Build and instrument the project
         run: |
@@ -65,7 +65,6 @@ jobs:
           CC="clang" CXX="clang++" meson setup \
           -Dbuildtype=debug \
           -Dunit_tests=disabled \
-          -Dsystem_libraries=speexdsp \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
           -Duse_mt32emu=false \
@@ -74,6 +73,7 @@ jobs:
           -Duse_sdl2_image=false \
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
+          -Duse_xinput2=false \
           build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int meson compile -C build

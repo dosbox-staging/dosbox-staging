@@ -241,6 +241,10 @@ quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
             |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
+:CONFIG_FRAMESKIP
+Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
+utilizzando l'impostazione '[sdl] host_rate'.
+.
 :CONFIG_ASPECT
 Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
 di aspetto 4:3, corrispondente a quello dei monitor a definizione standard
@@ -290,21 +294,18 @@ sono rispettivamente:
 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
 .
 :CONFIG_SCALER
-Scaler usato per ingrandire/migliorare le modalità a bassa risoluzione.
-Se viene aggiunto 'forced', lo scaler sarà usato anche se i risultati
-potrebbero non essere come desiderati.
-Nota che alcuni scaler possono utilizzare bordi neri per adattare l'immagine
-alla risoluzione dello schermo configurata. Se questo non è l'effetto
-desiderato, prova uno scaler diverso o attiva l'uscita a piena risoluzione.
+Gli scaler software sono deprecati a favore delle opzioni con accelerazione
+hardware:
+ - Se hai utilizzato in passato gli scaler normal2x/3x, imposta invece
+   l'opzione 'windowresolution'.
+ - Se hai utilizzato in passato uno scaler avanzato, considera invece una
+   delle opzioni "glshader".
 .
 :CONFIG_GLSHADER
-Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con
-l'uscita OpenGL. Può essere un percorso assoluto, un file nella sottodirectory
-'glshaders' della directory di configurazione di DOSBox, o uno degli shader
-inclusi:
-advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-scan2x, scan3x, tv2x, tv3x, sharp (predefinito).
+Le opzioni incluse sono 'default', 'none', uno shader elencato utilizzando
+l'argomento della riga di comando --list-glshaders o un percorso relativo o
+assoluto che fa riferimento ad un file. 
+In tutti i casi, l'estensione '.glsl' dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
 Abilita la modalità composita all'avvio. 'auto' lascia decidere al programma.
@@ -364,14 +365,17 @@ scelta rapida.
 .
 :CONFIG_MOUSE_CAPTURE
 Scegli un metodo di controllo del mouse:
-   onclick:       Cattura il mouse quando fai clic con qualsiasi pulsante
-                  all'interno della finestra.
-   onstart:       Cattura il mouse immediatamente all'avvio.
-   seamless:      Modalità mouse senza soluzione di continuità; È possibile
-                  catturarlo premendo il pulsante centrale del mouse o
-                  l'apposito tasto di scelta rapida.
-   nomouse:       Nasconde il mouse e impedisce che vengano inviati segnali di
-                  input al gioco.
+   onclick:      Cattura il mouse quando fai clic con qualsiasi pulsante
+                 all'interno della finestra.
+   onstart:      Cattura il mouse immediatamente all'avvio.
+   seamless:     Modalità mouse senza soluzione di continuità; È possibile
+                 catturarlo premendo il pulsante centrale del mouse o
+                 l'apposito tasto di scelta rapida. Questa modalità non
+                 funziona correttamente con tutti i giochi, Windows 3.1x può
+                 essere reso compatibile con un driver del mouse personalizzato
+   nomouse:      Nasconde il mouse e impedisce che vengano inviati segnali di
+                 input al gioco.
+Per gli schermi tattili, utilizzare il metodo di controllo 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Se vero, il pulsante centrale rilascerà il mouse. Con il metodo di controllo
@@ -1631,14 +1635,15 @@ Possono essere modificate nel [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F1[reset]   %s Avvia il [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.               
-[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (screenshot).
+[color=yellow]%s+F5[reset]     Scatta un'istantanea dello schermo (immagine renderizzata).
+[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (risoluzione originale).
 [color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
 [color=yellow]%s+F7[reset]   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.
 [color=yellow]%s+F8[reset]   %s Disattiva/Riattiva l'audio.
 [color=yellow]%s+F9[reset]   %s Chiude l'emulatore.
 [color=yellow]%s+F10[reset]  %s Cattura/Rilascia il mouse.
-[color=yellow]%s+F11[reset]  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
-[color=yellow]%s+F12[reset]  %s Accelera l'emulazione (Incrementa i Cicli DOSBox).
+[color=yellow]%s+F11[reset]  %s Rallenta l'emulazione (Decrementa i cicli DOSBox).
+[color=yellow]%s+F12[reset]  %s Accelera l'emulazione (Incrementa i cicli DOSBox).
 [color=yellow]%s+F12[reset]    Sblocca la velocità (pulsante turbo/avanzamento rapido).
 
 .
@@ -1817,19 +1822,36 @@ Esempi:
 Visualizza l'output una schermata alla volta.
 
 Utilizzo:
-  [color=cyan]COMANDO[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]MODELLO[reset] [[color=cyan]MODELLO[reset] ...]
+  [color=cyan]COMANDO[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]MODELLO[reset] [[color=cyan]MODELLO[reset] ...]
 
 Dove:
   [color=cyan]COMANDO[reset] è il comando di cui visualizzare l'output.
   [color=cyan]FILE[reset]    è il nome del file da visualizzare, facoltativamente con un percorso.
   [color=cyan]MODELLO[reset] è un percorso a un singolo file o con caratteri jolly,
           cioè asterisco (*) e punto di domanda (?).
-  [color=white]n[reset]       è la misura della tabulazione, 1-9, il valore predefinito è 8.
+  /c      cancella lo schermo prima di ogni file.
+  /e      modalità estesa, con più tasti di scelta rapida disponibili.
+  /p      espande i caratteri di avanzamento modulo / pagina.
+  /s      converte più righe vuote in una singola riga.
+  /t[color=white]n[reset]     specifica la misura della tabulazione, 1-9, il valore predefinito è 8.
+  +[color=white]nnn[reset]    salta le prime [color=white]nnn[reset] righe del primo file.
 
 Note:
   Questo comando serve solo per visualizzare file di testo, non file binari.
+  Sono disponibili i seguenti tasti di scelta rapida:
+  [color=yellow]Spazio[reset]         per mostrare la schermata successiva.
+  [color=yellow]Invio[reset]          per mostrare la riga successiva.
+  [color=yellow]N[reset] o [color=yellow]F[reset]          per passare al file successivo.
+  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] per terminare il comando.
+  [color=yellow]Ctrl+C[reset] può essere anche utilizzato per terminare la lettura dell'input da
+  tastiera da parte del comando, come quando [color=green]more[reset] viene eseguito senza argomenti
+  I seguenti tasti di scelta rapida sono disponibili solo in modalità estesa:
+  [color=yellow]P[reset] [color=white]nnn[reset]          per visualizzare le [color=white]nnn[reset] righe successive.
+  [color=yellow]S[reset] [color=white]nnn[reset]          per ignorare le [color=white]nnn[reset] righe successive.
+  [color=yellow]=[reset]              per visualizzare il numero di riga corrente.
+  L'opzione /p disabilita alcuni tasti di scelta rapida incompatibili.
 
 Esempi:
   [color=cyan]dir /on[reset] | [color=green]more[reset]    ; visualizza la directory ordinata una schermata alla volta
@@ -1849,10 +1871,16 @@ Nessun file di input trovato.
 [reset][color=light-yellow]--- dispositivo %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- premere SPAZIO per mostrare di più ---[reset]
+[reset][color=light-yellow]--- premere SPAZIO o INVIO per mostrare di più ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) premere SPAZIO o INVIO per mostrare di più ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- premere SPAZIO per mostrare di più, N per il prossimo file ---[reset]
+[reset][color=light-yellow]--- premere SPAZIO o INVIO per mostrare di più, N per il file successivo ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- riga %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- impossibile aprire %s ---[reset]
@@ -1861,7 +1889,13 @@ Nessun file di input trovato.
 [reset][color=light-yellow](terminato)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](prossimo file)[reset]
+[reset][color=light-yellow](file successivo)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](contenuto ignorato)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]quante righe?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Mappa cartelle fisiche o unità su una lettera di unità virtuale.

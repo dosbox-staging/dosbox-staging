@@ -94,7 +94,7 @@ public:
 	          type(V_STRING)
 	{}
 
-	Value(char const *const in)
+	Value(const char* const in)
 	        : _string(new std::string(in)),
 	          type(V_STRING)
 	{}
@@ -110,7 +110,10 @@ public:
 	Value &operator=(bool in) { return copy(Value(in)); }
 	Value &operator=(double in) { return copy(Value(in)); }
 	Value &operator=(const std::string &in) { return copy(Value(in)); }
-	Value &operator=(char const *const in) { return copy(Value(in)); }
+	Value& operator=(const char* const in)
+	{
+		return copy(Value(in));
+	}
 	Value &operator=(const Value &in) { return copy(Value(in)); }
 
 	bool operator==(const Value &other) const;
@@ -119,7 +122,7 @@ public:
 	operator Hex() const;
 	operator int() const;
 	operator double() const;
-	operator char const *() const;
+	operator const char*() const;
 
 	bool SetValue(const std::string &in, Etype _type = V_CURRENT);
 
@@ -232,8 +235,9 @@ private:
 
 class Prop_double final : public Property {
 public:
-	Prop_double(std::string const & _propname, Changeable::Value when, double _value)
-		:Property(_propname,when){
+	Prop_double(const std::string& _propname, Changeable::Value when, double _value)
+	        : Property(_propname, when)
+	{
 		default_value = value = _value;
 	}
 	bool SetValue(const std::string &input);
@@ -305,7 +309,7 @@ private:
 		SectionFunction function;
 		bool changeable_at_runtime;
 
-		Function_wrapper(SectionFunction const fn, bool ch)
+		Function_wrapper(const SectionFunction fn, bool ch)
 		        : function(fn),
 		          changeable_at_runtime(ch)
 		{}
@@ -319,6 +323,10 @@ private:
 public:
 	Section() = default;
 	Section(const std::string &name) : sectionname(name) {}
+
+	// Construct and assign by std::move
+	Section(Section&& other)            = default;
+	Section& operator=(Section&& other) = default;
 
 	virtual ~Section() = default; // Children must call executedestroy!
 
@@ -427,9 +435,16 @@ public:
 class Section_line final : public Section {
 public:
 	Section_line() = default;
-	Section_line(std::string const &name) : Section(name), data() {}
+	Section_line(const std::string& name) : Section(name), data() {}
 
-	~Section_line() override { ExecuteDestroy(true); }
+	// Construct and assign by std::move
+	Section_line(Section_line&& other)            = default;
+	Section_line& operator=(Section_line&& other) = default;
+
+	~Section_line() override
+	{
+		ExecuteDestroy(true);
+	}
 
 	std::string GetPropValue(const std::string &property) const override;
 	bool HandleInputline(const std::string &line) override;
