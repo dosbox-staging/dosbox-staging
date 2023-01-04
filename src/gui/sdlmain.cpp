@@ -750,8 +750,8 @@ static void log_display_properties(int source_w, int source_h,
 	const auto scale_y = static_cast<double>(target_h) / source_h;
 	const auto out_par = scale_y / scale_x;
 
-	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type,
-	                                                        CurMode->mode);
+	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
+	const auto [mode_desc, colours_desc] = VGA_DescribeMode(mode_type, mode_id);
 
 	const char *frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -759,9 +759,8 @@ static void log_display_properties(int source_w, int source_h,
 	case FRAME_MODE::VFR: frame_mode = "VFR"; break;
 	case FRAME_MODE::SYNCED_CFR: frame_mode = "synced CFR"; break;
 	case FRAME_MODE::THROTTLED_VFR: frame_mode = "throttled VFR"; break;
-	case FRAME_MODE::UNSET: break;
+	case FRAME_MODE::UNSET: frame_mode = "Unset frame_mode"; break;
 	}
-	assert(frame_mode);
 
 	// Some DOS FPS rates are double-scanned in hardware, so multiply them
 	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
@@ -770,15 +769,19 @@ static void log_display_properties(int source_w, int source_h,
 	                                      ? "double-scanned "
 	                                      : "";
 
-	const auto colours = (type_colours == "") ? "" : " " + type_colours;
+	// Double check all the char* string variables
+	assert(mode_desc);
+	assert(colours_desc);
+	assert(double_scanned_str);
+	assert(frame_mode);
 
-	LOG_MSG("DISPLAY: %s %dx%d%s (mode %02Xh) at %s%2.5g Hz %s, scaled"
+	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %s%2.5g Hz %s, scaled"
 	        " to %dx%d with %.4g pixel aspect ratio",
-	        type_name.c_str(),
+	        mode_desc,
 	        source_w,
 	        source_h,
-	        colours.c_str(),
-	        CurMode->mode,
+	        colours_desc,
+	        mode_id,
 	        double_scanned_str,
 	        refresh_rate,
 	        frame_mode,
