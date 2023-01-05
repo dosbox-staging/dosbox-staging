@@ -194,7 +194,7 @@ UserDecision MoreOutputBase::DisplaySingleStream()
 			}
 		}
 		if (!is_state_ansi && (current_column == previous_column) &&
-		    (code != code_del) && (code >= ' ' || code < 0)) {
+		    is_extended_printable_ascii(code)) {
 			// Alphanumeric character outside of ANSI sequence
 			// always changes the current column - if not, the
 			// output must have been redirected
