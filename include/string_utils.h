@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstring>
+#include <limits.h>
 #include <optional>
 #include <string>
 #include <vector>
@@ -137,6 +138,54 @@ template <typename T>
 void reset_str(T *str) noexcept
 {
 	terminate_str_at(str, 0);
+}
+
+// Is it an ASCII control character?
+constexpr bool is_control_ascii(const char c)
+{
+	// clang-format off
+	// ASCII control characters span the bottom 5 bits plus the DEL character.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#Control_characters
+	[[maybe_unused]] 
+	constexpr char controls_first = 0b0'0000;
+	constexpr char controls_last  = 0b1'1111;
+	constexpr char delete_char    = 0b111'1111;
+	// clang-format on
+
+#if (CHAR_MIN < 0) // char is signed
+	static_assert(std::is_signed_v<char> && CHAR_MAX == delete_char);
+	return (c >= controls_first && c <= controls_last) ||
+#else // char is unsigned
+	static_assert(std::is_unsigned_v<char> && CHAR_MAX > delete_char);
+	return c <= controls_last ||
+#endif
+	       // return continues ...
+	       c == delete_char;
+}
+
+// Is the character within the printable ASCII range?
+constexpr bool is_printable_ascii(const char c)
+{
+	// The printable ASCII range spans the Space to ESC characters.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#Printable_characters
+	constexpr char space_char  = ' ';
+	constexpr char escape_char = 0b111'1110;
+	return c >= space_char && c <= escape_char;
+}
+
+// Is the character within the standard ASCII range?
+constexpr bool is_ascii(const char c)
+{
+	return is_printable_ascii(c) || is_control_ascii(c);
+}
+
+// Is the character with the extended printable ASCII range?
+constexpr bool is_extended_printable_ascii(const char c)
+{
+	// The extended ASCII range spans all 8-bits, leaving the extended
+	// printable portion of those being the non-control characters.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#8-bit_codes
+	return !is_control_ascii(c);
 }
 
 bool is_hex_digits(const std::string_view s) noexcept;
