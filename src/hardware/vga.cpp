@@ -88,7 +88,7 @@ std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_t
 		LOG_ERR("VIDEO: Unknown mode: %u with ID: %u",
 		        static_cast<uint32_t>(video_mode_type),
 		        video_mode_id);
-		return {"Unknown mode", "nknown color-depth"};
+		return {"Unknown mode", "Unknown color-depth"};
 	}
 	// clang-format on
 
