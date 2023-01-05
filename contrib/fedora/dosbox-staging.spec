@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.80.0
+Version: 0.80.1
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -93,6 +93,19 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Fri 6 Jan 2023 <kcgen@users.noreply.github.com>
+- 0.80.1-1
+- Fix a corner-case bug involving CLI mounts and using MORE.COM
+- Fix a handful of Common Weakness Enumeration (CWE) issues
+- Drop the unused "system_libraries" Meson option
+- Add the X11 Input 2.0 (libxi) as a Meson option, for use with ManyMouse
+- Refine the default mouse behavior based on feedback:
+-  * The mouse will be centered in the window when uncapturing
+-  * The mouse will now be captured 'onclick' by default
+-  * When running without a window manager, the mouse will always be captured
+- Fix a potential small incremental memory increase when using Ethernet
+- Fix the documentation regarding the 'direct' serial port type
+
 * Tue 20 Dec 2022 <kcgen@users.noreply.github.com>
 - 0.80.0-1
 - Update to 0.80.0
