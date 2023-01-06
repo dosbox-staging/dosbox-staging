@@ -169,7 +169,7 @@ sudo apt install meson
 ``` shell
 # Arch, Manjaro
 sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_image sdl2_net \
-               opusfile fluidsynth libslirp speexdsp libxi
+               opusfile fluidsynth libslirp speexdsp libxi pkgconf
 ```
 
 ``` shell
