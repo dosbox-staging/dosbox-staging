@@ -434,9 +434,13 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
-	case KBD_leftgui:extend=true;ret=90;break;
-	case KBD_rightgui:extend=true;ret=89;break;
-	
+
+	 // The IBM PC XT and AT keyboard layouts lack GUI keys, so we don't
+	 // generate event codes for them. For reference, see the IBM Model F XT
+	 // (1981) and M AT (1986) layouts.
+	case KBD_leftgui:
+	case KBD_rightgui: break;
+
 	case KBD_pause:
 		KEYBOARD_AddBuffer(0xe1);
 		KEYBOARD_AddBuffer(29|(pressed?0:0x80));
