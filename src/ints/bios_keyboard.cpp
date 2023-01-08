@@ -27,6 +27,9 @@
 #include "inout.h"
 #include "dos_inc.h"
 
+#include "checks.h"
+CHECK_NARROWING();
+
 static callback_number_t call_int16 = 0;
 static callback_number_t call_irq1  = 0;
 static callback_number_t call_irq6  = 0;
@@ -369,9 +372,10 @@ static Bitu IRQ1_Handler(void) {
 			break;
 		}
 		if(flags1 &0x08) {
-			uint8_t token = mem_readb(BIOS_KEYBOARD_TOKEN);
-			token = token*10 + (uint8_t)(scan_to_scanascii[scancode].alt&0xff);
-			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
+			const auto token    = mem_readb(BIOS_KEYBOARD_TOKEN);
+			const auto alt      = get_key_codes_for(scancode).alt & 0xff;
+			const auto combined = token * 10 + alt;
+			mem_writeb(BIOS_KEYBOARD_TOKEN, check_cast<uint8_t>(combined));
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
 		} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) { //Xor shift and numlock (both means off)
@@ -534,7 +538,8 @@ static Bitu INT16_Handler(void) {
 			IO_Write(0x60,0x20); // 500 msec delay, 30 cps
 		} else if (reg_al == 0x05) { // set repeat rate and delay
 			IO_Write(0x60,0xf3);
-			IO_Write(0x60,(reg_bh&3)<<5|(reg_bl&0x1f));
+			const auto rate_and_delay = (reg_bh & 3) << 5 | (reg_bl & 0x1f);
+			IO_Write(0x60, check_cast<uint8_t>(rate_and_delay));
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("INT16:Unhandled Typematic Rate Call %2X BX=%X",reg_al,reg_bx);
 		}
@@ -545,9 +550,11 @@ static Bitu INT16_Handler(void) {
 		break;
 	case 0x12: /* GET EXTENDED SHIFT STATES */
 		reg_al = mem_readb(BIOS_KEYBOARD_FLAGS1);
-		reg_ah = (mem_readb(BIOS_KEYBOARD_FLAGS2)&0x73)   |
-		         ((mem_readb(BIOS_KEYBOARD_FLAGS2)&4)<<5) | // SysReq pressed, bit 7
-		         (mem_readb(BIOS_KEYBOARD_FLAGS3)&0x0c);    // Right Ctrl/Alt pressed, bits 2,3
+		reg_ah = check_cast<uint8_t>((mem_readb(BIOS_KEYBOARD_FLAGS2) & 0x73) |
+		                             // SysReq pressed, bit 7
+		                             ((mem_readb(BIOS_KEYBOARD_FLAGS2) & 4) << 5) |
+		                             // Right Ctrl/Alt pressed, bits 2,3
+		                             (mem_readb(BIOS_KEYBOARD_FLAGS3) & 0x0c));
 		break;
 	case 0x55:
 		/* Weird call used by some dos apps */
