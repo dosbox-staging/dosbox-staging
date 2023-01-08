@@ -46,10 +46,10 @@ Available via [Arch User Repository](https://aur.archlinux.org/packages/dosbox-s
 
 ## Tarball download
 
-[Download DOSBox Staging 0.80.0 (tar.xz)][0_80_0]
+[Download DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
 <br>
 <small>
-sha256: 3022bdd405dc1106007c3505e6a5d083<wbr>de982d516c9bce499e2c4a02a697a1bd
+sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
 </small>
 
 Our pre-compiled builds run on most Linux distributions (x86\_64 only for now).
@@ -93,6 +93,12 @@ are designed with developers and testers in mind.
 
 
 ## Older builds
+
+- [DOSBox Staging 0.80.0 (tar.xz)][0_80_0]
+  <br>
+  <small>
+  sha256: 3022bdd405dc1106007c3505e6a5d083<wbr>de982d516c9bce499e2c4a02a697a1bd
+  </small>
 
 - [DOSBox Staging 0.79.1 (tar.xz)][0_79_1]
   <br>
@@ -160,6 +166,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz
 [0_79_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-linux-v0.79.1.tar.xz
 [0_79_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.0/dosbox-staging-linux-v0.79.0.tar.xz
