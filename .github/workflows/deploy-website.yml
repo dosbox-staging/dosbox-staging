@@ -24,8 +24,11 @@ jobs:
 
       - name: Install mkdocs
         run: |
-          pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects \
-                      mkdocs-glightbox mdx-gh-links
+          pip install mkdocs-material==9.0.2 \
+                      mkdocs-minify-plugin==0.6.2 --use-pep517 \
+                      mkdocs-redirects==1.2.0 --use-pep517 \
+                      mkdocs-glightbox==0.3.1 \
+                      mdx-gh-links==0.3
 
       - name: Build & deploy website
         run: |
