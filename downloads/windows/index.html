@@ -1,0 +1,652 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/windows/" rel="canonical"/>
+<link href="../macos/" rel="next"/>
+<link href="../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>Windows - DOSBox Staging</title>
+<link href="../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#windows-builds">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="./">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          Windows
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        Windows
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#development-snapshot-builds">
+    Development snapshot builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#microsoft-defender-smartscreen">
+    Microsoft Defender SmartScreen
+  </a>
+<nav aria-label="Microsoft Defender SmartScreen" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#method-1">
+    Method 1
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#method-2">
+    Method 2
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#explanation">
+    Explanation
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#older-builds">
+    Older builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#building-from-source">
+    Building from source
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#development-snapshot-builds">
+    Development snapshot builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#microsoft-defender-smartscreen">
+    Microsoft Defender SmartScreen
+  </a>
+<nav aria-label="Microsoft Defender SmartScreen" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#method-1">
+    Method 1
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#method-2">
+    Method 2
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#explanation">
+    Explanation
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#older-builds">
+    Older builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#building-from-source">
+    Building from source
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="windows-builds">Windows builds<a class="headerlink" href="#windows-builds" title="Permanent link">¶</a></h1>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-v0.80.0-setup.exe">Download DOSBox Staging 0.80.0 64-bit (installer)</a>
+<br/>
+<small>
+sha256: 84445c869e58f6b4591484f6178c7b5b<wbr/>3c8f284bf9460e9afc4502ba842ab039
+</small></p>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-windows-msys2-x86_64-v0.80.0.zip">Download DOSBox Staging 0.80.0 64-bit (zip)</a>
+<br/>
+<small>
+sha256: 075be379ed4475615e0e86953eb21f02<wbr/>4c74b4cafd6914e9cf5ef40e3d9e26cd
+</small></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
+Microsoft Defender SmartScreen, see the <a href="#microsoft-defender-smartscreen">section below</a>.</p>
+</div>
+<h2 id="development-snapshot-builds">Development snapshot builds<a class="headerlink" href="#development-snapshot-builds" title="Permanent link">¶</a></h2>
+<p>You can always see what’s cooking on the main branch! <img alt="😎" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f60e.svg" title=":sunglasses:"> <img alt="🍺" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f37a.svg" title=":beer:"/></img></p>
+<p>These <a href="../development-builds/">snapshot builds</a> might be slow or unstable as they
+are designed with developers and testers in mind.</p>
+<h2 id="microsoft-defender-smartscreen">Microsoft Defender SmartScreen<a class="headerlink" href="#microsoft-defender-smartscreen" title="Permanent link">¶</a></h2>
+<p>You’ll need to do the following when launching DOSBox Staging for the first
+time (you’ll need to repeat these steps every time after having upgraded to a newer version).</p>
+<h3 id="method-1">Method 1<a class="headerlink" href="#method-1" title="Permanent link">¶</a></h3>
+<p>Start the application, then click on <strong>More info</strong> in the appearing dialog.
+Click the <strong>Run anyway</strong> button in the second dialog.</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/smartscreen1.png"><img alt="SmartScreen window 1" src="../images/smartscreen1.png"/></a></p>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/smartscreen2.png"><img alt="SmartScreen window 2" src="../images/smartscreen2.png"/></a></p>
+</figure>
+<h3 id="method-2">Method 2<a class="headerlink" href="#method-2" title="Permanent link">¶</a></h3>
+<p>In your installation folder, right-click on the <code>dosbox.exe</code>, select <strong>Properties</strong>, tick
+<strong>Unblock</strong> in the appearing dialog, then press <strong>Ok</strong>.</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/properties.png"><img alt="Properties window" src="../images/properties.png"/></a></p>
+</figure>
+<h3 id="explanation">Explanation<a class="headerlink" href="#explanation" title="Permanent link">¶</a></h3>
+<p>Starting in Windows 8, <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-smartscreen/windows-defender-smartscreen-overview">Microsoft Defender SmartScreen’s</a> pop-up encumbers the execution
+of newly-developed applications.  To prevent this, developers are expected to pay
+Microsoft’s <a href="https://docs.microsoft.com/en-gb/archive/blogs/ie/microsoft-smartscreen-extended-validation-ev-code-signing-certificates">EV certification</a> vendors a yearly fee and put the software on Windows
+Store.</p>
+<p>As DOSBox Staging is a volunteer effort, we are not in a position to make such
+payments. We therefore ask users to manually unblock DOSBox Staging and be
+patient while Microsoft’s Application Reputation Scheme eventually whitelists
+DOSBox Staging.</p>
+<h2 id="older-builds">Older builds<a class="headerlink" href="#older-builds" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-v0.79.1-setup.exe">DOSBox Staging 0.79.1 64-bit (installer)</a>
+<br/>
+<small>
+  sha256: 0045ac995ada0af955681983ae86c969<wbr/>a05030c25173618f8b1547a267046a27
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-windows-x86_64-v0.79.1.zip">DOSBox Staging 0.79.1 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: 8c7045dfea6dc20bb985cff516d2faee<wbr/>51d2ecaf054db60632857b6941d3d648
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.0/dosbox-staging-v0.79.0-setup.exe">DOSBox Staging 0.79.0 64-bit (installer)</a>
+<br/>
+<small>
+  sha256: 154c663f76d0ca46d1d23d8c2bcea2d8<wbr/>3717f1ba9103067a6a6f5ce814cf0cb2
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.0/dosbox-staging-windows-x86_64-v0.79.0.zip">DOSBox Staging 0.79.0 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: b3633d425489fbb5f6f9b3de75e4c2c6<wbr/>dd0713c3aec504e42cac948cc1550bbe
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.1/dosbox-staging-windows-msys2-x86_64-v0.78.1.zip">DOSBox Staging 0.78.1 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: 3c2f408125351154a37e93de8a4bd05d<wbr/>0c722bbf53e1f583909e4ca6c3eb9204
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.1/dosbox-staging-windows-x64-v0.78.1.zip">DOSBox Staging with built-in debugger 0.78.1 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: b99f3c354f831ed2b0ed04d215170f69<wbr/>6b6fc18285b0c7192c0abab62c41bbc8
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.0/dosbox-staging-windows-msys2-x86_64-v0.78.0.zip">DOSBox Staging 0.78.0 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: f13cba664259fdb0db5e32826e13dcde<wbr/>d4270557963f6e823a4731129f23a8a3
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.0/dosbox-staging-windows-msys2-i686-v0.78.0.zip">DOSBox Staging 0.78.0 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 0ca9201cdf3f3a1576b97b0de0e87280<wbr/>b75c633976f0b179ba33a68d44f5ba56
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.1/dosbox-staging-windows-x64-v0.77.1.zip">DOSBox Staging 0.77.1 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: 11ba992ece6d3e4ef2046fcdb6d842da<wbr/>364b69720a921d61fdcc793eb52e7051
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.1/dosbox-staging-windows-x86-v0.77.1.zip">DOSBox Staging 0.77.1 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: a34883101486ce2af071a29c6390f203<wbr/>8889fc519e042101284f2a6999d9f0ef
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.0/dosbox-staging-windows-x64-v0.77.0.zip">DOSBox Staging 0.77.0 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: cacdac418642fd8c7faf1e5955110c35<wbr/>d0c207392ae20835707fd2a1e1114b82
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.0/dosbox-staging-windows-x86-v0.77.0.zip">DOSBox Staging 0.77.0 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: f718d07bab69e3e1be0b28207039cea2<wbr/>746c7e45b8ba7a19b625011f477e609a
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.76.0/dosbox-staging-windows-x86-v0.76.0.zip">DOSBox Staging 0.76.0 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 646d2f3fa8189e411589fedcb8148a29<wbr/>5361693a6ce95d08e06f4a70e5a36b16
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.2/dosbox-staging-windows-x64-v0.75.2.zip">DOSBox Staging 0.75.2 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: 09f0ca911813a64b8814880eb6e49ad4<wbr/>dcdac9a5bb9263c4887ad82b71fad292
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.2/dosbox-staging-windows-x86-v0.75.2.zip">DOSBox Staging 0.75.2 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 51dc171ff52ea395c6a22f09ebb98a93<wbr/>974a95c701ca81008368c22a66deced2
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.1/dosbox-staging-windows-x64-v0.75.1.zip">DOSBox Staging 0.75.1 64-bit (zip)</a>
+<br/>
+<small>
+  sha256: 80c60c4377ff2882649f113b3cb3bcd4<wbr/>07c17acaac344c49fa1fc4229813f012
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.1/dosbox-staging-windows-x86-v0.75.1.zip">DOSBox Staging 0.75.1 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 843c742a348f575862e152e02cf174be<wbr/>0ea1c52bdb6e4bffd65f34af88b566b7
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-windows-v0.75.0.zip">DOSBox Staging 0.75.0 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 69046adcef2ef9920fbba8d40fc9e51f<wbr/>3dd144ba4549787e1816cf1c2ae87d71
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-windows-v0.75.0-rc1.zip">DOSBox Staging 0.75.0-rc1 32-bit (zip)</a>
+<br/>
+<small>
+  sha256: 738d2ae2101384f2eeaf1895de64cf1b<wbr/>4c76eaf7873de7e15b7f52145dfed7e7
+  </small></p>
+</li>
+</ul>
+<h2 id="building-from-source">Building from source<a class="headerlink" href="#building-from-source" title="Permanent link">¶</a></h2>
+<p>Of course you can always <a href="https://github.com/dosbox-staging/dosbox-staging">build DOSBox Staging straight from the source</a>.</p>
+<p>Send us patches if you improve something! <img alt="😄" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f604.svg" title=":smile:"/></p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid" hidden="">
+<!-- Link to previous page -->
+<!-- Link to next page -->
+<a aria-label="Next: macOS" class="md-footer__link md-footer__link--next" href="../macos/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              macOS
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

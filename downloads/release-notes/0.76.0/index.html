@@ -1,0 +1,1364 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/release-notes/0.76.0/" rel="canonical"/>
+<link href="../0.77.0/" rel="prev"/>
+<link href="../0.75.2/" rel="next"/>
+<link href="../../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>0.76.0 - DOSBox Staging</title>
+<link href="../../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#0760-release-notes">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          0.76.0
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        0.76.0
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#new-features-in-detail">
+    New features in detail
+  </a>
+<nav aria-label="New features in detail" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gravis-ultrasound-emulation-improvements">
+    Gravis UltraSound emulation improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#built-in-glsl-shaders">
+    Built-in GLSL shaders
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#built-in-midi-support-via-fluidsynth">
+    Built-in MIDI support via FluidSynth
+  </a>
+<nav aria-label="Built-in MIDI support via FluidSynth" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fine-grained-midi-level-controls">
+    Fine-grained MIDI level controls
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#what-soundfont-should-i-use">
+    What soundfont should I use?
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#integer-scaling-pixel-perfect-option-for-opengl-output">
+    Integer scaling (pixel-perfect) option for OpenGL output
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dynamic-recompilation-for-powerpc-and-power8-ppc64le">
+    Dynamic recompilation for PowerPC and POWER8 (ppc64le)
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quick-edit-and-find-your-configuration-file">
+    Quick-edit and find your configuration file
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ls-command">
+    LS command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#rapid-dc-offset-correction-for-the-emulated-pc-speaker">
+    Rapid DC offset correction for the emulated PC speaker
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-pop-and-click-prevention">
+    Audio pop and click prevention
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#splash-screen-and-help-banner-verbosity-control">
+    Splash screen and help banner verbosity control
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#revise-help-messages-for-mount-and-imgmount-commands">
+    Revise help messages for MOUNT and IMGMOUNT commands
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#improve-telnet-mode-handling-for-modem-emulation">
+    Improve Telnet-mode handling for modem emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fix-setting-file-timestamp">
+    Fix setting file timestamp
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#case-insensitive-paths-handling">
+    Case-insensitive paths handling
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#revise-default-keyboard-shortcuts">
+    Revise default keyboard shortcuts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#monochrome-palette-colour-setting">
+    Monochrome palette colour setting
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#raw-mouse-input-setting">
+    Raw mouse input setting
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10-axis-controller-support">
+    10-axis controller support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#log-memory-base-address">
+    Log memory base address
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bugfixes">
+    Bugfixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#known-issues">
+    Known issues
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#removed-features">
+    Removed features
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notes-for-developers">
+    Notes for developers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#changes-merged-from-upstream-projects">
+    Changes merged from upstream projects
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#maintainers">
+    Maintainers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#direct-contributors">
+    Direct contributors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dosbox-contributors">
+    DOSBox contributors
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#new-features-in-detail">
+    New features in detail
+  </a>
+<nav aria-label="New features in detail" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gravis-ultrasound-emulation-improvements">
+    Gravis UltraSound emulation improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#built-in-glsl-shaders">
+    Built-in GLSL shaders
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#built-in-midi-support-via-fluidsynth">
+    Built-in MIDI support via FluidSynth
+  </a>
+<nav aria-label="Built-in MIDI support via FluidSynth" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fine-grained-midi-level-controls">
+    Fine-grained MIDI level controls
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#what-soundfont-should-i-use">
+    What soundfont should I use?
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#integer-scaling-pixel-perfect-option-for-opengl-output">
+    Integer scaling (pixel-perfect) option for OpenGL output
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dynamic-recompilation-for-powerpc-and-power8-ppc64le">
+    Dynamic recompilation for PowerPC and POWER8 (ppc64le)
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quick-edit-and-find-your-configuration-file">
+    Quick-edit and find your configuration file
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ls-command">
+    LS command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#rapid-dc-offset-correction-for-the-emulated-pc-speaker">
+    Rapid DC offset correction for the emulated PC speaker
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-pop-and-click-prevention">
+    Audio pop and click prevention
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#splash-screen-and-help-banner-verbosity-control">
+    Splash screen and help banner verbosity control
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#revise-help-messages-for-mount-and-imgmount-commands">
+    Revise help messages for MOUNT and IMGMOUNT commands
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#improve-telnet-mode-handling-for-modem-emulation">
+    Improve Telnet-mode handling for modem emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fix-setting-file-timestamp">
+    Fix setting file timestamp
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#case-insensitive-paths-handling">
+    Case-insensitive paths handling
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#revise-default-keyboard-shortcuts">
+    Revise default keyboard shortcuts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#monochrome-palette-colour-setting">
+    Monochrome palette colour setting
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#raw-mouse-input-setting">
+    Raw mouse input setting
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10-axis-controller-support">
+    10-axis controller support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#log-memory-base-address">
+    Log memory base address
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bugfixes">
+    Bugfixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#known-issues">
+    Known issues
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#removed-features">
+    Removed features
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notes-for-developers">
+    Notes for developers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#changes-merged-from-upstream-projects">
+    Changes merged from upstream projects
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#maintainers">
+    Maintainers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#direct-contributors">
+    Direct contributors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dosbox-contributors">
+    DOSBox contributors
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="0760-release-notes">0.76.0 release notes<a class="headerlink" href="#0760-release-notes" title="Permanent link">¶</a></h1>
+<p><strong>Release date:</strong> 2020-12-03</p>
+<h2 id="how-to-upgrade">How to upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">¶</a></h2>
+<p>Download and launch the latest version:</p>
+<div class="compact">
+<ul>
+<li><a href="/downloads/linux/">Linux</a> (or <a href="/downloads/linux#steam">Steam on Linux</a>)</li>
+<li><a href="/downloads/windows/">Windows</a></li>
+<li><a href="/downloads/macos/">macOS</a></li>
+</ul>
+</div>
+<p>At the<code>Z:\&gt;</code> prompt, run <code>config -wc</code> to write the new configuration file. Any
+existing settings will be retained, however, extraneous comments will be
+dropped.</p>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
+<p>This release introduces significant enhancements to the quality of audio
+emulation (GUS, built-in MIDI, PC speaker), improved support for PowerPC
+and POWER8 architectures, and a healthy mix of usability, documentation,
+code quality improvements.</p>
+<p>Enjoy! <img alt="😄" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f604.svg" title=":smile:"/></p>
+<h2 id="new-features-in-detail">New features in detail<a class="headerlink" href="#new-features-in-detail" title="Permanent link">¶</a></h2>
+<h3 id="gravis-ultrasound-emulation-improvements">Gravis UltraSound emulation improvements<a class="headerlink" href="#gravis-ultrasound-emulation-improvements" title="Permanent link">¶</a></h3>
+<p>Sample from <a href="https://www.pcgamingwiki.com/wiki/Rise_of_the_Triad">Rise of the Triad</a> (1995). For other comparisons see <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Gravis-UltraSound-Enhancements#audio-comparisons">link</a>.</p>
+<p>Using headphones is highly recommended!</p>
+<table>
+<thead>
+<tr>
+<th>GUS emulator</th>
+<th>Sample (FLAC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Old implementation</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.76.0-gravis-ultrasound-improvements/rott-before.flac"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>New implementation (with improvements)</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.76.0-gravis-ultrasound-improvements/rott-after.flac"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+</tbody>
+</table>
+<p>Several changes have been made to the GUS emulation resulting in (sometimes)
+audible differences, as follows:</p>
+<ul>
+<li>
+<p>Output volume is now typically on-par with other audio devices.</p>
+</li>
+<li>
+<p>Panning of voices is now performed using constant-power, as described in the
+  Gravis’ SDK documentation. Constant-power panning was originally researched by
+  the British Broadcasting Corporation (BBC) and found to produce the most
+  realistic perception of voice placement on a radial axis from the listener.</p>
+</li>
+<li>
+<p>When quitting DOSBox Staging, information about the game’s GUS audio stream
+  will be provided, such as the breakdown of 8-bit versus 16-bit samples. A
+  potential suggestion to adjust the game’s GUS mixer level, either upward or
+  downward may also be provided, which you could paste into your game’s startup
+  batch file or <code>[autoexec]</code> section.</p>
+</li>
+</ul>
+<p>We recommend using GUS emulation for the handful of DOS games that
+<a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Gravis-Ultrasound-(GUS)#gus-native-games">natively support</a>
+the GUS’s multi-voice feature. For a list of these games, see:
+<a href="https://github.com/dosbox-staging/dosbox-staging/wiki/CDDA-GUS-&amp;-MIDI-compatible-games">GUS Native games</a>.</p>
+<p>For more details about DOSBox Staging’s GUS support and enhancements, see:
+<a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Gravis-UltraSound-Enhancements">GUS Enhancements</a>.</p>
+<p>For information about constant-power panning, see pages 7 and 8 of the
+<a href="http://downloads.bbc.co.uk/rd/pubs/whp/whp-pdf-files/WHP051.pdf">BBC R&amp;D White Paper</a>.</p>
+<h3 id="built-in-glsl-shaders">Built-in GLSL shaders<a class="headerlink" href="#built-in-glsl-shaders" title="Permanent link">¶</a></h3>
+<p>Two high-quality shaders that emulate the visual look of an analog CRT monitor
+are now included:</p>
+<ul>
+<li><code>glshader = crt-easymode-flat</code>: for DOS games using resolutions 640×400
+   or higher.</li>
+<li><code>glshader = crt-fakelottes-flat</code>: for DOS games using smaller resolutions
+   (e.g. 320×200).</li>
+</ul>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-jazz-jackrabbit-crt-shader/jazz-jackrabbit-full.png"><img alt="Jazz Jackrabbit (Holiday Hare 1995 Edition)" src="https://archive.org/download/dosbox-staging-v0.76.0-jazz-jackrabbit-crt-shader/jazz-jackrabbit-full.png"/></a></p>
+<figcaption>
+<p><a href="https://en.wikipedia.org/wiki/Jazz_Jackrabbit_(1994_video_game)">Jazz Jackrabbit (Holiday Hare 1995 Edition)</a> — showcasing <code>crt-fakelottes-flat</code>
+</p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-jazz-jackrabbit-crt-shader/jazz-jackrabbit-crt-shader.png"><img alt="Jazz Jackrabbit (Holiday Hare 1995 Edition) -- zoomed-in view" src="https://archive.org/download/dosbox-staging-v0.76.0-jazz-jackrabbit-crt-shader/jazz-jackrabbit-crt-shader.png"/></a></p>
+<figcaption>
+<p><a href="https://en.wikipedia.org/wiki/Jazz_Jackrabbit_(1994_video_game)">Jazz Jackrabbit (Holiday Hare 1995 Edition)</a> — showcasing <code>crt-fakelottes-flat</code> (zoomed-in view)
+  </p>
+</figcaption>
+</figure>
+<h3 id="built-in-midi-support-via-fluidsynth">Built-in MIDI support via FluidSynth<a class="headerlink" href="#built-in-midi-support-via-fluidsynth" title="Permanent link">¶</a></h3>
+<p><a href="http://www.fluidsynth.org/">FluidSynth 2.x</a>, a powerful and accurate MIDI
+synthesizer, has been integrated into DOSBox to directly support MIDI
+playback. This means you no longer need to use an external MIDI synthesizer
+(but it’s still possible, of course).</p>
+<p>Configure your game to use General MIDI (GM) output on port <code>330</code> and update
+your DOSBOX Staging config as follows to start using it:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">[midi]</span>
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="na">mididevice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">fluidsynth</span>
+<a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="na">mpu401</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">intelligent</span>
+<a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a>
+<a href="#__codelineno-0-5" id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">[fluidsynth]</span>
+<a href="#__codelineno-0-6" id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="na">soundfont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">my-favourite-soundfont.sf2</span>
+</code></pre></div>
+<p>DOSBox will look for soundfont files in the <code>soundfonts</code> directory within your
+configuration directory and in additional platform-specific directories (e.g.
+<code>/usr/share/soundfonts/</code> on Linux).</p>
+<p>You can also use absolute paths or paths relative to the current working
+directory (for bundling <code>.sf2</code> files in game directories).</p>
+<h4 id="fine-grained-midi-level-controls">Fine-grained MIDI level controls<a class="headerlink" href="#fine-grained-midi-level-controls" title="Permanent link">¶</a></h4>
+<p>Some SoundFonts can be “louder” than others, such as <a href="http://midkar.com/soundfonts/">Timbres of Heaven</a>.
+You can provide an optional volume-scaling percentage after the SF2 filename,
+such as:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="na">soundfont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">timbres_of_heaven.sf2 20</span>
+</code></pre></div>
+<p>This will reduce the SoundFont’s volume to 20%.</p>
+<p>Most games that play MIDI music provide an in-game volume adjustment, but
+some games may not save your settings while others may not even allow this
+adjustment. For these games, use the <code>mixer FSYNTH</code> command to set your desired
+MIDI output volume either in your startup batch file or the <code>[autoexec]</code> section
+in the game’s config file, e.g.:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a>C:\&gt;mixer FSYNTH 33
+</code></pre></div>
+<h4 id="what-soundfont-should-i-use">What soundfont should I use?<a class="headerlink" href="#what-soundfont-should-i-use" title="Permanent link">¶</a></h4>
+<p>This is very much a matter of personal opinion. We’ve compiled a list of
+SoundFont recommendations suitable for DOS gaming on our
+<a href="https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#soundfonts">wiki</a>.</p>
+<p>Linux users: if you have the <a href="https://repology.org/project/fluid-soundfont/versions">fluid-soundfont</a> installed on your OS, it
+will be picked up automatically by default.</p>
+<h3 id="integer-scaling-pixel-perfect-option-for-opengl-output">Integer scaling (pixel-perfect) option for OpenGL output<a class="headerlink" href="#integer-scaling-pixel-perfect-option-for-opengl-output" title="Permanent link">¶</a></h3>
+<p>Integer scaling (aka pixel-perfect mode) is now also available via OpenGL.</p>
+<p>You can test integer scaling by setting the following <code>output</code> options:</p>
+<ul>
+<li>
+<p><code>output = openglpp</code> — OpenGL + integer scaling. This option is used to provide
+  backwards compatibility with other DOSBox forks.</p>
+</li>
+<li>
+<p><code>output = texturepp</code> — SDL2 texture backend + integer scaling. This option
+  was added in 0.75.0.</p>
+</li>
+</ul>
+<p>These two options behave pretty much the same, except Linux users can enjoy
+resizable windows with <code>output = openglpp</code>.</p>
+<p>Examples running fullscreen on 1080p display:</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/the-lost-vikings-integer-scaling.png"><img alt="The Lost Vikings (1993)" src="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/the-lost-vikings-integer-scaling.png"/></a></p>
+<figcaption>
+<p><a href="https://en.wikipedia.org/wiki/The_Lost_Vikings">The Lost Vikings (1993)</a> — with integer scaling
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/epic-pinball-integer-scaling.png"><img alt="Epic Pinball (1993)" src="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/epic-pinball-integer-scaling.png"/></a></p>
+<figcaption>
+<p><a href="https://en.wikipedia.org/wiki/Epic_Pinball">Epic Pinball (1993)</a> — with integer scaling
+  </p>
+</figcaption>
+</figure>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Integer scaling works best for games that use square pixels; most DOS
+games use non-square pixels (often using resolution 320×200 / <a href="https://en.wikipedia.org/wiki/Pixel_aspect_ratio">PAR</a> 5:6)—for
+those titles sharp-bilinear scaling (DOSBox Staging default setting) works
+better.</p>
+</div>
+<p>This video essay by <strong>Displaced Gamers</strong> provides a great explanation:</p>
+<figure>
+<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="allowfullscreen" frameborder="0" height="472" src="https://www.youtube-nocookie.com/embed/YvckyWxHAIw" title="YouTube video player" width="840"></iframe>
+<figcaption>
+<p>DOS Gaming Aspect Ratio — 320×200
+  </p>
+</figcaption>
+</figure>
+<p>The <code>output = openglpp</code> option with <code>windowresolution = resizable</code> is also a good choice
+for text mode DOS applications as it produces sharp text (but
+sacrifices the proper DOS font aspect ratio):</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/desktop-turbo-openglpp.png"><img alt="Turbo Pascal in windowed mode with pixel-perfect scaling" src="https://archive.org/download/dosbox-staging-v0.76.0-pixel-perfect-scaling/desktop-turbo-openglpp.png"/></a></p>
+<figcaption>
+<p>Turbo Pascal in windowed mode with pixel-perfect scaling
+  </p>
+</figcaption>
+</figure>
+<h3 id="dynamic-recompilation-for-powerpc-and-power8-ppc64le">Dynamic recompilation for PowerPC and POWER8 (ppc64le)<a class="headerlink" href="#dynamic-recompilation-for-powerpc-and-power8-ppc64le" title="Permanent link">¶</a></h3>
+<p>Roughly two years ago <em>jmarsh</em> of the vogons.org forums published a
+feature-complete
+<a href="https://en.wikipedia.org/wiki/Dynamic_recompilation">dynamic recompilation</a>
+patch supporting the PowerPC (32-bit) architecture. This was quickly
+expanded by the community to support the POWER8 (64-bit) architecture as
+well. Both patches (with slight improvements) were merged to DOSBox Staging.</p>
+<p>Shoutout to the AmigaOS community for the help with thoroughly testing this
+significant PowerPC contribution! <img alt="😄" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f604.svg" title=":smile:"/></p>
+<h3 id="quick-edit-and-find-your-configuration-file">Quick-edit and find your configuration file<a class="headerlink" href="#quick-edit-and-find-your-configuration-file" title="Permanent link">¶</a></h3>
+<p>It can be cumbersome to edit and find your default <code>dosbox-staging.conf</code> file.
+You might not know where it’s located or it might be hidden away due to certain
+OS settings.</p>
+<p>These two command-line options can help:</p>
+<ul>
+<li>
+<p><code>dosbox --editconf</code>, opens the <code>.conf</code> file in a text editor.</p>
+<p>This option respects the <code>EDITOR</code> environment variable if set to your
+prefered editor. Otherwise, it uses one of the following: <code>nano</code>,
+<code>vim</code>, <code>vi</code>, <code>notepad++.exe</code>, or <code>notepad.exe</code>.</p>
+</li>
+<li>
+<p><code>dosbox --printconf</code>, prints the path to the <code>.conf</code> file.</p>
+</li>
+</ul>
+<h3 id="ls-command">LS command<a class="headerlink" href="#ls-command" title="Permanent link">¶</a></h3>
+<p>The <code>ls</code> (list directory contents) command is widely available across Unix-based
+operating systems. Most users of modern OSes are more likely to have it in their
+muscle memory rather than the <code>DIR</code> DOS command.</p>
+<p>A very simple implementation of <code>ls</code> has been added that resembles the default
+operation of GNU <code>ls</code>:</p>
+<ul>
+<li>Fits as many directory entries as possible on the screen</li>
+<li>Differentiates directories, executables, and plain files using color</li>
+<li>Prints files in lowercase and directories in uppercase, Norton Commander style</li>
+</ul>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-ls-command/dir.png"><img alt="Example: DIR /W /P" src="https://archive.org/download/dosbox-staging-v0.76.0-ls-command/dir.png"/></a></p>
+<figcaption>
+<p>Windows 3.11 listed using <code>dir /w /p</code> — not enough space to show all
+  files, hard to distinguish between files and directories
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-ls-command/ls.png"><img alt="Example: LS" src="https://archive.org/download/dosbox-staging-v0.76.0-ls-command/ls.png"/></a></p>
+<figcaption>
+<p>The same directory listed using <code>ls</code> — more efficient utilisation of space
+  in 80×25 DOS text mode, easier to read
+  </p>
+</figcaption>
+</figure>
+<h3 id="rapid-dc-offset-correction-for-the-emulated-pc-speaker">Rapid DC offset correction for the emulated PC speaker<a class="headerlink" href="#rapid-dc-offset-correction-for-the-emulated-pc-speaker" title="Permanent link">¶</a></h3>
+<p>Audio speakers work by pushing and pulling their diaphragm at a rate equal to the
+audio’s frequency.</p>
+<p>Physical PC speakers can sometimes be left in a pushed-out or pulled-in state
+through constant voltage, called DC offset, which typically isn’t a problem on
+real hardware. However in DOSBox, the PC speaker’s offset samples mix with those
+from other audio sources such as the Sound Blaster or Adlib, which can:</p>
+<ul>
+<li>
+<p>Cause a pop if the next sample played has a position significantly different
+  from the position of the DC offset.</p>
+</li>
+<li>
+<p>Harm accurate sound reproduction of other sound devices by moving half the
+  waveform further away from the center line (making it louder) and the other
+  half of the waveform closer to the center line (making it quieter).</p>
+</li>
+</ul>
+<p>This new configuration option, <code>zero_offset</code> under the <code>[speaker]</code> section,
+defaults to <code>'auto'</code>. It’s enabled for non-Windows systems and  disabled on
+Windows as some of its audio drivers appear to attempt their own DC offset
+correction.</p>
+<p>For more details about this change, see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/480" title="GitHub Issue dosbox-staging/dosbox-staging #480">#480</a></p>
+<p>For a discussion about Windows 10 performing DC offset correction,
+see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/625" title="GitHub Issue dosbox-staging/dosbox-staging #625">#625</a></p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-dc-offset-prevention/dc-offset.png"><img alt="Example: DC offset correction" src="https://archive.org/download/dosbox-staging-v0.76.0-dc-offset-prevention/dc-offset.png"/></a></p>
+<figcaption>
+<p>The game has left the PC speaker in an offset position, which is detected
+  and silently “wound down” in a fraction of a second.
+  </p>
+</figcaption>
+</figure>
+<h3 id="audio-pop-and-click-prevention">Audio pop and click prevention<a class="headerlink" href="#audio-pop-and-click-prevention" title="Permanent link">¶</a></h3>
+<p>Some games generate audio pops or clicks during startup. We’ve added
+two changes to reduce these occurences:</p>
+<ul>
+<li>Initial audio by all emulated devices is fed through a 15-ms envelope
+  specifically timed to prevent unnatural electronic pops and clicks, yet fast
+  enough to ensure that sharp-attack natural sounds (such as a cymbal crash) are
+  not affected.</li>
+</ul>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-1.png"><img alt="Example: Unenveloped" src="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-1.png"/></a>
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-2.png"><img alt="Example: Enveloped" src="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-2.png"/></a></p>
+<figcaption>
+<p>On startup, the game greets our ears with an unatural instantaneous pop. In
+  the second image, we see the enveloper briefly in action ramping the
+  instaneous volume to prevent the pop.
+  </p>
+</figcaption>
+</figure>
+<p>For more visuals and detail about the enveloper, see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/442" title="GitHub Issue dosbox-staging/dosbox-staging #442">#442</a></p>
+<ul>
+<li>Some games test their interface to the Sound Blaster 16 using one or more
+  small “junk” DMA transfers. Unfortunately on actual hardware, these result in
+  startup clicks and pops, which can be jarring when using a headset.  We now
+  suppress these initial junk transfers.</li>
+</ul>
+<p>For a list of many more games that had their pops cleaned up, see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/411" title="GitHub Issue dosbox-staging/dosbox-staging #411">#411</a></p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-3.png"><img alt="Example: SB16 junk suppression" src="https://archive.org/download/dosbox-staging-v0.76.0-pop-and-click-prevention/pop-and-click-3.png"/></a></p>
+<figcaption>
+<p>On startup, <a href="https://en.wikipedia.org/wiki/Lands_of_Lore:_The_Throne_of_Chaos">Lands of Lore: The Throne of
+  Chaos</a>‘s
+  audio driver blasts our ears with two instantaneous pops, which are
+  eliminated after suppression.
+  </p>
+</figcaption>
+</figure>
+<h3 id="splash-screen-and-help-banner-verbosity-control">Splash screen and help banner verbosity control<a class="headerlink" href="#splash-screen-and-help-banner-verbosity-control" title="Permanent link">¶</a></h3>
+<p>The splash screen and its delay, as well as the blue help banner, can now be
+skipped using the <code>startup_verbosity</code> setting in the <code>[dosbox]</code> section in the
+config file.  The verbosity can be set as follows:</p>
+<ul>
+<li>
+<p><code>high</code> shows everything: the splash screen, blue help banner, and initial
+  console output.</p>
+</li>
+<li>
+<p><code>medium</code> skips just the splash screen and its delay, but still shows the blue
+  help banner and initial console output.</p>
+</li>
+<li>
+<p><code>low</code> skips both the splash screen, delay, and blue help banner, but still
+  shows  initial console output.</p>
+</li>
+<li>
+<p><code>quiet</code> skips all of the above. The first output will either be the command
+  prompt or output from startup executables or batch files.</p>
+</li>
+</ul>
+<p>By default, the verbosity is set to <code>auto</code>, which is either <code>low</code> when an
+executable or directory is passed on the command-line or <code>high</code> when DOSBox
+Staging is started without initial commands.</p>
+<p>For a visual depiction of the options, see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/477" title="GitHub Issue dosbox-staging/dosbox-staging #477">#477</a></p>
+<h3 id="revise-help-messages-for-mount-and-imgmount-commands">Revise help messages for MOUNT and IMGMOUNT commands<a class="headerlink" href="#revise-help-messages-for-mount-and-imgmount-commands" title="Permanent link">¶</a></h3>
+<p>These commands are usually thoroughly documented in the <a href="https://github.com/dosbox-staging/dosbox-staging/blob/main/README">manual</a>, but having
+usage examples at your fingertips is more convenient. Help can be invoked
+by passing one of the following parameters: <code>/?</code> (DOS style), or <code>-h</code>, <code>--help</code>
+(GNU style).</p>
+<p>Read more in: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/729" title="GitHub Issue dosbox-staging/dosbox-staging #729">#729</a></p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-mount-help/mount-help.png"><img alt="Example: MOUNT help" src="https://archive.org/download/dosbox-staging-v0.76.0-mount-help/mount-help.png"/></a></p>
+<figcaption>
+<p>Revised help messages provide usage examples, common parameter descriptions,
+  and use a limited set of colours to improve readability.
+  </p>
+</figcaption>
+</figure>
+<h3 id="improve-telnet-mode-handling-for-modem-emulation">Improve Telnet-mode handling for modem emulation<a class="headerlink" href="#improve-telnet-mode-handling-for-modem-emulation" title="Permanent link">¶</a></h3>
+<p>For those hosting a BBS behind a Telnet interface, you can now pre-configure
+your serial port in Telnet-mode with the <code>telnet:1</code> argument, as follows:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-3-1" id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="k">[serial]</span>
+<a href="#__codelineno-3-2" id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="na">serial1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">modem telnet:1 listenport:2323</span>
+</code></pre></div>
+<p>For those dialling BBSs hosted behind a Telnet interface, use the following
+dial-prefix: <code>AT+NET1DT</code>. In general, the <code>+NET1</code> or <code>+NET0</code> AT-command will
+enable or disable Telnet-mode, respectively.</p>
+<p>This change brings Telnet-mode in-line with the Hayes multi-character command
+specification, which should be compatible with existing BBS software.</p>
+<p>For more background about this change, see: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/582" title="GitHub Issue dosbox-staging/dosbox-staging #582">#582</a></p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-improved-telnet-mode/telnet.png"><img alt="example: large-modem-transfer" src="https://archive.org/download/dosbox-staging-v0.76.0-improved-telnet-mode/telnet.png"/></a></p>
+<figcaption>
+<p>When telnet-mode is set according to the remote BBS’s needs, you will
+  experience fast and corruption-free transfers.
+  </p>
+</figcaption>
+</figure>
+<h3 id="fix-setting-file-timestamp">Fix setting file timestamp<a class="headerlink" href="#fix-setting-file-timestamp" title="Permanent link">¶</a></h3>
+<p>DOS function <a href="https://dos4gw.org/DOS_Fn_5701H_Set_File_Time_Date">5701h “Set File Time/Date”</a> was implemented.</p>
+<p>This corrects a long-standing emulation issue when it comes to date handling of
+files created in DOS (e.g. when files are being unpacked from an archive). This
+fixes some game installers and other software that checks file modification
+times.</p>
+<h3 id="case-insensitive-paths-handling">Case-insensitive paths handling<a class="headerlink" href="#case-insensitive-paths-handling" title="Permanent link">¶</a></h3>
+<p>Paths passed to commands <code>mount</code>, <code>imgmount</code>, and audio track paths in
+<code>.cue</code> and <code>.ins</code> files are now treated as case-insensitive, regardless
+of the operating system.</p>
+<p>Fixes numerous issues with running DOS games on Linux or FreeBSD. This change
+alone corrects the vast majority of Windows-only DOS game releases on <a href="https://www.gog.com/games?sort=release_asc&amp;page=1">GOG</a> or
+<a href="https://store.steampowered.com/curator/35328265-Powered-by-DOSBox/">Steam</a> (such as e.g. <strong>Settlers II</strong>, <strong>Redneck Rampage</strong>, or
+<em>Mortal Kombat</em>* series)—users no longer need to manually adjust the paths
+after unpacking games from Windows installer. This should significantly
+improve the quality of <a href="https://lutris.net/">Lutris</a> installers as well.</p>
+<h3 id="revise-default-keyboard-shortcuts">Revise default keyboard shortcuts<a class="headerlink" href="#revise-default-keyboard-shortcuts" title="Permanent link">¶</a></h3>
+<p>The default keyboard shortcuts were revised to avoid triggering conflicting OS
+default shortcuts. We’ve only changed those that that were not typically used by
+general users.</p>
+<p>The list of new default shortcuts are:</p>
+<ul>
+<li><span class="keys"><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-enter">Enter</kbd></span> – Switch between fullscreen and window mode</li>
+<li><span class="keys"><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-media-pause">Pause</kbd></span> – Pause/Unpause emulator</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f1">F1</kbd></span> – Start the keymapper</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f4">F4</kbd></span> – Change between mounted floppy/CD images</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f5">F5</kbd></span> – Save a screenshot</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f6">F6</kbd></span> – Start/Stop recording sound output to a wave file</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f7">F7</kbd></span> – Start/Stop recording video output to a zmbv file</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f9">F9</kbd></span> – Shutdown emulator</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f10">F10</kbd></span> – Capture/Release the mouse</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f11">F11</kbd></span> – Slow down emulation</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f12">F12</kbd></span> – Speed up emulation</li>
+<li><span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-home">Home</kbd></span> – Restart emulator</li>
+<li>Hold <span class="keys"><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-f12">F12</kbd></span> – Fast forward</li>
+</ul>
+<p>Keymapper received tiny usability improvements as well: it displays the
+keyboard shortcut (binding) for the selected action.</p>
+<h3 id="monochrome-palette-colour-setting">Monochrome palette colour setting<a class="headerlink" href="#monochrome-palette-colour-setting" title="Permanent link">¶</a></h3>
+<p>When emulating monochrome displays (Hercules or CGA/monochrome), the default
+colour palette can now be selected in the configuration file.</p>
+<p><em>This feature was backported to 0.75.2 release;
+<a href="../0.75.2/#select-monochrome-palette-colour">read more</a>.</em></p>
+<h3 id="raw-mouse-input-setting">Raw mouse input setting<a class="headerlink" href="#raw-mouse-input-setting" title="Permanent link">¶</a></h3>
+<p>User can now bypass the operating system’s mouse acceleration and sensitivity
+settings. This works in fullscreen or when the mouse is captured in window mode.</p>
+<p><em>This feature was backported to 0.75.2 release;
+<a href="../0.75.2/#raw-mouse-input">read more</a>.</em></p>
+<h3 id="10-axis-controller-support">10-axis controller support<a class="headerlink" href="#10-axis-controller-support" title="Permanent link">¶</a></h3>
+<p>Old joysticks compatible with DOS games can be emulated using modern 10-axis
+controllers (like DualShock or Xbox controllers).</p>
+<p><em>This feature was backported to 0.75.1 release;
+<a href="../0.75.1/#add-support-for-binding-more-controller-axes">read more</a>.</em></p>
+<h3 id="log-memory-base-address">Log memory base address<a class="headerlink" href="#log-memory-base-address" title="Permanent link">¶</a></h3>
+<p>The base memory address of DOS’s emulated memory region is now logged to the
+console to help some users of external software, such as <strong>Cheat Engine</strong>.</p>
+<p><em>This feature was backported to 0.75.1 release;
+<a href="../0.75.1/#log-base-address-of-emulated-memory">read more</a>.</em></p>
+<h2 id="bugfixes">Bugfixes<a class="headerlink" href="#bugfixes" title="Permanent link">¶</a></h2>
+<p>Some notable bugfixes:</p>
+<ul>
+<li>Prevent SDL2 crash on exit when using Wayland. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/336" title="GitHub Issue dosbox-staging/dosbox-staging #336">#336</a>)</li>
+<li>Fix sound effects in Prince of Persia on Tandy. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/457" title="GitHub Issue dosbox-staging/dosbox-staging #457">#457</a>)</li>
+<li>Prevent crash on SDL2 re-creating OpenGL window. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/510" title="GitHub Issue dosbox-staging/dosbox-staging #510">#510</a>)</li>
+<li>Fix <code>dir /p</code> in non-standard text modes. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/528" title="GitHub Issue dosbox-staging/dosbox-staging #528">#528</a>)</li>
+<li>Prevent injection of spurious newlines in autoexec and bat files. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/536" title="GitHub Issue dosbox-staging/dosbox-staging #536">#536</a>)</li>
+<li>Fix <code>capture_mouse</code> <code>middlegame</code> setting. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/563" title="GitHub Issue dosbox-staging/dosbox-staging #563">#563</a>)</li>
+<li>Fix a CD-DA roll-over bug when calculating PCM frames. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/569" title="GitHub Issue dosbox-staging/dosbox-staging #569">#569</a>)</li>
+<li>Fix boot failure from an image mounted as C:. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/589" title="GitHub Issue dosbox-staging/dosbox-staging #589">#589</a>)</li>
+<li>Fix memory leak in the modem phone book. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/622" title="GitHub Issue dosbox-staging/dosbox-staging #622">#622</a>)</li>
+<li>Fix <code>cls</code> command. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/639" title="GitHub Issue dosbox-staging/dosbox-staging #639">#639</a>)</li>
+<li>Increase default DOS file limit for emulation of program Subiekt 4. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/656" title="GitHub Issue dosbox-staging/dosbox-staging #656">#656</a>)</li>
+<li>
+<p>Fix Pentium CPUID to indicate CPU without FDIV bug. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/694" title="GitHub Issue dosbox-staging/dosbox-staging #694">#694</a>)</p>
+</li>
+<li>
+<p><em>(from SVN)</em> Multiple bugfixes and regression fixes for various games or demoscene
+  productions, such as
+  <a href="https://www.mobygames.com/game/dos/clue-master-detective">Clue: Master Detective</a>
+  (1989), (<a href="https://github.com/dosbox-staging/dosbox-staging/commit/8c0021ab2a0ae56a413e12816c0cb8a472f36cd0">8c002</a>),
+  <a href="https://demozoo.org/productions/102239/">Pleasure’n Pain</a> demo
+  (<a href="https://github.com/dosbox-staging/dosbox-staging/commit/8c07c9bcae56dfff9602995aad39708d1c8c975a">8c07c</a>, <a href="https://github.com/dosbox-staging/dosbox-staging/commit/e9a67fcaa73dcdc66d6ab2477821d3ddc2034fbf">e9a67</a>), MayDay demo (<a href="https://github.com/dosbox-staging/dosbox-staging/commit/b6e7718ebc6cd93498f4b4505bc2e5be6f09edcb">b6e77</a>), PC Tools 9, and others.</p>
+</li>
+<li>
+<p><em>(from SVN)</em> Set Precision Exception in <code>FRNDINT</code> (Round to Integer instruction),
+   to avoid bug when running Borland Pascal <code>pow</code> implementation. (<a href="https://github.com/dosbox-staging/dosbox-staging/commit/7892be26c72f812c0f58d17524516370fbde9bd6">7892b</a>)</p>
+</li>
+</ul>
+<h2 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p><em>(added on 2020-12-04)</em> Windows x64 builds are not available for now due
+  to regression after building in Visual Studio 16.8.2. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/746" title="GitHub Issue dosbox-staging/dosbox-staging #746">#746</a>)</p>
+</li>
+<li>
+<p>The W^X memory protection (enabled by default via e.g. SELinux) prevents
+  dynamic recompiler from working. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/253" title="GitHub Issue dosbox-staging/dosbox-staging #253">#253</a>)</p>
+</li>
+<li>
+<p>Keymapper has problems with mapping multiple axes when multiple controllers
+  are plugged in (e.g. notably when using modern joysticks and throttles
+  connected at the same time). (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/342" title="GitHub Issue dosbox-staging/dosbox-staging #342">#342</a>)</p>
+</li>
+<li>
+<p>GLSL shader implementation crashes on certain Intel GPUs on Arch. (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/319" title="GitHub Issue dosbox-staging/dosbox-staging #319">#319</a>)</p>
+</li>
+<li>
+<p>Mapping key scancodes on X11 using <code>xmodmap</code> can break SDL2 ability to
+  detect your keyboard layout and leave you with non-functional keyboard input.
+  Use udev instead of xmodmap to prevent this problem.</p>
+</li>
+<li>
+<p>Some users of Gnome 3.38.1 experience problems when toggling fullscreen (both
+  X11 and Wayland). This seems to be a Gnome issue; if you experience it as
+  well, please make a report in the bugtracker.</p>
+</li>
+</ul>
+<h2 id="removed-features">Removed features<a class="headerlink" href="#removed-features" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Option <code>gusrate</code> in the <code>[gus]</code> section was removed. The revised Gravis UltraSound
+  emulation implementation made this option obsolete.</p>
+</li>
+<li>
+<p>Option <code>oplrate</code> in the <code>[sblaster]</code> section was removed. This value is now
+  automatically tied to <code>rate</code> in <code>[mixer]</code> to avoid resampling (so users do not
+  need to manually correlate values for these two options any more).</p>
+</li>
+</ul>
+<h2 id="notes-for-developers">Notes for developers<a class="headerlink" href="#notes-for-developers" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Project switched to using C++14.</p>
+</li>
+<li>
+<p>We introduced <a href="https://en.wikipedia.org/wiki/Unit_testing">unit tests</a> (using Google Test framework). At the moment,
+  unit tests are running on Linux only—to build them use <code>--enable-tests</code>
+  configure flag and <code>make test</code> to run them. They are included in CI gating.</p>
+</li>
+<li>
+<p>Windows x64 builds were added to Visual Studio solution (both Debug and
+  Release profiles).</p>
+</li>
+<li>
+<p>CI was extended with gating based on MSVC (32-bit and 64-bit builds)</p>
+</li>
+<li>
+<p>Due to instability and extremely slow installation times MSYS2 was
+  removed from gating CI. It is still included in our daily builds, but we do
+  not recommend using MSYS2 for development.</p>
+</li>
+<li>
+<p>Linux builds for ARMv6, ARMv7, ARMv8 (AArch64), ppc64le, and s390x
+  architectures were added to our set of daily builds.</p>
+</li>
+<li>
+<p>We fixed all <code>-Wall -Weffc++</code> warnings on Linux and macOS and corrected
+  a large number of issues detected via static and dynamic code analysis tools.</p>
+</li>
+</ul>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.76.0-reduced-warnings/dosbox-staging-warnings-nov-2020.png"><img alt="warnings graph" src="https://archive.org/download/dosbox-staging-v0.76.0-reduced-warnings/dosbox-staging-warnings-nov-2020.png"/></a></p>
+<figcaption>
+<p>When the project started we inherited 1411 warnings from DOSBox; as of
+  November 2020, the builds are finally clean, so it’s easier to make sure we
+  do not introduce new warnings.
+  </p>
+</figcaption>
+</figure>
+<h2 id="changes-merged-from-upstream-projects">Changes merged from upstream projects<a class="headerlink" href="#changes-merged-from-upstream-projects" title="Permanent link">¶</a></h2>
+<ul>
+<li>Merge DOSBox SVN changes up to revision 4392</li>
+<li>Sync dr_mp3 v0.6.11 from upstream</li>
+<li>Sync dr_flac v0.12.13 from upstream</li>
+<li>Sync dr_wav v0.12.4 from upstream</li>
+<li>Sync xxhash 0.8.0 from upstream</li>
+<li>Sync stb header v2.36 from upstream</li>
+<li>Sync stb_vorbis v1.19 from upstream</li>
+</ul>
+<h2 id="contributors">Contributors<a class="headerlink" href="#contributors" title="Permanent link">¶</a></h2>
+<p>During DOSBox Staging 0.76 development period we merged <strong>1035</strong> commits,
+including <strong>55</strong> commits originating from the DOSBox project.</p>
+<h3 id="maintainers">Maintainers<a class="headerlink" href="#maintainers" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Patryk Obara</li>
+<li>kcgen</li>
+<li>nemo93</li>
+</ul>
+</div>
+<h3 id="direct-contributors">Direct contributors<a class="headerlink" href="#direct-contributors" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Affonso Amendola</li>
+<li>Bernard Cafarelli</li>
+<li>cfoesch</li>
+<li>ClassicHasClass</li>
+<li>David Heidelberg</li>
+<li>drfiemost</li>
+<li>Edward Betts</li>
+<li>Erlotinib</li>
+<li>Expack3</li>
+<li>Feignint</li>
+<li>Jonathan Campbell</li>
+<li>MasterO2</li>
+<li>NicknineTheEagle</li>
+<li>Nikos Chantziaras</li>
+<li>Robert de Rooy</li>
+<li>Troy Campbell</li>
+<li>Tyrell Sassen</li>
+<li>Vladimir Serbinenko</li>
+<li>Wengier</li>
+</ul>
+</div>
+<h3 id="dosbox-contributors">DOSBox contributors<a class="headerlink" href="#dosbox-contributors" title="Permanent link">¶</a></h3>
+<p>SVN r4336:r4392</p>
+<div class="compact">
+<ul>
+<li>Harekiet</li>
+<li>jmarsh</li>
+<li>Jonathan Campbell</li>
+<li>NewRisingSun</li>
+<li>Qbix</li>
+<li>ripsaw8080</li>
+</ul>
+</div>
+<h2 id="thank-you">Thank you<a class="headerlink" href="#thank-you" title="Permanent link">¶</a></h2>
+<p>We are extremely grateful for all contributions, including the invaluable
+improvements merged in from the DOSBox project.</p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid">
+<!-- Link to previous page -->
+<a aria-label="Previous: 0.77.0" class="md-footer__link md-footer__link--prev" href="../0.77.0/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              0.77.0
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: 0.75.2" class="md-footer__link md-footer__link--next" href="../0.75.2/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              0.75.2
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

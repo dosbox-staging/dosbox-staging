@@ -1,0 +1,2405 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/release-notes/0.79.0/" rel="canonical"/>
+<link href="../0.79.1/" rel="prev"/>
+<link href="../0.78.1/" rel="next"/>
+<link href="../../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>0.79.0 - DOSBox Staging</title>
+<link href="../../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#0790-release-notes">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          0.79.0
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        0.79.0
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#what-you-can-expect">
+    What you can expect
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-improvements">
+    Audio improvements
+  </a>
+<nav aria-label="Audio improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#adlib-gold-surround-module-emulation">
+    AdLib Gold Surround Module emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sound-card-output-filter-emulation">
+    Sound card output filter emulation
+  </a>
+<nav aria-label="Sound card output filter emulation" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sound-blaster">
+    Sound Blaster
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#small-speaker-systems">
+    Small-speaker systems
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#custom-filters">
+    Custom filters
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#crossfeed">
+    Crossfeed
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reverb-and-chorus">
+    Reverb and chorus
+  </a>
+<nav aria-label="Reverb and chorus" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reverb">
+    Reverb
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#chorus">
+    Chorus
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#master-compressor">
+    Master compressor
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-mixer-improvements">
+    General mixer improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#one-opl-mode-to-rule-them-all">
+    "One OPL mode to rule them all" 💍
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fluidsynth-configuration-changes">
+    FluidSynth configuration changes
+  </a>
+<nav aria-label="FluidSynth configuration changes" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fluidsynth-reverb-and-chorus">
+    FluidSynth Reverb and Chorus
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#volume-scaling">
+    Volume Scaling
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ripas-pc-speaker-patch">
+    ripa's PC speaker patch
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#parallel-port-dac-models-disney-covox-and-stereo-on-1">
+    Parallel port DAC models: Disney, Covox, and Stereo-On-1
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-mute-and-pause">
+    Audio mute and pause
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#graphical-improvements">
+    Graphical improvements
+  </a>
+<nav aria-label="Graphical improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#shader-reload-shortcut">
+    Shader reload shortcut
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cga-palette-override">
+    CGA palette override
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#scaled-image-quality-improvements">
+    Scaled image quality improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#high-dpi-on-macos">
+    High DPI on macOS
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#window-transparency-support">
+    Window transparency support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#frame-presentation-modes">
+    Frame presentation modes
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dos-shell-improvements">
+    DOS shell improvements
+  </a>
+<nav aria-label="DOS shell improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#piping-from-the-dos-prompt-or-batch-files">
+    Piping from the DOS prompt or batch files
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-attribute-support-and-attrib-command">
+    File attribute support and ATTRIB command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#default-choices-for-the-choice-command">
+    Default choices for the CHOICE command
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mount-improvements">
+    Mount improvements
+  </a>
+<nav aria-label="Mount improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#physical-cd-rom-mount-support">
+    Physical CD-ROM mount support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#read-only-disk-image-mount-support">
+    Read-only disk image mount support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#z-drive-customisation-and-directory-support">
+    Z-drive customisation and directory support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#imgmount-wildcard-support">
+    IMGMOUNT wildcard support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#automount-of-resource-drives">
+    Automount of resource drives
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#localisation-improvements">
+    Localisation improvements
+  </a>
+<nav aria-label="Localisation improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#code-pages-and-keyboard-layouts">
+    Code pages and keyboard layouts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#country-support-for-different-date-time-and-decimal-formats">
+    Country support for different date, time, and decimal formats
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#local-language-and-keyboard-layout-detection-improvements">
+    Local language and keyboard layout detection improvements
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#input-improvements">
+    Input improvements
+  </a>
+<nav aria-label="Input improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-wheel-emulation">
+    Mouse-wheel emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#serial-mice-emulation">
+    Serial mice emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows-31-seamless-mouse-integration">
+    Windows 3.1 seamless mouse integration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#joystick-calibration-hotkeys">
+    Joystick calibration hotkeys
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-improvements">
+    General improvements
+  </a>
+<nav aria-label="General improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#command-line-setting-of-configuration-options">
+    Command-line setting of configuration options
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows-installer-for-windows-users">
+    Windows installer for Windows users
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#configurable-modem-connect-speeds">
+    Configurable modem connect speeds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#handling-options-for-memory-faults-in-buggy-games">
+    Handling options for memory faults in buggy games
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#developer-related-improvements">
+    Developer-related improvements
+  </a>
+<nav aria-label="Developer-related improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#self-documenting-bit-twiddling-with-bit_view">
+    Self-documenting bit twiddling with bit_view
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#memory-block-and-type-size-simplification">
+    Memory block and type size simplification
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tracy-profiler-integration">
+    Tracy profiler integration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#continuous-integration-msys2-workflow-improvements">
+    Continuous integration MSYS2 workflow improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#release-package-shell-script">
+    Release-package shell script
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#static-analysis">
+    Static analysis
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-status">
+    Translation status
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notable-fixes">
+    Notable fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#special-thanks">
+    Special thanks
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#maintainers">
+    Maintainers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#authors">
+    Authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translators">
+    Translators
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sponsors">
+    Sponsors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#backers">
+    Backers
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#what-you-can-expect">
+    What you can expect
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-improvements">
+    Audio improvements
+  </a>
+<nav aria-label="Audio improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#adlib-gold-surround-module-emulation">
+    AdLib Gold Surround Module emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sound-card-output-filter-emulation">
+    Sound card output filter emulation
+  </a>
+<nav aria-label="Sound card output filter emulation" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sound-blaster">
+    Sound Blaster
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#small-speaker-systems">
+    Small-speaker systems
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#custom-filters">
+    Custom filters
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#crossfeed">
+    Crossfeed
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reverb-and-chorus">
+    Reverb and chorus
+  </a>
+<nav aria-label="Reverb and chorus" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reverb">
+    Reverb
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#chorus">
+    Chorus
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#master-compressor">
+    Master compressor
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-mixer-improvements">
+    General mixer improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#one-opl-mode-to-rule-them-all">
+    "One OPL mode to rule them all" 💍
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fluidsynth-configuration-changes">
+    FluidSynth configuration changes
+  </a>
+<nav aria-label="FluidSynth configuration changes" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fluidsynth-reverb-and-chorus">
+    FluidSynth Reverb and Chorus
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#volume-scaling">
+    Volume Scaling
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ripas-pc-speaker-patch">
+    ripa's PC speaker patch
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#parallel-port-dac-models-disney-covox-and-stereo-on-1">
+    Parallel port DAC models: Disney, Covox, and Stereo-On-1
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-mute-and-pause">
+    Audio mute and pause
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#graphical-improvements">
+    Graphical improvements
+  </a>
+<nav aria-label="Graphical improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#shader-reload-shortcut">
+    Shader reload shortcut
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cga-palette-override">
+    CGA palette override
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#scaled-image-quality-improvements">
+    Scaled image quality improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#high-dpi-on-macos">
+    High DPI on macOS
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#window-transparency-support">
+    Window transparency support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#frame-presentation-modes">
+    Frame presentation modes
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dos-shell-improvements">
+    DOS shell improvements
+  </a>
+<nav aria-label="DOS shell improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#piping-from-the-dos-prompt-or-batch-files">
+    Piping from the DOS prompt or batch files
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-attribute-support-and-attrib-command">
+    File attribute support and ATTRIB command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#default-choices-for-the-choice-command">
+    Default choices for the CHOICE command
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mount-improvements">
+    Mount improvements
+  </a>
+<nav aria-label="Mount improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#physical-cd-rom-mount-support">
+    Physical CD-ROM mount support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#read-only-disk-image-mount-support">
+    Read-only disk image mount support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#z-drive-customisation-and-directory-support">
+    Z-drive customisation and directory support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#imgmount-wildcard-support">
+    IMGMOUNT wildcard support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#automount-of-resource-drives">
+    Automount of resource drives
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#localisation-improvements">
+    Localisation improvements
+  </a>
+<nav aria-label="Localisation improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#code-pages-and-keyboard-layouts">
+    Code pages and keyboard layouts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#country-support-for-different-date-time-and-decimal-formats">
+    Country support for different date, time, and decimal formats
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#local-language-and-keyboard-layout-detection-improvements">
+    Local language and keyboard layout detection improvements
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#input-improvements">
+    Input improvements
+  </a>
+<nav aria-label="Input improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-wheel-emulation">
+    Mouse-wheel emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#serial-mice-emulation">
+    Serial mice emulation
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows-31-seamless-mouse-integration">
+    Windows 3.1 seamless mouse integration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#joystick-calibration-hotkeys">
+    Joystick calibration hotkeys
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-improvements">
+    General improvements
+  </a>
+<nav aria-label="General improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#command-line-setting-of-configuration-options">
+    Command-line setting of configuration options
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows-installer-for-windows-users">
+    Windows installer for Windows users
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#configurable-modem-connect-speeds">
+    Configurable modem connect speeds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#handling-options-for-memory-faults-in-buggy-games">
+    Handling options for memory faults in buggy games
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#developer-related-improvements">
+    Developer-related improvements
+  </a>
+<nav aria-label="Developer-related improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#self-documenting-bit-twiddling-with-bit_view">
+    Self-documenting bit twiddling with bit_view
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#memory-block-and-type-size-simplification">
+    Memory block and type size simplification
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tracy-profiler-integration">
+    Tracy profiler integration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#continuous-integration-msys2-workflow-improvements">
+    Continuous integration MSYS2 workflow improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#release-package-shell-script">
+    Release-package shell script
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#static-analysis">
+    Static analysis
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-status">
+    Translation status
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notable-fixes">
+    Notable fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#special-thanks">
+    Special thanks
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#maintainers">
+    Maintainers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#authors">
+    Authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translators">
+    Translators
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sponsors">
+    Sponsors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#backers">
+    Backers
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="0790-release-notes">0.79.0 release notes<a class="headerlink" href="#0790-release-notes" title="Permanent link">¶</a></h1>
+<p><strong>Release date:</strong> 2022-09-19</p>
+<h2 id="how-to-upgrade">How to upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">¶</a></h2>
+<p>Download and launch the latest version:</p>
+<div class="compact">
+<ul>
+<li><a href="/downloads/linux/">Linux</a> (or <a href="/downloads/linux#steam">Steam on Linux</a>)</li>
+<li><a href="/downloads/windows/">Windows</a></li>
+<li><a href="/downloads/macos/">macOS</a></li>
+</ul>
+</div>
+<p>At the<code>Z:\&gt;</code> prompt, run <code>config -wc</code> to write the new configuration file. Any
+existing settings will be retained, however, extraneous comments will be
+dropped.</p>
+<h2 id="what-you-can-expect">What you can expect<a class="headerlink" href="#what-you-can-expect" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>It should run everything that prior versions did.</p>
+</li>
+<li>
+<p>The default settings will give you improved audio, refined graphical scaling
+  and colour accuracy, more robust mouse handling, and a more usable shell.</p>
+</li>
+<li>
+<p>There are new and some deprecated config settings: your console log will
+  inform you with orange-coloured warning messages to help you.</p>
+</li>
+<li>
+<p>For performance-demanding games that use <code>max</code> cycles, it should provide
+  just as much performance (or a bit more) than prior versions.</p>
+</li>
+<li>
+<p><strong>International users</strong>: it should detect your language and keyboard layout
+  on startup. We recommend reading the Localisation section for details.</p>
+</li>
+<li>
+<p><strong>Repo packagers</strong>: learn about <a href="https://github.com/dosbox-staging/dosbox-staging/blob/release/0.79.x/docs/README.resources">bundled resource files</a>
+  and the updated Meson <a href="https://github.com/dosbox-staging/dosbox-staging/blob/release/0.79.x/BUILD.md#repository-maintainer--packager-builds">build settings</a>.</p>
+</li>
+</ul>
+<p>Read on for all the details!</p>
+<h2 id="audio-improvements">Audio improvements<a class="headerlink" href="#audio-improvements" title="Permanent link">¶</a></h2>
+<h3 id="adlib-gold-surround-module-emulation">AdLib Gold Surround Module emulation<a class="headerlink" href="#adlib-gold-surround-module-emulation" title="Permanent link">¶</a></h3>
+<p>The ultra-rare AdLib Gold surround sound daughterboard is now emulated, which
+makes it possible to finally enjoy the <a href="https://www.youtube.com/playlist?list=PLDE06DE88BB135F33">Dune
+soundtrack</a> in its
+full glory! That’s the only game in existence that makes use of the surround
+module.</p>
+<p>The following config is recommended for
+<a href="https://en.wikipedia.org/wiki/Dune_(video_game)">Dune</a>. The setup utility
+should auto-detect AdLib Gold and the surround module correctly with these
+settings.</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">[sblaster]</span>
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="na">sbtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">sb16</span>
+<a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="na">oplmode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">opl3gold</span>
+</code></pre></div>
+<h3 id="sound-card-output-filter-emulation">Sound card output filter emulation<a class="headerlink" href="#sound-card-output-filter-emulation" title="Permanent link">¶</a></h3>
+<p>Most DOS-era sound cards feature an output low-pass filter (and sometimes a
+high-pass filter too) that play an important role in giving their sound its
+character. DOSBox Staging can now accurately emulate these analog output stage
+filters for all supported sound devices.</p>
+<h4 id="sound-blaster">Sound Blaster<a class="headerlink" href="#sound-blaster" title="Permanent link">¶</a></h4>
+<p>For backward compatibility reasons, the <code>sb_filter</code> config parameter defaults
+to the newly introduced <code>modern</code> filter, which uses the simple linear
+interpolation method of previous DOSBox versions. To turn on accurate analog
+output filter emulation, set the <code>sb_filter</code> to <code>auto</code>. This will set the
+correct filters for each Sound Blaster model depending on the <code>sb_type</code> value.
+You can also set a model-specific filter manually if you wish, e.g. this is
+how to use a Sound Blaster 16 but with Sound Blaster Pro filters:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="k">[sblaster]</span>
+<a href="#__codelineno-1-2" id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="na">sbtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">sb16</span>
+<a href="#__codelineno-1-3" id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="na">sb_filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">sbpro1</span>
+</code></pre></div>
+<p>Some Sound Blaster models can toggle the filter on and off in software; you
+can force the filter to be always on by setting <code>sb_filter_always_on</code> to
+<code>true</code>.</p>
+<p>OPL and CMS filters are also accurately emulated; please refer to the
+descriptions of the <code>opl_filter</code> and <code>cms_filter</code> config parameters for
+further details.</p>
+<h4 id="small-speaker-systems">Small-speaker systems<a class="headerlink" href="#small-speaker-systems" title="Permanent link">¶</a></h4>
+<p>Filters are enabled by default for all small-speaker audio systems (PC
+Speaker, PS/1 Audio, Tandy, and the various LPT DAC options). Depending on the
+particular device, these filters either emulate the analog output filters of
+the original device, or the sound coming out of a small band-limited speaker
+in an acoustic environment. Either way, the result is a more period-accurate
+and pleasant listening experience, especially on headphones.</p>
+<p>Small-speaker filters are controlled by the following config parameters:</p>
+<div class="compact">
+<ul>
+<li><code>lpt_dac_filter</code></li>
+<li><code>pcspeaker_filter</code></li>
+<li><code>ps1audio_dac_filter</code></li>
+<li><code>ps1audio_filter</code></li>
+<li><code>tandy_dac_filter</code></li>
+<li><code>tandy_filter</code></li>
+</ul>
+</div>
+<h4 id="custom-filters">Custom filters<a class="headerlink" href="#custom-filters" title="Permanent link">¶</a></h4>
+<p>Advanced users can specify custom filter settings for any of the supported
+sound devices. You can specify either a high-pass filter, a low-pass filter,
+or both at the same time using the following format</p>
+<div class="highlight"><pre><span></span><code>TYPE ORDER FREQ [TYPE ORDER FREQ]
+</code></pre></div>
+<p>where <strong>TYPE</strong> can be <code>hpf</code> (high-pass) or <code>lpf</code> (low-pass), <strong>ORDER</strong> is the
+order of the filter from 1 to 16 (1<sup>st</sup> order results in a 6dB per octave slope,
+2<sup>nd</sup> order in a 12dB per octave slope, etc.), and <strong>FREQ</strong> is the filter’s
+cutoff frequency in Hz.</p>
+<p>For example, to use a 2<sup>nd</sup> order (12dB/oct) low-pass filter at 8 kHz for the
+Sound Blaster:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="na">sb_filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">lpf 2 8000</span>
+</code></pre></div>
+<p>To use a 3<sup>rd</sup> order (18dB/oct) high-pass filter at 120 Hz, and a 1<sup>st</sup> order
+(6dB/oct) low-pass filter at 6.5 kHz for the PC Speaker:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-3-1" id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="na">pcspeaker_filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">hpf 3 120 lfp 1 6500</span>
+</code></pre></div>
+<p>In addition to the sound devices mentioned above, you use custom filters even
+with devices that don’t filter the output in the original hardware (e.g. GUS,
+MT-32), and the FluidSynth virtual MIDI device via the following config
+parameters:</p>
+<div class="compact">
+<ul>
+<li><code>fsynth_filter</code></li>
+<li><code>gus_filter</code></li>
+<li><code>innovation_filter</code></li>
+<li><code>mt32_filter</code></li>
+</ul>
+</div>
+<h3 id="crossfeed">Crossfeed<a class="headerlink" href="#crossfeed" title="Permanent link">¶</a></h3>
+<p>Listening to audio material on headphones where certain sounds are only
+present in either the left or the right channel can be a rather distracting
+and unpleasant experience. This is most noticeable on certain Dual OPL game
+soundtracks and tracker music (e.g. MOD, XM, S3M, IT, etc.)</p>
+<p>The new crossfeed feature remedies that; by enabling <code>crossfeed</code> in the
+<code>[mixer]</code> section, a certain percentage of the left channel is mixed into the
+right, and vice versa. The default crossfeed strength is 40% which is a good
+general setting, but you can provide a custom percentage value as well (e.g.
+<code>crossfeed = 55</code>).</p>
+<p>The amount of crossfeed can be fine-tuned per individual channels via mixer
+commands; please type <code>MIXER /?</code> in the DOSBox prompt for further details.</p>
+<h3 id="reverb-and-chorus">Reverb and chorus<a class="headerlink" href="#reverb-and-chorus" title="Permanent link">¶</a></h3>
+<h4 id="reverb">Reverb<a class="headerlink" href="#reverb" title="Permanent link">¶</a></h4>
+<p>One of the most exciting new audio features is the ability to add reverb (the
+emulation of real acoustic spaces) and chorus effects to any mixer channel.
+This can add a lot of atmosphere to dry-sounding synth soundtracks (typically
+OPL music) and elevate them to a whole new level! Enabling reverb and chorus
+processing is especially useful for headphone-listening.</p>
+<p>The quickest way to enable the <strong>reverb effect</strong> globally is to put <code>reverb =
+on</code> in the <code>[mixer]</code> config section. This will add reverb to all synth
+channels (e.g. PC Speaker, OPL, CMS), and a lesser amount to digital audio
+channels (e.g. Sound Blaster, GUS). While the default setting works well in
+most games, it’s highly recommended to experiment with the five available
+reverb presets to find the optimal setting for each game:</p>
+<ul>
+<li>
+<p><code>tiny</code> simulates the sound of a small integrated speaker in a domestic room.
+  This preset is specifically tailored for small-speaker audio systems (PC
+  Speaker, Tandy, PS/1 Audio, and LPT DAC devices).</p>
+</li>
+<li>
+<p><code>small</code> adds a subtle sense of space; it’s best suited for games that use a
+  single synth channel (typically OPL) for both the music and the sound
+  effects.</p>
+</li>
+<li>
+<p><code>medium</code> is the default preset; it’s a middle-of-the-road setting that works
+  well with a wide variety of games.</p>
+</li>
+<li>
+<p><code>large</code> is a large hall-style reverb that is recommended for games that use
+  separate audio channels for music and digital audio (e.g. OPL audio and
+  Sound Blaster digital sound.)</p>
+</li>
+<li>
+<p><code>huge</code> is a stronger variant of the large hall preset which is ideal for
+  slower-paced, atmospheric music.</p>
+</li>
+</ul>
+<h4 id="chorus">Chorus<a class="headerlink" href="#chorus" title="Permanent link">¶</a></h4>
+<p>Another way to add a sense of space to the sound is by enabling the <strong>chorus
+effect</strong>. This adds stereo movement and increases the perceived stereo width,
+which is especially noticeable on purely mono signals on headphones (e.g. PC
+Speaker or OPL2 music). To enable it, just put <code>chorus = on</code> into the
+<code>[mixer]</code> config section, or select one of three predefined chorus strength
+presets, <code>light</code>, <code>normal</code> or <code>strong</code>.</p>
+<p>Similarly to crossfeed, per-channel reverb and chorus settings can be tweaked
+by mixer commands; please type <code>MIXER /?</code> in the DOSBox prompt for details.</p>
+<p><strong>Audio examples</strong></p>
+<p>Naturally, you can combine chorus and reverb, and it’s not only possible to do
+so, but highly recommended for achieving the best results! The below
+recordings showcase how crossfeed, reverb, chorus, and output stage filters
+can work in tandem to give old DOS game soundtracks a new life.</p>
+<p>The exact settings used for these recordings are documented
+<a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Audio-configuration-recommendations">on the wiki</a>,
+along with suggested audio configs for many other games. Make sure to check
+them out and experiment with the settings yourself! 😎 🔉 🎧</p>
+<figure>
+<video controls="controls" width="760">
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-alone-in-the-dark-intro/alone-in-the-dark-intro.webm" type="video/webm; codecs=vp9,opus"/>
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-alone-in-the-dark-intro/alone-in-the-dark-intro.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>Alone in the Dark (1992, floppy version) — introduction
+  </p>
+</figcaption>
+</figure>
+<div class="compact">
+<table>
+<thead>
+<tr>
+<th>Game</th>
+<th>Type</th>
+<th>Audio example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alone in the Dark<br/>(floppy version)</td>
+<td>OPL2</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Warcraft: Orcs &amp; Humans</td>
+<td>OPL3</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/warcraft.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Dungeon Master II:<br/>The Legend of Skullkeep</td>
+<td>Dual OPL2</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/dungeon-master-ii.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Ultima Underworld I: The Stygian Abyss</td>
+<td>Dual OPL2</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/ultima-underworld-i.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Elvira: Mistress of the Dark</td>
+<td>Dual OPL2</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/elvira.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Skate or Die!</td>
+<td>Tandy</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/skate-or-die.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Zak McKracken and the Alien Mindbenders</td>
+<td>Tandy</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/zak.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td>Budokan: The Martial Spirit</td>
+<td>CMS</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/budokan.mp3"> Your browser does not support the <code>audio</code> element </audio></td>
+</tr>
+<tr>
+<td>The Secret of Monkey Island</td>
+<td>CMS</td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/monkey-island.mp3"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="master-compressor">Master compressor<a class="headerlink" href="#master-compressor" title="Permanent link">¶</a></h3>
+<p>An auto-levelling dynamic range compressor has been introduced to the master
+channel to ensure that the audio output never gets distorted, no matter how
+high the volume levels are. This is on by default and is virtually transparent
+when the output is not driven into clipping. However, purists can disable it
+by setting <code>compressor</code> to <code>off</code>, and then ensure correct non-clipping output
+levels manually.</p>
+<h3 id="general-mixer-improvements">General mixer improvements<a class="headerlink" href="#general-mixer-improvements" title="Permanent link">¶</a></h3>
+<ul>
+<li>
+<p>The mixer now uses a full floating-point processing path internally, which
+  means you can no longer overload individual mixer channels into clipping by
+  using high per-channel volume settings. As long as the summed master output
+  is not clipping, it’s guaranteed that nothing else will.</p>
+</li>
+<li>
+<p>A fixed high-pass filter at 20 Hz has been introduced right before the final
+  output that gets rid of any DC-offset and subsonic rumble globally.</p>
+</li>
+<li>
+<p>The <code>MIXER</code> command has received an overhaul too. First of all, the status
+  output looks better, and the following improvements have been made:</p>
+<ul>
+<li>
+<p>Now you can set reverb, chorus, and crossfeed levels per mixer channel;
+  type <code>MIXER /?</code> in the DOSBox prompt for further details.</p>
+</li>
+<li>
+<p>The <code>FM</code> channel has been renamed to <code>OPL</code>.</p>
+</li>
+<li>
+<p>The <code>SPKR</code> channel has been renamed to <code>PCSPEAKER</code>.</p>
+</li>
+<li>
+<p>The sample rate column has been removed (it served no useful purpose,
+  and the displayed values were often technically correct but misleading).</p>
+</li>
+</ul>
+</li>
+<li>
+<p>For a high-level overview of the new mixer architecture, please refer to
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Audio-Mixer-Signal-Flow-Diagram">this diagram</a>.</p>
+</li>
+</ul>
+<h3 id="one-opl-mode-to-rule-them-all">“One OPL mode to rule them all” 💍<a class="headerlink" href="#one-opl-mode-to-rule-them-all" title="Permanent link">¶</a></h3>
+<p>NukedOPL has long been the default OPL mode in Staging. As it’s basically a
+bit-perfect emulation of the <a href="https://en.wikipedia.org/wiki/Yamaha_OPL#OPL3">Yamaha YMF262 OPL3 chip</a>,
+and it runs fast enough even on low-end hardware such as the Raspberry Pi 4,
+all other less accurate OPL emulation modes have been removed.</p>
+<h3 id="fluidsynth-configuration-changes">FluidSynth configuration changes<a class="headerlink" href="#fluidsynth-configuration-changes" title="Permanent link">¶</a></h3>
+<h4 id="fluidsynth-reverb-and-chorus">FluidSynth Reverb and Chorus<a class="headerlink" href="#fluidsynth-reverb-and-chorus" title="Permanent link">¶</a></h4>
+<p>Due to the introduction of the new mixer-level <a href="#ReverbandChorus">reverb and chorus
+effects</a>, the FluidSynth <code>reverb</code> and <code>chorus</code> config
+parameters have been renamed to <code>fsynth_reverb</code> and <code>fsynth_chorus</code>,
+respectively.</p>
+<p>To maintain backward compatibility with existing configurations, the
+FluidSynth reverb and chorus effects are enabled by default, so all your
+SoundFonts will sound just like in previous DOSBox versions. If you enable the
+mixer-level reverb (or chorus) as well (e.g. by putting <code>reverb = on</code> in the
+<code>[mixer]</code> section), you would get a <em>second</em> round of reverb (or chorus)
+processing on the FluidSynth output. This is by design as it allows users the
+greatest level of control over customising SoundFonts (e.g. some would sound
+best with the FluidSynth reverb only, some with both, etc.)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the SF2 format the reverb and chorus amounts are specified on a
+per-instrument basis, while the mixer-level effects are applied “globally”
+to all instruments in the summed FluidSynth output. Therefore, what works
+best really depends on the particular SoundFont in question and on
+individual user preference (see <a href="https://github.com/dosbox-staging/dosbox-staging/pull/1814">this
+discussion</a>
+for further technical details).</p>
+</div>
+<h4 id="volume-scaling">Volume Scaling<a class="headerlink" href="#volume-scaling" title="Permanent link">¶</a></h4>
+<p>Previously, it was possible to specify a percentage after the SoundFont’s name
+in the config to adjust its volume (e.g. <code>soundfont = way_too_loud.sf2 30</code>).
+This was introduced as a workaround for certain loud SoundFonts that tended to
+clip the mixer channel internally.</p>
+<p>With the new floating-pointing mixer signal path, it’s no longer possible to
+drive any of the mixer channels into clipping, therefore this workaround has
+been deprecated. Please use standard mixer commands to lower the volume of the
+<code>FSYNTH</code> channel if you wish to do so.</p>
+<h3 id="ripas-pc-speaker-patch">ripa’s PC speaker patch<a class="headerlink" href="#ripas-pc-speaker-patch" title="Permanent link">¶</a></h3>
+<p>We’ve integrated ripa’s impulse-model <a href="https://www.vogons.org/viewtopic.php?f=41&amp;t=23371">PC speaker
+patch</a> alongside DOSBox’s
+existing (discrete-model) PC speaker implementation, which is still the
+default.</p>
+<p>To use it, set the <code>pcspeaker</code> config setting to <code>impulse</code> (or go back to
+default with <code>discrete</code>).</p>
+<p><em>James-F</em> and <em>VileRancour</em> have mentioned in the linked thread that it
+generally improves the accuracy of square-wave effects, such as in <strong>Commander
+Keen</strong> and <strong>Duke Nukem</strong> (2D). This patch also can produce sounds when none
+previously existed, such as in <strong>Wizball</strong>, as noted by <em>ripsaw8080</em>.</p>
+<p>For example, here’s Wizball using the settings below:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-4-1" id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="k">[mixer]</span>
+<a href="#__codelineno-4-2" id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="na">rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">32000</span>
+<a href="#__codelineno-4-3" id="__codelineno-4-3" name="__codelineno-4-3"></a>
+<a href="#__codelineno-4-4" id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="k">[speaker]</span>
+<a href="#__codelineno-4-5" id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="na">pcspeaker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">discrete</span>
+</code></pre></div>
+<figure>
+<video controls="controls" width="760">
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-pcspeaker-impulse-wizball/pcspeaker-impulse-wizball.webm" type="video/webm; codecs=vp9,opus"/>
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-pcspeaker-impulse-wizball/pcspeaker-impulse-wizball.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>Wizball (1987) — using <code>discrete</code> PC speaker emulation
+  </p>
+</figcaption>
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are some audible regressions and harmonics that still exist in some
+games, so that’s why this is an alternative and not the default.</p>
+</div>
+<h3 id="parallel-port-dac-models-disney-covox-and-stereo-on-1">Parallel port DAC models: Disney, Covox, and Stereo-On-1<a class="headerlink" href="#parallel-port-dac-models-disney-covox-and-stereo-on-1" title="Permanent link">¶</a></h3>
+<p>Those familiar with DOSBox know that these three devices are emulated with the
+universal <code>disney = true</code> setting.</p>
+<p>Like <code>sbtype</code>, we wanted the model of LPT DAC to be configurable, and so
+Staging’s deprecated the <code>disney</code> setting in favour of <code>lpt_dac</code> that takes
+any of the following:</p>
+<ul>
+<li><code>disney</code>, for the Disney Sound Source</li>
+<li><code>covox</code>, for the Covox Speech Thing</li>
+<li><code>ston1</code>, for the Stereo-on-1 DAC device</li>
+<li><code>off/none</code>, to disable the DAC (default)</li>
+</ul>
+<p>This is paired with a corresponding filter setting, <code>lpt_dac_filter</code>, which
+approximates how the original device sounded. This means that the Disney Sound
+Source (which included a little speaker inside it) will sound a lot like you
+might remember.</p>
+<div class="compact">
+<table>
+<thead>
+<tr>
+<th><code>lpt_dac</code></th>
+<th>Examples (ModPlay Pro &amp; Star Control II’s 8-bit Pkunk MOD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>disney</code></td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-parallel-port-dac/modplay-pkunk-lpt-dac-disney.flac"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td><code>covox</code></td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-parallel-port-dac/modplay-pkunk-lpt-dac-covox.flac"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+<tr>
+<td><code>ston1</code></td>
+<td><audio controls="" src="https://archive.org/download/dosbox-staging-v0.79.0-parallel-port-dac/modplay-pkunk-lpt-dac-ston1.flac"> Your browser does not support the <code>audio</code> element.</audio></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Like the other audio filters settings, the <code>lpt_dac_filter</code> can be toggled on,
+off, or customised.</p>
+<h3 id="audio-mute-and-pause">Audio mute and pause<a class="headerlink" href="#audio-mute-and-pause" title="Permanent link">¶</a></h3>
+<p>The audio stream can now be manually muted with <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f8">F8</kbd></span> (or <span class="keys"><kbd class="key-command">Cmd</kbd><span>+</span><kbd class="key-f8">F8</kbd></span> on
+macOS).</p>
+<p>You can also mute the audio automatically when DOSBox Staging goes to the
+background with this config setting:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-5-1" id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="k">[sdl]</span>
+<a href="#__codelineno-5-2" id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="na">mute_when_inactive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">true</span>
+</code></pre></div>
+<p>Or you can pause emulation entirely when in the background with:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-6-1" id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="k">[sdl]</span>
+<a href="#__codelineno-6-2" id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="na">pause_when_inactive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">true</span>
+</code></pre></div>
+<h2 id="graphical-improvements">Graphical improvements<a class="headerlink" href="#graphical-improvements" title="Permanent link">¶</a></h2>
+<h3 id="shader-reload-shortcut">Shader reload shortcut<a class="headerlink" href="#shader-reload-shortcut" title="Permanent link">¶</a></h3>
+<p>As DOSBox Staging currently lacks a shader preset system, tweaking shader
+parameters can only be accomplished by making changes to the shader source
+files themselves. Previously, you had to restart DOSBox to see the effects of
+such changes, which made fine-tuning shaders quite cumbersome, to say the
+least.</p>
+<p>Now you can just use the <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f2">F2</kbd></span> shortcut (<span class="keys"><kbd class="key-command">Cmd</kbd><span>+</span><kbd class="key-f2">F2</kbd></span> on macOS) to reload
+the current shader at any time. Progress! 😎</p>
+<h3 id="cga-palette-override">CGA palette override<a class="headerlink" href="#cga-palette-override" title="Permanent link">¶</a></h3>
+<p>Now it is possible to override the default, canonical interpretation of the
+16-colour CGA/EGA RGBI palette. The feature overrides the CGA colours in any
+CGA/EGA-like mode, so it even works in CGA/EGA modes with an emulated VGA or
+TGA (Tandy) graphics adapter.</p>
+<p>Several presets have been included (e.g. Amiga and Atari ST colours for Sierra
+games, and various CGA/EGA monitor emulations), and you can specify custom
+palettes as well. Make sure to check out the description of the <code>cga_colors</code>
+config parameter for the list of available presets (you can read more about
+them
+<a href="https://github.com/dosbox-staging/dosbox-staging/pull/1794">here</a>).</p>
+<p><strong>Defender of the Crown</strong></p>
+<p><code>tandy-warm</code> emulates the colours as they appear on an actual Tandy monitor,
+which results in more subdued and pleasant colours. This is especially
+apparent on the greens.</p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/dotc-default.png"><img alt="Defender of the Crown (default)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/dotc-default.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = default</code>
+</p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/dotc-tandy-warm.png"><img alt="Defender of the Crown (tandy-warm)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/dotc-tandy-warm.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = tandy-warm</code>
+</p>
+</figcaption>
+</figure>
+</div>
+<p><strong>Gold Rush</strong></p>
+<p>The Amiga/Atari ST ports of Sierra AGI games feature a tweaked CGA palette
+with improved skin tones and sky colours.</p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/gold-rush-default.png"><img alt="Gold Rush! (default)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/gold-rush-default.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = default</code>
+</p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/gold-rush-agi-amigaish.png"><img alt="Gold Rush! (agi-amigaish)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/gold-rush-agi-amigaish.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = agi-amigaish</code>
+</p>
+</figcaption>
+</figure>
+</div>
+<p><strong>Zak McKracken and the Alien Mindbenders</strong></p>
+<p>Now you can play the PC version of this classic adventure with Tandy sound and
+Commodore 64 colours!</p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/zak-default.png"><img alt="Zak McKracken (default)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/zak-default.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = default</code>
+</p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/zak-colodore.png"><img alt="Zak McKracken (colodore)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-cga-palette-overrides/zak-colodore.png"/></a></p>
+<figcaption>
+<p><code>cga_colors = colodore</code>
+</p>
+</figcaption>
+</figure>
+</div>
+<h3 id="scaled-image-quality-improvements">Scaled image quality improvements<a class="headerlink" href="#scaled-image-quality-improvements" title="Permanent link">¶</a></h3>
+<p>When the image is scaled by non-integer ratios (e.g. when aspect correction is
+enabled with the default <code>sharp</code> OpenGL shader), previously the interpolation
+was performed in a gamma-incorrect way, leading to various unwanted artifacts.
+These were most noticeable on checkerboard dither patterns (used frequently in
+EGA games), appearing as interference (moiré) patterns, and on high-contrast
+antialiased text (e.g. regular black text on white background appeared bold).</p>
+<div class="admonition warning">
+<p class="admonition-title">macOS notes</p>
+<p>All Mac browsers tend to display the below images with incorrect gamma on
+the built-in MacBook displays, which makes the “bad” images look less
+wrong, and there are slight interference patterns on the “good” images.
+Please download the images and view them in the Preview app instead, which
+displays them correctly.</p>
+</div>
+<p><strong>Time Quest</strong></p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/timequest-good.png"><img alt="Timequest (good)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/timequest-good.png"/></a></p>
+<figcaption>
+<p>Good
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/timequest-bad.png"><img alt="Timequest (bad)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/timequest-bad.png"/></a></p>
+<figcaption>
+<p>Bad
+  </p>
+</figcaption>
+</figure>
+</div>
+<p><strong>Space Quest III: The Pirates of Pestulon</strong></p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/sq3-good.png"><img alt="Space Quest III (good)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/sq3-good.png"/></a></p>
+<figcaption>
+<p>Good
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/sq3-bad.png"><img alt="Space Quest III (bad)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/sq3-bad.png"/></a></p>
+<figcaption>
+<p>Bad
+  </p>
+</figcaption>
+</figure>
+</div>
+<p><strong>Windwalker</strong></p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/windwalker-good.png"><img alt="Windwalker (good)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/windwalker-good.png"/></a></p>
+<figcaption>
+<p>Good
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/windwalker-bad.png"><img alt="Windwalker (bad)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-image-scaling-improvements/windwalker-bad.png"/></a></p>
+<figcaption>
+<p>Bad
+  </p>
+</figcaption>
+</figure>
+</div>
+<h3 id="high-dpi-on-macos">High DPI on macOS<a class="headerlink" href="#high-dpi-on-macos" title="Permanent link">¶</a></h3>
+<p>The backstory: DOSBox Staging uses OpenGL output with the sharp bilinear
+scaling shader to keep the picture crisp no matter how big or small the image
+is, and minimise blurring on pixel transitions.</p>
+<p>Due to the way macOS handles DPI scaling, the image was drawn at a much lower
+resolution, usually just a quarter of the window size. Then it was stretched
+by the system, producing an unpleasantly mushy presentation. But we want our
+pixels to be so sharp they could cut one’s eyes <img alt="😎" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f60e.svg" title=":sunglasses:"/> <img alt="🗡" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f5e1.svg" title=":dagger:"/></p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-macos-high-dpi-support/win31-non-hidpi.png"><img alt="DOSBox Staging on macOS without high DPI support" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-macos-high-dpi-support/win31-non-hidpi.png"/></a></p>
+<figcaption>
+<p>Without high DPI support
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-macos-high-dpi-support/win31-hidpi.png"><img alt="DOSBox Staging on macOS with high DPI support" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-macos-high-dpi-support/win31-hidpi.png"/></a></p>
+<figcaption>
+<p>With high DPI support
+  </p>
+</figcaption>
+</figure>
+</div>
+<p>Now DOSBox Staging can handle high DPI displays, be it Retina or not, so you
+and shaders alike can see all the (physical) pixels.</p>
+<p>Please note that this is currently experimental: only macOS is currently
+supported, and we haven’t thoroughly tested multi-display setups. Please
+report any weird behaviour! Support for Windows will come in the future, and
+for Linux, it is still uncertain. Also note that due to the way rendering is
+currently implemented, you may observe lowered performance on higher
+resolution displays, especially when running off integrated graphics. This
+might be remedied in the future as well.</p>
+<h3 id="window-transparency-support">Window transparency support<a class="headerlink" href="#window-transparency-support" title="Permanent link">¶</a></h3>
+<p>There might be situations where you want to place the DOSBox Staging window on
+top of another window while seeing both windows at the same time. Indeed, you
+can now set the DOSBox Staging window as transparent, with a customised level
+of window transparency, so that you can see the background window as well.
+There is a new config option <code>transparency</code> for this, whose valid values are
+between <code>0</code> (no transparency; default) to <code>90</code> (high transparency).</p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-transparent-window-support/transparent-window.png"><img alt="Transparent window" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-transparent-window-support/transparent-window.png"/></a></p>
+<h3 id="frame-presentation-modes">Frame presentation modes<a class="headerlink" href="#frame-presentation-modes" title="Permanent link">¶</a></h3>
+<p>DOSBox presents frames when new content is available, which means that
+sometimes the effective frame rate can vary between 0 FPS (if the screen
+content isn’t changing) and as fast as the DOS vertical refresh (vblank) rate
+(typically up to ~70 Hz). We’ll call this presentation mode <strong>Variable Frame
+Rate</strong> or <strong>VFR</strong>.</p>
+<p>In addition to VFR, DOSBox Staging supports a <strong>Constant Frame Rate (CFR)</strong>
+presentation mode, which presents a constant frame rate defined by the
+emulated DOS rate, as well as variations on both:</p>
+<ul>
+<li>
+<p><strong>Synced CFR</strong>, which presents a constant frame rate but is synchronised
+  with the host’s refresh rate. This presents only the most recently updated
+  frame when the DOS rate exceeds the host rate.</p>
+</li>
+<li>
+<p><strong>Throttled VFR</strong>, which presents a variable frame rate up to the DOS rate
+  throttled to the display’s rate. This presents only the most recently
+  updated frame when the DOS rate exceeds the host rate.</p>
+</li>
+</ul>
+<p>By default, DOSBox Staging inspects runtime conditions and picks the optimal
+presentation mode.</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-synced-cfr-earthworm-jim/synced-cfr-earthworm-jim.png"><img alt="Earthworm Jim (synced CFR)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-synced-cfr-earthworm-jim/synced-cfr-earthworm-jim.png"/></a></p>
+<figcaption>
+<p>Synced CFR mode selected due to vsync-enforced video drivers
+  </p>
+</figcaption>
+</figure>
+<p>Although typically not needed, power users might be interested in forcing a
+given mode or rate, which can be done using the following config settings
+(which includes detailed descriptions in the conf):</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-7-1" id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="k">[sdl]</span>
+<a href="#__codelineno-7-2" id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="na">presentation_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">auto | cfr | vfr</span>
+<a href="#__codelineno-7-3" id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="na">host_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">auto | sdi | vrr | custom-rate</span>
+<a href="#__codelineno-7-4" id="__codelineno-7-4" name="__codelineno-7-4"></a>
+<a href="#__codelineno-7-5" id="__codelineno-7-5" name="__codelineno-7-5"></a><span class="k">[dosbox]</span>
+<a href="#__codelineno-7-6" id="__codelineno-7-6" name="__codelineno-7-6"></a><span class="na">dos_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">default | host | custom-rate</span>
+</code></pre></div>
+<h2 id="dos-shell-improvements">DOS shell improvements<a class="headerlink" href="#dos-shell-improvements" title="Permanent link">¶</a></h2>
+<h3 id="piping-from-the-dos-prompt-or-batch-files">Piping from the DOS prompt or batch files<a class="headerlink" href="#piping-from-the-dos-prompt-or-batch-files" title="Permanent link">¶</a></h3>
+<p>DOSBox did not support the piping operation previously, but DOSBox Staging now
+brings piping support as how it has worked in DOS and most other operating
+systems. This allows two or more commands to communicate by passing the output
+text of one command to another as its input text. For example, commands like
+<code>ECHO Y | CHOICE</code> will work, so that the <code>Y</code> option will be passed as the
+input of <code>CHOICE</code> command. Chained piping is also supported, such as <code>DIR |
+SORT | MORE</code> for displaying sorted directory output one screen at a time
+(provided that you have the <code>SORT</code> and <code>MORE</code> commands from MS-DOS or FreeDOS
+in your path). If the current directory and <code>C:\</code> are both read-only, the
+environment variable <code>%TEMP%</code> (or <code>%TMP%</code>) needs to be set within DOS pointing
+to a writable directory so that piping will work properly (e.g. <code>SET
+TEMP=C:\TEMP</code>).</p>
+<h3 id="file-attribute-support-and-attrib-command">File attribute support and ATTRIB command<a class="headerlink" href="#file-attribute-support-and-attrib-command" title="Permanent link">¶</a></h3>
+<p>File attributes contain information about how the files should be used, and in
+DOS these correspond to Archive (<code>A</code>), Read-only (<code>R</code>), Hidden (<code>H</code>), and
+System (<code>S</code>) attributes. DOSBox Staging now adds support for file attributes
+through <code>ATTRIB</code> command (type <code>ATTRIB /?</code> for more information about this
+command) or through DOS API that accesses to file attributes. For example,
+some game installers and applications make use of file attributes. All file
+attributes are currently supported except for system and hidden attributes on
+mounted local drives for non-Windows platforms.</p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-improved-attrib-command/attrib-help.png"><img alt="ATTRIB command help" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-improved-attrib-command/attrib-help.png"/></a></p>
+<h3 id="default-choices-for-the-choice-command">Default choices for the CHOICE command<a class="headerlink" href="#default-choices-for-the-choice-command" title="Permanent link">¶</a></h3>
+<p>The <code>CHOICE</code> command allows you to choose from a list of options, but
+sometimes you want to have some default choice if no selection is made within
+the specific time period. DOSBox Staging now allows you to do this, by
+specifying the <code>/T</code> option which includes a default choice and the time period
+in seconds. For example, <code>CHOICE /C:ABC /T:B,2</code> will default to the choice <code>B</code>
+(among <code>A</code>, <code>B</code>, and <code>C</code>) if no key press is made within 2 seconds.</p>
+<h2 id="mount-improvements">Mount improvements<a class="headerlink" href="#mount-improvements" title="Permanent link">¶</a></h2>
+<h3 id="physical-cd-rom-mount-support">Physical CD-ROM mount support<a class="headerlink" href="#physical-cd-rom-mount-support" title="Permanent link">¶</a></h3>
+<p>Mounting physical CDs is now (re-)implemented in DOSBox Staging for better
+compatibility with games like <strong>Under a Killing Moon</strong>, <strong>System Shock</strong>, and
+<strong>The Pandora Directive</strong>. The feature is supported in DOSBox SVN but was
+forced to be dropped from DOSBox Staging earlier during the SDL2 migration
+process. We’ve brought it back by using the SDL1 CD support code as an
+external library, plus restoring the main SDL CD interface from DOSBox.</p>
+<p>To use the feature, execute the command <code>mount -cd</code> to list all CD drives and
+their numbers, and use <code>-usecd NUMBER</code> parameter to specify a CD drive
+<code>NUMBER</code>, just like you would do in DOSBox SVN. Playing CD audio tracks from
+physical discs is also supported in Windows as with DOSBox SVN.</p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-mount-improvements/mount-cd.png"><img alt="Mount support for Physical CD" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-mount-improvements/mount-cd.png"/></a></p>
+<h3 id="read-only-disk-image-mount-support">Read-only disk image mount support<a class="headerlink" href="#read-only-disk-image-mount-support" title="Permanent link">¶</a></h3>
+<p>You might have encountered the problem previously that you could not mount
+write-protected disk images, which happened simply because DOSBox Staging
+required write access to mount disk images.</p>
+<p>Sometimes the user may also want to mount a disk image in a read-only manner
+(so that the content in the disk image will not be changed inside the
+emulator), even if the disk image itself is not write-protected. We have
+realised that in either case the requirement for write access is not needed
+for mounting disk images, so we have added support for mounting them in a
+read-only manner, either when the disk image files are read-only or when the
+<code>-ro</code> flag is specified by the users.</p>
+<h3 id="z-drive-customisation-and-directory-support">Z-drive customisation and directory support<a class="headerlink" href="#z-drive-customisation-and-directory-support" title="Permanent link">¶</a></h3>
+<p>The internal Z drive that is automatically mounted when you launch DOSBox
+Staging is now fully customisable, allowing users to add their own files or
+programs to the drive by putting them in the <code>drivez</code> subdirectory inside the
+DOSBox Staging program directory. Files already existing on the Z drive will
+be replaced by the user-provided ones, e.g. you can use your own <code>MEM.COM</code> or
+<code>KEYB.COM</code> commands instead of the default ones on the Z drive. Moreover,
+support for one-level subdirectories has been added, allowing users to better
+organise their files, resulting in a cleaner-looking Z drive. The drive’s
+contents can be refreshed via the <code>RESCAN</code> command to reflect any changes made
+to it at the host OS level.</p>
+<h3 id="imgmount-wildcard-support">IMGMOUNT wildcard support<a class="headerlink" href="#imgmount-wildcard-support" title="Permanent link">¶</a></h3>
+<p>The <code>IMGMOUNT</code> command allows you to mount disk or CD images, but sometimes
+you may want to mount multiple images to a single drive, swappable via a
+keyboard shortcut. Previously you had to specify the names of the all the
+image files one by one, even if they have some patterns in common (like
+<code>DISK1.IMG</code>, <code>DISK2.IMG</code>, <code>DISK3.IMG</code>, etc). <code>IMGMOUNT</code> command now supports
+wildcards for mounting image files, so that you can just specify a file
+pattern that matches all the image files that you want to include. For
+example, the command <code>IMGMOUNT a d:\*.img -t floppy</code> will mount all image
+files with the IMG extension on <code>D:\</code> as floppy images.</p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-mount-improvements/imgmount-wildcard.png"><img alt="Mount images with wildcard" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-mount-improvements/imgmount-wildcard.png"/></a></p>
+<h3 id="automount-of-resource-drives">Automount of resource drives<a class="headerlink" href="#automount-of-resource-drives" title="Permanent link">¶</a></h3>
+<p>Directories can now be automounted, provided the <code>automount</code> config setting is
+enabled (which it is, by default).</p>
+<p>These automount directories are single-letter directories, <code>a</code> through <code>y</code>
+representing the mounted drive letter (where <code>z</code> is reserved for DOSBox’s
+drive) placed inside a local <code>drives/</code> directory, relative to the startup
+location. This <code>drives/</code> directory can also be placed in a scanned resource
+location, like your DOSBox config directory or the release package’s
+<code>resources/</code> area.</p>
+<p>Each drive can be customised with an accompanying <code>&lt;letter&gt;.conf</code> to define
+its mount <code>type</code>, <code>label</code>, and <code>path</code>. For example, to mount a local
+<code>drives/d/</code> directory as a <code>D:</code> CD-ROM with the label <code>SIERRA</code>, the
+accompanying <code>d.conf</code> would contain:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-8-1" id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="k">[drive]</span>
+<a href="#__codelineno-8-2" id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="na">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">cdrom</span>
+<a href="#__codelineno-8-3" id="__codelineno-8-3" name="__codelineno-8-3"></a><span class="na">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">SIERRA</span>
+</code></pre></div>
+<p>A bundled <code>Y:</code> automount is provided in the release’s <code>resources/</code> directory
+that bundles a couple FreeDOS 3<sup>rd</sup> party tools (<code>XCOPY.COM</code>, <code>DELTREE.COM</code>,
+<code>DEBUG.COM</code>) along with an accompanying <code>y.conf</code> to add it to the PATH.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This feature doesn’t yet support image mounts, such as <code>.img</code>, <code>.bin/cue</code>,
+or <code>.iso</code>.</p>
+</div>
+<h2 id="localisation-improvements">Localisation improvements<a class="headerlink" href="#localisation-improvements" title="Permanent link">¶</a></h2>
+<h3 id="code-pages-and-keyboard-layouts">Code pages and keyboard layouts<a class="headerlink" href="#code-pages-and-keyboard-layouts" title="Permanent link">¶</a></h3>
+<p>The 20-year-old FreeDOS code pages (screen fonts) and keyboard layouts were
+updated to the latest versions, offering countless new definitions for use.
+See the full list in the following documentation:</p>
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/blob/1ae448a58ef03bf9d5b69a3a9017df07ac6029f6/contrib/resources/freedos-cpi/DOC/CODEPAGE.TXT">List of available code pages</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/blob/1ae448a58ef03bf9d5b69a3a9017df07ac6029f6/contrib/resources/freedos-keyboard/DOC/LAYOUTS.TXT">List of available keyboard layouts</a></li>
+</ul>
+<p>Some notable examples:</p>
+<ul>
+<li>
+<p><code>KEYB bg 3021</code> — sets a Bulgarian keyboard layout and code page, with
+  Cyrillic characters encoded according to the MIK standard</p>
+</li>
+<li>
+<p><code>KEYB cz489 867</code> — a so-called programmer keyboard layout (national
+  characters available with <span class="keys"><kbd class="key-right-alt">Right Alt</kbd><span>+</span><kbd class="key-0">0</kbd></span> - <span class="keys"><kbd class="key-9">9</kbd></span>) for Czech and Slovak
+  languages, with Kamenický character encoding - which was more popular than
+  code page 852</p>
+</li>
+<li>
+<p><code>KEYB de 858</code> — German keyboard, code page with EUR currency symbol</p>
+</li>
+<li>
+<p><code>KEYB hu 3845</code> — Hungarian keyboard, CWI-2 character encoding</p>
+</li>
+<li>
+<p><code>KEYB pl 668</code> — code page specially designed for the Polish language;
+  places national characters on the same positions as standard code page 852
+  (so it is compatible with current software and text documents), but
+  preserves more table drawing symbols</p>
+</li>
+<li>
+<p><code>KEYB pl 667</code> — Mazovia encoding for Polish language, used mainly by older
+  business software</p>
+</li>
+</ul>
+<h3 id="country-support-for-different-date-time-and-decimal-formats">Country support for different date, time, and decimal formats<a class="headerlink" href="#country-support-for-different-date-time-and-decimal-formats" title="Permanent link">¶</a></h3>
+<p>The display formats for dates, times, and decimals were previously fixed to
+the United States style, but this is no longer the case with this new version.
+Indeed, DOSBox Staging can now display date, time, and decimal formats
+according to the system locale and country settings, and for example, in the
+Canadian French locale (country code 2) the date and time will be displayed as
+<code>2002-10-01 12:34</code> instead of <code>10-01-2002 12:34p</code> as displayed in the United
+States locale (country code 1). There is a new config option <code>country</code> which
+allows you to manually specify the country code for the date, time, and
+decimal formats.</p>
+<div class="image-grid">
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-improved-localisation-support/canadian-french.png"><img alt="DIR command (CF)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-improved-localisation-support/canadian-french.png"/></a></p>
+<figcaption>
+<p>Canadian French locale
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-improved-localisation-support/united-states.png"><img alt="DIR command (US)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-improved-localisation-support/united-states.png"/></a></p>
+<figcaption>
+<p>United States locale
+  </p>
+</figcaption>
+</figure>
+</div>
+<h3 id="local-language-and-keyboard-layout-detection-improvements">Local language and keyboard layout detection improvements<a class="headerlink" href="#local-language-and-keyboard-layout-detection-improvements" title="Permanent link">¶</a></h3>
+<p>On macOS and Windows systems, local languages now are more robustly detected
+and applied.</p>
+<p>Note that these can still be manually set using the <code>language</code> and
+<code>keyboardlayout</code> config settings when needed, or via the <code>KEYB</code> command as
+mentioned above.</p>
+<h2 id="input-improvements">Input improvements<a class="headerlink" href="#input-improvements" title="Permanent link">¶</a></h2>
+<h3 id="mouse-wheel-emulation">Mouse-wheel emulation<a class="headerlink" href="#mouse-wheel-emulation" title="Permanent link">¶</a></h3>
+<p>The built-in mouse driver now provides a wheel support for application aware
+of CuteMouse extensions; examples include <strong>Necromancer’s DOS Navigator</strong> and
+<strong>Mpxplay</strong>.</p>
+<p>The original CuteMouse driver version 2.1 is also able to use the PS/2 mouse
+wheel, just start it with <code>CTMOUSE /o</code>.</p>
+<h3 id="serial-mice-emulation">Serial mice emulation<a class="headerlink" href="#serial-mice-emulation" title="Permanent link">¶</a></h3>
+<p>Numerous serial (COM port) mice are now emulated:</p>
+<ul>
+<li>original Microsoft mouse with 2 buttons</li>
+<li>Logitech mouse, with 3 buttons</li>
+<li>wheel mouse with 3 buttons</li>
+<li>Mouse Systems mouse (old mouse type, not compatible with the ones listed
+  above), with 3 buttons</li>
+</ul>
+<p>To enable serial mouse, user the <code>SERIAL 1 mouse</code> command (this will attach it
+to the COM1 port), or edit the <code>[serial]</code> section of the configuration file.
+By default, DOSBox Staging tries to determine what kind of mouse the game or
+application expects.</p>
+<p>With serial mouse emulation, Windows 1.01 is finally usable!</p>
+<h3 id="windows-31-seamless-mouse-integration">Windows 3.1 seamless mouse integration<a class="headerlink" href="#windows-31-seamless-mouse-integration" title="Permanent link">¶</a></h3>
+<p>It is now possible to have a seamless mouse integration using one of the
+following 3<sup>rd</sup> party VMware-compatible Windows 3.1 mouse drivers:</p>
+<ul>
+<li>
+<p><a href="https://git.javispedro.com/cgit/vbados.git/about/">VBADOS</a> by <em>javispedro</em>
+  — this one requires a corresponding DOS mouse driver to be started; this
+  driver also provides seamless mouse integration for a real DOS if booted
+  inside DOSBox Staging</p>
+</li>
+<li>
+<p><a href="https://github.com/NattyNarwhal/vmwmouse">vmwmouse</a> by <em>NattyNarwhal</em> —
+  does not require any specific DOS driver and has experimental support for
+  mouse wheel, but current version 0.1 has stability problems</p>
+</li>
+</ul>
+<p>For now, only the mouse is supported (no VMware directory sharing, etc.), only
+using VMware protocol (no VirtualBox-only drivers). Windows 9x VMware mouse
+driver is not supported.</p>
+<h3 id="joystick-calibration-hotkeys">Joystick calibration hotkeys<a class="headerlink" href="#joystick-calibration-hotkeys" title="Permanent link">¶</a></h3>
+<p>Most DOS games that offer analog joystick control include some form of
+calibration. However, some games have poor or limited calibration resulting in
+the joystick’s position drifting or being offset, despite calibration
+attempts.</p>
+<p>To compensate for these rare cases, DOSBox Staging lets you adjust the
+joystick’s X and Y position parameters in real time by enabling the
+<code>use_joy_calibration_hotkeys</code> setting in the <code>[joystick]</code> config section.</p>
+<p>Once activated, you can tap <span class="keys"><kbd class="key-control">Ctrl</kbd></span> + <em>arrow-keys</em> or <span class="keys"><kbd class="key-alt">Alt</kbd></span> + <em>arrow-keys</em>
+to adjust either the joystick’s scalar multiplier or absolute offset position,
+respectively. These let you “counterbalance” calibration issues in real time.</p>
+<p>Each tap of the hotkeys will log the calibration values for the given axis.
+For example:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-9-1" id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="na">x_calibration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">0.576211,0.02</span>
+<a href="#__codelineno-9-2" id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="na">y_calibration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">0.5474,-0.005</span>
+</code></pre></div>
+<p>Once you’ve found the optimal settings for a game, the logged calibration
+values can be placed in the game’s local config file (so the setting are only
+active for the affected game). Using the above as an example:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-10-1" id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="k">[joystick]</span>
+<a href="#__codelineno-10-2" id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="na">use_joy_calibration_hotkeys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">false</span>
+<a href="#__codelineno-10-3" id="__codelineno-10-3" name="__codelineno-10-3"></a><span class="na">joy_x_calibration</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s">0.576211,0.02</span>
+<a href="#__codelineno-10-4" id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="na">joy_y_calibration</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s">0.5474,-0.005</span>
+</code></pre></div>
+<p>Note that you can disable the calibration hotkeys once you’ve found settings
+that work for a problematic game.</p>
+<p>Here’s a video showing how the calibration hotkeys “pull” the joystick in
+various directions:</p>
+<figure>
+<video controls="controls" width="760">
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-joystick-calibration-hotkey-demo/joystick-calibration-hotkey-demo.webm" type="video/webm; codecs=vp9,opus"/>
+<source src="https://archive.org/download/dosbox-staging-v0.79.0-joystick-calibration-hotkey-demo/joystick-calibration-hotkey-demo.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>The new joystick calibration feature in action
+  </p>
+</figcaption>
+</figure>
+<h2 id="general-improvements">General improvements<a class="headerlink" href="#general-improvements" title="Permanent link">¶</a></h2>
+<h3 id="command-line-setting-of-configuration-options">Command-line setting of configuration options<a class="headerlink" href="#command-line-setting-of-configuration-options" title="Permanent link">¶</a></h3>
+<p>Some people may want to temporarily run DOSBox Staging with specified config
+option(s), and in this new version you can do this with the new <code>-set</code>
+command-line option when launching DOSBox Staging, instead of having to modify
+the configuration file before you start DOSBox Staging.</p>
+<p>For example, the user can temporarily run DOSBox Staging with the EMS memory
+disabled with the command line <code>dosbox -set ems=false</code>, overriding the setting
+in the configuration file.</p>
+<p>The <code>-set</code> option can be specified multiple times for different config
+options, similar to the <code>-c</code> option which can be used multiple times to run
+multiple commands after DOSBox Staging starts.</p>
+<h3 id="windows-installer-for-windows-users">Windows installer for Windows users<a class="headerlink" href="#windows-installer-for-windows-users" title="Permanent link">¶</a></h3>
+<p>Previously, DOSBox Staging was only available as portable zip packages for
+Windows users, but this has changed in this new version—as a Windows user
+you can now install DOSBox Staging more easily with the installer, which is
+especially recommended for new and first-time users. When the installer is
+used, the installation process will be automated while allowing you to change
+certain things like the installation folder, and you will be able to launch
+DOSBox Staging as soon as the installation ends. Shell context menus can also
+be automatically added for a faster launch of DOSBox Staging from Windows
+Explorer.</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-windows-installer/windows-installer-start.png"><img alt="Windows installer welome page" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-windows-installer/windows-installer-start.png"/></a></p>
+<figcaption>
+<p>Windows installer welome page
+  </p>
+</figcaption>
+</figure>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-windows-installer/windows-icons-after-installation.png"><img alt="Icons after installation" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-windows-installer/windows-icons-after-installation.png"/></a></p>
+<figcaption>
+<p>Icons after installation
+  </p>
+</figcaption>
+</figure>
+<h3 id="configurable-modem-connect-speeds">Configurable modem connect speeds<a class="headerlink" href="#configurable-modem-connect-speeds" title="Permanent link">¶</a></h3>
+<p>The soft-modem’s reported connect speed can be customised using the serial
+port’s <code>baudrate</code> setting. for example:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-11-1" id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="na">serial1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">modem baudrate:2400</span>
+</code></pre></div>
+<p>Although this doesn’t change the underlying baud rate, it can help satisfy old
+modem software if it’s unable to handle (or parse) the larger connect values.</p>
+<h3 id="handling-options-for-memory-faults-in-buggy-games">Handling options for memory faults in buggy games<a class="headerlink" href="#handling-options-for-memory-faults-in-buggy-games" title="Permanent link">¶</a></h3>
+<p>Extremely rare programming bugs 😉 in some DOS games (and programs) may cause
+them to accidentally write data beyond their allocated memory region, similar
+to “painting outside the lines”. DOSBox is great at catching these instances:
+it flags the corruption and quits, preventing the program from barreling on
+and possibly doing more harm such as writing corrupt save games, documents,
+and so on.</p>
+<p>DOSBox Staging defaults to this same behaviour, but adds the <code>[dosbox]
+mcb_fault_strategy</code> config setting:</p>
+<table>
+<thead>
+<tr>
+<th>mcb_fault_strategy</th>
+<th>Behaviour</th>
+<th>How it affects the buggy game</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deny</code></td>
+<td>Report and quit as soon as a fault is detected (default)</td>
+<td>Game terminates, no risk of subsequent file corruption</td>
+</tr>
+<tr>
+<td><code>repair</code></td>
+<td>Report and repair up to 100 sequential faults</td>
+<td>Game continues, but may still be unstable if its developers expected the corruption</td>
+</tr>
+<tr>
+<td><code>report</code></td>
+<td>Report the corruption and carry on</td>
+<td>Game continues, but risks further instability and file corruption</td>
+</tr>
+<tr>
+<td><code>allow</code></td>
+<td>Carry on without reporting</td>
+<td>Game continues, but risks further instability and file corruption</td>
+</tr>
+</tbody>
+</table>
+<p>Only consider this if your game is prone to crashing with MCB chain corruption errors reported in the console log.</p>
+<h2 id="developer-related-improvements">Developer-related improvements<a class="headerlink" href="#developer-related-improvements" title="Permanent link">¶</a></h2>
+<h3 id="self-documenting-bit-twiddling-with-bit_view">Self-documenting bit twiddling with bit_view<a class="headerlink" href="#self-documenting-bit-twiddling-with-bit_view" title="Permanent link">¶</a></h3>
+<p>We’ve implemented a <code>bit_view</code> C++ class using constant expressions to access
+a subset of a data-field’s bits, allowing them to be read, written, assigned,
+flipped, cleared, and tested, without the need to for the usual twiddling
+operations.</p>
+<p>Constructing a <code>bit_view</code> is similar to a C bitfield, however unlike C
+bitfields, <code>bit_view</code>s are free from undefined behaviour and have been proven
+using GCC’s and Clang’s undefined behaviour sanitisers.</p>
+<p>There’s more detail and some code examples
+<a href="https://github.com/dosbox-staging/dosbox-staging/pull/1708">here</a>.</p>
+<h3 id="memory-block-and-type-size-simplification">Memory block and type size simplification<a class="headerlink" href="#memory-block-and-type-size-simplification" title="Permanent link">¶</a></h3>
+<p>The emulated main memory (up to 64 MiB) and the video card’s memory (to up 8
+MiB) are both now allocated statically to reduce pressure on heap storage
+(<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1714" title="GitHub Issue dosbox-staging/dosbox-staging #1714">#1714</a>).</p>
+<p>More progress has been made in reducing the use of large variables type-sizes
+down to purpose-fit sizes per the DOS/hardware specification (typically 8 or
+16-bit) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1721" title="GitHub Issue dosbox-staging/dosbox-staging #1721">#1721</a>).</p>
+<h3 id="tracy-profiler-integration">Tracy profiler integration<a class="headerlink" href="#tracy-profiler-integration" title="Permanent link">¶</a></h3>
+<p>The <a href="https://github.com/wolfpld/tracy">Tracy event profiler</a> has been
+integrated into the build system and basic hooks are in place to log frames
+and tics. These are only active (and not compiled in) unless Tracy is enabled.</p>
+<p>Here’s what it looks like:</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-tracy-profiler-integration/tracy.png"><img alt="tracy" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-tracy-profiler-integration/tracy.png"/></a></p>
+<figcaption>
+<p>Tracy runtime-profiling DOSBox Staging
+  </p>
+</figcaption>
+</figure>
+<p>It can be enabled at build-time with <code>-Dtracy=true</code>. Learn more about it, and
+how to build the server-side component here: <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1749" title="GitHub Issue dosbox-staging/dosbox-staging #1749">#1749</a></p>
+<h3 id="continuous-integration-msys2-workflow-improvements">Continuous integration MSYS2 workflow improvements<a class="headerlink" href="#continuous-integration-msys2-workflow-improvements" title="Permanent link">¶</a></h3>
+<p>The MSYS2-based workflow has been brought in line with current best practices,
+which dramatically improved its build time and lead to us now using it to
+generate the default Windows release binaries.</p>
+<h3 id="release-package-shell-script">Release-package shell script<a class="headerlink" href="#release-package-shell-script" title="Permanent link">¶</a></h3>
+<p>Release packages are now generated using a cross-platform POSIX-compliant
+shell script. With this logic moved into a script, developers can now easily
+test the creation of a release package locally, which was previously
+impossible as that logic only lived in a GitHub-syntax YAML.</p>
+<h3 id="static-analysis">Static analysis<a class="headerlink" href="#static-analysis" title="Permanent link">¶</a></h3>
+<p>The team continues to fix and address static analysis issues as flagged by
+various analysers. Here are our Coverity Scan metrics to-date:</p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-static-analysis-metrics/coverity-numbers-2022-09.png"><img alt="Coverity metrics)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-static-analysis-metrics/coverity-numbers-2022-09.png"/></a></p>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="https://archive.org/download/dosbox-staging-v0.79.0-static-analysis-metrics/coverity-graph-2022-09.png"><img alt="Coverity graph)" loading="lazy" src="https://archive.org/download/dosbox-staging-v0.79.0-static-analysis-metrics/coverity-graph-2022-09.png"/></a></p>
+<h2 id="translation-status">Translation status<a class="headerlink" href="#translation-status" title="Permanent link">¶</a></h2>
+<div class="compact">
+<ul>
+<li>German: up-to-date</li>
+<li>Italian: up-to-date</li>
+<li>Polish: up-to-date</li>
+<li>Russian: config sections up-to-date</li>
+<li>French: not updated</li>
+<li>Spanish: not updated</li>
+</ul>
+</div>
+<p>The 0.79.0 configuration file is also in UTF-8 format for the German, Italian,
+and Polish languages under the package’s
+<code>resources/translated-0.79-conf-files</code> directory.</p>
+<p>The messaging system now supports self-documenting markup syntax, which is
+much easier to read and maintain compared to the previous ANSI escape
+sequences.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Old escape-code style</th>
+<th align="left">New markup style</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>Escribiendo ^[[34;1mdir^[[0m all� mostrar� su contenido.</code></td>
+<td align="left"><code>Digita [color=blue]dir[reset] per visualizzarne il contenuto.</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="notable-fixes">Notable fixes<a class="headerlink" href="#notable-fixes" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Fixed <strong>Ultima Underworld</strong> issues with gaming (high polling rate) mice
+  (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1722" title="GitHub Issue dosbox-staging/dosbox-staging #1722">#1722</a>)</p>
+</li>
+<li>
+<p>Fixed lockups and input issues with the debugger on macOS and Linux. Note
+  that for those using the debugger on Linux, we recommend building it with
+  SDL 2.0.18, because some input/interaction bugs exist when using newer SDL
+  versions.</p>
+</li>
+<li>
+<p>Fixed colours becoming very dim on newer Intel integrated GPUs due to
+  Intel’s OpenGL drivers not properly handling the sRGB linear colour space.</p>
+</li>
+<li>
+<p>Fixed a memory-read race condition present during the splash-image display,
+  which also reduced start-up time by around 200 ms.</p>
+</li>
+<li>
+<p>Fixed display of the low-resolution halfline VESA 2.0 mode used by <strong>Extreme
+  Assault</strong> through the addition of a new <code>vesa_mode</code> config setting value,
+  named <code>halfline</code>.</p>
+</li>
+<li>
+<p>Named the macOS application “DOSBox Staging.app” per the macOS per Human
+  Interface Guidelines.</p>
+</li>
+<li>
+<p>Fixed a usability trap door when opening the mapper without mouse support:
+  in these cases, the user was unable to exit the mapper. The mapper now only
+  opens when mouse support is enabled.</p>
+</li>
+</ul>
+<h2 id="special-thanks">Special thanks<a class="headerlink" href="#special-thanks" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p><strong>John Novak</strong> for all the audio enhancements, mixer cleanup, shader
+  improvements, and code reviews</p>
+</li>
+<li>
+<p><strong>FeralChild64</strong> for the mouse overhaul, code page and layout cleanup and
+  improvements, and code reviews</p>
+</li>
+<li>
+<p><strong>Wengier</strong> for the shell improvements, mount and CLI additions, and Windows
+  installer</p>
+</li>
+<li>
+<p><strong>Antti Peltola</strong> for providing historic resources, documentation help, and
+  project support</p>
+</li>
+<li>
+<p><strong>shermp</strong> for the MSYS2 cleanup, cross-platform packaging script and CI
+  cleanup, ANSI markup system, and code reviews</p>
+</li>
+<li>
+<p><strong>Kirk Klobe</strong> for the debugger fixes, Tracy integration, and paging and
+  memory system refinements</p>
+</li>
+<li>
+<p><strong>GranMinigun</strong> for the HiDPI additions, video chain fixes, and Russian
+  translations</p>
+</li>
+<li>
+<p><strong>nemo93</strong> for testing 400+ games on the Raspberry Pi</p>
+</li>
+<li>
+<p><strong>Kappa971</strong> for the Italian and configuration file translations, and
+  leading the translation effort</p>
+</li>
+<li>
+<p><strong>Burrito78</strong> for the German translation</p>
+</li>
+</ul>
+<h2 id="contributors">Contributors<a class="headerlink" href="#contributors" title="Permanent link">¶</a></h2>
+<h3 id="maintainers">Maintainers<a class="headerlink" href="#maintainers" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>kcgen</li>
+<li>John Novak</li>
+<li>FeralChild64</li>
+<li>shermp</li>
+<li>Wengier</li>
+</ul>
+</div>
+<h3 id="authors">Authors<a class="headerlink" href="#authors" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>kcgen</li>
+<li>John Novak</li>
+<li>FeralChild64</li>
+<li>Wengier</li>
+<li>shermp</li>
+<li>Kirk Klobe</li>
+<li>GranMinigun</li>
+<li>Patryk Obara</li>
+<li>ripsaw8080 (DOSBox maintainer)</li>
+<li>NicknineTheEagle</li>
+<li>David Reid (dr_lib author, 3<sup>rd</sup> party dependency)</li>
+<li>Leandro Nini (libresidfp author, 3<sup>rd</sup> party dependency)</li>
+<li>Jonathan Campbell (DOSBox-X maintainer)</li>
+<li>Dean Beeler</li>
+<li>ripa (DOSBox patch author)</li>
+<li>Keenan Weaver</li>
+<li>Dennis Lühring</li>
+<li>IPeluchito</li>
+<li>Otto Liljalaakso</li>
+<li>Peter Ferrie</li>
+<li>arrowgent</li>
+<li>gulrak</li>
+<li>hunterk</li>
+</ul>
+</div>
+<h3 id="translators">Translators<a class="headerlink" href="#translators" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Burrito78 (German)</li>
+<li>FeralChild64 (Polish)</li>
+<li>GranMinigun (Russian)</li>
+<li>Kappa971 (Italian)</li>
+</ul>
+</div>
+<h3 id="sponsors">Sponsors<a class="headerlink" href="#sponsors" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Antti Peltola: 3,000 USD during the 0.79 development cycle</li>
+<li>Wengier</li>
+</ul>
+</div>
+<h3 id="backers">Backers<a class="headerlink" href="#backers" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Burrito78</li>
+<li>Hugo Locurcio</li>
+</ul>
+</div>
+<p>Thank you to our financial contributors who allow us to purchase hardware,
+licenses, and other non-trivial expenses to keep the team and project going.</p>
+<p>To support our work, donate to our <a href="https://github.com/sponsors/dosbox-staging">GitHub
+Sponsors</a> or <a href="https://opencollective.com/dosbox-staging">Open
+Collective</a>.</p>
+<h2 id="thank-you">Thank you<a class="headerlink" href="#thank-you" title="Permanent link">¶</a></h2>
+<p>We are extremely grateful for all contributions, including the invaluable
+improvements merged in from the DOSBox project.</p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid">
+<!-- Link to previous page -->
+<a aria-label="Previous: 0.79.1" class="md-footer__link md-footer__link--prev" href="../0.79.1/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              0.79.1
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: 0.78.1" class="md-footer__link md-footer__link--next" href="../0.78.1/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              0.78.1
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

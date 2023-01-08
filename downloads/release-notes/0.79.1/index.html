@@ -1,0 +1,632 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/release-notes/0.79.1/" rel="canonical"/>
+<link href="../0.80.0/" rel="prev"/>
+<link href="../0.79.0/" rel="next"/>
+<link href="../../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>0.79.1 - DOSBox Staging</title>
+<link href="../../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#0791-release-notes">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          0.79.1
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        0.79.1
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fixes-and-regressions">
+    Fixes and regressions
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#functionality-refinements">
+    Functionality refinements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-improvements">
+    Translation improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#wiki-updates-since-0790">
+    Wiki updates since 0.79.0
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#packaging-fixes">
+    Packaging fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fixes-and-regressions">
+    Fixes and regressions
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#functionality-refinements">
+    Functionality refinements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-improvements">
+    Translation improvements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#wiki-updates-since-0790">
+    Wiki updates since 0.79.0
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#packaging-fixes">
+    Packaging fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="0791-release-notes">0.79.1 release notes<a class="headerlink" href="#0791-release-notes" title="Permanent link">¶</a></h1>
+<p><strong>Release date:</strong>  2022-09-30</p>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
+<p>We recommend repository maintainers move to 0.79.1, which should be much
+easier to package. Details in the <a href="#packaging-fixes">Packaging fixes</a> section below.</p>
+<p>We recommend users of our zip, dmg, and Windows installer packages upgrade
+from 0.79.0 to fix some audio and usability bugs.</p>
+<p>This maintenance release was made possible by everyone who tried 0.79.0,
+submitted bugs and pull requests, and tested the updates: thank you!</p>
+<h2 id="how-to-upgrade">How to upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">¶</a></h2>
+<p>Download and launch the latest version:</p>
+<div class="compact">
+<ul>
+<li><a href="/downloads/linux/">Linux</a> (or <a href="/downloads/linux#steam">Steam on Linux</a>)</li>
+<li><a href="/downloads/windows/">Windows</a></li>
+<li><a href="/downloads/macos/">macOS</a></li>
+</ul>
+</div>
+<p>At the<code>Z:\&gt;</code> prompt, run <code>config -wc</code> to write the new configuration file. Any
+existing settings will be retained, however, extraneous comments will be
+dropped.</p>
+<h2 id="fixes-and-regressions">Fixes and regressions<a class="headerlink" href="#fixes-and-regressions" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Fixed a CD-DA playback regression in <strong>Might and Magic 6</strong> when using
+  multi-image mounts <em>(kcgen)</em></p>
+</li>
+<li>
+<p>Allowed the <span class="keys"><kbd class="key-escape">Esc</kbd></span> key and window-close events to exit from the paused
+  state <em>(Wengier)</em></p>
+</li>
+<li>
+<p>Fixed a bug that prevented automounted drives from being used by
+  <code>[autoexec]</code> commands <em>(kcgen)</em></p>
+</li>
+<li>
+<p>Fixed an audio filter reset regression flagged in <strong>Blues Brothers: Jukebox
+  Adventure</strong> <em>(kcgen)</em></p>
+</li>
+<li>
+<p>Fixed a 16-bit stereo DMA regression detected when using the Sound Blaster’s
+  <code>modern</code> filter <em>(kcgen)</em></p>
+</li>
+</ul>
+<figure>
+<video controls="controls" width="690"><source src="https://archive.org/download/dosbox-staging-v0.79.1-303-by-acme-sb16-modern/303-by-acme-sb16-modern.mp4" type="video/mp4"/>Your browser does not support the <code>video</code> element.</video>
+<figcaption>
+<p>303 by Acme — 30fps encoding, 120k cycles, and SB16 using the <code>modern</code> filter
+  </p>
+</figcaption>
+</figure>
+<h2 id="functionality-refinements">Functionality refinements<a class="headerlink" href="#functionality-refinements" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Improved ability to pipe between applications by using <code>Y:</code> as a temporary
+  path <em>(Wengier)</em></p>
+</li>
+<li>
+<p>Switched to warning-level logging for MIDI configuration issues <em>(Michael
+  Drueing)</em></p>
+</li>
+<li>
+<p>Improved the lookup of resources when XDG variables aren’t set correctly
+  <em>(kcgen, Eli Schwartz)</em></p>
+</li>
+<li>
+<p>Updated the Dutch language to use the US keyboard layout by default
+  <em>(Wengier)</em></p>
+</li>
+<li>
+<p>Included Xbox compatible controller mapperfiles for 180+ games:
+  <a href="https://github.com/dosbox-staging/dosbox-staging/pull/1977">conf</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Keymapper">wiki</a>
+<em>(nemo93)</em></p>
+</li>
+</ul>
+<h2 id="translation-improvements">Translation improvements<a class="headerlink" href="#translation-improvements" title="Permanent link">¶</a></h2>
+<ul>
+<li>Added Dutch translation <em>(Robert de Rooy)</em></li>
+<li>Fixed outdated content in German translation <em>(Burrito78)</em></li>
+<li>
+<p>Synced Italian translation <em>(Kappa971)</em></p>
+</li>
+<li>
+<p>Dropped non-existant <code>KEYB</code> help messages from translation system
+  <em>(Wengier)</em></p>
+</li>
+<li>
+<p>Replaced more escape codes with markup tags in the translations <em>(Robert de
+  Rooy)</em></p>
+</li>
+<li>
+<p>Moved the mount type descriptions into the translation system <em>(Wengier)</em></p>
+</li>
+</ul>
+<h2 id="wiki-updates-since-0790">Wiki updates since 0.79.0<a class="headerlink" href="#wiki-updates-since-0790" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>New <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Keymapper">Keymapper page</a>
+  with examples for those with Xbox controllers (nemo93)</p>
+</li>
+<li>
+<p>New <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Frequently-Asked-Questions">FAQ</a>
+  answering questions about audio settings, configuration files, video output,
+  and other topics <em>(nemo93)</em></p>
+</li>
+<li>
+<p>Notable additions to the <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/UniVBE">UniVBE</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Special-Keys">Special keys</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Get-Started">Getting started</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Audio-configuration-recommendations">Suggested audio settings</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Config-file-examples">Config examples</a>,
+  <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/AUTOTYPE-Candidates">AUTOTYPE candidates</a>,
+  and <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-CD-DA,-GUS-and-MIDI-audio">Games with CD-DA, GUS and MIDI audio</a>
+  pages <em>(nemo93)</em></p>
+</li>
+</ul>
+<h2 id="packaging-fixes">Packaging fixes<a class="headerlink" href="#packaging-fixes" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>Adjusted Meson’s FluidSynth dependency spec to match upstream’s packaging
+  <em>(Kirk Klobe)</em></p>
+</li>
+<li>
+<p>Switched Meson to use SpeexDSP from the host first and fallback to wrap
+  <em>(kcgen)</em></p>
+</li>
+<li>
+<p>Switched Meson to use shared (instead of static) libraries by default
+  <em>(kcgen)</em></p>
+</li>
+<li>
+<p>Fixed installation of <code>resources</code> when using <code>meson install</code> <em>(kcgen, Eli
+  Schwartz)</em></p>
+</li>
+</ul>
+<p>Packagers will get shared libs and installed resources with these standard
+steps:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a>meson setup --prefix /writable/install/path build
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a>meson install -C build
+</code></pre></div>
+<h2 id="thank-you">Thank you<a class="headerlink" href="#thank-you" title="Permanent link">¶</a></h2>
+<p>Thanks to our financial contributors who allow us to purchase
+hardware, licenses, and other non-trivial expenses to keep the team
+and project going.</p>
+<p>To support our work, donate to our
+<a href="https://github.com/sponsors/dosbox-staging">GitHub Sponsors</a> or
+<a href="https://opencollective.com/dosbox-staging">Open Collective</a>.</p>
+<p>We are grateful for all community contributions as well as the
+original DOSBox project, upon which DOSBox Staging is based.</p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid">
+<!-- Link to previous page -->
+<a aria-label="Previous: 0.80.0" class="md-footer__link md-footer__link--prev" href="../0.80.0/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              0.80.0
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: 0.79.0" class="md-footer__link md-footer__link--next" href="../0.79.0/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              0.79.0
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

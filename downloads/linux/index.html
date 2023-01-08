@@ -1,0 +1,693 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/linux/" rel="canonical"/>
+<link href="../macos/" rel="prev"/>
+<link href="../development-builds/" rel="next"/>
+<link href="../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>Linux - DOSBox Staging</title>
+<link href="../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#linux-builds">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          Linux
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        Linux
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#packages">
+    Packages
+  </a>
+<nav aria-label="Packages" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gentoo">
+    Gentoo
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ubuntu-mint">
+    Ubuntu, Mint
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro">
+    Arch, Manjaro
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#other-repositories">
+    Other repositories
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tarball-download">
+    Tarball download
+  </a>
+<nav aria-label="Tarball download" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora_1">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ubuntu-debian">
+    Ubuntu, Debian
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro_1">
+    Arch, Manjaro
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#steam">
+     Steam
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#development-snapshot-builds">
+    Development snapshot builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#older-builds">
+    Older builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#building-from-source">
+    Building from source
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#packages">
+    Packages
+  </a>
+<nav aria-label="Packages" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gentoo">
+    Gentoo
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ubuntu-mint">
+    Ubuntu, Mint
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro">
+    Arch, Manjaro
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#other-repositories">
+    Other repositories
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tarball-download">
+    Tarball download
+  </a>
+<nav aria-label="Tarball download" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora_1">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ubuntu-debian">
+    Ubuntu, Debian
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro_1">
+    Arch, Manjaro
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#steam">
+     Steam
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#development-snapshot-builds">
+    Development snapshot builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#older-builds">
+    Older builds
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#building-from-source">
+    Building from source
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="linux-builds">Linux builds<a class="headerlink" href="#linux-builds" title="Permanent link">¶</a></h1>
+<h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">¶</a></h2>
+<p><a href="https://flathub.org/apps/details/io.github.dosbox-staging"><img align="left" alt="Download from Flathub" class="linux-badge" src="https://flathub.org/assets/badges/flathub-badge-en.png" width="35%"/></a></p>
+<p><a href="https://snapcraft.io/dosbox-staging"><img align="left" alt="Download from the Snap Store" class="linux-badge" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" width="37%"/></a></p>
+<h3 id="fedora">Fedora<a class="headerlink" href="#fedora" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo dnf install dosbox-staging
+</code></pre></div>
+<h3 id="gentoo">Gentoo<a class="headerlink" href="#gentoo" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>emerge games-emulation/dosbox-staging
+</code></pre></div>
+<h3 id="ubuntu-mint">Ubuntu, Mint<a class="headerlink" href="#ubuntu-mint" title="Permanent link">¶</a></h3>
+<p>Available via <a href="https://launchpad.net/~feignint/+archive/ubuntu/dosbox-staging">Personal Package Archive</a>:</p>
+<div class="highlight"><pre><span></span><code>sudo add-apt-repository ppa:feignint/dosbox-staging
+sudo apt-get update
+sudo apt install dosbox-staging
+</code></pre></div>
+<h3 id="arch-manjaro">Arch, Manjaro<a class="headerlink" href="#arch-manjaro" title="Permanent link">¶</a></h3>
+<p>Available via <a href="https://aur.archlinux.org/packages/dosbox-staging">Arch User Repository</a>.</p>
+<p><em>Vote for inclusion in the community repo!</em></p>
+<h3 id="other-repositories">Other repositories<a class="headerlink" href="#other-repositories" title="Permanent link">¶</a></h3>
+<p><a href="https://repology.org/project/dosbox-staging/versions"><img alt="Packaging status" src="https://repology.org/badge/vertical-allrepos/dosbox-staging.svg" width="230"/></a></p>
+<h2 id="tarball-download">Tarball download<a class="headerlink" href="#tarball-download" title="Permanent link">¶</a></h2>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz">Download DOSBox Staging 0.80.0 (tar.xz)</a>
+<br/>
+<small>
+sha256: 3022bdd405dc1106007c3505e6a5d083<wbr/>de982d516c9bce499e2c4a02a697a1bd
+</small></p>
+<p>Our pre-compiled builds run on most Linux distributions (x86_64 only for now).
+They depend on the following packages:</p>
+<h3 id="fedora_1">Fedora<a class="headerlink" href="#fedora_1" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo dnf install SDL2 SDL2_image SDL2_net opusfile
+</code></pre></div>
+<h3 id="ubuntu-debian">Ubuntu, Debian<a class="headerlink" href="#ubuntu-debian" title="Permanent link">¶</a></h3>
+<p>Ubuntu 18.04 or newer, and Debian 9 or newer is required.</p>
+<div class="highlight"><pre><span></span><code>sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
+</code></pre></div>
+<h3 id="arch-manjaro_1">Arch, Manjaro<a class="headerlink" href="#arch-manjaro_1" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
+</code></pre></div>
+<h2 id="steam"><a name="steam"></a> Steam<a class="headerlink" href="#steam" title="Permanent link">¶</a></h2>
+<p>You can easily configure your DOS games on Steam to use DOSBox Staging via
+<a href="https://github.com/dreamer/boxtron">Boxtron</a> (community-developed
+Steam Play compatibility tool for DOS games).</p>
+<p>Boxtron will automatically use <code>dosbox</code> if found in your path, or can be
+configured to use a specific binary by editing the file
+<code>~/.config/boxtron.conf</code> and overriding <a href="https://github.com/dreamer/boxtron/wiki/Configuration#dosboxcmd">dosbox.cmd</a>:</p>
+<div class="highlight"><pre><span></span><code>cmd = ~/path-to-dosbox-staging/dosbox
+</code></pre></div>
+<h2 id="development-snapshot-builds">Development snapshot builds<a class="headerlink" href="#development-snapshot-builds" title="Permanent link">¶</a></h2>
+<p>You can always see what’s cooking on the main branch! <img alt="😎" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f60e.svg" title=":sunglasses:"/> <img alt="🍺" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f37a.svg" title=":beer:"/></p>
+<p>These <a href="../development-builds/">snapshot builds</a> might be slow or unstable as they
+are designed with developers and testers in mind.</p>
+<h2 id="older-builds">Older builds<a class="headerlink" href="#older-builds" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-linux-v0.79.1.tar.xz">DOSBox Staging 0.79.1 (tar.xz)</a>
+<br/>
+<small>
+  sha256: aebf8619bb44934f18d0e219d50c4e2c<wbr/>03b179c37daa67a9b800e7bd3aefc262
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.0/dosbox-staging-linux-v0.79.0.tar.xz">DOSBox Staging 0.79.0 (tar.xz)</a>
+<br/>
+<small>
+  sha256: 804adb294096ab651490b1664570203f<wbr/>24e460048d7e6e2e388d210a8380016a
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.1/dosbox-staging-linux-v0.78.1.tar.xz">DOSBox Staging 0.78.1 (tar.xz)</a>
+<br/>
+<small>
+  sha256: 8bd2a247ca960f6059276db2b0331f85<wbr/>3e16bc8a090722b15f567782542b5fba
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.0/dosbox-staging-linux-v0.78.0.tar.xz">DOSBox Staging 0.78.0 (tar.xz)</a>
+<br/>
+<small>
+  sha256: 085e7cbe350546b3f25b0400c872a276<wbr/>6f9a49d16a5ca8d17a0a93aad6e37709
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.1/dosbox-staging-linux-v0.77.1.tar.xz">DOSBox Staging 0.77.1 (tar.xz)</a>
+<br/>
+<small>
+  sha256: e2d475e4b1f80881ccafc4502b3884c0<wbr/>96b51aa2fc2cfe89bb6c2b8ebfb7cc76
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.0/dosbox-staging-linux-v0.77.0.tar.xz">DOSBox Staging 0.76.0 (tar.xz)</a>
+<br/>
+<small>
+  sha256: f8401bcd473d5b664eeb3a90e4dbb4bb<wbr/>f0cef5339adba867f361c00b7de9b2fe
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.76.0/dosbox-staging-linux-v0.76.0.tar.xz">DOSBox Staging 0.76.0 (tar.xz)</a>
+<br/>
+<small>
+  sha256: b14de58ba0f5dd192398cda58fa439b1<wbr/>5512f50d1c88b5ded6f300d4a9212852
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.2/dosbox-staging-linux-v0.75.2.tar.xz">DOSBox Staging 0.75.2 (tar.xz)</a>
+<br/>
+<small>
+  sha256: 0325a1860aea95e8117aa49b041bfd62<wbr/>8ab20531a3abc7b0a67aff4c47049465
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.1/dosbox-staging-linux-v0.75.1.tar.xz">DOSBox Staging 0.75.1 (tar.xz)</a>
+<br/>
+<small>
+  sha256: aef22e5ddf93ff826fc2d48a4c8c0b40<wbr/>97d3455525b40be5b3fb443935929c70
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-linux-v0.75.0.tar.xz">DOSBox Staging 0.75.0 (tar.xz)</a>
+<br/>
+<small>
+  sha256: a28d8ba0481722c8343b7532299c7b9b<wbr/>b9e491c6832d9d05dd4704939287f776
+  </small></p>
+</li>
+<li>
+<p><a href="https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-linux-v0.75.0-rc1.tar.xz">DOSBox Staging 0.75.0-rc1 (tar.xz)</a>
+<br/>
+<small>
+  sha256: 594ba45280af240cb18b3882f7ffa711<wbr/>69a697eb362b7d7a76c8ccda2b940e84
+  </small></p>
+</li>
+</ul>
+<h2 id="building-from-source">Building from source<a class="headerlink" href="#building-from-source" title="Permanent link">¶</a></h2>
+<p>Of course you can always <a href="https://github.com/dosbox-staging/dosbox-staging">build DOSBox Staging straight from the source</a>.</p>
+<p>Send us patches if you improve something! <img alt="😄" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f604.svg" title=":smile:"/></p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid" hidden="">
+<!-- Link to previous page -->
+<a aria-label="Previous: macOS" class="md-footer__link md-footer__link--prev" href="../macos/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              macOS
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: Development builds" class="md-footer__link md-footer__link--next" href="../development-builds/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              Development builds
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

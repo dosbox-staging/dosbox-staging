@@ -1,0 +1,688 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/development-builds/" rel="canonical"/>
+<link href="../linux/" rel="prev"/>
+<link href="../release-notes/0.80.0/" rel="next"/>
+<link href="../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>Development builds - DOSBox Staging</title>
+<link href="../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#development-builds">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="DOSBox Staging">
+<img alt="logo" src="../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          Development builds
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        Development builds
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#installation-notes">
+    Installation notes
+  </a>
+<nav aria-label="Installation notes" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#linux">
+    Linux
+  </a>
+<nav aria-label="Linux" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#debian-ubuntu">
+    Debian, Ubuntu
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro">
+    Arch, Manjaro
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows">
+    Windows
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#macos">
+    macOS
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.80.0/">
+        0.80.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../release-notes/0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#installation-notes">
+    Installation notes
+  </a>
+<nav aria-label="Installation notes" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#linux">
+    Linux
+  </a>
+<nav aria-label="Linux" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fedora">
+    Fedora
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#debian-ubuntu">
+    Debian, Ubuntu
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#arch-manjaro">
+    Arch, Manjaro
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#windows">
+    Windows
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#macos">
+    macOS
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="development-builds">Development builds<a class="headerlink" href="#development-builds" title="Permanent link">¶</a></h1>
+<script>
+
+function set_build_version(gh_api_artifacts, os_name) {
+    fetch(gh_api_artifacts)
+        .then(response => {
+            if (response.status !== 200)
+                return;
+
+            response.json().then(data => {
+                let changelog = data.artifacts
+                    .find(a => a.name.startsWith("changelog-"));
+
+                if (changelog === undefined)
+                    return;
+
+                let n = changelog.name.length;
+                let version = changelog.name.substring(10, n - 4);
+                let version_el = document.getElementById(os_name + "-build-version");
+                version_el.textContent = version;
+            });
+        })
+        .catch(err => {
+            console.log('Fetch Error :-S', err);
+        });
+}
+
+// Fetch build status using GitHub API and update HTML
+function set_ci_status(workflow_file, os_name, description, page = 1) {
+
+    // GitHub has strict rate-limits for anonymous users: 60 requests per hour;
+    // We request 100 results per page (max allowed); main builds are very
+    // likely to be included in the first page anyway.
+    if (page > 10) {
+        return;
+    }
+
+    let per_page = 100;
+    let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
+    fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs" +
+          "?page=" + page + "&per_page=" + per_page)
+        .then(response => {
+
+            // Handle HTTP error
+            if (response.status !== 200) {
+                console.log("Looks like there was a problem." +
+                            "Status Code: " + response.status);
+                return;
+            }
+
+            response.json().then(data => {
+
+                console.log(data.workflow_runs);
+
+                let status = data.workflow_runs
+                    .filter(run => run.head_branch == "main")
+                    .filter(run => run.event == "push")
+                    .find(run => run.conclusion == "success");
+
+                // If result not found, query the next page
+                if (status == undefined) {
+                    set_ci_status(workflow_file, os_name, page + 1);
+                    return;
+                }
+
+                // Update HTML elements
+                let build_link = document.createElement("a");
+                build_link.textContent = description;
+                build_link.setAttribute("href", status.html_url);
+                let build_link_tr_el = document.getElementById(os_name + "-build-link");
+                build_link_tr_el.innerHTML = '';
+                build_link_tr_el.appendChild(build_link);
+
+                let build_date = new Date(status.updated_at);
+                let date_el = document.getElementById(os_name + "-build-date");
+                date_el.textContent = build_date.toUTCString();
+
+                set_build_version(status.artifacts_url, os_name);
+            });
+        })
+        .catch(err => {
+            console.log('Fetch Error :-S', err);
+        });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    set_ci_status("linux.yml", "linux", "Linux");
+    set_ci_status("macos.yml", "macos", "macOS");
+    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds");
+    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds");
+});
+
+</script>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These are unstable development snapshots intended for testing and showcasing new features; if you want to download a stable build, head on to <a href="../linux/">Linux</a>, <a href="../windows/">Windows</a>, or <a href="../macos/">macOS</a> download pages.</p>
+<p>Build artifacts are hosted on GitHub; you need to be logged in to download them.</p>
+</div>
+<div class="compact">
+<table>
+<tr>
+<th style="width: 260px">Download link</th>
+<th style="width: 260px">Build version</th>
+<th style="width: 260px">Date</th>
+</tr>
+<tr>
+<td id="linux-build-link">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="linux-build-version">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="linux-build-date">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+</tr>
+<tr>
+<td id="macos-build-link">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="macos-build-version">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="macos-build-date">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+</tr>
+<tr>
+<td id="msys2-build-link">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="msys2-build-version">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="msys2-build-date">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+</tr>
+<tr>
+<td id="windows-build-link">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="windows-build-version">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+<td id="windows-build-date">
+<a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../images/dots.svg"><img src="../images/dots.svg" style="margin:auto;margin-left:0.1em;"/></a>
+</td>
+</tr>
+</table>
+</div>
+<h2 id="installation-notes">Installation notes<a class="headerlink" href="#installation-notes" title="Permanent link">¶</a></h2>
+<p>Testing new features might require manual reset of the configuration
+file.  DOSBox Staging builds use a configuration file named
+<code>dosbox-staging.conf</code> located in:</p>
+<div class="compact">
+<table>
+<thead>
+<tr>
+<th><!-- --></th>
+<th><!-- --></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td><code>~/.config/dosbox/</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>C:\Users\USERNAME&gt;\AppData\Local\DOSBox\</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/Library/Preferences/DOSBox/</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h3>
+<p>The tarball contains a dynamically-linked x86_64 build; you’ll need additional
+dependencies installed via your package manager.</p>
+<h4 id="fedora">Fedora<a class="headerlink" href="#fedora" title="Permanent link">¶</a></h4>
+<div class="highlight"><pre><span></span><code>sudo dnf install SDL2 SDL2_image SDL2_net opusfile
+</code></pre></div>
+<h4 id="debian-ubuntu">Debian, Ubuntu<a class="headerlink" href="#debian-ubuntu" title="Permanent link">¶</a></h4>
+<div class="highlight"><pre><span></span><code>sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
+</code></pre></div>
+<h4 id="arch-manjaro">Arch, Manjaro<a class="headerlink" href="#arch-manjaro" title="Permanent link">¶</a></h4>
+<div class="highlight"><pre><span></span><code>sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
+</code></pre></div>
+<h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">¶</a></h3>
+<p>Windows executables in a snapshot packages are not signed, therefore Windows 10
+might prevent the program from starting.</p>
+<p>See <a href="../windows/#microsoft-defender-smartscreen">this guide</a> to learn how to deal with this.</p>
+<h3 id="macos">macOS<a class="headerlink" href="#macos" title="Permanent link">¶</a></h3>
+<p>macOS app bundles are not notarized; Apple Gatekeeper will try to prevent
+the program from running.</p>
+<p>See <a href="../macos/#apple-gatekeeper">this guide</a> to learn how to deal with
+this.</p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid" hidden="">
+<!-- Link to previous page -->
+<a aria-label="Previous: Linux" class="md-footer__link md-footer__link--prev" href="../linux/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              Linux
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: 0.80.0" class="md-footer__link md-footer__link--next" href="../release-notes/0.80.0/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              0.80.0
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>

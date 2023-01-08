@@ -1,0 +1,1217 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices." name="description"/>
+<meta content="DOSBox Staging Authors" name="author"/>
+<link href="https://https:/dosbox-staging.github.io/downloads/release-notes/0.80.0/" rel="canonical"/>
+<link href="../../development-builds/" rel="prev"/>
+<link href="../0.79.1/" rel="next"/>
+<link href="../../../assets/images/favicon.ico" rel="icon"/>
+<meta content="mkdocs-1.4.2, mkdocs-material-9.0.2" name="generator"/>
+<title>0.80.0 - DOSBox Staging</title>
+<link href="../../../assets/stylesheets/main.f56500e0.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.2505c338.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Open Sans";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            
+                .gscrollbar-fixer { padding-right: 15px; }
+                .gdesc-inner { font-size: 0.75rem; }
+                body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+                body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+                body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+                </style><script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+<body data-md-color-accent="" data-md-color-primary="" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#0800-release-notes">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Determine class according to configuration -->
+<!-- Header -->
+<header class="md-header md-header--lifted" data-md-component="header">
+<nav aria-label="" class="md-header__inner md-grid">
+<!-- Link to home -->
+<a aria-label="DOSBox Staging" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+<!-- Button to open drawer -->
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+</label>
+<!-- Header title -->
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            DOSBox Staging
+          </span>
+</div>
+</div>
+</div>
+<!-- Color palette -->
+<!-- Site language selector -->
+<!-- Button to open search modal -->
+<!-- Repository information -->
+</nav>
+<!-- Navigation tabs (sticky) -->
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href="../../windows/">
+        Downloads
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../get-involved/">
+        Get involved
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../about/">
+        About
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="DOSBox Staging" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="DOSBox Staging">
+<img alt="logo" src="../../../assets/images/dosbox-staging-nobg.svg"/>
+</a>
+    DOSBox Staging
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" id="__nav_1" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1">
+          Downloads
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Downloads" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+          Downloads
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../windows/">
+        Windows
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../macos/">
+        macOS
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../linux/">
+        Linux
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../development-builds/">
+        Development builds
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="__nav_1_5" id="__nav_1_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_1_5">
+          Release notes
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Release notes" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_1_5">
+<span class="md-nav__icon md-icon"></span>
+          Release notes
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          0.80.0
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        0.80.0
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+<nav aria-label="How to upgrade" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#downloads">
+    Downloads
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#upgrade-your-configuration-file">
+    Upgrade your configuration file
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#new-features">
+    New features
+  </a>
+<nav aria-label="New features" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reelmagic-support">
+    ReelMagic support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-improvements">
+    Mouse improvements
+  </a>
+<nav aria-label="Mouse improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dedicated-configuration-section">
+    Dedicated configuration section
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dual-mouse-gaming">
+    Dual mouse gaming
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#improved-support-for-third-party-int33-windows-mouse-drivers">
+    Improved support for third-party INT33 Windows mouse drivers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-related-help-in-the-title-bar">
+    Mouse-related help in the title bar
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#high-dpi-on-windows">
+    High DPI on Windows
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ability-to-use-local-configs-via-finder-on-macos">
+    Ability to use local configs via Finder on macOS
+  </a>
+<nav aria-label="Ability to use local configs via Finder on macOS" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-use-it">
+    How to use it
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-improvements">
+    General improvements
+  </a>
+<nav aria-label="General improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#morecom-command">
+    more.com command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#on-the-fly-changes">
+    On-the-fly changes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#post-rendered-screenshots">
+    Post-rendered screenshots
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#more-bundled-opengl-shaders">
+    More bundled OpenGL shaders
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bug-and-regression-fixes">
+    Bug and regression fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-improvements">
+    Translation improvements
+  </a>
+<nav aria-label="Translation improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translations">
+    Translations
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#related-improvements">
+    Related improvements
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#documentation-updates">
+    Documentation updates
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-commit-authors">
+    0.80 commit authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-sponsors">
+    0.80 sponsors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-backers">
+    0.80 backers
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.1/">
+        0.79.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.79.0/">
+        0.79.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.1/">
+        0.78.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.78.0/">
+        0.78.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.1/">
+        0.77.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.77.0/">
+        0.77.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.76.0/">
+        0.76.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.2/">
+        0.75.2
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.1/">
+        0.75.1
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0/">
+        0.75.0
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../0.75.0-rc1/">
+        0.75.0-RC1
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../get-involved/">Get involved</a>
+<label for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-label="Get involved" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+          Get involved
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../get-involved/code-of-conduct/">
+        Code of conduct
+      </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__link--index">
+<a href="../../../about/">About</a>
+</div>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#summary">
+    Summary
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-upgrade">
+    How to upgrade
+  </a>
+<nav aria-label="How to upgrade" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#downloads">
+    Downloads
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#upgrade-your-configuration-file">
+    Upgrade your configuration file
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#new-features">
+    New features
+  </a>
+<nav aria-label="New features" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reelmagic-support">
+    ReelMagic support
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-improvements">
+    Mouse improvements
+  </a>
+<nav aria-label="Mouse improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dedicated-configuration-section">
+    Dedicated configuration section
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dual-mouse-gaming">
+    Dual mouse gaming
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#improved-support-for-third-party-int33-windows-mouse-drivers">
+    Improved support for third-party INT33 Windows mouse drivers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mouse-related-help-in-the-title-bar">
+    Mouse-related help in the title bar
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#high-dpi-on-windows">
+    High DPI on Windows
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ability-to-use-local-configs-via-finder-on-macos">
+    Ability to use local configs via Finder on macOS
+  </a>
+<nav aria-label="Ability to use local configs via Finder on macOS" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-use-it">
+    How to use it
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-improvements">
+    General improvements
+  </a>
+<nav aria-label="General improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#morecom-command">
+    more.com command
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#on-the-fly-changes">
+    On-the-fly changes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#post-rendered-screenshots">
+    Post-rendered screenshots
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#more-bundled-opengl-shaders">
+    More bundled OpenGL shaders
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bug-and-regression-fixes">
+    Bug and regression fixes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translation-improvements">
+    Translation improvements
+  </a>
+<nav aria-label="Translation improvements" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#translations">
+    Translations
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#related-improvements">
+    Related improvements
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#documentation-updates">
+    Documentation updates
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#contributors">
+    Contributors
+  </a>
+<nav aria-label="Contributors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-commit-authors">
+    0.80 commit authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-sponsors">
+    0.80 sponsors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#080-backers">
+    0.80 backers
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thank-you">
+    Thank you
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="0800-release-notes">0.80.0 release notes<a class="headerlink" href="#0800-release-notes" title="Permanent link">¶</a></h1>
+<p><strong>Release date:</strong> 2022-12-21</p>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/RealMagic">ReelMagic</a> DOS games are now playable thanks to the efforts of Jon
+Dennis, Chris Guthrie, and Joseph Whittaker, with testing and feedback from
+Vogons users Uka, DonutKing, and Vetz. Mouse emulation has been improved and
+now supports up to six independent mice, enabling split-screen play in games
+like <a href="https://en.wikipedia.org/wiki/The_Settlers">The Settlers</a> and <a href="https://en.wikipedia.org/wiki/The_Settlers_II">The Settlers II</a>. More
+settings, including video, audio, and mixer effects, can now be changed on the
+fly. Following macOS, high DPI support on multi-display setups now comes to
+Windows. A new <code>--working-dir</code> command line flag allows DOSBox Staging to
+launch from a specific working directory. Repo packagers should note that
+<strong>sdl2_image</strong> is now a dependency.</p>
+<p>Read on for all the details!</p>
+<h2 id="how-to-upgrade">How to upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">¶</a></h2>
+<p>Get started by downloading the latest version and updating your configuration
+file:</p>
+<h3 id="downloads">Downloads<a class="headerlink" href="#downloads" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li><a href="/downloads/linux/">Linux</a></li>
+<li><a href="/downloads/windows/">Windows</a></li>
+<li><a href="/downloads/macos/">macOS</a></li>
+</ul>
+</div>
+<h3 id="upgrade-your-configuration-file">Upgrade your configuration file<a class="headerlink" href="#upgrade-your-configuration-file" title="Permanent link">¶</a></h3>
+<ol>
+<li>Launch the new release.</li>
+<li>At the<code>Z:\&gt;</code> prompt, run <code>config -wc</code> to write the new configuration file.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul>
+<li>
+<p>Existing settings will be retained, but extraneous comments will be
+  dropped.</p>
+</li>
+<li>
+<p>Starting with version 0.80, the configuration file is written in the
+  language in which DOSBox Staging was started.</p>
+</li>
+<li>
+<p>To write an English configuration file, launch with the <code>-lang en</code>
+  command-line flag (to start DOSBox Staging in English) and then (re-)write
+  your configuration file.</p>
+</li>
+</ul>
+</div>
+<h2 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">¶</a></h2>
+<h3 id="reelmagic-support">ReelMagic support<a class="headerlink" href="#reelmagic-support" title="Permanent link">¶</a></h3>
+<p>DOS <a href="https://en.wikipedia.org/wiki/RealMagic">ReelMagic</a> games are now playable thanks to Jon Dennis’s
+<a href="https://github.com/jrdennisoss/dosboxrm">patch</a> with help from Chris Guthrie
+and Joseph Whittaker.</p>
+<p>See the <code>[reelmagic]</code> section in your configuration file to enable this. We
+suggest only enabling ReelMagic emulation on an as-needed basis.</p>
+<figure>
+<video controls="controls" width="100%">
+<source src="https://archive.org/download/dosbox-staging-v0.80.0-return-to-zork-intro-reelmagic/return-to-zork-intro-reelmagic.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>Return to Zork (1995) — introduction
+  </p>
+</figcaption>
+</figure>
+<p>Jon plans to add DMA support (primarily used by the ReelMagic Windows 3.1x
+driver and games) when time permits, but most ReelMagic games for DOS are
+already fully functional and playable.</p>
+<h3 id="mouse-improvements">Mouse improvements<a class="headerlink" href="#mouse-improvements" title="Permanent link">¶</a></h3>
+<h4 id="dedicated-configuration-section">Dedicated configuration section<a class="headerlink" href="#dedicated-configuration-section" title="Permanent link">¶</a></h4>
+<p>The mouse configuration has been moved to its own section and additional
+options have been added. A tool called <code>mousectl</code> is available on <code>Z:</code> for
+more detailed per-interface mouse configuration.
+ </p>
+<h4 id="dual-mouse-gaming">Dual mouse gaming<a class="headerlink" href="#dual-mouse-gaming" title="Permanent link">¶</a></h4>
+<p>Multiple physical mice can now be mapped to specific emulated mouse
+interfaces, enabling two-player split-screen gaming (<a href="https://en.wikipedia.org/wiki/The_Settlers">The Settlers</a>
+and <a href="https://en.wikipedia.org/wiki/The_Settlers_II">The Settlers II</a>) using two USB mice on a single computer.</p>
+<p>See the <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming">wiki
+article</a>
+for more details.</p>
+<figure>
+<video controls="controls" width="100%">
+<source src="https://archive.org/download/dosbox-staging-v0.80.0-settlers-2-dual-mouse/settlers-2-dual-mouse.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>The Settlers II (1996) — showcasing dual-mouse gaming in action
+  </p>
+</figcaption>
+</figure>
+<h4 id="improved-support-for-third-party-int33-windows-mouse-drivers">Improved support for third-party INT33 Windows mouse drivers<a class="headerlink" href="#improved-support-for-third-party-int33-windows-mouse-drivers" title="Permanent link">¶</a></h4>
+<p><em>javispedro</em>‘s <a href="https://git.javispedro.com/cgit/vbados.git/about/">INT33 mouse driver</a>
+for Windows 3.1x is fully supported and no longer requires the use of the
+separate DOS driver, except when booting from a disk image. The driver also
+resolves compatibility issues with seamless mouse integration and adds mouse
+wheel support.</p>
+<p>See the <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Windows-3.1x#improved-mouse-driver">wiki
+article</a>
+for more details.</p>
+<h4 id="mouse-related-help-in-the-title-bar">Mouse-related help in the title bar<a class="headerlink" href="#mouse-related-help-in-the-title-bar" title="Permanent link">¶</a></h4>
+<p>The title bar now displays some short help about the mouse, such as how it can
+be captured or released.</p>
+<h3 id="high-dpi-on-windows">High DPI on Windows<a class="headerlink" href="#high-dpi-on-windows" title="Permanent link">¶</a></h3>
+<p>Following macOS, high DPI support now comes to Windows: the DOSBox window
+should scale nicely along other programs, and retain correct dimensions when
+moving between monitors with different scaling factors set.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This feature is currently experimental! If you notice any weird behaviour,
+<a href="https://github.com/dosbox-staging/dosbox-staging/issues/new/choose">please report it!</a></p>
+</div>
+<h3 id="ability-to-use-local-configs-via-finder-on-macos">Ability to use local configs via Finder on macOS<a class="headerlink" href="#ability-to-use-local-configs-via-finder-on-macos" title="Permanent link">¶</a></h3>
+<p>A new <code>--working-dir &lt;path&gt;</code> command line parameter has been introduced to
+make it possible to launch DOSBox Staging using local configs from the Finder
+on macOS. Previously, you had to use DOSBox from the command line to achieve
+this.
+ </p>
+<h4 id="how-to-use-it">How to use it<a class="headerlink" href="#how-to-use-it" title="Permanent link">¶</a></h4>
+<p>Follow the steps indicated in the DMG package, as shown:</p>
+<figure>
+<p><a class="glightbox" data-desc-position="bottom" data-height="auto" data-width="100%" href="../../images/macos_dmg_run_command.png"><img alt="macOS DMG run-command tip" src="../../images/macos_dmg_run_command.png"/></a></p>
+</figure>
+<p>Simply copy the included <code>Start DOSBox Staging.command</code> to any folder that
+contains a local <code>dosbox.conf</code> and then open it (<code>Start DOSBox
+Staging.command</code>) in Finder. DOSBox Staging will act as if started from that
+folder and will pick up the local config.
+ </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You might be asked to give DOSBox Staging access to the containing folder
+upon the first launch—just click OK if that dialog comes up.</p>
+</div>
+<h2 id="general-improvements">General improvements<a class="headerlink" href="#general-improvements" title="Permanent link">¶</a></h2>
+<h3 id="morecom-command"><code>more.com</code> command<a class="headerlink" href="#morecom-command" title="Permanent link">¶</a></h3>
+<p>The <code>more</code> command is now internally implemented (should be more user-friendly
+than the original DOS one), and its engine is used for displaying help
+messages longer than one screen.</p>
+<figure>
+<video controls="controls" width="100%">
+<source src="https://archive.org/download/dosbox-staging-v0.80.0-enhanced-more-command/enhanced-more-command.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>more.com — Better and Improved™
+  </p>
+</figcaption>
+</figure>
+<h3 id="on-the-fly-changes">On-the-fly changes<a class="headerlink" href="#on-the-fly-changes" title="Permanent link">¶</a></h3>
+<p>Several settings can be safely adjusted at runtime, including the output video
+settings, resolution, OpenGL shaders, audio devices, and mixer settings.</p>
+<figure>
+<video controls="controls" width="100%">
+<source src="https://archive.org/download/dosbox-staging-v0.80.0-plug-n-play-audio/plug-n-play-audio.mp4" type="video/mp4"/>
+    Your browser does not support the <code>video</code> element.
+  </video>
+<figcaption>
+<p>Reconfiguring audio on-the-fly — changing sound cards in a PC has never
+  been easier!
+  </p>
+</figcaption>
+</figure>
+<h3 id="post-rendered-screenshots">Post-rendered screenshots<a class="headerlink" href="#post-rendered-screenshots" title="Permanent link">¶</a></h3>
+<p>DOSBox has long provided the <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-f5">F5</kbd></span> hotkey to capture the emulated video
+card’s image prior to rendering.</p>
+<p>DOSBox Staging 0.80 now pairs this with <span class="keys"><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-f5">F5</kbd></span> (or <span class="keys"><kbd class="key-option">Option</kbd><span>+</span><kbd class="key-f5">F5</kbd></span> on macOS) to
+capture the as-seen (post-rendered) image.</p>
+<h3 id="more-bundled-opengl-shaders">More bundled OpenGL shaders<a class="headerlink" href="#more-bundled-opengl-shaders" title="Permanent link">¶</a></h3>
+<p>The balance of usable shaders from <a href="https://github.com/tyrells/dosbox-svn-shaders">Tyrells’ CRT shader
+collection</a>, as well as
+GranMinigun’s interpolating Catmull–Rom spline shader have been added.</p>
+<p>Launch DOSBox Staging with the <code>--list-glshaders</code> command-line argument to list
+the available OpenGL shaders. For example:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a>List of available GLSL shaders
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a>------------------------------
+<a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a>
+<a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a>Path '/usr/src/dosbox-staging/build/resources/glshaders' has:
+<a href="#__codelineno-0-5" id="__codelineno-0-5" name="__codelineno-0-5"></a>        |- crt/aperture
+<a href="#__codelineno-0-6" id="__codelineno-0-6" name="__codelineno-0-6"></a>        |- crt/caligari
+<a href="#__codelineno-0-7" id="__codelineno-0-7" name="__codelineno-0-7"></a>        |- crt/easymode
+<a href="#__codelineno-0-8" id="__codelineno-0-8" name="__codelineno-0-8"></a>        |- crt/easymode.tweaked
+<a href="#__codelineno-0-9" id="__codelineno-0-9" name="__codelineno-0-9"></a>        |- crt/fakelottes
+<a href="#__codelineno-0-10" id="__codelineno-0-10" name="__codelineno-0-10"></a>        |- crt/fakelottes.tweaked
+<a href="#__codelineno-0-11" id="__codelineno-0-11" name="__codelineno-0-11"></a>        |- crt/geom
+<a href="#__codelineno-0-12" id="__codelineno-0-12" name="__codelineno-0-12"></a>        |- crt/geom.tweaked
+<a href="#__codelineno-0-13" id="__codelineno-0-13" name="__codelineno-0-13"></a>        |- crt/hyllian-updated
+<a href="#__codelineno-0-14" id="__codelineno-0-14" name="__codelineno-0-14"></a>        |- crt/hyllian
+<a href="#__codelineno-0-15" id="__codelineno-0-15" name="__codelineno-0-15"></a>        |- crt/lottes-fast
+<a href="#__codelineno-0-16" id="__codelineno-0-16" name="__codelineno-0-16"></a>        |- crt/lottes-fast.subtle+gain
+<a href="#__codelineno-0-17" id="__codelineno-0-17" name="__codelineno-0-17"></a>        |- crt/lottes
+<a href="#__codelineno-0-18" id="__codelineno-0-18" name="__codelineno-0-18"></a>        |- crt/lottes.tweaked
+<a href="#__codelineno-0-19" id="__codelineno-0-19" name="__codelineno-0-19"></a>        |- crt/mattias
+<a href="#__codelineno-0-20" id="__codelineno-0-20" name="__codelineno-0-20"></a>        |- crt/pi-vertical
+<a href="#__codelineno-0-21" id="__codelineno-0-21" name="__codelineno-0-21"></a>        |- crt/pi
+<a href="#__codelineno-0-22" id="__codelineno-0-22" name="__codelineno-0-22"></a>        |- crt/yee64
+<a href="#__codelineno-0-23" id="__codelineno-0-23" name="__codelineno-0-23"></a>        |- crt/yeetron
+<a href="#__codelineno-0-24" id="__codelineno-0-24" name="__codelineno-0-24"></a>        |- crt/zfast
+<a href="#__codelineno-0-25" id="__codelineno-0-25" name="__codelineno-0-25"></a>        |- crt/zfast-composite
+<a href="#__codelineno-0-26" id="__codelineno-0-26" name="__codelineno-0-26"></a>        |- interpolation/catmull-rom
+<a href="#__codelineno-0-27" id="__codelineno-0-27" name="__codelineno-0-27"></a>        |- interpolation/sharp
+<a href="#__codelineno-0-28" id="__codelineno-0-28" name="__codelineno-0-28"></a>        |- scaler/advinterp2x
+<a href="#__codelineno-0-29" id="__codelineno-0-29" name="__codelineno-0-29"></a>        |- scaler/advinterp3x
+<a href="#__codelineno-0-30" id="__codelineno-0-30" name="__codelineno-0-30"></a>        |- scaler/advmame2x
+<a href="#__codelineno-0-31" id="__codelineno-0-31" name="__codelineno-0-31"></a>        |- scaler/advmame3x
+<a href="#__codelineno-0-32" id="__codelineno-0-32" name="__codelineno-0-32"></a>        |- scaler/rgb2x
+<a href="#__codelineno-0-33" id="__codelineno-0-33" name="__codelineno-0-33"></a>        |- scaler/rgb3x
+<a href="#__codelineno-0-34" id="__codelineno-0-34" name="__codelineno-0-34"></a>        |- scaler/scan2x
+<a href="#__codelineno-0-35" id="__codelineno-0-35" name="__codelineno-0-35"></a>        |- scaler/scan3x
+<a href="#__codelineno-0-36" id="__codelineno-0-36" name="__codelineno-0-36"></a>        |- scaler/tv2x
+<a href="#__codelineno-0-37" id="__codelineno-0-37" name="__codelineno-0-37"></a>        `- scaler/tv3x
+</code></pre></div>
+<details class="note">
+<summary>Full PR list of additions and improvements</summary>
+<ul>
+<li>Add <code>--working-dir</code> command line option (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2122" title="GitHub Issue dosbox-staging/dosbox-staging #2122">#2122</a>)</li>
+<li>Add a subset of OpenGL shaders from Tyrells’ repo (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2137" title="GitHub Issue dosbox-staging/dosbox-staging #2137">#2137</a>)</li>
+<li>Add direct support for Windows 3.1 seamless mouse driver by javispedro (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1996" title="GitHub Issue dosbox-staging/dosbox-staging #1996">#1996</a>)</li>
+<li>Add libraries to support TrueType font rendering (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2075" title="GitHub Issue dosbox-staging/dosbox-staging #2075">#2075</a>)</li>
+<li>Add more cleanup on audio device tear-down (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2099" title="GitHub Issue dosbox-staging/dosbox-staging #2099">#2099</a>)</li>
+<li>Add mouse related hints to title bar (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2062" title="GitHub Issue dosbox-staging/dosbox-staging #2062">#2062</a>)</li>
+<li>Add release drafter support files (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2036" title="GitHub Issue dosbox-staging/dosbox-staging #2036">#2036</a>)</li>
+<li>Add screenshots for rendered output <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2073" title="GitHub Issue dosbox-staging/dosbox-staging #2073">#2073</a>) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2078" title="GitHub Issue dosbox-staging/dosbox-staging #2078">#2078</a>)</li>
+<li>Allow to cancel interactive mouse mapping with a keyboard (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2067" title="GitHub Issue dosbox-staging/dosbox-staging #2067">#2067</a>)</li>
+<li>Bump actions/cache from 2 to 3.0.11 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2025" title="GitHub Issue dosbox-staging/dosbox-staging #2025">#2025</a>)</li>
+<li>Bump actions/download-artifact from 2 to 3 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2028" title="GitHub Issue dosbox-staging/dosbox-staging #2028">#2028</a>)</li>
+<li>Bump actions/upload-artifact from 2 to 3 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2026" title="GitHub Issue dosbox-staging/dosbox-staging #2026">#2026</a>)</li>
+<li>Bump fountainhead/action-wait-for-check from 1.0.0 to 1.1.0 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2027" title="GitHub Issue dosbox-staging/dosbox-staging #2027">#2027</a>)</li>
+<li>Bump microsoft/setup-msbuild from 1.1 to 1.2 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2123" title="GitHub Issue dosbox-staging/dosbox-staging #2123">#2123</a>)</li>
+<li>Bump microsoft/setup-msbuild from 1.2 to 1.3 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2129" title="GitHub Issue dosbox-staging/dosbox-staging #2129">#2129</a>)</li>
+<li>Check file-descriptor dependency for Enet, slirp, and ManyMouse (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2108" title="GitHub Issue dosbox-staging/dosbox-staging #2108">#2108</a>)</li>
+<li>Cleanup a handful of build issues for clang 10.x and 11.x (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2096" title="GitHub Issue dosbox-staging/dosbox-staging #2096">#2096</a>)</li>
+<li>Cleanup issues in ReelMagic flagged by Coverity (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2084" title="GitHub Issue dosbox-staging/dosbox-staging #2084">#2084</a>)</li>
+<li>Cleanup overcomplicated data conversions in Unicode support (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2104" title="GitHub Issue dosbox-staging/dosbox-staging #2104">#2104</a>)</li>
+<li>Cleanup string IDs of DOS programs (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2064" title="GitHub Issue dosbox-staging/dosbox-staging #2064">#2064</a>)</li>
+<li>Compiler warning fix in ManyMouse library (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2076" title="GitHub Issue dosbox-staging/dosbox-staging #2076">#2076</a>)</li>
+<li>Contribute a script to convert from YouTube chapters to CD-DA (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2037" title="GitHub Issue dosbox-staging/dosbox-staging #2037">#2037</a>)</li>
+<li>Customise the looks of the macOS DMG distribution disk image (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2127" title="GitHub Issue dosbox-staging/dosbox-staging #2127">#2127</a>)</li>
+<li>Debloat the binary: use more heap storage and retire the software scalar (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2101" title="GitHub Issue dosbox-staging/dosbox-staging #2101">#2101</a>)</li>
+<li>Drop architecture spec from setup-msbuild GitHub action (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2124" title="GitHub Issue dosbox-staging/dosbox-staging #2124">#2124</a>)</li>
+<li>Enable DPI scaling on Windows (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2105" title="GitHub Issue dosbox-staging/dosbox-staging #2105">#2105</a>)</li>
+<li>Fix a couple CWE issues in ManyMouse (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2040" title="GitHub Issue dosbox-staging/dosbox-staging #2040">#2040</a>)</li>
+<li>Fix sentence starting with lower case in MOUNT command help (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2068" title="GitHub Issue dosbox-staging/dosbox-staging #2068">#2068</a>)</li>
+<li>Generate linker map file by default (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2103" title="GitHub Issue dosbox-staging/dosbox-staging #2103">#2103</a>)</li>
+<li>Implement MORE.COM command (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2020" title="GitHub Issue dosbox-staging/dosbox-staging #2020">#2020</a>)</li>
+<li>Import Jon Dennis’s ReelMagic emulation package <a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1112" title="GitHub Issue dosbox-staging/dosbox-staging #1112">#1112</a>) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2077" title="GitHub Issue dosbox-staging/dosbox-staging #2077">#2077</a>)</li>
+<li>Improve detection of atomics, testing of speexDSP, and cleanup README (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1992" title="GitHub Issue dosbox-staging/dosbox-staging #1992">#1992</a>)</li>
+<li>Improve interactive mouse mapping (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2065" title="GitHub Issue dosbox-staging/dosbox-staging #2065">#2065</a>)</li>
+<li>Improve management of audio devices (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2095" title="GitHub Issue dosbox-staging/dosbox-staging #2095">#2095</a>)</li>
+<li>Look for libXInput dependency (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2085" title="GitHub Issue dosbox-staging/dosbox-staging #2085">#2085</a>)</li>
+<li>Minor mouse enhancements (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2060" title="GitHub Issue dosbox-staging/dosbox-staging #2060">#2060</a>)</li>
+<li>Mouse mapper and configuration mechanism (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2000" title="GitHub Issue dosbox-staging/dosbox-staging #2000">#2000</a>)</li>
+<li>Refactor ReelMagic player with per-stream handle registration (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2086" title="GitHub Issue dosbox-staging/dosbox-staging #2086">#2086</a>)</li>
+<li>Refactor the ReelMagic audio FIFO class (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2090" title="GitHub Issue dosbox-staging/dosbox-staging #2090">#2090</a>)</li>
+<li>Simplifies file search in virtual drive (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2130" title="GitHub Issue dosbox-staging/dosbox-staging #2130">#2130</a>)</li>
+<li>Split contributed CD-DA scripts into fetch vs. cue functions (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2045" title="GitHub Issue dosbox-staging/dosbox-staging #2045">#2045</a>)</li>
+<li>Sync reSIDfp with upstream (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2092" title="GitHub Issue dosbox-staging/dosbox-staging #2092">#2092</a>)</li>
+<li>Update CI against latest deprecations and OS versions (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2031" title="GitHub Issue dosbox-staging/dosbox-staging #2031">#2031</a>)</li>
+<li>Update Tracy to v0.9 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2069" title="GitHub Issue dosbox-staging/dosbox-staging #2069">#2069</a>)</li>
+<li>Update the build system wraps and automate CI action maintenance (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2024" title="GitHub Issue dosbox-staging/dosbox-staging #2024">#2024</a>)</li>
+<li>Update wraps and PVS Studio (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2097" title="GitHub Issue dosbox-staging/dosbox-staging #2097">#2097</a>)</li>
+<li>Use MORE engine for help output (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2079" title="GitHub Issue dosbox-staging/dosbox-staging #2079">#2079</a>)</li>
+<li>Use a <code>sdd::unique_ptr</code> to manage the video memory (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2116" title="GitHub Issue dosbox-staging/dosbox-staging #2116">#2116</a>)</li>
+<li>Use shared pointers to manage the virtual files (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2117" title="GitHub Issue dosbox-staging/dosbox-staging #2117">#2117</a>)</li>
+</ul>
+</details>
+<h2 id="bug-and-regression-fixes">Bug and regression fixes<a class="headerlink" href="#bug-and-regression-fixes" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>The mixer’s effects (reverb, chorus, and crossfeed) can now be turned on and
+  off at runtime via the mixer command.</p>
+</li>
+<li>
+<p>FluidSynth’s specific reverb and chorus configuration settings are now applied
+  and will replace the default values that were previously always applied.</p>
+</li>
+<li>
+<p>The modem’s call now has a warm-up period where it will discard data. This
+  fixes a bug noted in <strong>Duke Nukem 3D</strong> where it would fail its initial
+  handshake on the first try.</p>
+</li>
+</ul>
+<details class="note">
+<summary>Full PR list of bug and regression fixes</summary>
+<ul>
+<li>Adapt <code>update-sources.sh</code> script to UTF-8 locale (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2011" title="GitHub Issue dosbox-staging/dosbox-staging #2011">#2011</a>)</li>
+<li>Add modem call warm-up period (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2125" title="GitHub Issue dosbox-staging/dosbox-staging #2125">#2125</a>)</li>
+<li>Always use VFR presentation mode for text modes (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2139" title="GitHub Issue dosbox-staging/dosbox-staging #2139">#2139</a>)</li>
+<li>Avoid shifting negative DAC data in Sound Blaster (CWE-758) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2115" title="GitHub Issue dosbox-staging/dosbox-staging #2115">#2115</a>)</li>
+<li>Capture the OpenGL screenshot using RGBA pixel format (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2143" title="GitHub Issue dosbox-staging/dosbox-staging #2143">#2143</a>)</li>
+<li>Change <code>config -wc</code> to write UTF-8 file (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1991" title="GitHub Issue dosbox-staging/dosbox-staging #1991">#1991</a>)</li>
+<li>Drop architecture spec from setup-msbuild GitHub action (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2124" title="GitHub Issue dosbox-staging/dosbox-staging #2124">#2124</a>)</li>
+<li>Fix FluidSynth reverb and chorus settings not applying (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2133" title="GitHub Issue dosbox-staging/dosbox-staging #2133">#2133</a>)</li>
+<li>Fix a memory leak in the keyboard layout class (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1985" title="GitHub Issue dosbox-staging/dosbox-staging #1985">#1985</a>)</li>
+<li>Fix assertion in mouse code for surface screen output (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2110" title="GitHub Issue dosbox-staging/dosbox-staging #2110">#2110</a>)</li>
+<li>Fix bitwise shift of negative in DOS date pack call (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2034" title="GitHub Issue dosbox-staging/dosbox-staging #2034">#2034</a>)</li>
+<li>Fix character D6 mapping in code page 3021 (Bulgarian MIK encoding) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2094" title="GitHub Issue dosbox-staging/dosbox-staging #2094">#2094</a>)</li>
+<li>Fix several English strings too long to fit on screen (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1998" title="GitHub Issue dosbox-staging/dosbox-staging #1998">#1998</a>)</li>
+<li>Fix tab handling in MORE command (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2102" title="GitHub Issue dosbox-staging/dosbox-staging #2102">#2102</a>)</li>
+<li>Improve <code>mixer.com</code> CLI handling of volume and effect arguments (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2021" title="GitHub Issue dosbox-staging/dosbox-staging #2021">#2021</a>)</li>
+<li>Initialize the window’s canvas size during its setup phase (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2038" title="GitHub Issue dosbox-staging/dosbox-staging #2038">#2038</a>)</li>
+<li>Limit <code>bit_view</code>s to 8-bit registers to avoid byte-order assumption (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1999" title="GitHub Issue dosbox-staging/dosbox-staging #1999">#1999</a>)</li>
+<li>MORE text output engine fixes (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2083" title="GitHub Issue dosbox-staging/dosbox-staging #2083">#2083</a>)</li>
+<li>Parse language options before writing the conf file (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2001" title="GitHub Issue dosbox-staging/dosbox-staging #2001">#2001</a>)</li>
+<li>Remove errorneous screen parameters check in mouse code (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2119" title="GitHub Issue dosbox-staging/dosbox-staging #2119">#2119</a>)</li>
+<li>Restore 0.79.1 mouse acceleration model in DOS driver (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2087" title="GitHub Issue dosbox-staging/dosbox-staging #2087">#2087</a>)</li>
+<li>Restore WheelHasMoved bit in DOS mouse driver to correct value (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2091" title="GitHub Issue dosbox-staging/dosbox-staging #2091">#2091</a>)</li>
+<li>Use non-throwing form of <code>std::filesystem</code> calls (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1995" title="GitHub Issue dosbox-staging/dosbox-staging #1995">#1995</a>)</li>
+</ul>
+</details>
+<h2 id="translation-improvements">Translation improvements<a class="headerlink" href="#translation-improvements" title="Permanent link">¶</a></h2>
+<h3 id="translations">Translations<a class="headerlink" href="#translations" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>German: up-to-date</li>
+<li>Italian: up-to-date</li>
+<li>Polish: up-to-date</li>
+<li>Russian: up-to-date</li>
+<li>French: not updated</li>
+<li>Spanish: not updated</li>
+</ul>
+</div>
+<h3 id="related-improvements">Related improvements<a class="headerlink" href="#related-improvements" title="Permanent link">¶</a></h3>
+<ul>
+<li>
+<p>The title bar is now translatable.</p>
+</li>
+<li>
+<p>The Brazilian ABNT2 slash and question mark keys are now handled.</p>
+</li>
+<li>
+<p>Translations are now stored in UTF-8 and converted to the selected DOS
+  codepage, dropping accents if needed, sometimes even performing crude
+  transliterations (for Latin, Greek, and Cyrillic alphabets DOSBox
+  shouldn’t display garbled messages anymore regardless which codepage is
+  selected). This is especially important for languages where more than one
+  incompatible encoding was used in the DOS era. All FreeDOS codepages are
+  supported. Note that only DOSBox Staging’s own messages benefit from this
+  feature.</p>
+</li>
+</ul>
+<details class="note">
+<summary>Full PR list of documentation and translation changes</summary>
+<ul>
+<li>Adapt <code>update-sources.sh</code> script to UTF-8 locale (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2011" title="GitHub Issue dosbox-staging/dosbox-staging #2011">#2011</a>)</li>
+<li>Add Dutch tranlation of MOUSECTL (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2042" title="GitHub Issue dosbox-staging/dosbox-staging #2042">#2042</a>)</li>
+<li>Add Dutch translation of MORE (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2048" title="GitHub Issue dosbox-staging/dosbox-staging #2048">#2048</a>)</li>
+<li>Add handling for ABNT2 slash/question mark key (by rsribeiro) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2082" title="GitHub Issue dosbox-staging/dosbox-staging #2082">#2082</a>)</li>
+<li>Add release drafter support files (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2036" title="GitHub Issue dosbox-staging/dosbox-staging #2036">#2036</a>)</li>
+<li>Clarify <code>tandy</code> and <code>ibm5153</code> <code>cga_colors</code> config descriptions (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2074" title="GitHub Issue dosbox-staging/dosbox-staging #2074">#2074</a>)</li>
+<li>Cleanup string IDs of DOS programs (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2064" title="GitHub Issue dosbox-staging/dosbox-staging #2064">#2064</a>)</li>
+<li>Convert esc codes to ansi in src (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2008" title="GitHub Issue dosbox-staging/dosbox-staging #2008">#2008</a>)</li>
+<li>Delete obsolete translated msgs (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2058" title="GitHub Issue dosbox-staging/dosbox-staging #2058">#2058</a>)</li>
+<li>Fix character D6 mapping in code page 3021 (Bulgarian MIK encoding) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2094" title="GitHub Issue dosbox-staging/dosbox-staging #2094">#2094</a>)</li>
+<li>Fix code page 30020 to UTF-8 mapping (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1988" title="GitHub Issue dosbox-staging/dosbox-staging #1988">#1988</a>)</li>
+<li>Fix code page 30020 to UTF-8 mapping (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1988" title="GitHub Issue dosbox-staging/dosbox-staging #1988">#1988</a>)</li>
+<li>Fix mistakes in switching to ansi text codes (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2017" title="GitHub Issue dosbox-staging/dosbox-staging #2017">#2017</a>)</li>
+<li>Fix some errors in the Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2029" title="GitHub Issue dosbox-staging/dosbox-staging #2029">#2029</a>)</li>
+<li>Fixed some ANSI escape codes in the Italian translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2013" title="GitHub Issue dosbox-staging/dosbox-staging #2013">#2013</a>)</li>
+<li>Fixup nl.txt to match nl.lng (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2010" title="GitHub Issue dosbox-staging/dosbox-staging #2010">#2010</a>)</li>
+<li>Improve build instructions (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2126" title="GitHub Issue dosbox-staging/dosbox-staging #2126">#2126</a>)</li>
+<li>Improve detection of atomics, testing of speexDSP, and cleanup README (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1992" title="GitHub Issue dosbox-staging/dosbox-staging #1992">#1992</a>)</li>
+<li>Minor Dutch translation updates (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2007" title="GitHub Issue dosbox-staging/dosbox-staging #2007">#2007</a>)</li>
+<li>Parse language options before writing the conf file (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2001" title="GitHub Issue dosbox-staging/dosbox-staging #2001">#2001</a>)</li>
+<li>Support for UTF-8 locale (2<sup>nd</sup> generation patch) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1884" title="GitHub Issue dosbox-staging/dosbox-staging #1884">#1884</a>)</li>
+<li>Support for UTF-8 locale (2<sup>nd</sup> generation patch) (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1884" title="GitHub Issue dosbox-staging/dosbox-staging #1884">#1884</a>)</li>
+<li>Switch messages in <code>MSG_Add</code> from code page 437 to UTF-8 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1984" title="GitHub Issue dosbox-staging/dosbox-staging #1984">#1984</a>)</li>
+<li>Switch messages in <code>MSG_Add</code> from code page 437 to UTF-8 (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1984" title="GitHub Issue dosbox-staging/dosbox-staging #1984">#1984</a>)</li>
+<li>Translate new message (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2032" title="GitHub Issue dosbox-staging/dosbox-staging #2032">#2032</a>)</li>
+<li>Update Dutch (nl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2100" title="GitHub Issue dosbox-staging/dosbox-staging #2100">#2100</a>)</li>
+<li>Update Dutch (nl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2141" title="GitHub Issue dosbox-staging/dosbox-staging #2141">#2141</a>)</li>
+<li>Update Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2005" title="GitHub Issue dosbox-staging/dosbox-staging #2005">#2005</a>)</li>
+<li>Update Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2041" title="GitHub Issue dosbox-staging/dosbox-staging #2041">#2041</a>)</li>
+<li>Update Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2055" title="GitHub Issue dosbox-staging/dosbox-staging #2055">#2055</a>)</li>
+<li>Update Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2072" title="GitHub Issue dosbox-staging/dosbox-staging #2072">#2072</a>)</li>
+<li>Update Italian (it-it) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2088" title="GitHub Issue dosbox-staging/dosbox-staging #2088">#2088</a>)</li>
+<li>Update Polish (pl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/1982" title="GitHub Issue dosbox-staging/dosbox-staging #1982">#1982</a>)</li>
+<li>Update Polish (pl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2070" title="GitHub Issue dosbox-staging/dosbox-staging #2070">#2070</a>)</li>
+<li>Update Polish (pl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2098" title="GitHub Issue dosbox-staging/dosbox-staging #2098">#2098</a>)</li>
+<li>Update Polish (pl) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2118" title="GitHub Issue dosbox-staging/dosbox-staging #2118">#2118</a>)</li>
+<li>Update Polish (pl) translation, change ANSI escape codes to tags (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2012" title="GitHub Issue dosbox-staging/dosbox-staging #2012">#2012</a>)</li>
+<li>Update Russian (ru-RU) translation (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2120" title="GitHub Issue dosbox-staging/dosbox-staging #2120">#2120</a>)</li>
+<li>Various Dutch translation updates (<a class="gh-link gh-issue" href="https://github.com/dosbox-staging/dosbox-staging/issues/2016" title="GitHub Issue dosbox-staging/dosbox-staging #2016">#2016</a>)</li>
+</ul>
+</details>
+<h2 id="documentation-updates">Documentation updates<a class="headerlink" href="#documentation-updates" title="Permanent link">¶</a></h2>
+<p>The following wiki articles have been updated:</p>
+<ul>
+<li>
+<p>The new <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming">Dual Mouse Gaming page</a>
+  documents how to set up dual-mouse working in <a href="https://en.wikipedia.org/wiki/The_Settlers">The Settlers</a> and <a href="https://en.wikipedia.org/wiki/The_Settlers_II">The Settlers II</a>.</p>
+</li>
+<li>
+<p>The <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Windows-3.1x">Windows 3.1x page</a>
+  was updated with notes on how to set up the improved mouse driver, and more
+  sound drivers.</p>
+</li>
+<li>
+<p>The new <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Windows-3.0">Windows 3.0 page</a>
+  documents how to set up Windows 3.0’s video, sound, MIDI, mouse, and how to
+  print to files.</p>
+</li>
+<li>
+<p>The new <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Serial-Ports">Serial Ports page</a>
+  documents all of the serial port settings.</p>
+</li>
+<li>
+<p>The <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Sound-Cards">Sound Cards page</a>
+  was overhauled with descriptions and configuration help for all supported
+  sound devices.</p>
+</li>
+<li>
+<p>The <a href="https://github.com/dosbox-staging/dosbox-staging/wiki/Tips-&amp;-Tricks">Tips &amp; Tricks page</a>
+  was updated with how to generate DOSBox mountable CD-DA content from public
+  domain or Creative Commons licensed YouTube chapters and playlists.</p>
+</li>
+</ul>
+<h2 id="contributors">Contributors<a class="headerlink" href="#contributors" title="Permanent link">¶</a></h2>
+<p>The following commit authors, sponsors, supporters, and backers all invested
+their time or funds into the 0.80 release effort. Thank you!</p>
+<p>Contributors are listed in alphabetic order.</p>
+<h3 id="080-commit-authors">0.80 commit authors<a class="headerlink" href="#080-commit-authors" title="Permanent link">¶</a></h3>
+<div class="compact">
+<ul>
+<li>Burrito78</li>
+<li>dreamer</li>
+<li>drfiemost</li>
+<li>FeralChild64</li>
+<li>GranMinigun</li>
+<li>javispedro</li>
+<li>Jkapp76</li>
+<li>johnnovak</li>
+<li>jrdennisoss</li>
+<li>Kappa971</li>
+<li>kcgen</li>
+<li>kklobe</li>
+<li>LowLevelMahn</li>
+<li>memononen</li>
+<li>nemo93</li>
+<li>NicknineTheEagle</li>
+<li>rderooy</li>
+<li>rsribeiro</li>
+<li>tyrells</li>
+</ul>
+</div>
+<h3 id="080-sponsors">0.80 sponsors<a class="headerlink" href="#080-sponsors" title="Permanent link">¶</a></h3>
+<p>Sponsors who donated more than <strong>100 USD per month</strong> to the project:</p>
+<div class="compact">
+<ul>
+<li>Antti Peltola (1000 USD during the period)</li>
+<li>Wengier Wu (380 USD during the period)</li>
+</ul>
+</div>
+<h3 id="080-backers">0.80 backers<a class="headerlink" href="#080-backers" title="Permanent link">¶</a></h3>
+<p>Backers who donated more than <strong>5 USD per month</strong> to the project:</p>
+<div class="compact">
+<ul>
+<li>Burrito78</li>
+<li>Hannu Hartikainen</li>
+<li>Hugo Locurcio</li>
+</ul>
+</div>
+<p>Thank you for considering supporting our work through a donation on
+<a href="https://github.com/sponsors/dosbox-staging">GitHub Sponsors</a> or
+<a href="https://opencollective.com/dosbox-staging">Open Collective</a>. Your
+contribution helps us purchase the necessary hardware and licenses to keep our
+project going.</p>
+<h2 id="thank-you">Thank you<a class="headerlink" href="#thank-you" title="Permanent link">¶</a></h2>
+<p>We are grateful for all community contributions as well as the original DOSBox
+project, upon which DOSBox Staging is based.</p>
+</article>
+</div>
+</div>
+<a class="md-top md-icon" data-md-component="top" hidden="" href="#">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg>
+            Back to top
+          </a>
+</main>
+<!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+<!-- Footer -->
+<footer class="md-footer">
+<!-- Link to previous and/or next page -->
+<nav aria-label="" class="md-footer__inner md-grid">
+<!-- Link to previous page -->
+<a aria-label="Previous: Development builds" class="md-footer__link md-footer__link--prev" href="../../development-builds/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              Development builds
+            </div>
+</div>
+</a>
+<!-- Link to next page -->
+<a aria-label="Next: 0.79.1" class="md-footer__link md-footer__link--next" href="../0.79.1/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              0.79.1
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"></path></svg>
+</div>
+</a>
+</nav>
+<!-- Further information -->
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="links">
+<ul>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging">GitHub</a></li>
+<li><a href="https://github.com/dosbox-staging/dosbox-staging/wiki">Wiki</a></li>
+<li><a href="https://discord.gg/WwAg3Xf">Discord</a></li>
+<li><a href="https://opencollective.com/dosbox-staging">Open Collective</a></li>
+</ul>
+</div>
+<div class="credits">
+       Powered by <a href="https://www.mkdocs.org/">MkDocs</a>, <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>, and <a href="https://pages.github.com/">GitHub Pages</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+<script src="../../../assets/javascripts/bundle.5cf534bf.min.js"></script>
+<script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "none"});})</script></body>
+</html>
