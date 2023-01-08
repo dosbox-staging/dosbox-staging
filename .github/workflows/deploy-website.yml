@@ -1,0 +1,23 @@
+name: Deploy website
+
+on: workflow_dispatch
+
+jobs:
+  build_and_deploy_website:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Install mkdocs
+        run: |
+          pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects \
+                      mkdocs-glightbox mdx-gh-links
+
+      - name: Build & deploy website
+        run: |
+          cd website
+          mkdocs gh-deploy --force
+
