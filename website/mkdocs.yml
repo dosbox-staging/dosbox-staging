@@ -93,3 +93,5 @@ nav:
   - About:
       - about/index.md
 
+  - Wiki: https://github.com/dosbox-staging/dosbox-staging/wiki
+
