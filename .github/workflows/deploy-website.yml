@@ -6,10 +6,21 @@ jobs:
   build_and_deploy_website:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout repository
+      - name: Check out MkDocs sources
         uses: actions/checkout@v3
         with:
+          ref: main
           submodules: false
+          path: dosbox-staging
+
+      - name: Check out organisation GitHub Pages repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.ACCESS_TOKEN_REPO }}
+          repository: dosbox-staging/dosbox-staging.github.io
+          ref: master
+          submodules: false
+          path: dosbox-staging.github.io
 
       - name: Install mkdocs
         run: |
@@ -18,6 +29,8 @@ jobs:
 
       - name: Build & deploy website
         run: |
-          cd website
-          mkdocs gh-deploy --force
+          cd dosbox-staging.github.io
+          mkdocs gh-deploy \
+              --config-file ../dosbox-staging/website/mkdocs.yml \
+              --remote-branch master --force
 
