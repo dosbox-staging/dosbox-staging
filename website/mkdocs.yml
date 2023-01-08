@@ -72,6 +72,7 @@ nav:
     - downloads/development-builds.md
 
     - Release notes:
+      - 0.80.1: downloads/release-notes/0.80.1.md
       - 0.80.0: downloads/release-notes/0.80.0.md
       - 0.79.1: downloads/release-notes/0.79.1.md
       - 0.79.0: downloads/release-notes/0.79.0.md
