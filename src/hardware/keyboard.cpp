@@ -19,13 +19,14 @@
 #include "dosbox.h"
 #include "keyboard.h"
 
+#include "bios.h"
 #include "bitops.h"
 #include "inout.h"
-#include "pic.h"
 #include "mem.h"
 #include "mixer.h"
-#include "timer.h"
+#include "pic.h"
 #include "support.h"
+#include "timer.h"
 
 #define KEYBUFSIZE 32
 #define KEYDELAY   0.300 // Considering 20-30 khz serial clock and 11 bits/char
@@ -365,6 +366,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_grave:ret=41;break;
 	case KBD_leftshift:ret=42;break;
 	case KBD_backslash:ret=43;break;
+	case KBD_oem102: ret = 86; break;
 	case KBD_z:ret=44;break;
 	case KBD_x:ret=45;break;
 	case KBD_c:ret=46;break;
@@ -376,6 +378,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_comma:ret=51;break;
 	case KBD_period:ret=52;break;
 	case KBD_slash:ret=53;break;
+	case KBD_abnt1: ret = 115; break;
 	case KBD_rightshift:ret=54;break;
 	case KBD_kpmultiply:ret=55;break;
 	case KBD_leftalt:ret=56;break;
@@ -410,16 +413,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_kp0:ret=82;break;
 	case KBD_kpperiod:ret=83;break;
 
-	case KBD_extra_lt_gt:ret=86;break;
 	case KBD_f11:ret=87;break;
 	case KBD_f12:ret=88;break;
 
-	// International keys
-
-	case KBD_intl1:ret=89;break;
-
 	//The Extended keys
-
 	case KBD_kpenter:extend=true;ret=28;break;
 	case KBD_rightctrl:extend=true;ret=29;break;
 	case KBD_kpdivide:extend=true;ret=53;break;
@@ -434,8 +431,8 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
-	case KBD_leftgui:extend=true;ret=90;break;
-	case KBD_rightgui:extend=true;ret=89;break;
+	case KBD_leftgui:extend=true;ret=91;break;
+	case KBD_rightgui:extend=true;ret=92;break;
 	
 	case KBD_pause:
 		KEYBOARD_AddBuffer(0xe1);
@@ -452,6 +449,8 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 		E_Exit("Unsupported key press");
 		break;
 	}
+	assert(ret <= MAX_SCAN_CODE);
+
 	/* Add the actual key in the keyboard queue */
 	if (pressed) {
 		if (keyb.repeat.key == keytype) keyb.repeat.wait = keyb.repeat.rate;

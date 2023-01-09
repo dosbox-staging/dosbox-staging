@@ -18,8 +18,6 @@
 
 #include "bios.h"
 
-#include <SDL.h>
-
 #include "callback.h"
 #include "mem.h"
 #include "keyboard.h"
@@ -27,112 +25,157 @@
 #include "inout.h"
 #include "dos_inc.h"
 
-#include "checks.h"
-CHECK_NARROWING();
-
 static callback_number_t call_int16 = 0;
 static callback_number_t call_irq1  = 0;
 static callback_number_t call_irq6  = 0;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
-static struct {
-  uint16_t normal;
-  uint16_t shift;
-  uint16_t control;
-  uint16_t alt;
-  } scan_to_scanascii[MAX_SCAN_CODE + 1] = {
-      {   none,   none,   none,   none },
-      { 0x011b, 0x011b, 0x011b, 0x01f0 }, /* escape */
-      { 0x0231, 0x0221,   none, 0x7800 }, /* 1! */
-      { 0x0332, 0x0340, 0x0300, 0x7900 }, /* 2@ */
-      { 0x0433, 0x0423,   none, 0x7a00 }, /* 3# */
-      { 0x0534, 0x0524,   none, 0x7b00 }, /* 4$ */
-      { 0x0635, 0x0625,   none, 0x7c00 }, /* 5% */
-      { 0x0736, 0x075e, 0x071e, 0x7d00 }, /* 6^ */
-      { 0x0837, 0x0826,   none, 0x7e00 }, /* 7& */
-      { 0x0938, 0x092a,   none, 0x7f00 }, /* 8* */
-      { 0x0a39, 0x0a28,   none, 0x8000 }, /* 9( */
-      { 0x0b30, 0x0b29,   none, 0x8100 }, /* 0) */
-      { 0x0c2d, 0x0c5f, 0x0c1f, 0x8200 }, /* -_ */
-      { 0x0d3d, 0x0d2b,   none, 0x8300 }, /* =+ */
-      { 0x0e08, 0x0e08, 0x0e7f, 0x0ef0 }, /* backspace */
-      { 0x0f09, 0x0f00, 0x9400,   none }, /* tab */
-      { 0x1071, 0x1051, 0x1011, 0x1000 }, /* Q */
-      { 0x1177, 0x1157, 0x1117, 0x1100 }, /* W */
-      { 0x1265, 0x1245, 0x1205, 0x1200 }, /* E */
-      { 0x1372, 0x1352, 0x1312, 0x1300 }, /* R */
-      { 0x1474, 0x1454, 0x1414, 0x1400 }, /* T */
-      { 0x1579, 0x1559, 0x1519, 0x1500 }, /* Y */
-      { 0x1675, 0x1655, 0x1615, 0x1600 }, /* U */
-      { 0x1769, 0x1749, 0x1709, 0x1700 }, /* I */
-      { 0x186f, 0x184f, 0x180f, 0x1800 }, /* O */
-      { 0x1970, 0x1950, 0x1910, 0x1900 }, /* P */
-      { 0x1a5b, 0x1a7b, 0x1a1b, 0x1af0 }, /* [{ */
-      { 0x1b5d, 0x1b7d, 0x1b1d, 0x1bf0 }, /* ]} */
-      { 0x1c0d, 0x1c0d, 0x1c0a,   none }, /* Enter */
-      {   none,   none,   none,   none }, /* L Ctrl */
-      { 0x1e61, 0x1e41, 0x1e01, 0x1e00 }, /* A */
-      { 0x1f73, 0x1f53, 0x1f13, 0x1f00 }, /* S */
-      { 0x2064, 0x2044, 0x2004, 0x2000 }, /* D */
-      { 0x2166, 0x2146, 0x2106, 0x2100 }, /* F */
-      { 0x2267, 0x2247, 0x2207, 0x2200 }, /* G */
-      { 0x2368, 0x2348, 0x2308, 0x2300 }, /* H */
-      { 0x246a, 0x244a, 0x240a, 0x2400 }, /* J */
-      { 0x256b, 0x254b, 0x250b, 0x2500 }, /* K */
-      { 0x266c, 0x264c, 0x260c, 0x2600 }, /* L */
-      { 0x273b, 0x273a,   none, 0x27f0 }, /* ;: */
-      { 0x2827, 0x2822,   none, 0x28f0 }, /* '" */
-      { 0x2960, 0x297e,   none, 0x29f0 }, /* `~ */
-      {   none,   none,   none,   none }, /* L shift */
-      { 0x2b5c, 0x2b7c, 0x2b1c, 0x2bf0 }, /* |\ */
-      { 0x2c7a, 0x2c5a, 0x2c1a, 0x2c00 }, /* Z */
-      { 0x2d78, 0x2d58, 0x2d18, 0x2d00 }, /* X */
-      { 0x2e63, 0x2e43, 0x2e03, 0x2e00 }, /* C */
-      { 0x2f76, 0x2f56, 0x2f16, 0x2f00 }, /* V */
-      { 0x3062, 0x3042, 0x3002, 0x3000 }, /* B */
-      { 0x316e, 0x314e, 0x310e, 0x3100 }, /* N */
-      { 0x326d, 0x324d, 0x320d, 0x3200 }, /* M */
-      { 0x332c, 0x333c,   none, 0x33f0 }, /* ,< */
-      { 0x342e, 0x343e,   none, 0x34f0 }, /* .> */
-      { 0x352f, 0x353f,   none, 0x35f0 }, /* /? */
-      {   none,   none,   none,   none }, /* R Shift */
-      { 0x372a, 0x372a, 0x9600, 0x37f0 }, /* * */
-      {   none,   none,   none,   none }, /* L Alt */
-      { 0x3920, 0x3920, 0x3920, 0x3920 }, /* space */
-      {   none,   none,   none,   none }, /* caps lock */
-      { 0x3b00, 0x5400, 0x5e00, 0x6800 }, /* F1 */
-      { 0x3c00, 0x5500, 0x5f00, 0x6900 }, /* F2 */
-      { 0x3d00, 0x5600, 0x6000, 0x6a00 }, /* F3 */
-      { 0x3e00, 0x5700, 0x6100, 0x6b00 }, /* F4 */
-      { 0x3f00, 0x5800, 0x6200, 0x6c00 }, /* F5 */
-      { 0x4000, 0x5900, 0x6300, 0x6d00 }, /* F6 */
-      { 0x4100, 0x5a00, 0x6400, 0x6e00 }, /* F7 */
-      { 0x4200, 0x5b00, 0x6500, 0x6f00 }, /* F8 */
-      { 0x4300, 0x5c00, 0x6600, 0x7000 }, /* F9 */
-      { 0x4400, 0x5d00, 0x6700, 0x7100 }, /* F10 */
-      {   none,   none,   none,   none }, /* Num Lock */
-      {   none,   none,   none,   none }, /* Scroll Lock */
-      { 0x4700, 0x4737, 0x7700, 0x0007 }, /* 7 Home */
-      { 0x4800, 0x4838, 0x8d00, 0x0008 }, /* 8 UP */
-      { 0x4900, 0x4939, 0x8400, 0x0009 }, /* 9 PgUp */
-      { 0x4a2d, 0x4a2d, 0x8e00, 0x4af0 }, /* - */
-      { 0x4b00, 0x4b34, 0x7300, 0x0004 }, /* 4 Left */
-      { 0x4cf0, 0x4c35, 0x8f00, 0x0005 }, /* 5 */
-      { 0x4d00, 0x4d36, 0x7400, 0x0006 }, /* 6 Right */
-      { 0x4e2b, 0x4e2b, 0x9000, 0x4ef0 }, /* + */
-      { 0x4f00, 0x4f31, 0x7500, 0x0001 }, /* 1 End */
-      { 0x5000, 0x5032, 0x9100, 0x0002 }, /* 2 Down */
-      { 0x5100, 0x5133, 0x7600, 0x0003 }, /* 3 PgDn */
-      { 0x5200, 0x5230, 0x9200, 0x0000 }, /* 0 Ins */
-      { 0x5300, 0x532e, 0x9300,   none }, /* Del */
-      {   none,   none,   none,   none },
-      {   none,   none,   none,   none },
-      { 0x565c, 0x567c,   none,   none }, /* (102-key) */
-      { 0x8500, 0x8700, 0x8900, 0x8b00 }, /* F11 */
-      { 0x8600, 0x8800, 0x8a00, 0x8c00 }, /* F12 */
-      { 0x352f, 0x353f,   none,   none }  /* international 1 */
-      };
+struct KeyCodes {
+	uint16_t normal  = none;
+	uint16_t shift   = none;
+	uint16_t control = none;
+	uint16_t alt     = none;
+};
+
+static const KeyCodes& get_key_codes_for(const uint8_t scan_code)
+{
+	// LOG_MSG("BIOS: Scan code %u (0x%xh) requested", scan_code, scan_code);
+
+	// clang-format off
+	// Ref: http://www.quadibloc.com/comp/scan.htm, Set 1 layout
+	static constexpr KeyCodes keyboard[] = {
+		// index    normal   shift control     alt
+		/*   0 */ {   none,   none,   none,   none },
+		/*   1 */ { 0x011b, 0x011b, 0x011b, 0x01f0 }, /* escape */
+		/*   2 */ { 0x0231, 0x0221,   none, 0x7800 }, /* 1! */
+		/*   3 */ { 0x0332, 0x0340, 0x0300, 0x7900 }, /* 2@ */
+		/*   4 */ { 0x0433, 0x0423,   none, 0x7a00 }, /* 3# */
+		/*   5 */ { 0x0534, 0x0524,   none, 0x7b00 }, /* 4$ */
+		/*   6 */ { 0x0635, 0x0625,   none, 0x7c00 }, /* 5% */
+		/*   7 */ { 0x0736, 0x075e, 0x071e, 0x7d00 }, /* 6^ */
+		/*   8 */ { 0x0837, 0x0826,   none, 0x7e00 }, /* 7& */
+		/*   9 */ { 0x0938, 0x092a,   none, 0x7f00 }, /* 8* */
+		/*  10 */ { 0x0a39, 0x0a28,   none, 0x8000 }, /* 9( */
+		/*  11 */ { 0x0b30, 0x0b29,   none, 0x8100 }, /* 0) */
+		/*  12 */ { 0x0c2d, 0x0c5f, 0x0c1f, 0x8200 }, /* -_ */
+		/*  13 */ { 0x0d3d, 0x0d2b,   none, 0x8300 }, /* =+ */
+		/*  14 */ { 0x0e08, 0x0e08, 0x0e7f, 0x0ef0 }, /* backspace */
+		/*  15 */ { 0x0f09, 0x0f00, 0x9400,   none }, /* tab */
+		/*  16 */ { 0x1071, 0x1051, 0x1011, 0x1000 }, /* Q */
+		/*  17 */ { 0x1177, 0x1157, 0x1117, 0x1100 }, /* W */
+		/*  18 */ { 0x1265, 0x1245, 0x1205, 0x1200 }, /* E */
+		/*  19 */ { 0x1372, 0x1352, 0x1312, 0x1300 }, /* R */
+		/*  20 */ { 0x1474, 0x1454, 0x1414, 0x1400 }, /* T */
+		/*  21 */ { 0x1579, 0x1559, 0x1519, 0x1500 }, /* Y */
+		/*  22 */ { 0x1675, 0x1655, 0x1615, 0x1600 }, /* U */
+		/*  23 */ { 0x1769, 0x1749, 0x1709, 0x1700 }, /* I */
+		/*  24 */ { 0x186f, 0x184f, 0x180f, 0x1800 }, /* O */
+		/*  25 */ { 0x1970, 0x1950, 0x1910, 0x1900 }, /* P */
+		/*  26 */ { 0x1a5b, 0x1a7b, 0x1a1b, 0x1af0 }, /* [{ */
+		/*  27 */ { 0x1b5d, 0x1b7d, 0x1b1d, 0x1bf0 }, /* ]} */
+		/*  28 */ { 0x1c0d, 0x1c0d, 0x1c0a,   none }, /* Enter */
+		/*  29 */ {   none,   none,   none,   none }, /* L Ctrl */
+		/*  30 */ { 0x1e61, 0x1e41, 0x1e01, 0x1e00 }, /* A */
+		/*  31 */ { 0x1f73, 0x1f53, 0x1f13, 0x1f00 }, /* S */
+		/*  32 */ { 0x2064, 0x2044, 0x2004, 0x2000 }, /* D */
+		/*  33 */ { 0x2166, 0x2146, 0x2106, 0x2100 }, /* F */
+		/*  34 */ { 0x2267, 0x2247, 0x2207, 0x2200 }, /* G */
+		/*  35 */ { 0x2368, 0x2348, 0x2308, 0x2300 }, /* H */
+		/*  36 */ { 0x246a, 0x244a, 0x240a, 0x2400 }, /* J */
+		/*  37 */ { 0x256b, 0x254b, 0x250b, 0x2500 }, /* K */
+		/*  38 */ { 0x266c, 0x264c, 0x260c, 0x2600 }, /* L */
+		/*  39 */ { 0x273b, 0x273a,   none, 0x27f0 }, /* ;: */
+		/*  40 */ { 0x2827, 0x2822,   none, 0x28f0 }, /* '" */
+		/*  41 */ { 0x2960, 0x297e,   none, 0x29f0 }, /* `~ */
+		/*  42 */ {   none,   none,   none,   none }, /* L shift */
+		/*  43 */ { 0x2b5c, 0x2b7c, 0x2b1c, 0x2bf0 }, /* |\ */
+		/*  44 */ { 0x2c7a, 0x2c5a, 0x2c1a, 0x2c00 }, /* Z */
+		/*  45 */ { 0x2d78, 0x2d58, 0x2d18, 0x2d00 }, /* X */
+		/*  46 */ { 0x2e63, 0x2e43, 0x2e03, 0x2e00 }, /* C */
+		/*  47 */ { 0x2f76, 0x2f56, 0x2f16, 0x2f00 }, /* V */
+		/*  48 */ { 0x3062, 0x3042, 0x3002, 0x3000 }, /* B */
+		/*  49 */ { 0x316e, 0x314e, 0x310e, 0x3100 }, /* N */
+		/*  50 */ { 0x326d, 0x324d, 0x320d, 0x3200 }, /* M */
+		/*  51 */ { 0x332c, 0x333c,   none, 0x33f0 }, /* ,< */
+		/*  52 */ { 0x342e, 0x343e,   none, 0x34f0 }, /* .> */
+		/*  53 */ { 0x352f, 0x353f,   none, 0x35f0 }, /* /? */
+		/*  54 */ {   none,   none,   none,   none }, /* R Shift */
+		/*  55 */ { 0x372a, 0x372a, 0x9600, 0x37f0 }, /* * */
+		/*  56 */ {   none,   none,   none,   none }, /* L Alt */
+		/*  57 */ { 0x3920, 0x3920, 0x3920, 0x3920 }, /* space */
+		/*  58 */ {   none,   none,   none,   none }, /* caps lock */
+		/*  59 */ { 0x3b00, 0x5400, 0x5e00, 0x6800 }, /* F1 */
+		/*  60 */ { 0x3c00, 0x5500, 0x5f00, 0x6900 }, /* F2 */
+		/*  61 */ { 0x3d00, 0x5600, 0x6000, 0x6a00 }, /* F3 */
+		/*  62 */ { 0x3e00, 0x5700, 0x6100, 0x6b00 }, /* F4 */
+		/*  63 */ { 0x3f00, 0x5800, 0x6200, 0x6c00 }, /* F5 */
+		/*  64 */ { 0x4000, 0x5900, 0x6300, 0x6d00 }, /* F6 */
+		/*  65 */ { 0x4100, 0x5a00, 0x6400, 0x6e00 }, /* F7 */
+		/*  66 */ { 0x4200, 0x5b00, 0x6500, 0x6f00 }, /* F8 */
+		/*  67 */ { 0x4300, 0x5c00, 0x6600, 0x7000 }, /* F9 */
+		/*  68 */ { 0x4400, 0x5d00, 0x6700, 0x7100 }, /* F10 */
+		/*  69 */ {   none,   none,   none,   none }, /* Num Lock */
+		/*  70 */ {   none,   none,   none,   none }, /* Scroll Lock */
+		/*  71 */ { 0x4700, 0x4737, 0x7700, 0x0007 }, /* 7 Home */
+		/*  72 */ { 0x4800, 0x4838, 0x8d00, 0x0008 }, /* 8 UP */
+		/*  73 */ { 0x4900, 0x4939, 0x8400, 0x0009 }, /* 9 PgUp */
+		/*  74 */ { 0x4a2d, 0x4a2d, 0x8e00, 0x4af0 }, /* - */
+		/*  75 */ { 0x4b00, 0x4b34, 0x7300, 0x0004 }, /* 4 Left */
+		/*  76 */ { 0x4cf0, 0x4c35, 0x8f00, 0x0005 }, /* 5 */
+		/*  77 */ { 0x4d00, 0x4d36, 0x7400, 0x0006 }, /* 6 Right */
+		/*  78 */ { 0x4e2b, 0x4e2b, 0x9000, 0x4ef0 }, /* + */
+		/*  79 */ { 0x4f00, 0x4f31, 0x7500, 0x0001 }, /* 1 End */
+		/*  80 */ { 0x5000, 0x5032, 0x9100, 0x0002 }, /* 2 Down */
+		/*  81 */ { 0x5100, 0x5133, 0x7600, 0x0003 }, /* 3 PgDn */
+		/*  82 */ { 0x5200, 0x5230, 0x9200, 0x0000 }, /* 0 Ins */
+		/*  83 */ { 0x5300, 0x532e, 0x9300,   none }, /* Del */
+		/*  84 */ {   none,   none,   none,   none }, /* SysRq */
+		/*  85 */ {   none,   none,   none,   none },
+		/*  86 */ { 0x565c, 0x567c,   none,   none }, /* OEM102 */
+		/*  87 */ { 0x8500, 0x8700, 0x8900, 0x8b00 }, /* F11 */
+		/*  88 */ { 0x8600, 0x8800, 0x8a00, 0x8c00 }, /* F12 */
+		/*  89 */ { /* placeholder */ },
+		/*  90 */ { /* placeholder */ },
+		/*  91 */ {   none,   none,   none,   none }, /* Win Left */
+		/*  92 */ {   none,   none,   none,   none }, /* Win Right */
+		/*  93 */ { /* placeholder */ }, /* Win Menu */
+		/*  94 */ { /* placeholder */ },
+		/*  95 */ { /* placeholder */ },
+		/*  96 */ { /* placeholder */ },
+		/*  97 */ { /* placeholder */ },
+		/*  98 */ { /* placeholder */ },
+		/*  99 */ { /* placeholder */ }, /* F16 */
+		/* 100 */ { /* placeholder */ }, /* F17 */
+		/* 101 */ { /* placeholder */ }, /* F18 */
+		/* 102 */ { /* placeholder */ }, /* F19 */
+		/* 103 */ { /* placeholder */ }, /* F20 */
+		/* 104 */ { /* placeholder */ }, /* F21 */
+		/* 105 */ { /* placeholder */ }, /* F22 */
+		/* 106 */ { /* placeholder */ }, /* F23 */
+		/* 107 */ { /* placeholder */ }, /* F24 */
+		/* 108 */ { /* placeholder */ },
+		/* 109 */ { /* placeholder */ },
+		/* 110 */ { /* placeholder */ },
+		/* 111 */ { /* placeholder */ },
+		/* 112 */ { /* placeholder */ },
+		/* 113 */ { /* placeholder */ }, /* Attn  */
+		/* 114 */ { /* placeholder */ }, /* CrSel */
+
+		// Key directly left of Right Shift on ABNT layouts
+		/* 115 */ {   0x7330, 0x7340, none,   0x73f0 } /* /? ABNT1 or ABNT_C1 */
+		//            0x__^^  0x__^^          0x__^^
+		// Note: These lower-byte values are guesses based based on prior
+		//       patterns. Update them if you find an actual source or spec.
+	};
+	// clang-format on
+
+	constexpr auto num_scan_codes = std::end(keyboard) - std::begin(keyboard);
+	static_assert(num_scan_codes == MAX_SCAN_CODE + 1);
+
+	assert(scan_code < num_scan_codes);
+	return keyboard[scan_code];
+}
 
 bool BIOS_AddKeyToBuffer(uint16_t code) {
 	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return true;
@@ -363,12 +406,15 @@ static Bitu IRQ1_Handler(void) {
 		if(flags3 &0x02) {	/*extend key. e.g key above arrows or arrows*/
 			if(scancode == 0x52) flags2 |=0x80; /* press insert */		   
 			if(flags1 &0x08) {
-				add_key(scan_to_scanascii[scancode].normal+0x5000);
+				add_key(get_key_codes_for(scancode).normal + 0x5000);
 			} else if (flags1 &0x04) {
-				add_key((scan_to_scanascii[scancode].control&0xff00)|0xe0);
-			} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) { //Due to |0xe0 results are identical. 
-				add_key((scan_to_scanascii[scancode].shift&0xff00)|0xe0);
-			} else add_key((scan_to_scanascii[scancode].normal&0xff00)|0xe0);
+				add_key((get_key_codes_for(scancode).control & 0xff00) | 0xe0);
+			} else if (((flags1 & 0x3) != 0) || ((flags1 & 0x20) != 0)) {
+				// Due to |0xe0 results are identical
+				add_key((get_key_codes_for(scancode).shift & 0xff00) | 0xe0);
+			} else {
+				add_key((get_key_codes_for(scancode).normal & 0xff00) | 0xe0);
+			}
 			break;
 		}
 		if(flags1 &0x08) {
@@ -376,11 +422,14 @@ static Bitu IRQ1_Handler(void) {
 			const auto alt      = get_key_codes_for(scancode).alt & 0xff;
 			const auto combined = token * 10 + alt;
 			mem_writeb(BIOS_KEYBOARD_TOKEN, check_cast<uint8_t>(combined));
-		} else if (flags1 &0x04) {
-			add_key(scan_to_scanascii[scancode].control);
-		} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) { //Xor shift and numlock (both means off)
-			add_key(scan_to_scanascii[scancode].shift);
-		} else add_key(scan_to_scanascii[scancode].normal);
+		} else if (flags1 & 0x04) {
+			add_key(get_key_codes_for(scancode).control);
+		} else if (((flags1 & 0x3) != 0) ^ ((flags1 & 0x20) != 0)) {
+			// Xor shift and numlock (both means off)
+			add_key(get_key_codes_for(scancode).shift);
+		} else {
+			add_key(get_key_codes_for(scancode).normal);
+		}
 		break;
 
 	default: /* Normal Key */
@@ -391,28 +440,30 @@ normal_key:
 		if (scancode & 0x80) goto irq1_end;
 		if (scancode > MAX_SCAN_CODE) goto irq1_end;
 		if (flags1 & 0x08) { 					/* Alt is being pressed */
-			asciiscan=scan_to_scanascii[scancode].alt;
+			asciiscan = get_key_codes_for(scancode).alt;
 #if 0 /* old unicode support disabled*/
 		} else if (ascii) {
 			asciiscan=(scancode << 8) | ascii;
 #endif
 		} else if (flags1 & 0x04) {					/* Ctrl is being pressed */
-			asciiscan=scan_to_scanascii[scancode].control;
+			asciiscan = get_key_codes_for(scancode).control;
 		} else if (flags1 & 0x03) {					/* Either shift is being pressed */
-			asciiscan=scan_to_scanascii[scancode].shift;
+			asciiscan = get_key_codes_for(scancode).shift;
 		} else {
-			asciiscan=scan_to_scanascii[scancode].normal;
+			asciiscan = get_key_codes_for(scancode).normal;
 		}
 		/* cancel shift is letter and capslock active */
 		if(flags1&64) {
 			if(flags1&3) {
-				/*cancel shift */  
-				if(((asciiscan&0x00ff) >0x40) && ((asciiscan&0x00ff) <0x5b)) 
-					asciiscan=scan_to_scanascii[scancode].normal; 
+				/*cancel shift */
+				if (((asciiscan & 0x00ff) > 0x40) && ((asciiscan & 0x00ff) < 0x5b)) {
+					asciiscan = get_key_codes_for(scancode).normal;
+				}
 			} else {
 				/* add shift */
-	   			if(((asciiscan&0x00ff) >0x60) && ((asciiscan&0x00ff) <0x7b)) 
-					asciiscan=scan_to_scanascii[scancode].shift; 
+				if (((asciiscan & 0x00ff) > 0x60) && ((asciiscan & 0x00ff) < 0x7b)) {
+					asciiscan = get_key_codes_for(scancode).shift;
+				}
 			}
 		}
 		if (flags3 &0x02) {
