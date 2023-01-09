@@ -361,12 +361,30 @@ public:
 
 	std::string GetBindName() const override
 	{
-		if (key == SDL_SCANCODE_RETURN)
-			return "Enter"; // instead of "Return"
-		else if (key == SDL_SCANCODE_INTERNATIONAL1)
-			return "International 1"; // instead of empty string
-		else
-			return SDL_GetScancodeName(key);
+		// Always map Return to Enter
+		if (key == SDL_SCANCODE_RETURN) {
+			return "Enter";
+		}
+
+		const std::string sdl_scancode_name = SDL_GetScancodeName(key);
+		if (!sdl_scancode_name.empty()) {
+			return sdl_scancode_name;
+		}
+
+		// SDL Doesn't have a name for this key, so use our own
+		assert(sdl_scancode_name.empty());
+
+		// Key between Left Shift and Z is "oem102"
+		if (key == SDL_SCANCODE_NONUSBACKSLASH) {
+			return "oem102"; // called 'OEM_102" at kbdlayout.info
+		}
+		// Key to the left of Right Shift on ABNT layouts
+		if (key == SDL_SCANCODE_INTERNATIONAL1) {
+			return "abnt1"; // called "ABNT_C1" at kbdlayout.info
+		}
+
+		DEBUG_LOG_MSG("MAPPER: Please report unnamed SDL scancode %d (%xh)", key, key);
+		return sdl_scancode_name;
 	}
 
 	void ConfigName(char *buf) override
@@ -2080,13 +2098,18 @@ static KeyBlock combo_3[12]={
 	{"\\|","backslash",KBD_backslash},
 };
 
-static KeyBlock combo_4[11]={
-	{"<>","lessthan",KBD_extra_lt_gt},
-	{"Z","z",KBD_z},			{"X","x",KBD_x},	{"C","c",KBD_c},
-	{"V","v",KBD_v},			{"B","b",KBD_b},	{"N","n",KBD_n},
-	{"M","m",KBD_m},			{",<","comma",KBD_comma},
-	{".>","period",KBD_period},						{"/?","slash",KBD_slash},
-};
+static KeyBlock combo_4[12] = {{"\\|", "oem102", KBD_oem102},
+                               {"Z", "z", KBD_z},
+                               {"X", "x", KBD_x},
+                               {"C", "c", KBD_c},
+                               {"V", "v", KBD_v},
+                               {"B", "b", KBD_b},
+                               {"N", "n", KBD_n},
+                               {"M", "m", KBD_m},
+                               {",<", "comma", KBD_comma},
+                               {".>", "period", KBD_period},
+                               {"/?", "slash", KBD_slash},
+                               {"/?", "abnt1", KBD_abnt1}};
 
 static CKeyEvent * caps_lock_event=NULL;
 static CKeyEvent * num_lock_event=NULL;
@@ -2112,8 +2135,16 @@ static void CreateLayout() {
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
 
 	AddKeyButtonEvent(PX(0),PY(4),BW*2,BH,"SHIFT","lshift",KBD_leftshift);
-	for (i=0;i<11;i++) AddKeyButtonEvent(PX(2+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
-	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
+	for (i = 0; i < 12; i++) {
+		AddKeyButtonEvent(PX(2 + i),
+		                  PY(4),
+		                  BW,
+		                  BH,
+		                  combo_4[i].title,
+		                  combo_4[i].entry,
+		                  combo_4[i].key);
+	}
+	AddKeyButtonEvent(PX(14), PY(4), BW * 3, BH, "SHIFT", "rshift", KBD_rightshift);
 
 	/* Bottom Row */
 	AddKeyButtonEvent(PX(0), PY(5), BW * 2, BH, MMOD1_NAME, "lctrl", KBD_leftctrl);
@@ -2177,8 +2208,6 @@ static void CreateLayout() {
 	AddKeyButtonEvent(PX(XO),PY(YO+4),BW*2,BH,"0","kp_0",KBD_kp0);
 	AddKeyButtonEvent(PX(XO+2),PY(YO+4),BW,BH,".","kp_period",KBD_kpperiod);
 
-	/* International Keys */
-	AddKeyButtonEvent(PX(XO + 5), PY(YO), BW * 2, BH, "Intl1", "intl1", KBD_intl1);
 #undef XO
 #undef YO
 
@@ -2478,11 +2507,15 @@ static struct {
                    {"kp_period", SDL_SCANCODE_KP_PERIOD},
                    {"kp_enter", SDL_SCANCODE_KP_ENTER},
 
-                   /* Is that the extra backslash key ("less than" key) */
-                   /* on some keyboards with the 102-keys layout??      */
-                   {"lessthan", SDL_SCANCODE_NONUSBACKSLASH},
-				   				   
-                   {"intl1", SDL_SCANCODE_INTERNATIONAL1},
+                   // ABNT-arrangement, key between Left-Shift and Z: SDL
+                   // scancode 100 (0x64) maps to OEM102 key with scancode 86
+                   // (0x56)
+                   {"oem102", SDL_SCANCODE_NONUSBACKSLASH},
+
+                   // ABNT-arrangement, key between Left-Shift and Z: SDL
+                   // scancode 135 (0x87) maps to first ABNT key with scancode
+                   // 115 (0x73)
+                   {"abnt1", SDL_SCANCODE_INTERNATIONAL1},
 
                    {0, SDL_SCANCODE_UNKNOWN}};
 

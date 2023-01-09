@@ -32,22 +32,19 @@ enum KBD_KEYS {
 	KBD_f1,  KBD_f2,  KBD_f3,  KBD_f4,  KBD_f5,  KBD_f6,
 	KBD_f7,  KBD_f8,  KBD_f9,  KBD_f10, KBD_f11, KBD_f12,
 
-	// Now the weirder keys
-
 	KBD_esc, KBD_tab, KBD_backspace, KBD_enter, KBD_space,
 
 	KBD_leftalt,   KBD_rightalt,
 	KBD_leftctrl,  KBD_rightctrl,
 	KBD_leftgui,   KBD_rightgui, // 'windows' keys
 	KBD_leftshift, KBD_rightshift,
-	
+
 	KBD_capslock, KBD_scrolllock, KBD_numlock,
 
 	KBD_grave, KBD_minus, KBD_equals, KBD_backslash,
 	KBD_leftbracket, KBD_rightbracket,
 	KBD_semicolon, KBD_quote,
-	KBD_period, KBD_comma, KBD_slash,
-	KBD_extra_lt_gt,
+	KBD_oem102, KBD_period, KBD_comma, KBD_slash, KBD_abnt1,
 
 	KBD_printscreen, KBD_pause,
 
@@ -59,8 +56,6 @@ enum KBD_KEYS {
 	KBD_kp1, KBD_kp2, KBD_kp3, KBD_kp4, KBD_kp5, KBD_kp6, KBD_kp7, KBD_kp8, KBD_kp9, KBD_kp0,
 	KBD_kpdivide, KBD_kpmultiply, KBD_kpminus, KBD_kpplus,
 	KBD_kpenter, KBD_kpperiod,
-
-	KBD_intl1,
 
 	KBD_LAST,
 // clang-format on
