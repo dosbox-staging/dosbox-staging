@@ -14,6 +14,9 @@ sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa
 
 This package is compatible with macOS 10.15 (Catalina) or newer.
 
+Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
+the changes and improvements introduced by this release.
+
 !!! important
 
     macOS uses its Gatekeeper feature to prevent users from running

@@ -410,6 +410,9 @@ figcaption {
   text-align: center;
   color: #555;
 }
+.front-page .header .current-version a:hover {
+  color: #808080;
+}
 
 .front-page .feature-highlights {
   margin-top: 4.0rem;
