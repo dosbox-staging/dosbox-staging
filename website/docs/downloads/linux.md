@@ -52,6 +52,9 @@ Available via [Arch User Repository](https://aur.archlinux.org/packages/dosbox-s
 sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
 </small>
 
+Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
+the changes and improvements introduced by this release.
+
 Our pre-compiled builds run on most Linux distributions (x86\_64 only for now).
 They depend on the following packages:
 

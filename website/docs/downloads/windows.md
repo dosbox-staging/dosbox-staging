@@ -17,6 +17,9 @@ sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
 sha256: 3680cbdf7a91467877b51c95e468ef45<wbr>b186b42518c3163fab85c727923ee659
 </small>
 
+Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
+the changes and improvements introduced by this release.
+
 !!! important
 
     If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
