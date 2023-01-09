@@ -28,7 +28,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v3.2.2
+      - uses: actions/cache@v3.2.3
         id: cache-pvs
         with:
           path: pvs-package
@@ -47,7 +47,7 @@ jobs:
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
       - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+        uses:  actions/cache@v3.2.3
         with:
           path: subprojects/packagecache
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
