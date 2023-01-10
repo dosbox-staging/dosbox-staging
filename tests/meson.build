@@ -15,7 +15,7 @@
 gmock_dep = dependency(
     'gmock',
     main: true,
-    version: '> 1.8.0',
+    version: ['> 1.8.0', '< 2'],
     disabler: true,
     required: get_option('unit_tests'),
     fallback: ['gtest', 'gmock_main_dep'],
