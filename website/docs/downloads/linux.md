@@ -73,7 +73,7 @@ Ubuntu 18.04 or newer, and Debian 9 or newer is required.
     sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
 
 
-## <a name="steam"></a> Steam
+## Steam
 
 You can easily configure your DOS games on Steam to use DOSBox Staging via
 [Boxtron](https://github.com/dreamer/boxtron) (community-developed
