@@ -383,25 +383,26 @@ endif
 
 libiir_dep = dependency(
     'iir',
-    version: '>= 1.9.3',
+    version: ['>= 1.9.3', '< 2'],
     default_options: default_wrap_options + ['tests=' + wants_tests.to_string()],
     static: ('iir' in static_libs_list or prefers_static_libs),
 )
 
 opus_dep = dependency(
     'opusfile',
+    version: ['>= 0.8', '< 1'],
     static: ('opusfile' in static_libs_list or prefers_static_libs),
 )
 
 sdl2_dep = dependency(
     'sdl2',
-    version: '>= 2.0.5',
+    version: ['>= 2.0.5', '< 3'],
     static: ('sdl2' in static_libs_list),
 )
 
 zlib_dep = dependency(
     'zlib',
-    version: '>= 1.2.11',
+    version: ['>= 1.2.11', '< 2'],
     default_options: default_wrap_options,
     static: ('zlib' in static_libs_list or prefers_static_libs),
 )
@@ -411,6 +412,7 @@ zlib_dep = dependency(
 # Default to the system library
 speexdsp_dep = dependency(
     'speexdsp',
+    version: ['>= 1.2', '< 2'],
     required: false,
     fallback: [],
     static: ('speexdsp' in static_libs_list or prefers_static_libs),
@@ -463,7 +465,7 @@ sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
     sdl2_net_dep = dependency(
         'SDL2_net',
-        version: '>= 2.0.0',
+        version: ['>= 2.0.0', '< 3'],
         static: ('sdl2_net' in static_libs_list),
         not_found_message: msg.format('use_sdl2_net'),
     )
@@ -483,7 +485,7 @@ libslirp_summary_msg = 'Disabled'
 if get_option('use_slirp')
     libslirp_dep = dependency(
         'slirp',
-        version: '>= 4.6.1',
+        version: ['>= 4.6.1', '< 5'],
         default_options: default_wrap_options,
         static: ('slirp' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_slirp'),
@@ -505,7 +507,7 @@ sdl2_image_dep = optional_dep
 if get_option('use_sdl2_image')
     sdl2_image_dep = dependency(
         'SDL2_image',
-        version: '>= 2.0.0',
+        version: ['>= 2.0.0', '< 3'],
         static: ('sdl2_image' in static_libs_list),
         not_found_message: msg.format('use_sdl2_image'),
     )
@@ -543,7 +545,7 @@ fluid_dep = optional_dep
 if get_option('use_fluidsynth')
     fluid_dep = dependency(
         'fluidsynth',
-        version: '>= 2.2.3',
+        version: ['>= 2.2.3', '< 3'],
         modules: ['FluidSynth::libfluidsynth'],
         static: ('fluidsynth' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_fluidsynth'),
@@ -565,7 +567,7 @@ mt32emu_dep = optional_dep
 if get_option('use_mt32emu')
     mt32emu_dep = dependency(
         'mt32emu',
-        version: '>= 2.5.3',
+        version: ['>= 2.5.3', '< 3'],
         default_options: default_wrap_options,
         static: ('mt32emu' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_mt32emu'),
@@ -578,6 +580,7 @@ png_dep = optional_dep
 if get_option('use_png')
     png_dep = dependency(
         'libpng',
+        version: ['>= 1.2', '< 2'],
         static: ('png' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_png'),
     )
@@ -589,12 +592,11 @@ tracy_dep = optional_dep
 if get_option('tracy')
     tracy_dep = dependency(
         'tracy',
+        version: ['>= 0.9', '< 1'],
         default_options: default_wrap_options,
         static: ('tracy' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('tracy'),
     )
-    #tracy_proj = subproject('tracy')
-    #tracy_dep = tracy_proj.get_variable('tracy_dep')
     add_project_arguments('-g', language: ['c', 'cpp'])
     add_project_arguments('-fno-omit-frame-pointer', language: ['c', 'cpp'])
 endif
@@ -736,7 +738,11 @@ manymouse_summary_msg = 'Enabled'
 xinput2_dep = optional_dep
 xinput2_required = (get_option('use_xinput2') == 'true')
 if xinput2_required or (get_option('use_xinput2') == 'auto')
-    xinput2_dep = dependency('xi', required: xinput2_required)
+    xinput2_dep = dependency(
+        'xi',
+        version: ['<= 1.4', '< 2'],
+        required: xinput2_required,
+    )
 endif
 conf_data.set10('SUPPORT_XINPUT2', xinput2_dep.found())
 
@@ -760,7 +766,7 @@ alsa_dep = optional_dep
 using_linux = (host_machine.system() == 'linux')
 force_alsa = (get_option('use_alsa') == 'true')
 if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
-    alsa_dep = dependency('alsa')
+    alsa_dep = dependency('alsa', version: ['>= 1', '< 2'])
     conf_data.set10('C_ALSA', true)
     summary('ALSA support', alsa_dep.found())
 endif
