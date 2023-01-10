@@ -87,6 +87,13 @@ configured to use a specific binary by editing the file
 
 [boxtron-conf]:https://github.com/dreamer/boxtron/wiki/Configuration#dosboxcmd
 
+## RetroPie
+
+You can easily configure your DOS games on
+[Retropie](https://retropie.org.uk/) to use DOSBox Staging via
+[RetroPie-Setup](https://github.com/RetroPie/RetroPie-Setup) (select
+**Optional Packages** --> **DOSBox Staging**).
+
 ## Development snapshot builds
 
 You can always see what's cooking on the main branch! :sunglasses: :beer:
