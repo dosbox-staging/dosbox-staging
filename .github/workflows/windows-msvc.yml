@@ -11,6 +11,24 @@ env:
   VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
 
 jobs:
+  check_vcpkg_manifest:
+    name: Check vcpkg manifest
+    runs-on: windows-2022
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+      - name: Check vcpkg manifest for outdated dependencies
+        shell: bash
+        run: |
+          git -C "${{ env.VCPKG_ROOT }}" checkout master -f
+          git -C "${{ env.VCPKG_ROOT }}" pull &> /dev/null
+          git fetch --prune --unshallow --tags &> /dev/null
+          python scripts/generate-vcpkg-manifest.py -p "${{ env.VCPKG_ROOT }}" > vcpkg.json
+          git diff vcpkg.json
+          git diff -G'version' --ignore-all-space --quiet vcpkg.json
+
   build_windows_vs:
     name: ${{ matrix.conf.name }}
     runs-on: windows-2022
@@ -35,6 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "${{ env.VCPKG_ROOT }}"
+          git checkout master -f && git pull &> /dev/null
           ./bootstrap-vcpkg.sh -disableMetrics
           nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
           owner="${GITHUB_REPOSITORY%/*}"
@@ -117,6 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "${{ env.VCPKG_ROOT }}"
+          git checkout master -f && git pull &> /dev/null
           ./bootstrap-vcpkg.sh -disableMetrics
           nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
           owner="${GITHUB_REPOSITORY%/*}"
