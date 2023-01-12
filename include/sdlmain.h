@@ -146,6 +146,8 @@ struct SDL_Block {
 
 		uint8_t bpp = 0;
 		double dpi_scale = 1.0;
+		bool want_dpi_handling = true;
+
 		bool fullscreen = false;
 
 		// This flag indicates, that we are in the process of switching

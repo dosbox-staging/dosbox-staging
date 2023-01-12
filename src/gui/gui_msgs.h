@@ -58,6 +58,9 @@ List of common options:
   --working-dir <path> Set working directory to <path>. DOSBox will act as if
                        started from this directory.
 
+  --ignore-dpi         Ignore display DPI (dots per inch) settings.
+                       May result in a small window on high DPI displays.
+
   -fullscreen          Start in fullscreen mode.
 
   -lang <langfile>     Start with the language specified in <langfile>.

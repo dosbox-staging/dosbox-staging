@@ -1205,11 +1205,19 @@ static void NewMouseScreenParams()
 	        sdl.desktop.fullscreen);
 }
 
-static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
-                                 int width,
-                                 int height,
-                                 bool fullscreen,
-                                 bool resizable)
+static void set_dpi_scale_if_wanted(const double scale_factor)
+{
+	assert(scale_factor > 0);
+	if (sdl.desktop.want_dpi_handling) {
+		sdl.desktop.dpi_scale = scale_factor;
+	} else {
+		// Detect if other code is changing this value
+		assert(sdl.desktop.dpi_scale == 1.0);
+	}
+}
+
+static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width, int height,
+                                 bool fullscreen, bool resizable)
 {
 	CleanupSDLResources();
 
@@ -1228,7 +1236,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(screen_type);
-		flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+		if (sdl.desktop.want_dpi_handling) {
+			flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+		}
 #if C_OPENGL
 		if (screen_type == SCREEN_OPENGL)
 			flags |= SDL_WINDOW_OPENGL;
@@ -1294,7 +1304,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		SDL_GetWindowSize(sdl.window, &window_width, nullptr);
 		const auto canvas = get_canvas_size(screen_type);
 
-		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
+		const auto dpi_scale = static_cast<double>(canvas.w) / window_width;
+		set_dpi_scale_if_wanted(dpi_scale);
 
 		GFX_RefreshTitle();
 
@@ -3836,7 +3847,8 @@ static void HandleVideoResize(int width, int height)
 
 			// If the window was resized, it might have been triggered
 			// by the OS setting DPI scale, so recalculate that.
-			sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
+			const auto dpi_scale = static_cast<double>(canvas.w) / width;
+			set_dpi_scale_if_wanted(dpi_scale);
 		}
 
 		// Ensure mouse emulation knows the current parameters
@@ -4040,8 +4052,8 @@ bool GFX_Events()
 				const auto canvas = get_canvas_size(sdl.desktop.type);
 				assert(win_w > 0 && canvas.w > 0 && canvas.h > 0);
 
-				sdl.desktop.dpi_scale = static_cast<double>(canvas.w) /
-				                        win_w;
+				const auto dpi_scale = static_cast<double>(canvas.w) / win_w;
+				set_dpi_scale_if_wanted(dpi_scale);
 
 				SDL_Rect display_bounds = {};
 				SDL_GetDisplayBounds(event.window.data1,
@@ -4639,6 +4651,75 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen)
 	fullscreen = sdl.desktop.fullscreen;
 }
 
+static bool check_env_for_high_dpi_handling()
+{
+	constexpr auto disable_high_dpi_var = "SDL_HINT_VIDEO_HIGHDPI_DISABLED";
+
+	const auto disable_high_dpi_val = getenv(disable_high_dpi_var);
+	if (disable_high_dpi_val == nullptr) {
+		return true;
+	}
+	if (std::string_view(disable_high_dpi_val) == "0" ||
+	    iequals(disable_high_dpi_val, "false") || iequals(disable_high_dpi_val, "no")) {
+		return true;
+	}
+
+	LOG_MSG("SDL: Ignoring DPI settings as requested by %s=%s environment variable",
+	        disable_high_dpi_var,
+	        disable_high_dpi_val);
+	return false;
+}
+
+static bool check_cli_for_dpi_handling(CommandLine& cmdline)
+{
+	for (const auto arg : {"--ignore-dpi", "-ignore-dpi"}) {
+		if (cmdline.FindExist(arg)) {
+			LOG_MSG("SDL: Ignoring DPI settings as requested by '%s' command-line argument",
+			        arg);
+			return false;
+		}
+	}
+	return true;
+}
+
+#if defined(WIN32)
+void static set_windows_dpi_awareness_hints(const bool want_dpi_handling)
+{
+#	define dpi_min_major_ver  2
+#	define dpi_min_minor_ver  23
+#	define dpi_min_bugfix_ver 0
+
+#	if SDL_VERSION_ATLEAST(dpi_min_major_ver, dpi_min_minor_ver, dpi_min_bugfix_ver)
+	if (want_dpi_handling) {
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to enable DPI awareness flag");
+		}
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to enable DPI scaling flag");
+		}
+	} else {
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "unaware") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to disable DPI awareness flag");
+		}
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "0") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to disable DPI scaling flag");
+		}
+	}
+#	else
+	// SDL is too old to support DPI
+	if (want_dpi_handling) {
+		LOG_WARNING("SDL: DPI handling is not available in SDL version %d.%d.%d; use %d.%d.%d or newer.",
+		            SDL_MAJOR_VERSION,
+		            SDL_MINOR_VERSION,
+		            SDL_PATCHLEVEL,
+		            dpi_min_major_ver,
+		            dpi_min_minor_ver,
+		            dpi_min_bugfix_ver);
+	}
+#	endif
+}
+#endif
+
 extern "C" int SDL_CDROMInit(void);
 int sdl_main(int argc, char *argv[])
 {
@@ -4747,15 +4828,13 @@ int sdl_main(int argc, char *argv[])
 			return 0;
 		}
 
-#if defined(WIN32)
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
+		sdl.desktop.want_dpi_handling = check_env_for_high_dpi_handling() &&
+		                                check_cli_for_dpi_handling(*control->cmdline);
 
-#	if SDL_VERSION_ATLEAST(2, 23, 0)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI awareness flag");
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI scaling flag");
-#	endif
+#if defined(WIN32)
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleEventHandler, TRUE);
+
+		set_windows_dpi_awareness_hints(sdl.desktop.want_dpi_handling);
 #endif
 
 	check_kmsdrm_setting();
