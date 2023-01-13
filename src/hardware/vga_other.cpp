@@ -1504,7 +1504,7 @@ static void composite_settings(Section_prop &secprop)
 	const char *states[] = {"auto", "on", "off", 0};
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
 	str_prop->Set_values(states);
-	str_prop->Set_help("Enable composite mode on start. 'auto' lets the program decide.\n"
+	str_prop->Set_help("Enable composite mode on start ('auto' by default). 'auto' lets the program decide.\n"
 	                   "Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.\n"
 	                   "      Then read the new settings from your console and enter them here.");
 
@@ -1512,7 +1512,7 @@ static void composite_settings(Section_prop &secprop)
 	str_prop = secprop.Add_string("era", when_idle, "auto");
 	str_prop->Set_values(eras);
 	str_prop->Set_help(
-	        "Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.");
+	        "Era of composite technology ('auto' by default). When 'auto', PCjr uses new and CGA/Tandy use old.");
 
 	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());

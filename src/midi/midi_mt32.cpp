@@ -180,10 +180,12 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	auto *str_prop       = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
 	str_prop->Set_help(
-	        "Model of synthesizer to use.\n"
-	        "'auto' picks the first model with available ROMs, in order as listed.\n"
-	        "'cm32l' and 'mt32' pick the first model of their type, in the order listed.\n"
-	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.");
+	        "MT-32 model to use:\n"
+	        "  auto:      Pick the first available model, in order as listed.\n"
+	        "  mt32:      Pick the first available MT-32 model, in order as listed.\n"
+	        "  cm32l:     Pick the first available CM-32L model, in order as listed.\n"
+	        "  mt32_old:  Alias for MT-32 v1.07.\n"
+	        "  mt32_new:  Alias for MT-32 v2.04.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(

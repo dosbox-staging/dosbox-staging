@@ -51,7 +51,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	// in the OS. Usually it's Fluid_R3.
 	auto *str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
 	str_prop->Set_help(
-	        "Path to a SoundFont file in .sf2 format. You can use an\n"
+	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default). You can use an\n"
 	        "absolute or relative path, or the name of an .sf2 inside\n"
 	        "the 'soundfonts' directory within your DOSBox configuration\n"
 	        "directory.\n"
@@ -62,7 +62,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 
 	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
 	str_prop->Set_help(
-	        "Chorus effect: 'auto', 'on', 'off', or custom values.\n"
+	        "Chorus effect: 'auto (default)', 'on', 'off', or custom values.\n"
 	        "When using custom values:\n"
 	        "  All five must be provided in-order and space-separated.\n"
 	        "  They are: voice-count level speed depth modulation-wave, where:\n"
@@ -80,7 +80,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 
 	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
 	str_prop->Set_help(
-	        "Reverb effect: 'auto', 'on', 'off', or custom values.\n"
+	        "Reverb effect: 'auto' (default), 'on', 'off', or custom values.\n"
 	        "When using custom values:\n"
 	        "  All four must be provided in-order and space-separated.\n"
 	        "  They are: room-size damping width level, where:\n"

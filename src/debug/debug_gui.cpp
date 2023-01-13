@@ -278,13 +278,13 @@ void LOG_StartUp(void) {
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
 	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
-	Pstring->Set_help("file where the log messages will be saved to");
+	Pstring->Set_help("File where the log messages will be saved to");
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) {
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
 		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
-		Pbool->Set_help("Enable/Disable logging of this type.");
+		Pbool->Set_help("Enable/disable logging of this type.");
 	}
 //	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
