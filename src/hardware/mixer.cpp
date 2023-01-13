@@ -2390,7 +2390,7 @@ private:
 		        "\n"
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 
 		MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
 		        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
@@ -2790,14 +2790,14 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	auto bool_prop = sec_prop.Add_bool("nosound", always, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
+	bool_prop->Set_help("Enable silent mode, sound is still emulated though (disabled by default).");
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
 	const char *rates[] = {
 	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", 0};
 	int_prop->Set_values(rates);
-	int_prop->Set_help("Mixer sample rate.");
+	int_prop->Set_help("Mixer sample rate (48000 by default).");
 
 	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", 0};
 

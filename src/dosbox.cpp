@@ -444,18 +444,18 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
-	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru\n"
+	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru (unset by default)\n"
 	        "Notes: This setting will override the 'LANG' environment, if set.\n"
 	        "       The 'resources/translations' directory bundled with the executable holds\n"
 	        "       these files. Please keep it along-side the executable to support this\n"
 	        "       feature.");
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
-	pstring->Set_help("The type of machine DOSBox tries to emulate.");
+	pstring->Set_help("The type of machine DOSBox tries to emulate ('svga_s3' by default).");
 
 	pstring = secprop->Add_path("captures", always, "capture");
 	pstring->Set_help(
-	        "Directory where things like wave, midi, screenshot get captured.");
+	        "Directory where things like wave, midi, screenshot get captured ('capture' by default).");
 
 #if C_DEBUG
 	LOG_StartUp();
@@ -468,7 +468,7 @@ void DOSBOX_Init()
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(1, 63);
 	pint->Set_help(
-	        "Amount of memory DOSBox has in megabytes.\n"
+	        "Amount of memory DOSBox has in megabytes (16 by default).\n"
 	        "This value is best left at its default to avoid problems with some games,\n"
 	        "though few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
@@ -504,14 +504,14 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
 	pstring->Set_help("Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per\n"
-	                  "video adapter.");
+	                  "video adapter ('auto' by default).");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
 	        "Customize the emulated video mode's frame rate, in Hz:\n"
-	        "default:  The DOS video mode determines the rate (recommended).\n"
-	        "host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
-	        "<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
+	        "  default:  The DOS video mode determines the rate (recommended; this is the default).\n"
+	        "  host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
+	        "  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
 	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
 
 	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", 0};
@@ -519,17 +519,17 @@ void DOSBOX_Init()
 	Pstring->Set_values(vesa_modes_choices);
 	Pstring->Set_help(
 	        "Controls the selection of VESA 1.2 and 2.0 modes offered:\n"
-	        "  compatible   A tailored selection that maximizes game compatibility.\n"
-	        "               This is recommended along with 4 or 8 MB of video memory.\n"
-	        "  halfline     Supports the low-resolution halfline VESA 2.0 mode used by\n"
+	        "  compatible:  A tailored selection that maximizes game compatibility.\n"
+	        "               This is recommended along with 4 or 8 MB of video memory (default).\n"
+	        "  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by\n"
 	        "               Extreme Assault. Use only if needed, as it's not S3 compatible.\n"
-	        "  all          Offers all modes for a given video memory size, however\n"
+	        "  all:         Offers all modes for a given video memory size, however\n"
 	        "               some games may not use them properly (flickering) or may need\n"
 	        "               more system memory (mem = ) to use them.");
 
 	Pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	Pbool->Set_help(
-	        "Permit changes known to improve performance. Currently no games are known\n"
+	        "Permit changes known to improve performance (enabled by default). Currently no games are known\n"
 	        "to be affected by this. Please file a bug with the project if you find a\n"
 	        "game that fails when this is set to true so we will list them here.");
 
@@ -548,13 +548,13 @@ void DOSBOX_Init()
 	Pstring->Set_values(autoexec_section_choices);
 	Pstring->Set_help(
 	        "How autoexec sections are handled from multiple config files.\n"
-	        "join      : combines them into one big section (legacy behavior).\n"
-	        "overwrite : use the last one encountered, like other conf settings.");
+	        "  join:      Combine them into one big section (legacy behavior; default).\n"
+	        "  overwrite: Use the last one encountered, like other config settings.");
 
 	Pbool = secprop->Add_bool("automount", only_at_start, true);
 	Pbool->Set_help(
-	        "Mounts 'drives/[c]' directories as drives on startup, where [c] is\n"
-	        "a lower-case drive letter from a to y.  The 'drives' folder can be\n"
+	        "Mount 'drives/[c]' directories as drives on startup, where [c] is\n"
+	        "a lower-case drive letter from a to y (enabled by default). The 'drives' folder can be\n"
 	        "provided relative to the current directory or via built-in resources.\n"
 	        "Mount settings can be optionally provided using a [c].conf file along-\n"
 	        "-side the drive's directory, with content as follows:\n"
@@ -571,12 +571,12 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	Pstring->Set_values(verbosity_choices);
 	Pstring->Set_help(
-	        "Controls verbosity prior to displaying the program:\n"
-	        "Verbosity   | Welcome | Early stdout\n"
-	        "high        |   yes   |    yes\n"
-	        "low         |   no    |    yes\n"
-	        "quiet       |   no    |    no\n"
-	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
+	        "Controls verbosity prior to displaying the program ('auto' by default):\n"
+	        "  Verbosity   | Welcome | Early stdout\n"
+	        "  high        |   yes   |    yes\n"
+	        "  low         |   no    |    yes\n"
+	        "  quiet       |   no    |    no\n"
+	        "  auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
 	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, true);
@@ -585,15 +585,15 @@ void DOSBOX_Init()
 	pint->Set_help("Consider capping frame-rates using the '[sdl] host_rate' setting.");
 
 	Pbool = secprop->Add_bool("aspect", always, true);
-	Pbool->Set_help("Scales the vertical resolution to produce a 4:3 display aspect\n"
+	Pbool->Set_help("Scale the vertical resolution to produce a 4:3 display aspect\n"
 	                "ratio, matching that of the original standard-definition monitors\n"
-	                "for which the majority of DOS games were designed. This setting\n"
+	                "for which the majority of DOS games were designed (enabled by default). This setting\n"
 	                "only affects video modes that use non-square pixels, such as\n"
-	                "320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
+	                "320x200 or 640x400; whereas square-pixel modes, such as 640x480\n"
 	                "and 800x600, will be displayed as-is.");
 
 	pstring = secprop->Add_string("monochrome_palette", always, "white");
-	pstring->Set_help("Select default palette for monochrome display.\n"
+	pstring->Set_help("Select default palette for monochrome display ('white' by default).\n"
 	                  "Works only when emulating hercules or cga_mono.\n"
 	                  "You can also cycle through available colours using F11.");
 	const char *mono_pal[] = {"white", "paperwhite", "green", "amber", 0};
@@ -601,17 +601,17 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("cga_colors", only_at_start, "default");
 	pstring->Set_help(
-	        "Sets the interpretation of CGA RGBI colors. Affects all machine types capable\n"
+	        "Set the interpretation of CGA RGBI colors. Affects all machine types capable\n"
 	        "of displaying CGA or better graphics. Built-in presets:\n"
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
 	        "                 (default).\n"
-	        "  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable\n"
+	        "  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable\n"
 	        "                 brown level. The brown level can be provided as an optional\n"
 	        "                 second parameter (0 - red, 50 - brown, 100 - dark yellow;\n"
 	        "                 defaults to 50). E.g. tandy 100\n"
 	        "  tandy-warm:    Emulation of the actual color output of an unknown Tandy\n"
 	        "                 monitor.\n"
-	        "  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor\n"
+	        "  ibm5153 <c>:   Emulation of the actual color output of an IBM 5153 monitor\n"
 	        "                 with a unique contrast control that dims non-bright colors\n"
 	        "                 only. The contrast can be optionally provided as a second\n"
 	        "                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60\n"
@@ -662,28 +662,27 @@ void DOSBOX_Init()
 		"normal", "simple",0 };
 	Pstring = secprop->Add_string("core", when_idle, "auto");
 	Pstring->Set_values(cores);
-	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and\n"
+	Pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic if available and\n"
 		"appropriate.");
 
 	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", 0};
 	Pstring = secprop->Add_string("cputype", always, "auto");
 	Pstring->Set_values(cputype_values);
-	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
+	Pstring->Set_help("CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.");
 
 
 	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
 	pmulti_remain->Set_help(
-		"Number of instructions DOSBox tries to emulate each millisecond.\n"
+		"Number of instructions DOSBox tries to emulate each millisecond ('auto' by default).\n"
 		"Setting this value too high results in sound dropouts and lags.\n"
 		"Cycles can be set in 3 ways:\n"
-		"  'auto'          tries to guess what a game needs.\n"
+		"  auto:           Try to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
-		"  'fixed #number' will set a fixed number of cycles. This is what you usually\n"
-		"                  need if 'auto' fails (Example: fixed 4000).\n"
-		"  'max'           will allocate as much cycles as your computer is able to\n"
-		"                  handle.");
+		"  fixed <number>: Set a fixed number of cycles. This is what you usually\n"
+		"                  need if 'auto' fails (example: fixed 4000).\n"
+		"  max'            Allocate as much cycles as your computer is able to handle.");
 
-	const char* cyclest[] = { "auto","fixed","max","%u",0 };
+	const char* cyclest[] = { "auto", "fixed", "max", "%u", 0 };
 	Pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
 	pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
@@ -691,13 +690,13 @@ void DOSBOX_Init()
 	pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
 	Pint = secprop->Add_int("cycleup", always, 10);
-	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Number of cycles added or subtracted with speed control hotkeys.\n"
+	Pint->SetMinMax(1, 1000000);
+	Pint->Set_help("Number of cycles added or subtracted with speed control hotkeys (10 by default).\n"
 	               "Run INTRO and see Special Keys for list of hotkeys.");
 
 	Pint = secprop->Add_int("cycledown", always, 20);
-	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Setting it lower than 100 will be a percentage.");
+	Pint->SetMinMax(1, 1000000);
+	Pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
@@ -749,24 +748,24 @@ void DOSBOX_Init()
 
 	pstring->Set_values(midi_devices);
 	pstring->Set_help(
-	        "Device that will receive the MIDI data (from the emulated MIDI\n"
-	        "interface - MPU-401). Choose one of the following:\n"
+	        "Device that will receive the MIDI data from the emulated MPU-401 MIDI\n"
+	        "interface ('auto' by default):\n"
 #if C_FLUIDSYNTH
-	        "'fluidsynth', to use the built-in MIDI synthesizer. See the\n"
-	        "       [fluidsynth] section for detailed configuration.\n"
+	        "  fluidsynth:  The built-in MIDI synthesizer. See the\n"
+	        "               [fluidsynth] section for detailed configuration.\n"
 #endif
 #if C_MT32EMU
-	        "'mt32', to use the built-in Roland MT-32 synthesizer.\n"
-	        "       See the [mt32] section for detailed configuration.\n"
+	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
+	        "               See the [mt32] section for detailed configuration.\n"
 #endif
-	        "'auto', to use the first working external MIDI player. This\n"
-	        "       might be a software synthesizer or physical device.");
+	        "  auto:        The first working external MIDI player. This\n"
+	        "               might be a software synthesizer or physical device.");
 
 	pstring = secprop->Add_string("midiconfig", when_idle, "");
 	pstring->Set_help(
-	        "Configuration options for the selected MIDI interface.\n"
-	        "This is usually the id or name of the MIDI synthesizer you want\n"
-	        "to use (find the id/name with DOS command 'mixer /listmidi').\n"
+	        "Configuration options for the selected MIDI interface (unset by default).\n"
+	        "This is usually the ID or name of the MIDI synthesizer you want\n"
+	        "to use (find the ID/name with DOS command 'mixer /listmidi').\n"
 #if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
 	        "- This option has no effect when using the built-in synthesizers\n"
 	        "  (mididevice = fluidsynth or mt32).\n"
@@ -788,7 +787,7 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
 	const char *mputypes[] = {"intelligent", "uart", "none", 0};
 	pstring->Set_values(mputypes);
-	pstring->Set_help("Type of MPU-401 to emulate.");
+	pstring->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
 #if C_FLUIDSYNTH
 	FLUID_AddConfigSection(control);
@@ -799,7 +798,7 @@ void DOSBOX_Init()
 #endif
 
 #if C_DEBUG
-	secprop=control->AddSection_prop("debug",&DEBUG_Init);
+	secprop = control->AddSection_prop("debug",&DEBUG_Init);
 #endif
 
 	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
@@ -807,33 +806,33 @@ void DOSBOX_Init()
 	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
 	Pstring = secprop->Add_string("sbtype", when_idle, "sb16");
 	Pstring->Set_values(sbtypes);
-	Pstring->Set_help("Type of Sound Blaster to emulate. 'gb' is Game Blaster.");
+	Pstring->Set_help("Type of Sound Blaster to emulate ('sb16' by default). 'gb' is Game Blaster.");
 
 	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0};
 	Phex = secprop->Add_hex("sbbase", when_idle, 0x220);
 	Phex->Set_values(ios);
-	Phex->Set_help("The IO address of the Sound Blaster.");
+	Phex->Set_help("The IO address of the Sound Blaster (220 by default).");
 
-	const char *irqssb[] = {"7", "5", "3", "9", "10", "11", "12", 0};
+	const char *irqssb[] = {"3", "5", "7", "9", "10", "11", "12", 0};
 	Pint = secprop->Add_int("irq", when_idle, 7);
 	Pint->Set_values(irqssb);
-	Pint->Set_help("The IRQ number of the Sound Blaster.");
+	Pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
 
-	const char *dmassb[] = {"1", "5", "0", "3", "6", "7", 0};
+	const char *dmassb[] = {"0", "1", "3", "5", "6", "7", 0};
 	Pint = secprop->Add_int("dma", when_idle, 1);
 	Pint->Set_values(dmassb);
-	Pint->Set_help("The DMA number of the Sound Blaster.");
+	Pint->Set_help("The DMA number of the Sound Blaster (1 by default).");
 
 	Pint = secprop->Add_int("hdma", when_idle, 5);
 	Pint->Set_values(dmassb);
-	Pint->Set_help("The High DMA number of the Sound Blaster.");
+	Pint->Set_help("The High DMA number of the Sound Blaster (5 by default).");
 
 	Pbool = secprop->Add_bool("sbmixer", when_idle, true);
-	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer.");
+	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).");
 
 	pint = secprop->Add_int("sbwarmup", when_idle, 100);
 	pint->Set_help(
-	        "Silence initial DMA audio after card power-on, in milliseconds.\n"
+	        "Silence initial DMA audio after card power-on, in milliseconds (100 by default).\n"
 	        "This mitigates pops heard when starting many SB-based games.\n"
 	        "Reduce this if you notice intial playback is missing audio.");
 	pint->SetMinMax(0, 100);
@@ -844,7 +843,7 @@ void DOSBOX_Init()
 	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
 	Pstring = secprop->Add_string("oplmode", when_idle, "auto");
 	Pstring->Set_values(oplmodes);
-	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
+	Pstring->Set_help("Type of OPL emulation ('auto' by default). On 'auto' the mode is determined by 'sbtype'.\n"
 	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
 	Pstring = secprop->Add_string("oplemu", deprecated, "");
@@ -870,7 +869,7 @@ void DOSBOX_Init()
 
 	Pbool = secprop->Add_bool("sb_filter_always_on", when_idle, false);
 	Pbool->Set_help("Force the Sound Blaster filter to be always on\n"
-					"(disallow programs from turning the filter off).");
+					"(disallow programs from turning the filter off; disabled by default).");
 
 	Pstring = secprop->Add_string("opl_filter", when_idle, "auto");
 	Pstring->Set_help(
@@ -928,7 +927,7 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("tandy", when_idle, "auto");
 	Pstring->Set_values(tandys);
 	Pstring->Set_help(
-	        "Enable Tandy Sound System emulation.\n"
+	        "Enable Tandy Sound System emulation ('auto' by default).\n"
 	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
 
 	Pstring = secprop->Add_string("tandy_filter", when_idle, "on");
@@ -971,7 +970,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&PS1AUDIO_Init, true);
 
 	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
-	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
+	Pbool->Set_help("Enable IBM PS/1 Audio emulation (disabled by default).");
 
 	Pstring = secprop->Add_string("ps1audio_filter", when_idle, "on");
 	Pstring->Set_help(
@@ -991,24 +990,24 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("reelmagic", when_idle, "off");
 	pstring->Set_help(
 	        "ReelMagic (aka REALmagic) MPEG playback support.\n"
-	        "  off:      Disable support (default).\n"
-	        "  cardonly: Initialize the card without loading the FMPDRV.EXE driver.\n"
-	        "  on:       Initialize the card and load the FMPDRV.EXE on start-up.");
+	        "  off:       Disable support (default).\n"
+	        "  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.\n"
+	        "  on:        Initialize the card and load the FMPDRV.EXE on start-up.");
 
 	pstring = secprop->Add_string("reelmagic_key", when_idle, "auto");
 	pstring->Set_help(
 	        "Set the 32-bit magic key used to decode the game's videos.\n"
-	        "  auto:     Use the built-in routines to determine the key (default).\n"
-	        "  common:   Use the most commonly found key, which is 0x40044041.\n"
-	        "  thehorde: Use The Horde's key, which is 0xC39D7088.\n"
-	        "  <custom>: Set a custom key in hex format (e.g., 0x12345678).");
+	        "  auto:      Use the built-in routines to determine the key (default).\n"
+	        "  common:    Use the most commonly found key, which is 0x40044041.\n"
+	        "  thehorde:  Use The Horde's key, which is 0xC39D7088.\n"
+	        "  <custom>:  Set a custom key in hex format (e.g., 0x12345678).");
 
 	pint = secprop->Add_int("reelmagic_fcode", when_idle, 0);
 	pint->Set_help(
 	        "Override the frame rate code used during video playback.\n"
-	        "  0:        No override: attempt automatic rate discovery (default).\n"
-	        "  1 to 7:   Override the frame rate to one the following (use 1 through 7):\n"
-	        "            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
+	        "  0:       No override: attempt automatic rate discovery (default).\n"
+	        "  1 to 7:  Override the frame rate to one the following (use 1 through 7):\n"
+	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
@@ -1021,43 +1020,43 @@ void DOSBOX_Init()
 	Pstring = secprop->Add_string("joysticktype", when_idle, "auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
-	        "Type of joystick to emulate: auto (default),\n"
-	        "auto     : Detect and use any joystick(s), if possible.,\n"
-	        "2axis    : Support up to two joysticks, each with 2 axis\n"
-	        "4axis    : Support the first joystick only, as a 4-axis type.\n"
-	        "4axis_2  : Support the second joystick only, as a 4-axis type.\n"
-	        "fcs      : Emulate joystick as an original Thrustmaster FCS.\n"
-	        "ch       : Emulate joystick as an original CH Flightstick.\n"
-	        "hidden   : Prevent DOS from seeing the joystick(s), but enable them for\n"
-	        "           mapping.\n"
-	        "disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
-	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
+	        "Type of joystick to emulate:\n"
+	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
+	        "  2axis:     Support up to two joysticks, each with 2 axis\n"
+	        "  4axis:     Support the first joystick only, as a 4-axis type.\n"
+	        "  4axis_2:   Support the second joystick only, as a 4-axis type.\n"
+	        "  fcs:       Emulate joystick as an original Thrustmaster FCS.\n"
+	        "  ch:        Emulate joystick as an original CH Flightstick.\n"
+	        "  hidden:    Prevent DOS from seeing the joystick(s), but enable them for\n"
+	        "             mapping.\n"
+	        "  disabled:  Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
+	          "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed", when_idle, true);
-	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your\n"
-	                "joystick drifts (away).");
+	Pbool->Set_help("Enable timed intervals for axis (disabled by default). Experiment with this option, if your\n"
+	                "joystick drifts away.");
 
 	Pbool = secprop->Add_bool("autofire", when_idle, false);
-	Pbool->Set_help("continuously fires as long as you keep the button pressed.");
+	Pbool->Set_help("Continuously fires as long as you keep the button pressed (disabled by default).");
 
 	Pbool = secprop->Add_bool("swap34", when_idle, false);
-	Pbool->Set_help("swap the 3rd and the 4th axis. Can be useful for certain joysticks.");
+	Pbool->Set_help("Swap the 3rd and the 4th axis (disabled by default). Can be useful for certain joysticks.");
 
 	Pbool = secprop->Add_bool("buttonwrap", when_idle, false);
-	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
+	Pbool->Set_help("Enable button wrapping at the number of emulated buttons (disabled by default).");
 
 	Pbool = secprop->Add_bool("circularinput", when_idle, false);
 	Pbool->Set_help(
-	        "enable translation of circular input to square output.\n"
+	        "Enable translation of circular input to square output (disabled by default).\n"
 	        "Try enabling this if your left analog stick can only move in a circle.");
 
 	Pint = secprop->Add_int("deadzone", when_idle, 10);
 	Pint->SetMinMax(0, 100);
-	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
+	Pint->Set_help("The percentage of motion to ignore (10 by default). 100 turns the stick into a digital one.");
 
 	Pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	Pbool->Set_help(
-	        "Activates hotkeys to allow realtime calibration of the joystick's x and y axis.\n"
+	        "Enable hotkeys to allow realtime calibration of the joystick's x and y axis (disabled by default).\n"
 	        "Only consider this if in-game calibration fails and other settings have been\n"
 	        "tried.\n"
 	        " - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:\n"
@@ -1073,11 +1072,11 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
 	pstring->Set_help(
-	        "Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.");
+	        "Apply x-axis calibration parameters from the hotkeys ('auto' by default).");
 
 	pstring = secprop->Add_string("joy_y_calibration", when_idle, "auto");
 	pstring->Set_help(
-	        "Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.");
+	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
 	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
 	const char* serials[] = {
@@ -1089,16 +1088,16 @@ void DOSBOX_Init()
 	Pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	pmulti_remain->Set_help(
-	        "set type of device connected to com port.\n"
-	        "Can be disabled, dummy, mouse, modem, nullmodem, direct.\n"
+	        "Set type of device connected to COM port.\n"
+	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. Parameter for all types is irq (optional).\n"
-	        "for mouse:\n"
-	        "   model, overrides setting from [mouse] section\n"
-	        "for direct: realport (required), rxdelay (optional).\n"
-	        "   (realport:COM1 realport:ttyS0).\n"
-	        "for modem: listenport, sock, baudrate (all optional).\n"
-	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
+	        "- for mouse:\n"
+	        "    model, overrides setting from [mouse] section\n"
+	        "- for direct: realport (required), rxdelay (optional).\n"
+	        "    (realport:COM1 realport:ttyS0).\n"
+	        "- for modem: listenport, sock, baudrate (all optional).\n"
+	        "- for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "   transparent, port, inhsocket, sock (all optional).\n"
 	        "SOCK parameter specifies the protocol to be used by both sides\n"
 	        "of the conection. 0 for TCP and 1 for ENet reliable UDP.\n"
@@ -1109,64 +1108,64 @@ void DOSBOX_Init()
 	pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("see serial1");
+	pmulti_remain->Set_help("See 'serial1'");
 
 	pmulti_remain = secprop->AddMultiValRemain("serial3", when_idle, " ");
 	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("see serial1");
+	pmulti_remain->Set_help("See 'serial1'");
 
 	pmulti_remain = secprop->AddMultiValRemain("serial4", when_idle, " ");
 	Pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("see serial1");
+	pmulti_remain->Set_help("See 'serial1'");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
-	pstring->Set_help("File used to map fake phone numbers to addresses.");
+	pstring->Set_help("File used to map fake phone numbers to addresses ('phonebook.txt' by default).");
 
 	/* All the DOS Related stuff, which will eventually
 	 * start up in the shell */
 	secprop = control->AddSection_prop("dos", &DOS_Init, false); // done
 	secprop->AddInitFunction(&XMS_Init, true);                   // done
 	Pbool = secprop->Add_bool("xms", when_idle, true);
-	Pbool->Set_help("Enable XMS support.");
+	Pbool->Set_help("Enable XMS support (enabled by default).");
 
 	secprop->AddInitFunction(&EMS_Init, true); // done
 	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", 0};
 	Pstring = secprop->Add_string("ems", when_idle, "true");
 	Pstring->Set_values(ems_settings);
 	Pstring->Set_help(
-	        "Enable EMS support. The default (=true) provides the best\n"
+	        "Enable EMS support (enabled by default). Enabled provides the best\n"
 	        "compatibility but certain applications may run better with\n"
-	        "other choices, or require EMS support to be disabled (=false)\n"
+	        "other choices, or require EMS support to be disabled\n"
 	        "to work at all.");
 
 	Pbool = secprop->Add_bool("umb", when_idle, true);
-	Pbool->Set_help("Enable UMB support.");
+	Pbool->Set_help("Enable UMB support (enabled by default).");
 
 	pstring = secprop->Add_string("ver", when_idle, "5.0");
-	pstring->Set_help("Set DOS version (5.0 by default). Specify as major.minor format.\n"
+	pstring->Set_help("Set DOS version (5.0 by default). Specify in major.minor format.\n"
 	                  "A single number is treated as the major version.\n"
 	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
 	pint = secprop->Add_int("country", when_idle, 0);
 	pint->Set_help("Set DOS country code which will affect country-specific\n"
-	               "information such as date, time, and decimal formats.\n"
+	               "information such as date, time, and decimal formats (0 by default).\n"
 	               "If set to 0, the country code corresponding to the\n"
 	               "selected keyboard layout will be used.");
 
 	Pbool = secprop->Add_bool("expand_shell_variable", when_idle, false);
 	Pbool->Set_help("Enable expanding environment variables such as %PATH%\n"
-	                "while in the DOS command shell. FreeDOS and MS-DOS 7/8\n"
-	                "COMMAND.COM supports this behavior.");
+	                "while in the DOS command shell (disabled by default).\n"
+	                "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, true);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
-	Pstring->Set_help("Language code of the keyboard layout (or none).");
+	Pstring->Set_help("Language code of the keyboard layout, or auto ('auto' by default).");
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
@@ -1175,7 +1174,7 @@ void DOSBOX_Init()
 #if C_IPX
 	secprop = control->AddSection_prop("ipx", &IPX_Init, true);
 	Pbool   = secprop->Add_bool("ipx", when_idle, false);
-	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
+	Pbool->Set_help("Enable IPX over UDP/IP emulation (enabled by default).");
 #endif
 
 #if C_SLIRP
@@ -1184,11 +1183,11 @@ void DOSBOX_Init()
 	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
 	Pbool->Set_help(
 	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
-	        "network (using libslirp) with properties as follows:\n"
-	        " - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.\n"
-	        " - 10.0.2.2      : IP of the gateway and DHCP service.\n"
-	        " - 10.0.2.3      : IP of the virtual DNS server.\n"
-	        " - 10.0.2.15     : First IP provided by DHCP, your IP!\n"
+	        "network (using libslirp) with properties as follows (enabled by default):\n"
+	        " - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.\n"
+	        " - 10.0.2.2:       IP of the gateway and DHCP service.\n"
+	        " - 10.0.2.3:       IP of the virtual DNS server.\n"
+	        " - 10.0.2.15:      First IP provided by DHCP, your IP!\n"
 	        "Note: Inside DOS, setting this up requires an NE2000 packet driver,\n"
 	        "      DHCP client, and TCP/IP stack. You might need port-forwarding\n"
 	        "      from the host into the DOS guest, and from your router to your\n"
@@ -1199,7 +1198,7 @@ void DOSBOX_Init()
 	Phex = secprop->Add_hex("nicbase", when_idle, 0x300);
 	Phex->Set_values(nic_addresses);
 	Phex->Set_help(
-	        "The base address of the NE2000 card.\n"
+	        "The base address of the NE2000 card (300 by default).\n"
 	        "Note: Addresses 220 and 240 might not be available as they're assigned\n"
 	        "      to the Sound Blaster and Gravis UltraSound by default.");
 
@@ -1207,15 +1206,15 @@ void DOSBOX_Init()
 	                          "11", "12", "14", "15", 0};
 	Pint = secprop->Add_int("nicirq", when_idle, 3);
 	Pint->Set_values(nic_irqs);
-	Pint->Set_help("The interrupt used by the NE2000 card.\n"
+	Pint->Set_help("The interrupt used by the NE2000 card (3 by default).\n"
 	               "Note: IRQs 3 and 5 might not be available as they're assigned\n"
 	               "      to 'serial2' and the Gravis UltraSound by default.");
 
 	Pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
-	Pstring->Set_help("The MAC address of the NE2000 card.");
+	Pstring->Set_help("The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
 
 	Pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
-	Pstring->Set_help("Forwards one or more TCP ports from the host into the DOS guest.\n"
+	Pstring->Set_help("Forwards one or more TCP ports from the host into the DOS guest (unset by default).\n"
 	                  "The format is:\n"
 	                  "  port1  port2  port3 ... (e.g., 21 80 443)\n"
 	                  "  This will forward FTP, HTTP, and HTTPS into the DOS guest.\n"
@@ -1235,7 +1234,7 @@ void DOSBOX_Init()
 	                  "  - If conflicting guest ports are given, the latter rule takes precedent.");
 
 	Pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
-	Pstring->Set_help("Forwards one or more UDP ports from the host into the DOS guest.\n"
+	Pstring->Set_help("Forwards one or more UDP ports from the host into the DOS guest (unset by default).\n"
 	                  "The format is the same as for TCP port forwards.");
 #endif
 
