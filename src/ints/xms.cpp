@@ -330,7 +330,7 @@ Bitu XMS_Handler(void) {
 		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx),false);
 		break;
 	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
-		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
+		if(reg_ebx > reg_bx) LOG_MSG("64 MB memory limit!");
 		[[fallthrough]];
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));

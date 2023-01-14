@@ -684,7 +684,7 @@ static void FinishSetMode(bool clearmem) {
 		case M_HERC_TEXT:
 		case M_TANDY_TEXT:
 		case M_TEXT: {
-			// TODO Hercules had 32KiB compared to CGA/MDA 16KiB,
+			// TODO Hercules had 32KB compared to CGA/MDA 16 KB,
 			// but does it matter in here?
 			uint16_t seg = (CurMode->mode==7)?0xb000:0xb800;
 			for (uint16_t ct=0;ct<16*1024;ct++) real_writew(seg,ct*2,0x0720);
