@@ -51,32 +51,29 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	// in the OS. Usually it's Fluid_R3.
 	auto *str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
 	str_prop->Set_help(
-	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default). You can use an\n"
-	        "absolute or relative path, or the name of an .sf2 inside\n"
-	        "the 'soundfonts' directory within your DOSBox configuration\n"
-	        "directory.\n"
-	        "Note: The optional volume scaling percentage after the filename\n"
-	        "has been deprecated. Please use a mixer command instead to\n"
-	        "change the FluidSynth audio channel's volume, e.g.:\n"
-	        "  MIXER FSYNTH 200");
+	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
+	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
+	        "'soundfonts' directory within your DOSBox configuration directory.\n"
+	        "Notes: The optional volume scaling percentage after the filename has been\n"
+	        "       deprecated. Please use a mixer command instead to change the FluidSynth\n"
+	        "       audio channel's volume, e.g. 'MIXER FSYNTH 200'");
 
 	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
 	str_prop->Set_help(
-	        "Chorus effect: 'auto (default)', 'on', 'off', or custom values.\n"
+	        "Chorus effect: 'auto' (default), 'on', 'off', or custom values.\n"
 	        "When using custom values:\n"
 	        "  All five must be provided in-order and space-separated.\n"
 	        "  They are: voice-count level speed depth modulation-wave, where:\n"
-	        "  - voice-count is an integer from 0 to 99.\n"
-	        "  - level is a decimal from 0.0 to 10.0\n"
-	        "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
-	        "  - depth is a decimal from 0.0 to 21.0\n"
-	        "  - modulation-wave is either 'sine' or 'triangle'\n"
+	        "    - voice-count is an integer from 0 to 99.\n"
+	        "    - level is a decimal from 0.0 to 10.0\n"
+	        "    - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
+	        "    - depth is a decimal from 0.0 to 21.0\n"
+	        "    - modulation-wave is either 'sine' or 'triangle'\n"
 	        "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
-	        "Note: You can disable the FluidSynth chorus and enable the\n"
-	        "mixer-level chorus on the FluidSynth channel instead, or\n"
-	        "enable both chorus effects at the same time. Whether this\n"
-	        "sounds good depends on the SoundFont and the chorus settings\n"
-	        "being used.");
+	        "Notes: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
+	        "       on the FluidSynth channel instead, or enable both chorus effects at the\n"
+	        "       same time. Whether this sounds good depends on the SoundFont and the\n"
+	        "       chorus settings being used.");
 
 	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
 	str_prop->Set_help(
@@ -84,16 +81,15 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "When using custom values:\n"
 	        "  All four must be provided in-order and space-separated.\n"
 	        "  They are: room-size damping width level, where:\n"
-	        "  - room-size is a decimal from 0.0 to 1.0\n"
-	        "  - damping is a decimal from 0.0 to 1.0\n"
-	        "  - width is a decimal from 0.0 to 100.0\n"
-	        "  - level is a decimal from 0.0 to 1.0\n"
+	        "    - room-size is a decimal from 0.0 to 1.0\n"
+	        "    - damping is a decimal from 0.0 to 1.0\n"
+	        "    - width is a decimal from 0.0 to 100.0\n"
+	        "    - level is a decimal from 0.0 to 1.0\n"
 	        "  For example: reverb = 0.61 0.23 0.76 0.56\n"
-	        "Note: You can disable the FluidSynth reverb and enable the\n"
-	        "mixer-level reverb on the FluidSynth channel instead, or\n"
-	        "enable both reverb effects at the same time. Whether this\n"
-	        "sounds good depends on the SoundFont and the reverb settings\n"
-	        "being used.");
+	        "Notes: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
+	        "       on the FluidSynth channel instead, or enable both reverb effects at the\n"
+	        "       same time. Whether this sounds good depends on the SoundFont and the\n"
+	        "       reverb settings being used.");
 
 	str_prop = secprop.Add_string("fsynth_filter", when_idle, "off");
 	assert(str_prop);
