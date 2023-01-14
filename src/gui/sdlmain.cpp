@@ -4310,12 +4310,12 @@ void config_add_sdl() {
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
 	        "Set window size when running in windowed mode:\n"
-	        "  default:   Select the best option based on your\n"
-	        "             environment and other settings.\n"
-	        "  small, medium, or large (or s, m, l):\n"
+	        "  default:   Select the best option based on your environment and\n"
+	        "             other settings.\n"
+	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
-	        "  <custom>:  Scale the window to the given dimensions in\n"
-	        "             WxH format. For example: 1024x768.\n"
+	        "  <custom>:  Scale the window to the given dimensions in WxH format.\n"
+	        "             For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
 	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
@@ -4333,7 +4333,7 @@ void config_add_sdl() {
 	        "             0,0 is the top-left corner of the screen.");
 
 	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
+	Pbool->Set_help("Enable window decorations in windowed mode.");
 
 	Pint = sdl_sec->Add_int("transparency", always, 0);
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
@@ -4356,18 +4356,18 @@ void config_add_sdl() {
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
-	        "Synchronize with display refresh rate if supported. This can\n"
-	        "reduce flickering and tearing, but may also impact performance.");
+	        "Synchronize with display refresh rate if supported.\n"
+	        "This can reduce flickering and tearing, but may also impact performance.");
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping the next\n"
-	               "frame. 0 disables this and will always render.");
+	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
+	               "next frame. 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
 
 	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
-	        "Optionally select the frame presentation mode:\n"
+	        "Select the frame presentation mode:\n"
 	        "  auto:  Intelligently time and drop frames to prevent\n"
 	        "         emulation stalls, based on host and DOS frame rates.\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
@@ -4391,12 +4391,12 @@ void config_add_sdl() {
 #else
 	Pstring = sdl_sec->Add_string("output", always, "texture");
 #endif
-	Pstring->Set_help("What video system to use for output.");
+	Pstring->Set_help("Video system to use for output.");
 	Pstring->Set_values(outputs);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Choose a renderer driver when using a texture output mode.\n"
-	                  "Use texture_renderer=auto for an automatic choice.");
+	pstring->Set_help("Render driver to use in 'texture' output mode.\n"
+	                  "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
@@ -4411,9 +4411,9 @@ void config_add_sdl() {
 
 	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
-	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively. \n"
-	                 "   auto:  Let the host operating system manage the priority (valid for both).\n"
-	                 "Default is: 'auto auto'");
+	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
+	                 "('auto auto' by default)\n"
+	                 "'auto' lets the host operating system manage the priority.");
 
 	const char *priority_level_choices[] = {
 	        "auto",
@@ -4441,13 +4441,13 @@ void config_add_sdl() {
 	        "File used to load/save the key/event mappings.\n"
 	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
 	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
-	        "Note: the -resetmapper commandline flag only deletes the default mapperfile.");
+	        "Notes: The -resetmapper commandline flag only deletes the default mapperfile.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
-	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
-	        "environment variable (which usually blocks the OS screensaver\n"
-	        "while the emulator is running).");
+	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
+	        "variable (which usually blocks the OS screensaver while the emulator is\n"
+	        "running).");
 	const char *ssopts[] = {"auto", "allow", "block", 0};
 	pstring->Set_values(ssopts);
 }

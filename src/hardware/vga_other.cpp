@@ -1501,22 +1501,24 @@ static void composite_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char *states[] = {"auto", "on", "off", 0};
+	const char* states[] = {"auto", "on", "off", 0};
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
 	str_prop->Set_values(states);
-	str_prop->Set_help("Enable composite mode on start ('auto' by default). 'auto' lets the program decide.\n"
-	                   "Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.\n"
-	                   "      Then read the new settings from your console and enter them here.");
-
-	const char *eras[] = {"auto", "old", "new", 0};
-	str_prop = secprop.Add_string("era", when_idle, "auto");
-	str_prop->Set_values(eras);
 	str_prop->Set_help(
-	        "Era of composite technology ('auto' by default). When 'auto', PCjr uses new and CGA/Tandy use old.");
+	        "Enable composite mode on start ('auto' by default).\n"
+	        "'auto' lets the program decide.\n"
+	        "Notes: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
+	        "       then read the new settings from your console and enter them here.");
+
+	const char* eras[] = {"auto", "old", "new", 0};
+	str_prop           = secprop.Add_string("era", when_idle, "auto");
+	str_prop->Set_values(eras);
+	str_prop->Set_help("Era of composite technology ('auto' by default).\n"
+	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 
 	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->Set_help("Appearance of RGB palette. For example, adjust until sky is blue.");
+	int_prop->Set_help("Appearance of RGB palette. For example, adjust until the sky is blue.");
 
 	int_prop = secprop.Add_int("saturation", when_idle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());

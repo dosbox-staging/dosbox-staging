@@ -2380,7 +2380,6 @@ private:
 		        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
 		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
 		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]\n"
-		        "\n"
 		        "Notes:\n"
 		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
 		        "  You may change the settings of more than one channel in a single command.\n"
@@ -2790,7 +2789,9 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	auto bool_prop = sec_prop.Add_bool("nosound", always, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable silent mode, sound is still emulated though (disabled by default).");
+	bool_prop->Set_help(
+	        "Enable silent mode (disabled by default).\n"
+	        "Sound is still fullhy emulated in silent mode, but DOSBox outputs silence.");
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
@@ -2812,9 +2813,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "How many milliseconds of sound to render on top of the blocksize; larger values\n"
 	        "might help with sound stuttering but sound will also be more lagged.");
 
-	bool_prop = sec_prop.Add_bool("negotiate",
-	                              only_at_start,
-	                              default_allow_negotiate);
+	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
 	bool_prop->Set_help("Let the system audio driver negotiate (possibly) better rate and blocksize\n"
 	                    "settings.");
 
@@ -2833,7 +2832,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed\n"
 	        "               (off) and 100 full crossfeed (effectively turning stereo content\n"
 	        "               into mono).\n"
-	        "Note: You can set per-channel crossfeed via mixer commands.");
+	        "Notes: You can set per-channel crossfeed via mixer commands.");
 
 	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
 	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
@@ -2851,7 +2850,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
+	        "Notes: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
 	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
@@ -2860,11 +2859,11 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
-	        "  light:   A light chorus effect (especially suited for\n"
-	        "           synth music that features lots of white noise.)\n"
+	        "  light:   A light chorus effect (especially suited for synth music that\n"
+	        "           features lots of white noise.)\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
+	        "Notes: You can fine-tune per-channel chorus levels via mixer commands.");
 	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
