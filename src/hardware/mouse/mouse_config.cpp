@@ -278,11 +278,11 @@ static void config_init(Section_prop &secprop)
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
-	        "Default mouse sensitivity (100,100 by default). 100 is the base value, 150 is 150% sensitivity, etc.\n"
-	        "Negative values reverse mouse direction, 0 disables the movement completely.\n"
-	        "The optional second parameter specifies vertical sensitivity (e.g. 100,200).\n"
-	        "The setting can be adjusted in runtime (also per mouse interface) using internal\n"
-	        "MOUSECTL.COM tool, available on drive Z.");
+	        "Mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
+	        "(100,100 by default). Negative values invert the axis, zero disables it.\n"
+	        "Providing only one value sets sensitivity for both axes.\n"
+	        "The setting can be adjusted in runtime (also per mouse interface) using\n"
+	        "internal MOUSECTL.COM tool, available on drive Z.");
 	prop_multi->SetValue("100");
 
 	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
