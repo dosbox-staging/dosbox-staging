@@ -54,8 +54,8 @@ const auto ultradir_env_name = "ULTRADIR";
 constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
 
 // DMA transfer size and rate constants
-constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
-constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MiB/s
+constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
+constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
 constexpr double MS_PER_DMA_XFER = millis_in_second / DMA_TRANSFERS_PER_S;
 

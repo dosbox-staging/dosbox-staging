@@ -431,7 +431,7 @@ void MOUNT::AddMessages() {
 	        "  [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...\n"
 	        "  [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted\n"
 	        "  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
-	        "  SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)\n"
+	        "  SIZE      free space for the virtual drive (KB for floppies, MB otherwise)\n"
 	        "  LABEL     drive label name to be used\n"
 	        "\n"
 	        "Notes:\n"

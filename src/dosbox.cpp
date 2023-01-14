@@ -385,7 +385,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	// Set the user's prefered MCB fault handling strategy
 	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy"));
 
-	// Convert the users video memory in either MB or KiB to bytes
+	// Convert the users video memory in either MB or KB to bytes
 	const auto vmemsize_string = std::string(section->Get_string("vmemsize"));
 
 	// If auto, then default to 0 and let the adapter's setup rountine set
@@ -469,7 +469,7 @@ void DOSBOX_Init()
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(1, 63);
 	pint->Set_help(
-	        "Amount of memory of the emulated machine has in MiB (16 by default).\n"
+	        "Amount of memory of the emulated machine has in MB (16 by default).\n"
 	        "Best leave at the default setting to avoid problems with some games,\n"
 	        "though a few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
@@ -493,18 +493,18 @@ void DOSBOX_Init()
 	        "1",
 	        "2",
 	        "4",
-	        "8", // MiB
+	        "8", // MB
 	        "256",
 	        "512",
 	        "1024",
 	        "2048",
 	        "4096",
 	        "8192",
-	        0, // KiB
+	        0, // KB
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
-	pstring->Set_help("Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per\n"
+	pstring->Set_help("Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default per\n"
 	                  "video adapter ('auto' by default).");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
