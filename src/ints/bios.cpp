@@ -1269,7 +1269,10 @@ public:
 		for (const auto c : "01/01/92")
 			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
 
-		phys_writeb(0xfffff, 0x55); // signature
+		if (machine==MCH_TANDY)
+			phys_writeb(0xfffff, 0xff); // Needed for Ninja (1986)
+		else
+			phys_writeb(0xfffff, 0x55); // signature
 
 		tandy_sb.port=0;
 		tandy_dac.port=0;
