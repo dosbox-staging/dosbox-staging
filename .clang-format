@@ -189,7 +189,7 @@ AlwaysBreakTemplateDeclarations: Yes
 #      --i;                                      --i;
 #    while (i);
 #
-InsertBraces: true
+# InsertBraces: true
 
 # Attach braces to surrounding context except break before braces on function
 # definitions (also known as K&R indentation style). This is C-derived style,
