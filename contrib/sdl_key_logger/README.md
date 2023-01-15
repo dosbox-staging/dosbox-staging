@@ -11,9 +11,13 @@ keyboard keys and SDL's enumerated scancodes and sdlk values.
 
 ## Build
 
- meson setup build
- meson compile -C build
+``` shell
+meson setup build
+meson compile -C build
+```
 
 ## Run
 
- ./build/logger
+``` shell
+  ./build/logger
+```
