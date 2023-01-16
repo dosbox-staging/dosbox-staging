@@ -44,7 +44,7 @@ you build a binary optimized for gaming.
    - Open an MSYS2 console from your start menu.
    - Run `pacman -Syu`, answer `Y`, and let it run to completion.
    - Close your terminal when it's done.
-   - Re-open the terminal and repeat the process.
+   - Re-open the terminal and repeat the process one last time: Run `pacman -Syu`, answer `Y`, and let it run to completion.
 
 5. Install the GCC and Clang runtime groups:
 
@@ -52,6 +52,7 @@ you build a binary optimized for gaming.
    the GCC and Clang runtime groups along with Staging's dependencies.
 
     ``` shell
+    cd dosbox-staging
     pacman -R clang
     pacman -R gcc
     pacman -S $(cat packages/windows-msys2-clang-x86_64.txt packages/windows-msys2-gcc-x86_64.txt)
