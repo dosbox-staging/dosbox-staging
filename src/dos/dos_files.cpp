@@ -163,22 +163,17 @@ bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive)
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 
-			for (Bitu i=0;i<strlen(tempdir);i++) {
-				c=tempdir[i];
-				if ((c>='A') && (c<='Z')) continue;
-				if ((c>='0') && (c<='9')) continue;
-				switch (c) {
-				case '$':	case '#':	case '@':	case '(':	case ')':
-				case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
-				case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-				case '\'':	case '+':	case '^':	case 246:	case 255:	case 0xa0:
-				case 0xe5:	case 0xbd:	case 0x9d:
-					break;
-				default:
+			const auto tempdir_sv = std::string_view(tempdir);
+
+			const auto tempdir_is_printable =
+			        std::all_of(tempdir_sv.begin(),
+			                    tempdir_sv.end(),
+			                    is_extended_printable_ascii);
+
+			if (!tempdir_is_printable) {
 					LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X in %s!",c,c,name);
-					DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
-					break;
-				}
+				DOS_SetError(DOSERR_PATH_NOT_FOUND);
+				return false;
 			}
 
 			if (strlen(fullname)+strlen(tempdir)>=DOS_PATHLENGTH) {
