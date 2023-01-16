@@ -163,10 +163,21 @@ bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive)
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 
-			for (Bitu i=0;i<strlen(tempdir);i++) {
-				c=tempdir[i];
-				if ((c>='A') && (c<='Z')) continue;
-				if ((c>='0') && (c<='9')) continue;
+			for (auto i = 0; i < strlen(tempdir); i++) {
+				c = tempdir[i];
+				if ((c >= 'A') && (c <= 'Z')) {
+					continue;
+				}
+				if ((c >= '0') && (c <= '9')) {
+					continue;
+				}
+
+				constexpr uint8_t high_ascii_first = 0x80;
+				constexpr uint8_t high_ascii_last  = 0xff;
+				if (static_cast<uint8_t>(c) >= high_ascii_first &&
+				    static_cast<uint8_t>(c) <= high_ascii_last) {
+					continue;
+				}
 				switch (c) {
 				case '$':	case '#':	case '@':	case '(':	case ')':
 				case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
