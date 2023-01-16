@@ -140,6 +140,24 @@ void reset_str(T *str) noexcept
 	terminate_str_at(str, 0);
 }
 
+// Is the ASCII character within the upper nibble?
+constexpr bool is_upper_ascii(const char c)
+{
+	constexpr uint8_t upper_ascii_first = 128;
+	constexpr uint8_t upper_ascii_last  = 255;
+
+#if (CHAR_MIN < 0) // char is signed
+	static_assert(std::is_signed_v<char> && CHAR_MAX < upper_ascii_last);
+	return static_cast<uint8_t>(c) >= upper_ascii_first;
+
+#else // char is unsigned
+	static_assert(std::is_unsigned_v<char> && CHAR_MAX == upper_ascii_last);
+	return c >= upper_ascii_first;
+
+#endif
+}
+
+
 // Is it an ASCII control character?
 constexpr bool is_control_ascii(const char c)
 {
