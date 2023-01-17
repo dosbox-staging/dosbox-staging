@@ -65,13 +65,13 @@ private:
 	void MixerCallBack(uint16_t len);
 	void ProcessWorkFromFifo();
 
-	uint16_t GetNumPendingFrames();
-	void RenderFramesToFifo(const uint16_t num_frames = 1);
+	uint16_t GetNumPendingAudioFrames();
+	void RenderAudioFramesToFifo(const uint16_t num_frames = 1);
 	void Render();
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
-	RWQueue<AudioFrame> frame_fifo{1};
+	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};
 
 	std::mutex service_mutex = {};
@@ -82,7 +82,7 @@ private:
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.
 	double last_rendered_ms = 0.0;
-	double ms_per_frame     = 0.0;
+	double ms_per_audio_frame = 0.0;
 
 	std::atomic_bool keep_rendering = {};
 	bool is_open = false;
