@@ -690,6 +690,12 @@ void MidiHandler_mt32::Close()
 
 	LOG_MSG("MT32: Shutting down");
 
+	if (had_underruns) {
+		LOG_WARNING("MT32: Fix underruns by lowering CPU load "
+		            "or increasing your conf's prebuffer");
+		had_underruns = false;
+	}
+
 	// Stop playback
 	if (channel)
 		channel->Enable(false);
@@ -772,14 +778,15 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 {
 	assert(channel);
 
+	// Report buffer underruns
 	constexpr auto warning_percent = 5.0f;
 	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
 	    percent_full < warning_percent) {
 		static auto iteration = 0;
 		if (iteration++ % 100 == 0) {
-			LOG_WARNING("MT32: Audio FIFO is %4.2f%% full",
-			            static_cast<double>(percent_full));
+			LOG_WARNING("MT32: Audio buffer underrun");
 		}
+		had_underruns = true;
 	}
 
 	static std::vector<AudioFrame> audio_frames = {};

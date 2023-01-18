@@ -85,7 +85,9 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	std::atomic_bool keep_rendering = {};
-	bool is_open = false;
+
+	bool had_underruns = false;
+	bool is_open       = false;
 };
 
 #endif // C_MT32EMU
