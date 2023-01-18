@@ -542,6 +542,12 @@ void MidiHandlerFluidsynth::Close()
 
 	LOG_MSG("FSYNTH: Shutting down");
 
+	if (had_underruns) {
+		LOG_WARNING("FSYNTH: Fix underruns by lowering CPU load, increasing "
+		            "your conf's prebuffer, or using a simpler soundfont");
+		had_underruns = false;
+	}
+
 	// Stop playback
 	if (channel)
 		channel->Enable(false);
@@ -646,14 +652,15 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 {
 	assert(channel);
 
+	// Report buffer underruns
 	constexpr auto warning_percent = 5.0f;
 	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
 	    percent_full < warning_percent) {
 		static auto iteration = 0;
 		if (iteration++ % 100 == 0) {
-			LOG_WARNING("FSYNTH: Audio FIFO is %4.2f%% full",
-			            static_cast<double>(percent_full));
+			LOG_WARNING("FSYNTH: Audio buffer underrun");
 		}
+		had_underruns = true;
 	}
 
 	static std::vector<AudioFrame> audio_frames = {};
