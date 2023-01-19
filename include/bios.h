@@ -112,8 +112,11 @@
 #define BIOS_DEFAULT_IRQ2_LOCATION		(RealMake(0xf000,0xff55))
 #define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,(machine==MCH_PCJR)?0x0043:0xe05b))
 
-/* maximum of scancodes handled by keyboard bios routines */
-#define MAX_SCAN_CODE 0x59
+// The maximum "normal key" scancode value handled by keyboard bios routines.
+// This should match the maximum return value set in KEYBOARD_AddKey()'s switch
+// statement. The scan code is read from an 8-bit register (reg_al) and
+// therefore limited to handling 255 keys.
+constexpr uint8_t MAX_SCAN_CODE = 115;
 
 /* The Section handling Bios Disk Access */
 //#define BIOS_MAX_DISK 10

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -370,8 +370,9 @@ bool MOUSE_IsProbeForMappingAllowed()
 
 static Bitu int74_exit()
 {
-	SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
-	reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
+	const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
+	SegSet16(cs, RealSeg(real_pt));
+	reg_ip = RealOff(real_pt);
 
 	return CBRET_NONE;
 }
@@ -395,24 +396,28 @@ static Bitu int74_handler()
 			// it. Doing this allows the INT 33h emulation to draw
 			// the cursor while not causing Windows 3.1 to crash or
 			// behave erratically.
-			if (mask)
+			if (mask) {
 				MOUSEDOS_DrawCursor();
+			}
 		}
-		if (ev.dos_button)
-			mask = static_cast<uint8_t>(
-			        mask | MOUSEDOS_UpdateButtons(ev.dos_buttons));
-		if (ev.dos_wheel)
-			mask = static_cast<uint8_t>(mask | MOUSEDOS_UpdateWheel());
+		if (ev.dos_button) {
+			const auto new_mask = mask | MOUSEDOS_UpdateButtons(ev.dos_buttons);
+			mask = static_cast<uint8_t>(new_mask);
+		}
+		if (ev.dos_wheel) {
+			const auto new_mask = mask | MOUSEDOS_UpdateWheel();
+			mask = static_cast<uint8_t>(new_mask);
+		}
 
 		// If DOS driver's client is not interested in this particular
 		// type of event - skip it
-		if (!MOUSEDOS_HasCallback(mask))
+		if (!MOUSEDOS_HasCallback(mask)) {
 			return int74_exit();
+		}
 
-		CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
-		CPU_Push16(RealOff(static_cast<RealPt>(CALLBACK_RealPointer(
-		                           int74_ret_callback)) +
-		                   7));
+		const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
+		CPU_Push16(RealSeg(real_pt));
+		CPU_Push16(RealOff(static_cast<RealPt>(real_pt) + 7));
 
 		return MOUSEDOS_DoCallback(mask, ev.dos_buttons);
 	}
