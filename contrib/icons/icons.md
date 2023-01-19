@@ -13,6 +13,12 @@ This icon looks good in most contexts, but for very small sizes (16px up to
 32px) it's better to render icon based on one of files in `small-svg/`
 directory.
 
+# Source file
+
+The source file used to generate the current icons is `dosbox-staging-src.svg`. 
+It's based out of `src\dosbox_staging_splash.svg`, with the file contents 
+edited with Inkscape. The source file size is 500x500. 
+
 # Rendering bitmap font
 
 Use bundled Makefile for that.  It includes targets for rendering .png files
