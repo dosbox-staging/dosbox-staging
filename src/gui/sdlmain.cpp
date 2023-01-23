@@ -217,9 +217,10 @@ constexpr uint32_t AMASK = 0xff000000;
 
 // Size and ratio constants
 // ------------------------
-constexpr int SMALL_WINDOW_PERCENT = 50;
-constexpr int MEDIUM_WINDOW_PERCENT = 74;
-constexpr int LARGE_WINDOW_PERCENT = 90;
+constexpr int SMALL_WINDOW_PERCENT  = 33;
+constexpr int MEDIUM_WINDOW_PERCENT = 50;
+constexpr int LARGE_WINDOW_PERCENT  = 75;
+
 constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
 static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
 constexpr SDL_Point RATIOS_FOR_STRETCHED_PIXELS = {4, 3};
@@ -698,10 +699,6 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	default_driver_is_opengl = starts_with("opengl", info.name);
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
-
-static SDL_Point refine_window_size(const SDL_Point &size,
-                                    const SCALING_MODE scaling_mode,
-                                    const bool should_stretch_pixels);
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
@@ -2782,68 +2779,60 @@ static bool wants_stretched_pixels()
 	return render_section->Get_bool("aspect");
 }
 
-static SDL_Point remove_stretched_aspect(const SDL_Point &size)
+SDL_Point calc_nearest_aspect_corrected_dimensions(const SDL_Point& source_dimensions,
+                                                   const SDL_Point& aspect_ratios,
+                                                   const int in_multiples_of)
 {
-	return {size.x, ceil_sdivide(size.y * 5, 6)};
+	auto to_nearest_multiple = [=](const int source_dimension,
+	                               const int aspect_ratio) {
+		assert(aspect_ratio > 0);
+		assert(in_multiples_of > 0);
+		const auto aspect_multiple = aspect_ratio * in_multiples_of;
+		assert(source_dimension > aspect_multiple);
+		return (source_dimension / aspect_multiple) * aspect_multiple;
+	};
+
+	auto width = to_nearest_multiple(source_dimensions.x,
+	                                 aspect_ratios.x);
+
+	auto height = to_nearest_multiple(source_dimensions.y,
+	                                  aspect_ratios.y);
+
+	const auto width_with_ratio  = width * aspect_ratios.y;
+	const auto height_with_ratio = height * aspect_ratios.x;
+
+	// screen is landscape, so bound the width using the height
+	if (width_with_ratio > height_with_ratio) {
+		width = height_with_ratio / aspect_ratios.y;
+	}
+	// screen is portrait, so bound the height using the width
+	else if (height_with_ratio > width_with_ratio) {
+		height = width_with_ratio / aspect_ratios.x;
+	}
+
+	return {width, height};
 }
 
-static SDL_Point refine_window_size(const SDL_Point &size,
+static SDL_Point refine_window_size(const SDL_Point &coarse_dimensions,
                                     const SCALING_MODE scaling_mode,
                                     const bool should_stretch_pixels)
 {
+	const auto aspect_ratios = should_stretch_pixels
+	                                 ? RATIOS_FOR_STRETCHED_PIXELS
+	                                 : RATIOS_FOR_SQUARE_PIXELS;
+
 	switch (scaling_mode) {
 	case (SCALING_MODE::NONE): {
-		const auto game_ratios = should_stretch_pixels
-		                                 ? RATIOS_FOR_STRETCHED_PIXELS
-		                                 : RATIOS_FOR_SQUARE_PIXELS;
-
-		const auto window_aspect = static_cast<double>(size.x) / size.y;
-		const auto game_aspect = static_cast<double>(game_ratios.x) / game_ratios.y;
-
-		// screen is wider than the game, so constrain horizonal
-		if (window_aspect > game_aspect) {
-			const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
-			return {x, size.y};
-		} else {
-			// screen is narrower than the game, so constrain vertical
-			const int y = ceil_sdivide(size.x * game_ratios.y,
-			                           game_ratios.x);
-			return {size.x, y};
-		}
+		constexpr auto in_multiples_of = 1;
+		return calc_nearest_aspect_corrected_dimensions(coarse_dimensions,
+		                                                aspect_ratios,
+		                                                in_multiples_of);
 	}
 	case (SCALING_MODE::NEAREST): {
-		constexpr SDL_Point resolutions[] = {
-		        {7680, 5760}, // 8K  at 4:3 aspect
-		        {7360, 5520}, //
-		        {7040, 5280}, //
-		        {6720, 5040}, //
-		        {6400, 4800}, // HUXGA
-		        {6080, 4560}, //
-		        {5760, 4320}, // 8K "Full Format" at 4:3 aspect
-		        {5440, 4080}, //
-		        {5120, 3840}, // HSXGA at 4:3 aspect
-		        {4800, 3600}, //
-		        {4480, 3360}, //
-		        {4160, 3120}, //
-		        {3840, 2880}, // 4K UHD at 4:3 aspect
-		        {3520, 2640}, //
-		        {3200, 2400}, // QUXGA
-		        {2880, 2160}, // 3K UHD at 4:3 aspect
-		        {2560, 1920}, // 4.92M3 (Max CRT, Viewsonic P225f)
-		        {2400, 1800}, //
-		        {1920, 1440}, // 1080p in 4:3
-		        {1600, 1200}, // UXGA
-		        {1280, 960},  // 720p in 4:3
-		        {1024, 768},  // XGA
-		        {800, 600},   // SVGA
-		};
-		// Pick the biggest window size that fits inside the bounds.
-		for (const auto &candidate : resolutions)
-			if (candidate.x <= size.x && candidate.y <= size.y)
-				return (should_stretch_pixels
-				                ? candidate
-				                : remove_stretched_aspect(candidate));
-		break;
+		constexpr auto in_multiples_of = 20;
+		return calc_nearest_aspect_corrected_dimensions(coarse_dimensions,
+		                                                aspect_ratios,
+		                                                in_multiples_of);
 	}
 	case (SCALING_MODE::PERFECT): {
 		constexpr double aspect_weight = 1.14;
@@ -2853,7 +2842,8 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 		int scale_x = 0;
 		int scale_y = 0;
 		const int err = pp_getscale(pre_draw_size.x, pre_draw_size.y,
-		                            pixel_aspect_ratio, size.x, size.y,
+		                            pixel_aspect_ratio,
+		                            coarse_dimensions.x, coarse_dimensions.y,
 		                            aspect_weight, &scale_x, &scale_y);
 		if (err == 0)
 			return {pre_draw_size.x * scale_x, pre_draw_size.y * scale_y};
@@ -3110,40 +3100,26 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	const auto desktop = get_desktop_resolution();
 
-	// The refined scaling mode tell the refiner how it should adjust
-	// the coarse-resolution.
-	SCALING_MODE refined_scaling_mode = scaling_mode;
-	auto drop_nearest = [scaling_mode]() {
-		return (scaling_mode == SCALING_MODE::NEAREST) ? SCALING_MODE::NONE
-		                                               : scaling_mode;
-	};
-
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
 	const std::string pref = windowresolution_val;
 	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
+	SDL_Point refined_size = FALLBACK_WINDOW_DIMENSIONS;
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
-		coarse_size = parse_window_resolution_from_conf(pref);
-		refined_scaling_mode = drop_nearest();
-	} else {
-		coarse_size = window_bounds_from_label(pref, desktop);
-		if (pref == "desktop") {
-			refined_scaling_mode = drop_nearest();
-		}
-	}
-	// Save the coarse bounds in the SDL struct for future sizing events
-	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
-
-	// Refine the coarse resolution and save it in the SDL struct.
-	auto refined_size = coarse_size;
-	if (sdl.use_exact_window_resolution) {
+		coarse_size  = parse_window_resolution_from_conf(pref);
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
-		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
+		coarse_size  = window_bounds_from_label(pref, desktop);
+		refined_size = refine_window_size(coarse_size,
+		                                  scaling_mode,
 		                                  should_stretch_pixels);
 	}
+	// Save the coarse and refined sizes to the SDL struct for future sizing events
+	assert(coarse_size.x <= UINT16_MAX && coarse_size.y <= UINT16_MAX);
+	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
+
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
 
