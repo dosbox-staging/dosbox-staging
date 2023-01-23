@@ -23,6 +23,9 @@ project(
         'glib:warning_level=0',
         'glib:xattr=false',
         'gtest:warning_level=0',
+        'libjpeg-turbo:b_staticpic=true',
+        'libpng:b_staticpic=true',
+        'sdl2_image:b_staticpic=true',
     ],
 )
 
@@ -508,7 +511,8 @@ if get_option('use_sdl2_image')
     sdl2_image_dep = dependency(
         'SDL2_image',
         version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_image' in static_libs_list),
+        default_options: default_wrap_options,
+        static: ('sdl2_image' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_sdl2_image'),
     )
 endif

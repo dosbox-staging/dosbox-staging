@@ -1,0 +1,12 @@
+[wrap-file]
+directory = libjpeg-turbo-2.1.4
+source_url = https://sourceforge.net/projects/libjpeg-turbo/files/2.1.4/libjpeg-turbo-2.1.4.tar.gz
+source_filename = libjpeg-turbo-2.1.4.tar.gz
+source_hash = d3ed26a1131a13686dfca4935e520eb7c90ae76fbc45d98bb50a8dc86230342b
+patch_filename = libjpeg-turbo_2.1.4-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libjpeg-turbo_2.1.4-1/get_patch
+patch_hash = 5ac2378c090a3456f4dd34e80b12bbaf17e40eba67de1eeb366b3cbf5eb03269
+wrapdb_version = 2.1.4-1
+
+[provide]
+dependency_names = libjpeg
