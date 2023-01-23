@@ -199,8 +199,8 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	return (fhandle != NULL);
 }
 
-FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type) {
-
+FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)
+{
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
@@ -210,8 +210,8 @@ FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const 
 	return fopen_wrap(newname,type);
 }
 
-bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
-
+bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
+{
 	strcpy(sysName, basedir);
 	strcat(sysName, dosName);
 	CROSS_FILENAME(sysName);
@@ -348,6 +348,10 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 		const char* temp_name = dirCache.GetExpandName(full_name);
 		if (stat(temp_name, &stat_block) != 0) {
 			continue; // No symlinks and such
+		}
+
+		if (is_hidden_by_host(temp_name)) {
+			continue; // No host-only hidden files
 		}
 
 		if (stat_block.st_mode & S_IFDIR) {
