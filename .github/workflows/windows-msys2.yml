@@ -94,6 +94,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python-pip
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -120,6 +121,16 @@ jobs:
 
       - name: Log environment
         run:  ./scripts/log-env.sh
+
+      - name: Update SSL certificates
+        shell: pwsh
+        run: |
+          pip3 install --upgrade pip-system-certs certifi
+          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
+          $env:SSL_CERT_FILE = $certifiPath
+          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
+          $webclient = New-Object System.Net.WebClient
+          $webclient.DownloadString("https://github.com") >$null
 
       - name: Setup build
         run: |
@@ -195,6 +206,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
+            mingw-w64-clang-${{matrix.conf.arch}}-python-pip
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -234,8 +246,19 @@ jobs:
           set -x
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
 
+      - name: Update SSL certificates
+        shell: pwsh
+        run: |
+          pip3 install --upgrade pip-system-certs certifi
+          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
+          $env:SSL_CERT_FILE = $certifiPath
+          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
+          $webclient = New-Object System.Net.WebClient
+          $webclient.DownloadString("https://github.com") >$null
+
       - name: Setup release build
-        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
+        run: |
+          meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
         run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
