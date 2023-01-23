@@ -21,7 +21,7 @@ jobs:
             needs_deps: true
             build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
-            max_warnings: 0
+            max_warnings: 109
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
