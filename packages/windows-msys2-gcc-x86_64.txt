@@ -5,6 +5,7 @@ mingw-w64-x86_64-python
 mingw-w64-x86_64-ntldd
 mingw-w64-x86_64-ncurses
 mingw-w64-x86_64-glib2
+mingw-w64-x86_64-iir
 mingw-w64-x86_64-fluidsynth
 mingw-w64-x86_64-munt-mt32emu
 mingw-w64-x86_64-libpng
