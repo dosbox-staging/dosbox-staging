@@ -45,7 +45,7 @@ bool is_directory(const std::string& candidate)
 	return std_fs::is_directory(p, ec);
 }
 
-bool is_hidden_by_host(const std::filesystem::path& pathname)
+bool is_hidden_by_host(const std_fs::path& pathname)
 {
 	assert(!pathname.empty());
 	const auto filename = pathname.filename().string();
@@ -56,11 +56,14 @@ bool is_hidden_by_host(const std::filesystem::path& pathname)
 		return false;
 	}
 
-	// If the filename starts with a dot and is longer than "8.3" or has any
-	// lower-case characters then it's definitely not a DOS filename and is
-	// meant to be hidden.
 	assert(filename[0] == '.');
-	return filename.length() > DOS_NAMELENGTH ||
+	const auto extension = pathname.extension().string();
+
+	// Consider the file hidden by the host so long as the filename starts
+	// with a dot *and* has an extension longer that DOS's three characters
+	// or uses any lower-case characters.
+
+	return extension.length() > DOS_EXTLENGTH ||
 	       std::any_of(filename.begin(), filename.end(), islower);
 }
 
