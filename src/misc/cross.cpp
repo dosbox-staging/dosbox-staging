@@ -80,27 +80,65 @@ static std::string DetermineConfigPath()
 	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
 	const std::string conf_home = xdg_conf_home ? xdg_conf_home : "~/.config";
 	const std::string conf_path = CROSS_ResolveHome(conf_home + "/dosbox");
-	const std::string old_conf_path = CROSS_ResolveHome("~/.dosbox");
 
 	if (path_exists(conf_path + "/" + GetConfigName())) {
 		return conf_path;
 	}
 
-	if (path_exists(old_conf_path + "/" + GetConfigName())) {
-		LOG_MSG("WARNING: Config file found in deprecated path! (~/.dosbox)\n"
-		        "Backup/remove this dir and restart to generate updated config file.\n"
-		        "---");
+	auto fallback_to_deprecated = []() {
+		const std::string old_conf_path = CROSS_ResolveHome("~/.dosbox");
+		if (path_exists(old_conf_path + "/" + GetConfigName())) {
+			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
+			LOG_WARNING("CONFIG: Please investigate the problems and try again");
+		}
 		return old_conf_path;
-	}
+	};
 
 	std::error_code ec = {};
-	if (!std_fs::create_directories(conf_path, ec)) {
-		LOG_MSG("ERROR: Directory '%s' cannot be created",
+
+	if (!std_fs::exists(conf_path, ec)) {
+		if (std_fs::create_directories(conf_path, ec)) {
+			return conf_path;
+		}
+		LOG_ERR("CONFIG: Path '%s' cannot be created (permission issue or broken symlink?)",
 		        conf_path.c_str());
-		return old_conf_path;
+		return fallback_to_deprecated();
 	}
 
-	return conf_path;
+	// The conf path exists - but is it a directory, file, or symlink(s)?
+	assert(std_fs::exists(conf_path, ec));
+
+	if (std_fs::is_directory(conf_path, ec)) {
+		return conf_path;
+	}
+
+	if (std_fs::is_regular_file(conf_path, ec)) {
+		LOG_ERR("CONFIG: Path '%s' exists, but it's a file",
+		        conf_path.c_str());
+		return fallback_to_deprecated();
+
+	}
+
+	if (std_fs::is_symlink(conf_path, ec)) {
+		auto target_path = std_fs::read_symlink(conf_path, ec);
+
+		// If it's a symlink to a symlink, then keep reading them
+		auto num_symlinks_read = 1; // but bail out if they're circular links
+		while (std_fs::is_symlink(target_path, ec) && num_symlinks_read++ < 100) {
+			target_path = std_fs::read_symlink(target_path, ec);
+		}
+		// If the last symlink points to a directory, then we'll take it
+		if (std_fs::is_directory(target_path, ec)) {
+			return target_path.string();
+		}
+		LOG_ERR("CONFIG: Path '%s' cannot be created because it's symlinked to '%s'",
+		        conf_path.c_str(),
+		        target_path.c_str());
+	} else {
+		LOG_ERR("CONFIG: Path '%s' exists, but it's not a directory or a symlink",
+		        conf_path.c_str());
+	}
+	return fallback_to_deprecated();
 }
 
 #endif // !MACOSX
