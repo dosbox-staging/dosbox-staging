@@ -329,66 +329,76 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	dta.GetSearchParams(srch_attr,srch_pattern);
 	uint16_t id = dta.GetDirID();
 
-again:
-	if (!dirCache.FindNext(id,dir_ent)) {
-		DOS_SetError(DOSERR_NO_MORE_FILES);
-		return false;
-	}
-	if (!WildFileCmp(dir_ent,srch_pattern)) goto again;
+	while (true) {
+		if (!dirCache.FindNext(id, dir_ent)) {
+			DOS_SetError(DOSERR_NO_MORE_FILES);
+			return false;
+		}
+		if (!WildFileCmp(dir_ent, srch_pattern)) {
+			continue;
+		}
 
-	safe_strcpy(full_name, srchInfo[id].srch_dir);
-	safe_strcat(full_name, dir_ent);
+		safe_strcpy(full_name, srchInfo[id].srch_dir);
+		safe_strcat(full_name, dir_ent);
 
-	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
-	//and due to its design dir_ent might be lost.)
-	//Copying dir_ent first
-	safe_strcpy(dir_entcopy, dir_ent);
-	char *temp_name = dirCache.GetExpandName(full_name);
-	if (stat(temp_name, &stat_block) != 0) {
-		goto again;//No symlinks and such
-	}
+		// GetExpandName might indirectly destroy dir_ent (by caching in
+		// a new directory and due to its design dir_ent might be lost.)
+		// Copying dir_ent first
+		safe_strcpy(dir_entcopy, dir_ent);
+		const char* temp_name = dirCache.GetExpandName(full_name);
+		if (stat(temp_name, &stat_block) != 0) {
+			continue; // No symlinks and such
+		}
 
-	if (stat_block.st_mode & S_IFDIR)
-		find_attr = DOS_ATTR_DIRECTORY;
-	else
-		find_attr = 0;
+		if (stat_block.st_mode & S_IFDIR) {
+			find_attr = DOS_ATTR_DIRECTORY;
+		} else {
+			find_attr = 0;
+		}
 #if defined(WIN32)
-	constexpr int8_t maximum_attribs = 0x3f;
-	Bitu attribs = GetFileAttributes(temp_name);
-	if (attribs != INVALID_FILE_ATTRIBUTES)
-		find_attr |= attribs & maximum_attribs;
+		constexpr int8_t maximum_attribs = 0x3f;
+
+		Bitu attribs = GetFileAttributes(temp_name);
+		if (attribs != INVALID_FILE_ATTRIBUTES) {
+			find_attr |= attribs & maximum_attribs;
+		}
 #else
-	if (!(find_attr & DOS_ATTR_DIRECTORY))
-		find_attr |= DOS_ATTR_ARCHIVE;
-	if (!(stat_block.st_mode & S_IWUSR))
-		find_attr |= DOS_ATTR_READ_ONLY;
+		if (!(find_attr & DOS_ATTR_DIRECTORY)) {
+			find_attr |= DOS_ATTR_ARCHIVE;
+		}
+		if (!(stat_block.st_mode & S_IWUSR)) {
+			find_attr |= DOS_ATTR_READ_ONLY;
+		}
 #endif
-	if (~srch_attr & find_attr &
-	    (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))
-		goto again;
+		if (~srch_attr & find_attr &
+		    (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) {
+			continue;
+		}
 
-	/*file is okay, setup everything to be copied in DTA Block */
-	char find_name[DOS_NAMELENGTH_ASCII] = "";
-	uint16_t find_date;
-	uint16_t find_time;
-	uint32_t find_size;
+		/*file is okay, setup everything to be copied in DTA Block */
+		char find_name[DOS_NAMELENGTH_ASCII] = "";
+		uint16_t find_date;
+		uint16_t find_time;
+		uint32_t find_size;
 
-	if (safe_strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII) {
-		safe_strcpy(find_name, dir_entcopy);
-		upcase(find_name);
-	} 
+		if (safe_strlen(dir_entcopy) < DOS_NAMELENGTH_ASCII) {
+			safe_strcpy(find_name, dir_entcopy);
+			upcase(find_name);
+		}
 
-	find_size=(uint32_t) stat_block.st_size;
-	struct tm datetime;
-	if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
-		find_date = DOS_PackDate(datetime);
-		find_time = DOS_PackTime(datetime);
-	} else {
-		find_time=6; 
-		find_date=4;
+		find_size = (uint32_t)stat_block.st_size;
+		struct tm datetime;
+		if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
+			find_date = DOS_PackDate(datetime);
+			find_time = DOS_PackTime(datetime);
+		} else {
+			find_time = 6;
+			find_date = 4;
+		}
+		dta.SetResult(find_name, find_size, find_date, find_time, find_attr);
+		return true;
 	}
-	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
-	return true;
+	return false;
 }
 
 bool localDrive::GetFileAttr(char *name, uint16_t *attr)
