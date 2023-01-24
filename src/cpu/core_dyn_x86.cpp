@@ -248,6 +248,24 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 
 #include "core_dyn_x86/decoder.h"
 
+static void copy_dh_fpu_to_normal()
+{
+	FPU_SetTag(dyn_dh_fpu.state.tag);
+	FPU_SetCW(dyn_dh_fpu.state.cw);
+	FPU_SetSW(dyn_dh_fpu.state.sw);
+	TOP = FPU_GET_TOP();
+	FPU_LoadPRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+}
+
+static void copy_normal_fpu_to_dh()
+{
+	FPU_SET_TOP(TOP);
+	dyn_dh_fpu.state.sw  = FPU_GetSW();
+	dyn_dh_fpu.state.cw  = FPU_GetCW();
+	dyn_dh_fpu.state.tag = FPU_GetTag();
+	FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+}
+
 Bits CPU_Core_Dyn_X86_Run() noexcept
 {
 	ZoneScoped;
@@ -278,7 +296,10 @@ restart_core:
 		goto restart_core;
 	}
 	if (!chandler) {
-		return CPU_Core_Normal_Run();
+		copy_dh_fpu_to_normal();
+		Bits ret = CPU_Core_Normal_Run();
+		copy_normal_fpu_to_dh();
+		return ret;
 	}
 	/* Find correct Dynamic Block to run */
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
@@ -288,9 +309,32 @@ restart_core:
 		} else {
 			int32_t old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
-			// manually save
-			fpu_saver = auto_dh_fpu();
-			Bits nc_retcode=CPU_Core_Normal_Run();
+
+			// If host FPU has been used by the recompiled code
+			// block, then we need to save the host FPU state in
+			// dyn_dh_fpu.state and free up the host FPU for the
+			// normal core to use.
+			if (dyn_dh_fpu.state_used) {
+				gen_dh_fpu_save();
+			}
+
+			// Copy the saved state to the normal core's emulated
+			// FPU so that it can resume from where the dynamic core
+			// left. We can't skip this step even when
+			// `dyn_dh_fpu.state_used` is `false`, because we do not
+			// know if the emulated FPU's state is consistent with
+			// the dynamic core, if not (very likely), then we will
+			// overwrite the dynamic FPU state later when we copy it
+			// back.
+			copy_dh_fpu_to_normal();
+			Bits nc_retcode = CPU_Core_Normal_Run();
+			
+			// On leaving the normal core, copy emulated FPU's state
+			// to the dynamic core's saved FPU state. There is no
+			// way to tell if the emulated FPU was used in this run
+			// so we can't skip this.
+			copy_normal_fpu_to_dh();
+
 			if (!nc_retcode) {
 				CPU_Cycles=old_cycles-1;
 				goto restart_core;
@@ -348,7 +392,12 @@ run_block:
 	case BR_Opcode:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
-		return CPU_Core_Normal_Run();
+		{
+			copy_dh_fpu_to_normal();
+			Bits ret = CPU_Core_Normal_Run();
+			copy_normal_fpu_to_dh();
+			return ret;
+		}
 	case BR_Link1:
 	case BR_Link2:
 		{
@@ -372,7 +421,9 @@ Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
 
+	copy_dh_fpu_to_normal();
 	Bits ret=CPU_Core_Normal_Run();
+	copy_normal_fpu_to_dh();
 	if (!cpu.trap_skip) CPU_DebugException(DBINT_STEP,reg_eip);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Dyn_X86_Run;

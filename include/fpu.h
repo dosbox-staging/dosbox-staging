@@ -115,12 +115,27 @@ static inline void FPU_SetTag(uint16_t tag){
 		fpu.tags[i] = static_cast<FPU_Tag>((tag >>(2*i))&3);
 }
 
-static inline void FPU_SetCW(Bitu word){
+static inline uint16_t FPU_GetCW()
+{
+	return fpu.cw;
+}
+
+static inline void FPU_SetCW(Bitu word)
+{
 	fpu.cw = (uint16_t)word;
 	fpu.cw_mask_all = (uint16_t)(word | 0x3f);
 	fpu.round = (FPU_Round)((word >> 10) & 3);
 }
 
+static inline uint16_t FPU_GetSW()
+{
+	return fpu.sw;
+}
+
+static inline void FPU_SetSW(Bitu word)
+{
+	fpu.sw = (uint16_t)word;
+}
 
 static inline Bitu FPU_GET_TOP(void) {
 	return (fpu.sw & 0x3800)>>11;
@@ -131,6 +146,8 @@ static inline void FPU_SET_TOP(Bitu val){
 	fpu.sw |= (val&7)<<11;
 }
 
+void FPU_LoadPRegs(const uint8_t* buffer);
+void FPU_SavePRegs(uint8_t* buffer);
 
 static inline void FPU_SET_C0(Bitu C){
 	fpu.sw &= ~0x0100;
