@@ -263,6 +263,31 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 	};
 	auto_dh_fpu fpu_saver;
 
+	class auto_fpu_sync {
+	public:
+		auto_fpu_sync () {
+			FPU_SetTag(dyn_dh_fpu.state.tag);
+			FPU_SetCW(dyn_dh_fpu.state.cw);
+			fpu.sw = dyn_dh_fpu.state.sw;
+			TOP = FPU_GET_TOP();
+			for(Bitu i = 0;i < 8;i++){
+				fpu.p_regs[STV(i)].m1 = *((uint32_t*)(dyn_dh_fpu.state.st_reg[i]+0));
+				fpu.p_regs[STV(i)].m2 = *((uint32_t*)(dyn_dh_fpu.state.st_reg[i]+4));
+				fpu.p_regs[STV(i)].m3 = *((uint16_t*)(dyn_dh_fpu.state.st_reg[i]+8));
+			}
+		}
+		~auto_fpu_sync () {
+			FPU_SET_TOP(TOP);
+			dyn_dh_fpu.state.tag = FPU_GetTag();
+			dyn_dh_fpu.state.cw = fpu.cw;
+			dyn_dh_fpu.state.sw = fpu.sw;
+			for(Bitu i = 0;i < 8;i++){
+				*((uint32_t*)(dyn_dh_fpu.state.st_reg[i]+0)) = fpu.p_regs[STV(i)].m1;
+				*((uint32_t*)(dyn_dh_fpu.state.st_reg[i]+4)) = fpu.p_regs[STV(i)].m2;
+				*((uint16_t*)(dyn_dh_fpu.state.st_reg[i]+8)) = fpu.p_regs[STV(i)].m3;
+			}
+		}
+	};
 	/* Determine the linear address of CS:EIP */
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
@@ -289,6 +314,7 @@ restart_core:
 			CPU_Cycles=1;
 			// manually save
 			fpu_saver = auto_dh_fpu();
+			auto_fpu_sync sync_fpu;
 			Bits nc_retcode=CPU_Core_Normal_Run();
 			if (!nc_retcode) {
 				CPU_Cycles=old_cycles-1;
