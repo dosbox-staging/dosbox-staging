@@ -20,9 +20,6 @@ sha256: 3680cbdf7a91467877b51c95e468ef45<wbr>b186b42518c3163fab85c727923ee659
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
 the changes and improvements introduced by this release.
 
-The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php). For available install
-parameters, please see [Inno's documentation page](https://jrsoftware.org/ishelp/index.php?topic=setupcmdline).
-
 !!! important
 
     If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
@@ -78,6 +75,11 @@ As DOSBox Staging is a volunteer effort, we are not in a position to make such
 payments. We therefore ask users to manually unblock DOSBox Staging and be
 patient while Microsoft's Application Reputation Scheme eventually whitelists
 DOSBox Staging.
+
+### Custom install parameters
+
+The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php). For the available
+command-line install parameters, please see [Inno's documentation page](https://jrsoftware.org/ishelp/index.php?topic=setupcmdline).
 
 
 ## Older builds
