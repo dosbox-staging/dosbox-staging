@@ -76,7 +76,7 @@ payments. We therefore ask users to manually unblock DOSBox Staging and be
 patient while Microsoft's Application Reputation Scheme eventually whitelists
 DOSBox Staging.
 
-### Custom install parameters
+## Custom install parameters
 
 The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php). For the available
 command-line install parameters, please see [Inno's documentation page](https://jrsoftware.org/ishelp/index.php?topic=setupcmdline).
