@@ -270,14 +270,14 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 			FPU_SetCW(dyn_dh_fpu.state.cw);
 			FPU_SetSW(dyn_dh_fpu.state.sw);
 			TOP = FPU_GET_TOP();
-			FPU_Load_P_Regs(&dyn_dh_fpu.state.st_reg[0][0]);
+			FPU_LoadPRegs(&dyn_dh_fpu.state.st_reg[0][0]);
 		}
 		~auto_fpu_sync () {
 			FPU_SET_TOP(TOP);
 			dyn_dh_fpu.state.sw = FPU_GetSW();
 			dyn_dh_fpu.state.cw = FPU_GetCW();
 			dyn_dh_fpu.state.tag = FPU_GetTag();
-			FPU_Save_P_Regs(&dyn_dh_fpu.state.st_reg[0][0]);
+			FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
 		}
 	};
 
