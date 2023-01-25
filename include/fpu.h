@@ -116,7 +116,7 @@ static inline void FPU_SetTag(uint16_t tag){
 }
 
 static inline uint16_t FPU_GetCW(void){
-    return fpu.cw;
+	return fpu.cw;
 }
 
 static inline void FPU_SetCW(Bitu word){
@@ -126,11 +126,11 @@ static inline void FPU_SetCW(Bitu word){
 }
 
 static inline uint16_t FPU_GetSW(void){
-    return fpu.sw;
+	return fpu.sw;
 }
 
 static inline void FPU_SetSW(Bitu word){
-    fpu.sw = (uint16_t)word;
+	fpu.sw = (uint16_t)word;
 }
 
 static inline Bitu FPU_GET_TOP(void) {

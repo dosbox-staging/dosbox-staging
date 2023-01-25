@@ -42,19 +42,19 @@ uint16_t FPU_GetTag(void){
 }
 
 void FPU_Load_P_Regs(const uint8_t* buffer) {
-    for(Bitu i = 0;i < 8; i++){
-        fpu.p_regs[STV(i)].m1 = *(reinterpret_cast<const uint32_t*>(buffer + i * 10 + 0));
-        fpu.p_regs[STV(i)].m2 = *(reinterpret_cast<const uint32_t*>(buffer + i * 10 + 4));
-        fpu.p_regs[STV(i)].m3 = *(reinterpret_cast<const uint16_t*>(buffer + i * 10 + 8));
-    }
+	for(Bitu i = 0;i < 8; i++){
+		fpu.p_regs[STV(i)].m1 = *(reinterpret_cast<const uint32_t*>(buffer + i * 10 + 0));
+		fpu.p_regs[STV(i)].m2 = *(reinterpret_cast<const uint32_t*>(buffer + i * 10 + 4));
+		fpu.p_regs[STV(i)].m3 = *(reinterpret_cast<const uint16_t*>(buffer + i * 10 + 8));
+	}
 }
 
 void FPU_Save_P_Regs(uint8_t* buffer) {
-    for(Bitu i = 0;i < 8; i++){
-        *(reinterpret_cast<uint32_t*>(buffer + i * 10 + 0)) = fpu.p_regs[STV(i)].m1;
-        *(reinterpret_cast<uint32_t*>(buffer + i * 10 + 4)) = fpu.p_regs[STV(i)].m2;
-        *(reinterpret_cast<uint16_t*>(buffer + i * 10 + 8)) = fpu.p_regs[STV(i)].m3;
-    }
+	for(Bitu i = 0;i < 8; i++){
+		*(reinterpret_cast<uint32_t*>(buffer + i * 10 + 0)) = fpu.p_regs[STV(i)].m1;
+		*(reinterpret_cast<uint32_t*>(buffer + i * 10 + 4)) = fpu.p_regs[STV(i)].m2;
+		*(reinterpret_cast<uint16_t*>(buffer + i * 10 + 8)) = fpu.p_regs[STV(i)].m3;
+	}
 }
 
 #if C_FPU_X86
