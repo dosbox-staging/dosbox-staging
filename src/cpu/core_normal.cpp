@@ -137,7 +137,8 @@ static inline uint32_t Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Normal_Run(void) {
+Bits CPU_Core_Normal_Run() noexcept
+{
 	ZoneScoped;
 	while (CPU_Cycles-->0) {
 		LOADIP;
@@ -190,7 +191,8 @@ decode_end:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Normal_Trap_Run(void) {
+Bits CPU_Core_Normal_Trap_Run() noexcept
+{
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
@@ -202,8 +204,6 @@ Bits CPU_Core_Normal_Trap_Run(void) {
 
 	return ret;
 }
-
-
 
 void CPU_Core_Normal_Init(void) {
 
