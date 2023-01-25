@@ -305,8 +305,22 @@ restart_core:
 		} else {
 			int32_t old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
-			// manually save
+			// If the guest code has used the host FPU, The dtor of
+			// `auto_dh_fpu` will store a snapshot of the host FPU state in
+			// `dyn_dh_fpu.state`, so that next time we enter the dyn core we
+			// can resume from this state.	Here we do an extra save (the
+			// assignment will cause the original fpu_saver's dtor to be called)
+			// because we are about to enter the normal core, and we do not want
+			// the guest FPU state to interfere the normal core which also uses
+			// FPU.
 			fpu_saver = auto_dh_fpu();
+			// `auto_fpu_sync` class syncs the `dyn_dh_fpu.state` we just saved
+			// with the normal core's `fpu` structure. This allows the normal
+			// core to pick up where the dyn core left, and vice versa. The ctor
+			// copies `dyn_dh_fpu` to `fpu` and the dtor copies `fpu` back to
+			// `dyn_dh_fpu`. If we do not sync between the 2 FPU states, we may
+			// get weird failures such as "FPU stack overflow", guest app
+			// deadlock or guest app crash.
 			auto_fpu_sync sync_fpu;
 			Bits nc_retcode=CPU_Core_Normal_Run();
 			if (!nc_retcode) {
