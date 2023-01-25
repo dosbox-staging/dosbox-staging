@@ -322,9 +322,9 @@ restart_core:
 			// get weird failures such as "FPU stack overflow", guest app
 			// deadlock or guest app crash.
 			Bits nc_retcode = [] {
-                auto_fpu_sync sync_fpu;
-                return CPU_Core_Normal_Run();
-            }();
+				auto_fpu_sync sync_fpu;
+				return CPU_Core_Normal_Run();
+			}();
 			if (!nc_retcode) {
 				CPU_Cycles=old_cycles-1;
 				goto restart_core;
