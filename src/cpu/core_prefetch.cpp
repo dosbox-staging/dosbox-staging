@@ -208,7 +208,8 @@ static uint32_t Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Prefetch_Run(void) {
+Bits CPU_Core_Prefetch_Run() noexcept
+{
 	bool invalidate_pq=false;
 	while (CPU_Cycles-->0) {
 		if (invalidate_pq) {
@@ -308,7 +309,8 @@ decode_end:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Prefetch_Trap_Run(void) {
+Bits CPU_Core_Prefetch_Trap_Run() noexcept
+{
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
@@ -320,8 +322,6 @@ Bits CPU_Core_Prefetch_Trap_Run(void) {
 
 	return ret;
 }
-
-
 
 void CPU_Core_Prefetch_Init(void) {
 

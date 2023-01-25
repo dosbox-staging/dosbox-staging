@@ -2436,7 +2436,7 @@ void CPU_ShutDown([[maybe_unused]] Section* sec) {
 }
 
 void CPU_Init(Section* sec) {
-	test = new CPU(sec);
+	test = new (std::nothrow) CPU(sec);
 	sec->AddDestroyFunction(&CPU_ShutDown,true);
 }
 //initialize static members

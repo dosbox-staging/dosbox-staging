@@ -248,7 +248,8 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 
 #include "core_dyn_x86/decoder.h"
 
-Bits CPU_Core_Dyn_X86_Run(void) {
+Bits CPU_Core_Dyn_X86_Run() noexcept
+{
 	ZoneScoped;
 	// helper class to auto-save DH_FPU state on function exit
 	class auto_dh_fpu {
@@ -365,7 +366,8 @@ run_block:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Dyn_X86_Trap_Run(void) {
+Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
+{
 	int32_t oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;

@@ -61,7 +61,8 @@ typedef PhysPt EAPoint;
 		continue;											\
 	}
 
-Bits CPU_Core_Full_Run(void) {
+Bits CPU_Core_Full_Run() noexcept
+{
 	ZoneScoped;
 	FullData inst{};
 	while (CPU_Cycles-->0) {
@@ -93,7 +94,6 @@ illegalopcode:
 	FillFlags();
 	return CBRET_NONE;
 }
-
 
 void CPU_Core_Full_Init(void) {
 

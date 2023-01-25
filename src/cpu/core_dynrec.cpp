@@ -208,7 +208,8 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 	execution process, or returning from the core etc.
 */
 
-Bits CPU_Core_Dynrec_Run(void) {
+Bits CPU_Core_Dynrec_Run() noexcept
+{
 	ZoneScoped;
 	for (;;) {
 		// Determine the linear address of CS:EIP
@@ -333,7 +334,8 @@ run_block:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Dynrec_Trap_Run(void) {
+Bits CPU_Core_Dynrec_Trap_Run() noexcept
+{
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
