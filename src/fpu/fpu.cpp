@@ -43,13 +43,13 @@ uint16_t FPU_GetTag(void){
 
 void FPU_LoadPRegs(const uint8_t* buffer) {
 	for(Bitu i = 0; i < 8; i++){
-		memcpy(&fpu.p_regs[STV(i)], buffer + i * 10, 10);
+		memcpy(&fpu.p_regs[i], buffer + i * 10, 10);
 	}
 }
 
 void FPU_SavePRegs(uint8_t* buffer) {
 	for(Bitu i = 0; i < 8; i++){
-		memcpy(buffer + i * 10, &fpu.p_regs[STV(i)], 10);
+		memcpy(buffer + i * 10, &fpu.p_regs[i], 10);
 	}
 }
 
