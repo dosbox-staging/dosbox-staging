@@ -4,6 +4,8 @@ glib-*
 googletest-release-*
 iir1-*
 libffi*
+libjpeg-*
+libpng-*
 libslirp-*
 munt-libmt32emu*
 packagecache

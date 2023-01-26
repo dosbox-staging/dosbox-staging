@@ -266,7 +266,8 @@ static void copy_normal_fpu_to_dh (void)
     FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
 }
 
-Bits CPU_Core_Dyn_X86_Run(void) {
+Bits CPU_Core_Dyn_X86_Run() noexcept
+{
 	ZoneScoped;
 	// helper class to auto-save DH_FPU state on function exit
 	class auto_dh_fpu {
@@ -401,7 +402,8 @@ run_block:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Dyn_X86_Trap_Run(void) {
+Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
+{
 	int32_t oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
