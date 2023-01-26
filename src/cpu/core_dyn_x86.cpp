@@ -297,7 +297,10 @@ restart_core:
 		goto restart_core;
 	}
 	if (!chandler) {
-		return CPU_Core_Normal_Run();
+		copy_dh_fpu_to_normal();
+		Bits ret = CPU_Core_Normal_Run();
+		copy_normal_fpu_to_dh();
+		return ret;
 	}
 	/* Find correct Dynamic Block to run */
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
@@ -384,7 +387,12 @@ run_block:
 	case BR_Opcode:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
-		return CPU_Core_Normal_Run();
+		{
+			copy_dh_fpu_to_normal();
+			Bits ret = CPU_Core_Normal_Run();
+			copy_normal_fpu_to_dh();
+			return ret;
+		}
 	case BR_Link1:
 	case BR_Link2:
 		{
@@ -408,7 +416,9 @@ Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
 
+	copy_dh_fpu_to_normal();
 	Bits ret=CPU_Core_Normal_Run();
+	copy_normal_fpu_to_dh();
 	if (!cpu.trap_skip) CPU_DebugException(DBINT_STEP,reg_eip);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Dyn_X86_Run;
