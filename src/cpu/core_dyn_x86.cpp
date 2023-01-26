@@ -248,6 +248,24 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 
 #include "core_dyn_x86/decoder.h"
 
+static void copy_dh_fpu_to_normal (void)
+{
+    FPU_SetTag(dyn_dh_fpu.state.tag);
+    FPU_SetCW(dyn_dh_fpu.state.cw);
+    FPU_SetSW(dyn_dh_fpu.state.sw);
+    TOP = FPU_GET_TOP();
+    FPU_LoadPRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+}
+
+static void copy_normal_fpu_to_dh (void)
+{
+    FPU_SET_TOP(TOP);
+    dyn_dh_fpu.state.sw = FPU_GetSW();
+    dyn_dh_fpu.state.cw = FPU_GetCW();
+    dyn_dh_fpu.state.tag = FPU_GetTag();
+    FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+}
+
 Bits CPU_Core_Dyn_X86_Run(void) {
 	ZoneScoped;
 	// helper class to auto-save DH_FPU state on function exit
@@ -263,23 +281,6 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 	};
 	auto_dh_fpu fpu_saver;
 
-	class auto_fpu_sync {
-	public:
-		auto_fpu_sync () {
-			FPU_SetTag(dyn_dh_fpu.state.tag);
-			FPU_SetCW(dyn_dh_fpu.state.cw);
-			FPU_SetSW(dyn_dh_fpu.state.sw);
-			TOP = FPU_GET_TOP();
-			FPU_LoadPRegs(&dyn_dh_fpu.state.st_reg[0][0]);
-		}
-		~auto_fpu_sync () {
-			FPU_SET_TOP(TOP);
-			dyn_dh_fpu.state.sw = FPU_GetSW();
-			dyn_dh_fpu.state.cw = FPU_GetCW();
-			dyn_dh_fpu.state.tag = FPU_GetTag();
-			FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
-		}
-	};
 
 	/* Determine the linear address of CS:EIP */
 restart_core:
@@ -305,26 +306,26 @@ restart_core:
 		} else {
 			int32_t old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
-			// If the guest code has used the host FPU, The dtor of
-			// `auto_dh_fpu` will store a snapshot of the host FPU state in
-			// `dyn_dh_fpu.state`, so that next time we enter the dyn core we
-			// can resume from this state.	Here we do an extra save (the
-			// assignment will cause the original fpu_saver's dtor to be called)
-			// because we are about to enter the normal core, and we do not want
-			// the guest FPU state to interfere the normal core which also uses
-			// FPU.
-			fpu_saver = auto_dh_fpu();
-			// `auto_fpu_sync` class syncs the `dyn_dh_fpu.state` we just saved
-			// with the normal core's `fpu` structure. This allows the normal
-			// core to pick up where the dyn core left, and vice versa. The ctor
-			// copies `dyn_dh_fpu` to `fpu` and the dtor copies `fpu` back to
-			// `dyn_dh_fpu`. If we do not sync between the 2 FPU states, we may
-			// get weird failures such as "FPU stack overflow", guest app
-			// deadlock or guest app crash.
-			Bits nc_retcode = [] {
-				auto_fpu_sync sync_fpu;
-				return CPU_Core_Normal_Run();
-			}();
+
+			// If host FPU has been used by the recompiled code block, then we
+			// need to save the host FPU state in dyn_dh_fpu.state and free up
+			// the host FPU for the normal core to use.
+			if (dyn_dh_fpu.state_used) {
+				gen_dh_fpu_save();
+			}
+			// Copy the saved state to the normal core's emulated FPU so that it
+			// can resume from where the dynamic core left. We can't skip this
+			// step even when `dyn_dh_fpu.state_used` is `false`, because we do
+			// not know if the emulated FPU's state is consistent with the
+			// dynamic core, if not (very likely), then we will overwrite the
+			// dynamic FPU state later when we copy it back.
+			copy_dh_fpu_to_normal();
+			Bits nc_retcode = CPU_Core_Normal_Run();
+			// On leaving the normal core, copy emulated FPU's state to the
+			// dynamic core's saved FPU state. There is no way to tell if the
+			// emulated FPU was used in this run so we can't skip this.
+			copy_normal_fpu_to_dh();
+
 			if (!nc_retcode) {
 				CPU_Cycles=old_cycles-1;
 				goto restart_core;
