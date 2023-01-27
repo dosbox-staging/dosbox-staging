@@ -170,7 +170,6 @@ struct dyn_dh_fpu {
 	uint16_t host_cw            = 0;
 	bool state_used             = false;
 
-
 	// some fields expanded here for alignment purposes
 	struct {
 		uint32_t cw  = 0x37f;
@@ -257,39 +256,68 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 
 #include "core_dyn_x86/decoder.h"
 
-static void copy_dh_fpu_to_normal()
+#	if defined(X86_DYNFPU_DH_ENABLED)
+
+enum class CoreType { Dynamic,  Normal };
+static auto last_core = CoreType::Dynamic;
+
+static void maybe_sync_host_fpu_to_dh()
 {
-	FPU_SetTag(dyn_dh_fpu.state.tag);
-	FPU_SetCW(dyn_dh_fpu.state.cw);
-	FPU_SetSW(dyn_dh_fpu.state.sw);
-	TOP = FPU_GET_TOP();
-	FPU_SetPRegsFrom(dyn_dh_fpu.state.st_reg);
+	if (dyn_dh_fpu.state_used) {
+		gen_dh_fpu_save();
+	}
 }
 
-static void copy_normal_fpu_to_dh()
+// The active core being run (dynamic or normal) synchronizes its respective FPU
+// from the opposite FPU if the other core was last run. Subsequent runs that
+// stay within the same core do not need synchronization.
+
+static BlockReturn sync_normal_fpu_and_run_dyn_code(const uint8_t* code) noexcept
 {
-	FPU_SET_TOP(TOP);
-	dyn_dh_fpu.state.sw  = FPU_GetSW();
-	dyn_dh_fpu.state.cw  = FPU_GetCW();
-	dyn_dh_fpu.state.tag = FPU_GetTag();
-	FPU_GetPRegsTo(dyn_dh_fpu.state.st_reg);
+	if (last_core == CoreType::Normal) {
+		dyn_dh_fpu.state.tag = FPU_GetTag();
+		dyn_dh_fpu.state.cw  = FPU_GetCW();
+		dyn_dh_fpu.state.sw  = FPU_GetSW();
+		FPU_GetPRegsTo(dyn_dh_fpu.state.st_reg);
+		last_core = CoreType::Dynamic;
+	}
+	return gen_runcode(code);
 }
+
+static Bits sync_dh_fpu_and_run_normal_core() noexcept
+{
+	if (last_core == CoreType::Dynamic) {
+		maybe_sync_host_fpu_to_dh();
+		FPU_SetTag(static_cast<uint16_t>(dyn_dh_fpu.state.tag & 0xffff));
+		FPU_SetCW(static_cast<uint16_t>(dyn_dh_fpu.state.cw & 0xffff));
+		FPU_SetSW(static_cast<uint16_t>(dyn_dh_fpu.state.sw & 0xffff));
+		FPU_SetPRegsFrom(dyn_dh_fpu.state.st_reg);
+		last_core = CoreType::Normal;
+	}
+	assert(!dyn_dh_fpu.state_used);
+	return CPU_Core_Normal_Run();
+}
+
+struct HostFpuToDhCopier {
+	~HostFpuToDhCopier()
+	{
+		maybe_sync_host_fpu_to_dh();
+	}
+};
+
+#	else
+auto sync_dh_fpu_and_run_normal_core  = CPU_Core_Normal_Run;
+auto sync_normal_fpu_and_run_dyn_code = gen_runcode;
+#	endif
 
 Bits CPU_Core_Dyn_X86_Run() noexcept
 {
 	ZoneScoped;
-	// helper class to auto-save DH_FPU state on function exit
-	class auto_dh_fpu {
-	public:
-		~auto_dh_fpu()
-		{
-#if defined(X86_DYNFPU_DH_ENABLED)
-			if (dyn_dh_fpu.state_used)
-				gen_dh_fpu_save();
-#endif
-		}
-	};
-	auto_dh_fpu fpu_saver;
+
+#	if defined(X86_DYNFPU_DH_ENABLED)
+	// activates at each return point below (on scope closure)
+	HostFpuToDhCopier host_fpu_to_dh_copier;
+#	endif
 
 	/* Determine the linear address of CS:EIP */
 restart_core:
@@ -305,10 +333,7 @@ restart_core:
 		goto restart_core;
 	}
 	if (!chandler) {
-		copy_dh_fpu_to_normal();
-		Bits ret = CPU_Core_Normal_Run();
-		copy_normal_fpu_to_dh();
-		return ret;
+		return sync_dh_fpu_and_run_normal_core();
 	}
 	/* Find correct Dynamic Block to run */
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
@@ -319,30 +344,7 @@ restart_core:
 			int32_t old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
 
-			// If host FPU has been used by the recompiled code
-			// block, then we need to save the host FPU state in
-			// dyn_dh_fpu.state and free up the host FPU for the
-			// normal core to use.
-			if (dyn_dh_fpu.state_used) {
-				gen_dh_fpu_save();
-			}
-
-			// Copy the saved state to the normal core's emulated
-			// FPU so that it can resume from where the dynamic core
-			// left. We can't skip this step even when
-			// `dyn_dh_fpu.state_used` is `false`, because we do not
-			// know if the emulated FPU's state is consistent with
-			// the dynamic core, if not (very likely), then we will
-			// overwrite the dynamic FPU state later when we copy it
-			// back.
-			copy_dh_fpu_to_normal();
-			Bits nc_retcode = CPU_Core_Normal_Run();
-			
-			// On leaving the normal core, copy emulated FPU's state
-			// to the dynamic core's saved FPU state. There is no
-			// way to tell if the emulated FPU was used in this run
-			// so we can't skip this.
-			copy_normal_fpu_to_dh();
+			const auto nc_retcode = sync_dh_fpu_and_run_normal_core();
 
 			if (!nc_retcode) {
 				CPU_Cycles=old_cycles-1;
@@ -354,8 +356,8 @@ restart_core:
 	}
 run_block:
 	cache.block.running=0;
-	BlockReturn ret=gen_runcode(block->cache.start);
-#if C_DEBUG
+	const auto ret = sync_normal_fpu_and_run_dyn_code(block->cache.start);
+#	if C_DEBUG
 	cycle_count += 32;
 #endif
 	switch (ret) {
@@ -402,10 +404,7 @@ run_block:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
 		{
-			copy_dh_fpu_to_normal();
-			Bits ret = CPU_Core_Normal_Run();
-			copy_normal_fpu_to_dh();
-			return ret;
+			return sync_dh_fpu_and_run_normal_core();
 		}
 	case BR_Link1:
 	case BR_Link2:
@@ -430,9 +429,7 @@ Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
 	CPU_Cycles = 1;
 	cpu.trap_skip = false;
 
-	copy_dh_fpu_to_normal();
-	Bits ret=CPU_Core_Normal_Run();
-	copy_normal_fpu_to_dh();
+	const auto ret = sync_dh_fpu_and_run_normal_core();
 	if (!cpu.trap_skip) CPU_DebugException(DBINT_STEP,reg_eip);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Dyn_X86_Run;
