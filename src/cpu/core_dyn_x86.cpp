@@ -163,37 +163,46 @@ static struct {
 	uint32_t readdata;
 } core_dyn;
 
-#if defined(X86_DYNFPU_DH_ENABLED)
-static struct dyn_dh_fpu {
-	uint16_t		cw,host_cw;
-	bool		state_used;
+#	if defined(X86_DYNFPU_DH_ENABLED)
+
+struct dyn_dh_fpu {
+	uint16_t cw                 = 0x37f;
+	uint16_t host_cw            = 0;
+	bool state_used             = false;
+
+
 	// some fields expanded here for alignment purposes
 	struct {
-		uint32_t cw;
-		uint32_t sw;
-		uint32_t tag;
-		uint32_t ip;
-		uint32_t cs;
-		uint32_t ea;
-		uint32_t ds;
-		uint8_t st_reg[8][10];
-	} state;
-	FPU_P_Reg	temp,temp2;
-	uint32_t		dh_fpu_enabled;
-	uint8_t		temp_state[128];
-} dyn_dh_fpu;
-#endif
+		uint32_t cw  = 0x37f;
+		uint32_t sw  = 0;
+		uint32_t tag = 0xffff;
+		uint32_t ip  = 0;
+		uint32_t cs  = 0;
+		uint32_t ea  = 0;
+		uint32_t ds  = 0;
 
-#define X86         0x01
-#define X86_64      0x02
+		uint8_t st_reg[8][10] = {};
+	} state = {};
 
-#if C_TARGETCPU == X86_64
-#include "core_dyn_x86/risc_x64.h"
-#elif C_TARGETCPU == X86
-#include "core_dyn_x86/risc_x86.h"
-#else
-#error DYN_X86 core not supported for this CPU target.
-#endif
+	FPU_P_Reg temp  = {};
+	FPU_P_Reg temp2 = {};
+
+	uint32_t dh_fpu_enabled = true;
+	uint8_t temp_state[128] = {};
+} dyn_dh_fpu = {};
+
+#	endif
+
+#	define X86    0x01
+#	define X86_64 0x02
+
+#	if C_TARGETCPU == X86_64
+#		include "core_dyn_x86/risc_x64.h"
+#	elif C_TARGETCPU == X86
+#		include "core_dyn_x86/risc_x86.h"
+#	else
+#		error DYN_X86 core not supported for this CPU target.
+#	endif
 
 struct DynState {
 	DynReg regs[G_MAX];
@@ -494,16 +503,8 @@ void CPU_Core_Dyn_X86_Init(void) {
 
 #if defined(X86_DYNFPU_DH_ENABLED)
 	/* Init the fpu state */
-	dyn_dh_fpu.dh_fpu_enabled=true;
-	dyn_dh_fpu.state_used=false;
-	dyn_dh_fpu.cw=0x37f;
-	// FINIT
-	memset(&dyn_dh_fpu.state, 0, sizeof(dyn_dh_fpu.state));
-	dyn_dh_fpu.state.cw = 0x37F;
-	dyn_dh_fpu.state.tag = 0xFFFF;
-#endif
-
-	return;
+	dyn_dh_fpu = {};
+#	endif
 }
 
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache) {
