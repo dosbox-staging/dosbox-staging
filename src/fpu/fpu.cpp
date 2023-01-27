@@ -43,17 +43,27 @@ uint16_t FPU_GetTag()
 	return tag;
 }
 
-void FPU_LoadPRegs(const uint8_t* buffer)
+void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10])
 {
-	for (Bitu i = 0; i < 8; i++) {
-		memcpy(&fpu.p_regs[STV(i)], buffer + i * 10, 10);
+	for (uint8_t i = 0; i < 8; ++i) {
+		auto& norm_p_reg        = fpu.p_regs[STV(i)];
+		const auto dyn_reg_addr = dyn_regs[i];
+
+		norm_p_reg.m1 = read_unaligned_uint32_at(dyn_reg_addr, 0);
+		norm_p_reg.m2 = read_unaligned_uint32_at(dyn_reg_addr, 1);
+		norm_p_reg.m3 = read_unaligned_uint16_at(dyn_reg_addr, 4);
 	}
 }
 
-void FPU_SavePRegs(uint8_t* buffer)
+void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
 {
-	for (Bitu i = 0; i < 8; i++) {
-		memcpy(buffer + i * 10, &fpu.p_regs[STV(i)], 10);
+	for (uint8_t i = 0; i < 8; ++i) {
+		auto dyn_reg_addr      = dyn_regs[i];
+		const auto& norm_p_reg = fpu.p_regs[STV(i)];
+
+		write_unaligned_uint32_at(dyn_reg_addr, 0, norm_p_reg.m1);
+		write_unaligned_uint32_at(dyn_reg_addr, 1, norm_p_reg.m2);
+		write_unaligned_uint16_at(dyn_reg_addr, 4, norm_p_reg.m3);
 	}
 }
 

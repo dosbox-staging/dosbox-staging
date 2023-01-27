@@ -263,7 +263,7 @@ static void copy_dh_fpu_to_normal()
 	FPU_SetCW(dyn_dh_fpu.state.cw);
 	FPU_SetSW(dyn_dh_fpu.state.sw);
 	TOP = FPU_GET_TOP();
-	FPU_LoadPRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+	FPU_SetPRegsFrom(dyn_dh_fpu.state.st_reg);
 }
 
 static void copy_normal_fpu_to_dh()
@@ -272,7 +272,7 @@ static void copy_normal_fpu_to_dh()
 	dyn_dh_fpu.state.sw  = FPU_GetSW();
 	dyn_dh_fpu.state.cw  = FPU_GetCW();
 	dyn_dh_fpu.state.tag = FPU_GetTag();
-	FPU_SavePRegs(&dyn_dh_fpu.state.st_reg[0][0]);
+	FPU_GetPRegsTo(dyn_dh_fpu.state.st_reg);
 }
 
 Bits CPU_Core_Dyn_X86_Run() noexcept

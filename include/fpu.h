@@ -146,8 +146,8 @@ static inline void FPU_SET_TOP(const uint32_t val)
 	fpu.sw |= static_cast<uint16_t>((val & 7) << 11);
 }
 
-void FPU_LoadPRegs(const uint8_t* buffer);
-void FPU_SavePRegs(uint8_t* buffer);
+void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
+void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
 static inline void FPU_SET_C0(Bitu C){
 	fpu.sw &= ~0x0100;
