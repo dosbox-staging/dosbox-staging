@@ -126,9 +126,10 @@ static double FROUND(double in){
 
 static Real64 FPU_FLD80(PhysPt addr) {
 	struct {
-		int16_t begin;
-		FPU_Reg eind;
-	} test;
+		int16_t begin = 0;
+		FPU_Reg eind  = {};
+	} test = {};
+
 	test.eind.l.lower = mem_readd(addr);
 	test.eind.l.upper = mem_readd(addr+4);
 	test.begin = mem_readw(addr+8);
@@ -154,12 +155,13 @@ static Real64 FPU_FLD80(PhysPt addr) {
 
 static void FPU_ST80(PhysPt addr,Bitu reg) {
 	struct {
-		int16_t begin;
-		FPU_Reg eind;
-	} test;
-	int64_t sign80 = (fpu.regs[reg].ll&LONGTYPE(0x8000000000000000))?1:0;
-	int64_t exp80 =  fpu.regs[reg].ll&LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52);
+		int16_t begin = 0;
+		FPU_Reg eind  = {};
+	} test = {};
+
+	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
+	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
+	int64_t exp80final  = (exp80 >> 52);
 	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
 	int64_t mant80final = (mant80 << 11);
 	if(fpu.regs[reg].d != 0){ //Zero is a special case

@@ -27,17 +27,19 @@
 #include "fpu.h"
 #include "cpu.h"
 
-FPU_rec fpu;
+FPU_rec fpu = {};
 
 void FPU_FLDCW(PhysPt addr){
 	uint16_t temp = mem_readw(addr);
 	FPU_SetCW(temp);
 }
 
-uint16_t FPU_GetTag(void){
-	uint16_t tag=0;
-	for(Bitu i=0;i<8;i++)
-		tag |= ( (fpu.tags[i]&3) <<(2*i));
+uint16_t FPU_GetTag()
+{
+	uint16_t tag = 0;
+	for (Bitu i = 0; i < 8; i++) {
+		tag |= ((fpu.tags[i] & 3) << (2 * i));
+	}
 	return tag;
 }
 
