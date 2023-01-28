@@ -601,13 +601,14 @@ static void FPU_FLD1(void){
 }
 
 static void FPU_FLDL2T(void){
+	constexpr auto L2T = M_LN10 / M_LN2;
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = L2T;
 }
 
 static void FPU_FLDL2E(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = L2E;
+	fpu.regs[TOP].d = M_LOG2E;
 }
 
 static void FPU_FLDPI(void){
@@ -616,13 +617,14 @@ static void FPU_FLDPI(void){
 }
 
 static void FPU_FLDLG2(void){
+	constexpr auto LG2 = M_LOG10E / M_LOG2E;
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = LG2;
 }
 
 static void FPU_FLDLN2(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = LN2;
+	fpu.regs[TOP].d = M_LN2;
 }
 
 static void FPU_FLDZ(void){

@@ -86,7 +86,7 @@
 // sub dst, src, #imm		@	0 <= imm <= 7
 #define SUB_IMM3(dst, src, imm) (0x1e00 + (dst) + ((src) << 3) + ((imm) << 6) )
 // sub dst, #imm		@	0 <= imm <= 255
-#define SUB_IMM8(dst, imm) (0x3800 + ((dst) << 8) + (imm) )
+#define SUB_IMM8(dst, imm) (fpu_top_register_bits + ((dst) << 8) + (imm) )
 // neg dst, src
 #define NEG(dst, src) (0x4240 + (dst) + ((src) << 3) )
 // cmp dst, #imm		@	0 <= imm <= 255

@@ -93,11 +93,6 @@ struct FPU_rec {
 	FPU_Round round      = {};
 };
 
-constexpr auto L2E = 1.4426950408889634;
-constexpr auto L2T = 3.3219280948873623;
-constexpr auto LN2 = 0.69314718055994531;
-constexpr auto LG2 = 0.3010299956639812;
-
 extern FPU_rec fpu;
 
 #define TOP fpu.top
@@ -135,14 +130,16 @@ static inline void FPU_SetSW(const uint16_t word)
 	fpu.sw = word;
 }
 
+constexpr uint16_t fpu_top_register_bits = 0x3800;
+
 static inline uint8_t FPU_GET_TOP()
 {
-	return static_cast<uint8_t>((fpu.sw & 0x3800) >> 11);
+	return static_cast<uint8_t>((fpu.sw & fpu_top_register_bits) >> 11);
 }
 
 static inline void FPU_SET_TOP(const uint32_t val)
 {
-	fpu.sw &= ~0x3800;
+	fpu.sw &= ~fpu_top_register_bits;
 	fpu.sw |= static_cast<uint16_t>((val & 7) << 11);
 }
 
