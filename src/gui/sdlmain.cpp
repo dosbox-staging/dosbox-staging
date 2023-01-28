@@ -3948,7 +3948,6 @@ bool GFX_Events()
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
-				ApplyActiveSettings();
 				FocusInput();
 				continue;
 
@@ -3962,6 +3961,8 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				ApplyActiveSettings();
+				[[fallthrough]];
 			case SDL_WINDOWEVENT_EXPOSED:
 				// DEBUG_LOG_MSG("SDL: Window has been exposed "
 				//               "and should be redrawn");
@@ -3982,7 +3983,6 @@ bool GFX_Events()
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
 				MOUSE_NotifyHasFocus(true);
-				ApplyActiveSettings();
 				FocusInput();
 				continue;
 
@@ -4143,9 +4143,11 @@ bool GFX_Events()
 							if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (ev.window.event == SDL_WINDOWEVENT_MINIMIZED) || (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
 								// We've got focus back, so unpause and break out of the loop
 								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
-									paused = false;
 									GFX_RefreshTitle();
-									ApplyActiveSettings();
+									if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+										paused = false;
+										ApplyActiveSettings();
+									}
 									CPU_Disable_SkipAutoAdjust();
 								}
 
