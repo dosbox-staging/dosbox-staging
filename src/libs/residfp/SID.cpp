@@ -95,7 +95,7 @@ const unsigned int OSC_DAC_BITS = 12;
  * zero-x did the measuring on the 8580 (https://sourceforge.net/p/vice-emu/bugs/1036/#c5b3):
  * When it sits on basic from powerup it's at 4.72
  * Run 1.prg and check the output pin level.
- * Then run 2.prg andadjust it until the output level is the same...
+ * Then run 2.prg and adjust it until the output level is the same...
  * 0x94-0xA8 gives me the same 4.72 1.prg shows.
  * On another 8580 it's 0x90-0x9C
  * Third chip 0x94-0xA8

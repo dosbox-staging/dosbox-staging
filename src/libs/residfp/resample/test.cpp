@@ -31,11 +31,15 @@
 #include "Resampler.h"
 #include "TwoPassSincResampler.h"
 
+#if __cplusplus < 201103L
+#  define unique_ptr auto_ptr
+#endif
+
 /**
  * Simple sin waveform in, power output measurement function.
  * It would be far better to use FFT.
  */
-int main(int argc, const char* argv[])
+int main(int, const char*[])
 {
     const double RATE = 985248.4;
     const int RINGSIZE = 2048;
