@@ -3563,6 +3563,7 @@ void Restart(bool pressed);
 static void ApplyActiveSettings()
 {
 	SetPriority(sdl.priority.active);
+	MOUSE_NotifyHasFocus(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::On);
@@ -3571,6 +3572,7 @@ static void ApplyActiveSettings()
 static void ApplyInactiveSettings()
 {
 	SetPriority(sdl.priority.inactive);
+	MOUSE_NotifyHasFocus(false);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::Off);
@@ -3982,7 +3984,6 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
-				MOUSE_NotifyHasFocus(true);
 				FocusInput();
 				continue;
 
@@ -3997,7 +3998,6 @@ bool GFX_Events()
 				ApplyInactiveSettings();
 				GFX_LosingFocus();
 				CPU_Enable_SkipAutoAdjust();
-				MOUSE_NotifyHasFocus(false);
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
