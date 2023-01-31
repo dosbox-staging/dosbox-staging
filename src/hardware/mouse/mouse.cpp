@@ -55,7 +55,7 @@ static struct {
 	uint32_t cursor_y_abs  = 0;
 	bool cursor_is_outside = false; // if mouse cursor is outside of drawing area
 
-	bool has_focus              = false; // if our window has focus
+	bool is_window_active       = false; // if our window is active (has focus)
 	bool gui_has_taken_over     = false; // if a GUI requested to take over the mouse
 	bool is_mapping_in_progress = false; // if interactive mapping is running
 	bool capture_was_requested  = false; // if user requested mouse to be captured
@@ -119,7 +119,7 @@ static void update_cursor_visibility()
 	// Store internally old settings, to avoid unnecessary GFX calls
 	const auto old_is_visible = state.is_visible;
 
-	if (!state.has_focus) {
+	if (!state.is_window_active) {
 
 		// No change to cursor visibility
 
@@ -196,7 +196,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// Raw input depends on the user configuration
 	state.is_input_raw = mouse_config.raw_input;
 
-	if (!state.has_focus) {
+	if (!state.is_window_active) {
 
 		state.should_drop_events = true;
 
@@ -289,7 +289,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Select hint to be displayed on a title bar
 	if (!state.have_desktop_environment || state.is_fullscreen ||
-	    state.gui_has_taken_over || !state.has_focus) {
+	    state.gui_has_taken_over || !state.is_window_active) {
 		state.hint_id = MouseHint::None;
 	} else if (is_config_no_mouse) {
 		state.hint_id = MouseHint::NoMouse;
@@ -359,9 +359,9 @@ bool MOUSE_IsCaptured()
 bool MOUSE_IsProbeForMappingAllowed()
 {
 	// Conditions to be met to accept mouse clicks for interactive mapping:
-	// - we have a focus
+	// - window is active (we have a focus)
 	// - no GUI has taken over the mouse
-	return state.has_focus && !state.gui_has_taken_over;
+	return state.is_window_active && !state.gui_has_taken_over;
 }
 
 // ***************************************************************************
@@ -496,9 +496,9 @@ void MOUSE_NotifyTakeOver(const bool gui_has_taken_over)
 	MOUSE_UpdateGFX();
 }
 
-void MOUSE_NotifyHasFocus(const bool has_focus)
+void MOUSE_NotifyWindowActive(const bool is_active)
 {
-	state.has_focus = has_focus;
+	state.is_window_active = is_active;
 	MOUSE_UpdateGFX();
 }
 

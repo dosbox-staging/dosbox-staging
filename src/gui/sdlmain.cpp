@@ -3563,7 +3563,7 @@ void Restart(bool pressed);
 static void ApplyActiveSettings()
 {
 	SetPriority(sdl.priority.active);
-	MOUSE_NotifyHasFocus(true);
+	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::On);
@@ -3572,7 +3572,7 @@ static void ApplyActiveSettings()
 static void ApplyInactiveSettings()
 {
 	SetPriority(sdl.priority.inactive);
-	MOUSE_NotifyHasFocus(false);
+	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::Off);
