@@ -68,7 +68,9 @@ static struct {
 	bool is_input_raw = false; // if GFX was requested to provide raw movements
 	bool is_seamless  = false; // if seamless mouse integration is in effect
 
-	bool should_drop_events       = true;  // if we should drop mouse events
+	// if mouse events should be ignored, except button release
+	bool should_drop_events = true;
+
 	bool should_capture_on_click  = false; // if any button click should capture the mouse
 	bool should_capture_on_middle = false; // if middle button press should capture the mouse
 	bool should_release_on_middle = false; // if middle button press should release the mouse
@@ -89,11 +91,11 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 
 		if (absolute < 0 || static_cast<uint32_t>(absolute) < clipping) {
 			// cursor is over the top or left black bar
-			state.cursor_is_outside = true;
+			state.cursor_is_outside = !state.is_fullscreen;
 			return 0;
 		} else if (static_cast<uint32_t>(absolute) >= resolution + clipping) {
 			// cursor is over the bottom or right black bar
-			state.cursor_is_outside = true;
+			state.cursor_is_outside = !state.is_fullscreen;
 			return check_cast<uint32_t>(resolution - 1);
 		}
 
@@ -111,8 +113,9 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 static void update_cursor_visibility()
 {
 	// If mouse subsystem not started yet, do nothing
-	if (!mouse_shared.started)
+	if (!mouse_shared.started) {
 		return;
+	}
 
 	static bool first_time = true;
 
@@ -196,23 +199,14 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// Raw input depends on the user configuration
 	state.is_input_raw = mouse_config.raw_input;
 
-	if (!state.is_window_active) {
-
-		state.should_drop_events = true;
-
-		// No change to:
-		// - state.is_captured
-
-	} else if (state.gui_has_taken_over) {
-
+	if (state.gui_has_taken_over) {
 		state.is_captured = false;
-		state.should_drop_events = true;
 
 		// Override user configuration, for the GUI we want
 		// host OS mouse acceleration applied
 		state.is_input_raw = false;
 
-	} else { // Window has focus, no GUI running
+	} else if (state.is_window_active) { // window has focus, no GUI running
 
 		// Capture mouse cursor if any of:
 		// - we lack a desktop environment,
@@ -221,14 +215,21 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 		state.is_captured = !state.have_desktop_environment ||
 		                    state.is_fullscreen ||
 		                    state.capture_was_requested;
+	}
 
-		// Drop mouse events if NoMouse is configured
-		state.should_drop_events = is_config_no_mouse;
-		// Also drop events if:
-		// - mouse not captured, and
-		// - mouse not in seamless mode (due to user setting or seamless driver)
-		if (!state.is_captured && !state.is_seamless)
-			state.should_drop_events = true;
+	// Drop mouse events (except for button release) if any of:
+	// - GUI has taken over the mouse
+	// - capture type is NoMouse
+	state.should_drop_events = state.gui_has_taken_over ||
+                               is_config_no_mouse;
+	if (!state.is_seamless) {
+
+		// If not Seamless mode, also drop events if any of:
+		// - mouse is not captured
+		// - emulator window is not active (has no focus)
+		state.should_drop_events = state.should_drop_events ||
+		                           !state.is_captured ||
+		                           !state.is_window_active;
 	}
 
 	// Use a hotkey to toggle mouse capture if:
@@ -245,7 +246,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// - mouse is not captured, and
 	// - we are not in seamless mode, and
 	// - no GUI has taken over the mouse, and
-	// - no NoMouse mode is in effect, and
+	// - capture type is different than NoMouse, and
 	// - capture on start/click was configured or mapping is in effect
 	state.should_capture_on_click = state.have_desktop_environment &&
 	                                !state.is_fullscreen &&
@@ -260,7 +261,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// - windowed mode, and
 	// - mouse is not captured, and
 	// - no GUI has taken over the mouse, and
-	// - no NoMouse mode is in effect, and
+	// - capture type is different than NoMouse, and
 	// - seamless mode is in effect, and
 	// - middle release was configured
 	state.should_capture_on_middle = state.have_desktop_environment &&
@@ -337,12 +338,16 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	first_time = false;
 }
 
-static bool should_drop_event()
+static bool should_drop_move()
 {
-	// Decide whether to drop mouse events, depending on both
-	// mouse cursor position and general event dropping policy
-	return (state.is_seamless && state.cursor_is_outside) ||
-	       state.should_drop_events;
+	return state.should_drop_events ||
+	       (state.cursor_is_outside && !state.is_seamless);
+}
+
+static bool should_drop_press_or_wheel()
+{
+	return state.should_drop_events ||
+	       state.cursor_is_outside;
 }
 
 void MOUSE_UpdateGFX()
@@ -541,8 +546,9 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	update_cursor_visibility();
 
 	// Drop unneeded events
-	if (should_drop_event())
+	if (should_drop_move()) {
 		return;
+	}
 
 	// From the GUI we are getting mouse movement data in two
 	// distinct formats:
@@ -577,8 +583,9 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	// Event from ManyMouse
 
 	// Drop unneeded events
-	if (should_drop_event())
+	if (should_drop_move()) {
 		return;
+	}
 
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
@@ -616,9 +623,10 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed)
 			return;
 		}
 
-		/// Drop unneeded events
-		if (should_drop_event())
+		// Drop unneeded events
+		if (should_drop_press_or_wheel()) {
 			return;
+		}
 	}
 
 	MouseEvent ev;
@@ -636,8 +644,9 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed,
 	// Drop unneeded events - but never drop any button
 	// releases events; pass them to concrete interfaces,
 	// they will decide whether to ignore them or not.
-	if (pressed && should_drop_event())
+	if (pressed && should_drop_press_or_wheel()) {
 		return;
+	}
 
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
@@ -652,8 +661,9 @@ void MOUSE_EventWheel(const int16_t w_rel)
 	// Event from GFX
 
 	// Drop unneeded events
-	if (should_drop_event())
+	if (should_drop_press_or_wheel()) {
 		return;
+	}
 
 	MouseEvent ev;
 	for (auto &interface : mouse_interfaces)
@@ -667,8 +677,9 @@ void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
 	// Event from ManyMouse
 
 	// Drop unneeded events
-	if (state.should_drop_events)
+	if (should_drop_press_or_wheel()) {
 		return;
+	}
 
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
