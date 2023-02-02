@@ -23,24 +23,24 @@ import os
 import re
 import sys
 
-SAN_WARN_PATTERN = re.compile(r'==\d+==WARNING: ([^:]+): (.*)')
+SAN_WARN_PATTERN = re.compile(r"==\d+==WARNING: ([^:]+): (.*)")
 #                                                ~~~~~    ~~
 #                                                ↑        ↑
 #                                        sanitizer        message
 
-SAN_ERR_PATTERN = re.compile(r'==\d+==ERROR: ([^:]+): (.*)')
+SAN_ERR_PATTERN = re.compile(r"==\d+==ERROR: ([^:]+): (.*)")
 #                                             ~~~~~    ~~
 #                                             ↑        ↑
 #                                     sanitizer        message
 
-RT_ERR_PATTERN = re.compile(r'([^:]+):(\d+):\d+: runtime error: .*')
+RT_ERR_PATTERN = re.compile(r"([^:]+):(\d+):\d+: runtime error: .*")
 #                              ~~~~~   ~~~                      ~~
 #                              ↑       ↑                        ↑
 #                              file    line                     message
 
-MEMLEAK_PATTERN_1 = re.compile(r'Direct leak of \d+ byte\(s\) in .*')
+MEMLEAK_PATTERN_1 = re.compile(r"Direct leak of \d+ byte\(s\) in .*")
 
-MEMLEAK_PATTERN_2 = re.compile(r'Indirect leak of \d+ byte\(s\) in .*')
+MEMLEAK_PATTERN_2 = re.compile(r"Indirect leak of \d+ byte\(s\) in .*")
 
 
 def match_line(line):
@@ -54,15 +54,15 @@ def match_line(line):
 
     match = RT_ERR_PATTERN.match(line)
     if match:
-        return 'runtime error'
+        return "runtime error"
 
     match = MEMLEAK_PATTERN_1.match(line)
     if match:
-        return 'direct leak'
+        return "direct leak"
 
     match = MEMLEAK_PATTERN_2.match(line)
     if match:
-        return 'indirect leak'
+        return "indirect leak"
 
     return None
 
@@ -77,12 +77,12 @@ def count_issue(line, issue_types):
 
 
 def get_input_lines(name):
-    if name == '-':
+    if name == "-":
         return sys.stdin.readlines()
     if not os.path.isfile(name):
-        print('{}: no such file.'.format(name))
+        print("{}: no such file.".format(name))
         sys.exit(2)
-    with open(name, 'r', encoding='utf-8') as logs:
+    with open(name, "r", encoding="utf-8") as logs:
         return logs.readlines()
 
 
@@ -94,27 +94,34 @@ def print_summary(issues):
     size = find_longest_name_length(issues.keys()) + 1
     items = list(issues.items())
     for name, count in sorted(items, key=lambda x: (x[1], x[0]), reverse=True):
-        print('  {text:{field_size}s}: {count}'.format(
-            text=name, count=count, field_size=size))
+        print(
+            "  {text:{field_size}s}: {count}".format(
+                text=name, count=count, field_size=size
+            )
+        )
     print()
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter, description=__doc__)
+        formatter_class=argparse.RawTextHelpFormatter, description=__doc__
+    )
 
     parser.add_argument(
-        'logfile',
-        metavar='LOGFILE',
-        help="Path to the logfile, or use - to read from stdin")
+        "logfile",
+        metavar="LOGFILE",
+        help="Path to the logfile, or use - to read from stdin",
+    )
 
-    max_issues = int(os.getenv('MAX_ISSUES', '0'))
+    max_issues = int(os.getenv("MAX_ISSUES", "0"))
     parser.add_argument(
-        '-m', '--max-issues',
+        "-m",
+        "--max-issues",
         type=int,
         default=max_issues,
-        help='Override the maximum number of issues.\n'
-             'Use value -1 to disable the check.')
+        help="Override the maximum number of issues.\n"
+        "Use value -1 to disable the check.",
+    )
 
     return parser.parse_args()
 
@@ -129,15 +136,16 @@ def main():
     if issue_types:
         print("Issues grouped by type:\n")
         print_summary(issue_types)
-    print('Total: {} issues'.format(total), end='')
+    print("Total: {} issues".format(total), end="")
     if args.max_issues >= 0:
-        print(' (out of {} allowed)\n'.format(args.max_issues))
+        print(" (out of {} allowed)\n".format(args.max_issues))
         if total > args.max_issues:
-            print('Error: upper limit of allowed issues is', args.max_issues)
+            print("Error: upper limit of allowed issues is", args.max_issues)
             rcode = 1
     else:
-        print('\n')
+        print("\n")
     return rcode
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

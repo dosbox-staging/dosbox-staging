@@ -81,9 +81,7 @@ def parse_args():
 
 
 def get_stdout_from_command(arg_line):
-    result = subprocess.run(
-        arg_line.split(), stdout=subprocess.PIPE, check=True
-    )
+    result = subprocess.run(arg_line.split(), stdout=subprocess.PIPE, check=True)
     return result.stdout.decode("utf-8").strip()
 
 
@@ -171,9 +169,7 @@ def main():
     builtin_baseline = get_latest_baseline_commit(args.vcpkg_path)
 
     print(
-        generate_project_json(
-            args.name, args.version, dep_versions, builtin_baseline
-        )
+        generate_project_json(args.name, args.version, dep_versions, builtin_baseline)
     )
 
 

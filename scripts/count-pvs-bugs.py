@@ -24,6 +24,7 @@ import csv
 import os
 import sys
 
+
 def parse_issues(filename):
     """
     Returns a dict of source filename keys having occurrence-count values
@@ -31,12 +32,12 @@ def parse_issues(filename):
     """
     cwd = os.getcwd()
     issues = collections.defaultdict(int)
-    with open(filename, encoding='utf-8') as csvfile:
+    with open(filename, encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            sourcefile = row['FilePath']
+            sourcefile = row["FilePath"]
             # Skip non-file lines
-            if not sourcefile.startswith('/'):
+            if not sourcefile.startswith("/"):
                 continue
             sourcefile = os.path.relpath(sourcefile, cwd)
             issues[sourcefile] += 1
@@ -58,18 +59,19 @@ def main(argv):
         print("Sorted by issue count:\n")
 
         for sourcefile in sorted(issues, key=issues.get, reverse=True):
-            print(f'  {sourcefile:{longest_name}} : {issues[sourcefile]}')
+            print(f"  {sourcefile:{longest_name}} : {issues[sourcefile]}")
 
     # Print the tally against the desired maximum
     if len(sys.argv) == 3:
         max_issues = int(sys.argv[2])
-        print(f'\nTotal: {tally} issues (out of {max_issues} allowed)')
+        print(f"\nTotal: {tally} issues (out of {max_issues} allowed)")
         if tally > max_issues:
             rcode = 1
     else:
-        print(f'\nTotal: {tally} issues')
+        print(f"\nTotal: {tally} issues")
 
     return rcode
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
