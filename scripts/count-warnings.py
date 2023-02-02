@@ -142,7 +142,7 @@ def parse_args():
     parser.add_argument(
         'logfile',
         metavar='LOGFILE',
-        help=("Path to the logfile, or use - to read from stdin"))
+        help="Path to the logfile, or use - to read from stdin")
 
     max_warnings = int(os.getenv('MAX_WARNINGS', '0'))
     parser.add_argument(

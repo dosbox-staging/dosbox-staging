@@ -106,7 +106,7 @@ def parse_args():
     parser.add_argument(
         'logfile',
         metavar='LOGFILE',
-        help=("Path to the logfile, or use - to read from stdin"))
+        help="Path to the logfile, or use - to read from stdin")
 
     max_issues = int(os.getenv('MAX_ISSUES', '0'))
     parser.add_argument(

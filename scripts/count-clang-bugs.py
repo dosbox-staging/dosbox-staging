@@ -71,7 +71,7 @@ def parse_args():
     parser.add_argument(
         'report',
         metavar='REPORT',
-        help=("Path to the HTML report file"))
+        help="Path to the HTML report file")
 
     max_bugs = to_int(os.getenv('MAX_BUGS', None))
     parser.add_argument(
