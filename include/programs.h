@@ -55,7 +55,9 @@ public:
 	bool HasDirectory() const;
 	bool HasExecutableName() const;
 	unsigned int GetCount(void);
-	void Shift(unsigned int amount=1);
+	bool ExistsPriorTo(const std::list<std::string_view>& pre_args,
+	                   const std::list<std::string_view>& post_args) const;
+	void Shift(unsigned int amount = 1);
 	uint16_t Get_arglength();
 
 private:

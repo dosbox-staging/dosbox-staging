@@ -1234,7 +1234,34 @@ bool CommandLine::FindExist(const char *name, bool remove)
 	return true;
 }
 
-bool CommandLine::FindInt(const char *name, int &value, bool remove)
+// Checks if any of the command line arguments are found in the pre_args *and*
+// exist prior to any of the post_args. If none of the command line arguments
+// are found in the pre_args then false is returned.
+bool CommandLine::ExistsPriorTo(const std::list<std::string_view>& pre_args,
+                                const std::list<std::string_view>& post_args) const
+{
+	auto any_of_iequals = [](const auto& haystack,
+	                         const auto& needle) {
+		return std::any_of(haystack.begin(),
+		                   haystack.end(),
+		                   [&needle](const auto& hay) {
+			                   return iequals(hay, needle);
+		                   });
+	};
+
+	for (const auto& cli_arg : cmds) {
+		// if any of the pre-args are insensitive-equal-to the CLI argument ...
+		if (any_of_iequals(pre_args, cli_arg)) {
+			return true;
+		}
+		if (any_of_iequals(post_args, cli_arg)) {
+			return false;
+		}
+	}
+	return false;
+}
+
+bool CommandLine::FindInt(const char* name, int& value, bool remove)
 {
 	cmd_it it, it_next;
 	if (!(FindEntry(name, it, true)))
