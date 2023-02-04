@@ -185,11 +185,6 @@ bool ciequals(const char a, const char b)
 	return tolower(a) == tolower(b);
 }
 
-bool iequals(const std::string &a, const std::string &b)
-{
-	return std::equal(a.begin(), a.end(), b.begin(), b.end(), ciequals);
-}
-
 char *strip_word(char *&line)
 {
 	char *scan = line;
