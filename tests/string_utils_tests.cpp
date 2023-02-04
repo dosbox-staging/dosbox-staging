@@ -28,6 +28,58 @@
 
 namespace {
 
+TEST(CaseInsensitiveCompare, Chars)
+{
+	constexpr const char a[] = "123";
+	constexpr const char not_a[] = "321";
+
+	EXPECT_TRUE(iequals(a, a));
+	EXPECT_FALSE(iequals(a, not_a));
+}
+
+TEST(CaseInsensitiveCompare, StringViews)
+{
+	constexpr std::string_view a = "123";
+	constexpr std::string_view not_a = "321";
+
+	EXPECT_TRUE(iequals(a, a));
+	EXPECT_FALSE(iequals(a, not_a));
+}
+
+TEST(CaseInsensitiveCompare, Strings)
+{
+	const std::string a = "123";
+	const std::string not_a = "321";
+
+	EXPECT_TRUE(iequals(a, a));
+	EXPECT_FALSE(iequals(a, not_a));
+}
+
+
+TEST(CaseInsensitiveCompare, MixedTypes)
+{
+	constexpr const char a_sz[] = "123";
+
+	constexpr std::string_view a_sv = "123";
+	constexpr std::string_view not_a_sv = "321";
+
+	const std::string a_string = "123";
+	const std::string not_a_string = "321";
+
+	// char and string_view
+	EXPECT_TRUE(iequals(a_sz, a_sv));
+	EXPECT_FALSE(iequals(a_sz, not_a_sv));
+
+	// char and string
+	EXPECT_TRUE(iequals(a_sz, a_string));
+	EXPECT_FALSE(iequals(a_sz, not_a_string));
+
+	// string_view and string
+	EXPECT_TRUE(iequals(a_sv, a_string));
+	EXPECT_FALSE(iequals(a_sv, not_a_string));
+}
+
+
 TEST(StartsWith, Prefix)
 {
 	EXPECT_TRUE(starts_with("ab", "abcd"));
