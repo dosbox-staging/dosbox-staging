@@ -113,11 +113,20 @@ jobs:
           restore-keys: |
             ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-3
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -224,11 +233,20 @@ jobs:
           restore-keys: |
             ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-3
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh

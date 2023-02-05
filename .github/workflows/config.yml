@@ -104,10 +104,20 @@ jobs:
         run: |
           brew install $(cat packages/macos-12-brew.txt)
 
-      # Workaround frequent HTTPS-based connectivity issues
-      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
-      - name:  Fetch the libffi subproject for Glib
-        run: ./scripts/fetch-libffi-subproject.sh
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
+        with:
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
