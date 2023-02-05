@@ -77,11 +77,20 @@ jobs:
           restore-keys: |
             ccache-static-clang-${{ steps.prep-ccache.outputs.yesterday }}
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -162,11 +171,6 @@ jobs:
           sudo apt-get install $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
-      # Workaround frequent HTTPS-based connectivity issues
-      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
-      - name:  Fetch the libffi subproject for Glib
-        run: ./scripts/fetch-libffi-subproject.sh
-
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -183,11 +187,20 @@ jobs:
           key:          ccache-sanitizers-${{ steps.prep-ccache.outputs.today }}
           restore-keys: ccache-sanitizers-${{ steps.prep-ccache.outputs.yesterday }}
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh

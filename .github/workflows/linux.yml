@@ -34,10 +34,38 @@ env:
     ghcr.io/dosbox-staging/debian-cross
 
 jobs:
+  cache_subprojects:
+    name: Cache subprojects
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Install Meson
+        run:  |
+          sudo apt-get update
+          sudo apt-get install -y meson
+
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
+        with:
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    needs: cache_subprojects
     strategy:
       matrix:
         conf:
@@ -200,12 +228,6 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
-        with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
-
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -227,6 +249,17 @@ jobs:
             echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
             echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
           fi
+
+      - name: Restore subprojects cache
+        id:   cache-subprojects
+        uses: actions/cache@v3
+        with:
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Meson setup
         run:  |
@@ -254,6 +287,7 @@ jobs:
     name: Release build
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    needs: cache_subprojects
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -268,10 +302,16 @@ jobs:
             $(cat packages/ubuntu-18.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
-      # Workaround frequent HTTPS-based connectivity issues
-      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
-      - name:  Fetch the libffi subproject for Glib
-        run: ./scripts/fetch-libffi-subproject.sh
+      - name: Restore subprojects cache
+        id:   cache-subprojects
+        uses: actions/cache@v3
+        with:
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -289,12 +329,6 @@ jobs:
           key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}-1
           restore-keys: |
             ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}-1
-
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.4
-        with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
 
       - name: Log environment
         run:  ./scripts/log-env.sh
