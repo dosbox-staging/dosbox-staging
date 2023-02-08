@@ -96,6 +96,35 @@ void IMGMOUNT::ListImgMounts(void)
 	}
 }
 
+// A helper function that expands wildcard paths from the given argument and
+// adds them to the given paths. Returns true if the expansion succeeded.
+static bool add_wildcard_paths(const std::string& path_arg,
+                               std::vector<std::string>& paths)
+{
+	// Expand the given path argument
+	constexpr auto only_expand_files = true;
+	constexpr auto skip_native_path  = true;
+	std::vector<std::string> expanded_paths = {}; // filled by get_expanded_files
+	if (!get_expanded_files(path_arg, expanded_paths, only_expand_files, skip_native_path)) {
+		return false;
+	}
+
+	// Sort wildcards with natural ordering
+	constexpr auto npos      = std::string::npos;
+	const auto has_wildcards = path_arg.find_first_of('*') != npos ||
+	                           path_arg.find_first_of('?') != npos;
+	if (has_wildcards) {
+		std::sort(expanded_paths.begin(), expanded_paths.end(), natural_compare);
+	}
+
+	// Move the expanded paths out
+	paths.insert(paths.end(),
+	             std::make_move_iterator(expanded_paths.begin()),
+	             std::make_move_iterator(expanded_paths.end()));
+
+	return true;
+}
+
 void IMGMOUNT::Run(void)
 {
 	// Hack To allow long commandlines
@@ -234,21 +263,17 @@ void IMGMOUNT::Run(void)
 		         fstype.c_str());
 		return;
 	}
+	cmd->Shift(); // consume the drive letter portion
 
 	// find all file parameters, assuming that all option parameters have
 	// been removed
-	while (cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) &&
-	       temp_line.size()) {
+	uint16_t arg_pos = 1;
+	while (cmd->FindCommand(arg_pos++, temp_line)) {
 		// Try to find the path on native filesystem first
-		const auto real_path             = to_native_path(temp_line);
-		constexpr auto only_expand_files = true;
-		constexpr auto skip_native_path  = true;
+		assert(!temp_line.empty());
+		const auto real_path = to_native_path(temp_line);
 		if (real_path.empty()) {
-			if (get_expanded_files(temp_line,
-			                       paths,
-			                       only_expand_files,
-			                       skip_native_path)) {
-				temp_line = paths[0];
+			if (add_wildcard_paths(temp_line, paths)) {
 				continue;
 			} else {
 				LOG_MSG("IMGMOUNT: Path '%s' not found, maybe it's a DOS path",
@@ -305,11 +330,7 @@ void IMGMOUNT::Run(void)
 				temp_line = tmp;
 
 				if (stat(temp_line.c_str(), &test)) {
-					if (get_expanded_files(temp_line,
-					                       paths,
-					                       only_expand_files,
-					                       skip_native_path)) {
-						temp_line = paths[0];
+					if (add_wildcard_paths(temp_line, paths)) {
 						continue;
 					} else {
 						WriteOut(MSG_Get(
@@ -333,6 +354,11 @@ void IMGMOUNT::Run(void)
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
 		return;
 	}
+	// Tidy up the paths
+	for (auto& p : paths) {
+		p = simplify_path(p).string();
+	}
+
 	if (paths.size() == 1) {
 		temp_line = paths[0];
 	}

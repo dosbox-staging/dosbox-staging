@@ -80,6 +80,53 @@ TEST(CaseInsensitiveCompare, MixedTypes)
 }
 
 
+TEST(NaturalCompare, AtStartChar)
+{
+	EXPECT_FALSE(natural_compare("", ""));
+
+	EXPECT_TRUE(natural_compare(" ", "  "));
+	EXPECT_TRUE(natural_compare("a", "Aa"));
+	EXPECT_TRUE(natural_compare("aA", "Ba"));
+	EXPECT_TRUE(natural_compare("Aa", "ba"));
+}
+TEST(NaturalCompare, AtStartNum)
+{
+
+	EXPECT_TRUE(natural_compare("1", "1a"));
+	EXPECT_TRUE(natural_compare("1", "2a"));
+	EXPECT_TRUE(natural_compare("999", "1000a"));
+}
+
+TEST(NaturalCompare, InMiddleChar)
+{
+	EXPECT_TRUE(natural_compare("aac", "ABC"));
+	EXPECT_TRUE(natural_compare("aAc", "aBc"));
+	EXPECT_TRUE(natural_compare("AAC", "abc"));
+}
+TEST(NaturalCompare, InMiddleNum)
+{
+
+	EXPECT_TRUE(natural_compare("a1a", "a1aa"));
+	EXPECT_TRUE(natural_compare("A1A", "a2a"));
+	EXPECT_TRUE(natural_compare("A999b", "a1000a"));
+}
+TEST(NaturalCompare, AtEndChar)
+{
+	EXPECT_TRUE(natural_compare("abc", "ABCd"));
+	EXPECT_TRUE(natural_compare("abcD", "abcE"));
+	EXPECT_TRUE(natural_compare("ABCD", "abce"));
+
+}
+TEST(NaturalCompare, AtEndNum)
+{
+
+	EXPECT_TRUE(natural_compare("a1", "a1 "));
+	EXPECT_TRUE(natural_compare("A10", "b2"));
+	EXPECT_TRUE(natural_compare("A10", "a20"));
+	EXPECT_TRUE(natural_compare("Ab999", "aB1000"));
+}
+
+
 TEST(StartsWith, Prefix)
 {
 	EXPECT_TRUE(starts_with("ab", "abcd"));
