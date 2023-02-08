@@ -23,8 +23,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "bios_disk.h"
 #include "bios.h"
+#include "bios_disk.h"
 #include "cross.h"
 #include "dos_inc.h"
 #include "string_utils.h"
@@ -754,6 +754,7 @@ fatDrive::fatDrive(const char *sysFilename,
 		imgDTAPtr = RealMake(imgDTASeg, 0);
 		imgDTA    = new DOS_DTA(imgDTAPtr);
 	}
+	assert(sysFilename);
 	diskfile = fopen_wrap_ro_fallback(sysFilename, readonly);
 	created_successfully = (diskfile != nullptr);
 	if (!created_successfully)
@@ -905,15 +906,21 @@ fatDrive::fatDrive(const char *sysFilename,
 	firstDataSector = (bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + RootDirSectors) + partSectOff;
 	firstRootDirSect = bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + partSectOff;
 
-	if(CountOfClusters < 4085) {
+	if (CountOfClusters < 4085) {
 		/* Volume is FAT12 */
-		LOG_MSG("Mounted FAT volume is FAT12 with %d clusters", CountOfClusters);
+		LOG_MSG("FAT: Mounted %s as FAT12 volume with %d clusters",
+		        sysFilename,
+		        CountOfClusters);
 		fattype = FAT12;
 	} else if (CountOfClusters < 65525) {
-		LOG_MSG("Mounted FAT volume is FAT16 with %d clusters", CountOfClusters);
+		LOG_MSG("FAT: Mounted %s as FAT16 volume with %d clusters",
+		        sysFilename,
+		        CountOfClusters);
 		fattype = FAT16;
 	} else {
-		LOG_MSG("Mounted FAT volume is FAT32 with %d clusters", CountOfClusters);
+		LOG_MSG("FAT: Mounted %s as FAT32 volume with %d clusters",
+		        sysFilename,
+		        CountOfClusters);
 		fattype = FAT32;
 	}
 

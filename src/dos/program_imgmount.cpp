@@ -458,11 +458,11 @@ void IMGMOUNT::Run(void)
 		}
 		dos.dta(save_dta);
 
-		std::string tmp(paths[0]);
-		for (i = 1; i < paths.size(); i++) {
-			tmp += "; " + paths[i];
-		}
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
+		constexpr auto end_punctuation = ".";
+		const auto joined_paths = join_with_commas(paths, end_punctuation);
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         drive,
+		         joined_paths.c_str());
 
 		auto newdrive = static_cast<fatDrive*>(imgDisks[0]);
 		assert(newdrive);
@@ -545,11 +545,12 @@ void IMGMOUNT::Run(void)
 
 		// Print status message (success)
 		WriteOut(MSG_Get("MSCDEX_SUCCESS"));
-		std::string tmp(paths[0]);
-		for (i = 1; i < paths.size(); i++) {
-			tmp += "; " + paths[i];
-		}
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
+
+		constexpr auto end_punctuation = ".";
+		const auto joined_paths = join_with_commas(paths, end_punctuation);
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         drive,
+		         joined_paths.c_str());
 
 	} else if (fstype == "none") {
 		FILE* newDisk = fopen_wrap_ro_fallback(temp_line, roflag);

@@ -180,6 +180,25 @@ std::vector<std::string> split(const std::string &seq)
 	return words;
 }
 
+std::string join_with_commas(const std::vector<std::string>& items,
+                             const char* end_punctuation)
+{
+	const auto num_items = items.size();
+
+	std::string result = {};
+	std::string_view separator = (num_items == 2) ? " and " : ", ";
+
+	auto item_num = 1;
+	for (const auto& item : items) {
+		assert(!item.empty());
+		result += item;
+		result += (item_num == num_items) ? end_punctuation : separator;
+		separator = (item_num + 2 == num_items) ? ", and " : separator;
+		++item_num;
+	}
+	return result;
+}
+
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);
