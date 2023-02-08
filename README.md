@@ -313,3 +313,13 @@ For some historical context of why this repo exists you can read
 [build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
 
 [coverity-badge]: https://img.shields.io/coverity/scan/dosbox-staging
+
+## Website & documentation
+
+The website at https://dosbox-staging.github.io/ is generated from the [MkDocs](https://www.mkdocs.org/) sources in the [/website](/website) directory of this repository. 
+
+Always modify the MkDocs sources to make changes to the website or documentation—*do not* attempt to push any manual changes to our organisation-level GitHub Pages repo directly at [https://github.com/dosbox-staging/dosbox-staging.github.io/](https://github.com/dosbox-staging/dosbox-staging.github.io/)! If you do so, your manual changes will be overwritten by the next proper website deployment action.
+
+Once you've merged in your changes, use the [Deploy website](https://github.com/dosbox-staging/dosbox-staging/actions/workflows/deploy-website.yml) GitHub Action in this repo to publish them. This will generate the website from the MkDocs sources and push the generated content into our organisation-level GitHub Pages repo. The changes should appear on the website automatically after a few minutes (sometimes it takes a bit longer).
+
+Currently, the publishing always happens from the `main` branch of this repo.
