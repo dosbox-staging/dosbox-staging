@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -489,14 +489,17 @@ void DOS_Shell::RunInternal()
 
 void DOS_Shell::Run()
 {
-	char input_line[CMD_MAXLINE] = {0};
-	std::string line;
-	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+	// COMMAND.COM's /C and /INIT spawn sub-commands. When parsing help, we need
+	// to be sure the /? and -? are intended for us and not part of the
+	// sub-command.
+	if (cmd->ExistsPriorTo({"/?", "-?"}, {"/C", "/INIT"})) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_COMMAND_HELP_LONG"));
 		output.Display();
 		return;
 	}
+	char input_line[CMD_MAXLINE] = {0};
+	std::string line = {};
 	if (cmd->FindStringRemainBegin("/C",line)) {
 		safe_strcpy(input_line, line.c_str());
 		char* sep = strpbrk(input_line,"\r\n"); //GTA installer

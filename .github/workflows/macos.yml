@@ -21,7 +21,7 @@ jobs:
             needs_deps: true
             build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
-            max_warnings: 0
+            max_warnings: 109
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
@@ -74,7 +74,7 @@ jobs:
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
           echo "name_hash=$(echo '${{ matrix.conf.name }} ${{ matrix.conf.arch }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -88,7 +88,7 @@ jobs:
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
 
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
@@ -97,11 +97,20 @@ jobs:
             ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-
             ccache-macos-debug-
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Setup and build
         run: |
@@ -180,7 +189,7 @@ jobs:
           echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -193,23 +202,27 @@ jobs:
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
           ccache libpng meson opusfile sdl2 sdl2_image sdl2_net speexdsp
 
-      # Workaround frequent HTTPS-based connectivity issues
-      # https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/407
-      - name:  Fetch the libffi subproject for Glib
-        run: ./scripts/fetch-libffi-subproject.sh
-
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
           key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: ccache-macos-release-${{ matrix.runner.arch }}-
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+      - name: Cache subprojects
+        id: cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-2
+          path: subprojects.tar
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  arch -arch=${{ matrix.runner.arch }} ./scripts/log-env.sh

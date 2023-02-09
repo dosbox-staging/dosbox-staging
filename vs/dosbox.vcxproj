@@ -132,12 +132,16 @@
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
+  </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'" Label="Vcpkg">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
   </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
+  </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|x64'" Label="Vcpkg">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
@@ -169,7 +173,7 @@
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_image.lib;SDL2_net.lib;winmm.lib;libpng16.lib;SDL2main.lib;SDL2.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2_imaged.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -213,7 +217,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_image.lib;SDL2_net.lib;winmm.lib;libpng16.lib;SDL2main.lib;SDL2.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2_imaged.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -724,6 +728,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h" />
+    <ClInclude Include="..\include\audio_frame.h" />
     <ClInclude Include="..\include\bios.h" />
     <ClInclude Include="..\include\bios_disk.h" />
     <ClInclude Include="..\include\bitops.h" />
@@ -758,6 +763,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\pci_bus.h" />
     <ClInclude Include="..\include\pic.h" />
     <ClInclude Include="..\include\programs.h" />
+    <ClInclude Include="..\include\reelmagic.h" />
     <ClInclude Include="..\include\regs.h" />
     <ClInclude Include="..\include\render.h" />
     <ClInclude Include="..\include\rgb16.h" />
@@ -822,13 +828,18 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\hardware\mame\emu.h" />
     <ClInclude Include="..\src\hardware\mame\saa1099.h" />
     <ClInclude Include="..\src\hardware\mame\sn76496.h" />
+    <ClInclude Include="..\src\hardware\mouse\mouse_common.h" />
+    <ClInclude Include="..\src\hardware\mouse\mouse_config.h" />
+    <ClInclude Include="..\src\hardware\mouse\mouse_interfaces.h" />
+    <ClInclude Include="..\src\hardware\mouse\mouse_manymouse.h" />
+    <ClInclude Include="..\src\hardware\mouse\mouse_queue.h" />
     <ClInclude Include="..\src\hardware\serialport\directserial.h" />
     <ClInclude Include="..\src\hardware\serialport\libserial.h" />
     <ClInclude Include="..\src\hardware\serialport\misc_util.h" />
     <ClInclude Include="..\src\hardware\serialport\nullmodem.h" />
     <ClInclude Include="..\src\hardware\serialport\serialdummy.h" />
+    <ClInclude Include="..\src\hardware\serialport\serialmouse.h" />
     <ClInclude Include="..\src\hardware\serialport\softmodem.h" />
-    <ClInclude Include="..\src\hardware\serialport\softmouse.h" />
     <ClInclude Include="..\src\ints\int10.h" />
     <ClInclude Include="..\src\ints\xms.h" />
     <ClInclude Include="..\src\libs\decoders\archive.h" />

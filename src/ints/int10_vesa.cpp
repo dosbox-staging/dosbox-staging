@@ -430,7 +430,7 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 
 	switch (CurMode->type) {
 	case M_TEXT:
-		// In text mode we only have a 32 KiB window to operate on
+		// In text mode we only have a 32 KB window to operate on
 		usable_vmem_bytes = 32 * 1024;
 		screen_height = CurMode->theight;
 		bytes_per_offset = 4;   // 2 characters + 2 attributes

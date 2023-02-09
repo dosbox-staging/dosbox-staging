@@ -68,8 +68,7 @@ jobs:
         shell: pwsh
         run: |
           cd vs
-          # TODO: get unit tests working in Debug-mode; for now use release flags (better than nothing)
-          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
 
       - name:  Build
         shell: pwsh

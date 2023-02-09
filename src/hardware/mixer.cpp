@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -190,6 +190,8 @@ struct mixer_t {
 	std::atomic<int> sample_rate = 0; // sample rate negotiated with SDL
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
+	uint16_t prebuffer_ms = 25; // user-adjustable in conf
+
 	SDL_AudioDeviceID sdldevice = 0;
 
 	MixerState state = MixerState::Uninitialized; // use MIXER_SetState() to change
@@ -209,9 +211,19 @@ static struct mixer_t mixer = {};
 
 alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
 
+uint16_t MIXER_GetPreBufferMs()
+{
+	assert(mixer.prebuffer_ms > 0);
+	assert(mixer.prebuffer_ms <= max_prebuffer_ms);
+
+	return mixer.prebuffer_ms;
+}
+
 int MIXER_GetSampleRate()
 {
-	return mixer.sample_rate.load();
+	const auto sample_rate_hz = mixer.sample_rate.load();
+	assert(sample_rate_hz > 0);
+	return sample_rate_hz;
 }
 
 static void MIXER_LockAudioDevice()
@@ -1393,19 +1405,19 @@ void MixerChannel::ConvertSamples(const Type *data, const uint16_t frames,
 			        data, pos);
 		}
 
+		AudioFrame frame_with_gain = {
+		        prev_frame[mapped_channel_left] * combined_volume_scalar.left,
+		        (stereo ? prev_frame[mapped_channel_right]
+		                : prev_frame[mapped_channel_left]) *
+		                combined_volume_scalar.right};
+
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
-		envelope.Process(stereo, prev_frame);
-
-		const auto left = prev_frame[mapped_channel_left] *
-		                  combined_volume_scalar.left;
-		const auto right = (stereo ? prev_frame[mapped_channel_right]
-		                           : prev_frame[mapped_channel_left]) *
-		                   combined_volume_scalar.right;
+		envelope.Process(stereo, frame_with_gain);
 
 		out_frame = {0.0f, 0.0f};
-		out_frame[mapped_output_left] += left;
-		out_frame[mapped_output_right] += right;
+		out_frame[mapped_output_left] += frame_with_gain.left;
+		out_frame[mapped_output_right] += frame_with_gain.right;
 
 		out.emplace_back(out_frame[0]);
 		out.emplace_back(out_frame[1]);
@@ -2380,7 +2392,6 @@ private:
 		        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
 		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
 		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]\n"
-		        "\n"
 		        "Notes:\n"
 		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
 		        "  You may change the settings of more than one channel in a single command.\n"
@@ -2390,7 +2401,7 @@ private:
 		        "\n"
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 
 		MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
 		        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
@@ -2690,10 +2701,10 @@ void MIXER_Init(Section *sec)
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
-	const auto prebuffer_ms = static_cast<uint16_t>(
-	        clamp(requested_prebuffer_ms, 0, max_prebuffer_ms));
+	mixer.prebuffer_ms = check_cast<uint16_t>(
+	        clamp(requested_prebuffer_ms, 1, max_prebuffer_ms));
 
-	const auto prebuffer_frames = (mixer.sample_rate * prebuffer_ms) / 1000;
+	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
 
 	mixer.pos               = 0;
 	mixer.frames_done       = 0;
@@ -2780,7 +2791,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 #else
 	// Non-Windows platforms tolerate slightly lower latency
 	constexpr int default_blocksize = 512;
-	constexpr int default_prebuffer_ms = 20;
+	constexpr int16_t default_prebuffer_ms = 20;
 	constexpr bool default_allow_negotiate = true;
 #endif
 
@@ -2790,14 +2801,16 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 
 	auto bool_prop = sec_prop.Add_bool("nosound", always, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
+	bool_prop->Set_help(
+	        "Enable silent mode (disabled by default).\n"
+	        "Sound is still fullhy emulated in silent mode, but DOSBox outputs silence.");
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
 	const char *rates[] = {
 	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", 0};
 	int_prop->Set_values(rates);
-	int_prop->Set_help("Mixer sample rate.");
+	int_prop->Set_help("Mixer sample rate (48000 by default).");
 
 	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", 0};
 
@@ -2812,9 +2825,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "How many milliseconds of sound to render on top of the blocksize; larger values\n"
 	        "might help with sound stuttering but sound will also be more lagged.");
 
-	bool_prop = sec_prop.Add_bool("negotiate",
-	                              only_at_start,
-	                              default_allow_negotiate);
+	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
 	bool_prop->Set_help("Let the system audio driver negotiate (possibly) better rate and blocksize\n"
 	                    "settings.");
 
@@ -2833,7 +2844,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed\n"
 	        "               (off) and 100 full crossfeed (effectively turning stereo content\n"
 	        "               into mono).\n"
-	        "Note: You can set per-channel crossfeed via mixer commands.");
+	        "Notes: You can set per-channel crossfeed via mixer commands.");
 
 	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
 	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
@@ -2851,7 +2862,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
+	        "Notes: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
 	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
@@ -2860,11 +2871,11 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
-	        "  light:   A light chorus effect (especially suited for\n"
-	        "           synth music that features lots of white noise.)\n"
+	        "  light:   A light chorus effect (especially suited for synth music that\n"
+	        "           features lots of white noise.)\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
+	        "Notes: You can fine-tune per-channel chorus levels via mixer commands.");
 	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");

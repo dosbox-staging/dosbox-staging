@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -275,12 +275,7 @@ MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 			}
 		}
 		if (!is_state_ansi && (current_column == previous_column) &&
-#if (CHAR_MIN == 0) // 'char' is unsigned
-		    (code >= ' ') &&
-#else // 'char' is signed
-		    (code >= ' ' || code < 0) &&
-#endif
-		    (code != code_del)) {
+		    is_extended_printable_ascii(code)) {
 			// Alphanumeric character outside of ANSI sequence
 			// always changes the current column - if not, the
 			// output must have been redirected

@@ -47,13 +47,13 @@ const CombinedWaveformConfig config[2][5] =
     { /* kevtris chip G (6581 R2) */
         {0.862147212f, 0.f,          10.8962431f,    2.50848103f }, // TS  error  1941 (327/28672)
         {0.932746708f, 2.07508397f,   1.03668225f,   1.14876997f }, // PT  error  5992 (126/32768)
-        {0.785892785f, 1.68656933f,   0.913057923f,  1.09173143f }, // PS  error  3795 (575/28672)
+        {0.860927045f, 2.43506575f,   0.908603609f,  1.07907593f }, // PS  error  3693 (521/28672)
         {0.741343081f, 0.0452554375f, 1.1439606f,    1.05711341f }, // PTS error   338 ( 29/28672)
         {0.96f,        2.5f,          1.1f,          1.2f        }, // NP  guessed
     },
     { /* kevtris chip V (8580 R5) */
         {0.715788841f, 0.f,           1.32999945f,   2.2172699f  }, // TS  error   928 (135/32768)
-        {0.93500334f,  1.05977178f,   1.08629429f,   1.43518543f }, // PT  error  9113 (198/32768)
+        {0.93500334f,  1.05977178f,   1.08629429f,   1.43518543f }, // PT  error  7991 (212/32768)
         {0.920648575f, 0.943601072f,  1.13034654f,   1.41881108f }, // PS  error 12566 (394/32768)
         {0.90921098f,  0.979807794f,  0.942194462f,  1.40958893f }, // PTS error  2092 ( 60/32768)
         {0.95f,        1.15f,         1.f,           1.45f       }, // NP  guessed
@@ -94,11 +94,11 @@ static unsigned int triXor(unsigned int val)
  */
 short calculatePulldown(float distancetable[], float pulsestrength, float threshold, unsigned int accumulator)
 {
-    float bit[12];
+    unsigned char bit[12];
 
     for (unsigned int i = 0; i < 12; i++)
     {
-        bit[i] = (accumulator & (1u << i)) != 0 ? 1.f : 0.f;
+        bit[i] = (accumulator & (1u << i)) != 0 ? 1 : 0;
     }
 
     float pulldown[12];
@@ -113,7 +113,7 @@ short calculatePulldown(float distancetable[], float pulsestrength, float thresh
             if (cb == sb)
                 continue;
             const float weight = distancetable[sb - cb + 12];
-            avg += (1.f - bit[cb]) * weight;
+            avg += static_cast<float>(1 - bit[cb]) * weight;
             n += weight;
         }
 
@@ -122,18 +122,13 @@ short calculatePulldown(float distancetable[], float pulsestrength, float thresh
         pulldown[sb] = avg / n;
     }
 
-    for (int i = 0; i < 12; i++)
-    {
-        if (bit[i] != 0.f)
-            bit[i] = 1.f - pulldown[i];
-    }
-
     // Get the predicted value
     short value = 0;
 
     for (unsigned int i = 0; i < 12; i++)
     {
-        if (bit[i] > threshold)
+        const float bitValue = bit[i] != 0 ? 1.f - pulldown[i] : 0.f;
+        if (bitValue > threshold)
         {
             value |= 1u << i;
         }

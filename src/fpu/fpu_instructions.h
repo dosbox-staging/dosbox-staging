@@ -126,9 +126,10 @@ static double FROUND(double in){
 
 static Real64 FPU_FLD80(PhysPt addr) {
 	struct {
-		int16_t begin;
-		FPU_Reg eind;
-	} test;
+		int16_t begin = 0;
+		FPU_Reg eind  = {};
+	} test = {};
+
 	test.eind.l.lower = mem_readd(addr);
 	test.eind.l.upper = mem_readd(addr+4);
 	test.begin = mem_readw(addr+8);
@@ -154,12 +155,13 @@ static Real64 FPU_FLD80(PhysPt addr) {
 
 static void FPU_ST80(PhysPt addr,Bitu reg) {
 	struct {
-		int16_t begin;
-		FPU_Reg eind;
-	} test;
-	int64_t sign80 = (fpu.regs[reg].ll&LONGTYPE(0x8000000000000000))?1:0;
-	int64_t exp80 =  fpu.regs[reg].ll&LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52);
+		int16_t begin = 0;
+		FPU_Reg eind  = {};
+	} test = {};
+
+	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
+	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
+	int64_t exp80final  = (exp80 >> 52);
 	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
 	int64_t mant80final = (mant80 << 11);
 	if(fpu.regs[reg].d != 0){ //Zero is a special case
@@ -599,13 +601,14 @@ static void FPU_FLD1(void){
 }
 
 static void FPU_FLDL2T(void){
+	constexpr auto L2T = M_LN10 / M_LN2;
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = L2T;
 }
 
 static void FPU_FLDL2E(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = L2E;
+	fpu.regs[TOP].d = M_LOG2E;
 }
 
 static void FPU_FLDPI(void){
@@ -614,13 +617,14 @@ static void FPU_FLDPI(void){
 }
 
 static void FPU_FLDLG2(void){
+	constexpr auto LG2 = M_LOG10E / M_LOG2E;
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = LG2;
 }
 
 static void FPU_FLDLN2(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = LN2;
+	fpu.regs[TOP].d = M_LN2;
 }
 
 static void FPU_FLDZ(void){

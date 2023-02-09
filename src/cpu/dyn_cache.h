@@ -917,8 +917,11 @@ static void cache_init(bool enable) {
 		cache.used_pages=nullptr;
 		// setup the code pages
 		for (int i=0;i<CACHE_PAGES;i++) {
-			CodePageHandler *newpage = new CodePageHandler();
-			newpage->next=cache.free_pages;
+			auto newpage = new (std::nothrow) CodePageHandler();
+			if (GCC_UNLIKELY(!newpage)) {
+				E_Exit("DYN_CACHE: Failed to allocate code-page handler");
+			}
+			newpage->next = cache.free_pages;
 			cache.free_pages=newpage;
 		}
 	}

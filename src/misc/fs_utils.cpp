@@ -20,11 +20,13 @@
 
 #include "fs_utils.h"
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <fstream>
 
 #include "checks.h"
+#include "dos_system.h"
 #include "std_filesystem.h"
 
 CHECK_NARROWING();
@@ -41,6 +43,28 @@ bool is_directory(const std::string& candidate)
 	}
 	// If it's not a symlink then we can check it directly ..
 	return std_fs::is_directory(p, ec);
+}
+
+bool is_hidden_by_host(const std_fs::path& pathname)
+{
+	assert(!pathname.empty());
+	const auto filename = pathname.filename().string();
+
+	// Filenames that don't start with dot or are the two directory entries
+	// are not hidden by the host
+	if (filename.find(".") != 0 || filename == "." || filename == "..") {
+		return false;
+	}
+
+	assert(filename[0] == '.');
+	const auto extension = pathname.extension().string();
+
+	// Consider the file hidden by the host so long as the filename starts
+	// with a dot *and* has an extension longer that DOS's three characters
+	// or uses any lower-case characters.
+
+	return extension.length() > DOS_EXTLENGTH ||
+	       std::any_of(filename.begin(), filename.end(), islower);
 }
 
 // return the lines from the given text file or an empty optional

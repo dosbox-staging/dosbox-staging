@@ -27,18 +27,44 @@
 #include "fpu.h"
 #include "cpu.h"
 
-FPU_rec fpu;
+FPU_rec fpu = {};
 
 void FPU_FLDCW(PhysPt addr){
 	uint16_t temp = mem_readw(addr);
 	FPU_SetCW(temp);
 }
 
-uint16_t FPU_GetTag(void){
-	uint16_t tag=0;
-	for(Bitu i=0;i<8;i++)
-		tag |= ( (fpu.tags[i]&3) <<(2*i));
+uint16_t FPU_GetTag()
+{
+	uint16_t tag = 0;
+	for (Bitu i = 0; i < 8; i++) {
+		tag |= ((fpu.tags[i] & 3) << (2 * i));
+	}
 	return tag;
+}
+
+void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10])
+{
+	for (uint8_t i = 0; i < 8; ++i) {
+		auto& norm_p_reg        = fpu.p_regs[STV(i)];
+		const auto dyn_reg_addr = dyn_regs[i];
+
+		norm_p_reg.m1 = read_unaligned_uint32_at(dyn_reg_addr, 0);
+		norm_p_reg.m2 = read_unaligned_uint32_at(dyn_reg_addr, 1);
+		norm_p_reg.m3 = read_unaligned_uint16_at(dyn_reg_addr, 4);
+	}
+}
+
+void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
+{
+	for (uint8_t i = 0; i < 8; ++i) {
+		auto dyn_reg_addr      = dyn_regs[i];
+		const auto& norm_p_reg = fpu.p_regs[STV(i)];
+
+		write_unaligned_uint32_at(dyn_reg_addr, 0, norm_p_reg.m1);
+		write_unaligned_uint32_at(dyn_reg_addr, 1, norm_p_reg.m2);
+		write_unaligned_uint16_at(dyn_reg_addr, 4, norm_p_reg.m3);
+	}
 }
 
 #if C_FPU_X86

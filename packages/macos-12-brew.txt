@@ -3,6 +3,7 @@ cmake
 curl
 fluid-synth
 git
+gnu-tar
 libpng
 libslirp
 meson
@@ -17,3 +18,4 @@ sdl2_image
 sdl2_net
 speexdsp
 wget
+

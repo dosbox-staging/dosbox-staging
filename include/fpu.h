@@ -45,92 +45,106 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
-
-typedef union {
-    double d;
+union FPU_Reg {
+	double d = 0.0;
+	struct {
 #ifndef WORDS_BIGENDIAN
-    struct {
-        uint32_t lower;
-        int32_t upper;
-    } l;
+		uint32_t lower;
+		int32_t upper;
 #else
-    struct {
-        int32_t upper;
-        uint32_t lower;
-    } l;
+		int32_t upper;
+		uint32_t lower;
 #endif
-    int64_t ll;
-} FPU_Reg;
+	} l;
+	int64_t ll;
+};
 
-typedef struct {
-    uint32_t m1;
-    uint32_t m2;
-    uint16_t m3;
+struct FPU_P_Reg {
+	uint32_t m1 = 0;
+	uint32_t m2 = 0;
+	uint16_t m3 = 0;
 
-    uint16_t d1;
-    uint32_t d2;
-} FPU_P_Reg;
+	uint16_t d1 = 0;
+	uint32_t d2 = 0;
+};
 
-enum FPU_Tag {
+enum FPU_Tag : uint8_t {
 	TAG_Valid = 0,
 	TAG_Zero  = 1,
 	TAG_Weird = 2,
 	TAG_Empty = 3
 };
 
-enum FPU_Round {
-	ROUND_Nearest = 0,		
+enum FPU_Round : uint8_t {
+	ROUND_Nearest = 0,
 	ROUND_Down    = 1,
-	ROUND_Up      = 2,	
+	ROUND_Up      = 2,
 	ROUND_Chop    = 3
 };
 
-typedef struct FPU_rec {
-	FPU_Reg		regs[9];
-	FPU_P_Reg	p_regs[9];
-	FPU_Tag		tags[9];
-	uint16_t		cw,cw_mask_all;
-	uint16_t		sw;
-	uint32_t		top;
-	FPU_Round	round;
-} FPU_rec;
-
-#define L2E		1.4426950408889634
-#define L2T		3.3219280948873623
-#define LN2		0.69314718055994531
-#define LG2		0.3010299956639812
-
+struct FPU_rec {
+	FPU_Reg regs[9]      = {};
+	FPU_P_Reg p_regs[9]  = {};
+	FPU_Tag tags[9]      = {};
+	uint16_t cw          = 0;
+	uint16_t cw_mask_all = 0;
+	uint16_t sw          = 0;
+	uint32_t top         = 0;
+	FPU_Round round      = {};
+};
 
 extern FPU_rec fpu;
 
 #define TOP fpu.top
 #define STV(i)  ( (fpu.top+ (i) ) & 7 )
 
-
-uint16_t FPU_GetTag(void);
+uint16_t FPU_GetTag();
 void FPU_FLDCW(PhysPt addr);
 
-static inline void FPU_SetTag(uint16_t tag){
-	for(Bitu i=0;i<8;i++)
-		fpu.tags[i] = static_cast<FPU_Tag>((tag >>(2*i))&3);
+static inline void FPU_SetTag(const uint16_t tag)
+{
+	for (uint8_t i = 0; i < 8; ++i) {
+		fpu.tags[i] = static_cast<FPU_Tag>((tag >> (2 * i)) & 3);
+	}
 }
 
-static inline void FPU_SetCW(Bitu word){
-	fpu.cw = (uint16_t)word;
-	fpu.cw_mask_all = (uint16_t)(word | 0x3f);
-	fpu.round = (FPU_Round)((word >> 10) & 3);
+static inline uint16_t FPU_GetCW()
+{
+	return fpu.cw;
 }
 
-
-static inline Bitu FPU_GET_TOP(void) {
-	return (fpu.sw & 0x3800)>>11;
+static inline void FPU_SetCW(const uint16_t word)
+{
+	fpu.cw          = word;
+	fpu.cw_mask_all = word | 0x3f;
+	fpu.round       = static_cast<FPU_Round>((word >> 10) & 3);
 }
 
-static inline void FPU_SET_TOP(Bitu val){
-	fpu.sw &= ~0x3800;
-	fpu.sw |= (val&7)<<11;
+static inline uint16_t FPU_GetSW()
+{
+	return fpu.sw;
 }
 
+static inline void FPU_SetSW(const uint16_t word)
+{
+	fpu.sw = word;
+}
+
+constexpr uint16_t fpu_top_register_bits = 0x3800;
+
+static inline uint8_t FPU_GET_TOP()
+{
+	return static_cast<uint8_t>((fpu.sw & fpu_top_register_bits) >> 11);
+}
+
+static inline void FPU_SET_TOP(const uint32_t val)
+{
+	fpu.sw &= ~fpu_top_register_bits;
+	fpu.sw |= static_cast<uint16_t>((val & 7) << 11);
+}
+
+void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
+void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
 static inline void FPU_SET_C0(Bitu C){
 	fpu.sw &= ~0x0100;

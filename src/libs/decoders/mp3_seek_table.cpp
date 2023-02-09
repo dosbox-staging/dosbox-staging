@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2018-2021  kcgen <kcgen@users.noreply.github.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -165,7 +165,7 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     auto hash_state = XXH_OK;
     vector<char> buffer(1024, 0);
 
-    // Seek prior to the last 32 KiB (or less) in the file, which is what we'll hash
+    // Seek prior to the last 32 KB (or less) in the file, which is what we'll hash
     const auto bytes_to_hash = std::min(static_cast<size_t>(32768u), stream_size);
     const auto pos_to_hash_from = static_cast<Sint64>(stream_size - bytes_to_hash);
     SDL_RWseek(context, pos_to_hash_from, RW_SEEK_SET);

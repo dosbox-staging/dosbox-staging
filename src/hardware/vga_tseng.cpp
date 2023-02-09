@@ -814,7 +814,7 @@ void SVGA_Setup_TsengET3K(void) {
 	IO_RegisterReadHandler(0x3cd, read_p3cd_et3k, io_width_t::byte);
 	IO_RegisterWriteHandler(0x3cd, write_p3cd_et3k, io_width_t::byte);
 
-	// The ET3000AX/BX had a fixed 512 KiB of DRAM
+	// The ET3000AX/BX had a fixed 512 KB of DRAM
 	vga.vmemsize = 512*1024;
 
 	const auto num_modes = ModeList_VGA_Tseng.size();

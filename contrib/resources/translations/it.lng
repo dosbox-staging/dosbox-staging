@@ -46,7 +46,7 @@ Imposta le dimensioni della finestra da utilizzare durante l'esecuzione
 in modalità finestra:
   default:   Seleziona l'opzione migliore in base al tuo sistema e ad altre
              impostazioni.
-  small, medium, o large (o s, m, l):
+  small, medium, large (s, m, l):
              Ridimensiona la finestra in base alla risoluzione del desktop.
   <custom>:  Ridimensiona la finestra in base alle dimensioni indicate
              nel formato WxH. Per esempio: 1024x768.
@@ -70,7 +70,7 @@ finestra:
              0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
-Controlla se visualizzare le decorazioni delle finestre in modalità finestra.
+Abilita le decorazioni delle finestre in modalità finestra.
 .
 :CONFIG_TRANSPARENCY
 Imposta la trasparenza della schermata di DOSBox Staging.
@@ -96,11 +96,10 @@ prestazioni.
 .
 :CONFIG_VSYNC_SKIP
 Numero di microsecondi per consentire il blocco del rendering prima di saltare
-al fotogramma successivo. Impostando un valore di 0, disabiliterà questa
-funzione.
+al fotogramma successivo. Impostando 0, disabiliterà questa funzione.
 .
 :CONFIG_PRESENTATION_MODE
-Facoltativamente, seleziona la modalità di presentazione dei fotogrammi:
+Seleziona la modalità di presentazione dei fotogrammi:
   auto:  Determina la durata e taglia i fotogrammi in modo intelligente per
          prevenire lo stallo dell'emulazione, in base alla frequenza dei
          fotogrammi host e DOS.
@@ -111,8 +110,8 @@ Facoltativamente, seleziona la modalità di presentazione dei fotogrammi:
 Sistema video da utilizzare per l'output.
 .
 :CONFIG_TEXTURE_RENDERER
-Scegli un driver di rendering da utilizzare nella modalità di uscita texture.
-Usa texture_renderer=auto per una scelta automatica.
+Driver di rendering da utilizzare nella modalità di uscita 'texture'.
+Usa 'texture_renderer = auto' per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
 Spostato nella sezione [mouse].
@@ -128,10 +127,8 @@ Mantiene la console aperta se si verifica un errore.
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
-in primo piano o inattiva. 
-   auto:  Lascia che sia il sistema operativo host a gestire la priorità
-          (valida per entrambi).
-Predefinito: 'auto auto'
+in primo piano o inattiva (predefinito 'auto auto').
+'auto' lascia che sia il sistema operativo host a gestire la priorità.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
 Disattiva il suono quando la finestra è inattiva.
@@ -144,32 +141,34 @@ File utilizzato per caricare/salvare le corrispondenze tasto/evento.
 Sono inclusi dei file di mappatura preconfigurati nella directory
 'resources/mapperfiles'. Possono essere caricati per nome, ad esempio: 
 mapperfile = xbox/xenon2.map
-Nota: il flag della riga di comando -resetmapper elimina solo il file di
+Note: il flag della riga di comando -resetmapper elimina solo il file di
       mappatura predefinito.
 .
 :CONFIG_SCREENSAVER
 Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
-d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca gli screensaver
+d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca il salva schermo
 del sistema operativo mentre l'emulatore è in esecuzione).
 .
 :CONFIG_LANGUAGE
-Seleziona una lingua da usare: de, en, es, fr, it, nl, pl e ru.
+Seleziona la lingua da utilizzare: de, en, es, fr, it, nl, pl e ru
+(predefinito non impostato).
 Note: Questa impostazione, se utilizzata, sovrascriverà la variabile 
       d'ambiente 'LANG'. La directory 'resources/translations', inclusa nel
       pacchetto insieme all'eseguibile, contiene questi file.
       Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
 :CONFIG_MACHINE
-Tipo di macchina che DOSBox sta cercando di emulare.
+Tipo di macchina che DOSBox sta cercando di emulare (predefinito 'svga_s3').
 .
 :CONFIG_CAPTURES
-Directory in cui vengono salvati file come suoni WAVE, musica MIDI e screenshot
+Directory in cui vengono salvate le acquisizioni di audio, video, MIDI
+e instantanee dello schermo (predefinito 'capture').
 .
 :CONFIG_MEMSIZE
-Quantità di memoria a disposizione di DOSBox, in megabyte.
+Quantità di memoria della macchina emulata in MB (predefinito 16).
 Si consiglia di non modificare questo valore per evitare problemi con alcuni
-giochi, anche se potrebbe essere necessario aumentarlo per farne funzionare
-alcuni. Di solito non vi è nessun guadagno in velocità alzando questo valore.
+giochi, anche se altri potrebbero richiedere un valore più alto.
+Di solito non vi è nessun guadagno in velocità aumentando questo valore.
 .
 :CONFIG_MCB_FAULT_STRATEGY
 Come gestire i blocchi della catena di memoria software corrotti:
@@ -177,16 +176,18 @@ Come gestire i blocchi della catena di memoria software corrotti:
   repair:  Ripara (e segnala) gli errori con blocchi di catena adiacenti.
   report:  Segnala solo gli errori.
   allow:   Gli errori non vengono segnalati (comportamento hardware).
-L'impostazione predefinita (deny) è consigliata a meno che un gioco non abbia
-errori di corruzione MCB.
+L'impostazione predefinita ('deny') è consigliata a meno che un gioco non
+abbia errori di corruzione MCB.
 .
 :CONFIG_VMEMSIZE
-Memoria video in MiB (1-8) o KiB (da 256 a 8192). 
-'auto' usa il valore predefinito in base all'adattatore video scelto.
+Memoria video in MB (1-8) o KB (da 256 a 8192).
+'auto' usa il valore predefinito in base all'adattatore video scelto
+(predefinito 'auto').
 .
 :CONFIG_DOS_RATE
 Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
-  default:   La frequenza è determinata dalla modalità video DOS (consigliato).
+  default:   La frequenza è determinata dalla modalità video DOS
+             (consigliato; predefinito).
   host:      Abbina la frequenza DOS alla frequenza host (vedi impostazione
              'host_rate').
   <valore>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
@@ -196,35 +197,36 @@ provare ed impostare in base al gioco.
 .
 :CONFIG_VESA_MODES
 Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
-  compatible   Selezione su misura che massimizza la compatibilità con i giochi
-               È consigliato insieme a 4 o 8 MB di memoria video.
-  halfline     Supporta la modalità VESA 2.0 a mezza linea a bassa risoluzione
+  compatible:  Selezione su misura che massimizza la compatibilità con i giochi
+               È consigliato insieme a 4 o 8 MB di memoria video (predefinito).
+  halfline:    Supporta la modalità VESA 2.0 a mezza linea a bassa risoluzione
                utilizzata da Extreme Assault. Utilizzare solo se necessario,
                in quanto non è compatibile con S3.
-  all          Offre tutte le modalità per una data dimensione della memoria
+  all:         Offre tutte le modalità per una data dimensione della memoria
                video, tuttavia alcuni giochi potrebbero non utilizzarle
                correttamente (sfarfallio) o potrebbe essere necessaria più
                memoria di sistema (mem = ).
 .
 :CONFIG_SPEED_MODS
-Consenti modifiche note per migliorare le prestazioni. Attualmente nessun gioco
-è noto per esserne influenzato. Se trovi un gioco che fallisce quando questa
-impostazione è impostata su 'true', segnala il bug nel repository del progetto,
-in modo tale da poterlo elencare qui.
+Consenti modifiche note per migliorare le prestazioni (predefinito abilitato).
+Attualmente, nessun gioco è noto per esserne influenzato negativamente.
+Se trovi un gioco che fallisce quando questa impostazione è abilitata, segnala
+il bug nel repository del progetto, in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
-join      : le combina in un'unica grande sezione (comportamento legacy).
-overwrite : usa l'ultima incontrata, come le altre impostazioni di
-            configurazione.
+  join:       Le combina in un'unica grande sezione 
+              (comportamento legacy; predefinito).
+  overwrite:  Utilizza l'ultima incontrata, come per le altre impostazioni di
+              configurazione.
 .
 :CONFIG_AUTOMOUNT
 Monta le directory 'drives/[c]' come unità all'avvio, dove [c] è una lettera di
-unità in formato minuscolo da 'a' a 'y'. La cartella 'drives' può essere fornita
-in relazione alla directory corrente o tramite le risorse integrate nel
-pacchetto di rilascio.
-Possono essere fornite le impostazioni di montaggio dell'unità utilizzando un
-file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
+unità in formato minuscolo da 'a' a 'y' (predefinito abilitato).
+La cartella 'drives' può essere fornita in relazione alla directory corrente o
+tramite le risorse integrate.
+Inoltre possono essere fornite le impostazioni di montaggio utilizzando
+un file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
   [drive]
   type    = dir, overlay, floppy, o cdrom
   label   = etichetta_personalizzata
@@ -233,13 +235,14 @@ file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
   verbose = true o false
 .
 :CONFIG_STARTUP_VERBOSITY
-Determina il livello di verbosità prima di visualizzare il programma:
+Determina il livello di verbosità prima di visualizzare il programma
+(predefinito 'auto'):
 Verbosità   | Schermata di benvenuto | Registro di DOSBox
 high        |           sì           |         sì
 low         |           no           |         sì
 quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
-            |  (es. dosbox run.bat), altrimenti sarà impostato su 'high'
+               (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
@@ -247,19 +250,20 @@ utilizzando l'impostazione '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
 Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
-di aspetto 4:3, corrispondente a quello dei monitor a definizione standard
-originali, per i quali sono stati progettati la maggior parte dei giochi DOS.
+d'aspetto 4:3, corrispondente a quello dei monitor originali per i quali sono
+stati progettati la maggior parte dei giochi DOS (predefinito abilitato).
 Questa impostazione ha effetto solo sulle modalità video che utilizzano pixel
 non quadrati, come 320x200 o 640x400; Le modalità video a pixel quadrati,
 come 640x480 e 800x600, verranno visualizzate così come sono.
 .
 :CONFIG_MONOCHROME_PALETTE
-Seleziona la tavolozza predefinita per la visualizzazione monocromatica.
-Funziona solo quando si emula hercules o cga_mono.
+Seleziona la tavolozza predefinita per la visualizzazione monocromatica
+(predefinito 'white').
+Funziona solo quando si emula 'hercules' o 'cga_mono'.
 È possibile scorrere i colori disponibili usando il tasto F11.
 .
 :CONFIG_CGA_COLORS
-Imposta l'interpretazione dei colori CGA RGBI. Influisce su tutti i tipi di
+Imposta l'interpretazione dei colori CGA RGBI. Interessa tutti i tipi di
 macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy [BL]:    Emulazione di un monitor Tandy con livello del marrone
@@ -274,24 +278,24 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
                  come secondo parametro opzionale (da 0 a 100; predefinito 100)
                  Es. ibm5153 60
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra
-                 (fare riferimento al manuale per ulteriori dettagli).
+                 Tavolozze utilizzate dai port Amiga dei giochi AGI Sierra.
   agi-amigaish:  Mix di colori EGA e Amiga usati dall'interprete AGI Sarien.
   scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
   colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
   colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
   dga16:         Versione moderna della tavolozza CGA, con contrasto ridotto.
-È possibile impostare colori personalizzati specificando 16 valori di colore
-separati da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
+È possibile impostare colori personalizzati specificando 16 valori separati
+da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
 #ff0000 per rosso), o triplette RGB decimali (es. (255, 0, 255) per magenta).
 I 16 colori sono ordinati come segue:
-nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro, grigio-scuro,
-azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro, magenta-chiaro, giallo,
-e bianco.
+  nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro,
+  grigio-scuro, azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro,
+  magenta-chiaro, giallo, e bianco.
+
 I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre
 sono rispettivamente:
-#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555
-#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 e #ffffff.
+  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff.
 .
 :CONFIG_SCALER
 Gli scaler software sono deprecati a favore delle opzioni con accelerazione
@@ -308,14 +312,15 @@ assoluto che fa riferimento ad un file.
 In tutti i casi, l'estensione '.glsl' dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
-Abilita la modalità composita all'avvio. 'auto' lascia decidere al programma.
-Nota: Regola le impostazioni di seguito (es: tonalità) usando gli appositi
-      tasti di scelta rapida.
-      Quindi leggi le nuove impostazioni dalla tua console e inseriscile qui.
+Abilita la modalità composita all'avvio (predefinito 'auto'). 
+'auto' lascia decidere al programma.
+Note: Regola le impostazioni di seguito (es. tonalità) usando gli appositi
+      tasti di scelta rapida, quindi leggi le nuove impostazioni dalla
+      tua console e inseriscile qui.
 .
 :CONFIG_ERA
-Era della tecnologia composita. Quando impostato su 'auto', PCjr usa 'new' e
-CGA/Tandy usa 'old'.
+Era della tecnologia composita (predefinito 'auto').
+Quando impostato su 'auto', PCjr usa 'new' e CGA/Tandy usa 'old'.
 .
 :CONFIG_HUE
 Aspetto della tavolozza RGB. Ad esempio, regola finché il cielo non diventa blu
@@ -333,114 +338,114 @@ Luminosità dell'immagine, da scura a chiara.
 Convergenza degli elementi del subpixel, da sfocati a nitidi (solo CGA e Tandy)
 .
 :CONFIG_CORE
-Core CPU usato nell'emulazione. 'auto' diventerà 'dynamic' quando possibile e
-appropriato.
+Core della CPU usato nell'emulazione (predefinito 'auto'). 
+'auto' passerà a 'dynamic' se disponibile e appropriato.
 .
 :CONFIG_CPUTYPE
-Tipo di CPU usata nell'emulazione. 'auto' è la scelta più veloce.
+Tipo di CPU usata nell'emulazione (predefinito 'auto').
+'auto' è la scelta più veloce.
 .
 :CONFIG_CYCLES
-Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo.
-Un valore troppo alto produrrà perdite nell'audio e ritardi.
-I cicli possono essere impostati in 3 modi:
-  'auto'          prova a indovinare le necessità del gioco.
-                  Di solito funziona, ma può fallire con alcuni giochi.
-  'fixed #numero' imposta un numero fisso di cicli. Questo è ciò di cui hai
-                  bisogno di solito se 'auto' fallisce (Esempio: fixed 4000).
-  'max'           allocherà tanti cicli quanti il tuo computer è in grado di
-                  gestire.
+Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
+(predefinito 'auto').
+Un valore troppo alto può causare perdite nell'audio e ritardi.
+Impostazioni possibili:
+  auto:            Prova a indovinare le necessità del gioco. 
+                   Di solito funziona, ma può fallire con alcuni giochi.
+  fixed <numero>:  Imposta un numero fisso di cicli. Questo è ciò di cui hai
+                   bisogno di solito se 'auto' fallisce (es. 'fixed 4000').
+  max:             Allocherà tanti cicli quanti il tuo computer è in grado di
+                   gestire.
 .
 :CONFIG_CYCLEUP
-Numero di cicli di cui aumentare usando i tasti di scelta rapida per il
-controllo della velocità.
-Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
-scelta rapida.
+Numero di cicli di cui aumentare utilizzando i tasti di scelta rapida
+(predefinito 10).
 .
 :CONFIG_CYCLEDOWN
-Numero di cicli di cui diminuire usando i tasti di scelta rapida per il
-controllo della velocità.
+Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
+(predefinito 20).
 Un valore più basso di 100 indica una percentuale.
-Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
-scelta rapida.
 .
 :CONFIG_MOUSE_CAPTURE
-Scegli un metodo di controllo del mouse:
+Imposta la modalità di cattura dell mouse:
    onclick:      Cattura il mouse quando fai clic con qualsiasi pulsante
-                 all'interno della finestra.
-   onstart:      Cattura il mouse immediatamente all'avvio.
-   seamless:     Modalità mouse senza soluzione di continuità; È possibile
-                 catturarlo premendo il pulsante centrale del mouse o
-                 l'apposito tasto di scelta rapida. Questa modalità non
-                 funziona correttamente con tutti i giochi, Windows 3.1x può
-                 essere reso compatibile con un driver del mouse personalizzato
-   nomouse:      Nasconde il mouse e impedisce che vengano inviati segnali di
-                 input al gioco.
-Per gli schermi tattili, utilizzare il metodo di controllo 'seamless'.
+                 del mouse all'interno della finestra (predefinito).
+   onstart:      Cattura il mouse immediatamente all'avvio. Potrebbe non
+                 funzionare correttamente su alcuni sistemi operativi.
+   seamless:     Lascia che il mouse si muova liberamente tra la finestra
+                 di DOSBox e il resto del desktop; è possibile catturarlo con
+                 il pulsante centrale del mouse o l'apposito tasto di scelta
+                 rapida. Questa modalità non funziona correttamente con tutti
+                 i giochi. Windows 3.1x può essere reso compatibile con un
+                 driver del mouse personalizzato
+   nomouse:      Nasconde il mouse e impedisce che venga inviato l'input del
+                 mouse al gioco.
+Per gli schermi tattili, utilizzare la modalità 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-Se vero, il pulsante centrale rilascerà il mouse. Con il metodo di controllo
-'seamless', esso si occuperà anche di catturarlo.
+Se abilitato, il pulsante centrale rilascerà il mouse. Se è stata impostata
+la modalità 'seamless', esso si occuperà anche di catturarlo 
+(predefinito abilitato).
 .
 :CONFIG_MOUSE_SENSITIVITY
-Sensibilità del mouse predefinita. 100 è il valore base, 150 equivale al 150%
-di sensibilità, ecc.
-Valori negativi invertono la direzione del mouse, 0 lo disabilita.
-Il secondo parametro specifica la sensibilità verticale (ad es. 100,200).
+Sensibilità del mouse per gli assi orizzontale e verticale, in percentuale
+(predefinito 100,100).
+Valori negativi invertono gli assi, zero disabilita il mouse. 
+Fornendo un solo valore si imposta la sensibilità per entrambi gli assi.
 Questa impostazione può essere regolata durante l'esecuzione del programma
 (per ogni interfaccia del mouse) utilizzando lo strumento interno MOUSECTL.COM,
-disponibile sull'unità Z:.
+disponibile sull'unità Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Abilita questa impostazione per bypassare le impostazioni di sensibilità
-e accelerazione del mouse del tuo sistema operativo. Funziona in modalità
-schermo intero o quando il mouse viene catturato in modalità finestra.
+e accelerazione del mouse del tuo sistema operativo (predefinito abilitato).
+Funziona in modalità schermo intero o quando il mouse viene catturato
+in modalità finestra.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Abilita il driver del mouse DOS integrato.
-Note:
-   Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
-   Quando un sistema operativo guest viene avviato, il driver integrato viene
-   disabilitato automaticamente.
+Abilita il driver del mouse DOS integrato (predefinito abilitato).
+Note: Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
+      Quando un sistema operativo guest viene avviato, il driver integrato
+      viene disabilitato automaticamente.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
-l'interrupt. Può migliorare la giocabilità, specialmente nei giochi dal ritmo
-veloce (arcade, FPS, ecc.) poichè per alcuni incrementa efficacemente la
-frequenza di polling a 1000 Hz, senza aumentare il sovraccarico dell'interrupt.
-Potrebbe causare problemi di compatibilità. 
+l'interrupt (predefinito disabilitato). Può migliorare la giocabilità,
+specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poichè per alcuni
+incrementa efficacemente la frequenza di polling a 1000 Hz, senza aumentare il
+sovraccarico dell'interrupt. Potrebbe causare problemi di compatibilità.
 Elenco di giochi incompatibili noti:
-   - Ultima Underworld: The Stygian Abyss
-   - Ultima Underworld II: Labyrinth of Worlds
-Segnala un bug nel repository del progetto se trovi un altro gioco che ha
-problemi con questa impostazione abilitata, aggiorneremo questo elenco.
+  - Ultima Underworld: The Stygian Abyss
+  - Ultima Underworld II: Labyrinth of Worlds
+Segnalalo se trovi un altro gioco incompatibile in modo che possiamo aggiornare
+questo elenco.
 .
 :CONFIG_PS2_MOUSE_MODEL
 Modello mouse porta PS/2 AUX:
-   standard:       3 pulsanti, mouse PS/2 standard.
-   intellimouse:   3 pulsanti + rotellina, Microsoft IntelliMouse.
-Predefinito: intellimouse
+   standard:      3 pulsanti, mouse PS/2 standard.
+   intellimouse:  3 pulsanti + rotellina, Microsoft IntelliMouse (predefinito).
 .
 :CONFIG_COM_MOUSE_MODEL
 Modello mouse predefinito porta COM (seriale):
-   2button:        2 pulsanti, mouse Microsoft.
-   3button:        3 pulsanti, mouse Logitech,
-                   per lo più compatibile con mouse Microsoft.
-   wheel:          3 pulsanti + rotellina,
-                   per lo più compatibile con mouse Microsoft.
-   msm:            3 pulsanti, mouse Mouse Systems,
-                   NON COMPATIBILE con mouse Microsoft.
-   2button+msm:    Scelta automatica tra 2button e msm.
-   3button+msm:    Scelta automatica tra 3button e msm.
-   wheel+msm:      Scelta automatica tra wheel e msm.
-Predefinito: wheel+msm
-Note:
-   Vai alla sezione [serial] per abilitare/disabilitare i mouse su porta COM.
+   2button:      2 pulsanti, mouse Microsoft.
+   3button:      3 pulsanti, mouse Logitech;
+                 per lo più compatibile con mouse Microsoft.
+   wheel:        3 pulsanti + rotellina;
+                 per lo più compatibile con mouse Microsoft.
+   msm:          3 pulsanti, mouse Mouse Systems;
+                 NON compatibile con mouse Microsoft.
+   2button+msm:  Scelta automatica tra '2button' e 'msm'.
+   3button+msm:  Scelta automatica tra '3button' e 'msm'.
+   wheel+msm:    Scelta automatica tra 'wheel' e 'msm' (predefinito).
+Note: Abilita i mouse della porta COM nella sezione [serial].
 .
 :CONFIG_NOSOUND
-Attiva la modalità silenziosa, ma il suono viene comunque emulato.
+Abilita la modalità silenziosa (predefinito disabilitato).
+In questa modalità, il suono è ancora completamente emulato ma non viene
+riprodotto da DOSBox.
 .
 :CONFIG_RATE
-Frequenza di campionamento del mixer.
+Frequenza di campionamento del mixer (predefinito 48000).
 .
 :CONFIG_BLOCKSIZE
 Dimensione blocchi mixer; Valori più grandi potrebbero ridurre l'audio a
@@ -462,15 +467,15 @@ il ritaglio (clipping) dell'uscita audio:
   on:   Abilita il compressore (predefinito).
 .
 :CONFIG_CROSSFEED
-Imposta il crossfeed a livello globale su tutti i canali stereo per l'ascolto
-in cuffia:
-  off:         Nessun crossfeed (predefinito).
-  on:          Abilita il crossfeed (ad una intensità di 40).
-  <intensità>: Imposta l'intensità del crossfeed da 0 a 100, dove 0 significa
-               nessun crossfeed (off) e 100 crossfeed completo 
-               (trasformando di fatto il contenuto stereo in mono).
-Nota: È possibile regolare l'intensità del crossfeed per ogni canale tramite i
-      comandi del mixer.
+Imposta l'alimentazione incrociata a livello globale su tutti i canali stereo
+per l'ascolto in cuffia:
+  off:          Alimentazione incrociata disabilitata (predefinito).
+  on:           Abilita alimentazione incrociata (intensità 40).
+  <intensità>:  Imposta l'intensità dell'alimentazione incrociata da 0 a 100,
+                dove 0 significa spento (off) e 100 trasforma di fatto
+                il contenuto stereo in mono.
+Note: È possibile impostare l'alimentazione incrociata per ogni canale tramite
+      i comandi del mixer.
 .
 :CONFIG_REVERB
 Abilita l'effetto riverbero a livello globale per aggiungere un senso di
@@ -488,7 +493,7 @@ spazializzazione del suono:
            per musica e audio digitale.
   huge:    Variante del preset salone con maggiore intensità; funziona davvero
            bene nei giochi con colonne sonore più suggestive
-Nota: È possibile regolare con precisione i livelli di riverbero per ogni
+Note: È possibile regolare con precisione i livelli di riverbero per ogni
       canale tramite i comandi del mixer.
 .
 :CONFIG_CHORUS
@@ -499,73 +504,80 @@ Abilita l'effetto coro a livello globale per un suono più avvolgente:
            sintetizzata che presenta molto rumore bianco).
   normal:  Effetto coro normale, funziona bene con un'ampia varietà di giochi.
   strong:  Effetto coro molto evidente.
-Nota: È possibile regolare con precisione i livelli di coro per ogni canale
+Note: È possibile regolare con precisione i livelli di coro per ogni canale
       tramite i comandi del mixer.
 .
 :CONFIG_MIDIDEVICE
-Dispositivo che riceverà i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
-Scegli uno dei seguenti:
-'fluidsynth', per usare il sintetizzatore MIDI integrato. Fare riferimento
-       alla sezione [fluidsynth] per una configurazione dettagliata.
-'mt32', per usare il sintetizzatore Roland MT-32 integrato.
-       Fare riferimento alla sezione [mt32] per una configurazione dettagliata.
-'auto', per utilizzare il primo lettore MIDI esterno funzionante. Questo
-       potrebbe essere un sintetizzatore software o un dispositivo fisico.
+Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
+(predefinito 'auto'):
+  win32:       Utilizza l'interfaccia di riproduzione MIDI Win32.
+  fluidsynth:  Sintetizzatore MIDI FluidSynth integrato (lettore SoundFont).
+               Fare riferimento alla sezione [fluidsynth] per una
+               configurazione dettagliata.
+  mt32:        Sintetizzatore Roland MT-32 integrato.
+               Fare riferimento alla sezione [mt32] per una configurazione
+               dettagliata.
+  auto:        Utilizza uno dei sintetizzatori MIDI incorporati
+               (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
+               dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
+               'midiconfig'). Questo potrebbe essere un sintetizzatore software
+               o un dispositivo fisico. Questo è il comportamento predefinito.
+  none:        Disabilita l'uscita MIDI.
 .
 :CONFIG_MIDICONFIG
-Opzioni di configurazione per l'interfaccia MIDI selezionata.
+Opzioni di configurazione per l'interfaccia MIDI selezionata
+(predefinito non impostato).
 Di solito è l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
-(trova l'id/nome con il comando DOS 'mixer /listmidi').
-- Questa opzione non ha effetto quando si utilizzano sintetizzatori intergrati.
-  (mididevice = fluidsynth o mt32).
-- Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
-  elencare le porte MIDI aperte e selezionarne una
-  (ad esempio 'midiconfig=14:0' per il client sequencer 14, porta 0).
-- Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
-  potrebbe richiedere un ritardo per evitare che il suo buffer
-  si sovraccarichi. In tal caso, aggiungi 'delaysysex', 
-  ad esempio: 'midiconfig=2 delaysysex'.
-Fare riferimento al README/Manuale per ulteriori dettagli.
+(trova l'ID/nome con il comando DOS 'MIXER /LISTMIDI').
+Note: - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
+        intergrati ('mididevice = fluidsynth' o 'mididevice = mt32').
+      - Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
+        elencare le porte MIDI aperte e selezionarne una
+        (ad esempio 'midiconfig = 14:0' per il client sequencer 14, porta 0).
+      - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
+        potrebbe richiedere un ritardo per evitare che il suo buffer si
+        sovraccarichi. In tal caso, aggiungi 'delaysysex', ad esempio:
+        'midiconfig = 2 delaysysex'.
 .
 :CONFIG_MPU401
-Tipo di MPU-401 da emulare.
+Modalità MPU-401 da emulare (predefinito 'intelligent').
 .
 :CONFIG_SOUNDFONT
-Percorso del file SoundFont in formato .sf2. Puoi utilizzare un percorso
-assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
-'soundfonts' situata nella directory di configurazione di DOSBox.
-Nota: La percentuale di ridimensionamento del volume dopo il nome del file è
+Percorso di un file SoundFont in formato .sf2 (predefinito 'default.sf2').
+Puoi utilizzare un percorso relativo o assoluto, o il nome di un file .sf2
+all'interno della cartella 'soundfonts' situata nella directory di
+configurazione di DOSBox.
+Note: La percentuale di ridimensionamento del volume dopo il nome del file è
       stata deprecata. Si prega invece di utilizzare il comando del mixer per
-      modificare il volume del canale audio FluidSynth, ad es.:
-        MIXER FSYNTH 200
+      modificare il volume del canale audio FluidSynth, es.'MIXER FSYNTH 200'.
 .
 :CONFIG_FSYNTH_CHORUS
-Effetto coro: 'auto', 'on', 'off', o valori personalizzati.
+Effetto coro: 'auto' (predefinito), 'on', 'off', o valori personalizzati.
 Quando si utilizzano valori personalizzati:
   Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
   Essi sono: conteggio-voci livello velocità profondità modulazione-onda, dove:
-  - conteggio-voci è un numero intero compreso tra 0 e 99
-  - livello è un numero decimale compreso tra 0.0 e 10.0
-  - velocità è un numero decimale, misurato in Hz, compreso tra 0.1 e 5.0
-  - profondità è un numero decimale compreso tra 0.0 e 21.0
-  - modulazione-onda è 'sine' o 'triangle'
+    - conteggio-voci è un numero intero compreso tra 0 e 99
+    - livello è un numero decimale compreso tra 0.0 e 10.0
+    - velocità è un numero decimale, misurato in Hz, compreso tra 0.1 e 5.0
+    - profondità è un numero decimale compreso tra 0.0 e 21.0
+    - modulazione-onda è 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
-Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
+Note: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
       il coro a livello del mixer sul canale FluidSynth, oppure abilitare 
       entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
       riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
 .
 :CONFIG_FSYNTH_REVERB
-Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
+Effetto riverbero: 'auto' (predefinito), 'on', 'off', o valori personalizzati.
 Quando si utilizzano valori personalizzati:
   Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
   Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
-  - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
-  - smorzamento è un numero decimale compreso tra 0.0 e 1.0
-  - ampiezza è un numero decimale compreso tra 0.0 e 100.0
-  - livello è un numero decimale compreso tra 0.0 e 1.0
+    - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
+    - smorzamento è un numero decimale compreso tra 0.0 e 1.0
+    - ampiezza è un numero decimale compreso tra 0.0 e 100.0
+    - livello è un numero decimale compreso tra 0.0 e 1.0
   Per esempio: reverb = 0.61 0.23 0.76 0.56
-Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
+Note: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
       invece il riverbero a livello del mixer sul canale FluidSynth, oppure
       abilitare entrambi gli effetti contemporaneamente. Il modo in cui il
       suono verrà riprodotto dipende dal SoundFont e dalle impostazioni di
@@ -578,10 +590,12 @@ Filtro per l'uscita audio di FluidSynth:
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_MODEL
-Modello di sintetizzatore da utilizzare. 
-'auto' sceglie il primo modello con ROM disponibili, nell'ordine indicato.
-'cm32l' e 'mt32' scelgono il primo modello del loro tipo, nell'ordine indicato.
-'mt32_old' e 'mt32_new' si riferiscono rispettivamente ai modelli 1.07 e 2.04.
+Modello di MT-32 da utilizzare: 
+  auto:      Sceglie il primo modello disponibile, nell'ordine indicato.
+  mt32:      Sceglie il primo modello MT-32 disponibile, nell'ordine indicato.
+  cm32l:     Sceglie il primo modello CM-32L disponibile, nell'ordine indicato.
+  mt32_old:  Modello MT-32 v1.07.
+  mt32_new:  Modello MT-32 v2.04.
 .
 :CONFIG_ROMDIR
 Directory contenente le ROM di uno o più modelli.
@@ -619,35 +633,38 @@ ROM attiva  :
 Caricata da : 
 .
 :CONFIG_SBTYPE
-Tipo di Sound Blaster da emulare. 'gb' è il Game Blaster.
+Tipo di Sound Blaster da emulare (predefinito 'sb16').
+'gb' è il Game Blaster.
 .
 :CONFIG_SBBASE
-Indirizzo porta IO della scheda audio Sound Blaster.
+Indirizzo porta IO della scheda Sound Blaster (predefinito 220).
 .
 :CONFIG_IRQ
-Numero IRQ della scheda audio Sound Blaster.
+Numero IRQ della scheda Sound Blaster (predefinito 7).
 .
 :CONFIG_DMA
-Canale DMA della scheda audio Sound Blaster.
+Canale DMA della scheda Sound Blaster (predefinito 1).
 .
 :CONFIG_HDMA
-Canale High DMA della scheda audio Sound Blaster.
+Canale High DMA della scheda Sound Blaster (predefinito 5).
 .
 :CONFIG_SBMIXER
-Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox.
+Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox
+(predefinito abilitato).
 .
 :CONFIG_SBWARMUP
 Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
-in millisecondi. Questo attenua gli artefatti audio che si sentono quando si
-avviano molti giochi compatibili con Sound Blaster. Riduci questo valore se
-noti che nella riproduzione iniziale manca l'audio.
+in millisecondi (predefinito 100). Questo attenua gli artefatti audio che si
+sentono quando si avviano molti giochi compatibili con Sound Blaster.
+Riduci questo valore se noti che nella riproduzione iniziale manca l'audio.
 .
 :CONFIG_OPLRATE
 La forma d'onda OPL viene ora campionata alla frequenza di riproduzione
 del mixer per evitare il ricampionamento.
 .
 :CONFIG_OPLMODE
-Tipo di emulazione OPL. Se 'auto', la modalità è determinata da 'sbtype'.
+Tipo di emulazione OPL (predefinito 'auto'). 
+Se 'auto', la modalità è determinata da 'sbtype'.
 Tutte le modalità OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
 :CONFIG_OPLEMU
@@ -674,7 +691,7 @@ Sound Blaster:
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
 Forza il filtro della scheda Sound Blaster ad essere sempre attivo
-(impedisce ai programmi di disattivare il filtro).
+(impedisce ai programmi di disattivare il filtro; predefinito disabilitato).
 .
 :CONFIG_OPL_FILTER
 Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
@@ -694,20 +711,21 @@ Filtro per l'uscita audio CMS della scheda Sound Blaster:
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_GUS
-Abilita l'emulazione della scheda audio Gravis UltraSound.
+Abilita l'emulazione della scheda Gravis UltraSound (predefinito disabilitato).
 .
 :CONFIG_GUSBASE
-Indirizzo porta IO della scheda audio Gravis Ultrasound.
+Indirizzo porta IO della scheda Gravis Ultrasound (predefinito 240).
 .
 :CONFIG_GUSIRQ
-Numero IRQ della scheda audio Gravis UltraSound.
+Numero IRQ della scheda Gravis UltraSound (predefinito 5).
 .
 :CONFIG_GUSDMA
-Canale DMA della scheda audio Gravis UltraSound.
+Canale DMA della scheda Gravis UltraSound (predefinito 3).
 .
 :CONFIG_ULTRADIR
-Percorso per la directory UltraSound. In essa dovrebbe essere presente una
-directory MIDI con al suo interno i file di patch per la riproduzione GUS.
+Percorso per la directory UltraSound (predefinito 'C:\ULTRASND'). 
+In essa dovrebbe essere presente una directory MIDI con al suo interno
+i file di patch per la riproduzione GUS.
 I set di patch utilizzati con Timidity dovrebbero funzionare.
 .
 :CONFIG_GUS_FILTER
@@ -718,31 +736,33 @@ Filtro per l'uscita audio della scheda Gravis UltraSound:
 .
 :CONFIG_SIDMODEL
 Modello di chip da emulare nella scheda Innovation SSI-2001:
- - auto:  Seleziona il chip 6581.
- - 6581:  Il chip originale, noto per il suo suono basso e ricco.
- - 8580:  Una revisione successiva che corrispondeva più da vicino alla
+  auto:  Utilizza il chip 6581.
+  6581:  Il chip originale, noto per il suo suono basso e ricco.
+  8580:  Una revisione successiva che corrispondeva più da vicino alla
           specifica SID. 
           Ha corretto il bias DC del 6581 ed è meno incline alla distorsione.
           L'8580 è un'opzione sulle schede di riproduzione, come il DuoSID.
- - none:  Disabilita la scheda.
+  none:  Disabilita la scheda (predefinito).
 .
 :CONFIG_SIDCLOCK
 Frequenza di clock del chip SID, modificabile tramite ponticello (o jumper)
 sulle schede di riproduzione.
- - default: utilizza 0.895 MHz, secondo la scheda SSI-2001 originale.
- - c64ntsc: utilizza 1.023 MHz, secondo i PC Commodore e DuoSID NTSC.
- - c64pal:  utilizza 0.985 MHz, secondo i PC Commodore e DuoSID PAL.
- - hardsid: utilizza 1.000 MHz, disponibile sul DuoSID.
+  default: 0.895 MHz, secondo la scheda SSI-2001 originale (predefinito).
+  c64ntsc: 1.023 MHz, secondo i PC Commodore e DuoSID NTSC.
+  c64pal:  0.985 MHz, secondo i PC Commodore e DuoSID PAL.
+  hardsid: 1.000 MHz, disponibile sul DuoSID.
 .
 :CONFIG_SIDPORT
-Indirizzo porta IO della scheda audio Innovation SSI-2001.
+Indirizzo porta IO della scheda Innovation SSI-2001 (predefinito 280).
 .
 :CONFIG_6581FILTER
-Il filtraggio analogico del SID rendeva ogni chip fisicamente unico.
-Regola la forza di filtraggio del chip 6581 come percentuale da 0 a 100.
+Regola l'intensità del filtro del chip 6581 come percentuale da 0 a 100
+(predefinito 50). Il filtraggio analogico del SID rendeva ogni chip
+fisicamente unico.
 .
 :CONFIG_8580FILTER
-Regola la forza di filtraggio del chip 8580 come percentuale da 0 a 100.
+Regola l'intensità del filtro del chip 8580 come percentuale da 0 a 100
+(predefinito 50).
 .
 :CONFIG_INNOVATION_FILTER
 Filtro per l'uscita audio della scheda Innovation:
@@ -752,14 +772,14 @@ Filtro per l'uscita audio della scheda Innovation:
 .
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
-  discrete: La forma d'onda viene creata utilizzando passaggi discreti
-            (predefinito).
-            Funziona bene per i giochi che utilizzano effetti di tipo RealSound
-  impulse:  La forma d'onda viene creata utilizzando gli impulsi sinc.
-            Consigliato per i giochi che utilizzano forme d'onda quadra, come
-            Commander Keen. Pur migliorando la precisione, richiede più potenza
-            di calcolo da parte della CPU.
-  none/off: Disabilita l'altoparlante interno del PC.
+  discrete:  La forma d'onda viene creata utilizzando passaggi discreti
+             (predefinito). Funziona bene per i giochi che utilizzano effetti
+             di tipo RealSound.
+  impulse:   La forma d'onda viene creata utilizzando gli impulsi sinc.
+             Consigliato per i giochi che utilizzano forme d'onda quadra, come
+             Commander Keen. Pur migliorando la precisione, richiede più
+             potenza di calcolo da parte della CPU.
+  none/off:  Disabilita l'altoparlante interno del PC.
 .
 :CONFIG_PCSPEAKER_FILTER
 Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
@@ -772,7 +792,7 @@ Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
 Il DC offset è ora eliminato globalmente dall'uscita del mixer principale.
 .
 :CONFIG_TANDY
-Abilita l'emulazione del sistema audio Tandy.
+Abilita l'emulazione del sistema audio Tandy (predefinito 'auto').
 Se 'auto', l'emulazione è presente solo se la macchina è impostata su 'tandy'.
 .
 :CONFIG_TANDY_FILTER
@@ -807,7 +827,7 @@ Filtro per i dispositivi audio DAC LPT:
 Usa 'lpt_dac=disney' per abilitare l'emulazione Disney Sound Source.
 .
 :CONFIG_PS1AUDIO
-Abilita l'emulazione audio IBM PS/1.
+Abilita l'emulazione audio IBM PS/1 (predefinito disabilitato).
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtro per l'uscita audio del sintetizzatore PS/1:
@@ -825,177 +845,184 @@ Filtro per l'uscita audio del DAC PS/1:
 .
 :CONFIG_REELMAGIC
 Supporto per la riproduzione MPEG di ReelMagic (alias REALmagic).
-  off:      Disabilita il supporto (predefinito).
-  cardonly: Inizializza la scheda senza caricare il driver FMPDRV.EXE.
-  on:       Inizializza la scheda e carica il driver FMPDRV.EXE all'avvio.
+  off:       Disabilita il supporto (predefinito).
+  cardonly:  Inizializza la scheda senza caricare il driver FMPDRV.EXE.
+  on:        Inizializza la scheda e carica il driver FMPDRV.EXE all'avvio.
 .
 :CONFIG_REELMAGIC_KEY
 Imposta la chiave a 32 bit utilizzata per decodificare i video dei giochi.
-  auto:     Utilizza le routine integrate per determinare la chiave
-            (predefinito).
-  common:   Utilizza la chiave trovata più comunemente, cioè 0x40044041.
-  thehorde: Utilizza la chiave del videogioco The Horde, cioè 0xC39D7088.
-  <custom>: Imposta una chiave personalizzata in formato esadecimale
-            (ad esempio, 0x12345678).
+  auto:      Utilizza le routine integrate per determinare la chiave
+             (predefinito).
+  common:    Utilizza la chiave trovata più comunemente, cioè 0x40044041.
+  thehorde:  Utilizza la chiave del videogioco The Horde, cioè 0xC39D7088.
+  <custom>:  Imposta una chiave personalizzata in formato esadecimale
+             (ad esempio, 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
 Modifica la frequenza dei fotogrammi utilizzata durante la riproduzione video.
-  0:        Nessuna modifica: tenta il rilevamento automatico della frequenza
-            (predefinito).
-  1 - 7:    Modifica la frequenza dei fotogrammi con una delle seguenti:
-            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, o 7=59.94 FPS.
+  0:      Nessuna modifica: tenta il rilevamento automatico della frequenza
+          (predefinito).
+  1 - 7:  Modifica la frequenza dei fotogrammi con una delle seguenti:
+          1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, o 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
-Tipo di joystick da emulare: auto (predefinito),
-auto     : Rileva e usa qualsiasi joystick, se possibile.
-2axis    : Supporta fino a due joystick, ciascuno con 2 assi.
-4axis    : Supporta solo il primo joystick, come tipo a 4 assi.
-4axis_2  : Supporta solo il secondo joystick, come tipo a 4 assi.
-fcs      : Emula il joystick Thrustmaster FCS.
-ch       : Emula il joystick CH Flightstick.
-hidden   : Impedisce a DOS di vedere i joystick, ma sono abilitali per la
+Tipo di joystick da emulare:
+auto:      Rileva e usa qualsiasi joystick, se possibile (predefinito).
+2axis:     Supporta fino a due joystick, ciascuno con 2 assi.
+4axis:     Supporta solo il primo joystick, come tipo a 4 assi.
+4axis_2:   Supporta solo il secondo joystick, come tipo a 4 assi.
+fcs:       Emula il joystick Thrustmaster FCS.
+ch:        Emula il joystick CH Flightstick.
+hidden:    Impedisce a DOS di vedere i joystick, ma sono abilitali per la
            mappatura.
-disabled : Disabilita completamente i joystick: non saranno interrogati,
+disabled:  Disabilita completamente i joystick: non saranno interrogati,
            mappati o visibili in DOS.
-(Ricorda di resettare il mapperfile di DOSBox se l'hai salvato in precedenza)
+Ricorda di resettare il mapperfile di DOSBox se l'hai salvato in precedenza.
 .
 :CONFIG_TIMED
-Abilita gli intervalli temporizzati per gli assi.
+Abilita gli intervalli temporizzati per gli assi (predefinito disabilitato).
 Sperimenta con questa opzione, se il tuo joystick soffre di drifting.
 .
 :CONFIG_AUTOFIRE
-Continua a fare fuoco finché tieni il tasto premuto.
+Continua a fare fuoco finché tieni il tasto premuto (predefinito disabilitato).
 .
 :CONFIG_SWAP34
-Scambia il 3° e il 4° asse. Può essere utile per alcuni joystick.
+Scambia il 3° e il 4° asse (predefinito disabilitato). 
+Può essere utile per alcuni joystick.
 .
 :CONFIG_BUTTONWRAP
-Abilita il wrapping dei pulsanti al numero di pulsanti emulati.
+Abilita il wrapping dei pulsanti al numero di pulsanti emulati
+(predefinito disabilitato).
 .
 :CONFIG_CIRCULARINPUT
-Abilita la traduzione dell'input circolare in output quadrato.
+Abilita la traduzione dell'input circolare in output quadrato
+(predefinito disabilitato).
 Prova ad abilitarlo se la tua levetta analogica sinistra può muoversi solo in
 cerchio.
 .
 :CONFIG_DEADZONE
-Percentuale di movimento da ignorare.
+Percentuale di movimento da ignorare (predefinito 10).
 Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Attiva i tasti di scelta rapida per consentire la calibrazione in tempo reale
-degli assi X e Y del joystick. Consideralo solo se la calibrazione all'interno
-del gioco fallisce e sono state provate altre impostazioni.
- - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
-     - Sinistra e Destra diminuiscono o ingrandiscono rispettivamente lo
-       scalare dell'asse X.
-     - In basso ed In alto diminuiscono o ingrandiscono rispettivamente lo
-       scalare dell'asse Y.
- - Alt+TastiFreccia regola la posizione di offset dell'asse:
-     - Sinistra e Destra sposta l'offset dell'asse X nella direzione data.
-     - In basso ed In alto sposta l'offset dell'asse Y nella direzione data.
- - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
-   Ctrl+Home.
+degli assi X e Y del joystick (predefinito disabilitato). Consideralo solo se
+la calibrazione all'interno del gioco fallisce e sono state provate altre
+impostazioni.
+  - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
+      - Sinistra e Destra diminuiscono o ingrandiscono rispettivamente lo
+        scalare dell'asse X.
+      - In basso ed In alto diminuiscono o ingrandiscono rispettivamente lo
+        scalare dell'asse Y.
+  - Alt+TastiFreccia regola la posizione di offset dell'asse:
+      - Sinistra e Destra sposta l'offset dell'asse X nella direzione data.
+      - In basso ed In alto sposta l'offset dell'asse Y nella direzione data.
+  - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
+    Ctrl+Home.
 Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
 valori di calibrazione X o Y che puoi impostare di seguito. Quando hai trovato
 i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
 'false' e inserisci i parametri di calibrazione segnalati.
 .
 :CONFIG_JOY_X_CALIBRATION
-Applica i parametri di calibrazione dell'asse X dai tasti di scelta rapida.
-L'impostazione predefinita è "auto".
+Applica i parametri di calibrazione dell'asse X dai tasti di scelta rapida
+(predefinito 'auto').
 .
 :CONFIG_JOY_Y_CALIBRATION
-Applica i parametri di calibrazione dell'asse Y dai tasti di scelta rapida.
-L'impostazione predefinita è "auto"
+Applica i parametri di calibrazione dell'asse Y dai tasti di scelta rapida
+(predefinito 'auto').
 .
 :CONFIG_SERIAL1
-Imposta il tipo di dispositivo connesso alla porta com.
-Può essere: disabled, dummy, mouse, modem, nullmodem, direct.
+Imposta il tipo di dispositivo connesso alla porta COM.
+Può essere disabled, dummy, mouse, modem, nullmodem, direct 
+(predefinito 'dummy').
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
-per mouse:
-   model, sovrascrive l'impostazione dalla sezione [mouse].
-per direct: realport (richiesto), rxdelay (facoltativo).
-   (realport:COM1 realport:ttyS0).
-per modem: listenport, sock, baudrate (tutti facoltativi).
-per nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-   transparent, port, inhsocket, sock (tutti facoltativi).
+  - per 'mouse':      model, sovrascrive l'impostazione dalla sezione [mouse].
+  - per 'direct':     realport (richiesto), rxdelay (facoltativo).
+                      (realport:COM1 realport:ttyS0).
+  - per 'modem':      listenport, sock, baudrate (tutti facoltativi).
+  - per 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
+                      transparent, port, inhsocket, sock (tutti facoltativi).
 Il parametro SOCK specifica il protocollo da utilizzare da entrambi i lati
 della connessione. 0 per TCP e 1 per UDP affidabile ENet.
 Esempio: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Fare riferimento a serial1.
+Fare riferimento a 'serial1'.
 .
 :CONFIG_SERIAL3
-Fare riferimento a serial1.
+Fare riferimento a 'serial1'.
 .
 :CONFIG_SERIAL4
-Fare riferimento a serial1.
+Fare riferimento a 'serial1'.
 .
 :CONFIG_PHONEBOOKFILE
-File utilizzato per mappare numeri di telefono falsi su indirizzi. 
+File utilizzato per mappare numeri di telefono falsi su indirizzi
+(predefinito 'phonebook.txt'). 
 .
 :CONFIG_XMS
-Abilita supporto XMS.
+Abilita supporto XMS (predefinito abilitato).
 .
 :CONFIG_EMS
-Abilita supporto EMS. L'impostazione predefinita (=true) fornisce la migliore
-compatibilità, ma alcune applicazioni potrebbero funzionare meglio con altre
-scelte o richiedere la disabilitazione del supporto EMS (=false).
+Abilita supporto EMS (predefinito abilitato). L'abilitazione fornisce la
+migliore compatibilità ma alcune applicazioni potrebbero funzionare meglio
+con altre scelte, o richiedere la disabilitazione del supporto EMS.
 .
 :CONFIG_UMB
-Abilita supporto UMB.
+Abilita supporto UMB (predefinito abilitato).
 .
 :CONFIG_VER
-Imposta la versione DOS (5.0 per impostazione predefinita).
-Specificare come formato maggiore.minore.
+Imposta la versione DOS (predefinito 5.0).
+Specificare come formato principale.minore.
 Un singolo numero viene considerato come la versione principale.
 Le impostazioni comuni sono 3.3, 5.0, 6.22, e 7.1.
 .
 :CONFIG_COUNTRY
-Imposta il codice paese DOS che influenzerà informazioni come data, ora e
-formati decimali. Se impostato a 0, verrà utilizzato il codice paese
-corrispondente al layout di tastiera selezionato.
+Imposta il codice paese DOS (predefinito 0).
+Ciò influisce su informazioni come data, ora e formati decimali.
+Se impostato a 0, verrà utilizzato il codice paese corrispondente al layout
+di tastiera selezionato.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
-dei comandi DOS. COMMAND.COM in FreeDOS e MS-DOS 7/8 supporta questa funzione.
+dei comandi DOS (predefinito disabilitato).
+COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_KEYBOARDLAYOUT
-Codice linguaggio del layout della tastiera (o 'none').
+Codice linguaggio del layout della tastiera, o 'auto' (predefinito 'auto').
 .
 :CONFIG_IPX
-Abilita ipx attraverso l'emulazione UDP/IP.
+Abilita IPX attraverso l'emulazione UDP/IP (predefinito abilitato).
 .
 :CONFIG_NE2000
-Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata
-su software (usando libslirp) con le seguenti proprietà:
- - 255.255.255.0 : Maschera di sottorete della LAN virtuale 10.0.2.0.
- - 10.0.2.2      : IP del gateway e del servizio DHCP.
- - 10.0.2.3      : IP del server DNS virtuale.
- - 10.0.2.15     : Primo IP fornito dal DHCP, il tuo IP!
+Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata su
+software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
+  - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
+  - 10.0.2.2:       IP del gateway e del servizio DHCP.
+  - 10.0.2.3:       IP del server DNS virtuale.
+  - 10.0.2.15:      Primo IP fornito dal DHCP, il tuo IP!
 Note: All'interno del DOS, la configurazione richiede un pacchetto driver
       NE2000, un client DHCP e uno stack TCP/IP. Potrebbe essere necessario
       inoltrare le porte dall'host al guest DOS, e dal router al tuo host
       quando funge da server per i giochi multigiocatore.
 .
 :CONFIG_NICBASE
-Indirizzo di base della scheda NE2000.
+Indirizzo di base della scheda NE2000 (predefinito 300).
 Note: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
       assegnati alle schede Sound Blaster e Gravis UltraSound per impostazione
       predefinita.
 .
 :CONFIG_NICIRQ
-Interrupt utilizzato dalla scheda NE2000.
+Interrupt utilizzato dalla scheda NE2000 (predefinito 3).
 Note: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
       'serial2' e Gravis UltraSound per impostazione predefinita.
 .
 :CONFIG_MACADDR
-Indirizzo MAC della scheda NE2000.
+Indirizzo MAC della scheda NE2000 (predefinito 'AC:DE:48:88:99:AA').
 .
 :CONFIG_TCP_PORT_FORWARDS
-Inoltra una o più porte TCP dall'host al guest DOS.
+Inoltra una o più porte TCP dall'host al guest DOS (predefinito non impostato).
 Il formato è:
   porta1  porta2  porta3 ... (ad es. 21 80 443)
   Questo inoltrerà FTP, HTTP e HTTPS al guest DOS.
@@ -1008,15 +1035,14 @@ Un intervallo di porte adiacenti può essere abbreviato con un trattino:
 Le mappature e gli intervalli possono essere combinati:
   hinizio-hfine:ginizio-gfine ..., (ad es. 8040-8080:20-60)
   Questo inoltra le porte da 8040 a 8080 in 20 a 60 nel guest DOS.
-Note:
-  - Se gli intervalli mappati differiscono, l'intervallo più corto viene esteso
-    per adattarsi.
-  - Se vengono fornite porte host in conflitto, viene impostata solo la prima.
-  - Se vengono fornite porte guest in conflitto, quest'ultima regola ha la
-    precedenza.
+Note: Se gli intervalli mappati differiscono, l'intervallo più corto viene
+      esteso per adattarsi.
+      Se vengono fornite porte host in conflitto, viene impostata solo la prima
+      Se vengono fornite porte guest in conflitto, quest'ultima regola ha la
+      precedenza.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Inoltra una o più porte UDP dall'host al guest DOS.
+Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
 Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
@@ -1030,7 +1056,7 @@ Puoi inserire i tuoi comandi MOUNT qui.
 
 .
 :CONFIG_SUGGESTED_VALUES
-Valori Possibili
+Valori possibili
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Sezione o proprietà non trovata: %s
@@ -1104,7 +1130,7 @@ Regola i parametri configurabili di DOSBox Staging.
 Scopo della proprietà "%s" (contenuto nella sezione "%s"):
 %s
 
-Valori Possibili: %s
+Valori possibili: %s
 Valore predefinito: %s
 Valore corrente: %s
 
@@ -1907,14 +1933,14 @@ Monta una directory del sistema operativo host su una lettera di unità.
 Utilizzo:
   [color=green]mount[reset] [color=white]UNITÀ[reset] [color=cyan]DIRECTORY[reset] [-t TIPO] [-usecd #] [-freesize DIM] [-label ETICHETTA]
   [color=green]mount[reset] -listcd / -cd (elenca le unità CD-ROM rilevate e i relativi numeri)
-  [color=green]mount[reset] -u [color=white]UNITÀ[reset]  (smonta la directory dell'UNITÀ)
+  [color=green]mount[reset] -u [color=white]UNITÀ[reset]  (smonta la directory dell'[color=white]UNITÀ[reset])
 
 Dove:
   [color=white]UNITÀ[reset]     è la lettera dell'unità in cui verrà montata la directory: A, C, ..
   [color=cyan]DIRECTORY[reset] è la directory sul sistema operativo host da montare.
   TIPO      è il tipo di directory da montare: dir, floppy, cdrom o overlay.
-  DIM       è lo spazio libero per l'unità virtuale (KiB per floppy,
-            altrimenti MiB).
+  DIM       è lo spazio libero per l'unità virtuale (KB per floppy,
+            altrimenti MB).
   ETICHETTA è il nome dell'etichetta dell'unità da utilizzare.
 
 Note:
@@ -2149,12 +2175,12 @@ Dove:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    Crossfeed: da [color=white]x0[reset] a [color=white]x100[reset]    Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]    Coro: da [color=white]c0[reset] a [color=white]c100[reset]
+    A. Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
 Note:
   L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
   È possibile modificare le impostazioni di più canali con un unico comando.
-  Se il canale non è specificato, è possibile impostare crossfeed, riverbero o
-  coro a livello globale.
+  Se il canale non è specificato, è possibile impostare alimentazione
+  incrociata, riverbero o coro a livello globale.
   È possibile visualizzare l'elenco dei dispositivi MIDI con /listmidi.
   /noshow applica le modifiche senza mostrare le impostazioni del mixer.
 
@@ -2163,10 +2189,10 @@ Esempi:
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %7s %8s %7s
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Canale       Volume    Volume (dB)   Modalità   Xfeed  Riverbero  Coro[reset]
+[color=white]Canale       Volume    Volume (dB)   Modalità  A. Incrociata  Riverbero  Coro[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
 spento

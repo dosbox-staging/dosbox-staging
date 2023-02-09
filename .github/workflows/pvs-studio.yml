@@ -28,7 +28,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v3.2.2
+      - uses: actions/cache@v3.2.4
         id: cache-pvs
         with:
           path: pvs-package
@@ -46,11 +46,20 @@ jobs:
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Build
         run: |
@@ -102,7 +111,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 255
+          MAX_BUGS: 252
         run: |
           echo "Full report is included in build Artifacts"
           echo

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstring>
+#include <limits.h>
 #include <optional>
 #include <string>
 #include <vector>
@@ -139,6 +140,72 @@ void reset_str(T *str) noexcept
 	terminate_str_at(str, 0);
 }
 
+// Is the ASCII character within the upper nibble?
+constexpr bool is_upper_ascii(const char c)
+{
+	constexpr uint8_t upper_ascii_first = 128;
+	constexpr uint8_t upper_ascii_last  = 255;
+
+#if (CHAR_MIN < 0) // char is signed
+	static_assert(std::is_signed_v<char> && CHAR_MAX < upper_ascii_last);
+	return static_cast<uint8_t>(c) >= upper_ascii_first;
+
+#else // char is unsigned
+	static_assert(std::is_unsigned_v<char> && CHAR_MAX == upper_ascii_last);
+	return c >= upper_ascii_first;
+
+#endif
+}
+
+
+// Is it an ASCII control character?
+constexpr bool is_control_ascii(const char c)
+{
+	// clang-format off
+	// ASCII control characters span the bottom 5 bits plus the DEL character.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#Control_characters
+	[[maybe_unused]] 
+	constexpr char controls_first = 0b0'0000;
+	constexpr char controls_last  = 0b1'1111;
+	constexpr char delete_char    = 0b111'1111;
+	// clang-format on
+
+#if (CHAR_MIN < 0) // char is signed
+	static_assert(std::is_signed_v<char> && CHAR_MAX == delete_char);
+	return (c >= controls_first && c <= controls_last) ||
+#else // char is unsigned
+	static_assert(std::is_unsigned_v<char> && CHAR_MAX > delete_char);
+	return c <= controls_last ||
+#endif
+	       // return continues ...
+	       c == delete_char;
+}
+
+// Is the character within the printable ASCII range?
+constexpr bool is_printable_ascii(const char c)
+{
+	// The printable ASCII range spans the Space to ESC characters.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#Printable_characters
+	constexpr char space_char  = ' ';
+	constexpr char escape_char = 0b111'1110;
+	return c >= space_char && c <= escape_char;
+}
+
+// Is the character within the standard ASCII range?
+constexpr bool is_ascii(const char c)
+{
+	return is_printable_ascii(c) || is_control_ascii(c);
+}
+
+// Is the character with the extended printable ASCII range?
+constexpr bool is_extended_printable_ascii(const char c)
+{
+	// The extended ASCII range spans all 8-bits, leaving the extended
+	// printable portion of those being the non-control characters.
+	// Ref:https://en.wikipedia.org/wiki/ASCII#8-bit_codes
+	return !is_control_ascii(c);
+}
+
 bool is_hex_digits(const std::string_view s) noexcept;
 
 bool is_digits(const std::string_view s) noexcept;
@@ -157,7 +224,25 @@ inline bool is_empty(const char *str) noexcept
 
 // case-insensitive comparisons
 bool ciequals(const char a, const char b);
-bool iequals(const std::string &a, const std::string &b);
+
+// case-insensitive comparison for combinations of
+// const char *, const std::string&, and const string_view
+template <typename T1, typename T2>
+constexpr bool iequals(T1&& a, T2&& b)
+{
+	using str_t1 = std::conditional_t<std::is_same_v<T1, const std::string&>,
+	                                  const std::string&,
+	                                  const std::string_view>;
+
+	using str_t2 = std::conditional_t<std::is_same_v<T2, const std::string&>,
+	                                  const std::string&,
+	                                  const std::string_view>;
+
+	const str_t1 str_a = std::forward<T1>(a);
+	const str_t2 str_b = std::forward<T2>(b);
+
+	return std::equal(str_a.begin(), str_a.end(), str_b.begin(), str_b.end(), ciequals);
+}
 
 char *strip_word(char *&cmd);
 

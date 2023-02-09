@@ -43,8 +43,23 @@ jobs:
           sudo apt-get install curl zstd clang $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
+        with:
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
+
       - name: Prepare the Coverity package cache
-        uses: actions/cache@v3.2.2
+        uses: actions/cache@v3.2.4
         id: cache-coverity
         with:
           path: ${{ env.PACKAGE_DIR }}

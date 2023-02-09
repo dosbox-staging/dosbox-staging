@@ -1,3 +1,5 @@
+# Building on macOS
+
 macOS builds can be created using the Meson buildsystem, compiled using
 the Clang or GCC compilers, and provided with dependencies using the Homebrew
 or MacPorts package managers.

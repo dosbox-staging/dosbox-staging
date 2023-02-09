@@ -85,6 +85,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-iir
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp
@@ -93,6 +94,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python-pip
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -103,7 +105,7 @@ jobs:
           echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
           echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -111,14 +113,33 @@ jobs:
           restore-keys: |
             ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-3
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh
+
+      - name: Update SSL certificates
+        shell: pwsh
+        run: |
+          pip3 install --upgrade pip-system-certs certifi
+          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
+          $env:SSL_CERT_FILE = $certifiPath
+          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
+          $webclient = New-Object System.Net.WebClient
+          $webclient.DownloadString("https://github.com") >$null
 
       - name: Setup build
         run: |
@@ -185,6 +206,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-ntldd
             mingw-w64-clang-${{matrix.conf.arch}}-ncurses
             mingw-w64-clang-${{matrix.conf.arch}}-glib2
+            mingw-w64-clang-${{matrix.conf.arch}}-iir
             mingw-w64-clang-${{matrix.conf.arch}}-libpng
             mingw-w64-clang-${{matrix.conf.arch}}-opusfile
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp
@@ -193,6 +215,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
+            mingw-w64-clang-${{matrix.conf.arch}}-python-pip
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -202,7 +225,7 @@ jobs:
           echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
           echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.2
+      - uses:  actions/cache@v3.2.4
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -210,11 +233,20 @@ jobs:
           restore-keys: |
             ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-3
 
-      - name:  Cache subprojects
-        uses:  actions/cache@v3.2.2
+      - name: Cache subprojects
+        id:   cache-subprojects
+        uses: actions/cache@v3
         with:
-          path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-3
+          path: subprojects.tar
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          enableCrossOsArchive: true
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -232,8 +264,19 @@ jobs:
           set -x
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
 
+      - name: Update SSL certificates
+        shell: pwsh
+        run: |
+          pip3 install --upgrade pip-system-certs certifi
+          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
+          $env:SSL_CERT_FILE = $certifiPath
+          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
+          $webclient = New-Object System.Net.WebClient
+          $webclient.DownloadString("https://github.com") >$null
+
       - name: Setup release build
-        run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
+        run: |
+          meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
         run: meson setup -Ddefault_library=static -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR

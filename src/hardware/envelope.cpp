@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2019-2021  kcgen <kcgen@users.noreply.github.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -100,7 +100,7 @@ void Envelope::Apply(const bool is_stereo, AudioFrame &frame)
 	if (++frames_done > expire_after_frames || edge >= edge_limit) {
 		process = &Envelope::Skip;
 		(void)channel_name; // [[maybe_unused]] in release builds
-		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %f",
+		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %.4f",
 		              channel_name,
 		              frames_done,
 		              edge);

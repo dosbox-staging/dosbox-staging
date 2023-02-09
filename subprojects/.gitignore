@@ -4,13 +4,15 @@ glib-*
 googletest-release-*
 iir1-*
 libffi*
+libjpeg-*
+libpng-*
 libslirp-*
 munt-libmt32emu*
 packagecache
 pcre*
 proxy-libintl*
+SDL2_image-*
 speexdsp-*
 tracy-*
 zlib*
 gvdb*
-

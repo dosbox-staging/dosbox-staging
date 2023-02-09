@@ -83,9 +83,9 @@ void MOUSE_NotifyBooting();
 // and can accept requests from mouse emulation module
 void MOUSE_NotifyReadyGFX();
 
-// Notify that window has lost or gained focus, this tells the mouse
+// Notify whether emulator window is active, this tells the mouse
 // emulation code if it should process mouse events or ignore them
-void MOUSE_NotifyHasFocus(const bool has_focus);
+void MOUSE_NotifyWindowActive(const bool is_active);
 
 // A GUI has to use this function to tell when it takes over or releases
 // the mouse; this will change various settings like raw input (we don't

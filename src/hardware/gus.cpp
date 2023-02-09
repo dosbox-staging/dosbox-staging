@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,8 +54,8 @@ const auto ultradir_env_name = "ULTRADIR";
 constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
 
 // DMA transfer size and rate constants
-constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
-constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MiB/s
+constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
+constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
 constexpr double MS_PER_DMA_XFER = millis_in_second / DMA_TRANSFERS_PER_S;
 
@@ -1635,34 +1635,34 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 
 	auto *bool_prop = secprop.Add_bool("gus", when_idle, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable Gravis UltraSound emulation.");
+	bool_prop->Set_help("Enable Gravis UltraSound emulation (disabled by default).");
 
 	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
 	const char *const bases[] = {"240", "220", "260", "280",  "2a0",
 	                             "2c0", "2e0", "300", nullptr};
 	hex_prop->Set_values(bases);
-	hex_prop->Set_help("The IO base address of the Gravis UltraSound.");
+	hex_prop->Set_help("The IO base address of the Gravis UltraSound (240 by default).");
 
 	auto *int_prop = secprop.Add_int("gusirq", when_idle, 5);
 	assert(int_prop);
-	const char *const irqs[] = {"5",  "3",  "7",  "9",
+	const char *const irqs[] = {"3",  "5",  "7",  "9",
 	                            "10", "11", "12", nullptr};
 	int_prop->Set_values(irqs);
-	int_prop->Set_help("The IRQ number of the Gravis UltraSound.");
+	int_prop->Set_help("The IRQ number of the Gravis UltraSound (5 by default).");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
 	assert(int_prop);
-	const char *const dmas[] = {"3", "0", "1", "5", "6", "7", nullptr};
+	const char *const dmas[] = {"0", "1", "3", "5", "6", "7", nullptr};
 	int_prop->Set_values(dmas);
-	int_prop->Set_help("The DMA channel of the Gravis UltraSound.");
+	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
 
-	auto *str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
+	auto* str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
 	assert(str_prop);
-	str_prop->Set_help("Path to UltraSound directory. In this directory\n"
-	                   "there should be a MIDI directory that contains\n"
-	                   "the patch files for GUS playback. Patch sets used\n"
-	                   "with Timidity should work fine.");
+	str_prop->Set_help(
+	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
+	        "In this directory there should be a MIDI directory that contains the patch\n"
+	        "files for GUS playback. Patch sets used with Timidity should work fine.");
 
 	str_prop = secprop.Add_string("gus_filter", when_idle, "off");
 	assert(str_prop);

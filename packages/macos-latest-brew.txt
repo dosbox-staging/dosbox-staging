@@ -3,6 +3,7 @@ cmake
 curl
 fluid-synth
 git
+gnu-tar
 libpng
 libslirp
 meson

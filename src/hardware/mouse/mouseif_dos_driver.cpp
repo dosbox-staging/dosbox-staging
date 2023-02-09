@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -241,18 +241,22 @@ static uint16_t mickey_counter_to_reg16(const float x)
 // Data - default cursor/mask
 // ***************************************************************************
 
-static constexpr uint16_t default_text_and_mask = 0x77FF;
+static constexpr uint16_t default_text_and_mask = 0x77ff;
 static constexpr uint16_t default_text_xor_mask = 0x7700;
 
+// clang-format off
+
 static uint16_t default_screen_mask[cursor_size_y] = {
-	0x3FFF, 0x1FFF, 0x0FFF, 0x07FF, 0x03FF, 0x01FF, 0x00FF, 0x007F,
-        0x003F, 0x001F, 0x01FF, 0x00FF, 0x30FF, 0xF87F, 0xF87F, 0xFCFF
+	0x3fff, 0x1fff, 0x0fff, 0x07ff, 0x03ff, 0x01ff, 0x00ff, 0x007f,
+	0x003f, 0x001f, 0x01ff, 0x00ff, 0x30ff, 0xf87f, 0xf87f, 0xfcff
 };
 
 static uint16_t default_cursor_mask[cursor_size_y] = {
-	0x0000, 0x4000, 0x6000, 0x7000, 0x7800, 0x7C00, 0x7E00, 0x7F00,
-        0x7F80, 0x7C00, 0x6C00, 0x4600, 0x0600, 0x0300, 0x0300, 0x0000
+	0x0000, 0x4000, 0x6000, 0x7000, 0x7800, 0x7c00, 0x7e00, 0x7f00,
+	0x7f80, 0x7c00, 0x6c00, 0x4600, 0x0600, 0x0300, 0x0300, 0x0000
 };
+
+// clang-format on
 
 // ***************************************************************************
 // Text mode cursor

@@ -252,7 +252,7 @@ int Integrator6581::solve(int vi) const
     const unsigned int Ir = static_cast<unsigned int>(fmc->getVcr_n_Ids_term(kVgt_Vd)) << 15;
 #ifdef SLOPE_FACTOR
     const double iVcr = static_cast<double>(If - Ir);
-    const int n_I_vcr = static_cast<int>((iVcr * n) + 0.5);
+    const int n_I_vcr = static_cast<int>(iVcr * n);
 #else
     const int n_I_vcr = If - Ir;
 #endif

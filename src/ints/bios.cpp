@@ -1268,8 +1268,11 @@ public:
 		i = 0;
 		for (const auto c : "01/01/92")
 			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
-
-		phys_writeb(0xfffff, 0x55); // signature
+		
+		// write machine signature
+		constexpr uint32_t machine_signature_location = 0xfffff;
+		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
+		phys_writeb(machine_signature_location, machine_signature);
 
 		tandy_sb.port=0;
 		tandy_dac.port=0;

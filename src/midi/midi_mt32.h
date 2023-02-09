@@ -1,8 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2012-2021  sergm <sergm@bigmir.net>
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -62,33 +61,33 @@ public:
 	void PrintStats();
 
 private:
-	uint32_t GetMidiEventTimestamp() const;
 	service_t GetService();
 	void MixerCallBack(uint16_t len);
-	uint16_t GetRemainingFrames();
+	void ProcessWorkFromFifo();
+
+	uint16_t GetNumPendingAudioFrames();
+	void RenderAudioFramesToFifo(const uint16_t num_frames = 1);
 	void Render();
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
-
-	std::vector<float> play_buffer = {};
-	static constexpr auto num_buffers = 20;
-	RWQueue<std::vector<float>> playable{num_buffers};
-	RWQueue<std::vector<float>> backstock{num_buffers};
+	RWQueue<AudioFrame> audio_frame_fifo{1};
+	RWQueue<MidiWork> work_fifo{1};
 
 	std::mutex service_mutex = {};
 	service_t service = {};
 	std::thread renderer = {};
 	std::optional<model_and_dir_t> model_and_dir = {};
 
-	// The following two members let us determine the total number of played
-	// frames, which is used by GetMidiEventTimestamp() to calculate a total
-	// time offset.
-	uint32_t total_buffers_played = 0;
-	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
+	// Used to track the balance of time between the last mixer callback
+	// versus the current MIDI Sysex or Msg event.
+	double last_rendered_ms = 0.0;
+	double ms_per_audio_frame = 0.0;
 
 	std::atomic_bool keep_rendering = {};
-	bool is_open = false;
+
+	bool had_underruns = false;
+	bool is_open       = false;
 };
 
 #endif // C_MT32EMU

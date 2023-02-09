@@ -1,9 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
- *  Copyright (C) 2020-2020  Nikos Chantziaras <realnc@gmail.com>
- *  Copyright (C) 2002-2011  The DOSBox Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,8 +47,13 @@ public:
 	MIDI_RC ListAll(Program *caller) override;
 
 private:
-	void MixerCallBack(uint16_t requested_frames);
-	uint16_t GetRemainingFrames();
+	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
+	void ApplySysexMessage(const std::vector<uint8_t>& msg);
+	void MixerCallBack(uint16_t requested_audio_frames);
+	void ProcessWorkFromFifo();
+
+	uint16_t GetNumPendingAudioFrames();
+	void RenderAudioFramesToFifo(const uint16_t num_audio_frames = 1);
 	void Render();
 
 	using fluid_settings_ptr_t =
@@ -59,19 +62,23 @@ private:
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
+
 	mixer_channel_t channel = nullptr;
-	std::string selected_font = "";
-
-	std::vector<float> play_buffer = {};
-	static constexpr auto num_buffers = 20;
-	RWQueue<std::vector<float>> playable{num_buffers};
-	RWQueue<std::vector<float>> backstock{num_buffers};
-
+	RWQueue<AudioFrame> audio_frame_fifo{1};
+	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
 
-	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
+	std::string selected_font = "";
+
+	// Used to track the balance of time between the last mixer callback
+	// versus the current MIDI Sysex or Msg event.
+	double last_rendered_ms = 0.0;
+	double ms_per_audio_frame = 0.0;
+
 	std::atomic_bool keep_rendering = {};
-	bool is_open = false;
+
+	bool had_underruns = false;
+	bool is_open       = false;
 };
 
 #endif // C_FLUIDSYNTH

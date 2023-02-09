@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -262,27 +262,29 @@ static void config_init(Section_prop &secprop)
 	assert(prop_str);
 	prop_str->Set_values(list_capture_types);
 	prop_str->Set_help(
-	        "Choose a mouse control method:\n"
-	        "  onclick:   Capture the mouse when clicking any button in the window.\n"
+	        "Set the mouse capture behaviour:\n"
+	        "  onclick:   Capture the mouse when clicking any mouse button in the window \n"
+	        "             (default).\n"
 	        "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
 	        "             on some host operating systems.\n"
-	        "  seamless:  Let the mouse move seamlessly; captures only with middle-click or\n"
-	        "             hotkey. Seamless mouse does not work correctly with all the games,\n"
+	        "  seamless:  Let the mouse move seamlessly between the DOSBox window and the\n"
+	        "             rest of the desktop; captures only with middle-click or hotkey.\n"
+	        "             Seamless mouse does not work correctly with all the games.\n"
 	        "             Windows 3.1x can be made compatible with a custom mouse driver.\n"
-	        "  nomouse:   Hide the mouse and don't send input to the game.\n"
-	        "For touchscreen control use the seamless method.\n");
+	        "  nomouse:   Hide the mouse and don't send mouse input to the game.\n"
+	        "For touch-screen control, use 'seamless'.");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
-	prop_bool->Set_help("If true, middle-click will release the captured mouse, and also\n"
-	                    "capture when seamless.");
+	prop_bool->Set_help("If enabled, middle-click will release the captured mouse, and also capture\n"
+	                    "when seamless (enabled by default).");
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
-	        "Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.\n"
-	        "Negative values reverse mouse direction, 0 disables the movement completely.\n"
-	        "The optional second parameter specifies vertical sensitivity (e.g. 100,200).\n"
-	        "Setting can be adjusted in runtime (also per mouse interface) using internal\n"
-	        "MOUSECTL.COM tool, available on drive Z:.");
+	        "Mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
+	        "(100,100 by default). Negative values invert the axis, zero disables it.\n"
+	        "Providing only one value sets sensitivity for both axes.\n"
+	        "The setting can be adjusted in runtime (also per mouse interface) using\n"
+	        "internal MOUSECTL.COM tool, available on drive Z.");
 	prop_multi->SetValue("100");
 
 	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
@@ -295,30 +297,30 @@ static void config_init(Section_prop &secprop)
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(
 	        "Enable to bypass your operating system's mouse acceleration and sensitivity\n"
-	        "settings. Works in fullscreen or when the mouse is captured in window mode.");
+	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
+	        "captured in window mode.");
 
 	// DOS driver configuration
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Enable built-in DOS mouse driver.\n"
-	        "Notes:\n"
-	        "   Disable if you intend to use original MOUSE.COM driver in emulated DOS.\n"
-	        "   When guest OS is booted, built-in driver gets disabled automatically.");
+	        "Enable built-in DOS mouse driver (enabled by default).\n"
+	        "Notes: Disable if you intend to use original MOUSE.COM driver in emulated DOS.\n"
+	        "       When guest OS is booted, built-in driver gets disabled automatically.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Updates mouse movement counters immediately, without waiting for interrupt.\n"
-	        "May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as\n"
-	        "for some games it effectively boosts the mouse sampling rate to 1000 Hz, without\n"
-	        "increasing interrupt overhead.\n"
+	        "Update mouse movement counters immediately, without waiting for interrupt\n"
+	        "(disabled by default). May improve gameplay, especially in fast-paced games\n"
+	        "(arcade, FPS, etc.), as for some games it effectively boosts the mouse\n"
+	        "sampling rate to 1000 Hz, without increasing interrupt overhead.\n"
 	        "Might cause compatibility issues. List of known incompatible games:\n"
-	        "   - Ultima Underworld: The Stygian Abyss\n"
-	        "   - Ultima Underworld II: Labyrinth of Worlds\n"
-	        "Please file a bug with the project if you find another game that fails when\n"
-	        "this is enabled, we will update this list.");
+	        "  - Ultima Underworld: The Stygian Abyss\n"
+	        "  - Ultima Underworld II: Labyrinth of Worlds\n"
+	        "Please report it if you find another incompatible game so we can update this\n"
+	        "list.");
 
 	// Physical mice configuration
 
@@ -329,32 +331,31 @@ static void config_init(Section_prop &secprop)
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
 	        // TODO - Add option "none"
-	        "   standard:       3 buttons, standard PS/2 mouse.\n"
-	        "   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.\n"
+	        "   standard:      3 buttons, standard PS/2 mouse.\n"
+	        "   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse (default)."
 #ifdef ENABLE_EXPLORER_MOUSE
-	        "   explorer:       5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
+	        "\n   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer."
 #endif
-	        "Default: intellimouse");
+	);
 
-	prop_str = secprop.Add_string("com_mouse_model", only_at_start,
+	prop_str = secprop.Add_string("com_mouse_model",
+	                              only_at_start,
 	                              model_com_wheel_msm_str);
 	assert(prop_str);
 	prop_str->Set_values(list_models_com);
 	prop_str->Set_help(
 	        "COM (serial) port default mouse model:\n"
-	        "   2button:        2 buttons, Microsoft mouse.\n"
-	        "   3button:        3 buttons, Logitech mouse,\n"
-	        "                   mostly compatible with Microsoft mouse.\n"
-	        "   wheel:          3 buttons + wheel,\n"
-	        "                   mostly compatible with Microsoft mouse.\n"
-	        "   msm:            3 buttons, Mouse Systems mouse,\n"
-	        "                   NOT COMPATIBLE with Microsoft mouse.\n"
-	        "   2button+msm:    Automatic choice between 2button and msm.\n"
-	        "   3button+msm:    Automatic choice between 3button and msm.\n"
-	        "   wheel+msm:      Automatic choice between wheel and msm.\n"
-	        "Default: wheel+msm\n"
-	        "Notes:\n"
-	        "   Go to [serial] section to enable/disable COM port mice.");
+	        "   2button:      2 buttons, Microsoft mouse.\n"
+	        "   3button:      3 buttons, Logitech mouse;\n"
+	        "                 mostly compatible with Microsoft mouse.\n"
+	        "   wheel:        3 buttons + wheel;\n"
+	        "                 mostly compatible with Microsoft mouse.\n"
+	        "   msm:          3 buttons, Mouse Systems mouse;\n"
+	        "                 NOT compatible with Microsoft mouse.\n"
+	        "   2button+msm:  Automatic choice between '2button' and 'msm'.\n"
+	        "   3button+msm:  Automatic choice between '3button' and 'msm'.\n"
+	        "   wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
+	        "Notes: Enable COM port mice in the [serial] section.");
 }
 
 void MOUSE_AddConfigSection(const config_ptr_t &conf)

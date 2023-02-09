@@ -1,0 +1,35 @@
+ARG DOSBOX_VERS=v0.00.0
+ARG BASE_IMG=ghcr.io/dosbox-staging/debian-cross-base
+ARG DEB_VERS=10
+
+FROM ${BASE_IMG}:${DEB_VERS}-${DOSBOX_VERS} as final
+ARG DPKG_ARCH=arm64
+ARG DOSBOX_APT_LIST=/debian-apt-list.txt
+ARG DEB_VERS
+
+ENV MESON_CROSS_FILE=/usr/local/share/meson/cross/dosbox-cross
+
+COPY ./debian-${DEB_VERS}-docker-apt.txt ${DOSBOX_APT_LIST}
+
+RUN mkdir -p $(dirname ${MESON_CROSS_FILE})
+RUN apt-get update && apt-get -y install --no-install-recommends \
+        meson \
+        crossbuild-essential-${DPKG_ARCH} \
+    && /usr/share/meson/debcrossgen --arch ${DPKG_ARCH} -o ${MESON_CROSS_FILE} \
+    && apt-get -y remove meson \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update &&  apt-get -y install --no-install-recommends \
+        $(sed 's/$/':${DPKG_ARCH}'/g' ${DOSBOX_APT_LIST}) \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install meson
+
+RUN export DPKG_TRIPLET=$(dpkg-architecture -A ${DPKG_ARCH} -q DEB_TARGET_MULTIARCH); \
+    # Fixup meson cross file for qemu-user-static and ccache
+    sed -i "2i exe_wrapper = '/usr/bin/qemu-${DPKG_TRIPLET%%-*}-static'" ${MESON_CROSS_FILE} \
+    && sed -i -r 's@(c|cpp) = '\'"(/usr/bin/[^']+)'@"'\1'" = ['ccache', '"'\2'"']@g" ${MESON_CROSS_FILE} \
+    # Fix opusfile pkgconfig
+    && sed 's@libdir=\${exec_prefix}/lib@libdir=\${prefix}/lib/'"${DPKG_TRIPLET}@g" \
+        /usr/lib/pkgconfig/opusfile.pc > /usr/lib/${DPKG_TRIPLET}/pkgconfig/opusfile.pc

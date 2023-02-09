@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,38 @@ void MIDI_Init(Section *sec);
 void MIDI_ListAll(Program *output_handler);
 void MIDI_RawOutByte(uint8_t data);
 void MIDI_ResumeSequence();
+
+enum class MessageType : uint8_t {
+	Channel,
+	SysEx,
+};
+
+struct MidiWork {
+	std::vector<uint8_t> message      = {};
+	uint16_t num_pending_audio_frames = 0;
+	MessageType message_type          = {};
+
+	// Default value constructor
+	MidiWork()                      = default;
+	MidiWork(MidiWork&&)            = default;
+	MidiWork& operator=(MidiWork&&) = default;
+
+	// Construct from movable values
+	MidiWork(std::vector<uint8_t>&& _message,
+	         const uint16_t _num_audio_frames_pending,
+	         const MessageType _message_type)
+	        : message(std::move(_message)),
+	          num_pending_audio_frames(_num_audio_frames_pending),
+	          message_type(_message_type)
+	{
+		// leave the source in a valid state
+		_message.clear();
+	}
+
+	// Prevent copy construction
+	MidiWork(const MidiWork&)            = delete;
+	MidiWork& operator=(const MidiWork&) = delete;
+};
 
 #if C_FLUIDSYNTH
 void FLUID_AddConfigSection(const config_ptr_t &conf);

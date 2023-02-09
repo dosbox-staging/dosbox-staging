@@ -415,7 +415,7 @@
     <ClCompile Include="..\src\libs\manymouse\windows_wminput.c">
       <Filter>src\libs\manymouse</Filter>
     </ClCompile>
-      <ClCompile Include="..\src\libs\manymouse\x11_xinput2.c">
+    <ClCompile Include="..\src\libs\manymouse\x11_xinput2.c">
       <Filter>src\libs\manymouse</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\nuked\opl3.c">
@@ -778,11 +778,20 @@
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\window.c">
       <Filter>src\libs\pdcurses</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
-    <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
-    <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
+    <ClCompile Include="..\src\libs\zmbv\drvproc.cpp">
+      <Filter>src\libs\zmbv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\zmbv\zmbv.cpp">
+      <Filter>src\libs\zmbv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp">
+      <Filter>src\libs\zmbv</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\audio_frame.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\bios.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -1095,9 +1104,6 @@
     <ClInclude Include="..\src\ints\int10.h">
       <Filter>src\ints</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ints\mouse_core.h">
-      <Filter>src\ints</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ints\xms.h">
       <Filter>src\ints</Filter>
     </ClInclude>
@@ -1291,7 +1297,9 @@
       <Filter>src\libs\stb_truetype</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\zmbv\Resource.h" />
-    <ClInclude Include="..\src\libs\zmbv\zmbv.h" />
+    <ClInclude Include="..\src\libs\zmbv\zmbv.h">
+      <Filter>src\libs\zmbv</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
@@ -1414,6 +1422,15 @@
     </Filter>
     <Filter Include="src\libs\pdcurses">
       <UniqueIdentifier>{40435b8c-40e5-4751-ad49-5c4492538be5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hardware\mouse">
+      <UniqueIdentifier>{411a6bc1-3131-4a5e-a132-538b5864f2f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\manymouse">
+      <UniqueIdentifier>{367194fd-13af-44ca-8bd9-b3f1190f786c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\zmbv">
+      <UniqueIdentifier>{99b19861-c042-4e3e-bf24-ee8a418866f6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

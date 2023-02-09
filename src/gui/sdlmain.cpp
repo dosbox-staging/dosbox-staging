@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -750,8 +750,8 @@ static void log_display_properties(int source_w, int source_h,
 	const auto scale_y = static_cast<double>(target_h) / source_h;
 	const auto out_par = scale_y / scale_x;
 
-	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type,
-	                                                        CurMode->mode);
+	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
+	const auto [mode_desc, colours_desc] = VGA_DescribeMode(mode_type, mode_id);
 
 	const char *frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -759,9 +759,8 @@ static void log_display_properties(int source_w, int source_h,
 	case FRAME_MODE::VFR: frame_mode = "VFR"; break;
 	case FRAME_MODE::SYNCED_CFR: frame_mode = "synced CFR"; break;
 	case FRAME_MODE::THROTTLED_VFR: frame_mode = "throttled VFR"; break;
-	case FRAME_MODE::UNSET: break;
+	case FRAME_MODE::UNSET: frame_mode = "Unset frame_mode"; break;
 	}
-	assert(frame_mode);
 
 	// Some DOS FPS rates are double-scanned in hardware, so multiply them
 	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
@@ -770,15 +769,19 @@ static void log_display_properties(int source_w, int source_h,
 	                                      ? "double-scanned "
 	                                      : "";
 
-	const auto colours = (type_colours == "") ? "" : " " + type_colours;
+	// Double check all the char* string variables
+	assert(mode_desc);
+	assert(colours_desc);
+	assert(double_scanned_str);
+	assert(frame_mode);
 
-	LOG_MSG("DISPLAY: %s %dx%d%s (mode %02Xh) at %s%2.5g Hz %s, scaled"
+	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %s%2.5g Hz %s, scaled"
 	        " to %dx%d with %.4g pixel aspect ratio",
-	        type_name.c_str(),
+	        mode_desc,
 	        source_w,
 	        source_h,
-	        colours.c_str(),
-	        CurMode->mode,
+	        colours_desc,
+	        mode_id,
 	        double_scanned_str,
 	        refresh_rate,
 	        frame_mode,
@@ -3560,6 +3563,7 @@ void Restart(bool pressed);
 static void ApplyActiveSettings()
 {
 	SetPriority(sdl.priority.active);
+	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::On);
@@ -3568,6 +3572,7 @@ static void ApplyActiveSettings()
 static void ApplyInactiveSettings()
 {
 	SetPriority(sdl.priority.inactive);
+	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
 		MIXER_SetState(MixerState::Off);
@@ -3945,7 +3950,6 @@ bool GFX_Events()
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
-				ApplyActiveSettings();
 				FocusInput();
 				continue;
 
@@ -3959,6 +3963,8 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				ApplyActiveSettings();
+				[[fallthrough]];
 			case SDL_WINDOWEVENT_EXPOSED:
 				// DEBUG_LOG_MSG("SDL: Window has been exposed "
 				//               "and should be redrawn");
@@ -3978,8 +3984,6 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
-				MOUSE_NotifyHasFocus(true);
-				ApplyActiveSettings();
 				FocusInput();
 				continue;
 
@@ -3994,7 +3998,6 @@ bool GFX_Events()
 				ApplyInactiveSettings();
 				GFX_LosingFocus();
 				CPU_Enable_SkipAutoAdjust();
-				MOUSE_NotifyHasFocus(false);
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
@@ -4140,9 +4143,11 @@ bool GFX_Events()
 							if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (ev.window.event == SDL_WINDOWEVENT_MINIMIZED) || (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
 								// We've got focus back, so unpause and break out of the loop
 								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
-									paused = false;
 									GFX_RefreshTitle();
-									ApplyActiveSettings();
+									if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+										paused = false;
+										ApplyActiveSettings();
+									}
 									CPU_Disable_SkipAutoAdjust();
 								}
 
@@ -4307,12 +4312,12 @@ void config_add_sdl() {
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
 	        "Set window size when running in windowed mode:\n"
-	        "  default:   Select the best option based on your\n"
-	        "             environment and other settings.\n"
-	        "  small, medium, or large (or s, m, l):\n"
+	        "  default:   Select the best option based on your environment and\n"
+	        "             other settings.\n"
+	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
-	        "  <custom>:  Scale the window to the given dimensions in\n"
-	        "             WxH format. For example: 1024x768.\n"
+	        "  <custom>:  Scale the window to the given dimensions in WxH format.\n"
+	        "             For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
 	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
@@ -4330,7 +4335,7 @@ void config_add_sdl() {
 	        "             0,0 is the top-left corner of the screen.");
 
 	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
+	Pbool->Set_help("Enable window decorations in windowed mode.");
 
 	Pint = sdl_sec->Add_int("transparency", always, 0);
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
@@ -4353,18 +4358,18 @@ void config_add_sdl() {
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
-	        "Synchronize with display refresh rate if supported. This can\n"
-	        "reduce flickering and tearing, but may also impact performance.");
+	        "Synchronize with display refresh rate if supported.\n"
+	        "This can reduce flickering and tearing, but may also impact performance.");
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping the next\n"
-	               "frame. 0 disables this and will always render.");
+	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
+	               "next frame. 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
 
 	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
-	        "Optionally select the frame presentation mode:\n"
+	        "Select the frame presentation mode:\n"
 	        "  auto:  Intelligently time and drop frames to prevent\n"
 	        "         emulation stalls, based on host and DOS frame rates.\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
@@ -4388,12 +4393,12 @@ void config_add_sdl() {
 #else
 	Pstring = sdl_sec->Add_string("output", always, "texture");
 #endif
-	Pstring->Set_help("What video system to use for output.");
+	Pstring->Set_help("Video system to use for output.");
 	Pstring->Set_values(outputs);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Choose a renderer driver when using a texture output mode.\n"
-	                  "Use texture_renderer=auto for an automatic choice.");
+	pstring->Set_help("Render driver to use in 'texture' output mode.\n"
+	                  "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
@@ -4408,9 +4413,9 @@ void config_add_sdl() {
 
 	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
-	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively. \n"
-	                 "   auto:  Let the host operating system manage the priority (valid for both).\n"
-	                 "Default is: 'auto auto'");
+	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
+	                 "('auto auto' by default)\n"
+	                 "'auto' lets the host operating system manage the priority.");
 
 	const char *priority_level_choices[] = {
 	        "auto",
@@ -4438,13 +4443,13 @@ void config_add_sdl() {
 	        "File used to load/save the key/event mappings.\n"
 	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
 	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
-	        "Note: the -resetmapper commandline flag only deletes the default mapperfile.");
+	        "Notes: The -resetmapper commandline flag only deletes the default mapperfile.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
-	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
-	        "environment variable (which usually blocks the OS screensaver\n"
-	        "while the emulator is running).");
+	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
+	        "variable (which usually blocks the OS screensaver while the emulator is\n"
+	        "running).");
 	const char *ssopts[] = {"auto", "allow", "block", 0};
 	pstring->Set_values(ssopts);
 }

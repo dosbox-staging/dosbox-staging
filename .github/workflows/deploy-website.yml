@@ -1,0 +1,39 @@
+name: Deploy website
+
+on: workflow_dispatch
+
+jobs:
+  build_and_deploy_website:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out MkDocs sources
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          submodules: false
+          path: dosbox-staging
+
+      - name: Check out organisation GitHub Pages repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.ACCESS_TOKEN_REPO }}
+          repository: dosbox-staging/dosbox-staging.github.io
+          ref: master
+          submodules: false
+          path: dosbox-staging.github.io
+
+      - name: Install mkdocs
+        run: |
+          pip install mkdocs-material==9.0.2 \
+                      mkdocs-minify-plugin==0.6.2 --use-pep517 \
+                      mkdocs-redirects==1.2.0 --use-pep517 \
+                      mkdocs-glightbox==0.3.1 \
+                      mdx-gh-links==0.3
+
+      - name: Build & deploy website
+        run: |
+          cd dosbox-staging.github.io
+          mkdocs gh-deploy \
+              --config-file ../dosbox-staging/website/mkdocs.yml \
+              --remote-branch master --force
+

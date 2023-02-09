@@ -37,8 +37,8 @@ import sys
 
 if __name__ == "__main__":
     script_py = sys.argv[1]
-    script_sh = script_py + '.sh'
+    script_sh = script_py + ".sh"
     shutil.copy(script_py, script_sh)
-    bash = [r'C:\tools\msys64\usr\bin\bash', '-eo', 'pipefail', '-l']
+    bash = [r"C:\tools\msys64\usr\bin\bash", "-eo", "pipefail", "-l"]
     rcode = subprocess.call(bash + [script_sh])
     sys.exit(rcode)

@@ -183,12 +183,16 @@ struct Int10Data {
 
 extern Int10Data int10;
 
-static inline uint8_t CURSOR_POS_COL(uint8_t page) {
-	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2);
+inline uint8_t CURSOR_POS_COL(const uint8_t page)
+{
+	const auto cursor_offset = static_cast<uint16_t>(page * 2);
+	return real_readb(BIOSMEM_SEG, BIOSMEM_CURSOR_POS + cursor_offset);
 }
 
-static inline uint8_t CURSOR_POS_ROW(uint8_t page) {
-	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
+inline uint8_t CURSOR_POS_ROW(const uint8_t page)
+{
+	const auto cursor_offset = static_cast<uint16_t>(page * 2 + 1);
+	return real_readb(BIOSMEM_SEG, BIOSMEM_CURSOR_POS + cursor_offset);
 }
 
 void INT10_SetupPalette();

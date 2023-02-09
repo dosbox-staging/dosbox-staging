@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,9 @@
 #include <memory>
 #include <set>
 
-#include "envelope.h"
 #include "../src/hardware/compressor.h"
+#include "audio_frame.h"
+#include "envelope.h"
 
 // Disable effc++ for Iir until its release.
 // Ref: https://github.com/berndporr/iir1/pull/39
@@ -58,27 +59,6 @@ enum class MixerState {
 	Off,
 	On,
 	Mute,
-};
-
-// A simple stereo audio frame
-struct AudioFrame {
-	float left  = 0.0f;
-	float right = 0.0f;
-
-	constexpr AudioFrame() = default;
-	constexpr AudioFrame(const float l, const float r) : left(l), right(r) {}
-	constexpr AudioFrame(const int16_t l, const int16_t r) : left(l), right(r) {}
-
-	constexpr float& operator[](const size_t i) noexcept
-	{
-		assert(i < 2);
-		return i == 0 ? left : right;
-	}
-	constexpr const float &operator[](const size_t i) const noexcept
-	{
-		assert(i < 2);
-		return i == 0 ? left : right;
-	}
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
@@ -420,6 +400,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t &conf);
 int MIXER_GetSampleRate();
+uint16_t MIXER_GetPreBufferMs();
 bool MIXER_IsManuallyMuted();
 void MIXER_SetState(const MixerState requested);
 
