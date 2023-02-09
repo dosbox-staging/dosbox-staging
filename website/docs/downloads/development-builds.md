@@ -92,8 +92,8 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
 document.addEventListener("DOMContentLoaded", () => {
     set_ci_status("linux.yml", "linux", "Linux");
     set_ci_status("macos.yml", "macos", "macOS");
-    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds");
-    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds");
+    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ¹");
+    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ²");
 });
 
 </script>
@@ -115,51 +115,55 @@ document.addEventListener("DOMContentLoaded", () => {
   </tr>
   <tr>
     <td id="linux-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="linux-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="linux-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="macos-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="macos-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="macos-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="msys2-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="msys2-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="msys2-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="windows-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="windows-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="windows-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
 </table>
 </div>
 
+¹ Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
+(default) and 64-bit MSVC (optional).
+
+² Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
 
 ## Installation notes
 
