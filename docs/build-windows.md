@@ -80,6 +80,12 @@ you build a binary optimized for gaming.
    meson setup build/release-clang --native-file=.github/meson/native-clang.ini
    ```
 
+   If building for Vista use instead:
+
+   ``` shell
+   meson setup -Duse_fluidsynth=false -Duse_slirp=false build/release-clang --native-file=.github/meson/native-clang.ini
+   ```   
+
 9. Compile:
 
    ``` shell
