@@ -26,7 +26,7 @@ the changes and improvements introduced by this release.
     Microsoft Defender SmartScreen, see the [section below](#microsoft-defender-smartscreen).
 
 For 32-bit Windows 7 and newer, and for 64-bit Windows 7 hosts use the respective MSVC builds:
-- The 32-bit MSVC build [Download DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
+- The 32-bit MSVC build [DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
 - The 64-bit MSVC build on Windows 7 or newer can be optionally selected in the installer.
 
 Windows Vista hosts are supported out-of-the-box up to release 0.78.1.
