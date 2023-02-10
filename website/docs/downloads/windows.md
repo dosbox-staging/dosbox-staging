@@ -5,6 +5,8 @@ hide:
 
 # Windows builds
 
+## Windows 8.x or newer
+
 [Download DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER]
 <br>
 <small>
@@ -17,6 +19,12 @@ sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
 sha256: 3680cbdf7a91467877b51c95e468ef45<wbr>b186b42518c3163fab85c727923ee659
 </small>
 
+[Download DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
+<br>
+<small>
+sha256: 
+</small>
+
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
 the changes and improvements introduced by this release.
 
@@ -25,16 +33,26 @@ the changes and improvements introduced by this release.
     If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
     Microsoft Defender SmartScreen, see the [section below](#microsoft-defender-smartscreen).
 
-The installer uses by default the MSYS2 build, which works on 64-bit Windows 8.x or newer.<br>
+## Windows 7
 
-For 64-bit Windows 7 use the 64-bit MSVC build. It can be optionally selected via the installer and is also available as ZIP.<br>
-For 32-bit Windows 7, 8.x and 10 use the 32-bit MSVC build [DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
+For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
+in the [installer](0_80_1_x64_INSTALLER) and is also available as a [portable
+ZIP archive](0_80_1_x64_ZIP).
 
-Windows Vista is supported out-of-the-box up to release 0.78.1.
-<br>
-Subsequent releases can be built from source by excluding FluidSynth and Slirp. Please see the [Windows MSYS2 build instructions][5] for further details.
+For 32-bit Windows 7, use the [portable 32-bit MSVC build](0_80_1_x32_ZIP)
 
-[5]:https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2 
+## Windows Vista
+
+The official distribution packages only support Windows Vista up to version
+0.78.1.
+
+More recent releases can be built from the source by excluding FluidSynth and
+Slirp support. Please see the [Windows MSYS2 build instructions][win-build]
+for further details.
+
+[win-build]: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2
+
+## Harware requirements
 
 CPUs without SSE4.2 are supported up to release 0.75.0. 
 
@@ -97,13 +115,13 @@ command-line install parameters, please see [Inno's documentation page](https://
 ## Older builds
 
 - [DOSBox Staging 0.80.0 64-bit (Installer)][0_80_0_x64_INSTALLER] (Windows 7 or newer)
-  <br/>
+  <br>
   <small>
   sha256: 84445c869e58f6b4591484f6178c7b5b<wbr>3c8f284bf9460e9afc4502ba842ab039
   </small>
 
 - [DOSBox Staging 0.80.0 64-bit (zip)][0_80_0_x64_ZIP] (Windows 7 or newer)
-  <br/>
+  <br>
   <small>
   sha256: 075be379ed4475615e0e86953eb21f02<wbr>4c74b4cafd6914e9cf5ef40e3d9e26cd
   </small>
