@@ -115,46 +115,46 @@ document.addEventListener("DOMContentLoaded", () => {
   </tr>
   <tr>
     <td id="linux-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="linux-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="linux-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="macos-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="macos-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="macos-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="msys2-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="msys2-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="msys2-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
   <tr>
     <td id="windows-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="windows-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
     <td id="windows-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg" />
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
 </table>
