@@ -1303,7 +1303,7 @@ Obraz
 Slot
 .
 :PROGRAM_MOUNT_STATUS_2
-%s zamontowany jako dysk %c.
+%s zamontowany jako dysk %c
 
 .
 :PROGRAM_MOUNT_STATUS_1

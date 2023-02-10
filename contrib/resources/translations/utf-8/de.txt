@@ -1170,10 +1170,10 @@ Lokales Verzeichnis
 CD-ROM Laufwerk
 .
 :MOUNT_TYPE_FAT
-FAT image
+FAT-Image
 .
 :MOUNT_TYPE_ISO
-ISO image
+ISO-Image
 .
 :MOUNT_TYPE_VIRTUAL
 Virtuelles internes Laufwerk
