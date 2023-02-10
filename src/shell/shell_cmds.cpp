@@ -244,7 +244,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 //TODO Maybe support confirmation for *.* like dos does.
 	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
-		WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
 		dos.dta(save_dta);
 		return;
 	}
@@ -254,8 +254,10 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	DOS_DTA dta(dos.dta());
 	while (res) {
 		dta.GetResult(name,size,date,time,attr);
-		if (!(attr & (DOS_ATTR_DIRECTORY|DOS_ATTR_READ_ONLY))) {
-			strcpy(end,name);
+		strcpy(end, name);
+		if (attr & DOS_ATTR_READ_ONLY) {
+			WriteOut(MSG_Get("SHELL_CMD_FILE_ACCESS_DENIED"), full);
+		} else if (!(attr & DOS_ATTR_DIRECTORY)) {
 			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
 		}
 		res=DOS_FindNext();
