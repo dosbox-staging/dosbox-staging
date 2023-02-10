@@ -1071,7 +1071,7 @@ Tipo
 Etiqueta
 .
 :PROGRAM_MOUNT_STATUS_2
-La unidad %c está montada como %s
+%s montada como unidad %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -2749,19 +2749,19 @@ Miscellaneous Commands
 Unknown Command
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
+Local directory
 .
 :MOUNT_TYPE_CDROM
 CD-ROM drive
 .
 :MOUNT_TYPE_FAT
-FAT drive
+FAT imagen
 .
 :MOUNT_TYPE_ISO
-ISO drive
+ISO imagen
 .
 :MOUNT_TYPE_VIRTUAL
-internal virtual drive
+Internal virtual drive
 .
 :MOUNT_TYPE_UNKNOWN
 unknown drive
@@ -2960,4 +2960,7 @@ and mapped mice always receive raw input events.
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
 Reverse
+.
+:CONJUNCTION_AND
+y
 .

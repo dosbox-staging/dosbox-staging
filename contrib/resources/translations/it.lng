@@ -1203,19 +1203,19 @@ elenco non supportato
 dispositivo non configurato
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-directory locale
+Directory locale
 .
 :MOUNT_TYPE_CDROM
-unità CD-ROM
+Unità CD-ROM
 .
 :MOUNT_TYPE_FAT
-unità FAT
+Immagine FAT
 .
 :MOUNT_TYPE_ISO
-unità ISO
+Immagine ISO
 .
 :MOUNT_TYPE_VIRTUAL
-unità virtuale interna
+Unità virtuale interna
 .
 :MOUNT_TYPE_UNKNOWN
 unità sconosciuta
@@ -1426,7 +1426,7 @@ Nome immagine
 Scambia slot
 .
 :PROGRAM_MOUNT_STATUS_2
-Unità %c montata come %s
+%s montata come unità %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -3202,4 +3202,7 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
+.
+:CONJUNCTION_AND
+e
 .

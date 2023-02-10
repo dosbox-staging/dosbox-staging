@@ -181,19 +181,24 @@ std::vector<std::string> split(const std::string &seq)
 }
 
 std::string join_with_commas(const std::vector<std::string>& items,
-                             const char* end_punctuation)
+                             const std::string_view and_conjunction,
+                             const std::string_view end_punctuation)
 {
 	const auto num_items = items.size();
 
 	std::string result = {};
-	std::string_view separator = (num_items == 2) ? " and " : ", ";
 
-	auto item_num = 1;
+	const auto and_pair = std::string(" ") + and_conjunction.data() + " ";
+	const auto and_multi = std::string(", ") + and_conjunction.data() + " ";
+
+	std::string separator = (num_items == 2u) ? and_pair : ", ";
+
+	size_t item_num = 1;
 	for (const auto& item : items) {
 		assert(!item.empty());
 		result += item;
 		result += (item_num == num_items) ? end_punctuation : separator;
-		separator = (item_num + 2 == num_items) ? ", and " : separator;
+		separator = (item_num + 2u == num_items) ? and_multi : separator;
 		++item_num;
 	}
 	return result;

@@ -958,7 +958,7 @@ Type
 Nom de volume
 .
 :PROGRAM_MOUNT_STATUS_2
-Lecteur %c monté en tant que %s
+%s monté en tant que lecteur %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -2543,20 +2543,23 @@ Miscellaneous Commands
 Unknown Command
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
+Local directory
 .
 :MOUNT_TYPE_CDROM
 CD-ROM drive
 .
 :MOUNT_TYPE_FAT
-FAT drive
+FAT image
 .
 :MOUNT_TYPE_ISO
-ISO drive
+ISO image
 .
 :MOUNT_TYPE_VIRTUAL
-internal virtual drive
+Internal virtual drive
 .
 :MOUNT_TYPE_UNKNOWN
 unknown drive
+.
+:CONJUNCTION_AND
+et
 .

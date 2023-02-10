@@ -387,8 +387,8 @@ void MOUNT::Run(void) {
 				newdrive->GetMediaByte());
 	if (type != "overlay")
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         drive,
-		         newdrive->GetInfoString().c_str());
+		         newdrive->GetInfoString().c_str(),
+		         drive);
 	else
 		WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
 		         temp_line.c_str(),
