@@ -250,10 +250,11 @@ finalizeWrite:
 	tmpentry.modTime = DOS_GetBiosTimePacked();
 	tmpentry.modDate = DOS_GetBiosDatePacked();
 	tmpentry.entrysize = filelength;
-	if (myDrive->GetBPB().is_fat32())
+	if (myDrive->GetBPB().is_fat32()) {
 		tmpentry.SetCluster32(firstCluster);
-	else
+	} else {
 		tmpentry.loFirstClust = (uint16_t)firstCluster;
+	}
 	myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
 
 	*size =sizecount;
@@ -340,7 +341,8 @@ uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
 			fatoffset = clustNum * 4;
 			break;
 	}
-	fatsectnum = BPB.v.BPB_RsvdSecCnt + (fatoffset / BPB.v.BPB_BytsPerSec) + partSectOff;
+	fatsectnum = BPB.v.BPB_RsvdSecCnt + (fatoffset / BPB.v.BPB_BytsPerSec) +
+	             partSectOff;
 	fatentoff = fatoffset % BPB.v.BPB_BytsPerSec;
 
 	if(curFatSect != fatsectnum) {
@@ -387,7 +389,8 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 			fatoffset = clustNum * 4;
 			break;
 	}
-	fatsectnum = BPB.v.BPB_RsvdSecCnt + (fatoffset / BPB.v.BPB_BytsPerSec) + partSectOff;
+	fatsectnum = BPB.v.BPB_RsvdSecCnt + (fatoffset / BPB.v.BPB_BytsPerSec) +
+	             partSectOff;
 	fatentoff = fatoffset % BPB.v.BPB_BytsPerSec;
 
 	if(curFatSect != fatsectnum) {
@@ -422,12 +425,20 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 			var_write((uint32_t *)&fatSectBuffer[fatentoff], clustValue);
 			break;
 	}
-	for(unsigned int fc=0;fc<BPB.v.BPB_NumFATs;fc++) {
-		writeSector(fatsectnum + (fc * (BPB.is_fat32() ? BPB.v32.BPB_FATSz32 : BPB.v.BPB_FATSz16)), &fatSectBuffer[0]);
-		if (fattype==FAT12) {
-			if (fatentoff >= (BPB.v.BPB_BytsPerSec-1U))
-				writeSector(fatsectnum+1u+(fc * (BPB.is_fat32() ? BPB.v32.BPB_FATSz32 : BPB.v.BPB_FATSz16)), &fatSectBuffer[BPB.v.BPB_BytsPerSec]);
-		}
+	for (unsigned int fc = 0; fc < BPB.v.BPB_NumFATs; fc++) {
+		        writeSector(fatsectnum + (fc * (BPB.is_fat32()
+		                                                ? BPB.v32.BPB_FATSz32
+		                                                : BPB.v.BPB_FATSz16)),
+		                    &fatSectBuffer[0]);
+		        if (fattype == FAT12) {
+			        if (fatentoff >= (BPB.v.BPB_BytsPerSec - 1U)) {
+				writeSector(fatsectnum + 1u +
+				                    (fc * (BPB.is_fat32()
+				                                   ? BPB.v32.BPB_FATSz32
+				                                   : BPB.v.BPB_FATSz16)),
+				            &fatSectBuffer[BPB.v.BPB_BytsPerSec]);
+			        }
+		        }
 	}
 }
 
@@ -455,7 +466,10 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, const bool dir_ok) {
+bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
+                               uint32_t* dirClust, uint32_t* subEntry,
+                               const bool dir_ok)
+{
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	uint32_t currentClust = 0;
@@ -467,8 +481,8 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 	findFile=dirtoken;
 
 	if (BPB.is_fat32()) {
-			/* Set to FAT32 root directory */
-			currentClust = BPB.v32.BPB_RootClus;
+		/* Set to FAT32 root directory */
+		currentClust = BPB.v32.BPB_RootClus;
 	}
 	/* Skip if testing in root directory */
 	if ((len>0) && (filename[len-1]!='\\')) {
@@ -493,10 +507,11 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 				findDir = findNext;
 			}
 
-			if (BPB.is_fat32())
+			if (BPB.is_fat32()) {
 				currentClust = foundEntry.Cluster32();
-			else
+			} else {
 				currentClust = foundEntry.loFirstClust;
+			}
 		}
 	} else {
 		/* Set to root directory */
@@ -524,13 +539,13 @@ bool fatDrive::getDirClustNum(char *dir, uint32_t *clustNum, bool parDir) {
 	/* Skip if testing for root directory */
 	if ((len>0) && (dir[len-1]!='\\')) {
 		if (BPB.is_fat32()) {
-        /* Set to FAT32 root directory */
-        currentClust = BPB.v32.BPB_RootClus;
-    }
-		//LOG_MSG("Testing for dir %s", dir);
-		findDir = strtok(dirtoken,"\\");
-		while(findDir != NULL) {
-			imgDTA->SetupSearch(0,DOS_ATTR_DIRECTORY,findDir);
+			/* Set to FAT32 root directory */
+			currentClust = BPB.v32.BPB_RootClus;
+		}
+		// LOG_MSG("Testing for dir %s", dir);
+		findDir = strtok(dirtoken, "\\");
+		while (findDir != NULL) {
+			imgDTA->SetupSearch(0, DOS_ATTR_DIRECTORY, findDir);
 			imgDTA->SetDirID(0);
 			findDir = strtok(NULL,"\\");
 			if(parDir && (findDir == NULL)) break;
@@ -542,10 +557,11 @@ bool fatDrive::getDirClustNum(char *dir, uint32_t *clustNum, bool parDir) {
 				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr &DOS_ATTR_DIRECTORY)) return false;
 			}
-			if (BPB.is_fat32())
+			if (BPB.is_fat32()) {
 				currentClust = foundEntry.Cluster32();
-			else
+			} else {
 				currentClust = foundEntry.loFirstClust;
+			}
 		}
 		*clustNum = currentClust;
 	} else if (BPB.is_fat32()) {
@@ -567,10 +583,11 @@ uint8_t fatDrive::readSector(uint32_t sectnum, void * data) {
 	if (absolute) {
 		return loadedDisk->Read_AbsoluteSector(sectnum, data);
 	}
-	uint32_t cylindersize = (unsigned int)BPB.v.BPB_NumHeads * (unsigned int)BPB.v.BPB_SecPerTrk;
+	uint32_t cylindersize = (unsigned int)BPB.v.BPB_NumHeads *
+	                        (unsigned int)BPB.v.BPB_SecPerTrk;
 	uint32_t cylinder = sectnum / cylindersize;
 	sectnum %= cylindersize;
-	uint32_t head = sectnum / BPB.v.BPB_SecPerTrk;
+	uint32_t head   = sectnum / BPB.v.BPB_SecPerTrk;
 	uint32_t sector = sectnum % BPB.v.BPB_SecPerTrk + 1L;
 	return loadedDisk->Read_Sector(head, cylinder, sector, data);
 }
@@ -584,24 +601,27 @@ uint8_t fatDrive::writeSector(uint32_t sectnum, void * data) {
 	if (absolute) {
 		return loadedDisk->Write_AbsoluteSector(sectnum, data);
 	}
-	uint32_t cylindersize = (unsigned int)BPB.v.BPB_NumHeads * (unsigned int)BPB.v.BPB_SecPerTrk;
+	uint32_t cylindersize = (unsigned int)BPB.v.BPB_NumHeads *
+	                        (unsigned int)BPB.v.BPB_SecPerTrk;
 	uint32_t cylinder = sectnum / cylindersize;
 	sectnum %= cylindersize;
-	uint32_t head = sectnum / BPB.v.BPB_SecPerTrk;
+	uint32_t head   = sectnum / BPB.v.BPB_SecPerTrk;
 	uint32_t sector = sectnum % BPB.v.BPB_SecPerTrk + 1L;
 	return loadedDisk->Write_Sector(head, cylinder, sector, data);
 }
 
-uint32_t fatDrive::getSectSize(void) {
-    return sector_size;
+uint32_t fatDrive::getSectSize(void)
+{
+	return sector_size;
 }
 
 uint32_t fatDrive::getSectorCount()
 {
-	if (BPB.v.BPB_TotSec16 != 0)
+	if (BPB.v.BPB_TotSec16 != 0) {
 		return check_cast<uint32_t>(BPB.v.BPB_TotSec16);
-	else
+	} else {
 		return BPB.v.BPB_TotSec32;
+	}
 }
 
 uint32_t fatDrive::getSectorSize(void)
@@ -614,11 +634,11 @@ uint32_t fatDrive::getClusterSize(void) {
 }
 
 uint32_t fatDrive::getAbsoluteSectFromBytePos(uint32_t startClustNum, uint32_t bytePos) {
-	return  getAbsoluteSectFromChain(startClustNum, bytePos / BPB.v.BPB_BytsPerSec);
+	return getAbsoluteSectFromChain(startClustNum, bytePos / BPB.v.BPB_BytsPerSec);
 }
 
 uint32_t fatDrive::getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t logicalSector) {
-	int32_t skipClust = logicalSector / BPB.v.BPB_SecPerClus;
+	int32_t skipClust  = logicalSector / BPB.v.BPB_SecPerClus;
 	uint32_t sectClust = logicalSector % BPB.v.BPB_SecPerClus;
 
 	uint32_t currentClust = startClustNum;
@@ -762,26 +782,22 @@ bool fatDrive::allocateCluster(uint32_t useCluster, uint32_t prevCluster) {
 	return true;
 }
 
-fatDrive::fatDrive(const char *sysFilename,
-                   uint32_t bytesector,
-                   uint32_t cylsector,
-                   uint32_t headscyl,
-                   uint32_t cylinders,
-                   uint32_t startSector,
-                   bool roflag)
-	: loadedDisk(nullptr),
-	  created_successfully(true),
-	  partSectOff(0),
-	  readonly(roflag),
-	  bootbuffer{},
-	  absolute(false),
-	  fattype(0),
-	  CountOfClusters(0),
-	  firstDataSector(0),
-	  firstRootDirSect(0),
-	  cwdDirCluster(0),
-	  fatSectBuffer{0},
-	  curFatSect(0)
+fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
+                   uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
+                   uint32_t startSector, bool roflag)
+        : loadedDisk(nullptr),
+          created_successfully(true),
+          partSectOff(0),
+          readonly(roflag),
+          bootbuffer{},
+          absolute(false),
+          fattype(0),
+          CountOfClusters(0),
+          firstDataSector(0),
+          firstRootDirSect(0),
+          cwdDirCluster(0),
+          fatSectBuffer{0},
+          curFatSect(0)
 {
 	FILE *diskfile;
 	uint32_t filesize;
@@ -809,10 +825,11 @@ fatDrive::fatDrive(const char *sysFilename,
 	/* Load disk image */
 	loadedDisk.reset(new imageDisk(diskfile, sysFilename, filesize, is_hdd));
 	if (loadedDisk->getSectSize() > sizeof(bootbuffer)) {
-			LOG_MSG("Disk sector/bytes (%u) is too large, not attempting FAT filesystem access",loadedDisk->getSectSize());
-			created_successfully = false;
-			return;
-		}
+		LOG_MSG("Disk sector/bytes (%u) is too large, not attempting FAT filesystem access",
+		        loadedDisk->getSectSize());
+		created_successfully = false;
+		return;
+	}
 
 	if(is_hdd) {
 		/* Set user specified harddrive parameters */
@@ -853,36 +870,41 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	loadedDisk->Read_AbsoluteSector(0+partSectOff,&bootbuffer);
 
-	void* var = &bootbuffer.bpb.v.BPB_BytsPerSec;
+	void* var                       = &bootbuffer.bpb.v.BPB_BytsPerSec;
 	bootbuffer.bpb.v.BPB_BytsPerSec = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_RsvdSecCnt;
+	var                             = &bootbuffer.bpb.v.BPB_RsvdSecCnt;
 	bootbuffer.bpb.v.BPB_RsvdSecCnt = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_RootEntCnt;
+	var                             = &bootbuffer.bpb.v.BPB_RootEntCnt;
 	bootbuffer.bpb.v.BPB_RootEntCnt = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_TotSec16;
-	bootbuffer.bpb.v.BPB_TotSec16 = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_FATSz16;
-	bootbuffer.bpb.v.BPB_FATSz16 = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_SecPerTrk;
-	bootbuffer.bpb.v.BPB_SecPerTrk = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_NumHeads;
-	bootbuffer.bpb.v.BPB_NumHeads = var_read((uint16_t*)var);
-	var = &bootbuffer.bpb.v.BPB_HiddSec;
-	bootbuffer.bpb.v.BPB_HiddSec = var_read((uint32_t*)var);
-	var = &bootbuffer.bpb.v.BPB_TotSec32;
-	bootbuffer.bpb.v.BPB_TotSec32 = var_read((uint32_t*)var);
-	var = &bootbuffer.bpb.v.BPB_VolID;
-	bootbuffer.bpb.v.BPB_VolID = var_read((uint32_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_TotSec16;
+	bootbuffer.bpb.v.BPB_TotSec16   = var_read((uint16_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_FATSz16;
+	bootbuffer.bpb.v.BPB_FATSz16    = var_read((uint16_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_SecPerTrk;
+	bootbuffer.bpb.v.BPB_SecPerTrk  = var_read((uint16_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_NumHeads;
+	bootbuffer.bpb.v.BPB_NumHeads   = var_read((uint16_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_HiddSec;
+	bootbuffer.bpb.v.BPB_HiddSec    = var_read((uint32_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_TotSec32;
+	bootbuffer.bpb.v.BPB_TotSec32   = var_read((uint32_t*)var);
+	var                             = &bootbuffer.bpb.v.BPB_VolID;
+	bootbuffer.bpb.v.BPB_VolID      = var_read((uint32_t*)var);
 
 	if (!is_hdd) {
 		/* Identify floppy format */
-		if ((bootbuffer.BS_jmpBoot[0] == 0x69 || bootbuffer.BS_jmpBoot[0] == 0xe9 ||
-			(bootbuffer.BS_jmpBoot[0] == 0xeb && bootbuffer.BS_jmpBoot[2] == 0x90)) &&
-			(bootbuffer.bpb.v.BPB_Media & 0xf0) == 0xf0) {
+		if ((bootbuffer.BS_jmpBoot[0] == 0x69 ||
+		     bootbuffer.BS_jmpBoot[0] == 0xe9 ||
+		     (bootbuffer.BS_jmpBoot[0] == 0xeb &&
+		      bootbuffer.BS_jmpBoot[2] == 0x90)) &&
+		    (bootbuffer.bpb.v.BPB_Media & 0xf0) == 0xf0) {
 			/* DOS 2.x or later format, BPB assumed valid */
 
-			if ((bootbuffer.bpb.v.BPB_Media != 0xf0 && !(bootbuffer.bpb.v.BPB_Media & 0x1)) &&
-				(bootbuffer.BS_OEMName[5] != '3' || bootbuffer.BS_OEMName[6] != '.' || bootbuffer.BS_OEMName[7] < '2')) {
+			if ((bootbuffer.bpb.v.BPB_Media != 0xf0 &&
+			     !(bootbuffer.bpb.v.BPB_Media & 0x1)) &&
+			    (bootbuffer.BS_OEMName[5] != '3' ||
+			     bootbuffer.BS_OEMName[6] != '.' ||
+			     bootbuffer.BS_OEMName[7] < '2')) {
 				/* Fix pre-DOS 3.2 single-sided floppy */
 				bootbuffer.bpb.v.BPB_SecPerClus = 1;
 			}
@@ -897,19 +919,19 @@ fatDrive::fatDrive(const char *sysFilename,
 				bootbuffer.bpb.v.BPB_BytsPerSec = 512;
 				bootbuffer.bpb.v.BPB_SecPerClus = 1;
 				bootbuffer.bpb.v.BPB_RsvdSecCnt = 1;
-				bootbuffer.bpb.v.BPB_NumFATs = 2;
+				bootbuffer.bpb.v.BPB_NumFATs    = 2;
 				bootbuffer.bpb.v.BPB_RootEntCnt = 64;
-				bootbuffer.bpb.v.BPB_TotSec16 = 320;
-				bootbuffer.bpb.v.BPB_Media = mdesc;
-				bootbuffer.bpb.v.BPB_FATSz16 = 1;
-				bootbuffer.bpb.v.BPB_SecPerTrk = 8;
-				bootbuffer.bpb.v.BPB_NumHeads = 1;
-				bootbuffer.magic1 = 0x55;	// to silence warning
+				bootbuffer.bpb.v.BPB_TotSec16   = 320;
+				bootbuffer.bpb.v.BPB_Media      = mdesc;
+				bootbuffer.bpb.v.BPB_FATSz16    = 1;
+				bootbuffer.bpb.v.BPB_SecPerTrk  = 8;
+				bootbuffer.bpb.v.BPB_NumHeads   = 1;
+				bootbuffer.magic1 = 0x55; // to silence warning
 				bootbuffer.magic2 = 0xaa;
 				if (!(mdesc & 0x2)) {
 					/* Adjust for 9 sectors per track */
-					bootbuffer.bpb.v.BPB_TotSec16 = 360;
-					bootbuffer.bpb.v.BPB_FATSz16 = 2;
+					bootbuffer.bpb.v.BPB_TotSec16  = 360;
+					bootbuffer.bpb.v.BPB_FATSz16   = 2;
 					bootbuffer.bpb.v.BPB_SecPerTrk = 9;
 				}
 				if (mdesc & 0x1) {
@@ -932,51 +954,53 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	/* DEBUG */
 	LOG_MSG("FAT: BPB says %u sectors/track %u heads %u bytes/sector",
-			BPB.v.BPB_SecPerTrk,
-			BPB.v.BPB_NumHeads,
-			BPB.v.BPB_BytsPerSec);
+	        BPB.v.BPB_SecPerTrk,
+	        BPB.v.BPB_NumHeads,
+	        BPB.v.BPB_BytsPerSec);
 
-	if (fatDrive::getSectSize() == 512 && (bootbuffer.magic1 != 0x55 || bootbuffer.magic2 != 0xaa)) {
+	if (fatDrive::getSectSize() == 512 &&
+	    (bootbuffer.magic1 != 0x55 || bootbuffer.magic2 != 0xaa)) {
 		/* Not a FAT filesystem */
 		LOG_MSG("Loaded image has no valid magicnumbers at the end!");
 	}
 
-	if (BPB.v.BPB_SecPerTrk == 0 || (BPB.v.BPB_SecPerTrk > ((filesize <= 3000) ? 40 : 255)) ||
-			(BPB.v.BPB_NumHeads > ((filesize <= 3000) ? 64 : 255))) {
-			LOG_MSG("Rejecting image, boot sector has weird values not consistent with FAT filesystem");
-			created_successfully = false;
-			return;
+	if (BPB.v.BPB_SecPerTrk == 0 ||
+	    (BPB.v.BPB_SecPerTrk > ((filesize <= 3000) ? 40 : 255)) ||
+	    (BPB.v.BPB_NumHeads > ((filesize <= 3000) ? 64 : 255))) {
+		LOG_MSG("Rejecting image, boot sector has weird values not consistent with FAT filesystem");
+		created_successfully = false;
+		return;
 	}
 	sector_size = loadedDisk->getSectSize();
 
 	/* Sanity checks */
-	if ((BPB.v.BPB_SecPerClus == 0) ||
-		(BPB.v.BPB_NumFATs == 0) ||
-		(BPB.v.BPB_NumHeads == 0) ||
-		(BPB.v.BPB_SecPerTrk > cylsector)) {
+	if ((BPB.v.BPB_SecPerClus == 0) || (BPB.v.BPB_NumFATs == 0) ||
+	    (BPB.v.BPB_NumHeads == 0) || (BPB.v.BPB_SecPerTrk > cylsector)) {
 		created_successfully = false;
 		LOG_MSG("here");
 		return;
 	}
 
-	/* Sanity check: Root directory count is nonzero if FAT16/FAT12, or is zero if FAT32 */
+	/* Sanity check: Root directory count is nonzero if FAT16/FAT12, or is
+	 * zero if FAT32 */
 	if (BPB.is_fat32()) {
-			if (BPB.v.BPB_RootEntCnt != 0) {
-					LOG_MSG("Sanity check fail: Root directory count != 0 and not FAT32");
-					created_successfully = false;
-					return;
-			}
-	}
-	else {
-			if (BPB.v.BPB_RootEntCnt == 0) {
-					LOG_MSG("Sanity check fail: Root directory count == 0 and not FAT32");
-					created_successfully = false;
-					return;
-			}
+		if (BPB.v.BPB_RootEntCnt != 0) {
+			LOG_MSG("Sanity check fail: Root directory count != 0 and not FAT32");
+			created_successfully = false;
+			return;
+		}
+	} else {
+		if (BPB.v.BPB_RootEntCnt == 0) {
+			LOG_MSG("Sanity check fail: Root directory count == 0 and not FAT32");
+			created_successfully = false;
+			return;
+		}
 	}
 
-	/* Filesystem must be contiguous to use absolute sectors, otherwise CHS will be used */
-	absolute = ((BPB.v.BPB_NumHeads == headscyl) && (BPB.v.BPB_SecPerTrk == cylsector));
+	/* Filesystem must be contiguous to use absolute sectors, otherwise CHS
+	 * will be used */
+	absolute = ((BPB.v.BPB_NumHeads == headscyl) &&
+	            (BPB.v.BPB_SecPerTrk == cylsector));
 
 	/* Determine FAT format, 12, 16 or 32 */
 
@@ -984,53 +1008,76 @@ fatDrive::fatDrive(const char *sysFilename,
 	uint32_t RootDirSectors;
 	uint32_t DataSectors;
 
-    if (BPB.is_fat32()) {
-        /* FAT32 requires use of TotSec32, TotSec16 must be zero. */
-        if (BPB.v.BPB_TotSec32 == 0) {
-            LOG_MSG("BPB_TotSec32 == 0 and FAT32 BPB, not valid");
-            created_successfully = false;
-            return;
-        }
-        if (BPB.v32.BPB_RootClus < 2) {
-            LOG_MSG("BPB_RootClus == 0 and FAT32 BPB, not valid");
-            created_successfully = false;
-            return;
-        }
-        if (BPB.v.BPB_FATSz16 != 0) {
-            LOG_MSG("BPB_FATSz16 != 0 and FAT32 BPB, not valid");
-            created_successfully = false;
-            return;
-        }
-        if (BPB.v32.BPB_FATSz32 == 0) {
-            LOG_MSG("BPB_FATSz32 == 0 and FAT32 BPB, not valid");
-            created_successfully = false;
-            return;
-        }
+	if (BPB.is_fat32()) {
+		/* FAT32 requires use of TotSec32, TotSec16 must be zero. */
+		if (BPB.v.BPB_TotSec32 == 0) {
+			LOG_MSG("BPB_TotSec32 == 0 and FAT32 BPB, not valid");
+			created_successfully = false;
+			return;
+		}
+		if (BPB.v32.BPB_RootClus < 2) {
+			LOG_MSG("BPB_RootClus == 0 and FAT32 BPB, not valid");
+			created_successfully = false;
+			return;
+		}
+		if (BPB.v.BPB_FATSz16 != 0) {
+			LOG_MSG("BPB_FATSz16 != 0 and FAT32 BPB, not valid");
+			created_successfully = false;
+			return;
+		}
+		if (BPB.v32.BPB_FATSz32 == 0) {
+			LOG_MSG("BPB_FATSz32 == 0 and FAT32 BPB, not valid");
+			created_successfully = false;
+			return;
+		}
 
-        RootDirSectors = 0; /* FAT32 root directory has it's own allocation chain, instead of a fixed location */
-        DataSectors = (Bitu)BPB.v.BPB_TotSec32 - ((Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v32.BPB_FATSz32) + (Bitu)RootDirSectors);
-        CountOfClusters = DataSectors / BPB.v.BPB_SecPerClus;
-        firstDataSector = ((Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v32.BPB_FATSz32) + (Bitu)RootDirSectors) + (Bitu)partSectOff;
-        firstRootDirSect = 0;
-    }
-    else {
-        if (BPB.v.BPB_FATSz16 == 0) {
-            LOG_MSG("BPB_FATSz16 == 0 and not FAT32 BPB, not valid");
-            created_successfully = false;
-            return;
-        }
+		RootDirSectors = 0; /* FAT32 root directory has it's own
+		                       allocation chain, instead of a fixed
+		                       location */
+		DataSectors = (Bitu)BPB.v.BPB_TotSec32 -
+		              ((Bitu)BPB.v.BPB_RsvdSecCnt +
+		               ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v32.BPB_FATSz32) +
+		               (Bitu)RootDirSectors);
+		CountOfClusters = DataSectors / BPB.v.BPB_SecPerClus;
+		firstDataSector = ((Bitu)BPB.v.BPB_RsvdSecCnt +
+		                   ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v32.BPB_FATSz32) +
+		                   (Bitu)RootDirSectors) +
+		                  (Bitu)partSectOff;
+		firstRootDirSect = 0;
+	} else {
+		if (BPB.v.BPB_FATSz16 == 0) {
+			LOG_MSG("BPB_FATSz16 == 0 and not FAT32 BPB, not valid");
+			created_successfully = false;
+			return;
+		}
 
-        RootDirSectors = ((BPB.v.BPB_RootEntCnt * 32u) + (BPB.v.BPB_BytsPerSec - 1u)) / BPB.v.BPB_BytsPerSec;
+		RootDirSectors = ((BPB.v.BPB_RootEntCnt * 32u) +
+		                  (BPB.v.BPB_BytsPerSec - 1u)) /
+		                 BPB.v.BPB_BytsPerSec;
 
-        if (BPB.v.BPB_TotSec16 != 0)
-            DataSectors = (Bitu)BPB.v.BPB_TotSec16 - ((Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) + (Bitu)RootDirSectors);
-        else
-            DataSectors = (Bitu)BPB.v.BPB_TotSec32 - ((Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) + (Bitu)RootDirSectors);
+		if (BPB.v.BPB_TotSec16 != 0) {
+			DataSectors = (Bitu)BPB.v.BPB_TotSec16 -
+			              ((Bitu)BPB.v.BPB_RsvdSecCnt +
+			               ((Bitu)BPB.v.BPB_NumFATs *
+			                (Bitu)BPB.v.BPB_FATSz16) +
+			               (Bitu)RootDirSectors);
+		} else {
+			DataSectors = (Bitu)BPB.v.BPB_TotSec32 -
+			              ((Bitu)BPB.v.BPB_RsvdSecCnt +
+			               ((Bitu)BPB.v.BPB_NumFATs *
+			                (Bitu)BPB.v.BPB_FATSz16) +
+			               (Bitu)RootDirSectors);
+		}
 
-        CountOfClusters = DataSectors / BPB.v.BPB_SecPerClus;
-        firstDataSector = ((Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) + (Bitu)RootDirSectors) + (Bitu)partSectOff;
-        firstRootDirSect = (Bitu)BPB.v.BPB_RsvdSecCnt + ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) + (Bitu)partSectOff;
-    }
+		CountOfClusters = DataSectors / BPB.v.BPB_SecPerClus;
+		firstDataSector = ((Bitu)BPB.v.BPB_RsvdSecCnt +
+		                   ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) +
+		                   (Bitu)RootDirSectors) +
+		                  (Bitu)partSectOff;
+		firstRootDirSect = (Bitu)BPB.v.BPB_RsvdSecCnt +
+		                   ((Bitu)BPB.v.BPB_NumFATs * (Bitu)BPB.v.BPB_FATSz16) +
+		                   (Bitu)partSectOff;
+	}
 
 	if (CountOfClusters < 4085) {
 		/* Volume is FAT12 */
@@ -1167,10 +1214,11 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 	}
 
 	/* Empty file created, now lets open it */
-	auto fat_file        = new fatFile(name, BPB.is_fat32() ? fileEntry.Cluster32() :
-                                    fileEntry.loFirstClust,
-                                    fileEntry.entrysize,
-                                    this);
+	const auto cluster_size = BPB.is_fat32() ? fileEntry.Cluster32()
+	                                         : fileEntry.loFirstClust;
+
+	const auto fat_file = new fatFile(name, cluster_size, fileEntry.entrysize, this);
+
 	bool is_readonly     = fileEntry.attrib & DOS_ATTR_READ_ONLY;
 	fat_file->flags      = is_readonly ? OPEN_READ : OPEN_READWRITE;
 	fat_file->dirCluster = dirClust;
@@ -1208,10 +1256,11 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 		return false;
 	}
 
-	auto fat_file        = new fatFile(name, BPB.is_fat32() ? fileEntry.Cluster32() :
-                                    fileEntry.loFirstClust,
-                                    fileEntry.entrysize,
-                                    this);
+	const auto cluster_size = BPB.is_fat32() ? fileEntry.Cluster32()
+	                                         : fileEntry.loFirstClust;
+
+	const auto fat_file = new fatFile(name, cluster_size, fileEntry.entrysize, this);
+
 	fat_file->flags      = flags;
 	fat_file->dirCluster = dirClust;
 	fat_file->dirIndex   = subEntry;
@@ -1257,8 +1306,11 @@ bool fatDrive::FileUnlink(char * name) {
 	directoryChange(dirClust, &fileEntry, subEntry);
 
 	{
-		const uint32_t chk = BPB.is_fat32() ? fileEntry.Cluster32() : fileEntry.loFirstClust;
-		if(chk != 0) deleteClustChain(chk, 0);
+		const uint32_t chk = BPB.is_fat32() ? fileEntry.Cluster32()
+		                                    : fileEntry.loFirstClust;
+		if (chk != 0) {
+			deleteClustChain(chk, 0);
+		}
 	}
 
 	return true;
@@ -1347,8 +1399,10 @@ nextfile:
 	entryoffset = dirPos % 16;
 
 	if(dirClustNumber==0) {
-		if (BPB.is_fat32()) return false;
-		if(dirPos >= BPB.v.BPB_RootEntCnt) {
+		if (BPB.is_fat32()) {
+			return false;
+		}
+		if (dirPos >= BPB.v.BPB_RootEntCnt) {
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
@@ -1458,17 +1512,21 @@ bool fatDrive::SetFileAttr(const char *name, const uint16_t attr)
 	return true;
 }
 
-unsigned long fatDrive::GetSerial() {
-	if (BPB.is_fat32())
-		return BPB.v32.BS_VolID?BPB.v32.BS_VolID:0x1234;
-	else
-		return BPB.v.BPB_VolID?BPB.v.BPB_VolID:0x1234;
+unsigned long fatDrive::GetSerial()
+{
+	if (BPB.is_fat32()) {
+		return BPB.v32.BS_VolID ? BPB.v32.BS_VolID : 0x1234;
+	} else {
+		return BPB.v.BPB_VolID ? BPB.v.BPB_VolID : 0x1234;
+	}
 }
 
-bool fatDrive::directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start/*=0*/) {
-	direntry sectbuf[16];	/* 16 directory entries per sector */
-	uint32_t logentsector;	/* Logical entry sector */
-	uint32_t entryoffset = 0;	/* Index offset within sector */
+bool fatDrive::directoryBrowse(uint32_t dirClustNumber, direntry* useEntry,
+                               int32_t entNum, int32_t start /*=0*/)
+{
+	direntry sectbuf[16];     /* 16 directory entries per sector */
+	uint32_t logentsector;    /* Logical entry sector */
+	uint32_t entryoffset = 0; /* Index offset within sector */
 	uint32_t tmpsector;
 	if ((start<0) || (start>65535)) return false;
 	uint16_t dirPos = (uint16_t)start;
@@ -1482,9 +1540,11 @@ bool fatDrive::directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int3
 
 		if(dirClustNumber==0) {
 			assert(!BPB.is_fat32());
-			if(dirPos >= BPB.v.BPB_RootEntCnt) return false;
-			tmpsector = firstRootDirSect+logentsector;
-			readSector(tmpsector,sectbuf);
+			if (dirPos >= BPB.v.BPB_RootEntCnt) {
+				return false;
+			}
+			tmpsector = firstRootDirSect + logentsector;
+			readSector(tmpsector, sectbuf);
 		} else {
 			tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 			/* A zero sector number can't happen */
@@ -1517,9 +1577,11 @@ bool fatDrive::directoryChange(uint32_t dirClustNumber, direntry *useEntry, int3
 
 		if(dirClustNumber==0) {
 			assert(!BPB.is_fat32());
-			if(dirPos >= BPB.v.BPB_RootEntCnt) return false;
-			tmpsector = firstRootDirSect+logentsector;
-			readSector(tmpsector,sectbuf);
+			if (dirPos >= BPB.v.BPB_RootEntCnt) {
+				return false;
+			}
+			tmpsector = firstRootDirSect + logentsector;
+			readSector(tmpsector, sectbuf);
 		} else {
 			tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 			/* A zero sector number can't happen */
@@ -1556,9 +1618,11 @@ bool fatDrive::addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry) {
 
 		if(dirClustNumber==0) {
 			assert(!BPB.is_fat32());
-			if(dirPos >= BPB.v.BPB_RootEntCnt) return false;
-			tmpsector = firstRootDirSect+logentsector;
-			readSector(tmpsector,sectbuf);
+			if (dirPos >= BPB.v.BPB_RootEntCnt) {
+				return false;
+			}
+			tmpsector = firstRootDirSect + logentsector;
+			readSector(tmpsector, sectbuf);
 		} else {
 			tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 			/* A zero sector number can't happen - we need to allocate more room for this directory*/
@@ -1591,7 +1655,7 @@ void fatDrive::zeroOutCluster(uint32_t clustNumber) {
 	memset(&secBuffer[0], 0, 512);
 
 	int i;
-	for(i=0;i<BPB.v.BPB_SecPerClus;i++) {
+	for (i = 0; i < BPB.v.BPB_SecPerClus; i++) {
 		writeSector(getAbsoluteSectFromChain(clustNumber,i), &secBuffer[0]);
 	}
 }
@@ -1645,13 +1709,12 @@ bool fatDrive::MakeDir(char *dir) {
 	memset(&tmpentry,0, sizeof(direntry));
 	memcpy(&tmpentry.entryname, "..         ", 11);
 	if (BPB.is_fat32() && dirClust == BPB.v32.BPB_RootClus) {
-			tmpentry.loFirstClust = (uint16_t)0;
-			tmpentry.hiFirstClust = (uint16_t)0;
-		}
-		else {
-			tmpentry.loFirstClust = (uint16_t)(dirClust & 0xffff);
-			tmpentry.hiFirstClust = (uint16_t)(dirClust >> 16);
-		}
+		tmpentry.loFirstClust = (uint16_t)0;
+		tmpentry.hiFirstClust = (uint16_t)0;
+	} else {
+		tmpentry.loFirstClust = (uint16_t)(dirClust & 0xffff);
+		tmpentry.hiFirstClust = (uint16_t)(dirClust >> 16);
+	}
 	tmpentry.attrib = DOS_ATTR_DIRECTORY;
 	addDirectoryEntry(dummyClust, tmpentry);
 
@@ -1677,7 +1740,9 @@ bool fatDrive::RemoveDir(char *dir) {
 
 	/* Can't remove root directory */
 	if(dummyClust == 0) return false;
-	if(BPB.is_fat32() && dummyClust==BPB.v32.BPB_RootClus) return false;
+	if (BPB.is_fat32() && dummyClust == BPB.v32.BPB_RootClus) {
+		return false;
+	}
 
 	/* Get parent directory starting cluster */
 	if(!getDirClustNum(dir, &dirClust, true)) return false;
@@ -1765,52 +1830,62 @@ bool fatDrive::TestDir(char *dir) {
 	return getDirClustNum(dir, &dummyClust, false);
 }
 
-uint32_t fatDrive::GetPartitionOffset(void) {
+uint32_t fatDrive::GetPartitionOffset(void)
+{
 	return partSectOff;
 }
 
-void fatDrive::SetBPB(const FAT_BootSector::bpb_union_t &bpb) {
-	if (readonly) return;
+void fatDrive::SetBPB(const FAT_BootSector::bpb_union_t& bpb)
+{
+	if (readonly) {
+		return;
+	}
 	BPB.v.BPB_BytsPerSec = bpb.v.BPB_BytsPerSec;
 	BPB.v.BPB_SecPerClus = bpb.v.BPB_SecPerClus;
 	BPB.v.BPB_RsvdSecCnt = bpb.v.BPB_RsvdSecCnt;
-	BPB.v.BPB_NumFATs = bpb.v.BPB_NumFATs;
+	BPB.v.BPB_NumFATs    = bpb.v.BPB_NumFATs;
 	BPB.v.BPB_RootEntCnt = bpb.v.BPB_RootEntCnt;
-	BPB.v.BPB_TotSec16 = bpb.v.BPB_TotSec16;
-	BPB.v.BPB_Media = bpb.v.BPB_Media;
-	BPB.v.BPB_FATSz16 = bpb.v.BPB_FATSz16;
-	BPB.v.BPB_SecPerTrk = bpb.v.BPB_SecPerTrk;
-	BPB.v.BPB_NumHeads = bpb.v.BPB_NumHeads;
-	BPB.v.BPB_HiddSec = bpb.v.BPB_HiddSec;
-	BPB.v.BPB_TotSec32 = bpb.v.BPB_TotSec32;
-	if (!bpb.is_fat32() && (bpb.v.BPB_BootSig == 0x28 || bpb.v.BPB_BootSig == 0x29))
+	BPB.v.BPB_TotSec16   = bpb.v.BPB_TotSec16;
+	BPB.v.BPB_Media      = bpb.v.BPB_Media;
+	BPB.v.BPB_FATSz16    = bpb.v.BPB_FATSz16;
+	BPB.v.BPB_SecPerTrk  = bpb.v.BPB_SecPerTrk;
+	BPB.v.BPB_NumHeads   = bpb.v.BPB_NumHeads;
+	BPB.v.BPB_HiddSec    = bpb.v.BPB_HiddSec;
+	BPB.v.BPB_TotSec32   = bpb.v.BPB_TotSec32;
+	if (!bpb.is_fat32() &&
+	    (bpb.v.BPB_BootSig == 0x28 || bpb.v.BPB_BootSig == 0x29)) {
 		BPB.v.BPB_VolID = bpb.v.BPB_VolID;
-	if (bpb.is_fat32() && (bpb.v32.BS_BootSig == 0x28 || bpb.v32.BS_BootSig == 0x29))
+	}
+	if (bpb.is_fat32() &&
+	    (bpb.v32.BS_BootSig == 0x28 || bpb.v32.BS_BootSig == 0x29)) {
 		BPB.v32.BS_VolID = bpb.v32.BS_VolID;
+	}
 	if (bpb.is_fat32()) {
 		BPB.v32.BPB_BytsPerSec = bpb.v32.BPB_BytsPerSec;
 		BPB.v32.BPB_SecPerClus = bpb.v32.BPB_SecPerClus;
 		BPB.v32.BPB_RsvdSecCnt = bpb.v32.BPB_RsvdSecCnt;
-		BPB.v32.BPB_NumFATs = bpb.v32.BPB_NumFATs;
+		BPB.v32.BPB_NumFATs    = bpb.v32.BPB_NumFATs;
 		BPB.v32.BPB_RootEntCnt = bpb.v32.BPB_RootEntCnt;
-		BPB.v32.BPB_TotSec16 = bpb.v32.BPB_TotSec16;
-		BPB.v32.BPB_Media = bpb.v32.BPB_Media;
-		BPB.v32.BPB_FATSz32 = bpb.v32.BPB_FATSz32;
-		BPB.v32.BPB_SecPerTrk = bpb.v32.BPB_SecPerTrk;
-		BPB.v32.BPB_NumHeads = bpb.v32.BPB_NumHeads;
-		BPB.v32.BPB_HiddSec = bpb.v32.BPB_HiddSec;
-		BPB.v32.BPB_TotSec32 = bpb.v32.BPB_TotSec32;
-		BPB.v32.BPB_FATSz32 = bpb.v32.BPB_FATSz32;
-		BPB.v32.BPB_ExtFlags = bpb.v32.BPB_ExtFlags;
-		BPB.v32.BPB_FSVer = bpb.v32.BPB_FSVer;
-		BPB.v32.BPB_RootClus = bpb.v32.BPB_RootClus;
-		BPB.v32.BPB_FSInfo = bpb.v32.BPB_FSInfo;
-		BPB.v32.BPB_BkBootSec = bpb.v32.BPB_BkBootSec;
+		BPB.v32.BPB_TotSec16   = bpb.v32.BPB_TotSec16;
+		BPB.v32.BPB_Media      = bpb.v32.BPB_Media;
+		BPB.v32.BPB_FATSz32    = bpb.v32.BPB_FATSz32;
+		BPB.v32.BPB_SecPerTrk  = bpb.v32.BPB_SecPerTrk;
+		BPB.v32.BPB_NumHeads   = bpb.v32.BPB_NumHeads;
+		BPB.v32.BPB_HiddSec    = bpb.v32.BPB_HiddSec;
+		BPB.v32.BPB_TotSec32   = bpb.v32.BPB_TotSec32;
+		BPB.v32.BPB_FATSz32    = bpb.v32.BPB_FATSz32;
+		BPB.v32.BPB_ExtFlags   = bpb.v32.BPB_ExtFlags;
+		BPB.v32.BPB_FSVer      = bpb.v32.BPB_FSVer;
+		BPB.v32.BPB_RootClus   = bpb.v32.BPB_RootClus;
+		BPB.v32.BPB_FSInfo     = bpb.v32.BPB_FSInfo;
+		BPB.v32.BPB_BkBootSec  = bpb.v32.BPB_BkBootSec;
 	}
 
-    FAT_BootSector bootbuffer = {};
-    loadedDisk->Read_AbsoluteSector(0+partSectOff,&bootbuffer);
-	if (BPB.is_fat32()) bootbuffer.bpb.v32=BPB.v32;
-	bootbuffer.bpb.v=BPB.v;
-    loadedDisk->Write_AbsoluteSector(0+partSectOff,&bootbuffer);
+	FAT_BootSector bootbuffer = {};
+	loadedDisk->Read_AbsoluteSector(0 + partSectOff, &bootbuffer);
+	if (BPB.is_fat32()) {
+		bootbuffer.bpb.v32 = BPB.v32;
+	}
+	bootbuffer.bpb.v = BPB.v;
+	loadedDisk->Write_AbsoluteSector(0 + partSectOff, &bootbuffer);
 }

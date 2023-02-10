@@ -275,18 +275,18 @@ static inline uint16_t long2para(uint32_t size) {
 
 /* fopen64, ftello64, fseeko64 */
 #if defined(__APPLE__)
- #define fopen64 fopen
- #define ftello64 ftell
- #define fseeko64 fseek
-#elif defined (_MSC_VER)
- #define fopen64 fopen
- #if (_MSC_VER >= 1400)
-  #define ftello64 _ftelli64
-  #define fseeko64 _fseeki64
- #else
-  #define ftello64 ftell
-  #define fseeko64 fseek
- #endif
+#	define fopen64  fopen
+#	define ftello64 ftell
+#	define fseeko64 fseek
+#elif defined(_MSC_VER)
+#	define fopen64 fopen
+#	if (_MSC_VER >= 1400)
+#		define ftello64 _ftelli64
+#		define fseeko64 _fseeki64
+#	else
+#		define ftello64 ftell
+#		define fseeko64 fseek
+#	endif
 #endif
 
 /* Dos Error Codes */
@@ -602,8 +602,14 @@ public:
 	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
 	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
 
-	void SetDirIDCluster(uint32_t cl) { SSET_DWORD(sDTA, dirCluster, cl); }
-	uint32_t GetDirIDCluster() const { return SGET_DWORD(sDTA, dirCluster); }
+	void SetDirIDCluster(uint32_t cl)
+	{
+		SSET_DWORD(sDTA, dirCluster, cl);
+	}
+	uint32_t GetDirIDCluster() const
+	{
+		return SGET_DWORD(sDTA, dirCluster);
+	}
 
 private:
 	#ifdef _MSC_VER
@@ -615,7 +621,8 @@ private:
 		uint8_t sext[3];						/* The Search pattern for the extension */
 		uint8_t sattr;						/* The Attributes that need to be found */
 		uint16_t dirID;						/* custom: dir-search ID for multiple searches at the same time */
-		uint32_t dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
+		uint32_t dirCluster; /* custom (drive_fat only): cluster number
+		                        for multiple searches at the same time */
 		uint8_t fill[2];
 		uint8_t attr;
 		uint16_t time;

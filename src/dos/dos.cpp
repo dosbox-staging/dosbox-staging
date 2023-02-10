@@ -1283,23 +1283,25 @@ static Bitu DOS_21Handler(void) {
 				}
 				CALLBACK_SCF(false);
 				break;
-			case 0x23: /* Determine if character represents yes/no response */
-				{
-						unsigned int c = reg_dl;
-						if (tolower(c) == 'y')
-								reg_ax = 1;/*yes*/
-						else if (tolower(c) == 'n')
-								reg_ax = 0;/*no*/
-						else
-								reg_ax = 2;/*neither*/
+			case 0x23: // Determine if character represents yes/no response
+			{
+				unsigned int c = reg_dl;
+				if (tolower(c) == 'y') {
+					reg_ax = 1; /*yes*/
+				} else if (tolower(c) == 'n') {
+					reg_ax = 0; /*no*/
+				} else {
+					reg_ax = 2; /*neither*/
 				}
+			}
 				CALLBACK_SCF(false);
 				break;
 			default:
-				E_Exit("DOS:0x65:Unhandled country information call %2X",reg_al);	
+				E_Exit("DOS:0x65:Unhandled country information call %2X",
+						reg_al);
 			};
 			break;
-		}
+	}
 	case 0x66:					/* Get/Set global code page table  */
 		if (reg_al==1) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("Getting global code page table");

@@ -205,7 +205,8 @@ uint32_t DOS_CheckExtDevice(const char *name, bool already_flag)
 		no = real_readw(seg, off + 4);
 		next_seg = real_readw(seg, off + 2);
 		next_off = real_readw(seg, off);
-		if ((next_seg == 0xffff && next_off == 0xffff) || (no == 0 && next_seg == 0 && next_off == 0)) {
+		if ((next_seg == 0xffff && next_off == 0xffff) ||
+		    (no == 0 && next_seg == 0 && next_off == 0)) {
 			break;
 		}
 		if (no & 0x8000) {
@@ -337,7 +338,8 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	return *this;
 }
 
-uint8_t DOS_FindDevice(char const * name) {
+uint8_t DOS_FindDevice(const char* name)
+{
 	/* should only check for the names before the dot and spacepadded */
 	char fullname[DOS_PATHLENGTH];uint8_t drive;
 //	if(!name || !(*name)) return DOS_DEVICES; //important, but makename does it
@@ -393,7 +395,6 @@ uint8_t DOS_FindDevice(char const * name) {
 	}
 	return DOS_DEVICES;
 }
-
 
 void DOS_AddDevice(DOS_Device * adddev) {
 //Caller creates the device. We store a pointer to it
