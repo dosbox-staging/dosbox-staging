@@ -133,155 +133,275 @@ struct bootstrap {
 } GCC_ATTRIBUTE(packed);
 
 #ifdef _MSC_VER
-#pragma pack (1)
+#	pragma pack(1)
 #endif
 struct FAT_BPB_MSDOS20 {
-    uint16_t      BPB_BytsPerSec;                     /* offset 0x00B size 0x002 Bytes per sector. Formerly bytespersector */
-    uint8_t       BPB_SecPerClus;                     /* offset 0x00D size 0x001 Sectors per cluster, must be a power of 2. Formerly sectorspercluster */
-    uint16_t      BPB_RsvdSecCnt;                     /* offset 0x00E size 0x002 Number of reserved sectors starting from partition, to FAT table. reservedsectors */
-    uint8_t       BPB_NumFATs;                        /* offset 0x010 size 0x001 Number of FAT tables. fatcopies */
-    uint16_t      BPB_RootEntCnt;                     /* offset 0x011 size 0x002 Number of 32-byte root directories (FAT12/FAT16), or 0 (FAT32). rootdirentries */
-    uint16_t      BPB_TotSec16;                       /* offset 0x013 size 0x002 Total sectors of volume if count < 0x10000, or 0 if not. 0 if FAT32. totalsectorcount */
-    uint8_t       BPB_Media;                          /* offset 0x015 size 0x001 Media type byte. mediadescriptor */
-    uint16_t      BPB_FATSz16;                        /* offset 0x016 size 0x002 Sectors per fat (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
-} GCC_ATTRIBUTE(packed);                            /*    ==> 0x018 size 0x00D total */
+	uint16_t BPB_BytsPerSec; /* offset 0x00B size 0x002 Bytes per sector.
+	                            Formerly bytespersector */
+	uint8_t BPB_SecPerClus;  /* offset 0x00D size 0x001 Sectors per cluster,
+	                            must be a power of 2. Formerly
+	                            sectorspercluster */
+	uint16_t BPB_RsvdSecCnt; /* offset 0x00E size 0x002 Number of reserved
+	                            sectors starting from partition, to FAT
+	                            table. reservedsectors */
+	uint8_t BPB_NumFATs; /* offset 0x010 size 0x001 Number of FAT tables.
+	                        fatcopies */
+	uint16_t BPB_RootEntCnt; /* offset 0x011 size 0x002 Number of 32-byte
+	                            root directories (FAT12/FAT16), or 0
+	                            (FAT32). rootdirentries */
+	uint16_t BPB_TotSec16;   /* offset 0x013 size 0x002 Total sectors of
+	                            volume if count < 0x10000, or 0 if not. 0 if
+	                            FAT32. totalsectorcount */
+	uint8_t BPB_Media;       /* offset 0x015 size 0x001 Media type byte.
+	                            mediadescriptor */
+	uint16_t BPB_FATSz16;    /* offset 0x016 size 0x002 Sectors per fat
+	                            (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
+} GCC_ATTRIBUTE(packed);         /*    ==> 0x018 size 0x00D total */
 
 struct FAT_BPB_MSDOS30 {
-    uint16_t      BPB_BytsPerSec;                     /* offset 0x00B size 0x002 Bytes per sector. Formerly bytespersector */
-    uint8_t       BPB_SecPerClus;                     /* offset 0x00D size 0x001 Sectors per cluster, must be a power of 2. Formerly sectorspercluster */
-    uint16_t      BPB_RsvdSecCnt;                     /* offset 0x00E size 0x002 Number of reserved sectors starting from partition, to FAT table. reservedsectors */
-    uint8_t       BPB_NumFATs;                        /* offset 0x010 size 0x001 Number of FAT tables. fatcopies */
-    uint16_t      BPB_RootEntCnt;                     /* offset 0x011 size 0x002 Number of 32-byte root directories (FAT12/FAT16), or 0 (FAT32). rootdirentries */
-    uint16_t      BPB_TotSec16;                       /* offset 0x013 size 0x002 Total sectors of volume if count < 0x10000, or 0 if not. 0 if FAT32. totalsectorcount */
-    uint8_t       BPB_Media;                          /* offset 0x015 size 0x001 Media type byte. mediadescriptor */
-    uint16_t      BPB_FATSz16;                        /* offset 0x016 size 0x002 Sectors per fat (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
-    uint16_t      BPB_SecPerTrk;                      /* offset 0x018 size 0x002 Sectors per track. sectorspertrack */
-    uint16_t      BPB_NumHeads;                       /* offset 0x01A size 0x002 Number of heads. headcount */
-    uint32_t      BPB_HiddSec;                        /* offset 0x01C size 0x004 Number of hidden sectors (i.e. starting sector of partition). hiddensectorcount (MS-DOS 3.31) */
-} GCC_ATTRIBUTE(packed);                            /*    ==> 0x020 size 0x015 total */
-                                                    /* ==== ADDITIONAL NOTES (Wikipedia) */
-                                                    /* offset 0x01C size 0x002 Number of hidden sectors (i.e. starting sector of partition). hiddensectorcount (MS-DOS 3.0) */
-                                                    /* offset 0x01E size 0x002 Total sectors including hidden (?) if BPB_TotSec16 != 0 (MS-DOS 3.20) */
+	uint16_t BPB_BytsPerSec; /* offset 0x00B size 0x002 Bytes per sector.
+	                            Formerly bytespersector */
+	uint8_t BPB_SecPerClus;  /* offset 0x00D size 0x001 Sectors per cluster,
+	                            must be a power of 2. Formerly
+	                            sectorspercluster */
+	uint16_t BPB_RsvdSecCnt; /* offset 0x00E size 0x002 Number of reserved
+	                            sectors starting from partition, to FAT
+	                            table. reservedsectors */
+	uint8_t BPB_NumFATs; /* offset 0x010 size 0x001 Number of FAT tables.
+	                        fatcopies */
+	uint16_t BPB_RootEntCnt; /* offset 0x011 size 0x002 Number of 32-byte
+	                            root directories (FAT12/FAT16), or 0
+	                            (FAT32). rootdirentries */
+	uint16_t BPB_TotSec16;   /* offset 0x013 size 0x002 Total sectors of
+	                            volume if count < 0x10000, or 0 if not. 0 if
+	                            FAT32. totalsectorcount */
+	uint8_t BPB_Media;       /* offset 0x015 size 0x001 Media type byte.
+	                            mediadescriptor */
+	uint16_t BPB_FATSz16;    /* offset 0x016 size 0x002 Sectors per fat
+	                            (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
+	uint16_t BPB_SecPerTrk;  /* offset 0x018 size 0x002 Sectors per track.
+	                            sectorspertrack */
+	uint16_t BPB_NumHeads;   /* offset 0x01A size 0x002 Number of heads.
+	                            headcount */
+	uint32_t BPB_HiddSec;    /* offset 0x01C size 0x004 Number of hidden
+	                            sectors (i.e. starting sector of partition).
+	                            hiddensectorcount (MS-DOS 3.31) */
+} GCC_ATTRIBUTE(packed);         /*    ==> 0x020 size 0x015 total */
+                                 /* ==== ADDITIONAL NOTES (Wikipedia) */
+/* offset 0x01C size 0x002 Number of hidden sectors (i.e. starting sector of
+ * partition). hiddensectorcount (MS-DOS 3.0) */
+/* offset 0x01E size 0x002 Total sectors including hidden (?) if BPB_TotSec16 !=
+ * 0 (MS-DOS 3.20) */
 
 struct FAT_BPB_MSDOS331 {
-    uint16_t      BPB_BytsPerSec;                     /* offset 0x00B size 0x002 Bytes per sector. Formerly bytespersector */
-    uint8_t       BPB_SecPerClus;                     /* offset 0x00D size 0x001 Sectors per cluster, must be a power of 2. Formerly sectorspercluster */
-    uint16_t      BPB_RsvdSecCnt;                     /* offset 0x00E size 0x002 Number of reserved sectors starting from partition, to FAT table. reservedsectors */
-    uint8_t       BPB_NumFATs;                        /* offset 0x010 size 0x001 Number of FAT tables. fatcopies */
-    uint16_t      BPB_RootEntCnt;                     /* offset 0x011 size 0x002 Number of 32-byte root directories (FAT12/FAT16), or 0 (FAT32). rootdirentries */
-    uint16_t      BPB_TotSec16;                       /* offset 0x013 size 0x002 Total sectors of volume if count < 0x10000, or 0 if not. 0 if FAT32. totalsectorcount */
-    uint8_t       BPB_Media;                          /* offset 0x015 size 0x001 Media type byte. mediadescriptor */
-    uint16_t      BPB_FATSz16;                        /* offset 0x016 size 0x002 Sectors per fat (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
-    uint16_t      BPB_SecPerTrk;                      /* offset 0x018 size 0x002 Sectors per track. sectorspertrack */
-    uint16_t      BPB_NumHeads;                       /* offset 0x01A size 0x002 Number of heads. headcount */
-    uint32_t      BPB_HiddSec;                        /* offset 0x01C size 0x004 Number of hidden sectors (i.e. starting sector of partition). hiddensectorcount (MS-DOS 3.31) */
-    uint32_t      BPB_TotSec32;                       /* offset 0x020 size 0x004 Total sectors of volume if count >= 0x10000 or FAT32, or 0 if not. totalsecdword */
-} GCC_ATTRIBUTE(packed);                            /*    ==> 0x024 size 0x019 total */
+	uint16_t BPB_BytsPerSec; /* offset 0x00B size 0x002 Bytes per sector.
+	                            Formerly bytespersector */
+	uint8_t BPB_SecPerClus;  /* offset 0x00D size 0x001 Sectors per cluster,
+	                            must be a power of 2. Formerly
+	                            sectorspercluster */
+	uint16_t BPB_RsvdSecCnt; /* offset 0x00E size 0x002 Number of reserved
+	                            sectors starting from partition, to FAT
+	                            table. reservedsectors */
+	uint8_t BPB_NumFATs; /* offset 0x010 size 0x001 Number of FAT tables.
+	                        fatcopies */
+	uint16_t BPB_RootEntCnt; /* offset 0x011 size 0x002 Number of 32-byte
+	                            root directories (FAT12/FAT16), or 0
+	                            (FAT32). rootdirentries */
+	uint16_t BPB_TotSec16;   /* offset 0x013 size 0x002 Total sectors of
+	                            volume if count < 0x10000, or 0 if not. 0 if
+	                            FAT32. totalsectorcount */
+	uint8_t BPB_Media;       /* offset 0x015 size 0x001 Media type byte.
+	                            mediadescriptor */
+	uint16_t BPB_FATSz16;    /* offset 0x016 size 0x002 Sectors per fat
+	                            (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
+	uint16_t BPB_SecPerTrk;  /* offset 0x018 size 0x002 Sectors per track.
+	                            sectorspertrack */
+	uint16_t BPB_NumHeads;   /* offset 0x01A size 0x002 Number of heads.
+	                            headcount */
+	uint32_t BPB_HiddSec;    /* offset 0x01C size 0x004 Number of hidden
+	                            sectors (i.e. starting sector of partition).
+	                            hiddensectorcount (MS-DOS 3.31) */
+	uint32_t BPB_TotSec32;   /* offset 0x020 size 0x004 Total sectors of
+	                            volume if count >= 0x10000 or FAT32, or 0 if
+	                            not. totalsecdword */
+} GCC_ATTRIBUTE(packed);         /*    ==> 0x024 size 0x019 total */
 
-struct FAT_BPB_MSDOS40 { /* FAT12/FAT16 only */
-    uint16_t      BPB_BytsPerSec;                     /* offset 0x00B size 0x002 Bytes per sector. Formerly bytespersector */
-    uint8_t       BPB_SecPerClus;                     /* offset 0x00D size 0x001 Sectors per cluster, must be a power of 2. Formerly sectorspercluster */
-    uint16_t      BPB_RsvdSecCnt;                     /* offset 0x00E size 0x002 Number of reserved sectors starting from partition, to FAT table. reservedsectors */
-    uint8_t       BPB_NumFATs;                        /* offset 0x010 size 0x001 Number of FAT tables. fatcopies */
-    uint16_t      BPB_RootEntCnt;                     /* offset 0x011 size 0x002 Number of 32-byte root directories (FAT12/FAT16), or 0 (FAT32). rootdirentries */
-    uint16_t      BPB_TotSec16;                       /* offset 0x013 size 0x002 Total sectors of volume if count < 0x10000, or 0 if not. 0 if FAT32. totalsectorcount */
-    uint8_t       BPB_Media;                          /* offset 0x015 size 0x001 Media type byte. mediadescriptor */
-    uint16_t      BPB_FATSz16;                        /* offset 0x016 size 0x002 Sectors per fat (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
-    uint16_t      BPB_SecPerTrk;                      /* offset 0x018 size 0x002 Sectors per track. sectorspertrack */
-    uint16_t      BPB_NumHeads;                       /* offset 0x01A size 0x002 Number of heads. headcount */
-    uint32_t      BPB_HiddSec;                        /* offset 0x01C size 0x004 Number of hidden sectors (i.e. starting sector of partition). hiddensectorcount (MS-DOS 3.31) */
-    uint32_t      BPB_TotSec32;                       /* offset 0x020 size 0x004 Total sectors of volume if count >= 0x10000 or FAT32, or 0 if not. totalsecdword */
-    uint8_t       BPB_DrvNum;                         /* offset 0x024 size 0x001 Physical (INT 13h) drive number */
-    uint8_t       BPB_Reserved1;                      /* offset 0x025 size 0x001 Reserved? */
-    uint8_t       BPB_BootSig;                        /* offset 0x026 size 0x001 Extended boot signature. 0x29 or 0x28 to indicate following members exist. */
-    uint32_t      BPB_VolID;                          /* offset 0x027 size 0x004 Volume ID, if BPB_BootSig is 0x28 or 0x29. */
-    uint8_t       BPB_VolLab[11];                     /* offset 0x02B size 0x00B Volume label, if BPB_BootSig is 0x28 or 0x29. */
-    uint8_t       BPB_FilSysType[8];                  /* offset 0x036 size 0x008 File system type, for display purposes if BPB_BootSig is 0x29. */
-} GCC_ATTRIBUTE(packed);                            /*    ==> 0x03E size 0x033 total */
+struct FAT_BPB_MSDOS40 {         /* FAT12/FAT16 only */
+	uint16_t BPB_BytsPerSec; /* offset 0x00B size 0x002 Bytes per sector.
+	                            Formerly bytespersector */
+	uint8_t BPB_SecPerClus;  /* offset 0x00D size 0x001 Sectors per cluster,
+	                            must be a power of 2. Formerly
+	                            sectorspercluster */
+	uint16_t BPB_RsvdSecCnt; /* offset 0x00E size 0x002 Number of reserved
+	                            sectors starting from partition, to FAT
+	                            table. reservedsectors */
+	uint8_t BPB_NumFATs; /* offset 0x010 size 0x001 Number of FAT tables.
+	                        fatcopies */
+	uint16_t BPB_RootEntCnt; /* offset 0x011 size 0x002 Number of 32-byte
+	                            root directories (FAT12/FAT16), or 0
+	                            (FAT32). rootdirentries */
+	uint16_t BPB_TotSec16;   /* offset 0x013 size 0x002 Total sectors of
+	                            volume if count < 0x10000, or 0 if not. 0 if
+	                            FAT32. totalsectorcount */
+	uint8_t BPB_Media;       /* offset 0x015 size 0x001 Media type byte.
+	                            mediadescriptor */
+	uint16_t BPB_FATSz16;    /* offset 0x016 size 0x002 Sectors per fat
+	                            (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
+	uint16_t BPB_SecPerTrk;  /* offset 0x018 size 0x002 Sectors per track.
+	                            sectorspertrack */
+	uint16_t BPB_NumHeads;   /* offset 0x01A size 0x002 Number of heads.
+	                            headcount */
+	uint32_t BPB_HiddSec;    /* offset 0x01C size 0x004 Number of hidden
+	                            sectors (i.e. starting sector of partition).
+	                            hiddensectorcount (MS-DOS 3.31) */
+	uint32_t BPB_TotSec32;   /* offset 0x020 size 0x004 Total sectors of
+	                            volume if count >= 0x10000 or FAT32, or 0 if
+	                            not. totalsecdword */
+	uint8_t BPB_DrvNum; /* offset 0x024 size 0x001 Physical (INT 13h) drive
+	                       number */
+	uint8_t BPB_Reserved1; /* offset 0x025 size 0x001 Reserved? */
+	uint8_t BPB_BootSig; /* offset 0x026 size 0x001 Extended boot signature.
+	                        0x29 or 0x28 to indicate following members
+	                        exist. */
+	uint32_t BPB_VolID; /* offset 0x027 size 0x004 Volume ID, if BPB_BootSig
+	                       is 0x28 or 0x29. */
+	uint8_t BPB_VolLab[11];    /* offset 0x02B size 0x00B Volume label, if
+	                              BPB_BootSig is 0x28 or 0x29. */
+	uint8_t BPB_FilSysType[8]; /* offset 0x036 size 0x008 File system type,
+	                              for display purposes if BPB_BootSig is
+	                              0x29. */
+} GCC_ATTRIBUTE(packed);           /*    ==> 0x03E size 0x033 total */
 
-struct FAT_BPB_MSDOS710_FAT32 { /* FAT32 only */
-    uint16_t      BPB_BytsPerSec;                     /* offset 0x00B size 0x002 Bytes per sector. Formerly bytespersector */
-    uint8_t       BPB_SecPerClus;                     /* offset 0x00D size 0x001 Sectors per cluster, must be a power of 2. Formerly sectorspercluster */
-    uint16_t      BPB_RsvdSecCnt;                     /* offset 0x00E size 0x002 Number of reserved sectors starting from partition, to FAT table. reservedsectors */
-    uint8_t       BPB_NumFATs;                        /* offset 0x010 size 0x001 Number of FAT tables. fatcopies */
-    uint16_t      BPB_RootEntCnt;                     /* offset 0x011 size 0x002 Number of 32-byte root directories (FAT12/FAT16), or 0 (FAT32). rootdirentries */
-    uint16_t      BPB_TotSec16;                       /* offset 0x013 size 0x002 Total sectors of volume if count < 0x10000, or 0 if not. 0 if FAT32. totalsectorcount */
-    uint8_t       BPB_Media;                          /* offset 0x015 size 0x001 Media type byte. mediadescriptor */
-    uint16_t      BPB_FATSz16;                        /* offset 0x016 size 0x002 Sectors per fat (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
-    uint16_t      BPB_SecPerTrk;                      /* offset 0x018 size 0x002 Sectors per track. sectorspertrack */
-    uint16_t      BPB_NumHeads;                       /* offset 0x01A size 0x002 Number of heads. headcount */
-    uint32_t      BPB_HiddSec;                        /* offset 0x01C size 0x004 Number of hidden sectors (i.e. starting sector of partition). hiddensectorcount (MS-DOS 3.31) */
-    uint32_t      BPB_TotSec32;                       /* offset 0x020 size 0x004 Total sectors of volume if count >= 0x10000 or FAT32, or 0 if not. totalsecdword */
-    uint32_t      BPB_FATSz32;                        /* offset 0x024 size 0x004 Sectors per fat (FAT32). */
-    uint16_t      BPB_ExtFlags;                       /* offset 0x028 size 0x002 Bitfield: [7:7] 1=one fat active 0=mirrored  [3:0]=active FAT if mirroring disabled */
-    uint16_t      BPB_FSVer;                          /* offset 0x02A size 0x002 Version number. Only 0.0 is defined now. Do not mount if newer version beyond what we support */
-    uint32_t      BPB_RootClus;                       /* offset 0x02C size 0x004 Starting cluster number of the root directory (FAT32) */
-    uint16_t      BPB_FSInfo;                         /* offset 0x030 size 0x002 Sector number in volume of FAT32 FSInfo structure in reserved area */
-    uint16_t      BPB_BkBootSec;                      /* offset 0x032 size 0x002 Sector number in volume of FAT32 backup boot sector */
-    uint8_t       BPB_Reserved[12];                   /* offset 0x034 size 0x00C Reserved for future expansion */
-    uint8_t       BS_DrvNum;                          /* offset 0x040 size 0x001 BPB_DrvNum but moved for FAT32 */
-    uint8_t       BS_Reserved1;                       /* offset 0x041 size 0x001 BPB_Reserved1 but moved for FAT32 */
-    uint8_t       BS_BootSig;                         /* offset 0x042 size 0x001 Extended boot signature. 0x29 or 0x28 to indicate following members exist. */
-    uint32_t      BS_VolID;                           /* offset 0x043 size 0x004 Volume ID, if BPB_BootSig is 0x28 or 0x29. */
-    uint8_t       BS_VolLab[11];                      /* offset 0x047 size 0x00B Volume label, if BPB_BootSig is 0x28 or 0x29. */
-    uint8_t       BS_FilSysType[8];                   /* offset 0x052 size 0x008 File system type, for display purposes if BPB_BootSig is 0x29. */
-} GCC_ATTRIBUTE(packed);                            /*    ==> 0x05A size 0x04F total */
+struct FAT_BPB_MSDOS710_FAT32 {  /* FAT32 only */
+	uint16_t BPB_BytsPerSec; /* offset 0x00B size 0x002 Bytes per sector.
+	                            Formerly bytespersector */
+	uint8_t BPB_SecPerClus;  /* offset 0x00D size 0x001 Sectors per cluster,
+	                            must be a power of 2. Formerly
+	                            sectorspercluster */
+	uint16_t BPB_RsvdSecCnt; /* offset 0x00E size 0x002 Number of reserved
+	                            sectors starting from partition, to FAT
+	                            table. reservedsectors */
+	uint8_t BPB_NumFATs; /* offset 0x010 size 0x001 Number of FAT tables.
+	                        fatcopies */
+	uint16_t BPB_RootEntCnt; /* offset 0x011 size 0x002 Number of 32-byte
+	                            root directories (FAT12/FAT16), or 0
+	                            (FAT32). rootdirentries */
+	uint16_t BPB_TotSec16;   /* offset 0x013 size 0x002 Total sectors of
+	                            volume if count < 0x10000, or 0 if not. 0 if
+	                            FAT32. totalsectorcount */
+	uint8_t BPB_Media;       /* offset 0x015 size 0x001 Media type byte.
+	                            mediadescriptor */
+	uint16_t BPB_FATSz16;    /* offset 0x016 size 0x002 Sectors per fat
+	                            (FAT12/FAT16), or 0 (FAT32). sectorsperfat */
+	uint16_t BPB_SecPerTrk;  /* offset 0x018 size 0x002 Sectors per track.
+	                            sectorspertrack */
+	uint16_t BPB_NumHeads;   /* offset 0x01A size 0x002 Number of heads.
+	                            headcount */
+	uint32_t BPB_HiddSec;    /* offset 0x01C size 0x004 Number of hidden
+	                            sectors (i.e. starting sector of partition).
+	                            hiddensectorcount (MS-DOS 3.31) */
+	uint32_t BPB_TotSec32;   /* offset 0x020 size 0x004 Total sectors of
+	                            volume if count >= 0x10000 or FAT32, or 0 if
+	                            not. totalsecdword */
+	uint32_t BPB_FATSz32;    /* offset 0x024 size 0x004 Sectors per fat
+	                            (FAT32). */
+	uint16_t BPB_ExtFlags; /* offset 0x028 size 0x002 Bitfield: [7:7] 1=one
+	                          fat active 0=mirrored  [3:0]=active FAT if
+	                          mirroring disabled */
+	uint16_t BPB_FSVer; /* offset 0x02A size 0x002 Version number. Only 0.0
+	                       is defined now. Do not mount if newer version
+	                       beyond what we support */
+	uint32_t BPB_RootClus; /* offset 0x02C size 0x004 Starting cluster
+	                          number of the root directory (FAT32) */
+	uint16_t BPB_FSInfo; /* offset 0x030 size 0x002 Sector number in volume
+	                        of FAT32 FSInfo structure in reserved area */
+	uint16_t BPB_BkBootSec;   /* offset 0x032 size 0x002 Sector number in
+	                             volume of FAT32 backup boot sector */
+	uint8_t BPB_Reserved[12]; /* offset 0x034 size 0x00C Reserved for future
+	                             expansion */
+	uint8_t BS_DrvNum; /* offset 0x040 size 0x001 BPB_DrvNum but moved for
+	                      FAT32 */
+	uint8_t BS_Reserved1; /* offset 0x041 size 0x001 BPB_Reserved1 but moved
+	                         for FAT32 */
+	uint8_t BS_BootSig; /* offset 0x042 size 0x001 Extended boot signature.
+	                       0x29 or 0x28 to indicate following members exist. */
+	uint32_t BS_VolID;  /* offset 0x043 size 0x004 Volume ID, if BPB_BootSig
+	                       is 0x28 or 0x29. */
+	uint8_t BS_VolLab[11];    /* offset 0x047 size 0x00B Volume label, if
+	                             BPB_BootSig is 0x28 or 0x29. */
+	uint8_t BS_FilSysType[8]; /* offset 0x052 size 0x008 File system type,
+	                             for display purposes if BPB_BootSig is
+	                             0x29. */
+} GCC_ATTRIBUTE(packed);          /*    ==> 0x05A size 0x04F total */
 
-typedef struct FAT_BPB_MSDOS40 FAT_BPB_MSDOS;       /* what we use internally */
-typedef struct FAT_BPB_MSDOS710_FAT32 FAT32_BPB_MSDOS;       /* what we use internally */
+typedef struct FAT_BPB_MSDOS40 FAT_BPB_MSDOS; /* what we use internally */
+typedef struct FAT_BPB_MSDOS710_FAT32 FAT32_BPB_MSDOS; /* what we use internally */
 
 struct FAT_BootSector {
-    /* --------- Common fields: Amalgam of Wikipedia documentation with names from Microsoft's FAT32 whitepaper */
-    uint8_t       BS_jmpBoot[3];                      /* offset 0x000 size 0x003 Jump instruction to boot code. Formerly nearjmp[3] */
-    uint8_t       BS_OEMName[8];                      /* offset 0x003 size 0x008 OEM string. Formerly oemname[8] */
-    /* --------- BIOS Parameter Block (converted in place from existing DOSBox-X code) */
-    union bpb_union_t {
-        struct FAT_BPB_MSDOS20              v20;    /* offset 0x00B size 0x00D MS-DOS 2.0 BPB */
-        struct FAT_BPB_MSDOS30              v30;    /* offset 0x00B size 0x015 MS-DOS 3.0 BPB */
-        struct FAT_BPB_MSDOS331             v331;   /* offset 0x00B size 0x019 MS-DOS 3.31 BPB */
-        struct FAT_BPB_MSDOS40              v40;    /* offset 0x00B size 0x039 MS-DOS 4.0 BPB (FAT12/FAT16) */
-        struct FAT_BPB_MSDOS710_FAT32       v710_32;/* offset 0x00B size 0x04F MS-DOS 7.10 BPB (FAT32) */
+	/* --------- Common fields: Amalgam of Wikipedia documentation with
+	 * names from Microsoft's FAT32 whitepaper */
+	uint8_t BS_jmpBoot[3]; /* offset 0x000 size 0x003 Jump instruction to
+	                          boot code. Formerly nearjmp[3] */
+	uint8_t BS_OEMName[8]; /* offset 0x003 size 0x008 OEM string. Formerly
+	                          oemname[8] */
+	/* --------- BIOS Parameter Block (converted in place from existing
+	 * DOSBox-X code) */
+	union bpb_union_t {
+		struct FAT_BPB_MSDOS20 v20;   /* offset 0x00B size 0x00D
+		                                 MS-DOS 2.0 BPB */
+		struct FAT_BPB_MSDOS30 v30;   /* offset 0x00B size 0x015
+		                                 MS-DOS 3.0 BPB */
+		struct FAT_BPB_MSDOS331 v331; /* offset 0x00B size 0x019
+		                                 MS-DOS 3.31 BPB */
+		struct FAT_BPB_MSDOS40 v40;   /* offset 0x00B size 0x039
+		                                 MS-DOS 4.0 BPB (FAT12/FAT16) */
+		struct FAT_BPB_MSDOS710_FAT32 v710_32; /* offset 0x00B size
+		                                          0x04F MS-DOS 7.10 BPB
+		                                          (FAT32) */
 
-        FAT_BPB_MSDOS                       v;      /* offset 0x00B ... */
-        FAT32_BPB_MSDOS                     v32;    /* offset 0x00B ... */
+		FAT_BPB_MSDOS v;     /* offset 0x00B ... */
+		FAT32_BPB_MSDOS v32; /* offset 0x00B ... */
 
-        inline bool is_fat32(void) const {
-            return (v.BPB_RootEntCnt == 0 && v.BPB_TotSec16 == 0 && v.BPB_FATSz16 == 0); /* all fields are "must be set to 0" for FAT32 */
-        }
-    } bpb;
-    /* --------- The rest of the sector ---------- */
-    uint8_t  bootcode[512 - 2/*magic*/ - sizeof(bpb_union_t) - 8/*OEM*/ - 3/*JMP*/];
-    uint8_t  magic1; /* 0x55 */
-    uint8_t  magic2; /* 0xaa */
+		inline bool is_fat32(void) const
+		{
+			return (v.BPB_RootEntCnt == 0 && v.BPB_TotSec16 == 0 &&
+			        v.BPB_FATSz16 == 0); /* all fields are "must be
+			                                set to 0" for FAT32 */
+		}
+	} bpb;
+	/* --------- The rest of the sector ---------- */
+	uint8_t bootcode[512 - 2 /*magic*/ - sizeof(bpb_union_t) - 8 /*OEM*/ - 3 /*JMP*/];
+	uint8_t magic1; /* 0x55 */
+	uint8_t magic2; /* 0xaa */
 #define SECTOR_SIZE_MAX 2048
 #if SECTOR_SIZE_MAX > 512
-    uint8_t  extra[SECTOR_SIZE_MAX - 512];
+	uint8_t extra[SECTOR_SIZE_MAX - 512];
 #endif
 } GCC_ATTRIBUTE(packed);
-static_assert(offsetof(FAT_BootSector,bpb.v20) == 0x00B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v30) == 0x00B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v331) == 0x00B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v40) == 0x00B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v) == 0x00B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v20.BPB_TotSec16) == 0x013,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v30.BPB_TotSec16) == 0x013,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v331.BPB_TotSec16) == 0x013,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v40.BPB_TotSec16) == 0x013,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v.BPB_TotSec16) == 0x013,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v331.BPB_TotSec32) == 0x020,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v30.BPB_HiddSec) == 0x01C,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v40.BPB_TotSec32) == 0x020,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v40.BPB_VolLab) == 0x02B,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v710_32.BS_FilSysType) == 0x052,"Oops");
-static_assert(sizeof(FAT_BootSector) == SECTOR_SIZE_MAX,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v331.BPB_TotSec32) == 0x020,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v40.BPB_TotSec32) == 0x020,"Oops");
-static_assert(offsetof(FAT_BootSector,bpb.v710_32.BPB_TotSec32) == 0x020,"Oops");
-static_assert(sizeof(FAT_BootSector::bpb.v20) == 0x00D,"Oops");
-static_assert(sizeof(FAT_BootSector::bpb.v30) == 0x015,"Oops");
-static_assert(sizeof(FAT_BootSector::bpb.v331) == 0x019,"Oops");
-static_assert(sizeof(FAT_BootSector::bpb.v40) == 0x033,"Oops");
-static_assert(sizeof(FAT_BootSector::bpb.v710_32) == 0x04F,"Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v20) == 0x00B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v30) == 0x00B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v331) == 0x00B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v40) == 0x00B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v) == 0x00B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v20.BPB_TotSec16) == 0x013, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v30.BPB_TotSec16) == 0x013, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v331.BPB_TotSec16) == 0x013, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v40.BPB_TotSec16) == 0x013, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v.BPB_TotSec16) == 0x013, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v331.BPB_TotSec32) == 0x020, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v30.BPB_HiddSec) == 0x01C, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v40.BPB_TotSec32) == 0x020, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v40.BPB_VolLab) == 0x02B, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v710_32.BS_FilSysType) == 0x052, "Oops");
+static_assert(sizeof(FAT_BootSector) == SECTOR_SIZE_MAX, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v331.BPB_TotSec32) == 0x020, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v40.BPB_TotSec32) == 0x020, "Oops");
+static_assert(offsetof(FAT_BootSector, bpb.v710_32.BPB_TotSec32) == 0x020, "Oops");
+static_assert(sizeof(FAT_BootSector::bpb.v20) == 0x00D, "Oops");
+static_assert(sizeof(FAT_BootSector::bpb.v30) == 0x015, "Oops");
+static_assert(sizeof(FAT_BootSector::bpb.v331) == 0x019, "Oops");
+static_assert(sizeof(FAT_BootSector::bpb.v40) == 0x033, "Oops");
+static_assert(sizeof(FAT_BootSector::bpb.v710_32) == 0x04F, "Oops");
 
 struct direntry {
 	uint8_t entryname[11];
@@ -296,10 +416,12 @@ struct direntry {
 	uint16_t modDate;
 	uint16_t loFirstClust;
 	uint32_t entrysize;
-	inline uint32_t Cluster32(void) const {
+	inline uint32_t Cluster32(void) const
+	{
 		return ((uint32_t)hiFirstClust << (uint32_t)16) + loFirstClust;
 	}
-	inline void SetCluster32(const uint32_t v) {
+	inline void SetCluster32(const uint32_t v)
+	{
 		loFirstClust = (uint16_t)v;
 		hiFirstClust = (uint16_t)(v >> (uint32_t)16);
 	}
@@ -368,11 +490,15 @@ public:
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
-  FAT_BootSector::bpb_union_t GetBPB() {return BPB;}
-  void SetBPB(const FAT_BootSector::bpb_union_t &bpb);
-  virtual uint32_t getSectSize(void);
-  uint32_t sector_size = 0;
-  bool readonly = false;
+	FAT_BootSector::bpb_union_t GetBPB()
+	{
+		return BPB;
+	}
+	void SetBPB(const FAT_BootSector::bpb_union_t& bpb);
+	virtual uint32_t getSectSize(void);
+	uint32_t sector_size = 0;
+	bool readonly        = false;
+
 private:
 	uint32_t getClusterValue(uint32_t clustNum);
 	void setClusterValue(uint32_t clustNum, uint32_t clustValue);
@@ -385,9 +511,10 @@ private:
 	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
 	void zeroOutCluster(uint32_t clustNumber);
 	bool getEntryName(char *fullname, char *entname);
-	
-  FAT_BootSector::bpb_union_t BPB = {}; // BPB in effect (translated from on-disk BPB as needed)
-  FAT_BootSector bootbuffer = {};
+
+	FAT_BootSector::bpb_union_t BPB = {}; // BPB in effect (translated from
+	                                      // on-disk BPB as needed)
+	FAT_BootSector bootbuffer = {};
 	bool absolute;
 	uint8_t fattype;
 	uint32_t CountOfClusters;

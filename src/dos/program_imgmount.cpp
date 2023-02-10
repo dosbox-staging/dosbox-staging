@@ -38,67 +38,82 @@
 #include "shell.h"
 #include "string_utils.h"
 
-bool DetectMFMsectorPartition(uint8_t buf[], uint32_t fcsize, uint16_t sizes[]) {
-		// This is used for plain MFM sector format as created by IMGMAKE
-		// It tries to find the first partition. Addressing is in CHS format.
-		/* Offset   | Length    | Description
-		 * +0       | 1 byte    | 80 hex = active, 00 = inactive
-		 * +1       | 3 bytes   | CHS of first sector in partition
-		 * +4       | 1 byte    | partition type
-		 * +5       | 3 bytes   | CHS of last sector in partition
-		 * +8       | 4 bytes   | LBA of first sector in partition
-		 * +C       | 4 bytes   | Number of sectors in partition. 0 may mean, use LBA
-		 */
-		uint8_t starthead = 0; // start head of partition
-		uint8_t startsect = 0; // start sector of partition
-		uint16_t startcyl = 0; // start cylinder of partition
-		//uint8_t ptype = 0;     // Partition Type
-		uint16_t endcyl = 0;   // end cylinder of partition
-		uint8_t heads = 0;     // heads in partition
-		uint8_t sectors = 0;   // sectors per track in partition
-		uint32_t pe1_size = host_readd(&buf[0x1ca]);
-		if ((uint32_t)host_readd(&buf[0x1fa]) != 0) {     // DOS 2.0-3.21 partition table
-				pe1_size = host_readd(&buf[0x1fa]);
-				starthead = buf[0x1ef];
-				startsect = (buf[0x1f0] & 0x3fu) - 1u;
-				startcyl = (unsigned char)buf[0x1f1] | (unsigned int)((buf[0x1f0] & 0xc0) << 2u);
-				endcyl = (unsigned char)buf[0x1f5] | (unsigned int)((buf[0x1f4] & 0xc0) << 2u);
-				//ptype = buf[0x1f2];
-				heads = buf[0x1f3] + 1u;
-				sectors = buf[0x1f4] & 0x3fu;
-		} else if (pe1_size != 0) {                     // DOS 3.3+ partition table, starting at 0x1BE
-				starthead = buf[0x1bf];
-				startsect = (buf[0x1c0] & 0x3fu) - 1u;
-				startcyl = (unsigned char)buf[0x1c1] | (unsigned int)((buf[0x1c0] & 0xc0) << 2u);
-				endcyl = (unsigned char)buf[0x1c5] | (unsigned int)((buf[0x1c4] & 0xc0) << 2u);
-				//ptype = buf[0x1c2];
-				heads = buf[0x1c3] + 1u;
-				sectors = buf[0x1c4] & 0x3fu;
+bool DetectMFMsectorPartition(uint8_t buf[], uint32_t fcsize, uint16_t sizes[])
+{
+	// This is used for plain MFM sector format as created by IMGMAKE
+	// It tries to find the first partition. Addressing is in CHS format.
+	/* Offset   | Length    | Description
+	 * +0       | 1 byte    | 80 hex = active, 00 = inactive
+	 * +1       | 3 bytes   | CHS of first sector in partition
+	 * +4       | 1 byte    | partition type
+	 * +5       | 3 bytes   | CHS of last sector in partition
+	 * +8       | 4 bytes   | LBA of first sector in partition
+	 * +C       | 4 bytes   | Number of sectors in partition. 0 may mean,
+	 * use LBA
+	 */
+	uint8_t starthead = 0; // start head of partition
+	uint8_t startsect = 0; // start sector of partition
+	uint16_t startcyl = 0; // start cylinder of partition
+	// uint8_t ptype = 0;     // Partition Type
+	uint16_t endcyl   = 0; // end cylinder of partition
+	uint8_t heads     = 0; // heads in partition
+	uint8_t sectors   = 0; // sectors per track in partition
+	uint32_t pe1_size = host_readd(&buf[0x1ca]);
+	if ((uint32_t)host_readd(&buf[0x1fa]) != 0) { // DOS 2.0-3.21 partition
+		                                      // table
+		pe1_size  = host_readd(&buf[0x1fa]);
+		starthead = buf[0x1ef];
+		startsect = (buf[0x1f0] & 0x3fu) - 1u;
+		startcyl  = (unsigned char)buf[0x1f1] |
+		           (unsigned int)((buf[0x1f0] & 0xc0) << 2u);
+		endcyl = (unsigned char)buf[0x1f5] |
+		         (unsigned int)((buf[0x1f4] & 0xc0) << 2u);
+		// ptype = buf[0x1f2];
+		heads   = buf[0x1f3] + 1u;
+		sectors = buf[0x1f4] & 0x3fu;
+	} else if (pe1_size != 0) { // DOS 3.3+ partition table, starting at 0x1BE
+		starthead = buf[0x1bf];
+		startsect = (buf[0x1c0] & 0x3fu) - 1u;
+		startcyl  = (unsigned char)buf[0x1c1] |
+		           (unsigned int)((buf[0x1c0] & 0xc0) << 2u);
+		endcyl = (unsigned char)buf[0x1c5] |
+		         (unsigned int)((buf[0x1c4] & 0xc0) << 2u);
+		// ptype = buf[0x1c2];
+		heads   = buf[0x1c3] + 1u;
+		sectors = buf[0x1c4] & 0x3fu;
+	}
+	if (pe1_size != 0) {
+		uint32_t part_start = startsect + sectors * starthead +
+		                      startcyl * sectors * heads;
+		uint32_t part_end = heads * sectors * endcyl;
+		uint32_t part_len = part_end - part_start;
+		// partition start/end sanity check
+		// partition length should not exceed file length
+		// real partition size can be a few cylinders less than pe1_size
+		// if more than 1023 cylinders see if first partition fits
+		// into 1023, else bail.
+		if (/*(part_len<0) always false because unsigned || */ (
+		            part_len > pe1_size) ||
+		    (pe1_size > fcsize) ||
+		    ((pe1_size - part_len) / (sectors * heads) > 2u) ||
+		    ((pe1_size / (heads * sectors)) > 1023u)) {
+			// LOG_MSG("start(c,h,s)
+			// %u,%u,%u",startcyl,starthead,startsect);
+			// LOG_MSG("endcyl %u heads %u sectors
+			// %u",endcyl,heads,sectors); LOG_MSG("psize %u start %u
+			// end %u",pe1_size,part_start,part_end);
+		} else {
+			sizes[0] = 512;
+			sizes[1] = sectors;
+			sizes[2] = heads;
+			sizes[3] = (uint16_t)(fcsize / (heads * sectors));
+			if (sizes[3] > 1023) {
+				sizes[3] = 1023;
+			}
+			return true;
 		}
-		if (pe1_size != 0) {
-				uint32_t part_start = startsect + sectors * starthead +
-						startcyl * sectors * heads;
-				uint32_t part_end = heads * sectors * endcyl;
-				uint32_t part_len = part_end - part_start;
-				// partition start/end sanity check
-				// partition length should not exceed file length
-				// real partition size can be a few cylinders less than pe1_size
-				// if more than 1023 cylinders see if first partition fits
-				// into 1023, else bail.
-				if (/*(part_len<0) always false because unsigned || */(part_len > pe1_size) || (pe1_size > fcsize) ||
-						((pe1_size - part_len) / (sectors*heads)>2u) ||
-						((pe1_size / (heads*sectors))>1023u)) {
-						//LOG_MSG("start(c,h,s) %u,%u,%u",startcyl,starthead,startsect);
-						//LOG_MSG("endcyl %u heads %u sectors %u",endcyl,heads,sectors);
-						//LOG_MSG("psize %u start %u end %u",pe1_size,part_start,part_end);
-				} else {
-						sizes[0] = 512; sizes[1] = sectors;
-						sizes[2] = heads; sizes[3] = (uint16_t)(fcsize / (heads*sectors));
-						if (sizes[3]>1023) sizes[3] = 1023;
-						return true;
-				}
-		}
-		return false;
+	}
+	return false;
 }
 
 void IMGMOUNT::ListImgMounts(void)
@@ -266,12 +281,12 @@ void IMGMOUNT::Run(void)
 		mediaid = 0xF8;
 		fstype  = "iso";
 
-        if (wants_ide) {
-            IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
-        }
-    } else if (type=="hdd" && wants_ide) {
-        IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
+		if (wants_ide) {
+			IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
 		}
+	} else if (type == "hdd" && wants_ide) {
+		IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
+	}
 
 	cmd->FindString("-size", str_size, true);
 	if ((type == "hdd") && (str_size.size() == 0)) {
@@ -445,62 +460,76 @@ void IMGMOUNT::Run(void)
 		         drive_letter);
 	};
 
-    if (fstype=="fat") {
-        if (imgsizedetect) {
-            FILE * diskfile = fopen_wrap_ro_fallback(temp_line, roflag);
-            if (!diskfile) {
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-                return;
-            }
-            fseek(diskfile, 0L, SEEK_END);
-            uint32_t fcsize = (uint32_t)(ftell(diskfile) / 512L);
-            uint8_t buf[512];
-            fseek(diskfile, 0L, SEEK_SET);
-            if (fread(buf,sizeof(uint8_t),512,diskfile)<512) {
-                fclose(diskfile);
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
-                return;
-            }
-            fclose(diskfile);
-            if ((buf[510]!=0x55) || (buf[511]!=0xaa)) {
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
-                return;
-            }
-            Bitu sectors=(Bitu)(fcsize/(16*63));
-            if (sectors*16*63>fcsize) {
-                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
-                return;
-            }
-						bool assume_lba = false;
-						if (!DetectMFMsectorPartition(buf, fcsize, sizes)) {
-							uint8_t ptype = buf[0x1c2]; // Location of DOS 3.3+ partition type
-							if (ptype == 0x0C/*FAT32+LBA*/ || ptype == 0x0E/*FAT16+LBA*/) {
-								assume_lba = true;
-								LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on first partition type (FAT with LBA)");
-							}
-							if (!assume_lba && (ptype == 0x01 || ptype == 0x04 || ptype == 0x06 || ptype == 0x0B || ptype == 0x0C || ptype == 0x0E)) {
-								/* buf[] still contains MBR */
-								unsigned int i=0;
-								while (i < 0x20 && buf[i] == 0) i++;
-								if (i == 0x20) {
-									assume_lba = true;
-									LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on first partition type (FAT-related) and lack of executable code in the MBR");
-								}
-							}
-							if (!assume_lba && fcsize >= ((4ull*1024ull*1024ull*1024ull)/512ull)) {
-								assume_lba = true;
-								LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on size");
-							}
-							if (assume_lba) {
-								sizes[0] = 512;
-								sizes[1] = 63;
-								sizes[2] = 255;
-								const Bitu d = sizes[1]*sizes[2];
-								sizes[3] = (fcsize + d - 1) / d; /* round up */
-							} else {
-	            	sizes[0]=512;	sizes[1]=63;	sizes[2]=16;	sizes[3]=sectors;
-							}
-						}
+	if (fstype == "fat") {
+		if (imgsizedetect) {
+			FILE* diskfile = fopen_wrap_ro_fallback(temp_line, roflag);
+			if (!diskfile) {
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+				return;
+			}
+			fseek(diskfile, 0L, SEEK_END);
+			uint32_t fcsize = (uint32_t)(ftell(diskfile) / 512L);
+			uint8_t buf[512];
+			fseek(diskfile, 0L, SEEK_SET);
+			if (fread(buf, sizeof(uint8_t), 512, diskfile) < 512) {
+				fclose(diskfile);
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+				return;
+			}
+			fclose(diskfile);
+			if ((buf[510] != 0x55) || (buf[511] != 0xaa)) {
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
+				return;
+			}
+			Bitu sectors = (Bitu)(fcsize / (16 * 63));
+			if (sectors * 16 * 63 > fcsize) {
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
+				return;
+			}
+			bool assume_lba = false;
+			if (!DetectMFMsectorPartition(buf, fcsize, sizes)) {
+				uint8_t ptype = buf[0x1c2]; // Location of
+				                            // DOS 3.3+ partition
+				                            // type
+				if (ptype == 0x0C /*FAT32+LBA*/ ||
+				    ptype == 0x0E /*FAT16+LBA*/) {
+					assume_lba = true;
+					LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on first partition type (FAT with LBA)");
+				}
+				if (!assume_lba &&
+				    (ptype == 0x01 || ptype == 0x04 ||
+				     ptype == 0x06 || ptype == 0x0B ||
+				     ptype == 0x0C || ptype == 0x0E)) {
+					/* buf[] still contains MBR */
+					unsigned int i = 0;
+					while (i < 0x20 && buf[i] == 0) {
+						i++;
+					}
+					if (i == 0x20) {
+						assume_lba = true;
+						LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on first partition type (FAT-related) and lack of executable code in the MBR");
+					}
+				}
+				if (!assume_lba &&
+				    fcsize >= ((4ull * 1024ull * 1024ull * 1024ull) /
+				               512ull)) {
+					assume_lba = true;
+					LOG_MSG("Failed to autodetect geometry, assuming LBA approximation based on size");
+				}
+				if (assume_lba) {
+					sizes[0]     = 512;
+					sizes[1]     = 63;
+					sizes[2]     = 255;
+					const Bitu d = sizes[1] * sizes[2];
+					sizes[3] = (fcsize + d - 1) / d; /* round
+					                                    up */
+				} else {
+					sizes[0] = 512;
+					sizes[1] = 63;
+					sizes[2] = 16;
+					sizes[3] = sectors;
+				}
+			}
 
 			LOG_MSG("autosized image file: %d:%d:%d:%d",
 			        sizes[0],
@@ -551,15 +580,23 @@ void IMGMOUNT::Run(void)
 		mem_writeb(Real2Phys(dos.tables.mediaid) + drive_index(drive) * 9,
 		           mediaid);
 
-										// If instructed, attach to IDE controller as IDE device
-						        if (wants_ide) {
-						            if (ide_index >= 0) {
-						                if (imgDisks.size() && !imageDiskList[drive_index(drive)]) imageDiskList[drive_index(drive)] = static_cast<fatDrive*>(imgDisks[0])->loadedDisk;
-						                IDE_Hard_Disk_Attach(ide_index, is_second_cable_slot, drive_index(drive));
-						            } else {
-						                WriteOut(MSG_Get("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"));
-						            }
-						        }
+		// If instructed, attach to IDE controller as IDE device
+		if (wants_ide) {
+			if (ide_index >= 0) {
+				if (imgDisks.size() &&
+				    !imageDiskList[drive_index(drive)]) {
+					imageDiskList[drive_index(drive)] =
+					        static_cast<fatDrive*>(imgDisks[0])
+					                ->loadedDisk;
+				}
+				IDE_Hard_Disk_Attach(ide_index,
+				                     is_second_cable_slot,
+				                     drive_index(drive));
+			} else {
+				WriteOut(MSG_Get(
+				        "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"));
+			}
+		}
 
 		/* Command uses dta so set it to our internal dta */
 		RealPt save_dta = dos.dta();
