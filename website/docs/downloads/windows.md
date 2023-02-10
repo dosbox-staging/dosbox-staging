@@ -39,7 +39,7 @@ For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
 in the [installer](0_80_1_x64_INSTALLER) and is also available as a [portable
 ZIP archive](0_80_1_x64_ZIP).
 
-For 32-bit Windows 7, use the [portable 32-bit MSVC build](0_80_1_x32_ZIP)
+For 32-bit Windows 7, use the 32-bit MSVC build [portable ZIP archive](0_80_1_x32_ZIP)
 
 ## Windows Vista
 
