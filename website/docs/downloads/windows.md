@@ -25,13 +25,14 @@ the changes and improvements introduced by this release.
     If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
     Microsoft Defender SmartScreen, see the [section below](#microsoft-defender-smartscreen).
 
-For 32-bit Windows 7 and newer, and for 64-bit Windows 7 use the respective MSVC builds:
-- The 32-bit MSVC build [DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
-- The 64-bit MSVC build on Windows 7 or newer can be optionally selected in the installer.
+The installer uses by default the MSYS2 build, which works on 64-bit Windows 8.x or newer.<br>
 
-Windows Vista hosts are supported out-of-the-box up to release 0.78.1.
+For 64-bit Windows 7 use the 64-bit MSVC build. It can be optionally selected via the installer and is also available as ZIP.<br>
+For 32-bit Windows 7, 8.x and 10 use the 32-bit MSVC build [DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
+
+Windows Vista is supported out-of-the-box up to release 0.78.1.
 <br>
-Subsequent releases can be built from source by excluding FluidSynth (MIDI) and Slirp (NE2000). Please see the [Windows MSYS2 build instructions][5] for further details.
+Subsequent releases can be built from source by excluding FluidSynth and Slirp. Please see the [Windows MSYS2 build instructions][5] for further details.
 
 [5]:https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2 
 
