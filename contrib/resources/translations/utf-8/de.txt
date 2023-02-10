@@ -1164,19 +1164,19 @@ Auflistung nicht unterstützt
 Gerät nicht konfiguriert
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-lokales Verzeichnis
+Lokales Verzeichnis
 .
 :MOUNT_TYPE_CDROM
 CD-ROM Laufwerk
 .
 :MOUNT_TYPE_FAT
-FAT Laufwerk
+FAT image
 .
 :MOUNT_TYPE_ISO
-ISO Laufwerk
+ISO image
 .
 :MOUNT_TYPE_VIRTUAL
-virtuelles internes Laufwerk
+Virtuelles internes Laufwerk
 .
 :MOUNT_TYPE_UNKNOWN
 unbekanntes Laufwerk
@@ -1345,7 +1345,7 @@ Image-Name
 Wechsel-Image
 .
 :PROGRAM_MOUNT_STATUS_2
-Laufwerk %c ist eingebunden als %s
+%s ist eingebunden als Laufwerk %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -3136,4 +3136,7 @@ und gemappte Mäuse erhalten immer direkte Eingabe-Daten.
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
 Umgekehrt
+.
+:CONJUNCTION_AND
+und
 .

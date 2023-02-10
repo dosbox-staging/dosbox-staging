@@ -1095,19 +1095,19 @@ listing not supported
 device not configured
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-local directory
+Local directory
 .
 :MOUNT_TYPE_CDROM
 CD-ROM drive
 .
 :MOUNT_TYPE_FAT
-FAT drive
+FAT image
 .
 :MOUNT_TYPE_ISO
-ISO drive
+ISO image
 .
 :MOUNT_TYPE_VIRTUAL
-internal virtual drive
+Internal virtual drive
 .
 :MOUNT_TYPE_UNKNOWN
 unknown drive
@@ -1313,7 +1313,7 @@ Image name
 Swap slot
 .
 :PROGRAM_MOUNT_STATUS_2
-Drive %c is mounted as %s
+%s mounted as %c drive
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -3014,4 +3014,7 @@ Miscellaneous Commands
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Unknown Command
+.
+:CONJUNCTION_AND
+and
 .

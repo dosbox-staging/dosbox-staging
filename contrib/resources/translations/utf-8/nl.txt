@@ -1112,19 +1112,19 @@ lijst wordt niet ondersteund
 apparaat niet geconfigureerd
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-lokale map
+Lokale map
 .
 :MOUNT_TYPE_CDROM
 CD-ROM station
 .
 :MOUNT_TYPE_FAT
-FAT schijf
+FAT image
 .
 :MOUNT_TYPE_ISO
-ISO schijf
+ISO image
 .
 :MOUNT_TYPE_VIRTUAL
-interne virtuele schijf
+Interne virtuele schijf
 .
 :MOUNT_TYPE_UNKNOWN
 onbekende schijf
@@ -1332,7 +1332,7 @@ Imagenaam
 Wissel slot
 .
 :PROGRAM_MOUNT_STATUS_2
-Schijf %c is gekoppeld als %s
+%s gekoppeld als %c schijf
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -3080,4 +3080,7 @@ Diverse opdrachten
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Onbekende opdracht
+.
+:CONJUNCTION_AND
+en
 .

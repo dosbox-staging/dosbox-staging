@@ -363,6 +363,23 @@ void IMGMOUNT::Run(void)
 		temp_line = paths[0];
 	}
 
+	auto write_out_mount_status = [this](const char* image_type,
+	                                     const std::vector<std::string>& images,
+	                                     const char drive_letter) {
+		constexpr auto end_punctuation = "";
+
+		const auto images_str = join_with_commas(images,
+		                                         MSG_Get("CONJUNCTION_AND"),
+		                                         end_punctuation);
+
+		const std::string type_and_images_str = image_type +
+		                                        std::string(" ") + images_str;
+
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         type_and_images_str.c_str(),
+		         drive_letter);
+	};
+
 	if (fstype == "fat") {
 		if (imgsizedetect) {
 			FILE* diskfile = fopen_wrap_ro_fallback(temp_line, roflag);
@@ -458,12 +475,7 @@ void IMGMOUNT::Run(void)
 		}
 		dos.dta(save_dta);
 
-		constexpr auto end_punctuation = ".";
-		const auto joined_paths = join_with_commas(paths, end_punctuation);
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         drive,
-		         joined_paths.c_str());
-
+		write_out_mount_status(MSG_Get("MOUNT_TYPE_FAT"), paths, drive);
 		auto newdrive = static_cast<fatDrive*>(imgDisks[0]);
 		assert(newdrive);
 		if (('A' <= drive && drive <= 'B' &&
@@ -546,11 +558,7 @@ void IMGMOUNT::Run(void)
 		// Print status message (success)
 		WriteOut(MSG_Get("MSCDEX_SUCCESS"));
 
-		constexpr auto end_punctuation = ".";
-		const auto joined_paths = join_with_commas(paths, end_punctuation);
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         drive,
-		         joined_paths.c_str());
+		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO"), paths, drive);
 
 	} else if (fstype == "none") {
 		FILE* newDisk = fopen_wrap_ro_fallback(temp_line, roflag);

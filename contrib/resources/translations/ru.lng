@@ -1114,7 +1114,7 @@ DOSBox был запущен со следующими параметрами к
 Метка
 .
 :PROGRAM_MOUNT_STATUS_2
-Диск %c смонтирован как %s
+%s смонтирован как диск %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -2724,19 +2724,19 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 устройство не настроено
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-локальный каталог
+Локальный каталог
 .
 :MOUNT_TYPE_CDROM
-привод CD-ROM
+Привод CD-ROM
 .
 :MOUNT_TYPE_FAT
-привод FAT
+Образ FAT
 .
 :MOUNT_TYPE_ISO
-привод ISO
+Образ ISO
 .
 :MOUNT_TYPE_VIRTUAL
-внутренний виртуальный привод
+Внутренний виртуальный привод
 .
 :MOUNT_TYPE_UNKNOWN
 неизвестный привод
@@ -3041,4 +3041,7 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
 Реверс
+.
+:CONJUNCTION_AND
+и
 .

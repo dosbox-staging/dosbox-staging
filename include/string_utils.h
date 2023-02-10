@@ -287,7 +287,8 @@ std::vector<std::string> split(const std::string &seq, const char delim);
 std::vector<std::string> split(const std::string &seq);
 
 std::string join_with_commas(const std::vector<std::string>& items,
-                             const char* end_punctuation);
+                             const std::string_view and_conjunction = "and",
+                             const std::string_view end_punctuation = ".");
 
 // Clear the language if it's set to the POSIX default
 void clear_language_if_default(std::string &language);
