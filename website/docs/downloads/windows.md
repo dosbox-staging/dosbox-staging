@@ -54,7 +54,7 @@ for further details.
 
 ## Harware requirements
 
-CPUs without SSE4.2 are supported up to release 0.75.0. 
+SSE 4.2 instruction set is required for version 0.75.1 or newer.
 
 ## Development snapshot builds
 
