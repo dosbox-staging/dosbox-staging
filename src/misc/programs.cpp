@@ -902,4 +902,5 @@ void PROGRAMS_Init(Section* sec) {
 	MSG_Add("PROGRAM_PATH_TOO_LONG",
 	        "The path \"%s\" exceeds the DOS maximum length of %d characters\n");
 	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: %s\n");
+	MSG_Add("CONJUNCTION_AND", "and");
 }

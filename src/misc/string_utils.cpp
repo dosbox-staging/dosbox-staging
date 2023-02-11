@@ -180,12 +180,64 @@ std::vector<std::string> split(const std::string &seq)
 	return words;
 }
 
+std::string join_with_commas(const std::vector<std::string>& items,
+                             const std::string_view and_conjunction,
+                             const std::string_view end_punctuation)
+{
+	const auto num_items = items.size();
+
+	std::string result = {};
+
+	const auto and_pair = std::string(" ") + and_conjunction.data() + " ";
+	const auto and_multi = std::string(", ") + and_conjunction.data() + " ";
+
+	std::string separator = (num_items == 2u) ? and_pair : ", ";
+
+	size_t item_num = 1;
+	for (const auto& item : items) {
+		assert(!item.empty());
+		result += item;
+		result += (item_num == num_items) ? end_punctuation : separator;
+		separator = (item_num + 2u == num_items) ? and_multi : separator;
+		++item_num;
+	}
+	return result;
+}
+
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);
 }
 
-char *strip_word(char *&line)
+bool natural_compare(const std::string& a_str, const std::string& b_str)
+{
+	auto parse_num = [](auto& it, const auto it_end) {
+		int num = 0;
+		while (it != it_end && isdigit(*it)) {
+			num = num * 10 + (*it - '0');
+			++it;
+		}
+		return num;
+	};
+	auto a = a_str.begin();
+	auto b = b_str.begin();
+
+	const auto a_end = a_str.end();
+	const auto b_end = b_str.end();
+
+	while (a != a_end && b != b_end) {
+		const auto found_nums = isdigit(*a) && isdigit(*b);
+		const auto a_val = found_nums ? parse_num(a, a_end) : tolower(*a++);
+		const auto b_val = found_nums ? parse_num(b, b_end) : tolower(*b++);
+		if (a_val != b_val) {
+			return a_val < b_val;
+		}
+	}
+	// the overlapping strings match, so finally check if A is shorter
+	return a == a_end && b != b_end;
+}
+
+char* strip_word(char*& line)
 {
 	char *scan = line;
 	scan       = ltrim(scan);

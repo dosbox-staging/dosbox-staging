@@ -1127,19 +1127,19 @@ ReelMagic Full Motion Player (wbudowany sterownik) %hhu.%hhu
 
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-katalog lokalny
+Katalog lokalny
 .
 :MOUNT_TYPE_CDROM
 CD-ROM
 .
 :MOUNT_TYPE_FAT
-obraz FAT
+Obraz FAT
 .
 :MOUNT_TYPE_ISO
-obraz ISO
+Obraz ISO
 .
 :MOUNT_TYPE_VIRTUAL
-wewnętrzny dysk wirtualny
+Wewnętrzny dysk wirtualny
 .
 :MOUNT_TYPE_UNKNOWN
 nieznany typ
@@ -1303,7 +1303,7 @@ Obraz
 Slot
 .
 :PROGRAM_MOUNT_STATUS_2
-Dysk %c jest zamontowany jako '%s'.
+%s zamontowany jako dysk %c
 
 .
 :PROGRAM_MOUNT_STATUS_1
@@ -3018,4 +3018,7 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
+.
+:CONJUNCTION_AND
+i
 .

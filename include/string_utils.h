@@ -244,7 +244,17 @@ constexpr bool iequals(T1&& a, T2&& b)
 	return std::equal(str_a.begin(), str_a.end(), str_b.begin(), str_b.end(), ciequals);
 }
 
-char *strip_word(char *&cmd);
+// Performs a "natural" comparison between A and B, which is case-insensitive
+// and treats number sequenences as whole numbers. Returns true if A < B. This
+// function can be used with higher order sort rountines, like std::sort.
+//
+// Examples:
+// - ("abc_2", "ABC_10") -> true, because abc_ matches and 2 < 10.
+// - ("xyz_2", "ABC_10") -> false, because 'x' > 'a'.
+// - ("abc123", "abc123=") -> true, simply because the first is shorter.
+bool natural_compare(const std::string& a, const std::string& b);
+
+char* strip_word(char*& cmd);
 
 std::string replace(const std::string &str, char old_char, char new_char) noexcept;
 void trim(std::string &str, const char trim_chars[] = " \r\t\f\n");
@@ -276,6 +286,9 @@ std::vector<std::string> split(const std::string &seq, const char delim);
 //   split(" ") returns {}
 std::vector<std::string> split(const std::string &seq);
 
+std::string join_with_commas(const std::vector<std::string>& items,
+                             const std::string_view and_conjunction = "and",
+                             const std::string_view end_punctuation = ".");
 
 // Clear the language if it's set to the POSIX default
 void clear_language_if_default(std::string &language);

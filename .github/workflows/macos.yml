@@ -74,7 +74,7 @@ jobs:
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
           echo "name_hash=$(echo '${{ matrix.conf.name }} ${{ matrix.conf.arch }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.4
+      - uses:  actions/cache@v3.2.5
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -88,7 +88,7 @@ jobs:
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
 
-      - uses:  actions/cache@v3.2.4
+      - uses:  actions/cache@v3.2.5
         if:    matrix.conf.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
@@ -99,7 +99,7 @@ jobs:
 
       - name: Cache subprojects
         id:   cache-subprojects
-        uses: actions/cache@v3
+        uses: actions/cache@v3.2.5
         with:
           path: subprojects.tar
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
@@ -189,7 +189,7 @@ jobs:
           echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
           echo "today=$(date +%F)"      >> $GITHUB_OUTPUT
 
-      - uses:  actions/cache@v3.2.4
+      - uses:  actions/cache@v3.2.5
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.brew_dir }}
@@ -202,7 +202,7 @@ jobs:
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
           ccache libpng meson opusfile sdl2 sdl2_image sdl2_net speexdsp
 
-      - uses:  actions/cache@v3.2.4
+      - uses:  actions/cache@v3.2.5
         if:    matrix.runner.needs_deps
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
@@ -211,7 +211,7 @@ jobs:
 
       - name: Cache subprojects
         id: cache-subprojects
-        uses: actions/cache@v3
+        uses: actions/cache@v3.2.5
         with:
           path: subprojects.tar
           key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
