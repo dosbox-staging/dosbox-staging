@@ -630,16 +630,84 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	}
 }
 
-static uint8_t decode_ADPCM_4_sample(const int val)
+static uint8_t decode_adpcm_portion(const int bit_portion,
+                                    const uint8_t adjust_map[],
+                                    const int8_t scale_map[], const int last_index)
 {
-	const auto sample = check_cast<uint8_t>(val);
-	constexpr int8_t scaleMap[64] = {
+	auto& scale  = sb.adpcm.stepsize;
+	auto& sample = sb.adpcm.reference;
+
+	const auto i = std::clamp(bit_portion + scale, 0, last_index);
+	scale = (scale + adjust_map[i]) & 0xff;
+	sample = static_cast<uint8_t>(clamp(sample + scale_map[i], 0, 255));
+	return sample;
+}
+
+static std::array<uint8_t, 4> decode_ADPCM_2(const uint8_t data)
+{
+	// clang-format off
+
+	constexpr int8_t scale_map[] = {
+		0,  1,  0,  -1, 1,  3,  -1,  -3,
+		2,  6, -2,  -6, 4, 12,  -4, -12,
+		8, 24, -8, -24, 6, 48, -16, -48
+	};
+	constexpr uint8_t adjust_map[] = {
+		  0, 4,   0, 4,
+		252, 4, 252, 4, 252, 4, 252, 4,
+		252, 4, 252, 4, 252, 4, 252, 4,
+		252, 0, 252, 0
+	};
+	static_assert(ARRAY_LEN(scale_map) == ARRAY_LEN(adjust_map));
+	constexpr auto last_i = static_cast<uint8_t>(sizeof(scale_map) - 1);;
+
+	return {decode_adpcm_portion((data >> 6) & 0x3, adjust_map, scale_map, last_i),
+	        decode_adpcm_portion((data >> 4) & 0x3, adjust_map, scale_map, last_i),
+	        decode_adpcm_portion((data >> 2) & 0x3, adjust_map, scale_map, last_i),
+	        decode_adpcm_portion((data >> 0) & 0x3, adjust_map, scale_map, last_i)};
+
+	// clang-format on
+}
+
+static std::array<uint8_t, 3> decode_ADPCM_3(const uint8_t data)
+{
+	// clang-format off
+
+	constexpr int8_t scale_map[40] = {
+		0,  1,  2,  3,  0,  -1,  -2,  -3,
+		1,  3,  5,  7, -1,  -3,  -5,  -7,
+		2,  6, 10, 14, -2,  -6, -10, -14,
+		4, 12, 20, 28, -4, -12, -20, -28,
+		5, 15, 25, 35, -5, -15, -25, -35
+	};
+	constexpr uint8_t adjust_map[40] = {
+		  0, 0, 0, 8,   0, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 0, 248, 0, 0, 0
+	};
+	static_assert(ARRAY_LEN(scale_map) == ARRAY_LEN(adjust_map));
+	constexpr auto last_i = static_cast<uint8_t>(sizeof(scale_map) - 1);;
+
+	return {decode_adpcm_portion((data >> 5) & 0x7, adjust_map, scale_map, last_i),
+	        decode_adpcm_portion((data >> 2) & 0x7, adjust_map, scale_map, last_i),
+	        decode_adpcm_portion((data & 0x3) << 1, adjust_map, scale_map, last_i)};
+
+	// clang-format on
+}
+
+static std::array<uint8_t, 2> decode_ADPCM_4(const uint8_t data)
+{
+	// clang-format off
+
+	constexpr int8_t scale_map[64] = {
 		0,  1,  2,  3,  4,  5,  6,  7,  0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,
 		1,  3,  5,  7,  9, 11, 13, 15, -1,  -3,  -5,  -7,  -9, -11, -13, -15,
 		2,  6, 10, 14, 18, 22, 26, 30, -2,  -6, -10, -14, -18, -22, -26, -30,
 		4, 12, 20, 28, 36, 44, 52, 60, -4, -12, -20, -28, -36, -44, -52, -60
 	};
-	constexpr uint8_t adjustMap[64] = {
+	constexpr uint8_t adjust_map[64] = {
 		  0, 0, 0, 0, 0, 16, 16, 16,
 		  0, 0, 0, 0, 0, 16, 16, 16,
 		240, 0, 0, 0, 0, 16, 16, 16,
@@ -649,62 +717,13 @@ static uint8_t decode_ADPCM_4_sample(const int val)
 		240, 0, 0, 0, 0,  0,  0,  0,
 		240, 0, 0, 0, 0,  0,  0,  0
 	};
-	auto & scale = sb.adpcm.stepsize;
-	const auto i = std::min(sample + scale, 63);
-	scale = (scale + adjustMap[i]) & 0xff;
+	static_assert(ARRAY_LEN(scale_map) == ARRAY_LEN(adjust_map));
+	constexpr auto last_i = static_cast<uint8_t>(sizeof(scale_map) - 1);;
 
-	auto &ref = sb.adpcm.reference;
-	ref = static_cast<uint8_t>(clamp(ref + scaleMap[i], 0, 255));
-	return ref;
-}
+	return {decode_adpcm_portion(data >> 4,  adjust_map, scale_map, last_i),
+	        decode_adpcm_portion(data & 0xf, adjust_map, scale_map, last_i)};
 
-static uint8_t decode_ADPCM_2_sample(const int val)
-{
-	const auto sample = check_cast<uint8_t>(val);
-	constexpr int8_t scaleMap[24] = {
-		0,  1,  0,  -1, 1,  3,  -1,  -3,
-		2,  6, -2,  -6, 4, 12,  -4, -12,
-		8, 24, -8, -24, 6, 48, -16, -48
-	};
-	constexpr uint8_t adjustMap[24] = {
-		  0, 4,   0, 4,
-		252, 4, 252, 4, 252, 4, 252, 4,
-		252, 4, 252, 4, 252, 4, 252, 4,
-		252, 0, 252, 0
-	};
-	auto & scale = sb.adpcm.stepsize;
-	const auto i = std::min(sample + scale, 23);
-	scale = (scale + adjustMap[i]) & 0xff;
-
-	auto &ref = sb.adpcm.reference;
-	ref = static_cast<uint8_t>(clamp(ref + scaleMap[i], 0, 255));
-	return ref;
-}
-
-static uint8_t decode_ADPCM_3_sample(const int val)
-{
-	const auto sample = check_cast<uint8_t>(val);
-	constexpr int8_t scaleMap[40] = {
-		0,  1,  2,  3,  0,  -1,  -2,  -3,
-		1,  3,  5,  7, -1,  -3,  -5,  -7,
-		2,  6, 10, 14, -2,  -6, -10, -14,
-		4, 12, 20, 28, -4, -12, -20, -28,
-		5, 15, 25, 35, -5, -15, -25, -35
-	};
-	constexpr uint8_t adjustMap[40] = {
-		  0, 0, 0, 8,   0, 0, 0, 8,
-		248, 0, 0, 8, 248, 0, 0, 8,
-		248, 0, 0, 8, 248, 0, 0, 8,
-		248, 0, 0, 8, 248, 0, 0, 8,
-		248, 0, 0, 0, 248, 0, 0, 0
-	};
-	auto & scale = sb.adpcm.stepsize;
-	const auto i = std::min(sample + scale, 39);
-	scale = (scale + adjustMap[i]) & 0xff;
-
-	auto &ref = sb.adpcm.reference;
-	ref = static_cast<uint8_t>(clamp(ref + scaleMap[i], 0, 255));
-	return ref;
+	// clang-format on
 }
 
 template <typename T>
@@ -759,69 +778,45 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	last_dma_callback = PIC_FullIndex();
 
 	// Temporary counter for ADPCM modes
-	uint32_t i = 0;
+
+	auto decode_adpcm_dma =
+	        [&](auto decode_adpcm_fn) -> std::tuple<uint32_t, uint32_t, uint16_t> {
+
+		const uint32_t num_bytes = ReadDMA8(bytes_to_read);
+		uint32_t num_samples = 0;
+		uint16_t num_frames  = 0;
+
+		// Parse the reference ADPCM byte, if provided
+		uint32_t i = 0;
+		if (num_bytes > 0 && sb.adpcm.haveref) {
+			sb.adpcm.haveref   = false;
+			sb.adpcm.reference = sb.dma.buf.b8[0];
+			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
+			++i;
+		}
+		// Decode the remaining DMA buffer into samples using the provided function
+		while (i < num_bytes) {
+			const auto decoded = decode_adpcm_fn(sb.dma.buf.b8[i]);
+			constexpr auto num_decoded = check_cast<uint8_t>(decoded.size());
+			sb.chan->AddSamples_m8(num_decoded, maybe_silence(num_decoded, decoded.data()));
+			num_samples += num_decoded;
+			++i;
+		}
+		 // ADPCM is mono
+		num_frames = check_cast<uint16_t>(num_samples);
+		return {num_bytes, num_samples, num_frames};
+	};
 
 	//Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
-		bytes_read = ReadDMA8(bytes_to_read);
-		if (bytes_read && sb.adpcm.haveref) {
-			sb.adpcm.haveref=false;
-			sb.adpcm.reference=sb.dma.buf.b8[0];
-			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			i++;
-		}
-		assert(samples == 0);
-		while (i < bytes_read) {
-			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
-			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
-			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
-			MixTemp[samples++] = decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
-
-			frames = check_cast<uint16_t>(samples / channels);
-			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
-			samples = 0;
-			++i;
-		}
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_ADPCM_2);
 		break;
 	case DSP_DMA_3:
-		bytes_read = ReadDMA8(bytes_to_read);
-		if (bytes_read && sb.adpcm.haveref) {
-			sb.adpcm.haveref=false;
-			sb.adpcm.reference=sb.dma.buf.b8[0];
-			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			i++;
-		}
-		assert(samples == 0);
-		while (i < bytes_read) {
-			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7);
-			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
-			MixTemp[samples++] = decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
-
-			frames = check_cast<uint16_t>(samples / channels);
-			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
-			samples = 0;
-			++i;
-		}
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_ADPCM_3);
 		break;
 	case DSP_DMA_4:
-		bytes_read = ReadDMA8(bytes_to_read);
-		if (bytes_read && sb.adpcm.haveref) {
-			sb.adpcm.haveref=false;
-			sb.adpcm.reference=sb.dma.buf.b8[0];
-			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			i++;
-		}
-		assert(samples == 0);
-		while (i < bytes_read) {
-			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
-			MixTemp[samples++] = decode_ADPCM_4_sample(sb.dma.buf.b8[i] & 0xf);
-
-			frames = check_cast<uint16_t>(samples / channels);
-			sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
-			samples = 0;
-			++i;
-		}
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_ADPCM_4);
 		break;
 	case DSP_DMA_8:
  		if (sb.dma.stereo) {
