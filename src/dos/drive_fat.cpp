@@ -245,6 +245,8 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 
 finalizeWrite:
 	myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+	tmpentry.modTime = DOS_GetBiosTimePacked();
+	tmpentry.modDate = DOS_GetBiosDatePacked();
 	tmpentry.entrysize = filelength;
 	tmpentry.loFirstClust = (uint16_t)firstCluster;
 	myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
@@ -286,10 +288,22 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 }
 
 bool fatFile::Close() {
-	/* Flush buffer */
-	if (loadedSector) myDrive->writeSector(currentSector, sectorBuffer);
+	if ((flags & 0xf) != OPEN_READ) {
+		if (newtime) {
+			direntry tmpentry;
+			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+			tmpentry.modTime = time;
+			tmpentry.modDate = date;
+			myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
+		}
 
-	return false;
+		/* Flush buffer */
+		if (loadedSector) {
+			myDrive->writeSector(currentSector, sectorBuffer);
+		}
+	}
+
+	return true;
 }
 
 uint16_t fatFile::GetInformation(void) {
@@ -1013,6 +1027,8 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 			fileEntry.loFirstClust = 0;
 		}
 		fileEntry.entrysize = 0;
+		fileEntry.modTime   = DOS_GetBiosTimePacked();
+		fileEntry.modDate   = DOS_GetBiosDatePacked();
 		directoryChange(dirClust, &fileEntry, subEntry);
 	} else {
 		/* Can we even get the name of the file itself? */
@@ -1023,7 +1039,9 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 		if(!getDirClustNum(name, &dirClust, true)) return false;
 		memset(&fileEntry, 0, sizeof(direntry));
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
-		fileEntry.attrib = (uint8_t)(attributes & 0xff);
+		fileEntry.attrib  = (uint8_t)(attributes & 0xff);
+		fileEntry.modTime = DOS_GetBiosTimePacked();
+		fileEntry.modDate = DOS_GetBiosDatePacked();
 		addDirectoryEntry(dirClust, fileEntry);
 
 		/* Check if file exists now */
@@ -1032,12 +1050,17 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 
 	/* Empty file created, now lets open it */
 	/* TODO: check for read-only flag and requested write access */
-	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
-	(*file)->flags=OPEN_READWRITE;
-	((fatFile *)(*file))->dirCluster = dirClust;
-	((fatFile *)(*file))->dirIndex = subEntry;
-	((fatFile *)(*file))->time = fileEntry.modTime;
-	((fatFile *)(*file))->date = fileEntry.modDate;
+	auto fat_file        = new fatFile(name,
+                                    fileEntry.loFirstClust,
+                                    fileEntry.entrysize,
+                                    this);
+	fat_file->flags      = OPEN_READWRITE;
+	fat_file->dirCluster = dirClust;
+	fat_file->dirIndex   = subEntry;
+	fat_file->time       = fileEntry.modTime;
+	fat_file->date       = fileEntry.modDate;
+
+	*file = fat_file;
 
 	dos.errorcode=save_errorcode;
 	return true;
@@ -1057,12 +1080,17 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	uint32_t dirClust, subEntry;
 	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
 	/* TODO: check for read-only flag and requested write access */
-	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
-	(*file)->flags = flags;
-	((fatFile *)(*file))->dirCluster = dirClust;
-	((fatFile *)(*file))->dirIndex = subEntry;
-	((fatFile *)(*file))->time = fileEntry.modTime;
-	((fatFile *)(*file))->date = fileEntry.modDate;
+	auto fat_file        = new fatFile(name,
+                                    fileEntry.loFirstClust,
+                                    fileEntry.entrysize,
+                                    this);
+	fat_file->flags      = flags;
+	fat_file->dirCluster = dirClust;
+	fat_file->dirIndex   = subEntry;
+	fat_file->time       = fileEntry.modTime;
+	fat_file->date       = fileEntry.modDate;
+
+	*file = fat_file;
 	return true;
 }
 
