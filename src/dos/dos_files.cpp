@@ -1183,13 +1183,8 @@ uint8_t DOS_FCBWrite(uint16_t seg,uint16_t offset,uint16_t recno) {
 	fcb.GetSizeDateTime(size,date,time);
 	if (pos+towrite>size) size=pos+towrite;
 	//time doesn't keep track of endofday
-	date = DOS_PackDate(dos.date.year,dos.date.month,dos.date.day);
-	uint32_t ticks = mem_readd(BIOS_TIMER);
-	uint32_t seconds = (ticks*10)/182;
-	uint16_t hour = (uint16_t)(seconds/3600);
-	uint16_t min = (uint16_t)((seconds % 3600)/60);
-	uint16_t sec = (uint16_t)(seconds % 60);
-	time = DOS_PackTime(hour,min,sec);
+	date = DOS_GetBiosDatePacked();
+	time = DOS_GetBiosTimePacked();
 
 	assert(fhandle < DOS_FILES);
 	Files[fhandle]->time = time;

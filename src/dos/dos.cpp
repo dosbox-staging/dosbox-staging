@@ -178,6 +178,22 @@ void DOS_SetCountry(uint16_t country_number)
 	dos.tables.country[DOS_DECIMAL_SEPARATOR_OFS]   = country_info.decimal_separator;
 }
 
+uint16_t DOS_GetBiosTimePacked()
+{
+	const auto ticks   = mem_readd(BIOS_TIMER);
+	const auto seconds = (ticks * 10) / 182;
+	const auto hour    = static_cast<uint16_t>(seconds / 3600);
+	const auto min     = static_cast<uint16_t>((seconds % 3600) / 60);
+	const auto sec     = static_cast<uint16_t>(seconds % 60);
+
+	return DOS_PackTime(hour, min, sec);
+}
+
+uint16_t DOS_GetBiosDatePacked()
+{
+	return DOS_PackDate(dos.date.year, dos.date.month, dos.date.day);
+}
+
 static void DOS_AddDays(Bitu days)
 {
 	dos.date.day += days;
