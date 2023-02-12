@@ -1036,9 +1036,8 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 	(*file)->flags=OPEN_READWRITE;
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
-	/* Maybe modTime and date should be used ? (crt matches findnext) */
-	((fatFile *)(*file))->time = fileEntry.crtTime;
-	((fatFile *)(*file))->date = fileEntry.crtDate;
+	((fatFile *)(*file))->time = fileEntry.modTime;
+	((fatFile *)(*file))->date = fileEntry.modDate;
 
 	dos.errorcode=save_errorcode;
 	return true;
@@ -1062,9 +1061,8 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	(*file)->flags = flags;
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
-	/* Maybe modTime and date should be used ? (crt matches findnext) */
-	((fatFile *)(*file))->time = fileEntry.crtTime;
-	((fatFile *)(*file))->date = fileEntry.crtDate;
+	((fatFile *)(*file))->time = fileEntry.modTime;
+	((fatFile *)(*file))->date = fileEntry.modDate;
 	return true;
 }
 
