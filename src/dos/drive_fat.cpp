@@ -106,7 +106,8 @@ fatFile::fatFile(const char* /*name*/,
 }
 
 bool fatFile::Read(uint8_t * data, uint16_t *size) {
-	if ((this->flags & 0xf) == OPEN_WRITE) {	// check if file opened in write-only mode
+	// check if file opened in write-only mode
+	if ((this->flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -159,7 +160,8 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 }
 
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
-	if ((this->flags & 0xf) == OPEN_READ) {	// check if file opened in read-only mode
+	// check if file opened in read-only mode
+	if ((this->flags & 0xf) == OPEN_READ || myDrive->isReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -288,7 +290,7 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 }
 
 bool fatFile::Close() {
-	if ((flags & 0xf) != OPEN_READ) {
+	if ((flags & 0xf) != OPEN_READ && !myDrive->isReadOnly()) {
 		if (newtime) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
@@ -1089,7 +1091,7 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 		return false;
 	}
 
-	bool is_readonly = (readonly || (fileEntry.attrib & DOS_ATTR_READ_ONLY));
+	bool is_readonly = (fileEntry.attrib & DOS_ATTR_READ_ONLY);
 	bool open_for_readonly = ((flags & 0xf) == OPEN_READ);
 	if (is_readonly && !open_for_readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
