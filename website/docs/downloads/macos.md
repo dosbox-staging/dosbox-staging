@@ -25,10 +25,6 @@ the changes and improvements introduced by this release.
 
     [1]:https://github.com/dosbox-staging/dosbox-staging
 
-## Harware requirements
-
-For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models that don't support it you can try using the parital SSE4.2 emulator [MouSSE](https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/).
-
 ## Homebrew
 
 The [Homebrew package](https://formulae.brew.sh/formula/dosbox-staging) is
@@ -51,6 +47,13 @@ Learn how to setup MacPorts [here](https://guide.macports.org/).
 If you're running an OS not longer maintained by Apple, then support is on a
 best-effort basis (as the team runs supported configurations and may not be able
 to reproduce some issues).
+
+
+## Harware requirements
+
+For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models
+that don't support it you can try using the parital SSE4.2 emulator
+[MouSSE](https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/).
 
 
 ## Development snapshot builds
