@@ -52,7 +52,7 @@ for further details.
 
 [win-build]: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2
 
-## Harware requirements
+## Hardware requirements
 
 SSE 4.2 instruction set is required for version 0.75.1 or newer.
 

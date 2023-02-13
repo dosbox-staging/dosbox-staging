@@ -94,7 +94,7 @@ You can easily configure your DOS games on
 [RetroPie-Setup](https://github.com/RetroPie/RetroPie-Setup) (select
 **Optional Packages** --> **DOSBox Staging**).
 
-## Harware requirements
+## Hardware requirements
 
 For x86 CPUs the SSE 4.2 instruction set is required.
 

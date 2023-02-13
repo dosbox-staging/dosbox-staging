@@ -49,7 +49,7 @@ best-effort basis (as the team runs supported configurations and may not be able
 to reproduce some issues).
 
 
-## Harware requirements
+## Hardware requirements
 
 For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models
 that don't support it you can try using the parital SSE4.2 emulator
