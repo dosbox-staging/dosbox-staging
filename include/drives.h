@@ -200,6 +200,7 @@ public:
 	uint32_t getFirstFreeClust(void);
 	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
+	bool isReadOnly() const { return readonly; }
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
