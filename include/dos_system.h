@@ -39,14 +39,14 @@
 
 #define LFN_NAMELENGTH 255
 
-enum {
-	DOS_ATTR_READ_ONLY=	0x01,
-	DOS_ATTR_HIDDEN=	0x02,
-	DOS_ATTR_SYSTEM=	0x04,
-	DOS_ATTR_VOLUME=	0x08,
-	DOS_ATTR_DIRECTORY=	0x10,
-	DOS_ATTR_ARCHIVE=	0x20,
-	DOS_ATTR_DEVICE=	0x40
+enum FatAttributeFlags : uint8_t { // 7-bit
+	DOS_ATTR_READ_ONLY = 0b000'0001,
+	DOS_ATTR_HIDDEN    = 0b000'0010,
+	DOS_ATTR_SYSTEM    = 0b000'0100,
+	DOS_ATTR_VOLUME    = 0b000'1000,
+	DOS_ATTR_DIRECTORY = 0b001'0000,
+	DOS_ATTR_ARCHIVE   = 0b010'0000,
+	DOS_ATTR_DEVICE    = 0b100'0000,
 };
 
 struct FileStat_Block {
@@ -352,9 +352,19 @@ public:
 	virtual void Activate() {}
 };
 
-enum { OPEN_READ=0, OPEN_WRITE=1, OPEN_READWRITE=2, OPEN_READ_NO_MOD=4, DOS_NOT_INHERIT=128};
-enum { DOS_SEEK_SET=0,DOS_SEEK_CUR=1,DOS_SEEK_END=2};
+enum FatPermissionFlags : uint8_t { // 8-bit
+	OPEN_READ        = 0b0000'0000,
+	OPEN_WRITE       = 0b0000'0001,
+	OPEN_READWRITE   = 0b0000'0010,
+	OPEN_READ_NO_MOD = 0b0000'0100,
+	DOS_NOT_INHERIT  = 0b1000'0000,
+};
 
+enum SeekType : uint8_t {
+	DOS_SEEK_SET = 0,
+	DOS_SEEK_CUR = 1,
+	DOS_SEEK_END = 2,
+};
 
 /*
  A multiplex handler should read the registers to check what function is being called
