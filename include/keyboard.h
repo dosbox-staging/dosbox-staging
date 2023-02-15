@@ -21,7 +21,7 @@
 #define DOSBOX_KEYBOARD_H
 
 enum KBD_KEYS {
-// clang-format off
+	// clang-format off
 	KBD_NONE,
 
 	KBD_1, KBD_2, KBD_3, KBD_4, KBD_5, KBD_6, KBD_7, KBD_8, KBD_9, KBD_0,
@@ -31,6 +31,9 @@ enum KBD_KEYS {
 
 	KBD_f1,  KBD_f2,  KBD_f3,  KBD_f4,  KBD_f5,  KBD_f6,
 	KBD_f7,  KBD_f8,  KBD_f9,  KBD_f10, KBD_f11, KBD_f12,
+
+	KBD_f13, KBD_f14, KBD_f15, KBD_f16, KBD_f17, KBD_f18,
+	KBD_f19, KBD_f20, KBD_f21, KBD_f22, KBD_f23, KBD_f24,
 
 	KBD_esc, KBD_tab, KBD_backspace, KBD_enter, KBD_space,
 
@@ -58,7 +61,7 @@ enum KBD_KEYS {
 	KBD_kpenter, KBD_kpperiod,
 
 	KBD_LAST,
-// clang-format on
+	// clang-format on
 };
 
 void KEYBOARD_ClrBuffer(void);

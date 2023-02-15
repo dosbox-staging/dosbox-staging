@@ -137,23 +137,28 @@ static const KeyCodes& get_key_codes_for(const uint8_t scan_code)
 		/*  88 */ { 0x8600, 0x8800, 0x8a00, 0x8c00 }, /* F12 */
 		/*  89 */ { /* placeholder */ },
 		/*  90 */ { /* placeholder */ },
-		/*  91 */ {   none,   none,   none,   none }, /* Win Left */
-		/*  92 */ {   none,   none,   none,   none }, /* Win Right */
-		/*  93 */ { /* placeholder */ }, /* Win Menu */
+		/*  91 */ { 0x6800, 0x6900, 0x6A00, 0x6b00 }, /* F13 | Win Left */
+		/*  92 */ { 0x6c00, 0x6d00, 0x6e00, 0x6f00 }, /* F14 | Win Right */
+		/*  93 */ { 0x7000, 0x7100, 0x7200, 0x7300 }, /* F15 | Win Menu */
 		/*  94 */ { /* placeholder */ },
 		/*  95 */ { /* placeholder */ },
 		/*  96 */ { /* placeholder */ },
 		/*  97 */ { /* placeholder */ },
 		/*  98 */ { /* placeholder */ },
-		/*  99 */ { /* placeholder */ }, /* F16 */
-		/* 100 */ { /* placeholder */ }, /* F17 */
-		/* 101 */ { /* placeholder */ }, /* F18 */
-		/* 102 */ { /* placeholder */ }, /* F19 */
-		/* 103 */ { /* placeholder */ }, /* F20 */
-		/* 104 */ { /* placeholder */ }, /* F21 */
-		/* 105 */ { /* placeholder */ }, /* F22 */
-		/* 106 */ { /* placeholder */ }, /* F23 */
-		/* 107 */ { /* placeholder */ }, /* F24 */
+		/*  99 */ { 0x7400, 0x7500, 0x7600, 0x7700 }, /* F16 */
+		/* 100 */ { 0x7800, 0x7900, 0x7a00, 0x7b00 }, /* F17 */
+		/* 101 */ { 0x7c00, 0x7d00, 0x7e00, 0x7f00 }, /* F18 */
+		/* 102 */ { 0x8000, 0x8100, 0x8200, 0x8300 }, /* F19 */
+		/* 103 */ { 0x8400, 0x8500, 0x8600, 0x8700 }, /* F20 */
+		/* 104 */ { 0x8800, 0x8900, 0x8a00, 0x8b00 }, /* F21 */
+		/* 105 */ { 0x8c00, 0x8d00, 0x8e00, 0x8f00 }, /* F22 */
+		/* 106 */ { 0x9000, 0x9100, 0x9200, 0x9300 }, /* F23 */
+		/* 107 */ { 0x9400, 0x9500, 0x9600, 0x9700 }, /* F24 */
+
+		// Ref: the IBM Technical Reference for the Enhanced Keyboard
+		// (Publication number S84G-7499-04), which describes the scan codes for
+		// the original IBM Enhanced Keyboard, including F13 through F24.
+
 		/* 108 */ { /* placeholder */ },
 		/* 109 */ { /* placeholder */ },
 		/* 110 */ { /* placeholder */ },

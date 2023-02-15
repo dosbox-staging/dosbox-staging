@@ -416,7 +416,21 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_f11:ret=87;break;
 	case KBD_f12:ret=88;break;
 
-	//The Extended keys
+	case KBD_f13: ret = 91; break;
+	case KBD_f14: ret = 92; break;
+	case KBD_f15: ret = 93; break;
+
+	case KBD_f16: ret = 99; break;
+	case KBD_f17: ret = 100; break;
+	case KBD_f18: ret = 101; break;
+	case KBD_f19: ret = 102; break;
+	case KBD_f20: ret = 103; break;
+	case KBD_f21: ret = 104; break;
+	case KBD_f22: ret = 105; break;
+	case KBD_f23: ret = 106; break;
+	case KBD_f24: ret = 107; break;
+
+	// The Extended keys
 	case KBD_kpenter:extend=true;ret=28;break;
 	case KBD_rightctrl:extend=true;ret=29;break;
 	case KBD_kpdivide:extend=true;ret=53;break;

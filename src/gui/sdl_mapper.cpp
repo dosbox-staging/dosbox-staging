@@ -2075,11 +2075,34 @@ struct KeyBlock {
 	const char * entry;
 	KBD_KEYS key;
 };
-static KeyBlock combo_f[12]={
-	{"F1","f1",KBD_f1},		{"F2","f2",KBD_f2},		{"F3","f3",KBD_f3},
-	{"F4","f4",KBD_f4},		{"F5","f5",KBD_f5},		{"F6","f6",KBD_f6},
-	{"F7","f7",KBD_f7},		{"F8","f8",KBD_f8},		{"F9","f9",KBD_f9},
-	{"F10","f10",KBD_f10},	{"F11","f11",KBD_f11},	{"F12","f12",KBD_f12},
+static KeyBlock f1_to_f12[] = {
+        {"F1", "f1", KBD_f1},
+        {"F2", "f2", KBD_f2},
+        {"F3", "f3", KBD_f3},
+        {"F4", "f4", KBD_f4},
+        {"F5", "f5", KBD_f5},
+        {"F6", "f6", KBD_f6},
+        {"F7", "f7", KBD_f7},
+        {"F8", "f8", KBD_f8},
+        {"F9", "f9", KBD_f9},
+        {"F10", "f10", KBD_f10},
+        {"F11", "f11", KBD_f11},
+        {"F12", "f12", KBD_f12},
+};
+
+static KeyBlock f13_to_f24[] = {
+        {"F13", "f13", KBD_f13},
+        {"F14", "f14", KBD_f14},
+        {"F15", "f15", KBD_f15},
+        {"F16", "f16", KBD_f16},
+        {"F17", "f17", KBD_f17},
+        {"F18", "f18", KBD_f18},
+        {"F19", "f19", KBD_f19},
+        {"F20", "f20", KBD_f20},
+        {"F21", "f21", KBD_f21},
+        {"F22", "f22", KBD_f22},
+        {"F23", "f23", KBD_f23},
+        {"F24", "f24", KBD_f24},
 };
 
 static KeyBlock combo_1[14]={
@@ -2137,55 +2160,94 @@ static void CreateLayout() {
 #define DX 5
 #define PX(_X_) ((_X_)*BW + DX)
 #define PY(_Y_) (10+(_Y_)*BH)
-	AddKeyButtonEvent(PX(0),PY(0),BW,BH,"ESC","esc",KBD_esc);
-	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(0),BW,BH,combo_f[i].title,combo_f[i].entry,combo_f[i].key);
-	for (i=0;i<14;i++) AddKeyButtonEvent(PX(  i),PY(1),BW,BH,combo_1[i].title,combo_1[i].entry,combo_1[i].key);
 
-	AddKeyButtonEvent(PX(0),PY(2),BW*2,BH,"TAB","tab",KBD_tab);
-	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(2),BW,BH,combo_2[i].title,combo_2[i].entry,combo_2[i].key);
+	AddKeyButtonEvent(PX(0), PY(1), BW, BH, "ESC", "esc", KBD_esc);
 
-	AddKeyButtonEvent(PX(14),PY(2),BW*2,BH*2,"ENTER","enter",KBD_enter);
+	i = 0;
+	for (const auto& f_key : f13_to_f24) {
+		AddKeyButtonEvent(
+		        PX(2 + i++), PY(0), BW, BH, f_key.title, f_key.entry, f_key.key);
+	}
 
-	caps_lock_event=AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
-	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
+	i = 0;
+	for (const auto& f_key : f1_to_f12) {
+		AddKeyButtonEvent(
+		        PX(2 + i++), PY(1), BW, BH, f_key.title, f_key.entry, f_key.key);
+	}
 
-	AddKeyButtonEvent(PX(0),PY(4),BW*2,BH,"SHIFT","lshift",KBD_leftshift);
+	for (i = 0; i < 14; i++) {
+		AddKeyButtonEvent(PX(i),
+		                  PY(3),
+		                  BW,
+		                  BH,
+		                  combo_1[i].title,
+		                  combo_1[i].entry,
+		                  combo_1[i].key);
+	}
+
+	AddKeyButtonEvent(PX(0),PY(4),BW*2,BH,"TAB","tab",KBD_tab);
+
 	for (i = 0; i < 12; i++) {
 		AddKeyButtonEvent(PX(2 + i),
 		                  PY(4),
+		                  BW,
+		                  BH,
+		                  combo_2[i].title,
+		                  combo_2[i].entry,
+		                  combo_2[i].key);
+	}
+
+	AddKeyButtonEvent(PX(14), PY(4), BW * 2, BH * 2, "ENTER", "enter", KBD_enter);
+
+	caps_lock_event = AddKeyButtonEvent(
+	        PX(0), PY(5), BW * 2, BH, "CLCK", "capslock", KBD_capslock);
+	for (i = 0; i < 12; i++) {
+		AddKeyButtonEvent(PX(2 + i),
+		                  PY(5),
+		                  BW,
+		                  BH,
+		                  combo_3[i].title,
+		                  combo_3[i].entry,
+		                  combo_3[i].key);
+	}
+
+	AddKeyButtonEvent(PX(0), PY(6), BW * 2, BH, "SHIFT", "lshift", KBD_leftshift);
+	for (i = 0; i < 12; i++) {
+		AddKeyButtonEvent(PX(2 + i),
+		                  PY(6),
 		                  BW,
 		                  BH,
 		                  combo_4[i].title,
 		                  combo_4[i].entry,
 		                  combo_4[i].key);
 	}
-	AddKeyButtonEvent(PX(14), PY(4), BW * 3, BH, "SHIFT", "rshift", KBD_rightshift);
+	AddKeyButtonEvent(PX(14), PY(6), BW * 3, BH, "SHIFT", "rshift", KBD_rightshift);
 
 	/* Bottom Row */
-	AddKeyButtonEvent(PX(0), PY(5), BW * 2, BH, MMOD1_NAME, "lctrl", KBD_leftctrl);
+	AddKeyButtonEvent(PX(0), PY(7), BW * 2, BH, MMOD1_NAME, "lctrl", KBD_leftctrl);
 
 #if !defined(MACOSX)
-	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
-	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(2), PY(7), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
+	AddKeyButtonEvent(PX(4), PY(7), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
 #else
-	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
-	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
+	AddKeyButtonEvent(PX(2), PY(7), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(4), PY(7), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
 #endif
 
-	AddKeyButtonEvent(PX(6), PY(5), BW * 4, BH, "SPACE", "space", KBD_space);
+	AddKeyButtonEvent(PX(6), PY(7), BW * 4, BH, "SPACE", "space", KBD_space);
 
 #if !defined(MACOSX)
-	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
-	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
-	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
+	AddKeyButtonEvent(PX(10), PY(7), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
+	AddKeyButtonEvent(PX(12), PY(7), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(14), PY(7), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 #else
-	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
-	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
+	AddKeyButtonEvent(PX(10), PY(7), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(12), PY(7), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 #endif
 
 	/* Arrow Keys */
 #define XO 17
-#define YO 0
+#define YO 2
 
 	AddKeyButtonEvent(PX(XO+0),PY(YO),BW,BH,"PRT","printscreen",KBD_printscreen);
 	AddKeyButtonEvent(PX(XO+1),PY(YO),BW,BH,"SCL","scrolllock",KBD_scrolllock);
@@ -2203,7 +2265,7 @@ static void CreateLayout() {
 #undef XO
 #undef YO
 #define XO 0
-#define YO 7
+#define YO 9
 	/* Numeric KeyPad */
 	num_lock_event=AddKeyButtonEvent(PX(XO),PY(YO),BW,BH,"NUM","numlock",KBD_numlock);
 	AddKeyButtonEvent(PX(XO+1),PY(YO),BW,BH,"/","kp_divide",KBD_kpdivide);
@@ -2227,7 +2289,7 @@ static void CreateLayout() {
 #undef YO
 
 #define XO 10
-#define YO 8
+#define YO 10
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
 	AddJButtonButton(PX(XO),PY(YO),BW,BH,"1" ,0,0);
@@ -2423,6 +2485,19 @@ static struct {
                    {"f10", SDL_SCANCODE_F10},
                    {"f11", SDL_SCANCODE_F11},
                    {"f12", SDL_SCANCODE_F12},
+
+                   {"f13", SDL_SCANCODE_F13},
+                   {"f14", SDL_SCANCODE_F14},
+                   {"f15", SDL_SCANCODE_F15},
+                   {"f16", SDL_SCANCODE_F16},
+                   {"f17", SDL_SCANCODE_F17},
+                   {"f18", SDL_SCANCODE_F18},
+                   {"f19", SDL_SCANCODE_F19},
+                   {"f20", SDL_SCANCODE_F20},
+                   {"f21", SDL_SCANCODE_F21},
+                   {"f22", SDL_SCANCODE_F22},
+                   {"f23", SDL_SCANCODE_F23},
+                   {"f24", SDL_SCANCODE_F24},
 
                    {"1", SDL_SCANCODE_1},
                    {"2", SDL_SCANCODE_2},
