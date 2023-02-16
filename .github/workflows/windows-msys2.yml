@@ -121,16 +121,6 @@ jobs:
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
           enableCrossOsArchive: true
 
-      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
-        name: Generate subprojects cache
-        run:  scripts/fetch-and-tar-subprojects.sh
-
-      - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
-
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-
       - name: Update SSL certificates
         shell: pwsh
         run: |
@@ -140,6 +130,16 @@ jobs:
           "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
           $webclient = New-Object System.Net.WebClient
           $webclient.DownloadString("https://github.com") >$null
+
+      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
+        name: Generate subprojects cache
+        run:  scripts/fetch-and-tar-subprojects.sh
+
+      - name: Extract subprojects cache
+        run:  scripts/extract-subprojects-tar.sh
+
+      - name: Log environment
+        run:  ./scripts/log-env.sh
 
       - name: Setup build
         run: |
@@ -241,6 +241,16 @@ jobs:
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
           enableCrossOsArchive: true
 
+      - name: Update SSL certificates
+        shell: pwsh
+        run: |
+          pip3 install --upgrade pip-system-certs certifi
+          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
+          $env:SSL_CERT_FILE = $certifiPath
+          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
+          $webclient = New-Object System.Net.WebClient
+          $webclient.DownloadString("https://github.com") >$null
+
       - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
         name: Generate subprojects cache
         run:  scripts/fetch-and-tar-subprojects.sh
@@ -263,16 +273,6 @@ jobs:
         run: |
           set -x
           echo "PKG_RELEASE=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_ENV
-
-      - name: Update SSL certificates
-        shell: pwsh
-        run: |
-          pip3 install --upgrade pip-system-certs certifi
-          $certifiPath = & 'python3' -c 'import certifi; print(certifi.where())' | Out-String
-          $env:SSL_CERT_FILE = $certifiPath
-          "SSL_CERT_FILE=$certifiPath" >> $env:GITHUB_ENV
-          $webclient = New-Object System.Net.WebClient
-          $webclient.DownloadString("https://github.com") >$null
 
       - name: Setup release build
         run: |
