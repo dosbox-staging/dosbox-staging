@@ -1025,9 +1025,10 @@ static void remove_window()
 // narrow than the allowed frame period.
 static void maybe_present_throttled(const bool frame_is_new)
 {
-	static bool last_frame_shown = false;
-	if (!frame_is_new && last_frame_shown)
+	static bool last_frame_presented = false;
+	if (!frame_is_new && last_frame_presented) {
 		return;
+	}
 
 	const auto now = GetTicksUs();
 	static int64_t last_present_time = 0;
@@ -1037,16 +1038,16 @@ static void maybe_present_throttled(const bool frame_is_new)
 		// this extra wait back by deducting it from the recorded time.
 		const auto wait_overage = elapsed % sdl.frame.period_us;
 		last_present_time = now - (9 * wait_overage / 10);
-		last_frame_shown = sdl.frame.present();
+		last_frame_presented = sdl.frame.present();
 	} else {
-		last_frame_shown = false;
+		last_frame_presented = false;
 	}
 }
 
 static void maybe_present_synced(const bool present_if_last_skipped)
 {
 	// state tracking across runs
-	static bool last_frame_shown = false;
+	static bool last_frame_presented = false;
 	static int64_t last_sync_time = 0;
 
 	const auto now = GetTicksUs();
@@ -1056,10 +1057,10 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	const auto on_time = scheduler_arrival > sdl.frame.period_us_early &&
 	                     scheduler_arrival < sdl.frame.period_us_late;
 
-	const auto should_present = on_time ||
-	                            (present_if_last_skipped && !last_frame_shown);
+	const auto should_present = on_time || (present_if_last_skipped &&
+	                                        !last_frame_presented);
 
-	last_frame_shown = should_present ? sdl.frame.present() : false;
+	last_frame_presented = should_present ? sdl.frame.present() : false;
 
 	last_sync_time = should_present ? GetTicksUs() : now;
 }
