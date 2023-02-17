@@ -1065,6 +1065,30 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	last_sync_time = should_present ? GetTicksUs() : now;
 }
 
+// Present new frames, but if not new, re-present the last frame up to 10 times
+// (as back-to-back duplicates) to ensure the host shows it as opposed to
+// showing a prior frame in the event the host dropped the original when we
+// first presented it.
+static void present_new_or_maybe_dupe(const bool frame_is_new)
+{
+	constexpr auto max_dupes = 10;
+	static auto remaining_dupes = 0;
+
+	if (frame_is_new) {
+		sdl.frame.present();
+		remaining_dupes = max_dupes;
+	}
+	// We're now presenting duplicate frames - but be less agressive with
+	// them by using the sync'd presenter to run the dupes at the host's
+	// rate to avoid causing further blocking / stuttering / dropped frames
+	// on the host-side.
+	else if (remaining_dupes > 0) {
+		constexpr auto always_try = true;
+		maybe_present_synced(always_try);
+		--remaining_dupes;
+	}
+}
+
 static void schedule_synced([[maybe_unused]] const uint32_t event_id = 0)
 {
 	if (sdl.frame.mode != FRAME_MODE::SYNCED_CFR)
@@ -2464,10 +2488,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 	case FRAME_MODE::CFR:
 		maybe_present_synced(frame_is_new);
 		break;
-	case FRAME_MODE::VFR:
-		if (frame_is_new)
-			sdl.frame.present();
-		break;
+	case FRAME_MODE::VFR: present_new_or_maybe_dupe(frame_is_new); break;
 	case FRAME_MODE::THROTTLED_VFR:
 		maybe_present_throttled(frame_is_new);
 		break;
