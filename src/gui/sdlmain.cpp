@@ -1154,14 +1154,8 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	// to be set below
 	auto mode = FRAME_MODE::UNSET;
 
-	// Text modes always get VFR
-	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
-	if (in_text_mode) {
-		mode = FRAME_MODE::VFR;
-		save_rate_to_frame_period(dos_rate);
-	}
 	// Manual full CFR
-	else if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
+	if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
 		if (configure_cfr_mode() != FRAME_MODE::CFR && wants_vsync) {
 			LOG_WARNING("SDL: CFR performance warning: the DOS rate of %2.5g"
 			            " Hz exceeds the host's %2.5g Hz vsynced rate",
@@ -1193,12 +1187,13 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		return;
 	previous_mode = mode;
 
-	// Configure the pacer. We only use it for graphical VFR modes because
-	// CFR modes determine if the frame is presented based on the
-	// scheduler's accuracy.
+	// Configure the pacer in VFR modes to detect when the host takes too
+	// long to render frames. CFR modes use the PIC scheduler to place
+	// frames and use their own measurements, so we disable the pacer for
+	// them.
 	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
 	                         mode == FRAME_MODE::THROTTLED_VFR;
-	render_pacer.SetTimeout(is_vfr_mode && !in_text_mode ? sdl.vsync.skip_us : 0);
+	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
 
 	// Start synced presentation, if applicable
 	if (mode == FRAME_MODE::SYNCED_CFR)
