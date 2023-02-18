@@ -49,8 +49,8 @@ CHECK_NARROWING();
 // - https://www.stanislavs.org/helppc/int_33.html
 // - http://www2.ift.ulaval.ca/~marchand/ift17583/dosints.pdf
 
-static constexpr uint8_t cursor_size_x   = 16;
-static constexpr uint8_t cursor_size_y   = 16;
+static constexpr uint8_t  cursor_size_x  = 16;
+static constexpr uint8_t  cursor_size_y  = 16;
 static constexpr uint16_t cursor_size_xy = cursor_size_x * cursor_size_y;
 
 static constexpr uint8_t num_buttons = 3;
@@ -69,6 +69,22 @@ enum class MouseEventId : uint8_t {
 	ReleasedMiddle = 1 << 6,
 	WheelHasMoved  = 1 << 7,
 };
+
+// Pending (usually delayed) events
+
+// delay to enforce between callbacks, in milliseconds
+static uint8_t delay_ms = 5;
+
+// true = delay timer is in progress
+static bool delay_running  = false;
+// true = delay timer expired, event can be sent immediately
+static bool delay_finished = true;
+
+static bool pending_moved  = false;
+static bool pending_button = false;
+static bool pending_wheel  = false;
+
+static MouseButtons12S pending_button_state = 0;
 
 // These values represent 'hardware' state, not driver state
 
@@ -202,6 +218,63 @@ static struct { // DOS driver state
 } state;
 
 static RealPt user_callback;
+
+// ***************************************************************************
+// Delayed event support
+// ***************************************************************************
+
+static bool has_pending_event()
+{
+	return pending_moved || pending_button || pending_wheel;
+}
+
+static void maybe_trigger_event(); // forward declaration
+
+static void delay_handler(uint32_t /*val*/)
+{
+	delay_running  = false;
+	delay_finished = true;
+
+	maybe_trigger_event();
+}
+
+static void maybe_start_delay_timer(const uint8_t timer_delay_ms)
+{
+	if (delay_running) {
+		return;
+	}
+	PIC_AddEvent(delay_handler, timer_delay_ms);
+	delay_running  = true;
+	delay_finished = false;
+}
+
+static void maybe_trigger_event()
+{
+	if (!delay_finished) {
+		maybe_start_delay_timer(delay_ms);
+		return;
+	}
+
+	if (!has_pending_event()) {
+		return;
+	}
+
+	maybe_start_delay_timer(delay_ms);
+	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
+}
+
+static void clear_pending_events()
+{
+	if (delay_running) {
+		PIC_RemoveEvents(delay_handler);
+		delay_running = false;
+	}
+
+	pending_moved  = false;
+	pending_button = pending_button_state.data;
+	pending_wheel  = false;
+	maybe_start_delay_timer(delay_ms);
+}
 
 // ***************************************************************************
 // Common helper routines
@@ -456,7 +529,7 @@ static void restore_cursor_background()
 	restore_vga_registers();
 }
 
-void MOUSEDOS_DrawCursor()
+static void draw_cursor()
 {
 	if (state.hidden || state.inhibit_draw)
 		return;
@@ -673,16 +746,17 @@ static void notify_interface_rate()
 
 	constexpr uint16_t rate_default_hz = 200;
 
-	if (rate_is_set)
+	if (rate_is_set) {
 		// Rate was set by guest application - use this value. The
 		// minimum will be enforced by MouseInterface nevertheless
 		MouseInterface::GetDOS()->NotifyInterfaceRate(rate_hz);
-	else if (min_rate_hz)
+	} else if (min_rate_hz) {
 		// If user set the minimum mouse rate - follow it
 		MouseInterface::GetDOS()->NotifyInterfaceRate(min_rate_hz);
-	else
+	} else {
 		// No user setting in effect - use default value
 		MouseInterface::GetDOS()->NotifyInterfaceRate(rate_default_hz);
+	}
 }
 
 static void set_interrupt_rate(const uint16_t rate_id)
@@ -808,7 +882,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool setmode)
 	state.cursor_type        = MouseCursor::Software;
 	state.enabled            = true;
 
-	MOUSE_NotifyResetDOS();
+	clear_pending_events();
 }
 
 static void reset()
@@ -848,7 +922,7 @@ static void reset()
 	mouse_shared.dos_cb_running = false;
 
 	update_driver_active();
-	MOUSE_NotifyResetDOS();
+	clear_pending_events();
 }
 
 static void limit_coordinates()
@@ -997,7 +1071,7 @@ static uint8_t move_cursor()
 		return 0;
 }
 
-uint8_t MOUSEDOS_UpdateMoved()
+static uint8_t update_moved()
 {
 	if (mouse_config.dos_immediate)
 		return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
@@ -1005,7 +1079,7 @@ uint8_t MOUSEDOS_UpdateMoved()
 		return move_cursor();
 }
 
-uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S new_buttons_12S)
+static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 {
 	if (buttons.data == new_buttons_12S.data)
 		return 0;
@@ -1067,7 +1141,7 @@ static uint8_t move_wheel()
 		return 0;
 }
 
-uint8_t MOUSEDOS_UpdateWheel()
+static uint8_t update_wheel()
 {
 	if (mouse_config.dos_immediate)
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
@@ -1075,11 +1149,11 @@ uint8_t MOUSEDOS_UpdateWheel()
 		return move_wheel();
 }
 
-bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
+void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs)
 {
-	// Check if an event is needed
 	bool event_needed = false;
+
 	if (use_relative) {
 		// Uses relative mouse movements - processing is too complicated
 		// to easily predict whether the event can be safely omitted
@@ -1109,19 +1183,28 @@ bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 	// constantly (don't ask me, why) - doing too much optimization
 	// can cause the game to skip mouse events.
 
-	if (!event_needed)
-		return 0;
+	if (event_needed && mouse_config.dos_immediate) {
+		event_needed = (move_cursor() != 0);
+	}
 
-	if (mouse_config.dos_immediate)
-		return (move_cursor() != 0);
-	else
-		return true;
+	if (event_needed) {
+		pending_moved = true;
+		maybe_trigger_event();
+	}
 }
 
-bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
+void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 {
-	if (!state.wheel_api)
-		return 0;
+	pending_button = true;
+	pending_button_state = new_buttons_12S;
+	maybe_trigger_event();
+}
+
+void MOUSEDOS_NotifyWheel(const int16_t w_rel)
+{
+	if (!state.wheel_api) {
+		return;
+	}
 
 	// Although in some places it is possible for the guest code to get
 	// wheel counter in 16-bit format, scrolling hundreds of lines in one
@@ -1129,13 +1212,15 @@ bool MOUSEDOS_NotifyWheel(const int16_t w_rel)
 	// reuse the code written for other mouse modules
 	pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
 
-	if (pending.w_rel == 0)
-		return 0;
+	bool event_needed = (pending.w_rel != 0);
+	if (event_needed && mouse_config.dos_immediate) {
+		event_needed = (move_wheel() != 0);
+	}
 
-	if (mouse_config.dos_immediate)
-		return (move_wheel() != 0);
-	else
-		return true;
+	if (event_needed) {
+		pending_wheel = true;
+		maybe_trigger_event();
+	}
 }
 
 static Bitu int33_handler()
@@ -1153,7 +1238,7 @@ static Bitu int33_handler()
 		if (state.hidden)
 			--state.hidden;
 		state.update_region_y[1] = -1; // offscreen
-		MOUSEDOS_DrawCursor();
+		draw_cursor();
 		break;
 	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
 		if (CurMode->type != M_TEXT)
@@ -1180,7 +1265,7 @@ static Bitu int33_handler()
 		if (reg_to_signed16(reg_dx) != get_pos_y())
 			pos_y = static_cast<float>(reg_dx);
 		limit_coordinates();
-		MOUSEDOS_DrawCursor();
+		draw_cursor();
 		break;
 	}
 	case 0x05: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel
@@ -1283,7 +1368,7 @@ static Bitu int33_handler()
 		state.hot_x            = clamp_hot(reg_bx, cursor_size_x);
 		state.hot_y            = clamp_hot(reg_cx, cursor_size_y);
 		state.cursor_type      = MouseCursor::Text;
-		MOUSEDOS_DrawCursor();
+		draw_cursor();
 		break;
 	}
 	case 0x0a: // MS MOUSE v3.0+ - define text cursor
@@ -1298,7 +1383,7 @@ static Bitu int33_handler()
 			LOG(LOG_MOUSE, LOG_NORMAL)
 			("Hardware Text cursor selected");
 		}
-		MOUSEDOS_DrawCursor();
+		draw_cursor();
 		break;
 	case 0x27: // MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
 		reg_ax = state.text_and_mask;
@@ -1333,7 +1418,7 @@ static Bitu int33_handler()
 		state.update_region_y[0] = reg_to_signed16(reg_dx);
 		state.update_region_x[1] = reg_to_signed16(reg_si);
 		state.update_region_y[1] = reg_to_signed16(reg_di);
-		MOUSEDOS_DrawCursor();
+		draw_cursor();
 		break;
 	case 0x11: // WheelAPI v1.0+ - get mouse capabilities
 		reg_ax          = 0x574d; // Identifier for detection purposes
@@ -1616,12 +1701,57 @@ static Bitu user_callback_handler()
 	return CBRET_NONE;
 }
 
-bool MOUSEDOS_HasCallback(const uint8_t mask)
+uint8_t MOUSEDOS_DoInterrupt()
 {
-	return state.user_callback_mask & mask;
+	if (!has_pending_event()) {
+		return 0x00;
+	}
+
+	uint8_t mask = 0x00;
+
+	if (pending_moved) {
+		mask = update_moved();
+
+		// Taken from DOSBox X: HERE within the IRQ 12 handler
+		// is the appropriate place to redraw the cursor. OSes
+		// like Windows 3.1 expect real-mode code to do it in
+		// response to IRQ 12, not "out of the blue" from the
+		// SDL event handler like the original DOSBox code did
+		// it. Doing this allows the INT 33h emulation to draw
+		// the cursor while not causing Windows 3.1 to crash or
+		// behave erratically.
+		if (mask) {
+			draw_cursor();
+		}
+
+		pending_moved = false;
+	}
+
+	if (pending_button) {
+		const auto new_mask = mask | update_buttons(pending_button_state);
+		mask = static_cast<uint8_t>(new_mask);
+
+		pending_button = false;
+	}
+
+	if (pending_wheel) {
+		const auto new_mask = mask | update_wheel();
+		mask = static_cast<uint8_t>(new_mask);
+
+		pending_wheel = false;
+	}
+
+	// If DOS driver's client is not interested in this particular
+	// type of event - skip it
+
+	if (!(state.user_callback_mask & mask)) {
+		return 0x00;
+	}
+
+	return mask;
 }
 
-Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
+void MOUSEDOS_DoCallback(const uint8_t mask)
 {
 	mouse_shared.dos_cb_running = true;
 	const bool mouse_moved = mask & static_cast<uint8_t>(MouseEventId::MouseHasMoved);
@@ -1638,7 +1768,7 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 	reg_ah = (!use_relative && mouse_moved) ? 1 : 0;
 
 	reg_al = mask;
-	reg_bl = buttons_12S.data;
+	reg_bl = buttons.data;
 	reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
 	reg_cx = get_pos_x();
 	reg_dx = get_pos_y();
@@ -1649,8 +1779,17 @@ Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S)
 	CPU_Push16(RealOff(user_callback));
 	CPU_Push16(state.user_callback_segment);
 	CPU_Push16(state.user_callback_offset);
+}
 
-	return CBRET_NONE;
+void MOUSEDOS_FinalizeInterrupt()
+{
+	// Just in case our interrupt was taken over by
+	// PS/2 BIOS callback, or if user interrupt
+	// handler did not finish yet
+
+	if (has_pending_event()) {
+		maybe_start_delay_timer(1);
+	}
 }
 
 void MOUSEDOS_NotifyInputType(const bool new_use_relative,
@@ -1660,14 +1799,17 @@ void MOUSEDOS_NotifyInputType(const bool new_use_relative,
 	is_input_raw = new_is_input_raw;
 }
 
+void MOUSEDOS_SetDelay(const uint8_t new_delay_ms)
+{
+	delay_ms = new_delay_ms;
+}
+
 void MOUSEDOS_Init()
 {
 	// Callback for mouse interrupt 0x33
 	const auto call_int33 = CALLBACK_Allocate();
-	// RealPt int33_location = RealMake(CB_SEG + 1,(call_int33 * CB_SIZE) -
-	// 0x10);
-	const RealPt int33_location =
-	        RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1), 0x10);
+	const auto tmp_pt = static_cast<uint16_t>(DOS_GetMemory(0x1) - 1);
+	const auto int33_location = RealMake(tmp_pt, 0x10);
 	CALLBACK_Setup(call_int33,
 	               &int33_handler,
 	               CB_MOUSE,
@@ -1677,11 +1819,11 @@ void MOUSEDOS_Init()
 	real_writed(0, 0x33 << 2, int33_location);
 
 	const auto call_mouse_bd = CALLBACK_Allocate();
+	const auto tmp_offs = static_cast<uint16_t>(RealOff(int33_location) + 2);
 	CALLBACK_Setup(call_mouse_bd,
 	               &mouse_bd_handler,
 	               CB_RETF8,
-	               PhysMake(RealSeg(int33_location),
-	                        static_cast<uint16_t>(RealOff(int33_location) + 2)),
+	               PhysMake(RealSeg(int33_location), tmp_offs),
 	               "MouseBD");
 	// pseudocode for CB_MOUSE (including the special backdoor entry point):
 	//    jump near i33hd

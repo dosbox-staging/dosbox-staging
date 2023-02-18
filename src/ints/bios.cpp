@@ -17,21 +17,24 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
-#include "mem.h"
 #include "bios.h"
-#include "regs.h"
-#include "cpu.h"
+
 #include "callback.h"
+#include "cpu.h"
+#include "dosbox.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "hardware.h"
-#include "pci_bus.h"
+#include "inout.h"
 #include "joystick.h"
+#include "mem.h"
 #include "mouse.h"
-#include "setup.h"
+#include "pci_bus.h"
+#include "pic.h"
+#include "regs.h"
 #include "serialport.h"
+#include "setup.h"
 #include <time.h>
 
 #if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
@@ -949,96 +952,15 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 		reg_ah=0;
 		break;
-	case 0xc2:	/* BIOS PS2 Pointing Device Support */
-		switch (reg_al) {
-		case 0x00:                      // enable/disable
-			if (reg_bh == 0) { // disable
-				MOUSEBIOS_Disable();
-				reg_ah = 0;
-				CALLBACK_SCF(false);
-			} else if (reg_bh == 0x01) { // enable
-				if (!MOUSEBIOS_Enable()) {
-					reg_ah = 5;
-					CALLBACK_SCF(true);
-					break;
-				}
-				reg_ah = 0;
-				CALLBACK_SCF(false);
-			} else {
-				CALLBACK_SCF(true);
-				reg_ah = 1;
-			}
-			break;
-		case 0x01: // reset
-			MOUSEBIOS_Reset();
-			reg_bx = 0x00aa; // mouse
-			[[fallthrough]];
-		case 0x05:		// initialize
-			if ((reg_al == 0x05) && !MOUSEBIOS_SetPacketSize(reg_bh)) {
-				CALLBACK_SCF(true);
-				reg_ah = 2;
-				break;
-			}
-			MOUSEBIOS_Disable();
-			CALLBACK_SCF(false);
-			reg_ah=0;
-			break;
-		case 0x02:		// set sampling rate
-			if (!MOUSEBIOS_SetSampleRate(reg_bh)) {
-				CALLBACK_SCF(true);
-				reg_ah = 2;
-				break;
-			}
-			CALLBACK_SCF(false);
-			reg_ah = 0;
-			break;
-		case 0x03: // set resolution
-			if (!MOUSEBIOS_SetResolution(reg_bh)) {
-				CALLBACK_SCF(true);
-				reg_ah = 2;
-				break;
-			}
-			CALLBACK_SCF(false);
-			reg_ah = 0;
-			break;
-		case 0x04: // get mouse type/protocol
-			reg_bh = MOUSEBIOS_GetProtocol();
-			CALLBACK_SCF(false);
-			reg_ah=0;
-			break;
-		case 0x06: // extended commands
-			if (reg_bh == 0x00) { // get mouse status
-				reg_bx = MOUSEBIOS_GetStatus();
-				reg_cx = MOUSEBIOS_GetResolution();
-				reg_dx = MOUSEBIOS_GetSampleRate();
-				CALLBACK_SCF(false);
-				reg_ah = 0;
-			} else if (reg_bh == 0x01 || reg_bh == 0x02) { // scaling
-				MOUSEBIOS_SetScaling21(reg_bh == 0x02);
-				CALLBACK_SCF(false);
-				reg_ah = 0;
-			} else {
-				CALLBACK_SCF(true);
-				reg_ah = 1;
-			}
-			break;
-		case 0x07:		// set callback
-			MOUSEBIOS_SetCallback(SegValue(es), reg_bx);
-			CALLBACK_SCF(false);
-			reg_ah = 0;
-			break;
-		default:
-			CALLBACK_SCF(true);
-			reg_ah = 1;
-			break;
-		}
+	case 0xc2: /* BIOS PS2 Pointing Device Support */
+		MOUSEBIOS_Subfunction_C2();
 		break;
 	case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
 		reg_ah=0x86;
 		CALLBACK_SCF(true);
 		break;
 	case 0xc4:	/* BIOS POS Programm option Select */
-		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
+		LOG(LOG_BIOS, LOG_WARN)("INT15:Function %X called, programmable options not supported", reg_ah);
 		CALLBACK_SCF(true);
 		break;
 	case 0xe8:
