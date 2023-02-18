@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,7 +67,6 @@ uint8_t MOUSEDOS_UpdateWheel();
 
 void MOUSEPS2_Init();
 void MOUSEPS2_UpdateButtonSquish();
-void MOUSEPS2_PortWrite(const uint8_t byte);
 void MOUSEPS2_UpdatePacket();
 bool MOUSEPS2_SendPacket();
 

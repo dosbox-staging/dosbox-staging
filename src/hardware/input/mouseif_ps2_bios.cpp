@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
+#include "intel8042.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
@@ -324,6 +325,16 @@ static void cmd_set_scaling_21(const bool enable)
 	terminate_unlock_sequence();
 
 	scaling_21 = enable;
+}
+
+bool MOUSEPS2_PortWrite([[maybe_unused]] const uint8_t byte)
+{
+	return false; // TODO: implement
+}
+
+void MOUSEPS2_NotifyReadyForFrame()
+{
+	// TODO: implement
 }
 
 bool MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)

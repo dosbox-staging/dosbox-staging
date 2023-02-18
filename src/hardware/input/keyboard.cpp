@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2002-2021  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2022  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -8,7 +11,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
@@ -16,484 +19,697 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
 #include "keyboard.h"
+#include "dosbox.h"
 
-#include "bios.h"
+#include <array>
+
 #include "bitops.h"
-#include "inout.h"
-#include "mem.h"
-#include "mixer.h"
+#include "checks.h"
+#include "cpu.h"
+#include "intel8042.h"
+#include "intel8255.h"
 #include "pic.h"
 #include "support.h"
 #include "timer.h"
 
-#define KEYBUFSIZE 32
-#define KEYDELAY   0.300 // Considering 20-30 khz serial clock and 11 bits/char
-
 using namespace bit::literals;
 
-enum KeyCommands {
-	CMD_NONE,
-	CMD_SETLEDS,
-	CMD_SETTYPERATE,
-	CMD_SETOUTPORT
+CHECK_NARROWING();
+
+// Emulates the PS/2 keybaord, as seen by the Intel 8042 microcontroller.
+
+// Reference:
+// - https://wiki.osdev.org/PS/2_Keyboard
+// - https://stanislavs.org/helppc/keyboard_commands.html
+// - https://kbd-project.org/docs/scancodes/scancodes.html
+// - https://homepages.cwi.nl/~aeb/linux/kbd/scancodes.html
+// - http://www-ug.eecg.toronto.edu/msl/nios_devices/datasheets/PS2%20Keyboard%20Protocol.htm
+
+#ifdef ENABLE_SCANCODE_SET_3
+#	undef HAS_SCANCODE_SET_2_OR_3
+#	define HAS_SCANCODE_SET_2_OR_3
+#endif // ENABLE_SCANCODE_SET_3
+#ifdef ENABLE_SCANCODE_SET_2
+#	undef HAS_SCANCODE_SET_2_OR_3
+#	define HAS_SCANCODE_SET_2_OR_3
+#endif // ENABLE_SCANCODE_SET_2
+
+static constexpr uint8_t buffer_size = 8; // in scancodes
+static constexpr size_t max_num_scancodes = UINT8_MAX + 1;
+
+enum CodeSet : uint8_t {
+	CodeSet1 = 0x01,
+	CodeSet2 = 0x02,
+	CodeSet3 = 0x03,
 };
 
+enum class Command : uint8_t { // PS/2 keyboard port commands
+	None                 = 0x00,
+	SetLeds              = 0xed,
+	Echo                 = 0xee,
+	CodeSet              = 0xf0,
+	Identify             = 0xf2,
+	SetTypeRate          = 0xf3,
+	ClearEnable          = 0xf4,
+	DefaultDisable       = 0xf5,
+	ResetEnable          = 0xf6,
+	Set3AllTypematic     = 0xf7,
+	Set3AllMakeBreak     = 0xf8,
+	Set3AllMakeOnly      = 0xf9,
+	Set3AllTypeMakeBreak = 0xfa,
+	Set3KeyTypematic     = 0xfb,
+	Set3KeyMakeBreak     = 0xfc,
+	Set3KeyMakeOnly      = 0xfd,
+	Resend               = 0xfe,
+	Reset                = 0xff,
+};
+
+// Internal keyboard scancode buffer
+
+std::vector<uint8_t> buffer[buffer_size] = {};
+
+static bool buffer_overflowed  = false;
+static size_t buffer_start_idx = 0;
+static size_t buffer_num_used  = 0;
+
+// Key repetition mechanism data
+
 static struct {
-	uint8_t buffer[KEYBUFSIZE];
-	Bitu used;
-	Bitu pos;
-	struct {
-		KBD_KEYS key;
-		Bitu wait;
-		Bitu pause,rate;
-	} repeat;
-	KeyCommands command;
-	uint8_t p60data;
-	bool p60changed;
-	bool active;
-	bool scanning;
-	bool scheduled;
-} keyb;
+	KBD_KEYS key   = KBD_NONE; // key which went typematic
+	uint16_t wait  = 0;
+	uint16_t pause = 0;
+	uint16_t rate  = 0;
 
-static void KEYBOARD_SetPort60(uint8_t val) {
-	keyb.p60changed=true;
-	keyb.p60data=val;
-	if (machine==MCH_PCJR) PIC_ActivateIRQ(6);
-	else PIC_ActivateIRQ(1);
+} repeat;
+
+struct Set3CodeInfoEntry {
+	bool is_enabled_typematic = true;
+	bool is_enabled_make      = true;
+	bool is_enabled_break     = true;
+};
+
+static std::array<Set3CodeInfoEntry, max_num_scancodes> set3_code_info = {};
+
+// State of keyboard LEDs, as requested via keyboard controller
+static uint8_t led_state;
+// If true, all LEDs are on due to keyboard reset
+static bool leds_all_on = false;
+// If false, keyboard does not push keycodes to the controller
+static bool is_scanning = true;
+
+static uint8_t code_set = CodeSet1;
+
+// Command currently being executed, waiting for parameter
+static Command current_command = Command::None;
+
+// ***************************************************************************
+// Helper routines to log various warnings
+// ***************************************************************************
+
+static void warn_resend()
+{
+	static bool already_warned = false;
+	if (!already_warned) {
+		LOG_WARNING("KEYBOARD: Resend command not implemented");
+		already_warned = true;
+	}
 }
 
-static void KEYBOARD_TransferBuffer(uint32_t /*val*/)
+static void warn_unknown_command(const Command command)
 {
-	keyb.scheduled = false;
-	if (!keyb.used) {
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("Transfer started with empty buffer");
+	static bool already_warned[max_num_scancodes];
+	const uint8_t code = static_cast<uint8_t>(command);
+	if (!already_warned[code]) {
+		LOG_WARNING("KEYBOARD: Unknown command 0x%02x", code);
+		already_warned[code] = true;
+	}
+}
+
+static void warn_unknown_scancode_set()
+{
+	static bool already_warned = false;
+	if (!already_warned) {
+		LOG_WARNING("KEYBOARD: Guest requested unknown scancode set");
+		already_warned = true;
+	}
+}
+
+// ***************************************************************************
+// keyboard buffer support
+// ***************************************************************************
+
+static void maybe_transfer_buffer()
+{
+	if (!buffer_num_used || !I8042_IsReadyForKbdFrame()) {
 		return;
 	}
-	KEYBOARD_SetPort60(keyb.buffer[keyb.pos]);
-	if (++keyb.pos >= KEYBUFSIZE) keyb.pos -= KEYBUFSIZE;
-	keyb.used--;
+
+	I8042_AddKbdFrame(buffer[buffer_start_idx]);
+
+	--buffer_num_used;
+	buffer_start_idx = (buffer_start_idx + 1) % buffer_size;
 }
 
-void KEYBOARD_ClrBuffer(void) {
-	keyb.used=0;
-	keyb.pos=0;
-	PIC_RemoveEvents(KEYBOARD_TransferBuffer);
-	keyb.scheduled=false;
-}
-
-static void KEYBOARD_AddBuffer(uint8_t data) {
-	if (keyb.used>=KEYBUFSIZE) {
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("Buffer full, dropping code");
+static void buffer_add(const std::vector<uint8_t>& scan_code)
+{
+	// Ignore unsupported keys, drop everything if buffer overflowed
+	if (scan_code.empty() || buffer_overflowed) {
 		return;
 	}
-	Bitu start=keyb.pos+keyb.used;
-	if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
-	keyb.buffer[start]=data;
-	keyb.used++;
-	/* Start up an event to start the first IRQ */
-	if (!keyb.scheduled && !keyb.p60changed) {
-		keyb.scheduled=true;
-		PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
+
+	// If buffer got overflowed, drop everything until
+	// the controllers queue gets free for the keyboard
+	if (buffer_num_used == buffer_size) {
+		buffer_num_used   = 0;
+		buffer_overflowed = true;
+		return;
 	}
+
+	// We can safely add a scancode to the buffer
+	const size_t idx = (buffer_start_idx + buffer_num_used++) % buffer_size;
+	buffer[idx] = scan_code;
+
+	// If possible, transfer the scancode to keyboard controller
+	maybe_transfer_buffer();
 }
 
-static uint8_t read_p60(io_port_t, io_width_t)
-{
-	keyb.p60changed = false;
-	if (!keyb.scheduled && keyb.used) {
-		keyb.scheduled = true;
-		PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
-	}
-	return keyb.p60data;
-}
+// ***************************************************************************
+// Key repetition
+// ***************************************************************************
 
-static void write_p60(io_port_t, io_val_t value, io_width_t)
+static void typematic_update(const KBD_KEYS key_type, const bool is_pressed)
 {
-	const auto val = check_cast<uint8_t>(value);
-	switch (keyb.command) {
-	case CMD_NONE:	/* None */
-		/* No active command this would normally get sent to the keyboard then */
-		KEYBOARD_ClrBuffer();
-		switch (val) {
-		case 0xed:	/* Set Leds */
-			keyb.command=CMD_SETLEDS;
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-			break;
-		case 0xee:	/* Echo */
-			KEYBOARD_AddBuffer(0xee);	/* Echo */
-			break;
-		case 0xf2:	/* Identify keyboard */
-			/* AT's just send acknowledge */
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-			break;
-		case 0xf3: /* Typematic rate programming */
-			keyb.command=CMD_SETTYPERATE;
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-			break;
-		case 0xf4:	/* Enable keyboard,clear buffer, start scanning */
-			LOG(LOG_KEYBOARD, LOG_NORMAL)("Clear buffer,enable Scanning");
-			KEYBOARD_AddBuffer(0xfa); /* Acknowledge */
-			keyb.scanning=true;
-			break;
-		case 0xf5:	 /* Reset keyboard and disable scanning */
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, disable scanning");
-			keyb.scanning=false;
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-			break;
-		case 0xf6:	/* Reset keyboard and enable scanning */
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, enable scanning");
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-			keyb.scanning=false;
-			break;
-		default:
-			/* Just always acknowledge strange commands */
-			LOG(LOG_KEYBOARD, LOG_ERROR)("60:Unhandled command %x", val);
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+	if (key_type == KBD_pause || key_type == KBD_printscreen) {
+		// Key is excluded from being repeated
+	} else if (is_pressed) {
+		if (repeat.key == key_type) {
+			repeat.wait = repeat.rate;
+		} else {
+			repeat.wait = repeat.pause;
 		}
-		return;
-	case CMD_SETOUTPORT:
-		MEM_A20_Enable((val & 2)>0);
-		keyb.command = CMD_NONE;
-		break;
-	case CMD_SETTYPERATE:
-		{
-			static const int delay[] = { 250, 500, 750, 1000 };
-			static const int repeat[] =
-				{ 33,37,42,46,50,54,58,63,67,75,83,92,100,
-				  109,118,125,133,149,167,182,200,217,233,
-				  250,270,303,333,370,400,435,476,500 };
-			keyb.repeat.pause = delay[(val>>5)&3];
-			keyb.repeat.rate = repeat[val&0x1f];
-			keyb.command=CMD_NONE;
-		}
-		[[fallthrough]]; // CMD_SETLEDS does what we want
-	case CMD_SETLEDS:
-		keyb.command=CMD_NONE;
-		KEYBOARD_ClrBuffer();
-		KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
-		break;
+		repeat.key = key_type;
+	} else if (repeat.key == key_type) {
+		// Currently repeated key being released
+		repeat.key  = KBD_NONE;
+		repeat.wait = 0;
 	}
 }
 
-/* Bochs: 8255 Programmable Peripheral Interface
-
-0061	w	KB controller port B (ISA, EISA)   (PS/2 port A is at 0092)
-system control port for compatibility with 8255
-bit 7      (1= IRQ 0 reset )
-bit 6-4    reserved
-bit 3 = 1  channel check enable
-bit 2 = 1  parity check enable
-bit 1 = 1  speaker data enable
-bit 0 = 1  timer 2 gate to speaker enable
-
-0061	w	PPI  Programmable Peripheral Interface 8255 (XT only)
-system control port
-bit 7 = 1  clear keyboard
-bit 6 = 0  hold keyboard clock low
-bit 5 = 0  I/O check enable
-bit 4 = 0  RAM parity check enable
-bit 3 = 0  read low switches
-bit 2      reserved, often used as turbo switch
-bit 1 = 1  speaker data enable
-bit 0 = 1  timer 2 gate to speaker enable
-*/
-static PpiPortB port_b = {0};
-extern void TIMER_SetGate2(bool);
-static void write_p61(io_port_t, io_val_t value, io_width_t)
+#ifdef ENABLE_SCANCODE_SET_3
+static void typematic_update_set3(const KBD_KEYS key_type,
+                                  const std::vector<uint8_t>& scan_code,
+                                  const bool is_pressed)
 {
-	const PpiPortB new_port_b = {check_cast<uint8_t>(value)};
-
-	// Determine how the state changed
-	const auto output_changed = new_port_b.timer2_gating_and_speaker_out !=
-	                            port_b.timer2_gating_and_speaker_out;
-	const auto timer_changed = new_port_b.timer2_gating != port_b.timer2_gating;
-
-	// Update the state
-	port_b.data = new_port_b.data;
-
-	if (machine < MCH_EGA && port_b.xt_clear_keyboard) {
-		//  On XT only, Bit 7 is a request to clear keyboard. This is
-		//  only a pulse, and is normally kept at 0. We "ack" the
-		//  request by switching the bit back normal (0) state. However,
-		//  we leave the keyboard as is, because clearing it can cause
-		//  duplicate key strokes in AlleyCat.
-		port_b.xt_clear_keyboard.clear();
+	// Ignore keys not supported in set 3
+	if (scan_code.empty()) {
+		return;
 	}
 
-	if (!output_changed)
-		return;
-
-	if (timer_changed)
-		TIMER_SetGate2(port_b.timer2_gating);
-
-	PCSPEAKER_SetType(port_b);
-}
-
-/* Bochs: 8255 Programmable Peripheral Interface
-
-0061	r	KB controller port B control register (ISA, EISA)
-system control port for compatibility with 8255
-bit 7    parity check occurred
-bit 6    channel check occurred
-bit 5    mirrors timer 2 output condition
-bit 4    toggles with each refresh request
-bit 3    channel check status
-bit 2    parity check status
-bit 1    speaker data status
-bit 0    timer 2 gate to speaker status
-*/
-extern bool TIMER_GetOutput2(void);
-static uint8_t read_p61(io_port_t, io_width_t)
-{
-	// Bit 4 must be toggled each request
-	port_b.read_toggle.flip();
-
-	// On PC/AT systems, bit 5 sets the timer 2 output status
-	if (is_machine(MCH_EGA | MCH_VGA))
-		port_b.timer2_gating_alias = TIMER_GetOutput2();
-	else
-		// On XT systems always toggle bit 5 (Spellicopter CGA)
-		port_b.xt_read_toggle.flip();
-
-	return port_b.data;
-}
-
-/* Bochs: 8255 Programmable Peripheral Interface
-0062	r/w	PPI (XT only)
-bit 7 = 1  RAM parity check
-bit 6 = 1  I/O channel check
-bit 5 = 1  timer 2 channel out
-bit 4      reserved
-bit 3 = 1  system board RAM size type 1
-bit 2 = 1  system board RAM size type 2
-bit 1 = 1  coprocessor installed
-bit 0 = 1  loop in POST
-*/
-static uint8_t read_p62(io_port_t, io_width_t)
-{
-	auto ret = bit::all<uint8_t>();
-
-	if(!TIMER_GetOutput2())
-		bit::clear(ret, b5);
-
-	return ret;
-}
-
-static void write_p64(io_port_t, io_val_t value, io_width_t)
-{
-	const auto val = check_cast<uint8_t>(value);
-	switch (val) {
-	case 0xae:		/* Activate keyboard */
-		keyb.active=true;
-		if (keyb.used && !keyb.scheduled && !keyb.p60changed) {
-			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
-		}
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
-		break;
-	case 0xad:		/* Deactivate keyboard */
-		keyb.active=false;
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("De-Activated");
-		break;
-	case 0xd0:		/* Outport on buffer */
-		KEYBOARD_SetPort60(MEM_A20_Enabled() ? 0x02 : 0);
-		break;
-	case 0xd1:		/* Write to outport */
-		keyb.command=CMD_SETOUTPORT;
-		break;
-	default:
-		LOG(LOG_KEYBOARD, LOG_ERROR)("Port 64 write with val %x", val);
-		break;
-	}
-}
-
-static uint8_t read_p64(io_port_t, io_width_t)
-{
-	uint8_t status = 0x1c | (keyb.p60changed ? 0x1 : 0x0);
-	return status;
-}
-
-void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
-	uint8_t ret=0;bool extend=false;
-	switch (keytype) {
-	case KBD_esc:ret=1;break;
-	case KBD_1:ret=2;break;
-	case KBD_2:ret=3;break;
-	case KBD_3:ret=4;break;
-	case KBD_4:ret=5;break;
-	case KBD_5:ret=6;break;
-	case KBD_6:ret=7;break;
-	case KBD_7:ret=8;break;
-	case KBD_8:ret=9;break;
-	case KBD_9:ret=10;break;
-	case KBD_0:ret=11;break;
-
-	case KBD_minus:ret=12;break;
-	case KBD_equals:ret=13;break;
-	case KBD_backspace:ret=14;break;
-	case KBD_tab:ret=15;break;
-
-	case KBD_q:ret=16;break;
-	case KBD_w:ret=17;break;
-	case KBD_e:ret=18;break;
-	case KBD_r:ret=19;break;
-	case KBD_t:ret=20;break;
-	case KBD_y:ret=21;break;
-	case KBD_u:ret=22;break;
-	case KBD_i:ret=23;break;
-	case KBD_o:ret=24;break;
-	case KBD_p:ret=25;break;
-
-	case KBD_leftbracket:ret=26;break;
-	case KBD_rightbracket:ret=27;break;
-	case KBD_enter:ret=28;break;
-	case KBD_leftctrl:ret=29;break;
-
-	case KBD_a:ret=30;break;
-	case KBD_s:ret=31;break;
-	case KBD_d:ret=32;break;
-	case KBD_f:ret=33;break;
-	case KBD_g:ret=34;break;
-	case KBD_h:ret=35;break;
-	case KBD_j:ret=36;break;
-	case KBD_k:ret=37;break;
-	case KBD_l:ret=38;break;
-
-	case KBD_semicolon:ret=39;break;
-	case KBD_quote:ret=40;break;
-	case KBD_grave:ret=41;break;
-	case KBD_leftshift:ret=42;break;
-	case KBD_backslash:ret=43;break;
-	case KBD_oem102: ret = 86; break;
-	case KBD_z:ret=44;break;
-	case KBD_x:ret=45;break;
-	case KBD_c:ret=46;break;
-	case KBD_v:ret=47;break;
-	case KBD_b:ret=48;break;
-	case KBD_n:ret=49;break;
-	case KBD_m:ret=50;break;
-
-	case KBD_comma:ret=51;break;
-	case KBD_period:ret=52;break;
-	case KBD_slash:ret=53;break;
-	case KBD_abnt1: ret = 115; break;
-	case KBD_rightshift:ret=54;break;
-	case KBD_kpmultiply:ret=55;break;
-	case KBD_leftalt:ret=56;break;
-	case KBD_space:ret=57;break;
-	case KBD_capslock:ret=58;break;
-
-	case KBD_f1:ret=59;break;
-	case KBD_f2:ret=60;break;
-	case KBD_f3:ret=61;break;
-	case KBD_f4:ret=62;break;
-	case KBD_f5:ret=63;break;
-	case KBD_f6:ret=64;break;
-	case KBD_f7:ret=65;break;
-	case KBD_f8:ret=66;break;
-	case KBD_f9:ret=67;break;
-	case KBD_f10:ret=68;break;
-
-	case KBD_numlock:ret=69;break;
-	case KBD_scrolllock:ret=70;break;
-
-	case KBD_kp7:ret=71;break;
-	case KBD_kp8:ret=72;break;
-	case KBD_kp9:ret=73;break;
-	case KBD_kpminus:ret=74;break;
-	case KBD_kp4:ret=75;break;
-	case KBD_kp5:ret=76;break;
-	case KBD_kp6:ret=77;break;
-	case KBD_kpplus:ret=78;break;
-	case KBD_kp1:ret=79;break;
-	case KBD_kp2:ret=80;break;
-	case KBD_kp3:ret=81;break;
-	case KBD_kp0:ret=82;break;
-	case KBD_kpperiod:ret=83;break;
-
-	case KBD_f11:ret=87;break;
-	case KBD_f12:ret=88;break;
-
-	//The Extended keys
-	case KBD_kpenter:extend=true;ret=28;break;
-	case KBD_rightctrl:extend=true;ret=29;break;
-	case KBD_kpdivide:extend=true;ret=53;break;
-	case KBD_rightalt:extend=true;ret=56;break;
-	case KBD_home:extend=true;ret=71;break;
-	case KBD_up:extend=true;ret=72;break;
-	case KBD_pageup:extend=true;ret=73;break;
-	case KBD_left:extend=true;ret=75;break;
-	case KBD_right:extend=true;ret=77;break;
-	case KBD_end:extend=true;ret=79;break;
-	case KBD_down:extend=true;ret=80;break;
-	case KBD_pagedown:extend=true;ret=81;break;
-	case KBD_insert:extend=true;ret=82;break;
-	case KBD_delete:extend=true;ret=83;break;
-	case KBD_leftgui:extend=true;ret=91;break;
-	case KBD_rightgui:extend=true;ret=92;break;
-	
-	case KBD_pause:
-		KEYBOARD_AddBuffer(0xe1);
-		KEYBOARD_AddBuffer(29|(pressed?0:0x80));
-		KEYBOARD_AddBuffer(69|(pressed?0:0x80));
-		return;
-	case KBD_printscreen:
-		KEYBOARD_AddBuffer(0xe0);
-		KEYBOARD_AddBuffer(42|(pressed?0:0x80));
-		KEYBOARD_AddBuffer(0xe0);
-		KEYBOARD_AddBuffer(55|(pressed?0:0x80));
-		return;
-	default:
-		E_Exit("Unsupported key press");
-		break;
-	}
-	assert(ret <= MAX_SCAN_CODE);
-
-	/* Add the actual key in the keyboard queue */
-	if (pressed) {
-		if (keyb.repeat.key == keytype) keyb.repeat.wait = keyb.repeat.rate;
-		else keyb.repeat.wait = keyb.repeat.pause;
-		keyb.repeat.key = keytype;
+	// Sanity check, for debug builds only
+	if (is_pressed) {
+		assert(scan_code.size() == 1);
 	} else {
-		if (keyb.repeat.key == keytype) {
-			/* repeated key being released */
-			keyb.repeat.key  = KBD_NONE;
-			keyb.repeat.wait = 0;
+		assert(scan_code.size() == 2);
+		assert(scan_code[0] == 0xf0);
+	}
+
+	// Ignore keys for which typematic behavior was disabled
+	if (!set3_code_info[scan_code.back()].is_enabled_typematic) {
+		return;
+	}
+
+	// For all the other keys, follow usual behavior
+	typematic_update(key_type, is_pressed);
+}
+#endif // ENABLE_SCANCODE_SET_3
+
+static void typematic_tick()
+{
+	// Update countdown, check if we should try to add key press
+	if (repeat.wait) {
+		if (--repeat.wait) {
+			return;
 		}
-		ret += 128;
 	}
-	if (extend) KEYBOARD_AddBuffer(0xe0);
-	KEYBOARD_AddBuffer(ret);
+
+	// No typematic key = nothing to do
+	if (!repeat.key) {
+		return;
+	}
+
+	// Check if buffers are free
+	if (buffer_num_used || !I8042_IsReadyForKbdFrame()) {
+		repeat.wait = 1;
+		return;
+	}
+
+	// Simulate key press
+	constexpr bool is_pressed = true;
+	KEYBOARD_AddKey(repeat.key, is_pressed);
 }
 
-static void KEYBOARD_TickHandler(void) {
-	if (keyb.repeat.wait) {
-		keyb.repeat.wait--;
-		if (!keyb.repeat.wait) KEYBOARD_AddKey(keyb.repeat.key,true);
+// ***************************************************************************
+// Keyboard microcontroller high-level emulation
+// ***************************************************************************
+
+static void maybe_notify_led_state()
+{
+	// TODO:
+	// - add LED support to BIOS, currently it does not set them
+	// - consider displaying LEDs on screen
+
+	static uint8_t last_reported = 0x00;
+	static bool first_time       = true;
+
+	const uint8_t current_state = KEYBOARD_GetLedState();
+	if (first_time || current_state != last_reported) {
+#if 0
+		LOG_INFO("KEYBOARD:  [%c] SCROLL_LOCK  [%c] NUM_LOCK  [%c] CAPS_LOCK",
+		          bit::is(current_state, b0) ? '*' : ' ',
+		          bit::is(current_state, b1) ? '*' : ' ',
+		          bit::is(current_state, b2) ? '*' : ' ');
+#endif
+		last_reported = current_state;
 	}
 }
 
-void KEYBOARD_Init(Section* /*sec*/) {
-	IO_RegisterWriteHandler(0x60, write_p60, io_width_t::byte);
-	IO_RegisterReadHandler(0x60, read_p60, io_width_t::byte);
-	IO_RegisterWriteHandler(0x61, write_p61, io_width_t::byte);
-	IO_RegisterReadHandler(0x61, read_p61, io_width_t::byte);
-	if (machine == MCH_CGA || machine == MCH_HERC)
-		IO_RegisterReadHandler(0x62, read_p62, io_width_t::byte);
-	IO_RegisterWriteHandler(0x64, write_p64, io_width_t::byte);
-	IO_RegisterReadHandler(0x64, read_p64, io_width_t::byte);
-	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
-	write_p61(0, 0, io_width_t::byte);
-	/* Init the keyb struct */
-	keyb.active = true;
-	keyb.scanning = true;
-	keyb.command = CMD_NONE;
-	keyb.p60changed = false;
-	keyb.repeat.key = KBD_NONE;
-	keyb.repeat.pause = 500;
-	keyb.repeat.rate = 33;
-	keyb.repeat.wait = 0;
-	KEYBOARD_ClrBuffer();
+static void leds_all_on_expire_handler(uint32_t /*val*/)
+{
+	leds_all_on = false;
+	maybe_notify_led_state();
+}
+
+static void clear_buffer()
+{
+	buffer_start_idx  = 0;
+	buffer_num_used   = 0;
+	buffer_overflowed = false;
+
+	repeat.key  = KBD_NONE;
+	repeat.wait = 0;
+}
+
+bool scancode_set(const uint8_t requested_set)
+{
+#ifndef ENABLE_SCANCODE_SET_2
+	if (requested_set == CodeSet2) {
+		return false;
+	}
+#endif // no ENABLE_SCANCODE_SET_2
+
+#ifndef ENABLE_SCANCODE_SET_3
+	if (requested_set == CodeSet3) {
+		return false;
+	}
+#endif // no ENABLE_SCANCODE_SET_3
+
+	if (requested_set < CodeSet1 || requested_set > CodeSet3) {
+		warn_unknown_scancode_set();
+		return false;
+	}
+
+#ifdef HAS_SCANCODE_SET_2_OR_3
+	const auto old_set = code_set;
+#endif // HAS_SCANCODE_SET_2_OR_3
+	code_set = requested_set;
+
+#ifdef HAS_SCANCODE_SET_2_OR_3
+	static bool first_time = true;
+	if (first_time || (code_set != old_set)) {
+		LOG_INFO("KEYBOARD: Using scancode set #%d", code_set);
+	}
+#endif // HAS_SCANCODE_SET_2_OR_3
+
+	clear_buffer();
+	return true;
+}
+
+void set_type_rate(const uint8_t byte)
+{
+	// clang-format off
+	static const uint16_t pause_table[]  = {
+		250, 500, 750, 1000
+	};
+	static const uint16_t rate_table[] = {
+		 33,  37,  42,  46,  50,  54,  58,  63,
+		 67,  75,  83,  92, 100, 109, 118, 125,
+		133, 149, 167, 182, 200, 217, 233, 250,
+		270, 303, 333, 370, 400, 435, 476, 500
+	};
+	// clang-format on
+
+	const auto pause_idx = (byte & 0b0110'0000) >> 5;
+	const auto rate_idx  = (byte & 0b0001'1111);
+
+	repeat.pause = pause_table[pause_idx];
+	repeat.rate  = rate_table[rate_idx];
+}
+
+static void set_defaults()
+{
+	repeat.key   = KBD_NONE;
+	repeat.pause = 500;
+	repeat.rate  = 33;
+	repeat.wait  = 0;
+
+	for (auto& entry : set3_code_info) {
+		entry.is_enabled_make      = true;
+		entry.is_enabled_break     = true;
+		entry.is_enabled_typematic = true;
+	}
+
+#ifdef ENABLE_SCANCODE_SET_2
+	scancode_set(CodeSet2);
+#else
+	scancode_set(CodeSet1);
+#endif
+}
+
+static void keyboard_reset(const bool is_startup = false)
+{
+	set_defaults();
+	clear_buffer();
+
+	is_scanning = true;
+
+	// Flash all the LEDs
+	PIC_RemoveEvents(leds_all_on_expire_handler);
+	led_state   = 0;
+	leds_all_on = !is_startup;
+	if (leds_all_on) {
+		// To commemorate how evil the whole keyboard
+		// subsystem is, let's set blink expiration
+		// time to 666 milliseconds
+		constexpr double expire_time_ms = 666.0;
+		PIC_AddEvent(leds_all_on_expire_handler, expire_time_ms);
+	}
+	maybe_notify_led_state();
+}
+
+static void execute_command(const Command command)
+{
+	// LOG_INFO("KEYBOARD: Command 0x%02x", static_cast<int>(command));
+
+	switch (command) {
+	//
+	// Commands requiring a parameter
+	//
+	case Command::SetLeds:          // 0xed
+	case Command::SetTypeRate:      // 0xf3
+		I8042_AddKbdByte(0xfa); // acknowledge
+		current_command = command;
+		break;
+	case Command::CodeSet:          // 0xf0
+	case Command::Set3KeyTypematic: // 0xfb
+	case Command::Set3KeyMakeBreak: // 0xfc
+	case Command::Set3KeyMakeOnly:  // 0xfd
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		current_command = command;
+		break;
+	//
+	// No-parameter commands
+	//
+	case Command::Echo: // 0xee
+		// Diagnostic echo, responds without acknowledge
+		I8042_AddKbdByte(0xee);
+		break;
+	case Command::Identify: // 0xf2
+		// Returns keyboard ID
+		// - 0xab, 0x83: typical for multifunction PS/2 keyboards
+		// - 0xab, 0x84: many short, space saver keyboards
+		// - 0xab, 0x86: many 122-key keyboards
+		I8042_AddKbdByte(0xfa); // acknowledge
+		I8042_AddKbdByte(0xab);
+		I8042_AddKbdByte(0x83);
+		break;
+	case Command::ClearEnable: // 0xf4
+		// Clear internal buffer, enable scanning
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		is_scanning = true;
+		break;
+	case Command::DefaultDisable: // 0xf5
+		// Restore defaults, disable scanning
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		set_defaults();
+		is_scanning = false;
+		break;
+	case Command::ResetEnable: // 0xf6
+		// Restore defaults, enable scanning
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		set_defaults();
+		is_scanning = true;
+		break;
+	case Command::Set3AllTypematic: // 0xf7
+		// Set scanning type for all the keys,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		for (auto& entry : set3_code_info) {
+			entry.is_enabled_typematic = true;
+			entry.is_enabled_make      = false;
+			entry.is_enabled_break     = false;
+		}
+		break;
+	case Command::Set3AllMakeBreak: // 0xf8
+		// Set scanning type for all the keys,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		for (auto& entry : set3_code_info) {
+			entry.is_enabled_typematic = false;
+			entry.is_enabled_make      = true;
+			entry.is_enabled_break     = true;
+		}
+		break;
+	case Command::Set3AllMakeOnly: // 0xf9
+		// Set scanning type for all the keys,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		for (auto& entry : set3_code_info) {
+			entry.is_enabled_typematic = false;
+			entry.is_enabled_make      = true;
+			entry.is_enabled_break     = false;
+		}
+		break;
+	case Command::Set3AllTypeMakeBreak: // 0xfa
+		// Set scanning type for all the keys,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		for (auto& entry : set3_code_info) {
+			entry.is_enabled_typematic = true;
+			entry.is_enabled_make      = true;
+			entry.is_enabled_break     = true;
+		}
+		break;
+	case Command::Resend: // 0xfe
+		// Resend byte, should normally be used on transmission
+		// errors - not implemented, as the emulation can
+		// also send whole multi-byte scancode at once
+		warn_resend();
+		break;
+	case Command::Reset: // 0xff
+		// Full keyboard reset and self test
+		// 0xaa: passed; 0xfc/0xfd: failed
+		I8042_AddKbdByte(0xfa); // acknowledge
+		keyboard_reset();
+		I8042_AddKbdByte(0xaa);
+		break;
+	//
+	// Unknown commands
+	//
+	default:
+		warn_unknown_command(command);
+		I8042_AddKbdByte(0xfe); // resend
+		break;
+	}
+}
+
+static void execute_command(const Command command, const uint8_t param)
+{
+	// LOG_INFO("KEYBOARD: Command 0x%02x, parameter 0x%02x",
+	//          static_cast<int>(command), param);
+
+	switch (command) {
+	case Command::SetLeds: // 0xed
+		// Set keyboard LEDs according to bitfielld
+		I8042_AddKbdByte(0xfa); // acknowledge
+		led_state = param;
+		maybe_notify_led_state();
+		break;
+	case Command::CodeSet: // 0xf0
+		// Query or change the scancode set
+		if (param != 0) {
+			// Query current scancode set
+			if (scancode_set(param)) {
+				I8042_AddKbdByte(0xfa); // acknowledge
+			} else {
+				current_command = command;
+				I8042_AddKbdByte(0xfe); // resend
+			}
+		} else {
+			I8042_AddKbdByte(0xfa); // acknowledge
+			switch (code_set) {
+			case CodeSet1:
+			case CodeSet2:
+			case CodeSet3: I8042_AddKbdByte(code_set); break;
+			default:
+				assert(false);
+				I8042_AddKbdByte(CodeSet1);
+				break;
+			}
+		}
+		break;
+	case Command::SetTypeRate: // 0xf3
+		// Sets typematic rate/delay
+		I8042_AddKbdByte(0xfa); // acknowledge
+		set_type_rate(param);
+		break;
+	case Command::Set3KeyTypematic: // 0xfb
+		// Set scanning type for the given key,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		set3_code_info[param].is_enabled_typematic = true;
+		set3_code_info[param].is_enabled_make      = false;
+		set3_code_info[param].is_enabled_break     = false;
+		break;
+	case Command::Set3KeyMakeBreak: // 0xfc
+		// Set scanning type for the given key,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		set3_code_info[param].is_enabled_typematic = false;
+		set3_code_info[param].is_enabled_make      = true;
+		set3_code_info[param].is_enabled_break     = true;
+		break;
+	case Command::Set3KeyMakeOnly: // 0xfd
+		// Set scanning type for the given key,
+		// relevant for scancode set 3 only
+		I8042_AddKbdByte(0xfa); // acknowledge
+		clear_buffer();
+		set3_code_info[param].is_enabled_typematic = false;
+		set3_code_info[param].is_enabled_make      = true;
+		set3_code_info[param].is_enabled_break     = false;
+		break;
+	default:
+		// If we are here, than either this function
+		// was wrongly called or it is incomplete
+		assert(false);
+		break;
+	};
+}
+
+// ***************************************************************************
+// External interfaces
+// ***************************************************************************
+
+void KEYBOARD_PortWrite(const uint8_t byte)
+{
+	// Highest bit set usuaally means a command
+	const bool is_command = bit::is(byte, b7) &&
+	                        current_command != Command::Set3KeyTypematic &&
+	                        current_command != Command::Set3KeyMakeBreak &&
+	                        current_command != Command::Set3KeyMakeOnly;
+
+	if (is_command) {
+		// Terminate previous command
+		current_command = Command::None;
+	}
+
+	const auto command = current_command;
+	if (command != Command::None) {
+		// Continue execution of previous command
+		current_command = Command::None;
+		execute_command(command, byte);
+	} else if (is_command) {
+		execute_command(static_cast<Command>(byte));
+	}
+}
+
+void KEYBOARD_NotifyReadyForFrame()
+{
+	// Since the guest software seems to be reacting on keys again,
+	// clear the buffer overflow flag, do not ignore keys any more
+	buffer_overflowed = false;
+
+	maybe_transfer_buffer();
+}
+
+void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed)
+{
+	if (!is_scanning) {
+		return;
+	}
+
+	std::vector<uint8_t> scan_code = {};
+
+	switch (code_set) {
+	case CodeSet1:
+		scan_code = KEYBOARD_GetScanCode1(key_type, is_pressed);
+		typematic_update(key_type, is_pressed);
+		break;
+#ifdef ENABLE_SCANCODE_SET_2
+	case CodeSet2:
+		scan_code = KEYBOARD_GetScanCode2(key_type, is_pressed);
+		typematic_update(key_type, is_pressed);
+		break;
+#endif // ENABLE_SCANCODE_SET_2
+#ifdef ENABLE_SCANCODE_SET_3
+	case CodeSet3:
+		scan_code = KEYBOARD_GetScanCode3(key_type, is_pressed);
+		typematic_update_set3(key_type, scan_code, is_pressed);
+		break;
+#endif // ENABLE_SCANCODE_SET_3
+	default: assert(false); break;
+	}
+
+	buffer_add(scan_code);
+}
+
+uint8_t KEYBOARD_GetLedState()
+{
+	// We support only 3 leds
+	return (leds_all_on ? 0xff : led_state) & 0b0000'0111;
+}
+
+void KEYBOARD_ClrBuffer()
+{
+	// Sometimes the GUI part wants us to clear the buffer. Original code
+	// was clearing the controller buffer, but this is a REALLY dangerous
+	// operation, because it might:
+	// - clear the result of keyboard / device command, which might
+	//   confuse the guest side software
+	// - clear part of the scancode from the buffer, while the other
+	//   part was already fetched by the guest software
+	// - wipe the information about mouse button release
+	// This might lead to occasional misbehaviour, timing dependent,
+	// possibly reproducible on some hosts and on on other.
+	// Moreover, Windows 3.11 for Workgroups does not like unnecessary
+	// keyboard IRQs - so once we fired an IRQ for the scancode package,
+	// it's too late to withdraw it!
+
+	// We have to limit clearing to keyboard internal buffer, this is safe
+	clear_buffer();
+}
+
+// ***************************************************************************
+// Initialization
+// ***************************************************************************
+
+void KEYBOARD_Init(Section* /*sec*/)
+{
+	I8042_Init();
+	I8255_Init();
+	TIMER_AddTickHandler(&typematic_tick);
+
+	constexpr bool is_startup = true;
+	keyboard_reset(is_startup);
+	scancode_set(CodeSet1);
 }

@@ -160,7 +160,16 @@
     <ClCompile Include="..\src\hardware\innovation.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\input\intel8042.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\intel8255.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\input\keyboard.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\keyboard_scancodes.cpp">
       <Filter>src\hardware\input</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\input\mouse.cpp">
@@ -1055,6 +1064,12 @@
     </ClInclude>
     <ClInclude Include="..\src\hardware\gameblaster.h">
       <Filter>src\hardware\mame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\intel8042.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\intel8255.h">
+      <Filter>src\hardware\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\input\mouse_common.h">
       <Filter>src\hardware\input</Filter>
