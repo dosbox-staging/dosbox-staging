@@ -660,9 +660,19 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	const auto actual = static_cast<uint16_t>(fread(data, 1, requested, fhandle));
 	*size = actual; // always save the actual
 
-	// if (actual != requested)
-	//	DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
-	//	              actual, requested, name.c_str());
+	if (actual != requested) {
+		//DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
+		//              actual,
+		//              requested,
+		//              name.c_str());
+
+		// Check for host read error
+		if (ferror(fhandle)) {
+			clearerr(fhandle);
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+	}
 
 	/* Fake harddrive motion. Inspector Gadget with soundblaster compatible */
 	/* Same for Igor */
@@ -713,6 +723,13 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	if (actual != requested) {
 		DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
 		              actual, requested, name.c_str());
+
+		// Check for host write error
+		if (ferror(fhandle)) {
+			clearerr(fhandle);
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 	}
 	*size = actual; // always save the actual
 	return true;    // always return true, even if partially written
