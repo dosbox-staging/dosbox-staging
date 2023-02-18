@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include "cpu.h"
 #include "callback.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "hardware.h"
 #include "pci_bus.h"
@@ -1039,6 +1040,47 @@ static Bitu INT15_Handler(void) {
 	case 0xc4:	/* BIOS POS Programm option Select */
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
+		break;
+	case 0xe8:
+		switch (reg_al) {
+		case 0x01:
+			reg_ax = 0; // extended memory between 1MB and 16MB, in 1KB blocks
+			reg_bx = 0; // extended memory above 16MB, in 64KB blocks
+			{
+				const auto mem_in_kb = MEM_TotalPages() * 4;
+				if (mem_in_kb > 1024) {
+					reg_ax = std::min(static_cast<uint16_t>(mem_in_kb - 1024),
+					                  static_cast<uint16_t>(15 * 1024));
+				}
+				if (mem_in_kb > 16 * 1024) {
+					reg_bx = clamp_to_uint16((mem_in_kb - 16 * 1024) / 64);
+				}
+			}
+			reg_cx = reg_ax; // configured memory between 1MB and 16MB, in 1KB blocks
+			reg_dx = reg_bx; // configured memory above 16MB, in 64KB blocks
+			CALLBACK_SCF(false);
+			break;
+		// TODO implement function 0x20
+		case 0x81:
+			reg_eax = 0; // extended memory between 1MB and 16MB, in 1KB blocks
+			reg_ebx = 0; // extended memory above 16MB, in 64KB blocks
+			{
+				const auto mem_in_kb = MEM_TotalPages() * 4;
+				if (mem_in_kb > 1024) {
+					reg_eax = std::min(static_cast<uint32_t>(mem_in_kb - 1024),
+					                   static_cast<uint32_t>(15 * 1024));
+				}
+				if (mem_in_kb > 16 * 1024) {
+					reg_ebx = clamp_to_uint32((mem_in_kb - 16 * 1024) / 64);
+				}
+			}
+			reg_ecx = reg_eax; // configured memory between 1MB and 16MB, in 1KB blocks
+			reg_edx = reg_ebx; // configured memory above 16MB, in 64KB blocks
+			CALLBACK_SCF(false);
+			break;
+		default:
+			goto unhandled;
+		}
 		break;
 	default:
 	unhandled:

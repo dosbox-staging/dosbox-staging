@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -136,6 +136,14 @@ int8_t clamp_to_int8(const T val)
 }
 
 template <typename T>
+uint8_t clamp_to_uint8(const T val)
+{
+	constexpr auto min_val = static_cast<T>(0);
+	constexpr auto max_val = static_cast<T>(UINT8_MAX);
+	return static_cast<uint8_t>(std::clamp(val, min_val, max_val));
+}
+
+template <typename T>
 int16_t clamp_to_int16(const T val)
 {
 	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT16_MIN : 0);
@@ -144,11 +152,27 @@ int16_t clamp_to_int16(const T val)
 }
 
 template <typename T>
+uint16_t clamp_to_uint16(const T val)
+{
+	constexpr auto min_val = static_cast<T>(0);
+	constexpr auto max_val = static_cast<T>(UINT16_MAX);
+	return static_cast<uint16_t>(std::clamp(val, min_val, max_val));
+}
+
+template <typename T>
 int32_t clamp_to_int32(const T val)
 {
 	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT32_MIN : 0);
 	constexpr auto max_val = static_cast<T>(INT32_MAX);
 	return static_cast<int32_t>(std::clamp(val, min_val, max_val));
+}
+
+template <typename T>
+uint32_t clamp_to_uint32(const T val)
+{
+	constexpr auto min_val = static_cast<T>(0);
+	constexpr auto max_val = static_cast<T>(UINT32_MAX);
+	return static_cast<uint32_t>(std::clamp(val, min_val, max_val));
 }
 
 inline float decibel_to_gain(const float decibel)
