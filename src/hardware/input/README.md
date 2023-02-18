@@ -1,7 +1,26 @@
-# Mouse code
+# Input code
 
-Few comments on mouse emulation code organization:
+Few comments on input device emulation code organization:
 
+**intel8042.cpp**
+
+Intel 8042 micro-controller emulation, responsible for keyboard and mouse ports.
+Handles only the micro-controller part, communicates with `keyboard.cpp` and
+`mouseif_ps2_bios.cpp`, similarly as a real-life micro-controller communicates
+with keyboard and mouse.
+
+**intel8255.cpp**
+
+Partial emulation of Intel 8255 microcontroller.
+
+**keyboard.cpp**
+
+Emulates a microcontroller typically found in a keyboard.
+
+**keyboard_scancodes.cpp**
+
+Convert internal keyboard codes to scancodes relevant to key press/release,
+for a given scancode set. Just a simple (but quite large) converter.
 
 **mouse.cpp**
 
@@ -39,11 +58,6 @@ dual-mice gaming. Used as a source of mouse events - but only when a physical
 mouse is mapped to the emulated interface, otherwise all mouse events come
 from SDL-based GFX subsystem.
 
-**`mouse_queue.cpp`**
-
-A 'queue' - delays and aggregates mouse events from host OS to simulate
-the desired mouse scanning rate.
-
 **`mouseif_*.cpp`**
 
 Implementations (non-object oriented) of various mouse interfaces:
@@ -51,8 +65,7 @@ Implementations (non-object oriented) of various mouse interfaces:
 - a simulated DOS driver, compatible with _MOUSE.COM_, with some extensions
 (like _CtMouse_ wheel API or direct support for _INT33_ Windows driver from
 _javispedro_) 
-- PS/2 (currently only via BIOS calls, physical mouse port is not emulated
-yet)
+- PS/2 (both register-level access abd via BIOS calls)
 - a _VMWare_ mouse protocol (actually a PS/2 mouse extension), allowing for
 seamless integration with host mouse cursor if a proper driver is running
 
