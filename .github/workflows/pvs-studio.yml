@@ -12,9 +12,9 @@ concurrency:
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
-      debfile: pvs-studio-7.21.64848.262-amd64.deb
+      debfile: pvs-studio-7.23.68432.289-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
