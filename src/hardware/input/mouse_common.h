@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -153,21 +153,6 @@ union MouseButtons12S {
 	MouseButtons12S(const uint8_t data) : data(data) {}
 	MouseButtons12S(const MouseButtons12S &other) : data(other.data) {}
 	MouseButtons12S &operator=(const MouseButtons12S &other);
-};
-
-// ***************************************************************************
-// Internal mouse event types
-// ***************************************************************************
-
-struct MouseEvent {
-	bool request_dos = false; // if DOS mouse driver needs an event
-	bool request_ps2 = false; // if PS/2 mouse emulation needs an event
-
-	bool dos_moved  = false;
-	bool dos_button = false;
-	bool dos_wheel  = false;
-
-	MouseButtons12S dos_buttons = 0;
 };
 
 #endif // DOSBOX_MOUSE_COMMON_H

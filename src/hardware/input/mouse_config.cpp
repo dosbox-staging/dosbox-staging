@@ -31,13 +31,6 @@
 
 CHECK_NARROWING();
 
-// TODO - IntelliMouse Explorer emulation is currently deactivated - there is
-// probably no way to test it. The IntelliMouse 3.0 software can use it, but
-// it seems to require physical PS/2 mouse registers to work correctly,
-// and these are not emulated yet.
-
-// #define ENABLE_EXPLORER_MOUSE
-
 MouseConfig     mouse_config;
 MousePredefined mouse_predefined;
 
@@ -48,9 +41,8 @@ constexpr auto capture_type_nomouse_str   = "nomouse";
 
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
-#ifdef ENABLE_EXPLORER_MOUSE
-constexpr auto model_ps2_explorer_str     = "explorer";	
-#endif
+constexpr auto model_ps2_explorer_str     = "explorer";
+constexpr auto model_ps2_nomouse_str      = "none";
 
 constexpr auto model_com_2button_str      = "2button";
 constexpr auto model_com_3button_str      = "3button";
@@ -68,13 +60,12 @@ static const char *list_capture_types[] = {
 	nullptr
 };
 
-static const char *list_models_ps2[] = {
+static const char* list_models_ps2[] = {
 	model_ps2_standard_str,
-	model_ps2_intellimouse_str,
-#ifdef ENABLE_EXPLORER_MOUSE
-	model_ps2_explorer_str,
-#endif
-	nullptr
+        model_ps2_intellimouse_str,
+        model_ps2_explorer_str,
+        model_ps2_nomouse_str,
+        nullptr
 };
 
 static const char *list_models_com[] = {
@@ -166,16 +157,17 @@ bool MouseConfig::ParseCOMModel(const std::string &model_str,
 
 bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &model)
 {
-	if (model_str == model_ps2_standard_str)
+	if (model_str == model_ps2_standard_str) {
 		model = MouseModelPS2::Standard;
-	else if (model_str == model_ps2_intellimouse_str)
+	} else if (model_str == model_ps2_intellimouse_str) {
 		model = MouseModelPS2::IntelliMouse;
-#ifdef ENABLE_EXPLORER_MOUSE
-	else if (model_str == model_ps2_explorer_str)
+	} else if (model_str == model_ps2_explorer_str) {
 		model = MouseModelPS2::Explorer;
-#endif
-	else
+	} else if (model_str == model_ps2_nomouse_str) {
+		model = MouseModelPS2::NoMouse;	
+	} else {
 		return false;
+	}
 	return true;
 }
 
@@ -324,19 +316,19 @@ static void config_init(Section_prop &secprop)
 
 	// Physical mice configuration
 
-	prop_str = secprop.Add_string("ps2_mouse_model", only_at_start,
-	                              model_ps2_intellimouse_str);
+	// TODO: PS/2 mouse might be hot-pluggable
+	prop_str = secprop.Add_string("ps2_mouse_model",
+	                              only_at_start,
+	                              model_ps2_explorer_str);
 	assert(prop_str);
 	prop_str->Set_values(list_models_ps2);
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
-	        // TODO - Add option "none"
 	        "   standard:      3 buttons, standard PS/2 mouse.\n"
-	        "   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse (default)."
-#ifdef ENABLE_EXPLORER_MOUSE
-	        "\n   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer."
-#endif
-	);
+	        "   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
+	        "   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
+	        "   none:          no PS/2 mouse emulated.\n"
+	        "Default: explorer");
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,

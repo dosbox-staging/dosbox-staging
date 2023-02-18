@@ -21,7 +21,6 @@
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
 #include "mouse_manymouse.h"
-#include "mouse_queue.h"
 
 #include <algorithm>
 #include <cctype>
@@ -39,7 +38,6 @@ CHECK_NARROWING();
 
 static callback_number_t int74_ret_callback = 0;
 
-static MouseQueue &mouse_queue  = MouseQueue::GetInstance();
 static ManyMouseGlue &manymouse = ManyMouseGlue::GetInstance();
 
 // ***************************************************************************
@@ -384,65 +382,36 @@ static Bitu int74_exit()
 
 static Bitu int74_handler()
 {
-	MouseEvent ev;
-	mouse_queue.FetchEvent(ev);
-
-	// Handle DOS events
-	if (ev.request_dos) {
-		uint8_t mask = 0;
-		if (ev.dos_moved) {
-			mask = MOUSEDOS_UpdateMoved();
-
-			// Taken from DOSBox X: HERE within the IRQ 12 handler
-			// is the appropriate place to redraw the cursor. OSes
-			// like Windows 3.1 expect real-mode code to do it in
-			// response to IRQ 12, not "out of the blue" from the
-			// SDL event handler like the original DOSBox code did
-			// it. Doing this allows the INT 33h emulation to draw
-			// the cursor while not causing Windows 3.1 to crash or
-			// behave erratically.
-			if (mask) {
-				MOUSEDOS_DrawCursor();
-			}
-		}
-		if (ev.dos_button) {
-			const auto new_mask = mask | MOUSEDOS_UpdateButtons(ev.dos_buttons);
-			mask = static_cast<uint8_t>(new_mask);
-		}
-		if (ev.dos_wheel) {
-			const auto new_mask = mask | MOUSEDOS_UpdateWheel();
-			mask = static_cast<uint8_t>(new_mask);
-		}
-
-		// If DOS driver's client is not interested in this particular
-		// type of event - skip it
-		if (!MOUSEDOS_HasCallback(mask)) {
-			return int74_exit();
-		}
-
-		const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
-		CPU_Push16(RealSeg(real_pt));
-		CPU_Push16(RealOff(static_cast<RealPt>(real_pt) + 7));
-
-		return MOUSEDOS_DoCallback(mask, ev.dos_buttons);
-	}
-
-	// Handle PS/2 and BIOS mouse events
-	if (ev.request_ps2 && mouse_shared.active_bios) {
+	// Try BIOS events (from Intel 8042 controller)
+	if (MOUSEBIOS_CheckCallback()) {
 		CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 		CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
-
-		MOUSEPS2_UpdatePacket();
-		return MOUSEBIOS_DoCallback();
+		MOUSEBIOS_DoCallback();		
+		// TODO: Handle both BIOS and DOS callback within
+		// in a single interrupt
+		return CBRET_NONE;
 	}
 
-	// No mouse emulation module is interested in event
+	// Try DOS driver events
+	if (!mouse_shared.dos_cb_running) {
+		const auto mask = MOUSEDOS_DoInterrupt();
+		if (mask) {
+			const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
+			CPU_Push16(RealSeg(real_pt));
+			CPU_Push16(RealOff(static_cast<RealPt>(real_pt) + 7));
+
+			MOUSEDOS_DoCallback(mask);
+			return CBRET_NONE;
+		}
+	}
+
+	// No mouse emulation module is interested in the event
 	return int74_exit();
 }
 
 Bitu int74_ret_handler()
 {
-	mouse_queue.StartTimerIfNeeded();
+	MOUSEDOS_FinalizeInterrupt();
 	return CBRET_NONE;
 }
 
@@ -507,27 +476,11 @@ void MOUSE_NotifyWindowActive(const bool is_active)
 	MOUSE_UpdateGFX();
 }
 
-void MOUSE_NotifyResetDOS()
-{
-	mouse_queue.ClearEventsDOS();
-}
-
 void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id)
 {
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface)
 		interface->NotifyDisconnect();
-}
-
-void MOUSE_NotifyFakePS2()
-{
-	const auto interface = MouseInterface::GetPS2();
-
-	if (interface && interface->IsUsingEvents()) {
-		MouseEvent ev;
-		ev.request_ps2 = true;
-		mouse_queue.AddEvent(ev);
-	}
 }
 
 void MOUSE_NotifyBooting()
@@ -567,14 +520,11 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	// so it needs data in both formats.
 
 	// Notify mouse interfaces
-
-	MouseEvent ev;
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
-			interface->NotifyMoved(ev, x_rel, y_rel,
+			interface->NotifyMoved(x_rel, y_rel,
 			                       state.cursor_x_abs,
 			                       state.cursor_y_abs);
-	mouse_queue.AddEvent(ev);
 }
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
@@ -587,11 +537,10 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 		return;
 	}
 
+	// Notify mouse interface
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
-		MouseEvent ev;
-		interface->NotifyMoved(ev, x_rel, y_rel, 0, 0);
-		mouse_queue.AddEvent(ev);
+		interface->NotifyMoved(x_rel, y_rel, 0, 0);
 	}
 }
 
@@ -629,11 +578,10 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed)
 		}
 	}
 
-	MouseEvent ev;
+	// Notify mouse interfaces
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
-			interface->NotifyButton(ev, idx, pressed);
-	mouse_queue.AddEvent(ev);
+			interface->NotifyButton(idx, pressed);
 }
 
 void MOUSE_EventButton(const uint8_t idx, const bool pressed,
@@ -648,11 +596,10 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed,
 		return;
 	}
 
+	// Notify mouse interface
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
-		MouseEvent ev;
-		interface->NotifyButton(ev, idx, pressed);
-		mouse_queue.AddEvent(ev);
+		interface->NotifyButton(idx, pressed);
 	}
 }
 
@@ -665,11 +612,10 @@ void MOUSE_EventWheel(const int16_t w_rel)
 		return;
 	}
 
-	MouseEvent ev;
+	// Notify mouse interfaces
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
-			interface->NotifyWheel(ev, w_rel);
-	mouse_queue.AddEvent(ev);
+			interface->NotifyWheel(w_rel);
 }
 
 void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
@@ -681,11 +627,10 @@ void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
 		return;
 	}
 
+	// Notify mouse interface
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
-		MouseEvent ev;
-		interface->NotifyWheel(ev, w_rel);
-		mouse_queue.AddEvent(ev);
+		interface->NotifyWheel(w_rel);
 	}
 }
 
@@ -1041,7 +986,7 @@ void MOUSE_StartupIfReady()
 		                : "be sent to the game/program (clicks not used to capture/release)");
 	}
 
-	// Callback for ps2 irq
+	// Callback for PS/2 BIOS or DOS driver IRQ
 	auto call_int74 = CALLBACK_Allocate();
 	CALLBACK_Setup(call_int74, &int74_handler, CB_IRQ12, "int 74");
 	// pseudocode for CB_IRQ12:

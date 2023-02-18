@@ -187,9 +187,6 @@
     <ClCompile Include="..\src\hardware\input\mouse_manymouse.cpp">
       <Filter>src\hardware\input</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\input\mouse_queue.cpp">
-      <Filter>src\hardware\input</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\input\mouseif_dos_driver.cpp">
       <Filter>src\hardware\input</Filter>
     </ClCompile>
@@ -1081,9 +1078,6 @@
       <Filter>src\hardware\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\input\mouse_manymouse.h">
-      <Filter>src\hardware\input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\input\mouse_queue.h">
       <Filter>src\hardware\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\mame\emu.h">

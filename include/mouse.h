@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -111,18 +111,14 @@ void MOUSE_ToggleUserCapture(const bool pressed);
 // BIOS mouse interface for PS/2 mouse
 // ***************************************************************************
 
-bool MOUSEBIOS_Enable();
-bool MOUSEBIOS_Disable();
-void MOUSEBIOS_SetCallback(const uint16_t pseg, const uint16_t pofs);
-void MOUSEBIOS_Reset();
-bool MOUSEBIOS_SetPacketSize(const uint8_t packet_size);
-bool MOUSEBIOS_SetSampleRate(const uint8_t rate_id);
-void MOUSEBIOS_SetScaling21(const bool enable);
-bool MOUSEBIOS_SetResolution(const uint8_t res_id);
-uint8_t MOUSEBIOS_GetProtocol();
-uint8_t MOUSEBIOS_GetStatus();
-uint8_t MOUSEBIOS_GetResolution();
-uint8_t MOUSEBIOS_GetSampleRate();
+void MOUSEBIOS_Subfunction_C2();
+
+// ***************************************************************************
+// Register-level interface for PS/2 mouse
+// ***************************************************************************
+
+void MOUSEPS2_FlushBuffer();
+bool MOUSEPS2_SendPacket();
 
 // ***************************************************************************
 // DOS mouse driver
