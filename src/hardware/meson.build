@@ -1,5 +1,8 @@
 libhardware_sources = files(
+    'input/intel8042.cpp',
+    'input/intel8255.cpp',
     'input/keyboard.cpp',
+    'input/keyboard_scancodes.cpp',
     'input/mouse.cpp',
     'input/mouse_common.cpp',
     'input/mouse_config.cpp',
