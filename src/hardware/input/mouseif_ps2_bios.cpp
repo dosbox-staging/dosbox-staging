@@ -776,7 +776,7 @@ static void bios_flush_aux()
 	bool has_more = true;
 	while (has_more) {
 		while (bios_is_aux_byte_waiting()) {
-			IO_ReadB(0x60);
+			IO_ReadB(port_num_i8042_data);
 		}
 
 		const auto start_ticks = PIC_Ticks;
@@ -820,7 +820,7 @@ bool MOUSEBIOS_CheckCallback()
 			break;
 		}
 
-		const auto byte = IO_ReadB(0x60);
+		const auto byte = IO_ReadB(port_num_i8042_data);
 		if (mouse_shared.active_bios && callback_init) {
 			bios_buffer.push_back(byte);
 			// Do not allow too many old frames in the buffer

@@ -152,10 +152,13 @@ static uint8_t read_p62(io_port_t, io_width_t)
 
 void I8255_Init()
 {
-	IO_RegisterWriteHandler(0x61, write_p61, io_width_t::byte);
-	IO_RegisterReadHandler(0x61, read_p61, io_width_t::byte);
+	IO_RegisterWriteHandler(port_num_i8255_1, write_p61, io_width_t::byte);
+	IO_RegisterReadHandler(port_num_i8255_1, read_p61, io_width_t::byte);
 	if (machine == MCH_CGA || machine == MCH_HERC) {
-		IO_RegisterReadHandler(0x62, read_p62, io_width_t::byte);
+		IO_RegisterReadHandler(port_num_i8255_2,
+		                       read_p62,
+		                       io_width_t::byte);
 	}
+
 	write_p61(0, 0, io_width_t::byte);
 }

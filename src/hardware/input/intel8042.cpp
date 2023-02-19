@@ -1041,12 +1041,19 @@ void I8042_Init()
 {
 	assert(buffer_size >= firmware_copyright.size() + 16);
 
-	IO_RegisterReadHandler(0x60, read_data_port, io_width_t::byte);
-	IO_RegisterReadHandler(0x64, read_status_register, io_width_t::byte);
-	IO_RegisterWriteHandler(0x60, write_data_port, io_width_t::byte);
-	IO_RegisterWriteHandler(0x64, write_command_port, io_width_t::byte);
+	IO_RegisterReadHandler(port_num_i8042_data,
+	                       read_data_port,
+	                       io_width_t::byte);
+	IO_RegisterReadHandler(port_num_i8042_status,
+	                       read_status_register,
+	                       io_width_t::byte);
+	IO_RegisterWriteHandler(port_num_i8042_data,
+	                        write_data_port,
+	                        io_width_t::byte);
+	IO_RegisterWriteHandler(port_num_i8042_command,
+	                        write_command_port,
+	                        io_width_t::byte);
 
 	// Initialize hardware
-
 	flush_buffer();
 }
