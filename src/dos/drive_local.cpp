@@ -154,9 +154,15 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 		// If yes, check if the file can be opened with Read-only access:
 		fhandle = fopen_wrap(newname, "rb");
 		if (fhandle) {
+			if (!always_open_ro_files)
+				fhandle = nullptr;
 
 #ifdef DEBUG
-			open_msg = "wanted writes but opened read-only";
+			if (always_open_ro_files) {
+				open_msg = "wanted writes but opened read-only";
+			} else {
+				open_msg = "wanted writes but file is read-only";
+			}
 #else
 			// Inform the user that the file is being protected against modification.
 			// If the DOS program /really/ needs to write to the file, it will
@@ -180,7 +186,9 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	}
 
 #ifdef DEBUG
-	else {
+	else if (!fhandle) {
+		open_msg = "failed with desired flags";
+	} else {
 		open_msg = "succeeded with desired flags";
 	}
 	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
@@ -189,14 +197,15 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	        open_msg.c_str());
 #endif
 
-	if (fhandle) {
-		*file = new localFile(name, fhandle, basedir);
-		(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
-	} else {
-		// Otherwise we really can't open the file.
+	if (!fhandle) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
 	}
-	return (fhandle != NULL);
+
+	*file = new localFile(name, fhandle, basedir);
+	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
+
+	return true;
 }
 
 FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)
@@ -588,18 +597,13 @@ Bits localDrive::UnMount(void) {
 	return 0; 
 }
 
-localDrive::localDrive(const char * startdir,
-                       uint16_t _bytes_sector,
-                       uint8_t _sectors_cluster,
-                       uint16_t _total_clusters,
-                       uint16_t _free_clusters,
-                       uint8_t _mediaid)
-	: write_protected_files{},
-	  allocation{_bytes_sector,
-	             _sectors_cluster,
-	             _total_clusters,
-	             _free_clusters,
-	             _mediaid}
+localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
+                       uint8_t _sectors_cluster, uint16_t _total_clusters,
+                       uint16_t _free_clusters, uint8_t _mediaid,
+                       bool _always_open_ro_files)
+        : always_open_ro_files(_always_open_ro_files),
+          write_protected_files{},
+          allocation{_bytes_sector, _sectors_cluster, _total_clusters, _free_clusters, _mediaid}
 {
 	type = DosDriveType::Local;
 	safe_strcpy(basedir, startdir);

@@ -63,7 +63,10 @@ private:
 
 class localDrive : public DOS_Drive {
 public:
-	localDrive(const char * startdir,uint16_t _bytes_sector,uint8_t _sectors_cluster,uint16_t _total_clusters,uint16_t _free_clusters,uint8_t _mediaid);
+	localDrive(const char* startdir, uint16_t _bytes_sector,
+	           uint8_t _sectors_cluster, uint16_t _total_clusters,
+	           uint16_t _free_clusters, uint8_t _mediaid,
+	           bool _always_open_ro_files = false);
 	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags);
 	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
 	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
@@ -94,6 +97,7 @@ protected:
 
 private:
 	bool IsFirstEncounter(const std::string& filename);
+	bool always_open_ro_files;
 	std::unordered_set<std::string> write_protected_files;
 	struct {
 		uint16_t bytes_sector;

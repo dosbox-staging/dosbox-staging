@@ -581,6 +581,14 @@ void DOSBOX_Init()
 	        "  quiet       |   no    |    no\n"
 	        "  auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
+	Pbool = secprop->Add_bool("allow_write_protected_files", only_at_start, true);
+	Pbool->Set_help(
+	        "Many games open all their files with writable permissions; even files that they\n"
+	        "never modify. This setting lets you write-protect those files while still\n"
+	        "allowing the game to read them. A second use-case: if you're using a copy-on-write\n"
+	        "or network-based filesystem, this setting avoids triggering write-operations for\n"
+	        "these write-protected files.");
+
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
 	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, true);
 
