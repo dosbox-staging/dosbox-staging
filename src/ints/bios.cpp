@@ -1131,7 +1131,7 @@ static Bitu INT15_Handler(void) {
 			reg_eax = 0; // extended memory between 1MB and 16MB, in 1KB blocks
 			reg_ebx = 0; // extended memory above 16MB, in 64KB blocks
 			{
-				const auto mem_in_kb = MEM_TotalPages() * 4;
+				const auto mem_in_kb = static_cast<int64_t>(MEM_TotalPages() * 4);
 				if (mem_in_kb > 1024) {
 					reg_eax = std::min(static_cast<uint32_t>(mem_in_kb - 1024),
 					                   static_cast<uint32_t>(15 * 1024));
