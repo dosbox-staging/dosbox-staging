@@ -41,7 +41,7 @@ template <class T> T clamp(const T& n, const T& lower, const T& upper) {
 
   All credit to Charles Bailey, https://stackoverflow.com/a/707426
 */
-constexpr int wrap(int val, int const lower_bound, int const upper_bound)
+constexpr int wrap(int val, const int lower_bound, const int upper_bound)
 {
 	const auto range_size = upper_bound - lower_bound + 1;
 	if (val < lower_bound)
@@ -128,48 +128,78 @@ constexpr T1 left_shift_signed(T1 value, T2 amount)
 }
 
 template <typename T>
-int8_t clamp_to_int8(const T val)
+constexpr int8_t clamp_to_int8(const T val)
 {
-	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT8_MIN : 0);
+	static_assert(!std::is_same_v<T, int8_t>,
+	              "clamping unnecessary: val is already an int8_t");
+
+	constexpr auto min_val = static_cast<T>(std::is_signed_v<T> ? INT8_MIN : 0);
 	constexpr auto max_val = static_cast<T>(INT8_MAX);
 	return static_cast<int8_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
-uint8_t clamp_to_uint8(const T val)
+constexpr uint8_t clamp_to_uint8(const T val)
 {
+	static_assert(!std::is_same_v<T, uint8_t>,
+	              "clamping unnecessary: val is already an uint8_t");
+
 	constexpr auto min_val = static_cast<T>(0);
 	constexpr auto max_val = static_cast<T>(UINT8_MAX);
 	return static_cast<uint8_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
-int16_t clamp_to_int16(const T val)
+constexpr int16_t clamp_to_int16(const T val)
 {
-	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT16_MIN : 0);
+	static_assert(!std::is_same_v<T, int16_t>,
+	              "clamping unnecessary: val is already an int16_t");
+
+	static_assert(sizeof(T) >= sizeof(int16_t),
+	              "clamping unnecessary: val type fits within int16_t");
+
+	constexpr auto min_val = static_cast<T>(std::is_signed_v<T> ? INT16_MIN : 0);
 	constexpr auto max_val = static_cast<T>(INT16_MAX);
 	return static_cast<int16_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
-uint16_t clamp_to_uint16(const T val)
+constexpr uint16_t clamp_to_uint16(const T val)
 {
+	static_assert(!std::is_same_v<T, uint16_t>,
+	              "clamping unnecessary: val is already an uint16_t");
+
+	static_assert(std::is_signed_v<T> || sizeof(T) > sizeof(uint16_t),
+	              "clamping unnecessary: val type fits within uint16_t");
+
 	constexpr auto min_val = static_cast<T>(0);
 	constexpr auto max_val = static_cast<T>(UINT16_MAX);
 	return static_cast<uint16_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
-int32_t clamp_to_int32(const T val)
+constexpr int32_t clamp_to_int32(const T val)
 {
-	constexpr auto min_val = static_cast<T>(std::is_signed<T>{} ? INT32_MIN : 0);
+	static_assert(!std::is_same_v<T, int32_t>,
+	              "clamping unnecessary: val is already an int32_t");
+
+	static_assert(sizeof(T) >= sizeof(int32_t),
+	              "clamping unnecessary: val type fits within int32_t");
+
+	constexpr auto min_val = static_cast<T>(std::is_signed_v<T> ? INT32_MIN : 0);
 	constexpr auto max_val = static_cast<T>(INT32_MAX);
 	return static_cast<int32_t>(std::clamp(val, min_val, max_val));
 }
 
 template <typename T>
-uint32_t clamp_to_uint32(const T val)
+constexpr uint32_t clamp_to_uint32(const T val)
 {
+	static_assert(!std::is_same_v<T, uint32_t>,
+	              "clamping unnecessary: val is already an uint32_t");
+
+	static_assert(std::is_signed_v<T> || sizeof(T) > sizeof(uint32_t),
+	              "clamping unnecessary: val type fits within uint32_t");
+
 	constexpr auto min_val = static_cast<T>(0);
 	constexpr auto max_val = static_cast<T>(UINT32_MAX);
 	return static_cast<uint32_t>(std::clamp(val, min_val, max_val));
