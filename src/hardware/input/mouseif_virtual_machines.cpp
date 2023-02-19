@@ -62,8 +62,6 @@ union VMwareButtons {
 	bit_view<3, 1> middle;
 };
 
-static constexpr io_port_t VMWARE_PORT = 0x5658u;      // communication port
-// static constexpr io_port_t VMWARE_PORTHB = 0x5659u; // communication port, high bandwidth
 static constexpr uint32_t VMWARE_MAGIC = 0x564D5868u;  // magic number for all VMware calls
 static constexpr uint32_t ABS_UPDATED  = 4; // tells about new pointer position
 static constexpr uint32_t ABS_NOT_UPDATED = 0;
@@ -287,5 +285,7 @@ void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs)
 
 void MOUSEVMM_Init()
 {
-	IO_RegisterReadHandler(VMWARE_PORT, port_read_vmware, io_width_t::dword);
+	IO_RegisterReadHandler(port_num_vmware,
+	                       port_read_vmware,
+	                       io_width_t::dword);
 }

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 #include <functional>
 
 using io_port_t = uint16_t; // DOS only supports 16-bit port addresses
-using io_val_t = uint32_t; // Handling exists up to a dword (or less)
+using io_val_t  = uint32_t; // Handling exists up to a dword (or less)
 
 void IO_WriteB(io_port_t port, uint8_t val);
 void IO_WriteW(io_port_t port, uint16_t val);
@@ -113,5 +113,20 @@ static inline uint8_t IO_Read(io_port_t port)
 	// cast to be dropped after deprecating the Bitu IO handler API
 	return IO_ReadB(port);
 }
+
+// Hardware I/O port numbers
+
+// Intel 8042 keyboard/mouse port microcontroller
+constexpr io_port_t port_num_i8042_data    = 0x60u;
+constexpr io_port_t port_num_i8042_status  = 0x64u; // read-only
+constexpr io_port_t port_num_i8042_command = 0x64u; // write-only
+
+// Intel 8255 microcontrollers
+constexpr io_port_t port_num_i8255_1 = 0x61u;
+constexpr io_port_t port_num_i8255_2 = 0x62u;
+
+// VMware communication interface
+constexpr io_port_t port_num_vmware    = 0x5658u;
+constexpr io_port_t port_num_vmware_hb = 0x5659u; // high bandwidth
 
 #endif
