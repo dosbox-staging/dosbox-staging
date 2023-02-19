@@ -1060,7 +1060,73 @@ static Bitu INT15_Handler(void) {
 			reg_dx = reg_bx; // configured memory above 16MB, in 64KB blocks
 			CALLBACK_SCF(false);
 			break;
-		// TODO implement function 0x20
+		case 0x20:
+			if (reg_edx == 0x534d4150 && reg_ecx >= 20 &&
+			    (MEM_TotalPages() * 4) >= 24000) {
+				// return a minimalist list:
+				// - 0x000000-0x09EFFF    free
+				// - 0x0C0000-0x0FFFFF    reserved
+				// - 0x100000-...         free (no ACPI tables)
+			    	reg_eax = reg_edx;
+				if (reg_ebx < 3) {
+					uint32_t base = 0;
+					uint32_t len  = 0;
+					uint32_t type = 0;
+
+					// type 1 - memory, available to OS
+					// type 2 - reserved, not available
+					//          (e.g. system ROM, memory-mapped device)
+					// type 3 - ACPI reclaim memory
+					//          (usable by OS after reading ACPI tables)
+					// type 4 - ACPI NVS Memory
+					//          (OS is required to save this memory between NVS)
+
+					switch (reg_ebx) {
+					case 0:
+						base = 0x000000;
+						len  = 0x09f000;
+						type = 1;
+						break;
+					case 1:
+						base = 0x0c0000;
+						len  = 0x040000;
+						type = 2;
+						break;
+					case 2:
+						base = 0x100000;
+						len  = (MEM_TotalPages() * 4096) - 0x100000;
+						type = 1;
+						break;
+					default:
+						E_Exit("Despite checks EBX is wrong value"); // BUG!
+					}
+
+					// Write map to ES:DI
+					const auto seg = SegValue(es);
+					real_writed(seg, reg_di + 0x00, base);
+					real_writed(seg, reg_di + 0x04, 0);
+					real_writed(seg, reg_di + 0x08, len);
+					real_writed(seg, reg_di + 0x0c, 0);
+					real_writed(seg, reg_di + 0x10, type);
+					reg_ecx = 20;
+
+					// Return EBX pointing to next entry.
+					// Wrap around, as most BIOSes do.
+					// The program is supposed to stop on
+					// CF == 1 or when we return EBX == 0
+					if (++reg_ebx >= 3) {
+						reg_ebx = 0;
+					}
+
+					CALLBACK_SCF(false);
+				} else {
+					CALLBACK_SCF(true);
+				}
+			} else {
+				reg_eax = 0x8600;
+				CALLBACK_SCF(true);
+			}
+			break;
 		case 0x81:
 			reg_eax = 0; // extended memory between 1MB and 16MB, in 1KB blocks
 			reg_ebx = 0; // extended memory above 16MB, in 64KB blocks
