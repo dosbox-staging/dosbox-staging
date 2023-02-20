@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2019-2022  The DOSBox Staging Team
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,10 +41,10 @@ void MEM_A20_Enable(bool enable);
 
 /* Memory management / EMS mapping */
 HostPt MEM_GetBlockPage();
-Bitu MEM_FreeTotal();                      // Free 4 KiB pages
-Bitu MEM_FreeLargest();                    // Largest free 4 KiB pages block
-Bitu MEM_TotalPages();                     // Total amount of 4 KiB pages
-Bitu MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
+Bitu MEM_FreeTotal();                          // free 4 KiB pages
+Bitu MEM_FreeLargest();                        // largest free 4 KiB pages block
+uint32_t MEM_TotalPages();                     // total amount of 4 KiB pages
+uint32_t MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
 MemHandle MEM_AllocatePages(Bitu pages, bool sequence);
 MemHandle MEM_GetNextFreePage();
 PhysPt MEM_AllocatePage();

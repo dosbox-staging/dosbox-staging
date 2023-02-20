@@ -220,8 +220,9 @@ void MEM_StrCopy(PhysPt pt,char * data,Bitu size) {
 	*data=0;
 }
 
-Bitu MEM_TotalPages(void) {
-	return memory.pages.size();
+uint32_t MEM_TotalPages(void)
+{
+	return check_cast<uint32_t>(memory.pages.size());
 }
 
 Bitu MEM_FreeLargest(void) {
@@ -250,12 +251,13 @@ Bitu MEM_FreeTotal(void) {
 	return free;
 }
 
-Bitu MEM_AllocatedPages(MemHandle handle) 
+uint32_t MEM_AllocatedPages(MemHandle handle) 
 {
-	Bitu pages = 0;
-	while (handle>0) {
-		pages++;
-		handle=memory.mhandles[handle];
+	uint32_t pages = 0;
+	while (handle > 0) {
+		++pages;
+		assert(pages != 0);
+		handle = memory.mhandles[handle];
 	}
 	return pages;
 }
