@@ -28,10 +28,12 @@
 #include "mem.h"
 #endif
 
+#include "cpu.h"
+
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
 void FPU_ESC1_Normal(Bitu rm);
-void FPU_ESC1_EA(Bitu func,PhysPt ea);
+void FPU_ESC1_EA(Bitu func,PhysPt ea, bool op16);
 void FPU_ESC2_Normal(Bitu rm);
 void FPU_ESC2_EA(Bitu func,PhysPt ea);
 void FPU_ESC3_Normal(Bitu rm);
@@ -39,7 +41,7 @@ void FPU_ESC3_EA(Bitu func,PhysPt ea);
 void FPU_ESC4_Normal(Bitu rm);
 void FPU_ESC4_EA(Bitu func,PhysPt ea);
 void FPU_ESC5_Normal(Bitu rm);
-void FPU_ESC5_EA(Bitu func,PhysPt ea);
+void FPU_ESC5_EA(Bitu func,PhysPt ea, bool op16);
 void FPU_ESC6_Normal(Bitu rm);
 void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
@@ -75,28 +77,157 @@ enum FPU_Tag : uint8_t {
 	TAG_Empty = 3
 };
 
-enum FPU_Round : uint8_t {
-	ROUND_Nearest = 0,
-	ROUND_Down    = 1,
-	ROUND_Up      = 2,
-	ROUND_Chop    = 3
+template<class T, unsigned bitno, unsigned nbits=1>
+struct RegBit
+{
+        enum { basemask = (1 << nbits) - 1 };
+        enum { mask = basemask << bitno };
+        T data;
+        RegBit(const T& reg) : data(reg) {}
+        template <class T2> RegBit& operator=(T2 val)
+        {
+                data = (data & ~mask) | ((nbits > 1 ? val & basemask : !!val) << bitno);
+                return *this;
+        }
+        operator unsigned() const { return (data & mask) >> bitno; }
+};
+
+struct FPUControlWord
+{
+	union
+	{
+		uint16_t reg;
+		RegBit<decltype(reg), 0>     IM;  // Invalid operation mask
+		RegBit<decltype(reg), 1>     DM;  // Denormalized operand mask
+		RegBit<decltype(reg), 2>     ZM;  // Zero divide mask
+		RegBit<decltype(reg), 3>     OM;  // Overflow mask
+		RegBit<decltype(reg), 4>     UM;  // Underflow mask
+		RegBit<decltype(reg), 5>     PM;  // Precision mask
+		RegBit<decltype(reg), 7>     M;   // Interrupt mask   (8087-only)
+		RegBit<decltype(reg), 8, 2>  PC;  // Precision control
+		RegBit<decltype(reg), 10, 2> RC;  // Rounding control
+		RegBit<decltype(reg), 12>    IC;  // Infinity control (8087/80287-only)
+	};
+	
+	enum
+	{
+		mask8087     = 0x1fff,
+		maskNon8087  = 0x1f7f,
+		reservedMask = 0x40,
+		initValue    = 0x37f
+	};
+	enum RoundMode
+	{
+		Nearest = 0,
+		Down    = 1,
+		Up      = 2,
+		Chop    = 3
+	};
+
+	FPUControlWord() : reg(initValue) {}
+	FPUControlWord(const FPUControlWord& other) = default;
+
+	FPUControlWord& operator=(const FPUControlWord& other)
+	{
+		reg = other.reg;
+		return *this;
+	}
+	template<class T>
+	FPUControlWord& operator=(T val)
+	{
+		reg = (val & (CPU_ArchitectureType==CPU_ARCHTYPE_8086 ? mask8087 : maskNon8087)) | reservedMask;
+		return *this;
+	}
+	operator unsigned() const
+	{
+		return reg;
+	}
+	template <class T>
+	FPUControlWord& operator |=(T val)
+	{
+		*this = reg | val;
+		return *this;
+	}
+	void init() { reg = initValue; }
+	FPUControlWord allMasked() const
+	{
+		auto masked = *this;
+		masked |= IM.mask | DM.mask | ZM.mask | OM.mask | UM.mask | PM.mask;
+		return masked;
+	}
+};
+
+struct FPUStatusWord
+{
+	union
+	{
+		uint16_t reg;
+		RegBit<decltype(reg), 0>     IE;  // Invalid operation
+		RegBit<decltype(reg), 1>     DE;  // Denormalized operand
+		RegBit<decltype(reg), 2>     ZE;  // Divide-by-zero
+		RegBit<decltype(reg), 3>     OE;  // Overflow
+		RegBit<decltype(reg), 4>     UE;  // Underflow
+		RegBit<decltype(reg), 5>     PE;  // Precision
+		RegBit<decltype(reg), 6>     SF;  // Stack Flag (non-8087/802087)
+		RegBit<decltype(reg), 7>     IR;  // Interrupt request (8087-only)
+		RegBit<decltype(reg), 7>     ES;  // Error summary     (non-8087)
+		RegBit<decltype(reg), 8>     C0;  // Condition flag
+		RegBit<decltype(reg), 9>     C1;  // Condition flag
+		RegBit<decltype(reg), 10>    C2;  // Condition flag
+		RegBit<decltype(reg), 11, 3> top; // Top of stack pointer
+		RegBit<decltype(reg), 14>    C3;  // Condition flag
+		RegBit<decltype(reg), 15>    B;   // Busy flag
+	};
+
+	FPUStatusWord() : reg(0) {}
+	FPUStatusWord(const FPUStatusWord& other) = default;
+	FPUStatusWord& operator=(const FPUStatusWord& other)
+	{
+		reg = other.reg;
+		return *this;
+	}
+	template<class T>
+	FPUStatusWord& operator=(T val)
+	{
+		reg = val;
+		return *this;
+	}
+	operator unsigned() const
+	{
+		return reg;
+	}
+	template <class T>
+	FPUStatusWord& operator |=(T val)
+	{
+		*this |= reg | val;
+		return *this;
+	}
+	void init() { reg = 0; }
+	void clearExceptions()
+	{
+		IE = false; DE = false; ZE = false; OE = false; UE = false; PE = false;
+		ES = false;
+	}
+	enum
+	{
+		conditionMask = 0x4700,
+		conditionAndExceptionMask = 0x47bf
+	};
+	std::string to_string() const;
 };
 
 struct FPU_rec {
 	FPU_Reg regs[9]      = {};
 	FPU_P_Reg p_regs[9]  = {};
 	FPU_Tag tags[9]      = {};
-	uint16_t cw          = 0;
-	uint16_t cw_mask_all = 0;
-	uint16_t sw          = 0;
-	uint32_t top         = 0;
-	FPU_Round round      = {};
+	FPUControlWord  cw;
+	FPUStatusWord   sw;
 };
 
 extern FPU_rec fpu;
 
-#define TOP fpu.top
-#define STV(i)  ( (fpu.top+ (i) ) & 7 )
+#define TOP fpu.sw.top
+#define STV(i)  ( (fpu.sw.top + (i) ) & 7 )
 
 uint16_t FPU_GetTag();
 void FPU_FLDCW(PhysPt addr);
@@ -115,9 +246,7 @@ static inline uint16_t FPU_GetCW()
 
 static inline void FPU_SetCW(const uint16_t word)
 {
-	fpu.cw          = word;
-	fpu.cw_mask_all = word | 0x3f;
-	fpu.round       = static_cast<FPU_Round>((word >> 10) & 3);
+	fpu.cw = word;
 }
 
 static inline uint16_t FPU_GetSW()
@@ -130,40 +259,27 @@ static inline void FPU_SetSW(const uint16_t word)
 	fpu.sw = word;
 }
 
-constexpr uint16_t fpu_top_register_bits = 0x3800;
-
-static inline uint8_t FPU_GET_TOP()
-{
-	return static_cast<uint8_t>((fpu.sw & fpu_top_register_bits) >> 11);
-}
-
-static inline void FPU_SET_TOP(const uint32_t val)
-{
-	fpu.sw &= ~fpu_top_register_bits;
-	fpu.sw |= static_cast<uint16_t>((val & 7) << 11);
-}
-
 void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
 void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
 static inline void FPU_SET_C0(Bitu C){
-	fpu.sw &= ~0x0100;
-	if(C) fpu.sw |=  0x0100;
+	fpu.sw.C0 = !!C;
 }
 
 static inline void FPU_SET_C1(Bitu C){
-	fpu.sw &= ~0x0200;
-	if(C) fpu.sw |=  0x0200;
+	fpu.sw.C1 = !!C;
 }
 
 static inline void FPU_SET_C2(Bitu C){
-	fpu.sw &= ~0x0400;
-	if(C) fpu.sw |=  0x0400;
+	fpu.sw.C2 = !!C;
 }
 
 static inline void FPU_SET_C3(Bitu C){
-	fpu.sw &= ~0x4000;
-	if(C) fpu.sw |= 0x4000;
+	fpu.sw.C3 = !!C;
+}
+
+static inline void FPU_SET_D(Bitu C){
+	fpu.sw.DE = !!C;
 }
 
 static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)

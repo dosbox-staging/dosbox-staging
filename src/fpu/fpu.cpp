@@ -26,12 +26,13 @@
 #include "mem.h"
 #include "fpu.h"
 #include "cpu.h"
+#include "../cpu/lazyflags.h"
 
 FPU_rec fpu = {};
 
-void FPU_FLDCW(PhysPt addr){
-	uint16_t temp = mem_readw(addr);
-	FPU_SetCW(temp);
+void FPU_FLDCW(PhysPt addr)
+{
+	fpu.cw = mem_readw(addr);
 }
 
 uint16_t FPU_GetTag()
@@ -72,11 +73,6 @@ void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
 #else
 #include "fpu_instructions.h"
 #endif
-
-/* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
-			STATUS WORD =>	FPU_SET_TOP(TOP) BEFORE a read
-			TOP=FPU_GET_TOP() after a write;
-			*/
 
 static void EATREE(Bitu _rm){
 	Bitu group=(_rm >> 3) & 7;
@@ -151,7 +147,7 @@ void FPU_ESC0_Normal(Bitu rm) {
 	}
 }
 
-void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
+void FPU_ESC1_EA(Bitu rm,PhysPt addr, bool op16) {
 // floats
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
@@ -171,13 +167,13 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 		FPU_FPOP();
 		break;
 	case 0x04: /* FLDENV */
-		FPU_FLDENV(addr);
+		FPU_FLDENV(addr, op16);
 		break;
 	case 0x05: /* FLDCW */
 		FPU_FLDCW(addr);
 		break;
 	case 0x06: /* FSTENV */
-		FPU_FSTENV(addr);
+		FPU_FSTENV(addr, op16);
 		break;
 	case 0x07:  /* FNSTCW*/
 		mem_writew(addr,fpu.cw);
@@ -399,7 +395,10 @@ void FPU_ESC3_Normal(Bitu rm) {
 		switch (sub) {
 		case 0x00:				//FNENI
 		case 0x01:				//FNDIS
-			LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %u", sub);
+			if (CPU_ArchitectureType==CPU_ARCHTYPE_8086)
+				fpu.cw.M = false;
+			else
+				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %u", sub);
 			break;
 		case 0x02:				//FNCLEX FCLEX
 			FPU_FCLEX();
@@ -463,7 +462,7 @@ void FPU_ESC4_Normal(Bitu rm) {
 	}
 }
 
-void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
+void FPU_ESC5_EA(Bitu rm,PhysPt addr, bool op16) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
 	switch(group){
@@ -482,13 +481,12 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 		FPU_FPOP();
 		break;
 	case 0x04:	/* FRSTOR */
-		FPU_FRSTOR(addr);
+		FPU_FRSTOR(addr, op16);
 		break;
 	case 0x06:	/* FSAVE */
-		FPU_FSAVE(addr);
+		FPU_FSAVE(addr, op16);
 		break;
 	case 0x07:   /*FNSTSW    NG DISAGREES ON THIS*/
-		FPU_SET_TOP(TOP);
 		mem_writew(addr,fpu.sw);
 		//seems to break all dos4gw games :)
 		break;
@@ -635,7 +633,6 @@ void FPU_ESC7_Normal(Bitu rm) {
 	case 0x04:
 		switch(sub){
 			case 0x00:     /* FNSTSW AX*/
-				FPU_SET_TOP(TOP);
 				reg_ax = fpu.sw;
 				break;
 			default:
@@ -652,6 +649,16 @@ void FPU_ESC7_Normal(Bitu rm) {
 
 void FPU_Init(Section*) {
 	FPU_FINIT();
+}
+
+std::string FPUStatusWord::to_string() const
+{
+	return "B=" + std::to_string(B) + " C3-C0=" + std::to_string(C3) + std::to_string(C2) +
+	       std::to_string(C1) + std::to_string(C0) + " ES=" + std::to_string(ES) +
+	       " SF=" + std::to_string(SF) + " PE=" + std::to_string(PE) +
+	       " UE=" + std::to_string(UE) + " OE=" + std::to_string(OE) +
+	       " ZE=" + std::to_string(ZE) + " DE=" + std::to_string(DE) +
+	       " IE=" + std::to_string(IE) + " TOP=" + std::to_string(top);
 }
 
 #endif

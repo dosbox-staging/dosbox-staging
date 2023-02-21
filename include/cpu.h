@@ -41,11 +41,17 @@
 
 
 #define CPU_ARCHTYPE_MIXED			0xff
+#define CPU_ARCHTYPE_8086           0x05
 #define CPU_ARCHTYPE_386SLOW		0x30
 #define CPU_ARCHTYPE_386FAST		0x35
 #define CPU_ARCHTYPE_486OLDSLOW		0x40
 #define CPU_ARCHTYPE_486NEWSLOW		0x45
 #define CPU_ARCHTYPE_PENTIUMSLOW	0x50
+
+#define FPU_ARCHTYPE_8087                       0x07
+#define FPU_ARCHTYPE_287                        0x27
+#define FPU_ARCHTYPE_387                        0x37
+#define FPU_ARCHTYPE_BEST                       0xfe
 
 /* CPU Cycle Timing */
 extern int32_t CPU_Cycles;
@@ -60,6 +66,7 @@ extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 
 extern Bitu CPU_ArchitectureType;
+extern uint8_t FPU_ArchitectureType;
 
 extern Bitu CPU_PrefetchQueueSize;
 

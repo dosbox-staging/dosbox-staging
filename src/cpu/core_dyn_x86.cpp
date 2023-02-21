@@ -275,7 +275,6 @@ static void maybe_sync_host_fpu_to_dh()
 static BlockReturn sync_normal_fpu_and_run_dyn_code(const uint8_t* code) noexcept
 {
 	if (last_core == CoreType::Normal) {
-		FPU_SET_TOP(TOP);
 		dyn_dh_fpu.state.tag = FPU_GetTag();
 		dyn_dh_fpu.state.cw  = FPU_GetCW();
 		dyn_dh_fpu.state.sw  = FPU_GetSW();
@@ -292,7 +291,6 @@ static Bits sync_dh_fpu_and_run_normal_core() noexcept
 		FPU_SetTag(static_cast<uint16_t>(dyn_dh_fpu.state.tag & 0xffff));
 		FPU_SetCW(static_cast<uint16_t>(dyn_dh_fpu.state.cw & 0xffff));
 		FPU_SetSW(static_cast<uint16_t>(dyn_dh_fpu.state.sw & 0xffff));
-		TOP = FPU_GET_TOP();
 		FPU_SetPRegsFrom(dyn_dh_fpu.state.st_reg);
 		last_core = CoreType::Normal;
 	}

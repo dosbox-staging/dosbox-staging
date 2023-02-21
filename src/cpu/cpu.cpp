@@ -63,6 +63,7 @@ bool CPU_SkipCycleAutoAdjust = false;
 Bitu CPU_AutoDetermineMode = 0;
 
 Bitu CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
+uint8_t FPU_ArchitectureType = FPU_ARCHTYPE_BEST;
 
 Bitu CPU_extflags_toggle=0;	// ID and AC flags may be toggled depending on emulated CPU architecture
 
@@ -1172,96 +1173,8 @@ call_code:
 				switch (n_cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
-					/* Check if we goto inner priviledge */
-					if (n_cs_dpl < cpu.cpl) {
-						/* Get new SS:ESP out of TSS */
-						Bitu n_ss_sel,n_esp;
-						Descriptor n_ss_desc;
-						cpu_tss.Get_SSx_ESPx(n_cs_dpl,n_ss_sel,n_esp);
-						CPU_CHECK_COND((n_ss_sel & 0xfffc)==0,
-							"CALL:Gate:NC:SS selector zero",
-							EXCEPTION_TS,0)
-						CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_ss_sel,n_ss_desc),
-							"CALL:Gate:Invalid SS selector",
-							EXCEPTION_TS,n_ss_sel & 0xfffc)
-						CPU_CHECK_COND(((n_ss_sel & 3)!=n_cs_desc.DPL()) || (n_ss_desc.DPL()!=n_cs_desc.DPL()),
-							"CALL:Gate:Invalid SS selector privileges",
-							EXCEPTION_TS,n_ss_sel & 0xfffc)
-
-						switch (n_ss_desc.Type()) {
-						case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
-						case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
-							// writable data segment
-							break;
-						default:
-							E_Exit("Call:Gate:SS no writable data segment");	// or #TS(ss_sel)
-						}
-						CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
-							"CALL:Gate:Stack segment not present",
-							EXCEPTION_SS,n_ss_sel & 0xfffc)
-
-						/* Load the new SS:ESP and save data on it */
-						Bitu o_esp		= reg_esp;
-						Bitu o_ss		= SegValue(ss);
-						PhysPt o_stack  = SegPhys(ss)+(reg_esp & cpu.stack.mask);
-
-
-						// catch pagefaults
-						if (call.saved.gate.paramcount&31) {
-							if (call.Type()==DESC_386_CALL_GATE) {
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
-									mem_readd(o_stack+i*4);
-							} else {
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
-									mem_readw(o_stack+i*2);
-							}
-						}
-
-						// commit point
-						Segs.val[ss]=n_ss_sel;
-						Segs.phys[ss]=n_ss_desc.GetBase();
-						if (n_ss_desc.Big()) {
-							cpu.stack.big=true;
-							cpu.stack.mask=0xffffffff;
-							cpu.stack.notmask=0;
-							reg_esp=n_esp;
-						} else {
-							cpu.stack.big=false;
-							cpu.stack.mask=0xffff;
-							cpu.stack.notmask=0xffff0000;
-							reg_sp=n_esp & 0xffff;
-						}
-
-						cpu.cpl = n_cs_desc.DPL();
-						uint16_t oldcs    = SegValue(cs);
-						/* Switch to new CS:EIP */
-						Segs.phys[cs]	= n_cs_desc.GetBase();
-						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
-						cpu.code.big	= n_cs_desc.Big()>0;
-						reg_eip			= n_eip;
-						if (!use32)	reg_eip&=0xffff;
-
-						if (call.Type()==DESC_386_CALL_GATE) {
-							CPU_Push32(o_ss);		//save old stack
-							CPU_Push32(o_esp);
-							if (call.saved.gate.paramcount&31)
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
-									CPU_Push32(mem_readd(o_stack+i*4));
-							CPU_Push32(oldcs);
-							CPU_Push32(oldeip);
-						} else {
-							CPU_Push16(o_ss);		//save old stack
-							CPU_Push16(o_esp);
-							if (call.saved.gate.paramcount&31)
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
-									CPU_Push16(mem_readw(o_stack+i*2));
-							CPU_Push16(oldcs);
-							CPU_Push16(oldeip);
-						}
-
-						break;		
-					} else if (n_cs_dpl > cpu.cpl)
-						E_Exit("CALL:GATE:CS DPL>CPL");		// or #GP(sel)
+                    CPU_CHECK_COND(n_cs_dpl != cpu.cpl, "JMP:Gate:NC CS DPL!=CPL",
+                                   EXCEPTION_GP, n_cs_sel & 0xfffc)
 					[[fallthrough]];
 				case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
@@ -2373,10 +2286,13 @@ public:
 		std::string cputype(section->Get_string("cputype"));
 		if (cputype == "auto") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
+			FPU_ArchitectureType = FPU_ARCHTYPE_BEST;
 		} else if (cputype == "386") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386FAST;
+			FPU_ArchitectureType = FPU_ARCHTYPE_387;
 		} else if (cputype == "386_prefetch") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386FAST;
+			FPU_ArchitectureType = FPU_ARCHTYPE_387;
 			if (core == "normal") {
 				cpudecoder=&CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 16;
@@ -2389,10 +2305,13 @@ public:
 			}
 		} else if (cputype == "386_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386SLOW;
+			FPU_ArchitectureType = FPU_ARCHTYPE_387;
 		} else if (cputype == "486_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_486OLDSLOW;
+			FPU_ArchitectureType = FPU_ARCHTYPE_BEST;
 		} else if (cputype == "486_prefetch") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
+			FPU_ArchitectureType = FPU_ARCHTYPE_BEST;
 			if (core == "normal") {
 				cpudecoder=&CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 32;
@@ -2405,6 +2324,7 @@ public:
 			}
 		} else if (cputype == "pentium_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_PENTIUMSLOW;
+			FPU_ArchitectureType = FPU_ARCHTYPE_BEST;
 		}
 
 		if (CPU_ArchitectureType>=CPU_ARCHTYPE_486NEWSLOW) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);
