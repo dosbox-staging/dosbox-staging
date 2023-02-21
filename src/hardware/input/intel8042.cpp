@@ -631,11 +631,13 @@ static void execute_command(const Command command)
 	//
 	case Command::ReadByteConfig: // 0x20
 		// Reads the keyboard controller configuration byte
+		flush_buffer();
 		buffer_add(config_byte.data);
 		break;
 	case Command::ReadFwCopyright: // 0xa0
 		// Reads the keyboard controller firmware
 		// copyright string, terminated by NUL
+		flush_buffer();
 		for (auto byte : firmware_copyright) {
 			buffer_add(static_cast<uint8_t>(byte));
 		}
@@ -644,12 +646,14 @@ static void execute_command(const Command command)
 	case Command::ReadFwRevision: // 0xa1
 		// Reads the keybaord copntroller firmware
 		// revision, always one byte
+		flush_buffer();
 		buffer_add(firmware_revision);
 		break;
 	case Command::PasswordCheck: // 0xa4
 		// Check if password installed
 		// 0xf1: not installed, or no hardware support
 		// 0xfa: password installed
+		flush_buffer();
 		buffer_add(0xf1);
 		break;
 	case Command::DisablePortAux: // 0xa7
@@ -668,6 +672,7 @@ static void execute_command(const Command command)
 		// 0x04: data line stuck high
 		// Disables the aux (mouse) port
 		is_disabled_aux = true;
+		flush_buffer();
 		buffer_add(0x00);
 		break;
 	case Command::TestController: // 0xaa
@@ -676,6 +681,7 @@ static void execute_command(const Command command)
 		// Disables aux (mouse) and keyboard ports
 		is_disabled_aux = true;
 		is_disabled_kbd = true;
+		flush_buffer();
 		buffer_add(0x55);
 		break;
 	case Command::TestPortKbd: // 0xab
@@ -683,12 +689,14 @@ static void execute_command(const Command command)
 		// (as with aux port test)
 		// Disables the keyboard port
 		is_disabled_kbd = true;
+		flush_buffer();
 		buffer_add(0x00); // as with TestPortAux
 		break;
 	case Command::DiagnosticDump: // 0xac
 		// Dump the whole controller internal RAM (16 bytes),
 		// output port, input port, and status port
 		warn_internal_ram_access();
+		flush_buffer();
 		buffer_add(config_byte.data);
 		for (uint8_t idx = 1; idx <= 16; idx++) {
 			buffer_add(0);
@@ -710,20 +718,24 @@ static void execute_command(const Command command)
 		// Reads the keyboard version
 		// TODO: not found any meaningful description,
 		// so the code follows 86Box behaviour
+		flush_buffer();
 		buffer_add(0);
 		break;
 	case Command::ReadInputPort: // 0xc0
 		// Reads the controller input port (P1)
+		flush_buffer();
 		buffer_add(get_input_port());
 		break;
 	case Command::ReadControllerMode: // 0xca
 		// Reads keybaord controller mode
 		// 0x00: ISA (AT)
 		// 0x01: PS/2 (MCA)
+		flush_buffer();
 		buffer_add(0x01);
 		break;
 	case Command::ReadOutputPort: // 0xd0
 		// Reads the controller output port (P2)
+		flush_buffer();
 		buffer_add(get_output_port());
 		break;
 	case Command::DisableA20: // 0xdd
@@ -745,6 +757,7 @@ static void execute_command(const Command command)
 		// bit 1: (AT) keyboard data in, or (PS/2) mouse clock in
 		// Not fully implemented, follows DOSBox-X behaviour.
 		warn_read_test_inputs();
+		flush_buffer();
 		buffer_add(0x00);
 		break;
 	//
@@ -810,10 +823,12 @@ static void execute_command(const Command command, const uint8_t param)
 		break;
 	case Command::SimulateInputKbd: // 0xd2
 		// Acts as if the byte was received from keyboard
+		flush_buffer();
 		buffer_add_kbd(param);
 		break;
 	case Command::SimulateInputAux: // 0xd3
 		// Acts as if the byte was received from aux (mouse)
+		flush_buffer();
 		buffer_add_aux(param);
 		break;
 	case Command::WriteAux: // 0xd4
@@ -940,7 +955,6 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t) // port 0x
 	const bool should_notify_kbd = !I8042_IsReadyForKbdFrame();
 
 	should_skip_device_notify = true;
-	flush_buffer();
 	if ((byte <= 0x1f) || (byte >= 0x40 && byte <= 0x5f)) {
 		// AMI BIOS systems command aliases
 		execute_command(static_cast<Command>(byte + 0x20));
