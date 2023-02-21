@@ -402,23 +402,95 @@ static void FPU_FST(Bitu st, Bitu other){
 
 
 static void FPU_FCOM(Bitu st, Bitu other){
-	if(((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) || 
-		((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C0(1);return;
+	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
+	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		return;
 	}
-	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	/* HACK: If emulating a 286 processor we want the guest to think it's
+	 * talking to a 287. For more info, read
+	 * [http://www.intel-assembler.it/portale/5/cpu-identification/asm-source-to-find-intel-cpu.asp].
+	 */
+	/* TODO: This should eventually become an option, say, a dosbox.conf
+	 * option named fputype where the user can enter "none" for no FPU, 287
+	 * or 387 for cputype=286 and cputype=386, or "auto" to match the CPU
+	 * (8086 => 8087). If the FPU type is 387 or auto, then skip this hack.
+	 * Else for 8087 and 287, use this hack. */
+	if (FPU_ArchitectureType < FPU_ARCHTYPE_387) {
+		if ((std::isinf)(fpu.regs[st].d) && (std::isinf)(fpu.regs[other].d)) {
+			/* 8087/287 consider -inf == +inf and that's what DOS
+			 * programs test for to detect 287 vs 387 */
+			FPU_SET_C3(1);
+			FPU_SET_C2(0);
+			FPU_SET_C0(0);
+			return;
+		}
 	}
-	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(1);return;
+
+	if (fpu.regs[st].d == fpu.regs[other].d) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		return;
+	}
+	if (fpu.regs[st].d < fpu.regs[other].d) {
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
+		return;
 	}
 	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(0);return;
+	FPU_SET_C3(0);
+	FPU_SET_C2(0);
+	FPU_SET_C0(0);
+	return;
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
-	//does atm the same as fcom 
+	//does atm the same as fcom
 	FPU_FCOM(st,other);
+}
+
+uint32_t FillFlags();
+
+static void FPU_FUCOMI(Bitu st, Bitu other)
+{
+	FillFlags();
+	SETFLAGBIT(OF, false);
+
+	if (fpu.regs[st].d == fpu.regs[other].d) {
+		SETFLAGBIT(ZF, true);
+		SETFLAGBIT(PF, false);
+		SETFLAGBIT(CF, false);
+		return;
+	}
+	if (fpu.regs[st].d < fpu.regs[other].d) {
+		SETFLAGBIT(ZF, false);
+		SETFLAGBIT(PF, false);
+		SETFLAGBIT(CF, true);
+		return;
+	}
+	// st > other
+	SETFLAGBIT(ZF, false);
+	SETFLAGBIT(PF, false);
+	SETFLAGBIT(CF, false);
+	return;
+}
+
+static inline void FPU_FCOMI(Bitu st, Bitu other)
+{
+	FPU_FUCOMI(st, other);
+
+	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
+	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+		SETFLAGBIT(ZF, true);
+		SETFLAGBIT(PF, true);
+		SETFLAGBIT(CF, true);
+		return;
+	}
 }
 
 static void FPU_FRNDINT(void){
