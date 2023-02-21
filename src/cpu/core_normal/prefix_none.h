@@ -818,7 +818,7 @@
 	CASE_B(0xd8)												/* FPU ESC 0 */
 		 FPU_ESC(0);break;
 	CASE_B(0xd9)												/* FPU ESC 1 */
-		 FPU_ESC(1);break;
+		 FPU_ESC_SIZE(1, !(core.opcode_index&OPCODE_SIZE));break;
 	CASE_B(0xda)												/* FPU ESC 2 */
 		 FPU_ESC(2);break;
 	CASE_B(0xdb)												/* FPU ESC 3 */
@@ -826,7 +826,7 @@
 	CASE_B(0xdc)												/* FPU ESC 4 */
 		 FPU_ESC(4);break;
 	CASE_B(0xdd)												/* FPU ESC 5 */
-		 FPU_ESC(5);break;
+		 FPU_ESC_SIZE(5, !(core.opcode_index&OPCODE_SIZE));break;
 	CASE_B(0xde)												/* FPU ESC 6 */
 		 FPU_ESC(6);break;
 	CASE_B(0xdf)												/* FPU ESC 7 */

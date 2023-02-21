@@ -71,8 +71,8 @@ static void FPU_FNINIT_DH(void){
 	dyn_dh_fpu.cw = 0x37f;
 }
 
-static void FPU_FSTENV_DH(PhysPt addr){
-	if(!cpu.code.big) {
+static void FPU_FSTENV_DH(PhysPt addr, bool op16){
+	if (op16) {
 		mem_writew(addr+0,dyn_dh_fpu.cw);
 		mem_writew(addr+2,(uint16_t)dyn_dh_fpu.temp.m2);
 		mem_writew(addr+4,dyn_dh_fpu.temp.m3);
@@ -84,8 +84,8 @@ static void FPU_FSTENV_DH(PhysPt addr){
 	}
 }
 
-static void FPU_FLDENV_DH(PhysPt addr){
-	if(!cpu.code.big) {
+static void FPU_FLDENV_DH(PhysPt addr, bool op16){
+	if (op16) {
 		dyn_dh_fpu.cw = (uint32_t)mem_readw(addr);
 		dyn_dh_fpu.temp.m1 = dyn_dh_fpu.cw|0x3f;
 		dyn_dh_fpu.temp.m2 = (uint32_t)mem_readw(addr+2);
@@ -99,8 +99,8 @@ static void FPU_FLDENV_DH(PhysPt addr){
 	}
 }
 
-static void FPU_FSAVE_DH(PhysPt addr){
-	if (!cpu.code.big) {
+static void FPU_FSAVE_DH(PhysPt addr, bool op16){
+	if (op16) {
 		mem_writew(addr,dyn_dh_fpu.cw);
 		addr+=2;
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x04]);
@@ -123,8 +123,8 @@ static void FPU_FSAVE_DH(PhysPt addr){
 	}
 }
 
-static void FPU_FRSTOR_DH(PhysPt addr){
-	if (!cpu.code.big) {
+static void FPU_FRSTOR_DH(PhysPt addr, bool op16){
+	if (op16) {
 		dyn_dh_fpu.cw = (uint32_t)mem_readw(addr);
 		dyn_dh_fpu.temp_state[0x00] = mem_readb(addr++)|0x3f;
 		dyn_dh_fpu.temp_state[0x01] = mem_readb(addr++);
@@ -193,7 +193,7 @@ static void dh_fpu_esc1(){
 			gen_call_function((void*)&FPU_FST_32,"%Drd",DREG(EA));
 			break;
 		case 0x04: /* FLDENV */
-			gen_call_function((void*)&FPU_FLDENV_DH,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FLDENV_DH,"%Drd%Ib", DREG(EA), !decode.big_op);
 			dh_fpu_mem(0xd9);
 			break;
 		case 0x05: /* FLDCW */
@@ -202,7 +202,7 @@ static void dh_fpu_esc1(){
 			break;
 		case 0x06: /* FSTENV */
 			dh_fpu_mem(0xd9);
-			gen_call_function((void*)&FPU_FSTENV_DH,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FSTENV_DH,"%Drd%Ib", DREG(EA), !decode.big_op);
 			break;
 		case 0x07:  /* FNSTCW*/
 			gen_call_function((void*)&FPU_FNSTCW_DH,"%Drd",DREG(EA));
@@ -324,12 +324,12 @@ static void dh_fpu_esc5(){
 			gen_call_function((void*)&FPU_FST_64,"%Drd",DREG(EA));
 			break;
 		case 0x04:	/* FRSTOR */
-			gen_call_function((void*)&FPU_FRSTOR_DH,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FRSTOR_DH,"%Drd%Ib",DREG(EA), !decode.big_op);
 			dh_fpu_mem(0xdd, decode.modrm.reg, &(dyn_dh_fpu.temp_state[0]));
 			break;
 		case 0x06:	/* FSAVE */
 			dh_fpu_mem(0xdd, decode.modrm.reg, &(dyn_dh_fpu.temp_state[0]));
-			gen_call_function((void*)&FPU_FSAVE_DH,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FSAVE_DH,"%Drd%Ib",DREG(EA), !decode.big_op);
 			cache_addw(0xE3DB);
 			break;
 		case 0x07:   /* FNSTSW */

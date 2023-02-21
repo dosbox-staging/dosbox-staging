@@ -141,6 +141,15 @@
 	}																		\
 }
 
+#define FPU_ESC_SIZE(code, op16) {														\
+	uint8_t rm=Fetchb();														\
+	if (rm >= 0xc0) {															\
+		FPU_ESC ## code ## _Normal(rm);										\
+	} else {																\
+		GetEAa;FPU_ESC ## code ## _EA(rm,eaa,op16);								\
+	}																		\
+}
+
 #define CASE_W(_WHICH)							\
 	case (OPCODE_NONE+_WHICH):
 

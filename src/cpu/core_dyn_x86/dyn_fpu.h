@@ -306,13 +306,13 @@ static void dyn_fpu_esc1()
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
 		case 0x04: /* FLDENV */
-			gen_call_function((void*)&FPU_FLDENV,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FLDENV,"%Drd%Ib", DREG(EA), !decode.big_op);
 			break;
 		case 0x05: /* FLDCW */
 			gen_call_function((void *)&FPU_FLDCW,"%Drd",DREG(EA));
 			break;
 		case 0x06: /* FSTENV */
-			gen_call_function((void *)&FPU_FSTENV,"%Drd",DREG(EA));
+			gen_call_function((void *)&FPU_FSTENV,"%Drd%Ib", DREG(EA), !decode.big_op);
 			break;
 		case 0x07:  /* FNSTCW*/
 			gen_call_function((void *)&FPU_FNSTCW,"%Drd",DREG(EA));
@@ -522,15 +522,13 @@ static void dyn_fpu_esc5()
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
 		case 0x04:	/* FRSTOR */
-			gen_call_function((void*)&FPU_FRSTOR,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FRSTOR,"%Drd%Ib", DREG(EA), !decode.big_op);
 			break;
 		case 0x06:	/* FSAVE */
-			gen_call_function((void*)&FPU_FSAVE,"%Drd",DREG(EA));
+			gen_call_function((void*)&FPU_FSAVE,"%Drd%Ib", DREG(EA), !decode.big_op);
 			break;
 		case 0x07:   /*FNSTSW */
 			gen_protectflags(); 
-			gen_load_host(&TOP,DREG(TMPB),4); 
-			gen_call_function((void*)&FPU_SET_TOP,"%Dd",DREG(TMPB));
 			gen_load_host(&fpu.sw,DREG(TMPB),4); 
 			gen_call_function((void*)&mem_writew,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
@@ -618,8 +616,6 @@ static void dyn_fpu_esc7()
 		case 0x04:
 			switch(sub){
 				case 0x00:     /* FNSTSW AX*/
-					gen_load_host(&TOP,DREG(TMPB),4);
-					gen_call_function((void*)&FPU_SET_TOP,"%Drd",DREG(TMPB)); 
 					gen_mov_host(&fpu.sw,DREG(EAX),2);
 					break;
 				default:
