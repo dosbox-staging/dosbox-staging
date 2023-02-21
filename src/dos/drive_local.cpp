@@ -154,8 +154,10 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 		// If yes, check if the file can be opened with Read-only access:
 		fhandle = fopen_wrap(newname, "rb");
 		if (fhandle) {
-			if (!always_open_ro_files)
+			if (!always_open_ro_files) {
+				fclose(fhandle);
 				fhandle = nullptr;
+			}
 
 #ifdef DEBUG
 			if (always_open_ro_files) {
