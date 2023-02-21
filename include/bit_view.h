@@ -123,22 +123,14 @@ private:
 	static_assert(view_index + view_width <= std::numeric_limits<uint8_t>::digits,
 	              "the bit_view's extents need to fit within an uint8_t data type");
 
-	// ensure the right-hand-side is an integer and fits in the data type
+	// ensure the right-hand-side fits in the data type
 	template <typename rhs_type>
 	constexpr void check_rhs([[maybe_unused]] const rhs_type rhs_value) noexcept
 	{
-		// detect attempts to assign from non-integral types
-		static_assert(std::is_integral<rhs_type>::value,
-		              "the bit_view's value can only accept integral types");
-
-		// detect use of bool, in which case the data is 1 bit and safe
-		if (std::is_same<rhs_type, bool>::value)
-			return;
-
-		// detect assignments of negative values
-		if (std::is_signed<rhs_type>::value)
+		// detect assignment of negative values
+		if constexpr (std::is_signed_v<rhs_type>) {
 			assert(rhs_value >= 0);
-
+		}
 		// detect assignment of values that are too large
 		[[maybe_unused]] constexpr uint64_t max_data_value = {0b1u << view_width};
 		assert(static_cast<uint64_t>(rhs_value) < max_data_value);
@@ -153,34 +145,13 @@ private:
 	// leave the member uninitialised; let union peer(s) initialize the data
 	data_type data;
 
-public:
-	constexpr bit_view() = default;
-
-	// trivial copy constructor
-	bit_view(const bit_view &other) noexcept = default;
-
-	// construct the view from a right-hand-side value
+	// all-purpose assignment
 	template <class rhs_type>
-	constexpr bit_view(const rhs_type rhs_value) noexcept
+	constexpr bit_view& Assign(const rhs_type& rhs_value) noexcept
 	{
-		// use the = operator to save the value into the view
-		*this = rhs_value;
-	}
-
-	// assign from right-hand-side boolean
-	constexpr bit_view &operator=(const bool b) noexcept
-	{
-		constexpr uint8_t bool_to_val[2] = {0, 1};
-
-		// use the = operator to save the value into the view
-		return *this = bool_to_val[static_cast<size_t>(b)];
-	}
-
-	// assign from right-hand-side value
-	template <class rhs_type>
-	constexpr bit_view &operator=(const rhs_type rhs_value) noexcept
-	{
-		check_rhs(rhs_value);
+		if constexpr (std::is_integral_v<rhs_type>) {
+			check_rhs(rhs_value);
+		}
 		const auto outer = data & ~mask::shifted;
 		const auto inner = (rhs_value & mask::unshifted) << view_index;
 
@@ -188,14 +159,49 @@ public:
 		return *this;
 	}
 
-	// assign the view from another bit_view if the same type
-	constexpr bit_view &operator=(const bit_view &other) noexcept
-	{
-		// get the other view's value using the data_type() operator
-		const data_type d = other;
+public:
+	// trivial constructors
+	constexpr bit_view() = default;
+	constexpr bit_view(const bit_view&) = default;
 
-		// use the = operator to save the value into the view
-		return *this = d;
+	// construct from any T
+	template <class rhs_type>
+	constexpr bit_view(const rhs_type& rhs_value) noexcept
+	{
+		(void)Assign(rhs_value);
+	}
+	// assign from bit_view (equal layout)
+	constexpr bit_view& operator=(const bit_view& other) noexcept
+	{
+		const data_type value = other;
+		return Assign(value);
+	}
+
+	// assign from bit_view (different layout)
+	template <int other_index, int other_width>
+	constexpr bit_view& operator=(const bit_view<other_index, other_width>& other) noexcept
+	{
+		static_assert(view_width >= other_width,
+		              "this bit_view has too few bits to accomodate the assignment");
+		const data_type value = other;
+		return Assign(value);
+	}
+
+	// assign from bool
+	constexpr bit_view& operator=(const bool b) noexcept
+	{
+		static_assert(view_width == 1,
+		              "Only 1-bit-wide bit_views can be unambiguously assigned from bool");
+
+		constexpr uint8_t bool_to_val[2] = {0, 1};
+		return Assign(bool_to_val[static_cast<size_t>(b)]);
+	}
+
+	// assign from any T
+	template <class rhs_type>
+	constexpr bit_view& operator=(const rhs_type& rhs_value) noexcept
+	{
+		return Assign(rhs_value);
 	}
 
 	// read the view's value
@@ -208,7 +214,7 @@ public:
 	constexpr bit_view &operator++() noexcept
 	{
 		// use the = operator to save the value into the view
-		return *this = *this + 1;
+		return Assign(*this + 1);
 	}
 
 	// post-increment the view's value
@@ -223,16 +229,13 @@ public:
 	template <class rhs_type>
 	constexpr bit_view &operator+=(const rhs_type rhs_value) noexcept
 	{
-		check_rhs(rhs_value);
-		// use the = operator to save the value into the view
-		return *this = *this + rhs_value;
+		return Assign(*this + rhs_value);
 	}
 
 	// pre-decrement the view's value
 	constexpr bit_view &operator--() noexcept
 	{
-		// use the = operator to save the value into the view
-		return *this = *this - 1;
+		return Assign(*this - 1);
 	}
 
 	// post-decrement the view's value
@@ -247,8 +250,7 @@ public:
 	template <class rhs_type>
 	constexpr bit_view &operator-=(const rhs_type rhs_value) noexcept
 	{
-		check_rhs(rhs_value);
-		return *this = *this - rhs_value;
+		return Assign(*this - rhs_value);
 	}
 
 	// check if all the view's bits are set
