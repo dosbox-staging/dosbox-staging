@@ -69,11 +69,6 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC, Ubuntu 18.04
-            os: ubuntu-18.04
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-9.ini
-            max_warnings: 0
-            needs_all_deps: true
 
           - name: GCC 10, Ubuntu 20.04
             os: ubuntu-20.04
@@ -88,6 +83,13 @@ jobs:
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-12.ini
             max_warnings: 0
             needs_all_deps: true
+
+          - name: GCC 12, Ubuntu 22.04
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug
+            max_warnings: 0
+            needs_all_deps: true
+            run_tests: true
 
           - name: GCC, Debian 10, ARMv7
             os: ubuntu-20.04
@@ -285,7 +287,7 @@ jobs:
 
   build_linux_release:
     name: Release build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     needs: cache_subprojects
     steps:
@@ -299,7 +301,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
-            $(cat packages/ubuntu-18.04-apt.txt)
+            $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Restore subprojects cache
@@ -408,7 +410,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_linux_release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
