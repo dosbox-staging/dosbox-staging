@@ -1278,6 +1278,12 @@ static void FPU_FST(Bitu stv, Bitu other){
 	FPU_SET_C1(0);
 }
 
+static inline void FPU_FCMOV(Bitu st, Bitu other)
+{
+	fpu.p_regs[st] = fpu.p_regs[other];
+	fpu.tags[st]   = fpu.tags[other];
+}
+
 /* FPU_P_Reg holds the raw data fed to the host x86 FPU registers.
  * We can't guarantee that std::isinf() can handle that or that anything
  * in the host C++ compiler supports long double, so do it ourself */
