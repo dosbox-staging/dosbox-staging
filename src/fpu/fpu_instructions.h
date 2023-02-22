@@ -101,15 +101,11 @@ static void FPU_FPOP(void){
 
 static double FROUND(double in){
 	switch (fpu.cw.RC){
-	case fpu::RoundMode::Nearest:
-		return std::nearbyint(in);
-	case fpu::RoundMode::Down:
-		return (floor(in));
-	case fpu::RoundMode::Up:
-		return (ceil(in));
-	case fpu::RoundMode::Chop:
-		[[fallthrough]]; // cast by the caller chops
-	default: return in;
+	case FPUControlWord::RoundMode::Nearest: return std::nearbyint(in);
+	case FPUControlWord::RoundMode::Down: return floor(in);
+	case FPUControlWord::RoundMode::Up: return ceil(in);
+	case FPUControlWord::RoundMode::Chop: [[fallthrough]]; // cast by the caller chops
+	default: return in; break;
 	}
 }
 
