@@ -283,6 +283,12 @@ static inline uint16_t FPU_GetSW()
 	return fpu.sw;
 }
 
+static inline void FPU_SetMaskedSW(const uint16_t word, 
+                                   const uint16_t mask = FPUStatusWord::conditionAndExceptionMask)
+{
+	fpu.sw = (word & mask) | (fpu.sw & FPUStatusWord::conditionUnmask);
+}
+
 static inline void FPU_SetSW(const uint16_t word)
 {
 	fpu.sw = word;
