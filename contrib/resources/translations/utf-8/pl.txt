@@ -113,15 +113,14 @@ Przeniesione do sekcji [mouse].
 Przeniesione do sekcji [mouse].
 .
 :CONFIG_WAITONERROR
-Czekanie przed zamknięciem konsoli po wystąpieniu błędu.
+Czeka przed zamknięciem konsoli po wystąpieniu błędu.
 .
 :CONFIG_PRIORITY
-Priorytet zadania, kiedy emulator jest aktywny/nieaktywny, odpowiednio.
+Priorytety zadania, kiedy emulator jest aktywny/nieaktywny, odpowiednio.
    auto:  Pozwala zadecydować systemowi operacyjnemu gospodarza.
-Domyślne: 'auto auto'
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Wyciszanie dźwięku, kiedy okno emulatora traci fokus.
+Wycisza dźwięk, kiedy okno emulatora traci fokus.
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
 Pauza emulacji, kiedy okno emulatora traci fokus.
@@ -139,7 +138,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego włączenie.
 .
 :CONFIG_LANGUAGE
-Język emulatora: de, en, es, fr, it, nl, pl lub ru.
+Język emulatora: de, en, es, fr, it, nl, pl lub ru (domyślnie nieustawiony).
 Uwaga: Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'. Pliki
 tłumaczeń dla poszczególnych języków znajdują się w dostarczonym katalogu
 'resources/translations'.
@@ -154,15 +153,15 @@ ekranu, itd.
 :CONFIG_MEMSIZE
 Rozmiar pamięci emulowanej maszyny w megabajtach.
 Najlepiej nie zmieniać wartości bez potrzeby, gdyż może to powodować problemy
-w niektórych grach (chociiaż niektóre mogą wymagać większego rozmiaru).
+w niektórych grach (chociaż niektóre mogą wymagać większego rozmiaru).
 Zwiększenie rozmiaru zazwyczaj nie poprawia wydajności.
 .
 :CONFIG_MCB_FAULT_STRATEGY
 Obsługa uszkodzonych bloków MCB (Memory Control Blocks):
-  deny:    Wyświetlenie błędu i zakończenie emulacji (domyslne).
-  repair:  Naprawa (i zaraportowanie) uzywając sąsiednich bloków.
-  report:  Tylko naprawa.
-  allow:   Zignorowanie problemu, jak w rzeczywistym sprzęcie.
+  deny:    Wyświetla błąd i kończy pracę (domyślne).
+  repair:  Naprawia (i raportuje) używając sąsiednich bloków.
+  report:  Tylko raportuje.
+  allow:   Ignoruje problem, jak na rzeczywistym sprzęcie.
 Ustawienie domyślne (deny) jest zalecane, chyba że gra zgłasza problemy z
 uszkodzonym MCB.
 .
@@ -194,15 +193,16 @@ natrafisz, zgłoś błąd zespołowi projektowemu.
 .
 :CONFIG_AUTOEXEC_SECTION
 Sposób traktowania sekcji [autoexec] z kilku plików konfiguracyjnych:
-  join:       łączy w jedną sekcję [autoexec] (stare zachowanie).
-  overwrite:  uzywa tylko ostatniej napotkanej sekcji.
+  join:       Łączy w jedną sekcję [autoexec] (stare zachowanie).
+  overwrite:  Używa tylko ostatniej napotkanej sekcji.
 .
 :CONFIG_AUTOMOUNT
 Podczas startu montuje katalog 'drives/[c]' jako dysk, gdzie [c] jest nazwą
-dysku podaną jako mała litera od a do y. Katalog 'drives' powinien znajdować
-się w aktualnym katalogu, w przeciwnym razie używany jest katalog z zasobów
-emulatora. Dodatkowe ustawienia mogą być podane w formie pliku [c].conf,
-znajdującego się tam, gdzie montowany katalog, z zawartością jak poniżej:
+dysku podaną jako mała litera od 'a' do 'y'. Katalog 'drives' powinien
+znajdować się w aktualnym katalogu, w przeciwnym razie używany jest katalog z
+zasobów emulatora. Dodatkowe ustawienia mogą być podane w formie pliku
+[c].conf, znajdującego się tam, gdzie montowany katalog, z zawartością
+jak poniżej:
   [drive]
   type    = dir, overlay, floppy lub cdrom
   label   = etykieta_dysku
@@ -246,7 +246,7 @@ Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
                  Palety barw używane przez porty gier Sierra AGI na komputery
                  Amiga; więcej informacji (po angielsku) w instrukcji.
-  agi-amigaish:  Mix barw EGA i kolorów komputera Amiga, używany przez
+  agi-amigaish:  Miks barw EGA i kolorów komputera Amiga, używany przez
                  interpreter Sarien AGI.
   scumm-amiga:   Paleta używana przez porty gier LucasArts EGA na
                  komputery Amiga.
@@ -266,14 +266,16 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 .
 :CONFIG_SCALER
 Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
-- Zamiast normal2x/3x, użyj ustawienia 'windowresolution'.
-- W innym przypadku spróbuj użyj opcji 'glshader'.
+  - Zamiast normal2x/3x, użyj ustawienia 'windowresolution'.
+  - W innym przypadku spróbuj użyj opcji 'glshader'.
 .
 :CONFIG_GLSHADER
+Wybór shadera w trybach OpenGL.
 Albo 'none' (żaden), albo 'default' (domyślny), albo ścieżka względna lub
 bezwzględna do pliku z shaderem GLSL. Można również podać jeden z shaderów
 z listy wyświetlonej opcją wiersza poleceń '--list-glshaders'.
-Działa tylko z wyjściem OpenGL. Rozszerzenie '.glsl' można pominąć.
+Wartość domyślna wybiera shader 'interpolation/sharp.glsl'.
+Rozszerzenie '.glsl' można pominąć.
 .
 :CONFIG_COMPOSITE
 Włączenie trybu sygnału 'composite'. Porada: dopasuj ustawienia poniżej przy
@@ -281,8 +283,8 @@ pomocy skrótów klawiszowych, następnie odczytaj ustawienia z konsoli tekstowe
 i wpisz je do pliku konfiguracyjnego.
 .
 :CONFIG_ERA
-Epoka sygnału 'composite'. Wartość 'auto' wybiera 'new' dla PCjr, a 'old' dla
-CGA oraz Tandy.
+Epoka sygnału 'composite'.
+Wartość 'auto' wybiera 'new' dla PCjr, a 'old' dla maszyn CGA oraz Tandy.
 .
 :CONFIG_HUE
 Odcień. Pozwala na wyregulowanie obrazu tak, żeby np. niebo było niebieskie.
@@ -301,7 +303,7 @@ Zbieżność subpikseli, od obrazu rozmytego po ostry (tylko dla maszyn 'cga'
 oraz 'tandy').
 .
 :CONFIG_CORE
-Rodzaj emulatora procesora. Wartość 'auto' przełącza na 'dynamic' (dynamiczną
+Sposób emulacji procesora. Wartość 'auto' przełącza na 'dynamic' (dynamiczną
 rekompilację) jeśli tylko jest dostępna i możliwa do użycia.
 .
 :CONFIG_CPUTYPE
@@ -348,53 +350,55 @@ Domyślna czułość myszy. 100 to wartość bazowa, 150 to 150% czułości, itd
 Wartości ujemne odwracają kierunki ruchu, 0 wyłącza ruch kursora całkowicie.
 Opcjonalna druga wartość określa oddzielnie czułość pionową.
 Ustawienie może być zmienione w trakcie pracy (również dla każdego interfejsu
-myszy osobno) przy pomocy narzędzia MOUSECTL.COM, dostępnego na dysku Z:.
+myszy osobno) przy pomocy narzędzia MOUSECTL.COM, dostępnego na dysku Z.
 Przykład: 100,-50.
 .
 :CONFIG_MOUSE_RAW_INPUT
-Ominięcie ustawień systemu operacyjnego gospodarza dotyczących czułości oraz
+Pomija ustawienia systemu operacyjnego gospodarza dotyczących czułości oraz
 przyspieszenia myszy. Działa albo na pełnym ekranie, albo kiedy kursor myszy
 jest przejęty w trybie okienkowym.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Włączenie wbudowanego sterownika myszy dla aplikacji DOS.
 Uwagi:
-   Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
-   Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany sterownik
-   jest automatycznie wyłączany.
+  Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
+  Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany sterownik
+  jest automatycznie wyłączany.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Natychmiastowa aktualizacja liczników ruchu, bez oczekiwania na przerwanie.
 Może zwiększyć płynność ruchów myszy, zwłaszcza w grach zręcznościowych
-(arcade, FPS, itd.), aż do porównywalnej z częstotliwością próbkowania
+(arcade, FPS, itp.), aż do porównywalnej z częstotliwością próbkowania
 1000 Hz, bez zwiększania narzutu na obsługę przerwań.
 Może spowodować problemy w niektórych grach. Znane niekompatybilne tytuły:
-   - Ultima Underworld: The Stygian Abyss
-   - Ultima Underworld II: Labyrinth of Worlds
+  - Ultima Underworld: The Stygian Abyss
+  - Ultima Underworld II: Labyrinth of Worlds
 Jeśli znajdziesz inną niekompatybilną grę, zgłoś (po angielsku) raport o
 błędzie, a zaktualizujemy tę listę.
 .
 :CONFIG_PS2_MOUSE_MODEL
 Model myszy podłączonej do portu PS/2 AUX:
-   standard:       3 przyciski, standardowa mysz PS/2.
-   intellimouse:   3 przyciski + rolka, mysz Microsoft IntelliMouse.
+  standard:       3 przyciski, standardowa mysz PS/2.
+  intellimouse:   3 przyciski + rolka, mysz Microsoft IntelliMouse.
+  explorer:       5 przycisków + rolka, mysz Microsoft IntelliMouse Explorer.
+  none:           Mysz PS/2 nie jest emulowana.
 Domyślnie: intellimouse
 .
 :CONFIG_COM_MOUSE_MODEL
 Domyślny model myszy podłączonej do portu COM (serial):
-   2button:        2 przyciski, mysz Microsoft.
-   3button:        3 przyciski, mysz Logitech,
-                   dość kompatybilna z myszą Microsoft.
-   wheel:          3 przyciski + rolka,
-                   dość kompatybilna z myszą Microsoft.
-   msm:            3 przyciski, mysz Mouse Systems,
+  2button:        2 przyciski, mysz Microsoft.
+  3button:        3 przyciski, mysz Logitech,
+                  dość kompatybilna z myszą Microsoft.
+  wheel:          3 przyciski + rolka,
+                  dość kompatybilna z myszą Microsoft.
+  msm:            3 przyciski, mysz Mouse Systems,
                    ta mysz jest NIEKOMPATYBILNA z myszą Microsoft.
-   2button+msm:    Automatyczna selekcja pomiędzy '2button' oraz 'msm'.
-   3button+msm:    Automatyczna selekcja pomiędzy '3button' oraz 'msm'.
-   wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
+  2button+msm:    Automatyczna selekcja pomiędzy '2button' oraz 'msm'.
+  3button+msm:    Automatyczna selekcja pomiędzy '3button' oraz 'msm'.
+  wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
 Domyślnie: wheel+msm
-Uwaga:
-   Ten rodzaj myszy należy włączyć w sekcji [serial].
+Uwagi:
+  Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
 :CONFIG_NOSOUND
 Włączenie trybu cichego; dźwięk jest emulowany, ale całkowicie wyciszony.
@@ -403,7 +407,7 @@ Włączenie trybu cichego; dźwięk jest emulowany, ale całkowicie wyciszony.
 Częstotliwość próbkowania miksera dźwięku.
 .
 :CONFIG_BLOCKSIZE
-Rozmiar bloku miksera. Wieksze wartości mogą pomóc na problem przycinania
+Rozmiar bloku miksera. Większe wartości mogą pomóc na problem przycinania
 dźwięku, ale zwiększają opóźnienie (lag).
 .
 :CONFIG_PREBUFFER
@@ -426,7 +430,7 @@ dla używających słuchawek:
   off:         Bez efektu (domyślne).
   on:          Włączenie przenikania na poziomie 40.
   <strength>:  Ustawienie siły efektu od 0 (wyłączone) do 100 (dźwięk mono).
-Poleceniem DOSu 'mixer' można zmienić ustawienie dla poszczególnych kanałów.
+Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
 :CONFIG_REVERB
 Włączenie (globalnie) efektu 'reverb', dodaje dźwiękowi wrażenia przestrzeni:
@@ -442,7 +446,7 @@ Włączenie (globalnie) efektu 'reverb', dodaje dźwiękowi wrażenia przestrzen
            kanałów dla muzyki i efektów dźwiękowych.
   huge:    Mocniejszy wariant dużej hali, odpowiedni do gier z atmosferyczną
            ścieżką dźwiękową.
-Poleceniem DOSu 'mixer' można zmienić ustawienie dla poszczególnych kanałów.
+Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
 :CONFIG_CHORUS
 Włączenie (globalnie) efektu 'chorus', dającego bardziej poruszający dźwięk:
@@ -452,18 +456,21 @@ Włączenie (globalnie) efektu 'chorus', dającego bardziej poruszający dźwię
            ilością białego szumu.
   normal:  Normalny efekt, odpowiedni dla wielu różnych gier.
   strong:  Silny efekt.
-Poleceniem DOSu 'mixer' można zmienić ustawienie dla poszczególnych kanałów.
+Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
 :CONFIG_MIDIDEVICE
 Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
+  oss          Interfejs OSS (dla systemu Linux).
+  alsa         Interfejs ALSA (dla systemu Linux).
   fluidsynth:  Wbudowany syntetyzer, patrz sekcja [fluidsynth].
-  mt32:        Emulacja syntetyzatora Roland MT-32, ptrz sekcja [mt32].
+  mt32:        Emulacja syntetyzatora Roland MT-32, patrz sekcja [mt32].
   auto:        Pierwszy działający zewnętrzny syntetyzator; może to być
                synteza programowa lub fizyczne urządzenie.
+  none:        Wyłącz wyjście MIDI.
 .
 :CONFIG_MIDICONFIG
 Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
-syntetyzatora - można je sprawdzić poleceniem DOSu 'mixer /listmidi'.
+syntetyzatora - można je sprawdzić poleceniem DOSu 'MIXER /LISTMIDI'.
 - Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
   (mididevice = fluidsynth lub mt32).
 - Dla systemu Linux i podsystemu dźwiękowego ALSA, wyświetl listę portów MIDI
@@ -482,8 +489,8 @@ Typ emulowanego interfejsu MPU-401.
 można też podać nazwę pliku z podkatalogu 'soundfonts' katalogu z
 konfiguracją.
 Uwaga: opcjonalny parametr regulujący głośność jest przestarzały; głośność
-należy zmieniać odpowiednim poleceniem, np.:
-  MIXER FSYNTH 200
+       należy zmieniać odpowiednim poleceniem, np.:
+         MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
 Efekt 'chorus': auto', 'on', 'off' lub ustawienia użytkownika.
@@ -497,9 +504,9 @@ voice-count level speed depth modulation-wave, gdzie:
   modulation-wave:  'sine' lub 'triangle'.
   Przykład: chorus = 3 1.2 0.3 8.0 sine
 Uwaga: Można wyłączyć efekt 'chorus' z syntetyzatora FluidSynth i
-w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
-jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
-SoundFont i ustawień efektu 'chorus'.
+       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
+       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
+       SoundFont i ustawień efektu 'chorus'.
 .
 :CONFIG_FSYNTH_REVERB
 Efekt 'reverb': auto', 'on', 'off' lub ustawienia użytkownika.
@@ -512,9 +519,9 @@ room-size damping width level, gdzie:
   level:      wartość dziesiętna od 0.0 do 1.0
   Przykład: reverb = 0.61 0.23 0.76 0.56
 Uwaga: Można wyłączyć efekt 'reverb' z syntetyzatora FluidSynth i
-w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
-jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
-SoundFont i ustawień efektu 'reverb'.
+       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
+       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
+       SoundFont i ustawień efektu 'reverb'.
 .
 :CONFIG_FSYNTH_FILTER
 Filtrowanie dźwięku syntetyzera FluidSynth:
@@ -575,7 +582,7 @@ Numer kanału DMA karty muzycznej Sound Blaster.
 Numer kanału High DMA karty muzycznej Sound Blaster.
 .
 :CONFIG_SBMIXER
-Zezwolenie mikserowi karty Sound Blaster na zmianę ustawień miksera DOSBoksa.
+Zezwala mikserowi karty Sound Blaster na zmianę ustawień miksera DOSBoksa.
 .
 :CONFIG_SBWARMUP
 Czas wyciszenia początkowych transferów DMA, w milisekundach.
@@ -611,7 +618,7 @@ Filtrowanie dźwięku digitalizowanego karty Sound Blaster:
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Wymuś włączone filtrowanie dźwięku karty Sound Blaster
+Wymusza włączone filtrowanie dźwięku karty Sound Blaster
 (uniemożliwia oprogramowaniu wyłączenie filtrowania).
 .
 :CONFIG_OPL_FILTER
@@ -629,8 +636,7 @@ Filtrowanie dźwięku syntetyzowanego CMS karty Sound Blaster:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_GUS
-Włączenie emulacji karty muzycznej Gravis UltraSound.
-Enable Gravis UltraSound emulation.
+Włącza emulację karty muzycznej Gravis UltraSound.
 .
 :CONFIG_GUSBASE
 Adres bazowy (I/O) karty muzycznej Gravis UltraSound.
@@ -642,9 +648,9 @@ Numer przerwania (IRQ) karty muzycznej Gravis UltraSound.
 Numer kanału DMA karty muzycznej Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-Ścieżka do katalogu UltraSound. Powinien on zawierać podkatalog MIDI
-z definicjami instrumentów w formacie PAT. Zestawy instrumentów dla programu
-Timidity powinny działać poprawnie.
+Ścieżka do katalogu UltraSound, domyślnie 'C:\ULTRASND'.
+Powinien zawierać podkatalog MIDI z definicjami instrumentów w formacie PAT.
+Zestawy instrumentów dla programu Timidity powinny działać poprawnie.
 .
 :CONFIG_GUS_FILTER
 Filtrowanie dźwięku karty Gravis UltraSound:
@@ -652,7 +658,7 @@ Filtrowanie dźwięku karty Gravis UltraSound:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
-Model układu w karcie muzycznej Innovation SSI-2001:
+Model układu na karcie muzycznej Innovation SSI-2001:
   auto:  Wybiera model 6581.
   6581:  Oryginalny ('stary SID'), znany z basowego, bogatego charakteru.
   8580:  Późniejsza rewizja ('nowy SID'), bardziej zgodna ze specyfikacją.
@@ -702,7 +708,7 @@ Filtrowanie dźwięku urządzenia PC Speaker:
 'DC offset' jest obecnie eliminowany globalnie.
 .
 :CONFIG_TANDY
-Włączenie emulacji urządzenia dźwiękowego Tandy Sound System.
+Włącza emulację urządzenia dźwiękowego Tandy Sound System.
 Dla 'auto', emulacja działa tylko przy typie maszyny 'tandy'.
 .
 :CONFIG_TANDY_FILTER
@@ -734,7 +740,7 @@ Filtrowanie dźwięku urządzenia LPT DAC:
 Żeby włączyć Disney Sound Source użyj 'lpt_dac=disney'.
 .
 :CONFIG_PS1AUDIO
-Włączenie emulacji urządzenia dźwiękowego IBM PS/1.
+Włącza emulację urządzenia dźwiękowego IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtrowanie dźwięku syntetyzowanego urządzenia PS/1:
@@ -749,7 +755,7 @@ Filtrowanie dźwięku digitalizowanego urządzenia PS/1:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_REELMAGIC
-Włączenie emulacji ReelMagic (REALmagic), karty dekodera MPEG.
+Włącza emulację ReelMagic (REALmagic), karty dekodera MPEG.
   off:      Wyłączone (domyślne).
   cardonly: Emulacja włączona, nie ładuje sterownika FMPDRV.EXE przy starcie.
   on:       Emulacja włączona, ładuje sterownik FMPDRV.EXE przy starcie.
@@ -762,7 +768,7 @@ Ustawienie 32-bitowego klucza do dekodowania animacji w grach.
   <custom>: Klucz użytkownia w formacie szesnastkowym (np. 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
-Wymuszenie odpowiedniej ilości ramek na sekundę podczas odtwarzania.
+Wymusza odpowiednią ilości ramek na sekundę podczas odtwarzania.
   0:        Próbuje wykryć automatycznie (domyślne).
   1 to 7:   Wymusza odpowiednią ilość ramek na sekundę (wartości od 1 do 7):
             1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, lub 7=59.94 ramek/s.
@@ -777,7 +783,7 @@ Typ joysticka:
   ch       : Emulacja joysticka typu CH Flightstick.
   hidden   : Ukrywa joystick przed DOSem, ale umożliwia mapowanie.
   disabled : Całkowicie wyłączone joysticki.
-(Pamiętaj o zresetowaniu mapowania jeśli zapisałeś je wcześniej do pliku)
+Pamiętaj o zresetowaniu mapowania jeśli zapisałeś je wcześniej do pliku.
 .
 :CONFIG_TIMED
 Interwały czasowe. Poeksperymentuj z tą opcją, jeśli joystick wykazuje drift.
@@ -786,15 +792,15 @@ Interwały czasowe. Poeksperymentuj z tą opcją, jeśli joystick wykazuje drift
 Ogień ciągły (przerywany) dopóki wciśnięty jest przycisk joysticka.
 .
 :CONFIG_SWAP34
-Zamiana osi 3 i 4. Może być użyteczne przy niektórych joystickach.
+Zamienia osie 3 i 4. Może być użyteczne przy niektórych joystickach.
 .
 :CONFIG_BUTTONWRAP
-"Zawijanie" numeracji nadmiarowych przycisków; n-ty działa jak drugi 1-szy,
+"Zawija" numerację nadmiarowych przycisków; n-ty działa jak drugi 1-szy,
 n+2 jako dodatkowy 2, itd.
 .
 :CONFIG_CIRCULARINPUT
-Tłumaczenie ruchu okrężnego na ruch prosty. Włącz, jeśli analogowa gałka
-może poruszać się jedynie po okręgu.
+Tłumaczy ruchu okrężny na ruch prosty. Włącz, jeśli analogowa gałka twojego
+urządzenia może poruszać się jedynie po okręgu.
 .
 :CONFIG_DEADZONE
 Procent obszaru ruchu do ignorowania. 100 przekształca joystick w cyfrowy.
@@ -803,11 +809,11 @@ Procent obszaru ruchu do ignorowania. 100 przekształca joystick w cyfrowy.
 Włącza skróty klawiszowe do kalibracji osi x i y joysticka w czasie
 rzeczywistym. Używaj tylko, jeśli zawiedzie kalibracja joysticka
 zaimplementowana w grze, a zmiana innych ustawień nie pomaga.
-- Ctrl/Cmd + klawisze kursora - zmieniają skalowanie:
-  - lewo/prawo - oś x
-  - góra/dół - oś y
-- Alt + klawisze kursora - zmieniają offset (przesunięcie)
-- Ctrl+Delete, Ctrl+Home - resetowanie ustawień kalibracji
+  - Ctrl/Cmd + klawisze kursora - zmieniają skalowanie:
+    - lewo/prawo - oś x
+    - góra/dół - oś y
+  - Alt + klawisze kursora - zmieniają offset (przesunięcie)
+  - Ctrl+Delete, Ctrl+Home - resetowanie ustawień kalibracji
 Za każdym razem, kiedy zmienisz ustawienia, zostaną one wypisane w konsoli
 tekstowej. Po znalezieniu satysfakcjonujących ustawień zakończ grę, zmień
 to ustawienie na 'false', i przepisz ustawienia kalibracji.
@@ -824,42 +830,42 @@ Jedno z: disabled, dummy, mouse, modem, nullmodem, direct.
 Można podać dodatkowe parametry w formie parametr:wartość, muszą być
 wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
 (opcjonalny) irq:numer.
-Dla urządzenia 'mouse' (mysz szeregowa):
-  model, nadpisuje ustawienie z sekcji [mouse].
-Dla urządzenia 'direct' (bezpośredni dostęp do portu COM gospodarza):
-  realport (wymagany), rxdelay (opcjonalny).
-  Przykład: realport:COM1 realport:ttyS0.
-Dla urządzenia 'modem':
-  listenport, sock, baudrate (wszystkie opcjonalne).
-Dla urządzenia 'nullmodem':
-  server, rxdelay, txdelay, telnet, usedtr, transparent, port, inhsocket, sock
-  (wszystkie opcjonalne).
+  - Dla urządzenia 'mouse' (mysz szeregowa):
+      model, nadpisuje ustawienie z sekcji [mouse].
+  - Dla urządzenia 'direct' (bezpośredni dostęp do portu COM gospodarza):
+      realport (wymagany), rxdelay (opcjonalny).
+      Przykład: realport:COM1 realport:ttyS0.
+  - Dla urządzenia 'modem':
+      listenport, sock, baudrate (wszystkie opcjonalne).
+  - Dla urządzenia 'nullmodem':
+      server, rxdelay, txdelay, telnet, usedtr, transparent, port,
+      inhsocket, sock (wszystkie opcjonalne).
 SOCK określa protokół uzywany przez obydwie strony połączenia, 0 dla TCP,
 1 dla ENet reliable UDP.
 Przykład: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-patrz serial1
+Patrz 'serial1'
 .
 :CONFIG_SERIAL3
-patrz serial1
+Patrz 'serial1'
 .
 :CONFIG_SERIAL4
-patrz serial1
+Patrz 'serial1'
 .
 :CONFIG_PHONEBOOKFILE
 Plik z informacją o mapowaniu wirtualnych numerów telefonicznych na adresy.
 .
 :CONFIG_XMS
-Włączenie emulacji pamięci XMS (rozszerzonej).
+Włącza emulację pamięci XMS (rozszerzonej).
 .
 :CONFIG_EMS
-Włączenie emulacji pamięci EMS (stronicowanej). Domyślne ustawienie ('true')
+Włącza emulacją pamięci EMS (stronicowanej). Domyślne ustawienie ('true')
 oferuje największą kompatybilność, ale niektóre aplikacje mogą działać lepiej
 z innymi wartościami lub wymagać wyłączenia pamięci EMS żeby w ogóle działać.
 .
 :CONFIG_UMB
-Włączenie emulacji pamięci UMB (górnej).
+Włącza emulację pamięci UMB (górnej).
 .
 :CONFIG_VER
 Wersja systemu DOS raportowana oprogramowanie (domyślnie 5.0). Format to
@@ -873,7 +879,7 @@ Wartość 0 spowoduje ustawienie kraju odpowiadającemu wybranemu układowi
 klawiatury.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Rozwijanie zmiennych środowiskowych, np. %PATH%, w wierszu poleceń.
+Rozwija zmienne środowiskowe, np. %PATH%, w wierszu poleceń.
 Obsługiwane przez COMMAND.COM z systemów MS-DOS 7/8 oraz FreeDOS.
 .
 :CONFIG_KEYBOARDLAYOUT
@@ -881,10 +887,10 @@ Kod języka klawiatury (lub puste) - np. 'pl' (polski układ programisty),
 'pl214' (polski układ maszynistki).
 .
 :CONFIG_IPX
-Włączenie emulacji protokołu IPX po UDP/IP.
+Włącza emulację protokołu IPX po UDP/IP.
 .
 :CONFIG_NE2000
-Włączenie emulacji karty sieciowej Novell NE2000 podłączonej do wirtualnej
+Włącza emulację karty sieciowej Novell NE2000 podłączonej do wirtualnej
 sieci 'libslirp' z parametrami jak poniżej:
   10.0.2.0       : Adres witrualnej sieci LAN.
   255.255.255.0  : Maska podsieci.
@@ -892,19 +898,19 @@ sieci 'libslirp' z parametrami jak poniżej:
   10.0.2.3       : Adres IP wirtualnego serwera DNS,
   10.0.2.15      : Pierwszy adres IP przydzielany przez DHCP. Twoje IP!
 Uwaga: Wewnątrz DOSa używanie w/w sieci wymaga sterownika pakietowego karty
-NE2000, klienta DHCP i stosu TCP/IP. Jeśli chcesz uruchomić serwer gry
-wieloosobowej, niezbędne może być przekierowanie portów z systemu gospodarza
-do DOSu, oraz z routera do gospodarza.
+       NE2000, klienta DHCP i stosu TCP/IP. Jeśli chcesz uruchomić serwer gry
+       wieloosobowej, niezbędne może być przekierowanie portów z systemu
+       gospodarza do DOSa, oraz z routera do gospodarza.
 .
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000.
 Uwaga: Adresy 220 oraz 240 ogą być niedostępne, gdyż są domyślnie przypisane
-do kart muzycznych Sound Blaster oraz Gravis UltraSound.
+       do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000.
 Uwaga: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
-do portu COM2 i karty muzycznej Gravis UltraSound.
+       do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
 Adres MAC karty sieciowej NE2000.
@@ -978,7 +984,7 @@ Katalog z konfiguracją DOSBox Staging %s:
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Nie można otworzyć pliku '%s'
+Nie można otworzyć pliku %s
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
@@ -1077,8 +1083,11 @@ Brakujący parametr.
 
 .
 :PROGRAM_EXECUTABLE_MISSING
-Nie znaleziono pliku wykonywalnego: '%s'.
+Nie znaleziono pliku wykonywalnego: '%s'
 
+.
+:CONJUNCTION_AND
+i
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 enumeracja nieobsługiwana
@@ -1307,9 +1316,7 @@ Slot
 
 .
 :PROGRAM_MOUNT_STATUS_1
-
 Lista zamontowanych dysków:
-
 
 .
 :PROGRAM_IMGMOUNT_HELP_LONG
@@ -2045,7 +2052,7 @@ Uwagi:
 
 Przykłady:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
@@ -3018,7 +3025,4 @@ Inne polecenia
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Pozostałe, bez kategorii
-.
-:CONJUNCTION_AND
-i
 .
