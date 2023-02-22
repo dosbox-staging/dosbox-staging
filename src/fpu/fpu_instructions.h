@@ -20,10 +20,11 @@
 #include "fpu.h"
 #endif
 
+static void FPU_FINIT()
+{
+	fpu.cw = {};
+	fpu.sw = {};
 
-static void FPU_FINIT(void) {
-	fpu.cw.init();
-	fpu.sw.init();
 	fpu.tags[0] = TAG_Empty;
 	fpu.tags[1] = TAG_Empty;
 	fpu.tags[2] = TAG_Empty;

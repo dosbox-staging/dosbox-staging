@@ -77,54 +77,60 @@ enum FPU_Tag : uint8_t {
 	TAG_Empty = 3
 };
 
-template<class T, unsigned bitno, unsigned nbits=1>
-struct RegBit
-{
-        enum { basemask = (1 << nbits) - 1 };
-        enum { mask = basemask << bitno };
-        T data;
-        RegBit(const T& reg) : data(reg) {}
-        template <class T2> RegBit& operator=(T2 val)
-        {
-                data = (data & ~mask) | ((nbits > 1 ? val & basemask : !!val) << bitno);
-                return *this;
-        }
-        operator unsigned() const { return (data & mask) >> bitno; }
+template <class T, unsigned bitno, unsigned nbits = 1>
+struct RegBit {
+	enum : T { basemask = (1 << nbits) - 1 };
+	enum : T { mask = basemask << bitno };
+	T data;
+	RegBit() = default;
+	RegBit(const T& reg) : data(reg) {}
+
+	template <class T2>
+	RegBit& operator=(const T2 val)
+	{
+		data = static_cast<T>((data & ~mask) |
+		                      ((nbits > 1 ? val & basemask : !!val) << bitno));
+		return *this;
+	}
+
+	// Limit casting outward to our internal type, as it can't be smaller or
+	// larger. Any type conversion warnings will occur externally (if misused).
+	operator T() const
+	{
+		return static_cast<T>((data & mask) >> bitno);
+	}
 };
 
-struct FPUControlWord
-{
-	union
-	{
-		uint16_t reg;
-		RegBit<decltype(reg), 0>     IM;  // Invalid operation mask
-		RegBit<decltype(reg), 1>     DM;  // Denormalized operand mask
-		RegBit<decltype(reg), 2>     ZM;  // Zero divide mask
-		RegBit<decltype(reg), 3>     OM;  // Overflow mask
-		RegBit<decltype(reg), 4>     UM;  // Underflow mask
-		RegBit<decltype(reg), 5>     PM;  // Precision mask
-		RegBit<decltype(reg), 7>     M;   // Interrupt mask   (8087-only)
-		RegBit<decltype(reg), 8, 2>  PC;  // Precision control
-		RegBit<decltype(reg), 10, 2> RC;  // Rounding control
-		RegBit<decltype(reg), 12>    IC;  // Infinity control (8087/80287-only)
-	};
-	
-	enum
-	{
+struct FPUControlWord {
+	enum : uint16_t {
 		mask8087     = 0x1fff,
 		maskNon8087  = 0x1f7f,
 		reservedMask = 0x40,
 		initValue    = 0x37f
 	};
-	enum RoundMode
-	{
-		Nearest = 0,
-		Down    = 1,
-		Up      = 2,
-		Chop    = 3
+
+	enum RoundMode : uint8_t {
+		Nearest,
+		Down,
+		Up,
+		Chop,
 	};
 
-	FPUControlWord() : reg(initValue) {}
+	union {
+		uint16_t reg = initValue;
+		RegBit<decltype(reg), 0> IM;     // Invalid operation mask
+		RegBit<decltype(reg), 1> DM;     // Denormalized operand mask
+		RegBit<decltype(reg), 2> ZM;     // Zero divide mask
+		RegBit<decltype(reg), 3> OM;     // Overflow mask
+		RegBit<decltype(reg), 4> UM;     // Underflow mask
+		RegBit<decltype(reg), 5> PM;     // Precision mask
+		RegBit<decltype(reg), 7> M;      // Interrupt mask   (8087-only)
+		RegBit<decltype(reg), 8, 2> PC;  // Precision control
+		RegBit<decltype(reg), 10, 2> RC; // Rounding control
+		RegBit<decltype(reg), 12> IC; // Infinity control (8087/80287-only)
+	};
+
+	FPUControlWord()                            = default;
 	FPUControlWord(const FPUControlWord& other) = default;
 
 	FPUControlWord& operator=(const FPUControlWord& other)
@@ -132,23 +138,31 @@ struct FPUControlWord
 		reg = other.reg;
 		return *this;
 	}
-	template<class T>
-	FPUControlWord& operator=(T val)
+
+	template <class T>
+	FPUControlWord& operator=(const T val)
 	{
-		reg = (val & (CPU_ArchitectureType==CPU_ARCHTYPE_8086 ? mask8087 : maskNon8087)) | reservedMask;
+		const auto arch_mask = CPU_ArchitectureType == CPU_ARCHTYPE_8086
+		                             ? mask8087
+		                             : maskNon8087;
+
+		reg = static_cast<uint16_t>(val & arch_mask) | reservedMask;
 		return *this;
 	}
-	operator unsigned() const
+
+	operator uint16_t() const
 	{
 		return reg;
 	}
+
 	template <class T>
-	FPUControlWord& operator |=(T val)
+	FPUControlWord& operator|=(const T val)
 	{
+		// use assignment operator
 		*this = reg | val;
 		return *this;
 	}
-	void init() { reg = initValue; }
+
 	FPUControlWord allMasked() const
 	{
 		auto masked = *this;
@@ -157,71 +171,86 @@ struct FPUControlWord
 	}
 };
 
-struct FPUStatusWord
-{
-	union
-	{
-		uint16_t reg;
-		RegBit<decltype(reg), 0>     IE;  // Invalid operation
-		RegBit<decltype(reg), 1>     DE;  // Denormalized operand
-		RegBit<decltype(reg), 2>     ZE;  // Divide-by-zero
-		RegBit<decltype(reg), 3>     OE;  // Overflow
-		RegBit<decltype(reg), 4>     UE;  // Underflow
-		RegBit<decltype(reg), 5>     PE;  // Precision
-		RegBit<decltype(reg), 6>     SF;  // Stack Flag (non-8087/802087)
-		RegBit<decltype(reg), 7>     IR;  // Interrupt request (8087-only)
-		RegBit<decltype(reg), 7>     ES;  // Error summary     (non-8087)
-		RegBit<decltype(reg), 8>     C0;  // Condition flag
-		RegBit<decltype(reg), 9>     C1;  // Condition flag
-		RegBit<decltype(reg), 10>    C2;  // Condition flag
+struct FPUStatusWord {
+	enum : uint16_t {
+		conditionMask             = 0x4700,
+		conditionUnmask           = static_cast<uint16_t>(~conditionMask),
+		conditionAndExceptionMask = 0x47bf,
+		initValue                 = 0,
+	};
+	union {
+		uint16_t reg = initValue;
+		RegBit<decltype(reg), 0> IE;  // Invalid operation
+		RegBit<decltype(reg), 1> DE;  // Denormalized operand
+		RegBit<decltype(reg), 2> ZE;  // Divide-by-zero
+		RegBit<decltype(reg), 3> OE;  // Overflow
+		RegBit<decltype(reg), 4> UE;  // Underflow
+		RegBit<decltype(reg), 5> PE;  // Precision
+		RegBit<decltype(reg), 6> SF;  // Stack Flag (non-8087/802087)
+		RegBit<decltype(reg), 7> IR;  // Interrupt request (8087-only)
+		RegBit<decltype(reg), 7> ES;  // Error summary     (non-8087)
+		RegBit<decltype(reg), 8> C0;  // Condition flag
+		RegBit<decltype(reg), 9> C1;  // Condition flag
+		RegBit<decltype(reg), 10> C2; // Condition flag
 		RegBit<decltype(reg), 11, 3> top; // Top of stack pointer
-		RegBit<decltype(reg), 14>    C3;  // Condition flag
-		RegBit<decltype(reg), 15>    B;   // Busy flag
+		RegBit<decltype(reg), 14> C3;     // Condition flag
+		RegBit<decltype(reg), 15> B;      // Busy flag
 	};
 
-	FPUStatusWord() : reg(0) {}
+	FPUStatusWord()                           = default;
 	FPUStatusWord(const FPUStatusWord& other) = default;
+
 	FPUStatusWord& operator=(const FPUStatusWord& other)
 	{
 		reg = other.reg;
 		return *this;
 	}
-	template<class T>
-	FPUStatusWord& operator=(T val)
+
+	template <class T>
+	FPUStatusWord& operator=(const T val)
 	{
-		reg = val;
+		if constexpr (std::is_signed_v<T>) {
+			assert(val >= 0);
+		}
+		if constexpr (sizeof(T) > sizeof(reg)) {
+			assert(val <= UINT16_MAX);
+		}
+		reg = static_cast<uint16_t>(val);
 		return *this;
 	}
-	operator unsigned() const
+
+	operator uint16_t() const
 	{
 		return reg;
 	}
+
 	template <class T>
-	FPUStatusWord& operator |=(T val)
+	FPUStatusWord& operator|=(const T val)
 	{
-		*this |= reg | val;
+		// use assignment operator
+		*this = reg | val;
 		return *this;
 	}
-	void init() { reg = 0; }
+
 	void clearExceptions()
 	{
-		IE = false; DE = false; ZE = false; OE = false; UE = false; PE = false;
+		IE = false;
+		DE = false;
+		ZE = false;
+		OE = false;
+		UE = false;
+		PE = false;
 		ES = false;
 	}
-	enum
-	{
-		conditionMask = 0x4700,
-		conditionAndExceptionMask = 0x47bf
-	};
 	std::string to_string() const;
 };
 
 struct FPU_rec {
-	FPU_Reg regs[9]      = {};
-	FPU_P_Reg p_regs[9]  = {};
-	FPU_Tag tags[9]      = {};
-	FPUControlWord  cw;
-	FPUStatusWord   sw;
+	FPU_Reg regs[9]     = {};
+	FPU_P_Reg p_regs[9] = {};
+	FPU_Tag tags[9]     = {};
+	FPUControlWord cw   = {};
+	FPUStatusWord sw    = {};
 };
 
 extern FPU_rec fpu;
