@@ -262,24 +262,29 @@ static inline void FPU_SetSW(const uint16_t word)
 void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
 void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
-static inline void FPU_SET_C0(Bitu C){
-	fpu.sw.C0 = !!C;
+static inline void FPU_SET_C0(const uint16_t value)
+{
+	fpu.sw.C0 = (value > 0) ? 0b1 : 0b0;
 }
 
-static inline void FPU_SET_C1(Bitu C){
-	fpu.sw.C1 = !!C;
+static inline void FPU_SET_C1(const uint16_t value)
+{
+	fpu.sw.C1 = (value > 0) ? 0b1 : 0b0;
 }
 
-static inline void FPU_SET_C2(Bitu C){
-	fpu.sw.C2 = !!C;
+static inline void FPU_SET_C2(const uint16_t value)
+{
+	fpu.sw.C2 = (value > 0) ? 0b1 : 0b0;
 }
 
-static inline void FPU_SET_C3(Bitu C){
-	fpu.sw.C3 = !!C;
+static inline void FPU_SET_C3(const uint16_t value)
+{
+	fpu.sw.C3 = (value > 0) ? 0b1 : 0b0;
 }
 
-static inline void FPU_SET_D(Bitu C){
-	fpu.sw.DE = !!C;
+static inline void FPU_SET_D(const uint16_t value)
+{
+	fpu.sw.DE = (value > 0) ? 0b1 : 0b0;
 }
 
 static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)
