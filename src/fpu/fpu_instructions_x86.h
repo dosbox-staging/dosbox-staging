@@ -1008,18 +1008,21 @@ static constexpr uint16_t sw_mask = FPUStatusWord::conditionAndExceptionMask;
         );
 #endif
 
-static void FPU_FINIT(void) {
-	fpu.cw.init();
-	fpu.sw.init();
-	fpu.tags[0]=TAG_Empty;
-	fpu.tags[1]=TAG_Empty;
-	fpu.tags[2]=TAG_Empty;
-	fpu.tags[3]=TAG_Empty;
-	fpu.tags[4]=TAG_Empty;
-	fpu.tags[5]=TAG_Empty;
-	fpu.tags[6]=TAG_Empty;
-	fpu.tags[7]=TAG_Empty;
-	fpu.tags[8]=TAG_Valid; // is only used by us
+static void FPU_FINIT()
+{
+	fpu.cw = {};
+	fpu.sw = {};
+
+	fpu.tags[0] = TAG_Empty;
+	fpu.tags[1] = TAG_Empty;
+	fpu.tags[2] = TAG_Empty;
+	fpu.tags[3] = TAG_Empty;
+	fpu.tags[4] = TAG_Empty;
+	fpu.tags[5] = TAG_Empty;
+	fpu.tags[6] = TAG_Empty;
+	fpu.tags[7] = TAG_Empty;
+
+	fpu.tags[8] = TAG_Valid; // is only used by us
 }
 
 static void FPU_FCLEX(void){
