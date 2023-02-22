@@ -101,23 +101,11 @@ static void FPU_FPOP(void){
 
 static double FROUND(double in){
 	switch(fpu.round){
-	case ROUND_Nearest:	
-		if (in-floor(in)>0.5) return (floor(in)+1);
-		else if (in-floor(in)<0.5) return (floor(in));
-		else return (((static_cast<int64_t>(floor(in)))&1)!=0)?(floor(in)+1):(floor(in));
-		break;
-	case ROUND_Down:
-		return (floor(in));
-		break;
-	case ROUND_Up:
-		return (ceil(in));
-		break;
-	case ROUND_Chop:
-		return in; //the cast afterwards will do it right maybe cast here
-		break;
-	default:
-		return in;
-		break;
+	case ROUND_Nearest: return std::nearbyint(in);
+	case ROUND_Down: return (floor(in));
+	case ROUND_Up: return (ceil(in));
+	case ROUND_Chop: [[fallthrough]]; // cast by the caller chops
+	default: return in;
 	}
 }
 
