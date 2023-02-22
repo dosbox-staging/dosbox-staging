@@ -324,10 +324,10 @@ static void config_init(Section_prop &secprop)
 	prop_str->Set_values(list_models_ps2);
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
-	        "   standard:      3 buttons, standard PS/2 mouse.\n"
-	        "   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
-	        "   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
-	        "   none:          no PS/2 mouse emulated.\n"
+	        "  standard:      3 buttons, standard PS/2 mouse.\n"
+	        "  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
+	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
+	        "  none:          no PS/2 mouse emulated.\n"
 	        "Default: explorer");
 
 	prop_str = secprop.Add_string("com_mouse_model",
@@ -337,16 +337,16 @@ static void config_init(Section_prop &secprop)
 	prop_str->Set_values(list_models_com);
 	prop_str->Set_help(
 	        "COM (serial) port default mouse model:\n"
-	        "   2button:      2 buttons, Microsoft mouse.\n"
-	        "   3button:      3 buttons, Logitech mouse;\n"
-	        "                 mostly compatible with Microsoft mouse.\n"
-	        "   wheel:        3 buttons + wheel;\n"
-	        "                 mostly compatible with Microsoft mouse.\n"
-	        "   msm:          3 buttons, Mouse Systems mouse;\n"
-	        "                 NOT compatible with Microsoft mouse.\n"
-	        "   2button+msm:  Automatic choice between '2button' and 'msm'.\n"
-	        "   3button+msm:  Automatic choice between '3button' and 'msm'.\n"
-	        "   wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
+	        "  2button:      2 buttons, Microsoft mouse.\n"
+	        "  3button:      3 buttons, Logitech mouse;\n"
+	        "                mostly compatible with Microsoft mouse.\n"
+	        "  wheel:        3 buttons + wheel;\n"
+	        "                mostly compatible with Microsoft mouse.\n"
+	        "  msm:          3 buttons, Mouse Systems mouse;\n"
+	        "                NOT compatible with Microsoft mouse.\n"
+	        "  2button+msm:  Automatic choice between '2button' and 'msm'.\n"
+	        "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
+	        "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
 	        "Notes: Enable COM port mice in the [serial] section.");
 }
 

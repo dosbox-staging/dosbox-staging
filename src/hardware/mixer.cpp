@@ -2803,7 +2803,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable silent mode (disabled by default).\n"
-	        "Sound is still fullhy emulated in silent mode, but DOSBox outputs silence.");
+	        "Sound is still fully emulated in silent mode, but DOSBox outputs silence.");
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
