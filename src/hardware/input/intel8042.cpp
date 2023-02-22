@@ -176,6 +176,7 @@ static constexpr void sanitize_config_byte()
 	config_byte.reserved_bit_7 = 0;
 }
 
+static auto& passed_self_test     = config_byte.passed_self_test;
 static auto& is_irq_active_kbd    = config_byte.is_irq_active_kbd;
 static auto& is_irq_active_aux    = config_byte.is_irq_active_aux;
 static auto& is_disabled_kbd      = config_byte.is_disabled_kbd;
@@ -264,6 +265,15 @@ static void warn_controller_mode()
 	static bool already_warned = false;
 	if (!already_warned) {
 		LOG_WARNING("I8042: Switching controller to AT mode not emulated");
+		already_warned = true;
+	}
+}
+
+static void warn_diagnostic_dump()
+{
+	static bool already_warned = false;
+	if (!already_warned) {
+		LOG_WARNING("I8042: Diagnostic dump not emulated");
 		already_warned = true;
 	}
 }
@@ -678,9 +688,13 @@ static void execute_command(const Command command)
 	case Command::TestController: // 0xaa
 		// Controller test. Possible results:
 		// 0x55: passed; 0xfc: failed
-		// Disables aux (mouse) and keyboard ports
-		is_disabled_aux = true;
-		is_disabled_kbd = true;
+		// Disables aux (mouse) and keyboard ports, enables translation,
+		// enables A20 line, marks self-test as passed.
+		MEM_A20_Enable(true);
+		is_disabled_aux      = true;
+		is_disabled_kbd      = true;
+		uses_kbd_translation = true;
+		passed_self_test     = true;
 		flush_buffer();
 		buffer_add(0x55);
 		break;
@@ -694,16 +708,18 @@ static void execute_command(const Command command)
 		break;
 	case Command::DiagnosticDump: // 0xac
 		// Dump the whole controller internal RAM (16 bytes),
-		// output port, input port, and status port
-		warn_internal_ram_access();
-		flush_buffer();
-		buffer_add(config_byte.data);
-		for (uint8_t idx = 1; idx <= 16; idx++) {
-			buffer_add(0);
-		}
-		buffer_add(get_input_port());
-		buffer_add(get_output_port());
-		buffer_add(status_byte.data);
+		// output port, input port, test input, and status byte
+		warn_diagnostic_dump();
+		// TODO: "For each byte of information dumped, the KBC sends
+		// three bytes to the host: two ASCII hex digits in scan set 1
+		// format followed by an ASCII space" - this is not clear enough
+		// to implement the command; how to choose these hex digits?
+		// "While processing the dump command, the KBC is not accepting
+		// keyboard input. The KBC waits potentially indefinitely for
+		// the host to read the bytes (from port 60h), but any byte
+		// (new command) written to the KBC (port 64h) aborts the dump"
+		// See:
+		// http://www.os2museum.com/wp/ibm-pcat-8042-keyboard-controller-commands/
 		break;
 	case Command::DisablePortKbd: // 0xad
 		// Disable keyboard port; any keyboard command
@@ -818,6 +834,7 @@ static void execute_command(const Command command, const uint8_t param)
 		// should the firmware allow changing them at all?
 		MEM_A20_Enable(bit::is(param, b1));
 		if (!bit::is(param, b0)) {
+			LOG_WARNING("I8042: Clearing P2 bit 0 locks a real PC");
 			request_system_reset();
 		}
 		break;
