@@ -183,6 +183,8 @@ static auto& is_disabled_kbd      = config_byte.is_disabled_kbd;
 static auto& is_disabled_aux      = config_byte.is_disabled_aux;
 static auto& uses_kbd_translation = config_byte.uses_kbd_translation;
 
+static bool is_diagnostic_dump = false;
+
 // Byte returned from port 0x60
 
 static uint8_t data_byte = 0;
@@ -265,15 +267,6 @@ static void warn_controller_mode()
 	static bool already_warned = false;
 	if (!already_warned) {
 		LOG_WARNING("I8042: Switching controller to AT mode not emulated");
-		already_warned = true;
-	}
-}
-
-static void warn_diagnostic_dump()
-{
-	static bool already_warned = false;
-	if (!already_warned) {
-		LOG_WARNING("I8042: Diagnostic dump not emulated");
 		already_warned = true;
 	}
 }
@@ -620,6 +613,31 @@ static void execute_command(const Command command)
 {
 	// LOG_INFO("I8042: Command 0x%02x", static_cast<int>(command));
 
+	auto diag_dump_byte = [](const uint8_t byte) {
+		// Based on communication logs collected from real chip
+		// by Vogons forum user 'migry' - reference:
+		// - https://www.vogons.org/viewtopic.php?p=1054200
+		// - https://www.vogons.org/download/file.php?id=133167
+
+		const size_t nibble_hi = (byte & 0b1111'0000) >> 4;
+		const size_t nibble_lo = (byte & 0b0000'1111);
+
+		// clang-format off
+		static constexpr uint8_t translation_table[] = {
+			0x0b, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+			0x09, 0x0a, 0x1e, 0x30, 0x2e, 0x20, 0x12, 0x21
+		};
+		// clang-format on
+
+		// Diagnostic dumps send 3 bytes for each byte from memory:
+		// - high nibble in hex ASCII, translated using codeset 1 table
+		// - low nibble, similarly
+		// - 0x27 (space in codeset 1)
+		buffer_add(translation_table[nibble_hi]);
+		buffer_add(translation_table[nibble_lo]);
+		buffer_add(0x39);
+	};
+
 	switch (command) {
 	//
 	// Commands requiring a parameter
@@ -709,17 +727,20 @@ static void execute_command(const Command command)
 	case Command::DiagnosticDump: // 0xac
 		// Dump the whole controller internal RAM (16 bytes),
 		// output port, input port, test input, and status byte
-		warn_diagnostic_dump();
-		// TODO: "For each byte of information dumped, the KBC sends
-		// three bytes to the host: two ASCII hex digits in scan set 1
-		// format followed by an ASCII space" - this is not clear enough
-		// to implement the command; how to choose these hex digits?
-		// "While processing the dump command, the KBC is not accepting
-		// keyboard input. The KBC waits potentially indefinitely for
-		// the host to read the bytes (from port 60h), but any byte
-		// (new command) written to the KBC (port 64h) aborts the dump"
-		// See:
-		// http://www.os2museum.com/wp/ibm-pcat-8042-keyboard-controller-commands/
+		warn_internal_ram_access();
+		static_assert(buffer_size >= 20 * 3,
+		              "Buffer has to hold 3 bytes for each byte of dump");
+		flush_buffer();
+		is_diagnostic_dump = true;
+		diag_dump_byte(config_byte.data);
+		for (uint8_t idx = 1; idx <= 16; idx++) {
+			diag_dump_byte(0);
+		}
+		diag_dump_byte(get_input_port());
+		diag_dump_byte(get_output_port());
+		warn_read_test_inputs();
+		diag_dump_byte(0); // test input - TODO: not emulated for now
+		diag_dump_byte(status_byte.data);
 		break;
 	case Command::DisablePortKbd: // 0xad
 		// Disable keyboard port; any keyboard command
@@ -892,6 +913,17 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 		return data_byte;
 	}
 
+	if (is_diagnostic_dump && !buffer_num_used) {
+		// Diagnostic dump finished
+		is_diagnostic_dump = false;
+		if (I8042_IsReadyForAuxFrame()) {
+			MOUSEPS2_NotifyReadyForFrame();
+		}
+		if (I8042_IsReadyForKbdFrame()) {
+			KEYBOARD_NotifyReadyForFrame();
+		}
+	}
+
 	if (is_data_from_aux) {
 		assert(waiting_bytes_from_aux);
 		--waiting_bytes_from_aux;
@@ -964,20 +996,26 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t) // port 0x
 {
 	const auto byte = check_cast<uint8_t>(value);
 
-	status_byte.was_last_write_cmd = true;
-
-	current_command = Command::None;
+	should_skip_device_notify = true;
 
 	const bool should_notify_aux = !I8042_IsReadyForAuxFrame();
 	const bool should_notify_kbd = !I8042_IsReadyForKbdFrame();
 
-	should_skip_device_notify = true;
+	if (is_diagnostic_dump) {
+		is_diagnostic_dump = false;
+		flush_buffer();
+	}
+
+	status_byte.was_last_write_cmd = true;
+
+	current_command = Command::None;
 	if ((byte <= 0x1f) || (byte >= 0x40 && byte <= 0x5f)) {
 		// AMI BIOS systems command aliases
 		execute_command(static_cast<Command>(byte + 0x20));
 	} else {
 		execute_command(static_cast<Command>(byte));
 	}
+
 	should_skip_device_notify = false;
 
 	if (should_notify_aux && I8042_IsReadyForAuxFrame()) {
@@ -1056,12 +1094,12 @@ void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes)
 
 bool I8042_IsReadyForAuxFrame()
 {
-	return !waiting_bytes_from_aux && !is_disabled_aux;
+	return !waiting_bytes_from_aux && !is_disabled_aux && !is_diagnostic_dump;
 }
 
 bool I8042_IsReadyForKbdFrame()
 {
-	return !waiting_bytes_from_kbd && !is_disabled_kbd;
+	return !waiting_bytes_from_kbd && !is_disabled_kbd && !is_diagnostic_dump;
 }
 
 // ***************************************************************************
