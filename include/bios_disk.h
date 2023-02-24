@@ -73,7 +73,7 @@ public:
 	uint32_t sector_size;
 	uint32_t heads,cylinders,sectors;
 private:
-	uint32_t current_fpos;
+	off_t current_fpos;
 	enum { NONE,READ,WRITE } last_action;
 };
 

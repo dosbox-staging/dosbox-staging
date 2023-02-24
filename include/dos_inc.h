@@ -273,6 +273,21 @@ static inline uint16_t long2para(uint32_t size) {
 	else return (uint16_t)(size>>4);
 }
 
+/* Large file support */
+#if defined(_MSC_VER)
+	// MSVC doesn't support the posix fstream functions,
+	// typedef their equivalents
+	#define ftello _ftelli64
+	#define fseeko _fseeki64
+	#define off_t __int64
+#else
+	// All other platforms should have POSIX fstream 'o' support
+	// Note: Meson automatically sets preprocessor defines for us
+
+	// Check that off_t is 64 bits
+	static_assert(sizeof(off_t) == sizeof(int64_t), "off_t not 64 bits");
+#endif
+
 /* Dos Error Codes */
 #define DOSERR_NONE 0
 #define DOSERR_FUNCTION_NUMBER_INVALID 1
