@@ -632,7 +632,7 @@ static void execute_command(const Command command)
 		// Diagnostic dumps send 3 bytes for each byte from memory:
 		// - high nibble in hex ASCII, translated using codeset 1 table
 		// - low nibble, similarly
-		// - 0x27 (space in codeset 1)
+		// - 0x39 (space in codeset 1)
 		buffer_add(translation_table[nibble_hi]);
 		buffer_add(translation_table[nibble_lo]);
 		buffer_add(0x39);
