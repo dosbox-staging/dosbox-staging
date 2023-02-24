@@ -219,6 +219,13 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora:
   auto        | 'low' jeśli podano katalog lub plik wykonywalny,
               | 'high' w przeciwnym wypadku
 .
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+Wiele gier otwiera swoje pliki z uprawnieniami do zapisu; nawet te, których
+nigdy nie modyfikuje. To ustawienie pozwala zabezpieczyć te pliki przed
+zapisem, wciąż pozwalając tym grom na ich otwieranie.
+Drugie zastosowanie: jeśli używasz systemu plików z funkcją copy-on-write,
+lub sieciowego systemu plików, to ustawienie pozwala pominąć operację zapisu.
+.
 :CONFIG_FRAMESKIP
 Użyj ustawienia 'host_rate' z sekcji [sdl].
 .
