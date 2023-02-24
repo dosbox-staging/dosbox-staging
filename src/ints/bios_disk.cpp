@@ -197,7 +197,7 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
 	if (last_action == READ || bytenum != current_fpos) {
 		if (fseeko(diskimg, bytenum, SEEK_SET) != 0) {
 			LOG_ERR("BIOSDISK: Could not seek to byte %lld in file '%s': %s",
-			        bytenum,
+			        static_cast<long long int>(bytenum),
 			        diskname,
 			        strerror(errno));
 			return 0xff;
