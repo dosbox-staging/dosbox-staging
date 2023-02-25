@@ -388,7 +388,7 @@ void IMGMOUNT::Run(void)
 				return;
 			}
 			fseeko(diskfile, 0L, SEEK_END);
-			uint32_t fcsize = (uint32_t)(ftello(diskfile) / 512L);
+			uint32_t fcsize = static_cast<uint32_t>(ftello(diskfile) / 512L);
 			uint8_t buf[512];
 			fseeko(diskfile, 0L, SEEK_SET);
 			if (fread(buf, sizeof(uint8_t), 512, diskfile) < 512) {
@@ -567,7 +567,7 @@ void IMGMOUNT::Run(void)
 			return;
 		}
 		fseeko(newDisk, 0L, SEEK_END);
-		uint32_t imagesize = (ftello(newDisk) / 1024);
+		uint32_t imagesize = static_cast<uint32_t>(ftello(newDisk) / 1024);
 		const bool hdd     = (imagesize > 2880);
 		// Seems to make sense to require a valid geometry..
 		if (hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
