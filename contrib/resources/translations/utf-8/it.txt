@@ -244,6 +244,13 @@ quiet       |           no           |         no
 auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
                (es. dosbox run.bat), altrimenti sarà impostato su 'high'
 .
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+Molti giochi aprono tutti i loro file con permessi di scrittura, anche quelli
+che non modificheranno mai. Questa impostazione ti consente di proteggere
+dalla scrittura quei file pur consentendo al gioco di leggerli.
+Un secondo caso d'uso: se stai utilizzando un filesystem copy-on-write 
+o di rete, questa impostazione consente di ignorare le operazioni di scrittura.
+.
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione '[sdl] host_rate'.
@@ -291,7 +298,6 @@ I 16 colori sono ordinati come segue:
   nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro,
   grigio-scuro, azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro,
   magenta-chiaro, giallo, e bianco.
-
 I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre
 sono rispettivamente:
   #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
@@ -422,21 +428,24 @@ questo elenco.
 .
 :CONFIG_PS2_MOUSE_MODEL
 Modello mouse porta PS/2 AUX:
-   standard:      3 pulsanti, mouse PS/2 standard.
-   intellimouse:  3 pulsanti + rotellina, Microsoft IntelliMouse (predefinito).
+  standard:      3 pulsanti, mouse PS/2 standard.
+  intellimouse:  3 pulsanti + rotellina, Microsoft IntelliMouse.
+  explorer:      5 pulsanti + rotellina, Microsoft IntelliMouse Explorer.
+  none:          nessun mouse PS/2 emulato.
+Predefinito: explorer
 .
 :CONFIG_COM_MOUSE_MODEL
 Modello mouse predefinito porta COM (seriale):
-   2button:      2 pulsanti, mouse Microsoft.
-   3button:      3 pulsanti, mouse Logitech;
-                 per lo più compatibile con mouse Microsoft.
-   wheel:        3 pulsanti + rotellina;
-                 per lo più compatibile con mouse Microsoft.
-   msm:          3 pulsanti, mouse Mouse Systems;
-                 NON compatibile con mouse Microsoft.
-   2button+msm:  Scelta automatica tra '2button' e 'msm'.
-   3button+msm:  Scelta automatica tra '3button' e 'msm'.
-   wheel+msm:    Scelta automatica tra 'wheel' e 'msm' (predefinito).
+  2button:      2 pulsanti, mouse Microsoft.
+  3button:      3 pulsanti, mouse Logitech;
+                per lo più compatibile con mouse Microsoft.
+  wheel:        3 pulsanti + rotellina;
+                per lo più compatibile con mouse Microsoft.
+  msm:          3 pulsanti, mouse Mouse Systems;
+                NON compatibile con mouse Microsoft.
+  2button+msm:  Scelta automatica tra '2button' e 'msm'.
+  3button+msm:  Scelta automatica tra '3button' e 'msm'.
+  wheel+msm:    Scelta automatica tra 'wheel' e 'msm' (predefinito).
 Note: Abilita i mouse della porta COM nella sezione [serial].
 .
 :CONFIG_NOSOUND
@@ -1196,6 +1205,9 @@ Il percorso "%s" supera la lunghezza massima DOS di %d carattere/i.
 File eseguibile non trovato: %s
 
 .
+:CONJUNCTION_AND
+e
+.
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 elenco non supportato
 .
@@ -1597,9 +1609,8 @@ Devi montare la directory contenente i file.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Dopo aver montato con successo il disco, puoi digitare [color=blue]c:[reset] per spostarti
-nella tua nuova unità C.
-Una volta qui, digita [color=blue]dir[reset] per visualizzarne il contenuto.
+Dopo aver montato con successo il disco, puoi digitare [color=blue]c:[reset] per spostarti nella
+tua nuova unità C. Una volta qui, digita [color=blue]dir[reset] per visualizzarne il contenuto.
 [color=blue]cd[reset] ti permette di spostarti all'interno di una directory (riconoscibile da [color=yellow][][reset]).
 Puoi eseguire programmi/file con estensione [color=light-red].exe[reset], [color=light-red].bat[reset] e [color=light-red].com[reset].
 
@@ -3202,7 +3213,4 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
-.
-:CONJUNCTION_AND
-e
 .
