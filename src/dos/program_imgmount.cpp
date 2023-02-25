@@ -387,10 +387,10 @@ void IMGMOUNT::Run(void)
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 				return;
 			}
-			fseeko(diskfile, 0L, SEEK_END);
-			uint32_t fcsize = static_cast<uint32_t>(ftello(diskfile) / 512L);
+			cross_fseeko(diskfile, 0L, SEEK_END);
+			uint32_t fcsize = static_cast<uint32_t>(cross_ftello(diskfile) / 512L);
 			uint8_t buf[512];
-			fseeko(diskfile, 0L, SEEK_SET);
+			cross_fseeko(diskfile, 0L, SEEK_SET);
 			if (fread(buf, sizeof(uint8_t), 512, diskfile) < 512) {
 				fclose(diskfile);
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
@@ -566,8 +566,8 @@ void IMGMOUNT::Run(void)
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 			return;
 		}
-		fseeko(newDisk, 0L, SEEK_END);
-		uint32_t imagesize = static_cast<uint32_t>(ftello(newDisk) / 1024);
+		cross_fseeko(newDisk, 0L, SEEK_END);
+		uint32_t imagesize = static_cast<uint32_t>(cross_ftello(newDisk) / 1024);
 		const bool hdd     = (imagesize > 2880);
 		// Seems to make sense to require a valid geometry..
 		if (hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
