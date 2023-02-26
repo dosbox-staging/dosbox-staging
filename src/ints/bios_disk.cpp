@@ -164,7 +164,7 @@ uint8_t imageDisk::Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,v
 
 uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void *data)
 {
-	const cross_off_t bytenum = static_cast<cross_off_t>(sectnum) * sector_size;
+	const auto bytenum = check_cast<cross_off_t>(sectnum) * sector_size;
 
 	if (last_action == WRITE || bytenum != current_fpos) {
 		if (cross_fseeko(diskimg, bytenum, SEEK_SET) != 0) {
@@ -190,7 +190,7 @@ uint8_t imageDisk::Write_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,
 
 
 uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
-	cross_off_t bytenum = static_cast<cross_off_t>(sectnum) * sector_size;
+	const auto bytenum = check_cast<cross_off_t>(sectnum) * sector_size;
 
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 

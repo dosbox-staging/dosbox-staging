@@ -775,8 +775,12 @@ fatDrive::fatDrive(const char *sysFilename,
 	created_successfully = (diskfile != nullptr);
 	if (!created_successfully)
 		return;
-	cross_fseeko(diskfile, 0L, SEEK_END);
-	filesize = (uint32_t)cross_ftello(diskfile) / 1024L;
+	const auto sz = stdio_size_kb(diskfile);
+	if (sz < 0) {
+		fclose(diskfile);
+		return;
+	}
+	filesize = check_cast<uint32_t>(sz);
 	is_hdd = (filesize > 2880);
 
 	/* Load disk image */
