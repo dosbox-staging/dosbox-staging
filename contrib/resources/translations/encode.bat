@@ -2,6 +2,10 @@
 
 SET trans_dir=%~dp0
 PUSHD "%trans_dir%"
+
+IF NOT EXIST tools\uconv.exe GOTO readme
+IF NOT EXIST tools\dos2unix.exe GOTO readme
+
 ECHO In directory %trans_dir%:
 
 REM (default)
@@ -38,3 +42,9 @@ ECHO Normalizing %~1 to %~2.lng
 tools\uconv -f UTF-8 -t UTF-8 -x nfc "%~1" > "%~2.lng"
 tools\dos2unix "%~2.lng"
 EXIT /B 0
+
+:readme
+TYPE tools\readme.txt
+ECHO.
+PAUSE
+EXIT /B
