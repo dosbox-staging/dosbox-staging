@@ -57,6 +57,24 @@
 #define ftruncate(blah,blah2) chsize(blah,blah2)
 #endif
 
+/* Large file support */
+#if defined(_MSC_VER)
+	// MSVC doesn't support the posix fstream functions,
+	// typedef their equivalents
+	#define cross_ftello _ftelli64
+	#define cross_fseeko _fseeki64
+	#define cross_off_t __int64
+#else
+	// All other platforms should have POSIX fstream 'o' support
+	// Note: Meson automatically sets preprocessor defines for us
+
+	// Check that off_t is 64 bits
+	static_assert(sizeof(off_t) == sizeof(int64_t), "off_t not 64 bits");
+	#define cross_ftello ftello
+	#define cross_fseeko fseeko
+	#define cross_off_t off_t
+#endif
+
 // fileno is a POSIX function (not mentioned in ISO/C++), which means it might
 // be missing when when using C++11 with strict ANSI compatibility.
 // New MSVC issues "deprecation" warning when fileno is used and recommends
