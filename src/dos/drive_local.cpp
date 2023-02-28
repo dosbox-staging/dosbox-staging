@@ -594,9 +594,9 @@ bool localDrive::isRemovable(void) {
 	return false;
 }
 
-Bits localDrive::UnMount(void) { 
-	delete this;
-	return 0; 
+Bits localDrive::UnMount()
+{
+	return 0;
 }
 
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
@@ -986,7 +986,6 @@ bool cdromDrive::isRemovable(void) {
 
 Bits cdromDrive::UnMount(void) {
 	if (MSCDEX_RemoveDrive(driveLetter)) {
-		delete this;
 		return 0;
 	}
 	return 2;

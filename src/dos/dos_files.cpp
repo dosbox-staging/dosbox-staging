@@ -18,6 +18,7 @@
 
 #include "dos_inc.h"
 
+#include <array>
 #include <climits>
 #include <ctype.h>
 #include <stdlib.h>
@@ -42,9 +43,11 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
+DOS_File* Files[DOS_FILES] = {};
 
-DOS_File * Files[DOS_FILES];
-DOS_Drive * Drives[DOS_DRIVES];
+// Merely pointers. The actual filesystem and raw image objects backing these
+// drives are owned are managed by the drive manager class.
+std::array<DOS_Drive*, DOS_DRIVES> Drives = {};
 
 uint8_t DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -163,7 +166,8 @@ bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive)
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 
-			for (size_t i = 0; i < strlen(tempdir); ++i) {
+			const auto tempdir_len = strlen(tempdir);
+			for (size_t i = 0; i < tempdir_len; ++i) {
 				c = tempdir[i];
 				if ((c >= 'A') && (c <= 'Z')) {
 					continue;
@@ -1437,5 +1441,9 @@ void DOS_SetupFiles()
 	/* Setup the Virtual Disk System */
 	for (uint8_t i = 0; i < DOS_DRIVES; ++i)
 		Drives[i] = nullptr;
-	Drives[drive_index('Z')] = new Virtual_Drive();
+
+	const auto z_drive_index = drive_index('Z');
+
+	Drives[z_drive_index] = DriveManager::RegisterFilesystemImage(
+	        z_drive_index, std::make_unique<Virtual_Drive>());
 }

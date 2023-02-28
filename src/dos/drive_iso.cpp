@@ -390,12 +390,9 @@ bool isoDrive::isRemovable(void) {
 	return true;
 }
 
-Bits isoDrive::UnMount(void) {
-	if(MSCDEX_RemoveDrive(driveLetter)) {
-		delete this;
-		return 0;
-	}
-	return 2;
+Bits isoDrive::UnMount()
+{
+	return MSCDEX_RemoveDrive(driveLetter) ? 0 : 2;
 }
 
 int isoDrive::GetDirIterator(const isoDirEntry* de) {

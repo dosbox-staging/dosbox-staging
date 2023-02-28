@@ -42,13 +42,14 @@ void LOADROM::Run(void) {
     }
     uint8_t drive;
     char fullname[DOS_PATHLENGTH];
-    localDrive* ldp=0;
     if (!DOS_MakeName((char *)temp_line.c_str(),fullname,&drive)) return;
 
     try {
         /* try to read ROM file into buffer */
-        ldp=dynamic_cast<localDrive*>(Drives[drive]);
-        if (!ldp) return;
+		const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
+		if (!ldp) {
+			return;
+		}
 
         FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
         if (tmpfile == NULL) {

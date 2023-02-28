@@ -195,21 +195,86 @@ void DOS_Drive::SetDir(const char *path)
 }
 
 // static members variables
-int DriveManager::currentDrive;
-DriveManager::DriveInfo DriveManager::driveInfos[26];
+uint8_t DriveManager::currentDrive                       = 0;
+DriveManager::DriveInfo DriveManager::driveInfos[26]     = {};
+DriveManager::raw_images_t DriveManager::numbered_images = {};
+DriveManager::raw_images_t DriveManager::raw_fdd_images  = {};
 
-void DriveManager::AppendDisk(int drive, DOS_Drive* disk) {
-	driveInfos[drive].disks.push_back(disk);
+DOS_Drive* DriveManager::RegisterFilesystemImage(const int drive,
+                                                 std::unique_ptr<DOS_Drive>&& filesystem_image)
+{
+	auto& disks = driveInfos[drive].disks;
+	disks.clear();
+	return disks.emplace_back(std::move(filesystem_image)).get();
+}
+
+std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(
+        const int drive, filesystem_images_t& filesystem_images)
+{
+	std::vector<DOS_Drive*> filesystem_pointers = {};
+	for (auto& image : filesystem_images) {
+		filesystem_pointers.emplace_back(image.get());
+		driveInfos[drive].disks.emplace_back(std::move(image));
+	}
+	filesystem_images.clear();
+	return filesystem_pointers;
+}
+
+imageDisk* DriveManager::RegisterNumberedImage(FILE* img_file,
+                                               const std::string& img_name,
+                                               const uint32_t img_size_kb,
+                                               const bool is_hdd)
+{
+	auto image = std::make_unique<imageDisk>(img_file,
+	                                         img_name.c_str(),
+	                                         img_size_kb,
+	                                         is_hdd);
+
+	return numbered_images.emplace_back(std::move(image)).get();
+}
+
+void DriveManager::CloseNumberedImage(const imageDisk* image_ptr)
+{
+	auto matcher = [image_ptr](const std::unique_ptr<imageDisk>& image) {
+		return image.get() == image_ptr;
+	};
+
+	const auto matching_images = std::remove_if(numbered_images.begin(),
+	                                            numbered_images.end(),
+	                                            matcher);
+
+	numbered_images.erase(matching_images, numbered_images.end());
+}
+
+imageDisk* DriveManager::RegisterRawFddImage(FILE* img_file,
+                                             const std::string& img_name,
+                                             const uint32_t img_size_kb)
+{
+	constexpr bool is_hdd = false;
+
+	auto image = std::make_unique<imageDisk>(img_file,
+	                                         img_name.c_str(),
+	                                         img_size_kb,
+	                                         is_hdd);
+
+	return raw_fdd_images.emplace_back(std::move(image)).get();
+}
+
+void DriveManager::CloseRawFddImages()
+{
+	raw_fdd_images.clear();
 }
 
 void DriveManager::InitializeDrive(int drive) {
-	currentDrive = drive;
-	DriveInfo& driveInfo = driveInfos[currentDrive];
-	if (driveInfo.disks.size() > 0) {
+	currentDrive    = check_cast<uint8_t>(drive);
+	auto& driveInfo = driveInfos[currentDrive];
+	if (!driveInfo.disks.empty()) {
 		driveInfo.currentDisk = 0;
-		DOS_Drive* disk = driveInfo.disks[driveInfo.currentDisk];
-		Drives[currentDrive] = disk;
-		if (driveInfo.disks.size() > 1) disk->Activate();
+		const auto disk_pointer = driveInfo.disks[driveInfo.currentDisk].get();
+		Drives[currentDrive] = disk_pointer;
+		if (disk_pointer && driveInfo.disks.size() > 1) {
+			disk_pointer->Activate();
+		}
 	}
 }
 
@@ -256,35 +321,41 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		int currentDisk = driveInfos[drive].currentDisk;
 
 		// dettach CDROM from controller, if attached
-		isoDrive *cdrom = dynamic_cast<isoDrive *>(Drives[drive]);
+		const auto is_cdrom = Drives[drive] && (Drives[drive]->GetType() ==
+		                                        DosDriveType::Iso);
 		int8_t index = -1;
 		bool slave = false;
-		if (cdrom)
+		if (is_cdrom) {
 			IDE_CDROM_Detach_Ret(index, slave, drive);
+		}
 
-		DOS_Drive *oldDisk = driveInfos[drive].disks[currentDisk];
+		const auto oldDisk = driveInfos[drive].disks[currentDisk].get();
 		currentDisk = (currentDisk + 1) % numDisks;
-		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
+		const auto newDisk = driveInfos[drive].disks[currentDisk].get();
 		driveInfos[drive].currentDisk = currentDisk;
 		if (drive < MAX_DISK_IMAGES && imageDiskList[drive]) {
-			if (newDisk->GetType() == DosDriveType::Fat) {
-				imageDiskList[drive] = reinterpret_cast<fatDrive *>(newDisk)->loadedDisk;
+			if (newDisk && newDisk->GetType() == DosDriveType::Fat) {
+				const auto fat_drive = dynamic_cast<fatDrive*>(newDisk);
+				imageDiskList[drive] = fat_drive->loadedDisk.get();
 			} else {
-				imageDiskList[drive].reset(reinterpret_cast<imageDisk *>(newDisk));
+				imageDiskList[drive] = dynamic_cast<imageDisk*>(newDisk);
 			}
-			if ((drive == 2 || drive == 3) && imageDiskList[drive]->hardDrive) {
+			if ((drive == 2 || drive == 3) && imageDiskList[drive] && imageDiskList[drive]->hardDrive) {
 				updateDPT();
 			}
 		}
 
-		// copy working directory, acquire system resources and finally switch to next drive		
-		strcpy(newDisk->curdir, oldDisk->curdir);
-		newDisk->Activate();
+		// copy working directory, acquire system resources and finally switch to next drive
+		if (newDisk && oldDisk) {
+			strcpy(newDisk->curdir, oldDisk->curdir);
+			newDisk->Activate();
+		}
 		Drives[drive] = newDisk;
 
 		// Re-attach the new drive to the controller
-		if (cdrom && index > -1)
+		if (is_cdrom && index > -1) {
 			IDE_CDROM_Attach(index, slave, drive);
+		}
 
 		if (notify)
 			LOG_MSG("Drive %c: disk %d of %d now active",
@@ -300,9 +371,11 @@ int DriveManager::UnmountDrive(int drive) {
 	int result = 0;
 
 	// dettach CDROM from controller, if attached
-	isoDrive *cdrom = dynamic_cast<isoDrive *>(Drives[drive]);
-	if (cdrom)
+	const auto is_cdrom = Drives[drive] &&
+	                      (Drives[drive]->GetType() == DosDriveType::Iso);
+	if (is_cdrom) {
 		IDE_CDROM_Detach(drive);
+	}
 
 	// unmanaged drive
 	if (driveInfos[drive].disks.size() == 0) {
@@ -311,14 +384,11 @@ int DriveManager::UnmountDrive(int drive) {
 		// managed drive
 		int currentDisk = driveInfos[drive].currentDisk;
 		result = driveInfos[drive].disks[currentDisk]->UnMount();
-		// only delete on success, current disk set to NULL because of UnMount
-		if (result == 0) {
-			driveInfos[drive].disks[currentDisk] = NULL;
-			for (int i = 0; i < (int)driveInfos[drive].disks.size(); i++) {
-				delete driveInfos[drive].disks[i];
-			}
-			driveInfos[drive].disks.clear();
-		}
+	}
+	// only clear on success
+	if (result == 0) {
+		driveInfos[drive] = {};
+		Drives[drive] = nullptr;
 	}
 	return result;
 }

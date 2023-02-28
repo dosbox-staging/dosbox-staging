@@ -452,7 +452,10 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, uint32_t * dirClust, uint32_t * subEntry, const bool dir_ok) {
+bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
+                               uint32_t* dirClust, uint32_t* subEntry,
+                               const bool dir_ok)
+{
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	uint32_t currentClust = 0;
@@ -781,7 +784,7 @@ fatDrive::fatDrive(const char *sysFilename,
 		return;
 	}
 	filesize = check_cast<uint32_t>(sz);
-	is_hdd = (filesize > 2880);
+	is_hdd   = (filesize > 2880);
 
 	/* Load disk image */
 	loadedDisk.reset(new imageDisk(diskfile, sysFilename, filesize, is_hdd));
@@ -1003,8 +1006,8 @@ uint32_t fatDrive::getFirstFreeClust(void) {
 bool fatDrive::isRemote(void) {	return false; }
 bool fatDrive::isRemovable(void) { return false; }
 
-Bits fatDrive::UnMount(void) {
-	delete this;
+Bits fatDrive::UnMount()
+{
 	return 0;
 }
 
