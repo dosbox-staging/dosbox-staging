@@ -1063,9 +1063,9 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 	tracks.clear();
 
 	// data track (track 1)
-	Track track;
-	bool error;
-	track.file = make_shared<BinaryFile>(filename, error);
+	Track track = {};
+	bool error  = false;
+	track.file  = make_shared<BinaryFile>(filename, error);
 
 	if (error) {
 		return false;
@@ -1402,7 +1402,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		return false;
 	}
 
-	localDrive *ldp = dynamic_cast<localDrive*>(Drives[drive]);
+	const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
 	if (ldp) {
 		ldp->GetSystemFilename(tmp, fullname);
 		if (path_exists(tmp)) {

@@ -169,7 +169,7 @@ public:
 	std::string id_model = "DOSBox IDE disk";
 	uint8_t bios_disk_index;
 
-	std::shared_ptr<imageDisk> getBIOSdisk();
+	imageDisk* getBIOSdisk();
 
 	void update_from_biosdisk();
 	virtual uint32_t data_read(io_width_t width);          /* read from 1F0h data port from IDE device */
@@ -2129,7 +2129,7 @@ IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
 IDEATADevice::~IDEATADevice()
 {}
 
-std::shared_ptr<imageDisk> IDEATADevice::getBIOSdisk()
+imageDisk* IDEATADevice::getBIOSdisk()
 {
 	if (bios_disk_index >= (2 + MAX_HDD_IMAGES))
 		return nullptr;
@@ -2157,7 +2157,7 @@ void IDEATAPICDROMDevice::update_from_cdrom()
 
 void IDEATADevice::update_from_biosdisk()
 {
-	std::shared_ptr<imageDisk> dsk = getBIOSdisk();
+	const auto dsk = getBIOSdisk();
 	if (dsk == nullptr) {
 		LOG_WARNING("IDE: IDE update from BIOS disk failed, disk not available");
 		return;
@@ -2697,7 +2697,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 				bool vm86 = IDE_CPU_Is_Vm86();
 
 				if ((ata->bios_disk_index - 2) == (disk - 0x80)) {
-					std::shared_ptr<imageDisk> dsk = ata->getBIOSdisk();
+					const auto dsk = ata->getBIOSdisk();
 
 					/* print warning if INT 13h is being called after the OS changed
 					 * logical geometry */
@@ -2944,7 +2944,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		IDEATADevice *ata = (IDEATADevice *)dev;
 		uint32_t sectorn = 0; /* TBD: expand to uint64_t when adding LBA48 emulation */
 		uint32_t sectcount;
-		std::shared_ptr<imageDisk> disk;
+		imageDisk* disk = nullptr;
 		//      int i;
 
 		switch (dev->command) {

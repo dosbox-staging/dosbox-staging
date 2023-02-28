@@ -53,7 +53,7 @@ void MOUNT::Move_Z(char new_z)
 		ZDRIVE_NUM = new_idx;
 		/* remap drives */
 		Drives[new_idx] = Drives[25];
-		Drives[25] = 0;
+		Drives[25]      = nullptr;
 		if (!first_shell) return; //Should not be possible
 		/* Update environment */
 		std::string line = "";
@@ -121,10 +121,12 @@ void MOUNT::ListMounts()
 }
 
 void MOUNT::Run(void) {
-	DOS_Drive * newdrive;char drive;
-	std::string label;
-	std::string umount;
-	std::string newz;
+	std::unique_ptr<DOS_Drive> newdrive = {};
+	DOS_Drive* drive_pointer            = nullptr;
+	char drive                          = '\0';
+	std::string label                   = {};
+	std::string umount                  = {};
+	std::string newz                    = {};
 
 	//Hack To allow long commandlines
 	ChangeToLongCmd();
@@ -325,7 +327,15 @@ void MOUNT::Run(void) {
 			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;
-			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],int8_tize,sizes[2],0,mediaid,error);
+			newdrive  = std::make_unique<cdromDrive>(
+			        drive,
+			        temp_line.c_str(),
+			        sizes[0],
+			        int8_tize,
+			        sizes[2],
+			        0,
+			        mediaid,
+			        error);
 			// Check Mscdex, if it worked out...
 			switch (error) {
 				case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -336,8 +346,7 @@ void MOUNT::Run(void) {
 				case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
 				default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
 			};
-			if (error && error!=5) {
-				delete newdrive;
+			if (error && error != 5) {
 				return;
 			}
 		} else {
@@ -350,23 +359,30 @@ void MOUNT::Run(void) {
 			if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
 			if (type == "overlay") {
-				localDrive *ldp = dynamic_cast<localDrive *>(
-						Drives[drive_index(drive)]);
-				cdromDrive *cdp = dynamic_cast<cdromDrive *>(
-						Drives[drive_index(drive)]);
+				const auto ldp = dynamic_cast<localDrive*>(Drives[drive_index(drive)]);
+				const auto cdp = dynamic_cast<cdromDrive*>(Drives[drive_index(drive)]);
 				if (!ldp || cdp) {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
 					return;
 				}
 				std::string base = ldp->GetBasedir();
 				uint8_t o_error = 0;
-				newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],int8_tize,sizes[2],sizes[3],mediaid,o_error);
-				//Erase old drive on success
+				newdrive = std::make_unique<Overlay_Drive>(
+				        base.c_str(),
+				        temp_line.c_str(),
+				        sizes[0],
+				        int8_tize,
+				        sizes[2],
+				        sizes[3],
+				        mediaid,
+				        o_error);
+				// Erase old drive on success
 				if (o_error) {
 					if (o_error == 1) WriteOut("No mixing of relative and absolute paths. Overlay failed.");
 					else if (o_error == 2) WriteOut("overlay directory can not be the same as underlying file system.");
-					else WriteOut("Something went wrong");
-					delete newdrive;
+					else {
+						WriteOut("Something went wrong");
+					}
 					return;
 				}
 				//Copy current directory if not marked as deleted.
@@ -374,47 +390,52 @@ void MOUNT::Run(void) {
 					safe_strcpy(newdrive->curdir,
 								ldp->curdir);
 				}
-
-				delete Drives[drive_index(drive)];
 				Drives[drive_index(drive)] = nullptr;
 			} else {
-				newdrive = new localDrive(
+				newdrive = std::make_unique<localDrive>(
 				        temp_line.c_str(),
 				        sizes[0],
 				        int8_tize,
 				        sizes[2],
 				        sizes[3],
 				        mediaid,
-				        section->Get_bool("allow_write_protected_files"));
+				        section->Get_bool(
+				                "allow_write_protected_files"));
 			}
 		}
 	} else {
 		WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"),type.c_str());
 		return;
 	}
-	Drives[drive_index(drive)] = newdrive;
+
+	drive_pointer = DriveManager::RegisterFilesystemImage(drive_index(drive),
+	                                                      std::move(newdrive));
+	Drives[drive_index(drive)] = drive_pointer;
+
 	/* Set the correct media byte in the table */
 	mem_writeb(Real2Phys(dos.tables.mediaid) + (drive_index(drive)) * 9,
-				newdrive->GetMediaByte());
+	           drive_pointer->GetMediaByte());
 	if (type != "overlay")
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         newdrive->GetInfoString().c_str(),
+		         drive_pointer->GetInfoString().c_str(),
 		         drive);
 	else
 		WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
 		         temp_line.c_str(),
 		         drive);
 	/* check if volume label is given and don't allow it to updated in the future */
-	if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+	if (cmd->FindString("-label", label, true)) {
+		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
+	}
 	/* For hard drives set the label to DRIVELETTER_Drive.
-		* For floppy drives set the label to DRIVELETTER_Floppy.
-		* This way every drive except cdroms should get a label.*/
+	 * For floppy drives set the label to DRIVELETTER_Floppy.
+	 * This way every drive except cdroms should get a label.*/
 	else if (type == "dir" || type == "overlay") {
 		label = drive; label += "_DRIVE";
-		newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
 	} else if (type == "floppy") {
 		label = drive; label += "_FLOPPY";
-		newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
+		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, true);
 	}
 	if (type == "floppy") incrementFDD();
 	return;

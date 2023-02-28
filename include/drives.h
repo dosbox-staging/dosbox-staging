@@ -40,9 +40,31 @@ void VFILE_Register(const char *name,
                     const uint32_t size,
                     const char *dir);
 
+class imageDisk; // forward declare
+
 class DriveManager {
 public:
-	static void AppendDisk(int drive, DOS_Drive* disk);
+	using raw_images_t        = std::vector<std::unique_ptr<imageDisk>>;
+	using filesystem_images_t = std::vector<std::unique_ptr<DOS_Drive>>;
+
+	static std::vector<DOS_Drive*> AppendFilesystemImages(
+	        const int drive, filesystem_images_t& filesystem_images);
+
+	static DOS_Drive* RegisterFilesystemImage(
+	        const int drive, std::unique_ptr<DOS_Drive>&& filesystem_image);
+
+	static imageDisk* RegisterNumberedImage(FILE* img_file,
+	                                        const std::string& img_name,
+	                                        const uint32_t img_size_kb,
+	                                        const bool is_hdd);
+
+	static void CloseNumberedImage(const imageDisk* image_ptr);
+
+	static imageDisk* RegisterRawFddImage(FILE* img_file,
+	                                      const std::string& img_name,
+	                                      const uint32_t img_size_kb);
+	static void CloseRawFddImages();
+
 	static void InitializeDrive(int drive);
 	static int UnmountDrive(int drive);
 //	static void CycleDrive(bool pressed);
@@ -54,11 +76,12 @@ public:
 	
 private:
 	static struct DriveInfo {
-		std::vector<DOS_Drive*> disks = {};
-		int currentDisk = 0;
+		filesystem_images_t disks = {};
+		uint16_t currentDisk = 0;
 	} driveInfos[DOS_DRIVES];
-	
-	static int currentDrive;
+	static raw_images_t numbered_images;
+	static raw_images_t raw_fdd_images;
+	static uint8_t currentDrive;
 };
 
 class localDrive : public DOS_Drive {
