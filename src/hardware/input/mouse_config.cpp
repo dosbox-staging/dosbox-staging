@@ -350,10 +350,15 @@ static void config_init(Section_prop &secprop)
 	        "Notes: Enable COM port mice in the [serial] section.");
 }
 
-void MOUSE_AddConfigSection(const config_ptr_t &conf)
+void MOUSE_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mouse", &config_read, true);
+
+	constexpr auto changeable_at_runtime = true;
+
+	Section_prop* sec = conf->AddSection_prop("mouse",
+	                                          &config_read,
+	                                          changeable_at_runtime);
 	assert(sec);
 	config_init(*sec);
 }

@@ -1533,15 +1533,19 @@ void NE2K_ShutDown(Section* sec) {
 	test=0;
 }
 
-void NE2K_Init(Section *sec)
+void NE2K_Init(Section* sec)
 {
+	assert(sec);
 	// LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
 
 	test = new NE2K(sec);
-	sec->AddDestroyFunction(&NE2K_ShutDown,true);
-	if(!test->load_success) {
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&NE2K_ShutDown, changeable_at_runtime);
+
+	if (!test->load_success) {
 		delete test;
-		test=0;
+		test = 0;
 	}
 }
 

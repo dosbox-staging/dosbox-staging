@@ -407,9 +407,15 @@ void MIDI_Destroy(Section * /*sec*/)
 {
 	delete test;
 }
-void MIDI_Init(Section * sec) {
+
+void MIDI_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new MIDI(sec);
-	sec->AddDestroyFunction(&MIDI_Destroy,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&MIDI_Destroy, changeable_at_runtime);
 
 	register_midi_text_messages();
 }

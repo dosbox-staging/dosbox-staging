@@ -2881,10 +2881,15 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
-void MIXER_AddConfigSection(const config_ptr_t &conf)
+void MIXER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mixer", &MIXER_Init, true);
+
+	constexpr auto changeable_at_runtime = true;
+
+	Section_prop* sec = conf->AddSection_prop("mixer",
+	                                          &MIXER_Init,
+	                                          changeable_at_runtime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 }

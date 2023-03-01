@@ -1426,15 +1426,21 @@ void MSCDEX_ShutDown(Section* /*sec*/) {
 	curReqheaderPtr = 0;
 }
 
-void MSCDEX_Init(Section* sec) {
+void MSCDEX_Init(Section* sec)
+{
+	assert(sec);
+
 	// AddDestroy func
 	sec->AddDestroyFunction(&MSCDEX_ShutDown);
-	/* Register the mscdex device */
-	DOS_Device * newdev = new device_MSCDEX();
+
+	// Register the mscdex device
+	DOS_Device* newdev = new device_MSCDEX();
 	DOS_AddDevice(newdev);
 	curReqheaderPtr = 0;
-	/* Add Multiplexer */
+
+	// Add Multiplexer
 	DOS_AddMultiplexHandler(MSCDEX_Handler);
-	/* Create MSCDEX */
+
+	// Create MSCDEX
 	mscdex = new CMscdex;
 }

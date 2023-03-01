@@ -862,8 +862,12 @@ void HARDWARE_Destroy([[maybe_unused]] Section *sec)
 	delete hardware_module;
 }
 
-void HARDWARE_Init(Section *sec)
+void HARDWARE_Init(Section* sec)
 {
+	assert(sec);
+
 	hardware_module = new HARDWARE(sec);
-	sec->AddDestroyFunction(&HARDWARE_Destroy, true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&HARDWARE_Destroy, changeable_at_runtime);
 }

@@ -633,7 +633,7 @@ static void TANDYSOUND_ShutDown([[maybe_unused]] Section *section)
 void TANDYSOUND_Init(Section *section)
 {
 	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	const auto prop = static_cast<Section_prop*>(section);
 	const auto pref = std::string_view(prop->Get_string("tandy"));
 	const auto wants_tandy_sound = pref == "true" || pref == "on" ||
 	                               (IS_TANDY_ARCH && pref == "auto");
@@ -653,14 +653,17 @@ void TANDYSOUND_Init(Section *section)
 	CloseSecondDMAController();
 
 	const auto can_use_tandy_dac = is_sound_blaster_absent();
-	if (can_use_tandy_dac)
+	if (can_use_tandy_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
 		        cfg, prop->Get_string("tandy_dac_filter"));
+	}
 
-	tandy_psg = std::make_unique<TandyPSG>(
-	        cfg, can_use_tandy_dac, prop->Get_string("tandy_filter"));
+	tandy_psg = std::make_unique<TandyPSG>(cfg,
+	                                       can_use_tandy_dac,
+	                                       prop->Get_string("tandy_filter"));
 
 	set_tandy_sound_flag_in_bios(true);
 
-	section->AddDestroyFunction(&TANDYSOUND_ShutDown, true);
+	constexpr auto changeable_at_runtime = true;
+	section->AddDestroyFunction(&TANDYSOUND_ShutDown, changeable_at_runtime);
 }

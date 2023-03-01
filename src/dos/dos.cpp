@@ -1601,8 +1601,10 @@ void DOS_ShutDown(Section* /*sec*/) {
 	delete test;
 }
 
-void DOS_Init(Section* sec) {
+void DOS_Init(Section* sec)
+{
+	assert(sec);
 	test = new DOS(sec);
-	/* shutdown function */
-	sec->AddDestroyFunction(&DOS_ShutDown,false);
+
+	sec->AddDestroyFunction(&DOS_ShutDown);
 }

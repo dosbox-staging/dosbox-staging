@@ -381,7 +381,12 @@ void CMOS_Destroy(Section* /*sec*/){
 	delete test;
 }
 
-void CMOS_Init(Section* sec) {
+void CMOS_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new CMOS(sec);
-	sec->AddDestroyFunction(&CMOS_Destroy,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
 }
