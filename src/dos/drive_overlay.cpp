@@ -230,7 +230,7 @@ public:
 //Create leading directories of a file being overlayed if they exist in the original (localDrive).
 //This function is used to create copies of existing files, so all leading directories exist in the original.
 
-FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const *mode)
+FILE* Overlay_Drive::create_file_in_overlay(const char* dos_filename, const char* mode)
 {
 	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
 	char newname[CROSS_LEN];

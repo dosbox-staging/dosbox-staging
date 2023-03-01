@@ -249,14 +249,14 @@ void MOUNT::Run(void) {
 		drive = int_to_char(i_drive);
 		if (type == "overlay") {
 			//Ensure that the base drive exists:
-			if (!Drives[drive_index(drive)]) {
+			if (!Drives.at(drive_index(drive))) {
 				WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_NO_BASE"));
 				return;
 			}
-		} else if (Drives[drive_index(drive)]) {
+		} else if (Drives.at(drive_index(drive))) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),
 			         drive,
-			         Drives[drive_index(drive)]->GetInfoString().c_str());
+			         Drives.at(drive_index(drive))->GetInfoString().c_str());
 			return;
 		}
 
@@ -390,7 +390,7 @@ void MOUNT::Run(void) {
 					safe_strcpy(newdrive->curdir,
 								ldp->curdir);
 				}
-				Drives[drive_index(drive)] = nullptr;
+				Drives.at(drive_index(drive)) = nullptr;
 			} else {
 				newdrive = std::make_unique<localDrive>(
 				        temp_line.c_str(),
@@ -410,7 +410,7 @@ void MOUNT::Run(void) {
 
 	drive_pointer = DriveManager::RegisterFilesystemImage(drive_index(drive),
 	                                                      std::move(newdrive));
-	Drives[drive_index(drive)] = drive_pointer;
+	Drives.at(drive_index(drive)) = drive_pointer;
 
 	/* Set the correct media byte in the table */
 	mem_writeb(Real2Phys(dos.tables.mediaid) + (drive_index(drive)) * 9,

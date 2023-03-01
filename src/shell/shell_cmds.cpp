@@ -825,12 +825,12 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	const char drive_letter = path[0];
 	const auto drive_idx = drive_index(drive_letter);
-	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
+	const bool print_label  = (drive_letter >= 'A') && Drives.at(drive_idx);
 	unsigned p_count = 0; // line counter for 'pause' command
 
 	if (!optB) {
 		if (print_label) {
-			const auto label = To_Label(Drives[drive_idx]->GetLabel());
+			const auto label = To_Label(Drives.at(drive_idx)->GetLabel());
 			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter,
 			         label.c_str());
 			p_count += 1;
@@ -1002,15 +1002,15 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 		uint8_t drive = dta.GetSearchDrive();
 		size_t free_space = 1024 * 1024 * 100;
-		if (Drives[drive]) {
+		if (Drives.at(drive)) {
 			uint16_t bytes_sector;
 			uint8_t sectors_cluster;
 			uint16_t total_clusters;
 			uint16_t free_clusters;
-			Drives[drive]->AllocationInfo(&bytes_sector,
-			                              &sectors_cluster,
-			                              &total_clusters,
-			                              &free_clusters);
+			Drives.at(drive)->AllocationInfo(&bytes_sector,
+			                                 &sectors_cluster,
+			                                 &total_clusters,
+			                                 &free_clusters);
 			free_space = bytes_sector;
 			free_space *= sectors_cluster;
 			free_space *= free_clusters;
@@ -1220,8 +1220,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		// add '\\' if target is a directory
 		bool target_is_file = true;
 		const auto target_path_length = strlen(pathTarget);
-		assert(target_path_length > 0);
-		if (pathTarget[target_path_length - 1] != '\\') {
+		if (target_path_length > 0 && pathTarget[target_path_length - 1] != '\\') {
 			if (DOS_FindFirst(pathTarget, 0xffff & ~DOS_ATTR_VOLUME)) {
 				dta.GetResult(name, size, date, time, attr);
 				if (attr & DOS_ATTR_DIRECTORY) {
@@ -1240,7 +1239,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 			return;
 		}
 
-		uint16_t sourceHandle,targetHandle;
+		uint16_t sourceHandle = 0;
+		uint16_t targetHandle = 0;
 		char nameTarget[DOS_PATHLENGTH];
 		char nameSource[DOS_PATHLENGTH];
 
@@ -1256,8 +1256,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 					// Create Target or open it if in concat mode
 					safe_strcpy(nameTarget, pathTarget);
 					const auto name_length = strlen(nameTarget);
-					assert(name_length > 0);
-					if (nameTarget[name_length - 1] == '\\')
+					if (name_length > 0 && nameTarget[name_length - 1] == '\\')
 						strcat(nameTarget, name);
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
@@ -1924,22 +1923,24 @@ void DOS_Shell::CMD_SUBST (char * args) {
 
 		const auto drive_idx = drive_index(temp_str[0]);
 		if ((arg == "/D") || (arg == "/d")) {
-			if (!Drives[drive_idx])
+			if (!Drives.at(drive_idx)) {
 				throw 1; // targetdrive not in use
+			}
 			strcat(mountstring, "-u ");
 			strcat(mountstring, temp_str);
 			this->ParseLine(mountstring);
 			return;
 		}
-		if (Drives[drive_idx])
+		if (Drives.at(drive_idx)) {
 			throw 0; // targetdrive in use
+		}
 		strcat(mountstring, temp_str);
 		strcat(mountstring, " ");
 
    		uint8_t drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
 
-		ldp = dynamic_cast<localDrive*>(Drives[drive]);
+		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp) {
 			throw 0;
 		}

@@ -44,8 +44,13 @@ class imageDisk; // forward declare
 
 class DriveManager {
 public:
-	using raw_images_t        = std::vector<std::unique_ptr<imageDisk>>;
 	using filesystem_images_t = std::vector<std::unique_ptr<DOS_Drive>>;
+	using raw_images_t        = std::vector<std::unique_ptr<imageDisk>>;
+	struct DriveInfo {
+		filesystem_images_t disks = {};
+		uint16_t currentDisk      = 0;
+	};
+	using drive_infos_t = std::array<DriveInfo, DOS_DRIVES>;
 
 	static std::vector<DOS_Drive*> AppendFilesystemImages(
 	        const int drive, filesystem_images_t& filesystem_images);
@@ -75,10 +80,7 @@ public:
 	static void Init(Section* sec);
 	
 private:
-	static struct DriveInfo {
-		filesystem_images_t disks = {};
-		uint16_t currentDisk = 0;
-	} driveInfos[DOS_DRIVES];
+	static drive_infos_t drive_infos;
 	static raw_images_t numbered_images;
 	static raw_images_t raw_fdd_images;
 	static uint8_t currentDrive;

@@ -359,7 +359,7 @@ uint8_t DOS_FindDevice(const char* name)
 	if(name_part) {
 		*name_part++ = 0;
 		// Check validity of leading directory.
-		//  if(!Drives[drive]->TestDir(fullname))
+		//  if(!Drives.at(drive)->TestDir(fullname))
 		//      return DOS_DEVICES; //can be invalid
 	} else
 		name_part = fullname;

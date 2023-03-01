@@ -66,10 +66,8 @@ void assert_DTAExtendName(const std::string_view input_fullname,
 	EXPECT_EQ(output_ext, expected_ext);
 }
 
-void assert_DOS_MakeName(char const *const input,
-                         bool exp_result,
-                         std::string exp_fullname = "",
-                         int exp_drive = 0)
+void assert_DOS_MakeName(const char* const input, bool exp_result,
+                         std::string exp_fullname = "", int exp_drive = 0)
 {
 	uint8_t drive_result;
 	char fullname_result[DOS_PATHLENGTH];
@@ -126,7 +124,7 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Uppercase)
 	// lower case
 	assert_DOS_MakeName("z:\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
 	// current dir isn't uppercased if it's not already
-	safe_strcpy(Drives[25]->curdir, "Windows\\Folder");
+	safe_strcpy(Drives.at(25)->curdir, "Windows\\Folder");
 	assert_DOS_MakeName("autoexec.bat", true,
 	                    "Windows\\Folder\\AUTOEXEC.BAT", 25);
 }
@@ -163,28 +161,28 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Assumes_Current_Drive_And_Dir)
 	// when passed only a filename, assume default drive and current dir
 	assert_DOS_MakeName("AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
 	// artificially change directory
-	safe_strcpy(Drives[25]->curdir, "CODE");
+	safe_strcpy(Drives.at(25)->curdir, "CODE");
 	assert_DOS_MakeName("AUTOEXEC.BAT", true, "CODE\\AUTOEXEC.BAT", 25);
 	// artificially change directory
-	safe_strcpy(Drives[25]->curdir, "CODE\\BIN");
+	safe_strcpy(Drives.at(25)->curdir, "CODE\\BIN");
 	assert_DOS_MakeName("AUTOEXEC.BAT", true, "CODE\\BIN\\AUTOEXEC.BAT", 25);
 	// ignores current dir and goes to root
 	assert_DOS_MakeName("\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
-	safe_strcpy(Drives[25]->curdir, "");
+	safe_strcpy(Drives.at(25)->curdir, "");
 	assert_DOS_MakeName("Z:\\CODE\\BIN", true, "CODE\\BIN", 25);
 	assert_DOS_MakeName("Z:", true, "", 25);
 	assert_DOS_MakeName("Z:\\", true, "", 25);
 	// This is a bug but we need to capture this functionality
-	safe_strcpy(Drives[25]->curdir, "CODE\\BIN\\");
+	safe_strcpy(Drives.at(25)->curdir, "CODE\\BIN\\");
 	assert_DOS_MakeName("AUTOEXEC.BAT", true, "CODE\\BIN\\\\AUTOEXEC.BAT", 25);
-	safe_strcpy(Drives[25]->curdir, "CODE\\BIN\\\\");
+	safe_strcpy(Drives.at(25)->curdir, "CODE\\BIN\\\\");
 	assert_DOS_MakeName("AUTOEXEC.BAT", true, "CODE\\BIN\\\\\\AUTOEXEC.BAT", 25);
 }
 
 // This tests that illegal char matching happens AFTER 8.3 trimming
 TEST_F(DOS_FilesTest, DOS_MakeName_Illegal_Chars_After_8_3)
 {
-	safe_strcpy(Drives[25]->curdir, "BIN");
+	safe_strcpy(Drives.at(25)->curdir, "BIN");
 	assert_DOS_MakeName("\n2345678AAAAABBB.BAT", false);
 	assert_DOS_MakeName("12345678.\n23BBBBBAAA", false);
 	assert_DOS_MakeName("12345678AAAAABB\n.BAT", true, "BIN\\12345678.BAT", 25);
@@ -194,7 +192,7 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Illegal_Chars_After_8_3)
 TEST_F(DOS_FilesTest, DOS_MakeName_DOS_PATHLENGTH_checks)
 {
 	// Right on the line ...
-	safe_strcpy(Drives[25]->curdir,
+	safe_strcpy(Drives.at(25)->curdir,
 	            "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\"
 	            "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaaa");
 	assert_DOS_MakeName("BBBBB.BB", true,
@@ -209,14 +207,14 @@ TEST_F(DOS_FilesTest, DOS_MakeName_DOS_PATHLENGTH_checks)
 
 TEST_F(DOS_FilesTest, DOS_MakeName_Enforce_8_3)
 {
-	safe_strcpy(Drives[25]->curdir, "BIN");
+	safe_strcpy(Drives.at(25)->curdir, "BIN");
 	assert_DOS_MakeName("12345678AAAAABBBB.BAT", true, "BIN\\12345678.BAT", 25);
 	assert_DOS_MakeName("12345678.123BBBBBAAAA", true, "BIN\\12345678.123", 25);
 }
 
 TEST_F(DOS_FilesTest, DOS_MakeName_Dot_Handling)
 {
-	safe_strcpy(Drives[25]->curdir, "WINDOWS\\CONFIG");
+	safe_strcpy(Drives.at(25)->curdir, "WINDOWS\\CONFIG");
 	assert_DOS_MakeName(".", true, "WINDOWS\\CONFIG", 25);
 	assert_DOS_MakeName("..", true, "WINDOWS", 25);
 	assert_DOS_MakeName("...", true, "", 25);
@@ -224,10 +222,10 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Dot_Handling)
 	                    "WINDOWS\\CONFIG\\AUTOEXEC.BAT", 25);
 	assert_DOS_MakeName("..\\AUTOEXEC.BAT", true, "WINDOWS\\AUTOEXEC.BAT", 25);
 	assert_DOS_MakeName("...\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
-	safe_strcpy(Drives[25]->curdir, "WINDOWS\\CONFIG\\FOLDER");
+	safe_strcpy(Drives.at(25)->curdir, "WINDOWS\\CONFIG\\FOLDER");
 	assert_DOS_MakeName("...\\AUTOEXEC.BAT", true, "WINDOWS\\AUTOEXEC.BAT", 25);
 	assert_DOS_MakeName("....\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
-	safe_strcpy(Drives[25]->curdir, "WINDOWS\\CONFIG\\FOLDER\\DEEP");
+	safe_strcpy(Drives.at(25)->curdir, "WINDOWS\\CONFIG\\FOLDER\\DEEP");
 	assert_DOS_MakeName("....\\AUTOEXEC.BAT", true, "WINDOWS\\AUTOEXEC.BAT", 25);
 	assert_DOS_MakeName(".....\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
 	// make sure we can exceed the depth

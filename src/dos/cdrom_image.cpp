@@ -1402,7 +1402,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		return false;
 	}
 
-	const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
+	const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 	if (ldp) {
 		ldp->GetSystemFilename(tmp, fullname);
 		if (path_exists(tmp)) {
