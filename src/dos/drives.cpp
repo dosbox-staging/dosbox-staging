@@ -196,28 +196,33 @@ void DOS_Drive::SetDir(const char *path)
 
 // static members variables
 uint8_t DriveManager::currentDrive                       = 0;
-DriveManager::DriveInfo DriveManager::driveInfos[26]     = {};
+DriveManager::drive_infos_t DriveManager::drive_infos    = {};
 DriveManager::raw_images_t DriveManager::numbered_images = {};
 DriveManager::raw_images_t DriveManager::raw_fdd_images  = {};
 
 DOS_Drive* DriveManager::RegisterFilesystemImage(const int drive,
-                                                 std::unique_ptr<DOS_Drive>&& filesystem_image)
+                                                 std::unique_ptr<DOS_Drive>&& image)
 {
-	auto& disks = driveInfos[drive].disks;
+	auto& disks = drive_infos.at(drive).disks;
 	disks.clear();
-	return disks.emplace_back(std::move(filesystem_image)).get();
+	return disks.emplace_back(std::move(image)).get();
 }
 
-std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(
-        const int drive, filesystem_images_t& filesystem_images)
+std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(const int drive,
+                                                             filesystem_images_t& images)
 {
-	std::vector<DOS_Drive*> filesystem_pointers = {};
-	for (auto& image : filesystem_images) {
-		filesystem_pointers.emplace_back(image.get());
-		driveInfos[drive].disks.emplace_back(std::move(image));
+	std::vector<DOS_Drive*> pointers = {};
+
+	auto& disks = drive_infos.at(drive).disks;
+
+	// Move all the source images into the drive's disk vector, and add the
+	// resulting pointers back to our return vector.
+	for (auto& image : images) {
+		pointers.emplace_back(disks.emplace_back(std::move(image)).get());
 	}
-	filesystem_images.clear();
-	return filesystem_pointers;
+
+	images.clear();
+	return pointers;
 }
 
 imageDisk* DriveManager::RegisterNumberedImage(FILE* img_file,
@@ -267,11 +272,11 @@ void DriveManager::CloseRawFddImages()
 
 void DriveManager::InitializeDrive(int drive) {
 	currentDrive    = check_cast<uint8_t>(drive);
-	auto& driveInfo = driveInfos[currentDrive];
+	auto& driveInfo = drive_infos.at(currentDrive);
 	if (!driveInfo.disks.empty()) {
 		driveInfo.currentDisk = 0;
 		const auto disk_pointer = driveInfo.disks[driveInfo.currentDisk].get();
-		Drives[currentDrive] = disk_pointer;
+		Drives.at(currentDrive) = disk_pointer;
 		if (disk_pointer && driveInfo.disks.size() > 1) {
 			disk_pointer->Activate();
 		}
@@ -280,34 +285,32 @@ void DriveManager::InitializeDrive(int drive) {
 
 /*
 void DriveManager::CycleDrive(bool pressed) {
-	if (!pressed) return;
-		
-	// do one round through all drives or stop at the next drive with multiple disks
-	int oldDrive = currentDrive;
-	do {
-		currentDrive = (currentDrive + 1) % DOS_DRIVES;
-		int numDisks = driveInfos[currentDrive].disks.size();
-		if (numDisks > 1) break;
-	} while (currentDrive != oldDrive);
+        if (!pressed) return;
+
+        // do one round through all drives or stop at the next drive with
+multiple disks int oldDrive = currentDrive; do { currentDrive = (currentDrive +
+1) % DOS_DRIVES; int numDisks = drive_infos.at(currentDrive).disks.size(); if
+(numDisks > 1) break; } while (currentDrive != oldDrive);
 }
 
 void DriveManager::CycleDisk(bool pressed) {
-	if (!pressed) return;
-	
-	int numDisks = driveInfos[currentDrive].disks.size();
-	if (numDisks > 1) {
-		// cycle disk
-		int currentDisk = driveInfos[currentDrive].currentDisk;
-		DOS_Drive* oldDisk = driveInfos[currentDrive].disks[currentDisk];
-		currentDisk = (currentDisk + 1) % numDisks;		
-		DOS_Drive* newDisk = driveInfos[currentDrive].disks[currentDisk];
-		driveInfos[currentDrive].currentDisk = currentDisk;
-		
-		// copy working directory, acquire system resources and finally switch to next drive		
-		strcpy(newDisk->curdir, oldDisk->curdir);
-		newDisk->Activate();
-		Drives[currentDrive] = newDisk;
-	}
+        if (!pressed) return;
+
+        int numDisks = drive_infos.at(currentDrive).disks.size();
+        if (numDisks > 1) {
+                // cycle disk
+                int currentDisk = drive_infos.at(currentDrive).currentDisk;
+                DOS_Drive* oldDisk =
+drive_infos.at(currentDrive).disks[currentDisk]; currentDisk = (currentDisk + 1)
+% numDisks; DOS_Drive* newDisk =
+drive_infos.at(currentDrive).disks[currentDisk];
+                drive_infos.at(currentDrive).currentDisk = currentDisk;
+
+                // copy working directory, acquire system resources and finally
+switch to next drive strcpy(newDisk->curdir, oldDisk->curdir);
+                newDisk->Activate();
+                Drives.at(currentDrive) = newDisk;
+        }
 }
 */
 
@@ -315,25 +318,29 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 {
 	const auto drive = check_cast<int8_t>(requested_drive);
 
-	int numDisks = (int)driveInfos[drive].disks.size();
+	// short-hand reference
+	auto& drive_info = drive_infos.at(drive);
+
+	auto numDisks = check_cast<int>(drive_info.disks.size());
 	if (numDisks > 1) {
 		// cycle disk
-		int currentDisk = driveInfos[drive].currentDisk;
+		int currentDisk = drive_info.currentDisk;
 
 		// dettach CDROM from controller, if attached
-		const auto is_cdrom = Drives[drive] && (Drives[drive]->GetType() ==
-		                                        DosDriveType::Iso);
+		const auto is_cdrom = Drives.at(drive) &&
+		                      (Drives.at(drive)->GetType() ==
+		                       DosDriveType::Iso);
 		int8_t index = -1;
 		bool slave = false;
 		if (is_cdrom) {
 			IDE_CDROM_Detach_Ret(index, slave, drive);
 		}
 
-		const auto oldDisk = driveInfos[drive].disks[currentDisk].get();
+		const auto oldDisk = drive_info.disks[currentDisk].get();
 		currentDisk = (currentDisk + 1) % numDisks;
-		const auto newDisk = driveInfos[drive].disks[currentDisk].get();
-		driveInfos[drive].currentDisk = currentDisk;
-		if (drive < MAX_DISK_IMAGES && imageDiskList[drive]) {
+		const auto newDisk = drive_info.disks[currentDisk].get();
+		drive_info.currentDisk = currentDisk;
+		if (drive < MAX_DISK_IMAGES && imageDiskList.at(drive)) {
 			if (newDisk && newDisk->GetType() == DosDriveType::Fat) {
 				const auto fat_drive = dynamic_cast<fatDrive*>(newDisk);
 				imageDiskList[drive] = fat_drive->loadedDisk.get();
@@ -350,7 +357,7 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 			strcpy(newDisk->curdir, oldDisk->curdir);
 			newDisk->Activate();
 		}
-		Drives[drive] = newDisk;
+		Drives.at(drive) = newDisk;
 
 		// Re-attach the new drive to the controller
 		if (is_cdrom && index > -1) {
@@ -371,24 +378,27 @@ int DriveManager::UnmountDrive(int drive) {
 	int result = 0;
 
 	// dettach CDROM from controller, if attached
-	const auto is_cdrom = Drives[drive] &&
+	const auto is_cdrom = Drives.at(drive) &&
 	                      (Drives[drive]->GetType() == DosDriveType::Iso);
 	if (is_cdrom) {
 		IDE_CDROM_Detach(drive);
 	}
 
+	// short-hand reference
+	auto& drive_info = drive_infos.at(drive);
+
 	// unmanaged drive
-	if (driveInfos[drive].disks.size() == 0) {
-		result = Drives[drive]->UnMount();
+	if (drive_info.disks.size() == 0) {
+		result = Drives.at(drive)->UnMount();
 	} else {
 		// managed drive
-		int currentDisk = driveInfos[drive].currentDisk;
-		result = driveInfos[drive].disks[currentDisk]->UnMount();
+		int currentDisk = drive_info.currentDisk;
+		result = drive_info.disks[currentDisk]->UnMount();
 	}
 	// only clear on success
 	if (result == 0) {
-		driveInfos[drive] = {};
-		Drives[drive] = nullptr;
+		drive_infos.at(drive) = {};
+		Drives.at(drive)      = nullptr;
 	}
 	return result;
 }
@@ -396,17 +406,19 @@ int DriveManager::UnmountDrive(int drive) {
 char *DriveManager::GetDrivePosition(int drive)
 {
 	static char swap_position[10];
-	safe_sprintf(swap_position, "%d / %d", driveInfos[drive].currentDisk + 1,
-	             (int)driveInfos[drive].disks.size());
+	const auto& drive_info = drive_infos.at(drive);
+	safe_sprintf(swap_position,
+	             "%d / %d",
+	             drive_info.currentDisk + 1,
+	             (int)drive_info.disks.size());
 	return swap_position;
 }
 
 void DriveManager::Init(Section* /* sec */) {
-	
-	// setup driveInfos structure
+	// setup drive_infos structure
 	currentDrive = 0;
 	for(int i = 0; i < DOS_DRIVES; i++) {
-		driveInfos[i].currentDisk = 0;
+		drive_infos.at(i).currentDisk = 0;
 	}
 
 	// MAPPER_AddHandler(&CycleDisk, SDL_SCANCODE_F3, MMOD1,

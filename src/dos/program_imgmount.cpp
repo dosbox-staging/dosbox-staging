@@ -310,13 +310,15 @@ void IMGMOUNT::Run(void)
 					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
 					return;
 				}
-				if (Drives[dummy]->GetType() != DosDriveType::Local) {
+				if (Drives.at(dummy)->GetType() !=
+				    DosDriveType::Local) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
 					return;
 				}
 
-				const auto ldp = dynamic_cast<localDrive*>(Drives[dummy]);
+				const auto ldp = dynamic_cast<localDrive*>(
+				        Drives.at(dummy));
 				if (ldp == nullptr) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
@@ -419,7 +421,7 @@ void IMGMOUNT::Run(void)
 			        sizes[3]);
 		}
 
-		if (Drives[drive_index(drive)]) {
+		if (Drives.at(drive_index(drive))) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 			return;
 		}
@@ -480,11 +482,12 @@ void IMGMOUNT::Run(void)
 		const auto is_floppy = (drive == 'A' || drive == 'B') && !has_hdd;
 		const auto is_hdd = (drive == 'C' || drive == 'D') && has_hdd;
 		if (is_floppy || is_hdd) {
-			imageDiskList[drive_index(drive)] = fat_image->loadedDisk.get();
+			imageDiskList.at(
+			        drive_index(drive)) = fat_image->loadedDisk.get();
 			updateDPT();
 		}
 	} else if (fstype == "iso") {
-		if (Drives[drive_index(drive)]) {
+		if (Drives.at(drive_index(drive))) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 			return;
 		}
@@ -577,14 +580,12 @@ void IMGMOUNT::Run(void)
 
 		const auto drive_index = drive - '0';
 
-		imageDiskList[drive_index] = DriveManager::RegisterNumberedImage(
+		imageDiskList.at(drive_index) = DriveManager::RegisterNumberedImage(
 		        newDisk, temp_line, imagesize, is_hdd);
 
 		if (is_hdd) {
-			imageDiskList[drive_index]->Set_Geometry(sizes[2],
-			                                         sizes[3],
-			                                         sizes[1],
-			                                         sizes[0]);
+			imageDiskList.at(drive_index)
+			        ->Set_Geometry(sizes[2], sizes[3], sizes[1], sizes[0]);
 		}
 
 		if ((drive == '2' || drive == '3') && is_hdd) {

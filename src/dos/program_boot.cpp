@@ -50,7 +50,7 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		return NULL;
 
 	try {
-		const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
+		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp)
 			return NULL;
 
@@ -259,14 +259,14 @@ void BOOT::Run(void)
 
 	swapInDisks(0);
 
-	if (!imageDiskList[drive_index(drive)]) {
+	if (!imageDiskList.at(drive_index(drive))) {
 		WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
 		return;
 	}
 
 	bootSector bootarea;
-	imageDiskList[drive_index(drive)]->Read_Sector(
-	        0, 0, 1, reinterpret_cast<uint8_t *>(&bootarea));
+	imageDiskList.at(drive_index(drive))
+	        ->Read_Sector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
 	if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
 	    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
 		if (machine != MCH_PCJR) {

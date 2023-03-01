@@ -44,7 +44,7 @@ void BIOSTEST::Run(void) {
 
 	try {
 		// try to read ROM file into buffer
-		ldp = dynamic_cast<localDrive *>(Drives[drive]);
+		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp)
 			return;
 

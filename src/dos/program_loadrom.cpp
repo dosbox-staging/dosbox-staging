@@ -46,9 +46,9 @@ void LOADROM::Run(void) {
 
     try {
         /* try to read ROM file into buffer */
-		const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
-		if (!ldp) {
-			return;
+	const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+	if (!ldp) {
+		return;
 		}
 
         FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
