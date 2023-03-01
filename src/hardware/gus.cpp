@@ -1679,3 +1679,4 @@ void GUS_AddConfigSection(const config_ptr_t &conf)
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }
+

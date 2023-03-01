@@ -30,6 +30,7 @@
 #include <SDL.h>
 
 #include "ansi_code_markup.h"
+#include "control.h"
 #include "cross.h"
 #include "hardware.h"
 #include "mapper.h"
@@ -412,3 +413,109 @@ void MIDI_Init(Section * sec) {
 
 	register_midi_text_messages();
 }
+
+void init_midi_dosbox_settings(Section_prop& secprop)
+{
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
+
+	auto* str_prop = secprop.Add_string("mididevice", when_idle, "auto");
+	const char* midi_devices[] =
+	{ "auto",
+#if defined(MACOSX)
+#	if C_COREMIDI
+	  "coremidi",
+#	endif
+#	if C_COREAUDIO
+	  "coreaudio",
+#	endif
+#elif defined(WIN32)
+	  "win32",
+#else
+	  "oss",
+#endif
+#if C_ALSA
+	  "alsa",
+#endif
+#if C_FLUIDSYNTH
+	  "fluidsynth",
+#endif
+#if C_MT32EMU
+	  "mt32",
+#endif
+	  "none",
+	  0 };
+
+	str_prop->Set_values(midi_devices);
+	str_prop->Set_help(
+	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
+	        "('auto' by default):\n"
+#if defined(MACOSX)
+#	if C_COREMIDI
+	        "  coremidi:    Any device that has been configured in the macOS\n"
+	        "               Audio MIDI Setup.\n"
+#	endif
+#	if C_COREAUDIO
+	        "  coreaudio:   Use the built-in macOS MIDI synthesiser.\n"
+#	endif
+#elif defined(WIN32)
+	        "  win32:       Use the Win32 MIDI playback interface.\n"
+#else
+	        "  oss:         Use the Linux OSS MIDI playback interface.\n"
+#endif
+#if C_ALSA
+	        "  alsa:        Use the Linux ALSA MIDI playback interface.\n"
+#endif
+#if C_FLUIDSYNTH
+	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
+	        "               See the [fluidsynth] section for detailed configuration.\n"
+#endif
+#if C_MT32EMU
+	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
+	        "               See the [mt32] section for detailed configuration.\n"
+#endif
+	        "  auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is\n"
+	        "               set to 'fluidsynth' or 'mt32'), or a MIDI device external to\n"
+	        "               DOSBox (any other 'midiconfig' value). This might be a software\n"
+	        "               synthesizer or physical device. This is the default behaviour.\n"
+	        "  none:        Disable MIDI output.");
+
+	str_prop = secprop.Add_string("midiconfig", when_idle, "");
+	str_prop->Set_help(
+	        "Configuration options for the selected MIDI interface (unset by default).\n"
+	        "This is usually the ID or name of the MIDI synthesizer you want\n"
+	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
+#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
+	        "Notes: - This option has no effect when using the built-in synthesizers\n"
+	        "         ('mididevice = fluidsynth' or 'mididevice = mt32').\n"
+#endif
+#if C_COREAUDIO
+	        "       - When using 'coreaudio', you can specify a SoundFont here.\n"
+#endif
+#if C_ALSA
+	        "       - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
+	        "         MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
+	        "         client 14, port 0).\n"
+#endif
+	        "       - If you're using a physical Roland MT-32 with revision 0 PCB, the\n"
+	        "         hardware may require a delay in order to prevent its buffer from\n"
+	        "         overflowing. In that case, add 'delaysysex', e.g:\n"
+	        "         'midiconfig = 2 delaysysex'.");
+
+	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
+	const char* mputypes[] = {"intelligent", "uart", "none", 0};
+	str_prop->Set_values(mputypes);
+	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
+}
+
+void MPU401_Init(Section*);
+
+void MIDI_AddConfigSection(const config_ptr_t &conf)
+{
+	assert(conf);
+	Section_prop *sec = conf->AddSection_prop("midi", &MIDI_Init, true);
+	assert(sec);
+	sec->AddInitFunction(&MPU401_Init, true);
+
+	init_midi_dosbox_settings(*sec);
+}
+
