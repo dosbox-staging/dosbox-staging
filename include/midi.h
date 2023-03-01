@@ -81,4 +81,6 @@ void FLUID_AddConfigSection(const config_ptr_t &conf);
 void MT32_AddConfigSection(const config_ptr_t &conf);
 #endif
 
+void MIDI_AddConfigSection(const config_ptr_t &conf);
+
 #endif
