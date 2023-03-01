@@ -2435,9 +2435,15 @@ void CPU_ShutDown([[maybe_unused]] Section* sec) {
 	delete test;
 }
 
-void CPU_Init(Section* sec) {
+void CPU_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new (std::nothrow) CPU(sec);
-	sec->AddDestroyFunction(&CPU_ShutDown,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
 }
+
 //initialize static members
 bool CPU::inited=false;

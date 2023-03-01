@@ -1558,9 +1558,13 @@ static void turn_crt_knob(bool pressed, const int amount)
 	log_crt_knob_value();
 }
 
-void VGA_AddCompositeSettings(Config &conf)
+void VGA_AddCompositeSettings(Config& conf)
 {
-	auto sec = conf.AddSection_prop("composite", &composite_init, true);
+	constexpr auto changeable_at_runtime = true;
+
+	auto sec = conf.AddSection_prop("composite",
+	                                &composite_init,
+	                                changeable_at_runtime);
 	assert(sec);
 	composite_settings(*sec);
 }

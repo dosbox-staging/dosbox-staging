@@ -1498,7 +1498,12 @@ void BIOS_Destroy(Section* /*sec*/){
 	delete test;
 }
 
-void BIOS_Init(Section* sec) {
+void BIOS_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new BIOS(sec);
-	sec->AddDestroyFunction(&BIOS_Destroy,false);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
 }

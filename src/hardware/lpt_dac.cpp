@@ -145,6 +145,8 @@ void LPT_DAC_ShutDown([[maybe_unused]] Section *sec)
 
 void LPT_DAC_Init(Section *section)
 {
+	assert(section);
+
 	// Always reset on changes
 	LPT_DAC_ShutDown(nullptr);
 
@@ -177,5 +179,6 @@ void LPT_DAC_Init(Section *section)
 
 	lpt_dac->BindToPort(Lpt1Port);
 
-	section->AddDestroyFunction(&LPT_DAC_ShutDown, true);
+	constexpr auto changeable_at_runtime = true;
+	section->AddDestroyFunction(&LPT_DAC_ShutDown, changeable_at_runtime);
 }

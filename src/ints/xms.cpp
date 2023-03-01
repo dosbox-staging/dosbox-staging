@@ -483,7 +483,12 @@ void XMS_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
-void XMS_Init(Section* sec) {
+void XMS_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new XMS(sec);
-	sec->AddDestroyFunction(&XMS_ShutDown,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&XMS_ShutDown, changeable_at_runtime);
 }

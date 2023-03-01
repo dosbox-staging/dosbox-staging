@@ -431,6 +431,8 @@ void DOSBOX_Init()
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
+	constexpr auto changeable_at_runtime = true;
+
 	/* Setup all the different modules making up DOSBox */
 	const char *machines[] = {"hercules",      "cga",
 	                          "cga_mono",      "tandy",
@@ -461,10 +463,10 @@ void DOSBOX_Init()
 	LOG_StartUp();
 #endif
 
-	secprop->AddInitFunction(&IO_Init);//done
-	secprop->AddInitFunction(&PAGING_Init);//done
-	secprop->AddInitFunction(&MEM_Init);//done
-	secprop->AddInitFunction(&HARDWARE_Init);//done
+	secprop->AddInitFunction(&IO_Init);
+	secprop->AddInitFunction(&PAGING_Init);
+	secprop->AddInitFunction(&MEM_Init);
+	secprop->AddInitFunction(&HARDWARE_Init);
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(1, 384);
 	pint->Set_help(
@@ -536,10 +538,10 @@ void DOSBOX_Init()
 	        "when this is enabled so we will list them here.");
 
 	secprop->AddInitFunction(&CALLBACK_Init);
-	secprop->AddInitFunction(&PIC_Init);//done
+	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
-	secprop->AddInitFunction(&TIMER_Init);//done
-	secprop->AddInitFunction(&CMOS_Init);//done
+	secprop->AddInitFunction(&TIMER_Init);
+	secprop->AddInitFunction(&CMOS_Init);
 
 	const char *autoexec_section_choices[] = {
 	        "join",
@@ -588,8 +590,8 @@ void DOSBOX_Init()
 	        "or network-based filesystem, this setting avoids triggering write-operations for\n"
 	        "these write-protected files.");
 
-	secprop = control->AddSection_prop("render", &RENDER_Init, true);
-	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, true);
+	secprop = control->AddSection_prop("render", &RENDER_Init, changeable_at_runtime);
+	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, changeable_at_runtime);
 
 	pint = secprop->Add_int("frameskip", deprecated, 0);
 	pint->Set_help("Consider capping frame-rates using the '[sdl] host_rate' setting.");
@@ -668,7 +670,7 @@ void DOSBOX_Init()
 	assert(control);
 	VGA_AddCompositeSettings(*control);
 
-	secprop = control->AddSection_prop("cpu", &CPU_Init, true); // done
+	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
 	const char* cores[] =
 	{ "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)
@@ -719,13 +721,13 @@ void DOSBOX_Init()
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
 #endif
-	secprop->AddInitFunction(&DMA_Init);//done
+	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
-	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
+	secprop=control->AddSection_prop("pci", &PCI_Init); // PCI bus
 #endif
 
 	// Configure mouse
@@ -746,10 +748,12 @@ void DOSBOX_Init()
 #endif
 
 #if C_DEBUG
-	secprop = control->AddSection_prop("debug",&DEBUG_Init);
+	secprop = control->AddSection_prop("debug", &DEBUG_Init);
 #endif
 
-	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
+	secprop = control->AddSection_prop("sblaster",
+	                                   &SBLASTER_Init,
+	                                   changeable_at_runtime);
 
 	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
 	Pstring = secprop->Add_string("sbtype", when_idle, "sb16");
@@ -845,7 +849,9 @@ void DOSBOX_Init()
 	INNOVATION_AddConfigSection(control);
 
 	// PC speaker emulation
-	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
+	secprop = control->AddSection_prop("speaker",
+	                                   &PCSPEAKER_Init,
+	                                   changeable_at_runtime);
 
 	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", 0};
 	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
@@ -871,7 +877,7 @@ void DOSBOX_Init()
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
 	// Tandy audio emulation
-	secprop->AddInitFunction(&TANDYSOUND_Init, true);
+	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
 
 	const char *tandys[] = {"auto", "on", "off", 0};
 
@@ -896,7 +902,7 @@ void DOSBOX_Init()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
-	secprop->AddInitFunction(&LPT_DAC_Init, true);
+	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
 	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", 0};
 	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
@@ -918,7 +924,7 @@ void DOSBOX_Init()
 	Pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
-	secprop->AddInitFunction(&PS1AUDIO_Init, true);
+	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
 
 	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
 	Pbool->Set_help("Enable IBM PS/1 Audio emulation (disabled by default).");
@@ -937,7 +943,10 @@ void DOSBOX_Init()
 	                  "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// ReelMagic Emulator
-	secprop = control->AddSection_prop("reelmagic", &ReelMagic_Init, true);
+	secprop = control->AddSection_prop("reelmagic",
+	                                   &ReelMagic_Init,
+	                                   changeable_at_runtime);
+
 	pstring = secprop->Add_string("reelmagic", when_idle, "off");
 	pstring->Set_help(
 	        "ReelMagic (aka REALmagic) MPEG playback support:\n"
@@ -961,11 +970,11 @@ void DOSBOX_Init()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
+	secprop=control->AddSection_prop("joystick", &BIOS_Init);
 
 	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
-	secprop->AddInitFunction(&JOYSTICK_Init,true);
+	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
+	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
 	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
 	                          "ch",   "hidden",  "disabled", 0};
 	Pstring = secprop->Add_string("joysticktype", when_idle, "auto");
@@ -1034,7 +1043,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	secprop = control->AddSection_prop("serial", &SERIAL_Init, true);
+	secprop = control->AddSection_prop("serial", &SERIAL_Init, changeable_at_runtime);
 	const char* serials[] = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", 0};
 
@@ -1085,12 +1094,12 @@ void DOSBOX_Init()
 
 	/* All the DOS Related stuff, which will eventually
 	 * start up in the shell */
-	secprop = control->AddSection_prop("dos", &DOS_Init, false); // done
-	secprop->AddInitFunction(&XMS_Init, true);                   // done
+	secprop = control->AddSection_prop("dos", &DOS_Init);
+	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
 	Pbool = secprop->Add_bool("xms", when_idle, true);
 	Pbool->Set_help("Enable XMS support (enabled by default).");
 
-	secprop->AddInitFunction(&EMS_Init, true); // done
+	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
 	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", 0};
 	Pstring = secprop->Add_string("ems", when_idle, "true");
 	Pstring->Set_values(ems_settings);
@@ -1127,13 +1136,13 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
-	secprop = control->AddSection_prop("ipx", &IPX_Init, true);
+	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
 	Pbool   = secprop->Add_bool("ipx", when_idle, false);
 	Pbool->Set_help("Enable IPX over UDP/IP emulation (enabled by default).");
 #endif
 
 #if C_SLIRP
-	secprop = control->AddSection_prop("ethernet", &NE2K_Init, true);
+	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
 
 	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
 	Pbool->Set_help(

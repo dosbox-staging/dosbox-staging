@@ -694,7 +694,10 @@ static void MEM_ShutDown([[maybe_unused]] Section *sec)
 	delete test;
 }
 
-void MEM_Init(Section * sec) {
+void MEM_Init(Section* sec)
+{
+	assert(sec);
+
 	/* shutdown function */
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);

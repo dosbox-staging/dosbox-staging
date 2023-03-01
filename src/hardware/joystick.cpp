@@ -618,7 +618,12 @@ void JOYSTICK_Destroy([[maybe_unused]] Section *sec)
 	delete test;
 }
 
-void JOYSTICK_Init(Section* sec) {
+void JOYSTICK_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new JOYSTICK(sec);
-	sec->AddDestroyFunction(&JOYSTICK_Destroy,true); 
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&JOYSTICK_Destroy, changeable_at_runtime); 
 }

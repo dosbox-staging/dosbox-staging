@@ -1407,7 +1407,7 @@ public:
 		ems_baseseg = DOS_GetMemory(2); // We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
-		char const *emsname = "EMMXXXX0";
+		const char* emsname = "EMMXXXX0";
 		MEM_BlockWrite(PhysMake(ems_baseseg, 0xa), emsname,
 		               strlen(emsname) + 1);
 
@@ -1536,7 +1536,12 @@ void EMS_ShutDown(Section* /*sec*/) {
 	delete test;
 }
 
-void EMS_Init(Section* sec) {
+void EMS_Init(Section* sec)
+{
+	assert(sec);
+
 	test = new EMS(sec);
-	sec->AddDestroyFunction(&EMS_ShutDown,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&EMS_ShutDown, changeable_at_runtime);
 }

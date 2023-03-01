@@ -455,9 +455,12 @@ void PCI_ShutDown(Section* sec){
 	pci_interface=NULL;
 }
 
-void PCI_Init(Section* sec) {
+void PCI_Init(Section* sec)
+{
+	assert(sec);
+
 	pci_interface = new PCI(sec);
-	sec->AddDestroyFunction(&PCI_ShutDown,false);
+	sec->AddDestroyFunction(&PCI_ShutDown);
 }
 
 #endif

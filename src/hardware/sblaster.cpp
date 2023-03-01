@@ -2166,9 +2166,11 @@ private:
 	}
 
 public:
-	SBLASTER(Section* configuration)
+	SBLASTER(Section* conf)
 	{
-		Section_prop * section=static_cast<Section_prop *>(configuration);
+		assert(conf);
+
+		Section_prop * section=static_cast<Section_prop *>(conf);
 
 		sb.hw.base=section->Get_hex("sbbase");
 
@@ -2331,7 +2333,12 @@ void SBLASTER_ShutDown(Section* /*sec*/) {
 	sblaster = {};
 }
 
-void SBLASTER_Init(Section* sec) {
+void SBLASTER_Init(Section* sec)
+{
+	assert(sec);
+
 	sblaster = std::make_unique<SBLASTER>(sec);
-	sec->AddDestroyFunction(&SBLASTER_ShutDown,true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&SBLASTER_ShutDown, changeable_at_runtime);
 }

@@ -3150,14 +3150,17 @@ void MAPPER_AutoTypeStopImmediately()
 	mapper.typist.StopImmediately();
 }
 
-void MAPPER_StartUp(Section * sec) {
-	Section_prop * section = static_cast<Section_prop *>(sec);
+void MAPPER_StartUp(Section* sec)
+{
+	assert(sec);
+	Section_prop* section = static_cast<Section_prop*>(sec);
 
-	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_BindKeys, true);
+	// Runs after this function ends and for subsequent `config -set "sdl
+	// mapperfile=file.map"` commands
+	constexpr auto changeable_at_runtime = true;
+	section->AddInitFunction(&MAPPER_BindKeys, changeable_at_runtime);
 
-	// runs one-time on shutdown
-	section->AddDestroyFunction(&MAPPER_Destroy, false);
-	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper",
-	                  "Mapper");
+	// Runs one-time on shutdown
+	section->AddDestroyFunction(&MAPPER_Destroy);
+	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 }

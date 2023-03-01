@@ -802,8 +802,12 @@ void MPU401_Destroy(Section * /*sec*/)
 	delete test;
 }
 
-void MPU401_Init(Section *sec)
+void MPU401_Init(Section* sec)
 {
+	assert(sec);
+
 	test = new MPU401(sec);
-	sec->AddDestroyFunction(&MPU401_Destroy, true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
 }
