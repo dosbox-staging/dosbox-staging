@@ -45,7 +45,7 @@ static void for_each_alsa_seq_port(port_action_t action)
 	// be called before that sequencer is created.
 	snd_seq_t *seq = nullptr;
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
-		LOG_MSG("ALSA: Error: Can't open MIDI sequencer");
+		LOG_WARNING("MIDI:ALSA: Can't open MIDI sequencer");
 		return;
 	}
 	assert(seq);
@@ -171,8 +171,10 @@ void MidiHandler_alsa::PlayMsg(const uint8_t* msg)
 	default:
 		// Maybe filter out FC as it leads for at least one user to
 		// crash, but the entire midi stream has not yet been checked.
-		LOG(LOG_MISC, LOG_WARN)
-		("ALSA: Unknown Command: %02X %02X %02X", status_byte, msg[1], msg[2]);
+		LOG_WARNING("MIDI:ALSA: Unknown MIDI message sequence (hex): %02X %02X %02X",
+		            status_byte,
+		            msg[1],
+		            msg[2]);
 		send_event(1);
 		break;
 	}
@@ -264,7 +266,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	assert(conf != nullptr);
 	seq = {-1, -1};
 
-	DEBUG_LOG_MSG("ALSA: Attempting connection to: '%s'", conf);
+	DEBUG_LOG_MSG("MIDI:ALSA: Attempting connection to: '%s'", conf);
 
 	// Try to use port specified in config; if port is not configured,
 	// then attempt to connect to the newest capable port.
@@ -280,12 +282,12 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	if (seq.client == -1) {
-		LOG_MSG("ALSA: No available MIDI devices found");
+		LOG_WARNING("MIDI:ALSA: No available MIDI devices found");
 		return false;
 	}
 
 	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
-		LOG_MSG("ALSA: Can't open sequencer");
+		LOG_WARNING("MIDI:ALSA: Can't open sequencer");
 		return false;
 	}
 
@@ -301,7 +303,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 
 	if (output_port < 0) {
 		snd_seq_close(seq_handle);
-		LOG_MSG("ALSA: Can't create ALSA port");
+		LOG_WARNING("MIDI:ALSA: Can't create ALSA port");
 		return false;
 	}
 
@@ -312,7 +314,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 			snd_seq_client_info_malloc(&info);
 			assert(info);
 			snd_seq_get_any_client_info(seq_handle, seq.client, info);
-			LOG_MSG("ALSA: Connected to MIDI port %d:%d - %s", seq.client,
+			LOG_MSG("MIDI:ALSA: Connected to MIDI port %d:%d - %s", seq.client,
 			        seq.port, snd_seq_client_info_get_name(info));
 			snd_seq_client_info_free(info);
 			return true;
@@ -320,7 +322,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	snd_seq_close(seq_handle);
-	LOG_MSG("ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
+	LOG_WARNING("MIDI:ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
 	return false;
 }
 
