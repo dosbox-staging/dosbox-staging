@@ -361,7 +361,7 @@ elif cxx.links(
 )
     atomic_dep = atomic_internal_dep
 else
-    atomic_dep = dependency('atomic', true)
+    atomic_dep = dependency('atomic')
 endif
 
 # Gather external dependencies
