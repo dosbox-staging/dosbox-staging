@@ -28,7 +28,6 @@
 
 class Program;
 
-
 // Lookup to figure out the total length of a MIDI message (including the
 // first status byte) based on the status byte.
 // Using data bytes will result in a dummy zero lookup.
