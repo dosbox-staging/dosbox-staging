@@ -125,50 +125,54 @@ void MidiHandler_alsa::PlaySysex(uint8_t *sysex, size_t len)
 	send_event(1);
 }
 
-void MidiHandler_alsa::PlayMsg(const uint8_t *msg)
+void MidiHandler_alsa::PlayMsg(const uint8_t* msg)
 {
-	ev.type = SND_SEQ_EVENT_OSS;
-	ev.data.raw32.d[0] = msg[0];
+	const auto status_byte = msg[0];
+
+	ev.type            = SND_SEQ_EVENT_OSS;
+	ev.data.raw32.d[0] = status_byte;
 	ev.data.raw32.d[1] = msg[1];
 	ev.data.raw32.d[2] = msg[2];
 
-	unsigned char chanID = msg[0] & 0x0F;
-	switch (msg[0] & 0xF0) {
-	case 0x80:
-		snd_seq_ev_set_noteoff(&ev, chanID, msg[1], msg[2]);
+	const auto status  = get_midi_status(status_byte);
+	const auto channel = get_midi_channel(status_byte);
+
+	switch (status) {
+	case MidiStatus::NoteOff:
+		snd_seq_ev_set_noteoff(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
-	case 0x90:
-		snd_seq_ev_set_noteon(&ev, chanID, msg[1], msg[2]);
+	case MidiStatus::NoteOn:
+		snd_seq_ev_set_noteon(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
-	case 0xA0:
-		snd_seq_ev_set_keypress(&ev, chanID, msg[1], msg[2]);
+	case MidiStatus::PolyKeyPressure:
+		snd_seq_ev_set_keypress(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
-	case 0xB0:
-		snd_seq_ev_set_controller(&ev, chanID, msg[1], msg[2]);
+	case MidiStatus::ControlChange:
+		snd_seq_ev_set_controller(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
-	case 0xC0:
-		snd_seq_ev_set_pgmchange(&ev, chanID, msg[1]);
+	case MidiStatus::ProgramChange:
+		snd_seq_ev_set_pgmchange(&ev, channel, msg[1]);
 		send_event(0);
 		break;
-	case 0xD0:
-		snd_seq_ev_set_chanpress(&ev, chanID, msg[1]);
+	case MidiStatus::ChannelPressure:
+		snd_seq_ev_set_chanpress(&ev, channel, msg[1]);
 		send_event(0);
 		break;
-	case 0xE0: {
+	case MidiStatus::PitchBend: {
 		long theBend = ((long)msg[1] + (long)(msg[2] << 7)) - 0x2000;
-		snd_seq_ev_set_pitchbend(&ev, chanID, theBend);
+		snd_seq_ev_set_pitchbend(&ev, channel, theBend);
 		send_event(1);
 		break;
 	}
 	default:
 		// Maybe filter out FC as it leads for at least one user to
 		// crash, but the entire midi stream has not yet been checked.
-		LOG(LOG_MISC, LOG_WARN)("ALSA: Unknown Command: %02X %02X %02X",
-		                        msg[0], msg[1], msg[2]);
+		LOG(LOG_MISC, LOG_WARN)
+		("ALSA: Unknown Command: %02X %02X %02X", status_byte, msg[1], msg[2]);
 		send_event(1);
 		break;
 	}
