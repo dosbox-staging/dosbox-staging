@@ -28,7 +28,11 @@
 
 class Program;
 
-extern uint8_t MIDI_evt_len[256];
+
+// Lookup to figure out the total length of a MIDI message (including the
+// first status byte) based on the status byte.
+// Using data bytes will result in a dummy zero lookup.
+extern uint8_t MIDI_message_len_by_status[256];
 
 constexpr auto MIDI_SYSEX_SIZE = 8192;
 

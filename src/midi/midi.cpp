@@ -42,8 +42,8 @@
 #include "timer.h"
 
 // clang-format off
-uint8_t MIDI_evt_len[256] = {
-  // Data bytes
+uint8_t MIDI_message_len_by_status[256] = {
+  // Data bytes (dummy zero values)
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x10
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
@@ -251,7 +251,7 @@ void MIDI_RawOutByte(uint8_t data)
 		midi.message.pos = 0;
 
 		// Total length of the MIDI message, including the status byte
-		midi.message.len = MIDI_evt_len[midi.status];
+		midi.message.len = MIDI_message_len_by_status[midi.status];
 
 		if (midi.status == MidiStatus::SystemExclusive) {
 			midi.sysex.buf[0] = MidiStatus::SystemExclusive;
