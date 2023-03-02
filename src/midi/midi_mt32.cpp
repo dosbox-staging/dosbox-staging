@@ -344,12 +344,12 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 		static void onErrorControlROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open Control ROM file");
+			LOG_WARNING("MT32: Couldn't open Control ROM file");
 		}
 
 		static void onErrorPCMROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open PCM ROM file");
+			LOG_WARNING("MT32: Couldn't open PCM ROM file");
 		}
 
 		static void showLCDMessage(void *, const char *message)
@@ -572,7 +572,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	// Load the selected model and print info about it
 	auto loaded_model_and_dir = load_model(mt32_service, selected_model, rom_dirs);
 	if (!loaded_model_and_dir) {
-		LOG_MSG("MT32: Failed to find ROMs for model %s in:",
+		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
 		for (const auto &dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
@@ -602,7 +602,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
-		LOG_MSG("MT32: Error initialising emulation: %i", rc);
+		LOG_WARNING("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
 
