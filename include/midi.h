@@ -131,6 +131,14 @@ constexpr uint8_t RpnMsb            = 100;
 constexpr uint8_t RpnLsb            = 101;
 } // namespace MidiController
 
+bool is_midi_data_byte(const uint8_t byte);
+bool is_midi_status_byte(const uint8_t byte);
+
+MessageType get_midi_message_type(const uint8_t status_byte);
+
+uint8_t get_midi_status(const uint8_t status_byte);
+uint8_t get_midi_channel(const uint8_t channel_status);
+
 bool MIDI_Available();
 void MIDI_Disengage();
 void MIDI_Engage();
