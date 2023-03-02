@@ -131,8 +131,8 @@ public:
 		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
 		m_pCurPacket = MIDIPacketListInit(packetList);
 		
-		// Determine the length of msg
-		Bitu len=MIDI_evt_len[*msg];
+		const auto status_byte = *msg;
+		const auto len = MIDI_message_len_by_status[status_byte];
 		
 		// Add msg to the MIDIPacketList
 		MIDIPacketListAdd(packetList, (ByteCount)sizeof(packetBuf), m_pCurPacket, (MIDITimeStamp)0, len, msg);

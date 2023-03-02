@@ -69,7 +69,9 @@ void MidiHandler_oss::Close()
 
 void MidiHandler_oss::PlayMsg(const uint8_t *msg)
 {
-	const uint8_t len = MIDI_evt_len[*msg];
+	const auto status_byte = *msg;
+	const auto len = MIDI_message_len_by_status[status_byte];
+
 	uint8_t buf[128];
 	assert(len * 4 <= sizeof(buf));
 	size_t pos = 0;
