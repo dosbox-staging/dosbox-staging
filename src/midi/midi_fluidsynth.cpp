@@ -234,7 +234,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
 	                                    delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_MSG("FSYNTH: new_fluid_settings failed");
+		LOG_WARNING("FSYNTH: new_fluid_settings failed");
 		return false;
 	}
 
@@ -257,7 +257,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_MSG("FSYNTH: Failed to create the FluidSynth synthesizer.");
+		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
 		return false;
 	}
 
@@ -272,7 +272,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        sf_file);
+		            sf_file);
 		return false;
 	}
 
