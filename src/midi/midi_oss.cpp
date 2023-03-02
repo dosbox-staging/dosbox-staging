@@ -84,7 +84,7 @@ void MidiHandler_oss::PlayMsg(const uint8_t *msg)
 	}
 	const auto rcode = write(device, buf, pos);
 	if (!rcode) {
-		LOG_WARNING("MIDI: Failed to play messa message");
+		LOG_WARNING("MIDI:OSS: Failed to play message");
 	}
 }
 
@@ -101,6 +101,6 @@ void MidiHandler_oss::PlaySysex(uint8_t *sysex, size_t len)
 	}
 	const auto rcode = write(device, buf, pos);
 	if (!rcode) {
-		LOG_WARNING("MIDI: Failed to write sysex message");
+		LOG_WARNING("MIDI:OSS: Failed to write SysEx message");
 	}
 }
