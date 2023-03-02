@@ -92,7 +92,7 @@ public:
 
 		if (!m_client)
 		{
-			LOG_MSG("MIDI:coremidi: No client created.");
+			LOG_MSG("MIDI:COREMIDI: No client created.");
 			return false;
 		}
 
@@ -100,7 +100,7 @@ public:
 
 		if (!m_port)
 		{
-			LOG_MSG("MIDI:coremidi: No port created.");
+			LOG_MSG("MIDI:COREMIDI: No port created.");
 			return false;
 		}
 
