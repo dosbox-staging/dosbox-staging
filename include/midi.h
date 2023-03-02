@@ -36,8 +36,8 @@ bool MIDI_Available();
 void MIDI_Disengage();
 void MIDI_Engage();
 void MIDI_HaltSequence();
-void MIDI_Init(Section *sec);
-void MIDI_ListAll(Program *output_handler);
+void MIDI_Init(Section* sec);
+void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
 void MIDI_ResumeSequence();
 
@@ -74,13 +74,13 @@ struct MidiWork {
 };
 
 #if C_FLUIDSYNTH
-void FLUID_AddConfigSection(const config_ptr_t &conf);
+void FLUID_AddConfigSection(const config_ptr_t& conf);
 #endif
 
 #if C_MT32EMU
-void MT32_AddConfigSection(const config_ptr_t &conf);
+void MT32_AddConfigSection(const config_ptr_t& conf);
 #endif
 
-void MIDI_AddConfigSection(const config_ptr_t &conf);
+void MIDI_AddConfigSection(const config_ptr_t& conf);
 
 #endif
