@@ -124,8 +124,57 @@ struct Midi {
 	MidiHandler* handler = nullptr;
 };
 
-static Midi midi            = {};
-static Midi disengaged_midi = {};
+static Midi midi                    = {};
+static Midi disengaged_midi         = {};
+static bool raw_midi_output_enabled = {};
+
+class MidiState {
+public:
+	MidiState()
+	{
+		Reset();
+	}
+
+	void Reset()
+	{
+		note_on_tracker.fill(false);
+	}
+
+	inline void SetNoteActive(const uint8_t channel, const uint8_t note,
+	                          const bool is_playing)
+	{
+		note_on_tracker[NoteAddr(channel, note)] = is_playing;
+	}
+
+	inline bool IsNoteActive(const uint8_t channel, const uint8_t note)
+	{
+		return note_on_tracker[NoteAddr(channel, note)];
+	}
+
+	~MidiState() {}
+
+	// prevent copying
+	MidiState(const MidiState&) = delete;
+	// prevent assignment
+	MidiState& operator=(const MidiState&) = delete;
+
+private:
+	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
+
+	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
+	{
+		assert(channel <= LastMidiChannel);
+		assert(note <= LastMidiNote);
+		return channel * NumMidiNotes + note;
+	}
+};
+
+static MidiState midi_state = {};
+
+void init_midi_state(Section*)
+{
+	midi_state.Reset();
+}
 
 /* When using a physical Roland MT-32 rev. 0 as MIDI output device,
  * some games may require a delay in order to prevent buffer overflow
@@ -166,6 +215,85 @@ MessageType get_midi_message_type(const uint8_t status_byte)
 uint8_t get_midi_channel(const uint8_t channel_status)
 {
 	return channel_status & 0x0f;
+}
+
+static void output_note_off_for_active_notes(const uint8_t channel)
+{
+	assert(channel <= LastMidiChannel);
+
+	constexpr auto note_off_velocity = 64;
+	constexpr auto note_off_msg_len  = 3;
+	uint8_t buf[note_off_msg_len]    = {};
+
+	buf[0] = MidiStatus::NoteOff | channel;
+	buf[2] = note_off_velocity;
+
+	for (auto note = FirstMidiNote; note <= LastMidiNote; ++note) {
+		if (midi_state.IsNoteActive(channel, note)) {
+			buf[1] = note;
+
+			if (CaptureState & CAPTURE_MIDI) {
+				constexpr auto is_sysex = false;
+				CAPTURE_AddMidi(is_sysex, note_off_msg_len, buf);
+			}
+			midi.handler->PlayMsg(buf);
+		}
+	}
+}
+
+// Many MIDI drivers used in games send the "All Notes Off" Channel Mode
+// Message to turn off all active notes when switching between songs, instead
+// of properly sending Note Off messages for each individual note as required
+// by the MIDI specification (all Note On messages *must* be always paired
+// with Note Offs; the "All Notes Off" message must not be used as a shortcut
+// for that). E.g. all Sierra drivers exhibit this incorrect behaviour, while
+// LucasArts games are doing the correct thing and pair all Note On messages
+// with Note Offs.
+//
+// This hack can lead to "infinite notes" (hanging notes) when recording the
+// MIDI output into a MIDI sequencer, or when using DOSBox's raw MIDI output
+// capture functionality. What's worse, it can also result in multiple Note On
+// messages for the same note on the same channel in the recorded MIDI stream,
+// followed by a single Note Off only. While playing back the raw MIDI stream
+// is interpreted "correctly" on MIDI modules typically used in the 1990s,
+// it's up to the individual MIDI sequencer how to resolve this situation when
+// dealing with recorded MIDI data. This can lead lead to missing notes, and
+// it makes editing long MIDI recordings containing multiple songs very
+// difficult and error-prone.
+//
+// See page 20, 24, 25 and A-4 of the "The Complete MIDI 1.0 Detailed
+// Specification" document version 96.1, third edition (1996, MIDI
+// Manufacturers Association) for further details
+//
+// https://archive.org/details/Complete_MIDI_1.0_Detailed_Specification_96-1-3/
+//
+static void sanitise_midi_stream(const uint8_t buf[MaxMidiMessageLen])
+{
+	const auto status_byte = buf[0];
+	const auto status      = get_midi_status(status_byte);
+	const auto channel     = get_midi_channel(status_byte);
+
+	if (status == MidiStatus::NoteOn) {
+		const auto note = buf[1];
+		midi_state.SetNoteActive(channel, note, true);
+
+	} else if (status == MidiStatus::NoteOff) {
+		const auto note = buf[1];
+		midi_state.SetNoteActive(channel, note, false);
+
+	} else if (status == MidiStatus::ControlChange) {
+		const auto mode = buf[1];
+		if (mode >= MidiChannelMode::AllNotesOff) {
+			// Send Note Offs for the currently active notes prior
+			// to sending the "All Notes Off" message, as mandated
+			// by the MIDI spec
+			output_note_off_for_active_notes(channel);
+
+			for (auto note = FirstMidiNote; note <= LastMidiNote; ++note) {
+				midi_state.SetNoteActive(channel, note, false);
+			}
+		}
+	}
 }
 
 void MIDI_RawOutByte(uint8_t data)
@@ -263,6 +391,9 @@ void MIDI_RawOutByte(uint8_t data)
 		midi.message.buf[midi.message.pos++] = data;
 
 		if (midi.message.pos >= midi.message.len) {
+			if (!raw_midi_output_enabled) {
+				sanitise_midi_stream(midi.message.buf);
+			}
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
@@ -351,6 +482,8 @@ public:
 		Section_prop* section = static_cast<Section_prop*>(configuration);
 		std::string mididevice_prefs = section->Get_string("mididevice");
 		lowcase(mididevice_prefs);
+
+		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
 
@@ -580,6 +713,16 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	const char* mputypes[] = {"intelligent", "uart", "none", 0};
 	str_prop->Set_values(mputypes);
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
+
+	auto* bool_prop = secprop.Add_bool("raw_midi_output", when_idle, false);
+	assert(bool_prop);
+	bool_prop->Set_help(
+	        "Enable raw, unaltered MIDI output (disabled by default).\n"
+	        "Many MIDI drivers used in games don't fully conform to the MIDI standard.\n"
+	        "Working with out-of-spec MIDI data recorded from such games in MIDI\n"
+	        "sequencers can result in various issues, e.g. hanging or missing notes.\n"
+	        "DOSBox tries to fix such problems by default; this should not normally affect\n"
+	        "the output in any audible way.");
 }
 
 void MPU401_Init(Section*);
@@ -595,6 +738,7 @@ void MIDI_AddConfigSection(const config_ptr_t& conf)
 	                                          changeable_at_runtime);
 	assert(sec);
 
+	sec->AddInitFunction(&init_midi_state, changeable_at_runtime);
 	sec->AddInitFunction(&MPU401_Init, changeable_at_runtime);
 
 	init_midi_dosbox_settings(*sec);
