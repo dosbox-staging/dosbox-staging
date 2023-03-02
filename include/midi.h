@@ -32,6 +32,105 @@ extern uint8_t MIDI_evt_len[256];
 
 constexpr auto MIDI_SYSEX_SIZE = 8192;
 
+constexpr uint8_t MaxMidiMessageLen = 3;
+
+constexpr uint8_t NumMidiChannels  = 16;
+constexpr uint8_t FirstMidiChannel = 0;
+constexpr uint8_t LastMidiChannel  = NumMidiChannels - 1;
+
+constexpr uint8_t NumMidiNotes  = 128;
+constexpr uint8_t FirstMidiNote = 0;
+constexpr uint8_t LastMidiNote  = NumMidiNotes - 1;
+
+enum class MessageType : uint8_t { Channel, SysEx };
+
+// From "The Complete MIDI 1.0 Detailed Specification",
+// document version 96.1, third edition (1996, MIDI Manufacturers Association)
+//
+// https://archive.org/details/Complete_MIDI_1.0_Detailed_Specification_96-1-3/
+
+namespace MidiStatus {
+// Channel Voice Messages -- lower 4-bits (nibble) specify one of the 16 MIDI
+// Channels (channel 1 = 0x0, channel 16 = 0xf)
+constexpr uint8_t NoteOff         = 0x80;
+constexpr uint8_t NoteOn          = 0x90;
+constexpr uint8_t PolyKeyPressure = 0xa0;
+constexpr uint8_t ControlChange   = 0xb0;
+constexpr uint8_t ProgramChange   = 0xc0;
+constexpr uint8_t ChannelPressure = 0xd0;
+constexpr uint8_t PitchBend       = 0xe0;
+
+// System Messages
+constexpr uint8_t SystemMessage = 0xf0;
+
+// System Common Messages
+constexpr uint8_t MidiTimeCodeQuarterFrame = 0xf1;
+constexpr uint8_t SongPositionPointer      = 0xf2;
+constexpr uint8_t SongSelect               = 0xf3;
+constexpr uint8_t TuneRequest              = 0xf6;
+constexpr uint8_t EndOfExclusive           = 0xf7;
+
+// System Real-Time Messages
+constexpr uint8_t TimingClock   = 0xf8;
+constexpr uint8_t Start         = 0xfa;
+constexpr uint8_t Continue      = 0xfb;
+constexpr uint8_t Stop          = 0xfc;
+constexpr uint8_t ActiveSensing = 0xfe;
+constexpr uint8_t SystemReset   = 0xff;
+
+// System Exclusive Messages
+constexpr uint8_t SystemExclusive = 0xf0;
+} // namespace MidiStatus
+
+// Channel Mode Messages are Control Change Messages that use the the reserved
+// 120-127 controller number range to set the Channel Mode.
+namespace MidiChannelMode {
+
+constexpr uint8_t AllSoundOff         = 120;
+constexpr uint8_t ResetAllControllers = 121;
+constexpr uint8_t LocalControl        = 122;
+constexpr uint8_t AllNotesOff         = 123;
+constexpr uint8_t OmniOff             = 124;
+constexpr uint8_t OmniOn              = 125;
+constexpr uint8_t MonoOn              = 126;
+constexpr uint8_t PolyOn              = 127;
+} // namespace MidiChannelMode
+
+// Only controllers implemented by the Roland Sound Canvas SC-8850 released in
+// 1999 are included, which is a reasonable superset of all General Midi/GS/XG
+// implementations from the 1990s. Most of these are not used in the code but
+// are included here anyway for reference and troubleshooting purposes.
+// Names were taken from the Owner's Manual of the SC-8850.
+namespace MidiController {
+constexpr uint8_t Modulation        = 1;
+constexpr uint8_t PortamentoTime    = 5;
+constexpr uint8_t DataEntryMsb      = 6;
+constexpr uint8_t Volume            = 7;
+constexpr uint8_t Pan               = 8;
+constexpr uint8_t Expression        = 11;
+constexpr uint8_t DataEntryLsb      = 38;
+constexpr uint8_t Hold1             = 64;
+constexpr uint8_t Portamento        = 65;
+constexpr uint8_t Sostenuto         = 66;
+constexpr uint8_t Soft              = 67;
+constexpr uint8_t FilterResonance   = 71;
+constexpr uint8_t ReleaseTime       = 72;
+constexpr uint8_t AttackTime        = 73;
+constexpr uint8_t Cutoff            = 74;
+constexpr uint8_t DecayTime         = 75;
+constexpr uint8_t VibrateRate       = 76;
+constexpr uint8_t VibrateDepth      = 77;
+constexpr uint8_t VibrateDelay      = 78;
+constexpr uint8_t PortamentoControl = 84;
+constexpr uint8_t ReverbSendLevel   = 91;
+constexpr uint8_t ChorusSendLevel   = 93;
+constexpr uint8_t DelaySendLevel    = 94;
+constexpr uint8_t NrpnMsb           = 98;
+constexpr uint8_t NrpnLsb           = 99;
+constexpr uint8_t RpnMsb            = 100;
+constexpr uint8_t RpnLsb            = 101;
+} // namespace MidiController
+
 bool MIDI_Available();
 void MIDI_Disengage();
 void MIDI_Engage();
@@ -40,11 +139,6 @@ void MIDI_Init(Section* sec);
 void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
 void MIDI_ResumeSequence();
-
-enum class MessageType : uint8_t {
-	Channel,
-	SysEx,
-};
 
 struct MidiWork {
 	std::vector<uint8_t> message      = {};
