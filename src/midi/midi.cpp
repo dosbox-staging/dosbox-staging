@@ -486,6 +486,8 @@ bool MIDI_Available()
 	return midi.available;
 }
 
+// We'll adapt the RtMidi library, eventually, so hold off any substantial
+// rewrites on the MIDI stuff until then to unnecessary work.
 class MIDI final {
 public:
 	MIDI(Section* configuration)
@@ -728,11 +730,14 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable raw, unaltered MIDI output (disabled by default).\n"
-	        "Many MIDI drivers used in games don't fully conform to the MIDI standard.\n"
-	        "Working with out-of-spec MIDI data recorded from such games in MIDI\n"
-	        "sequencers can result in various issues, e.g. hanging or missing notes.\n"
-	        "DOSBox tries to fix such problems by default; this should not normally affect\n"
-	        "the output in any audible way.");
+	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
+	        "which makes editing the MIDI recordings of these games very error-prone and\n"
+	        "cumbersome in MIDI sequencers, often resulting in hanging or missing notes.\n"
+	        "DOSBox corrects the MIDI output of such games by default. This results in no\n"
+	        "audible difference whatsoever; it only affects the representation of the MIDI\n"
+	        "data. You should only enable 'raw_midi_output' if you really need to capture\n"
+	        "the raw, unaltered MIDI output of a program, e.g. when working with music\n"
+	        "applications, or when debugging MIDI issues.");
 }
 
 void MPU401_Init(Section*);
