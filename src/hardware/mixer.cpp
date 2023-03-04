@@ -280,7 +280,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 }
 
 // Apply the global reverb settings to the given channel
-static void set_global_reverb(const mixer_channel_t channel)
+static void set_global_reverb(const mixer_channel_t &channel)
 {
 	assert(channel);
 	if (!mixer.do_reverb || !channel->HasFeature(ChannelFeature::ReverbSend))
@@ -292,7 +292,7 @@ static void set_global_reverb(const mixer_channel_t channel)
 }
 
 // Apply the global chorus settings to the given channel
-static void set_global_chorus(const mixer_channel_t channel)
+static void set_global_chorus(const mixer_channel_t &channel)
 {
 	assert(channel);
 	if (!mixer.do_chorus || !channel->HasFeature(ChannelFeature::ChorusSend))
@@ -1293,14 +1293,14 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
-						        (HostPt)&data[pos * 2 + 0]);
+						        (const HostPt)&data[pos * 2 + 0]);
 						frame[1] = (int16_t)host_readw(
-						        (HostPt)&data[pos * 2 + 1]);
+						        (const HostPt)&data[pos * 2 + 1]);
 					} else {
 						frame[0] = static_cast<float>((int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 0]));
+						        (const HostPt)&data[pos * 2 + 0]));
 						frame[1] = static_cast<float>((int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 1]));
+						        (const HostPt)&data[pos * 2 + 1]));
 					}
 				}
 			} else { // mono
@@ -1309,11 +1309,11 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
-						        (HostPt)&data[pos]);
+						        (const HostPt)&data[pos]);
 					} else {
 						frame[0] = static_cast<float>(
 						        (int32_t)host_readd(
-						                (HostPt)&data[pos]));
+						                (const HostPt)&data[pos]));
 					}
 				}
 			}
@@ -1331,20 +1331,20 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos * 2 + 0])) -
+						                (const HostPt)&data[pos * 2 + 0])) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos * 2 + 1])) -
+						                (const HostPt)&data[pos * 2 + 1])) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos * 2 + 0])) -
+						                (const HostPt)&data[pos * 2 + 0])) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos * 2 + 1])) -
+						                (const HostPt)&data[pos * 2 + 1])) -
 						        offs);
 					}
 				}
@@ -1356,12 +1356,12 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos])) -
+						                (const HostPt)&data[pos])) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos])) -
+						                (const HostPt)&data[pos])) -
 						        offs);
 					}
 				}
