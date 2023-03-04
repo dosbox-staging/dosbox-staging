@@ -512,13 +512,11 @@ public:
 		trim(midiconfig_prefs);
 		const char* midiconfig = midiconfig_prefs.c_str();
 
+		// TODO: Rewrite this logic without using goto
 		if (mididevice_prefs == "none") {
 			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
 			return;
-		} else if (mididevice_prefs == "auto" ||
-		           mididevice_prefs == "default") {
-			// Value "default" exists for backwards-compatibility.
-			// TODO: Rewrite this logic without using goto
+		} else if (mididevice_prefs == "auto") {
 			goto getdefault;
 		}
 
