@@ -62,6 +62,39 @@ using comdata_t = std::vector<uint8_t>;
 static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
+static uint8_t last_written_character = '\n';
+constexpr int WriteOutBufSize         = 2048;
+
+static void write_to_stdout(std::string_view output)
+{
+	dos.internal_output = true;
+	for (const auto& chr : output) {
+		uint8_t out;
+		uint16_t bytes_to_write = 1;
+		if (chr == '\n' && last_written_character != '\r') {
+			out = '\r';
+			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
+		}
+		out = static_cast<uint8_t>(chr);
+		last_written_character = out;
+		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
+	}
+	dos.internal_output = false;
+}
+
+static void truncated_chars_message(int size)
+{
+	if (size > WriteOutBufSize) {
+		constexpr int MessageSize = 128;
+		char message[MessageSize];
+		snprintf(message,
+		         MessageSize,
+		         "\n\nERROR: OUTPUT TOO LONG: %d CHARS TRUNCATED",
+		         size - WriteOutBufSize);
+		write_to_stdout(message);
+	}
+}
+
 void PROGRAMS_MakeFile(const char *name, PROGRAMS_Creator creator)
 {
 	comdata_t comdata(exe_block.begin(), exe_block.end());
@@ -121,7 +154,7 @@ Program::Program() {
 	psp = new DOS_PSP(dos.psp());
 	/* Scan environment for filename */
 	PhysPt envscan=PhysMake(psp->GetEnvironment(),0);
-	while (mem_readb(envscan)) envscan+=mem_strlen(envscan)+1;	
+	while (mem_readb(envscan)) envscan+=mem_strlen(envscan)+1;
 	envscan+=3;
 	CommandTail tail;
 	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
@@ -135,10 +168,10 @@ Program::Program() {
 extern std::string full_arguments;
 
 void Program::ChangeToLongCmd() {
-	/* 
+	/*
 	 * Get arguments directly from the shell instead of the psp.
 	 * this is done in securemode: (as then the arguments to mount and friends
-	 * can only be given on the shell ( so no int 21 4b) 
+	 * can only be given on the shell ( so no int 21 4b)
 	 * Securemode part is disabled as each of the internal command has already
 	 * protection for it. (and it breaks games like cdman)
 	 * it is also done for long arguments to as it is convient (as the total commandline can be longer then 127 characters.
@@ -146,7 +179,7 @@ void Program::ChangeToLongCmd() {
 	 * Length of arguments can be ~120. but switch when above 100 to be sure
 	 */
 
-	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {	
+	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),full_arguments.c_str());
 		delete cmd;
 		cmd = temp;
@@ -170,75 +203,47 @@ bool Program::SuppressWriteOut(const char *format)
 	return true;
 }
 
-// For "\n" to "\r\n" expansion (0xA to OxD 0xA) in WriteOut* functions
-static char last_written_character = '\n';
+// TODO: Refactor messages and related functions like WriteOut that use variadic
+// args to instead use format strings when dosbox-staging starts using C++20
 
-void Program::WriteOut(const char *format, ...)
+void Program::WriteOut(const char* format, ...)
 {
-	if (SuppressWriteOut(format))
+	if (SuppressWriteOut(format)) {
 		return;
+	}
 
-	char buf[2048];
-	va_list msg;
+	char buf[WriteOutBufSize];
+	std::va_list msg;
 
-	va_start(msg,format);
-	vsnprintf(buf,2047,format,msg);
+	va_start(msg, format);
+	const int size = std::vsnprintf(buf, WriteOutBufSize, format, msg) + 1;
 	va_end(msg);
 
-	uint16_t size = (uint16_t)strlen(buf);
-	dos.internal_output=true;
-	for (uint16_t i = 0; i < size; i++) {
-		uint8_t out;uint16_t s=1;
-		if (buf[i] == 0xA && last_written_character != 0xD) {
-			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
-		}
-		last_written_character = out = buf[i];
-		DOS_WriteFile(STDOUT,&out,&s);
-	}
-	dos.internal_output=false;
-
-//	DOS_WriteFile(STDOUT,(uint8_t *)buf,&size);
+	write_to_stdout(buf);
+	truncated_chars_message(size);
 }
 
-void Program::WriteOut(const char *format, const char *arguments)
+void Program::WriteOut(const char* format, const char* arguments)
 {
-	if (SuppressWriteOut(format))
+	if (SuppressWriteOut(format)) {
 		return;
-
-	char buf[2048];
-	sprintf(buf,format,arguments);
-
-	uint16_t size = (uint16_t)strlen(buf);
-	dos.internal_output=true;
-	for (uint16_t i = 0; i < size; i++) {
-		uint8_t out;uint16_t s=1;
-		if (buf[i] == 0xA && last_written_character != 0xD) {
-			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
-		}
-		last_written_character = out = buf[i];
-		DOS_WriteFile(STDOUT,&out,&s);
 	}
-	dos.internal_output=false;
+
+	char buf[WriteOutBufSize];
+	const int size = std::snprintf(buf, WriteOutBufSize, format, arguments) + 1;
+
+	write_to_stdout(buf);
+	truncated_chars_message(size);
+
 }
 
-void Program::WriteOut_NoParsing(const char * format) {
-	if (SuppressWriteOut(format))
+void Program::WriteOut_NoParsing(const char* str)
+{
+	if (SuppressWriteOut(str)) {
 		return;
-
-	uint16_t size = (uint16_t)strlen(format);
-	char const* buf = format;
-	dos.internal_output=true;
-	for (uint16_t i = 0; i < size; i++) {
-		uint8_t out;uint16_t s=1;
-		if (buf[i] == 0xA && last_written_character != 0xD) {
-			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
-		}
-		last_written_character = out = buf[i];
-		DOS_WriteFile(STDOUT,&out,&s);
 	}
-	dos.internal_output=false;
 
-//	DOS_WriteFile(STDOUT,(uint8_t *)format,&size);
+	write_to_stdout(str);
 }
 
 void Program::ResetLastWrittenChar(char c)
@@ -313,7 +318,7 @@ Bitu Program::GetEnvCount() const
 
 bool Program::SetEnv(const char * entry,const char * new_string) {
 	PhysPt env_read = PhysMake(psp->GetEnvironment(),0);
-	
+
 	//Get size of environment.
 	DOS_MCB mcb(psp->GetEnvironment() - 1);
 	uint16_t envsize = mcb.GetSize()*16;
@@ -327,7 +332,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 		if (!env_string[0]) break;
 		env_read += (PhysPt)(safe_strlen(env_string)+1);
 		if (!strchr(env_string,'=')) continue;		/* Remove corrupt entry? */
-		if ((strncasecmp(entry,env_string,strlen(entry))==0) && 
+		if ((strncasecmp(entry,env_string,strlen(entry))==0) &&
 			env_string[strlen(entry)]=='=') continue;
 		MEM_BlockWrite(env_write,env_string,(Bitu)(safe_strlen(env_string)+1));
 		env_write += (PhysPt)(safe_strlen(env_string)+1);
@@ -375,7 +380,7 @@ public:
 	void Run(void);
 private:
 	void restart(const char* useconfig);
-	
+
 	void writeconf(std::string name, bool configdir) {
 		if (configdir) {
 			// write file to the default config directory
@@ -389,7 +394,7 @@ private:
 		}
 		return;
 	}
-	
+
 	bool securemode_check() {
 		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
@@ -433,7 +438,7 @@ void CONFIG::Run(void) {
 	while (presult != P_NOPARAMS) {
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
 		switch(presult) {
-		
+
 		case P_RESTART:
 			if (securemode_check()) return;
 			if (pvars.size() == 0) restart_program(control->startup_params);
@@ -448,7 +453,7 @@ void CONFIG::Run(void) {
 				restart_program(restart_params);
 			}
 			return;
-		
+
 		case P_LISTCONF: {
 			Bitu size = control->configfiles.size();
 			std::string config_path;
@@ -550,7 +555,7 @@ void CONFIG::Run(void) {
 				break;
 			}
 			default: display_help(); return;
-			}	
+			}
 			// if we have one value in pvars, it's a section
 			// two values are section + property
 			Section* sec = control->GetSection(pvars[0].c_str());
@@ -570,7 +575,7 @@ void CONFIG::Run(void) {
 					MSG_Get("AUTOEXEC_CONFIGFILE_HELP"),
 					pline->data.c_str() );
 				return;
-			} 
+			}
 			if (pvars.size()==1) {
 				size_t i = 0;
 				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),pvars[0].c_str());
@@ -590,7 +595,7 @@ void CONFIG::Run(void) {
 						// found it; make the list of possible values
 						std::string propvalues;
 						std::vector<Value> pv = p->GetValues();
-						
+
 						if (p->Get_type()==Value::V_BOOL) {
 							// possible values for boolean are true, false
 							propvalues += "true, false";
@@ -758,7 +763,7 @@ void CONFIG::Run(void) {
 		case P_SETPROP:	{
 			// Code for the configuration changes
 			// Official format: config -set "section property=value"
-			// Accepted: with or without -set, 
+			// Accepted: with or without -set,
 			// "section property value"
 			// "section property=value"
 			// "property" "value"
@@ -857,7 +862,7 @@ void PROGRAMS_Init(Section* sec) {
 	// writeconf
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","\nCan't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
-	
+
 	// help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
 	        "Adjusts DOSBox Staging's configurable parameters.\n"
@@ -888,8 +893,8 @@ void PROGRAMS_Init(Section* sec) {
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP","Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n");
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP","Purpose of section \"%s\":\n%s\nCurrent value:\n%s\n");
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE","This property cannot be changed at runtime.\n");
-	MSG_Add("PROGRAM_CONFIG_HLP_POSINT","positive integer"); 
-	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP","Section %s contains the following properties:\n");				
+	MSG_Add("PROGRAM_CONFIG_HLP_POSINT","positive integer");
+	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP","Section %s contains the following properties:\n");
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST","DOSBox configuration contains the following sections:\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_ON","Switched to secure mode.\n");
