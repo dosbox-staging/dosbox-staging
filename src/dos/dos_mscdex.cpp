@@ -351,15 +351,7 @@ int CMscdex::AddDrive(uint16_t _drive, char* physicalPath, uint8_t& subUnit)
 		devHeader.SetName				("MSCD001 ");
 
 		//Link it in the device chain
-		uint32_t start = dos_infoblock.GetDeviceChain();
-		uint16_t segm  = (uint16_t)(start>>16);
-		uint16_t offm  = (uint16_t)(start&0xFFFF);
-		while(start != 0xFFFFFFFF) {
-			segm  = (uint16_t)(start>>16);
-			offm  = (uint16_t)(start&0xFFFF);
-			start = real_readd(segm,offm);
-		}
-		real_writed(segm,offm,seg<<16);
+		DOS_AppendDevice(seg);
 
 		// Create Callback Strategy
 		uint16_t off = sizeof(DOS_DeviceHeader::sDeviceHeader);
