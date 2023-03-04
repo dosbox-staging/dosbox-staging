@@ -98,9 +98,14 @@ public:
 		CloseHandle (m_event);
 	}
 
-	void PlayMsg(const uint8_t *msg) override
+	void PlayMsg(const uint8_t* data) override
 	{
-		midiOutShortMsg(m_out, read_unaligned_uint32(msg));
+		const auto status  = data[0];
+		const auto data1   = data[1];
+		const auto data2   = data[2];
+		const uint32_t msg = status + (data1 << 8) + (data2 << 16);
+
+		midiOutShortMsg(m_out, msg);
 	}
 
 	void PlaySysex(uint8_t *sysex, size_t len) override
