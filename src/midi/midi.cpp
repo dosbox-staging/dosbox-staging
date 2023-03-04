@@ -151,7 +151,7 @@ public:
 		return note_on_tracker[NoteAddr(channel, note)];
 	}
 
-	~MidiState() {}
+	~MidiState() = default;
 
 	// prevent copying
 	MidiState(const MidiState&) = delete;
@@ -549,8 +549,9 @@ public:
 				return;
 			}
 		}
+		assert(handler != nullptr);
 		const std::string name = handler->GetName();
-		assert((handler != nullptr) && (name == "none"));
+		assert(name == "none");
 	}
 
 	~MIDI()
