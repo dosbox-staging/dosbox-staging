@@ -68,7 +68,7 @@ uint8_t MIDI_message_len_by_status[256] = {
 };
 // clang-format on
 
-static MidiHandler* handler_list = 0;
+static MidiHandler* handler_list = nullptr;
 
 MidiHandler::MidiHandler() : next(handler_list)
 {
@@ -487,7 +487,7 @@ public:
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
 
-		MidiHandler* handler;
+		MidiHandler* handler = {};
 
 		if (midiconfig_prefs.find("delaysysex") != std::string::npos) {
 			midi.sysex.start_ms = GetTicks();

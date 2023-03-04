@@ -106,7 +106,7 @@ public:
 	void PlaySysex(uint8_t *sysex, size_t len) override
 	{
 		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
-			LOG_WARNING("MIDI:WIN32: Can't send midi message.");
+			LOG_WARNING("MIDI:WIN32: Can't send midi message");
 			return;
 		}
 		midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));
