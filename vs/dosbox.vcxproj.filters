@@ -229,6 +229,9 @@
     <ClCompile Include="..\src\hardware\mpu401.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\ne2000.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\opl.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -880,6 +883,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mouse.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ne2000.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\paging.h">
