@@ -70,6 +70,17 @@ uint8_t MIDI_message_len_by_status[256] = {
 
 static MidiHandler* handler_list = nullptr;
 
+// JN: What the original devs did here is all MIDI devices that extend from
+// MidiHandler are created as global singletons. They relied on the global
+// instance creation combined with inheritance to create a linked-list of all
+// MIDI handlers as a side-effect... You get a kind of a linked list at the
+// end, where `handler_list` points to the last created MIDI device, then you
+// can iterate through the rest of the devices in reverse creation order by
+// following the `next` pointer until you hit a NULL pointer which signifies
+// the end of the chain.
+//
+// This is hacky as hell and needs to be rewritten in a sane way at some
+// point...
 MidiHandler::MidiHandler() : next(handler_list)
 {
 	handler_list = this;
