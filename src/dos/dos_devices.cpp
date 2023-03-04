@@ -191,8 +191,75 @@ uint8_t DOS_ExtDevice::GetStatus(bool input_flag)
 	return 0x00;
 }
 
-uint32_t DOS_CheckExtDevice(const char *name, bool already_flag)
+// Walk the DOS devices and return the real pointer to the device matching the
+// given name, provided it's not an existing driver (if indicated).
+RealPt DOS_CheckExtDeviceReplacement(const std::string_view name, const bool skip_existing_drivers)
 {
+	// Helper lambda's to check various device properties
+	//
+	auto is_a_driver = [](const RealPt rp) {
+		constexpr uint16_t driver_flag = (1 << 15);
+		return DOS_DeviceHasAttributes(rp, driver_flag);
+	};
+
+	auto is_con_or_nul = [](const RealPt rp) {
+		constexpr uint16_t con_strategy  = 0;
+		constexpr uint16_t con_interrupt = 0;
+
+		constexpr uint16_t nul_strategy  = 0xffff;
+		constexpr uint16_t nul_interrupt = 0xffff;
+
+		const auto strategy  = DOS_GetDeviceStrategy(rp);
+		const auto interrupt = DOS_GetDeviceInterrupt(rp);
+
+		return (strategy == con_strategy && interrupt == con_interrupt) ||
+		       (strategy == nul_strategy && interrupt == nul_interrupt);
+	};
+
+	auto is_existing_driver = [](const RealPt rp) {
+		for (const auto& dev : Devices) {
+			if (!dev || (dev->GetInformation() & EXT_DEVICE_BIT) == 0) {
+				continue;
+			}
+			const auto ext_dev = dynamic_cast<DOS_ExtDevice*>(dev);
+			if (ext_dev->CheckSameDevice(RealSeg(rp),
+			                             DOS_GetDeviceStrategy(rp),
+			                             DOS_GetDeviceInterrupt(rp))) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	// start walking the device chain of real pointers
+	auto rp = dos_infoblock.GetDeviceChain();
+
+	while (!DOS_IsLastDevice(rp)) {
+		if (!is_a_driver(rp) || !DOS_DeviceHasName(rp, name)) {
+			rp = DOS_GetNextDevice(rp);
+			continue;
+		}
+		if (is_con_or_nul(rp)) {
+			return 0;
+		}
+		if (skip_existing_drivers && is_existing_driver(rp)) {
+			return 0;
+		}
+		// The device at the real pointer is a driver, has a name
+		// matching the given name, is neither the CON nor NUL devices,
+		// and (if requested) is not an existing device driver.
+		return rp;
+	}
+	return 0;
+}
+
+uint32_t DOS_CheckExtDevice(const char* name, bool already_flag)
+{
+	// Call the replacement function so we can programmatically compare its
+	// result with this function. We will only accept it if it produces
+	// identical results.
+	const auto replacement_rvalue = DOS_CheckExtDeviceReplacement(name, already_flag);
+
 	uint32_t addr = dos_infoblock.GetDeviceChain();
 	uint16_t seg, off;
 	uint16_t next_seg, next_off;
@@ -224,7 +291,9 @@ uint32_t DOS_CheckExtDevice(const char *name, bool already_flag)
 								if (((DOS_ExtDevice *)Devices[no])
 								            ->CheckSameDevice(seg, real_readw(seg, off + 6),
 								                              real_readw(seg, off + 8))) {
-									return 0;
+									constexpr uint32_t rvalue = 0; 
+									assert(replacement_rvalue == rvalue);
+									return rvalue;
 								}
 							}
 						}
@@ -232,15 +301,21 @@ uint32_t DOS_CheckExtDevice(const char *name, bool already_flag)
 				}
 				// Exclude the default CON and NUL
 				if (real_readd(seg, off + 6) == 0 || real_readd(seg, off + 6) == 0xffffffff) {
-					return 0;
+					constexpr uint32_t rvalue = 0; 
+					assert(replacement_rvalue == rvalue);
+					return rvalue;
 				}
-				return (uint32_t)seg << 16 | (uint32_t)off;
+				const auto rvalue = (uint32_t)seg << 16 | (uint32_t)off;
+				assert(replacement_rvalue == rvalue);
+				return rvalue;
 			}
 		}
 		seg = next_seg;
 		off = next_off;
 	}
-	return 0;
+	constexpr uint32_t rvalue = 0; 
+	assert(replacement_rvalue == rvalue);
+	return rvalue;
 }
 
 static void DOS_CheckOpenExtDevice(const char *name)
