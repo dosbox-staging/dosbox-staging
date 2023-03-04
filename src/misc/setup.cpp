@@ -93,7 +93,8 @@ Value::operator double () const {
 	return _double;
 }
 
-Value::operator char const* () const {
+Value::operator const char*() const
+{
 	assert(type == V_STRING);
 	return _string->c_str();
 }
@@ -105,7 +106,7 @@ bool Value::operator==(const Value &other) const
 	if (type != other.type)
 		return false;
 	switch(type){
-		case V_BOOL: 
+		case V_BOOL:
 			if(_bool == other._bool) return true;
 			break;
 		case V_INT:
@@ -142,7 +143,7 @@ bool Value::SetValue(const std::string &in, const Etype _type)
 	case V_NONE:
 	case V_CURRENT:
 	default:
-		LOG_ERR("SETUP: Unhandled type when setting value: %s", in.c_str());
+		LOG_ERR("SETUP: Unhandled type when setting value: '%s'", in.c_str());
 		retval = false;
 		break;
 	}
@@ -241,7 +242,7 @@ Property::Property(const std::string &name, Changeable::Value when)
           change(when)
 {
 	assertm(std::regex_match(name, std::regex{"[a-zA-Z0-9_]+"}),
-	        "Only letters, digits, and underscores are allowed in property name");
+	        "Only letters, digits, and underscores are allowed in property names");
 }
 
 bool Property::CheckValue(const Value &in, bool warn)
@@ -254,11 +255,12 @@ bool Property::CheckValue(const Value &in, bool warn)
 			return true;
 		}
 	}
-	if (warn)
-		LOG_WARNING("CONFIG: \"%s\" is an invalid value for: %s. Using the default: %s",
-		        in.ToString().c_str(),
-		        propname.c_str(),
-		        default_value.ToString().c_str());
+	if (warn) {
+		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
+		            in.ToString().c_str(),
+		            propname.c_str(),
+		            default_value.ToString().c_str());
+	}
 	return false;
 }
 
@@ -312,7 +314,7 @@ bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
 		if (va > ma ) va = ma; else va = mi;
 
 		if (warn) {
-			LOG_WARNING("CONFIG: %s lies outside the range %s-%s for variable: %s. Limiting it to: %d",
+			LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
 			            in.ToString().c_str(),
 			            min_value.ToString().c_str(),
 			            max_value.ToString().c_str(),
@@ -320,7 +322,7 @@ bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
 			            va);
 		}
 
-		value = va; 
+		value = va;
 		return true;
 	}
 }
@@ -339,7 +341,7 @@ bool Prop_int::CheckValue(const Value &in, bool warn)
 	if (va >= mi && va <= ma) return true;
 
 	if (warn) {
-		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for variable: %s. Using the default: %s",
+		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', using the default value %s",
 		            in.ToString().c_str(),
 		            min_value.ToString().c_str(),
 		            max_value.ToString().c_str(),
@@ -392,11 +394,12 @@ bool Prop_string::CheckValue(const Value &in, bool warn)
 			}
 		}
 	}
-	if (warn)
-		LOG_WARNING("CONFIG: \"%s\" is an invalid value for: %s. Using the default: %s",
-		        in.ToString().c_str(),
-		        propname.c_str(),
-		        default_value.ToString().c_str());
+	if (warn) {
+		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
+		            in.ToString().c_str(),
+		            propname.c_str(),
+		            default_value.ToString().c_str());
+	}
 	return false;
 }
 
@@ -519,7 +522,7 @@ bool PropMultiVal::SetValue(const std::string &input)
 			in = local;
 			local.clear();
 		}
-		
+
 		if (p->Get_type() == Value::V_STRING) {
 			//Strings are only checked against the suggested values list.
 			//Test Value. If it fails set default
@@ -535,7 +538,7 @@ bool PropMultiVal::SetValue(const std::string &input)
 			if (!r) {
 				if (in.empty() && p->Get_type() == prevtype ) {
 					//Nothing there, but same type of variable, so repeat it (sensitivity)
-					in = prevargument; 
+					in = prevargument;
 					p->SetValue(in);
 				} else {
 					//Something was there to be parsed or not the same type. Invalidate entire property.
@@ -768,7 +771,7 @@ bool Section_prop::HandleInputline(const std::string &gegevens)
 
 		return p->SetValue(val);
 	}
-	LOG_WARNING("CONFIG: Unknown option %s", name.c_str());
+	LOG_WARNING("CONFIG: Unknown option '%s'", name.c_str());
 	return false;
 }
 
@@ -1083,9 +1086,9 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 	const auto canonical_path = std_fs::canonical(cfg_path, ec);
 	if (ec)
 		return false;
-	
+
 	if (contains(configFilesCanonical, canonical_path)) {
-		LOG_INFO("CONFIG: Skipping duplicate config file '%s'", 
+		LOG_INFO("CONFIG: Skipping duplicate config file '%s'",
 			configfilename.c_str());
 		return true;
 	}
@@ -1141,7 +1144,7 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 	}
 	current_config_dir.clear();//So internal changes don't use the path information
 
-	LOG_INFO("CONFIG: Loaded %s conf file %s", type.c_str(), configfilename.c_str());
+	LOG_INFO("CONFIG: Loaded '%s' config file '%s'", type.c_str(), configfilename.c_str());
 
 	return true;
 }
@@ -1319,7 +1322,9 @@ bool CommandLine::FindEntry(const char *name, cmd_it &it, bool neednext)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(char const* const begin,std::string & value, bool remove) {
+bool CommandLine::FindStringBegin(const char* const begin, std::string& value,
+                                  bool remove)
+{
 	size_t len = strlen(begin);
 	for (cmd_it it = cmds.begin(); it != cmds.end();++it) {
 		if (strncmp(begin,(*it).c_str(),len)==0) {
@@ -1457,7 +1462,7 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	return retval;
 }
 
-CommandLine::CommandLine(int argc, char const *const argv[])
+CommandLine::CommandLine(int argc, const char* const argv[])
 {
 	if (argc>0) {
 		file_name=argv[0];
@@ -1592,8 +1597,9 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	while (control->cmdline->FindString("-conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// try to load it from the user directory
-			if (!control->ParseConfigFile("custom", config_path + config_file)) {
-				LOG_WARNING("CONFIG: Can't open custom conf file: %s",
+			if (!control->ParseConfigFile("custom",
+			                              config_path + config_file)) {
+				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
 				            config_file.c_str());
 			}
 		}
@@ -1613,10 +1619,10 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 		Cross::GetPlatformConfigName(config_file);
 		const std::string config_combined = new_config_path + config_file;
 		if (control->PrintConfig(config_combined)) {
-			LOG_MSG("CONFIG: Wrote new primary conf file '%s'", config_combined.c_str());
+			LOG_MSG("CONFIG: Wrote new primary config file '%s'", config_combined.c_str());
 			control->ParseConfigFile("new primary", config_combined);
 		} else {
-			LOG_WARNING("CONFIG: Unable to write a new primary conf file '%s'",
+			LOG_WARNING("CONFIG: Unable to write a new primary config file '%s'",
 						config_combined.c_str());
 		}
 	}
