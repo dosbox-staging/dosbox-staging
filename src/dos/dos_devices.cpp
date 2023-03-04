@@ -193,7 +193,7 @@ uint8_t DOS_ExtDevice::GetStatus(bool input_flag)
 
 // Walk the DOS devices and return the real pointer to the device matching the
 // given name, provided it's not an existing driver (if indicated).
-RealPt DOS_CheckExtDeviceReplacement(const std::string_view name, const bool skip_existing_drivers)
+RealPt DOS_CheckExtDevice(const std::string_view name, const bool skip_existing_drivers)
 {
 	// Helper lambda's to check various device properties
 	//
@@ -251,71 +251,6 @@ RealPt DOS_CheckExtDeviceReplacement(const std::string_view name, const bool ski
 		return rp;
 	}
 	return 0;
-}
-
-uint32_t DOS_CheckExtDevice(const char* name, bool already_flag)
-{
-	// Call the replacement function so we can programmatically compare its
-	// result with this function. We will only accept it if it produces
-	// identical results.
-	const auto replacement_rvalue = DOS_CheckExtDeviceReplacement(name, already_flag);
-
-	uint32_t addr = dos_infoblock.GetDeviceChain();
-	uint16_t seg, off;
-	uint16_t next_seg, next_off;
-	uint16_t no;
-	char devname[8 + 1];
-
-	seg = addr >> 16;
-	off = addr & 0xffff;
-	while (1) {
-		no = real_readw(seg, off + 4);
-		next_seg = real_readw(seg, off + 2);
-		next_off = real_readw(seg, off);
-		if (next_seg == 0xffff && next_off == 0xffff) {
-			break;
-		}
-		if (no & 0x8000) {
-			for (no = 0; no < 8; no++) {
-				if ((devname[no] = real_readb(seg, off + 10 + no)) <= 0x20) {
-					devname[no] = 0;
-					break;
-				}
-			}
-			devname[8] = 0;
-			if (!strcmp(name, devname)) {
-				if (already_flag) {
-					for (no = 0; no < DOS_DEVICES; no++) {
-						if (Devices[no]) {
-							if (Devices[no]->GetInformation() & EXT_DEVICE_BIT) {
-								if (((DOS_ExtDevice *)Devices[no])
-								            ->CheckSameDevice(seg, real_readw(seg, off + 6),
-								                              real_readw(seg, off + 8))) {
-									constexpr uint32_t rvalue = 0; 
-									assert(replacement_rvalue == rvalue);
-									return rvalue;
-								}
-							}
-						}
-					}
-				}
-				// Exclude the default CON and NUL
-				if (real_readd(seg, off + 6) == 0 || real_readd(seg, off + 6) == 0xffffffff) {
-					constexpr uint32_t rvalue = 0; 
-					assert(replacement_rvalue == rvalue);
-					return rvalue;
-				}
-				const auto rvalue = (uint32_t)seg << 16 | (uint32_t)off;
-				assert(replacement_rvalue == rvalue);
-				return rvalue;
-			}
-		}
-		seg = next_seg;
-		off = next_off;
-	}
-	constexpr uint32_t rvalue = 0; 
-	assert(replacement_rvalue == rvalue);
-	return rvalue;
 }
 
 static void DOS_CheckOpenExtDevice(const char *name)
