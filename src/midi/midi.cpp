@@ -560,9 +560,6 @@ public:
 				return;
 			}
 		}
-		assert(handler != nullptr);
-		const std::string name = handler->GetName();
-		assert(name == "none");
 	}
 
 	~MIDI()
@@ -585,9 +582,6 @@ void MIDI_ListAll(Program* caller)
 
 	for (auto* handler = handler_list; handler; handler = handler->next) {
 		const std::string name = handler->GetName();
-		if (name == "none") {
-			continue;
-		}
 
 		std::string name_format = msg_indent;
 		name_format.append(convert_ansi_markup("[color=white]%s:[reset]\n"));
