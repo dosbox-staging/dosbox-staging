@@ -380,6 +380,16 @@ void DOS_AddDevice(DOS_Device * adddev);
 /* DelDevice destroys the device that is pointed to. */
 void DOS_DelDevice(DOS_Device * dev);
 
+// Get, append, and query the DOS device header linked list
+RealPt DOS_GetNextDevice(const RealPt rp);
+RealPt DOS_GetLastDevice();
+void DOS_AppendDevice(const uint16_t segment, const uint16_t offset = 0);
+bool DOS_IsLastDevice(const RealPt rp);
+bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name);
+bool DOS_DeviceHasAttributes(const RealPt rp, const uint16_t attributes);
+uint16_t DOS_GetDeviceStrategy(const RealPt rp);
+uint16_t DOS_GetDeviceInterrupt(const RealPt rp);
+
 void VFILE_Register(const char *name,
                     const uint8_t *data,
                     const uint32_t size,

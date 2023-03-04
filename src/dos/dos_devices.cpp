@@ -420,6 +420,106 @@ void DOS_DelDevice(DOS_Device * dev) {
 	}
 }
 
+// Structure of internal DOS tables, Device Driver
+//
+// Property   Offset  Type      Description
+// ~~~~~~~~   ~~~~~~  ~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// next_rpt   00h     DWord --> Next driver in chain (x:FFFF means end)
+// attributes 04h     Word      Device attributes.
+// strategy   06h     Word      Device strategy routine offset.
+// interrupt  08h     Word      Device interrupt routine offset.
+// name       0Ah     8 Bytes   Device name padded with spaces.
+//
+// Ref: https://www.infradeaorg/devload/DOSTables.html, Appendix 2
+//
+namespace DeviceDriverInfo {
+constexpr uint8_t next_rpt_offset = 0x00;   // DWORD, points to next driver in
+                                            // chain (x:FFFF means end)
+constexpr uint8_t attributes_offset = 0x04; // WORD, device attributes offset
+constexpr uint8_t strategy_offset   = 0x06; // WORD, device strategy routine
+                                            // offset.
+constexpr uint8_t interrupt_offset = 0x08;  // WORD, device interrupt
+                                            // routine offset.
+constexpr uint8_t name_offset = 0x0a;       // 8 bytes, device name padded with
+                                            // spaces.
+constexpr size_t name_length = 8;
+} // namespace DeviceDriverInfo
+
+// Indicates if the device at the given real pointer is the last in DOS's chain
+bool DOS_IsLastDevice(const RealPt rp)
+{
+	constexpr uint16_t last_offset_marker = 0xffff;
+	return RealOff(rp) == last_offset_marker;
+}
+
+// From the given real pointer, get the next device driver's real pointer
+RealPt DOS_GetNextDevice(const RealPt rp)
+{
+	return real_readd(RealSeg(rp),
+	                  RealOff(rp) + DeviceDriverInfo::next_rpt_offset);
+}
+
+// Get the tail real pointer from the DOS device driver linked list
+RealPt DOS_GetLastDevice()
+{
+	auto rp = dos_infoblock.GetDeviceChain();
+
+	while (!DOS_IsLastDevice(rp)) {
+		rp = DOS_GetNextDevice(rp);
+	}
+	return rp;
+}
+
+// Append the device at the given address to the end of the DOS device linked list
+void DOS_AppendDevice(const uint16_t segment, const uint16_t offset)
+{
+	const auto new_rp  = RealMake(segment, offset);
+	const auto tail_rp = DOS_GetLastDevice();
+	real_writed(RealSeg(tail_rp), RealOff(tail_rp), new_rp);
+}
+
+bool DOS_DeviceHasAttributes(const RealPt rp, const uint16_t req_attributes)
+{
+	const auto attributes = real_readw(
+	        RealSeg(rp), RealOff(rp) + DeviceDriverInfo::attributes_offset);
+
+	return (attributes & req_attributes) == req_attributes;
+}
+
+uint16_t DOS_GetDeviceStrategy(const RealPt rp)
+{
+	return real_readw(RealSeg(rp),
+	                  RealOff(rp) + DeviceDriverInfo::strategy_offset);
+}
+
+uint16_t DOS_GetDeviceInterrupt(const RealPt rp)
+{
+	return real_readw(RealSeg(rp),
+	                  RealOff(rp) + DeviceDriverInfo::interrupt_offset);
+}
+
+bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name)
+{
+	const auto segment    = RealSeg(rp);
+	const auto offset     = RealOff(rp) + DeviceDriverInfo::name_offset;
+
+	const auto search_len = std::min(req_name.length(),
+	                                 DeviceDriverInfo::name_length);
+
+	for (uint8_t i = 0; i < search_len; ++i) {
+		// source and requested characters
+		const auto s = real_readb(segment, check_cast<uint16_t>(offset + i));
+		const auto r = req_name[i];
+		if (r == '\0') {
+			break;
+		}
+		if (r != static_cast<char>(s)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void DOS_SetupDevices() {
 	DOS_Device * newdev;
 	newdev=new device_CON();
