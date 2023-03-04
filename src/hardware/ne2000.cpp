@@ -51,7 +51,7 @@ static void NE2000_TX_Event(uint32_t val);
 
 #define LOG_THIS theNE2kDevice->
 // #define BX_DEBUG
-// #define BX_INFO 
+// #define BX_INFO
 #define BX_NULL_TIMER_HANDLE 0
 #define BX_ERROR LOG_WARNING
 #define BX_PANIC LOG_WARNING
@@ -87,7 +87,7 @@ static inline void BX_DEBUG(const char *msg, ...)
 
 bx_ne2k_c* theNE2kDevice = NULL;
 
-  
+
 bx_ne2k_c::bx_ne2k_c(void)
 	: s()
 {
@@ -143,7 +143,7 @@ bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.address_cnt  = 0;
 
   memset( & BX_NE2K_THIS s.mem, 0, sizeof(BX_NE2K_THIS s.mem));
-  
+
   // Set power-up conditions
   BX_NE2K_THIS s.CR.stop      = 1;
   BX_NE2K_THIS s.CR.rdma_cmd = 4;
@@ -173,7 +173,7 @@ void
 bx_ne2k_c::write_cr(io_val_t data)
 {
   auto value = check_cast<uint8_t>(data);
-  
+
   BX_DEBUG ("wrote 0x%02x to CR", value);
 
   // Validate remote-DMA
@@ -192,7 +192,7 @@ bx_ne2k_c::write_cr(io_val_t data)
   }
 
   BX_NE2K_THIS s.CR.rdma_cmd = (value & 0x38) >> 3;
-  
+
   // If start command issued, the RST bit in the ISR
   // must be cleared
   if ((value & 0x02) && !BX_NE2K_THIS s.CR.start) {
@@ -237,17 +237,17 @@ bx_ne2k_c::write_cr(io_val_t data)
       // start-tx and no loopback
       if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
         BX_PANIC(("CR write - tx start, dev in reset"));
-        
+
       if (BX_NE2K_THIS s.tx_bytes == 0)
         BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
-#ifdef notdef    
+#ifdef notdef
       // XXX debug stuff
       printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
       for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
-        printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - 
+        printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 -
           BX_NE2K_MEMSTART + i]);
-        if (i && (((i+1) % 16) == 0)) 
+        if (i && (((i+1) % 16) == 0))
           printf("\t");
       }
       printf("");
@@ -305,7 +305,7 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 {
   uint32_t retval = 0;
 
-  if ((io_len == io_width_t::word) && (address & 0x1)) 
+  if ((io_len == io_width_t::word) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word read"));
 
   // ROM'd MAC address
@@ -338,11 +338,11 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
   return (0xff);
 }
 
-void 
+void
 bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_len)
 {
   const auto value = check_cast<uint16_t>(data);
-  if ((io_len == io_width_t::word) && (address & 0x1)) 
+  if ((io_len == io_width_t::word) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word write"));
 
   if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
@@ -363,7 +363,7 @@ bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_len)
 // after that, insw/outsw instructions can be used to move
 // the appropriate number of bytes to/from the device.
 //
-uint32_t 
+uint32_t
 bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
 {
   uint32_t retval = 0;
@@ -372,7 +372,7 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
   case 0x0:  // Data register
     //
     // A read remote-DMA command must have been issued,
-    // and the source-address and length registers must  
+    // and the source-address and length registers must
     // have been initialised.
     //
     if (!s.remote_bytes) {
@@ -515,7 +515,7 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
   case 0x5:  // NCR
     return (BX_NE2K_THIS s.num_coll);
     break;
-    
+
   case 0x6:  // FIFO
     // reading FIFO is only valid in loopback mode
     BX_ERROR(("reading FIFO not supported yet"));
@@ -533,7 +533,7 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 	    (unsigned int)(BX_NE2K_THIS s.ISR.pkt_tx    << 1u) |
 	    (unsigned int)(BX_NE2K_THIS s.ISR.pkt_rx));
     break;
-    
+
   case 0x8:  // CRDA0
     return (BX_NE2K_THIS s.remote_dma & 0xff);
     break;
@@ -551,7 +551,7 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
     BX_INFO(("reserved read - page 0, 0xb"));
     return (0xff);
     break;
-    
+
   case 0xc:  // RSR
     return
        ((unsigned int)(BX_NE2K_THIS s.RSR.deferred    << 7u) |
@@ -563,7 +563,7 @@ bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 	    (unsigned int)(BX_NE2K_THIS s.RSR.bad_crc     << 1u) |
 	    (unsigned int)(BX_NE2K_THIS s.RSR.rx_ok));
     break;
-    
+
   case 0xd:  // CNTR0
     return (BX_NE2K_THIS s.tallycnt_0);
     break;
@@ -834,7 +834,7 @@ bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
   case 0x6:
     BX_NE2K_THIS s.physaddr[offset - 1] = value;
     break;
-    
+
   case 0x7:  // CURR
     BX_NE2K_THIS s.curr_page = value;
     break;
@@ -852,7 +852,7 @@ bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
   default:
     BX_PANIC("page 1 w offset %04x out of range", (unsigned) offset);
-  }  
+  }
 }
 
 
@@ -1010,13 +1010,13 @@ bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
   case 0xf:
     BX_PANIC("page 2 write to reserved offset %0x", offset);
     break;
-   
+
   default:
     BX_PANIC("page 2 write, illegal offset %0x", offset);
     break;
   }
 }
-  
+
 //
 // page3_read/page3_write - writes to this page are illegal
 //
@@ -1119,12 +1119,12 @@ io_val_t bx_ne2k_c::read(io_port_t address, io_width_t io_len)
 // by this ne2000 instance
 //
 void
-bx_ne2k_c::write_handler(void *this_ptr, io_port_t address, io_val_t value, 
+bx_ne2k_c::write_handler(void *this_ptr, io_port_t address, io_val_t value,
 			 io_width_t io_len)
 {
 #if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
-  
+
   class_ptr->write(address, value, io_len);
 }
 
@@ -1252,7 +1252,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   pages = (int)((io_len + 4u + 4u + 255u)/256u);
 
   if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
-    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;    
+    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
   } else {
     avail = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
       (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
@@ -1262,7 +1262,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   // Avoid getting into a buffer overflow condition by not attempting
   // to do partial receives. The emulation to handle this condition
   // seems particularly painful.
-  if ((avail < pages) 
+  if ((avail < pages)
 #if BX_NE2K_NEVER_FULL_RING
       || (avail == pages)
 #endif
@@ -1329,7 +1329,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     memcpy(startptr + 4, buf, io_len);
     BX_NE2K_THIS s.curr_page = nextpage;
   } else {
-    unsigned int endbytes = (unsigned int)(BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page) 
+    unsigned int endbytes = (unsigned int)(BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page)
       * 256u;
     memcpy(startptr, pkthdr, 4);
     memcpy(startptr + 4, buf, (size_t)(endbytes - 4u));
@@ -1339,7 +1339,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 	   (size_t)(io_len - endbytes + 8u));
     BX_NE2K_THIS s.curr_page = nextpage;
   }
-  
+
   BX_NE2K_THIS s.RSR.rx_ok = 1;
   if (pktbuf[0] & 0x80) {
     BX_NE2K_THIS s.RSR.rx_mbit = 1;
@@ -1415,11 +1415,11 @@ void bx_ne2k_c::init()
   BX_NE2K_THIS s.macaddr[9]  = BX_NE2K_THIS s.physaddr[4];
   BX_NE2K_THIS s.macaddr[10] = BX_NE2K_THIS s.physaddr[5];
   BX_NE2K_THIS s.macaddr[11] = BX_NE2K_THIS s.physaddr[5];
-    
+
   // ne2k signature
-  for (Bitu i = 12; i < 32; i++) 
+  for (Bitu i = 12; i < 32; i++)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
-    
+
   // Bring the register state into power-up state
   reset(BX_RESET_HARDWARE);
 }
@@ -1432,7 +1432,7 @@ static void NE2000_TX_Event([[maybe_unused]] uint32_t val)
 static void NE2000_Poller(void) {
 	ethernet->GetPackets([](const uint8_t *packet, int len) {
 		//LOG_MSG("NE2000: Received %d bytes", header->len);
-		
+
 		// don't receive in loopback modes
 		if((theNE2kDevice->s.DCR.loop == 0) || (theNE2kDevice->s.TCR.loop_cntl != 0))
 			return -1;
@@ -1523,13 +1523,13 @@ public:
 		theNE2kDevice = nullptr;
 		TIMER_DelTickHandler(NE2000_Poller);
 		PIC_RemoveEvents(NE2000_TX_Event);
-	}	
+	}
 };
 
 static NE2K* test;
 void NE2K_ShutDown(Section* sec) {
     (void)sec;//UNUSED
-	if(test) delete test;	
+	if(test) delete test;
 	test=0;
 }
 
@@ -1545,7 +1545,7 @@ void NE2K_Init(Section* sec)
 
 	if (!test->load_success) {
 		delete test;
-		test = 0;
+		test = nullptr;
 	}
 }
 

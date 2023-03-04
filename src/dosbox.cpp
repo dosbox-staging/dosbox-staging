@@ -1127,7 +1127,7 @@ void DOSBOX_Init()
 	                "(disabled by default).\n"
 	                "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, true);
+	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
 	Pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout, or 'auto' ('auto' by default).");
 
