@@ -294,7 +294,8 @@ static void sanitise_midi_stream(const uint8_t buf[MaxMidiMessageLen])
 
 	} else if (status == MidiStatus::ControlChange) {
 		const auto mode = buf[1];
-		if (mode >= MidiChannelMode::AllNotesOff) {
+		if (mode == MidiChannelMode::AllSoundOff ||
+		    mode >= MidiChannelMode::AllNotesOff) {
 			// Send Note Offs for the currently active notes prior
 			// to sending the "All Notes Off" message, as mandated
 			// by the MIDI spec
