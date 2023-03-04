@@ -1184,7 +1184,7 @@ bx_ne2k_c::mcast_index(const void *dst)
   unsigned long crc = 0xffffffffL;
   int carry, i, j;
   uint8_t b;
-  uint8_t *ep = (uint8_t *) dst;
+  const auto *ep = (const uint8_t *) dst;
 
   for (i = 6; --i >= 0;) {
       b = *ep++;
@@ -1229,7 +1229,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 //  int wrapped;
   uint8_t nextpage;
   uint8_t pkthdr[4];
-  uint8_t *pktbuf = (uint8_t *) buf;
+  const auto *pktbuf = (const uint8_t *) buf;
   uint8_t *startptr;
   static uint8_t bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
