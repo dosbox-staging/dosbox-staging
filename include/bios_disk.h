@@ -84,8 +84,8 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-// Merely pointers. The actual raw image objects backing these
-// arrays are owned are managed by the drive manager class.
+// Merely pointers. The actual raw image objects are managed by the drive
+// manager class.
 extern std::array<imageDisk*, MAX_DISK_IMAGES> imageDiskList;
 extern std::array<imageDisk*, MAX_SWAPPABLE_DISKS> diskSwap;
 

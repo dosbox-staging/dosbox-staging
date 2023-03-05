@@ -557,14 +557,14 @@ void IMGMOUNT::Run(void)
 		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO"), paths, drive);
 
 	} else if (fstype == "none") {
-		FILE* newDisk = fopen_wrap_ro_fallback(temp_line, roflag);
-		if (!newDisk) {
+		FILE* new_disk = fopen_wrap_ro_fallback(temp_line, roflag);
+		if (!new_disk) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 			return;
 		}
-		const auto sz = stdio_size_kb(newDisk);
+		const auto sz = stdio_size_kb(new_disk);
 		if (sz < 0) {
-			fclose(newDisk);
+			fclose(new_disk);
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 			return;
 		}
@@ -573,7 +573,7 @@ void IMGMOUNT::Run(void)
 		// Seems to make sense to require a valid geometry..
 		if (is_hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
 		    sizes[3] == 0) {
-			fclose(newDisk);
+			fclose(new_disk);
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
 			return;
 		}
@@ -581,7 +581,7 @@ void IMGMOUNT::Run(void)
 		const auto drive_index = drive - '0';
 
 		imageDiskList.at(drive_index) = DriveManager::RegisterNumberedImage(
-		        newDisk, temp_line, imagesize, is_hdd);
+		        new_disk, temp_line, imagesize, is_hdd);
 
 		if (is_hdd) {
 			imageDiskList.at(drive_index)

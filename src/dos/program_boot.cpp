@@ -240,7 +240,8 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != NULL) {
-				diskSwap[i] = DriveManager::RegisterRawFddImage(usefile, temp_line, floppysize);
+				diskSwap[i] = DriveManager::RegisterRawFloppyImage(
+				        usefile, temp_line, floppysize);
 				if (usefile_1 == NULL) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;

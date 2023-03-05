@@ -45,8 +45,8 @@
 
 DOS_File* Files[DOS_FILES] = {};
 
-// Merely pointers. The actual filesystem and raw image objects backing these
-// drives are owned are managed by the drive manager class.
+// Merely pointers. The actual filesystem and raw image objects are managed by
+// the drive manager class.
 std::array<DOS_Drive*, DOS_DRIVES> Drives = {};
 
 uint8_t DOS_GetDefaultDrive(void) {

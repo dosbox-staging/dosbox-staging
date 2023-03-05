@@ -48,7 +48,7 @@ public:
 	using raw_images_t        = std::vector<std::unique_ptr<imageDisk>>;
 	struct DriveInfo {
 		filesystem_images_t disks = {};
-		uint16_t currentDisk      = 0;
+		uint16_t current_disk     = 0;
 	};
 	using drive_infos_t = std::array<DriveInfo, DOS_DRIVES>;
 
@@ -65,9 +65,9 @@ public:
 
 	static void CloseNumberedImage(const imageDisk* image_ptr);
 
-	static imageDisk* RegisterRawFddImage(FILE* img_file,
-	                                      const std::string& img_name,
-	                                      const uint32_t img_size_kb);
+	static imageDisk* RegisterRawFloppyImage(FILE* img_file,
+	                                         const std::string& img_name,
+	                                         const uint32_t img_size_kb);
 	static void CloseRawFddImages();
 
 	static void InitializeDrive(int drive);
@@ -81,8 +81,8 @@ public:
 	
 private:
 	static drive_infos_t drive_infos;
-	static raw_images_t numbered_images;
-	static raw_images_t raw_fdd_images;
+	static raw_images_t indexed_images;
+	static raw_images_t raw_floppy_images;
 	static uint8_t currentDrive;
 };
 
