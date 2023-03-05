@@ -1,0 +1,981 @@
+/*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#include "mouse.h"
+#include "mouse_config.h"
+#include "mouse_interfaces.h"
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
+#include "bios.h"
+#include "bitops.h"
+#include "callback.h"
+#include "checks.h"
+#include "cpu.h"
+#include "intel8042.h"
+#include "math_utils.h"
+#include "pic.h"
+#include "regs.h"
+
+#include "../../ints/int10.h"
+
+using namespace bit::literals;
+
+CHECK_NARROWING();
+
+// This file implements both BIOS interface and PS/2 direct mouse access.
+
+// Reference:
+// - https://www.digchip.com/datasheets/parts/datasheet/196/HT82M30A-pdf.php
+// - https://isdaman.com/alsos/hardware/mouse/ps2interface.htm
+// - https://wiki.osdev.org/Mouse_Input
+// - https://wiki.osdev.org/PS/2_Mouse
+// - https://www.os2museum.com/wp/jumpy-ps2-mouse-in-enhanced-mode-windows-3-x/
+// - http://hackipedia.org, 'Windows and the 5-Button Wheel Mouse'
+
+// TODO: consider adding Typhoon mouse emulation:
+// - unlock sequence (sample rates): 200, 100, 80, 60, 40, 20
+// - mouse protocol ID: 8
+// - frame: 6 bytes
+//   - 3 bytes as usual
+//   - byte 4: always 1
+//   - byte 5: z-axis movement, one of: 0xff, 0x00, or 0x01
+//   - byte 6: 0
+// Reference: https://kbd-project.org/docs/scancodes/scancodes-13.html#mcf2
+// Drawbacks:
+// - probably Windows 9x only (couldn't find DOS driver)
+// - protocol is bandwidth inefficient
+
+// clang-format off
+
+static const std::vector<uint8_t> list_rates_hz = {
+        10, 20, 40, 60, 80, 100, 200 // PS/2 mouse sampling rates
+};
+
+static const std::vector<uint8_t> list_resolutions = {
+        1, 2, 4, 8 // PS/2 mouse resolution values
+};
+
+// clang-format on
+
+enum class Command : uint8_t { // PS/2 AUX (mouse) port commands
+	None          = 0x00,
+	SetScaling11  = 0xe6,
+	SetScaling21  = 0xe7,
+	SetResolution = 0xe8,
+	GetStatus     = 0xe9,
+	SetStreamMode = 0xea,
+	PollFrame     = 0xeb,
+	ResetWrapMode = 0xec,
+	SetWrapMode   = 0xee,
+	SetRemoteMode = 0xf0,
+	GetDevId      = 0xf2,
+	SetSampleRate = 0xf3,
+	EnableDev     = 0xf4,
+	DisableDev    = 0xf5,
+	SetDefaults   = 0xf6,
+	ResetDev      = 0xff,
+};
+
+// delay to enforce between callbacks, in milliseconds
+static uint8_t delay_ms = 5;
+
+// true = delay timer is in progress
+static bool delay_running = false;
+// true = delay timer expired, event can be sent immediately
+static bool delay_finished = true;
+
+static MouseButtonsAll buttons;     // currently visible button state
+static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
+static MouseButtons12S buttons_12S; // buttons with 3/4/5 quished together
+
+static float delta_x = 0.0f; // accumulated mouse movement since last reported
+static float delta_y = 0.0f;
+static int8_t counter_w = 0; // mouse wheel counter
+
+static MouseModelPS2 protocol = MouseModelPS2::Standard;
+static uint8_t unlock_idx_im = 0; // sequence index for unlocking extended protocol
+static uint8_t unlock_idx_xp = 0;
+
+// frame to be sent via the i8042 controller
+static std::vector<uint8_t> frame = {};
+// if enough movement or other mouse state changes for a new frame
+static bool has_data_for_frame = false;
+
+static uint8_t rate_hz = 0; // maximum rate at which the mouse state is updated
+static bool scaling_21 = false;
+
+static uint8_t counts_mm = 0;    // counts per mm
+static float counts_rate = 0.0f; // 1.0 is 4 counts per mm
+
+static bool is_reporting = false;
+static bool mode_remote  = false; // true = remote mode, false = stream mode
+static bool mode_wrap    = false; // true = wrap mode
+
+// Command currently being executed, waiting for parameter
+static Command current_command = Command::None;
+
+// ***************************************************************************
+// Helper routines to log various warnings
+// ***************************************************************************
+
+static void warn_unknown_command(const Command command)
+{
+	static bool already_warned[UINT8_MAX + 1];
+	const uint8_t code = static_cast<uint8_t>(command);
+	if (!already_warned[code]) {
+		LOG_WARNING("MOUSE (PS/2): Unknown command 0x%02x", code);
+		already_warned[code] = true;
+	}
+}
+
+// ***************************************************************************
+// PS/2 hardware mouse implementation
+// ***************************************************************************
+
+void MOUSEPS2_UpdateButtonSquish()
+{
+	// - if VMware compatible driver is enabled, never try to report
+	//   mouse buttons 4 and 5, that would be asking for trouble
+	// - for PS/2 modes other than IntelliMouse Explorer there is
+	//   no standard way to report buttons 4 and 5
+
+	const bool squish = mouse_shared.active_vmm ||
+	                    (protocol != MouseModelPS2::Explorer);
+	buttons.data = squish ? buttons_12S.data : buttons_all.data;
+}
+
+static void terminate_unlock_sequence()
+{
+	unlock_idx_im = 0;
+	unlock_idx_xp = 0;
+}
+
+static void set_protocol(const MouseModelPS2 new_protocol)
+{
+	terminate_unlock_sequence();
+
+	static bool first_time = true;
+	if (first_time || protocol != new_protocol) {
+		const char* protocol_name = nullptr;
+
+		first_time = false;
+		protocol   = new_protocol;
+
+		switch (protocol) {
+		case MouseModelPS2::Standard:
+			protocol_name = "Standard, 3 buttons";
+			break;
+		case MouseModelPS2::IntelliMouse:
+			protocol_name = "IntelliMouse, wheel, 3 buttons";
+			break;
+		case MouseModelPS2::Explorer:
+			protocol_name = "IntelliMouse Explorer, wheel, 5 buttons";
+			break;
+		default: break;
+		}
+
+		LOG_MSG("MOUSE (PS/2): %s", protocol_name);
+
+		frame.clear();
+		MOUSEPS2_UpdateButtonSquish();
+	}
+}
+
+static uint8_t get_reset_wheel_4bit()
+{
+	const int8_t tmp = std::clamp(counter_w,
+	                              static_cast<int8_t>(-0x08),
+	                              static_cast<int8_t>(0x07));
+
+	// reading always clears the counter
+	counter_w = 0;
+
+	// 0x0f for -1, 0x0e for -2, etc.
+	return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x10 + tmp);
+}
+
+static uint8_t get_reset_wheel_8bit()
+{
+	const auto tmp = counter_w;
+
+	// reading always clears the counter
+	counter_w = 0;
+
+	// 0xff for -1, 0xfe for -2, etc.
+	return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x100 + tmp);
+}
+
+static int16_t get_scaled_movement(const int16_t d, const bool is_polling)
+{
+	// Scaling is not applied when polling, see:
+	// see https://www3.tuhh.de/osg/Lehre/SS21/V_BSB/doc/ps2mouse.html
+
+	if (!scaling_21 || is_polling) {
+		return d;
+	}
+
+	// clang-format off
+	switch (d) {
+	case -5: return -9;
+	case -4: return -6;
+	case -3: return -3;
+	case -2: [[fallthrough]];
+	case -1: return -1;
+	case 1:  [[fallthrough]];
+	case 2:  return 1;
+	case 3:  return 3;
+	case 4:  return 6;
+	case 5:  return 9;
+	default: return static_cast<int16_t>(2 * d);
+	}
+	// clang-format on
+}
+
+static void reset_counters()
+{
+	delta_x   = 0.0f;
+	delta_y   = 0.0f;
+	counter_w = 0;
+}
+
+static void build_protocol_frame(const bool is_polling = false)
+{
+	union {
+		uint8_t data = 0x08;
+
+		bit_view<0, 1> left;
+		bit_view<1, 1> right;
+		bit_view<2, 1> middle;
+		bit_view<4, 1> sign_x;
+		bit_view<5, 1> sign_y;
+		bit_view<6, 1> overflow_x;
+		bit_view<7, 1> overflow_y;
+	} mdat;
+
+	mdat.left   = buttons.left;
+	mdat.right  = buttons.right;
+	mdat.middle = buttons.middle;
+
+	auto dx = static_cast<int16_t>(std::round(delta_x));
+	auto dy = static_cast<int16_t>(std::round(delta_y));
+
+	delta_x -= dx;
+	delta_y -= dy;
+
+	dx = get_scaled_movement(dx, is_polling);
+	dy = get_scaled_movement(static_cast<int16_t>(-dy), is_polling);
+
+	if (protocol == MouseModelPS2::Explorer) {
+		// There is no overflow for 5-button mouse protocol, see
+		// HT82M30A datasheet
+		dx = std::clamp(dx,
+		                static_cast<int16_t>(-UINT8_MAX),
+		                static_cast<int16_t>(UINT8_MAX));
+		dy = std::clamp(dy,
+		                static_cast<int16_t>(-UINT8_MAX),
+		                static_cast<int16_t>(UINT8_MAX));
+	} else {
+		if ((dx > UINT8_MAX) || (dx < -UINT8_MAX)) {
+			mdat.overflow_x = 1;
+		}
+		if ((dy > UINT8_MAX) || (dy < -UINT8_MAX)) {
+			mdat.overflow_y = 1;
+		}
+	}
+
+	dx = static_cast<int16_t>(dx % (UINT8_MAX + 1));
+	if (dx < 0) {
+		dx = static_cast<int16_t>(dx + UINT8_MAX + 1);
+		mdat.sign_x = 1;
+	}
+
+	dy = static_cast<int16_t>(dy % (UINT8_MAX + 1));
+	if (dy < 0) {
+		dy = static_cast<int16_t>(dy + UINT8_MAX + 1);
+		mdat.sign_y = 1;
+	}
+
+	frame.resize(3);
+	frame[0] = mdat.data;
+	frame[1] = static_cast<uint8_t>(dx);
+	frame[2] = static_cast<uint8_t>(dy);
+
+	if (protocol == MouseModelPS2::IntelliMouse) {
+		frame.resize(4);
+		frame[3] = get_reset_wheel_8bit();
+	} else if (protocol == MouseModelPS2::Explorer) {
+		frame.resize(4);
+		frame[3] = get_reset_wheel_4bit();
+		if (buttons.extra_1) {
+			bit::set(frame[3], b4);
+		}
+		if (buttons.extra_2) {
+			bit::set(frame[3], b5);
+		}
+	}
+
+	// Protocol frame was build, no need for a second one
+	has_data_for_frame = false;
+}
+
+static void maybe_transfer_frame(); // forward declaration
+
+static void delay_handler(uint32_t /*val*/)
+{
+	delay_running  = false;
+	delay_finished = true;
+
+	maybe_transfer_frame();
+}
+
+static void maybe_start_delay_timer(const uint8_t timer_delay_ms)
+{
+	if (delay_running) {
+		return;
+	}
+	PIC_AddEvent(delay_handler, timer_delay_ms);
+	delay_running  = true;
+	delay_finished = false;
+}
+
+static bool should_report()
+{
+	return !mode_wrap && !mode_remote && is_reporting;
+}
+
+static void maybe_transfer_frame()
+{
+	if (!delay_finished) {
+		maybe_start_delay_timer(delay_ms);
+		return;
+	}
+
+	if (!has_data_for_frame || !I8042_IsReadyForAuxFrame()) {
+		return;
+	}
+
+	maybe_start_delay_timer(delay_ms);
+
+	build_protocol_frame();
+	if (should_report()) {
+		I8042_AddAuxFrame(frame);
+	}
+
+	frame.clear();
+}
+
+static uint8_t get_status_byte()
+{
+	union {
+		uint8_t data = 0;
+
+		bit_view<0, 1> right;
+		bit_view<1, 1> middle;
+		bit_view<2, 1> left;
+		// bit 3 - reserved
+		bit_view<4, 1> scaling_21;
+		bit_view<5, 1> reporting;
+		bit_view<6, 1> mode_remote;
+		// bit 7 - reserved
+	} ret;
+
+	ret.left   = buttons.left;
+	ret.right  = buttons.right;
+	ret.middle = buttons.middle;
+
+	ret.scaling_21 = scaling_21;
+	ret.reporting  = is_reporting;
+
+	return ret.data;
+}
+
+static void cmd_get_status()
+{
+	I8042_AddAuxByte(get_status_byte());
+	I8042_AddAuxByte(counts_mm);
+	I8042_AddAuxByte(rate_hz);
+}
+
+static void cmd_get_dev_id()
+{
+	I8042_AddAuxByte(static_cast<uint8_t>(protocol));
+	reset_counters();
+}
+
+static void cmd_poll_frame()
+{
+	constexpr bool is_polling = true;
+	build_protocol_frame(is_polling);
+	I8042_AddAuxFrame(frame);
+	frame.clear();
+	reset_counters();
+}
+
+static void cmd_set_resolution(const uint8_t new_counts_mm)
+{
+	terminate_unlock_sequence();
+	reset_counters();
+
+	if (new_counts_mm != 1 && new_counts_mm != 2 &&
+	    new_counts_mm != 4 && new_counts_mm != 8) {
+		// Invalid parameter, set default
+		counts_mm = 4;
+	} else {
+		counts_mm = new_counts_mm;
+	}
+
+	counts_rate = counts_mm / 4.0f;
+}
+
+static void cmd_set_sample_rate(const uint8_t new_rate_hz)
+{
+	reset_counters();
+
+	if (!std::binary_search(list_rates_hz.begin(), list_rates_hz.end(), new_rate_hz)) {
+		// Invalid parameter, set default
+		terminate_unlock_sequence();
+		rate_hz = 100;
+	} else {
+		rate_hz = new_rate_hz;
+	}
+
+	// Update event queue settings and interface information
+	MouseInterface::GetPS2()->NotifyInterfaceRate(rate_hz);
+
+	// Handle extended mouse protocol unlock sequences
+	auto process_unlock = [](const std::vector<uint8_t>& sequence,
+	                         uint8_t& idx,
+	                         const MouseModelPS2 potential_protocol) {
+		if (sequence[idx] != rate_hz) {
+			idx = 0;
+		} else if (sequence.size() == ++idx) {
+			set_protocol(potential_protocol);
+		}
+	};
+
+	static const std::vector<uint8_t> unlock_sequence_im = {200, 100, 80};
+	static const std::vector<uint8_t> unlock_sequence_xp = {200, 200, 80};
+
+	if (mouse_config.model_ps2 == MouseModelPS2::IntelliMouse) {
+		process_unlock(unlock_sequence_im,
+		               unlock_idx_im,
+		               MouseModelPS2::IntelliMouse);
+	} else if (mouse_config.model_ps2 == MouseModelPS2::Explorer) {
+		process_unlock(unlock_sequence_im,
+		               unlock_idx_im,
+		               MouseModelPS2::IntelliMouse);
+		process_unlock(unlock_sequence_xp, unlock_idx_xp, MouseModelPS2::Explorer);
+	}
+}
+
+static void cmd_set_scaling_21(const bool enable)
+{
+	terminate_unlock_sequence();
+	scaling_21 = enable;
+}
+
+static void cmd_set_reporting(const bool enabled)
+{
+	terminate_unlock_sequence();
+	reset_counters();
+	is_reporting = enabled;
+}
+
+static void cmd_set_mode_remote(const bool enabled)
+{
+	terminate_unlock_sequence();
+	reset_counters();
+	mode_remote = enabled;
+}
+
+static void cmd_set_mode_wrap(const bool enabled)
+{
+	terminate_unlock_sequence();
+	reset_counters();
+	mode_wrap = enabled;
+}
+
+static void cmd_set_defaults()
+{
+	cmd_set_resolution(4);
+	cmd_set_sample_rate(100);
+	cmd_set_scaling_21(false);
+	cmd_set_reporting(false);
+
+	cmd_set_mode_remote(false);
+	cmd_set_mode_wrap(false);
+
+	reset_counters();
+}
+
+static void cmd_reset(bool is_startup = false)
+{
+	cmd_set_defaults();
+
+	set_protocol(MouseModelPS2::Standard);
+	frame.clear();
+
+	if (!is_startup) {
+		I8042_AddAuxByte(0xaa); // self-test passed
+		cmd_get_dev_id();
+	}
+}
+
+static void execute_command(const Command command)
+{
+	// LOG_INFO("MOUSEPS2: Command 0x%02x", static_cast<int>(command));
+
+	I8042_AddAuxByte(0xfa); // acknowledge
+
+	switch (command) {
+	//
+	// Commands requiring a parameter
+	//
+	case Command::SetResolution: // 0xe8
+	case Command::SetSampleRate: // 0xf3
+		current_command = command;
+		break;
+	//
+	// No-parameter commands
+	//
+	case Command::SetScaling11: // 0xe6
+		// Set mouse movement scaling 1:1
+		cmd_set_scaling_21(false);
+		break;
+	case Command::SetScaling21: // 0xe7
+		// Set mouse movement scaling 2:1
+		cmd_set_scaling_21(true);
+		break;
+	case Command::GetStatus: // 0xe9
+		// Send a 3-byte status packet
+		cmd_get_status();
+		break;
+	case Command::SetStreamMode: // 0xea
+		// Set stream (non-remote) mode, reset movement counters
+		cmd_set_mode_remote(false);
+		break;
+	case Command::PollFrame: // 0xeb
+		// Set mouse data packet, reset movement counters afterwards
+		cmd_poll_frame();
+		break;
+	case Command::ResetWrapMode: // 0xec
+		// Reset wrap mode, reset movement counters
+		cmd_set_mode_wrap(false);
+		break;
+	case Command::SetWrapMode: // 0xee
+		// Set wrap mode, reset movement counters
+		cmd_set_mode_wrap(true);
+		break;
+	case Command::SetRemoteMode: // 0xf0
+		// Set remote (non-stream) mode, reset movement counters
+		cmd_set_mode_remote(true);
+		break;
+	case Command::GetDevId: // 0xf2
+		// Send current protocol ID, reset movement counters
+		cmd_get_dev_id();
+		break;
+	case Command::EnableDev: // 0xf4
+		// Enable reporting in stream mode, reset movement counters
+		cmd_set_reporting(true);
+		break;
+	case Command::DisableDev: // 0xf5
+		// Disable reporting in stream mode, reset movement counters
+		cmd_set_reporting(false);
+		break;
+	case Command::SetDefaults: // 0xf6
+		// Load defaults, reset movement counters, enter stream mode
+		cmd_set_defaults();
+		break;
+	case Command::ResetDev: // 0xff
+		// Enter reset mode
+		cmd_reset();
+		break;
+	default: warn_unknown_command(command); break;
+	}
+}
+
+static void execute_command(const Command command, const uint8_t param)
+{
+	// LOG_INFO("MOUSEPS2: Command 0x%02x, parameter 0x%02x",
+	//          static_cast<int>(command), param);
+
+	I8042_AddAuxByte(0xfa); // acknowledge
+
+	switch (command) {
+	case Command::SetResolution: // 0xe8
+		// Set mouse resolution, reset movement counters
+		cmd_set_resolution(param);
+		break;
+	case Command::SetSampleRate: // 0xf3
+		// Set mouse resolution, reset movement counters
+		// Magic sequences change mouse protocol
+		cmd_set_sample_rate(param);
+		break;
+	default:
+		// If we are here, than either this function
+		// was wrongly called or it is incomplete
+		assert(false);
+		break;
+	}
+}
+
+bool MOUSEPS2_PortWrite(const uint8_t byte)
+{
+	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+		return false; // no mouse emulated
+	}
+
+	if (byte != static_cast<uint8_t>(Command::ResetDev) && mode_wrap &&
+	    byte != static_cast<uint8_t>(Command::ResetWrapMode)) {
+		I8042_AddAuxByte(byte); // wrap mode, just send bytes back
+		return true;
+	}
+
+	const auto command = current_command;
+	if (command != Command::None) {
+		// Continue execution of previous command
+		current_command = Command::None;
+		execute_command(command, byte);
+	} else {
+		execute_command(static_cast<Command>(byte));
+	}
+
+	return true;
+}
+
+void MOUSEPS2_NotifyReadyForFrame()
+{
+	maybe_transfer_frame();
+}
+
+void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
+{
+	delta_x = MOUSE_ClampRelativeMovement(delta_x + x_rel);
+	delta_y = MOUSE_ClampRelativeMovement(delta_y + y_rel);
+
+	// Threshold the accumulated movement needs to cross
+	// to be considered significant enough for new event
+	constexpr float threshold = 0.5f;
+
+	has_data_for_frame |= (std::fabs(delta_x) >= threshold) ||
+	                      (std::fabs(delta_y) >= threshold);
+	maybe_transfer_frame();
+}
+
+void MOUSEPS2_NotifyMovedDummy()
+{
+	has_data_for_frame = true;
+	maybe_transfer_frame();
+}
+
+void MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
+                           const MouseButtonsAll new_buttons_all)
+{
+	const auto buttons_old = buttons;
+
+	buttons_12S = new_buttons_12S;
+	buttons_all = new_buttons_all;
+	MOUSEPS2_UpdateButtonSquish();
+
+	has_data_for_frame |= (buttons_old.data != buttons.data);
+	maybe_transfer_frame();
+}
+
+void MOUSEPS2_NotifyWheel(const int16_t w_rel)
+{
+	if (protocol != MouseModelPS2::IntelliMouse &&
+	    protocol != MouseModelPS2::Explorer) {
+		return;
+	}
+
+	auto old_counter_w = counter_w;
+	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
+
+	has_data_for_frame |= (old_counter_w != counter_w);
+	maybe_transfer_frame();
+}
+
+void MOUSEPS2_SetDelay(const uint8_t new_delay_ms)
+{
+	delay_ms = new_delay_ms;
+}
+
+// ***************************************************************************
+// BIOS interface implementation
+// ***************************************************************************
+
+enum class BiosRetVal : uint8_t {
+	Success         = 0x00,
+	InvalidFunction = 0x01,
+	InvalidInput    = 0x02,
+	InterfaceError  = 0x03,
+	NeedToResend    = 0x04,
+	NoDeviceHandler = 0x05,
+};
+
+static bool bios_is_flushing   = false;
+static uint8_t bios_frame_size = 3;
+
+static bool callback_init    = false;
+static uint16_t callback_seg = 0;
+static uint16_t callback_ofs = 0;
+static RealPt ps2_callback   = 0;
+
+std::vector<uint8_t> bios_buffer = {};
+
+static bool bios_enable()
+{
+	mouse_shared.active_bios = callback_init;
+	bios_buffer.clear();
+	MOUSE_UpdateGFX();
+	cmd_set_reporting(true);
+	return callback_init;
+}
+
+static bool bios_disable()
+{
+	mouse_shared.active_bios = false;
+	bios_buffer.clear();
+	MOUSE_UpdateGFX();
+	cmd_set_reporting(false);
+	return true;
+}
+
+static bool bios_is_aux_byte_waiting()
+{
+	const auto byte = IO_ReadB(0x64);
+	return bit::is(byte, b0) && bit::is(byte, b5);
+}
+
+static void bios_flush_aux()
+{
+	constexpr uint8_t max_wait_ms = 30;
+
+	bios_is_flushing = true;
+	bios_buffer.clear();
+
+	bool has_more = true;
+	while (has_more) {
+		while (bios_is_aux_byte_waiting()) {
+			IO_ReadB(port_num_i8042_data);
+		}
+
+		const auto start_ticks = PIC_Ticks;
+		while (PIC_Ticks - start_ticks <= max_wait_ms) {
+			CALLBACK_Idle();
+			has_more = bios_is_aux_byte_waiting();
+			if (has_more) {
+				break;
+			}
+		}
+	}
+
+	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false);
+	bios_is_flushing = false;
+}
+
+static void bios_clear_oldest_frame()
+{
+	bios_buffer = {bios_buffer.begin() + bios_frame_size, bios_buffer.end()};
+}
+
+static Bitu bios_ps2_callback_ret()
+{
+	CPU_Pop16();
+	CPU_Pop16();
+	CPU_Pop16();
+	CPU_Pop16(); // remove 4 words
+	return CBRET_NONE;
+}
+
+bool MOUSEBIOS_CheckCallback()
+{
+	if (bios_is_flushing) {
+		return false;
+	}
+
+	const size_t max_buffer_size = static_cast<size_t>(bios_frame_size * 4);
+	while (1) {
+		if (!bios_is_aux_byte_waiting()) {
+			// No more AUX data to read
+			break;
+		}
+
+		const auto byte = IO_ReadB(port_num_i8042_data);
+		if (mouse_shared.active_bios && callback_init) {
+			bios_buffer.push_back(byte);
+			// Do not allow too many old frames in the buffer
+			if (bios_buffer.size() >= max_buffer_size) {
+				bios_clear_oldest_frame();
+			}
+		}
+	}
+
+	// Check if we have enough data for a callback
+	if (bios_buffer.size() < bios_frame_size) {
+		return false;
+	}
+
+	return true;
+}
+
+void MOUSEBIOS_DoCallback()
+{
+	assert(bios_frame_size == 3 || bios_frame_size == 4);
+	assert(bios_buffer.size() >= bios_frame_size);
+
+	if (bios_frame_size == 3) {
+		CPU_Push16(bios_buffer[0]);
+		CPU_Push16(bios_buffer[1]);
+		CPU_Push16(bios_buffer[2]);
+	} else {
+		const auto word_0 = bios_buffer[0] + (bios_buffer[1] << 8);
+		CPU_Push16(static_cast<uint16_t>(word_0));
+		CPU_Push16(bios_buffer[2]);
+		CPU_Push16(bios_buffer[3]);
+	}
+	CPU_Push16(0u);
+
+	bios_clear_oldest_frame();
+
+	CPU_Push16(RealSeg(ps2_callback));
+	CPU_Push16(RealOff(ps2_callback));
+	SegSet16(cs, callback_seg);
+	reg_ip = callback_ofs;
+}
+
+void MOUSEBIOS_Subfunction_C2() // INT 15h, AH = 0xc2
+{
+	auto set_return_value = [](const BiosRetVal value) {
+		CALLBACK_SCF(value != BiosRetVal::Success);
+		reg_ah = static_cast<uint8_t>(value);
+	};
+
+	auto is_return_success = []() {
+		return reg_ah == static_cast<uint8_t>(BiosRetVal::Success);
+	};
+
+	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+		set_return_value(BiosRetVal::InterfaceError);
+		return;
+	}
+
+	switch (reg_al) {
+	case 0x00: // enable/disable mouse
+		if (reg_bh == 0) {
+			// disable mouse
+			bios_disable();
+			set_return_value(BiosRetVal::Success);
+		} else if (reg_bh == 0x01) {
+			// enable mouse
+			if (!bios_enable()) {
+				set_return_value(BiosRetVal::NoDeviceHandler);
+				break;
+			}
+			set_return_value(BiosRetVal::Success);
+		} else {
+			set_return_value(BiosRetVal::InvalidFunction);
+		}
+		break;
+	case 0x01: // reset
+		// VBADOS seems to expect VMware interface to get dectivated
+		MOUSEVMM_Deactivate();
+		cmd_reset();
+		bios_disable();
+		cmd_set_defaults();
+		reg_bx = 0x00aa;
+		set_return_value(BiosRetVal::Success);
+		break;
+	case 0x02: // set sampling rate
+		if (reg_bh >= list_rates_hz.size()) {
+			set_return_value(BiosRetVal::InvalidInput);
+			break;
+		}
+		cmd_set_sample_rate(list_rates_hz[reg_bh]);
+		set_return_value(BiosRetVal::Success);
+		break;
+	case 0x03: // set resolution
+		if (reg_bh >= list_resolutions.size()) {
+			set_return_value(BiosRetVal::InvalidInput);
+			break;
+		}
+		cmd_set_resolution(list_resolutions[reg_bh]);
+		set_return_value(BiosRetVal::Success);
+		break;
+	case 0x04: // get mouse type/protocol
+		reg_bh = static_cast<uint8_t>(protocol);
+		set_return_value(BiosRetVal::Success);
+		break;
+	case 0x05: // initialize
+		if (reg_bh == 3 || reg_bh == 4) {
+			bios_frame_size = reg_bh;
+			bios_disable();
+			cmd_set_defaults();
+			set_return_value(BiosRetVal::Success);
+		} else {
+			set_return_value(BiosRetVal::InvalidInput);
+		}
+		break;
+	case 0x06: // extended commands
+		if (reg_bh == 0x00) {
+			// get mouse status
+			reg_bx = get_status_byte();
+			reg_cx = counts_mm;
+			reg_dx = rate_hz;
+			set_return_value(BiosRetVal::Success);
+		} else if (reg_bh == 0x01 || reg_bh == 0x02) {
+			// set scaling 2:1
+			cmd_set_scaling_21(reg_bh == 0x02);
+			set_return_value(BiosRetVal::Success);
+		} else {
+			set_return_value(BiosRetVal::InvalidFunction);
+		}
+		break;
+	case 0x07: // set callback
+		if ((SegValue(es) == 0) && (reg_bx == 0)) {
+			callback_init = false;
+		} else {
+			callback_init = true;
+			callback_seg  = SegValue(es);
+			callback_ofs  = reg_bx;
+		}
+		bios_buffer.clear();
+		set_return_value(BiosRetVal::Success);
+		break;
+	default: set_return_value(BiosRetVal::InvalidFunction); break;
+	}
+
+	if (is_return_success()) {
+		bios_flush_aux();
+	}
+}
+
+void MOUSEPS2_Init()
+{
+	// Callback for ps2 user callback handling
+	const auto call_ps2 = CALLBACK_Allocate();
+	CALLBACK_Setup(call_ps2, &bios_ps2_callback_ret, CB_RETF, "ps2 bios mouse callback");
+	ps2_callback = CALLBACK_RealPointer(call_ps2);
+
+	constexpr bool is_startup = true;
+	cmd_reset(is_startup);
+}

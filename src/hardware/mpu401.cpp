@@ -46,7 +46,6 @@ enum MpuDataType { T_OVERFLOW, T_MARK, T_MIDI_SYS, T_MIDI_NORM, T_COMMAND };
 static void MPU401_WriteData(io_port_t port, io_val_t value, io_width_t);
 
 // Messages sent to MPU-401 from host
-constexpr uint8_t MSG_EOX = 0xf7;
 // constexpr uint8_t MSG_OVERFLOW = 0xf8; // unused
 // constexpr uint8_t MSG_MARK = 0xfc; // unused
 
@@ -133,6 +132,15 @@ static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 	return ret;
 }
 
+static void send_all_notes_off()
+{
+	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
+		MIDI_RawOutByte(MidiStatus::ControlChange | channel);
+		MIDI_RawOutByte(MidiChannelMode::AllNotesOff);
+		MIDI_RawOutByte(0);
+	}
+}
+
 static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
@@ -150,16 +158,16 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 		// MIDI stop, start, continue
 		switch (val & 3) {
 		case 1:
-			MIDI_RawOutByte(0xfc);
+			MIDI_RawOutByte(MidiStatus::Stop);
 			mpu.clock.cth_savecount = mpu.clock.cth_counter;
 			break;
 
 		case 2:
-			MIDI_RawOutByte(0xfa);
+			MIDI_RawOutByte(MidiStatus::Start);
 			mpu.clock.cth_counter = mpu.clock.cth_savecount = 0;
 			break;
 		case 3:
-			MIDI_RawOutByte(0xfb);
+			MIDI_RawOutByte(MidiStatus::Continue);
 			mpu.clock.cth_counter = mpu.clock.cth_savecount;
 			break;
 		}
@@ -171,12 +179,7 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 			if (mpu.state.playing && !mpu.clock.clock_to_host)
 				PIC_RemoveEvents(MPU401_Event);
 			mpu.state.playing = false;
-			// All notes off
-			for (uint8_t i = 0xb0; i < 0xbf; ++i) {
-				MIDI_RawOutByte(i);
-				MIDI_RawOutByte(0x7b);
-				MIDI_RawOutByte(0);
-			}
+			send_all_notes_off();
 			break;
 		case 0x8: // Play
 			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Intelligent mode playback started");
@@ -265,12 +268,7 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 			break;
 		case 0xb9: // Clear play map
 		case 0xb8: // Clear play counters
-			// All notes off
-			for (uint8_t i = 0xb0; i < 0xbf; ++i) {
-				MIDI_RawOutByte(i);
-				MIDI_RawOutByte(0x7b);
-				MIDI_RawOutByte(0);
-			}
+			send_all_notes_off();
 			for (uint8_t i = 0; i < 8; ++i) {
 				mpu.playbuf[i].counter = 0;
 				mpu.playbuf[i].type = T_OVERFLOW;
@@ -444,8 +442,8 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 		return;
 	}
 	if (mpu.state.wsm) { // Directly send system message
-		if (val == MSG_EOX) {
-			MIDI_RawOutByte(MSG_EOX);
+		if (val == MidiStatus::EndOfExclusive) {
+			MIDI_RawOutByte(MidiStatus::EndOfExclusive);
 			mpu.state.wsm = 0;
 			return;
 		}
@@ -802,8 +800,12 @@ void MPU401_Destroy(Section * /*sec*/)
 	delete test;
 }
 
-void MPU401_Init(Section *sec)
+void MPU401_Init(Section* sec)
 {
+	assert(sec);
+
 	test = new MPU401(sec);
-	sec->AddDestroyFunction(&MPU401_Destroy, true);
+
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
 }

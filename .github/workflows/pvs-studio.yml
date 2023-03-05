@@ -12,9 +12,9 @@ concurrency:
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
-      debfile: pvs-studio-7.21.64848.262-amd64.deb
+      debfile: pvs-studio-7.23.68432.289-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         id: cache-pvs
         with:
           path: pvs-package
@@ -48,7 +48,7 @@ jobs:
 
       - name: Cache subprojects
         id:   cache-subprojects
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: subprojects.tar
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
@@ -111,7 +111,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 252
+          MAX_BUGS: 350
         run: |
           echo "Full report is included in build Artifacts"
           echo

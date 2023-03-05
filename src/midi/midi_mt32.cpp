@@ -344,12 +344,12 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 		static void onErrorControlROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open Control ROM file");
+			LOG_WARNING("MT32: Couldn't open Control ROM file");
 		}
 
 		static void onErrorPCMROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open PCM ROM file");
+			LOG_WARNING("MT32: Couldn't open PCM ROM file");
 		}
 
 		static void showLCDMessage(void *, const char *message)
@@ -572,7 +572,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	// Load the selected model and print info about it
 	auto loaded_model_and_dir = load_model(mt32_service, selected_model, rom_dirs);
 	if (!loaded_model_and_dir) {
-		LOG_MSG("MT32: Failed to find ROMs for model %s in:",
+		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
 		for (const auto &dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
@@ -602,7 +602,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
-		LOG_MSG("MT32: Error initialising emulation: %i", rc);
+		LOG_WARNING("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
 
@@ -754,10 +754,9 @@ uint16_t MidiHandler_mt32::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
+void MidiHandler_mt32::PlayMsg(const MidiMessage& msg)
 {
-	constexpr auto channel_len = 4;
-	std::vector<uint8_t> message(msg, msg + channel_len);
+	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
 	              MessageType::Channel};
@@ -835,8 +834,10 @@ void MidiHandler_mt32::ProcessWorkFromFifo()
 	const std::lock_guard<std::mutex> lock(service_mutex);
 
 	if (work.message_type == MessageType::Channel) {
-		const auto msg_words = reinterpret_cast<const uint32_t*>(work.message.data());
-		service->playMsg(SDL_SwapLE32(*msg_words));
+		assert(work.message.size() >= MaxMidiMessageLen);
+		const auto &data = work.message.data();
+		const uint32_t msg = data[0] + (data[1] << 8) + (data[2] << 16);
+		service->playMsg(msg);
 	} else {
 		assert(work.message_type == MessageType::SysEx);
 		service->playSysex(work.message.data(), static_cast<uint32_t>(work.message.size()));

@@ -106,7 +106,8 @@ fatFile::fatFile(const char* /*name*/,
 }
 
 bool fatFile::Read(uint8_t * data, uint16_t *size) {
-	if ((this->flags & 0xf) == OPEN_WRITE) {	// check if file opened in write-only mode
+	// check if file opened in write-only mode
+	if ((this->flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -159,7 +160,8 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 }
 
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
-	if ((this->flags & 0xf) == OPEN_READ) {	// check if file opened in read-only mode
+	// check if file opened in read-only mode
+	if ((this->flags & 0xf) == OPEN_READ || myDrive->isReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -245,6 +247,8 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 
 finalizeWrite:
 	myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+	tmpentry.modTime = DOS_GetBiosTimePacked();
+	tmpentry.modDate = DOS_GetBiosDatePacked();
 	tmpentry.entrysize = filelength;
 	tmpentry.loFirstClust = (uint16_t)firstCluster;
 	myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
@@ -286,10 +290,22 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 }
 
 bool fatFile::Close() {
-	/* Flush buffer */
-	if (loadedSector) myDrive->writeSector(currentSector, sectorBuffer);
+	if ((flags & 0xf) != OPEN_READ && !myDrive->isReadOnly()) {
+		if (newtime) {
+			direntry tmpentry;
+			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+			tmpentry.modTime = time;
+			tmpentry.modDate = date;
+			myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
+		}
 
-	return false;
+		/* Flush buffer */
+		if (loadedSector) {
+			myDrive->writeSector(currentSector, sectorBuffer);
+		}
+	}
+
+	return true;
 }
 
 uint16_t fatFile::GetInformation(void) {
@@ -759,8 +775,12 @@ fatDrive::fatDrive(const char *sysFilename,
 	created_successfully = (diskfile != nullptr);
 	if (!created_successfully)
 		return;
-	fseek(diskfile, 0L, SEEK_END);
-	filesize = (uint32_t)ftell(diskfile) / 1024L;
+	const auto sz = stdio_size_kb(diskfile);
+	if (sz < 0) {
+		fclose(diskfile);
+		return;
+	}
+	filesize = check_cast<uint32_t>(sz);
 	is_hdd = (filesize > 2880);
 
 	/* Load disk image */
@@ -1007,12 +1027,20 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 
 	/* Check if file already exists */
 	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+		if (fileEntry.attrib & DOS_ATTR_READ_ONLY) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+
 		/* Truncate file */
 		if (fileEntry.loFirstClust != 0) {
 			deleteClustChain(fileEntry.loFirstClust, 0);
 			fileEntry.loFirstClust = 0;
 		}
 		fileEntry.entrysize = 0;
+		fileEntry.attrib    = check_cast<uint8_t>(attributes);
+		fileEntry.modTime   = DOS_GetBiosTimePacked();
+		fileEntry.modDate   = DOS_GetBiosDatePacked();
 		directoryChange(dirClust, &fileEntry, subEntry);
 	} else {
 		/* Can we even get the name of the file itself? */
@@ -1021,9 +1049,11 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 
 		/* Can we find the base directory? */
 		if(!getDirClustNum(name, &dirClust, true)) return false;
-		memset(&fileEntry, 0, sizeof(direntry));
+		fileEntry = {};
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
-		fileEntry.attrib = (uint8_t)(attributes & 0xff);
+		fileEntry.attrib  = check_cast<uint8_t>(attributes);
+		fileEntry.modTime = DOS_GetBiosTimePacked();
+		fileEntry.modDate = DOS_GetBiosDatePacked();
 		addDirectoryEntry(dirClust, fileEntry);
 
 		/* Check if file exists now */
@@ -1031,14 +1061,18 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 	}
 
 	/* Empty file created, now lets open it */
-	/* TODO: check for read-only flag and requested write access */
-	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
-	(*file)->flags=OPEN_READWRITE;
-	((fatFile *)(*file))->dirCluster = dirClust;
-	((fatFile *)(*file))->dirIndex = subEntry;
-	/* Maybe modTime and date should be used ? (crt matches findnext) */
-	((fatFile *)(*file))->time = fileEntry.crtTime;
-	((fatFile *)(*file))->date = fileEntry.crtDate;
+	auto fat_file        = new fatFile(name,
+                                    fileEntry.loFirstClust,
+                                    fileEntry.entrysize,
+                                    this);
+	bool is_readonly     = fileEntry.attrib & DOS_ATTR_READ_ONLY;
+	fat_file->flags      = is_readonly ? OPEN_READ : OPEN_READWRITE;
+	fat_file->dirCluster = dirClust;
+	fat_file->dirIndex   = subEntry;
+	fat_file->time       = fileEntry.modTime;
+	fat_file->date       = fileEntry.modDate;
+
+	*file = fat_file;
 
 	dos.errorcode=save_errorcode;
 	return true;
@@ -1056,15 +1090,29 @@ bool fatDrive::FileExists(const char *name) {
 bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
-	/* TODO: check for read-only flag and requested write access */
-	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
-	(*file)->flags = flags;
-	((fatFile *)(*file))->dirCluster = dirClust;
-	((fatFile *)(*file))->dirIndex = subEntry;
-	/* Maybe modTime and date should be used ? (crt matches findnext) */
-	((fatFile *)(*file))->time = fileEntry.crtTime;
-	((fatFile *)(*file))->date = fileEntry.crtDate;
+	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+
+	bool is_readonly = (fileEntry.attrib & DOS_ATTR_READ_ONLY);
+	bool open_for_readonly = ((flags & 0xf) == OPEN_READ);
+	if (is_readonly && !open_for_readonly) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	auto fat_file        = new fatFile(name,
+                                    fileEntry.loFirstClust,
+                                    fileEntry.entrysize,
+                                    this);
+	fat_file->flags      = flags;
+	fat_file->dirCluster = dirClust;
+	fat_file->dirIndex   = subEntry;
+	fat_file->time       = fileEntry.modTime;
+	fat_file->date       = fileEntry.modDate;
+
+	*file = fat_file;
 	return true;
 }
 
@@ -1078,25 +1126,27 @@ bool fatDrive::FileUnlink(char * name) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
-
 	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
-/*
-	Technically correct, but maybe an unwanted obstruction, so inactive for now.
 
-	if(fileEntry.attrib & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN)) {
+	/* Not sure if this is correct. */
+#if 0
+	if (fileEntry.attrib & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
-	if(fileEntry.attrib & DOS_ATTR_READ_ONLY) {
+#endif
+
+	if (fileEntry.attrib & DOS_ATTR_READ_ONLY) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-*/
+
 	fileEntry.entryname[0] = 0xe5;
 	directoryChange(dirClust, &fileEntry, subEntry);
 

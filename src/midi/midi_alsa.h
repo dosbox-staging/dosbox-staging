@@ -51,7 +51,7 @@ public:
 	const char *GetName() const override { return "alsa"; }
 	bool Open(const char *conf) override;
 	void Close() override;
-	void PlayMsg(const uint8_t *msg) override;
+	void PlayMsg(const MidiMessage& msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 	MIDI_RC ListAll(Program *caller) override;
 };

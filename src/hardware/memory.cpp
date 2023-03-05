@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,7 +30,7 @@
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define SAFE_MEMORY	32
-#define MAX_MEMORY	64
+#define MAX_MEMORY	385
 #define MAX_PAGE_ENTRIES (MAX_MEMORY*1024*1024/4096)
 #define LFB_PAGES	512
 #define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
@@ -219,8 +220,9 @@ void MEM_StrCopy(PhysPt pt,char * data,Bitu size) {
 	*data=0;
 }
 
-Bitu MEM_TotalPages(void) {
-	return memory.pages.size();
+uint32_t MEM_TotalPages(void)
+{
+	return check_cast<uint32_t>(memory.pages.size());
 }
 
 Bitu MEM_FreeLargest(void) {
@@ -249,12 +251,13 @@ Bitu MEM_FreeTotal(void) {
 	return free;
 }
 
-Bitu MEM_AllocatedPages(MemHandle handle) 
+uint32_t MEM_AllocatedPages(MemHandle handle) 
 {
-	Bitu pages = 0;
-	while (handle>0) {
-		pages++;
-		handle=memory.mhandles[handle];
+	uint32_t pages = 0;
+	while (handle > 0) {
+		++pages;
+		assert(pages != 0);
+		handle = memory.mhandles[handle];
 	}
 	return pages;
 }
@@ -691,7 +694,10 @@ static void MEM_ShutDown([[maybe_unused]] Section *sec)
 	delete test;
 }
 
-void MEM_Init(Section * sec) {
+void MEM_Init(Section* sec)
+{
+	assert(sec);
+
 	/* shutdown function */
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);

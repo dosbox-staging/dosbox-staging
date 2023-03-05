@@ -160,6 +160,42 @@
     <ClCompile Include="..\src\hardware\innovation.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\input\intel8042.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\intel8255.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\keyboard.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\keyboard_scancodes.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouse.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouse_common.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouse_config.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouse_interfaces.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouse_manymouse.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouseif_dos_driver.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouseif_ps2_bios.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouseif_virtual_machines.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\iohandler.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -173,9 +209,6 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\joystick.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\keyboard.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\lpt_dac.cpp">
@@ -193,34 +226,10 @@
     <ClCompile Include="..\src\hardware\mixer.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse_common.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse_config.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse_interfaces.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse_manymouse.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouse_queue.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouseif_dos_driver.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouseif_ps2_bios.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\mouse\mouseif_virtual_machines.cpp">
-      <Filter>src\hardware\mouse</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\mpu401.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\ne2000.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\opl.cpp">
@@ -876,6 +885,9 @@
     <ClInclude Include="..\include\mouse.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ne2000.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\paging.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -1056,6 +1068,24 @@
     <ClInclude Include="..\src\hardware\gameblaster.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\hardware\input\intel8042.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\intel8255.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\mouse_common.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\mouse_config.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\mouse_interfaces.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\mouse_manymouse.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\hardware\mame\emu.h">
       <Filter>src\hardware\mame</Filter>
     </ClInclude>
@@ -1064,21 +1094,6 @@
     </ClInclude>
     <ClInclude Include="..\src\hardware\mame\sn76496.h">
       <Filter>src\hardware\mame</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mouse\mouse_common.h">
-      <Filter>src\hardware\mouse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mouse\mouse_config.h">
-      <Filter>src\hardware\mouse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mouse\mouse_interfaces.h">
-      <Filter>src\hardware\mouse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mouse\mouse_manymouse.h">
-      <Filter>src\hardware\mouse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardware\mouse\mouse_queue.h">
-      <Filter>src\hardware\mouse</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\directserial.h">
       <Filter>src\hardware\serialport</Filter>

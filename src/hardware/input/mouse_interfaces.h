@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 void MOUSE_StartupIfReady();
 
 void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id);
-void MOUSE_NotifyFakePS2(); // fake PS/2 event, for VMware protocol support
-void MOUSE_NotifyResetDOS();
 
 void MOUSE_UpdateGFX();
 bool MOUSE_IsCaptured();
@@ -42,49 +40,47 @@ bool MOUSE_IsProbeForMappingAllowed();
 // ***************************************************************************
 
 void MOUSEDOS_Init();
+void MOUSEDOS_SetDelay(const uint8_t new_delay_ms);
 void MOUSEDOS_NotifyInputType(const bool new_use_relative,
                               const bool new_is_input_raw);
 void MOUSEDOS_NotifyMinRate(const uint16_t value_hz);
-void MOUSEDOS_DrawCursor();
 
-bool MOUSEDOS_HasCallback(const uint8_t mask);
-Bitu MOUSEDOS_DoCallback(const uint8_t mask, const MouseButtons12S buttons_12S);
+uint8_t MOUSEDOS_DoInterrupt();
+void MOUSEDOS_DoCallback(const uint8_t mask);
+void MOUSEDOS_FinalizeInterrupt();
 
 // - needs relative movements
 // - understands up to 3 buttons
 
-bool MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
+void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs);
-bool MOUSEDOS_NotifyWheel(const int16_t w_rel);
-
-uint8_t MOUSEDOS_UpdateMoved();
-uint8_t MOUSEDOS_UpdateButtons(const MouseButtons12S buttons_12S);
-uint8_t MOUSEDOS_UpdateWheel();
+void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S);
+void MOUSEDOS_NotifyWheel(const int16_t w_rel);
 
 // ***************************************************************************
 // PS/2 mouse
 // ***************************************************************************
 
 void MOUSEPS2_Init();
+void MOUSEPS2_SetDelay(const uint8_t new_delay_ms);
 void MOUSEPS2_UpdateButtonSquish();
-void MOUSEPS2_PortWrite(const uint8_t byte);
-void MOUSEPS2_UpdatePacket();
-bool MOUSEPS2_SendPacket();
 
 // - needs relative movements
 // - understands up to 5 buttons in Intellimouse Explorer mode
 // - understands up to 3 buttons in other modes
 
-bool MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel);
-bool MOUSEPS2_NotifyButton(const MouseButtons12S buttons_12S,
+void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel);
+void MOUSEPS2_NotifyMovedDummy(); // for virtual machine interfaces
+void MOUSEPS2_NotifyButton(const MouseButtons12S buttons_12S,
                            const MouseButtonsAll buttons_all);
-bool MOUSEPS2_NotifyWheel(const int16_t w_rel);
+void MOUSEPS2_NotifyWheel(const int16_t w_rel);
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
 // ***************************************************************************
 
-Bitu MOUSEBIOS_DoCallback();
+bool MOUSEBIOS_CheckCallback();
+void MOUSEBIOS_DoCallback();
 
 // ***************************************************************************
 // VMware protocol extension for PS/2 mouse
@@ -99,10 +95,10 @@ void MOUSEVMM_Deactivate();
 // - needs absolute mouse position
 // - understands up to 3 buttons
 
-bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
+void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs);
-bool MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
-bool MOUSEVMM_NotifyWheel(const int16_t w_rel);
+void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
+void MOUSEVMM_NotifyWheel(const int16_t w_rel);
 
 // ***************************************************************************
 // Serial mouse
@@ -120,21 +116,20 @@ bool MOUSEVMM_NotifyWheel(const int16_t w_rel);
 
 class MouseInterface {
 public:
-	MouseInterface()                                  = delete;
-	MouseInterface(const MouseInterface &)            = delete;
-	MouseInterface &operator=(const MouseInterface &) = delete;
+	MouseInterface()                                 = delete;
+	MouseInterface(const MouseInterface&)            = delete;
+	MouseInterface& operator=(const MouseInterface&) = delete;
 
 	static void InitAllInstances();
-	static MouseInterface *Get(const MouseInterfaceId interface_id);
-	static MouseInterface *GetDOS();
-	static MouseInterface *GetPS2();
-	static MouseInterface *GetSerial(const uint8_t port_id);
+	static MouseInterface* Get(const MouseInterfaceId interface_id);
+	static MouseInterface* GetDOS();
+	static MouseInterface* GetPS2();
+	static MouseInterface* GetSerial(const uint8_t port_id);
 
-	virtual void NotifyMoved(MouseEvent &ev, const float x_rel, const float y_rel,
+	virtual void NotifyMoved(const float x_rel, const float y_rel,
 	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
-	virtual void NotifyButton(MouseEvent &ev, const uint8_t idx,
-	                          const bool pressed)                 = 0;
-	virtual void NotifyWheel(MouseEvent &ev, const int16_t w_rel) = 0;
+	virtual void NotifyButton(const uint8_t idx, const bool pressed) = 0;
+	virtual void NotifyWheel(const int16_t w_rel) = 0;
 
 	void NotifyInterfaceRate(const uint16_t new_rate_hz);
 	virtual void NotifyBooting();
@@ -148,9 +143,9 @@ public:
 
 	MouseInterfaceId GetInterfaceId() const;
 	MouseMapStatus GetMapStatus() const;
-	uint8_t GetMappedDeviceIdx() const;
-	int16_t GetSensitivityX() const;
-	int16_t GetSensitivityY() const;
+	uint8_t  GetMappedDeviceIdx() const;
+	int16_t  GetSensitivityX() const;
+	int16_t  GetSensitivityY() const;
 	uint16_t GetMinRate() const;
 	uint16_t GetRate() const;
 
@@ -170,7 +165,7 @@ public:
 
 	virtual void UpdateConfig();
 	virtual void UpdateInputType();
-	virtual void RegisterListener(CSerialMouse &listener_object);
+	virtual void RegisterListener(CSerialMouse& listener_object);
 	virtual void UnRegisterListener();
 
 protected:
@@ -200,8 +195,9 @@ protected:
 
 	bool emulated = false;
 
-	float sensitivity_coeff_x = 1.0f; // cached combined sensitivity coefficients
-	float sensitivity_coeff_y = 1.0f; // to reduce amount of multiplications
+	// cached combined sensitivity coefficients,to reduce calculations
+	float sensitivity_coeff_x = 1.0f;
+	float sensitivity_coeff_y = 1.0f;
 
 	int16_t sensitivity_user_x = 0;
 	int16_t sensitivity_user_y = 0;
@@ -214,7 +210,7 @@ private:
 	const MouseInterfaceId interface_id = MouseInterfaceId::None;
 
 	MouseMapStatus map_status   = MouseMapStatus::HostPointer;
-	uint8_t mapped_physical_idx = idx_host_pointer; // index of mapped physical mouse
+	uint8_t mapped_physical_idx = idx_host_pointer;
 
 	MouseButtons12 buttons_12   = 0; // host side buttons 1 (left), 2 (right)
 	MouseButtons345 buttons_345 = 0; // host side buttons 3 (middle), 4, and 5
@@ -225,6 +221,6 @@ private:
 	float sensitivity_predefined = 1.0f; // hardcoded for the given interface
 };
 
-extern std::vector<MouseInterface *> mouse_interfaces;
+extern std::vector<MouseInterface*> mouse_interfaces;
 
 #endif // DOSBOX_MOUSE_INTERFACES_H

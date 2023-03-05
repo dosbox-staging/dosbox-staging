@@ -50,7 +50,7 @@ backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
 
 ## Non-goals
 
-- Support old operating systems (Windows 9x/Me, OS/2, and Mac OS X 10.4)
+- Support old operating systems (Windows 9x/Me/XP, OS/2, and Mac OS X 10.5)
   and limited CPU/memory hardware, which are constraints
   [DOSBox](https://www.dosbox.com/) continues to support.
 

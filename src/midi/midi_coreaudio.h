@@ -164,13 +164,13 @@ public:
 						                          );
 						CFRelease(url);
 					} else {
-						LOG_MSG("Failed to allocate CFURLRef from  %s",soundfont);
+						LOG_WARNING("MIDI: Failed to allocate CFURLRef from  %s",soundfont);
 					}
 #endif
 					if (!err) {
-						LOG_MSG("MIDI:coreaudio: loaded soundfont: %s",soundfont);
+						LOG_MSG("MIDI: coreaudio: loaded soundfont: %s",soundfont);
 					} else {
-						LOG_MSG("Error loading CoreAudio SoundFont %s",soundfont);
+						LOG_WARNING("MIDI: Error loading CoreAudio SoundFont %s",soundfont);
 						// after trying and failing to load a soundfont it's better
 						// to fail initializing the CoreAudio driver or it might crash
 						return false;
@@ -201,7 +201,7 @@ public:
 		}
 	}
 
-	void PlayMsg(const uint8_t *msg) override
+	void PlayMsg(const MidiMessage& msg) override
 	{
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
 	}

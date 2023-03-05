@@ -142,11 +142,10 @@ void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
 		return;
 
 	// Guard if source and destination are the same
-	if (basePath == baseDir) {
-		return;
+	if (basePath != baseDir) {
+		safe_strcpy(basePath, baseDir);
 	}
 
-	safe_strcpy(basePath, baseDir);
 	static uint16_t id = 0;
 	if (OpenDir(baseDir,id)) {
 		char* result = 0;

@@ -25,7 +25,6 @@ the changes and improvements introduced by this release.
 
     [1]:https://github.com/dosbox-staging/dosbox-staging
 
-
 ## Homebrew
 
 The [Homebrew package](https://formulae.brew.sh/formula/dosbox-staging) is
@@ -39,7 +38,7 @@ compatible with macOS 10.14 (Mojave) or newer. Learn how to setup Homebrew
 ## MacPorts
 
 The [MacPorts package](https://ports.macports.org/port/dosbox-staging/)
-should build on systems as old as macOS 10.7 (Lion, circa 2011) or newer.
+should build on systems as old as macOS 10.6 (Snow Leopard, circa 2009) or newer.
 Learn how to setup MacPorts [here](https://guide.macports.org/).
 
     sudo port selfupdate
@@ -48,6 +47,13 @@ Learn how to setup MacPorts [here](https://guide.macports.org/).
 If you're running an OS not longer maintained by Apple, then support is on a
 best-effort basis (as the team runs supported configurations and may not be able
 to reproduce some issues).
+
+
+## Hardware requirements
+
+For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models
+that don't support it you can try using the parital SSE4.2 emulator
+[MouSSE](https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/).
 
 
 ## Development snapshot builds
@@ -85,43 +91,43 @@ payments and therefore ask users to bypass Apple's Gatekeeper manually.
 
 ## Older builds
 
-- [DOSBox Staging 0.80.0 Universal binary (dmg)][0_80_0]
+- [DOSBox Staging 0.80.0 Universal binary (dmg)][0_80_0] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 53f12aa63cf9d2a33a46149fb394947c<wbr>6b12d5ab9b7ba41ee2d7eab1a990fa7a
   </small>
 
-- [DOSBox Staging 0.79.1 Universal binary (dmg)][0_79_1]
+- [DOSBox Staging 0.79.1 Universal binary (dmg)][0_79_1] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 52547692be29949747bb8d3b59bf31dd<wbr>22b4f49178316417cc8f1f468eeab387
   </small>
 
-- [DOSBox Staging 0.79.0 Universal binary (dmg)][0_79_0]
+- [DOSBox Staging 0.79.0 Universal binary (dmg)][0_79_0] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 1678f7458acabecdaf2b49e0d95a20d0<wbr>57734898b70c29d4e845f52a1aa26d46
   </small>
 
-- [DOSBox Staging 0.78.1 Universal binary (dmg)][0_78_1_UB]
+- [DOSBox Staging 0.78.1 Universal binary (dmg)][0_78_1_UB] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: b9ddff89e9fc283493580d5fc021b050<wbr>21a13d90305ae44e2867499b22e359c9
   </small>
 
-- [DOSBox Staging 0.78.0 Universal binary (dmg)][0_78_0_UB]
+- [DOSBox Staging 0.78.0 Universal binary (dmg)][0_78_0_UB] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 3997546560af542b7f3b55b1bc890ae4<wbr>342144a72c21af9880449adf579db88b
   </small>
 
-- [DOSBox Staging 0.77.1 x86-64 (dmg)][0_77_1_x64]
+- [DOSBox Staging 0.77.1 x86-64 (dmg)][0_77_1_x64] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 29964d79f0a85d593f8bafd30da854c7<wbr>26594c12474528f46758fc95c05f0c97
   </small>
 
-- [DOSBox Staging 0.77.1 ARM64 (dmg)][0_77_1_arm64]
+- [DOSBox Staging 0.77.1 ARM64 (dmg)][0_77_1_arm64] (macOS 11 or newer)
   <br>
   <small>
   sha256: 74a1c84bdda0db25091f749ba7a2e5e9<wbr>3f7849baf130817ea1bc182039bd3698

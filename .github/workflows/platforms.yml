@@ -25,7 +25,7 @@ jobs:
   build_on_platform:
     name: ${{ matrix.name }}
     # The host should always be linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: repo-check
     if: needs.repo-check.outputs.has-commits == 'true'
     strategy:

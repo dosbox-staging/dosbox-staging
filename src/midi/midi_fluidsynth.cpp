@@ -221,7 +221,7 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	                                        msg.end(),
 	                                        std::string(),
 	                                        append_as_hex);
-	LOG_WARNING("FSYNTH: unknown MIDI message sequence (hex): %s",
+	LOG_WARNING("FSYNTH: Unknown MIDI message sequence (hex): %s",
 	            hex_values.c_str());
 }
 
@@ -234,7 +234,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
 	                                    delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_MSG("FSYNTH: new_fluid_settings failed");
+		LOG_WARNING("FSYNTH: new_fluid_settings failed");
 		return false;
 	}
 
@@ -257,7 +257,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_MSG("FSYNTH: Failed to create the FluidSynth synthesizer.");
+		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
 		return false;
 	}
 
@@ -272,7 +272,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        sf_file);
+		            sf_file);
 		return false;
 	}
 
@@ -600,10 +600,9 @@ uint16_t MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlayMsg(const uint8_t* msg)
+void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
 {
-	constexpr auto channel_message_len = 4;
-	std::vector<uint8_t> message(msg, msg + channel_message_len);
+	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
 	              MessageType::Channel};
@@ -618,21 +617,21 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t* sysex, size_t len)
 	work_fifo.Enqueue(std::move(work));
 }
 
-// Apply the channel message to the service
 void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 {
 	// clang-format off
-	// Ref: https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
-	const auto action = static_cast<uint8_t>(msg[0] >> 4);
-	const auto chan_id = static_cast<uint8_t>(msg[0] & 0b1111);
-	switch (action) {
-	case 0b1000: fluid_synth_noteoff(         synth.get(), chan_id, msg[1]);                 break;
-	case 0b1001: fluid_synth_noteon(          synth.get(), chan_id, msg[1], msg[2]);         break;
-	case 0b1010: fluid_synth_key_pressure(    synth.get(), chan_id, msg[1], msg[2]);         break;
-	case 0b1011: fluid_synth_cc(              synth.get(), chan_id, msg[1], msg[2]);         break;
-	case 0b1100: fluid_synth_program_change(  synth.get(), chan_id, msg[1]);                 break;
-	case 0b1101: fluid_synth_channel_pressure(synth.get(), chan_id, msg[1]);                 break;
-	case 0b1110: fluid_synth_pitch_bend(      synth.get(), chan_id, msg[1] + (msg[2] << 7)); break;
+	const auto status_byte = msg[0];
+	const auto status = get_midi_status(status_byte);
+	const auto channel = get_midi_channel(status_byte);
+
+	switch (status) {
+	case MidiStatus::NoteOff:         fluid_synth_noteoff(         synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::NoteOn:          fluid_synth_noteon(          synth.get(), channel, msg[1], msg[2]);         break;
+	case MidiStatus::PolyKeyPressure: fluid_synth_key_pressure(    synth.get(), channel, msg[1], msg[2]);         break;
+	case MidiStatus::ControlChange:   fluid_synth_cc(              synth.get(), channel, msg[1], msg[2]);         break;
+	case MidiStatus::ProgramChange:   fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::ChannelPressure: fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::PitchBend:       fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
 	default: log_unknown_midi_message(msg); break;
 	}
 	// clang-format on

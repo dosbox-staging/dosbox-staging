@@ -1455,9 +1455,10 @@ void CDROM_Image_Destroy(Section*) {
 	Sound_Quit();
 }
 
-void CDROM_Image_Init(Section* sec) {
+void CDROM_Image_Init(Section* sec)
+{
 	if (sec != nullptr) {
-		sec->AddDestroyFunction(CDROM_Image_Destroy, false);
+		sec->AddDestroyFunction(CDROM_Image_Destroy);
 	}
 	Sound_Init();
 }

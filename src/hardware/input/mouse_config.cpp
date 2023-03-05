@@ -31,13 +31,6 @@
 
 CHECK_NARROWING();
 
-// TODO - IntelliMouse Explorer emulation is currently deactivated - there is
-// probably no way to test it. The IntelliMouse 3.0 software can use it, but
-// it seems to require physical PS/2 mouse registers to work correctly,
-// and these are not emulated yet.
-
-// #define ENABLE_EXPLORER_MOUSE
-
 MouseConfig     mouse_config;
 MousePredefined mouse_predefined;
 
@@ -48,9 +41,8 @@ constexpr auto capture_type_nomouse_str   = "nomouse";
 
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
-#ifdef ENABLE_EXPLORER_MOUSE
-constexpr auto model_ps2_explorer_str     = "explorer";	
-#endif
+constexpr auto model_ps2_explorer_str     = "explorer";
+constexpr auto model_ps2_nomouse_str      = "none";
 
 constexpr auto model_com_2button_str      = "2button";
 constexpr auto model_com_3button_str      = "3button";
@@ -68,13 +60,12 @@ static const char *list_capture_types[] = {
 	nullptr
 };
 
-static const char *list_models_ps2[] = {
+static const char* list_models_ps2[] = {
 	model_ps2_standard_str,
-	model_ps2_intellimouse_str,
-#ifdef ENABLE_EXPLORER_MOUSE
-	model_ps2_explorer_str,
-#endif
-	nullptr
+        model_ps2_intellimouse_str,
+        model_ps2_explorer_str,
+        model_ps2_nomouse_str,
+        nullptr
 };
 
 static const char *list_models_com[] = {
@@ -166,16 +157,17 @@ bool MouseConfig::ParseCOMModel(const std::string &model_str,
 
 bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &model)
 {
-	if (model_str == model_ps2_standard_str)
+	if (model_str == model_ps2_standard_str) {
 		model = MouseModelPS2::Standard;
-	else if (model_str == model_ps2_intellimouse_str)
+	} else if (model_str == model_ps2_intellimouse_str) {
 		model = MouseModelPS2::IntelliMouse;
-#ifdef ENABLE_EXPLORER_MOUSE
-	else if (model_str == model_ps2_explorer_str)
+	} else if (model_str == model_ps2_explorer_str) {
 		model = MouseModelPS2::Explorer;
-#endif
-	else
+	} else if (model_str == model_ps2_nomouse_str) {
+		model = MouseModelPS2::NoMouse;	
+	} else {
 		return false;
+	}
 	return true;
 }
 
@@ -324,19 +316,19 @@ static void config_init(Section_prop &secprop)
 
 	// Physical mice configuration
 
-	prop_str = secprop.Add_string("ps2_mouse_model", only_at_start,
-	                              model_ps2_intellimouse_str);
+	// TODO: PS/2 mouse might be hot-pluggable
+	prop_str = secprop.Add_string("ps2_mouse_model",
+	                              only_at_start,
+	                              model_ps2_explorer_str);
 	assert(prop_str);
 	prop_str->Set_values(list_models_ps2);
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
-	        // TODO - Add option "none"
-	        "   standard:      3 buttons, standard PS/2 mouse.\n"
-	        "   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse (default)."
-#ifdef ENABLE_EXPLORER_MOUSE
-	        "\n   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer."
-#endif
-	);
+	        "  standard:      3 buttons, standard PS/2 mouse.\n"
+	        "  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
+	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
+	        "  none:          no PS/2 mouse emulated.\n"
+	        "Default: explorer");
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,
@@ -345,23 +337,28 @@ static void config_init(Section_prop &secprop)
 	prop_str->Set_values(list_models_com);
 	prop_str->Set_help(
 	        "COM (serial) port default mouse model:\n"
-	        "   2button:      2 buttons, Microsoft mouse.\n"
-	        "   3button:      3 buttons, Logitech mouse;\n"
-	        "                 mostly compatible with Microsoft mouse.\n"
-	        "   wheel:        3 buttons + wheel;\n"
-	        "                 mostly compatible with Microsoft mouse.\n"
-	        "   msm:          3 buttons, Mouse Systems mouse;\n"
-	        "                 NOT compatible with Microsoft mouse.\n"
-	        "   2button+msm:  Automatic choice between '2button' and 'msm'.\n"
-	        "   3button+msm:  Automatic choice between '3button' and 'msm'.\n"
-	        "   wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
+	        "  2button:      2 buttons, Microsoft mouse.\n"
+	        "  3button:      3 buttons, Logitech mouse;\n"
+	        "                mostly compatible with Microsoft mouse.\n"
+	        "  wheel:        3 buttons + wheel;\n"
+	        "                mostly compatible with Microsoft mouse.\n"
+	        "  msm:          3 buttons, Mouse Systems mouse;\n"
+	        "                NOT compatible with Microsoft mouse.\n"
+	        "  2button+msm:  Automatic choice between '2button' and 'msm'.\n"
+	        "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
+	        "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
 	        "Notes: Enable COM port mice in the [serial] section.");
 }
 
-void MOUSE_AddConfigSection(const config_ptr_t &conf)
+void MOUSE_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mouse", &config_read, true);
+
+	constexpr auto changeable_at_runtime = true;
+
+	Section_prop* sec = conf->AddSection_prop("mouse",
+	                                          &config_read,
+	                                          changeable_at_runtime);
 	assert(sec);
 	config_init(*sec);
 }

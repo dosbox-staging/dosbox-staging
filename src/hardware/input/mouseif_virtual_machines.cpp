@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -62,8 +62,6 @@ union VMwareButtons {
 	bit_view<3, 1> middle;
 };
 
-static constexpr io_port_t VMWARE_PORT = 0x5658u;      // communication port
-// static constexpr io_port_t VMWARE_PORTHB = 0x5659u; // communication port, high bandwidth
 static constexpr uint32_t VMWARE_MAGIC = 0x564D5868u;  // magic number for all VMware calls
 static constexpr uint32_t ABS_UPDATED  = 4; // tells about new pointer position
 static constexpr uint32_t ABS_NOT_UPDATED = 0;
@@ -103,7 +101,7 @@ static void MOUSEVMM_Activate()
 			pos_y    = static_cast<float>(mouse_shared.resolution_y) / 2.0f;
 			scaled_x = 0;
 			scaled_y = 0;
-			MOUSE_NotifyFakePS2();
+			MOUSEPS2_NotifyMovedDummy();
 		}
 	}
 	buttons.data = 0;
@@ -184,11 +182,12 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 	return reg_eax;
 }
 
-bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
+void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs)
 {
-	if (!mouse_shared.active_vmm)
-		return false;
+	if (!mouse_shared.active_vmm) {
+		return;
+	}
 
 	speed_xy.Update(std::sqrt(x_rel * x_rel + y_rel * y_rel));
 
@@ -232,17 +231,19 @@ bool MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 
 	// Filter out unneeded events (like sub-pixel mouse movements,
 	// which won't change guest side mouse state)
-	if (GCC_UNLIKELY(old_scaled_x == scaled_x && old_scaled_y == scaled_y))
-		return false;
+	if (GCC_UNLIKELY(old_scaled_x == scaled_x && old_scaled_y == scaled_y)) {
+		return;
+	}
 
 	updated = true;
-	return true;
+	MOUSEPS2_NotifyMovedDummy();
 }
 
-bool MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
+void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 {
-	if (!mouse_shared.active_vmm)
-		return false;
+	if (!mouse_shared.active_vmm) {
+		return;
+	}
 
 	const auto old_buttons = buttons;
 	buttons.data           = 0;
@@ -252,36 +253,39 @@ bool MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 	buttons.right  = static_cast<bool>(buttons_12S.right);
 	buttons.middle = static_cast<bool>(buttons_12S.middle);
 
-	if (GCC_UNLIKELY(old_buttons.data == buttons.data))
-		return false;
+	if (GCC_UNLIKELY(old_buttons.data == buttons.data)) {
+		return;
+	}
 
 	updated = true;
-	return true;
+	MOUSEPS2_NotifyMovedDummy();
 }
 
-bool MOUSEVMM_NotifyWheel(const int16_t w_rel)
+void MOUSEVMM_NotifyWheel(const int16_t w_rel)
 {
-	if (!mouse_shared.active_vmm)
-		return false;
+	if (!mouse_shared.active_vmm) {
+		return;
+	}
 
 	const auto old_counter_w = counter_w;
 	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
 
-	if (GCC_UNLIKELY(old_counter_w == counter_w))
-		return false;
+	if (GCC_UNLIKELY(old_counter_w == counter_w)) {
+		return;
+	}
 
 	updated = true;
-	return true;
+	MOUSEPS2_NotifyMovedDummy();
 }
 
 void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs)
 {
-	// Report a fake mouse movement
-	if (MOUSEVMM_NotifyMoved(0.0f, 0.0f, x_abs, y_abs) && mouse_shared.active_vmm)
-		MOUSE_NotifyFakePS2();
+	MOUSEVMM_NotifyMoved(0.0f, 0.0f, x_abs, y_abs);
 }
 
 void MOUSEVMM_Init()
 {
-	IO_RegisterReadHandler(VMWARE_PORT, port_read_vmware, io_width_t::dword);
+	IO_RegisterReadHandler(port_num_vmware,
+	                       port_read_vmware,
+	                       io_width_t::dword);
 }

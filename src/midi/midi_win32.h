@@ -76,7 +76,7 @@ public:
 			if (nummer < total) {
 				MIDIOUTCAPS mididev;
 				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
-				LOG_MSG("MIDI: win32 selected %s",mididev.szPname);
+				LOG_MSG("MIDI:WIN32: Selected output device %s",mididev.szPname);
 				res = midiOutOpen(&m_out, nummer, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
 			}
 		} else {
@@ -98,15 +98,20 @@ public:
 		CloseHandle (m_event);
 	}
 
-	void PlayMsg(const uint8_t *msg) override
+	void PlayMsg(const MidiMessage& data) override
 	{
-		midiOutShortMsg(m_out, read_unaligned_uint32(msg));
+		const auto status  = data[0];
+		const auto data1   = data[1];
+		const auto data2   = data[2];
+		const uint32_t msg = status + (data1 << 8) + (data2 << 16);
+
+		midiOutShortMsg(m_out, msg);
 	}
 
 	void PlaySysex(uint8_t *sysex, size_t len) override
 	{
 		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
-			LOG(LOG_MISC,LOG_ERROR)("Can't send midi message");
+			LOG_WARNING("MIDI:WIN32: Can't send midi message");
 			return;
 		}
 		midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));

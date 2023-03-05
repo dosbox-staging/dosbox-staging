@@ -230,6 +230,10 @@ using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
 // itself when it goes out of scope
 FILE_unique_ptr make_fopen(const char *fname, const char *mode);
 
+int64_t stdio_size_bytes(FILE* f);
+int64_t stdio_size_kb(FILE* f);
+int64_t stdio_num_sectors(FILE* f);
+
 const std_fs::path &GetExecutablePath();
 std_fs::path GetResourcePath(const std_fs::path &name);
 std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name);

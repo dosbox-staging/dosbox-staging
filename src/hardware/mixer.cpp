@@ -280,7 +280,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 }
 
 // Apply the global reverb settings to the given channel
-static void set_global_reverb(const mixer_channel_t channel)
+static void set_global_reverb(const mixer_channel_t &channel)
 {
 	assert(channel);
 	if (!mixer.do_reverb || !channel->HasFeature(ChannelFeature::ReverbSend))
@@ -292,7 +292,7 @@ static void set_global_reverb(const mixer_channel_t channel)
 }
 
 // Apply the global chorus settings to the given channel
-static void set_global_chorus(const mixer_channel_t channel)
+static void set_global_chorus(const mixer_channel_t &channel)
 {
 	assert(channel);
 	if (!mixer.do_chorus || !channel->HasFeature(ChannelFeature::ChorusSend))
@@ -1293,14 +1293,14 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
-						        (HostPt)&data[pos * 2 + 0]);
+						        (const HostPt)&data[pos * 2 + 0]);
 						frame[1] = (int16_t)host_readw(
-						        (HostPt)&data[pos * 2 + 1]);
+						        (const HostPt)&data[pos * 2 + 1]);
 					} else {
 						frame[0] = static_cast<float>((int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 0]));
+						        (const HostPt)&data[pos * 2 + 0]));
 						frame[1] = static_cast<float>((int32_t)host_readd(
-						        (HostPt)&data[pos * 2 + 1]));
+						        (const HostPt)&data[pos * 2 + 1]));
 					}
 				}
 			} else { // mono
@@ -1309,11 +1309,11 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				} else {
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(
-						        (HostPt)&data[pos]);
+						        (const HostPt)&data[pos]);
 					} else {
 						frame[0] = static_cast<float>(
 						        (int32_t)host_readd(
-						                (HostPt)&data[pos]));
+						                (const HostPt)&data[pos]));
 					}
 				}
 			}
@@ -1331,20 +1331,20 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos * 2 + 0])) -
+						                (const HostPt)&data[pos * 2 + 0])) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos * 2 + 1])) -
+						                (const HostPt)&data[pos * 2 + 1])) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos * 2 + 0])) -
+						                (const HostPt)&data[pos * 2 + 0])) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos * 2 + 1])) -
+						                (const HostPt)&data[pos * 2 + 1])) -
 						        offs);
 					}
 				}
@@ -1356,12 +1356,12 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (HostPt)&data[pos])) -
+						                (const HostPt)&data[pos])) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (HostPt)&data[pos])) -
+						                (const HostPt)&data[pos])) -
 						        offs);
 					}
 				}
@@ -2803,7 +2803,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable silent mode (disabled by default).\n"
-	        "Sound is still fullhy emulated in silent mode, but DOSBox outputs silence.");
+	        "Sound is still fully emulated in silent mode, but DOSBox outputs silence.");
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
@@ -2881,10 +2881,15 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
-void MIXER_AddConfigSection(const config_ptr_t &conf)
+void MIXER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mixer", &MIXER_Init, true);
+
+	constexpr auto changeable_at_runtime = true;
+
+	Section_prop* sec = conf->AddSection_prop("mixer",
+	                                          &MIXER_Init,
+	                                          changeable_at_runtime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 }

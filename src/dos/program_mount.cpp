@@ -174,6 +174,10 @@ void MOUNT::Run(void) {
 		return;
 	}
 
+	const Section_prop* section = static_cast<Section_prop*>(
+	        control->GetSection("dosbox"));
+	assert(section);
+
 	std::string type="dir";
 	cmd->FindString("-t",type,true);
 	bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
@@ -374,7 +378,14 @@ void MOUNT::Run(void) {
 				delete Drives[drive_index(drive)];
 				Drives[drive_index(drive)] = nullptr;
 			} else {
-				newdrive = new localDrive(temp_line.c_str(),sizes[0],int8_tize,sizes[2],sizes[3],mediaid);
+				newdrive = new localDrive(
+				        temp_line.c_str(),
+				        sizes[0],
+				        int8_tize,
+				        sizes[2],
+				        sizes[3],
+				        mediaid,
+				        section->Get_bool("allow_write_protected_files"));
 			}
 		}
 	} else {

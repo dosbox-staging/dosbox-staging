@@ -1455,5 +1455,6 @@ void ReelMagic_Init(Section* sec)
 	_a206debug = true;
 #endif
 
-	sec->AddDestroyFunction(&reelmagic_destroy, true);
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&reelmagic_destroy, changeable_at_runtime);
 }

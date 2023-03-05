@@ -157,7 +157,7 @@ protected:
 /* class for events which can be ON/OFF only: key presses, joystick buttons, joystick hat */
 class CTriggeredEvent : public CEvent {
 public:
-	CTriggeredEvent(char const * const _entry) : CEvent(_entry) {}
+	CTriggeredEvent(const char* const _entry) : CEvent(_entry) {}
 	virtual bool IsTrigger() {
 		return true;
 	}
@@ -183,7 +183,7 @@ public:
 /* class for events which have a non-boolean state: joystick axis movement */
 class CContinuousEvent : public CEvent {
 public:
-	CContinuousEvent(char const * const _entry) : CEvent(_entry) {}
+	CContinuousEvent(const char* const _entry) : CEvent(_entry) {}
 	virtual bool IsTrigger() {
 		return false;
 	}
@@ -1145,9 +1145,11 @@ public:
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
 		Bitu but = 0;
-		static unsigned const button_magic[6]={0x02,0x04,0x10,0x100,0x20,0x200};
-		static unsigned const hat_magic[2][5]={{0x8888,0x8000,0x800,0x80,0x08},
-							   {0x5440,0x4000,0x400,0x40,0x1000}};
+		static const unsigned button_magic[6] = {
+		        0x02, 0x04, 0x10, 0x100, 0x20, 0x200};
+		static const unsigned hat_magic[2][5] = {
+		        {0x8888, 0x8000, 0x800, 0x80, 0x08},
+		        {0x5440, 0x4000, 0x400, 0x40, 0x1000}};
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
@@ -1199,8 +1201,9 @@ public:
 	}
 
 	void UpdateJoystick() {
-		static unsigned const button_priority[6]={7,11,13,14,5,6};
-		static unsigned const hat_priority[2][4]={{0,1,2,3},{8,9,10,12}};
+		static const unsigned button_priority[6] = {7, 11, 13, 14, 5, 6};
+		static const unsigned hat_priority[2][4] = {{0, 1, 2, 3},
+		                                            {8, 9, 10, 12}};
 
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
@@ -1681,9 +1684,9 @@ protected:
 
 class CKeyEvent final : public CTriggeredEvent {
 public:
-	CKeyEvent(char const * const entry, KBD_KEYS k)
-		: CTriggeredEvent(entry),
-		  key(k)
+	CKeyEvent(const char* const entry, KBD_KEYS k)
+	        : CTriggeredEvent(entry),
+	          key(k)
 	{}
 
 	void Active(bool yesno) {
@@ -1695,12 +1698,13 @@ public:
 
 class CJAxisEvent final : public CContinuousEvent {
 public:
-	CJAxisEvent(char const * const entry, Bitu s, Bitu a, bool p, CJAxisEvent *op_axis)
-		: CContinuousEvent(entry),
-		  stick(s),
-		  axis(a),
-		  positive(p),
-		  opposite_axis(op_axis)
+	CJAxisEvent(const char* const entry, Bitu s, Bitu a, bool p,
+	            CJAxisEvent* op_axis)
+	        : CContinuousEvent(entry),
+	          stick(s),
+	          axis(a),
+	          positive(p),
+	          opposite_axis(op_axis)
 	{
 		if (opposite_axis)
 			opposite_axis->SetOppositeAxis(this);
@@ -1730,10 +1734,10 @@ protected:
 
 class CJButtonEvent final : public CTriggeredEvent {
 public:
-	CJButtonEvent(char const * const entry, Bitu s, Bitu btn)
-		: CTriggeredEvent(entry),
-		  stick(s),
-		  button(btn)
+	CJButtonEvent(const char* const entry, Bitu s, Bitu btn)
+	        : CTriggeredEvent(entry),
+	          stick(s),
+	          button(btn)
 	{}
 
 	void Active(bool pressed)
@@ -1747,11 +1751,11 @@ protected:
 
 class CJHatEvent final : public CTriggeredEvent {
 public:
-	CJHatEvent(char const * const entry, Bitu s, Bitu h, Bitu d)
-		: CTriggeredEvent(entry),
-		  stick(s),
-		  hat(h),
-		  dir(d)
+	CJHatEvent(const char* const entry, Bitu s, Bitu h, Bitu d)
+	        : CTriggeredEvent(entry),
+	          stick(s),
+	          hat(h),
+	          dir(d)
 	{}
 
 	void Active(bool pressed)
@@ -1765,9 +1769,9 @@ protected:
 
 class CModEvent final : public CTriggeredEvent {
 public:
-	CModEvent(char const * const _entry, int _wmod)
-		: CTriggeredEvent(_entry),
-		  wmod(_wmod)
+	CModEvent(const char* const _entry, int _wmod)
+	        : CTriggeredEvent(_entry),
+	          wmod(_wmod)
 	{}
 
 	void Active(bool yesno)
@@ -1993,7 +1997,10 @@ static void DrawButtons() {
 	SDL_UpdateWindowSurface(mapper.window);
 }
 
-static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
+static CKeyEvent* AddKeyButtonEvent(Bitu x, Bitu y, Bitu dx, Bitu dy,
+                                    const char* const title,
+                                    const char* const entry, KBD_KEYS key)
+{
 	char buf[64];
 	safe_strcpy(buf, "key_");
 	safe_strcat(buf, entry);
@@ -2002,7 +2009,10 @@ static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * 
 	return event;
 }
 
-static CJAxisEvent * AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
+static CJAxisEvent* AddJAxisButton(Bitu x, Bitu y, Bitu dx, Bitu dy,
+                                   const char* const title, Bitu stick, Bitu axis,
+                                   bool positive, CJAxisEvent* opposite_axis)
+{
 	char buf[64];
 	sprintf(buf, "jaxis_%d_%d%s",
 	        static_cast<int>(stick),
@@ -2021,7 +2031,9 @@ static CJAxisEvent * AddJAxisButton_hidden(Bitu stick,Bitu axis,bool positive,CJ
 	return new CJAxisEvent(buf,stick,axis,positive,opposite_axis);
 }
 
-static void AddJButtonButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu button) {
+static void AddJButtonButton(Bitu x, Bitu y, Bitu dx, Bitu dy,
+                             const char* const title, Bitu stick, Bitu button)
+{
 	char buf[64];
 	sprintf(buf, "jbutton_%d_%d",
 	        static_cast<int>(stick),
@@ -2037,7 +2049,9 @@ static void AddJButtonButton_hidden(Bitu stick,Bitu button) {
 	new CJButtonEvent(buf,stick,button);
 }
 
-static void AddJHatButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu _stick,Bitu _hat,Bitu _dir) {
+static void AddJHatButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char* const title,
+                          Bitu _stick, Bitu _hat, Bitu _dir)
+{
 	char buf[64];
 	sprintf(buf, "jhat_%d_%d_%d",
 	        static_cast<int>(_stick),
@@ -2047,7 +2061,8 @@ static void AddJHatButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title
 	new CEventButton(x,y,dx,dy,title,event);
 }
 
-static void AddModButton(Bitu x, Bitu y, Bitu dx, Bitu dy, char const * const title, int mod)
+static void AddModButton(Bitu x, Bitu y, Bitu dx, Bitu dy,
+                         const char* const title, int mod)
 {
 	char buf[64];
 	sprintf(buf, "mod_%d", mod);
@@ -3135,14 +3150,17 @@ void MAPPER_AutoTypeStopImmediately()
 	mapper.typist.StopImmediately();
 }
 
-void MAPPER_StartUp(Section * sec) {
-	Section_prop * section = static_cast<Section_prop *>(sec);
+void MAPPER_StartUp(Section* sec)
+{
+	assert(sec);
+	Section_prop* section = static_cast<Section_prop*>(sec);
 
-	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_BindKeys, true);
+	// Runs after this function ends and for subsequent `config -set "sdl
+	// mapperfile=file.map"` commands
+	constexpr auto changeable_at_runtime = true;
+	section->AddInitFunction(&MAPPER_BindKeys, changeable_at_runtime);
 
-	// runs one-time on shutdown
-	section->AddDestroyFunction(&MAPPER_Destroy, false);
-	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper",
-	                  "Mapper");
+	// Runs one-time on shutdown
+	section->AddDestroyFunction(&MAPPER_Destroy);
+	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 }

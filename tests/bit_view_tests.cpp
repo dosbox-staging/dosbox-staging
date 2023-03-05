@@ -87,6 +87,37 @@ TEST(bit_view, assign_from_literal)
 	EXPECT_EQ(r.last_3, 0b111);
 }
 
+TEST(bit_view, assign_from_bool)
+{
+	// A bit_view union to access the two low bits (0 and 3) by name
+	union BoolReg {
+		uint8_t data = 0;
+		bit_view<0, 1> first_bit;
+		bit_view<1, 6> middle_six;
+		bit_view<7, 1> last_bit;
+	};
+
+	BoolReg r = {0};
+
+	r.last_bit = true;
+	EXPECT_EQ(r.last_bit, 0b1);
+	EXPECT_EQ(r.first_bit, 0b0);
+	EXPECT_EQ(r.middle_six, 0b000'000);
+
+	r.first_bit = true;
+	EXPECT_EQ(r.first_bit, 0b1);
+	EXPECT_EQ(r.last_bit, 0b1);
+	EXPECT_EQ(r.middle_six, 0b000'000);
+
+	// Deliberate compile-time static assert failure when trying to assign
+	// multi-wide bit_view from bool:
+	//
+	//  error: static assertion failed due to requirement '6 == 1': Only
+	//         1-bit-wide bit_views can be unambiguously assigned from bools
+	//
+	// r.middle_six = true;
+}
+
 TEST(bit_view, assign_to_data)
 {
 	Register r1 = {0b111'000'11};
@@ -110,6 +141,40 @@ TEST(bit_view, assign_from_parts)
 	EXPECT_EQ(r1.first_2, 0b11);
 	EXPECT_EQ(r1.middle_3, 0b111);
 	EXPECT_EQ(r1.last_3, 0b111);
+}
+
+TEST(bit_view, assign_from_disparate_parts)
+{
+	Register r1 = {0b111'000'11};
+
+	union OtherReg {
+		uint8_t data = 0;
+		bit_view<0, 1> first_bit;
+		bit_view<1, 6> middle_six;
+		bit_view<7, 1> last_bit;
+	};
+
+	OtherReg r2 = {0b1'000000'1};
+
+	r2.middle_six = r1.first_2;
+
+	EXPECT_EQ(r2.first_bit, 0b1);
+	EXPECT_EQ(r2.middle_six, 0b000011);
+	EXPECT_EQ(r2.last_bit, 0b1);
+
+	r2.middle_six = r1.middle_3;
+	EXPECT_EQ(r2.first_bit, 0b1);
+	EXPECT_EQ(r2.middle_six, 0b000000);
+	EXPECT_EQ(r2.last_bit, 0b1);
+
+	// Deliberate compile-time static assert failure to catch assignment
+	// when the RHS has more bits than the LHS:
+	//
+	//   error: static assertion failed due to requirement '1 >= 2': this
+	//          bit_view's doesn't have enough bits to accomodate the
+	//          assignment
+	//
+	// r2.first_bit = r1.first_2;
 }
 
 TEST(bit_view, flip)

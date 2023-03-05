@@ -32,6 +32,7 @@ enum class MIDI_RC : int {
 	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
 };
 
+
 class MidiHandler {
 public:
 	MidiHandler();
@@ -45,7 +46,7 @@ public:
 
 	virtual bool Open([[maybe_unused]] const char *conf)
 	{
-		LOG_MSG("MIDI: No working MIDI device found/selected.");
+		LOG_WARNING("MIDI: No working MIDI device found/selected.");
 		return true;
 	}
 
@@ -53,7 +54,7 @@ public:
 	{
 		HaltSequence();
 	}
-	virtual void PlayMsg([[maybe_unused]] const uint8_t *msg) {}
+	virtual void PlayMsg([[maybe_unused]] const MidiMessage& msg) {}
 	virtual void PlaySysex([[maybe_unused]] uint8_t *sysex, [[maybe_unused]] size_t len) {}
 
 	virtual MIDI_RC ListAll(Program *)

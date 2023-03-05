@@ -59,7 +59,8 @@ extern MousePredefined mouse_predefined;
 enum class MouseCapture : uint8_t { Seamless, OnClick, OnStart, NoMouse };
 
 enum class MouseModelPS2 : uint8_t {
-	// Values must match PS/2 protocol IDs
+	NoMouse      = 0xff,
+	// Values below must match PS/2 protocol IDs
 	Standard     = 0x00,
 	IntelliMouse = 0x03,
 	Explorer     = 0x04,

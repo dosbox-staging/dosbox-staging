@@ -208,6 +208,43 @@ FILE_unique_ptr make_fopen(const char *fname, const char *mode)
 	return f ? FILE_unique_ptr(f) : nullptr;
 }
 
+// File size in bytes, returns -1 on error
+// The file position will be restored
+int64_t stdio_size_bytes(FILE* f)
+{
+	const auto orig_pos = cross_ftello(f);
+	if (orig_pos >= 0 && !cross_fseeko(f, 0L, SEEK_END)) {
+		const auto end_pos = cross_ftello(f);
+		if (end_pos >= 0 && !cross_fseeko(f, orig_pos, SEEK_SET)) {
+			return end_pos;
+		}
+	}
+	return -1;
+}
+
+static int64_t stdio_size_with_divisor(FILE* f, const int divisor)
+{
+	auto s = stdio_size_bytes(f);
+	if (s >= 0) {
+		return static_cast<int64_t>(s / divisor);
+	}
+	return -1;
+}
+
+// File size in KiB, returns -1 on error
+// The file position will be restored
+int64_t stdio_size_kb(FILE* f)
+{
+	return stdio_size_with_divisor(f, 1024L);
+}
+
+// Number of sectors in file, returns -1 on error
+// The file position will be restored
+int64_t stdio_num_sectors(FILE* f)
+{
+	return stdio_size_with_divisor(f, 512L);
+}
+
 const std_fs::path &GetExecutablePath()
 {
 	static std_fs::path exe_path;

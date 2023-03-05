@@ -104,8 +104,14 @@ if get_option('asm')
     extra_flags += ['--save-temps', '/FAs']
 endif
 
+# Don't flood us with hundreds of suggestions to use Microsoft-specific calls
 if host_machine.system() == 'windows'
     extra_flags += '-Wno-pedantic-ms-format'
+endif
+
+# Don't flood us with hundreds of suggestions to use snprintf on Apple + Clang
+if host_machine.system() == 'darwin' and  cxx.get_id() == 'clang'
+    extra_flags += '-Wno-deprecated-declarations'
 endif
 
 if prefers_static_libs
@@ -355,7 +361,7 @@ elif cxx.links(
 )
     atomic_dep = atomic_internal_dep
 else
-    atomic_dep = dependency('atomic', true)
+    atomic_dep = dependency('atomic')
 endif
 
 # Gather external dependencies

@@ -1025,9 +1025,10 @@ static void remove_window()
 // narrow than the allowed frame period.
 static void maybe_present_throttled(const bool frame_is_new)
 {
-	static bool last_frame_shown = false;
-	if (!frame_is_new && last_frame_shown)
+	static bool last_frame_presented = false;
+	if (!frame_is_new && last_frame_presented) {
 		return;
+	}
 
 	const auto now = GetTicksUs();
 	static int64_t last_present_time = 0;
@@ -1037,16 +1038,16 @@ static void maybe_present_throttled(const bool frame_is_new)
 		// this extra wait back by deducting it from the recorded time.
 		const auto wait_overage = elapsed % sdl.frame.period_us;
 		last_present_time = now - (9 * wait_overage / 10);
-		last_frame_shown = sdl.frame.present();
+		last_frame_presented = sdl.frame.present();
 	} else {
-		last_frame_shown = false;
+		last_frame_presented = false;
 	}
 }
 
 static void maybe_present_synced(const bool present_if_last_skipped)
 {
 	// state tracking across runs
-	static bool last_frame_shown = false;
+	static bool last_frame_presented = false;
 	static int64_t last_sync_time = 0;
 
 	const auto now = GetTicksUs();
@@ -1056,12 +1057,36 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	const auto on_time = scheduler_arrival > sdl.frame.period_us_early &&
 	                     scheduler_arrival < sdl.frame.period_us_late;
 
-	const auto should_present = on_time ||
-	                            (present_if_last_skipped && !last_frame_shown);
+	const auto should_present = on_time || (present_if_last_skipped &&
+	                                        !last_frame_presented);
 
-	last_frame_shown = should_present ? sdl.frame.present() : false;
+	last_frame_presented = should_present ? sdl.frame.present() : false;
 
 	last_sync_time = should_present ? GetTicksUs() : now;
+}
+
+// Present new frames, but if not new, re-present the last frame up to 10 times
+// (as back-to-back duplicates) to ensure the host shows it as opposed to
+// showing a prior frame in the event the host dropped the original when we
+// first presented it.
+static void present_new_or_maybe_dupe(const bool frame_is_new)
+{
+	constexpr auto max_dupes = 10;
+	static auto remaining_dupes = 0;
+
+	if (frame_is_new) {
+		sdl.frame.present();
+		remaining_dupes = max_dupes;
+	}
+	// We're now presenting duplicate frames - but be less agressive with
+	// them by using the sync'd presenter to run the dupes at the host's
+	// rate to avoid causing further blocking / stuttering / dropped frames
+	// on the host-side.
+	else if (remaining_dupes > 0) {
+		constexpr auto always_try = true;
+		maybe_present_synced(always_try);
+		--remaining_dupes;
+	}
 }
 
 static void schedule_synced([[maybe_unused]] const uint32_t event_id = 0)
@@ -1129,14 +1154,8 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	// to be set below
 	auto mode = FRAME_MODE::UNSET;
 
-	// Text modes always get VFR
-	const bool in_text_mode = CurMode->type & M_TEXT_MODES;
-	if (in_text_mode) {
-		mode = FRAME_MODE::VFR;
-		save_rate_to_frame_period(dos_rate);
-	}
 	// Manual full CFR
-	else if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
+	if (sdl.frame.desired_mode == FRAME_MODE::CFR) {
 		if (configure_cfr_mode() != FRAME_MODE::CFR && wants_vsync) {
 			LOG_WARNING("SDL: CFR performance warning: the DOS rate of %2.5g"
 			            " Hz exceeds the host's %2.5g Hz vsynced rate",
@@ -1168,12 +1187,13 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		return;
 	previous_mode = mode;
 
-	// Configure the pacer. We only use it for graphical VFR modes because
-	// CFR modes determine if the frame is presented based on the
-	// scheduler's accuracy.
+	// Configure the pacer in VFR modes to detect when the host takes too
+	// long to render frames. CFR modes use the PIC scheduler to place
+	// frames and use their own measurements, so we disable the pacer for
+	// them.
 	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
 	                         mode == FRAME_MODE::THROTTLED_VFR;
-	render_pacer.SetTimeout(is_vfr_mode && !in_text_mode ? sdl.vsync.skip_us : 0);
+	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
 
 	// Start synced presentation, if applicable
 	if (mode == FRAME_MODE::SYNCED_CFR)
@@ -2463,10 +2483,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 	case FRAME_MODE::CFR:
 		maybe_present_synced(frame_is_new);
 		break;
-	case FRAME_MODE::VFR:
-		if (frame_is_new)
-			sdl.frame.present();
-		break;
+	case FRAME_MODE::VFR: present_new_or_maybe_dupe(frame_is_new); break;
 	case FRAME_MODE::THROTTLED_VFR:
 		maybe_present_throttled(frame_is_new);
 		break;

@@ -21,6 +21,7 @@
 #ifndef DOSBOX_MIDI_MT32_H
 #define DOSBOX_MIDI_MT32_H
 
+#include "midi.h"
 #include "midi_handler.h"
 
 #if C_MT32EMU
@@ -56,7 +57,7 @@ public:
 	const char *GetName() const override { return "mt32"; }
 	MIDI_RC ListAll(Program *caller) override;
 	bool Open(const char *conf) override;
-	void PlayMsg(const uint8_t *msg) override;
+	void PlayMsg(const MidiMessage& msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 	void PrintStats();
 

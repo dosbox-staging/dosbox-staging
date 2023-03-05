@@ -20,8 +20,11 @@
 #ifndef DOSBOX_KEYBOARD_H
 #define DOSBOX_KEYBOARD_H
 
+#include <cstdint>
+#include <vector>
+
 enum KBD_KEYS {
-// clang-format off
+	// clang-format off
 	KBD_NONE,
 
 	KBD_1, KBD_2, KBD_3, KBD_4, KBD_5, KBD_6, KBD_7, KBD_8, KBD_9, KBD_0,
@@ -44,7 +47,8 @@ enum KBD_KEYS {
 	KBD_grave, KBD_minus, KBD_equals, KBD_backslash,
 	KBD_leftbracket, KBD_rightbracket,
 	KBD_semicolon, KBD_quote,
-	KBD_oem102, KBD_period, KBD_comma, KBD_slash, KBD_abnt1,
+	KBD_oem102, // usually between SHIFT and Z, has 2 or more symbols (|, \, <, >), depending on layout
+	KBD_period, KBD_comma, KBD_slash, KBD_abnt1,
 
 	KBD_printscreen, KBD_pause,
 
@@ -58,10 +62,72 @@ enum KBD_KEYS {
 	KBD_kpenter, KBD_kpperiod,
 
 	KBD_LAST,
-// clang-format on
+
+	// TODO: add support (GFX, mapper, etc.) for the keys below. For now
+	// they are put after KBD_LAST on purpose.
+	// Scancodes for them were taken from various sources - if possible,
+	// test on real hardware before enabling them.
+	// Note, that our BIOS might be unable to handle the scancodes of
+	// these keys correctly - this also needs to be tested.
+
+	KBD_application, // application menu key
+
+	KBD_f13, KBD_f14, KBD_f15, KBD_f16, KBD_f17, KBD_f18,
+	KBD_f19, KBD_f20, KBD_f21, KBD_f22, KBD_f23, KBD_f24,
+	KBD_sys_req,
+
+	KBD_intl1, KBD_intl2, KBD_intl4, KBD_intl5,
+	KBD_katakana, KBD_fugirana, KBD_kanji, KBD_hiragana,
+
+	KBD_acpi_power, KBD_acpi_sleep, KBD_acpi_wake,
+
+	KBD_cut, KBD_copy, KBD_paste, KBD_undo, KBD_redo, KBD_help,
+
+	KBD_vol_mute, KBD_vol_up, KBD_vol_down,
+
+	KBD_media_play, KBD_media_stop,
+	KBD_media_prev, KBD_media_next,
+	KBD_media_eject,
+	KBD_media_select, // media_video according to some sources
+	KBD_media_music, KBD_media_pictures,
+
+	KBD_www_home, KBD_www_search, KBD_www_favorites, KBD_www_refresh,
+	KBD_www_stop, KBD_www_forward, KBD_www_back,
+
+	KBD_my_computer, KBD_email, KBD_calculator,
+
+	// clang-format on
 };
 
-void KEYBOARD_ClrBuffer(void);
-void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed);
+// Simulate key press or release
+void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed);
 
-#endif
+// bit 0: scroll_lock, bit 1: num_lock, bit 2: caps_lock
+// TODO: BIOS does not update LEDs as of yet
+uint8_t KEYBOARD_GetLedState();
+
+// Do not use KEYBOARD_ClrBuffer in new code, it can't clear everything!
+void KEYBOARD_ClrBuffer();
+
+// Keyboard scancode set 1 is required, always.
+// Sets 2 and 3 are not tested yet.
+// Set 3 was never widely adopted, several existing keyboards
+// are said to have buggy implementations, and it seems it
+// was never extended to cover the multimedia keys.
+
+// #define ENABLE_SCANCODE_SET_2
+// #define ENABLE_SCANCODE_SET_3
+
+// Retrieve a scancode for the given key, for scancode set 1, 2, or 3
+std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
+                                           const bool is_pressed);
+#ifdef ENABLE_SCANCODE_SET_2
+std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
+                                           const bool is_pressed);
+#endif // ENABLE_SCANCODE_SET_2
+#ifdef ENABLE_SCANCODE_SET_3
+std::vector<uint8_t> KEYBOARD_GetScanCode3(const KBD_KEYS key_type,
+                                           const bool is_pressed);
+#endif // ENABLE_SCANCODE_SET_3
+
+#endif // DOSBOX_KEYBOARD_H

@@ -803,20 +803,22 @@
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
 
 // handles fprem,fprem1,fscale
-#define FPUD_REMAINDER(op)					\
-		uint16_t new_sw;						\
-		__asm__ volatile (					\
-			"fldt		%2				\n"	\
-			"fldt		%1				\n"	\
-			"fclex						\n"	\
-			#op" 						\n"	\
-			"fnstsw		%0				\n"	\
-			"fstpt		%1				\n"	\
-			"fstp		%%st(0)			"	\
-			:	"=&am" (new_sw), "+m" (fpu.p_regs[TOP])	\
-			:	"m" (fpu.p_regs[(TOP+1)&7])				\
-		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#define FPUD_REMAINDER(op)       \
+	uint16_t new_sw, save_sw;    \
+	__asm__ volatile(            \
+	        "fnstcw  %1      \n" \
+	        "fldcw   %4      \n" \
+	        "fldt    %3      \n" \
+	        "fldt    %2      \n" \
+	        "fclex           \n" \
+	        #op"             \n" \
+	        "fnstsw  %0      \n" \
+	        "fstpt   %2      \n" \
+	        "fstp    %%st(0) \n" \
+	        "fldcw   %1"         \
+	        : "=&am"(new_sw), "=m"(save_sw), "+m"(fpu.p_regs[TOP]) \
+	        : "m"(fpu.p_regs[(TOP + 1) & 7]), "m"(fpu.cw_mask_all)); \
+	fpu.sw = (new_sw & 0xffbf) | (fpu.sw & 0x80ff);
 
 // handles fcom,fucom
 #define FPUD_COMPARE(op)					\
