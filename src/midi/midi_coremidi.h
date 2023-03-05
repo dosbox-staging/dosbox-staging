@@ -124,21 +124,25 @@ public:
 //		MIDIEndpointDispose(m_endpoint);
 	}
 
-	void PlayMsg(const uint8_t *msg) override
+	void PlayMsg(const MidiMessage& msg) override
 	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];
-		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
-		m_pCurPacket = MIDIPacketListInit(packetList);
-		
-		const auto status_byte = *msg;
-		const auto len = MIDI_message_len_by_status[status_byte];
-		
+		MIDIPacketList* packetList = (MIDIPacketList*)packetBuf;
+		m_pCurPacket               = MIDIPacketListInit(packetList);
+
+		const auto len = MIDI_message_len_by_status[msg.status()];
+
 		// Add msg to the MIDIPacketList
-		MIDIPacketListAdd(packetList, (ByteCount)sizeof(packetBuf), m_pCurPacket, (MIDITimeStamp)0, len, msg);
-		
+		MIDIPacketListAdd(packetList,
+		                  (ByteCount)sizeof(packetBuf),
+		                  m_pCurPacket,
+		                  (MIDITimeStamp)0,
+		                  len,
+		                  msg.data.data());
+
 		// Send the MIDIPacketList
-		MIDISend(m_port,m_endpoint,packetList);
+		MIDISend(m_port, m_endpoint, packetList);
 	}
 
 	void PlaySysex(uint8_t *sysex, size_t len) override

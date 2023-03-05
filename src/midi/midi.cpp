@@ -113,15 +113,13 @@ struct Midi {
 	uint8_t status = 0;
 
 	struct {
-		uint8_t buf[MaxMidiMessageLen] = {};
+		MidiMessage msg = {};
 
 		size_t len = 0;
 		size_t pos = 0;
 	} message = {};
 
-	struct {
-		uint8_t buf[MaxMidiMessageLen] = {};
-	} realtime_message = {};
+	MidiMessage realtime_message = {};
 
 	struct {
 		uint8_t buf[MIDI_SYSEX_SIZE] = {};
@@ -234,20 +232,22 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 
 	constexpr auto note_off_velocity = 64;
 	constexpr auto note_off_msg_len  = 3;
-	uint8_t buf[note_off_msg_len]    = {};
 
-	buf[0] = MidiStatus::NoteOff | channel;
-	buf[2] = note_off_velocity;
+	MidiMessage msg = {};
+	msg[0]          = MidiStatus::NoteOff | channel;
+	msg[2]          = note_off_velocity;
 
 	for (auto note = FirstMidiNote; note <= LastMidiNote; ++note) {
 		if (midi_state.IsNoteActive(channel, note)) {
-			buf[1] = note;
+			msg[1] = note;
 
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
-				CAPTURE_AddMidi(is_sysex, note_off_msg_len, buf);
+				CAPTURE_AddMidi(is_sysex,
+				                note_off_msg_len,
+				                msg.data.data());
 			}
-			midi.handler->PlayMsg(buf);
+			midi.handler->PlayMsg(msg);
 		}
 	}
 }
@@ -278,22 +278,21 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 //
 // https://archive.org/details/Complete_MIDI_1.0_Detailed_Specification_96-1-3/
 //
-static void sanitise_midi_stream(const uint8_t buf[MaxMidiMessageLen])
+static void sanitise_midi_stream(const MidiMessage& msg)
 {
-	const auto status_byte = buf[0];
-	const auto status      = get_midi_status(status_byte);
-	const auto channel     = get_midi_channel(status_byte);
+	const auto status  = get_midi_status(msg.status());
+	const auto channel = get_midi_channel(msg.status());
 
 	if (status == MidiStatus::NoteOn) {
-		const auto note = buf[1];
+		const auto note = msg.data1();
 		midi_state.SetNoteActive(channel, note, true);
 
 	} else if (status == MidiStatus::NoteOff) {
-		const auto note = buf[1];
+		const auto note = msg.data1();
 		midi_state.SetNoteActive(channel, note, false);
 
 	} else if (status == MidiStatus::ControlChange) {
-		const auto mode = buf[1];
+		const auto mode = msg.data1();
 		if (mode == MidiChannelMode::AllSoundOff ||
 		    mode >= MidiChannelMode::AllNotesOff) {
 			// Send Note Offs for the currently active notes prior
@@ -323,8 +322,8 @@ void MIDI_RawOutByte(uint8_t data)
 
 	const auto is_realtime_message = (data >= MidiStatus::TimingClock);
 	if (is_realtime_message) {
-		midi.realtime_message.buf[0] = data;
-		midi.handler->PlayMsg(midi.realtime_message.buf);
+		midi.realtime_message[0] = data;
+		midi.handler->PlayMsg(midi.realtime_message);
 		return;
 	}
 
@@ -400,19 +399,19 @@ void MIDI_RawOutByte(uint8_t data)
 	}
 
 	if (midi.message.len > 0) {
-		midi.message.buf[midi.message.pos++] = data;
+		midi.message.msg[midi.message.pos++] = data;
 
 		if (midi.message.pos >= midi.message.len) {
 			if (!raw_midi_output_enabled) {
-				sanitise_midi_stream(midi.message.buf);
+				sanitise_midi_stream(midi.message.msg);
 			}
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
 				                midi.message.len,
-				                midi.message.buf);
+				                midi.message.msg.data.data());
 			}
-			midi.handler->PlayMsg(midi.message.buf);
+			midi.handler->PlayMsg(midi.message.msg);
 
 			midi.message.pos = 1; // Use Running Status
 		}
@@ -421,26 +420,27 @@ void MIDI_RawOutByte(uint8_t data)
 
 void MidiHandler::HaltSequence()
 {
-	uint8_t message[MaxMidiMessageLen] = {};
+	MidiMessage msg = {};
 
 	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
-		message[0] = MidiStatus::ControlChange | channel;
+		msg[0] = MidiStatus::ControlChange | channel;
 
-		message[1] = MidiChannelMode::AllNotesOff;
-		PlayMsg(message);
+		msg[1] = MidiChannelMode::AllNotesOff;
+		PlayMsg(msg);
 
-		message[1] = MidiChannelMode::ResetAllControllers;
-		PlayMsg(message);
+		msg[1] = MidiChannelMode::ResetAllControllers;
+		PlayMsg(msg);
 	}
 }
 
 void MidiHandler::ResumeSequence()
 {
-	uint8_t message[] = {MidiStatus::ControlChange, MidiChannelMode::OmniOn};
+	MidiMessage msg = {};
+	msg[1]          = MidiChannelMode::OmniOn;
 
 	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
-		message[0] = MidiStatus::ControlChange | channel;
-		PlayMsg(message);
+		msg[0] = MidiStatus::ControlChange | channel;
+		PlayMsg(msg);
 	}
 }
 

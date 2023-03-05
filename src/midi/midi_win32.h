@@ -98,7 +98,7 @@ public:
 		CloseHandle (m_event);
 	}
 
-	void PlayMsg(const uint8_t* data) override
+	void PlayMsg(const MidiMessage& data) override
 	{
 		const auto status  = data[0];
 		const auto data1   = data[1];

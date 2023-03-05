@@ -125,7 +125,7 @@ void MidiHandler_alsa::PlaySysex(uint8_t *sysex, size_t len)
 	send_event(1);
 }
 
-void MidiHandler_alsa::PlayMsg(const uint8_t* msg)
+void MidiHandler_alsa::PlayMsg(const MidiMessage& msg)
 {
 	const auto status_byte = msg[0];
 
