@@ -222,7 +222,8 @@ RealPt DOS_CheckExtDevice(const std::string_view name, const bool skip_existing_
 				continue;
 			}
 			const auto ext_dev = dynamic_cast<DOS_ExtDevice*>(dev);
-			if (ext_dev->CheckSameDevice(RealSeg(rp),
+			if (ext_dev &&
+			    ext_dev->CheckSameDevice(RealSeg(rp),
 			                             DOS_GetDeviceStrategy(rp),
 			                             DOS_GetDeviceInterrupt(rp))) {
 				return true;
@@ -347,7 +348,8 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	return *this;
 }
 
-uint8_t DOS_FindDevice(char const * name) {
+uint8_t DOS_FindDevice(const char* name)
+{
 	/* should only check for the names before the dot and spacepadded */
 	char fullname[DOS_PATHLENGTH];uint8_t drive;
 //	if(!name || !(*name)) return DOS_DEVICES; //important, but makename does it
@@ -403,7 +405,6 @@ uint8_t DOS_FindDevice(char const * name) {
 	}
 	return DOS_DEVICES;
 }
-
 
 void DOS_AddDevice(DOS_Device * adddev) {
 //Caller creates the device. We store a pointer to it
