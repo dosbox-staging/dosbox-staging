@@ -54,16 +54,22 @@ static void FPU_FFREE(Bitu st) {
 
 static inline void dyn_fpu_top() {
 	gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+	gen_shr_imm(FC_OP2,11); // stack top is 3-bit value starting at bit 11
 	gen_add_imm(FC_OP2,decode.modrm.rm);
 	gen_and_imm(FC_OP2,7);
 	gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+	gen_shr_imm(FC_OP1,11); // stack top is 3-bit value starting at bit 11
+	gen_and_imm(FC_OP1,7);
 }
 
 static inline void dyn_fpu_top_swapped() {
 	gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+	gen_shr_imm(FC_OP1,11); // stack top is 3-bit value starting at bit 11
 	gen_add_imm(FC_OP1,decode.modrm.rm);
 	gen_and_imm(FC_OP1,7);
 	gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+	gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+	gen_and_imm(FC_OP2,7);
 }
 
 static void dyn_eatree() {
@@ -138,6 +144,8 @@ static void dyn_fpu_esc0(){
 		dyn_fill_ea(FC_ADDR);
 		gen_call_function_R((void*)&FPU_FLD_F32_EA,FC_ADDR); 
 		gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+		gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+		gen_and_imm(FC_OP1,7);
 		dyn_eatree();
 	}
 }
@@ -150,11 +158,14 @@ static void dyn_fpu_esc1(){
 		switch (decode.modrm.reg){
 		case 0x00: /* FLD STi */
 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
 			gen_add_imm(FC_OP1,decode.modrm.rm);
 			gen_and_imm(FC_OP1,7);
 			gen_protect_reg(FC_OP1);
 			gen_call_function_raw((void*)&FPU_PREP_PUSH); 
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_restore_reg(FC_OP1);
 			gen_call_function_RR((void*)&FPU_FST,FC_OP1,FC_OP2);
 			break;
@@ -294,6 +305,8 @@ static void dyn_fpu_esc1(){
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1);
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FLD_F32,FC_OP1,FC_OP2);
 			break;
 		case 0x01: /* UNKNOWN */
@@ -340,9 +353,12 @@ static void dyn_fpu_esc2(){
 			switch(decode.modrm.rm){
 			case 0x01:		/* FUCOMPP */
 				gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+				gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
 				gen_add_imm(FC_OP2,1);
 				gen_and_imm(FC_OP2,7);
 				gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+				gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+				gen_and_imm(FC_OP1,7);
 				gen_call_function_RR((void *)&FPU_FUCOM,FC_OP1,FC_OP2);
 				gen_call_function_raw((void *)&FPU_FPOP);
 				gen_call_function_raw((void *)&FPU_FPOP);
@@ -360,6 +376,8 @@ static void dyn_fpu_esc2(){
 		dyn_fill_ea(FC_ADDR);
 		gen_call_function_R((void*)&FPU_FLD_I32_EA,FC_ADDR); 
 		gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+		gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+		gen_and_imm(FC_OP1,7);
 		dyn_eatree();
 	}
 }
@@ -402,6 +420,8 @@ static void dyn_fpu_esc3()
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1); 
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FLD_I32,FC_OP1,FC_OP2);
 			break;
 		case 0x01:	/* FISTTP */
@@ -477,6 +497,8 @@ static void dyn_fpu_esc4(){
 		dyn_fill_ea(FC_ADDR);
 		gen_call_function_R((void*)&FPU_FLD_F64_EA,FC_ADDR); 
 		gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+		gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+		gen_and_imm(FC_OP1,7);
 		dyn_eatree();
 	}
 }
@@ -517,6 +539,8 @@ static void dyn_fpu_esc5(){
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1); 
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FLD_F64,FC_OP1,FC_OP2);
 			break;
 		case 0x01:  /* FISTTP longint*/
@@ -573,9 +597,12 @@ static void dyn_fpu_esc6(){
 				return;
 			}
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
 			gen_add_imm(FC_OP2,1);
 			gen_and_imm(FC_OP2,7);
 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP1,7);
 			gen_call_function_RR((void*)&FPU_FCOM,FC_OP1,FC_OP2);
 			gen_call_function_raw((void*)&FPU_FPOP); /* extra pop at the bottom*/
 			break;
@@ -603,6 +630,8 @@ static void dyn_fpu_esc6(){
 		dyn_fill_ea(FC_ADDR);
 		gen_call_function_R((void*)&FPU_FLD_I16_EA,FC_ADDR); 
 		gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+		gen_shr_imm(FC_OP1,11); /* stack top is 3-bit value starting at bit 11 */
+		gen_and_imm(FC_OP1,7);
 		dyn_eatree();
 	}
 }
@@ -648,6 +677,8 @@ static void dyn_fpu_esc7(){
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1); 
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FLD_I16,FC_OP1,FC_OP2);
 			break;
 		case 0x01:
@@ -666,12 +697,16 @@ static void dyn_fpu_esc7(){
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1);
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FBLD,FC_OP1,FC_OP2);
 			break;
 		case 0x05:  /* FILD int64_t */
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
 			dyn_fill_ea(FC_OP1);
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_shr_imm(FC_OP2,11); /* stack top is 3-bit value starting at bit 11 */
+			gen_and_imm(FC_OP2,7);
 			gen_call_function_RR((void*)&FPU_FLD_I64,FC_OP1,FC_OP2);
 			break;
 		case 0x06:	/* FBSTP packed BCD */

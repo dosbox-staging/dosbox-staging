@@ -69,6 +69,7 @@ struct FPU_P_Reg {
 	uint16_t d1 = 0;
 	uint32_t d2 = 0;
 };
+static_assert( sizeof(FPU_P_Reg) == 16, "FPU_P_Reg size error" );
 
 enum FPU_Tag : uint8_t {
 	TAG_Valid = 0,
