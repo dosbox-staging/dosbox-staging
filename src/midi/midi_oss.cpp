@@ -67,20 +67,18 @@ void MidiHandler_oss::Close()
 	is_open = false;
 }
 
-void MidiHandler_oss::PlayMsg(const uint8_t *msg)
+void MidiHandler_oss::PlayMsg(const MidiMessage& msg)
 {
-	const auto status_byte = *msg;
-	const auto len = MIDI_message_len_by_status[status_byte];
+	const auto len = MIDI_message_len_by_status[msg.status()];
 
 	uint8_t buf[128];
 	assert(len * 4 <= sizeof(buf));
 	size_t pos = 0;
 	for (uint8_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
-		buf[pos++] = *msg;
+		buf[pos++] = msg[i];
 		buf[pos++] = device_num;
 		buf[pos++] = 0;
-		msg++;
 	}
 	const auto rcode = write(device, buf, pos);
 	if (!rcode) {

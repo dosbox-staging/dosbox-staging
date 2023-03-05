@@ -600,9 +600,9 @@ uint16_t MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlayMsg(const uint8_t* msg)
+void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
 {
-	std::vector<uint8_t> message(msg, msg + MaxMidiMessageLen);
+	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
 	              MessageType::Channel};

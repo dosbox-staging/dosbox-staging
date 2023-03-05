@@ -754,10 +754,9 @@ uint16_t MidiHandler_mt32::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
+void MidiHandler_mt32::PlayMsg(const MidiMessage& msg)
 {
-	constexpr auto channel_len = 4;
-	std::vector<uint8_t> message(msg, msg + channel_len);
+	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
 	              MessageType::Channel};
@@ -835,8 +834,10 @@ void MidiHandler_mt32::ProcessWorkFromFifo()
 	const std::lock_guard<std::mutex> lock(service_mutex);
 
 	if (work.message_type == MessageType::Channel) {
-		const auto msg_words = reinterpret_cast<const uint32_t*>(work.message.data());
-		service->playMsg(SDL_SwapLE32(*msg_words));
+		assert(work.message.size() >= MaxMidiMessageLen);
+		const auto &data = work.message.data();
+		const uint32_t msg = data[0] + (data[1] << 8) + (data[2] << 16);
+		service->playMsg(msg);
 	} else {
 		assert(work.message_type == MessageType::SysEx);
 		service->playSysex(work.message.data(), static_cast<uint32_t>(work.message.size()));

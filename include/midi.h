@@ -24,6 +24,9 @@
 
 #include "dosbox.h"
 
+#include <array>
+#include <assert.h>
+
 #include "setup.h"
 
 class Program;
@@ -46,6 +49,59 @@ constexpr uint8_t FirstMidiNote = 0;
 constexpr uint8_t LastMidiNote  = NumMidiNotes - 1;
 
 enum class MessageType : uint8_t { Channel, SysEx };
+
+struct MidiMessage {
+	std::array<uint8_t, MaxMidiMessageLen> data = {};
+
+	constexpr MidiMessage() = default;
+
+	constexpr MidiMessage(const uint8_t status, const uint8_t data1)
+	        : data{status, data1, 0}
+	{}
+
+	constexpr MidiMessage(const uint8_t status, const uint8_t data1,
+	                      const uint8_t data2)
+	        : data{status, data1, data2}
+	{}
+
+	constexpr uint8_t& operator[](const size_t i) noexcept
+	{
+		assert(i < MaxMidiMessageLen);
+		return data[i];
+	}
+	constexpr const uint8_t& operator[](const size_t i) const noexcept
+	{
+		assert(i < MaxMidiMessageLen);
+		return data[i];
+	}
+
+	constexpr uint8_t& status() noexcept
+	{
+		return data[0];
+	}
+	constexpr const uint8_t& status() const noexcept
+	{
+		return data[0];
+	}
+
+	constexpr uint8_t& data1() noexcept
+	{
+		return data[1];
+	}
+	constexpr const uint8_t& data1() const noexcept
+	{
+		return data[1];
+	}
+
+	constexpr uint8_t& data2() noexcept
+	{
+		return data[2];
+	}
+	constexpr const uint8_t& data2() const noexcept
+	{
+		return data[2];
+	}
+};
 
 // From "The Complete MIDI 1.0 Detailed Specification",
 // document version 96.1, third edition (1996, MIDI Manufacturers Association)

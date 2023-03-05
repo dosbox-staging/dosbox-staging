@@ -201,7 +201,7 @@ public:
 		}
 	}
 
-	void PlayMsg(const uint8_t *msg) override
+	void PlayMsg(const MidiMessage& msg) override
 	{
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
 	}
