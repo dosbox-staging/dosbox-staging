@@ -2767,12 +2767,12 @@ static void ToggleMute(const bool was_pressed)
 		break;
 	case MixerState::Mute:
 		MIXER_SetState(MixerState::On);
-		MIDI_Engage();
+		MIDI_Unmute();
 		LOG_MSG("MIXER: Unmuted");
 		break;
 	case MixerState::On:
 		MIXER_SetState(MixerState::Mute);
-		MIDI_Disengage();
+		MIDI_Mute();
 		LOG_MSG("MIXER: Muted");
 		break;
 	default: break;

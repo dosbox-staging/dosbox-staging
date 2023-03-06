@@ -542,6 +542,16 @@ void MIDI_Engage()
 	MIDI_ResumeSequence();
 }
 
+void MIDI_Mute()
+{
+	MIDI_Disengage();
+}
+
+void MIDI_Unmute()
+{
+	MIDI_Engage();
+}
+
 bool MIDI_Available()
 {
 	return midi.available;
