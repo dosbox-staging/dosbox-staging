@@ -208,6 +208,9 @@ void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
 void MIDI_ResumeSequence();
 
+void MIDI_Mute();
+void MIDI_Unmute();
+
 struct MidiWork {
 	std::vector<uint8_t> message      = {};
 	uint16_t num_pending_audio_frames = 0;
