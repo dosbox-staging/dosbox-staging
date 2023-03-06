@@ -149,6 +149,21 @@ public:
 		note_on_tracker.fill(false);
 	}
 
+	void Track(const MidiMessage& msg)
+	{
+		const auto status  = get_midi_status(msg.status());
+		const auto channel = get_midi_channel(msg.status());
+
+		if (status == MidiStatus::NoteOn) {
+			const auto note = msg.data1();
+			SetNoteActive(channel, note, true);
+
+		} else if (status == MidiStatus::NoteOff) {
+			const auto note = msg.data1();
+			SetNoteActive(channel, note, false);
+		}
+	}
+
 	inline void SetNoteActive(const uint8_t channel, const uint8_t note,
 	                          const bool is_playing)
 	{
@@ -283,15 +298,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 	const auto status  = get_midi_status(msg.status());
 	const auto channel = get_midi_channel(msg.status());
 
-	if (status == MidiStatus::NoteOn) {
-		const auto note = msg.data1();
-		midi_state.SetNoteActive(channel, note, true);
-
-	} else if (status == MidiStatus::NoteOff) {
-		const auto note = msg.data1();
-		midi_state.SetNoteActive(channel, note, false);
-
-	} else if (status == MidiStatus::ControlChange) {
+	if (status == MidiStatus::ControlChange) {
 		const auto mode = msg.data1();
 		if (mode == MidiChannelMode::AllSoundOff ||
 		    mode >= MidiChannelMode::AllNotesOff) {
@@ -402,15 +409,32 @@ void MIDI_RawOutByte(uint8_t data)
 		midi.message.msg[midi.message.pos++] = data;
 
 		if (midi.message.pos >= midi.message.len) {
+			// 1. Update the MIDI state based on the last non-SysEx message
+			midi_state.Track(midi.message.msg);
+
+			// 2. Sanitise the MIDI stream unless raw output is enabled.
+			// Currently, this can result in the emission of extra MIDI events
+			// only and updating the MIDI state.
+			//
+			// `sanitise_midi_stream` also captures these extra events if MIDI
+			// capture is enabled and sends them to the MIDI backend. This is
+			// a bit hacky and rather limited design, but it does the job for
+			// now... A better solution would be a message queue or stream
+			// that we could also alter and filter, plus a centralised capture
+			// and send function.
 			if (!raw_midi_output_enabled) {
 				sanitise_midi_stream(midi.message.msg);
 			}
+
+			// 3. Capture the original message if MIDI capture is enabled
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
 				                midi.message.len,
 				                midi.message.msg.data.data());
 			}
+
+			// 4. Send the MIDI message to the backend for playback
 			midi.handler->PlayMsg(midi.message.msg);
 
 			midi.message.pos = 1; // Use Running Status
