@@ -418,6 +418,7 @@ figcaption {
   margin-top: 4.0rem;
 }
 .front-page .feature-highlights > h1 {
+  margin-bottom: 1.4rem;
   font: 400 1.75rem/1.0 Titillium Web;
   text-align: center;
   color: #333;
@@ -426,6 +427,7 @@ figcaption {
   margin-bottom: 1.4rem;
   text-align: center;
   font-size: 0.95rem;
+  line-height: 1.55rem;
   color: #333;
 }
 
@@ -468,6 +470,12 @@ figcaption {
   padding-bottom: 0.50rem;
   padding-left: 0.1rem;
   color: #333;
+}
+.front-page .features li a {
+  color: #333;
+}
+.front-page .features li a:hover {
+  color: #888;
 }
 .front-page .features li::marker {
   color: #bbb;
