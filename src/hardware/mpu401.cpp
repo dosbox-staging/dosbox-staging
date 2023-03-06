@@ -356,7 +356,7 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 		// it generally, in addition to how the device handles it.
 		// https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
 		if (val == MSG_MPU_RESET) {
-			MIDI_HaltSequence();
+			MIDI_Reset();
 		}
 		return;
 	}
@@ -703,7 +703,7 @@ static void MPU401_ResetDone(uint32_t)
 }
 static void MPU401_Reset()
 {
-	MIDI_HaltSequence();
+	MIDI_Reset();
 	PIC_DeActivateIRQ(mpu.irq);
 	mpu.mode = (mpu.intelligent ? M_INTELLIGENT : M_UART);
 	PIC_RemoveEvents(MPU401_Event);

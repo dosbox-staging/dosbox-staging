@@ -506,6 +506,11 @@ void MIDI_HaltSequence()
 	}
 }
 
+void MIDI_Reset()
+{
+	MIDI_HaltSequence();
+}
+
 void MIDI_ResumeSequence()
 {
 	if (midi.handler) {
