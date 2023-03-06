@@ -199,8 +199,6 @@ uint8_t get_midi_status(const uint8_t status_byte);
 uint8_t get_midi_channel(const uint8_t channel_status);
 
 bool MIDI_Available();
-void MIDI_Disengage();
-void MIDI_Engage();
 void MIDI_Reset();
 void MIDI_Init(Section* sec);
 void MIDI_Reset();

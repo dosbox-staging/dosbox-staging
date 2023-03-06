@@ -518,7 +518,7 @@ void MIDI_ResumeSequence()
 	}
 }
 
-void MIDI_Disengage()
+void MIDI_Mute()
 {
 	// nothing to disengage, so do nothing
 	if (!midi.handler) {
@@ -530,7 +530,7 @@ void MIDI_Disengage()
 	assert(midi.handler == nullptr);
 }
 
-void MIDI_Engage()
+void MIDI_Unmute()
 {
 	// nothing to re-engage, so do nothing
 	if (!disengaged_midi.handler) {
@@ -540,16 +540,6 @@ void MIDI_Engage()
 	std::swap(disengaged_midi, midi);
 	assert(midi.handler);
 	MIDI_ResumeSequence();
-}
-
-void MIDI_Mute()
-{
-	MIDI_Disengage();
-}
-
-void MIDI_Unmute()
-{
-	MIDI_Engage();
 }
 
 bool MIDI_Available()
