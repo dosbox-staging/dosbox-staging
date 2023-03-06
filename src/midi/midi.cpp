@@ -147,6 +147,7 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
+		channel_volume_tracker.fill(default_channel_volume);
 	}
 
 	void Track(const MidiMessage& msg)
@@ -161,6 +162,16 @@ public:
 		} else if (status == MidiStatus::NoteOff) {
 			const auto note = msg.data1();
 			SetNoteActive(channel, note, false);
+
+		} else if (status == MidiStatus::ControlChange) {
+
+			if (msg.data1() == MidiController::Volume) {
+				const auto volume = msg.data2();
+				SetChannelVolume(channel, volume);
+
+			} else if (msg.data1() == MidiChannelMode::ResetAllControllers) {
+				channel_volume_tracker.fill(default_channel_volume);
+			}
 		}
 	}
 
@@ -175,6 +186,22 @@ public:
 		return note_on_tracker[NoteAddr(channel, note)];
 	}
 
+	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
+	{
+		assert(channel <= NumMidiChannels);
+		constexpr auto max_volume = 127;
+		assert(volume <= max_volume);
+
+		channel_volume_tracker[channel] = volume;
+	}
+
+	inline uint8_t GetChannelVolume(const uint8_t channel)
+	{
+		assert(channel <= NumMidiChannels);
+
+		return channel_volume_tracker[channel];
+	}
+
 	~MidiState() = default;
 
 	// prevent copying
@@ -184,6 +211,10 @@ public:
 
 private:
 	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
+	std::array<uint8_t, NumMidiChannels> channel_volume_tracker = {};
+
+	// TODO double check value
+	const uint8_t default_channel_volume = 63;
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
