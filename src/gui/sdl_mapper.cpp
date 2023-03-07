@@ -2212,11 +2212,12 @@ static void CreateLayout() {
 #if !defined(MACOSX)
 	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
-	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 #else
 	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
 	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 #endif
+
+	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 
 	/* Arrow Keys */
 #define XO 17
@@ -2516,9 +2517,7 @@ static struct {
                    {"lalt", SDL_SCANCODE_LALT},
                    {"ralt", SDL_SCANCODE_RALT},
                    {"lctrl", SDL_SCANCODE_LCTRL},
-#if !defined(MACOSX)
                    {"rctrl", SDL_SCANCODE_RCTRL},
-#endif
                    {"lgui", SDL_SCANCODE_LGUI},
                    {"rgui", SDL_SCANCODE_RGUI},
                    {"comma", SDL_SCANCODE_COMMA},
@@ -2589,10 +2588,8 @@ static void CreateDefaultBinds() {
 		CreateStringBind(buffer);
 		i++;
 	}
-#if !defined(MACOSX)
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_RCTRL);
 	CreateStringBind(buffer);
-#endif
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_LCTRL);
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
