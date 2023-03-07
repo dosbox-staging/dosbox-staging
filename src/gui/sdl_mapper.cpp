@@ -396,11 +396,33 @@ public:
 	SDL_Scancode key;
 };
 
+<<<<<<< HEAD
 #if defined(MACOSX)
-enum ddtpos : size_t { ddtgui, ddtalt, ddtctrl, ddtshift, ddtmax };
-std::array<bool,ddtmax> baDeDuplicateTable;
+// clang-format off
+enum DEDUP_SCAN2INDEX : size_t {
+  // Index of scancode from below array
+  DD_lgui, DD_lalt, DD_lctrl, DD_lshift,
+
+  DD_LAST,
+
+  DD_NONE // No important key pressed
+};
+// clang-format on
+static std::array<bool, DD_LAST> deduptable;
+
+static DEDUP_SCAN2INDEX ScanCodeToDDEnum(const uintptr_t key) {
+	switch(key) {
+		case SDL_SCANCODE_LGUI: return DD_lgui;
+		case SDL_SCANCODE_LALT: return DD_lalt;
+		case SDL_SCANCODE_LCTRL: return DD_lctrl;
+		case SDL_SCANCODE_LSHIFT: return DD_lshift;
+		default: return DD_NONE;
+	}
+}
 #endif
 
+=======
+>>>>>>> parent of bc5692e9f (Sticky left mod key workaround.)
 class CKeyBindGroup final : public  CBindGroup {
 public:
 	CKeyBindGroup(Bitu _keys)
@@ -441,38 +463,31 @@ public:
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
 		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
+<<<<<<< HEAD
 		if (event->type==SDL_KEYDOWN) {
-      ActivateBindList(&lists[key],0x7fff,true);
+			ActivateBindList(&lists[key],0x7fff,true);
 #if defined(MACOSX)
-      size_t stItem;
-      switch(key) {
-			  case SDL_SCANCODE_LGUI: stItem = ddtgui; break;
-			  case SDL_SCANCODE_LALT: stItem = ddtalt; break;
-			  case SDL_SCANCODE_LCTRL: stItem = ddtctrl; break;
-			  case SDL_SCANCODE_LSHIFT: stItem = ddtshift; break;
-        default: return 0;
-      }
-      if(!baDeDuplicateTable[stItem]) {
-        baDeDuplicateTable[stItem] = true;
-        DeactivateBindList(&lists[key],true);
-      }
+			const DEDUP_SCAN2INDEX index = ScanCodeToDDEnum(key);
+			if(index != DD_NONE && !deduptable[index]) {
+				deduptable[index] = true;
+				DeactivateBindList(&lists[key],true);
+			}
 #endif
-    }
+		}
 		else if(event->type==SDL_KEYUP) {
-      DeactivateBindList(&lists[key],true);
+			DeactivateBindList(&lists[key],true);
 #if defined(MACOSX)
-      size_t stItem;
-      switch(key) {
-			  case SDL_SCANCODE_LGUI: stItem = ddtgui; break;
-			  case SDL_SCANCODE_LALT: stItem = ddtalt; break;
-			  case SDL_SCANCODE_LCTRL: stItem = ddtctrl; break;
-			  case SDL_SCANCODE_LSHIFT: stItem = ddtshift; break;
-        default: return 0;
-      }
-      baDeDuplicateTable[stItem] = false;
+			const DEDUP_SCAN2INDEX index = ScanCodeToDDEnum(key);
+			if(index != DD_NONE) {
+				deduptable[index] = false;
+			}
 #endif
-    }
+		}
 
+=======
+		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
+		else DeactivateBindList(&lists[key],true);
+>>>>>>> parent of bc5692e9f (Sticky left mod key workaround.)
 		return 0;
 	}
 	CBind * CreateKeyBind(SDL_Scancode _key) {
@@ -2212,12 +2227,11 @@ static void CreateLayout() {
 #if !defined(MACOSX)
 	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 #else
 	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
 	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 #endif
-
-	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 
 	/* Arrow Keys */
 #define XO 17
@@ -2517,7 +2531,9 @@ static struct {
                    {"lalt", SDL_SCANCODE_LALT},
                    {"ralt", SDL_SCANCODE_RALT},
                    {"lctrl", SDL_SCANCODE_LCTRL},
+#if !defined(MACOSX)
                    {"rctrl", SDL_SCANCODE_RCTRL},
+#endif
                    {"lgui", SDL_SCANCODE_LGUI},
                    {"rgui", SDL_SCANCODE_RGUI},
                    {"comma", SDL_SCANCODE_COMMA},
@@ -2588,8 +2604,10 @@ static void CreateDefaultBinds() {
 		CreateStringBind(buffer);
 		i++;
 	}
+#if !defined(MACOSX)
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_RCTRL);
 	CreateStringBind(buffer);
+#endif
 	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_LCTRL);
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
