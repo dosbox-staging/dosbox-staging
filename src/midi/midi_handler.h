@@ -64,7 +64,6 @@ public:
 	}
 
 	void HaltSequence();
-	void ResumeSequence();
 
 	MidiHandler *next = nullptr;
 };
