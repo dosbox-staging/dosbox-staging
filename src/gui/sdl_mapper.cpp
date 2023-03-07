@@ -396,6 +396,11 @@ public:
 	SDL_Scancode key;
 };
 
+#if defined(MACOSX)
+enum ddtpos : size_t { ddtgui, ddtalt, ddtctrl, ddtshift, ddtmax };
+std::array<bool,ddtmax> baDeDuplicateTable;
+#endif
+
 class CKeyBindGroup final : public  CBindGroup {
 public:
 	CKeyBindGroup(Bitu _keys)
@@ -436,8 +441,38 @@ public:
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
 		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
-		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
-		else DeactivateBindList(&lists[key],true);
+		if (event->type==SDL_KEYDOWN) {
+      ActivateBindList(&lists[key],0x7fff,true);
+#if defined(MACOSX)
+      size_t stItem;
+      switch(key) {
+			  case SDL_SCANCODE_LGUI: stItem = ddtgui; break;
+			  case SDL_SCANCODE_LALT: stItem = ddtalt; break;
+			  case SDL_SCANCODE_LCTRL: stItem = ddtctrl; break;
+			  case SDL_SCANCODE_LSHIFT: stItem = ddtshift; break;
+        default: return 0;
+      }
+      if(!baDeDuplicateTable[stItem]) {
+        baDeDuplicateTable[stItem] = true;
+        DeactivateBindList(&lists[key],true);
+      }
+#endif
+    }
+		else if(event->type==SDL_KEYUP) {
+      DeactivateBindList(&lists[key],true);
+#if defined(MACOSX)
+      size_t stItem;
+      switch(key) {
+			  case SDL_SCANCODE_LGUI: stItem = ddtgui; break;
+			  case SDL_SCANCODE_LALT: stItem = ddtalt; break;
+			  case SDL_SCANCODE_LCTRL: stItem = ddtctrl; break;
+			  case SDL_SCANCODE_LSHIFT: stItem = ddtshift; break;
+        default: return 0;
+      }
+      baDeDuplicateTable[stItem] = false;
+#endif
+    }
+
 		return 0;
 	}
 	CBind * CreateKeyBind(SDL_Scancode _key) {
