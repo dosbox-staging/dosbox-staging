@@ -499,7 +499,7 @@ void MidiHandler::ResumeSequence()
 	}
 }
 
-void MIDI_HaltSequence()
+static void halt_sequence()
 {
 	if (midi.handler) {
 		midi.handler->HaltSequence();
@@ -508,10 +508,10 @@ void MIDI_HaltSequence()
 
 void MIDI_Reset()
 {
-	MIDI_HaltSequence();
+	halt_sequence();
 }
 
-void MIDI_ResumeSequence()
+static void resume_sequence()
 {
 	if (midi.handler) {
 		midi.handler->ResumeSequence();
@@ -525,7 +525,7 @@ void MIDI_Mute()
 		return;
 	}
 
-	MIDI_HaltSequence();
+	halt_sequence();
 	std::swap(midi, disengaged_midi);
 	assert(midi.handler == nullptr);
 }
@@ -539,7 +539,7 @@ void MIDI_Unmute()
 
 	std::swap(disengaged_midi, midi);
 	assert(midi.handler);
-	MIDI_ResumeSequence();
+	resume_sequence();
 }
 
 bool MIDI_Available()
