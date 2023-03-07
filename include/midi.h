@@ -204,7 +204,6 @@ void MIDI_Init(Section* sec);
 void MIDI_Reset();
 void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
-void MIDI_ResumeSequence();
 
 void MIDI_Mute();
 void MIDI_Unmute();
