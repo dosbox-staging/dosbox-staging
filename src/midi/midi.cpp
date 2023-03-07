@@ -488,17 +488,6 @@ void MidiHandler::HaltSequence()
 	}
 }
 
-void MidiHandler::ResumeSequence()
-{
-	MidiMessage msg = {};
-	msg[1]          = MidiChannelMode::OmniOn;
-
-	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
-		msg[0] = MidiStatus::ControlChange | channel;
-		PlayMsg(msg);
-	}
-}
-
 static void halt_sequence()
 {
 	if (midi.handler) {
@@ -509,13 +498,6 @@ static void halt_sequence()
 void MIDI_Reset()
 {
 	halt_sequence();
-}
-
-static void resume_sequence()
-{
-	if (midi.handler) {
-		midi.handler->ResumeSequence();
-	}
 }
 
 void MIDI_Mute()
@@ -539,7 +521,6 @@ void MIDI_Unmute()
 
 	std::swap(disengaged_midi, midi);
 	assert(midi.handler);
-	resume_sequence();
 }
 
 bool MIDI_Available()
