@@ -56,7 +56,6 @@ using MIXER_Handler = std::function<void(uint16_t frames)>;
 enum class MixerState {
 	Uninitialized,
 	NoSound,
-	Off,
 	On,
 	Mute,
 };
@@ -401,7 +400,8 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 void MIXER_AddConfigSection(const config_ptr_t &conf);
 int MIXER_GetSampleRate();
 uint16_t MIXER_GetPreBufferMs();
-bool MIXER_IsManuallyMuted();
-void MIXER_SetState(const MixerState requested);
+
+void MIXER_Mute();
+void MIXER_Unmute();
 
 #endif

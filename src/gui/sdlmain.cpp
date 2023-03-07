@@ -3582,8 +3582,9 @@ static void ApplyActiveSettings()
 	SetPriority(sdl.priority.active);
 	MOUSE_NotifyWindowActive(true);
 
-	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
-		MIXER_SetState(MixerState::On);
+	if (sdl.mute_when_inactive) {
+		MIXER_Unmute();
+	}
 }
 
 static void ApplyInactiveSettings()
@@ -3591,8 +3592,9 @@ static void ApplyInactiveSettings()
 	SetPriority(sdl.priority.inactive);
 	MOUSE_NotifyWindowActive(false);
 
-	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted())
-		MIXER_SetState(MixerState::Off);
+	if (sdl.mute_when_inactive) {
+		MIXER_Mute();
+	}
 }
 
 static void SetPriorityLevels(const std::string_view active_pref,
