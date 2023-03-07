@@ -396,11 +396,6 @@ public:
 	SDL_Scancode key;
 };
 
-#if defined(MACOSX)
-enum ddtpos : size_t { ddtgui, ddtalt, ddtctrl, ddtshift, ddtmax };
-std::array<bool,ddtmax> baDeDuplicateTable;
-#endif
-
 class CKeyBindGroup final : public  CBindGroup {
 public:
 	CKeyBindGroup(Bitu _keys)
@@ -437,6 +432,11 @@ public:
 			return nullptr;
 		return CreateKeyBind(event->key.keysym.scancode);
 	}
+
+#if defined(MACOSX)
+  enum ddtpos : size_t { ddtgui, ddtalt, ddtctrl, ddtshift, ddtmax };
+  std::array<bool,ddtmax> baDeDuplicateTable;
+#endif
 
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
