@@ -54,7 +54,17 @@ public:
 	MidiHandler_mt32();
 	~MidiHandler_mt32() override;
 	void Close() override;
-	const char *GetName() const override { return "mt32"; }
+
+	const char* GetName() const override
+	{
+		return "mt32";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::BuiltIn;
+	}
+
 	MIDI_RC ListAll(Program *caller) override;
 	bool Open(const char *conf) override;
 	void PlayMsg(const MidiMessage& msg) override;

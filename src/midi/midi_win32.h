@@ -46,7 +46,15 @@ public:
 	MidiHandler_win32(const MidiHandler_win32&) = delete;
 	MidiHandler_win32& operator=(const MidiHandler_win32&) = delete;
 
-	const char *GetName() const override { return "win32"; }
+	const char* GetName() const override
+	{
+		return "win32";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{

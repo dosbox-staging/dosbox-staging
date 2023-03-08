@@ -39,7 +39,17 @@ public:
 	MidiHandlerFluidsynth();
 	~MidiHandlerFluidsynth() override;
 	void PrintStats();
-	const char *GetName() const override { return "fluidsynth"; }
+
+	const char* GetName() const override
+	{
+		return "fluidsynth";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::BuiltIn;
+	}
+
 	bool Open(const char *conf) override;
 	void Close() override;
 	void PlayMsg(const MidiMessage& msg) override;

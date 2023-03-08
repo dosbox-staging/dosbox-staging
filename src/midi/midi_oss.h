@@ -38,7 +38,15 @@ public:
 
 	~MidiHandler_oss() override;
 
-	const char *GetName() const override { return "oss"; }
+	const char* GetName() const override
+	{
+		return "oss";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override;
 
