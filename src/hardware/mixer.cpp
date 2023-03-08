@@ -319,7 +319,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 		return ReverbPreset::Huge;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	LOG_ERR("MIXER: Received an unknown reverb preset type: '%s'", pref.data());
+	LOG_WARNING("MIXER: Received an unknown reverb preset type: '%s'", pref.data());
 	return ReverbPreset::None;
 }
 
@@ -394,7 +394,7 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 		return ChorusPreset::Strong;
 
 	// the conf system programmatically guarantees only the above prefs are used
-	LOG_ERR("MIXER: Received an unknown chorus preset type: '%s'", pref.data());
+	LOG_WARNING("MIXER: Received an unknown chorus preset type: '%s'", pref.data());
 	return ChorusPreset::None;
 }
 
@@ -596,7 +596,7 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 	RecalcCombinedVolume();
 
 #ifdef DEBUG
-	LOG_MSG("MIXER %-7s channel: application requested volume "
+	LOG_MSG("MIXER: %-7s channel: application requested volume "
 	        "{%3.0f%%, %3.0f%%}, and was set to {%3.0f%%, %3.0f%%}",
 	        name,
 	        static_cast<double>(left),
@@ -646,8 +646,9 @@ void MixerChannel::ChangeChannelMap(const LINE_INDEX mapped_as_left,
 	channel_map = {mapped_as_left, mapped_as_right};
 
 #ifdef DEBUG
-	LOG_MSG("MIXER %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
-	        name, channel_map.left == LEFT ? "left" : "right",
+	LOG_MSG("MIXER: %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
+	        name,
+	        channel_map.left == LEFT ? "left" : "right",
 	        channel_map.right == LEFT ? "left" : "right");
 #endif
 }
