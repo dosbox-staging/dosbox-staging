@@ -58,10 +58,11 @@ bool MidiHandler_oss::Open(const char *conf)
 
 void MidiHandler_oss::Close()
 {
-	if (!is_open)
+	if (!is_open) {
 		return;
+	}
 
-	HaltSequence();
+	Reset();
 
 	close(device);
 	is_open = false;

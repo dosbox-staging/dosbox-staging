@@ -50,9 +50,11 @@ public:
 		return true;
 	}
 
+	virtual void Reset();
+
 	virtual void Close()
 	{
-		HaltSequence();
+		Reset();
 	}
 
 	virtual void PlayMsg([[maybe_unused]] const MidiMessage& msg) {}
@@ -62,8 +64,6 @@ public:
 	{
 		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
 	}
-
-	void HaltSequence();
 
 	MidiHandler *next = nullptr;
 };

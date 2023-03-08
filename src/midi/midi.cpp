@@ -473,7 +473,7 @@ void MIDI_RawOutByte(uint8_t data)
 	}
 }
 
-void MidiHandler::HaltSequence()
+void MidiHandler::Reset()
 {
 	MidiMessage msg = {};
 
@@ -488,16 +488,11 @@ void MidiHandler::HaltSequence()
 	}
 }
 
-static void halt_sequence()
-{
-	if (midi.handler) {
-		midi.handler->HaltSequence();
-	}
-}
-
 void MIDI_Reset()
 {
-	halt_sequence();
+	if (midi.handler) {
+		midi.handler->Reset();
+	}
 }
 
 void MIDI_Mute()
@@ -507,7 +502,7 @@ void MIDI_Mute()
 		return;
 	}
 
-	halt_sequence();
+	MIDI_Reset();
 	std::swap(midi, disengaged_midi);
 	assert(midi.handler == nullptr);
 }
