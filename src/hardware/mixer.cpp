@@ -2510,11 +2510,6 @@ std::unique_ptr<Program> MIXER_ProgramCreate() {
 	return ProgramCreate<MIXER>();
 }
 
-bool MIXER_IsManuallyMuted()
-{
-	return mixer.state == MixerState::Mute;
-}
-
 [[maybe_unused]] static const char * MixerStateToString(const MixerState s)
 {
 	switch (s) {
