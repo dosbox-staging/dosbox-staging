@@ -130,6 +130,7 @@ struct Midi {
 	} sysex = {};
 
 	bool available       = false;
+	bool is_muted        = false;
 	MidiHandler* handler = nullptr;
 };
 
@@ -163,13 +164,9 @@ public:
 			SetNoteActive(channel, note, false);
 
 		} else if (status == MidiStatus::ControlChange) {
-
 			if (msg.data1() == MidiController::Volume) {
 				const auto volume = msg.data2();
 				SetChannelVolume(channel, volume);
-
-			} else if (msg.data1() == MidiChannelMode::ResetAllControllers) {
-				channel_volume_tracker.fill(default_channel_volume);
 			}
 		}
 	}
@@ -269,6 +266,11 @@ MessageType get_midi_message_type(const uint8_t status_byte)
 uint8_t get_midi_channel(const uint8_t channel_status)
 {
 	return channel_status & 0x0f;
+}
+
+static bool is_external_midi_device()
+{
+	return midi.handler->GetDeviceType() == MidiDeviceType::External;
 }
 
 static void output_note_off_for_active_notes(const uint8_t channel)
@@ -439,24 +441,45 @@ void MIDI_RawOutByte(uint8_t data)
 		midi.message.msg[midi.message.pos++] = data;
 
 		if (midi.message.pos >= midi.message.len) {
-			// 1. Update the MIDI state based on the last non-SysEx message
+			// 1. Update the MIDI state based on the last non-SysEx
+			// message
 			midi_state.Track(midi.message.msg);
 
-			// 2. Sanitise the MIDI stream unless raw output is enabled.
-			// Currently, this can result in the emission of extra MIDI events
-			// only and updating the MIDI state.
+			// 2. Sanitise the MIDI stream unless raw output is
+			// enabled. Currently, this can result in the emission
+			// of extra MIDI events only and updating the MIDI
+			// state.
 			//
-			// `sanitise_midi_stream` also captures these extra events if MIDI
-			// capture is enabled and sends them to the MIDI backend. This is
-			// a bit hacky and rather limited design, but it does the job for
-			// now... A better solution would be a message queue or stream
-			// that we could also alter and filter, plus a centralised capture
-			// and send function.
+			// `sanitise_midi_stream` also captures these extra
+			// events if MIDI capture is enabled and sends them to
+			// the MIDI device. This is a bit hacky and rather
+			// limited design, but it does the job for now... A
+			// better solution would be a message queue or stream that
+			// we could also alter and filter, plus a centralised
+			// capture and send function.
 			if (!raw_midi_output_enabled) {
 				sanitise_midi_stream(midi.message.msg);
 			}
 
-			// 3. Capture the original message if MIDI capture is enabled
+			// 3. Determine whether the message should be sent to
+			// the device based on the mute state
+			auto play_msg = true;
+
+			if (midi.is_muted && is_external_midi_device()) {
+				const auto& msg = midi.message.msg;
+				const auto status = get_midi_status(msg.status());
+
+				// Track Channel Volume changes messages in
+				// MidiState, but don't send them to external
+				// devices when muted
+				if (status == MidiStatus::ControlChange &&
+				    msg.data1() == MidiController::Volume) {
+					play_msg = false;
+				}
+			}
+
+			// 4. Always capture the original message if MIDI
+			// capture is enabled, regardless of the mute state
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
@@ -464,8 +487,10 @@ void MIDI_RawOutByte(uint8_t data)
 				                midi.message.msg.data.data());
 			}
 
-			// 4. Send the MIDI message to the backend for playback
-			midi.handler->PlayMsg(midi.message.msg);
+			// 5. Send the MIDI message to the device for playback
+			if (play_msg) {
+				midi.handler->PlayMsg(midi.message.msg);
+			}
 
 			midi.message.pos = 1; // Use Running Status
 		}
@@ -496,16 +521,41 @@ void MIDI_Reset()
 
 void MIDI_Mute()
 {
-	if (!midi.handler) {
+	if (!midi.handler || midi.is_muted) {
 		return;
 	}
+
+	if (is_external_midi_device()) {
+		MidiMessage msg = {0, MidiController::Volume, 0};
+
+		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
+		     ++channel) {
+			msg[0] = MidiStatus::ControlChange | channel;
+			midi.handler->PlayMsg(msg);
+		}
+	}
+
+	midi.is_muted = true;
 }
 
 void MIDI_Unmute()
 {
-	if (!midi.handler) {
+	if (!midi.handler || !midi.is_muted) {
 		return;
 	}
+
+	if (is_external_midi_device()) {
+		MidiMessage msg = {0, MidiController::Volume, 0};
+
+		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
+		     ++channel) {
+			msg[0] = MidiStatus::ControlChange | channel;
+			msg[2] = midi_state.GetChannelVolume(channel);
+			midi.handler->PlayMsg(msg);
+		}
+	}
+
+	midi.is_muted = false;
 }
 
 bool MIDI_Available()
