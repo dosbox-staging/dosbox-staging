@@ -89,13 +89,15 @@ public:
 
 	void Close() override
 	{
-		if (!isOpen) return;
+		if (!isOpen) {
+			return;
+		}
 
-		HaltSequence();
+		Reset();
 
 		isOpen = false;
 		midiOutClose(m_out);
-		CloseHandle (m_event);
+		CloseHandle(m_event);
 	}
 
 	void PlayMsg(const MidiMessage& data) override
