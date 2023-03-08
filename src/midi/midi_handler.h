@@ -32,6 +32,8 @@ enum class MIDI_RC : int {
 	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
 };
 
+enum class MidiDeviceType { BuiltIn, External };
+
 class MidiHandler {
 public:
 	MidiHandler();
@@ -44,6 +46,11 @@ public:
 	virtual const char* GetName() const
 	{
 		return "none";
+	}
+
+	virtual MidiDeviceType GetDeviceType() const
+	{
+		return MidiDeviceType::External;
 	}
 
 	virtual bool Open([[maybe_unused]] const char* conf)

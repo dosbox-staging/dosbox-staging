@@ -76,7 +76,15 @@ public:
 	          soundfont(nullptr)
 	{}
 
-	const char *GetName() const override { return "coreaudio"; }
+	const char* GetName() const override
+	{
+		return "coreaudio";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{

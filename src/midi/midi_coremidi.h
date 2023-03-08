@@ -49,7 +49,15 @@ public:
 	          m_pCurPacket(nullptr)
 	{}
 
-	const char *GetName() const override { return "coremidi"; }
+	const char* GetName() const override
+	{
+		return "coremidi";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{
