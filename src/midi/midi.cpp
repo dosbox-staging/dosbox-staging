@@ -134,7 +134,6 @@ struct Midi {
 };
 
 static Midi midi                    = {};
-static Midi disengaged_midi         = {};
 static bool raw_midi_output_enabled = {};
 
 class MidiState {
@@ -497,25 +496,16 @@ void MIDI_Reset()
 
 void MIDI_Mute()
 {
-	// nothing to disengage, so do nothing
 	if (!midi.handler) {
 		return;
 	}
-
-	MIDI_Reset();
-	std::swap(midi, disengaged_midi);
-	assert(midi.handler == nullptr);
 }
 
 void MIDI_Unmute()
 {
-	// nothing to re-engage, so do nothing
-	if (!disengaged_midi.handler) {
+	if (!midi.handler) {
 		return;
 	}
-
-	std::swap(disengaged_midi, midi);
-	assert(midi.handler);
 }
 
 bool MIDI_Available()
