@@ -44,7 +44,7 @@ support today's systems.
 [4]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [5]: https://github.com/emilk/loguru
 [6]:tests/README.md
-[Development builds]:https://dosbox-staging.github.io/downloads/devel/
+[Development builds]:https://dosbox-staging.github.io/downloads/development-builds/
 
 ### For users
 
@@ -85,7 +85,7 @@ support today's systems.
 [Wayland]: https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
 [GUS]:   https://en.wikipedia.org/wiki/Gravis_Ultrasound
 [MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
-[FS]:    http://www.fluidsynth.org/
+[FS]:    https://www.fluidsynth.org/
 [ENet]:  https://github.com/zpl-c/enet
 [8]:     https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:     https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
@@ -108,7 +108,7 @@ support today's systems.
 
 ## Test builds / development snapshots
 
-[Links to the newest builds](https://dosbox-staging.github.io/downloads/devel/)
+[Development builds].
 
 ## Get the source
 
