@@ -27,24 +27,26 @@
 #include <cstdint>
 
 enum class MIDI_RC : int {
-	OK = 0,
-	ERR_DEVICE_NOT_CONFIGURED = -1,
+	OK                            = 0,
+	ERR_DEVICE_NOT_CONFIGURED     = -1,
 	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
 };
-
 
 class MidiHandler {
 public:
 	MidiHandler();
 
-	MidiHandler(const MidiHandler &) = delete;            // prevent copying
-	MidiHandler &operator=(const MidiHandler &) = delete; // prevent assignment
+	MidiHandler(const MidiHandler&) = delete;            // prevent copying
+	MidiHandler& operator=(const MidiHandler&) = delete; // prevent assignment
 
 	virtual ~MidiHandler() = default;
 
-	virtual const char *GetName() const { return "none"; }
+	virtual const char* GetName() const
+	{
+		return "none";
+	}
 
-	virtual bool Open([[maybe_unused]] const char *conf)
+	virtual bool Open([[maybe_unused]] const char* conf)
 	{
 		LOG_WARNING("MIDI: No working MIDI device found/selected.");
 		return true;
@@ -58,14 +60,16 @@ public:
 	}
 
 	virtual void PlayMsg([[maybe_unused]] const MidiMessage& msg) {}
-	virtual void PlaySysex([[maybe_unused]] uint8_t *sysex, [[maybe_unused]] size_t len) {}
+	virtual void PlaySysex([[maybe_unused]] uint8_t* sysex,
+	                       [[maybe_unused]] size_t len)
+	{}
 
-	virtual MIDI_RC ListAll(Program *)
+	virtual MIDI_RC ListAll(Program*)
 	{
 		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
 	}
 
-	MidiHandler *next = nullptr;
+	MidiHandler* next = nullptr;
 };
 
 #endif
