@@ -129,7 +129,7 @@ struct Midi {
 		int64_t start_ms = 0;
 	} sysex = {};
 
-	bool available       = false;
+	bool is_available    = false;
 	bool is_muted        = false;
 	MidiHandler* handler = nullptr;
 };
@@ -210,7 +210,7 @@ public:
 
 private:
 	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
-	std::array<uint8_t, NumMidiChannels> channel_volume_tracker = {};
+	std::array<uint8_t, NumMidiChannels> channel_volume_tracker     = {};
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
@@ -348,7 +348,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 
 void MIDI_RawOutByte(uint8_t data)
 {
-	if (!midi.available) {
+	if (!midi.is_available) {
 		return;
 	}
 
@@ -454,9 +454,9 @@ void MIDI_RawOutByte(uint8_t data)
 			// events if MIDI capture is enabled and sends them to
 			// the MIDI device. This is a bit hacky and rather
 			// limited design, but it does the job for now... A
-			// better solution would be a message queue or stream that
-			// we could also alter and filter, plus a centralised
-			// capture and send function.
+			// better solution would be a message queue or stream
+			// that we could also alter and filter, plus a
+			// centralised capture and send function.
 			if (!raw_midi_output_enabled) {
 				sanitise_midi_stream(midi.message.msg);
 			}
@@ -560,7 +560,7 @@ void MIDI_Unmute()
 
 bool MIDI_Available()
 {
-	return midi.available;
+	return midi.is_available;
 }
 
 // We'll adapt the RtMidi library, eventually, so hold off any substantial
@@ -606,8 +606,8 @@ public:
 					            midiconfig);
 					goto getdefault;
 				}
-				midi.handler   = handler;
-				midi.available = true;
+				midi.handler      = handler;
+				midi.is_available = true;
 
 				LOG_MSG("MIDI: Opened device: %s",
 				        handler->GetName());
@@ -635,8 +635,8 @@ public:
 				continue;
 			}
 			if (handler->Open(midiconfig)) {
-				midi.available = true;
-				midi.handler   = handler;
+				midi.is_available = true;
+				midi.handler      = handler;
 				LOG_MSG("MIDI: Opened device: %s", name.c_str());
 				return;
 			}
@@ -645,15 +645,15 @@ public:
 
 	~MIDI()
 	{
-		if (!midi.available) {
+		if (!midi.is_available) {
 			assert(!midi.handler);
 			return;
 		}
 
 		assert(midi.handler);
 		midi.handler->Close();
-		midi.handler   = {};
-		midi.available = false;
+		midi.handler      = {};
+		midi.is_available = false;
 	}
 };
 
