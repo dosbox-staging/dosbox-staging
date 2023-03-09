@@ -2517,7 +2517,7 @@ std::unique_ptr<Program> MIXER_ProgramCreate() {
 	case MixerState::Uninitialized: return "uninitialized";
 	case MixerState::NoSound: return "no sound";
 	case MixerState::On: return "on";
-	case MixerState::Mute: return "mute";
+	case MixerState::Muted: return "mute";
 	}
 	return "unknown!";
 }
@@ -2754,7 +2754,7 @@ void MIXER_Init(Section *sec)
 void MIXER_Mute()
 {
 	if (mixer.state == MixerState::On) {
-		set_mixer_state(MixerState::Mute);
+		set_mixer_state(MixerState::Muted);
 		MIDI_Mute();
 		LOG_MSG("MIXER: Muted");
 	}
@@ -2762,7 +2762,7 @@ void MIXER_Mute()
 
 void MIXER_Unmute()
 {
-	if (mixer.state == MixerState::Mute) {
+	if (mixer.state == MixerState::Muted) {
 		set_mixer_state(MixerState::On);
 		MIDI_Unmute();
 		LOG_MSG("MIXER: Unmuted");
@@ -2782,7 +2782,7 @@ static void ToggleMute(const bool was_pressed)
 	case MixerState::NoSound:
 		LOG_WARNING("MIXER: Mute requested, but sound is off (nosound mode)");
 		break;
-	case MixerState::Mute: MIXER_Unmute(); break;
+	case MixerState::Muted: MIXER_Unmute(); break;
 	case MixerState::On: MIXER_Mute(); break;
 	default: break;
 	};

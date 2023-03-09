@@ -57,7 +57,7 @@ enum class MixerState {
 	Uninitialized,
 	NoSound,
 	On,
-	Mute,
+	Muted
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
