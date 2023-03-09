@@ -137,6 +137,8 @@ struct Midi {
 static Midi midi                    = {};
 static bool raw_midi_output_enabled = {};
 
+// Keep track of the state of the MIDI device (e.g. channel volumes and which
+// notes are currently active on each channel).
 class MidiState {
 public:
 	MidiState()
@@ -150,7 +152,7 @@ public:
 		channel_volume_tracker.fill(default_channel_volume);
 	}
 
-	void Track(const MidiMessage& msg)
+	void UpdateState(const MidiMessage& msg)
 	{
 		const auto status  = get_midi_status(msg.status());
 		const auto channel = get_midi_channel(msg.status());
@@ -443,7 +445,7 @@ void MIDI_RawOutByte(uint8_t data)
 		if (midi.message.pos >= midi.message.len) {
 			// 1. Update the MIDI state based on the last non-SysEx
 			// message
-			midi_state.Track(midi.message.msg);
+			midi_state.UpdateState(midi.message.msg);
 
 			// 2. Sanitise the MIDI stream unless raw output is
 			// enabled. Currently, this can result in the emission
