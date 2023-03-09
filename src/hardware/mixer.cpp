@@ -205,6 +205,8 @@ struct mixer_t {
 
 	chorus_settings_t chorus = {};
 	bool do_chorus = false;
+
+	bool is_manually_muted = false;
 };
 
 static struct mixer_t mixer = {};
@@ -2769,6 +2771,11 @@ void MIXER_Unmute()
 	}
 }
 
+bool MIXER_IsManuallyMuted()
+{
+	return mixer.is_manually_muted;
+}
+
 // Toggle the mixer on/off when a 'true' bool is passed in.
 static void ToggleMute(const bool was_pressed)
 {
@@ -2782,8 +2789,14 @@ static void ToggleMute(const bool was_pressed)
 	case MixerState::NoSound:
 		LOG_WARNING("MIXER: Mute requested, but sound is off (nosound mode)");
 		break;
-	case MixerState::Muted: MIXER_Unmute(); break;
-	case MixerState::On: MIXER_Mute(); break;
+	case MixerState::Muted:
+		MIXER_Unmute();
+		mixer.is_manually_muted = false;
+		break;
+	case MixerState::On:
+		MIXER_Mute();
+		mixer.is_manually_muted = true;
+		break;
 	default: break;
 	};
 }

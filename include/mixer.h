@@ -404,4 +404,8 @@ uint16_t MIXER_GetPreBufferMs();
 void MIXER_Mute();
 void MIXER_Unmute();
 
+// Return true if the mixer was explicitly muted by the user (as opposed to
+// auto-muted when `mute_when_inactive` is enabled)
+bool MIXER_IsManuallyMuted();
+
 #endif
