@@ -137,6 +137,8 @@ struct Midi {
 static Midi midi                    = {};
 static bool raw_midi_output_enabled = {};
 
+constexpr auto max_channel_volume = 127;
+
 // Keep track of the state of the MIDI device (e.g. channel volumes and which
 // notes are currently active on each channel).
 class MidiState {
@@ -149,7 +151,7 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
-		channel_volume_tracker.fill(default_channel_volume);
+		channel_volume_tracker.fill(max_channel_volume);
 	}
 
 	void UpdateState(const MidiMessage& msg)
@@ -187,8 +189,7 @@ public:
 	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
 	{
 		assert(channel <= NumMidiChannels);
-		constexpr auto max_volume = 127;
-		assert(volume <= max_volume);
+		assert(volume <= max_channel_volume);
 
 		channel_volume_tracker[channel] = volume;
 	}
@@ -210,9 +211,6 @@ public:
 private:
 	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
 	std::array<uint8_t, NumMidiChannels> channel_volume_tracker = {};
-
-	// TODO double check value
-	const uint8_t default_channel_volume = 63;
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
