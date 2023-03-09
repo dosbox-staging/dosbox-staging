@@ -48,6 +48,7 @@ constexpr uint8_t NumMidiNotes  = 128;
 constexpr uint8_t FirstMidiNote = 0;
 constexpr uint8_t LastMidiNote  = NumMidiNotes - 1;
 
+
 enum class MessageType : uint8_t { Channel, SysEx };
 
 struct MidiMessage {
