@@ -60,6 +60,10 @@ public:
 	std::shared_ptr<BatchFile> prev = {}; // shared with Shell.bf
 	std::unique_ptr<CommandLine> cmd = {};
 	std::string filename{};
+
+private:
+	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
+	[[nodiscard]] std::string GetLine();
 };
 
 class AutoexecEditor;
