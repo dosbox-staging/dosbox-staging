@@ -514,14 +514,14 @@ void MidiHandler::Reset()
 
 void MIDI_Reset()
 {
-	if (midi.handler) {
+	if (midi.is_available) {
 		midi.handler->Reset();
 	}
 }
 
 void MIDI_Mute()
 {
-	if (!midi.handler || midi.is_muted) {
+	if (!midi.is_available || midi.is_muted) {
 		return;
 	}
 
@@ -540,7 +540,7 @@ void MIDI_Mute()
 
 void MIDI_Unmute()
 {
-	if (!midi.handler || !midi.is_muted) {
+	if (!midi.is_available || !midi.is_muted) {
 		return;
 	}
 
