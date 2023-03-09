@@ -442,13 +442,12 @@ void MIDI_RawOutByte(uint8_t data)
 
 		if (midi.message.pos >= midi.message.len) {
 			// 1. Update the MIDI state based on the last non-SysEx
-			// message
+			// message.
 			midi_state.UpdateState(midi.message.msg);
 
 			// 2. Sanitise the MIDI stream unless raw output is
-			// enabled. Currently, this can result in the emission
-			// of extra MIDI events only and updating the MIDI
-			// state.
+			// enabled. Currently, this can result in the emission of extra
+			// MIDI Note Off events only, and updating the MIDI state.
 			//
 			// `sanitise_midi_stream` also captures these extra
 			// events if MIDI capture is enabled and sends them to
@@ -462,16 +461,16 @@ void MIDI_RawOutByte(uint8_t data)
 			}
 
 			// 3. Determine whether the message should be sent to
-			// the device based on the mute state
+			// the device based on the mute state.
 			auto play_msg = true;
 
 			if (midi.is_muted && is_external_midi_device()) {
 				const auto& msg = midi.message.msg;
 				const auto status = get_midi_status(msg.status());
 
-				// Track Channel Volume changes messages in
+				// Track Channel Volume change messages in
 				// MidiState, but don't send them to external
-				// devices when muted
+				// devices when muted.
 				if (status == MidiStatus::ControlChange &&
 				    msg.data1() == MidiController::Volume) {
 					play_msg = false;
@@ -479,7 +478,7 @@ void MIDI_RawOutByte(uint8_t data)
 			}
 
 			// 4. Always capture the original message if MIDI
-			// capture is enabled, regardless of the mute state
+			// capture is enabled, regardless of the mute state.
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
