@@ -571,9 +571,7 @@ void GFX_RequestExit(const bool pressed)
 			}
 			break;
 		case SDL_KEYDOWN: // Must use Pause/Break Key to resume.
-		case SDL_KEYUP:
-			if (event.key.keysym.sym == SDLK_PAUSE ||
-			    event.key.keysym.sym == SDLK_ESCAPE) {
+			if (event.key.keysym.sym == SDLK_PAUSE) {
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
