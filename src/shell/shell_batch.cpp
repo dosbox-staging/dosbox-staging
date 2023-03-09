@@ -67,152 +67,113 @@ BatchFile::~BatchFile() {
 	shell->echo = echo;
 }
 
-// TODO: Refactor this sprawling function into smaller ones without GOTOs
-bool BatchFile::ReadLine(char * line) {
-	//Open the batchfile and seek to stored postion
-	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
-		LOG(LOG_MISC,LOG_ERROR)("ReadLine Can't open BatchFile %s",filename.c_str());
-		return false; // Parent deletes this BatchFile on negative return
-	}
-	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_SET);
+bool BatchFile::ReadLine(char* lineout)
+{
+	std::string line = {};
+	while (line.empty()) {
+		line = GetLine();
 
+		if (line.empty()) {
+			return false;
+		}
+
+		const auto colon_index = line.find_first_of(':');
+		if (colon_index != std::string::npos &&
+		    colon_index == line.find_first_not_of("=\t ")) {
+			// Line is a comment or label, so ignore it
+			line.clear();
+		}
+
+		trim(line);
+	}
+
+	line = ExpandedBatchLine(line);
+	strncpy(lineout, line.c_str(), CMD_MAXLINE);
+	lineout[CMD_MAXLINE - 1] = '\0';
+	return true;
+}
+
+std::string BatchFile::GetLine()
+{
+	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &file_handle)) {
+		LOG(LOG_MISC, LOG_ERROR)
+		("ReadLine Can't open BatchFile %s", filename.c_str());
+		return "";
+	}
+	DOS_SeekFile(file_handle, &(this->location), DOS_SEEK_SET);
+
+	uint8_t data        = 0;
 	uint16_t bytes_read = 1;
-	uint8_t data = 0;
-	char val = 0;
-	char temp[CMD_MAXLINE] = "";
-	char temp_cycles_hack[CMD_MAXLINE];
-emptyline:
-	char * cmd_write=temp;
-	do {
-		bytes_read = 1;
+	std::string line    = {};
+
+	while (data != LINE_FEED) {
 		DOS_ReadFile(file_handle, &data, &bytes_read);
-		val = static_cast<char>(data);
 
-		if (bytes_read > 0) {
-			/* Inclusion criteria:
-			 *  - backspace for alien odyssey
-			 *  - tab for batch files
-			 *  - escape for ANSI
-			 * Note: the negative allowance permits high
-			 * international ASCII characters that are wrapped when
-			 * char is a signed type
-			 */
-			if (
-#if (CHAR_MIN < 0) // char is signed
-			    val < 0 ||
-#endif
-			    val > UNIT_SEPARATOR || val == BACKSPACE || val == ESC || val == TAB) {
-				// Only add it if room for it (and trailing zero)
-				// in the buffer, but do the check here instead
-				// at the end So we continue reading till EOL/EOF
-				if (cmd_write - temp + 1 < CMD_MAXLINE - 1) {
-					*cmd_write++ = val;
-				}
-			} else if (val != LINE_FEED && val != CARRIAGE_RETURN) {
-				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
-				              val, val);
-			}
+		// EOF
+		if (bytes_read == 0) {
+			break;
 		}
-	} while (val != LINE_FEED && bytes_read);
-	*cmd_write=0;
-	if (!bytes_read && cmd_write == temp) {
-		// Close the file and delete this BatchFile on return
-		DOS_CloseFile(file_handle);
-		return false; // Parent deletes this BatchFile on negative return
+
+		/* Inclusion criteria:
+		 *  - backspace for alien odyssey
+		 *  - tab for batch files
+		 *  - escape for ANSI
+		 */
+		if (data <= UNIT_SEPARATOR && data != TAB && data != BACKSPACE &&
+		    data != ESC && data != LINE_FEED && data != CARRIAGE_RETURN) {
+			DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
+			              data,
+			              data);
+		} else {
+			line += static_cast<char>(data);
+		}
 	}
-	if (!strlen(temp)) goto emptyline;
-	if (temp[0]==':') goto emptyline;
 
-	// Lambda that copies the src to cmd_write, provided the result fits
-	// within CMD_MAXLINE while taking the existing line into consideration.
-	// Finally it moves the cmd_write pointer ahead by the length copied.
-	auto append_cmd_write = [&cmd_write, &line](const char *src) {
-		const auto src_len = strlen(src);
-		const auto req_len = cmd_write - line + static_cast<int>(src_len) + 1;
-		if (src_len && req_len < CMD_MAXLINE) {
-			safe_strncpy(cmd_write, src, req_len);
-			cmd_write += src_len;
-		}
-	};
+	this->location = 0;
+	DOS_SeekFile(file_handle, &(this->location), DOS_SEEK_CUR);
+	DOS_CloseFile(file_handle);
 
-	/* Now parse the line read from the bat file for % stuff */
-	cmd_write=line;
-	char * cmd_read=temp;
-	while (*cmd_read) {
-		if (*cmd_read == '%') {
-			cmd_read++;
-			if (cmd_read[0] == '%') {
-				cmd_read++;
-				if (((cmd_write - line) + 1) < (CMD_MAXLINE - 1))
-					*cmd_write++ = '%';
-				continue;
-			}
-			if (cmd_read[0] == '0') {  /* Handle %0 */
-				const char *file_name = cmd->GetFileName();
-				cmd_read++;
-				append_cmd_write(file_name);
-				continue;
-			}
-			char next = cmd_read[0];
-			if(next > '0' && next <= '9') {
-				/* Handle %1 %2 .. %9 */
-				cmd_read++; //Progress reader
-				next -= '0';
-				if (cmd->GetCount()<(unsigned int)next) continue;
-				std::string word;
-#if (CHAR_MIN < 0) // char is signed
-				assert(next >= 0);
-#endif
-				if (!cmd->FindCommand(static_cast<unsigned>(next), word))
-					continue;
-				append_cmd_write(word.c_str());
-				continue;
-			} else {
-				/* Not a command line number has to be an environment */
-				char * first = strchr(cmd_read,'%');
-				/* No env after all. Ignore a single % */
-				if (!first) {
-					/* *cmd_write++ = '%';*/
-					//check if input contains cycles + max/auto  and that next character is space or empty
-					//If so, don't ignore it. This way cycles can still be set from within batch files
-					char peak = *(cmd_read);
-					if (peak == 0 || peak == ' ' || peak == '\r' || peak == '\n') {
-						strncpy(temp_cycles_hack,temp,cmd_read-temp);
-						temp_cycles_hack[cmd_read-temp] = 0;
-						upcase(temp_cycles_hack);
-						const char* cycles_test_cycles = strstr(temp_cycles_hack,"CYCLES");
-						if (cycles_test_cycles) {
-							const char* cycles_test_max = strstr(cycles_test_cycles,"MAX");
-							const char* cycles_test_auto = strstr(cycles_test_cycles,"AUTO");
-							if ( cycles_test_max  || cycles_test_auto )	{
-								   if (((cmd_write - line) + 1) < (CMD_MAXLINE - 1))
-									   *cmd_write++ = '%';
-							}
-						}
-					}
-					continue;
-				}
-				*first++ = 0;
-				std::string env;
-				if (shell->GetEnvStr(cmd_read,env)) {
-					const char* equals = strchr(env.c_str(),'=');
-					if (!equals) continue;
-					equals++;
-					append_cmd_write(equals);
-				}
-				cmd_read = first;
+	return line;
+}
+
+std::string BatchFile::ExpandedBatchLine(std::string_view line) const
+{
+	std::string expanded = {};
+
+	auto percent_index = line.find_first_of('%');
+	while (percent_index != std::string::npos) {
+		expanded += line.substr(0, percent_index);
+		line = line.substr(percent_index + 1);
+
+		if (line.empty()) {
+			break;
+		} else if (line[0] == '%') {
+			expanded += '%';
+		} else if (line[0] == '0') {
+			expanded += cmd->GetFileName();
+		} else if (line[0] >= '1' && line[0] <= '9') {
+			std::string arg;
+			if (cmd->FindCommand(line[0] - '0', arg)) {
+				expanded += arg;
 			}
 		} else {
-			if (((cmd_write - line) + 1) < (CMD_MAXLINE - 1))
-				*cmd_write++ = *cmd_read++;
+			auto closing_percent = line.find_first_of('%');
+			if (closing_percent == std::string::npos) {
+				break;
+			}
+			std::string result;
+			std::string envvar(line.substr(0, closing_percent));
+			shell->GetEnvStr(envvar.c_str(), result);
+			result.erase(0, envvar.size() + sizeof('='));
+			expanded += result;
+			line = line.substr(closing_percent);
 		}
+		line          = line.substr(1);
+		percent_index = line.find_first_of('%');
 	}
-	*cmd_write = 0;
-	//Store current location and close bat file
-	this->location = 0;
-	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_CUR);
-	DOS_CloseFile(file_handle);
-	return true;	
+
+	expanded += line;
+	return expanded;
 }
 
 // TODO: Refactor this sprawling function into smaller ones without GOTOs
