@@ -189,6 +189,25 @@ sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
 ```
 
 ``` shell
+# Nix 
+# With Home Manager on home.nix (Recommended Permanent Installation)
+home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net \ 
+                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \ 
+                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
+                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
+
+# With the standard NixOS Configuration on configuration.nix
+environment.systemPackages = [ 
+                  pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net \ 
+                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \ 
+                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
+                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 
+                  ]; 
+                  
+# See the build-nix.md for more information
+```
+
+``` shell
 # macOS
 xcode-select --install
 brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
