@@ -3637,8 +3637,10 @@ static void GUI_StartUp(Section *sec)
 	SetPriorityLevels(priority_conf->Get_string("active"),
 	                  priority_conf->Get_string("inactive"));
 
-	sdl.mute_when_inactive  = section->Get_bool("mute_when_inactive");
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
+
+	sdl.mute_when_inactive = section->Get_bool("mute_when_inactive") ||
+	                         sdl.pause_when_inactive;
 
 	// Adjust the fallback resolution based on the user's aspect-correction
 	const auto should_stretch_pixels = wants_stretched_pixels();
