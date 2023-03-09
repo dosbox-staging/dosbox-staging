@@ -3582,7 +3582,7 @@ static void ApplyActiveSettings()
 	SetPriority(sdl.priority.active);
 	MOUSE_NotifyWindowActive(true);
 
-	if (sdl.mute_when_inactive) {
+	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
 		MIXER_Unmute();
 	}
 }
