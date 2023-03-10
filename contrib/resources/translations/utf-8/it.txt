@@ -423,7 +423,7 @@ sovraccarico dell'interrupt. Potrebbe causare problemi di compatibilità.
 Elenco di giochi incompatibili noti:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
-Segnalalo se trovi un altro gioco incompatibile in modo che possiamo aggiornare
+Se trovi un altro gioco incompatibile, segnalalo in modo da poter aggiornare
 questo elenco.
 .
 :CONFIG_PS2_MOUSE_MODEL
@@ -479,7 +479,7 @@ il ritaglio (clipping) dell'uscita audio:
 Imposta l'alimentazione incrociata a livello globale su tutti i canali stereo
 per l'ascolto in cuffia:
   off:          Alimentazione incrociata disabilitata (predefinito).
-  on:           Abilita alimentazione incrociata (intensità 40).
+  on:           Abilita l'alimentazione incrociata (intensità 40).
   <intensità>:  Imposta l'intensità dell'alimentazione incrociata da 0 a 100,
                 dove 0 significa spento (off) e 100 trasforma di fatto
                 il contenuto stereo in mono.
@@ -491,7 +491,7 @@ Abilita l'effetto riverbero a livello globale per aggiungere un senso di
 spazializzazione del suono:
   off:     Nessun riverbero (predefinito).
   on:      Abilita riverbero (preset medio).
-  tiny:    Simula il suono di un piccolo altoparlante integrato in una stanza;
+  tiny:    Simula il suono di un piccolo altoparlante integrato;
            specificamente progettato per sistemi audio di piccole dimensioni
            (PC Speaker, Tandy, PS/1 Audio, e dispositivi DAC LPT).
   small:   Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
@@ -500,8 +500,8 @@ spazializzazione del suono:
   medium:  Preset stanza media che funziona bene con un'ampia varietà di giochi
   large:   Preset salone consigliato per giochi che utilizzano canali separati
            per musica e audio digitale.
-  huge:    Variante del preset salone con maggiore intensità; funziona davvero
-           bene nei giochi con colonne sonore più suggestive
+  huge:    Variante del preset salone con intensità maggiore; funziona davvero
+           bene nei giochi con colonne sonore più suggestive.
 Note: È possibile regolare con precisione i livelli di riverbero per ogni
       canale tramite i comandi del mixer.
 .
@@ -550,6 +550,19 @@ Note: - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
 .
 :CONFIG_MPU401
 Modalità MPU-401 da emulare (predefinito 'intelligent').
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Abilita l'uscita MIDI senza alcuna elaborazione (predefinito disabilitato).
+I driver MIDI di molti giochi non sono completamente conformi allo standard
+MIDI, il che rende la modifica delle registrazioni MIDI di questi giochi
+altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
+causando note sospese o mancanti. DOSBox corregge l'output MIDI di tali giochi
+per impostazione predefinita. Ciò non comporta alcuna differenza udibile;
+influisce solo sulla rappresentazione dei dati MIDI.
+Dovresti abilitare 'raw_midi_output' solo se hai davvero bisogno di catturare
+una sequenza MIDI (inalterata) da un programma, ad esempio quando si lavora con
+applicazioni musicali o quando si esegue il debug per problemi riguardanti
+la riproduzione MIDI.
 .
 :CONFIG_SOUNDFONT
 Percorso di un file SoundFont in formato .sf2 (predefinito 'default.sf2').
@@ -1047,7 +1060,7 @@ Le mappature e gli intervalli possono essere combinati:
 Note: Se gli intervalli mappati differiscono, l'intervallo più corto viene
       esteso per adattarsi.
       Se vengono fornite porte host in conflitto, viene impostata solo la prima
-      Se vengono fornite porte guest in conflitto, quest'ultima regola ha la
+      Se vengono fornite porte guest in conflitto, l'ultima regola ha la
       precedenza.
 .
 :CONFIG_UDP_PORT_FORWARDS
