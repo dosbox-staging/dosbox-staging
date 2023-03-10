@@ -289,7 +289,7 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   agi-amigaish:  Mix di colori EGA e Amiga usati dall'interprete AGI Sarien.
   scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
   colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
-  colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
+  colodore-sat:  Tavolozza Colodore con saturazione aumentata del 20%.
   dga16:         Versione moderna della tavolozza CGA, con contrasto ridotto.
 È possibile impostare colori personalizzati specificando 16 valori separati
 da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
@@ -2199,7 +2199,7 @@ Dove:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    A. Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
+    A.Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
 Note:
   L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
   È possibile modificare le impostazioni di più canali con un unico comando.
@@ -2216,7 +2216,7 @@ Esempi:
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Canale       Volume    Volume (dB)   Modalità  A. Incrociata  Riverbero  Coro[reset]
+[color=white]Canale       Volume    Volume (dB)   Modalità  A.Incrociata  Riverbero  Coro[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
 spento
