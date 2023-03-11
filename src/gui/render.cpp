@@ -25,6 +25,7 @@
 #include <fstream>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <regex>
 #include <sstream>
 #include <unordered_map>
@@ -282,9 +283,15 @@ static Bitu MakeAspectTable(Bitu height, double scaley, Bitu miny)
 	}
 	return linesadded;
 }
+std::mutex render_reset_mutex;
 
 static void RENDER_Reset(void)
 {
+	// Despite rendering being a single-threaded sequence, the Reset() can
+	// be called from the rendering callback, which might come from a video
+	// driver operating in a different thread or process.
+	std::lock_guard<std::mutex> guard(render_reset_mutex);
+
 	Bitu width  = render.src.width;
 	bool dblw   = render.src.dblw;
 	bool dblh   = render.src.dblh;
