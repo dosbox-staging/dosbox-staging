@@ -29,8 +29,8 @@ CHECK_NARROWING();
 // Common variables
 // ***************************************************************************
 
-MouseInfo   mouse_info;
-MouseShared mouse_shared;
+MouseInfo mouse_info     = {};
+MouseShared mouse_shared = {};
 
 // ***************************************************************************
 // Common helper calculations
