@@ -643,16 +643,20 @@ static std::vector<MouseInterface *> get_relevant_interfaces(
 {
 	std::vector<MouseInterface *> list_tmp = {};
 
-	if (list_ids.empty())
+	if (list_ids.empty()) {
 		// If command does not specify interfaces,
 		// assume we are interested in all of them
-		list_tmp = mouse_interfaces;
-	else
-		for (const auto &interface_id : list_ids) {
-			auto interface = MouseInterface::Get(interface_id);
-			if (interface)
-				list_tmp.push_back(interface);
+		for (const auto& interface : mouse_interfaces) {
+			list_tmp.push_back(interface.get());
 		}
+	} else {
+		for (const auto& id : list_ids) {
+			if (const auto interface = MouseInterface::Get(id);
+			    interface) {
+				list_tmp.push_back(interface);
+			}
+		}
+	}
 
 	// Filter out not emulated ones
 	std::vector<MouseInterface *> list_out = {};
