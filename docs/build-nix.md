@@ -28,14 +28,12 @@ to run them. However, if you still want to, we recommend you to do the following
 1. Add the following packages to configuration.nix:
 
     ``` shell
-environment.systemPackages = [ 
-                  pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net 
-                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg
-                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile
-                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 
-                  ]; 
+    environment.systemPackages = [ 
+            pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net 
+            fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg
+            libpng libpulseaudio libslirp libsndfile meson ninja opusfile
+            libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ];
     ```
-
 
 ## Build 
 
