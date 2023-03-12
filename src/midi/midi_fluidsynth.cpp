@@ -562,17 +562,17 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
-	// Deregister the mixer channel and remove it
-	assert(channel);
-	MIXER_DeregisterChannel(channel);
-	channel.reset();
-
 	// Reset the members
 	synth.reset();
 	settings.reset();
 	selected_font.clear();
 
-	last_rendered_ms = 0.0;
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+	channel.reset();
+
+	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
 
 	is_open = false;
