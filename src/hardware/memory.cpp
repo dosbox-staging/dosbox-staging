@@ -28,12 +28,13 @@
 #include "regs.h"
 #include "support.h"
 
-#define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
-#define SAFE_MEMORY	32
-#define MAX_MEMORY	385
-#define MAX_PAGE_ENTRIES (MAX_MEMORY*1024*1024/4096)
-#define LFB_PAGES	512
-#define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
+// Allow up to 3072 MB, at this address emulated S3 card framebuffer starts
+constexpr auto MinMegabytes = 1;
+constexpr auto MaxMegabytes = 3072;
+
+constexpr auto SafeMegabytesDos   = 31;
+constexpr auto SafeMegabytesWin95 = 480;
+constexpr auto SafeMegabytesWin98 = 512;
 
 static struct MemoryBlock {
 	struct page_t {
@@ -125,7 +126,15 @@ public:
 	}
 };
 
+uint16_t MEM_GetMinMegabytes()
+{
+	return MinMegabytes;
+}
 
+uint16_t MEM_GetMaxMegabytes()
+{
+	return MaxMegabytes;
+}
 
 static IllegalPageHandler illegal_page_handler;
 static RAMPageHandler ram_page_handler;
@@ -596,26 +605,21 @@ void MEM_PreparePCJRCartRom()
 	}
 }
 
-static int determine_num_megabytes(const int num_megabytes_pref)
+static void check_num_megabytes(const int num_megabytes)
 {
-	// max of 63 MB solves problems with certain xms handlers
-	constexpr auto min_megabytes  = 1;
-	constexpr auto safe_megabytes = SAFE_MEMORY - 1;
-	constexpr auto max_megabytes  = MAX_MEMORY - 1;
+	assert(num_megabytes >= MinMegabytes);
+	assert(num_megabytes <= MaxMegabytes);
 
-	const auto num_megabytes = std::clamp(num_megabytes_pref, min_megabytes, max_megabytes);
-
-	if (num_megabytes_pref > max_megabytes) {
-		LOG_WARNING("MEMORY: Memory size of %d MB is beyond the maximum of %d MB, limiting",
-		            num_megabytes_pref,
-		            max_megabytes);
-		assert(num_megabytes == max_megabytes);
+	if (num_megabytes > SafeMegabytesDos) {
+		LOG_WARNING("MEMORY: Memory sizes above %d MB aren't recommended for most DOS games",
+		            SafeMegabytesDos);
 	}
-
-	if (num_megabytes > safe_megabytes) {
-		LOG_WARNING("MEMORY: Memory sizes above %d MB aren't recommended", safe_megabytes);
+	if (num_megabytes > SafeMegabytesWin95) {
+		LOG_WARNING("MEMORY: Memory sizes above %d/%d MB aren't compatible with unpatched Windows 95/98, respectively",
+		            SafeMegabytesWin95,
+		            SafeMegabytesWin98);
+		// Limitation can be lifted with PATCHMEM by Rudolph R. Loew
 	}
-	return num_megabytes;
 }
 
 HostPt GetMemBase(void)
@@ -633,10 +637,8 @@ public:
 	{
 		// Get the users memory size preference
 		const auto section = static_cast<Section_prop*>(configuration);
-		const auto num_megabytes_pref = section->Get_int("memsize");
-
-		// Determine the memory size and pages based on the preference
-		const auto num_megabytes = determine_num_megabytes(num_megabytes_pref);
+		const auto num_megabytes = section->Get_int("memsize");
+		check_num_megabytes(num_megabytes);
 		const auto num_pages = (num_megabytes * 1024 * 1024) / dos_pagesize;
 
 		// Size the actual memory pages
@@ -645,7 +647,7 @@ public:
 		// The MemBase is address of the the first page's first byte
 		MemBase = &(memory.pages[0].bytes[0]);
 
-		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB) at address: %p",
+		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MB) at address: %p",
 		        static_cast<int>(memory.pages.size()),
 		        num_megabytes,
 		        static_cast<void*>(MemBase));
