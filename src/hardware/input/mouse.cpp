@@ -89,11 +89,11 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 
 		if (absolute < 0 || static_cast<uint32_t>(absolute) < clipping) {
 			// cursor is over the top or left black bar
-			state.cursor_is_outside = !state.is_fullscreen;
+			state.cursor_is_outside = !state.is_captured;
 			return 0;
 		} else if (static_cast<uint32_t>(absolute) >= resolution + clipping) {
 			// cursor is over the bottom or right black bar
-			state.cursor_is_outside = !state.is_fullscreen;
+			state.cursor_is_outside = !state.is_captured;
 			return check_cast<uint32_t>(resolution - 1);
 		}
 
