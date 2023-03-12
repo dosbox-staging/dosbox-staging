@@ -197,7 +197,7 @@ home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net \
                   libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
 
 # Note: the same package list will work with environment.systemPackages 
-on configuration.nix
+# on configuration.nix
 ```
 
 ``` shell
