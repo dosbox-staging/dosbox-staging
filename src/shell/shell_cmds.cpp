@@ -84,10 +84,10 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	};
 // clang-format on
 
-/* support functions */
-static char empty_char = 0;
-static char* empty_string = &empty_char;
-static void StripSpaces(char*&args) {
+// support functions
+
+static void StripSpaces(char*& args)
+{
 	while (args && *args && isspace(*reinterpret_cast<unsigned char*>(args)))
 		args++;
 }
@@ -226,7 +226,7 @@ void DOS_Shell::CMD_CLS(char *args)
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
 	/* Command uses dta so set it to our internal dta */
-	RealPt save_dta=dos.dta();
+	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 
 	char * rem=ScanCMDRemain(args);
@@ -515,68 +515,108 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 	}
 }
 
-static std::string format_number(size_t num)
+std::string format_number(const size_t num)
 {
-	[[maybe_unused]] constexpr uint64_t petabyte_si = 1'000'000'000'000'000;
-	assert(num <= petabyte_si);
-	const auto b = static_cast<unsigned>(num % 1000);
-	num /= 1000;
-	const auto kb = static_cast<unsigned>(num % 1000);
-	num /= 1000;
-	const auto mb = static_cast<unsigned>(num % 1000);
-	num /= 1000;
-	const auto gb = static_cast<unsigned>(num % 1000);
-	num /= 1000;
-	const auto tb = static_cast<unsigned>(num);
-	const char thousands_separator = dos.tables.country[DOS_THOUSANDS_SEPARATOR_OFS];
-	char buf[22];
-	if (tb) {
-		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u%c%03u", tb,
-		             thousands_separator, gb, thousands_separator, mb,
-		             thousands_separator, kb, thousands_separator, b);
-		return buf;
+	if (num < 1) {
+		return "0";
 	}
-	if (gb) {
-		safe_sprintf(buf, "%u%c%03u%c%03u%c%03u", gb,
-		             thousands_separator, mb, thousands_separator, kb,
-		             thousands_separator, b);
-		return buf;
+
+	std::string buffer = {};
+
+	std::string separator = " ";
+	separator[0] = dos.tables.country[DOS_THOUSANDS_SEPARATOR_OFS];
+
+	auto tmp = num;
+	while (tmp) {
+		const auto current_num = tmp % 1000;
+		const auto current_str = std::to_string(current_num);
+
+		tmp /= 1000;
+
+		if (tmp && current_num < 10) {
+			buffer = separator + "00" + current_str + buffer;
+		} else if (tmp && current_num < 100) {
+			buffer = separator + "0" + current_str + buffer;
+		} else if (tmp) {
+			buffer = separator + current_str + buffer;
+		} else {
+			buffer = current_str + buffer;
+		}
 	}
-	if (mb) {
-		safe_sprintf(buf, "%u%c%03u%c%03u", mb, thousands_separator,
-		             kb, thousands_separator, b);
-		return buf;
-	}
-	if (kb) {
-		safe_sprintf(buf, "%u%c%03u", kb, thousands_separator, b);
-		return buf;
-	}
-	sprintf(buf, "%u", b);
-	return buf;
+
+	return buffer;
 }
 
-struct DtaResult {
-	char name[DOS_NAMELENGTH_ASCII];
-	uint32_t size;
-	uint16_t date;
-	uint16_t time;
-	uint8_t attr;
+std::string shorten_path(const std::string& path, const size_t max_len)
+{
+	// NOTE: This routine tries to shorten the path, but in case of extreme
+	// limit requested, it might be unable to shorten the path that much.
+	//
+	// max_len 20 or more should always work
 
-	static bool compareName(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.name, rhs.name) < 0; }
-	static bool compareExt(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.getExtension(), rhs.getExtension()) < 0; }
-	static bool compareSize(const DtaResult &lhs, const DtaResult &rhs) { return lhs.size < rhs.size; }
-	static bool compareDate(const DtaResult &lhs, const DtaResult &rhs) { return lhs.date < rhs.date || (lhs.date == rhs.date && lhs.time < rhs.time); }
+	// Nothing to do if file name matches the constraint
 
-	const char * getExtension() const {
-		const char * ext = empty_string;
-		if (name[0] != '.') {
-			ext = strrchr(name, '.');
-			if (!ext) ext = empty_string;
-		}
-		return ext;
+	if (path.length() <= max_len) {
+		return path;
 	}
 
-};
+	// Extract parts of the path which can't be shortened
+
+	std::string path_prefix = {}; // part which has to stay untouched
+	std::string path_middle = path;
+	std::string path_suffix = {}; // part which has to stay untouched
+
+	if (!path_middle.empty() && path_middle.back() == '\\') {
+		// Input ends with backslash
+		path_suffix = "\\";
+		path_middle.pop_back();
+	}
+
+	if (path_middle.size() >= 2 && path_middle[1] == ':' &&
+	    ((path_middle[0] >= 'a' && path_middle[0] <= 'z') ||
+	     (path_middle[0] >= 'A' && path_middle[0] <= 'Z'))) {
+		// Input starts with DRIVE:
+		if (path_middle.size() >= 3 && path_middle[2] == '\\') {
+			path_prefix = path_middle.substr(0, 3);
+			path_middle = path_middle.substr(3);
+		} else {
+			path_prefix = path_middle.substr(0, 2);
+			path_middle = path_middle.substr(2);
+		}
+	}
+
+	// Calculate length limit for path_middle part, do not allow for
+	// any extreme limit
+	// - 3 dots (ellipsis)
+	// - 1 path separator
+	// - 8 characters of name
+	// - 1 dot
+	// - 3 characters of extension
+	// gives 16 characters, the code should always be prepared to display
+	// something this long.
+
+	constexpr size_t min_limit   = 16;
+	const auto prefix_suffix_len = path_prefix.size() + path_suffix.size();
+	const size_t limit = std::max(min_limit, max_len - prefix_suffix_len);
+
+	// Try to strip path levels, one at a time
+
+	static const std::string ellipsis = "...";
+	while (path_middle.length() > limit &&
+	       std::count(path_middle.begin(), path_middle.end(), '\\') > 1) {
+		const auto pos = path_middle.find('\\', path_middle.find('\\') + 1);
+		path_middle = ellipsis + path_middle.substr(pos);
+	}
+
+	// If still too long, just cut away the beginning
+
+	const auto len = path_middle.length();
+	if (len > limit) {
+		path_middle = ellipsis + path_middle.substr(len - limit + 3);
+	}
+
+	return path_prefix + path_middle + path_suffix;
+}
 
 static std::string to_search_pattern(const char *arg)
 {
@@ -617,13 +657,13 @@ static std::string to_search_pattern(const char *arg)
 }
 
 // Map a vector of dir contents to a vector of word widths.
-static std::vector<int> to_name_lengths(const std::vector<DtaResult> &dir_contents,
+static std::vector<int> to_name_lengths(const std::vector<DOS_DTA::Result>& dir_contents,
                                         int padding)
 {
 	std::vector<int> ret;
 	ret.reserve(dir_contents.size());
 	for (const auto &entry : dir_contents) {
-		const int len = static_cast<int>(strlen(entry.name));
+		const int len = static_cast<int>(entry.name.length());
 		ret.push_back(len + padding);
 	}
 	return ret;
@@ -723,11 +763,8 @@ char *format_date(const uint16_t year, const uint8_t month, const uint8_t day)
 	return return_date_buffer;
 }
 
-char *format_time(const uint8_t hour,
-                  const uint8_t min,
-                  const uint8_t sec,
-                  const uint8_t msec,
-                  bool full = false)
+char* format_time(const uint8_t hour, const uint8_t min, const uint8_t sec,
+                  const uint8_t msec, const bool full)
 {
 	uint8_t fhour = hour;
 	static char return_time_buffer[19] = {0};
@@ -753,7 +790,8 @@ char *format_time(const uint8_t hour,
 	return return_time_buffer;
 }
 
-void DOS_Shell::CMD_DIR(char * args) {
+void DOS_Shell::CMD_DIR(char* args)
+{
 	HELP("DIR");
 
 	std::string line;
@@ -764,53 +802,75 @@ void DOS_Shell::CMD_DIR(char * args) {
 		args=const_cast<char*>(line.c_str());
 	}
 
-	bool optW=ScanCMDBool(args,"W");
+	bool has_option_wide = ScanCMDBool(args, "W");
 
 	(void)ScanCMDBool(args, "S");
 
-	bool optP=ScanCMDBool(args,"P");
+	bool has_option_paging = ScanCMDBool(args, "P");
 	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
-		optW=optP=true;
+		has_option_paging = true;
+		has_option_wide   = true;
 	}
-	bool optB=ScanCMDBool(args,"B");
-	bool optAD=ScanCMDBool(args,"AD");
-	bool optAminusD=ScanCMDBool(args,"A-D");
+
+	bool has_option_bare = ScanCMDBool(args, "B");
+
+	bool has_option_all_dirs  = ScanCMDBool(args, "AD");
+	bool has_option_all_files = ScanCMDBool(args, "A-D");
+
 	// Sorting flags
-	bool reverseSort = false;
-	bool optON=ScanCMDBool(args,"ON");
-	if (ScanCMDBool(args,"O-N")) {
-		optON = true;
-		reverseSort = true;
+	bool option_reverse          = false;
+	ResultSorting option_sorting = ResultSorting::None;
+	if (ScanCMDBool(args, "ON")) {
+		option_sorting = ResultSorting::ByName;
+		option_reverse = false;
 	}
-	bool optOD=ScanCMDBool(args,"OD");
+	if (ScanCMDBool(args, "O-N")) {
+		option_sorting = ResultSorting::ByName;
+		option_reverse = true;
+	}
+	if (ScanCMDBool(args, "OD")) {
+		option_sorting = ResultSorting::ByDateTime;
+		option_reverse = false;
+	}
 	if (ScanCMDBool(args,"O-D")) {
-		optOD = true;
-		reverseSort = true;
+		option_sorting = ResultSorting::ByDateTime;
+		option_reverse = true;
 	}
-	bool optOE=ScanCMDBool(args,"OE");
+	if (ScanCMDBool(args, "OE")) {
+		option_sorting = ResultSorting::ByExtension;
+		option_reverse = false;
+	}
 	if (ScanCMDBool(args,"O-E")) {
-		optOE = true;
-		reverseSort = true;
+		option_sorting = ResultSorting::ByExtension;
+		option_reverse = true;
 	}
-	bool optOS=ScanCMDBool(args,"OS");
+	if (ScanCMDBool(args, "OS")) {
+		option_sorting = ResultSorting::BySize;
+		option_reverse = false;
+	}
 	if (ScanCMDBool(args,"O-S")) {
-		optOS = true;
-		reverseSort = true;
+		option_sorting = ResultSorting::BySize;
+		option_reverse = true;
 	}
-	char * rem=ScanCMDRemain(args);
+
+	const char* rem = ScanCMDRemain(args);
 	if (rem) {
-		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
+		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
 		return;
 	}
 
 	const std::string pattern = to_search_pattern(args);
 
-	/* Make a full path in the args */
+	// Make a full path in the args
 	char path[DOS_PATHLENGTH];
 	if (!DOS_Canonicalize(pattern.c_str(), path)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
+
+	// Prepare display engine
+	MoreOutputStrings output(*this);
+	output.SetOptionNoPaging(!has_option_paging);
 
 	// DIR cmd in DOS and cmd.exe format 'Directory of <path>'
 	// accordingly:
@@ -826,185 +886,141 @@ void DOS_Shell::CMD_DIR(char * args) {
 	const char drive_letter = path[0];
 	const auto drive_idx = drive_index(drive_letter);
 	const bool print_label  = (drive_letter >= 'A') && Drives.at(drive_idx);
-	unsigned p_count = 0; // line counter for 'pause' command
 
-	if (!optB) {
+	if (!has_option_bare) {
 		if (print_label) {
 			const auto label = To_Label(Drives.at(drive_idx)->GetLabel());
-			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter,
-			         label.c_str());
-			p_count += 1;
+			output.AddString(MSG_Get("SHELL_CMD_DIR_VOLUME"),
+			                 drive_letter,
+			                 label.c_str());
 		}
-		WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
-		WriteOut_NoParsing("\n");
-		p_count += 2;
+		// TODO: display volume serial number in DIR and TREE commands
+		output.AddString(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
+		output.AddString("\n");
 	}
-
-	// Helper function to handle 'Press any key to continue' message
-	// regardless of user-selected formatting of DIR command output.
-	//
-	// Call it whenever a newline gets printed to potentially display
-	// this one-line message.
-	//
-	const int term_rows = INT10_GetTextRows() - 1;
-	auto show_press_any_key = [&]() {
-		p_count += 1;
-		if (optP && (p_count % term_rows) == 0)
-			CMD_PAUSE(empty_string);
-	};
 
 	const bool is_root = strnlen(path, sizeof(path)) == 3;
 
 	/* Command uses dta so set it to our internal dta */
-	RealPt save_dta=dos.dta();
+	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 
 	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
-		if (!optB)
-			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
-			         pattern.c_str());
+		if (!has_option_bare)
+			output.AddString(MSG_Get("SHELL_FILE_NOT_FOUND"),
+			                 pattern.c_str());
 		dos.dta(save_dta);
+		output.Display();
 		return;
 	}
 
-	std::vector<DtaResult> results;
-	// TODO OS should be asked for a number of files and appropriate
-	// vector capacity should be set
+	std::vector<DOS_DTA::Result> dir_contents;
 
-	do {    /* File name and extension */
-		DtaResult result;
-		dta.GetResult(result.name,result.size,result.date,result.time,result.attr);
+	do { // File name and extension
+		DOS_DTA::Result result = {};
+		dta.GetResult(result);
 
-		/* Skip non-directories if option AD is present, or skip dirs in case of A-D */
-		if (optAD && !(result.attr&DOS_ATTR_DIRECTORY) ) continue;
-		else if (optAminusD && (result.attr&DOS_ATTR_DIRECTORY) ) continue;
+		// Skip non-directories if option AD is present,
+		// or skip dirs in case of A-D
+		if (has_option_all_dirs && !result.IsDirectory()) {
+			continue;
+		} else if (has_option_all_files && result.IsDirectory()) {
+			continue;
+		}
 
-		results.push_back(result);
+		dir_contents.emplace_back(result);
 
 	} while (DOS_FindNext());
 
-	if (optON) {
-		// Sort by name
-		std::sort(results.begin(), results.end(), DtaResult::compareName);
-	} else if (optOE) {
-		// Sort by extension
-		std::sort(results.begin(), results.end(), DtaResult::compareExt);
-	} else if (optOD) {
-		// Sort by date
-		std::sort(results.begin(), results.end(), DtaResult::compareDate);
-	} else if (optOS) {
-		// Sort by size
-		std::sort(results.begin(), results.end(), DtaResult::compareSize);
-	}
-	if (reverseSort) {
-		std::reverse(results.begin(), results.end());
-	}
+	DOS_Sort(dir_contents, option_sorting, option_reverse);
 
-	uint32_t byte_count = 0;
+	size_t byte_count   = 0;
 	uint32_t file_count = 0;
-	uint32_t dir_count = 0;
-	unsigned w_count = 0;
+	uint32_t dir_count  = 0;
+	size_t wide_count   = 0;
 
-	for (auto &entry : results) {
-
-		char *name = entry.name;
-		const uint32_t size = entry.size;
-		const uint16_t date = entry.date;
-		const uint16_t time = entry.time;
-		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
-
+	for (const auto& entry : dir_contents) {
 		// Skip listing . and .. from toplevel directory, to simulate
 		// DIR output correctly.
 		// Bare format never lists .. nor . as directories.
-		if (is_root || optB) {
-			if (strcmp(".", name) == 0 || strcmp("..", name) == 0)
+		if (is_root || has_option_bare) {
+			if (entry.IsDummyDirectory()) {
 				continue;
+			}
 		}
 
-		if (is_dir) {
+		if (entry.IsDirectory()) {
 			dir_count += 1;
 		} else {
 			file_count += 1;
-			byte_count += size;
+			byte_count += entry.size;
 		}
 
 		// 'Bare' format: just the name, one per line, nothing else
 		//
-		if (optB) {
-			WriteOut("%s\n", name);
-			show_press_any_key();
+		if (has_option_bare) {
+			output.AddString("%s\n", entry.name.c_str());
 			continue;
 		}
 
 		// 'Wide list' format: using several columns
 		//
-		if (optW) {
-			if (is_dir) {
-				const int length = static_cast<int>(strlen(name));
-				WriteOut("[%s]%*s", name, (14 - length), "");
+		if (has_option_wide) {
+			if (entry.IsDirectory()) {
+				const int length = static_cast<int>(entry.name.length());
+				output.AddString("[%s]%*s",
+				                 entry.name.c_str(),
+				                 (14 - length),
+				                 "");
 			} else {
-				WriteOut("%-16s", name);
+				output.AddString("%-16s", entry.name.c_str());
 			}
-			w_count += 1;
-			if ((w_count % 5) == 0)
-				show_press_any_key();
+			wide_count += 1;
+			if (!(wide_count % 5)) {
+				// TODO: should auto-adapt to screen width
+				output.AddString("\n");
+			}
 			continue;
 		}
 
 		// default format: one detailed entry per line
 		//
-		const auto year   = static_cast<uint16_t>((date >> 9) + 1980);
-		const auto month  = static_cast<uint8_t>((date >> 5) & 0x000f);
-		const auto day    = static_cast<uint8_t>(date & 0x001f);
-		const auto hour   = static_cast<uint8_t>((time >> 5) >> 6);
-		const auto minute = static_cast<uint8_t>((time >> 5) & 0x003f);
+		const auto year   = static_cast<uint16_t>((entry.date >> 9) + 1980);
+		const auto month  = static_cast<uint8_t>((entry.date >> 5) & 0x000f);
+		const auto day    = static_cast<uint8_t>(entry.date & 0x001f);
+		const auto hour   = static_cast<uint8_t>((entry.time >> 5) >> 6);
+		const auto minute = static_cast<uint8_t>((entry.time >> 5) & 0x003f);
 
-		char *ext = empty_string;
-		if ((name[0] != '.')) {
-			ext = strrchr(name, '.');
-			if (ext) {
-				*ext = '\0';
-				ext++;
-			} else {
-				// prevent (null) from appearing
-				ext = empty_string;
-			}
-		}
-
-		if (is_dir) {
-			WriteOut("%-8s %-3s   %-21s %s %s\n", name, ext,
-			         "<DIR>", format_date(year, month, day),
-			         format_time(hour, minute, 0, 0));
-		} else {
-			const auto file_size = format_number(size);
-			WriteOut("%-8s %-3s   %21s %s %s\n", name, ext,
-			         file_size.c_str(), format_date(year, month, day),
-			         format_time(hour, minute, 0, 0));
-		}
-		show_press_any_key();
+		output.AddString("%-8s %-3s   %-21s %s %s\n",
+		                 entry.GetBareName().c_str(),
+		                 entry.GetExtension().c_str(),
+		                 entry.IsDirectory()
+		                         ? "<DIR>"
+		                         : format_number(entry.size).c_str(),
+		                 format_date(year, month, day),
+		                 format_time(hour, minute, 0, 0));
 	}
 
-	// Additional newline in case last line in 'Wide list` format was
-	// not wrapped automatically.
-	if (optW && (w_count % 5)) {
-		WriteOut("\n");
-		show_press_any_key();
+	// Additional newline in case last line in 'Wide list` format was not
+	// wrapped automatically
+	if (has_option_wide && (wide_count % 5)) {
+		// TODO: should auto-adapt to screen width
+		output.AddString("\n");
 	}
 
 	// Show the summary of results
-	if (!optB) {
-		const auto bytes_used = format_number(byte_count);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"), file_count,
-		         bytes_used.c_str());
-		show_press_any_key();
+	if (!has_option_bare) {
+		output.AddString(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),
+		                 file_count,
+		                 format_number(byte_count).c_str());
 
 		uint8_t drive = dta.GetSearchDrive();
 		size_t free_space = 1024 * 1024 * 100;
 		if (Drives.at(drive)) {
 			uint16_t bytes_sector;
-			uint8_t sectors_cluster;
+			uint8_t  sectors_cluster;
 			uint16_t total_clusters;
 			uint16_t free_clusters;
 			Drives.at(drive)->AllocationInfo(&bytes_sector,
@@ -1015,11 +1031,13 @@ void DOS_Shell::CMD_DIR(char * args) {
 			free_space *= sectors_cluster;
 			free_space *= free_clusters;
 		}
-		const auto bytes = format_number(free_space);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count,
-		         bytes.c_str());
+
+		output.AddString(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),
+		                 dir_count,
+		                 format_number(free_space).c_str());
 	}
 	dos.dta(save_dta);
+	output.Display();
 }
 
 void DOS_Shell::CMD_LS(char *args)
@@ -1039,17 +1057,13 @@ void DOS_Shell::CMD_LS(char *args)
 		return;
 	}
 
-	std::vector<DtaResult> dir_contents;
-	// reserve space for as many as we can fit into a single memory page
-	// nothing more to it; make it larger if necessary
-	dir_contents.reserve(MEM_PAGE_SIZE / sizeof(DtaResult));
-
+	std::vector<DOS_DTA::Result> dir_contents;
 	do {
-		DtaResult result;
-		dta.GetResult(result.name, result.size, result.date,
-		              result.time, result.attr);
-		if (result.name == "."s || result.name == ".."s)
+		DOS_DTA::Result result;
+		dta.GetResult(result);
+		if (result.IsDummyDirectory()) {
 			continue;
+		}
 		dir_contents.push_back(result);
 	} while (DOS_FindNext());
 
@@ -1069,11 +1083,10 @@ void DOS_Shell::CMD_LS(char *args)
 
 	for (const auto &entry : dir_contents) {
 		std::string name = entry.name;
-		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
 		const size_t col = w_count % cols;
 		const int cw = column_widths[col];
 
-		if (is_dir) {
+		if (entry.IsDirectory()) {
 			upcase(name);
 			write_color(ansi_blue, name, cw);
 		} else {
@@ -1108,7 +1121,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	static char defaulttarget[] = ".";
 	StripSpaces(args);
 	/* Command uses dta so set it to our internal dta */
-	RealPt save_dta=dos.dta();
+	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 	uint32_t size;uint16_t date;uint16_t time;uint8_t attr;
@@ -1415,12 +1428,10 @@ static bool attrib_recursive(DOS_Shell *shell,
 			std::vector<std::string> found_dirs;
 			found_dirs.clear();
 			do { /* File name and extension */
-				DtaResult result;
-				dta.GetResult(result.name, result.size, result.date,
-				              result.time, result.attr);
-				if ((result.attr & DOS_ATTR_DIRECTORY) &&
-				    strcmp(result.name, ".") &&
-				    strcmp(result.name, "..")) {
+				DOS_DTA::Result result;
+				dta.GetResult(result);
+				if (result.IsDirectory() &&
+				    !result.IsDummyDirectory()) {
 					std::string fullname = result.name +
 					                       std::string(1, '\\') +
 					                       get_filename(args);
@@ -1478,7 +1489,7 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 	char buffer[CROSS_LEN];
 	args = ExpandDot(sfull, buffer, CROSS_LEN);
 	StripSpaces(args);
-	RealPt save_dta = dos.dta();
+	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 	all_dirs.clear();
@@ -1601,7 +1612,7 @@ void DOS_Shell::CMD_IF(char * args) {
 		}
 
 		{	/* DOS_FindFirst uses dta so set it to our internal dta */
-			RealPt save_dta=dos.dta();
+			const RealPt save_dta=dos.dta();
 			dos.dta(dos.tables.tempdta);
 			bool ret=DOS_FindFirst(word,0xffff & ~DOS_ATTR_VOLUME);
 			dos.dta(save_dta);

@@ -565,6 +565,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\program_placeholder.cpp" />
     <ClCompile Include="..\src\dos\program_rescan.cpp" />
     <ClCompile Include="..\src\dos\program_serial.cpp" />
+    <ClCompile Include="..\src\dos\program_tree.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
     <ClCompile Include="..\src\gui\render.cpp" />
     <ClCompile Include="..\src\gui\render_scalers.cpp" />

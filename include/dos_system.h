@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "bit_view.h"
 #include "cross.h"
 #include "mem.h"
 #include "support.h"
@@ -39,7 +41,8 @@
 
 #define LFN_NAMELENGTH 255
 
-enum FatAttributeFlags : uint8_t { // 7-bit
+// obsolete - TODO: remove
+enum FatAttributeFlagsValues : uint8_t { // 7-bit
 	DOS_ATTR_READ_ONLY = 0b000'0001,
 	DOS_ATTR_HIDDEN    = 0b000'0010,
 	DOS_ATTR_SYSTEM    = 0b000'0100,
@@ -47,6 +50,28 @@ enum FatAttributeFlags : uint8_t { // 7-bit
 	DOS_ATTR_DIRECTORY = 0b001'0000,
 	DOS_ATTR_ARCHIVE   = 0b010'0000,
 	DOS_ATTR_DEVICE    = 0b100'0000,
+};
+
+union FatAttributeFlags {
+	uint8_t data = 0;
+
+	bit_view<0, 1> read_only;
+	bit_view<1, 1> hidden;
+	bit_view<2, 1> system;
+	bit_view<3, 1> volume;
+	bit_view<4, 1> directory;
+	bit_view<5, 1> archive;
+	bit_view<6, 1> device;
+	bit_view<7, 1> unused;
+
+	FatAttributeFlags() : data(0) {}
+	FatAttributeFlags(const uint8_t data) : data(data) {}
+	FatAttributeFlags(const FatAttributeFlags& other) : data(other.data) {}
+	FatAttributeFlags& operator=(const FatAttributeFlags& other)
+	{
+		data = other.data;
+		return *this;
+	}
 };
 
 struct FileStat_Block {

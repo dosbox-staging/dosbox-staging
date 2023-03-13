@@ -628,6 +628,9 @@
     <ClCompile Include="..\src\dos\program_serial.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_tree.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libs\loguru\loguru.cpp">
       <Filter>src\libs\loguru</Filter>
     </ClCompile>
@@ -1288,6 +1291,9 @@
       <Filter>src\cpu\core_dyn_x86</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\program_serial.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_tree.h">
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\loguru\loguru.hpp">

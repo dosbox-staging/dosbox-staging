@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -207,7 +208,52 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 	return true;
 }
 
-bool DOS_GetCurrentDir(uint8_t drive,char * const buffer) {
+void DOS_Sort(std::vector<DOS_DTA::Result>& list, const ResultSorting sorting,
+              const bool reverse_order, const ResultGrouping grouping)
+{
+	auto compare = [&](const DOS_DTA::Result& result1,
+	                   const DOS_DTA::Result& result2) {
+		if (grouping == ResultGrouping::FilesFirst ||
+		    grouping == ResultGrouping::NonFilesFirst) {
+			if (!result1.IsFile() && result2.IsFile()) {
+				return (grouping == ResultGrouping::NonFilesFirst);
+			}
+			if (result1.IsFile() && !result2.IsFile()) {
+				return (grouping == ResultGrouping::FilesFirst);
+			}
+		}
+
+		auto& r1 = reverse_order ? result2 : result1;
+		auto& r2 = reverse_order ? result1 : result2;
+
+		switch (sorting) {
+		case ResultSorting::ByName:
+			return r1.name.compare(r2.name) < 0;
+		case ResultSorting::ByExtension:
+			return r1.GetExtension().compare(r2.GetExtension()) < 0;
+		case ResultSorting::BySize:
+			// Do not compare sizes of objects which are not files!
+			if (!r1.IsFile()) {
+				return true;
+			} else if (!r2.IsFile()) {
+				return false;
+			}
+			// Both are files - we can compare sizes
+			return r1.size < r2.size;
+		case ResultSorting::ByDateTime:
+			return r1.date < r2.date ||
+			       (r1.date == r2.date && r1.time < r2.time);
+		case ResultSorting::None:
+		default:
+			return false;
+		}
+	};
+
+	std::stable_sort(list.begin(), list.end(), compare);
+}
+
+bool DOS_GetCurrentDir(uint8_t drive, char* const buffer)
+{
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
 	if ((drive>=DOS_DRIVES) || (!Drives[drive])) {

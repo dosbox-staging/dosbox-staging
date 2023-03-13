@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,6 +39,7 @@
 #include "program_placeholder.h"
 #include "program_rescan.h"
 #include "program_serial.h"
+#include "program_tree.h"
 
 #if C_DEBUG
 #include "program_biostest.h"
@@ -87,6 +89,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
+	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	if (add_autoexec)
 		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data, (uint32_t)strlen(autoexec_data));

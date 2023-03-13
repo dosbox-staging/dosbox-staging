@@ -948,12 +948,14 @@ void SHELL_Init() {
 	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n");
+	MSG_Add("SHELL_TOO_MANY_PARAMETERS", "Too many parameters.\n");
 	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n");
 	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n");
 	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n");
 	MSG_Add("SHELL_FILE_OPEN_ERROR", "File open error - '%s'\n");
 	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
 	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
+	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
 
 	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type [color=yellow]help /all[reset] .\nA short list of the most often used commands:\n");
