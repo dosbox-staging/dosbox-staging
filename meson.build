@@ -45,6 +45,21 @@ subdir('contrib/linux')
 subdir('contrib/icons')
 subdir('contrib/resources')
 
+# Gather OS family type
+# ~~~~~~~~~~~~~~~~~~~~~
+#
+os_family_name = {
+    'linux': 'LINUX',
+    'windows': 'WIN32',
+    'cygwin': 'WIN32',
+    'darwin': 'MACOSX',
+    'freebsd': 'BSD',
+    'netbsd': 'BSD',
+    'openbsd': 'BSD',
+    'dragonfly': 'BSD',
+}.get(host_machine.system(), 'UNKNOWN_OS')
+
+
 # Gather compiler settings
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -144,6 +159,11 @@ if get_option('autovec_info')
     ]
 endif
 
+# Tag BSD executables with the WX-needed bit
+if os_family_name == 'BSD'
+    extra_link_flags += ['-Wl,-z,wxneeded']
+endif
+
 # Allow-list the flags against the compiler, and add them to the project
 foreach flag : extra_flags
     if cc.has_argument(flag)
@@ -173,18 +193,7 @@ conf_data.set_quoted(
     get_option('prefix') / get_option('datadir'),
 )
 
-os_family_name = {
-    'linux': 'LINUX',
-    'windows': 'WIN32',
-    'cygwin': 'WIN32',
-    'darwin': 'MACOSX',
-    'freebsd': 'BSD',
-    'netbsd': 'BSD',
-    'openbsd': 'BSD',
-    'dragonfly': 'BSD',
-}.get(host_machine.system(), 'UNKNOWN_OS')
 conf_data.set10(os_family_name, true)
-
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_SLIRP', get_option('use_slirp'))
@@ -750,7 +759,7 @@ xinput2_required = (get_option('use_xinput2') == 'true')
 if xinput2_required or (get_option('use_xinput2') == 'auto')
     xinput2_dep = dependency(
         'xi',
-        version: ['<= 1.4', '< 2'],
+        version: ['>= 1.4', '< 2'],
         required: xinput2_required,
     )
 endif

@@ -1120,8 +1120,10 @@ namespace loguru
 			// This is what we *want* to do on all platforms, but
 			// only some platforms support it (currently).
 
-			#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__sun)
+			#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__sun)
 				pthread_getname_np(pthread_self(), buffer, length);
+			#elif defined(__OpenBSD__)
+				pthread_get_name_np(pthread_self(), buffer, length);
 			#else
 				// Other platforms that don't support thread names
 				buffer[0] = 0;
@@ -1154,8 +1156,13 @@ namespace loguru
 				const auto pthread_self_is_pointer = std::is_pointer<decltype(native_id)>::value;
 				const auto thread_id = pthread_self_is_pointer
 				                           ? reinterpret_cast<uintptr_t>((void*)native_id)
+				#if defined(__OpenBSD__)
+				                           : reinterpret_cast<uintptr_t>(native_id);
+				#else
 				                           : static_cast<uintptr_t>(native_id);
-			#else
+				#endif // __OpenBSD__
+
+			#else // not LOGURU_PTHREADS
 				// This ID does not correllate to anything we can get from the OS,
 				// so this is the worst way to get the ID.
 				const auto thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());

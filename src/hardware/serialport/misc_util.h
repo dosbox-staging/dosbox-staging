@@ -56,7 +56,7 @@
 #include <ctime>
 #endif
 
-#include <SDL2/SDL_net.h>
+#include <SDL_net.h>
 
 #include "../../libs/enet/include/enet.h"
 
