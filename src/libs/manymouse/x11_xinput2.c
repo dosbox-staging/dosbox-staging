@@ -8,6 +8,8 @@
  *   - silence compiler warnings, by Roman Standzikowski.
  *   - fix uninitialized event member access, by kcgen.
  *   - include project config.h, by kcgen.
+ *   - include sys/time.h, sys/types.h, and unistd where
+ *      struct timeval and fd_* functions are defined
  */
 
 /* Let the project (maybe) define SUPPORT_XINPUT2 via common header */
@@ -33,6 +35,12 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <X11/extensions/XInput2.h>
+
+#if defined(BSD)
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 /* 32 is good enough for now. */
 #define MAX_MICE 32

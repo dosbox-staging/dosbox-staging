@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <vector>
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 static void play_tone(const int sample_rate, const int device_id)
 {
