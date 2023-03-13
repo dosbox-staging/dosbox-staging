@@ -285,7 +285,7 @@ Wartość domyślna wybiera shader 'interpolation/sharp.glsl'.
 Rozszerzenie '.glsl' można pominąć.
 .
 :CONFIG_COMPOSITE
-Włączenie trybu sygnału 'composite'. Porada: dopasuj ustawienia poniżej przy
+Włącza trybu sygnału 'composite'. Porada: dopasuj ustawienia poniżej przy
 pomocy skrótów klawiszowych, następnie odczytaj ustawienia z konsoli tekstowej
 i wpisz je do pliku konfiguracyjnego.
 .
@@ -366,7 +366,7 @@ przyspieszenia myszy. Działa albo na pełnym ekranie, albo kiedy kursor myszy
 jest przejęty w trybie okienkowym.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Włączenie wbudowanego sterownika myszy dla aplikacji DOS.
+Włącza wbudowany sterownik myszy dla aplikacji DOS.
 Uwagi:
   Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
   Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany sterownik
@@ -408,7 +408,7 @@ Uwagi:
   Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
 :CONFIG_NOSOUND
-Włączenie trybu cichego; dźwięk jest emulowany, ale całkowicie wyciszony.
+Włącza tryb cichy; dźwięk jest emulowany, ale całkowicie wyciszony.
 .
 :CONFIG_RATE
 Częstotliwość próbkowania miksera dźwięku.
@@ -426,21 +426,20 @@ Negocjacja potencjalnie lepszych ustawień częstotliwości i rozmiaru bloku
 ze sterownikiem dźwięku.
 .
 :CONFIG_COMPRESSOR
-Włączenie automatycznego kompresora dynamiki, który zapobiega przesterowaniu
-dźwięku:
-  off:  Wyłączenie kompresora.
-  on:   Włączenie kompresora (domyślne).
+Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
+  off:  Wyłącza kompresor dynamiki.
+  on:   Włącza kompresor dynamiki (domyślne).
 .
 :CONFIG_CROSSFEED
-Włączenie (globalnie) efektu przenikania kanałów stereo, odpowiednie
-dla używających słuchawek:
+Włącza (globalnie) efekt przenikania kanałów stereo, przydatne jeśli używasz
+słuchawek:
   off:         Bez efektu (domyślne).
-  on:          Włączenie przenikania na poziomie 40.
+  on:          Włącza przenikania na poziomie 40.
   <strength>:  Ustawienie siły efektu od 0 (wyłączone) do 100 (dźwięk mono).
 Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
 :CONFIG_REVERB
-Włączenie (globalnie) efektu 'reverb', dodaje dźwiękowi wrażenia przestrzeni:
+Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
   off:     Bez efektu (domyślne).
   on:      Efekt włączony, ustawienie 'medium'.
   tiny:    Odpowiada zintegrowanemu głośnikowi w niewielkim pokoju, ustawienie
@@ -456,7 +455,7 @@ Włączenie (globalnie) efektu 'reverb', dodaje dźwiękowi wrażenia przestrzen
 Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
 :CONFIG_CHORUS
-Włączenie (globalnie) efektu 'chorus', dającego bardziej poruszający dźwięk:
+Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
   off:     Bez efektu (domyślne).
   on:      Efekt włączony, ustawienie 'normal'.
   light:   Niewielki efekt, odpowiedni dla muzyki syntetyzowanej z dużą
@@ -490,6 +489,16 @@ Więcej informacji (po angielsku) znajdziesz w pliku README/Manual.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401.
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Włącz surowe, nieprzetworzone wyjście MIDI (domyślnie wyłączone).
+Sterowniki MIDI wielu gier nie są w pełni zgodne ze standardem MIDI, przez co
+edytowanie lub wyjściowych danych jest utrudnione i często prowadzi do
+zawieszających się lub brakujących dźwięków.
+DOSBox domyślnie koryguje wyjście MIDI takich gier. Nie zmienia to dźwięku
+w słyszalny sposób, wpływa jedynie na reprezentację danych MIDI.
+Włącz jedynie, jeśli potrzebujesz surowych, nieprzetworzonych danych MIDI, np.
+do pracy z aplikacjami muzycznymi, lub aby debugować problemy związane z MIDI.
 .
 :CONFIG_SOUNDFONT
 Ścieżka do pliku SoundFont w formacie SF2. Może być względna lub bezwzględna,
@@ -675,7 +684,7 @@ Model układu na karcie muzycznej Innovation SSI-2001:
 .
 :CONFIG_SIDCLOCK
 Częstotliwość zegara taktującego układ SID, w reprodukcjach karty (np. DuoSID)
-była wybierana jumperem.
+była wybierana zworką.
   default:  0.895 MHz, jak w oryginalnej karcie SSI-2001.
   c64ntsc:  1.023 MHz, jak w komputerach NTSC firmy Commodore.
   c64pal:   0.985 MHz, jak w komputerach PAL firmy Commodore.
@@ -947,7 +956,7 @@ Format jest taki sam jak dla portów TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Linie z tej sekcji zostaną wykonane podczas startu.
-To dobre miejsce na umieszczenie poleceń MOUNT.
+Jest to dobre miejsce na umieszczenie poleceń MOUNT.
 
 .
 :CONFIGFILE_INTRO
