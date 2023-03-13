@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -496,9 +496,9 @@ static void inline gen_call_function_raw(void * func,bool fastcall=true)
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static uint32_t inline gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
+static inline const uint8_t* gen_call_function_setup(void * func, [[maybe_unused]] Bitu paramcount,bool fastcall=false)
 {
-	uint32_t proc_addr=(uint32_t)cache.pos;
+	const uint8_t* proc_addr = cache.pos;
 	gen_call_function_raw(func,fastcall);
 	return proc_addr;
 }
@@ -535,69 +535,70 @@ static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 
 // short conditional jump (+-127 bytes) if register is zero
 // the destination is set by gen_fill_branch() later
-static uint32_t gen_create_branch_on_zero(HostReg reg,bool dword)
+static const uint8_t* gen_create_branch_on_zero(const HostReg reg, const bool is_dword)
 {
-	if (!dword)
+	if (!is_dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
 	else
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x0C, 2, 0); // bc 12,CR0[Z] (beq)
-	return ((uint32_t)cache.pos-4);
+	return cache.pos-4;
 }
 
 // short conditional jump (+-127 bytes) if register is nonzero
 // the destination is set by gen_fill_branch() later
-static uint32_t gen_create_branch_on_nonzero(HostReg reg,bool dword)
+static const uint8_t* gen_create_branch_on_nonzero(const HostReg reg, const bool is_dword)
 {
-	if (!dword)
+	if (!is_dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
 	else
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bc 4,CR0[Z] (bne)
-	return ((uint32_t)cache.pos-4);
+	return cache.pos-4;
 }
 
 // calculate relative offset and fill it into the location pointed to by data
-static void gen_fill_branch(DRC_PTR_SIZE_IM data)
+static void gen_fill_branch(const uint8_t* data)
 {
+	ptrdiff_t len = cache.pos - data;
+
 #if C_DEBUG
-	Bits len=(uint32_t)cache.pos-data;
 	if (len<0) len=-len;
 	if (len >= 0x8000) LOG_MSG("Big jump %d",len);
 #endif
 
-	((uint16_t*)data)[1] =((uint32_t)cache.pos-data) & 0xFFFC;
+	((uint16_t*)data)[1] = static_cast<uint32_t>(len) & 0xFFFC;
 }
 
 
 // conditional jump if register is nonzero
 // for isdword==true the 32bit of the register are tested
 // for isdword==false the lowest 8bit of the register are tested
-static uint32_t gen_create_branch_long_nonzero(HostReg reg,bool dword)
+static const uint8_t* gen_create_branch_long_nonzero(const HostReg reg, const bool is_dword)
 {
-	if (!dword)
+	if (!is_dword)
 		IMM_OP(28,reg,HOST_R0,0xFF); // andi. r0,reg,0xFF
 	else
 		IMM_OP(11, 0, reg, 0);       // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bne
-	return ((uint32_t)cache.pos-4);
+	return cache.pos-4;
 }
 
 // compare 32bit-register against zero and jump if value less/equal than zero
-static uint32_t gen_create_branch_long_leqzero(HostReg reg)
+static const uint8_t* gen_create_branch_long_leqzero(const HostReg reg)
 {
 	IMM_OP(11, 0, reg, 0); // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 1, 0); // ble
-	return ((uint32_t)cache.pos-4);
+	return cache.pos-4;
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void gen_fill_branch_long(uint32_t data) {
-	return gen_fill_branch((DRC_PTR_SIZE_IM)data);
+static void gen_fill_branch_long(const uint8_t* data) {
+	return gen_fill_branch(data);
 }
 
 static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
@@ -634,8 +635,8 @@ static void gen_function(void* func)
 }
 
 // gen_run_code is assumed to be called exactly once, gen_return_function() jumps back to it
-static void* epilog_addr;
-static uint8_t *getCF_glue;
+static const uint8_t* epilog_addr = nullptr;
+static const uint8_t* getCF_glue = nullptr;
 static void gen_run_code(void)
 {
 	// prolog
@@ -675,12 +676,12 @@ static void gen_run_code(void)
 // return from a function
 static void gen_return_function(void)
 {
-	gen_function(epilog_addr);
+	gen_function((void*)epilog_addr);
 }
 
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(uint8_t * pos,void* fct_ptr,Bitu flags_type)
+static void gen_fill_function_ptr(const uint8_t * pos,void* fct_ptr,Bitu flags_type)
 {
 	uint32_t *op = (uint32_t*)pos;
 	uint32_t *end = op+4;
@@ -760,40 +761,62 @@ static void gen_fill_function_ptr(uint8_t * pos,void* fct_ptr,Bitu flags_type)
 		case t_SHRw:
 		case t_SHRd:
 			*op++ = EXT(FC_OP1, FC_RETOP, FC_OP2, 536, 0); // srw FC_RETOP, FC_OP1, FC_OP2
-			break;
-		case t_SARb:
-			*op++ = EXT(FC_OP1, FC_RETOP, 0, 954, 0); // extsb FC_RETOP, FC_OP1
-		case t_SARw:
-			if (flags_type == t_SARw)
-				*op++ = EXT(FC_OP1, FC_RETOP, 0, 922, 0); // extsh FC_RETOP, FC_OP1
-		case t_SARd:
-			*op++ = EXT(FC_OP1, FC_RETOP, FC_OP2, 792, 0); // sraw FC_RETOP, FC_OP1, FC_OP2
-			break;
+		        break;
 
-		case t_ROLb:
-			*op++ = RLW(20, FC_OP1, FC_OP1, 24, 0, 7, 0); // rlwimi FC_OP1, FC_OP1, 24, 0, 7
-		case t_ROLw:
-			if (flags_type == t_ROLw)
-				*op++ = RLW(20, FC_OP1, FC_OP1, 16, 0, 15, 0); // rlwimi FC_OP1, FC_OP1, 16, 0, 15
-		case t_ROLd:
-			*op++ = RLW(23, FC_OP1, FC_RETOP, FC_OP2, 0, 31, 0); // rotlw FC_RETOP, FC_OP1, FC_OP2
-			break;
+	        case t_SARb:
+		        // extsb FC_RETOP, FC_OP1
+		        *op++ = EXT(FC_OP1, FC_RETOP, 0, 954, 0);
+		        [[fallthrough]];
+	        case t_SARw:
+		        if (flags_type == t_SARw) {
+			// extsh FC_RETOP, FC_OP1
+			*op++ = EXT(FC_OP1, FC_RETOP, 0, 922, 0);
+		        }
+		        [[fallthrough]];
+	        case t_SARd:
+		        // sraw FC_RETOP,FC_OP1, FC_OP2
+		        *op++ = EXT(FC_OP1, FC_RETOP, FC_OP2, 792, 0);
+		        break;
 
-		case t_RORb:
-			*op++ = RLW(20, FC_OP1, FC_OP1, 8, 16, 23, 0); // rlwimi FC_OP1, FC_OP1, 8, 16, 23
-		case t_RORw:
-			if (flags_type == t_RORw)
-				*op++ = RLW(20, FC_OP1, FC_OP1, 16, 0, 15, 0); // rlwimi FC_OP1, FC_OP1, 16, 0, 15
-		case t_RORd:
-			*op++ = IMM(8, FC_OP2, FC_OP2, 32); // subfic FC_OP2, FC_OP2, 32 (FC_OP2 = 32 - FC_OP2)
-			*op++ = RLW(23, FC_OP1, FC_RETOP, FC_OP2, 0, 31, 0); // rotlw FC_RETOP, FC_OP1, FC_OP2
-			break;
+	        case t_ROLb:
+		        // rlwimi FC_OP1, FC_OP1, 24, 0, 7
+		        *op++ = RLW(20, FC_OP1, FC_OP1, 24, 0, 7, 0);
+		        [[fallthrough]];
+	        case t_ROLw:
+		        if (flags_type == t_ROLw) {
+			// rlwimi FC_OP1, FC_OP1, 16, 0, 15
+			*op++ = RLW(20, FC_OP1, FC_OP1, 16, 0, 15, 0);
+		        }
+		        [[fallthrough]];
+	        case t_ROLd:
+			// rotlw FC_RETOP, FC_OP1, FC_OP2
+		        *op++ = RLW(23, FC_OP1, FC_RETOP, FC_OP2, 0, 31, 0);
+		        break;
 
-		case t_DSHLw: // technically not correct for FC_OP3 > 16
-			*op++ = RLW(20, FC_OP2, FC_RETOP, 16, 0, 15, 0); // rlwimi FC_RETOP, FC_OP2, 16, 0, 5
-			*op++ = RLW(23, FC_RETOP, FC_RETOP, FC_OP3, 0, 31, 0); // rotlw FC_RETOP, FC_RETOP, FC_OP3
-			break;
-		case t_DSHLd:
+	        case t_RORb:
+		        // rlwimi FC_OP1, FC_OP1, 8, 16, 23
+		        *op++ = RLW(20, FC_OP1, FC_OP1, 8, 16, 23, 0);
+		        [[fallthrough]];
+	        case t_RORw:
+		        if (flags_type == t_RORw) {
+			// rlwimi FC_OP1, FC_OP1, 16, 0, 15
+			*op++ = RLW(20, FC_OP1, FC_OP1, 16, 0, 15, 0);
+		        }
+		        [[fallthrough]];
+	        case t_RORd:
+		        // subfic FC_OP2, FC_OP2, 32 (FC_OP2 = 32 - FC_OP2)
+		        *op++ = IMM(8, FC_OP2, FC_OP2, 32);
+		        // rotlw FC_RETOP, FC_OP1, FC_OP2
+		        *op++ = RLW(23, FC_OP1, FC_RETOP, FC_OP2, 0, 31, 0);
+		        break;
+
+	        case t_DSHLw: // technically not correct for FC_OP3 > 16
+		              // rlwimi FC_RETOP, FC_OP2, 16, 0, 5
+		        *op++ = RLW(20, FC_OP2, FC_RETOP, 16, 0, 15, 0);
+		        // rotlw FC_RETOP, FC_RETOP, FC_OP3
+		        *op++ = RLW(23, FC_RETOP, FC_RETOP, FC_OP3, 0, 31, 0);
+		        break;
+	        case t_DSHLd:
 			op[0] = EXT(FC_OP1, FC_RETOP, FC_OP3, 24, 0); // slw FC_RETOP, FC_OP1, FC_OP3
 			op[1] = IMM(8, FC_OP3, FC_OP3, 32); // subfic FC_OP3, FC_OP3, 32 (FC_OP3 = 32 - FC_OP3)
 			op[2] = EXT(FC_OP2, FC_OP2, FC_OP3, 536, 0); // srw FC_OP2, FC_OP2, FC_OP3

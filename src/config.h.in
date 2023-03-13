@@ -67,6 +67,9 @@
 // Define to 1 if target CPU supports unaligned memory access
 #mesondefine C_UNALIGNED_MEMORY
 
+// Define to 1 if the target platform needs per-page dynamic core write or execute (W^X) tagging
+#mesondefine C_PER_PAGE_W_OR_X
+
 // Define to 1 to use x86/x86_64 dynamic cpu core
 // Can not be used together with C_DYNREC
 #mesondefine C_DYNAMIC_X86

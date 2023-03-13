@@ -797,34 +797,46 @@ static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
 
 static inline void dyn_mem_execute(void *ptr, size_t size)
 {
+#if defined(C_PER_PAGE_W_OR_X)
 	dyn_mem_set_access(ptr, size, true);
+#else
+	// Skip per-page execute-flagging
+#endif
 }
 
 static inline void dyn_mem_write(void *ptr, size_t size)
 {
+#if defined(C_PER_PAGE_W_OR_X)
 	dyn_mem_set_access(ptr, size, false);
+#else
+	// Skip per-page write-flagging
+#endif
 }
 
 static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
                                         [[maybe_unused]] size_t size)
 {
-#if defined(HAVE_BUILTIN_CLEAR_CACHE)
-	const auto start = static_cast<char *>(ptr);
+#if defined(C_PER_PAGE_W_OR_X)
+#	if defined(HAVE_BUILTIN_CLEAR_CACHE)
+	const auto start     = static_cast<char*>(ptr);
 	const auto start_val = reinterpret_cast<uintptr_t>(start);
 	const auto end_val = start_val + size;
 	const auto end = reinterpret_cast<char *>(end_val);
 	__builtin___clear_cache(start, end);
 #elif defined(HAVE_SYS_ICACHE_INVALIDATE)
 #if defined(HAVE_BUILTIN_AVAILABLE)
-	if (__builtin_available(macOS 11.0, *))
+	        if (__builtin_available(macOS 11.0, *))
 #endif
 		sys_icache_invalidate(ptr, size);
 #elif defined(WIN32)
-	if (CPU_UseRwxMemProtect)
+	        if (CPU_UseRwxMemProtect)
 		return;
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #else
 #error "Don't know how to clear the cache on this platform: please report this"
+#endif
+#else
+	// Skip per-page invalidation
 #endif
 }
 
@@ -867,12 +879,12 @@ static void cache_init(bool enable) {
 #endif
 			cache_code_start_ptr=static_cast<uint8_t *>(mmap(nullptr, cache_code_size, prot_flags, map_flags, -1, 0));
 			if (cache_code_start_ptr == MAP_FAILED) {
-				E_Exit("Allocating dynamic core cache memory failed with errno %d", errno);
+				E_Exit("DYNCACHE: Failed memory-mapping cache memory because: %s", strerror(errno));
 			}
 #else
 			cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			if (!cache_code_start_ptr) {
-				E_Exit("Allocating dynamic core cache memory failed");
+				E_Exit("DYNCACHE: Failed allocating cache memory because: %s", strerror(errno));
 			}
 #endif
 			// align the cache at a page boundary

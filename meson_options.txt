@@ -98,6 +98,44 @@ option(
     description: 'Select the dynamic core implementation.',
 )
 
+# Per-page write-or-execute (W^X) permissions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# This option lets packagers control if dynamic core memory pages are flagged
+# with write-or-execute (W^X) permissions on a per-page basis.
+
+# Platforms that support W^X in hardware can do this with near-zero overhead,
+# where as slower platforms like PowerPC and 32-bit ARM SBCs might experience
+# signficant performance overhead with this enabled.
+#
+# Defaults per-platform are in the "src/cpu/meson.build" file, and should
+# be OK. However, if you find them to be wrong, please follow the next steps
+# to check if per-page W^X is both unecessary and costly.
+#
+#  1) Create two builds:
+#       meson setup -Dper_page_w_or_x=enabled  build/with_per_page_w_or_x
+#       meson setup -Dper_page_w_or_x=disabled build/without_per_page_w_or_x
+#
+#  2) For each build, launch and switch to the dynamic by entering "core dynamic"
+#     at the Z:\> prompt.  If the build without per-page W^X crashes, then stop
+#     here: your platforms needs W^X.
+#
+#  3) If the build without per-page W^X didn't crash, now compare how much
+#     host CPU usage they both consume using your task manager or 'top'.
+#     If their usages are about the same, then your platform has fast support
+#     for per-page W^X, so stop here (the defaults are fine).
+#
+#  4) If the build without per-page W^X is using less CPU usage, then you
+#     should build with "-Dper_page_w_or_x=disabled". Please also inform
+#     the maintenance team so they can make this the new default for your
+#     platform.
+#
+option(
+    'per_page_w_or_x',
+    type: 'feature',
+    value: 'auto',
+    description: 'Flag dynamic core memory write-or-execute (W^X) per-page.'
+)
+
 # Use this option for selectively switching dependencies to look for static
 # libraries first. This behaves differently than passing
 # -Ddefault_library=static (which will turn on static linking for dependencies
