@@ -24,6 +24,7 @@
 #include "callback.h"
 #include "checks.h"
 #include "dos_inc.h"
+#include "shell.h"
 #include "string_utils.h"
 
 #include <algorithm>
@@ -89,6 +90,11 @@ void MoreOutputBase::SetOptionTabSize(const uint8_t tab_size)
 {
 	assert(tab_size > 0);
 	option_tab_size = tab_size;
+}
+
+void MoreOutputBase::SetOptionNoPaging(const bool enabled)
+{
+	has_option_no_paging = enabled;
 }
 
 void MoreOutputBase::SetLinesInStream(const uint32_t lines)
@@ -367,9 +373,9 @@ MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
 	lines_to_display    = max_lines;
 	lines_to_skip       = 0;
 
-	if (is_output_redirected) {
-		// Don't ask user for anything if command
-		// output is redirected, always continue
+	if (is_output_redirected || has_option_no_paging) {
+		// Don't ask user for anything if command output is redirected,
+		// or if no-paging mode was requested, always continue
 		return UserDecision::More;
 	}
 
@@ -699,41 +705,8 @@ std::string MoreOutputFiles::GetShortPath(const std::string &file_path,
 	// We need to make sure the path and file name fits within
 	// the designated space - if not, we have to shorten it.
 
-	// The shortest name we should be able to display is:
-	// - 3 dots (ellipsis)
-	// - 1 path separator
-	// - 8 characters of name
-	// - 1 dot
-	// - 3 characters of extension
-	// This gives 16 characters.
-	// We need to keep the last column free (reduces max length by 1).
-	// Format string contains '%s' (increases max length by 2).
-	constexpr size_t min = 16;
-	const auto max = GetMaxColumns() - std::strlen(MSG_Get(msg_id)) + 1;
-	const auto max_len = std::max(min, max);
-
-	// Nothing to do if file name matches the constraint
-	if (file_path.length() <= max_len) {
-		return file_path;
-	}
-
-	// We need to shorten the name - try to strip part of the path
-	static const std::string ellipsis = "...";
-	auto shortened = file_path;
-	while (shortened.length() > max_len &&
-	       std::count(shortened.begin(), shortened.end(), '\\') > 1) {
-		// Strip one level of path at a time
-		const auto pos = shortened.find('\\', shortened.find('\\') + 1);
-		shortened      = ellipsis + shortened.substr(pos);
-	}
-
-	// If still too long, just cut away the beginning
-	const auto len = shortened.length();
-	if (len > max_len) {
-		shortened = ellipsis + shortened.substr(len - max_len + 3);
-	}
-
-	return shortened;
+	const auto max_len = GetMaxColumns() - std::strlen(MSG_Get(msg_id)) + 1;
+	return shorten_path(file_path, max_len);
 }
 
 void MoreOutputFiles::DisplayInputStream()
@@ -883,23 +856,10 @@ void MoreOutputStrings::AddString(const char *format, ...)
 	input_strings += std::string(buf);
 }
 
-void MoreOutputStrings::Display()
+void MoreOutputStrings::ProcessEndOfLines()
 {
-	if (SuppressWriteOut("")) {
-		input_strings.clear();
-		return;
-	}
-
-	PrepareInternals();
-
-	input_position = 0;
-
-	has_multiple_files   = false;
-	should_end_on_ctrl_c = false;
-
-	// Change the last CR/LF or LF/CR to a single
-	// end of the line symbol, so that 'is_last_character'
-	// can be calculated easilty
+	// Change the last CR/LF or LF/CR to a single end of the line symbol,
+	// makes it easier to calculate 'is_last_character' value
 	const auto length = input_strings.size();
 	if (length >= 2) {
 		const auto code1 = input_strings[length - 2];
@@ -909,7 +869,10 @@ void MoreOutputStrings::Display()
 			input_strings.pop_back();
 		}
 	}
+}
 
+void MoreOutputStrings::CountLines()
+{
 	// Calculate total number of lines
 	if (!input_strings.empty()) {
 		uint32_t lines = 1;
@@ -944,11 +907,74 @@ void MoreOutputStrings::Display()
 		SetLinesInStream(lines);
 	}
 
-	WriteOut("\n");
-	ClearScreenIfRequested();
-	DisplaySingleStream();
+	ProcessEndOfLines();
+}
+
+bool MoreOutputStrings::CommonPrepare()
+{
+	if (SuppressWriteOut("")) {
+		input_strings.clear();
+		return false;
+	}
+
+	if (!is_continuation) {
+		PrepareInternals();
+
+		input_position = 0;
+
+		has_multiple_files   = false;
+		should_end_on_ctrl_c = false;
+		is_continuation      = false;
+		is_output_terminated = false;
+
+		WriteOut("\n");
+		ClearScreenIfRequested();
+	}
+
+	return true;
+}
+
+void MoreOutputStrings::Display()
+{
+	if (!CommonPrepare()) {
+		return;
+	}
+
+	if (!is_continuation) {
+		CountLines();
+	}
+
+	if (!is_output_terminated) {
+		DisplaySingleStream();
+	}
+
+	is_continuation      = false;
+	is_output_terminated = false;
 
 	input_strings.clear();
+	input_position = 0;
+}
+
+bool MoreOutputStrings::DisplayPartial()
+{
+	if (!CommonPrepare()) {
+		is_continuation      = true;
+		is_output_terminated = true;
+		return false;
+	}
+
+	if (!is_output_terminated) {
+		if (UserDecision::Cancel == DisplaySingleStream()) {
+			is_output_terminated = true;
+		}
+	}
+
+	is_continuation = true;
+
+	input_strings.clear();
+	input_position = 0;
+
+	return !is_output_terminated;
 }
 
 bool MoreOutputStrings::GetCharacterRaw(char& code, bool& is_last_character)

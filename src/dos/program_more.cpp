@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 
 	constexpr auto search_attr = UINT16_MAX & ~DOS_ATTR_DIRECTORY & ~DOS_ATTR_VOLUME;
 
-	RealPt save_dta = dos.dta();
+	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 
 	bool found = false;
@@ -148,7 +148,7 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 			uint16_t date = 0;
 			uint8_t  attr = 0;
 
-			DOS_DTA dta(dos.dta());
+			const DOS_DTA dta(dos.dta());
 			dta.GetResult(name, size, date, time, attr);
 			assert(name);
 

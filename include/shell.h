@@ -173,4 +173,13 @@ private:
 	void CreateAutoexec();
 };
 
+// Localized output
+
+char* format_date(const uint16_t year, const uint8_t month, const uint8_t day);
+char* format_time(const uint8_t hour, const uint8_t min, const uint8_t sec,
+                  const uint8_t msec, const bool full = false);
+std::string format_number(const size_t num);
+
+std::string shorten_path(const std::string& path, const size_t max_len);
+
 #endif

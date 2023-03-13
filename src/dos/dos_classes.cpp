@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -307,7 +307,33 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 	return true;
 }
 
-void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char *pattern)
+std::string DOS_DTA::Result::GetExtension() const
+{
+	const auto pos = name.rfind('.');
+	if (pos == std::string::npos) {
+		return std::string();
+	}
+
+	return name.substr(pos + 1);
+}
+
+std::string DOS_DTA::Result::GetBareName() const
+{
+	if (name == "." || name == "..") {
+		return name;
+	}
+
+	const auto pos = name.rfind('.');
+	if (pos == std::string::npos) {
+		return name;
+	} else if (pos < 1) {
+		return std::string();
+	}
+
+	return name.substr(0, pos);
+}
+
+void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char* pattern)
 {
 	SSET_BYTE(sDTA, sdrive, drive);
 	SSET_BYTE(sDTA, sattr, attr);
@@ -354,7 +380,14 @@ void DOS_DTA::GetResult(char *found_name,
 	found_attr = SGET_BYTE(sDTA, attr);
 }
 
-void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
+void DOS_DTA::GetResult(Result& result) const
+{
+	char name[DOS_NAMELENGTH_ASCII];
+	GetResult(name, result.size, result.date, result.time, result.attr.data);
+	result.name = name;
+}
+
+void DOS_DTA::GetSearchParams(uint8_t& attr, char* pattern) const
 {
 	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];
