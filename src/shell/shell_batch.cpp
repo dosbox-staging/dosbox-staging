@@ -18,54 +18,44 @@
 
 #include "shell.h"
 
-#include <climits>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 
 #include "logging.h"
 #include "string_utils.h"
 
 // Permitted ASCII control characters in batch files
-constexpr uint8_t BACKSPACE = 8;
-constexpr uint8_t CARRIAGE_RETURN = '\r';
-constexpr uint8_t ESC = 27;
-constexpr uint8_t LINE_FEED = '\n';
-constexpr uint8_t TAB = '\t';
-constexpr uint8_t UNIT_SEPARATOR = 31;
+constexpr uint8_t Esc           = 27;
+constexpr uint8_t UnitSeparator = 31;
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(DOS_Shell *host,
-                     char const *const resolved_name,
-                     char const *const entered_name,
-                     char const *const cmd_line)
-        : file_handle(0),
-          location(0),
-          echo(host->echo),
+BatchFile::BatchFile(DOS_Shell* const host, const char* const resolved_name,
+                     const char* const entered_name, const char* const cmd_line)
+        : echo(host->echo),
           shell(host),
           prev(host->bf),
-          cmd(new CommandLine(entered_name, cmd_line)),
-          filename("")
+          cmd(new CommandLine(entered_name, cmd_line))
 {
-	char totalname[DOS_PATHLENGTH+4];
+	char totalname[DOS_PATHLENGTH + 4];
 
 	// Get fullname including drive specification
-	if (!DOS_Canonicalize(resolved_name, totalname))
+	if (!DOS_Canonicalize(resolved_name, totalname)) {
 		E_Exit("SHELL: Can't determine path to batch file %s", resolved_name);
-	
+	}
+
 	filename = totalname;
 	// Test if file is openable
-	if (!DOS_OpenFile(totalname,(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
-		//TODO Come up with something better
-		E_Exit("SHELL:Can't open BatchFile %s",totalname);
+	if (!DOS_OpenFile(totalname, (DOS_NOT_INHERIT | OPEN_READ), &file_handle)) {
+		shell->WriteOut("SHELL: Can't open BatchFile %s\n", totalname);
 	}
 	DOS_CloseFile(file_handle);
 }
 
-BatchFile::~BatchFile() {
+BatchFile::~BatchFile()
+{
 	cmd.reset();
 	assert(shell);
-	shell->bf = prev;
+	shell->bf   = prev;
 	shell->echo = echo;
 }
 
@@ -108,7 +98,7 @@ std::string BatchFile::GetLine()
 	uint16_t bytes_read = 1;
 	std::string line    = {};
 
-	while (data != LINE_FEED) {
+	while (data != '\n') {
 		DOS_ReadFile(file_handle, &data, &bytes_read);
 
 		// EOF
@@ -121,8 +111,8 @@ std::string BatchFile::GetLine()
 		 *  - tab for batch files
 		 *  - escape for ANSI
 		 */
-		if (data <= UNIT_SEPARATOR && data != TAB && data != BACKSPACE &&
-		    data != ESC && data != LINE_FEED && data != CARRIAGE_RETURN) {
+		if (data <= UnitSeparator && data != '\t' && data != '\b' &&
+		    data != Esc && data != '\n' && data != '\r') {
 			DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
 			              data,
 			              data);
