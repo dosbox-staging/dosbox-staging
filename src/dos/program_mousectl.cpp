@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ bool MOUSECTL::ParseAndRun()
 			return CmdSensitivity(params[1], params[2]);
 	}
 
-	WriteOut(MSG_Get("PROGRAM_MOUSECTL_SYNTAX"));
+	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	return false;
 }
 
@@ -541,24 +541,25 @@ void MOUSECTL::AddMessages()
 	        "Examples:\n"
 	        "  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
 
-	MSG_Add("PROGRAM_MOUSECTL_SYNTAX", "Wrong command syntax.");
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_PATTERN",
-	        "Wrong syntax, only ASCII characters allowed in pattern.");
+	        "Incorrect syntax, only ASCII characters allowed in pattern.\n");
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY",
-	        "Wrong syntax, sensitivity needs to be in -999 to +999 range.");
+	        "Incorrect syntax, sensitivity needs to be in -999 to +999 range.\n");
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_DUPLICATED",
-	        "Wrong syntax, duplicated mouse interfaces.");
+	        "Incorrect syntax, duplicated mouse interfaces.\n");
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE",
-	        "Wrong syntax, sampling rate has to be one of:\n%s");
+	        "Incorrect syntax, sampling rate has to be one of:\n%s\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
-	        "Mapping not available in no-mouse mode.");
-	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES", "No mouse interfaces available.");
+	        "Mapping not available in no-mouse mode.\n");
+	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
+	        "No mouse interfaces available.\n");
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
-	        "Mouse interface not available.");
-	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE", "No physical mice detected.");
+	        "Mouse interface not available.\n");
+	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE",
+	        "No physical mice detected.\n");
 	MSG_Add("PROGRAM_MOUSECTL_NO_MATCH",
-	        "No available mouse matching the pattern found.");
+	        "No available mouse found matching the pattern.\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER1",
 	        "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]");
