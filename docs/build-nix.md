@@ -60,11 +60,11 @@ See more build options in [BUILD.md](/BUILD.md).
 If you are either running in a nixpkgs setup or with NixOS installed inside of another
 system (using the Chroot method), you may have issues [getting OpenGL working with 
 DOSBox Staging.](https://nixos.wiki/wiki/Nixpkgs_with_OpenGL_on_non-NixOS) This is caused by how Nix handles OpenGL, and can be fixed 
-with Wrappers developed by the community. 
+with wrappers developed by the community. 
 
-Currently, we recommend installing [the nixGL wrapper](https://github.com/guibou/nixGL), as it worked
+Currently, we recommend installing [the nixGL wrapper](https://github.com/guibou/nixGL), as it works
 flawlessly with DOSBox Staging. After installing the wrapper appropriate
-to your hardware, run the following command on your terminal to launch
+to your hardware, run the following command in the terminal to launch
 your binary:
 
 ### Launching with nixGLDefault (tries to auto-detect your setup) 
@@ -85,7 +85,7 @@ nixGLNvidia ./build/dosbox
 nixGLNvidiaBumblebee ./build/dosbox
 ```
 
-### Launching with nixGLIntel (uses Mesa drivers for AMD, Intel, Nouveau...)
+### Launching with nixGLIntel (uses Mesa drivers for AMD, Intel, Nouveau, etc.)
 
 ``` shell
 nixGLIntel ./build/dosbox
