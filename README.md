@@ -189,6 +189,18 @@ sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
 ```
 
 ``` shell
+# NixOS 
+# With Home Manager on home.nix (Recommended Permanent Installation)
+home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net \ 
+                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \ 
+                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
+                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
+
+# Note: the same package list will work with environment.systemPackages 
+# on configuration.nix
+```
+
+``` shell
 # macOS
 xcode-select --install
 brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
@@ -253,16 +265,17 @@ a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
-### Windows (MSYS2), macOS (MacPorts), Haiku, others
+### Windows (MSYS2), macOS (MacPorts), Haiku, Nix0S, others
 
 Instructions for other build systems and operating systems are documented
 in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
-[Haiku].
+[Haiku], [NixOS].
 
 [BUILD.md]: BUILD.md
 [MSYS2]:    docs/build-windows.md
 [MacPorts]: docs/build-macos.md
 [Haiku]:    docs/build-haiku.md
+[NixOS]:    docs/build-nix.md
 
 ## Imported branches, community patches, old forks
 

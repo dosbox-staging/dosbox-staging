@@ -26,11 +26,12 @@ example, the **debug** and **release** configurations can reside in
 
 Instructions in this article assume you're using Linux or BSD but will work
 on any modern system. Documentation for programmers using other systems:
-[Windows], [macOS], [Haiku].
+[Windows], [macOS], [Haiku], [NixOS] .
 
 [Windows]: docs/build-windows.md
 [macOS]: docs/build-macos.md
 [Haiku]: docs/build-haiku.md
+[NixOS]: docs/build-nix.md
 
 ## Standard release build, all features enabled
 
