@@ -33,6 +33,8 @@ constexpr uint8_t LINE_FEED = '\n';
 constexpr uint8_t TAB = '\t';
 constexpr uint8_t UNIT_SEPARATOR = 31;
 
+[[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
+
 BatchFile::BatchFile(DOS_Shell *host,
                      char const *const resolved_name,
                      char const *const entered_name,
@@ -176,79 +178,41 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 	return expanded;
 }
 
-// TODO: Refactor this sprawling function into smaller ones without GOTOs
-bool BatchFile::Goto(char * where) {
-	//Open bat file and search for the where string
-	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
-		LOG(LOG_MISC,LOG_ERROR)("SHELL:Goto Can't open BatchFile %s",filename.c_str());
-		return false; // Parent deletes this BatchFile on negative return
-	}
+bool BatchFile::Goto(const std::string_view label)
+{
+	std::string line = " ";
 
-	char cmd_buffer[CMD_MAXLINE] = "";
-	char *cmd_write = nullptr;
-
-	/* Scan till we have a match or return false */
-	uint16_t bytes_read = 1;
-	uint8_t data = 0;
-	char val = 0;
-again:
-	cmd_write=cmd_buffer;
-	do {
-		bytes_read = 1;
-		DOS_ReadFile(file_handle, &data, &bytes_read);
-		val = static_cast<char>(data);
-		if (bytes_read > 0) {
-			// Note: the negative allowance permits high
-			// international ASCII characters that are wrapped when
-			// char is a signed type
-
-			if (
-#if (CHAR_MIN < 0) // char is signed
-			    val < 0 ||
-#endif
-			    val > UNIT_SEPARATOR) {
-				if (cmd_write - cmd_buffer + 1 < CMD_MAXLINE - 1) {
-					*cmd_write++ = val;
-				}
-			} else if (val != BACKSPACE && val != CARRIAGE_RETURN &&
-			           val != ESC && val != LINE_FEED && val != TAB) {
-				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
-				              val, val);
-			}
-		}
-	} while (val != LINE_FEED && bytes_read);
-	*cmd_write++ = 0;
-	char *nospace = trim(cmd_buffer);
-	if (nospace[0] == ':') {
-		nospace++; //Skip :
-		//Strip spaces and = from it.
-		while(*nospace && (isspace(*reinterpret_cast<unsigned char*>(nospace)) || (*nospace == '=')))
-			nospace++;
-
-		//label is until space/=/eol
-		char* const beginlabel = nospace;
-		while(*nospace && !isspace(*reinterpret_cast<unsigned char*>(nospace)) && (*nospace != '=')) 
-			nospace++;
-
-		*nospace = 0;
-		if (strcasecmp(beginlabel,where)==0) {
-		//Found it! Store location and continue
-			this->location = 0;
-			DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_CUR);
-			DOS_CloseFile(file_handle);
+	while (!line.empty()) {
+		line = GetLine();
+		if (found_label(line, label)) {
 			return true;
 		}
-	   
 	}
-	if (!bytes_read) {
-		DOS_CloseFile(file_handle);
-		return false; // Parent deletes this BatchFile on negative return
-	}
-	goto again;
+
 	return false;
 }
 
 void BatchFile::Shift()
 {
 	cmd->Shift(1);
+}
+
+static bool found_label(std::string_view line, const std::string_view label)
+{
+	const auto label_start  = line.find_first_not_of("=\t :");
+	const auto label_prefix = line.substr(0, label_start);
+
+	if (label_start == std::string::npos ||
+	    std::count(label_prefix.begin(), label_prefix.end(), ':') != 1) {
+		return false;
+	}
+
+	line = line.substr(label_start);
+
+	const auto label_end = line.find_first_of("\t\r\n ");
+	if (label_end != std::string::npos && label_end == label.size()) {
+		line = line.substr(0, label_end);
+	}
+
+	return iequals(line, label);
 }
