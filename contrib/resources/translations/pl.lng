@@ -1945,36 +1945,42 @@ Uwagi:
 Przykłady:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Nieprawidłowa składnia.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Nieprawidłowa składnia, w nazwie dozwolone są tylko znaki ASCII.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Nieprawidłowa składnia, czułość musi być w zakresie od -999 do +999.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Nieprawidłowa składnia, zduplikowany interfejs.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Nieprawidłowa składnia, częstotliwość próbkowania musi być jedną z:
 %s[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
-Żaden interfejs myszy nie jest dostępny.[color=white]Interfejs        Czułość     Próbkowanie (Hz)     Status[reset]
+Żaden interfejs myszy nie jest dostępny.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Interfejs myszy nie jest dostępny.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Nie wykryto żadnej fizycznej myszy.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Nie znaleziono żadnej fizycznej myszy o pasującej nazwie.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interfejs        Czułość      Próbkowanie (Hz)   Status[reset]
@@ -2134,6 +2140,38 @@ Typ musi być jednym z:
 Nieprawidłowa ścieżka.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Nieprawidłowy przełącznik: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Brak wymaganego parametru.
+
+.
+:SHELL_SYNTAX_ERROR
+Nieprawidłowa składnia.
+
+.
+:SHELL_ACCESS_DENIED
+Brak dostępu - %s.
+
+.
+:SHELL_FILE_CREATE_ERROR
+Nie można stworzyć pliku - %s.
+
+.
+:SHELL_FILE_OPEN_ERROR
+Nie można otworzyć pliku - %s.
+
+.
+:SHELL_FILE_NOT_FOUND
+Nie odnaleziono pliku - %s.
+
+.
+:SHELL_FILE_EXISTS
+Plik %s już istnieje.
+
+.
 :SHELL_CMD_HELP
 Aby zobaczyć listę wszystkich obsługiwanych komend, wpisz [color=yellow]help /all[reset].
 Krótka lista najczęściej używanych komend:
@@ -2166,14 +2204,6 @@ ECHO jest włączone.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO jest wyłączone.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Nieprawidłowy przełącznik '%s'.
-
-.
-:SHELL_MISSING_PARAMETER
-Brak wymaganego parametru.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2276,10 +2306,6 @@ Nie można usunąć katalogu '%s'.
 Nie można usunąć '%s'.
 
 .
-:SHELL_SYNTAXERROR
-Nieprawidłowa składnia.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Zmienna środowiskowa %s nie jest zdefiniowana.
 
@@ -2308,10 +2334,6 @@ GOTO: Brakuje etykiety.
 GOTO: Nie odnaleziono etykiety %s.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Brak dostępu - '%s'.
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Podwójne przekierowanie - '%s'.
 
@@ -2320,22 +2342,6 @@ Podwójne przekierowanie - '%s'.
 
 Nie można utworzyć lub otworzyć pliku tymczasowego dla strumienia.
 Sprawdź zmienną środowiskową %%TEMP%%.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Nie można utworzyć pliku '%s'.
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Nie można otworzyć pliku '%s'.
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Nie odnaleziono pliku '%s'.
-
-.
-:SHELL_CMD_FILE_EXISTS
-Plik '%s' już istnieje.
 
 .
 :SHELL_CMD_DIR_VOLUME

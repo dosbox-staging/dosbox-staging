@@ -2082,36 +2082,42 @@ Note:
 Esempi:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Sintassi del comando errata.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Sintassi errata, sono ammessi solo caratteri ASCII.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Sintassi errata, la sensibilità deve essere compresa tra -999 e +999.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Sintassi errata, interfacce del mouse duplicate.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Sintassi errata, la frequenza di polling deve essere una dei seguenti:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mappatura non disponibile in modalità senza mouse.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Nessuna interfaccia del mouse disponibile.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Interfaccia mouse non disponibile.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Nessun mouse fisico rilevato.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Nessun mouse corrispondente trovato.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interfaccia    Sensibilità    Frequenza (Hz)    Stato[reset]
@@ -2277,6 +2283,38 @@ Il tipo deve essere uno dei seguenti:
 Percorso non valido.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Opzione non valida: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Parametro richiesto mancante.
+
+.
+:SHELL_SYNTAX_ERROR
+La sintassi del comando non è corretta.
+
+.
+:SHELL_ACCESS_DENIED
+Accesso negato - %s
+
+.
+:SHELL_FILE_CREATE_ERROR
+Errore nella creazione del file - %s
+
+.
+:SHELL_FILE_OPEN_ERROR
+Errore di apertura del file - %s
+
+.
+:SHELL_FILE_NOT_FOUND
+File non trovato: %s 
+
+.
+:SHELL_FILE_EXISTS
+Il file %s esiste già.
+
+.
 :SHELL_CMD_HELP
 Per una lista di tutti i comandi supportati, digita [color=yellow]help /all[reset].
 Segue una breve lista dei comandi più comuni:
@@ -2313,14 +2351,6 @@ ECHO attivato.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO disattivato.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Opzione non valida: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Parametro richiesto mancante.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2427,10 +2457,6 @@ Impossibile rimuovere: %s.
 Impossibile eliminare: %s.
 
 .
-:SHELL_SYNTAXERROR
-La sintassi del comando non è corretta.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Variabile di ambiente %s non definita.
 
@@ -2459,10 +2485,6 @@ Nessuna etichetta fornita al comando GOTO.
 GOTO: Etichetta %s non trovata.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Accesso negato - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Reindirizzamento duplicato - %s
 
@@ -2471,22 +2493,6 @@ Reindirizzamento duplicato - %s
 
 Impossibile creare/aprire un file temporaneo per il piping.
 Controllare la variabile %%TEMP%%.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Errore nella creazione del file - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Errore di apertura del file - %s
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-File non trovato: %s 
-
-.
-:SHELL_CMD_FILE_EXISTS
-Il file %s esiste già.
 
 .
 :SHELL_CMD_DIR_VOLUME

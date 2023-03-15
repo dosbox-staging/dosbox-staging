@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -244,7 +244,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 //TODO Maybe support confirmation for *.* like dos does.
 	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 		dos.dta(save_dta);
 		return;
 	}
@@ -256,7 +256,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 		dta.GetResult(name,size,date,time,attr);
 		strcpy(end, name);
 		if (attr & DOS_ATTR_READ_ONLY) {
-			WriteOut(MSG_Get("SHELL_CMD_FILE_ACCESS_DENIED"), full);
+			WriteOut(MSG_Get("SHELL_ACCESS_DENIED"), full);
 		} else if (!(attr & DOS_ATTR_DIRECTORY)) {
 			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
 		}
@@ -863,7 +863,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		if (!optB)
-			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
 			         pattern.c_str());
 		dos.dta(save_dta);
 		return;
@@ -1234,7 +1234,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		//Find first sourcefile
 		bool ret = DOS_FindFirst(const_cast<char*>(source.filename.c_str()),0xffff & ~DOS_ATTR_VOLUME);
 		if (!ret) {
-			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
 			dos.dta(save_dta);
 			return;
 		}
@@ -1494,7 +1494,7 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 		all_dirs.erase(all_dirs.begin());
 	}
 	if (!found)
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 	dos.dta(save_dta);
 }
 
@@ -1676,7 +1676,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 	HELP("TYPE");
 	StripSpaces(args);
 	if (!*args) {
-		WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 		return;
 	}
 	uint16_t handle;
@@ -1684,7 +1684,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 nextfile:
 	word=strip_word(args);
 	if (!DOS_OpenFile(word,0,&handle)) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),word);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),word);
 		return;
 	}
 	uint16_t n;uint8_t c;
