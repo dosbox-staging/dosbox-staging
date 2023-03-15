@@ -17,6 +17,9 @@
  */
 
 #include "mouse_interfaces.h"
+
+#include <memory>
+
 #include "mouse.h"
 #include "mouse_common.h"
 #include "mouse_config.h"
@@ -26,7 +29,7 @@
 
 CHECK_NARROWING();
 
-std::vector<MouseInterface*> mouse_interfaces = {};
+std::vector<std::unique_ptr<MouseInterface>> mouse_interfaces = {};
 
 // ***************************************************************************
 // Mouse interface information facade
@@ -38,7 +41,8 @@ MouseInterfaceInfoEntry::MouseInterfaceInfoEntry(const MouseInterfaceId interfac
 
 const MouseInterface& MouseInterfaceInfoEntry::Interface() const
 {
-	return *mouse_interfaces[interface_idx];
+	assert(mouse_interfaces[interface_idx]);
+	return *mouse_interfaces[interface_idx].get();
 }
 
 const MousePhysical& MouseInterfaceInfoEntry::MappedPhysical() const
@@ -222,13 +226,6 @@ private:
 // Base mouse interface
 // ***************************************************************************
 
-static InterfaceDos interface_dos;
-static InterfacePS2 interface_ps2;
-static InterfaceCOM interface_com1(0);
-static InterfaceCOM interface_com2(1);
-static InterfaceCOM interface_com3(2);
-static InterfaceCOM interface_com4(3);
-
 void MouseInterface::InitAllInstances()
 {
 	if (!mouse_interfaces.empty()) {
@@ -241,28 +238,35 @@ void MouseInterface::InitAllInstances()
 	for (uint8_t i = first; i <= last; i++) {
 		switch (static_cast<MouseInterfaceId>(i)) {
 		case MouseInterfaceId::DOS:
-			mouse_interfaces.push_back(&interface_dos);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfaceDos>());
 			break;
 		case MouseInterfaceId::PS2:
-			mouse_interfaces.push_back(&interface_ps2);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfacePS2>());
 			break;
 		case MouseInterfaceId::COM1:
-			mouse_interfaces.push_back(&interface_com1);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfaceCOM>(0));
 			break;
 		case MouseInterfaceId::COM2:
-			mouse_interfaces.push_back(&interface_com2);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfaceCOM>(1));
 			break;
 		case MouseInterfaceId::COM3:
-			mouse_interfaces.push_back(&interface_com3);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfaceCOM>(2));
 			break;
 		case MouseInterfaceId::COM4:
-			mouse_interfaces.push_back(&interface_com4);
+			mouse_interfaces.emplace_back(
+			        std::make_unique<InterfaceCOM>(3));
 			break;
 		default: assert(false); break;
 		}
 	}
 
-	for (auto interface : mouse_interfaces) {
+	for (auto& interface : mouse_interfaces) {
+		assert(interface);
 		interface->Init();
 		interface->UpdateConfig();
 	}
@@ -272,7 +276,8 @@ MouseInterface* MouseInterface::Get(const MouseInterfaceId interface_id)
 {
 	const auto idx = static_cast<size_t>(interface_id);
 	if (idx < mouse_interfaces.size()) {
-		return mouse_interfaces[idx];
+		assert(mouse_interfaces[idx]);
+		return mouse_interfaces[idx].get();
 	}
 
 	assert(interface_id == MouseInterfaceId::None);

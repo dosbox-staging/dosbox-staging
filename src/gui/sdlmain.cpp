@@ -817,8 +817,6 @@ static void safe_set_window_size(const int w, const int h)
 	std::swap(sdl.draw.callback, saved_callback);
 }
 
-static Pacer render_pacer("Render", 7000, Pacer::LogLevel::TIMEOUTS);
-
 static const VsyncPreference &get_vsync_preference()
 {
 	return sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
@@ -837,6 +835,8 @@ static void save_rate_to_frame_period(const double rate_hz)
 	sdl.frame.period_us_late = static_cast<int>(145 * period_us / 100);
 }
 
+static std::unique_ptr<Pacer> render_pacer = {};
+
 static int benchmark_presentation_rate()
 {
 	// If the presentation function is empty, then we can't benchmark
@@ -848,7 +848,7 @@ static int benchmark_presentation_rate()
 	const auto bench_frames = 4;
 	// Disable the pacer because we need every frame presented and measured
 	// so we can hit the vsync wall (if it exists)
-	render_pacer.SetTimeout(0);
+	render_pacer->SetTimeout(0);
 	// Warmup round
 	for (auto i = 0; i < warmup_frames; ++i) {
 		sdl.frame.update(nullptr);
@@ -1191,7 +1191,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	// them.
 	const auto is_vfr_mode = mode == FRAME_MODE::VFR ||
 	                         mode == FRAME_MODE::THROTTLED_VFR;
-	render_pacer.SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
+	render_pacer->SetTimeout(is_vfr_mode ? sdl.vsync.skip_us : 0);
 
 	// Start synced presentation, if applicable
 	if (mode == FRAME_MODE::SYNCED_CFR)
@@ -1375,7 +1375,7 @@ finish:
 	// Ensure the time to change window modes isn't counted against
 	// our paced timing. This is a rare event that depends on host
 	// latency (and not the rendering pipeline).
-	render_pacer.Reset();
+	render_pacer->Reset();
 
 	sdl.update_display_contents = true;
 	return sdl.window;
@@ -2508,13 +2508,13 @@ static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
 
 static bool present_frame_texture()
 {
-	const auto is_presenting = render_pacer.CanRun();
+	const auto is_presenting = render_pacer->CanRun();
 	if (is_presenting) {
 		SDL_RenderClear(sdl.renderer);
 		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
 		SDL_RenderPresent(sdl.renderer);
 	}
-	render_pacer.Checkpoint();
+	render_pacer->Checkpoint();
 	return is_presenting;
 }
 
@@ -2561,7 +2561,7 @@ static void update_frame_gl_fb(const uint16_t *changedLines)
 
 static bool present_frame_gl()
 {
-	const auto is_presenting = render_pacer.CanRun();
+	const auto is_presenting = render_pacer->CanRun();
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (sdl.opengl.program_object) {
@@ -2573,7 +2573,7 @@ static bool present_frame_gl()
 		}
 		SDL_GL_SwapWindow(sdl.window);
 	}
-	render_pacer.Checkpoint();
+	render_pacer->Checkpoint();
 	return is_presenting;
 }
 #endif
@@ -3698,6 +3698,9 @@ static void GUI_StartUp(Section *sec)
 	                                              : VSYNC_STATE::OFF;
 	sdl.vsync.skip_us = section->Get_int("vsync_skip");
 
+	render_pacer = std::make_unique<Pacer>("Render",
+	                                       sdl.vsync.skip_us,
+	                                       Pacer::LogLevel::TIMEOUTS);
 
 	const int display = section->Get_int("display");
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {

@@ -36,6 +36,9 @@ typedef int32_t MemHandle;
 extern HostPt MemBase;
 HostPt GetMemBase();
 
+uint16_t MEM_GetMinMegabytes();
+uint16_t MEM_GetMaxMegabytes();
+
 bool MEM_A20_Enabled();
 void MEM_A20_Enable(bool enable);
 

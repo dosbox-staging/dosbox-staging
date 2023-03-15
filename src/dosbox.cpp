@@ -40,6 +40,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
+#include "memory.h"
 #include "midi.h"
 #include "mixer.h"
 #include "mouse.h"
@@ -468,7 +469,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&MEM_Init);
 	secprop->AddInitFunction(&HARDWARE_Init);
 	pint = secprop->Add_int("memsize", when_idle, 16);
-	pint->SetMinMax(1, 384);
+	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
 	        "Amount of memory of the emulated machine has in MB (16 by default).\n"
 	        "Best leave at the default setting to avoid problems with some games,\n"

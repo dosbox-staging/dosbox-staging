@@ -119,6 +119,7 @@ public:
 	MouseInterface()                                 = delete;
 	MouseInterface(const MouseInterface&)            = delete;
 	MouseInterface& operator=(const MouseInterface&) = delete;
+	virtual ~MouseInterface()                        = default;
 
 	static void InitAllInstances();
 	static MouseInterface* Get(const MouseInterfaceId interface_id);
@@ -173,7 +174,6 @@ protected:
 
 	MouseInterface(const MouseInterfaceId interface_id,
 	               const float sensitivity_predefined);
-	virtual ~MouseInterface() = default;
 	virtual void Init();
 
 	uint8_t GetInterfaceIdx() const;
@@ -221,6 +221,6 @@ private:
 	float sensitivity_predefined = 1.0f; // hardcoded for the given interface
 };
 
-extern std::vector<MouseInterface*> mouse_interfaces;
+extern std::vector<std::unique_ptr<MouseInterface>> mouse_interfaces;
 
 #endif // DOSBOX_MOUSE_INTERFACES_H
