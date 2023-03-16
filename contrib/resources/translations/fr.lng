@@ -1416,23 +1416,23 @@ La syntaxe de la commande est incorrecte.
 
 .
 :SHELL_ACCESS_DENIED
-Access denied - %s
+Access denied - '%s'
 
 .
 :SHELL_FILE_CREATE_ERROR
-File creation error - %s
+File creation error - '%s'
 
 .
 :SHELL_FILE_OPEN_ERROR
-File open error - %s
+File open error - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
-Fichier %s non trouvé.
+Fichier '%s' non trouvé.
 
 .
 :SHELL_FILE_EXISTS
-Fichier %s déjà existant.
+Fichier '%s' déjà existant.
 
 .
 :SHELL_CMD_HELP

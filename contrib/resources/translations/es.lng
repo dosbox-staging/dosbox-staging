@@ -1672,23 +1672,23 @@ La sintaxis del comando es incorrecta.
 
 .
 :SHELL_ACCESS_DENIED
-Access denied - %s
+Access denied - '%s'
 
 .
 :SHELL_FILE_CREATE_ERROR
-File creation error - %s
+File creation error - '%s'
 
 .
 :SHELL_FILE_OPEN_ERROR
-File open error - %s
+File open error - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
-Archivo %s no encontrado.
+Archivo '%s' no encontrado.
 
 .
 :SHELL_FILE_EXISTS
-Archivo %s ya existe.
+Archivo '%s' ya existe.
 
 .
 :SHELL_CMD_HELP

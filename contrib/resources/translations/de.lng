@@ -1980,23 +1980,23 @@ Die Syntax des Befehls ist falsch.
 
 .
 :SHELL_ACCESS_DENIED
-Zugriff verweigert - %s
+Zugriff verweigert - '%s'
 
 .
 :SHELL_FILE_CREATE_ERROR
-Fehler beim Erstellen der Datei - %s
+Fehler beim Erstellen der Datei - '%s'
 
 .
 :SHELL_FILE_OPEN_ERROR
-Fehler beim Öffnen der Datei - %s
+Fehler beim Öffnen der Datei - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
-Datei %s nicht gefunden.
+Datei '%s' nicht gefunden.
 
 .
 :SHELL_FILE_EXISTS
-Die Datei %s existiert bereits.
+Die Datei '%s' existiert bereits.
 
 .
 :SHELL_CMD_HELP
