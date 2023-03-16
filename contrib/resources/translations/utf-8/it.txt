@@ -2296,23 +2296,23 @@ La sintassi del comando non è corretta.
 
 .
 :SHELL_ACCESS_DENIED
-Accesso negato - %s
+Accesso negato - '%s'
 
 .
 :SHELL_FILE_CREATE_ERROR
-Errore nella creazione del file - %s
+Errore nella creazione del file - '%s'
 
 .
 :SHELL_FILE_OPEN_ERROR
-Errore di apertura del file - %s
+Errore di apertura del file - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
-File non trovato: %s 
+File non trovato - '%s'
 
 .
 :SHELL_FILE_EXISTS
-Il file %s esiste già.
+Il file '%s' esiste già.
 
 .
 :SHELL_CMD_HELP

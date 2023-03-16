@@ -2153,23 +2153,23 @@ Nieprawidłowa składnia.
 
 .
 :SHELL_ACCESS_DENIED
-Brak dostępu - %s.
+Brak dostępu - '%s'.
 
 .
 :SHELL_FILE_CREATE_ERROR
-Nie można stworzyć pliku - %s.
+Nie można stworzyć pliku - '%s'.
 
 .
 :SHELL_FILE_OPEN_ERROR
-Nie można otworzyć pliku - %s.
+Nie można otworzyć pliku - '%s'.
 
 .
 :SHELL_FILE_NOT_FOUND
-Nie odnaleziono pliku - %s.
+Nie odnaleziono pliku - '%s'.
 
 .
 :SHELL_FILE_EXISTS
-Plik %s już istnieje.
+Plik '%s' już istnieje.
 
 .
 :SHELL_CMD_HELP

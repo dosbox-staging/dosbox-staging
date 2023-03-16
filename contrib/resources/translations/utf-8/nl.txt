@@ -2162,23 +2162,23 @@ De syntaxis van de opdracht is onjuist.
 
 .
 :SHELL_ACCESS_DENIED
-Toegang geweigerd - %s
+Toegang geweigerd - '%s'
 
 .
 :SHELL_FILE_CREATE_ERROR
-Fout bij aanmaken bestand - %s
+Fout bij aanmaken bestand - '%s'
 
 .
 :SHELL_FILE_OPEN_ERROR
-Fout bij openen bestand - %s
+Fout bij openen bestand - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
-Bestand niet gevonden: %s
+Bestand niet gevonden - '%s'
 
 .
 :SHELL_FILE_EXISTS
-Bestand %s bestaat al.
+Bestand '%s' bestaat al.
 
 .
 :SHELL_CMD_HELP
