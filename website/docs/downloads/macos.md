@@ -6,13 +6,14 @@ hide:
 # macOS builds
 
 
-**[Download DOSBox Staging 0.80.1 Universal binary (dmg)][0_80_1]**
+**[Download DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1]**
 <br>
 <small>
 sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa
 </small>
 
-This package is compatible with macOS 10.15 (Catalina) or newer.
+This package is compatible with macOS 10.15 (Catalina) or newer and supports both
+Intel and M1 Macs.
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
 the changes and improvements introduced by this release.
