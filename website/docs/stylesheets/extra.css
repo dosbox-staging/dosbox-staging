@@ -1,6 +1,13 @@
 /* Custom font for headings */
 @import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700");
 
+@font-face {
+  font-family: "IBM VGA";
+  src: url('../assets/fonts/Web437_IBM_VGA_8x16.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* General */
 body {
   -webkit-font-smoothing: auto;
@@ -22,6 +29,21 @@ body {
 .md-content a:hover {
   text-decoration: underline;
 }
+/*
+.md-content a[external]:after {
+  font-family: "icons" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  font-size: 65%;
+  content: "  \e900 ";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+*/
 
 .md-content ul {
   list-style: square;
@@ -124,6 +146,7 @@ body {
   box-shadow: none;
 }
 
+
 .md-typeset .admonition.note,
 .md-typeset details.note {
   background: #448aff1a;
@@ -131,6 +154,24 @@ body {
 .md-typeset .admonition.note .admonition-title,
 .md-typeset details.note summary {
   background: #448aff30 !important;
+}
+
+.md-typeset .admonition.abstract,
+.md-typeset details.abstract {
+  background: #00b0ff1a;
+}
+.md-typeset .admonition.abstract .admonition-title,
+.md-typeset details.abstract summary {
+  background: #00b0ff30 !important;
+}
+
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  background: #00b8d41a;
+}
+.md-typeset .admonition.info .admonition-title,
+.md-typeset details.info summary {
+  background: #00b8d430 !important;
 }
 
 .md-typeset .admonition.important,
@@ -146,6 +187,24 @@ body {
   background: #00bfa530 !important;
 }
 
+.md-typeset .admonition.success,
+.md-typeset details.success {
+  background: #00c8531a;
+}
+.md-typeset .admonition.success .admonition-title,
+.md-typeset details.success summary {
+  background: #00c85330 !important;
+}
+
+.md-typeset .admonition.question,
+.md-typeset details.question {
+  background: #00b07020;
+}
+.md-typeset .admonition.question .admonition-title,
+.md-typeset details.question summary {
+  background: #00b07040 !important;
+}
+
 .md-typeset .admonition.warning,
 .md-typeset details.warning {
   background: #ff91001a;
@@ -155,22 +214,40 @@ body {
   background: #ff910030 !important;
 }
 
-.md-typeset .admonition.question,
-.md-typeset details.question {
-  background: #00b07022;
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  background: #f017341a;
 }
-.md-typeset .admonition.question .admonition-title,
-.md-typeset details.question summary {
-  background: #00b07042 !important;
+.md-typeset .admonition.danger .admonition-title,
+.md-typeset details.danger summary {
+  background: #f0173430 !important;
 }
-.md-typeset :-webkit-any(.question,.help,.faq)>:-webkit-any(.admonition-title,summary):before{
-  background-color:#00b070;
+
+.md-typeset .admonition.failure,
+.md-typeset details.failure {
+  background: #ff52521a;
 }
-.md-typeset :-moz-any(.question,.help,.faq)>:-moz-any(.admonition-title,summary):before{
-  background-color:#00b070;
+.md-typeset .admonition.failure .admonition-title,
+.md-typeset details.failure summary {
+  background: #ff525230 !important;
 }
-.md-typeset :is(.question,.help,.faq)>:is(.admonition-title, summary):before{
-  background-color:#00b070;
+
+.md-typeset .admonition.bug,
+.md-typeset details.bug {
+  background: #f500571a;
+}
+.md-typeset .admonition.bug .admonition-title,
+.md-typeset details.bug summary {
+  background: #f5005730 !important;
+}
+
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  background: #3c10f016;
+}
+.md-typeset .admonition.example .admonition-title,
+.md-typeset details.example summary {
+  background: #3c10f030 !important;
 }
 
 .md-typeset .admonition.quote,
@@ -182,22 +259,14 @@ body {
   background: #9e9e9e40 !important;
 }
 
-.md-typeset .admonition.example,
-.md-typeset details.example {
-  background: #3c10f01a;
+.md-typeset :-webkit-any(.question,.help,.faq)>:-webkit-any(.admonition-title,summary):before{
+  background-color: #00b070;
 }
-.md-typeset .admonition.example .admonition-title,
-.md-typeset details.example summary {
-  background: #3c10f030 !important;
+.md-typeset :-moz-any(.question,.help,.faq)>:-moz-any(.admonition-title,summary):before{
+  background-color: #00b070;
 }
-
-.md-typeset .admonition.danger,
-.md-typeset details.danger {
-  background: #f0173422;
-}
-.md-typeset .admonition.danger .admonition-title,
-.md-typeset details.danger summary {
-  background: #f0173434 !important;
+.md-typeset :is(.question,.help,.faq)>:is(.admonition-title, summary):before{
+  background-color: #00b070;
 }
 
 /* Tables */
@@ -215,7 +284,10 @@ body {
 }
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td {
-  padding: 0.6rem;
+  padding: 0.55rem 0.62rem;
+}
+.md-typeset table:not([class]) ul {
+  margin-left: 0;
 }
 
 .md-typeset .compact table:not([class]) th,
@@ -240,9 +312,15 @@ body {
 .md-typeset figure {
   max-width: 756px;
 }
+.md-typeset figure audio {
+  width: 17rem;
+}
 .md-typeset figcaption {
   font-size: 95%;
   max-width: 28rem
+}
+.md-typeset figure img {
+  margin: auto;
 }
 
 .md-typeset h2 .twemoji {
@@ -264,6 +342,48 @@ img.linux-badge {
     margin: 0;
   }
 }
+
+/* Definition lists */
+.md-typeset dl dt {
+  font-weight: 600;
+}
+.md-typeset dl dd {
+  margin-top: 0.25rem;
+}
+/*.md-typeset dl dd p {
+  margin-top: 0.7em;
+  margin-bottom: 0.7em;
+} */
+/*.md-typeset dl dd ul {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+} */
+/*
+.md-typeset dl dt a {
+  font-size: 1.15em;
+  font-family: Titillium Web;
+  color: var(--md-default-fg-color);
+}
+.md-typeset dl dt a:hover {
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+} */
+
+/* Tags */
+.md-typeset em.default {
+  position: relative;
+  top: -0.05rem;
+  margin-right: 0.1rem;
+  padding: 0.05rem 0.25rem;
+  border-radius: 0.13rem;
+  font-size: 0.6rem;
+  font-weight: bold;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.02rem;
+  background: #888;
+  color: var(--md-primary-bg-color);
+} 
 
 /* Footer */
 .md-footer-meta {
@@ -511,5 +631,19 @@ figcaption {
   .front-page .features {
     flex-basis: calc((100% - (1.2rem * 2)) / 3);
   }
+}
+
+/*--------------------------------------------------------------------------*/
+/* Documentation                                                            */
+/*--------------------------------------------------------------------------*/
+
+.md-typeset .dos-prompt pre>code {
+  font: 1rem IBM VGA;
+  background: #000;
+  color: #aaa;
+}
+
+.md-typeset .dos-prompt pre>code {
+    padding: 0.67rem 0.8rem 0.5rem 0.8rem;
 }
 
