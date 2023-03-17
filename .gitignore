@@ -28,6 +28,10 @@ vcpkg_installed
 !.vscode/extensions.json
 *.code-workspace
 
+# IntelliJ
+.idea
+*.iml
+
 # Local History for Visual Studio Code
 .history/
 
