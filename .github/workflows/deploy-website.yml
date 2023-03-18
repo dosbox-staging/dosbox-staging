@@ -42,10 +42,10 @@ jobs:
 
       - name: Install mkdocs
         run: |
-          pip install mkdocs-material==9.0.2 \
-                      mkdocs-minify-plugin==0.6.2 --use-pep517 \
-                      mkdocs-redirects==1.2.0 --use-pep517 \
-                      mkdocs-glightbox==0.3.1 \
+          pip install mkdocs-material==9.1.6 \
+                      mkdocs-minify-plugin==0.6.4 \
+                      mkdocs-redirects==1.2.0 \
+                      mkdocs-glightbox==0.3.2 \
                       mdx-gh-links==0.3
 
       - name: Get current documentation Git hash
