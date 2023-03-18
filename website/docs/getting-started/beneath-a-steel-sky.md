@@ -90,7 +90,7 @@ keep pressing <kbd>Space</kbd> or <kbd>Enter</kbd> to go to the next page, or
 legal notice we don't really care about. `INSTALL.EXE` is what we're
 after, so let's run that!
 
-We're greeted by a pretty standard looking installer. Either press a any key
+We're greeted by a pretty standard looking installer. Either press any key
 or wait a few seconds to progress to the second screen where you need to
 select where the game will be installed:
 
@@ -102,7 +102,7 @@ The interface is navigable by the cursor keys, <kbd>Esc</kbd>,
 <kbd>Enter</kbd>, and the mouse. The default `C:\SKY` install location is
 perfectly fine, so just press `Enter`.
 
-That will take you to the setup screen where you can select the language of
+That will take us to the setup screen where we can select the language of
 the in-game text (the voice-acting is in English only), and the sound card
 settings: 
 
@@ -112,8 +112,8 @@ settings:
 
 English is fine, and the game has auto-detected the Sound Blaster correctly, so
 just accept these defaults for now. And now, the counterintuitive part: to
-finish the installation and save the settings, you need to press the *Exit
-Install* button, which will take you to the (guess what?) *Exit Install*
+finish the installation and save the settings, we need to press the *Exit
+Install* button, which will take us to the (guess what?) *Exit Install*
 dialog:
 
 <figure markdown>
@@ -129,11 +129,12 @@ saved then if we press this? Probably it will just do the same thing as
 *Restore Default*...
 
 As you can see, this is not exactly a masterclass in user interface design,
-but it does the job. Expect all DOS-era install and setup utilities to be
-similarly slightly illogical---often it's not completely clear what to do, but it's not to hard to figure and it out with some trial and error.
+but it does the job. Expect many DOS-era install and setup utilities to be
+similarly slightly illogical---often it's not completely clear what to do, but
+it's not too hard to figure it and out with some trial and error.
 
-Anyway, after hitting the *Save Setup* the installer will exit and print the
-following instructions on the screen:
+Anyway, after pressing *Save Setup* the installer will exit and print out the
+following instructions:
 
 <pre class="dos-prompt">
 
@@ -155,8 +156,8 @@ Okey-dokey, let's just do as the computer says!
 
 ## Installing the game
 
-It's the easiest to put the above commands into our `[autoexec]` section, then
-simply start DOSBox:
+It's the easiest to put the above commands into the `[autoexec]` section of
+our config, then simply start DOSBox:
 
 ```ini
 [autexec]
@@ -191,3 +192,56 @@ romdir = D:\Emulators\DOS\ROMs\Roland\
 ```
 
 
+
+
+
+## Full configuration
+
+```ini
+[cpu]
+cycles = 10000
+
+[sblaster]
+sbtype = sbpro1
+
+[midi]
+mididevice = mt32
+
+[mt32]
+model = cm32l
+
+[mixer]
+reverb = large
+chorus = strong
+
+[autoexec]
+imgmount D "CD\Beneath a Steel Sky.iso" -t iso
+c:
+cd sky
+mixer fm 50
+sky
+```
+
+
+
+
+
+
+
+CPU    Speed  Cycles
+------ ------ ------
+8088    4.77     200
+8088    7.16     300
+8088      10     400
+8086      10     500
+286        8     800
+286       10    1000
+286       12    1500
+286       16    2000
+386DX     20    3000
+386DX     33    4000
+386DX     40    5000
+486DX     33    6000
+486DX2    66    1000
+486DX4   100   13000
+P-MMX    166   20000
