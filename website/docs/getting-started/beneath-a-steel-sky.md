@@ -153,3 +153,41 @@ SKY
 Okey-dokey, let's just do as the computer says!
 
 
+## Installing the game
+
+It's the easiest to put the above commands into our `[autoexec]` section, then
+simply start DOSBox:
+
+```ini
+[autexec]
+c:
+cd \sky
+sky
+```
+
+https://archive.org/details/beneath-a-steel-sky-security-manual/
+
+
+Don't watch the intro just yet; press <kbd>Esc</kbd> to jump straight to the
+starting scene. There's music playing, so far so good. Click on the *Notice*
+on the right door to inspect it. 
+
+
+
+
+## Setting up Roland MT-32 sound
+
+Requires CM-series/LAPC-I for proper MT-32 output. Buffer overflows on MT-32 'old'. Combined MT-32/SB output only possible using ScummVM
+
+https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games
+
+```ini
+[midi]
+mididevice = mt32
+
+[mt32]
+model = cm32l
+romdir = D:\Emulators\DOS\ROMs\Roland\
+```
+
+
