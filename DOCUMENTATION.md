@@ -117,10 +117,10 @@ Once that's done, you can install MkDocs and the required dependencies with
 the following command:
 
 ``` shell
-pip install mkdocs-material==9.0.2 \
-            mkdocs-minify-plugin==0.6.2 --use-pep517 \
+pip install mkdocs-material==9.1.6 \
+            mkdocs-minify-plugin==0.6.4 --use-pep517 \
             mkdocs-redirects==1.2.0 --use-pep517 \
-            mkdocs-glightbox==0.3.1 \
+            mkdocs-glightbox==0.3.2 \
             mdx-gh-links==0.3
 ```
 
