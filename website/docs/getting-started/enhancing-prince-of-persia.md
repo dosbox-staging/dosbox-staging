@@ -155,7 +155,8 @@ This is how the game looks with the fixed 16-colour EGA palette:
 
 That's nice, but it's not exactly how the graphics looked on an EGA monitor
 back in the day. Pre-VGA monitors had visible scanlines, and we can emulate
-that by enabling an OpenGL shader that emulates CRT displays of the era:
+that by enabling an OpenGL shader that emulates the CRT monitors
+(**C**athode-**R**ay **T**ube) of the era:
 
 ```ini
 [render]
@@ -271,7 +272,7 @@ period-accurate monochrome monitor.
     the game supported, then variants for "lesser" standards
     were derived from that. If you were an unlucky person still stuck with a
     Hercules or CGA adapter in 1990, being able to play Prince of Persia with
-    *any* graphics on your PC surely beat no game at all!
+    *any* graphics surely beat no game at all!
 
     Although we've shown how to emulate these earlier graphics standards for
     completeness' sake, there's generally little reason for *not* playing a
@@ -282,8 +283,8 @@ period-accurate monochrome monitor.
     we to judge? :laughing:
 
     In any case, preserving all relevant aspects of PC gaming history is
-    important for the DOSBox project, so these display options are always at
-    your fingertips, should you need them.
+    important for the DOSBox project, so these display options are always
+    available at your fingertips, should you need ever them.
 
 
 ## Authentic VGA emulation
@@ -362,9 +363,9 @@ and the `light` and `strong` chorus settings as well.
 
 !!! note "Purist alert!"
 
-    For the purists among you: adding reverb and chorus to the OPL sound is
-    something you can do on certain Sound Blaster AWE32 and AWE64 models on real
-    hardware too, using the standard Sound Blaster drivers.
+    For the purists among you: adding reverb and chorus to the OPL synthesiser
+    is something you can do on certain Sound Blaster AWE32 and AWE64 models on
+    real hardware via the standard drivers.
 
 
 ## Auto-pause
@@ -389,7 +390,11 @@ take a break during a long cutscene that cannot be paused.
 
 ## Final configuration
 
-Below is the full configuration with all the enhancements we've added, including authentic VGA emulation on 4K displays.
+Below is the full config with all the enhancements we've added,
+including authentic VGA CRT monitor emulation on 4K displays. Note we've added the `exit`
+command to the end of the `[autoexec]` section; with this in place DOSBox will
+quit itself after we exit from the game by pressing
+<kbd>Ctrl</kbd>+<kbd>Q</kbd>. Not strictly necessary, but a nice touch.
 
 ```ini
 [sdl]
@@ -447,6 +452,7 @@ chorus = normal
 [autoexec]
 c:
 prince
+exit
 ```
 
 Well, we've pretty much maxed out Prince of Persia for demonstration purposes,

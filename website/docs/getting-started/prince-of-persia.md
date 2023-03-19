@@ -124,9 +124,11 @@ any other regular icon.
 
 ## Installing the game
 
-Once you've started up DOSBox, you're greeted by the following window:
+You'll be greeted by the following window when starting DOSBox:
 
-![](images/start.png)
+<figure markdown>
+  ![](images/start.png)
+</figure>
 
 Let's ignore the polite welcome message for now and focus on the text below
 the blue banner.
@@ -284,7 +286,7 @@ some fun, try to find the sword and overcome a few guards, maybe even attempt
 to fully complete the first level.
 
 You can quit the game by pressing <kbd>Ctrl</kbd>+<kbd>Q</kbd> which will
-return you to the DOS prompt. There you can use the `EXIT` command to close
+return you to the DOS prompt. There you can use the `exit` command to close
 DOSBox. Of course, you can quit DOSBox any time by pressing
 <kbd>Alt</kbd>+<kbd>F4</kbd> on Windows and Linux, or
 <kbd>Cmd</kbd>+<kbd>Q</kbd> on macOS.
