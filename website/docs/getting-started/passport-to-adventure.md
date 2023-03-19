@@ -30,8 +30,8 @@ Here are the locations of `dosbox-staging.conf` on each platform:
 !!! tip "Showing the Library folder in Finder"
 
      The `Library` folder is hidden by default in the macOS Finder. To enable
-     it, go to your home folder in Finder, press <kbd>Cmd</kbd>+<kbd>J</kbd> to
-     bring up the view options dialog, then check **Show Library Folder**.
+     it, go to your home folder in Finder, press ++cmd+j++ to bring up the
+     view options dialog, then check **Show Library Folder**.
 
 </div>
 

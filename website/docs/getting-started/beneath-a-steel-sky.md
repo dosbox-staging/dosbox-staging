@@ -12,14 +12,21 @@ freeware in 2003 (see their accompanying notes [here](bass-readme.txt)).
 We're going to set up the liberated "talkie" CD-ROM version of the game that
 has full voice-acting. You know the drill; create a new `Beneath a Steel Sky`
 folder inside your `DOS Games` subfolder and the usual `drives/c` subfolder
-within it. Then download the [ISO CD-ROM image](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin) and put it into a `cd`
-subfolder inside your game folder. The name of the `cd` subfolder has no
-special significance; you could put the `.iso` image anywhere, but it's good to
-get into the habit of organising your game files systematically (e.g., you
-could create a `Manual` of `Extras` subfolder too and put the scanned manuals
-and all other extra files there). It's a good idea to rename `Beneath a Steel Sky (1995)(Virgin).iso` to `bass.iso`; our game folder has full name of the game anyway.
+within it. Then download the [ISO CD-ROM
+image](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin) and put it
+into a `cd` subfolder inside your game folder. The name of the `cd` subfolder
+has no special significance; you could put the `.iso` image anywhere, but it's
+good to get into the habit of organising your game files systematically (e.g.,
+you could create a `Manual` of `Extras` subfolder too and put the scanned
+manuals and all other extra files there). It's a good idea to rename `Beneath
+a Steel Sky (1995)(Virgin).iso` to `bass.iso`; our game folder has full name
+of the game anyway.
 
-Speaking of manuals, make sure to get the scan of the [Security Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and the [comic book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf) that was included in the boxed version of the game.
+Speaking of manuals, make sure to get the scan of the [Security
+Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and
+the [comic
+book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
+that was included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
 
@@ -95,10 +102,9 @@ SKY      RST                  53,720 07/07/1994  7:19a
 
 Okay, so we've got two executables with the `.EXE` extension, and one text
 file. View `README.TXT` using the `more` command (run `more README.TXT`, then
-keep pressing <kbd>Space</kbd> or <kbd>Enter</kbd> to go to the next page, or
-<kbd>Ctrl</kbd>+<kbd>C</kbd> to quit). It turns out it just contains some
-legal notice we don't really care about. `INSTALL.EXE` is what we're
-after, so let's run that!
+keep pressing ++space++ or ++enter++ to go to the next page, or ++ctrl+c++ to
+quit). It turns out it just contains some legal notice we don't really care
+about. `INSTALL.EXE` is what we're after, so let's run that!
 
 We're greeted by a pretty standard looking installer. Either press any key
 or wait a few seconds to progress to the second screen where you need to
@@ -108,9 +114,9 @@ select where the game will be installed:
   ![](images/bass-setup1.png){ width=80% }
 </figure>
 
-You can navigate the interface by the cursor keys, <kbd>Esc</kbd>,
-<kbd>Enter</kbd>, and the mouse. The default `C:\SKY` install location is
-perfectly fine, so just accept it by pressing `Enter`.
+You can navigate the interface by the cursor keys, ++Esc++, ++enter++, and the
+mouse. The default `C:\SKY` install location is perfectly fine, so just accept
+it by pressing `Enter`.
 
 That will take us to the setup screen where we can select the language of
 the in-game text (the voice-acting is in English only), and the sound card
@@ -174,44 +180,24 @@ cd \sky
 sky
 ```
 
-## Adjusting the emulated CPU speed
-
-After starting the game, don't watch the intro just yet; press <kbd>Esc</kbd>
-to jump straight to the starting scene. There's music playing, so far so good.
-Move the cursor over the door on the right side of the screen, and when it
-turns into a crosshair and the word "Door" appear next to it,
-Click on the *Notice* on the right door to inspect it.
-
-This is what Wikipedia say about the [Intel 486DX2/66](https://en.wikipedia.org/wiki/Intel_DX2#:~:text=The%20i486DX2%2D66,performance%20and%20longevity.):
-
-> The i486DX2-66 was a very popular processor for video games enthusiasts in
-> the early to mid-90s. Often coupled with 4 to 8 MB of RAM and a VLB video
-> card, this CPU was capable of playing virtually every game title available
-> for years after its release, right up to the end of the MS-DOS game era,
-> making it a "sweet spot" in terms of CPU performance and longevity.
-
-<div class="compact" markdown>
-
-| Emulated CPU      |  MHz | Approx. cycles
-|-------------------|-----:|--------------:
-| 8088              | 4.77 |    300
-| 286               |    8 |    700
-| 286               |   12 |   1500
-| 286               |   25 |   3000
-| 386DX             |   33 |   6000
-| 486DX             |   33 |  12000
-| 486DX2            |   66 |  25000
-| Intel Pentium     |   90 |  50000
-| Intel Pentium MMX |  166 | 100000
-| Intel Pentium II  |  300 | 200000
-
-</div>
-
-[list of CPU speed sensitive games](https://www.vogonswiki.com/index.php/List_of_CPU_speed_sensitive_games)
-
-
 
 ## Adjusting volume levels
+
+After starting the game, don't watch the intro just yet; press ++esc++ to jump
+straight to the starting scene. There's music playing, so far so good. Move
+the cursor over the door on the right side of the screen, and when it turns
+into a crosshair and the word "Door" appears next to it, press the left mouse
+button to inspect it. Lo and behold, you'll hear our protagonist speak! But
+it's barely audible, the music is just too loud.
+
+There are a couple of ways to fix that. You can press ++f5++ to bring up the
+options screen where you can lower the music volume significantly, but that
+makes the whole audio output too quiet. Worse yet, the setting doesn't get
+saved, so you'll need to do this every single time when starting up the game.
+
+Another issue we need to fix is the low speech volume relative to the music.
+DOSBox emulates the Sound Blaster 16
+Back in the day, there were more Sound Blaster variants you could shake a stick at, so who knows what the developers used to set those volume levels.
 
 ```ini
 [sblaster]
@@ -230,6 +216,183 @@ mixer fm 50
 sky
 exit
 ```
+
+## Adjusting the emulated CPU speed
+
+TODO
+ Now
+keep pressing the left mouse button repeatedly on the door, about two times
+per second, to keep starting then stopping the speech. You'll very likely hear
+audio stuttering and dropouts, ranging from subtle to quite severe, depending
+on how powerful your computer is. Also, if you *did* watch the intro video
+(which I told you to skip for now), you'd hear similar random audio stuttering
+from time to time.
+
+What's happening here? Well, DOS gaming spans almost two decades, and there
+were lots of different CPUs in use during that period, all having wildly
+different performance, or *clock speeds*. DOSBox doesn't emulate any specific
+CPU but a "generic" one. So how does it know at what speed to run a particular
+game then?
+
+It doesn't.
+
+To explain what's going on, we'll need to understand a few technical details.
+It won't hurt too much, I promise!
+
+### Real and protected mode
+
+DOS games can be divided into two categories: older games, and newer games
+(who would've guessed?) Older games released before about 1993 use something called
+*real mode*, while newer games released from 1993 onwards use *protected mode*.
+The important distinction here is that most CPU-hungry games are protected
+mode games (e.g., FPS games and flight simulators), while older pre-1993 real mode games
+generally have much less demanding performance requirements. Figuring out what
+exact CPU speed a particular game needs is almost impossible at the emulator level,
+but detecting whether a game uses real or protected mode is trivial.
+Therefore, DOSBox does the following automatic speed calibration by default:
+
+- For real mode games, it defaults to emulating 3,000 CPU instructions per millisecond.
+
+- For protected mode games, it emulates *as many CPU instructions as it can*
+  per millsecond.
+
+The reasoning here is that older games are often sensitive to CPU speed; they
+might run too fast or misbehave if the CPU is too performant, hence the more
+conservative setting. Newer, more demanding games, however, benefit from the
+extra speed advantage and can generally handle faster processors without
+negative side effects.
+
+While this approach generally gets all games *running*, manual tweaking of the
+emulated CPU speed is often required to make any particular game run
+*smoothly*. Protected mode games running at the maximum emulable CPU speed are
+particularly problematic because there might be not enough power left for
+smooth, glitch free audio emulation. There's zero point in emulating a faster
+CPU than what the game really needs as all that extra work could be put to
+better use---such as smoother audio emulation.
+
+Beyond a Steel Sky is a protected mode game, but how we do know that? Let's
+comment out the last `sky` comment in the `[autoexec]` section to prevent the
+game from auto-starting, then launch DOSBox in windowed mode. DOSBox itself
+*always* starts in real mode, and let's take a look at the text in the DOSBox
+window's title bar! It starts with the following:
+
+```ini
+DOSBOX - 3000 cycles/ms
+```
+
+Remember what we learned earlier: in real mode, DOSBox defaults to emulating
+3,000 CPU instructions, or *cycles*, per millisecond. The text in the title
+bar tells us the current cycles value, so indeed, we must be running in real
+mode now!
+
+Now start the game with the `sky` command and keep your eyes peeled on the title bar.
+The text will soon change to the following:
+
+```ini
+SKY - max 100%
+```
+
+`SKY` is the name of the executable that's running, and what do we see after
+that? `max 100%`! That's the tell-tale sign of a protected mode game because,
+as mentioned, DOSBox tries to emulate the fastest CPU it can in protected
+mode.
+
+And that's the crux of the problem---there's not enough horsepower left to
+emulate the time-critical audio output without stuttering and glitches. The
+solution is kind of obvious: instead of letting DOSBox run amok with the CPU
+emulation, we'll restrict it to a reasonable speed.
+
+We do that by specifying the number of CPU instructions, or cycles, to emulate per
+millisecond with the following config snippet:
+
+```ini
+[cpu]
+cycles = 12000
+```
+
+Restart DOSBox and do the "door test" again. All the audio glitches are now
+gone! Well done, time for a beer (or your beverage of choice)! :sunglasses:
+:beer:
+
+!!! info "Real and protected mode"
+
+    In very simple terms, *real mode* is a programming model that uses the
+    legacy 16-bit mode of an Intel 386 or later CPU, while *protected mode* takes
+    full advantage of its capabilities and runs in 32-bit mode. Protected mode is
+    the real deal, but it couldn't be universally utilised until 386 or better
+    CPUs had gained widespread adoption. That happened around the year 1993; games released
+    from thereon use protected mode almost exclusively.
+
+    You can easily spot protected mode games by the presence of so-called [DOS
+    extenders](https://en.wikipedia.org/wiki/DOS_extender) in their main game
+    directories. `DOS4GW.EXE`, `PMODEW.EXE`, and `CWSDPMI.EXE` were the most
+    popular ones.
+
+    But you don't need to worry about all that detail as DOSBox will indicate
+    with 100% accuracy whether a game runs in real or protected mode. Just set
+    `cycles` to `auto`, then watch the title bar of the DOSBox window while
+    running the game.
+
+
+
+### Finding the correct speed
+
+Ok, so why 12,000 and not any other number? The game's manual states that a
+386 or better processor is required. Indeed, the game works fine at 6,000
+cycles which approximates a 386DX CPU running at 33 MHz, but the loading times
+are a bit on the slow side. Setting cycles to 12,000---which roughly
+corresponds to a 486DX2/66 with "turbo mode" off, running at 33 MHz---speeds
+up the loading considerably while not causing any negative side effects. This
+is not surprising as the DX2/66 was one of the most popular CPUs in the 90s
+for gaming. This is what [Wikipedia says about
+it](https://en.wikipedia.org/wiki/Intel_DX2#:~:text=The%20i486DX2%2D66,performance%20and%20longevity.):
+
+> The i486DX2-66 was a very popular processor for video games enthusiasts in
+> the early to mid-90s. Often coupled with 4 to 8 MB of RAM and a VLB video
+> card, this CPU was capable of playing virtually every game title available
+> for years after its release, right up to the end of the MS-DOS game era,
+> making it a "sweet spot" in terms of CPU performance and longevity.
+
+The following table gives you reasonable rough cycles values for most popular
+processor: 
+
+<div class="compact" markdown>
+
+| Emulated CPU      |  MHz | Approx. cycles
+|-------------------|-----:|--------------:
+| 8088              | 4.77 |    300
+| 286               |    8 |    700
+| 286               |   12 |   1500
+| 286               |   25 |   3000
+| 386DX             |   33 |   6000
+| 486DX             |   33 |  12000
+| 486DX2            |   66 |  25000
+| Intel Pentium     |   90 |  50000
+| Intel Pentium MMX |  166 | 100000
+| Intel Pentium II  |  300 | 200000
+
+</div>
+
+Always treat these values only as starting points; as explained
+previously, accurately emulating the speed of any given processor is not
+possible due to the "abstract" nature of DOSBox's CPU emulation approach. But
+from a practical point of view, this does not matter; you just need to find
+the optimal cycles value the game works well with.
+
+You can fine-tune the cycles setting while playing the game with the
+++ctrl+f11++ and ++ctrl+f12++ shortcuts (++cmd+f11++ and ++cmd+f12++ on the
+Mac) that will increase the cycles value by 10%, or decrease it by 20%,
+respectively. Once you've arrived at a good setting, just update your config
+according to the cycles value displayed in the DOSBox window's title bar.
+
+Always try to find the minimum cycles value for each game that gives you
+adequate performance to conserve host CPU power and reduce the likelihood of
+audio glitches---overdoing it only makes things worse. Finally, here's a [list
+of CPU speed sensitive
+games](https://www.vogonswiki.com/index.php/List_of_CPU_speed_sensitive_games)
+that should give you further tips and pointers.
+
+
 
 ## Setting up Roland MT-32 sound
 
@@ -387,6 +550,11 @@ chorus = strong
 
 ## Aspect-ratio correction
 
+We're on a roll here; the game seems to provide us with seemingly endless
+education opportunities. We'll divert our eyes (ears?) from the audio to the
+graphics next!
+
+
 ```ini
 [render]
 aspect = off
@@ -459,7 +627,7 @@ Putting it all together, this is our final config:
 #machine = vgaonly
 
 [cpu]
-cycles = 25000
+cycles = 12000
 
 [sdl]
 fullscreen = on
@@ -499,3 +667,4 @@ wondering, enabling reverb and chorus does not add these effects to the MT-32
 output by default; that's undesirable as the MT-32 has its own built-in
 reverb, and DOSBox is intelligent enough not to apply *double* reverb to its
 output!
+

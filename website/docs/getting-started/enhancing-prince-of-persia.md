@@ -4,7 +4,7 @@
 ## Fullscreen
 
 You can toggle between windowed and fullscreen mode any time by pressing
-<kbd>Alt</kbd>+<kbd>Enter</kbd>. But what if you always want to play the game
+++alt+enter++. But what if you always want to play the game
 in fullscreen? Wouldn't it be nice to configure DOSBox to start in fullscreen
 mode?
 
@@ -233,7 +233,7 @@ Monochrome monitors came in different colours; DOSBox can emulate all these
 variations as well via the `monochrome_palette` configuration parameter. The
 available colours are `white` (the default), `paperwhite`, `green`, and
 `amber`. You can also switch between them while the game is running with the
-<kbd>F11</kbd> key.
+++f11++ key.
 
 ```ini
 [dosbox]
@@ -370,7 +370,7 @@ and the `light` and `strong` chorus settings as well.
 
 ## Auto-pause
 
-Prince of Persia can be paused by pressing the <kbd>Esc</kbd> key during the
+Prince of Persia can be paused by pressing the ++esc++ key during the
 game. But wouldn't it be useful if DOSBox could auto-pause itself whenever you
 switch to a different window? You can easily achieve that by enabling the
 `pause_when_inactive` option in the `[sdl]` section.
@@ -394,7 +394,7 @@ Below is the full config with all the enhancements we've added,
 including authentic VGA CRT monitor emulation on 4K displays. Note we've added the `exit`
 command to the end of the `[autoexec]` section; with this in place DOSBox will
 quit itself after we exit from the game by pressing
-<kbd>Ctrl</kbd>+<kbd>Q</kbd>. Not strictly necessary, but a nice touch.
+++ctrl+q++. Not strictly necessary, but a nice touch.
 
 ```ini
 [sdl]
@@ -415,6 +415,7 @@ chorus = normal
 [autoexec]
 c:
 prince
+exit
 ```
 
 If you're on a 1080p display, just delete the whole `[dosbox]` and `[render]`
@@ -424,8 +425,7 @@ sections to remove the VGA double-scan emulation and the CRT shader.
 ## Configuration comments
 
 Instead of deleting those lines, you can prefix them with a `#` character
-(<kbd>Shift</kbd>+<kbd>3</kbd> on the US keyboard layout) to turn them into
-comments.
+(++shift+3++ on the US keyboard layout) to turn them into comments.
 
 Comments are lines starting with a `#` character; DOSBox ignores them when
 reading the configuration. Normally, you would use them to add, well,
@@ -455,5 +455,5 @@ prince
 exit
 ```
 
-Well, we've pretty much maxed out Prince of Persia for demonstration purposes,
-time to move on to another game!
+Well, we've pretty much maxed out Prince of Persia for demonstration purposes.
+Time to move on to another game!
