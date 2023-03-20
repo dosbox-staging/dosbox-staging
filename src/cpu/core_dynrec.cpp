@@ -182,18 +182,34 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 
 CacheBlock *LinkBlocks(BlockReturn ret)
 {
-	CacheBlock *block = NULL;
 	// the last instruction was a control flow modifying instruction
-	Bitu temp_ip=SegPhys(cs)+reg_eip;
-	CodePageHandler *temp_handler = (CodePageHandler *)get_tlb_readhandler(temp_ip);
-	if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
-		// see if the target is an already translated block
-		block=temp_handler->FindCacheBlock(temp_ip & 4095);
-		if (block) { // found it, link the current block to
-			cache.block.running->LinkTo(ret==BR_Link2,block);
-		}
+	const auto temp_ip = SegPhys(cs) + reg_eip;
+
+	const auto read_handler = get_tlb_readhandler(temp_ip);
+	if (!read_handler) {
+		return nullptr;
 	}
-	return block;
+
+	const auto cp_handler = reinterpret_cast<CodePageHandler*>(read_handler);
+	if (!cp_handler) {
+		return nullptr;
+	}
+
+	const bool cp_has_code = cp_handler->flags &
+	                         (cpu.code.big ? PFLAG_HASCODE32 : PFLAG_HASCODE16);
+	if (!cp_has_code) {
+		return nullptr;
+	}
+
+	// see if the target is an already translated block
+	const auto cache_block = cp_handler->FindCacheBlock(temp_ip & 4095);
+	if (!cache_block) {
+		return nullptr;
+	}
+
+	// found it, link the current block to
+	cache.block.running->LinkTo(ret == BR_Link2, cache_block);
+	return cache_block;
 }
 
 /*
