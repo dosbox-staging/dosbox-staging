@@ -2116,7 +2116,7 @@ Muestra una lista de archivos y subdirectorios de un directorio.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Uso:
-  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
+  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] \[/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
 
 Dónde:
   [36;1mPATRÓN[0m es un nombre de archivo exacto o un nombre de archivo inexacto con comodines,
@@ -2570,7 +2570,7 @@ Espera a que se presione una tecla y establece un valor ERRORLEVEL.
 :SHELL_CMD_CHOICE_HELP_LONG
 Uso:
   [32;1mchoice[0m [36;1m[TEXTO][0m
-  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [/s] [36;1m[TEXTO][0m
+  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] \[/s] [36;1m[TEXTO][0m
 
 Dónde:
   [36;1mTEXTO[0m         es el texto a mostrar como un aviso, o vacío.

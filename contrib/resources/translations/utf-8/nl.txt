@@ -2512,7 +2512,7 @@ Toont een lijst met bestanden en submappen in een map.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Gebruik:
-  [color=green]dir[reset] [color=cyan][PATROON][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
+  [color=green]dir[reset] [color=cyan][PATROON][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
 
 Waar:
   [color=cyan]PATROON[reset]    is ofwel een exacte bestandsnaam of een onnauwkeurige

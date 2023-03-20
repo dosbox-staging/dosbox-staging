@@ -1853,7 +1853,7 @@ GOTO: Метка %s не найдена.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Использование:
-  [color=green]dir[reset] [color=cyan][ШАБЛОН][reset] [/w] [/b] [/p] [/ad] [/a-d] [/o[color=white]ПОРЯДОК[reset]]
+  [color=green]dir[reset] [color=cyan][ШАБЛОН][reset] [/w] \[/b] [/p] [/ad] [/a-d] [/o[color=white]ПОРЯДОК[reset]]
 
 Где:
   [color=cyan]ШАБЛОН[reset]    - точное имя файла либо имя файла с символами подстановки:
