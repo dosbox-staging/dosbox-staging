@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
+#include "include/math_utils.h"
 
 static uint8_t DRC_CALL_CONV dynrec_add_byte(uint8_t op1,uint8_t op2) DRC_FC;
 static uint8_t DRC_CALL_CONV dynrec_add_byte(uint8_t op1,uint8_t op2) {
@@ -1959,7 +1959,7 @@ static uint32_t DRC_CALL_CONV dynrec_stosd_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		mem_writed(di_base+reg_edi,reg_eax);
 		reg_edi+=add_index;
