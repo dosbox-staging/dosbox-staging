@@ -1132,7 +1132,7 @@ void SHELL_Init() {
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
 	        "Usage:\n"
-	        "  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
+	        "  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] \\[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,\n"

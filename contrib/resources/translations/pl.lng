@@ -2500,7 +2500,7 @@ Wyświetla listę plików i podkatalogów.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Składnia:
-  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]PORZĄDEK[reset]]
+  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]PORZĄDEK[reset]]
 
 Gdzie:
   [color=cyan]WZORZEC[reset]       dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),

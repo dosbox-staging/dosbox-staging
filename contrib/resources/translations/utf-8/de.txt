@@ -2336,7 +2336,7 @@ Zeigt eine Liste der Dateien und Unterverzeichnisse an.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Verwendung:
-  [color=green]dir[reset] [color=cyan][SUCHMUSTER][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
+  [color=green]dir[reset] [color=cyan][SUCHMUSTER][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
 
 Wobei:
   [color=cyan]SUCHMUSTER[reset] ist entweder ein exakter Dateiname oder ein ungenauer Dateiname

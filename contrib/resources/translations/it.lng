@@ -2654,7 +2654,7 @@ Visualizza un elenco di file e sottodirectory in una directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Utilizzo:
-  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
+  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
 
 Dove:
   [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)
