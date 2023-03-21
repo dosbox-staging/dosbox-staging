@@ -221,9 +221,9 @@ private:
 	const std::string m_name;
 	SDL_mutex* m_mutex;
 	volatile bool m_locked;
-	volatile unsigned int lastReadByteIndex;
-	volatile unsigned int indexForNextWriteByte;
-	BufferFlags flags;
+	volatile unsigned int lastReadByteIndex{};
+	volatile unsigned int indexForNextWriteByte{};
+	BufferFlags flags{};
 	volatile unsigned int m_bufferSize;
 	volatile bool m_debug;
 	//volatile BufferDataType m_buffer[2048]; // maximum that is used in the IMF code
@@ -741,24 +741,24 @@ struct InstrumentConfiguration {
 private:
 	InstrumentConfiguration& operator = (const InstrumentConfiguration& other) { /* don't use */ }
 public:
-	uint8_t numberOfNotes; // Number of notes                  / 0-8
-	uint8_t midiChannel; // MIDI channel number              / 0-15
+	uint8_t numberOfNotes{}; // Number of notes                  / 0-8
+	uint8_t midiChannel{}; // MIDI channel number              / 0-15
 	Note noteNumberLimitHigh; // Note number limit high           / 0-127
 	Note noteNumberLimitLow; // Note number limit low            / 0-127
-	uint8_t voiceBankNumber; // Voice bank number                / 0-6
-	uint8_t voiceNumber; // Voice number                     / 0-47
-	uint8_t detune; // Detune                           / -64-63 (2's complement)
-	uint8_t octaveTranspose; // Octave transpose                 / 0-4 (2=Center)
+	uint8_t voiceBankNumber{}; // Voice bank number                / 0-6
+	uint8_t voiceNumber{}; // Voice number                     / 0-47
+	uint8_t detune{}; // Detune                           / -64-63 (2's complement)
+	uint8_t octaveTranspose{}; // Octave transpose                 / 0-4 (2=Center)
 private:
-	uint8_t outputLevel; // Output level                     / 0(mute)-127(max)
+	uint8_t outputLevel{}; // Output level                     / 0(mute)-127(max)
 public:
-	uint8_t pan; // Pan                              / 0=L, 64=L+R, 127=R
-	uint8_t lfoEnable; // LFO enable                       / 0,1(OFF)
-	uint8_t portamentoTime; // Portamento time (pitch slide)       / 0=OFF, 1(fast)-127(slow)
-	uint8_t pitchbenderRange; // Pitchbender range                / 0-12 number of half-steps (0=no pitch fluctuation)
-	uint8_t polyMonoMode; // POLY/MONO mode                   / 0(POLY), 1(MONO) FIXME: Based in the code, this is a single bit
-	uint8_t pmdController; // PMD controller                   / 0=OFF, 1=Touch, 2=Wheel, 3=Breath, 4=Foot
-	uint8_t reserved1;
+	uint8_t pan{}; // Pan                              / 0=L, 64=L+R, 127=R
+	uint8_t lfoEnable{}; // LFO enable                       / 0,1(OFF)
+	uint8_t portamentoTime{}; // Portamento time (pitch slide)       / 0=OFF, 1(fast)-127(slow)
+	uint8_t pitchbenderRange{}; // Pitchbender range                / 0-12 number of half-steps (0=no pitch fluctuation)
+	uint8_t polyMonoMode{}; // POLY/MONO mode                   / 0(POLY), 1(MONO) FIXME: Based in the code, this is a single bit
+	uint8_t pmdController{}; // PMD controller                   / 0=OFF, 1=Touch, 2=Wheel, 3=Breath, 4=Foot
+	uint8_t reserved1{};
 
 	void clear() {
 		//IMF_LOG("InstrumentConfiguration.clear - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
@@ -812,14 +812,14 @@ struct ConfigurationData {
 private:
 	ConfigurationData& operator = (const ConfigurationData& other) { /* don't use */ }
 public:
-	char name[8];
-	uint8_t combineMode;
-	uint8_t lfoSpeed;
-	uint8_t amplitudeModulationDepth;
-	uint8_t pitchModulationDepth;
-	uint8_t lfoWaveForm;
-	uint8_t noteNumberReceptionMode; // FIXME: This should be an enum
-	uint8_t reserved[18];
+	char name[8]{};
+	uint8_t combineMode{};
+	uint8_t lfoSpeed{};
+	uint8_t amplitudeModulationDepth{};
+	uint8_t pitchModulationDepth{};
+	uint8_t lfoWaveForm{};
+	uint8_t noteNumberReceptionMode{}; // FIXME: This should be an enum
+	uint8_t reserved[18]{};
 	InstrumentConfiguration instrumentConfigurations[8];
 
 	void shallowClear() {
@@ -855,25 +855,25 @@ private:
 	InstrumentParameters& operator = (const InstrumentParameters& other) { /* don't use */ }
 public:
 	InstrumentConfiguration instrumentConfiguration;
-	VoiceDefinition voiceDefinition;
+	VoiceDefinition voiceDefinition{};
 	PitchbenderValueMSB pitchbenderValueMSB;
 	PitchbenderValueLSB pitchbenderValueLSB;
 	FractionalNote detuneAndPitchbendAsNoteFraction; // considers detuneAsNoteFraction and instrumentConfiguration.pitchbenderRange * pitchbenderValue
 	FractionalNote detuneAsNoteFraction; // considers instrumentConfiguration.octaveTranspose and instrumentConfiguration.detune 
-	uint8_t volume;
+	uint8_t volume{};
 	// flags: <a*****ps> <a>: LFO sync mode 0,1 (Sync ON) / <p> portamento ON/OFF / <s> sustain ON/OFF
 	uint8_t _sustain : 1;
 	uint8_t _portamento : 1;
 	uint8_t _unused0 : 5;
 	uint8_t _lfoSyncMode : 1;
 	// next byte
-	uint8_t operator1TotalLevel; // 0(Max)~127
-	uint8_t operator2TotalLevel; // 0(Max)~127
-	uint8_t operator3TotalLevel; // 0(Max)~127
-	uint8_t operator4TotalLevel; // 0(Max)~127
-	uint8_t unused1;
-	uint8_t channelMask;
-	uint8_t lastUsedChannel;
+	uint8_t operator1TotalLevel{}; // 0(Max)~127
+	uint8_t operator2TotalLevel{}; // 0(Max)~127
+	uint8_t operator3TotalLevel{}; // 0(Max)~127
+	uint8_t operator4TotalLevel{}; // 0(Max)~127
+	uint8_t unused1{};
+	uint8_t channelMask{};
+	uint8_t lastUsedChannel{};
 	//uint16_t __lastMidiOnOff_Duration_XXX : 15;
 	//uint16_t __lastMidiOnOff_Duration_IsEmpty_XXX : 1;
 	Duration _lastMidiOnOff_Duration_XX;
@@ -882,9 +882,9 @@ public:
 	//uint16_t __lastMidiOnOff_Duration_IsEmpty_YYY : 1;
 	Duration _lastMidiOnOff_Duration_YY;
 	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_YYY;
-	YmChannelData* ymChannelData;
-	uint8_t overflowToMidiOut; // FIXME: This is a bit flag
-	uint8_t unused2[22];
+	YmChannelData* ymChannelData{};
+	uint8_t overflowToMidiOut{}; // FIXME: This is a bit flag
+	uint8_t unused2[22]{};
 
 	inline void clear() { memset(this, 0, sizeof(InstrumentParameters)); }
 	inline void copyFrom(InstrumentParameters* other) { memcpy(this, other, sizeof(InstrumentParameters)); }
@@ -896,9 +896,9 @@ private:
 public:
 	FractionalNote originalFractionAndNoteNumber; // this is the original note that triggered the note ON. 
 	//uint16_t unused1;
-	InstrumentParameters* instrumentParameters;
+	InstrumentParameters* instrumentParameters{};
 	FractionalNote currentlyPlaying; // this is the note/fraction that is being play right now
-	uint8_t operatorVolumes[4];
+	uint8_t operatorVolumes[4]{};
 	// ym_channel
 	uint8_t channelNumber : 3;
 	uint8_t operatorsEnabled : 4;
@@ -1107,7 +1107,7 @@ public:
 
 class DFlipFlop : public DataChangedConsumer<bool> {
 private:
-	bool m_clockValue;
+	bool m_clockValue{};
 	DataDrivenInputPin<bool> m_dataInput;
 	DataDrivenInputPin<bool> m_clockInput;
 	DataDrivenInputPin<bool> m_clearInput;
@@ -2006,9 +2006,9 @@ private:
 
 	MixerChannel* m_mixerChannel;
 
-	int tl_tab[TL_TAB_LEN];
-	unsigned int sin_tab[SIN_LEN];
-	uint32_t d1l_tab[16];
+	int tl_tab[TL_TAB_LEN]{};
+	unsigned int sin_tab[SIN_LEN]{};
+	uint32_t d1l_tab[16]{};
 
 	static const uint8_t eg_inc[19 * RATE_STEPS];
 	static const uint8_t eg_rate_select[32 + 64 + 32];
@@ -2072,56 +2072,56 @@ private:
 		void key_off(uint32_t key_set);
 	};
 
-	signed int chanout[8];
-	signed int m2, c1, c2; /* Phase Modulation input for operators 2,3,4 */
-	signed int mem;     /* one sample delay memory */
+	signed int chanout[8]{};
+	signed int m2{}, c1{}, c2{}; /* Phase Modulation input for operators 2,3,4 */
+	signed int mem{};     /* one sample delay memory */
 
-	YM2151Operator  oper[32];           /* the 32 operators */
+	YM2151Operator  oper[32]{};           /* the 32 operators */
 
-	uint32_t      pan[16];                /* channels output masks (0xffffffff = enable) */
+	uint32_t      pan[16]{};                /* channels output masks (0xffffffff = enable) */
 
-	uint32_t      eg_cnt;                 /* global envelope generator counter */
-	uint32_t      eg_timer;               /* global envelope generator counter works at frequency = chipclock/64/3 */
-	uint32_t      eg_timer_add;           /* step of eg_timer */
-	uint32_t      eg_timer_overflow;      /* envelope generator timer overflows every 3 samples (on real chip) */
+	uint32_t      eg_cnt{};                 /* global envelope generator counter */
+	uint32_t      eg_timer{};               /* global envelope generator counter works at frequency = chipclock/64/3 */
+	uint32_t      eg_timer_add{};           /* step of eg_timer */
+	uint32_t      eg_timer_overflow{};      /* envelope generator timer overflows every 3 samples (on real chip) */
 
-	uint32_t      lfo_phase;              /* accumulated LFO phase (0 to 255) */
-	uint32_t      lfo_timer;              /* LFO timer                        */
-	uint32_t      lfo_timer_add;          /* step of lfo_timer                */
-	uint32_t      lfo_overflow;           /* LFO generates new output when lfo_timer reaches this value */
-	uint32_t      lfo_counter;            /* LFO phase increment counter      */
-	uint32_t      lfo_counter_add;        /* step of lfo_counter              */
-	uint8_t       lfo_wsel;               /* LFO waveform (0-saw, 1-square, 2-triangle, 3-random noise) */
-	uint8_t       amd;                    /* LFO Amplitude Modulation Depth   */
-	int8_t        pmd;                    /* LFO Phase Modulation Depth       */
-	uint32_t      lfa;                    /* LFO current AM output            */
-	int32_t       lfp;                    /* LFO current PM output            */
+	uint32_t      lfo_phase{};              /* accumulated LFO phase (0 to 255) */
+	uint32_t      lfo_timer{};              /* LFO timer                        */
+	uint32_t      lfo_timer_add{};          /* step of lfo_timer                */
+	uint32_t      lfo_overflow{};           /* LFO generates new output when lfo_timer reaches this value */
+	uint32_t      lfo_counter{};            /* LFO phase increment counter      */
+	uint32_t      lfo_counter_add{};        /* step of lfo_counter              */
+	uint8_t       lfo_wsel{};               /* LFO waveform (0-saw, 1-square, 2-triangle, 3-random noise) */
+	uint8_t       amd{};                    /* LFO Amplitude Modulation Depth   */
+	int8_t        pmd{};                    /* LFO Phase Modulation Depth       */
+	uint32_t      lfa{};                    /* LFO current AM output            */
+	int32_t       lfp{};                    /* LFO current PM output            */
 
-	uint8_t       test;                   /* TEST register */
-	uint8_t       ct;                     /* output control pins (bit1-CT2, bit0-CT1) */
+	uint8_t       test{};                   /* TEST register */
+	uint8_t       ct{};                     /* output control pins (bit1-CT2, bit0-CT1) */
 
-	uint32_t      noise;                  /* noise enable/period register (bit 7 - noise enable, bits 4-0 - noise period */
-	uint32_t      noise_rng;              /* 17 bit noise shift register */
-	uint32_t      noise_p;                /* current noise 'phase'*/
-	uint32_t      noise_f;                /* current noise period */
+	uint32_t      noise{};                  /* noise enable/period register (bit 7 - noise enable, bits 4-0 - noise period */
+	uint32_t      noise_rng{};              /* 17 bit noise shift register */
+	uint32_t      noise_p{};                /* current noise 'phase'*/
+	uint32_t      noise_f{};                /* current noise period */
 
-	uint32_t      csm_req;                /* CSM  KEY ON / KEY OFF sequence request */
+	uint32_t      csm_req{};                /* CSM  KEY ON / KEY OFF sequence request */
 
-	uint32_t      irq_enable;             /* IRQ enable for timer B (bit 3) and timer A (bit 2); bit 7 - CSM mode (keyon to all slots, everytime timer A overflows) */
-	uint32_t      status;                 /* chip status (BUSY, IRQ Flags) */
-	uint8_t       connect[8];             /* channels connections */
+	uint32_t      irq_enable{};             /* IRQ enable for timer B (bit 3) and timer A (bit 2); bit 7 - CSM mode (keyon to all slots, everytime timer A overflows) */
+	uint32_t      status{};                 /* chip status (BUSY, IRQ Flags) */
+	uint8_t       connect[8]{};             /* channels connections */
 
 	//emu_timer   *timer_A, *timer_A_irq_off;
 	//emu_timer   *timer_B, *timer_B_irq_off;
 
 	//attotime    timer_A_time[1024];     /* timer A times for MAME */
 	//attotime    timer_B_time[256];      /* timer B times for MAME */
-	int         irqlinestate;
+	int         irqlinestate{};
 
-	uint32_t      timer_A_index;          /* timer A index */
-	uint32_t      timer_B_index;          /* timer B index */
-	uint32_t      timer_A_index_old;      /* timer A previous index */
-	uint32_t      timer_B_index_old;      /* timer B previous index */
+	uint32_t      timer_A_index{};          /* timer A index */
+	uint32_t      timer_B_index{};          /* timer B index */
+	uint32_t      timer_A_index_old{};      /* timer A previous index */
+	uint32_t      timer_B_index_old{};      /* timer B previous index */
 
 	/*  Frequency-deltas to get the closest frequency possible.
 	*   There are 11 octaves because of DT2 (max 950 cents over base frequency)
@@ -2139,14 +2139,14 @@ private:
 	*              9       note code + DT2 + LFO PM
 	*              10      note code + DT2 + LFO PM
 	*/
-	uint32_t      freq[11 * 768];           /* 11 octaves, 768 'cents' per octave */
+	uint32_t      freq[11 * 768]{};           /* 11 octaves, 768 'cents' per octave */
 
 	/*  Frequency deltas for DT1. These deltas alter operator frequency
 	*   after it has been taken from frequency-deltas table.
 	*/
-	int32_t       dt1_freq[8 * 32];         /* 8 DT1 levels, 32 KC values */
+	int32_t       dt1_freq[8 * 32]{};         /* 8 DT1 levels, 32 KC values */
 
-	uint32_t      noise_tab[32];          /* 17bit Noise Generator periods */
+	uint32_t      noise_tab[32]{};          /* 17bit Noise Generator periods */
 
 	// internal state
 	//sound_stream *         m_stream;
@@ -3744,7 +3744,7 @@ class PD71051 {
 private:
 	enum State { WAITING_FOR_WRITE_MODE, WAITING_FOR_SYNC_CHAR1, WAITING_FOR_SYNC_CHAR2, NORMAL_OPERATION };
 	State m_state;
-	uint8_t m_mode;
+	uint8_t m_mode{};
 
 	void setState(State newState) {
 		m_state = newState;
@@ -3866,7 +3866,7 @@ private:
 	IrqController m_irqTriggerImf;
 	TotalStatusRegister m_tsr;
 
-	volatile bool m_finishedBootupSequence;
+	volatile bool m_finishedBootupSequence{};
 	SDL_Thread* m_mainThread;
 	SDL_Thread* m_interruptThread;
 	bool m_interruptHandlerRunning;
@@ -3881,12 +3881,12 @@ private:
 	//VoiceDefinitionBank m_voiceDefinitionBankRom[5];
 
 	// RAM
-	VoiceDefinitionBank m_voiceDefinitionBankCustom[2];
+	VoiceDefinitionBank m_voiceDefinitionBankCustom[2]{};
 	ConfigurationData m_configurationRAM[16];
-	char m_copyOfCardName[16];
+	char m_copyOfCardName[16]{};
 	ConfigurationData m_activeConfiguration;
-	uint8_t m_nodeNumber;
-	uint8_t m_activeConfigurationNr;
+	uint8_t m_nodeNumber{};
+	uint8_t m_activeConfigurationNr{};
 	CHAIN_MODE m_chainMode;
 	InstrumentParameters m_activeInstrumentParameters[8];
 	//uint8_t m_bufferFromMidiIn[2048];
@@ -3897,51 +3897,51 @@ private:
 	//uint8_t m_bufferBToSystem[256];
 	YmChannelData m_ymChannelData[8];
 	MEMORY_PROTECTION m_memoryProtection;
-	uint8_t m_systemRealtimeMessageInProgress;
-	uint8_t m_masterTune; // Master tune (-64~63 in 7-bit 2's complement notation)
-	uint8_t m_masterOutputLevel; // 0(Max)~127(muted)
+	uint8_t m_systemRealtimeMessageInProgress{};
+	uint8_t m_masterTune{}; // Master tune (-64~63 in 7-bit 2's complement notation)
+	uint8_t m_masterOutputLevel{}; // 0(Max)~127(muted)
 	FractionalNote m_masterTuneAsNoteFraction;
 	FractionalNote m_lastMidiOnOff_FractionAndNoteNumber;
 	KeyVelocity m_lastMidiOnOff_KeyVelocity;
 	Duration m_lastMidiOnOff_Duration;
-	uint8_t m_musicProcessingDepth;
-	uint8_t m_ya2151_timerA_counter;
-	uint8_t m_ya2151_timerB_counter;
-	uint8_t m_ym2151_IRQ_stuff;
+	uint8_t m_musicProcessingDepth{};
+	uint8_t m_ya2151_timerA_counter{};
+	uint8_t m_ya2151_timerB_counter{};
+	uint8_t m_ym2151_IRQ_stuff{};
 	CARD_MODE m_cardMode;
 	ERROR_REPORTING m_errorReport;
-	MidiFlowPath m_configuredMidiFlowPath;
-	MidiFlowPath m_actualMidiFlowPath;
-	uint8_t m_incomingMusicCardMessage_Expected;
-	uint8_t m_incomingMusicCardMessage_Size;
-	uint8_t m_incomingMusicCardMessageData[16];
-	MidiDataPacket m_midiDataPacketFromMidiIn;
-	MidiDataPacket m_midiDataPacketFromSystem;
-	uint8_t m_outgoingMusicCardMessageData[16];
-	uint8_t m_readMidiDataTimeoutCountdown;
-	uint8_t m_midi_ReceiveSource_SendTarget;
-	uint8_t m_midiTransmitReceiveFlag; // FIXME: change to flags
+	MidiFlowPath m_configuredMidiFlowPath{};
+	MidiFlowPath m_actualMidiFlowPath{};
+	uint8_t m_incomingMusicCardMessage_Expected{};
+	uint8_t m_incomingMusicCardMessage_Size{};
+	uint8_t m_incomingMusicCardMessageData[16]{};
+	MidiDataPacket m_midiDataPacketFromMidiIn{};
+	MidiDataPacket m_midiDataPacketFromSystem{};
+	uint8_t m_outgoingMusicCardMessageData[16]{};
+	uint8_t m_readMidiDataTimeoutCountdown{};
+	uint8_t m_midi_ReceiveSource_SendTarget{};
+	uint8_t m_midiTransmitReceiveFlag{}; // FIXME: change to flags
 	CyclicBufferState<uint8_t> m_bufferFromMidiInState;
-	uint8_t m_bufferFromMidiIn_lastActiveSenseCodeCountdown;
+	uint8_t m_bufferFromMidiIn_lastActiveSenseCodeCountdown{};
 	CyclicBufferState<uint8_t> m_bufferToMidiOutState;
-	uint8_t m_midiOutActiveSensingCountdown;
-	uint8_t m_midiOut_CommandInProgress;
-	uint8_t m_runningCommandOnMidiInTimerCountdown;
-	uint8_t m_activeSenseSendingState;
+	uint8_t m_midiOutActiveSensingCountdown{};
+	uint8_t m_midiOut_CommandInProgress{};
+	uint8_t m_runningCommandOnMidiInTimerCountdown{};
+	uint8_t m_activeSenseSendingState{};
 	CyclicBufferState<uint16_t> m_bufferFromSystemState;
 	CyclicBufferState<uint16_t> m_bufferToSystemState;
-	uint8_t m_sendDataToSystemTimoutCountdown;
-	uint8_t m_system_CommandInProgress;
-	uint8_t m_runningCommandOnSystemInTimerCountdown;
-	uint8_t m_sp_MidiDataOfMidiCommandInProgress[256];
-	uint8_t m_soundProcessorMidiInterpreterState;
-	uint8_t m_soundProcessorMidiInterpreterSysExState;
-	uint8_t m_sysEx_ChannelNumber;
-	uint8_t m_sysEx_InstrumentNumber;
-	uint8_t* m_soundProcessorSysExCurrentMatchPtr; // this is probably a pointer
-	uint8_t m_sp_SysExStateMatchTable[256];
-	uint8_t m_midiChannelToAssignedInstruments[AVAILABLE_MIDI_CHANNELS][AVAILABLE_INSTRUMENTS + 1]; // size:0x90 / 9 x 16 bytes / 0xFF := end of list / e.g. for MidiChannel 2 -> MidiChannelToAssignedInstruments[2*9] = 0,1,2,0xFF
-	uint8_t m_receiveDataPacketTypeAState;
+	uint8_t m_sendDataToSystemTimoutCountdown{};
+	uint8_t m_system_CommandInProgress{};
+	uint8_t m_runningCommandOnSystemInTimerCountdown{};
+	uint8_t m_sp_MidiDataOfMidiCommandInProgress[256]{};
+	uint8_t m_soundProcessorMidiInterpreterState{};
+	uint8_t m_soundProcessorMidiInterpreterSysExState{};
+	uint8_t m_sysEx_ChannelNumber{};
+	uint8_t m_sysEx_InstrumentNumber{};
+	uint8_t* m_soundProcessorSysExCurrentMatchPtr{}; // this is probably a pointer
+	uint8_t m_sp_SysExStateMatchTable[256]{};
+	uint8_t m_midiChannelToAssignedInstruments[AVAILABLE_MIDI_CHANNELS][AVAILABLE_INSTRUMENTS + 1]{}; // size:0x90 / 9 x 16 bytes / 0xFF := end of list / e.g. for MidiChannel 2 -> MidiChannelToAssignedInstruments[2*9] = 0,1,2,0xFF
+	uint8_t m_receiveDataPacketTypeAState{};
 
 	bool currentThreadIsMainThread() {
 		return SDL_ThreadID() == SDL_GetThreadID(m_mainThread);
@@ -4238,7 +4238,7 @@ private:
 		m_outgoingMusicCardMessageData[0] = 0xE0;
 		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 		while (true) {
-			ReadResult readResult;
+			ReadResult readResult{};
 			readResult = midiIn_readMidiDataByte();
 			if (readResult.status == READ_ERROR) {
 				disableInterrupts();
@@ -8064,7 +8064,7 @@ private:
 	// ROM Address: 0x2A79
 	void processSysExCmd_NodeMessage_SetVoiceBankData(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetVoiceBankData(%i) - begin", midiData);
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		if (m_memoryProtection == MEMORY_READONLY) {
 			log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - error - memory is read only");
@@ -8094,7 +8094,7 @@ private:
 	// ROM Address: 0x2AB8
 	void processSysExCmd_NodeMessage_SetConfiguration1(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration1()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8112,7 +8112,7 @@ private:
 	// ROM Address: 0x2AF5
 	void processSysExCmd_NodeMessage_SetConfigurationMemory(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfigurationMemory()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		if (m_memoryProtection == MEMORY_READONLY) { return sendResponse(0x03, CANCEL_MESSAGE); }
 		if (midiData >= 0x10) { return sendResponse(0x00, CANCEL_MESSAGE); }
@@ -8130,7 +8130,7 @@ private:
 	// ROM Address: 0x2B40
 	void processSysExCmd_NodeMessage_SetConfigurationRAM(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfigurationRAM()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		if (m_memoryProtection == MEMORY_READONLY) { return sendResponse(0x03, CANCEL_MESSAGE); }
 		do {
@@ -8145,7 +8145,7 @@ private:
 	// ROM Address: 0x2B74
 	void processSysExCmd_NodeMessage_SetConfiguration2(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration2()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8177,7 +8177,7 @@ private:
 	// ROM Address: 0x2BE1
 	void processSysExCmd_InstrumentMessage_SetInstrumentVoice(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentVoice()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		// read the high size byte
 		do {
@@ -8198,7 +8198,7 @@ private:
 	// ROM Address: 0x2C26
 	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8218,7 +8218,7 @@ private:
 	// ROM Address: 0x2C77
 	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8317,7 +8317,7 @@ private:
 	// ROM Address: 0x2DAD
 	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		// read the "source ID" byte (Technical Reference Manual 6-24)
 		do {
@@ -8414,7 +8414,7 @@ private:
 	// ROM Address: 0x2F07
 	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer2(uint8_t midiData1) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer2()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		// read the "source ID" byte (Technical Reference Manual 6-24)
 		do {
@@ -8457,7 +8457,7 @@ private:
 	// ROM Address: 0x2F9C
 	void processSysExCmd_F0_43_75_0n_2i_00(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_00");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8481,7 +8481,7 @@ private:
 	// ROM Address: 0x2FE5
 	void processSysExCmd_F0_43_75_0n_2i_01(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_01()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8506,7 +8506,7 @@ private:
 	// This method is identical to "processSysExCmd_F0_43_75_0n_2i_01"
 	void processSysExCmd_F0_43_75_0n_2i_02(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_02()");
-		ReadResult readResult;
+		ReadResult readResult{};
 
 		do {
 			readResult = readMidiData();
@@ -8901,7 +8901,7 @@ private:
 
 	// ROM Address: 0x33D7
 	ReadStatus receiveDataPacketTypeA_internal(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
-		ReadResult readResult;
+		ReadResult readResult{};
 		uint8_t checksum = 0;
 		uint16_t dataPacketSize = 0;
 
@@ -9027,7 +9027,7 @@ private:
 
 	// ROM Address: 0x351C
 	ReadStatus receiveDataPacketTypeB(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
-		ReadResult readResult;
+		ReadResult readResult{};
 		uint8_t checksum = 0;
 		uint16_t dataPacketSize = 0;
 
