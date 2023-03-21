@@ -1983,7 +1983,7 @@ public:
 
 	//DECLARE_WRITE_LINE_MEMBER(reset_w);
 
-public:
+
 	// device-level overrides
 	void device_start();
 	void device_reset();
