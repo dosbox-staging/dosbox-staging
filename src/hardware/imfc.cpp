@@ -2198,7 +2198,7 @@ const uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
 };
 
 
-#define O(a) (a*RATE_STEPS)
+#define O(a) ((a)*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
 const uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {   /* Envelope Generator rates (32 + 64 rates + 32 RKS) */
@@ -2246,7 +2246,7 @@ const uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {   /* Envelope Gene
 /*shift 11,   10,   9,   8,   7,   6,  5,  4,  3,  2, 1,  0,  0,  0,  0,  0 */
 /*mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0 */
 
-#define O(a) (a*1)
+#define O(a) ((a)*1)
 const uint8_t ym2151_device::eg_rate_shift[32 + 64 + 32] = {    /* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 	/* 32 infinite time rates */
 	O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -8891,7 +8891,7 @@ private:
 		return send_midi_byte((-checksum) & 0x7F);
 	}
 
-#define readMidiDataWithErrorHandling(target) do { target = readMidiData(); if (target.status == READ_ERROR) { logMidiError(); return READ_ERROR; }	} while (target.status == NO_DATA);
+#define readMidiDataWithErrorHandling(target) do { (target) = readMidiData(); if ((target).status == READ_ERROR) { logMidiError(); return READ_ERROR; }	} while ((target).status == NO_DATA);
 
 	// ROM Address: 0x33BE
 	ReadStatus receiveDataPacketTypeA(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
