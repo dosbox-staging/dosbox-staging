@@ -49,11 +49,14 @@
 //    there is a way to upload Z80 programs to the IMF card and execute it! Who
 //    knew that IBM added this back-door :)
 
+#include "dosbox.h"
+
 #include <string.h>
 #include <string>
 #include <vector>
 #include <functional>
-#include "dosbox.h"
+#include <SDL2/SDL_thread.h>
+
 #include "inout.h"
 #include "mixer.h"
 #include "dma.h"
@@ -3869,6 +3872,7 @@ private:
 	bool m_interruptHandlerRunning;
 	SDL_mutex* m_interruptHandlerRunningMutex;
 	SDL_cond* m_interruptHandlerRunningCond;
+	std::atomic_bool keep_running;
 
 	// memory allocation on the IMF
 	// ROM
@@ -4213,7 +4217,7 @@ private:
 
 		log_debug("softReboot - starting infinite loop");
 		m_finishedBootupSequence = true;
-		while (true) {
+		while (keep_running.load()) {
 			//log_debug("DEBUG: heartbeat in MUSIC_MODE_LOOP %i", debug_count++);
 			//MUSIC_MODE_LOOP_read_MidiIn_And_Dispatch(); //FIXME: reenable
 			MUSIC_MODE_LOOP_read_System_And_Dispatch();
@@ -9360,6 +9364,7 @@ public:
 		m_piuIMF.reset();
 
 		// now start the main program
+		keep_running = true; // both threads stop looping when false
 		m_hardwareMutex = SDL_CreateMutex();
 		m_interruptHandlerRunning = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
@@ -9387,7 +9392,7 @@ public:
 
 	int threadInterruptStart() {
 		log_debug("IMF processor interrupt thread started");
-		while (true) {
+		while (keep_running.load()) {
 			SDL_LockMutex(m_interruptHandlerRunningMutex);
 			while (!m_interruptHandlerRunning) {
 				SDL_CondWait(m_interruptHandlerRunningCond, m_interruptHandlerRunningMutex);
@@ -9524,8 +9529,9 @@ public:
 	}
 
 	~MusicFeatureCard() override {
-	~MusicFeatureCard() {
-		SDL_KillThread(m_mainThread);
+		keep_running = false;
+		SDL_WaitThread(m_mainThread, nullptr);
+		SDL_WaitThread(m_interruptThread, nullptr);
 	}
 };
 
