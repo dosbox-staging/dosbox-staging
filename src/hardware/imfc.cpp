@@ -227,12 +227,12 @@ template <typename BufferDataType> struct CyclicBufferState {
 private:
 	const std::string m_name;
 	SDL_mutex* m_mutex;
-	volatile bool m_locked;
+	volatile bool m_locked{false};
 	volatile unsigned int lastReadByteIndex{};
 	volatile unsigned int indexForNextWriteByte{};
 	BufferFlags flags{};
 	volatile unsigned int m_bufferSize;
-	volatile bool m_debug;
+	volatile bool m_debug{false};
 	//volatile BufferDataType m_buffer[2048]; // maximum that is used in the IMF code
 	volatile BufferDataType m_buffer[0x2000]; // FIXME
 
@@ -254,7 +254,7 @@ private:
 	inline void setDataCleared() { flags.setDataCleared(); }
 
 public:
-	CyclicBufferState(std::string name, unsigned int bufferSize) : m_name(std::move(name)), m_mutex(SDL_CreateMutex()), m_locked(false), m_bufferSize(bufferSize), m_debug(false) {}
+	CyclicBufferState(std::string name, unsigned int bufferSize) : m_name(std::move(name)), m_mutex(SDL_CreateMutex()),  m_bufferSize(bufferSize) {}
 
 	void setDebug(bool debug) {
 		m_debug = debug;
@@ -961,11 +961,11 @@ public:
 
 template <typename DataType> class DataContainer : public DataProvider<DataType> {
 private:
-	bool m_debug;
+	bool m_debug{false};
 	std::string m_name;
 	DataType m_value;
 public:
-	DataContainer(std::string name, DataType inititalValue) : m_debug(false), m_name(std::move(name)), m_value(inititalValue) {}
+	DataContainer(std::string name, DataType inititalValue) :  m_name(std::move(name)), m_value(inititalValue) {}
 	std::string getName() { return m_name; }
 	DataType getValue() override { return m_value; }
 	void setValue(DataType newValue) {
@@ -1210,14 +1210,14 @@ enum CounterWriteTarget { COUNTERWRITETARGET_BYTE1, COUNTERWRITETARGET_BYTE2 };
 
 struct CounterData {
 	std::string m_name;
-	CounterMode m_counterMode;
-	unsigned int m_counter;
-	unsigned int m_runningCounter;
-	unsigned int m_latchedCounter;
-	uint8_t m_tmpWrite;
-	CounterReadSource m_nextReadSource;
-	CounterWriteTarget m_nextWriteTarget;
-	explicit CounterData(std::string name) : m_name(std::move(name)), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
+	CounterMode m_counterMode{COUNTERMODE_INVALID};
+	unsigned int m_counter{0};
+	unsigned int m_runningCounter{0};
+	unsigned int m_latchedCounter{0};
+	uint8_t m_tmpWrite{0};
+	CounterReadSource m_nextReadSource{COUNTERREADSOURCE_LIVE_1};
+	CounterWriteTarget m_nextWriteTarget{COUNTERWRITETARGET_BYTE1};
+	explicit CounterData(std::string name) : m_name(std::move(name)) {};
 	void writeCounterByte(uint8_t val) {
 		switch (m_nextWriteTarget) {
 			case COUNTERWRITETARGET_BYTE1:
@@ -1254,7 +1254,7 @@ struct CounterData {
 class Intel8253 {
 private:
 	std::string m_name;
-	bool m_debug;
+	bool m_debug{false};
 	DataPin<bool> m_timerA;
 	DataPin<bool> m_timerB;
 	CounterData m_counter0, m_counter1, m_counter2;
@@ -1265,7 +1265,7 @@ private:
 		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
 	}
 public:
-	explicit Intel8253(std::string name) : m_name(std::move(name)), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
+	explicit Intel8253(std::string name) : m_name(std::move(name)),  m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
 		registerNextEvent(); // FIXME
 	}
 	DataProvider<bool>* getTimerA() { return m_timerA.getDataProvider(); }
@@ -1431,10 +1431,10 @@ private:
 	InputOutputPin<uint8_t> m_port1;
 	InputOutputPin<bool> m_port2[8];
 	// internal signals
-	bool m_group0_readInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
-	bool m_group0_writeInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
-	bool m_group1_readInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
-	bool m_group1_writeInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
+	bool m_group0_readInterruptEnable{false}; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
+	bool m_group0_writeInterruptEnable{false}; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
+	bool m_group1_readInterruptEnable{false}; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
+	bool m_group1_writeInterruptEnable{false}; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
 
 	uint8_t readPort0() {
 		return m_port0.getValue();
@@ -1568,11 +1568,8 @@ public:
 			m_name(name),
 			m_port0(name + ".p0"),
 			m_port1(name + ".p1"),
-			m_port2 { InputOutputPin<bool>(name + ".P2-0"), InputOutputPin<bool>(name + ".P2-1"), InputOutputPin<bool>(name + ".P2-2"), InputOutputPin<bool>(name + ".P2-3"), InputOutputPin<bool>(name + ".P2-4"), InputOutputPin<bool>(name + ".P2-5"), InputOutputPin<bool>(name + ".P2-6"), InputOutputPin<bool>(name + ".P2-7") },
-			m_group0_readInterruptEnable(false),
-			m_group0_writeInterruptEnable(false),
-			m_group1_readInterruptEnable(false),
-			m_group1_writeInterruptEnable(false) {
+			m_port2 { InputOutputPin<bool>(name + ".P2-0"), InputOutputPin<bool>(name + ".P2-1"), InputOutputPin<bool>(name + ".P2-2"), InputOutputPin<bool>(name + ".P2-3"), InputOutputPin<bool>(name + ".P2-4"), InputOutputPin<bool>(name + ".P2-5"), InputOutputPin<bool>(name + ".P2-6"), InputOutputPin<bool>(name + ".P2-7") }
+			{
 	}
 	void connectPort0(DataContainer<uint8_t>* dataContainer) { m_port0.connect(dataContainer); }
 	void connectPort1(DataContainer<uint8_t>* dataContainer) { m_port1.connect(dataContainer); }
@@ -1847,9 +1844,9 @@ public:
 class IrqController : public DataChangedConsumer<bool> {
 private:
 	std::string m_name;
-	bool m_enabled;
-	bool m_debug;
-	bool m_interruptOutput;
+	bool m_enabled{false};
+	bool m_debug{false};
+	bool m_interruptOutput{false};
 	std::vector<DataProvider<bool>*> m_interruptLines;
 	std::function<void(void)> m_callbackOnLowToHigh;
 	std::function<void(void)> m_callbackOnHighToLow;
@@ -1890,7 +1887,7 @@ private:
 		}
 	}
 public:
-	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(std::move(name)), m_debug(false), m_enabled(false), m_interruptOutput(false), m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)), m_callbackOnHighToLow(std::move(callbackOnToHighToLow)) {}
+	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(std::move(name)),  m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)), m_callbackOnHighToLow(std::move(callbackOnToHighToLow)) {}
 	void enableInterrupts() {
 		if (m_enabled == true) { return; }
 		if (m_debug) {
@@ -2165,10 +2162,10 @@ private:
 
 	// internal state
 	//sound_stream *         m_stream;
-	uint8_t                  m_lastreg;
+	uint8_t                  m_lastreg{0};
 	//devcb_write_line       m_irqhandler;
 	//devcb_write8           m_portwritehandler;
-	bool                   m_reset_active;
+	bool                   m_reset_active{false};
 
 	void init_tables();
 	void calculate_timers();
@@ -3519,7 +3516,7 @@ void ym2151_device::advance() {
 //  ym2151_device - constructor
 //-------------------------------------------------
 
-ym2151_device::ym2151_device(MixerChannel* mixerChannel) : m_mixerChannel(mixerChannel), m_lastreg(0), m_reset_active(false) {
+ym2151_device::ym2151_device(MixerChannel* mixerChannel) : m_mixerChannel(mixerChannel) {
 	m_mixerChannel->Enable(true);
 	device_start();
 	device_post_load();
@@ -3758,7 +3755,7 @@ void ym2151_device::sound_stream_update(int samples) {
 class PD71051 {
 private:
 	enum State { WAITING_FOR_WRITE_MODE, WAITING_FOR_SYNC_CHAR1, WAITING_FOR_SYNC_CHAR2, NORMAL_OPERATION };
-	State m_state;
+	State m_state{WAITING_FOR_WRITE_MODE};
 	uint8_t m_mode{};
 
 	void setState(State newState) {
@@ -3780,7 +3777,7 @@ private:
 	}
 
 public:
-	PD71051() : m_state(WAITING_FOR_WRITE_MODE) {}
+	PD71051()  {}
 	// MIDI_PORT_1 = 0x10
 	void writePort1(uint8_t value) {
 		// This doesn't do anything for now
@@ -3884,7 +3881,7 @@ private:
 	volatile bool m_finishedBootupSequence{};
 	SDL_Thread* m_mainThread;
 	SDL_Thread* m_interruptThread;
-	bool m_interruptHandlerRunning;
+	bool m_interruptHandlerRunning{false};
 	SDL_mutex* m_interruptHandlerRunningMutex;
 	SDL_cond* m_interruptHandlerRunningCond;
 	std::atomic_bool keep_running;
