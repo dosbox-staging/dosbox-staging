@@ -2882,7 +2882,8 @@ void ym2151_device::write_reg(int r, int v) {
 		case 0x08:  /* Key Code */
 			v &= 0x7f;
 			if (v != op->kc) {
-				uint32_t kc = 0, kc_channel = 0;
+				uint32_t kc = 0;
+				uint32_t kc_channel = 0;
 
 				kc_channel = (v - (v >> 2)) * 64;
 				kc_channel += 768;
@@ -3374,7 +3375,8 @@ void ym2151_device::advance_eg() {
 void ym2151_device::advance() {
 	YM2151Operator *op = nullptr;
 	unsigned int i = 0;
-	int a = 0, p = 0;
+	int a = 0;
+	int p = 0;
 
 	/* LFO */
 	if ((test & 2) != 0) {
