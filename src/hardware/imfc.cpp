@@ -212,13 +212,13 @@ struct BufferFlags {
 	inline void setReadErrorFlag() { _hasReadError = 1; }
 	inline void setOverflowErrorFlag() { _hasOverflowError = 1; }
 	inline void setOfflineErrorFlag() { _hasOfflineError = 1; }
-	inline bool isEmpty() { return _isBufferEmpty; }
+	inline bool isEmpty() const { return _isBufferEmpty; }
 	inline bool hasData() { return !isEmpty(); }
-	inline bool hasError() { return _hasOfflineError || _hasOverflowError || _hasReadError; }
-	inline bool hasReadError() { return _hasReadError; }
-	inline bool hasOverflowError() { return _hasOverflowError; }
-	inline bool hasOfflineError() { return _hasOfflineError; }
-	inline uint8_t getByteValue() {
+	inline bool hasError() const { return _hasOfflineError || _hasOverflowError || _hasReadError; }
+	inline bool hasReadError() const { return _hasReadError; }
+	inline bool hasOverflowError() const { return _hasOverflowError; }
+	inline bool hasOfflineError() const { return _hasOfflineError; }
+	inline uint8_t getByteValue() const {
 		return (_unused1 << 0) | (_hasOfflineError << 4) | (_hasOverflowError << 5) | (_hasReadError << 6) | (_isBufferEmpty << 7);
 	}
 };
@@ -370,7 +370,7 @@ struct Note {
 	Note() : value(0) { }
 	explicit Note(uint8_t v) : value(v) { }
 
-	std::string toString() {
+	std::string toString() const {
 		return m_noteToString[value % 12] + "-" + std::to_string(value / 12);
 	}
 };
@@ -393,7 +393,7 @@ struct FractionalNote {
 
 	FractionalNote() : note(), fraction() {}
 	FractionalNote(Note nn, Fraction nf) : note(nn), fraction(nf) {}
-	uint16_t getuint16_t() { return note.value << 8 | fraction.value; }
+	uint16_t getuint16_t() const { return note.value << 8 | fraction.value; }
 };
 static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be 1 in size!");
 bool operator==(FractionalNote a, FractionalNote b) { return a.note == b.note && a.fraction == b.fraction; }
@@ -420,7 +420,7 @@ struct Duration {
 
 	Duration() : value(0) { }
 	explicit Duration(uint16_t v) : value(v) { }
-	inline bool isEmpty() { return (value & 0x8000) != 0; }
+	inline bool isEmpty() const { return (value & 0x8000) != 0; }
 	inline bool isNotEmpty() { return !isEmpty(); }
 	inline void setEmpty() { value |= 0x8000; }
 };
@@ -609,39 +609,39 @@ private:
 	VoiceDefinition& operator = (const VoiceDefinition& other) { /* don't use */ }
 public:
 	char getName(uint8_t i) { return name[i]; }
-	uint8_t getLfoSpeed() { return lfoSpeed; }
+	uint8_t getLfoSpeed() const { return lfoSpeed; }
 	void setLfoSpeed(uint8_t val) { lfoSpeed = val; }
-	uint8_t getAmplitudeModulationDepth() { return (byte9 >> 0) & 0x7F; }
+	uint8_t getAmplitudeModulationDepth() const { return (byte9 >> 0) & 0x7F; }
 	void setAmplitudeModulationDepth(uint8_t val) { byte9 = (byte9 & 0x80) | (val & 0x7F); }
-	uint8_t getLfoLoadMode() { return (byte9 >> 7) & 0x01; }
+	uint8_t getLfoLoadMode() const { return (byte9 >> 7) & 0x01; }
 	void setLfoLoadMode(uint8_t val) { byte9 = (byte9 & 0x7F) | (val << 7); }
-	uint8_t getPitchModulationDepth() { return (byteA >> 0) & 0x7F; }
+	uint8_t getPitchModulationDepth() const { return (byteA >> 0) & 0x7F; }
 	void setPitchModulationDepth(uint8_t val) { byteA = (byteA & 0x7F) | (val << 7); }
-	uint8_t getLfoSyncMode() { return (byteA >> 7) & 0x01; }
+	uint8_t getLfoSyncMode() const { return (byteA >> 7) & 0x01; }
 	void setLfoSyncMode(uint8_t val) { byteA = (byteA & 0x7F) | (val << 7); }
-	uint8_t getOperatorsEnabled() {
+	uint8_t getOperatorsEnabled() const {
 		const uint8_t val = (byteB >> 3) & 0x0F;
 		//val = (((val >> 0) & 1) << 0) | (((val >> 2) & 1) << 1) | (((val >> 1) & 1) << 2) | (((val >> 3) & 1) << 3); // Test if oper 1 and 2 are inverted
 		return val;
 	}
-	uint8_t getAlgorithm() { return (byteC >> 0) & 0x07; }
-	uint8_t getFeedbackLevel() { return (byteC >> 3) & 0x07; }
-	uint8_t getAmplitudeModulationSensitivity() { return (byteD >> 0) & 0x03; }
+	uint8_t getAlgorithm() const { return (byteC >> 0) & 0x07; }
+	uint8_t getFeedbackLevel() const { return (byteC >> 3) & 0x07; }
+	uint8_t getAmplitudeModulationSensitivity() const { return (byteD >> 0) & 0x03; }
 	void setAmplitudeModulationSensitivity(uint8_t val) { byteD = (byteD & 0xFC) | (val & 3); }
-	uint8_t getPitchModulationSensitivity() { return (byteD >> 4) & 0x07; }
+	uint8_t getPitchModulationSensitivity() const { return (byteD >> 4) & 0x07; }
 	void setPitchModulationSensitivity(uint8_t val) { byteD = (byteD & 0x8F) | ((val & 7) << 4); }
-	uint8_t getLfoWaveForm() { return (byteE >> 5) & 0x03; }
+	uint8_t getLfoWaveForm() const { return (byteE >> 5) & 0x03; }
 	void setLfoWaveForm(uint8_t val) { byteE = (byteE & 0x9F) | ((val & 3) << 5); }
-	uint8_t getTranspose() { return transpose; }
+	uint8_t getTranspose() const { return transpose; }
 	OperatorDefinition* getOperator(uint8_t i) {
 		return &operators[i];
 		//static uint8_t mapping[4] = {0, 2, 1, 3};  // Test if oper 1 and 2 are inverted
 		//return &operators[mapping[i]];
 	}
-	uint8_t getPortamentoTime() { return (field_3A >> 0) & 0x7F; }
-	uint8_t getPolyMonoMode() { return (field_3A >> 7) & 0x01; }
-	uint8_t getPitchbenderRange() { return (field_3B >> 0) & 0x0F; }
-	uint8_t getPMDController() { return (field_3B >> 4) & 0x07; }
+	uint8_t getPortamentoTime() const { return (field_3A >> 0) & 0x7F; }
+	uint8_t getPolyMonoMode() const { return (field_3A >> 7) & 0x01; }
+	uint8_t getPitchbenderRange() const { return (field_3B >> 0) & 0x0F; }
+	uint8_t getPMDController() const { return (field_3B >> 4) & 0x07; }
 
 	void veryShallowClear() {
 		name[0] = name[1] = name[2] = name[3] = name[4] = name[5] = name[6] = 0;
@@ -702,7 +702,7 @@ public:
 		operators[2].copyFrom(&other->operators[2]);
 		operators[3].copyFrom(&other->operators[3]);
 	}
-	inline uint8_t getModulationSensitivity() { return byteD; }
+	inline uint8_t getModulationSensitivity() const { return byteD; }
 
 	void dumpToLog() {
 		//IMF_LOG("      name: '%c%c%c%c%c%c%c'", name[0], name[1], name[2], name[3], name[4], name[5], name[6]);
@@ -809,7 +809,7 @@ public:
 		//IMF_LOG("InstrumentConfiguration.copySpecialFrom - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
 	}
 
-	uint8_t getOutputLevel() { return outputLevel; }
+	uint8_t getOutputLevel() const { return outputLevel; }
 	void setOutputLevel(uint8_t val) {
 		outputLevel = val;
 		//IMF_LOG("InstrumentConfiguration.setOutputLevel - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
@@ -921,7 +921,7 @@ public:
 	FractionalNote portamentoAdjustment; // This might be a positive or negative fractionNote!
 	FractionalNote portamentoTarget; // target note/fraction for portamento
 
-	inline uint8_t getChannelNumberAndOperatorEnabled() {
+	inline uint8_t getChannelNumberAndOperatorEnabled() const {
 		return channelNumber | (operatorsEnabled << 3);
 	}
 };
@@ -1974,7 +1974,7 @@ public:
 	//auto port_write_handler() { return m_portwritehandler.bind(); }
 
 	// read/write
-	u8 read(offs_t offset);
+	u8 read(offs_t offset) const;
 	void write(offs_t offset, u8 data);
 
 	u8 status_r();
@@ -2171,7 +2171,7 @@ private:
 
 	void init_tables();
 	void calculate_timers();
-	void envelope_KONKOFF(YM2151Operator * op, int v);
+	void envelope_KONKOFF(YM2151Operator * op, int v) const;
 	void set_connect(YM2151Operator *om1, int cha, int v);
 	void advance();
 	void advance_eg();
@@ -2575,7 +2575,7 @@ void ym2151_device::YM2151Operator::key_off(uint32_t key_set) {
 	}
 }
 
-void ym2151_device::envelope_KONKOFF(YM2151Operator * op, int v) {
+void ym2151_device::envelope_KONKOFF(YM2151Operator * op, int v) const {
 	// m1, m2, c1, c2
 	static const uint8_t masks[4] = { 0x08, 0x20, 0x10, 0x40 };
 	for (int i = 0; i != 4; i++) {
@@ -3560,7 +3560,7 @@ ym2151_device::ym2151_device(MixerChannel* mixerChannel) : m_mixerChannel(mixerC
 //  read - read from the device
 //-------------------------------------------------
 
-u8 ym2151_device::read(offs_t offset) {
+u8 ym2151_device::read(offs_t offset) const {
 	if ((offset & 1) != 0) {
 		//m_stream->update();
 		return status;
@@ -4525,7 +4525,7 @@ private:
 	}
 
 	// ROM Address: 0x053D
-	bool hasReadMidiDataTimeoutExpired() {
+	bool hasReadMidiDataTimeoutExpired() const {
 		return m_readMidiDataTimeoutCountdown == 0;
 	}
 
@@ -7048,7 +7048,7 @@ private:
 		instr->detuneAndPitchbendAsNoteFraction = FractionalNote(Note(pitchbenderValue >> 8), Fraction(pitchbenderValue & 0xFF));
 	}
 
-	inline uint8_t getOutputLevel(InstrumentParameters* instr) {
+	inline uint8_t getOutputLevel(InstrumentParameters* instr) const {
 		uint16_t outputLevel = (instr->instrumentConfiguration.getOutputLevel() ^ 0xFF) & 0x7F;
 		outputLevel += instr->volume;
 		outputLevel += m_masterOutputLevel;
