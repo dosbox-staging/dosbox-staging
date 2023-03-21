@@ -711,12 +711,12 @@ public:
 	VoiceDefinition instrumentDefinitions[48];
 
 	void shallowClear() {
-		for (uint8_t i = 0; i < 8; i++) { name[i] = 0; }
-		for (uint8_t i = 0; i < 24; i++) { reserved[i] = 0; }
+		for (char & i : name) { i = 0; }
+		for (unsigned char & i : reserved) { i = 0; }
 	}
 	void deepClear() {
 		shallowClear();
-		for (uint8_t i = 0; i < 48; i++) { instrumentDefinitions[i].deepClear(); }
+		for (auto & instrumentDefinition : instrumentDefinitions) { instrumentDefinition.deepClear(); }
 	}
 	void shallowCopyFrom(VoiceDefinitionBank* other) {
 		for (uint8_t i = 0; i < 8; i++) { name[i] = other->name[i]; }
@@ -823,13 +823,13 @@ public:
 	InstrumentConfiguration instrumentConfigurations[8];
 
 	void shallowClear() {
-		for (uint8_t i = 0; i < 8; i++) { name[i] = 0; }
+		for (char & i : name) { i = 0; }
 		combineMode = lfoSpeed = amplitudeModulationDepth = pitchModulationDepth = lfoWaveForm = noteNumberReceptionMode = 0;
-		for (uint8_t i = 0; i < 18; i++) { reserved[i] = 0; }
+		for (unsigned char & i : reserved) { i = 0; }
 	}
 	void deepClear() {
 		shallowClear();
-		for (uint8_t i = 0; i < 8; i++) { instrumentConfigurations[i].clear(); }
+		for (auto & instrumentConfiguration : instrumentConfigurations) { instrumentConfiguration.clear(); }
 	}
 	void shallowCopyFrom(ConfigurationData* other) {
 		for (uint8_t i = 0; i < 8; i++) { name[i] = other->name[i]; }
@@ -1849,8 +1849,8 @@ private:
 
 	bool atLeastOneInterruptLineIsHigh() {
 		bool result = false;
-		for (unsigned int i = 0; i < m_interruptLines.size(); i++) {
-			if (m_interruptLines[i]->getValue()) {
+		for (auto & m_interruptLine : m_interruptLines) {
+			if (m_interruptLine->getValue()) {
 				result = true;
 			}
 		}
@@ -3661,8 +3661,8 @@ void ym2151_device::sound_stream_update(int samples) {
 	for (int i = 0; i < samples; i++) {
 		advance_eg();
 
-		for (int ch = 0; ch < 8; ch++)
-			chanout[ch] = 0;
+		for (int & ch : chanout)
+			ch = 0;
 
 		for (int ch = 0; ch < 7; ch++)
 			chan_calc(ch);
@@ -4287,8 +4287,8 @@ private:
 		// clear memory from 0xC0C0 to 0xE7FF (voiceDefinitionBankCustom1, voiceDefinitionBankCustom2, configurationRAM, copyOfCardName, activeConfiguration, nodeNumber, activeConfigurationNr, chainMode, activeInstrumentParameters)
 		m_voiceDefinitionBankCustom[0].deepClear();
 		m_voiceDefinitionBankCustom[1].deepClear();
-		for (uint8_t i = 0; i < 16; i++) {
-			m_configurationRAM[i].deepClear();
+		for (auto & i : m_configurationRAM) {
+			i.deepClear();
 		}
 		memset(&m_copyOfCardName, 0, sizeof(m_copyOfCardName));
 		m_activeConfiguration.deepClear();
@@ -4296,8 +4296,8 @@ private:
 		m_activeConfigurationNr = 0;
 		m_chainMode = CHAIN_MODE_DISABLED;
 		log_debug("initConfigurationMemory - start copy");
-		for (uint8_t i = 0; i < 8; i++) {
-			m_activeInstrumentParameters[i].clear();
+		for (auto & m_activeInstrumentParameter : m_activeInstrumentParameters) {
+			m_activeInstrumentParameter.clear();
 		}
 		log_debug("initConfigurationMemory - end copy");
 		for (uint8_t i = 0; i < 16; i++) {
@@ -6069,9 +6069,9 @@ private:
 		instr->overflowToMidiOut = 0;
 		if (m_chainMode == CHAIN_MODE_ENABLED) {
 			uint8_t overflowToMidiOut = 1;
-			for (uint8_t i = 0; i < 8; i++) {
-				if (m_activeInstrumentParameters[i].instrumentConfiguration.midiChannel == newMidiChannel) {
-					m_activeInstrumentParameters[i].overflowToMidiOut = overflowToMidiOut;
+			for (auto & m_activeInstrumentParameter : m_activeInstrumentParameters) {
+				if (m_activeInstrumentParameter.instrumentConfiguration.midiChannel == newMidiChannel) {
+					m_activeInstrumentParameter.overflowToMidiOut = overflowToMidiOut;
 					overflowToMidiOut = 0;
 				}
 			}
@@ -6410,8 +6410,8 @@ private:
 	// ROM Address: 0x15D6
 	ChannelMaskInfo getFreeChannels() {
 		uint8_t totalMask = 0;
-		for (uint8_t i = 0; i < 8; i++) {
-			totalMask |= m_activeInstrumentParameters[i].channelMask;
+		for (auto & m_activeInstrumentParameter : m_activeInstrumentParameters) {
+			totalMask |= m_activeInstrumentParameter.channelMask;
 		}
 		totalMask ^= 0xFF;
 		uint8_t freeChannels = 0;
@@ -6754,9 +6754,9 @@ private:
 
 	// ROM Address: 0x18DC
 	void ym_updateKeyCodeAndFractionOnAllChannels() {
-		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i]._flag6) {
-				ym_setKeyCodeAndFraction(&m_ymChannelData[i], m_ymChannelData[i].instrumentParameters);
+		for (auto & i : m_ymChannelData) {
+			if (i._flag6) {
+				ym_setKeyCodeAndFraction(&i, i.instrumentParameters);
 			}
 		}
 	}
@@ -6895,9 +6895,9 @@ private:
 	// ROM Address: 0x1AEC
 	void ym_updateAllCurrentlyPlayingByPortamentoAdjustment() {
 		startMusicProcessing();
-		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i]._hasActivePortamento && m_ymChannelData[i]._flag6) {
-				ym_updateCurrentlyPlayingByPortamentoAdjustment(&m_ymChannelData[i]);
+		for (auto & i : m_ymChannelData) {
+			if (i._hasActivePortamento && i._flag6) {
+				ym_updateCurrentlyPlayingByPortamentoAdjustment(&i);
 			}
 		}
 		stopMusicProcessing();
@@ -7329,9 +7329,9 @@ private:
 				realTimeMessage_FC_MonoMode(inst);
 			}
 		}
-		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i].remainingDuration.value != 0) {
-				noteOffDueToMidiRealTimeClock(&m_ymChannelData[i]);
+		for (auto & i : m_ymChannelData) {
+			if (i.remainingDuration.value != 0) {
+				noteOffDueToMidiRealTimeClock(&i);
 			}
 		}
 		m_systemRealtimeMessageInProgress = 0;
@@ -7363,11 +7363,11 @@ private:
 			}
 		}
 		// Do we need to stop any playing channels that had a duration specified?
-		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i].remainingDuration.value) {
-				m_ymChannelData[i].remainingDuration.value--;
-				if (m_ymChannelData[i].remainingDuration.value == 0) {
-					noteOffDueToMidiRealTimeClock(&m_ymChannelData[i]);
+		for (auto & i : m_ymChannelData) {
+			if (i.remainingDuration.value) {
+				i.remainingDuration.value--;
+				if (i.remainingDuration.value == 0) {
+					noteOffDueToMidiRealTimeClock(&i);
 				}
 			}
 		}
@@ -8776,11 +8776,11 @@ private:
 		writeStatus = sendDataPacketTypeA((uint8_t*)bank, 0x20);
 		if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 		// send all the voice data
-		for (int i = 0; i < VOICE_DATA_PER_INSTRUMENT_BANKS; i++) {
+		for (auto & instrumentDefinition : bank->instrumentDefinitions) {
 			log_debug("sendVoiceDefinitionBank() - waitForDataToBeSent()");
 			waitForDataToBeSent();
 			log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - data");
-			writeStatus = sendDataPacketTypeA((uint8_t*)&bank->instrumentDefinitions[i], sizeof(VoiceDefinition));
+			writeStatus = sendDataPacketTypeA((uint8_t*)&instrumentDefinition, sizeof(VoiceDefinition));
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 		}
 		log_debug("sendVoiceDefinitionBank() - almost end");
@@ -8790,8 +8790,8 @@ private:
 	// ROM Address: 0x3303
 	WriteStatus sendAllConfigurations() {
 		WriteStatus writeStatus;
-		for (uint8_t i = 0; i < AVAILABLE_CONFIGURATIONS; i++) {
-			writeStatus = sendDataPacketTypeB((uint8_t*)&m_configurationRAM[i], 0xA0/*sizeof(ConfigurationType)*/);
+		for (auto & i : m_configurationRAM) {
+			writeStatus = sendDataPacketTypeB((uint8_t*)&i, 0xA0/*sizeof(ConfigurationType)*/);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			waitForDataToBeSent();
 		}
@@ -9120,9 +9120,9 @@ private:
 	void initMidiChannelToAssignedInstruments() {
 		//log("initMidiChannelToAssignedInstruments() - begin");
 		// clear out the existing data
-		for (uint8_t c = 0; c < AVAILABLE_MIDI_CHANNELS; c++) {
+		for (auto & m_midiChannelToAssignedInstrument : m_midiChannelToAssignedInstruments) {
 			for (uint8_t i = 0; i < AVAILABLE_INSTRUMENTS + 1; i++) {
-				m_midiChannelToAssignedInstruments[c][i] = 0xFF;
+				m_midiChannelToAssignedInstrument[i] = 0xFF;
 			}
 		}
 		// iterate through all the instruments, extract the midi channel and add it to the end of the list
