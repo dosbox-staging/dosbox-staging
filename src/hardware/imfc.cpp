@@ -1181,14 +1181,14 @@ public:
 		return value;
 	}
 	void writePort(uint8_t val) {
-		m_timerAClear.setValue(val & 0x01 ? 1 : 0);
-		m_timerBClear.setValue(val & 0x02 ? 1 : 0);
-		m_timerAEnable.setValue(val & 0x04 ? 1 : 0);
-		m_timerBEnable.setValue(val & 0x08 ? 1 : 0);
-		m_dataBit8FromSystem.setValue(val & 0x10 ? 1 : 0);
+		m_timerAClear.setValue(val & 0x01 ? true : false);
+		m_timerBClear.setValue(val & 0x02 ? true : false);
+		m_timerAEnable.setValue(val & 0x04 ? true : false);
+		m_timerBEnable.setValue(val & 0x08 ? true : false);
+		m_dataBit8FromSystem.setValue(val & 0x10 ? true : false);
 		//IMF_LOG("TCR: new value for m_dataBit8FromSystem = %i", val & 0x10 ? 1 : 0);
-		m_totalIrqMask.setValue(val & 0x40 ? 1 : 0);
-		m_irqBufferEnable.setValue(val & 0x80 ? 1 : 0);
+		m_totalIrqMask.setValue(val & 0x40 ? true : false);
+		m_irqBufferEnable.setValue(val & 0x80 ? true : false);
 
 		// Based on the IMFC documentation, the timerAClear and timerBClear:
 		//  The power-on default value is 0. This bit clears interrupts from timer A/B. It is usually set to 1.
@@ -5741,7 +5741,7 @@ private:
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (m_bufferFromSystemState.getLastReadByteIndex() == m_bufferFromSystemState.getIndexForNextWriteByte()) {
 			SDL_LockMutex(m_hardwareMutex);
-			m_piuIMF.setPort2Bit(2, 0); // Group 1 (INPUT) - Read interrupt enable = false
+			m_piuIMF.setPort2Bit(2, false); // Group 1 (INPUT) - Read interrupt enable = false
 			SDL_UnlockMutex(m_hardwareMutex);
 		}
 
@@ -5813,7 +5813,7 @@ private:
 		//}
 		//log("IMF PIU read interrupt = enabled");
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuIMF.setPort2Bit(2, 1); // Group 1 (INPUT) - Read interrupt enable = true
+		m_piuIMF.setPort2Bit(2, true); // Group 1 (INPUT) - Read interrupt enable = true
 		SDL_UnlockMutex(m_hardwareMutex);
 		m_bufferFromSystemState.unlock();//enableInterrupts();
 		if ((a & 1) == 0) {
@@ -5844,12 +5844,12 @@ private:
 		const uint16_t data16u = m_bufferToSystemState.popData();
 		log_debug("IMF->PC: Reading queue data [%X%02X] and sending to port", data16u >> 8, data16u & 0xFF);
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuIMF.setPort2Bit(5, data16u >= 0x100 ? 1 : 0); // set bit 5 to bufferA value
+		m_piuIMF.setPort2Bit(5, data16u >= 0x100 ? true : false); // set bit 5 to bufferA value
 		m_piuIMF.writePortPIU0(data16u & 0xFF);
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (m_bufferToSystemState.getIndexForNextWriteByte() == m_bufferToSystemState.getLastReadByteIndex()) {
 			SDL_LockMutex(m_hardwareMutex);
-			m_piuIMF.setPort2Bit(6, 0); // Group 0 (OUTPUT) - Write interrupt enable = false
+			m_piuIMF.setPort2Bit(6, false); // Group 0 (OUTPUT) - Write interrupt enable = false
 			SDL_UnlockMutex(m_hardwareMutex);
 		}
 
@@ -5935,7 +5935,7 @@ private:
 		//m_bufferToSystemState.setDataAdded();
 		m_bufferToSystemState.unlock();
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuIMF.setPort2Bit(6, 1); // Group 0 (OUTPUT) - Write interrupt enable = true
+		m_piuIMF.setPort2Bit(6, true); // Group 0 (OUTPUT) - Write interrupt enable = true
 		SDL_UnlockMutex(m_hardwareMutex);
 		//enableInterrupts();
 		return WRITE_SUCCESS;
@@ -9237,7 +9237,10 @@ public:
 		// initialize all the internal structures
 		m_bufferFromMidiInState("bufferFromMidiInState", 2048),
 		m_bufferToMidiOutState("bufferToMidiOutState", 256),
-		m_bufferFromSystemState("bufferFromSystemState", 0x2000), // FIXME: The original only has a buffer of 256, but since the "main" thread is a bit slow, we need to increase it a LOT
+
+		// FIXME: The original only has a buffer of 256, but since the "main"
+		// thread is a bit slow, we need to increase it a LOT
+		m_bufferFromSystemState("bufferFromSystemState", 0x2000), 
 		m_bufferToSystemState("bufferToSystemState", 256),
 		// create all the instances
 		m_tcr("TCR"),
@@ -9249,12 +9252,12 @@ public:
 		m_piuIMF_int1("PIU_IMF.RxRDY(INT1)", false),
 		m_piuPort0Data("PIU.port0", 0),
 		m_piuPort1Data("PIU.port1", 0),
-		m_piuEXR8("PIU.EXR8", 0),
-		m_piuEXR9("PIU.EXR9", 0),
-		m_piuGroup0DataAvailable("PIU.Group0DataAvailable", 0),
-		m_piuGroup0DataAcknowledgement("PIU.Group0DataAcknowledgement", 0),
-		m_piuGroup1DataAvailable("PIU.Group1DataAvailable", 0),
-		m_piuGroup1DataAcknowledgement("PIU.Group1DataAcknowledgement", 0),
+		m_piuEXR8("PIU.EXR8", false),
+		m_piuEXR9("PIU.EXR9", false),
+		m_piuGroup0DataAvailable("PIU.Group0DataAvailable", false),
+		m_piuGroup0DataAcknowledgement("PIU.Group0DataAcknowledgement", false),
+		m_piuGroup1DataAvailable("PIU.Group1DataAvailable", false),
+		m_piuGroup1DataAcknowledgement("PIU.Group1DataAcknowledgement", false),
 		m_timer("TIMER"),
 		m_invTimerAClear("TCR.timerAClear.inverted"),
 		m_df1("DF1"),
