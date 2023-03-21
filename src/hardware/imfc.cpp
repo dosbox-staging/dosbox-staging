@@ -67,28 +67,34 @@
 
 #include "SDL_thread.h"
 
-#define IMFC_RATE 44100
-#define IMFC_PORT_BASE 0x2A20
-#define IMFC_PORT_PIU0 0x0
-#define IMFC_PORT_PIU1 0x1
-#define IMFC_PORT_PIU2 0x2
-#define IMFC_PORT_PCR 0x3
-#define IMFC_PORT_CNTR0 0x4
-#define IMFC_PORT_CNTR1 0x5
-#define IMFC_PORT_CNTR2 0x6
-#define IMFC_PORT_TCWR 0x7
-#define IMFC_PORT_TCR 0x8
-#define IMFC_PORT_TSR 0xC
+enum {
+IMFC_RATE = 44100,
+IMFC_PORT_BASE = 0x2A20,
+IMFC_PORT_PIU0 = 0x0,
+IMFC_PORT_PIU1 = 0x1,
+IMFC_PORT_PIU2 = 0x2,
+IMFC_PORT_PCR = 0x3,
+IMFC_PORT_CNTR0 = 0x4,
+IMFC_PORT_CNTR1 = 0x5,
+IMFC_PORT_CNTR2 = 0x6,
+IMFC_PORT_TCWR = 0x7,
+IMFC_PORT_TCR = 0x8,
+IMFC_PORT_TSR = 0xC
+};
 
-#define AVAILABLE_CONFIGURATIONS                16
-#define AVAILABLE_MIDI_CHANNELS                 16
-#define AVAILABLE_INSTRUMENTS                   8
-#define VOICE_DATA_PER_INSTRUMENT_BANKS         48
-#define AVAILABLE_CUSTOM_INSTRUMENT_BANKS       2
-#define AVAILABLE_INTERNAL_INSTRUMENT_BANKS     5
+enum {
+AVAILABLE_CONFIGURATIONS =                16,
+AVAILABLE_MIDI_CHANNELS =                 16,
+AVAILABLE_INSTRUMENTS =                   8,
+VOICE_DATA_PER_INSTRUMENT_BANKS =         48,
+AVAILABLE_CUSTOM_INSTRUMENT_BANKS =       2,
+AVAILABLE_INTERNAL_INSTRUMENT_BANKS =     5
+};
 
 // IRQ can be any number between 2 and 7
-#define IMFC_IRQ 3
+enum {
+IMFC_IRQ = 3
+};
 
 SDL_mutex *m_loggerMutex;
 
@@ -1928,25 +1934,33 @@ From the looks of it, there is a different clock frequency being used. Based on 
 #define offs_t uint8_t
 #define M_PI   3.14159265358979323846264338327950288
 
-#define FREQ_SH         16  /* 16.16 fixed point (frequency calculations) */
-#define EG_SH           16  /* 16.16 fixed point (envelope generator timing) */
-#define LFO_SH          10  /* 22.10 fixed point (LFO calculations)       */
-#define TIMER_SH        16  /* 16.16 fixed point (timers calculations)    */
+enum {
+FREQ_SH =         16,  /* 16.16 fixed point (frequency calculations) */
+EG_SH =           16,  /* 16.16 fixed point (envelope generator timing) */
+LFO_SH =          10,  /* 22.10 fixed point (LFO calculations)       */
+TIMER_SH =        16  /* 16.16 fixed point (timers calculations)    */
+};
 
 #define FREQ_MASK       ((1<<FREQ_SH)-1)
 
-#define ENV_BITS        10
+enum {
+ENV_BITS =        10
+};
 #define ENV_LEN         (1<<ENV_BITS)
 #define ENV_STEP        (128.0/ENV_LEN)
 
 #define MAX_ATT_INDEX   (ENV_LEN-1) /* 1023 */
-#define MIN_ATT_INDEX   (0)         /* 0 */
+enum {
+MIN_ATT_INDEX =   (0)         /* 0 */
+};
 
-#define EG_ATT          4
-#define EG_DEC          3
-#define EG_SUS          2
-#define EG_REL          1
-#define EG_OFF          0
+enum {
+EG_ATT =          4,
+EG_DEC =          3,
+EG_SUS =          2,
+EG_REL =          1,
+EG_OFF =          0
+};
 
 #define ENV_QUIET       (TL_TAB_LEN>>3)
 
