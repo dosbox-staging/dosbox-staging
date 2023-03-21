@@ -1044,7 +1044,7 @@ private:
 	DataDrivenInputPin<bool> m_input;
 	DataPin<bool> m_output;
 public:
-	explicit InverterGate(std::string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
+	explicit InverterGate(const std::string& name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = !m_input.getValue();
@@ -1060,7 +1060,7 @@ private:
 	DataDrivenInputPin<bool> m_enableInput;
 	DataPin<bool> m_output;
 public:
-	explicit TriStateBuffer(std::string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
+	explicit TriStateBuffer(const std::string& name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
@@ -1080,7 +1080,7 @@ private:
 	DataDrivenInputPin<bool> m_input2;
 	DataPin<bool> m_output;
 public:
-	explicit AndGate(std::string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
+	explicit AndGate(const std::string& name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = m_input1.getValue() && m_input2.getValue();
@@ -1099,7 +1099,7 @@ private:
 	DataDrivenInputPin<bool> m_input4;
 	DataPin<bool> m_output;
 public:
-	explicit OrGate(std::string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
+	explicit OrGate(const std::string& name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = m_input1.getValue() || m_input2.getValue() || m_input3.getValue() || m_input4.getValue();
@@ -1120,7 +1120,7 @@ private:
 	DataDrivenInputPin<bool> m_clearInput;
 	DataPin<bool> m_output;
 public:
-	explicit DFlipFlop(std::string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
+	explicit DFlipFlop(const std::string& name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
@@ -1152,7 +1152,7 @@ private:
 	DataPin<bool> m_totalIrqMask;
 	DataPin<bool> m_irqBufferEnable;
 public:
-	explicit TotalControlRegister(std::string name) :
+	explicit TotalControlRegister(const std::string& name) :
 		m_timerAClear(name+".timerAClear", false),
 		m_timerBClear(name + ".timerBClear", false),
 		m_timerAEnable(name + ".timerAEnable", false),
@@ -1391,7 +1391,7 @@ private:
 	DataDrivenInputPin<bool> m_timerBStatus;
 	DataDrivenInputPin<bool> m_totalCardStatus;
 public:
-	explicit TotalStatusRegister(std::string name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
+	explicit TotalStatusRegister(const std::string& name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
 
 	void connectTimerAStatus(DataProvider<bool>* dataProvider) { m_timerAStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
 	void connectTimerBStatus(DataProvider<bool>* dataProvider) { m_timerBStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
@@ -1564,7 +1564,7 @@ private:
 	}
 
 public:
-	explicit PD71055(std::string name) :
+	explicit PD71055(const std::string& name) :
 			m_name(name),
 			m_port0(name + ".p0"),
 			m_port1(name + ".p1"),
