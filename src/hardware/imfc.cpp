@@ -398,11 +398,11 @@ bool operator==(FractionalNote a, FractionalNote b) { return a.note == b.note &&
 bool operator!=(FractionalNote a, FractionalNote b) { return !(a == b); }
 FractionalNote operator -(FractionalNote a, FractionalNote b) {
 	const uint16_t val = a.getuint16_t() - b.getuint16_t();
-	return FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
+	return {Note(val >> 8), Fraction(val & 0xFF)};
 }
 FractionalNote operator +(FractionalNote a, FractionalNote b) {
 	const uint16_t val = a.getuint16_t() + b.getuint16_t();
-	return FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
+	return {Note(val >> 8), Fraction(val & 0xFF)};
 }
 
 struct KeyVelocity {
@@ -6825,14 +6825,14 @@ private:
 			while (result >= 0x8000) {
 				result += 12 << 8; // up an octave
 			}
-			return FractionalNote(Note(result >> 8), Fraction(result & 0xFF));
+			return {Note(result >> 8), Fraction(result & 0xFF)};
 		} else {
 			// adjustment is positive
 			uint16_t result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
 			while (result >= 0x8000) {
 				result -= 12 << 8; // drop an octave
 			}
-			return FractionalNote(Note(result >> 8), Fraction(result & 0xFF));
+			return {Note(result >> 8), Fraction(result & 0xFF)};
 		}
 	}
 
