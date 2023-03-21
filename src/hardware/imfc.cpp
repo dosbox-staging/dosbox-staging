@@ -8302,7 +8302,6 @@ private:
 		}
 		logSuccess();
 		m_soundProcessorMidiInterpreterState = 0;
-		return;
 	}
 
 	// ROM Address: 0x2CFD
