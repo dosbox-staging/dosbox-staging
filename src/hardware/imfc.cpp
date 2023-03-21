@@ -1261,7 +1261,7 @@ private:
 	DataPin<bool> m_timerB;
 	CounterData m_counter0, m_counter1, m_counter2;
 
-	void registerNextEvent() {
+	static void registerNextEvent() {
 		// PIC_AddEvent takes milliseconds as argument
 		// the counter0 has a resolution of 2 microseconds
 		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
@@ -1309,7 +1309,7 @@ public:
 	}
 
 
-	uint8_t readPortTCWR() {
+	static uint8_t readPortTCWR() {
 		IMF_LOG("readPortTCWR -> 0x00");
 		// I don't think we should be able to read this port
 		return 0;
@@ -1710,7 +1710,7 @@ public:
 			m_port2[7].setValue(val & 0x80);
 		}
 	}
-	uint8_t readPortPCR() {
+	static uint8_t readPortPCR() {
 		//IMF_LOG("%s: readPortPCR -> 0x00", m_name.c_str());
 		// Based on the PD71055 datasheet:
 		//  The host writes command words to the PD71055 in
@@ -2180,7 +2180,7 @@ private:
 	void chan7_calc();
 	int op_calc(YM2151Operator * OP, unsigned int env, signed int pm);
 	int op_calc1(YM2151Operator * OP, unsigned int env, signed int pm);
-	void refresh_EG(YM2151Operator * op);
+	static void refresh_EG(YM2151Operator * op);
 };
 
 const uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
@@ -3820,7 +3820,7 @@ public:
 		// This doesn't do anything for now
 	}
 
-	uint8_t readPort1() {
+	static uint8_t readPort1() {
 		// This doesn't do anything for now
 		return 0;
 	}
@@ -4371,7 +4371,7 @@ private:
 	}
 
 	// ROM Address: 0x03AD
-	void initConfigurationRAMSlot(ConfigurationData* config, const char* c) {
+	static void initConfigurationRAMSlot(ConfigurationData* config, const char* c) {
 		config->deepCopyFrom((ConfigurationData*)&m_romPresetConfiguration16Binary); // this would be after the name copy in the original code
 		memcpy(&config->name, " user ", 6);
 		config->name[6] = c[0];
@@ -4380,7 +4380,7 @@ private:
 	}
 
 	// ROM Address: 0x03AD
-	void initCustomInstrumentData(VoiceDefinitionBank* customBank, const char* name) {
+	static void initCustomInstrumentData(VoiceDefinitionBank* customBank, const char* name) {
 		customBank->deepCopyFrom((VoiceDefinitionBank*)&m_voiceDefinitionBankRom1Binary); // this would be after the name copy in the original code
 		memcpy(&customBank->name, name, 8);
 	}
@@ -4520,7 +4520,7 @@ private:
 	}
 
 	// ROM Address: 0x052E
-	bool isMidiDataPacket_in_state_01_36_37_38(MidiDataPacket* packet) {
+	static bool isMidiDataPacket_in_state_01_36_37_38(MidiDataPacket* packet) {
 		return packet->state == 0x01 || packet->state == 0x36 || packet->state == 0x37 || packet->state == 0x38;
 	}
 
@@ -4710,7 +4710,7 @@ private:
 
 	// ROM Address: 0x063F
 	// Note: midiCommandByte will always be >= 0x80 !
-	uint8_t convert_midi_command_byte_to_initial_state(uint8_t midiCommandByte) {
+	static uint8_t convert_midi_command_byte_to_initial_state(uint8_t midiCommandByte) {
 		static const uint8_t initialMidiStateTable[16] = {
 			0x15 /* 0xF0 */, 0x12 /* 0xF1 */, 0x0F /* 0xF2 */, 0x12 /* 0xF3 */,
 			0x00 /* 0xF4 */, 0x00 /* 0xF5 */, 0x14 /* 0xF6 */, 0x40 /* 0xF7 */,
@@ -4724,276 +4724,276 @@ private:
 	}
 
 	// ROM Address: 0x06E3
-	uint8_t processMidiState_00(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
+	static uint8_t processMidiState_00(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x06E6
-	uint8_t processMidiState_01_36_37_38(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_01_36_37_38(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[0] = midiData;
 		return 0x01;
 	}
 
 	// ROM Address: 0x06EC
-	uint8_t processMidiState_02_04(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_02_04(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x03;
 	}
 
 	// ROM Address: 0x06F2
-	uint8_t processMidiState_03(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_03(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x04;
 	}
 
 	// ROM Address: 0x06F8
-	uint8_t processMidiState_05_07(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_05_07(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x06;
 	}
 
 	// ROM Address: 0x06FE
-	uint8_t processMidiState_06(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_06(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x07;
 	}
 
 	// ROM Address: 0x0704
-	uint8_t processMidiState_08_09(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_08_09(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x09;
 	}
 
 	// ROM Address: 0x070A
-	uint8_t processMidiState_0A_0C(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_0A_0C(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x0B;
 	}
 
 	// ROM Address: 0x0710
-	uint8_t processMidiState_0B(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_0B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x0C;
 	}
 
 	// ROM Address: 0x0716
-	uint8_t processMidiState_0D_0E(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_0D_0E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x0E;
 	}
 
 	// ROM Address: 0x071C
-	uint8_t processMidiState_0F(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_0F(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x10;
 	}
 
 	// ROM Address: 0x0722
-	uint8_t processMidiState_10(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_10(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x11;
 	}
 
 	// ROM Address: 0x0728
-	uint8_t processMidiState_11(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
+	static uint8_t processMidiState_11(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x072B
-	uint8_t processMidiState_12(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_12(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x13;
 	}
 
 	// ROM Address: 0x0731
-	uint8_t processMidiState_13(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
+	static uint8_t processMidiState_13(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x0734
-	uint8_t processMidiState_14(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
+	static uint8_t processMidiState_14(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x0737
-	uint8_t processMidiState_15(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_15(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return midiData == 0x43 ? 0x16 : 0x36;
 		return 0x00;
 	}
 
 	// ROM Address: 0x0745
-	uint8_t processMidiState_16(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_16(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData == 0x75 ? 0x17 : 0x37;
 		return 0x00;
 	}
 
 	// ROM Address: 0x0753
-	uint8_t processMidiState_17(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_17(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return midiData == 0x70 ? 0x18 : midiData == 0x71 ? 0x39 : 0x38;
 	}
 
 	// ROM Address: 0x0768
-	uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket*  /*packet*/, uint8_t midiData) {
+	static uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket*  /*packet*/, uint8_t midiData) {
 		static const uint8_t transition[8] = { 0x19, 0x1C, 0x20, 0x26, 0x29, 0x2B, 0x2D, 0x30 };
 		return transition[(midiData>>4) & 7];
 	}
 
 	// ROM Address: 0x0786
-	uint8_t processMidiState_19(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_19(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x1A;
 	}
 
 	// ROM Address: 0x078C
-	uint8_t processMidiState_1A(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_1A(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x1B;
 	}
 
 	// ROM Address: 0x0792
-	uint8_t processMidiState_1C(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_1C(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x1D;
 	}
 
 	// ROM Address: 0x0798
-	uint8_t processMidiState_1D(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_1D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x1E;
 	}
 
 	// ROM Address: 0x079E
-	uint8_t processMidiState_1E(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_1E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x1F;
 	}
 
 	// ROM Address: 0x07A4
-	uint8_t processMidiState_20(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_20(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x21;
 	}
 
 	// ROM Address: 0x07AA
-	uint8_t processMidiState_21(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_21(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x22;
 	}
 
 	// ROM Address: 0x07B0
-	uint8_t processMidiState_22(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_22(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x23;
 	}
 
 	// ROM Address: 0x07B6
-	uint8_t processMidiState_23(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_23(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[5] = midiData;
 		return 0x24;
 	}
 
 	// ROM Address: 0x07BC
-	uint8_t processMidiState_24(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_24(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[6] = midiData;
 		return 0x25;
 	}
 
 	// ROM Address: 0x07C2
-	uint8_t processMidiState_26(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_26(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x27;
 	}
 
 	// ROM Address: 0x07C8
-	uint8_t processMidiState_27(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_27(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x28;
 	}
 
 	// ROM Address: 0x07CE
-	uint8_t processMidiState_29(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_29(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2A;
 	}
 
 	// ROM Address: 0x07D4
-	uint8_t processMidiState_2B(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_2B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2C;
 	}
 
 	// ROM Address: 0x07DA
-	uint8_t processMidiState_2D(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_2D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2E;
 	}
 
 	// ROM Address: 0x07E0
-	uint8_t processMidiState_2E(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_2E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x2F;
 	}
 
 	// ROM Address: 0x07E6
-	uint8_t processMidiState_30(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_30(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData & 0b01000000 ? 0x33 : 0x31;
 	}
 
 	// ROM Address: 0x07F3
-	uint8_t processMidiState_31(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_31(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x32;
 	}
 
 	// ROM Address: 0x07F9
-	uint8_t processMidiState_33(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_33(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x34;
 	}
 
 	// ROM Address: 0x07FF
-	uint8_t processMidiState_34(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_34(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x35;
 	}
 
 	// ROM Address: 0x0805
-	uint8_t processMidiState_39_3C_3F(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_39_3C_3F(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[0] = 0xFE;
 		packet->data[1] = midiData;
 		return 0x3A;
 	}
 
 	// ROM Address: 0x080F
-	uint8_t processMidiState_3A(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_3A(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData & 0b01000000 ? 0x3D : 0x3B;
 	}
 
 	// ROM Address: 0x081C
-	uint8_t processMidiState_3B(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_3B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x3C;
 	}
 
 	// ROM Address: 0x0822
-	uint8_t processMidiState_3D(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_3D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x3E;
 	}
 
 	// ROM Address: 0x0828
-	uint8_t processMidiState_3E(MidiDataPacket* packet, uint8_t midiData) {
+	static uint8_t processMidiState_3E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x3F;
 	}
 
 	// ROM Address: 0x082E
-	uint8_t processMidiState_40(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
+	static uint8_t processMidiState_40(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
@@ -5673,7 +5673,7 @@ private:
 	}
 
 	// ROM Address: 0x0F74
-	void wait(uint16_t delayCounter) {
+	static void wait(uint16_t delayCounter) {
 		do {
 			uint8_t i = 61;
 			while (i--) {;
@@ -6550,7 +6550,7 @@ private:
 	}
 
 	// ROM Address: 0x1694
-	bool isLfoModeEnabled(InstrumentParameters* instr) {
+	static bool isLfoModeEnabled(InstrumentParameters* instr) {
 		return instr->voiceDefinition.getLfoLoadMode() && instr->instrumentConfiguration.numberOfNotes;
 	}
 
@@ -6741,7 +6741,7 @@ private:
 		stopMusicProcessing();
 	}
 
-	inline uint8_t addWithUpperBoundary(uint8_t a, uint8_t b, uint8_t upperBoundary) {
+	static inline uint8_t addWithUpperBoundary(uint8_t a, uint8_t b, uint8_t upperBoundary) {
 		const uint16_t s = a + b;
 		return s > upperBoundary ? upperBoundary : s;
 	}
@@ -6857,7 +6857,7 @@ private:
 	}
 
 	// ROM Address: 0x19B4
-	FractionalNote cropToPlayableRange(FractionalNote root /*hl*/, FractionalNote adjustment /*de*/) {
+	static FractionalNote cropToPlayableRange(FractionalNote root /*hl*/, FractionalNote adjustment /*de*/) {
 		if (adjustment.note.value & 0x80) {
 			// adjustment is negative
 			uint16_t result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
@@ -6926,7 +6926,7 @@ private:
 	}
 
 	// ROM Address: 0x1A8C
-	uint8_t ym_getPortamentoTimeFactor(InstrumentParameters* instr) {
+	static uint8_t ym_getPortamentoTimeFactor(InstrumentParameters* instr) {
 		static const uint8_t byte_1A9E[32] = { 0xFF, 0x80, 0x56, 0x40, 0x34, 0x2B, 0x25, 0x20, 0x1D, 0x1A, 0x18, 0x16, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 };
 		return byte_1A9E[(instr->instrumentConfiguration.portamentoTime >> 2) & 0x1F];
 	}
@@ -6985,7 +6985,7 @@ private:
 	}
 
 	// ROM Address: 0x1B4C
-	void ym_finishPortamento(YmChannelData* ymChannelData) {
+	static void ym_finishPortamento(YmChannelData* ymChannelData) {
 		ymChannelData->_hasActivePortamento = 0; // reset bit5
 		ymChannelData->currentlyPlaying = ymChannelData->portamentoTarget;
 	}
@@ -7041,7 +7041,7 @@ private:
 
 	// ROM Address: 0x1BBA
 	// pitchbenderValue 14-bit signed value (-8192 ~ 8192)
-	void executeMidiCommand_PitchBender(InstrumentParameters* instr, PitchbenderValueLSB pitchbenderValueLSB, PitchbenderValueMSB pitchbenderValueMSB) {
+	static void executeMidiCommand_PitchBender(InstrumentParameters* instr, PitchbenderValueLSB pitchbenderValueLSB, PitchbenderValueMSB pitchbenderValueMSB) {
 		instr->pitchbenderValueLSB = pitchbenderValueLSB;
 		instr->pitchbenderValueMSB = pitchbenderValueMSB;
 		int16_t pitchbenderValue = (((int16_t)((pitchbenderValueMSB.value << 9) | (pitchbenderValueLSB.value << 2))) >> 2) - 0x2000; // convert for 2x7bit->14bit and then offset it from 0x2000
@@ -7171,7 +7171,7 @@ private:
 	}
 
 	// ROM Address: 0x1D6D
-	uint8_t carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition, uint8_t l, uint8_t c) {
+	static uint8_t carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition, uint8_t l, uint8_t c) {
 		static const uint8_t carrierTable[8][32] = {
 			{ 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18 },
 			{ 0x1B, 0x1B, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A, 0x1A, 0x19, 0x19, 0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x16, 0x15, 0x15, 0x15, 0x15 },
@@ -7200,7 +7200,7 @@ private:
 	}
 
 	// ROM Address: 0x1D84
-	uint8_t getKeyboardLevelScaling(OperatorDefinition* operatorDefinition, uint8_t h) {
+	static uint8_t getKeyboardLevelScaling(OperatorDefinition* operatorDefinition, uint8_t h) {
 		static const uint8_t scale[4][64] = {
 			{
 				// Linear attenuation with increasing KC#; maximum of -24 dB per 8 octaves.
@@ -7329,7 +7329,7 @@ private:
 	}
 
 	// ROM Address: 0x223C
-	void resetYmChannelData(InstrumentParameters* instr, YmChannelData* ymChannelData) {
+	static void resetYmChannelData(InstrumentParameters* instr, YmChannelData* ymChannelData) {
 		ymChannelData->currentlyPlaying = FractionalNote(Note(0), Fraction(0));
 		ymChannelData->portamentoTarget = FractionalNote(Note(0), Fraction(0));
 		ymChannelData->originalFractionAndNoteNumber = FractionalNote(Note(0), Fraction(0));
@@ -7394,7 +7394,7 @@ private:
 	}
 
 	// ROM Address: 0x22F4
-	void realTimeMessage_FC_MonoMode(InstrumentParameters* instr) {
+	static void realTimeMessage_FC_MonoMode(InstrumentParameters* instr) {
 		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && instr->_lastMidiOnOff_Duration_YY.value) {
 			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		}
@@ -7429,7 +7429,7 @@ private:
 	}
 
 	// ROM Address: 0x2377
-	void sub_2377(InstrumentParameters* instr) {
+	static void sub_2377(InstrumentParameters* instr) {
 		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && instr->_lastMidiOnOff_Duration_YY.value) {
 			instr->_lastMidiOnOff_Duration_YY.value--;
 			if (instr->_lastMidiOnOff_Duration_YY.value == 0) {
