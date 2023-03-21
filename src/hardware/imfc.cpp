@@ -2661,8 +2661,8 @@ void ym2151_device::set_connect(YM2151Operator *om1, int cha, int v) {
 
 
 void ym2151_device::refresh_EG(YM2151Operator * op) {
-	uint32_t kc;
-	uint32_t v;
+	uint32_t kc = 0;
+	uint32_t v = 0;
 
 	kc = op->kc;
 
@@ -2862,7 +2862,7 @@ void ym2151_device::write_reg(int r, int v) {
 		case 0x08:  /* Key Code */
 			v &= 0x7f;
 			if (v != op->kc) {
-				uint32_t kc, kc_channel;
+				uint32_t kc = 0, kc_channel = 0;
 
 				kc_channel = (v - (v >> 2)) * 64;
 				kc_channel += 768;
@@ -2898,7 +2898,7 @@ void ym2151_device::write_reg(int r, int v) {
 		case 0x10:  /* Key Fraction */
 			v >>= 2;
 			if (v != (op->kc_i & 63)) {
-				uint32_t kc_channel;
+				uint32_t kc_channel = 0;
 
 				kc_channel = v;
 				kc_channel |= (op->kc_i & ~63);
@@ -3118,7 +3118,7 @@ void ym2151_device::device_start() {
 
 
 int ym2151_device::op_calc(YM2151Operator * OP, unsigned int env, signed int pm) {
-	uint32_t p;
+	uint32_t p = 0;
 
 
 	p = (env << 3) + sin_tab[(((signed int)((OP->phase & ~FREQ_MASK) + (pm << 15))) >> FREQ_SH) & SIN_MASK];
@@ -3130,8 +3130,8 @@ int ym2151_device::op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
 }
 
 int ym2151_device::op_calc1(YM2151Operator * OP, unsigned int env, signed int pm) {
-	uint32_t p;
-	int32_t  i;
+	uint32_t p = 0;
+	int32_t  i = 0;
 
 
 	i = (OP->phase & ~FREQ_MASK) + pm;
@@ -3152,8 +3152,8 @@ int ym2151_device::op_calc1(YM2151Operator * OP, unsigned int env, signed int pm
 #define volume_calc(OP) ((OP)->tl + ((uint32_t)(OP)->volume) + (AM & (OP)->AMmask))
 
 void ym2151_device::chan_calc(unsigned int chan) {
-	YM2151Operator *op;
-	unsigned int env;
+	YM2151Operator *op = nullptr;
+	unsigned int env = 0;
 	uint32_t AM = 0;
 
 	m2 = c1 = c2 = mem = 0;
@@ -3201,8 +3201,8 @@ void ym2151_device::chan_calc(unsigned int chan) {
 }
 
 void ym2151_device::chan7_calc() {
-	YM2151Operator *op;
-	unsigned int env;
+	YM2151Operator *op = nullptr;
+	unsigned int env = 0;
 	uint32_t AM = 0;
 
 	m2 = c1 = c2 = mem = 0;
@@ -3242,7 +3242,7 @@ void ym2151_device::chan7_calc() {
 
 	env = volume_calc(op + 3);    /* C2 */
 	if (noise & 0x80) {
-		uint32_t noiseout;
+		uint32_t noiseout = 0;
 
 		noiseout = 0;
 		if (env < 0x3ff)
@@ -3257,8 +3257,8 @@ void ym2151_device::chan7_calc() {
 }
 
 void ym2151_device::advance_eg() {
-	YM2151Operator *op;
-	unsigned int i;
+	YM2151Operator *op = nullptr;
+	unsigned int i = 0;
 
 	eg_timer += eg_timer_add;
 
@@ -3333,9 +3333,9 @@ void ym2151_device::advance_eg() {
 
 
 void ym2151_device::advance() {
-	YM2151Operator *op;
-	unsigned int i;
-	int a, p;
+	YM2151Operator *op = nullptr;
+	unsigned int i = 0;
+	int a = 0, p = 0;
 
 	/* LFO */
 	if (test & 2)
@@ -3420,7 +3420,7 @@ void ym2151_device::advance() {
 	i = (noise_p >> 16);     /* number of events (shifts of the shift register) */
 	noise_p &= 0xffff;
 	while (i) {
-		uint32_t j;
+		uint32_t j = 0;
 		j = ((noise_rng ^ (noise_rng >> 3)) & 1) ^ 1;
 		noise_rng = (j << 16) | (noise_rng >> 1);
 		i--;
@@ -3557,7 +3557,7 @@ void ym2151_device::data_w(u8 data) {
 //-------------------------------------------------
 
 void ym2151_device::device_reset() {
-	int i;
+	int i = 0;
 	/* initialize hardware registers */
 	for (i = 0; i < 32; i++) {
 		memset(&oper[i], '\0', sizeof(YM2151Operator));
@@ -3988,7 +3988,7 @@ private:
 	}
 
 	uint8_t getMidiChannel(InstrumentParameters* instr) {
-		uint8_t instrIdx;
+		uint8_t instrIdx = 0;
 		for (instrIdx = 0; instrIdx < 8; instrIdx++) {
 			if (&m_activeInstrumentParameters[instrIdx] == instr) break;
 		}
@@ -7032,7 +7032,7 @@ private:
 	void ym_setOperatorVolumes(InstrumentParameters* instr, YmChannelData* ymChannelData, uint8_t volume) {
 		//log_debug("ym_setOperatorVolumes - using volume 0x%02X for channel %i", volume, ymChannelData->channelNumber);
 		uint8_t ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
-		uint8_t operatorVolume;
+		uint8_t operatorVolume = 0;
 		// set operator 0
 		operatorVolume = ymChannelData->operatorVolumes[0];
 		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect()) {
@@ -7068,7 +7068,7 @@ private:
 		uint8_t volume = getOutputLevel(instr);
 		//log_debug("ym_updateOperatorVolumes - using volume 0x%02X for channel %i", volume, ymChannelData->channelNumber);
 		uint8_t ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
-		uint8_t operatorVolume;
+		uint8_t operatorVolume = 0;
 		operatorVolume = ymChannelData->operatorVolumes[0];
 		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect()) {
 			operatorVolume += volume;
@@ -7104,7 +7104,7 @@ private:
 		uint8_t l = m_lastMidiOnOff_KeyVelocity.value > 2 ? m_lastMidiOnOff_KeyVelocity.value - 2 : 0;
 		l = (l >> 2) & 0x1F;
 
-		uint8_t tmp;
+		uint8_t tmp = 0;
 		tmp = carrierOrModulatorTableLookup(instr->voiceDefinition.getOperator(0), l, getKeyboardLevelScaling(instr->voiceDefinition.getOperator(0), h)) + instr->operator1TotalLevel;
 		ymChannelData->operatorVolumes[0] = tmp < 0x80 ? tmp : 0x7F;
 		tmp = carrierOrModulatorTableLookup(instr->voiceDefinition.getOperator(2), l, getKeyboardLevelScaling(instr->voiceDefinition.getOperator(2), h)) + instr->operator3TotalLevel;
@@ -7856,7 +7856,7 @@ private:
 			return sendMidiResponse_to_MidiOut((uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, 3);
 		}
 		uint8_t i = 0;
-		uint8_t instrNr;
+		uint8_t instrNr = 0;
 		while ((instrNr = m_midiChannelToAssignedInstruments[midiChannel][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			ym2151_executeMidiCommand(instr, m_sp_MidiDataOfMidiCommandInProgress[0], m_sp_MidiDataOfMidiCommandInProgress[1], m_sp_MidiDataOfMidiCommandInProgress[2]);
@@ -7886,7 +7886,7 @@ private:
 			return sendMidiResponse_to_MidiOut((uint8_t*)&m_outgoingMusicCardMessageData, m_outgoingMusicCardMessageData[4] == 0 && m_outgoingMusicCardMessageData[5] == 0 ? 3 : 5);
 		}
 		uint8_t i = 0;
-		uint8_t instrNr;
+		uint8_t instrNr = 0;
 		while ((instrNr = m_midiChannelToAssignedInstruments[midiChannel][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			executeMidiCommand_NoteONOFF_internal_guard(
@@ -7907,7 +7907,7 @@ private:
 			m_sp_MidiDataOfMidiCommandInProgress[1] = (m_sp_MidiDataOfMidiCommandInProgress[2] << 4) | m_sp_MidiDataOfMidiCommandInProgress[1];
 		}
 		uint8_t i = 0;
-		uint8_t instrNr;
+		uint8_t instrNr = 0;
 		while ((instrNr = m_midiChannelToAssignedInstruments[m_sysEx_ChannelNumber][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			setInstrumentParameter(instr, m_sp_MidiDataOfMidiCommandInProgress[0], m_sp_MidiDataOfMidiCommandInProgress[1]);
@@ -8843,7 +8843,7 @@ private:
 	// ROM Address: 0x3343
 	WriteStatus sendDataPacketTypeA(uint8_t* pData, uint16_t dataSize) {
 		WriteStatus writeStatus;
-		uint8_t checksum;
+		uint8_t checksum = 0;
 
 		// we need to double the size since we're sending two bytes per input byte
 		uint16_t numberOfBytesToSend = dataSize * 2;
@@ -8871,7 +8871,7 @@ private:
 	// ROM Address: 0x338D
 	WriteStatus sendDataPacketTypeB(uint8_t* pData, uint16_t dataSize) {
 		WriteStatus writeStatus;
-		uint8_t checksum;
+		uint8_t checksum = 0;
 
 		// send size
 		send_midi_byte_with_error_handling((dataSize >> 7) & 0x7F);
@@ -8902,8 +8902,8 @@ private:
 	// ROM Address: 0x33D7
 	ReadStatus receiveDataPacketTypeA_internal(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
 		ReadResult readResult;
-		uint8_t checksum;
-		uint16_t dataPacketSize;
+		uint8_t checksum = 0;
+		uint16_t dataPacketSize = 0;
 
 		log_debug("receiveDataPacketTypeA_internal(%02X) - begin - bufferSize=0x%X", byteCountHigh, bufferSize);
 
@@ -9028,8 +9028,8 @@ private:
 	// ROM Address: 0x351C
 	ReadStatus receiveDataPacketTypeB(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
 		ReadResult readResult;
-		uint8_t checksum;
-		uint16_t dataPacketSize;
+		uint8_t checksum = 0;
+		uint16_t dataPacketSize = 0;
 
 		checksum = 0;
 		// read the second byte of the size
