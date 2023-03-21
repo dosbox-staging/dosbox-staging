@@ -51,20 +51,20 @@
 
 #include "dosbox.h"
 
-#include <string.h>
-#include <string>
-#include <vector>
 #include <functional>
-#include <SDL2/SDL_thread.h>
+#include <string>
+#include <string.h>
+#include <vector>
 
-#include "inout.h"
-#include "mixer.h"
 #include "dma.h"
+#include "inout.h"
+#include "math.h"
+#include "mixer.h"
 #include "pic.h"
+#include "regs.h"
 #include "setup.h"
 #include "shell.h"
-#include "math.h"
-#include "regs.h"
+
 #include "SDL_thread.h"
 
 #define IMFC_RATE 44100
