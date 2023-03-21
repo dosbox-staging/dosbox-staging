@@ -979,7 +979,7 @@ private:
 	std::string m_name = {};
 public:
 	InputPin() = default;
-	InputPin(std::string name) : m_name(name) {}
+	explicit InputPin(std::string name) : m_name(name) {}
 	std::string getName() { return m_name; }
 	virtual DataType getValue() = 0;
 };
@@ -988,7 +988,7 @@ template <typename DataType> class DataDrivenInputPin : public InputPin<DataType
 private:
 	DataProvider<DataType>* m_dataProvider;
 public:
-	DataDrivenInputPin(std::string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
+	explicit DataDrivenInputPin(std::string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
 	void connect(DataProvider<DataType>* source) { m_dataProvider = source; }
 	DataType getValue() override {
 		if (!m_dataProvider) {
@@ -1014,7 +1014,7 @@ template <typename DataType> class InputOutputPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType>* m_dataContainer;
 public:
-	InputOutputPin(std::string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
+	explicit InputOutputPin(std::string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
 	void connect(DataContainer<DataType>* dataContainer) { m_dataContainer = dataContainer; }
 	DataType getValue() override {
 		if (!m_dataContainer) {
@@ -1037,7 +1037,7 @@ private:
 	DataDrivenInputPin<bool> m_input;
 	DataPin<bool> m_output;
 public:
-	InverterGate(std::string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
+	explicit InverterGate(std::string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = !m_input.getValue();
@@ -1053,7 +1053,7 @@ private:
 	DataDrivenInputPin<bool> m_enableInput;
 	DataPin<bool> m_output;
 public:
-	TriStateBuffer(std::string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
+	explicit TriStateBuffer(std::string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
@@ -1073,7 +1073,7 @@ private:
 	DataDrivenInputPin<bool> m_input2;
 	DataPin<bool> m_output;
 public:
-	AndGate(std::string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
+	explicit AndGate(std::string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_input1.getValue() && m_input2.getValue();
@@ -1092,7 +1092,7 @@ private:
 	DataDrivenInputPin<bool> m_input4;
 	DataPin<bool> m_output;
 public:
-	OrGate(std::string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
+	explicit OrGate(std::string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_input1.getValue() || m_input2.getValue() || m_input3.getValue() || m_input4.getValue();
@@ -1113,7 +1113,7 @@ private:
 	DataDrivenInputPin<bool> m_clearInput;
 	DataPin<bool> m_output;
 public:
-	DFlipFlop(std::string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
+	explicit DFlipFlop(std::string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
 	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
@@ -1145,7 +1145,7 @@ private:
 	DataPin<bool> m_totalIrqMask;
 	DataPin<bool> m_irqBufferEnable;
 public:
-	TotalControlRegister(std::string name) :
+	explicit TotalControlRegister(std::string name) :
 		m_timerAClear(name+".timerAClear", false),
 		m_timerBClear(name + ".timerBClear", false),
 		m_timerAEnable(name + ".timerAEnable", false),
@@ -1210,7 +1210,7 @@ struct CounterData {
 	uint8_t m_tmpWrite;
 	CounterReadSource m_nextReadSource;
 	CounterWriteTarget m_nextWriteTarget;
-	CounterData(std::string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
+	explicit CounterData(std::string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
 	void writeCounterByte(uint8_t val) {
 		switch (m_nextWriteTarget) {
 			case COUNTERWRITETARGET_BYTE1:
@@ -1258,7 +1258,7 @@ private:
 		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
 	}
 public:
-	Intel8253(std::string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
+	explicit Intel8253(std::string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
 		registerNextEvent(); // FIXME
 	}
 	DataProvider<bool>* getTimerA() { return m_timerA.getDataProvider(); }
@@ -1384,7 +1384,7 @@ private:
 	DataDrivenInputPin<bool> m_timerBStatus;
 	DataDrivenInputPin<bool> m_totalCardStatus;
 public:
-	TotalStatusRegister(std::string name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
+	explicit TotalStatusRegister(std::string name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
 
 	void connectTimerAStatus(DataProvider<bool>* dataProvider) { m_timerAStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
 	void connectTimerBStatus(DataProvider<bool>* dataProvider) { m_timerBStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
@@ -1557,7 +1557,7 @@ private:
 	}
 
 public:
-	PD71055(std::string name) :
+	explicit PD71055(std::string name) :
 			m_name(name),
 			m_port0(name + ".p0"),
 			m_port1(name + ".p1"),
@@ -1953,7 +1953,7 @@ From the looks of it, there is a different clock frequency being used. Based on 
 class ym2151_device {
 public:
 	// construction/destruction
-	ym2151_device(MixerChannel* mixerChannel);
+	explicit ym2151_device(MixerChannel* mixerChannel);
 
 	// configuration helpers
 	//auto irq_handler() { return m_irqhandler.bind(); }
