@@ -97,22 +97,22 @@ void IMF_LOG(string format, Args const & ... args) {
 	SDL_UnlockMutex(m_loggerMutex);
 }
 
-inline Bit8u leftRotate8(Bit8u n) { return (n << 1) | (n >> (8 - 1)); }
+inline uint8_t leftRotate8(uint8_t n) { return (n << 1) | (n >> (8 - 1)); }
 
 enum DataParty { DATAPARTY_SYSTEM, DATAPARTY_MIDI };
 
-static void Intel8253_TimerEvent(Bitu val);
+static void Intel8253_TimerEvent(uint32_t val);
 
 #pragma pack(push)  /* push current alignment to stack */
 #pragma pack(1)     /* set alignment to 1 byte boundary */
 
-enum CARD_MODE : Bit8u { MUSIC_MODE=0, THRU_MODE=1 };
-enum CHAIN_MODE : Bit8u { CHAIN_MODE_DISABLED=0, CHAIN_MODE_ENABLED=1 };
-enum MEMORY_PROTECTION : Bit8u { MEMORY_WRITABLE=0, MEMORY_READONLY=1 };
-enum ERROR_REPORTING : Bit8u { ERROR_REPORTING_DISABLED=0, ERROR_REPORTING_ENABLED=1 };
-enum HANDSHAKE_MESSAGE : Bit8u { ACK_MESSAGE=2, NAK_MESSAGE=3, CANCEL_MESSAGE=4 };
+enum CARD_MODE : uint8_t { MUSIC_MODE=0, THRU_MODE=1 };
+enum CHAIN_MODE : uint8_t { CHAIN_MODE_DISABLED=0, CHAIN_MODE_ENABLED=1 };
+enum MEMORY_PROTECTION : uint8_t { MEMORY_WRITABLE=0, MEMORY_READONLY=1 };
+enum ERROR_REPORTING : uint8_t { ERROR_REPORTING_DISABLED=0, ERROR_REPORTING_ENABLED=1 };
+enum HANDSHAKE_MESSAGE : uint8_t { ACK_MESSAGE=2, NAK_MESSAGE=3, CANCEL_MESSAGE=4 };
 
-enum MUSICCARD_ERROR_CODE : Bit8u {
+enum MUSICCARD_ERROR_CODE : uint8_t {
 	FIFO_OVERFLOW_ERROR_MUSICCARD_TO_SYSTEM = 0xF0,
 	FIFO_OVERFLOW_ERROR_MIDI_TO_MUSICCARD = 0xF1,
 	MIDI_RECEPTION_ERROR = 0xF2,
@@ -122,7 +122,7 @@ enum MUSICCARD_ERROR_CODE : Bit8u {
 };
 
 
-enum MidiDataPacketState : Bit8u {
+enum MidiDataPacketState : uint8_t {
 	PACKET_STATE_00 = 0x00,
 	PACKET_STATE_01 = 0x01,
 	PACKET_STATE_02 = 0x02,
@@ -192,11 +192,11 @@ enum MidiDataPacketState : Bit8u {
 
 struct BufferFlags {
 	// bit-7:true=no data / false=has data / bit6:read errors encounted / bit5: overflow error / bit4: offline error
-	volatile Bit8u __unused1 : 4;
-	volatile Bit8u __hasOfflineError : 1;
-	volatile Bit8u __hasOverflowError : 1;
-	volatile Bit8u __hasReadError : 1;
-	volatile Bit8u __isBufferEmpty : 1;
+	volatile uint8_t __unused1 : 4;
+	volatile uint8_t __hasOfflineError : 1;
+	volatile uint8_t __hasOverflowError : 1;
+	volatile uint8_t __hasReadError : 1;
+	volatile uint8_t __isBufferEmpty : 1;
 
 	inline void setDataAdded() { __isBufferEmpty = 0; }
 	inline void setDataCleared() { __isBufferEmpty = 1; }
@@ -209,7 +209,7 @@ struct BufferFlags {
 	inline bool hasReadError() { return __hasReadError; }
 	inline bool hasOverflowError() { return __hasOverflowError; }
 	inline bool hasOfflineError() { return __hasOfflineError; }
-	inline Bit8u getByteValue() {
+	inline uint8_t getByteValue() {
 		return (__unused1 << 0) | (__hasOfflineError << 4) | (__hasOverflowError << 5) | (__hasReadError << 6) | (__isBufferEmpty << 7);
 	}
 };
@@ -326,7 +326,7 @@ public:
 	inline bool hasReadError() { return flags.hasReadError(); }
 	inline bool hasOverflowError() { return flags.hasOverflowError(); }
 	inline bool hasOfflineError() { return flags.hasOfflineError(); }
-	inline Bit8u getFlagsByteValue() { return flags.getByteValue(); }
+	inline uint8_t getFlagsByteValue() { return flags.getByteValue(); }
 };
 
 enum ReadStatus { READ_SUCCESS, NO_DATA, READ_ERROR };
@@ -334,30 +334,30 @@ enum WriteStatus { WRITE_SUCCESS, WRITE_ERROR };
 
 struct ReadResult {
 	ReadStatus status;
-	Bit8u data;
+	uint8_t data;
 };
 
 enum SystemDataAvailability { NO_DATA_AVAILABLE, MIDI_DATA_AVAILABLE, SYSTEM_DATA_AVAILABLE };
 
 struct SystemReadResult {
 	SystemDataAvailability status;
-	Bit8u data;
+	uint8_t data;
 };
 
 struct MidiDataPacket {
-	Bit8u data[16];
-	Bit8u/*MidiDataPacketState*/ state;
-	Bit8u reserved[15];
+	uint8_t data[16];
+	uint8_t/*MidiDataPacketState*/ state;
+	uint8_t reserved[15];
 };
 static_assert(sizeof(MidiDataPacket) == 0x20, "MidiDataPacket needs to be 0x20 in size!");
 
 static const string m_noteToString[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 struct Note {
-	Bit8u value;
+	uint8_t value;
 
 	Note() { value = 0; }
-	explicit Note(Bit8u v) { value = v; }
+	explicit Note(uint8_t v) { value = v; }
 
 	string toString() {
 		return m_noteToString[value % 12] + "-" + to_string(value / 12);
@@ -367,10 +367,10 @@ static_assert(sizeof(Note) == 1, "Note needs to be 1 in size!");
 bool operator==(Note a, Note b) { return a.value == b.value; }
 
 struct Fraction {
-	Bit8u value;
+	uint8_t value;
 
 	Fraction() { value = 0; }
-	explicit Fraction(Bit8u v) { value = v; }
+	explicit Fraction(uint8_t v) { value = v; }
 };
 static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
 bool operator==(Fraction a, Fraction b) { return a.value == b.value; }
@@ -382,33 +382,33 @@ struct FractionalNote {
 
 	FractionalNote() : note(), fraction() {}
 	FractionalNote(Note nn, Fraction nf) : note(nn), fraction(nf) {}
-	Bit16u getBit16u() { return note.value << 8 | fraction.value; }
+	uint16_t getuint16_t() { return note.value << 8 | fraction.value; }
 };
 static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be 1 in size!");
 bool operator==(FractionalNote a, FractionalNote b) { return a.note == b.note && a.fraction == b.fraction; }
 bool operator!=(FractionalNote a, FractionalNote b) { return !(a == b); }
 FractionalNote operator -(FractionalNote a, FractionalNote b) {
-	Bit16u val = a.getBit16u() - b.getBit16u();
+	uint16_t val = a.getuint16_t() - b.getuint16_t();
 	return FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
 }
 FractionalNote operator +(FractionalNote a, FractionalNote b) {
-	Bit16u val = a.getBit16u() + b.getBit16u();
+	uint16_t val = a.getuint16_t() + b.getuint16_t();
 	return FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
 }
 
 struct KeyVelocity {
-	Bit8u value;
+	uint8_t value;
 
 	KeyVelocity() { value = 0; }
-	explicit KeyVelocity(Bit8u v) { value = v; }
+	explicit KeyVelocity(uint8_t v) { value = v; }
 };
 static_assert(sizeof(KeyVelocity) == 1, "KeyVelocity needs to be 1 in size!");
 
 struct Duration {
-	Bit16u value;
+	uint16_t value;
 
 	Duration() { value = 0; }
-	explicit Duration(Bit16u v) { value = v; }
+	explicit Duration(uint16_t v) { value = v; }
 	inline bool isEmpty() { return value & 0x8000; }
 	inline bool isNotEmpty() { return !isEmpty(); }
 	inline void setEmpty() { value |= 0x8000; }
@@ -417,18 +417,18 @@ static_assert(sizeof(Duration) == 2, "Duration2 needs to be 1 in size!");
 static Duration ZERO_DURATION(0);
 
 struct PitchbenderValueMSB {
-	Bit8u value;
+	uint8_t value;
 
 	PitchbenderValueMSB() { value = 0; }
-	explicit PitchbenderValueMSB(Bit8u v) { value = v; }
+	explicit PitchbenderValueMSB(uint8_t v) { value = v; }
 };
 static_assert(sizeof(PitchbenderValueMSB) == 1, "PitchbenderValueMSB needs to be 1 in size!");
 
 struct PitchbenderValueLSB {
-	Bit8u value;
+	uint8_t value;
 
 	PitchbenderValueLSB() { value = 0; }
-	explicit PitchbenderValueLSB(Bit8u v) { value = v; }
+	explicit PitchbenderValueLSB(uint8_t v) { value = v; }
 };
 static_assert(sizeof(PitchbenderValueLSB) == 1, "PitchbenderValueLSB needs to be 1 in size!");
 
@@ -451,83 +451,83 @@ static_assert(sizeof(PitchbenderValueLSB) == 1, "PitchbenderValueLSB needs to be
 */
 struct MidiFlowPath {
 	// This is the path from MIDI IN to the system. This path is enabled when the data received at MIDI IN is to be processed by the system.
-	Bit8u MidiIn_To_System;
+	uint8_t MidiIn_To_System;
 	// This is the patch from the system to MIDI OUT. This path is used when sending a message from the system to an external MIDI device. If this
 	// path is enabled, it is automatically closed when CHAIN mode is set. When CHAIN mode is cancelled, the path returns to its previous state.
 	// Even if this path has been closed by entry into CHAIN mode, status reports from the music card will reflect its programmed state.
-	Bit8u System_To_MidiOut;
+	uint8_t System_To_MidiOut;
 	// This is the path from MIDI IN to the sound processor. This path is set so that the music card can be controlled by an external MIDI devince.
-	Bit8u MidiIn_To_SP;
+	uint8_t MidiIn_To_SP;
 	// This is the route from the system to the sound processor. This path is set so that the music card can be controlled by the processor.
 	// Note: If you try to set both the "MIDI IN -> Sound Processor" and "System -> Sound Processor" paths to pass system real-time messages,
 	//       only the "MIDI IN -> Sound Processor" path is set. The other path is ignored with no error report message.
-	Bit8u System_To_SP;
+	uint8_t System_To_SP;
 	// This is the path from MIDI IN to MIDI OUT. When this path is set, the MIDI OUT terminal functions in essentially the same manner as the
 	// MIDI THRU terminal. When the "System -> MIDI OUT" path is concurrently set, the data from the system and the data input to MIDI IN can
 	// be merged in MIDI OUT. When this path is set, the program request from a MIDI line is not valid, and a MIDI handshaking message cannot
 	// be output to a MIDI line.
 	// This path automatically closes when CHAIN mode is set. When CHAIN mode is cancelled, this path returns  to its previous state. Even if
 	// this path has been closed by entry into CHAIN mode, status reports from the music card reflect its programmed state.
-	Bit8u MidiIn_To_MidiOut;
+	uint8_t MidiIn_To_MidiOut;
 };
 static_assert(sizeof(MidiFlowPath) == 5, "MidiFlowPath needs to be 1 in size!");
 
 struct OperatorDefinition {
 private:
-	Bit8u bytes[8];
+	uint8_t bytes[8];
 	//// +00: <0*******> <*>: Total level (TL) 0(Max)~127
-	//Bit8u __totalLevel : 7;
-	//Bit8u __unused1 : 1;
+	//uint8_t __totalLevel : 7;
+	//uint8_t __unused1 : 1;
 	//// +01: <a***0000> <a>: Keyboard level scaling type (KLS Bit0) / <*>: Velocity sensitivity to total level (VSTL)
-	//Bit8u __unused2 : 4; 
-	//Bit8u __velocitySensitivityToTotalLevel : 3;
-	//Bit8u __keyboardLevelScalingType : 1; // KLS bit0
+	//uint8_t __unused2 : 4; 
+	//uint8_t __velocitySensitivityToTotalLevel : 3;
+	//uint8_t __keyboardLevelScalingType : 1; // KLS bit0
 	//// +02: <aaaabbbb> <a>: Keyboard level scaling depth (KLSD) / <b>: Addition to "Total level" (undocumented)
-	//Bit8u __additionToTotalLevel : 4; // undocumented
-	//Bit8u __keyboardLevelScalingDepth : 4;
+	//uint8_t __additionToTotalLevel : 4; // undocumented
+	//uint8_t __keyboardLevelScalingDepth : 4;
 	//// +03: <abbbcccc> <a>: KLS bit 1 / <b>: Detune (DT) / <c>: Multiple
-	//Bit8u __multiple : 4;
-	//Bit8u __detune : 3;
-	//Bit8u __keyboardLevelScaling : 1;
+	//uint8_t __multiple : 4;
+	//uint8_t __detune : 3;
+	//uint8_t __keyboardLevelScaling : 1;
 	//// +04: <aa0*****> <a>: Keyboard rate scaling depth (KRSD) / <*>: Attack rate (AR)
-	//Bit8u __attackRate : 5;
-	//Bit8u __unused3 : 1;
-	//Bit8u __keyboardRateScalingDepth : 2;
+	//uint8_t __attackRate : 5;
+	//uint8_t __unused3 : 1;
+	//uint8_t __keyboardRateScalingDepth : 2;
 	//// +05: <abb*****> <a>: Modulator(0)/Carrier(1) / <b>: Velocity sensitivity to attack rate (VSAR) / <*>: Decay 1 rate (D1R)
-	//Bit8u __decay1Rate : 5;
-	//Bit8u __velocitySensitivityToAttackRate : 2;
-	//Bit8u __modulatorCarrierSelect : 1;
+	//uint8_t __decay1Rate : 5;
+	//uint8_t __velocitySensitivityToAttackRate : 2;
+	//uint8_t __modulatorCarrierSelect : 1;
 	//// +06: <aa0*****> <a>: Inharmonic / <*>: Decay 2 rate (D2R)
-	//Bit8u __decay2Rate : 5;
-	//Bit8u __unused4 : 1;
-	//Bit8u __inharmonic : 2;
+	//uint8_t __decay2Rate : 5;
+	//uint8_t __unused4 : 1;
+	//uint8_t __inharmonic : 2;
 	//// +07: <aaaabbbb> <a>: Sustain level (SL) / <b>: Release rate (RR)
-	//Bit8u __releaseRate : 4;
-	//Bit8u __sustainLevel : 4;
+	//uint8_t __releaseRate : 4;
+	//uint8_t __sustainLevel : 4;
 
 	OperatorDefinition& operator = (const OperatorDefinition& other ) { /* don't use */ }
 public:
-	Bit8u getTotalLevel() { return (bytes[0] & 0x7F) >> 0; }
-	Bit8u getUnused1() { return (bytes[0] >> 7) & 0x01; }
-	Bit8u getUnused2() { return (bytes[1] >> 0) & 0x0F; }
-	Bit8u getVelocitySensitivityToTotalLevel() { return (bytes[1] >> 4) & 0x07; }
-	Bit8u getKeyboardLevelScalingType() { return (bytes[1] >> 7) & 0x01; }
-	Bit8u getAdditionToTotalLevel() { return (bytes[2] >> 0) & 0x0F; }
-	Bit8u getKeyboardLevelScalingDepth() { return (bytes[2] >> 4) & 0x0F; }
-	Bit8u getMultiple() { return (bytes[3] >> 0) & 0x0F; }
-	Bit8u getDetune() { return (bytes[3] >> 4) & 0x07; }
-	Bit8u getKeyboardLevelScaling() { return (bytes[3] >> 7) & 0x01; }
-	Bit8u getAttackRate() { return (bytes[4] >> 0) & 0x1F; }
-	Bit8u getUnused3() { return (bytes[4] >> 5) & 0x01; }
-	Bit8u getKeyboardRateScalingDepth() { return (bytes[4] >> 6) & 0x03; }
-	Bit8u getDecay1Rate() { return (bytes[5] >> 0) & 0x1F; }
-	Bit8u getVelocitySensitivityToAttackRate() { return (bytes[5] >> 5) & 0x03; }
-	Bit8u getModulatorCarrierSelect() { return (bytes[5] >> 7) & 0x01; }
-	Bit8u getDecay2Rate() { return (bytes[6] >> 0) & 0x1F; }
-	Bit8u getUnused4() { return (bytes[6] >> 5) & 0x01; }
-	Bit8u getInharmonic() { return (bytes[6] >> 6) & 0x03; }
-	Bit8u getReleaseRate() { return (bytes[7] >> 0) & 0x0F; }
-	Bit8u getSustainLevel() { return (bytes[7] >> 4) & 0x0F; }
+	uint8_t getTotalLevel() { return (bytes[0] & 0x7F) >> 0; }
+	uint8_t getUnused1() { return (bytes[0] >> 7) & 0x01; }
+	uint8_t getUnused2() { return (bytes[1] >> 0) & 0x0F; }
+	uint8_t getVelocitySensitivityToTotalLevel() { return (bytes[1] >> 4) & 0x07; }
+	uint8_t getKeyboardLevelScalingType() { return (bytes[1] >> 7) & 0x01; }
+	uint8_t getAdditionToTotalLevel() { return (bytes[2] >> 0) & 0x0F; }
+	uint8_t getKeyboardLevelScalingDepth() { return (bytes[2] >> 4) & 0x0F; }
+	uint8_t getMultiple() { return (bytes[3] >> 0) & 0x0F; }
+	uint8_t getDetune() { return (bytes[3] >> 4) & 0x07; }
+	uint8_t getKeyboardLevelScaling() { return (bytes[3] >> 7) & 0x01; }
+	uint8_t getAttackRate() { return (bytes[4] >> 0) & 0x1F; }
+	uint8_t getUnused3() { return (bytes[4] >> 5) & 0x01; }
+	uint8_t getKeyboardRateScalingDepth() { return (bytes[4] >> 6) & 0x03; }
+	uint8_t getDecay1Rate() { return (bytes[5] >> 0) & 0x1F; }
+	uint8_t getVelocitySensitivityToAttackRate() { return (bytes[5] >> 5) & 0x03; }
+	uint8_t getModulatorCarrierSelect() { return (bytes[5] >> 7) & 0x01; }
+	uint8_t getDecay2Rate() { return (bytes[6] >> 0) & 0x1F; }
+	uint8_t getUnused4() { return (bytes[6] >> 5) & 0x01; }
+	uint8_t getInharmonic() { return (bytes[6] >> 6) & 0x03; }
+	uint8_t getReleaseRate() { return (bytes[7] >> 0) & 0x0F; }
+	uint8_t getSustainLevel() { return (bytes[7] >> 4) & 0x0F; }
 
 	void clear() {
 		bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] = bytes[5] = bytes[6] = bytes[7] = 0;
@@ -542,11 +542,11 @@ public:
 		bytes[6] = other->bytes[6];
 		bytes[7] = other->bytes[7];
 	}
-	inline Bit8u getByte3() { return bytes[3]; }
-	inline Bit8u getByte4() { return bytes[4]; }
-	inline Bit8u getByte5() { return bytes[5]; }
-	inline Bit8u getByte6() { return bytes[6]; }
-	inline Bit8u getReleaseRateSustainLevel() { return bytes[7]; }
+	inline uint8_t getByte3() { return bytes[3]; }
+	inline uint8_t getByte4() { return bytes[4]; }
+	inline uint8_t getByte5() { return bytes[5]; }
+	inline uint8_t getByte6() { return bytes[6]; }
+	inline uint8_t getReleaseRateSustainLevel() { return bytes[7]; }
 };
 static_assert(sizeof(OperatorDefinition) == 8, "OperatorDefinition needs to be 8 in size!");
 
@@ -555,82 +555,82 @@ private:
 	// +00~+06: Name of instrument
 	char name[7];
 	// +07: <********> Reserved
-	Bit8u reserved1;
+	uint8_t reserved1;
 	// +08: <********> LFO Speed
-	Bit8u lfoSpeed;
+	uint8_t lfoSpeed;
 	// +09: <a*******> <a>: LFO load mode 0,1 (Enable) / <*>: Amplitude modulation depth (AMD)
-	Bit8u byte9;
-	//Bit8u __amplitudeModulationDepth : 7;
-	//Bit8u __lfoLoadMode : 1;
+	uint8_t byte9;
+	//uint8_t __amplitudeModulationDepth : 7;
+	//uint8_t __lfoLoadMode : 1;
 	// +0A: <a*******> <a>: LFO sync mode 0,1 (Sync ON) / <*>: Pitch modulation depth (PMD)
-	Bit8u byteA;
-	//Bit8u __pitchModulationDepth : 7;
-	//Bit8u __lfoSyncMode : 1;
+	uint8_t byteA;
+	//uint8_t __pitchModulationDepth : 7;
+	//uint8_t __lfoSyncMode : 1;
 	// +0B: <0abcd000> Operator enable a=operator #4 ... d=operator #1
-	Bit8u byteB;
-	//Bit8u __unused01 : 3;
-	//Bit8u __operatorsEnabled : 4;
-	//Bit8u __unused02 : 1;
+	uint8_t byteB;
+	//uint8_t __unused01 : 3;
+	//uint8_t __operatorsEnabled : 4;
+	//uint8_t __unused02 : 1;
 	// +0C: <11aaabbb> <a>: Feedback level / <b>: Algorithm
-	Bit8u byteC;
-	//Bit8u __algorithm : 3;
-	//Bit8u __feedbackLevel : 3;
-	//Bit8u __unused03_allOnes : 2; // these two bits would be the enable Left/Right channel
+	uint8_t byteC;
+	//uint8_t __algorithm : 3;
+	//uint8_t __feedbackLevel : 3;
+	//uint8_t __unused03_allOnes : 2; // these two bits would be the enable Left/Right channel
 	// +0D: <0aaa00bb> <a>: Pitch modulation sensitivity (PMS) / <b>: AMS
-	Bit8u byteD;
-	//Bit8u __amplitudeModulationSensitivity : 2;
-	//Bit8u __unused04 : 2;
-	//Bit8u __pitchModulationSensitivity : 3;
-	//Bit8u __unused05 : 1;
+	uint8_t byteD;
+	//uint8_t __amplitudeModulationSensitivity : 2;
+	//uint8_t __unused04 : 2;
+	//uint8_t __pitchModulationSensitivity : 3;
+	//uint8_t __unused05 : 1;
 	// +0E: <0**00000> <*>: LFO wave form
-	Bit8u byteE;
-	//Bit8u __unused06 : 5;
-	//Bit8u __lfoWaveForm : 2;
-	//Bit8u __unused07 : 1;
+	uint8_t byteE;
+	//uint8_t __unused06 : 5;
+	//uint8_t __lfoWaveForm : 2;
+	//uint8_t __unused07 : 1;
 	// +0F: <********> <*>: Transpose -128~127
-	Bit8u transpose;
+	uint8_t transpose;
 	OperatorDefinition operators[4];
-	Bit8u reserved2[10];
-	Bit8u field_3A; // <a*******> : <a> Mono/Poly mode <*> portamento time
-	Bit8u field_3B; // <*aaabbbb> : <b> PitchbenderRange <a> PMDController
-	Bit8u reserved3[4];
+	uint8_t reserved2[10];
+	uint8_t field_3A; // <a*******> : <a> Mono/Poly mode <*> portamento time
+	uint8_t field_3B; // <*aaabbbb> : <b> PitchbenderRange <a> PMDController
+	uint8_t reserved3[4];
 
 	VoiceDefinition& operator = (const VoiceDefinition& other) { /* don't use */ }
 public:
-	char getName(Bit8u i) { return name[i]; }
-	Bit8u getLfoSpeed() { return lfoSpeed; }
-	void setLfoSpeed(Bit8u val) { lfoSpeed = val; }
-	Bit8u getAmplitudeModulationDepth() { return (byte9 >> 0) & 0x7F; }
-	void setAmplitudeModulationDepth(Bit8u val) { byte9 = (byte9 & 0x80) | (val & 0x7F); }
-	Bit8u getLfoLoadMode() { return (byte9 >> 7) & 0x01; }
-	void setLfoLoadMode(Bit8u val) { byte9 = (byte9 & 0x7F) | (val << 7); }
-	Bit8u getPitchModulationDepth() { return (byteA >> 0) & 0x7F; }
-	void setPitchModulationDepth(Bit8u val) { byteA = (byteA & 0x7F) | (val << 7); }
-	Bit8u getLfoSyncMode() { return (byteA >> 7) & 0x01; }
-	void setLfoSyncMode(Bit8u val) { byteA = (byteA & 0x7F) | (val << 7); }
-	Bit8u getOperatorsEnabled() {
-		Bit8u val = (byteB >> 3) & 0x0F;
+	char getName(uint8_t i) { return name[i]; }
+	uint8_t getLfoSpeed() { return lfoSpeed; }
+	void setLfoSpeed(uint8_t val) { lfoSpeed = val; }
+	uint8_t getAmplitudeModulationDepth() { return (byte9 >> 0) & 0x7F; }
+	void setAmplitudeModulationDepth(uint8_t val) { byte9 = (byte9 & 0x80) | (val & 0x7F); }
+	uint8_t getLfoLoadMode() { return (byte9 >> 7) & 0x01; }
+	void setLfoLoadMode(uint8_t val) { byte9 = (byte9 & 0x7F) | (val << 7); }
+	uint8_t getPitchModulationDepth() { return (byteA >> 0) & 0x7F; }
+	void setPitchModulationDepth(uint8_t val) { byteA = (byteA & 0x7F) | (val << 7); }
+	uint8_t getLfoSyncMode() { return (byteA >> 7) & 0x01; }
+	void setLfoSyncMode(uint8_t val) { byteA = (byteA & 0x7F) | (val << 7); }
+	uint8_t getOperatorsEnabled() {
+		uint8_t val = (byteB >> 3) & 0x0F;
 		//val = (((val >> 0) & 1) << 0) | (((val >> 2) & 1) << 1) | (((val >> 1) & 1) << 2) | (((val >> 3) & 1) << 3); // Test if oper 1 and 2 are inverted
 		return val;
 	}
-	Bit8u getAlgorithm() { return (byteC >> 0) & 0x07; }
-	Bit8u getFeedbackLevel() { return (byteC >> 3) & 0x07; }
-	Bit8u getAmplitudeModulationSensitivity() { return (byteD >> 0) & 0x03; }
-	void setAmplitudeModulationSensitivity(Bit8u val) { byteD = (byteD & 0xFC) | (val & 3); }
-	Bit8u getPitchModulationSensitivity() { return (byteD >> 4) & 0x07; }
-	void setPitchModulationSensitivity(Bit8u val) { byteD = (byteD & 0x8F) | ((val & 7) << 4); }
-	Bit8u getLfoWaveForm() { return (byteE >> 5) & 0x03; }
-	void setLfoWaveForm(Bit8u val) { byteE = (byteE & 0x9F) | ((val & 3) << 5); }
-	Bit8u getTranspose() { return transpose; }
-	OperatorDefinition* getOperator(Bit8u i) {
+	uint8_t getAlgorithm() { return (byteC >> 0) & 0x07; }
+	uint8_t getFeedbackLevel() { return (byteC >> 3) & 0x07; }
+	uint8_t getAmplitudeModulationSensitivity() { return (byteD >> 0) & 0x03; }
+	void setAmplitudeModulationSensitivity(uint8_t val) { byteD = (byteD & 0xFC) | (val & 3); }
+	uint8_t getPitchModulationSensitivity() { return (byteD >> 4) & 0x07; }
+	void setPitchModulationSensitivity(uint8_t val) { byteD = (byteD & 0x8F) | ((val & 7) << 4); }
+	uint8_t getLfoWaveForm() { return (byteE >> 5) & 0x03; }
+	void setLfoWaveForm(uint8_t val) { byteE = (byteE & 0x9F) | ((val & 3) << 5); }
+	uint8_t getTranspose() { return transpose; }
+	OperatorDefinition* getOperator(uint8_t i) {
 		return &operators[i];
-		//static Bit8u mapping[4] = {0, 2, 1, 3};  // Test if oper 1 and 2 are inverted
+		//static uint8_t mapping[4] = {0, 2, 1, 3};  // Test if oper 1 and 2 are inverted
 		//return &operators[mapping[i]];
 	}
-	Bit8u getPortamentoTime() { return (field_3A >> 0) & 0x7F; }
-	Bit8u getPolyMonoMode() { return (field_3A >> 7) & 0x01; }
-	Bit8u getPitchbenderRange() { return (field_3B >> 0) & 0x0F; }
-	Bit8u getPMDController() { return (field_3B >> 4) & 0x07; }
+	uint8_t getPortamentoTime() { return (field_3A >> 0) & 0x7F; }
+	uint8_t getPolyMonoMode() { return (field_3A >> 7) & 0x01; }
+	uint8_t getPitchbenderRange() { return (field_3B >> 0) & 0x0F; }
+	uint8_t getPMDController() { return (field_3B >> 4) & 0x07; }
 
 	void veryShallowClear() {
 		name[0] = name[1] = name[2] = name[3] = name[4] = name[5] = name[6] = 0;
@@ -691,7 +691,7 @@ public:
 		operators[2].copyFrom(&other->operators[2]);
 		operators[3].copyFrom(&other->operators[3]);
 	}
-	inline Bit8u getModulationSensitivity() { return byteD; }
+	inline uint8_t getModulationSensitivity() { return byteD; }
 
 	void dumpToLog() {
 		//IMF_LOG("      name: '%c%c%c%c%c%c%c'", name[0], name[1], name[2], name[3], name[4], name[5], name[6]);
@@ -705,29 +705,29 @@ private:
 	VoiceDefinitionBank& operator = (const VoiceDefinitionBank& other) { /* don't use */ }
 public:
 	char name[8];
-	Bit8u reserved[24];
+	uint8_t reserved[24];
 	VoiceDefinition instrumentDefinitions[48];
 
 	void shallowClear() {
-		for (Bit8u i = 0; i < 8; i++) { name[i] = 0; }
-		for (Bit8u i = 0; i < 24; i++) { reserved[i] = 0; }
+		for (uint8_t i = 0; i < 8; i++) { name[i] = 0; }
+		for (uint8_t i = 0; i < 24; i++) { reserved[i] = 0; }
 	}
 	void deepClear() {
 		shallowClear();
-		for (Bit8u i = 0; i < 48; i++) { instrumentDefinitions[i].deepClear(); }
+		for (uint8_t i = 0; i < 48; i++) { instrumentDefinitions[i].deepClear(); }
 	}
 	void shallowCopyFrom(VoiceDefinitionBank* other) {
-		for (Bit8u i = 0; i < 8; i++) { name[i] = other->name[i]; }
-		for (Bit8u i = 0; i < 24; i++) { reserved[i] = other->reserved[i]; }
+		for (uint8_t i = 0; i < 8; i++) { name[i] = other->name[i]; }
+		for (uint8_t i = 0; i < 24; i++) { reserved[i] = other->reserved[i]; }
 	}
 	void deepCopyFrom(VoiceDefinitionBank* other) {
 		shallowCopyFrom(other);
-		for (Bit8u i = 0; i < 48; i++) { instrumentDefinitions[i].deepCopyFrom(&other->instrumentDefinitions[i]); }
+		for (uint8_t i = 0; i < 48; i++) { instrumentDefinitions[i].deepCopyFrom(&other->instrumentDefinitions[i]); }
 	}
 	void dumpToLog() {
 		//IMF_LOG("Dump of VoiceDefinitionBank:");
 		//IMF_LOG("   name: '%c%c%c%c%c%c%c%c'", name[0], name[1], name[2], name[3], name[4], name[5], name[6], name[7]);
-		//for (Bit8u i = 0; i < 48; i++) {
+		//for (uint8_t i = 0; i < 48; i++) {
 		//	IMF_LOG("   instrumentDefinition[%i]:", i);
 		//	instrumentDefinitions[i].dumpToLog();
 		//}
@@ -739,24 +739,24 @@ struct InstrumentConfiguration {
 private:
 	InstrumentConfiguration& operator = (const InstrumentConfiguration& other) { /* don't use */ }
 public:
-	Bit8u numberOfNotes; // Number of notes                  / 0-8
-	Bit8u midiChannel; // MIDI channel number              / 0-15
+	uint8_t numberOfNotes; // Number of notes                  / 0-8
+	uint8_t midiChannel; // MIDI channel number              / 0-15
 	Note noteNumberLimitHigh; // Note number limit high           / 0-127
 	Note noteNumberLimitLow; // Note number limit low            / 0-127
-	Bit8u voiceBankNumber; // Voice bank number                / 0-6
-	Bit8u voiceNumber; // Voice number                     / 0-47
-	Bit8u detune; // Detune                           / -64-63 (2's complement)
-	Bit8u octaveTranspose; // Octave transpose                 / 0-4 (2=Center)
+	uint8_t voiceBankNumber; // Voice bank number                / 0-6
+	uint8_t voiceNumber; // Voice number                     / 0-47
+	uint8_t detune; // Detune                           / -64-63 (2's complement)
+	uint8_t octaveTranspose; // Octave transpose                 / 0-4 (2=Center)
 private:
-	Bit8u outputLevel; // Output level                     / 0(mute)-127(max)
+	uint8_t outputLevel; // Output level                     / 0(mute)-127(max)
 public:
-	Bit8u pan; // Pan                              / 0=L, 64=L+R, 127=R
-	Bit8u lfoEnable; // LFO enable                       / 0,1(OFF)
-	Bit8u portamentoTime; // Portamento time (pitch slide)       / 0=OFF, 1(fast)-127(slow)
-	Bit8u pitchbenderRange; // Pitchbender range                / 0-12 number of half-steps (0=no pitch fluctuation)
-	Bit8u polyMonoMode; // POLY/MONO mode                   / 0(POLY), 1(MONO) FIXME: Based in the code, this is a single bit
-	Bit8u pmdController; // PMD controller                   / 0=OFF, 1=Touch, 2=Wheel, 3=Breath, 4=Foot
-	Bit8u reserved1;
+	uint8_t pan; // Pan                              / 0=L, 64=L+R, 127=R
+	uint8_t lfoEnable; // LFO enable                       / 0,1(OFF)
+	uint8_t portamentoTime; // Portamento time (pitch slide)       / 0=OFF, 1(fast)-127(slow)
+	uint8_t pitchbenderRange; // Pitchbender range                / 0-12 number of half-steps (0=no pitch fluctuation)
+	uint8_t polyMonoMode; // POLY/MONO mode                   / 0(POLY), 1(MONO) FIXME: Based in the code, this is a single bit
+	uint8_t pmdController; // PMD controller                   / 0=OFF, 1=Touch, 2=Wheel, 3=Breath, 4=Foot
+	uint8_t reserved1;
 
 	void clear() {
 		//IMF_LOG("InstrumentConfiguration.clear - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
@@ -798,8 +798,8 @@ public:
 		//IMF_LOG("InstrumentConfiguration.copySpecialFrom - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
 	}
 
-	Bit8u getOutputLevel() { return outputLevel; }
-	void setOutputLevel(Bit8u val) {
+	uint8_t getOutputLevel() { return outputLevel; }
+	void setOutputLevel(uint8_t val) {
 		outputLevel = val;
 		//IMF_LOG("InstrumentConfiguration.setOutputLevel - voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X", voiceBankNumber, voiceNumber, outputLevel);
 	}
@@ -811,37 +811,37 @@ private:
 	ConfigurationData& operator = (const ConfigurationData& other) { /* don't use */ }
 public:
 	char name[8];
-	Bit8u combineMode;
-	Bit8u lfoSpeed;
-	Bit8u amplitudeModulationDepth;
-	Bit8u pitchModulationDepth;
-	Bit8u lfoWaveForm;
-	Bit8u noteNumberReceptionMode; // FIXME: This should be an enum
-	Bit8u reserved[18];
+	uint8_t combineMode;
+	uint8_t lfoSpeed;
+	uint8_t amplitudeModulationDepth;
+	uint8_t pitchModulationDepth;
+	uint8_t lfoWaveForm;
+	uint8_t noteNumberReceptionMode; // FIXME: This should be an enum
+	uint8_t reserved[18];
 	InstrumentConfiguration instrumentConfigurations[8];
 
 	void shallowClear() {
-		for (Bit8u i = 0; i < 8; i++) { name[i] = 0; }
+		for (uint8_t i = 0; i < 8; i++) { name[i] = 0; }
 		combineMode = lfoSpeed = amplitudeModulationDepth = pitchModulationDepth = lfoWaveForm = noteNumberReceptionMode = 0;
-		for (Bit8u i = 0; i < 18; i++) { reserved[i] = 0; }
+		for (uint8_t i = 0; i < 18; i++) { reserved[i] = 0; }
 	}
 	void deepClear() {
 		shallowClear();
-		for (Bit8u i = 0; i < 8; i++) { instrumentConfigurations[i].clear(); }
+		for (uint8_t i = 0; i < 8; i++) { instrumentConfigurations[i].clear(); }
 	}
 	void shallowCopyFrom(ConfigurationData* other) {
-		for (Bit8u i = 0; i < 8; i++) { name[i] = other->name[i]; }
+		for (uint8_t i = 0; i < 8; i++) { name[i] = other->name[i]; }
 		combineMode = other->combineMode;
 		lfoSpeed = other->lfoSpeed;
 		amplitudeModulationDepth = other->amplitudeModulationDepth;
 		pitchModulationDepth = other->pitchModulationDepth;
 		lfoWaveForm = other->lfoWaveForm;
 		noteNumberReceptionMode = other->noteNumberReceptionMode;
-		for (Bit8u i = 0; i < 18; i++) { reserved[i] = other->reserved[i]; }
+		for (uint8_t i = 0; i < 18; i++) { reserved[i] = other->reserved[i]; }
 	}
 	void deepCopyFrom(ConfigurationData* other) {
 		shallowCopyFrom(other);
-		for (Bit8u i = 0; i < 8; i++) { instrumentConfigurations[i].copyFrom(&other->instrumentConfigurations[i]); }
+		for (uint8_t i = 0; i < 8; i++) { instrumentConfigurations[i].copyFrom(&other->instrumentConfigurations[i]); }
 	}
 };
 static_assert(sizeof(ConfigurationData) == 0xA0, "ConfigurationData needs to be 0xA0 in size!");
@@ -858,31 +858,31 @@ public:
 	PitchbenderValueLSB pitchbenderValueLSB;
 	FractionalNote detuneAndPitchbendAsNoteFraction; // considers detuneAsNoteFraction and instrumentConfiguration.pitchbenderRange * pitchbenderValue
 	FractionalNote detuneAsNoteFraction; // considers instrumentConfiguration.octaveTranspose and instrumentConfiguration.detune 
-	Bit8u volume;
+	uint8_t volume;
 	// flags: <a*****ps> <a>: LFO sync mode 0,1 (Sync ON) / <p> portamento ON/OFF / <s> sustain ON/OFF
-	Bit8u __sustain : 1;
-	Bit8u __portamento : 1;
-	Bit8u __unused0 : 5;
-	Bit8u __lfoSyncMode : 1;
+	uint8_t __sustain : 1;
+	uint8_t __portamento : 1;
+	uint8_t __unused0 : 5;
+	uint8_t __lfoSyncMode : 1;
 	// next byte
-	Bit8u operator1TotalLevel; // 0(Max)~127
-	Bit8u operator2TotalLevel; // 0(Max)~127
-	Bit8u operator3TotalLevel; // 0(Max)~127
-	Bit8u operator4TotalLevel; // 0(Max)~127
-	Bit8u unused1;
-	Bit8u channelMask;
-	Bit8u lastUsedChannel;
-	//Bit16u __lastMidiOnOff_Duration_XXX : 15;
-	//Bit16u __lastMidiOnOff_Duration_IsEmpty_XXX : 1;
+	uint8_t operator1TotalLevel; // 0(Max)~127
+	uint8_t operator2TotalLevel; // 0(Max)~127
+	uint8_t operator3TotalLevel; // 0(Max)~127
+	uint8_t operator4TotalLevel; // 0(Max)~127
+	uint8_t unused1;
+	uint8_t channelMask;
+	uint8_t lastUsedChannel;
+	//uint16_t __lastMidiOnOff_Duration_XXX : 15;
+	//uint16_t __lastMidiOnOff_Duration_IsEmpty_XXX : 1;
 	Duration __lastMidiOnOff_Duration_XX;
 	FractionalNote __lastMidiOnOff_FractionAndNoteNumber_XXX;
-	//Bit16u __lastMidiOnOff_Duration_YYY : 15;
-	//Bit16u __lastMidiOnOff_Duration_IsEmpty_YYY : 1;
+	//uint16_t __lastMidiOnOff_Duration_YYY : 15;
+	//uint16_t __lastMidiOnOff_Duration_IsEmpty_YYY : 1;
 	Duration __lastMidiOnOff_Duration_YY;
 	FractionalNote __lastMidiOnOff_FractionAndNoteNumber_YYY;
 	YmChannelData* ymChannelData;
-	Bit8u overflowToMidiOut; // FIXME: This is a bit flag
-	Bit8u unused2[22];
+	uint8_t overflowToMidiOut; // FIXME: This is a bit flag
+	uint8_t unused2[22];
 
 	inline void clear() { memset(this, 0, sizeof(InstrumentParameters)); }
 	inline void copyFrom(InstrumentParameters* other) { memcpy(this, other, sizeof(InstrumentParameters)); }
@@ -893,31 +893,31 @@ private:
 	YmChannelData& operator = (const YmChannelData& other) { /* don't use */ }
 public:
 	FractionalNote originalFractionAndNoteNumber; // this is the original note that triggered the note ON. 
-	//Bit16u unused1;
+	//uint16_t unused1;
 	InstrumentParameters* instrumentParameters;
 	FractionalNote currentlyPlaying; // this is the note/fraction that is being play right now
-	Bit8u operatorVolumes[4];
+	uint8_t operatorVolumes[4];
 	// ym_channel
-	Bit8u channelNumber : 3;
-	Bit8u operatorsEnabled : 4;
-	Bit8u unused2 : 1;
-	Bit8u __unused3 : 4;
-	Bit8u __hasActiveSostenuto : 1;
-	Bit8u __hasActivePortamento : 1;
-	Bit8u __flag6 : 1;
-	Bit8u __hasActiveNoteON : 1; // this is probably an "is playing"-flag
+	uint8_t channelNumber : 3;
+	uint8_t operatorsEnabled : 4;
+	uint8_t unused2 : 1;
+	uint8_t __unused3 : 4;
+	uint8_t __hasActiveSostenuto : 1;
+	uint8_t __hasActivePortamento : 1;
+	uint8_t __flag6 : 1;
+	uint8_t __hasActiveNoteON : 1; // this is probably an "is playing"-flag
 	Duration remainingDuration; // if set, the number of clock messages (midi code 0xF8) to play this not
 	FractionalNote portamentoAdjustment; // This might be a positive or negative fractionNote!
 	FractionalNote portamentoTarget; // target note/fraction for portamento
 
-	inline Bit8u getChannelNumberAndOperatorEnabled() {
+	inline uint8_t getChannelNumberAndOperatorEnabled() {
 		return channelNumber | (operatorsEnabled << 3);
 	}
 };
 
 struct ChannelMaskInfo {
-	Bit8u mask;
-	Bit8u nrOfChannels;
+	uint8_t mask;
+	uint8_t nrOfChannels;
 };
 static_assert(sizeof(ChannelMaskInfo) == 2, "ChannelMaskInfo needs to be 2 in size!");
 
@@ -964,9 +964,9 @@ public:
 		if (oldValue != newValue) {
 			m_value = newValue;
 			if (m_debug) {
-				IMF_LOG("%s changed from %X to %X", getName().c_str(), oldValue, newValue);
+				IMF_LOG("%s changed from %X to %X", this->getName().c_str(), oldValue, newValue);
 			}
-			notifyConsumers(oldValue, newValue);
+			this->notifyConsumers(oldValue, newValue);
 		}
 	}
 	void setDebug(bool debug) { m_debug = debug; }
@@ -974,8 +974,9 @@ public:
 
 template <typename DataType> class InputPin {
 private:
-	string m_name;
+	string m_name = {};
 public:
+	InputPin() = default;
 	InputPin(string name) : m_name(name) {}
 	string getName() { return m_name; }
 	virtual DataType getValue() = 0;
@@ -985,14 +986,14 @@ template <typename DataType> class DataDrivenInputPin : public InputPin<DataType
 private:
 	DataProvider<DataType>* m_dataProvider;
 public:
-	DataDrivenInputPin(string name) : InputPin(name), m_dataProvider(NULL) {}
+	DataDrivenInputPin(string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
 	void connect(DataProvider<DataType>* source) { m_dataProvider = source; }
 	virtual DataType getValue() {
 		if (!m_dataProvider) {
-			IMF_LOG("Pin %s is not connected (DataDrivenInputPin.getValue)", getName().c_str());
+			IMF_LOG("Pin %s is not connected (DataDrivenInputPin.getValue)", this->getName().c_str());
 			return false;
 		}
-		return m_dataProvider->getValue();
+		return this->m_dataProvider->getValue();
 	}
 };
 
@@ -1000,7 +1001,7 @@ template <typename DataType> class DataPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType> m_dataContainer;
 public:
-	DataPin(string name, DataType initialValue) : InputPin(name), m_dataContainer(name, initialValue) {}
+	DataPin(string name, DataType initialValue) : InputPin<DataType>(name), m_dataContainer(name, initialValue) {}
 	DataProvider<DataType>* getDataProvider() { return &m_dataContainer; }
 	virtual DataType getValue() { return m_dataContainer.getValue(); }
 	void setValue(DataType val) { m_dataContainer.setValue(val); }
@@ -1011,21 +1012,21 @@ template <typename DataType> class InputOutputPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType>* m_dataContainer;
 public:
-	InputOutputPin(string name) : InputPin(name), m_dataContainer(NULL) {}
+	InputOutputPin(string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
 	void connect(DataContainer<DataType>* dataContainer) { m_dataContainer = dataContainer; }
 	virtual DataType getValue() {
 		if (!m_dataContainer) {
-			IMF_LOG("Pin %s is not connected (InputOutputPin.getValue)", getName().c_str());
+			IMF_LOG("Pin %s is not connected (InputOutputPin.getValue)", this->getName().c_str());
 			return false;
 		}
-		return m_dataContainer->getValue();
+		return this->m_dataContainer->getValue();
 	}
 	void setValue(DataType val) {
 		if (!m_dataContainer) {
-			IMF_LOG("Pin %s is not connected (InputOutputPin.setValue)", getName().c_str());
+			IMF_LOG("Pin %s is not connected (InputOutputPin.setValue)", this->getName().c_str());
 			return;
 		}
-		m_dataContainer->setValue(val);
+		this->m_dataContainer->setValue(val);
 	}
 };
 
@@ -1158,8 +1159,8 @@ public:
 	DataProvider<bool>* getDataBit8FromSystem() { return m_dataBit8FromSystem.getDataProvider(); }
 	DataProvider<bool>* getTotalIrqMask() { return m_totalIrqMask.getDataProvider(); }
 	DataProvider<bool>* getIrqBufferEnable() { return m_irqBufferEnable.getDataProvider(); }
-	Bit8u readPort() {
-		Bit8u value = 
+	uint8_t readPort() {
+		uint8_t value = 
 			(m_timerAClear.getValue() ? 0x01 : 0x00) |
 			(m_timerBClear.getValue() ? 0x02 : 0x00) |
 			(m_timerAEnable.getValue() ? 0x04 : 0x00) |
@@ -1170,7 +1171,7 @@ public:
 		//IMF_LOG("IMFC.TCR:readPort -> 0x%X", value);
 		return value;
 	}
-	void writePort(Bit8u val) {
+	void writePort(uint8_t val) {
 		m_timerAClear.setValue(val & 0x01 ? 1 : 0);
 		m_timerBClear.setValue(val & 0x02 ? 1 : 0);
 		m_timerAEnable.setValue(val & 0x04 ? 1 : 0);
@@ -1204,11 +1205,11 @@ struct CounterData {
 	unsigned int m_counter;
 	unsigned int m_runningCounter;
 	unsigned int m_latchedCounter;
-	Bit8u m_tmpWrite;
+	uint8_t m_tmpWrite;
 	CounterReadSource m_nextReadSource;
 	CounterWriteTarget m_nextWriteTarget;
 	CounterData(string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
-	void writeCounterByte(Bit8u val) {
+	void writeCounterByte(uint8_t val) {
 		switch (m_nextWriteTarget) {
 			case COUNTERWRITETARGET_BYTE1:
 				m_tmpWrite = val;
@@ -1222,7 +1223,7 @@ struct CounterData {
 				break;
 		}
 	}
-	Bit8u readCounterByte() {
+	uint8_t readCounterByte() {
 		switch (m_nextReadSource) {
 			case COUNTERREADSOURCE_LIVE_1:
 				m_nextReadSource = COUNTERREADSOURCE_LIVE_2;
@@ -1252,7 +1253,7 @@ private:
 	void registerNextEvent() {
 		// PIC_AddEvent takes milliseconds as argument
 		// the counter0 has a resolution of 2 microseconds
-		PIC_AddEvent(Intel8253_TimerEvent, 0.002f, 0); // FIXME
+		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
 	}
 public:
 	Intel8253(string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
@@ -1263,46 +1264,46 @@ public:
 
 	void setDebug(bool debug) { m_debug = debug; }
 
-	Bit8u readPortCNTR0() {
-		Bit8u val = m_counter0.readCounterByte();
+	uint8_t readPortCNTR0() {
+		uint8_t val = m_counter0.readCounterByte();
 		IMF_LOG("readPortCNTR0 -> 0x%X", val);
 		return val;
 	}
 
-	void writePortCNTR0(Bit8u val) {
+	void writePortCNTR0(uint8_t val) {
 		IMF_LOG("writePortCNTR0 / value=0x%X", val);
 		m_counter0.writeCounterByte(val);
 	}
 
-	Bit8u readPortCNTR1() {
-		Bit8u val = m_counter1.readCounterByte();
+	uint8_t readPortCNTR1() {
+		uint8_t val = m_counter1.readCounterByte();
 		IMF_LOG("readPortCNTR1 -> 0x%X", val);
 		return val;
 	}
 
-	void writePortCNTR1(Bit8u val) {
+	void writePortCNTR1(uint8_t val) {
 		IMF_LOG("writePortCNTR1 / value=0x%X", val);
 		m_counter1.writeCounterByte(val);
 	}
 
-	Bit8u readPortCNTR2() {
-		Bit8u val = m_counter2.readCounterByte();
+	uint8_t readPortCNTR2() {
+		uint8_t val = m_counter2.readCounterByte();
 		IMF_LOG("readPortCNTR2 -> 0x%X", val);
 		return val;
 	}
 
-	void writePortCNTR2(Bit8u val) {
+	void writePortCNTR2(uint8_t val) {
 		IMF_LOG("writePortCNTR2 / value=0x%X", val);
 		m_counter2.writeCounterByte(val);
 	}
 
 
-	Bit8u readPortTCWR() {
+	uint8_t readPortTCWR() {
 		IMF_LOG("readPortTCWR -> 0x00");
 		// I don't think we should be able to read this port
 		return 0;
 	}
-	void writePortTCWR(Bit8u val) {
+	void writePortTCWR(uint8_t val) {
 		IMF_LOG("writePortTCWR / value=0x%X", val);
 		// The two "normal" commands are:
 		//  AAFFMMMB: AA is either "00" for "Set mode of counter 0", "01" for "Set mode of counter 1" or "10" for "Set mode of counter 2"
@@ -1389,12 +1390,12 @@ public:
 
 	virtual void valueChanged(bool oldValue, bool newValue) {}
 
-	Bit8u readPort() {
-		Bit8u value = (m_timerAStatus.getValue() ? 0x01 : 0x00) | (m_timerBStatus.getValue() ? 0x02 : 0x00) | (m_totalCardStatus.getValue() ? 0x80 : 0x00);
+	uint8_t readPort() {
+		uint8_t value = (m_timerAStatus.getValue() ? 0x01 : 0x00) | (m_timerBStatus.getValue() ? 0x02 : 0x00) | (m_totalCardStatus.getValue() ? 0x80 : 0x00);
 		//IMF_LOG("IMFC.TSR:readPort -> 0x%X", value);
 		return value;
 	}
-	void writePort(Bit8u val) {
+	void writePort(uint8_t val) {
 		//IMF_LOG("IMFC.TSR:writePort / value=0x%X", val);
 		/// I really don't think that we are allowed to write to this port based on the schematics
 	}
@@ -1417,8 +1418,8 @@ private:
 	PortInOut m_group1_port1InOut;
 	PortInOut m_group1_port2LowerInOut;
 	// data ports
-	InputOutputPin<Bit8u> m_port0;
-	InputOutputPin<Bit8u> m_port1;
+	InputOutputPin<uint8_t> m_port0;
+	InputOutputPin<uint8_t> m_port1;
 	InputOutputPin<bool> m_port2[8];
 	// internal signals
 	bool m_group0_readInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
@@ -1426,20 +1427,20 @@ private:
 	bool m_group1_readInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
 	bool m_group1_writeInterruptEnable; // This signal is internal to the PD71055. They are not output to port 2 pins and they cannot be read by the host.
 
-	Bit8u readPort0() {
+	uint8_t readPort0() {
 		return m_port0.getValue();
 	}
-	void writePort0(Bit8u val) {
+	void writePort0(uint8_t val) {
 		m_port0.setValue(val);
 	}
-	Bit8u readPort1() {
+	uint8_t readPort1() {
 		return m_port1.getValue();
 	}
-	void writePort1(Bit8u val) {
+	void writePort1(uint8_t val) {
 		m_port1.setValue(val);
 	}
-	Bit8u readPort2() {
-		Bit8u val = 0;
+	uint8_t readPort2() {
+		uint8_t val = 0;
 		for (int i = 0; i < 8; i++) {
 			if (m_port2[i].getValue()) {
 				val |= 1 << i;
@@ -1447,7 +1448,7 @@ private:
 		}
 		return val;
 	}
-	void writePort2(Bit8u val) {
+	void writePort2(uint8_t val) {
 		for (int i = 0; i < 8; i++) {
 			m_port2[i].setValue(val & (1 << i));
 		}
@@ -1564,8 +1565,8 @@ public:
 			m_group1_readInterruptEnable(false),
 			m_group1_writeInterruptEnable(false) {
 	}
-	void connectPort0(DataContainer<Bit8u>* dataContainer) { m_port0.connect(dataContainer); }
-	void connectPort1(DataContainer<Bit8u>* dataContainer) { m_port1.connect(dataContainer); }
+	void connectPort0(DataContainer<uint8_t>* dataContainer) { m_port0.connect(dataContainer); }
+	void connectPort1(DataContainer<uint8_t>* dataContainer) { m_port1.connect(dataContainer); }
 	void connectPort2(unsigned int bitNr, DataContainer<bool>* dataContainer) {
 		m_port2[bitNr].connect(dataContainer);
 		if (bitNr < 8 && bitNr != 3 && bitNr != 0) {
@@ -1628,17 +1629,17 @@ public:
 		clearAllData();
 	}
 
-	Bit8u readPortPIU0() {
+	uint8_t readPortPIU0() {
 		// reading PIU0 is not dependant on the mode of group0
 		// if group0 was specified as OUTPUT then it returns the last value written
-		Bit8u val = readPort0();
+		uint8_t val = readPort0();
 		//IMF_LOG("%s: readPortPIU0 -> value=0x%X", m_name.c_str(), val);
 		if (m_group0_mode == MODE1 && m_group0_port0InOut == INPUT) {
 			setGroup0DataAcknowledgement(true);
 		}
 		return val;
 	}
-	void writePortPIU0(Bit8u val) {
+	void writePortPIU0(uint8_t val) {
 		if (m_group0_port0InOut == OUTPUT) {
 			//IMF_LOG("%s: writePortPIU0 / value=0x%X", m_name.c_str(), val);
 			writePort0(val);
@@ -1649,17 +1650,17 @@ public:
 			IMF_LOG("%s: writePortPIU0 / value=0x%X in an input port -> NOP", m_name.c_str(), val);
 		}
 	}
-	Bit8u readPortPIU1() {
+	uint8_t readPortPIU1() {
 		// reading PIU1 is not dependant on the mode of group1
 		// if group1 was specified as OUTPUT then it returns the last value written
-		Bit8u val = readPort1();
+		uint8_t val = readPort1();
 		//IMF_LOG("%s: readPortPIU1 -> value=0x%X", m_name.c_str(), val);
 		if (m_group1_mode == MODE1 && m_group1_port1InOut == INPUT) {
 			setGroup1DataAcknowledgement(true);
 		}
 		return val;
 	}
-	void writePortPIU1(Bit8u val) {
+	void writePortPIU1(uint8_t val) {
 		if (m_group1_port1InOut == OUTPUT) {
 			//IMF_LOG("%s: writePortPIU1 / value=0x%X", m_name.c_str(), val);
 			writePort1(val);
@@ -1670,8 +1671,8 @@ public:
 			IMF_LOG("%s: writePortPIU1 / value=0x%X in an input port -> NOP", m_name.c_str(), val);
 		}
 	}
-	Bit8u readPortPIU2() {
-		Bit8u val = readPort2();
+	uint8_t readPortPIU2() {
+		uint8_t val = readPort2();
 		if (m_group1_mode == MODE1) {
 			val = (val & (0x04 ^ 0xFF)) | (m_group1_readInterruptEnable || m_group1_writeInterruptEnable ? 0x04 : 0x00);
 		}
@@ -1681,7 +1682,7 @@ public:
 		//IMF_LOG("%s: readPortPIU2 -> value=0x%X", m_name.c_str(), val);
 		return val;
 	}
-	void writePortPIU2(Bit8u val) {
+	void writePortPIU2(uint8_t val) {
 		//IMF_LOG("%s: writePortPIU2 / value=0x%X", m_name.c_str(), val);
 		// bit0, bit1, bit2
 		if (m_group1_mode == MODE0) {
@@ -1701,7 +1702,7 @@ public:
 			m_port2[7].setValue(val & 0x80);
 		}
 	}
-	Bit8u readPortPCR() {
+	uint8_t readPortPCR() {
 		//IMF_LOG("%s: readPortPCR -> 0x00", m_name.c_str());
 		// Based on the PD71055 datasheet:
 		//  The host writes command words to the PD71055 in
@@ -1710,7 +1711,7 @@ public:
 		//  be read.
 		return 0;
 	}
-	void writePortPCR(Bit8u val) {
+	void writePortPCR(uint8_t val) {
 		//IMF_LOG("writePortPCR / value=0x%X", val);
 		// bit 7: Command select
 		if (val & 0b10000000) {
@@ -1823,7 +1824,7 @@ public:
 			(port2LowerInOut == OUTPUT ? 0x00 : 0x01)
 		);
 	}
-	void setPort2Bit(Bit8u bitNr, bool val) {
+	void setPort2Bit(uint8_t bitNr, bool val) {
 		// Command: Bit manipulation
 		//  bit 6&5&4: unused
 		//  bit 3&2&1: Port 2 bit select (000=Bit0 / 001=Bit1 / ... / 111=Bit7)
@@ -1921,8 +1922,8 @@ From the looks of it, there is a different clock frequency being used. Based on 
 	4192                    2953
 */
 
-#define u8 Bit8u
-#define offs_t Bit8u
+#define u8 uint8_t
+#define offs_t uint8_t
 #define M_PI   3.14159265358979323846264338327950288
 
 #define FREQ_SH         16  /* 16.16 fixed point (frequency calculations) */
@@ -3624,12 +3625,12 @@ void ym2151_device::sound_stream_update(int samples) {
 /*
 	memset(&MixTemp,0,len*8);
 	Bitu i;
-	Bit16s * buf16 = (Bit16s *)MixTemp;
-	Bit32s * buf32 = (Bit32s *)MixTemp;
+	int16_t * buf16 = (int16_t *)MixTemp;
+	int32_t * buf32 = (int32_t *)MixTemp;
 	for(i=0;i<myGUS.ActiveChannels;i++)
 		guschan[i]->generateSamples(buf32,len);
 	for(i=0;i<len*2;i++) {
-		Bit32s sample=((buf32[i] >> 13)*AutoAmp)>>9;
+		int32_t sample=((buf32[i] >> 13)*AutoAmp)>>9;
 		if (sample>32767) {
 			sample=32767;
 			AutoAmp--;
@@ -3637,7 +3638,7 @@ void ym2151_device::sound_stream_update(int samples) {
 			sample=-32768;
 			AutoAmp--;
 		}
-		buf16[i] = (Bit16s)(sample);
+		buf16[i] = (int16_t)(sample);
 	}
 	gus_chan->AddSamples_s16(len,buf16);
 	CheckVoiceIrq(); */
@@ -3652,8 +3653,8 @@ void ym2151_device::sound_stream_update(int samples) {
 
 	//IMF_LOG("ym2151_device - sending samples");
 	//memset(&MixTemp, 0, samples * 8);
-	//Bit16s * buf16 = (Bit16s *)MixTemp;
-	Bit16s buf16[2];
+	//int16_t * buf16 = (int16_t *)MixTemp;
+	int16_t buf16[2];
 
 	for (int i = 0; i < samples; i++) {
 		advance_eg();
@@ -3741,7 +3742,7 @@ class PD71051 {
 private:
 	enum State { WAITING_FOR_WRITE_MODE, WAITING_FOR_SYNC_CHAR1, WAITING_FOR_SYNC_CHAR2, NORMAL_OPERATION };
 	State m_state;
-	Bit8u m_mode;
+	uint8_t m_mode;
 
 	void setState(State newState) {
 		m_state = newState;
@@ -3764,17 +3765,17 @@ private:
 public:
 	PD71051() : m_state(WAITING_FOR_WRITE_MODE) {}
 	// MIDI_PORT_1 = 0x10
-	void writePort1(Bit8u value) {
+	void writePort1(uint8_t value) {
 		// This doesn't do anything for now
 	}
 
-	Bit8u readPort1() {
+	uint8_t readPort1() {
 		// This doesn't do anything for now
 		return 0;
 	}
 
 	// MIDI_PORT_2 = 0x11
-	void writePort2(Bit8u value) {
+	void writePort2(uint8_t value) {
 		switch (m_state) {
 		case WAITING_FOR_WRITE_MODE:
 			m_mode = value;
@@ -3810,7 +3811,7 @@ public:
 		}
 	}
 
-	Bit8u readPort2() {
+	uint8_t readPort2() {
 		if (m_state == NORMAL_OPERATION) {
 			/*
 				bit0: TxRDY
@@ -3841,8 +3842,8 @@ private:
 	PD71055 m_piuIMF; // this is the PIU that connects to the card processor
 	DataContainer<bool> m_piuIMF_int0; // This is the INT0 line for the PIU connected to the IMF
 	DataContainer<bool> m_piuIMF_int1; // This is the INT1 line for the PIU connected to the IMF
-	DataContainer<Bit8u> m_piuPort0Data; // port0 data that connects the PIU_PC to PIU_IMF
-	DataContainer<Bit8u> m_piuPort1Data; // port1 data that connects the PIU_PC to PIU_IMF
+	DataContainer<uint8_t> m_piuPort0Data; // port0 data that connects the PIU_PC to PIU_IMF
+	DataContainer<uint8_t> m_piuPort1Data; // port1 data that connects the PIU_PC to PIU_IMF
 	DataContainer<bool> m_piuEXR8; // Extended bit8
 	DataContainer<bool> m_piuEXR9; // Extended bit9
 	DataContainer<bool> m_piuGroup0DataAvailable;
@@ -3881,63 +3882,63 @@ private:
 	ConfigurationData m_configurationRAM[16];
 	char m_copyOfCardName[16];
 	ConfigurationData m_activeConfiguration;
-	Bit8u m_nodeNumber;
-	Bit8u m_activeConfigurationNr;
+	uint8_t m_nodeNumber;
+	uint8_t m_activeConfigurationNr;
 	CHAIN_MODE m_chainMode;
 	InstrumentParameters m_activeInstrumentParameters[8];
-	//Bit8u m_bufferFromMidiIn[2048];
-	//Bit8u m_bufferToMidiOut[256];
-	//Bit8u m_bufferAFromSystem[256];
-	//Bit8u m_bufferBFromSystem[256];
-	//Bit8u m_bufferAToSystem[256];
-	//Bit8u m_bufferBToSystem[256];
+	//uint8_t m_bufferFromMidiIn[2048];
+	//uint8_t m_bufferToMidiOut[256];
+	//uint8_t m_bufferAFromSystem[256];
+	//uint8_t m_bufferBFromSystem[256];
+	//uint8_t m_bufferAToSystem[256];
+	//uint8_t m_bufferBToSystem[256];
 	YmChannelData m_ymChannelData[8];
 	MEMORY_PROTECTION m_memoryProtection;
-	Bit8u m_systemRealtimeMessageInProgress;
-	Bit8u m_masterTune; // Master tune (-64~63 in 7-bit 2's complement notation)
-	Bit8u m_masterOutputLevel; // 0(Max)~127(muted)
+	uint8_t m_systemRealtimeMessageInProgress;
+	uint8_t m_masterTune; // Master tune (-64~63 in 7-bit 2's complement notation)
+	uint8_t m_masterOutputLevel; // 0(Max)~127(muted)
 	FractionalNote m_masterTuneAsNoteFraction;
 	FractionalNote m_lastMidiOnOff_FractionAndNoteNumber;
 	KeyVelocity m_lastMidiOnOff_KeyVelocity;
 	Duration m_lastMidiOnOff_Duration;
-	Bit8u m_musicProcessingDepth;
-	Bit8u m_ya2151_timerA_counter;
-	Bit8u m_ya2151_timerB_counter;
-	Bit8u m_ym2151_IRQ_stuff;
+	uint8_t m_musicProcessingDepth;
+	uint8_t m_ya2151_timerA_counter;
+	uint8_t m_ya2151_timerB_counter;
+	uint8_t m_ym2151_IRQ_stuff;
 	CARD_MODE m_cardMode;
 	ERROR_REPORTING m_errorReport;
 	MidiFlowPath m_configuredMidiFlowPath;
 	MidiFlowPath m_actualMidiFlowPath;
-	Bit8u m_incomingMusicCardMessage_Expected;
-	Bit8u m_incomingMusicCardMessage_Size;
-	Bit8u m_incomingMusicCardMessageData[16];
+	uint8_t m_incomingMusicCardMessage_Expected;
+	uint8_t m_incomingMusicCardMessage_Size;
+	uint8_t m_incomingMusicCardMessageData[16];
 	MidiDataPacket m_midiDataPacketFromMidiIn;
 	MidiDataPacket m_midiDataPacketFromSystem;
-	Bit8u m_outgoingMusicCardMessageData[16];
-	Bit8u m_readMidiDataTimeoutCountdown;
-	Bit8u m_midi_ReceiveSource_SendTarget;
-	Bit8u m_midiTransmitReceiveFlag; // FIXME: change to flags
-	CyclicBufferState<Bit8u> m_bufferFromMidiInState;
-	Bit8u m_bufferFromMidiIn_lastActiveSenseCodeCountdown;
-	CyclicBufferState<Bit8u> m_bufferToMidiOutState;
-	Bit8u m_midiOutActiveSensingCountdown;
-	Bit8u m_midiOut_CommandInProgress;
-	Bit8u m_runningCommandOnMidiInTimerCountdown;
-	Bit8u m_activeSenseSendingState;
-	CyclicBufferState<Bit16u> m_bufferFromSystemState;
-	CyclicBufferState<Bit16u> m_bufferToSystemState;
-	Bit8u m_sendDataToSystemTimoutCountdown;
-	Bit8u m_system_CommandInProgress;
-	Bit8u m_runningCommandOnSystemInTimerCountdown;
-	Bit8u m_sp_MidiDataOfMidiCommandInProgress[256];
-	Bit8u m_soundProcessorMidiInterpreterState;
-	Bit8u m_soundProcessorMidiInterpreterSysExState;
-	Bit8u m_sysEx_ChannelNumber;
-	Bit8u m_sysEx_InstrumentNumber;
-	Bit8u* m_soundProcessorSysExCurrentMatchPtr; // this is probably a pointer
-	Bit8u m_sp_SysExStateMatchTable[256];
-	Bit8u m_midiChannelToAssignedInstruments[AVAILABLE_MIDI_CHANNELS][AVAILABLE_INSTRUMENTS + 1]; // size:0x90 / 9 x 16 bytes / 0xFF := end of list / e.g. for MidiChannel 2 -> MidiChannelToAssignedInstruments[2*9] = 0,1,2,0xFF
-	Bit8u m_receiveDataPacketTypeAState;
+	uint8_t m_outgoingMusicCardMessageData[16];
+	uint8_t m_readMidiDataTimeoutCountdown;
+	uint8_t m_midi_ReceiveSource_SendTarget;
+	uint8_t m_midiTransmitReceiveFlag; // FIXME: change to flags
+	CyclicBufferState<uint8_t> m_bufferFromMidiInState;
+	uint8_t m_bufferFromMidiIn_lastActiveSenseCodeCountdown;
+	CyclicBufferState<uint8_t> m_bufferToMidiOutState;
+	uint8_t m_midiOutActiveSensingCountdown;
+	uint8_t m_midiOut_CommandInProgress;
+	uint8_t m_runningCommandOnMidiInTimerCountdown;
+	uint8_t m_activeSenseSendingState;
+	CyclicBufferState<uint16_t> m_bufferFromSystemState;
+	CyclicBufferState<uint16_t> m_bufferToSystemState;
+	uint8_t m_sendDataToSystemTimoutCountdown;
+	uint8_t m_system_CommandInProgress;
+	uint8_t m_runningCommandOnSystemInTimerCountdown;
+	uint8_t m_sp_MidiDataOfMidiCommandInProgress[256];
+	uint8_t m_soundProcessorMidiInterpreterState;
+	uint8_t m_soundProcessorMidiInterpreterSysExState;
+	uint8_t m_sysEx_ChannelNumber;
+	uint8_t m_sysEx_InstrumentNumber;
+	uint8_t* m_soundProcessorSysExCurrentMatchPtr; // this is probably a pointer
+	uint8_t m_sp_SysExStateMatchTable[256];
+	uint8_t m_midiChannelToAssignedInstruments[AVAILABLE_MIDI_CHANNELS][AVAILABLE_INSTRUMENTS + 1]; // size:0x90 / 9 x 16 bytes / 0xFF := end of list / e.g. for MidiChannel 2 -> MidiChannelToAssignedInstruments[2*9] = 0,1,2,0xFF
+	uint8_t m_receiveDataPacketTypeAState;
 
 	bool currentThreadIsMainThread() {
 		return SDL_ThreadID() == SDL_GetThreadID(m_mainThread);
@@ -3978,19 +3979,19 @@ private:
 	void delayExEx() { /* FIXME:wait for 2x"ex (sp), hl" */ }
 
 	// ROM Address: 0x0072
-	InstrumentParameters* getActiveInstrumentParameters(Bit8u instrumentParametersNr) {
+	InstrumentParameters* getActiveInstrumentParameters(uint8_t instrumentParametersNr) {
 		//log_debug("getActiveInstrumentParameters(%i) - outputLevel=0x%02X", instrumentParametersNr, m_activeInstrumentParameters[instrumentParametersNr].instrumentConfiguration.getOutputLevel());
 		return &m_activeInstrumentParameters[instrumentParametersNr];
 	}
 
-	Bit8u getMidiChannel(InstrumentParameters* instr) {
-		Bit8u instrIdx;
+	uint8_t getMidiChannel(InstrumentParameters* instr) {
+		uint8_t instrIdx;
 		for (instrIdx = 0; instrIdx < 8; instrIdx++) {
 			if (&m_activeInstrumentParameters[instrIdx] == instr) break;
 		}
 		if (instrIdx >= 8) { return 0xFF; }
-		for (Bit8u midiChannel = 0; midiChannel < 16; midiChannel++) {
-			for (Bit8u i = 0; i < 9; i++) {
+		for (uint8_t midiChannel = 0; midiChannel < 16; midiChannel++) {
+			for (uint8_t i = 0; i < 9; i++) {
 				if (m_midiChannelToAssignedInstruments[midiChannel][i] == instrIdx) return midiChannel;
 			}
 		}
@@ -3998,18 +3999,18 @@ private:
 	}
 
 	// ROM Address: 0x008C
-	YmChannelData* getYmChannelData(Bit8u val) {
+	YmChannelData* getYmChannelData(uint8_t val) {
 		return &m_ymChannelData[val];
 	}
 
 	// ROM Address: 0x00A6
-	void sendToYM2151_no_interrupts_allowed(Bit8u registerNr, Bit8u value) {
+	void sendToYM2151_no_interrupts_allowed(uint8_t registerNr, uint8_t value) {
 		sendToYM2151_with_disabled_interrupts(registerNr, value);
 		enableInterrupts();
 	}
 
 	// ROM Address: 0x00AB
-	void sendToYM2151_with_disabled_interrupts(Bit8u registerNr, Bit8u value) {
+	void sendToYM2151_with_disabled_interrupts(uint8_t registerNr, uint8_t value) {
 		disableInterrupts();
 		SDL_LockMutex(m_hardwareMutex);
 		m_ya2151.register_w(registerNr);
@@ -4024,13 +4025,13 @@ private:
 	}
 
 	// ROM Address: 0x00B7
-	VoiceDefinition* getVoiceDefinitionOfSameBank(InstrumentParameters* instr, Bit8u instrNr) {
+	VoiceDefinition* getVoiceDefinitionOfSameBank(InstrumentParameters* instr, uint8_t instrNr) {
 		return &(getVoiceDefinitionBank(instr->instrumentConfiguration.voiceBankNumber)->instrumentDefinitions[instrNr]);
 	}
 
 	// ROM Address: 0x00C5
 	// instrNr = 0x00..0x30 instrument nr in CustomBankA, 0x31..0x5F instrument nr in CustomBankB
-	VoiceDefinition* getCustomVoiceDefinition(Bit8u instrNr) {
+	VoiceDefinition* getCustomVoiceDefinition(uint8_t instrNr) {
 		if (instrNr < 0x30) {
 			return &(m_voiceDefinitionBankCustom[0].instrumentDefinitions[instrNr]);
 		}
@@ -4038,7 +4039,7 @@ private:
 	}
 
 	// ROM Address: 0x00E7
-	VoiceDefinitionBank* getVoiceDefinitionBank(Bit8u bankNr) {
+	VoiceDefinitionBank* getVoiceDefinitionBank(uint8_t bankNr) {
 		// safe-guard that is NOT in the original implementation
 		switch (bankNr % 7) {
 			default:
@@ -4053,7 +4054,7 @@ private:
 	}
 
 	// ROM Address: 0x0101
-	ConfigurationData* getConfigurationData(Bit8u configNr) {
+	ConfigurationData* getConfigurationData(uint8_t configNr) {
 		// WARNING: the original code has a buffer overflow here. If the configNr>20 then random memory will be read!
 		if (configNr < 16) { return &m_configurationRAM[configNr]; }
 		if (configNr == 16) {
@@ -4074,7 +4075,7 @@ private:
 
 	// ROM Address: 0x013B
 	// a=idx 0..39 / c=value
-	void setNodeParameter(Bit8u parameterNr, Bit8u val) {
+	void setNodeParameter(uint8_t parameterNr, uint8_t val) {
 		if (parameterNr >= 40) { return; }
 		startMusicProcessing();
 		switch (parameterNr) {
@@ -4104,7 +4105,7 @@ private:
 	}
 
 	// ROM Address: 0x0194
-	void setInstrumentParameter(InstrumentParameters* instr, Bit8u paramNr, Bit8u value) {
+	void setInstrumentParameter(InstrumentParameters* instr, uint8_t paramNr, uint8_t value) {
 		log_debug("setInstrumentParameter(param=0x%02X, value=0x%02X)", paramNr, value);
 		if (paramNr >= 0x40) {
 			startMusicProcessing();
@@ -4184,7 +4185,7 @@ private:
 
 	// ROM Address: 0x0225
 	// Note: the input value used are 0xE0 (select music card mode command) and 0xE5 (reboot command). This value will be sent to the system.
-	void softReboot(Bit8u commandThatRequestedTheSoftReboot) {
+	void softReboot(uint8_t commandThatRequestedTheSoftReboot) {
 
 		disableInterrupts();
 		// reset the stack pointer :)
@@ -4209,7 +4210,7 @@ private:
 		set_System_To_SP_InitialState();
 		initialize_ym2151_timers();
 		m_outgoingMusicCardMessageData[0] = commandThatRequestedTheSoftReboot;
-		send_card_bytes_to_System((Bit8u*) &m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*) &m_outgoingMusicCardMessageData, 1);
 
 		log_debug("softReboot - starting infinite loop");
 		m_finishedBootupSequence = true;
@@ -4232,7 +4233,7 @@ private:
 		clearIncomingMusicCardMessageBuffer();
 		initialize_ym2151_timers();
 		m_outgoingMusicCardMessageData[0] = 0xE0;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 		while (true) {
 			ReadResult readResult;
 			readResult = midiIn_readMidiDataByte();
@@ -4283,7 +4284,7 @@ private:
 		// clear memory from 0xC0C0 to 0xE7FF (voiceDefinitionBankCustom1, voiceDefinitionBankCustom2, configurationRAM, copyOfCardName, activeConfiguration, nodeNumber, activeConfigurationNr, chainMode, activeInstrumentParameters)
 		m_voiceDefinitionBankCustom[0].deepClear();
 		m_voiceDefinitionBankCustom[1].deepClear();
-		for (Bit8u i = 0; i < 16; i++) {
+		for (uint8_t i = 0; i < 16; i++) {
 			m_configurationRAM[i].deepClear();
 		}
 		memset(&m_copyOfCardName, 0, sizeof(m_copyOfCardName));
@@ -4292,11 +4293,11 @@ private:
 		m_activeConfigurationNr = 0;
 		m_chainMode = CHAIN_MODE_DISABLED;
 		log_debug("initConfigurationMemory - start copy");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_activeInstrumentParameters[i].clear();
 		}
 		log_debug("initConfigurationMemory - end copy");
-		for (Bit8u i = 0; i < 16; i++) {
+		for (uint8_t i = 0; i < 16; i++) {
 			initConfigurationRAMSlot(&m_configurationRAM[i], &defaultConfigurationSlotNameSuffix[i*2]);
 		}
 		initCustomInstrumentData(&m_voiceDefinitionBankCustom[0], "user 1  ");
@@ -4304,7 +4305,7 @@ private:
 		memcpy(&m_copyOfCardName, &m_cardName, sizeof(m_copyOfCardName));
 		m_activeConfiguration.shallowCopyFrom((ConfigurationData*)&m_romPresetConfiguration16Binary); // ROMPresetConfiguration16
 		log_debug("initConfigurationMemory - copy start");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			getActiveInstrumentParameters(i)->instrumentConfiguration.copyFrom(&((ConfigurationData*)&m_romPresetConfiguration16Binary)->instrumentConfigurations[i]);
 		}
 		log_debug("initConfigurationMemory - copy end");
@@ -4416,7 +4417,7 @@ private:
 		return { NO_DATA, 0 };
 	}
 
-	Bit8u midiIn_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t midiIn_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet, uint8_t midiData) {
 		midiDataDispatcher_transitionToNewState(packet, midiData);
 		conditional_send_midi_byte_to_MidiOut(packet, m_actualMidiFlowPath.MidiIn_To_MidiOut);
 		conditional_send_midi_byte_to_System(packet, m_actualMidiFlowPath.MidiIn_To_System);
@@ -4440,7 +4441,7 @@ private:
 		return { READ_ERROR, midiIn_MidiDataDispatcher_00_to_F7(packet, 0xF7) };
 	}
 
-	Bit8u system_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t system_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet, uint8_t midiData) {
 		clearIncomingMusicCardMessageBuffer();
 		midiDataDispatcher_transitionToNewState(packet, midiData);
 		conditional_send_midi_byte_to_MidiOut(packet, m_actualMidiFlowPath.System_To_MidiOut);
@@ -4474,7 +4475,7 @@ private:
 
 	// ROM Address: 0x0542
 	// RealTimeMessage midi code (F8-FF)
-	void processSystemRealTimeMessage(Bit8u midiCode) {
+	void processSystemRealTimeMessage(uint8_t midiCode) {
 		startMusicProcessing();
 		switch (midiCode - 0xF8) {
 			case 0: processSystemRealTimeMessage_F8(); break;
@@ -4495,7 +4496,7 @@ private:
 	}
 
 	// ROM Address: 0x0565
-	WriteStatus send_midi_byte(Bit8u data) {
+	WriteStatus send_midi_byte(uint8_t data) {
 		log_debug("send_midi_byte %02X", data);
 		if (m_midi_ReceiveSource_SendTarget & 1) {
 			// send to system
@@ -4553,7 +4554,7 @@ private:
 	}
 
 	// ROM Address: 0x05E7
-	bool doesMidiDataPacketNeedAdditionalData_MUSIC_MODE(Bit8u midiDataPacketState) {
+	bool doesMidiDataPacketNeedAdditionalData_MUSIC_MODE(uint8_t midiDataPacketState) {
 		send_F7_to_MidiOut_if_timed_out();
 		send_F7_to_System_if_timed_out();
 		return midiDataPacketState == 0x01 || midiDataPacketState == 0x36 || midiDataPacketState == 0x37 || midiDataPacketState == 0x38;
@@ -4572,14 +4573,14 @@ private:
 	}
 
 	// ROM Address: 0x061B
-	void midiDataDispatcher_transitionToNewState(MidiDataPacket* packet, Bit8u midiData) {
+	void midiDataDispatcher_transitionToNewState(MidiDataPacket* packet, uint8_t midiData) {
 		if (midiData >= 0x80) {
 			// midi command byte
 			packet->data[0] = midiData;
 			packet->state = convert_midi_command_byte_to_initial_state(midiData);
 		} else {
 			// midi data byte
-			Bit8u state = packet->state;
+			uint8_t state = packet->state;
 			switch (state) {
 				case 0x00: state = processMidiState_00(packet, midiData); break;
 				case 0x01: state = processMidiState_01_36_37_38(packet, midiData); break;
@@ -4653,8 +4654,8 @@ private:
 
 	// ROM Address: 0x063F
 	// Note: midiCommandByte will always be >= 0x80 !
-	Bit8u convert_midi_command_byte_to_initial_state(Bit8u midiCommandByte) {
-		static Bit8u initialMidiStateTable[16] = {
+	uint8_t convert_midi_command_byte_to_initial_state(uint8_t midiCommandByte) {
+		static uint8_t initialMidiStateTable[16] = {
 			0x15 /* 0xF0 */, 0x12 /* 0xF1 */, 0x0F /* 0xF2 */, 0x12 /* 0xF3 */,
 			0x00 /* 0xF4 */, 0x00 /* 0xF5 */, 0x14 /* 0xF6 */, 0x40 /* 0xF7 */,
 			0x02 /* 0x8n/0xF8 */, 0x02 /* 0x9n/0xF9 */, 0x05 /* 0xAn/0xFA */, 0x0A /* 0xBn/0xFB */,
@@ -4667,282 +4668,282 @@ private:
 	}
 
 	// ROM Address: 0x06E3
-	Bit8u processMidiState_00(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_00(MidiDataPacket* packet, uint8_t midiData) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x06E6
-	Bit8u processMidiState_01_36_37_38(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_01_36_37_38(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[0] = midiData;
 		return 0x01;
 	}
 
 	// ROM Address: 0x06EC
-	Bit8u processMidiState_02_04(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_02_04(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x03;
 	}
 
 	// ROM Address: 0x06F2
-	Bit8u processMidiState_03(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_03(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x04;
 	}
 
 	// ROM Address: 0x06F8
-	Bit8u processMidiState_05_07(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_05_07(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x06;
 	}
 
 	// ROM Address: 0x06FE
-	Bit8u processMidiState_06(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_06(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x07;
 	}
 
 	// ROM Address: 0x0704
-	Bit8u processMidiState_08_09(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_08_09(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x09;
 	}
 
 	// ROM Address: 0x070A
-	Bit8u processMidiState_0A_0C(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_0A_0C(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x0B;
 	}
 
 	// ROM Address: 0x0710
-	Bit8u processMidiState_0B(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_0B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x0C;
 	}
 
 	// ROM Address: 0x0716
-	Bit8u processMidiState_0D_0E(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_0D_0E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x0E;
 	}
 
 	// ROM Address: 0x071C
-	Bit8u processMidiState_0F(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_0F(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x10;
 	}
 
 	// ROM Address: 0x0722
-	Bit8u processMidiState_10(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_10(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x11;
 	}
 
 	// ROM Address: 0x0728
-	Bit8u processMidiState_11(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_11(MidiDataPacket* packet, uint8_t midiData) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x072B
-	Bit8u processMidiState_12(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_12(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return 0x13;
 	}
 
 	// ROM Address: 0x0731
-	Bit8u processMidiState_13(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_13(MidiDataPacket* packet, uint8_t midiData) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x0734
-	Bit8u processMidiState_14(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_14(MidiDataPacket* packet, uint8_t midiData) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x0737
-	Bit8u processMidiState_15(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_15(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[1] = midiData;
 		return midiData == 0x43 ? 0x16 : 0x36;
 		return 0x00;
 	}
 
 	// ROM Address: 0x0745
-	Bit8u processMidiState_16(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_16(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData == 0x75 ? 0x17 : 0x37;
 		return 0x00;
 	}
 
 	// ROM Address: 0x0753
-	Bit8u processMidiState_17(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_17(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return midiData == 0x70 ? 0x18 : midiData == 0x71 ? 0x39 : 0x38;
 	}
 
 	// ROM Address: 0x0768
-	Bit8u processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket* packet, Bit8u midiData) {
-		static Bit8u transition[8] = { 0x19, 0x1C, 0x20, 0x26, 0x29, 0x2B, 0x2D, 0x30 };
+	uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket* packet, uint8_t midiData) {
+		static uint8_t transition[8] = { 0x19, 0x1C, 0x20, 0x26, 0x29, 0x2B, 0x2D, 0x30 };
 		return transition[(midiData>>4) & 7];
 	}
 
 	// ROM Address: 0x0786
-	Bit8u processMidiState_19(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_19(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x1A;
 	}
 
 	// ROM Address: 0x078C
-	Bit8u processMidiState_1A(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_1A(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x1B;
 	}
 
 	// ROM Address: 0x0792
-	Bit8u processMidiState_1C(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_1C(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x1D;
 	}
 
 	// ROM Address: 0x0798
-	Bit8u processMidiState_1D(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_1D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x1E;
 	}
 
 	// ROM Address: 0x079E
-	Bit8u processMidiState_1E(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_1E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x1F;
 	}
 
 	// ROM Address: 0x07A4
-	Bit8u processMidiState_20(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_20(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x21;
 	}
 
 	// ROM Address: 0x07AA
-	Bit8u processMidiState_21(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_21(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x22;
 	}
 
 	// ROM Address: 0x07B0
-	Bit8u processMidiState_22(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_22(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x23;
 	}
 
 	// ROM Address: 0x07B6
-	Bit8u processMidiState_23(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_23(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[5] = midiData;
 		return 0x24;
 	}
 
 	// ROM Address: 0x07BC
-	Bit8u processMidiState_24(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_24(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[6] = midiData;
 		return 0x25;
 	}
 
 	// ROM Address: 0x07C2
-	Bit8u processMidiState_26(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_26(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x27;
 	}
 
 	// ROM Address: 0x07C8
-	Bit8u processMidiState_27(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_27(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x28;
 	}
 
 	// ROM Address: 0x07CE
-	Bit8u processMidiState_29(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_29(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2A;
 	}
 
 	// ROM Address: 0x07D4
-	Bit8u processMidiState_2B(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_2B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2C;
 	}
 
 	// ROM Address: 0x07DA
-	Bit8u processMidiState_2D(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_2D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return 0x2E;
 	}
 
 	// ROM Address: 0x07E0
-	Bit8u processMidiState_2E(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_2E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x2F;
 	}
 
 	// ROM Address: 0x07E6
-	Bit8u processMidiState_30(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_30(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData & 0b01000000 ? 0x33 : 0x31;
 	}
 
 	// ROM Address: 0x07F3
-	Bit8u processMidiState_31(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_31(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x32;
 	}
 
 	// ROM Address: 0x07F9
-	Bit8u processMidiState_33(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_33(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x34;
 	}
 
 	// ROM Address: 0x07FF
-	Bit8u processMidiState_34(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_34(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x35;
 	}
 
 	// ROM Address: 0x0805
-	Bit8u processMidiState_39_3C_3F(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_39_3C_3F(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[0] = 0xFE;
 		packet->data[1] = midiData;
 		return 0x3A;
 	}
 
 	// ROM Address: 0x080F
-	Bit8u processMidiState_3A(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_3A(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[2] = midiData;
 		return midiData & 0b01000000 ? 0x3D : 0x3B;
 	}
 
 	// ROM Address: 0x081C
-	Bit8u processMidiState_3B(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_3B(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x3C;
 	}
 
 	// ROM Address: 0x0822
-	Bit8u processMidiState_3D(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_3D(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[3] = midiData;
 		return 0x3E;
 	}
 
 	// ROM Address: 0x0828
-	Bit8u processMidiState_3E(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_3E(MidiDataPacket* packet, uint8_t midiData) {
 		packet->data[4] = midiData;
 		return 0x3F;
 	}
 
 	// ROM Address: 0x082E
-	Bit8u processMidiState_40(MidiDataPacket* packet, Bit8u midiData) {
+	uint8_t processMidiState_40(MidiDataPacket* packet, uint8_t midiData) {
 		return 0x00;
 	}
 
 	struct StateTermination {
-		Bit8u flowMask;
-		Bit8u totalBytes;
+		uint8_t flowMask;
+		uint8_t totalBytes;
 	};
 	StateTermination stateTerminationTable[0x41] = {
 		{0,0},{8,1},{0,0},{0,0},{1,3},{0,0},{0,0},{2,3},
@@ -4957,11 +4958,11 @@ private:
 	};
 
 	// ROM Address: 0x0831
-	void conditional_send_midi_byte_to_SP(MidiDataPacket* packet, Bit8u flow, Bit8u midiData) {
+	void conditional_send_midi_byte_to_SP(MidiDataPacket* packet, uint8_t flow, uint8_t midiData) {
 		//log("conditional_send_midi_byte_to_SP - %02X for state %02X", midiData, packet->state);
 		if ((stateTerminationTable[packet->state].flowMask & flow) && stateTerminationTable[packet->state].totalBytes != 0) {
 			log_debug("conditional_send_midi_byte_to_SP - midi packet complete. Sending to sound processor");
-			Bit8u i = 0;
+			uint8_t i = 0;
 			if (packet->data[0] >= 0xFE) {
 				soundProcessor_handle_midi_0xFE_0xFF(packet->data[0]);
 				i++;
@@ -4973,7 +4974,7 @@ private:
 	}
 
 	// ROM Address: 0x085C
-	void soundProcessor_handle_midi_0xFE_0xFF(Bit8u data) {
+	void soundProcessor_handle_midi_0xFE_0xFF(uint8_t data) {
 		if (data == 0xFE) {
 			SoundProcessor_SetState_SysEx_ParameterListTransferToMusicCard();
 		} else {
@@ -4982,33 +4983,33 @@ private:
 	}
 
 	// ROM Address: 0x0869
-	void conditional_send_midi_byte_to_MidiOut(MidiDataPacket* packet, Bit8u flow) {
+	void conditional_send_midi_byte_to_MidiOut(MidiDataPacket* packet, uint8_t flow) {
 		if (packet->state == 0x01) {
 			if (flow & 0x08) {
 				send_midi_byte_to_MidiOut(packet->data[0]);
 			}
 		} else {
 			if ((stateTerminationTable[packet->state].flowMask & flow) && stateTerminationTable[packet->state].totalBytes != 0) {
-				sendMidiResponse_to_MidiOut((Bit8u*)&(packet->data), stateTerminationTable[packet->state].totalBytes);
+				sendMidiResponse_to_MidiOut((uint8_t*)&(packet->data), stateTerminationTable[packet->state].totalBytes);
 			}
 		}
 	}
 
 	// ROM Address: 0x0894
-	void conditional_send_midi_byte_to_System(MidiDataPacket* packet, Bit8u flow) {
+	void conditional_send_midi_byte_to_System(MidiDataPacket* packet, uint8_t flow) {
 		if (packet->state == 0x01) {
 			if (flow & 0x08) {
 				send_midi_byte_to_System(packet->data[0]);
 			}
 		} else {
 			if ((stateTerminationTable[packet->state].flowMask & flow) && stateTerminationTable[packet->state].totalBytes != 0) {
-				sendMidiResponse_to_System((Bit8u*)&(packet->data), stateTerminationTable[packet->state].totalBytes);
+				sendMidiResponse_to_System((uint8_t*)&(packet->data), stateTerminationTable[packet->state].totalBytes);
 			}
 		}
 	}
 
 	// ROM Address: 0x0941
-	void setNodeParameterChainMode(Bit8u val) {
+	void setNodeParameterChainMode(uint8_t val) {
 		log_debug("setNodeParameterChainMode()");
 		if (val >= 2) { return; }
 		// wait until all the data has been sent
@@ -5029,7 +5030,7 @@ private:
 			sub_9AB();
 		}
 		log_debug("setNodeParameterChainMode - copy start");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_activeConfiguration.instrumentConfigurations[i].copyFrom(&(getActiveInstrumentParameters(i)->instrumentConfiguration));
 		}
 		log_debug("setNodeParameterChainMode - copy end");
@@ -5054,7 +5055,7 @@ private:
 	}
 
 	// ROM Address: 0x09BC
-	void processIncomingMusicCardMessageByte(Bit8u messageByte) {
+	void processIncomingMusicCardMessageByte(uint8_t messageByte) {
 		log_debug("IMF - processIncomingMusicCardMessageByte(0x%02X)", messageByte);
 		if (messageByte >= 0x80) {
 			setIncomingMusicCardMessageBufferExpected(messageByte);
@@ -5104,8 +5105,8 @@ private:
 	}
 
 	// ROM Address: 0x09E5
-	void setIncomingMusicCardMessageBufferExpected(Bit8u messageByte) {
-		static Bit8u expectedSizes[0x20] = { 1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,6,9,1,1,1,0,0,0,0,0,0,0,0,0 };
+	void setIncomingMusicCardMessageBufferExpected(uint8_t messageByte) {
+		static uint8_t expectedSizes[0x20] = { 1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,6,9,1,1,1,0,0,0,0,0,0,0,0,0 };
 
 		clearIncomingMusicCardMessageBuffer();
 		if (messageByte >= 0xF0) { return; }
@@ -5119,7 +5120,7 @@ private:
 		log_debug("processMusicCardMessageCardModeStatus()");
 		m_outgoingMusicCardMessageData[0] = 0xD0;
 		m_outgoingMusicCardMessageData[1] = m_cardMode;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 2);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 2);
 	}
 
 	// ROM Address: 0x0A72
@@ -5127,7 +5128,7 @@ private:
 		log_debug("processMusicCardMessageErrorReportStatus()");
 		m_outgoingMusicCardMessageData[0] = 0xD1;
 		m_outgoingMusicCardMessageData[1] = m_errorReport;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 2);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 2);
 	}
 
 	// ROM Address: 0x0A82
@@ -5139,7 +5140,7 @@ private:
 		m_outgoingMusicCardMessageData[3] = m_configuredMidiFlowPath.MidiIn_To_SP;
 		m_outgoingMusicCardMessageData[4] = m_configuredMidiFlowPath.System_To_SP;
 		m_outgoingMusicCardMessageData[5] = m_configuredMidiFlowPath.MidiIn_To_MidiOut;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 6);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 6);
 	}
 
 	// ROM Address: 0x0A97
@@ -5154,7 +5155,7 @@ private:
 		m_outgoingMusicCardMessageData[6] = m_chainMode;
 		m_outgoingMusicCardMessageData[7] = 0;
 		m_outgoingMusicCardMessageData[8] = 0;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 9);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 9);
 	}
 
 	// ROM Address: 0x0AC9
@@ -5177,7 +5178,7 @@ private:
 		if (m_incomingMusicCardMessageData[1] >= 2) { return; }
 		m_errorReport = m_incomingMusicCardMessageData[1] == 0 ? ERROR_REPORTING_DISABLED : ERROR_REPORTING_ENABLED;
 		m_outgoingMusicCardMessageData[0] = 0xE1;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 		log_debug("IMF - processMusicCardMessageSelectErrorReportMode() - end");
 	}
 
@@ -5193,7 +5194,7 @@ private:
 		setNodeParameter(0x25, m_chainMode);
 		log_debug("IMF - processMusicCardMessageSetPaths() - setNodeParameter - end");
 		m_outgoingMusicCardMessageData[0] = 0xE2;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 		log_debug("IMF - processMusicCardMessageSetPaths() - end");
 	}
 
@@ -5208,7 +5209,7 @@ private:
 		setNodeParameter(0x25, m_incomingMusicCardMessageData[6]);
 		SoundProcessor_SetToInitialState();
 		m_outgoingMusicCardMessageData[0] = 0xE3;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 	}
 
 	// ROM Address: 0x0B71
@@ -5218,7 +5219,7 @@ private:
 			sendActiveSenseCodeSafe();
 		}
 		m_outgoingMusicCardMessageData[0] = 0xE4;
-		send_card_bytes_to_System((Bit8u*)&m_outgoingMusicCardMessageData, 1);
+		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData, 1);
 	}
 
 	// ROM Address: 0x0B82
@@ -5246,7 +5247,7 @@ private:
 	void interruptHandler() {
 		//log("IMF - interruptHandler() - start");
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u midiStatus = m_midi.readPort2();
+		uint8_t midiStatus = m_midi.readPort2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (midiStatus & 2) {
 			readMidiInPortDuringInterruptHandler();
@@ -5256,8 +5257,8 @@ private:
 			SDL_LockMutex(m_hardwareMutex);
 			// FIXME
 			//m_ya2151.register_w(0x14); // select clock manipulation/status register
-			//Bit8u yaStatus = m_ya2151.status_r();
-			Bit8u yaStatus = 0;
+			//uint8_t yaStatus = m_ya2151.status_r();
+			uint8_t yaStatus = 0;
 			//m_ya2151.data_w(m_ym2151_IRQ_stuff);
 			SDL_UnlockMutex(m_hardwareMutex);
 			if (yaStatus & 3) {
@@ -5272,11 +5273,11 @@ private:
 
 	// ROM Address: 0x0C3F
 	void reset_ym2151() {
-		for (Bit8u i = 0; i < 0x20; i++) {
+		for (uint8_t i = 0; i < 0x20; i++) {
 			sendToYM2151_with_disabled_interrupts(0x60+i, 0x7F); // TotalLevel=0x7F(mute)
 			delayExEx();
 		}
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			sendToYM2151_with_disabled_interrupts(0x00+i, 0x10); // ???
 			delayExEx();
 		}
@@ -5300,7 +5301,7 @@ private:
 	}
 
 	// ROM Address: 0x0C89
-	void process_ya2151_interrupts_callInInterruptHandler(Bit8u irqMask) {
+	void process_ya2151_interrupts_callInInterruptHandler(uint8_t irqMask) {
 		if (irqMask & 1) {
 			// TimerA triggered an IRQ
 			m_ya2151_timerA_counter++;
@@ -5402,8 +5403,8 @@ private:
 	// ROM Address: 0x0D55
 	void readMidiInPortDuringInterruptHandler() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u midiData = m_midi.readPort1();
-		Bit8u midiStatus = m_midi.readPort2();
+		uint8_t midiData = m_midi.readPort1();
+		uint8_t midiStatus = m_midi.readPort2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (midiStatus & 0x38) { // 0x38 = 00111000 : bit5(FramingError), bit4(OverrunError), bit3(ParityError)
 			resetMidiInBuffersAndPorts();
@@ -5442,8 +5443,8 @@ private:
 			enableInterrupts();
 			return { NO_DATA, m_bufferFromMidiInState.getFlagsByteValue() };
 		}
-		Bit8u midiData = m_bufferFromMidiInState.popData();
-		//Bit8u midiData = m_bufferFromMidiIn[m_bufferFromMidiInState.getLastReadByteIndex()];
+		uint8_t midiData = m_bufferFromMidiInState.popData();
+		//uint8_t midiData = m_bufferFromMidiIn[m_bufferFromMidiInState.getLastReadByteIndex()];
 		//m_bufferFromMidiInState.increaseLastReadByteIndex();
 		//if (m_bufferFromMidiInState.getLastReadByteIndex() == m_bufferFromMidiInState.getIndexForNextWriteByte()) {
 		//	m_bufferFromMidiInState.setDataCleared();
@@ -5497,7 +5498,7 @@ private:
 	}
 
 	// ROM Address: 0x0E5B
-	void send_midi_byte_to_MidiOut(Bit8u midiData) {
+	void send_midi_byte_to_MidiOut(uint8_t midiData) {
 		if (midiData <= 0xF7 && midiData >= 0x80) {
 			if (midiData <= 0xF0) {
 				m_midiOut_CommandInProgress = midiData;
@@ -5531,8 +5532,8 @@ private:
 	}
 
 	// ROM Address: 0x0E9B
-	void sendMidiResponse_to_MidiOut(Bit8u* pData, Bit8u size) {
-		Bit8u midiCommandByte = *pData;
+	void sendMidiResponse_to_MidiOut(uint8_t* pData, uint8_t size) {
+		uint8_t midiCommandByte = *pData;
 		if (midiCommandByte < 0xF7) {
 			if (midiCommandByte < 0x80) { return; } // first byte must be a midi command
 			send_F7_to_MidiOut_if_needed();
@@ -5616,9 +5617,9 @@ private:
 	}
 
 	// ROM Address: 0x0F74
-	void wait(Bit16u delayCounter) {
+	void wait(uint16_t delayCounter) {
 		do {
-			Bit8u i = 61;
+			uint8_t i = 61;
 			while (i--);
 		} while (--delayCounter);
 	}
@@ -5691,7 +5692,7 @@ private:
 	// ROM Address: 0x0FC2
 	void sendOrReceiveNextValueToFromSystemDuringInterruptHandler() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u irqStatus = m_piuIMF.readPortPIU2();
+		uint8_t irqStatus = m_piuIMF.readPortPIU2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (irqStatus & 0x08) { // Test for interrupt request on group 0 (INT0)
 			sendNextValueToSystemDuringInterruptHandler();
@@ -5716,7 +5717,7 @@ private:
 		//m_bufferAFromSystem[m_bufferFromSystemState.indexForNextWriteByte] = (m_midi.readPort2() >> 7) ^ 1;
 
 		SDL_LockMutex(m_hardwareMutex);
-		Bit16u data = (m_tcr.getDataBit8FromSystem()->getValue() << 8) | m_piuIMF.readPortPIU1(); // FIXME: use the midi port
+		uint16_t data = (m_tcr.getDataBit8FromSystem()->getValue() << 8) | m_piuIMF.readPortPIU1(); // FIXME: use the midi port
 		//log_debug("PC->IMF: Reading port data [%03X] and adding to queue", data);
 		m_bufferFromSystemState.pushData(data);
 		SDL_UnlockMutex(m_hardwareMutex);
@@ -5747,16 +5748,16 @@ private:
 			return NO_DATA_AVAILABLE;
 		}
 		//disableInterrupts();
-		Bit16u data16u = m_bufferFromSystemState.peekData();
-		Bit8u dataA = data16u >> 8;
-		Bit8u dataB = data16u & 0xFF;
+		uint16_t data16u = m_bufferFromSystemState.peekData();
+		uint8_t dataA = data16u >> 8;
+		uint8_t dataB = data16u & 0xFF;
 		if ((dataA & 1) == 0) {
 		//if ((m_bufferAFromSystem[m_bufferFromSystemState.getLastReadByteIndex()] & 1) == 0) {
 			// current data is not system data
 			m_bufferFromSystemState.unlock();//enableInterrupts();
 			return MIDI_DATA_AVAILABLE;
 		}
-		//Bit8u dataB = m_bufferBFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
+		//uint8_t dataB = m_bufferBFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
 		if (dataB < 0xF0) {
 			m_bufferFromSystemState.unlock();//enableInterrupts();
 			return SYSTEM_DATA_AVAILABLE;
@@ -5781,12 +5782,12 @@ private:
 			return { NO_DATA_AVAILABLE, 0 };
 		}
 		//disableInterrupts();
-		Bit16u data16u = m_bufferFromSystemState.popData();
-		Bit8u a = data16u >> 8;
-		Bit8u b = data16u & 0xFF;
+		uint16_t data16u = m_bufferFromSystemState.popData();
+		uint8_t a = data16u >> 8;
+		uint8_t b = data16u & 0xFF;
 		//log("DEBUG2(1/2): m_bufferFromSystemState: lastReadByteIndex=%02X indexForNextWriteByte=%02X", m_bufferFromSystemState.getLastReadByteIndex(), m_bufferFromSystemState.getIndexForNextWriteByte());
-		//Bit8u a = m_bufferAFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
-		//Bit8u b = m_bufferBFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
+		//uint8_t a = m_bufferAFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
+		//uint8_t b = m_bufferBFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
 		//m_bufferFromSystemState.increaseLastReadByteIndex();
 		////log("DEBUG2(2/2): m_bufferFromSystemState.lastReadByteIndex = %02X / (indexForNextWriteByte = %02X)", m_bufferFromSystemState.getLastReadByteIndex(), m_bufferFromSystemState.getIndexForNextWriteByte());
 		//if (m_bufferFromSystemState.getIndexForNextWriteByte() == m_bufferFromSystemState.getLastReadByteIndex()) {
@@ -5822,7 +5823,7 @@ private:
 	// ROM Address: 0x108F
 	void sendNextValueToSystemDuringInterruptHandler() {
 		m_bufferToSystemState.lock();
-		Bit16u data16u = m_bufferToSystemState.popData();
+		uint16_t data16u = m_bufferToSystemState.popData();
 		log_debug("IMF->PC: Reading queue data [%X%02X] and sending to port", data16u >> 8, data16u & 0xFF);
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuIMF.setPort2Bit(5, data16u >= 0x100 ? 1 : 0); // set bit 5 to bufferA value
@@ -5851,7 +5852,7 @@ private:
 	}
 
 	// ROM Address: 0x10BF
-	WriteStatus send_card_byte_to_System(Bit8u data) {
+	WriteStatus send_card_byte_to_System(uint8_t data) {
 		if (data >= 0xF0) { return send9bitDataToSystem_with_timeout(1, data); };
 		if (data < 0x80) { return send9bitDataToSystem_with_timeout(1, data); };
 		m_system_CommandInProgress = 0;
@@ -5859,13 +5860,13 @@ private:
 	}
 
 	// ROM Address: 0x10D1
-	WriteStatus send_midi_byte_to_System_in_THRU_mode(Bit8u data) {
+	WriteStatus send_midi_byte_to_System_in_THRU_mode(uint8_t data) {
 		m_system_CommandInProgress = 0;
 		return send9bitDataToSystem_with_timeout(0, data);
 	}
 
 	// ROM Address: 0x10DB
-	WriteStatus send_midi_byte_to_System(Bit8u data) {
+	WriteStatus send_midi_byte_to_System(uint8_t data) {
 		if (data >= 0xF8) { return send9bitDataToSystem_with_timeout(0, data); }
 		if (data < 0x80) { return send9bitDataToSystem_with_timeout(0, data); }
 		if (data < 0xF1) { return send_midi_command_byte_to_System(data, 0, data); }
@@ -5874,13 +5875,13 @@ private:
 	}
 
 	// ROM Address: 0x10F3
-	WriteStatus send_midi_command_byte_to_System(Bit8u midiCommandByte, Bit8u dataMSB, Bit8u dataLSB) {
+	WriteStatus send_midi_command_byte_to_System(uint8_t midiCommandByte, uint8_t dataMSB, uint8_t dataLSB) {
 		m_system_CommandInProgress = midiCommandByte;
 		return send9bitDataToSystem_with_timeout(dataMSB, dataLSB);
 	}
 
 	// ROM Address: 0x10F6
-	WriteStatus send9bitDataToSystem_with_timeout(Bit8u dataMSB, Bit8u dataLSB) {
+	WriteStatus send9bitDataToSystem_with_timeout(uint8_t dataMSB, uint8_t dataLSB) {
 		log_debug("IMF->PC: Adding data [%X%02X] to queue", dataMSB, dataLSB);
 		m_sendDataToSystemTimoutCountdown = 3;
 		m_bufferToSystemState.lock();
@@ -5923,7 +5924,7 @@ private:
 	}
 
 	// ROM Address: 0x1133
-	WriteStatus sendMidiResponse_to_System(Bit8u* pData, Bit8u size) {
+	WriteStatus sendMidiResponse_to_System(uint8_t* pData, uint8_t size) {
 		if (*pData < 0xF7) {
 			if (*pData < 0x80) { return WRITE_SUCCESS; }
 			if (send_F7_to_System_if_needed_0() != WRITE_SUCCESS) { return WRITE_ERROR; }
@@ -5983,7 +5984,7 @@ private:
 	}
 
 	// ROM Address: 0x11D6
-	WriteStatus send_card_bytes_to_System(Bit8u* pData, Bit8u size) {
+	WriteStatus send_card_bytes_to_System(uint8_t* pData, uint8_t size) {
 		if (*pData < 0x80) { return WRITE_SUCCESS; }
 		if (*pData >= 0xF0) { return WRITE_SUCCESS; }
 		if (send_F7_to_System_if_needed() != WRITE_SUCCESS) { return WRITE_ERROR; }
@@ -6032,7 +6033,7 @@ private:
 	void logSuccess() {}
 
 	// ROM Address: 0x126A
-	void setNodeParameterNodeNumber(Bit8u val) {
+	void setNodeParameterNodeNumber(uint8_t val) {
 		log_debug("setNodeParameterNodeNumber()");
 		if (val >= 16) { return; }
 		m_nodeNumber = val;
@@ -6040,17 +6041,17 @@ private:
 	}
 
 	// ROM Address: 0x1274
-	void setNodeParameterMemoryProtection(Bit8u val) {
+	void setNodeParameterMemoryProtection(uint8_t val) {
 		log_debug("setNodeParameterMemoryProtection()");
 		if (val >= 2) { return; }
 		m_memoryProtection = val == 0 ? MEMORY_WRITABLE : MEMORY_READONLY;
 	}
 
 	// ROM Address: 0x127C
-	void storeActiveConfigurationToCustomConfiguration(Bit8u targetConfigNr) {
+	void storeActiveConfigurationToCustomConfiguration(uint8_t targetConfigNr) {
 		if (targetConfigNr >= 16) { return; }
 		log_debug("storeActiveConfigurationToCustomConfiguration - copy start");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_activeConfiguration.instrumentConfigurations[i].copyFrom(&(m_activeInstrumentParameters[i].instrumentConfiguration));
 		}
 		log_debug("storeActiveConfigurationToCustomConfiguration - copy end");
@@ -6058,14 +6059,14 @@ private:
 	}
 
 	// ROM Address: 0x127C
-	void setInstrumentParameter_MidiChannelNumber(InstrumentParameters *instr, Bit8u newMidiChannel) {
+	void setInstrumentParameter_MidiChannelNumber(InstrumentParameters *instr, uint8_t newMidiChannel) {
 		log_debug("setInstrumentParameter_MidiChannelNumber()");
 		if (newMidiChannel >= 16) { return; }
 		instr->instrumentConfiguration.midiChannel = newMidiChannel;
 		instr->overflowToMidiOut = 0;
 		if (m_chainMode == CHAIN_MODE_ENABLED) {
-			Bit8u overflowToMidiOut = 1;
-			for (Bit8u i = 0; i < 8; i++) {
+			uint8_t overflowToMidiOut = 1;
+			for (uint8_t i = 0; i < 8; i++) {
 				if (m_activeInstrumentParameters[i].instrumentConfiguration.midiChannel == newMidiChannel) {
 					m_activeInstrumentParameters[i].overflowToMidiOut = overflowToMidiOut;
 					overflowToMidiOut = 0;
@@ -6077,13 +6078,13 @@ private:
 
 	// ROM Address: 0x12E6
 	// instrumentNr=0x00..0x30 instrument nr in CustomBankA, 0x31..0x5F instrument nr in CustomBankB
-	void storeInstrumentParametersToCustomBank(InstrumentParameters *instr, Bit8u instrumentNr) {
+	void storeInstrumentParametersToCustomBank(InstrumentParameters *instr, uint8_t instrumentNr) {
 		if (instrumentNr >= 0x60) { return; }
 		getCustomVoiceDefinition(instrumentNr)->deepCopyFrom(&(instr->voiceDefinition));
 	}
 
 	// ROM Address: 0x12FB
-	void ym2151_executeMidiCommand(InstrumentParameters* instr, Bit8u midiCmdByte, Bit8u midiDataByte0, Bit8u midiDataByte1) {
+	void ym2151_executeMidiCommand(InstrumentParameters* instr, uint8_t midiCmdByte, uint8_t midiDataByte0, uint8_t midiDataByte1) {
 		startMusicProcessing();
 		switch ((midiCmdByte >> 4) & 7) {
 			case 0: // 0x8n - Note OFF Message
@@ -6133,7 +6134,7 @@ private:
 	}
 
 	// ROM Address: 0x1381
-	void setNodeParameterActiveConfigurationNr(Bit8u val) {
+	void setNodeParameterActiveConfigurationNr(uint8_t val) {
 		log_debug("setNodeParameterActiveConfigurationNr()");
 		if (val >= 0x14) { return; }
 		m_activeConfigurationNr = val;
@@ -6144,12 +6145,12 @@ private:
 
 	// ROM Address: 0x1393
 	void proc_1393_called_for_Reboot() {
-		Bit8u lfoSpeed = m_activeConfiguration.lfoSpeed;
-		Bit8u amplitudeModulationDepth = m_activeConfiguration.amplitudeModulationDepth;
-		Bit8u pitchModulationDepth = m_activeConfiguration.pitchModulationDepth;
-		Bit8u lfoWaveForm = m_activeConfiguration.lfoWaveForm;
+		uint8_t lfoSpeed = m_activeConfiguration.lfoSpeed;
+		uint8_t amplitudeModulationDepth = m_activeConfiguration.amplitudeModulationDepth;
+		uint8_t pitchModulationDepth = m_activeConfiguration.pitchModulationDepth;
+		uint8_t lfoWaveForm = m_activeConfiguration.lfoWaveForm;
 		sub_1405(); // b=8, c=7, ix=0xE3A0
-		for (Bit8s i = 7; i >= 0; i--) {
+		for (int8_t i = 7; i >= 0; i--) {
 			loadInstrumentParameters_InstrumentConfiguration(getActiveInstrumentParameters(i), &m_activeConfiguration.instrumentConfigurations[i]);
 		}
 		setNodeParameterLFOWaveForm(lfoWaveForm);
@@ -6163,7 +6164,7 @@ private:
 	void sub_13D1() {
 		log_debug("sub_13D1 - begin");
 		sub_1405();
-		for (Bit8s i = 7; i >= 0; i--) {
+		for (int8_t i = 7; i >= 0; i--) {
 			setInstrumentParameter00_05_safe(getActiveInstrumentParameters(i), &m_activeConfiguration.instrumentConfigurations[i]);
 		}
 		stopMusicProcessing();
@@ -6174,7 +6175,7 @@ private:
 	void proc_13EB_called_for_SelectMusicCardMode() {
 		log_debug("proc_13EB_called_for_SelectMusicCardMode - begin");
 		sub_1405();
-		for (Bit8s i = 7; i >= 0; i--) {
+		for (int8_t i = 7; i >= 0; i--) {
 			setInstrumentParameter00to0A_safe(getActiveInstrumentParameters(i), &m_activeConfiguration.instrumentConfigurations[i]);
 		}
 		stopMusicProcessing();
@@ -6185,7 +6186,7 @@ private:
 	void sub_1405() {
 		startMusicProcessing();
 		setNodeParameterNoteNrReceptionMode(m_activeConfiguration.noteNumberReceptionMode);
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* p = getActiveInstrumentParameters(i);
 			YmChannelData* s = getYmChannelData(i);
 			p->channelMask = 0;
@@ -6204,7 +6205,7 @@ private:
 		log_debug("loadInstrumentParameters_InstrumentConfiguration - copy begin");
 		instr->instrumentConfiguration.copyFrom(config);
 		log_debug("loadInstrumentParameters_InstrumentConfiguration - copy end");
-		Bit8u combineMode = m_activeConfiguration.combineMode;
+		uint8_t combineMode = m_activeConfiguration.combineMode;
 		setNodeParameterCombineMode(0);
 		setInstrumentParameter_ForceRefreshOfParam_00_05(instr);
 		setNodeParameterCombineMode(combineMode);
@@ -6266,48 +6267,48 @@ private:
 	}
 
 	// ROM Address: 0x14F4
-	void setNodeParameterName0(Bit8u val) {
+	void setNodeParameterName0(uint8_t val) {
 		log_debug("setNodeParameterName0()");
 		m_activeConfiguration.name[0] = val;
 	}
 	// ROM Address: 0x14F9
-	void setNodeParameterName1(Bit8u val) {
+	void setNodeParameterName1(uint8_t val) {
 		log_debug("setNodeParameterName1()");
 		m_activeConfiguration.name[1] = val;
 	}
 	// ROM Address: 0x14FE
-	void setNodeParameterName2(Bit8u val) {
+	void setNodeParameterName2(uint8_t val) {
 		log_debug("setNodeParameterName2()");
 		m_activeConfiguration.name[2] = val;
 	}
 	// ROM Address: 0x1503
-	void setNodeParameterName3(Bit8u val) {
+	void setNodeParameterName3(uint8_t val) {
 		log_debug("setNodeParameterName3()");
 		m_activeConfiguration.name[3] = val;
 	}
 	// ROM Address: 0x1508
-	void setNodeParameterName4(Bit8u val) {
+	void setNodeParameterName4(uint8_t val) {
 		log_debug("setNodeParameterName4()");
 		m_activeConfiguration.name[4] = val;
 	}
 	// ROM Address: 0x150D
-	void setNodeParameterName5(Bit8u val) {
+	void setNodeParameterName5(uint8_t val) {
 		log_debug("setNodeParameterName5()");
 		m_activeConfiguration.name[5] = val;
 	}
 	// ROM Address: 0x1512
-	void setNodeParameterName6(Bit8u val) {
+	void setNodeParameterName6(uint8_t val) {
 		log_debug("setNodeParameterName6()");
 		m_activeConfiguration.name[6] = val;
 	}
 	// ROM Address: 0x1517
-	void setNodeParameterName7(Bit8u val) {
+	void setNodeParameterName7(uint8_t val) {
 		log_debug("setNodeParameterName7()");
 		m_activeConfiguration.name[7] = val;
 	}
 
 	// ROM Address: 0x151C
-	void setNodeParameterCombineMode(Bit8u val) {
+	void setNodeParameterCombineMode(uint8_t val) {
 		log_debug("setNodeParameterCombineMode()");
 		if (val >= 2) { return; }
 		m_activeConfiguration.combineMode = val;
@@ -6315,7 +6316,7 @@ private:
 
 	// ROM Address: 0x1524
 	// val = 0=All, 1=Even, 2=Odd
-	void setNodeParameterNoteNrReceptionMode(Bit8u val) {
+	void setNodeParameterNoteNrReceptionMode(uint8_t val) {
 		log_debug("setNodeParameterNoteNrReceptionMode()");
 		if (val >= 3) { return; }
 		m_activeConfiguration.noteNumberReceptionMode = val;
@@ -6323,14 +6324,14 @@ private:
 	}
 
 	void logInstrumentMasks() {
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(i);
 			log_error("     instrument %i (midi channel %i) - mask 0x%02X", i, getMidiChannel(instr), instr->channelMask);
 		}
 	}
 
 	// ROM Address: 0x152E
-	void setInstrumentParameter_NumberOfNotes(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_NumberOfNotes(InstrumentParameters* instr, uint8_t val) {
 		log_error("setInstrumentParameter_NumberOfNotes(midichannel=%i, %i) - begin", getMidiChannel(instr), val);
 		if (val >= 9) {
 			return;
@@ -6366,14 +6367,14 @@ private:
 	// ROM Address: 0x1555
 	void sub_1555(InstrumentParameters* instr) {
 		log_debug("sub_1555() - begin");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			deallocateAssignedChannels(getActiveInstrumentParameters(i));
 		}
 		ChannelMaskInfo availableChannels = getFreeChannels();
 		instr->channelMask = allocateChannels(instr, availableChannels.mask, instr->instrumentConfiguration.numberOfNotes).mask;
 		log_debug("sub_1555() - allocateChannels() returned mask %02X for new channel", instr->channelMask);
 		sub_154F(instr);
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* tmpInstr = getActiveInstrumentParameters(i);
 			if (tmpInstr != instr && tmpInstr->instrumentConfiguration.numberOfNotes != 0) {
 				ChannelMaskInfo tmpAvailableChannels = getFreeChannels();
@@ -6391,8 +6392,8 @@ private:
 	void deallocateAssignedChannels(InstrumentParameters* instr) {
 		log_debug("deallocateAssignedChannels() - begin");
 		setDefaultInstrumentParameters(instr);
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				m_ymChannelData[i].instrumentParameters = NULL;
 			}
@@ -6405,13 +6406,13 @@ private:
 
 	// ROM Address: 0x15D6
 	ChannelMaskInfo getFreeChannels() {
-		Bit8u totalMask = 0;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t totalMask = 0;
+		for (uint8_t i = 0; i < 8; i++) {
 			totalMask |= m_activeInstrumentParameters[i].channelMask;
 		}
 		totalMask ^= 0xFF;
-		Bit8u freeChannels = 0;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t freeChannels = 0;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (totalMask & (1 << i)) {
 				freeChannels++;
 			}
@@ -6420,10 +6421,10 @@ private:
 	}
 
 	// ROM Address: 0x15F2
-	ChannelMaskInfo allocateChannels(InstrumentParameters* instr, Bit8u freeMask, Bit8u numberOfNotes) {
-		Bit8u channelMask = 0;
-		Bit8u numberOfAllocatedChannels = 0;
-		for (Bit8u i = 0; i < 8; i++) {
+	ChannelMaskInfo allocateChannels(InstrumentParameters* instr, uint8_t freeMask, uint8_t numberOfNotes) {
+		uint8_t channelMask = 0;
+		uint8_t numberOfAllocatedChannels = 0;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (freeMask & (1 << i)) {
 				m_ymChannelData[i].instrumentParameters = instr;
 				channelMask |= 1 << i;
@@ -6436,7 +6437,7 @@ private:
 	}
 
 	// ROM Address: 0x1622
-	void setInstrumentParameter_NoteNumberLimitHigh(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_NoteNumberLimitHigh(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_NoteNumberLimitHigh()");
 		instr->instrumentConfiguration.noteNumberLimitHigh.value = val;
 		if (val < instr->instrumentConfiguration.noteNumberLimitLow.value) {
@@ -6446,7 +6447,7 @@ private:
 	}
 
 	// ROM Address: 0x1631
-	void setInstrumentParameter_NoteNumberLimitLow(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_NoteNumberLimitLow(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_NoteNumberLimitLow()");
 		instr->instrumentConfiguration.noteNumberLimitLow.value = val;
 		if (val > instr->instrumentConfiguration.noteNumberLimitHigh.value) {
@@ -6456,22 +6457,22 @@ private:
 	}
 
 	// ROM Address: 0x1640
-	void setInstrumentParameter_MonoMode(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_MonoMode(InstrumentParameters* instr, uint8_t val) {
 		if (val == 1) {
 			setInstrumentParameter_MonoPolyMode(instr, val);
 		}
 	}
 
 	// ROM Address: 0x1647
-	void setInstrumentParameter_PolyMode(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PolyMode(InstrumentParameters* instr, uint8_t val) {
 		setInstrumentParameter_MonoPolyMode(instr, 0);
 	}
 
 	// ROM Address: 0x164B
-	void setInstrumentParameter_MonoPolyMode(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_MonoPolyMode(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_MonoPolyMode()");
 		if (val >= 2) { return; }
-		Bit8u oldMonoPolyMode = instr->instrumentConfiguration.polyMonoMode;
+		uint8_t oldMonoPolyMode = instr->instrumentConfiguration.polyMonoMode;
 		instr->instrumentConfiguration.polyMonoMode = val;
 		if (oldMonoPolyMode ^ val) {
 			// mode changed
@@ -6480,7 +6481,7 @@ private:
 	}
 
 	// ROM Address: 0x165A
-	void setInstrumentParameter_LFOLoadEnable(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_LFOLoadEnable(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_LFOLoadEnable()");
 		if (val >= 2) { return; }
 		instr->voiceDefinition.setLfoLoadMode(val);
@@ -6497,7 +6498,7 @@ private:
 	}
 
 	// ROM Address: 0x169E
-	void setInstrumentParameter_LFOSpeed(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_LFOSpeed(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_LFOSpeed()");
 		instr->voiceDefinition.setLfoSpeed(val << 1);
 		if (isLfoModeEnabled(instr)) {
@@ -6506,14 +6507,14 @@ private:
 	}
 
 	// ROM Address: 0x16A7
-	void setNodeParameterLFOSpeed(Bit8u val) {
+	void setNodeParameterLFOSpeed(uint8_t val) {
 		log_debug("setNodeParameterLFOSpeed()");
 		m_activeConfiguration.lfoSpeed = val;
 		sendToYM2151_no_interrupts_allowed(0x18, val); // setLFOFreq
 	}
 
 	// ROM Address: 0x16B2
-	void setInstrumentParameter_AmplitudeModulationDepth(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_AmplitudeModulationDepth(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_AmplitudeModulationDepth()");
 		instr->voiceDefinition.setAmplitudeModulationDepth(val);
 		if (isLfoModeEnabled(instr)) {
@@ -6522,14 +6523,14 @@ private:
 	}
 
 	// ROM Address: 0x16BF
-	void setNodeParameterAmpModDepth(Bit8u val) {
+	void setNodeParameterAmpModDepth(uint8_t val) {
 		log_debug("setNodeParameterAmpModDepth()");
 		m_activeConfiguration.amplitudeModulationDepth = val;
 		sendToYM2151_no_interrupts_allowed(0x19, val); // setPhaseDepth or setAmpDepth
 	}
 
 	// ROM Address: 0x16CA
-	void setInstrumentParameter_PitchModulationDepth(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PitchModulationDepth(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PitchModulationDepth()");
 		instr->voiceDefinition.setPitchModulationDepth(val);
 		if (isLfoModeEnabled(instr)) {
@@ -6538,14 +6539,14 @@ private:
 	}
 
 	// ROM Address: 0x16D7
-	void setNodeParameterPitchModDepth(Bit8u val) {
+	void setNodeParameterPitchModDepth(uint8_t val) {
 		log_debug("setNodeParameterPitchModDepth()");
 		m_activeConfiguration.pitchModulationDepth = val;
 		sendToYM2151_no_interrupts_allowed(0x19, val | 0x80); // setPhaseDepth or setAmpDepth
 	}
 
 	// ROM Address: 0x16E3
-	void setInstrumentParameter_LFOWaveform(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_LFOWaveform(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_LFOWaveform()");
 		if (val >= 4) { return; }
 		instr->voiceDefinition.setLfoWaveForm(val);
@@ -6555,7 +6556,7 @@ private:
 	}
 
 	// ROM Address: 0x16F8
-	void setNodeParameterLFOWaveForm(Bit8u val) {
+	void setNodeParameterLFOWaveForm(uint8_t val) {
 		log_debug("setNodeParameterLFOWaveForm()");
 		if (val >= 4) { return; }
 		m_activeConfiguration.lfoWaveForm = val;
@@ -6563,7 +6564,7 @@ private:
 	}
 
 	// ROM Address: 0x1705
-	void setInstrumentParameter_LFOSync(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_LFOSync(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_LFOSync()");
 		if (val >= 2) { return; }
 		instr->voiceDefinition.setLfoSyncMode(val);
@@ -6571,34 +6572,34 @@ private:
 	}
 
 	// ROM Address: 0x171E
-	void setInstrumentParameter_PMDController(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PMDController(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PMDController()");
 		if (val >= 5) { return; }
 		instr->instrumentConfiguration.pmdController = val;
 	}
 
 	// ROM Address: 0x1726
-	void setInstrumentParameter_AfterTouch(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_AfterTouch(InstrumentParameters* instr, uint8_t val) {
 		setInstrumentParameterController(instr, 1, val);
 	}
 
 	// ROM Address: 0x1729
-	void setInstrumentParameterModulationWheel(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterModulationWheel(InstrumentParameters* instr, uint8_t val) {
 		setInstrumentParameterController(instr, 2, val);
 	}
 
 	// ROM Address: 0x172C
-	void setInstrumentParameterBreathController(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterBreathController(InstrumentParameters* instr, uint8_t val) {
 		setInstrumentParameterController(instr, 3, val);
 	}
 
 	// ROM Address: 0x172F
-	void setInstrumentParameterFootController(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterFootController(InstrumentParameters* instr, uint8_t val) {
 		setInstrumentParameterController(instr, 4, val);
 	}
 
 	// ROM Address: 0x1731
-	void setInstrumentParameterController(InstrumentParameters* instr, Bit8u controlType, Bit8u val) {
+	void setInstrumentParameterController(InstrumentParameters* instr, uint8_t controlType, uint8_t val) {
 		if (instr->instrumentConfiguration.pmdController != controlType) { return; }
 		if (instr->instrumentConfiguration.numberOfNotes) {
 			setNodeParameterPitchModDepth(val);
@@ -6606,7 +6607,7 @@ private:
 	}
 
 	// ROM Address: 0x173D
-	void setInstrumentParameter_AmplitudeModulationSensitivity(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_AmplitudeModulationSensitivity(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_AmplitudeModulationSensitivity()");
 		if (val >= 4) { return; }
 		instr->voiceDefinition.setAmplitudeModulationSensitivity(val);
@@ -6614,7 +6615,7 @@ private:
 	}
 
 	// ROM Address: 0x174F
-	void setInstrumentParameter_PitchModulationSensitivity(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PitchModulationSensitivity(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PitchModulationSensitivity()");
 		if (val >= 8) { return; }
 		instr->voiceDefinition.setPitchModulationSensitivity(val);
@@ -6622,7 +6623,7 @@ private:
 	}
 
 	// ROM Address: 0x1764
-	void setInstrumentParameter_LFOEnable(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_LFOEnable(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_LFOEnable()");
 		if (val >= 2) { return; }
 		instr->instrumentConfiguration.lfoEnable = val;
@@ -6631,20 +6632,20 @@ private:
 	}
 
 	// ROM Address: 0x1778
-	void setInstrumentParameter_Pan(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_Pan(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_Pan(0x%02X)", val);
 		instr->instrumentConfiguration.pan = val;
 		// Start by setting the Left/Right channel enable flags
-		Bit8u regValue = (val & 0x60) == 0x00 ? 0b01000000 /*Left channel enabled*/ : (val & 0x60) == 0x60 ? 0b10000000 /*Right channel enabled*/ : 0b11000000 /*Left+Right channel enabled*/;
+		uint8_t regValue = (val & 0x60) == 0x00 ? 0b01000000 /*Left channel enabled*/ : (val & 0x60) == 0x60 ? 0b10000000 /*Right channel enabled*/ : 0b11000000 /*Left+Right channel enabled*/;
 		regValue |= instr->voiceDefinition.getFeedbackLevel() << 3;
 		regValue |= instr->voiceDefinition.getAlgorithm();
 		sub_1792(instr, 0x20, regValue);
 	}
 
 	// ROM Address: 0x1792
-	void sub_1792(InstrumentParameters* instr, Bit8u reg, Bit8u val) {
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+	void sub_1792(InstrumentParameters* instr, uint8_t reg, uint8_t val) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				sendToYM2151_no_interrupts_allowed(reg + i, val);
 			}
@@ -6652,7 +6653,7 @@ private:
 	}
 
 	// ROM Address: 0x17A0
-	void setInstrumentParameter_VoiceBankNumber(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_VoiceBankNumber(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_VoiceBankNumber()");
 		if (val >= 7) { return; }
 		if (val == instr->instrumentConfiguration.voiceBankNumber) { return; }
@@ -6661,7 +6662,7 @@ private:
 	}
 
 	// ROM Address: 0x17AE
-	void setInstrumentParameter_VoiceNumber(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_VoiceNumber(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_VoiceNumber()");
 		if (val >= 0x30) { return; }
 		instr->instrumentConfiguration.voiceNumber = val;
@@ -6670,8 +6671,8 @@ private:
 	}
 
 	// ROM Address: 0x17C8
-	void setInstrumentParameter_VoiceDefinition(InstrumentParameters* instr, Bit8u param, Bit8u val) {
-		((Bit8u*)&(instr->voiceDefinition))[param] = val; // ugly, but that's how they did it
+	void setInstrumentParameter_VoiceDefinition(InstrumentParameters* instr, uint8_t param, uint8_t val) {
+		((uint8_t*)&(instr->voiceDefinition))[param] = val; // ugly, but that's how they did it
 		applyVoiceDefinition(instr);
 	}
 
@@ -6683,8 +6684,8 @@ private:
 		stopMusicProcessing();
 	}
 
-	inline Bit8u addWithUpperBoundary(Bit8u a, Bit8u b, Bit8u upperBoundary) {
-		Bit16u s = a + b;
+	inline uint8_t addWithUpperBoundary(uint8_t a, uint8_t b, uint8_t upperBoundary) {
+		uint16_t s = a + b;
 		return s > upperBoundary ? upperBoundary : s;
 	}
 
@@ -6709,9 +6710,9 @@ private:
 	// ROM Address: 0x1857
 	void setAllYmRegistersForAssignedChannels(InstrumentParameters* instr) {
 		log_debug("setAllYmRegistersForAssignedChannels - begin");
-		Bit8u operatorsEnabled = instr->voiceDefinition.getOperatorsEnabled();
-		Bit8u mask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t operatorsEnabled = instr->voiceDefinition.getOperatorsEnabled();
+		uint8_t mask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (mask & (1 << i)) {
 				m_ymChannelData[i].channelNumber = i;
 				m_ymChannelData[i].operatorsEnabled = operatorsEnabled;
@@ -6739,9 +6740,9 @@ private:
 	}
 
 	// ROM Address: 0x18CE
-	void sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(InstrumentParameters* instr, Bit8u startReg, Bit8u val) {
-		Bit8u mask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+	void sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(InstrumentParameters* instr, uint8_t startReg, uint8_t val) {
+		uint8_t mask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (mask & (1 << i)) {
 				sendToYM2151_no_interrupts_allowed(startReg+i, val);
 			}
@@ -6750,7 +6751,7 @@ private:
 
 	// ROM Address: 0x18DC
 	void ym_updateKeyCodeAndFractionOnAllChannels() {
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (m_ymChannelData[i].__flag6) {
 				ym_setKeyCodeAndFraction(&m_ymChannelData[i], m_ymChannelData[i].instrumentParameters);
 			}
@@ -6774,7 +6775,7 @@ private:
 
 	// ROM Address: 0x18FC
 	void ym_setKeyCodeAndFraction(YmChannelData* ymChannelData, InstrumentParameters* instr) {
-		static Bit8u ym2151KeyCodeTable[128] = {
+		static uint8_t ym2151KeyCodeTable[128] = {
 			YM_KEYCODE(0,YM_KEY_C),
 			YM_KEYCODE(0,YM_KEY_C_SHARP), YM_KEYCODE(0,YM_KEY_D), YM_KEYCODE(0,YM_KEY_D_SHARP), YM_KEYCODE(0,YM_KEY_E), YM_KEYCODE(0,YM_KEY_F), YM_KEYCODE(0,YM_KEY_F_SHARP), YM_KEYCODE(0,YM_KEY_G), YM_KEYCODE(0,YM_KEY_G_SHARP), YM_KEYCODE(0,YM_KEY_A), YM_KEYCODE(0,YM_KEY_A_SHARP), YM_KEYCODE(0,YM_KEY_B), YM_KEYCODE(0,YM_KEY_C),
 			YM_KEYCODE(0,YM_KEY_C_SHARP), YM_KEYCODE(0,YM_KEY_D), YM_KEYCODE(0,YM_KEY_D_SHARP), YM_KEYCODE(0,YM_KEY_E), YM_KEYCODE(0,YM_KEY_F), YM_KEYCODE(0,YM_KEY_F_SHARP), YM_KEYCODE(0,YM_KEY_G), YM_KEYCODE(0,YM_KEY_G_SHARP), YM_KEYCODE(0,YM_KEY_A), YM_KEYCODE(0,YM_KEY_A_SHARP), YM_KEYCODE(0,YM_KEY_B), YM_KEYCODE(0,YM_KEY_C),
@@ -6802,14 +6803,14 @@ private:
 	FractionalNote cropToPlayableRange(FractionalNote root /*hl*/, FractionalNote adjustment /*de*/) {
 		if (adjustment.note.value & 0x80) {
 			// adjustment is negative
-			Bit16u result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
+			uint16_t result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
 			while (result >= 0x8000) {
 				result += 12 << 8; // up an octave
 			}
 			return FractionalNote(Note(result >> 8), Fraction(result & 0xFF));
 		} else {
 			// adjustment is positive
-			Bit16u result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
+			uint16_t result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
 			while (result >= 0x8000) {
 				result -= 12 << 8; // drop an octave
 			}
@@ -6818,7 +6819,7 @@ private:
 	}
 
 	// ROM Address: 0x19CE
-	void setInstrumentParameter_PortamentoTime(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PortamentoTime(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PortamentoTime()");
 		instr->instrumentConfiguration.portamentoTime = val;
 		setInstrumentParameterPortamentoOnOff(instr, instr->__portamento);
@@ -6826,13 +6827,13 @@ private:
 
 	// ROM Address: 0x19D3
 	// val is either 0 (OFF) or 127 (ON)
-	void setInstrumentParameterPortamentoOnOff(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterPortamentoOnOff(InstrumentParameters* instr, uint8_t val) {
 		if (val == 0) { instr->__portamento = 0; }
 		else if (val == 0x7F) { instr->__portamento = 1; }
 		else { return; }
 
 		if (instr->__portamento && instr->instrumentConfiguration.portamentoTime) { return; }
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (instr->channelMask & (1 << i)) {
 				ym_finishPortamento(&m_ymChannelData[i]);
 			}
@@ -6851,7 +6852,7 @@ private:
 		if ((hl.note.value & 0x80) == 0) {
 			// hl is positive
 			ymChannelData->__hasActivePortamento = 1;
-			Bit16u val = (hl.note.value >> 1) & 0x3F;
+			uint16_t val = (hl.note.value >> 1) & 0x3F;
 			if (val == 0) { val = 1; }
 			val = val * ym_getPortamentoTimeFactor(instr);
 			ymChannelData->portamentoAdjustment = FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
@@ -6859,7 +6860,7 @@ private:
 		} else {
 			// hl is negative
 			ymChannelData->__hasActivePortamento = 1;
-			Bit16s val = hl.getBit16u();
+			int16_t val = hl.getuint16_t();
 			val = val >> (8 + 1);
 			val = val * ym_getPortamentoTimeFactor(instr);
 			ymChannelData->portamentoAdjustment = FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
@@ -6868,8 +6869,8 @@ private:
 	}
 
 	// ROM Address: 0x1A8C
-	Bit8u ym_getPortamentoTimeFactor(InstrumentParameters* instr) {
-		static Bit8u byte_1A9E[32] = { 0xFF, 0x80, 0x56, 0x40, 0x34, 0x2B, 0x25, 0x20, 0x1D, 0x1A, 0x18, 0x16, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 };
+	uint8_t ym_getPortamentoTimeFactor(InstrumentParameters* instr) {
+		static uint8_t byte_1A9E[32] = { 0xFF, 0x80, 0x56, 0x40, 0x34, 0x2B, 0x25, 0x20, 0x1D, 0x1A, 0x18, 0x16, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 };
 		return byte_1A9E[(instr->instrumentConfiguration.portamentoTime >> 2) & 0x1F];
 	}
 
@@ -6891,7 +6892,7 @@ private:
 	// ROM Address: 0x1AEC
 	void ym_updateAllCurrentlyPlayingByPortamentoAdjustment() {
 		startMusicProcessing();
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (m_ymChannelData[i].__hasActivePortamento && m_ymChannelData[i].__flag6) {
 				ym_updateCurrentlyPlayingByPortamentoAdjustment(&m_ymChannelData[i]);
 			}
@@ -6905,22 +6906,22 @@ private:
 			// portamentoAdjustment is a "negative" note
 			FractionalNote newCurrentlyPlaying = ymChannelData->currentlyPlaying + ymChannelData->portamentoAdjustment;
 			// did it overflow?
-			if (newCurrentlyPlaying.getBit16u() > ymChannelData->currentlyPlaying.getBit16u()) {
+			if (newCurrentlyPlaying.getuint16_t() > ymChannelData->currentlyPlaying.getuint16_t()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 			ymChannelData->currentlyPlaying = newCurrentlyPlaying;
-			if (ymChannelData->currentlyPlaying.getBit16u() <= ymChannelData->portamentoTarget.getBit16u()) {
+			if (ymChannelData->currentlyPlaying.getuint16_t() <= ymChannelData->portamentoTarget.getuint16_t()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 		} else {
 			// portamentoAdjustment is a "positive" note
 			FractionalNote newCurrentlyPlaying = ymChannelData->currentlyPlaying + ymChannelData->portamentoAdjustment;
 			// did it overflow?
-			if (newCurrentlyPlaying.getBit16u() < ymChannelData->currentlyPlaying.getBit16u()) {
+			if (newCurrentlyPlaying.getuint16_t() < ymChannelData->currentlyPlaying.getuint16_t()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 			ymChannelData->currentlyPlaying = newCurrentlyPlaying;
-			if (ymChannelData->currentlyPlaying.getBit16u() >= ymChannelData->portamentoTarget.getBit16u()) {
+			if (ymChannelData->currentlyPlaying.getuint16_t() >= ymChannelData->portamentoTarget.getuint16_t()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 		}
@@ -6933,23 +6934,23 @@ private:
 	}
 
 	// ROM Address: 0x1B5D
-	void setNodeParameterMasterTune(Bit8u val) {
+	void setNodeParameterMasterTune(uint8_t val) {
 		log_debug("setNodeParameterMasterTune()");
 		m_masterTune = val;
-		Bit8s tmpVal = val;
-		Bit16s masterTune = ((Bit8s)(val << 1)) - 0x1EC;
+		int8_t tmpVal = val;
+		int16_t masterTune = ((int8_t)(val << 1)) - 0x1EC;
 		m_masterTuneAsNoteFraction = FractionalNote(Note(masterTune >> 8), Fraction(masterTune & 0xFF));
 	}
 
 	// ROM Address: 0x1B73
-	void setInstrumentParameter_Detune(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_Detune(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_Detune()");
 		instr->instrumentConfiguration.detune = val;
 		setInstrumentParameter_06_07_common(instr);
 	}
 
 	// ROM Address: 0x1B78
-	void setInstrumentParameter_OctaveTranspose(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_OctaveTranspose(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_OctaveTranspose(midichannel=%i, %i)", getMidiChannel(instr), val);
 		if (val >= 5) { return; }
 		instr->instrumentConfiguration.octaveTranspose = val;
@@ -6958,13 +6959,13 @@ private:
 
 	// ROM Address: 0x1B7F
 	void setInstrumentParameter_06_07_common(InstrumentParameters* instr) {
-		static Bit16s octaveTransposeTable[5] = {-24 * 256, -12 * 256, 0 * 256, 12 * 256, 24 * 256 }; // In the original: actually a Bit8s
+		static int16_t octaveTransposeTable[5] = {-24 * 256, -12 * 256, 0 * 256, 12 * 256, 24 * 256 }; // In the original: actually a int8_t
 
 		//if (instr->instrumentConfiguration.octaveTranspose != 2) {
 		//	log_error("DEBUG: instr->instrumentConfiguration.octaveTranspose is %i", instr->instrumentConfiguration.octaveTranspose);
 		//}
 
-		Bit16s detuneAsNoteFraction = octaveTransposeTable[instr->instrumentConfiguration.octaveTranspose] + ((Bit16s)((Bit8s)(instr->instrumentConfiguration.detune << 1)));
+		int16_t detuneAsNoteFraction = octaveTransposeTable[instr->instrumentConfiguration.octaveTranspose] + ((int16_t)((int8_t)(instr->instrumentConfiguration.detune << 1)));
 		instr->detuneAsNoteFraction = FractionalNote(Note(detuneAsNoteFraction >> 8), Fraction(detuneAsNoteFraction & 0xFF));
 		executeMidiCommand_PitchBender(instr, instr->pitchbenderValueLSB, instr->pitchbenderValueMSB);
 	}
@@ -6974,7 +6975,7 @@ private:
 	// the width of pitch fluctuation generated by the pitchbend wheel. The value range is from 0 through 12. When the pitchbender range is set to 0, no pitch fluctuation
 	// occurs. Each time the pitchbender parameter is incremeted by one, the variable width expands both a half-step higher and lower. Weh nthe pitchbender parameter is
 	// set to 12, the pitchbend is altered plus or minus one cotave.
-	void setInstrumentParameter_PitchbenderRange(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_PitchbenderRange(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PitchbenderRange()");
 		if (val > 12) { return; }
 		instr->instrumentConfiguration.pitchbenderRange = val;
@@ -6986,15 +6987,15 @@ private:
 	void executeMidiCommand_PitchBender(InstrumentParameters* instr, PitchbenderValueLSB pitchbenderValueLSB, PitchbenderValueMSB pitchbenderValueMSB) {
 		instr->pitchbenderValueLSB = pitchbenderValueLSB;
 		instr->pitchbenderValueMSB = pitchbenderValueMSB;
-		Bit16s pitchbenderValue = (((Bit16s)((pitchbenderValueMSB.value << 9) | (pitchbenderValueLSB.value << 2))) >> 2) - 0x2000; // convert for 2x7bit->14bit and then offset it from 0x2000
+		int16_t pitchbenderValue = (((int16_t)((pitchbenderValueMSB.value << 9) | (pitchbenderValueLSB.value << 2))) >> 2) - 0x2000; // convert for 2x7bit->14bit and then offset it from 0x2000
 		// not the exact code, but should do the same thing
 		pitchbenderValue = instr->instrumentConfiguration.pitchbenderRange * pitchbenderValue / 0x2000;
 		pitchbenderValue += (instr->detuneAsNoteFraction.note.value << 8) + instr->detuneAsNoteFraction.fraction.value;
 		instr->detuneAndPitchbendAsNoteFraction = FractionalNote(Note(pitchbenderValue >> 8), Fraction(pitchbenderValue & 0xFF));
 	}
 
-	inline Bit8u getOutputLevel(InstrumentParameters* instr) {
-		Bit16u outputLevel = (instr->instrumentConfiguration.getOutputLevel() ^ 0xFF) & 0x7F;
+	inline uint8_t getOutputLevel(InstrumentParameters* instr) {
+		uint16_t outputLevel = (instr->instrumentConfiguration.getOutputLevel() ^ 0xFF) & 0x7F;
 		outputLevel += instr->volume;
 		outputLevel += m_masterOutputLevel;
 		//log_debug("getOutputLevel - instr->instrumentConfiguration.outputLevel=0x%02X, instr->volume=0x%02X, m_masterOutputLevel=0x%02X", (instr->instrumentConfiguration.getOutputLevel() ^ 0xFF) & 0x7F, instr->volume, m_masterOutputLevel);
@@ -7015,9 +7016,9 @@ private:
 
 	// ROM Address: 0x1C15
 	void setInstrumentVolume(InstrumentParameters* instr) {
-		Bit8u channelMask = instr->channelMask;
-		Bit8u outputLevel = getOutputLevel(instr);
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		uint8_t outputLevel = getOutputLevel(instr);
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				ym_setOperatorVolumes(instr, &m_ymChannelData[i], outputLevel);
 			}
@@ -7025,10 +7026,10 @@ private:
 	}
 
 	// ROM Address: 0x1C42
-	void ym_setOperatorVolumes(InstrumentParameters* instr, YmChannelData* ymChannelData, Bit8u volume) {
+	void ym_setOperatorVolumes(InstrumentParameters* instr, YmChannelData* ymChannelData, uint8_t volume) {
 		//log_debug("ym_setOperatorVolumes - using volume 0x%02X for channel %i", volume, ymChannelData->channelNumber);
-		Bit8u ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
-		Bit8u operatorVolume;
+		uint8_t ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
+		uint8_t operatorVolume;
 		// set operator 0
 		operatorVolume = ymChannelData->operatorVolumes[0];
 		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect()) {
@@ -7061,10 +7062,10 @@ private:
 
 	// ROM Address: 0x1C81
 	void ym_updateOperatorVolumes(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		Bit8u volume = getOutputLevel(instr);
+		uint8_t volume = getOutputLevel(instr);
 		//log_debug("ym_updateOperatorVolumes - using volume 0x%02X for channel %i", volume, ymChannelData->channelNumber);
-		Bit8u ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
-		Bit8u operatorVolume;
+		uint8_t ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
+		uint8_t operatorVolume;
 		operatorVolume = ymChannelData->operatorVolumes[0];
 		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect()) {
 			operatorVolume += volume;
@@ -7096,11 +7097,11 @@ private:
 
 	// ROM Address: 0x1CD5
 	void ym_calculateAndUpdateOperatorVolumes(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		Bit8u h = (ymChannelData->portamentoTarget.note.value >> 1) & 0x3F; // ?!?!?!?!?!?
-		Bit8u l = m_lastMidiOnOff_KeyVelocity.value > 2 ? m_lastMidiOnOff_KeyVelocity.value - 2 : 0;
+		uint8_t h = (ymChannelData->portamentoTarget.note.value >> 1) & 0x3F; // ?!?!?!?!?!?
+		uint8_t l = m_lastMidiOnOff_KeyVelocity.value > 2 ? m_lastMidiOnOff_KeyVelocity.value - 2 : 0;
 		l = (l >> 2) & 0x1F;
 
-		Bit8u tmp;
+		uint8_t tmp;
 		tmp = carrierOrModulatorTableLookup(instr->voiceDefinition.getOperator(0), l, getKeyboardLevelScaling(instr->voiceDefinition.getOperator(0), h)) + instr->operator1TotalLevel;
 		ymChannelData->operatorVolumes[0] = tmp < 0x80 ? tmp : 0x7F;
 		tmp = carrierOrModulatorTableLookup(instr->voiceDefinition.getOperator(2), l, getKeyboardLevelScaling(instr->voiceDefinition.getOperator(2), h)) + instr->operator3TotalLevel;
@@ -7113,8 +7114,8 @@ private:
 	}
 
 	// ROM Address: 0x1D6D
-	Bit8u carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition, Bit8u l, Bit8u c) {
-		static Bit8u carrierTable[8][32] = {
+	uint8_t carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition, uint8_t l, uint8_t c) {
+		static uint8_t carrierTable[8][32] = {
 			{ 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18 },
 			{ 0x1B, 0x1B, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A, 0x1A, 0x19, 0x19, 0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x16, 0x15, 0x15, 0x15, 0x15 },
 			{ 0x1E, 0x1E, 0x1D, 0x1D, 0x1C, 0x1C, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A, 0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x15, 0x15, 0x14, 0x14, 0x13, 0x13, 0x12, 0x12 },
@@ -7124,7 +7125,7 @@ private:
 			{ 0x2A, 0x28, 0x27, 0x26, 0x25, 0x24, 0x22, 0x21, 0x20, 0x1F, 0x1D, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x16, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0F, 0x0E, 0x0C, 0x0B, 0x0A, 0x09, 0x07, 0x06 },
 			{ 0x2D, 0x2B, 0x2A, 0x28, 0x27, 0x25, 0x24, 0x22, 0x21, 0x1F, 0x1E, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0E, 0x0D, 0x0B, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00 }
 		};
-		static Bit8u modulatorTable[8][32] = {
+		static uint8_t modulatorTable[8][32] = {
 			{  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8 },
 			{  9,  9,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  7,  7,  7,  7,  7,  7,  7,  7 },
 			{ 10, 10, 10, 10, 10, 10,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  8,  7,  7,  7,  7,  7,  7,  6,  6,  6,  6,  6,  6 },
@@ -7142,8 +7143,8 @@ private:
 	}
 
 	// ROM Address: 0x1D84
-	Bit8u getKeyboardLevelScaling(OperatorDefinition* operatorDefinition, Bit8u h) {
-		static Bit8u scale[4][64] = {
+	uint8_t getKeyboardLevelScaling(OperatorDefinition* operatorDefinition, uint8_t h) {
+		static uint8_t scale[4][64] = {
 			{
 				// Linear attenuation with increasing KC#; maximum of -24 dB per 8 octaves.
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x05, 0x07, 0x0A, 0x0C, 0x0F, 0x11, 0x13, 0x16,
@@ -7173,29 +7174,29 @@ private:
 				0x09, 0x07, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 			}
 		};
-		Bit16u val = operatorDefinition->getKeyboardLevelScalingDepth() * scale[(operatorDefinition->getKeyboardLevelScaling() << 1) | operatorDefinition->getKeyboardLevelScalingType()][h];
+		uint16_t val = operatorDefinition->getKeyboardLevelScalingDepth() * scale[(operatorDefinition->getKeyboardLevelScaling() << 1) | operatorDefinition->getKeyboardLevelScalingType()][h];
 		return val >> 8;
 	}
 
 	// ROM Address: 0x20BA
-	void setNodeParameterMasterOutputLevel(Bit8u val) {
+	void setNodeParameterMasterOutputLevel(uint8_t val) {
 		log_debug("setNodeParameterMasterOutputLevel()");
 		m_masterOutputLevel = (val ^ 0xFF) & 0x7F;
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			setInstrumentVolume(getActiveInstrumentParameters(i));
 		}
 	}
 
 	// ROM Address: 0x20D4
-	void setInstrumentParameter_OutputLevel(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_OutputLevel(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_OutputLevel(0x%02X)", val);
 		instr->instrumentConfiguration.setOutputLevel(val);
 		setInstrumentVolume(instr);
 	}
 
 	// ROM Address: 0x20DA
-	void setInstrumentParameterVolume(InstrumentParameters* instr, Bit8u val) {
-		static Bit8u volume_table[64] = {
+	void setInstrumentParameterVolume(InstrumentParameters* instr, uint8_t val) {
+		static uint8_t volume_table[64] = {
 			0x3F, 0x3D, 0x3B, 0x39, 0x37, 0x35, 0x33, 0x31, 0x2F, 0x2D, 0x2B, 0x29, 0x27, 0x25, 0x23, 0x21,
 			0x20, 0x1F, 0x1E, 0x1D, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x17, 0x16, 0x15, 0x14, 0x13, 0x12, 0x11,
 			0x10, 0x0F, 0x0F, 0x0E, 0x0E, 0x0D, 0x0D, 0x0C, 0x0C, 0x0B, 0x0B, 0x0A, 0x0A, 0x09, 0x09, 0x08,
@@ -7207,7 +7208,7 @@ private:
 
 	// ROM Address: 0x212C
 	void ym_allOperators_sendKeyScaleAndAttackRate(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		Bit8u ymRegister = ymChannelData->channelNumber + 0x80; // KS and AR
+		uint8_t ymRegister = ymChannelData->channelNumber + 0x80; // KS and AR
 		ym_singleOperator_sendKeyScaleAndAttackRate(instr->voiceDefinition.getOperator(0), ymRegister + 0*8);
 		ym_singleOperator_sendKeyScaleAndAttackRate(instr->voiceDefinition.getOperator(2), ymRegister + 1*8);
 		ym_singleOperator_sendKeyScaleAndAttackRate(instr->voiceDefinition.getOperator(1), ymRegister + 2*8);
@@ -7215,15 +7216,15 @@ private:
 	}
 
 	// ROM Address: 0x2155
-	void ym_singleOperator_sendKeyScaleAndAttackRate(OperatorDefinition* operatorDefinition, Bit8u ymRegister) {
-		static Bit8s byte_2194[4][16] = {
+	void ym_singleOperator_sendKeyScaleAndAttackRate(OperatorDefinition* operatorDefinition, uint8_t ymRegister) {
+		static int8_t byte_2194[4][16] = {
 			{ 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0  },
 			{-4,  -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   1,   1,   2,   2,   3,   3,   4  },
 			{-8,  -6,  -5,  -4,  -3,  -2,  -1,   0,   0,   1,   2,   3,   4,   5,   6,   8  },
 			{-12, -10, -8,  -6,  -4,  -2,  -1,   0,   0,   1,   2,   4,   6,   8,   10,  12 }
 		};
 		if (operatorDefinition->getVelocitySensitivityToAttackRate()) {
-			Bit8s a = operatorDefinition->getAttackRate() + byte_2194[operatorDefinition->getVelocitySensitivityToAttackRate()][(m_lastMidiOnOff_KeyVelocity.value >> 3) & 0x0F];
+			int8_t a = operatorDefinition->getAttackRate() + byte_2194[operatorDefinition->getVelocitySensitivityToAttackRate()][(m_lastMidiOnOff_KeyVelocity.value >> 3) & 0x0F];
 			if (a < 0 || a < 2) {
 				a = 2;
 			} else if (a >= 0x20) {
@@ -7238,15 +7239,15 @@ private:
 	// ROM Address: 0x21D4
 	void ym_key_off_on_all_channels() {
 		startMusicProcessing();
-		for (Bit8u i = 0; i < 0x20; i++) {
+		for (uint8_t i = 0; i < 0x20; i++) {
 			sendToYM2151_no_interrupts_allowed(0xE0 + i, 0x0F); // D1L (First Decay Level) / RR (Release Rate)
 		}
 		// KEY OFF on all channels
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			sendToYM2151_no_interrupts_allowed(0x08, i); // (SN)^KON / (CH #)
 		}
 
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			setDefaultInstrumentParameters(getActiveInstrumentParameters(i));
 		}
 		stopMusicProcessing();
@@ -7261,8 +7262,8 @@ private:
 		setInstrumentParameterSostenutoOnOff(instr, 0);
 		executeMidiCommand_PitchBender(instr, PitchbenderValueLSB(0x40), PitchbenderValueMSB(0x00)); // set the pitchbender value in the center (no pitchbend)
 		setInstrumentParameterVolume(instr, 0x7F);
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				resetYmChannelData(instr, &m_ymChannelData[i]);
 			}
@@ -7283,8 +7284,8 @@ private:
 		startMusicProcessing();
 		instr->__lastMidiOnOff_Duration_XX.setEmpty();
 		instr->__lastMidiOnOff_Duration_YY.setEmpty();
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				ym_noteOFF_fastRelease(instr, getYmChannelData(i));
 			}
@@ -7293,11 +7294,11 @@ private:
 	}
 
 	// ROM Address: 0x2284
-	void setInstrumentParameter_AllNotesOFF(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameter_AllNotesOFF(InstrumentParameters* instr, uint8_t val) {
 		instr->__lastMidiOnOff_Duration_XX.setEmpty();
 		instr->__lastMidiOnOff_Duration_YY.setEmpty();
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				ym_noteOFF(instr, getYmChannelData(i));
 			}
@@ -7319,13 +7320,13 @@ private:
 	// When the music card receives a stop message (0xFC), the MIDI real-time clock stops counting and stops playing notes started by an event list
 	void processSystemRealTimeMessage_FC() {
 		startMusicProcessing();
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* inst = getActiveInstrumentParameters(i);
 			if (inst->channelMask && (inst->instrumentConfiguration.polyMonoMode & 1)) {
 				realTimeMessage_FC_MonoMode(inst);
 			}
 		}
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (m_ymChannelData[i].remainingDuration.value != 0) {
 				noteOffDueToMidiRealTimeClock(&m_ymChannelData[i]);
 			}
@@ -7352,14 +7353,14 @@ private:
 	void processSystemRealTimeMessage_F8() {
 		if ((m_systemRealtimeMessageInProgress & 1) == 0) { return; }
 		startMusicProcessing();
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(i);
 			if (instr->channelMask && (instr->instrumentConfiguration.polyMonoMode & 1) == 1) {
 				sub_2377(instr);
 			}
 		}
 		// Do we need to stop any playing channels that had a duration specified?
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (m_ymChannelData[i].remainingDuration.value) {
 				m_ymChannelData[i].remainingDuration.value--;
 				if (m_ymChannelData[i].remainingDuration.value == 0) {
@@ -7402,13 +7403,13 @@ private:
 
 	// ROM Address: 0x23E7
 	// val is either 0 (OFF) or 127 (ON)
-	void setInstrumentParameterSustainOnOff(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterSustainOnOff(InstrumentParameters* instr, uint8_t val) {
 		instr->__sustain = 1;
 		if (val & 0b01000000) { return; }
 		instr->__sustain = 0;
 		// since the sustain "pedal" was release, we might need to turn off a couple of notes that are still playing
-		Bit8u channelMask = instr->channelMask;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t channelMask = instr->channelMask;
+		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				// turn off the note only if it's been "released" (note was turned off)
 				if (m_ymChannelData[i].__flag6 && !m_ymChannelData[i].__hasActiveNoteON) {
@@ -7420,11 +7421,11 @@ private:
 
 	// ROM Address: 0x2418
 	// val is either 0 (OFF) or 127 (ON)
-	void setInstrumentParameterSostenutoOnOff(InstrumentParameters* instr, Bit8u val) {
+	void setInstrumentParameterSostenutoOnOff(InstrumentParameters* instr, uint8_t val) {
 		if ((val & 0b01000000) == 0) {
 			// Sostenuto OFF
-			Bit8u channelMask = instr->channelMask;
-			for (Bit8u i = 0; i < 8; i++) {
+			uint8_t channelMask = instr->channelMask;
+			for (uint8_t i = 0; i < 8; i++) {
 				if (channelMask & (1 << i)) {
 					m_ymChannelData[i].__hasActiveSostenuto = 0;
 					if (m_ymChannelData[i].__flag6 && !m_ymChannelData[i].__hasActiveNoteON) {
@@ -7434,8 +7435,8 @@ private:
 			}
 		} else {
 			// Sostenuto ON
-			Bit8u channelMask = instr->channelMask;
-			for (Bit8u i = 0; i < 8; i++) {
+			uint8_t channelMask = instr->channelMask;
+			for (uint8_t i = 0; i < 8; i++) {
 				if (channelMask & (1 << i)) {
 					if (m_ymChannelData[i].__hasActiveNoteON) {
 						m_ymChannelData[i].__hasActiveSostenuto = 1;
@@ -7449,10 +7450,10 @@ private:
 	void noActiveChannels_forward_to_midiout(InstrumentParameters* instr) {
 		if ((instr->overflowToMidiOut & 1) == 0) { return; }
 
-		Bit8u durationMSB = m_lastMidiOnOff_Duration.value >> 7;
-		Bit8u durationLSB = m_lastMidiOnOff_Duration.value & 0x7F;
-		Bit8u noteNumber = m_lastMidiOnOff_FractionAndNoteNumber.note.value;
-		Bit8u fraction = (m_lastMidiOnOff_FractionAndNoteNumber.fraction.value >> 1) & 0x7F;
+		uint8_t durationMSB = m_lastMidiOnOff_Duration.value >> 7;
+		uint8_t durationLSB = m_lastMidiOnOff_Duration.value & 0x7F;
+		uint8_t noteNumber = m_lastMidiOnOff_FractionAndNoteNumber.note.value;
+		uint8_t fraction = (m_lastMidiOnOff_FractionAndNoteNumber.fraction.value >> 1) & 0x7F;
 
 		if (durationMSB || durationLSB) {
 			return forwardToMidiOut_7bytes(instr, noteNumber, fraction, durationLSB, durationMSB);
@@ -7467,7 +7468,7 @@ private:
 	}
 
 	// ROM Address: 0x249B
-	void forwardToMidiOut_5bytes(InstrumentParameters* instr, Bit8u noteNumber, Bit8u fraction) {
+	void forwardToMidiOut_5bytes(InstrumentParameters* instr, uint8_t noteNumber, uint8_t fraction) {
 		m_outgoingMusicCardMessageData[0] = 0xFF;
 		m_outgoingMusicCardMessageData[1] = 0x10 | instr->instrumentConfiguration.midiChannel;
 		m_outgoingMusicCardMessageData[2] = noteNumber;
@@ -7477,7 +7478,7 @@ private:
 	}
 
 	// ROM Address: 0x24B6
-	void forwardToMidiOut_7bytes(InstrumentParameters* instr, Bit8u noteNumber, Bit8u fraction, Bit8u durationLSB, Bit8u durationMSB) {
+	void forwardToMidiOut_7bytes(InstrumentParameters* instr, uint8_t noteNumber, uint8_t fraction, uint8_t durationLSB, uint8_t durationMSB) {
 		m_outgoingMusicCardMessageData[0] = 0xFF;
 		m_outgoingMusicCardMessageData[1] = 0x20 | instr->instrumentConfiguration.midiChannel;
 		m_outgoingMusicCardMessageData[2] = noteNumber;
@@ -7489,8 +7490,8 @@ private:
 	}
 
 	// ROM Address: 0x24D2
-	void forwardToMidiOut(Bit8u nrOfBytes) {
-		sendMidiResponse_to_MidiOut((Bit8u*)&m_outgoingMusicCardMessageData, nrOfBytes);
+	void forwardToMidiOut(uint8_t nrOfBytes) {
+		sendMidiResponse_to_MidiOut((uint8_t*)&m_outgoingMusicCardMessageData, nrOfBytes);
 	}
 
 	// ROM Address: 0x24D8
@@ -7534,7 +7535,7 @@ private:
 			//log_debug("executeMidiCommand_NoteONOFF_internal() - note OFF");
 			// note OFF
 			// find the same note and turn it off
-			for (Bit8u i = 0; i < 8; i++) {
+			for (uint8_t i = 0; i < 8; i++) {
 				if (instr->channelMask & (1 << i) && m_ymChannelData[i].__hasActiveNoteON) {
 					if (m_ymChannelData[i].originalFractionAndNoteNumber == FractionalNote(noteNumber, fraction)) {
 						return ym_noteOFF(instr, &m_ymChannelData[i]);
@@ -7545,8 +7546,8 @@ private:
 		}
 		// note ON
 		//log_debug("executeMidiCommand_NoteONOFF_internal() - note ON");
-		Bit8u lastUsedChannel = instr->lastUsedChannel;
-		for (Bit8u i = 0; i < 8; i++) {
+		uint8_t lastUsedChannel = instr->lastUsedChannel;
+		for (uint8_t i = 0; i < 8; i++) {
 			lastUsedChannel = leftRotate8(lastUsedChannel);
 			if (instr->channelMask & lastUsedChannel) {
 				YmChannelData* ymChannelData = getYmChannelData_for_first_active_channel(instr->channelMask & lastUsedChannel);
@@ -7560,7 +7561,7 @@ private:
 		if (m_chainMode == CHAIN_MODE_ENABLED) { return noActiveChannels_forward_to_midiout(instr); }
 		// note ON and chain mode DISABLED
 		//log_debug("executeMidiCommand_NoteONOFF_internal() - note ON and chain mode DISABLED");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			lastUsedChannel = leftRotate8(lastUsedChannel);
 			if (instr->channelMask & lastUsedChannel) {
 				YmChannelData* ymChannelData = getYmChannelData_for_first_active_channel(instr->channelMask & lastUsedChannel);
@@ -7586,16 +7587,16 @@ private:
 	}
 
 	// ROM Address: 0x259E
-	YmChannelData* getYmChannelData_for_first_active_channel(Bit8u channelMask) {
-		Bit8u channelNr = 0;
+	YmChannelData* getYmChannelData_for_first_active_channel(uint8_t channelMask) {
+		uint8_t channelNr = 0;
 		while ((channelMask & (1 << channelNr)) == 0) { channelNr++; }
 		return &m_ymChannelData[channelNr];
 	}
 
 	// ROM Address: 0x25A8
 	void applySub25B9_for_first_active_channel_because_MONO_MODE(InstrumentParameters* instr, FractionalNote val) {
-		Bit8u channelMask = instr->channelMask;
-		Bit8u channelNr = 0;
+		uint8_t channelMask = instr->channelMask;
+		uint8_t channelNr = 0;
 		while ((channelMask & (1 << channelNr)) == 0) { channelNr++; }
 		if (m_lastMidiOnOff_KeyVelocity.value) {
 			// key ON
@@ -7676,8 +7677,8 @@ private:
 
 	// ROM Address: 0x26B4
 	// value to be ORed to ymCmdValue (0x00 or 0x0F)
-	void ym_setFirstDecayLevelAndReleaseRate(InstrumentParameters* instr, YmChannelData* ymChannelData, Bit8u val) {
-		Bit8u ymReg = ymChannelData->channelNumber + 0xE0;
+	void ym_setFirstDecayLevelAndReleaseRate(InstrumentParameters* instr, YmChannelData* ymChannelData, uint8_t val) {
+		uint8_t ymReg = ymChannelData->channelNumber + 0xE0;
 		// Send D1L (First Decay Level) and RR (Release Rate)
 		sendToYM2151_no_interrupts_allowed(ymReg + 0*8, instr->voiceDefinition.getOperator(0)->getReleaseRateSustainLevel() | val);
 		sendToYM2151_no_interrupts_allowed(ymReg + 1*8, instr->voiceDefinition.getOperator(2)->getReleaseRateSustainLevel() | val);
@@ -7772,7 +7773,7 @@ private:
 	}
 
 	// ROM Address: 0x2766
-	void SoundProcessor_processMidiByte(Bit8u midiData) {
+	void SoundProcessor_processMidiByte(uint8_t midiData) {
 		//log("SoundProcessor_processMidiByte - processing %02X", midiData);
 		switch (m_soundProcessorMidiInterpreterState & 0xF0) {
 			case 0x00: return SoundProcessor_processMidiCommandByte(midiData);
@@ -7789,12 +7790,12 @@ private:
 	}
 
 	// ROM Address: 0x2798
-	void SoundProcessor_processMidiCommandByte(Bit8u midiCommandByte) {
+	void SoundProcessor_processMidiCommandByte(uint8_t midiCommandByte) {
 		log_debug("SoundProcessor_processMidiCommandByte - processing %02X", midiCommandByte);
 		m_soundProcessorMidiInterpreterState = 0;
 		if (midiCommandByte < 0x80) { return; }
 		if (midiCommandByte == 0xF0) {
-			m_soundProcessorSysExCurrentMatchPtr = (Bit8u*)&m_sp_SysExStateMatchTable;
+			m_soundProcessorSysExCurrentMatchPtr = (uint8_t*)&m_sp_SysExStateMatchTable;
 			m_soundProcessorMidiInterpreterSysExState = 0;
 			m_soundProcessorMidiInterpreterState = 0x30;
 		} else {
@@ -7815,7 +7816,7 @@ private:
 	}
 
 	// ROM Address: 0x27F4
-	void SoundProcessor_processMidiByte_3ByteMidiCommandState(Bit8u midiData) {
+	void SoundProcessor_processMidiByte_3ByteMidiCommandState(uint8_t midiData) {
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 		if ((m_soundProcessorMidiInterpreterState & 0x0F) == 0) {
 			//log("SoundProcessor_processMidiByte_3ByteMidiCommandState - first data byte - processing %02X", midiData);
@@ -7832,7 +7833,7 @@ private:
 	}
 
 	// ROM Address: 0x27F4
-	void SoundProcessor_processMidiByte_2ByteMidiCommandState(Bit8u midiData) {
+	void SoundProcessor_processMidiByte_2ByteMidiCommandState(uint8_t midiData) {
 		log_debug("SoundProcessor_processMidiByte_2ByteMidiCommandState - processing %02X", midiData);
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 		m_sp_MidiDataOfMidiCommandInProgress[1] = midiData;
@@ -7843,16 +7844,16 @@ private:
 	// ROM Address: 0x2800
 	void SoundProcessor_executeMidiCommand() {
 		//log("SoundProcessor_executeMidiCommand");
-		Bit8u midiChannel = m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F;
+		uint8_t midiChannel = m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F;
 		if (m_midiChannelToAssignedInstruments[midiChannel][0] == 0xFF && m_chainMode == CHAIN_MODE_ENABLED && m_sp_MidiDataOfMidiCommandInProgress[0] < 0xA0) {
 			if (m_sp_MidiDataOfMidiCommandInProgress[0] == 0x90) {
 				m_sp_MidiDataOfMidiCommandInProgress[0] = (m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F) | 0x90;
 				m_sp_MidiDataOfMidiCommandInProgress[2] = 0;
 			}
-			return sendMidiResponse_to_MidiOut((Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, 3);
+			return sendMidiResponse_to_MidiOut((uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, 3);
 		}
-		Bit8u i = 0;
-		Bit8u instrNr;
+		uint8_t i = 0;
+		uint8_t instrNr;
 		while ((instrNr = m_midiChannelToAssignedInstruments[midiChannel][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			ym2151_executeMidiCommand(instr, m_sp_MidiDataOfMidiCommandInProgress[0], m_sp_MidiDataOfMidiCommandInProgress[1], m_sp_MidiDataOfMidiCommandInProgress[2]);
@@ -7871,7 +7872,7 @@ private:
 			 byte 4: 0ddddddd : Duration2 LSB
 			 byte 5: 0ddddddd : Duration2 MSB / d=0: Note ON/OFF Only
 		*/
-		Bit8u midiChannel = m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F;
+		uint8_t midiChannel = m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F;
 		if (m_midiChannelToAssignedInstruments[midiChannel][0] == 0xFF && m_chainMode == CHAIN_MODE_ENABLED) {
 			m_outgoingMusicCardMessageData[0] = 0xFF;
 			m_outgoingMusicCardMessageData[1] = (m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F) | 0x20;
@@ -7879,10 +7880,10 @@ private:
 			m_outgoingMusicCardMessageData[3] = m_sp_MidiDataOfMidiCommandInProgress[2];
 			m_outgoingMusicCardMessageData[4] = m_sp_MidiDataOfMidiCommandInProgress[3];
 			m_outgoingMusicCardMessageData[5] = m_sp_MidiDataOfMidiCommandInProgress[4];
-			return sendMidiResponse_to_MidiOut((Bit8u*)&m_outgoingMusicCardMessageData, m_outgoingMusicCardMessageData[4] == 0 && m_outgoingMusicCardMessageData[5] == 0 ? 3 : 5);
+			return sendMidiResponse_to_MidiOut((uint8_t*)&m_outgoingMusicCardMessageData, m_outgoingMusicCardMessageData[4] == 0 && m_outgoingMusicCardMessageData[5] == 0 ? 3 : 5);
 		}
-		Bit8u i = 0;
-		Bit8u instrNr;
+		uint8_t i = 0;
+		uint8_t instrNr;
 		while ((instrNr = m_midiChannelToAssignedInstruments[midiChannel][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			executeMidiCommand_NoteONOFF_internal_guard(
@@ -7902,8 +7903,8 @@ private:
 		if (m_sp_MidiDataOfMidiCommandInProgress[0] >= 0x40) {
 			m_sp_MidiDataOfMidiCommandInProgress[1] = (m_sp_MidiDataOfMidiCommandInProgress[2] << 4) | m_sp_MidiDataOfMidiCommandInProgress[1];
 		}
-		Bit8u i = 0;
-		Bit8u instrNr;
+		uint8_t i = 0;
+		uint8_t instrNr;
 		while ((instrNr = m_midiChannelToAssignedInstruments[m_sysEx_ChannelNumber][i]) != 0xFF) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(instrNr);
 			setInstrumentParameter(instr, m_sp_MidiDataOfMidiCommandInProgress[0], m_sp_MidiDataOfMidiCommandInProgress[1]);
@@ -7913,7 +7914,7 @@ private:
 	}
 
 	// ROM Address: 0x2913
-	void SoundProcessor_processSysExStates(Bit8u midiData) {
+	void SoundProcessor_processSysExStates(uint8_t midiData) {
 		//log("SoundProcessor_processSysExStates - processing %02X", midiData);
 		if (m_soundProcessorMidiInterpreterState == 0x30) {
 			// midiData is the first byte after a 0xF0 (SysEx) command
@@ -7921,10 +7922,10 @@ private:
 				log_debug("SoundProcessor_processSysExStates() - unexpected midi command");
 				return SoundProcessor_processMidiCommandByte(midiData);
 			}
-			Bit8u* templateValuePtr = m_soundProcessorSysExCurrentMatchPtr;
-			Bit8u expectedMidiData = templateValuePtr[0];
+			uint8_t* templateValuePtr = m_soundProcessorSysExCurrentMatchPtr;
+			uint8_t expectedMidiData = templateValuePtr[0];
 			while (true) {
-				Bit8u actualMidiData = midiData;
+				uint8_t actualMidiData = midiData;
 				if (expectedMidiData >= 0x80) {
 					processSysExTemplateCommand(&expectedMidiData, &actualMidiData);
 				}
@@ -7991,7 +7992,7 @@ private:
 	}
 
 	// ROM Address: 0x2997
-	void processSysExTemplateCommand(Bit8u* expectedMidiData, Bit8u* actualMidiData) {
+	void processSysExTemplateCommand(uint8_t* expectedMidiData, uint8_t* actualMidiData) {
 		if ((*expectedMidiData & 0xF0) == 0xA0) {
 			// Template byte is of type ChannelNumber
 			m_sysEx_ChannelNumber = *actualMidiData & 0x0F;
@@ -8006,16 +8007,16 @@ private:
 	}
 
 	// ROM Address: 0x29C9
-	void processSysExCmd_F0_43_0n_0C(Bit8u midiData) {
+	void processSysExCmd_F0_43_0n_0C(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_0n_0C()");
 		if (m_memoryProtection == MEMORY_READONLY) { return sendResponse(0x03, CANCEL_MESSAGE); }
 		if (midiData >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeA(midiData, (Bit8u*)&m_voiceDefinitionBankCustom[0], sizeof(VoiceDefinitionBank)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeA(midiData, (uint8_t*)&m_voiceDefinitionBankCustom[0], sizeof(VoiceDefinitionBank)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		sendResponse(0x01, ACK_MESSAGE);
 	}
 
 	// ROM Address: 0x29EF
-	void processSysExCmd_InstrumentParameterChange_ByMidiChannel(Bit8u midiData) {
+	void processSysExCmd_InstrumentParameterChange_ByMidiChannel(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentParameterChange_ByMidiChannel()");
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 		switch (m_soundProcessorMidiInterpreterSysExState) {
@@ -8045,7 +8046,7 @@ private:
 	}
 
 	// ROM Address: 0x2A48
-	void processSysExCmd_F0_43_2n_0C(Bit8u midiData) {
+	void processSysExCmd_F0_43_2n_0C(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_2n_0C()");
 		if (midiData < 0x80) { return sendResponse(0x00, CANCEL_MESSAGE); }
 		if (send_midi_byte(0xF0) == WRITE_SUCCESS
@@ -8058,7 +8059,7 @@ private:
 	}
 
 	// ROM Address: 0x2A79
-	void processSysExCmd_NodeMessage_SetVoiceBankData(Bit8u midiData) {
+	void processSysExCmd_NodeMessage_SetVoiceBankData(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetVoiceBankData(%i) - begin", midiData);
 		ReadResult readResult;
 
@@ -8078,7 +8079,7 @@ private:
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
 		log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - calling receiveDataPacketTypeA(0x%02x)", readResult.data);
-		if (receiveDataPacketTypeA(readResult.data, (Bit8u*)bank, sizeof(VoiceDefinitionBank)) != READ_SUCCESS) {
+		if (receiveDataPacketTypeA(readResult.data, (uint8_t*)bank, sizeof(VoiceDefinitionBank)) != READ_SUCCESS) {
 			log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - receiveDataPacketTypeA returned ERROR");
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
@@ -8088,7 +8089,7 @@ private:
 	}
 
 	// ROM Address: 0x2AB8
-	void processSysExCmd_NodeMessage_SetConfiguration1(Bit8u midiData) {
+	void processSysExCmd_NodeMessage_SetConfiguration1(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration1()");
 		ReadResult readResult;
 
@@ -8097,7 +8098,7 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		m_activeConfiguration.deepCopyFrom((ConfigurationData*)&m_sp_MidiDataOfMidiCommandInProgress);
 		proc_1393_called_for_Reboot();
 		initMidiChannelToAssignedInstruments();
@@ -8106,7 +8107,7 @@ private:
 	}
 
 	// ROM Address: 0x2AF5
-	void processSysExCmd_NodeMessage_SetConfigurationMemory(Bit8u midiData) {
+	void processSysExCmd_NodeMessage_SetConfigurationMemory(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfigurationMemory()");
 		ReadResult readResult;
 
@@ -8118,13 +8119,13 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		config->deepCopyFrom((ConfigurationData*)&m_sp_MidiDataOfMidiCommandInProgress);
 		sendResponse(0x00, ACK_MESSAGE);
 	}
 
 	// ROM Address: 0x2B40
-	void processSysExCmd_NodeMessage_SetConfigurationRAM(Bit8u midiData) {
+	void processSysExCmd_NodeMessage_SetConfigurationRAM(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfigurationRAM()");
 		ReadResult readResult;
 
@@ -8134,12 +8135,12 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_configurationRAM, sizeof(m_configurationRAM)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_configurationRAM, sizeof(m_configurationRAM)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		sendResponse(0x01, ACK_MESSAGE);
 	}
 
 	// ROM Address: 0x2B74
-	void processSysExCmd_NodeMessage_SetConfiguration2(Bit8u midiData) {
+	void processSysExCmd_NodeMessage_SetConfiguration2(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration2()");
 		ReadResult readResult;
 
@@ -8148,18 +8149,18 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
-		Bit8u lfoSpeed = m_activeConfiguration.lfoSpeed;
-		Bit8u amplitudeModulationDepth = m_activeConfiguration.amplitudeModulationDepth;
-		Bit8u pitchModulationDepth = m_activeConfiguration.pitchModulationDepth;
-		Bit8u lfoWaveForm = m_activeConfiguration.lfoWaveForm;
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		uint8_t lfoSpeed = m_activeConfiguration.lfoSpeed;
+		uint8_t amplitudeModulationDepth = m_activeConfiguration.amplitudeModulationDepth;
+		uint8_t pitchModulationDepth = m_activeConfiguration.pitchModulationDepth;
+		uint8_t lfoWaveForm = m_activeConfiguration.lfoWaveForm;
 		memcpy(&m_activeConfiguration, &m_sp_MidiDataOfMidiCommandInProgress, sizeof(ConfigurationData)-8*sizeof(InstrumentConfiguration)); // just copy the pure configuration data without the instrumentConfigurations
 		m_activeConfiguration.lfoWaveForm = lfoWaveForm;
 		m_activeConfiguration.pitchModulationDepth = pitchModulationDepth;
 		m_activeConfiguration.amplitudeModulationDepth = amplitudeModulationDepth;
 		m_activeConfiguration.lfoSpeed = lfoSpeed;
 
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			// this copy is kind of strange. It's not copying all the bytes. So the following would not work:
 			//  m_activeConfiguration.instrumentConfigurations[m_sysEx_InstrumentNumber].copyFrom((InstrumentConfiguration*)&m_sp_MidiDataOfMidiCommandInProgress);
 			// instead we're just gonna do a memcpy
@@ -8171,7 +8172,7 @@ private:
 	}
 
 	// ROM Address: 0x2BE1
-	void processSysExCmd_InstrumentMessage_SetInstrumentVoice(Bit8u midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentVoice(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentVoice()");
 		ReadResult readResult;
 
@@ -8182,7 +8183,7 @@ private:
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
 
-		if (receiveDataPacketTypeA(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(VoiceDefinition)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeA(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(VoiceDefinition)) != READ_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		InstrumentParameters* instr = getActiveInstrumentParameters(m_sysEx_InstrumentNumber);
 		instr->voiceDefinition.deepCopyFrom((VoiceDefinition*)&m_sp_MidiDataOfMidiCommandInProgress);
 		applyInstrumentParameter(instr);
@@ -8192,7 +8193,7 @@ private:
 
 
 	// ROM Address: 0x2C26
-	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1(Bit8u midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1()");
 		ReadResult readResult;
 
@@ -8201,7 +8202,7 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(InstrumentConfiguration)) != WRITE_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, sizeof(InstrumentConfiguration)) != WRITE_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy start");
 		m_activeConfiguration.instrumentConfigurations[m_sysEx_InstrumentNumber].copyFrom((InstrumentConfiguration*)&m_sp_MidiDataOfMidiCommandInProgress);
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy end");
@@ -8212,7 +8213,7 @@ private:
 	}
 
 	// ROM Address: 0x2C77
-	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2(Bit8u midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2()");
 		ReadResult readResult;
 
@@ -8221,7 +8222,7 @@ private:
 			if (readResult.status == READ_ERROR) { logMidiError(); return sendResponse(0x00, NAK_MESSAGE); }
 		} while (readResult.status == NO_DATA);
 		if (readResult.data >= 0x80) { return sendResponse(0x02, NAK_MESSAGE); }
-		if (receiveDataPacketTypeB(readResult.data, (Bit8u*)&m_sp_MidiDataOfMidiCommandInProgress, 0x0B) != WRITE_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
+		if (receiveDataPacketTypeB(readResult.data, (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, 0x0B) != WRITE_SUCCESS) { return sendResponse(0x02, NAK_MESSAGE); }
 		// this copy is kind of strange. It's not copying all the bytes. So the following would not work:
 		//  m_activeConfiguration.instrumentConfigurations[m_sysEx_InstrumentNumber].copyFrom((InstrumentConfiguration*)&m_sp_MidiDataOfMidiCommandInProgress);
 		// instead we're just gonna do a memcpy
@@ -8233,7 +8234,7 @@ private:
 	}
 
 	// ROM Address: 0x2CC8
-	void processSysExCmd_NodeParameterChangeMessage(Bit8u midiData) {
+	void processSysExCmd_NodeParameterChangeMessage(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeParameterChangeMessage()");
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
@@ -8252,7 +8253,7 @@ private:
 	}
 
 	// ROM Address: 0x2CFD
-	void processSysExCmd_InstrumentParameterChange_ByInstrument(Bit8u midiData) {
+	void processSysExCmd_InstrumentParameterChange_ByInstrument(uint8_t midiData) {
 		log_debug("processSysExCmd_InstrumentParameterChange_ByInstrument() - begin");
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 
@@ -8283,7 +8284,7 @@ private:
 	}
 
 	// ROM Address: 0x2D65
-	void processSysExCmd_NodeDumpRequestMessage_VoiceMemoryBank(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_VoiceMemoryBank(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_VoiceMemoryBank() - start");
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			if (midiData >= 0x07) {
@@ -8311,7 +8312,7 @@ private:
 	}
 
 	// ROM Address: 0x2DAD
-	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1()");
 		ReadResult readResult;
 
@@ -8322,7 +8323,7 @@ private:
 		} while (readResult.status == NO_DATA);
 		if (readResult.data < 0x80) { return sendResponse(0x00, CANCEL_MESSAGE); }
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1() - copy start");
-		for (Bit8u i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_activeConfiguration.instrumentConfigurations[i].copyFrom(&(m_activeInstrumentParameters[i].instrumentConfiguration));
 		}
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1() - copy end");
@@ -8330,13 +8331,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x01) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)m_activeConfiguration.instrumentConfigurations, 0xA0);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)m_activeConfiguration.instrumentConfigurations, 0xA0);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x2E07
-	void processSysExCmd_NodeDumpRequestMessage_IndividualConfiguration(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_IndividualConfiguration(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_IndividualConfiguration()");
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			if (midiData >= 0x14) { return sendResponse(0x00, CANCEL_MESSAGE); }
@@ -8349,13 +8350,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x02) == WRITE_SUCCESS
 			&& send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) == WRITE_SUCCESS) {
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)getConfigurationData(m_sp_MidiDataOfMidiCommandInProgress[0]), 0xA0);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)getConfigurationData(m_sp_MidiDataOfMidiCommandInProgress[0]), 0xA0);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x2E56
-	void processSysExCmd_NodeDumpRequestMessage_ConfigurationRAM(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_ConfigurationRAM(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationRAM()");
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			m_soundProcessorMidiInterpreterSysExState = 1;
@@ -8372,7 +8373,7 @@ private:
 	}
 
 	// ROM Address: 0x2E8D
-	void processSysExCmd_NodeDumpRequestMessage_MusicCardID(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_MusicCardID(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_MusicCardID()");
 		static char CARD_NAME[16] = { 'Y','A','M','A','H','A',' ','I','B','M',' ','M','U','S','I','C' };
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
@@ -8384,13 +8385,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x04) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)&CARD_NAME, 16);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_NAME, 16);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x2ECA
-	void processSysExCmd_NodeDumpRequestMessage_MusicCardRevision(Bit8u midiData) {
+	void processSysExCmd_NodeDumpRequestMessage_MusicCardRevision(uint8_t midiData) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_MusicCardRevision()");
 		static char CARD_REV[16] = { 'r','e','l','.',' ','M','1','0','2','.','0','0','.','0','1','0' };
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
@@ -8402,13 +8403,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x05) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)&CARD_REV, 16);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_REV, 16);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x2F07
-	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer2(Bit8u midiData1) {
+	void processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer2(uint8_t midiData1) {
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer2()");
 		ReadResult readResult;
 
@@ -8426,13 +8427,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x06) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)&m_activeConfiguration, 0xA0);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&m_activeConfiguration, 0xA0);
 		}
 		SoundProcessor_processMidiCommandByte(midiData1);
 	}
 
 	// ROM Address: 0x2F5C
-	void processSysExCmd_StoreRequest_StoreConfigurationData(Bit8u midiData) {
+	void processSysExCmd_StoreRequest_StoreConfigurationData(uint8_t midiData) {
 		log_debug("processSysExCmd_StoreRequest_StoreConfigurationData()");
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			if (midiData >= 0x10) { return sendResponse(0, CANCEL_MESSAGE); }
@@ -8451,7 +8452,7 @@ private:
 	}
 
 	// ROM Address: 0x2F9C
-	void processSysExCmd_F0_43_75_0n_2i_00(Bit8u midiData) {
+	void processSysExCmd_F0_43_75_0n_2i_00(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_00");
 		ReadResult readResult;
 
@@ -8469,13 +8470,13 @@ private:
 			&& send_midi_byte(0x00) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(m_sysEx_InstrumentNumber);
-			sendDataPacketTypeAInChunksOf2048ByteBlocks((Bit8u*)&(instr->voiceDefinition), 0x40);
+			sendDataPacketTypeAInChunksOf2048ByteBlocks((uint8_t*)&(instr->voiceDefinition), 0x40);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x2FE5
-	void processSysExCmd_F0_43_75_0n_2i_01(Bit8u midiData) {
+	void processSysExCmd_F0_43_75_0n_2i_01(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_01()");
 		ReadResult readResult;
 
@@ -8493,14 +8494,14 @@ private:
 			&& send_midi_byte(0x01) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(m_sysEx_InstrumentNumber);
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)instr, 0x10);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)instr, 0x10);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x302B
 	// This method is identical to "processSysExCmd_F0_43_75_0n_2i_01"
-	void processSysExCmd_F0_43_75_0n_2i_02(Bit8u midiData) {
+	void processSysExCmd_F0_43_75_0n_2i_02(uint8_t midiData) {
 		log_debug("processSysExCmd_F0_43_75_0n_2i_02()");
 		ReadResult readResult;
 
@@ -8518,13 +8519,13 @@ private:
 			&& send_midi_byte(0x01) == WRITE_SUCCESS
 			&& send_midi_byte(0x00) == WRITE_SUCCESS) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(m_sysEx_InstrumentNumber);
-			sendDataPacketTypeBInChunksOf2048ByteBlocks((Bit8u*)instr, 0x10);
+			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)instr, 0x10);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
 	}
 
 	// ROM Address: 0x3071
-	void processSysExCmd_StoreRequest_StoreVoiceData(Bit8u midiData) {
+	void processSysExCmd_StoreRequest_StoreVoiceData(uint8_t midiData) {
 		log_debug("processSysExCmd_StoreRequest_StoreVoiceData()");
 		if (m_soundProcessorMidiInterpreterSysExState == 0x00/*SP_MidiInterpreterSysExState_InitialState*/) {
 			if (midiData >= 0x60) {
@@ -8548,7 +8549,7 @@ private:
 	}
 
 	// ROM Address: 0x30BA
-	void processSysExCmd_EventListTransferToMusicCard(Bit8u midiData) {
+	void processSysExCmd_EventListTransferToMusicCard(uint8_t midiData) {
 		log_debug("processSysExCmd_EventListTransferToMusicCard()");
 		if (midiData >= 0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 
@@ -8570,7 +8571,7 @@ private:
 	}
 
 	// ROM Address: 0x30F5
-	void processSysExCmd_EventList_NoteOFF(Bit8u midiData) {
+	void processSysExCmd_EventList_NoteOFF(uint8_t midiData) {
 		switch (m_soundProcessorMidiInterpreterSysExState) {
 		case 0x01/*SP_MidiInterpreterSysExState_0x01*/:
 			m_sp_MidiDataOfMidiCommandInProgress[1] = midiData;
@@ -8588,7 +8589,7 @@ private:
 	}
 
 	// ROM Address: 0x311C
-	void processSysExCmd_EventList_NoteONOFF(Bit8u midiData) {
+	void processSysExCmd_EventList_NoteONOFF(uint8_t midiData) {
 		switch (m_soundProcessorMidiInterpreterSysExState) {
 		case 0x11/*SP_MidiInterpreterSysExState_0x11*/:
 			m_sp_MidiDataOfMidiCommandInProgress[1] = midiData;
@@ -8609,7 +8610,7 @@ private:
 	}
 
 	// ROM Address: 0x314F
-	void processSysExCmd_EventList_NoteONOFFWithDuration(Bit8u midiData) {
+	void processSysExCmd_EventList_NoteONOFFWithDuration(uint8_t midiData) {
 		m_sp_MidiDataOfMidiCommandInProgress[m_soundProcessorMidiInterpreterSysExState - 0x20] = midiData;
 		if (m_soundProcessorMidiInterpreterSysExState == 0x25/*SP_MidiInterpreterSysExState_0x25*/) {
 			executeMidiCommand_NoteONOFFForAllAssignInstruments();
@@ -8621,7 +8622,7 @@ private:
 	}
 
 	// ROM Address: 0x316F
-	void processSysExCmd_EventList_ControlChange(Bit8u midiData) {
+	void processSysExCmd_EventList_ControlChange(uint8_t midiData) {
 		switch (m_soundProcessorMidiInterpreterSysExState) {
 		case 0x31/*SP_MidiInterpreterSysExState_0x31*/:
 			m_sp_MidiDataOfMidiCommandInProgress[1] = midiData;
@@ -8637,7 +8638,7 @@ private:
 	}
 
 	// ROM Address: 0x318C
-	void processSysExCmd_EventList_ProgramChangeAndAfterTouch(Bit8u midiData) {
+	void processSysExCmd_EventList_ProgramChangeAndAfterTouch(uint8_t midiData) {
 		m_sp_MidiDataOfMidiCommandInProgress[1] = midiData;
 		m_sp_MidiDataOfMidiCommandInProgress[2] = 0;
 		SoundProcessor_executeMidiCommand();
@@ -8645,13 +8646,13 @@ private:
 	}
 
 	// ROM Address: 0x319A
-	void processSysExCmd_EventList_PitchbenderRange(Bit8u midiData) {
+	void processSysExCmd_EventList_PitchbenderRange(uint8_t midiData) {
 		m_soundProcessorMidiInterpreterSysExState = 0x31/*SP_MidiInterpreterSysExState_0x31*/;
 		processSysExCmd_EventList_ControlChange(midiData);
 	}
 
 	// ROM Address: 0x31A1
-	void processSysExCmd_EventList_ParameterChange(Bit8u midiData) {
+	void processSysExCmd_EventList_ParameterChange(uint8_t midiData) {
 		switch (m_soundProcessorMidiInterpreterSysExState) {
 		case 0x71/*SP_MidiInterpreterSysExState_0x71*/:
 			m_sysEx_ChannelNumber = m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F;
@@ -8683,7 +8684,7 @@ private:
 	}
 
 	// ROM Address: 0x31FD
-	void processSysExCmd_ParameterListTransferToMusicCard(Bit8u midiData) {
+	void processSysExCmd_ParameterListTransferToMusicCard(uint8_t midiData) {
 		log_debug("processSysExCmd_ParameterListTransferToMusicCard()");
 		if (midiData>=0x80) { return SoundProcessor_processMidiCommandByte(midiData); }
 
@@ -8724,7 +8725,7 @@ private:
 	}
 
 	// ROM Address: 0x327F
-	void sendResponse(Bit8u errorNumber, HANDSHAKE_MESSAGE handshakingMessageNumber) {
+	void sendResponse(uint8_t errorNumber, HANDSHAKE_MESSAGE handshakingMessageNumber) {
 		logDumpError(errorNumber);
 		sendHandshakingMessage(handshakingMessageNumber); // ignore err code
 		m_soundProcessorMidiInterpreterState = 0/*SP_MidiInterpreterState_InitialState*/;
@@ -8746,7 +8747,7 @@ private:
 	}
 
 	// ROM Address: 0x32B7
-	WriteStatus sendDataPacketTypeBInChunksOf2048ByteBlocks(Bit8u* pData, Bit16u dataSize) {
+	WriteStatus sendDataPacketTypeBInChunksOf2048ByteBlocks(uint8_t* pData, uint16_t dataSize) {
 		WriteStatus writeStatus;
 		if (dataSize <= 0x0800) {
 			writeStatus = sendDataPacketTypeB(pData, dataSize);
@@ -8761,7 +8762,7 @@ private:
 	}
 
 	// ROM Address: 0x32E4
-	WriteStatus sendVoiceDefinitionBank(Bit8u instrumentBankNumber) {
+	WriteStatus sendVoiceDefinitionBank(uint8_t instrumentBankNumber) {
 		log_debug("sendVoiceDefinitionBank() - start");
 		WriteStatus writeStatus;
 
@@ -8769,14 +8770,14 @@ private:
 		log_debug("sendVoiceDefinitionBank() - bank.name %c%c%c%c%c%c", bank->name[0], bank->name[1], bank->name[2], bank->name[3], bank->name[4], bank->name[5]);
 		// send bank header (i.e. name and reserved field)
 		log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - header");
-		writeStatus = sendDataPacketTypeA((Bit8u*)bank, 0x20);
+		writeStatus = sendDataPacketTypeA((uint8_t*)bank, 0x20);
 		if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 		// send all the voice data
 		for (int i = 0; i < VOICE_DATA_PER_INSTRUMENT_BANKS; i++) {
 			log_debug("sendVoiceDefinitionBank() - waitForDataToBeSent()");
 			waitForDataToBeSent();
 			log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - data");
-			writeStatus = sendDataPacketTypeA((Bit8u*)&bank->instrumentDefinitions[i], sizeof(VoiceDefinition));
+			writeStatus = sendDataPacketTypeA((uint8_t*)&bank->instrumentDefinitions[i], sizeof(VoiceDefinition));
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 		}
 		log_debug("sendVoiceDefinitionBank() - almost end");
@@ -8786,8 +8787,8 @@ private:
 	// ROM Address: 0x3303
 	WriteStatus sendAllConfigurations() {
 		WriteStatus writeStatus;
-		for (Bit8u i = 0; i < AVAILABLE_CONFIGURATIONS; i++) {
-			writeStatus = sendDataPacketTypeB((Bit8u*)&m_configurationRAM[i], 0xA0/*sizeof(ConfigurationType)*/);
+		for (uint8_t i = 0; i < AVAILABLE_CONFIGURATIONS; i++) {
+			writeStatus = sendDataPacketTypeB((uint8_t*)&m_configurationRAM[i], 0xA0/*sizeof(ConfigurationType)*/);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			waitForDataToBeSent();
 		}
@@ -8816,7 +8817,7 @@ private:
 		}
 
 		/* Original implementation:
-		Bit16u timeout = 0;
+		uint16_t timeout = 0;
 		do {
 			if (m_midi_ReceiveSource_SendTarget & 1) {
 				// target is "system"
@@ -8837,12 +8838,12 @@ private:
 #define send_midi_byte_with_error_handling(data) writeStatus = send_midi_byte(data); if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 
 	// ROM Address: 0x3343
-	WriteStatus sendDataPacketTypeA(Bit8u* pData, Bit16u dataSize) {
+	WriteStatus sendDataPacketTypeA(uint8_t* pData, uint16_t dataSize) {
 		WriteStatus writeStatus;
-		Bit8u checksum;
+		uint8_t checksum;
 
 		// we need to double the size since we're sending two bytes per input byte
-		Bit16u numberOfBytesToSend = dataSize * 2;
+		uint16_t numberOfBytesToSend = dataSize * 2;
 
 		// send size
 		send_midi_byte_with_error_handling((numberOfBytesToSend >> 7) & 0x7F);
@@ -8851,7 +8852,7 @@ private:
 		// send data
 		checksum = 0;
 		do {
-			Bit8u dataByte = *pData;
+			uint8_t dataByte = *pData;
 			send_midi_byte_with_error_handling(dataByte & 0x0F);
 			checksum += dataByte & 0x0F;
 			send_midi_byte_with_error_handling((dataByte >> 4) & 0x0F);
@@ -8865,9 +8866,9 @@ private:
 	}
 
 	// ROM Address: 0x338D
-	WriteStatus sendDataPacketTypeB(Bit8u* pData, Bit16u dataSize) {
+	WriteStatus sendDataPacketTypeB(uint8_t* pData, uint16_t dataSize) {
 		WriteStatus writeStatus;
-		Bit8u checksum;
+		uint8_t checksum;
 
 		// send size
 		send_midi_byte_with_error_handling((dataSize >> 7) & 0x7F);
@@ -8876,7 +8877,7 @@ private:
 		// send data
 		checksum = 0;
 		do {
-			Bit8u dataByte = *pData;
+			uint8_t dataByte = *pData;
 			send_midi_byte_with_error_handling(dataByte);
 			checksum += dataByte;
 			pData++;
@@ -8890,16 +8891,16 @@ private:
 #define readMidiDataWithErrorHandling(target) do { target = readMidiData(); if (target.status == READ_ERROR) { logMidiError(); return READ_ERROR; }	} while (target.status == NO_DATA);
 
 	// ROM Address: 0x33BE
-	ReadStatus receiveDataPacketTypeA(Bit8u byteCountHigh, Bit8u* pData, Bit16u bufferSize) {
+	ReadStatus receiveDataPacketTypeA(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
 		m_receiveDataPacketTypeAState = 0;
 		return receiveDataPacketTypeA_internal(byteCountHigh, pData, bufferSize);
 	}
 
 	// ROM Address: 0x33D7
-	ReadStatus receiveDataPacketTypeA_internal(Bit8u byteCountHigh, Bit8u* pData, Bit16u bufferSize) {
+	ReadStatus receiveDataPacketTypeA_internal(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
 		ReadResult readResult;
-		Bit8u checksum;
-		Bit16u dataPacketSize;
+		uint8_t checksum;
+		uint16_t dataPacketSize;
 
 		log_debug("receiveDataPacketTypeA_internal(%02X) - begin - bufferSize=0x%X", byteCountHigh, bufferSize);
 
@@ -9022,10 +9023,10 @@ private:
 	}
 
 	// ROM Address: 0x351C
-	ReadStatus receiveDataPacketTypeB(Bit8u byteCountHigh, Bit8u* pData, Bit16u bufferSize) {
+	ReadStatus receiveDataPacketTypeB(uint8_t byteCountHigh, uint8_t* pData, uint16_t bufferSize) {
 		ReadResult readResult;
-		Bit8u checksum;
-		Bit16u dataPacketSize;
+		uint8_t checksum;
+		uint16_t dataPacketSize;
 
 		checksum = 0;
 		// read the second byte of the size
@@ -9083,7 +9084,7 @@ private:
 	}
 
 	// ROM Address: 0x3600
-	void logDumpError(Bit8u messageNr) {
+	void logDumpError(uint8_t messageNr) {
 		static char logDumpMessages[3][16] = {
 				{'d','u','m','p','/','r','e','c','e','i','v','e','d',' ','!','!'},
 				{'d','u','m','p','/','e','r','r','o','r',' ',' ',' ','!','!','!'},
@@ -9116,22 +9117,22 @@ private:
 	void initMidiChannelToAssignedInstruments() {
 		//log("initMidiChannelToAssignedInstruments() - begin");
 		// clear out the existing data
-		for (Bit8u c = 0; c < AVAILABLE_MIDI_CHANNELS; c++) {
-			for (Bit8u i = 0; i < AVAILABLE_INSTRUMENTS + 1; i++) {
+		for (uint8_t c = 0; c < AVAILABLE_MIDI_CHANNELS; c++) {
+			for (uint8_t i = 0; i < AVAILABLE_INSTRUMENTS + 1; i++) {
 				m_midiChannelToAssignedInstruments[c][i] = 0xFF;
 			}
 		}
 		// iterate through all the instruments, extract the midi channel and add it to the end of the list
 		//log("initMidiChannelToAssignedInstruments() - assign");
-		for (Bit8u i = 0; i < AVAILABLE_INSTRUMENTS; i++) {
+		for (uint8_t i = 0; i < AVAILABLE_INSTRUMENTS; i++) {
 			InstrumentParameters* curInstParams = getActiveInstrumentParameters(i);
-			Bit8u curMidiChannel = curInstParams->instrumentConfiguration.midiChannel & 0x0F;
-			Bit8u t = 0;
+			uint8_t curMidiChannel = curInstParams->instrumentConfiguration.midiChannel & 0x0F;
+			uint8_t t = 0;
 			while (m_midiChannelToAssignedInstruments[curMidiChannel][t] != 0xFF) { t++; }; // go to first 0xFF occurance
 			m_midiChannelToAssignedInstruments[curMidiChannel][t] = i;
 		}
 		log_debug("initMidiChannelToAssignedInstruments:");
-		for (Bit8u c = 0; c < AVAILABLE_MIDI_CHANNELS; c++) {
+		for (uint8_t c = 0; c < AVAILABLE_MIDI_CHANNELS; c++) {
 			log_debug("   Channel %2i: %02X %02X %02X %02X %02X %02X %02X %02X %02X", c,
 				m_midiChannelToAssignedInstruments[c][0], m_midiChannelToAssignedInstruments[c][1], m_midiChannelToAssignedInstruments[c][2],
 				m_midiChannelToAssignedInstruments[c][3], m_midiChannelToAssignedInstruments[c][4], m_midiChannelToAssignedInstruments[c][5],
@@ -9156,7 +9157,7 @@ private:
 			0xF0:ignore
 			0xFF+0xss:following byte is the new state (0xss)
 		*/
-		static const Bit8u SP_SysExStateMatchTableTemplate[] = {
+		static const uint8_t SP_SysExStateMatchTableTemplate[] = {
 			0x43,0x80,0x0C,0xFF,0x31,0x00,0x00,
 			0x43,0x80,0xF0,0x00,0x00,0x00,0x00,
 			0x43,0xA1,0x15,0xFF,0x32,0x00,0x00,
@@ -9193,8 +9194,8 @@ private:
 			0x43,0x75,0x71,0xFF,0x45,0x00,0x00,
 			0xF0,0xF0,0xF0
 		};
-		for (Bit8u i = 0; i < size(SP_SysExStateMatchTableTemplate); i++) {
-			Bit8u b = SP_SysExStateMatchTableTemplate[i];
+		for (uint8_t i = 0; i < size(SP_SysExStateMatchTableTemplate); i++) {
+			uint8_t b = SP_SysExStateMatchTableTemplate[i];
 			if (b < 0x80) {
 				// normal midi data -> keep data as-is
 			} else if (b >= 0x90) {
@@ -9400,7 +9401,7 @@ public:
 
 	Bitu readPortPIU0() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_piuPC.readPortPIU0();
+		uint8_t val = m_piuPC.readPortPIU0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9411,7 +9412,7 @@ public:
 	}
 	Bitu readPortPIU1() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_piuPC.readPortPIU1();
+		uint8_t val = m_piuPC.readPortPIU1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9424,7 +9425,7 @@ public:
 	}
 	Bitu readPortPIU2() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_piuPC.readPortPIU2();
+		uint8_t val = m_piuPC.readPortPIU2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9435,7 +9436,7 @@ public:
 	}
 	Bitu readPortPCR() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_piuPC.readPortPCR();
+		uint8_t val = m_piuPC.readPortPCR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9446,7 +9447,7 @@ public:
 	}
 	Bitu readPortCNTR0() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_timer.readPortCNTR0();
+		uint8_t val = m_timer.readPortCNTR0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9457,7 +9458,7 @@ public:
 	}
 	Bitu readPortCNTR1() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_timer.readPortCNTR1();
+		uint8_t val = m_timer.readPortCNTR1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9468,7 +9469,7 @@ public:
 	}
 	Bitu readPortCNTR2() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_timer.readPortCNTR2();
+		uint8_t val = m_timer.readPortCNTR2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9479,7 +9480,7 @@ public:
 	}
 	Bitu readPortTCWR() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_timer.readPortTCWR();
+		uint8_t val = m_timer.readPortTCWR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9490,7 +9491,7 @@ public:
 	}
 	Bitu readPortTCR() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_tcr.readPort();
+		uint8_t val = m_tcr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9502,7 +9503,7 @@ public:
 	}
 	Bitu readPortTSR() {
 		SDL_LockMutex(m_hardwareMutex);
-		Bit8u val = m_tsr.readPort();
+		uint8_t val = m_tsr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9637,7 +9638,7 @@ void IMFC_ShutDown(Section* /*sec*/) {
 }
 
 void IMFC_Init(Section* sec) {
-	IMF_LOG("IMFC_Init");
+/*	IMF_LOG("IMFC_Init");
 
 	m_loggerMutex = SDL_CreateMutex();
 
@@ -9672,4 +9673,5 @@ void IMFC_Init(Section* sec) {
 		writeHandler[0xC + i].Install(IMFC_PORT_BASE + IMFC_PORT_TSR + i, writePortTSR, IO_MB);
 	}
 	sec->AddDestroyFunction(&IMFC_ShutDown, true);
+*/
 }
