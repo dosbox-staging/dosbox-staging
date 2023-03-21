@@ -3562,9 +3562,7 @@ u8 ym2151_device::read(offs_t offset) {
 	if (offset & 1) {
 		//m_stream->update();
 		return status;
-	} else {
-		return 0xff;    /* confirmed on a real YM2151 */
-}
+	} 		return 0xff;    /* confirmed on a real YM2151 */
 }
 
 
@@ -4560,13 +4558,12 @@ private:
 				return send_midi_byte_to_System(data);
 			}
 			return WRITE_SUCCESS;
-		} else {
-			// send to midi out
+		} 			// send to midi out
 			if (m_actualMidiFlowPath.MidiIn_To_SP & 0x20) {
 				send_midi_byte_to_MidiOut(data);
 			}
 			return WRITE_SUCCESS;
-		}
+	
 	}
 
 	// ROM Address: 0x0584
@@ -6070,7 +6067,7 @@ private:
 		if (m_system_CommandInProgress >= 0xFE) {
 			send_midi_byte_to_System(0xF7);
 			return;
-		} else if (m_system_CommandInProgress == 0xF0) {
+		} if (m_system_CommandInProgress == 0xF0) {
 			return;
 		}
 		m_system_CommandInProgress = 0;
@@ -6865,14 +6862,13 @@ private:
 				result += 12 << 8; // up an octave
 			}
 			return {Note(result >> 8), Fraction(result & 0xFF)};
-		} else {
-			// adjustment is positive
+		} 			// adjustment is positive
 			uint16_t result = ((root.note.value << 8) | root.fraction.value) + ((adjustment.note.value << 8) | adjustment.fraction.value);
 			while (result >= 0x8000) {
 				result -= 12 << 8; // drop an octave
 			}
 			return {Note(result >> 8), Fraction(result & 0xFF)};
-		}
+	
 	}
 
 	// ROM Address: 0x19CE
@@ -6914,15 +6910,14 @@ private:
 			val = val * ym_getPortamentoTimeFactor(instr);
 			ymChannelData->portamentoAdjustment = FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
 			return ym_registerKey_setKeyCodeAndFraction(instr, ymChannelData);
-		} else {
-			// hl is negative
+		} 			// hl is negative
 			ymChannelData->_hasActivePortamento = 1;
 			int16_t val = hl.getuint16_t();
 			val = val >> (8 + 1);
 			val = val * ym_getPortamentoTimeFactor(instr);
 			ymChannelData->portamentoAdjustment = FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
 			return ym_registerKey_setKeyCodeAndFraction(instr, ymChannelData);
-		}
+	
 	}
 
 	// ROM Address: 0x1A8C
@@ -7194,9 +7189,8 @@ private:
 		};
 		if (operatorDefinition->getModulatorCarrierSelect()) {
 			return c + carrierTable[operatorDefinition->getVelocitySensitivityToTotalLevel()][l];
-		} else {
-			return c + modulatorTable[operatorDefinition->getVelocitySensitivityToTotalLevel()][l];
-		}
+		} 			return c + modulatorTable[operatorDefinition->getVelocitySensitivityToTotalLevel()][l];
+	
 	}
 
 	// ROM Address: 0x1D84
@@ -8673,9 +8667,8 @@ private:
 			executeMidiCommand_NoteONOFFForAllAssignInstruments();
 			m_soundProcessorMidiInterpreterSysExState = 0x00/*SP_MidiInterpreterSysExState_InitialState*/;
 			return;
-		} else {
-			m_soundProcessorMidiInterpreterSysExState++;
-		}
+		} 			m_soundProcessorMidiInterpreterSysExState++;
+	
 	}
 
 	// ROM Address: 0x316F
@@ -8795,12 +8788,11 @@ private:
 			writeStatus = sendDataPacketTypeA(pData, dataSize);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			return send_midi_byte(0xF7);
-		} else {
-			writeStatus = sendDataPacketTypeA(pData, 0x0800);
+		} 			writeStatus = sendDataPacketTypeA(pData, 0x0800);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			waitForDataToBeSent();
 			return sendDataPacketTypeAInChunksOf2048ByteBlocks(pData + 0x0800, dataSize - 0x0800);
-		}
+	
 	}
 
 	// ROM Address: 0x32B7
@@ -8810,12 +8802,11 @@ private:
 			writeStatus = sendDataPacketTypeB(pData, dataSize);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			return send_midi_byte(0xF7);
-		} else {
-			writeStatus = sendDataPacketTypeB(pData, 0x0800);
+		} 			writeStatus = sendDataPacketTypeB(pData, 0x0800);
 			if (writeStatus != WRITE_SUCCESS) { return writeStatus; }
 			waitForDataToBeSent();
 			return sendDataPacketTypeBInChunksOf2048ByteBlocks(pData + 0x0800, dataSize - 0x0800);
-		}
+	
 	}
 
 	// ROM Address: 0x32E4
