@@ -358,8 +358,8 @@ static const std::string m_noteToString[12] = {"C", "C#", "D", "D#", "E", "F", "
 struct Note {
 	uint8_t value;
 
-	Note() { value = 0; }
-	explicit Note(uint8_t v) { value = v; }
+	Note() : value(0) { }
+	explicit Note(uint8_t v) : value(v) { }
 
 	std::string toString() {
 		return m_noteToString[value % 12] + "-" + std::to_string(value / 12);
@@ -371,8 +371,8 @@ bool operator==(Note a, Note b) { return a.value == b.value; }
 struct Fraction {
 	uint8_t value;
 
-	Fraction() { value = 0; }
-	explicit Fraction(uint8_t v) { value = v; }
+	Fraction() : value(0) { }
+	explicit Fraction(uint8_t v) : value(v) { }
 };
 static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
 bool operator==(Fraction a, Fraction b) { return a.value == b.value; }
@@ -401,16 +401,16 @@ FractionalNote operator +(FractionalNote a, FractionalNote b) {
 struct KeyVelocity {
 	uint8_t value;
 
-	KeyVelocity() { value = 0; }
-	explicit KeyVelocity(uint8_t v) { value = v; }
+	KeyVelocity() : value(0) { }
+	explicit KeyVelocity(uint8_t v) : value(v) { }
 };
 static_assert(sizeof(KeyVelocity) == 1, "KeyVelocity needs to be 1 in size!");
 
 struct Duration {
 	uint16_t value;
 
-	Duration() { value = 0; }
-	explicit Duration(uint16_t v) { value = v; }
+	Duration() : value(0) { }
+	explicit Duration(uint16_t v) : value(v) { }
 	inline bool isEmpty() { return value & 0x8000; }
 	inline bool isNotEmpty() { return !isEmpty(); }
 	inline void setEmpty() { value |= 0x8000; }
@@ -421,16 +421,16 @@ static Duration ZERO_DURATION(0);
 struct PitchbenderValueMSB {
 	uint8_t value;
 
-	PitchbenderValueMSB() { value = 0; }
-	explicit PitchbenderValueMSB(uint8_t v) { value = v; }
+	PitchbenderValueMSB() : value(0) { }
+	explicit PitchbenderValueMSB(uint8_t v) : value(v) { }
 };
 static_assert(sizeof(PitchbenderValueMSB) == 1, "PitchbenderValueMSB needs to be 1 in size!");
 
 struct PitchbenderValueLSB {
 	uint8_t value;
 
-	PitchbenderValueLSB() { value = 0; }
-	explicit PitchbenderValueLSB(uint8_t v) { value = v; }
+	PitchbenderValueLSB() : value(0) { }
+	explicit PitchbenderValueLSB(uint8_t v) : value(v) { }
 };
 static_assert(sizeof(PitchbenderValueLSB) == 1, "PitchbenderValueLSB needs to be 1 in size!");
 
@@ -9370,7 +9370,7 @@ public:
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
 		m_interruptHandlerRunningCond = SDL_CreateCond();
 		m_mainThread = SDL_CreateThread(&imfMainThreadStart, "dosbox:imfc", this);
-		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, "imfc-interrupt", this);
+		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, "imfc-interrupt", this);		
 
 		// wait until we're ready to receive data... it's a workaround for now, but well....
 		while (!m_finishedBootupSequence);
