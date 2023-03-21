@@ -4020,7 +4020,7 @@ private:
 
 	template <typename ... Args>
 	void log_error(std::string format, Args const & ... args) {
-		IMF_LOG(("[%s] [ERROR] " + format).c_str(), getCurrentThreadName().c_str(), args...);
+		IMF_LOG("[%s] [ERROR] " + format, getCurrentThreadName().c_str(), args...);
 	}
 
 	void disableInterrupts() {
