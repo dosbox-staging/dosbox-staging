@@ -91,7 +91,6 @@ void PCI_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
-void IMFC_Init(Section*);
 void SBLASTER_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
@@ -923,9 +922,6 @@ void DOSBOX_Init()
 	// Deprecate the overloaded Disney setting
 	Pbool = secprop->Add_bool("disney", deprecated, false);
 	Pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
-
-	// IBM Music feature emulation
-	// (void) control->AddSection_prop("imfc", &IMFC_Init, true);
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
