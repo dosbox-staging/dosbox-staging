@@ -53,12 +53,12 @@
 
 #include <functional>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <vector>
 
 #include "dma.h"
 #include "inout.h"
-#include "math.h"
+#include <cmath>
 #include "mixer.h"
 #include "pic.h"
 #include "regs.h"
