@@ -1038,7 +1038,7 @@ private:
 	DataPin<bool> m_output;
 public:
 	explicit InverterGate(std::string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = !m_input.getValue();
 		m_output.setValue(newOutputValue);
@@ -1054,7 +1054,7 @@ private:
 	DataPin<bool> m_output;
 public:
 	explicit TriStateBuffer(std::string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
 		if (m_enableInput.getValue()) {
@@ -1074,7 +1074,7 @@ private:
 	DataPin<bool> m_output;
 public:
 	explicit AndGate(std::string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = m_input1.getValue() && m_input2.getValue();
 		m_output.setValue(newOutputValue);
@@ -1093,7 +1093,7 @@ private:
 	DataPin<bool> m_output;
 public:
 	explicit OrGate(std::string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		const bool newOutputValue = m_input1.getValue() || m_input2.getValue() || m_input3.getValue() || m_input4.getValue();
 		m_output.setValue(newOutputValue);
@@ -1114,7 +1114,7 @@ private:
 	DataPin<bool> m_output;
 public:
 	explicit DFlipFlop(std::string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
 		if (m_clearInput.getValue()) {
@@ -1346,7 +1346,7 @@ public:
 		}
 	}
 
-	void timerEvent(Bitu val) {
+	void timerEvent(Bitu  /*val*/) {
 		if (m_counter0.m_counter) {
 			// counter was initialized with a value
 			if (m_counter0.m_runningCounter > 1) {
@@ -1598,7 +1598,7 @@ public:
 			m_port2[0].setValue(int1);
 		}
 	}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		// we might need to change states
 		if (m_group0_mode == MODE1 && m_group0_port0InOut == OUTPUT && getGroup0DataAvailability() && getGroup0DataAcknowledgement()) {
 			//IMF_LOG("%s (valueChanged): setGroup0DataAvailability(false)", m_name.c_str());
@@ -1904,7 +1904,7 @@ public:
 		m_interruptLines.push_back(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	void valueChanged(bool oldValue, bool newValue) override {
+	void valueChanged(bool  /*oldValue*/, bool  /*newValue*/) override {
 		triggerCallIfNeeded();
 	}
 	void setDebug(bool val) {
@@ -4671,7 +4671,7 @@ private:
 	}
 
 	// ROM Address: 0x06E3
-	uint8_t processMidiState_00(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_00(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
@@ -4742,7 +4742,7 @@ private:
 	}
 
 	// ROM Address: 0x0728
-	uint8_t processMidiState_11(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_11(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
@@ -4753,12 +4753,12 @@ private:
 	}
 
 	// ROM Address: 0x0731
-	uint8_t processMidiState_13(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_13(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
 	// ROM Address: 0x0734
-	uint8_t processMidiState_14(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_14(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
@@ -4783,7 +4783,7 @@ private:
 	}
 
 	// ROM Address: 0x0768
-	uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(MidiDataPacket*  /*packet*/, uint8_t midiData) {
 		static const uint8_t transition[8] = { 0x19, 0x1C, 0x20, 0x26, 0x29, 0x2B, 0x2D, 0x30 };
 		return transition[(midiData>>4) & 7];
 	}
@@ -4940,7 +4940,7 @@ private:
 	}
 
 	// ROM Address: 0x082E
-	uint8_t processMidiState_40(MidiDataPacket* packet, uint8_t midiData) {
+	uint8_t processMidiState_40(MidiDataPacket*  /*packet*/, uint8_t  /*midiData*/) {
 		return 0x00;
 	}
 
@@ -4961,7 +4961,7 @@ private:
 	};
 
 	// ROM Address: 0x0831
-	void conditional_send_midi_byte_to_SP(MidiDataPacket* packet, uint8_t flow, uint8_t midiData) {
+	void conditional_send_midi_byte_to_SP(MidiDataPacket* packet, uint8_t flow, uint8_t  /*midiData*/) {
 		//log("conditional_send_midi_byte_to_SP - %02X for state %02X", midiData, packet->state);
 		if ((stateTerminationTable[packet->state].flowMask & flow) && stateTerminationTable[packet->state].totalBytes != 0) {
 			log_debug("conditional_send_midi_byte_to_SP - midi packet complete. Sending to sound processor");
@@ -6467,7 +6467,7 @@ private:
 	}
 
 	// ROM Address: 0x1647
-	void setInstrumentParameter_PolyMode(InstrumentParameters* instr, uint8_t val) {
+	void setInstrumentParameter_PolyMode(InstrumentParameters* instr, uint8_t  /*val*/) {
 		setInstrumentParameter_MonoPolyMode(instr, 0);
 	}
 
@@ -7297,7 +7297,7 @@ private:
 	}
 
 	// ROM Address: 0x2284
-	void setInstrumentParameter_AllNotesOFF(InstrumentParameters* instr, uint8_t val) {
+	void setInstrumentParameter_AllNotesOFF(InstrumentParameters* instr, uint8_t  /*val*/) {
 		instr->_lastMidiOnOff_Duration_XX.setEmpty();
 		instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		const uint8_t channelMask = instr->channelMask;
@@ -8092,7 +8092,7 @@ private:
 	}
 
 	// ROM Address: 0x2AB8
-	void processSysExCmd_NodeMessage_SetConfiguration1(uint8_t midiData) {
+	void processSysExCmd_NodeMessage_SetConfiguration1(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration1()");
 		ReadResult readResult{};
 
@@ -8128,7 +8128,7 @@ private:
 	}
 
 	// ROM Address: 0x2B40
-	void processSysExCmd_NodeMessage_SetConfigurationRAM(uint8_t midiData) {
+	void processSysExCmd_NodeMessage_SetConfigurationRAM(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_NodeMessage_SetConfigurationRAM()");
 		ReadResult readResult{};
 
@@ -8143,7 +8143,7 @@ private:
 	}
 
 	// ROM Address: 0x2B74
-	void processSysExCmd_NodeMessage_SetConfiguration2(uint8_t midiData) {
+	void processSysExCmd_NodeMessage_SetConfiguration2(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_NodeMessage_SetConfiguration2()");
 		ReadResult readResult{};
 
@@ -8175,7 +8175,7 @@ private:
 	}
 
 	// ROM Address: 0x2BE1
-	void processSysExCmd_InstrumentMessage_SetInstrumentVoice(uint8_t midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentVoice(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentVoice()");
 		ReadResult readResult{};
 
@@ -8196,7 +8196,7 @@ private:
 
 
 	// ROM Address: 0x2C26
-	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1(uint8_t midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1()");
 		ReadResult readResult{};
 
@@ -8216,7 +8216,7 @@ private:
 	}
 
 	// ROM Address: 0x2C77
-	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2(uint8_t midiData) {
+	void processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2(uint8_t  /*midiData*/) {
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration2()");
 		ReadResult readResult{};
 
@@ -9554,83 +9554,83 @@ static void check8bit(Bitu iolen) {
 	}
 }
 
-static Bitu readPortPIU0(Bitu port, Bitu iolen) {
+static Bitu readPortPIU0(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortPIU0();
 }
-static void writePortPIU0(Bitu port, Bitu val, Bitu iolen) {
+static void writePortPIU0(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortPIU0(val);
 }
-static Bitu readPortPIU1(Bitu port, Bitu iolen) {
+static Bitu readPortPIU1(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortPIU1();
 }
-static void writePortPIU1(Bitu port, Bitu val, Bitu iolen) {
+static void writePortPIU1(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortPIU1(val);
 }
-static Bitu readPortPIU2(Bitu port, Bitu iolen) {
+static Bitu readPortPIU2(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortPIU2();
 }
-static void writePortPIU2(Bitu port, Bitu val, Bitu iolen) {
+static void writePortPIU2(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortPIU2(val);
 }
-static Bitu readPortPCR(Bitu port, Bitu iolen) {
+static Bitu readPortPCR(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortPCR();
 }
-static void writePortPCR(Bitu port, Bitu val, Bitu iolen) {
+static void writePortPCR(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortPCR(val);
 }
-static Bitu readPortCNTR0(Bitu port, Bitu iolen) {
+static Bitu readPortCNTR0(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortCNTR0();
 }
-static void writePortCNTR0(Bitu port, Bitu val, Bitu iolen) {
+static void writePortCNTR0(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortCNTR0(val);
 }
-static Bitu readPortCNTR1(Bitu port, Bitu iolen) {
+static Bitu readPortCNTR1(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortCNTR1();
 }
-static void writePortCNTR1(Bitu port, Bitu val, Bitu iolen) {
+static void writePortCNTR1(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortCNTR1(val);
 }
-static Bitu readPortCNTR2(Bitu port, Bitu iolen) {
+static Bitu readPortCNTR2(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortCNTR2();
 }
-static void writePortCNTR2(Bitu port, Bitu val, Bitu iolen) {
+static void writePortCNTR2(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortCNTR2(val);
 }
-static Bitu readPortTCWR(Bitu port, Bitu iolen) {
+static Bitu readPortTCWR(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortTCWR();
 }
-static void writePortTCWR(Bitu port, Bitu val, Bitu iolen) {
+static void writePortTCWR(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortTCWR(val);
 }
-static Bitu readPortTCR(Bitu port, Bitu iolen) {
+static Bitu readPortTCR(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortTCR();
 }
-static void writePortTCR(Bitu port, Bitu val, Bitu iolen) {
+static void writePortTCR(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortTCR(val);
 }
-static Bitu readPortTSR(Bitu port, Bitu iolen) {
+static Bitu readPortTSR(Bitu iolen) {
 	check8bit(iolen);
 	return imfcSingleton->readPortTSR();
 }
-static void writePortTSR(Bitu port, Bitu val, Bitu iolen) {
+static void writePortTSR(Bitu val, Bitu iolen) {
 	check8bit(iolen);
 	imfcSingleton->writePortTSR(val);
 }
