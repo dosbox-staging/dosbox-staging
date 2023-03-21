@@ -5458,7 +5458,7 @@ private:
 	// ROM Address: 0x0D55
 	void readMidiInPortDuringInterruptHandler() {
 		SDL_LockMutex(m_hardwareMutex);
-		const uint8_t midiData = m_midi.readPort1();
+		const uint8_t midiData = PD71051::readPort1();
 		const uint8_t midiStatus = m_midi.readPort2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		if ((midiStatus & 0x38) != 0) { // 0x38 = 00111000 : bit5(FramingError), bit4(OverrunError), bit3(ParityError)
@@ -9502,7 +9502,7 @@ public:
 	}
 	Bitu readPortPCR() {
 		SDL_LockMutex(m_hardwareMutex);
-		const uint8_t val = m_piuPC.readPortPCR();
+		const uint8_t val = PD71055::readPortPCR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
@@ -9546,7 +9546,7 @@ public:
 	}
 	Bitu readPortTCWR() {
 		SDL_LockMutex(m_hardwareMutex);
-		const uint8_t val = m_timer.readPortTCWR();
+		const uint8_t val = Intel8253::readPortTCWR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
