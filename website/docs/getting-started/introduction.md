@@ -6,16 +6,21 @@ Welcome to the DOSBox Staging getting started guide!
 
 This guide will gently introduce you to the wonderful world of DOSBox through
 setting up a few example games from scratch. It's written in the spirit of
-"teaching a man how to fish", and the choice of games doesn't matter that
-much---they're only vehicles to teach you the basics that you can apply
-to any DOS game you wish to play.
+"teaching a man how to fish"---the games are only vehicles to teach you the
+basics that you can apply to any DOS game you wish to play later.
+Consequently, the choice of games doesn't matter that much (although we tried
+to pick from the all-time classics).
 
-To get the most out of this guide, don't just read the instructions but
-perform all the steps yourself! All the files you need will be provided, and
-no familiarity with IBM PCs and the MS-DOS environment is
-required---everything you need to know will be explained as we go. The only
-assumption is that you can perform basic everyday computer tasks, such as
-copying files, unpacking ZIP archives, and editing text files. 
+To get the most out of this guide, don't just *read* the instructions but
+*perform* all the steps yourself! Later chapters build on concepts introduced
+in previous ones, so *do not skip a chapter* just because you're not
+interested in a particular game! You don't have to play it if you don't want
+to; going through the setup procedure and learning how to troubleshoot various
+issues is what this is all about. All necessary files will be provided, and no
+familiarity with IBM PCs and the MS-DOS environment is required---everything
+you need to know will be explained as we go. The only assumption is that you
+can perform basic everyday computer tasks, such as copying files, unpacking
+ZIP archives, and editing text files. 
 
 The guide has been written so that everyone can follow it with ease,
 regardless of their operating system of choice (e.g., Windows users probably
@@ -32,8 +37,8 @@ If you already have other versions of DOSBox on your computer, installing
 DOSBox Staging won't interfere with them at all. Experienced users can
 certainly use multiple DOSBox variants on the same machine without problems,
 but if you're a beginner, we recommend to start with a clean slate to avoid
-confusing yourself. Uninstall all DOSBox versions from your machine first,
-then proceed with the installation steps.
+confusing yourself. Make sure you've removed all other DOSBox versions from
+your machine first, then proceed with the DOSBox Staging installation steps.
 
 <h3>Windows</h3>
 
@@ -71,7 +76,7 @@ the task.
 <h3>Windows</h3>
 
 Windows users are recommended to install the free and open-source
-[Notepad++](https://notepad-plus-plus.org/) text editor.
+[Notepad++](https://notepad-plus-plus.org/) editor.
 
 Accept the default installer options; this will give you a handly *Open with
 Notepad++* right-click context menu entry in Windows Explorer.
@@ -81,7 +86,7 @@ TODO screenshot
 <h3>macOS</h3>
 
 [TextMate](https://macromates.com/) is a free and open-source text editor
-for macOS that's perfect for the job, hence our recommendation.
+for macOS which is perfect for the job.
 
 
 !!! tip

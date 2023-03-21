@@ -3,14 +3,17 @@
 ## First steps
 
 We will set up the demo version of [Prince of Persia](), the classic
-cinematic platformer from 1990 as our first example.
+cinematic platformer from 1990 as our first example. It was a landmark game,
+and it can still provide you with countless hours of entertainment if you like
+platformers that require you to exercise that pesky gray matter a bit too.
 
 First of all, we'll create a new folder for storing all our DOS games. I'll
 use `DOS Games` throughout this guide, but you can pick any name you like.
 It's best to create this folder in your regular documents folder so DOSBox has
 full read and write access to it (don't put it in a system folder, e.g.,
-`Program Files` on Windows). Each individual game will have its own subfolder
-under `DOS Games`, so let's create our first one called `Prince of Persia`.
+`Program Files` on Windows). Each individual game will have its own dedicated
+subfolder under `DOS Games`, so let's create our first one called `Prince of
+Persia`.
 
 Now download [pop1.zip](pop1.zip) and extract its contents
 into `DOS Games/Prince of Persia`. The archive contained only two files:
@@ -24,40 +27,46 @@ Let's open the text file in our text editor!
     This is a demonstration version which only has limited functionality.  To
     obtain the full program, just access GO BB, and order it from our store.
 
-Sounds intriguing! As indicated by the second paragraph, this is a fully
-playable demo version that includes only the first two levels of the game.
-That's more than enough for our purposes here, and you can always get the full
-game later.
+I'm not quite sold on the "heart-stopping" part, but otherwise sounds
+intriguing! As indicated by the second paragraph, this is a fully playable
+demo version that includes only the first two levels of the game. That's more
+than enough for our purposes here, and you can always get the full game later.
 
 But there are no further instructions, so what should we do next? Well,
 setting up old DOS games is not all that dissimilar to solving adventure game
 puzzles. Getting past these puzzles require some logical thinking, a little
 bit of background knowledge, and an element of trial and error is occasionally
-involved as well. Luckily, this is an easy one: MS-DOS executable have the
-`exe` or `com` file extension, so looking at `pop1demo.exe` the solution is
-quite obvious: we need to try running this executable file in DOSBox!
+involved as well. Well, the user manual often helps too if you happen to own
+the original, or are able to procure a [scanned copy][pop-manual] online (most
+often you can).
+
+[pop-manual]: https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf
+
+Luckily, this is an easy one: MS-DOS executables have the `exe` or `com` file
+extension, so looking at `pop1demo.exe` the solution is quite obvious: we'll
+need to run this executable file in DOSBox!
 
 
 ## The C drive
 
-Most DOS games need a hard drive, but DOSBox doesn't have access to your
-computer's hard drive by default where your programs and documents reside---we
-need to tell it which folder to use as its "virtual DOS hard drive". This is
-called *mounting*; we *mount* a folder as the "DOS hard drive", the contents
-of which is then be available to DOSBox as the **C drive**. This might be
-familiar to Windows users; all drives in DOS are assigned to the letters of
-the English alphabet, just like in Windows, and the C drive is usually your
-first hard drive.
+Most DOS games need a hard drive as a *hard requirement* (okay, I'll show
+myself to the door...), but DOSBox doesn't have access to your computer's hard
+drive by default where your programs and documents reside---we need to tell it
+which folder to use as its "virtual DOS hard drive". This is called
+*mounting*; we *mount* a folder as the "DOS hard drive", the contents of which
+is then available to DOSBox as the **C drive**. All drives in DOS are assigned
+to the letters of the English alphabet (just like in Windows), and the C drive
+is usually your first hard drive.
 
 The recommended way to mount the C drive is to create a `drives` subfolder
 inside your game folder. This `drives` folder is a "magic" folder with a
 special purpose: all its subfolders having single-letter names are
 automatically mounted as DOS drives with the same letter. In our case, we only
-need a single C drive, so we'll create a `C` subfolder inside our `drives`
-folder (it does not make a difference if you use uppercase or lowercase `C` on
-Windows and macOS; Linux people should use lowercase `c`). We'll then copy the
-contents of the `pop1.zip` archive into `drives/C` to end up with the
-following folder structure:
+need a single C drive, so we'll create a `c` subfolder inside our `drives`
+folder (technically, it does not make a difference if you use uppercase or
+lowercase `C` on Windows and macOS; Linux people should use lowercase `c`).
+We'll then copy the files from the `pop1.zip` archive into `drives/c` to end
+up with the following folder structure:
 
 ![](images/pop-tree1.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem calc(50% - 8.5rem);" }
 
@@ -76,9 +85,9 @@ following folder structure:
 
 !!! important
 
-    If you're a Windows user, don't confuse your *real* C drive where your
+    If you're a Windows user, do not confuse your *real* C drive where your
     operating system and programs are stored with the "virtual DOS C drive" of
-    DOSBox. It's important to understand the distinction between these two as
+    DOSBox. It is important to understand the distinction between these two as
     they are completely separate concepts---DOSBox will *not* see the contents
     of your real C drive by default (or the contents of any of your other
     drives, for the matter).
@@ -86,21 +95,21 @@ following folder structure:
 
 ## Starting DOSBox
 
-Okay, with our C drive set up and ready to go, now we need to start DOSBox
-from our `DOS Games/Prince of Persia` folder. This is accomplished slightly
-differently on each platform:
+Okay, with our C drive set up and ready to go, the next step is to start
+DOSBox from our `DOS Games/Prince of Persia` folder. This is accomplished
+slightly differently on each platform:
 
 **Windows**
 
 If you have used the installer with the default options to set up DOSBox (and
 it's highly recommended to do so while you're still learning the ropes),
-right-click on the `Prince of Persia` folder in Windows Explorer and select
-the *Start DOSBox from this folder* in the context menu.
+simply right-click on the `Prince of Persia` folder in Windows Explorer and
+select the *Start DOSBox from this folder* in the context menu.
 
 **macOS**
 
-1. Mount the DOSBox installer `.dmg` image file
-1. Copy the *Start DOSBox Staging* icon from the appearing window into the `Prince of Persia` folder
+1. Mount the DOSBox installer `.dmg` image file.
+1. Copy the *Start DOSBox Staging* icon from the appearing window into the `Prince of Persia` folder.
 1. Right-click or <kbd>Ctrl</kbd>-click the icon, then select the topmost
    *Open* menu item.
 1. A dialog with the following text will appear: **macOS cannot verify the
@@ -359,6 +368,7 @@ should have at this point:
 Starting up DOSBox from the `Prince of Persia` folder should now launch the
 game right away without any manual intervention!
 
-So far so good---now let's see how we can use the advanced features offered by
-DOSBox Staging to our advantage!
+
+## When things go wrong
+
 
