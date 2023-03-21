@@ -63,7 +63,6 @@
 #include "math.h"
 #include "regs.h"
 #include "SDL_thread.h"
-using namespace std;
 
 #define IMFC_RATE 44100
 #define IMFC_PORT_BASE 0x2A20
@@ -91,7 +90,7 @@ using namespace std;
 SDL_mutex *m_loggerMutex;
 
 template <typename ... Args>
-void IMF_LOG(string format, Args const & ... args) {
+void IMF_LOG(std::string format, Args const & ... args) {
 	SDL_LockMutex(m_loggerMutex);
 	printf((format + "\n").c_str(), args...);
 	SDL_UnlockMutex(m_loggerMutex);
@@ -216,7 +215,7 @@ struct BufferFlags {
 
 template <typename BufferDataType> struct CyclicBufferState {
 private:
-	const string m_name;
+	const std::string m_name;
 	SDL_mutex* m_mutex;
 	volatile bool m_locked;
 	volatile unsigned int lastReadByteIndex;
@@ -245,7 +244,7 @@ private:
 	inline void setDataCleared() { flags.setDataCleared(); }
 
 public:
-	CyclicBufferState(string name, unsigned int bufferSize) : m_name(name), m_mutex(SDL_CreateMutex()), m_locked(false), m_bufferSize(bufferSize), m_debug(false) {}
+	CyclicBufferState(std::string name, unsigned int bufferSize) : m_name(name), m_mutex(SDL_CreateMutex()), m_locked(false), m_bufferSize(bufferSize), m_debug(false) {}
 
 	void setDebug(bool debug) {
 		m_debug = debug;
@@ -351,7 +350,7 @@ struct MidiDataPacket {
 };
 static_assert(sizeof(MidiDataPacket) == 0x20, "MidiDataPacket needs to be 0x20 in size!");
 
-static const string m_noteToString[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+static const std::string m_noteToString[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 struct Note {
 	uint8_t value;
@@ -359,8 +358,8 @@ struct Note {
 	Note() { value = 0; }
 	explicit Note(uint8_t v) { value = v; }
 
-	string toString() {
-		return m_noteToString[value % 12] + "-" + to_string(value / 12);
+	std::string toString() {
+		return m_noteToString[value % 12] + "-" + std::to_string(value / 12);
 	}
 };
 static_assert(sizeof(Note) == 1, "Note needs to be 1 in size!");
@@ -935,7 +934,7 @@ public:
 
 template <typename DataType> class DataProvider {
 private:
-	vector<DataChangedConsumer<DataType>*> m_consumers;
+	std::vector<DataChangedConsumer<DataType>*> m_consumers;
 protected:
 	void notifyConsumers(DataType oldValue, DataType newValue) {
 		for (unsigned int i = 0; i < m_consumers.size(); i++) {
@@ -953,12 +952,12 @@ public:
 template <typename DataType> class DataContainer : public DataProvider<DataType> {
 private:
 	bool m_debug;
-	string m_name;
+	std::string m_name;
 	DataType m_value;
 public:
-	DataContainer(string name, DataType inititalValue) : m_debug(false), m_name(name), m_value(inititalValue) {}
-	string getName() { return m_name; }
-	virtual DataType getValue() { return m_value; }
+	DataContainer(std::string name, DataType inititalValue) : m_debug(false), m_name(name), m_value(inititalValue) {}
+	std::string getName() { return m_name; }
+	DataType getValue() override { return m_value; }
 	void setValue(DataType newValue) {
 		DataType oldValue = m_value;
 		if (oldValue != newValue) {
@@ -974,11 +973,11 @@ public:
 
 template <typename DataType> class InputPin {
 private:
-	string m_name = {};
+	std::string m_name = {};
 public:
 	InputPin() = default;
-	InputPin(string name) : m_name(name) {}
-	string getName() { return m_name; }
+	InputPin(std::string name) : m_name(name) {}
+	std::string getName() { return m_name; }
 	virtual DataType getValue() = 0;
 };
 
@@ -986,9 +985,9 @@ template <typename DataType> class DataDrivenInputPin : public InputPin<DataType
 private:
 	DataProvider<DataType>* m_dataProvider;
 public:
-	DataDrivenInputPin(string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
+	DataDrivenInputPin(std::string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
 	void connect(DataProvider<DataType>* source) { m_dataProvider = source; }
-	virtual DataType getValue() {
+	DataType getValue() override {
 		if (!m_dataProvider) {
 			IMF_LOG("Pin %s is not connected (DataDrivenInputPin.getValue)", this->getName().c_str());
 			return false;
@@ -1001,9 +1000,9 @@ template <typename DataType> class DataPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType> m_dataContainer;
 public:
-	DataPin(string name, DataType initialValue) : InputPin<DataType>(name), m_dataContainer(name, initialValue) {}
+	DataPin(std::string name, DataType initialValue) : InputPin<DataType>(name), m_dataContainer(name, initialValue) {}
 	DataProvider<DataType>* getDataProvider() { return &m_dataContainer; }
-	virtual DataType getValue() { return m_dataContainer.getValue(); }
+	DataType getValue() override { return m_dataContainer.getValue(); }
 	void setValue(DataType val) { m_dataContainer.setValue(val); }
 	void setDebug(bool debug) { m_dataContainer.setDebug(debug); }
 };
@@ -1012,9 +1011,9 @@ template <typename DataType> class InputOutputPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType>* m_dataContainer;
 public:
-	InputOutputPin(string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
+	InputOutputPin(std::string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
 	void connect(DataContainer<DataType>* dataContainer) { m_dataContainer = dataContainer; }
-	virtual DataType getValue() {
+	DataType getValue() override {
 		if (!m_dataContainer) {
 			IMF_LOG("Pin %s is not connected (InputOutputPin.getValue)", this->getName().c_str());
 			return false;
@@ -1035,8 +1034,8 @@ private:
 	DataDrivenInputPin<bool> m_input;
 	DataPin<bool> m_output;
 public:
-	InverterGate(string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	InverterGate(std::string name) : m_input(name+".IN"), m_output(name + ".OUT", false) {}
+	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = !m_input.getValue();
 		m_output.setValue(newOutputValue);
@@ -1051,8 +1050,8 @@ private:
 	DataDrivenInputPin<bool> m_enableInput;
 	DataPin<bool> m_output;
 public:
-	TriStateBuffer(string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	TriStateBuffer(std::string name) : m_dataInput(name+".DATA"), m_enableInput(name+".ENABLE"), m_output(name + ".OUT", false) {}
+	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
 		if (m_enableInput.getValue()) {
@@ -1071,8 +1070,8 @@ private:
 	DataDrivenInputPin<bool> m_input2;
 	DataPin<bool> m_output;
 public:
-	AndGate(string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	AndGate(std::string name) : m_input1(name+".IN1"), m_input2(name + ".IN2"), m_output(name + ".OUT", false) {}
+	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_input1.getValue() && m_input2.getValue();
 		m_output.setValue(newOutputValue);
@@ -1090,8 +1089,8 @@ private:
 	DataDrivenInputPin<bool> m_input4;
 	DataPin<bool> m_output;
 public:
-	OrGate(string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	OrGate(std::string name) : m_input1(name + ".IN1"), m_input2(name + ".IN2"), m_input3(name + ".IN3"), m_input4(name + ".IN4"), m_output(name + ".OUT", false) {}
+	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_input1.getValue() || m_input2.getValue() || m_input3.getValue() || m_input4.getValue();
 		m_output.setValue(newOutputValue);
@@ -1111,8 +1110,8 @@ private:
 	DataDrivenInputPin<bool> m_clearInput;
 	DataPin<bool> m_output;
 public:
-	DFlipFlop(string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	DFlipFlop(std::string name) : m_dataInput(name + ".DATA"), m_clockInput(name + ".CLK"), m_clearInput(name + ".CLR"), m_output(name + ".OUT", false) {}
+	void valueChanged(bool oldValue, bool newValue) override {
 		// inputs have changed: generate the new output
 		bool newOutputValue = m_output.getValue();
 		if (m_clearInput.getValue()) {
@@ -1143,7 +1142,7 @@ private:
 	DataPin<bool> m_totalIrqMask;
 	DataPin<bool> m_irqBufferEnable;
 public:
-	TotalControlRegister(string name) :
+	TotalControlRegister(std::string name) :
 		m_timerAClear(name+".timerAClear", false),
 		m_timerBClear(name + ".timerBClear", false),
 		m_timerAEnable(name + ".timerAEnable", false),
@@ -1200,7 +1199,7 @@ enum CounterReadSource { COUNTERREADSOURCE_LIVE_1, COUNTERREADSOURCE_LIVE_2, COU
 enum CounterWriteTarget { COUNTERWRITETARGET_BYTE1, COUNTERWRITETARGET_BYTE2 };
 
 struct CounterData {
-	string m_name;
+	std::string m_name;
 	CounterMode m_counterMode;
 	unsigned int m_counter;
 	unsigned int m_runningCounter;
@@ -1208,7 +1207,7 @@ struct CounterData {
 	uint8_t m_tmpWrite;
 	CounterReadSource m_nextReadSource;
 	CounterWriteTarget m_nextWriteTarget;
-	CounterData(string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
+	CounterData(std::string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
 	void writeCounterByte(uint8_t val) {
 		switch (m_nextWriteTarget) {
 			case COUNTERWRITETARGET_BYTE1:
@@ -1244,7 +1243,7 @@ struct CounterData {
 
 class Intel8253 {
 private:
-	string m_name;
+	std::string m_name;
 	bool m_debug;
 	DataPin<bool> m_timerA;
 	DataPin<bool> m_timerB;
@@ -1256,7 +1255,7 @@ private:
 		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
 	}
 public:
-	Intel8253(string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
+	Intel8253(std::string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
 		registerNextEvent(); // FIXME
 	}
 	DataProvider<bool>* getTimerA() { return m_timerA.getDataProvider(); }
@@ -1382,13 +1381,13 @@ private:
 	DataDrivenInputPin<bool> m_timerBStatus;
 	DataDrivenInputPin<bool> m_totalCardStatus;
 public:
-	TotalStatusRegister(string name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
+	TotalStatusRegister(std::string name) : m_timerAStatus(name+".TAS"), m_timerBStatus(name + ".TBS"), m_totalCardStatus(name + ".TCS") {}
 
 	void connectTimerAStatus(DataProvider<bool>* dataProvider) { m_timerAStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
 	void connectTimerBStatus(DataProvider<bool>* dataProvider) { m_timerBStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
 	void connectTotalCardStatus(DataProvider<bool>* dataProvider) { m_totalCardStatus.connect(dataProvider); dataProvider->notifyOnChange(this); }
 
-	virtual void valueChanged(bool oldValue, bool newValue) {}
+	void valueChanged(bool oldValue, bool newValue) override {}
 
 	uint8_t readPort() {
 		uint8_t value = (m_timerAStatus.getValue() ? 0x01 : 0x00) | (m_timerBStatus.getValue() ? 0x02 : 0x00) | (m_totalCardStatus.getValue() ? 0x80 : 0x00);
@@ -1408,7 +1407,7 @@ public:
 	enum GroupMode { MODE0, MODE1, MODE2 };
 
 private:
-	string m_name;
+	std::string m_name;
 	// group 0 control
 	GroupMode m_group0_mode;
 	PortInOut m_group0_port0InOut;
@@ -1555,7 +1554,7 @@ private:
 	}
 
 public:
-	PD71055(string name) :
+	PD71055(std::string name) :
 			m_name(name),
 			m_port0(name + ".p0"),
 			m_port1(name + ".p1"),
@@ -1596,7 +1595,7 @@ public:
 			m_port2[0].setValue(int1);
 		}
 	}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	void valueChanged(bool oldValue, bool newValue) override {
 		// we might need to change states
 		if (m_group0_mode == MODE1 && m_group0_port0InOut == OUTPUT && getGroup0DataAvailability() && getGroup0DataAcknowledgement()) {
 			//IMF_LOG("%s (valueChanged): setGroup0DataAvailability(false)", m_name.c_str());
@@ -1837,13 +1836,13 @@ public:
 
 class IrqController : public DataChangedConsumer<bool> {
 private:
-	string m_name;
+	std::string m_name;
 	bool m_enabled;
 	bool m_debug;
 	bool m_interruptOutput;
-	vector<DataProvider<bool>*> m_interruptLines;
-	function<void(void)> m_callbackOnLowToHigh;
-	function<void(void)> m_callbackOnHighToLow;
+	std::vector<DataProvider<bool>*> m_interruptLines;
+	std::function<void(void)> m_callbackOnLowToHigh;
+	std::function<void(void)> m_callbackOnHighToLow;
 
 	bool atLeastOneInterruptLineIsHigh() {
 		bool result = false;
@@ -1881,7 +1880,7 @@ private:
 		}
 	}
 public:
-	IrqController(string name, function<void(void)> callbackOnLowToHigh, function<void(void)> callbackOnToHighToLow) : m_name(name), m_debug(false), m_enabled(false), m_interruptOutput(false), m_callbackOnLowToHigh(callbackOnLowToHigh), m_callbackOnHighToLow(callbackOnToHighToLow) {}
+	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(name), m_debug(false), m_enabled(false), m_interruptOutput(false), m_callbackOnLowToHigh(callbackOnLowToHigh), m_callbackOnHighToLow(callbackOnToHighToLow) {}
 	void enableInterrupts() {
 		if (m_enabled == true) { return; }
 		if (m_debug) {
@@ -1902,7 +1901,7 @@ public:
 		m_interruptLines.push_back(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	virtual void valueChanged(bool oldValue, bool newValue) {
+	void valueChanged(bool oldValue, bool newValue) override {
 		triggerCallIfNeeded();
 	}
 	void setDebug(bool val) {
@@ -3948,24 +3947,24 @@ private:
 		return SDL_ThreadID() == SDL_GetThreadID(m_interruptThread);
 	}
 
-	string getCurrentThreadName() {
+	std::string getCurrentThreadName() {
 		if (currentThreadIsMainThread()) { return "MAIN"; }
 		if (currentThreadIsInterruptThread()) { return "INTERRUPT"; }
 		return "DOSBOX";
 	}
 
 	template <typename ... Args>
-	void log_debug(string format, Args const & ... args) {
+	void log_debug(std::string format, Args const & ... args) {
 		//IMF_LOG(("[%s] [DEBUG] " + format).c_str(), getCurrentThreadName().c_str(), args...);
 	}
 
 	template <typename ... Args>
-	void log_info(string format, Args const & ... args) {
+	void log_info(std::string format, Args const & ... args) {
 		//IMF_LOG(("[%s] [INFO] " + format).c_str(), getCurrentThreadName().c_str(), args...);
 	}
 
 	template <typename ... Args>
-	void log_error(string format, Args const & ... args) {
+	void log_error(std::string format, Args const & ... args) {
 		IMF_LOG(("[%s] [ERROR] " + format).c_str(), getCurrentThreadName().c_str(), args...);
 	}
 
@@ -9194,7 +9193,7 @@ private:
 			0x43,0x75,0x71,0xFF,0x45,0x00,0x00,
 			0xF0,0xF0,0xF0
 		};
-		for (uint8_t i = 0; i < size(SP_SysExStateMatchTableTemplate); i++) {
+		for (uint8_t i = 0; i < sizeof(SP_SysExStateMatchTableTemplate); i++) {
 			uint8_t b = SP_SysExStateMatchTableTemplate[i];
 			if (b < 0x80) {
 				// normal midi data -> keep data as-is
@@ -9365,8 +9364,8 @@ public:
 		m_interruptHandlerRunning = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
 		m_interruptHandlerRunningCond = SDL_CreateCond();
-		m_mainThread = SDL_CreateThread(&imfMainThreadStart, this);
-		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, this);
+		m_mainThread = SDL_CreateThread(&imfMainThreadStart, "dosbox:imfc", this);
+		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, "imfc-interrupt", this);
 
 		// wait until we're ready to receive data... it's a workaround for now, but well....
 		while (!m_finishedBootupSequence);
@@ -9524,6 +9523,7 @@ public:
 		m_timer.timerEvent(val);
 	}
 
+	~MusicFeatureCard() override {
 	~MusicFeatureCard() {
 		SDL_KillThread(m_mainThread);
 	}
@@ -9536,7 +9536,7 @@ public:
 static MusicFeatureCard* imfcSingleton;
 static IO_ReadHandleObject readHandler[16];
 static IO_WriteHandleObject writeHandler[16];
-static MixerObject MixerChan;
+//static MixerObject MixerChan;
 
 static void Intel8253_TimerEvent(Bitu val) {
 	imfcSingleton->onTimerEvent(val);
