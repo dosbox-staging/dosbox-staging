@@ -1356,7 +1356,7 @@ public:
 	}
 
 	void timerEvent(Bitu  /*val*/) {
-		if (m_counter0.m_counter != 0u) {
+		if (m_counter0.m_counter != 0U) {
 			// counter was initialized with a value
 			if (m_counter0.m_runningCounter > 1) {
 				// normal case -> decrease the counter
@@ -2547,7 +2547,7 @@ void ym2151_device::init_tables() {
 
 void ym2151_device::YM2151Operator::key_on(uint32_t key_set, uint32_t eg_cnt) {
 	//IMF_LOG("ym2151_device::YM2151Operator::key_on");
-	if (key == 0u) {
+	if (key == 0U) {
 		phase = 0;            /* clear phase */
 		state = EG_ATT;       /* KEY ON = attack */
 		//IMF_LOG("ym2151_device - operator now in state EG_ATT");
@@ -2564,9 +2564,9 @@ void ym2151_device::YM2151Operator::key_on(uint32_t key_set, uint32_t eg_cnt) {
 
 void ym2151_device::YM2151Operator::key_off(uint32_t key_set) {
 	//IMF_LOG("ym2151_device::YM2151Operator::key_off");
-	if (key != 0u) {
+	if (key != 0U) {
 		key &= ~key_set;
-		if (key == 0u) {
+		if (key == 0U) {
 			if (state > EG_REL) {
 				state = EG_REL; /* KEY OFF = release */
 				//IMF_LOG("ym2151_device - operator now in state EG_REL");
@@ -3188,7 +3188,7 @@ void ym2151_device::chan_calc(unsigned int chan) {
 
 	*op->mem_connect = op->mem_value;   /* restore delayed sample (MEM) value to m2 or c2 */
 
-	if (op->ams != 0u) {
+	if (op->ams != 0U) {
 		AM = lfa << (op->ams - 1);
 }
 	env = volume_calc(op);
@@ -3206,7 +3206,7 @@ void ym2151_device::chan_calc(unsigned int chan) {
 
 		op->fb_out_curr = 0;
 		if (env < ENV_QUIET) {
-			if (op->fb_shift == 0u) {
+			if (op->fb_shift == 0U) {
 				out = 0;
 }
 			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
@@ -3243,7 +3243,7 @@ void ym2151_device::chan7_calc() {
 
 	*op->mem_connect = op->mem_value;   /* restore delayed sample (MEM) value to m2 or c2 */
 
-	if (op->ams != 0u) {
+	if (op->ams != 0U) {
 		AM = lfa << (op->ams - 1);
 }
 	env = volume_calc(op);
@@ -3261,7 +3261,7 @@ void ym2151_device::chan7_calc() {
 
 		op->fb_out_curr = 0;
 		if (env < ENV_QUIET) {
-			if (op->fb_shift == 0u) {
+			if (op->fb_shift == 0U) {
 				out = 0;
 }
 			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
@@ -3279,14 +3279,14 @@ void ym2151_device::chan7_calc() {
 }
 
 	env = volume_calc(op + 3);    /* C2 */
-	if ((noise & 0x80) != 0u) {
+	if ((noise & 0x80) != 0U) {
 		uint32_t noiseout = 0;
 
 		noiseout = 0;
 		if (env < 0x3ff) {
 			noiseout = (env ^ 0x3ff) * 2;   /* range of the YM2151 noise output is -2044 to 2040 */
 }
-		chanout[7] += ((noise_rng & 0x10000) != 0u ? noiseout : -noiseout); /* bit 16 -> output */
+		chanout[7] += ((noise_rng & 0x10000) != 0U ? noiseout : -noiseout); /* bit 16 -> output */
 	} else {
 		if (env < ENV_QUIET) {
 			chanout[7] += op_calc(op + 3, env, c2);
@@ -3313,7 +3313,7 @@ void ym2151_device::advance_eg() {
 		do {
 			switch (op->state) {
 			case EG_ATT:    /* attack phase */
-				if ((eg_cnt & ((1 << op->eg_sh_ar) - 1)) == 0u) {
+				if ((eg_cnt & ((1 << op->eg_sh_ar) - 1)) == 0U) {
 					op->volume += (~op->volume *
 						(eg_inc[op->eg_sel_ar + ((eg_cnt >> op->eg_sh_ar) & 7)])
 						) >> 4;
@@ -3328,7 +3328,7 @@ void ym2151_device::advance_eg() {
 				break;
 
 			case EG_DEC:    /* decay phase */
-				if ((eg_cnt & ((1 << op->eg_sh_d1r) - 1)) == 0u) {
+				if ((eg_cnt & ((1 << op->eg_sh_d1r) - 1)) == 0U) {
 					op->volume += eg_inc[op->eg_sel_d1r + ((eg_cnt >> op->eg_sh_d1r) & 7)];
 
 					if (op->volume >= op->d1l) {
@@ -3340,7 +3340,7 @@ void ym2151_device::advance_eg() {
 				break;
 
 			case EG_SUS:    /* sustain phase */
-				if ((eg_cnt & ((1 << op->eg_sh_d2r) - 1)) == 0u) {
+				if ((eg_cnt & ((1 << op->eg_sh_d2r) - 1)) == 0U) {
 					op->volume += eg_inc[op->eg_sel_d2r + ((eg_cnt >> op->eg_sh_d2r) & 7)];
 
 					if (op->volume >= MAX_ATT_INDEX) {
@@ -3353,7 +3353,7 @@ void ym2151_device::advance_eg() {
 				break;
 
 			case EG_REL:    /* release phase */
-				if ((eg_cnt & ((1 << op->eg_sh_rr) - 1)) == 0u) {
+				if ((eg_cnt & ((1 << op->eg_sh_rr) - 1)) == 0U) {
 					op->volume += eg_inc[op->eg_sel_rr + ((eg_cnt >> op->eg_sh_rr) & 7)];
 
 					if (op->volume >= MAX_ATT_INDEX) {
@@ -3367,7 +3367,7 @@ void ym2151_device::advance_eg() {
 			}
 			op++;
 			i--;
-		} while (i != 0u);
+		} while (i != 0U);
 	}
 }
 
@@ -3463,7 +3463,7 @@ void ym2151_device::advance() {
 	noise_p += noise_f;
 	i = (noise_p >> 16);     /* number of events (shifts of the shift register) */
 	noise_p &= 0xffff;
-	while (i != 0u) {
+	while (i != 0U) {
 		uint32_t j = 0;
 		j = ((noise_rng ^ (noise_rng >> 3)) & 1) ^ 1;
 		noise_rng = (j << 16) | (noise_rng >> 1);
@@ -3475,7 +3475,7 @@ void ym2151_device::advance() {
 	op = &oper[0]; /* CH 0 M1 */
 	i = 8;
 	do {
-		if (op->pms != 0u)    /* only when phase modulation from LFO is enabled for this channel */
+		if (op->pms != 0U)    /* only when phase modulation from LFO is enabled for this channel */
 		{
 			int32_t mod_ind = lfp;       /* -128..+127 (8bits signed) */
 			if (op->pms < 6) {
@@ -3507,7 +3507,7 @@ void ym2151_device::advance() {
 
 		op += 4;
 		i--;
-	} while (i != 0u);
+	} while (i != 0U);
 
 
 	/* CSM is calculated *after* the phase generator calculations (verified on real chip)
@@ -3519,7 +3519,7 @@ void ym2151_device::advance() {
 	* the sound played is the same as after normal KEY ON.
 	*/
 
-	if (csm_req != 0u)           /* CSM KEYON/KEYOFF seqeunce request */
+	if (csm_req != 0U)           /* CSM KEYON/KEYOFF seqeunce request */
 	{
 		if (csm_req == 2)    /* KEY ON */
 		{
@@ -3529,7 +3529,7 @@ void ym2151_device::advance() {
 				op->key_on(2, eg_cnt);
 				op++;
 				i--;
-			} while (i != 0u);
+			} while (i != 0U);
 			csm_req = 1;
 		} else                    /* KEY OFF */
 		{
@@ -3539,7 +3539,7 @@ void ym2151_device::advance() {
 				op->key_off(2);
 				op++;
 				i--;
-			} while (i != 0u);
+			} while (i != 0U);
 			csm_req = 0;
 		}
 	}
@@ -4548,7 +4548,7 @@ private:
 
 	// ROM Address: 0x055B
 	void decreaseReadMidiDataTimeout() {
-		if (m_readMidiDataTimeoutCountdown != 0u) { m_readMidiDataTimeoutCountdown--; }
+		if (m_readMidiDataTimeoutCountdown != 0U) { m_readMidiDataTimeoutCountdown--; }
 	}
 
 	// ROM Address: 0x0565
@@ -5119,7 +5119,7 @@ private:
 		if (m_incomingMusicCardMessage_Expected == 0) { return; }
 		m_incomingMusicCardMessageData[m_incomingMusicCardMessage_Size] = messageByte;
 		m_incomingMusicCardMessage_Size++;
-		if (--m_incomingMusicCardMessage_Expected != 0u) { return; };
+		if (--m_incomingMusicCardMessage_Expected != 0U) { return; };
 		log_debug("IMF - reached expected message size... dispatching");
 		startMusicProcessing();
 		switch (m_incomingMusicCardMessageData[0] - 0xD0) {
@@ -5379,14 +5379,14 @@ private:
 	void finalizeMusicProcessing() {
 		while (true) {
 			disableInterrupts();
-			if (m_ya2151_timerA_counter != 0u) {
+			if (m_ya2151_timerA_counter != 0U) {
 				m_ya2151_timerA_counter--;
 				enableInterrupts();
 				ym_updateAllCurrentlyPlayingByPortamentoAdjustment();
 				if (m_ya2151_timerA_counter == 0) {
 					ym_updateKeyCodeAndFractionOnAllChannels();
 				}
-			} else if (m_ya2151_timerB_counter != 0u) {
+			} else if (m_ya2151_timerB_counter != 0U) {
 				m_ya2151_timerB_counter--;
 				enableInterrupts();
 				logSuccess();
@@ -5510,7 +5510,7 @@ private:
 
 	// ROM Address: 0x0DF4
 	void resetMidiInActiveSenseCodeCountdownIfZero() {
-		if (m_bufferFromMidiIn_lastActiveSenseCodeCountdown != 0u) { return; }
+		if (m_bufferFromMidiIn_lastActiveSenseCodeCountdown != 0U) { return; }
 		m_bufferFromMidiIn_lastActiveSenseCodeCountdown = 0x20;
 	}
 
@@ -5518,7 +5518,7 @@ private:
 	void decreaseMidiInActiveSenseCounter() {
 		if (m_bufferFromMidiIn_lastActiveSenseCodeCountdown == 0) { return; }
 		m_bufferFromMidiIn_lastActiveSenseCodeCountdown--;
-		if (m_bufferFromMidiIn_lastActiveSenseCodeCountdown != 0u) { return; }
+		if (m_bufferFromMidiIn_lastActiveSenseCodeCountdown != 0U) { return; }
 		// active sense was not received within 300ms -> flag it
 		m_bufferFromMidiInState.setOfflineErrorFlag();
 	}
@@ -5606,7 +5606,7 @@ private:
 		}
 		pData++;
 		size--;
-		while (size != 0u) {
+		while (size != 0U) {
 			send_midi_byte_to_MidiOut(*pData);
 			pData++;
 			size--;
@@ -5675,15 +5675,15 @@ private:
 	static void wait(uint16_t delayCounter) {
 		do {
 			uint8_t i = 61;
-			while ((i--) != 0u) {;
+			while ((i--) != 0U) {;
 }
-		} while (--delayCounter != 0u);
+		} while (--delayCounter != 0U);
 	}
 
 	// ROM Address: 0x0F7E
 	void sendActiveSenseCodeToMidiOutAfterTimeout() {
 		if (m_midiOutActiveSensingCountdown == 0) { return; }
-		if (--m_midiOutActiveSensingCountdown != 0u) {
+		if (--m_midiOutActiveSensingCountdown != 0U) {
 			sendActiveSenseCodeToMidiOut();
 		}
 	}
@@ -5998,7 +5998,7 @@ private:
 		}
 		pData++;
 		size--;
-		while (size != 0u) {
+		while (size != 0U) {
 			if (send_midi_byte_to_System(*pData) != WRITE_SUCCESS) { return WRITE_ERROR; }
 			pData++;
 			size--;
@@ -6048,7 +6048,7 @@ private:
 			if (send_card_byte_to_System(*pData) != WRITE_SUCCESS) { return WRITE_ERROR; }
 			pData++;
 			size--;
-		} while (size != 0u);
+		} while (size != 0U);
 		m_runningCommandOnSystemInTimerCountdown = 0x0A;
 		return WRITE_SUCCESS;
 	}
@@ -6550,7 +6550,7 @@ private:
 
 	// ROM Address: 0x1694
 	static bool isLfoModeEnabled(InstrumentParameters* instr) {
-		return (instr->voiceDefinition.getLfoLoadMode() != 0u) && (instr->instrumentConfiguration.numberOfNotes != 0u);
+		return (instr->voiceDefinition.getLfoLoadMode() != 0U) && (instr->instrumentConfiguration.numberOfNotes != 0U);
 	}
 
 	// ROM Address: 0x169E
@@ -6657,7 +6657,7 @@ private:
 	// ROM Address: 0x1731
 	void setInstrumentParameterController(InstrumentParameters* instr, uint8_t controlType, uint8_t val) {
 		if (instr->instrumentConfiguration.pmdController != controlType) { return; }
-		if (instr->instrumentConfiguration.numberOfNotes != 0u) {
+		if (instr->instrumentConfiguration.numberOfNotes != 0U) {
 			setNodeParameterPitchModDepth(val);
 		}
 	}
@@ -6684,7 +6684,7 @@ private:
 		if (val >= 2) { return; }
 		instr->instrumentConfiguration.lfoEnable = val;
 		// TODO: the parameter condition seems weird
-		sub_1792(instr, 0x38, val != 0u ? 0 : instr->voiceDefinition.getModulationSensitivity()); // set PhaseModulationSensitivity (bits6&5&4) and AmplitudeModumationSensitivity (bits1&0)
+		sub_1792(instr, 0x38, val != 0U ? 0 : instr->voiceDefinition.getModulationSensitivity()); // set PhaseModulationSensitivity (bits6&5&4) and AmplitudeModumationSensitivity (bits1&0)
 	}
 
 	// ROM Address: 0x1778
@@ -6887,7 +6887,7 @@ private:
 		else if (val == 0x7F) { instr->_portamento = 1; }
 		else { return; }
 
-		if (instr->_portamento && (instr->instrumentConfiguration.portamentoTime != 0u)) { return; }
+		if (instr->_portamento && (instr->instrumentConfiguration.portamentoTime != 0U)) { return; }
 		for (uint8_t i = 0; i < 8; i++) {
 			if ((instr->channelMask & (1 << i)) != 0) {
 				ym_finishPortamento(&m_ymChannelData[i]);
@@ -7086,28 +7086,28 @@ private:
 		uint8_t operatorVolume = 0;
 		// set operator 0
 		operatorVolume = ymChannelData->operatorVolumes[0];
-		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 0*8, 0x80 | operatorVolume);
 		// set operator 2
 		operatorVolume = ymChannelData->operatorVolumes[2];
-		if (instr->voiceDefinition.getOperator(2)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(2)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 1*8, 0x80 | operatorVolume);
 		// set operator 1
 		operatorVolume = ymChannelData->operatorVolumes[1];
-		if (instr->voiceDefinition.getOperator(1)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(1)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 2*8, 0x80 | operatorVolume);
 		// set operator 3
 		operatorVolume = ymChannelData->operatorVolumes[3];
-		if (instr->voiceDefinition.getOperator(3)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(3)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
@@ -7121,28 +7121,28 @@ private:
 		const uint8_t ymRegister = ymChannelData->channelNumber + 0x60; // TL (Total Level)
 		uint8_t operatorVolume = 0;
 		operatorVolume = ymChannelData->operatorVolumes[0];
-		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(0)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 0 * 8, operatorVolume);
 		// set operator 2
 		operatorVolume = ymChannelData->operatorVolumes[2];
-		if (instr->voiceDefinition.getOperator(2)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(2)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 1 * 8, operatorVolume);
 		// set operator 1
 		operatorVolume = ymChannelData->operatorVolumes[1];
-		if (instr->voiceDefinition.getOperator(1)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(1)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
 		sendToYM2151_no_interrupts_allowed(ymRegister + 2 * 8, operatorVolume);
 		// set operator 3
 		operatorVolume = ymChannelData->operatorVolumes[3];
-		if (instr->voiceDefinition.getOperator(3)->getModulatorCarrierSelect() != 0u) {
+		if (instr->voiceDefinition.getOperator(3)->getModulatorCarrierSelect() != 0U) {
 			operatorVolume += volume;
 			if (operatorVolume >= 0x80) { operatorVolume = 0x7f; }
 		}
@@ -7189,7 +7189,7 @@ private:
 			{ 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 10,  9,  9,  9,  8,  8,  8,  8,  7,  7,  7,  6,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2 },
 			{ 15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10,  9,  9,  8,  8,  8,  8,  7,  7,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2,  1,  0 }
 		};
-		if (operatorDefinition->getModulatorCarrierSelect() != 0u) {
+		if (operatorDefinition->getModulatorCarrierSelect() != 0U) {
 			return c + carrierTable[operatorDefinition->getVelocitySensitivityToTotalLevel()][l];
 		} 			return c + modulatorTable[operatorDefinition->getVelocitySensitivityToTotalLevel()][l];
 	
@@ -7276,7 +7276,7 @@ private:
 			{-8,  -6,  -5,  -4,  -3,  -2,  -1,   0,   0,   1,   2,   3,   4,   5,   6,   8  },
 			{-12, -10, -8,  -6,  -4,  -2,  -1,   0,   0,   1,   2,   4,   6,   8,   10,  12 }
 		};
-		if (operatorDefinition->getVelocitySensitivityToAttackRate() != 0u) {
+		if (operatorDefinition->getVelocitySensitivityToAttackRate() != 0U) {
 			int8_t a = operatorDefinition->getAttackRate() + byte_2194[operatorDefinition->getVelocitySensitivityToAttackRate()][(m_lastMidiOnOff_KeyVelocity.value >> 3) & 0x0F];
 			if (a < 0 || a < 2) {
 				a = 2;
@@ -7375,7 +7375,7 @@ private:
 		startMusicProcessing();
 		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* inst = getActiveInstrumentParameters(i);
-			if ((inst->channelMask != 0u) && ((inst->instrumentConfiguration.polyMonoMode & 1) != 0)) {
+			if ((inst->channelMask != 0U) && ((inst->instrumentConfiguration.polyMonoMode & 1) != 0)) {
 				realTimeMessage_FC_MonoMode(inst);
 			}
 		}
@@ -7391,10 +7391,10 @@ private:
 
 	// ROM Address: 0x22F4
 	static void realTimeMessage_FC_MonoMode(InstrumentParameters* instr) {
-		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && (instr->_lastMidiOnOff_Duration_YY.value != 0u)) {
+		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && (instr->_lastMidiOnOff_Duration_YY.value != 0U)) {
 			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		}
-		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && (instr->_lastMidiOnOff_Duration_XX.value != 0u)) {
+		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && (instr->_lastMidiOnOff_Duration_XX.value != 0U)) {
 			instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
 			instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = instr->_lastMidiOnOff_FractionAndNoteNumber_YYY;
 			instr->_lastMidiOnOff_Duration_YY.setEmpty();
@@ -7408,13 +7408,13 @@ private:
 		startMusicProcessing();
 		for (uint8_t i = 0; i < 8; i++) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(i);
-			if ((instr->channelMask != 0u) && (instr->instrumentConfiguration.polyMonoMode & 1) == 1) {
+			if ((instr->channelMask != 0U) && (instr->instrumentConfiguration.polyMonoMode & 1) == 1) {
 				sub_2377(instr);
 			}
 		}
 		// Do we need to stop any playing channels that had a duration specified?
 		for (auto & i : m_ymChannelData) {
-			if (i.remainingDuration.value != 0u) {
+			if (i.remainingDuration.value != 0U) {
 				i.remainingDuration.value--;
 				if (i.remainingDuration.value == 0) {
 					noteOffDueToMidiRealTimeClock(&i);
@@ -7426,13 +7426,13 @@ private:
 
 	// ROM Address: 0x2377
 	static void sub_2377(InstrumentParameters* instr) {
-		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && (instr->_lastMidiOnOff_Duration_YY.value != 0u)) {
+		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && (instr->_lastMidiOnOff_Duration_YY.value != 0U)) {
 			instr->_lastMidiOnOff_Duration_YY.value--;
 			if (instr->_lastMidiOnOff_Duration_YY.value == 0) {
 				instr->_lastMidiOnOff_Duration_YY.setEmpty();
 			}
 		}
-		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && (instr->_lastMidiOnOff_Duration_XX.value != 0u)) {
+		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && (instr->_lastMidiOnOff_Duration_XX.value != 0U)) {
 			instr->_lastMidiOnOff_Duration_XX.value--;
 			if (instr->_lastMidiOnOff_Duration_XX.value == 0) {
 				instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
@@ -7508,10 +7508,10 @@ private:
 		const uint8_t noteNumber = m_lastMidiOnOff_FractionAndNoteNumber.note.value;
 		const uint8_t fraction = (m_lastMidiOnOff_FractionAndNoteNumber.fraction.value >> 1) & 0x7F;
 
-		if ((durationMSB != 0u) || (durationLSB != 0u)) {
+		if ((durationMSB != 0U) || (durationLSB != 0U)) {
 			return forwardToMidiOut_7bytes(instr, noteNumber, fraction, durationLSB, durationMSB);
 		}
-		if (fraction != 0u) {
+		if (fraction != 0U) {
 			return forwardToMidiOut_5bytes(instr, noteNumber, fraction);
 		}
 		m_outgoingMusicCardMessageData[0] = 0x90 | instr->instrumentConfiguration.midiChannel;
@@ -7651,7 +7651,7 @@ private:
 		const uint8_t channelMask = instr->channelMask;
 		uint8_t channelNr = 0;
 		while ((channelMask & (1 << channelNr)) == 0) { channelNr++; }
-		if (m_lastMidiOnOff_KeyVelocity.value != 0u) {
+		if (m_lastMidiOnOff_KeyVelocity.value != 0U) {
 			// key ON
 			return sub_264B(instr, &m_ymChannelData[channelNr]);
 		}
@@ -8908,7 +8908,7 @@ private:
 			checksum += (dataByte >> 4) & 0x0F;
 			pData++;
 			dataSize--;
-		} while (dataSize != 0u);
+		} while (dataSize != 0U);
 
 		// return checksum
 		return send_midi_byte((-checksum) & 0x7F);
@@ -8931,7 +8931,7 @@ private:
 			checksum += dataByte;
 			pData++;
 			dataSize--;
-		} while (dataSize != 0u);
+		} while (dataSize != 0U);
 
 		// return checksum
 		return send_midi_byte((-checksum) & 0x7F);
@@ -9051,7 +9051,7 @@ private:
 		}
 
 		// read the additional data
-		while (--dataPacketSize != 0u) {
+		while (--dataPacketSize != 0U) {
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x80) { return READ_ERROR; }
 			checksum += readResult.data;
@@ -9108,7 +9108,7 @@ private:
 		}
 
 		// read the additional data
-		while (--dataPacketSize != 0u) {
+		while (--dataPacketSize != 0U) {
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x80) { return READ_ERROR; }
 			checksum += readResult.data;
